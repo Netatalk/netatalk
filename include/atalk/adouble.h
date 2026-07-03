@@ -280,6 +280,31 @@ struct adouble {
 #define AD_FILELOCK_OPEN_NONE      (AD_FILELOCK_BASE + 8)
 #define AD_FILELOCK_RSRC_OPEN_NONE (AD_FILELOCK_BASE + 9)
 
+/* share-mode band as a bitmap: bit n == AD_FILELOCK_BASE + n */
+#define AD_FILELOCK_BAND_BITS  10
+
+#define OPEN_WR_BIT         (1U << (AD_FILELOCK_OPEN_WR        - AD_FILELOCK_BASE))
+#define OPEN_RD_BIT         (1U << (AD_FILELOCK_OPEN_RD        - AD_FILELOCK_BASE))
+#define RSRC_OPEN_WR_BIT    (1U << (AD_FILELOCK_RSRC_OPEN_WR   - AD_FILELOCK_BASE))
+#define RSRC_OPEN_RD_BIT    (1U << (AD_FILELOCK_RSRC_OPEN_RD   - AD_FILELOCK_BASE))
+#define DENY_WR_BIT         (1U << (AD_FILELOCK_DENY_WR        - AD_FILELOCK_BASE))
+#define DENY_RD_BIT         (1U << (AD_FILELOCK_DENY_RD        - AD_FILELOCK_BASE))
+#define RSRC_DENY_WR_BIT    (1U << (AD_FILELOCK_RSRC_DENY_WR   - AD_FILELOCK_BASE))
+#define RSRC_DENY_RD_BIT    (1U << (AD_FILELOCK_RSRC_DENY_RD   - AD_FILELOCK_BASE))
+#define OPEN_NONE_BIT       (1U << (AD_FILELOCK_OPEN_NONE      - AD_FILELOCK_BASE))
+#define RSRC_OPEN_NONE_BIT  (1U << (AD_FILELOCK_RSRC_OPEN_NONE - AD_FILELOCK_BASE))
+
+#define ALL_BAND_BITS       ((1U << AD_FILELOCK_BAND_BITS) - 1)
+#define OPEN_BITS           (OPEN_WR_BIT | OPEN_RD_BIT \
+                             | RSRC_OPEN_WR_BIT | RSRC_OPEN_RD_BIT)
+/* band bits that block a delete: all but the no-claim "open, no deny" markers.
+ * Excludes OPEN_NONE (deny-none/access-none open) and OPEN_RD (read-only open,
+ * no deny) for both data and rsrc: mere open-ness with no deny mode is not a
+ * claim that should refuse a delete.  OPEN_WR and every DENY_* bit still block. */
+#define DELETE_BLOCKING_BAND_BITS                                       \
+    (ALL_BAND_BITS & ~(OPEN_NONE_BIT | RSRC_OPEN_NONE_BIT               \
+                       | OPEN_RD_BIT | RSRC_OPEN_RD_BIT))
+
 /* time stuff. we overload the bits a little.  */
 #define AD_DATE_CREATE         0
 #define AD_DATE_MODIFY         4
@@ -396,6 +421,9 @@ extern int fsetrsrcea(struct adouble *ad, int fd, const char *eaname,
 
 /* ad_lock.c */
 extern int ad_testlock(struct adouble *adp, int eid, off_t off);
+extern int ad_testlock_range(struct adouble *adp, int eid, off_t off,
+                             off_t len);
+extern int ad_testlock_whole(struct adouble *adp, int eid);
 extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
 extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off,
                    off_t len, int fork);

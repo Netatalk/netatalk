@@ -15,6 +15,8 @@
 #ifndef FAULTINJECT_H
 #define FAULTINJECT_H
 
+#include <sys/types.h>   /* off_t */
+
 /*!
  * @file
  * @brief Test-only fault-injection control block (see faultinject.c).
@@ -40,6 +42,15 @@ struct fault_inject {
     int fcntl_armed;
     int fcntl_fail_after;
     int fcntl_errno;
+    /* Observe the lock calls a probe issues, so a test can assert HOW it probed
+     * (count, range, type), not just the result.  Updated on every F_GETLK/F_SETLK
+     * fcntl when fcntl_watch is set; reset by fault_inject_reset(). */
+    int   fcntl_watch;       /*!< record lock-fcntl calls into the fields below */
+    int   getlk_calls;       /*!< count of F_GETLK calls seen while watching */
+    int   setlk_calls;       /*!< count of F_SETLK/F_SETLKW calls seen */
+    int   lock_last_type;    /*!< l_type of the most recent watched lock fcntl */
+    off_t lock_last_start;   /*!< l_start of the most recent watched lock fcntl */
+    off_t lock_last_len;     /*!< l_len   of the most recent watched lock fcntl */
     int fchdir_armed;
     int fchdir_fail_after;
     int fchdir_errno;

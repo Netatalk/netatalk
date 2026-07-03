@@ -604,6 +604,201 @@ test_exit:
 }
 
 
+/* -------------------------------------------------------------------------
+ * test609  Cross-session DeleteInhibit (kFPDeleteInhibitBit) lifecycle.
+ *
+ * Session 1 (Conn) sets ATTRBIT_NODELETE, session 2 (Conn2) deletes:
+ *
+ *   1. Conn  FPCreateFile, then FPSetFileParams ATTRBIT_NODELETE|SETCLR  (set)
+ *   2. Conn2 FPDelete  -> assert AFPERR_OLOCK            (cross-session refuse)
+ *   3. Conn  FPSetFileParams ATTRBIT_NODELETE (SETCLR off => clear)
+ *   4. Conn2 FPDelete  -> assert success                (cross-session allow)
+ */
+STATIC void test609()
+{
+    char *name = "t609 deleteinhibit xsession";
+    int  ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = { 0 };
+    uint16_t bitmap = (1 << FILPBIT_ATTR);
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    const DSI *dsi;
+    ENTER_TEST
+    dsi = &Conn->dsi;
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        test_nottested();
+        goto cleanup_file;
+    }
+
+    /* read current attrs so the unpacked struct is well-formed before we
+     * OR in NODELETE */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
+        test_nottested();
+        goto cleanup_vol2;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+    /* (1) session 1 sets DeleteInhibit */
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
+    FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
+    /* (2) session 2 delete must be refused cross-session */
+    FAIL(ntohl(AFPERR_OLOCK) != FPDelete(Conn2, vol2, DIRDID_ROOT, name))
+    /* (3) session 1 clears it (SETCLR off => clear the named bits) */
+    filedir.attr = ATTRBIT_NODELETE;
+    FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
+    /* (4) session 2 delete must now succeed cross-session (also disposes the
+     *     file, so no explicit cleanup delete below) */
+    FAIL(FPDelete(Conn2, vol2, DIRDID_ROOT, name))
+    FAIL(FPCloseVol(Conn2, vol2))
+    goto test_exit;
+cleanup_vol2:
+    FPCloseVol(Conn2, vol2);
+cleanup_file:
+    /* clear any inhibit we may have set, then remove via session 1 */
+    filedir.attr = ATTRBIT_NODELETE;
+    FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir);
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+test_exit:
+    exit_test("FPDelete:test609: cross-session DeleteInhibit lifecycle");
+}
+
+/* -------------------------------------------------------------------------
+ * test608  An open with no access mode (no Read/Write/DenyRead/DenyWrite) does
+ *          not block a cross-session delete.
+ *
+ * Conn opens the data fork with access == 0 — a fork that is open but holds no
+ * deny mode and reserves no access. Per the AFP sharing model a "none" access
+ * open makes no claim against other users, so Conn2 FPDelete must succeed.
+ *
+ * The delete-time conflict check is selective: a "none" access open plants only
+ * the OPEN_NONE share-mode marker, which the delete gate ignores (it blocks only
+ * on a deny mode or a held content lock). A bare open therefore does not refuse a
+ * cross-session delete.
+ */
+STATIC void test608()
+{
+    char *name = "t608 open_none nonblock";
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    uint16_t fork;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      0 /* no access */);
+
+    if (!fork) {
+        /* server may reject access==0 */
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    dret = FPDelete(Conn2, vol2, DIRDID_ROOT, name);
+    FAIL(AFP_OK != dret)   /* a no-access open must not block delete */
+    FAIL(FPCloseVol(Conn2, vol2))
+    /* file is gone (Conn2 deleted it); close our fork, do not re-delete */
+    FAIL(FPCloseFork(Conn, fork))
+    goto test_exit;
+cleanup:
+    FPCloseFork(Conn, fork);
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+test_exit:
+    exit_test("FPDelete:test608: open with no access mode does not block delete");
+}
+
+/* -------------------------
+ * test610  A read-only open with no deny mode does not block a cross-session
+ *          delete.
+ *
+ * Conn opens the data fork OPENACC_RD only (read access, no write, no deny).
+ * Per the AFP sharing model "someone has it open read-only, no deny" is not a
+ * claim that should refuse a delete, so Conn2 FPDelete must succeed.
+ *
+ * Mechanism: a read-only, no-deny open plants only the OPEN_RD share-mode marker
+ * (and, for the rsrc case, RSRC_OPEN_RD).  DELETE_BLOCKING_BAND_BITS excludes both
+ * OPEN_RD and OPEN_NONE, so the delete gate ignores them and blocks only on a deny
+ * mode, DeleteInhibit, or a held content lock.  Companion to test608 (OPEN_NONE).
+ */
+STATIC void test610()
+{
+    char *name = "t610 open_rd nonblock";
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    uint16_t fork;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD /* read only, no deny */);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    dret = FPDelete(Conn2, vol2, DIRDID_ROOT, name);
+    FAIL(AFP_OK != dret)   /* a read-only, no-deny open must not block delete */
+    FAIL(FPCloseVol(Conn2, vol2))
+    /* file is gone (Conn2 deleted it); close our fork, do not re-delete */
+    FAIL(FPCloseFork(Conn, fork))
+    goto test_exit;
+cleanup:
+    FPCloseFork(Conn, fork);
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+test_exit:
+    exit_test("FPDelete:test610: read-only open does not block delete");
+}
+
 /* ----------- */
 void FPDelete_test()
 {
@@ -617,4 +812,7 @@ void FPDelete_test()
     test369();
     test421();
     test422();
+    test608();
+    test609();
+    test610();
 }

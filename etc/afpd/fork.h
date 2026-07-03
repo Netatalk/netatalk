@@ -76,6 +76,14 @@ extern struct adouble *of_ad(const struct vol *, struct path *,
 extern struct ofork *of_findnameat(int dirfd, struct path *path);
 extern int of_fstatat(int dirfd, struct path *path);
 
+enum of_locks_status { OF_LOCKS_ERROR = -1, OF_LOCKS_OK = 0, OF_LOCKS_NOENT = 1 };
+
+extern int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
+                        int df_get, off_t df_off, off_t df_len,
+                        int rf_get, off_t rf_off, off_t rf_len,
+                        uint16_t band_request, int try_root,
+                        int *df_locked, int *rf_locked, uint16_t *band_held);
+
 
 /* in fork.c */
 extern int          flushfork(struct ofork *);

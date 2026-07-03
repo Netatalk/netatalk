@@ -22,5 +22,17 @@ extern int utest_openfork_no_fd_leak(const struct vol *vol);
 extern int utest_shared_adouble_refcount_balance(const struct vol *vol);
 extern int utest_adclose_underflow_aborts(const struct vol *vol);
 extern int utest_ro_retry_strips_destructive_flags(const struct vol *vol);
+extern int utest_ad2openflags_accmode(const struct vol *vol);
+
+extern int utest_testlock_range_clamp(const struct vol *vol);
+extern int utest_testlock_whole(const struct vol *vol);
+extern int utest_testlock_range_no_self_report(const struct vol *vol);
+extern int utest_testlock_range_wrlck_sees_rdlck(const struct vol *vol);
+extern int utest_of_get_locks_contract(const struct vol *vol);
+extern int utest_of_get_locks_fastpath(const struct vol *vol);
+extern int utest_of_get_locks_failclosed(const struct vol *vol);
+extern int utest_deletefile_quirk_hazard(const struct vol *vol);
+extern int utest_deletefile_quirk(struct vol *vol);
+extern int utest_deletefile_nodelete(const struct vol *vol);
 
 #endif /* SUBTESTS_LOCK_H */

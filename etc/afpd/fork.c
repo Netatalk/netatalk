@@ -1429,7 +1429,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         dsi = obj->dsi;
         /* reqcount isn't always truthful. we need to deal with that. */
         size = ad_size(ofork->of_ad, eid);
-        LOG(log_debug, logtype_afpd,
+        LOG(log_maxdebug, logtype_afpd,
             "afp_read(fork: %" PRIu16 " [%s], off: %" PRIu64 ", len: %" PRIu64 ", size: %"
             PRIu64 ")",
             ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset,
@@ -1546,7 +1546,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_done;
         }
 
-        LOG(log_debug, logtype_afpd,
+        LOG(log_maxdebug, logtype_afpd,
             "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
             of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
         offset += *rbuflen;
@@ -1768,9 +1768,12 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
 
     if (NULL == (ofork = of_find(ofrefnum))) {
-        LOG(log_debug, logtype_afpd,
+        /* A close we cannot match leaves any real fork it targeted tracked
+         * forever (and its inode undeletable this session). */
+        LOG(log_warning, logtype_afpd,
             "afp_closefork: of_find(%" PRIu16 ") could not locate fork"
-            " (wire bytes: 0x%02x%02x; stale close from client)",
+            " (wire bytes: 0x%02x%02x; stale close from client, or a fork"
+            " this session leaked)",
             ofrefnum,
             (unsigned char)ibuf[0], (unsigned char)ibuf[1]);
         return AFPERR_PARAM;
@@ -1794,7 +1797,7 @@ static ssize_t write_file(struct ofork *ofork, int eid,
                           size_t rbuflen)
 {
     ssize_t cc;
-    LOG(log_debug, logtype_afpd, "write_file(off: %ju, size: %zu)",
+    LOG(log_maxdebug, logtype_afpd, "write_file(off: %ju, size: %zu)",
         (uintmax_t)offset, rbuflen);
 
     if ((cc = ad_write(ofork->of_ad, eid, offset, 0,
@@ -1866,7 +1869,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         goto afp_write_err;
     }
 
-    LOG(log_debug, logtype_afpd,
+    LOG(log_maxdebug, logtype_afpd,
         "afp_write(fork: %" PRIu16 " [%s], off: %" PRIu64 ", size: %" PRIu64 ")",
         ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset,
         reqcount);
@@ -2053,7 +2056,7 @@ afp_write_loop:
                 return cc;
             }
 
-            LOG(log_debug, logtype_afpd, "afp_write: wrote: %jd, offset: %jd",
+            LOG(log_maxdebug, logtype_afpd, "afp_write: wrote: %jd, offset: %jd",
                 (intmax_t)cc, (intmax_t)offset);
             offset += cc;
         }

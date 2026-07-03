@@ -134,11 +134,14 @@ static int fault_should_fire(int armed, int *fail_after, int errnum)
 }
 
 typedef int (*open_fn)(const char *, int, ...);
+typedef int (*open2_fn)(const char *, int);
 typedef int (*close_fn)(int);
 typedef int (*fcntl_fn)(int, int, ...);
 typedef int (*fchdir_fn)(int);
 
 static open_fn   real_open;
+static open2_fn  real_open_2;
+static open2_fn  real_open64_2;
 static close_fn  real_close;
 static fcntl_fn  real_fcntl;
 static fchdir_fn real_fchdir;
@@ -146,6 +149,19 @@ static fchdir_fn real_fchdir;
 #ifndef O_TMPFILE
 #define O_TMPFILE 0
 #endif
+
+/* Record then decide, shared by every open-family interposer.  Record before
+ * the decision so count/flags reflect the attempt; only while armed.  Returns 1
+ * when the caller should inject the failure (errno already set). */
+static int open_armed_should_fire(int flags)
+{
+    if (fi.open_armed) {
+        fi.open_calls++;
+        fi.open_last_flags = flags;
+    }
+
+    return fault_should_fire(fi.open_armed, &fi.open_fail_after, fi.open_errno);
+}
 
 /* A single open() definition covers both symbols libatalk may reference: under
  * glibc with _FILE_OFFSET_BITS=64 (set globally) <fcntl.h> renames THIS
@@ -170,21 +186,48 @@ int open(const char *path, int flags, ...)
         real_open = (open_fn)dlsym(RTLD_NEXT, "open");
     }
 
-    /* Record the flags of every armed open() so a test can inspect WHAT a retry
-     * re-opened with (e.g. assert a read-only downgrade retry dropped O_TRUNC),
-     * not merely that an open happened.  Recorded before the failure decision so
-     * the count and flags reflect the attempt regardless of outcome; only while
-     * armed, to stay inert for unrelated infrastructure opens. */
-    if (fi.open_armed) {
-        fi.open_calls++;
-        fi.open_last_flags = flags;
-    }
-
-    if (fault_should_fire(fi.open_armed, &fi.open_fail_after, fi.open_errno)) {
+    if (open_armed_should_fire(flags)) {
         return -1;
     }
 
     return real_open(path, flags, mode);
+}
+
+/* _FORTIFY_SOURCE (default on Ubuntu's GCC, glibc >= 2.42) rewrites a no-mode
+ * open(path, flags) to __open_2()/__open64_2() instead of open()/open64().
+ * Every of_get_locks/deletefile probe open is no-O_CREAT, so without these
+ * interposers an armed failure never fires on a fortified build and a
+ * fail-closed test reads a real ENOENT as "no rfork".  No O_CREAT here means no
+ * mode argument.  The __asm__ labels pin the real symbol names: under
+ * _FILE_OFFSET_BITS=64 the identifier __open_2 would itself emit __open64_2 and
+ * collide, so private identifiers keep both interposers distinct (LFS + 32-bit). */
+int fi_open_2(const char *path, int flags) __asm__("__open_2");
+int fi_open64_2(const char *path, int flags) __asm__("__open64_2");
+
+int fi_open_2(const char *path, int flags)
+{
+    if (!real_open_2) {
+        real_open_2 = (open2_fn)dlsym(RTLD_NEXT, "__open_2");
+    }
+
+    if (open_armed_should_fire(flags)) {
+        return -1;
+    }
+
+    return real_open_2(path, flags);
+}
+
+int fi_open64_2(const char *path, int flags)
+{
+    if (!real_open64_2) {
+        real_open64_2 = (open2_fn)dlsym(RTLD_NEXT, "__open64_2");
+    }
+
+    if (open_armed_should_fire(flags)) {
+        return -1;
+    }
+
+    return real_open64_2(path, flags);
 }
 
 int close(int fd)
@@ -241,6 +284,24 @@ int fcntl(int fd, int cmd, ...)
 
     if (!real_fcntl) {
         real_fcntl = (fcntl_fn)dlsym(RTLD_NEXT, "fcntl");
+    }
+
+    /* Record lock-fcntl calls so a test can assert HOW a probe locked (count,
+     * range, type) — e.g. that a range probe never issues l_len == 0 (which would
+     * sweep the share-mode band).  Only while watching, to stay inert otherwise. */
+    if (fi.fcntl_watch && has_ptr && ptr_arg != NULL
+            && (cmd == F_GETLK || cmd == F_SETLK || cmd == F_SETLKW)) {
+        const struct flock *flk = ptr_arg;
+
+        if (cmd == F_GETLK) {
+            fi.getlk_calls++;
+        } else {
+            fi.setlk_calls++;
+        }
+
+        fi.lock_last_type  = flk->l_type;
+        fi.lock_last_start = flk->l_start;
+        fi.lock_last_len   = flk->l_len;
     }
 
     if (fault_should_fire(fi.fcntl_armed, &fi.fcntl_fail_after, fi.fcntl_errno)) {

@@ -1,7 +1,7 @@
 /* ----------------------------------------------
  * Tier-2 lock "attack" tests.
  *
- * Observe the KERNEL'S lock state directly (raw fcntl on the backing file via
+ * Observe the kernel's lock state directly (raw fcntl on the backing file via
  * -c Path), independently of afpd's own bookkeeping.  Auto-skip without a local
  * path (-c) or a second connection.
  */
@@ -40,11 +40,10 @@ static int data_fork_path(char *out, size_t outlen, char *sub, char *name)
 /* F_GETLK probe from a throwaway fd: 1 = kernel reports a conflicting lock on
  * [off,len); 0 = range free; -1 = open/fcntl error.
  *
- * NOTE on Quirk A self-interference: this helper opens and CLOSES its own fd.
- * That is safe here precisely because it runs in the SPECTEST CLIENT process,
- * which holds no afpd locks - the close drops nothing of ours.  (This is the
- * opposite of the server-side bug, where afpd closing a probe fd dropped its
- * own locks.) */
+ * Note on self-interference: this helper opens and closes its own fd.  That is
+ * safe here precisely because it runs in the spectest client process, which holds
+ * no afpd locks - the close drops nothing of ours.  (This is the opposite of the
+ * server-side bug, where afpd closing a probe fd dropped its own locks.) */
 static int kernel_lock_held(char *path, off_t off, off_t len)
 {
     struct flock fl;
@@ -81,18 +80,18 @@ static int kernel_lock_held(char *path, off_t off, off_t len)
 
 /* ------------------------------------------------------------------ *
  * test600  Cross-session delete-probe does not corrupt a holder's lock.
- *          KERNEL-observed.  NOT a Quirk-A repro.
+ *          Kernel-observed.
  *
  * Conn locks [0,100] on the data fork; F_GETLK confirms the kernel records it.
  * Conn2 attempts FPDelete (in Conn2's child this fires the ADFLAGS_CHECK_OF
- * probe open+close on the inode).  Assert the delete returns AFPERR_BUSY AND
+ * probe open+close on the inode).  Assert the delete returns AFPERR_BUSY and
  * Conn's lock is still held afterwards.
  *
- * NOTE: this does NOT exercise Quirk A.  Quirk A is same-process; Conn and Conn2
- * are separate afpd children, so Conn2's probe close cannot drop Conn's locks -
- * this test passes on both the buggy and fixed server.  Its value is that no
- * other test asserts "held byte lock -> cross-session FPDelete is BUSY and the
- * deleter's probe path leaves the holder's lock intact."
+ * Note: Conn and Conn2 are separate afpd children, so Conn2's probe close cannot
+ * drop Conn's locks (the close-drops-own-locks effect is same-process only) - this
+ * test passes on both the buggy and fixed server.  Its value is that no other test
+ * asserts "held byte lock -> cross-session FPDelete is BUSY and the deleter's probe
+ * path leaves the holder's lock intact."
  * ------------------------------------------------------------------ */
 STATIC void test600()
 {
@@ -192,10 +191,10 @@ test_exit:
 
 /* ------------------------------------------------------------------ *
  * test603  Shared share-mode read-lock preservation (refcount > 1),
- *          KERNEL-observed.
+ *          kernel-observed.
  *
- * Two deny-none read opens of one fork in ONE session share the AD_FILELOCK_OPEN_RD
- * share-mode lock with a refcount of 2. Closing the first open must NOT drop the
+ * Two deny-none read opens of one fork in one session share the AD_FILELOCK_OPEN_RD
+ * share-mode lock with a refcount of 2. Closing the first open must not drop the
  * kernel lock (refcount 2->1); closing the second must (refcount ->0).
  * ------------------------------------------------------------------ */
 STATIC void test603()
@@ -299,7 +298,7 @@ test_exit:
 }
 
 /* ------------------------------------------------------------------ *
- * test604  Last-close teardown releases every range, KERNEL-observed.
+ * test604  Last-close teardown releases every range, kernel-observed.
  * ------------------------------------------------------------------ */
 STATIC void test604()
 {
@@ -372,16 +371,16 @@ test_exit:
 }
 
 /* ------------------------------------------------------------------ *
- * test613  AFPERR_BUSY holder telemetry: `external` class.
+ * test605  A foreign-process share-mode band lock blocks delete.
  *
- * A NON-afpd process (this test) holds a raw fcntl lock on the data-fork
- * share-mode region.  A cross-session FPDelete should return BUSY; the afpd log
- * (captured by CI) must classify the holder `external`.  Spectest asserts only
- * the client-visible BUSY; the log half is the CI scraper's job.
+ * A non-afpd process (this test) takes a raw F_WRLCK at the AD_FILELOCK_OPEN_WR
+ * band offset on the data fork's backing file, with no afpd fork held.  A
+ * cross-session FPDelete must detect the open-fork band lock and return
+ * AFPERR_BUSY.
  * ------------------------------------------------------------------ */
-STATIC void test613()
+STATIC void test605()
 {
-    char *dname = "t613";
+    char *dname = "t605";
     char *name = "f";
     uint16_t vol = VolID;
     uint16_t vol2;
@@ -432,7 +431,7 @@ STATIC void test613()
 
     if (fcntl(fd, F_SETLK, &fl) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tcould not take foreign lock: %s\n", strerror(errno));
+            fprintf(stdout, "\tcould not take foreign band lock: %s\n", strerror(errno));
         }
 
         test_nottested();
@@ -446,19 +445,9 @@ STATIC void test613()
         goto cleanup;
     }
 
+    /* the foreign band lock must block the cross-session delete */
     dret = FPDelete(Conn2, vol2, dir, name);
-
-    if (ntohl(AFPERR_BUSY) != dret) {
-        /* external-holder detection on delete is platform/build dependent;
-         * don't hard-fail, but record it. */
-        if (!Quiet) {
-            fprintf(stdout, "\tNOTE: delete returned 0x%x, expected AFPERR_BUSY\n",
-                    ntohl(dret));
-        }
-
-        test_nottested();
-    }
-
+    FAIL(ntohl(AFPERR_BUSY) != dret)
     FAIL(FPCloseVol(Conn2, vol2))
 cleanup:
 
@@ -473,7 +462,7 @@ cleanup:
 
     delete_directory_tree(Conn, vol, DIRDID_ROOT, dname);
 test_exit:
-    exit_test("T2LockAttack:test613: AFPERR_BUSY external holder");
+    exit_test("T2LockAttack:test605: foreign band lock blocks delete");
 }
 
 /* ------------------------------------------------------------------ *
@@ -481,8 +470,8 @@ test_exit:
  *
  * Conn opens a file inside a test directory and takes a byte lock. While it is
  * held:
- *   - deleting the PARENT directory returns AFPERR_DIRNEMPT (offspring present);
- *   - deleting the FILE from a second session returns AFPERR_BUSY (open by a user).
+ *   - deleting the parent directory returns AFPERR_DIRNEMPT (offspring present);
+ *   - deleting the file from a second session returns AFPERR_BUSY (open by a user).
  * After Conn closes the fork, both the file and the directory delete cleanly.
  * Exercises the delete-vs-lock contention surface and the recursive cleanup of a
  * directory whose contents were locked.
@@ -554,6 +543,128 @@ test_exit:
     exit_test("T2LockAttack:test620: delete contention on a dir with a locked file");
 }
 
+/* ------------------------------------------------------------------ *
+ * test607  Delete vs a foreign-process data-content read lock.
+ *
+ * A non-afpd process (e.g. Samba) takes an fcntl(F_RDLCK) on content [0,100] of
+ * the backing file, with no AFP fork open. The current server refuses a
+ * cross-session FPDelete (AFPERR_BUSY) because its delete-time check takes a
+ * whole-file trial lock that overlaps any byte-range lock — it blocks on any byte
+ * lock, which is too coarse.
+ *
+ * The correct outcome for a foreign read lock is not yet finalised and depends on
+ * an ownership-escalation rule still under design:
+ *   - a write byte-range lock / a file open for writing is active modification and
+ *     should block a delete;
+ *   - a read byte-range lock should not block the file's Unix owner (ownership is
+ *     the escalation), but blocking a non-owner whose target is being read may be
+ *     acceptable.
+ * Until that policy is decided this test is not wired into the testset (its body
+ * is kept ready for when the expected outcome is finalised).
+ * ------------------------------------------------------------------ */
+STATIC void test607()
+{
+    char *dname = "t607";
+    char *name = "f";
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    uint16_t fork;
+    int dir;
+    int fd = -1;
+    struct flock fl;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (Path[0] == '\0') {
+        test_skipped(T_PATH);
+        goto test_exit;
+    }
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, dir, name)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    /* give the file > 100 bytes so the content range is real */
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,
+                      OPENACC_RD | OPENACC_WR);
+
+    if (!fork) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    FAIL(FPSetForkParam(Conn, fork, (1 << FILPBIT_DFLEN), 200))
+    FAIL(FPCloseFork(Conn, fork))
+
+    if (data_fork_path(temp, sizeof(temp), dname, name) < 0) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    fd = open(temp, O_RDWR, 0);
+
+    if (fd < 0) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    fl.l_type   = F_RDLCK;                  /* a foreign read content lock */
+    fl.l_whence = SEEK_SET;
+    fl.l_start  = 0;
+    fl.l_len    = 100;
+
+    if (fcntl(fd, F_SETLK, &fl) < 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tcould not take foreign read lock: %s\n", strerror(errno));
+        }
+
+        test_nottested();
+        goto cleanup;
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    /* The assertion below encodes today's over-broad "any byte lock blocks"
+     * outcome only as scaffolding; the real expected result is undecided (it
+     * depends on a file-ownership escalation rule) and must be set once that
+     * policy is finalised.  Until then this test is not wired into the testset. */
+    dret = FPDelete(Conn2, vol2, dir, name);
+    FAIL(ntohl(AFPERR_BUSY) != dret)
+    FAIL(FPCloseVol(Conn2, vol2))
+cleanup:
+
+    if (fd >= 0) {
+        fl.l_type = F_UNLCK;
+        fl.l_whence = SEEK_SET;
+        fl.l_start = 0;
+        fl.l_len = 100;
+        fcntl(fd, F_SETLK, &fl);
+        close(fd);
+    }
+
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, dname);
+test_exit:
+    exit_test("T2LockAttack:test607: delete vs foreign content read lock");
+}
+
 /* ----------- */
 void T2LockAttack_test()
 {
@@ -561,6 +672,9 @@ void T2LockAttack_test()
     test600();
     test603();
     test604();
-    test613();
+    test605();
+    /* test607 (delete vs foreign content read lock) is intentionally not wired in
+     * yet: its expected outcome depends on an undecided ownership-escalation
+     * policy. */
     test620();
 }

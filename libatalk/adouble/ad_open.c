@@ -1058,7 +1058,11 @@ static int ad_error(struct adouble *ad, int adflags)
 {
     int err _U_ = errno;
 
-    if (adflags & ADFLAGS_NOHF) { /* 1 */
+    /* (1) ADFLAGS_NOHF: a *missing* metadata/header fork is not an error.  Suppress
+     * only the benign "absent" errnos; a hard error (EIO, EACCES, ...) propagates so
+     * a caller cannot mistake an unreadable header for "no header". */
+    if ((adflags & ADFLAGS_NOHF)
+            && (errno == ENOENT || errno == ENOATTR)) {
         return 0;
     }
 
@@ -1822,6 +1826,12 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
 EC_CLEANUP:
 
     if (ret != 0) {
+        /* Capture the open-failure errno before the close()/ad_close() below can
+         * clobber it: ADFLAGS_NORF suppresses only a *missing* resource fork
+         * (ENOENT/ENOATTR), not a hard error (EIO, EACCES, ...), so a caller cannot
+         * mistake an unreadable rfork for "no rfork". */
+        int open_errno = errno;
+
         if (opened && (ad_reso_fileno(ad) != -1)) {
             close(ad_reso_fileno(ad));
             ad_reso_fileno(ad) = -1;
@@ -1829,7 +1839,8 @@ EC_CLEANUP:
             ad->ad_rfp->adf_refcount = 0;
         }
 
-        if (adflags & ADFLAGS_NORF) {
+        if ((adflags & ADFLAGS_NORF)
+                && (open_errno == ENOENT || open_errno == ENOATTR)) {
             ret = 0;
         } else {
             int err = errno;

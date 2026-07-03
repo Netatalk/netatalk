@@ -42,11 +42,16 @@
 #include "subtests.h"
 #include "subtests_lock.h"
 #include "test.h"
+#include "test_capabilities.h"
 #include "volume.h"
 
 unsigned char nologin = 0;
 static AFPObj obj, aspobj;
-static char *args[] = {"test", "-F", "test.conf"};
+/* args[2] is filled with an absolute path to test.conf at startup: opening a
+ * second volume triggers a load_volumes() config reload, and by then afpd has
+ * fchdir()'d into a volume, so a relative "test.conf" would no longer resolve. */
+static char  confpath[MAXPATHLEN + 1];
+static char *args[] = {"test", "-F", confpath};
 int test_output_tap = 0;
 int test_case_num = 0;
 FILE *test_report_stream = NULL;
@@ -55,11 +60,19 @@ int main(int argc, char *argv[])
 {
     int reti;
     uint16_t vid;
+    uint16_t vidsys;
     struct vol *vol;
+    struct vol *volsys;
     struct dir *retdir;
     struct path *path;
     int test_report_fd;
     signal(SIGPIPE, SIG_IGN);
+
+    /* Resolve test.conf to an absolute path before any chdir (see args[] note). */
+    if (realpath("test.conf", confpath) == NULL) {
+        /* fall back to the relative name; single-volume use still works */
+        snprintf(confpath, sizeof(confpath), "test.conf");
+    }
 
     if (argc == 2 && strcmp(argv[1], "--tap") == 0) {
         test_output_tap = 1;
@@ -130,14 +143,29 @@ int main(int argc, char *argv[])
               "open the afpd_test volume");
     TEST_expr(vol = getvolbyvid(vid), vol != NULL,
               "resolve volume by volume id");
+    /* Second volume on the ea=sys backend (metadata in EAs, not a ._ sidecar), so
+     * the backend-specific tests can run both legs in-process — but only where the
+     * filesystem actually supports user xattrs.  openvol() does not write-probe, so
+     * gate on the capability (a real xattr round-trip) to skip honestly elsewhere. */
+    volsys = NULL;
+
+    if (test_capability(TEST_CAP_EA_SYS, vol)) {
+        TEST_expr(vidsys = openvol(&obj, "afpd_test_sys"), vidsys != 0,
+                  "open the afpd_test_sys (ea=sys) volume");
+        TEST_expr(volsys = getvolbyvid(vidsys), volsys != NULL,
+                  "resolve ea=sys volume by volume id");
+    }
+
+    /* No volume-level "cnid server" (only the dbd backend uses it), so the volume
+     * inherits the Global value; the port exercises the no-port default. */
     TEST_expr(reti = 0,
               vol->v_cnidserver != NULL
-              && strcmp(vol->v_cnidserver, "localhost") == 0,
-              "volume: CNID server is localhost");
+              && strcmp(vol->v_cnidserver, "127.0.0.1") == 0,
+              "volume: CNID server inherited from Global");
     TEST_expr(reti = 0,
               vol->v_cnidport != NULL
               && strcmp(vol->v_cnidport, "4700") == 0,
-              "volume: CNID port is 4700");
+              "volume: CNID port defaults to 4700");
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL,
               "dirlookup: root parent directory");
@@ -186,8 +214,43 @@ int main(int argc, char *argv[])
                      "ad_close() hard-fails (abort) on adf_refcount underflow");
     TEST_int_or_skip(utest_ro_retry_strips_destructive_flags(vol), 0,
                      "read-only downgrade retry strips O_TRUNC (no truncate)");
+    TEST_int_or_skip(utest_ad2openflags_accmode(vol), 0,
+                     "ad2openflags: SETSHRMD|RDONLY promoted to O_RDWR, plain RDONLY stays RO");
+    /* delete-conflict GET / of_get_locks / ad_testlock_range unit tests */
+    TEST_int_or_skip(utest_testlock_range_clamp(vol), 0,
+                     "ad_testlock_range: data-zone probe is clamped, never sweeps the band");
+    TEST_int_or_skip(utest_testlock_whole(vol), 0,
+                     "ad_testlock_whole: one unclamped F_GETLK spanning content + band");
+    TEST_int_or_skip(utest_testlock_range_no_self_report(vol), 0,
+                     "ad_testlock_range: F_GETLK does not report our own band entry");
+    TEST_int_or_skip(utest_testlock_range_wrlck_sees_rdlck(vol), 0,
+                     "ad_testlock_range: F_WRLCK probe sees a peer's F_RDLCK band entry");
+    TEST_int_or_skip(utest_of_get_locks_contract(vol), 0,
+                     "of_get_locks: positional band bitmap, independent df/rf, tri-valued");
+    TEST_int_or_skip(utest_of_get_locks_fastpath(vol), 0,
+                     "of_get_locks: >=2-dimension whole-fd fast path, per-bit on a hit");
+    TEST_int_or_skip(utest_of_get_locks_failclosed(vol), 0,
+                     "of_get_locks: fail-closed/NOENT/absent-rfork (v2 backend)");
+    /* same fail-closed + NORF error-handling contract on the ea=sys backend */
+    TEST_int_or_skip(volsys ? utest_of_get_locks_failclosed(volsys) : TEST_SKIP, 0,
+                     "of_get_locks: fail-closed/NOENT/absent-rfork (ea=sys backend)");
+    TEST_int_or_skip(utest_deletefile_quirk_hazard(vol), 0,
+                     "POSIX close-drops-locks hazard is real here (negative control)");
+    TEST_int_or_skip(utest_deletefile_quirk(vol), 0,
+                     "deletefile conflict GET through a held fd preserves the held lock");
+    TEST_int_or_skip(utest_deletefile_nodelete(vol), 0,
+                     "deletefile honours NODELETE (v2 backend)");
+    /* ea=sys leg: only where the filesystem supports user xattrs (else volsys is
+     * NULL and the test skips, like any other unmet capability). */
+    TEST_int_or_skip(volsys ? utest_deletefile_nodelete(volsys) : TEST_SKIP, 0,
+                     "deletefile honours NODELETE (ea=sys backend)");
     /* cleanup */
     closevol(&obj, vol);
+
+    if (volsys) {
+        closevol(&obj, volsys);
+    }
+
     unload_volumes(&obj);
     test_plan(test_case_num);
 }

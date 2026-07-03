@@ -800,6 +800,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     struct vol  *vol;
     struct dir  *dir;
     struct path *s_path;
+    struct ofork *of;
     char        *upath;
     int         did;
     int         rc = AFP_OK;
@@ -966,7 +967,18 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             bdestroy(dname);
         }
-    } else if (of_findname(vol, s_path)) {
+    } else if ((of = of_findname(vol, s_path))) {
+        /* This session still holds a tracked fork on the inode. */
+        LOG(log_note, logtype_afpd,
+            "afp_delete(\"%s\"): refused (AFPERR_BUSY): this session still has "
+            "an open fork: refnum %" PRIu16 ", name \"%s\", flags 0x%x"
+            "%s%s%s%s, dev/ino %ju/%ju",
+            upath, of->of_refnum, of_name(of), of->of_flags,
+            (of->of_flags & AFPFORK_DATA) ? " [data]" : "",
+            (of->of_flags & AFPFORK_RSRC) ? " [rsrc]" : "",
+            (of->of_flags & AFPFORK_DIRTY) ? " [dirty]" : "",
+            (of->of_flags & AFPFORK_MODIFIED) ? " [modified]" : "",
+            (uintmax_t)of->key.dev, (uintmax_t)of->key.inode);
         rc = AFPERR_BUSY;
     } else {
         /* it's a file st_valid should always be true

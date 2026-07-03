@@ -68,7 +68,7 @@ static int dsi_peek(DSI *dsi)
     int    len;
     int    maxfd;
     int    ret;
-    LOG(log_debug, logtype_dsi, "dsi_peek");
+    LOG(log_maxdebug, logtype_dsi, "dsi_peek");
     maxfd = dsi->socket + 1;
 
     while (1) {
@@ -116,7 +116,7 @@ static int dsi_peek(DSI *dsi)
 
         if (FD_ISSET(dsi->socket, &writefds)) {
             /* we can write again */
-            LOG(log_debug, logtype_dsi, "dsi_peek: can write again");
+            LOG(log_maxdebug, logtype_dsi, "dsi_peek: can write again");
             break;
         }
 
@@ -139,7 +139,7 @@ static int dsi_peek(DSI *dsi)
                 return -1;
             }
 
-            LOG(log_debug, logtype_dsi, "dsi_peek: read %d bytes", len);
+            LOG(log_maxdebug, logtype_dsi, "dsi_peek: read %d bytes", len);
             dsi->eof += len;
         }
     }
@@ -174,7 +174,7 @@ static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
         }
     }
 
-    LOG(log_debug, logtype_dsi,
+    LOG(log_maxdebug, logtype_dsi,
         "from_buf(read: %u, unread:%u , space left: %u): returning %u",
         dsi->start - dsi->buffer, dsi->eof - dsi->start, dsi->end - dsi->eof, nbe);
     return nbe;
@@ -711,6 +711,7 @@ int dsi_stream_receive(DSI *dsi)
         return 0;
     }
 
-    LOG(log_debug, logtype_dsi, "dsi_stream_receive: DSI cmdlen: %zd", dsi->cmdlen);
+    LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: DSI cmdlen: %zd",
+        dsi->cmdlen);
     return block[1];
 }
