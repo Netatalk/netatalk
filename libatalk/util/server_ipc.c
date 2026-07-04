@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025-2026 Andy Lemin (@andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  * All rights reserved. See COPYRIGHT.
  */
 

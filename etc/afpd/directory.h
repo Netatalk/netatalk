@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
- * Copyright (c) 2025 Andy Lemin (@andylemin)
+ * Copyright (c) 2025 Andy Lemin (andylemin)
  * All Rights Reserved.
  *
  * Permission to use, copy, modify, and distribute this software and

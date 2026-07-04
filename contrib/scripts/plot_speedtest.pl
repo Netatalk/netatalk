@@ -5,7 +5,7 @@
 # Rendering is delegated to gnuplot (gnuplot-nox is sufficient), so only
 # core Perl modules are used.
 #
-# (c) 2026 Andy Lemin (@andylemin)
+# (c) 2026 Andy Lemin (andylemin)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
