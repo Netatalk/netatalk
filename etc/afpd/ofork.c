@@ -772,6 +772,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     int                 ret;
     int                 saved_errno = 0;
     struct dir *dir;
+    bstring forkname = NULL;
     bstring forkpath = NULL;
     adflags = 0;
 
@@ -808,21 +809,31 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     }
 
     if (dir) {
-        forkpath = bformat("%s/%s", bdata(dir->d_fullpath), of_name(ofork));
+        const char *upath = mtoupath(ofork->of_vol, of_name(ofork),
+                                     ofork->of_did, utf8_encoding(obj));
+
+        if (upath) {
+            forkname = bfromcstr(upath);
+
+            if (forkname) {
+                forkpath = bformat("%s/%s", bdata(dir->d_fullpath),
+                                   bdata(forkname));
+            }
+        }
     }
 
     /* Pre-acquire cache pointer before ad_close changes ctime */
     struct dir *cached = NULL;
 
-    if ((ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED)) && dir && forkpath) {
-        char *upath = of_name(ofork);
-        cached = dircache_search_by_name(ofork->of_vol, dir, upath, strnlen(upath,
-                                         CNID_MAX_PATH_LEN));
+    if ((ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED))
+            && dir && forkname && forkpath) {
+        cached = dircache_search_by_name(ofork->of_vol, dir, bdata(forkname),
+                                         blength(forkname));
     }
 
 #ifdef WITH_FCE
 
-    /* Somone has used write_fork, we assume file was changed, register it to file change event api */
+    /* Someone has used write_fork, assume the file changed and register an FCE */
     if ((ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
         fce_register(obj, FCE_FILE_MODIFY, bdata(forkpath), NULL);
     }
@@ -967,11 +978,10 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         cnid_t hint_cnid = (cached && cached->d_did != CNID_INVALID)
                            ? cached->d_did : CNID_INVALID;
 
-        if (hint_cnid == CNID_INVALID) {
-            char *upath = of_name(ofork);
-            size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+        if (hint_cnid == CNID_INVALID && forkname) {
+            size_t ulen = blength(forkname);
             hint_cnid = cnid_get(ofork->of_vol->v_cdb, ofork->of_did,
-                                 upath, ulen);
+                                 bdata(forkname), ulen);
         }
 
         if (hint_cnid != CNID_INVALID) {
@@ -1014,6 +1024,10 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
     if (forkpath) {
         bdestroy(forkpath);
+    }
+
+    if (forkname) {
+        bdestroy(forkname);
     }
 
     if (ret < 0) {
