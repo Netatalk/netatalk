@@ -129,7 +129,7 @@ jobs:
               libsunacl \
               localsearch \
               meson \
-              mysql96-client \
+              mysql97-client \
               openldap26-client \
               perl5 \
               pkgconf \
@@ -209,7 +209,7 @@ jobs:
               libsunacl \
               localsearch \
               meson \
-              mysql96-client \
+              mysql97-client \
               openldap26-client \
               perl5 \
               pkgconf \
