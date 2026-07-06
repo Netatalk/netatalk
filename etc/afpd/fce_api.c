@@ -720,7 +720,7 @@ static void check_saved_close_events(const AFPObj *obj)
  */
 void fce_pending_events(const AFPObj *obj)
 {
-    if (!udp_sockets) {
+    if (!udp_sockets && obj->fce_notify_script == NULL) {
         return;
     }
 
