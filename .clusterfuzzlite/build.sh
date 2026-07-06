@@ -27,6 +27,7 @@ meson setup build \
     -Dwith-acls=false \
     -Dwith-cracklib=false \
     -Dwith-cups=false \
+    -Dwith-fce=false \
     -Dwith-appletalk=false \
     -Dwith-gssapi=false \
     -Dwith-kerberos=false \

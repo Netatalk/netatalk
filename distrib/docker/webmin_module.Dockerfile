@@ -74,6 +74,7 @@ RUN sed -i 's/hide_service_controls=0/hide_service_controls=1/' /netatalk-code/c
     -Dwith-appletalk=true \
     -Dwith-docs= \
     -Dwith-dtrace=false \
+    -Dwith-fce=false \
     -Dwith-init-style=none \
     -Dwith-krbV-uam=false \
     -Dwith-pkgconfdir-path=/etc/netatalk \

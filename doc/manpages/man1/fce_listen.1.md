@@ -47,4 +47,4 @@ Listen to FCE events on localhost port 58585
 
 # See Also
 
-**afpd**(8)
+**afpd**(8), **fce_ev_script**(8)

@@ -1,5 +1,9 @@
 subdir('bin_utils')
 
+if have_fce
+    subdir('scripts')
+endif
+
 if have_appletalk
     subdir('a2boot')
     subdir('timelord')

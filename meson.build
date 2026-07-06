@@ -57,6 +57,7 @@ bindir = prefix / get_option('bindir')
 datadir = prefix / get_option('datadir')
 includedir = prefix / get_option('includedir')
 libdir = prefix / get_option('libdir')
+libexecdir = prefix / get_option('libexecdir')
 mandir = prefix / get_option('mandir')
 sbindir = prefix / get_option('sbindir')
 sysconfdir = prefix / get_option('sysconfdir')
@@ -2512,6 +2513,7 @@ cdata.set('exec_prefix', exec_prefix)
 cdata.set('datadir', datadir)
 cdata.set('homedir', homedir)
 cdata.set('libdir', libdir)
+cdata.set('libexecdir', libexecdir)
 cdata.set('includedir', includedir)
 cdata.set('localstatedir', localstatedir)
 cdata.set('lockfile_path', lockfile_path)
@@ -2698,6 +2700,7 @@ summary_info = {
     'Executable directory': bindir,
     'Header file directory': get_option('prefix') / get_option('includedir'),
     'Library directory': libdir,
+    'Library executable directory': libexecdir,
     'Manual page directory': mandir,
     'System executable directory': sbindir,
     'Package conf directory': pkgconfdir,
