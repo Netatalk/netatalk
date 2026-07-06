@@ -320,7 +320,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
         memcpy(p, user, userlen);
         p += userlen;
         datalen += userlen;
-        remaining -= userlen;
+        remaining -= sizeof(uint16) + userlen;
     }
 
     /* path */
@@ -340,7 +340,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     memcpy(p, path, pathlen);
     p += pathlen;
     datalen += pathlen;
-    remaining -= pathlen;
+    remaining -= sizeof(uint16) + pathlen;
 
     /* optional: source path */
     if (oldpath && packet_info & FCE_EV_INFO_SRCPATH) {
@@ -424,7 +424,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
 
         bstring cmd = bformat("%s -v %d -e %s -i %" PRIu32 "",
                               obj->fce_notify_script,
-                              FCE_PACKET_VERSION,
+                              obj->fce_version,
                               fce_event_names[event],
                               event_id);
 
