@@ -894,9 +894,8 @@ Must not end with a slash. Default: empty
 
 fce notify script = *path* **(G)**
 
-> Script which will be executed for every FCE event. See
-*contrib/scripts/fce_ev_script.sh* in the Netatalk source tree
-for an example script.
+> Script which will be executed for every FCE event. Netatalk installs
+**fce_ev_script**(8) as a notification helper under its libexec directory.
 
 ## Options for ACL handling
 

@@ -77,6 +77,7 @@ COPY contrib/meson.build ./contrib/
 COPY contrib/a2boot/ ./contrib/a2boot/
 COPY contrib/bin_utils/ ./contrib/bin_utils/
 COPY contrib/macipgw/ ./contrib/macipgw/
+COPY contrib/scripts/ ./contrib/scripts/
 COPY contrib/timelord/ ./contrib/timelord/
 COPY distrib/docker/ ./distrib/docker/
 COPY etc/ ./etc/

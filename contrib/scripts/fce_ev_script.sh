@@ -1,6 +1,9 @@
 #!/bin/sh
 
-usage="$(basename $0) [-h] [-v version] [-e event] [-P path] [-S source path] -- FCE sample script
+# Filesystem Change Event reporting helper for the 'fce notify script'
+# afp.conf option.
+
+usage="$(basename "$0") [-h] [-v version] [-e event] [-P path] [-S source path] -- FCE notification helper
 
 where:
     -h  show this help text
@@ -11,9 +14,14 @@ where:
     -u  username
     -p  pid
     -i  event ID
+
+environment:
+    NETATALK_FCE_LOG_FILE    append events to this file instead of syslog
+    NETATALK_FCE_LOGGER      logger command path, default: logger
+    NETATALK_FCE_LOG_TAG     syslog tag, default: netatalk-fce
 "
 
-while getopts ':hs:v:e:P:S:u:p:i:' option; do
+while getopts ':hv:e:P:S:u:p:i:' option; do
     case "$option" in
         h)
             echo "$usage"
@@ -49,23 +57,39 @@ while getopts ':hs:v:e:P:S:u:p:i:' option; do
 done
 shift $((OPTIND - 1))
 
-printf "FCE Event: $event" >> /tmp/fce.log
+message="FCE Event: ${event:-unknown}"
+
 if [ -n "$version" ]; then
-    printf ", protocol: $version" >> /tmp/fce.log
+    message="$message, protocol: $version"
 fi
 if [ -n "$evid" ]; then
-    printf ", ID: $evid" >> /tmp/fce.log
+    message="$message, ID: $evid"
 fi
 if [ -n "$pid" ]; then
-    printf ", pid: $pid" >> /tmp/fce.log
+    message="$message, pid: $pid"
 fi
 if [ -n "$user" ]; then
-    echo -n ", user: $user" >> /tmp/fce.log
+    message="$message, user: $user"
 fi
 if [ -n "$srcpath" ]; then
-    echo -n ", source: $srcpath" >> /tmp/fce.log
+    message="$message, source: $srcpath"
 fi
 if [ -n "$path" ]; then
-    echo -n ", path: $path" >> /tmp/fce.log
+    message="$message, path: $path"
 fi
-printf "\n" >> /tmp/fce.log
+
+if [ -n "$NETATALK_FCE_LOG_FILE" ]; then
+    printf '%s\n' "$message" >> "$NETATALK_FCE_LOG_FILE"
+    exit $?
+fi
+
+logger_cmd="${NETATALK_FCE_LOGGER:-logger}"
+logger_tag="${NETATALK_FCE_LOG_TAG:-netatalk-fce}"
+
+if command -v "$logger_cmd" > /dev/null 2>&1; then
+    "$logger_cmd" -t "$logger_tag" "$message"
+    exit $?
+fi
+
+printf '%s\n' "$message" >&2
+exit 0

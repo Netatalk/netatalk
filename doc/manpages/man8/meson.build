@@ -3,6 +3,12 @@ manfiles = [
     'netatalk',
 ]
 
+if have_fce
+    manfiles += [
+        'fce_ev_script',
+    ]
+endif
+
 if use_dbd_backend
     manfiles += [
         'cnid_dbd',
