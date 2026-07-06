@@ -308,6 +308,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    if (flags & DBD_FLAGS_V2TOEA) {
+        vol->v_flags &= ~AFPVOL_NOV2TOEACONV;
+    }
+
     /* Sanity checks to ensure we can touch this volume */
     if (vol->v_vfs_ea != AFPVOL_EA_AD && vol->v_vfs_ea != AFPVOL_EA_SYS) {
         dbd_log(LOGSTD, "Unknown Extended Attributes option: %u", vol->v_vfs_ea);
