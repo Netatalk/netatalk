@@ -33,7 +33,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
@@ -67,7 +67,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite" >> ${GITHUB_ENV}
@@ -101,7 +101,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-webmin" >> ${GITHUB_ENV}
@@ -135,7 +135,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite-debian" >> ${GITHUB_ENV}
@@ -169,7 +169,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-debug" >> ${GITHUB_ENV}
@@ -212,7 +212,7 @@ jobs:
     steps:
       # Checkout is needed to resolve the local publish-gh-pages action
       - name: Checkout repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Run spectest with flamegraph profiling
         run: |
           docker run --privileged --rm \
@@ -1072,7 +1072,7 @@ jobs:
       aggregates: ${{ steps.lantest-summary.outputs.AGG }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Run Netatalk lantest (CSV output)
         run: |
           # -c (CSV) is passed via $TEST_FLAGS, which the entrypoint prepends
@@ -1229,7 +1229,7 @@ jobs:
       peaks: ${{ steps.speedtest-summary.outputs.PEAKS }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Run Netatalk speedtest (CSV output)
         run: |
           # -c (CSV) and -z (size sweep) are passed via $TEST_FLAGS, which the
