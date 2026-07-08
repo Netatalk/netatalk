@@ -747,7 +747,7 @@ static int ftw_startup(const char *dir,
     data.maxdir = descriptors < 1 ? 1 : descriptors;
     data.actdir = 0;
     data.dirstreams = (struct dir_data **) alloca(data.maxdir
-                      * sizeof(struct dir_data *));
+        * sizeof(struct dir_data *));
     memset(data.dirstreams, '\0', data.maxdir * sizeof(struct dir_data *));
     /* PATH_MAX is always defined when we get here.  */
     data.dirbufsize = MAX(2 * strlen(dir), PATH_MAX);

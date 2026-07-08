@@ -247,7 +247,7 @@ static void translate(charset_t from, charset_t dest, char **option)
 
         if (from) {
             if ((size_t) -1 != (convert_string_allocate(from, dest, *option, -1,
-                                &translated))) {
+                    &translated))) {
                 free(*option);
                 *option = translated;
             }

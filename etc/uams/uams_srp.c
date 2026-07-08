@@ -734,7 +734,7 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
     mpi_to_padded_buf(S_binary, SRP_NBYTES, S);
     size_t S_stripped_len;
     const unsigned char *S_stripped = strip_leading_zeros(S_binary, SRP_NBYTES,
-                                      &S_stripped_len);
+        &S_stripped_len);
 
     if (mgf1_sha1(S_stripped, S_stripped_len, K, sizeof(K)) != 0) {
         LOG(log_error, logtype_uams, "srp_logincont: MGF1 failed");
@@ -748,7 +748,7 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
     /* H(N) — hash of N with leading zeros stripped */
     size_t N_stripped_len;
     const unsigned char *N_stripped = strip_leading_zeros(srp_N_bytes, SRP_NBYTES,
-                                      &N_stripped_len);
+        &N_stripped_len);
     unsigned char H_N[SRP_SHA1_LEN];
 
     if (sha1_multi(H_N, N_stripped, N_stripped_len, NULL) != 0) {
@@ -803,9 +803,9 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
      */
     size_t A_stripped_len, B_stripped_len;
     const unsigned char *A_stripped = strip_leading_zeros(A_buf, SRP_NBYTES,
-                                      &A_stripped_len);
+        &A_stripped_len);
     const unsigned char *B_stripped = strip_leading_zeros(session_B_buf, SRP_NBYTES,
-                                      &B_stripped_len);
+        &B_stripped_len);
     unsigned char M1_expected[SRP_SHA1_LEN];
 
     if (sha1_multi(M1_expected,

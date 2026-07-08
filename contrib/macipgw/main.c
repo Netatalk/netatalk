@@ -206,10 +206,10 @@ macip_options *read_options(const char *conf)
     options->network = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "network", "");
     options->netmask = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "netmask", "");
     options->nameserver = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "nameserver",
-                          "");
+        "");
     options->zone = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "zone", "");
     options->unprivileged_user = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL,
-                                 "unprivileged user", "");
+        "unprivileged user", "");
     iniparser_freedict(config);
     return options;
 }

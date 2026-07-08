@@ -40,7 +40,7 @@ static size_t cjk_iconv(void *cd, char **inbuf, char *end,
 }
 
 size_t cjk_generic_push(size_t (*char_func)(uint8_t *, const ucs2_t *,
-                        size_t *),
+        size_t *),
                         void *cd, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
 {
@@ -101,7 +101,7 @@ size_t cjk_generic_push(size_t (*char_func)(uint8_t *, const ucs2_t *,
 }
 
 size_t cjk_generic_pull(size_t (*char_func)(ucs2_t *, const uint8_t *,
-                        size_t *),
+        size_t *),
                         void *cd, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
 {

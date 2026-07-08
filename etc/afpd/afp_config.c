@@ -168,10 +168,10 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
             size_t zone_len = strnlen(asp_obj->options.zone, MAX_ZONE_LENGTH);
 
             if ((size_t) -1 == (convert_string_allocate(asp_obj->options.unixcharset,
-                                asp_obj->options.maccharset,
-                                asp_obj->options.zone,
-                                zone_len,
-                                &Zone))) {
+                    asp_obj->options.maccharset,
+                    asp_obj->options.zone,
+                    zone_len,
+                    &Zone))) {
                 if ((Zone = strdup(asp_obj->options.zone)) == NULL) {
                     LOG(log_error, logtype_afpd, "malloc: %s", strerror(errno));
                     asp_close(asp);

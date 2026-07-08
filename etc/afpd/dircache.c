@@ -1721,7 +1721,7 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
                 /* Expand to_remove array */
                 if (remove_count >= remove_capacity) {
                     remove_capacity = remove_capacity ? remove_capacity * 2 : 16;
-                    struct dir **tmp = realloc(to_remove, remove_capacity * sizeof(struct dir*));
+                    struct dir **tmp = realloc(to_remove, remove_capacity * sizeof(struct dir *));
 
                     if (!tmp) {
                         LOG(log_error, logtype_afpd,

@@ -59,7 +59,7 @@ extern char			*comcont;
 void compop(void);
 void compush(struct papd_comment *);
 int comswitch(struct papd_comment *, int (*)(struct papfile *, struct papfile *,
-              struct sockaddr_at *));
+        struct sockaddr_at *));
 int comcmp(char *, char *, char *, int);
 struct papd_comment *commatch(char *, char *, struct papd_comment *);
 char *comtoken(char *, char *, char *, char *);

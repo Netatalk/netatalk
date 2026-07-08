@@ -898,8 +898,8 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 
     /* convert charsets */
     if ((size_t) -1 == (outlen = convert_charset(vol->v_volcharset,
-                                 utf8 ? CH_UTF8_MAC : vol->v_maccharset, vol->v_maccharset, u, outlen, mpath,
-                                 sizeof(mpath), &flags))) {
+        utf8 ? CH_UTF8_MAC : vol->v_maccharset, vol->v_maccharset, u, outlen, mpath,
+        sizeof(mpath), &flags))) {
         LOG(log_error, logtype_afpd, "Conversion from %s to %s for %s (%u) failed.",
             vol->v_volcodepage, vol->v_maccodepage, u, ntohl(id));
         goto utompath_error;

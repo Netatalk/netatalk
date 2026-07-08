@@ -992,7 +992,7 @@ EC_CLEANUP:
     return id;
 }
 
-char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
+char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
                           size_t len)
 {
     EC_INIT;

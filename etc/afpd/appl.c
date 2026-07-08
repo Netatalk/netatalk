@@ -182,7 +182,7 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir,
 {
     char	*p;
     int     reserved_space = sizeof(uint16_t) + sizeof(unsigned
-                             char[4]); /* u_short + appltag */
+        char[4]); /* u_short + appltag */
     p = mpath + mpathlen;
     p -= strlen(path);
 

@@ -378,7 +378,7 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
 
     if (obj->options.flags & OPTION_SHARE_RESERV) {
         shmd.f_access = (access & OPENACC_RD ? F_RDACC : 0) | (access & OPENACC_WR ?
-                        F_WRACC : 0);
+            F_WRACC : 0);
 
         if (shmd.f_access == 0)
             /* we must give an access mode, otherwise fcntl will complain */
@@ -828,7 +828,7 @@ static void rfork_invalidate_for_ofork(const struct vol *vol,
     if (parentdir) {
         char *name = of_name(ofork);
         struct dir *cached = dircache_search_by_name(vol, parentdir,
-                             name, strnlen(name, MAXPATHLEN));
+            name, strnlen(name, MAXPATHLEN));
 
         if (cached) {
             dir_modify(vol, cached, &(struct dir_modify_args) {
@@ -969,7 +969,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
         }
 
         err = ad_rtruncate(ofork->of_ad, mtoupath(ofork->of_vol, of_name(ofork),
-                           ofork->of_did, utf8_encoding(obj)), size);
+            ofork->of_did, utf8_encoding(obj)), size);
 
         if (st_size > size) {
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size - size,

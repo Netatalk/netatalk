@@ -431,7 +431,7 @@ struct sockaddr_at	*sat;
         }
 
         for (i = nnets, netinc = 1; i > 0; net = ntohs(nr.nr_firstnet) +
-                ((net - ntohs(nr.nr_firstnet) + netinc) % nnets), i--) {
+            ((net - ntohs(nr.nr_firstnet) + netinc) % nnets), i--) {
             AA_SAT(aa)->sat_addr.s_net = htons(net);
 
             for (j = 0, nodeinc = time.tv_sec | 1; j < 256;

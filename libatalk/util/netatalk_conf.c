@@ -1265,7 +1265,7 @@ static struct vol *creatvol(AFPObj *obj,
         }
 
         if (hostaccessvol(obj, section, getoption_str(obj->iniconfig, section,
-                          "hosts deny", preset, NULL)) == 1) {
+                "hosts deny", preset, NULL)) == 1) {
             LOG(log_debug, logtype_afpd,
                 "creatvol: host is in hosts deny list for volume \"%s\"",
                 section);
@@ -1273,7 +1273,7 @@ static struct vol *creatvol(AFPObj *obj,
         }
 
         if (hostaccessvol(obj, section, getoption_str(obj->iniconfig, section,
-                          "hosts allow", preset, NULL)) == 0) {
+                "hosts allow", preset, NULL)) == 0) {
             LOG(log_debug, logtype_afpd,
                 "creatvol: host is NOT in hosts allow list for volume \"%s\"",
                 section);
@@ -1619,7 +1619,7 @@ static struct vol *creatvol(AFPObj *obj,
             (accessvol(obj, getoption_str(obj->iniconfig, section, "rolist", preset, NULL),
                        pwd->pw_name) == 1
              || accessvol(obj, getoption_str(obj->iniconfig, section, "rwlist", preset,
-                          NULL), pwd->pw_name) == 0)
+                     NULL), pwd->pw_name) == 0)
        ) {
         volume->v_flags |= AFPVOL_RO;
     }
@@ -2817,7 +2817,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->logfile = getoption_strdup(config, INISEC_GLOBAL, "log file", NULL,
                                         NULL);
     options->log_us_timestamp = getoption_bool(config, INISEC_GLOBAL,
-                                "log microseconds", NULL, 1);
+        "log microseconds", NULL, 1);
     setuplog(options->logconfig, options->logfile, options->log_us_timestamp);
 
     /* "server options" boolean options */
@@ -2899,44 +2899,44 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 
     /* figure out options w values */
     options->loginmesg      = getoption_strdup(config, INISEC_GLOBAL,
-                              "login message",  NULL, NULL);
+        "login message",  NULL, NULL);
     options->guest          = getoption_strdup(config, INISEC_GLOBAL,
-                              "guest account",  NULL, "nobody");
+        "guest account",  NULL, "nobody");
     options->extmapfile     = getoption_strdup(config, INISEC_GLOBAL, "extmap file",
-                              NULL, _PATH_CONFDIR "extmap.conf");
+        NULL, _PATH_CONFDIR "extmap.conf");
     options->passwdfile     = getoption_strdup(config, INISEC_GLOBAL, "passwd file",
-                              NULL, _PATH_AFPDPWFILE);
+        NULL, _PATH_AFPDPWFILE);
     options->srppasswdfile  = getoption_strdup(config, INISEC_GLOBAL,
-                              "srp passwd file",
-                              NULL, _PATH_AFPDSRPPWFILE);
+        "srp passwd file",
+        NULL, _PATH_AFPDSRPPWFILE);
     options->uampath        = getoption_strdup(config, INISEC_GLOBAL, "uam path",
-                              NULL, _PATH_AFPDUAMPATH);
+        NULL, _PATH_AFPDUAMPATH);
     options->uamlist        = getoption_strdup(config, INISEC_GLOBAL, "uam list",
-                              NULL, "uams_dhx2.so");
+        NULL, "uams_dhx2.so");
     options->port           = getoption_strdup(config, INISEC_GLOBAL, "afp port",
-                              NULL, "548");
+        NULL, "548");
     options->signatureopt   = getoption_strdup(config, INISEC_GLOBAL, "signature",
-                              NULL, "");
+        NULL, "");
     options->k5service      = getoption_strdup(config, INISEC_GLOBAL, "k5 service",
-                              NULL, NULL);
+        NULL, NULL);
     options->k5realm        = getoption_strdup(config, INISEC_GLOBAL, "k5 realm",
-                              NULL, NULL);
+        NULL, NULL);
     options->listen         = getoption_strdup(config, INISEC_GLOBAL, "afp listen",
-                              NULL, NULL);
+        NULL, NULL);
     options->interfaces     = getoption_strdup(config, INISEC_GLOBAL,
-                              "afp interfaces", NULL, NULL);
+        "afp interfaces", NULL, NULL);
     options->ntdomain       = getoption_strdup(config, INISEC_GLOBAL, "nt domain",
-                              NULL, NULL);
+        NULL, NULL);
     options->addomain       = getoption_strdup(config, INISEC_GLOBAL, "ad domain",
-                              NULL, NULL);
+        NULL, NULL);
     options->ntseparator    = getoption_strdup(config, INISEC_GLOBAL,
-                              "nt separator",   NULL, NULL);
+        "nt separator",   NULL, NULL);
     options->legacyicon     = getoption_strdup(config, INISEC_GLOBAL, "legacy icon",
-                              NULL, "");
+        NULL, "");
     options->mimicmodel     = getoption_strdup(config, INISEC_GLOBAL, "mimic model",
-                              NULL, NULL);
+        NULL, NULL);
     options->servername     = getoption_strdup(config, INISEC_GLOBAL, "server name",
-                              NULL, NULL);
+        NULL, NULL);
 
     if (options->servername == NULL) {
         options->servername = getoption_strdup(config, INISEC_GLOBAL, "zeroconf name",
@@ -2949,19 +2949,19 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
     options->ignored_attr   = getoption_strdup(config, INISEC_GLOBAL,
-                              "ignored attributes", NULL, NULL);
+        "ignored attributes", NULL, NULL);
     options->cnid_mysql_host = getoption_strdup(config, INISEC_GLOBAL,
-                               "cnid mysql host", NULL, NULL);
+        "cnid mysql host", NULL, NULL);
     options->cnid_mysql_user = getoption_strdup(config, INISEC_GLOBAL,
-                               "cnid mysql user", NULL, NULL);
+        "cnid mysql user", NULL, NULL);
     options->cnid_mysql_pw  = getoption_strdup(config, INISEC_GLOBAL,
-                              "cnid mysql pw", NULL, NULL);
+        "cnid mysql pw", NULL, NULL);
     options->cnid_mysql_db  = getoption_strdup(config, INISEC_GLOBAL,
-                              "cnid mysql db",  NULL, NULL);
+        "cnid mysql db",  NULL, NULL);
     options->connections    = getoption_int(config, INISEC_GLOBAL,
                                             "max connections", NULL, 200);
     options->passwdminlen   = (unsigned char) getoption_int(config, INISEC_GLOBAL,
-                              "passwd minlen", NULL, 0);
+        "passwd minlen", NULL, 0);
     options->tickleval      = getoption_int(config, INISEC_GLOBAL, "tickleval",
                                             NULL, 30);
     options->timeout        = getoption_int(config, INISEC_GLOBAL, "timeout",
@@ -2969,9 +2969,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->dsireadbuf     = getoption_int(config, INISEC_GLOBAL, "dsireadbuf",
                                             NULL, 12);
     options->server_quantum = getoption_uint32_strict(config, INISEC_GLOBAL,
-                              "server quantum", NULL,
-                              DSI_SERVQUANT_MIN, DSI_SERVQUANT_MAX,
-                              DSI_SERVQUANT_DEF);
+        "server quantum", NULL,
+        DSI_SERVQUANT_MIN, DSI_SERVQUANT_MAX,
+        DSI_SERVQUANT_DEF);
     options->volnamelen     = getoption_int(config, INISEC_GLOBAL, "volnamelen",
                                             NULL, 80);
     options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircache size",
@@ -3010,14 +3010,14 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
     /* Parse dircache validation parameter */
     options->dircache_validation_freq = getoption_int(config, INISEC_GLOBAL,
-                                        "dircache validation freq", NULL,
-                                        DEFAULT_DIRCACHE_VALIDATION_FREQ);
+        "dircache validation freq", NULL,
+        DEFAULT_DIRCACHE_VALIDATION_FREQ);
     /* Tier 2: Resource Fork data cache configuration.
      * Hard caps defined in globals.h: RFORK_BUDGET_MAX_KB, RFORK_ENTRY_MAX_KB.
      * On 32-bit platforms, clamp to SIZE_MAX / 1024 to prevent overflow
      * when converting KB to bytes in dircache_init(). */
     options->dircache_rfork_budget = getoption_int(config, INISEC_GLOBAL,
-                                     "dircache rfork budget", NULL, 0);
+        "dircache rfork budget", NULL, 0);
 
     if (options->dircache_rfork_budget < 0) {
         options->dircache_rfork_budget = 0;
@@ -3039,7 +3039,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 
 #endif
     options->dircache_rfork_maxentry = getoption_int(config, INISEC_GLOBAL,
-                                       "dircache rfork maxsize", NULL, 1024);
+        "dircache rfork maxsize", NULL, 1024);
 
     if (options->dircache_rfork_maxentry < 0) {
         options->dircache_rfork_maxentry = 0;

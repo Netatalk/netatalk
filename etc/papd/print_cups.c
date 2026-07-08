@@ -201,9 +201,9 @@ const char *cups_get_printer_ppd(char *name)
     const char *make_model = cupsGetOption("printer-make-and-model",
                                            dest->num_options, dest->options);
     const char *printer_uri_supported = cupsGetOption("printer-uri-supported",
-                                        dest->num_options, dest->options);
+        dest->num_options, dest->options);
     const char *printer_is_temporary = cupsGetOption("printer-is-temporary",
-                                       dest->num_options, dest->options);
+        dest->num_options, dest->options);
 
     /* Is this a DNS-SD discovered printer? Connect directly to it. */
     if (!printer_uri_supported || !strcmp(printer_is_temporary, "true")) {
@@ -389,9 +389,9 @@ cups_get_printer_status(struct printer *pr)
      * Collect the needed attributes...
      */
     const char *printer_uri_supported = cupsGetOption("printer-uri-supported",
-                                        dest->num_options, dest->options);
+        dest->num_options, dest->options);
     const char *printer_is_temporary = cupsGetOption("printer-is-temporary",
-                                       dest->num_options, dest->options);
+        dest->num_options, dest->options);
     memset(pr->p_status, 0, sizeof(pr->p_status));
 
     /* DNS-SD discovered IPP printer: Get status directly from printer */

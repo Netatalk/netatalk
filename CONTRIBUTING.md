@@ -189,8 +189,8 @@ With automated enforcement of the style guide, the manual overhead of fiddling w
 
 ### Automatic formatting
 
-The style guide is automatically enforced with [astyle](https://gitlab.com/saalen/astyle) v3.6.17 or later.
-and an `.astylerc` options file.
+The style guide is automatically enforced with [astyle](https://gitlab.com/saalen/astyle) v3.6.17 or later
+and an `.astylerc` formatting options file.
 Before submitting new code, run `astyle --project --recursive '*.h' '*.c' '*.cc'` in the root of the netatalk source tree.
 You can also use the `./contrib/scripts/codefmt.sh` convenience script to the same effect.
 

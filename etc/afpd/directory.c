@@ -2008,7 +2008,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
     /* Defensive NULL checks - return error instead of asserting */
     if (vol == NULL || dir == NULL) {
         LOG(log_error, logtype_afpd, "movecwd: NULL parameter (vol:%p, dir:%p)",
-            (void*)vol, (void*)dir);
+            (void *)vol, (void *)dir);
         afp_errno = AFPERR_PARAM;
         return -1;
     }

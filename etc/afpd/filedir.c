@@ -174,7 +174,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         *(rbuf + 2 * sizeof(uint16_t)) = (char) FILDIRBIT_ISDIR;
     } else {
         if (fbitmap && AFP_OK != (ret = getfilparams(obj, vol, fbitmap, s_path, curdir,
-                                        rbuf + 3 * sizeof(uint16_t), &buflen, 0))) {
+            rbuf + 3 * sizeof(uint16_t), &buflen, 0))) {
             return ret;
         }
 
@@ -327,7 +327,7 @@ static int moveandrename(const AFPObj *obj,
         }
 
         size_t oldunixname_len = oldunixname ? strnlen(oldunixname,
-                                 CNID_MAX_PATH_LEN) : 0;
+            CNID_MAX_PATH_LEN) : 0;
         AFP_CNID_START("cnid_get");
         id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, oldunixname_len);
         AFP_CNID_DONE();

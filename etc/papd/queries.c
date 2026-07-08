@@ -740,7 +740,7 @@ int cq_rbilogin(struct papfile *in, struct papfile *out,
             }
 
             if (!*uamtype || (papd_uam = auth_uamfind(UAM_SERVER_PRINTAUTH,
-                                         uamtype, strlen(uamtype))) == NULL) {
+                uamtype, strlen(uamtype))) == NULL) {
                 LOG(log_info, logtype_papd, "Could not find uam: %s", uamtype);
                 append(out, rbiloginbad, strlen(rbiloginbad));
                 append(out, rbiloginerrstr, strlen(rbiloginerrstr));
