@@ -25,7 +25,10 @@ permissions:
   contents: read
 
 env:
-  STUFFIT_RS_COMMIT: 16336d7abff5c925e8081869bfa0dd6ee27f0658
+  CMARK_TARBALL_URL: https://github.com/commonmark/cmark/archive/refs/tags/0.31.2.tar.gz
+  INIPARSER_TARBALL_URL: https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
+  SMARTOS_BOOTSTRAP_URL: https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
+  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.1.8.tar.gz
 
 jobs:
   spectest-dflybsd:
@@ -46,8 +49,10 @@ jobs:
             set -e
             pkg install -y \
               avahi \
+              curl \
               cmark \
               db5 \
+              gmake \
               iniparser \
               libev \
               file \
@@ -60,15 +65,25 @@ jobs:
               py39-gdbm \
               py39-sqlite3 \
               py39-tkinter \
+              rust \
               sqlite \
               talloc \
               xapian-core
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
+            mkdir -p /tmp/stuffit-rs
+            tar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
+            cd /tmp/stuffit-rs
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/usr/local
           run: |
             set -e
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig
             meson setup build \
               -Dbuildtype=debugoptimized \
               -Dwith-appletalk=true \
               -Dwith-eventloop=libev \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -117,6 +132,7 @@ jobs:
               avahi \
               bison \
               cmark \
+              curl \
               db5 \
               dconf \
               flex \
@@ -137,15 +153,14 @@ jobs:
               sqlite3 \
               talloc \
               xapian-core
-          run: |
-            set -e
-            repo_dir=$(pwd)
-            git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
+            mkdir -p /tmp/stuffit-rs
+            tar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
             cd /tmp/stuffit-rs
-            git checkout "${{ env.STUFFIT_RS_COMMIT }}"
             cargo build --release --locked -p stuffit-ffi
             gmake -C stuffit-ffi install-files PREFIX=/usr/local
-            cd "$repo_dir"
+          run: |
+            set -e
             export LD_LIBRARY_PATH=/usr/local/lib
             export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig
             meson setup build \
@@ -197,6 +212,7 @@ jobs:
               avahi \
               bison \
               cmark \
+              curl \
               db5 \
               dconf \
               flex \
@@ -217,15 +233,14 @@ jobs:
               sqlite3 \
               talloc \
               xapian-core
-          run: |
-            set -e
-            repo_dir=$(pwd)
-            git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
+            mkdir -p /tmp/stuffit-rs
+            tar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
             cd /tmp/stuffit-rs
-            git checkout "${{ env.STUFFIT_RS_COMMIT }}"
             cargo build --release --locked -p stuffit-ffi
             gmake -C stuffit-ffi install-files PREFIX=/usr/local
-            cd "$repo_dir"
+          run: |
+            set -e
             export LD_LIBRARY_PATH=/usr/local/lib
             export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig
             meson setup build \
@@ -284,8 +299,10 @@ jobs:
             export PKG_PATH="https://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All"
             pkg_add \
               cmark \
+              curl \
               db5 \
               gcc13 \
+              gmake \
               heimdal \
               iniparser \
               libev \
@@ -295,17 +312,27 @@ jobs:
               mysql-client \
               perl \
               pkg-config \
+              rust \
               sqlite3 \
               talloc \
               xapian
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
+            mkdir -p /tmp/stuffit-rs
+            tar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
+            cd /tmp/stuffit-rs
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/usr/local
           run: |
             set -e
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             meson setup build \
               -Dbuildtype=debugoptimized \
               -Dwith-appletalk=true \
               -Dwith-cups-pap-backend=true \
               -Dwith-dtrace=false \
               -Dwith-eventloop=libev \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -356,10 +383,12 @@ jobs:
             pkg_add -I \
               avahi \
               cmark \
+              curl \
               db-4.6.21p8v0 \
               dbus \
               git \
               gmake \
+              gtar-1.35p1 \
               heimdal \
               iniparser \
               libev \
@@ -373,15 +402,14 @@ jobs:
               rust \
               sqlite3 \
               xapian-core
-          run: |
-            set -e
-            repo_dir=$(pwd)
-            git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
+            mkdir -p /tmp/stuffit-rs
+            gtar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
             cd /tmp/stuffit-rs
-            git checkout "${{ env.STUFFIT_RS_COMMIT }}"
             cargo build --release --locked -p stuffit-ffi
             gmake -C stuffit-ffi install-files PREFIX=/usr/local
-            cd "$repo_dir"
+          run: |
+            set -e
             export LD_LIBRARY_PATH=/usr/local/lib
             export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             meson setup build \
@@ -439,32 +467,44 @@ jobs:
             # containing a pkgin package manager and a /opt/local prefix.
             # The bootstrap is used to install the required dependencies for building netatalk on OmniOS.
             # This step can be skipped if the bootstrap is already installed.
-            curl -o bootstrap.tar.gz https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
+            curl --proto '=https' --location --fail -o bootstrap.tar.gz "${{ env.SMARTOS_BOOTSTRAP_URL }}"
             tar -zxpf bootstrap.tar.gz -C /
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             pkgin -y install \
               avahi \
               cmark \
               dconf \
+              gmake \
               gnome-tracker \
+              gtar-base \
               iniparser \
               libev \
               file \
               libgcrypt \
               meson \
               mysql-client \
+              rust \
               sqlite3 \
               talloc \
               xapian
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
+            mkdir -p /tmp/stuffit-rs
+            gtar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
+            cd /tmp/stuffit-rs
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/opt/local
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            export LD_LIBRARY_PATH=/opt/local/lib
+            export PKG_CONFIG_PATH=/opt/local/lib/pkgconfig
             meson setup build \
               --prefix=/opt/local \
               -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-eventloop=libev \
               -Dwith-ldap-path=/opt/local \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -513,6 +553,7 @@ jobs:
               compress/gzip \
               database/sqlite-3 \
               developer/build/cmake \
+              developer/build/gnu-make \
               developer/build/meson \
               developer/build/ninja \
               developer/build/pkg-config \
@@ -522,22 +563,20 @@ jobs:
               runtime/perl \
               system/library/security/libgcrypt \
               web/curl
-            curl --location -o iniparser.tar.gz \
-              https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
-            # tar on illumos is too old to handle git tarballs cleanly
-            set +e
-            tar xzf iniparser.tar.gz
-            set -e
-            cd iniparser-v4.2.6
+            curl --proto '=https' --location --fail -o iniparser.tar.gz "${{ env.INIPARSER_TARBALL_URL }}"
+            mkdir -p /tmp/iniparser
+            gtar -xzf iniparser.tar.gz -C /tmp/iniparser --strip-components=1
+            cd /tmp/iniparser
             mkdir build
             cd build
             cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
             make all
             make install
-            cd ../..
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/amd64/pkgconfig
             meson setup build \
               -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
@@ -590,7 +629,11 @@ jobs:
           prepare: |
             set -e
             pkg install \
+              archiver/gnu-tar \
               cmake \
+              developer/build/gnu-make \
+              developer/rust/cargo \
+              developer/rust/rustc \
               gcc \
               libevent \
               libgcrypt \
@@ -598,34 +641,39 @@ jobs:
               ninja \
               pkg-config \
               sqlite-3
-            curl --location -o cmark.tar.gz \
-              https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
-            curl --location -o iniparser.tar.gz \
-              https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
-            # tar on Solaris is too old to handle git tarballs cleanly
-            set +e
-            tar xzf cmark.tar.gz
-            tar xzf iniparser.tar.gz
-            set -e
-            cd cmark-0.31.1
+            curl --proto '=https' --location --fail -o cmark.tar.gz "${{ env.CMARK_TARBALL_URL }}"
+            curl --proto '=https' --location --fail -o iniparser.tar.gz "${{ env.INIPARSER_TARBALL_URL }}"
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
+            mkdir -p /tmp/cmark
+            gtar -xzf cmark.tar.gz -C /tmp/cmark --strip-components=1
+            mkdir -p /tmp/iniparser
+            gtar -xzf iniparser.tar.gz -C /tmp/iniparser --strip-components=1
+            mkdir -p /tmp/stuffit-rs
+            gtar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
+            cd /tmp/cmark
             cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr
             cmake --build build
             cmake --install build
-            cd ..
-            cd iniparser-v4.2.6
+            cd /tmp/iniparser
             mkdir build
             cd build
             cmake ..
             make all
             make install
             cd ../..
+            cd /tmp/stuffit-rs
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/usr/local
           run: |
             set -e
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/amd64/pkgconfig
             meson setup build \
               --prefix=/usr/local \
               -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-iniparser-path=/usr/local \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build

@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  STUFFIT_RS_COMMIT: 16336d7abff5c925e8081869bfa0dd6ee27f0658
+  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.1.8.tar.gz
   LD_LIBRARY_PATH: /usr/local/lib
   PKG_CONFIG_PATH: /usr/local/lib/pkgconfig
 
@@ -57,7 +57,6 @@ jobs:
             dconf \
             flex \
             file-dev \
-            git \
             gcc \
             glib \
             iniparser-dev \
@@ -85,9 +84,10 @@ jobs:
             xapian-core-dev
       - name: Install stuffit-ffi
         run: |
-          git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+          curl --proto '=https' --location --fail -o /tmp/stuffit-rs.tar.gz "$STUFFIT_RS_TARBALL_URL"
+          mkdir -p /tmp/stuffit-rs
+          tar -xzf /tmp/stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
           cd /tmp/stuffit-rs
-          git checkout "$STUFFIT_RS_COMMIT"
           cargo build --release --locked -p stuffit-ffi
           make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
@@ -141,12 +141,12 @@ jobs:
             cmark-gfm \
             cracklib \
             cups \
+            curl \
             db \
             dconf \
             flex \
             file \
             gcc \
-            git \
             iniparser \
             libev \
             localsearch \
@@ -163,9 +163,10 @@ jobs:
             xapian-core
       - name: Install stuffit-ffi
         run: |
-          git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+          curl --proto '=https' --location --fail -o /tmp/stuffit-rs.tar.gz "$STUFFIT_RS_TARBALL_URL"
+          mkdir -p /tmp/stuffit-rs
+          tar -xzf /tmp/stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
           cd /tmp/stuffit-rs
-          git checkout "$STUFFIT_RS_COMMIT"
           cargo build --release --locked -p stuffit-ffi
           make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
@@ -214,9 +215,11 @@ jobs:
           apt-get update
           apt-get install --assume-yes --no-install-recommends \
             bison \
+            cargo \
             ca-certificates \
             cmark-gfm \
             cracklib-runtime \
+            curl \
             dconf-cli \
             file \
             flex \
@@ -244,6 +247,7 @@ jobs:
             libtracker-sparql-3.0-dev \
             libwrap0-dev \
             libxapian-dev \
+            make \
             meson \
             ninja-build \
             quota \
@@ -252,6 +256,14 @@ jobs:
             tracker \
             tracker-miner-fs \
             valgrind
+      - name: Install stuffit-ffi
+        run: |
+          curl --proto '=https' --location --fail -o /tmp/stuffit-rs.tar.gz "$STUFFIT_RS_TARBALL_URL"
+          mkdir -p /tmp/stuffit-rs
+          tar -xzf /tmp/stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
+          cd /tmp/stuffit-rs
+          cargo build --release --locked -p stuffit-ffi
+          make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
         run: |
           meson setup build \
@@ -262,6 +274,7 @@ jobs:
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-sysv,systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk \
+            -Dwith-stuffit=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
       - name: Build
@@ -304,12 +317,12 @@ jobs:
             cargo \
             chkconfig \
             cracklib-devel \
+            curl \
             cups-devel \
             dbus-devel \
             dconf \
             flex \
             gcc-c++ \
-            git \
             glib2-devel \
             iniparser-devel \
             krb5-devel \
@@ -338,9 +351,10 @@ jobs:
             xapian-core-devel
       - name: Install stuffit-ffi
         run: |
-          git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+          curl --proto '=https' --location --fail -o /tmp/stuffit-rs.tar.gz "$STUFFIT_RS_TARBALL_URL"
+          mkdir -p /tmp/stuffit-rs
+          tar -xzf /tmp/stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
           cd /tmp/stuffit-rs
-          git checkout "$STUFFIT_RS_COMMIT"
           cargo build --release --locked -p stuffit-ffi
           make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
@@ -391,9 +405,11 @@ jobs:
           apt-get update
           apt-get install --assume-yes --no-install-recommends \
             bison \
+            cargo \
             ca-certificates \
             cmark-gfm \
             cracklib-runtime \
+            curl \
             dconf-cli \
             file \
             flex \
@@ -420,6 +436,7 @@ jobs:
             libtracker-sparql-3.0-dev \
             libwrap0-dev \
             libxapian-dev \
+            make \
             meson \
             ninja-build \
             quota \
@@ -427,6 +444,14 @@ jobs:
             tcpd \
             tracker \
             tracker-miner-fs
+      - name: Install stuffit-ffi
+        run: |
+          curl --proto '=https' --location --fail -o /tmp/stuffit-rs.tar.gz "$STUFFIT_RS_TARBALL_URL"
+          mkdir -p /tmp/stuffit-rs
+          tar -xzf /tmp/stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
+          cd /tmp/stuffit-rs
+          cargo build --release --locked -p stuffit-ffi
+          make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
         run: |
           meson setup build \
@@ -435,6 +460,7 @@ jobs:
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
+            -Dwith-stuffit=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
       - name: Build
