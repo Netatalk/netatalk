@@ -22,7 +22,7 @@ jobs:
     name: Code Formatting
     runs-on: ubuntu-latest
     container:
-      image: alpine:3.23.2
+      image: alpine:3.24.1
     steps:
       - name: Install dependencies
         run: |
@@ -30,6 +30,7 @@ jobs:
             build-base \
             ca-certificates \
             cmake \
+            curl \
             git \
             muon \
             nodejs \
@@ -37,11 +38,19 @@ jobs:
             perl-tidy \
             shfmt \
             yamlfmt
-          npm install --global --ignore-scripts markdownlint-cli2@0.22.0
-      - name: Build astyle 3.6.14 from source
+          curl --proto '=https' --location --fail -o /tmp/markdownlint-cli2.tgz \
+            https://registry.npmjs.org/markdownlint-cli2/-/markdownlint-cli2-0.22.0.tgz
+          echo '98e0bd058fd71ad757dccf67dc080445defd174f92ef0d7cc81053348438e77b08f3b7ad65fa75cf879a8ea48c57bd026236f129ee64b4abd3d870a9bdc5b1f7  /tmp/markdownlint-cli2.tgz' \
+            | sha512sum -c -
+          npm install --global --ignore-scripts /tmp/markdownlint-cli2.tgz
+      - name: Build astyle from source
         run: |
-          git clone --depth 1 --branch 3.6.14 \
-            https://gitlab.com/saalen/astyle.git /tmp/astyle
+          curl --proto '=https' --location --fail -o /tmp/astyle.tar.gz \
+            https://gitlab.com/saalen/astyle/-/archive/3.6.18/astyle-3.6.18.tar.gz
+          echo '3cf671a726e9b14e75fd9ad862dc6b5500f948a12700bc842e9bd4bc3a9a9915  /tmp/astyle.tar.gz' \
+            | sha256sum -c -
+          mkdir -p /tmp/astyle
+          tar -xzf /tmp/astyle.tar.gz -C /tmp/astyle --strip-components=1
           cmake -S /tmp/astyle -B /tmp/astyle/build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr/local
