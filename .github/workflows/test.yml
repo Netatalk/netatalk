@@ -38,9 +38,9 @@ jobs:
             shfmt \
             yamlfmt
           npm install --global --ignore-scripts markdownlint-cli2@0.22.0
-      - name: Build astyle 3.6.14 from source
+      - name: Build astyle 3.6.17 from source
         run: |
-          git clone --depth 1 --branch 3.6.14 \
+          git clone --depth 1 --branch 3.6.17 \
             https://gitlab.com/saalen/astyle.git /tmp/astyle
           cmake -S /tmp/astyle -B /tmp/astyle/build \
             -DCMAKE_BUILD_TYPE=Release \

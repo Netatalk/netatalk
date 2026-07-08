@@ -16,6 +16,7 @@
 --ignore-exclude-errors-x
 --indent=spaces=4
 --max-code-length=80
+--max-code-length-mode=ignore-side-comments
 --pad-comma
 --pad-header
 --pad-oper
