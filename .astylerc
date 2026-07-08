@@ -13,9 +13,14 @@
 --exclude=libatalk/unicode/precompose.h
 --exclude=libatalk/unicode/utf16_case.c
 --exclude=libatalk/unicode/utf16_casetable.h
+# workaround for astyle bug:
+# https://gitlab.com/saalen/astyle/-/work_items/111
+--exclude=etc/spotlight/xapian/sl_xapian.h
 --ignore-exclude-errors-x
 --indent=spaces=4
 --max-code-length=80
+--max-code-length-mode=ignore-side-comments
+--max-continuation-indent=60
 --pad-comma
 --pad-header
 --pad-oper
