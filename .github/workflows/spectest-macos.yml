@@ -21,7 +21,7 @@ env:
   AFP_USER: atalk1
   AFP_USER2: atalk2
   AFP_GROUP: afpusers
-  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.1.8.tar.gz
+  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.2.0.tar.gz
   DYLD_LIBRARY_PATH: /opt/homebrew/lib
   PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig
 

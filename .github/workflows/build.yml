@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 env:
-  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.1.8.tar.gz
+  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.2.0.tar.gz
   LD_LIBRARY_PATH: /usr/local/lib
   PKG_CONFIG_PATH: /usr/local/lib/pkgconfig
 
