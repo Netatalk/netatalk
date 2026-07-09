@@ -1032,14 +1032,14 @@ jobs:
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
-            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_dhx.so" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so uams_dhx.so uams_dhx2.so uams_srp.so" \
             -e TESTSUITE="login" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-  afp-logintest-afp21:
-    name: AFP login test AFP 2.1 - Alpine
+  afp-logintest-afp33:
+    name: AFP login test AFP 3.3 - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -1051,10 +1051,87 @@ jobs:
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so uams_dhx.so uams_dhx2.so uams_srp.so" \
+            -e TESTSUITE="login" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="6" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-logintest-afp32:
+    name: AFP login test AFP 3.2 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so uams_dhx.so uams_dhx2.so" \
+            -e TESTSUITE="login" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="5" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-logintest-afp31:
+    name: AFP login test AFP 3.1 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so uams_dhx.so uams_dhx2.so" \
+            -e TESTSUITE="login" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="4" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-logintest-afp30:
+    name: AFP login test AFP 3.0 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so uams_dhx.so" \
+            -e TESTSUITE="login" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="3" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-logintest-afp22:
+    name: AFP login test AFP 2.2 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so" \
             -e INSECURE_AUTH="1" \
             -e TESTSUITE="login" \
             -e VERBOSE="1" \
-            -e AFP_VERSION="1" \
+            -e AFP_VERSION="2" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   latencygraph-lantest:

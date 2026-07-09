@@ -4,6 +4,12 @@ if threads.found()
     afptest_external_deps += threads
 endif
 
+enable_testsuite_uams = get_option('with-testsuite-uams')
+
+if enable_testsuite_uams
+    testsuite_libafpclient = dependency('libafpclient', required: false)
+endif
+
 libafptest_sources = [
     'adoublehelper.c',
     'afpclient.c',
@@ -81,12 +87,36 @@ executable(
 
 login_test_sources = [
     'logintest.c',
+    'logintest_dsi.c',
 ]
+
+login_test_deps = []
+login_test_c_args = []
+
+if enable_testsuite_uams
+    if testsuite_libafpclient.found()
+        login_test_sources += [
+            'logintest_uam.c',
+            'uamtest_libafpclient.c',
+        ]
+        login_test_deps += testsuite_libafpclient
+        if threads.found()
+            login_test_deps += threads
+        endif
+        login_test_c_args += ['-DHAVE_TESTSUITE_LIBAFPCLIENT=1']
+    else
+        warning(
+            'libafpclient-backed UAM tests requested but libafpclient was not found',
+        )
+    endif
+endif
 
 executable(
     'afp_logintest',
     login_test_sources,
     include_directories: root_includes,
+    dependencies: login_test_deps,
+    c_args: login_test_c_args,
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,

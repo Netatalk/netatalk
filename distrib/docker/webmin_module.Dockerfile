@@ -13,7 +13,6 @@ ARG RUN_DEPS="\
     "
 ARG BUILD_DEPS="\
     build-essential \
-    curl \
     file \
     libdb-dev \
     libevent-dev \
@@ -36,12 +35,11 @@ ENV BUILD_DEPS=$BUILD_DEPS
 ENV PERLLIB=/usr/share/webmin
 
 ARG DEBIAN_FRONTEND=noninteractive
+ADD "https://raw.githubusercontent.com/webmin/webmin/${WEBMIN_COMMIT}/webmin-setup-repo.sh" webmin-setup-repo.sh
 RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends \
     $RUN_DEPS \
     $BUILD_DEPS \
-&&  curl --fail --proto '=https' --show-error --location -o webmin-setup-repo.sh \
-    "https://raw.githubusercontent.com/webmin/webmin/${WEBMIN_COMMIT}/webmin-setup-repo.sh" \
 &&  printf '%s  webmin-setup-repo.sh\n' "${WEBMIN_SETUP_REPO_SHA256}" | sha256sum -c - \
 &&  sh webmin-setup-repo.sh --force \
 &&  apt-get install --yes --no-install-recommends webmin=${WEBMIN_VERSION} \

@@ -9,6 +9,7 @@ ARG RUN_DEPS="\
     glib \
     iniparser \
     krb5 \
+    libedit \
     libevent \
     libgcrypt \
     linux-pam \
@@ -26,14 +27,17 @@ ARG BUILD_DEPS="\
     acl-dev \
     avahi-dev \
     bison \
+    ca-certificates \
     cups-dev \
     db-dev \
     dbus-dev \
     build-base \
     flex \
     gcc \
+    gnupg \
     iniparser-dev \
     krb5-dev \
+    libedit-dev \
     libevent-dev \
     libgcrypt-dev \
     linux-pam-dev \
@@ -45,6 +49,7 @@ ARG BUILD_DEPS="\
     sqlite-dev \
     talloc-dev \
     tinysparql-dev \
+    xz \
     "
 
 FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS build
@@ -58,6 +63,32 @@ RUN apk update \
 &&  apk add --no-cache \
     $RUN_DEPS \
     $BUILD_DEPS
+
+WORKDIR /netatalk-client-code
+ADD "https://netatalk.io/NetatalkDistributionPublicKey.asc" netatalk-distribution.asc
+ADD "https://github.com/Netatalk/netatalk-client/releases/download/0.9.5/netatalk-client-0.9.5.tar.xz" netatalk-client.tar.xz
+ADD "https://github.com/Netatalk/netatalk-client/releases/download/0.9.5/netatalk-client-0.9.5.tar.xz.asc" netatalk-client.tar.xz.asc
+RUN gpg --batch --import netatalk-distribution.asc \
+&&  gpg --batch --list-keys --with-colons 835A65428C822F69C45B817A7B13E1BFE4DDE8BD \
+        | grep -q '^fpr:::::::::835A65428C822F69C45B817A7B13E1BFE4DDE8BD:' \
+&&  gpg --batch --verify netatalk-client.tar.xz.asc netatalk-client.tar.xz \
+&&  mkdir src \
+&&  tar -xJf netatalk-client.tar.xz \
+        -C src \
+        --strip-components=1 \
+&&  rm -rf \
+        netatalk-distribution.asc \
+        netatalk-client.tar.xz \
+        netatalk-client.tar.xz.asc \
+        /root/.gnupg
+
+RUN meson setup src/build src \
+    -Dbuildtype=debugoptimized \
+    -Dc_link_args=-Wl,-Bsymbolic-functions \
+    -Denable-docs=false \
+&&  meson compile -C src/build \
+&&  meson install --destdir=/staging/ -C src/build \
+&&  cp -a /staging/usr/local/. /usr/local/
 
 WORKDIR /netatalk-code
 COPY bin/ ./bin/
