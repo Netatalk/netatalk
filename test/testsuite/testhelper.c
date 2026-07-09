@@ -138,6 +138,10 @@ void test_skipped(int why)
         s = "extmap.conf type/creator mapping";
         break;
 
+    case T_UAM:
+        s = "required UAM support on the AFP server";
+        break;
+
     default:
         s = "UNKNOWN REASON - this is a bug";
         break;

@@ -2676,6 +2676,7 @@ if 'none' not in init_style
     subdir('distrib')
 endif
 
+testsuite_libafpclient = disabler()
 if get_option('with-tests') or get_option('with-testsuite') or get_option('with-fuzzing')
     subdir('test')
 endif
@@ -2801,6 +2802,7 @@ summary(summary_info, bool_yn: true, section: '  Documentation:')
 summary_info = {
     '  afpd integration tests': get_option('with-tests'),
     '  AFP testsuite': get_option('with-testsuite'),
+    '  UAM tests': testsuite_libafpclient.found(),
     '  Webmin module': have_webmin,
 }
 summary(summary_info, bool_yn: true, section: '  Extras:')
