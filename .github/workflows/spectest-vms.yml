@@ -28,7 +28,7 @@ env:
   CMARK_TARBALL_URL: https://github.com/commonmark/cmark/archive/refs/tags/0.31.2.tar.gz
   INIPARSER_TARBALL_URL: https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
   SMARTOS_BOOTSTRAP_URL: https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
-  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.1.8.tar.gz
+  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.2.0.tar.gz
 
 jobs:
   spectest-dflybsd:
