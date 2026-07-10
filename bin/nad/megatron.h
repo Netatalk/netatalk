@@ -33,6 +33,7 @@ struct vol;
 #define OPTION_STDOUT     (1 << 1)
 #define OPTION_VERBOSE    (1 << 2)
 #define OPTION_ADOUBLE    (1 << 3)
+#define OPTION_NORF       (1 << 4)
 
 #define FH_DATE_CREATE    (1 << 0)
 #define FH_DATE_MODIFY    (1 << 1)

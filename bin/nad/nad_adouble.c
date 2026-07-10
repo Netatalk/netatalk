@@ -309,7 +309,11 @@ int nad_open(char *path, int openflags, struct FHeader *fh, int options _U_)
         return rc;
     } else {
         ad_init(&nad.ad, nad.vol);
-        nad.closeflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_RF;
+        nad.closeflags = ADFLAGS_DF | ADFLAGS_HF;
+
+        if (!(options & OPTION_NORF)) {
+            nad.closeflags |= ADFLAGS_RF;
+        }
 
         if (strlcpy(nad.macname, fh->name, sizeof(nad.macname))
                 >= sizeof(nad.macname)
