@@ -839,8 +839,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     }
 
 #endif /* WITH_FCE */
-    ad_unlock(ofork->of_ad, ofork->of_refnum,
-              ofork->of_flags & AFPFORK_ERROR ? 0 : 1);
+    ad_unlock(ofork->of_ad, ofork->of_refnum);
 #ifdef HAVE_FSHARE_T
 
     if (obj->options.flags & OPTION_SHARE_RESERV) {

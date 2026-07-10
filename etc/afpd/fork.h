@@ -87,6 +87,8 @@ extern int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
 
 /* in fork.c */
 extern int          flushfork(struct ofork *);
+extern int          fork_setmode_deny(int access, int f_rddny, int f_wrdny,
+                                      int f_nodny);
 
 /* FP functions */
 int afp_openfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

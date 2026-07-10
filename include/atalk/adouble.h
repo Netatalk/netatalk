@@ -160,10 +160,16 @@ struct ad_entry {
     ssize_t   ade_len;
 };
 
+typedef struct adf_lock_shared {
+    int   count;
+    off_t start;
+    off_t end;
+} adf_lock_shared_t;
+
 typedef struct adf_lock_t {
     struct flock lock;
     int user;
-    int *refcount; /*!< handle read locks with multiple users */
+    adf_lock_shared_t *refcount;
 } adf_lock_t;
 
 struct ad_fd {
@@ -427,7 +433,7 @@ extern int ad_testlock_whole(struct adouble *adp, int eid);
 extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
 extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off,
                    off_t len, int fork);
-extern void ad_unlock(struct adouble *, int fork, int unlckbrl);
+extern void ad_unlock(struct adouble *, int fork);
 extern void adf_lock_init(struct ad_fd *adf);
 extern void adf_lock_free(struct ad_fd *adf);
 extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off,

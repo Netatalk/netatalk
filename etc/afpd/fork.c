@@ -272,6 +272,16 @@ static int sum_neg(int is64, off_t offset, off_t reqcount)
     return 0;
 }
 
+/* f_deny reservation bits for an FPOpenFork access mode.  Each deny bit is set
+ * independently and ORed; the parenthesised ternaries stop `|` from swallowing the
+ * left side as a condition.  Parameterised on the constants so
+ * utest_fork_setmode_fdeny can exercise it without <sys/fcntl.h> / fshare_t. */
+int fork_setmode_deny(int access, int f_rddny, int f_wrdny, int f_nodny)
+{
+    return (access & OPENACC_DRD ? f_rddny : f_nodny)
+           | (access & OPENACC_DWR ? f_wrdny : f_nodny);
+}
+
 static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
                         int access, int ofrefnum)
 {
@@ -386,8 +396,7 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
             shmd.f_access = F_RDACC;
         }
 
-        shmd.f_deny = (access & OPENACC_DRD ? F_RDDNY : F_NODNY) |
-                      (access & OPENACC_DWR) ? F_WRDNY : 0;
+        shmd.f_deny = fork_setmode_deny(access, F_RDDNY, F_WRDNY, F_NODNY);
         shmd.f_id = ofrefnum;
         int fd = (eid == ADEID_DFORK) ? ad_data_fileno(adp) : ad_reso_fileno(adp);
 

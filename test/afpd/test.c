@@ -244,6 +244,15 @@ int main(int argc, char *argv[])
      * NULL and the test skips, like any other unmet capability). */
     TEST_int_or_skip(volsys ? utest_deletefile_nodelete(volsys) : TEST_SKIP, 0,
                      "deletefile honours NODELETE (ea=sys backend)");
+    /* release-path correctness: per-fork unlock, coalesced-union release, unlock-fail log */
+    TEST_int_or_skip(utest_shared_rlock(vol), 0,
+                     "shared read lock: kernel lock survives first release, drops on last");
+    TEST_int_or_skip(utest_overlap_strand(vol), 0,
+                     "overlapping read locks: union unlock leaves no stranded remainder");
+    TEST_int_or_skip(utest_freelock_unlck_fail_logs(vol), 0,
+                     "adf_freelock: a failed F_UNLCK is logged and the entry still dropped");
+    TEST_int_or_skip(utest_fork_setmode_fdeny(vol), 0,
+                     "fork_setmode_deny: each access mode maps to the correct deny bits");
     /* cleanup */
     closevol(&obj, vol);
 

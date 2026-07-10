@@ -396,9 +396,15 @@ option.
 
 afp read locks = *BOOLEAN* (default: *no*) **(G)**
 
-> Whether to apply locks to the byte region read in FPRead calls. The AFP
-spec mandates this, but it's not really in line with UNIX semantics and
-is a performance hog.
+> Enforces byte-range locks on reads and writes. Required when the same
+share is accessed through another protocol such as SMB/Samba. Can be *no* for a
+small performance gain otherwise.
+>
+> With it off, an app that locks part of a file is not protected from another
+app reading or writing that same part at the same time, which can lead to
+corrupted files or stale reads for apps that rely on locking (for example
+databases or shared documents). Whole-file protections — open/deny modes and
+delete/rename safety — still work either way.
 
 disconnect time = *number* **(G)**
 
