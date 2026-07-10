@@ -131,13 +131,13 @@ if get_option('with-tests')
     test_sh = find_program('test.sh')
 
     test(
-        'afpd integration tests - setup',
+        'afpd tests - setup',
         test_sh,
         is_parallel: false,
         priority: 1,
     )
     test(
-        'afpd integration tests - run',
+        'afpd tests - run',
         afpdtest,
         args: ['--tap'],
         protocol: 'tap',

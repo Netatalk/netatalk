@@ -10,6 +10,12 @@ option(
     description: 'Enable ACL support',
 )
 option(
+    'with-appletalk',
+    type: 'boolean',
+    value: false,
+    description: 'Enable the AppleTalk transport layer, services and utilities',
+)
+option(
     'with-cracklib',
     type: 'boolean',
     value: true,
@@ -26,12 +32,6 @@ option(
     type: 'boolean',
     value: false,
     description: 'Install the pap backend for CUPS',
-)
-option(
-    'with-appletalk',
-    type: 'boolean',
-    value: false,
-    description: 'Enable the AppleTalk transport layer, services and utilities',
 )
 option(
     'with-debug',
@@ -164,12 +164,6 @@ option(
     type: 'boolean',
     value: true,
     description: 'Enable sendfile syscall',
-)
-option(
-    'with-shell-check',
-    type: 'boolean',
-    value: true,
-    description: 'Enable checking for a valid shell',
 )
 option(
     'with-spotlight',
