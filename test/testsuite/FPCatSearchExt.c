@@ -86,8 +86,8 @@ STATIC void test227()
     memset(pos, 0, sizeof(pos));
     memset(&filedir, 0, sizeof(filedir));
     filedir.attr = 0x01a0;			/* various lock attributes */
-    ret = FPCatSearchExt(Conn, vol, 10, pos, 0,  /* d_bitmap*/ 0, bitmap, &filedir,
-                         &filedir);
+    ret = FPCatSearchExt(Conn, vol, 10, pos, 0, /* d_bitmap */ 0, bitmap,
+                         &filedir, &filedir);
 
     if (Conn->afp_version < 30) {
         if (htonl(AFPERR_NOOP) != ret) {
@@ -108,7 +108,7 @@ STATIC void test227()
         goto test_exit;
     }
 
-    ret = FPCatSearchExt(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap,
+    ret = FPCatSearchExt(Conn, vol, 10, pos, 0x42, /* d_bitmap */ 0, bitmap,
                          &filedir, &filedir);
 
     if (ret != htonl(AFPERR_EOF)) {
@@ -133,7 +133,7 @@ STATIC void test227()
     memset(&filedir, 0, sizeof(filedir));
     /* ------------------- */
     filedir.attr = 0x01a0;			/* lock attributes */
-    ret  = FPCatSearchExt(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap,
+    ret  = FPCatSearchExt(Conn, vol, 10, pos, 0x42, /* d_bitmap */ 0, bitmap,
                           &filedir, &filedir);
 
     if (ret != htonl(AFPERR_EOF)) {
@@ -153,7 +153,7 @@ STATIC void test227()
 
     /* ------------------- */
     filedir.attr = 0x0100;			/* lock attributes */
-    ret  = FPCatSearchExt(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap,
+    ret  = FPCatSearchExt(Conn, vol, 10, pos, 0x42, /* d_bitmap */ 0, bitmap,
                           &filedir, &filedir);
 
     if (ret != htonl(AFPERR_EOF)) {
@@ -488,7 +488,7 @@ test_exit:
 /* ------------------------- */
 STATIC void test530()
 {
-    DSI *dsi;
+    const DSI *dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -511,7 +511,7 @@ test_exit:
 /* ------------------------- */
 STATIC void test549()
 {
-    DSI *dsi;
+    const DSI *dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -537,7 +537,7 @@ STATIC void test550()
     uint16_t name_offset;
     unsigned char spec1[2];
     unsigned char spec2[3];
-    DSI *dsi;
+    const DSI *dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -568,7 +568,7 @@ STATIC void test552()
     uint16_t name_offset;
     unsigned char spec1[6];
     unsigned char spec2[6];
-    DSI *dsi;
+    const DSI *dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -598,7 +598,7 @@ STATIC void test553()
     uint16_t name_len;
     unsigned char spec1[7];
     unsigned char spec2[6];
-    DSI *dsi;
+    const DSI *dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -625,7 +625,7 @@ test_exit:
 /* ------------------------- */
 STATIC void test554()
 {
-    DSI *dsi;
+    const DSI *dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -651,7 +651,7 @@ STATIC void test555()
     uint16_t offset;
     uint16_t name_len;
     unsigned char spec1[23];
-    DSI *dsi;
+    const DSI *dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
