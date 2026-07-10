@@ -865,7 +865,7 @@ int utest_testlock_range_no_self_report(const struct vol *vol)
 
     range_ret = ad_testlock_range(&ad, ADEID_DFORK, AD_FILELOCK_OPEN_RD, 1);
     scan_ret  = ad_testlock(&ad, ADEID_DFORK, AD_FILELOCK_OPEN_RD);
-    ad_unlock(&ad, 0, 1);
+    ad_unlock(&ad, 0);
     ad_close(&ad, ADFLAGS_DF);
     (void)unlink(path);
 
@@ -1220,7 +1220,7 @@ int utest_deletefile_quirk(struct vol *vol)
     held_before = peer_try_lock(full, F_WRLCK, 0, 100);
 
     if (held_before != 0) {
-        ad_unlock(of->of_ad, ofrefnum, 1);
+        ad_unlock(of->of_ad, ofrefnum);
         ad_close(of->of_ad, ADFLAGS_DF);
         of_dealloc(of);
         (void)unlink(full);
@@ -1235,7 +1235,7 @@ int utest_deletefile_quirk(struct vol *vol)
     /* a peer must STILL see the lock after the GET: if the GET had opened and
      * closed a transient fd to the inode, our process's lock would be gone */
     held_after = peer_try_lock(full, F_WRLCK, 0, 100);
-    ad_unlock(of->of_ad, ofrefnum, 1);
+    ad_unlock(of->of_ad, ofrefnum);
     ad_close(of->of_ad, ADFLAGS_DF);
     of_dealloc(of);
     (void)unlink(full);
@@ -1432,4 +1432,215 @@ int utest_deletefile_nodelete(const struct vol *vol)
     }
 
     return 0;
+}
+
+/*!
+ * @brief Two same-range read locks from two fork owners share one refcount; the
+ * kernel lock survives the first release and drops only on the last.
+ */
+int utest_shared_rlock(const struct vol *vol)
+{
+    struct adouble ad;
+    char path[MAXPATHLEN + 1];
+    int  rc = 0;
+    snprintf(path, sizeof(path), "%s/fi_shared_rlock", vol->v_path);
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                0666) != 0) {
+        (void)unlink(path);
+        return 1;                        /* setup open failed */
+    }
+
+    /* Two read locks, same range [0,100), distinct fork owners 1 and 2:
+     * adf_findxlock matches the overlap and they share one refcount group. */
+    if (ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, 100, 1) < 0
+            || ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, 100, 2) < 0) {
+        ad_close(&ad, ADFLAGS_DF);
+        (void)unlink(path);
+        return 2;                        /* setup lock failed */
+    }
+
+    /* Release owner 1: group count 2->1, kernel lock must REMAIN. */
+    ad_unlock(&ad, 1);
+
+    if (peer_try_lock(path, F_WRLCK, 0, 100) != 0) {
+        rc = 3;                          /* expected 0 == still held */
+    }
+
+    /* Release owner 2: group count 1->0, kernel lock must be GONE. */
+    ad_unlock(&ad, 2);
+
+    if (!rc && peer_try_lock(path, F_WRLCK, 0, 100) != 1) {
+        rc = 4;                          /* expected 1 == range now free */
+    }
+
+    ad_close(&ad, ADFLAGS_DF);
+    (void)unlink(path);
+    return rc;                           /* 0 == pass */
+}
+
+/*!
+ * @brief Overlapping read locks from two fork owners coalesce in the kernel; the
+ * union unlock must release the whole coalesced range, leaving no stranded
+ * remainder.
+ */
+int utest_overlap_strand(const struct vol *vol)
+{
+    struct adouble ad;
+    char path[MAXPATHLEN + 1];
+    int  rc = 0;
+    snprintf(path, sizeof(path), "%s/fi_overlap_strand", vol->v_path);
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                0666) != 0) {
+        (void)unlink(path);
+        return 1;                        /* setup open failed */
+    }
+
+    if (ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, 100, 1) < 0
+            || ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 50, 100, 2) < 0) {
+        ad_close(&ad, ADFLAGS_DF);
+        (void)unlink(path);
+        return 2;                        /* setup lock failed ([50,150)) */
+    }
+
+    /* Positive control: release owner 1 only; owner 2's [50,150) must survive. */
+    ad_unlock(&ad, 1);
+
+    if (peer_try_lock(path, F_WRLCK, 50, 100) != 0) {
+        rc = 3;                          /* expected 0 == [50,150) still held */
+    }
+
+    /* Release owner 2 (last): the whole coalesced [0,150) must be gone - no
+     * stranded [0,50) remainder. */
+    ad_unlock(&ad, 2);
+
+    if (!rc && peer_try_lock(path, F_WRLCK, 0, 150) != 1) {
+        rc = 4;                          /* expected 1 == all of [0,150) free */
+    }
+
+    ad_close(&ad, ADFLAGS_DF);
+    (void)unlink(path);
+    return rc;                           /* 0 == pass */
+}
+
+/*!
+ * @brief A failed refcount-0 F_UNLCK in adf_freelock() is logged and the entry
+ * still dropped (log-drop-continue), not silently swallowed.
+ */
+int utest_freelock_unlck_fail_logs(const struct vol *vol)
+{
+    struct adouble ad;
+    char path[MAXPATHLEN + 1];
+    char logf[MAXPATHLEN + 1];
+    int  rc = 0;
+    FILE *lf;
+    char buf[4096];
+    int  found = 0;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/fi_unlck_fail", vol->v_path);
+    snprintf(logf, sizeof(logf), "%s/fi_unlck_fail.log", vol->v_path);
+    fault_inject_reset();
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                0666) != 0) {
+        (void)unlink(path);
+        return 1;                        /* setup open failed */
+    }
+
+    /* Place a data-zone read lock (fork owner id 1). */
+    if (ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, 100, 1) < 0) {
+        ad_close(&ad, ADFLAGS_DF);
+        (void)unlink(path);
+        return 2;                        /* setup lock failed */
+    }
+
+    /* Route logs to a temp file so the log_error is observable. */
+    setuplog("default:error", logf, true);
+    /* Arm the NEXT fcntl (the ADLOCK_CLR path issues no fcntl before the F_UNLCK,
+     * so the armed failure lands exactly on adf_freelock's unlock). */
+    fi.fcntl_armed = 1;
+    fi.fcntl_fail_after = 0;             /* fail the very next fcntl, once */
+    fi.fcntl_errno = ENOLCK;
+    fi.fcntl_watch = 1;
+    ad_unlock(&ad, 1);
+    fi.fcntl_armed = 0;
+    fi.fcntl_watch = 0;
+
+    /* (a) the release attempted the F_UNLCK ... */
+    if (fi.lock_last_type != F_UNLCK) {
+        rc = 3;
+    }
+
+    /* (b) ... and dropped the array entry anyway (log-drop-continue). */
+    if (ad.ad_data_fork.adf_lockcount != 0) {
+        rc = rc ? rc : 4;
+    }
+
+    /* (c) the kernel lock stranded: a peer still conflicts on [0,100). */
+    if (peer_try_lock(path, F_WRLCK, 0, 100) != 0) {
+        rc = rc ? rc : 5;               /* expected 0 == conflict (held) */
+    }
+
+    /* (d) the failure was logged, not silent. */
+    lf = fopen(logf, "r");
+
+    if (lf) {
+        while (fgets(buf, sizeof(buf), lf)) {
+            if (strstr(buf, "adf_freelock") && strstr(buf, "F_UNLCK")) {
+                found = 1;
+                break;
+            }
+        }
+
+        fclose(lf);
+    }
+
+    if (!found) {
+        rc = rc ? rc : 6;
+    }
+
+    /* Restore the harness logging and clean up. */
+    setuplog("default:note", "/dev/stderr", true);
+    ad_close(&ad, ADFLAGS_DF);
+    (void)unlink(path);
+    (void)unlink(logf);
+    return rc;                           /* 0 == pass */
+}
+
+/*!
+ * @brief fork_setmode_deny() maps each access mode to the right F_SHARE deny bits.
+ * The pre-fix expression mis-parsed via operator precedence, collapsing every
+ * input to the deny-write bit or 0.
+ */
+int utest_fork_setmode_fdeny(const struct vol *vol)
+{
+    const int RD = 1, WR = 2, NO = 0;   /* sentinel deny bits (illumos values) */
+    int rc = 0;
+    (void)vol;                          /* pure expression test, no volume I/O */
+
+    if (fork_setmode_deny(0, RD, WR, NO) != NO) {
+        rc = 1;                          /* no deny -> NODNY */
+    }
+
+    if (fork_setmode_deny(OPENACC_DRD, RD, WR, NO) != RD) {
+        rc = rc ? rc : 2;                /* deny-read only -> RDDNY */
+    }
+
+    if (fork_setmode_deny(OPENACC_DWR, RD, WR, NO) != WR) {
+        rc = rc ? rc : 3;                /* deny-write only -> WRDNY */
+    }
+
+    if (fork_setmode_deny(OPENACC_DRD | OPENACC_DWR, RD, WR, NO) != (RD | WR)) {
+        rc = rc ? rc : 4;                /* deny-both -> RDDNY | WRDNY */
+    }
+
+    return rc;                           /* 0 == pass */
 }

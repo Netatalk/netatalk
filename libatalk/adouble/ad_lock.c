@@ -122,15 +122,44 @@ static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen)
 #define ARRAY_BLOCK_SIZE 10
 #define ARRAY_FREE_DELTA 100
 
+/* adf_freelock() re-asserts surviving locks after a data-zone union unlock;
+ * adf_relockrange() is defined below, so forward-declare it here. */
+static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len);
+
 /*! remove a lock and compact space if necessary */
 static void adf_freelock(struct ad_fd *ad, const int i)
 {
     adf_lock_t *lock = ad->adf_lock + i;
+    int    last_free = 0;
+    int    do_relock = 0;
+    off_t  ul_start = 0, ul_len = 0;
 
-    if (--(*lock->refcount) < 1) {
+    if (--(lock->refcount->count) < 1) {
+        last_free = 1;
+        struct flock ul = lock->lock;   /* own range; inherits l_whence=SEEK_SET */
+        ul.l_type = F_UNLCK;
+
+        /* Data-zone group: release the coalesced union the kernel formed and
+         * re-assert survivors after compaction.  Band entry: no union (single
+         * fixed offset, never coalesced) - release its own range and skip the
+         * relock. */
+        if (lock->lock.l_start < AD_FILELOCK_BASE) {
+            ul_start   = lock->refcount->start;
+            ul_len     = lock->refcount->end - lock->refcount->start;
+            ul.l_start = ul_start;
+            ul.l_len   = ul_len;
+            do_relock  = 1;
+        }
+
         free(lock->refcount);
-        lock->lock.l_type = F_UNLCK;
-        set_lock(ad->adf_fd, F_SETLK, &lock->lock); /* unlock */
+
+        if (set_lock(ad->adf_fd, F_SETLK, &ul) < 0) {
+            LOG(log_error, logtype_ad,
+                "adf_freelock: F_UNLCK fd=%d off=%jd len=%jd: %s - kernel lock "
+                "may be stranded until this process's last close of the file",
+                ad->adf_fd, (intmax_t)ul.l_start, (intmax_t)ul.l_len,
+                strerror(errno));
+        }
     }
 
     ad->adf_lockcount--;
@@ -155,32 +184,32 @@ static void adf_freelock(struct ad_fd *ad, const int i)
             ad->adf_lockmax = ad->adf_lockcount + ARRAY_FREE_DELTA;
         }
     }
+
+    /* re-assert data-zone survivors AFTER compaction removed the dying entry */
+    if (last_free && do_relock) {
+        adf_relockrange(ad, ad->adf_fd, ul_start, ul_len);
+    }
 }
 
 
-/* this needs to deal with the following cases:
- * 1) free all UNIX byterange lock from any fork
- * 2) free all locks of the requested fork
+/* AFP spec: "All locks held by a user are unlocked when the user closes the
+ * fork", where a "user" is one OForkRefNum (== fork == lock[i].user).  Release
+ * only THIS fork's locks; a sibling fork on the same shared ad_fd keeps its own.
  *
  * i converted to using arrays of locks. everytime a lock
  * gets removed, we shift all of the locks down.
  */
 static void adf_unlock(struct adouble *ad _U_, struct ad_fd *adf,
-                       const int fork, int unlckbrl)
+                       const int fork)
 {
     adf_lock_t *lock = adf->adf_lock;
     int i;
 
     for (i = 0; i < adf->adf_lockcount; i++) {
-        if ((unlckbrl && lock[i].lock.l_start < AD_FILELOCK_BASE)
-                || lock[i].user == fork) {
-            /* we're really going to delete this lock. note: read locks
-               are the only ones that allow refcounts > 1 */
+        if (lock[i].user == fork) {
             adf_freelock(adf, i);
-            /* we shifted things down, so we need to backtrack */
-            i--;
-            /* unlikely but realloc may have change adf_lock */
-            lock = adf->adf_lock;
+            i--;                       /* compaction shifted the tail down */
+            lock = adf->adf_lock;      /* realloc may have moved the array */
         }
     }
 }
@@ -244,7 +273,7 @@ void adf_lock_free(struct ad_fd *adf)
         }
 
         /* Only free refcount memory when last reference */
-        if (--(*lock->refcount) < 1) {
+        if (--(lock->refcount->count) < 1) {
             free(lock->refcount);
         }
     }
@@ -512,6 +541,17 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off,
     /* byte_lock(len=-1) lock whole file */
     if (len == BYTELOCK_MAX) {
         lock.l_len -= lock.l_start; /* otherwise  EOVERFLOW error */
+
+        if (lock.l_len <= 0) {
+            /* Whole-file lock at/after the last lockable offset: nothing to lock,
+             * and the data-zone union bookkeeping (l_start + l_len) needs
+             * l_len > 0.  l_start already includes the rfork entry offset, so one
+             * check covers both forks.  EINVAL -> byte_lock() returns
+             * AFPERR_RANGEOVR. */
+            errno = EINVAL;
+            ret = -1;               /* no lock placed: exit skips the F_UNLCK */
+            goto exit;
+        }
     }
 
     /* see if it's locked by another fork.
@@ -562,6 +602,9 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off,
 
     /* we upgraded this lock. */
     if (adflock && (type & ADLOCK_UPGRADE)) {
+        /* If ADLOCK_UPGRADE ever gets a caller: a widening RD upgrade on a
+         * shared entry must also extend refcount->start/end like the create/join
+         * path below, or the group union under-records and re-strands. */
         memcpy(&adflock->lock, &lock, sizeof(lock));
         goto exit;
     }
@@ -594,13 +637,36 @@ int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off,
     adflock->user = fork;
 
     if (oldlock > -1) {
+        /* join an existing overlapping-read group: adopt its shared struct. */
         adflock->refcount = (adf->adf_lock + oldlock)->refcount;
-    } else if ((adflock->refcount = calloc(1, sizeof(int))) == NULL) {
-        ret = fcntl_lock_err = 1;
+
+        /* Widen the coalesced union; data-zone entries only (band entries are
+         * single fixed offsets that never coalesce). */
+        if (lock.l_start < AD_FILELOCK_BASE) {
+            off_t this_end = lock.l_start + lock.l_len;
+
+            if (lock.l_start < adflock->refcount->start) {
+                adflock->refcount->start = lock.l_start;
+            }
+
+            if (this_end > adflock->refcount->end) {
+                adflock->refcount->end = this_end;
+            }
+        }
+    } else if ((adflock->refcount = calloc(1, sizeof(adf_lock_shared_t))) == NULL) {
+        ret = -1;                   /* callers test `< 0`; +1 read as success */
+        fcntl_lock_err = 1;         /* still trigger the kernel-lock rollback */
         goto exit;
+    } else {
+        /* new group: union = this entry's own range, DATA-ZONE entries only.
+         * calloc leaves start/end 0 for band entries, which never read them. */
+        if (lock.l_start < AD_FILELOCK_BASE) {
+            adflock->refcount->start = lock.l_start;
+            adflock->refcount->end   = lock.l_start + lock.l_len;
+        }
     }
 
-    (*adflock->refcount)++;
+    adflock->refcount->count++;
     adf->adf_lockcount++;
 exit:
 
@@ -641,7 +707,7 @@ int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off,
     if (eid == ADEID_DFORK) {
         adf = &ad->ad_data_fork;
     } else {
-        adf = &ad->ad_resource_fork;
+        adf = ad->ad_rfp;                  /* match ad_lock(): backend indirection */
 
         if (adf->adf_fd == -1) {
             /* there's no resource fork. return success */
@@ -695,16 +761,16 @@ exit:
 }
 
 /* --------------------- */
-void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
+void ad_unlock(struct adouble *ad, const int fork)
 {
-    LOG(log_debug, logtype_ad, "ad_unlock(unlckbrl: %d): BEGIN", unlckbrl);
+    LOG(log_debug, logtype_ad, "ad_unlock(fork: %d): BEGIN", fork);
 
     if (ad_data_fileno(ad) != -1) {
-        adf_unlock(ad, &ad->ad_data_fork, fork, unlckbrl);
+        adf_unlock(ad, &ad->ad_data_fork, fork);
     }
 
     if (ad_reso_fileno(ad) != -1) {
-        adf_unlock(ad, &ad->ad_resource_fork, fork, unlckbrl);
+        adf_unlock(ad, ad->ad_rfp, fork);   /* rfork indirection, matching ad_lock() */
     }
 
     LOG(log_debug, logtype_ad, "ad_unlock: END");

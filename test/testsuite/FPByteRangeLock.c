@@ -583,9 +583,8 @@ test_exit:
 STATIC void test410()
 {
     char *name = "t410 DF FPByteLock 2 users";
-    int fork;
-    int fork1 = 0;
-    int fork2 = 0;
+    uint16_t fork;
+    uint16_t fork1 = 0;
     uint16_t vol = VolID;
     uint16_t bitmap = 0;
     uint16_t vol2;
@@ -595,12 +594,6 @@ STATIC void test410()
 
     if (!Conn2) {
         test_skipped(T_CONN2);
-        goto test_exit;
-    }
-
-    if (adouble == AD_V2) {
-        /* this fails on adouble v2, because in Netatalk 3 we now close locks on file close */
-        test_skipped(T_ADEA);
         goto test_exit;
     }
 
@@ -632,7 +625,7 @@ STATIC void test410()
         goto fin;
     }
 
-    if (FPCloseFork(Conn, fork1)) { /* this should drop the byterange lock! */
+    if (FPCloseFork(Conn, fork1)) { /* sibling close must NOT drop fork's lock */
         test_failed();
         FPCloseFork(Conn, fork);
         goto fin;
@@ -656,7 +649,9 @@ STATIC void test410()
         goto fin2;
     }
 
-    if (FPByteLock(Conn2, fork1, 0, 0 /* set */, 0, 100)) {
+    /* fork still holds [0,100): the sibling close did not drop it, so a
+     * different session's acquire of the same range must be refused. */
+    if (htonl(AFPERR_LOCK) != FPByteLock(Conn2, fork1, 0, 0 /* set */, 0, 100)) {
         test_failed();
     }
 
@@ -1417,11 +1412,7 @@ void FPByteRangeLock_test()
     test63();
     test64();
     test65();
-    /* test78() disabled: reproduces an as-yet-unfixed adf_unlock() bug (a
-     * single fork close releases every fork's byte-range locks) and its
-     * failure was blocking unrelated PRs from pushing container images.
-     * Re-enable once the per-fork lock-release fix lands. */
-    /* test78(); */
+    test78();
     test79();
     test80();
     test329();

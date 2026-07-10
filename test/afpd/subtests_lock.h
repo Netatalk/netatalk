@@ -35,4 +35,9 @@ extern int utest_deletefile_quirk_hazard(const struct vol *vol);
 extern int utest_deletefile_quirk(struct vol *vol);
 extern int utest_deletefile_nodelete(const struct vol *vol);
 
+extern int utest_shared_rlock(const struct vol *vol);
+extern int utest_overlap_strand(const struct vol *vol);
+extern int utest_freelock_unlck_fail_logs(const struct vol *vol);
+extern int utest_fork_setmode_fdeny(const struct vol *vol);
+
 #endif /* SUBTESTS_LOCK_H */
