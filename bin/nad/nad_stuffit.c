@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <utime.h>
 #include <unistd.h>
 
 #include <stuffit_ffi.h>
@@ -220,8 +221,19 @@ static int fill_header_from_entry(const StuffitEntryInfo *info,
 
     fh->forklen[DATA] = htonl((uint32_t)info->data_len);
     fh->forklen[RESOURCE] = htonl((uint32_t)info->resource_len);
-    fh->create_date = ad_time;
-    fh->mod_date = ad_time;
+
+    if (info->creation_date != 0) {
+        fh->create_date = AD_DATE_FROM_MAC(htonl((uint32_t)info->creation_date));
+    } else {
+        fh->create_date = ad_time;
+    }
+
+    if (info->modification_date != 0) {
+        fh->mod_date = AD_DATE_FROM_MAC(htonl((uint32_t)info->modification_date));
+    } else {
+        fh->mod_date = ad_time;
+    }
+
     fh->backup_date = AD_DATE_START;
     fh->date_flags = FH_DATE_CREATE | FH_DATE_MODIFY;
     memcpy(&fh->finder_info.fdType, info->file_type,
@@ -258,6 +270,7 @@ static int extract_file_entry(const StuffitEntryInfo *info,
                               const StuffitBytes *rsrc)
 {
     struct FHeader fh;
+    struct utimbuf filetimestamp;
     char parent[MAXPATHLEN + 1];
     char base[ADEDLEN_NAME + 1];
     int cwd = -1;
@@ -296,6 +309,14 @@ static int extract_file_entry(const StuffitEntryInfo *info,
 
     if (write_fork_bytes(DATA, data->ptr, data->len) < 0
             || write_fork_bytes(RESOURCE, rsrc->ptr, rsrc->len) < 0) {
+        goto done;
+    }
+
+    filetimestamp.modtime = AD_DATE_TO_UNIX(fh.mod_date);
+    filetimestamp.actime = time(NULL);
+
+    if (utime(base, &filetimestamp) < 0) {
+        perror("unable to change modification date");
         goto done;
     }
 
@@ -457,6 +478,8 @@ static int add_file_to_writer(StuffitWriter *writer, const char *path,
 
     memset(&entry, 0, sizeof(entry));
     entry.name = entry_name;
+    entry.creation_date = htonl(AD_DATE_TO_MAC(fh.create_date));
+    entry.modification_date = htonl(AD_DATE_TO_MAC(fh.mod_date));
     entry.data_fork.ptr = data;
     entry.data_fork.len = data_len;
     entry.resource_fork.ptr = rsrc;
