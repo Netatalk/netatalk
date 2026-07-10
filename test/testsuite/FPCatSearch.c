@@ -28,10 +28,10 @@ STATIC void test225()
     memset(&filedir, 0, sizeof(filedir));
     filedir.attr = 0x01a0;			/* various lock attributes */
     FAIL(htonl(AFPERR_BITMAP) != FPCatSearch(Conn, vol, 10, pos,
-            0,  /* d_bitmap*/ 0, bitmap, &filedir, &filedir))
+            0, /* d_bitmap */ 0, bitmap, &filedir, &filedir))
     filedir.attr = 0x01a0;			/* various lock attributes */
-    ret = FPCatSearch(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap, &filedir,
-                      &filedir);
+    ret = FPCatSearch(Conn, vol, 10, pos, 0x42, /* d_bitmap */ 0,
+                      bitmap, &filedir, &filedir);
 
     if (ret != htonl(AFPERR_EOF)) {
         test_failed();
@@ -55,8 +55,8 @@ STATIC void test225()
     memset(&filedir, 0, sizeof(filedir));
     /* ------------------- */
     filedir.attr = 0x01a0;			/* lock attributes */
-    ret  = FPCatSearch(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap, &filedir,
-                       &filedir);
+    ret  = FPCatSearch(Conn, vol, 10, pos, 0x42, /* d_bitmap*/ 0, bitmap,
+                       &filedir, &filedir);
 
     if (ret != htonl(AFPERR_EOF)) {
         test_failed();
@@ -75,7 +75,7 @@ STATIC void test225()
 
     /* ------------------- */
     filedir.attr = 0x0100;			/* lock attributes */
-    ret  = FPCatSearch(Conn, vol, 10, pos, 0x42,  /* d_bitmap*/ 0, bitmap, &filedir,
+    ret  = FPCatSearch(Conn, vol, 10, pos, 0x42, /* d_bitmap */ 0, bitmap, &filedir,
                        &filedir);
 
     if (ret != htonl(AFPERR_EOF)) {
@@ -94,7 +94,6 @@ STATIC void test225()
     }
 
     /* -------------------- */
-#if 1
     memset(&filedir, 0, sizeof(filedir));
     memset(&filedir2, 0, sizeof(filedir2));
     filedir.lname = "Data";
@@ -108,7 +107,6 @@ STATIC void test225()
     }
 
     /* -------------------- */
-#endif
     memset(&filedir, 0, sizeof(filedir));
     filedir.attr = 0x01a0;
     FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
@@ -167,7 +165,6 @@ STATIC void test551()
         test_failed();
     }
 
-test_exit:
     exit_test("FPCatSearch:test551: truncated search-spec payload");
 }
 
