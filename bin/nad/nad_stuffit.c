@@ -244,6 +244,33 @@ static int fill_header_from_entry(const StuffitEntryInfo *info,
     return 0;
 }
 
+static int validate_entry_fork_lengths(const StuffitEntryInfo *info,
+                                       const StuffitBytes *data,
+                                       const StuffitBytes *rsrc)
+{
+    if (info->data_len != data->len) {
+        fprintf(stderr,
+                "%s: data fork length mismatch: metadata says %zu, decoded fork is %zu\n",
+                info->name, info->data_len, data->len);
+        return -1;
+    }
+
+    if (info->resource_len != rsrc->len) {
+        fprintf(stderr,
+                "%s: resource fork length mismatch: metadata says %zu, decoded fork is %zu\n",
+                info->name, info->resource_len, rsrc->len);
+        return -1;
+    }
+
+    if (info->data_len > UINT32_MAX || info->resource_len > UINT32_MAX) {
+        fprintf(stderr, "%s: fork length exceeds AppleDouble header limit\n",
+                info->name);
+        return -1;
+    }
+
+    return 0;
+}
+
 static int write_fork_bytes(int fork, const uint8_t *ptr, size_t len)
 {
     size_t written = 0;
@@ -275,6 +302,7 @@ static int extract_file_entry(const StuffitEntryInfo *info,
     char base[ADEDLEN_NAME + 1];
     int cwd = -1;
     int opened = 0;
+    int options;
     int rc = -1;
 
     if (make_parent_dirs(info->name) < 0
@@ -301,14 +329,17 @@ static int extract_file_entry(const StuffitEntryInfo *info,
         goto done;
     }
 
-    if (nad_open(base, O_RDWR | O_CREAT | O_EXCL, &fh, OPTION_NONE) < 0) {
+    options = (rsrc->len == 0) ? OPTION_NORF : OPTION_NONE;
+
+    if (nad_open(base, O_RDWR | O_CREAT | O_EXCL, &fh, options) < 0) {
         goto done;
     }
 
     opened = 1;
 
     if (write_fork_bytes(DATA, data->ptr, data->len) < 0
-            || write_fork_bytes(RESOURCE, rsrc->ptr, rsrc->len) < 0) {
+            || (rsrc->len > 0
+                && write_fork_bytes(RESOURCE, rsrc->ptr, rsrc->len) < 0)) {
         goto done;
     }
 
@@ -382,6 +413,11 @@ static int unsit_archive(const char *path, AFPObj *obj)
 
         if (!entry_name_is_safe(info.name)) {
             fprintf(stderr, "%s: unsafe StuffIt entry name: %s\n", path, info.name);
+            rv = -1;
+            break;
+        }
+
+        if (validate_entry_fork_lengths(&info, &data, &rsrc) < 0) {
             rv = -1;
             break;
         }
