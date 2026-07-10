@@ -54,6 +54,7 @@ if get_option('with-stuffit')
     endif
 
     nad_deps += stuffit
+    have_stuffit = true
     nad_c_args += '-DHAVE_STUFFIT'
 endif
 

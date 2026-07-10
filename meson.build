@@ -382,11 +382,6 @@ if socket.found()
     netatalk_common_link_args += '-lsocket'
 endif
 
-sendfile = cc.find_library('sendfile', required: false)
-if sendfile.found()
-    netatalk_common_link_args += '-lsendfile'
-endif
-
 nsl = cc.find_library('nsl', required: false)
 if nsl.found()
     netatalk_common_link_args += '-lnsl'
@@ -2171,30 +2166,36 @@ endif
 # Check for sendfile
 #
 
-enable_sendfile = get_option('with-sendfile')
+have_sendfile = false
+sendfile_deps = []
 
-if not enable_sendfile
-    have_sendfile = false
-elif host_os == 'linux'
-    cdata.set('SENDFILE_FLAVOR_LINUX', 1)
-    have_sendfile = cc.has_function('sendfile')
-    if have_sendfile
-        cdata.set('WITH_SENDFILE', 1)
+if get_option('with-sendfile')
+    sendfile = cc.find_library('sendfile', required: false)
+    if sendfile.found()
+        sendfile_deps += sendfile
     endif
-elif host_os == 'sunos'
-    cdata.set('SENDFILE_FLAVOR_SOLARIS', 1)
-    have_sendfile = cc.has_function('sendfile', dependencies: sendfile)
-    if have_sendfile
-        cdata.set('WITH_SENDFILE', 1)
-    endif
-    if cc.has_function('sendfilev', dependencies: sendfile)
-        cdata.set('HAVE_SENDFILEV', 1)
-    endif
-elif host_os == 'freebsd'
-    cdata.set('SENDFILE_FLAVOR_FREEBSD', 1)
-    have_sendfile = cc.has_function('sendfile')
-    if have_sendfile
-        cdata.set('WITH_SENDFILE', 1)
+
+    if host_os == 'linux'
+        cdata.set('SENDFILE_FLAVOR_LINUX', 1)
+        have_sendfile = cc.has_function('sendfile')
+        if have_sendfile
+            cdata.set('WITH_SENDFILE', 1)
+        endif
+    elif host_os == 'sunos'
+        cdata.set('SENDFILE_FLAVOR_SOLARIS', 1)
+        have_sendfile = cc.has_function('sendfile', dependencies: sendfile_deps)
+        if have_sendfile
+            cdata.set('WITH_SENDFILE', 1)
+        endif
+        if cc.has_function('sendfilev', dependencies: sendfile_deps)
+            cdata.set('HAVE_SENDFILEV', 1)
+        endif
+    elif host_os == 'freebsd'
+        cdata.set('SENDFILE_FLAVOR_FREEBSD', 1)
+        have_sendfile = cc.has_function('sendfile')
+        if have_sendfile
+            cdata.set('WITH_SENDFILE', 1)
+        endif
     endif
 endif
 
@@ -2659,6 +2660,7 @@ configure_file(
 #########################
 
 root_includes = include_directories(include_dirs)
+have_stuffit = false
 
 subdir('include')
 subdir('libatalk')
@@ -2749,10 +2751,10 @@ summary_info = {
     '  ACL': have_acls,
     '  AppleTalk': have_appletalk,
     '  Cracklib': have_cracklib,
-    '  CUPS': have_cups,
     '  dtrace probes': have_dtrace,
     '  FCE': have_fce,
     '  GSSAPI': have_gssapi,
+    '  Iconv': have_iconv,
     '  Kerberos': have_kerberos,
     '  LDAP': have_ldap,
     '  Quota': have_quota,
@@ -2763,6 +2765,7 @@ if have_quota
     }
 endif
 summary_info += {
+    '  Sendfile syscall': have_sendfile,
     '  Spotlight search': have_spotlight,
 }
 if have_spotlight
@@ -2779,7 +2782,7 @@ if enable_zeroconf
         '  Zeroconf provider': zeroconf_provider,
     }
 endif
-summary(summary_info, bool_yn: true, section: '  Features:')
+summary(summary_info, bool_yn: true, section: '  Netatalk Features:')
 
 summary_info = {
     '  dbus daemon path': dbus_daemonpath,
@@ -2800,9 +2803,17 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  Documentation:')
 
 summary_info = {
-    '  afpd integration tests': get_option('with-tests'),
-    '  AFP testsuite': get_option('with-testsuite'),
-    '  UAM tests': testsuite_libafpclient.found(),
+    '  afpd': get_option('with-tests'),
+    '  fuzzing': get_option('with-fuzzing'),
+    '  testsuite': get_option('with-testsuite'),
+    '  UAM testsuite': testsuite_libafpclient.found(),
+}
+summary(summary_info, bool_yn: true, section: '  Tests:')
+
+summary_info = {
+    '  CUPS printing in papd': have_cups,
+    '  PAP backend for CUPS': get_option('with-cups-pap-backend'),
+    '  StuffIt support in nad': have_stuffit,
     '  Webmin module': have_webmin,
 }
 summary(summary_info, bool_yn: true, section: '  Extras:')

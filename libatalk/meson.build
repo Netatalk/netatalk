@@ -29,6 +29,8 @@ if have_acls
     libatalk_deps += acl_deps
 endif
 
+libatalk_deps += sendfile_deps
+
 if have_appletalk
     subdir('asp')
     subdir('atp')
