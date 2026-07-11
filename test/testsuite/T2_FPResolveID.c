@@ -352,7 +352,7 @@ static int get_fs_lock(char *folder, char *file)
         }
 
         if ((ret = fcntl(fd, F_SETLK, &lock)) >= 0 || (errno != EACCES
-                && errno != EAGAIN)) {
+            && errno != EAGAIN)) {
             if (!ret >= 0) {
                 errno = 0;
             }

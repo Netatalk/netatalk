@@ -990,7 +990,7 @@ void collect_values_after_key(const std::string &q,
         }
 
         if (std::string value = strip_wildcards(q.substr(quote1 + 1,
-                                                quote2 - quote1 - 1)); !value.empty()) {
+            quote2 - quote1 - 1)); !value.empty()) {
             values.push_back(value);
         }
 
@@ -1017,7 +1017,7 @@ std::vector<std::string> collect_any_values(const std::string &q)
         }
 
         if (std::string value = strip_wildcards(q.substr(quote1 + 1,
-                                                quote2 - quote1 - 1)); !value.empty()) {
+            quote2 - quote1 - 1)); !value.empty()) {
             values.push_back(value);
         }
 

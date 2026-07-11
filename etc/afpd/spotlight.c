@@ -437,7 +437,7 @@ static bool create_result_handle(slq_t *slq)
     }
 
     query_results->cnids->ca_cnids = talloc_zero(query_results->cnids,
-                                     DALLOC_CTX);
+        DALLOC_CTX);
 
     if (query_results->cnids->ca_cnids == NULL) {
         return false;
@@ -1135,7 +1135,7 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj _U_,
         ts[1] = ts[0];
         utimensat(AT_FDCWD, path, ts, 0);
     } else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX",
-                          1, "DALLOC_CTX", 1, "kMDItemLastUsedDate", "sl_time_t"))) {
+        1, "DALLOC_CTX", 1, "kMDItemLastUsedDate", "sl_time_t"))) {
         struct timespec ts[2] = {{0}};
         ts[0].tv_sec  = sl_time->tv_sec;
         ts[0].tv_nsec = sl_time->tv_usec * 1000;

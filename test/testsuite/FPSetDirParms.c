@@ -572,7 +572,7 @@ STATIC void test353()
              (1 << DIRPBIT_UNIXPR);
 
     if (/* htonl(AFPERR_BITMAP) != */ FPGetFileDirParams(Conn, vol, dir, name,
-                                      bitmap, 0)) {
+            bitmap, 0)) {
         test_failed();
         goto fin1;
     }

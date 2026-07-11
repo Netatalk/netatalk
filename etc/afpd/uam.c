@@ -148,28 +148,28 @@ int uam_register(const int type, const char *path, const char *name, ...)
     case UAM_SERVER_LOGIN_EXT:
         /* expect four arguments */
         uam->u.uam_login.login = va_arg(ap, int (*)(void *, struct passwd **, char *,
-                                        int, char *, size_t *));
+            int, char *, size_t *));
         uam->u.uam_login.logincont = va_arg(ap, int (*)(void *, struct passwd **,
-                                            char *, int, char *, size_t *));
+            char *, int, char *, size_t *));
         uam->u.uam_login.logout = va_arg(ap, void (*)(void));
         uam->u.uam_login.login_ext = va_arg(ap, int (*)(void *, char *,
-                                            struct passwd **, char *, int, char *, size_t *));
+            struct passwd **, char *, int, char *, size_t *));
         break;
 
     case UAM_SERVER_LOGIN:
         /* expect three arguments */
         uam->u.uam_login.login_ext = NULL;
         uam->u.uam_login.login = va_arg(ap, int (*)(void *, struct passwd **, char *,
-                                        int, char *, size_t *));
+            int, char *, size_t *));
         uam->u.uam_login.logincont = va_arg(ap, int (*)(void *, struct passwd **,
-                                            char *, int, char *, size_t *));
+            char *, int, char *, size_t *));
         uam->u.uam_login.logout = va_arg(ap, void (*)(void));
         break;
 
     case UAM_SERVER_CHANGEPW:
         /* one argument */
         uam->u.uam_changepw = va_arg(ap, int (*)(void *, char *, struct passwd *,
-                                     char *, int, char *, size_t *));
+            char *, int, char *, size_t *));
         break;
 
     case UAM_SERVER_PRINTAUTH:

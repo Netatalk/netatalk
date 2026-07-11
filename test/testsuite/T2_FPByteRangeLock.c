@@ -87,7 +87,7 @@ static void test_bytelock(uint16_t vol2, char *name, int type)
         lock.l_whence = SEEK_SET;
 
         if ((ret = fcntl(fd, F_SETLK, &lock)) >= 0 || (errno != EACCES
-                && errno != EAGAIN)) {
+            && errno != EAGAIN)) {
             if (!ret >= 0) {
                 errno = 0;
             }

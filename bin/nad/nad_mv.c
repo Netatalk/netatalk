@@ -397,7 +397,7 @@ static int do_move(const char *from, const char *to)
         ad_init(&ad, dvolume.vol);
 
         if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF |
-                    ADFLAGS_RDWR) : ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
+                ADFLAGS_RDWR) : ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
             NAD_INFO("Error opening adouble for: %s", to);
             return 1;
         }

@@ -691,7 +691,7 @@ static int ad_convert_osx(const char *path, struct adouble *ad)
     ad_setentrylen(ad, ADEID_FINDERI, ADEDLEN_FINDERI);
     ad->ad_rlen = ad_getentrylen(ad, ADEID_RFORK);
     ad_setentryoff(ad, ADEID_RFORK, ad_getentryoff(ad,
-                   ADEID_FINDERI) + ADEDLEN_FINDERI);
+            ADEID_FINDERI) + ADEDLEN_FINDERI);
     EC_ZERO_LOG(ftruncate(ad_reso_fileno(ad),
                           ad_getentryoff(ad, ADEID_RFORK)
                           + ad_getentrylen(ad, ADEID_RFORK)));
@@ -1707,7 +1707,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
     }
 
     if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO,
-                              oflags)) == -1) {
+        oflags)) == -1) {
         if (!(adflags & ADFLAGS_CREATE)) {
             switch (errno) {
             case EACCES:
@@ -1727,7 +1727,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
                 oflags |= O_RDONLY;
 
                 if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO,
-                                          oflags)) == -1) {
+                    oflags)) == -1) {
                     LOG(log_error, logtype_ad, "ad_open_rf_ea(\"%s\"): \"%s\"", fullpathname(path),
                         strerror(errno));
                     EC_FAIL;
@@ -1746,7 +1746,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
         } else {
             oflags |= O_CREAT;
             EC_NEG1_LOG(ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad),
-                                             AD_EA_RESO, oflags, 0666));
+                AD_EA_RESO, oflags, 0666));
         }
     }
 
@@ -2422,7 +2422,7 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
 
     if (adflags & ADFLAGS_CREATE) {
         mode = (sizeof(mode_t) < sizeof(int) ? va_arg(args, int) : va_arg(args,
-                mode_t));
+            mode_t));
     }
 
     va_end(args);
@@ -2660,7 +2660,7 @@ int ad_openat(struct adouble  *ad,
 
     if (adflags & ADFLAGS_CREATE) {
         mode = (sizeof(mode_t) < sizeof(int) ? va_arg(args, int) : va_arg(args,
-                mode_t));
+            mode_t));
     }
 
     va_end(args);

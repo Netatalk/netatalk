@@ -98,9 +98,9 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
     outlen = MAXPATHLEN;
 
     if ((size_t) -1 == (outlen = convert_charset(CH_UTF8_MAC,
-                                 vol->v_volcharset,
-                                 vol->v_maccharset,
-                                 m, inplen, u, outlen, &flags))) {
+        vol->v_volcharset,
+        vol->v_maccharset,
+        m, inplen, u, outlen, &flags))) {
         return NULL;
     }
 
@@ -196,7 +196,7 @@ static int unpack_header(struct ea *ea)
         }
 
         (*(ea->ea_entries))[count].ea_namelen = strlen((*
-                                                (ea->ea_entries))[count].ea_name);
+            (ea->ea_entries))[count].ea_name);
         buf += (*(ea->ea_entries))[count].ea_namelen + 1;
         LOG(log_maxdebug, logtype_afpd,
             "unpack_header: entry no:%u,\"%s\", size: %u, namelen: %u", count,

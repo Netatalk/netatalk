@@ -56,7 +56,7 @@ void readmessage(AFPObj *obj)
     static int c;
     uint32_t maxmsgsize;
     maxmsgsize = (obj->proto == AFPPROTO_DSI) ? MIN(MAX(obj->dsi->attn_quantum,
-                 MAXMESGSIZE), MAXPATHLEN) : MAXMESGSIZE;
+        MAXMESGSIZE), MAXPATHLEN) : MAXMESGSIZE;
     i = 0;
     /* Construct file name SERVERTEXT/message.[pid] */
     snprintf(filename, sizeof(filename), "%s/message.%" PRIiMAX,
@@ -118,7 +118,7 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     int utf8 = 0;
     *rbuflen = 0;
     msgsize = (obj->proto == AFPPROTO_DSI) ? MAX(obj->dsi->attn_quantum,
-              MAXMESGSIZE) : MAXMESGSIZE;
+        MAXMESGSIZE) : MAXMESGSIZE;
     memcpy(&type, ibuf + 2, sizeof(type));
     memcpy(&bitmap, ibuf + 4, sizeof(bitmap));
     message = servermesg;
@@ -169,8 +169,8 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     if (msglen) {
         if ((size_t) -1 == (outlen = convert_string(obj->options.unixcharset,
-                                     utf8 ? CH_UTF8_MAC : obj->options.maccharset,
-                                     message, msglen, localized_message, msgsize))) {
+            utf8 ? CH_UTF8_MAC : obj->options.maccharset,
+            message, msglen, localized_message, msgsize))) {
             memcpy(rbuf + (utf8 ? 2 : 1), message, msglen); /*FIXME*/
             outlen = msglen;
         } else {

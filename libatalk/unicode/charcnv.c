@@ -146,7 +146,7 @@ charset_t add_charset(const char *name)
 
     /* First try to setup the required conversions */
     conv_handles[cur_charset_t][CH_UCS2] = atalk_iconv_open(charset_name(CH_UCS2),
-                                           name);
+        name);
 
     if (conv_handles[cur_charset_t][CH_UCS2] == (atalk_iconv_t) -1) {
         LOG(log_error, logtype_default,
@@ -157,7 +157,7 @@ charset_t add_charset(const char *name)
     }
 
     conv_handles[CH_UCS2][cur_charset_t] = atalk_iconv_open(name,
-                                           charset_name(CH_UCS2));
+        charset_name(CH_UCS2));
 
     if (conv_handles[CH_UCS2][cur_charset_t] == (atalk_iconv_t) -1) {
         LOG(log_error, logtype_default,
@@ -310,7 +310,7 @@ size_t convert_string(charset_t from, charset_t to,
 
     /* convert from_set to UCS2 */
     if ((size_t) -1 == (o_len = convert_string_internal(from, CH_UCS2, src, srclen,
-                                (char *) buffer, sizeof(buffer)))) {
+        (char *) buffer, sizeof(buffer)))) {
         LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )",
             charset_name(from));
         return (size_t) -1;
@@ -335,7 +335,7 @@ size_t convert_string(charset_t from, charset_t to,
 
     /* Convert UCS2 to to_set */
     if ((size_t)(-1) == (o_len = convert_string_internal(CH_UCS2, to, (char *) u,
-                                 i_len, dest, destlen))) {
+        i_len, dest, destlen))) {
         LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s",
             charset_name(to), strerror(errno));
         return (size_t) -1;
@@ -467,7 +467,7 @@ size_t convert_string_allocate(charset_t from, charset_t to,
 
     /* convert from_set to UCS2 */
     if ((size_t)(-1) == (o_len = convert_string_internal(from, CH_UCS2, src, srclen,
-                                 buffer, sizeof(buffer)))) {
+        buffer, sizeof(buffer)))) {
         LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )",
             charset_name(from));
         return (size_t) -1;
@@ -492,7 +492,7 @@ size_t convert_string_allocate(charset_t from, charset_t to,
 
     /* Convert UCS2 to to_set */
     if ((size_t) -1 == (o_len = convert_string_allocate_internal(CH_UCS2, to,
-                                (char *)u, i_len, dest))) {
+        (char *)u, i_len, dest))) {
         LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s",
             charset_name(to), strerror(errno));
     }
@@ -581,7 +581,7 @@ size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst,
     size_t ilen;
 
     if ((size_t)(-1) == (len = convert_string_allocate_internal(ch, CH_UCS2, src,
-                               inlen, &buffer))) {
+        inlen, &buffer))) {
         return len;
     }
 
@@ -593,7 +593,7 @@ size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst,
     }
 
     if ((size_t)(-1) == (len = convert_string_internal(CH_UCS2, ch, (char *)u, ilen,
-                               dst, outlen))) {
+        dst, outlen))) {
         free(buffer);
         return (size_t) -1;
     }
@@ -611,7 +611,7 @@ size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
     size_t ilen;
 
     if ((size_t)(-1) == (len = convert_string_allocate_internal(ch, CH_UCS2, src,
-                               inlen, &buffer))) {
+        inlen, &buffer))) {
         return len;
     }
 
@@ -623,7 +623,7 @@ size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
     }
 
     if ((size_t)(-1) == (len = convert_string_internal(CH_UCS2, ch, (char *)u, ilen,
-                               dst, outlen))) {
+        dst, outlen))) {
         free(buffer);
         return (size_t) -1;
     }
@@ -1000,8 +1000,8 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
     errno = 0;
 
     if ((size_t)(-1) == (o_len = pull_charset_flags(from_set, to_set, cap_charset,
-                                 src, src_len,
-                                 (char *) buffer, sizeof(buffer) - 2, flags))) {
+        src, src_len,
+        (char *) buffer, sizeof(buffer) - 2, flags))) {
         LOG(log_error, logtype_default,
             "Conversion failed ( %s to CH_UCS2 ), errno %i, %s", charset_name(from_set),
             errno, src);
@@ -1058,7 +1058,7 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
 
     /* Convert UCS2 to to_set */
     if ((size_t)(-1) == (o_len = push_charset_flags(to_set, cap_charset, (char *)u,
-                                 i_len, dest, dest_capacity, flags))) {
+        i_len, dest, dest_capacity, flags))) {
         LOG(log_error, logtype_default,
             "Conversion failed (CH_UCS2 to %s):%s", charset_name(to_set), strerror(errno));
         return (size_t) -1;

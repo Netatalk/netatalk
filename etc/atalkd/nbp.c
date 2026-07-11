@@ -172,7 +172,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
         } else {
             for (zt = ziptab; zt; zt = zt->zt_next) {
                 if (zt->zt_len == nn.nn_zonelen && strndiacasecmp(zt->zt_name,
-                        nn.nn_zone, zt->zt_len) == 0) {
+                    nn.nn_zone, zt->zt_len) == 0) {
                     break;
                 }
             }
@@ -375,7 +375,7 @@ int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
         } else {
             for (zt = ziptab; zt; zt = zt->zt_next) {
                 if (zt->zt_len == nn.nn_zonelen && strndiacasecmp(zt->zt_name,
-                        nn.nn_zone, zt->zt_len) == 0) {
+                    nn.nn_zone, zt->zt_len) == 0) {
                     break;
                 }
             }

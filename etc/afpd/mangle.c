@@ -83,7 +83,7 @@ static char *demangle_checks(const struct vol *vol, char *uname,
     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
 
     if ((size_t) -1 == (len = convert_charset(vol->v_volcharset, vol->v_maccharset,
-                              0, uname, strlen(uname), buffer, sizeof(buffer), &flags))) {
+        0, uname, strlen(uname), buffer, sizeof(buffer), &flags))) {
         return mfilename;
     }
 
@@ -106,7 +106,7 @@ static char *demangle_checks(const struct vol *vol, char *uname,
         if (len) {
             /* convert the buffer to UTF8_MAC ... */
             if ((size_t) -1 == (len = convert_charset(vol->v_maccharset, CH_UTF8_MAC, 0,
-                                      buffer, len, buffer, sizeof(buffer), &flags))) {
+                buffer, len, buffer, sizeof(buffer), &flags))) {
                 return mfilename;
             }
 
@@ -130,7 +130,7 @@ static char *demangle_checks(const struct vol *vol, char *uname,
             /* characters have to match ... again a possible race FIXME			  */
 
             if ((size_t) -1 == (len = convert_charset(vol->v_volcharset, CH_UTF8_MAC, 0,
-                                      uname, strlen(uname), buffer, sizeof(buffer), &flags))) {
+                uname, strlen(uname), buffer, sizeof(buffer), &flags))) {
                 return mfilename;
             }
 

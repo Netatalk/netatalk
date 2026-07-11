@@ -189,9 +189,9 @@ With automated enforcement of the style guide, the manual overhead of fiddling w
 
 ### Automatic formatting
 
-The style guide is automatically enforced with [astyle](https://gitlab.com/saalen/astyle) v3.6.x
-and an `.astylerc` options file.
-Before submitting new code, run `astyle --project --recursive '*.h' '*.c'` in the root of the netatalk source tree.
+The style guide is automatically enforced with [astyle](https://gitlab.com/saalen/astyle) v3.6.17 or later
+and an `.astylerc` formatting options file.
+Before submitting new code, run `astyle --project --recursive '*.h' '*.c' '*.cc'` in the root of the netatalk source tree.
 You can also use the `./contrib/scripts/codefmt.sh` convenience script to the same effect.
 
 ### Rules
@@ -232,11 +232,9 @@ int return_zero(int i)
 ```
 
 - Code comments
-  - C style comments, not C++ style
-  - Comments should come on the line before the code it describes
-    - Exception: Trailing Doxygen comments (see below)
-  - Single line: `/* Your comment goes here */`
-  - Multi line comments use a `*` prefix
+  - C style `/* comments */`, not C++ style `// comments`
+  - Trailing code comments should be used where appropriate, such as structure member definitions
+  - Multi line comments use vertically aligned `*` prefixes
 
 Ex.
 

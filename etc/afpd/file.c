@@ -835,7 +835,7 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
             /* Fork-owned adouble — use directly, skip cache.
              * Opportunistically populate cache if not yet loaded. */
             struct dir *cachedfile = dircache_search_by_name(vol, dir,
-                                     upath, upath_len);
+                upath, upath_len);
 
             /* If cache AD is unset, store fork's live adouble */
             if (cachedfile && cachedfile->dcache_rlen < 0) {
@@ -844,7 +844,7 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
         } else {
             /* No open fork — use ad_metadata_cached() */
             struct dir *cachedfile = dircache_search_by_name(vol, dir,
-                                     upath, upath_len);
+                upath, upath_len);
             ad_init(&ad, vol);
 
             if (ad_metadata_cached(upath, flags, &ad, vol, cachedfile, false,
@@ -1017,7 +1017,7 @@ createfile_iderr:
      * Eliminates per-file getxattr on first enumerate after creation. */
     {
         struct dir *cachedfile = dircache_search_by_name(vol, dir,
-                                 upath, (int)upath_len);
+            upath, (int)upath_len);
 
         if (!cachedfile && id != CNID_INVALID) {
             bstring fullpath = bstrcpy(dir->d_fullpath);
@@ -1310,7 +1310,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 {
                     size_t upath_slen = strnlen(upath, CNID_MAX_PATH_LEN);
                     struct dir *stale = dircache_search_by_name(vol, curdir,
-                                        upath, upath_slen);
+                        upath, upath_slen);
 
                     if (stale) {
                         dir_remove(vol, stale, 0);
@@ -1560,7 +1560,7 @@ setfilparam_done:
 
     if (!symlinked && upath) {
         cached = dircache_search_by_name(vol, curdir, upath, strnlen(upath,
-                                         CNID_MAX_PATH_LEN));
+            CNID_MAX_PATH_LEN));
     }
 
     if (isad) {
@@ -1715,7 +1715,7 @@ size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
     size_t    outlen;
 
     if ((size_t) -1 == (outlen = convert_string(vol->v_maccharset, CH_UTF8_MAC, src,
-                                 srclen, dest, destlen))) {
+        srclen, dest, destlen))) {
         return -1;
     }
 

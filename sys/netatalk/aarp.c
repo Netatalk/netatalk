@@ -224,7 +224,7 @@ int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat,
 
     if (at_broadcast(destsat)) {
         if ((aa = (struct at_ifaddr *)at_ifawithnet(destsat,
-                  ((struct ifnet *)ac)->if_addrlist)) == NULL) {
+            ((struct ifnet *)ac)->if_addrlist)) == NULL) {
             m_freem(m);
             return 0;
         }
@@ -362,7 +362,7 @@ void at_aarpinput(struct arpcom *ac, struct mbuf *m)
         sat.sat_addr.s_net = net;
 
         if ((aa = (struct at_ifaddr *)at_ifawithnet(&sat,
-                  ac->ac_if.if_addrlist)) == NULL) {
+            ac->ac_if.if_addrlist)) == NULL) {
             m_freem(m);
             return;
         }

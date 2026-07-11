@@ -152,7 +152,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         ad_available = 1;
         size_t uname_len = strnlen(uname, CNID_MAX_PATH_LEN);
         struct dir *cached = dircache_search_by_name(vol, curdir,
-                             uname, uname_len);
+            uname, uname_len);
 
         /* If cache AD is unset, store fork's live adouble */
         if (cached && cached->dcache_rlen < 0) {
