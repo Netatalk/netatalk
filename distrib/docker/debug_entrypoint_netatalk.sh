@@ -306,27 +306,44 @@ else
     TEST_START=$(date +%s)
     TEST_EXIT_CODE=0
     case "$TESTSUITE" in
-        spectest)
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2"
+        spec | spectest)
+            if [ "$AFP_SUBTEST" = "Readonly" ]; then
+                echo "testfile uno" > /mnt/afpshare/first.txt
+                echo "testfile dos" > /mnt/afpshare/second.txt
+                mkdir /mnt/afpshare/third
+            fi
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" \
+                -s "$SHARE_NAME" -S "$SHARE_NAME2"
+            if [ -n "$AFP_TESTSUITE_UAM" ]; then
+                set -- "$@" -A "$AFP_TESTSUITE_UAM"
+            fi
+            if [ -n "$AFP_SUBTEST" ]; then
+                set -- "$@" -f "$AFP_SUBTEST"
+            fi
+            afp_spectest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
-        readonly)
-            echo "testfile uno" > /mnt/afpshare/first.txt
-            echo "testfile dos" > /mnt/afpshare/second.txt
-            mkdir /mnt/afpshare/third
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
+        login | logintest)
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -w "$AFP_PASS"
+            if [ -n "$AFP_TESTSUITE_UAM" ]; then
+                set -- "$@" -A "$AFP_TESTSUITE_UAM"
+            fi
+            afp_logintest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
-        login)
-            afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS"
+        lan | lantest)
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_lantest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
-        lan)
-            afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
-            TEST_EXIT_CODE=$?
-            ;;
-        speed)
-            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -n 10 -f Read,Write,Copy,ServerCopy
+        speed | speedtest)
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" \
+                -n 10 -f Read,Write,Copy,ServerCopy
+            afp_speedtest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         *)

@@ -16,7 +16,7 @@
 #include "config.h"
 #endif
 
-#include "uamtest_libafpclient.h"
+#include "testsuite_libafpclient.h"
 
 #include <pthread.h>
 #include <stddef.h>
@@ -30,7 +30,7 @@
 
 #include "testhelper.h"
 
-struct uamtest_session {
+struct testsuite_libafpclient_session {
     struct afp_server *server;
 };
 
@@ -38,8 +38,8 @@ static pthread_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
 static int initialized;
 static pthread_t loop_thread;
 
-static void uamtest_libafpclient_log(void *priv, enum logtypes logtype,
-                                     int loglevel, const char *message)
+static void testsuite_libafpclient_log(void *priv, enum logtypes logtype,
+                                       int loglevel, const char *message)
 {
     (void)priv;
     (void)logtype;
@@ -55,9 +55,9 @@ static void uamtest_libafpclient_log(void *priv, enum logtypes logtype,
     fprintf(stdout, "%s\n", message ? message : "(null)");
 }
 
-static struct libafpclient uamtest_libafpclient = {
+static struct libafpclient testsuite_libafpclient = {
     .unmount_volume = NULL,
-    .log_for_client = uamtest_libafpclient_log,
+    .log_for_client = testsuite_libafpclient_log,
     .forced_ending_hook = NULL,
     .scan_extra_fds = NULL,
     .loop_started = NULL,
@@ -79,12 +79,12 @@ static void fill_request(struct afp_connection_request *req,
     req->uam_mask = uam_mask;
 }
 
-int uamtest_libafpclient_init(void)
+int testsuite_libafpclient_init(void)
 {
     pthread_mutex_lock(&init_lock);
 
     if (!initialized) {
-        libafpclient_register(&uamtest_libafpclient);
+        libafpclient_register(&testsuite_libafpclient);
         init_uams();
         afp_main_quick_startup(&loop_thread);
         initialized = 1;
@@ -94,7 +94,7 @@ int uamtest_libafpclient_init(void)
     return 0;
 }
 
-unsigned int uamtest_libafpclient_uam_mask(const char *uam)
+unsigned int testsuite_libafpclient_uam_mask(const char *uam)
 {
     if (!uam || !*uam) {
         return 0;
@@ -103,7 +103,7 @@ unsigned int uamtest_libafpclient_uam_mask(const char *uam)
     return find_uam_by_name(uam);
 }
 
-const char *uamtest_libafpclient_resolve_uam(const char *uam)
+const char *testsuite_libafpclient_resolve_uam(const char *uam)
 {
     if (!uam || !*uam) {
         return NULL;
@@ -112,7 +112,7 @@ const char *uamtest_libafpclient_resolve_uam(const char *uam)
     return resolve_uam_shorthand(uam);
 }
 
-unsigned int uamtest_libafpclient_discover_uams(const char *host, int port,
+unsigned int testsuite_libafpclient_discover_uams(const char *host, int port,
         int afp_version,
         const char *user,
         const char *password,
@@ -129,7 +129,7 @@ unsigned int uamtest_libafpclient_discover_uams(const char *host, int port,
     (void)user;
     (void)password;
 
-    if (uamtest_libafpclient_init() != 0) {
+    if (testsuite_libafpclient_init() != 0) {
         return 0;
     }
 
@@ -154,10 +154,10 @@ unsigned int uamtest_libafpclient_discover_uams(const char *host, int port,
     return supported;
 }
 
-int uamtest_libafpclient_connect(struct uamtest_session **session,
-                                 const char *host, int port,
-                                 int afp_version, const char *uam,
-                                 const char *user, const char *password)
+int testsuite_libafpclient_connect(
+    struct testsuite_libafpclient_session **session,
+    const char *host, int port, int afp_version, const char *uam,
+    const char *user, const char *password)
 {
     struct afp_connection_request req;
     struct afp_server *server;
@@ -169,7 +169,7 @@ int uamtest_libafpclient_connect(struct uamtest_session **session,
 
     *session = NULL;
 
-    if (uamtest_libafpclient_init() != 0) {
+    if (testsuite_libafpclient_init() != 0) {
         return -1;
     }
 
@@ -198,8 +198,8 @@ int uamtest_libafpclient_connect(struct uamtest_session **session,
     return 0;
 }
 
-unsigned int uamtest_libafpclient_supported_uams(
-    const struct uamtest_session *session)
+unsigned int testsuite_libafpclient_supported_uams(
+    const struct testsuite_libafpclient_session *session)
 {
     if (!session || !session->server) {
         return 0;
@@ -208,8 +208,8 @@ unsigned int uamtest_libafpclient_supported_uams(
     return session->server->supported_uams;
 }
 
-unsigned int uamtest_libafpclient_using_uam(
-    const struct uamtest_session *session)
+unsigned int testsuite_libafpclient_using_uam(
+    const struct testsuite_libafpclient_session *session)
 {
     if (!session || !session->server) {
         return 0;
@@ -218,8 +218,8 @@ unsigned int uamtest_libafpclient_using_uam(
     return session->server->using_uam;
 }
 
-int uamtest_libafpclient_using_version(
-    const struct uamtest_session *session)
+int testsuite_libafpclient_using_version(
+    const struct testsuite_libafpclient_session *session)
 {
     if (!session || !session->server || !session->server->using_version) {
         return 0;
@@ -228,7 +228,7 @@ int uamtest_libafpclient_using_version(
     return session->server->using_version->av_number;
 }
 
-int uamtest_libafpclient_smoke(struct uamtest_session *session)
+int testsuite_libafpclient_smoke(struct testsuite_libafpclient_session *session)
 {
     if (!session || !session->server) {
         return -1;
@@ -237,7 +237,8 @@ int uamtest_libafpclient_smoke(struct uamtest_session *session)
     return afp_getsrvrparms(session->server);
 }
 
-void uamtest_libafpclient_close(struct uamtest_session **session)
+void testsuite_libafpclient_close(
+    struct testsuite_libafpclient_session **session)
 {
     if (!session || !*session) {
         return;

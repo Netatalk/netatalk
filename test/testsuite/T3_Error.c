@@ -615,7 +615,7 @@ STATIC void test35()
     }
 
 test_exit:
-    exit_test("Error:test35: illegal volume/desktop ref");
+    exit_test("T3Error:test35: illegal volume/desktop ref");
 }
 
 /* ----------------------- */
@@ -696,7 +696,7 @@ STATIC void test36()
     }
 
 test_exit:
-    exit_test("Error:test36: no folder error (ERR_NOOBJ)");
+    exit_test("T3Error:test36: no folder error (ERR_NOOBJ)");
 }
 
 
@@ -768,7 +768,7 @@ STATIC void test37()
 fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
-    exit_test("Error:test37: no folder error ==> ERR_NOOBJ");
+    exit_test("T3Error:test37: no folder error ==> ERR_NOOBJ");
 }
 
 /* ----------------------
@@ -802,7 +802,12 @@ static void cname_test(char *name)
     uint16_t vol = VolID;
     const DSI *dsi;
     dsi = &Conn->dsi;
-    FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap))
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap)) {
+        test_failed();
+        return;
+    }
+
     filedir.isdir = 1;
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
@@ -967,7 +972,7 @@ STATIC void test95()
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
 test_exit:
-    exit_test("Error:test95: exchange files");
+    exit_test("T3Error:test95: exchange files");
 }
 
 /* ----------------- */
@@ -993,7 +998,7 @@ STATIC void test99()
 #endif
     delete_folder(vol, DIRDID_ROOT, name);
 test_exit:
-    exit_test("Error:test99: test folder without access right");
+    exit_test("T3Error:test99: test folder without access right");
 }
 
 /* --------------------- */
@@ -1077,7 +1082,7 @@ STATIC void test100()
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT, name1))
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT,
             name1, name))
-    exit_test("Error:test100: no obj cname error (AFPERR_NOOBJ)");
+    exit_test("T3Error:test100: no obj cname error (AFPERR_NOOBJ)");
 }
 
 /* --------------------- */
@@ -1174,7 +1179,7 @@ STATIC void test101()
             DIRDID_ROOT, name1, name))
     delete_folder(vol, DIRDID_ROOT, ndir);
 test_exit:
-    exit_test("Error:test101: access error cname");
+    exit_test("T3Error:test101: access error cname");
 }
 
 /* --------------------- */
@@ -1314,7 +1319,7 @@ STATIC void test102()
     }
 
 test_exit:
-    exit_test("Error:test102: access error but not cname");
+    exit_test("T3Error:test102: access error but not cname");
 }
 
 /* --------------------- */
@@ -1514,7 +1519,7 @@ STATIC void test103()
     }
 
 test_exit:
-    exit_test("Error:test103: did access error");
+    exit_test("T3Error:test103: did access error");
 }
 
 /* --------------------- */
@@ -1589,7 +1594,7 @@ STATIC void test105()
     FAIL(err != FPRename(Conn, vol, dir, name1, name))
     FAIL(err != FPDelete(Conn, vol, dir, name1))
     FAIL(err != FPMoveAndRename(Conn, vol, dir, DIRDID_ROOT, name1, name))
-    exit_test("Error:test105: bad DID in call");
+    exit_test("T3Error:test105: bad DID in call");
 }
 
 /* -------------------------- */
@@ -1763,7 +1768,7 @@ fin:
     FPDelete(Conn, vol, DIRDID_ROOT, name);
     FPDelete(Conn, vol, DIRDID_ROOT, name1);
 test_exit:
-    exit_test("Error:test170: cname error did=1 name=\"\"");
+    exit_test("T3Error:test170: cname error did=1 name=\"\"");
 }
 
 /* -------------------------- */
@@ -1918,7 +1923,7 @@ fin:
     FPDelete(Conn, vol, DIRDID_ROOT, name);
     FPDelete(Conn, vol, DIRDID_ROOT, name1);
 test_exit:
-    exit_test("Error:test171: cname error did=1 name=bad name");
+    exit_test("T3Error:test171: cname error did=1 name=bad name");
 }
 
 /* -------------------------- */
@@ -2084,7 +2089,7 @@ fin:
     FPDelete(Conn, vol, DIRDID_ROOT, name);
     FPDelete(Conn, vol, DIRDID_ROOT, name1);
 test_exit:
-    exit_test("Error:test173: did error did=0 name=test173 name");
+    exit_test("T3Error:test173: did error did=0 name=test173 name");
 }
 
 /* -------------------------- */
@@ -2278,11 +2283,11 @@ STATIC void test174()
     FAIL(ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, tdir, tname))
     FAIL(FPCloseDT(Conn, dt))
 test_exit:
-    exit_test("Error:test174: did error two users from parent folder did=<deleted> name=test174 name");
+    exit_test("T3Error:test174: did error two users from parent folder did=<deleted> name=test174 name");
 }
 
 /* ----------- */
-void Error_test()
+void T3Error_test()
 {
     ENTER_TESTSET
     test35();

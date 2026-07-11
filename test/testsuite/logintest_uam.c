@@ -28,7 +28,7 @@
 
 #include "testhelper.h"
 #include "logintest_uam.h"
-#include "uamtest_libafpclient.h"
+#include "logintest_libafpclient.h"
 
 enum test_result {
     RESULT_PASS,
@@ -39,7 +39,7 @@ enum test_result {
 
 const struct uamtest_entry uamtest_entries[] = {
     { "guest",     "No User Authent",        false, false },
-    { "cleartext", "Cleartxt Passwrd",       true,  true  },
+    { "clrtxt",    "Cleartxt Passwrd",       true,  true  },
     { "randnum",   "Randnum Exchange",       true,  true  },
     { "randnum2",  "2-Way Randnum Exchange", true,  true  },
     { "dhx",       "DHCAST128",              true,  true  },
@@ -169,15 +169,15 @@ static void make_wrong_password(char *buf, size_t buflen)
 static enum test_result run_one(const struct uamtest_entry *entry,
                                 char *reason, size_t reason_len)
 {
-    struct uamtest_session *session = NULL;
-    struct uamtest_session *wrong_session = NULL;
+    struct logintest_libafpclient_session *session = NULL;
+    struct logintest_libafpclient_session *wrong_session = NULL;
     const char *canonical;
     unsigned int mask;
     unsigned int using_uam;
     char wrong_password[AFP_MAX_PASSWORD_LEN];
     int using_version;
-    canonical = uamtest_libafpclient_resolve_uam(entry->uam);
-    mask = uamtest_libafpclient_uam_mask(entry->uam);
+    canonical = logintest_libafpclient_resolve_uam(entry->uam);
+    mask = logintest_libafpclient_uam_mask(entry->uam);
 
     if (mask == 0) {
         snprintf(reason, reason_len, "libafpclient does not know this UAM");
@@ -198,10 +198,10 @@ static enum test_result run_one(const struct uamtest_entry *entry,
         fprintf(stdout, "Testing %s\n", canonical ? canonical : entry->uam);
     }
 
-    if (uamtest_libafpclient_connect(&session, Server, Port, Version,
-                                     entry->uam,
-                                     entry->needs_credentials ? User : "",
-                                     entry->needs_credentials ? Password : "")
+    if (logintest_libafpclient_connect(&session, Server, Port, Version,
+                                       entry->uam,
+                                       entry->needs_credentials ? User : "",
+                                       entry->needs_credentials ? Password : "")
             != 0) {
         if (advertised_known && (advertised_uams & mask) != 0) {
             snprintf(reason, reason_len, "advertised UAM failed to authenticate");
@@ -212,25 +212,25 @@ static enum test_result run_one(const struct uamtest_entry *entry,
         return RESULT_SKIP;
     }
 
-    using_uam = uamtest_libafpclient_using_uam(session);
+    using_uam = logintest_libafpclient_using_uam(session);
 
     if ((using_uam & mask) == 0) {
-        uamtest_libafpclient_close(&session);
+        logintest_libafpclient_close(&session);
         snprintf(reason, reason_len, "libafpclient selected a different UAM");
         return RESULT_FAIL;
     }
 
-    using_version = uamtest_libafpclient_using_version(session);
+    using_version = logintest_libafpclient_using_version(session);
 
     if (using_version != 0 && using_version > Version) {
-        uamtest_libafpclient_close(&session);
+        logintest_libafpclient_close(&session);
         snprintf(reason, reason_len, "negotiated AFP%d above requested AFP%d",
                  using_version, Version);
         return RESULT_FAIL;
     }
 
-    if (uamtest_libafpclient_smoke(session) != 0) {
-        uamtest_libafpclient_close(&session);
+    if (logintest_libafpclient_smoke(session) != 0) {
+        logintest_libafpclient_close(&session);
         snprintf(reason, reason_len, "authenticated AFP smoke failed");
         return RESULT_FAIL;
     }
@@ -238,17 +238,17 @@ static enum test_result run_one(const struct uamtest_entry *entry,
     if (entry->check_wrong_password) {
         make_wrong_password(wrong_password, sizeof(wrong_password));
 
-        if (uamtest_libafpclient_connect(&wrong_session, Server, Port,
-                                         Version, entry->uam, User,
-                                         wrong_password) == 0) {
-            uamtest_libafpclient_close(&wrong_session);
-            uamtest_libafpclient_close(&session);
+        if (logintest_libafpclient_connect(&wrong_session, Server, Port,
+                                           Version, entry->uam, User,
+                                           wrong_password) == 0) {
+            logintest_libafpclient_close(&wrong_session);
+            logintest_libafpclient_close(&session);
             snprintf(reason, reason_len, "wrong password authenticated");
             return RESULT_FAIL;
         }
     }
 
-    uamtest_libafpclient_close(&session);
+    logintest_libafpclient_close(&session);
     snprintf(reason, reason_len, "login, smoke, and failure checks passed");
     return RESULT_PASS;
 }
@@ -268,7 +268,7 @@ int uamtest_has_test(const char *filter)
 int uamtest_run_selected(const char *filter)
 {
     bool matched = false;
-    advertised_uams = uamtest_libafpclient_discover_uams(Server, Port,
+    advertised_uams = logintest_libafpclient_discover_uams(Server, Port,
                       Version, User ? User : "", Password ? Password : "",
                       &advertised_known);
 

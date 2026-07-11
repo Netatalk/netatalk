@@ -564,10 +564,11 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_srp.so" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
             -e VERBOSE="1" \
+            -e AFP_TESTSUITE_UAM="srp" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -618,10 +619,11 @@ jobs:
             -e AFP_CNID_BACKEND="sqlite" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_dhx2.so" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
             -e VERBOSE="1" \
+            -e AFP_TESTSUITE_UAM="dhx2" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -728,10 +730,11 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_dhx.so" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
             -e VERBOSE="1" \
+            -e AFP_TESTSUITE_UAM="dhx" \
             -e AFP_VERSION="6" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -808,10 +811,11 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
             -e VERBOSE="1" \
+            -e AFP_TESTSUITE_UAM="randnum2" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -860,10 +864,11 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
             -e VERBOSE="1" \
+            -e AFP_TESTSUITE_UAM="randnum" \
             -e AFP_VERSION="2" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -993,7 +998,8 @@ jobs:
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
-            -e TESTSUITE="readonly" \
+            -e TESTSUITE="spectest" \
+            -e AFP_SUBTEST="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
@@ -1014,7 +1020,8 @@ jobs:
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
-            -e TESTSUITE="readonly" \
+            -e TESTSUITE="spectest" \
+            -e AFP_SUBTEST="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
