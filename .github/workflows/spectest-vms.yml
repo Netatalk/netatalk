@@ -293,7 +293,6 @@ jobs:
         uses: vmactions/netbsd-vm@0c26a4c4a5e234038862a4a53a00c905b8a107c9 # v1.4.2
         with:
           copyback: true
-          sync: sshfs
           prepare: |
             set -e
             export PKG_PATH="https://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All"
