@@ -1207,6 +1207,13 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
 {
     ssize_t cc;
 
+    if (cached_entry->dcache_rfork_buf == NULL) {
+        LOG(log_error, logtype_afpd,
+            "rfork_cache_serve_from_buf: NULL buffer (did:%u)",
+            ntohl(cached_entry->d_did));
+        return -1;
+    }
+
     /* Defense-in-depth: validate bounds before any memcpy from rfork buffer.
      * Callers maintain offset + reqcount <= dcache_rlen, but verify here to
      * prevent heap over-read if invariants are ever violated. */
@@ -1221,6 +1228,12 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
         return -1;
     }
 
+    LOG(log_debug, logtype_afpd,
+        "rfork_cache_serve_from_buf: serving rfork from cache "
+        "(offset:%lld, reqcount:%lld, rlen:%lld, did:%u)",
+        (long long)offset, (long long)reqcount,
+        (long long)cached_entry->dcache_rlen,
+        ntohl(cached_entry->d_did));
     *rbuflen = MIN(reqcount, dsi->server_quantum);
     memcpy(ibuf, (char *)cached_entry->dcache_rfork_buf + offset, *rbuflen);
     offset += *rbuflen;

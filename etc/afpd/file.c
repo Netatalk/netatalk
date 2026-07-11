@@ -1656,7 +1656,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
             }
 
             if (AFP_OK != (rc = copyfile(vol, vol, ddir, sdir_fd, src, dst, newname,
-                                         NULL))) {
+                                         NULL, 0))) {
                 /* on error copyfile delete dest */
                 return rc;
             }
@@ -1836,32 +1836,47 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         return AFPERR_BADTYPE;
     }
 
-    /* don't allow copies when the file is open.
-     * XXX: the spec only calls for read/deny write access.
-     *      however, copyfile doesn't have any of that info,
-     *      and locks need to stay coherent. as a result,
-     *      we just balk if the file is opened already. */
+    /* A held source must reuse its fds: never ad_open/ad_close a second handle
+     * onto the live of->of_ad.  A transient close can strand the holder's
+     * process-owned POSIX locks and perturbs the shared refcount; of_get_locks
+     * follows the same rule.  A not-held adp is a private throwaway. */
+    const struct ofork *of = of_findname(s_vol, s_path);
+    int held = (of != NULL);
     adp = of_ad(s_vol, s_path, &ad);
 
-    if (ad_open(adp, s_path->u_name,
-                ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RDONLY | ADFLAGS_SETSHRMD) <
-            0) {
+    if (!held) {
+        if (ad_open(adp, s_path->u_name,
+                    ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RDONLY
+                    | ADFLAGS_SETSHRMD) < 0) {
+            return AFPERR_DENYCONF;
+        }
+    } else if (!(ad_data_fileno(adp) >= 0 || ad_data_fileno(adp) == AD_SYMLINK)) {
+        /* held with no usable data fd: copy_fork reads it, and a transient open
+         * would strand the holder's locks - refuse.  Test the fd directly (like
+         * of_get_locks), not AD_DATA_OPEN: on EA the base fd is valid with
+         * ad_data_refcount == 0. */
         return AFPERR_DENYCONF;
     }
 
 #ifdef HAVE_FSHARE_T
-    fshare_t shmd;
-    shmd.f_access = F_RDACC;
-    shmd.f_deny = F_NODNY;
 
-    if (fcntl(ad_data_fileno(adp), F_SHARE, &shmd) != 0) {
-        retvalue = AFPERR_DENYCONF;
-        goto copy_exit;
-    }
+    /* Only for a freshly-opened source: on a held fd this would plant an
+     * uninitialized-f_id reservation (released only by the !held close below)
+     * over the holder's own fork_setmode reservation. */
+    if (!held) {
+        fshare_t shmd;
+        shmd.f_access = F_RDACC;
+        shmd.f_deny = F_NODNY;
 
-    if (AD_RSRC_OPEN(adp) && fcntl(ad_reso_fileno(adp), F_SHARE, &shmd) != 0) {
-        retvalue = AFPERR_DENYCONF;
-        goto copy_exit;
+        if (fcntl(ad_data_fileno(adp), F_SHARE, &shmd) != 0) {
+            retvalue = AFPERR_DENYCONF;
+            goto copy_exit;
+        }
+
+        if (AD_RSRC_OPEN(adp) && fcntl(ad_reso_fileno(adp), F_SHARE, &shmd) != 0) {
+            retvalue = AFPERR_DENYCONF;
+            goto copy_exit;
+        }
     }
 
 #endif
@@ -1926,7 +1941,8 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         goto copy_exit;
     }
 
-    if ((err = copyfile(s_vol, d_vol, curdir, -1, p, upath, newname, adp)) < 0) {
+    if ((err = copyfile(s_vol, d_vol, curdir, -1, p, upath, newname, adp,
+                        held)) < 0) {
         retvalue = err;
         goto copy_exit;
     }
@@ -1946,7 +1962,10 @@ copy_exit:
         ipc_send_cache_hint(obj, d_vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     }
 
-    ad_close(adp, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_SETSHRMD);
+    if (!held) {
+        ad_close(adp, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_SETSHRMD);
+    }
+
     return retvalue;
 }
 
@@ -1962,7 +1981,8 @@ int copyfile(struct vol *s_vol,
              char *src,
              char *dst,
              char *newname,
-             struct adouble *adp)
+             struct adouble *adp,
+             int held)
 {
     struct adouble	ads, add;
     int			err = 0;
@@ -1979,21 +1999,58 @@ int copyfile(struct vol *s_vol,
 
     adflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RF | ADFLAGS_NORF;
 
-    if (ad_openat(adp, sfd, src, adflags | ADFLAGS_RDONLY) < 0) {
-        err = errno;
-        goto done;
-    }
+    if (!held) {
+        /* not held: private handle, so ad_open/close is safe.  AD_RSRC_OPEN then
+         * reflects the on-disk rfork. */
+        if (ad_openat(adp, sfd, src, adflags | ADFLAGS_RDONLY) < 0) {
+            err = errno;
+            goto done;
+        }
 
-    if (!AD_META_OPEN(adp))
-        /* no resource fork, don't create one for dst file */
-    {
-        adflags &= ~ADFLAGS_HF;
-    }
+        if (!AD_META_OPEN(adp)) {
+            adflags &= ~ADFLAGS_HF;
+        }
 
-    if (!AD_RSRC_OPEN(adp))
-        /* no resource fork, don't create one for dst file */
-    {
-        adflags &= ~ADFLAGS_RF;
+        if (!AD_RSRC_OPEN(adp)) {
+            adflags &= ~ADFLAGS_RF;
+        }
+    } else {
+        /* held: reuse fds, never ad_open/close onto of->of_ad.  Meta presence is
+         * read directly; the rfork may be closed on the held handle even when it
+         * exists on disk, so probe it with a PRIVATE adouble. */
+        if (!AD_META_OPEN(adp)) {
+            adflags &= ~ADFLAGS_HF;
+        }
+
+#if defined(HAVE_EAFD) && defined(SOLARIS)
+
+        /* Solaris O_XATTR rfork fd hangs off the data fd: a private rfork open
+         * would strand the held locks - fall back to the held handle's view. */
+        if (!AD_RSRC_OPEN(adp)) {
+            adflags &= ~ADFLAGS_RF;
+        }
+
+#else
+
+        if (!AD_RSRC_OPEN(adp)) {
+            struct adouble adprobe;
+            ad_init(&adprobe, s_vol);
+
+            if (ad_openat(&adprobe, sfd, src,
+                          ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY) == 0) {
+                int has_rf = AD_RSRC_OPEN(&adprobe);
+                ad_close(&adprobe, ADFLAGS_RF | ADFLAGS_HF);
+
+                if (!has_rf) {
+                    adflags &= ~ADFLAGS_RF;
+                }
+            }
+
+            /* a hard open error leaves RF set: create the dest rfork, matching
+             * the not-held path's RF|NORF open. */
+        }
+
+#endif
     }
 
     /* saving stat exit code, thus saving us on one more stat later on */
@@ -2009,7 +2066,10 @@ int copyfile(struct vol *s_vol,
     if (ad_open(&add, dst, adflags | ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL,
                 st.st_mode | S_IRUSR | S_IWUSR) < 0) {
         err = errno;
-        ad_close(adp, adflags);
+
+        if (!held) {
+            ad_close(adp, adflags);
+        }
 
         if (EEXIST != err) {
             /* dst ownership is not certain here (the create failed for a
@@ -2076,7 +2136,10 @@ int copyfile(struct vol *s_vol,
     }
 
 error:
-    ad_close(adp, adflags);
+
+    if (!held) {
+        ad_close(adp, adflags);
+    }
 
     if (ad_close(&add, adflags) < 0) {
         err = errno;

@@ -288,7 +288,7 @@ static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src,
                     goto copydir_done;
                 }
             } else if (AFP_OK != (err = copyfile(vol, vol, ddir, dirfd, spath, dpath, NULL,
-                                                 NULL))) {
+                                                 NULL, 0))) {
                 goto copydir_done;
             } else {
                 /* keep the same time stamp. */

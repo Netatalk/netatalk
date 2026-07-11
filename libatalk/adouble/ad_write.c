@@ -97,6 +97,10 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end,
 
         cc = adf_pwrite(&ad->ad_resource_fork, buf, buflen, r_off);
 
+        if (cc < 0) {
+            return -1;    /* nothing written; do NOT touch ad_rlen */
+        }
+
         if (ad->ad_rlen < off + cc) {
             ad->ad_rlen = off + cc;
         }
