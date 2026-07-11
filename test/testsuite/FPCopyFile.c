@@ -1132,6 +1132,131 @@ test_exit:
 }
 
 
+/* ------------------------- */
+/* Copy a file whose resource fork this session still holds open, then close the
+ * fork.  The copy must succeed and preserve both forks, and the holder's close
+ * must return cleanly. */
+STATIC void test425()
+{
+    int      dir = DIRDID_ROOT;
+    uint16_t vol = VolID;
+    int      ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = { 0 };
+    uint16_t bitmap;
+    uint16_t fork = 0;
+    uint16_t dfork = 0;
+    const DSI *dsi = &Conn->dsi;
+    char     data[20];
+    char *name  = "t425 held rfork src";
+    char *name1 = "t425 copy dest";
+    ENTER_TEST
+
+    if (FPCreateFile(Conn, vol, 0, dir, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    dfork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,
+                       OPENACC_WR | OPENACC_RD);
+
+    if (!dfork) {
+        test_nottested();
+        goto fin;
+    }
+
+    if (FPSetForkParam(Conn, dfork, (1 << FILPBIT_DFLEN), 9)) {
+        FPCloseFork(Conn, dfork);
+        test_nottested();
+        goto fin;
+    }
+
+    if (FPWrite(Conn, dfork, 0, 9, "Data fork", 0)) {
+        FPCloseFork(Conn, dfork);
+        test_nottested();
+        goto fin;
+    }
+
+    FPCloseFork(Conn, dfork);
+    dfork = 0;
+    /* open the resource fork and keep it open across the copy */
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, 0, dir, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        test_nottested();
+        goto fin;
+    }
+
+    if (FPSetForkParam(Conn, fork, (1 << FILPBIT_RFLEN), 13)) {
+        test_nottested();
+        goto fin;
+    }
+
+    if (FPWrite(Conn, fork, 0, 13, "Resource fork", 0)) {
+        test_nottested();
+        goto fin;
+    }
+
+    FAIL(FPCopyFile(Conn, vol, dir, vol, dir, name, "", name1))
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+    bitmap = (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN);
+
+    if (FPGetFileDirParams(Conn, vol, dir, name1, bitmap, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+
+    if (filedir.dflen != 9 || filedir.rflen != 13) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED after copy wrong size (data %d, resource %d)\n",
+                    filedir.dflen, filedir.rflen);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    memset(data, 0, sizeof(data));
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, 0, dir, name1,
+                      OPENACC_RD);
+
+    if (!fork) {
+        test_failed();
+        goto fin;
+    }
+
+    if (FPRead(Conn, fork, 0, 13, data)) {
+        test_failed();
+    } else if (memcmp(data, "Resource fork", 13)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED not \"Resource fork\" read after copy\n");
+        }
+
+        test_failed();
+    }
+
+    FPCloseFork(Conn, fork);
+    fork = 0;
+    FAIL(FPDelete(Conn, vol, dir, name1))
+fin:
+
+    if (fork) {
+        FPCloseFork(Conn, fork);
+    }
+
+    if (dfork) {
+        FPCloseFork(Conn, dfork);
+    }
+
+    FPDelete(Conn, vol, dir, name);
+test_exit:
+    exit_test("FPCopyFile:test425: copy file with held-open resource fork");
+}
+
 /* ----------- */
 void FPCopyFile_test()
 {
@@ -1151,4 +1276,5 @@ void FPCopyFile_test()
     test409();
     test414();
     test424();
+    test425();
 }

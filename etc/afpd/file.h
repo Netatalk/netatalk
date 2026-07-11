@@ -112,7 +112,7 @@ extern int setfilparams(const AFPObj *obj, struct vol *, struct path *,
 extern int renamefile(struct vol *, struct dir *, int, char *, char *, char *,
                       struct adouble *);
 extern int copyfile(struct vol *, struct vol *, struct dir *, int, char *,
-                    char *, char *, struct adouble *);
+                    char *, char *, struct adouble *, int);
 extern int deletefile(const struct vol *, int, char *, int);
 
 extern int getmetadata(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
