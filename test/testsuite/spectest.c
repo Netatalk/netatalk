@@ -90,9 +90,6 @@ EXT_FN(FPSync);
 EXT_FN(FPWrite);
 EXT_FN(FPWriteExt);
 
-EXT_FN(T3FPRead);
-EXT_FN(T3FPzzz);
-
 EXT_FN(T2FPByteRangeLock);
 EXT_FN(T2FPCopyFile);
 EXT_FN(T2FPCreateFile);
@@ -111,9 +108,12 @@ EXT_FN(T2LockAttack);
 
 EXT_FN(Dircache_attack);
 EXT_FN(Encoding);
-EXT_FN(T3Error);
 EXT_FN(Readonly);
 EXT_FN(Utf8);
+
+EXT_FN(T3Error);
+EXT_FN(T3FPRead);
+EXT_FN(T3FPzzz);
 
 static void spectest_libafpclient_smoke_test(void);
 
