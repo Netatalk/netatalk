@@ -615,7 +615,13 @@ void afptest_libafpclient_close(struct CONN *conn)
     struct afptest_libafpclient_transport *transport;
     int fd;
 
-    if (!conn || !conn->transport) {
+    if (!conn) {
+        return;
+    }
+
+    afptest_libafpclient_clear_io_state(conn);
+
+    if (!conn->transport) {
         return;
     }
 

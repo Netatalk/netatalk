@@ -19,6 +19,7 @@ int afptest_libafpclient_raw_command(struct CONN *conn,
                                      size_t *reply_len);
 int afptest_libafpclient_smoke(struct CONN *conn, const char *volume_name);
 void afptest_libafpclient_logout(struct CONN *conn);
+void afptest_libafpclient_clear_io_state(struct CONN *conn);
 void afptest_libafpclient_close(struct CONN *conn);
 #endif
 

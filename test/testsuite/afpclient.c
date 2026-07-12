@@ -263,6 +263,12 @@ static void afptest_libafpclient_clear_replies(CONN *conn)
     conn->reply_queue_tail = NULL;
 }
 
+void afptest_libafpclient_clear_io_state(CONN *conn)
+{
+    afptest_libafpclient_clear_pending(conn);
+    afptest_libafpclient_clear_replies(conn);
+}
+
 static int afptest_libafpclient_pop_reply(CONN *conn)
 {
     DSI *dsi = &conn->dsi;
