@@ -211,6 +211,7 @@ static void afp_dsi_close(AFPObj *obj)
     LOG(log_note, logtype_afpd,
         "AFP statistics: %.2f KB read, %.2f KB written via DSI",
         dsi->read_count / 1024.0, dsi->write_count / 1024.0);
+    of_log_highwater();
     log_dircache_stat();
     dircache_rfork_shutdown();
     dsi_close(dsi);

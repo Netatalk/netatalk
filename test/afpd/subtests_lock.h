@@ -39,5 +39,6 @@ extern int utest_shared_rlock(const struct vol *vol);
 extern int utest_overlap_strand(const struct vol *vol);
 extern int utest_freelock_unlck_fail_logs(const struct vol *vol);
 extern int utest_fork_setmode_fdeny(const struct vol *vol);
+extern int utest_of_alloc_fifo(struct vol *vol);
 
 #endif /* SUBTESTS_LOCK_H */
