@@ -479,6 +479,7 @@ jobs:
               iniparser \
               libev \
               file \
+              libbstring \
               libgcrypt \
               meson \
               mysql-client \
