@@ -15,6 +15,7 @@ ARG RUN_DEPS="\
     libldap2 \
     libmariadb3 \
     libpam0g \
+    libreadline8t64 \
     libsqlite3-0 \
     libssl3 \
     libtalloc2 \
@@ -30,6 +31,7 @@ ARG BUILD_DEPS="\
     build-essential \
     file \
     flex \
+    gnupg \
     libacl1-dev \
     libattr1-dev \
     libavahi-client-dev \
@@ -45,6 +47,7 @@ ARG BUILD_DEPS="\
     libltdl-dev \
     libmariadb-dev \
     libpam0g-dev \
+    libreadline-dev \
     libsqlite3-dev \
     libtalloc-dev \
     libtinysparql-dev \
@@ -54,6 +57,7 @@ ARG BUILD_DEPS="\
     ninja-build \
     pkg-config \
     systemtap-sdt-dev \
+    xz-utils \
     "
 
 FROM debian:13.5-slim@sha256:28de0877c2189802884ccd20f15ee41c203573bd87bb6b883f5f46362d24c5c2 AS build
@@ -68,6 +72,32 @@ RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends \
     $RUN_DEPS \
     $BUILD_DEPS
+
+WORKDIR /netatalk-client-code
+ADD "https://netatalk.io/NetatalkDistributionPublicKey.asc" netatalk-distribution.asc
+ADD "https://github.com/Netatalk/netatalk-client/releases/download/0.9.5/netatalk-client-0.9.5.tar.xz" netatalk-client.tar.xz
+ADD "https://github.com/Netatalk/netatalk-client/releases/download/0.9.5/netatalk-client-0.9.5.tar.xz.asc" netatalk-client.tar.xz.asc
+RUN gpg --batch --import netatalk-distribution.asc \
+&&  gpg --batch --list-keys --with-colons 835A65428C822F69C45B817A7B13E1BFE4DDE8BD \
+        | grep -q '^fpr:::::::::835A65428C822F69C45B817A7B13E1BFE4DDE8BD:' \
+&&  gpg --batch --verify netatalk-client.tar.xz.asc netatalk-client.tar.xz \
+&&  mkdir src \
+&&  tar -xJf netatalk-client.tar.xz \
+        -C src \
+        --strip-components=1 \
+&&  rm -rf \
+        netatalk-distribution.asc \
+        netatalk-client.tar.xz \
+        netatalk-client.tar.xz.asc \
+        /root/.gnupg
+
+RUN meson setup src/build src \
+    -Dbuildtype=debugoptimized \
+    -Dc_link_args=-Wl,-Bsymbolic-functions \
+    -Denable-docs=false \
+&&  meson compile -C src/build \
+&&  meson install --destdir=/staging/ -C src/build \
+&&  cp -a /staging/usr/local/. /usr/local/
 
 WORKDIR /netatalk-code
 COPY bin/ ./bin/

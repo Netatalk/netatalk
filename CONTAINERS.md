@@ -291,8 +291,8 @@ Set this environment variable to a specific value or string.
 | AFP_UNIX_CHARSET                | Server filesystem charset (default: UTF8); see afp.conf man page       |
 | AFP_VOL_CHARSET                 | Volume charset (default: UTF8); see afp.conf man page                  |
 | **Test Suite Configuration** |                                                                           |
-| TESTSUITE                       | Run test suite on startup: *spectest*, *lan*, *speed*, or *login*         |
-| AFP_SUBTEST                     | Optional spectest name to select with `-f`; for example: *LibafpclientSmoke* or *Readonly* |
+| TESTSUITE                       | Run test suite on startup: *spec*, *lan*, *speed*, or *login*          |
+| AFP_SUBTESTS                    | Optional comma separated list of tests to run                          |
 | AFP_TESTSUITE_UAM               | UAM selector or protocol name passed with `-A` to spectest and logintest |
 | AFP_VERSION                     | AFP protocol version for tests: 1-7 (default: 7 = AFP 3.4)             |
 | AFP_HOST                        | AFP server hostname/IP for tests (default: 127.0.0.1)                  |

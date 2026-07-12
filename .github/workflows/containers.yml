@@ -999,7 +999,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="spectest" \
-            -e AFP_SUBTEST="Readonly" \
+            -e AFP_SUBTESTS="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
@@ -1021,7 +1021,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="spectest" \
-            -e AFP_SUBTEST="Readonly" \
+            -e AFP_SUBTESTS="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}

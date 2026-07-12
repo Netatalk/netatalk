@@ -5,7 +5,7 @@ afp_spectest — AFP specification compliance test suite
 # Synopsis
 
 **afp_spectest** [-1234567aCEiLmVv] [-A *uam*] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
-[-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
+[-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *tests*]
 
 **afp_spectest** -l
 
@@ -22,7 +22,8 @@ control of DSI framing, sockets, or session lifecycle, and therefore uses
 the raw DSI transport built into the testsuite.
 
 Available testsets can be listed with the **-l** option.
-Single tests or entire testsets can be executed with the **-f** option.
+Single tests or entire testsets can be executed with the **-f** option. Multiple
+tests or testsets can be selected with a comma-separated list.
 
 # Options
 
@@ -70,8 +71,9 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 > ***WARNING:*** This will delete all files and directories in the test volume!
 
-**-f** *test*
-: Specify test or testset to run
+**-f** *tests*
+: Specify a test or testset to run, or a comma-separated list. Each selected
+  testset uses its registered transport backend.
 
 **-h** *host*
 : Server hostname or IP address (default: localhost)
@@ -251,17 +253,26 @@ Set afp.conf as follows:
 
 ## Running tests
 
-Run the afp_spectest against AFP server running on 10.0.0.10 for the "FPSetForkParms" testset
+Run the afp_spectest against AFP server running on 10.0.0.10 for two testsets
 with AFP 3.4 and authenticating with the DHX2 UAM:
 
-    % afp_spectest -h 10.0.0.10 -u user1 -d user2 -w passwd -A dhx2 -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms
+    $ afp_spectest -h 10.0.0.10 -u user1 -d user2 -w passwd -A dhx2 -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms,FPSetVolParms
     ===================
-    FPSetForkParms_test
-    -------------------
+    Executing testset: FPSetForkParms_test
     FPSetForkParms:test62: SetForkParams errors - PASSED
     FPSetForkParms:test141: Setforkmode error - PASSED
     FPSetForkParms:test217: Setfork size 64 bits - PASSED
     FPSetForkParms:test306: set fork size, new size > old size - PASSED
+    ===================
+    Executing testset: FPSetVolParms_test
+    FPSetVolParms:test206: Set Volume parameters - PASSED
+    =====================
+    TEST RESULT SUMMARY
+    ---------------------
+    Passed:     5
+    Skipped:    0
+    Failed:     0
+    Not tested: 0
 
 # See Also
 

@@ -50,7 +50,7 @@ else
     TEST_EXIT_CODE=0
     case "$TESTSUITE" in
         spec | spectest)
-            if [ "$AFP_SUBTEST" = "Readonly" ]; then
+            if [ "$AFP_SUBTESTS" = "Readonly" ]; then
                 echo "testfile uno" > /mnt/afpshare/first.txt
                 echo "testfile dos" > /mnt/afpshare/second.txt
                 mkdir /mnt/afpshare/third
@@ -61,8 +61,8 @@ else
             if [ -n "$AFP_TESTSUITE_UAM" ]; then
                 set -- "$@" -A "$AFP_TESTSUITE_UAM"
             fi
-            if [ -n "$AFP_SUBTEST" ]; then
-                set -- "$@" -f "$AFP_SUBTEST"
+            if [ -n "$AFP_SUBTESTS" ]; then
+                set -- "$@" -f "$AFP_SUBTESTS"
             fi
             afp_spectest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?

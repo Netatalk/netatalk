@@ -340,31 +340,10 @@ static const struct test_fn *spectest_find_test(const char *name)
 
 static enum spectest_backend spectest_backend_for_run(const char *name)
 {
-    enum spectest_backend backend;
     const struct test_fn *test;
-    int i = 0;
 
-    if (name) {
-        test = spectest_find_test(name);
-        return test ? test->backend : SPECTEST_BACKEND_LEGACY_DSI;
-    }
-
-    backend = Test_list[0].backend;
-
-    while (Test_list[i].name != NULL) {
-        if (Test_list[i].backend != backend) {
-            fprintf(stdout,
-                    "Cannot run all testsets in one pass with mixed backends "
-                    "(%s and %s).\n",
-                    spectest_backend_name(backend),
-                    spectest_backend_name(Test_list[i].backend));
-            exit(1);
-        }
-
-        i++;
-    }
-
-    return backend;
+    test = spectest_find_test(name);
+    return test ? test->backend : SPECTEST_BACKEND_LEGACY_DSI;
 }
 
 static void spectest_print_flag(unsigned int flags, unsigned int flag,
@@ -499,14 +478,12 @@ static void list_tests(void)
 }
 
 /* ----------- */
-static void run_one(char *name)
+static void run_one(const char *name)
 {
     int i = 0;
     void *handle = NULL;
     void (*fn)(void) = NULL;
     char *error;
-    char *token;
-    token = strtok(name, ",");
 
     while (Test_list[i].name != NULL) {
         if (!strcmp(Test_list[i].name, name)) {
@@ -520,7 +497,7 @@ static void run_one(char *name)
         handle = dlopen(NULL, RTLD_NOW);
 
         if (handle) {
-            fn = dlsym(handle, token);
+            fn = dlsym(handle, name);
 
             if ((error = dlerror()) != NULL)  {
                 fprintf(stdout, "%s (%p)\n", error, fn);
@@ -549,19 +526,8 @@ static void run_one(char *name)
         }
     }
 
-    while (token) {
-        press_enter(token);
-        (*fn)();
-        token = strtok(NULL, ",");
-
-        if (token && handle) {
-            fn = dlsym(handle, token);
-
-            if ((error = dlerror()) != NULL)  {
-                fprintf(stdout, "%s\n", error);
-            }
-        }
-    }
+    press_enter(name);
+    (*fn)();
 
     if (handle) {
         dlclose(handle);
@@ -838,6 +804,63 @@ static void spectest_disconnect(const struct spectest_transport_backend
     backend->disconnect(conn);
 }
 
+static int run_selected(const char *selectors)
+{
+    const struct spectest_transport_backend *backend;
+    enum spectest_backend backend_id;
+    char *selection;
+    char *saveptr = NULL;
+    char *name;
+    int ret = 0;
+
+    selection = strdup(selectors);
+
+    if (!selection) {
+        perror("strdup");
+        return 1;
+    }
+
+    name = strtok_r(selection, ",", &saveptr);
+
+    while (name) {
+        backend_id = spectest_backend_for_run(name);
+        backend = spectest_transport_for_backend(backend_id);
+
+        if (!backend) {
+            fprintf(stdout, "No spectest backend selected for '%s'.\n", name);
+            ret = 1;
+            break;
+        }
+
+        if (!Quiet) {
+            fprintf(stdout, "Using spectest backend %s for %s\n",
+                    backend->name, name);
+            fflush(stdout);
+        }
+
+        ret = spectest_connect_primary(backend);
+
+        if (ret) {
+            break;
+        }
+
+        ret = spectest_connect_secondary(backend);
+
+        if (ret) {
+            spectest_disconnect(backend, &Conn);
+            break;
+        }
+
+        run_one(name);
+        spectest_disconnect(backend, &Conn);
+        spectest_disconnect(backend, &Conn2);
+        name = strtok_r(NULL, ",", &saveptr);
+    }
+
+    free(selection);
+    return ret;
+}
+
 static int run_all(void)
 {
     const struct spectest_transport_backend *backend;
@@ -894,7 +917,7 @@ void usage(char *av0)
 {
     fprintf(stdout,
             "usage:\t%s [-1234567aCEiLlmVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
-            "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
+            "[-u user] [-d user2] [-w password] [-F testsuite] [-f tests]\n", av0);
     fprintf(stdout, "\t-A\tUAM name or alias (default Cleartxt Passwrd)\n");
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
@@ -916,7 +939,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-7\tAFP 3.4 version (default)\n");
     fprintf(stdout, "\t-v\tverbose\n");
     fprintf(stdout, "\t-V\tvery verbose\n");
-    fprintf(stdout, "\t-f\ttest or testset to run\n");
+    fprintf(stdout, "\t-f\ttest(s) or testset(s) to run, comma-separated\n");
     fprintf(stdout, "\t-l\tlist testsets\n");
     fprintf(stdout,
             "\t-L\tserver has 'afp read locks = yes'; run byte-range read-lock conflict tests\n");
@@ -931,7 +954,6 @@ void usage(char *av0)
 /* ------------------------------- */
 int main(int ac, char **av)
 {
-    const struct spectest_transport_backend *backend;
     int cc;
     int ret;
 
@@ -1092,34 +1114,11 @@ int main(int ac, char **av)
     }
 
     if (Test != NULL) {
-        backend = spectest_transport_for_backend(spectest_backend_for_run(Test));
-
-        if (!backend) {
-            fprintf(stdout, "No spectest backend selected.\n");
-            return 1;
-        }
-
-        if (!Quiet) {
-            fprintf(stdout, "Using spectest backend %s\n", backend->name);
-            fflush(stdout);
-        }
-
-        ret = spectest_connect_primary(backend);
+        ret = run_selected(Test);
 
         if (ret) {
             return ret;
         }
-
-        ret = spectest_connect_secondary(backend);
-
-        if (ret) {
-            spectest_disconnect(backend, &Conn);
-            return ret;
-        }
-
-        run_one(Test);
-        spectest_disconnect(backend, &Conn);
-        spectest_disconnect(backend, &Conn2);
     } else {
         ret = run_all();
 
