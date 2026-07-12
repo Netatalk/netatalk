@@ -8,6 +8,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,8 +44,17 @@ static struct ofork *ofork_table[OFORK_HASHSIZE];
 /* point to allocated table of open forks pointers */
 static struct ofork **oforks = NULL;
 static int          nforks = 0;
-static u_short      lastrefnum = 0;
 
+/* Free-slot FIFO of free slot indices; cap nforks+1 avoids head==tail
+ * full/empty ambiguity. Pop from head, push to tail: maximal reuse window. */
+static uint16_t      *of_freeq      = NULL;
+static int            of_freeq_cap  = 0;   /* nforks + 1 */
+static int            of_freeq_head = 0;
+static int            of_freeq_tail = 0;
+
+/* live forks now, and lifetime peak (logged at session close) */
+static int            of_curr_forks = 0;
+static int            of_peak_forks = 0;
 
 /* OR some of each character for the hash */
 static unsigned long hashfn(const struct file_key *key)
@@ -77,6 +87,39 @@ static void of_unhash(struct ofork *of)
         of->prevp = NULL;
         of->next = NULL;
     }
+}
+
+static inline bool of_freeq_empty(void)
+{
+    return of_freeq_head == of_freeq_tail;
+}
+
+static inline void of_freeq_push(uint16_t slot)
+{
+    of_freeq[of_freeq_tail] = slot;
+
+    /* branch, not `% of_freeq_cap`: cap (nforks+1) is not a power of two. */
+    if (++of_freeq_tail == of_freeq_cap) {
+        of_freeq_tail = 0;
+    }
+
+    /* cap == nforks+1 makes overflow impossible; assert it. */
+    AFP_ASSERT(!of_freeq_empty());
+}
+
+static inline int of_freeq_pop(void)   /* slot, or -1 if empty */
+{
+    if (of_freeq_empty()) {
+        return -1;
+    }
+
+    uint16_t slot = of_freeq[of_freeq_head];
+
+    if (++of_freeq_head == of_freeq_cap) {
+        of_freeq_head = 0;
+    }
+
+    return slot;
 }
 
 void of_pforkdesc(FILE *f)
@@ -163,7 +206,6 @@ of_alloc(struct vol *vol,
 {
     struct ofork        *of;
     uint16_t       refnum, of_refnum;
-    int         i;
 
     if (!oforks) {
         /* Two ceilings: the 16-bit protocol max (0xffff), and half the realised
@@ -173,20 +215,30 @@ of_alloc(struct vol *vol,
         int fdlimit = getdtablesize();
         int fdcap   = fdlimit / 2;
 
-        /* Floor at 1 so a degenerate/-1 fd limit can't make nforks 0 (would
-         * divide by zero at "refnum % nforks" below). */
-        if (fdcap < 1) {
-            fdcap = 1;
+        /* Floor at 2: slot 0 is reserved, so one usable fork needs 2 slots. */
+        if (fdcap < 2) {
+            fdcap = 2;
         }
 
         nforks = (fdcap < 0xffff) ? fdcap : 0xffff;
-        oforks = (struct ofork **) calloc(nforks, sizeof(struct ofork *));
+        oforks       = (struct ofork **) calloc(nforks, sizeof(struct ofork *));
+        of_freeq_cap = nforks + 1;
+        of_freeq     = (uint16_t *) calloc(of_freeq_cap, sizeof(uint16_t));
 
-        if (!oforks) {
+        if (!oforks || !of_freeq) {
             LOG(log_error, logtype_afpd,
                 "of_alloc: cannot allocate %d-slot ofork table: %s",
                 nforks, strerror(errno));
+            free(oforks);
+            free(of_freeq);
+            oforks = NULL;
+            of_freeq = NULL;
             return NULL;
+        }
+
+        /* Seed slots 1..nforks-1; slot 0 reserved (refnum 0 means "no fork"). */
+        for (int s = 1; s < nforks; s++) {
+            of_freeq_push((uint16_t)s);
         }
 
         LOG(log_debug, logtype_afpd,
@@ -194,47 +246,24 @@ of_alloc(struct vol *vol,
             "fd limit %d, ~2 fds/fork)", nforks, fdlimit);
     }
 
-    for (refnum = ++lastrefnum, i = 0; i < nforks; i++, refnum++) {
-        /* cf AFP3.0.pdf, File fork page 40 */
-        if (!refnum) {
-            refnum++;
-        }
+    int slot = of_freeq_pop();
 
-        if (oforks[refnum % nforks] == NULL) {
-            break;
-        }
-    }
-
-    /* grr, Apple and their 'uniquely identifies'
-       the next line is a protection against
-       of_alloc()
-       refnum % nforks = 3
-       lastrefnum = 3
-       oforks[3] != NULL
-       refnum = 4
-       oforks[4] == NULL
-       return 4
-
-       close(oforks[4])
-
-       of_alloc()
-       refnum % nforks = 4
-       ...
-       return 4
-       same if lastrefnum++ rather than ++lastrefnum.
-    */
-    lastrefnum = refnum;
-
-    if (i == nforks) {
+    /* Queued slots are always in 1..nforks-1, so slot indexes oforks[] safely;
+     * the upper bound is stated explicitly so the array access is provably in
+     * range. */
+    if (slot < 1 || slot >= nforks) {
         LOG(log_error, logtype_afpd, "of_alloc: maximum number of forks exceeded.");
         return NULL;
     }
 
-    of_refnum = refnum % nforks;
+    refnum    = (uint16_t)slot;   /* refnum == slot, by design */
+    of_refnum = (uint16_t)slot;
+    AFP_ASSERT(oforks[of_refnum] == NULL);   /* a free slot must be empty */
 
     if ((oforks[of_refnum] =
                 (struct ofork *)malloc(sizeof(struct ofork))) == NULL) {
         LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno));
+        of_freeq_push(of_refnum);
         return NULL;
     }
 
@@ -248,6 +277,7 @@ of_alloc(struct vol *vol,
             LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno));
             free(of);
             oforks[of_refnum] = NULL;
+            of_freeq_push(of_refnum);
             return NULL;
         }
 
@@ -260,6 +290,7 @@ of_alloc(struct vol *vol,
             free(ad);
             free(of);
             oforks[of_refnum] = NULL;
+            of_freeq_push(of_refnum);
             return NULL;
         }
     } else {
@@ -283,6 +314,11 @@ of_alloc(struct vol *vol,
     }
 
     of_hash(of);
+
+    if (++of_curr_forks > of_peak_forks) {
+        of_peak_forks = of_curr_forks;
+    }
+
     return of;
 }
 
@@ -745,7 +781,11 @@ void of_dealloc(struct ofork *of)
         of->of_refnum, of_name(of), of->of_flags,
         (uintmax_t)of->key.dev, (uintmax_t)of->key.inode);
     of_unhash(of);
-    oforks[of->of_refnum % nforks] = NULL;
+    int slot = of->of_refnum;          /* refnum == slot, no modulus needed */
+    AFP_ASSERT(oforks[slot] == of);    /* this ofork must still own its slot */
+    oforks[slot] = NULL;
+    of_freeq_push((uint16_t)slot);
+    of_curr_forks--;
 
     /* decrease refcount; guard so a stray double-dealloc on a shared adouble is
      * logged (and asserts in non-NDEBUG builds) instead of silently absorbed. */
@@ -762,6 +802,18 @@ void of_dealloc(struct ofork *of)
     }
 
     free(of);
+}
+
+/* Log current + lifetime-peak fork-table occupancy (once, at session close).
+ * Current should be ~0 at a clean close; a nonzero value flags leaked forks. */
+void of_log_highwater(void)
+{
+    if (nforks > 0) {
+        LOG(log_info, logtype_afpd,
+            "fork table: %d open now, %d of %d slots peak (%.1f%%)",
+            of_curr_forks, of_peak_forks, nforks,
+            100.0 * of_peak_forks / nforks);
+    }
 }
 
 /* --------------------------- */

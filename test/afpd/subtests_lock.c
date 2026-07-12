@@ -1644,3 +1644,105 @@ int utest_fork_setmode_fdeny(const struct vol *vol)
 
     return rc;                           /* 0 == pass */
 }
+
+/*!
+ * @brief of_alloc()/of_dealloc() free-slot FIFO contract.
+ *
+ * Public API only (of_alloc/of_dealloc/of_find): refnum == slot and never 0;
+ * of_find() round-trips a live refnum and rejects a closed one; a freed slot
+ * waits behind all other free slots before reuse (FIFO, not LIFO).
+ */
+int utest_of_alloc_fifo(struct vol *vol)
+{
+    enum { N = 8 };
+    struct ofork *of[N] = {0};
+    uint16_t refnum[N] = {0};
+    char leaf[32], full[MAXPATHLEN + 1];
+    struct stat st;
+    int i, rc = 0;
+
+    for (i = 0; i < N; i++) {
+        snprintf(leaf, sizeof(leaf), "fi_fifo_%d", i);
+
+        if (make_scratch(vol, leaf, 0, full, sizeof(full)) != 0) {
+            rc = 10 + i;
+            goto out;
+        }
+
+        if (stat(full, &st) != 0) {
+            rc = 20 + i;
+            goto out;
+        }
+
+        of[i] = of_alloc(vol, curdir, leaf, &refnum[i], ADEID_DFORK, NULL,
+                         &st);
+
+        if (of[i] == NULL) {
+            rc = 30 + i;
+            goto out;
+        }
+
+        if (refnum[i] == 0 || of[i]->of_refnum != refnum[i]) {
+            rc = 40 + i;
+            goto out;
+        }
+
+        if (of_find(refnum[i]) != of[i]) {
+            rc = 50 + i;
+            goto out;
+        }
+    }
+
+    uint16_t freed0 = refnum[0], freed1 = refnum[1];
+    of_dealloc(of[0]);
+    of[0] = NULL;
+    of_dealloc(of[1]);
+    of[1] = NULL;
+
+    /* of_find() rejects closed refnums. */
+    if (of_find(freed0) != NULL || of_find(freed1) != NULL) {
+        rc = 60;
+        goto out;
+    }
+
+    /* Next alloc pops the front: a fresh slot if the table has headroom, else
+     * freed0 (first freed) if it is exhausted.  Either is correct FIFO order;
+     * only freed1 coming back first would be wrong (LIFO).  Asserting "!= freed1"
+     * holds for any nforks, so it can't false-fail on a small fork table. */
+    snprintf(leaf, sizeof(leaf), "fi_fifo_r0");
+
+    if (make_scratch(vol, leaf, 0, full, sizeof(full)) != 0
+            || stat(full, &st) != 0) {
+        rc = 70;
+        goto out;
+    }
+
+    of[0] = of_alloc(vol, curdir, leaf, &refnum[0], ADEID_DFORK, NULL, &st);
+
+    if (of[0] == NULL) {
+        rc = 71;
+        goto out;
+    }
+
+    if (refnum[0] == freed1) {
+        rc = 72;
+        goto out;
+    }
+
+out:
+
+    for (i = 0; i < N; i++) {
+        if (of[i]) {
+            of_dealloc(of[i]);
+        }
+    }
+
+    for (i = 0; i < N; i++) {
+        snprintf(full, sizeof(full), "%s/fi_fifo_%d", vol->v_path, i);
+        (void)unlink(full);
+    }
+
+    snprintf(full, sizeof(full), "%s/fi_fifo_r0", vol->v_path);
+    (void)unlink(full);
+    return rc;
+}

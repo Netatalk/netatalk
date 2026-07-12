@@ -253,6 +253,8 @@ int main(int argc, char *argv[])
                      "adf_freelock: a failed F_UNLCK is logged and the entry still dropped");
     TEST_int_or_skip(utest_fork_setmode_fdeny(vol), 0,
                      "fork_setmode_deny: each access mode maps to the correct deny bits");
+    TEST_int(utest_of_alloc_fifo(vol), 0,
+             "of_alloc: refnum==slot, never 0, of_find round-trip, FIFO reuse window");
     /* cleanup */
     closevol(&obj, vol);
 
