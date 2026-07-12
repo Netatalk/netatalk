@@ -28,6 +28,7 @@ env:
   CMARK_TARBALL_URL: https://github.com/commonmark/cmark/archive/refs/tags/0.31.2.tar.gz
   INIPARSER_TARBALL_URL: https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
   SMARTOS_BOOTSTRAP_URL: https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
+  SMARTOS_BOOTSTRAP_SHA256: 4842f72b610d44cf98560253b6bf16ff4056016e5fe2c6932bc195156ac75772
   STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.2.0.tar.gz
 
 jobs:
@@ -467,6 +468,11 @@ jobs:
             # The bootstrap is used to install the required dependencies for building netatalk on OmniOS.
             # This step can be skipped if the bootstrap is already installed.
             curl --proto '=https' --location --fail -o bootstrap.tar.gz "${{ env.SMARTOS_BOOTSTRAP_URL }}"
+            bootstrap_sha256=$(digest -a sha256 bootstrap.tar.gz)
+            if [ "$bootstrap_sha256" != "${{ env.SMARTOS_BOOTSTRAP_SHA256 }}" ]; then
+              echo "bootstrap.tar.gz SHA-256 mismatch" >&2
+              exit 1
+            fi
             tar -zxpf bootstrap.tar.gz -C /
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             pkgin -y install \

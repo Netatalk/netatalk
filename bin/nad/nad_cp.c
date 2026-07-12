@@ -65,9 +65,8 @@
 #include <sys/sysinfo.h>
 #endif
 
-#include <bstrlib.h>
-
 #include <atalk/adouble.h>
+#include <atalk/bstrlib_compat.h>
 #include <atalk/queue.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>

@@ -29,11 +29,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <bstrlib.h>
-
 #include <atalk/acl.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/bstrlib_compat.h>
 #include <atalk/compat.h>
 #include <atalk/directory.h>
 #include <atalk/ea.h>

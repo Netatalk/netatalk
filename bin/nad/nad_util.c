@@ -40,8 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <bstrlib.h>
-
 #ifdef HAVE_FREEBSD_SUNACL
 #include <sunacl.h>
 #endif
@@ -63,6 +61,7 @@
 #endif /* HAVE_POSIX_ACLS */
 
 #include <atalk/adouble.h>
+#include <atalk/bstrlib_compat.h>
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>

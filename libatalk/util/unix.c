@@ -38,6 +38,7 @@
 #include <atalk/acl.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/bstrlib_compat.h>
 #include <atalk/compat.h>
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
