@@ -20,7 +20,7 @@
 # afp_lantest, run with -c, prints one summary row per test:
 #
 #     Test,Time_ms,Time±,Min_ms,Max_ms,Median_ms,MB/s
-#     Open, stat and read 512 bytes from 1000 files [8,000 AFP ops],360,33.6,324,406,349,0
+#     Stat 2000 files [6,000 AFP ops],260,3.6,258,263,260,0
 #     ...
 #     Sum of all AFP OPs = 80686,4921,,
 #
@@ -63,20 +63,23 @@ my $ROW_TAIL_RE = qr/^(.+),(\d+),([\d.]+),(\d+),(\d+),(\d+),(\d+)\s*$/;
 # Map each lantest test (matched by a substring of its full name) to a short
 # axis label. Order matters: first matching substring wins.
 my @SHORT_LABELS = (
-                    ['Writing one large file' => 'Write 100MB'],
-                    ['Reading one large file' => 'Read 100MB'],
-                    ['Creating 2000 files'    => 'Create 2k'],
-                    ['Writing 1024 bytes'     => 'Write 2k'],
-                    ['Lock then unlock 2000'  => 'Fork lock 2k'],
-                    ['Stat, open, read'       => 'Stat/open/read 2k'],
-                    ['Enumerate dir'          => 'Enumerate 2k'],
-                    ['Deleting 2000 files'    => 'Delete 2k'],
-                    ['Byte-range lock/unlock' => 'Byte lock 2k'],
-                    ['Create directory tree'  => 'Create tree'],
-                    ['Directory cache hits'   => 'Dircache hits'],
-                    ['Mixed cache operations' => 'Mixed cache'],
-                    ['Deep path traversal'    => 'Deep traverse'],
-                    ['Cache validation'       => 'Cache validate'],
+                    ['Writing one large file'    => 'Write 100MB'],
+                    ['Reading one large file'    => 'Read 100MB'],
+                    ['Creating 2000 files'       => 'Create 2k'],
+                    ['Open, write 1024 bytes'    => 'Write 2k'],
+                    ['Open, read 512 bytes'      => 'Read 2k'],
+                    ['Copying 2000 files client' => 'Copy 2k'],
+                    ['Copying 2000 files server' => 'ServerCopy 2k'],
+                    ['Lock then unlock 2000'     => 'Fork lock 2k'],
+                    ['Stat 2000 files'           => 'Stat 2k'],
+                    ['Enumerate dir'             => 'Enumerate 2k'],
+                    ['Deleting 2000 files'       => 'Delete 2k'],
+                    ['Byte-range lock/unlock'    => 'Byte lock 2k'],
+                    ['Create directory tree'     => 'Create tree'],
+                    ['Directory cache hits'      => 'Dircache hits'],
+                    ['Mixed cache operations'    => 'Mixed cache'],
+                    ['Deep path traversal'       => 'Deep traverse'],
+                    ['Cache validation'          => 'Cache validate'],
 );
 
 # Map a verbose test name to a short axis label, falling back to the name with
@@ -252,14 +255,14 @@ set rmargin at screen 0.98
 set boxwidth 0.5
 # Y-axis titles as screen-pinned rotated labels (not per-panel "set ylabel"),
 # centered on each panel's height so they align despite differing tick widths.
-# Upper panel y 0.34-0.84 (mid 0.59), lower 0.18-0.30 (mid 0.24).
-set label 5 "Time (ms) — lower is faster" at screen 0.022, screen 0.59 \\
+# Upper panel y 0.30-0.84 (mid 0.57), lower 0.14-0.26 (mid 0.20).
+set label 5 "Time (ms) — lower is faster" at screen 0.022, screen 0.57 \\
     center rotate by 90 font "DejaVu Sans,7"
-set label 6 "Jitter (CoV %)" at screen 0.022, screen 0.24 \\
+set label 6 "Jitter (CoV %)" at screen 0.022, screen 0.20 \\
     center rotate by 90 font "DejaVu Sans,7"
 set label 7 \\
     "Coefficient of Variation (CoV) = stddev ÷ mean, as a normalized percent" \\
-    at screen 0.5, screen 0.06 center font "DejaVu Sans,6.5" \\
+    at screen 0.5, screen 0.025 center font "DejaVu Sans,6.5" \\
     textcolor rgb "#444444"
 # Dotted grid; minor (per-decade log) lines fainter so they don't read heavy.
 set grid ytics mytics linetype 1 dashtype (1,2) linewidth 1 \\
@@ -274,18 +277,18 @@ set multiplot
 
 # --- Upper panel: latency candlesticks (~70%; log y needs less height) ---
 set tmargin at screen 0.84
-set bmargin at screen 0.34
+set bmargin at screen 0.30
 set logscale y
 set yrange [$y_lo:$y_hi]
 set format y "%g"
 set ytics font ",6"
 # Blank x labels here; the lower panel labels the shared ticks.
 set xtics ($blank_tics)
-# Vertical dividers bracketing the shared-file pipeline (Create..Delete 2k),
+# Vertical dividers bracketing the 2000-file tests (Create 2k..Byte lock 2k),
 # drawn in both panels so the related series reads as one group.
 set arrow 1 from 1.5, graph 0 to 1.5, graph 1 nohead \\
     dashtype (4,3) linewidth 1 linecolor rgb "#999999" front
-set arrow 2 from 7.5, graph 0 to 7.5, graph 1 nohead \\
+set arrow 2 from 11.5, graph 0 to 11.5, graph 1 nohead \\
     dashtype (4,3) linewidth 1 linecolor rgb "#999999" front
 # Legend in the free top-left outer canvas, outside the plot area so it never
 # overlaps a candle.
@@ -320,12 +323,12 @@ unset label 1
 unset label 2
 unset logscale y
 unset key
-set tmargin at screen 0.30
-set bmargin at screen 0.18
+set tmargin at screen 0.26
+set bmargin at screen 0.14
 set yrange [0:$cov_hi]
 set format y "%g"
 set ytics $cov_tic font ",6"
-set xtics rotate by 12 right font ",6" ($tics)
+set xtics rotate by 16 right font ",6" ($tics)
 # Narrower than the 0.5 candle boxes so the jitter bars read as a distinct mark.
 set boxwidth 0.3
 plot \$DATA using 1:7 with boxes \\
