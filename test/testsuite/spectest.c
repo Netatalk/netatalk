@@ -341,7 +341,6 @@ static const struct test_fn *spectest_find_test(const char *name)
 static enum spectest_backend spectest_backend_for_run(const char *name)
 {
     const struct test_fn *test;
-
     test = spectest_find_test(name);
     return test ? test->backend : SPECTEST_BACKEND_LEGACY_DSI;
 }
@@ -812,7 +811,6 @@ static int run_selected(const char *selectors)
     char *saveptr = NULL;
     char *name;
     int ret = 0;
-
     selection = strdup(selectors);
 
     if (!selection) {
