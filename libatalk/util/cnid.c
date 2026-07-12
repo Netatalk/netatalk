@@ -47,8 +47,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <bstrlib.h>
-
+#include <atalk/bstrlib_compat.h>
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
