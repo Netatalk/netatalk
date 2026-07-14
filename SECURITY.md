@@ -40,6 +40,10 @@ That said, we will try to take action on your report as soon as possible!
 
 | CVE ID | Subject | Disclosure Date | Affected Versions | Severity |
 |--------|---------|-----------------|-------------------|----------|
+| [CVE-2026-62321](https://netatalk.io/security/CVE-2026-62321.html) | Heap buffer overflow in Spotlight reply marshalling | 2026/07/15 | 3.1.0 - 4.5.0 | High |
+| [CVE-2026-62320](https://netatalk.io/security/CVE-2026-62320.html) | Pre-authentication DSI frame smuggling | 2026/07/15 | 1.5.0 - 4.5.0 | Medium |
+| [CVE-2026-62319](https://netatalk.io/security/CVE-2026-62319.html) | DSIWrite frame desynchronization | 2026/07/15 | 1.5.0 - 4.5.0 | Medium |
+| [CVE-2026-62318](https://netatalk.io/security/CVE-2026-62318.html) | Use-after-free in DHX2 login continuation | 2026/07/15 | 2.0.0 - 4.5.0 | High |
 | [CVE-2026-49390](https://netatalk.io/security/CVE-2026-49390.html) | Missing range validation for server quantum | 2026/05/30 | 3.0.0 - 4.4.3 | Low |
 | [CVE-2026-49389](https://netatalk.io/security/CVE-2026-49389.html) | Heap over-read in CatSearch search-spec parsing | 2026/05/30 | 2.0.0 - 4.4.3 | Low |
 | [CVE-2026-49388](https://netatalk.io/security/CVE-2026-49388.html) | Heap out-of-bounds read in Spotlight RPC TOC index | 2026/05/30 | 3.1.0 - 4.4.3 | High |
@@ -69,10 +73,10 @@ That said, we will try to take action on your report as soon as possible!
 | [CVE-2026-44059](https://netatalk.io/security/CVE-2026-44059.html) | Non-reentrant privilege toggle | 2026/05/13 | 2.2.5 - 4.4.3 | Low |
 | [CVE-2026-44058](https://netatalk.io/security/CVE-2026-44058.html) | Authentication bypass via admin auth user | 2026/05/13 | 2.2.2 - 4.4.3 | Medium |
 | [CVE-2026-44057](https://netatalk.io/security/CVE-2026-44057.html) | Dead bounds check in Spotlight RPC unmarshaller | 2026/05/13 | 3.0.0 - 4.4.2 | None |
-| [CVE-2026-44056](https://netatalk.io/security/CVE-2026-44056.html) | Stack buffer overflow in desktop.c | 2026/05/13 | 1.3 - 4.2.3 | Medium |
+| [CVE-2026-44056](https://netatalk.io/security/CVE-2026-44056.html) | Stack buffer overflow in desktop.c | 2026/05/13 | 1.3 - 4.4.3 | Medium |
 | [CVE-2026-44055](https://netatalk.io/security/CVE-2026-44055.html) | Bitwise OR logic bug enables shell injection | 2026/05/13 | 3.1.4 - 4.4.2 | High |
 | [CVE-2026-44054](https://netatalk.io/security/CVE-2026-44054.html) | Predictable afpd session token | 2026/05/13 | 2.0.0 - 4.4.2 | Medium |
-| [CVE-2026-44053](https://netatalk.io/security/CVE-2026-44053.html) | Weak cryptography in DHCAST128 UAM | 2026/05/13 | 1.5.0 - 4.2.3 | High |
+| [CVE-2026-44053](https://netatalk.io/security/CVE-2026-44053.html) | Weak cryptography in DHCAST128 UAM | 2026/05/13 | 1.5.0 - 4.4.3 | High |
 | [CVE-2026-44052](https://netatalk.io/security/CVE-2026-44052.html) | LDAP simple-bind password exposure in log output | 2026/05/13 | 2.1.0 - 4.4.2 | High |
 | [CVE-2026-44051](https://netatalk.io/security/CVE-2026-44051.html) | Arbitrary file read via attacker-controlled symlink creation | 2026/05/13 | 3.0.2 - 4.4.2 | High |
 | [CVE-2026-44050](https://netatalk.io/security/CVE-2026-44050.html) | Heap buffer overflow in CNID daemon comm_rcv() | 2026/05/13 | 2.0.0 - 4.4.2 | Critical |
