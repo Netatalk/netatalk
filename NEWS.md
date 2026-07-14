@@ -1,6 +1,18 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.5.1
+----------------
+
+* CVE-2026-62318: uams: harden auth state for DHX2 UAM
+* CVE-2026-62319,CVE-2026-62320: libatalk: harden DSI frame parsing
+* CVE-2026-62321: afpd: harden spotlight marshalling
+* FIX: afpd: make SpotlightRPC big-endian safe, GitHub #3127
+* FIX: afpd: explicit libatalk header include in file.c, GitHub #3125
+* UPD: docs: replace the C font style with CR in cmark manpages, GitHub #3126
+* testsuite: capture and print AFP errors in SpotlightRPC tests, GitHub #3127
+* testsuite: keep write frames within DSI quantum in speedtest, GitHub #3185
+
 Changes in 4.5.0
 ----------------
 
