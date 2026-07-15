@@ -65,7 +65,7 @@ typedef enum {CH_UCS2 = 0, CH_UTF8 = 1, CH_MAC = 2, CH_UNIX = 3, CH_UTF8_MAC = 4
 
 struct charset_functions {
     const char *name;
-    const long kTextEncoding;
+    const uint32_t kTextEncoding;
     size_t (*pull)(void *, char **inbuf, size_t *inbytesleft,
                    char **outbuf, size_t *outbytesleft);
     size_t (*push)(void *, char **inbuf, size_t *inbytesleft,

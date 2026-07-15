@@ -246,7 +246,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath,
 /* ---------------------
 */
 char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
-               cnid_t id, uint32_t utf8)
+               cnid_t id, bool utf8)
 {
     uint32_t   aint;
     uint32_t   tp_len = 0;
@@ -277,6 +277,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
 
         *data++ = aint;
     } else {
+        uint32_t encoding_hint;
         uint16_t temp;
 
         /* FIXME safeguard, anyway if no ascii char it's game over */
@@ -284,9 +285,9 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
             aint = UTF8FILELEN_EARLY;
         }
 
-        utf8 = (uint32_t) vol->v_kTextEncoding;
-        memcpy(data, &utf8, sizeof(utf8));
-        data += sizeof(utf8);
+        encoding_hint = vol->v_kTextEncoding;
+        memcpy(data, &encoding_hint, sizeof(encoding_hint));
+        data += sizeof(encoding_hint);
         temp = htons(aint);
         memcpy(data, &temp, sizeof(temp));
         data += sizeof(temp);
@@ -411,7 +412,6 @@ int getmetadata(const AFPObj *obj,
     cnid_t              id = 0;
     uint16_t		ashort;
     uint8_t              achar, fdType[4];
-    uint32_t           utf8 = 0;
     struct stat         *st;
     struct maccess	ma;
     int                 timeoffset = 0;
@@ -673,7 +673,6 @@ int getmetadata(const AFPObj *obj,
            <shirsch@adelphia.net> */
         case FILPBIT_PDINFO :
             if (obj->afp_version >= 30) { /* UTF8 name */
-                utf8 = kTextEncodingUTF8;
                 utf_nameoff = data;
                 data += sizeof(uint16_t);
                 aint = 0;
@@ -794,13 +793,13 @@ int getmetadata(const AFPObj *obj,
     if (l_nameoff) {
         ashort = htons(data - buf);
         memcpy(l_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, dir->d_did, path->m_name, id, 0);
+        data = set_name(vol, data, dir->d_did, path->m_name, id, false);
     }
 
     if (utf_nameoff) {
         ashort = htons(data - buf);
         memcpy(utf_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, dir->d_did, path->m_name, id, utf8);
+        data = set_name(vol, data, dir->d_did, path->m_name, id, true);
     }
 
     *buflen = data - buf;

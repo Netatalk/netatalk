@@ -2194,7 +2194,6 @@ int getdirparams(const AFPObj *obj,
     uint32_t           aint;
     uint16_t       ashort;
     int                 ret;
-    uint32_t           utf8 = 0;
     cnid_t              pdid;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
@@ -2383,8 +2382,6 @@ int getdirparams(const AFPObj *obj,
         case DIRPBIT_PDINFO :
             if (obj->afp_version >= 30) {
                 /* UTF8 name */
-                utf8 = kTextEncodingUTF8;
-
                 /* root of parent can have a null name */
                 if (dir->d_m_name) {
                     utf_nameoff = data;
@@ -2440,13 +2437,15 @@ int getdirparams(const AFPObj *obj,
     if (l_nameoff) {
         ashort = htons(data - buf);
         memcpy(l_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, 0);
+        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did,
+                        false);
     }
 
     if (utf_nameoff) {
         ashort = htons(data - buf);
         memcpy(utf_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, utf8);
+        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did,
+                        true);
     }
 
     *buflen = data - buf;

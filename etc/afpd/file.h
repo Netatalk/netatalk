@@ -52,11 +52,15 @@ extern const uint8_t	ufinderi[];
 #define FILPBIT_EXTRFLEN 14
 #define FILPBIT_UNIXPR   15
 
-#define kTextEncodingUTF8 0x08000103
+#define kTextEncodingUTF8 UINT32_C(0x08000103)
 
-/*! Mac OS encodings*/
+/*! AFP 3.4 text encoding identifiers.
+ *
+ * Availability in this enum does not imply that Netatalk has a converter for
+ * the encoding.
+ */
 typedef enum {
-    kTextEncodingMacRoman         = 0L,
+    kTextEncodingMacRoman         = 0,
     kTextEncodingMacJapanese      = 1,
     kTextEncodingMacChineseTrad   = 2,
     kTextEncodingMacKorean        = 3,
@@ -96,10 +100,71 @@ typedef enum {
     kTextEncodingMacCeltic        = 39,
     kTextEncodingMacGaelic        = 40,
     kTextEncodingMacKeyboardGlyphs = 41,
+    kTextEncodingMacUnicode       = 126,
+    kTextEncodingMacFarsi         = 140,
+    kTextEncodingMacUkrainian     = 152,
+    kTextEncodingMacInuit         = 236,
+    kTextEncodingMacVT100         = 252,
+    kTextEncodingMacHFS           = 255,
+    kTextEncodingUnicodeDefault   = 256,
+    kTextEncodingUnicodeV1_1      = 257,
+    kTextEncodingISO10646_1993    = 257,
+    kTextEncodingUnicodeV2_0      = 259,
+    kTextEncodingUnicodeV2_1      = 259,
+    kTextEncodingUnicodeV3_0      = 260,
+    kTextEncodingISOLatin1        = 513,
+    kTextEncodingISOLatin2        = 514,
+    kTextEncodingISOLatin3        = 515,
+    kTextEncodingISOLatin4        = 516,
+    kTextEncodingISOLatinCyrillic = 517,
+    kTextEncodingISOLatinArabic   = 518,
+    kTextEncodingISOLatinGreek    = 519,
+    kTextEncodingISOLatinHebrew   = 520,
+    kTextEncodingISOLatin5        = 521,
+    kTextEncodingISOLatin6        = 522,
+    kTextEncodingISOLatin7        = 525,
+    kTextEncodingISOLatin8        = 526,
+    kTextEncodingISOLatin9        = 527,
+    kTextEncodingDOSLatinUS       = 1024,
+    kTextEncodingDOSGreek         = 1029,
+    kTextEncodingDOSBalticRim     = 1030,
+    kTextEncodingDOSLatin1        = 1040,
+    kTextEncodingDOSGreek1        = 1041,
+    kTextEncodingDOSLatin2        = 1042,
+    kTextEncodingDOSCyrillic      = 1043,
+    kTextEncodingDOSTurkish       = 1044,
+    kTextEncodingDOSPortuguese    = 1045,
+    kTextEncodingDOSIcelandic     = 1046,
+    kTextEncodingDOSHebrew        = 1047,
+    kTextEncodingDOSCanadianFrench = 1048,
+    kTextEncodingDOSArabic        = 1049,
+    kTextEncodingDOSNordic        = 1050,
+    kTextEncodingDOSRussian       = 1051,
+    kTextEncodingDOSGreek2        = 1052,
+    kTextEncodingDOSThai          = 1053,
+    kTextEncodingDOSJapanese      = 1056,
+    kTextEncodingDOSChineseSimplif = 1057,
+    kTextEncodingDOSKorean        = 1058,
+    kTextEncodingDOSChineseTrad   = 1059,
+    kTextEncodingWindowsLatin1    = 1280,
+    kTextEncodingWindowsANSI      = 1280,
+    kTextEncodingWindowsLatin2    = 1281,
+    kTextEncodingWindowsCyrillic  = 1282,
+    kTextEncodingWindowsGreek     = 1283,
+    kTextEncodingWindowsLatin5    = 1284,
+    kTextEncodingWindowsHebrew    = 1285,
+    kTextEncodingWindowsArabic    = 1286,
+    kTextEncodingWindowsBalticRim = 1287,
+    kTextEncodingWindowsVietnamese = 1288,
+    kTextEncodingWindowsKoreanJohab = 1296,
+    kTextEncodingUS_ASCII         = 1536,
+    kTextEncodingJIS_X0201_76     = 1568,
+    kTextEncodingJIS_X0208_83     = 1569,
+    kTextEncodingJIS_X0208_90     = 1570,
 } kTextEncoding_t;
 
 extern char *set_name(const struct vol *, char *, cnid_t, char *, cnid_t,
-                      uint32_t);
+                      bool);
 
 extern struct extmap	*getextmap(const char *);
 extern struct extmap	*getdefextmap(void);

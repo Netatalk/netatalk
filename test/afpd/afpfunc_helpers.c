@@ -66,7 +66,7 @@ static int push_path(char **bufp, const char *name)
     int slen = strlen(name);
     char *p = *bufp;
     PUSHVAL(p, uint8_t, 3, len); /* path type */
-    PUSHVAL(p, uint32_t, kTextEncodingUTF8, len); /* text encoding hint */
+    PUSHVAL(p, uint32_t, htonl(kTextEncodingUTF8), len); /* text encoding hint */
     PUSHVAL(p, uint16_t, htons(slen), len);
 
     if (slen) {
@@ -95,7 +95,7 @@ char **cnamewrap(const char *name)
     static char *p = buf;
     int len = 0;
     PUSHVAL(p, uint8_t, 3, len); /* path type */
-    PUSHVAL(p, uint32_t, kTextEncodingUTF8, len); /* text encoding hint */
+    PUSHVAL(p, uint32_t, htonl(kTextEncodingUTF8), len); /* text encoding hint */
     size_t avail = sizeof(buf) - len - sizeof(uint16_t);
     size_t namelen = strnlen(name, avail);
     PUSHVAL(p, uint16_t, htons(namelen), len);
@@ -220,4 +220,3 @@ uint16_t openvol(AFPObj *obj, const char *name)
     memcpy(&vid, p, 2);
     return vid;
 }
-
