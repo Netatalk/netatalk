@@ -61,6 +61,7 @@
 #define MACIP_MAXMTU (586)
 
 #define MACIP_NODETYPE "IPADDRESS"
+#define MACIP_NODETYPE_LEN (sizeof(MACIP_NODETYPE) - 1)
 #define MACIP_GATETYPE "IPGATEWAY"
 
 #define MACIP_ATPRETRIES (5)
@@ -136,8 +137,15 @@ static struct macip_data gMacip;
 static struct zones gZones;
 static outputfunc_t gOutput;
 
-static const char *error_noip = "No Address Available.";
-static const char *error_noop = "Unknown Operation.";
+static const char error_noip[] = "No Address Available.";
+static const char error_noop[] = "Unknown Operation.";
+
+_Static_assert(sizeof(error_noip) <= sizeof(((struct macip_req_data *)
+               0)->mipr_error),
+               "error_noip does not fit in mipr_error");
+_Static_assert(sizeof(error_noop) <= sizeof(((struct macip_req_data *)
+               0)->mipr_error),
+               "error_noop does not fit in mipr_error");
 
 static uint16_t cksum(char *buffer, int len)
 {
@@ -289,9 +297,9 @@ static void arp_input(struct sockaddr_at *sat, char *buffer, int len)
                    nve->nn_typelen, nve->nn_type,
                    nve->nn_zonelen, nve->nn_zone);
 
-        if (nve->nn_typelen != strlen(MACIP_NODETYPE) ||
+        if (nve->nn_typelen != MACIP_NODETYPE_LEN ||
                 strncasecmp(nve->nn_type, MACIP_NODETYPE,
-                            strlen(MACIP_NODETYPE)) != 0) {
+                            MACIP_NODETYPE_LEN) != 0) {
             continue;
         }
 
@@ -444,8 +452,8 @@ static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
             }
         } else {
             rq->miprc.mipr_function = htonl(MACIP_ERROR);
-            strncpy(rq->miprd.mipr_error, error_noip, strlen(error_noip));
-            len = len + strlen(error_noip);
+            memcpy(rq->miprd.mipr_error, error_noip, sizeof(error_noip));
+            len += (int)(sizeof(error_noip) - 1);
         }
 
         break;
@@ -461,8 +469,8 @@ static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
              f);
 
         rq->miprc.mipr_function = htonl(MACIP_ERROR);
-        strncpy(rq->miprd.mipr_error, error_noop, strlen(error_noop));
-        len = len + strlen(error_noop);
+        memcpy(rq->miprd.mipr_error, error_noop, sizeof(error_noop));
+        len += (int)(sizeof(error_noop) - 1);
         break;
     }
 
