@@ -352,7 +352,6 @@ static int reducestack(void)
 static struct adouble *adl_lkup(struct vol *vol, struct path *path,
                                 struct adouble *adp)
 {
-    /* FIXME What about noadouble? */
     static struct adouble ad;
     struct ofork *of;
     int isdir;
@@ -1128,7 +1127,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen, int ext)
 {
     struct vol *vol;
-    char *ibuf_start = ibuf;
+    const char *ibuf_start = ibuf;
     uint16_t   vid;
     uint16_t   spec_len;
     uint32_t   rmatches, reserved;
@@ -1320,7 +1319,6 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         /* Offspring count - only directories */
         if (c1.fbitmap == 0) {
             memcpy(&c1.offcnt, spec1, sizeof(c1.offcnt));
-            spec1 += sizeof(c1.offcnt);
             c1.offcnt = ntohs(c1.offcnt);
             memcpy(&c2.offcnt, spec2, sizeof(c2.offcnt));
             spec2 += sizeof(c2.offcnt);
