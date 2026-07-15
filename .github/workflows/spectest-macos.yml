@@ -53,7 +53,7 @@ jobs:
         run: |
           export PATH="$(brew --prefix bison)/bin:$PATH"
           meson setup build \
-            -Dbuildtype=release \
+            -Dbuildtype=debugoptimized \
             -Dwith-homebrew=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
@@ -144,7 +144,7 @@ jobs:
           [Global]
           server name = Netatalk
           uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so uams_guest.so
-          log level = default:debug
+          log level = default:info
           log file = /tmp/afpd.log
           mac charset = MAC_ROMAN
           unix charset = UTF8
