@@ -38,6 +38,10 @@
 #include "afp_tcp_analytics.h"
 #include "speedtest_local_vfs.h"
 
+/* Reserve space for the DSI header and FPWriteExt request fields so that the
+ * complete write frame, not just its data portion, fits the server quantum. */
+#define FPWRITE_RQST_SIZE 36
+
 /* For compiling on OS X */
 #ifndef MAP_ANONYMOUS
 #ifdef MAP_ANON
@@ -1711,10 +1715,23 @@ static void run_one(char *name)
         tcp_analytics_test_start(&tcp_session, Conn, Size);
     }
 
-    /* check server quantum size */
+    /* The negotiated DSI quantum covers the complete frame.  Remote writes
+     * also carry a DSI header and FPWriteExt request fields, so leave room for
+     * that overhead instead of sending server_quantum bytes of data. */
+    size_t max_quantum = dsi->server_quantum;
+
+    if (!Local) {
+        if (max_quantum <= FPWRITE_RQST_SIZE) {
+            fprintf(stdout, "\t server quantum (%d) too small\n", dsi->server_quantum);
+            return;
+        }
+
+        max_quantum -= FPWRITE_RQST_SIZE;
+    }
+
     if (!Quantum) {
-        Quantum = dsi->server_quantum;
-    } else if (Quantum > dsi->server_quantum) {
+        Quantum = max_quantum;
+    } else if (Quantum > max_quantum) {
         fprintf(stdout, "\t server quantum (%d) too small\n", dsi->server_quantum);
         return;
     }
