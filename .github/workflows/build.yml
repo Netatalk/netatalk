@@ -534,7 +534,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Build on VM
-        uses: vmactions/freebsd-vm@d1e65811565151536c0c894fff74f06351ed26e6 # v1.4.5
+        uses: vmactions/freebsd-vm@5a72679103d223925653750faa878a143340fbd0 # v1.5.0
         with:
           copyback: true
           sync: sshfs
@@ -554,7 +554,7 @@ jobs:
               libsunacl \
               localsearch \
               meson \
-              mysql96-client \
+              mysql97-client \
               openldap26-client \
               perl5 \
               pkgconf \
