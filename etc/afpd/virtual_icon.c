@@ -321,7 +321,6 @@ int virtual_icon_getfilparams(const AFPObj *obj,
     char *utf_nameoff = NULL;
     uint16_t ashort;
     uint32_t aint;
-    uint32_t utf8 = 0;
     int bit = 0;
     uint16_t bmap = bitmap;
     cnid_t id = htonl(VIRTUAL_ICON_CNID);
@@ -410,7 +409,6 @@ int virtual_icon_getfilparams(const AFPObj *obj,
 
         case FILPBIT_PDINFO:
             if (obj->afp_version >= 30) {
-                utf8 = kTextEncodingUTF8;
                 utf_nameoff = data;
                 data += sizeof(uint16_t);
                 aint = 0;
@@ -450,14 +448,14 @@ int virtual_icon_getfilparams(const AFPObj *obj,
         ashort = htons((uint16_t)(data - buf));
         memcpy(l_nameoff, &ashort, sizeof(ashort));
         data = set_name(vol, data, DIRDID_ROOT, (char *)name,
-                        htonl(VIRTUAL_ICON_CNID), 0);
+                        htonl(VIRTUAL_ICON_CNID), false);
     }
 
     if (utf_nameoff) {
         ashort = htons((uint16_t)(data - buf));
         memcpy(utf_nameoff, &ashort, sizeof(ashort));
         data = set_name(vol, data, DIRDID_ROOT, (char *)name,
-                        htonl(VIRTUAL_ICON_CNID), utf8);
+                        htonl(VIRTUAL_ICON_CNID), true);
     }
 
     *buflen = data - buf;
