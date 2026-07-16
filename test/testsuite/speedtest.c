@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <math.h>
 #include <signal.h>
 #include <string.h>
@@ -38,9 +39,9 @@
 #include "afp_tcp_analytics.h"
 #include "speedtest_local_vfs.h"
 
-/* Reserve space for the DSI header and FPWriteExt request fields so that the
- * complete write frame, not just its data portion, fits the server quantum. */
-#define FPWRITE_RQST_SIZE 36
+/* FPWrite sends a 16-byte DSI header followed by 12 bytes of request fields
+ * before the write data. */
+#define FPWRITE_FRAME_OVERHEAD ((size_t)DSI_BLOCKSIZ + 12U)
 
 /* For compiling on OS X */
 #ifndef MAP_ANONYMOUS
@@ -1717,23 +1718,28 @@ static void run_one(char *name)
     }
 
     /* The negotiated DSI quantum covers the complete frame.  Remote writes
-     * also carry a DSI header and FPWriteExt request fields, so leave room for
-     * that overhead instead of sending server_quantum bytes of data. */
+     * use FPWrite, so leave room for its DSI header and request fields instead
+     * of sending server_quantum bytes of data. */
     size_t max_quantum = dsi->server_quantum;
 
     if (!Local) {
-        if (max_quantum <= FPWRITE_RQST_SIZE) {
-            fprintf(stdout, "\t server quantum (%d) too small\n", dsi->server_quantum);
+        if (max_quantum <= FPWRITE_FRAME_OVERHEAD) {
+            fprintf(stdout,
+                    "\t server quantum (%" PRIu32
+                    ") cannot accommodate FPWrite overhead (%zu)\n",
+                    dsi->server_quantum, FPWRITE_FRAME_OVERHEAD);
             return;
         }
 
-        max_quantum -= FPWRITE_RQST_SIZE;
+        max_quantum -= FPWRITE_FRAME_OVERHEAD;
     }
 
     if (!Quantum) {
         Quantum = max_quantum;
     } else if (Quantum > max_quantum) {
-        fprintf(stdout, "\t server quantum (%d) too small\n", dsi->server_quantum);
+        fprintf(stdout,
+                "\t requested quantum (%zu) exceeds maximum data quantum (%zu)\n",
+                Quantum, max_quantum);
         return;
     }
 
@@ -1848,7 +1854,8 @@ void usage(char *av0)
     fprintf(stdout, "\t-d\tfile size (Mbytes, default 64)\n");
     fprintf(stdout,
             "\t-z\tfile size sweep, comma-separated list in MB (e.g., '0.00390625,1,2,4,8,16') (max 1024)\n");
-    fprintf(stdout, "\t-q\tpacket size (Kbytes, default server quantum)\n");
+    fprintf(stdout,
+            "\t-q\tdata size per request (Kbytes, default: maximum allowed by server quantum)\n");
     fprintf(stdout,
             "\t-r\tnumber of outstanding requests for pipelining (default 1)\n");
     fprintf(stdout, "\t-y\tuse a new file for each run (default same file)\n");
