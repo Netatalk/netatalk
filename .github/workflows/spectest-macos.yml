@@ -53,7 +53,7 @@ jobs:
         run: |
           export PATH="$(brew --prefix bison)/bin:$PATH"
           meson setup build \
-            -Dbuildtype=debugoptimized \
+            -Dbuildtype=release \
             -Dwith-homebrew=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
