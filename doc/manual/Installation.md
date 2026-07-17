@@ -235,9 +235,11 @@ and depends on the following third-party software:
 - DConf
 
     DConf is a low-level configuration database. Netatalk writes a
-    dconf keyfile listing the volumes to index, then runs *dconf
-    update* to compile it into the binary database. The LocalSearch
-    indexer reads this configuration on startup.
+    dconf keyfile listing the volumes to index under
+    */etc/dconf/db/netatalk.d*, then runs *dconf compile* to create the
+    Netatalk system database. The Netatalk profile is installed under
+    */etc/dconf/profile*, and locks prevent user database values from
+    overriding the generated volume list.
 
 - flex
 

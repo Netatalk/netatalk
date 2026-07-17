@@ -340,6 +340,24 @@
 /* Define as const if the declaration of iconv() needs const. */
 #mesondefine ICONV_CONST
 
+/* Indexer D-Bus name */
+#mesondefine INDEXER_DBUS_NAME
+
+/* dconf command with absolute path */
+#mesondefine INDEXER_DCONF_COMMAND
+
+/* Path to the compiled netatalk dconf database */
+#mesondefine INDEXER_DCONF_DB
+
+/* Directory for the netatalk dconf database keyfiles */
+#mesondefine INDEXER_DCONF_DB_DIR
+
+/* Indexer dconf keyfile path (schema with dots replaced by slashes, lowercased) */
+#mesondefine INDEXER_DCONF_PATH
+
+/* Path to the netatalk dconf profile file */
+#mesondefine INDEXER_DCONF_PROFILE
+
 /* OS is Linux */
 #mesondefine LINUX
 
@@ -402,21 +420,6 @@
 
 /* Define if TCP wrappers should be used */
 #mesondefine TCPWRAP
-
-/* Indexer D-Bus name */
-#mesondefine INDEXER_DBUS_NAME
-
-/* Indexer dconf keyfile path (schema with dots replaced by slashes, lowercased) */
-#mesondefine INDEXER_DCONF_PATH
-
-/* Directory for the netatalk dconf database keyfiles */
-#mesondefine INDEXER_DCONF_DB_DIR
-
-/* Path to the netatalk dconf profile file */
-#mesondefine INDEXER_DCONF_PROFILE
-
-/* dconf update command with absolute path */
-#mesondefine DCONF_UPDATE_COMMAND
 
 /* Define if cracklib should be used */
 #mesondefine USE_CRACKLIB

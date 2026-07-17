@@ -16,6 +16,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
@@ -130,13 +131,42 @@ static int makedirs(const char *path, mode_t mode)
     return 0;
 }
 
+/*! Open a dconf input file with permissions independent of the process umask */
+static FILE *open_dconf_file(const char *path)
+{
+    int fd, saved_errno;
+    FILE *fp;
+
+    if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
+        return NULL;
+    }
+
+    /* open() does not update the mode of an existing file. */
+    if (fchmod(fd, 0644) == -1) {
+        saved_errno = errno;
+        close(fd);
+        errno = saved_errno;
+        return NULL;
+    }
+
+    if ((fp = fdopen(fd, "w")) == NULL) {
+        saved_errno = errno;
+        close(fd);
+        errno = saved_errno;
+        return NULL;
+    }
+
+    return fp;
+}
+
 /*! Set indexers to index all our volumes via a dconf keyfile */
 static int set_sl_volumes(void)
 {
     EC_INIT;
     const struct vol *volumes, *vol;
     FILE *fp = NULL;
-    int sysret;
+    int status;
+    pid_t pid, waitret;
     bool first;
     EC_NULL_LOG(volumes = getvolumes());
 
@@ -147,7 +177,14 @@ static int set_sl_volumes(void)
         EC_FAIL;
     }
 
-    if ((fp = fopen(INDEXER_DCONF_DB_DIR "/10-spotlight", "w")) == NULL) {
+    if (makedirs(INDEXER_DCONF_DB_DIR "/locks", 0755) != 0) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to create " INDEXER_DCONF_DB_DIR "/locks: %s",
+            strerror(errno));
+        EC_FAIL;
+    }
+
+    if ((fp = open_dconf_file(INDEXER_DCONF_DB_DIR "/10-spotlight")) == NULL) {
         LOG(log_error, logtype_sl,
             "set_sl_volumes: failed to open " INDEXER_DCONF_DB_DIR "/10-spotlight: %s",
             strerror(errno));
@@ -177,7 +214,7 @@ static int set_sl_volumes(void)
     }
 
     if (first) {
-        /* No Spotlight volumes: emit typed empty array so dconf update parses it */
+        /* No Spotlight volumes: emit typed empty array so dconf compile parses it */
         fprintf(fp, "index-recursive-directories=@as []\n");
     } else {
         fprintf(fp, "]\n");
@@ -192,24 +229,79 @@ static int set_sl_volumes(void)
         EC_FAIL;
     }
 
-    fclose(fp);
-    fp = NULL;
-    sysret = system(DCONF_UPDATE_COMMAND);
-
-    if (sysret == -1) {
+    if (fclose(fp) != 0) {
+        fp = NULL;
         LOG(log_error, logtype_sl,
-            "set_sl_volumes: system() failed to run 'dconf update': %s",
+            "set_sl_volumes: failed to close " INDEXER_DCONF_DB_DIR
+            "/10-spotlight: %s", strerror(errno));
+        EC_FAIL;
+    }
+
+    fp = NULL;
+
+    if ((fp = open_dconf_file(INDEXER_DCONF_DB_DIR "/locks/spotlight")) == NULL) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to open " INDEXER_DCONF_DB_DIR
+            "/locks/spotlight: %s", strerror(errno));
+        EC_FAIL;
+    }
+
+    fprintf(fp, "/" INDEXER_DCONF_PATH "/index-recursive-directories\n");
+    fprintf(fp, "/" INDEXER_DCONF_PATH "/index-single-directories\n");
+
+    if (fflush(fp) != 0) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to write " INDEXER_DCONF_DB_DIR
+            "/locks/spotlight: %s", strerror(errno));
+        EC_FAIL;
+    }
+
+    if (fclose(fp) != 0) {
+        fp = NULL;
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to close " INDEXER_DCONF_DB_DIR
+            "/locks/spotlight: %s", strerror(errno));
+        EC_FAIL;
+    }
+
+    fp = NULL;
+
+    if ((pid = fork()) == -1) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to fork for 'dconf compile': %s",
             strerror(errno));
         EC_FAIL;
-    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
+    }
+
+    if (pid == 0) {
+        int exec_errno;
+        execl(INDEXER_DCONF_COMMAND, INDEXER_DCONF_COMMAND, "compile",
+              INDEXER_DCONF_DB, INDEXER_DCONF_DB_DIR, NULL);
+        exec_errno = errno;
         LOG(log_error, logtype_sl,
-            "set_sl_volumes: 'dconf update' exited with status %d",
-            WEXITSTATUS(sysret));
+            "set_sl_volumes: failed to execute '%s compile': %s",
+            INDEXER_DCONF_COMMAND, strerror(exec_errno));
+        _exit(127);
+    }
+
+    do {
+        waitret = waitpid(pid, &status, 0);
+    } while (waitret == -1 && errno == EINTR);
+
+    if (waitret == -1) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to wait for 'dconf compile': %s",
+            strerror(errno));
         EC_FAIL;
-    } else if (WIFSIGNALED(sysret)) {
+    } else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
         LOG(log_error, logtype_sl,
-            "set_sl_volumes: 'dconf update' killed by signal %d",
-            WTERMSIG(sysret));
+            "set_sl_volumes: 'dconf compile' exited with status %d",
+            WEXITSTATUS(status));
+        EC_FAIL;
+    } else if (WIFSIGNALED(status)) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: 'dconf compile' killed by signal %d",
+            WTERMSIG(status));
         EC_FAIL;
     }
 
@@ -742,8 +834,9 @@ int main(int argc, char **argv)
         setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc",
                1);
         setenv("DCONF_PROFILE", INDEXER_DCONF_PROFILE, 1);
-        setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
-        setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
+        setenv("XDG_CONFIG_HOME", _PATH_STATEDIR, 1);
+        setenv("XDG_DATA_HOME", _PATH_STATEDIR, 1);
+        setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 1);
         setenv("TRACKER_USE_LOG_FILES", "1", 0);
         dbus_path = INIPARSER_GETSTR(obj.iniconfig, INISEC_GLOBAL, "dbus daemon",
                                      DBUS_DAEMON_PATH);
