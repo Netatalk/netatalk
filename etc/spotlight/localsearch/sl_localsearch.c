@@ -301,8 +301,9 @@ static int sl_localsearch_init(AFPObj *obj)
     sl_ctx->cancellable = g_cancellable_new();
     setenv("DBUS_SESSION_BUS_ADDRESS",
            "unix:path=" _PATH_STATEDIR "spotlight.ipc", 1);
-    setenv("XDG_DATA_HOME",          _PATH_STATEDIR, 0);
-    setenv("XDG_CACHE_HOME",         _PATH_STATEDIR, 0);
+    setenv("XDG_CONFIG_HOME",        _PATH_STATEDIR, 1);
+    setenv("XDG_DATA_HOME",          _PATH_STATEDIR, 1);
+    setenv("XDG_CACHE_HOME",         _PATH_STATEDIR, 1);
     setenv("TRACKER_USE_LOG_FILES",  "1",             0);
     sl_ctx->tracker_con =
         tracker_sparql_connection_bus_new(INDEXER_DBUS_NAME, NULL, NULL, &error);

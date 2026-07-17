@@ -103,7 +103,7 @@ option(
     'with-install-hooks',
     type: 'boolean',
     value: true,
-    description: 'Enable OS specific install hooks',
+    description: 'Convenience hooks for end users, should be disabled for package maintainers',
 )
 option(
     'with-kerberos',

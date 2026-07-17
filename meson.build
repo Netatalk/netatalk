@@ -1390,8 +1390,18 @@ if get_option('with-spotlight')
                 )
             endif
 
-            cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
-            cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
+            cdata.set(
+                'INDEXER_DCONF_DB',
+                '"/etc/dconf/db/netatalk"',
+            )
+            cdata.set(
+                'INDEXER_DCONF_DB_DIR',
+                '"/etc/dconf/db/netatalk.d"',
+            )
+            cdata.set(
+                'INDEXER_DCONF_PROFILE',
+                '"/etc/dconf/profile/netatalk"',
+            )
 
             use_spotlight_localsearch = (
                 sparql_found
@@ -1409,14 +1419,7 @@ if get_option('with-spotlight')
                 endif
                 spotlight_backends += 'localsearch'
                 cdata.set('SPOTLIGHT_BACKEND_LOCALSEARCH', 1)
-                cdata.set(
-                    'DCONF_UPDATE_COMMAND',
-                    '"' + dconf.full_path() + ' update"',
-                )
-                install_emptydir('/etc/dconf/db')
-                if get_option('with-install-hooks')
-                    meson.add_install_script(dconf, 'update')
-                endif
+                cdata.set('INDEXER_DCONF_COMMAND', '"' + dconf.full_path() + '"')
             else
                 warning(
                     'localsearch Spotlight search backend requested but one or more required dependencies not found',
