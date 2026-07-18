@@ -24,9 +24,9 @@ ARG BUILD_DEPS="\
     pkg-config \
     systemtap-sdt-dev \
     "
-ARG WEBMIN_VERSION=2.651
-ARG WEBMIN_COMMIT=ce1ab74c6fe6a7c5f776ba8e62ec0fcf812414c9
-ARG WEBMIN_SETUP_REPO_SHA256=c752127dcd345494432979eb13140f358243b95b249e9fb7744034393dbccab9
+ARG WEBMIN_VERSION=2.652
+ARG WEBMIN_SETUP_REPOS_COMMIT=dce50a2039e49736d43a6f7590a3244687cdcc8d
+ARG WEBMIN_SETUP_REPOS_SHA256=c752127dcd345494432979eb13140f358243b95b249e9fb7744034393dbccab9
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -35,12 +35,12 @@ ENV BUILD_DEPS=$BUILD_DEPS
 ENV PERLLIB=/usr/share/webmin
 
 ARG DEBIAN_FRONTEND=noninteractive
-ADD "https://raw.githubusercontent.com/webmin/webmin/${WEBMIN_COMMIT}/webmin-setup-repo.sh" webmin-setup-repo.sh
+ADD "https://raw.githubusercontent.com/webmin/webmin/${WEBMIN_SETUP_REPOS_COMMIT}/webmin-setup-repo.sh" webmin-setup-repo.sh
 RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends \
     $RUN_DEPS \
     $BUILD_DEPS \
-&&  printf '%s  webmin-setup-repo.sh\n' "${WEBMIN_SETUP_REPO_SHA256}" | sha256sum -c - \
+&&  printf '%s  webmin-setup-repo.sh\n' "${WEBMIN_SETUP_REPOS_SHA256}" | sha256sum -c - \
 &&  sh webmin-setup-repo.sh --force \
 &&  apt-get install --yes --no-install-recommends webmin=${WEBMIN_VERSION} \
 &&  apt-get clean
