@@ -493,6 +493,8 @@ static void handle_alarm(AFPObj *obj)
             afp_dsi_die(EXITERR_CLNT);
         }
 
+        /* Checked once per tickle, so a disconnected session is reaped up to
+         * one tickle interval (tickleval seconds) after its deadline. */
         if (dsi->tickle > obj->options.disconnected) {
             LOG(log_error, logtype_afpd, "afp_alarm: reconnect timer expired, goodbye");
             afp_dsi_die(EXITERR_CLNT);
