@@ -702,27 +702,45 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
         goto exit;
     }
 
-    /* Now see what happens: either afpd master sends us SIGTERM because our session */
-    /* has been transferred to a old disconnected session, or we continue    */
+    /* Wait out the window in which master may SIGTERM us if the session
+     * transferred to Child A. */
     sleep(5);
 
-    /* With deferred signal handling, SIGTERM only sets die_pending
-     * instead of directly calling afp_dsi_die() which would clear
-     * DSI_RECONINPROG.  Do that here. */
+    /* SIGTERM during sleep(5): drop the flag so the success branch fires. */
     if (die_pending) {
         die_pending = 0;
         dsi->flags &= ~DSI_RECONINPROG;
     }
 
-    if (!(dsi->flags & DSI_RECONINPROG)) { /* deleted in SIGTERM handler */
-        /* Reconnect succeeded, we exit now after sleeping some more */
-        sleep(2); /* sleep some more to give the recon. session time */
+    if (!(dsi->flags & DSI_RECONINPROG)) {
+        sleep(2); /* let the reconnecting session settle */
         LOG(log_note, logtype_afpd, "afp_disconnect: primary reconnect succeeded");
         exit(0);
     }
 
 exit:
-    /* Reinstall tickle timer */
+
+    /* The handoff failures jump here, above the sleep(5) sweep; die_pending here
+     * means a termination signal raced the handoff after the transfer to Child
+     * A completed.  Not afp_dsi_die(): its DSI_RECONINPROG guard would swallow
+     * the exit.  Preserve afp_dsi_die()'s exit mapping so a non-SIGTERM signal
+     * (e.g. SIGQUIT) keeps its diagnostic exit status. */
+    if (die_pending) {
+        int sig = die_pending;
+        die_pending = 0;
+        dsi->flags &= ~DSI_RECONINPROG;
+        LOG(log_note, logtype_afpd,
+            "afp_disconnect: session transferred, child exiting");
+
+        if (sig == SIGTERM || sig == SIGALRM || sig < 0) {
+            exit(0);
+        }
+
+        exit(sig);
+    }
+
+    /* Leave DSI_RECONINPROG set: the afp_over_dsi() backstop uses it to reap
+     * this child on the next connection error. */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
     LOG(log_error, logtype_afpd, "afp_disconnect: primary reconnect failed");
     return AFPERR_MISC;
