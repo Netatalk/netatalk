@@ -1,6 +1,19 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.6.0
+----------------
+
+* FIX: dsi: remove the double copy and latent truncation of buffered
+  write payload in dsi_writeinit
+* UPD: dsi: grow the server quantum per session to frame-to-MSS
+  alignment so transfers never end in a runt TCP segment; detected and
+  logged at session open, never below the configured value
+* UPD: dsi: cap server quantum at 256 MiB, raise dsireadbuf default to
+  32 (maximum 1024) with a platform-safe product guard
+* BREAKING: libatalk: dsi_writeinit signature changed to pointer handoff;
+  soversion bumped to 21
+
 Changes in 4.5.0
 ----------------
 

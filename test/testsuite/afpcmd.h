@@ -91,10 +91,10 @@ extern unsigned int FPMoveAndRename(CONN *conn, uint16_t svol, int sdid,
 extern unsigned int FPRename(CONN *conn, uint16_t svol, int sdid, char *src,
                              char *dst);
 
-extern unsigned int FPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
-                                 char *data);
-extern unsigned int FPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                                 char *data);
+extern unsigned int FPReadHeader(DSI *dsi, uint16_t fork, off_t offset,
+                                 size_t size, char *data);
+extern unsigned int FPReadFooter(DSI *dsi, uint16_t fork, off_t offset,
+                                 size_t size, char *data);
 extern unsigned int FPRead(CONN *conn, uint16_t fork, long long offset,
                            int size, char *data);
 
@@ -103,10 +103,14 @@ extern unsigned int FPRead_ext(CONN *conn, uint16_t fork, off_t offset,
 extern unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
                                      off_t size, char *data);
 
-extern unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
-                                  char *data, char whence);
-extern unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                                  char *data, char whence);
+extern unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, off_t offset,
+                                  size_t size, char *data, char whence);
+extern unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, off_t offset,
+                                  size_t size, char *data, char whence);
+extern unsigned int FPWriteExtHeader(DSI *dsi, uint16_t fork, off_t offset,
+                                     size_t size, char *data, char whence);
+extern unsigned int FPWriteExtFooter(DSI *dsi, uint16_t fork, off_t offset,
+                                     size_t size, char *data, char whence);
 extern unsigned int FPWrite(CONN *conn, uint16_t fork, long long offset,
                             int size, char *data, char whence);
 extern unsigned int FPWrite_ext(CONN *conn, uint16_t fork, off_t  offset,

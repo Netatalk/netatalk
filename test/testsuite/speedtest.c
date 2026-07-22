@@ -39,10 +39,6 @@
 #include "afp_tcp_analytics.h"
 #include "speedtest_local_vfs.h"
 
-/* FPWrite sends a 16-byte DSI header followed by 12 bytes of request fields
- * before the write data. */
-#define FPWRITE_FRAME_OVERHEAD ((size_t)DSI_BLOCKSIZ + 12U)
-
 /* For compiling on OS X */
 #ifndef MAP_ANONYMOUS
 #ifdef MAP_ANON
@@ -155,6 +151,7 @@ static int Request = 1;
 static int Delete = 0;
 static int Sparse = 0;
 static int Local = 0;
+static int LegacyWrite = 0;
 static int Flush = 1;
 static int Direct = 1;
 
@@ -1717,29 +1714,20 @@ static void run_one(char *name)
         tcp_analytics_test_start(&tcp_session, Conn, Size);
     }
 
-    /* The negotiated DSI quantum covers the complete frame.  Remote writes
-     * use FPWrite, so leave room for its DSI header and request fields instead
-     * of sending server_quantum bytes of data. */
-    size_t max_quantum = dsi->server_quantum;
-
-    if (!Local) {
-        if (max_quantum <= FPWRITE_FRAME_OVERHEAD) {
-            fprintf(stdout,
-                    "\t server quantum (%" PRIu32
-                    ") cannot accommodate FPWrite overhead (%zu)\n",
-                    dsi->server_quantum, FPWRITE_FRAME_OVERHEAD);
-            return;
-        }
-
-        max_quantum -= FPWRITE_FRAME_OVERHEAD;
+    /* The negotiated quantum is the per-request data capacity in both
+     * directions; frame overhead rides on top of it on the wire.  Zero
+     * means DSIOpenSession delivered no quantum. */
+    if (dsi->server_quantum == 0) {
+        fprintf(stdout, "\t no server quantum negotiated\n");
+        return;
     }
 
     if (!Quantum) {
-        Quantum = max_quantum;
-    } else if (Quantum > max_quantum) {
+        Quantum = dsi->server_quantum;
+    } else if (Quantum > dsi->server_quantum) {
         fprintf(stdout,
-                "\t requested quantum (%zu) exceeds maximum data quantum (%zu)\n",
-                Quantum, max_quantum);
+                "\t requested quantum (%zu) exceeds server quantum (%" PRIu32 ")\n",
+                Quantum, dsi->server_quantum);
         return;
     }
 
@@ -1825,7 +1813,7 @@ static void run_one(char *name)
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567acDeiLTVvy] [-h host] [-p port] [-s vol] [-P path] [-S vol2] [-u user] [-w password] [-n iterations] [-W warmup] "
+            "usage:\t%s [-1234567acDEeiLTVvy] [-h host] [-p port] [-s vol] [-P path] [-S vol2] [-u user] [-w password] [-n iterations] [-W warmup] "
             "[-t delay] [-d size] [-z sizes] [-q quantum] [-r requests] [-f test] [-F file] \n",
             av0);
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
@@ -1837,6 +1825,8 @@ void usage(char *av0)
     fprintf(stdout, "\t-w\tpassword\n");
     fprintf(stdout, "\t-c\toutput in CSV format (auto-enables statistics)\n");
     fprintf(stdout, "\t-L\tuse posix calls (default AFP calls)\n");
+    fprintf(stdout,
+            "\t-E\tuse legacy FPWrite instead of FPWriteExt (AFP >= 3.0)\n");
     fprintf(stdout,
             "\t-D\tdisable O_DIRECT in Local mode (default: auto-enabled)\n");
     fprintf(stdout, "\t-1\tAFP 2.1 version\n");
@@ -1884,7 +1874,7 @@ int main(int ac, char **av)
     }
 
     while ((cc = getopt(ac, av,
-                        "1234567aceDiLTVvyd:F:f:h:n:p:P:q:r:S:s:t:u:w:W:z:")) != EOF) {
+                        "1234567aceDEiLTVvyd:F:f:h:n:p:P:q:r:S:s:t:u:w:W:z:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -1962,6 +1952,10 @@ int main(int ac, char **av)
 
         case 'L':
             Local = 1;
+            break;
+
+        case 'E':
+            LegacyWrite = 1;
             break;
 
         case 'n':
@@ -2226,6 +2220,11 @@ int main(int ac, char **av)
         } else {
             FPopenLogin(Conn, vers, uam, User, Password);
         }
+    }
+
+    if (!Local && !LegacyWrite && Version >= 30) {
+        VFS.writeheader = FPWriteExtHeader;
+        VFS.writefooter = FPWriteExtFooter;
     }
 
     Conn->afp_version = Version;

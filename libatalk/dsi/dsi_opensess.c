@@ -65,21 +65,15 @@ void dsi_opensession(DSI *dsi)
         i += option_len;
     }
 
-    /* let the client know the server quantum. we don't use the
-     * max server quantum due to a bug in appleshare client 3.8.6. */
+    /* let the client know the server quantum */
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_data.dsi_code = 0;
-#if 0
-    dsi->header.dsi_command = DSIFUNC_OPEN;
-#endif
     /* length of data. dsi_send uses it. */
     dsi->cmdlen = 2 * (2 + sizeof(uint32_t));
     /* DSI Option Server Request Quantum */
     dsi->commands[0] = DSIOPT_SERVQUANT;
     dsi->commands[1] = sizeof(servquant);
-    servquant = htonl((dsi->server_quantum < DSI_SERVQUANT_MIN ||
-                       dsi->server_quantum > DSI_SERVQUANT_MAX) ?
-                      DSI_SERVQUANT_DEF : dsi->server_quantum);
+    servquant = htonl(dsi->server_quantum);
     memcpy(dsi->commands + 2, &servquant, sizeof(servquant));
     /* AFP replaycache size option */
     offs = 2 + sizeof(replcsize);

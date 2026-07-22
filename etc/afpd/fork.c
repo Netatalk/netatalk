@@ -1999,10 +1999,12 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
 
         /* find out what we have already */
-        if ((cc = dsi_writeinit(dsi, rcvbuf, rcvbuflen)) > 0) {
+        char *wbuf = NULL;
+
+        if ((cc = dsi_writeinit(dsi, &wbuf)) > 0) {
             ssize_t written;
 
-            if ((written = write_file(ofork, eid, offset, rcvbuf, cc)) != cc) {
+            if ((written = write_file(ofork, eid, offset, wbuf, cc)) != cc) {
                 dsi_writeflush(dsi);
                 *rbuflen = 0;
 
@@ -2113,7 +2115,7 @@ afp_write_done:
 afp_write_err:
 
     if (obj->proto == AFPPROTO_DSI) {
-        dsi_writeinit(dsi, rcvbuf, rcvbuflen);
+        dsi_writeinit(dsi, NULL);
         dsi_writeflush(dsi);
     }
 

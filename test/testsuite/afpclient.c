@@ -258,6 +258,69 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
     return 1;
 }
 
+/*! Send one DSI write frame — 16-byte header, AFP request block, payload —
+ * in a single writev so no runt segment precedes the payload. */
+int dsi_stream_send3(DSI *dsi, void *cmd, size_t cmdlen, void *data,
+                     size_t datalen)
+{
+    char block[DSI_BLOCKSIZ];
+    struct iovec iov[3];
+    int first = 0;
+    size_t towrite;
+    ssize_t len;
+    block[0] = dsi->header.dsi_flags;
+    block[1] = dsi->header.dsi_command;
+    memcpy(block + 2, &dsi->header.dsi_requestID,
+           sizeof(dsi->header.dsi_requestID));
+    memcpy(block + 4, &dsi->header.dsi_code, sizeof(dsi->header.dsi_code));
+    memcpy(block + 8, &dsi->header.dsi_len, sizeof(dsi->header.dsi_len));
+    memcpy(block + 12, &dsi->header.dsi_reserved,
+           sizeof(dsi->header.dsi_reserved));
+
+    if (Throttle) {
+        sleep(1);
+    }
+
+    iov[0].iov_base = block;
+    iov[0].iov_len = sizeof(block);
+    iov[1].iov_base = cmd;
+    iov[1].iov_len = cmdlen;
+    iov[2].iov_base = data;
+    iov[2].iov_len = datalen;
+    towrite = sizeof(block) + cmdlen + datalen;
+    dsi->write_count += towrite;
+
+    while (towrite > 0) {
+        if (((len = writev(dsi->socket, iov + first, 3 - first)) == -1
+                && errno == EINTR) || !len) {
+            continue;
+        }
+
+        if (len < 0) {
+            if (!Quiet) {
+                fprintf(stdout, "dsi_stream_send3: %s\n", strerror(errno));
+            }
+
+            return 0;
+        }
+
+        towrite -= len;
+
+        while (len > 0 && first < 3) {
+            if ((size_t)len >= iov[first].iov_len) {
+                len -= iov[first].iov_len;
+                first++;
+            } else {
+                iov[first].iov_base = (char *)iov[first].iov_base + len;
+                iov[first].iov_len -= len;
+                len = 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
 /* ------------------------------------- */
 void dsi_tickle(DSI *dsi)
 {
@@ -1739,11 +1802,11 @@ unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did,
 }
 
 /* ------------------------------- */
-unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                             char *data, char whence)
 {
     int ofs;
-    int rsize;
+    uint32_t rsize;
     uint32_t temp;
     assert(dsi);
     memset(dsi->commands, 0, DSI_CMDSIZ);
@@ -1756,23 +1819,22 @@ unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
     dsi->commands[ofs++] = whence;			/* 0 SEEK_SET, 0x80 SEEK_END */
     memcpy(dsi->commands + ofs, &fork, sizeof(fork));	/* fork num */
     ofs += sizeof(fork);
-    temp = htonl(offset);
+    temp = htonl((uint32_t)offset);
     memcpy(dsi->commands + ofs, &temp, sizeof(temp));
     ofs += sizeof(temp);
-    rsize = htonl(size);
+    rsize = htonl((uint32_t)size);
     memcpy(dsi->commands + ofs, &rsize, sizeof(rsize));
     ofs += sizeof(rsize);
     dsi->datalen = ofs;		/* 12*/
-    dsi->header.dsi_len = htonl((uint32_t) dsi->datalen + size);
+    dsi->header.dsi_len = htonl((uint32_t)(dsi->datalen + size));
     dsi->header.dsi_code = htonl(ofs);
-    dsi_stream_send(dsi, dsi->commands, ofs);
-    dsi_stream_write(dsi, data, size);
+    dsi_stream_send3(dsi, dsi->commands, ofs, data, size);
     return 0;
 }
 
 /* ------------------------------- */
-unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork _U_, int offset, int size,
-                            char *data _U_, char whence)
+unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork _U_, off_t offset,
+                            size_t size, char *data _U_, char whence)
 {
     uint32_t last;
     assert(dsi);
@@ -1809,15 +1871,11 @@ unsigned int AFPWrite(CONN *conn, uint16_t fork, int offset, int size,
 }
 
 /* ------------------------------- */
-unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
-                          char *data, char whence)
+unsigned int AFPWriteExtHeader(DSI *dsi, uint16_t fork, off_t offset,
+                               size_t size, char *data, char whence)
 {
     int ofs;
-    DSI *dsi;
-    off_t last;
-    unsigned char *ptr;
-    assert(conn);
-    dsi = &conn->dsi;
+    assert(dsi);
     memset(dsi->commands, 0, DSI_CMDSIZ);
     memset(&dsi->header, 0, sizeof(dsi->header));
     dsi->header.dsi_flags = DSIFL_REQUEST;
@@ -1829,12 +1887,21 @@ unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
     memcpy(dsi->commands + ofs, &fork, sizeof(fork));	/* fork num */
     ofs += sizeof(fork);
     ofs += set_off_t(offset, dsi->commands + ofs, 1);
-    ofs += set_off_t(size, dsi->commands + ofs, 1);
-    dsi->datalen = ofs;
-    dsi->header.dsi_len = htonl(dsi->datalen + size);
+    ofs += set_off_t((off_t)size, dsi->commands + ofs, 1);
+    dsi->datalen = ofs;		/* 20 */
+    dsi->header.dsi_len = htonl((uint32_t)(dsi->datalen + size));
     dsi->header.dsi_code = htonl(ofs);
-    dsi_stream_send(dsi, dsi->commands, ofs);
-    dsi_stream_write(dsi, data, size);
+    dsi_stream_send3(dsi, dsi->commands, ofs, data, size);
+    return 0;
+}
+
+/* ------------------------------- */
+unsigned int AFPWriteExtFooter(DSI *dsi, uint16_t fork _U_, off_t offset,
+                               size_t size, char *data _U_, char whence)
+{
+    off_t last;
+    unsigned char *ptr;
+    assert(dsi);
     dsi_cmd_receive(dsi);
 
     if (!dsi->header.dsi_code) {
@@ -1847,40 +1914,33 @@ unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
 
         if (whence) {
             /* we don't know the size! */
-            return (last >= size + offset) ? 0 : -1;
+            return (last >= (off_t)size + offset) ? 0 : -1;
         }
 
-        return (last == size + offset) ? 0 : -1;
+        return (last == (off_t)size + offset) ? 0 : -1;
     }
 
     return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
+unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
+                          char *data, char whence)
+{
+    DSI *dsi;
+    assert(conn);
+    dsi = &conn->dsi;
+    AFPWriteExtHeader(dsi, fork, offset, (size_t)size, data, whence);
+    return AFPWriteExtFooter(dsi, fork, offset, (size_t)size, data, whence);
+}
+
+/* ------------------------------- */
 unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset,
                                 off_t size, char *data, char whence)
 {
-    int ofs;
-    DSI *dsi = &conn->dsi;
     assert(conn);
-    memset(dsi->commands, 0, DSI_CMDSIZ);
-    memset(&dsi->header, 0, sizeof(dsi->header));
-    dsi->header.dsi_flags = DSIFL_REQUEST;
-    dsi->header.dsi_command = DSIFUNC_WRITE;
-    dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
-    ofs = 0;
-    dsi->commands[ofs++] = AFP_WRITE_EXT;
-    dsi->commands[ofs++] = whence;			/* 0 SEEK_SET, 0x80 SEEK_END */
-    memcpy(dsi->commands + ofs, &fork, sizeof(fork));	/* fork num */
-    ofs += sizeof(fork);
-    ofs += set_off_t(offset, dsi->commands + ofs, 1);
-    ofs += set_off_t(size, dsi->commands + ofs, 1);
-    dsi->datalen = ofs;
-    dsi->header.dsi_len = htonl(dsi->datalen + size);
-    dsi->header.dsi_code = htonl(ofs);
-    dsi_stream_send(dsi, dsi->commands, ofs);
-    dsi_stream_write(dsi, data, size);
-    return 0;
+    return AFPWriteExtHeader(&conn->dsi, fork, offset, (size_t)size, data,
+                             whence);
 }
 
 /* -------------------------------
@@ -2158,7 +2218,7 @@ unsigned int AFPBadPacket(CONN *conn, char fn, char *name)
 }
 
 /* ------------------------------- */
-unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                            char *data _U_)
 {
     int ofs;
@@ -2170,10 +2230,10 @@ unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
     dsi->commands[ofs++] = 0;
     memcpy(dsi->commands + ofs, &fork, sizeof(fork));	/* fork num */
     ofs += sizeof(fork);
-    offset = htonl(offset);
-    memcpy(dsi->commands + ofs, &offset, sizeof(offset));
-    ofs += sizeof(offset);
-    temp = htonl(size);
+    temp = htonl((uint32_t)offset);
+    memcpy(dsi->commands + ofs, &temp, sizeof(temp));
+    ofs += sizeof(temp);
+    temp = htonl((uint32_t)size);
     memcpy(dsi->commands + ofs, &temp, sizeof(temp));
     ofs += sizeof(temp);
     dsi->commands[ofs++] = 0;	/* NewLineMask */
@@ -2184,8 +2244,8 @@ unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
 }
 
 /* ------------------------------- */
-unsigned int AFPReadFooter(DSI *dsi, uint16_t fork _U_, int offset _U_,
-                           int size, char *data)
+unsigned int AFPReadFooter(DSI *dsi, uint16_t fork _U_, off_t offset _U_,
+                           size_t size, char *data)
 {
     int rsize;
     assert(dsi && data);
