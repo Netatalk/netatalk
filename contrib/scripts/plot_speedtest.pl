@@ -168,8 +168,8 @@ sub build_info_lines {
         push @lines, "Iterations: $meta->{iterations}$warm";
     }
     push @lines, 'Ops: ' . join(', ', @ops);
-    push @lines, "AFP: $meta->{afp}"               if $meta->{afp};
-    push @lines, "Quantum: $meta->{quantum_kb} KB" if $meta->{quantum_kb};
+    push @lines, "AFP: $meta->{afp}"                if $meta->{afp};
+    push @lines, "Quantum: $meta->{quantum_kb} KiB" if $meta->{quantum_kb};
     my @dc;
     push @dc, uc $meta->{dircache_mode}     if $meta->{dircache_mode};
     push @dc, "size $meta->{dircache_size}" if $meta->{dircache_size};
@@ -275,19 +275,25 @@ sub plot {
                   $color, gp_quote($op)
           );
 
-        # Mark the dircache quantum (1 MiB) on the Read curve so the
-        # rfork-cache boundary is visible.
-        if ($op eq 'Read') {
+        # Mark the server quantum on the Read curve so the single-frame
+        # boundary is visible.  The configured quantum may not land exactly
+        # on a swept file size, so tag the nearest sweep point.
+        if ($op eq 'Read' && $meta->{quantum_kb}) {
+            my $q_bytes = $meta->{quantum_kb} * 1024;
+            my $mark;
             for my $r (@$rows) {
-                next unless $r->{size_bytes} == 1024 * 1024;
+                $mark = $r
+                  if !defined $mark
+                  || abs($r->{size_bytes} - $q_bytes) < abs($mark->{size_bytes} - $q_bytes);
+            }
+            if ($mark) {
                 push @labels,
                   sprintf(
                             'set label 9 "quantum" at first %s, first %s '
                           . 'offset 0.6,0.8 front font ",5" '
                           . "textcolor rgb \"$color\"",
-                          $r->{size_bytes}, $r->{mean}
+                          $mark->{size_bytes}, $mark->{mean}
                   );
-                last;
             }
         }
 

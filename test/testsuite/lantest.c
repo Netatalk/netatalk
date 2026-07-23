@@ -141,7 +141,7 @@ char SkippedTests[1024][256] = {{0}};
 /* Tests configuration */
 #define DIRNUM 10  /* outer/middle nesting levels */
 #define DIRNUM_K 10  /* inner level: 10 x 10 x 10 = 1000 nested dirs */
-static off_t rwsize = 100 * 1024 * 1024;  /* 100 MB */
+static off_t rwsize = 100 * 1024 * 1024;  /* 100 MiB */
 static int32_t num_locks = 2000;  /* byte-range locks held in one fork */
 static int32_t create_enum_files = 2000;  /* 2000 files */
 static int32_t num_fork_locks =
@@ -267,11 +267,11 @@ static void addresult(int32_t test, uint8_t iteration)
     if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
         if (t > 0) {  /* Prevent division by zero */
             avg = (rwsize / 1000) / t;
-            fprintf(stdout, " for %lu MB (avg. %" PRIu64 " MB/s)",
-                    rwsize / (1024 * 1024), avg);
+            fprintf(stdout, " for %ju MiB (avg. %" PRIu64 " MB/s)",
+                    (uintmax_t)(rwsize / (1024 * 1024)), avg);
         } else {
-            fprintf(stdout, " for %lu MB (time too small to measure)",
-                    rwsize / (1024 * 1024));
+            fprintf(stdout, " for %ju MiB (time too small to measure)",
+                    (uintmax_t)(rwsize / (1024 * 1024)));
         }
     }
 

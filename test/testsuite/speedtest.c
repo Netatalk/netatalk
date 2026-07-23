@@ -118,6 +118,7 @@ static int Count = 1;
 static int WarmupRuns = 1;
 static int DelaySeconds = 0;
 static off_t Size = 64 * MEGABYTE;
+static int SizeFlagSeen = 0;
 
 /* File size sweeping support */
 #define MAX_SIZE_SWEEP 32
@@ -734,11 +735,13 @@ static void print_test_header(const char *test_name)
     const char *sparse_note = Sparse ? "sparse file" : "";
 
     if (Size < MEGABYTE) {
-        fprintf(stdout, "%s quantum %ld KB, size %ld KB %s\n",
-                test_name, Quantum / KILOBYTE, Size / KILOBYTE, sparse_note);
+        fprintf(stdout, "%s quantum %ju KiB, size %ju KiB %s\n",
+                test_name, (uintmax_t)(Quantum / KILOBYTE),
+                (uintmax_t)(Size / KILOBYTE), sparse_note);
     } else {
-        fprintf(stdout, "%s quantum %ld KB, size %ld MB %s\n",
-                test_name, Quantum / KILOBYTE, Size / MEGABYTE, sparse_note);
+        fprintf(stdout, "%s quantum %ju KiB, size %ju MiB %s\n",
+                test_name, (uintmax_t)(Quantum / KILOBYTE),
+                (uintmax_t)(Size / MEGABYTE), sparse_note);
     }
 }
 
@@ -1855,7 +1858,7 @@ void usage(char *av0)
     fprintf(stdout,
             "\t-z\tfile size sweep, comma-separated list in MB (e.g., '0.00390625,1,2,4,8,16') (max 1024)\n");
     fprintf(stdout,
-            "\t-q\tdata size per request (Kbytes, default: maximum allowed by server quantum)\n");
+            "\t-q\tdata size per request (KiB, default: maximum allowed by server quantum)\n");
     fprintf(stdout,
             "\t-r\tnumber of outstanding requests for pipelining (default 1)\n");
     fprintf(stdout, "\t-y\tuse a new file for each run (default same file)\n");
@@ -1938,6 +1941,7 @@ int main(int ac, char **av)
 
         case 'd':
             Size = atoi(optarg) * MEGABYTE;
+            SizeFlagSeen = 1;
             break;
 
         case 'e':
@@ -2083,7 +2087,7 @@ int main(int ac, char **av)
     }
 
     /* Set default size sweep if no -d or -z was specified */
-    if (!size_sweep_enabled && Size == 64 * MEGABYTE) {
+    if (!size_sweep_enabled && !SizeFlagSeen) {
         /* Default sweep: 4K,8K,16K,32K,64K,128K,256K,512K,1M,2M,4M,8M,16M,32M,64M,128M,256M,512M */
         size_sweep_values[0] = 4 * KILOBYTE;
         size_sweep_values[1] = 8 * KILOBYTE;
@@ -2205,7 +2209,7 @@ int main(int ac, char **av)
         Local_VFS_Direct = Direct;
         Dsi = &Conn->dsi;
         dsi = Dsi;
-        /* Use 1 MB quantum for Local mode - no network overhead, optimized for filesystem I/O */
+        /* Use 1 MiB quantum for Local mode - no network overhead, optimized for filesystem I/O */
         dsi->server_quantum = 1 * MEGABYTE;
         VFS = local_VFS;
     } else {
