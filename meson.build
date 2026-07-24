@@ -552,6 +552,20 @@ endif
 if cc.has_member('struct stat', 'st_atimespec', prefix: '#include <sys/stat.h>')
     cdata.set('HAVE_STRUCT_STAT_ST_ATIMESPEC', 1)
 endif
+if cc.has_member(
+    'struct tcp_info',
+    'tcpi_snd_mss',
+    prefix: '#define _GNU_SOURCE\n#include <netinet/tcp.h>',
+)
+    cdata.set('HAVE_TCP_INFO_SND_MSS', 1)
+endif
+if cc.has_member(
+    'struct tcp_connection_info',
+    'tcpi_maxseg',
+    prefix: '#include <netinet/tcp.h>',
+)
+    cdata.set('HAVE_TCP_CONNECTION_INFO', 1)
+endif
 
 #################
 # Configuration #

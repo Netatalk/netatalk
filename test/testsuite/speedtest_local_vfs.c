@@ -312,21 +312,22 @@ uint16_t local_openfork(CONN *conn _U_, uint16_t vol, int type,
 /*!
  * @brief Write data via lseek() + write() syscalls
  */
-unsigned int local_writeheader(DSI *dsi _U_, uint16_t fork, int offset,
-                               int size,
+unsigned int local_writeheader(DSI *dsi _U_, uint16_t fork, off_t offset,
+                               size_t size,
                                char *data, char whence)
 {
     if (!Local_VFS_Quiet) {
         fprintf(stdout, "---------------------\n");
-        fprintf(stdout, "send write header fork %d  offset %d size %d from 0x%x\n\n",
-                fork, offset, size, (unsigned)whence);
+        fprintf(stdout,
+                "send write header fork %d  offset %lld size %zu from 0x%x\n\n",
+                fork, (long long)offset, size, (unsigned)whence);
     }
 
     if (lseek(fork, offset, SEEK_SET) == (off_t) -1) {
         return ntohl(AFPERR_EOF);
     }
 
-    if (write(fork, data, size) != size) {
+    if (write(fork, data, size) != (ssize_t)size) {
         return ntohl(AFPERR_EOF);
     }
 
@@ -336,14 +337,15 @@ unsigned int local_writeheader(DSI *dsi _U_, uint16_t fork, int offset,
 /*!
  * @brief No-op write footer (AFP compatibility)
  */
-unsigned int local_writefooter(DSI *dsi _U_, uint16_t fork, int offset,
-                               int size,
+unsigned int local_writefooter(DSI *dsi _U_, uint16_t fork, off_t offset,
+                               size_t size,
                                char *data _U_, char whence)
 {
     if (!Local_VFS_Quiet) {
         fprintf(stdout, "---------------------\n");
-        fprintf(stdout, "get write footer fork %d  offset %d size %d from 0x%x\n\n",
-                fork, offset, size, (unsigned)whence);
+        fprintf(stdout,
+                "get write footer fork %d  offset %lld size %zu from 0x%x\n\n",
+                fork, (long long)offset, size, (unsigned)whence);
     }
 
     return ntohl(AFP_OK);
@@ -452,13 +454,14 @@ unsigned int local_read(CONN *conn _U_, uint16_t fork, long long offset,
 /*!
  * @brief No-op read header (AFP compatibility)
 */
-unsigned int local_readheader(DSI *dsi _U_, uint16_t fork, int offset, int size,
+unsigned int local_readheader(DSI *dsi _U_, uint16_t fork, off_t offset,
+                              size_t size,
                               char *data _U_)
 {
     if (!Local_VFS_Quiet) {
         fprintf(stdout, "---------------------\n");
-        fprintf(stdout, "send read header fork %d  offset %d size %d\n\n", fork, offset,
-                size);
+        fprintf(stdout, "send read header fork %d  offset %lld size %zu\n\n", fork,
+                (long long)offset, size);
     }
 
     return ntohl(AFP_OK);
@@ -467,20 +470,21 @@ unsigned int local_readheader(DSI *dsi _U_, uint16_t fork, int offset, int size,
 /*!
  * @brief Read data footer via lseek() + read()
 */
-unsigned int local_readfooter(DSI *dsi _U_, uint16_t fork, int offset, int size,
+unsigned int local_readfooter(DSI *dsi _U_, uint16_t fork, off_t offset,
+                              size_t size,
                               char *data)
 {
     if (!Local_VFS_Quiet) {
         fprintf(stdout, "---------------------\n");
-        fprintf(stdout, "get read reply fork %d  offset %d size %d\n\n", fork, offset,
-                size);
+        fprintf(stdout, "get read reply fork %d  offset %lld size %zu\n\n", fork,
+                (long long)offset, size);
     }
 
     if (lseek(fork, offset, SEEK_SET) == (off_t) -1) {
         return ntohl(AFPERR_EOF);
     }
 
-    if (read(fork, data, size) != size) {
+    if (read(fork, data, size) != (ssize_t)size) {
         return ntohl(AFPERR_EOF);
     }
 

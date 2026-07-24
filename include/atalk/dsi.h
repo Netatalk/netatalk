@@ -130,11 +130,21 @@ typedef struct DSI {
 #define DSIERR_TOOMANY  0xfbce
 #define DSIERR_NOACK    0xfbcd
 
-/* server and client quanta */
+/* server and client quanta; the server quantum counts write data only */
 #define DSI_DEFQUANT        2           /*!< default attention quantum size */
-#define DSI_SERVQUANT_MAX   0xffffffff  /*!< server quantum */
+#define DSI_SERVQUANT_MAX   0x10000000  /*!< maximum server quantum (256 MiB) */
 #define DSI_SERVQUANT_MIN   32000       /*!< minimum server quantum */
 #define DSI_SERVQUANT_DEF   0x100000L   /*!< default server quantum (1 MB) */
+
+/* Write request blocks: FPWrite is 12 bytes, FPWriteExt 20 bytes. */
+#define DSI_WROFF_FPWRITE     12
+#define DSI_WROFF_FPWRITEEXT  20
+
+/* On-wire overhead of an FPWriteExt frame: DSI header + request block. */
+#define DSI_FRAME_OVERHEAD_EXT (DSI_BLOCKSIZ + DSI_WROFF_FPWRITEEXT)
+
+/*! max growth of the session quantum during MSS alignment (256 KiB) */
+#define DSI_QUANTUM_GROWTH_MAX (256 * 1024)
 
 /*! default port number */
 #define DSI_AFPOVERTCP_PORT 548
@@ -157,6 +167,8 @@ extern DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address,
 extern void dsi_setstatus(DSI *, char *, const size_t);
 extern int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
                         const char *port);
+extern uint32_t dsi_effective_mss(const DSI *);
+extern uint32_t dsi_align_quantum(uint32_t configured, uint32_t mss);
 extern void dsi_free(DSI *dsi);
 
 /* in dsi_getsess.c */
@@ -188,7 +200,7 @@ extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len,
 #endif
 
 /* client writes -- dsi_write.c */
-extern size_t dsi_writeinit(DSI *, void *, const size_t);
+extern size_t dsi_writeinit(DSI *, char **);
 extern size_t dsi_write(DSI *, void *, const size_t);
 extern void   dsi_writeflush(DSI *);
 #define dsi_wrtreply(a,b)  dsi_cmdreply(a,b)

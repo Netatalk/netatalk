@@ -394,34 +394,6 @@ afp port = *port number* **(G)**
 sets the default port applied when none specified in an **afp listen**
 option.
 
-afp read locks = *BOOLEAN* (default: *no*) **(G)**
-
-> Enforces byte-range locks on reads and writes. Required when the same
-share is accessed through another protocol such as SMB/Samba. Can be *no* for a
-small performance gain otherwise.
->
-> With it off, an app that locks part of a file is not protected from another
-app reading or writing that same part at the same time, which can lead to
-corrupted files or stale reads for apps that rely on locking (for example
-databases or shared documents). Whole-file protections — open/deny modes and
-delete/rename safety — still work either way.
-
-disconnect time = *number* **(G)**
-
-> Keep disconnected AFP sessions for *number* hours before dropping them.
-Default is 24 hours.
-
-dsireadbuf = *number* **(G)**
-
-> Scale factor that determines the size of the DSI/TCP readahead buffer,
-default is 12. This is multiplies with the DSI server quantum (default
-1MiB) to give the size of the buffer. Increasing this value might
-increase throughput in fast local networks for volume to volume copies.
->
-> ***NOTE:*** This buffer is allocated per afpd child process, so specifying
-large values will eat up large amount of memory (buffer size \* number
-of clients).
-
 fqdn = *name[:port]* **(G)**
 
 > Specifies a fully-qualified domain name, with an optional port. This is
@@ -438,22 +410,43 @@ which IP address to advertise, therefore the hostname is resolved to an
 IP which is the advertised. This is NOT used for listening and can be
 overridden by **afp listen**.
 
-max connections = *number* **(G)**
+zeroconf = *BOOLEAN* (default: *yes*) **(G)**
 
-> Sets the maximum number of clients that can simultaneously connect to
-the server (default is 200).
+> Whether to use automatic Zeroconf service
+registration if Avahi or mDNSResponder were compiled in.
+
+### Transfer Tuning
+
+Sizing: the quantum should cover at least one bandwidth-delay product
+of the network path or ZFS recordsize (which ever is larger) - usually
+no more than 4 MiB. A smaller quantum favours small-file transfers;
+a larger quantum achieves maximum throughput on large files at the
+expense of small ones: tune for the workload, larger is not always
+better. The readahead should cover a few hundred milliseconds to one
+second of inbound line rate and can be increased without trade-off
+beyond memory use.
 
 server quantum = *number* **(G)**
 
-> This specifies the DSI server quantum. The default value is 0x100000 (1
-MiB). The maximum value is 0xFFFFFFFF, the minimum is 32000. If you
-specify a value that is out of range, the default value will be set. Do
-not change this value unless you're absolutely sure, what you're doing
+> This specifies the DSI server quantum in bytes: the file data carried
+by a single write or read request, excluding frame overhead. The
+default value is 1048576 (1 MiB), the maximum is 268435456 (256 MiB),
+the minimum is 32000. Values below the minimum fall back to the
+default; values above the maximum are capped to it. The session value
+is rounded up (by at most 256 KiB) to a 4 KiB multiple whose write
+frame fills its final TCP segment; the result is logged at session
+open and never falls below the configured value.
 
-sleep time = *number* **(G)**
+dsireadbuf = *number* **(G)**
 
-> Keep sleeping AFP sessions for *number* hours before disconnecting
-clients in sleep mode. Default is 10 hours.
+> Scale factor that determines the size of the DSI/TCP readahead buffer,
+default is 32, maximum is 1024. This is multiplied with the DSI server
+quantum (default 1 MiB) to give the size of the buffer. The product is
+capped at 1 GiB by reducing this factor.
+>
+> ***NOTE:*** This buffer is allocated per afpd child process, so specifying
+large values will eat up large amount of memory (buffer size \* number
+of clients).
 
 tcprcvbuf = *number* **(G)**
 
@@ -465,6 +458,11 @@ tcpsndbuf = *number* **(G)**
 > Try to set TCP send buffer using setsockopt(). Often OSes impose
 restrictions on the applications ability to set this value.
 
+use sendfile = *BOOLEAN* (default: *yes*) **(G)**
+
+> Whether to use sendfile syscall for
+sending file data to clients.
+
 recvfile = *BOOLEAN* (default: *no*) **(G)**
 
 > Whether to use splice() on Linux for receiving data.
@@ -472,16 +470,6 @@ recvfile = *BOOLEAN* (default: *no*) **(G)**
 splice size = *number* (default: *64k*) **(G)**
 
 > Maximum number of bytes spliced.
-
-use sendfile = *BOOLEAN* (default: *yes*) **(G)**
-
-> Whether to use sendfile syscall for
-sending file data to clients.
-
-zeroconf = *BOOLEAN* (default: *yes*) **(G)**
-
-> Whether to use automatic Zeroconf service
-registration if Avahi or mDNSResponder were compiled in.
 
 ## CNID Database Backend Options
 
@@ -620,6 +608,16 @@ close vol = *BOOLEAN* (default: *no*) **(G)**
 > Whether to close volumes possibly opened by clients when they're removed
 from the configuration and the configuration is reloaded.
 
+disconnect time = *number* **(G)**
+
+> Keep disconnected AFP sessions for *number* hours before dropping them.
+Default is 24 hours.
+
+sleep time = *number* **(G)**
+
+> Keep sleeping AFP sessions for *number* hours before disconnecting
+clients in sleep mode. Default is 10 hours.
+
 extmap file = *path* **(G)**
 
 > Sets the path to the file which defines file extension type/creator
@@ -642,6 +640,11 @@ the server, *all* includes all the other options.
 BSD uchg flag in the Terminal, all three attributes are used. Thus in
 order to ignore the Finder lock/BSD uchg flag, add set *ignored
 attributes = all*.
+
+max connections = *number* **(G)**
+
+> Sets the maximum number of clients that can simultaneously connect to
+the server (default is 200).
 
 mimic model = *model* **(G)**
 
@@ -672,6 +675,18 @@ option is useful for clustered environments, to provide fault isolation
 etc. By default, afpd generates a signature and saves it to a file
 called **afp_signature.conf** automatically (based on random numbers). See
 also asip-status(1).
+
+afp read locks = *BOOLEAN* (default: *no*) **(G)**
+
+> Enforces byte-range locks on reads and writes. Required when the same
+share is accessed through another protocol such as SMB/Samba. Can be *no* for a
+small performance gain otherwise.
+>
+> With it off, an app that locks part of a file is not protected from another
+app reading or writing that same part at the same time, which can lead to
+corrupted files or stale reads for apps that rely on locking (for example
+databases or shared documents). Whole-file protections — open/deny modes and
+delete/rename safety — still work either way.
 
 solaris share reservations = *BOOLEAN* (default: *yes*) **(G)**
 

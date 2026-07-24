@@ -780,6 +780,35 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
 }
 
 /*!
+ * Bound dsireadbuf so dsireadbuf * quantum never exceeds limit.  The limit
+ * always wins: on a constrained platform the result may drop below the usual
+ * dsireadbuf floor of 6, but never below 1.  The quantum is never reduced
+ * here: frame acceptance must not change as a side effect of read-ahead
+ * sizing.  A zero quantum cannot occur in the config path and is treated as
+ * "no limit".
+ */
+int netatalk_readbuf_clamp(int readbuf, uint32_t quantum, uint64_t limit)
+{
+    uint64_t maxbuf;
+
+    if (quantum == 0) {
+        return readbuf;
+    }
+
+    maxbuf = limit / quantum;
+
+    if (maxbuf < 1) {
+        maxbuf = 1;
+    }
+
+    if ((uint64_t)readbuf > maxbuf) {
+        readbuf = (int)maxbuf;
+    }
+
+    return readbuf;
+}
+
+/*!
  * @brief Get option string from config, use default value if not set
  *
  * @param[in] conf    config handle
@@ -2967,11 +2996,19 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->timeout        = getoption_int(config, INISEC_GLOBAL, "timeout",
                                             NULL, 4);
     options->dsireadbuf     = getoption_int(config, INISEC_GLOBAL, "dsireadbuf",
-                                            NULL, 12);
+                                            NULL, 32);
     options->server_quantum = getoption_uint32_strict(config, INISEC_GLOBAL,
                               "server quantum", NULL,
-                              DSI_SERVQUANT_MIN, DSI_SERVQUANT_MAX,
+                              DSI_SERVQUANT_MIN, UINT32_MAX,
                               DSI_SERVQUANT_DEF);
+
+    if (options->server_quantum > DSI_SERVQUANT_MAX) {
+        LOG(log_warning, logtype_afpd,
+            "Config: server quantum %u exceeds maximum, using %u",
+            options->server_quantum, DSI_SERVQUANT_MAX);
+        options->server_quantum = DSI_SERVQUANT_MAX;
+    }
+
     options->volnamelen     = getoption_int(config, INISEC_GLOBAL, "volnamelen",
                                             NULL, 80);
     options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircache size",
@@ -3329,6 +3366,32 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 
     if (options->dsireadbuf < 6) {
         options->dsireadbuf = 6;
+    }
+
+    if (options->dsireadbuf > 1024) {
+        LOG(log_warning, logtype_afpd,
+            "Config: dsireadbuf %d exceeds maximum, using 1024",
+            options->dsireadbuf);
+        options->dsireadbuf = 1024;
+    }
+
+    {
+        int fit = netatalk_readbuf_clamp(options->dsireadbuf,
+                                         options->server_quantum,
+                                         NETATALK_READBUF_LIMIT);
+
+        if (fit != options->dsireadbuf) {
+            LOG(log_warning, logtype_afpd,
+                "Config: dsireadbuf %d x server quantum %u exceeds limit, "
+                "using dsireadbuf %d",
+                options->dsireadbuf, options->server_quantum, fit);
+            options->dsireadbuf = fit;
+        }
+
+        LOG(log_info, logtype_afpd,
+            "DSI read-ahead buffer: %d x %u = %" PRIu64 " bytes per session",
+            options->dsireadbuf, options->server_quantum,
+            (uint64_t)options->dsireadbuf * options->server_quantum);
     }
 
     if (options->volnamelen < 8) {

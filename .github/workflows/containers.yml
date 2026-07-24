@@ -1366,11 +1366,19 @@ jobs:
         id: speedtest-summary
         run: |
           # Peak per op = max of the mean column ($3) in each summary block.
+          # The two extra columns mirror the chart's horizontal reference
+          # lines: "avg mean" is the average of the per-size mean column ($3)
+          # and "avg max" is the average of the per-size max column ($6),
+          # each taken across the whole file-size sweep so small-file
+          # regressions are visible next to the peak.
           PEAKS=$(awk -F, '
             /# File Size Performance Summary for/ { op=$NF; sub(/.* for[[:space:]]*/, "", op); next }
             /^file_size_bytes,/ { next }
-            op != "" && NF >= 4 && $3+0 == $3 {
+            op != "" && NF >= 6 && $3+0 == $3 {
               if ($3+0 > peak[op]) peak[op]=$3+0
+              sum_mean[op] += $3+0
+              sum_max[op] += $6+0
+              n[op]++
               next
             }
             { op="" }
@@ -1378,7 +1386,8 @@ jobs:
               split("Read Write Copy ServerCopy", order, " ")
               for (i=1; i<=4; i++) {
                 o=order[i]
-                if (o in peak) printf "| %s | %.0f |\n", o, peak[o]
+                if (o in peak) printf "| %s | %.0f | %.0f | %.0f |\n",
+                  o, peak[o], sum_mean[o]/n[o], sum_max[o]/n[o]
               }
             }' speedtest.csv)
           {
@@ -1465,10 +1474,10 @@ jobs:
             [![Speedtest throughput](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)
 
             <details>
-            <summary>🔝 Peak throughput per operation</summary>
+            <summary>🔝 Throughputs per operation</summary>
 
-            | Operation | Peak mean (MB/s) |
-            |-----------|------------------|
+            | Operation | Peak mean (MB/s) | avg mean (MB/s) | avg max (MB/s) |
+            |-----------|------------------|-----------------|----------------|
             ${{ needs.perfgraph-speedtest.outputs.peaks }}
 
             </details>
