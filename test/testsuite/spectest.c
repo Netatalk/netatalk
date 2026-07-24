@@ -2,6 +2,7 @@
 #include <getopt.h>
 
 #include "afpclient.h"
+#include "afpclient_transport.h"
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
@@ -10,6 +11,8 @@ uint16_t VolID;
 static DSI *dsi;
 CONN *Conn;
 CONN *Conn2;
+DSI *Dsi;
+DSI *Dsi2;
 
 int ExitCode = 0;
 int PassCount = 0;
@@ -86,7 +89,6 @@ EXT_FN(FPSetVolParms);
 EXT_FN(FPSync);
 EXT_FN(FPWrite);
 EXT_FN(FPWriteExt);
-EXT_FN(FPzzz);
 
 EXT_FN(T2FPByteRangeLock);
 EXT_FN(T2FPCopyFile);
@@ -106,109 +108,336 @@ EXT_FN(T2LockAttack);
 
 EXT_FN(Dircache_attack);
 EXT_FN(Encoding);
-EXT_FN(Error);
 EXT_FN(Readonly);
 EXT_FN(Utf8);
 
-struct test_fn {
-    char *name;
-    void (*fn)(void);
+EXT_FN(T3Error);
+EXT_FN(T3FPRead);
+EXT_FN(T3FPzzz);
 
+static void spectest_libafpclient_smoke_test(void);
+
+enum spectest_tier {
+    SPECTEST_TIER_T1,
+    SPECTEST_TIER_T2,
+    SPECTEST_TIER_T3,
 };
-#define FN_N(a) { # a , FN(a) },
+
+enum spectest_backend {
+    SPECTEST_BACKEND_LEGACY_DSI,
+    SPECTEST_BACKEND_LIBAFPCLIENT,
+    SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP,
+};
+
+#define SPECTEST_FLAG_NONE              0U
+#define SPECTEST_FLAG_PRIMARY_VOL       (1U << 0)
+#define SPECTEST_FLAG_SECOND_USER       (1U << 1)
+#define SPECTEST_FLAG_SECOND_VOL        (1U << 2)
+#define SPECTEST_FLAG_LOCAL_PATH        (1U << 3)
+#define SPECTEST_FLAG_LOCAL_FS          (1U << 4)
+#define SPECTEST_FLAG_READ_LOCKS        (1U << 5)
+#define SPECTEST_FLAG_READONLY_VOL      (1U << 6)
+#define SPECTEST_FLAG_SLEEP             (1U << 7)
+#define SPECTEST_FLAG_WIRE_PROTOCOL     (1U << 8)
+#define SPECTEST_FLAG_NO_RUNNER_VOL     (1U << 9)
+
+struct test_fn {
+    const char *name;
+    void (*fn)(void);
+    enum spectest_tier tier;
+    enum spectest_backend backend;
+    unsigned int flags;
+    const char *legacy_reason;
+};
+
+struct spectest_transport_backend {
+    enum spectest_backend backend;
+    const char *name;
+    int (*connect)(CONN **conn, DSI **dsi_slot, char *host, char *user);
+    void (*disconnect)(CONN **conn);
+};
+#define TEST_ENTRY(a, tier_value, backend_value, flags_value) \
+    { # a, FN(a), tier_value, backend_value, flags_value, NULL },
+#define TEST_T1(a) \
+    TEST_ENTRY(a, SPECTEST_TIER_T1, SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP, \
+               SPECTEST_FLAG_PRIMARY_VOL)
+#define TEST_T1_FLAGS(a, flags_value) \
+    TEST_ENTRY(a, SPECTEST_TIER_T1, SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP, \
+               SPECTEST_FLAG_PRIMARY_VOL | (flags_value))
+#define TEST_T2(a) \
+    TEST_ENTRY(a, SPECTEST_TIER_T2, \
+               SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP, \
+               SPECTEST_FLAG_PRIMARY_VOL | SPECTEST_FLAG_LOCAL_PATH | \
+               SPECTEST_FLAG_LOCAL_FS)
+#define TEST_T2_FLAGS(a, flags_value) \
+    TEST_ENTRY(a, SPECTEST_TIER_T2, \
+               SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP, \
+               SPECTEST_FLAG_PRIMARY_VOL | SPECTEST_FLAG_LOCAL_PATH | \
+               SPECTEST_FLAG_LOCAL_FS | (flags_value))
+#define TEST_T3_FLAGS(a, flags_value, reason_value) \
+    { # a, FN(a), SPECTEST_TIER_T3, SPECTEST_BACKEND_LEGACY_DSI, \
+      SPECTEST_FLAG_PRIMARY_VOL | (flags_value), reason_value },
 
 static struct test_fn Test_list[] = {
-    FN_N(FPAddAPPL)
-    FN_N(FPAddComment)
-    FN_N(FPAddIcon)
-    FN_N(FPByteRangeLock)
-    FN_N(FPByteRangeLockExt)
-    FN_N(FPCatSearch)
-    FN_N(FPCatSearchExt)
+    TEST_T1_FLAGS(FPAddAPPL, SPECTEST_FLAG_SECOND_USER)
+    TEST_T1_FLAGS(FPAddComment, SPECTEST_FLAG_SECOND_USER)
+    TEST_T1(FPAddIcon)
+    TEST_T1_FLAGS(FPByteRangeLock,
+    SPECTEST_FLAG_SECOND_USER | SPECTEST_FLAG_READ_LOCKS)
+    TEST_T1_FLAGS(FPByteRangeLockExt,
+    SPECTEST_FLAG_SECOND_USER | SPECTEST_FLAG_READ_LOCKS)
+    TEST_T1(FPCatSearch)
+    TEST_T1_FLAGS(FPCatSearchExt, SPECTEST_FLAG_LOCAL_PATH)
 #ifdef HAVE_SPOTLIGHT_TEST
-    FN_N(FPSpotlightRPC)
+    TEST_T1(FPSpotlightRPC)
 #endif
-    FN_N(FPCloseDir)
-    FN_N(FPCloseDT)
-    FN_N(FPCloseFork)
-    FN_N(FPCloseVol)
-    FN_N(FPCreateDir)
-    FN_N(FPCreateFile)
-    FN_N(FPCopyFile)
-    FN_N(FPDelete)
-    FN_N(FPDisconnectOldSession)
-    FN_N(FPEnumerate)
-    FN_N(FPEnumerateExt)
-    FN_N(FPEnumerateExt2)
-    FN_N(FPExchangeFiles)
-    FN_N(FPFlush)
-    FN_N(FPFlushFork)
-    FN_N(FPGetACL)
-    FN_N(FPSetACL)
-    FN_N(FPGetAPPL)
-    FN_N(FPGetComment)
-    FN_N(FPGetExtAttr)
-    FN_N(FPGetFileDirParms)
-    FN_N(FPGetForkParms)
-    FN_N(FPGetIcon)
-    FN_N(FPGetIconInfo)
-    FN_N(FPGetSessionToken)
-    FN_N(FPGetSrvrInfo)
-    FN_N(FPGetSrvrMsg)
-    FN_N(FPGetSrvrParms)
-    FN_N(FPGetUserInfo)
-    FN_N(FPGetVolParms)
-    FN_N(FPMapID)
-    FN_N(FPMapName)
-    FN_N(FPMoveAndRename)
-    FN_N(FPOpenDir)
-    FN_N(FPOpenDT)
-    FN_N(FPOpenFork)
-    FN_N(FPOpenVol)
-    FN_N(FPRead)
-    FN_N(FPReadExt)
-    FN_N(FPRemoveAPPL)
-    FN_N(FPRemoveComment)
-    FN_N(FPRename)
-    FN_N(FPResolveID)
-    FN_N(FPSetDirParms)
-    FN_N(FPSetFileDirParms)
-    FN_N(FPSetFileParms)
-    FN_N(FPSetForkParms)
-    FN_N(FPSetVolParms)
-    FN_N(FPSync)
-    FN_N(FPWrite)
-    FN_N(FPWriteExt)
-    FN_N(FPzzz)
+    TEST_T1(FPCloseDir)
+    TEST_T1(FPCloseDT)
+    TEST_T1(FPCloseFork)
+    TEST_T1(FPCloseVol)
+    TEST_T1_FLAGS(FPCreateDir, SPECTEST_FLAG_SECOND_USER)
+    TEST_T1(FPCreateFile)
+    TEST_T1_FLAGS(FPCopyFile, SPECTEST_FLAG_SECOND_VOL)
+    TEST_T1_FLAGS(FPDelete, SPECTEST_FLAG_SECOND_USER)
+    TEST_T1_FLAGS(FPEnumerate, SPECTEST_FLAG_LOCAL_PATH)
+    TEST_T1(FPEnumerateExt)
+    TEST_T1(FPEnumerateExt2)
+    TEST_T1(FPExchangeFiles)
+    TEST_T1(FPFlush)
+    TEST_T1(FPFlushFork)
+    TEST_T1(FPGetACL)
+    TEST_T1(FPSetACL)
+    TEST_T1(FPGetAPPL)
+    TEST_T1_FLAGS(FPGetComment, SPECTEST_FLAG_SECOND_USER)
+    TEST_T1(FPGetExtAttr)
+    TEST_T1(FPGetFileDirParms)
+    TEST_T1(FPGetForkParms)
+    TEST_T1(FPGetIcon)
+    TEST_T1(FPGetIconInfo)
+    TEST_T1(FPGetSessionToken)
+    TEST_T1(FPGetSrvrInfo)
+    TEST_T1(FPGetSrvrMsg)
+    TEST_T1(FPGetSrvrParms)
+    TEST_T1(FPGetUserInfo)
+    TEST_T1(FPGetVolParms)
+    TEST_T1(FPMapID)
+    TEST_T1(FPMapName)
+    TEST_T1_FLAGS(FPMoveAndRename, SPECTEST_FLAG_LOCAL_PATH)
+    TEST_T1(FPOpenDir)
+    TEST_T1(FPOpenDT)
+    TEST_T1(FPOpenFork)
+    TEST_T1(FPOpenVol)
+    TEST_T1(FPRead)
+    TEST_T1(FPReadExt)
+    TEST_T1(FPRemoveAPPL)
+    TEST_T1_FLAGS(FPRemoveComment, SPECTEST_FLAG_SECOND_USER)
+    TEST_T1(FPRename)
+    TEST_T1(FPResolveID)
+    TEST_T1(FPSetDirParms)
+    TEST_T1(FPSetFileDirParms)
+    TEST_T1(FPSetFileParms)
+    TEST_T1(FPSetForkParms)
+    TEST_T1(FPSetVolParms)
+    TEST_T1(FPSync)
+    TEST_T1(FPWrite)
+    TEST_T1(FPWriteExt)
+    TEST_T2_FLAGS(T2FPByteRangeLock, SPECTEST_FLAG_SECOND_USER)
+    TEST_T2(T2FPCreateFile)
+    TEST_T2(T2FPCopyFile)
+    TEST_T2(T2FPDelete)
+    TEST_T2(T2FPGetFileDirParms)
+    TEST_T2_FLAGS(T2FPGetSrvrParms, SPECTEST_FLAG_SECOND_VOL)
+    TEST_T2(T2FPGetVolParms)
+    TEST_T2(T2FPMoveAndRename)
+    TEST_T2(T2FPOpenFork)
+    TEST_T2(T2FPSetDirParms)
+    TEST_T2(T2FPSetFileParms)
+    TEST_T2(T2FPResolveID)
+    TEST_T2(T2FPRead)
+    TEST_T2(T2FPSetForkParms)
+    TEST_T2_FLAGS(T2LockAttack, SPECTEST_FLAG_SECOND_USER)
 
-    FN_N(T2FPByteRangeLock)
-    FN_N(T2FPCreateFile)
-    FN_N(T2FPCopyFile)
-    FN_N(T2FPDelete)
-    FN_N(T2FPGetFileDirParms)
-    FN_N(T2FPGetSrvrParms)
-    FN_N(T2FPGetVolParms)
-    FN_N(T2FPMoveAndRename)
-    FN_N(T2FPOpenFork)
-    FN_N(T2FPSetDirParms)
-    FN_N(T2FPSetFileParms)
-    FN_N(T2FPResolveID)
-    FN_N(T2FPRead)
-    FN_N(T2FPSetForkParms)
-    FN_N(T2LockAttack)
+    TEST_T1_FLAGS(Dircache_attack, SPECTEST_FLAG_SECOND_USER)
+    TEST_T1(Encoding)
+    TEST_T1_FLAGS(Readonly, SPECTEST_FLAG_READONLY_VOL)
+    TEST_T1(Utf8)
+    {
+        "LibafpclientSmoke",
+        spectest_libafpclient_smoke_test,
+        SPECTEST_TIER_T1,
+        SPECTEST_BACKEND_LIBAFPCLIENT,
+        SPECTEST_FLAG_PRIMARY_VOL | SPECTEST_FLAG_NO_RUNNER_VOL,
+        NULL
+    },
 
-    FN_N(Dircache_attack)
-    FN_N(Encoding)
-    FN_N(Error)
-    FN_N(Readonly)
-    FN_N(Utf8)
+    /* T3 testsets intentionally retain raw legacy DSI. */
+    TEST_T3_FLAGS(FPDisconnectOldSession, SPECTEST_FLAG_WIRE_PROTOCOL,
+                  "owns sockets and hand-drives session replacement")
+    TEST_T3_FLAGS(T3Error, SPECTEST_FLAG_WIRE_PROTOCOL,
+                  "constructs malformed DSI and AFP requests")
+    TEST_T3_FLAGS(T3FPRead, SPECTEST_FLAG_WIRE_PROTOCOL,
+                  "interleaves partial DSI replies on a self-managed socket")
+    TEST_T3_FLAGS(T3FPzzz,
+                  SPECTEST_FLAG_WIRE_PROTOCOL | SPECTEST_FLAG_SLEEP,
+                  "tests idle disconnect and manually reconnects the session")
 
-    {NULL, NULL},
+    {
+        NULL, NULL, SPECTEST_TIER_T1, SPECTEST_BACKEND_LEGACY_DSI,
+        SPECTEST_FLAG_NONE, NULL
+    },
 };
 
+static const char *spectest_tier_name(enum spectest_tier tier)
+{
+    switch (tier) {
+    case SPECTEST_TIER_T1:
+        return "T1";
+
+    case SPECTEST_TIER_T2:
+        return "T2";
+
+    case SPECTEST_TIER_T3:
+        return "T3";
+    }
+
+    return "unknown";
+}
+
+static const char *spectest_backend_name(enum spectest_backend backend)
+{
+    switch (backend) {
+    case SPECTEST_BACKEND_LEGACY_DSI:
+        return "legacy-dsi";
+
+    case SPECTEST_BACKEND_LIBAFPCLIENT:
+        return "libafpclient";
+
+    case SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP:
+        return "libafpclient-raw-afp";
+    }
+
+    return "unknown";
+}
+
+static const struct test_fn *spectest_find_test(const char *name)
+{
+    int i = 0;
+
+    if (!name) {
+        return NULL;
+    }
+
+    while (Test_list[i].name != NULL) {
+        if (!strcmp(Test_list[i].name, name)) {
+            return &Test_list[i];
+        }
+
+        i++;
+    }
+
+    return NULL;
+}
+
+static enum spectest_backend spectest_backend_for_run(const char *name)
+{
+    const struct test_fn *test;
+    test = spectest_find_test(name);
+    return test ? test->backend : SPECTEST_BACKEND_LEGACY_DSI;
+}
+
+static void spectest_print_flag(unsigned int flags, unsigned int flag,
+                                const char *name, int *first)
+{
+    if (!(flags & flag)) {
+        return;
+    }
+
+    fprintf(stdout, "%s%s", *first ? "" : ",", name);
+    *first = 0;
+}
+
+static void spectest_print_preconditions(unsigned int flags)
+{
+    int first = 1;
+    spectest_print_flag(flags, SPECTEST_FLAG_PRIMARY_VOL, "primary-volume",
+                        &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_SECOND_USER, "second-user",
+                        &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_SECOND_VOL, "second-volume",
+                        &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_LOCAL_PATH, "local-path", &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_LOCAL_FS, "local-filesystem",
+                        &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_READ_LOCKS, "read-locks", &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_READONLY_VOL, "readonly-volume",
+                        &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_SLEEP, "sleep", &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_WIRE_PROTOCOL, "wire-protocol",
+                        &first);
+    spectest_print_flag(flags, SPECTEST_FLAG_NO_RUNNER_VOL,
+                        "self-managed-volume", &first);
+
+    if (first) {
+        fprintf(stdout, "-");
+    }
+}
+
+struct spectest_uam_alias {
+    const char *alias;
+    const char *uam;
+};
+
+static const struct spectest_uam_alias spectest_uam_aliases[] = {
+    { "guest",     "No User Authent"        },
+    { "clrtxt",    "Cleartxt Passwrd"       },
+    { "randnum",   "Randnum Exchange"       },
+    { "randnum2",  "2-Way Randnum Exchange" },
+    { "dhx",       "DHCAST128"              },
+    { "dhx2",      "DHX2"                   },
+    { "srp",       "SRP"                    },
+    { NULL, NULL }
+};
+
+static const char *spectest_resolve_uam(const char *name)
+{
+    int i = 0;
+
+    if (!name || !*name) {
+        return name;
+    }
+
+    while (spectest_uam_aliases[i].alias != NULL) {
+        if (!strcmp(name, spectest_uam_aliases[i].alias)) {
+            return spectest_uam_aliases[i].uam;
+        }
+
+        if (!strcmp(name, spectest_uam_aliases[i].uam)) {
+            return spectest_uam_aliases[i].uam;
+        }
+
+        i++;
+    }
+
+    return name;
+}
+
+static void spectest_libafpclient_smoke_test(void)
+{
+    ENTER_TEST
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+
+    if (afptest_libafpclient_smoke(Conn, Vol) != 0) {
+        test_failed();
+    }
+
+#else
+    test_nottested();
+#endif
+    exit_test("LibafpclientSmoke:test1: libafpclient smoke path");
+}
 
 /* =============================== */
-static void press_enter(char *s)
+static void press_enter(const char *s)
 {
     if (!Interactive) {
         return;
@@ -229,22 +458,31 @@ static void list_tests(void)
 {
     int i = 0;
     fprintf(stdout, "Available testsets. Run individually with the -f option.\n");
+    fprintf(stdout, "%-24s %-4s %-22s %s\n", "Testset", "Tier",
+            "Backend", "Preconditions / legacy reason");
 
     while (Test_list[i].name != NULL) {
-        fprintf(stdout, "%s\n", Test_list[i].name);
+        fprintf(stdout, "%-24s %-4s %-22s ", Test_list[i].name,
+                spectest_tier_name(Test_list[i].tier),
+                spectest_backend_name(Test_list[i].backend));
+        spectest_print_preconditions(Test_list[i].flags);
+
+        if (Test_list[i].legacy_reason) {
+            fprintf(stdout, "; legacy: %s", Test_list[i].legacy_reason);
+        }
+
+        fprintf(stdout, "\n");
         i++;
     }
 }
 
 /* ----------- */
-static void run_one(char *name)
+static void run_one(const char *name)
 {
     int i = 0;
     void *handle = NULL;
     void (*fn)(void) = NULL;
     char *error;
-    char *token;
-    token = strtok(name, ",");
 
     while (Test_list[i].name != NULL) {
         if (!strcmp(Test_list[i].name, name)) {
@@ -258,7 +496,7 @@ static void run_one(char *name)
         handle = dlopen(NULL, RTLD_NOW);
 
         if (handle) {
-            fn = dlsym(handle, token);
+            fn = dlsym(handle, name);
 
             if ((error = dlerror()) != NULL)  {
                 fprintf(stdout, "%s (%p)\n", error, fn);
@@ -276,58 +514,68 @@ static void run_one(char *name)
     }
 
     dsi = &Conn->dsi;
-    press_enter("Opening volume.");
-    VolID = FPOpenVol(Conn, Vol);
 
-    if (VolID == 0xffff) {
-        test_nottested();
-        return;
-    }
+    if (!(Test_list[i].flags & SPECTEST_FLAG_NO_RUNNER_VOL)) {
+        press_enter("Opening volume.");
+        VolID = FPOpenVol(Conn, Vol);
 
-    while (token) {
-        press_enter(token);
-        (*fn)();
-        token = strtok(NULL, ",");
-
-        if (token && handle) {
-            fn = dlsym(handle, token);
-
-            if ((error = dlerror()) != NULL)  {
-                fprintf(stdout, "%s\n", error);
-            }
+        if (VolID == 0xffff) {
+            test_nottested();
+            return;
         }
     }
+
+    press_enter(name);
+    (*fn)();
 
     if (handle) {
         dlclose(handle);
     }
 
-    FPCloseVol(Conn, VolID);
+    if (!(Test_list[i].flags & SPECTEST_FLAG_NO_RUNNER_VOL)) {
+        FPCloseVol(Conn, VolID);
+    }
 }
 
 /* ----------- */
-static void run_all()
+static void run_connected_range(int first, int last)
 {
-    int i = 0;
-    dsi = &Conn->dsi;
-    press_enter("Opening volume.");
-    VolID = FPOpenVol(Conn, Vol);
+    int i = first;
+    int needs_runner_vol = 0;
 
-    if (VolID == 0xffff) {
-        test_nottested();
-        return;
+    while (i < last) {
+        if (!(Test_list[i].flags & SPECTEST_FLAG_NO_RUNNER_VOL)) {
+            needs_runner_vol = 1;
+            break;
+        }
+
+        i++;
     }
 
-    while (Test_list[i].name != NULL) {
+    dsi = &Conn->dsi;
+
+    if (needs_runner_vol) {
+        press_enter("Opening volume.");
+        VolID = FPOpenVol(Conn, Vol);
+
+        if (VolID == 0xffff) {
+            test_nottested();
+            return;
+        }
+    }
+
+    i = first;
+
+    while (i < last) {
         press_enter(Test_list[i].name);
         Test_list[i].fn();
         i++;
     }
 
-    FPCloseVol(Conn, VolID);
+    if (needs_runner_vol) {
+        FPCloseVol(Conn, VolID);
+    }
 }
-
-DSI *Dsi, *Dsi2;
 
 char Data[300000] = "";
 /* ------------------------------- */
@@ -350,13 +598,325 @@ enum ad_format adouble = AD_EA;
 
 char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";
+static char legacy_uam[] = "Cleartxt Passwrd";
+
+static int spectest_legacy_dsi_connect(CONN **conn, DSI **dsi_slot,
+                                       char *host, char *user)
+{
+    int ret;
+    int sock;
+
+    if ((*conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
+        return 1;
+    }
+
+    sock = OpenClientSocket(host, Port);
+
+    if (sock < 0) {
+        free(*conn);
+        *conn = NULL;
+        return 2;
+    }
+
+    *dsi_slot = &(*conn)->dsi;
+    (*dsi_slot)->socket = sock;
+
+    if (Version >= 30) {
+        ret = FPopenLoginExt(*conn, vers, legacy_uam, user, Password);
+    } else {
+        ret = FPopenLogin(*conn, vers, legacy_uam, user, Password);
+    }
+
+    if (ret) {
+        printf("Login failed\n");
+        exit(1);
+    }
+
+    (*conn)->afp_version = Version;
+    return 0;
+}
+
+static void spectest_legacy_dsi_disconnect(CONN **conn)
+{
+    if (!conn || !*conn) {
+        return;
+    }
+
+    AFPLogOut(*conn);
+    CloseClientSocket((*conn)->dsi.socket);
+    free(*conn);
+    *conn = NULL;
+}
+
+static int spectest_libafpclient_connect(CONN **conn, DSI **dsi_slot,
+        char *host, char *user)
+{
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    int ret;
+
+    if ((*conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
+        return 1;
+    }
+
+    if (!Quiet) {
+        fprintf(stdout, "Connecting with libafpclient backend\n");
+        fflush(stdout);
+    }
+
+    ret = afptest_libafpclient_login(*conn, host, Port, vers, uam, user,
+                                     Password);
+
+    if (ret) {
+        printf("Login failed\n");
+        free(*conn);
+        *conn = NULL;
+        return 1;
+    }
+
+    *dsi_slot = &(*conn)->dsi;
+
+    if (!Quiet) {
+        fprintf(stdout, "Connected with libafpclient backend\n");
+        fflush(stdout);
+    }
+
+    return 0;
+#else
+    (void)conn;
+    (void)dsi_slot;
+    (void)host;
+    (void)user;
+    fprintf(stdout, "Spectest backend 'libafpclient' was not compiled in.\n");
+    return 1;
+#endif
+}
+
+static void spectest_libafpclient_disconnect(CONN **conn)
+{
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+
+    if (!conn || !*conn) {
+        return;
+    }
+
+    afptest_libafpclient_logout(*conn);
+    afptest_libafpclient_close(*conn);
+    free(*conn);
+    *conn = NULL;
+#else
+    (void)conn;
+#endif
+}
+
+static const struct spectest_transport_backend spectest_legacy_dsi_backend = {
+    SPECTEST_BACKEND_LEGACY_DSI,
+    "legacy-dsi",
+    spectest_legacy_dsi_connect,
+    spectest_legacy_dsi_disconnect,
+};
+
+static const struct spectest_transport_backend spectest_libafpclient_backend = {
+    SPECTEST_BACKEND_LIBAFPCLIENT,
+    "libafpclient",
+    spectest_libafpclient_connect,
+    spectest_libafpclient_disconnect,
+};
+
+static const struct spectest_transport_backend
+    spectest_libafpclient_raw_afp_backend = {
+    SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP,
+    "libafpclient-raw-afp",
+    spectest_libafpclient_connect,
+    spectest_libafpclient_disconnect,
+};
+
+static const struct spectest_transport_backend *spectest_transport_for_backend(
+    enum spectest_backend backend)
+{
+    switch (backend) {
+    case SPECTEST_BACKEND_LEGACY_DSI:
+        return &spectest_legacy_dsi_backend;
+
+    case SPECTEST_BACKEND_LIBAFPCLIENT:
+        return &spectest_libafpclient_backend;
+
+    case SPECTEST_BACKEND_LIBAFPCLIENT_RAW_AFP:
+        return &spectest_libafpclient_raw_afp_backend;
+    }
+
+    return NULL;
+}
+
+static int spectest_connect_primary(
+    const struct spectest_transport_backend *backend)
+{
+    int ret;
+
+    if (!backend || !backend->connect) {
+        fprintf(stdout, "Spectest backend '%s' is not implemented yet.\n",
+                backend ? backend->name : "unknown");
+        return 1;
+    }
+
+    ret = backend->connect(&Conn, &Dsi, Server, User);
+
+    if (ret) {
+        return ret;
+    }
+
+    dsi = Dsi;
+    return 0;
+}
+
+static int spectest_connect_secondary(
+    const struct spectest_transport_backend *backend)
+{
+    int ret;
+
+    if (!User2) {
+        return 0;
+    }
+
+    if (!backend || !backend->connect) {
+        fprintf(stdout, "Spectest backend '%s' is not implemented yet.\n",
+                backend ? backend->name : "unknown");
+        return 1;
+    }
+
+    ret = backend->connect(&Conn2, &Dsi2, Server2 ? Server2 : Server, User2);
+
+    if (ret == 2) {
+        return 1;
+    }
+
+    return ret;
+}
+
+static void spectest_disconnect(const struct spectest_transport_backend
+                                *backend,
+                                CONN **conn)
+{
+    if (!backend || !backend->disconnect || !conn || !*conn) {
+        return;
+    }
+
+    backend->disconnect(conn);
+}
+
+static int run_selected(const char *selectors)
+{
+    const struct spectest_transport_backend *backend;
+    enum spectest_backend backend_id;
+    char *selection;
+    char *saveptr = NULL;
+    char *name;
+    int ret = 0;
+    selection = strdup(selectors);
+
+    if (!selection) {
+        perror("strdup");
+        return 1;
+    }
+
+    name = strtok_r(selection, ",", &saveptr);
+
+    while (name) {
+        backend_id = spectest_backend_for_run(name);
+        backend = spectest_transport_for_backend(backend_id);
+
+        if (!backend) {
+            fprintf(stdout, "No spectest backend selected for '%s'.\n", name);
+            ret = 1;
+            break;
+        }
+
+        if (!Quiet) {
+            fprintf(stdout, "Using spectest backend %s for %s\n",
+                    backend->name, name);
+            fflush(stdout);
+        }
+
+        ret = spectest_connect_primary(backend);
+
+        if (ret) {
+            break;
+        }
+
+        ret = spectest_connect_secondary(backend);
+
+        if (ret) {
+            spectest_disconnect(backend, &Conn);
+            break;
+        }
+
+        run_one(name);
+        spectest_disconnect(backend, &Conn);
+        spectest_disconnect(backend, &Conn2);
+        name = strtok_r(NULL, ",", &saveptr);
+    }
+
+    free(selection);
+    return ret;
+}
+
+static int run_all(void)
+{
+    const struct spectest_transport_backend *backend;
+    enum spectest_backend backend_id;
+    int first = 0;
+    int last;
+    int ret;
+
+    while (Test_list[first].name != NULL) {
+        backend_id = Test_list[first].backend;
+        last = first + 1;
+
+        while (Test_list[last].name != NULL
+                && Test_list[last].backend == backend_id) {
+            last++;
+        }
+
+        backend = spectest_transport_for_backend(backend_id);
+
+        if (!backend) {
+            fprintf(stdout, "No spectest backend selected.\n");
+            return 1;
+        }
+
+        if (!Quiet) {
+            fprintf(stdout, "Using spectest backend %s\n", backend->name);
+            fflush(stdout);
+        }
+
+        ret = spectest_connect_primary(backend);
+
+        if (ret) {
+            return ret;
+        }
+
+        ret = spectest_connect_secondary(backend);
+
+        if (ret) {
+            spectest_disconnect(backend, &Conn);
+            return ret;
+        }
+
+        run_connected_range(first, last);
+        spectest_disconnect(backend, &Conn);
+        spectest_disconnect(backend, &Conn2);
+        first = last;
+    }
+
+    return 0;
+}
 
 /* =============================== */
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567aCEiLlmVv] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
-            "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
+            "usage:\t%s [-1234567aCEiLlmVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+            "[-u user] [-d user2] [-w password] [-F testsuite] [-f tests]\n", av0);
+    fprintf(stdout, "\t-A\tUAM name or alias (default Cleartxt Passwrd)\n");
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
@@ -377,7 +937,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-7\tAFP 3.4 version (default)\n");
     fprintf(stdout, "\t-v\tverbose\n");
     fprintf(stdout, "\t-V\tvery verbose\n");
-    fprintf(stdout, "\t-f\ttest or testset to run\n");
+    fprintf(stdout, "\t-f\ttest(s) or testset(s) to run, comma-separated\n");
     fprintf(stdout, "\t-l\tlist testsets\n");
     fprintf(stdout,
             "\t-L\tserver has 'afp read locks = yes'; run byte-range read-lock conflict tests\n");
@@ -399,7 +959,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCEiLlmVvc:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567aCEiLlmVvA:c:d:f:H:h:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -434,6 +994,10 @@ int main(int ac, char **av)
         case '7':
             vers = "AFP3.4";
             Version = 34;
+            break;
+
+        case 'A':
+            uam = strdup(spectest_resolve_uam(optarg));
             break;
 
         case 'a':
@@ -547,87 +1111,18 @@ int main(int ac, char **av)
         fprintf(stdout, "Error: Define a volume with -s\n");
     }
 
-    /************************************
-     *                                  *
-     * Connection user 1                *
-     *                                  *
-     ************************************/
-
-    if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        return 1;
-    }
-
-    int sock;
-    Dsi = &Conn->dsi;
-    dsi = Dsi;
-    sock = OpenClientSocket(Server, Port);
-
-    if (sock < 0) {
-        return 2;
-    }
-
-    Dsi->socket = sock;
-
-    if (Version >= 30) {
-        ret = FPopenLoginExt(Conn, vers, uam, User, Password);
-    } else {
-        ret = FPopenLogin(Conn, vers, uam, User, Password);
-    }
-
-    if (ret) {
-        printf("Login failed\n");
-        exit(1);
-    }
-
-    Conn->afp_version = Version;
-
-    /***************************************
-     *                                     *
-     * User 2                              *
-     *                                     *
-     ***************************************/
-
-    if (User2) {
-        if ((Conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-            return 1;
-        }
-
-        int sock2;
-        Dsi2 = &Conn2->dsi;
-        sock2 = OpenClientSocket(Server2 ? Server2 : Server, Port);
-
-        if (sock2 < 0) {
-            return 1;
-        }
-
-        Dsi2->socket = sock2;
-
-        if (Version >= 30) {
-            ret = FPopenLoginExt(Conn2, vers, uam, User2, Password);
-        } else {
-            ret = FPopenLogin(Conn2, vers, uam, User2, Password);
-        }
+    if (Test != NULL) {
+        ret = run_selected(Test);
 
         if (ret) {
-            printf("Login failed\n");
-            exit(1);
+            return ret;
         }
-
-        Conn2->afp_version = Version;
-    }
-
-    /*********************************
-    */
-    if (Test != NULL) {
-        run_one(Test);
     } else {
-        run_all();
-    }
+        ret = run_all();
 
-    FPLogOut(Conn);
-
-    if (User2) {
-        FPLogOut(Conn2);
+        if (ret) {
+            return ret;
+        }
     }
 
     fprintf(stdout, "=====================\n");

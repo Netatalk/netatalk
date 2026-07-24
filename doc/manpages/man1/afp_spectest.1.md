@@ -4,8 +4,8 @@ afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
-**afp_spectest** [-1234567aCEiLmVv] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
-[-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
+**afp_spectest** [-1234567aCEiLmVv] [-A *uam*] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
+[-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *tests*]
 
 **afp_spectest** -l
 
@@ -14,8 +14,16 @@ afp_spectest — AFP specification compliance test suite
 **afp_spectest** is a comprehensive AFP specification test suite, with several hundreds of test cases.
 It is organized into testsets, divided by the AFP commands tested, or by preconditions for testing.
 
+Testsets are classified by tier and transport backend. T1 contains normal AFP
+conformance tests, while T2 additionally uses the local filesystem for setup or
+validation. Both depend on Netatalk Client's *libafpclient* shared library
+for transport and authentication. T3 is reserved for tests that require direct
+control of DSI framing, sockets, or session lifecycle, and therefore uses
+the raw DSI transport built into the testsuite.
+
 Available testsets can be listed with the **-l** option.
-Single tests or entire testsets can be executed with the **-f** option.
+Single tests or entire testsets can be executed with the **-f** option. Multiple
+tests or testsets can be selected with a comma-separated list.
 
 # Options
 
@@ -43,6 +51,12 @@ Single tests or entire testsets can be executed with the **-f** option.
 **-a**
 : Server under test uses AppleDouble v2 metadata and not filesystem EA
 
+**-A** *uam*
+: UAM name or alias to use for authentication (default: *clrtxt*).
+  Recognized aliases are *guest*, *clrtxt*, *randnum*, *randnum2*, *dhx*,
+  *dhx2*, and *srp*. T3 tests ignore this option and use *Cleartxt Passwrd*
+  with the legacy DSI transport.
+
 **-c** *path*
 : Local filesystem path to test volume (required for tier 2 tests)
 
@@ -57,8 +71,9 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 > ***WARNING:*** This will delete all files and directories in the test volume!
 
-**-f** *test*
-: Specify test or testset to run
+**-f** *tests*
+: Specify a test or testset to run, or a comma-separated list. Each selected
+  testset uses its registered transport backend.
 
 **-h** *host*
 : Server hostname or IP address (default: localhost)
@@ -70,7 +85,7 @@ Single tests or entire testsets can be executed with the **-f** option.
 : Interactive mode – prompt user before each test (used for debugging)
 
 **-l**
-: List all available testsets and exit
+: List all available testsets with their tier, backend, and preconditions, then exit
 
 **-L**
 : Server under test has *afp read locks = yes* set in afp.conf(5);
@@ -106,7 +121,12 @@ The tests in the spectest suite follow the same general usage pattern and parame
 with some additional required parameters or preconditions for particular tests.
 You set the AFP protocol version (**-1** through **-7**),
 then the address and credentials of the host to test (which can be localhost).
+Use **-A** to select the authentication UAM by canonical name or alias.
 Some tests require a second user and second volume to be defined.
+
+T1 and T2 use a libafpclient-authenticated AFP session. T3 retains the raw DSI
+transport because those tests exercise behavior below the normal client API.
+Use **-l** to see the classification and requirements of each testset.
 
 The so-called *tier 2* (T2) tests must be run from localhost,
 and the local path to the volume under test to be provided with **-c**.
@@ -125,12 +145,12 @@ the lines for the mappings that you want to enable in this configuration file.
 
 ## Sleep tests
 
-The *FPzzz* testset contain tests for AFP sleep mode and timeouts.
+The *T3FPzzz* testset contains tests for AFP sleep mode and timeouts.
 Since they by necessity take much longer than other tests,
 they are not included when you execute the full spectest suite.
 Rather, you must run the testset separately using the *-f* parameter:
 
-    afp_spectest -f FPzzz
+    afp_spectest -f T3FPzzz
 
 ## Readonly tests
 
@@ -177,7 +197,7 @@ This return code will *not* contribute to a failed test run.
 
 This suite of tests was designed primarily to test Netatalk AFP servers,
 however they can also be used to test an AppleShare AFP server hosted
-by an older Mac OS X or Classic Mac OS system.
+by an early Mac OS X or Classic Mac OS system.
 
 Launch the test runner with the **-m** (Mac) option when testing an AppleShare AFP server.
 When running in this mode, the test runner will report tests with known current
@@ -202,7 +222,7 @@ against a native AppleShare AFP server or Netatalk.
 ## Configure environment
 
 Below is a sample configuration for running the AFP spec tests.
-Presently, only ClearTxt and Guest authentication is supported in the test runner.
+Use **-A** to choose any authentication UAM supported by the client and server.
 
 - 2 users: user1, user2 with the same password
 - 1 group: afpusers
@@ -217,7 +237,7 @@ residual files in the test directories.
 Set afp.conf as follows:
 
     [Global]
-    uam list = uams_clrtxt.so uams_guest.so
+    uam list = uams_clrtxt.so uams_guest.so uams_dhx.so uams_dhx2.so
 
     [testvol1]
     ea = sys
@@ -233,16 +253,26 @@ Set afp.conf as follows:
 
 ## Running tests
 
-Run the afp_spectest against AFP server running on 10.0.0.10 for the "FPSetForkParms_test" testset with AFP 3.4
+Run the afp_spectest against AFP server running on 10.0.0.10 for two testsets
+with AFP 3.4 and authenticating with the DHX2 UAM:
 
-    % afp_spectest -h 10.0.0.10 -u user1 -d user2 -w passwd -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms_test
+    $ afp_spectest -h 10.0.0.10 -u user1 -d user2 -w passwd -A dhx2 -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms,FPSetVolParms
     ===================
-    FPSetForkParms_test
-    -------------------
+    Executing testset: FPSetForkParms_test
     FPSetForkParms:test62: SetForkParams errors - PASSED
     FPSetForkParms:test141: Setforkmode error - PASSED
     FPSetForkParms:test217: Setfork size 64 bits - PASSED
     FPSetForkParms:test306: set fork size, new size > old size - PASSED
+    ===================
+    Executing testset: FPSetVolParms_test
+    FPSetVolParms:test206: Set Volume parameters - PASSED
+    =====================
+    TEST RESULT SUMMARY
+    ---------------------
+    Passed:     5
+    Skipped:    0
+    Failed:     0
+    Not tested: 0
 
 # See Also
 
