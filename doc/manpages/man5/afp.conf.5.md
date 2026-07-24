@@ -740,11 +740,14 @@ of 10000 candidate results. Set a larger nonzero value to raise the
 *xapian* cap. The *cnid* backend does not use this option and is limited
 by its fixed CNID search reply cap.
 
-spotlight = *BOOLEAN* (default: *yes*) **(G)**/**(V)**
+spotlight = *BOOLEAN* (default: *yes*) **(G)**/**(V)**/**(H)**
 
 > Whether to enable Spotlight-compatible searches.
-As a global option, this sets the default for volumes. As a volume option,
-it overrides the global default for that volume.
+As a global option, this sets the default for volumes and home directories.
+As a volume or Homes option, it overrides the global default.
+When enabled for the Homes section, the directory specified by
+**basedir regex** is submitted to the search indexer, covering all user
+home directories beneath it.
 >
 > A volume is searchable only when its effective **spotlight** setting is
 enabled and a supported **spotlight backend** is available for that volume.

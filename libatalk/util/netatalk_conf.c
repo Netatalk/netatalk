@@ -2877,6 +2877,20 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_SPOTLIGHT_VOL;
     }
 
+    {
+        /* OPTION_SPOTLIGHT is normally set by creatvol() per named volume, but
+         * [Homes] volumes are resolved per-user at login and never reach creatvol()
+         * in the master process, so we set the flag here if Homes spotlight is on. */
+        int global_sl = options->flags & OPTION_SPOTLIGHT_VOL ? 1 : 0;
+        const char *homes_basedir = getoption_str(config, INISEC_HOMES,
+                                    "basedir regex", NULL, NULL);
+
+        if (getoption_bool(config, INISEC_HOMES, "spotlight", NULL, global_sl)
+                && homes_basedir && *homes_basedir) {
+            options->flags |= OPTION_SPOTLIGHT;
+        }
+    }
+
     if (getoption_bool(config, INISEC_GLOBAL, "veto message", NULL, 0)) {
         options->flags |= OPTION_VETOMSG;
     }
