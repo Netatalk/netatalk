@@ -365,6 +365,7 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct vol *vol;
 #ifndef NO_DDP
     struct iovec	iov[2];
+    int         iovcnt = 0;
 #endif
     uint8_t		fcreator[4];
     uint8_t		imh[12];
@@ -372,7 +373,6 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     uint8_t		*p;
     int			itype;
     int         cc = AFP_OK;
-    int         iovcnt = 0;
     size_t 		buflen;
     uint32_t    ftype;
     uint32_t    itag;
@@ -460,6 +460,14 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
     }
 
+    /* Map a raw read() failure to a defined AFP error; the goto sites
+     * below already carry AFPERR_* codes and skip this. */
+    if (cc == -1) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): read: %s", icon_dtfile(vol,
+                fcreator), strerror(errno));
+        cc = AFPERR_PARAM;
+    }
+
     /*
      * Some error occurred, return.
      */
@@ -467,8 +475,17 @@ addicon_err:
 
     if (cc < 0) {
         if (obj->proto == AFPPROTO_DSI) {
-            dsi_writeinit(obj->dsi, rbuf, buflen);
+            /* Drain the icon data so the session stays in sync, then
+             * report the error instead of writing anything. */
+            dsi_writeinit(obj->dsi, NULL);
             dsi_writeflush(obj->dsi);
+
+            if (si.sdt_fd != -1) {
+                close(si.sdt_fd);
+                si.sdt_fd = -1;
+            }
+
+            return cc;
         }
     }
 
@@ -512,7 +529,8 @@ addicon_err:
 
     case AFPPROTO_DSI: {
         DSI *dsi = obj->dsi;
-        iovcnt = dsi_writeinit(dsi, rbuf, buflen);
+        char *wbuf = NULL;
+        size_t towrite = dsi_writeinit(dsi, &wbuf);
 
         /* add headers at end of file */
         if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
@@ -525,7 +543,7 @@ addicon_err:
             return AFPERR_PARAM;
         }
 
-        if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+        if (towrite > 0 && write(si.sdt_fd, wbuf, towrite) < 0) {
             LOG(log_error,
                 logtype_afpd,
                 "afp_addicon(%s): write: %s",
@@ -535,8 +553,8 @@ addicon_err:
             return AFPERR_PARAM;
         }
 
-        while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
-            if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
+        while ((towrite = dsi_write(dsi, rbuf, buflen))) {
+            if (write(si.sdt_fd, rbuf, towrite) < 0) {
                 LOG(log_error,
                     logtype_afpd,
                     "afp_addicon(%s): write: %s",

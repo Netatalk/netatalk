@@ -21,10 +21,12 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
+#include <atalk/dsi.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
@@ -49,6 +51,205 @@ static char *args[] = {"test", "-F", "test.conf"};
 int test_output_tap = 0;
 int test_case_num = 0;
 FILE *test_report_stream = NULL;
+
+static void dsi_test_header(uint8_t *block, uint8_t command,
+                            uint16_t request_id,
+                            uint32_t code_or_doff, uint32_t len)
+{
+    uint16_t request_id_be;
+    uint32_t code_or_doff_be;
+    uint32_t len_be;
+    uint32_t reserved_be;
+    memset(block, 0, DSI_BLOCKSIZ);
+    block[0] = DSIFL_REQUEST;
+    block[1] = command;
+    request_id_be = htons(request_id);
+    code_or_doff_be = htonl(code_or_doff);
+    len_be = htonl(len);
+    reserved_be = 0;
+    memcpy(block + 2, &request_id_be, sizeof(request_id_be));
+    memcpy(block + 4, &code_or_doff_be, sizeof(code_or_doff_be));
+    memcpy(block + 8, &len_be, sizeof(len_be));
+    memcpy(block + 12, &reserved_be, sizeof(reserved_be));
+}
+
+static int dsi_test_receive(uint8_t command, uint32_t code_or_doff,
+                            uint32_t len, const uint8_t *payload,
+                            size_t payload_len, uint32_t quantum, DSI *dsi)
+{
+    uint8_t block[DSI_BLOCKSIZ];
+    int fds[2];
+    ssize_t written;
+    memset(dsi, 0, sizeof(*dsi));
+    dsi->socket = -1;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
+        return -1;
+    }
+
+    dsi->socket = fds[1];
+    dsi->server_quantum = quantum;
+    dsi->commands = calloc(1, quantum);
+    dsi->buffer = calloc(1, quantum);
+
+    if (dsi->commands == NULL || dsi->buffer == NULL) {
+        close(fds[0]);
+        return -1;
+    }
+
+    dsi->start = dsi->buffer;
+    dsi->eof = dsi->buffer;
+    dsi->end = dsi->buffer + quantum;
+    dsi_test_header(block, command, 0x1234, code_or_doff, len);
+    written = write(fds[0], block, sizeof(block));
+
+    if (written != sizeof(block)) {
+        close(fds[0]);
+        return -1;
+    }
+
+    if (payload_len > 0) {
+        written = write(fds[0], payload, payload_len);
+
+        if (written != (ssize_t)payload_len) {
+            close(fds[0]);
+            return -1;
+        }
+    }
+
+    close(fds[0]);
+    return dsi_stream_receive(dsi);
+}
+
+static void dsi_test_cleanup(DSI *dsi)
+{
+    if (dsi->socket != -1) {
+        close(dsi->socket);
+    }
+
+    free(dsi->commands);
+    free(dsi->buffer);
+}
+
+/* T1 (RED before the quantum-math fix): dsi_len = quantum + doff is
+ * spec-legal; the quantum bounds write DATA, not the whole frame.  Only
+ * the header drives accept/reject, so the harness sends just doff payload
+ * bytes; the data portion is consumed later by dsi_write. */
+static int utest_dsi_receive_accepts_full_quantum_write(uint32_t doff)
+{
+    DSI dsi;
+    uint8_t cmd[DSI_WROFF_FPWRITEEXT];
+    int ret;
+    memset(cmd, 0, sizeof(cmd));
+    ret = dsi_test_receive(DSIFUNC_WRITE, doff, 4096 + doff, cmd, doff,
+                           4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == DSIFUNC_WRITE ? 0 : -1;
+}
+
+/* T2 (guard): one byte of data beyond the quantum is rejected. */
+static int utest_dsi_receive_rejects_overquantum_write(uint32_t doff)
+{
+    DSI dsi;
+    uint8_t cmd[DSI_WROFF_FPWRITEEXT];
+    int ret;
+    memset(cmd, 0, sizeof(cmd));
+    ret = dsi_test_receive(DSIFUNC_WRITE, doff, 4096 + doff + 1, cmd, doff,
+                           4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == 0 ? 0 : -1;
+}
+
+/* T3 (guard): non-write commands keep the strict whole-frame bound. */
+static int utest_dsi_receive_rejects_overquantum_cmd(void)
+{
+    DSI dsi;
+    uint8_t payload[1] = { AFP_LOGOUT };
+    int ret;
+    ret = dsi_test_receive(DSIFUNC_CMD, 0, 4097, payload, 1, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == 0 ? 0 : -1;
+}
+
+/* T4 (RED before the doff whitelist): doff outside {12, 20} is malformed;
+ * doff 0 maps to 12 (ASC 3.7). */
+static int utest_dsi_receive_validates_doff(void)
+{
+    DSI dsi;
+    uint8_t cmd[DSI_WROFF_FPWRITEEXT + 1];
+    int ret;
+    memset(cmd, 0, sizeof(cmd));
+    ret = dsi_test_receive(DSIFUNC_WRITE, 13, 64, cmd, 13, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+
+    if (ret != 0) {
+        return -1;
+    }
+
+    ret = dsi_test_receive(DSIFUNC_WRITE, 21, 64, cmd, 21, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+
+    if (ret != 0) {
+        return -1;
+    }
+
+    ret = dsi_test_receive(DSIFUNC_WRITE, 0, DSI_WROFF_FPWRITE + 8, cmd,
+                           DSI_WROFF_FPWRITE + 8, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == DSIFUNC_WRITE ? 0 : -1;
+}
+
+/* T6 (RED before the dsi_writeinit pointer-handoff fix): buffered write
+ * payload must be handed off, not copied out.  eof - start == 64 holds
+ * because the peer closes before dsi_stream_receive, so one recv coalesces
+ * the header and payload writes. */
+static int utest_dsi_writeinit_no_duplicate_copy(void)
+{
+    DSI dsi;
+    uint8_t frame[DSI_WROFF_FPWRITE + 64];
+    char *wbuf = NULL;
+    size_t i;
+    size_t cc;
+    int ret;
+    memset(frame, 0, DSI_WROFF_FPWRITE);
+
+    for (i = 0; i < 64; i++) {
+        frame[DSI_WROFF_FPWRITE + i] = (uint8_t)i;
+    }
+
+    ret = dsi_test_receive(DSIFUNC_WRITE, DSI_WROFF_FPWRITE,
+                           DSI_WROFF_FPWRITE + 64, frame, sizeof(frame),
+                           4096, &dsi);
+
+    if (ret != DSIFUNC_WRITE || dsi.eof - dsi.start != 64) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    memset(dsi.commands, 0xAA, 4096);
+    cc = dsi_writeinit(&dsi, &wbuf);
+
+    if (cc != 64 || dsi.datasize != 0) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    for (i = 0; i < 64; i++) {
+        if (dsi.commands[i] != 0xAA) {
+            dsi_test_cleanup(&dsi);
+            return -1;
+        }
+    }
+
+    if (wbuf == NULL || wbuf < dsi.buffer || wbuf + cc > dsi.end
+            || wbuf[0] != 0 || (uint8_t)wbuf[63] != 63) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    dsi_test_cleanup(&dsi);
+    return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -91,6 +292,14 @@ int main(int argc, char *argv[])
     /* initialize */
     test_section("Initializing", "============");
     TEST(setuplog("default:note", "/dev/tty", true));
+    /* DSI unit tests: frame acceptance and write handoff (critical backports). */
+    TEST_int(utest_dsi_receive_accepts_full_quantum_write(DSI_WROFF_FPWRITE), 0);
+    TEST_int(utest_dsi_receive_accepts_full_quantum_write(DSI_WROFF_FPWRITEEXT), 0);
+    TEST_int(utest_dsi_receive_rejects_overquantum_write(DSI_WROFF_FPWRITE), 0);
+    TEST_int(utest_dsi_receive_rejects_overquantum_write(DSI_WROFF_FPWRITEEXT), 0);
+    TEST_int(utest_dsi_receive_rejects_overquantum_cmd(), 0);
+    TEST_int(utest_dsi_receive_validates_doff(), 0);
+    TEST_int(utest_dsi_writeinit_no_duplicate_copy(), 0);
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]));
     TEST_int(afp_config_parse(&obj, NULL), 0);
     TEST_expr(reti = 0,

@@ -130,11 +130,17 @@ typedef struct DSI {
 #define DSIERR_TOOMANY  0xfbce
 #define DSIERR_NOACK    0xfbcd
 
-/* server and client quanta */
+/* server and client quanta.  The server quantum counts FPWrite/FPWriteExt
+ * data only; the 16-byte DSI header and the AFP request block ride on top
+ * of it on the wire. */
 #define DSI_DEFQUANT        2           /*!< default attention quantum size */
 #define DSI_SERVQUANT_MAX   0xffffffff  /*!< server quantum */
 #define DSI_SERVQUANT_MIN   32000       /*!< minimum server quantum */
 #define DSI_SERVQUANT_DEF   0x100000L   /*!< default server quantum (1 MB) */
+
+/* Write request blocks: FPWrite is 12 bytes, FPWriteExt 20 bytes. */
+#define DSI_WROFF_FPWRITE     12
+#define DSI_WROFF_FPWRITEEXT  20
 
 /*! default port number */
 #define DSI_AFPOVERTCP_PORT 548
@@ -188,7 +194,7 @@ extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len,
 #endif
 
 /* client writes -- dsi_write.c */
-extern size_t dsi_writeinit(DSI *, void *, const size_t);
+extern size_t dsi_writeinit(DSI *, char **);
 extern size_t dsi_write(DSI *, void *, const size_t);
 extern void   dsi_writeflush(DSI *);
 #define dsi_wrtreply(a,b)  dsi_cmdreply(a,b)
