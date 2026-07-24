@@ -59,7 +59,6 @@
 #define NUM_MEASUREMENTS 5
 
 #define FPWRITE_RPLY_SIZE 24
-#define FPWRITE_RQST_SIZE 36
 
 /* Test IDs */
 #define TEST_OPENSTATREAD 0
@@ -911,7 +910,16 @@ void run_test(const int32_t dir)
     uint16_t fork;
     struct async_io_req air;
     static char temp[MAXPATHLEN];
-    numrw = rwsize / (dsi->server_quantum - FPWRITE_RQST_SIZE);
+
+    /* The negotiated quantum is the per-request data capacity; a zero
+     * quantum means DSIOpenSession delivered none.  Reject loudly rather
+     * than divide by zero here or calloc a zero-length data buffer. */
+    if (dsi->server_quantum == 0) {
+        fprintf(stderr, "No server quantum negotiated\n");
+        clean_exit(ERROR_CONFIGURATION);
+    }
+
+    numrw = rwsize / dsi->server_quantum;
 
     if (!data) {
         data = calloc(1, dsi->server_quantum);
@@ -1121,9 +1129,9 @@ void run_test(const int32_t dir)
         starttimer();
 
         for (int32_t i = 0, offset = 0; i < numrw;
-                offset += (dsi->server_quantum - FPWRITE_RQST_SIZE), i++) {
+                offset += dsi->server_quantum, i++) {
             if (FPWrite_ext_async(Conn, fork, offset,
-                                  dsi->server_quantum - FPWRITE_RQST_SIZE, data, 0)) {
+                                  dsi->server_quantum, data, 0)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
         }
@@ -1176,7 +1184,7 @@ void run_test(const int32_t dir)
         }
 
         air.air_count = numrw;
-        air.air_size = (dsi->server_quantum - FPWRITE_RQST_SIZE) + 16;
+        air.air_size = dsi->server_quantum + 16;
         int32_t pthread_ret = pthread_create(&tid, NULL, rply_thread, &air);
 
         if (pthread_ret != 0) {
@@ -1191,8 +1199,8 @@ void run_test(const int32_t dir)
         starttimer();
 
         for (int32_t i = 0; i < numrw ; i++) {
-            if (FPRead_ext_async(Conn, fork, i * (dsi->server_quantum - FPWRITE_RQST_SIZE),
-                                 dsi->server_quantum - FPWRITE_RQST_SIZE, data)) {
+            if (FPRead_ext_async(Conn, fork, i * dsi->server_quantum,
+                                 dsi->server_quantum, data)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
         }
