@@ -28,6 +28,14 @@ In order for us to take effective action on your report, please include as much 
 - Ideally, proof-of-concept code that demonstrates the exploit
 - A summary of the issue's potental impact
 
+When you report a vulnerability to the Netatalk project, we expect you to be communicative and collaborative:
+Respond to questions for clarification, assist in validating patches in your environment, and coordinate on
+the disclosure process. If there is uncertainty about the exploitability of your vulnerability and we cannot
+get in touch with you, we may discard the vulnerability.
+
+Following our own analysis, we reserve the right to alter details of the advisory in our system,
+including exploitability and severity (CVSS).
+
 ## Response
 
 If we are able to reproduce and subsequently patch the vulnerability, we will publish an advisory below
