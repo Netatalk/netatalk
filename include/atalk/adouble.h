@@ -303,13 +303,16 @@ struct adouble {
 #define ALL_BAND_BITS       ((1U << AD_FILELOCK_BAND_BITS) - 1)
 #define OPEN_BITS           (OPEN_WR_BIT | OPEN_RD_BIT \
                              | RSRC_OPEN_WR_BIT | RSRC_OPEN_RD_BIT)
-/* band bits that block a delete: all but the no-claim "open, no deny" markers.
- * Excludes OPEN_NONE (deny-none/access-none open) and OPEN_RD (read-only open,
- * no deny) for both data and rsrc: mere open-ness with no deny mode is not a
- * claim that should refuse a delete.  OPEN_WR and every DENY_* bit still block. */
+/* band bits that block a delete, one mask for every holder (this session or
+ * a peer): only explicit deny modes.  An OPEN_* marker (NONE/RD/WR, data or
+ * rsrc) records access, not a claim against others; the declared claims are
+ * deny modes and content byte-range locks (checked separately, always
+ * block).  Same model as SMB/Samba share modes, whose conflict engine never
+ * blocks on an existing handle's READ/WRITE access, only on a withheld
+ * share mode — and the engine runs identically for same-client and
+ * cross-client handles. */
 #define DELETE_BLOCKING_BAND_BITS                                       \
-    (ALL_BAND_BITS & ~(OPEN_NONE_BIT | RSRC_OPEN_NONE_BIT               \
-                       | OPEN_RD_BIT | RSRC_OPEN_RD_BIT))
+    (DENY_WR_BIT | DENY_RD_BIT | RSRC_DENY_WR_BIT | RSRC_DENY_RD_BIT)
 
 /* time stuff. we overload the bits a little.  */
 #define AD_DATE_CREATE         0

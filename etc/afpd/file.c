@@ -2293,12 +2293,25 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
         break;
     }
 
-    /* An open with no deny claim does not block a delete: DELETE_BLOCKING_BAND_BITS
-     * excludes the "none" access markers (OPEN_NONE, which plants a band entry only
-     * so a mode-less open registers) and the read-only-open markers (OPEN_RD) for
-     * both data and rsrc.  Deny modes (DENY_*) and a write open (OPEN_WR) still
-     * block (left unchanged pending AFP/SMB spec and client validation). */
+    /* Delete-blocking policy: an open is just an open — no OPEN_* marker
+     * blocks, whatever its access mode or holder.  Only declared claims
+     * refuse: deny modes (DELETE_BLOCKING_BAND_BITS) and content byte-range
+     * locks.  Matches SMB/Samba share-mode semantics, where an existing
+     * handle's READ/WRITE access never blocks a delete.
+     *
+     * Deleting under a peer's open is safe: the peer child's fds stay valid
+     * on the unlinked inode (POSIX semantics — reads/writes complete, close
+     * works), its oforks and refnums are untouched, and only the directory
+     * entry is gone.  Nothing is invalidated in the holder's session. */
     if (df_locked || rf_locked || (band_held & DELETE_BLOCKING_BAND_BITS)) {
+        /* F_GETLK never reports this process's own locks, so the holder is
+         * another process: a peer session's child or a foreign locker. */
+        LOG(log_note, logtype_afpd,
+            "deletefile('%s'): refused (AFPERR_BUSY): cross-process claim:"
+            "%s%s band 0x%03x (blocking 0x%03x)", file,
+            df_locked ? " [data lock]" : "",
+            rf_locked ? " [rsrc lock]" : "",
+            band_held, band_held & DELETE_BLOCKING_BAND_BITS);
         return AFPERR_BUSY;
     }
 

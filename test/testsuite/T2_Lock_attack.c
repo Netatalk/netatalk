@@ -373,9 +373,9 @@ test_exit:
 /* ------------------------------------------------------------------ *
  * test605  A foreign-process share-mode band lock blocks delete.
  *
- * A non-afpd process (this test) takes a raw F_WRLCK at the AD_FILELOCK_OPEN_WR
+ * A non-afpd process (this test) takes a raw F_WRLCK at the AD_FILELOCK_DENY_WR
  * band offset on the data fork's backing file, with no afpd fork held.  A
- * cross-session FPDelete must detect the open-fork band lock and return
+ * cross-session FPDelete must detect the deny-mode band lock and return
  * AFPERR_BUSY.
  * ------------------------------------------------------------------ */
 STATIC void test605()
@@ -426,7 +426,7 @@ STATIC void test605()
 
     fl.l_type   = F_WRLCK;
     fl.l_whence = SEEK_SET;
-    fl.l_start  = AD_FILELOCK_OPEN_WR;
+    fl.l_start  = AD_FILELOCK_DENY_WR;
     fl.l_len    = 1;
 
     if (fcntl(fd, F_SETLK, &fl) < 0) {
@@ -454,7 +454,7 @@ cleanup:
     if (fd >= 0) {
         fl.l_type = F_UNLCK;
         fl.l_whence = SEEK_SET;
-        fl.l_start = AD_FILELOCK_OPEN_WR;
+        fl.l_start = AD_FILELOCK_DENY_WR;
         fl.l_len = 1;
         fcntl(fd, F_SETLK, &fl);
         close(fd);
@@ -546,21 +546,10 @@ test_exit:
 /* ------------------------------------------------------------------ *
  * test607  Delete vs a foreign-process data-content read lock.
  *
- * A non-afpd process (e.g. Samba) takes an fcntl(F_RDLCK) on content [0,100] of
- * the backing file, with no AFP fork open. The current server refuses a
- * cross-session FPDelete (AFPERR_BUSY) because its delete-time check takes a
- * whole-file trial lock that overlaps any byte-range lock — it blocks on any byte
- * lock, which is too coarse.
- *
- * The correct outcome for a foreign read lock is not yet finalised and depends on
- * an ownership-escalation rule still under design:
- *   - a write byte-range lock / a file open for writing is active modification and
- *     should block a delete;
- *   - a read byte-range lock should not block the file's Unix owner (ownership is
- *     the escalation), but blocking a non-owner whose target is being read may be
- *     acceptable.
- * Until that policy is decided this test is not wired into the testset (its body
- * is kept ready for when the expected outcome is finalised).
+ * A non-afpd process (e.g. Samba) takes an fcntl(F_RDLCK) on content
+ * [0,100] of the backing file, with no AFP fork open.  A content
+ * byte-range lock — read or write, AFP or foreign — means the file is in
+ * use: the cross-session FPDelete must refuse with AFPERR_BUSY.
  * ------------------------------------------------------------------ */
 STATIC void test607()
 {
@@ -642,10 +631,7 @@ STATIC void test607()
         goto cleanup;
     }
 
-    /* The assertion below encodes today's over-broad "any byte lock blocks"
-     * outcome only as scaffolding; the real expected result is undecided (it
-     * depends on a file-ownership escalation rule) and must be set once that
-     * policy is finalised.  Until then this test is not wired into the testset. */
+    /* A held content lock blocks the delete, whoever holds it. */
     dret = FPDelete(Conn2, vol2, dir, name);
     FAIL(ntohl(AFPERR_BUSY) != dret)
     FAIL(FPCloseVol(Conn2, vol2))
@@ -673,8 +659,6 @@ void T2LockAttack_test()
     test603();
     test604();
     test605();
-    /* test607 (delete vs foreign content read lock) is intentionally not wired in
-     * yet: its expected outcome depends on an undecided ownership-escalation
-     * policy. */
+    test607();
     test620();
 }

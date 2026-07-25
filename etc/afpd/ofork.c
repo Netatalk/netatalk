@@ -487,6 +487,127 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
 }
 
 /*!
+ * @brief Does this child hold a delete-blocking claim on the fork's file?
+ *
+ * The cross-process conflict check (deletefile()'s F_GETLK read) cannot by
+ * POSIX report the calling process's own locks, so the delete path asks this
+ * helper for the local complement: scan the session's own lock bookkeeping
+ * for the same claims and apply the same DELETE_BLOCKING_BAND_BITS policy —
+ * a deny mode or content byte-range lock refuses the delete whether its
+ * holder is a peer process or this session itself.  OPEN_* markers never
+ * block (an open is just an open; only declared claims do).
+ *
+ * Any one fork on the file suffices as @p of: sibling forks on an inode
+ * share one adouble, whose data-fork adf_lock[] holds ALL of the session's
+ * band entries (OPEN/DENY incl. the RSRC_* mirrors via rf2off) and its own
+ * content ranges; the rfork's adf_lock[] (reached via ad_rfp on the same
+ * adouble) holds only rfork content ranges.  So one lookup sees every claim
+ * — unlike the post-delete sweep, which must visit each fork to close it.
+ *
+ * @param[in]  of       a fork this child holds on the file
+ * @param[out] band     held blocking band bits, positional (may be NULL)
+ * @param[out] content  set if a content byte-range lock is held (may be NULL)
+ * @returns nonzero if the delete must be refused
+ */
+int of_delete_blocked(const struct ofork *of, uint16_t *band, int *content)
+{
+    const struct ad_fd *adf = &of->of_ad->ad_data_fork;
+    uint16_t bits = 0;
+    int bytelock = 0;
+
+    for (int i = 0; i < adf->adf_lockcount; i++) {
+        off_t start = adf->adf_lock[i].lock.l_start;
+
+        if (start >= AD_FILELOCK_BASE
+                && start - AD_FILELOCK_BASE < AD_FILELOCK_BAND_BITS) {
+            bits |= 1U << (start - AD_FILELOCK_BASE);
+        } else {
+            /* content range, or unclassifiable (negative / past the band):
+             * refuse rather than treat unknown state as no-claim */
+            bytelock = 1;
+        }
+    }
+
+    /* the rfork's own adf_lock[] holds only content ranges (its share-mode
+     * state lives on the data fd via rf2off) */
+    adf = of->of_ad->ad_rfp;
+
+    if (adf->adf_lockcount > 0) {
+        bytelock = 1;
+    }
+
+    bits &= DELETE_BLOCKING_BAND_BITS;
+
+    if (band != NULL) {
+        *band = bits;
+    }
+
+    if (content != NULL) {
+        *content = bytelock;
+    }
+
+    return bits || bytelock;
+}
+
+/*!
+ * @brief Close every fork this child holds on path's inode.
+ *
+ * Same-session sweep for FPDelete, called after a successful delete: every
+ * refusal condition (DeleteInhibit, peer claims, the session's own claims
+ * via of_delete_blocked()) has already passed and the file is unlinked, so
+ * only claim-free forks (any OPEN_* access, no deny mode, no content lock)
+ * reach this sweep.  Each fork is closed individually — the blocking check
+ * needs one fork (shared adouble), the close needs them all.
+ * of_closefork() deallocs even on flush error (nothing is stranded), so a
+ * failed close is logged and the sweep continues — matching of_closevol().
+ *
+ * @param[in] obj   the AFP session object
+ * @param[in] vol   volume the deleted file lived on
+ * @param[in] path  deleted file; path->st must be the pre-delete stat (the
+ *                  file no longer exists, so a re-stat cannot rebuild it)
+ */
+void of_close_inode_forks(const AFPObj *obj, const struct vol *vol,
+                          struct path *path)
+{
+    struct ofork *of;
+
+    /* The inode key must come from the caller's pre-delete stat: the name is
+     * already unlinked, so a re-stat inside of_findname() would ENOENT and
+     * the sweep would silently leak the forks it exists to close. */
+    if (!path->st_valid || path->st_errno) {
+        LOG(log_error, logtype_afpd,
+            "of_close_inode_forks(\"%s\"): stale path state (st_valid %d, "
+            "st_errno %d); fork sweep skipped", path->u_name,
+            path->st_valid, path->st_errno);
+        return;
+    }
+
+    /* of_closefork() rewrites the static mtoupath() buffer path->u_name may
+     * alias: snapshot the name for logging before the first close. */
+    char name[MAXPATHLEN + 1];
+    strlcpy(name, path->u_name, sizeof(name));
+
+    /* of_closefork() unhashes the fork it closes, so the loop converges. */
+    while ((of = of_findname(vol, path))) {
+        LOG(log_note, logtype_afpd,
+            "of_close_inode_forks(\"%s\"): self-clean refnum %" PRIu16
+            " flags 0x%x%s%s%s%s%s%s", name, of->of_refnum,
+            of->of_flags,
+            (of->of_flags & AFPFORK_DATA) ? " [data]" : "",
+            (of->of_flags & AFPFORK_RSRC) ? " [rsrc]" : "",
+            (of->of_flags & AFPFORK_ACCRD) ? " [rd]" : "",
+            (of->of_flags & AFPFORK_ACCWR) ? " [wr]" : "",
+            (of->of_flags & AFPFORK_DIRTY) ? " [dirty]" : "",
+            (of->of_flags & AFPFORK_MODIFIED) ? " [modified]" : "");
+
+        if (of_closefork(obj, of) < 0) {
+            LOG(log_error, logtype_afpd, "of_close_inode_forks: %s",
+                strerror(errno));
+        }
+    }
+}
+
+/*!
  * @brief Conflict GET (F_GETLK only): read another holder's locks on a file.
  *
  * Reuses a held fork's fd when one exists, else opens+closes a transient one.

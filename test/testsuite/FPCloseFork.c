@@ -28,15 +28,16 @@ STATIC void test186()
         goto test_exit;
     }
 
+    /* an unmatched close must leave real forks intact */
+    FAIL(htonl(AFPERR_PARAM) != FPCloseFork(Conn, 0))
+    FAIL(FPGetForkParam(Conn, fork, 1 << FILPBIT_DFLEN))
     FAIL(FPCloseFork(Conn, fork))
     /* double close */
     FAIL(htonl(AFPERR_PARAM) != FPCloseFork(Conn, fork))
     FAIL(htonl(AFPERR_PARAM) != FPCloseFork(Conn, 0))
-
-    if (FPDelete(Conn, vol, DIRDID_ROOT, name)) {
-        test_nottested();
-    }
-
+    /* FAIL, not test_nottested(): the latter would overwrite a FAILED
+     * verdict from the assertions above with NOT TESTED */
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("FPCloseFork:test186: FPCloseFork");
 }

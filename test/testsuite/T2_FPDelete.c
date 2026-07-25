@@ -66,7 +66,7 @@ STATIC void test146()
     FAIL(FPEnumerate(Conn2, vol2,  DIRDID_ROOT, "", 0, bitmap))
     FAIL(ntohl(AFPERR_ACCESS) != FPDelete(Conn2, vol2,  dir, name))
     fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,
-                      OPENACC_WR | OPENACC_RD);
+                      OPENACC_WR | OPENACC_RD | OPENACC_DWR);
 
     if (!fork) {
         test_failed();
@@ -107,7 +107,7 @@ STATIC void test146()
         FAIL(FPCloseFork(Conn, fork))
         FAIL(FPCreateFile(Conn, vol, 0, dir, name))
         fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,
-                          OPENACC_WR | OPENACC_RD);
+                          OPENACC_WR | OPENACC_RD | OPENACC_DWR);
 
         if (!fork) {
             test_failed();
@@ -126,7 +126,7 @@ STATIC void test146()
 
     FAIL(FPCloseFork(Conn, fork))
     fork1 = FPOpenFork(Conn2, vol2, OPENFORK_DATA, 0, dir, name,
-                       OPENACC_WR | OPENACC_RD);
+                       OPENACC_WR | OPENACC_RD | OPENACC_DWR);
 
     if (!fork1) {
         test_failed();
