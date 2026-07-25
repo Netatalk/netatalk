@@ -694,7 +694,37 @@ int dsi_stream_receive(DSI *dsi)
     dsi_len = ntohl(dsi->header.dsi_len);
     dsi_doff = dsi->header.dsi_data.dsi_doff;
 
-    if (dsi_len > dsi->server_quantum) {
+    if (dsi->header.dsi_command == DSIFUNC_WRITE) {
+        /* Work around bug in ASC 3.7.x when client sends a zero byte AFPWrite() */
+        if (!dsi_doff) {
+            dsi_doff = DSI_WROFF_FPWRITE;
+            dsi->header.dsi_data.dsi_doff = dsi_doff;
+        }
+
+        if (dsi_doff != DSI_WROFF_FPWRITE && dsi_doff != DSI_WROFF_FPWRITEEXT) {
+            LOG(log_error, logtype_dsi,
+                "dsi_stream_receive: invalid write data offset: %u",
+                (unsigned int)dsi_doff);
+            return 0;
+        }
+
+        if (dsi_doff > dsi_len) {
+            LOG(log_error, logtype_dsi,
+                "dsi_stream_receive: write data offset exceeds payload length: %u > %u",
+                (unsigned int)dsi_doff, (unsigned int)dsi_len);
+            return 0;
+        }
+
+        /* The negotiated quantum bounds the write DATA; the AFP request
+         * block (dsi_doff bytes) rides on top of it. */
+        if (dsi_len - dsi_doff > dsi->server_quantum) {
+            LOG(log_error, logtype_dsi,
+                "dsi_stream_receive: write data too large: %u > %u",
+                (unsigned int)(dsi_len - dsi_doff),
+                (unsigned int)dsi->server_quantum);
+            return 0;
+        }
+    } else if (dsi_len > dsi->server_quantum) {
         LOG(log_error, logtype_dsi,
             "dsi_stream_receive: request payload too large: %u > %u",
             (unsigned int)dsi_len, (unsigned int)dsi->server_quantum);
@@ -702,20 +732,6 @@ int dsi_stream_receive(DSI *dsi)
     }
 
     dsi->cmdlen = dsi_len;
-
-    /* Work around bug in ASC 3.7.x when client sends a zero byte AFPWrite() */
-    if (dsi->header.dsi_command == DSIFUNC_WRITE
-            && !dsi_doff) {
-        dsi_doff = 12;
-        dsi->header.dsi_data.dsi_doff = dsi_doff;
-    }
-
-    if (dsi->header.dsi_command == DSIFUNC_WRITE && dsi_doff > dsi_len) {
-        LOG(log_error, logtype_dsi,
-            "dsi_stream_receive: write data offset exceeds payload length: %u > %u",
-            (unsigned int)dsi_doff, (unsigned int)dsi_len);
-        return 0;
-    }
 
     /* Receiving DSIWrite data is done in AFP function, not here */
     if (dsi->header.dsi_command == DSIFUNC_WRITE

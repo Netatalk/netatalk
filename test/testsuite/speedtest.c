@@ -39,10 +39,6 @@
 #include "afp_tcp_analytics.h"
 #include "speedtest_local_vfs.h"
 
-/* FPWrite sends a 16-byte DSI header followed by 12 bytes of request fields
- * before the write data. */
-#define FPWRITE_FRAME_OVERHEAD ((size_t)DSI_BLOCKSIZ + 12U)
-
 /* For compiling on OS X */
 #ifndef MAP_ANONYMOUS
 #ifdef MAP_ANON
@@ -1716,29 +1712,21 @@ static void run_one(char *name)
         tcp_analytics_test_start(&tcp_session, Conn, Size);
     }
 
-    /* The negotiated DSI quantum covers the complete frame.  Remote writes
-     * use FPWrite, so leave room for its DSI header and request fields instead
-     * of sending server_quantum bytes of data. */
-    size_t max_quantum = dsi->server_quantum;
-
-    if (!Local) {
-        if (max_quantum <= FPWRITE_FRAME_OVERHEAD) {
-            fprintf(stdout,
-                    "\t server quantum (%" PRIu32
-                    ") cannot accommodate FPWrite overhead (%zu)\n",
-                    dsi->server_quantum, FPWRITE_FRAME_OVERHEAD);
-            return;
-        }
-
-        max_quantum -= FPWRITE_FRAME_OVERHEAD;
+    /* The negotiated quantum is the per-request data capacity in both
+     * directions; frame overhead rides on top of it on the wire.  A zero
+     * quantum means DSIOpenSession did not deliver one — reject loudly
+     * rather than proceed into a zero-length buffer allocation. */
+    if (dsi->server_quantum == 0) {
+        fprintf(stdout, "\t no server quantum negotiated\n");
+        return;
     }
 
     if (!Quantum) {
-        Quantum = max_quantum;
-    } else if (Quantum > max_quantum) {
+        Quantum = dsi->server_quantum;
+    } else if (Quantum > dsi->server_quantum) {
         fprintf(stdout,
-                "\t requested quantum (%zu) exceeds maximum data quantum (%zu)\n",
-                Quantum, max_quantum);
+                "\t requested quantum (%zu) exceeds server quantum (%" PRIu32 ")\n",
+                Quantum, dsi->server_quantum);
         return;
     }
 

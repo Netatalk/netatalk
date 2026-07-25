@@ -408,9 +408,11 @@ Default is 24 hours.
 dsireadbuf = *number* **(G)**
 
 > Scale factor that determines the size of the DSI/TCP readahead buffer,
-default is 12. This is multiplies with the DSI server quantum (default
-1MiB) to give the size of the buffer. Increasing this value might
-increase throughput in fast local networks for volume to volume copies.
+default is 12. This is multiplied with the DSI server quantum (default
+1 MiB) to give the size of the buffer. Because the quantum now counts
+write data only, the buffer covers that many data bytes of inbound
+transfer. Increasing this value might increase throughput in fast local
+networks for volume to volume copies.
 >
 > ***NOTE:*** This buffer is allocated per afpd child process, so specifying
 large values will eat up large amount of memory (buffer size \* number
@@ -439,10 +441,14 @@ the server (default is 200).
 
 server quantum = *number* **(G)**
 
-> This specifies the DSI server quantum. The default value is 0x100000 (1
-MiB). The maximum value is 0xFFFFFFFF, the minimum is 32000. If you
-specify a value that is out of range, the default value will be set. Do
-not change this value unless you're absolutely sure, what you're doing
+> This specifies the DSI server quantum: the amount of file data carried
+by a single FPWrite/FPWriteExt request, excluding the 16-byte DSI header
+and the AFP request block that ride on top of it on the wire. Clients
+also size their read requests from this value, so it governs transfer
+chunk size in both directions. The default value is 0x100000 (1 MiB).
+The maximum value is 0xFFFFFFFF, the minimum is 32000. If you specify a
+value that is out of range, the default value will be set. Do not change
+this value unless you're absolutely sure what you're doing
 
 sleep time = *number* **(G)**
 
