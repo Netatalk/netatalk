@@ -2305,14 +2305,14 @@ unsigned int FPRename(CONN *conn, uint16_t svol, int sdid, char *src, char *dst)
 }
 
 /* ------------------------------- */
-unsigned int FPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int FPReadHeader(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                           char *data)
 {
     unsigned int ret;
 
     if (!Quiet) {
-        fprintf(stdout, "[%s] send read header fork %d  offset %d size %d\n", __func__,
-                fork, offset, size);
+        fprintf(stdout, "[%s] send read header fork %d  offset %lld size %zu\n",
+                __func__, fork, (long long)offset, size);
     }
 
     ret = AFPReadHeader(dsi, fork, offset, size, data);
@@ -2321,14 +2321,14 @@ unsigned int FPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
 }
 
 /* ------------------------------- */
-unsigned int FPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int FPReadFooter(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                           char *data)
 {
     unsigned int ret;
 
     if (!Quiet) {
-        fprintf(stdout, "[%s] get read reply fork %d  offset %d size %d\n", __func__,
-                fork, offset, size);
+        fprintf(stdout, "[%s] get read reply fork %d  offset %lld size %zu\n",
+                __func__, fork, (long long)offset, size);
     }
 
     ret = AFPReadFooter(dsi, fork, offset, size, data);
@@ -2391,14 +2391,15 @@ unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
 }
 
 /* ------------------------------- */
-unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                            char *data, char whence)
 {
     unsigned int ret;
 
     if (!Quiet) {
-        fprintf(stdout, "[%s] send write header fork %d  offset %d size %d from 0x%x\n",
-                __func__, fork, offset, size, (unsigned)whence);
+        fprintf(stdout,
+                "[%s] send write header fork %d  offset %lld size %zu from 0x%x\n",
+                __func__, fork, (long long)offset, size, (unsigned)whence);
     }
 
     ret = AFPWriteHeader(dsi, fork, offset, size, data, whence);
@@ -2407,17 +2408,52 @@ unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
 }
 
 /* ------------------------------- */
-unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                            char *data, char whence)
 {
     unsigned int ret;
 
     if (!Quiet) {
-        fprintf(stdout, "[%s] get write footer fork %d  offset %d size %d from 0x%x\n",
-                __func__, fork, offset, size, (unsigned)whence);
+        fprintf(stdout,
+                "[%s] get write footer fork %d  offset %lld size %zu from 0x%x\n",
+                __func__, fork, (long long)offset, size, (unsigned)whence);
     }
 
     ret = AFPWriteFooter(dsi, fork, offset, size, data, whence);
+    dump_header(dsi);
+    return ret;
+}
+
+/* ------------------------------- */
+unsigned int FPWriteExtHeader(DSI *dsi, uint16_t fork, off_t offset,
+                              size_t size, char *data, char whence)
+{
+    unsigned int ret;
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "[%s] send write ext header fork %d  offset %lld size %zu from 0x%x\n",
+                __func__, fork, (long long)offset, size, (unsigned)whence);
+    }
+
+    ret = AFPWriteExtHeader(dsi, fork, offset, size, data, whence);
+    dump_header(dsi);
+    return ret;
+}
+
+/* ------------------------------- */
+unsigned int FPWriteExtFooter(DSI *dsi, uint16_t fork, off_t offset,
+                              size_t size, char *data, char whence)
+{
+    unsigned int ret;
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "[%s] get write ext footer fork %d  offset %lld size %zu from 0x%x\n",
+                __func__, fork, (long long)offset, size, (unsigned)whence);
+    }
+
+    ret = AFPWriteExtFooter(dsi, fork, offset, size, data, whence);
     dump_header(dsi);
     return ret;
 }

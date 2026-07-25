@@ -1091,7 +1091,7 @@ void afp_over_dsi(AFPObj *obj)
          * we need to flush the rest of the packet if necessary. */
         default:
             LOG(log_info, logtype_afpd, "afp_dsi: spurious command %d", cmd);
-            dsi_writeinit(dsi, dsi->data, DSI_DATASIZ);
+            dsi_writeinit(dsi, NULL);
             dsi_writeflush(dsi);
             break;
         }

@@ -322,6 +322,12 @@
 /* Define to 1 if you have the <sys/xattr.h> header file. */
 #mesondefine HAVE_SYS_XATTR_H
 
+/* Define to 1 if struct tcp_connection_info has tcpi_maxseg (macOS) */
+#mesondefine HAVE_TCP_CONNECTION_INFO
+
+/* Define to 1 if struct tcp_info has tcpi_snd_mss (Linux) */
+#mesondefine HAVE_TCP_INFO_SND_MSS
+
 /* Define if Tracker3 is used */
 #mesondefine HAVE_TRACKER3
 

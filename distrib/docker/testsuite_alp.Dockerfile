@@ -76,6 +76,7 @@ RUN gpg --batch --import netatalk-distribution.asc \
 &&  tar -xJf netatalk-client.tar.xz \
         -C src \
         --strip-components=1 \
+&&  gpgconf --kill all \
 &&  rm -rf \
         netatalk-distribution.asc \
         netatalk-client.tar.xz \

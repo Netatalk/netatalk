@@ -81,11 +81,10 @@ static void dsi_test_header(uint8_t *block, uint8_t command,
 
 static int dsi_test_receive(uint8_t command, uint32_t code_or_doff,
                             uint32_t len, const uint8_t *payload,
-                            size_t payload_len, DSI *dsi)
+                            size_t payload_len, uint32_t quantum, DSI *dsi)
 {
     uint8_t block[DSI_BLOCKSIZ];
     int fds[2];
-    size_t quantum;
     ssize_t written;
     memset(dsi, 0, sizeof(*dsi));
     dsi->socket = -1;
@@ -95,8 +94,7 @@ static int dsi_test_receive(uint8_t command, uint32_t code_or_doff,
     }
 
     dsi->socket = fds[1];
-    dsi->server_quantum = 16;
-    quantum = dsi->server_quantum;
+    dsi->server_quantum = quantum;
     dsi->commands = calloc(1, quantum);
     dsi->buffer = calloc(1, quantum);
 
@@ -139,13 +137,207 @@ static void dsi_test_cleanup(DSI *dsi)
     free(dsi->buffer);
 }
 
+/* dsi_len = quantum + doff is spec-legal: the quantum bounds write data,
+ * not the whole frame.  Only the header drives accept/reject, so the
+ * harness sends just doff payload bytes; data is consumed by dsi_write. */
+static int utest_dsi_receive_accepts_full_quantum_write(uint32_t doff)
+{
+    DSI dsi;
+    uint8_t cmd[DSI_WROFF_FPWRITEEXT];
+    int ret;
+    memset(cmd, 0, sizeof(cmd));
+    ret = dsi_test_receive(DSIFUNC_WRITE, doff, 4096 + doff, cmd, doff,
+                           4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == DSIFUNC_WRITE ? 0 : -1;
+}
+
+/* One byte of data beyond the quantum is rejected. */
+static int utest_dsi_receive_rejects_overquantum_write(uint32_t doff)
+{
+    DSI dsi;
+    uint8_t cmd[DSI_WROFF_FPWRITEEXT];
+    int ret;
+    memset(cmd, 0, sizeof(cmd));
+    ret = dsi_test_receive(DSIFUNC_WRITE, doff, 4096 + doff + 1, cmd, doff,
+                           4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == 0 ? 0 : -1;
+}
+
+/* doff outside {12, 20} is malformed; doff 0 maps to 12 (ASC 3.7). */
+static int utest_dsi_receive_validates_doff(void)
+{
+    DSI dsi;
+    uint8_t cmd[DSI_WROFF_FPWRITEEXT + 1];
+    int ret;
+    memset(cmd, 0, sizeof(cmd));
+    ret = dsi_test_receive(DSIFUNC_WRITE, 13, 64, cmd, 13, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+
+    if (ret != 0) {
+        return -1;
+    }
+
+    ret = dsi_test_receive(DSIFUNC_WRITE, 21, 64, cmd, 21, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+
+    if (ret != 0) {
+        return -1;
+    }
+
+    ret = dsi_test_receive(DSIFUNC_WRITE, 0, DSI_WROFF_FPWRITE + 8, cmd,
+                           DSI_WROFF_FPWRITE + 8, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == DSIFUNC_WRITE ? 0 : -1;
+}
+
+/* Alignment search: grows to the smallest page multiple at or above the
+ * configured value meeting the fill threshold; growth bounded by 256
+ * KiB and DSI_SERVQUANT_MAX; never returns less than configured. */
+static int utest_dsi_align_quantum(void)
+{
+    static const uint32_t mss_cases[] = { 1448, 1460, 8948, 8960, 65483, 536 };
+    static const uint32_t quanta[] = { 0x100000, 0x400000, 0x100ABC };
+
+    for (size_t q = 0; q < sizeof(quanta) / sizeof(quanta[0]); q++) {
+        for (size_t m = 0; m < sizeof(mss_cases) / sizeof(mss_cases[0]); m++) {
+            uint32_t mss = mss_cases[m];
+            uint32_t configured = quanta[q];
+            uint32_t d = dsi_align_quantum(configured, mss);
+
+            if (d < configured || d > configured + DSI_QUANTUM_GROWTH_MAX
+                    || d % 4096 != 0 || d > DSI_SERVQUANT_MAX) {
+                return -1;
+            }
+        }
+    }
+
+    /* No usable MSS: page-align up only. */
+    if (dsi_align_quantum(0x100000, 0) != 0x100000) {
+        return -1;
+    }
+
+    if (dsi_align_quantum(0x100ABC, 0) != 0x101000) {
+        return -1;
+    }
+
+    /* MSS shaping not worthwhile (4 * mss >= quantum): page-align up. */
+    if (dsi_align_quantum(32768, 8960) != 32768) {
+        return -1;
+    }
+
+    /* Fill search: 36864 + 36 fills poorly at mss 8960; first hit is
+     * 53248 (53284 % 8960 = 8484 >= 7840). */
+    if (dsi_align_quantum(33000, 8960) != 53248) {
+        return -1;
+    }
+
+    /* Fill search: first hit above 32768 at mss 1448 is 49152
+     * (49188 % 1448 = 1404 >= 1267). */
+    if (dsi_align_quantum(32001, 1448) != 49152) {
+        return -1;
+    }
+
+    /* Values above the maximum cap to it; page-up must not wrap. */
+    if (dsi_align_quantum(0xFFFFFF00, 1448) != DSI_SERVQUANT_MAX) {
+        return -1;
+    }
+
+    if (dsi_align_quantum(DSI_SERVQUANT_MAX, 0) != DSI_SERVQUANT_MAX) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/* Read-ahead product clamp: the limit always wins, floored at 1. */
+static int utest_readbuf_clamp(void)
+{
+    if (netatalk_readbuf_clamp(32, 0x10000000, NETATALK_READBUF_LIMIT) != 4) {
+        return -1;
+    }
+
+    if (netatalk_readbuf_clamp(1024, 0x10000000, UINT64_MAX) != 1024) {
+        return -1;
+    }
+
+    if (netatalk_readbuf_clamp(32, 0x10000000, 0x10000000) != 1) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/* Buffered write payload must be handed off, not copied out.  eof - start
+ * == 64 holds because the peer closes before dsi_stream_receive, so one
+ * recv coalesces header and payload. */
+static int utest_dsi_writeinit_no_duplicate_copy(void)
+{
+    DSI dsi;
+    uint8_t frame[DSI_WROFF_FPWRITE + 64];
+    char *wbuf = NULL;
+    size_t i;
+    size_t cc;
+    int ret;
+    memset(frame, 0, DSI_WROFF_FPWRITE);
+
+    for (i = 0; i < 64; i++) {
+        frame[DSI_WROFF_FPWRITE + i] = (uint8_t)i;
+    }
+
+    ret = dsi_test_receive(DSIFUNC_WRITE, DSI_WROFF_FPWRITE,
+                           DSI_WROFF_FPWRITE + 64, frame, sizeof(frame),
+                           4096, &dsi);
+
+    if (ret != DSIFUNC_WRITE || dsi.eof - dsi.start != 64) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    memset(dsi.commands, 0xAA, 4096);
+    cc = dsi_writeinit(&dsi, &wbuf);
+
+    if (cc != 64 || dsi.datasize != 0) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    for (i = 0; i < 64; i++) {
+        if (dsi.commands[i] != 0xAA) {
+            dsi_test_cleanup(&dsi);
+            return -1;
+        }
+    }
+
+    if (wbuf == NULL || wbuf < dsi.buffer || wbuf + cc > dsi.end
+            || wbuf[0] != 0 || (uint8_t)wbuf[63] != 63) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    dsi_test_cleanup(&dsi);
+    return 0;
+}
+
+/* Non-write commands: dsi_len itself is bounded by the quantum. */
+static int utest_dsi_receive_rejects_overquantum_cmd(void)
+{
+    DSI dsi;
+    uint8_t payload[1] = { AFP_LOGOUT };
+    int ret;
+    ret = dsi_test_receive(DSIFUNC_CMD, 0, 4097, payload, 1, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == 0 ? 0 : -1;
+}
+
 static int utest_dsi_receive_valid_cmd(void)
 {
     uint8_t payload[2] = {AFP_LOGIN, 0};
     DSI dsi;
     int ret;
     ret = dsi_test_receive(DSIFUNC_CMD, 0, sizeof(payload), payload,
-                           sizeof(payload), &dsi);
+                           sizeof(payload), 16, &dsi);
 
     if (ret != DSIFUNC_CMD || dsi.cmdlen != sizeof(payload)
             || memcmp(dsi.commands, payload, sizeof(payload)) != 0) {
@@ -161,7 +353,7 @@ static int utest_dsi_receive_rejects_oversized_payload(void)
 {
     DSI dsi;
     int ret;
-    ret = dsi_test_receive(DSIFUNC_CMD, 0, 17, NULL, 0, &dsi);
+    ret = dsi_test_receive(DSIFUNC_CMD, 0, 17, NULL, 0, 16, &dsi);
 
     if (ret != 0) {
         dsi_test_cleanup(&dsi);
@@ -178,7 +370,7 @@ static int utest_dsi_receive_rejects_write_offset_past_payload(void)
     DSI dsi;
     int ret;
     ret = dsi_test_receive(DSIFUNC_WRITE, 8, sizeof(payload), payload,
-                           sizeof(payload), &dsi);
+                           sizeof(payload), 16, &dsi);
 
     if (ret != 0) {
         dsi_test_cleanup(&dsi);
@@ -242,6 +434,25 @@ int main(int argc, char *argv[])
      * fail with ENXIO and every LOG() is silently dropped.  stderr is captured. */
     TEST(setuplog("default:note", "/dev/stderr", true),
          "init logging to stderr");
+    /* DSI unit tests: frame acceptance, write handoff, quantum shaping. */
+    TEST_int(utest_dsi_receive_accepts_full_quantum_write(DSI_WROFF_FPWRITE), 0,
+             "dsi_stream_receive accepts full-quantum FPWrite in one record");
+    TEST_int(utest_dsi_receive_accepts_full_quantum_write(DSI_WROFF_FPWRITEEXT), 0,
+             "dsi_stream_receive accepts full-quantum FPWriteExt in one record");
+    TEST_int(utest_dsi_receive_rejects_overquantum_write(DSI_WROFF_FPWRITE), 0,
+             "dsi_stream_receive rejects over-quantum FPWrite data");
+    TEST_int(utest_dsi_receive_rejects_overquantum_write(DSI_WROFF_FPWRITEEXT), 0,
+             "dsi_stream_receive rejects over-quantum FPWriteExt data");
+    TEST_int(utest_dsi_receive_rejects_overquantum_cmd(), 0,
+             "dsi_stream_receive keeps strict bound for non-write commands");
+    TEST_int(utest_dsi_receive_validates_doff(), 0,
+             "dsi_stream_receive validates write data offset");
+    TEST_int(utest_dsi_writeinit_no_duplicate_copy(), 0,
+             "dsi_writeinit hands buffered payload off without copying");
+    TEST_int(utest_dsi_align_quantum(), 0,
+             "dsi_align_quantum terminates within floors and page-aligns");
+    TEST_int(utest_readbuf_clamp(), 0,
+             "netatalk_readbuf_clamp bounds the read-ahead product");
     TEST_int(utest_dsi_receive_valid_cmd(), 0,
              "DSI receive accepts valid command frame");
     TEST_int(utest_dsi_receive_rejects_oversized_payload(), 0,

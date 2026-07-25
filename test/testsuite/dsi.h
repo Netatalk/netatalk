@@ -112,7 +112,7 @@ typedef struct DSI {
 
 /* server and client quanta */
 #define DSI_DEFQUANT        2           /*!< default attention quantum size */
-#define DSI_SERVQUANT_MAX   0xffffffffL /*!< server quantum */
+#define DSI_SERVQUANT_MAX   0x10000000L /*!< server quantum */
 #define DSI_SERVQUANT_MIN   0x0004A2E0L /*!< minimum server quantum */
 #define DSI_SERVQUANT_DEF   DSI_SERVQUANT_MIN /*!< default server quantum */
 
@@ -124,6 +124,7 @@ extern size_t dsi_stream_read(DSI *, void *, const size_t);
 extern int dsi_stream_receive(DSI *, void *, const size_t, size_t *);
 extern size_t dsi_stream_write(DSI *, void *, const size_t);
 extern int dsi_stream_send(DSI *, void *, size_t);
+extern int dsi_stream_send3(DSI *, void *, size_t, void *, size_t);
 
 /* some useful macros */
 #define dsi_clientID(x)   ((x)->clientID++)
