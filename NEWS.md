@@ -1,6 +1,24 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.5.2
+----------------
+
+* FIX: dsi: accept spec-legal writes of a full server quantum of data; the
+  DSI server quantum bounds FPWrite/FPWriteExt data only, not the whole
+  DSI frame, so a client may write (and request) a full configured quantum
+* FIX: dsi: harden FPWrite/FPWriteExt data-offset parsing on top of
+  CVE-2026-62319/CVE-2026-62320 — only the spec-legal offsets 12 and 20 are
+  accepted; malformed offsets 13-19 are rejected instead of parsed
+* FIX: dsi: remove the second userspace copy of buffered write payload in
+  dsi_writeinit and fix a latent truncation that caused an FPAddIcon
+  out-of-bounds read against buffers smaller than the server quantum
+* BREAKING: libatalk: dsi_writeinit changed to a pointer handoff signature;
+  the libatalk soversion is bumped to 21
+* testsuite: size speedtest and lantest remote I/O from the full advertised
+  server quantum again (reverts the speedtest overhead workaround, GitHub
+  #3185)
+
 Changes in 4.5.1
 ----------------
 
