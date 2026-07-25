@@ -75,6 +75,10 @@ extern void         of_close_all_forks(const AFPObj *obj);
 extern struct adouble *of_ad(const struct vol *, struct path *,
                              struct adouble *);
 extern struct ofork *of_findnameat(int dirfd, struct path *path);
+extern int of_delete_blocked(const struct ofork *of, uint16_t *band,
+                             int *content);
+extern void of_close_inode_forks(const AFPObj *obj, const struct vol *vol,
+                                 struct path *path);
 extern int of_fstatat(int dirfd, struct path *path);
 
 enum of_locks_status { OF_LOCKS_ERROR = -1, OF_LOCKS_OK = 0, OF_LOCKS_NOENT = 1 };

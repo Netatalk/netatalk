@@ -5,43 +5,6 @@
 #include "testhelper.h"
 
 /* ------------------------- */
-STATIC void test13()
-{
-    uint16_t bitmap = 0;
-    uint16_t vol = VolID;
-    char *name = "t13 file";
-    int ret = 0;
-    int fork;
-    ENTER_TEST
-
-    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
-        test_nottested();
-        goto test_exit;
-    }
-
-    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, name,
-                      OPENACC_WR | OPENACC_RD);
-
-    if (!fork) {
-        test_nottested();
-        goto fin;
-    }
-
-    FAIL(FPWrite(Conn, fork, 0, 2000, Data, 0))
-    ret = FPDelete(Conn, vol, DIRDID_ROOT, name);
-
-    if (!ret) {
-        test_failed();
-    }
-
-    FAIL(FPCloseFork(Conn, fork))
-fin:
-    FAIL(ret && FPDelete(Conn, vol, DIRDID_ROOT, name))
-test_exit:
-    exit_test("FPDelete:test13: delete open file same connection");
-}
-
-/* ------------------------- */
 STATIC void test27()
 {
     char *name  = "t27 file";
@@ -92,8 +55,9 @@ STATIC  void test74()
 
     dsi2 = &Conn2->dsi;
     vol2  = FPOpenVol(Conn2, Vol);
+    /* deny-write claim: an open alone does not block a delete */
     fork = FPOpenFork(Conn, vol, type, bitmap, DIRDID_ROOT, name,
-                      OPENACC_WR | OPENACC_RD);
+                      OPENACC_WR | OPENACC_RD | OPENACC_DWR);
 
     if (!fork) {
         test_failed();
@@ -799,11 +763,388 @@ test_exit:
     exit_test("FPDelete:test610: read-only open does not block delete");
 }
 
+/* -------------------------
+ * test611  A write-open with no deny mode does not block a cross-session
+ *          delete.
+ *
+ * Conn opens the data fork read-write with no deny claim; Conn2's FPDelete
+ * must succeed.  An open — even for write — is access, not a claim; only
+ * deny modes and content locks block (SMB share-mode semantics, where
+ * existing WRITE access never blocks a delete).  The holder's fds stay
+ * valid on the unlinked inode; nothing in the holder's session is
+ * invalidated.  Companion to test610 (OPEN_RD) and test608 (OPEN_NONE).
+ */
+STATIC void test611()
+{
+    char *name = "t611 open_wr nonblock";
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    uint16_t fork;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD | OPENACC_WR /* no deny */);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    FAIL(FPWrite(Conn, fork, 0, 2000, Data, 0))
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    dret = FPDelete(Conn2, vol2, DIRDID_ROOT, name);
+    FAIL(AFP_OK != dret)   /* a no-deny write-open must not block delete */
+    FAIL(FPCloseVol(Conn2, vol2))
+    /* the holder's fork survives the peer's delete: still readable, and the
+     * client-side close still works (POSIX unlinked-but-open semantics) */
+    FAIL(FPRead(Conn, fork, 0, 100, Data))
+    FAIL(FPCloseFork(Conn, fork))
+    goto test_exit;
+cleanup:
+    FPCloseFork(Conn, fork);
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+test_exit:
+    exit_test("FPDelete:test611: no-deny write-open does not block delete");
+}
+
+/* -------------------------
+ * test612  A same-session stale fork does not block a delete.
+ *
+ * Conn opens the data fork read-only (Preview's shape), never closes it, and
+ * deletes the file on the same connection.  The server closes the session's
+ * own tracked fork and the delete succeeds: the deleting session owns every
+ * fork in its child, so an unclosed fork must not make the file undeletable.
+ */
+STATIC void test612()
+{
+    char *name = "t612 selfclean";
+    uint16_t vol = VolID;
+    uint16_t fork;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    dret = FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FAIL(dret != AFP_OK)   /* a same-session stale fork must not block delete */
+
+    if (dret == AFP_OK) {
+        /* the sweep invalidated the refnum: the close must miss */
+        FAIL(ntohl(AFPERR_PARAM) != FPCloseFork(Conn, fork))
+    } else {
+        FPCloseFork(Conn, fork);
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+    }
+
+test_exit:
+    exit_test("FPDelete:test612: same-session stale fork swept on delete");
+}
+
+/* -------------------------
+ * test613  ALL same-session stale forks close on delete, not just one.
+ *
+ * As test612 but with two unclosed forks (data + rsrc, two refnums) on the
+ * inode.  The delete must succeed, which requires the server to close every
+ * tracked fork on the inode, covering the rsrc/adouble close branch.
+ */
+STATIC void test613()
+{
+    char *name = "t613 selfclean2";
+    uint16_t vol = VolID;
+    uint16_t fork;
+    uint16_t fork2;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    fork2 = FPOpenFork(Conn, vol, OPENFORK_RSCS, 0, DIRDID_ROOT, name,
+                       OPENACC_RD);
+
+    if (!fork2) {
+        test_nottested();
+        FAIL(FPCloseFork(Conn, fork))
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    dret = FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FAIL(dret != AFP_OK)   /* every same-session fork on the inode sweeps */
+
+    if (dret == AFP_OK) {
+        /* the sweep invalidated BOTH refnums: each close must miss */
+        FAIL(ntohl(AFPERR_PARAM) != FPCloseFork(Conn, fork))
+        FAIL(ntohl(AFPERR_PARAM) != FPCloseFork(Conn, fork2))
+    } else {
+        FPCloseFork(Conn, fork);
+        FPCloseFork(Conn, fork2);
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+    }
+
+test_exit:
+    exit_test("FPDelete:test613: all same-session forks swept on delete");
+}
+
+/* -------------------------
+ * test614  A same-session deny-mode fork blocks the delete; a plain
+ *          write-open does not.
+ *
+ * The delete-blocking policy is holder-agnostic and claim-based: only deny
+ * modes and content locks refuse; an open — even write — is not a claim
+ * (QuickLook leaks write-opens, and SMB/POSIX deletes succeed under them).
+ * Phase 1: open with a deny-write claim, write, FPDelete on the same
+ * connection: refused AFPERR_BUSY and the fork stays usable; delete
+ * succeeds after close.  Phase 2: open plain read-write, write, FPDelete:
+ * succeeds, the fork is swept.
+ */
+STATIC void test614()
+{
+    char *name = "t614 own deny blocks";
+    uint16_t vol = VolID;
+    uint16_t fork;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD | OPENACC_WR | OPENACC_DWR);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    FAIL(FPWrite(Conn, fork, 0, 2000, Data, 0))
+    FAIL(ntohl(AFPERR_BUSY) != FPDelete(Conn, vol, DIRDID_ROOT, name))
+    /* the refused delete must not have touched the open fork */
+    FAIL(FPGetForkParam(Conn, fork, 1 << FILPBIT_DFLEN))
+
+    if (FPCloseFork(Conn, fork)) {
+        /* a still-open deny fork would make the file undeletable: retry */
+        test_failed();
+        FPCloseFork(Conn, fork);
+    }
+
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+
+    /* phase 2: a plain write-open (no deny) does not block; the fork sweeps */
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD | OPENACC_WR);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    FAIL(FPWrite(Conn, fork, 0, 2000, Data, 0))
+    dret = FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FAIL(dret != AFP_OK)   /* a write-open with no deny must not block */
+
+    if (dret == AFP_OK) {
+        /* the sweep invalidated the refnum: the close must miss */
+        FAIL(ntohl(AFPERR_PARAM) != FPCloseFork(Conn, fork))
+    } else {
+        FPCloseFork(Conn, fork);
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+    }
+
+test_exit:
+    exit_test("FPDelete:test614: own deny blocks delete; write-open sweeps");
+}
+
+/* -------------------------
+ * test615  A once-written file with only a no-claim fork left deletes.
+ *
+ * Write via a read-write fork, flush, close it (the OPEN_WR claim is
+ * released), then leak a read-only fork; the same-session delete must
+ * succeed.  Pins that having-been-written is history, not a claim: only a
+ * live OPEN_WR/deny/content lock blocks, never dirty/modified state.
+ */
+STATIC void test615()
+{
+    char *name = "t615 written then rd leak";
+    uint16_t vol = VolID;
+    uint16_t fork;
+    unsigned int dret;
+    ENTER_TEST
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD | OPENACC_WR);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    FAIL(FPWrite(Conn, fork, 0, 2000, Data, 0))
+    FAIL(FPFlushFork(Conn, fork))
+    FAIL(FPCloseFork(Conn, fork))
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    dret = FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FAIL(dret != AFP_OK)   /* once-written is not a claim; the RD fork sweeps */
+
+    if (dret == AFP_OK) {
+        /* the sweep invalidated the refnum: the close must miss */
+        FAIL(ntohl(AFPERR_PARAM) != FPCloseFork(Conn, fork))
+    } else {
+        FPCloseFork(Conn, fork);
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+    }
+
+test_exit:
+    exit_test("FPDelete:test615: once-written file with rd-only fork deletes");
+}
+
+/* -------------------------
+ * test616  A refused delete leaves the session's open fork intact.
+ *
+ * DeleteInhibit blocks the delete before any fork cleanup: with the bit set
+ * and a same-session fork open, FPDelete returns AFPERR_OLOCK and the fork
+ * refnum must still be usable.  Clearing the bit lets the delete succeed and
+ * only then is the fork server-closed.
+ */
+STATIC void test616()
+{
+    char *name = "t616 olock keeps fork";
+    int  ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = { 0 };
+    uint16_t bitmap = (1 << FILPBIT_ATTR);
+    uint16_t vol = VolID;
+    uint16_t fork;
+    unsigned int dret;
+    const DSI *dsi;
+    ENTER_TEST
+    dsi = &Conn->dsi;
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_RD);
+
+    if (!fork) {
+        test_nottested();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+        goto test_exit;
+    }
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    FAIL(ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol, DIRDID_ROOT, name))
+    /* the refused delete must not have touched the open fork */
+    FAIL(FPGetForkParam(Conn, fork, 1 << FILPBIT_DFLEN))
+    filedir.attr = ATTRBIT_NODELETE;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) {
+        /* the clear must not be left set: retry it via cleanup */
+        test_failed();
+        goto cleanup;
+    }
+
+    dret = FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FAIL(dret != AFP_OK)
+
+    if (dret == AFP_OK) {
+        /* the sweep invalidated the refnum: the close must miss */
+        FAIL(ntohl(AFPERR_PARAM) != FPCloseFork(Conn, fork))
+        goto test_exit;
+    }
+
+cleanup:
+    FPCloseFork(Conn, fork);
+    /* clear any inhibit we may have set, then remove */
+    filedir.attr = ATTRBIT_NODELETE;
+    FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir);
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+test_exit:
+    exit_test("FPDelete:test616: refused delete leaves open fork intact");
+}
+
 /* ----------- */
 void FPDelete_test()
 {
     ENTER_TESTSET
-    test13();
     test27();
     test74();
     test172();
@@ -815,4 +1156,10 @@ void FPDelete_test()
     test608();
     test609();
     test610();
+    test611();
+    test612();
+    test613();
+    test614();
+    test615();
+    test616();
 }

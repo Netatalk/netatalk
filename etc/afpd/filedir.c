@@ -800,7 +800,6 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     struct vol  *vol;
     struct dir  *dir;
     struct path *s_path;
-    struct ofork *of;
     char        *upath;
     int         did;
     int         rc = AFP_OK;
@@ -967,26 +966,30 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             bdestroy(dname);
         }
-    } else if ((of = of_findname(vol, s_path))) {
-        /* This session still holds a tracked fork on the inode. */
-        LOG(log_note, logtype_afpd,
-            "afp_delete(\"%s\"): refused (AFPERR_BUSY): this session still has "
-            "an open fork: refnum %" PRIu16 ", name \"%s\", flags 0x%x"
-            "%s%s%s%s, dev/ino %ju/%ju",
-            upath, of->of_refnum, of_name(of), of->of_flags,
-            (of->of_flags & AFPFORK_DATA) ? " [data]" : "",
-            (of->of_flags & AFPFORK_RSRC) ? " [rsrc]" : "",
-            (of->of_flags & AFPFORK_DIRTY) ? " [dirty]" : "",
-            (of->of_flags & AFPFORK_MODIFIED) ? " [modified]" : "",
-            (uintmax_t)of->key.dev, (uintmax_t)of->key.inode);
-        rc = AFPERR_BUSY;
     } else {
         /* it's a file st_valid should always be true
          * only test for ENOENT because EACCES needs
          * to read meta data in deletefile
          */
+        const struct ofork *of;
+        uint16_t held_band = 0;
+        int held_content = 0;
+
         if (s_path->st_valid && s_path->st_errno == ENOENT) {
             rc = AFPERR_NOOBJ;
+        } else if ((of = of_findname(vol, s_path)) != NULL
+                   && of_delete_blocked(of, &held_band, &held_content)) {
+            /* Same-session claims block by the same policy as a peer's
+             * (deny modes and content locks; an open alone never blocks);
+             * one fork suffices to check, since siblings share the adouble
+             * that holds all of the session's claims.  Claim-free forks
+             * fall through and are swept after a successful delete. */
+            LOG(log_note, logtype_afpd,
+                "afp_delete(\"%s\"): refused (AFPERR_BUSY): same-session claim:"
+                "%s band 0x%03x (refnum %" PRIu16 ")", upath,
+                held_content ? " [content lock]" : "",
+                held_band, of->of_refnum);
+            rc = AFPERR_BUSY;
         } else {
             /* Validate target FILE inode to detect external replacement */
             LOG(log_debug, logtype_afpd,
@@ -1043,6 +1046,13 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 } else {
                     vol->v_tm_used -= s_path->st.st_size;
                 }
+
+                /* Sweep this session's remaining (no-claim) forks: they
+                 * reference the unlinked inode now.  Refusals above leave all
+                 * forks intact.  Last in the branch: of_closefork() overwrites
+                 * the static mtoupath() buffer that upath aliases, so no upath
+                 * consumer may run after this. */
+                of_close_inode_forks(obj, vol, s_path);
             }
         }
     }
