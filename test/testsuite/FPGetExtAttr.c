@@ -123,13 +123,8 @@ STATIC void test432()
     dsi = &Conn->dsi;
     ENTER_TEST
 
-    if (Conn->afp_version < 30) {
-        test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (adouble == AD_V2) {
-        test_skipped(T_ADEA);
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
         goto test_exit;
     }
 

@@ -1053,6 +1053,18 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 break;
             }
 
+            if (maxreply <= MAX_REPLY_EXTRA_BYTES) {
+                /*
+                 * maxreply must be at least size of xattr + MAX_REPLY_EXTRA_BYTES (6)
+                 * bytes. The 6 bytes are the AFP reply packets bitmap and length field.
+                 */
+                memset(rbuf, 0, 4);
+                *rbuflen += 4;
+                close(fd);
+                ret = AFPERR_PARAM;
+                break;
+            }
+
             /* Check how much the client wants, give him what we think is right */
             maxreply -= MAX_REPLY_EXTRA_BYTES;
 
@@ -1060,8 +1072,19 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 maxreply = MAX_EA_SIZE;
             }
 
-            toread = (maxreply < (*ea.ea_entries)[count].ea_size) ? maxreply :
-                     (*ea.ea_entries)[count].ea_size;
+            if (maxreply < (*ea.ea_entries)[count].ea_size) {
+                /*
+                 * maxreply must be at least size of xattr. Return error instead of
+                 * truncating data.
+                 */
+                memset(rbuf, 0, 4);
+                *rbuflen += 4;
+                close(fd);
+                ret = AFPERR_PARAM;
+                break;
+            }
+
+            toread = (*ea.ea_entries)[count].ea_size;
             LOG(log_debug, logtype_afpd, "get_eacontent('%s'): sending %u bytes", attruname,
                 toread);
             /* Put length of EA data in reply buffer */
