@@ -326,20 +326,24 @@ unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did,
                             char *name);
 unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did, char *name);
 
-unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                             char *data, char whence);
-unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                             char *data, char whence);
 unsigned int AFPWrite(CONN *conn, uint16_t fork, int offset, int size,
                       char *data, char whence);
 unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
                           char *data, char whence);
+unsigned int AFPWriteExtHeader(DSI *dsi, uint16_t fork, off_t offset,
+                               size_t size, char *data, char whence);
+unsigned int AFPWriteExtFooter(DSI *dsi, uint16_t fork, off_t offset,
+                               size_t size, char *data, char whence);
 unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset,
                                 off_t size, char *data, char whence);
 
-unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                            char *data);
-unsigned int AFPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
+unsigned int AFPReadFooter(DSI *dsi, uint16_t fork, off_t offset, size_t size,
                            char *data);
 unsigned int AFPRead(CONN *conn, uint16_t fork, int offset, int size,
                      char *data);

@@ -41,6 +41,7 @@ int deny_severity = log_warning;
 
 #include <atalk/dsi.h>
 #include <atalk/compat.h>
+#include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 #include <atalk/errchk.h>
 
@@ -96,6 +97,104 @@ static void dsi_init_buffer(DSI *dsi)
     dsi->start = dsi->buffer;
     dsi->eof = dsi->buffer;
     dsi->end = dsi->buffer + (dsi->dsireadbuf * dsi->server_quantum);
+}
+
+/*!
+ * Effective TCP segment payload for this session's socket, or 0 when it
+ * cannot be determined.  Live values (TCP_INFO / TCP_CONNECTION_INFO)
+ * already account for active TCP options; TCP_MAXSEG is the negotiated
+ * fallback.
+ */
+uint32_t dsi_effective_mss(const DSI *dsi)
+{
+    uint32_t mss = 0;
+#if defined(HAVE_TCP_INFO_SND_MSS)
+    {
+        struct tcp_info info;
+        socklen_t len = sizeof(info);
+
+        if (getsockopt(dsi->socket, IPPROTO_TCP, TCP_INFO, &info, &len) == 0
+                && len >= sizeof(info)) {
+            mss = info.tcpi_snd_mss;
+        }
+    }
+#elif defined(HAVE_TCP_CONNECTION_INFO)
+    {
+        struct tcp_connection_info info;
+        socklen_t len = sizeof(info);
+
+        if (getsockopt(dsi->socket, IPPROTO_TCP, TCP_CONNECTION_INFO,
+                       &info, &len) == 0 && len >= sizeof(info)) {
+            mss = info.tcpi_maxseg;
+        }
+    }
+#endif
+#ifdef TCP_MAXSEG
+
+    if (mss == 0) {
+        int maxseg = 0;
+        socklen_t len = sizeof(maxseg);
+
+        if (getsockopt(dsi->socket, IPPROTO_TCP, TCP_MAXSEG, &maxseg,
+                       &len) == 0 && maxseg > 0) {
+            mss = (uint32_t)maxseg;
+        }
+    }
+
+#endif
+
+    if (mss < 512 || mss > 65536) {
+        return 0;
+    }
+
+    return mss;
+}
+
+/*!
+ * Smallest 4 KiB multiple at or above the configured quantum whose
+ * FPWriteExt frame (data + 36 bytes) ends in a TCP segment at least
+ * 7/8 full.  Growth is capped at DSI_QUANTUM_GROWTH_MAX and
+ * DSI_SERVQUANT_MAX; best fill wins when the threshold is
+ * unreachable.  Never returns less than the configured value, which
+ * is itself capped at DSI_SERVQUANT_MAX.
+ */
+uint32_t dsi_align_quantum(uint32_t configured, uint32_t mss)
+{
+    uint32_t d;
+    uint32_t limit;
+    uint32_t best;
+    uint32_t best_fill = 0;
+
+    if (configured > DSI_SERVQUANT_MAX) {
+        configured = DSI_SERVQUANT_MAX;
+    }
+
+    d = (configured + 4095) & ~(uint32_t)4095;
+
+    if (mss == 0 || (uint64_t)mss * 4 >= d) {
+        /* No usable MSS or shaping won't pay off: page-align up only. */
+        return d;
+    }
+
+    best = d;
+    limit = (configured < DSI_SERVQUANT_MAX - DSI_QUANTUM_GROWTH_MAX)
+            ? configured + DSI_QUANTUM_GROWTH_MAX : DSI_SERVQUANT_MAX;
+
+    for (; d <= limit; d += 4096) {
+        uint32_t r = (d + DSI_FRAME_OVERHEAD_EXT) % mss;
+        uint32_t fill = r ? r : mss;
+
+        if (fill >= mss - mss / 8) {
+            return d;
+        }
+
+        if (fill > best_fill) {
+            best_fill = fill;
+            best = d;
+        }
+    }
+
+    return best;
 }
 
 /*!
@@ -171,6 +270,28 @@ static pid_t dsi_tcp_open(DSI *dsi)
         }
 
 #endif
+        /* Resolve the session quantum before any buffer exists: growth
+         * must be reflected in every buffer sized from it. */
+        uint32_t mss = dsi_effective_mss(dsi);
+        dsi->server_quantum = dsi_align_quantum(
+                                  (dsi->server_quantum < DSI_SERVQUANT_MIN ||
+                                   dsi->server_quantum > DSI_SERVQUANT_MAX) ?
+                                  DSI_SERVQUANT_DEF : dsi->server_quantum,
+                                  mss);
+        dsi->dsireadbuf = netatalk_readbuf_clamp((int)dsi->dsireadbuf,
+                          dsi->server_quantum,
+                          NETATALK_READBUF_LIMIT);
+
+        if (mss == 0) {
+            LOG(log_warning, logtype_dsi,
+                "dsi_tcp_open: no usable TCP segment size, "
+                "quantum %u page-aligned without MSS shaping",
+                dsi->server_quantum);
+        }
+
+        LOG(log_info, logtype_dsi,
+            "dsi_tcp_open: MSS %u, session quantum %u",
+            mss, dsi->server_quantum);
         dsi_init_buffer(dsi);
         /* read in commands. this is similar to dsi_receive except
          * for the fact that we do some sanity checking to prevent

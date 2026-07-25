@@ -22,9 +22,19 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
+/*!
+ * Begin a DSI write transfer: set datasize and hand back, by reference, any
+ * payload already in the read-ahead buffer.  *bufp is valid only until the
+ * next dsi_* call; consume it immediately.  A NULL bufp discards the
+ * buffered payload, for callers that only drain the transfer.
+ */
+size_t dsi_writeinit(DSI *dsi, char **bufp)
 {
     size_t bytes = 0;
+
+    if (bufp) {
+        *bufp = NULL;
+    }
 
     if (ntohl(dsi->header.dsi_len) < dsi->header.dsi_data.dsi_doff) {
         return 0;
@@ -34,8 +44,12 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
 
     if (dsi->eof > dsi->start) {
         /* We have data in the buffer */
-        bytes = MIN(dsi->eof - dsi->start, dsi->datasize);
-        memmove(buf, dsi->start, MIN(buflen, bytes));
+        bytes = MIN((size_t)(dsi->eof - dsi->start), dsi->datasize);
+
+        if (bufp) {
+            *bufp = dsi->start;
+        }
+
         dsi->start += bytes;
         dsi->datasize -= bytes;
 

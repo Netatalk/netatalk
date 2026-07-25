@@ -31,6 +31,11 @@ extern struct vol *getvolbypath(AFPObj *obj, const char *path);
 extern struct vol *getvolbyname(const char *name);
 extern void       volume_free(struct vol *vol);
 extern void       volume_unlink(struct vol *volume);
+/*! ceiling for dsireadbuf x server quantum per session (1 GiB) */
+#define NETATALK_READBUF_LIMIT ((uint64_t)1 << 30)
+
+extern int        netatalk_readbuf_clamp(int readbuf, uint32_t quantum,
+        uint64_t limit);
 
 /* Extension type/creator mapping */
 struct extmap *getdefextmap(void);
