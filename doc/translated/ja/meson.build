@@ -15,7 +15,7 @@ manual_pages = [
     'Upgrading',
 ]
 
-if get_option('with-website')
+if build_website
     manual_pages += [
         '_Sidebar',
         'a2boot.8',
@@ -56,7 +56,7 @@ if get_option('with-website')
     ]
 endif
 
-if get_option('with-website')
+if build_website
     foreach page : manual_pages
         install_data(page + '.md', install_dir: docs_install_path + '/manual/ja')
     endforeach

@@ -9,7 +9,7 @@ manfiles = [
     'nad',
 ]
 
-if have_appletalk
+if enable_appletalk
     manfiles += [
         'aecho',
         'getzones',
@@ -26,7 +26,7 @@ if have_appletalk
     )
 endif
 
-if get_option('with-testsuite')
+if build_testsuite
     manfiles += [
         'afp_lantest',
         'afp_logintest',
@@ -59,7 +59,7 @@ foreach man : manfiles
     )
 endforeach
 
-if get_option('with-website')
+if build_website
     foreach page : manfiles
         install_data(page + '.1.md', install_dir: docs_install_path + '/manual/en')
     endforeach

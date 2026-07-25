@@ -21,7 +21,7 @@ executable(
     install: false,
 )
 
-if have_fce
+if enable_fce
     executable(
         'fce_listen',
         ['fce.c'],

@@ -5,7 +5,7 @@ manfiles = [
     'extmap.conf',
 ]
 
-if have_appletalk
+if enable_appletalk
     manfiles += [
         'atalkd.conf',
         'papd.conf',
@@ -35,7 +35,7 @@ foreach man : manfiles
     )
 endforeach
 
-if get_option('with-website')
+if build_website
     foreach page : manfiles
         install_data(page + '.5.md', install_dir: docs_install_path + '/manual/en')
     endforeach

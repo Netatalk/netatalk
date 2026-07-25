@@ -10,7 +10,7 @@ if use_dbd_backend
     subdir('cnid_dbd')
 endif
 
-if have_appletalk
+if enable_appletalk
     subdir('atalkd')
     subdir('papd')
 endif

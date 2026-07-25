@@ -54,7 +54,7 @@ meson.add_install_script(
     install_tag: 'webmin',
 )
 
-if install_webmin and get_option('with-install-hooks')
+if install_webmin and install_hooks
     meson.add_install_script(
         webmin,
         webmin_tarball,

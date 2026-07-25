@@ -7,7 +7,7 @@ navlinks = '_Navlinks.md'
 if build_html_docs
     subdir('manual')
 
-    if get_option('with-docs-l10n')
+    if build_docs_l10n
         po4a = find_program('po4a', required: true)
         if po4a.found()
             run_command(
@@ -33,7 +33,7 @@ if build_dev_docs and doxygen.found()
     doxyfile_conf.set('ABS_TOP_SRCDIR', meson.project_source_root())
     doxyfile_conf.set('OUTPUT_DIR', meson.current_build_dir())
 
-    if get_option('with-doxygen-strict')
+    if strict_doxygen
         doxyfile_conf.set('WARN_AS_ERROR', 'YES')
     else
         doxyfile_conf.set('WARN_AS_ERROR', 'NO')
@@ -49,7 +49,7 @@ if build_dev_docs and doxygen.found()
         strip_directory: false,
     )
 
-    if get_option('with-website')
+    if build_website
         install_subdir(
             meson.current_build_dir() / 'developer',
             install_dir: docs_install_path / 'public',

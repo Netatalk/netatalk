@@ -47,6 +47,58 @@ endif
 uname = find_program('uname', required: false)
 uname_stdout = run_command(uname, '-a', check: false).stdout().strip()
 
+#################
+# Build options #
+#################
+
+enable_acls = get_option('with-acls')
+enable_appletalk = get_option('with-appletalk')
+enable_cracklib = get_option('with-cracklib')
+enable_cups = get_option('with-cups')
+enable_dbd_backend = 'dbd' in get_option('with-cnid-backends')
+enable_debug = get_option('with-debug')
+enable_debugging = get_option('with-debugging')
+enable_dtrace = get_option('with-dtrace')
+enable_fce = get_option('with-fce')
+enable_gssapi = get_option('with-gssapi')
+enable_iconv = get_option('with-libiconv')
+enable_kerberos = get_option('with-kerberos')
+enable_krb5_uam = get_option('with-krbV-uam')
+enable_ldap = get_option('with-ldap')
+enable_ldsoconf = get_option('with-ldsoconf')
+enable_mysql_backend = 'mysql' in get_option('with-cnid-backends')
+enable_pam = get_option('with-pam')
+enable_quota = get_option('with-quota')
+enable_rpath = get_option('with-rpath')
+enable_sendfile = get_option('with-sendfile')
+enable_spotlight = get_option('with-spotlight')
+enable_spotlight_cnid = 'cnid' in get_option('with-spotlight-backends')
+enable_spotlight_localsearch = 'localsearch' in get_option('with-spotlight-backends')
+enable_spotlight_xapian = 'xapian' in get_option('with-spotlight-backends')
+enable_sqlite_backend = 'sqlite' in get_option('with-cnid-backends')
+enable_stuffit = get_option('with-stuffit')
+enable_tcpwrap = get_option('with-tcp-wrappers')
+enable_zeroconf = get_option('with-zeroconf')
+
+build_afpd_tests = get_option('with-tests')
+build_docs_l10n = get_option('with-docs-l10n')
+build_docs_only = get_option('with-docs-only')
+build_fuzzing = get_option('with-fuzzing')
+build_testsuite = get_option('with-testsuite')
+build_testsuite_uams = get_option('with-testsuite-uams')
+build_webmin = get_option('with-webmin')
+build_website = get_option('with-website')
+
+create_statedirs = get_option('with-statedir-creation')
+install_cups_pap_backend = get_option('with-cups-pap-backend')
+install_hooks = get_option('with-install-hooks')
+install_init_hooks = get_option('with-init-hooks')
+overwrite_config = get_option('with-overwrite')
+regenerate_unicode_data = get_option('with-unicode-data')
+strict_doxygen = get_option('with-doxygen-strict')
+use_homebrew = get_option('with-homebrew')
+use_subprojects = get_option('with-subprojects')
+
 #########
 # Paths #
 #########
@@ -92,10 +144,9 @@ if get_option('with-docs-install-path') != ''
     docs_install_path = get_option('with-docs-install-path')
 endif
 
-with_docs_only = get_option('with-docs-only')
 docs_options = get_option('with-docs')
 
-if with_docs_only and docs_options == []
+if build_docs_only and docs_options == []
     error('with-docs-only requires at least one documentation type in with-docs')
 endif
 
@@ -139,7 +190,7 @@ if 'readmes' in docs_options
         'SECURITY',
     ]
 
-    if get_option('with-website') and perl.found()
+    if build_website and perl.found()
         make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: true)
         run_command(
             make_compile_doc,
@@ -153,7 +204,7 @@ if 'readmes' in docs_options
     endif
 
     foreach file : readmes_md
-        if get_option('with-website')
+        if build_website
             install_data(file + '.md', install_dir: docs_install_path / 'manual')
         else
             if pandoc.found()
@@ -224,9 +275,8 @@ if 'developer' in docs_options
     endif
 endif
 
-if with_docs_only
-    use_dbd_backend = 'dbd' in get_option('with-cnid-backends')
-    have_appletalk = get_option('with-appletalk')
+if build_docs_only
+    build_dbd_docs = enable_dbd_backend
 
     if docs_options != []
         subdir('doc')
@@ -296,7 +346,7 @@ add_global_arguments(netatalk_c_flags, language: 'c')
 
 netatalk_common_link_args = []
 
-if 'xapian' in get_option('with-spotlight-backends')
+if enable_spotlight_xapian
     cpp_found = add_languages('cpp', native: false, required: false)
     if cpp_found
         add_global_arguments(netatalk_common_flags, language: 'cpp')
@@ -341,7 +391,7 @@ endif
 # note: the brew app is not visible from within the brew build wrapper iteslf,
 # so rather than checking for brew we apply a blanket prefix
 brew_prefix = ''
-if get_option('with-homebrew') == true
+if use_homebrew
     if host_os == 'darwin'
         if cpu == 'aarch64' and fs.is_dir('/opt/homebrew')
             brew_prefix = '/opt/homebrew'
@@ -598,7 +648,7 @@ endif
 
 rpath_libdir = ''
 
-if host_os == 'sunos' or host_os == 'netbsd' or get_option('with-rpath')
+if host_os == 'sunos' or host_os == 'netbsd' or enable_rpath
     rpath_libdir = libdir
 endif
 
@@ -616,7 +666,7 @@ use_dbd_backend = false
 have_bdb = false
 grep = find_program('grep', required: false)
 
-if 'dbd' in get_option('with-cnid-backends')
+if enable_dbd_backend
     bdb_path = get_option('with-bdb-path')
     bdb_include_path_override = get_option('with-bdb-include-path')
     bdb_req_version = get_option('with-bdb-version')
@@ -796,7 +846,7 @@ mariadb = dependency('libmariadb', required: false)
 
 use_mysql_backend = false
 
-if 'mysql' in get_option('with-cnid-backends')
+if enable_mysql_backend
     if mysqlclient.found()
         mysql_deps = mysqlclient
     else
@@ -828,7 +878,7 @@ sqlite_deps = dependency('sqlite3', required: false)
 
 use_sqlite_backend = false
 
-if 'sqlite' in get_option('with-cnid-backends') and sqlite_deps.found()
+if enable_sqlite_backend and sqlite_deps.found()
     use_sqlite_backend = true
     if cnid_backends != ''
         cnid_backends += ' | '
@@ -876,7 +926,7 @@ has_bgets = cc.compiles(bgets_test_code, name: 'bgets defined in standard C libr
 cdata.set('HAVE_BGETS', has_bgets)
 bstring = dependency('bstring', required: false)
 
-if not bstring.found() or get_option('with-subprojects')
+if not bstring.found() or use_subprojects
     bstring_proj = subproject('bstring')
     bstring = bstring_proj.get_variable('bstring_dep')
 endif
@@ -1058,8 +1108,6 @@ endif
 # Check whether Kerberos V UAM should be compiled
 #
 
-enable_krb5_uam = get_option('with-krbV-uam')
-
 if not enable_krb5_uam
     have_krb5_uam = false
     have_gssapi = false
@@ -1069,7 +1117,6 @@ else
     # Check for GSSAPI
     #
 
-    enable_gssapi = get_option('with-gssapi')
     gssapi_path = get_option('with-gssapi-path')
 
     gss_libs = []
@@ -1129,7 +1176,6 @@ else
     # Check for Kerberos V
     #
 
-    enable_kerberos = get_option('with-kerberos')
     kerberos_path = get_option('with-kerberos-path')
 
     kerberos_includes = []
@@ -1213,8 +1259,6 @@ endif
 # Check for optional Zeroconf support
 #
 
-enable_zeroconf = get_option('with-zeroconf')
-
 have_zeroconf = false
 
 zeroconf_provider = ''
@@ -1294,17 +1338,17 @@ use_spotlight_xapian = false
 spotlight_backends = ''
 dbus_daemonpath = get_option('with-dbus-daemon-path')
 
-if get_option('with-spotlight')
+if enable_spotlight
     talloc = dependency('talloc', required: false)
 
     if talloc.found()
-        if 'cnid' in get_option('with-spotlight-backends')
+        if enable_spotlight_cnid
             use_spotlight_cnid = true
             spotlight_backends = 'cnid'
             cdata.set('SPOTLIGHT_BACKEND_CNID', 1)
         endif
 
-        if 'localsearch' in get_option('with-spotlight-backends')
+        if enable_spotlight_localsearch
             if host_os == 'darwin'
                 if brew_prefix != ''
                     bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
@@ -1441,7 +1485,7 @@ if get_option('with-spotlight')
             endif
         endif
 
-        if 'xapian' in get_option('with-spotlight-backends')
+        if enable_spotlight_xapian
             xapian = dependency('xapian-core', required: false)
             libmagic = dependency('libmagic', required: false)
 
@@ -1491,7 +1535,7 @@ endif
 cups = dependency('cups', required: false, version: '>=1.6')
 spooldir = ''
 
-if get_option('with-cups') and get_option('with-appletalk')
+if enable_cups and enable_appletalk
     spooldir = localstatedir / 'spool' / 'netatalk'
 
     spooldir_override = get_option('with-spooldir')
@@ -1515,8 +1559,6 @@ endif
 #
 # Check for quota support
 #
-
-enable_quota = get_option('with-quota')
 
 prop = cc.find_library('prop', required: false)
 quota = cc.find_library('quota', required: false)
@@ -1686,8 +1728,6 @@ endif
 # Check for ACL support
 #
 
-enable_acls = get_option('with-acls')
-
 acl_deps = []
 acl_includes = []
 acl_link_args = []
@@ -1781,7 +1821,6 @@ endif
 # Check for LDAP support, for client-side ACL visibility
 #
 
-enable_ldap = get_option('with-ldap')
 ldap_path = get_option('with-ldap-path')
 
 ldap_link_args = []
@@ -1845,7 +1884,6 @@ endif
 # Check for iconv support
 #
 
-enable_iconv = get_option('with-libiconv')
 iconv_path = get_option('with-libiconv-path')
 
 iconv = dependency('iconv', required: false)
@@ -1933,7 +1971,6 @@ endif
 # Check for PAM support
 #
 
-enable_pam = get_option('with-pam')
 pam_path = get_option('with-pam-path')
 pam_conf_path = get_option('with-pam-config-path')
 
@@ -2186,7 +2223,7 @@ endif
 have_sendfile = false
 sendfile_deps = []
 
-if get_option('with-sendfile')
+if enable_sendfile
     sendfile = cc.find_library('sendfile', required: false)
     if sendfile.found()
         sendfile_deps += sendfile
@@ -2229,8 +2266,6 @@ endif
 # Check for dtrace
 #
 
-enable_dtrace = get_option('with-dtrace')
-
 dtrace = find_program('dtrace', required: false)
 libelf = cc.find_library('elf', required: false)
 dtrace_command = [
@@ -2265,9 +2300,7 @@ endif
 # Check whether to enable FCE (File Change Events)
 #
 
-have_fce = get_option('with-fce')
-
-if have_fce
+if enable_fce
     cdata.set('WITH_FCE', 1)
 endif
 
@@ -2308,7 +2341,7 @@ if 'auto' in init_style
     endif
 endif
 
-if init_cmd != '' and get_option('with-init-hooks')
+if init_cmd != '' and install_init_hooks
     init_program = find_program(init_cmd, required: not init_style_auto)
     if not init_program.found()
         warning(init_cmd + ' not found, defaulting to no init scripts')
@@ -2321,7 +2354,6 @@ endif
 # Check for cracklib support
 #
 
-enable_cracklib = get_option('with-cracklib')
 cracklib_path = get_option('with-cracklib-path')
 
 crack = cc.find_library('crack', dirs: libsearch_dirs, required: false)
@@ -2372,8 +2404,6 @@ endif
 # Check for TCP wrappers support
 #
 
-enable_tcpwrap = get_option('with-tcp-wrappers')
-
 wrap = cc.find_library('wrap', required: false)
 
 if not enable_tcpwrap
@@ -2409,21 +2439,14 @@ endif
 # Check whether to enable DDP (AppleTalk)
 #
 
-enable_appletalk = get_option('with-appletalk')
-
 if not enable_appletalk
-    have_appletalk = false
     cdata.set('NO_DDP', 1)
-else
-    have_appletalk = true
 endif
 
 #
 # Check whether to install the Netatalk Webmin Module
 #
 
-with_webmin = get_option('with-webmin')
-have_webmin = false
 install_webmin = false
 
 webmin_dirs = [
@@ -2432,10 +2455,9 @@ webmin_dirs = [
     '/opt/webmin',
 ]
 
-if with_webmin
+if build_webmin
     tar = find_program('tar', required: true)
     webmin_install_script = 'install-module.pl'
-    have_webmin = true
     foreach dir : webmin_dirs
         if fs.exists(dir / webmin_install_script)
             webmin = find_program(dir / webmin_install_script, required: true)
@@ -2503,7 +2525,7 @@ endif
 # Check whether to enable debug code
 #
 
-if get_option('with-debug')
+if enable_debug
     cdata.set('DEBUG', 1)
 endif
 
@@ -2511,7 +2533,7 @@ endif
 # Check whether to enable debugging
 #
 
-if get_option('with-debugging')
+if enable_debugging
     cdata.set('DEBUGGING', 1)
 endif
 
@@ -2544,7 +2566,7 @@ if perl.found()
     cdata.set('PERL', perl.full_path())
 endif
 
-if have_webmin
+if build_webmin
     init_netatalk_start = ''
     init_netatalk_stop = ''
     init_netatalk_restart = ''
@@ -2677,8 +2699,6 @@ configure_file(
 #########################
 
 root_includes = include_directories(include_dirs)
-have_stuffit = false
-
 subdir('include')
 subdir('libatalk')
 subdir('bin')
@@ -2688,6 +2708,7 @@ subdir('contrib')
 subdir('sys')
 
 if docs_options != []
+    build_dbd_docs = use_dbd_backend
     subdir('doc')
 endif
 
@@ -2696,7 +2717,7 @@ if 'none' not in init_style
 endif
 
 testsuite_libafpclient = disabler()
-if get_option('with-tests') or get_option('with-testsuite') or get_option('with-fuzzing')
+if build_afpd_tests or build_testsuite or build_fuzzing
     subdir('test')
 endif
 
@@ -2766,10 +2787,10 @@ summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')
 
 summary_info = {
     '  ACL': have_acls,
-    '  AppleTalk': have_appletalk,
+    '  AppleTalk': enable_appletalk,
     '  Cracklib': have_cracklib,
     '  dtrace probes': have_dtrace,
-    '  FCE': have_fce,
+    '  FCE': enable_fce,
     '  GSSAPI': have_gssapi,
     '  Iconv': have_iconv,
     '  Kerberos': have_kerberos,
@@ -2820,17 +2841,17 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  Documentation:')
 
 summary_info = {
-    '  afpd': get_option('with-tests'),
-    '  fuzzing': get_option('with-fuzzing'),
-    '  testsuite': get_option('with-testsuite'),
+    '  afpd': build_afpd_tests,
+    '  fuzzing': build_fuzzing,
+    '  testsuite': build_testsuite,
     '  UAM testsuite': testsuite_libafpclient.found(),
 }
 summary(summary_info, bool_yn: true, section: '  Tests:')
 
 summary_info = {
     '  CUPS printing in papd': have_cups,
-    '  PAP backend for CUPS': get_option('with-cups-pap-backend'),
-    '  StuffIt support in nad': have_stuffit,
-    '  Webmin module': have_webmin,
+    '  PAP backend for CUPS': install_cups_pap_backend,
+    '  StuffIt support in nad': enable_stuffit,
+    '  Webmin module': build_webmin,
 }
 summary(summary_info, bool_yn: true, section: '  Extras:')

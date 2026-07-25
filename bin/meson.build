@@ -3,7 +3,7 @@ subdir('dbd')
 subdir('misc')
 subdir('nad')
 
-if have_appletalk
+if enable_appletalk
     subdir('aecho')
     subdir('getzones')
     subdir('nbp')

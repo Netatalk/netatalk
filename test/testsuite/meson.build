@@ -4,9 +4,7 @@ if threads.found()
     afptest_external_deps += threads
 endif
 
-enable_testsuite_uams = get_option('with-testsuite-uams')
-
-if enable_testsuite_uams
+if build_testsuite_uams
     testsuite_libafpclient = dependency('libafpclient', required: false)
 endif
 
@@ -93,7 +91,7 @@ login_test_sources = [
 login_test_deps = []
 login_test_c_args = []
 
-if enable_testsuite_uams
+if build_testsuite_uams
     if testsuite_libafpclient.found()
         login_test_sources += [
             'logintest_uam.c',
