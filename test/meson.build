@@ -1,4 +1,4 @@
-if get_option('with-tests')
+if build_afpd_tests
     if use_sqlite_backend
         subdir('afpd')
     else
@@ -8,11 +8,11 @@ if get_option('with-tests')
     endif
 endif
 
-if get_option('with-testsuite')
+if build_testsuite
     subdir('testsuite')
 endif
 
-if not get_option('with-tests') and get_option('with-fuzzing')
+if not build_afpd_tests and build_fuzzing
     if use_sqlite_backend
         subdir('afpd')
     endif

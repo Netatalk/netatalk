@@ -15,7 +15,7 @@ manual_pages = [
     'Upgrading',
 ]
 
-if get_option('with-website')
+if build_website
     manual_pages += [
         '_Sidebar',
     ]

@@ -1,10 +1,10 @@
 subdir('bin_utils')
 
-if have_fce
+if enable_fce
     subdir('scripts')
 endif
 
-if have_appletalk
+if enable_appletalk
     subdir('a2boot')
     subdir('timelord')
     if host_os in ['freebsd', 'linux', 'netbsd', 'openbsd']
@@ -12,6 +12,6 @@ if have_appletalk
     endif
 endif
 
-if have_webmin
+if build_webmin
     subdir('webmin_module')
 endif

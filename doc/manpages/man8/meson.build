@@ -3,20 +3,20 @@ manfiles = [
     'netatalk',
 ]
 
-if have_fce
+if enable_fce
     manfiles += [
         'fce_ev_script',
     ]
 endif
 
-if use_dbd_backend
+if build_dbd_docs
     manfiles += [
         'cnid_dbd',
         'cnid_metad',
     ]
 endif
 
-if have_appletalk
+if enable_appletalk
     manfiles += [
         'a2boot',
         'atalkd',
@@ -48,7 +48,7 @@ foreach man : manfiles
     )
 endforeach
 
-if get_option('with-website')
+if build_website
     foreach page : manfiles
         install_data(page + '.8.md', install_dir: docs_install_path + '/manual/en')
     endforeach

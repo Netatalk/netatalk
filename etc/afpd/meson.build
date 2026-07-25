@@ -36,7 +36,7 @@ afpd_common_internal_deps = []
 afpd_common_link_args = []
 afpd_common_includes = [root_includes]
 
-if have_fce
+if enable_fce
     afpd_common_sources += files(
         'fce_api.c',
         'fce_util.c',
@@ -97,7 +97,7 @@ if threads.found()
     afpd_common_external_deps += threads
 endif
 
-if have_appletalk
+if enable_appletalk
     afpd_common_sources += files('afp_asp.c')
 endif
 

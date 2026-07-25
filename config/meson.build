@@ -4,7 +4,7 @@ afp_conf = configure_file(
     configuration: cdata,
 )
 
-if (fs.exists(pkgconfdir / 'afp.conf') and not get_option('with-overwrite'))
+if fs.exists(pkgconfdir / 'afp.conf') and not overwrite_config
     message('will not replace existing', pkgconfdir / 'afp.conf')
 else
     install_data(afp_conf, install_dir: pkgconfdir, install_tag: 'config')
@@ -19,10 +19,7 @@ if have_spotlight and use_spotlight_localsearch
         configuration: cdata,
     )
 
-    if (
-        fs.exists(pkgconfdir / 'dbus-session.conf')
-        and not get_option('with-overwrite')
-    )
+    if (fs.exists(pkgconfdir / 'dbus-session.conf') and not overwrite_config)
         message('will not replace existing', pkgconfdir / 'dbus-session.conf')
     else
         install_data(dbus_session_conf, install_dir: pkgconfdir, install_tag: 'config')
@@ -31,7 +28,7 @@ endif
 
 static_conf_files = ['extmap.conf']
 
-if have_appletalk
+if enable_appletalk
     static_conf_files += ['atalkd.conf', 'macipgw.conf', 'papd.conf']
 endif
 
@@ -45,7 +42,7 @@ else
     cups_libdir = '/usr/lib'
 endif
 
-if have_appletalk and have_cups and get_option('with-cups-pap-backend')
+if enable_appletalk and have_cups and install_cups_pap_backend
     configure_file(
         input: 'pap.in',
         output: 'pap',
@@ -57,14 +54,14 @@ if have_appletalk and have_cups and get_option('with-cups-pap-backend')
 endif
 
 foreach file : static_conf_files
-    if (fs.exists(pkgconfdir / file) and not get_option('with-overwrite'))
+    if fs.exists(pkgconfdir / file) and not overwrite_config
         message('will not replace existing', pkgconfdir / file)
     else
         install_data(file, install_dir: pkgconfdir, install_tag: 'config')
     endif
 endforeach
 
-if (fs.exists('/etc/ld.so.conf.d') and get_option('with-ldsoconf'))
+if fs.exists('/etc/ld.so.conf.d') and enable_ldsoconf
     configure_file(
         input: 'libatalk.conf.in',
         output: 'libatalk.conf',
@@ -75,7 +72,7 @@ if (fs.exists('/etc/ld.so.conf.d') and get_option('with-ldsoconf'))
     )
 endif
 
-if get_option('with-statedir-creation')
+if create_statedirs
     install_data(
         'README',
         install_dir: localstatedir / 'netatalk/CNID',

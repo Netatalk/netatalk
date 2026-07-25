@@ -16,7 +16,7 @@ if 'debian-sysv' in init_style
     endif
     init_dirs += init_dir
     service_data = ['netatalk']
-    if have_appletalk
+    if enable_appletalk
         service_data += [
             'a2boot',
             'atalkd',
@@ -36,7 +36,7 @@ if 'debian-sysv' in init_style
             install_tag: 'runtime',
         )
     endforeach
-    if get_option('with-init-hooks')
+    if install_init_hooks
         foreach service : service_data
             meson.add_install_script(
                 find_program('update-rc.d'),
@@ -63,7 +63,7 @@ if 'freebsd' in init_style
         install_mode: 'rwxr-xr-x',
         install_tag: 'runtime',
     )
-    if get_option('with-init-hooks')
+    if install_init_hooks
         meson.add_install_script(
             find_program('sh'),
             '/usr/local/etc/rc.d/netatalk',
@@ -96,7 +96,7 @@ if 'macos-launchd' in init_style
     )
     if (
         not fs.exists(init_dir / 'io.netatalk.daemon.plist')
-        and get_option('with-init-hooks')
+        and install_init_hooks
     )
         if fs.exists(init_dir / 'com.netatalk.daemon.plist')
             meson.add_install_script(
@@ -131,7 +131,7 @@ if 'netbsd' in init_style
     endif
     init_dirs += init_dir
     service_data = ['netatalk']
-    if have_appletalk
+    if enable_appletalk
         service_data += [
             'a2boot',
             'atalkd',
@@ -167,7 +167,7 @@ if 'openbsd' in init_style
         install_mode: 'rwxr-xr-x',
         install_tag: 'runtime',
     )
-    if get_option('with-init-hooks')
+    if install_init_hooks
         meson.add_install_script(
             find_program('rcctl'),
             '-d', 'enable',
@@ -182,7 +182,7 @@ if 'openrc' in init_style
     endif
     init_dirs += init_dir
     service_data = ['netatalk']
-    if have_appletalk
+    if enable_appletalk
         service_data += [
             'a2boot',
             'atalkd',
@@ -202,7 +202,7 @@ if 'openrc' in init_style
             install_tag: 'runtime',
         )
     endforeach
-    if get_option('with-init-hooks')
+    if install_init_hooks
         foreach service : service_data
             meson.add_install_script(
                 find_program('rc-update'),
@@ -227,7 +227,7 @@ if 'solaris' in init_style
         install_dir: init_dir,
         install_tag: 'runtime',
     )
-    if get_option('with-init-hooks')
+    if install_init_hooks
         meson.add_install_script(
             find_program('svcadm'),
             'restart',
@@ -242,7 +242,7 @@ if 'systemd' in init_style
     endif
     init_dirs += init_dir
     service_data = ['netatalk']
-    if have_appletalk
+    if enable_appletalk
         service_data += [
             'a2boot',
             'atalkd',
@@ -261,7 +261,7 @@ if 'systemd' in init_style
             install_tag: 'runtime',
         )
     endforeach
-    if get_option('with-init-hooks')
+    if install_init_hooks
         meson.add_install_script(find_program('systemctl'), 'daemon-reload')
     endif
 endif

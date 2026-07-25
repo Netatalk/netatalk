@@ -294,6 +294,38 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
 We use [Muon](https://github.com/annacrombie/muon)'s opinionated formatter - `muon fmt` -
 to format all the meson.build files as it applies the meson syntax recommendations to all files.
 
+### Boolean variable naming
+
+Meson Boolean variables should describe both what the value means and where it
+comes from. Use the following prefixes consistently:
+
+- `enable_*` for user-requested features or candidate implementations,
+  normally read directly from a `with-*` Meson option.
+- `have_*` for capabilities confirmed by platform or dependency checks.
+- `use_*` for providers, backends, or implementations actually selected for
+  the build. This may come directly from an option when no availability check
+  is required.
+- `build_*` for build modes or classes of generated artifacts, such as
+  documentation and tests.
+- `install_*` for installation actions or hooks.
+
+For other Boolean actions, use a positive verb phrase such as
+`create_statedirs`, `overwrite_config`, or `regenerate_unicode_data`. Avoid
+negated names and avoid using `with_*` for local variables; `with-*` is reserved
+for Meson option names.
+
+Example of combining user intent and platform checks to determine whether
+a feature is available:
+
+```meson
+enable_acls = get_option('with-acls')
+have_acls = enable_acls and acl_dependencies_found
+```
+
+If an enabled feature requires no platform or dependency check, use its
+`enable_*` variable directly rather than creating an equivalent `have_*`
+variable.
+
 Install muon and save the following script as 'muonfmt' in your local bin directory (chmod +x it too):
 
 ```meson

@@ -31,7 +31,7 @@ endif
 
 libatalk_deps += sendfile_deps
 
-if have_appletalk
+if enable_appletalk
     subdir('asp')
     subdir('atp')
     subdir('nbp')
@@ -62,7 +62,7 @@ libatalk = library(
     install_rpath: rpath_libdir,
 )
 
-if host_os == 'linux' and get_option('with-install-hooks')
+if host_os == 'linux' and install_hooks
     ldconfig = find_program('ldconfig', required: false)
     if ldconfig.found()
         if run_command(ldconfig, '-N', '-X', check: false).returncode() == 0

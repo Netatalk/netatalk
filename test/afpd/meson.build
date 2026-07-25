@@ -9,7 +9,7 @@ test_internal_deps = [] + afpd_common_internal_deps
 test_link_args = [] + afpd_common_link_args
 test_includes = [] + afpd_common_includes
 
-if get_option('with-tests')
+if build_afpd_tests
 
     # For dtrace probes we need to invoke dtrace on all input files, before
     # linking the final executable.
@@ -150,7 +150,7 @@ if get_option('with-tests')
 
 endif
 
-if get_option('with-fuzzing')
+if build_fuzzing
     fuzz_engine = get_option('with-fuzzing-engine')
 
     if fuzz_engine != ''

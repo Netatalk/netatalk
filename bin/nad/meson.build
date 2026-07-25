@@ -28,7 +28,7 @@ if use_mysql_backend
     nad_deps += mysqlclient
 endif
 
-if get_option('with-stuffit')
+if enable_stuffit
     nad_sources += 'nad_stuffit.c'
 
     stuffit = dependency('stuffit-ffi', required: false)
@@ -54,7 +54,6 @@ if get_option('with-stuffit')
     endif
 
     nad_deps += stuffit
-    have_stuffit = true
     nad_c_args += '-DHAVE_STUFFIT'
 endif
 

@@ -1,6 +1,6 @@
 subdir('charsets')
 
-if get_option('with-unicode-data')
+if regenerate_unicode_data
     unicode_dirs = [
         meson.current_source_dir(),
         '/usr/share/unicode',
