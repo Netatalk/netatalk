@@ -90,6 +90,8 @@ COPY meson_options.txt .
 COPY meson.build .
 RUN rm -rf build
 
+ARG EXTRA_MESON_ARGS=""
+
 RUN meson setup build \
     -Dbuildtype=debugoptimized \
     -Dwith-appletalk=true \
@@ -106,6 +108,7 @@ RUN meson setup build \
     -Dwith-tcp-wrappers=false \
     -Dwith-tests=true \
     -Dwith-testsuite=true \
+    $EXTRA_MESON_ARGS \
 &&  meson compile -C build
 
 RUN meson test -C build --print-errorlogs
@@ -119,9 +122,12 @@ ENV RUN_DEPS=$RUN_DEPS
 
 COPY --from=build /staging/ /
 
+ARG EXTRA_RUN_DEPS=""
+
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-&&  apt-get install --yes --no-install-recommends $RUN_DEPS
+&&  apt-get install --yes --no-install-recommends $RUN_DEPS $EXTRA_RUN_DEPS \
+&&  rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /netatalk-code/distrib/docker/config_watch.sh /config_watch.sh
 COPY /distrib/docker/env_setup_netatalk.sh /env_setup.sh

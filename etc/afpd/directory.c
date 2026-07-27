@@ -105,8 +105,9 @@ struct path Cur_Path = {
  * This queue is accessed by both the main thread and the idle worker thread,
  * but NEVER concurrently. Temporal separation is enforced by:
  *   - Main thread: accesses during AFP command processing (worker dormant)
- *   - Worker thread: accesses during idle periods (main thread in poll())
- *   - idle_worker_stop() spin-wait guarantees the transition
+ *   - Worker thread: accesses only within its iw_is_working==1 window,
+ *     entered only under an iw_can_work grant (main blocked in poll())
+ *   - iw_revoke()'s wait-for-release guarantees the transition
  *
  * The queue implementation (queue.c) is NOT thread-safe. Do NOT add
  * concurrent access without adding synchronization.
@@ -1550,6 +1551,7 @@ int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
     /* Queue pruned entry for memory deallocation */
     enqueue(invalid_dircache_entries, dir); /* 3 */
+    iw_note_work();
 
     /* Only null out curdir if we're removing a directory */
     if (curdir == dir && !(dir->d_flags & DIRF_ISFILE)) { /* 4 */

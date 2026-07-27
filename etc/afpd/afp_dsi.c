@@ -159,12 +159,12 @@ static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->dsi;
     sigset_t sigs;
-    /* Sets is_idle=0 — no spin. Async-signal-safe (single atomic store only).
-     * Worker stops at next is_idle check. No spin needed because all
-     * afp_dsi_close() paths end in exit() which terminates the worker. */
-    idle_worker_stop_signal_safe();
+    /* Revokes iw_can_work — no wait. Async-signal-safe (single atomic
+     * store). All afp_dsi_close() paths run post-revoke in main-loop
+     * context and end in exit(); the store is belt-and-braces. */
+    iw_revoke_signal_safe();
     /* Log idle worker stats AFTER stop but BEFORE log_dircache_stat() */
-    idle_worker_log_stats();
+    iw_log_stats();
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
 
@@ -173,9 +173,9 @@ static void afp_dsi_close(AFPObj *obj)
         obj->hint_fd = -1;
     }
 
-    /* we may have been called from a signal handler caught when afpd was running
-     * as uid 0, that's the wrong user for volume's prexec_close scripts if any,
-     * restore our login user
+    /* euid may not be the login user if an error path exited mid-command
+     * (e.g. after become_root()); volume prexec_close scripts need the
+     * login user, restore it
      */
     if (geteuid() != obj->uid) {
         if (seteuid(obj->uid) < 0) {
@@ -562,7 +562,7 @@ static int process_deferred_signals(AFPObj *obj)
     /* Primary reconnect (SIGURG) */
     if (transfer_pending) {
         transfer_pending = 0;
-        idle_worker_stop();
+        iw_revoke();
         handle_transfer_session(obj);
         return 1;
     }
@@ -722,7 +722,7 @@ void afp_over_dsi(AFPObj *obj)
     }
 
     /* Start idle worker thread — failure is non-fatal (synchronous fallback) */
-    (void)idle_worker_init();
+    (void)iw_init();
 
     /* set TCP snd/rcv buf */
     if (obj->options.tcp_rcvbuf) {
@@ -812,14 +812,15 @@ void afp_over_dsi(AFPObj *obj)
             pfds[nfds].fd = sigpipe_fd[0];
             pfds[nfds].events = POLLIN;
             nfds++;
-            /* Signal idle worker to start — we are about to block in poll().
-             * idle_worker_start() is async-signal-safe (single atomic store) */
-            idle_worker_start();
+            /* Grant the idle worker the poll window — only if work is
+             * pending (iw_has_work); otherwise no grant and the paired
+             * iw_revoke() is free. Main-loop context only. */
+            iw_grant();
             /* [D] BLOCK IN POLL */
             int ret = poll(pfds, nfds, -1);
-            /* WARNING: idle_worker_stop() must be called before ANY
+            /* WARNING: iw_revoke() must be called before ANY
              * break/continue after this point */
-            idle_worker_stop();
+            iw_revoke();
 
             /* [E] poll error handling */
             if (ret < 0) {
@@ -889,7 +890,7 @@ void afp_over_dsi(AFPObj *obj)
             /* A deferred SIGURG may have arrived during dsi_stream_receive */
             if (transfer_pending) {
                 transfer_pending = 0;
-                idle_worker_stop();
+                iw_revoke();
                 handle_transfer_session(obj);
                 continue;
             }
@@ -898,14 +899,14 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi->flags & DSI_AFP_LOGGED_OUT) {
                 LOG(log_note, logtype_afpd,
                     "afp_over_dsi: client logged out, terminating DSI session");
-                idle_worker_shutdown();
+                iw_shutdown();
                 afp_dsi_close(obj);
                 exit(0);
             }
 
             if (dsi->flags & DSI_RECONINPROG) {
                 LOG(log_note, logtype_afpd, "afp_over_dsi: failed reconnect");
-                idle_worker_shutdown();
+                iw_shutdown();
                 afp_dsi_close(obj);
                 exit(0);
             }
@@ -975,7 +976,7 @@ void afp_over_dsi(AFPObj *obj)
         switch (cmd) {
         case DSIFUNC_CLOSE:
             LOG(log_debug, logtype_afpd, "DSI: close session request");
-            idle_worker_shutdown();
+            iw_shutdown();
             afp_dsi_close(obj);
             LOG(log_note, logtype_afpd, "done");
             exit(0);
@@ -1020,7 +1021,7 @@ void afp_over_dsi(AFPObj *obj)
                     LOG(log_maxdebug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                         AfpNum2name(function), AfpErr2name(err));
 
-                    if (!idle_worker_is_active()) {
+                    if (!iw_is_active()) {
                         dir_free_invalid_q();
                     }
 

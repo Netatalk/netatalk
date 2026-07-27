@@ -160,6 +160,79 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
 
+  build-container-tsan:
+    name: Build TSAN testsuite container
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}-testsuite-tsan" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=${{ github.sha }}
+      - name: Build and push container image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: distrib/docker/testsuite_deb.Dockerfile
+          push: true
+          build-args: |
+            EXTRA_MESON_ARGS=-Db_sanitize=thread
+            EXTRA_RUN_DEPS=libtsan2
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+
+  tsan-spectest:
+    name: Spectest + lantest under ThreadSanitizer
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: build-container-tsan
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+    steps:
+      - name: Lower ASLR entropy for TSAN shadow-memory compatibility
+        run: sudo sysctl vm.mmap_rnd_bits=28
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}-testsuite-tsan" >> ${GITHUB_ENV}
+      - name: Run spectest under TSAN
+        run: |
+          docker run --privileged --rm \
+              -e AFP_USER=atalk1 -e AFP_USER2=atalk2 \
+              -e AFP_PASS="$CONT_PASSWD" -e AFP_PASS2="$CONT_PASSWD" \
+              -e AFP_GROUP=afpusers \
+              -e SHARE_NAME=test1 -e SHARE_NAME2=test2 \
+              -e INSECURE_AUTH=1 -e DISABLE_TIMEMACHINE=1 \
+              -e TESTSUITE=spectest -e AFP_VERSION=7 \
+              -e AFP_CNID_BACKEND=sqlite \
+              -e TSAN_OPTIONS="halt_on_error=1 abort_on_error=1" \
+              ${{ env.REGISTRY }}/${IMAGE_NAME}:${{ github.sha }}
+      - name: Run lantest under TSAN
+        run: |
+          docker run --privileged --rm \
+              -e AFP_USER=atalk1 -e AFP_PASS="$CONT_PASSWD" \
+              -e AFP_GROUP=afpusers -e SHARE_NAME=test1 \
+              -e INSECURE_AUTH=1 -e DISABLE_TIMEMACHINE=1 \
+              -e TESTSUITE=lan -e AFP_VERSION=7 \
+              -e AFP_TEST_ITERATIONS=2 \
+              -e AFP_CNID_BACKEND=sqlite \
+              -e TSAN_OPTIONS="halt_on_error=1 abort_on_error=1" \
+              ${{ env.REGISTRY }}/${IMAGE_NAME}:${{ github.sha }}
+
   build-container-debug:
     name: Build debug profiling container
     runs-on: ubuntu-latest

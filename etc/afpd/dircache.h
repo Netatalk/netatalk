@@ -28,9 +28,7 @@
 #define MAX_DIRCACHE_SIZE 1048576          /* 1M maximum (high-memory servers) */
 #define DIRCACHE_FREE_QUANTUM 256
 
-/* Max dircache entries removed per hash chain per idle worker iteration.
- * 16 is compromise between latency (~1μs per dir_free × 16 = ~16μs per batch)
- * and is_idle polling frequency (instant yield to AFP commands) */
+/* Batch collect bound per chain scan; iw_can_work re-checked per removal */
 #define DEFERRED_CHAIN_BATCH 16
 
 /* flags for dircache_remove */

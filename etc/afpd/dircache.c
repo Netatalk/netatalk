@@ -127,20 +127,65 @@ static inline hnode_t *hash_chain_head(hash_t *hash, hashcount_t chain)
 }
 
 /* Deferred cleanup queue — accessed by idle worker.
- * THREADING: main thread enqueues (tail/count++), worker dequeues (head/count--).
- * Never concurrent — temporal separation enforced by idle_worker_start/stop.
- * Plain int is correct; seq_cst fences on is_idle/bg_running ensure visibility. */
+ * THREADING: main thread enqueues at the tail; the worker consumes LIFO
+ * from the tail and compacts dead slots from both ends.
+ * Never concurrent — temporal separation enforced by iw_grant/iw_revoke.
+ * Plain int is correct; seq_cst fences on iw_can_work/iw_is_working ensure
+ * visibility. */
 struct deferred_cleanup {
     char *parent_path;
     size_t parent_len;
     uint16_t v_vid;             /* Volume ID via getvolbyvid() */
     hashcount_t chain_idx;      /* resumable scan progress */
+    unsigned int seq;           /* enqueue order, for covered-cancellation */
+    unsigned int depth;         /* number of '/' in parent_path */
 };
+
+/* Monotonic enqueue counter (main thread writes, worker reads — never
+ * concurrent per the iw_can_work/iw_is_working temporal contract) */
+static unsigned int deferred_seq = 0;
+
+/* Sequence number the currently-scanning job started at; memoized on
+ * completion so jobs enqueued before the scan can be dropped when popped */
+static unsigned int deferred_scan_started_seq = 0;
+
+/* Ring index of the job currently being scanned, -1 = none */
+static int deferred_active = -1;
+
+/* Depth watermarks over jobs enqueued since the ring last drained
+ * (killed jobs do not narrow them — errs toward skipping a batch, never
+ * toward a wrong one). Equal watermarks prove no such job can be a
+ * strict '/'-boundary descendant of another (a descendant has strictly
+ * more slashes), enabling the merged flat batch scan. */
+static unsigned int deferred_depth_min = 0;
+static unsigned int deferred_depth_max = 0;
+
+/* Covering-scan memo: byte path of the most recently completed single-job
+ * scan and the seq that scan started at. Jobs popped later that were
+ * enqueued before that scan and sit at or strictly below the memoized
+ * path are already purged — dropped in O(1) without their own scan.
+ * All comparisons are raw byte memcmp with stored lengths. */
+static char *deferred_cover_path = NULL;
+static size_t deferred_cover_len = 0;
+static uint16_t deferred_cover_vid = 0;
+static unsigned int deferred_cover_seq = 0;
+
+/* Flat batch scan: when every pending job sits at one depth, a single
+ * full-table scan serves them all — each entry's unique candidate
+ * ancestor is its path truncated at the (depth+1)-th slash, matched
+ * against the sorted member paths. */
+static int deferred_batch_active = 0;
+static unsigned int deferred_batch_seq = 0;
+static unsigned int deferred_batch_depth = 0;
+static hashcount_t deferred_batch_chain_idx = 0;
+static int deferred_batch_n = 0;
 
 /* Max deferred/queued entries before fallback to synchronous cleaning */
 #define MAX_DEFERRED_CLEANUPS 5120
 
 static struct deferred_cleanup deferred_queue[MAX_DEFERRED_CLEANUPS];
+/* Sorted (vid, path-bytes) member index for the flat batch scan */
+static int deferred_batch_idx[MAX_DEFERRED_CLEANUPS];
 static int deferred_head = 0;
 static int deferred_tail = 0;
 static int deferred_count = 0;
@@ -171,6 +216,8 @@ static struct dircache_stat {
     unsigned long long evicted;
     /*! entries that failed when used */
     unsigned long long invalid_on_use;
+    /*! deferred jobs cancelled as covered by a completed ancestor scan */
+    unsigned long long covered_cancelled;
 } dircache_stat;
 
 /* Tier 2: Resource Fork data cache statistics.
@@ -2077,7 +2124,7 @@ void log_dircache_stat(void)
             "lookups: %llu, hits: %llu (%.1f%%), ghost_hits: %llu (%.1f%%), total_hits: (%.1f%%), misses: %llu (%.1f%%), "
             "validations: %llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, "
-            "evicted: %llu, validation_freq: %u",
+            "evicted: %llu, covered_cancelled: %llu, validation_freq: %u",
             username,
             total_cached,
             total_ghosts,
@@ -2098,6 +2145,7 @@ void log_dircache_stat(void)
             dircache_stat.expunged,
             dircache_stat.invalid_on_use,
             total_arc_evictions,
+            dircache_stat.covered_cancelled,
             dircache_validation_freq);
         /* ARC-specific details: ghost hits breakdown and learning metrics */
         LOG(log_info, logtype_afpd,
@@ -2148,7 +2196,7 @@ void log_dircache_stat(void)
             "entries: %lu, max_entries: %lu (%lu KB), config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
             "validations: %llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, evicted: %llu, "
-            "validation_freq: %u",
+            "covered_cancelled: %llu, validation_freq: %u",
             username,
             queue_count,
             queue_count_max,
@@ -2165,6 +2213,7 @@ void log_dircache_stat(void)
             dircache_stat.expunged,
             dircache_stat.invalid_on_use,
             dircache_stat.evicted,
+            dircache_stat.covered_cancelled,
             dircache_validation_freq);
     }
 
@@ -2703,8 +2752,8 @@ void dircache_remove_children_defer(const struct vol *vol, struct dir *dir)
     }
 
     /* Fallback if worker not running or queue full */
-    if (!idle_worker_is_active() || deferred_count >= MAX_DEFERRED_CLEANUPS) {
-        if (idle_worker_is_active() && deferred_count >= MAX_DEFERRED_CLEANUPS) {
+    if (!iw_is_active() || deferred_count >= MAX_DEFERRED_CLEANUPS) {
+        if (iw_is_active() && deferred_count >= MAX_DEFERRED_CLEANUPS) {
             LOG(log_warning, logtype_afpd,
                 "dircache_remove_children_defer: deferred queue full (%d/%d), "
                 "falling back to synchronous removal for \"%s\"",
@@ -2718,31 +2767,87 @@ void dircache_remove_children_defer(const struct vol *vol, struct dir *dir)
 
     struct deferred_cleanup *dc = &deferred_queue[deferred_tail];
 
-    dc->parent_path = strdup(cfrombstr(dir->d_fullpath));
+    /* Byte-exact copy: length from the bstring, no NUL scan, raw memcmp
+     * identity everywhere downstream */
+    size_t plen = (size_t)blength(dir->d_fullpath);
+    const char *pdata = bdata(dir->d_fullpath);
+
+    if (!pdata) {
+        dircache_remove_children(vol, dir);
+        return;
+    }
+
+    dc->parent_path = malloc(plen + 1);
 
     if (!dc->parent_path) {
         dircache_remove_children(vol, dir);
         return;
     }
 
-    dc->parent_len = strnlen(dc->parent_path, MAXPATHLEN);
+    memcpy(dc->parent_path, pdata, plen);
+    dc->parent_path[plen] = '\0';
+    dc->parent_len = plen;
     dc->v_vid = vol->v_vid;
     dc->chain_idx = 0;
+    dc->seq = deferred_seq++;
+    dc->depth = 0;
+
+    for (size_t bi = 0; bi < plen; bi++) {
+        if (dc->parent_path[bi] == '/') {
+            dc->depth++;
+        }
+    }
+
+    if (deferred_count == 0) {
+        deferred_depth_min = dc->depth;
+        deferred_depth_max = dc->depth;
+    } else {
+        if (dc->depth < deferred_depth_min) {
+            deferred_depth_min = dc->depth;
+        }
+
+        if (dc->depth > deferred_depth_max) {
+            deferred_depth_max = dc->depth;
+        }
+    }
+
     deferred_tail = (deferred_tail + 1) % MAX_DEFERRED_CLEANUPS;
     deferred_count++;
+    iw_note_work();
     LOG(log_debug, logtype_afpd,
         "dircache_remove_children_defer: queued \"%s\" (%d pending)",
         cfrombstr(dir->d_fullpath), deferred_count);
 }
+
+static void deferred_job_kill(int idx);
+static void deferred_compact_head(void);
 
 /*!
  * @brief Process deferred cleanup entries for a closing volume synchronously.
  *
  * @pre: Worker is dormant (called during AFP command processing).
  * Called from afp_closevol() before volume structures are freed.
+ * Drops the preselected active-job cursor if it points at this volume.
  */
 void dircache_flush_deferred_for_vol(uint16_t vid)
 {
+    if (deferred_active >= 0 &&
+            deferred_queue[deferred_active].v_vid == vid) {
+        deferred_active = -1;
+    }
+
+    /* Flush kills slots, invalidating an in-flight batch's member index
+     * and the covering memo for this volume — drop both; kills are
+     * idempotent so a restarted batch is correct */
+    deferred_batch_active = 0;
+    deferred_batch_n = 0;
+
+    if (deferred_cover_path && deferred_cover_vid == vid) {
+        free(deferred_cover_path);
+        deferred_cover_path = NULL;
+        deferred_cover_len = 0;
+    }
+
     int remaining = deferred_count;
 
     for (int i = 0; i < remaining; i++) {
@@ -2780,29 +2885,14 @@ void dircache_flush_deferred_for_vol(uint16_t vid)
                         }
                     }
                 }
-
-                free(deferred_queue[idx].parent_path);
             }
 
-            deferred_queue[idx].parent_path = NULL;
-            deferred_queue[idx].v_vid = 0;
+            deferred_job_kill(idx);
         }
     }
 
     /* Compact: advance head past any dead entries */
-    while (deferred_count > 0) {
-        struct deferred_cleanup *dc = &deferred_queue[deferred_head];
-
-        if (dc->v_vid != 0 && dc->parent_path != NULL) {
-            break;
-        }
-
-        free(dc->parent_path);  /* safe if NULL */
-        dc->parent_path = NULL;
-        dc->v_vid = 0;
-        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
-        deferred_count--;
-    }
+    deferred_compact_head();
 }
 
 /* Called by idle worker — returns true if deferred work exists */
@@ -2812,11 +2902,342 @@ int dircache_has_deferred_work(void)
 }
 
 /*!
- * @brief Process one hash chain from the current deferred cleanup job.
+ * @brief Free a job slot without completing it (volume gone / covered).
+ */
+static void deferred_job_kill(int idx)
+{
+    free(deferred_queue[idx].parent_path);
+    deferred_queue[idx].parent_path = NULL;
+    deferred_queue[idx].v_vid = 0;
+}
+
+/*!
+ * @brief Advance deferred_head past dead slots, keeping count consistent.
+ */
+static void deferred_compact_head(void)
+{
+    while (deferred_count > 0 &&
+            deferred_queue[deferred_head].parent_path == NULL) {
+        deferred_queue[deferred_head].v_vid = 0;
+        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
+        deferred_count--;
+    }
+}
+
+/*!
+ * @brief Test path strictly below parent: byte-prefix at a '/' boundary.
  *
- * Called by idle worker. Walks a single hash chain, collects up to
- * DEFERRED_CHAIN_BATCH matching children, and removes+frees them via
- * dir_remove_and_free(). Entries matching curdir are skipped.
+ * The boundary byte check rejects sibling prefixes ("/A/BC" under "/A/B").
+ *
+ * @returns 1 if path is a strict descendant of parent_path, else 0
+ */
+static int path_is_strict_child(const char *path, size_t len,
+                                const char *parent_path, size_t parent_len)
+{
+    return path && len > parent_len &&
+           memcmp(path, parent_path, parent_len) == 0 &&
+           path[parent_len] == '/';
+}
+
+/*!
+ * @brief Remember a completed scan as the covering memo.
+ */
+static void deferred_cover_set(const struct deferred_cleanup *done,
+                               unsigned int scan_seq)
+{
+    free(deferred_cover_path);
+    deferred_cover_path = malloc(done->parent_len + 1);
+
+    if (!deferred_cover_path) {
+        deferred_cover_len = 0;
+        return;
+    }
+
+    memcpy(deferred_cover_path, done->parent_path, done->parent_len);
+    deferred_cover_path[done->parent_len] = '\0';
+    deferred_cover_len = done->parent_len;
+    deferred_cover_vid = done->v_vid;
+    deferred_cover_seq = scan_seq;
+}
+
+/*!
+ * @brief Test whether a popped job is covered by the memoized scan.
+ *
+ * Covered iff enqueued before that scan started (serial-number compare:
+ * the unsigned seq difference exceeds half the counter space iff the job
+ * predates the scan, fully defined across wraparound), same volume, and
+ * its byte path equals or sits strictly below the memoized path at a '/'
+ * boundary.
+ *
+ * @returns 1 if the job's entries were already purged, else 0
+ */
+static int deferred_cover_drops(const struct deferred_cleanup *j)
+{
+    return deferred_cover_path &&
+           (j->seq - deferred_cover_seq) >= 0x80000000u &&
+           j->v_vid == deferred_cover_vid &&
+           (j->parent_len == deferred_cover_len
+            ? memcmp(j->parent_path, deferred_cover_path,
+                     deferred_cover_len) == 0
+            : path_is_strict_child(j->parent_path, j->parent_len,
+                                   deferred_cover_path,
+                                   deferred_cover_len));
+}
+
+/*!
+ * @brief Compact deferred_tail backwards past dead slots.
+ *
+ * LIFO consumption retires slots at the tail; head compaction still
+ * handles slots killed by the volume flush.
+ */
+static void deferred_compact_tail(void)
+{
+    while (deferred_count > 0) {
+        int last = (deferred_tail + MAX_DEFERRED_CLEANUPS - 1)
+                   % MAX_DEFERRED_CLEANUPS;
+
+        if (deferred_queue[last].parent_path != NULL) {
+            break;
+        }
+
+        deferred_queue[last].v_vid = 0;
+        deferred_tail = last;
+        deferred_count--;
+    }
+
+    if (deferred_count == 0) {
+        deferred_depth_min = 0;
+        deferred_depth_max = 0;
+    }
+}
+
+/*!
+ * @brief qsort comparator for batch members: vid, then path bytes.
+ */
+static int deferred_batch_cmp(const void *a, const void *b)
+{
+    const struct deferred_cleanup *ja = &deferred_queue[*(const int *)a];
+    const struct deferred_cleanup *jb = &deferred_queue[*(const int *)b];
+
+    if (ja->v_vid != jb->v_vid) {
+        return ja->v_vid < jb->v_vid ? -1 : 1;
+    }
+
+    size_t n = ja->parent_len < jb->parent_len ? ja->parent_len
+               : jb->parent_len;
+    int c = memcmp(ja->parent_path, jb->parent_path, n);
+
+    if (c != 0) {
+        return c;
+    }
+
+    return ja->parent_len < jb->parent_len ? -1
+           : ja->parent_len > jb->parent_len ? 1 : 0;
+}
+
+/*!
+ * @brief Test whether an entry path is covered by a batch member.
+ *
+ * The candidate ancestor is unique at uniform depth: the entry path
+ * truncated at its (batch_depth+1)-th slash. Binary search over the
+ * sorted member index; byte comparisons only.
+ *
+ * @returns member index-array position, or -1
+ */
+static int deferred_batch_match(uint16_t vid, const char *ep, size_t elen)
+{
+    unsigned int slashes = 0;
+    size_t cand_len = 0;
+
+    for (size_t bi = 0; bi < elen; bi++) {
+        if (ep[bi] == '/') {
+            slashes++;
+
+            if (slashes == deferred_batch_depth + 1) {
+                cand_len = bi;
+                break;
+            }
+        }
+    }
+
+    /* Entry at or above member depth cannot be a strict descendant */
+    if (cand_len == 0) {
+        return -1;
+    }
+
+    int lo = 0;
+    int hi = deferred_batch_n - 1;
+
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        const struct deferred_cleanup *m =
+                &deferred_queue[deferred_batch_idx[mid]];
+        int c;
+
+        if (vid != m->v_vid) {
+            c = vid < m->v_vid ? -1 : 1;
+        } else {
+            size_t n = cand_len < m->parent_len ? cand_len : m->parent_len;
+            c = memcmp(ep, m->parent_path, n);
+
+            if (c == 0) {
+                c = cand_len < m->parent_len ? -1
+                    : cand_len > m->parent_len ? 1 : 0;
+            }
+        }
+
+        if (c == 0) {
+            return mid;
+        }
+
+        if (c < 0) {
+            hi = mid - 1;
+        } else {
+            lo = mid + 1;
+        }
+    }
+
+    return -1;
+}
+
+/*!
+ * @brief Start a flat batch scan over every live pending job.
+ *
+ * @pre deferred_depth_min == deferred_depth_max and no batch is active.
+ * @returns 1 if the batch was armed, 0 if no live members exist
+ */
+static int deferred_batch_start(void)
+{
+    deferred_batch_n = 0;
+
+    for (int i = 0; i < deferred_count; i++) {
+        int idx = (deferred_head + i) % MAX_DEFERRED_CLEANUPS;
+
+        if (deferred_queue[idx].parent_path) {
+            deferred_batch_idx[deferred_batch_n++] = idx;
+        }
+    }
+
+    if (deferred_batch_n == 0) {
+        return 0;
+    }
+
+    qsort(deferred_batch_idx, deferred_batch_n, sizeof(int),
+          deferred_batch_cmp);
+    deferred_batch_active = 1;
+    deferred_batch_seq = deferred_seq;
+    deferred_batch_depth = deferred_depth_min;
+    deferred_batch_chain_idx = 0;
+    return 1;
+}
+
+/*!
+ * @brief Finish the flat batch scan: retire every pre-batch member.
+ *
+ * Mid-batch enqueues (seq >= batch seq) stay pending — their entries may
+ * sit in chains the batch already passed.
+ */
+static void deferred_batch_complete(void)
+{
+    for (int i = 0; i < deferred_batch_n; i++) {
+        int idx = deferred_batch_idx[i];
+
+        if (deferred_queue[idx].parent_path &&
+                (deferred_queue[idx].seq - deferred_batch_seq)
+                >= 0x80000000u) {
+            deferred_job_kill(idx);
+            dircache_stat.covered_cancelled++;
+        }
+    }
+
+    deferred_batch_active = 0;
+    deferred_batch_n = 0;
+    deferred_compact_tail();
+    deferred_compact_head();
+}
+
+/*!
+ * @brief Scan one hash chain for the flat batch: purge every entry whose
+ *        unique candidate ancestor is a batch member.
+ *
+ * @returns 1 if more chains remain, 0 when the batch completed
+ */
+static int deferred_batch_chain(void)
+{
+    hashcount_t nchains = hash_size(dircache);
+
+    if (deferred_batch_chain_idx >= nchains) {
+        deferred_batch_complete();
+        return deferred_count > 0;
+    }
+
+    struct dir *to_remove[DEFERRED_CHAIN_BATCH];
+
+    int remove_count = 0;
+    hnode_t *node = hash_chain_head(dircache, deferred_batch_chain_idx);
+
+    while (node) {
+        hnode_t *next = node->hash_next;
+        struct dir *entry = hnode_get(node);
+
+        if (entry == curdir) {
+            node = next;
+            continue;
+        }
+
+        if (entry->d_did != CNID_INVALID && entry->d_fullpath) {
+            const char *ep = cfrombstr(entry->d_fullpath);
+            size_t elen = (size_t)blength(entry->d_fullpath);
+
+            if (ep &&
+                    deferred_batch_match(entry->d_vid, ep, elen) >= 0) {
+                if (remove_count < DEFERRED_CHAIN_BATCH) {
+                    to_remove[remove_count++] = entry;
+                } else {
+                    break;  /* Batch full — will re-scan this chain */
+                }
+            }
+        }
+
+        node = next;
+    }
+
+    for (int i = 0; i < remove_count; i++) {
+        if (!iw_grant_active()) {
+            return 1;
+        }
+
+        AFP_ASSERT(to_remove[i] != curdir);
+        const struct vol *vol =
+            getvolbyvid(to_remove[i]->d_vid);
+
+        if (vol) {
+            dir_remove_and_free(vol, to_remove[i]);
+        }
+    }
+
+    if (remove_count < DEFERRED_CHAIN_BATCH) {
+        deferred_batch_chain_idx++;
+
+        if (deferred_batch_chain_idx >= nchains) {
+            deferred_batch_complete();
+            return deferred_count > 0;
+        }
+    }
+
+    return 1;
+}
+
+/*!
+ * @brief Process one unit of deferred cleanup.
+ *
+ * Called by idle worker under a validated grant. Jobs are consumed LIFO:
+ * AFP deletes bottom-up, so a tree's covering root-most job arrives last
+ * and its single scan purges the whole subtree; the covering memo then
+ * drops the tree's remaining jobs in O(1) as they pop. When every pending
+ * job sits at one depth, one merged batch scan serves all of them.
+ * Every removal re-checks iw_can_work; scans resume via their chain
+ * cursors across granted cycles.
  *
  * @returns 1 if more work remains, 0 if all deferred work is complete
  */
@@ -2826,35 +3247,66 @@ int dircache_process_deferred_chain(void)
         return 0;
     }
 
-    struct deferred_cleanup *dc = &deferred_queue[deferred_head];
+    if (deferred_batch_active) {
+        return deferred_batch_chain();
+    }
+
+    /* Select LIFO: newest live job at the tail */
+    if (deferred_active < 0) {
+        deferred_compact_tail();
+        deferred_compact_head();
+
+        if (deferred_count == 0) {
+            return 0;
+        }
+
+        /* Uniform depth across a multi-job queue: merge into one scan */
+        if (deferred_count > 1 &&
+                deferred_depth_min == deferred_depth_max) {
+            if (deferred_batch_start()) {
+                return deferred_batch_chain();
+            }
+
+            return deferred_count > 0;
+        }
+
+        int last = (deferred_tail + MAX_DEFERRED_CLEANUPS - 1)
+                   % MAX_DEFERRED_CLEANUPS;
+        const struct deferred_cleanup *cand = &deferred_queue[last];
+
+        /* Already purged by the memoized covering scan: drop in O(1) */
+        if (deferred_cover_drops(cand)) {
+            deferred_job_kill(last);
+            dircache_stat.covered_cancelled++;
+            deferred_compact_tail();
+            return deferred_count > 0;
+        }
+
+        deferred_active = last;
+        deferred_scan_started_seq = deferred_seq;
+    }
+
+    struct deferred_cleanup *dc = &deferred_queue[deferred_active];
 
     /* Volume safety — look up by VID, skip if volume was closed */
     const struct vol *vol = getvolbyvid(dc->v_vid);
 
     if (!vol) {
-        /* Volume was closed — discard this deferred entry */
-        free(dc->parent_path);
-        dc->parent_path = NULL;
-        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
-        deferred_count--;
-        return deferred_count > 0;
-    }
-
-    if (!dc->parent_path) {
-        /* Defensive: parent_path should never be NULL for a committed entry */
-        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
-        deferred_count--;
+        deferred_job_kill(deferred_active);
+        deferred_active = -1;
+        deferred_compact_tail();
+        deferred_compact_head();
         return deferred_count > 0;
     }
 
     hashcount_t nchains = hash_size(dircache);
 
     if (dc->chain_idx >= nchains) {
-        /* All chains scanned — job complete */
-        free(dc->parent_path);
-        dc->parent_path = NULL;
-        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
-        deferred_count--;
+        deferred_cover_set(dc, deferred_scan_started_seq);
+        deferred_job_kill(deferred_active);
+        deferred_active = -1;
+        deferred_compact_tail();
+        deferred_compact_head();
         return deferred_count > 0;
     }
 
@@ -2877,10 +3329,8 @@ int dircache_process_deferred_chain(void)
                 entry->d_fullpath) {
             const char *ep = cfrombstr(entry->d_fullpath);
 
-            if (ep &&
-                    (size_t)blength(entry->d_fullpath) > dc->parent_len &&
-                    memcmp(ep, dc->parent_path, dc->parent_len) == 0 &&
-                    ep[dc->parent_len] == '/') {
+            if (path_is_strict_child(ep, (size_t)blength(entry->d_fullpath),
+                                     dc->parent_path, dc->parent_len)) {
                 if (remove_count < DEFERRED_CHAIN_BATCH) {
                     to_remove[remove_count++] = entry;
                 } else {
@@ -2892,8 +3342,16 @@ int dircache_process_deferred_chain(void)
         node = next;
     }
 
-    /* Remove and free collected entries directly */
+    /* Remove and free collected entries directly.
+     * iw_can_work is re-checked before EVERY removal so a revoke stops the
+     * worker within ~one dir_remove_and_free (~1µs); chain_idx is not
+     * advanced, so the next granted cycle rescans this chain — entries
+     * already removed no longer match and are not double-freed. */
     for (int i = 0; i < remove_count; i++) {
+        if (!iw_grant_active()) {
+            return 1;
+        }
+
         AFP_ASSERT(to_remove[i] != curdir);
         dir_remove_and_free(vol, to_remove[i]);
     }
@@ -2903,10 +3361,11 @@ int dircache_process_deferred_chain(void)
         dc->chain_idx++;
 
         if (dc->chain_idx >= nchains) {
-            free(dc->parent_path);
-            dc->parent_path = NULL;
-            deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
-            deferred_count--;
+            deferred_cover_set(dc, deferred_scan_started_seq);
+            deferred_job_kill(deferred_active);
+            deferred_active = -1;
+            deferred_compact_tail();
+            deferred_compact_head();
             return deferred_count > 0;
         }
     }
