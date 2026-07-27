@@ -407,6 +407,9 @@ These metrics are reported for both cache modes:
 - **expunged**: Invalid entries detected and removed during cache validation before use
 - **invalid_on_use**: Entries found invalid when actually used (tune `dircache validation freq` if high)
 - **evicted**: Entries removed due to cache capacity limits
+- **covered_cancelled**: Deferred delete-children jobs cancelled because a
+  completed ancestor scan already removed their entries (tree deletes; see
+  Part 8)
 - **validation_freq**: Current validation frequency setting
 
 ### LRU Mode Statistics
@@ -422,7 +425,7 @@ LRU mode provides straightforward hit/miss metrics:
 dircache statistics (LRU): (user: jdoe) entries: 98234, max_entries: 131072,
 config_max: 131072, lookups: 2458716, hits: 1806407 (73.5%), misses: 652309 (26.5%),
 validations: ~24587 (1.0%), added: 152341, removed: 54107, expunged: 8921,
-invalid_on_use: 234, evicted: 53873, validation_freq: 100
+invalid_on_use: 234, evicted: 53873, covered_cancelled: 67, validation_freq: 100
 ```
 
 ### ARC Mode Statistics
@@ -472,7 +475,7 @@ dircache statistics (ARC): (user: jdoe) entries: 98234, ghost_entries: 32838,
 max_entries: 131072, config_max: 131072, lookups: 2458716, hits: 1954327 (79.5%),
 ghost_hits: 322351 (13.1%), total_hits: (92.6%), misses: 182038 (7.4%),
 validations: 21365 (0.9%), added: 152341, removed: 54107, expunged: 7234,
-invalid_on_use: 187, evicted: 53873, validation_freq: 100
+invalid_on_use: 187, evicted: 53873, covered_cancelled: 67, validation_freq: 100
 
 ARC ghost performance: ghost_hits: 322351 (13.1%), ghost_hits(B1=198423, B2=123928),
 learning_benefit: (13.1%)
@@ -521,14 +524,27 @@ is blocked waiting for client data.
 ### Architecture
 
 The idle worker uses **temporal separation** rather than locks: the worker
-thread and main thread never access shared dircache data concurrently.
+thread and main thread never access shared dircache data concurrently. Three
+seq_cst atomic flags coordinate the handshake (`idle_worker.c`):
 
-- `idle_worker_start()` — called just before `poll()`, sets `is_idle=1`
-  (the worker self-wakes every 10ms via `nanosleep()` and checks this flag)
-- `idle_worker_stop()` — called immediately after `poll()` returns, sets
-  `is_idle=0` and spins until the worker finishes its current unit of work
-- The worker checks `is_idle` per hash chain, yielding instantly when the
-  main thread reclaims access
+- `iw_has_work` — set by the main thread at every enqueue
+  (`iw_note_work()`), cleared by the worker only on full drain
+- `iw_can_work` — main thread only: `iw_grant()` sets it just before
+  blocking in `poll()`, and only when `iw_has_work` is set; `iw_revoke()`
+  clears it after `poll()` returns. With no pending work, no grant is
+  issued and the post-poll path performs no atomic operations at all.
+- `iw_is_working` — worker only: published *before* re-checking
+  `iw_can_work` (Dekker store-then-check), so either the worker sees the
+  revoke and aborts before touching shared data, or main sees
+  `iw_is_working==1` and waits
+
+The worker self-wakes every 10ms via `nanosleep()` and acts only on a
+granted window. It re-checks `iw_can_work` per unit of work — per invalid
+entry freed and per `dir_remove_and_free()` inside a chain batch — so a
+revoke stops it within ~one removal (~1µs). Main's reclaim
+(`iw_wait_release()`) is a single load in the expected case, then a bounded
+cpu-relax spin, then 100µs sleeps — bounding single-core reclaim latency
+that an empty spin would stretch to a scheduler quantum.
 
 ### Deferred Work Types
 
@@ -537,34 +553,54 @@ thread and main thread never access shared dircache data concurrently.
    periods instead of at the end of every AFP command
 2. **Deferred child cleanup** — `dircache_remove_children_defer()` enqueues
    an O(1) descriptor; the worker walks hash chains incrementally, removing
-   stale children in batches of 16 per chain
+   stale children in batches of 16 per chain. Jobs are consumed LIFO: AFP
+   deletes bottom-up, so a tree's covering root-most job is enqueued last,
+   and each completed scan is memoized (byte path, volume, scan-start seq).
+   A popped job that predates the memoized scan and sits at or below its
+   path is already purged — dropped in O(1) without a scan. When every
+   pending job sits at one depth (flat sibling bursts), one merged
+   full-table scan serves all of them: at uniform depth an entry's
+   candidate ancestor is unique and is binary-searched against the sorted
+   member paths. Drops and batch retirements are counted in
+   `covered_cancelled` (dircache statistics).
 
 ### Graceful Degradation
 
 If the worker thread fails to start (e.g., `pthread_create()` failure or
 platforms without lock-free atomics), all operations fall back to synchronous
-behavior transparently. The `idle_worker_is_active()` guard ensures the
+behavior transparently. The `iw_is_active()` guard ensures the
 `dir_free_invalid_q()` call is preserved in the DSIFUNC_CMD handler when
 the worker is not running.
 
-### Signal Safety
+### Shutdown
 
-`afp_dsi_close()` can be called from signal handler context. It uses
-`idle_worker_stop_signal_safe()` which performs only a single atomic store
-(no spin, no mutex). Since all `afp_dsi_close()` paths end in `exit()`,
-the kernel terminates the worker thread.
+`iw_shutdown()` joins the worker (bounded by the 10ms tick — all callers
+run after the main loop revoked the grant) and **abandons** any still-queued
+cleanup work: every caller exits immediately afterwards, the cache dies with
+the process, and the OS reclaims queue memory. Exit paths through
+`afp_dsi_close()` use `iw_revoke_signal_safe()` (a single lock-free atomic
+store, no wait) as a belt-and-braces revoke.
 
 ### Statistics
 
 Worker statistics are logged at session close:
 
 ```txt
-idle_worker stats: cycles=1234 completed=1100 interrupted=134
+iw stats: noted=9341 grants=22849 cycles=1562 completed=1495 interrupted=67 aborted=0 invalid_freed=4910 chains=8734720
 ```
 
-- **cycles**: Total idle cycles entered
-- **completed**: Cycles that finished all pending work
-- **interrupted**: Cycles cut short by `poll()` returning (client data arrived)
+- **noted**: `iw_note_work()` calls — idle-work enqueues by the main thread
+- **grants**: poll cycles that granted the worker the idle window
+  (only issued when work was pending)
+- **cycles**: granted windows the worker acted on (validated grants)
+- **completed**: cycles that drained all pending work
+- **interrupted**: cycles revoked mid-drain (client data arrived);
+  remaining work carries over to a later grant
+- **aborted**: Dekker aborts — grant revoked between the worker's wake and
+  its first touch of shared data (touched nothing)
+- **invalid_freed**: entries freed from the invalid queue by the worker
+- **chains**: `dircache_process_deferred_chain()` calls (hash-chain scan
+  units)
 
 ---
 

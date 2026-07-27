@@ -15,12 +15,16 @@
 #ifndef IDLE_WORKER_H
 #define IDLE_WORKER_H
 
-extern int  idle_worker_init(void);
-extern void idle_worker_start(void);
-extern void idle_worker_stop(void);
-extern void idle_worker_stop_signal_safe(void);
-extern void idle_worker_shutdown(void);
-extern int  idle_worker_is_active(void);
-extern void idle_worker_log_stats(void);
+/* Lock-free idle worker — handshake contract documented in idle_worker.c */
+
+extern int  iw_init(void);
+extern void iw_grant(void);
+extern void iw_revoke(void);
+extern void iw_revoke_signal_safe(void);
+extern void iw_shutdown(void);
+extern void iw_note_work(void);
+extern int  iw_grant_active(void);
+extern int  iw_is_active(void);
+extern void iw_log_stats(void);
 
 #endif /* IDLE_WORKER_H */
