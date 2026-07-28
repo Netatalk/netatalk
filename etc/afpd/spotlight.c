@@ -296,19 +296,45 @@ static int cnid_comp_fn(const void *p1, const void *p2)
     return 1;
 }
 
-static int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p)
+int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p)
 {
     EC_INIT;
     uint64_t *cnids = NULL;
-    EC_NULL(cnids = talloc_array(slq, uint64_t, talloc_array_length(p)));
+    size_t count;
 
-    for (int i = 0; i < talloc_array_length(p); i++) {
-        memcpy(&cnids[i], p->dd_talloc_array[i], sizeof(uint64_t));
+    if (slq == NULL || p == NULL) {
+        EC_FAIL;
     }
 
-    qsort(cnids, talloc_array_length(p), sizeof(uint64_t), cnid_comp_fn);
+    count = p->dd_talloc_array == NULL
+            ? 0 : talloc_array_length(p->dd_talloc_array);
+
+    if (count == 0) {
+        slq->slq_cnids = NULL;
+        slq->slq_cnids_num = 0;
+        EC_EXIT;
+    }
+
+    EC_NULL(cnids = talloc_array(slq, uint64_t, count));
+
+    for (size_t i = 0; i < count; i++) {
+        const void *element = p->dd_talloc_array[i];
+        const uint64_t *cnid;
+
+        if (element == NULL
+                || talloc_get_size(element) < sizeof(uint64_t)
+                || (cnid = talloc_check_name(element, "uint64_t")) == NULL) {
+            LOG(log_error, logtype_sl,
+                "invalid CNID array element at index %zu", i);
+            EC_FAIL;
+        }
+
+        memcpy(&cnids[i], cnid, sizeof(uint64_t));
+    }
+
+    qsort(cnids, count, sizeof(uint64_t), cnid_comp_fn);
     slq->slq_cnids = cnids;
-    slq->slq_cnids_num = talloc_array_length(p);
+    slq->slq_cnids_num = count;
 EC_CLEANUP:
 
     if (ret != 0 && cnids) {

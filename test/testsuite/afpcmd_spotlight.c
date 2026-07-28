@@ -182,6 +182,42 @@ static unsigned int spotlight_send(CONN *conn,
     return dsi->header.dsi_code;
 }
 
+static int spotlight_rpc_uint64_result(const CONN *conn, uint64_t *result_out)
+{
+    const DSI *dsi = &conn->dsi;
+    size_t reply_len = ntohl(dsi->header.dsi_len);
+    TALLOC_CTX *tmp = talloc_new(NULL);
+    DALLOC_CTX *reply;
+    const uint64_t *result;
+    int ret = -1;
+
+    if (result_out == NULL || tmp == NULL || reply_len < 4) {
+        goto cleanup;
+    }
+
+    reply = talloc_zero(tmp, DALLOC_CTX);
+
+    if (reply == NULL) {
+        goto cleanup;
+    }
+
+    if (sl_unpack_len(reply, (const char *)dsi->data + 4, reply_len - 4) < 0) {
+        goto cleanup;
+    }
+
+    result = dalloc_get(reply, "DALLOC_CTX", 0, "uint64_t", 0);
+
+    if (result == NULL) {
+        goto cleanup;
+    }
+
+    *result_out = *result;
+    ret = 0;
+cleanup:
+    talloc_free(tmp);
+    return ret;
+}
+
 /*!
  * @brief Send an otherwise-valid fetchPropertiesForContext: request whose
  *        TOC tag claims no usable complex-object entries
@@ -498,7 +534,8 @@ unsigned int FPSpotlightOpen(CONN *conn, uint16_t vid,
 static unsigned int spotlight_open_query_send(CONN *conn, uint16_t vid,
                                               const char *query_dsl,
                                               const char *scope,
-                                              uint64_t ctx)
+                                              uint64_t ctx,
+                                              bool bool_item_array)
 {
     /* sl_pack writes up to SL_PACK_BUFLEN bytes regardless of caller
      * buffer; see comment at top of this TU. */
@@ -510,8 +547,10 @@ static unsigned int spotlight_open_query_send(CONN *conn, uint16_t vid,
     sl_array_t  *args         = talloc_zero(outer_array, sl_array_t);
     sl_dict_t   *params       = talloc_zero(outer_array, sl_dict_t);
     sl_array_t  *attrs        = talloc_zero(params, sl_array_t);
+    sl_array_t  *items        = talloc_zero(params, sl_array_t);
     uint64_t     ctxval1      = ctx;
     uint64_t     ctxval2      = ctx;
+    sl_bool_t    bool_item    = true;
 
     if (!Quiet) {
         fprintf(stdout, "[%s] vol=%u ctx=%llu query=\"%s\" scope=\"%s\"\n",
@@ -547,6 +586,12 @@ static unsigned int spotlight_open_query_send(CONN *conn, uint16_t vid,
         dalloc_add(params, scope_array, "sl_array_t");
     }
 
+    if (bool_item_array) {
+        dalloc_add_copy(items, &bool_item, sl_bool_t);
+        dalloc_add(params, dalloc_strdup(params, "kMDQueryItemArray"), "char *");
+        dalloc_add(params, items, "sl_array_t");
+    }
+
     /* outer_array : [args, params] */
     dalloc_add(outer_array, args, "sl_array_t");
     dalloc_add(outer_array, params, "sl_dict_t");
@@ -579,14 +624,28 @@ static unsigned int spotlight_open_query_send(CONN *conn, uint16_t vid,
 unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
                                   const char *query_dsl, uint64_t ctx)
 {
-    return spotlight_open_query_send(conn, vid, query_dsl, NULL, ctx);
+    return spotlight_open_query_send(conn, vid, query_dsl, NULL, ctx, false);
 }
 
 unsigned int FPSpotlightOpenQueryScoped(CONN *conn, uint16_t vid,
                                         const char *query_dsl,
                                         const char *scope, uint64_t ctx)
 {
-    return spotlight_open_query_send(conn, vid, query_dsl, scope, ctx);
+    return spotlight_open_query_send(conn, vid, query_dsl, scope, ctx, false);
+}
+
+unsigned int FPSpotlightOpenQueryWithBoolItemArray(CONN *conn, uint16_t vid,
+                                                   const char *query_dsl, uint64_t ctx, uint64_t *rpc_result)
+{
+    unsigned int ret = spotlight_open_query_send(conn, vid, query_dsl, NULL,
+                                                 ctx, true);
+
+    if (ret == AFP_OK
+            && spotlight_rpc_uint64_result(conn, rpc_result) < 0) {
+        return htonl(AFPERR_PARAM);
+    }
+
+    return ret;
 }
 
 /*!

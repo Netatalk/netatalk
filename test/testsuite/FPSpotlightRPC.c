@@ -474,6 +474,65 @@ STATIC void test563()
     exit_test("FPSpotlightRPC:test563: reject oversized filemeta pack");
 }
 
+STATIC void test565()
+{
+    const char *testname = "test565";
+    uint16_t vol = VolID;
+    unsigned int ret;
+    uint64_t rpc_result = 0;
+    ENTER_TEST
+
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
+        goto test_exit;
+    }
+
+    if (!pag_spotlight_open(vol, testname)) {
+        goto test_exit;
+    }
+
+    ret = FPSpotlightOpenQueryWithBoolItemArray(
+              Conn, vol, "kMDItemFSName == \"*\"wc", 0x565, &rpc_result);
+
+    if (ret != AFP_OK) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: boolean query item transport returned "
+                            "%" PRIu32 " (%s), expected AFP_OK\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+        goto test_exit;
+    }
+
+    if (rpc_result != UINT64_MAX) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: boolean query item RPC result was "
+                            "0x%016" PRIx64 ", expected UINT64_MAX\n",
+                    rpc_result);
+        }
+
+        test_failed();
+        goto test_exit;
+    }
+
+    ret = FPSpotlightOpen(Conn, vol, NULL, 0);
+
+    if (ret != AFP_OK) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: boolean query item left "
+                            "Spotlight RPC unusable: FPSpotlightOpen returned "
+                            "%" PRIu32 " (%s), raw=0x%08x\n",
+                    ntohl(ret), afp_error(ret), ret);
+        }
+
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPSpotlightRPC:test565: reject non-CNID query item");
+}
+
 /*!
  * @brief Run one Spotlight query and return the drained result count
  *
@@ -930,6 +989,7 @@ void FPSpotlightRPC_test()
     test561();
     test562();
     test563();
+    test565();
     test632();
     test633();
     test634();

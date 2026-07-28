@@ -16,6 +16,11 @@ extern unsigned int FPSpotlightOpenQueryScoped(CONN *conn, uint16_t vid,
                                                const char *query_dsl,
                                                const char *scope,
                                                uint64_t ctx);
+extern unsigned int FPSpotlightOpenQueryWithBoolItemArray(CONN *conn,
+                                                          uint16_t vid,
+                                                          const char *query_dsl,
+                                                          uint64_t ctx,
+                                                          uint64_t *rpc_result);
 extern unsigned int FPSpotlightDrainResults(CONN *conn, uint16_t vid,
                                             uint64_t ctx,
                                             int *total_results_out);

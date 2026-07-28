@@ -40,6 +40,8 @@
 
 #include <atalk/dalloc.h>
 #include <atalk/spotlight.h>
+
+#include "etc/spotlight/spotlight_private.h"
 #endif
 
 #include "afp_config.h"
@@ -139,6 +141,52 @@ static int utest_spotlight_rejects_empty_long_cnids(void)
 cleanup:
     talloc_free(tmp);
     return result == -1 ? 0 : -1;
+}
+
+static int utest_spotlight_cnid_array_types(void)
+{
+    TALLOC_CTX *tmp = talloc_new(NULL);
+    slq_t *slq = talloc_zero(tmp, slq_t);
+    sl_array_t *items = talloc_zero(tmp, sl_array_t);
+    sl_bool_t bool_item = true;
+    uint64_t cnid1 = 9;
+    uint64_t cnid2 = 3;
+    int result = -1;
+
+    if (tmp == NULL || slq == NULL || items == NULL) {
+        goto cleanup;
+    }
+
+    dalloc_add_copy(items, &bool_item, sl_bool_t);
+
+    if (sl_createCNIDArray(slq, items) != -1
+            || slq->slq_cnids != NULL
+            || slq->slq_cnids_num != 0) {
+        goto cleanup;
+    }
+
+    talloc_free(items);
+    items = talloc_zero(tmp, sl_array_t);
+
+    if (items == NULL) {
+        goto cleanup;
+    }
+
+    dalloc_add_copy(items, &cnid1, uint64_t);
+    dalloc_add_copy(items, &cnid2, uint64_t);
+
+    if (sl_createCNIDArray(slq, items) != 0
+            || slq->slq_cnids == NULL
+            || slq->slq_cnids_num != 2
+            || slq->slq_cnids[0] != cnid2
+            || slq->slq_cnids[1] != cnid1) {
+        goto cleanup;
+    }
+
+    result = 0;
+cleanup:
+    talloc_free(tmp);
+    return result;
 }
 #endif
 
@@ -559,6 +607,8 @@ int main(int argc, char *argv[])
 #ifdef WITH_SPOTLIGHT
     TEST_int(utest_spotlight_rejects_empty_long_cnids(), 0,
              "Spotlight rejects long-form empty CNID array");
+    TEST_int(utest_spotlight_cnid_array_types(), 0,
+             "Spotlight accepts only uint64_t query item arrays");
 #endif
     TEST_int(utest_dsi_receive_rejects_zero_length_cmd(), 0,
              "DSI receive rejects a command frame with no AFP function byte");
