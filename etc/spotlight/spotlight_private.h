@@ -23,4 +23,10 @@ extern bool add_filemeta(sl_array_t *reqinfo,
  */
 extern bool sl_path_in_scope(const char *path, const char *scope);
 
+/*
+ * Validate and copy a client-supplied CNID array into a query.
+ * Defined in etc/afpd/spotlight.c.
+ */
+extern int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p);
+
 #endif /* SPOTLIGHT_PRIVATE_H */
