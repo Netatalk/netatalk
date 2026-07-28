@@ -318,6 +318,25 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static const uint64_t *sl_first_cnid(const sl_cnids_t *cnids)
+{
+    const void *first_cnid;
+
+    if (cnids == NULL || cnids->ca_cnids == NULL
+            || cnids->ca_cnids->dd_talloc_array == NULL
+            || talloc_array_length(cnids->ca_cnids->dd_talloc_array) == 0) {
+        return NULL;
+    }
+
+    first_cnid = cnids->ca_cnids->dd_talloc_array[0];
+
+    if (first_cnid == NULL) {
+        return NULL;
+    }
+
+    return talloc_check_name(first_cnid, "uint64_t");
+}
+
 static bool sl_reqinfo_contains(sl_array_t *reqinfo, const char *attr)
 {
     for (int i = 0; i < talloc_array_length(reqinfo->dd_talloc_array); i++) {
@@ -1164,12 +1183,14 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj _U_,
     uint64_t uint64;
     sl_array_t *array;
     const sl_cnids_t *cnids;
+    const uint64_t *first_cnid;
     const sl_time_t *sl_time;
     cnid_t id;
     const char *path;
     struct dir *dir;
     EC_NULL_LOG(cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 2));
-    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+    EC_NULL_LOG(first_cnid = sl_first_cnid(cnids));
+    memcpy(&uint64, first_cnid, sizeof(uint64_t));
     id = (cnid_t)uint64;
     LOG(log_debug, logtype_sl, "CNID: %" PRIu32, id);
 
@@ -1217,9 +1238,11 @@ static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj _U_,
     EC_INIT;
     uint64_t uint64;
     const sl_cnids_t *cnids;
+    const uint64_t *first_cnid;
     cnid_t id;
     EC_NULL_LOG(cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 1));
-    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+    EC_NULL_LOG(first_cnid = sl_first_cnid(cnids));
+    memcpy(&uint64, first_cnid, sizeof(uint64_t));
     id = (cnid_t)uint64;
     LOG(log_debug, logtype_sl,
         "sl_rpc_fetchAttributeNamesForOIDArray: CNID: %" PRIu32, id);
@@ -1259,6 +1282,7 @@ static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj _U_,
     EC_INIT;
     uint64_t uint64;
     const sl_cnids_t *cnids;
+    const uint64_t *first_cnid;
     sl_cnids_t *replycnids;
     cnid_t id, did;
     struct dir *dir;
@@ -1292,7 +1316,13 @@ static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj _U_,
         EC_FAIL;
     }
 
-    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+    first_cnid = sl_first_cnid(cnids);
+
+    if (first_cnid == NULL) {
+        EC_FAIL;
+    }
+
+    memcpy(&uint64, first_cnid, sizeof(uint64_t));
     id = (cnid_t)uint64;
 
     if (htonl(id) == DIRDID_ROOT) {

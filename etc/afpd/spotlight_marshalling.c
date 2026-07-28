@@ -735,6 +735,10 @@ static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset,
 
     count = query_data64 & 0xffff;
 
+    if (count == 0) {
+        EC_FAIL;
+    }
+
     if (count > (length - 2 * (int)sizeof(uint64_t)) / (int)sizeof(uint64_t)) {
         EC_FAIL;
     }
