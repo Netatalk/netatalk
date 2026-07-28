@@ -875,6 +875,52 @@ test_exit:
     exit_test("FPSpotlightRPC:test633: folder-scoped filename search");
 }
 
+STATIC void test634()
+{
+    const char *testname = "test634";
+    uint16_t vol = VolID;
+    unsigned int ret;
+    ENTER_TEST
+
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
+        goto test_exit;
+    }
+
+    if (!pag_spotlight_open(vol, testname)) {
+        goto test_exit;
+    }
+
+    ret = FPSpotlightFetchAttributeNamesWithEmptyCNIDArray(Conn, vol);
+
+    if (ret != htonl(AFPERR_MISC)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: empty CNID array returned "
+                            "%" PRIu32 " (%s), expected AFPERR_MISC\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+        goto test_exit;
+    }
+
+    ret = FPSpotlightOpen(Conn, vol, NULL, 0);
+
+    if (ret != AFP_OK) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: empty CNID array left "
+                            "Spotlight RPC unusable: FPSpotlightOpen returned "
+                            "%" PRIu32 " (%s), raw=0x%08x\n",
+                    ntohl(ret), afp_error(ret), ret);
+        }
+
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPSpotlightRPC:test634: reject empty CNID array");
+}
+
 void FPSpotlightRPC_test()
 {
     ENTER_TESTSET
@@ -886,4 +932,5 @@ void FPSpotlightRPC_test()
     test563();
     test632();
     test633();
+    test634();
 }

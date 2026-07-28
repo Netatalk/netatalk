@@ -85,6 +85,12 @@ static uint32_t spotlight_test_get_le32(const char *buf, size_t offset)
            | ((uint32_t)p[3] << 24);
 }
 
+static uint64_t spotlight_test_get_le64(const char *buf, size_t offset)
+{
+    return (uint64_t)spotlight_test_get_le32(buf, offset)
+           | ((uint64_t)spotlight_test_get_le32(buf, offset + 4) << 32);
+}
+
 static void spotlight_test_put_le32(uint8_t *buf, size_t offset, uint32_t val)
 {
     buf[offset] = (uint8_t)val;
@@ -257,6 +263,76 @@ unsigned int FPSpotlightRPCWithLargeInt64Count(CONN *conn, uint16_t vid)
     spotlight_test_put_le64(rpcbuf, 32,
                             spotlight_test_pack_tag(TEST_SQ_TYPE_TOC, 1, 0));
     return spotlight_send(conn, vid, SPOTLIGHT_CMD_RPC, rpcbuf, sizeof(rpcbuf));
+}
+
+/*!
+ * @brief Send a fetchAttributeNamesForOIDArray request whose CNIDS value uses
+ *        the long form but declares zero elements
+ */
+unsigned int FPSpotlightFetchAttributeNamesWithEmptyCNIDArray(
+    CONN *conn, uint16_t vid)
+{
+    char         rpcbuf[SL_PACK_BUFLEN];
+    int          rpclen;
+    TALLOC_CTX  *tmp = talloc_new(NULL);
+    DALLOC_CTX  *outer = talloc_zero(tmp, DALLOC_CTX);
+    sl_array_t  *outer_array = talloc_zero(outer, sl_array_t);
+    sl_array_t  *args = talloc_zero(outer_array, sl_array_t);
+    sl_cnids_t  *cnids = talloc_zero(outer_array, sl_cnids_t);
+    uint64_t     cnid = 0x1122334455667788;
+    const uint16_t ca_unkn1 = 0x0fec;
+    const uint32_t ca_context = 0x5a17c0de;
+    uint64_t     cnid_header;
+    bool         patched = false;
+    unsigned int ret = htonl(AFPERR_PARAM);
+
+    if (tmp == NULL || outer == NULL || outer_array == NULL || args == NULL
+            || cnids == NULL) {
+        goto cleanup;
+    }
+
+    cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
+
+    if (cnids->ca_cnids == NULL) {
+        goto cleanup;
+    }
+
+    dalloc_add(args,
+               dalloc_strdup(args, "fetchAttributeNamesForOIDArray:context:"),
+               "char *");
+    dalloc_add(outer_array, args, sl_array_t);
+    cnids->ca_unkn1 = ca_unkn1;
+    cnids->ca_context = ca_context;
+    dalloc_add_copy(cnids->ca_cnids, &cnid, uint64_t);
+    dalloc_add(outer_array, cnids, sl_cnids_t);
+    dalloc_add(outer, outer_array, sl_array_t);
+    rpclen = sl_pack(outer, rpcbuf);
+
+    if (rpclen < 0) {
+        goto cleanup;
+    }
+
+    cnid_header = spotlight_test_pack_tag(ca_unkn1, 1, ca_context);
+
+    for (size_t offset = 16; offset + sizeof(uint64_t) <= (size_t)rpclen;
+            offset += sizeof(uint64_t)) {
+        if (spotlight_test_get_le64(rpcbuf, offset) == cnid_header) {
+            rpcbuf[offset] = 0;
+            rpcbuf[offset + 1] = 0;
+            patched = true;
+            break;
+        }
+    }
+
+    if (!patched) {
+        goto cleanup;
+    }
+
+    ret = spotlight_send(conn, vid, SPOTLIGHT_CMD_RPC,
+                         (const uint8_t *)rpcbuf, (size_t)rpclen);
+cleanup:
+    talloc_free(tmp);
+    return ret;
 }
 
 /*!
