@@ -35,6 +35,13 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#ifdef WITH_SPOTLIGHT
+#include <talloc.h>
+
+#include <atalk/dalloc.h>
+#include <atalk/spotlight.h>
+#endif
+
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
 #include "dircache.h"
@@ -64,6 +71,76 @@ static char *args[] = {"test", "-F", confpath};
 int test_output_tap = 0;
 int test_case_num = 0;
 FILE *test_report_stream = NULL;
+
+#ifdef WITH_SPOTLIGHT
+static uint64_t spotlight_test_get_le64(const char *buf, size_t offset)
+{
+    const uint8_t *p = (const uint8_t *)buf + offset;
+    return (uint64_t)p[0]
+           | ((uint64_t)p[1] << 8)
+           | ((uint64_t)p[2] << 16)
+           | ((uint64_t)p[3] << 24)
+           | ((uint64_t)p[4] << 32)
+           | ((uint64_t)p[5] << 40)
+           | ((uint64_t)p[6] << 48)
+           | ((uint64_t)p[7] << 56);
+}
+
+static int utest_spotlight_rejects_empty_long_cnids(void)
+{
+    char rpcbuf[DSI_DATASIZ - 64];
+    TALLOC_CTX *tmp = talloc_new(NULL);
+    DALLOC_CTX *packed = talloc_zero(tmp, DALLOC_CTX);
+    DALLOC_CTX *unpacked = talloc_zero(tmp, DALLOC_CTX);
+    sl_cnids_t *cnids = talloc_zero(packed, sl_cnids_t);
+    const uint16_t ca_unkn1 = 0x0fec;
+    const uint32_t ca_context = 0x5a17c0de;
+    uint64_t cnid = 0x1122334455667788;
+    uint64_t cnid_header;
+    int rpclen;
+    int result = 0;
+
+    if (tmp == NULL || packed == NULL || unpacked == NULL || cnids == NULL) {
+        goto cleanup;
+    }
+
+    cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
+
+    if (cnids->ca_cnids == NULL) {
+        goto cleanup;
+    }
+
+    cnids->ca_unkn1 = ca_unkn1;
+    cnids->ca_context = ca_context;
+    dalloc_add_copy(cnids->ca_cnids, &cnid, uint64_t);
+    dalloc_add(packed, cnids, sl_cnids_t);
+    rpclen = sl_pack(packed, rpcbuf);
+
+    if (rpclen < 0) {
+        goto cleanup;
+    }
+
+    cnid_header = ((uint64_t)ca_context << 32)
+                  | ((uint64_t)ca_unkn1 << 16) | 1;
+
+    for (size_t offset = 16;
+            offset + sizeof(uint64_t) <= (size_t)rpclen;
+            offset += sizeof(uint64_t)) {
+        if (spotlight_test_get_le64(rpcbuf, offset) != cnid_header) {
+            continue;
+        }
+
+        rpcbuf[offset] = 0;
+        rpcbuf[offset + 1] = 0;
+        result = sl_unpack_len(unpacked, rpcbuf, (size_t)rpclen);
+        break;
+    }
+
+cleanup:
+    talloc_free(tmp);
+    return result == -1 ? 0 : -1;
+}
+#endif
 
 static void dsi_test_header(uint8_t *block, uint8_t command,
                             uint16_t request_id,
@@ -479,6 +556,10 @@ int main(int argc, char *argv[])
              "DSI receive rejects payload larger than server quantum");
     TEST_int(utest_dsi_receive_rejects_write_offset_past_payload(), 0,
              "DSI receive rejects DSIWrite offset beyond payload");
+#ifdef WITH_SPOTLIGHT
+    TEST_int(utest_spotlight_rejects_empty_long_cnids(), 0,
+             "Spotlight rejects long-form empty CNID array");
+#endif
     TEST_int(utest_dsi_receive_rejects_zero_length_cmd(), 0,
              "DSI receive rejects a command frame with no AFP function byte");
 #ifndef NO_DDP
