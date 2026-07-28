@@ -492,8 +492,9 @@ static int parse_entries(struct adouble *ad, uint16_t nentries,
 
         if (!eid
                 || eid > ADEID_MAX
-                || ((eid != ADEID_RFORK) && (off > valid_data_len))
-                || ((eid != ADEID_RFORK) && (off + len >  valid_data_len))) {
+                || ((eid != ADEID_RFORK)
+                    && (off > valid_data_len
+                        || (size_t)len > valid_data_len - (size_t)off))) {
             LOG(log_warning, logtype_ad, "parse_entries: bogus eid: %u, off: %u, len: %u",
                 (uint)eid, (uint)off, (uint)len);
             return -1;
