@@ -1263,7 +1263,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     /*
      * Clean up stale volume entries for the same path but with a different UUID.
      * This can happen when the UUID config file is rewritten without the entry
-     * for this volume (e.g. [Homes] volumes not loaded during load_volumes),
+     * for this volume (e.g. [Homes] volumes not loaded during load_afp_conf_vols),
      * causing a new UUID to be generated on the next open.
      */
     EC_NEG1(asprintf(&sql,

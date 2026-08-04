@@ -25,7 +25,7 @@
 use strict;
 use warnings;
 require 'netatalk-lib.pl';
-our (%in, %text, %netatalkParameterDefaults);
+our (%in, %text, %netatalkParameterDefaults, %netatalkDeprecatedAliases);
 my ($afpconfRef, $sectionRef);
 
 eval {
@@ -35,6 +35,8 @@ eval {
     $afpconfRef = &read_afpconf();
 
     $sectionRef = $$afpconfRef{sectionsByName}{'Global'} || die $text{edit_global_section_error} . "\n";
+
+    resolve_deprecated_aliases($sectionRef);
 };
 if ($@) {
     # preparations failed with an error message in $@ - print error
@@ -514,10 +516,10 @@ print &ui_tabs_end_tab('mode', 'network');
 print &ui_tabs_start_tab('mode', 'misc');
 print &ui_table_start($text{'edit_global_section_title_table'}, 'width="100%"', 2);
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'afp read locks', \%in);
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'strict locking', \%in);
 print &ui_table_row(
-                    $text{'edit_global_section_afp_read_locks'},
-                    &build_parameter_select($afpconfRef, $sectionRef, \%in, 'afp read locks')
+                    $text{'edit_global_section_strict_locking'},
+                    &build_parameter_select($afpconfRef, $sectionRef, \%in, 'strict locking')
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'close vol', \%in);

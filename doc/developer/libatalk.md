@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 
     setuplog("default:note", "/dev/tty");
 
-    if (load_volumes(&obj, NULL) != 0) {
+    if (load_afp_conf_vols(&obj, NULL) != 0) {
         ERROR("Couldn't load volumes");
     }
 

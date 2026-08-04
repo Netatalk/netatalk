@@ -35,7 +35,6 @@ our %netatalkParameterDefaults = (
                                   'acls'                        => 'yes',
                                   'advertise ssh'               => 'no',
                                   'afp port'                    => '548',
-                                  'afp read locks'              => 'no',
                                   'afpstats'                    => 'no',
                                   'appletalk'                   => 'no',
                                   'case sensitive'              => 'yes',
@@ -88,6 +87,7 @@ our %netatalkParameterDefaults = (
                                   'spotlight expr'              => 'yes',
                                   'srp passwd file'             => '/etc/netatalk/afppasswd.srp',
                                   'stat vol'                    => 'yes',
+                                  'strict locking'              => 'no',
                                   'time machine'                => 'no',
                                   'uam list'                    => 'uams_dhx2.so',
                                   'uam path'                    => '/usr/lib/netatalk',
@@ -104,10 +104,18 @@ our %netatalkParameterDefaults = (
 
 my @yesNoSelectOptions = ('yes', 'no');
 
+# Renamed afp.conf options: new name => deprecated alias still accepted by
+# the server.  Drives the edit-page display fallback and the save-time
+# cleanup below; future renames only need a new entry here.
+our %netatalkDeprecatedAliases = (
+                                  'dircache size'  => 'dircachesize',
+                                  'server name'    => 'zeroconf name',
+                                  'strict locking' => 'afp read locks',
+);
+
 our %netatalkParameterSelectOptions = (
                                        'acls'           => [@yesNoSelectOptions],
                                        'advertise ssh'  => [@yesNoSelectOptions],
-                                       'afp read locks' => [@yesNoSelectOptions],
                                        'afpstats'       => [@yesNoSelectOptions],
                                        'appletalk'      => [@yesNoSelectOptions],
                                        'case sensitive' => [@yesNoSelectOptions],
@@ -165,6 +173,7 @@ our %netatalkParameterSelectOptions = (
                                        'spotlight backend'          => ['cnid', 'localsearch', 'xapian'],
                                        'spotlight expr'             => [@yesNoSelectOptions],
                                        'stat vol'                   => [@yesNoSelectOptions],
+                                       'strict locking'             => [@yesNoSelectOptions],
                                        'time machine'               => [@yesNoSelectOptions],
                                        'unix priv'                  => [@yesNoSelectOptions],
                                        'use sendfile'               => [@yesNoSelectOptions],
@@ -385,6 +394,34 @@ sub get_parameter_of_section {
 # Checks the parameters for consistency, modifies the structure and
 # writes out the afp.conf file, if modifications actually took place.
 #
+# Display fallback for renamed options: when the new key is absent (or
+# present but empty) and the section still carries the deprecated alias,
+# surface the alias value under the new name so the form shows the
+# setting the server actually honours.
+sub resolve_deprecated_aliases {
+    my $sectionRef = shift;
+
+    while (my ($new, $old) = each %netatalkDeprecatedAliases) {
+        next unless exists $$sectionRef{parameters}{$old};
+        if (!exists $$sectionRef{parameters}{$new}
+             || $$sectionRef{parameters}{$new}{value} eq '') {
+            $$sectionRef{parameters}{$new} = $$sectionRef{parameters}{$old};
+        }
+    }
+}
+
+# Save-time cleanup for renamed options: when a form posts the new key,
+# delete the deprecated alias line (its value was carried by the new key
+# via resolve_deprecated_aliases).  A form that never posted the new key
+# (e.g. rendered before an upgrade) leaves the alias untouched.
+sub clear_deprecated_aliases {
+    my $inRef = shift;
+
+    while (my ($new, $old) = each %netatalkDeprecatedAliases) {
+        $$inRef{"p_$old"} = '' if exists $$inRef{"p_$new"};
+    }
+}
+
 sub modify_afpconf_ref_and_write {
     my $afpconfRef = shift;
     my $paramRef   = shift;

@@ -100,7 +100,7 @@ static void test_bytelock(uint16_t vol, char *name, int type)
     }
 }
 /* -----------
- * Requires "afp read locks = yes" (OPTION_AFP_READ_LOCK): test_bytelock()
+ * Requires "strict locking = yes" (OPTION_STRICT_LOCKING): test_bytelock()
  * asserts AFPERR_LOCK on a second fork's FPRead/FPWrite over a range locked by
  * the first fork, which afpd only enforces when that option is enabled. The
  * option is off by default (AFP-spec behaviour, traded off against UNIX
@@ -122,7 +122,7 @@ test_exit:
 }
 
 /* -----------
- * Requires "afp read locks = yes"; see test63. */
+ * Requires "strict locking = yes"; see test63. */
 STATIC void test64()
 {
     char *name = "test64 FPByteLock RF";
@@ -202,7 +202,7 @@ fin:
 }
 
 /* ---------------
- * Requires "afp read locks = yes"; see test63. test_bytelock3() asserts a
+ * Requires "strict locking = yes"; see test63. test_bytelock3() asserts a
  * second user's FPRead/FPWrite over the first user's locked range returns
  * AFPERR_LOCK, which afpd only enforces with that option enabled. */
 STATIC void test65()
@@ -326,7 +326,7 @@ fin:
 }
 
 /* --------------------------
- * Requires "afp read locks = yes" (the FPWrite_ext-over-lock assertion in
+ * Requires "strict locking = yes" (the FPWrite_ext-over-lock assertion in
  * test_bytelock2() is only enforced with that option; see test63).
  *
  * test_bytelock2() takes a to-EOF lock [0,-1] on one fork, closes a sibling fork
@@ -361,7 +361,7 @@ test_exit:
 }
 
 /* -----------
- * Requires "afp read locks = yes" (OPTION_AFP_READ_LOCK): asserts a second
+ * Requires "strict locking = yes" (OPTION_STRICT_LOCKING): asserts a second
  * fork's FPRead over a range locked by the first fork returns AFPERR_LOCK,
  * which afpd only enforces with that option enabled. See test63. */
 STATIC void test79()
@@ -1197,7 +1197,7 @@ test_exit:
  * Two AFP sessions each lock a DISJOINT range on the same file; assert both
  * succeed. Then assert an overlapping-range lock from the other session is
  * refused (AFPERR_LOCK). FPByteLock-vs-FPByteLock conflict is always enforced
- * (independent of "afp read locks"), so this runs by default.
+ * (independent of "strict locking"), so this runs by default.
  * ----------------------------------------------------------------- */
 STATIC void test606()
 {

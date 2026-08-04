@@ -89,6 +89,20 @@ static int have_uservol = 0;
 static struct vol *Volumes = NULL;
 static uint16_t lastvid = 0;
 
+/*!
+ * @brief Test seam: set the volume-id counter
+ *
+ * Saturating it (UINT16_MAX) makes the next creatvol() take the
+ * vid-overflow failure path.  Lives here because the static it mutates
+ * does; declared in the test-local subtests_conf.h, not the public API.
+ *
+ * @param[in] vid  new counter value (unload_volumes() resets it to 0)
+ */
+void conf_testutil_set_lastvid(uint16_t vid)
+{
+    lastvid = vid;
+}
+
 static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
 {
     int result;
@@ -346,8 +360,8 @@ static int do_check_ea_support(const struct vol *vol)
         haseas = 1;
     } else {
         LOG(log_warning, logtype_afpd,
-            "volume \"%s\" does not support Extended Attributes or read-only volume",
-            vol->v_localname);
+            "volume \"%s\" does not support Extended Attributes or read-only volume: %s",
+            vol->v_localname, strerror(errno));
         haseas = 0;
     }
 
@@ -875,6 +889,68 @@ static char *getoption_strdup(INIPARSER_DICTIONARY *conf, const char *vol,
 }
 
 /*!
+ * @brief Parse one boolean config value strictly
+ *
+ * Accepted spellings (case-insensitive, whole-word):
+ *   true:  yes, y, true, t, on, enabled, 1
+ *   false: no, n, false, f, off, disabled, 0
+ *
+ * @param[in] opt  option name, for the warning
+ * @param[in] val  raw config value (may be NULL or empty = unset)
+ *
+ * @returns 1 (true), 0 (false), or -1 (unset, or invalid with a warning)
+ */
+static int conf_parse_bool(const char *opt, const char *val)
+{
+    if (val == NULL || *val == '\0') {
+        return -1;
+    }
+
+    if (strcasecmp(val, "yes") == 0 || strcasecmp(val, "y") == 0
+            || strcasecmp(val, "true") == 0 || strcasecmp(val, "t") == 0
+            || strcasecmp(val, "on") == 0 || strcasecmp(val, "enabled") == 0
+            || strcmp(val, "1") == 0) {
+        return 1;
+    }
+
+    if (strcasecmp(val, "no") == 0 || strcasecmp(val, "n") == 0
+            || strcasecmp(val, "false") == 0 || strcasecmp(val, "f") == 0
+            || strcasecmp(val, "off") == 0 || strcasecmp(val, "disabled") == 0
+            || strcmp(val, "0") == 0) {
+        return 0;
+    }
+
+    LOG(log_warning, logtype_afpd,
+        "Config: %s value '%s' is not a valid boolean (yes/no, y/n, "
+        "true/false, t/f, on/off, enabled/disabled, 1/0); ignoring it",
+        opt, val);
+    return -1;
+}
+
+/*!
+ * @brief Whether a [Global] key is present with a non-empty value
+ *
+ * The explicitness probe for the ea = samba defaults: "the operator said
+ * something" is recorded separately from the parsed value so it stays
+ * correct when compiled defaults change.  Empty values ("key = ") count
+ * as unset, matching every parse in this file.  Note the deliberate
+ * asymmetry with booleans: a boolean only counts as explicit when it
+ * parses (conf_parse_bool() != -1, invalid = warned + unset), while int
+ * options count on presence because safe_atoi() already resolved an
+ * invalid value to the default with its own warning.
+ *
+ * @param[in] conf  config handle
+ * @param[in] opt   option name
+ *
+ * @returns 1 when the key is set non-empty in [Global], else 0
+ */
+static int conf_key_present(INIPARSER_DICTIONARY *conf, const char *opt)
+{
+    const char *raw = INIPARSER_GETSTR(conf, INISEC_GLOBAL, opt, NULL);
+    return raw && *raw;
+}
+
+/*!
  * @brief Get boolean option from config, use default value if not set
  *
  * @param[in] conf    config handle
@@ -891,11 +967,11 @@ static int getoption_bool(INIPARSER_DICTIONARY *conf, const char *vol,
     int result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
+    result = conf_parse_bool(opt, iniparser_getstring(conf, option, NULL));
 
-    if (((result = iniparser_getboolean(conf, option, -1)) == -1)
-            && (defsec != NULL)) {
+    if (result == -1 && defsec != NULL) {
         snprintf(option, sizeof(option), "%s:%s", defsec, opt);
-        result = iniparser_getboolean(conf, option, -1);
+        result = conf_parse_bool(opt, iniparser_getstring(conf, option, NULL));
     }
 
     if (result == -1) {
@@ -1065,9 +1141,9 @@ static uint32_t getoption_uint32_strict(INIPARSER_DICTIONARY *conf,
  * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
  * @param[in] opt     option
  * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
- * @param[in] defval  if neither "vol" nor "defsec" contain "opt" return "defval"
+ * @param[in] defval  if neither "vol", "defsec" nor global contain "opt" return "defval"
  *
- * @returns       const option string from "vol" or "defsec", or "defval" if not found
+ * @returns       1 or 0 from "vol", "defsec" or global, or "defval" if not found
  */
 static int vdgoption_bool(INIPARSER_DICTIONARY *conf, const char *vol,
                           const char *opt, const char *defsec, int defval)
@@ -1075,19 +1151,141 @@ static int vdgoption_bool(INIPARSER_DICTIONARY *conf, const char *vol,
     int result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
-    result = iniparser_getboolean(conf, option, -1);
+    result = conf_parse_bool(opt, iniparser_getstring(conf, option, NULL));
 
-    if ((result == -1) && (defsec != NULL)) {
+    if (result == -1 && defsec != NULL) {
         snprintf(option, sizeof(option), "%s:%s", defsec, opt);
-        result = iniparser_getboolean(conf, option, -1);
+        result = conf_parse_bool(opt, iniparser_getstring(conf, option, NULL));
     }
 
     if (result == -1) {
         snprintf(option, sizeof(option), "%s:%s", INISEC_GLOBAL, opt);
-        result = iniparser_getboolean(conf, option, defval);
+        result = conf_parse_bool(opt, iniparser_getstring(conf, option, NULL));
+    }
+
+    if (result == -1) {
+        result = defval;
     }
 
     return result;
+}
+
+/*!
+ * @brief Get string option from volume, default section or global -
+ * use default value if not set
+ *
+ * Order of precedence: volume -> default section -> global -> default value
+ *
+ * "vdg" means volume, default section or global
+ *
+ * @param[in] conf    config handle
+ * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
+ * @param[in] opt     option
+ * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
+ * @param[in] defval  if neither "vol", "defsec" nor global contain "opt" return "defval"
+ *
+ * @returns       const option string from "vol", "defsec" or global, or "defval" if not found
+ */
+static const char *vdgoption_str(INIPARSER_DICTIONARY *conf, const char *vol,
+                                 const char *opt, const char *defsec,
+                                 const char *defval)
+{
+    const char *result;
+    char option[MAXOPTLEN];
+    snprintf(option, sizeof(option), "%s:%s", vol, opt);
+    result = iniparser_getstring(conf, option, NULL);
+
+    if ((result == NULL) && (defsec != NULL)) {
+        snprintf(option, sizeof(option), "%s:%s", defsec, opt);
+        result = iniparser_getstring(conf, option, NULL);
+    }
+
+    if (result == NULL) {
+        snprintf(option, sizeof(option), "%s:%s", INISEC_GLOBAL, opt);
+        result = iniparser_getstring(conf, option, defval);
+    }
+
+    return result;
+}
+
+/*!
+ * @brief Apply the ea = samba coherency defaults to the process options
+ *
+ * Defaults the settings safe concurrent Samba access requires: strict
+ * locking on, dircache validation on every access, rfork caching off,
+ * (Solaris) F_SHARE reservations on.  Defaults only: an explicit
+ * afp.conf setting wins, with a warning when it weakens Samba coherency.
+ * Idempotent across config reloads.
+ *
+ * @param[in] obj      handle (options are process-global)
+ * @param[in] volname  volume name, for the log messages
+ */
+static void apply_samba_defaults(AFPObj *obj, const char *volname)
+{
+    struct afp_options *options = &obj->options;
+
+    if (options->strict_locking_explicit) {
+        if (!(options->flags & OPTION_STRICT_LOCKING)) {
+            LOG(log_warning, logtype_afpd,
+                "creatvol(\"%s\"): ea = samba, however 'strict locking' is "
+                "explicitly disabled. AFP reads and writes will not respect "
+                "Samba's byte-range locks", volname);
+        }
+    } else if (!(options->flags & OPTION_STRICT_LOCKING)) {
+        LOG(log_note, logtype_afpd,
+            "creatvol(\"%s\"): ea = samba: defaulting 'strict locking' to yes "
+            "(POSIX read+write data locks, visible to Samba)", volname);
+        options->flags |= OPTION_STRICT_LOCKING;
+    }
+
+    if (options->dircache_validation_freq_explicit) {
+        /* Out-of-range values (<1 or >100) already fell back to the
+         * fail-safe (validate always) at dircache_init(); only an
+         * in-range value > 1 actually weakens coherency. */
+        if (options->dircache_validation_freq > 1
+                && options->dircache_validation_freq <= 100) {
+            LOG(log_warning, logtype_afpd,
+                "creatvol(\"%s\"): ea = samba, however 'dircache validation "
+                "freq' is explicitly %d. Netatalk may serve stale answers for "
+                "files Samba changes", volname,
+                options->dircache_validation_freq);
+        }
+    } else if (options->dircache_validation_freq != 1) {
+        LOG(log_note, logtype_afpd,
+            "creatvol(\"%s\"): ea = samba: defaulting 'dircache validation "
+            "freq' to 1 (revalidate on every access; Samba mutates the volume "
+            "externally)", volname);
+        options->dircache_validation_freq = 1;
+    }
+
+    /* The rfork budget is process-global; per-volume exclusion happens at
+     * the Tier-2 cache gate in fork.c, so non-samba volumes keep the cache.
+     * Here we only log the outcome for this volume. */
+    if (options->dircache_rfork_budget > 0) {
+        if (options->dircache_rfork_budget_explicit) {
+            LOG(log_warning, logtype_afpd,
+                "creatvol(\"%s\"): ea = samba, however rfork caching is "
+                "explicitly enabled. The rfork cache cannot detect resource "
+                "fork changes made by Samba", volname);
+        } else {
+            LOG(log_note, logtype_afpd,
+                "creatvol(\"%s\"): ea = samba: volume excluded from "
+                "the rfork cache by default (cached resource forks cannot "
+                "track Samba's changes)", volname);
+        }
+    }
+
+#ifdef HAVE_FSHARE_T
+
+    if (!(options->flags & OPTION_SHARE_RESERV)) {
+        /* Default is on, so a clear bit is always an explicit 'no'. */
+        LOG(log_warning, logtype_afpd,
+            "creatvol(\"%s\"): ea = samba, however 'solaris share "
+            "reservations' is explicitly disabled. F_SHARE is the only "
+            "deny-mode layer Samba sees", volname);
+    }
+
+#endif
 }
 
 /*!
@@ -1361,22 +1559,20 @@ static struct vol *creatvol(AFPObj *obj,
     if (getoption_bool(obj->iniconfig, INISEC_GLOBAL, "vol dbnest", NULL, 0)) {
         EC_NULL(volume->v_dbpath = strdup(path));
     } else {
-        const char *global_path;
-        val = getoption_str(obj->iniconfig, section, "vol dbpath", preset, NULL);
+        /* Not vdgoption_str(): the [Global] level has its own semantics
+         * here -- a value without a variable is pre-3.1.1 behaviour and
+         * gets the volume name appended, which must not apply to
+         * volume/preset values. */
+        val = getoption_str(obj->iniconfig, section, "vol dbpath", preset,
+                            NULL);
 
         if (val == NULL) {
-            /* check global option */
-            global_path = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", NULL,
-                                        NULL);
+            val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath",
+                                NULL, NULL);
 
-            if (global_path) {
-                /* check for pre 3.1.1 behaviour without variable */
-                if (strchr(global_path, '$') == NULL) {
-                    global_path_tmp = bformat("%s/%s/", global_path, tmpname);
-                    val = cfrombstr(global_path_tmp);
-                } else {
-                    val = global_path;
-                }
+            if (val && strchr(val, '$') == NULL) {
+                EC_NULL(global_path_tmp = bformat("%s/%s/", val, tmpname));
+                val = cfrombstr(global_path_tmp);
             }
         }
 
@@ -1395,30 +1591,13 @@ static struct vol *creatvol(AFPObj *obj,
                                             cfrombstr(dbpath), pwd, NULL, tmpname));
     }
 
-    if ((val = getoption_str(obj->iniconfig, section, "cnid scheme", preset,
-                             NULL))) {
-        EC_NULL(volume->v_cnidscheme = strdup(val));
-    } else {
-        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "cnid scheme", NULL,
-                            NULL);
+    val = vdgoption_str(obj->iniconfig, section, "cnid scheme", preset,
+                        DEFAULT_CNID_SCHEME);
+    EC_NULL(volume->v_cnidscheme = strdup(val));
+    val = vdgoption_str(obj->iniconfig, section, "legacy icon", preset, NULL);
 
-        if (val) {
-            EC_NULL(volume->v_cnidscheme = strdup(val));
-        } else {
-            volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
-        }
-    }
-
-    if ((val = getoption_str(obj->iniconfig, section, "legacy icon", preset,
-                             NULL))) {
+    if (val && val[0] != '\0') {
         EC_NULL(volume->v_legacyicon = strdup(val));
-    } else {
-        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "legacy icon", NULL,
-                            NULL);
-
-        if (val && val[0] != '\0') {
-            EC_NULL(volume->v_legacyicon = strdup(val));
-        }
     }
 
     if ((val = getoption_str(obj->iniconfig, section, "umask", preset, NULL))) {
@@ -1472,7 +1651,12 @@ static struct vol *creatvol(AFPObj *obj,
             name, volume->v_uuid);
     }
 
-    if ((val = getoption_str(obj->iniconfig, section, "ea", preset, NULL))) {
+    /* Resolve ea from: volume section -> preset -> [Global] -> built-in
+     * auto-detect.  An empty value ("ea = ") keeps auto-detect: an
+     * explicitly emptied volume key opts out of inheritance. */
+    val = vdgoption_str(obj->iniconfig, section, "ea", preset, NULL);
+
+    if (val && *val) {
         if (strcasecmp(val, "sys") == 0) {
             volume->v_adouble = AD_VERSION_EA;
             volume->v_vfs_ea = AFPVOL_EA_SYS;
@@ -1485,6 +1669,10 @@ static struct vol *creatvol(AFPObj *obj,
             volume->v_vfs_ea = AFPVOL_EA_AD;
         } else if (strcasecmp(val, "none") == 0) {
             volume->v_vfs_ea = AFPVOL_EA_NONE;
+        } else {
+            LOG(log_warning, logtype_afpd,
+                "creatvol(\"%s\"): unknown ea mode \"%s\"; using auto-detect",
+                name, val);
         }
     }
 
@@ -1571,20 +1759,9 @@ static struct vol *creatvol(AFPObj *obj,
         obj->options.flags |= OPTION_SPOTLIGHT;
     }
 
-    if ((val = getoption_str(obj->iniconfig, section, "spotlight backend", preset,
-                             NULL))) {
-        EC_NULL(volume->v_sl_backend_name = strdup(val));
-    } else {
-        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "spotlight backend", NULL,
-                            NULL);
-
-        if (val) {
-            EC_NULL(volume->v_sl_backend_name = strdup(val));
-        } else {
-            volume->v_sl_backend_name = strdup("cnid");
-        }
-    }
-
+    val = vdgoption_str(obj->iniconfig, section, "spotlight backend", preset,
+                        "cnid");
+    EC_NULL(volume->v_sl_backend_name = strdup(val));
     LOG(log_debug, logtype_afpd,
         "creatvol: volume \"%s\": spotlight backend \"%s\"",
         name, volume->v_sl_backend_name);
@@ -1621,12 +1798,8 @@ static struct vol *creatvol(AFPObj *obj,
         }
     }
 
-    val = getoption_str(obj->iniconfig, section, "chmod request", preset, NULL);
-
-    if (val == NULL) {
-        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "chmod request", NULL,
-                            "preserve");
-    }
+    val = vdgoption_str(obj->iniconfig, section, "chmod request", preset,
+                        "preserve");
 
     if (strcasecmp(val, "ignore") == 0) {
         volume->v_flags |= AFPVOL_CHMOD_IGNORE;
@@ -1825,6 +1998,22 @@ static struct vol *creatvol(AFPObj *obj,
         check_ea_support(volume);
     }
 
+    /* ea = samba promises Samba-readable metadata; a volume that cannot
+     * store EAs cannot keep that promise.  Refuse to load it rather than
+     * serve AppleDouble v2 that Samba cannot read. */
+    if ((volume->v_flags & AFPVOL_EA_SAMBA)
+            && volume->v_adouble != AD_VERSION_EA) {
+        LOG(log_error, logtype_afpd,
+            "creatvol(\"%s\"): ea = samba requires filesystem Extended "
+            "Attribute support, which this volume lacks; volume not loaded",
+            name);
+        /* The volume never joins the chain, so return its vid: a
+         * misconfigured volume is retried on every config reload and would
+         * otherwise walk lastvid to overflow, refusing valid volumes too. */
+        lastvid--;
+        EC_FAIL;
+    }
+
     initvol_vfs(volume);
 
     /* get/store uuid from file in afpd master (unless already set from config) */
@@ -1844,6 +2033,13 @@ static struct vol *creatvol(AFPObj *obj,
     }
 
     /* no errors shall happen beyond this point because the cleanup would mess the volume chain up */
+
+    /* Applied only after the volume can no longer fail: options changes
+     * are process-global and volume_free() cannot undo them. */
+    if (volume->v_flags & AFPVOL_EA_SAMBA) {
+        apply_samba_defaults(obj, name);
+    }
+
     volume->v_next = Volumes;
     Volumes = volume;
     volume->v_obj = obj;
@@ -2239,7 +2435,7 @@ void volume_unlink(struct vol *volume)
 }
 
 /*!
- * @brief Free all resources allocated in a struct vol in load_volumes()
+ * @brief Free all resources allocated in a struct vol in load_afp_conf_vols()
  *
  * Actually opening a volume (afp_openvol()) will allocate additional
  * resources which are freed in closevol()
@@ -2298,7 +2494,7 @@ int load_charset(struct vol *vol)
  *                     - LV_ALL: load shares that are available in the config file
  *                     - LV_FORCE: reload file even though the timestamp wasn't changed
  */
-int load_volumes(AFPObj *obj, lv_flags_t flags)
+int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
 {
     EC_INIT;
     static long         bufsize;
@@ -2307,9 +2503,8 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     struct passwd       pwent;
     struct passwd      *pwresult = NULL;
     struct stat         st;
-    int                 retries = 0;
     struct vol         *vol;
-    LOG(log_debug, logtype_afpd, "load_volumes: BEGIN");
+    LOG(log_debug, logtype_afpd, "load_afp_conf_vols: BEGIN");
 
     if (pwbuf == NULL) {
         bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
@@ -2327,11 +2522,59 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
         ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize, &pwresult);
 
         if (pwresult == NULL) {
-            LOG(log_error, logtype_afpd, "load_volumes: getpwuid_r: %s", strerror(errno));
+            LOG(log_error, logtype_afpd, "load_afp_conf_vols: getpwuid_r: %s",
+                ret ? strerror(ret) : "user not found");
             EC_FAIL;
         }
 
         pwresult = &pwent;
+    }
+
+    /* Fast path: an unchanged config needs no open, no lock, no work.
+     * The mtime comparison here is read-only (volfile_changed() below,
+     * under the lock, is what consumes it), so a stale answer costs at
+     * most one extra reload cycle -- these calls run per
+     * FPGetSrvrParms/FPOpenVol. */
+    if (Volumes && !(flags & LV_FORCE)
+            && stat(obj->options.configfile, &st) == 0
+            && st.st_mtime <= obj->options.volfile.mtime) {
+        goto EC_CLEANUP;
+    }
+
+    /* Open and lock the config FIRST: a failure here must leave the reload
+     * state untouched (volfile mtime unconsumed, no v_deleted marks), so a
+     * transient lock contention only delays the reload to the next attempt
+     * instead of silently swallowing it. */
+    become_root();
+    fd = open(obj->options.configfile, O_RDONLY);
+    int open_errno = errno;
+    unbecome_root();
+
+    if (fd == -1) {
+        LOG(log_error, logtype_afpd,
+            "load_afp_conf_vols: can't open configfile \"%s\": %s",
+            obj->options.configfile, strerror(open_errno));
+        EC_FAIL;
+    }
+
+    int locked = 0;
+
+    for (int retries = 0; retries < 2; retries++) {
+        if (read_lock(fd, 0, SEEK_SET, 0) == 0) {
+            locked = 1;
+            break;
+        }
+
+        if (retries == 0) {
+            sleep(1);
+        }
+    }
+
+    if (!locked) {
+        LOG(log_error, logtype_afpd,
+            "load_afp_conf_vols: can't lock configfile \"%s\": %s",
+            obj->options.configfile, strerror(errno));
+        EC_FAIL;
     }
 
     if (Volumes) {
@@ -2351,43 +2594,22 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
             unbecome_root();
 
             if (ret != 0) {
-                LOG(log_error, logtype_afpd, "load_volumes: set_groups: %s", strerror(errno));
+                LOG(log_error, logtype_afpd, "load_afp_conf_vols: set_groups: %s",
+                    strerror(errno));
                 EC_FAIL;
             }
         }
     } else {
-        LOG(log_debug, logtype_afpd, "load_volumes: no volumes yet");
+        LOG(log_debug, logtype_afpd, "load_afp_conf_vols: no volumes yet");
         EC_ZERO_LOG(lstat(obj->options.configfile, &st));
         obj->options.volfile.mtime = st.st_mtime;
-    }
-
-    /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
-    become_root();
-    fd = open(obj->options.configfile, O_RDONLY);
-    unbecome_root();
-
-    while (retries < 2) {
-        if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
-            retries++;
-
-            if (!retries) {
-                LOG(log_error, logtype_afpd, "readvolfile: can't lock configfile \"%s\"",
-                    obj->options.configfile);
-                EC_FAIL;
-            }
-
-            sleep(1);
-            continue;
-        }
-
-        break;
     }
 
     if (obj->iniconfig) {
         iniparser_freedict(obj->iniconfig);
     }
 
-    LOG(log_debug, logtype_afpd, "load_volumes: loading: %s",
+    LOG(log_debug, logtype_afpd, "load_afp_conf_vols: loading: %s",
         obj->options.configfile);
     become_root();
     obj->iniconfig = iniparser_load(obj->options.configfile);
@@ -2399,7 +2621,8 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
 
     while (vol) {
         if (vol->v_deleted && !(vol->v_flags & AFPVOL_OPEN)) {
-            LOG(log_debug, logtype_afpd, "load_volumes: deleted: %s", vol->v_localname);
+            LOG(log_debug, logtype_afpd, "load_afp_conf_vols: deleted: %s",
+                vol->v_localname);
             nextvol = vol->v_next;
 
             if (prevvol) {
@@ -2440,7 +2663,7 @@ EC_CLEANUP:
         (void)close(fd);
     }
 
-    LOG(log_debug, logtype_afpd, "load_volumes: END");
+    LOG(log_debug, logtype_afpd, "load_afp_conf_vols: END");
     EC_EXIT;
 }
 
@@ -2547,14 +2770,14 @@ EC_CLEANUP:
  * @brief Search volume by path, creating user home vols as necessary
  *
  * Path may be absolute or relative. Ordinary volume structs are created when
- * the ini config is initially parsed (load_volumes()), but user volumes are
- * as load_volumes() only can create the user volume of the logged in user
+ * the ini config is initially parsed (load_afp_conf_vols()), but user volumes are
+ * as load_afp_conf_vols() only can create the user volume of the logged in user
  * in an AFP session in afpd, but not when called from e.g. cnid_metad or dbd.
  * Both cnid_metad and dbd thus need a way to lookup and create struct vols
  * for user home by path. This is what this func does as well.
  *
  * 1. Search "normal" volume list
- * 2. Check if theres a [Homes] section, load_volumes() remembers this for us
+ * 2. Check if theres a [Homes] section, load_afp_conf_vols() remembers this for us
  * 3. If there is, match "path" with "basedir regex" to get the user home parent dir
  * 4. Built user home path by appending the basedir matched in (3) and appending the username
  * 5. The next path element then is the username
@@ -2898,8 +3121,39 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         free(p);
     }
 
-    if (getoption_bool(config, INISEC_GLOBAL, "afp read locks", NULL, 0)) {
-        options->flags |= OPTION_AFP_READ_LOCK;
+    /* "strict locking" (canonical) with "afp read locks" as deprecated
+     * alias.  One raw read per key: conf_parse_bool() gives the tri-state
+     * value (-1 = unset; invalid values warn and read as unset) and the
+     * raw pointer gives presence for the deprecation notice, so an
+     * explicit new-key value always beats the alias. */
+    {
+        const char *raw_alias = INIPARSER_GETSTR(config, INISEC_GLOBAL,
+                                "afp read locks", NULL);
+        int strict_locking = conf_parse_bool("strict locking",
+                                             INIPARSER_GETSTR(config,
+                                                 INISEC_GLOBAL,
+                                                 "strict locking",
+                                                 NULL));
+
+        /* Notice keys on key presence with a non-empty value (valid or
+         * not), not on parse success; empty counts as unset. */
+        if (raw_alias && *raw_alias) {
+            LOG(log_warning, logtype_afpd,
+                "Using deprecated 'afp read locks' option, please update to 'strict locking'");
+        }
+
+        if (strict_locking == -1) {
+            strict_locking = conf_parse_bool("afp read locks", raw_alias);
+        }
+
+        if (strict_locking == 1) {
+            options->flags |= OPTION_STRICT_LOCKING;
+        }
+
+        /* Explicit = parsed to a valid value from either key; invalid
+         * values were ignored above and do not count.  creatvol()'s
+         * samba defaults apply only when unset. */
+        options->strict_locking_explicit = (strict_locking != -1);
     }
 
     if (getoption_bool(config, INISEC_GLOBAL, "spotlight", NULL, 1)) {
@@ -3049,12 +3303,18 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->dircache_validation_freq = getoption_int(config, INISEC_GLOBAL,
                                         "dircache validation freq", NULL,
                                         DEFAULT_DIRCACHE_VALIDATION_FREQ);
+    /* ea = samba adjusts defaults only: record whether the key was set */
+    options->dircache_validation_freq_explicit =
+        conf_key_present(config, "dircache validation freq");
     /* Tier 2: Resource Fork data cache configuration.
      * Hard caps defined in globals.h: RFORK_BUDGET_MAX_KB, RFORK_ENTRY_MAX_KB.
      * On 32-bit platforms, clamp to SIZE_MAX / 1024 to prevent overflow
      * when converting KB to bytes in dircache_init(). */
     options->dircache_rfork_budget = getoption_int(config, INISEC_GLOBAL,
                                      "dircache rfork budget", NULL, 0);
+    /* ea = samba adjusts defaults only: record whether the key was set */
+    options->dircache_rfork_budget_explicit =
+        conf_key_present(config, "dircache rfork budget");
 
     if (options->dircache_rfork_budget < 0) {
         options->dircache_rfork_budget = 0;

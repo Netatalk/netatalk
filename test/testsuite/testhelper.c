@@ -31,7 +31,7 @@ void test_skipped(int why)
         break;
 
     case T_LOCKING:
-        s = "server option 'afp read locks = yes' and -L";
+        s = "server option 'strict locking = yes' and -L";
         break;
 
     case T_AFP2:

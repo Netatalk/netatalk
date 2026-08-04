@@ -721,7 +721,7 @@ int main(int argc, char *argv[])
         LOG(log_debug, logtype_cnid, "user: %s, volume %s, path %s",
             username ? username : "-", volname, volpath);
 
-        if (load_volumes(&obj, LV_ALL) != 0) {
+        if (load_afp_conf_vols(&obj, LV_ALL) != 0) {
             LOG(log_severe, logtype_cnid, "main: error reloading config");
             goto loop_end;
         }

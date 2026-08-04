@@ -241,7 +241,7 @@ int main(int argc, char **argv)
         obj.uid = pwd->pw_uid;
     }
 
-    if (load_volumes(&obj, LV_ALL) != 0) {
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0) {
         dbd_log(LOGSTD, "Couldn't load volumes");
         exit(EXIT_FAILURE);
     }

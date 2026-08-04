@@ -119,7 +119,7 @@ struct vol {
     uint32_t        v_ignattr;  /*!< AFP attributes that shall be ignored */
 };
 
-/*! load_volumes() flags */
+/*! load_afp_conf_vols() flags */
 typedef enum {
     LV_DEFAULT = 0,
     LV_ALL = 1,      /*!< Skip access checks */

@@ -432,6 +432,14 @@ else
     AFP_EA="sys"
 fi
 
+# Canonical: AFP_STRICT_LOCKING (matches the renamed 'strict locking'
+# option). AFP_READ_LOCKS is the deprecated old name, kept as a fallback;
+# the new name wins when both are set.
+if [ -z "$AFP_STRICT_LOCKING" ] && [ -n "$AFP_READ_LOCKS" ]; then
+    echo "NOTE: AFP_READ_LOCKS is deprecated; use AFP_STRICT_LOCKING."
+    AFP_STRICT_LOCKING="$AFP_READ_LOCKS"
+fi
+
 if [ -n "$ATALKD_INTERFACE" ]; then
     AFP_DDP="yes"
 else
@@ -532,11 +540,11 @@ if [ "$TESTSUITE" = "spectest" ] && [ -z "$AFP_REMOTE" ]; then
     TEST_FLAGS="$TEST_FLAGS -c $NETATALK_SHARE_DIR"
 fi
 
-# When the server enables 'afp read locks', tell afp_spectest (-L) so the
+# When the server enables 'strict locking', tell afp_spectest (-L) so the
 # byte-range read-lock conflict tests run instead of skipping (T_LOCKING).
 # -L is an afp_spectest-only flag, so gate it on the spectest suite to avoid
 # passing an unknown option to the other test runners.
-if [ "$TESTSUITE" = "spectest" ] && [ "$AFP_READ_LOCKS" = "yes" ]; then
+if [ "$TESTSUITE" = "spectest" ] && [ "$AFP_STRICT_LOCKING" = "yes" ]; then
     TEST_FLAGS="$TEST_FLAGS -L"
 fi
 
@@ -554,7 +562,7 @@ if [ -z "$MANUAL_CONFIG" ]; then
 [Global]
 appletalk = $AFP_DDP
 afp listen = ${AFP_LISTEN:-0.0.0.0}
-afp read locks = ${AFP_READ_LOCKS:-no}
+${AFP_STRICT_LOCKING:+strict locking = $AFP_STRICT_LOCKING}
 cnid mysql host = $AFP_CNID_SQL_HOST
 cnid mysql user = $AFP_CNID_SQL_USER
 cnid mysql pw = $AFP_CNID_SQL_PASS

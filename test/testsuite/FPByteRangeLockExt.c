@@ -81,7 +81,7 @@ fin:
 }
 
 /* -----------
- * Requires "afp read locks = yes" (OPTION_AFP_READ_LOCK): test_bytelock_ext()
+ * Requires "strict locking = yes" (OPTION_STRICT_LOCKING): test_bytelock_ext()
  * asserts AFPERR_LOCK on a second fork's FPRead/FPWrite over a range locked by
  * the first fork, which afpd only enforces with that option enabled. The option
  * is off by default (AFP-spec behaviour, traded off against UNIX semantics and
@@ -107,7 +107,7 @@ test_exit:
 }
 
 /* -----------
- * Requires "afp read locks = yes"; see test66. */
+ * Requires "strict locking = yes"; see test66. */
 STATIC void test67()
 {
     char *name = "t67 FPByteLock_ext RF";

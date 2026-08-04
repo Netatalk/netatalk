@@ -17,6 +17,7 @@ See the table of old and new option names below for details.
 
 | v3 afp.conf        | v4 afp.conf      | Change in | Remarks                                                  |
 | ------------------ | ---------------- | --------- | -------------------------------------------------------- |
+| afp read locks     | strict locking   | 4.6.0     | old name is a deprecated synonym that logs a warning     |
 | appledouble        | -                | 4.2.0     | controlled solely by 'ea' now                            |
 | dircachesize       | dircache size    | 4.5.0     | -                                                        |
 | fce ignore names   | fce ignore names | 4.2.0     | comma delineation rather than forward slash delineation  |

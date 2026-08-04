@@ -15,6 +15,12 @@ EXT_FN(FPEnumerate);
 EXT_FN(FPCopyFile);
 EXT_FN(FPLockrw);
 EXT_FN(FPLockw);
+EXT_FN(FPWrite);
+EXT_FN(FPRead);
+EXT_FN(FPSetEA);
+EXT_FN(FPGetEA);
+EXT_FN(FPSetInhibit);
+EXT_FN(FPByteLockHold);
 
 struct test_fn {
     char *name;
@@ -27,8 +33,14 @@ static struct test_fn Test_list[] = {
     FN_N(FPResolveID, CNID)
     FN_N(FPEnumerate, dir)
     FN_N(FPCopyFile, source dest)
-    FN_N(FPLockrw, d | r file)
-    FN_N(FPLockw, d | r file)
+    FN_N(FPLockrw, d | r file [seconds])
+    FN_N(FPLockw, d | r file [seconds])
+    FN_N(FPWrite, file content)
+    FN_N(FPRead, file)
+    FN_N(FPSetEA, file attribute value)
+    FN_N(FPGetEA, file attribute)
+    FN_N(FPSetInhibit, file on | off)
+    FN_N(FPByteLockHold, d | r file seconds)
 
     {NULL, NULL},
 };

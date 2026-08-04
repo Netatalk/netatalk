@@ -943,7 +943,7 @@ void afp_over_dsi(AFPObj *obj)
 
         if (reload_request) {
             reload_request = 0;
-            load_volumes(AFPobj, LV_FORCE);
+            load_afp_conf_vols(AFPobj, LV_FORCE);
         }
 
         /* The first SIGINT enables debugging, the next restores the config */

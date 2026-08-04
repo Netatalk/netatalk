@@ -73,7 +73,7 @@ Single tests or entire testsets can be executed with the **-f** option.
 : List all available testsets and exit
 
 **-L**
-: Server under test has *afp read locks = yes* set in afp.conf(5);
+: Server under test has *strict locking = yes* set in afp.conf(5);
 run the byte-range read-lock conflict tests instead of skipping them
 
 **-m**

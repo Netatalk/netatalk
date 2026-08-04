@@ -36,10 +36,11 @@ Any line ending in a **\\** (backslash) is continued on the next line in the
 customary UNIX fashion.
 
 The values following the equals sign in parameters are all either a
-string (no quotes needed) or a boolean, which may be given as yes/no,
-1/0 or true/false. Case is not significant in boolean values, but is
-preserved in string values. Some options such as **file perm** take
-numeric values.
+string (no quotes needed) or a boolean. Accepted boolean values are
+yes/no (preferred), y/n, true/false, t/f, on/off, enabled/disabled and
+1/0, in any case. Any other boolean value is ignored with a logged
+warning and the option's default applies. Case is preserved in string
+values. Some options such as **file perm** take numeric values.
 
 # Section Descriptions
 
@@ -83,7 +84,10 @@ access to the path */foo/bar*. The share is accessed via the share name
 ## The [Global] section
 
 Parameters in this section apply to the server as a whole. Parameters
-denoted by a (G) below are must be set in this section.
+denoted by a (G) below are must be set in this section. A parameter
+denoted by both (G) and (V) may be set here in the global section of
+the configuration as a default for all volumes; a volume section (or
+selected **vol preset**) may override it.
 
 ## The [Homes] section
 
@@ -676,17 +680,12 @@ etc. By default, afpd generates a signature and saves it to a file
 called **afp_signature.conf** automatically (based on random numbers). See
 also asip-status(1).
 
-afp read locks = *BOOLEAN* (default: *no*) **(G)**
+strict locking = *BOOLEAN* (default: *no*) **(G)**
 
-> Enforces byte-range locks on reads and writes. Required when the same
-share is accessed through another protocol such as SMB/Samba. Can be *no* for a
-small performance gain otherwise.
->
-> With it off, an app that locks part of a file is not protected from another
-app reading or writing that same part at the same time, which can lead to
-corrupted files or stale reads for apps that rely on locking (for example
-databases or shared documents). Whole-file protections — open/deny modes and
-delete/rename safety — still work either way.
+> Take POSIX byte-range locks on file data for every AFP read and write so
+they conflict with other POSIX lockers such as Samba (pair with Samba's own
+**strict locking = yes**); off, AFP locks are invisible to other processes.
+**afp read locks** is a deprecated synonym.
 
 solaris share reservations = *BOOLEAN* (default: *yes*) **(G)**
 
@@ -1225,7 +1224,7 @@ hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 >
 > Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab
 
-ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
+ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(G)**/**(V)**
 
 > Specify how Extended Attributes and Mac OS Resource Forks are
 stored.
@@ -1244,6 +1243,15 @@ For read-only volumes, set this option explicitly.
 >
 > > Use filesystem Extended Attributes, but append a 0 byte to each xattr in
 order to be compatible with Samba's vfs_streams_xattr.
+>
+> > Selecting **samba** also changes the server defaults to the values safe
+concurrent Samba access requires: **strict locking** defaults to *yes*,
+**dircache validation freq** defaults to *1*, and the volume is excluded
+from the resource-fork data cache. Explicit settings always win; every
+explicit setting that weakens Samba coherency logs a verbose warning
+describing the risk. It
+requires filesystem Extended Attribute support; a volume whose filesystem
+cannot store them fails to load.
 >
 > ad
 >

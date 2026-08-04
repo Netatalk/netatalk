@@ -1409,6 +1409,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     if (eid == ADEID_RFORK
             && !(ofork->of_flags & AFPFORK_ACCWR)
+            && (!(ofork->of_vol->v_flags & AFPVOL_EA_SAMBA)
+                || obj->options.dircache_rfork_budget_explicit)
             && obj->options.dircache_rfork_budget > 0) {
         const struct dir *parentdir = dirlookup(ofork->of_vol, ofork->of_did);
 
@@ -1427,7 +1429,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 #ifndef NO_DDP
 
     case AFPPROTO_ASP:
-        if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+        if (obj->options.flags & OPTION_STRICT_LOCKING) {
             if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount,
                            ofork->of_refnum) < 0) {
                 err = AFPERR_LOCK;
@@ -1476,7 +1478,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_err;
         }
 
-        if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+        if (obj->options.flags & OPTION_STRICT_LOCKING) {
             if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount,
                            ofork->of_refnum) < 0) {
                 err = AFPERR_LOCK;
@@ -1614,7 +1616,7 @@ afp_read_exit:
             strerror(errno));
         dsi_readdone(dsi);
 
-        if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+        if (obj->options.flags & OPTION_STRICT_LOCKING) {
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,
                        ofork->of_refnum);
         }
@@ -1625,7 +1627,7 @@ afp_read_exit:
 
 afp_read_done:
 
-    if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+    if (obj->options.flags & OPTION_STRICT_LOCKING) {
         ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,
                    ofork->of_refnum);
     }
@@ -1954,7 +1956,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     AFP_WRITE_START((long)reqcount);
     saveoff = offset;
 
-    if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+    if (obj->options.flags & OPTION_STRICT_LOCKING) {
         if (ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, saveoff, reqcount,
                        ofork->of_refnum) < 0) {
             err = AFPERR_LOCK;
@@ -1980,7 +1982,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         if ((cc = write_file(ofork, eid, offset, rbuf, *rbuflen)) < 0) {
             *rbuflen = 0;
 
-            if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+            if (obj->options.flags & OPTION_STRICT_LOCKING) {
                 ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,
                            ofork->of_refnum);
             }
@@ -2008,7 +2010,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 dsi_writeflush(dsi);
                 *rbuflen = 0;
 
-                if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+                if (obj->options.flags & OPTION_STRICT_LOCKING) {
                     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
                 }
 
@@ -2052,7 +2054,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
                 *rbuflen = 0;
 
-                if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+                if (obj->options.flags & OPTION_STRICT_LOCKING) {
                     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
                 }
 
@@ -2073,7 +2075,7 @@ afp_write_loop:
                 dsi_writeflush(dsi);
                 *rbuflen = 0;
 
-                if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+                if (obj->options.flags & OPTION_STRICT_LOCKING) {
                     ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount, ofork->of_refnum);
                 }
 
@@ -2090,7 +2092,7 @@ afp_write_loop:
 
 afp_write_done:
 
-    if (obj->options.flags & OPTION_AFP_READ_LOCK) {
+    if (obj->options.flags & OPTION_STRICT_LOCKING) {
         ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,
                    ofork->of_refnum);
     }
