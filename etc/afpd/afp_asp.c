@@ -254,7 +254,7 @@ void afp_over_asp(AFPObj *obj)
     while ((reply = asp_getrequest(asp))) {
         if (reload_request) {
             reload_request = 0;
-            load_volumes(child, LV_FORCE);
+            load_afp_conf_vols(child, LV_FORCE);
         }
 
         switch (reply) {

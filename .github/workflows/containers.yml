@@ -646,8 +646,32 @@ jobs:
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-  afp-spectest-readlocks-afp34:
-    name: AFP spec test (afp read locks) AFP 3.4 - Alpine
+  samba-interop:
+    name: samba-client and netatalk-client interop (ea:samba) - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      # Privileged: the leg kernel-mounts the share via CIFS and FUSE-mounts
+      # it via netatalk-client, driving both protocol stacks end to end
+      - name: Run client-chain interoperability tests
+        run: |
+          # cifs is built-in or a module depending on the runner image; a
+          # missing module surfaces via the script's own CIFS-mount FATAL
+          sudo modprobe cifs || true
+          docker run --rm --privileged \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }} \
+            /samba_interop_test.sh
+
+  afp-spectest-strict-locking-afp34:
+    name: AFP spec test (strict locking) AFP 3.4 - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -670,7 +694,7 @@ jobs:
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
-            -e AFP_READ_LOCKS="yes" \
+            -e AFP_STRICT_LOCKING="yes" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-sqlite-afp34:

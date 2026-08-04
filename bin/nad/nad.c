@@ -202,7 +202,7 @@ int main(int argc, char **argv)
     setuplog(obj.options.logconfig, obj.options.logfile,
              obj.options.log_us_timestamp);
 
-    if (load_volumes(&obj, LV_DEFAULT) != 0) {
+    if (load_afp_conf_vols(&obj, LV_DEFAULT) != 0) {
         return 1;
     }
 

@@ -93,7 +93,9 @@ if build_afpd_tests
         # live in the executable; export_dynamic below lets the LD_PRELOAD
         # interposer (libfaultinject.so) resolve `fi` back into this binary.
         'faultinject.c',
+        'peer_lock.c',
         'test_capabilities.c',
+        'subtests_conf.c',
         'subtests_lock.c',
         include_directories: test_includes,
         objects: afpdtest_objects,

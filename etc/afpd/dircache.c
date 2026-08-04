@@ -1100,17 +1100,23 @@ static unsigned long queue_count;
  */
 static int should_validate_cache_entry(void)
 {
+    extern AFPObj *AFPobj;
     /* Thread-safe increment using compiler builtins */
     uint64_t count = __atomic_fetch_add(&validation_counter, 1, __ATOMIC_SEQ_CST);
-
-    /* Validate every Nth access to detect external changes */
-    if (dircache_validation_freq == 0) {
-        /* Always validate if freq is 0 (invalid config) */
-        return 1;
-    }
-
-    /* Use the fetched value + 1 (post-increment semantics) */
-    return ((count + 1) % dircache_validation_freq == 0);
+    /* Read the live option so config-time changes after dircache_init()
+     * (e.g. the ea = samba coherency defaults) take effect without
+     * plumbing.  Same 1-100 validity range as
+     * dircache_set_validation_params(); out-of-range config values fall
+     * back to the static (which the setter kept at the fail-safe). */
+    unsigned int freq = (AFPobj
+                         && AFPobj->options.dircache_validation_freq > 0
+                         && AFPobj->options.dircache_validation_freq <= 100)
+                        ? (unsigned int)AFPobj->options.dircache_validation_freq
+                        : dircache_validation_freq;
+    /* Use the fetched value + 1 (post-increment semantics).  freq is
+     * never 0 here: the options read is clamped to 1-100 above and the
+     * setter rejects 0 for the static fallback. */
+    return ((count + 1) % freq == 0);
 }
 
 

@@ -21,7 +21,7 @@
 use strict;
 use warnings;
 require 'netatalk-lib.pl';
-our (%in, %text);
+our (%in, %text, %netatalkDeprecatedAliases);
 
 eval {
     &ReadParse();
@@ -52,6 +52,8 @@ eval {
     $in{'p_log level'} = join(',', @_log_pairs);
     delete $in{'p_log_type'};
     delete $in{'p_log_level'};
+
+    clear_deprecated_aliases(\%in);
 
     my $afpconfRef = &read_afpconf();
     modify_afpconf_ref_and_write($afpconfRef, \%in);

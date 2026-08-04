@@ -60,7 +60,7 @@
 #define OPTION_SERVERNOTIF   (1 << 2)
 #define OPTION_NOSENDFILE    (1 << 3)
 #define OPTION_VETOMSG       (1 << 4) /*!< whether to send an AFP message for veto file access */
-#define OPTION_AFP_READ_LOCK (1 << 5) /*!< whether to do AFP spec conforming read locks (default: no) */
+#define OPTION_STRICT_LOCKING (1 << 5)  /*!< per-IO POSIX byte-range data locks on FPRead/FPWrite (default: no) */
 #define OPTION_ANNOUNCESSH   (1 << 6)
 #define OPTION_UUID          (1 << 7)
 #define OPTION_ACL2MACCESS   (1 << 8)
@@ -105,6 +105,9 @@ struct afp_options {
     int dircache_validation_freq;    /*!< Validate every Nth access (default 1) */
     int dircache_rfork_budget;   /*!< Total rfork cache memory budget (KB, 0=disabled) */
     int dircache_rfork_maxentry; /*!< Max rfork size to cache per entry (KB) */
+    int strict_locking_explicit; /*!< operator set strict locking (ea = samba changes defaults only) */
+    int dircache_validation_freq_explicit; /*!< operator set dircache validation freq */
+    int dircache_rfork_budget_explicit;    /*!< operator set dircache rfork budget */
     int sleep;                  /*!< Maximum time allowed to sleep (in tickles) */
     int disconnected;           /*!< Maximum time in disconnected state (in tickles) */
 #ifdef WITH_FCE

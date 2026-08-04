@@ -4,6 +4,30 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* UPD: afpd: `ea` is now a (G)/(V) option; a value in [Global] applies to all
+  volumes and can be overridden per volume. A `[Global] ea =` setting that
+  previous releases silently ignored now takes effect
+* UPD: afpd: rename `afp read locks` to `strict locking`, matching Samba's
+  option name for the same behaviour; the old name is a deprecated synonym
+  that logs a warning. The option takes POSIX byte-range locks for both reads
+  and writes
+* UPD: afpd: sharing a volume with Samba is now a single option: `ea = samba`
+  selects the Samba-compatible metadata format and defaults every related
+  setting for safe concurrent access (`strict locking = yes`,
+  `dircache validation freq = 1`, resource-fork cache off). Explicit settings
+  still win, with a logged warning when they weaken Samba coherency
+* NEW: test: end-to-end Samba interoperability test for `ea = samba`
+  volumes (`samba_interop_test.sh`, shipped in the Debian testsuite
+  container): a kernel CIFS mount and a netatalk-client FUSE mount on one
+  shared volume, exercising locking, deny modes, directory and EA
+  coherency, and the on-disk metadata format in both directions
+* FIX: libatalk: the afp.conf volume loader parsed the config file with no
+  read lock held after two failed lock attempts, and did not check the open()
+  of the config file; both now fail closed and leave the reload state
+  untouched. The function is renamed load_volumes() -> load_afp_conf_vols()
+  to say what it does
+* BREAKING: libatalk: struct afp_options gains three fields (installed header
+  globals.h). 4.5.2 branch shipped soversion 21, so we skip to 22 on main
 * FIX: dsi: remove the double copy and latent truncation of buffered
   write payload in dsi_writeinit
 * UPD: dsi: grow the server quantum per session to frame-to-MSS

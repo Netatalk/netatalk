@@ -79,7 +79,7 @@ int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
     }
 
     cnid_init();
-    load_volumes(&obj, LV_ALL);
+    load_afp_conf_vols(&obj, LV_ALL);
 
     if (dircache_init(8192) != 0) {
         return 0;

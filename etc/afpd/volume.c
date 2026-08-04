@@ -623,7 +623,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
     int         vcnt;
     size_t      len;
     uint32_t    aint;
-    load_volumes(obj, LV_DEFAULT);
+    load_afp_conf_vols(obj, LV_DEFAULT);
     data = rbuf + 5;
 
     for (vcnt = 0, volume = getvolumes(); volume
@@ -853,7 +853,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         ibuf++;
     }
 
-    load_volumes(obj, LV_DEFAULT);
+    load_afp_conf_vols(obj, LV_DEFAULT);
 
     for (volume = getvolumes(); volume; volume = volume->v_next) {
         if (strcasecmp_w((ucs2_t *) volname, volume->v_name) == 0) {

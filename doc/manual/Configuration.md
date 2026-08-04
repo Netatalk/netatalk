@@ -105,6 +105,72 @@ enabling access via AFP or SMB.
 > If you have an existing Netatalk volume using the default settings and want to add Samba sharing,
 > the recommended migration path is to copy files from one volume to another using an AFP client.
 
+### Locking
+
+AFP and SMB clients only respect each other's locks when both servers place
+real POSIX byte-range locks on the shared files. Two settings make that happen:
+
+- Netatalk's **strict locking** takes a POSIX
+  read lock for every AFP read and a write lock for every AFP write, making
+  AFP file access conflict with Samba's locks and vice versa. It is off by
+  default; setting **ea = samba** on any volume changes the default to on
+  globally (an explicit *strict locking* setting still wins, with a logged
+  warning).
+- Samba's own **strict locking** option is the same concept on the SMB side.
+  Set *strict locking = yes* in smb.conf: the default *Auto* skips the check
+  for files under an SMB lease. Samba's *posix locking* must stay at its
+  default *yes*, otherwise neither server sees the other's locks at all.
+
+Samba's **fruit:locking = netatalk** module option (off by default in Samba)
+additionally maps SMB open and deny modes onto the same on-disk convention
+Netatalk uses for AFP deny modes, so conflicting opens are refused across
+protocols and a file with open AFP forks is protected from deletion over SMB
+when deny modes are in effect.
+
+SMB client-side caching (oplocks and leases) is not aware of AFP activity:
+with Samba's defaults, an SMB client may cache stale data and overwrite
+AFP-side changes. On a volume shared by both servers, disable it in smb.conf
+(*oplocks = no*, *level2 oplocks = no*, *smb2 leases = no*) or, on Linux,
+set *kernel oplocks = yes* instead (real kernel leases that Netatalk's file
+access breaks; this disables SMB2 leases and durable handles).
+
+> ***WARNING:*** Do not export a Time Machine share over both protocols.
+> Samba's *fruit:time machine = yes* preset disables *posix locking* and
+> kernel oplocks, removing every cross-protocol safety described here.
+> Time Machine shares should be served by one protocol only.
+
+### Settings side by side
+
+Each row pairs the afp.conf and smb.conf settings that serve the same purpose.
+An empty cell means that side needs no setting for that row — either the
+behavior is built in, or the other server needs several settings to match one
+setting on this side. Settings marked *default* are listed so you know not to
+change them.
+
+| Netatalk (afp.conf)                  | Samba (smb.conf)                     | What it does |
+| ------------------------------------ | ------------------------------------ | ------------ |
+| **ea = samba**                       | **vfs objects = catia fruit streams_xattr** | Apple metadata (Finder info, resource forks) stored in a format both servers read and write. |
+|                                      | **fruit:metadata = netatalk** *(Samba default)* | Finder metadata in the same extended attribute Netatalk uses. |
+|                                      | **fruit:resource = file** *(Samba default)* | Resource forks in the same *._* AppleDouble files Netatalk uses. |
+|                                      | **fruit:encoding = native**          | Same on-disk names for characters that are illegal on Windows. |
+|                                      | **streams_xattr:prefix = user.**     | An AFP extended attribute and an SMB alternate data stream become the same object. Requires **ea = samba** on the Netatalk side (its trailing-byte format matches). |
+|                                      | **streams_xattr:store_stream_type = no** | Second half of the row above — strips the *:$DATA* suffix so the names match. |
+| **strict locking = yes** *(the default when ea = samba)* | **strict locking = yes** | Every read and write is checked against the other server's byte-range locks. Samba's default *Auto* skips the check for leased files — set *yes* explicitly. |
+|                                      | **posix locking = yes** *(Samba default — keep)* | Samba mirrors its locks into the kernel where Netatalk can see them. With this off, no lock crosses between the servers at all. |
+| *(built in — always on)*             | **fruit:locking = netatalk**         | AFP and SMB open/deny modes conflict across protocols: a deny-mode open on one side refuses a conflicting open on the other. |
+| **dircache validation freq = 1** *(default)*   | | Netatalk notices files that Samba created, renamed, or deleted. |
+| *(built in when ea = samba)*         | | The volume's resource forks are not cached in afpd memory, so Samba-side changes are always re-read. |
+|                                      | **kernel change notify = yes** *(Samba default — keep)* | Samba notices files that Netatalk changed, and notifies SMB clients. |
+|                                      | **oplocks = no**                     | SMB clients must not cache file data on a volume Netatalk also serves — a cached write could overwrite an AFP-side change. |
+|                                      | **level2 oplocks = no**              | Second half of the row above. |
+|                                      | **smb2 leases = no**                 | Third half of the row above. On Linux, **kernel oplocks = yes** may replace all three (real kernel leases that Netatalk's file access breaks). |
+| **solaris share reservations = yes** *(default; Solaris/illumos only)* | | F_SHARE reservations — the one deny-mode layer Samba can see on illumos without *fruit:locking*. |
+| **umask = 0002**                     | **create mask = 0664**               | New files get the same permissions no matter which protocol created them. |
+|                                      | **directory mask = 0775**            | Same, for directories. |
+|                                      | **map archive = no**                 | Stops Samba from setting a phantom execute bit on every new file (the DOS archive flag mapped to a mode bit). |
+
+### Caching
+
 When sharing a volume with other processes (Samba, NFS, local applications),
 keep *dircache validation freq* at **1** (the default)
 so Netatalk detects external changes on every access.
@@ -114,11 +180,20 @@ you can set *dircache validation freq* = 100 for maximum performance.
 ### Netatalk configuration
 
 Use *ea = samba* to store Extended Attributes in the Samba-compatible format.
+It also changes the defaults of the settings safe concurrent Samba access
+requires: *strict locking* defaults to yes, *dircache validation freq*
+defaults to 1, and the volume is excluded from the resource-fork data cache.
+Explicit settings always win — an explicit value that weakens Samba coherency
+is honored and logged with a verbose warning. The example lists the defaulted
+settings explicitly anyway, so the intended configuration is visible at a
+glance.
 
     [Global]
-        vol preset = my default values
-        dircache validation freq = 1
         ea = samba
+        umask = 0002
+        strict locking = yes            ; the default when ea = samba
+        dircache validation freq = 1    ; the default
+        solaris share reservations = yes ; already the default (Solaris/illumos only)
 
     [Homes]
         basedir regex = /home
@@ -129,6 +204,7 @@ Use *ea = samba* to store Extended Attributes in the Samba-compatible format.
     [My Time Machine Volume]
         path = /export/timemachine
         time machine = yes
+        ; Time Machine over AFP only -- do not also export this path via SMB
 
 ### Samba configuration
 
@@ -141,8 +217,22 @@ Use **hide files** (not **veto files**) to hide Netatalk's invisible files from 
         vfs objects = catia fruit streams_xattr
 
         fruit:encoding = native
+        fruit:locking = netatalk
         streams_xattr:prefix = user.
         streams_xattr:store_stream_type = no
+
+        strict locking = yes
+        ; posix locking = yes is the Samba default; do not disable it
+
+        ; no SMB client caching on a volume Netatalk also serves
+        oplocks = no
+        level2 oplocks = no
+        smb2 leases = no
+
+        ; same permissions from both protocols
+        create mask = 0664
+        directory mask = 0775
+        map archive = no
 
         hide files = /.DS_Store/Network Trash Folder/TheFindByContentFolder/TheVolumeSettingsFolder/Temporary Items/.TemporaryItems/.VolumeIcon.icns/Icon?/.FBCIndex/.FBCLockFolder/
 
@@ -152,6 +242,3 @@ Use **hide files** (not **veto files**) to hide Netatalk's invisible files from 
 
     [Test Volume]
         path = /export/test1
-
-    [My Time Machine Volume]
-        path = /export/timemachine

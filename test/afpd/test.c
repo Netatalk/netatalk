@@ -42,6 +42,7 @@
 #include "filedir.h"
 #include "hash.h"
 #include "subtests.h"
+#include "subtests_conf.h"
 #include "subtests_lock.h"
 #include "test.h"
 #include "test_capabilities.h"
@@ -50,7 +51,7 @@
 unsigned char nologin = 0;
 static AFPObj obj, aspobj;
 /* args[2] is filled with an absolute path to test.conf at startup: opening a
- * second volume triggers a load_volumes() config reload, and by then afpd has
+ * second volume triggers a load_afp_conf_vols() config reload, and by then afpd has
  * fchdir()'d into a volume, so a relative "test.conf" would no longer resolve. */
 static char  confpath[MAXPATHLEN + 1];
 static char *args[] = {"test", "-F", confpath};
@@ -459,6 +460,32 @@ int main(int argc, char *argv[])
              "DSI receive rejects payload larger than server quantum");
     TEST_int(utest_dsi_receive_rejects_write_offset_past_payload(), 0,
              "DSI receive rejects DSIWrite offset beyond payload");
+    /* Config-resolution tests: self-contained fixtures with their own
+     * AFPObj + temp configs.  They MUST run before the harness's own
+     * config/volume init below, which leaves process state live for the
+     * lock/fork tests. */
+    TEST_int_or_skip(utest_conf_parse_bool(), 0,
+                     "conf_parse_bool: strict boolean spellings, invalid values warn");
+    TEST_int_or_skip(utest_conf_ea_fallback(), 0,
+                     "ea resolves volume -> preset -> [Global] -> auto-detect");
+    TEST_int_or_skip(utest_conf_strict_locking_keys(), 0,
+                     "strict locking key, afp read locks alias, precedence, explicitness");
+    TEST_int_or_skip(utest_conf_samba_defaults(), 0,
+                     "ea = samba applies the coherency defaults with notes");
+    TEST_int_or_skip(utest_conf_samba_explicit_wins(), 0,
+                     "ea = samba never overrides explicit settings, warns instead");
+    TEST_int_or_skip(utest_conf_no_samba_regression(), 0,
+                     "no ea = samba: strict locking off, freq honoured");
+    TEST_int_or_skip(utest_conf_samba_requires_ea(), 0,
+                     "ea = samba volume without filesystem EAs fails to load");
+    TEST_int_or_skip(utest_conf_samba_ea_failure_keeps_vid(), 0,
+                     "volume refused for missing EAs returns its volume id");
+    TEST_int_or_skip(utest_conf_samba_defaults_not_leaked_on_failed_volume(), 0,
+                     "failed samba volume leaves process defaults untouched");
+    TEST_int_or_skip(utest_conf_samba_future_defaults(), 0,
+                     "ea = samba reverts performance-oriented compiled defaults (freq 100, rfork on)");
+    TEST_int_or_skip(utest_conf_load_afp_conf_vols_locked(), 0,
+                     "config loader fails closed under lock contention, state-neutral");
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]),
          "parse afpd command-line options");
     TEST_int(afp_config_parse(&obj, NULL), 0,
@@ -474,7 +501,7 @@ int main(int argc, char *argv[])
     TEST_int(configinit(&obj, &aspobj), 0,
              "initialize server config state");
     TEST(cnid_init(), "initialize CNID subsystem");
-    TEST(load_volumes(&obj, LV_ALL), "load all volumes from config");
+    TEST(load_afp_conf_vols(&obj, LV_ALL), "load all volumes from config");
     TEST_int(dircache_init(8192), 0, "initialize dircache (8192 entries)");
     obj.afp_version = 34;
     /* No IPC channel or dircache hint pipe in test harness */

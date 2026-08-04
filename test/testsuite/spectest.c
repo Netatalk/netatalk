@@ -380,7 +380,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-f\ttest or testset to run\n");
     fprintf(stdout, "\t-l\tlist testsets\n");
     fprintf(stdout,
-            "\t-L\tserver has 'afp read locks = yes'; run byte-range read-lock conflict tests\n");
+            "\t-L\tserver has 'strict locking = yes'; run byte-range read-lock conflict tests\n");
     fprintf(stdout,
             "\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
     fprintf(stdout, "\t-C\tturn off terminal color output\n");

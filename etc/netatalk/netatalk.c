@@ -386,7 +386,7 @@ static void sighup_impl(void)
 {
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
-    load_volumes(&obj, LV_ALL);
+    load_afp_conf_vols(&obj, LV_ALL);
 
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_deregister();
@@ -761,7 +761,7 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
-    load_volumes(&obj, LV_ALL);
+    load_afp_conf_vols(&obj, LV_ALL);
 #ifdef WITH_LIBEV
     ev_set_syserr_cb(libev_syserr_cb);
 #else
