@@ -40,4 +40,7 @@
 
 extern int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end);
 extern int test002_rem_x_dirs(const struct vol *vol, cnid_t start, cnid_t end);
+extern int test003_dir_add_error_no_double_free(struct vol *vol);
+extern int test004_getmetadata_nostat_keeps_cache(struct vol *vol);
+extern int test005_getmetadata_open_fork_outlives_path(struct vol *vol);
 #endif  /* SUBTESTS_H */

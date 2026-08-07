@@ -128,8 +128,25 @@ struct path {
     struct dir  *d_dir;
     int         st_valid;           /*!< does st_errno and st set */
     int         st_errno;
+    /* st was filled by fstat on an open fd: the object is live but the
+     * path may no longer name it. 0 = path-derived stat. */
+    int         st_fd;
     struct stat st;
+    /* Caller-resolved dircache entry for a FILE path; NULL = unknown.
+     * Directories use d_dir. Valid for the current request only. */
+    struct dir  *d_cached;
 };
+
+/*! d_cached accessor enforcing the staleness rule: an entry invalidated
+ * mid-request (dir_remove sets d_did = CNID_INVALID) reads as absent. */
+static inline struct dir *path_cached_file(const struct path *path)
+{
+    if (path->d_cached && path->d_cached->d_did != CNID_INVALID) {
+        return path->d_cached;
+    }
+
+    return NULL;
+}
 
 static inline int path_isadir(struct path *o_path)
 {

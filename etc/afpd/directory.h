@@ -114,6 +114,9 @@ extern void        dir_remove_and_free(const struct vol *, struct dir *);
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
 extern void        dir_free_invalid_q(void);
+extern bstring     fullpath_join(const bstring parent, const char *name);
+extern bstring     fullpath_join_blk(const bstring parent, const char *name,
+                                     int nlen);
 extern struct dir  *dir_new(const char *mname, const char *uname,
                             const struct vol *,
                             cnid_t pdid, cnid_t did, bstring fullpath, struct stat *);

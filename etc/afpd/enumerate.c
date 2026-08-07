@@ -398,6 +398,9 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             s_path.st_errno = 0;
             /* Pass CNID so getmetadata() skips redundant cache lookup */
             s_path.id = cached->d_did;
+            /* Pass the entry itself so getfilparams()/getmetadata() skip
+             * their own dircache_search_by_name() for this name */
+            s_path.d_cached = cached;
             /* Use cached mac name to skip utompath() charset conversion */
             s_path.m_name = cfrombstr(cached->d_m_name);
             LOG(log_maxdebug, logtype_afpd,

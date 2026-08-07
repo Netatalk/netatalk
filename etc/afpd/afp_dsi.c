@@ -50,6 +50,7 @@
 
 #include "auth.h"
 #include "dircache.h"
+#include "pfd_cache.h"
 #include "directory.h"
 #include "fork.h"
 #include "idle_worker.h"
@@ -213,6 +214,8 @@ static void afp_dsi_close(AFPObj *obj)
         dsi->read_count / 1024.0, dsi->write_count / 1024.0);
     of_log_highwater();
     log_dircache_stat();
+    pfd_log_stats();
+    pfd_shutdown();
     dircache_rfork_shutdown();
     dsi_close(dsi);
 }

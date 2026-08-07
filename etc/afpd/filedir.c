@@ -1075,15 +1075,7 @@ char *absupath(const struct vol *vol, struct dir *dir, char *u)
         return NULL;
     }
 
-    if ((path = bstrcpy(dir->d_fullpath)) == NULL) {
-        return NULL;
-    }
-
-    if (bcatcstr(path, "/") != BSTR_OK) {
-        return NULL;
-    }
-
-    if (bcatcstr(path, u) != BSTR_OK) {
+    if ((path = fullpath_join(dir->d_fullpath, u)) == NULL) {
         return NULL;
     }
 

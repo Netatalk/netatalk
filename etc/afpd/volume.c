@@ -67,6 +67,7 @@
 #include "fork.h"
 #include "hash.h"
 #include "mangle.h"
+#include "pfd_cache.h"
 #include "unix.h"
 #include "virtual_icon.h"
 #include "volume.h"
@@ -1080,6 +1081,11 @@ void closevol(const AFPObj *obj, struct vol *vol)
 
     vol->v_flags &= ~AFPVOL_OPEN;
     of_closevol(obj, vol);
+    /* Retire the volume's pfd slots: their O_PATH fds would otherwise
+     * outlive the close (pinning directories against unmount), and since
+     * struct vol and v_vid persist across logout/re-login a surviving
+     * slot would satisfy (vid, did) matches after re-open. */
+    pfd_purge_vol(vol->v_vid);
     dir_free(vol->v_root);
     vol->v_root = NULL;
 

@@ -76,6 +76,24 @@ static const uint8_t old_ufinderi[] = {
     'T', 'E', 'X', 'T', 'U', 'N', 'I', 'X'
 };
 
+/* Resolve a file path's dircache entry once per request: consult the
+ * memoized d_cached first (strnlen and hash walk skipped on a hit), fall
+ * back to the by-name search, and memoize the result for later consumers. */
+static struct dir *path_resolve_cached_file(const struct vol *vol,
+        const struct dir *dir, struct path *path)
+{
+    struct dir *cached = path_cached_file(path);
+
+    if (cached == NULL && path->u_name != NULL) {
+        cached = dircache_search_by_name(vol, dir, path->u_name,
+                                         strnlen(path->u_name,
+                                             CNID_MAX_PATH_LEN));
+        path->d_cached = cached;
+    }
+
+    return cached;
+}
+
 static int has_dotdot_component(const char *path)
 {
     const char *p = path;
@@ -426,14 +444,23 @@ int getmetadata(const AFPObj *obj,
                 && utf8_encoding(obj)) /* FIXME should be m_name utf8 filename */
             || (bitmap & (1 << FILPBIT_FNUM))) {
         if (!path->id) {
-            bstring fullpath;
+            bstring fullpath = NULL;
             struct dir *cachedfile;
+            int path_live = 1;
             int len = upath ? (int)strnlen(upath, CNID_MAX_PATH_LEN) : 0;
 
-            if ((cachedfile = dircache_search_by_name(vol, dir, upath, len)) != NULL) {
-                /* Compare fresh stat inode matches dircache entry */
-                if (cachedfile->dcache_ino == st->st_ino) {
+            if ((cachedfile = path_resolve_cached_file(vol, dir, path)) != NULL) {
+                /* Compare fresh stat inode matches dircache entry — only
+                 * when the caller actually filled the stat: an unfilled
+                 * path->st is not evidence of external replacement */
+                if (!path->st_valid || cachedfile->dcache_ino == st->st_ino) {
                     id = cachedfile->d_did;
+                } else if (path->st_fd) {
+                    /* fd-derived stat: the held object no longer matches
+                     * what the path names. The entry may be right for the
+                     * path — leave it; identity for THIS request must come
+                     * from the held object, below. */
+                    cachedfile = NULL;
                 } else {
                     /* File replaced externally - invalidate dircache */
                     LOG(log_debug, logtype_afpd,
@@ -445,51 +472,138 @@ int getmetadata(const AFPObj *obj,
             }
 
             if (cachedfile == NULL) {
-                id = get_id(vol, adp, st, dir->d_did, upath, len);
-
-                if (id < CNID_START) {
-                    LOG(log_error, logtype_afpd,
-                        "getmetadata: get_id failed for \"%s\", invalid id %u, afp_errno=%d (%s)",
-                        upath, id, afp_errno, AfpErr2name(afp_errno));
-                    return afp_errno;
+                /* The pre-stat, liveness probe and dir_new all consume the
+                 * entry's path */
+                if ((fullpath = fullpath_join(dir->d_fullpath, upath)) == NULL) {
+                    LOG(log_error, logtype_afpd, "getmetadata: fullpath: %s",
+                        strerror(errno));
+                    return AFPERR_MISC;
                 }
 
-                /* Add it to the cache */
-                LOG(log_debug, logtype_afpd, "getmetadata: caching: did:%u, \"%s\", cnid:%u",
-                    ntohl(dir->d_did), upath, ntohl(id));
+                /* get_id() and dir_new() below mint identity from *st:
+                 * with an unfilled stat (name-only bitmaps) that would
+                 * store zero ino/size/dates in the CNID DB and dircache.
+                 * Fill it here. */
+                int name_unoccupied = 0;
+
+                if (!path->st_valid) {
+                    if (ostat(cfrombstr(fullpath), st, vol_syml_opt(vol)) == 0) {
+                        path->st_valid = 1;
+                        path->st_errno = 0;
+                    } else if (adp != NULL && errno == ENOENT) {
+                        /* Only a held fork's request reaches here without
+                         * a stat (name-only bitmaps, no object fd — e.g. a
+                         * v2 resource-fork-only open): the fork outlived
+                         * its path. adp's header was bound to the held
+                         * object when the fork was opened. */
+                        path_live = 0;
+                        name_unoccupied = 1;
+                    } else {
+                        bdestroy(fullpath);
+                        return AFPERR_NOOBJ;
+                    }
+                } else if (path->st_fd) {
+                    /* fd-derived stat: an open fork can outlive its path
+                     * (renamed/deleted by another session). Only a path
+                     * that still names the held object may be minted. */
+                    struct stat pst;
+
+                    if (ostat(cfrombstr(fullpath), &pst, vol_syml_opt(vol)) != 0) {
+                        path_live = 0;
+                        name_unoccupied = (errno == ENOENT);
+                    } else if (pst.st_dev != st->st_dev
+                               || pst.st_ino != st->st_ino) {
+                        /* The name is occupied by a DIFFERENT object */
+                        path_live = 0;
+                    }
+                }
+
+                if (!path_live) {
+                    /* The held object's path is gone. Its CNID may only be
+                     * read: get_id/cnid_add here would rebind the object's
+                     * live DB record to the dead location (and cnid_lookup
+                     * deletes/rewrites on a dev/ino match at another name —
+                     * not a read). The dead path must enter neither the
+                     * dircache nor the DB. */
+                    bdestroy(fullpath);
+                    fullpath = NULL;
+
+                    /* Adouble header id, dev/ino-verified when we have the
+                     * object's stat; header-trusted otherwise (bound at
+                     * fork open) */
+                    if (adp == NULL) {
+                        id = CNID_INVALID;
+                    } else if (path->st_valid) {
+                        id = ad_getid(adp, st->st_dev, st->st_ino, 0,
+                                      vol->v_stamp);
+                    } else {
+                        id = ad_forcegetid(adp);
+                    }
+
+                    if ((id == CNID_INVALID || ntohl(id) < CNID_START)
+                            && name_unoccupied && vol->v_cdb != NULL) {
+                        /* Nothing lives at the name, so a record still
+                         * registered there can only be the held object's.
+                         * With the name occupied by another object this
+                         * read would return the replacement's identity —
+                         * refuse instead. */
+                        AFP_CNID_START("cnid_get");
+                        id = cnid_get(vol->v_cdb, dir->d_did, upath, len);
+                        AFP_CNID_DONE();
+                    }
+
+                    if (id == CNID_INVALID || ntohl(id) < CNID_START) {
+                        return AFPERR_NOOBJ;
+                    }
+                } else {
+                    id = get_id(vol, adp, st, dir->d_did, upath, len);
+
+                    if (id < CNID_START) {
+                        LOG(log_error, logtype_afpd,
+                            "getmetadata: get_id failed for \"%s\", invalid id %u, afp_errno=%d (%s)",
+                            upath, id, afp_errno, AfpErr2name(afp_errno));
+                        bdestroy(fullpath);
+                        return afp_errno;
+                    }
+                }
 
                 /* Get macname from unixname first */
                 if (path->m_name == NULL) {
                     if ((path->m_name = utompath(vol, upath, id, utf8_encoding(obj))) == NULL) {
                         LOG(log_error, logtype_afpd, "getmetadata: utompath error");
+                        bdestroy(fullpath);
                         return AFPERR_MISC;
                     }
                 }
 
-                /* Build fullpath */
-                if (((fullpath = bstrcpy(dir->d_fullpath)) == NULL)
-                        || (bconchar(fullpath, '/') != BSTR_OK)
-                        || (bcatcstr(fullpath, upath)) != BSTR_OK) {
-                    LOG(log_error, logtype_afpd, "getmetadata: fullpath: %s", strerror(errno));
-                    bdestroy(fullpath);
-                    return AFPERR_MISC;
-                }
+                if (path_live) {
+                    /* Add it to the cache */
+                    LOG(log_debug, logtype_afpd,
+                        "getmetadata: caching: did:%u, \"%s\", cnid:%u",
+                        ntohl(dir->d_did), upath, ntohl(id));
 
-                if ((cachedfile = dir_new(path->m_name, upath, vol, dir->d_did, id, fullpath,
-                                          st)) == NULL) {
-                    LOG(log_error, logtype_afpd, "getmetadata: error from dir_new");
-                    return AFPERR_MISC;
-                }
+                    /* dir_new takes ownership of fullpath */
+                    if ((cachedfile = dir_new(path->m_name, upath, vol, dir->d_did, id, fullpath,
+                                              st)) == NULL) {
+                        LOG(log_error, logtype_afpd, "getmetadata: error from dir_new");
+                        bdestroy(fullpath);
+                        return AFPERR_MISC;
+                    }
 
-                if ((dircache_add(vol, cachedfile)) != 0) {
-                    LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
-                    return AFPERR_MISC;
-                }
+                    if ((dircache_add(vol, cachedfile)) != 0) {
+                        LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
+                        dir_free(cachedfile);
+                        return AFPERR_MISC;
+                    }
 
-                /* Proactively populate AD cache from adp that was just read
-                 * from disk — entry was just created so has no AD data yet */
-                if (adp && adp->ad_rlen >= 0) {
-                    ad_store_to_cache(adp, cachedfile);
+                    /* Proactively populate AD cache from adp that was just read
+                     * from disk — entry was just created so has no AD data yet */
+                    if (adp && adp->ad_rlen >= 0) {
+                        ad_store_to_cache(adp, cachedfile);
+                    }
+
+                    /* Memoize for later consumers in this request */
+                    path->d_cached = cachedfile;
                 }
             }
         } else {
@@ -828,13 +942,11 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
                  && (bitmap & (1 << FILPBIT_ATTR))) ? ADFLAGS_CHECK_OF : 0;
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
-        size_t upath_len = strnlen(upath, CNID_MAX_PATH_LEN);
 
         if (adp != &ad) {
             /* Fork-owned adouble — use directly, skip cache.
              * Opportunistically populate cache if not yet loaded. */
-            struct dir *cachedfile = dircache_search_by_name(vol, dir,
-                                     upath, upath_len);
+            struct dir *cachedfile = path_resolve_cached_file(vol, dir, path);
 
             /* If cache AD is unset, store fork's live adouble */
             if (cachedfile && cachedfile->dcache_rlen < 0) {
@@ -842,8 +954,7 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
             }
         } else {
             /* No open fork — use ad_metadata_cached() */
-            struct dir *cachedfile = dircache_search_by_name(vol, dir,
-                                     upath, upath_len);
+            struct dir *cachedfile = path_resolve_cached_file(vol, dir, path);
             ad_init(&ad, vol);
 
             if (ad_metadata_cached(upath, flags, &ad, vol, cachedfile, false,
@@ -1019,10 +1130,9 @@ createfile_iderr:
                                  upath, (int)upath_len);
 
         if (!cachedfile && id != CNID_INVALID) {
-            bstring fullpath = bstrcpy(dir->d_fullpath);
+            bstring fullpath = fullpath_join(dir->d_fullpath, upath);
 
-            if (fullpath && bconchar(fullpath, '/') == BSTR_OK
-                    && bcatcstr(fullpath, upath) == BSTR_OK) {
+            if (fullpath) {
                 cachedfile = dir_new(path, upath, vol, dir->d_did,
                                      id, fullpath, &st);
 
@@ -1038,8 +1148,6 @@ createfile_iderr:
                     /* dir_new failed — did not take ownership of fullpath, free it */
                     bdestroy(fullpath);
                 }
-            } else {
-                bdestroy(fullpath);
             }
         }
 

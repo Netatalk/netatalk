@@ -44,6 +44,7 @@
 
 #include "desktop.h"
 #include "dircache.h"
+#include "pfd_cache.h"
 #include "ad_cache.h"
 #include "directory.h"
 #include "idle_worker.h"
@@ -683,9 +684,8 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
     }
 
     /* Build the fullpath from cached parent-chain + CNID's upath */
-    if ((fullpath = bstrcpy(pdir->d_fullpath)) == NULL
-            || bconchar(fullpath, '/') != BSTR_OK
-            || bcatcstr(fullpath, upath) != BSTR_OK) { /* 5 */
+    if ((fullpath = fullpath_join(pdir->d_fullpath, upath)) == NULL) { /* 5 */
+        afp_errno = AFPERR_MISC;
         err = 1;
         goto exit;
     }
@@ -735,12 +735,14 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
                        &st)) == NULL) { /* 6 */
         LOG(log_error, logtype_afpd, DIRLOOKUP_LOG_FMT ": {%s, %s}: %s", ntohl(did),
             mpath, upath, strerror(errno));
+        afp_errno = AFPERR_MISC;
         err = 1;
         goto exit;
     }
 
     /* Add new struct to the cache */
     if (dircache_add(vol, ret) != 0) { /* 7 */
+        afp_errno = AFPERR_MISC;
         err = 1;
         goto exit;
     }
@@ -953,6 +955,49 @@ struct dir *dir_new(const char *m_name,
 }
 
 /*!
+ * @brief Build "parent/name" as a new bstring from a length-known leaf
+ *
+ * One sized allocation, no growth reallocs: bcatblk's grow check
+ * (mlen <= slen + len) stays false at the sized fit, and the extra byte
+ * keeps bconchar's balloc(slen + 2) below mlen even for nlen == 0.
+ *
+ * @param[in] parent  parent directory fullpath (required)
+ * @param[in] name    leaf name in server side encoding (required)
+ * @param[in] nlen    strlen of name
+ *
+ * @returns new bstring (caller owns), NULL on allocation failure —
+ *          never a partial join
+ */
+bstring fullpath_join_blk(const bstring parent, const char *name, int nlen)
+{
+    bstring path = bfromcstralloc(blength(parent) + 1 + nlen + 2, "");
+
+    if (path == NULL
+            || bcatblk(path, bdata(parent), blength(parent)) != BSTR_OK
+            || bconchar(path, '/') != BSTR_OK
+            || bcatblk(path, name, nlen) != BSTR_OK) {
+        bdestroy(path);
+        return NULL;
+    }
+
+    return path;
+}
+
+/*!
+ * @brief Build "parent/name" as a new bstring
+ *
+ * @param[in] parent  parent directory fullpath (required)
+ * @param[in] name    leaf name in server side encoding (required)
+ *
+ * @returns new bstring (caller owns), NULL on allocation failure —
+ *          never a partial join
+ */
+bstring fullpath_join(const bstring parent, const char *name)
+{
+    return fullpath_join_blk(parent, name, (int)strlen(name));
+}
+
+/*!
  * @brief Free a struct dir and all its members
  *
  * @param dir (rw) pointer to struct dir
@@ -1078,6 +1123,23 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             args->new_uname ? args->new_uname
             : (dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)"),
             needs_reindex);
+        /* The only fallible step: join the new path before any mutation,
+         * so failure leaves the entry untouched and fully indexed. A
+         * truncated d_fullpath would validate against the wrong object. */
+        bstring newpath = NULL;
+
+        if (args->new_pdir_path != NULL) {
+            const char *uname = args->new_uname ? args->new_uname : cfrombstr(
+                                    dir->d_u_name);
+            newpath = fullpath_join(args->new_pdir_path, uname);
+
+            if (newpath == NULL) {
+                LOG(log_error, logtype_afpd,
+                    "dir_modify: path join failed, entry unchanged did:%u",
+                    ntohl(dir->d_did));
+                return -1;
+            }
+        }
 
         /* Remove from DID/name index if key is changing */
         if (needs_reindex) {
@@ -1113,13 +1175,9 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             }
         }
 
-        if (args->new_pdir_path != NULL) {
-            const char *uname = args->new_uname ? args->new_uname : cfrombstr(
-                                    dir->d_u_name);
+        if (newpath != NULL) {
             bdestroy(dir->d_fullpath);
-            dir->d_fullpath = bstrcpy(args->new_pdir_path);
-            bconchar(dir->d_fullpath, '/');
-            bcatcstr(dir->d_fullpath, uname);
+            dir->d_fullpath = newpath;
         }
 
         /* Re-insert into DID/name index if key changed.
@@ -1150,6 +1208,11 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                               dir->dcache_ctime != args->st->st_ctime);
 
         if (ino_changed) {
+            /* Object replaced — a cached parent fd would pin the old
+             * object. Needed here because the entry survives in place
+             * when the CNID is unchanged (no dircache_remove runs). */
+            pfd_purge(vol->v_vid, dir->d_did);
+
             /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
              * Setting rlen = -1 before freeing would corrupt rfork_cache_used tracking. */
             if (dir->dcache_rfork_buf) {
@@ -1363,6 +1426,10 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
             dircache_dump();
             AFP_PANIC("dir_add");
         }
+
+        /* dir_remove() queued the stray on invalid_dircache_entries; the
+         * exit block below must not free it a second time */
+        cdir = NULL;
     }
 
     /* get_id needs adp for reading CNID from adouble file */
@@ -1396,9 +1463,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
     }
 
     /* Build fullpath */
-    if (((fullpath = bstrcpy(dir->d_fullpath)) == NULL)  /* 3 */
-            || (bconchar(fullpath, '/') != BSTR_OK)
-            || (bcatcstr(fullpath, path->u_name)) != BSTR_OK) {
+    if ((fullpath = fullpath_join(dir->d_fullpath, path->u_name)) == NULL) { /* 3 */
         LOG(log_error, logtype_afpd, "dir_add: fullpath: %s", strerror(errno));
         err = 3;
         goto exit;
@@ -1547,7 +1612,7 @@ int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
         dircache_report_invalid_entry(dir);
     }
 
-    /* Remove the dircache entry */
+    /* Remove the dircache entry (also purges the entry's pfd slot) */
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
     /* Queue pruned entry for memory deallocation */
     enqueue(invalid_dircache_entries, dir); /* 3 */

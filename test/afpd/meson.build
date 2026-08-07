@@ -97,6 +97,7 @@ if build_afpd_tests
         'test_capabilities.c',
         'subtests_conf.c',
         'subtests_lock.c',
+        'subtests_pfd.c',
         include_directories: test_includes,
         objects: afpdtest_objects,
         link_whole: afpdtest_link_whole,

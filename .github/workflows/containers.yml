@@ -302,6 +302,8 @@ jobs:
               -e AFP_DIRCACHESIZE=1024 \
               -e AFP_DIRCACHE_MODE=arc \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
+              -e AFP_DIRCACHE_RFORK_BUDGET=102400 \
+              -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
               -e TESTSUITE=spectest \
               -e AFP_VERSION=7 \
               -e FLAMEGRAPH=1 \
@@ -407,8 +409,8 @@ jobs:
               -e AFP_DIRCACHESIZE=1048576 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
               -e AFP_DIRCACHE_MODE=arc \
-              -e AFP_DIRCACHE_RFORK_BUDGET=1048576000 \
-              -e AFP_DIRCACHE_RFORK_MAXSIZE=1048576 \
+              -e AFP_DIRCACHE_RFORK_BUDGET=1048576 \
+              -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
               -e AFP_CONVERT_APPLEDOUBLE=no \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
@@ -471,8 +473,8 @@ jobs:
               -e AFP_DIRCACHESIZE=1048576 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
               -e AFP_DIRCACHE_MODE=arc \
-              -e AFP_DIRCACHE_RFORK_BUDGET=1048576000 \
-              -e AFP_DIRCACHE_RFORK_MAXSIZE=1048576 \
+              -e AFP_DIRCACHE_RFORK_BUDGET=1048576 \
+              -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
               -e AFP_CONVERT_APPLEDOUBLE=no \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
@@ -526,8 +528,8 @@ jobs:
               -e AFP_DIRCACHESIZE=1048576 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
               -e AFP_DIRCACHE_MODE=arc \
-              -e AFP_DIRCACHE_RFORK_BUDGET=1048576000 \
-              -e AFP_DIRCACHE_RFORK_MAXSIZE=1048576 \
+              -e AFP_DIRCACHE_RFORK_BUDGET=1048576 \
+              -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
               -e AFP_CONVERT_APPLEDOUBLE=no \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
@@ -1240,7 +1242,17 @@ jobs:
     permissions:
       contents: write
     env:
+      # Single source of truth: these feed BOTH the container (-e) and the
+      # chart --meta labels, so the plot header always shows the real config.
       AFP_TEST_ITERATIONS: 20
+      AFP_VERSION: 7
+      AFP_VERSION_LABEL: "3.4"
+      AFP_DIRCACHE_MODE: arc
+      AFP_DIRCACHESIZE: 65536
+      AFP_DIRCACHE_VALIDATION_FREQ: 100
+      AFP_SERVER_QUANTUM: 1048576
+      AFP_DIRCACHE_RFORK_BUDGET: 102400
+      AFP_DIRCACHE_RFORK_MAXSIZE: 1024
     outputs:
       slowest: ${{ steps.lantest-summary.outputs.SLOW }}
       aggregates: ${{ steps.lantest-summary.outputs.AGG }}
@@ -1258,9 +1270,13 @@ jobs:
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
             -e TESTSUITE="lan" \
-            -e AFP_VERSION="7" \
-            -e AFP_DIRCACHE_MODE="arc" \
-            -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
+            -e AFP_VERSION="${{ env.AFP_VERSION }}" \
+            -e AFP_DIRCACHE_MODE="${{ env.AFP_DIRCACHE_MODE }}" \
+            -e AFP_DIRCACHESIZE="${{ env.AFP_DIRCACHESIZE }}" \
+            -e AFP_DIRCACHE_VALIDATION_FREQ="${{ env.AFP_DIRCACHE_VALIDATION_FREQ }}" \
+            -e AFP_SERVER_QUANTUM="${{ env.AFP_SERVER_QUANTUM }}" \
+            -e AFP_DIRCACHE_RFORK_BUDGET="${{ env.AFP_DIRCACHE_RFORK_BUDGET }}" \
+            -e AFP_DIRCACHE_RFORK_MAXSIZE="${{ env.AFP_DIRCACHE_RFORK_MAXSIZE }}" \
             -e AFP_TEST_ITERATIONS="${{ env.AFP_TEST_ITERATIONS }}" \
             -e TEST_FLAGS="-c" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }} \
@@ -1322,12 +1338,13 @@ jobs:
             -o lantest \
             --title "Netatalk AFP Lantest — per-test latency" \
             --subtitle "commit ${SHORT_SHA} · candle: min–max wick, mean±σ box, median line" \
-            --meta afp=3.4 \
+            --meta afp=${{ env.AFP_VERSION_LABEL }} \
             --meta iterations=${{ env.AFP_TEST_ITERATIONS }} \
-            --meta quantum_kb=1024 \
-            --meta dircache_mode=arc \
-            --meta dircache_size=65536 \
-            --meta dircache_validation_freq=100
+            --meta quantum_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
+            --meta dircache_mode=${{ env.AFP_DIRCACHE_MODE }} \
+            --meta dircache_size=${{ env.AFP_DIRCACHESIZE }} \
+            --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
+            --meta rfork_budget_kb=${{ env.AFP_DIRCACHE_RFORK_BUDGET }}
           echo "PNG size: $(du -h lantest.png | cut -f1)"
       - name: Extract per-test table and aggregates for PR comment
         id: lantest-summary
@@ -1398,7 +1415,17 @@ jobs:
     permissions:
       contents: write
     env:
+      # Single source of truth: these feed BOTH the container (-e) and the
+      # chart --meta labels, so the plot header always shows the real config.
       AFP_TEST_ITERATIONS: 20
+      AFP_VERSION: 7
+      AFP_VERSION_LABEL: "3.4"
+      AFP_DIRCACHE_MODE: arc
+      AFP_DIRCACHESIZE: 65536
+      AFP_DIRCACHE_VALIDATION_FREQ: 100
+      AFP_SERVER_QUANTUM: 1048576
+      AFP_DIRCACHE_RFORK_BUDGET: 102400
+      AFP_DIRCACHE_RFORK_MAXSIZE: 1024
     outputs:
       peaks: ${{ steps.speedtest-summary.outputs.PEAKS }}
     steps:
@@ -1415,11 +1442,13 @@ jobs:
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
             -e TESTSUITE="speed" \
-            -e AFP_VERSION="7" \
-            -e AFP_DIRCACHE_MODE="arc" \
-            -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
-            -e AFP_DIRCACHE_RFORK_BUDGET="1048576000" \
-            -e AFP_DIRCACHE_RFORK_MAXSIZE="1048576" \
+            -e AFP_VERSION="${{ env.AFP_VERSION }}" \
+            -e AFP_DIRCACHE_MODE="${{ env.AFP_DIRCACHE_MODE }}" \
+            -e AFP_DIRCACHESIZE="${{ env.AFP_DIRCACHESIZE }}" \
+            -e AFP_DIRCACHE_VALIDATION_FREQ="${{ env.AFP_DIRCACHE_VALIDATION_FREQ }}" \
+            -e AFP_SERVER_QUANTUM="${{ env.AFP_SERVER_QUANTUM }}" \
+            -e AFP_DIRCACHE_RFORK_BUDGET="${{ env.AFP_DIRCACHE_RFORK_BUDGET }}" \
+            -e AFP_DIRCACHE_RFORK_MAXSIZE="${{ env.AFP_DIRCACHE_RFORK_MAXSIZE }}" \
             -e AFP_TEST_ITERATIONS="${{ env.AFP_TEST_ITERATIONS }}" \
             -e TEST_FLAGS="-c -z 0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.25,0.5,1,2,4,8,16,32,64,128,256" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }} \
@@ -1452,11 +1481,12 @@ jobs:
             -o speedtest \
             --title "Netatalk AFP Speedtest — throughput vs file size" \
             --subtitle "commit ${SHORT_SHA} · mean MB/s, shaded band = min–max" \
-            --meta afp=3.4 \
-            --meta quantum_kb=1024 \
-            --meta dircache_mode=arc \
-            --meta dircache_size=65536 \
-            --meta dircache_validation_freq=100 \
+            --meta afp=${{ env.AFP_VERSION_LABEL }} \
+            --meta iterations=${{ env.AFP_TEST_ITERATIONS }} \
+            --meta quantum_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
+            --meta dircache_mode=${{ env.AFP_DIRCACHE_MODE }} \
+            --meta dircache_size=${{ env.AFP_DIRCACHESIZE }} \
+            --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
             --meta warmup=1
           echo "PNG size: $(du -h speedtest.png | cut -f1)"
       - name: Extract per-operation peak throughput for PR comment
