@@ -43,6 +43,7 @@
 #include "hash.h"
 #include "subtests.h"
 #include "subtests_lock.h"
+#include "subtests_pfd.h"
 #include "test.h"
 #include "test_capabilities.h"
 #include "volume.h"
@@ -552,6 +553,27 @@ int main(int argc, char *argv[])
     /* test enumerate.c stuff */
     TEST_int(enumerate(&obj, vid, DIRDID_ROOT), 0,
              "enumerate: root directory contents");
+    /* dircache lifetime: dir_add error path must not double-free a stray
+     * entry already queued on invalid_dircache_entries (sanitizer leg
+     * aborts on the second free) */
+    TEST_int(test003_dir_add_error_no_double_free(vol), 0,
+             "dir_add error path: queued stray entry not freed twice");
+    /* getmetadata must not expunge a valid entry when the caller's stat
+     * was never filled (LNAME-only FPGetForkParms shape) */
+    TEST_int(test004_getmetadata_nostat_keeps_cache(vol), 0,
+             "getmetadata: unfilled stat is not external-replacement evidence");
+    /* an open fork outlives its path: identity comes from the held fd,
+     * and the dead path must not be minted into the dircache */
+    TEST_int(test005_getmetadata_open_fork_outlives_path(vol), 0,
+             "getmetadata: open fork identified via held fd when path is gone");
+    /* pfd cache: strict ostat equivalence (quiescent), and the
+     * divergence window — probe bound + three-way sync-check no-thrash */
+    TEST_int(test_pfd_ostat_equivalence(vol), 0,
+             "pfd_ostat: byte-identical to ostat across the quiescent matrix");
+    TEST_int(test_pfd_rename_repairs_child_path(vol), 0,
+             "pfd_ostat: stale child d_fullpath repaired from re-pathed parent");
+    TEST_int(test_pfd_probe_rename_detection(vol), 0,
+             "pfd_ostat: rename-away caught by probe bound; no refill thrash");
     /* fork/adouble fault-injection unit tests (TEST_int_or_skip: tests that
      * cannot run on this platform/build return TEST_SKIP rather than failing) */
     TEST_int_or_skip(utest_faultinject_selftest(vol), 0,
@@ -605,8 +627,16 @@ int main(int argc, char *argv[])
                      "fork_setmode_deny: each access mode maps to the correct deny bits");
     TEST_int(utest_of_alloc_fifo(vol), 0,
              "of_alloc: refnum==slot, never 0, of_find round-trip, FIFO reuse window");
-    /* cleanup */
-    closevol(&obj, vol);
+    /* drives a full closevol/openvol cycle on vol and hands it back open */
+    TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
+             "closevol: pfd slots keyed on the volume are retired");
+    /* cleanup — vol may be closed if the cycle's reopen failed (closevol
+     * is not idempotent: dir_free(v_root) has no NULL guard) */
+    curdir = NULL;
+
+    if (vol->v_flags & AFPVOL_OPEN) {
+        closevol(&obj, vol);
+    }
 
     if (volsys) {
         closevol(&obj, volsys);

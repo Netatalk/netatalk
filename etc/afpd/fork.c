@@ -158,6 +158,7 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork,
     struct adouble  *adp;
     struct dir      *dir;
     struct vol      *vol;
+    memset(&path, 0, sizeof(path));
 
     /* Virtual forks use synthesized params */
     if (ofork->of_flags & AFPFORK_VIRTUAL) {
@@ -181,7 +182,15 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork,
     }
 
     vol = ofork->of_vol;
-    dir = dirlookup(vol, ofork->of_did);
+
+    /* The fork can outlive its parent directory's CNID entry (deleted by
+     * another session, hint-driven expunge). dirlookup sets afp_errno to
+     * distinguish gone (AFPERR_NOOBJ) from transient resolution failure;
+     * get_afp_errno screens the internal DID1 sentinel and paths that
+     * left it unset. */
+    if ((dir = dirlookup(vol, ofork->of_did)) == NULL) {
+        return get_afp_errno(AFPERR_NOOBJ);
+    }
 
     if (NULL == (path.u_name = mtoupath(vol, of_name(ofork), dir->d_did,
                                         utf8_encoding(obj)))) {
@@ -196,19 +205,38 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork,
                   (1 << FILPBIT_FNUM) | (1 << FILPBIT_CDATE) |
                   (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE))) {
         if (ad_data_fileno(ofork->of_ad) <= 0) {
-            /* 0 is for symlink */
+            /* 0 is for symlink. A v2 resource-fork-only fork holds no fd
+             * on the object itself (the rfork fd is the ._ sidecar, whose
+             * inode must not stand in for the object's) — when the held
+             * fork's path is gone, proceed with st unfilled: identity
+             * comes from the adouble header, dates already do. */
             if (movecwd(vol, dir) < 0) {
                 return AFPERR_NOOBJ;
             }
 
-            if (lstat(path.u_name, st) < 0) {
+            if (lstat(path.u_name, st) == 0) {
+                path.st_valid = 1;
+            } else if (adp == NULL || errno != ENOENT) {
                 return AFPERR_NOOBJ;
             }
         } else {
             if (fstat(ad_data_fileno(ofork->of_ad), st) < 0) {
                 return AFPERR_BITMAP;
             }
+
+            path.st_valid = 1;
+            path.st_fd = 1;
         }
+    } else if ((bitmap & (1 << FILPBIT_LNAME)) && utf8_encoding(obj)
+               && ad_data_fileno(ofork->of_ad) > 0
+               && fstat(ad_data_fileno(ofork->of_ad), st) == 0) {
+        /* The only name-only bitmap shape whose identity block runs in
+         * getmetadata (m_name is always set here, FNUM is in the stat
+         * block above): provide the held object's stat so a fork that
+         * outlived its path still resolves. Other name-only bitmaps skip
+         * the syscall entirely. */
+        path.st_valid = 1;
+        path.st_fd = 1;
     }
 
     return getmetadata(obj, vol, bitmap, &path, dir, buf, buflen, adp);
@@ -419,7 +447,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct dir      *dir;
     struct ofork    *ofork, *opened;
     struct adouble  *adsame = NULL;
-    size_t          buflen;
+    size_t          buflen = 0;
     int             ret, adflags, eid;
     uint32_t        did;
     uint16_t        vid, bitmap, access, ofrefnum;
@@ -2149,7 +2177,7 @@ int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct ofork    *ofork;
     int             ret;
     uint16_t       ofrefnum, bitmap;
-    size_t          buflen;
+    size_t          buflen = 0;
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
     ibuf += sizeof(ofrefnum);

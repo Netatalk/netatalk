@@ -143,6 +143,13 @@ sub build_info_lines {
     push @dc, "size $meta->{dircache_size}" if $meta->{dircache_size};
     push @dc, "freq $meta->{dircache_validation_freq}"
       if $meta->{dircache_validation_freq};
+
+    if (defined $meta->{rfork_budget_kb}) {
+        push @dc, $meta->{rfork_budget_kb} > 0
+          ? "rfork budget $meta->{rfork_budget_kb} KiB"
+          : 'rfork off';
+    }
+
     push @lines, 'Dircache: ' . join(' · ', @dc) if @dc;
     return @lines;
 }

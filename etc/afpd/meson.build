@@ -22,6 +22,7 @@ afpd_common_sources = files(
     'mangle.c',
     'messages.c',
     'ofork.c',
+    'pfd_cache.c',
     'status.c',
     'switch.c',
     'uam.c',

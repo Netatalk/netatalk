@@ -39,6 +39,7 @@
 #include "ad_cache.h"
 #include "dircache.h"
 #include "directory.h"
+#include "pfd_cache.h"
 #include "hash.h"
 #include "idle_worker.h"
 
@@ -466,6 +467,30 @@ static void arc_verify_invariants(void)
 }
 
 /*!
+ * @brief Hash-removed entry: defer its free to end-of-request.
+ *
+ * Caller must have removed the entry from both hash indexes and every
+ * ARC/LRU queue. Deferring keeps pointers handed out earlier in this
+ * request valid (consumers gate on d_did != CNID_INVALID) — ARC ghost
+ * eviction can reach entries that WERE returned this request, so an
+ * inline free here could dangle a held pointer. On qnode OOM (effectively
+ * unreachable: the kernel OOM killer fires first) leak the entry instead;
+ * dir_remove makes the same choice.
+ */
+static void dircache_defer_free(struct dir *dir)
+{
+    dir->d_did = CNID_INVALID;
+
+    if (enqueue(invalid_dircache_entries, dir) == NULL) {
+        LOG(log_error, logtype_afpd,
+            "dircache_defer_free: enqueue failed (OOM), entry leaked");
+        return;
+    }
+
+    iw_note_work();
+}
+
+/*!
  * @brief Ensure ghost directory has room for one more entry
  *
  * Maintains the ARC invariant: B1 + B2 ≤ c
@@ -508,9 +533,8 @@ static void arc_ensure_ghost_capacity(arc_list_t target_list)
                 ntohl(ghost->d_did),
                 arc_cache.b1_size,
                 arc_cache.b2_size);
-            /* Remove from hash tables and free */
             dircache_remove(NULL, ghost, DIRCACHE | DIDNAME_INDEX);
-            dir_free(ghost);
+            dircache_defer_free(ghost);
         }
     }
 }
@@ -925,9 +949,9 @@ static void arc_case_iv(struct dir *dir)
             if (ghost) {
                 arc_cache.b1_size--;
                 ghost->qidx_node = NULL;  /* Clear queue pointer after dequeue */
-                /* Ghost is a full struct dir - remove from hash tables and free */
+                /* Ghost is a full struct dir - remove from hash, defer free */
                 dircache_remove(NULL, ghost, DIRCACHE | DIDNAME_INDEX);
-                dir_free(ghost);
+                dircache_defer_free(ghost);
             }
 
             if (arc_replace(0) != 0) {
@@ -960,7 +984,7 @@ static void arc_case_iv(struct dir *dir)
 
                 victim->qidx_node = NULL;
                 dircache_remove(NULL, victim, DIRCACHE | DIDNAME_INDEX);
-                dir_free(victim);
+                dircache_defer_free(victim);
             } else {
                 LOG(log_warning, logtype_afpd,
                     "arc_case_iv(i): cannot evict, all entries are curdir "
@@ -977,9 +1001,9 @@ static void arc_case_iv(struct dir *dir)
             if (ghost) {
                 arc_cache.b2_size--;
                 ghost->qidx_node = NULL;  /* Clear queue pointer after dequeue */
-                /* Ghost is a full struct dir - remove from hash tables and free */
+                /* Ghost is a full struct dir - remove from hash, defer free */
                 dircache_remove(NULL, ghost, DIRCACHE | DIDNAME_INDEX);
-                dir_free(ghost);
+                dircache_defer_free(ghost);
             }
         }
 
@@ -1149,7 +1173,7 @@ static void dircache_evict(void)
         }
 
         dircache_remove(NULL, dir, DIRCACHE | DIDNAME_INDEX); /* 3 */
-        dir_free(dir);                                        /* 4 */
+        dircache_defer_free(dir);                             /* 4 */
     }
 
     AFP_ASSERT(queue_count == dircache->hash_nodecount);
@@ -1162,6 +1186,117 @@ static void dircache_evict(void)
 /********************************************************
  * Interface
  ********************************************************/
+
+/* The file-vs-directory gone-event mapping is a sender invariant the hint
+ * receiver keys on (CACHE_HINT_DELETE is treated as file-only when
+ * deciding whether a pfd slot may exist) — one definition only. */
+static uint8_t gone_event_for(const struct dir *dir)
+{
+    return (dir->d_flags & DIRF_ISFILE)
+           ? CACHE_HINT_DELETE
+           : CACHE_HINT_DELETE_CHILDREN;
+}
+
+/*!
+ * @brief Validation discovered the entry gone: expunge + hint siblings.
+ *
+ * One pipe message replaces each sibling re-discovering the change by its
+ * own full-path stat. The hint reports evidence (gone); a same-named
+ * recreate is harmless — hints only invalidate, receivers rebuild.
+ */
+static void validation_expunge_and_hint(const struct vol *vol,
+                                        struct dir *cdir)
+{
+    /* Capture before dir_remove invalidates d_did */
+    cnid_t gone_did = cdir->d_did;
+    uint8_t gone_event = gone_event_for(cdir);
+    (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
+    ipc_send_cache_hint(AFPobj, vol->v_vid, gone_did, gone_event);
+    dircache_stat.expunged++;
+    dircache_stat.misses++;  /* Count expunge as miss */
+}
+
+/*!
+ * @brief Validation saw an ino/ctime change: refresh in-place + hint.
+ *
+ * Hints: an inode change (object replaced) broadcasts REFRESH under the
+ * entry's current DID and, when dir_modify re-keyed it, under the old DID
+ * too — siblings cache the object under the old key. A ctime-only change
+ * sends nothing: fork writes advance ctime on every flush, and
+ * broadcasting those would rebuild sibling AD/rfork caches per write;
+ * pure metadata changes propagate via each sibling's own validation.
+ *
+ * @returns 0 if the entry survived (refreshed in-place), -1 if dir_modify
+ *          evicted it (inode change + CNID miss) — hint sent either way.
+ */
+static int validation_refresh_and_hint(const struct vol *vol,
+                                       struct dir *cdir, struct stat *st)
+{
+    /* Capture before dir_modify may invalidate or re-key the entry */
+    cnid_t old_did = cdir->d_did;
+    uint8_t gone_event = gone_event_for(cdir);
+    bool ino_changed = (cdir->dcache_ino != 0
+                        && cdir->dcache_ino != st->st_ino);
+    dir_modify(vol, cdir, &(struct dir_modify_args) {
+        .flags = DCMOD_STAT,
+        .st = st
+    });
+
+    /* dir_modify may evict the entry (inode change + CNID miss) */
+    if (cdir->d_did == CNID_INVALID) {
+        ipc_send_cache_hint(AFPobj, vol->v_vid, old_did, gone_event);
+        dircache_stat.expunged++;
+        dircache_stat.misses++;
+        return -1;
+    }
+
+    if (ino_changed) {
+        ipc_send_cache_hint(AFPobj, vol->v_vid, cdir->d_did,
+                            CACHE_HINT_REFRESH);
+
+        if (cdir->d_did != old_did) {
+            /* Re-keyed: siblings hold the object under the OLD DID */
+            ipc_send_cache_hint(AFPobj, vol->v_vid, old_did,
+                                CACHE_HINT_REFRESH);
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Plain index probe for pfd_cache parent resolution.
+ *
+ * Never validates, never mutates, never promotes. Filters ARC ghosts
+ * (their identity fields are frozen and unvalidated — treating one as a
+ * live parent would let the pfd sync-check pass against stale identity)
+ * and file entries (a parent must be a directory).
+ */
+struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did)
+{
+    struct dir key;
+    hnode_t *hn;
+    struct dir *d;
+
+    if (did == CNID_INVALID || ntohl(did) < CNID_START) {
+        return NULL;
+    }
+
+    key.d_vid = vol->v_vid;
+    key.d_did = did;
+
+    if ((hn = hash_lookup(dircache, &key)) == NULL) {
+        return NULL;
+    }
+
+    d = hnode_get(hn);
+
+    if (d->d_flags & (DIRF_ARC_GHOST | DIRF_ISFILE)) {
+        return NULL;
+    }
+
+    return d;
+}
 
 /*!
  * @brief Search the dircache via a CNID for a directory
@@ -1231,13 +1366,11 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
          * Internal netatalk operations invalidate cache explicitly via dir_remove(). */
         if (should_validate_cache_entry()) {
             /* Check if file still exists */
-            if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+            if (pfd_ostat(vol, cdir, &st, vol_syml_opt(vol)) != 0) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(cnid:%u): {missing:\"%s\"}",
                     ntohl(cnid), cfrombstr(cdir->d_fullpath));
-                (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
-                dircache_stat.expunged++;
-                dircache_stat.misses++;  /* Count expunge as miss */
+                validation_expunge_and_hint(vol, cdir);
                 return NULL;
             }
 
@@ -1257,20 +1390,8 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                     ntohl(cnid), cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)",
                     (unsigned long long)cdir->dcache_ino, (unsigned long long)st.st_ino,
                     (long)cdir->dcache_ctime, (long)st.st_ctime);
-                /* Refresh stat in-place via dir_modify(DCMOD_STAT).
-                 * Handles inode changes (CNID refresh + AD invalidation)
-                 * and ctime changes (AD invalidation + stat update).
-                 * Avoids destroying the entire entry and forcing a
-                 * full rebuild from the CNID database. */
-                dir_modify(vol, cdir, &(struct dir_modify_args) {
-                    .flags = DCMOD_STAT,
-                    .st = &st
-                });
 
-                /* dir_modify may evict the entry (inode change + CNID miss) */
-                if (cdir->d_did == CNID_INVALID) {
-                    dircache_stat.expunged++;
-                    dircache_stat.misses++;
+                if (validation_refresh_and_hint(vol, cdir, &st) != 0) {
                     return NULL;
                 }
 
@@ -1378,13 +1499,11 @@ struct dir *dircache_search_by_name(const struct vol *vol,
          * Internal netatalk operations invalidate cache explicitly via dir_remove(). */
         if (should_validate_cache_entry()) {
             /* Check if file still exists */
-            if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+            if (pfd_ostat(vol, cdir, &st, vol_syml_opt(vol)) != 0) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(did:%u,\"%s\"): {missing:\"%s\"}",
                     ntohl(dir->d_did), name, cfrombstr(cdir->d_fullpath));
-                (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
-                dircache_stat.expunged++;
-                dircache_stat.misses++;  /* Count expunge as miss */
+                validation_expunge_and_hint(vol, cdir);
                 return NULL;
             }
 
@@ -1404,20 +1523,8 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                     ntohl(dir->d_did), name,
                     (unsigned long long)cdir->dcache_ino, (unsigned long long)st.st_ino,
                     (long)cdir->dcache_ctime, (long)st.st_ctime);
-                /* Refresh stat in-place via dir_modify(DCMOD_STAT).
-                 * Handles inode changes (CNID refresh + AD invalidation)
-                 * and ctime changes (AD invalidation + stat update).
-                 * Avoids destroying the entire entry and forcing a
-                 * full rebuild from the CNID database. */
-                dir_modify(vol, cdir, &(struct dir_modify_args) {
-                    .flags = DCMOD_STAT,
-                    .st = &st
-                });
 
-                /* dir_modify may evict the entry (inode change + CNID miss) */
-                if (cdir->d_did == CNID_INVALID) {
-                    dircache_stat.expunged++;
-                    dircache_stat.misses++;
+                if (validation_refresh_and_hint(vol, cdir, &st) != 0) {
                     return NULL;
                 }
 
@@ -1705,6 +1812,15 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
                 hash_delete_free(dircache, hn);
             }
         }
+    }
+
+    /* Unpublish is the one choke point every removal funnels through
+     * (dir_remove, deferred chains, capacity eviction, ARC ghost deletion,
+     * dir_modify re-key) — purge here so no removal path can forget and
+     * leave a slot pinning the directory's fd. Keyed on d_vid because
+     * eviction callers pass vol == NULL. Files never own slots. */
+    if ((flags & DIRCACHE) && !(dir->d_flags & DIRF_ISFILE)) {
+        pfd_purge(dir->d_vid, dir->d_did);
     }
 
     LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {removed}",
@@ -2637,6 +2753,15 @@ void process_cache_hints(AFPObj *obj)
         hnode_t *hn = hash_lookup(dircache, &key);
 
         if (!hn) {
+            /* Entry already evicted locally, but a pfd slot keyed on this
+             * DID may survive it. Only directory-capable events consult:
+             * CACHE_HINT_DELETE is sent exclusively for file deletions
+             * (sender invariant), so file-delete storms cost zero scans. */
+            if (hint.event == CACHE_HINT_DELETE_CHILDREN
+                    || hint.event == CACHE_HINT_REFRESH) {
+                pfd_purge(vol->v_vid, hint.cnid);
+            }
+
             cache_hint_stat.hints_no_match++;
             continue;
         }
@@ -2893,6 +3018,8 @@ void dircache_flush_deferred_for_vol(uint16_t vid)
 
     /* Compact: advance head past any dead entries */
     deferred_compact_head();
+    /* Slot retirement for the closing volume lives in closevol(), which
+     * every close path (afp_closevol, logout's close_all_vol) runs. */
 }
 
 /* Called by idle worker — returns true if deferred work exists */
