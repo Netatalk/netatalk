@@ -1,124 +1,124 @@
 lantest.avg_op_time_us:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 114.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 76.0
 lantest.avg_total_runtime_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 6435.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 4674.0
 lantest.byte_range_lock_unlock_2000_ranges_in_one_fork.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 189.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 125.0
 lantest.cache_validation_2000_files_x_3_lookups.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 328.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 205.0
 lantest.copying_1000_files_client_side_r_w.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 732.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 524.0
 lantest.copying_2000_files_server_side.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 892.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 843.0
 lantest.create_directory_tree_with_1000_dirs.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 416.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 357.0
 lantest.creating_2000_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 784.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 619.0
 lantest.deep_path_traversal_20_levels_x_100_walks.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 119.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 76.0
 lantest.deleting_2000_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 732.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 484.0
 lantest.directory_cache_hits_20_dirs_x_100_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 112.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 70.0
 lantest.enumerate_dir_with_2000_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 5.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 4.0
 lantest.lock_then_unlock_2000_open_forks.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 177.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 117.0
 lantest.mixed_cache_operations_create_stat_enum_delete_on_1000_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 747.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 472.0
 lantest.open_read_1024_bytes_close_2000_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 371.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 245.0
 lantest.open_write_1024_bytes_close_2000_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 432.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 277.0
 lantest.reading_one_large_file.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 15.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 12.0
 lantest.stat_2000_files.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 346.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 217.0
 lantest.writing_one_large_file.mean_ms:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 38.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 27.0
 speedtest.copy.avg_max_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 1646.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 1981.0
 speedtest.copy.avg_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 1496.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 1873.0
 speedtest.copy.peak_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 2477.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 3235.0
 speedtest.read.avg_max_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 4039.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 5330.0
 speedtest.read.avg_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 3537.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 4891.0
 speedtest.read.peak_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 6494.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 8457.0
 speedtest.servercopy.avg_max_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 1750.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 2271.0
 speedtest.servercopy.avg_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 1678.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 2177.0
 speedtest.servercopy.peak_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 3247.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 4176.0
 speedtest.write.avg_max_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 871.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 386.0
 speedtest.write.avg_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 525.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 150.0
 speedtest.write.peak_mean_mbs:
 - pr: 3230
-  ts: '2026-08-07T09:18:18Z'
-  value: 1462.0
+  ts: '2026-08-07T13:44:13Z'
+  value: 255.0
