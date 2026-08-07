@@ -64,16 +64,16 @@
 #define TEST_WRITE100MB 0
 #define TEST_READ100MB 1
 #define TEST_CREATE2000FILES 2
-#define TEST_WRITE2000FILES 3
-#define TEST_READ2000FILES 4
-#define TEST_COPY2000FILES 5
-#define TEST_SERVERCOPY2000FILES 6
-#define TEST_STAT2000FILES 7
-#define TEST_ENUM2000FILES 8
-#define TEST_FORK2000LOCKS 9
-#define TEST_DELETE2000FILES 10
-#define TEST_BYTELOCKS 11
-#define TEST_DIRTREE 12
+#define TEST_DIRTREE 3
+#define TEST_WRITE2000FILES 4
+#define TEST_READ2000FILES 5
+#define TEST_COPY1000FILES 6
+#define TEST_SERVERCOPY2000FILES 7
+#define TEST_STAT2000FILES 8
+#define TEST_ENUM2000FILES 9
+#define TEST_FORK2000LOCKS 10
+#define TEST_DELETE2000FILES 11
+#define TEST_BYTELOCKS 12
 #define TEST_CACHE_HITS 13
 #define TEST_MIXED_CACHE_OPS 14
 #define TEST_DEEP_TRAVERSAL 15
@@ -83,7 +83,7 @@
 /* Timed AFP requests issued by one full pass over every test; recomputed
  * whenever a test's timed loop changes. See the per-test "[N AFP ops]"
  * annotations in test_names[] — this is their sum. */
-#define TOTAL_AFP_OPS 63486
+#define TOTAL_AFP_OPS 49326
 
 /* Global Error Constants */
 #define ERROR_MEMORY_ALLOCATION  2
@@ -138,20 +138,29 @@ char NotTestedTests[1024][256] = {{0}};
 char SkippedTests[1024][256] = {{0}};
 
 /* Tests configuration */
-#define DIRNUM 10  /* outer/middle nesting levels */
-#define DIRNUM_K 10  /* inner level: 10 x 10 x 10 = 1000 nested dirs */
+/* Directory tree geometry: 20 outer x 9 middle x 10 inner nests
+ * 20 + 180 + 1800 = exactly 2000 FPCreateDir calls, aligning the tree test
+ * with the other 2000-action tests. */
+#define DIRNUM_I 20  /* outer level */
+#define DIRNUM_J 9  /* middle level */
+#define DIRNUM_K 10  /* inner level */
 static off_t rwsize = 100 * 1024 * 1024;  /* 100 MiB */
 static int32_t num_locks = 2000;  /* byte-range locks held in one fork */
 static int32_t create_enum_files = 2000;  /* 2000 files */
+static int32_t copy_files = 1000;  /* client-side copies: 1000 reads + 1000
+                                    * writes = 2000 user actions */
 static int32_t num_fork_locks =
     2000;  /* forks locked at once (TEST_FORK2000LOCKS) */
 static int32_t cache_dirs =
     20;  /* dirs for cache tests (20 x 100 = 2000 files) */
 static int32_t cache_files_per_dir = 100;  /* files per dir */
-static int32_t mixed_cache_files = 1000;  /* mixed ops file count */
+static int32_t mixed_cache_files = 500;  /* mixed ops file count: 4 user
+                                          * actions each = 2000 actions */
 static int32_t deep_dir_levels = 20;  /* deep traversal dir levels */
 static int32_t deep_traversals = 100;  /* path walks: 20 levels x 100 = 2000 */
-static int32_t validation_files = 2000;  /* validation file count */
+static int32_t validation_files = 500;  /* validation file count: 4 lookups
+                                         * each = 2000 actions, hot-cache
+                                         * biased */
 
 /* Forward declarations */
 void clean_exit(int exit_code);
@@ -177,20 +186,20 @@ static const char *test_names[NUMTESTS] = {
     "Writing one large file [103 AFP ops]",  /*!< TEST_WRITE100MB */
     "Reading one large file [102 AFP ops]",  /*!< TEST_READ100MB */
     "Creating 2000 files [4,000 AFP ops]",  /*!< TEST_CREATE2000FILES */
+    "Create 2000 dirs tree (20×9×10) [2,000 AFP ops]",  /*!< TEST_DIRTREE */
     "Open, write 1024 bytes, close 2000 files [6,000 AFP ops]",  /*!< TEST_WRITE2000FILES */
-    "Open, read 512 bytes, close 2000 files [6,000 AFP ops]",  /*!< TEST_READ2000FILES */
-    "Copying 2000 files client-side [14,000 AFP ops]",  /*!< TEST_COPY2000FILES */
+    "Open, read 1024 bytes, close 2000 files [6,000 AFP ops]",  /*!< TEST_READ2000FILES */
+    "Copying 1000 files client-side (R+W) [7,000 AFP ops]",  /*!< TEST_COPY1000FILES */
     "Copying 2000 files server-side [2,000 AFP ops]",  /*!< TEST_SERVERCOPY2000FILES */
-    "Stat 2000 files [6,000 AFP ops]",  /*!< TEST_STAT2000FILES */
+    "Stat (lookup+getparams) 2000 files [4,000 AFP ops]",  /*!< TEST_STAT2000FILES */
     "Enumerate dir with 2000 files [~51 AFP ops]",  /*!< TEST_ENUM2000FILES */
     "Lock then unlock 2000 open forks [4,000 AFP ops]",  /*!< TEST_FORK2000LOCKS */
     "Deleting 2000 files [2,000 AFP ops]",  /*!< TEST_DELETE2000FILES */
     "Byte-range lock/unlock 2000 ranges in one fork [4,000 AFP ops]",  /*!< TEST_BYTELOCKS */
-    "Create directory tree with 1000 dirs [1,110 AFP ops]",  /*!< TEST_DIRTREE */
     "Directory cache hits (20 dirs x 100 files) [2,020 AFP ops]",  /*!< TEST_CACHE_HITS */
-    "Mixed cache operations (create/stat/enum/delete) on 1000 files [4,100 AFP ops]",  /*!< TEST_MIXED_CACHE_OPS */
+    "Mixed cache operations (create/stat/enum/delete) on 500 files [2,050 AFP ops]",  /*!< TEST_MIXED_CACHE_OPS */
     "Deep path traversal (20 levels x 100 walks) [2,000 AFP ops]",  /*!< TEST_DEEP_TRAVERSAL */
-    "Cache validation (2000 files x 3 lookups) [6,000 AFP ops]"  /*!< TEST_CACHE_VALIDATION */
+    "Cache validation (500 files x 4 lookups) [2,000 AFP ops]"  /*!< TEST_CACHE_VALIDATION */
 };
 
 static void starttimer(void)
@@ -658,7 +667,9 @@ static void result_print_summary(uint64_t
         total_time_ms += (double)tmedian;
     }
 
-    double avg_time_per_op = total_time_ms / (double)TOTAL_AFP_OPS;
+    /* Reported in µs: per-op latencies are fractions of a millisecond, so the
+     * µs figure reads as a whole number (86 µs) instead of 0.086 ms. */
+    double avg_time_per_op_us = total_time_ms * 1000.0 / (double)TOTAL_AFP_OPS;
 #ifdef __linux__
     double read_ratio = column_sums[MEASURE_AFPD_READ_IO] / (double)TOTAL_AFP_OPS;
     double write_ratio = column_sums[MEASURE_AFPD_WRITE_IO] / (double)TOTAL_AFP_OPS;
@@ -668,7 +679,7 @@ static void result_print_summary(uint64_t
         fprintf(stdout, "# Aggregate,Value\n");
         fprintf(stdout, "Total AFP ops,%d\n", TOTAL_AFP_OPS);
         fprintf(stdout, "Total median time (ms),%.0f\n", total_time_ms);
-        fprintf(stdout, "Avg time per AFP op (ms),%.3f\n", avg_time_per_op);
+        fprintf(stdout, "Avg time per AFP op (µs),%.0f\n", avg_time_per_op_us);
 #ifdef __linux__
 
         if (io_monitoring_enabled) {
@@ -681,8 +692,8 @@ static void result_print_summary(uint64_t
         fprintf(stdout, "\nAggregates Summary:\n");
         fprintf(stdout,
                 "------------------------------------------------------------------\n");
-        fprintf(stdout, "Average Time per AFP OP: %.3f ms (from per-test medians)\n",
-                avg_time_per_op);
+        fprintf(stdout, "Average Time per AFP OP: %.0f µs (from per-test medians)\n",
+                avg_time_per_op_us);
 #ifdef __linux__
 
         if (io_monitoring_enabled) {
@@ -1023,7 +1034,6 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (1) */
     if (teststorun[TEST_WRITE100MB]) {
         snprintf(temp, sizeof(temp), "File.big");
 
@@ -1095,7 +1105,6 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (2) */
     if (teststorun[TEST_READ100MB]) {
         if (!bigfilename) {
             if (is_there(Conn, vol, dir, temp) != AFP_OK) {
@@ -1169,7 +1178,6 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (3) */
     if (teststorun[TEST_CREATE2000FILES]) {
 #ifdef __linux__
         capture_io_values(TEST_START);
@@ -1196,6 +1204,53 @@ void run_test(const int32_t dir)
 
         stoptimer();
         addresult(TEST_CREATE2000FILES, iteration_counter);
+    }
+
+    /* -------- */
+    /* Nested directory tree creation: runs right after file creation so
+     * the two 2000-item create workloads read side by side. */
+    if (teststorun[TEST_DIRTREE]) {
+        uint32_t idirs[DIRNUM_I];
+        uint32_t jdirs[DIRNUM_I][DIRNUM_J];
+        uint32_t kdirs[DIRNUM_I][DIRNUM_J][DIRNUM_K];
+#ifdef __linux__
+        capture_io_values(TEST_START);
+#endif
+        starttimer();
+
+        for (int32_t i = 0; i < DIRNUM_I; i++) {
+            snprintf(temp, sizeof(temp), "dir%02u", i + 1);
+            FAILEXIT(!(idirs[i] = FPCreateDir(Conn, vol, dir, temp)), fin1);
+
+            for (int32_t j = 0; j < DIRNUM_J; j++) {
+                snprintf(temp, sizeof(temp), "dir%02u", j + 1);
+                FAILEXIT(!(jdirs[i][j] = FPCreateDir(Conn, vol, idirs[i], temp)), fin1);
+
+                for (int32_t k = 0; k < DIRNUM_K; k++) {
+                    snprintf(temp, sizeof(temp), "dir%02u", k + 1);
+                    FAILEXIT(!(kdirs[i][j][k] = FPCreateDir(Conn, vol, jdirs[i][j], temp)), fin1);
+                }
+            }
+        }
+
+        stoptimer();
+        addresult(TEST_DIRTREE, iteration_counter);
+
+        /* Delete directory tree */
+        for (int32_t i = 0; i < DIRNUM_I; i++) {
+            for (int32_t j = 0; j < DIRNUM_J; j++) {
+                for (int32_t k = 0; k < DIRNUM_K; k++) {
+                    snprintf(temp, sizeof(temp), "dir%02u", k + 1);
+                    FAILEXIT(FPDelete(Conn, vol, jdirs[i][j], temp) != 0, fin1);
+                }
+
+                snprintf(temp, sizeof(temp), "dir%02u", j + 1);
+                FAILEXIT(FPDelete(Conn, vol, idirs[i], temp) != 0, fin1);
+            }
+
+            snprintf(temp, sizeof(temp), "dir%02u", i + 1);
+            FAILEXIT(FPDelete(Conn, vol, dir, temp) != 0, fin1);
+        }
     }
 
     /* -------- */
@@ -1230,11 +1285,12 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Open, read 512 bytes, close each of the 2000 files written above: the
-     * full small-read lifecycle a real client pays per file, including the
-     * per-open/close lock management. Mirrors WRITE2000FILES's timed
-     * open+write+close so the read and write candles are directly
-     * comparable; the metadata stats live in STAT2000FILES. */
+    /* Open, read back the full 1024 bytes, close each of the 2000 files
+     * written above: the full small-read lifecycle a real client pays per
+     * file, including the per-open/close lock management. Mirrors
+     * WRITE2000FILES's timed open+write+close — same byte count, so the read
+     * and write candles are directly comparable; the metadata stats live in
+     * STAT2000FILES. */
     if (teststorun[TEST_READ2000FILES]) {
 #ifdef __linux__
         capture_io_values(TEST_START);
@@ -1250,7 +1306,7 @@ void run_test(const int32_t dir)
                 clean_exit(ERROR_FORK_OPERATIONS);
             }
 
-            if (FPRead(Conn, fork, 0, 512, data)) {
+            if (FPRead(Conn, fork, 0, 1024, data)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
 
@@ -1264,18 +1320,19 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Client-side copy: duplicate each of the 2000 1k files by pulling the
-     * data over the wire and pushing it back (open, read, close, create,
-     * open, write, close per file). Reuses the pipeline's written files;
-     * the copies are deleted untimed afterwards. */
-    if (teststorun[TEST_COPY2000FILES]) {
+    /* Client-side copy: duplicate 1000 of the 1k files by pulling the data
+     * over the wire and pushing it back (open, read, close, create, open,
+     * write, close per file) — 1000 reads + 1000 writes, so the candle
+     * aligns with the other 2000-action tests. Reuses the pipeline's
+     * written files; the copies are deleted untimed afterwards. */
+    if (teststorun[TEST_COPY1000FILES]) {
         static char temp2[MAXPATHLEN];
 #ifdef __linux__
         capture_io_values(TEST_START);
 #endif
         starttimer();
 
-        for (int32_t i = 1; i <= create_enum_files; i++) {
+        for (int32_t i = 1; i <= copy_files; i++) {
             snprintf(temp, sizeof(temp), "File.0k%d", i);
             snprintf(temp2, sizeof(temp2), "File.cp%d", i);
             fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0x342, dir, temp,
@@ -1314,10 +1371,10 @@ void run_test(const int32_t dir)
         }
 
         stoptimer();
-        addresult(TEST_COPY2000FILES, iteration_counter);
+        addresult(TEST_COPY1000FILES, iteration_counter);
 
         /* Cleanup (untimed): remove the copies. */
-        for (int32_t i = 1; i <= create_enum_files; i++) {
+        for (int32_t i = 1; i <= copy_files; i++) {
             snprintf(temp2, sizeof(temp2), "File.cp%d", i);
 
             if (FPDelete(Conn, vol, dir, temp2)) {
@@ -1361,10 +1418,10 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Stat each of the 2000 files created above: the same three metadata
-     * requests per file the old stat/open/read/close test issued in its stat
-     * phase. Reuses the pipeline's files, so this measures pure lookup and
-     * GetFileDirParams latency without any fork traffic. */
+    /* Stat each of the 2000 files created above: a minimal lookup probe
+     * (is_there) plus one full-bitmap FPGetFileDirParms per file. Reuses the
+     * pipeline's files, so this measures pure lookup and GetFileDirParams
+     * latency without any fork traffic. */
     if (teststorun[TEST_STAT2000FILES]) {
 #ifdef __linux__
         capture_io_values(TEST_START);
@@ -1378,10 +1435,6 @@ void run_test(const int32_t dir)
                 clean_exit(ERROR_FILE_DIRECTORY_OPS);
             }
 
-            if (FPGetFileDirParams(Conn, vol, dir, temp, 0x72d, 0)) {
-                clean_exit(ERROR_FILE_DIRECTORY_OPS);
-            }
-
             if (FPGetFileDirParams(Conn, vol, dir, temp, 0x73f, 0x133f)) {
                 clean_exit(ERROR_FILE_DIRECTORY_OPS);
             }
@@ -1392,7 +1445,6 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (9) */
     if (teststorun[TEST_ENUM2000FILES]) {
 #ifdef __linux__
         capture_io_values(TEST_START);
@@ -1442,7 +1494,7 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (10): fork/refnum scaling. Reuses the 2000 files created above
+    /* Fork/refnum scaling. Reuses the 2000 files created above
      * (force-enabled via -f, like enum/delete). Opens all 2000 forks first
      * so the server's open-fork (refnum) table is fully populated, then
      * times locking and unlocking one byte-range in each. The timed region
@@ -1496,7 +1548,6 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (11) */
     if (teststorun[TEST_DELETE2000FILES]) {
 #ifdef __linux__
         capture_io_values(TEST_START);
@@ -1656,53 +1707,7 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (13) */
-    if (teststorun[TEST_DIRTREE]) {
-        uint32_t idirs[DIRNUM];
-        uint32_t jdirs[DIRNUM][DIRNUM];
-        uint32_t kdirs[DIRNUM][DIRNUM][DIRNUM_K];
-#ifdef __linux__
-        capture_io_values(TEST_START);
-#endif
-        starttimer();
-
-        for (int32_t i = 0; i < DIRNUM; i++) {
-            snprintf(temp, sizeof(temp), "dir%02u", i + 1);
-            FAILEXIT(!(idirs[i] = FPCreateDir(Conn, vol, dir, temp)), fin1);
-
-            for (int32_t j = 0; j < DIRNUM; j++) {
-                snprintf(temp, sizeof(temp), "dir%02u", j + 1);
-                FAILEXIT(!(jdirs[i][j] = FPCreateDir(Conn, vol, idirs[i], temp)), fin1);
-
-                for (int32_t k = 0; k < DIRNUM_K; k++) {
-                    snprintf(temp, sizeof(temp), "dir%02u", k + 1);
-                    FAILEXIT(!(kdirs[i][j][k] = FPCreateDir(Conn, vol, jdirs[i][j], temp)), fin1);
-                }
-            }
-        }
-
-        stoptimer();
-        addresult(TEST_DIRTREE, iteration_counter);
-
-        /* Delete directory tree */
-        for (int32_t i = 0; i < DIRNUM; i++) {
-            for (int32_t j = 0; j < DIRNUM; j++) {
-                for (int32_t k = 0; k < DIRNUM_K; k++) {
-                    snprintf(temp, sizeof(temp), "dir%02u", k + 1);
-                    FAILEXIT(FPDelete(Conn, vol, jdirs[i][j], temp) != 0, fin1);
-                }
-
-                snprintf(temp, sizeof(temp), "dir%02u", j + 1);
-                FAILEXIT(FPDelete(Conn, vol, idirs[i], temp) != 0, fin1);
-            }
-
-            snprintf(temp, sizeof(temp), "dir%02u", i + 1);
-            FAILEXIT(FPDelete(Conn, vol, dir, temp) != 0, fin1);
-        }
-    }
-
-    /* -------- */
-    /* Test (14) - Directory Cache Hits */
+    /* Directory cache hits */
     if (teststorun[TEST_CACHE_HITS]) {
         /* Validate configuration to prevent excessive allocation */
         if (cache_dirs <= 0 || cache_dirs > 100 || cache_files_per_dir <= 0
@@ -1800,7 +1805,7 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (15) - Mixed Cache Operations */
+    /* Mixed cache operations */
     if (teststorun[TEST_MIXED_CACHE_OPS]) {
 #ifdef __linux__
         capture_io_values(TEST_START);
@@ -1849,7 +1854,7 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (16) - Deep Path Traversal */
+    /* Deep path traversal */
     if (teststorun[TEST_DEEP_TRAVERSAL]) {
         /* Validate configuration to prevent issues */
         if (deep_dir_levels <= 0 || deep_dir_levels > 100) {
@@ -1923,7 +1928,7 @@ void run_test(const int32_t dir)
     }
 
     /* -------- */
-    /* Test (17) - Cache Validation Efficiency */
+    /* Cache validation efficiency */
     if (teststorun[TEST_CACHE_VALIDATION]) {
         /* Create test files for validation testing */
         for (int32_t i = 0; i < validation_files; i++) {
@@ -1941,8 +1946,8 @@ void run_test(const int32_t dir)
 
         /* One pass of repeated metadata requests per file. With the improved
          * cache validation most of these skip the expensive filesystem
-         * validation calls. Three requests per file exercise the revalidation
-         * path on already-cached entries. */
+         * validation calls. Four requests per file bias the workload toward
+         * hot-cache revalidation of already-cached entries. */
         for (int32_t i = 0; i < validation_files; i++) {
             snprintf(temp, sizeof(temp), "valid_file_%d", i);
 
@@ -1958,6 +1963,11 @@ void run_test(const int32_t dir)
 
             if (FPGetFileDirParams(Conn, vol, dir, temp,
                                    (1 << FILPBIT_MDATE) | (1 << FILPBIT_FINFO), 0)) {
+                clean_exit(ERROR_FILE_DIRECTORY_OPS);
+            }
+
+            if (FPGetFileDirParams(Conn, vol, dir, temp,
+                                   (1 << FILPBIT_ATTR) | (1 << FILPBIT_RFLEN), 0)) {
                 clean_exit(ERROR_FILE_DIRECTORY_OPS);
             }
         }
@@ -2266,7 +2276,7 @@ int main(int32_t ac, char **av)
         /* READ2000FILES and both copy tests read the 2000 files' contents,
          * so they need them written first. */
         if (teststorun[TEST_READ2000FILES]
-                || teststorun[TEST_COPY2000FILES]
+                || teststorun[TEST_COPY1000FILES]
                 || teststorun[TEST_SERVERCOPY2000FILES]) {
             teststorun[TEST_WRITE2000FILES] = 1;
         }

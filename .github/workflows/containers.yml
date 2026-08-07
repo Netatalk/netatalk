@@ -1247,6 +1247,7 @@ jobs:
       AFP_TEST_ITERATIONS: 20
       AFP_VERSION: 7
       AFP_VERSION_LABEL: "3.4"
+      AFP_CNID_BACKEND: sqlite
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
@@ -1254,8 +1255,7 @@ jobs:
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024
     outputs:
-      slowest: ${{ steps.lantest-summary.outputs.SLOW }}
-      aggregates: ${{ steps.lantest-summary.outputs.AGG }}
+      metrics: ${{ steps.lantest-summary.outputs.METRICS }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -1271,6 +1271,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e TESTSUITE="lan" \
             -e AFP_VERSION="${{ env.AFP_VERSION }}" \
+            -e AFP_CNID_BACKEND="${{ env.AFP_CNID_BACKEND }}" \
             -e AFP_DIRCACHE_MODE="${{ env.AFP_DIRCACHE_MODE }}" \
             -e AFP_DIRCACHESIZE="${{ env.AFP_DIRCACHESIZE }}" \
             -e AFP_DIRCACHE_VALIDATION_FREQ="${{ env.AFP_DIRCACHE_VALIDATION_FREQ }}" \
@@ -1346,51 +1347,53 @@ jobs:
             --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
             --meta rfork_budget_kb=${{ env.AFP_DIRCACHE_RFORK_BUDGET }}
           echo "PNG size: $(du -h lantest.png | cut -f1)"
-      - name: Extract per-test table and aggregates for PR comment
+      - name: Extract metrics for PR comment
         id: lantest-summary
         run: |
-          # Full per-test results in execution order (matching the chart's
-          # x-axis left-to-right). Right-anchored parse: the trailing six fields
-          # are mean,stddev,min,max,median,mbs and the name (which may contain
-          # commas) precedes them. Require that exact numeric tail so afpd log
-          # lines (also comma-rich) are rejected. The mean is the per-test
-          # average runtime over the iterations — the same statistic the chart's
-          # candle labels and percentages use.
-          SLOW=$(awk -F, '
+          # Emit self-describing metric lines (render|key|name|unit|value) for
+          # the dashboard job's history merge. Per-test rows in execution
+          # order (matching the chart's x-axis left-to-right). Right-anchored
+          # parse: the trailing six fields are mean,stddev,min,max,median,mbs
+          # and the name (which may contain commas) precedes them. Require
+          # that exact numeric tail so afpd log lines (also comma-rich) are
+          # rejected. The mean is the per-test average runtime over the
+          # iterations — the same statistic the chart's candle labels and
+          # percentages use. The key is a slug of the test name, so a renamed
+          # test starts a fresh history series while the old one goes stale.
+          awk -F, '
             $(NF) ~ /^[0-9]+$/ && $(NF-1) ~ /^[0-9]+$/ && $(NF-2) ~ /^[0-9]+$/ \
               && $(NF-3) ~ /^[0-9]+$/ && $(NF-4) ~ /^[0-9.]+$/ && $(NF-5) ~ /^[0-9]+$/ {
               mean=$(NF-5)+0
               name=$1; for (i=2; i<=NF-6; i++) name=name","$i
               sub(/ *\[[^]]*\] *$/, "", name)
-              printf "| %s | %d |\n", name, mean
-            }' lantest.csv)
-          # Two inline aggregate stats for the comment:
+              slug=tolower(name); gsub(/[^a-z0-9]+/, "_", slug)
+              gsub(/^_+|_+$/, "", slug)
+              printf "table|lantest.%s.mean_ms|%s|ms|%d\n", slug, name, mean
+            }' lantest.csv > lantest-metrics.txt
+          # Two inline aggregate stats:
           #   * Avg time per AFP op (from the "# Aggregate" block).
           #   * Avg total runtime for all tests = sum of per-test means, which
           #     afp_lantest already prints as the second field of the
           #     "Sum of all AFP OPs = N,SUM,," row (SUM = summed means).
-          AVG_OP=$(awk -F, '
-            /^# Aggregate/ { agg = 1; next }
-            agg && $1 == "Avg time per AFP op (ms)" { print $2 }
-          ' lantest.csv)
+          # Only emit a stat that actually parsed, so a truncated CSV drops
+          # the missing figure rather than rendering a blank in the comment.
           TOTAL=$(awk -F, '
             /^Sum of all AFP OPs =/ { print $2 + 0; exit }
           ' lantest.csv)
-          # Only emit a stat that actually parsed, so a truncated CSV drops the
-          # missing figure rather than rendering "Avg ...:  ms" in the comment.
-          AGG=""
-          [ -n "$TOTAL" ] && AGG="**Avg total runtime: ${TOTAL} ms**"
-          if [ -n "$AVG_OP" ]; then
-            [ -n "$AGG" ] && AGG="$AGG · "
-            AGG="${AGG}**Avg time per AFP op: ${AVG_OP} ms**"
-          fi
+          AVG_OP=$(awk -F, '
+            /^# Aggregate/ { agg = 1; next }
+            agg && $1 == "Avg time per AFP op (µs)" { print $2 }
+          ' lantest.csv)
+          [ -n "$TOTAL" ] && \
+            echo "inline|lantest.avg_total_runtime_ms|Avg total runtime|ms|$TOTAL" \
+              >> lantest-metrics.txt
+          [ -n "$AVG_OP" ] && \
+            echo "inline|lantest.avg_op_time_us|Avg time per AFP op|µs|$AVG_OP" \
+              >> lantest-metrics.txt
           {
-            echo "SLOW<<EOFSLOW"
-            echo "$SLOW"
-            echo "EOFSLOW"
-            echo "AGG<<EOFAGG"
-            echo "$AGG"
-            echo "EOFAGG"
+            echo "METRICS<<EOFMETRICS"
+            cat lantest-metrics.txt
+            echo "EOFMETRICS"
           } >> "$GITHUB_OUTPUT"
       - name: Upload lantest artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -1420,6 +1423,7 @@ jobs:
       AFP_TEST_ITERATIONS: 20
       AFP_VERSION: 7
       AFP_VERSION_LABEL: "3.4"
+      AFP_CNID_BACKEND: sqlite
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
@@ -1427,7 +1431,7 @@ jobs:
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024
     outputs:
-      peaks: ${{ steps.speedtest-summary.outputs.PEAKS }}
+      metrics: ${{ steps.speedtest-summary.outputs.METRICS }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -1443,6 +1447,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e TESTSUITE="speed" \
             -e AFP_VERSION="${{ env.AFP_VERSION }}" \
+            -e AFP_CNID_BACKEND="${{ env.AFP_CNID_BACKEND }}" \
             -e AFP_DIRCACHE_MODE="${{ env.AFP_DIRCACHE_MODE }}" \
             -e AFP_DIRCACHESIZE="${{ env.AFP_DIRCACHESIZE }}" \
             -e AFP_DIRCACHE_VALIDATION_FREQ="${{ env.AFP_DIRCACHE_VALIDATION_FREQ }}" \
@@ -1489,16 +1494,17 @@ jobs:
             --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
             --meta warmup=1
           echo "PNG size: $(du -h speedtest.png | cut -f1)"
-      - name: Extract per-operation peak throughput for PR comment
+      - name: Extract metrics for PR comment
         id: speedtest-summary
         run: |
-          # Peak per op = max of the mean column ($3) in each summary block.
-          # The two extra columns mirror the chart's horizontal reference
-          # lines: "avg mean" is the average of the per-size mean column ($3)
-          # and "avg max" is the average of the per-size max column ($6),
-          # each taken across the whole file-size sweep so small-file
-          # regressions are visible next to the peak.
-          PEAKS=$(awk -F, '
+          # Emit self-describing metric lines (render|key|name|unit|value) for
+          # the dashboard job's history merge. Per operation:
+          #   * peak mean = max of the mean column ($3) in its summary block.
+          #   * avg mean / avg max mirror the chart's horizontal reference
+          #     lines: the average of the per-size mean column ($3) and max
+          #     column ($6), each taken across the whole file-size sweep so
+          #     small-file regressions are visible next to the peak.
+          awk -F, '
             /# File Size Performance Summary for/ { op=$NF; sub(/.* for[[:space:]]*/, "", op); next }
             /^file_size_bytes,/ { next }
             op != "" && NF >= 6 && $3+0 == $3 {
@@ -1513,14 +1519,26 @@ jobs:
               split("Read Write Copy ServerCopy", order, " ")
               for (i=1; i<=4; i++) {
                 o=order[i]
-                if (o in peak) printf "| %s | %.0f | %.0f | %.0f |\n",
-                  o, peak[o], sum_mean[o]/n[o], sum_max[o]/n[o]
+                if (!(o in peak)) continue
+                slug=tolower(o)
+                # Read/Write peaks double as inline headline stats above the
+                # collapsed table (same key: the duplicate upsert is
+                # idempotent, so the history stores one entry).
+                if (o == "Read" || o == "Write")
+                  printf "inline|speedtest.%s.peak_mean_mbs|Peak %s|MB/s|%.0f\n",
+                    slug, o, peak[o]
+                printf "table|speedtest.%s.peak_mean_mbs|%s peak mean|MB/s|%.0f\n",
+                  slug, o, peak[o]
+                printf "table|speedtest.%s.avg_mean_mbs|%s avg mean|MB/s|%.0f\n",
+                  slug, o, sum_mean[o]/n[o]
+                printf "table|speedtest.%s.avg_max_mbs|%s avg max|MB/s|%.0f\n",
+                  slug, o, sum_max[o]/n[o]
               }
-            }' speedtest.csv)
+            }' speedtest.csv > speedtest-metrics.txt
           {
-            echo "PEAKS<<EOFPEAKS"
-            echo "$PEAKS"
-            echo "EOFPEAKS"
+            echo "METRICS<<EOFMETRICS"
+            cat speedtest-metrics.txt
+            echo "EOFMETRICS"
           } >> "$GITHUB_OUTPUT"
       - name: Upload speedtest artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -1550,7 +1568,83 @@ jobs:
       'dependabot[bot]' }}
     permissions:
       pull-requests: write
+      contents: write
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Merge metrics into history and compute deltas
+        id: history
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LANTEST_METRICS: ${{ needs.latencygraph-lantest.outputs.metrics }}
+          SPEEDTEST_METRICS: ${{ needs.perfgraph-speedtest.outputs.metrics }}
+        run: |
+          # Each graph job publishes self-describing "render|key|name|unit|
+          # value" lines. Merge them into the YAML history on gh-pages
+          # (per-PR upsert: a re-run replaces this PR's stored values, so
+          # only its final CI figures feed the baseline; series are capped
+          # at 100 entries), and emit the dashboard fragments comparing the
+          # current run against the historical average.
+          printf '%s\n' "$LANTEST_METRICS" > lantest-metrics.txt
+          printf '%s\n' "$SPEEDTEST_METRICS" > speedtest-metrics.txt
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
+          perl .github/scripts/perf_history.pl \
+            --history gh-pages/perf-history/history.yml \
+            --pr "$PR_NUMBER" \
+            --timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --section lantest=lantest-metrics.txt \
+            --section speedtest=speedtest-metrics.txt
+      - name: Publish updated history to gh-pages
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Another PR's dashboard may push between clone and push, and both
+          # runs modify the same YAML series, so a rebase of the commit could
+          # CONFLICT (killing the job under bash -e).  Instead, on a rejected
+          # push, reset to the fresh remote head and re-run the merge script:
+          # the per-PR upsert is idempotent, so regenerating on top of the
+          # other run's history is always conflict-free.
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add perf-history/history.yml
+          git diff --cached --quiet && echo "No history change to commit" && exit 0
+          git commit -m "perf-history: metrics for PR ${PR_NUMBER}"
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin gh-pages; then
+              pushed=1
+              break
+            fi
+            echo "gh-pages push rejected (attempt ${attempt}); regenerating on fresh head..."
+            sleep $((attempt * 3))
+            # A failed fetch would leave origin/gh-pages stale and the
+            # regeneration on the old base, burning the next attempt on a
+            # doomed push: keep the current commit and just retry instead.
+            if ! git fetch origin gh-pages; then
+              echo "fetch failed (attempt ${attempt}); retrying push..."
+              continue
+            fi
+            git reset --hard origin/gh-pages
+            perl ../.github/scripts/perf_history.pl \
+              --history perf-history/history.yml \
+              --pr "$PR_NUMBER" \
+              --timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --section lantest=../lantest-metrics.txt \
+              --section speedtest=../speedtest-metrics.txt \
+              --github-output /dev/null
+            git add perf-history/history.yml
+            if git diff --cached --quiet; then
+              echo "No history change after regenerating on fresh head"
+              pushed=1
+              break
+            fi
+            git commit -m "perf-history: metrics for PR ${PR_NUMBER}"
+          done
+          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
       - name: Find existing dashboard comment
         id: find-comment
         uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
@@ -1600,12 +1694,12 @@ jobs:
 
             [![Speedtest throughput](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)
 
-            <details>
-            <summary>🔝 Throughputs per operation</summary>
+            ${{ steps.history.outputs.speedtest_inline }}
 
-            | Operation | Peak mean (MB/s) | avg mean (MB/s) | avg max (MB/s) |
-            |-----------|------------------|-----------------|----------------|
-            ${{ needs.perfgraph-speedtest.outputs.peaks }}
+            <details>
+            <summary>🔝 Throughputs per operation (vs. historical average)</summary>
+
+            ${{ steps.history.outputs.speedtest_table }}
 
             </details>
 
@@ -1613,14 +1707,12 @@ jobs:
 
             [![Lantest latency](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)
 
-            ${{ needs.latencygraph-lantest.outputs.aggregates }}
+            ${{ steps.history.outputs.lantest_inline }}
 
             <details>
-            <summary>🐢 All operations (avg runtime, in test order)</summary>
+            <summary>🐢 All operations (avg runtime, in test order, vs. historical average)</summary>
 
-            | Test | Avg (ms) |
-            |------|----------|
-            ${{ needs.latencygraph-lantest.outputs.slowest }}
+            ${{ steps.history.outputs.lantest_table }}
 
             </details>
 

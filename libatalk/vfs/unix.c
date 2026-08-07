@@ -201,7 +201,11 @@ int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
     sfd = openat(dirfd, src, O_RDONLY);
 
     if (sfd < 0) {
-        LOG(log_info, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
+        /* A missing source is routine here: callers copying AppleDouble
+         * sidecars (vfs_copyfile, ea_ad) probe for files that plain data
+         * files don't have and ignore ENOENT. */
+        LOG((errno == ENOENT ? log_debug : log_info), logtype_afpd,
+            "copy_file('%s'/'%s'): open '%s' error: %s",
             src, dst, src, strerror(errno));
         return -1;
     }
