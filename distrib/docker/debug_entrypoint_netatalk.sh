@@ -172,12 +172,14 @@ stop_flamegraph_profiling() {
     mv "${PERF_FOLDED}.tmp" "$PERF_FOLDED"
 
     FLAMEGRAPH_DATE=$(date -u '+%Y-%m-%d %H:%M UTC')
+    # Title-case the suite name (spectest -> Spectest) for the chart title.
+    TESTSUITE_LABEL=$(echo "$TESTSUITE" | awk '{ print toupper(substr($0, 1, 1)) substr($0, 2) }')
 
     if [ -n "$FLAMEGRAPH_OFFCPU" ]; then
         # Off-CPU: blue color palette and distinct title to distinguish
         # from on-CPU flamegraphs.
         "$FLAMEGRAPH_DIR/flamegraph.pl" \
-            --title "Netatalk afpd ${TESTSUITE} OFF-CPU flamegraph ${FLAMEGRAPH_DATE}" \
+            --title "Netatalk AFP ${TESTSUITE_LABEL} OFF-CPU flamegraph ${FLAMEGRAPH_DATE}" \
             --subtitle "buildtype=debugoptimized, sched:sched_switch tracepoint" \
             --color io \
             "$PERF_FOLDED" > "$FLAMEGRAPH_SVG"
@@ -188,7 +190,7 @@ stop_flamegraph_profiling() {
             UNWIND_METHOD="DWARF unwinding"
         fi
         "$FLAMEGRAPH_DIR/flamegraph.pl" \
-            --title "Netatalk afpd ${TESTSUITE} flamegraph ${FLAMEGRAPH_DATE}" \
+            --title "Netatalk AFP ${TESTSUITE_LABEL} flamegraph ${FLAMEGRAPH_DATE}" \
             --subtitle "buildtype=debugoptimized, perf @ ${PERF_FREQ} Hz, ${UNWIND_METHOD}" \
             "$PERF_FOLDED" > "$FLAMEGRAPH_SVG"
     fi

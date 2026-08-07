@@ -65,16 +65,20 @@ my $ROW_TAIL_RE = qr/^(.+),(\d+),([\d.]+),(\d+),(\d+),(\d+),(\d+)\s*$/;
 my @SHORT_LABELS = (
                     ['Writing one large file'    => 'Write 100MB'],
                     ['Reading one large file'    => 'Read 100MB'],
-                    ['Creating 2000 files'       => 'Create 2k'],
+                    ['Creating 2000 files'       => 'Create files 2k'],
                     ['Open, write 1024 bytes'    => 'Write 2k'],
+                    ['Open, read 1024 bytes'     => 'Read 2k'],
                     ['Open, read 512 bytes'      => 'Read 2k'],
+                    ['Copying 1000 files client' => 'Copy (R+W) 1k'],
                     ['Copying 2000 files client' => 'Copy 2k'],
                     ['Copying 2000 files server' => 'ServerCopy 2k'],
                     ['Lock then unlock 2000'     => 'Fork lock 2k'],
+                    ['Stat (lookup+getparams)'   => 'Stat 2k'],
                     ['Stat 2000 files'           => 'Stat 2k'],
                     ['Enumerate dir'             => 'Enumerate 2k'],
                     ['Deleting 2000 files'       => 'Delete 2k'],
                     ['Byte-range lock/unlock'    => 'Byte lock 2k'],
+                    ['Create 2000 dirs tree'     => 'Create Dirs 2k'],
                     ['Create directory tree'     => 'Create tree'],
                     ['Directory cache hits'      => 'Dircache hits'],
                     ['Mixed cache operations'    => 'Mixed cache'],
@@ -190,6 +194,28 @@ sub plot {
     $headroom_decades = 0.2 if $headroom_decades < 0.2;
     my $y_hi = $data_max * (10**$headroom_decades);
 
+    # Full explicit log tic list: every per-decade gridline (2..9) is drawn,
+    # with labels on the 1x, 2x and 5x lines. gnuplot's default log ticks
+    # label only the decades, so a candle sitting at 1400 reads as "just
+    # above 1000" to a linear eye; an explicit list disables the automatic
+    # minor tics, so the unlabeled lines are re-added as minor tics
+    # ("" value 1) to keep the detailed grid.
+    my @ytics;
+    my $dec = 10**int((log($y_lo) / log(10)) - 1);
+    while ($dec <= $y_hi) {
+        for my $m (1 .. 9) {
+            my $v = $dec * $m;
+            next if $v < $y_lo || $v > $y_hi;
+            if ($m == 1 || $m == 2 || $m == 5) {
+                push @ytics, sprintf('"%g" %g', $v, $v);
+            } else {
+                push @ytics, sprintf('"" %g 1', $v);
+            }
+        }
+        $dec *= 10;
+    }
+    my $ytics = join(', ', @ytics);
+
     # Total mean runtime (sum of per-test means) is the denominator for each
     # candle's "% of total runtime" label, so a test's share of one full pass
     # is comparable across runs even when absolute times drift.
@@ -288,14 +314,14 @@ set bmargin at screen 0.30
 set logscale y
 set yrange [$y_lo:$y_hi]
 set format y "%g"
-set ytics font ",6"
+set ytics ($ytics) font ",6"
 # Blank x labels here; the lower panel labels the shared ticks.
 set xtics ($blank_tics)
-# Vertical dividers bracketing the 2000-file tests (Create 2k..Byte lock 2k),
+# Vertical dividers bracketing the 2000-action tests (Create files 2k..Byte lock 2k),
 # drawn in both panels so the related series reads as one group.
 set arrow 1 from 1.5, graph 0 to 1.5, graph 1 nohead \\
     dashtype (4,3) linewidth 1 linecolor rgb "#999999" front
-set arrow 2 from 11.5, graph 0 to 11.5, graph 1 nohead \\
+set arrow 2 from 12.5, graph 0 to 12.5, graph 1 nohead \\
     dashtype (4,3) linewidth 1 linecolor rgb "#999999" front
 # Legend in the free top-left outer canvas, outside the plot area so it never
 # overlaps a candle.
