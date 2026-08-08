@@ -291,7 +291,9 @@ Set this environment variable to a specific value or string.
 | AFP_UNIX_CHARSET                | Server filesystem charset (default: UTF8); see afp.conf man page       |
 | AFP_VOL_CHARSET                 | Volume charset (default: UTF8); see afp.conf man page                  |
 | **Test Suite Configuration** |                                                                           |
-| TESTSUITE                       | Run test suite on startup: *spectest*, *lan*, *speed*, *login*, *readonly* |
+| TESTSUITE                       | Run test suite on startup: *spec*, *lan*, *speed*, or *login*          |
+| AFP_SUBTESTS                    | Optional comma separated list of tests to run                          |
+| AFP_TESTSUITE_UAM               | UAM selector or protocol name passed with `-A` to spectest and logintest |
 | AFP_VERSION                     | AFP protocol version for tests: 1-7 (default: 7 = AFP 3.4)             |
 | AFP_HOST                        | AFP server hostname/IP for tests (default: 127.0.0.1)                  |
 | AFP_PORT                        | AFP server port for tests (default: 548)                               |
@@ -320,6 +322,7 @@ Set these environment variables to a non-zero value to enable, ex. "1"
 | **Advanced Configuration** |                                                                                            |
 | MANUAL_CONFIG       | Enable manual management of configurations; overrides most other options                       |
 | VERBOSE             | Enable verbose test output                                                                     |
+| VERY_VERBOSE        | Enable verbose test output that includes transport layer logging                               |
 | SERVER_LOGS         | Display afpd server logs after test completion                                                 |
 | IO_MONITORING       | Enable I/O monitoring for lantest (requires \-\-privileged)                                       |
 | DEBUG_ENTRY_SCRIPT  | Enable bash debug mode (set -x) for entrypoint script                                          |

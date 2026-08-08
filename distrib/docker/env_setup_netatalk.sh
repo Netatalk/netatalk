@@ -398,8 +398,11 @@ rm -f "$NETATALK_LOCKDIR/netatalk" "$NETATALK_LOCKDIR/atalkd" "$NETATALK_LOCKDIR
 echo "*** Configuring Netatalk"
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
 
-# Prepend so a -c (CSV, forces quiet) later in TEST_FLAGS wins over -v
+# Prepend so a -c (CSV, forces quiet) later in TEST_FLAGS wins over verbosity.
+# VERBOSE enables normal test output (-v); VERY_VERBOSE also enables the
+# testsuite's detailed diagnostic logging (-V).
 [ -n "$VERBOSE" ] && TEST_FLAGS="-v $TEST_FLAGS"
+[ -n "$VERY_VERBOSE" ] && TEST_FLAGS="-V $TEST_FLAGS"
 
 if [ -z "$AFP_HOST" ]; then
     AFP_HOST="127.0.0.1"

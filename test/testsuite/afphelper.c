@@ -194,7 +194,6 @@ int no_access_folder(uint16_t vol, int did, char *name)
                       (1 << DIRPBIT_GID);
     struct afp_filedir_parms filedir = { 0 };
     DSI *dsi, *dsi2;
-    uint32_t uid;
 
     if (!Conn2) {
         return 0;
@@ -212,23 +211,6 @@ int no_access_folder(uint16_t vol, int did, char *name)
         test_nottested();
         return 0;
     }
-
-    ret = FPGetUserInfo(Conn, 1, 0, 1); /* who I am */
-
-    if (ret) {
-        test_nottested();
-        goto fin;
-    }
-
-    ret = FPGetUserInfo(Conn2, 1, 0, 1); /* who I am */
-
-    if (ret) {
-        test_nottested();
-        goto fin;
-    }
-
-    memcpy(&uid, dsi2->commands + sizeof(uint16_t), sizeof(uint32_t));
-    uid = ntohl(uid);
 
     if (!(dir = FPCreateDir(Conn2, vol2, did, name))) {
         test_nottested();

@@ -31,7 +31,7 @@ STATIC void test223()
 
     if (!Test) {
         if (!Quiet) {
-            fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+            fprintf(stdout, "Run sleep tests with: -f T3FPzzz.\n");
         }
 
         test_skipped(T_SINGLE);
@@ -107,7 +107,7 @@ fin:
     }
 
 test_exit:
-    exit_test("FPzzz:test223: AFP 3.x enter sleep mode");
+    exit_test("T3FPzzz:test223: AFP 3.x enter sleep mode");
 }
 
 /* ------------------------- */
@@ -123,7 +123,7 @@ STATIC void test224()
 
     if (!Test) {
         if (!Quiet) {
-            fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+            fprintf(stdout, "Run sleep tests with: -f T3FPzzz.\n");
         }
 
         test_skipped(T_SINGLE);
@@ -198,7 +198,7 @@ fin:
     }
 
 test_exit:
-    exit_test("FPzzz:test224: disconnected after 2 mn");
+    exit_test("T3FPzzz:test224: disconnected after 2 mn");
 }
 
 /* ------------------------- */
@@ -214,7 +214,7 @@ STATIC void test239()
 
     if (!Test) {
         if (!Quiet) {
-            fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+            fprintf(stdout, "Run sleep tests with: -f T3FPzzz.\n");
         }
 
         test_skipped(T_SINGLE);
@@ -251,11 +251,11 @@ fin:
     }
 
 test_exit:
-    exit_test("FPzzz:test239: AFP 3.x enter extended sleep");
+    exit_test("T3FPzzz:test239: AFP 3.x enter extended sleep");
 }
 
 /* ----------- */
-void FPzzz_test()
+void T3FPzzz_test()
 {
     ENTER_TESTSET
     test223();

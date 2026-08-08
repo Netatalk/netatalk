@@ -122,7 +122,7 @@ in:
     test_loginext_guest_direct
     test_logincont_roundtrip
     guest      No User Authent (libafpclient UAM)
-    cleartext  Cleartxt Passwrd (libafpclient UAM)
+    clrtxt     Cleartxt Passwrd (libafpclient UAM)
     randnum    Randnum Exchange (libafpclient UAM)
     randnum2   2-Way Randnum Exchange (libafpclient UAM)
     dhx        DHCAST128 (libafpclient UAM)

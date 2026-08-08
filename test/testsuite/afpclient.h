@@ -187,6 +187,22 @@ typedef struct CONN {
     uint16_t login_cont_id;
     size_t   login_cont_len;
     uint8_t  login_cont_data[DSI_CMDSIZ];
+
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    void *transport;
+    void *pending_payload;
+    size_t pending_payload_len;
+    size_t pending_payload_cap;
+    uint8_t pending_dsi_command;
+    uint32_t pending_data_offset;
+    void *reply_queue_head;
+    void *reply_queue_tail;
+    void *reply_payload;
+    size_t reply_payload_len;
+    size_t reply_payload_pos;
+    uint8_t reply_dsi_command;
+    uint32_t reply_dsi_code;
+#endif
 } CONN;
 
 extern CONN *Conn, *Conn2;
