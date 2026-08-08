@@ -82,14 +82,8 @@ struct dir rootParent = {
 };
 struct dir  *curdir = &rootParent;
 struct path Cur_Path = {
-    0,
-    "",  /* mac name */
-    ".", /* unix name */
-    0,   /* id */
-    NULL,/* pointer to struct dir */
-    0,   /* stat is not set */
-    0,   /* errno */
-    {0} /* struct stat */
+    .m_name = "",  /* mac name */
+    .u_name = ".", /* unix name */
 };
 
 /*
