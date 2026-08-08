@@ -1257,6 +1257,94 @@ test_exit:
     exit_test("FPCopyFile:test425: copy file with held-open resource fork");
 }
 
+/* ------------------------- */
+STATIC void test564()
+{
+    char *name  = "t564 source file";
+    char *name1 = "t564 copied file";
+    uint16_t vol = VolID;
+    int tp, tp1;
+    unsigned int ret;
+    uint16_t bitmap = (1 << FILPBIT_FNUM);
+    ENTER_TEST
+
+    if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID)) {
+        test_skipped(T_ID);
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    FAIL(FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name, "", name1))
+    tp = get_fid(Conn, vol, DIRDID_ROOT, name);
+    tp1 = get_fid(Conn, vol, DIRDID_ROOT, name1);
+
+    if (!tp || !tp1) {
+        test_nottested();
+        goto fin;
+    }
+
+    if (tp == tp1) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED source and copy share a file ID\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /* Both IDs must resolve independently: a copy whose stored identity
+     * still carried the source's CNID would leave one of these dangling
+     * or aliased to the other file. */
+    ret = FPResolveID(Conn, vol, tp, bitmap);
+
+    if (ret) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED source ID no longer resolves\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    ret = FPResolveID(Conn, vol, tp1, bitmap);
+
+    if (ret) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED copy ID does not resolve\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /* Delete the source: the copy's ID must survive on its own. */
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+    name = NULL;
+    ret = FPResolveID(Conn, vol, tp1, bitmap);
+
+    if (ret) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED copy ID lost after source deletion\n");
+        }
+
+        test_failed();
+    }
+
+fin:
+
+    if (name) {
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+    }
+
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
+test_exit:
+    exit_test("FPCopyFile:test564: copy has its own file ID, independent of the source");
+}
+
 /* ----------- */
 void FPCopyFile_test()
 {
@@ -1277,4 +1365,5 @@ void FPCopyFile_test()
     test414();
     test424();
     test425();
+    test564();
 }

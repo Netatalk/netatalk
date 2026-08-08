@@ -2059,11 +2059,19 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 copy_exit:
 
     if (upath && err == AFP_OK) {
+#if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
+        /* upath is a bare filename and curdir is its parent (see the comment
+         * above mtoupath), so the absolute path comes from the cached
+         * d_fullpath — fullpathname()'s getcwd is not needed. */
+        char dstpath[MAXPATHLEN + 1];
+        snprintf(dstpath, sizeof(dstpath), "%s/%s",
+                 cfrombstr(curdir->d_fullpath), upath);
+#endif
 #ifdef WITH_FCE
-        fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+        fce_register(obj, FCE_FILE_CREATE, dstpath, NULL);
 #endif /* WITH_FCE */
 #ifdef WITH_SPOTLIGHT
-        sl_index_event(obj, d_vol, SL_INDEX_FILE_CREATE, fullpathname(upath), NULL);
+        sl_index_event(obj, d_vol, SL_INDEX_FILE_CREATE, dstpath, NULL);
 #endif /* WITH_SPOTLIGHT */
         /* Send hint to afpd siblings — dest parent dir ctime changed due to copy */
         ipc_send_cache_hint(obj, d_vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
@@ -2104,60 +2112,23 @@ int copyfile(struct vol *s_vol,
         adp = &ads;
     }
 
-    adflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | ADFLAGS_RF | ADFLAGS_NORF;
+    /* The rfork is copied entirely by vfs_copyfile() below (the rfork EA via
+     * the EA loop, or the ._/.AppleDouble sidecar via copy_file), which does
+     * its own ENOENT-tolerated source probe.  Opening the rfork on the ad
+     * handles here would only duplicate that probe and pre-create an empty
+     * dest rfork for the vfs copy to overwrite, so the ad handles carry just
+     * the data fork and metadata. */
+    adflags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF;
 
-    if (!held) {
-        /* not held: private handle, so ad_open/close is safe.  AD_RSRC_OPEN then
-         * reflects the on-disk rfork. */
-        if (ad_openat(adp, sfd, src, adflags | ADFLAGS_RDONLY) < 0) {
-            err = errno;
-            goto done;
-        }
+    /* not held: private handle, so ad_open/close is safe.  A held source
+     * reuses its fds instead — never ad_open/close onto of->of_ad. */
+    if (!held && ad_openat(adp, sfd, src, adflags | ADFLAGS_RDONLY) < 0) {
+        err = errno;
+        goto done;
+    }
 
-        if (!AD_META_OPEN(adp)) {
-            adflags &= ~ADFLAGS_HF;
-        }
-
-        if (!AD_RSRC_OPEN(adp)) {
-            adflags &= ~ADFLAGS_RF;
-        }
-    } else {
-        /* held: reuse fds, never ad_open/close onto of->of_ad.  Meta presence is
-         * read directly; the rfork may be closed on the held handle even when it
-         * exists on disk, so probe it with a PRIVATE adouble. */
-        if (!AD_META_OPEN(adp)) {
-            adflags &= ~ADFLAGS_HF;
-        }
-
-#if defined(HAVE_EAFD) && defined(SOLARIS)
-
-        /* Solaris O_XATTR rfork fd hangs off the data fd: a private rfork open
-         * would strand the held locks - fall back to the held handle's view. */
-        if (!AD_RSRC_OPEN(adp)) {
-            adflags &= ~ADFLAGS_RF;
-        }
-
-#else
-
-        if (!AD_RSRC_OPEN(adp)) {
-            struct adouble adprobe;
-            ad_init(&adprobe, s_vol);
-
-            if (ad_openat(&adprobe, sfd, src,
-                          ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY) == 0) {
-                int has_rf = AD_RSRC_OPEN(&adprobe);
-                ad_close(&adprobe, ADFLAGS_RF | ADFLAGS_HF);
-
-                if (!has_rf) {
-                    adflags &= ~ADFLAGS_RF;
-                }
-            }
-
-            /* a hard open error leaves RF set: create the dest rfork, matching
-             * the not-held path's RF|NORF open. */
-        }
-
-#endif
+    if (!AD_META_OPEN(adp)) {
+        adflags &= ~ADFLAGS_HF;
     }
 
     /* saving stat exit code, thus saving us on one more stat later on */

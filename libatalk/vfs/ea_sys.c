@@ -664,6 +664,16 @@ int sys_ea_copyfile(const struct vol *vol _U_, int sfd, const char *src,
             continue;
         }
 
+        /* Skip the Netatalk metadata EA: the caller (copyfile) creates the
+         * destination's own header via ad_open(ADFLAGS_CREATE) and stamps its
+         * identity with ad_setid/ad_flush afterwards.  Copying the source's
+         * EA here would only plant the source's CNID/dev/ino on the dest to
+         * be overwritten again.  Exact match: a user EA that merely shares
+         * the prefix (e.g. "org.netatalk.Metadata.backup") must still copy. */
+        if (!strcmp(name, AD_EA_META)) {
+            continue;
+        }
+
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
 
         /* Skip special attributes set by NFS server */
