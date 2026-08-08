@@ -1596,8 +1596,11 @@ jobs:
             --pr "$PR_NUMBER" \
             --timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --section lantest=lantest-metrics.txt \
-            --section speedtest=speedtest-metrics.txt
+            --section speedtest=speedtest-metrics.txt \
+            --adjust lantest \
+            --adjust-exclude one_large_file
       - name: Publish updated history to gh-pages
+        id: history-publish
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
@@ -1629,13 +1632,18 @@ jobs:
               continue
             fi
             git reset --hard origin/gh-pages
+            # Emit the regenerated fragments as this step's outputs: the
+            # dashboard comment prefers them over the pre-retry ones, so the
+            # posted deltas always match the history actually published.
             perl ../.github/scripts/perf_history.pl \
               --history perf-history/history.yml \
               --pr "$PR_NUMBER" \
               --timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
               --section lantest=../lantest-metrics.txt \
               --section speedtest=../speedtest-metrics.txt \
-              --github-output /dev/null
+              --adjust lantest \
+              --adjust-exclude one_large_file \
+              --github-output "$GITHUB_OUTPUT"
             git add perf-history/history.yml
             if git diff --cached --quiet; then
               echo "No history change after regenerating on fresh head"
@@ -1694,12 +1702,12 @@ jobs:
 
             [![Speedtest throughput](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)
 
-            ${{ steps.history.outputs.speedtest_inline }}
+            ${{ steps.history-publish.outputs.speedtest_inline || steps.history.outputs.speedtest_inline }}
 
             <details>
             <summary>🔝 Throughputs per operation (vs. historical average)</summary>
 
-            ${{ steps.history.outputs.speedtest_table }}
+            ${{ steps.history-publish.outputs.speedtest_table || steps.history.outputs.speedtest_table }}
 
             </details>
 
@@ -1707,12 +1715,12 @@ jobs:
 
             [![Lantest latency](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)
 
-            ${{ steps.history.outputs.lantest_inline }}
+            ${{ steps.history-publish.outputs.lantest_inline || steps.history.outputs.lantest_inline }}
 
             <details>
             <summary>🐢 All operations (avg runtime, in test order, vs. historical average)</summary>
 
-            ${{ steps.history.outputs.lantest_table }}
+            ${{ steps.history-publish.outputs.lantest_table || steps.history.outputs.lantest_table }}
 
             </details>
 

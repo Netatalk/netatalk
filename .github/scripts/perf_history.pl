@@ -41,11 +41,18 @@
 # Usage:
 #     perf_history.pl --history FILE --pr N --timestamp ISO8601 \
 #         --section name=metrics_file [--section name=metrics_file ...] \
+#         [--adjust name ...] [--adjust-exclude REGEX] \
 #         [--github-output FILE]
 #
 # For every --section the script writes a "<name>_table" and "<name>_inline"
 # output (empty string when there is no data) to --github-output (defaults
 # to $GITHUB_OUTPUT), and rewrites --history in place.
+#
+# Sections named by --adjust gain an "Adj %" column: each metric's
+# current/avg ratio divided by the section's runner baseline (the median
+# ratio across its table metrics, minus keys matching --adjust-exclude).
+# This cancels run-to-run runner-speed variance so genuine code effects
+# stand out; standouts beyond 5% render bold.
 
 use strict;
 use warnings;
@@ -181,11 +188,39 @@ sub upsert {
     $hist->{$key} = \@entries;
 }
 
+sub median {
+    my @sorted = sort { $a <=> $b } @_;
+    return unless @sorted;
+    my $mid = int(@sorted / 2);
+    return @sorted % 2 ? $sorted[$mid] : ($sorted[$mid - 1] + $sorted[$mid]) / 2;
+}
+
+# Runner-speed baseline for an adjusted section: the median of the
+# current/avg ratios across its history-backed table metrics.  All tests in
+# one run move together with the runner's speed, and the median ignores the
+# few a PR genuinely changed, so re-basing each ratio against it isolates
+# code effects from runner variance.  Keys matching the exclude pattern
+# (e.g. the IO-bound streaming tests, whose variance does not track the
+# CPU-bound op tests) contribute nothing and get no adjusted value.
+sub baseline_ratio {
+    my ($rows, $hist, $pr, $exclude_re) = @_;
+    my @ratios;
+    for my $row (@$rows) {
+        my ($render, $key, $name, $unit, $value) = @$row;
+        next unless $render eq 'table';
+        next if defined $exclude_re && $key =~ /$exclude_re/;
+        my ($avg) = hist_stats($hist, $key, $pr);
+        push @ratios, $value / $avg if defined $avg && $avg > 0;
+    }
+    return median(@ratios);
+}
+
 # Build the (table_md, inline_md) fragments for one section.
 sub render_section {
-    my ($rows, $hist, $pr) = @_;
+    my ($rows, $hist, $pr, $adjust, $exclude_re) = @_;
     my (@table_rows, @inline_bits);
     my $unit_hdr = '';
+    my $base_r   = $adjust ? baseline_ratio($rows, $hist, $pr, $exclude_re) : undef;
     for my $row (@$rows) {
         my ($render, $key, $name, $unit, $value) = @$row;
         my ($avg, $min, $max, $n) = hist_stats($hist, $key, $pr);
@@ -206,23 +241,49 @@ sub render_section {
               defined $avg
               ? (fmt_delta($value, $avg), fmt_value($avg), fmt_value($min), fmt_value($max))
               : ("\x{2014}") x 4;
+            if ($adjust) {
+                my $adj = "\x{2014}";
+                if (    defined $base_r
+                     && defined $avg
+                     && $avg > 0
+                     && (!defined $exclude_re || $key !~ /$exclude_re/)) {
+                    my $pct = 100.0 * ($value / $avg / $base_r - 1);
+                    $adj = sprintf('%+.1f%%', $pct);
+                    # standout beyond the run's baseline: a code effect,
+                    # not a runner property
+                    $adj = "**$adj**" if abs($pct) >= 5;
+                }
+                splice @cells, 1, 0, $adj;
+            }
             push @table_rows,
               sprintf(
-                      '| %s | %s | %s | %s | %s | %s |',
+                      '| %s | %s | ' . join(' | ', ('%s') x @cells) . ' |',
                       $name, fmt_value($value), @cells
               );
         }
     }
     my $table_md = '';
     if (@table_rows) {
+        my $adj_hdr = $adjust ? "Adj \x{394}% | " : '';
+        my $adj_sep = $adjust ? "-------|"        : '';
         $table_md =
-            "| Metric | Current ($unit_hdr) | Cur Avg \x{394}% | Hist avg "
+            "| Metric | Current ($unit_hdr) | Cur Avg \x{394}% | ${adj_hdr}Hist avg "
           . "| Hist min | Hist max |\n"
-          . "|--------|------------------|------------|----------"
+          . "|--------|------------------|------------|${adj_sep}----------"
           . "|----------|----------|\n"
           . join("\n", @table_rows);
+
+        if (defined $base_r) {
+            $table_md .= sprintf(
+                                   "\n\n_Run baseline: median op-test delta %+.1f%%. "
+                                 . "Adj \x{394}%% re-bases each delta against it; standouts \x{2265}5%% in bold._",
+                                 100.0 * ($base_r - 1)
+            );
+        }
     }
-    return ($table_md, join(" \x{b7} ", @inline_bits));
+    # One stat per line: markdown needs the trailing double-space for a
+    # line break inside the same paragraph.
+    return ($table_md, join("  \n", @inline_bits));
 }
 
 sub write_output {
@@ -234,17 +295,23 @@ sub main {
     my ($history_path, $pr, $timestamp);
     my @sections;
     my $github_output = $ENV{GITHUB_OUTPUT} // '/dev/null';
+    my @adjust_sections;
+    my $adjust_exclude;
     GetOptions(
-               'history=s'       => \$history_path,
-               'pr=i'            => \$pr,
-               'timestamp=s'     => \$timestamp,
-               'section=s'       => \@sections,
-               'github-output=s' => \$github_output,
+               'history=s'        => \$history_path,
+               'pr=i'             => \$pr,
+               'timestamp=s'      => \$timestamp,
+               'section=s'        => \@sections,
+               'adjust=s'         => \@adjust_sections,
+               'adjust-exclude=s' => \$adjust_exclude,
+               'github-output=s'  => \$github_output,
       )
       or die "usage: perf_history.pl --history FILE --pr N --timestamp TS "
-      . "--section NAME=FILE ... [--github-output FILE]\n";
+      . "--section NAME=FILE ... [--adjust NAME ...] "
+      . "[--adjust-exclude REGEX] [--github-output FILE]\n";
     die "missing --history/--pr/--timestamp\n"
       unless defined $history_path && defined $pr && defined $timestamp;
+    my %adjust = map { $_ => 1 } @adjust_sections;
 
     my $hist = load_history($history_path);
 
@@ -254,7 +321,8 @@ sub main {
         my ($name, $path) = split /=/, $spec, 2;
         die "bad --section (want NAME=FILE): $spec\n" unless defined $path && length $path;
         my $rows = load_metrics($path);
-        my ($table_md, $inline_md) = render_section($rows, $hist, $pr);
+        my ($table_md, $inline_md) =
+          render_section($rows, $hist, $pr, $adjust{$name}, $adjust_exclude);
         write_output($out, "${name}_table",  $table_md);
         write_output($out, "${name}_inline", $inline_md);
         upsert($hist, $_->[1], $pr, $timestamp, $_->[4]) for @$rows;
