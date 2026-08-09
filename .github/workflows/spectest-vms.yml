@@ -29,7 +29,7 @@ env:
   INIPARSER_TARBALL_URL: https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
   SMARTOS_BOOTSTRAP_URL: https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
   SMARTOS_BOOTSTRAP_SHA256: 4842f72b610d44cf98560253b6bf16ff4056016e5fe2c6932bc195156ac75772
-  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.2.0.tar.gz
+  STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.2.1.tar.gz
 
 jobs:
   spectest-dflybsd:
@@ -563,21 +563,29 @@ jobs:
               developer/build/meson \
               developer/build/ninja \
               developer/build/pkg-config \
+              developer/cargo-c \
               developer/gcc-14 \
+              developer/lang/rustc \
               library/libev \
               library/security/cracklib \
               runtime/perl \
               system/library/security/libgcrypt \
               web/curl
             curl --proto '=https' --location --fail -o iniparser.tar.gz "${{ env.INIPARSER_TARBALL_URL }}"
+            curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"
             mkdir -p /tmp/iniparser
             gtar -xzf iniparser.tar.gz -C /tmp/iniparser --strip-components=1
+            mkdir -p /tmp/stuffit-rs
+            gtar -xzf stuffit-rs.tar.gz -C /tmp/stuffit-rs --strip-components=1
             cd /tmp/iniparser
             mkdir build
             cd build
             cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
             make all
             make install
+            cd /tmp/stuffit-rs
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/usr/local
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
@@ -588,6 +596,7 @@ jobs:
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-eventloop=libev \
               -Dwith-iniparser-path=/usr/local \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -666,7 +675,6 @@ jobs:
             cmake ..
             make all
             make install
-            cd ../..
             cd /tmp/stuffit-rs
             cargo build --release --locked -p stuffit-ffi
             gmake -C stuffit-ffi install-files PREFIX=/usr/local
