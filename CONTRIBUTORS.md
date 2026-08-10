@@ -20,9 +20,11 @@ Thanks a bunch folks, wherever you are.
 - Leland Wallace <randall@apple.com>: expert advice
 - Gerry Tomlinson <Gerry.Tomlinson@newcastle.ac.uk>:
   original afile/achfile/acleandir implementation
-- Marsha Jackson: reverse engineered the Apple II boot protocol
 
-## Community Contributors
+## Community Project Contributors
+
+This marks the transition to a Free and Open Source community project
+in the year 2000.
 
 ### Project Administration
 
@@ -74,8 +76,27 @@ Thanks a bunch folks, wherever you are.
 - Rafal Lewczuk <rlewczuk@pronet.pl>
 - Frank Lahm <franklahm@gmail.com>
 - Ralph Boehme <slow@samba.org>
-- CHANG-NING TSAI <spiderpower02@gmail.com>
+- Chang-Ning Tsai <spiderpower02@gmail.com>
 - Daniel Markstedt <daniel@mindani.net>
+
+### a2boot
+
+- Marsha Jackson: reverse engineered the Apple II boot protocol
+- Steve Hirsch <shirsch@adelphia.net>
+
+### asip-status
+
+- James W. Abendschan <jwa@jammed.com>
+
+### macipgw
+
+Contributors to the original macipgw project and forks,
+at the time the codebase was merged into netatalk.
+
+- Stefan Bethke <Stefan.Bethke@Hanse.DE>: original author
+- Jason King
+- Adam Seering
+- Christopher Kobayashi
 
 ### Package Maintainers and Contributors
 
@@ -145,8 +166,8 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Simon Roberts <simonr@siliconsystems.co.uk>
 - Steven Karel <karelsf@brandeis.edu>
 - Thomas Schierle <ts@visual-s.de>
-- Mikko <mikko@fs.sorl.net>
-- Roger <roger.day@globalgraphics.com>
+- Mikko Hellsing <mikko@fs.sorl.net>
+- Roger Day <roger.day@globalgraphics.com>
 
 ## Version 2.1 - 3.1 (ca. 2005-2018)
 
@@ -245,7 +266,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Richard van den Berg
 - Andy Chen <andychen@synology.com>
 - Petr Gajdos
-- 도환김 (down) <dohwan09@cau.ac.kr>
+- Dohwan Kim <dohwan09@cau.ac.kr>
 - Eric Harmon
 - Derrik Pates
 - Simon McVittie <smcv@collabora.com>
@@ -264,16 +285,6 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Jakub Jirutka <jakub@jirutka.cz>
 - Blake Garner
 - OrbisAI Security
-
-## macipgw
-
-Contributors to the original macipgw project and forks,
-at the time the codebase was merged into netatalk.
-
-- Stefan Bethke <Stefan.Bethke@Hanse.DE>: original author
-- Jason King
-- Adam Seering
-- Christopher Kobayashi
 
 And thanks to everyone on the netatalk-devel and netatalk-docs
 lists. And in recent years, the TinkerDifferent, 68kmla, E-Maculation,
