@@ -213,6 +213,22 @@ static int set_sl_volumes(void)
         }
     }
 
+    int global_sl = INIPARSER_GETBOOL(obj.iniconfig, INISEC_GLOBAL, "spotlight", 1);
+
+    if (INIPARSER_GETBOOL(obj.iniconfig, INISEC_HOMES, "spotlight", global_sl)) {
+        const char *basedir = INIPARSER_GETSTR(obj.iniconfig, INISEC_HOMES,
+                                               "basedir regex", NULL);
+
+        if (basedir && *basedir) {
+            if (first) {
+                fprintf(fp, "index-recursive-directories=['%s'", basedir);
+                first = false;
+            } else {
+                fprintf(fp, ", '%s'", basedir);
+            }
+        }
+    }
+
     if (first) {
         /* No Spotlight volumes: emit typed empty array so dconf compile parses it */
         fprintf(fp, "index-recursive-directories=@as []\n");

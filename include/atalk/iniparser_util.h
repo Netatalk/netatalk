@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2025 Daniel Markstedt
+ * Copyright (C) 2024-2026 Daniel Markstedt
  * All Rights Reserved.  See COPYING.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,12 @@
 
 #define INISEC_GLOBAL "global"
 #define INISEC_HOMES  "homes"
+
+#define INIPARSER_GETBOOL(config, section, key, default) ({           \
+    char _option[MAXOPTLEN];                                          \
+    snprintf(_option, sizeof(_option), "%s:%s", section, key);        \
+    iniparser_getboolean(config, _option, default);                   \
+})
 
 #define INIPARSER_GETSTR(config, section, key, default) ({            \
     char _option[MAXOPTLEN];                                          \
