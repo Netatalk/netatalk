@@ -1,4 +1,4 @@
-# Netatalk Installation Quick Start
+# Netatalk Installation
 
 This guide covers installing Netatalk from source on UNIX-like operating systems.
 
@@ -167,10 +167,3 @@ Please see [meson_options.txt](https://github.com/Netatalk/netatalk/blob/main/me
 for full details of all Netatalk-specific options,
 and the [Meson documentation](https://mesonbuild.com/Builtin-options.html)
 for details of generic Meson options.
-
-## See also
-
-The Netatalk manual has further resources to aid building and installation.
-
-- [Installation chapter](https://netatalk.io/manual/en/Installation): detailed descriptions of each dependency
-- [Compilation chapter](https://netatalk.io/compilation): concrete build steps for each supported operating system
