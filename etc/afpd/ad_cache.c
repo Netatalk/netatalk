@@ -24,6 +24,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/directory.h>
+#include <atalk/ea.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
@@ -174,14 +175,14 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
             ad_rebuild_from_cache(adp, dir);
             ad_cache_hits++;
             return 0;
-        } else if (dir->dcache_rlen == (off_t) -2) {
-            /* Confirmed no AD exists and ctime unchanged — still no AD */
+        } else if (ad_rlen_meta_absent(dir->dcache_rlen)) {
+            /* Confirmed no AD metadata and ctime unchanged — still none */
             ad_cache_no_ad++;
             errno = ENOENT;
             return -1;
         }
 
-        /* dcache_rlen == -1: not yet loaded (or just invalidated), fall through */
+        /* AD_RLEN_UNKNOWN: not yet loaded (or just invalidated), fall through */
     }
 
     if (!strict && dir && dir->dcache_rlen >= 0) {
@@ -202,7 +203,7 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
         return 0;
     }
 
-    if (dir && dir->dcache_rlen == (off_t) -2) {
+    if (dir && ad_rlen_meta_absent(dir->dcache_rlen)) {
         /* If caller provided a recent stat and ctime/inode changed,
          * the AD file may have been created since — re-check on disk. */
         if (recent_st
@@ -215,7 +216,7 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
             goto disk_read;
         }
 
-        /* Confirmed no AD exists and ctime unchanged — still no AD */
+        /* Confirmed no AD metadata and ctime unchanged — still none */
         ad_cache_no_ad++;
         errno = ENOENT;
         return -1;
@@ -239,14 +240,36 @@ disk_read:
         ad_close(adp, ADFLAGS_HF | flags);
     } else if (ret < 0 && errno == ENOENT && dir
                && dir->d_did != CNID_INVALID) {
-        /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
-         * Setting rlen = -2 before freeing would corrupt rfork_cache_used tracking. */
+        int saved_errno = errno;
+
+        /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for
+         * budget. Minting a sentinel before freeing would corrupt
+         * rfork_cache_used tracking. */
         if (dir->dcache_rfork_buf) {
             rfork_cache_free(dir);
             rfork_stat_invalidated++;
         }
 
-        dir->dcache_rlen = (off_t) -2;
+        /* Metadata ENOENT does not prove the rfork is absent: with ea=sys
+         * it is a separate EA (Samba vfs_fruit, macOS-native writers).
+         * ad_reso_size() returns 0 for any failure, so errno must confirm
+         * absence before minting NO_AD; an ambiguous probe leaves UNKNOWN.
+         * Directories have no resource fork. */
+        if (flags & ADFLAGS_DIR) {
+            dir->dcache_rlen = AD_RLEN_NO_AD;
+        } else {
+            errno = 0;
+            off_t rlen = ad_reso_size(name, 0, NULL);
+
+            if (rlen > 0) {
+                dir->dcache_rlen = AD_RLEN_RFORK_ONLY;
+            } else if (rlen == 0 && (errno == 0 || errno == ENOENT
+                                     || errno == ENOATTR)) {
+                dir->dcache_rlen = AD_RLEN_NO_AD;
+            }
+        }
+
+        errno = saved_errno;
     }
 
     return ret;
@@ -357,7 +380,7 @@ void rfork_cache_evict_to_budget(size_t needed)
  *
  * Allocates dcache_rlen bytes and does ad_read(adp, eid, 0, buf, dcache_rlen).
  * ad_read() handles all storage formats (EA, macOS xattr, AD v2 sidecar).
- * Guards: returns -1 if !AD_RSRC_OPEN(adp) (fd not open), dcache_rlen <= 0,
+ * Guards: returns -1 if !ad_rsrc_open(adp) (fd not open), dcache_rlen <= 0,
  * or rlen > rfork_max_entry_size.
  * Validates that ad_read returns exactly dcache_rlen bytes — if not, the fork
  * size changed since Tier 1 metadata was cached: invalidates ALL cached AD
@@ -384,7 +407,7 @@ int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
         rfork_cache_free(entry);
     }
 
-    if (!AD_RSRC_OPEN(adp)) {
+    if (!ad_rsrc_open(adp)) {
         return -1;
     }
 
@@ -436,7 +459,7 @@ int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
             "rfork_cache_store_from_fd: short read (%zd vs %lld) — "
             "external change detected, invalidating AD cache (did:%u)",
             bytes_read, (long long)entry->dcache_rlen, ntohl(entry->d_did));
-        entry->dcache_rlen = (off_t) -1;
+        entry->dcache_rlen = AD_RLEN_UNKNOWN;
         memset(entry->dcache_finderinfo, 0, 32);
         memset(entry->dcache_filedatesi, 0, 16);
         memset(entry->dcache_afpfilei, 0, 4);

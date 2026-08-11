@@ -49,10 +49,11 @@
 # to $GITHUB_OUTPUT), and rewrites --history in place.
 #
 # Sections named by --adjust gain an "Adj %" column: each metric's
-# current/avg ratio divided by the section's runner baseline (the median
-# ratio across its table metrics, minus keys matching --adjust-exclude).
-# This cancels run-to-run runner-speed variance so genuine code effects
-# stand out; standouts beyond 5% render bold.
+# current/avg delta shifted by the section's runner baseline (the median
+# delta across its table metrics, minus keys matching --adjust-exclude).
+# The MAD of the deltas is reported alongside the baseline as a
+# uniformity indicator. This cancels run-to-run runner-speed variance so
+# genuine code effects stand out; standouts beyond 5% render bold.
 
 use strict;
 use warnings;
@@ -196,23 +197,29 @@ sub median {
 }
 
 # Runner-speed baseline for an adjusted section: the median of the
-# current/avg ratios across its history-backed table metrics.  All tests in
-# one run move together with the runner's speed, and the median ignores the
-# few a PR genuinely changed, so re-basing each ratio against it isolates
-# code effects from runner variance.  Keys matching the exclude pattern
+# current/avg deltas across its history-backed table metrics, plus the MAD
+# (median absolute deviation) of those deltas.  All tests in one run move
+# together with the runner's speed, and the median ignores the few a PR
+# genuinely changed, so shifting each delta by it isolates code effects
+# from runner variance; the MAD shows how uniformly the run actually moved
+# (a large MAD means the shift is not common-mode and the adjusted column
+# should be read with suspicion).  Keys matching the exclude pattern
 # (e.g. the IO-bound streaming tests, whose variance does not track the
 # CPU-bound op tests) contribute nothing and get no adjusted value.
-sub baseline_ratio {
+sub baseline_delta {
     my ($rows, $hist, $pr, $exclude_re) = @_;
-    my @ratios;
+    my @deltas;
     for my $row (@$rows) {
         my ($render, $key, $name, $unit, $value) = @$row;
         next unless $render eq 'table';
         next if defined $exclude_re && $key =~ /$exclude_re/;
         my ($avg) = hist_stats($hist, $key, $pr);
-        push @ratios, $value / $avg if defined $avg && $avg > 0;
+        push @deltas, 100.0 * ($value / $avg - 1) if defined $avg && $avg > 0;
     }
-    return median(@ratios);
+    my $med = median(@deltas);
+    return unless defined $med;
+    my $mad = median(map { abs($_ - $med) } @deltas);
+    return ($med, $mad);
 }
 
 # Build the (table_md, inline_md) fragments for one section.
@@ -220,7 +227,9 @@ sub render_section {
     my ($rows, $hist, $pr, $adjust, $exclude_re) = @_;
     my (@table_rows, @inline_bits);
     my $unit_hdr = '';
-    my $base_r   = $adjust ? baseline_ratio($rows, $hist, $pr, $exclude_re) : undef;
+    my ($base_d, $base_mad);
+    ($base_d, $base_mad) = baseline_delta($rows, $hist, $pr, $exclude_re)
+      if $adjust;
     for my $row (@$rows) {
         my ($render, $key, $name, $unit, $value) = @$row;
         my ($avg, $min, $max, $n) = hist_stats($hist, $key, $pr);
@@ -243,11 +252,11 @@ sub render_section {
               : ("\x{2014}") x 4;
             if ($adjust) {
                 my $adj = "\x{2014}";
-                if (    defined $base_r
+                if (    defined $base_d
                      && defined $avg
                      && $avg > 0
                      && (!defined $exclude_re || $key !~ /$exclude_re/)) {
-                    my $pct = 100.0 * ($value / $avg / $base_r - 1);
+                    my $pct = 100.0 * ($value / $avg - 1) - $base_d;
                     $adj = sprintf('%+.1f%%', $pct);
                     # standout beyond the run's baseline: a code effect,
                     # not a runner property
@@ -273,11 +282,13 @@ sub render_section {
           . "|----------|----------|\n"
           . join("\n", @table_rows);
 
-        if (defined $base_r) {
+        if (defined $base_d) {
             $table_md .= sprintf(
-                                   "\n\n_Run baseline: median op-test delta %+.1f%%. "
-                                 . "Adj \x{394}%% re-bases each delta against it; standouts \x{2265}5%% in bold._",
-                                 100.0 * ($base_r - 1)
+                                   "\n\n_Run baseline: median op-test delta %+.1f%%, MAD %.1f%%. "
+                                 . "Adj \x{394}%% shifts each delta by the median; standouts \x{2265}5%% in bold. "
+                                 . "A large MAD means the run did not move uniformly \x{2014} "
+                                 . "read the adjusted column with caution._",
+                                 $base_d, $base_mad
             );
         }
     }

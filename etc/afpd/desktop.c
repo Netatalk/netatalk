@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -1067,21 +1068,29 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
         adp = of->of_ad;
     }
 
+    struct dir *cached = isadir ? path->d_dir
+                         : dircache_search_by_name(vol, curdir, upath, strnlen(upath,
+                             CNID_MAX_PATH_LEN));
+
+    /* ADEID_COMMENT is not in the Tier 1 cache, so a cache hit cannot
+     * serve the comment itself — but the negative AD cache can answer
+     * "no metadata, hence no comment" without a disk probe. Only with a
+     * ctime/inode-validated entry and no open fork (an open fork may
+     * have just created metadata). */
+    if (adp == &ad && cached && ad_rlen_meta_absent(cached->dcache_rlen)
+            && path->st_valid && path->st_errno == 0
+            && cached->dcache_ctime == path->st.st_ctime
+            && cached->dcache_ino == path->st.st_ino) {
+        return AFPERR_NOITEM;
+    }
+
     if (ad_metadata(upath, (isadir ? ADFLAGS_DIR : 0), adp) < 0) {
         return AFPERR_NOITEM;
     }
 
-    /* Opportunistic AD cache population (ADEID_COMMENT not in Tier 1 cache,
-     * but we can populate Tier 1 fields while we have the AD open) */
-    {
-        struct dir *cached = isadir ? path->d_dir
-                             : dircache_search_by_name(vol, curdir, upath, strnlen(upath,
-                                 CNID_MAX_PATH_LEN));
-
-        /* If cache AD is unset, store fork's live adouble */
-        if (cached && cached->dcache_rlen < 0) {
-            ad_store_to_cache(adp, cached);
-        }
+    /* Opportunistic AD cache population while the AD is open */
+    if (cached && cached->dcache_rlen < 0) {
+        ad_store_to_cache(adp, cached);
     }
 
     if (!ad_getentryoff(adp, ADEID_COMMENT) || !ad_entry(adp, ADEID_COMMENT)) {

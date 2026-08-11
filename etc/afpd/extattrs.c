@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2026 Andy Lemin (andylemin)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -148,14 +149,16 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     if (opened) {
         /* Fork-owned adouble — use directly, skip cache.
-         * Opportunistically populate cache if not yet loaded. */
+         * Opportunistically populate cache if not yet loaded.
+         * ad_meta_loaded(): a fork open without metadata leaves the
+         * adouble's header zeroed — storing it would flip a negative
+         * sentinel to a bogus positive entry. */
         ad_available = 1;
         size_t uname_len = strnlen(uname, CNID_MAX_PATH_LEN);
         struct dir *cached = dircache_search_by_name(vol, curdir,
                              uname, uname_len);
 
-        /* If cache AD is unset, store fork's live adouble */
-        if (cached && cached->dcache_rlen < 0) {
+        if (cached && cached->dcache_rlen < 0 && ad_meta_loaded(adp)) {
             ad_store_to_cache(adp, cached);
         }
     } else {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -510,12 +511,17 @@ static int moveandrename(const AFPObj *obj,
                 /* Refresh failed, purged — NULL sdir to prevent use-after-free */
                 sdir = NULL;
             }
+#if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
+            char event_path[MAXPATHLEN + 1];
+            const char *dir_dst = dir_event_path(event_path,
+                                                 sizeof(event_path), curdir, upath);
+#endif
 #ifdef WITH_FCE
-            fce_register(obj, FCE_DIR_MOVE, fullpathname(upath), oldunixname);
+            fce_register(obj, FCE_DIR_MOVE, dir_dst, oldunixname);
 #endif /* WITH_FCE */
 #ifdef WITH_SPOTLIGHT
             sl_index_event(obj, vol, SL_INDEX_DIR_MOVE,
-                           fullpathname(upath), bdata(saved_sdir_fullpath));
+                           dir_dst, bdata(saved_sdir_fullpath));
 #endif /* WITH_SPOTLIGHT */
         }
 
@@ -532,31 +538,28 @@ static int moveandrename(const AFPObj *obj,
             /* Refresh failed, purged — NULL cachedfile */
             cachedfile = NULL;
         }
-#ifdef WITH_FCE
-
-        /* Send FCE event */
-        if (isdir) {
-            /* Dir FCE already sent above inside the isdir block */
-        } else {
-            bstring srcpath = bformat("%s/%s", bdata(saved_sdir_fullpath), oldunixname);
-            fce_register(obj, FCE_FILE_MOVE, fullpathname(upath), bdata(srcpath));
-            bdestroy(srcpath);
-        }
-
-#endif /* WITH_FCE */
-#ifdef WITH_SPOTLIGHT
+#if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
 
         if (!isdir) {
-            bstring srcpath = bformat("%s/%s", bdata(saved_sdir_fullpath), oldunixname);
+            char event_path[MAXPATHLEN + 1];
+            const char *file_dst = dir_event_path(event_path,
+                                                  sizeof(event_path), curdir, upath);
+            bstring srcpath = bformat("%s/%s", bdata(saved_sdir_fullpath),
+                                      oldunixname);
 
             if (srcpath != NULL) {
+#ifdef WITH_FCE
+                fce_register(obj, FCE_FILE_MOVE, file_dst, bdata(srcpath));
+#endif
+#ifdef WITH_SPOTLIGHT
                 sl_index_event(obj, vol, SL_INDEX_FILE_MOVE,
-                               fullpathname(upath), bdata(srcpath));
+                               file_dst, bdata(srcpath));
+#endif
                 bdestroy(srcpath);
             }
         }
 
-#endif /* WITH_SPOTLIGHT */
+#endif /* WITH_FCE || WITH_SPOTLIGHT */
 
         /* Fixup adouble info — separate ad_open for CNID write.
          * adflags includes ADFLAGS_DIR for directories (set at line 301). */
@@ -938,11 +941,16 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             /* Parent dir ctime changed */
             ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
+#if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
+            char event_path[MAXPATHLEN + 1];
+            const char *deleted_dir = dir_event_path(event_path,
+                                      sizeof(event_path), curdir, upath);
+#endif
 #ifdef WITH_FCE
-            fce_register(obj, FCE_DIR_DELETE, fullpathname(upath), NULL);
+            fce_register(obj, FCE_DIR_DELETE, deleted_dir, NULL);
 #endif /* WITH_FCE */
 #ifdef WITH_SPOTLIGHT
-            sl_index_event(obj, vol, SL_INDEX_DIR_DELETE, fullpathname(upath), NULL);
+            sl_index_event(obj, vol, SL_INDEX_DIR_DELETE, deleted_dir, NULL);
 #endif /* WITH_SPOTLIGHT */
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
@@ -955,12 +963,20 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             /* deletecurdir() also handles CNID and dircache cleanup */
             if ((rc = deletecurdir(vol)) == AFP_OK) {
+#if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
+                /* deletecurdir() moved cwd to the parent: curdir is now
+                 * the deleted directory's parent. */
+                char event_path[MAXPATHLEN + 1];
+                const char *deleted_dir = dir_event_path(event_path,
+                                          sizeof(event_path), curdir,
+                                          cfrombstr(dname));
+#endif
 #ifdef WITH_FCE
-                fce_register(obj, FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL);
+                fce_register(obj, FCE_DIR_DELETE, deleted_dir, NULL);
 #endif /* WITH_FCE */
 #ifdef WITH_SPOTLIGHT
                 sl_index_event(obj, vol, SL_INDEX_DIR_DELETE,
-                               fullpathname(cfrombstr(dname)), NULL);
+                               deleted_dir, NULL);
 #endif /* WITH_SPOTLIGHT */
             }
 
@@ -1026,11 +1042,16 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             /* deletefile() also handles CNID and dircache cleanup */
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
+#if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
+                char event_path[MAXPATHLEN + 1];
+                const char *deleted_file = dir_event_path(event_path,
+                                           sizeof(event_path), curdir, upath);
+#endif
 #ifdef WITH_FCE
-                fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
+                fce_register(obj, FCE_FILE_DELETE, deleted_file, NULL);
 #endif /* WITH_FCE */
 #ifdef WITH_SPOTLIGHT
-                sl_index_event(obj, vol, SL_INDEX_FILE_DELETE, fullpathname(upath), NULL);
+                sl_index_event(obj, vol, SL_INDEX_FILE_DELETE, deleted_file, NULL);
 #endif /* WITH_SPOTLIGHT */
 
                 /* Send hints to afpd siblings — file deleted */

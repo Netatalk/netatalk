@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 2010      Frank Lahm
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -175,7 +176,7 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork,
         return AFPERR_BITMAP;
     }
 
-    if (! AD_META_OPEN(ofork->of_ad)) {
+    if (! ad_meta_open(ofork->of_ad)) {
         adp = NULL;
     } else {
         adp = ofork->of_ad;
@@ -841,8 +842,8 @@ openfork_err:
      * from the second), in every failure combination, exactly once.  SETSHRMD
      * releases any share-mode locks ad_open_df() set; the AD_*_OPEN guard makes
      * a failure before the first open close nothing.  ret was set per case. */
-    if (AD_DATA_OPEN(ofork->of_ad) || AD_META_OPEN(ofork->of_ad)
-            || AD_RSRC_OPEN(ofork->of_ad)) {
+    if (ad_data_open(ofork->of_ad) || ad_meta_open(ofork->of_ad)
+            || ad_rsrc_open(ofork->of_ad)) {
         ad_close(ofork->of_ad,
                  (ADFLAGS_DF | ADFLAGS_RF | ADFLAGS_HF) | ADFLAGS_SETSHRMD);
     }
@@ -1541,7 +1542,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             rfork_cache_free(cached_entry);
             rfork_stat_invalidated++;
             rfork_stat_misses++;     /* Size mismatch counts as a miss */
-            cached_entry->dcache_rlen = (off_t) -1;
+            cached_entry->dcache_rlen = AD_RLEN_UNKNOWN;
             memset(cached_entry->dcache_finderinfo, 0, 32);
             memset(cached_entry->dcache_filedatesi, 0, 16);
             memset(cached_entry->dcache_afpfilei, 0, 4);
@@ -2196,7 +2197,7 @@ int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return AFPERR_PARAM;
     }
 
-    if (AD_META_OPEN(ofork->of_ad)) {
+    if (ad_meta_open(ofork->of_ad)) {
         if (ad_refresh(NULL, ofork->of_ad) < 0) {
             LOG(log_error, logtype_afpd, "getforkparams(%s): ad_refresh: %s",
                 of_name(ofork), strerror(errno));

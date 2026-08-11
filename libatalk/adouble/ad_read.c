@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -86,7 +87,7 @@ ssize_t ad_read(struct adouble *ad, const uint32_t eid, off_t off, char *buf,
             cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
         }
     } else {
-        if (! AD_RSRC_OPEN(ad))
+        if (! ad_rsrc_open(ad))
             /* resource fork is not open ( cf etc/afp/fork.c) */
         {
             return 0;

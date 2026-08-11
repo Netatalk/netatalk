@@ -76,8 +76,8 @@ struct dir rootParent = {
     .dcache_mode = S_IFDIR | 0755,
     /* rootParent.d_rights_cache init to 0xffffffff ('access rights not set/unknown') */
     .d_rights_cache = 0xffffffff,
-    /* dcache_rlen init to -1 ('resource fork length unknown/not set') */
-    .dcache_rlen = (off_t) -1,
+    /* dcache_rlen init to AD_RLEN_UNKNOWN ('not yet loaded') */
+    .dcache_rlen = AD_RLEN_UNKNOWN,
     /* All other fields zero-initialized by C11 designated init rules */
 };
 struct dir  *curdir = &rootParent;
@@ -933,7 +933,7 @@ struct dir *dir_new(const char *m_name,
     dir->dcache_gid = st->st_gid;
     dir->dcache_size = st->st_size;
     /* Not yet loaded — triggers ad_metadata() on first access */
-    dir->dcache_rlen = (off_t) - 1;
+    dir->dcache_rlen = AD_RLEN_UNKNOWN;
 
     if (!S_ISDIR(st->st_mode)) {
         dir->d_flags = DIRF_ISFILE;
@@ -1215,7 +1215,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             }
 
             /* Different inode = different file. AD is always stale. */
-            dir->dcache_rlen = (off_t) -1;
+            dir->dcache_rlen = AD_RLEN_UNKNOWN;
             /* Refresh CNID from database */
             cnid_t new_cnid = CNID_INVALID;
             AFP_CNID_START("cnid_lookup");
@@ -1227,7 +1227,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             if (new_cnid == CNID_INVALID) {
                 if (dir == curdir) {
                     /* Do not remove curdir — callers rely on it being valid.
-                     * AD cache already invalidated (dcache_rlen = -1 above) */
+                     * AD cache already invalidated (AD_RLEN_UNKNOWN above) */
                     LOG(log_error, logtype_afpd,
                         "dir_modify: inode change on curdir! — no CNID for "
                         "new inode, keeping stale entry (did:%u, ino:%llu->%llu)",
@@ -1265,7 +1265,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                         ntohl(new_cnid));
                 }
             }
-        } else if (ctime_changed && dir->dcache_rlen != (off_t) -1) {
+        } else if (ctime_changed && dir->dcache_rlen != AD_RLEN_UNKNOWN) {
             /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
              * Setting rlen = -1 before freeing would corrupt rfork_cache_used tracking. */
             if (dir->dcache_rfork_buf) {
@@ -1275,7 +1275,8 @@ int dir_modify(const struct vol *vol, struct dir *dir,
 
             /* Ctime changed (same inode): metadata modified externally.
              * Invalidate AD cache — re-read from disk on next access.
-             * Covers dcache_rlen >= 0 (cached AD) and dcache_rlen == -2 (no AD)
+             * Covers dcache_rlen >= 0 (cached AD) and the negative
+             * sentinels (AD_RLEN_NO_AD, AD_RLEN_RFORK_ONLY).
              * When DCMOD_AD is also set, ad_store_to_cache() runs after
              * this section and re-populates dcache_rlen with caller data. */
             LOG(log_debug, logtype_afpd,
@@ -1283,7 +1284,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                 "did:%u (ctime:%ld->%ld)",
                 ntohl(dir->d_did),
                 (long)dir->dcache_ctime, (long)args->st->st_ctime);
-            dir->dcache_rlen = (off_t) -1;
+            dir->dcache_rlen = AD_RLEN_UNKNOWN;
         }
 
         dir->dcache_ctime = args->st->st_ctime;
@@ -1346,7 +1347,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             rfork_stat_invalidated++;
         }
 
-        dir->dcache_rlen = (off_t) -1;
+        dir->dcache_rlen = AD_RLEN_UNKNOWN;
         memset(dir->dcache_finderinfo, 0, 32);
         memset(dir->dcache_filedatesi, 0, 16);
         memset(dir->dcache_afpfilei, 0, 4);
@@ -3316,6 +3317,27 @@ int renamedir(struct vol *vol,
     }
 
     return AFP_OK;
+}
+
+const char *dir_event_path(char *buf, size_t buflen,
+                           const struct dir *parent,
+                           const char *name)
+{
+    if (parent == NULL || parent->d_fullpath == NULL) {
+        return fullpathname(name);
+    }
+
+    int len = snprintf(buf, buflen, "%s/%s",
+                       cfrombstr(parent->d_fullpath), name);
+
+    if (len < 0 || (size_t)len >= buflen) {
+        /* Never emit a clipped event path; the getcwd-based builder
+         * bounds against MAXPATHLEN, matching the kernel's own path
+         * limit. */
+        return fullpathname(name);
+    }
+
+    return buf;
 }
 
 /*! delete an empty directory */

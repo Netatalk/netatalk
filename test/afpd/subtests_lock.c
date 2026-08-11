@@ -156,7 +156,7 @@ int utest_openfork_no_fd_leak(const struct vol *vol)
     }
 
     /* Run afp_openfork()'s error-path cleanup (close keyed on open-state). */
-    if (AD_DATA_OPEN(&ad) || AD_META_OPEN(&ad) || AD_RSRC_OPEN(&ad)) {
+    if (ad_data_open(&ad) || ad_meta_open(&ad) || ad_rsrc_open(&ad)) {
         ad_close(&ad, (ADFLAGS_DF | ADFLAGS_RF | ADFLAGS_HF) | ADFLAGS_SETSHRMD);
     }
 
