@@ -53,6 +53,20 @@
 #define DIRF_CNID	   (1<<5) /*!< renumerate id */
 #define DIRF_ARC_GHOST (1<<6) /*!< ARC ghost entry (in B1/B2) */
 
+/* dcache_rlen states. AD_RLEN_NO_RFORK is the floor of the positive
+ * range, not a sentinel: test >= 0 for "metadata cached". */
+#define AD_RLEN_NO_RFORK   ((off_t) 0)   /*!< AD metadata present, no rfork */
+#define AD_RLEN_UNKNOWN    ((off_t) -1)  /*!< not yet loaded */
+#define AD_RLEN_NO_AD      ((off_t) -2)  /*!< no AD metadata, no rfork */
+#define AD_RLEN_RFORK_ONLY ((off_t) -3)  /*!< no AD metadata; rfork present,
+                                          * size not cached */
+
+/*! AD metadata confirmed absent — ad_metadata() would fail ENOENT. */
+static inline int ad_rlen_meta_absent(off_t rlen)
+{
+    return rlen == AD_RLEN_NO_AD || rlen == AD_RLEN_RFORK_ONLY;
+}
+
 struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for cache locality
     /* Fields requiring 8-byte alignment: pointers, time_t, ino_t, off_t */
     bstring     d_fullpath;          /*!< complete unix path to dir (or file) */
@@ -81,10 +95,9 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
                                       * used to detect changes in the dircache */
     time_t      dcache_mtime;        /*!< st_mtime: modification time */
     off_t       dcache_size;         /*!< st_size: file size (for FILPBIT_DFLEN) */
-    off_t       dcache_rlen;         /*!< Cached resource fork length.
-                                      * -1 = not yet loaded (triggers ad_metadata on first access),
-                                      * -2 = confirmed no AD exists (avoids repeated getxattr ENOENT),
-                                      * >= 0 = AD loaded and cached resource fork length value. */
+    /*! Cached resource fork length: >= 0 when AD metadata is cached,
+     * else one of the AD_RLEN_* sentinels above. */
+    off_t       dcache_rlen;
 
     /* Fields requiring 4-byte alignment: int, uint32_t, cnid_t, mode_t, uid_t, gid_t */
     int         d_flags;             /*!< directory flags */
@@ -147,6 +160,14 @@ static inline struct dir *path_cached_file(const struct path *path)
 
     return NULL;
 }
+
+/*! Absolute path of a child of parent for FCE/Spotlight event strings,
+ * built from the cached d_fullpath — no getcwd. Falls back to
+ * fullpathname() when the parent or its path is unavailable. Returns
+ * buf, or fullpathname()'s static buffer on the fallback path. */
+extern const char *dir_event_path(char *buf, size_t buflen,
+                                  const struct dir *parent,
+                                  const char *name);
 
 static inline int path_isadir(struct path *o_path)
 {

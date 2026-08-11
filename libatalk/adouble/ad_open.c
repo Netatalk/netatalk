@@ -2,6 +2,7 @@
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * Copyright (c) 2010 Frank Lahm
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * All Rights Reserved.
  *
@@ -1657,11 +1658,11 @@ static int ad_open_rf_v2(const char *path, int adflags, int mode _U_,
      */
     LOG(log_debug, logtype_ad, "ad_open_rf_v2(\"%s\"): BEGIN", fullpathname(path));
 
-    if (!AD_META_OPEN(ad) && !(adflags & (ADFLAGS_NORF | ADFLAGS_RDONLY))) {
+    if (!ad_meta_open(ad) && !(adflags & (ADFLAGS_NORF | ADFLAGS_RDONLY))) {
         EC_FAIL;
     }
 
-    if (AD_META_OPEN(ad)) {
+    if (ad_meta_open(ad)) {
         ad->ad_reso_refcount++;
     }
 
@@ -2575,7 +2576,7 @@ int ad_refresh(const char *path, struct adouble *ad)
 
     case AD_VERSION_EA:
 #ifdef HAVE_EAFD
-        if (AD_META_OPEN(ad)) {
+        if (ad_meta_open(ad)) {
             if (ad_data_fileno(ad) == -1) {
                 return -1;
             }
@@ -2583,7 +2584,7 @@ int ad_refresh(const char *path, struct adouble *ad)
             /* TODO: read meta EA */
         }
 
-        if (AD_RSRC_OPEN(ad)) {
+        if (ad_rsrc_open(ad)) {
             if (ad_reso_fileno(ad) == -1) {
                 return -1;
             }
@@ -2599,7 +2600,7 @@ int ad_refresh(const char *path, struct adouble *ad)
 
 #else
 
-        if (AD_META_OPEN(ad)) {
+        if (ad_meta_open(ad)) {
             if (ad_data_fileno(ad) == -1) {
                 return -1;
             }
@@ -2607,7 +2608,7 @@ int ad_refresh(const char *path, struct adouble *ad)
             /* TODO: read meta EA */
         }
 
-        if (AD_RSRC_OPEN(ad)) {
+        if (ad_rsrc_open(ad)) {
             if (ad_reso_fileno(ad) == -1) {
                 return -1;
             }

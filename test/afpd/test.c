@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2026 Andy Lemin (andylemin)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -593,6 +594,11 @@ int main(int argc, char *argv[])
      * and the dead path must not be minted into the dircache */
     TEST_int(test005_getmetadata_open_fork_outlives_path(vol), 0,
              "getmetadata: open fork identified via held fd when path is gone");
+    /* ea=sys can hold a resource fork with no metadata EA (foreign
+     * writers); the negative AD cache must not mask its length */
+    TEST_int_or_skip(volsys ? test006_rflen_rfork_without_metadata(volsys)
+                     : TEST_SKIP, 0,
+                     "getmetadata: rfork without metadata EA reports real RFLEN");
     /* pfd cache: strict ostat equivalence (quiescent), and the
      * divergence window — probe bound + three-way sync-check no-thrash */
     TEST_int(test_pfd_ostat_equivalence(vol), 0,

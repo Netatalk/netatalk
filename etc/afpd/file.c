@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -765,7 +766,15 @@ int getmetadata(const AFPObj *obj,
                     aint = htonl(adp->ad_rlen);
                 }
             } else {
-                rlen = ad_reso_size(path->u_name, 0, NULL);
+                /* Only NO_AD may answer rlen = 0 without a probe;
+                 * UNKNOWN and RFORK_ONLY keep the on-disk fallback. */
+                const struct dir *cachedfile = path_cached_file(path);
+
+                if (cachedfile && cachedfile->dcache_rlen == AD_RLEN_NO_AD) {
+                    rlen = 0;
+                } else {
+                    rlen = ad_reso_size(path->u_name, 0, NULL);
+                }
 
                 if (rlen > 0xffffffff) {
                     rlen = 0xffffffff;
@@ -848,7 +857,16 @@ int getmetadata(const AFPObj *obj,
                 memcpy(data, &aint, sizeof(aint));
                 data += sizeof(aint);
             } else {
-                int64_t rlen = hton64(ad_reso_size(path->u_name, 0, NULL));
+                const struct dir *cachedfile = path_cached_file(path);
+                off_t r;
+
+                if (cachedfile && cachedfile->dcache_rlen == AD_RLEN_NO_AD) {
+                    r = 0;
+                } else {
+                    r = ad_reso_size(path->u_name, 0, NULL);
+                }
+
+                int64_t rlen = hton64(r);
                 memcpy(data, &rlen, sizeof(rlen));
                 data += sizeof(rlen);
             }
@@ -945,11 +963,14 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
 
         if (adp != &ad) {
             /* Fork-owned adouble — use directly, skip cache.
-             * Opportunistically populate cache if not yet loaded. */
+             * Opportunistically populate cache if not yet loaded.
+             * ad_meta_loaded(): a fork open without metadata leaves the
+             * adouble's header zeroed — storing it would flip a negative
+             * sentinel to a bogus positive entry. */
             struct dir *cachedfile = path_resolve_cached_file(vol, dir, path);
 
-            /* If cache AD is unset, store fork's live adouble */
-            if (cachedfile && cachedfile->dcache_rlen < 0) {
+            if (cachedfile && cachedfile->dcache_rlen < 0
+                    && ad_meta_loaded(adp)) {
                 ad_store_to_cache(adp, cachedfile);
             }
         } else {
@@ -1156,11 +1177,17 @@ createfile_iderr:
         }
     }
     ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
+#if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
+    /* upath is a bare filename and curdir is its parent. */
+    char event_path[MAXPATHLEN + 1];
+    const char *created_path = dir_event_path(event_path, sizeof(event_path),
+                               curdir, upath);
+#endif
 #ifdef WITH_FCE
-    fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+    fce_register(obj, FCE_FILE_CREATE, created_path, NULL);
 #endif /* WITH_FCE */
 #ifdef WITH_SPOTLIGHT
-    sl_index_event(obj, vol, SL_INDEX_FILE_CREATE, fullpathname(upath), NULL);
+    sl_index_event(obj, vol, SL_INDEX_FILE_CREATE, created_path, NULL);
 #endif /* WITH_SPOTLIGHT */
 
     /* Defensive check: curdir may be corrupted by race conditions or cname() failures */
@@ -1960,7 +1987,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     } else if (!(ad_data_fileno(adp) >= 0 || ad_data_fileno(adp) == AD_SYMLINK)) {
         /* held with no usable data fd: copy_fork reads it, and a transient open
          * would strand the holder's locks - refuse.  Test the fd directly (like
-         * of_get_locks), not AD_DATA_OPEN: on EA the base fd is valid with
+         * of_get_locks), not ad_data_open(): on EA the base fd is valid with
          * ad_data_refcount == 0. */
         return AFPERR_DENYCONF;
     }
@@ -1980,7 +2007,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             goto copy_exit;
         }
 
-        if (AD_RSRC_OPEN(adp) && fcntl(ad_reso_fileno(adp), F_SHARE, &shmd) != 0) {
+        if (ad_rsrc_open(adp) && fcntl(ad_reso_fileno(adp), F_SHARE, &shmd) != 0) {
             retvalue = AFPERR_DENYCONF;
             goto copy_exit;
         }
@@ -2060,12 +2087,10 @@ copy_exit:
 
     if (upath && err == AFP_OK) {
 #if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
-        /* upath is a bare filename and curdir is its parent (see the comment
-         * above mtoupath), so the absolute path comes from the cached
-         * d_fullpath — fullpathname()'s getcwd is not needed. */
-        char dstpath[MAXPATHLEN + 1];
-        snprintf(dstpath, sizeof(dstpath), "%s/%s",
-                 cfrombstr(curdir->d_fullpath), upath);
+        /* upath is a bare filename and curdir is its parent. */
+        char event_path[MAXPATHLEN + 1];
+        const char *dstpath = dir_event_path(event_path, sizeof(event_path),
+                                             curdir, upath);
 #endif
 #ifdef WITH_FCE
         fce_register(obj, FCE_FILE_CREATE, dstpath, NULL);
@@ -2127,7 +2152,7 @@ int copyfile(struct vol *s_vol,
         goto done;
     }
 
-    if (!AD_META_OPEN(adp)) {
+    if (!ad_meta_open(adp)) {
         adflags &= ~ADFLAGS_HF;
     }
 
@@ -2188,8 +2213,8 @@ int copyfile(struct vol *s_vol,
             strerror(errno));
     }
 
-    if (AD_META_OPEN(&add)) {
-        if (AD_META_OPEN(adp)) {
+    if (ad_meta_open(&add)) {
+        if (ad_meta_open(adp)) {
             ad_copy_header(&add, adp);
         }
 
@@ -2314,7 +2339,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
                                   : of_findname(vol, &dpath);
         uint16_t      attr = 0;
 
-        if (ofm != NULL && AD_META_OPEN(ofm->of_ad)) {
+        if (ofm != NULL && ad_meta_open(ofm->of_ad)) {
             ad_getattr(ofm->of_ad, &attr);
         } else {
             /* No usable in-core header: read it privately.  ADFLAGS_CHECK_OF opens
@@ -3107,14 +3132,14 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_temp_to_dest;
     }
 
-    if (AD_META_OPEN(adsp) || AD_META_OPEN(addp)) {
+    if (ad_meta_open(adsp) || ad_meta_open(addp)) {
         struct adouble adtmp;
         bool opened_ads = false;
         bool opened_add = false;
         ad_init(&adtmp, vol);
         ad_init_offsets(&adtmp);
 
-        if (!AD_META_OPEN(adsp)) {
+        if (!ad_meta_open(adsp)) {
             /* RDWR: this block rewrites the metadata header (ad_flush only
              * persists when the fd carries O_RDWR). */
             if (ad_open(adsp, p, ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
@@ -3125,7 +3150,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             opened_ads = true;
         }
 
-        if (!AD_META_OPEN(addp)) {
+        if (!ad_meta_open(addp)) {
             if (ad_open(addp, upath, ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
                 err = AFPERR_MISC;
 

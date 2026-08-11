@@ -2,6 +2,7 @@
  * Copyright (C) 1990, 1993 Regents of The University of Michigan
  * Copyright (c) 2002 Rafal Lewczuk <rlewczuk@pronet.pl>
  * Copyright (C) 2010 Frank Lahm
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved. See COPYRIGHT
  */
 
@@ -364,13 +365,15 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
 
     if (!isdir && (of = of_findname(vol, path))) {
         /* Fork-owned adouble — use directly, skip cache.
-         * Opportunistically populate cache if not yet loaded. */
+         * Opportunistically populate cache if not yet loaded.
+         * ad_meta_loaded(): a fork open without metadata leaves the
+         * adouble's header zeroed — storing it would flip a negative
+         * sentinel to a bogus positive entry. */
         adp = of->of_ad;
         struct dir *cached = dircache_search_by_name(vol, curdir,
                              path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
 
-        /* If cache AD is unset, store fork's live adouble */
-        if (cached && cached->dcache_rlen < 0) {
+        if (cached && cached->dcache_rlen < 0 && ad_meta_loaded(adp)) {
             ad_store_to_cache(adp, cached);
         }
     } else {

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * Copyright (c) 2010      Frank Lahm
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -306,7 +307,7 @@ static int ad_flush_hf(struct adouble *ad)
             break;
 
         case AD_VERSION_EA:
-            if (AD_META_OPEN(ad)) {
+            if (ad_meta_open(ad)) {
 #ifdef __APPLE__
                 char *FinderInfo;
                 char NativeFinderInfo[ADEDLEN_FINDERI] = {'\0'};
@@ -450,11 +451,11 @@ int ad_flush(struct adouble *ad)
     EC_INIT;
     LOG(log_debug, logtype_ad, "ad_flush(%s)", adflags2logstr(ad->ad_adflags));
 
-    if (AD_META_OPEN(ad)) {
+    if (ad_meta_open(ad)) {
         EC_ZERO(ad_flush_hf(ad));
     }
 
-    if (AD_RSRC_OPEN(ad)) {
+    if (ad_rsrc_open(ad)) {
         EC_ZERO(ad_flush_rf(ad));
     }
 

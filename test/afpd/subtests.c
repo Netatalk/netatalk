@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2026 Andy Lemin (andylemin)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,6 +27,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
+#include <atalk/ea.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/queue.h>
@@ -374,5 +376,143 @@ out:
     }
 
     dir_free_invalid_q();
+    return ret;
+}
+
+/* ea=sys can hold a resource fork with no metadata EA (Samba vfs_fruit,
+ * macOS-native writers). Such a file must mint AD_RLEN_RFORK_ONLY, not
+ * AD_RLEN_NO_AD, and its RFLEN must come from the on-disk fork. */
+int test006_rflen_rfork_without_metadata(struct vol *vol)
+{
+    static const char rdata[] = "t006-resource-fork-payload";
+    struct dir *root, *entry = NULL;
+    struct adouble ad;
+    struct path p;
+    struct stat st;
+    char fpath[MAXPATHLEN + 1], sidecar[MAXPATHLEN + 1];
+    char buf[4096];
+    size_t buflen = 0;
+    static char fname[] = "t006_file";
+    uint32_t rlen_wire;
+    int ret = -1;
+    int rc;
+    int cwd_fd = -1;
+
+    if ((root = dirlookup(vol, DIRDID_ROOT)) == NULL) {
+        return -1;
+    }
+
+    snprintf(fpath, sizeof(fpath), "%s/%s", vol->v_path, fname);
+    snprintf(sidecar, sizeof(sidecar), "%s/._%s", vol->v_path, fname);
+
+    /* getmetadata resolves u_name relative to cwd — afpd is always
+     * fchdir'd into curdir; mirror that for this volume's root */
+    if ((cwd_fd = open(".", O_RDONLY)) < 0 || chdir(vol->v_path) != 0) {
+        if (cwd_fd >= 0) {
+            close(cwd_fd);
+        }
+
+        return -1;
+    }
+
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, fpath,
+                ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR |
+                ADFLAGS_CREATE, 0600) != 0) {
+        goto out;
+    }
+
+    if (ad_write(&ad, ADEID_RFORK, 0, 0, rdata,
+                 sizeof(rdata)) != (ssize_t)sizeof(rdata)) {
+        ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_RF);
+        goto out;
+    }
+
+    ad_flush(&ad);
+    ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_RF);
+
+    /* Strip ONLY the metadata, as a foreign writer never creates it;
+     * the resource fork stays. Metadata not in an EA (no xattr support,
+     * or a v2 sidecar volume where metadata and rfork share the file):
+     * the mixed state cannot exist there — skip. */
+    if (sys_lremovexattr(fpath, AD_EA_META) != 0) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    if (stat(fpath, &st) != 0) {
+        goto out;
+    }
+
+    bstring fullpath = bfromcstr(fpath);
+
+    if (fullpath == NULL) {
+        goto out;
+    }
+
+    /* dir_new takes ownership of fullpath only on success */
+    entry = dir_new(fname, fname, vol, DIRDID_ROOT, htonl(30006),
+                    fullpath, &st);
+
+    if (entry == NULL) {
+        bdestroy(fullpath);
+        goto out;
+    }
+
+    if (dircache_add(vol, entry) != 0) {
+        dir_free(entry);
+        entry = NULL;
+        goto out;
+    }
+
+    /* One FPGetFileParms for RFLEN: the metadata read inside fails ENOENT
+     * (mint point), and the reply must still carry the on-disk fork size */
+    memset(&p, 0, sizeof(p));
+    p.u_name = fname;
+    p.m_name = fname;
+    p.st = st;
+    p.st_valid = 1;
+    rc = getfilparams(AFPobj, vol, 1 << FILPBIT_RFLEN, &p, root,
+                      buf, &buflen, 0);
+
+    if (rc != AFP_OK || buflen < sizeof(rlen_wire)) {
+        fprintf(stderr, "t006: getfilparams rc %d buflen %zu\n", rc, buflen);
+        goto out;
+    }
+
+    memcpy(&rlen_wire, buf, sizeof(rlen_wire));
+
+    if (ntohl(rlen_wire) != sizeof(rdata)) {
+        fprintf(stderr,
+                "t006: RFLEN %u, want %zu (rfork masked by negative AD cache)\n",
+                ntohl(rlen_wire), sizeof(rdata));
+        goto out;
+    }
+
+    /* NO_AD here would pin RFLEN at 0; UNKNOWN would re-read the
+     * metadata from disk on every access */
+    if (entry->dcache_rlen != AD_RLEN_RFORK_ONLY) {
+        fprintf(stderr, "t006: dcache_rlen %lld, want AD_RLEN_RFORK_ONLY\n",
+                (long long)entry->dcache_rlen);
+        goto out;
+    }
+
+    ret = 0;
+out:
+
+    if (entry) {
+        dir_remove(vol, entry, 0);
+    }
+
+    dir_free_invalid_q();
+    unlink(fpath);
+    unlink(sidecar);
+
+    if (fchdir(cwd_fd) != 0 && ret == 0) {
+        ret = -1;
+    }
+
+    close(cwd_fd);
     return ret;
 }

@@ -1446,45 +1446,62 @@ void run_test(const int32_t dir)
 
     /* -------- */
     if (teststorun[TEST_ENUM2000FILES]) {
+        /* Finder browses with FPEnumerateExt2 (AFP 3.1+): UTF-8 names
+         * (PDINFO), 64-bit fork lengths (EXTDFLEN/EXTRFLEN), and UNIX
+         * privileges — EXTRFLEN on every file entry is what drives the
+         * per-entry rfork path in getmetadata. The server registers the
+         * verb from 3.1; pre-3.1 sessions keep the legacy enumerate. */
+        const bool use_ext2 = Version >= 31;
+        const uint16_t finder_f_bitmap = use_ext2 ?
+                                         (1 << FILPBIT_ATTR) | (1 << FILPBIT_PDID) | (1 << FILPBIT_CDATE) |
+                                         (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE) | (1 << FILPBIT_FINFO) |
+                                         (1 << FILPBIT_FNUM) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_PDINFO) |
+                                         (1 << FILPBIT_EXTRFLEN) | (1 << FILPBIT_UNIXPR)
+                                         :
+                                         (1 << FILPBIT_ATTR) | (1 << FILPBIT_PDID) | (1 << FILPBIT_CDATE) |
+                                         (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE) | (1 << FILPBIT_FINFO) |
+                                         (1 << FILPBIT_FNUM) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_LNAME) |
+                                         (1 << FILPBIT_RFLEN);
+        const uint16_t finder_d_bitmap = use_ext2 ?
+                                         (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_CDATE) |
+                                         (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_FINFO) |
+                                         (1 << DIRPBIT_DID) | (1 << DIRPBIT_OFFCNT) | (1 << DIRPBIT_ACCESS) |
+                                         (1 << DIRPBIT_PDINFO) | (1 << DIRPBIT_UNIXPR)
+                                         :
+                                         (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_CDATE) |
+                                         (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_FINFO) |
+                                         (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_ACCESS);
 #ifdef __linux__
         capture_io_values(TEST_START);
 #endif
         starttimer();
 
-        if (FPEnumerateFull(Conn, vol, 1, 40, DSI_DATASIZ, dir, "",
-                            (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
-                            (1 << FILPBIT_FINFO) | (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
-                            (1 << FILPBIT_MDATE) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
-                            ,
-                            (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-                            (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-                            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-                            (1 << DIRPBIT_ACCESS))) {
+        if (use_ext2
+                ? FPEnumerateExt2Full(Conn, vol, dir, "",
+                                      finder_f_bitmap, finder_d_bitmap, 1, 40)
+                : FPEnumerateFull(Conn, vol, 1, 40, DSI_DATASIZ, dir, "",
+                                  finder_f_bitmap, finder_d_bitmap)) {
             clean_exit(ERROR_NETWORK_PROTOCOL);
         }
 
         for (int32_t i = 41; (i + 40) < create_enum_files; i += 80) {
-            if (FPEnumerateFull(Conn, vol, (uint16_t)(i + 40), 40, DSI_DATASIZ, dir, "",
-                                (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
-                                (1 << FILPBIT_FINFO) | (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
-                                (1 << FILPBIT_MDATE) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
-                                ,
-                                (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-                                (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-                                (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-                                (1 << DIRPBIT_ACCESS))) {
+            if (use_ext2
+                    ? FPEnumerateExt2Full(Conn, vol, dir, "",
+                                          finder_f_bitmap, finder_d_bitmap,
+                                          (uint32_t)(i + 40), 40)
+                    : FPEnumerateFull(Conn, vol, (uint16_t)(i + 40), 40,
+                                      DSI_DATASIZ, dir, "",
+                                      finder_f_bitmap, finder_d_bitmap)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
 
-            if (FPEnumerateFull(Conn, vol, (uint16_t)i, 40, DSI_DATASIZ, dir, "",
-                                (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
-                                (1 << FILPBIT_FINFO) | (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
-                                (1 << FILPBIT_MDATE) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
-                                ,
-                                (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-                                (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-                                (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-                                (1 << DIRPBIT_ACCESS))) {
+            if (use_ext2
+                    ? FPEnumerateExt2Full(Conn, vol, dir, "",
+                                          finder_f_bitmap, finder_d_bitmap,
+                                          (uint32_t)i, 40)
+                    : FPEnumerateFull(Conn, vol, (uint16_t)i, 40,
+                                      DSI_DATASIZ, dir, "",
+                                      finder_f_bitmap, finder_d_bitmap)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
         }

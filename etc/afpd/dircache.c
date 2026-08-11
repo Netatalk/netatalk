@@ -2482,8 +2482,10 @@ void dircache_dump(void)
 
         if (dir->dcache_rlen >= 0) {
             ad_cache_state = "cached";
-        } else if (dir->dcache_rlen == (off_t) -1) {
+        } else if (dir->dcache_rlen == AD_RLEN_UNKNOWN) {
             ad_cache_state = "unloaded";
+        } else if (dir->dcache_rlen == AD_RLEN_RFORK_ONLY) {
+            ad_cache_state = "rfork";
         } else {
             ad_cache_state = "absent";
         }

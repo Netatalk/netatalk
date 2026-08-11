@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1996 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -723,7 +724,7 @@ int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
 
     /* --- rfork fd: separate inode; never opened onto of->of_ad --- */
     if (rf_get) {
-        if (of != NULL && AD_RSRC_OPEN(of->of_ad)) {
+        if (of != NULL && ad_rsrc_open(of->of_ad)) {
             radp = of->of_ad;            /* reuse held rfork, never close */
         } else if (of != NULL) {
             /* hold a fork but not the rfork.  On HAVE_EAFD && SOLARIS the rfork's
@@ -752,7 +753,7 @@ int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
                  * open (the base fd may have, e.g. on Solaris). */
                 r_opened = 1;
 
-                if (AD_RSRC_OPEN(&adrf)) {
+                if (ad_rsrc_open(&adrf)) {
                     radp = &adrf;
                 }
             } else {
@@ -789,7 +790,7 @@ int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
                  * the rfork actually opened. */
                 r_opened = 1;
 
-                if (AD_RSRC_OPEN(&adrf)) {
+                if (ad_rsrc_open(&adrf)) {
                     radp = &adrf;
                 }
             } else if (roerr == ENOENT) {
@@ -1019,14 +1020,14 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         fshare_t shmd;
         shmd.f_id = ofork->of_refnum;
 
-        if (AD_DATA_OPEN(ofork->of_ad)
+        if (ad_data_open(ofork->of_ad)
                 && fcntl(ad_data_fileno(ofork->of_ad), F_UNSHARE, &shmd) < 0) {
             LOG(log_warning, logtype_afpd,
                 "of_closefork: F_UNSHARE on data fork failed for refnum %"
                 PRIu16 ": %s", ofork->of_refnum, strerror(errno));
         }
 
-        if (AD_RSRC_OPEN(ofork->of_ad)
+        if (ad_rsrc_open(ofork->of_ad)
                 && fcntl(ad_reso_fileno(ofork->of_ad), F_UNSHARE, &shmd) < 0) {
             LOG(log_warning, logtype_afpd,
                 "of_closefork: F_UNSHARE on rsrc fork failed for refnum %"
