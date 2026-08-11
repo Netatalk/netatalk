@@ -197,10 +197,9 @@ if 'readmes' in docs_options
             '.github/workflows/build.yml',
             '.github/workflows/spectest-macos.yml',
             '.github/workflows/spectest-vms.yml',
-            'COMPILATION.md',
+            'INSTALL.md',
             check: true,
         )
-        readmes_md += ['COMPILATION']
     endif
 
     foreach file : readmes_md

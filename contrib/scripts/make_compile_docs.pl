@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
-# This script generates a compilation readme from GitHub workflow files
+# Generates compilation instructions from GitHub workflow files
+# meant to be appended to the INSTALL.md file
 #
 # (c) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 #
@@ -116,19 +117,13 @@ sub render_step {
 }
 
 my @markdown = (
-            "# Compile Netatalk from Source",
-            "",
-            "Below are instructions on how to compile Netatalk from source for specific operating systems.",
-            "Before starting, please read through the [Install Quick Start](https://netatalk.io/install) guide first.",
-            "You need to have a local clone of Netatalk's source code before proceeding.",
-            "",
-            "```shell",
-            "git clone https://github.com/Netatalk/netatalk.git",
-            "cd netatalk",
-            "```",
-            "",
-            "**Note:** Installation commands may require `sudo` privileges depending on your system configuration.",
-            "",
+               "",
+               "## OS Specific Compilation Examples",
+               "",
+               "Below are instructions on how to compile Netatalk from source for specific operating systems.",
+               "",
+               "**Note:** Installation commands may require `sudo` privileges depending on your system configuration.",
+               "",
 );
 
 foreach my $input_file (@input_files) {
@@ -146,7 +141,7 @@ foreach my $input_file (@input_files) {
         my @steps = grep { wanted_step($_) } @{$job->{steps}};
         next unless @steps;
 
-        push @markdown, "## " . format_job_name($job->{name}), "";
+        push @markdown, "### " . format_job_name($job->{name}), "";
 
         foreach my $step (@steps) {
             render_step(\@markdown, $step);
@@ -154,8 +149,19 @@ foreach my $input_file (@input_files) {
     }
 }
 
-open(my $fh, '>', $output_file) or die "Could not open file '$output_file' for writing: $!";
+my $needs_leading_newline = -s $output_file;
+if ($needs_leading_newline) {
+    open(my $existing_fh, '<', $output_file)
+      or die "Could not open file '$output_file' for reading: $!";
+    seek($existing_fh, -1, 2)
+      or die "Could not seek in file '$output_file': $!";
+    $needs_leading_newline = <$existing_fh> ne "\n";
+    close $existing_fh;
+}
+
+open(my $fh, '>>', $output_file) or die "Could not open file '$output_file' for appending: $!";
+print $fh "\n" if $needs_leading_newline;
 print $fh join("\n", @markdown);
 close $fh;
 
-print "Wrote to $output_file\n";
+print "Appended to $output_file\n";
