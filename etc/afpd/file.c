@@ -1795,7 +1795,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
                 return rc;
             }
 
-            return deletefile(vol, sdir_fd, src, 0);
+            return deletefile(vol, sdir_fd, src, 0, NULL);
 
         default :
             return AFPERR_PARAM;
@@ -2179,7 +2179,7 @@ int copyfile(struct vol *s_vol,
              * non-EEXIST reason, or dst appeared via a race), so the conflict
              * check governs the cleanup unlink: if it reports the object as
              * held or unreadable, do not remove it — log and leave it. */
-            int dret = deletefile(d_vol, -1, dst, 0);
+            int dret = deletefile(d_vol, -1, dst, 0, NULL);
 
             if (dret != AFP_OK && dret != AFPERR_NOOBJ) {
                 LOG(log_error, logtype_afpd,
@@ -2253,7 +2253,7 @@ error:
          * above succeeded, so nothing pre-existed).  Log if the conflict check
          * refuses (e.g. a peer raced an open on it), so a stranded temp file is
          * diagnosable rather than silent. */
-        int dret = deletefile(d_vol, -1, dst, 0);
+        int dret = deletefile(d_vol, -1, dst, 0, NULL);
 
         if (dret != AFP_OK && dret != AFPERR_NOOBJ) {
             LOG(log_error, logtype_afpd,
@@ -2299,6 +2299,10 @@ done:
 /* -----------------------------------
    vol: not NULL delete cnid entry. then we are in curdir and file is a only filename
    checkAttrib:   1 check kFPDeleteInhibitBit (deletefile called by afp_delete)
+   idp:           in: caller-resolved CNID (must come from an inode-validated
+                  dircache entry) or CNID_INVALID to resolve here after the
+                  unlink; out: the CNID that was deleted. NULL when the caller
+                  has neither.
 
    NODELETE check -> one conflict GET -> policy -> unlink -> CNID/dircache
    cleanup (afp_delete only).
@@ -2311,7 +2315,8 @@ done:
 /*!
  * @note dirfd can be used for unlinkat semantics
  */
-int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
+int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib,
+               cnid_t *idp)
 {
     struct path  dpath = {0};
     int          df_locked = 0, rf_locked = 0;
@@ -2424,16 +2429,23 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
     if (!(err = vol->vfs->vfs_deletefile(vol, dirfd, file))
             && !(err = netatalk_unlinkat(dirfd, file))
             && checkAttrib) {
-        cnid_t      id;
         struct dir *cachedfile;
-        AFP_CNID_START("cnid_get");
-        id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file));
-        AFP_CNID_DONE();
+        cnid_t      id = idp ? *idp : CNID_INVALID;
+
+        if (id == CNID_INVALID) {
+            AFP_CNID_START("cnid_get");
+            id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file));
+            AFP_CNID_DONE();
+        }
 
         if (id) {
             AFP_CNID_START("cnid_delete");
             cnid_delete(vol->v_cdb, id);
             AFP_CNID_DONE();
+        }
+
+        if (idp) {
+            *idp = id;
         }
 
         AFP_ASSERT(file != NULL);

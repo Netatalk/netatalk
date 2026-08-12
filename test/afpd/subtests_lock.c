@@ -1237,7 +1237,7 @@ int utest_deletefile_nodelete(const struct vol *vol)
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
     /* delete must be refused while NODELETE is set */
-    rc = deletefile(vol, dirfd, leaf, 1);
+    rc = deletefile(vol, dirfd, leaf, 1, NULL);
 
     if (rc != AFPERR_OLOCK) {
         close(dirfd);
@@ -1268,7 +1268,7 @@ int utest_deletefile_nodelete(const struct vol *vol)
 
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
-    rc = deletefile(vol, dirfd, leaf, 1);
+    rc = deletefile(vol, dirfd, leaf, 1, NULL);
     close(dirfd);
 
     if (rc != AFP_OK) {

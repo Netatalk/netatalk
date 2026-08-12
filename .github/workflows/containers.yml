@@ -304,6 +304,8 @@ jobs:
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
               -e AFP_DIRCACHE_RFORK_BUDGET=102400 \
               -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
+              -e AFP_CNID_BACKEND=sqlite \
+              -e AFP_CNID_TMPFS=1 \
               -e TESTSUITE=spectest \
               -e AFP_VERSION=7 \
               -e FLAMEGRAPH=1 \
@@ -1248,6 +1250,7 @@ jobs:
       AFP_VERSION: 7
       AFP_VERSION_LABEL: "3.4"
       AFP_CNID_BACKEND: sqlite
+      AFP_CNID_LABEL: sqlite+tmpfs
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
@@ -1263,7 +1266,9 @@ jobs:
         run: |
           # -c (CSV) is passed via $TEST_FLAGS, which the entrypoint prepends
           # to afp_lantest.
-          docker run --rm \
+          # --privileged: AFP_CNID_TMPFS mounts a tmpfs over the CNID state
+          # dir so timings measure afpd, not the runner's fsync latency.
+          docker run --privileged --rm \
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
@@ -1272,6 +1277,7 @@ jobs:
             -e TESTSUITE="lan" \
             -e AFP_VERSION="${{ env.AFP_VERSION }}" \
             -e AFP_CNID_BACKEND="${{ env.AFP_CNID_BACKEND }}" \
+            -e AFP_CNID_TMPFS=1 \
             -e AFP_DIRCACHE_MODE="${{ env.AFP_DIRCACHE_MODE }}" \
             -e AFP_DIRCACHESIZE="${{ env.AFP_DIRCACHESIZE }}" \
             -e AFP_DIRCACHE_VALIDATION_FREQ="${{ env.AFP_DIRCACHE_VALIDATION_FREQ }}" \
@@ -1340,6 +1346,7 @@ jobs:
             --title "Netatalk AFP Lantest — per-test latency" \
             --subtitle "commit ${SHORT_SHA} · candle: min–max wick, mean±σ box, median line" \
             --meta afp=${{ env.AFP_VERSION_LABEL }} \
+            --meta cnid=${{ env.AFP_CNID_LABEL }} \
             --meta iterations=${{ env.AFP_TEST_ITERATIONS }} \
             --meta quantum_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
             --meta dircache_mode=${{ env.AFP_DIRCACHE_MODE }} \
@@ -1424,6 +1431,7 @@ jobs:
       AFP_VERSION: 7
       AFP_VERSION_LABEL: "3.4"
       AFP_CNID_BACKEND: sqlite
+      AFP_CNID_LABEL: sqlite+tmpfs
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
@@ -1439,7 +1447,9 @@ jobs:
         run: |
           # -c (CSV) and -z (size sweep) are passed via $TEST_FLAGS, which the
           # entrypoint prepends to afp_speedtest.
-          docker run --rm \
+          # --privileged: AFP_CNID_TMPFS mounts a tmpfs over the CNID state
+          # dir so timings measure afpd, not the runner's fsync latency.
+          docker run --privileged --rm \
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
@@ -1448,6 +1458,7 @@ jobs:
             -e TESTSUITE="speed" \
             -e AFP_VERSION="${{ env.AFP_VERSION }}" \
             -e AFP_CNID_BACKEND="${{ env.AFP_CNID_BACKEND }}" \
+            -e AFP_CNID_TMPFS=1 \
             -e AFP_DIRCACHE_MODE="${{ env.AFP_DIRCACHE_MODE }}" \
             -e AFP_DIRCACHESIZE="${{ env.AFP_DIRCACHESIZE }}" \
             -e AFP_DIRCACHE_VALIDATION_FREQ="${{ env.AFP_DIRCACHE_VALIDATION_FREQ }}" \
@@ -1487,6 +1498,7 @@ jobs:
             --title "Netatalk AFP Speedtest — throughput vs file size" \
             --subtitle "commit ${SHORT_SHA} · mean MB/s, shaded band = min–max" \
             --meta afp=${{ env.AFP_VERSION_LABEL }} \
+            --meta cnid=${{ env.AFP_CNID_LABEL }} \
             --meta iterations=${{ env.AFP_TEST_ITERATIONS }} \
             --meta quantum_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
             --meta dircache_mode=${{ env.AFP_DIRCACHE_MODE }} \

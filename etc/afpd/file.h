@@ -178,7 +178,7 @@ extern int renamefile(struct vol *, struct dir *, int, char *, char *, char *,
                       struct adouble *);
 extern int copyfile(struct vol *, struct vol *, struct dir *, int, char *,
                     char *, char *, struct adouble *, int);
-extern int deletefile(const struct vol *, int, char *, int);
+extern int deletefile(const struct vol *, int, char *, int, cnid_t *);
 
 extern int getmetadata(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
                        struct path *path,

@@ -169,6 +169,7 @@ sub build_info_lines {
     }
     push @lines, 'Ops: ' . join(', ', @ops);
     push @lines, "AFP: $meta->{afp}"                if $meta->{afp};
+    push @lines, "CNID: $meta->{cnid}"              if $meta->{cnid};
     push @lines, "Quantum: $meta->{quantum_kb} KiB" if $meta->{quantum_kb};
     my @dc;
     push @dc, uc $meta->{dircache_mode}     if $meta->{dircache_mode};

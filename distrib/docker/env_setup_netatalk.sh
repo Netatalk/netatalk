@@ -25,6 +25,7 @@
 #   - Lock file cleanup
 #   - Netatalk configuration variable preparation
 #   - MySQL / MariaDB CNID backend bootstrap
+#   - CNID store tmpfs mount for benchmarking (AFP_CNID_TMPFS)
 #   - afp.conf generation (unless MANUAL_CONFIG is set)
 #   - extmap.conf activation
 #   - AppleTalk (DDP) service startup
@@ -497,11 +498,18 @@ if [ "$AFP_CNID_BACKEND" = "mysql" ]; then
             echo "*** Initializing MariaDB data directory"
             mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null 2>&1
         fi
-        # Configure MariaDB to listen on TCP 127.0.0.1 in addition to Unix socket
+        # Listen on TCP 127.0.0.1 in addition to the Unix socket. The tuning
+        # below preserves durability: every commit still reaches the disk.
         cat > /etc/my.cnf.d/netatalk.cnf << 'MYCNF'
 [mysqld]
 bind-address = 127.0.0.1
 skip-networking = 0
+skip-name-resolve
+innodb_flush_method = O_DIRECT
+innodb_flush_neighbors = 0
+innodb_buffer_pool_size = 512M
+innodb_log_buffer_size = 64M
+innodb_log_file_size = 512M
 MYCNF
         # Start MariaDB with TCP enabled
         mariadbd-safe --user=mysql &
@@ -529,6 +537,37 @@ CREATE USER IF NOT EXISTS '$AFP_CNID_SQL_USER_SQL'@'127.0.0.1' IDENTIFIED BY '$A
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON \`$AFP_CNID_SQL_DB_SQL\`.* TO '$AFP_CNID_SQL_USER_SQL'@'127.0.0.1';
 FLUSH PRIVILEGES;
 EOSQL
+    fi
+fi
+
+# --------------------------------------------------------------------------
+# CNID store on tmpfs (benchmarking)
+# --------------------------------------------------------------------------
+
+# AFP_CNID_TMPFS: mount a tmpfs over the CNID state directory so
+# benchmarks measure the AFP server rather than storage sync latency.
+# Benchmarking only — the CNID database is lost when the container stops.
+# Requires --privileged (or CAP_SYS_ADMIN); fails hard rather than
+# silently falling back to disk. The state directory is compiled into
+# afpd and varies by build prefix, so query the binary rather than
+# assume a path; NETATALK_STATEDIR overrides.
+if [ -n "$AFP_CNID_TMPFS" ]; then
+    if [ -z "$NETATALK_STATEDIR" ]; then
+        NETATALK_STATEDIR=$(afpd -V 2> /dev/null \
+            | sed -n 's/^ *state directory:[[:space:]]*//p' | sed 's:/$::')
+    fi
+    if [ -z "$NETATALK_STATEDIR" ]; then
+        echo "ERROR: AFP_CNID_TMPFS is set but the state directory could not" \
+            "be determined from 'afpd -V'; set NETATALK_STATEDIR" >&2
+        exit 1
+    fi
+    mkdir -p "$NETATALK_STATEDIR/CNID"
+    if mount -t tmpfs -o mode=1777 tmpfs "$NETATALK_STATEDIR/CNID"; then
+        echo "*** Mounted tmpfs on $NETATALK_STATEDIR/CNID for CNID storage"
+    else
+        echo "ERROR: AFP_CNID_TMPFS is set but the tmpfs mount failed;" \
+            "the container must run with --privileged" >&2
+        exit 1
     fi
 fi
 
