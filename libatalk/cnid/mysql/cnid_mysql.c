@@ -1,5 +1,6 @@
 /*
  * Copyright (C) Ralph Boehme 2013
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYING.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -44,6 +45,10 @@
 
 static MYSQL_BIND lookup_param[4], lookup_result[5];
 static MYSQL_BIND add_param[4], put_param[5];
+static MYSQL_BIND get_param[2], get_result[1];
+static MYSQL_BIND delete_param[1];
+static MYSQL_BIND resolve_param[1], resolve_result[2];
+static MYSQL_BIND purge_param[5];
 
 /*!
  * Prepared statement parameters
@@ -64,6 +69,10 @@ static char               lookup_result_name[MAXPATHLEN];
 static unsigned long      lookup_result_name_len;
 static unsigned long long lookup_result_dev;
 static unsigned long long lookup_result_ino;
+static unsigned long long get_result_id;
+static unsigned long long resolve_result_did;
+static char               resolve_result_name[MAXPATHLEN];
+static unsigned long      resolve_result_name_len;
 
 static int init_prepared_stmt_lookup(CNID_mysql_private *db)
 {
@@ -181,21 +190,197 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int init_prepared_stmt_get(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    get_param[0].buffer_type   = MYSQL_TYPE_STRING;
+    get_param[0].buffer        = &stmt_param_name;
+    get_param[0].buffer_length = sizeof(stmt_param_name);
+    get_param[0].length        = &stmt_param_name_len;
+    get_param[1].buffer_type   = MYSQL_TYPE_LONGLONG;
+    get_param[1].buffer        = &stmt_param_did;
+    get_param[1].is_unsigned   = true;
+    get_result[0].buffer_type  = MYSQL_TYPE_LONGLONG;
+    get_result[0].buffer       = &get_result_id;
+    get_result[0].is_unsigned  = true;
+    EC_NULL(db->cnid_get_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql, "SELECT Id FROM `%s` WHERE Name=? AND Did=?",
+                     db->cnid_mysql_voluuid_str));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_get_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_get_stmt, get_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+static int init_prepared_stmt_delete(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    delete_param[0].buffer_type = MYSQL_TYPE_LONGLONG;
+    delete_param[0].buffer      = &stmt_param_id;
+    delete_param[0].is_unsigned = true;
+    EC_NULL(db->cnid_delete_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql, "DELETE FROM `%s` WHERE Id=?",
+                     db->cnid_mysql_voluuid_str));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_delete_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_delete_stmt, delete_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+static int init_prepared_stmt_resolve(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    resolve_param[0].buffer_type    = MYSQL_TYPE_LONGLONG;
+    resolve_param[0].buffer         = &stmt_param_id;
+    resolve_param[0].is_unsigned    = true;
+    resolve_result[0].buffer_type   = MYSQL_TYPE_LONGLONG;
+    resolve_result[0].buffer        = &resolve_result_did;
+    resolve_result[0].is_unsigned   = true;
+    resolve_result[1].buffer_type   = MYSQL_TYPE_STRING;
+    resolve_result[1].buffer        = &resolve_result_name;
+    resolve_result[1].buffer_length = sizeof(resolve_result_name);
+    resolve_result[1].length        = &resolve_result_name_len;
+    EC_NULL(db->cnid_resolve_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql, "SELECT Did, Name FROM `%s` WHERE Id=?",
+                     db->cnid_mysql_voluuid_str));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_resolve_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_resolve_stmt, resolve_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+static int init_prepared_stmt_purge(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    purge_param[0].buffer_type   = MYSQL_TYPE_LONGLONG;
+    purge_param[0].buffer        = &stmt_param_id;
+    purge_param[0].is_unsigned   = true;
+    purge_param[1].buffer_type   = MYSQL_TYPE_LONGLONG;
+    purge_param[1].buffer        = &stmt_param_did;
+    purge_param[1].is_unsigned   = true;
+    purge_param[2].buffer_type   = MYSQL_TYPE_STRING;
+    purge_param[2].buffer        = &stmt_param_name;
+    purge_param[2].buffer_length = sizeof(stmt_param_name);
+    purge_param[2].length        = &stmt_param_name_len;
+    purge_param[3].buffer_type   = MYSQL_TYPE_LONGLONG;
+    purge_param[3].buffer        = &stmt_param_dev;
+    purge_param[3].is_unsigned   = true;
+    purge_param[4].buffer_type   = MYSQL_TYPE_LONGLONG;
+    purge_param[4].buffer        = &stmt_param_ino;
+    purge_param[4].is_unsigned   = true;
+    EC_NULL(db->cnid_purge_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "DELETE FROM `%s` WHERE Id=? OR (Did=? AND Name=?) "
+                     "OR (DevNo=? AND InodeNo=?)",
+                     db->cnid_mysql_voluuid_str));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_purge_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_purge_stmt, purge_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
 static int init_prepared_stmt(CNID_mysql_private *db)
 {
     EC_INIT;
     EC_ZERO(init_prepared_stmt_lookup(db));
     EC_ZERO(init_prepared_stmt_add(db));
     EC_ZERO(init_prepared_stmt_put(db));
+    EC_ZERO(init_prepared_stmt_get(db));
+    EC_ZERO(init_prepared_stmt_delete(db));
+    EC_ZERO(init_prepared_stmt_resolve(db));
+    EC_ZERO(init_prepared_stmt_purge(db));
 EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * NULL-safe and NULLs each handle: a failed recovery leaves a mix of
+ * closed and live handles, and a later close or re-init must neither
+ * double-close nor leak the survivors.
+ */
 static void close_prepared_stmt(CNID_mysql_private *db)
 {
-    mysql_stmt_close(db->cnid_lookup_stmt);
-    mysql_stmt_close(db->cnid_add_stmt);
-    mysql_stmt_close(db->cnid_put_stmt);
+    MYSQL_STMT **stmts[] = {
+        &db->cnid_lookup_stmt, &db->cnid_add_stmt, &db->cnid_put_stmt,
+        &db->cnid_get_stmt, &db->cnid_delete_stmt, &db->cnid_resolve_stmt,
+        &db->cnid_purge_stmt,
+    };
+
+    for (size_t i = 0; i < sizeof(stmts) / sizeof(stmts[0]); i++) {
+        if (*stmts[i]) {
+            mysql_stmt_close(*stmts[i]);
+            *stmts[i] = NULL;
+        }
+    }
+}
+
+/*!
+ * stmtp must point at the handle field in CNID_mysql_private:
+ * CR_SERVER_LOST recovery reallocates every handle, and the retry
+ * must execute the fresh one. Recovery also invalidates any other
+ * statement's in-flight stored result.
+ */
+static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
+{
+    EC_INIT;
+    bool retry = true;
+
+    /* A failed earlier recovery leaves handles NULL; re-prepare before use. */
+    if (*stmtp == NULL) {
+        close_prepared_stmt(db);
+        EC_ZERO(init_prepared_stmt(db));
+    }
+
+    while (retry) {
+        retry = false;
+
+        if (mysql_stmt_execute(*stmtp)) {
+            switch (mysql_stmt_errno(*stmtp)) {
+            case CR_SERVER_LOST:
+                close_prepared_stmt(db);
+                EC_ZERO(init_prepared_stmt(db));
+                retry = true;
+                continue;
+
+            default:
+                LOG(log_error, logtype_cnid, "MySQL statement error: %s",
+                    mysql_stmt_error(*stmtp));
+                EC_FAIL;
+            }
+        }
+    }
+
+EC_CLEANUP:
+
+    if (ret != 0) {
+        errno = CNID_ERR_DB;
+    }
+
+    EC_EXIT;
 }
 
 static int cnid_mysql_execute(MYSQL *con, const char *sql)
@@ -217,7 +402,6 @@ int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
 {
     EC_INIT;
     CNID_mysql_private *db;
-    char *sql = NULL;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !id) {
         LOG(log_error, logtype_cnid, "cnid_mysql_delete: Parameter error");
@@ -227,9 +411,8 @@ int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
 
     LOG(log_debug, logtype_cnid, "cnid_mysql_delete(%" PRIu32 "): BEGIN",
         ntohl(id));
-    EC_NEG1(asprintf(&sql, "DELETE FROM `%s` WHERE Id=%" PRIu32,
-                     db->cnid_mysql_voluuid_str, ntohl(id)));
-    EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
+    stmt_param_id = ntohl(id);
+    EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_delete_stmt));
     LOG(log_debug, logtype_cnid, "cnid_mysql_delete(%" PRIu32 "): END", ntohl(id));
 EC_CLEANUP:
     EC_EXIT;
@@ -270,8 +453,6 @@ int cnid_mysql_update(struct _cnid_db *cdb,
 {
     EC_INIT;
     CNID_mysql_private *db;
-    char *sql = NULL;
-    MYSQL_STMT *delete_stmt = NULL;
     cnid_t update_id = 0;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !id || !st || !name) {
@@ -295,44 +476,13 @@ int cnid_mysql_update(struct _cnid_db *cdb,
     uint64_t ino = st->st_ino;
 
     do {
-        MYSQL_BIND delete_param[2];
-        unsigned long delete_name_len = len;
-        uint64_t delete_did = ntohl(did);
-        EC_NEG1(asprintf(&sql, "DELETE FROM `%s` WHERE Id=%" PRIu32,
-                         db->cnid_mysql_voluuid_str, ntohl(id)));
-        EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
-        free(sql);
-        sql = NULL;
-        EC_NULL(delete_stmt = mysql_stmt_init(db->cnid_mysql_con));
-        EC_NEG1(asprintf(&sql, "DELETE FROM `%s` WHERE Did=? AND Name=?",
-                         db->cnid_mysql_voluuid_str));
-        EC_ZERO_LOG(mysql_stmt_prepare(delete_stmt, sql, strlen(sql)));
-        free(sql);
-        sql = NULL;
-        memset(delete_param, 0, sizeof(delete_param));
-        delete_param[0].buffer_type = MYSQL_TYPE_LONGLONG;
-        delete_param[0].buffer = &delete_did;
-        delete_param[0].is_unsigned = true;
-        delete_param[1].buffer_type = MYSQL_TYPE_STRING;
-        delete_param[1].buffer = (char *)name;
-        delete_param[1].buffer_length = len;
-        delete_param[1].length = &delete_name_len;
-        EC_ZERO_LOG(mysql_stmt_bind_param(delete_stmt, delete_param));
-        EC_ZERO_LOG(mysql_stmt_execute(delete_stmt));
-        mysql_stmt_close(delete_stmt);
-        delete_stmt = NULL;
-        EC_NEG1(asprintf(&sql, "DELETE FROM `%s` WHERE DevNo=%" PRIu64 " AND InodeNo=%"
-                         PRIu64,
-                         db->cnid_mysql_voluuid_str, dev, ino));
-        EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
-        free(sql);
-        sql = NULL;
         stmt_param_id = ntohl(id);
         strncpy(stmt_param_name, name, sizeof(stmt_param_name));
         stmt_param_name_len = len;
         stmt_param_did = ntohl(did);
         stmt_param_dev = dev;
         stmt_param_ino = ino;
+        EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_purge_stmt));
 
         if (mysql_stmt_execute(db->cnid_put_stmt)) {
             switch (mysql_stmt_errno(db->cnid_put_stmt)) {
@@ -358,15 +508,6 @@ int cnid_mysql_update(struct _cnid_db *cdb,
     } while (update_id != ntohl(id));
 
 EC_CLEANUP:
-
-    if (delete_stmt) {
-        mysql_stmt_close(delete_stmt);
-    }
-
-    if (sql) {
-        free(sql);
-    }
-
     EC_EXIT;
 }
 
@@ -409,25 +550,7 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
     stmt_param_did = ntohl(did);
     stmt_param_dev = dev;
     stmt_param_ino = ino;
-    bool retry = true;
-
-    while (retry) {
-        retry = false;
-
-        if (mysql_stmt_execute(db->cnid_lookup_stmt)) {
-            switch (mysql_stmt_errno(db->cnid_lookup_stmt)) {
-            case CR_SERVER_LOST:
-                close_prepared_stmt(db);
-                EC_ZERO(init_prepared_stmt(db));
-                retry = true;
-                continue;
-
-            default:
-                EC_FAIL;
-            }
-        }
-    }
-
+    EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_lookup_stmt));
     EC_ZERO_LOG(mysql_stmt_store_result(db->cnid_lookup_stmt));
     have_result = true;
     EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_lookup_stmt, lookup_result));
@@ -449,11 +572,21 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
         EC_ZERO(mysql_stmt_fetch(db->cnid_lookup_stmt));
         break;
 
-    case 2:
+    case 2: {
+        /* a mismatch, delete both and return not found. Fetch both ids
+         * before deleting: a CR_SERVER_LOST recovery inside delete
+         * re-prepares every statement and would invalidate a fetch
+         * still in flight on the lookup handle. */
+        cnid_t mismatched[2];
+        int nfetched = 0;
 
-        /* a mismatch, delete both and return not found */
-        while (mysql_stmt_fetch(db->cnid_lookup_stmt) == 0) {
-            if (cnid_mysql_delete(cdb, htonl((cnid_t)lookup_result_id))) {
+        while (nfetched < 2
+                && mysql_stmt_fetch(db->cnid_lookup_stmt) == 0) {
+            mismatched[nfetched++] = htonl((cnid_t)lookup_result_id);
+        }
+
+        for (int i = 0; i < nfetched; i++) {
+            if (cnid_mysql_delete(cdb, mismatched[i])) {
                 LOG(log_error, logtype_cnid, "MySQL query error: %s",
                     mysql_error(db->cnid_mysql_con));
                 errno = CNID_ERR_DB;
@@ -463,6 +596,7 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
 
         errno = CNID_DBD_RES_NOTFOUND;
         EC_FAIL;
+    }
 
     default:
         errno = CNID_ERR_DB;
@@ -678,14 +812,7 @@ cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name,
 {
     EC_INIT;
     CNID_mysql_private *db;
-    char *sql = NULL;
     cnid_t id = CNID_INVALID;
-    MYSQL_STMT *stmt = NULL;
-    MYSQL_BIND param[2];
-    MYSQL_BIND result[1];
-    unsigned long name_len = len;
-    uint64_t did_param = ntohl(did);
-    unsigned long long result_id = 0;
     bool have_result = false;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !name) {
@@ -703,49 +830,24 @@ cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name,
     LOG(log_debug, logtype_cnid,
         "cnid_mysql_get(did: %" PRIu32 ", name: \"%s\"): START",
         ntohl(did), name);
-    EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
-    EC_NEG1(asprintf(&sql, "SELECT Id FROM `%s` "
-                           "WHERE Name=? AND Did=?",
-                     db->cnid_mysql_voluuid_str));
-    EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
-    free(sql);
-    sql = NULL;
-    memset(param, 0, sizeof(param));
-    param[0].buffer_type = MYSQL_TYPE_STRING;
-    param[0].buffer = (char *)name;
-    param[0].buffer_length = len;
-    param[0].length = &name_len;
-    param[1].buffer_type = MYSQL_TYPE_LONGLONG;
-    param[1].buffer = &did_param;
-    param[1].is_unsigned = true;
-    EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
-    memset(result, 0, sizeof(result));
-    result[0].buffer_type = MYSQL_TYPE_LONGLONG;
-    result[0].buffer = &result_id;
-    result[0].is_unsigned = true;
-    EC_ZERO_LOG(mysql_stmt_bind_result(stmt, result));
-    EC_ZERO_LOG(mysql_stmt_execute(stmt));
-    EC_ZERO_LOG(mysql_stmt_store_result(stmt));
+    strncpy(stmt_param_name, name, sizeof(stmt_param_name));
+    stmt_param_name_len = len;
+    stmt_param_did = ntohl(did);
+    EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_get_stmt));
+    EC_ZERO_LOG(mysql_stmt_store_result(db->cnid_get_stmt));
     have_result = true;
+    EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_get_stmt, get_result));
 
-    if (mysql_stmt_num_rows(stmt)) {
-        EC_ZERO(mysql_stmt_fetch(stmt));
-        id = htonl((uint32_t)result_id);
+    if (mysql_stmt_num_rows(db->cnid_get_stmt)) {
+        EC_ZERO(mysql_stmt_fetch(db->cnid_get_stmt));
+        id = htonl((uint32_t)get_result_id);
     }
 
 EC_CLEANUP:
     LOG(log_debug, logtype_cnid, "cnid_mysql_get: id: %" PRIu32, ntohl(id));
 
     if (have_result) {
-        mysql_stmt_free_result(stmt);
-    }
-
-    if (stmt) {
-        mysql_stmt_close(stmt);
-    }
-
-    if (sql) {
-        free(sql);
+        mysql_stmt_free_result(db->cnid_get_stmt);
     }
 
     return id;
@@ -756,9 +858,7 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
 {
     EC_INIT;
     CNID_mysql_private *db;
-    char *sql = NULL;
-    MYSQL_RES *result = NULL;
-    MYSQL_ROW row;
+    bool have_result = false;
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_mysql_get: Parameter error");
@@ -766,28 +866,26 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
         EC_FAIL;
     }
 
-    EC_NEG1(asprintf(&sql, "SELECT Did, Name FROM `%s` WHERE Id=%" PRIu32,
-                     db->cnid_mysql_voluuid_str, ntohl(*id)));
-    EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
-    free(sql);
-    sql = NULL;
-    EC_NULL(result = mysql_store_result(db->cnid_mysql_con));
+    stmt_param_id = ntohl(*id);
+    EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_resolve_stmt));
+    EC_ZERO_LOG(mysql_stmt_store_result(db->cnid_resolve_stmt));
+    have_result = true;
+    EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_resolve_stmt, resolve_result));
 
-    if (mysql_num_rows(result) != 1) {
+    if (mysql_stmt_num_rows(db->cnid_resolve_stmt) != 1) {
         EC_FAIL;
     }
 
-    row = mysql_fetch_row(result);
-    *id = htonl(atoi(row[0]));
-    strncpy(buffer, row[1], len);
+    EC_ZERO(mysql_stmt_fetch(db->cnid_resolve_stmt));
+    /* The connector is not guaranteed to NUL-terminate string results;
+     * Name is VARCHAR(255) against a MAXPATHLEN buffer, so there is room. */
+    resolve_result_name[resolve_result_name_len] = '\0';
+    *id = htonl((uint32_t)resolve_result_did);
+    strncpy(buffer, resolve_result_name, len);
 EC_CLEANUP:
 
-    if (result) {
-        mysql_free_result(result);
-    }
-
-    if (sql) {
-        free(sql);
+    if (have_result) {
+        mysql_stmt_free_result(db->cnid_resolve_stmt);
     }
 
     if (ret != 0) {

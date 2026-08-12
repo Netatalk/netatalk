@@ -15,6 +15,10 @@ typedef struct CNID_mysql_private {
     MYSQL_STMT   *cnid_lookup_stmt;
     MYSQL_STMT   *cnid_add_stmt;
     MYSQL_STMT   *cnid_put_stmt;
+    MYSQL_STMT   *cnid_get_stmt;
+    MYSQL_STMT   *cnid_delete_stmt;
+    MYSQL_STMT   *cnid_resolve_stmt;
+    MYSQL_STMT   *cnid_purge_stmt;
 } CNID_mysql_private;
 
 #endif

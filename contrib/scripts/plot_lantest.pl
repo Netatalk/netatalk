@@ -141,6 +141,7 @@ sub build_info_lines {
     $total_mean += $_->{mean} for @$tests;
     push @lines, sprintf('Avg total runtime: %.0f ms', $total_mean);
     push @lines, "AFP: $meta->{afp}"               if $meta->{afp};
+    push @lines, "CNID: $meta->{cnid}"             if $meta->{cnid};
     push @lines, "Quantum: $meta->{quantum_kb} KB" if $meta->{quantum_kb};
     my @dc;
     push @dc, uc $meta->{dircache_mode}     if $meta->{dircache_mode};

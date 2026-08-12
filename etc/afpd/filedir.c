@@ -1029,19 +1029,14 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 return AFPERR_NOOBJ;
             }
 
-            /* Pre-resolve CNID BEFORE deletefile() — it calls cnid_delete()
-             * which removes the CNID from the database */
-            cnid_t file_cnid = CNID_INVALID;
-
-            if (cachedfile) {
-                file_cnid = cachedfile->d_did;
-            } else if (upath) {
-                size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
-                file_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
-            }
+            /* The dircache id was inode-validated just above; without a cache
+             * hit, deletefile() resolves the CNID itself after the unlink
+             * (authoritative against concurrent renames) and reports it back
+             * here for the sibling cache hint. */
+            cnid_t file_cnid = cachedfile ? cachedfile->d_did : CNID_INVALID;
 
             /* deletefile() also handles CNID and dircache cleanup */
-            if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
+            if ((rc = deletefile(vol, -1, upath, 1, &file_cnid)) == AFP_OK) {
 #if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
                 char event_path[MAXPATHLEN + 1];
                 const char *deleted_file = dir_event_path(event_path,
