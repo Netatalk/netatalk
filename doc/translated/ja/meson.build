@@ -58,7 +58,20 @@ endif
 
 if build_website
     foreach page : manual_pages
-        install_data(page + '.md', install_dir: docs_install_path + '/manual/ja')
+        custom_target(
+            'website_' + page,
+            input: page + '.md',
+            output: page + '.md',
+            command: [
+                'sed',
+                '-e', 's/^# 名前$/# ' + page + '/',
+                '-e', '1s/[.][0-9][0-9]*$//',
+                '@INPUT@',
+            ],
+            capture: true,
+            install: true,
+            install_dir: docs_install_path + '/manual/ja',
+        )
     endforeach
 else
     foreach page : manual_pages

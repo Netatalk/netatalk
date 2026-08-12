@@ -61,6 +61,14 @@ endforeach
 
 if build_website
     foreach page : manfiles
-        install_data(page + '.1.md', install_dir: docs_install_path + '/manual/en')
+        custom_target(
+            'website_' + page,
+            input: page + '.1.md',
+            output: page + '.1.md',
+            command: ['sed', 's/^# Name$/# ' + page + '/', '@INPUT@'],
+            capture: true,
+            install: true,
+            install_dir: docs_install_path + '/manual/en',
+        )
     endforeach
 endif
