@@ -1655,11 +1655,16 @@ jobs:
           [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
       - name: Render performance trend chart (PNG)
         id: trend-chart
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           # Render the cross-PR trend chart from the merged history (the
           # local file already includes this PR's values, whether or not
           # the push above needed retries). fonts-dejavu-core: the chart
           # scripts request "DejaVu Sans" (matplotlib's default face).
+          # The image markdown is emitted as a step output only on a
+          # successful render, so the dashboard comment degrades to no
+          # image (instead of a broken link) when the chart is skipped.
           if [ ! -s gh-pages/perf-history/history.yml ]; then
             echo "No history file yet; skipping trend chart" && exit 0
           fi
@@ -1668,11 +1673,15 @@ jobs:
             gnuplot-nox fonts-dejavu-core
           COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
           SHORT_SHA="$(echo "$COMMIT_SHA" | cut -c1-7)"
-          perl contrib/scripts/plot_perf_history.pl \
+          if perl contrib/scripts/plot_perf_history.pl \
             gh-pages/perf-history/history.yml \
             -o perf-trend \
-            --subtitle "commit ${SHORT_SHA} · band: decaying min–max envelope · solid: cumulative average" \
-            && echo "rendered=1" >> "$GITHUB_OUTPUT"
+            --subtitle "commit ${SHORT_SHA} · band: decaying min–max envelope · solid: cumulative average"
+          then
+            echo "rendered=1" >> "$GITHUB_OUTPUT"
+            URL="https://netatalk.github.io/netatalk/perf-history/pr-${PR_NUMBER}.png"
+            echo "image_md=[![Performance trend](${URL})](${URL})" >> "$GITHUB_OUTPUT"
+          fi
           # The publish action clones gh-pages itself; drop the history
           # step's clone so the paths don't collide.
           rm -rf gh-pages
@@ -1753,7 +1762,7 @@ jobs:
 
             ${{ steps.history-publish.outputs.lantest_table || steps.history.outputs.lantest_table }}
 
-            [![Performance trend](https://netatalk.github.io/netatalk/perf-history/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/perf-history/pr-${{ github.event.pull_request.number }}.png)
+            ${{ steps.trend-chart.outputs.image_md }}
 
             </details>
 
