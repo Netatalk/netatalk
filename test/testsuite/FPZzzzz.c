@@ -12,8 +12,9 @@ extern char *uam;
 
 static volatile int sigp = 0;
 
-static void pipe_handler()
+static void pipe_handler(int signum)
 {
+    (void)signum;
     sigp = 1;
 }
 
@@ -24,8 +25,6 @@ STATIC void test223()
     uint16_t vol = VolID;
     unsigned int ret;
     struct sigaction action;
-    DSI *dsi;
-    int sock;
     uint32_t time = 12345;
     ENTER_TEST
 
@@ -117,7 +116,6 @@ STATIC void test224()
     uint16_t vol = VolID;
     unsigned int ret;
     struct sigaction action;
-    int sock;
     uint32_t time = 12345;
     ENTER_TEST
 
@@ -206,10 +204,7 @@ STATIC void test239()
 {
     char *name = "t239 file";
     uint16_t vol = VolID;
-    unsigned int ret;
     struct sigaction action;
-    DSI *dsi;
-    int sock;
     ENTER_TEST
 
     if (!Test) {
@@ -241,7 +236,6 @@ STATIC void test239()
     FAIL(FPZzzzz(Conn, 2))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
-fin:
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
