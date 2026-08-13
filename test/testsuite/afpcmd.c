@@ -459,8 +459,8 @@ const char *AfpNum2name(int num)
     case AFP_ENUMERATE_EXT2:
         return "AFP_ENUMERATE_EXT2";   /*  68 */
 
-    case AFP_ZZZ           :
-        return "AFP_ZZZ           ";	/* 122 */
+    case AFP_ZZZZZ         :
+        return "AFP_ZZZZZ         ";   /* 122 */
 
     /* version 3.2 */
     case AFP_GETACL        :
@@ -643,17 +643,17 @@ unsigned int FPLogOut(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int FPzzz(CONN *conn, int flag)
+unsigned int FPZzzzz(CONN *conn, int flag)
 {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
 
     if (!Quiet) {
-        fprintf(stdout, "[%s] FPzzz enter sleep mode (flag: %i)\n", __func__, flag);
+        fprintf(stdout, "[%s] FPZzzzz enter sleep mode (flag: %i)\n", __func__, flag);
     }
 
-    ret = AFPzzz(conn, flag);
+    ret = AFPZzzzz(conn, flag);
     dump_header(dsi);
     return ret;
 }

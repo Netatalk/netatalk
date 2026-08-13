@@ -819,14 +819,14 @@ unsigned int AFPLogOut(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int AFPzzz(CONN *conn, int flag)
+unsigned int AFPZzzzz(CONN *conn, int flag)
 {
     int 		ofs = 0;
     DSI			*dsi = &conn->dsi;
     uint32_t   temp;
     assert(conn);
     SendInit(dsi);
-    dsi->commands[ofs++] = AFP_ZZZ;
+    dsi->commands[ofs++] = AFP_ZZZZZ;
     dsi->commands[ofs++] = 0;
     temp = flag;
     temp = htonl(temp);

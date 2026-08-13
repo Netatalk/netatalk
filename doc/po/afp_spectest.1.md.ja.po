@@ -528,12 +528,12 @@ msgstr "スリープテスト"
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:128
 msgid ""
-"The *FPzzz* testset contain tests for AFP sleep mode and timeouts.  Since "
+"The *FPZzzzz* testset contain tests for AFP sleep mode and timeouts.  Since "
 "they by necessity take much longer than other tests, they are not included "
 "when you execute the full spectest suite.  Rather, you must run the testset "
 "separately using the *-f* parameter:"
 msgstr ""
-"*FPzzz* テストセットは、AFP スリープモードとタイムアウトを検証するテスト項目"
+"*FPZzzzz* テストセットは、AFP スリープモードとタイムアウトを検証するテスト項目"
 "になっている。これらのテストは必然的に実行に時間がかかるため、spectest スイー"
 "トの実行時にはデフォルトでは実行されない。実行するには *-f* パラメータを使用"
 "する必要がある。"
@@ -541,7 +541,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:130
 #, no-wrap
-msgid "    afp_spectest -f FPzzz\n"
+msgid "    afp_spectest -f FPZzzzz\n"
 msgstr ""
 
 #. type: Title ##

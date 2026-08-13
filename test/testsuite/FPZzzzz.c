@@ -31,7 +31,7 @@ STATIC void test223()
 
     if (!Test) {
         if (!Quiet) {
-            fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+            fprintf(stdout, "Run sleep tests with: -f FPZzzzz.\n");
         }
 
         test_skipped(T_SINGLE);
@@ -54,7 +54,7 @@ STATIC void test223()
 
     /* Get session token */
     FAIL(FPGetSessionToken(Conn, 3, time, strlen("test223"), "test223"))
-    FAIL(FPzzz(Conn, 0))
+    FAIL(FPZzzzz(Conn, 0))
     fprintf(stdout, "sleep more than 2 mn\n");
     sleep(60 * 3);
     ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
@@ -107,7 +107,7 @@ fin:
     }
 
 test_exit:
-    exit_test("FPzzz:test223: AFP 3.x enter sleep mode");
+    exit_test("FPZzzzz:test223: AFP 3.x enter sleep mode");
 }
 
 /* ------------------------- */
@@ -123,7 +123,7 @@ STATIC void test224()
 
     if (!Test) {
         if (!Quiet) {
-            fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+            fprintf(stdout, "Run sleep tests with: -f FPZzzzz.\n");
         }
 
         test_skipped(T_SINGLE);
@@ -198,7 +198,7 @@ fin:
     }
 
 test_exit:
-    exit_test("FPzzz:test224: disconnected after 2 mn");
+    exit_test("FPZzzzz:test224: disconnected after 2 mn");
 }
 
 /* ------------------------- */
@@ -214,7 +214,7 @@ STATIC void test239()
 
     if (!Test) {
         if (!Quiet) {
-            fprintf(stdout, "Run sleep tests with: -f FPzzz_test.\n");
+            fprintf(stdout, "Run sleep tests with: -f FPZzzzz.\n");
         }
 
         test_skipped(T_SINGLE);
@@ -235,10 +235,10 @@ STATIC void test239()
         goto test_exit;
     }
 
-    FAIL(FPzzz(Conn, 1))
+    FAIL(FPZzzzz(Conn, 1))
     fprintf(stdout, "sleep more than 2 mn\n");
     sleep(60 * 3);
-    FAIL(FPzzz(Conn, 2))
+    FAIL(FPZzzzz(Conn, 2))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 fin:
@@ -251,11 +251,11 @@ fin:
     }
 
 test_exit:
-    exit_test("FPzzz:test239: AFP 3.x enter extended sleep");
+    exit_test("FPZzzzz:test239: AFP 3.x enter extended sleep");
 }
 
 /* ----------- */
-void FPzzz_test()
+void FPZzzzz_test()
 {
     ENTER_TESTSET
     test223();

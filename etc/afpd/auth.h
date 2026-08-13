@@ -56,7 +56,7 @@ int afp_getsession(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                    size_t *rbuflen);
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                    size_t *rbuflen);
-int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-            size_t *rbuflen);
+int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+              size_t *rbuflen);
 
 #endif /* auth.h */

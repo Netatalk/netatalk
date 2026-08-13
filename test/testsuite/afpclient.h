@@ -291,7 +291,7 @@ unsigned int AFPLogOut(CONN *conn);
 unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd,
                          char *pwd);
 
-unsigned int AFPzzz(CONN *conn, int);
+unsigned int AFPZzzzz(CONN *conn, int);
 
 unsigned int AFPGetSrvrInfo(CONN *conn);
 unsigned int AFPGetSrvrParms(CONN *conn);
