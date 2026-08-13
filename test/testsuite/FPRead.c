@@ -6,6 +6,11 @@
 
 int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
 
+extern char *Password;
+extern char *vers;
+extern char *uam;
+extern const char *afptest_uam;
+
 /* ------------------------- */
 STATIC void test5()
 {
@@ -357,9 +362,6 @@ test_exit:
 
 extern char *Server;
 extern int  Port;
-extern char *Password;
-extern char *vers;
-extern char *uam;
 
 static volatile int sigp = 0;
 static int sock = -1;
@@ -441,7 +443,8 @@ static void write_test(int size)
     }
 
     dsi2->socket = sock;
-    ret = FPopenLogin(myconn, vers, uam, User, Password);
+    ret = afptest_login_plain(myconn, vers, uam, afptest_uam, User,
+                              Password);
 
     if (ret) {
         test_nottested();

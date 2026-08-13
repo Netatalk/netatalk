@@ -268,6 +268,12 @@ unsigned int DSICloseSession(CONN *conn);
 unsigned int AFPopenLogin(CONN *conn, const char *vers, const char *uam,
                           const char *usr, const char *pwd);
 
+/* Build an FPLogin with an arbitrary UserAuthInfo payload. Encrypted UAMs
+ * provide their username and key-exchange material in this payload. */
+unsigned int AFPopenLoginAuth(CONN *conn, const char *vers, const char *uam,
+                              const void *auth_info,
+                              size_t auth_info_len);
+
 /* Build an FPLoginExt with an arbitrary UserAuthInfo payload.
  * Callers that need plain 8-byte cleartext padding should use
  * AFPopenLoginExt_pwd() instead. */

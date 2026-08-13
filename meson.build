@@ -2843,7 +2843,7 @@ summary_info = {
     '  afpd': build_afpd_tests,
     '  fuzzing': build_fuzzing,
     '  testsuite': build_testsuite,
-    '  UAM testsuite': testsuite_libafpclient.found(),
+    '  UAM logintest': testsuite_libafpclient.found(),
 }
 summary(summary_info, bool_yn: true, section: '  Tests:')
 

@@ -304,31 +304,58 @@ else
     echo ""
     # Temporarily disable exit-on-error to ensure we can dump logs even if test fails
     set +e
-    set -x
     TEST_START=$(date +%s)
     TEST_EXIT_CODE=0
     case "$TESTSUITE" in
-        spectest)
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2"
-            TEST_EXIT_CODE=$?
-            ;;
-        readonly)
-            echo "testfile uno" > /mnt/afpshare/first.txt
-            echo "testfile dos" > /mnt/afpshare/second.txt
-            mkdir /mnt/afpshare/third
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
+        spec)
+            if [ "$AFP_SUBTESTS" = "Readonly" ]; then
+                echo "testfile uno" > /mnt/afpshare/first.txt
+                echo "testfile dos" > /mnt/afpshare/second.txt
+                mkdir /mnt/afpshare/third
+            fi
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            if [ -n "$AFP_USER2" ]; then
+                set -- "$@" -d "$AFP_USER2"
+            fi
+            if [ -n "$SHARE_NAME2" ]; then
+                set -- "$@" -S "$SHARE_NAME2"
+            fi
+            if [ -n "$AFP_TESTSUITE_UAM" ]; then
+                set -- "$@" -A "$AFP_TESTSUITE_UAM"
+            fi
+            if [ -n "$AFP_SUBTESTS" ]; then
+                set -- "$@" -f "$AFP_SUBTESTS"
+            fi
+            afp_spectest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         login)
-            afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS"
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -w "$AFP_PASS"
+            afp_logintest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         lan)
-            afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            if [ -n "$AFP_TESTSUITE_UAM" ]; then
+                set -- "$@" -A "$AFP_TESTSUITE_UAM"
+            fi
+            afp_lantest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         speed)
-            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -n 10 -f Read,Write,Copy,ServerCopy
+            set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
+                -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" \
+                -n 10
+            if [ -n "$AFP_TESTSUITE_UAM" ]; then
+                set -- "$@" -A "$AFP_TESTSUITE_UAM"
+            fi
+            if [ -n "$AFP_SUBTESTS" ]; then
+                set -- "$@" -f "$AFP_SUBTESTS"
+            fi
+            afp_speedtest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         *)
@@ -336,7 +363,6 @@ else
             TEST_EXIT_CODE=1
             ;;
     esac
-    set +x
     set -e
 
     TEST_END=$(date +%s)

@@ -42,10 +42,6 @@ void test_skipped(int why)
         s = "AFP 3.x";
         break;
 
-    case T_AFP3_CONN2:
-        s = "AFP 3.x and no second user";
-        break;
-
     case T_AFP30:
         s = "AFP 3.0 only";
         break;

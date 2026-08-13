@@ -217,7 +217,7 @@ jobs:
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 -e SHARE_NAME2=test2 \
               -e INSECURE_AUTH=1 -e DISABLE_TIMEMACHINE=1 \
-              -e TESTSUITE=spectest -e AFP_VERSION=7 \
+              -e TESTSUITE=spec -e AFP_VERSION=7 \
               -e AFP_CNID_BACKEND=sqlite \
               -e TSAN_OPTIONS="halt_on_error=1 abort_on_error=1" \
               ${{ env.REGISTRY }}/${IMAGE_NAME}:${{ github.sha }}
@@ -306,7 +306,7 @@ jobs:
               -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
               -e AFP_CNID_BACKEND=sqlite \
               -e AFP_CNID_TMPFS=1 \
-              -e TESTSUITE=spectest \
+              -e TESTSUITE=spec \
               -e AFP_VERSION=7 \
               -e FLAMEGRAPH=1 \
               ${{ env.REGISTRY }}/netatalk/netatalk-debug:${{ github.sha }} \
@@ -426,7 +426,7 @@ jobs:
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
-              -e TESTSUITE=spectest \
+              -e TESTSUITE=spec \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -490,7 +490,7 @@ jobs:
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
-              -e TESTSUITE=spectest \
+              -e TESTSUITE=spec \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -545,7 +545,7 @@ jobs:
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
-              -e TESTSUITE=spectest \
+              -e TESTSUITE=spec \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -584,7 +584,7 @@ jobs:
               -e SHARE_NAME2=test2 \
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
-              -e TESTSUITE=spectest \
+              -e TESTSUITE=spec \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -616,7 +616,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -643,7 +643,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -693,7 +693,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -721,7 +721,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -747,7 +747,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -775,7 +775,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -805,7 +805,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -831,7 +831,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="6" \
             -e AFP_EXTMAP="1" \
@@ -858,7 +858,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="5" \
             -e AFP_EXTMAP="1" \
@@ -885,7 +885,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="4" \
             -e AFP_EXTMAP="1" \
@@ -911,7 +911,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
@@ -937,9 +937,117 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="3" \
+            -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+  afp-spectest-dhx-afp30:
+    name: AFP spec test (DHCAST128) AFP 3.0 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_dhx.so" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e TESTSUITE="spec" \
+            -e AFP_TESTSUITE_UAM="dhx" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="3" \
+            -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-spectest-dhx-afp34-debian:
+    name: AFP spec test (DHCAST128) AFP 3.4 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_dhx.so" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e TESTSUITE="spec" \
+            -e AFP_TESTSUITE_UAM="dhx" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+  afp-spectest-dhx2-afp31:
+    name: AFP spec test (DHX2) AFP 3.1 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_dhx2.so" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e TESTSUITE="spec" \
+            -e AFP_TESTSUITE_UAM="dhx2" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="4" \
+            -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-spectest-dhx2-afp34-debian:
+    name: AFP spec test (DHX2) AFP 3.4 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_dhx2.so" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e TESTSUITE="spec" \
+            -e AFP_TESTSUITE_UAM="dhx2" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
@@ -963,7 +1071,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="2" \
             -e AFP_EXTMAP="1" \
@@ -989,7 +1097,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
@@ -1015,7 +1123,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
@@ -1043,7 +1151,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
@@ -1071,7 +1179,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
@@ -1094,7 +1202,8 @@ jobs:
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
-            -e TESTSUITE="readonly" \
+            -e TESTSUITE="spec" \
+            -e AFP_SUBTESTS="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
@@ -1115,9 +1224,54 @@ jobs:
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
-            -e TESTSUITE="readonly" \
+            -e TESTSUITE="spec" \
+            -e AFP_SUBTESTS="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-sleeptest-afp34:
+    name: AFP spec test (sleep) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e AFP_UAMS="uams_dhx2.so" \
+            -e TESTSUITE="spec" \
+            -e AFP_SUBTESTS="FPZzzzz" \
+            -e AFP_TESTSUITE_UAM="dhx2" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="7" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-sleeptest-afp30:
+    name: AFP spec test (sleep) AFP 3.0 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e AFP_UAMS="uams_dhx.so" \
+            -e TESTSUITE="spec" \
+            -e AFP_SUBTESTS="FPZzzzz" \
+            -e AFP_TESTSUITE_UAM="dhx" \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="3" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-logintest-afp34:
@@ -1456,6 +1610,7 @@ jobs:
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
             -e TESTSUITE="speed" \
+            -e AFP_SUBTESTS="Read,Write,Copy,ServerCopy" \
             -e AFP_VERSION="${{ env.AFP_VERSION }}" \
             -e AFP_CNID_BACKEND="${{ env.AFP_CNID_BACKEND }}" \
             -e AFP_CNID_TMPFS=1 \
@@ -1797,7 +1952,7 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spectest" \
+            -e TESTSUITE="spec" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \

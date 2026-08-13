@@ -4,7 +4,7 @@ afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
-**afp_spectest** [-1234567aCEiLmVv] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
+**afp_spectest** [-1234567aCEiLmVv] [-A *uam*] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
 [-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
 
 **afp_spectest** -l
@@ -42,6 +42,11 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 **-a**
 : Server under test uses AppleDouble v2 metadata and not filesystem EA
+
+**-A** *uam*
+: Select authentication with the specified UAM name or alias.
+  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128, and
+  *dhx2* for DHX2.
 
 **-c** *path*
 : Local filesystem path to test volume (required for tier 2 tests)
@@ -202,7 +207,8 @@ against a native AppleShare AFP server or Netatalk.
 ## Configure environment
 
 Below is a sample configuration for running the AFP spec tests.
-Presently, only ClearTxt and Guest authentication is supported in the test runner.
+Note that this enables insecure ClearTxt, Guest, and DHCAST128 (DHX) authentication,
+which is not recommended for production use.
 
 - 2 users: user1, user2 with the same password
 - 1 group: afpusers
@@ -217,7 +223,7 @@ residual files in the test directories.
 Set afp.conf as follows:
 
     [Global]
-    uam list = uams_clrtxt.so uams_guest.so
+    uam list = uams_clrtxt.so uams_guest.so uams_dhx.so uams_dhx2.so
 
     [testvol1]
     ea = sys
@@ -233,16 +239,26 @@ Set afp.conf as follows:
 
 ## Running tests
 
-Run the afp_spectest against AFP server running on 10.0.0.10 for the "FPSetForkParms_test" testset with AFP 3.4
+Run the afp_spectest against AFP server running on 10.0.0.10 for
+the *FPSetForkParms* and *FPSetVolParms* testsets with AFP 3.4 and DHX2 authentication:
 
-    % afp_spectest -h 10.0.0.10 -u user1 -d user2 -w passwd -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms_test
+    % afp_spectest -h 10.0.0.10 -u user1 -d user2 -w passwd -A dhx2 -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms,FPSetVolParms
     ===================
-    FPSetForkParms_test
-    -------------------
+    Executing testset: FPSetForkParms_test
     FPSetForkParms:test62: SetForkParams errors - PASSED
     FPSetForkParms:test141: Setforkmode error - PASSED
     FPSetForkParms:test217: Setfork size 64 bits - PASSED
     FPSetForkParms:test306: set fork size, new size > old size - PASSED
+    ===================
+    Executing testset: FPSetVolParms_test
+    FPSetVolParms:test206: Set Volume parameters - PASSED
+    =====================
+    TEST RESULT SUMMARY
+    ---------------------
+    Passed:     5
+    Skipped:    0
+    Failed:     0
+    Not tested: 0
 
 # See Also
 
