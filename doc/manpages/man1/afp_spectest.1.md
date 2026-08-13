@@ -125,12 +125,12 @@ the lines for the mappings that you want to enable in this configuration file.
 
 ## Sleep tests
 
-The *FPzzz* testset contain tests for AFP sleep mode and timeouts.
+The *FPZzzzz* testset contain tests for AFP sleep mode and timeouts.
 Since they by necessity take much longer than other tests,
 they are not included when you execute the full spectest suite.
 Rather, you must run the testset separately using the *-f* parameter:
 
-    afp_spectest -f FPzzz
+    afp_spectest -f FPZzzzz
 
 ## Readonly tests
 

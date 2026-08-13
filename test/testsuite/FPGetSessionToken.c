@@ -103,7 +103,7 @@ STATIC void test221()
     }
 
     FAIL(FPGetSessionToken(Conn, 3, 0, 5, "token"))
-    FAIL(FPzzz(Conn, 0))
+    FAIL(FPZzzzz(Conn, 0))
 test_exit:
     exit_test("FPGetSessionToken:test221: AFP 3.1 get session token");
 }

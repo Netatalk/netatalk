@@ -29,7 +29,7 @@ extern unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
                                 char *pwd);
 extern unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
                                    char *pwd);
-extern unsigned int FPzzz(CONN *conn, int);
+extern unsigned int FPZzzzz(CONN *conn, int);
 extern unsigned int FPLogOut(CONN *conn);
 extern unsigned int FPMapID(CONN *conn, char fn, int id);
 extern unsigned int FPMapName(CONN *conn, char fn, char *name);

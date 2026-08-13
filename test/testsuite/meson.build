@@ -199,7 +199,7 @@ spectest_sources = [
     'FPSync.c',
     'FPWrite.c',
     'FPWriteExt.c',
-    'FPzzz.c',
+    'FPZzzzz.c',
     'T2_Dircache_attack.c',
     'T2_FPByteRangeLock.c',
     'T2_FPCopyFile.c',

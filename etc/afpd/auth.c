@@ -289,9 +289,9 @@ static int set_auth_switch(const AFPObj *obj, int expired)
         case 22:
             /*
              * If first connection to a server is done in classic AFP2.2 version is used
-             * but OSX uses AFP3.x FPzzz command !
+             * but OSX uses AFP3.x FPZzzzz command !
              */
-            uam_afpserver_action(AFP_ZZZ,  UAM_AFPSERVER_POSTAUTH, afp_zzz, NULL);
+            uam_afpserver_action(AFP_ZZZZZ,  UAM_AFPSERVER_POSTAUTH, afp_zzzzz, NULL);
             break;
         }
     } else {
@@ -412,8 +412,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
 }
 
 /* ---------------------- */
-int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-            size_t *rbuflen)
+int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+              size_t *rbuflen)
 {
     uint32_t data;
     DSI *dsi = (DSI *)AFPobj->dsi;
@@ -437,7 +437,7 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     if (data & AFPZZZ_EXT_WAKEUP) {
         /* wakeup request from exetended sleep */
         if (dsi->flags & DSI_EXTSLEEP) {
-            LOG(log_note, logtype_afpd, "afp_zzz: waking up from extended sleep");
+            LOG(log_note, logtype_afpd, "afp_zzzzz: waking up from extended sleep");
             dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP);
             ipc_child_state(obj, DSI_RUNNING);
         }
@@ -446,11 +446,11 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
         dsi->flags |= DSI_SLEEPING;
 
         if (data & AFPZZZ_EXT_SLEEP) {
-            LOG(log_note, logtype_afpd, "afp_zzz: entering extended sleep");
+            LOG(log_note, logtype_afpd, "afp_zzzzz: entering extended sleep");
             dsi->flags |= DSI_EXTSLEEP;
             ipc_child_state(obj, DSI_EXTSLEEP);
         } else {
-            LOG(log_note, logtype_afpd, "afp_zzz: entering normal sleep");
+            LOG(log_note, logtype_afpd, "afp_zzzzz: entering normal sleep");
             ipc_child_state(obj, DSI_SLEEPING);
         }
     }

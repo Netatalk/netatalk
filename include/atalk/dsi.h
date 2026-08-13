@@ -152,8 +152,8 @@ typedef struct DSI {
 /* DSI session State flags */
 #define DSI_DATA             (1 << 0) /*!< we have received a DSI command */
 #define DSI_RUNNING          (1 << 1) /*!< we have received a AFP command */
-#define DSI_SLEEPING         (1 << 2) /*!< we're sleeping after FPZzz */
-#define DSI_EXTSLEEP         (1 << 3) /*!< we're sleeping after FPZzz */
+#define DSI_SLEEPING         (1 << 2) /*!< we're sleeping after FPZzzzz */
+#define DSI_EXTSLEEP         (1 << 3) /*!< we're sleeping after FPZzzzz */
 #define DSI_DISCONNECTED     (1 << 4) /*!< we're in diconnected state after a socket error */
 #define DSI_DIE              (1 << 5) /*!< SIGUSR1, going down in 5 minutes */
 #define DSI_NOREPLY          (1 << 6) /*!< in dsi_write we generate our own replies */

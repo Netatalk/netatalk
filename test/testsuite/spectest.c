@@ -86,7 +86,7 @@ EXT_FN(FPSetVolParms);
 EXT_FN(FPSync);
 EXT_FN(FPWrite);
 EXT_FN(FPWriteExt);
-EXT_FN(FPzzz);
+EXT_FN(FPZzzzz);
 
 EXT_FN(T2FPByteRangeLock);
 EXT_FN(T2FPCopyFile);
@@ -179,7 +179,7 @@ static struct test_fn Test_list[] = {
     FN_N(FPSync)
     FN_N(FPWrite)
     FN_N(FPWriteExt)
-    FN_N(FPzzz)
+    FN_N(FPZzzzz)
 
     FN_N(T2FPByteRangeLock)
     FN_N(T2FPCreateFile)
