@@ -1653,6 +1653,37 @@ jobs:
             git commit -m "perf-history: metrics for PR ${PR_NUMBER}"
           done
           [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
+      - name: Render performance trend chart (PNG)
+        id: trend-chart
+        run: |
+          # Render the cross-PR trend chart from the merged history (the
+          # local file already includes this PR's values, whether or not
+          # the push above needed retries). fonts-dejavu-core: the chart
+          # scripts request "DejaVu Sans" (matplotlib's default face).
+          if [ ! -s gh-pages/perf-history/history.yml ]; then
+            echo "No history file yet; skipping trend chart" && exit 0
+          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gnuplot-nox fonts-dejavu-core
+          COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          SHORT_SHA="$(echo "$COMMIT_SHA" | cut -c1-7)"
+          perl contrib/scripts/plot_perf_history.pl \
+            gh-pages/perf-history/history.yml \
+            -o perf-trend \
+            --subtitle "commit ${SHORT_SHA} · band: decaying min–max envelope · solid: cumulative average" \
+            && echo "rendered=1" >> "$GITHUB_OUTPUT"
+          # The publish action clones gh-pages itself; drop the history
+          # step's clone so the paths don't collide.
+          rm -rf gh-pages
+      - name: Publish trend chart to gh-pages branch
+        if: ${{ steps.trend-chart.outputs.rendered == '1' }}
+        uses: ./.github/actions/publish-gh-pages
+        with:
+          files: perf-trend.png
+          dest-dir: perf-history
+          commit-prefix: perf-history
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Find existing dashboard comment
         id: find-comment
         uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
@@ -1721,6 +1752,8 @@ jobs:
             <summary>🐢 All operations (avg runtime, in test order, vs. historical average)</summary>
 
             ${{ steps.history-publish.outputs.lantest_table || steps.history.outputs.lantest_table }}
+
+            [![Performance trend](https://netatalk.github.io/netatalk/perf-history/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/perf-history/pr-${{ github.event.pull_request.number }}.png)
 
             </details>
 
