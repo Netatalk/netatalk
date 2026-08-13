@@ -39,7 +39,7 @@ export SERVER_NAME=Netatalk
 export AFP_HOST=127.0.0.1
 export AFP_PORT=548
 export AFP_VERSION=7
-export TESTSUITE=spectest
+export TESTSUITE=spec
 export VERBOSE=1
 
 # copy the extmap template if absent so env_setup can activate it

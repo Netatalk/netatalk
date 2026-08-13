@@ -4,7 +4,7 @@ afparg — Send commands to an AFP server
 
 # Synopsis
 
-**afparg** [-1234567Vv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-f *command*]
+**afparg** [-1234567Vv] [-A *uam*] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-f *command*]
 
 **afparg** -l
 
@@ -38,6 +38,11 @@ Run *afparg -l* to list available commands and their arguments.
 **-7**
 : Use AFP 3.4 protocol version (default)
 
+**-A** *uam*
+: Select authentication with the specified UAM name or alias.
+  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128, and
+  *dhx2* for DHX2.
+
 **-f** *command* *arguments*
 : Command to execute
 
@@ -64,11 +69,13 @@ Run *afparg -l* to list available commands and their arguments.
 
 # Configuration
 
-The test runner AFP client only supports the ClearTxt UAM currently.
-Configure the UAM in netatalk's afp.conf:
+By default, afparg uses ClearTxt; **-A clrtxt** selects that same legacy login
+path explicitly. Pass **-A dhx** or **-A dhx2** to use the corresponding native
+encrypted UAM. Configure the selected UAM in netatalk's
+afp.conf:
 
     [Global]
-    uam list = uams_clrtxt.so
+    uam list = uams_dhx.so uams_dhx2.so uams_clrtxt.so
 
 # Examples
 

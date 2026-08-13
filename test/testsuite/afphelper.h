@@ -61,5 +61,13 @@ extern int delete_directory_tree_by_did(CONN *conn, uint16_t volume,
 extern int delete_directory_tree(CONN *conn, uint16_t volume,
                                  uint32_t parent_did, char *dirname);
 extern void clear_volume(uint16_t vol, CONN *conn);
+/* Log in with the UAM selected for the test runner. */
+extern unsigned int afptest_login(CONN *conn, char *vers, char *uam,
+                                  const char *selected_uam, char *user,
+                                  char *password);
+/* As above, but keep the historical FPLogin fallback for ClearTxt. */
+extern unsigned int afptest_login_plain(CONN *conn, char *vers, char *uam,
+                                        const char *selected_uam, char *user,
+                                        char *password);
 
 #endif

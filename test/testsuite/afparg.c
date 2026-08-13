@@ -3,6 +3,7 @@
 #include <signal.h>
 
 #include "afpclient.h"
+#include "afptest_uam.h"
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
@@ -64,6 +65,7 @@ char    *Test = "";
 
 char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";
+static const char *afptest_uam;
 
 /* Unused but required in afphelper.c. Argh. */
 CONN       *Conn2;
@@ -128,8 +130,10 @@ static void run_one(char *name, char **args)
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567lVv] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f command args]\n",
+            "usage:\t%s [-1234567lVv] [-A uam] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f command args]\n",
             av0);
+    fprintf(stdout,
+            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2)\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
     fprintf(stdout, "\t-s\tvolume to mount\n");
@@ -159,7 +163,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567lVvf:h:p:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567lVvA:f:h:p:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -194,6 +198,10 @@ int main(int ac, char **av)
         case '7':
             vers = "AFP3.4";
             Version = 34;
+            break;
+
+        case 'A':
+            afptest_uam = afptest_uam_uses_legacy_login(optarg) ? NULL : optarg;
             break;
 
         case 'f' :
@@ -288,7 +296,9 @@ int main(int ac, char **av)
     Dsi->socket = sock;
 
     /* login */
-    if (Version >= 30) {
+    if (afptest_uam) {
+        ret = afptest_uam_login(Conn, vers, afptest_uam, User, Password);
+    } else if (Version >= 30) {
         ret = FPopenLoginExt(Conn, vers, uam, User, Password);
     } else {
         ret = FPopenLogin(Conn, vers, uam, User, Password);

@@ -8,14 +8,50 @@
 #include <atalk/compat.h>
 
 #include "afpclient.h"
+#include "afptest_uam.h"
 #include "afphelper.h"
 #include "afpcmd.h"
-#include "afphelper.h"
 #include "testhelper.h"
 
 #define AFPHELPER_NAME_MAX 255
 
 int Loglevel = AFP_LOG_INFO;
+
+static unsigned int afptest_login_with_fallback(
+    CONN *conn,
+    char *vers,
+    char *uam,
+    const char *selected_uam,
+    char *user,
+    char *password,
+    int use_login_ext)
+{
+    if (selected_uam) {
+        return afptest_uam_login(conn, vers, selected_uam, user, password);
+    }
+
+    if (use_login_ext && Version >= 30) {
+        return FPopenLoginExt(conn, vers, uam, user, password);
+    }
+
+    return FPopenLogin(conn, vers, uam, user, password);
+}
+
+unsigned int afptest_login(CONN *conn, char *vers, char *uam,
+                           const char *selected_uam, char *user,
+                           char *password)
+{
+    return afptest_login_with_fallback(conn, vers, uam, selected_uam, user,
+                                       password, 1);
+}
+
+unsigned int afptest_login_plain(CONN *conn, char *vers, char *uam,
+                                 const char *selected_uam, char *user,
+                                 char *password)
+{
+    return afptest_login_with_fallback(conn, vers, uam, selected_uam, user,
+                                       password, 0);
+}
 
 void illegal_fork(DSI *dsi, char cmd, char *name)
 {

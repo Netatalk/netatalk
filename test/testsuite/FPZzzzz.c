@@ -9,6 +9,7 @@ extern int  Port;
 extern char *Password;
 extern char *vers;
 extern char *uam;
+extern const char *afptest_uam;
 
 static volatile int sigp = 0;
 
@@ -37,8 +38,8 @@ STATIC void test223()
         goto test_exit;
     }
 
-    if (Conn->afp_version < 30 || Conn2) {
-        test_skipped(T_AFP3_CONN2);
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
         goto test_exit;
     }
 
@@ -69,11 +70,7 @@ STATIC void test223()
             goto fin;
         }
 
-        if (Conn->afp_version < 30) {
-            ret = FPopenLogin(Conn, vers, uam, User, Password);
-        } else {
-            ret = FPopenLoginExt(Conn, vers, uam, User, Password);
-        }
+        ret = afptest_login(Conn, vers, uam, afptest_uam, User, Password);
 
         if (ret) {
             test_nottested();
@@ -128,8 +125,8 @@ STATIC void test224()
         goto test_exit;
     }
 
-    if (Conn->afp_version < 30 || Conn2) {
-        test_skipped(T_AFP3_CONN2);
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
         goto test_exit;
     }
 
@@ -161,11 +158,7 @@ STATIC void test224()
             goto fin;
         }
 
-        if (Conn->afp_version < 30) {
-            ret = FPopenLogin(Conn, vers, uam, User, Password);
-        } else {
-            ret = FPopenLoginExt(Conn, vers, uam, User, Password);
-        }
+        ret = afptest_login(Conn, vers, uam, afptest_uam, User, Password);
 
         if (ret) {
             test_nottested();
@@ -216,8 +209,8 @@ STATIC void test239()
         goto test_exit;
     }
 
-    if (Conn->afp_version < 30 || Conn2) {
-        test_skipped(T_AFP3_CONN2);
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
         goto test_exit;
     }
 

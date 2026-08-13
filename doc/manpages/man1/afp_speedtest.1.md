@@ -4,7 +4,7 @@ afp_speedtest — Simple AFP file transfer benchmarking tool
 
 # Synopsis
 
-**afp_speedtest** [-1234567acDeiLTVvy] [-h *host*] [-p *port*] [-s *volume*] [-P *path*] [-S *volume2*]
+**afp_speedtest** [-1234567acDeiLTVvy] [-A *uam*] [-h *host*] [-p *port*] [-s *volume*] [-P *path*] [-S *volume2*]
 [-u *user*] [-w *password*] [-n *iterations*] [-W *warmup*] [-t *delay*] [-d *size*] [-z *sizes*]
 [-q *quantum*] [-r *requests*] [-F *file*] [-f *test*]
 
@@ -46,6 +46,11 @@ The tool supports comprehensive performance analysis including:
 
 **-7**
 : Use AFP 3.4 protocol version (default)
+
+**-A** *uam*
+: Select authentication with the specified UAM name or alias.
+  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128, and
+  *dhx2* for DHX2.
 
 **-a**
 : Don't flush to disk after write
@@ -142,11 +147,13 @@ The tool supports comprehensive performance analysis including:
 
 # Configuration
 
-The test runner AFP client only supports the ClearTxt UAM currently.
-Configure the UAM in netatalk's afp.conf:
+By default, afp_speedtest uses ClearTxt; **-A clrtxt** selects that same
+legacy login path explicitly. Pass **-A dhx** or **-A dhx2** to use the
+corresponding native encrypted UAM. Configure the selected UAM in
+netatalk's afp.conf:
 
     [Global]
-    uam list = uams_clrtxt.so
+    uam list = uams_dhx.so uams_dhx2.so uams_clrtxt.so
 
 # Output Modes
 

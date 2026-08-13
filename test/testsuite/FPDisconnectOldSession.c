@@ -7,8 +7,10 @@
 extern char  *Server;
 extern int     Port;
 extern char    *Password;
+extern char    *User2;
 extern char *vers;
 extern char *uam;
+extern const char *afptest_uam;
 
 static volatile int sigp = 0;
 
@@ -16,7 +18,6 @@ static void pipe_handler()
 {
     sigp = 1;
 }
-
 
 /* ------------------------- */
 /* FIXME: need to recheck GetSessionToken 0 */
@@ -61,7 +62,7 @@ STATIC void test222()
     }
 
     dsi3->socket = sock;
-    ret = FPopenLoginExt(conn2, vers, uam, User, Password);
+    ret = afptest_login(conn2, vers, uam, afptest_uam, User, Password);
 
     if (ret) {
         test_nottested();
@@ -221,7 +222,7 @@ STATIC void test338()
     }
 
     loc_dsi1->socket = sock1;
-    ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
+    ret = afptest_login(loc_conn1, vers, uam, afptest_uam, User, Password);
 
     if (ret) {
         test_nottested();
@@ -287,7 +288,7 @@ STATIC void test338()
     }
 
     loc_dsi2->socket = sock2;
-    ret = FPopenLoginExt(loc_conn2, vers, uam, User, Password);
+    ret = afptest_login(loc_conn2, vers, uam, afptest_uam, User, Password);
 
     if (ret) {
         test_nottested();
@@ -511,7 +512,6 @@ STATIC void test370()
 {
     char *name = "t370 file";
     char *ndir = "t370 dir";
-    char *no_user_uam = "No User Authent";
     uint16_t vol1;
     unsigned int ret;
     char *token = NULL;
@@ -540,6 +540,14 @@ STATIC void test370()
         goto test_exit;
     }
 
+    /* This verifies that a different authenticated user cannot invalidate
+     * another user's session. The former guest-UAM login is unavailable in
+     * UAM-specific test runs. */
+    if (!User2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
     /* setup 2 new connections for testing */
 
     if ((loc_conn1 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
@@ -557,7 +565,7 @@ STATIC void test370()
     }
 
     loc_dsi1->socket = sock1;
-    ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
+    ret = afptest_login(loc_conn1, vers, uam, afptest_uam, User, Password);
 
     if (ret) {
         test_nottested();
@@ -637,7 +645,7 @@ STATIC void test370()
     }
 
     loc_dsi2->socket = sock2;
-    ret = FPopenLoginExt(loc_conn2, vers, no_user_uam, "", "");
+    ret = afptest_login(loc_conn2, vers, uam, afptest_uam, User2, Password);
 
     if (ret) {
         test_nottested();
@@ -830,12 +838,7 @@ reconnect:
     }
 
     Conn->dsi.socket = sock;
-
-    if (Version >= 30) {
-        ret = FPopenLoginExt(Conn, vers, uam, User, Password);
-    } else {
-        ret = FPopenLogin(Conn, vers, uam, User, Password);
-    }
+    ret = afptest_login(Conn, vers, uam, afptest_uam, User, Password);
 
     if (ret) {
         if (!Quiet) {

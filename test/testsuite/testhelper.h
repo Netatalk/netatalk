@@ -32,8 +32,8 @@
 #define T_CONN2      1
 #define T_PATH       2
 #define T_AFP3       3
-#define T_AFP3_CONN2 4
 #if 0
+#define T_AFP3_CONN2 4
 #define T_MAC_PATH   5
 #endif
 #define T_UNIX_PREV  6

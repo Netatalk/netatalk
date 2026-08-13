@@ -4,7 +4,7 @@ afp_lantest — AFP LAN performance and directory cache testing tool
 
 # Synopsis
 
-**afp_lantest** [-34567bcGgKVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
+**afp_lantest** [-34567bcGgKVv] [-A *uam*] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
 [-n *iterations*] [-f *tests*] [-F *bigfile*]
 
 # Description
@@ -33,6 +33,11 @@ features.
 
 **-7**
 : Use AFP 3.4 protocol version (default)
+
+**-A** *uam*
+: Select authentication with the specified UAM name or alias.
+  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128, and
+  *dhx2* for DHX2.
 
 **-b**
 : Debug mode
@@ -81,11 +86,13 @@ features.
 
 # Configuration
 
-The test runner AFP client only supports the ClearTxt UAM currently.
-Configure the UAM in netatalk's afp.conf:
+By default, the test runner uses ClearTxt; **-A clrtxt** selects that same
+legacy login path explicitly. Pass **-A dhx** or **-A dhx2** to use the
+corresponding native encrypted UAM. Configure the selected UAM in
+netatalk's afp.conf:
 
     [Global]
-    uam list = uams_clrtxt.so
+    uam list = uams_dhx.so uams_dhx2.so uams_clrtxt.so
 
 # Available Tests
 

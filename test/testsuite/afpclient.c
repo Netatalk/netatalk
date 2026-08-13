@@ -589,7 +589,7 @@ unsigned int AFPopenLogin(CONN *conn, const char *vers, const char *uam,
     return dsi->header.dsi_code;
 }
 
-/* Capture FPLoginExt/FPLoginCont reply block on kFPAuthContinue.
+/* Capture FPLogin/FPLoginExt/FPLoginCont reply block on kFPAuthContinue.
  * Reply payload layout (AFP Reference table 51): int16_t ID, then UAM-specific
  * UserAuthInfo. */
 static void capture_login_cont(CONN *conn)
@@ -613,6 +613,48 @@ static void capture_login_cont(CONN *conn)
 
     memcpy(conn->login_cont_data, dsi->commands + sizeof(id_be),
            conn->login_cont_len);
+}
+
+unsigned int AFPopenLoginAuth(CONN *conn, const char *vers, const char *uam,
+                              const void *auth_info, size_t auth_info_len)
+{
+    uint8_t len;
+    int ofs;
+    DSI *dsi = &conn->dsi;
+    assert(conn && vers && uam);
+
+    if (DSIOpenSession(conn)) {
+        return dsi->header.dsi_code;
+    }
+
+    SendInit(dsi);
+    ofs = 0;
+    dsi->commands[ofs++] = AFP_LOGIN;
+    len = (uint8_t)strnlen(vers, UINT8_MAX);
+    dsi->commands[ofs++] = len;
+    assert((size_t)ofs + len <= DSI_CMDSIZ);
+    memcpy(&dsi->commands[ofs], vers, len);
+    ofs += len;
+    len = (uint8_t)strnlen(uam, UINT8_MAX);
+    dsi->commands[ofs++] = len;
+    assert((size_t)ofs + len + auth_info_len <= DSI_CMDSIZ);
+    memcpy(&dsi->commands[ofs], uam, len);
+    ofs += len;
+
+    if (auth_info && auth_info_len) {
+        memcpy(&dsi->commands[ofs], auth_info, auth_info_len);
+        ofs += auth_info_len;
+    }
+
+    SetLen(dsi, ofs);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_cmd_receive(dsi);
+
+    if (dsi->header.dsi_code == htonl((uint32_t)AFPERR_AUTHCONT)) {
+        capture_login_cont(conn);
+    }
+
+    return dsi->header.dsi_code;
 }
 
 /* ---------------------------- */

@@ -2,6 +2,7 @@
 #include <getopt.h>
 
 #include "afpclient.h"
+#include "afptest_uam.h"
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
@@ -239,40 +240,15 @@ static void list_tests(void)
 /* ----------- */
 static void run_one(char *name)
 {
-    int i = 0;
     void *handle = NULL;
     void (*fn)(void) = NULL;
     char *error;
     char *token;
     token = strtok(name, ",");
 
-    while (Test_list[i].name != NULL) {
-        if (!strcmp(Test_list[i].name, name)) {
-            break;
-        }
-
-        i++;
-    }
-
-    if (Test_list[i].name == NULL) {
-        handle = dlopen(NULL, RTLD_NOW);
-
-        if (handle) {
-            fn = dlsym(handle, token);
-
-            if ((error = dlerror()) != NULL)  {
-                fprintf(stdout, "%s (%p)\n", error, fn);
-            }
-        } else {
-            fprintf(stdout, "%s\n", dlerror());
-        }
-
-        if (!handle || !fn) {
-            test_nottested();
-            return;
-        }
-    } else {
-        fn = Test_list[i].fn;
+    if (!token) {
+        test_nottested();
+        return;
     }
 
     dsi = &Conn->dsi;
@@ -285,17 +261,44 @@ static void run_one(char *name)
     }
 
     while (token) {
-        press_enter(token);
-        (*fn)();
-        token = strtok(NULL, ",");
+        int i = 0;
 
-        if (token && handle) {
-            fn = dlsym(handle, token);
+        /* Resolve every token: comma-separated built-in testsets may differ. */
+        while (Test_list[i].name != NULL && strcmp(Test_list[i].name, token)) {
+            i++;
+        }
 
-            if ((error = dlerror()) != NULL)  {
-                fprintf(stdout, "%s\n", error);
+        if (Test_list[i].name != NULL) {
+            fn = Test_list[i].fn;
+        } else {
+            if (!handle) {
+                handle = dlopen(NULL, RTLD_NOW);
+
+                if (!handle) {
+                    fprintf(stdout, "%s\n", dlerror());
+                }
+            }
+
+            fn = NULL;
+
+            if (handle) {
+                dlerror();
+                fn = dlsym(handle, token);
+
+                if ((error = dlerror()) != NULL)  {
+                    fprintf(stdout, "%s (%p)\n", error, fn);
+                }
             }
         }
+
+        if (!fn) {
+            test_nottested();
+        } else {
+            press_enter(token);
+            (*fn)();
+        }
+
+        token = strtok(NULL, ",");
     }
 
     if (handle) {
@@ -350,13 +353,17 @@ enum ad_format adouble = AD_EA;
 
 char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";
+/* Also used by tests that create or reconnect their own AFP sessions. */
+const char *afptest_uam;
 
 /* =============================== */
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567aCEiLlmVv] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+            "usage:\t%s [-1234567aCEiLlmVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
+    fprintf(stdout,
+            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2)\n");
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
@@ -399,7 +406,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCEiLlmVvc:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567aCEiLlmVvA:c:d:f:H:h:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -434,6 +441,10 @@ int main(int ac, char **av)
         case '7':
             vers = "AFP3.4";
             Version = 34;
+            break;
+
+        case 'A':
+            afptest_uam = afptest_uam_uses_legacy_login(optarg) ? NULL : optarg;
             break;
 
         case 'a':
@@ -568,7 +579,9 @@ int main(int ac, char **av)
 
     Dsi->socket = sock;
 
-    if (Version >= 30) {
+    if (afptest_uam) {
+        ret = afptest_uam_login(Conn, vers, afptest_uam, User, Password);
+    } else if (Version >= 30) {
         ret = FPopenLoginExt(Conn, vers, uam, User, Password);
     } else {
         ret = FPopenLogin(Conn, vers, uam, User, Password);
@@ -602,7 +615,10 @@ int main(int ac, char **av)
 
         Dsi2->socket = sock2;
 
-        if (Version >= 30) {
+        if (afptest_uam) {
+            ret = afptest_uam_login(Conn2, vers, afptest_uam, User2,
+                                    Password);
+        } else if (Version >= 30) {
             ret = FPopenLoginExt(Conn2, vers, uam, User2, Password);
         } else {
             ret = FPopenLogin(Conn2, vers, uam, User2, Password);

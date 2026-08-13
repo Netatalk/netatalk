@@ -41,7 +41,7 @@ docker run --rm --privileged --network host \
     --env AFP_VERSION=7 \
     --env AFP_GROUP=afpusers \
     --env TZ=Europe/London \
-    --env TESTSUITE=spectest \
+    --env TESTSUITE=spec \
     --env INSECURE_AUTH=1 \
     --env DISABLE_TIMEMACHINE=1 \
     --env FLAMEGRAPH=1 \
