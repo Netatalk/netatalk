@@ -5,7 +5,7 @@ afp_spectest — AFP specification compliance test suite
 # Synopsis
 
 **afp_spectest** [-1234567aCEiLmVv] [-A *uam*] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
-[-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
+[-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*] [-j *path*]
 
 **afp_spectest** -l
 
@@ -73,6 +73,11 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 **-i**
 : Interactive mode – prompt user before each test (used for debugging)
+
+**-j** *path*
+: Write the completed test results as a JUnit XML file at *path*. The
+  existing terminal output and return codes are unchanged. The destination must
+  be a file path; standard output (`-`) is not supported.
 
 **-l**
 : List all available testsets and exit

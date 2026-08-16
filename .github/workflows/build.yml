@@ -105,6 +105,12 @@ jobs:
         run: meson compile -C build
       - name: Test
         run: meson test -C build
+      - name: Summarize test results
+        if: always()
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
+        with:
+          paths: build/meson-logs/testlog.junit.xml
+          folded: true
       - name: Run memory profiling
         run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
@@ -184,6 +190,12 @@ jobs:
         run: meson compile -C build
       - name: Test
         run: meson test -C build
+      - name: Summarize test results
+        if: always()
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
+        with:
+          paths: build/meson-logs/testlog.junit.xml
+          folded: true
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
@@ -281,6 +293,12 @@ jobs:
         run: meson compile -C build
       - name: Test
         run: meson test -C build
+      - name: Summarize test results
+        if: always()
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
+        with:
+          paths: build/meson-logs/testlog.junit.xml
+          folded: true
       - name: Run memory profiling
         run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
@@ -372,6 +390,12 @@ jobs:
         run: meson compile -C build
       - name: Test
         run: meson test -C build
+      - name: Summarize test results
+        if: always()
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
+        with:
+          paths: build/meson-logs/testlog.junit.xml
+          folded: true
       - name: Run memory profiling
         run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
@@ -467,6 +491,12 @@ jobs:
         run: meson compile -C build
       - name: Test
         run: meson test -C build
+      - name: Summarize test results
+        if: always()
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
+        with:
+          paths: build/meson-logs/testlog.junit.xml
+          folded: true
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
@@ -549,6 +579,12 @@ jobs:
         run: file build/etc/afpd/afpd | grep -q 'ELF 32-bit'
       - name: Test
         run: meson test -C build
+      - name: Summarize test results
+        if: always()
+        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
+        with:
+          paths: build/meson-logs/testlog.junit.xml
+          folded: true
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities

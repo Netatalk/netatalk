@@ -7,6 +7,7 @@
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
+#include "testreport.h"
 #include "afpclient.h"
 #include "afphelper.h"
 #include "testhelper.h"
@@ -15,6 +16,8 @@ static int CurTestResult;
 static char *Why;
 #define SKIPPED_MSG_BUFSIZE 256
 static char skipped_msg_buf[SKIPPED_MSG_BUFSIZE];
+static char failure_location[256];
+static char skip_reason[SKIPPED_MSG_BUFSIZE];
 
 /* ------------------------- */
 void test_skipped(int why)
@@ -150,6 +153,7 @@ void test_skipped(int why)
         snprintf(skipped_msg_buf, sizeof(skipped_msg_buf), "SKIPPED (%s)", s);
     }
 
+    strlcpy(skip_reason, s, sizeof(skip_reason));
     CurTestResult = 3;
 }
 
@@ -157,13 +161,14 @@ void test_skipped(int why)
 void test_failed_at(const char *file, int line)
 {
     fprintf(stderr, "\n*** ERROR: test_failed() called at %s:%d ***\n", file, line);
-    
+
     if (!Quiet) {
         fprintf(stderr, "\tFAILED\n");
     }
 
     ExitCode = 1;
     CurTestResult = 1;
+    snprintf(failure_location, sizeof(failure_location), "%s:%d", file, line);
 }
 
 /* ------------------------- */
@@ -183,6 +188,8 @@ void test_nottested(void)
 /* ------------------------- */
 void enter_test(void)
 {
+    testreport_begin_case();
+
     if (EmptyVol) {
         clear_volume(VolID, Conn);
 
@@ -193,12 +200,15 @@ void enter_test(void)
 
     CurTestResult = 0;
     Why = "";
+    failure_location[0] = '\0';
+    skip_reason[0] = '\0';
 }
 
 /* ------------------------- */
 void exit_test(char *name)
 {
     char *s;
+    char unknown_result[64];
 
     switch (CurTestResult) {
     case 0:
@@ -223,10 +233,7 @@ void exit_test(char *name)
             s = "FAILED";
         }
 
-        fprintf(stdout, "%s - ", name);
-        fprintf(stdout, "%s%s\n", s, Why);
-        fflush(stdout);
-        return;
+        break;
 
     case 2:
         strlcpy(NotTestedTests[NotTestedCount], name, 255);
@@ -249,13 +256,14 @@ void exit_test(char *name)
         break;
 
     default:
-        fprintf(stdout, "%s - ", name);
-        fprintf(stdout, "UNKNOWN RESULT (%d)%s\n", CurTestResult, Why);
-        fflush(stdout);
-        return;
+        snprintf(unknown_result, sizeof(unknown_result), "UNKNOWN RESULT (%d)",
+                 CurTestResult);
+        s = unknown_result;
+        break;
     }
 
     fprintf(stdout, "%s - ", name);
     fprintf(stdout, "%s%s\n", s, Why);
     fflush(stdout);
+    testreport_end_case(name, CurTestResult, failure_location, skip_reason);
 }

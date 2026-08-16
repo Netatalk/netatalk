@@ -68,8 +68,14 @@ else
             if [ -n "$AFP_SUBTESTS" ]; then
                 set -- "$@" -f "$AFP_SUBTESTS"
             fi
+            if [ -n "$AFP_JUNIT_REPORT_PATH" ]; then
+                set -- "$@" -j "$AFP_JUNIT_REPORT_PATH"
+            fi
             afp_spectest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
+            if [ -n "$AFP_JUNIT_REPORT_PATH" ] && [ -f "$AFP_JUNIT_REPORT_PATH" ]; then
+                chmod 0644 "$AFP_JUNIT_REPORT_PATH"
+            fi
             ;;
         login)
             set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \

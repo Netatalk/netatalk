@@ -186,6 +186,23 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: type=raw,value=${{ github.sha }}
       - name: Build and push container image
+        id: build-and-push
+        continue-on-error: true
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: distrib/docker/testsuite_deb.Dockerfile
+          push: true
+          build-args: |
+            EXTRA_MESON_ARGS=-Db_sanitize=thread
+            EXTRA_RUN_DEPS=libtsan2
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+      - name: Wait before retrying container image push
+        if: ${{ steps.build-and-push.outcome == 'failure' }}
+        run: sleep 10
+      - name: Retry container image push
+        if: ${{ steps.build-and-push.outcome == 'failure' }}
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -203,6 +220,9 @@ jobs:
     timeout-minutes: 60
     needs: build-container-tsan
     if: ${{ !github.event.pull_request.head.repo.fork }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Lower ASLR entropy for TSAN shadow-memory compatibility
         run: sudo sysctl vm.mmap_rnd_bits=28
@@ -218,6 +238,8 @@ jobs:
               -e SHARE_NAME=test1 -e SHARE_NAME2=test2 \
               -e INSECURE_AUTH=1 -e DISABLE_TIMEMACHINE=1 \
               -e TESTSUITE=spec -e AFP_VERSION=7 \
+              -v "$RUNNER_TEMP:/reports" \
+              -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
               -e AFP_CNID_BACKEND=sqlite \
               -e TSAN_OPTIONS="halt_on_error=1 abort_on_error=1" \
               ${{ env.REGISTRY }}/${IMAGE_NAME}:${{ github.sha }}
@@ -232,6 +254,17 @@ jobs:
               -e AFP_CNID_BACKEND=sqlite \
               -e TSAN_OPTIONS="halt_on_error=1 abort_on_error=1" \
               ${{ env.REGISTRY }}/${IMAGE_NAME}:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   build-container-debug:
     name: Build debug profiling container
@@ -259,6 +292,20 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: type=raw,value=${{ github.sha }}
       - name: Build and push container image
+        id: build-and-push
+        continue-on-error: true
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: distrib/docker/debug_alp.Dockerfile
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+      - name: Wait before retrying container image push
+        if: ${{ steps.build-and-push.outcome == 'failure' }}
+        run: sleep 10
+      - name: Retry container image push
+        if: ${{ steps.build-and-push.outcome == 'failure' }}
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
@@ -275,6 +322,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
     permissions:
       contents: write
+      checks: write
     outputs:
       self_time: ${{ steps.flamegraph-summary.outputs.SELF_TIME }}
       self_time_warning: ${{ steps.flamegraph-summary.outputs.SELF_TIME_WARNING }}
@@ -307,6 +355,8 @@ jobs:
               -e AFP_CNID_BACKEND=sqlite \
               -e AFP_CNID_TMPFS=1 \
               -e TESTSUITE=spec \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
               -e AFP_VERSION=7 \
               -e FLAMEGRAPH=1 \
               ${{ env.REGISTRY }}/netatalk/netatalk-debug:${{ github.sha }} \
@@ -381,6 +431,17 @@ jobs:
           commit-prefix: flamegraph
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-spectest-dbd-afp34-prod:
     name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Client/Server, PerfConfig)
     needs:
@@ -389,6 +450,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Create Docker network
         run: |
@@ -427,11 +491,24 @@ jobs:
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
               -e TESTSUITE=spec \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
               -e AFP_HOST=afp_server \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-mysql-afp34-prod:
     name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Client/Server/Database, PerfConfig)
@@ -441,6 +518,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Create container network
         run: |
@@ -491,6 +571,8 @@ jobs:
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
               -e TESTSUITE=spec \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -498,6 +580,17 @@ jobs:
               -e AFP_CNID_SQL_HOST=mariadb \
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-sqlite-afp34-prod:
     name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine (Client/Server, PerfConfig)
@@ -507,6 +600,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Create Docker network
         run: |
@@ -546,11 +642,24 @@ jobs:
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
               -e TESTSUITE=spec \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
               -e AFP_HOST=afp_server \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-mysql-afp34-debian:
     name: AFP spec test (cnid:mysql) AFP 3.4 - Debian
@@ -558,6 +667,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Create container network
         run: |
@@ -585,6 +697,8 @@ jobs:
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
               -e TESTSUITE=spec \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
               -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -596,12 +710,26 @@ jobs:
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-spectest-sqlite-afp34-debian:
     name: AFP spec test (cnid:sqlite) AFP 3.4 - Debian
     needs: build-container-testsuite-debian
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -617,6 +745,8 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -624,12 +754,26 @@ jobs:
             -e AFP_CONVERT_APPLEDOUBLE=yes \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-spectest-afp34:
     name: AFP spec test (ea:sys) AFP 3.4 - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -644,11 +788,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   samba-interop:
     name: samba-client and netatalk-client interop (ea:samba) - Debian
@@ -680,6 +837,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -694,6 +854,8 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -701,12 +863,26 @@ jobs:
             -e AFP_STRICT_LOCKING="yes" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-spectest-sqlite-afp34:
     name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -722,11 +898,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-afp34-debian:
     name: AFP spec test (ea:sys) AFP 3.4 - Debian
@@ -734,6 +923,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -748,11 +940,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-adtest-afp34:
     name: AFP spec test (ea:ad) AFP 3.4 - Alpine
@@ -760,6 +965,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -776,6 +984,8 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -784,12 +994,26 @@ jobs:
             -e AFP_DIRCACHE_RFORK_MAXSIZE="5120" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-adtest-afp34-debian:
     name: AFP spec test (ea:ad) AFP 3.4 - Debian
     needs: build-container-testsuite-debian
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -806,11 +1030,24 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-afp33:
     name: AFP spec test (ea:sys) AFP 3.3 - Alpine
@@ -818,6 +1055,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -832,6 +1072,8 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="6" \
             -e AFP_EXTMAP="1" \
@@ -839,12 +1081,26 @@ jobs:
             -e AFP_CONVERT_APPLEDOUBLE=yes \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-spectest-afp32:
     name: AFP spec test (ea:sys) AFP 3.2 - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -859,6 +1115,8 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="5" \
             -e AFP_EXTMAP="1" \
@@ -866,12 +1124,26 @@ jobs:
             -e AFP_CONVERT_APPLEDOUBLE=yes \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-spectest-afp31:
     name: AFP spec test (ea:sys) AFP 3.1 - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -886,11 +1158,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="4" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-afp30:
     name: AFP spec test (ea:sys) AFP 3.0 - Alpine
@@ -898,6 +1183,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -912,11 +1200,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-afp30-debian:
     name: AFP spec test (ea:sys) AFP 3.0 - Debian
@@ -924,6 +1225,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -938,11 +1242,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-dhx-afp30:
     name: AFP spec test (DHCAST128) AFP 3.0 - Alpine
@@ -950,6 +1267,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -964,12 +1284,25 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_TESTSUITE_UAM="dhx" \
             -e VERBOSE="1" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-dhx-afp34-debian:
     name: AFP spec test (DHCAST128) AFP 3.4 - Debian
@@ -977,6 +1310,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -991,12 +1327,25 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_TESTSUITE_UAM="dhx" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-dhx2-afp31:
     name: AFP spec test (DHX2) AFP 3.1 - Alpine
@@ -1004,6 +1353,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1018,6 +1370,8 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_TESTSUITE_UAM="dhx2" \
             -e VERBOSE="1" \
             -e AFP_VERSION="4" \
@@ -1025,12 +1379,26 @@ jobs:
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
   afp-spectest-dhx2-afp34-debian:
     name: AFP spec test (DHX2) AFP 3.4 - Debian
     needs: build-container-testsuite-debian
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1045,12 +1413,25 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_TESTSUITE_UAM="dhx2" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-afp22:
     name: AFP spec test (ea:sys) AFP 2.2 - Alpine
@@ -1058,6 +1439,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1072,11 +1456,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="2" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-afp21:
     name: AFP spec test (ea:sys) AFP 2.1 - Alpine
@@ -1084,6 +1481,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1098,11 +1498,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-spectest-afp21-debian:
     name: AFP spec test (ea:sys) AFP 2.1 - Debian
@@ -1110,6 +1523,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1124,11 +1540,24 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-adtest-afp21:
     name: AFP spec test (ea:ad) AFP 2.1 - Alpine
@@ -1136,6 +1565,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1152,11 +1584,24 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-adtest-afp21-debian:
     name: AFP spec test (ea:ad) AFP 2.1 - Debian
@@ -1164,6 +1609,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1180,11 +1628,24 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-rotest-afp34:
     name: AFP spec test (readonly) AFP 3.4 - Alpine
@@ -1192,6 +1653,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1203,10 +1667,23 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_SUBTESTS="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-rotest-afp21:
     name: AFP spec test (readonly) AFP 2.1 - Alpine
@@ -1214,6 +1691,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1225,10 +1705,23 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_SUBTESTS="Readonly" \
             -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-sleeptest-afp34:
     name: AFP spec test (sleep) AFP 3.4 - Alpine
@@ -1236,6 +1729,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1246,11 +1742,24 @@ jobs:
             -e SHARE_NAME="test1" \
             -e AFP_UAMS="uams_dhx2.so" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_SUBTESTS="FPZzzzz" \
             -e AFP_TESTSUITE_UAM="dhx2" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-sleeptest-afp30:
     name: AFP spec test (sleep) AFP 3.0 - Alpine
@@ -1258,6 +1767,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1268,11 +1780,24 @@ jobs:
             -e SHARE_NAME="test1" \
             -e AFP_UAMS="uams_dhx.so" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_SUBTESTS="FPZzzzz" \
             -e AFP_TESTSUITE_UAM="dhx" \
             -e VERBOSE="1" \
             -e AFP_VERSION="3" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
   afp-logintest-afp34:
     name: AFP login test AFP 3.4 - Alpine
@@ -1939,6 +2464,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Run Netatalk testsuite with ARC stress test
         run: |
@@ -1953,6 +2481,8 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -1962,3 +2492,13 @@ jobs:
             -e AFP_DIRCACHE_RFORK_BUDGET="102400" \
             -e AFP_DIRCACHE_RFORK_MAXSIZE="5120" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit

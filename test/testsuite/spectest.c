@@ -1,11 +1,17 @@
+#include <errno.h>
 #include <dlfcn.h>
 #include <getopt.h>
+#include <string.h>
 
 #include "afpclient.h"
 #include "afptest_uam.h"
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
+#include "testreport.h"
+
+static void report_runner_failure(const char *name, const char *message);
+static int finish_report(int code);
 
 uint16_t VolID;
 static DSI *dsi;
@@ -248,6 +254,7 @@ static void run_one(char *name)
 
     if (!token) {
         test_nottested();
+        report_runner_failure("runner.selector", "empty test selector");
         return;
     }
 
@@ -257,6 +264,7 @@ static void run_one(char *name)
 
     if (VolID == 0xffff) {
         test_nottested();
+        report_runner_failure("runner.open-volume", "unable to open test volume");
         return;
     }
 
@@ -293,6 +301,7 @@ static void run_one(char *name)
 
         if (!fn) {
             test_nottested();
+            report_runner_failure(token, "unknown test selector");
         } else {
             press_enter(token);
             (*fn)();
@@ -318,6 +327,7 @@ static void run_all()
 
     if (VolID == 0xffff) {
         test_nottested();
+        report_runner_failure("runner.open-volume", "unable to open test volume");
         return;
     }
 
@@ -353,15 +363,31 @@ enum ad_format adouble = AD_EA;
 
 char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";
+static char *JunitXML;
 /* Also used by tests that create or reconnect their own AFP sessions. */
 const char *afptest_uam;
+
+static void report_runner_failure(const char *name, const char *message)
+{
+    testreport_record_case(name, TESTREPORT_NOT_TESTED, message);
+}
+
+static int finish_report(int code)
+{
+    if (testreport_finalize()) {
+        fprintf(stderr, "Unable to write JUnit XML report: %s\n", strerror(errno));
+        return 1;
+    }
+
+    return code;
+}
 
 /* =============================== */
 void usage(char *av0)
 {
     fprintf(stdout,
             "usage:\t%s [-1234567aCEiLlmVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
-            "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
+            "[-u user] [-d user2] [-w password] [-F testsuite] [-f test] [-j path]\n", av0);
     fprintf(stdout,
             "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2)\n");
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
@@ -385,6 +411,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-v\tverbose\n");
     fprintf(stdout, "\t-V\tvery verbose\n");
     fprintf(stdout, "\t-f\ttest or testset to run\n");
+    fprintf(stdout, "\t-j PATH\twrite an opt-in JUnit XML report to PATH\n");
     fprintf(stdout, "\t-l\tlist testsets\n");
     fprintf(stdout,
             "\t-L\tserver has 'strict locking = yes'; run byte-range read-lock conflict tests\n");
@@ -406,7 +433,8 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCEiLlmVvA:c:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av,
+                        "1234567aCEiLlmVvA:c:d:f:H:h:j:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -530,6 +558,10 @@ int main(int ac, char **av)
             Password = strdup(optarg);
             break;
 
+        case 'j':
+            JunitXML = strdup(optarg);
+            break;
+
         default :
             usage(av[0]);
         }
@@ -537,9 +569,15 @@ int main(int ac, char **av)
 
     Loglevel = AFP_LOG_INFO;
 
+    if (testreport_configure(JunitXML, "afp_spectest")) {
+        fprintf(stderr, "Invalid JUnit XML output path: %s\n",
+                JunitXML ? JunitXML : "");
+        return 1;
+    }
+
     if (List) {
         list_tests();
-        exit(2);
+        return finish_report(2);
     }
 
     if (!Quiet) {
@@ -565,7 +603,8 @@ int main(int ac, char **av)
      ************************************/
 
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        return 1;
+        report_runner_failure("runner.connect", "unable to allocate connection");
+        return finish_report(1);
     }
 
     int sock;
@@ -574,7 +613,8 @@ int main(int ac, char **av)
     sock = OpenClientSocket(Server, Port);
 
     if (sock < 0) {
-        return 2;
+        report_runner_failure("runner.connect", "unable to connect to AFP server");
+        return finish_report(2);
     }
 
     Dsi->socket = sock;
@@ -589,7 +629,8 @@ int main(int ac, char **av)
 
     if (ret) {
         printf("Login failed\n");
-        exit(1);
+        report_runner_failure("runner.login", "AFP login failed");
+        return finish_report(1);
     }
 
     Conn->afp_version = Version;
@@ -602,7 +643,9 @@ int main(int ac, char **av)
 
     if (User2) {
         if ((Conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-            return 1;
+            report_runner_failure("runner.connect-user2",
+                                  "unable to allocate second connection");
+            return finish_report(1);
         }
 
         int sock2;
@@ -610,7 +653,9 @@ int main(int ac, char **av)
         sock2 = OpenClientSocket(Server2 ? Server2 : Server, Port);
 
         if (sock2 < 0) {
-            return 1;
+            report_runner_failure("runner.connect-user2",
+                                  "unable to connect second AFP session");
+            return finish_report(1);
         }
 
         Dsi2->socket = sock2;
@@ -626,7 +671,8 @@ int main(int ac, char **av)
 
         if (ret) {
             printf("Login failed\n");
-            exit(1);
+            report_runner_failure("runner.login-user2", "second AFP login failed");
+            return finish_report(1);
         }
 
         Conn2->afp_version = Version;
@@ -678,5 +724,5 @@ int main(int ac, char **av)
         }
     }
 
-    return ExitCode;
+    return finish_report(ExitCode);
 }
