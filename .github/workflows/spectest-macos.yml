@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 env:
   AFP_USER: atalk1
@@ -220,6 +221,8 @@ jobs:
 
       - name: Run AFP spec test (AFP 3.4)
         run: |
+          REPORT_PATH="$RUNNER_TEMP/afp-spectest.junit.xml"
+          set +e
           sudo afp_spectest \
             -7 \
             -h localhost \
@@ -229,7 +232,19 @@ jobs:
             -w "$AFP_PASS" \
             -s test1 \
             -S test2 \
-            -c /private/tmp/afptest/test1
+            -c /private/tmp/afptest/test1 \
+            -j "$REPORT_PATH"
+          TEST_STATUS=$?
+          sudo chown "$(id -u):$(id -g)" "$REPORT_PATH"
+          exit "$TEST_STATUS"
+
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (macOS)
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
 
       - name: Show netatalk log after test
         if: always()

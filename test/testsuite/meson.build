@@ -14,6 +14,7 @@ libafptest_sources = [
     'afpcmd.c',
     'afphelper.c',
     'testhelper.c',
+    'testreport.c',
 ]
 
 # Spotlight-only testsuite additions. The talloc dependency and the
@@ -53,6 +54,13 @@ libafptest = static_library(
     dependencies: libafptest_deps,
     link_with: libatalk,
 )
+
+testreport_test = executable(
+    'testreport_test',
+    ['testreport_test.c', 'testreport.c'],
+    include_directories: root_includes,
+)
+test('testreport', testreport_test)
 
 afparg_sources = [
     'afparg.c',

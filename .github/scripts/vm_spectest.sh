@@ -62,6 +62,8 @@ echo "==== Running AFP spec test (AFP 3.4) ===="
 set +e
 # TEST_FLAGS holds multiple flags (e.g. "-c /path" or "-a"); must split.
 # shellcheck disable=SC2086
+JUNIT_REPORT_PATH="$PWD/afp-spectest.junit.xml"
+rm -f "$JUNIT_REPORT_PATH"
 afp_spectest $TEST_FLAGS \
     -"$AFP_VERSION" \
     -h "$AFP_HOST" \
@@ -70,8 +72,12 @@ afp_spectest $TEST_FLAGS \
     -d "$AFP_USER2" \
     -w "$AFP_PASS" \
     -s "$SHARE_NAME" \
-    -S "$SHARE_NAME2"
+    -S "$SHARE_NAME2" \
+    -j "$JUNIT_REPORT_PATH"
 SPECTEST_RC=$?
+if [ -f "$JUNIT_REPORT_PATH" ]; then
+    chmod 0644 "$JUNIT_REPORT_PATH"
+fi
 set -e
 
 echo "==== afpd.log (tail) ===="

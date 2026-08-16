@@ -21,9 +21,6 @@ on:
       - synchronize
       - reopened
 
-permissions:
-  contents: read
-
 env:
   CMARK_TARBALL_URL: https://github.com/commonmark/cmark/archive/refs/tags/0.31.2.tar.gz
   INIPARSER_TARBALL_URL: https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
@@ -36,6 +33,9 @@ jobs:
     name: AFP Spectest - DragonFlyBSD (sys:ad, HAMMER2)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -108,6 +108,13 @@ jobs:
           export SERVICE_START="/usr/local/etc/rc.d/netatalk onestart"
           export SERVICE_STOP="/usr/local/etc/rc.d/netatalk onestop"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -119,6 +126,9 @@ jobs:
     name: AFP Spectest - FreeBSD (PerfConfig, UFS)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -188,6 +198,13 @@ jobs:
           export SERVICE_START="/usr/local/etc/rc.d/netatalk onestart"
           export SERVICE_STOP="/usr/local/etc/rc.d/netatalk onestop"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -199,6 +216,9 @@ jobs:
     name: AFP Spectest - FreeBSD (PerfConfig, ZFS)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -276,6 +296,13 @@ jobs:
           export SERVICE_START="/usr/local/etc/rc.d/netatalk onestart"
           export SERVICE_STOP="/usr/local/etc/rc.d/netatalk onestop"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -287,6 +314,9 @@ jobs:
     name: AFP Spectest - NetBSD (sys:ad, FFS)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -359,6 +389,13 @@ jobs:
           export SERVICE_START="service netatalk onestart"
           export SERVICE_STOP="service netatalk onestop"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -370,6 +407,9 @@ jobs:
     name: AFP Spectest - OpenBSD (sys:ad, FFS)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -439,6 +479,13 @@ jobs:
           export SERVICE_START="rcctl -d start netatalk"
           export SERVICE_STOP="rcctl -d stop netatalk"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -450,6 +497,9 @@ jobs:
     name: AFP Spectest - OmniOS (sys:ad, ZFS)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -533,6 +583,13 @@ jobs:
           export SERVICE_START="svcadm enable -s svc:/network/netatalk:default"
           export SERVICE_STOP="svcadm disable -s svc:/network/netatalk:default"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -544,6 +601,9 @@ jobs:
     name: AFP Spectest - OpenIndiana (sys:ad, ZFS)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -621,6 +681,13 @@ jobs:
           export SERVICE_START="svcadm enable -s svc:/network/netatalk:default"
           export SERVICE_STOP="svcadm disable -s svc:/network/netatalk:default"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -632,6 +699,9 @@ jobs:
     name: AFP Spectest - Solaris (sys:ad, ZFS)
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -711,6 +781,13 @@ jobs:
           export SERVICE_START="svcadm enable -s svc:/network/netatalk:default"
           export SERVICE_STOP="svcadm disable -s svc:/network/netatalk:default"
           sh ./.github/scripts/vm_spectest.sh
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: afp-spectest.junit.xml
+          reporter: java-junit
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
