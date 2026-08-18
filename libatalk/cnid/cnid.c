@@ -130,7 +130,7 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
             return NULL;
         }
 
-        if (cnid_dir(vol->v_path, vol->v_umask) < 0) {
+        if (cnid_dir(vol->v_path, vol_umask(vol)) < 0) {
             if (setegid(gid) < 0 || seteuid(uid) < 0) {
                 LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
                 exit(EXITERR_SYS);

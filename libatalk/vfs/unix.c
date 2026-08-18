@@ -52,7 +52,7 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode,
     mode |= st->st_mode & ~mask;
 
     if (ochmod((char *)name,
-               mode & ~vol->v_umask,
+               mode & ~vol_umask(vol),
                st,
                vol_syml_opt(vol) | vol_chmod_opt(vol)
               ) < 0 && errno != EPERM) {

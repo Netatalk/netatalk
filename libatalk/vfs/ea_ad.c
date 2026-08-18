@@ -427,7 +427,7 @@ static int write_ea(const struct ea *ea,
 
     LOG(log_maxdebug, logtype_afpd, "write_ea('%s')", eaname);
 
-    if ((fd = open(eaname, O_RDWR | O_CREAT, 0666 & ~ea->vol->v_umask)) == -1) {
+    if ((fd = open(eaname, O_RDWR | O_CREAT, 0666 & ~vol_umask(ea->vol))) == -1) {
         LOG(log_error, logtype_afpd, "write_ea: open error: %s", eaname);
         return AFPERR_MISC;
     }
@@ -655,7 +655,7 @@ int ea_open(const struct vol *vol,
         open_flags |= O_CREAT;
     }
 
-    ea->ea_fd = open(eaname, open_flags, 0666 & ~ea->vol->v_umask);
+    ea->ea_fd = open(eaname, open_flags, 0666 & ~vol_umask(ea->vol));
 
     if (ea->ea_fd == -1) {
         if (errno == ENOENT && !(eaflags & EA_CREATE)) {
@@ -1603,7 +1603,7 @@ int ea_copyfile(const struct vol *vol, int sfd, const char *src,
         }
 
         /* Now copy the EA */
-        if ((copy_file(sfd, srceapath, eapath, (0666 & ~vol->v_umask))) < 0) {
+        if (copy_file(sfd, srceapath, eapath, 0666 & ~vol_umask(vol)) < 0) {
             LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): copying EA '%s' to '%s'",
                 src, dst, srceapath, eapath);
             ret = AFPERR_MISC;
