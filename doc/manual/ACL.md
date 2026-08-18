@@ -1,116 +1,103 @@
 # ACL Support
 
-ACL support for AFP is implemented for ZFS ACLs on Solaris and derived platforms,
-and for POSIX 1e ACLs on Linux.
+Netatalk maps ACLs on a supported server filesystem to AFP ACLs and effective
+AFP permissions. It does not provide one ACL implementation for every server
+platform or make ACLs override the host filesystem's access checks.
 
-## Configuration
+## Support matrix
 
-For basic operation, no additional configuration is needed.
-Netatalk reads ACLs on the fly and calculates effective permissions,
-which are then sent to the AFP client via the so-called UARights permission bits.
-On a Mac, the Finder uses these bits to adjust permissions in its windows.
-For example, a folder whose UNIX mode is read-only
-but whose ACL grants the user write access will display the effective read-write permission.
-Without this permission mapping,
-the Finder would display a read-only icon and the user would not be able to write to the folder.
+| Server platform and ACL backend | Support | AFP behavior |
+| --- | --- | --- |
+| Solaris/illumos with NFSv4/ZFS ACLs | Supported | Maps NFSv4 ACEs to and from the AFP/macOS ACL format. |
+| FreeBSD with `libsunacl`/ZFS ACLs | Supported | Uses the NFSv4/ZFS ACL implementation. |
+| Linux with POSIX 1e ACLs | Supported | Maps the less expressive POSIX ACL model to AFP; see [POSIX ACLs](#posix-acls). |
+| macOS (Darwin) host ACLs | Not supported | Disabled at the build system level. |
+| macOS AFP client | Supported | Can use the ACL facilities of a supported server backend. |
 
-By default,
-the authenticated user's effective permissions are only mapped to the UARights permission structure,
-not the UNIX mode.
-You can adjust this behavior with the configuration option [map acls](afp.conf.html#options-for-acl-handling).
+Other platforms may compile when a compatible POSIX ACL API is found, but are
+not part of the documented support matrix.
 
-However, neither in Finder "Get Info" windows nor in the Terminal will you be able to see the ACLs,
-because of how macOS ACLs are designed.
-To display ACLs on the client,
-you must set up both client and server as part of an authentication domain
-(directory service, e.g. LDAP, OpenDirectory).
-The reason is that macOS ACLs are bound to UUIDs, not just UIDs or GIDs.
-Therefore **afpd** must be able to map every filesystem UID and GID to a UUID
-so that it can return server-side ACLs —
-which are bound to UNIX UID and GID —
-mapped to macOS UUIDs.
+## How Netatalk uses ACLs
 
-Netatalk can query a directory server using LDAP.
-Either the directory server already provides a UUID attribute for users and groups
-(Active Directory, Open Directory),
-or you can repurpose an unused attribute (or add a new one) in your directory server
-(e.g. OpenLDAP).
+After authentication, **afpd** calculates the user's effective filesystem ACL
+rights and maps them to AFP UARights. Finder uses UARights to decide which
+operations to offer. For example, a directory with restrictive mode bits but
+an ACL granting the user write access can be shown as writable to that user.
+The host filesystem remains the authority for the operation itself.
 
-In detail:
+The [map acls](afp.conf.html#options-for-acl-handling) option controls this
+client-facing mapping:
 
-1. For Solaris/ZFS: ZFS Volumes
+- `rights` (the default) maps effective ACL rights to AFP UARights.
 
-    You should configure the following ZFS ACL properties for any volume you want to use
-    with Netatalk:
+- `mode` also adjusts the UNIX mode reported through AFP so that it reflects
+  the mapped ACL rights. It does not change the filesystem object's mode.
 
-        aclinherit = passthrough
-        aclmode = passthrough
+- `none` disables effective-rights mapping.
 
-    For an explanation of what these properties do and how to apply them,
-    check your host's ZFS documentation (e.g. *man zfs*).
+ACL effective-rights mapping does not require LDAP, Active Directory, or any
+other directory service. It uses the authenticated user's local UNIX identity
+and the server filesystem's ACL.
 
-2. Authentication Domain
+AFP ACL entries identify users and groups by UUID, whereas the supported server
+ACL backends identify named entries by UID or GID. When returning or accepting
+ACL entries, Netatalk resolves the UID or GID through the server's normal
+user/group lookup and translates the resulting name to or from a UUID. Without
+LDAP configured, it can generate a reversible, Netatalk-local UUID from a
+local UID or GID. This is sufficient for the server-side mapping, but Netatalk
+advertises the volume as not supporting network identities, so macOS clients do
+not use the AFP ACL-entry display and editing functions.
 
-    Your server and clients must be part of a security association
-    where identity data comes from a common source.
-    ACLs in Darwin are based on UUIDs, as is the ACL specification in AFP 3.2.
-    Your source of identity data must provide an attribute
-    for every user and group containing a UUID stored as an ASCII string.
-    In other words:
+To enable those client-facing ACL functions, configure Netatalk's
+[LDAP options for ACLs](afp.conf.html#options-for-acl-handling) with a
+directory that can map each relevant user and group name to a stable UUID and
+back again. LDAP is the mechanism Netatalk implements for this lookup; Active
+Directory and Open Directory are examples, not requirements. An LDAP directory
+with UUID attributes for users and groups can be used instead. In practice, the
+directory should be shared by the server and clients so that the UUIDs refer to
+the same identities.
 
-    - You need an Open Directory server or an LDAP server where you
-      store UUIDs in an attribute.
+For Solaris/ZFS volumes, configure the ZFS properties appropriate for ACL
+inheritance and preservation:
 
-    - Your clients must be configured to use this server.
+```ini
+aclinherit = passthrough
+aclmode = passthrough
+```
 
-    - Your server should be configured to use this server via nsswitch
-      and PAM.
-
-    - Configure Netatalk via the [LDAP options for ACLs](afp.conf.html#options-for-acl-handling)
-      in *afp.conf* so that Netatalk can retrieve UUIDs
-      for users and groups via LDAP search queries.
+Consult the host's *zfs*(8) documentation for the meaning of these settings.
 
 ## macOS ACLs
 
-With Access Control Lists (ACLs),
-macOS offers a powerful extension of the traditional UNIX permissions model.
-An ACL is an ordered list of Access Control Entries (ACEs)
-that explicitly grant or deny a set of permissions to a given user or group.
+AFP represents ACLs using the macOS/Darwin model: an ordered list of ACEs that
+allow or deny fine-grained rights to UUID-identified users and groups. Directory
+rights are distinct; for example, adding a file and adding a subdirectory are
+separate permissions.
 
-Unlike UNIX permissions, which are bound to user or group IDs,
-ACLs are tied to UUIDs.
-Accessing an object's ACL therefore requires
-that server and client use a common directory service
-to translate between UUIDs and user/group IDs.
+Netatalk deliberately does not support native macOS (Darwin) ACLs when
+**afpd** runs on macOS. The build disables ACL support on that platform.
+The POSIX ACL implementation cannot safely evaluate or preserve Darwin's
+ordered allow/deny and fine-grained directory semantics.
 
-ACLs and UNIX permissions interact straightforwardly.
-Because ACLs are optional,
-UNIX permissions act as a default mechanism for access control.
-Changing an object's UNIX permissions leaves its ACL intact,
-and modifying an ACL never changes the object's UNIX permissions.
-During access checks, macOS first examines an object's ACL,
-evaluating ACEs in order until all requested rights have been granted,
-a requested right has been explicitly denied by an ACE,
-or the end of the list has been reached.
-If there is no ACL or the permissions granted by the ACL are insufficient,
-macOS next evaluates the object's UNIX permissions.
-ACLs therefore always take precedence over UNIX permissions.
+This is a limitation of the server host, not of AFP clients. A macOS client can
+use ACL support from a Linux POSIX-ACL or Solaris/FreeBSD ZFS-ACL server.
 
 ## ZFS ACLs
 
-ZFS ACLs closely match macOS ACLs.
-Both offer mostly identical fine-grained permissions and inheritance settings.
+Netatalk uses the NFSv4 ACL APIs on Solaris/illumos and the `libsunacl` API on
+FreeBSD. These ACLs are close enough to the AFP/macOS ACL model to preserve
+allow/deny ACEs and more of their directory and inheritance semantics than a
+POSIX ACL mapping can.
 
 ## POSIX ACLs
 
-### Overview
+The Linux backend uses the POSIX 1003.1e ACL API. This is a different and less
+expressive model than AFP/macOS or NFSv4 ACLs, so Netatalk necessarily
+approximates ACL entries exchanged with AFP clients.
 
-Compared to macOS or NFSv4 ACLs,
-POSIX ACLs represent a different,
-less versatile approach to overcoming the limitations of traditional UNIX permissions.
-Implementations are based on the withdrawn POSIX 1003.1e standard.
-
-The standard defines two types of ACLs.
+For every object, Netatalk reads the POSIX access ACL. For directories, it
+also reads the default ACL when returning an AFP ACL. The POSIX model defines
+two ACL types:
 Files and directories can have access ACLs,
 which are consulted for access checks.
 Directories can also have default ACLs,
@@ -120,7 +107,7 @@ the default ACL is applied to the new object as its access ACL.
 Subdirectories inherit default ACLs from their parent.
 There are no further mechanisms of inheritance control.
 
-Architectural differences between POSIX ACLs and macOS ACLs include:
+These differences determine the limits of Netatalk's AFP mapping:
 
 - No fine-grained permissions model.
 Like UNIX permissions,
@@ -170,17 +157,14 @@ to the value of the ACL_MASK entry —
 i.e. calling *chmod g-w* will not only revoke write access for the group,
 but for all entities granted write access by ACL_USER or ACL_GROUP entries.
 
-### Mapping POSIX ACLs to macOS ACLs
+### Mapping POSIX ACLs to AFP ACLs
 
 When a client reads an object's ACL,
-**afpd** maps its POSIX ACL onto an equivalent macOS ACL.
-Writing an object's ACL requires **afpd** to
-map a macOS ACL onto a POSIX ACL.
-Due to architectural limitations of POSIX ACLs,
-an exact mapping is usually impossible,
-so the result is an approximation of the original ACL's semantics.
+**afpd** maps its POSIX ACL into AFP's macOS-style ACL format. Writing an AFP
+ACL maps it back to POSIX ACL entries. This is an approximation, not an exact
+round trip, because the server ACL model cannot represent all AFP ACL features.
 
-- **afpd** silently discards entries that deny permissions,
+- **afpd** silently discards requested deny entries,
 because they cannot be represented in the POSIX architecture.
 
 - Because entries within POSIX ACLs are unordered,
@@ -199,18 +183,9 @@ it is impossible to preserve order.
 - The lack of a fine-grained permission model on the POSIX side
 normally results in an increase of granted permissions.
 
-Because macOS clients are unaware of the POSIX 1003.1e-specific relationship
-between UNIX permissions and ACL_MASK,
-**afpd** does not expose this feature to the client.
-This avoids compatibility issues and handles UNIX permissions and ACLs
-the same way as Apple's reference implementation of AFP.
-When an object's UNIX permissions are requested,
-**afpd** calculates proper group rights and returns the result together with
-the owner's and everybody's access rights to the caller via the "permissions"
-and "ua_permissions" members of the FPUnixPrivs structure
-(see Apple Filing Protocol Reference, page 181).
-When changing an object's permissions,
-**afpd** always updates ACL_USER_OBJ, ACL_GROUP_OBJ, and ACL_OTHER.
-If an ACL_MASK entry is present,
-**afpd** recalculates its value so that the new group rights become effective
-while existing ACL_USER and ACL_GROUP entries remain intact.
+The POSIX ACL mask is not exposed as a separate client permission layer.
+Instead, **afpd** calculates the effective user and group rights it reports
+through AFP. When AFP changes an object's UNIX permissions, **afpd** updates
+ACL_USER_OBJ, ACL_GROUP_OBJ, and ACL_OTHER. If an ACL_MASK entry is present,
+it recalculates the mask so that the new group rights take effect while named
+ACL_USER and ACL_GROUP entries remain intact.
