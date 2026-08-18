@@ -197,7 +197,7 @@ static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name,
 
     if (dir_rx_set(mode)) {
         if (ochmod(ad_dir(adouble),
-                   (DIRBITS | mode) & ~vol->v_umask,
+                   (DIRBITS | mode) & ~vol_umask(vol),
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
                   ) < 0) {
@@ -211,7 +211,7 @@ static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name,
 
     if (!dir_rx_set(mode)) {
         if (ochmod(ad_dir(adouble),
-                   (DIRBITS | mode) & ~vol->v_umask,
+                   (DIRBITS | mode) & ~vol_umask(vol),
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
                   ) < 0) {
@@ -253,7 +253,7 @@ static int RF_setdirmode_adouble(const struct vol *vol, const char *name,
 
     if (dir_rx_set(mode)) {
         if (ochmod(ad_dir(adouble),
-                   (DIRBITS | mode) & ~vol->v_umask,
+                   (DIRBITS | mode) & ~vol_umask(vol),
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
                   ) < 0) {
@@ -268,7 +268,7 @@ static int RF_setdirmode_adouble(const struct vol *vol, const char *name,
 
     if (!dir_rx_set(mode)) {
         if (ochmod(ad_dir(adouble),
-                   (DIRBITS | mode) & ~vol->v_umask,
+                   (DIRBITS | mode) & ~vol_umask(vol),
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
                   ) < 0) {

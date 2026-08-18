@@ -224,7 +224,11 @@ typedef enum {
 #define utf8_encoding(obj) ((obj)->afp_version >= 30)
 
 #define vol_nodev(vol) (((vol)->v_flags & AFPVOL_NODEV) ? 1 : 0)
-#define vol_unix_priv(vol) ((vol)->v_obj->afp_version >= 30 && ((vol)->v_flags & AFPVOL_UNIX_PRIV))
+#define vol_unix_priv_enabled(vol) (((vol)->v_flags & AFPVOL_UNIX_PRIV) ? 1 : 0)
+#define vol_unix_priv(vol) ((vol)->v_obj->afp_version >= 30 && vol_unix_priv_enabled(vol))
+#define vol_umask(vol) (vol_unix_priv_enabled(vol) ? (vol)->v_umask : 0)
+#define vol_dperm(vol) (vol_unix_priv_enabled(vol) ? (vol)->v_dperm : 0)
+#define vol_fperm(vol) (vol_unix_priv_enabled(vol) ? (vol)->v_fperm : 0)
 #define vol_inv_dots(vol) (((vol)->v_flags & AFPVOL_INV_DOTS) ? 1 : 0)
 #define vol_syml_opt(vol) (((vol)->v_flags & AFPVOL_FOLLOWSYM) ? 0 : O_NOFOLLOW)
 #define vol_chmod_opt(vol) (((vol)->v_flags & AFPVOL_CHMOD_PRESERVE_ACL) ? O_NETATALK_ACL : \

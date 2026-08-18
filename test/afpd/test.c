@@ -468,6 +468,8 @@ int main(int argc, char *argv[])
      * lock/fork tests. */
     TEST_int_or_skip(utest_conf_parse_bool(), 0,
                      "conf_parse_bool: strict boolean spellings, invalid values warn");
+    TEST_int_or_skip(utest_conf_permission_options_require_unix_priv(), 0,
+                     "volume permission options are ignored when unix priv is disabled");
     TEST_int_or_skip(utest_conf_ea_fallback(), 0,
                      "ea resolves volume -> preset -> [Global] -> auto-detect");
     TEST_int_or_skip(utest_conf_strict_locking_keys(), 0,

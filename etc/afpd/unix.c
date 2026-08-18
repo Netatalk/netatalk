@@ -188,7 +188,7 @@ int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
         return -1;
     }
 
-    mode |= vol->v_fperm;
+    mode |= vol_fperm(vol);
 
     if (setfilmode(vol, path->u_name, mode, &path->st) < 0) {
         return -1;
@@ -203,9 +203,9 @@ int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 {
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
-        fullpathname(name), mode, vol->v_dperm);
-    mode |= vol->v_dperm | DIRBITS;
-    mode &= ~vol->v_umask;
+        fullpathname(name), mode, vol_dperm(vol));
+    mode |= vol_dperm(vol) | DIRBITS;
+    mode &= ~vol_umask(vol);
 
     if (dir_rx_set(mode)) {
         /* extending right? dir first then .AppleDouble in rf_setdirmode */

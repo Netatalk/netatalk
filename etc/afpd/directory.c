@@ -128,10 +128,10 @@ static int netatalk_mkdir(const struct vol *vol, const char *name)
             return AFPERR_MISC;
         }
 
-        int mode = (DIRBITS & (~S_ISGID & st.st_mode)) | (0777 & ~vol->v_umask);
+        int mode = (DIRBITS & (~S_ISGID & st.st_mode)) | (0777 & ~vol_umask(vol));
         LOG(log_maxdebug, logtype_afpd,
             "netatalk_mkdir(\"%s\") {parent mode: %04o, vol umask: %04o}",
-            name, st.st_mode, vol->v_umask);
+            name, st.st_mode, vol_umask(vol));
         ret = mkdir(name, mode);
     } else {
         ret = ad_mkdir(name, DIRBITS | 0777);
@@ -2700,7 +2700,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
             ma.ma_world = *buf++;
             ma.ma_group = *buf++;
             ma.ma_owner = *buf++;
-            mpriv = mtoumode(&ma) | vol->v_dperm;
+            mpriv = mtoumode(&ma) | vol_dperm(vol);
             break;
 
         /* Ignore what the client thinks we should do to the
@@ -2727,7 +2727,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
                 change_mdate = 1;
                 memcpy(&upriv, buf, sizeof(upriv));
                 buf += sizeof(upriv);
-                upriv = ntohl(upriv) | vol->v_dperm;
+                upriv = ntohl(upriv) | vol_dperm(vol);
                 break;
             }
 

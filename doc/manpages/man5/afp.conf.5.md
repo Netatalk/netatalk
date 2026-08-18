@@ -1294,9 +1294,15 @@ this writing).
 
 file perm = *mode* **(V)**; directory perm = *mode* **(V)**
 
-> Add(or) with the client requested permissions: **file perm** is for files
-only, **directory perm** is for directories only. Don't use with
-"**unix priv = no**".
+> Add (bitwise OR) this mode to permissions requested by the client:
+**file perm** applies to files only, and **directory perm** applies to
+directories only. These options can grant permission bits, but cannot remove
+bits requested by the client or set a fixed mode. For example, a client
+requesting mode `0644` with `file perm = 0222` results in mode `0666`.
+>
+> The modes are applied when the client changes permissions; they are not
+initial creation modes. See **umask** to mask permission bits. These options
+are ignored with "**unix priv = no**".
 >
 > **Example**: Volume for a collaborative workgroup
 
@@ -1305,7 +1311,8 @@ only, **directory perm** is for directories only. Don't use with
 
 umask = *mode* **(V)**
 
-> Set perm mask. Don't use with "**unix priv = no**".
+> Set a permission mask, which removes bits from modes to which it is applied.
+This option is ignored with "**unix priv = no**".
 
 preexec = *command* **(V)**
 

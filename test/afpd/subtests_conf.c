@@ -340,6 +340,125 @@ cleanup:
     return failed;
 }
 
+/* utest_conf_permission_options_require_unix_priv: file perm, directory
+ * perm, and umask are meaningful only on UNIX-privilege volumes. A
+ * no-UNIX-privilege volume retains the configured values, but the live
+ * accessors suppress all three options (including explicitly configured zero
+ * masks). */
+int utest_conf_permission_options_require_unix_priv(void)
+{
+    static const struct {
+        const char *unix_priv;
+        const char *umask;
+        const char *file_perm;
+        const char *directory_perm;
+        mode_t expected_umask;
+        mode_t expected_file_perm;
+        mode_t expected_directory_perm;
+        int expect_unix_priv;
+    } cases[] = {
+        {"no",  "0077", "0222", "0444", 0077, 0222, 0444, 0},
+        {"no",  "0000", "0000", "0000", 0,    0,    0,    0},
+        {"yes", "0077", "0222", "0444", 0077, 0222, 0444, 1},
+        {"no",  NULL,   NULL,   NULL,   0,    0,    0,    0},
+    };
+    AFPObj obj;
+    char logpath[64];
+    char body[1024];
+    char *voldir = conf_mkvoldir();
+    int failed = -1;
+
+    if (voldir == NULL || conf_mklog(logpath, sizeof(logpath)) != 0) {
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        char umask_line[32] = "";
+        char file_perm_line[32] = "";
+        char directory_perm_line[32] = "";
+
+        if (cases[i].umask) {
+            snprintf(umask_line, sizeof(umask_line), "umask = %s\n",
+                     cases[i].umask);
+        }
+
+        if (cases[i].file_perm) {
+            snprintf(file_perm_line, sizeof(file_perm_line), "file perm = %s\n",
+                     cases[i].file_perm);
+        }
+
+        if (cases[i].directory_perm) {
+            snprintf(directory_perm_line, sizeof(directory_perm_line),
+                     "directory perm = %s\n", cases[i].directory_perm);
+        }
+
+        int n = snprintf(body, sizeof(body),
+                         "[utestvol]\n"
+                         "path = %s\n"
+                         "ea = none\n"
+                         "unix priv = %s\n"
+                         "%s"
+                         "%s"
+                         "%s",
+                         voldir, cases[i].unix_priv,
+                         umask_line, file_perm_line, directory_perm_line);
+
+        if (n < 0 || (size_t)n >= sizeof(body)) {
+            goto cleanup;
+        }
+
+        conf_log_truncate(logpath);
+
+        if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+            goto cleanup;
+        }
+
+        const struct vol *vol = conf_vol_by_name("utestvol");
+        int unix_priv = vol && (vol->v_flags & AFPVOL_UNIX_PRIV) ? 1 : 0;
+        mode_t effective_umask = vol ? vol_umask(vol) : 0;
+        mode_t effective_file_perm = vol ? vol_fperm(vol) : 0;
+        mode_t effective_directory_perm = vol ? vol_dperm(vol) : 0;
+        mode_t expected_effective_umask = cases[i].expect_unix_priv
+                                          ? cases[i].expected_umask : 0;
+        mode_t expected_effective_file_perm = cases[i].expect_unix_priv
+                                              ? cases[i].expected_file_perm : 0;
+        mode_t expected_effective_directory_perm = cases[i].expect_unix_priv
+            ? cases[i].expected_directory_perm : 0;
+
+        if (vol == NULL || unix_priv != cases[i].expect_unix_priv
+                || vol->v_umask != cases[i].expected_umask
+                || vol->v_fperm != cases[i].expected_file_perm
+                || vol->v_dperm != cases[i].expected_directory_perm
+                || effective_umask != expected_effective_umask
+                || effective_file_perm != expected_effective_file_perm
+                || effective_directory_perm != expected_effective_directory_perm) {
+            fprintf(test_stream(),
+                    "# utest_conf_permission_options_require_unix_priv: case %zu: "
+                    "unix priv %d/%d umask %04o/%04o (%04o) file %04o/%04o (%04o) "
+                    "directory %04o/%04o (%04o)\n",
+                    i, unix_priv, cases[i].expect_unix_priv,
+                    vol ? vol->v_umask : 0, cases[i].expected_umask,
+                    effective_umask,
+                    vol ? vol->v_fperm : 0, cases[i].expected_file_perm,
+                    effective_file_perm,
+                    vol ? vol->v_dperm : 0, cases[i].expected_directory_perm,
+                    effective_directory_perm);
+            conf_teardown(&obj, NULL);
+            goto cleanup;
+        }
+
+        conf_teardown(&obj, NULL);
+    }
+
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
 
 /* utest_conf_ea_fallback: the ea (G)/(V) resolution chain, one loaded
  * volume per case.
