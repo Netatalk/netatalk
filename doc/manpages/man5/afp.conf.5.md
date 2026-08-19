@@ -1438,6 +1438,9 @@ automounting or volumes created by a preexec script.
 time machine = *BOOLEAN* (default: *no*) **(V)**
 
 > Whether to enable Time Machine support for this volume.
+>
+> ***NOTE:*** Only static volume paths are supported with Time Machine.
+If you use '$u' in the volume path, the volume will not be advertised to Time Machine clients.
 
 unix priv = *BOOLEAN* (default: *yes*) **(V)**
 
