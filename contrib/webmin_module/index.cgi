@@ -88,14 +88,15 @@ if (@{$$afpconf{volumeSections}}) {
           (exists $$volumeSection{parameters}{'volume name'}{value})
           ? $$volumeSection{parameters}{'volume name'}{value}
           : $$volumeSection{name};
-        print &ui_columns_row(
+        print &ui_checked_columns_row(
             [
-                &ui_checkbox('section_index', $$volumeSection{'index'}),
 "<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$volumeName</b></a>",
                 $$volumeSection{parameters}{'path'}{value},
                 $$volumeSection{parameters}{'vol preset'}{value}
             ],
-            ["width='20'"]
+            ["width='20'"],
+            'section_index',
+            $$volumeSection{'index'}
         );
     }
     print &ui_columns_end();
@@ -183,15 +184,16 @@ if (@{$$afpconf{volumePresetSections}}) {
                             undef
     );
     foreach my $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumePresetSections}}) {
-        print &ui_columns_row(
+        print &ui_checked_columns_row(
             [
-                &ui_checkbox('section_index', $$volumeSection{'index'}),
 "<a href=\"edit_vol_section.cgi?action=edit_volume_preset&tab=general&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
                 defined $$volumeSection{presetUsedBySectionNames}
                 ? join("<br>", @{$$volumeSection{presetUsedBySectionNames}})
                 : ""
             ],
-            ["width='20'"]
+            ["width='20'"],
+            'section_index',
+            $$volumeSection{'index'}
         );
     }
     print &ui_columns_end();
@@ -288,19 +290,20 @@ if (@atalk_ifs) {
     );
     my $index = 0;
     foreach my $if (sort { lc($a->{atalk_iface}) cmp lc($b->{atalk_iface}) } @atalk_ifs) {
-        print &ui_columns_row(
-                              [
-                               &ui_checkbox('section_index', $if->{atalk_iface}),
-                               "<a href=\"edit_atalk.cgi?action=edit&index="
-                               . $index . "\">"
-                               . $if->{atalk_iface} . "</a>",
-                               $if->{atalk_routing} ? $if->{atalk_routing} : $text{'index_value_not_set'},
-                               $if->{atalk_phase}   ? $if->{atalk_phase}   : $text{'index_value_not_set'},
-                               $if->{atalk_net}     ? $if->{atalk_net}     : $text{'index_value_not_set'},
-                               $if->{atalk_addr}    ? $if->{atalk_addr}    : $text{'index_value_not_set'},
-                               $if->{atalk_zone}    ? $if->{atalk_zone}    : $text{'index_value_not_set'}
-                              ],
-                              ["width='20'"]
+        print &ui_checked_columns_row(
+                                      [
+                                         "<a href=\"edit_atalk.cgi?action=edit&index="
+                                       . $index . "\">"
+                                       . $if->{atalk_iface} . "</a>",
+                                       $if->{atalk_routing} ? $if->{atalk_routing} : $text{'index_value_not_set'},
+                                       $if->{atalk_phase}   ? $if->{atalk_phase}   : $text{'index_value_not_set'},
+                                       $if->{atalk_net}     ? $if->{atalk_net}     : $text{'index_value_not_set'},
+                                       $if->{atalk_addr}    ? $if->{atalk_addr}    : $text{'index_value_not_set'},
+                                       $if->{atalk_zone}    ? $if->{atalk_zone}    : $text{'index_value_not_set'}
+                                      ],
+                                      ["width='20'"],
+                                      'section_index',
+                                      $if->{atalk_iface}
         );
         $index++;
     }
