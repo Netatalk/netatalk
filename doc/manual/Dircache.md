@@ -58,11 +58,11 @@ always update dircache entries immediately regardless of this setting.
 If Netatalk is the only process accessing the volume,
 you can safely set a value of 100 for maximum performance.
 
-dircache mode = *lru* | *arc* (default: *lru*) **(G)**
+dircache mode = *lru* | *arc* (default: *arc*) **(G)**
 
 Cache replacement algorithm. Netatalk supports two cache eviction policies:
 
-- **LRU (Least Recently Used)** — the legacy algorithm and the default.
+- **LRU (Least Recently Used)** — the legacy algorithm.
   Maintains a single list ordered by access time (FIFO);
   the least recently accessed entry is evicted when the cache is full.
   Simple and memory-efficient.
@@ -88,8 +88,8 @@ because cache entries are small.
 A ghost hit is promoted back to the cache instantly without any filesystem lookup,
 so ARC should always perform at least as well as LRU in edge cases and better in all others.
 
-**Memory:** ARC uses approximately **twice the memory** of LRU
-because it tracks up to *c* ghost entries alongside *c* cached entries
+**Memory:** ARC can use up to twice the memory of LRU:
+it may retain up to *c* evicted entries as ghosts alongside *c* cached entries
 (where *c* is *dircache size*).
 Each entry is ~192 bytes on 64-bit systems.
 Even so, ARC still outperforms an LRU cache of the same total memory.
@@ -99,30 +99,30 @@ Even so, ARC still outperforms an LRU cache of the same total memory.
 | LRU  | 1000 cached     | ~192 KB                   |
 | ARC  | 1000 cached + up to 1000 ghosts | ~384 KB   |
 
-For the default *dircache size* of 65536: LRU ≈ 12 MB, ARC ≈ 24 MB per connected user.
+For the default *dircache size* of 65536: LRU ≈ 12 MB, ARC up to ≈ 24 MB per connected user.
 
-**Recommendation**: Use **arc** for servers with 4 GB or more RAM.
-Use **lru** for memory-constrained systems.
+**Recommendation**: Use **lru** for memory-constrained systems.
 
-Default: lru.
+Default: arc.
 
 ## Resource Fork Caching
 
-Netatalk can optionally cache resource fork data
-(AppleDouble *._* data in classic Mac OS,
-or extended attributes in modern macOS/Linux/UNIX systems) in a tier-2 dircache layer.
+Netatalk can optionally cache resource fork data in a tier-2 dircache layer.
+The cache covers Mac OS resource forks in whichever backend the volume's
+**ea** setting stores them — AppleDouble *._* sidecar files or filesystem
+extended attributes. Other extended attributes are not cached.
 This avoids repeated storage I/O when AFP clients enumerate directories
 with FPGetFileDirParams or FPEnumerate and request resource fork data.
 Resource forks store many macOS data structures such as folder cover art (icns data).
 Users who set custom directory icons, for example,
 will observe significant performance gains from the resource fork cache layer.
 
-Resource fork caching is disabled by default and is controlled by two settings:
+Resource fork caching is controlled by two settings:
 
-dircache rfork budget = *number* (default: *0*) **(G)**
+dircache rfork budget = *number* (default: *32768*) **(G)**
 
 Total memory budget in KB for caching resource fork data per connected user.
-When set to 0 (the default), resource fork caching is disabled.
+Set to 0 to disable resource fork caching.
 
 Maximum: 10485760 (10 GB in KB).
 
@@ -132,6 +132,11 @@ Maximum size in KB of a single resource fork entry that will be cached.
 Resource forks larger than this value are not cached even if the total budget has space remaining.
 
 Maximum: 10240 (10 MB in KB).
+
+Volumes with **ea = samba** are excluded from the resource fork cache by
+default, because Samba can change resource forks without afpd noticing.
+An explicit **dircache rfork budget** setting lifts the exclusion,
+with a logged warning.
 
 Cached entries are automatically invalidated when the file's ctime or inode changes,
 or when an AFP client modifies the resource fork.
