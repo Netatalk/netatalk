@@ -4,42 +4,50 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* UPD: afpd: `dircache mode` now defaults to *arc* (10-50% better hit
+  ratios, 2x on sequential scans). ARC can use up to 2x the dircache
+  memory (~24 MB vs ~12 MB at the default size): evicted entries may be
+  retained as ghosts and promoted back to full entries without a disk
+  rebuild. Set `dircache mode = lru` for memory-constrained systems,
+  GitHub #3265
 * FIX: afpd: a stock configuration now gets the documented 64K-entry
   directory cache; a stale compiled default silently capped it at 8K
-  entries. Explicit `dircache size` settings are unaffected
+  entries. Explicit `dircache size` settings are unaffected, GitHub #3264
 * UPD: afpd: `ea` is now a (G)/(V) option; a value in [Global] applies to all
   volumes and can be overridden per volume. A `[Global] ea =` setting that
-  previous releases silently ignored now takes effect
+  previous releases silently ignored now takes effect, GitHub #3223
 * UPD: afpd: rename `afp read locks` to `strict locking`, matching Samba's
   option name for the same behaviour; the old name is a deprecated synonym
   that logs a warning. The option takes POSIX byte-range locks for both reads
-  and writes
+  and writes, GitHub #3223
 * UPD: afpd: sharing a volume with Samba is now a single option: `ea = samba`
   selects the Samba-compatible metadata format and defaults every related
   setting for safe concurrent access (`strict locking = yes`,
   `dircache validation freq = 1`, resource-fork cache off). Explicit settings
-  still win, with a logged warning when they weaken Samba coherency
+  still win, with a logged warning when they weaken Samba coherency,
+  GitHub #3223
 * NEW: test: end-to-end Samba interoperability test for `ea = samba`
   volumes (`samba_interop_test.sh`, shipped in the Debian testsuite
   container): a kernel CIFS mount and a netatalk-client FUSE mount on one
   shared volume, exercising locking, deny modes, directory and EA
-  coherency, and the on-disk metadata format in both directions
+  coherency, and the on-disk metadata format in both directions, GitHub #3223
 * FIX: libatalk: the afp.conf volume loader parsed the config file with no
   read lock held after two failed lock attempts, and did not check the open()
   of the config file; both now fail closed and leave the reload state
   untouched. The function is renamed load_volumes() -> load_afp_conf_vols()
-  to say what it does
+  to say what it does, GitHub #3223
 * BREAKING: libatalk: struct afp_options gains three fields (installed header
-  globals.h). 4.5.2 branch shipped soversion 21, so we skip to 22 on main
+  globals.h). 4.5.2 branch shipped soversion 21, so we skip to 22 on main,
+  GitHub #3223
 * FIX: dsi: remove the double copy and latent truncation of buffered
-  write payload in dsi_writeinit
+  write payload in dsi_writeinit, GitHub #3196
 * UPD: dsi: grow the server quantum per session to frame-to-MSS
   alignment so transfers never end in a runt TCP segment; detected and
-  logged at session open, never below the configured value
+  logged at session open, never below the configured value, GitHub #3196
 * UPD: dsi: cap server quantum at 256 MiB, raise dsireadbuf default to
-  32 (maximum 1024) with a platform-safe product guard
+  32 (maximum 1024) with a platform-safe product guard, GitHub #3196
 * BREAKING: libatalk: dsi_writeinit signature changed to pointer handoff;
-  soversion bumped to 21
+  soversion bumped to 21, GitHub #3196
 
 Changes in 4.5.0
 ----------------
