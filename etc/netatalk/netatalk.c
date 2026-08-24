@@ -75,6 +75,9 @@ static pid_t cnid_metad_pid = NETATALK_SRV_NEEDED;
 static pid_t cnid_metad_pid = NETATALK_SRV_OPTIONAL;
 #endif
 static pid_t dbus_pid = NETATALK_SRV_OPTIONAL;
+/* whether the volume list loaded; without it the cnid_metad
+ * decisions fail conservative (run the daemon) */
+static bool volumes_loaded;
 static uint afpd_restarts, cnid_metad_restarts, dbus_restarts _U_;
 #ifdef WITH_LIBEV
 static struct ev_loop *loop;
@@ -386,7 +389,10 @@ static void sighup_impl(void)
 {
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
-    load_afp_conf_vols(&obj, LV_ALL);
+
+    if (load_afp_conf_vols(&obj, LV_ALL) == 0) {
+        volumes_loaded = true;
+    }
 
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_deregister();
@@ -395,6 +401,23 @@ static void sighup_impl(void)
     }
 
     kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
+#ifdef CNID_BACKEND_DBD
+
+    if (volumes_loaded) {
+        bool dbd_in_use = conf_cnid_scheme_in_use(&obj, "dbd");
+
+        if (service_running(cnid_metad_pid) && !dbd_in_use) {
+            LOG(log_note, logtype_afpd,
+                "Stopping 'cnid_metad': no volume uses the dbd CNID scheme");
+            kill_childs(SIGTERM, &cnid_metad_pid, NULL);
+        } else if (!service_running(cnid_metad_pid) && dbd_in_use) {
+            LOG(log_note, logtype_afpd,
+                "Starting 'cnid_metad': a volume now uses the dbd CNID scheme");
+            cnid_metad_pid = NETATALK_SRV_NEEDED;
+        }
+    }
+
+#endif
 }
 
 /*! SIGCHLD implementation, returns true if all services have exited during shutdown */
@@ -455,13 +478,17 @@ static void timer_impl(void)
     }
 
     if (cnid_metad_pid == NETATALK_SRV_NEEDED) {
-        cnid_metad_restarts++;
-        LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)",
-            cnid_metad_restarts);
+        if (volumes_loaded && !conf_cnid_scheme_in_use(&obj, "dbd")) {
+            cnid_metad_pid = NETATALK_SRV_OPTIONAL;
+        } else {
+            cnid_metad_restarts++;
+            LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)",
+                cnid_metad_restarts);
 
-        if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
-                                          obj.options.configfile, NULL)) == -1) {
-            LOG(log_error, logtype_default, "Error starting 'cnid_metad'");
+            if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
+                                              obj.options.configfile, NULL)) == -1) {
+                LOG(log_error, logtype_default, "Error starting 'cnid_metad'");
+            }
         }
     }
 
@@ -761,7 +788,7 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
-    load_afp_conf_vols(&obj, LV_ALL);
+    volumes_loaded = (load_afp_conf_vols(&obj, LV_ALL) == 0);
 #ifdef WITH_LIBEV
     ev_set_syserr_cb(libev_syserr_cb);
 #else
@@ -778,8 +805,10 @@ int main(int argc, char **argv)
 
 #ifdef CNID_BACKEND_DBD
 
-    if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
-                                      obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
+    if (volumes_loaded && !conf_cnid_scheme_in_use(&obj, "dbd")) {
+        cnid_metad_pid = NETATALK_SRV_OPTIONAL;
+    } else if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
+                                 obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
         netatalk_exit(EXITERR_CONF);
     }

@@ -4,6 +4,10 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* UPD: netatalk: cnid_metad is now started only when a volume uses the
+  dbd CNID scheme, and started or stopped on config reload as volumes
+  change; previously it always ran when the dbd backend was compiled in,
+  GitHub #3269
 * UPD: afpd: the resource-fork data cache is now enabled by default
   (`dircache rfork budget = 32768`, 32 MB). `ea = samba` volumes remain
   excluded (Samba mutates resource forks behind afpd's back). Set
