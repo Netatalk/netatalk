@@ -3273,7 +3273,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                               NULL, -1);
 
         if (options->dircachesize == -1) {
-            options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
+            options->dircachesize = DEFAULT_DIRCACHE_SIZE;
         } else {
             LOG(log_warning, logtype_afpd,
                 "Using deprecated 'dircachesize' option, please update to 'dircache size'");

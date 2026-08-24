@@ -50,7 +50,7 @@
 #define CNID_PATH_OVERHEAD 12  /* CNID protocol header size for path resolution */
 #define CNID_MAX_PATH_LEN (CNID_PATH_OVERHEAD + MAXPATHLEN + 1)  /* Maximum path length for CNID operations */
 
-#define DEFAULT_MAX_DIRCACHE_SIZE 8192
+#define DEFAULT_DIRCACHE_SIZE 65536    /*!< default 'dircache size' (entries) */
 
 /* Directory cache validation settings */
 #define DEFAULT_DIRCACHE_VALIDATION_FREQ    1     /*!< Validate every Nth access (default 1 for backward compatibility) */

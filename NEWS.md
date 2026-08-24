@@ -4,6 +4,9 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* FIX: afpd: a stock configuration now gets the documented 64K-entry
+  directory cache; a stale compiled default silently capped it at 8K
+  entries. Explicit `dircache size` settings are unaffected
 * UPD: afpd: `ea` is now a (G)/(V) option; a value in [Global] applies to all
   volumes and can be overridden per volume. A `[Global] ea =` setting that
   previous releases silently ignored now takes effect

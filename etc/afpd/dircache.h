@@ -22,9 +22,9 @@
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 
-/* Dircache size bounds */
+/* Dircache size bounds; the default is DEFAULT_DIRCACHE_SIZE in
+ * atalk/globals.h (included above) */
 #define MIN_DIRCACHE_SIZE 1024             /* 1K minimum (testing/constrained systems) */
-#define DEFAULT_DIRCACHE_SIZE 65536        /* 64K default (production) */
 #define MAX_DIRCACHE_SIZE 1048576          /* 1M maximum (high-memory servers) */
 #define DIRCACHE_FREE_QUANTUM 256
 
@@ -48,6 +48,7 @@ extern struct dir *dircache_search_by_name(const struct vol *,
 
 extern void       dircache_dump(void);
 extern void       log_dircache_stat(void);
+extern unsigned int dircache_resolve_size(int reqsize);
 extern int        dircache_set_validation_params(unsigned int freq);
 extern void       dircache_reset_validation_counter(void);
 extern void       dircache_report_invalid_entry(struct dir *dir);

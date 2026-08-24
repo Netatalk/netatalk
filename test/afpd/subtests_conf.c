@@ -40,6 +40,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "dircache.h"
 #include "peer_lock.h"
 #include "subtests_conf.h"
 #include "test.h"
@@ -1281,4 +1282,34 @@ cleanup:
     rmdir(voldir);
     free(voldir);
     return failed;
+}
+
+/* utest_conf_dircache_resolve_size: bounds behaviour of the pure size
+ * resolution helper; touches no dircache state (the binary's live
+ * dircache from test.c stays intact). */
+int utest_conf_dircache_resolve_size(void)
+{
+    static const struct {
+        int reqsize;
+        unsigned int expect;
+    } cases[] = {
+        {-1, 65536},        /* unset: default */
+        {512, 65536},       /* below minimum: default, with warning */
+        {1024, 1024},       /* minimum accepted verbatim */
+        {100000, 131072},   /* in range: next power of two */
+        {2000000, 1048576}, /* above maximum: clamp, with warning */
+    };
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        unsigned int got = dircache_resolve_size(cases[i].reqsize);
+
+        if (got != cases[i].expect) {
+            fprintf(test_stream(),
+                    "# utest_conf_dircache_resolve_size: %d -> %u, want %u\n",
+                    cases[i].reqsize, got, cases[i].expect);
+            return -1;
+        }
+    }
+
+    return 0;
 }
