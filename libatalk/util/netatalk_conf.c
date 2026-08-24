@@ -3292,11 +3292,11 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                 options->dircache_mode = 0;
             } else {
                 LOG(log_warning, logtype_afpd,
-                    "Invalid dircache mode '%s', using default (lru)", mode_str);
-                options->dircache_mode = 0;
+                    "Invalid dircache mode '%s', using default (arc)", mode_str);
+                options->dircache_mode = 1;
             }
         } else {
-            options->dircache_mode = 0;  /* Default to LRU */
+            options->dircache_mode = 1;  /* Default to ARC */
         }
     }
     /* Parse dircache validation parameter */

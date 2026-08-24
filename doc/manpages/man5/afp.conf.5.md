@@ -563,16 +563,17 @@ compatibility), higher values validate less frequently.
 > If Netatalk is the only process accessing the volume you can safely
 set a value of 100 for maximum performance.
 
-dircache mode = *lru* | *arc* (default: *lru*) **(G)**
+dircache mode = *lru* | *arc* (default: *arc*) **(G)**
 
 > Cache replacement algorithm. **lru** = Least Recently Used (stable, memory-efficient).
 **arc** = Adaptive Replacement Cache (self-tuning, 10-50% better hit ratios,
-2× better on sequential scans). ARC uses approximately **2× memory** (~100% overhead)
-due to ghost entries: evicted entries tracked for learning, enabling ARC to adapt.
-Example: 64K cache uses ~24 MB (ARC) vs ~12 MB (LRU).
+2× better on sequential scans). ARC **can** use up to 2× the memory of **lru**:
+evicted entries may be retained as ghosts for instant re-promotion; cold
+ghosts are dropped.
+Example: a 64K-entry cache uses ~12 MB, plus up to ~12 MB of ghosts under **arc**.
 >
-> **Recommendation**: Use **arc** for servers with 8GB+ RAM. Use **lru** for
-constrained systems. Increase **dircache size** (max entries) for best results.
+> **Recommendation**: Use **lru** for memory-constrained systems. Increase
+**dircache size** (max entries) for best results.
 
 dircache rfork budget = *number* (default: *0*) **(G)**
 
