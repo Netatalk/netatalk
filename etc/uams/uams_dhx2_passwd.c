@@ -304,6 +304,7 @@ error:              /* We exit here anyway */
     gcry_mpi_release(Ma);
 
     if (ret != AFPERR_AUTHCONT) {
+        *rbuflen = 0;
         dhx2_clear_session();
     }
 
