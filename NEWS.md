@@ -4,6 +4,14 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* UPD: dsi: listen backlog raised from 20 to 128, absorbing reconnect
+  storms without dropped SYNs (the kernel still caps it at
+  net.core.somaxconn), GitHub #3267
+* UPD: cnid: the default CNID scheme has changed to *sqlite*: the build
+  system now selects sqlite > mysql > dbd among the compiled backends
+  (GitHub #3077), and the docker image's fallback for an unset
+  AFP_CNID_BACKEND now matches. The dbd backend remains available but is
+  deprecated, GitHub #3267
 * UPD: netatalk: cnid_metad is now started only when a volume uses the
   dbd CNID scheme, and started or stopped on config reload as volumes
   change; previously it always ran when the dbd backend was compiled in,

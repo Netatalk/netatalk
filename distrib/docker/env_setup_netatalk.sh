@@ -629,7 +629,7 @@ vol charset = ${AFP_VOL_CHARSET:-UTF8}
 spotlight = $AFP_SPOTLIGHT_GLOBAL
 spotlight backend = ${AFP_SPOTLIGHT_BACKEND:-cnid}
 [${SHARE_NAME:-File Sharing}]
-cnid scheme = ${AFP_CNID_BACKEND:-dbd}
+cnid scheme = ${AFP_CNID_BACKEND:-sqlite}
 ea = $AFP_EA
 path = $NETATALK_SHARE_DIR
 valid users = $AFP_VALIDUSERS1
@@ -638,7 +638,7 @@ $AFP_RWRO = $AFP_VALIDUSERS1
 convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-no}
 spotlight = $AFP_SPOTLIGHT_GLOBAL
 [${SHARE_NAME2:-Time Machine}]
-cnid scheme = ${AFP_CNID_BACKEND:-dbd}
+cnid scheme = ${AFP_CNID_BACKEND:-sqlite}
 ea = $AFP_EA
 path = $NETATALK_BACKUP_DIR
 time machine = $TIMEMACHINE

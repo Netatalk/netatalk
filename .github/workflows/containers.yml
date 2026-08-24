@@ -478,6 +478,7 @@ jobs:
               -e AFP_DIRCACHE_RFORK_BUDGET=1048576 \
               -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
               -e AFP_CONVERT_APPLEDOUBLE=no \
+              -e AFP_CNID_BACKEND=dbd \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |

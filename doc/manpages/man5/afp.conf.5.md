@@ -525,6 +525,7 @@ Requires datbase administration, giving you full control over how the CNID data 
 >
 > *sqlite*: uses the SQLite embedded database library.
 It is performant and lean, requiring no external database or daemon.
+This is the default backend when compiled in.
 
 cnid server = *host[:port]* **(G)**/**(V)**
 
