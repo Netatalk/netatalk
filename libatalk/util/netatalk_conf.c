@@ -3311,7 +3311,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
      * On 32-bit platforms, clamp to SIZE_MAX / 1024 to prevent overflow
      * when converting KB to bytes in dircache_init(). */
     options->dircache_rfork_budget = getoption_int(config, INISEC_GLOBAL,
-                                     "dircache rfork budget", NULL, 0);
+                                     "dircache rfork budget", NULL, 32768);
     /* ea = samba adjusts defaults only: record whether the key was set */
     options->dircache_rfork_budget_explicit =
         conf_key_present(config, "dircache rfork budget");

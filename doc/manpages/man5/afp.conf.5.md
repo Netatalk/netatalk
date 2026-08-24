@@ -562,6 +562,8 @@ dircache validation freq = *number* **(G)**
 compatibility), higher values validate less frequently.
 > If Netatalk is the only process accessing the volume you can safely
 set a value of 100 for maximum performance.
+> When a volume uses **ea = samba** this defaults to *1*; an explicit
+higher value wins, with a logged warning (see **ea**).
 
 dircache mode = *lru* | *arc* (default: *arc*) **(G)**
 
@@ -575,12 +577,20 @@ Example: a 64K-entry cache uses ~12 MB, plus up to ~12 MB of ghosts under **arc*
 > **Recommendation**: Use **lru** for memory-constrained systems. Increase
 **dircache size** (max entries) for best results.
 
-dircache rfork budget = *number* (default: *0*) **(G)**
+dircache rfork budget = *number* (default: *32768*) **(G)**
 
 > Total memory budget in KB for caching resource fork data in the directory
-cache. When set to 0 (the default), resource fork caching is disabled.
+cache. Set to 0 to disable resource fork caching.
 Resource fork caching stores small resource fork contents in memory to avoid
 repeated disk reads during FPGetFileDirParams and FPEnumerate operations.
+The cache covers Mac OS resource forks — for example custom icons and other
+Finder resources — in whichever backend the **ea** option stores them
+(AppleDouble sidecar files or extended attributes). Other extended
+attributes are not cached.
+>
+> Volumes with **ea = samba** are excluded from the cache by default,
+because Samba can change resource forks behind afpd's back. Setting this
+option explicitly lifts the exclusion, with a logged warning (see **ea**).
 >
 > Maximum: 10485760 (10 GB in KB) total.
 
@@ -589,6 +599,9 @@ dircache rfork maxsize = *number* (default: *1024*) **(G)**
 > Maximum size in KB of a single resource fork entry that will be cached.
 Resource forks larger than this value will not be cached even if the total
 budget has not been exhausted.
+>
+> Has no effect on volumes excluded from the resource fork cache, such as
+**ea = samba** volumes (see **dircache rfork budget**).
 >
 > Maximum: 10240 (10 MB in KB) per entry.
 
@@ -687,6 +700,8 @@ strict locking = *BOOLEAN* (default: *no*) **(G)**
 they conflict with other POSIX lockers such as Samba (pair with Samba's own
 **strict locking = yes**); off, AFP locks are invisible to other processes.
 **afp read locks** is a deprecated synonym.
+> When a volume uses **ea = samba** this defaults to *yes*; an explicit
+*no* wins, with a logged warning (see **ea**).
 
 solaris share reservations = *BOOLEAN* (default: *yes*) **(G)**
 

@@ -4,6 +4,10 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* UPD: afpd: the resource-fork data cache is now enabled by default
+  (`dircache rfork budget = 32768`, 32 MB). `ea = samba` volumes remain
+  excluded (Samba mutates resource forks behind afpd's back). Set
+  `dircache rfork budget = 0` to disable, GitHub #3266
 * UPD: afpd: `dircache mode` now defaults to *arc* (10-50% better hit
   ratios, 2x on sequential scans). ARC can use up to 2x the dircache
   memory (~24 MB vs ~12 MB at the default size): evicted entries may be
