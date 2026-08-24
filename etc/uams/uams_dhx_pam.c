@@ -199,6 +199,8 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     uint16_t sessid;
     size_t i;
     size_t nwritten;
+    /* A new exchange supersedes any unfinished challenge. */
+    explicit_bzero(randbuf, sizeof(randbuf));
 
     if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
         LOG(log_error, logtype_uams,
@@ -334,6 +336,7 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     return AFPERR_AUTHCONT;
 pam_fail:
     dhx_release_key();
+    explicit_bzero(randbuf, sizeof(randbuf));
     /* Log Entry */
     LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Fail - Cast Encryption -- %s",
         strerror(errno));
@@ -459,6 +462,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     /* Make sure dhx_setup actually ran and established the shared key */
     if (K == NULL) {
         LOG(log_error, logtype_uams, "DHX: logincont called without completing login");
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -472,6 +476,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
             strerror(errno));
         /* Log Entry */
         dhx_release_key();
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -486,6 +491,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 
     if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
         dhx_release_key();
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -501,6 +507,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
                                 GCRY_CIPHER_MODE_CBC, 0);
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -508,6 +515,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -515,6 +523,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     ctxerror = gcry_cipher_setiv(ctx, msg3_iv, sizeof(msg3_iv));
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -522,6 +531,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     ctxerror = gcry_cipher_decrypt(ctx, rbuf, CRYPT2BUFLEN, ibuf, CRYPT2BUFLEN);
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -690,6 +700,7 @@ static int pam_changepw(void *obj, unsigned char *username,
     int PAM_error;
 
     if (ibuflen < sizeof(sessid)) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -709,6 +720,7 @@ static int pam_changepw(void *obj, unsigned char *username,
     if (K == NULL) {
         LOG(log_error, logtype_uams,
             "DHX: changepw called without completing key exchange");
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -720,6 +732,7 @@ static int pam_changepw(void *obj, unsigned char *username,
             strerror(errno));
         /* Log Entry */
         dhx_release_key();
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -731,11 +744,13 @@ static int pam_changepw(void *obj, unsigned char *username,
             strerror(errno));
         /* Log Entry */
         dhx_release_key();
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_MISC;
     }
 
     if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
         dhx_release_key();
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -751,6 +766,7 @@ static int pam_changepw(void *obj, unsigned char *username,
                                 GCRY_CIPHER_MODE_CBC, 0);
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -758,6 +774,7 @@ static int pam_changepw(void *obj, unsigned char *username,
     ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -765,6 +782,7 @@ static int pam_changepw(void *obj, unsigned char *username,
     ctxerror = gcry_cipher_setiv(ctx, msg3_iv, sizeof(msg3_iv));
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
@@ -772,6 +790,7 @@ static int pam_changepw(void *obj, unsigned char *username,
     ctxerror = gcry_cipher_decrypt(ctx, ibuf, CHANGEPWBUFLEN, NULL, 0);
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
