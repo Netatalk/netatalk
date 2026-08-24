@@ -19,5 +19,6 @@ extern int utest_conf_samba_ea_failure_keeps_vid(void);
 extern int utest_conf_samba_defaults_not_leaked_on_failed_volume(void);
 extern int utest_conf_samba_future_defaults(void);
 extern int utest_conf_load_afp_conf_vols_locked(void);
+extern int utest_conf_dircache_resolve_size(void);
 
 #endif /* SUBTESTS_CONF_H */

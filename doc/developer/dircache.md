@@ -168,13 +168,13 @@ Every recursive lookup also results in many more stat calls.
 So even opening a small folder directly,
 still requires stat'ing every level of the whole path to be pushed into the page cache.
 
-If the dircache max size is small (by default just 8192 entries), as you move around your file share,
+If the dircache is smaller than your working set, as you move around your file share,
 old entries are pushed off (evicted) as new ones are added.
 This high entry rotation is known as "scan eviction" and means by the time you want to go back to a previous directory
 and read a cached entry, it has likely already been evicted which can cause a cascade effect of recursive lookups
 and stats calls to restore the broken cached paths if parent entries are evicted.
-So unless your whole file server has less than 8192 file and directories,
-it is recommended to increase the `dircache size` value in [afp.conf](https://netatalk.io/manual/en/afp.conf.5).
+It is recommended to increase the `dircache size` value (default 65536 entries) in
+[afp.conf](https://netatalk.io/manual/en/afp.conf.5) to match your common working set.
 
 Future releases will increase the maximum size of the dircache once existing performance issues are addressed.
 We are also considering retaining directories over files during eviction
@@ -399,7 +399,7 @@ These metrics are reported for both cache modes:
 
 - **entries**: Current number of cached entries at shutdown
 - **max_entries**: Peak entries reached during the session (high-water mark)
-- **config_max**: Maximum cache size from afp.conf configuration
+- **config_max_entries**: Maximum cache size (in entries) from afp.conf configuration
 - **lookups**: Total cache lookup operations performed
 - **validations**: Approximate filesystem validations performed (based on `dircache validation freq`)
 - **added**: Entries added to cache
@@ -423,7 +423,7 @@ LRU mode provides straightforward hit/miss metrics:
 
 ```txt
 dircache statistics (LRU): (user: jdoe) entries: 98234, max_entries: 131072,
-config_max: 131072, lookups: 2458716, hits: 1806407 (73.5%), misses: 652309 (26.5%),
+config_max_entries: 131072, lookups: 2458716, hits: 1806407 (73.5%), misses: 652309 (26.5%),
 validations: ~24587 (1.0%), added: 152341, removed: 54107, expunged: 8921,
 invalid_on_use: 234, evicted: 53873, covered_cancelled: 67, validation_freq: 100
 ```
@@ -472,7 +472,7 @@ but performance is improved across virtually all workload patterns.
 
 ```txt
 dircache statistics (ARC): (user: jdoe) entries: 98234, ghost_entries: 32838,
-max_entries: 131072, config_max: 131072, lookups: 2458716, hits: 1954327 (79.5%),
+max_entries: 131072, config_max_entries: 131072, lookups: 2458716, hits: 1954327 (79.5%),
 ghost_hits: 322351 (13.1%), total_hits: (92.6%), misses: 182038 (7.4%),
 validations: 21365 (0.9%), added: 152341, removed: 54107, expunged: 7234,
 invalid_on_use: 187, evicted: 53873, covered_cancelled: 67, validation_freq: 100

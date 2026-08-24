@@ -490,6 +490,8 @@ int main(int argc, char *argv[])
                      "ea = samba reverts performance-oriented compiled defaults (freq 100, rfork on)");
     TEST_int_or_skip(utest_conf_load_afp_conf_vols_locked(), 0,
                      "config loader fails closed under lock contention, state-neutral");
+    TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
+                     "dircache_resolve_size: default, minimum, round-up, clamp");
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]),
          "parse afpd command-line options");
     TEST_int(afp_config_parse(&obj, NULL), 0,

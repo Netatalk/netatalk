@@ -537,7 +537,7 @@ print &ui_table_row(
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache size', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_dircachesize'},
-                    "<input name='p_dircache size' type='number' min='0' max='2097152' value='"
+                    "<input name='p_dircache size' type='number' min='0' max='1048576' value='"
                     . $values[0] . "'>" . " "
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );

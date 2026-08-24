@@ -230,7 +230,7 @@ edit_global_section_cnid_mysql_db=CNID MySQL database name
 edit_global_section_cnid_scheme=CNID scheme
 edit_global_section_cnid_server=CNID server IP address and port
 edit_global_section_dbus_daemon=D-Bus daemon directory
-edit_global_section_dircachesize=Directory cache size (bytes)
+edit_global_section_dircachesize=Directory cache size (entries)
 edit_global_section_dircache_mode=Directory cache replacement algorithm
 edit_global_section_dircache_rfork_budget=Resource fork cache memory budget (KB, 0=disabled)
 edit_global_section_dircache_rfork_maxsize=Max resource fork size to cache per entry (KB)

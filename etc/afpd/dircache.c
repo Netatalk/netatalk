@@ -95,10 +95,12 @@
  * Indexes
  * =======
  *
- * The maximum dircache size is:
- * max(DEFAULT_DIRCACHE_SIZE, min(size, MAX_DIRCACHE_SIZE)).
- * It is a hashtable which we use to store "struct dir"s in. If the cache get full, oldest
- * entries are evicted in chunks of DIRCACHE_FREE.
+ * The maximum dircache size resolves from the requested size: unset or
+ * below MIN_DIRCACHE_SIZE uses DEFAULT_DIRCACHE_SIZE, in-range values
+ * round up to the next power of two, larger requests clamp to
+ * MAX_DIRCACHE_SIZE. It is a hashtable which we use to store "struct
+ * dir"s in. If the cache gets full, oldest entries are evicted in
+ * chunks of DIRCACHE_FREE_QUANTUM.
  *
  * We have/need two indexes:
  * - a DID/name index on the main dircache, another hashtable
@@ -2032,10 +2034,51 @@ void dircache_promote(struct dir *dir)
 }
 
 /*!
+ * @brief Resolve a requested dircache size to the effective maximum
+ *
+ * Unset or below-minimum sizes use DEFAULT_DIRCACHE_SIZE, in-range
+ * sizes round up to the next power of two, oversize requests clamp
+ * to MAX_DIRCACHE_SIZE.
+ *
+ * @param[in] reqsize   requested maximum size from afp.conf
+ *
+ * @returns the effective maximum cache size
+ */
+unsigned int dircache_resolve_size(int reqsize)
+{
+    unsigned int size;
+
+    if (reqsize > 0 && reqsize >= MIN_DIRCACHE_SIZE
+            && reqsize <= MAX_DIRCACHE_SIZE) {
+        size = MIN_DIRCACHE_SIZE;
+
+        while (size < reqsize && size < MAX_DIRCACHE_SIZE) {
+            size *= 2;
+        }
+    } else if (reqsize > MAX_DIRCACHE_SIZE) {
+        size = MAX_DIRCACHE_SIZE;
+        LOG(log_warning, logtype_afpd,
+            "dircache_resolve_size: requested size %d exceeds maximum %d, using maximum",
+            reqsize, MAX_DIRCACHE_SIZE);
+    } else {
+        size = DEFAULT_DIRCACHE_SIZE;
+
+        if (reqsize > 0 && reqsize < MIN_DIRCACHE_SIZE) {
+            LOG(log_warning, logtype_afpd,
+                "dircache_resolve_size: requested size %d below minimum %d, using default %d",
+                reqsize, MIN_DIRCACHE_SIZE, DEFAULT_DIRCACHE_SIZE);
+        }
+    }
+
+    return size;
+}
+
+/*!
  * @brief Initialize the dircache and indexes
  *
- * This is called in child afpd initialization. The maximum cache size will be
- * max(DEFAULT_DIRCACHE_SIZE, min(size, MAX_DIRCACHE_SIZE)).
+ * This is called in child afpd initialization. Unset or below-minimum
+ * sizes use DEFAULT_DIRCACHE_SIZE, in-range sizes round up to the next
+ * power of two, oversize requests clamp to MAX_DIRCACHE_SIZE.
  * It initializes a hashtable which we use to store a directory cache in.
  * It also initializes two indexes:
  * - a DID/name index on the main dircache
@@ -2056,34 +2099,7 @@ int dircache_init(int reqsize)
         use_arc = 1;
     }
 
-    /* Initialize the main dircache with requested size
-     * Bounds: MIN_DIRCACHE_SIZE (1K) to MAX_DIRCACHE_SIZE (1M)
-     * Default: DEFAULT_DIRCACHE_SIZE (64K) if reqsize <= 0 or out of bounds */
-    if (reqsize > 0 && reqsize >= MIN_DIRCACHE_SIZE
-            && reqsize <= MAX_DIRCACHE_SIZE) {
-        /* Use requested size, rounding up to next power of 2 if needed */
-        dircache_maxsize = MIN_DIRCACHE_SIZE;
-
-        while (dircache_maxsize < reqsize && dircache_maxsize < MAX_DIRCACHE_SIZE) {
-            dircache_maxsize *= 2;
-        }
-    } else if (reqsize > MAX_DIRCACHE_SIZE) {
-        /* Requested size too large, use maximum */
-        dircache_maxsize = MAX_DIRCACHE_SIZE;
-        LOG(log_warning, logtype_afpd,
-            "dircache_init: requested size %d exceeds maximum %d, using maximum",
-            reqsize, MAX_DIRCACHE_SIZE);
-    } else {
-        /* Use default (reqsize <= 0 or < MIN_DIRCACHE_SIZE) */
-        dircache_maxsize = DEFAULT_DIRCACHE_SIZE;
-
-        if (reqsize > 0 && reqsize < MIN_DIRCACHE_SIZE) {
-            LOG(log_warning, logtype_afpd,
-                "dircache_init: requested size %d below minimum %d, using default %d",
-                reqsize, MIN_DIRCACHE_SIZE, DEFAULT_DIRCACHE_SIZE);
-        }
-    }
-
+    dircache_maxsize = dircache_resolve_size(reqsize);
     /* Determine hash table size based on mode:
      * LRU: hash_size = c (only cached entries)
      * ARC: hash_size = 2c (c cached + c ghosts per ARC paper) */
@@ -2242,7 +2258,7 @@ void log_dircache_stat(void)
                                    (double)dircache_stat.lookups) * 100.0 : 0.0;
         LOG(log_info, logtype_afpd,
             "dircache statistics (ARC): (user: %s) "
-            "entries: %zu, ghost_entries: %zu, max_entries: %lu (%lu KB), config_max: %zu, "
+            "entries: %zu, ghost_entries: %zu, max_entries: %lu (%lu KB), config_max_entries: %zu, "
             "lookups: %llu, hits: %llu (%.1f%%), ghost_hits: %llu (%.1f%%), total_hits: (%.1f%%), misses: %llu (%.1f%%), "
             "validations: %llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, "
@@ -2315,7 +2331,7 @@ void log_dircache_stat(void)
                             ((double)dircache_stat.misses / (double)dircache_stat.lookups) * 100.0 : 0.0;
         LOG(log_info, logtype_afpd,
             "dircache statistics (LRU): (user: %s) "
-            "entries: %lu, max_entries: %lu (%lu KB), config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
+            "entries: %lu, max_entries: %lu (%lu KB), config_max_entries: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
             "validations: %llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, evicted: %llu, "
             "covered_cancelled: %llu, validation_freq: %u",
