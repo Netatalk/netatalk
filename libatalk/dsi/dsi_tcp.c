@@ -48,7 +48,7 @@ int deny_severity = log_warning;
 #define min(a,b)  ((a) < (b) ? (a) : (b))
 
 #ifndef DSI_TCPMAXPEND
-#define DSI_TCPMAXPEND      20       /*!< max # of pending connections */
+#define DSI_TCPMAXPEND      128      /*!< max # of pending connections */
 #endif /* DSI_TCPMAXPEND */
 
 #ifndef DSI_TCPTIMEOUT
