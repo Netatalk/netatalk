@@ -26,6 +26,8 @@ extern int        load_charset(struct vol *vol);
 extern int        load_afp_conf_vols(AFPObj *obj, lv_flags_t flags);
 extern void       unload_volumes(AFPObj *obj);
 extern struct vol *getvolumes(void);
+extern int        conf_cnid_scheme_in_use(const AFPObj *obj,
+        const char *scheme);
 extern struct vol *getvolbyvid(const uint16_t);
 extern struct vol *getvolbypath(AFPObj *obj, const char *path);
 extern struct vol *getvolbyname(const char *name);

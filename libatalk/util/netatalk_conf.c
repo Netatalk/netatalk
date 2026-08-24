@@ -2691,6 +2691,41 @@ struct vol *getvolumes(void)
     return Volumes;
 }
 
+/*!
+ * @brief Whether any configured volume resolves to the given CNID scheme
+ *
+ * Scans the loaded volume list, then the [Homes] section: homes
+ * volumes are instantiated per-user at login, so outside AFP sessions
+ * they never appear in the list. The section's scheme is resolved the
+ * same way creatvol() resolves it (section -> preset -> global ->
+ * compiled default).
+ */
+int conf_cnid_scheme_in_use(const AFPObj *obj, const char *scheme)
+{
+    const char *preset, *default_preset;
+
+    for (const struct vol *vol = Volumes; vol; vol = vol->v_next) {
+        if (vol->v_cnidscheme && strcmp(vol->v_cnidscheme, scheme) == 0) {
+            return 1;
+        }
+    }
+
+    /* basedir regex is the one mandatory [Homes] option: absent means
+     * no homes sharing is configured */
+    if (getoption_str(obj->iniconfig, INISEC_HOMES, "basedir regex",
+                      NULL, NULL) == NULL) {
+        return 0;
+    }
+
+    default_preset = getoption_str(obj->iniconfig, INISEC_GLOBAL,
+                                   "vol preset", NULL, NULL);
+    preset = getoption_str(obj->iniconfig, INISEC_HOMES, "vol preset",
+                           NULL, NULL);
+    return strcmp(vdgoption_str(obj->iniconfig, INISEC_HOMES, "cnid scheme",
+                                preset ? preset : default_preset,
+                                DEFAULT_CNID_SCHEME), scheme) == 0;
+}
+
 struct vol *getvolbyvid(const uint16_t vid)
 {
     struct vol  *vol;
