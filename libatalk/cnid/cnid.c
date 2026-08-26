@@ -351,6 +351,33 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
               void *buffer, size_t buflen, bool *more_available)
 {
+    return cnid_find_scoped(cdb, name, namelen, CNID_INVALID,
+                            buffer, buflen, more_available);
+}
+
+/*!
+ * @brief cnid_find() restricted to the subtree of a directory
+ *
+ * Identical contract to cnid_find(); additionally, when @p scope_did
+ * is not CNID_INVALID only entries lying underneath that directory
+ * match. The scope directory itself is not a result.
+ *
+ * @param[in]  cdb            CNID database handle
+ * @param[in]  name           UTF-8 substring to search for, not necessarily NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN-sizeof(uint32_t)
+ * @param[in]  scope_did      CNID of the scope directory in network byte
+ *                            order, or CNID_INVALID for the whole volume
+ * @param[out] buffer         caller-provided buffer for matching CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes, must be >= CNID_FIND_MIN_BUFLEN
+ * @param[out] more_available set to true iff result set was truncated, NULL to opt out
+ *
+ * @returns number of CNIDs written to @p buffer on success, -1 on failure
+ *          (errno = CNID_ERR_PARAM or CNID_ERR_DB)
+ */
+int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
+                     size_t namelen, cnid_t scope_did,
+                     void *buffer, size_t buflen, bool *more_available)
+{
     int ret;
 
     if (more_available) {
@@ -382,7 +409,8 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     }
 
     block_signal(cdb->cnid_db_flags);
-    ret = cdb->cnid_find(cdb, name, namelen, buffer, buflen, more_available);
+    ret = cdb->cnid_find(cdb, name, namelen, scope_did,
+                         buffer, buflen, more_available);
     unblock_signal(cdb->cnid_db_flags);
     return ret;
 }

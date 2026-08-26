@@ -3397,8 +3397,44 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                             "disconnect time", NULL, 24);
     options->splice_size    = getoption_int(config, INISEC_GLOBAL, "splice size",
                                             NULL, 64 * 1024);
-    options->sparql_limit   = getoption_int(config, INISEC_GLOBAL,
-                                            "sparql results limit", NULL, 0);
+    /* "spotlight results limit" (canonical) with "sparql results limit" as
+     * deprecated alias.  Only the key actually in force is parsed:
+     * evaluating both would report a stale alias as invalid even when the
+     * canonical key decides the value. */
+    {
+        const char *raw_alias = INIPARSER_GETSTR(config, INISEC_GLOBAL,
+                                "sparql results limit", NULL);
+        const char *raw_canon = INIPARSER_GETSTR(config, INISEC_GLOBAL,
+                                "spotlight results limit", NULL);
+        const char *key = (raw_canon && *raw_canon)
+                          ? "spotlight results limit"
+                          : ((raw_alias
+                              && *raw_alias) ? "sparql results limit" : NULL);
+
+        if (raw_alias && *raw_alias) {
+            LOG(log_warning, logtype_afpd,
+                "Using deprecated 'sparql results limit' option, please update to 'spotlight results limit'");
+        }
+
+        /* getoption_uint32_strict() rejects negatives and out-of-range
+         * values rather than wrapping them into a huge unsigned limit */
+        options->spotlight_results_limit = key == NULL
+                                           ? SPOTLIGHT_RESULTS_LIMIT_DEFAULT
+                                           : getoption_uint32_strict(config, INISEC_GLOBAL, key,
+                                               NULL, 0, SPOTLIGHT_RESULTS_LIMIT_MAX,
+                                               SPOTLIGHT_RESULTS_LIMIT_DEFAULT);
+
+        /* 0 stays unlimited; anything else gets at least one batch */
+        if (options->spotlight_results_limit > 0
+                && options->spotlight_results_limit
+                < SPOTLIGHT_RESULTS_LIMIT_MIN) {
+            LOG(log_note, logtype_afpd,
+                "'spotlight results limit' %" PRIu64 " raised to the minimum %d",
+                options->spotlight_results_limit,
+                SPOTLIGHT_RESULTS_LIMIT_MIN);
+            options->spotlight_results_limit = SPOTLIGHT_RESULTS_LIMIT_MIN;
+        }
+    }
     p = getoption_strdup(config, INISEC_GLOBAL, "map acls", NULL, "rights");
 
     if (STRCMP(p, ==, "rights")) {

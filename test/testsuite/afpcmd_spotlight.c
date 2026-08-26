@@ -409,7 +409,8 @@ unsigned int FPSpotlightOpen(CONN *conn, uint16_t vid,
  *       [2] = ctx2  (uint64_t)
  *   [1] params : sl_dict_t — key/value pairs (kMDQueryString → DSL,
  *                                              kMDAttributeArray → sl_array_t,
- *                                              kMDScopeArray → char *)
+ *                                              kMDScopeArray → sl_array_t
+ *                                              of one char *, optional)
  *
  * Stack-local scalars use dalloc_add_copy so the value is memcpy'd into a
  * freshly-talloc'd chunk; dalloc_add only captures a pointer.
@@ -418,8 +419,10 @@ unsigned int FPSpotlightOpen(CONN *conn, uint16_t vid,
  * via dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1)
  * and "uint64_t", 2.
  */
-unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
-                                  const char *query_dsl, uint64_t ctx)
+static unsigned int spotlight_open_query_send(CONN *conn, uint16_t vid,
+        const char *query_dsl,
+        const char *scope,
+        uint64_t ctx)
 {
     /* sl_pack writes up to SL_PACK_BUFLEN bytes regardless of caller
      * buffer; see comment at top of this TU. */
@@ -435,9 +438,10 @@ unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
     uint64_t     ctxval2      = ctx;
 
     if (!Quiet) {
-        fprintf(stdout, "[%s] vol=%u ctx=%llu query=\"%s\"\n",
+        fprintf(stdout, "[%s] vol=%u ctx=%llu query=\"%s\" scope=\"%s\"\n",
                 __func__, (unsigned)ntohs(vid),
-                (unsigned long long)ctx, query_dsl);
+                (unsigned long long)ctx, query_dsl,
+                scope ? scope : "(volume)");
     }
 
     /* args : ["openQueryWithParams:forContext:", ctx1, ctx2] */
@@ -455,6 +459,18 @@ unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
     dalloc_add(params, dalloc_strdup(params, query_dsl), "char *");
     dalloc_add(params, dalloc_strdup(params, "kMDAttributeArray"), "char *");
     dalloc_add(params, attrs, "sl_array_t");
+
+    if (scope != NULL) {
+        /* kMDScopeArray : sl_array_t of one server-side path, the
+         * shape the server parses in etc/afpd/spotlight.c */
+        sl_array_t *scope_array = talloc_zero(params, sl_array_t);
+        dalloc_add(params, dalloc_strdup(params, "kMDScopeArray"),
+                   "char *");
+        dalloc_add(scope_array, dalloc_strdup(scope_array, scope),
+                   "char *");
+        dalloc_add(params, scope_array, "sl_array_t");
+    }
+
     /* outer_array : [args, params] */
     dalloc_add(outer_array, args, "sl_array_t");
     dalloc_add(outer_array, params, "sl_dict_t");
@@ -482,6 +498,19 @@ unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
 
     return spotlight_send(conn, vid, SPOTLIGHT_CMD_RPC,
                           (const uint8_t *)rpcbuf, (size_t)rpclen);
+}
+
+unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
+                                  const char *query_dsl, uint64_t ctx)
+{
+    return spotlight_open_query_send(conn, vid, query_dsl, NULL, ctx);
+}
+
+unsigned int FPSpotlightOpenQueryScoped(CONN *conn, uint16_t vid,
+                                        const char *query_dsl,
+                                        const char *scope, uint64_t ctx)
+{
+    return spotlight_open_query_send(conn, vid, query_dsl, scope, ctx);
 }
 
 /*!

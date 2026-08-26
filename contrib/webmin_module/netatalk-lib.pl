@@ -108,9 +108,10 @@ my @yesNoSelectOptions = ('yes', 'no');
 # the server.  Drives the edit-page display fallback and the save-time
 # cleanup below; future renames only need a new entry here.
 our %netatalkDeprecatedAliases = (
-                                  'dircache size'  => 'dircachesize',
-                                  'server name'    => 'zeroconf name',
-                                  'strict locking' => 'afp read locks',
+                                  'dircache size'           => 'dircachesize',
+                                  'server name'             => 'zeroconf name',
+                                  'spotlight results limit' => 'sparql results limit',
+                                  'strict locking'          => 'afp read locks',
 );
 
 our %netatalkParameterSelectOptions = (

@@ -217,7 +217,7 @@ functionality.
 
 ### Spotlight LocalSearch backend dependencies
 
-The LocalSearch backend for Spotlight enables rich file content and metadata matching,
+The LocalSearch backend for Spotlight (Finder search) enables rich file content and metadata matching,
 and depends on the following third-party software:
 
 - bison

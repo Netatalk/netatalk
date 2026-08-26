@@ -23,6 +23,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -653,6 +654,81 @@ int utest_conf_strict_locking_keys(void)
                     obj.options.strict_locking_explicit, cases[i].explicit_marker,
                     deprecated, cases[i].expect_deprecation,
                     invalid, cases[i].expect_invalid);
+            conf_teardown(&obj, NULL);
+            goto cleanup;
+        }
+
+        conf_teardown(&obj, NULL);
+    }
+
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    return failed;
+}
+
+/* utest_conf_spotlight_results_limit_keys: the canonical key, the
+ * deprecated alias, and their precedence.  Global-only parse, no
+ * volumes. */
+int utest_conf_spotlight_results_limit_keys(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    int failed = -1;
+    static const struct {
+        const char *body;
+        uint64_t limit;
+        int expect_deprecation;
+    } cases[] = {
+        /* unset falls back to the shared default */
+        {"", SPOTLIGHT_RESULTS_LIMIT_DEFAULT, 0},
+        {"spotlight results limit = 4200\n", 4200, 0},
+        /* below the minimum is raised to it, through either key */
+        {"spotlight results limit = 42\n", SPOTLIGHT_RESULTS_LIMIT_MIN, 0},
+        {"sparql results limit = 7\n", SPOTLIGHT_RESULTS_LIMIT_MIN, 1},
+        /* 0 is explicit: it removes the limit for every backend */
+        {"spotlight results limit = 0\n", 0, 0},
+        {"sparql results limit = 0\n", 0, 1},
+        /* a negative or unparsable value must not wrap into a huge
+         * unsigned limit; it falls back to the default */
+        {"spotlight results limit = -1\n", SPOTLIGHT_RESULTS_LIMIT_DEFAULT, 0},
+        {"spotlight results limit = wat\n", SPOTLIGHT_RESULTS_LIMIT_DEFAULT, 0},
+        /* an empty canonical key counts as unset, so the alias decides */
+        {"spotlight results limit =\nsparql results limit = 4200\n", 4200, 1},
+        /* the ceiling is accepted; above it falls back to the default */
+        {
+            "spotlight results limit = 16000000\n",
+            SPOTLIGHT_RESULTS_LIMIT_MAX, 0
+        },
+        {
+            "spotlight results limit = 16000001\n",
+            SPOTLIGHT_RESULTS_LIMIT_DEFAULT, 0
+        },
+        /* an explicit canonical value always beats the alias */
+        {"spotlight results limit = 4200\nsparql results limit = 7\n", 4200, 1},
+    };
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        conf_log_truncate(logpath);
+
+        if (conf_parse_fixture(&obj, cases[i].body, logpath) != 0) {
+            goto cleanup;
+        }
+
+        int deprecated = conf_log_contains(logpath,
+                                           "deprecated 'sparql results limit'");
+
+        if (obj.options.spotlight_results_limit != cases[i].limit
+                || deprecated != cases[i].expect_deprecation) {
+            fprintf(test_stream(),
+                    "# utest_conf_spotlight_results_limit_keys: case %zu: "
+                    "limit %" PRIu64 "/%" PRIu64 " depr %d/%d\n",
+                    i, obj.options.spotlight_results_limit, cases[i].limit,
+                    deprecated, cases[i].expect_deprecation);
             conf_teardown(&obj, NULL);
             goto cleanup;
         }

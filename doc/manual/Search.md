@@ -1,6 +1,6 @@
 # Search
 
-Netatalk provides support for Spotlight-compatible search and indexing on macOS clients.
+Netatalk provides support for Spotlight (Finder search) compatible search and indexing on macOS clients.
 This allows users to search for files and metadata on Netatalk volumes in macOS.
 
 > ***NOTE:*** The Netatalk development team has observed that in macOS,
@@ -15,9 +15,9 @@ For Classic Mac OS clients and very early Mac OS X clients,
 Netatalk provides support for the older search feature called Catalog Search,
 which is used by the Sherlock app in Mac OS.
 
-## Spotlight Search for macOS
+## Spotlight (Finder search) for macOS
 
-Netatalk's Spotlight-compatible search can be controlled with the **spotlight** option.
+Netatalk's Spotlight (Finder search) compatible search can be controlled with the **spotlight** option.
 Enabled by default, you can turn it on or off globally and per volume.
 
 Spotlight query handling uses a pluggable backend architecture.
@@ -67,6 +67,24 @@ regular files that are world-readable, readable by the indexing process,
 plain-text-like, and below the backend's text size limit. Files readable to
 a specific AFP user but not world-readable can still match filename and type
 queries, but may not match content queries such as `kMDItemTextContent`.
+
+### Searching for phrases and multiple words
+
+- A multi-word search (`two words`) is split into individual words by
+  macOS and sent to the server as an OR of per-word predicates; the
+  results contain files whose names match any of the words.
+- To search for words that must appear next to each other, wrap the
+  phrase in double quotes in the Finder search field, for example
+  `"two words"`. With the **cnid** backend a phrase matches as a
+  filename substring.
+- Searching within a folder returns only results from that folder and
+  its subfolders. With the **cnid** backend the restriction is applied
+  inside the CNID database; with the *mysql* CNID scheme that requires
+  MySQL 8.0 or MariaDB 10.2, and older servers fall back to a
+  volume-wide search that is filtered afterwards.
+
+The **localsearch** and **xapian** backends do not yet support quoted
+phrase searches.
 
 ### Building Spotlight backends
 

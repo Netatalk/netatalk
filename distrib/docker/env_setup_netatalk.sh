@@ -628,6 +628,7 @@ unix charset = ${AFP_UNIX_CHARSET:-UTF8}
 vol charset = ${AFP_VOL_CHARSET:-UTF8}
 spotlight = $AFP_SPOTLIGHT_GLOBAL
 spotlight backend = ${AFP_SPOTLIGHT_BACKEND:-cnid}
+spotlight results limit = ${AFP_SPOTLIGHT_RESULTS_LIMIT:-10000}
 [${SHARE_NAME:-File Sharing}]
 cnid scheme = ${AFP_CNID_BACKEND:-sqlite}
 ea = $AFP_EA

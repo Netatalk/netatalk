@@ -99,7 +99,7 @@ int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
      * and has no further entry, so SRCH_DONE is the correct answer for
      * that case — the legacy heuristic mis-emitted SRCH_CNT, forcing a
      * spurious extra paginated request. */
-    results = dbif_search(dbd, &key, resbuf, offset, &more);
+    results = dbif_search(dbd, &key, resbuf, offset, rqst->did, &more);
 
     if (results < 0) {
         LOG(log_error, logtype_cnid,

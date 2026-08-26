@@ -1386,8 +1386,9 @@ extern "C" int sl_xapian_query(const char *db_path,
             return 0;
         }
 
-        Xapian::doccount ask = limit == 0 ? 10000 : static_cast<Xapian::doccount>
-                               (limit);
+        /* limit 0 = unlimited: ask for every document in the index */
+        Xapian::doccount ask = limit == 0 ? db.get_doccount()
+                               : static_cast<Xapian::doccount>(limit);
         Xapian::Enquire enquire(db);
         enquire.set_query(query);
         Xapian::MSet matches = enquire.get_mset(static_cast<Xapian::doccount>(offset),

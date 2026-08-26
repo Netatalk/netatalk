@@ -95,6 +95,25 @@ struct afp_volume_name {
 #define RFORK_BUDGET_MAX_KB   (10 * 1024 * 1024)   /*!< Hard cap: 10 GB in KB */
 #define RFORK_ENTRY_MAX_KB    (10 * 1024)           /*!< Hard cap: 10 MB in KB */
 
+/*
+ * Default 'spotlight results limit': the number of results any search
+ * backend returns for one query when the option is unset. 0 removes the
+ * limit for every backend.
+ *
+ * A nonzero value below the minimum is raised to it: the CNID search
+ * pagination batch is 100 entries, so a smaller limit buys nothing and
+ * costs a search that cannot fill one batch per term.
+ */
+#define SPOTLIGHT_RESULTS_LIMIT_DEFAULT 10000
+#define SPOTLIGHT_RESULTS_LIMIT_MIN     100
+
+/*
+ * Upper bound on a nonzero limit. Keeps the value clear of the 32-bit
+ * match counts the Xapian API uses, and bounds what one CNID query can
+ * allocate: 16M CNIDs is 64 MB. Use 0 for unlimited instead.
+ */
+#define SPOTLIGHT_RESULTS_LIMIT_MAX     16000000
+
 struct afp_options {
     int connections;            /*!< Maximum number of possible AFP connections */
     int tickleval;
@@ -163,7 +182,7 @@ struct afp_options {
     char *cnid_mysql_pw;
     char *cnid_mysql_db;
     struct afp_volume_name volfile;
-    uint64_t sparql_limit;
+    uint64_t spotlight_results_limit;
 };
 
 typedef struct AFPObj {

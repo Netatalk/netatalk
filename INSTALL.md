@@ -90,7 +90,7 @@ required at the bare minimum.
 
 ### Optional Spotlight Backends
 
-In order to enable more advanced Spotlight search functionality such as content searching or metadata,
+In order to enable more advanced Spotlight (Finder search) functionality such as content searching or metadata,
 install the dependencies for one of the following search backends.
 
 #### LocalSearch

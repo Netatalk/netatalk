@@ -972,6 +972,7 @@ EC_CLEANUP:
  * is safely interpolated into the SQL string.
  */
 int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
+                    cnid_t scope_did,
                     void *buffer, size_t buflen, bool *more_available)
 {
     EC_INIT;
@@ -980,6 +981,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     char *namelike = NULL;
     MYSQL_STMT *stmt = NULL;
     MYSQL_BIND param[1];
+    MYSQL_BIND sparam[2];
     MYSQL_BIND result[1];
     int count = 0;
     cnid_t *cnids = (cnid_t *)buffer;
@@ -1010,26 +1012,125 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
      * is not user-controlled (derived from caller's buflen) and is safe to
      * interpolate as a literal; the Name LIKE parameter is bound via
      * mysql_stmt_bind_param below, never inlined into the SQL string. */
-    EC_NEG1(asprintf(&sql,
-                     "SELECT Id FROM `%s` WHERE Name LIKE ? "
-                     "ORDER BY Id LIMIT %lu",
-                     db->cnid_mysql_voluuid_str, max_results + 1));
-    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
-    EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
+    bool scoped = (scope_did != CNID_INVALID
+                   && !db->cnid_find_scoped_unsupported);
+    unsigned long long scope_host = 0;
+
+    if (scoped) {
+        /*
+         * Subtree-scoped variant: the recursive CTE enumerates the
+         * scope directory's transitive contents; STRAIGHT_JOIN pins
+         * the scope set as the outer loop so cost is proportional to
+         * the subtree, not the volume. Requires MySQL 8.0 / MariaDB
+         * 10.2; older servers fail the prepare and fall back below.
+         */
+        EC_NEG1(asprintf(&sql,
+                         "WITH RECURSIVE scope (Id) AS ("
+                         "  SELECT CAST(? AS UNSIGNED)"
+                         "  UNION"
+                         "  SELECT t.Id FROM `%s` t JOIN scope s ON t.Did = s.Id"
+                         ") "
+                         "SELECT t.Id FROM scope s STRAIGHT_JOIN `%s` t "
+                         "ON t.Did = s.Id "
+                         "WHERE t.Name LIKE ? ORDER BY t.Id LIMIT %lu",
+                         db->cnid_mysql_voluuid_str,
+                         db->cnid_mysql_voluuid_str, max_results + 1));
+        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
+
+        if (mysql_stmt_prepare(stmt, sql, strlen(sql)) != 0) {
+            /*
+             * Only a parse rejection means the server lacks recursive
+             * CTEs; latch the fallback for that alone. Any other
+             * prepare failure (connection loss, OOM) is transient and
+             * takes the same error path the unscoped prepare would.
+             */
+            if (mysql_stmt_errno(stmt) == 1064 /* ER_PARSE_ERROR */) {
+                LOG(log_warning, logtype_cnid,
+                    "cnid_mysql_find: server lacks recursive-CTE support "
+                    "(%s); falling back to unscoped searches for this "
+                    "connection", mysql_stmt_error(stmt));
+                db->cnid_find_scoped_unsupported = true;
+                scoped = false;
+                free(sql);
+                sql = NULL;
+            } else {
+                LOG(log_error, logtype_cnid,
+                    "cnid_mysql_find: prepare failed: %s",
+                    mysql_stmt_error(stmt));
+                EC_FAIL;
+            }
+        }
+    }
+
+    if (!scoped) {
+        EC_NEG1(asprintf(&sql,
+                         "SELECT Id FROM `%s` WHERE Name LIKE ? "
+                         "ORDER BY Id LIMIT %lu",
+                         db->cnid_mysql_voluuid_str, max_results + 1));
+        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
+        EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
+    }
+
     free(sql);
     sql = NULL;
-    memset(param, 0, sizeof(param));
-    param[0].buffer_type = MYSQL_TYPE_STRING;
-    param[0].buffer = namelike;
-    param[0].buffer_length = namelike_len;
-    param[0].length = &namelike_len;
-    EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
+
+    if (scoped) {
+        scope_host = (unsigned long long)ntohl(scope_did);
+        memset(sparam, 0, sizeof(sparam));
+        sparam[0].buffer_type = MYSQL_TYPE_LONGLONG;
+        sparam[0].buffer = &scope_host;
+        sparam[0].is_unsigned = true;
+        sparam[1].buffer_type = MYSQL_TYPE_STRING;
+        sparam[1].buffer = namelike;
+        sparam[1].buffer_length = namelike_len;
+        sparam[1].length = &namelike_len;
+        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, sparam));
+    } else {
+        memset(param, 0, sizeof(param));
+        param[0].buffer_type = MYSQL_TYPE_STRING;
+        param[0].buffer = namelike;
+        param[0].buffer_length = namelike_len;
+        param[0].length = &namelike_len;
+        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
+    }
+
     memset(result, 0, sizeof(result));
     result[0].buffer_type = MYSQL_TYPE_LONGLONG;
     result[0].buffer = &result_id;
     result[0].is_unsigned = true;
     EC_ZERO_LOG(mysql_stmt_bind_result(stmt, result));
-    EC_ZERO_LOG(mysql_stmt_execute(stmt));
+
+    if (mysql_stmt_execute(stmt) != 0) {
+        if (!scoped) {
+            LOG(log_error, logtype_cnid,
+                "cnid_mysql_find: execute failed: %s",
+                mysql_stmt_error(stmt));
+            EC_FAIL;
+        }
+
+        /* e.g. the server's CTE recursion-depth cap on an unusually
+         * deep subtree; retry unscoped — the Spotlight layer's path
+         * guard keeps the results correct */
+        LOG(log_warning, logtype_cnid,
+            "cnid_mysql_find: scoped query failed at execute (%s); "
+            "retrying unscoped", mysql_stmt_error(stmt));
+        EC_NEG1(asprintf(&sql,
+                         "SELECT Id FROM `%s` WHERE Name LIKE ? "
+                         "ORDER BY Id LIMIT %lu",
+                         db->cnid_mysql_voluuid_str, max_results + 1));
+        EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
+        free(sql);
+        sql = NULL;
+        memset(param, 0, sizeof(param));
+        param[0].buffer_type = MYSQL_TYPE_STRING;
+        param[0].buffer = namelike;
+        param[0].buffer_length = namelike_len;
+        param[0].length = &namelike_len;
+        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
+        EC_ZERO_LOG(mysql_stmt_bind_result(stmt, result));
+        EC_ZERO_LOG(mysql_stmt_execute(stmt));
+    }
+
     EC_ZERO_LOG(mysql_stmt_store_result(stmt));
     have_result = true;
     LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: mysql_num_rows=%lu",

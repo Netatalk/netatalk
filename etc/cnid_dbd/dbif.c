@@ -20,6 +20,7 @@
 #include <db.h>
 
 #include <atalk/cnid.h>
+#include <atalk/cnid_private.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
@@ -989,6 +990,114 @@ static bool dbif_name_contains(const void *name, size_t namelen,
     return false;
 }
 
+/*
+ * Per-request verdict cache for the scoped-search ancestor walk.
+ * Direct-mapped: a colliding entry is overwritten and its verdict
+ * recomputed on the next encounter, so collisions cost time, never
+ * correctness. Single-threaded daemon — static storage is safe
+ * (same pattern as dbd_search's resbuf).
+ */
+#define DBIF_SCOPE_CACHE_SIZE 1024
+#define DBIF_SCOPE_VERDICT_IN  1
+#define DBIF_SCOPE_VERDICT_OUT 2
+#define DBIF_SCOPE_MAX_DEPTH   64
+
+static struct {
+    cnid_t  did;
+    uint8_t verdict;
+} scope_cache[DBIF_SCOPE_CACHE_SIZE];
+
+static void dbif_scope_cache_reset(void)
+{
+    memset(scope_cache, 0, sizeof(scope_cache));
+}
+
+static uint8_t dbif_scope_cache_get(cnid_t did)
+{
+    uint32_t slot = ntohl(did) & (DBIF_SCOPE_CACHE_SIZE - 1);
+
+    if (scope_cache[slot].verdict && scope_cache[slot].did == did) {
+        return scope_cache[slot].verdict;
+    }
+
+    return 0;
+}
+
+static void dbif_scope_cache_put(cnid_t did, uint8_t verdict)
+{
+    uint32_t slot = ntohl(did) & (DBIF_SCOPE_CACHE_SIZE - 1);
+    scope_cache[slot].did = did;
+    scope_cache[slot].verdict = verdict;
+}
+
+/*!
+ * True when the entry whose parent directory is `did` lies within
+ * the subtree of `scope_did`. Walks the parent chain through the
+ * primary CNID db; unresolvable or over-deep chains count as out
+ * of scope.
+ */
+static bool dbif_in_scope(DBD *dbd, cnid_t did, cnid_t scope_did)
+{
+    cnid_t chain[DBIF_SCOPE_MAX_DEPTH];
+    cnid_t cur = did;
+    int depth = 0;
+    uint8_t verdict = 0;
+    /* Only verdicts that reached the scope or the root hold for every
+     * walked ancestor; a depth-capped or failed walk says nothing
+     * about the intermediate nodes, so it must not be cached. */
+    bool definitive = true;
+    DBT key, data;
+    int rc;
+
+    while (true) {
+        if (cur == scope_did) {
+            verdict = DBIF_SCOPE_VERDICT_IN;
+            break;
+        }
+
+        /* CNID 2 is the volume root, 1 its synthetic parent */
+        if (ntohl(cur) <= 2) {
+            verdict = DBIF_SCOPE_VERDICT_OUT;
+            break;
+        }
+
+        verdict = dbif_scope_cache_get(cur);
+
+        if (verdict) {
+            break;
+        }
+
+        if (depth >= DBIF_SCOPE_MAX_DEPTH) {
+            verdict = DBIF_SCOPE_VERDICT_OUT;
+            definitive = false;
+            break;
+        }
+
+        chain[depth++] = cur;
+        memset(&key, 0, sizeof(key));
+        memset(&data, 0, sizeof(data));
+        key.data = &cur;
+        key.size = sizeof(cnid_t);
+        rc = dbif_get(dbd, DBIF_CNID, &key, &data, 0);
+
+        if (rc <= 0) {
+            verdict = DBIF_SCOPE_VERDICT_OUT;
+            definitive = false;
+            break;
+        }
+
+        memcpy(&cur, (char *)data.data + CNID_DID_OFS, sizeof(cnid_t));
+    }
+
+    if (definitive) {
+        for (int i = 0; i < depth; i++) {
+            dbif_scope_cache_put(chain[i], verdict);
+        }
+    }
+
+    return verdict == DBIF_SCOPE_VERDICT_IN;
+}
+
 /*!
  * @brief Paginated substring cursor scan over the name index
  *
@@ -1005,6 +1114,8 @@ static bool dbif_name_contains(const void *name, size_t namelen,
  * @param[out] resbuf  buffer for matching CNIDs in network byte order, must have
  *                     capacity for DBD_MAX_SRCH_RSLTS * sizeof(cnid_t) bytes
  * @param[in]  offset  number of leading matches to skip, range 0..DBD_SEARCH_MAX_OFFSET
+ * @param[in]  scope_did  CNID of the scope directory: only entries in its
+ *                        subtree match; CNID_INVALID scopes to the whole volume
  * @param[out] more    set to true iff a (offset + DBD_MAX_SRCH_RSLTS + 1)-th matching
  *                     entry exists in the index, false otherwise. MUST be non-NULL.
  *
@@ -1012,7 +1123,7 @@ static bool dbif_name_contains(const void *name, size_t namelen,
  *          to @p resbuf (0..DBD_MAX_SRCH_RSLTS)
  */
 int dbif_search(DBD *dbd, DBT *key, char *resbuf,
-                uint32_t offset, bool *more)
+                uint32_t offset, cnid_t scope_did, bool *more)
 {
     int ret = 0;
     int count = 0;
@@ -1044,6 +1155,11 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf,
 
     /* Default: cursor walked off the end. */
     *more = false;
+
+    if (scope_did != CNID_INVALID) {
+        dbif_scope_cache_reset();
+    }
+
     memset(&pkey, 0, sizeof(DBT));
     memset(&data, 0, sizeof(DBT));
     ret = dbd->db_table[DBIF_IDX_NAME].db->cursor(
@@ -1080,6 +1196,25 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf,
         if (!dbif_name_contains(key->data, key->size, namebkp, namelenbkp)) {
             ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT);
             continue;
+        }
+
+        /*
+         * pget() on the secondary name index returns the primary
+         * record in `data` (primary key in `pkey`), so the parent DID
+         * is available at CNID_DID_OFS without an extra get — the same
+         * layout access as dbd_resolve(). Scope-check before the
+         * offset accounting so pagination offsets count in-scope
+         * matches consistently on both sides of the protocol.
+         */
+        if (scope_did != CNID_INVALID) {
+            cnid_t parent_did;
+            memcpy(&parent_did, (char *)data.data + CNID_DID_OFS,
+                   sizeof(cnid_t));
+
+            if (!dbif_in_scope(dbd, parent_did, scope_did)) {
+                ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT);
+                continue;
+            }
         }
 
         if (skipped < offset) {

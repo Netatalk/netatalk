@@ -616,12 +616,12 @@ print &ui_table_row(
                     &build_parameter_select($afpconfRef, $sectionRef, \%in, 'solaris share reservations')
 );
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'sparql results limit', \%in);
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'spotlight results limit', \%in);
 print &ui_table_row(
-                    $text{'edit_global_section_sparql_results_limit'},
-                    "<input name='p_sparql results limit' type='number' value='"
+                    $text{'edit_global_section_spotlight_results_limit'},
+                    "<input name='p_spotlight results limit' type='number' value='"
                     . $values[0] . "'>" . " "
-                    . $text{'edit_global_section_sparql_results_limit_default'}
+                    . $text{'edit_global_section_spotlight_results_limit_default'}
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'spotlight attributes', \%in);

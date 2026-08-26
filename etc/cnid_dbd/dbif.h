@@ -111,7 +111,7 @@ int dbif_put(DBD *, const int, DBT *, DBT *, uint32_t);
 int dbif_del(DBD *, const int, DBT *, uint32_t);
 int dbif_count(DBD *, const int, uint32_t *);
 int dbif_search(DBD *dbd, DBT *key, char *resbuf,
-                uint32_t offset, bool *more);
+                uint32_t offset, cnid_t scope_did, bool *more);
 int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 int dbif_txn_begin(DBD *);
 int dbif_txn_commit(DBD *);
