@@ -721,9 +721,10 @@ static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset,
     EC_NULL(cnids = talloc_zero(query, sl_cnids_t));
     EC_NULL(cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX));
 
-    if (length <= 16)
-        /* that's permitted, it's an empty array */
-    {
+    if (length <= 16) {
+        /* permitted: an empty set, e.g. in a zero-result reply. Added
+         * like the empty filemeta so the element count is preserved */
+        dalloc_add(query, cnids, sl_cnids_t);
         goto EC_CLEANUP;
     }
 
@@ -912,8 +913,13 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
                                          &query_data64));
         qlen = (query_data64 & 0xffff) * 8;
 
-        if (qlen <= 8 || !sl_unpack_range_valid(buf_len, offset, qlen)) {
-            EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length <= 8: %d", qlen);
+        if (qlen < 8 || !sl_unpack_range_valid(buf_len, offset, qlen)) {
+            EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length < 8: %d", qlen);
+        } else if (qlen == 8) {
+            /* header-only: sl_pack_filemeta's encoding of an empty
+             * filemeta, sent with zero-result replies */
+            EC_NULL(sl_fm = talloc_zero(query, sl_filemeta_t));
+            dalloc_add(query, sl_fm, sl_filemeta_t);
         } else {
             sl_fm = talloc_zero(query, sl_filemeta_t);
             EC_NEG1_LOG(sl_unpack_r(sl_fm, buf + offset + 8, qlen - 8,
@@ -929,7 +935,9 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
                                          &query_data64));
         qlen = (query_data64 & 0xffff) * 8;
 
-        if (qlen <= 8 || !sl_unpack_range_valid(buf_len, offset, qlen)) {
+        /* qlen == 8 is the header-only encoding of an empty CNID set
+         * (a zero-result reply); sl_unpack_CNID handles it */
+        if (qlen < 8 || !sl_unpack_range_valid(buf_len, offset, qlen)) {
             EC_FAIL;
         }
 

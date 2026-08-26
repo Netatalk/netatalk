@@ -208,6 +208,35 @@ static int init_prepared_stmt_find(CNID_sqlite_private *db)
     LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_find: SQL: %s", sql);
     EC_ZERO_LOG(sqlite3_prepare_v2(db->cnid_sqlite_con, sql, strlen(sql),
                                    &db->cnid_find_stmt, NULL));
+    free(sql);
+    sql = NULL;
+
+    if (db->cnid_find_scoped_stmt) {
+        sqlite3_finalize(db->cnid_find_scoped_stmt);
+    }
+
+    /*
+     * Subtree-scoped variant: the recursive CTE enumerates the scope
+     * directory's transitive contents via the (Did, Name) unique
+     * index, and the CROSS JOIN pins the scope set as the outer loop
+     * so cost is proportional to the subtree, not the volume.
+     * Recursive CTEs are a hard requirement (SQLite >= 3.8.3).
+     */
+    EC_NEG1(asprintf(&sql,
+                     "WITH RECURSIVE scope(Id) AS ("
+                     "  VALUES(?)"
+                     "  UNION"
+                     "  SELECT t.Id FROM \"%s\" t JOIN scope s ON t.Did = s.Id"
+                     ") "
+                     "SELECT t.Id FROM scope s CROSS JOIN \"%s\" t "
+                     "ON t.Did = s.Id "
+                     "WHERE t.Name LIKE ? ORDER BY t.Id LIMIT ?",
+                     db->cnid_sqlite_voluuid_str,
+                     db->cnid_sqlite_voluuid_str));
+    LOG(log_maxdebug, logtype_cnid,
+        "init_prepared_stmt_find: scoped SQL: %s", sql);
+    EC_ZERO_LOG(sqlite3_prepare_v2(db->cnid_sqlite_con, sql, strlen(sql),
+                                   &db->cnid_find_scoped_stmt, NULL));
 EC_CLEANUP:
 
     if (sql) {
@@ -259,6 +288,7 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     sqlite3_finalize(db->cnid_delete_stmt);
     sqlite3_finalize(db->cnid_getstamp_stmt);
     sqlite3_finalize(db->cnid_find_stmt);
+    sqlite3_finalize(db->cnid_find_scoped_stmt);
     db->cnid_lookup_stmt = NULL;
     db->cnid_add_stmt = NULL;
     db->cnid_put_stmt = NULL;
@@ -267,6 +297,7 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     db->cnid_delete_stmt = NULL;
     db->cnid_getstamp_stmt = NULL;
     db->cnid_find_stmt = NULL;
+    db->cnid_find_scoped_stmt = NULL;
 }
 
 static int cnid_sqlite_execute(sqlite3 *con, const char *sql)
@@ -1105,6 +1136,7 @@ EC_CLEANUP:
  * signature shared with the dbd / mysql backends.
  */
 int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen _U_,
+                     cnid_t scope_did,
                      void *buffer, size_t buflen, bool *more_available)
 {
     EC_INIT;
@@ -1126,24 +1158,45 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen _U_,
         *more_available = false;
     }
 
+    /* NULL matters: EC_NEG1 below can jump to cleanup, which resets
+     * the statement only when one was selected. */
+    sqlite3_stmt *stmt = NULL;
     /* Construct the LIKE pattern, escaping any special characters */
     EC_NEG1(asprintf(&namelike, "%%%s%%", name));
-    sqlite3_reset(db->cnid_find_stmt);
-    sqlite3_clear_bindings(db->cnid_find_stmt);
-    EC_ZERO_LOG(sqlite3_bind_text(db->cnid_find_stmt, 1, namelike, strlen(namelike),
-                                  SQLITE_STATIC));
-    /* LIMIT max_results + 1: peek for an extra row to detect "more results
-     * exist" without a second query. */
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_find_stmt, 2,
-                                   (sqlite3_int64)(max_results + 1)));
+
+    if (scope_did != CNID_INVALID) {
+        /* Bind the scope DID in host order: the table stores host-order
+         * integers; the API traffics in network order. */
+        stmt = db->cnid_find_scoped_stmt;
+        sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        EC_ZERO_LOG(sqlite3_bind_int64(stmt, 1,
+                                       (sqlite3_int64)ntohl(scope_did)));
+        EC_ZERO_LOG(sqlite3_bind_text(stmt, 2, namelike, strlen(namelike),
+                                      SQLITE_STATIC));
+        /* LIMIT max_results + 1: peek for an extra row to detect "more
+         * results exist" without a second query. */
+        EC_ZERO_LOG(sqlite3_bind_int64(stmt, 3,
+                                       (sqlite3_int64)(max_results + 1)));
+    } else {
+        stmt = db->cnid_find_stmt;
+        sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        EC_ZERO_LOG(sqlite3_bind_text(stmt, 1, namelike, strlen(namelike),
+                                      SQLITE_STATIC));
+        /* LIMIT max_results + 1: peek for an extra row to detect "more
+         * results exist" without a second query. */
+        EC_ZERO_LOG(sqlite3_bind_int64(stmt, 2,
+                                       (sqlite3_int64)(max_results + 1)));
+    }
 
     /* Fetch up to max_results + 1 rows. The (max_results + 1)-th row, if
      * it exists, is the "more available" sentinel and is not stored in
      * cnids[]. */
-    while (sqlite3_step(db->cnid_find_stmt) == SQLITE_ROW
+    while (sqlite3_step(stmt) == SQLITE_ROW
             && count <= (int)max_results) {
         if (count < (int)max_results) {
-            cnids[count] = htonl((uint32_t)sqlite3_column_int64(db->cnid_find_stmt, 0));
+            cnids[count] = htonl((uint32_t)sqlite3_column_int64(stmt, 0));
         }
 
         count++;
@@ -1169,8 +1222,8 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen _U_,
 EC_CLEANUP:
     LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(): END");
 
-    if (cdb && db) {
-        sqlite3_reset(db->cnid_find_stmt);
+    if (cdb && db && stmt) {
+        sqlite3_reset(stmt);
     }
 
     if (namelike) {

@@ -736,7 +736,7 @@ section).
 ## Search Options
 
 Configure Netatalk's file search capabilities,
-covering Spotlight and Catalog Search.
+covering Spotlight (Finder search) and Catalog Search.
 
 dbus daemon = *path* **(G)**
 
@@ -759,23 +759,15 @@ Interacting with the AFP volume with other file sharing protocols,
 or doing local filesystem access on the host without using **nad**(1)
 will lead to an inaccurate CNID database that has to be repaired with **dbd**(1).
 
-sparql results limit = *NUMBER* (default: *UNLIMITED*) **(G)**
-
-> Impose a limit on the number of results queried from Tracker or
-LocalSearch via SPARQL queries.
->
-> The *xapian* backend also uses this value as its per-query result limit,
-despite the historical option name. When set to *0*, LocalSearch queries
-are unlimited, while the *xapian* backend applies an internal safety cap
-of 10000 candidate results. Set a larger nonzero value to raise the
-*xapian* cap. The *cnid* backend does not use this option and is limited
-by its fixed CNID search reply cap.
-
 spotlight = *BOOLEAN* (default: *yes*) **(G)**/**(V)**
 
-> Whether to enable Spotlight-compatible searches.
+> Whether to enable Spotlight (Finder search) compatible searches.
 As a global option, this sets the default for volumes. As a volume option,
 it overrides the global default for that volume.
+>
+> ***NOTE:*** macOS searches network volumes through *Finder search* only,
+not through the *Spotlight* widget in the menu bar, which is reserved for
+local volumes. This is macOS client behaviour, not a Netatalk limitation.
 >
 > A volume is searchable only when its effective **spotlight** setting is
 enabled and a supported **spotlight backend** is available for that volume.
@@ -793,7 +785,7 @@ of the string. Example:
 
 spotlight backend = *backend* (default: *cnid*) **(G)**/**(V)**
 
-> Search backend used by the Spotlight feature.
+> Search backend used by the Spotlight (Finder search) feature.
 >
 > Depending on your Netatalk configuration, the available backends may include:
 *cnid*, *localsearch*, *xapian*.
@@ -809,6 +801,23 @@ spotlight expr = *BOOLEAN* (default: *yes*) **(G)**
 when translating Spotlight RAW queries to SPARQL.
 >
 > This option does not affect the *cnid* or *xapian* backends.
+
+spotlight results limit = *NUMBER* (default: *10000*) **(G)**
+
+> Maximum number of Spotlight (Finder search) results returned per query.
+Set *0* to remove the limit. A nonzero value below *100* is raised to
+*100*, the size of one CNID search batch; a value above *16000000*, or one
+that is negative or unparsable, is rejected in favour of the default and
+logged.
+>
+> Raise it if searches on large volumes are truncated; a larger limit costs
+memory and query time in proportion.
+>
+> The end-of-life *dbd* CNID scheme is excluded: it keeps a fixed cap of
+10000 results whatever this option is set to.
+>
+> This option was called **sparql results limit** before it applied to all
+backends. The old name still works and logs a deprecation warning.
 
 ## Logging Options
 
@@ -1475,7 +1484,7 @@ clients. See also: **file perm**, **directory perm**, and **umask**.
 
 ## Example: Modern Mac clients
 
-This enables Spotlight and AFP stats if Netatalk was built with
+This enables Spotlight (Finder search) and AFP stats if Netatalk was built with
 Spotlight and AFP stats support. The **mimic model** option is
 used to make the server look like an Xserve.
 

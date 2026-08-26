@@ -4,6 +4,10 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* DEPRECATED: cnid: the *dbd* CNID scheme is deprecated: it receives no new
+  features and no further fixes. Remove `cnid scheme = dbd` from all
+  configurations and migrate to *sqlite* (the new default) or *mysql*; dbd
+  will be removed entirely in an upcoming release, GitHub #3271
 * UPD: dsi: listen backlog raised from 20 to 128, absorbing reconnect
   storms without dropped SYNs (the kernel still caps it at
   net.core.somaxconn), GitHub #3267
@@ -12,6 +16,27 @@ Changes in 4.6.0
   (GitHub #3077), and the docker image's fallback for an unset
   AFP_CNID_BACKEND now matches. The dbd backend remains available but is
   deprecated, GitHub #3267
+* NEW: spotlight (Finder search): the cnid search backend now honors every
+  word of a multi-word search (previously only the first word was searched)
+  and supports quoted phrase searches ("two words"), which match as a
+  filename substring, GitHub #3271
+* FIX: spotlight (Finder search): the cnid search backend now honors the
+  search scope, so a search within a folder no longer returns matches from
+  the entire volume. The subtree restriction runs inside the CNID database
+  (recursive CTE for sqlite/mysql, an ancestor check in cnid_dbd), so
+  scoped results are complete, GitHub #3271
+* UPD: spotlight (Finder search): `sparql results limit` is renamed
+  `spotlight results limit`, since it applies to every search backend and
+  is no longer SPARQL-specific; the old name is a deprecated synonym that
+  logs a warning. It now defaults to 10000 and the backends honour it
+  identically, with `0` removing the limit; previously each backend applied
+  its own cap and the cnid backend could not return more than 10000 results
+  at all. The end-of-life dbd CNID scheme is excluded and keeps a fixed
+  10000-result cap, GitHub #3271
+* BREAKING: libatalk: the cnid_db backend function-pointer signature
+  for find gains a subtree scope parameter (installed header); the
+  public cnid_find() is unchanged and cnid_find_scoped() is new,
+  GitHub #3271
 * UPD: netatalk: cnid_metad is now started only when a volume uses the
   dbd CNID scheme, and started or stopped on config reload as volumes
   change; previously it always ran when the dbd backend was compiled in,

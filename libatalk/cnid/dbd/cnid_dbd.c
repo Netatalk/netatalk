@@ -920,6 +920,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
  * already pre-zeroed it for error paths).
  */
 int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen,
+                  cnid_t scope_did,
                   void *buffer, size_t buflen, bool *more_available)
 {
     CNID_bdb_private *db = cdb->cnid_db_private;
@@ -1003,6 +1004,12 @@ int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen,
          * prior batch into this one. */
         memset(&rply, 0, sizeof(rply));
         rqst.op      = CNID_DBD_OP_SEARCH;
+        /* Scope subtree for the daemon-side ancestor check. The did
+         * field was previously unused by SEARCH: the wire format is
+         * unchanged, an old daemon ignores it (unscoped results, which
+         * the Spotlight layer's scope guard still filters), and an old
+         * client's zeroed did means unscoped. */
+        rqst.did     = scope_did;
         rqst.name    = payload;
         rqst.namelen = sizeof(offset) + namelen;
         rply.name    = (char *)buffer + ((size_t)total * sizeof(cnid_t));

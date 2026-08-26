@@ -17,4 +17,10 @@ extern bool add_filemeta(sl_array_t *reqinfo,
                          const char *path,
                          const struct stat *sp);
 
+/*
+ * True when `path` equals `scope` or lies underneath it (component
+ * boundary aware). Defined in etc/afpd/spotlight.c.
+ */
+extern bool sl_path_in_scope(const char *path, const char *scope);
+
 #endif /* SPOTLIGHT_PRIVATE_H */

@@ -28,6 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/param.h>
 
 #include "afpcmd.h"
 #include "afphelper.h"
@@ -48,6 +49,20 @@
 
 #define PAG_DIR_SMALL  "pagtest_small"
 #define PAG_DIR_PAGED  "pagtest_paged"
+
+/* Phrase/OR fixture; the phrase632- prefix keeps the unscoped substring
+ * search collision-free (see the paginate fixtures above). */
+#define PHRASE_DIR     "pagtest_phrase"
+
+/* Scope fixture: identically named files in two sibling directories;
+ * a query scoped to one directory must not return the other's file. */
+#define SCOPE_DIR      "pagtest_scope"
+#define SCOPE_SUB_IN   "scope633-inside"
+#define SCOPE_SUB_OUT  "scope633-outside"
+/* u + combining diaeresis: the decomposed form macOS sends on the wire.
+ * The literal is split so the hex escape cannot absorb "ber" as digits. */
+#define SCOPE_SUB_UML  "scope633-u\xCC\x88" "ber"
+#define SCOPE_FILE     "scope633-file.txt"
 
 /*!
  * @brief Create a directory and return its DID
@@ -459,6 +474,407 @@ STATIC void test563()
     exit_test("FPSpotlightRPC:test563: reject oversized filemeta pack");
 }
 
+/*!
+ * @brief Run one Spotlight query and return the drained result count
+ *
+ * @returns 1 on success (count in *got), 0 after recording the
+ *          failure
+ */
+static int phrase_query_count(const char *testname, uint16_t vol,
+                              const char *query, const char *scope,
+                              uint32_t ctx, int *got)
+{
+    unsigned int ret;
+    *got = 0;
+    ret = scope != NULL
+          ? FPSpotlightOpenQueryScoped(Conn, vol, query, scope, ctx)
+          : FPSpotlightOpenQuery(Conn, vol, query, ctx);
+
+    if (ret != AFP_OK) {
+        pag_log_ret(testname, "FPSpotlightOpenQuery", ret);
+        test_failed();
+        return 0;
+    }
+
+    ret = FPSpotlightDrainResults(Conn, vol, ctx, got);
+    FPSpotlightCloseQuery(Conn, vol, ctx);
+
+    if (ret != AFP_OK) {
+        pag_log_ret(testname, "FPSpotlightDrainResults", ret);
+        test_failed();
+        return 0;
+    }
+
+    return 1;
+}
+
+STATIC void test632()
+{
+    const char *testname = "test632";
+    uint16_t vol = VolID;
+    unsigned int ret;
+    int got = 0;
+    int dir_id;
+    /* FPCreateFile takes a mutable name pointer */
+    static char *const phrase_files[] = {
+        "phrase632-alpha beta.txt",
+        "phrase632-beta alpha.txt",
+        "phrase632-alpha phrase632-beta.txt",
+    };
+    static const struct {
+        const char *label;
+        const char *query;
+        int expect;
+    } phrase_cases[] = {
+        /* substring match with a space in the value: file A only */
+        {
+            "plain-space term",
+            "kMDItemFSName==\"phrase632-alpha beta*\"cd", 1
+        },
+        /* Finder exact-phrase syntax: escaped quotes in the value */
+        {
+            "quoted phrase",
+            "kMDItemFSName==\"\\\"phrase632-alpha beta\\\"*\"cd", 1
+        },
+        /* one predicate per word: alpha matches A+AB, beta B+AB; the
+         * union counts AB once */
+        {
+            "per-word OR",
+            "kMDItemFSName==\"phrase632-alpha*\"cd"
+            "||kMDItemFSName==\"phrase632-beta*\"cd", 3
+        },
+        /* the universal unscoped multi-word form; the
+         * kMDItemTextContent predicates must be ignored */
+        {
+            "universal OR",
+            "*==\"phrase632-alpha*\"cdw"
+            "||kMDItemTextContent==\"phrase632-alpha*\"cdw"
+            "||*==\"phrase632-beta*\"cdw"
+            "||kMDItemTextContent==\"phrase632-beta*\"cdw", 3
+        },
+        /* a supported key inside another predicate's value must not
+         * bind that occurrence to a later predicate's value */
+        {
+            "key inside a value",
+            "kMDItemDisplayName==\"*kMDItemFSName*\"cd"
+            "||kMDItemTextContent==\"phrase632-alpha*\"cd", 0
+        },
+        /* a term under the minimum length is skipped without losing
+         * the scan position for the predicates that follow */
+        {
+            "short term alone",
+            "kMDItemFSName==\"ab*\"cd", 0
+        },
+        {
+            "short term then valid",
+            "kMDItemFSName==\"ab*\"cd"
+            "||kMDItemFSName==\"phrase632-alpha*\"cd", 2
+        },
+    };
+    ENTER_TEST
+
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
+        goto test_exit;
+    }
+
+    if (!pag_spotlight_open(vol, testname)) {
+        goto test_exit;
+    }
+
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, PHRASE_DIR);
+    dir_id = pag_create_dir_get_did(vol, DIRDID_ROOT, PHRASE_DIR);
+
+    /* See test547: dir_id is a network-byte-order CNID stored as int. */
+    if (dir_id == 0) {
+        pag_log_create_dir_failure(testname, PHRASE_DIR);
+        test_nottested();
+        goto cleanup;
+    }
+
+    for (size_t i = 0; i < sizeof(phrase_files) / sizeof(phrase_files[0]);
+            i++) {
+        ret = FPCreateFile(Conn, vol, 0, dir_id, phrase_files[i]);
+
+        if (ret != AFP_OK) {
+            pag_log_create_file_failure(testname, phrase_files[i], ret);
+            test_nottested();
+            goto cleanup;
+        }
+    }
+
+    for (size_t i = 0; i < sizeof(phrase_cases) / sizeof(phrase_cases[0]);
+            i++) {
+        if (!phrase_query_count(testname, vol, phrase_cases[i].query,
+                                NULL, 0x1236 + (uint32_t)i, &got)) {
+            goto cleanup;
+        }
+
+        if (got != phrase_cases[i].expect) {
+            if (!Quiet) {
+                fprintf(stdout,
+                        "\tFAILED: test632 %s expected %d, got %d\n",
+                        phrase_cases[i].label, phrase_cases[i].expect, got);
+            }
+
+            test_failed();
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, PHRASE_DIR);
+test_exit:
+    exit_test("FPSpotlightRPC:test632: quoted-phrase and per-word OR "
+              "filename search");
+}
+
+STATIC void test633()
+{
+    const char *testname = "test633";
+    uint16_t vol = VolID;
+    unsigned int ret;
+    int got = 0;
+    int dir_id, in_id, out_id, uml_id;
+    char vol_path[MAXPATHLEN];
+    char scope[MAXPATHLEN];
+    ENTER_TEST
+
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
+        goto test_exit;
+    }
+
+    /* The scope is a server-side absolute path; FPSpotlightOpen
+     * returns the volume's server path, the same way Finder learns
+     * it before scoping searches. */
+    ret = FPSpotlightOpen(Conn, vol, vol_path, sizeof(vol_path));
+
+    if (ret != AFP_OK) {
+        if (ret == htonl(AFPERR_NOOP)) {
+            test_nottested();
+        } else {
+            pag_log_ret(testname, "FPSpotlightOpen", ret);
+            test_failed();
+        }
+
+        goto test_exit;
+    }
+
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, SCOPE_DIR);
+    dir_id = pag_create_dir_get_did(vol, DIRDID_ROOT, SCOPE_DIR);
+
+    /* See test547: DIDs are network-byte-order CNIDs stored as int. */
+    if (dir_id == 0) {
+        pag_log_create_dir_failure(testname, SCOPE_DIR);
+        test_nottested();
+        goto cleanup;
+    }
+
+    in_id = pag_create_dir_get_did(vol, dir_id, SCOPE_SUB_IN);
+
+    if (in_id == 0) {
+        pag_log_create_dir_failure(testname, SCOPE_SUB_IN);
+        test_nottested();
+        goto cleanup;
+    }
+
+    out_id = pag_create_dir_get_did(vol, dir_id, SCOPE_SUB_OUT);
+
+    if (out_id == 0) {
+        pag_log_create_dir_failure(testname, SCOPE_SUB_OUT);
+        test_nottested();
+        goto cleanup;
+    }
+
+    ret = FPCreateFile(Conn, vol, 0, in_id, SCOPE_FILE);
+
+    if (ret != AFP_OK) {
+        pag_log_create_file_failure(testname, SCOPE_FILE, ret);
+        test_nottested();
+        goto cleanup;
+    }
+
+    ret = FPCreateFile(Conn, vol, 0, out_id, SCOPE_FILE);
+
+    if (ret != AFP_OK) {
+        pag_log_create_file_failure(testname, SCOPE_FILE, ret);
+        test_nottested();
+        goto cleanup;
+    }
+
+    uml_id = pag_create_dir_get_did(vol, dir_id, SCOPE_SUB_UML);
+
+    if (uml_id == 0) {
+        pag_log_create_dir_failure(testname, SCOPE_SUB_UML);
+        test_nottested();
+        goto cleanup;
+    }
+
+    ret = FPCreateFile(Conn, vol, 0, uml_id, SCOPE_FILE);
+
+    if (ret != AFP_OK) {
+        pag_log_create_file_failure(testname, SCOPE_FILE, ret);
+        test_nottested();
+        goto cleanup;
+    }
+
+    /* Unscoped: the substring search sees all three copies. */
+    if (!phrase_query_count(testname, vol,
+                            "kMDItemFSName==\"scope633-file*\"cd",
+                            NULL, 0x123a, &got)) {
+        goto cleanup;
+    }
+
+    if (got != 3) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: test633 unscoped expected 3, got %d\n",
+                    got);
+        }
+
+        test_failed();
+        goto cleanup;
+    }
+
+    /* The same search scoped to the "inside" directory must return
+     * only its copy. */
+    snprintf(scope, sizeof(scope), "%s/%s/%s",
+             vol_path, SCOPE_DIR, SCOPE_SUB_IN);
+
+    if (!phrase_query_count(testname, vol,
+                            "kMDItemFSName==\"scope633-file*\"cd",
+                            scope, 0x123b, &got)) {
+        goto cleanup;
+    }
+
+    if (got != 1) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: test633 scoped expected 1, got %d\n",
+                    got);
+        }
+
+        test_failed();
+        goto cleanup;
+    }
+
+    /* A trailing slash on the scope is equivalent to the bare path. */
+    snprintf(scope, sizeof(scope), "%s/%s/%s/",
+             vol_path, SCOPE_DIR, SCOPE_SUB_IN);
+
+    if (!phrase_query_count(testname, vol,
+                            "kMDItemFSName==\"scope633-file*\"cd",
+                            scope, 0x123c, &got)) {
+        goto cleanup;
+    }
+
+    if (got != 1) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: test633 trailing-slash scope expected 1, "
+                    "got %d\n", got);
+        }
+
+        test_failed();
+        goto cleanup;
+    }
+
+    /* Scope named in the client's decomposed form must resolve against
+     * the volume-charset (precomposed) on-disk name. */
+    snprintf(scope, sizeof(scope), "%s/%s/%s",
+             vol_path, SCOPE_DIR, SCOPE_SUB_UML);
+
+    if (!phrase_query_count(testname, vol,
+                            "kMDItemFSName==\"scope633-file*\"cd",
+                            scope, 0x123d, &got)) {
+        goto cleanup;
+    }
+
+    if (got != 1) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: test633 non-ASCII scope expected 1, "
+                    "got %d\n", got);
+        }
+
+        test_failed();
+        goto cleanup;
+    }
+
+    /* A scope escaping the volume is ignored in favour of the volume
+     * root, so all three copies are returned. */
+    snprintf(scope, sizeof(scope), "%s/../..", vol_path);
+
+    if (!phrase_query_count(testname, vol,
+                            "kMDItemFSName==\"scope633-file*\"cd",
+                            scope, 0x123e, &got)) {
+        goto cleanup;
+    }
+
+    if (got != 3) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: test633 escaping scope expected 3, got %d\n",
+                    got);
+        }
+
+        test_failed();
+        goto cleanup;
+    }
+
+    /* Likewise a scope naming another volume, and one that merely
+     * shares a prefix with this volume's path: neither may widen the
+     * search beyond this volume's root. */
+    {
+        static const char *const foreign[] = {
+            "/mnt/afpbackup",
+            NULL,
+        };
+        char sibling[MAXPATHLEN];
+        snprintf(sibling, sizeof(sibling), "%s2/elsewhere", vol_path);
+
+        for (size_t i = 0; foreign[i] != NULL; i++) {
+            if (!phrase_query_count(testname, vol,
+                                    "kMDItemFSName==\"scope633-file*\"cd",
+                                    foreign[i], 0x1240 + (uint32_t)i, &got)) {
+                goto cleanup;
+            }
+
+            if (got != 3) {
+                if (!Quiet) {
+                    fprintf(stdout,
+                            "\tFAILED: test633 foreign scope \"%s\" expected 3, "
+                            "got %d\n", foreign[i], got);
+                }
+
+                test_failed();
+                goto cleanup;
+            }
+        }
+
+        if (!phrase_query_count(testname, vol,
+                                "kMDItemFSName==\"scope633-file*\"cd",
+                                sibling, 0x1242, &got)) {
+            goto cleanup;
+        }
+
+        if (got != 3) {
+            if (!Quiet) {
+                fprintf(stdout,
+                        "\tFAILED: test633 prefix-sibling scope expected 3, "
+                        "got %d\n", got);
+            }
+
+            test_failed();
+        }
+    }
+cleanup:
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, SCOPE_DIR);
+test_exit:
+    exit_test("FPSpotlightRPC:test633: folder-scoped filename search");
+}
+
 void FPSpotlightRPC_test()
 {
     ENTER_TESTSET
@@ -468,4 +884,6 @@ void FPSpotlightRPC_test()
     test561();
     test562();
     test563();
+    test632();
+    test633();
 }

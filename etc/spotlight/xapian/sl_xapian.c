@@ -41,7 +41,6 @@
 
 #define SL_XAPIAN_PAGE_SIZE 20
 /* Safety cap used when the global result limit is configured as unlimited. */
-#define SL_XAPIAN_DEFAULT_LIMIT 10000
 #define SL_XAPIAN_DB_ID_MAX 128
 
 struct sl_xapian_seeded {
@@ -110,28 +109,6 @@ static int cnid_comp_fn(const void *p1, const void *p2)
     }
 
     return (*c1 < *c2) ? -1 : 1;
-}
-
-static bool sl_xapian_path_in_scope(const char *path, const char *scope)
-{
-    if (path == NULL || scope == NULL) {
-        return false;
-    }
-
-    if (scope[0] == '\0' || (scope[0] == '/' && scope[1] == '\0')) {
-        return true;
-    }
-
-    while (*scope != '\0' && *scope == *path) {
-        scope++;
-        path++;
-    }
-
-    if (*scope != '\0') {
-        return false;
-    }
-
-    return *path == '\0' || *path == '/';
 }
 
 static bool sl_xapian_seeded(const struct vol *vol)
@@ -361,7 +338,7 @@ static int sl_xapian_fill_results(slq_t *slq)
         uint64_t uint64var;
         bool ok;
 
-        if (!sl_xapian_path_in_scope(path, slq->slq_scope)) {
+        if (!sl_path_in_scope(path, slq->slq_scope)) {
             continue;
         }
 
@@ -467,7 +444,8 @@ static int sl_xapian_open_query(slq_t *slq)
     }
 
     EC_ZERO(sl_xapian_ensure_seeded(slq, db_path));
-    limit = slq->slq_result_limit ? slq->slq_result_limit : SL_XAPIAN_DEFAULT_LIMIT;
+    /* 0 = unlimited, handled in the wrapper */
+    limit = slq->slq_result_limit;
 
     if (sl_xapian_query(db_path, slq->slq_scope, slq->slq_qstring,
                         0, limit, &xsq->paths, &xsq->count, &more,
@@ -485,8 +463,8 @@ static int sl_xapian_open_query(slq_t *slq)
     if (more) {
         LOG(log_info, logtype_sl,
             "xapian backend: query truncated at %zu candidate result(s); "
-            "set \"sparql results limit\" to a larger nonzero value to raise the cap",
-            limit);
+            "raise 'spotlight results limit' (0 removes the limit)",
+            xsq->count);
     }
 
     EC_ZERO(sl_xapian_fill_results(slq));

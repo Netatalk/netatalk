@@ -27,7 +27,7 @@ extern int    cnid_dbd_getstamp(struct _cnid_db *, void *, const size_t);
 extern cnid_t cnid_dbd_lookup(struct _cnid_db *, const struct stat *, cnid_t,
                               const char *, size_t);
 extern int    cnid_dbd_find(struct _cnid_db *cdb, const char *name,
-                            size_t namelen,
+                            size_t namelen, cnid_t scope_did,
                             void *buffer, size_t buflen,
                             bool *more_available);
 extern int    cnid_dbd_update(struct _cnid_db *, cnid_t, const struct stat *,

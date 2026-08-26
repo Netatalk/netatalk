@@ -107,7 +107,7 @@ typedef struct _slq_t {
     size_t            slq_cnids_num;    /*!< Size of slq_cnids array         */
     void             *slq_backend_private; /*!< backend-private query state  */
     bool              slq_allow_expr;   /*!< Whether to allow expressions    */
-    uint64_t          slq_result_limit; /*!< Whether to LIMIT SPARQL results */
+    uint64_t          slq_result_limit; /*!< max results, 0 = unlimited      */
     struct sl_rslts  *query_results;    /*!< query results                   */
 } slq_t;
 

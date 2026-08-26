@@ -1,5 +1,6 @@
 %{
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -77,7 +78,7 @@ expr                           {
     }
 
     if (ssp_slq->slq_result_limit) {
-        result_limit = talloc_asprintf(ssp_slq, "LIMIT %ld",
+        result_limit = talloc_asprintf(ssp_slq, "LIMIT %" PRIu64,
                                        ssp_slq->slq_result_limit);
     } else {
         result_limit = "";

@@ -372,6 +372,68 @@ static sl_array_t *sl_sanitize_reqinfo(TALLOC_CTX *mem_ctx,
 }
 
 /*!
+ * True when `path` equals `scope` or lies underneath it. Component
+ * boundary aware: '/srv/afp2' does not match '/srv/afp22/x'. An
+ * empty or "/" scope matches everything.
+ */
+bool sl_path_in_scope(const char *path, const char *scope)
+{
+    if (path == NULL || scope == NULL) {
+        return false;
+    }
+
+    if (scope[0] == '\0' || (scope[0] == '/' && scope[1] == '\0')) {
+        return true;
+    }
+
+    while (*scope != '\0' && *scope == *path) {
+        scope++;
+        path++;
+    }
+
+    if (*scope != '\0') {
+        return false;
+    }
+
+    return *path == '\0' || *path == '/';
+}
+
+/*!
+ * True when any component of `path` is "..".
+ */
+static bool sl_path_has_dotdot(const char *path)
+{
+    for (const char *p = path; *p != '\0'; p++) {
+        if (p[0] == '.' && p[1] == '.'
+                && (p[2] == '\0' || p[2] == '/')
+                && (p == path || p[-1] == '/')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * Read the first CNID of an unpacked CNIDs element.
+ *
+ * The element is client-supplied and may legitimately carry no
+ * entries, in which case ca_cnids holds no array at all.
+ *
+ * @returns false when the element carries no CNID
+ */
+static bool sl_cnids_get_first(const sl_cnids_t *cnids, uint64_t *cnid)
+{
+    if (cnids == NULL || cnids->ca_cnids == NULL
+            || talloc_array_length(cnids->ca_cnids->dd_talloc_array) < 1) {
+        return false;
+    }
+
+    memcpy(cnid, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+    return true;
+}
+
+/*!
  * @brief Add requested metadata for a query result element
  *
  * This could be rewritten to something more sophisticated like
@@ -901,7 +963,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     slq->slq_obj = obj;
     slq->slq_vol = v;
     slq->slq_allow_expr = obj->options.flags & OPTION_SPOTLIGHT_EXPR ? true : false;
-    slq->slq_result_limit = obj->options.sparql_limit;
+    slq->slq_result_limit = obj->options.spotlight_results_limit;
     LOG(log_debug, logtype_sl, "Spotlight: expr: %s, limit: %" PRIu64,
         slq->slq_allow_expr ? "yes" : "no", slq->slq_result_limit);
     /* convert spotlight query charset to host charset */
@@ -995,7 +1057,97 @@ static int sl_rpc_openQuery(AFPObj *obj,
         raw_scope = first;
     }
 
-    slq->slq_scope = talloc_strdup(slq, raw_scope);
+    /*
+     * A scope is the volume root or a path below it, which the client
+     * echoes back from the kMDSStorePathScopes it was given. Only the
+     * components below the volume root come from the client, in
+     * UTF8-MAC form; the volume path prefix is already in the volume
+     * charset and is copied verbatim — converting it would apply this
+     * volume's casefold and precomposition to bytes already on disk.
+     * A scope that is not below the volume root, or that escapes it
+     * via "..", is replaced by the volume root: paths outside the
+     * volume break cnid_for_path()'s contract.
+     */
+    {
+        size_t vlen = strnlen(v->v_path, MAXPATHLEN);
+        const char *seg = NULL;
+        size_t out;
+
+        while (vlen > 1 && v->v_path[vlen - 1] == '/') {
+            vlen--;
+        }
+
+        if (strncmp(raw_scope, v->v_path, vlen) == 0) {
+            if (raw_scope[vlen] == '\0') {
+                seg = "";
+            } else if (raw_scope[vlen] == '/') {
+                seg = raw_scope + vlen;
+            } else if (vlen == 1) {
+                /* the volume path is "/", which is itself the separator */
+                seg = raw_scope + 1;
+            }
+        }
+
+        if (seg != NULL && sl_path_has_dotdot(seg)) {
+            seg = NULL;
+        }
+
+        if (seg == NULL) {
+            LOG(log_warning, logtype_sl,
+                "openQuery: scope \"%s\" is not inside volume \"%s\", "
+                "searching the whole volume", raw_scope, v->v_path);
+            seg = "";
+        }
+
+        memcpy(slq_host, v->v_path, vlen);
+        out = vlen;
+
+        while (*seg != '\0') {
+            const char *end;
+            size_t seg_len;
+            char segbuf[MAXPATHLEN + 1];
+
+            if (*seg == '/') {
+                if (out >= MAXPATHLEN) {
+                    LOG(log_error, logtype_sl, "scope path too long");
+                    EC_FAIL;
+                }
+
+                slq_host[out++] = '/';
+                seg++;
+                continue;
+            }
+
+            end = strchr(seg, '/');
+            seg_len = end != NULL ? (size_t)(end - seg)
+                      : strnlen(seg, MAXPATHLEN);
+            convflags = v->v_mtou_flags;
+            convret = convert_charset(CH_UTF8_MAC, v->v_volcharset,
+                                      v->v_maccharset, seg, seg_len,
+                                      segbuf, MAXPATHLEN, &convflags);
+
+            if (convret == -1) {
+                LOG(log_error, logtype_sl, "scope charset conversion failed");
+                EC_FAIL;
+            }
+
+            if ((size_t)convret > MAXPATHLEN - out) {
+                LOG(log_error, logtype_sl, "scope path too long");
+                EC_FAIL;
+            }
+
+            memcpy(slq_host + out, segbuf, (size_t)convret);
+            out += (size_t)convret;
+            seg += seg_len;
+        }
+
+        while (out > 1 && slq_host[out - 1] == '/') {
+            out--;
+        }
+
+        slq_host[out] = '\0';
+    }
+    slq->slq_scope = talloc_strdup(slq, slq_host);
 
     if (slq->slq_scope == NULL) {
         LOG(log_error, logtype_sl, "talloc_strdup failed");
@@ -1006,13 +1158,19 @@ static int sl_rpc_openQuery(AFPObj *obj,
     cnids = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
                                  "kMDQueryItemArray", "sl_cnids_t");
 
-    if (cnids && cnids->ca_cnids) {
+    /*
+     * An empty array is no filter at all: building a zero-length one
+     * would reject every result instead.
+     */
+    if (cnids && cnids->ca_cnids
+            && talloc_array_length(cnids->ca_cnids->dd_talloc_array) > 0) {
         EC_ZERO_LOG(sl_createCNIDArray(slq, cnids->ca_cnids));
     } else {
         cnid_array = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
                                           "kMDQueryItemArray", "sl_array_t");
 
-        if (cnid_array) {
+        if (cnid_array
+                && talloc_array_length(cnid_array->dd_talloc_array) > 0) {
             EC_ZERO_LOG(sl_createCNIDArray(slq, cnid_array));
         }
     }
@@ -1169,7 +1327,11 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj _U_,
     const char *path;
     struct dir *dir;
     EC_NULL_LOG(cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 2));
-    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+
+    if (!sl_cnids_get_first(cnids, &uint64)) {
+        EC_FAIL;
+    }
+
     id = (cnid_t)uint64;
     LOG(log_debug, logtype_sl, "CNID: %" PRIu32, id);
 
@@ -1219,7 +1381,11 @@ static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj _U_,
     const sl_cnids_t *cnids;
     cnid_t id;
     EC_NULL_LOG(cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 1));
-    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
+
+    if (!sl_cnids_get_first(cnids, &uint64)) {
+        EC_FAIL;
+    }
+
     id = (cnid_t)uint64;
     LOG(log_debug, logtype_sl,
         "sl_rpc_fetchAttributeNamesForOIDArray: CNID: %" PRIu32, id);
@@ -1288,11 +1454,10 @@ static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj _U_,
 
     cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 2);
 
-    if (cnids == NULL) {
+    if (!sl_cnids_get_first(cnids, &uint64)) {
         EC_FAIL;
     }
 
-    memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
     id = (cnid_t)uint64;
 
     if (htonl(id) == DIRDID_ROOT) {

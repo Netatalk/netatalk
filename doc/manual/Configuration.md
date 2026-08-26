@@ -6,7 +6,7 @@ Netatalk's **afpd** daemon provides AFP file services to clients.
 You usually launch the AFP file service daemon through the **netatalk** controller daemon.
 The controller daemon manages the lifecycle of the AFP file service daemon,
 including Zeroconf service registration, and housekeeping for certain CNID backends
-and Spotlight indexing.
+and Spotlight (Finder search) indexing.
 
 Configuration of both the daemons and the AFP volumes are managed through the *afp.conf* file,
 which uses an ini-style syntax.

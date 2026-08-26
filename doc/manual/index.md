@@ -25,7 +25,7 @@ of new and old Macs.
 Netatalk ships with range of capabilities to accommodate most deployment
 environments, including Kerberos, ACLs and LDAP. Modern macOS features
 such as Zeroconf (Bonjour) service discovery, Time Machine backups,
-and Spotlight indexed search are provided.
+and Spotlight (Finder search) indexed search are provided.
 
 ## AppleTalk Services
 
