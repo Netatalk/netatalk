@@ -143,6 +143,47 @@ void atp_build_resp_packet(struct atpbuf *pktbuf,
 }
 
 
+/*
+ * Push a packet onto the unmatched-receive queue, evicting the oldest entry
+ * once the queue is full.
+ *
+ * Nothing ages this queue: an entry is removed only by a receive that matches
+ * it, or by atp_close(). A stale response to a timed-out transaction or another
+ * node's traffic can therefore sit here indefinitely, so the queue is bounded
+ * and the oldest entry is evicted, which a datagram protocol is free to do.
+ * Every push goes through here so that both callers agree on which packet is
+ * sacrificed: never the one just received, which is the only one a caller may
+ * still be waiting for.
+ */
+void atp_queue_push(ATP ah, struct atpbuf *buf)
+{
+    struct atpbuf *prev = NULL;
+    int queued = 0;
+
+    /* one pass: count, and remember the entry before the tail */
+    for (struct atpbuf *cq = ah->atph_queue; cq != NULL; cq = cq->atpbuf_next) {
+        queued++;
+
+        if (cq->atpbuf_next != NULL && cq->atpbuf_next->atpbuf_next == NULL) {
+            prev = cq;
+        }
+    }
+
+    /* prev is the entry before the tail, so it is set whenever the queue holds
+     * two or more — which the bound guarantees, ATP_MAXQUEUE being above one. */
+    if (queued >= ATP_MAXQUEUE && prev != NULL) {
+#ifdef EBUG
+        printf("<%d> incoming queue full, dropping oldest\n", getpid());
+#endif /* EBUG */
+        atp_free_buf(prev->atpbuf_next);
+        prev->atpbuf_next = NULL;
+    }
+
+    buf->atpbuf_next = ah->atph_queue;
+    ah->atph_queue = buf;
+}
+
+
 int
 atp_recv_atp(ATP ah,
              struct sockaddr_at *fromaddr,
@@ -190,7 +231,7 @@ atp_recv_atp(ATP ah,
         putchar('\n');
 #endif /* EBUG */
 
-        if (((tid & ahdr.atphd_tid) == ahdr.atphd_tid) &&
+        if (rfunc != 0 && ((tid & ahdr.atphd_tid) == ahdr.atphd_tid) &&
                 ((*func & rfunc) == rfunc)
                 && at_addr_eq(fromaddr, &cq->atpbuf_addr)) {
             break;
@@ -208,7 +249,7 @@ atp_recv_atp(ATP ah,
         /* remove packet from queue and free buffer
         */
         if (pq == NULL) {
-            ah->atph_queue = NULL;
+            ah->atph_queue = cq->atpbuf_next;
         } else {
             pq->atpbuf_next = cq->atpbuf_next;
         }
@@ -242,10 +283,9 @@ atp_recv_atp(ATP ah,
             return -1;
         }
 
-        memcpy(&ahdr, rbuf + 1, sizeof(struct atphdr));
-
         if (recvlen >= ATP_HDRSIZE && *rbuf == DDPTYPE_ATP) {
             /* this is a valid ATP packet -- check for a match */
+            memcpy(&ahdr, rbuf + 1, sizeof(struct atphdr));
             rfunc = ahdr.atphd_ctrlinfo & ATP_FUNCMASK;
             rtid = ahdr.atphd_tid;
 #ifdef EBUG
@@ -256,7 +296,16 @@ atp_recv_atp(ATP ah,
             bprint(rbuf, recvlen);
 #endif /* EBUG */
 
-            if (rfunc == ATP_TREL) {
+            if (rfunc == 0) {
+                /* No function bits set. Such a packet satisfies every
+                 * ((*func & rfunc) == rfunc) test, so it would be handed back
+                 * as the response to whatever transaction asked first, and
+                 * once queued no request could ever claim it. Discard it here
+                 * rather than let it reach the queue. */
+#ifdef EBUG
+                printf("<%d> discarding packet with no function bits\n", getpid());
+#endif /* EBUG */
+            } else if (rfunc == ATP_TREL) {
                 /* remove response from sent list */
                 for (pq = NULL, cq = ah->atph_sent; cq != NULL;
                         pq = cq, cq = cq->atpbuf_next) {
@@ -304,9 +353,9 @@ atp_recv_atp(ATP ah,
 
                 memcpy(&inbuf->atpbuf_addr, &faddr,
                        sizeof(struct sockaddr_at));
-                inbuf->atpbuf_next = ah->atph_queue;
                 inbuf->atpbuf_dlen = (size_t) recvlen;
                 memcpy(inbuf->atpbuf_info.atpbuf_data, rbuf, recvlen);
+                atp_queue_push(ah, inbuf);
             }
         }
 

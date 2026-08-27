@@ -83,6 +83,9 @@ struct atphdr {
 
 #define ATP_TRIES_INFINITE	-1	/*!< for atp_sreq, etc */
 
+#define ATP_MAXQUEUE	8	/*!< bound on unmatched incoming packets */
+#define ATP_MAXRESP	8	/*!< response packets per transaction */
+
 struct atpxobuf {
     uint16_t		atpxo_tid;
     struct timeval	atpxo_tv;
@@ -115,7 +118,7 @@ struct atp_handle {
     uint8_t		atph_rbitmap;		/*!< bitmap for request */
     struct atpbuf	*atph_reqpkt;		/*!< last request packet */
     struct timeval	atph_reqtv;		/*!< when we last sent request */
-    struct atpbuf	*atph_resppkt[8];	/*!< response to request */
+    struct atpbuf	*atph_resppkt[ATP_MAXRESP];	/*!< response to request */
 };
 
 typedef struct atp_handle *ATP;
@@ -190,6 +193,8 @@ extern int		atp_sreq(ATP, struct atp_block *, int, uint8_t);
 extern int		atp_rresp(ATP, struct atp_block *);
 extern int		atp_rsel(ATP, struct sockaddr_at *, int);
 extern int		atp_rreq(ATP, struct atp_block *);
+extern int		atp_rreq_try(ATP,
+                          struct atp_block *);	/*!< 1 got, 0 none yet, -1 error */
 extern int		atp_sresp(ATP, struct atp_block *);
 
 #endif  /* NO_DDP */

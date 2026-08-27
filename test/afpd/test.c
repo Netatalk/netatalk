@@ -46,6 +46,9 @@
 #include "subtests_conf.h"
 #include "subtests_lock.h"
 #include "subtests_pfd.h"
+#ifndef NO_DDP
+#include "subtests_atp.h"
+#endif /* NO_DDP */
 #include "test.h"
 #include "test_capabilities.h"
 #include "volume.h"
@@ -334,6 +337,19 @@ static int utest_dsi_receive_rejects_overquantum_cmd(void)
     return ret == 0 ? 0 : -1;
 }
 
+/* A command frame with no payload at all: the dispatcher reads commands[0] to
+ * pick the AFP call, so it would take it from whatever the previous request
+ * left behind. Every other length check here is an upper bound. */
+static int utest_dsi_receive_rejects_zero_length_cmd(void)
+{
+    DSI dsi;
+    uint8_t payload[1] = { AFP_LOGOUT };
+    int ret;
+    ret = dsi_test_receive(DSIFUNC_CMD, 0, 0, payload, 0, 4096, &dsi);
+    dsi_test_cleanup(&dsi);
+    return ret == 0 ? 0 : -1;
+}
+
 static int utest_dsi_receive_valid_cmd(void)
 {
     uint8_t payload[2] = {AFP_LOGIN, 0};
@@ -462,6 +478,14 @@ int main(int argc, char *argv[])
              "DSI receive rejects payload larger than server quantum");
     TEST_int(utest_dsi_receive_rejects_write_offset_past_payload(), 0,
              "DSI receive rejects DSIWrite offset beyond payload");
+    TEST_int(utest_dsi_receive_rejects_zero_length_cmd(), 0,
+             "DSI receive rejects a command frame with no AFP function byte");
+#ifndef NO_DDP
+    TEST_int(utest_atp_queue_push_evicts_oldest(), 0,
+             "ATP queue: full queue evicts the oldest, not the arrival");
+    TEST_int(utest_atp_queue_push_keeps_newest(), 0,
+             "ATP queue: the packet just received is never the victim");
+#endif /* NO_DDP */
     /* Config-resolution tests: self-contained fixtures with their own
      * AFPObj + temp configs.  They MUST run before the harness's own
      * config/volume init below, which leaves process state live for the

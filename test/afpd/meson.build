@@ -9,6 +9,14 @@ test_internal_deps = [] + afpd_common_internal_deps
 test_link_args = [] + afpd_common_link_args
 test_includes = [] + afpd_common_includes
 
+# ATP queue tests reach the library-internal push helper
+afpd_test_extra_sources = []
+
+if enable_appletalk
+    test_includes += include_directories('../../libatalk/atp')
+    afpd_test_extra_sources += files('subtests_atp.c')
+endif
+
 if build_afpd_tests
 
     # For dtrace probes we need to invoke dtrace on all input files, before
@@ -98,6 +106,7 @@ if build_afpd_tests
         'subtests_conf.c',
         'subtests_lock.c',
         'subtests_pfd.c',
+        afpd_test_extra_sources,
         include_directories: test_includes,
         objects: afpdtest_objects,
         link_whole: afpdtest_link_whole,

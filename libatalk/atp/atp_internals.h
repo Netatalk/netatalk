@@ -38,6 +38,7 @@
 extern struct atpbuf *atp_alloc_buf(void);
 extern void atp_print_bufuse(ATP, char *);
 extern int atp_free_buf(struct atpbuf *);
+extern void atp_bufs_release(void);
 
 /* in atp_packet.c */
 extern int at_addr_eq(struct sockaddr_at *, struct sockaddr_at *);
@@ -47,6 +48,7 @@ extern void atp_build_resp_packet(struct atpbuf *, uint16_t, uint8_t,
                                   struct atp_block *, uint8_t);
 extern int atp_recv_atp(ATP, struct sockaddr_at *, uint8_t *, uint16_t,
                         char *, int);
+extern void atp_queue_push(ATP, struct atpbuf *);
 #ifdef EBUG
 extern void atp_print_addr(char *, struct sockaddr_at *);
 #endif /* EBUG */

@@ -70,6 +70,24 @@ resend_request(ATP ah)
     return 0;
 }
 
+/*
+ * A response arrived that does not complete the transaction. Report "keep
+ * waiting" only while retries remain: every caller loops while this returns 0,
+ * and once resend_request() has spent the last retry `requesting` goes false,
+ * which drops the select() timeout and leaves the next receive blocking with
+ * nothing to break it. An exhausted transaction must therefore fail rather than
+ * ask the caller to wait again.
+ */
+static int atp_resp_incomplete(ATP ah)
+{
+    if (ah->atph_reqtries > 0 || ah->atph_reqtries == ATP_TRIES_INFINITE) {
+        return 0;
+    }
+
+    errno = ETIMEDOUT;
+    return -1;
+}
+
 /*!
  * @brief Receive ATP packets
  * @param ah open atp handle
@@ -264,8 +282,7 @@ timeout :
             /* new request -- queue it and return */
             memcpy(&abuf->atpbuf_addr, &saddr, sizeof(struct sockaddr_at));
             memcpy(faddr, &saddr, sizeof(struct sockaddr_at));
-            abuf->atpbuf_next = ah->atph_queue;
-            ah->atph_queue = abuf;
+            atp_queue_push(ah, abuf);
             return ATP_TREQ;
         } else {
             atp_free_buf(abuf);
@@ -274,10 +291,26 @@ timeout :
     }
 
     /*
-     * we got a response: update bitmap
+     * we got a response: update bitmap. A response with no request outstanding
+     * has nothing to match against, and reading atph_reqpkt would dereference
+     * NULL.
      */
+    if (ah->atph_reqpkt == NULL) {
+        atp_free_buf(abuf);
+        return atp_resp_incomplete(ah);
+    }
+
     memcpy(&req_hdr, ah->atph_reqpkt->atpbuf_info.atpbuf_data + 1,
            sizeof(struct atphdr));
+
+    /* atphd_bitmap is a sequence number straight off the wire. Out of range it
+     * would index atph_resppkt[] out of bounds, and the shift below is
+     * undefined past the width of int — on the usual targets the count is
+     * masked, so 32, 64, ... alias onto bits the bitmap test accepts. */
+    if (resp_hdr.atphd_bitmap >= ATP_MAXRESP) {
+        atp_free_buf(abuf);
+        return atp_resp_incomplete(ah);
+    }
 
     if (requesting && ah->atph_rbitmap & (1 << resp_hdr.atphd_bitmap)
             && req_hdr.atphd_tid == resp_hdr.atphd_tid) {
@@ -316,7 +349,10 @@ timeout :
                               (struct sockaddr *) &ah->atph_reqpkt->atpbuf_addr,
                               sizeof(struct sockaddr_at)) !=
                     ah->atph_reqpkt->atpbuf_dlen) {
-                atp_free_buf(abuf);
+                /* abuf is owned by atph_resppkt[] from here on: the response
+                 * was accepted and only the resend failed. Freeing it would
+                 * leave a dangling slot for atp_sreq/atp_rresp/atp_close to
+                 * push onto the buffer free list a second time. */
                 return -1;
             }
         }
@@ -363,13 +399,7 @@ timeout :
     }
 
     if (ah->atph_rbitmap != 0) {
-        if (ah->atph_reqtries > 0
-                || ah->atph_reqtries == ATP_TRIES_INFINITE) {
-            return 0;
-        } else {
-            errno = ETIMEDOUT;
-            return -1;
-        }
+        return atp_resp_incomplete(ah);
     }
 
     memcpy(faddr, &saddr, sizeof(struct sockaddr_at));
