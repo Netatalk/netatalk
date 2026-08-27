@@ -40,6 +40,12 @@
 #define ASP_DATASIZ       (ASP_CMDSIZ*ASP_MAXPACKETS)
 #define ASP_DATAMAXSIZ    ((ASP_CMDSIZ + ASP_HDRSIZ)*ASP_MAXPACKETS)
 
+/* asp_getrequest() results: >0 the command byte, 0 session ended */
+#define ASP_ERR_READ      (-1)  /*!< read failed, errno set */
+#define ASP_ERR_SEQ       (-2)  /*!< sequence number mismatch */
+#define ASP_ERR_SID       (-3)  /*!< session id mismatch */
+#define ASP_NOREQUEST     (-4)  /*!< nothing complete yet, wait again */
+
 typedef struct ASP {
     ATP			asp_atp;
     struct sockaddr_at	asp_sat;

@@ -731,6 +731,18 @@ int dsi_stream_receive(DSI *dsi)
         return 0;
     }
 
+    /* Every check above is an upper bound. A command frame also needs a lower
+     * one: the dispatcher reads commands[0] to pick the AFP call, so a
+     * zero-length payload would select it from whatever the previous request
+     * left in the buffer and then run it with an input length of 0. */
+    if ((dsi->header.dsi_command == DSIFUNC_CMD
+            || dsi->header.dsi_command == DSIFUNC_WRITE)
+            && dsi_len < 1) {
+        LOG(log_error, logtype_dsi,
+            "dsi_stream_receive: command frame carries no AFP function byte");
+        return 0;
+    }
+
     dsi->cmdlen = dsi_len;
 
     /* Receiving DSIWrite data is done in AFP function, not here */

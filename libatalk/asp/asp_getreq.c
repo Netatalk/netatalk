@@ -34,31 +34,67 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
+/*
+ * One attempt only: ASP_NOREQUEST means a datagram was consumed but no request
+ * came of it, and the caller should wait for the socket to be readable again
+ * rather than block here. Callers driving other descriptors in the same loop
+ * depend on that, so the wait stays in one place.
+ *
+ * cmdbuf is char, which is signed on the usual ABIs, so every byte read out of
+ * it for comparison or return needs the unsigned cast: without it a session id
+ * of 0x80 or above never matches asp_sid, and a function byte of 0xFF/0xFE/0xFD
+ * would be returned as one of the negative result codes.
+ */
 int asp_getrequest(ASP asp)
 {
     struct atp_block	atpb;
     uint16_t		seq;
+    int			rc;
     asp->asp_sat.sat_port = ATADDR_ANYPORT;
     atpb.atp_saddr = &asp->asp_sat;
     atpb.atp_rreqdata = asp->cmdbuf;
     atpb.atp_rreqdlen = sizeof(asp->cmdbuf);
+    rc = atp_rreq_try(asp->asp_atp, &atpb);
 
-    if (atp_rreq(asp->asp_atp, &atpb) < 0) {
-        return -1;
+    if (rc < 0) {
+        return ASP_ERR_READ;
     }
 
-    asp->cmdlen = atpb.atp_rreqdlen - 4;
+    if (rc == 0) {
+        return ASP_NOREQUEST;
+    }
+
+    /* cmdlen is size_t, so a request shorter than the ASP header would wrap it
+     * to near SIZE_MAX and be passed to the command handlers as their input
+     * length. Such a packet is malformed; discard it. */
+    if (atpb.atp_rreqdlen < ASP_HDRSIZ) {
+        return ASP_NOREQUEST;
+    }
+
+    asp->cmdlen = (size_t) atpb.atp_rreqdlen - ASP_HDRSIZ;
+
+    /* The header alone is a valid frame for the control functions, but not for
+     * the two that carry an AFP call: the dispatcher reads commands[0] to pick
+     * it, so with no payload it would select the call from whatever the previous
+     * request left in the buffer and run it with an input length of 0. */
+    if (asp->cmdlen < 1
+            && ((unsigned char) asp->cmdbuf[0] == ASPFUNC_CMD
+                || (unsigned char) asp->cmdbuf[0] == ASPFUNC_WRITE)) {
+        return ASP_NOREQUEST;
+    }
+
     asp->read_count += asp->cmdlen;
     memcpy(&seq, asp->cmdbuf + 2, sizeof(seq));
     seq = ntohs(seq);
 
-    if ((asp->cmdbuf[0] != ASPFUNC_CLOSE) && (seq != asp->asp_seq)) {
-        return -2;
+    if (((unsigned char) asp->cmdbuf[0] != ASPFUNC_CLOSE)
+            && (seq != asp->asp_seq)) {
+        return ASP_ERR_SEQ;
     }
 
-    if (asp->cmdbuf[1] != asp->asp_sid) {
-        return -3;
+    if ((unsigned char) asp->cmdbuf[1] != asp->asp_sid) {
+        return ASP_ERR_SID;
     }
 
-    return asp->cmdbuf[0]; /* the command */
+    return (unsigned char) asp->cmdbuf[0]; /* the command */
 }

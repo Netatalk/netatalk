@@ -98,63 +98,8 @@ static volatile sig_atomic_t getmesg_pending = 0;
 /* Non-static: also checked by afp_disconnect() in auth.c */
 volatile sig_atomic_t die_pending = 0;
 
-/*!
- * @brief Self-pipe for waking poll() from signal handlers.
- *
- * Signal handlers write a single byte to sigpipe_fd[1].  The read end
- * sigpipe_fd[0] is included in the poll() set so that the main loop
- * wakes up promptly even when SA_RESTART would otherwise cause poll()
- * to be restarted transparently.
- *
- * Although POSIX says poll() is not affected by SA_RESTART, some
- * platforms (Solaris, illumos) have historically restarted it.
- * The self-pipe makes wake-up behaviour portable and deterministic.
- */
-static int sigpipe_fd[2] = {-1, -1};
-
-static void sigpipe_init(void)
-{
-    if (pipe(sigpipe_fd) == -1) {
-        /* Fatal — without the pipe, signals cannot wake poll() reliably */
-        exit(EXITERR_SYS);
-    }
-
-    /* Both ends non-blocking: write so handlers never stall,
-     * read so sigpipe_drain() never blocks */
-    fcntl(sigpipe_fd[0], F_SETFL,
-          fcntl(sigpipe_fd[0], F_GETFL) | O_NONBLOCK);
-    fcntl(sigpipe_fd[1], F_SETFL,
-          fcntl(sigpipe_fd[1], F_GETFL) | O_NONBLOCK);
-    fcntl(sigpipe_fd[0], F_SETFD, FD_CLOEXEC);
-    fcntl(sigpipe_fd[1], F_SETFD, FD_CLOEXEC);
-}
-
-/*!
- * @brief Write a single byte to the self-pipe.
- *
- * Called from signal handlers — async-signal-safe.
- */
-static void sigpipe_notify(void)
-{
-    int saved_errno = errno;
-    char c = 1;
-    (void)write(sigpipe_fd[1], &c, 1);
-    errno = saved_errno;
-}
-
-/*!
- * @brief Drain all pending bytes from the self-pipe.
- *
- * Called from the main loop after poll() returns.
- */
-static void sigpipe_drain(void)
-{
-    char buf[64];
-
-    while (read(sigpipe_fd[0], buf, sizeof(buf)) > 0) {
-        /* drain */
-    }
-}
+/* The self-pipe that wakes poll() from a signal handler lives in
+ * libatalk/util/sigpipe.c and is shared with the ASP transport. */
 
 static void afp_dsi_close(AFPObj *obj)
 {
@@ -265,7 +210,7 @@ static void afp_dsi_die(int sig)
 static void afp_dsi_transfer_handler(int sig _U_)
 {
     transfer_pending = 1;
-    sigpipe_notify();
+    atalk_sigpipe_notify();
 }
 
 /*!
@@ -328,7 +273,7 @@ static void afp_dsi_die_handler(int sig);
 static void afp_dsi_timedown_handler(int sig _U_)
 {
     timedown_pending = 1;
-    sigpipe_notify();
+    atalk_sigpipe_notify();
 }
 
 /*!
@@ -392,7 +337,7 @@ volatile sig_atomic_t reload_request = 0;
 static void afp_dsi_reload(int sig _U_)
 {
     reload_request = 1;
-    sigpipe_notify();
+    atalk_sigpipe_notify();
 }
 
 /*!
@@ -403,14 +348,14 @@ static volatile sig_atomic_t debug_request = 0;
 static void afp_dsi_debug(int sig _U_)
 {
     debug_request = 1;
-    sigpipe_notify();
+    atalk_sigpipe_notify();
 }
 
 /*! SIGUSR2 handler — async-signal-safe */
 static void afp_dsi_getmesg_handler(int sig _U_)
 {
     getmesg_pending = 1;
-    sigpipe_notify();
+    atalk_sigpipe_notify();
 }
 
 /*!
@@ -432,7 +377,7 @@ static void handle_getmesg(AFPObj *obj)
 static void afp_dsi_die_handler(int sig)
 {
     die_pending = sig ? sig : -1;
-    sigpipe_notify();
+    atalk_sigpipe_notify();
 }
 
 /*!
@@ -447,7 +392,7 @@ static void alarm_handler(int sig _U_)
     /* we have to restart the timer because some libraries may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
     alarm_pending = 1;
-    sigpipe_notify();
+    atalk_sigpipe_notify();
 }
 
 /*!
@@ -768,14 +713,20 @@ void afp_over_dsi(AFPObj *obj)
     int flag = 1;
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
     ipc_child_state(obj, DSI_RUNNING);
+
     /* Initialise self-pipe for signal-to-mainloop notification */
-    sigpipe_init();
+    if (atalk_sigpipe_init() != 0) {
+        /* Fatal — without the pipe, signals cannot wake poll() reliably */
+        LOG(log_error, logtype_afpd, "afp_over_dsi: signal pipe: %s",
+            strerror(errno));
+        exit(EXITERR_SYS);
+    }
 
     /* get stuck here until the end */
     while (1) {
         while (1) {
             /* [A0] Process deferred signals before any blocking I/O */
-            sigpipe_drain();
+            atalk_sigpipe_drain();
 
             if (process_deferred_signals(obj)) {
                 goto restart_outer;
@@ -812,7 +763,7 @@ void afp_over_dsi(AFPObj *obj)
             }
 
             int sigpipe_idx = nfds;
-            pfds[nfds].fd = sigpipe_fd[0];
+            pfds[nfds].fd = atalk_sigpipe_readfd();
             pfds[nfds].events = POLLIN;
             nfds++;
             /* Grant the idle worker the poll window — only if work is
@@ -835,9 +786,19 @@ void afp_over_dsi(AFPObj *obj)
                 break;
             }
 
-            /* [E1] Signal pipe — drain and loop back to process signals at [A0] */
+            /* [E1] Signal pipe — drain and loop back to process signals at [A0].
+             * Nothing can clear a bad self-pipe, and a POLLHUP/POLLNVAL/POLLERR
+             * that no read consumes makes poll() return immediately for the rest
+             * of the session, so the loop would spin with no way to be woken. */
+            if (pfds[sigpipe_idx].revents & (POLLNVAL | POLLERR | POLLHUP)) {
+                LOG(log_error, logtype_afpd,
+                    "afp_over_dsi: signal pipe fd %d unusable, ending session",
+                    atalk_sigpipe_readfd());
+                break;
+            }
+
             if (pfds[sigpipe_idx].revents & POLLIN) {
-                sigpipe_drain();
+                atalk_sigpipe_drain();
 
                 if (process_deferred_signals(obj)) {
                     goto restart_outer;
@@ -924,7 +885,7 @@ void afp_over_dsi(AFPObj *obj)
             while (dsi->flags & DSI_DISCONNECTED) {
                 /* gets interrupted by SIGALRM or SIGURG */
                 pause();
-                sigpipe_drain();
+                atalk_sigpipe_drain();
 
                 if (process_deferred_signals(obj)) {
                     break;

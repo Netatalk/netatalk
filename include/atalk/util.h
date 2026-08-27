@@ -158,6 +158,15 @@ extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence,
     lock_reg((fd), F_SETLK, F_UNLCK, (offset), (whence), (len))
 
 /******************************************************************
+ * sigpipe.c
+ ******************************************************************/
+
+extern int atalk_sigpipe_init(void);
+extern int atalk_sigpipe_readfd(void);
+extern void atalk_sigpipe_notify(void);
+extern void atalk_sigpipe_drain(void);
+
+/******************************************************************
  * socket.c
  ******************************************************************/
 

@@ -43,12 +43,16 @@
 #endif /* EBUG */
 
 
-/*!
- * @brief wait for a transaction service request
- * @param ah open atp handle
- * @param atpb parameter block
+/*
+ * atp_rreq() waits for a request, consuming as many datagrams as it takes.
+ * atp_rreq_try() makes exactly one attempt, so a caller that has already
+ * established the socket is readable never blocks in it, and stays in charge of
+ * its own wait. That matters for a caller driving other descriptors in the same
+ * loop: a readable socket does not promise a request, because the datagram may
+ * belong to another transaction or another node, and the waiting caller would
+ * otherwise be parked here with those descriptors unwatched.
  */
-int atp_rreq(ATP ah, struct atp_block *atpb)
+int atp_rreq_try(ATP ah, struct atp_block *atpb)
 {
     struct atpbuf	*req_buf;	/* for receiving request packet */
     struct atphdr	req_hdr;	/* request header overlay */
@@ -60,16 +64,17 @@ int atp_rreq(ATP ah, struct atp_block *atpb)
 #ifdef EBUG
     atp_print_bufuse(ah, "atp_rreq");
 #endif /* EBUG */
+    rc = atp_rsel(ah, atpb->atp_saddr, ATP_TREQ);
 
-    while ((rc = atp_rsel(ah, atpb->atp_saddr, ATP_TREQ)) == 0) {
-        ;
+    if (rc == 0) {
+        return 0;		/* consumed, but not a new request */
     }
 
     if (rc != ATP_TREQ) {
 #ifdef EBUG
         printf("<%d> atp_rreq: atp_rsel returns err %d\n", getpid(), rc);
 #endif /* EBUG */
-        return rc;
+        return -1;
     }
 
     /* allocate a buffer for receiving request
@@ -111,5 +116,21 @@ int atp_rreq(ATP ah, struct atp_block *atpb)
            recvlen - ATP_HDRSIZE);
     atpb->atp_bitmap = req_hdr.atphd_bitmap;
     atp_free_buf(req_buf);
-    return 0;
+    return 1;
+}
+
+/*!
+ * @brief wait for a transaction service request
+ * @param ah open atp handle
+ * @param atpb parameter block
+ */
+int atp_rreq(ATP ah, struct atp_block *atpb)
+{
+    int rc;
+
+    while ((rc = atp_rreq_try(ah, atpb)) == 0) {
+        ;
+    }
+
+    return (rc == 1) ? 0 : rc;
 }

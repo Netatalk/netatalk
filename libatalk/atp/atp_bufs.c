@@ -50,6 +50,12 @@
 #define			N_MORE_BUFS		10
 
 static struct atpbuf 	*free_list = NULL;	/*!< free buffers */
+/* Bases of the malloc'd chunks free_list is carved from. free_list holds
+ * interior pointers in hand-back order, so the bases cannot be recovered from
+ * it and have to be recorded to be freed. */
+static char		**chunks = NULL;
+static size_t		nchunks = 0;
+static size_t		chunkcap = 0;
 
 #ifdef EBUG
 static int		numbufs = 0;
@@ -71,6 +77,21 @@ static int more_bufs(void)
         return -1;
     }
 
+    if (nchunks == chunkcap) {
+        size_t newcap = (chunkcap == 0) ? 4 : chunkcap * 2;
+        char **grown = realloc(chunks, newcap * sizeof(*chunks));
+
+        if (grown == NULL) {
+            free(mem);
+            errno = ENOBUFS;
+            return -1;
+        }
+
+        chunks = grown;
+        chunkcap = newcap;
+    }
+
+    chunks[nchunks++] = mem;
     /* now split into separate bufs
     */
     bp = free_list = (struct atpbuf *) mem;
@@ -144,6 +165,23 @@ struct atpbuf *atp_alloc_buf(void)
     return bp;
 }
 
+
+/*
+ * Release every chunk the pool has taken. Only valid once no buffer is still
+ * in use anywhere, since it frees the memory the handed-out buffers live in;
+ * a session process simply exits instead of calling this.
+ */
+void atp_bufs_release(void)
+{
+    for (size_t i = 0; i < nchunks; i++) {
+        free(chunks[i]);
+    }
+
+    free(chunks);
+    chunks = NULL;
+    nchunks = chunkcap = 0;
+    free_list = NULL;
+}
 
 int atp_free_buf(struct atpbuf *bp)
 {
