@@ -103,6 +103,7 @@ if build_afpd_tests
         'faultinject.c',
         'peer_lock.c',
         'test_capabilities.c',
+        'subtests_cnid.c',
         'subtests_conf.c',
         'subtests_lock.c',
         'subtests_pfd.c',
@@ -158,6 +159,10 @@ if build_afpd_tests
         verbose: true,
         is_parallel: false,
         priority: 0,
+        # The CNID contention test waits out the backend's full busy timeout,
+        # and the valgrind CI leg multiplies everything else; meson's 30s
+        # default is too close for a loaded runner
+        timeout: 120,
     )
 
 endif

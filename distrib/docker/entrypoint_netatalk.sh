@@ -114,8 +114,9 @@ else
     set -e
 
     echo "==== TESTS (${TESTSUITE}) COMPLETED (exit code: $TEST_EXIT_CODE) ===="
-    # Display Netatalk's server logs if SERVER_LOGS environment variable is set
-    if [ -n "$SERVER_LOGS" ]; then
+    # Display Netatalk's server logs if SERVER_LOGS is set, and always on a
+    # failed run: a dying afpd child takes its diagnosis with it otherwise
+    if [ -n "$SERVER_LOGS" ] || [ "$TEST_EXIT_CODE" -ne 0 ]; then
         if [ -f /var/log/afpd.log ]; then
             echo "/var/log/afpd.log log lines: $(wc -l /var/log/afpd.log | awk '{print $1}')"
             echo "==== AFPD LOG CONTENT ===="

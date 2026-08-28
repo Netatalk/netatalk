@@ -43,6 +43,7 @@
 #include "filedir.h"
 #include "hash.h"
 #include "subtests.h"
+#include "subtests_cnid.h"
 #include "subtests_conf.h"
 #include "subtests_lock.h"
 #include "subtests_pfd.h"
@@ -516,6 +517,14 @@ int main(int argc, char *argv[])
                      "ea = samba reverts performance-oriented compiled defaults (freq 100, rfork on)");
     TEST_int_or_skip(utest_conf_load_afp_conf_vols_locked(), 0,
                      "config loader fails closed under lock contention, state-neutral");
+    TEST_int(utest_cnid_wrapper_sets_errno(), 0,
+             "CNID wrapper rejection sets its own errno, not a stale one");
+    TEST_int(utest_cnid_error_codes_distinct(), 0,
+             "CNID error codes are distinct and clear of the errno range");
+    TEST_int(utest_cnid_valide_byteorder(), 0,
+             "CNID wrapper validates returned ids in host byte order");
+    TEST_int(utest_cnid_resolve_dotdot_rejected(), 0,
+             "CNID wrapper '..' rejection invalidates *id and classifies corrupt");
     TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
                      "dircache_resolve_size: default, minimum, round-up, clamp");
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]),
@@ -575,6 +584,16 @@ int main(int argc, char *argv[])
               vol->v_cnidport != NULL
               && strcmp(vol->v_cnidport, "4700") == 0,
               "volume: CNID port defaults to 4700");
+    TEST_int_or_skip(utest_cnid_add_busy_not_fatal(vol), 0,
+                     "cnid_add: contended backend classifies BUSY, not session-fatal");
+    TEST_int_or_skip(utest_cnid_resolve_notfound_errno(vol), 0,
+                     "cnid_resolve: not-found classifies out of the syscall errno range");
+    TEST_int_or_skip(utest_cnid_corrupt_row_classified(vol), 0,
+                     "cnid_get/resolve: 64-bit rows classify corrupt, never truncate");
+    TEST_int_or_skip(utest_cnid_find_no_truncated_id(vol), 0,
+                     "cnid_find: search results never carry a truncated id");
+    TEST_int_or_skip(utest_cnid_dup_row_no_truncated_delete(vol), 0,
+                     "cnid_lookup: duplicate cleanup never deletes through a truncated id");
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL,
               "dirlookup: root parent directory");

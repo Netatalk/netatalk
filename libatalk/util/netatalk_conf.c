@@ -1644,8 +1644,11 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_cnidport = strdup(obj->options.Cnid_port);
     }
 
+    /* iniparser answers an empty "volume uuid =" with "", not NULL, so the
+     * emptiness test is what routes such a volume to get_vol_uuid() below.
+     * The sqlite CNID backend names its per-volume table after this. */
     if ((val = getoption_str(obj->iniconfig, section, "volume uuid", preset,
-                             NULL))) {
+                             NULL)) && val[0] != '\0') {
         EC_NULL(volume->v_uuid = strdup(val));
         LOG(log_debug, logtype_afpd, "Volume '%s': UUID set from config: '%s'",
             name, volume->v_uuid);

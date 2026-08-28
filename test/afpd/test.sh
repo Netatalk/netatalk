@@ -25,8 +25,20 @@ if [ $? -ne 0 ]; then
 fi
 
 SIGNATURE=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 16)
-VOLUUID=$(uuidgen | tr 'a-z' 'A-Z')
-VOLUUIDSYS=$(uuidgen | tr 'a-z' 'A-Z')
+
+gen_uuid() {
+    hex=$(od -An -tx1 -N16 /dev/urandom | tr -d ' \n')
+    printf '%s-%s-%s-%s-%s\n' \
+        "$(echo "$hex" | cut -c1-8)" \
+        "$(echo "$hex" | cut -c9-12)" \
+        "$(echo "$hex" | cut -c13-16)" \
+        "$(echo "$hex" | cut -c17-20)" \
+        "$(echo "$hex" | cut -c21-32)" | tr 'a-z' 'A-Z'
+    return 0
+}
+
+VOLUUID=$(gen_uuid)
+VOLUUIDSYS=$(gen_uuid)
 
 if [ -f test.conf ]; then
     echo "Removing stale configuration template test.conf ..."

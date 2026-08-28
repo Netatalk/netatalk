@@ -156,7 +156,9 @@ STATIC void test222()
 
     FAIL(FPCloseFork(Conn, fork1))
 fin:
-    action.sa_handler =  SIG_DFL;
+    /* Back to the process-wide SIG_IGN main() installed, not SIG_DFL: a
+     * dead server must fail a test, never kill the suite and its report */
+    action.sa_handler =  SIG_IGN;
     sigemptyset(&action.sa_mask);
     action.sa_flags = 0;
 
@@ -479,7 +481,7 @@ STATIC void test339()
     }
 
     FAIL(FPLogOut(loc_conn2));
-    action.sa_handler = SIG_DFL;
+    action.sa_handler = SIG_IGN;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
 
@@ -663,7 +665,7 @@ STATIC void test370()
     }
 
     FAIL(ntohl(AFPERR_MISC) != FPDisconnectOldSession(loc_conn2, 0, len, token))
-    action.sa_handler = SIG_DFL;
+    action.sa_handler = SIG_IGN;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
 
