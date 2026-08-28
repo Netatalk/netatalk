@@ -27,6 +27,7 @@
 #ifndef _ATALK_CNID__H
 #define _ATALK_CNID__H 1
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -48,9 +49,26 @@
 
 #define CNID_ERR_PARAM 0x80000001
 #define CNID_ERR_PATH  0x80000002
-#define CNID_ERR_DB    0x80000003
+#define CNID_ERR_DB    0x80000003   /*!< the backend itself is gone */
 #define CNID_ERR_CLOSE 0x80000004   /*!< the db was not open */
 #define CNID_ERR_MAX   0x80000005
+#define CNID_ERR_BUSY  0x80000007   /*!< contended or transient, retryable */
+#define CNID_ERR_CORRUPT 0x80000008 /*!< unusable data returned for a CNID */
+#define CNID_ERR_NOTFOUND 0x80000009 /*!< no row for the query */
+
+/* CNID_ERR_* exceed INT_MAX; compare against errno through this unsigned view */
+#define CNID_ERRNO() ((unsigned int) errno)
+
+/*!
+ * @brief Whether errno says the backend could not answer at all
+ *
+ * The object's existence is unknown, so the reply is the retryable AFPERR_MISC:
+ * AFPERR_NOOBJ and AFPERR_NOID are permanent and a client does not retry them.
+ */
+#define CNID_ERRNO_IS_BACKEND_FAILURE()         \
+    (CNID_ERRNO() == CNID_ERR_BUSY              \
+     || CNID_ERRNO() == CNID_ERR_CORRUPT        \
+     || CNID_ERRNO() == CNID_ERR_DB)
 
 /* cnid_find() requires a result buffer large enough to hold at least one
  * full DBD-backend batch (CNID_FIND_MIN_RESULTS = 100 CNIDs in network

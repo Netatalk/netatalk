@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <getopt.h>
+#include <signal.h>
 #include <string.h>
 
 #include "afpclient.h"
@@ -428,6 +429,11 @@ int main(int ac, char **av)
 {
     int cc;
     int ret;
+    /* A server child dying mid-run must fail the test in flight, not kill
+     * the suite: unhandled, the next write to the dead session raises
+     * SIGPIPE and the run ends with no summary and no report file. Ignored,
+     * the write fails with EPIPE and is handled like any other error. */
+    signal(SIGPIPE, SIG_IGN);
 
     if (ac == 1) {
         usage(av[0]);

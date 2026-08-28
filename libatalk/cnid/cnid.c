@@ -18,6 +18,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -209,14 +210,22 @@ static void unblock_signal(uint32_t flags)
 /*!
   protect against bogus value from the DB.
   adddir really doesn't like 2
+
+  Every CNID_INVALID returned from this file carries its own errno: callers read
+  the CNID_ERR_* values to choose between a permanent reply and a retryable one,
+  and CNID_ERR_DB ends the session. No syscall overwrites those values and the
+  logger preserves errno, so one persists until deliberately replaced.
 */
 static cnid_t valide(cnid_t id)
 {
     if (id == CNID_INVALID) {
+        /* the backend classified this one */
         return id;
     }
 
-    if (id < CNID_START) {
+    /* id is in network byte order; comparing it raw would reject 16 valid
+     * CNIDs on little-endian hosts and wave the reserved ids 1-16 through */
+    if (ntohl(id) < CNID_START) {
         static int err = 0;
 
         if (!err) {
@@ -224,6 +233,7 @@ static cnid_t valide(cnid_t id)
             LOG(log_error, logtype_afpd, "Error: Invalid cnid, corrupted DB?");
         }
 
+        errno = CNID_ERR_CORRUPT;
         return CNID_INVALID;
     }
 
@@ -254,9 +264,13 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
     cnid_t ret;
 
     if (len == 0) {
+        errno = CNID_ERR_PARAM;
         return CNID_INVALID;
     }
 
+    /* Cleared for every backend and caller here, so errno reads as this
+     * operation's verdict. Not every backend classifies every failure. */
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_add(cdb, st, did, name, len, hint));
     unblock_signal(cdb->cnid_db_flags);
@@ -267,6 +281,7 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
 int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 {
     int ret;
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_delete(cdb, id);
     unblock_signal(cdb->cnid_db_flags);
@@ -279,6 +294,7 @@ cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,
                 const size_t len)
 {
     cnid_t ret;
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_get(cdb, did, name, len));
     unblock_signal(cdb->cnid_db_flags);
@@ -304,6 +320,7 @@ int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len)
         return 0;
     }
 
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_getstamp(cdb, buffer, len);
     unblock_signal(cdb->cnid_db_flags);
@@ -316,6 +333,7 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
                    char *name, const size_t len)
 {
     cnid_t ret;
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_lookup(cdb, st, did, name, len));
     unblock_signal(cdb->cnid_db_flags);
@@ -408,6 +426,7 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
         return -1;
     }
 
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_find(cdb, name, namelen, scope_did,
                          buffer, buflen, more_available);
@@ -419,12 +438,17 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
 char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 {
     char *ret;
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_resolve(cdb, id, buffer, len);
     unblock_signal(cdb->cnid_db_flags);
 
     if (ret && !strcmp(ret, "..")) {
         LOG(log_error, logtype_afpd, "cnid_resolve: name is '..', corrupted db? ");
+        /* Match the backend failure contract: without these the caller reads
+         * a stale errno and *id still holds the parent DID the backend wrote */
+        *id = CNID_INVALID;
+        errno = CNID_ERR_CORRUPT;
         ret = NULL;
     }
 
@@ -436,6 +460,7 @@ int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
                 const cnid_t did, char *name, const size_t len)
 {
     int ret;
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_update(cdb, id, st, did, name, len);
     unblock_signal(cdb->cnid_db_flags);
@@ -448,6 +473,7 @@ cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
                         char *name, const size_t len, cnid_t hint)
 {
     cnid_t ret;
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_rebuild_add(cdb, st, did, name, len, hint);
     unblock_signal(cdb->cnid_db_flags);
@@ -458,6 +484,7 @@ cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
 int cnid_wipe(struct _cnid_db *cdb)
 {
     int ret = 0;
+    errno = 0;
     block_signal(cdb->cnid_db_flags);
 
     if (cdb->cnid_wipe) {

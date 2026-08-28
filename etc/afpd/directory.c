@@ -657,7 +657,17 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
      * Outputs: upath = basename only ("mydir") + cnid modified to parent DID
      * So we need to build the rest of the fullpath */
     if (upath == NULL) {
-        afp_errno = AFPERR_NOOBJ;
+        /* AFPERR_NOOBJ is permanent; a backend that could not answer has not
+         * said the directory is gone */
+        if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            LOG(log_warning, logtype_afpd,
+                DIRLOOKUP_LOG_FMT ": CNID backend error, errno=0x%x",
+                ntohl(did), CNID_ERRNO());
+            afp_errno = AFPERR_MISC;
+        } else {
+            afp_errno = AFPERR_NOOBJ;
+        }
+
         err = 1;
         goto exit;
     }
@@ -1225,29 +1235,32 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             AFP_CNID_DONE();
 
             if (new_cnid == CNID_INVALID) {
+                const char *why = CNID_ERRNO_IS_BACKEND_FAILURE()
+                                  ? "CNID backend could not answer" : "no CNID for new inode";
+
                 if (dir == curdir) {
                     /* Do not remove curdir — callers rely on it being valid.
-                     * AD cache already invalidated (AD_RLEN_UNKNOWN above) */
+                     * AD cache already invalidated (AD_RLEN_UNKNOWN above).
+                     * The DID re-index below runs only for a valid CNID, as
+                     * CNID_INVALID is DID 0. */
                     LOG(log_error, logtype_afpd,
-                        "dir_modify: inode change on curdir! — no CNID for "
-                        "new inode, keeping stale entry (did:%u, ino:%llu->%llu)",
-                        ntohl(dir->d_did),
+                        "dir_modify: inode change on curdir! — %s, "
+                        "keeping stale entry (did:%u, ino:%llu->%llu)",
+                        why, ntohl(dir->d_did),
                         (unsigned long long)dir->dcache_ino,
                         (unsigned long long)args->st->st_ino);
                 } else {
                     /* No CNID. Remove stale entry. */
                     LOG(log_debug, logtype_afpd,
-                        "dir_modify: inode change — no CNID for new inode, "
+                        "dir_modify: inode change — %s, "
                         "removing stale entry did:%u (ino:%llu->%llu)",
-                        ntohl(dir->d_did),
+                        why, ntohl(dir->d_did),
                         (unsigned long long)dir->dcache_ino,
                         (unsigned long long)args->st->st_ino);
                     dir_remove(vol, dir, 0);
                     return 0;
                 }
-            }
-
-            if (new_cnid != dir->d_did) {
+            } else if (new_cnid != dir->d_did) {
                 LOG(log_debug, logtype_afpd,
                     "dir_modify: inode change — CNID refreshed "
                     "did:%u->%u (ino:%llu->%llu)",
@@ -2072,6 +2085,8 @@ int movecwd(const struct vol *vol, struct dir *dir)
         LOG(log_error, logtype_afpd, "movecwd: NULL parameter (vol:%p, dir:%p)",
             (void*)vol, (void*)dir);
         afp_errno = AFPERR_PARAM;
+        /* Callers read errno right after this returns */
+        errno = EINVAL;
         return -1;
     }
 
@@ -2090,6 +2105,12 @@ int movecwd(const struct vol *vol, struct dir *dir)
         ntohl(dir->d_did), dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
 
     if ((ret = ochdir_vol(cfrombstr(dir->d_fullpath), vol)) != 0) {
+        /* The CNID lookups and chdirs in the self-heal below overwrite errno,
+         * while the reply must reflect why this chdir failed */
+        int chdir_errno = errno;
+        /* Set when the self-heal's lookup failed because the CNID backend
+         * could not answer, rather than because the directory is gone */
+        int backend_failure = 0;
         /* Failed to change directory */
         LOG(log_debug, logtype_afpd, "movecwd(\"%s\"): %s",
             dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", strerror(errno));
@@ -2121,12 +2142,17 @@ int movecwd(const struct vol *vol, struct dir *dir)
                     return 0;
                 }
 
+                chdir_errno = errno;
                 LOG(log_info, logtype_afpd,
                     "movecwd: CNID retry chdir failed: %s", strerror(errno));
             } else {
+                /* dirlookup_strict sets AFPERR_MISC when the backend could not
+                 * answer; the errno switch below must not overrule it */
+                backend_failure = (afp_errno == AFPERR_MISC);
                 LOG(log_debug, logtype_afpd,
-                    "movecwd: dirlookup_strict returned NULL for did:%u (does not exist)",
-                    ntohl(saved_did));
+                    "movecwd: dirlookup_strict returned NULL for did:%u (%s)",
+                    ntohl(saved_did),
+                    backend_failure ? "CNID backend could not answer" : "does not exist");
             }
 
             /* Special movecwd requirement: sync process CWD with curdir pointer.
@@ -2149,19 +2175,25 @@ int movecwd(const struct vol *vol, struct dir *dir)
             }
 
             curdir = vol->v_root;
+            errno = chdir_errno;
             return -1;
         }
 
-        switch (errno) {
-        case EACCES:
-        case EPERM:
-            afp_errno = AFPERR_ACCESS;
-            break;
+        if (!backend_failure) {
+            switch (chdir_errno) {
+            case EACCES:
+            case EPERM:
+                afp_errno = AFPERR_ACCESS;
+                break;
 
-        default:
-            afp_errno = AFPERR_NOOBJ;
+            default:
+                afp_errno = AFPERR_NOOBJ;
+            }
         }
 
+        /* Callers switch on errno after this returns and have no arm for the
+         * CNID_ERR_* values the self-heal above may have left there */
+        errno = chdir_errno;
         return -1;
     }
 

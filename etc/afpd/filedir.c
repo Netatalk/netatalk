@@ -332,6 +332,18 @@ static int moveandrename(const AFPObj *obj,
         AFP_CNID_START("cnid_get");
         id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, oldunixname_len);
         AFP_CNID_DONE();
+
+        /* A backend that could not answer is not "no CNID recorded": the
+         * cnid_update() after the rename below repoints this id at the new
+         * name */
+        if (id == CNID_INVALID && CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            LOG(log_warning, logtype_afpd,
+                "moveandrename(\"%s\"): CNID backend error, errno=0x%x",
+                oldunixname, CNID_ERRNO());
+            free(oldunixname);
+            return AFPERR_MISC;
+        }
+
         path.st_valid = 0;
         path.u_name = oldunixname;
         opened = of_findnameat(sdir_fd, &path);

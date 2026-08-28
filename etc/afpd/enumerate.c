@@ -455,6 +455,14 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                         LOG(log_error, logtype_afpd, "enumerate: error updating CNID of \"%s\"",
                             fullpathname(convname));
                     }
+                } else if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
+                    /* ad_convert has already renamed the file, so the CNID row
+                     * names a path that is gone and the next lookup mints a
+                     * fresh CNID for it */
+                    LOG(log_error, logtype_afpd,
+                        "enumerate: CNID backend error (errno=0x%x), the CNID of "
+                        "converted \"%s\" still names the pre-conversion file",
+                        CNID_ERRNO(), fullpathname(convname));
                 }
             }
         }

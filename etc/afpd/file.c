@@ -373,7 +373,26 @@ uint32_t get_id(struct vol *vol,
         if (dbcnid == CNID_INVALID) {
             switch (errno) {
             case CNID_ERR_CLOSE: /* the db is closed */
-                break;
+                /* Callers reply with afp_errno after a CNID_INVALID result */
+                LOG(log_error, logtype_afpd,
+                    "get_id: CNID database is not open for \"%s\"", upath);
+                afp_errno = AFPERR_MISC;
+                goto exit;
+
+            case CNID_ERR_BUSY:
+                /* Contention, not a broken backend: retryable, unlike the
+                 * CNID_ERR_DB arm below */
+                LOG(log_warning, logtype_afpd,
+                    "get_id: CNID backend busy for \"%s\"", upath);
+                afp_errno = AFPERR_MISC;
+                goto exit;
+
+            case CNID_ERR_CORRUPT:
+                LOG(log_error, logtype_afpd,
+                    "get_id: CNID backend returned unusable data for \"%s\"; "
+                    "the CNID database for this volume should be rebuilt", upath);
+                afp_errno = AFPERR_MISC;
+                goto exit;
 
             case CNID_ERR_DB:
                 LOG(log_error, logtype_afpd,
@@ -551,6 +570,15 @@ int getmetadata(const AFPObj *obj,
                         AFP_CNID_START("cnid_get");
                         id = cnid_get(vol->v_cdb, dir->d_did, upath, len);
                         AFP_CNID_DONE();
+
+                        /* The AFPERR_NOOBJ below is permanent; a backend that
+                         * could not answer has not said the object is gone */
+                        if (id == CNID_INVALID && CNID_ERRNO_IS_BACKEND_FAILURE()) {
+                            LOG(log_warning, logtype_afpd,
+                                "getmetadata(\"%s\"): CNID backend error, errno=0x%x",
+                                upath, CNID_ERRNO());
+                            return AFPERR_MISC;
+                        }
                     }
 
                     if (id == CNID_INVALID || ntohl(id) < CNID_START) {
@@ -559,7 +587,9 @@ int getmetadata(const AFPObj *obj,
                 } else {
                     id = get_id(vol, adp, st, dir->d_did, upath, len);
 
-                    if (id < CNID_START) {
+                    /* get_id returns a CNID in network byte order, as does the
+                     * ad_getid()/cnid_get() branch above */
+                    if (ntohl(id) < CNID_START) {
                         LOG(log_error, logtype_afpd,
                             "getmetadata: get_id failed for \"%s\", invalid id %u, afp_errno=%d (%s)",
                             upath, id, afp_errno, AfpErr2name(afp_errno));
@@ -2648,11 +2678,26 @@ retry:
     AFP_CNID_DONE();
 
     if (upath == NULL) {
+        /* The AFPERR_NOID below is permanent; a backend that could not answer
+         * has not said the id is unknown */
+        if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            LOG(log_warning, logtype_afpd,
+                "afp_resolveid(%u): CNID backend error, errno=0x%x", ntohl(cnid),
+                CNID_ERRNO());
+            return AFPERR_MISC;
+        }
+
         /* was AFPERR_BADID, but help older Macs */
         return AFPERR_NOID;
     }
 
     if (NULL == (dir = dirlookup(vol, id))) {
+        /* dirlookup sets AFPERR_MISC when the backend could not answer; the
+         * AFPERR_NOID below is permanent */
+        if (afp_errno == AFPERR_MISC) {
+            return AFPERR_MISC;
+        }
+
         /* idem AFPERR_PARAM */
         return AFPERR_NOID;
     }
@@ -2769,6 +2814,14 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     AFP_CNID_DONE();
 
     if (upath == NULL) {
+        /* A backend that could not answer has not said the id is unknown */
+        if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            LOG(log_warning, logtype_afpd,
+                "afp_deleteid(%u): CNID backend error, errno=0x%x", ntohl(fileid),
+                CNID_ERRNO());
+            return AFPERR_MISC;
+        }
+
         return AFPERR_NOID;
     }
 
@@ -2776,6 +2829,12 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         if (afp_errno == AFPERR_NOOBJ) {
             err = AFPERR_NOOBJ;
             goto delete;
+        }
+
+        /* dirlookup sets AFPERR_MISC when the backend could not answer; the
+         * AFPERR_PARAM below is permanent */
+        if (afp_errno == AFPERR_MISC) {
+            return AFPERR_MISC;
         }
 
         return AFPERR_PARAM;
@@ -2809,6 +2868,14 @@ delete:
 
     if (cnid_delete(vol->v_cdb, fileid)) {
         AFP_CNID_DONE();
+
+        /* The CNID_ERR_* values have no arm in the switch below */
+        if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            LOG(log_warning, logtype_afpd,
+                "afp_deleteid(%u): CNID backend error, errno=0x%x", ntohl(fileid),
+                CNID_ERRNO());
+            return AFPERR_MISC;
+        }
 
         switch (errno) {
         case EROFS:
@@ -2991,6 +3058,16 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     sid = cnid_lookup(vol->v_cdb, &srcst, sdir->d_did, supath, slen);
     AFP_CNID_DONE();
 
+    /* A backend that could not answer is not "no CNID recorded": the id swap
+     * below is the point of the call */
+    if (sid == CNID_INVALID && CNID_ERRNO_IS_BACKEND_FAILURE()) {
+        LOG(log_warning, logtype_afpd,
+            "afp_exchangefiles(\"%s\"): CNID backend error, errno=0x%x",
+            supath ? supath : "(null)", CNID_ERRNO());
+        err = AFPERR_MISC;
+        goto err_exchangefile;
+    }
+
     /* destination file - use strict validation for parent directory */
     if (NULL == (dir = dirlookup_strict(vol, did))) {
         err = afp_errno;
@@ -3075,6 +3152,17 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     AFP_CNID_START("cnid_lookup");
     did = cnid_lookup(vol->v_cdb, &destst, curdir->d_did, upath, dlen);
     AFP_CNID_DONE();
+
+    /* As for the source above: a backend that could not answer is not
+     * "no CNID recorded" */
+    if (did == CNID_INVALID && CNID_ERRNO_IS_BACKEND_FAILURE()) {
+        LOG(log_warning, logtype_afpd,
+            "afp_exchangefiles(\"%s\"): CNID backend error, errno=0x%x",
+            upath, CNID_ERRNO());
+        err = AFPERR_MISC;
+        goto err_exchangefile;
+    }
+
     /* construct a temp name.
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
@@ -3131,6 +3219,16 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             (sid && ((crossdev && ostat(p, &destst, vol_syml_opt(vol)) < 0) ||
                      cnid_update(vol->v_cdb, sid, &destst, sdir->d_did, supath, slen) < 0))
        ) {
+        /* The CNID_ERR_* values have no arm in the switch below, and both rows
+         * are already deleted at this point */
+        if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
+            LOG(log_warning, logtype_afpd,
+                "afp_exchangefiles: CNID backend error updating ids, errno=0x%x",
+                CNID_ERRNO());
+            err = AFPERR_MISC;
+            goto err_temp_to_dest;
+        }
+
         switch (errno) {
         case EPERM:
         case EACCES:
