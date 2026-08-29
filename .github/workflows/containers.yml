@@ -2278,8 +2278,10 @@ jobs:
           # value" lines. Merge them into the YAML history on gh-pages
           # (per-PR upsert: a re-run replaces this PR's stored values, so
           # only its final CI figures feed the baseline; series are capped
-          # at 100 entries), and emit the dashboard fragments comparing the
-          # current run against the historical average.
+          # at 100 entries and keys of renamed/removed tests are pruned
+          # after a few runs without data), and emit the dashboard
+          # fragments comparing the current run against the recent
+          # historical average.
           printf '%s\n' "$LANTEST_METRICS" > lantest-metrics.txt
           printf '%s\n' "$SPEEDTEST_METRICS" > speedtest-metrics.txt
           git clone --depth 1 --branch gh-pages \
@@ -2369,7 +2371,7 @@ jobs:
           if perl contrib/scripts/plot_perf_history.pl \
             gh-pages/perf-history/history.yml \
             -o perf-trend \
-            --subtitle "commit ${SHORT_SHA} · band: decaying min–max envelope · solid: cumulative average"
+            --subtitle "commit ${SHORT_SHA} · band: decaying min–max envelope · solid: rolling average (last 30 PRs)"
           then
             echo "rendered=1" >> "$GITHUB_OUTPUT"
             URL="https://netatalk.github.io/netatalk/perf-history/pr-${PR_NUMBER}.png"

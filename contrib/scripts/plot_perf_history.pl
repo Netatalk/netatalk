@@ -27,11 +27,14 @@
 #   * points: the single value each PR recorded
 #   * band:   a decaying min..max envelope — collapsed to a point at the
 #             first PR, pushed out whenever a PR lands outside it, and
-#             otherwise relaxing exponentially back toward the cumulative
+#             otherwise relaxing exponentially back toward the rolling
 #             average so one freak outlier does not pin the band open
 #             forever
 #   * lines:  envelope max (dashed), envelope min (dashed) and the
-#             cumulative average (solid) at each position in the series
+#             trailing 30-PR rolling average (solid) at each position in
+#             the series, so the baseline follows genuine performance
+#             shifts within a few PRs instead of averaging the whole
+#             stored series
 #
 # All tests share one plot with X = PR sequence (chronological) and
 # Y = mean runtime in ms (log scale, since tests span ~2ms to ~1300ms).
@@ -80,18 +83,14 @@ my @SHORT_LABELS = (
                     ['creating_2000_files'       => 'Create files 2k'],
                     ['open_write_1024'           => 'Write 2k'],
                     ['open_read_1024'            => 'Read 2k'],
-                    ['open_read_512'             => 'Read 2k'],
                     ['copying_1000_files_client' => 'Copy (R+W) 1k'],
-                    ['copying_2000_files_client' => 'Copy 2k'],
                     ['copying_2000_files_server' => 'ServerCopy 2k'],
                     ['lock_then_unlock_2000'     => 'Fork lock 2k'],
                     ['stat_lookup_getparams'     => 'Stat 2k'],
-                    ['stat_2000_files'           => 'Stat 2k'],
                     ['enumerate_dir'             => 'Enumerate 2k'],
                     ['deleting_2000_files'       => 'Delete 2k'],
                     ['byte_range_lock_unlock'    => 'Byte lock 2k'],
                     ['create_2000_dirs_tree'     => 'Create Dirs 2k'],
-                    ['create_directory_tree'     => 'Create tree'],
                     ['directory_cache_hits'      => 'Dircache hits'],
                     ['mixed_cache_operations'    => 'Mixed cache'],
                     ['deep_path_traversal'       => 'Deep traverse'],
@@ -198,15 +197,20 @@ sub plot {
 
     # Per-step decay factor for the envelope edges: after a new extreme,
     # each subsequent in-band PR moves the edge this fraction of its
-    # remaining distance back toward the cumulative average (0.15 ≈ half
+    # remaining distance back toward the rolling average (0.15 ≈ half
     # the excursion forgotten after ~4 PRs, fully faded after ~20 — one
     # fifth of the 100-entry series cap).
     my $DECAY = 0.15;
 
-    # Columns per series row: x, value, env_min, env_max, cum_avg. The
-    # stats are computed left-to-right: the envelope opens when a value
-    # lands outside it and decays toward the average while values stay
-    # inside.
+    # Trailing window for the solid average line, matching perf_history.pl's
+    # table baseline: long enough to smooth runner variance, short enough
+    # that an accepted performance change becomes the new baseline within
+    # weeks instead of being diluted by the whole stored series.
+    my $AVG_WINDOW = 30;
+
+    # Columns per series row: x, value, env_min, env_max, avg. The stats
+    # are computed left-to-right: the envelope opens when a value lands
+    # outside it and decays toward the average while values stay inside.
     my $blocks = '';
     my (@bands, @maxlines, @minlines, @avglines, @points, @keyentries);
     my ($data_min, $data_max);
@@ -217,12 +221,13 @@ sub plot {
         my $light   = '#80' . substr($color, 1);
         my $tag     = "S$idx";
         $blocks .= "\$$tag << EOD\n";
-        my ($env_min, $env_max, $sum, $count) = (undef, undef, 0, 0);
+        my ($env_min, $env_max, $win_sum, @win) = (undef, undef, 0);
         for my $e (@entries) {
             my $v = $e->{value} + 0;
-            $sum += $v;
-            $count++;
-            my $avg = $sum / $count;
+            push @win, $v;
+            $win_sum += $v;
+            $win_sum -= shift @win if @win > $AVG_WINDOW;
+            my $avg = $win_sum / @win;
             # Relax each edge part-way toward the average, then push it
             # back out if this PR's value lands beyond it.
             if (defined $env_min) {
@@ -246,7 +251,7 @@ sub plot {
           . 'notitle';
         # Running max (slowest seen) and min (fastest seen) trace the band
         # edges, alpha-blended (#80 = 50% transparent) so they read lighter
-        # than the solid cumulative average.
+        # than the solid rolling average.
         push @maxlines,
           "\$$tag using 1:4 with lines dashtype (2,1) linewidth 0.7 " . "linecolor rgb \"$light\" notitle";
         push @minlines,
@@ -267,12 +272,12 @@ sub plot {
     # Line-style legend entries explaining the three marks, appended after
     # the per-test colors.
     push @keyentries,
-      'keyentry with lines linewidth 1.1 linecolor rgb "#333333" ' . 'title "cumulative avg"',
+      'keyentry with lines linewidth 1.1 linecolor rgb "#333333" ' . 'title "avg (last 30 PRs)"',
       'keyentry with lines dashtype (2,1) linewidth 0.7 ' . 'linecolor rgb "#888888" title "max (decaying)"',
       'keyentry with lines dashtype (3,2) linewidth 0.7 ' . 'linecolor rgb "#888888" title "min (decaying)"';
 
     # Bottom-to-top: bands, then band-edge min/max traces, then the solid
-    # cumulative averages and the raw per-PR points on top.
+    # rolling averages and the raw per-PR points on top.
     my @plots = (@bands, @maxlines, @minlines, @avglines, @points, @keyentries);
 
     # Log y-axis with the same explicit per-decade tic list as
