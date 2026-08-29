@@ -24,14 +24,17 @@
 # where render is "table" (a row in the section's markdown table) or
 # "inline" (a bold run-on stat for the section header). Keys are free-form
 # and self-describing (e.g. lantest.creating_2000_files.mean_ms); a renamed
-# test simply starts a new key while the old one goes stale, so nothing is
-# positional and metrics can be added or dropped at any time.
+# test simply starts a new key, and the old key is pruned automatically
+# once it stops receiving entries, so nothing is positional and metrics
+# can be added, renamed or dropped at any time.
 #
 # The history file is a YAML mapping of key -> list of {pr, ts, value}
 # entries. Each PR holds at most one entry per key: a re-run of the same PR
 # replaces its previous value (so a PR's repeated CI pushes don't skew the
 # baseline), and each list is trimmed to the newest 100 entries. The
-# historical stats for the delta exclude the current PR's own entry.
+# historical stats for the delta exclude the current PR's own entry and
+# cover only the newest 30 stored values, so the baseline follows recent
+# performance instead of averaging the whole stored series.
 #
 # The YAML reader/writer below handles exactly the shape this script
 # writes (block mapping of block sequences of flat mappings); anything it
@@ -62,6 +65,17 @@ use File::Basename qw(dirname);
 use File::Path     qw(make_path);
 
 my $MAX_ENTRIES_PER_METRIC = 100;
+
+# Historical stats window: hist_stats() averages only this many of a key's
+# newest entries. Long enough to smooth runner variance, short enough that
+# an accepted performance change becomes the new baseline within weeks
+# rather than being diluted by the full 100-entry series.
+my $HIST_STATS_WINDOW = 30;
+
+# A key with no entry in its group's most recent runs (distinct PRs) is
+# obsolete — its test was renamed or removed — and gets pruned. Three runs
+# of grace keep a test that merely skipped a run or two alive.
+my $PRUNE_GRACE_RUNS = 3;
 
 # Parse pipe-separated metric lines; skip anything malformed.
 sub load_metrics {
@@ -164,12 +178,15 @@ sub fmt_delta {
     return sprintf('%+.1f%%', 100.0 * ($cur - $avg) / $avg);
 }
 
-# (avg, min, max, count) of stored values for key, excluding the current
-# PR's own entry. Returns an empty list when no history exists.
+# (avg, min, max, count) of the newest $HIST_STATS_WINDOW stored values
+# for key, excluding the current PR's own entry. Returns an empty list
+# when no history exists.
 sub hist_stats {
     my ($hist, $key, $current_pr) = @_;
     my @values = map { $_->{value} + 0 }
       grep { $_->{pr} ne $current_pr } @{$hist->{$key} // []};
+    splice @values, 0, @values - $HIST_STATS_WINDOW
+      if @values > $HIST_STATS_WINDOW;
     return unless @values;
     my ($sum, $min, $max) = (0, $values[0], $values[0]);
     for my $v (@values) {
@@ -187,6 +204,40 @@ sub upsert {
     splice @entries, 0, @entries - $MAX_ENTRIES_PER_METRIC
       if @entries > $MAX_ENTRIES_PER_METRIC;
     $hist->{$key} = \@entries;
+}
+
+# Prune obsolete keys after the current run's rows have been upserted.
+# When a test is renamed or removed, its old key stops receiving entries
+# while the rest of its group (keys sharing the first dot-separated
+# segment, e.g. "lantest") moves on; without pruning the dead key stays in
+# the history — and in every future trend-chart legend — forever, since
+# the per-key entry cap only trims keys that still receive data. A key
+# with no entry in its group's $PRUNE_GRACE_RUNS most recent runs
+# (distinct PRs, ranked by their newest timestamp) is dropped. Only groups
+# with rows in the current run are examined: a section whose CI job failed
+# contributes no rows, and its keys must not age toward pruning on another
+# section's clock.
+sub prune_stale {
+    my ($hist, $rows) = @_;
+    my %groups = map { ((split /\./, $_->[1], 2)[0]) => 1 } @$rows;
+    for my $group (keys %groups) {
+        my @keys = grep { (split /\./, $_, 2)[0] eq $group } keys %$hist;
+        my %pr_ts;
+        for my $key (@keys) {
+            for my $e (@{$hist->{$key}}) {
+                my $ts = $e->{ts} // '';
+                $pr_ts{$e->{pr}} = $ts
+                  if !exists $pr_ts{$e->{pr}} || $ts gt $pr_ts{$e->{pr}};
+            }
+        }
+        my @recent =
+          (sort { $pr_ts{$b} cmp $pr_ts{$a} } keys %pr_ts)[0 .. $PRUNE_GRACE_RUNS - 1];
+        my %recent = map { $_ => 1 } grep {defined} @recent;
+        for my $key (@keys) {
+            delete $hist->{$key}
+              unless grep { $recent{$_->{pr}} } @{$hist->{$key}};
+        }
+    }
 }
 
 sub median {
@@ -328,6 +379,7 @@ sub main {
 
     open my $out, '>>:encoding(UTF-8)', $github_output
       or die "cannot append $github_output: $!\n";
+    my @all_rows;
     for my $spec (@sections) {
         my ($name, $path) = split /=/, $spec, 2;
         die "bad --section (want NAME=FILE): $spec\n" unless defined $path && length $path;
@@ -337,9 +389,11 @@ sub main {
         write_output($out, "${name}_table",  $table_md);
         write_output($out, "${name}_inline", $inline_md);
         upsert($hist, $_->[1], $pr, $timestamp, $_->[4]) for @$rows;
+        push @all_rows, @$rows;
     }
     close $out;
 
+    prune_stale($hist, \@all_rows);
     save_history($history_path, $hist);
     return 0;
 }
