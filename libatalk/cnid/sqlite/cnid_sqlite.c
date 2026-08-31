@@ -74,6 +74,26 @@
 static void cnid_sqlite_set_errno(int sqlite_return);
 
 /*!
+ * @brief Whether a string is one of this backend's per-volume table names
+ *
+ * uuid_strip_dashes() yields exactly 32 hex digits, so a value in any other
+ * form was not written by this backend. A table name cannot be a bound
+ * parameter, so statements that name one accept only this form.
+ */
+static bool cnid_sqlite_is_table_name(const char *name)
+{
+    size_t i;
+
+    for (i = 0; name[i] != '\0'; i++) {
+        if (!isxdigit((unsigned char) name[i])) {
+            return false;
+        }
+    }
+
+    return i == 32;
+}
+
+/*!
  * @brief Prepare one per-volume statement, replacing any previous handle
  *
  * @param[in,out] db      backend private data
@@ -2010,6 +2030,15 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         while ((stale_return = sqlite3_step(transient_stmt)) == SQLITE_ROW
                 && stale_count < 64) {
             const char *stale_uuid = (const char *)sqlite3_column_text(transient_stmt, 0);
+
+            /* Only names this backend created are cleaned up; a row whose
+             * VolUUID is not in table-name form is left in place and logged */
+            if (stale_uuid != NULL && !cnid_sqlite_is_table_name(stale_uuid)) {
+                LOG(log_warning, logtype_cnid,
+                    "cnid_sqlite_open: ignoring volumes row for path '%s' whose "
+                    "VolUUID is not a CNID table name", vol->v_path);
+                continue;
+            }
 
             if (stale_uuid == NULL
                     || (stale_uuids[stale_count] = strdup(stale_uuid)) == NULL) {
