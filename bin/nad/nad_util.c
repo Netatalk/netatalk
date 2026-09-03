@@ -298,6 +298,24 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
 }
 
 /*!
+ * @brief Report a CNID table reset behind a failed resolve
+ *
+ * A reset empties the volume's CNID table as a side effect of the failing
+ * call, which the caller's generic resolve error would hide.
+ *
+ * @param[in] volpath  path of the volume the failing call ran against
+ */
+void nad_report_cnid_reset(const char *volpath)
+{
+    if (CNID_ERRNO() == CNID_ERR_RESET) {
+        fprintf(stderr,
+                "CNID space exhausted for volume \"%s\": the table was "
+                "emptied, so every session on it now holds stale CNIDs\n",
+                volpath);
+    }
+}
+
+/*!
  * @brief Resolves CNID of a given paths parent directory
  *
  * path might be:
@@ -352,6 +370,7 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
                              cfrombstr(l->entry[i]),
                              blength(l->entry[i]),
                              0)) == CNID_INVALID) {
+            nad_report_cnid_reset(vol->vol->v_path);
             EC_FAIL;
         }
 

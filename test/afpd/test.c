@@ -532,6 +532,8 @@ int main(int argc, char *argv[])
              "CNID wrapper rejection sets its own errno, not a stale one");
     TEST_int(utest_cnid_error_codes_distinct(), 0,
              "CNID error codes are distinct and clear of the errno range");
+    TEST_int(utest_cnid_volume_tag_identity(), 0,
+             "volume tag names the CNID table, independent of v_vid");
     TEST_int(utest_cnid_valide_byteorder(), 0,
              "CNID wrapper validates returned ids in host byte order");
     TEST_int(utest_cnid_resolve_dotdot_rejected(), 0,
@@ -605,6 +607,10 @@ int main(int argc, char *argv[])
                      "cnid_find: search results never carry a truncated id");
     TEST_int_or_skip(utest_cnid_dup_row_no_truncated_delete(vol), 0,
                      "cnid_lookup: duplicate cleanup never deletes through a truncated id");
+    /* Last of the CNID group: recovering from the reset empties the volume's
+     * table, so anything expecting a CNID minted earlier must run before it */
+    TEST_int_or_skip(utest_cnid_add_depletion_resets(vol), 0,
+                     "cnid_add: exhausting the CNID space reports CNID_ERR_RESET");
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL,
               "dirlookup: root parent directory");

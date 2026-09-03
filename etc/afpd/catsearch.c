@@ -477,6 +477,12 @@ static int crit_check(struct vol *vol, struct path *path)
                         (int)uname_len);
 
             if (!id) {
+                if (CNID_ERRNO() == CNID_ERR_RESET) {
+                    /* Later entries would get reseeded CNIDs and still be
+                     * sent in this reply, so fail the search */
+                    return -1;
+                }
+
                 LOG(log_debug, logtype_afpd,
                     "crit_check: get_id failed for '%s', skipping file in search results",
                     path->u_name);
@@ -891,6 +897,11 @@ static int catsearch(const AFPObj *obj,
 
             ccr = crit_check(vol, &path);
 
+            if (ccr < 0) {
+                result = AFPERR_MISC;
+                goto catsearch_end;
+            }
+
             /* bit 0 means that criteria has been met */
             if (ccr & 1) {
                 r = rslt_add(obj, vol, &path, &rrbuf, ext);
@@ -1082,6 +1093,11 @@ static int catsearch_db(const AFPObj *obj,
             cfrombstr(dir->d_fullpath), getcwdpath(), path.u_name);
         /* At last we can check the search criteria */
         ccr = crit_check(vol, &path);
+
+        if (ccr < 0) {
+            result = AFPERR_MISC;
+            goto catsearch_end;
+        }
 
         if (ccr & 1) {
             LOG(log_debug, logtype_afpd, "catsearch_db: match: %s/%s",

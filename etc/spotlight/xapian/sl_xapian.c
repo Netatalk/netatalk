@@ -36,6 +36,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "etc/afpd/volume.h"
 #include "etc/spotlight/spotlight_private.h"
 #include "etc/spotlight/xapian/sl_xapian.h"
 
@@ -357,6 +358,19 @@ static int sl_xapian_fill_results(slq_t *slq)
         id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did);
 
         if (id == CNID_INVALID) {
+            if (CNID_ERRNO() == CNID_ERR_RESET) {
+                /* The lookup emptied the table: CNIDs every session holds
+                 * will name other files as it refills. Not a missing result. */
+                LOG(log_error, logtype_sl,
+                    "xapian backend: CNID table for volume '%s' was reset "
+                    "during search", slq->slq_vol->v_path);
+                cnid_volume_reset(slq->slq_vol);
+                /* Breaking would report the pre-wipe rows as a successful,
+                 * resumable result set, every CNID in it recycled */
+                slq->slq_state = SLQ_STATE_ERROR;
+                EC_FAIL;
+            }
+
             LOG(log_debug, logtype_sl,
                 "xapian backend: no CNID for result: %s", path);
             continue;

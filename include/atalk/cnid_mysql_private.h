@@ -7,6 +7,8 @@
 #include <atalk/uuid.h>
 
 #define CNID_MYSQL_FLAG_DEPLETED (1 << 0) /*!< CNID set overflowed */
+#define CNID_MYSQL_FLAG_HINT_RANGE_LOGGED (1 << 1) /*!< out-of-range hint warned once */
+#define CNID_MYSQL_FLAG_NEAR_DEPLETION (1 << 2) /*!< approaching-ceiling warned once */
 
 typedef struct CNID_mysql_private {
     struct vol *vol;

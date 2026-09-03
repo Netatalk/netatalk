@@ -14,6 +14,7 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,6 +70,22 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
 
 #define HINT_RATE_LIMIT        1000  /* Max hints/second per child (attack guard) */
 
+/* Resets skip the drop paths, so they need their own ceiling. A child raises
+ * SIGTERM right after resetting, so it sends at most one. */
+#define HINT_RESET_RATE_LIMIT  8
+
+/* Volumes whose reset can be deduped at once — more than a handful resetting
+ * inside one second is not a case worth holding memory for */
+#define RESET_SEEN_SIZE        8
+
+/* Waiting for pipe space stalls the master, so each flush gets a fixed wait
+ * budget regardless of how many siblings are backed up */
+#define HINT_RESET_WAIT_BUDGET 4
+
+/* One wait for IPC space when a reset cannot be written at once. The child is
+ * the only sender, so a lost write costs every sibling the notification. */
+#define HINT_RESET_WAIT_MS     20
+
 /* Per-child rate tracking — fixed array indexed by PID % RATE_TRACK_SIZE.
  * Hash collisions are benign — worst case a child gets a slightly wrong
  * rate count from sharing a slot with another child. */
@@ -93,6 +110,9 @@ static struct {
     pid_t  pid;
     time_t window_start;
     int    count_in_window;
+    /* Counted apart from the hints above: a reset shares no budget with the
+     * best-effort traffic, which a working session emits far faster */
+    int    resets_in_window;
 } rate_track[RATE_TRACK_SIZE];
 
 /* Parent-side statistics */
@@ -100,9 +120,9 @@ static unsigned long long hints_batched = 0;
 static unsigned long long hints_rate_dropped = 0;
 static unsigned long long flush_count = 0;
 
-/* Returns current hint count for this child in the current 1-second window.
- * Resets window if second has changed. Called from main thread only. */
-static int check_and_increment_rate(pid_t child_pid)
+/* Start this child's window, or reuse the one already open. Called from main
+ * thread only. */
+static int rate_slot(pid_t child_pid)
 {
     int idx = child_pid % RATE_TRACK_SIZE;
     time_t now = time(NULL);
@@ -110,11 +130,133 @@ static int check_and_increment_rate(pid_t child_pid)
     if (rate_track[idx].pid != child_pid || rate_track[idx].window_start != now) {
         rate_track[idx].pid = child_pid;
         rate_track[idx].window_start = now;
-        rate_track[idx].count_in_window = 1;
-        return 1;
+        rate_track[idx].count_in_window = 0;
+        rate_track[idx].resets_in_window = 0;
     }
 
-    return ++rate_track[idx].count_in_window;
+    return idx;
+}
+
+/* Returns current hint count for this child in the current 1-second window. */
+static int check_and_increment_rate(pid_t child_pid)
+{
+    return ++rate_track[rate_slot(child_pid)].count_in_window;
+}
+
+static int check_and_increment_reset_rate(pid_t child_pid)
+{
+    return ++rate_track[rate_slot(child_pid)].resets_in_window;
+}
+
+/* Volume tags whose reset was broadcast, and when */
+static struct {
+    uint32_t tag;
+    time_t   when;
+} reset_seen[RESET_SEEN_SIZE];
+
+/*!
+ * @brief Whether this volume's reset has just been broadcast
+ *
+ * One notification per volume is all a sibling needs, and each one costs a
+ * forced flush to every session, so a repeat inside the same second is
+ * dropped. Records the tag when it is new.
+ *
+ * @param[in] tag  cnid_volume_tag() of the reset volume, network byte order
+ */
+static int reset_already_broadcast(uint32_t tag)
+{
+    const time_t now = time(NULL);
+    int oldest = 0;
+
+    for (int i = 0; i < RESET_SEEN_SIZE; i++) {
+        if (reset_seen[i].tag == tag && reset_seen[i].when == now) {
+            return 1;
+        }
+
+        if (reset_seen[i].when < reset_seen[oldest].when) {
+            oldest = i;
+        }
+    }
+
+    reset_seen[oldest].tag = tag;
+    reset_seen[oldest].when = now;
+    return 0;
+}
+
+/*!
+ * @brief Make a volume's reset broadcastable again
+ *
+ * A sibling that missed a reset batch has no other redelivery path, so a
+ * delivery failure must not leave the tag deduped against the next duplicate.
+ *
+ * @param[in] tag  cnid_volume_tag() of the reset volume, network byte order
+ */
+static void reset_broadcast_forget(uint32_t tag)
+{
+    for (int i = 0; i < RESET_SEEN_SIZE; i++) {
+        if (reset_seen[i].tag == tag) {
+            reset_seen[i].tag = 0;
+            reset_seen[i].when = 0;
+        }
+    }
+}
+
+/*!
+ * @brief Write a sibling's hint batch, waiting once if it carries a reset
+ *
+ * A full sibling pipe drops a best-effort batch: those hints only cost a
+ * lookup. A batch carrying a reset waits briefly for pipe space instead, since
+ * the sibling would otherwise keep resolving recycled CNIDs. Waits are budgeted
+ * per second across flushes so backed-up siblings cannot stall the master.
+ *
+ * @param[in]     fd          sibling's hint pipe
+ * @param[in]     buf         serialized batch
+ * @param[in]     len         bytes to write
+ * @param[in]     has_reset   batch contains a CACHE_HINT_VOLUME_RESET
+ * @param[in,out] waits_left  this second's remaining waits, spent here
+ * @returns 0 on success, -1 if the batch was not delivered
+ */
+static int hint_write_batch(int fd, const char *buf, int len, int has_reset,
+                            int *waits_left)
+{
+    ssize_t ret = write(fd, buf, len);
+    int write_errno = errno;
+
+    if (ret == len) {
+        return 0;
+    }
+
+    if (has_reset && ret == -1 && *waits_left > 0
+            && (write_errno == EAGAIN || write_errno == EWOULDBLOCK)) {
+        struct pollfd pfd = { .fd = fd, .events = POLLOUT };
+        int pret;
+        (*waits_left)--;
+
+        do {
+            pret = poll(&pfd, 1, HINT_RESET_WAIT_MS);
+        } while (pret < 0 && errno == EINTR);
+
+        if (pret > 0 && (pfd.revents & POLLOUT)) {
+            ret = write(fd, buf, len);
+            write_errno = errno;
+        }
+
+        if (ret == len) {
+            return 0;
+        }
+    }
+
+    /* Classified on the write's own errno: poll() has since overwritten it */
+    if (ret == -1 && write_errno != EAGAIN && write_errno != EWOULDBLOCK) {
+        LOG(log_debug, logtype_afpd, "hint_flush: write failed fd=%d: %s",
+            fd, strerror(write_errno));
+    } else if (has_reset) {
+        LOG(log_warning, logtype_afpd,
+            "hint_flush: could not deliver a volume reset to fd=%d; that "
+            "session may serve stale CNIDs until it reconnects", fd);
+    }
+
+    return -1;
 }
 
 /*!
@@ -152,6 +294,7 @@ static int serialize_hint(char *buf, const struct hint_entry *e)
     memcpy(p, &payload, sizeof(payload));
     return IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload);
 }
+
 
 /*!
  * @brief Pass afp_socket to old disconnected session if one has a matching token
@@ -299,15 +442,40 @@ static int ipc_relay_cache_hint(struct ipc_header *ipc,
     }
 
     /* Validate event type */
-    if (hint.event > CACHE_HINT_DELETE_CHILDREN) {
+    if (hint.event >= CACHE_HINT_COUNT) {
         LOG(log_warning, logtype_afpd,
             "ipc_relay_cache_hint: invalid event %u from pid %u, dropped",
             hint.event, ipc->child_pid);
         return 0;
     }
 
+    /* Losing a reset leaves siblings resolving recycled CNIDs, so it skips the
+     * drop paths below — but not the guard itself, or one child could force
+     * unmetered disconnection of every session on the volume. */
+    const int is_reset = (hint.event == CACHE_HINT_VOLUME_RESET);
+
+    if (is_reset) {
+        if (check_and_increment_reset_rate(ipc->child_pid)
+                > HINT_RESET_RATE_LIMIT) {
+            hints_rate_dropped++;
+            LOG(log_warning, logtype_afpd,
+                "ipc_relay_cache_hint: pid %u exceeded the reset limit, dropped",
+                ipc->child_pid);
+            return 0;
+        }
+
+        /* Siblings need to hear a volume was reset, not how often. Deduped
+         * against what was already broadcast, not against hint_buf: each reset
+         * forces a flush below, so the buffer never holds one by the time the
+         * next arrives. Keyed on the tag alone — vid is per-process, so two
+         * children reporting one volume disagree on it. */
+        if (reset_already_broadcast(hint.cnid)) {
+            return 0;
+        }
+    }
+
     /* Rate-limit check (attack guard) */
-    if (check_and_increment_rate(ipc->child_pid) > HINT_RATE_LIMIT) {
+    if (!is_reset && check_and_increment_rate(ipc->child_pid) > HINT_RATE_LIMIT) {
         hints_rate_dropped++;
 
         if (rate_track[ipc->child_pid % RATE_TRACK_SIZE].count_in_window
@@ -322,10 +490,16 @@ static int ipc_relay_cache_hint(struct ipc_header *ipc,
 
     /* Buffer full — drop hint. Caller will flush after ipc_server_read returns. */
     if (hint_buf.count >= HINT_BUF_SIZE) {
-        LOG(log_debug, logtype_afpd,
-            "ipc_relay_cache_hint: buffer full, hint dropped from pid %u",
-            ipc->child_pid);
-        return 0;
+        if (!is_reset) {
+            LOG(log_debug, logtype_afpd,
+                "ipc_relay_cache_hint: buffer full, hint dropped from pid %u",
+                ipc->child_pid);
+            return 0;
+        }
+
+        /* A best-effort hint yields its slot: flushing first would send the
+         * batch the reset has to precede */
+        hint_buf.count--;
     }
 
     hint_buf.entries[hint_buf.count] = (struct hint_entry) {
@@ -335,6 +509,12 @@ static int ipc_relay_cache_hint(struct ipc_header *ipc,
         .source_pid = ipc->child_pid,
     };
     hint_buf.count++;
+
+    if (is_reset) {
+        /* A busy master can starve the batching trigger indefinitely */
+        hint_flush_pending(children);
+    }
+
     return 0;
 }
 
@@ -584,24 +764,49 @@ void hint_flush_pending(server_child_t *children)
     }
 
     int local_count = hint_buf.count;
+    /* Shared across flushes: each reset forces one, and a per-flush budget
+     * would let a burst of distinct-volume resets stall the single-threaded
+     * master for its multiple. */
+    static time_t wait_window;
+    static int waits_left;
+    const time_t now = time(NULL);
+
+    if (now != wait_window) {
+        wait_window = now;
+        waits_left = HINT_RESET_WAIT_BUDGET;
+    }
+
+    int reset_lost = 0;
     struct hint_entry local_buf[HINT_BUF_SIZE];
     memcpy(local_buf, hint_buf.entries,
            local_count * sizeof(struct hint_entry));
     hint_buf.count = 0;
-    /* Sort by priority: REFRESH(0) first, DELETE(1), DELETE_CHILDREN(2) last.
-     * O(n) counting + scatter pass — no allocations. */
+    /* Sort by delivery priority. VOLUME_RESET ends the receiving session, so it
+     * precedes the cache-mend events that a reset makes moot; those keep their
+     * REFRESH, DELETE, DELETE_CHILDREN order. O(n) counting + scatter pass —
+     * no allocations. Events are validated against CACHE_HINT_COUNT before
+     * being buffered, so they are safe to use as indices here. */
+    static const int priority[CACHE_HINT_COUNT] = {
+        [CACHE_HINT_VOLUME_RESET]    = 0,
+        [CACHE_HINT_REFRESH]         = 1,
+        [CACHE_HINT_DELETE]          = 2,
+        [CACHE_HINT_DELETE_CHILDREN] = 3,
+    };
     struct hint_entry sorted[HINT_BUF_SIZE] = {0};
-    int counts[3] = {0};
+    int counts[CACHE_HINT_COUNT] = {0};
 
     for (int h = 0; h < local_count; h++) {
-        counts[local_buf[h].event]++;
+        counts[priority[local_buf[h].event]]++;
     }
 
-    int offsets[3] = {0, counts[0], counts[0] + counts[1]};
+    int offsets[CACHE_HINT_COUNT] = {0};
+
+    for (int p = 1; p < CACHE_HINT_COUNT; p++) {
+        offsets[p] = offsets[p - 1] + counts[p - 1];
+    }
 
     for (int h = 0; h < local_count; h++) {
-        int e = local_buf[h].event;
-        sorted[offsets[e]++] = local_buf[h];
+        sorted[offsets[priority[local_buf[h].event]]++] = local_buf[h];
     }
 
     /* Build and send per-sibling batch in PIPE_BUF-safe chunks */
@@ -620,51 +825,53 @@ void hint_flush_pending(server_child_t *children)
             }
 
             int write_len = 0;
+            int chunk_has_reset = 0;
 
             for (int h = 0; h < local_count; h++) {
                 if (child->afpch_pid == sorted[h].source_pid) {
-                    /* Skip source child */
                     continue;
                 }
 
                 write_len += serialize_hint(write_buf + write_len,
                                             &sorted[h]);
 
+                if (sorted[h].event == CACHE_HINT_VOLUME_RESET) {
+                    chunk_has_reset = 1;
+                }
+
                 /* Flush chunk when it reaches PIPE_BUF-safe limit */
                 if ((size_t)write_len >= chunk_limit) {
-                    ssize_t ret = write(child->afpch_hint_fd,
-                                        write_buf, write_len);
-
-                    if (ret < 0) {
-                        if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                            LOG(log_debug, logtype_afpd,
-                                "hint_flush: write failed fd=%d pid=%d: %s",
-                                child->afpch_hint_fd,
-                                child->afpch_pid,
-                                strerror(errno));
-                        }
-
+                    if (hint_write_batch(child->afpch_hint_fd, write_buf,
+                                         write_len, chunk_has_reset,
+                                         &waits_left) != 0) {
+                        reset_lost |= chunk_has_reset;
                         write_len = 0;
                         /* Pipe full or error — next sibling */
                         break;
                     }
 
                     write_len = 0;
+                    chunk_has_reset = 0;
                 }
             }
 
             /* Flush any remaining partial chunk */
-            if (write_len > 0) {
-                ssize_t ret = write(child->afpch_hint_fd,
-                                    write_buf, write_len);
+            if (write_len > 0
+                    && hint_write_batch(child->afpch_hint_fd, write_buf,
+                                        write_len, chunk_has_reset,
+                                        &waits_left) != 0) {
+                reset_lost |= chunk_has_reset;
+            }
+        }
+    }
 
-                if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                    LOG(log_debug, logtype_afpd,
-                        "hint_flush: write failed fd=%d pid=%d: %s",
-                        child->afpch_hint_fd,
-                        child->afpch_pid,
-                        strerror(errno));
-                }
+    if (reset_lost) {
+        /* At least one sibling missed a reset it can only hear again through
+         * a duplicate; siblings that did hear it end their sessions either
+         * way, so the re-broadcast is idempotent. */
+        for (int h = 0; h < local_count; h++) {
+            if (local_buf[h].event == CACHE_HINT_VOLUME_RESET) {
+                reset_broadcast_forget(local_buf[h].cnid);
             }
         }
     }
@@ -691,6 +898,26 @@ unsigned long long ipc_get_hints_dropped(void)
     return hints_dropped;
 }
 
+static const char *cache_hint_name(uint8_t event)
+{
+    switch (event) {
+    case CACHE_HINT_REFRESH:
+        return "REFRESH";
+
+    case CACHE_HINT_DELETE:
+        return "DELETE";
+
+    case CACHE_HINT_DELETE_CHILDREN:
+        return "DELETE_CHILDREN";
+
+    case CACHE_HINT_VOLUME_RESET:
+        return "VOLUME_RESET";
+
+    default:
+        return "?";
+    }
+}
+
 /*!
  * @brief Send a dircache invalidation hint from child to parent
  *
@@ -704,6 +931,10 @@ unsigned long long ipc_get_hints_dropped(void)
  * Hints are best-effort optimizations, and the dircache validation mechanism
  * & graceful fail-on-use detection makes drops safe.
  *
+ * CACHE_HINT_VOLUME_RESET is the exception: a sibling that misses it keeps
+ * resolving CNIDs that the wipe has recycled onto other files, so it waits
+ * briefly for pipe space and reports failure to the caller.
+ *
  * The 22-byte message (14-byte IPC header + 8-byte payload) is well under
  * the kernel socket buffer size, so partial writes cannot occur when space
  * is available.
@@ -711,15 +942,17 @@ unsigned long long ipc_get_hints_dropped(void)
  * @param[in] obj    AFPObj with ipc_fd
  * @param[in] vid    Volume ID (network byte order, matches vol->v_vid)
  * @param[in] cnid   CNID of affected file/dir (network byte order)
- * @param[in] event  Hint type: CACHE_HINT_REFRESH, CACHE_HINT_DELETE,
- *                   or CACHE_HINT_DELETE_CHILDREN
- * @returns 0 on success (or graceful drop), -1 on fatal error
+ * @param[in] event  Hint type: one of the CACHE_HINT_* values
+ * @returns 0 on success (or graceful drop), -1 on fatal error or an
+ *          undeliverable CACHE_HINT_VOLUME_RESET
  */
 int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
                         uint8_t event)
 {
     if (obj->ipc_fd < 0) {
-        return 0;    /* No IPC channel */
+        /* A reset nobody can be told about is a failure; a cache-mend hint
+         * is best-effort */
+        return event == CACHE_HINT_VOLUME_RESET ? -1 : 0;
     }
 
     /* Both vid and cnid are already network byte order in the codebase */
@@ -754,23 +987,36 @@ int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
         hints_sent++;
         LOG(log_debug, logtype_afpd,
             "ipc_send_cache_hint: sent %s for vid:%u did:%u",
-            event == CACHE_HINT_REFRESH ? "REFRESH" :
-            event == CACHE_HINT_DELETE ? "DELETE" :
-            event == CACHE_HINT_DELETE_CHILDREN ? "DELETE_CHILDREN" : "?",
-            ntohs(vid), ntohl(cnid));
+            cache_hint_name(event), ntohs(vid), ntohl(cnid));
         return 0;
     }
 
     if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-        hints_dropped++;
-        LOG(log_debug, logtype_afpd,
-            "ipc_send_cache_hint: dropped (buffer full) %s for vid:%u did:%u "
-            "(total dropped: %llu)",
-            event == CACHE_HINT_REFRESH ? "REFRESH" :
-            event == CACHE_HINT_DELETE ? "DELETE" :
-            event == CACHE_HINT_DELETE_CHILDREN ? "DELETE_CHILDREN" : "?",
-            ntohs(vid), ntohl(cnid), hints_dropped);
-        return 0;  /* Graceful drop — not a fatal error */
+        if (event != CACHE_HINT_VOLUME_RESET) {
+            /* Best-effort: a lost cache-mend hint costs a lookup */
+            hints_dropped++;
+            LOG(log_debug, logtype_afpd,
+                "ipc_send_cache_hint: buffer full, %s dropped",
+                cache_hint_name(event));
+            return 0;
+        }
+
+        /* A lost reset costs every sibling the notification */
+        struct pollfd pfd = { .fd = obj->ipc_fd, .events = POLLOUT };
+        int pret;
+
+        do {
+            pret = poll(&pfd, 1, HINT_RESET_WAIT_MS);
+        } while (pret < 0 && errno == EINTR);
+
+        if (pret > 0 && (pfd.revents & POLLOUT)) {
+            ret = write(obj->ipc_fd, block, total);
+        }
+
+        if (ret == total) {
+            hints_sent++;
+            return 0;
+        }
     }
 
     /* Unexpected error (not EAGAIN) or partial write */

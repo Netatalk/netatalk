@@ -36,6 +36,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "etc/afpd/volume.h"
 #include "etc/spotlight/spotlight_private.h"
 
 static int cnid_comp_fn(const void *p1, const void *p2)
@@ -851,6 +852,17 @@ static int sl_cnid_open_query(slq_t *slq)
                                   slq->slq_scope, &pdid);
 
         if (scope_did == CNID_INVALID) {
+            if (CNID_ERRNO() == CNID_ERR_RESET) {
+                /* Resolving a scope inserts its path components, so a search
+                 * can trip the wipe */
+                LOG(log_error, logtype_sl,
+                    "cnid backend: CNID table for volume '%s' was reset while "
+                    "resolving the search scope", slq->slq_vol->v_path);
+                cnid_volume_reset(slq->slq_vol);
+                slq->slq_state = SLQ_STATE_ERROR;
+                EC_FAIL;
+            }
+
             LOG(log_info, logtype_sl,
                 "cnid backend: cannot resolve scope \"%s\", "
                 "returning 0 results", slq->slq_scope);

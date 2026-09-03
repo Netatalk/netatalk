@@ -5,6 +5,8 @@
 #include <atalk/uuid.h>
 
 #define CNID_SQLITE_FLAG_DEPLETED (1 << 0) /*!< CNID set overflowed */
+#define CNID_SQLITE_FLAG_NEAR_DEPLETION (1 << 1) /*!< depletion warning logged */
+#define CNID_SQLITE_FLAG_HINT_RANGE_LOGGED (1 << 2) /*!< hint range warning logged */
 
 typedef struct CNID_sqlite_private {
     struct vol *vol;

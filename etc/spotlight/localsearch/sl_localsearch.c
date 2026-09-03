@@ -17,6 +17,7 @@
 #endif
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -42,6 +43,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "etc/afpd/volume.h"
 #include "etc/spotlight/localsearch/sparql_parser.h"
 #include "etc/spotlight/spotlight_private.h"
 
@@ -190,6 +192,19 @@ static void tracker_cursor_cb(GObject      *object,
     id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did);
 
     if (id == CNID_INVALID) {
+        if (CNID_ERRNO() == CNID_ERR_RESET) {
+            /* The lookup emptied the table: CNIDs every session holds will
+             * name other files as it refills. Not a missing result. */
+            LOG(log_error, logtype_sl,
+                "CNID table for volume '%s' was reset during search",
+                slq->slq_vol->v_path);
+            cnid_volume_reset(slq->slq_vol);
+            /* The exit path asks for the next row, which would mint another
+             * CNID from the emptied table */
+            slq->slq_state = SLQ_STATE_ERROR;
+            return;
+        }
+
         LOG(log_debug, logtype_sl,
             "skipping result, no CNID (file moved or deleted?): %s", path);
         goto exit;

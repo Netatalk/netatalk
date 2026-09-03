@@ -81,6 +81,7 @@ extern void nad_not_inside_volume(FILE *out, const char *path, int force_hint);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path,
                                     cnid_t *did);
+extern void nad_report_cnid_reset(const char *volpath);
 extern char *utompath(const struct vol *, const char *);
 extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
                                  char *path);

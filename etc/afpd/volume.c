@@ -14,6 +14,7 @@
 #include <inttypes.h>
 #include <netinet/in.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1071,6 +1072,70 @@ openvol_err:
     free(vol_mname);
     *rbuflen = 0;
     return ret;
+}
+
+/*!
+ * @brief Stable cross-process identifier for a volume's CNID table
+ *
+ * v_vid is per-process, so the same vid names different volumes in different
+ * children. v_uuid is what every child agrees on.
+ *
+ * @returns FNV-1a of v_uuid, or 0 if the volume has no UUID
+ */
+uint32_t cnid_volume_tag(const struct vol *vol)
+{
+    uint32_t hash = 2166136261u;
+
+    if (!vol || !vol->v_uuid) {
+        return 0;
+    }
+
+    for (const unsigned char *p = (const unsigned char *)vol->v_uuid; *p; p++) {
+        hash ^= *p;
+        hash *= 16777619u;
+    }
+
+    /* 0 is reserved for "no tag" */
+    return hash ? hash : 1;
+}
+
+/*!
+ * @brief Announce a CNID table reset and end this session
+ *
+ * Only the session that reset the table sends the hint; a responder that
+ * re-broadcast would loop between children. No AFP attention exists for "the
+ * ID space was recycled" — the protocol guarantees IDs are never reused — so
+ * the disconnect is the signal.
+ */
+void cnid_volume_reset(const struct vol *vol)
+{
+    extern AFPObj *AFPobj;
+
+    if (!AFPobj || !vol) {
+        return;
+    }
+
+    uint32_t tag = cnid_volume_tag(vol);
+
+    if (tag == 0) {
+        LOG(log_error, logtype_afpd,
+            "cnid_volume_reset: volume '%s' has no UUID, cannot tell other "
+            "sessions its CNID table was reset", vol->v_path);
+    } else if (ipc_send_cache_hint(AFPobj, vol->v_vid, htonl(tag),
+                                   CACHE_HINT_VOLUME_RESET) != 0) {
+        LOG(log_error, logtype_afpd,
+            "cnid_volume_reset: could not tell other sessions that the CNID "
+            "table for volume '%s' was reset; they may serve stale CNIDs until "
+            "they reconnect", vol->v_path);
+    }
+
+    LOG(log_warning, logtype_afpd,
+        "cnid_volume_reset: CNID table for volume '%s' was reset, disconnecting "
+        "so the client picks up the rebuilt table", vol->v_path);
+    /* Both transports defer, so the session ends between requests: the request
+     * in flight is still answered, and callers that could return recycled
+     * CNIDs stop their own walk for that reason. */
+    raise(SIGTERM);
 }
 
 void closevol(const AFPObj *obj, struct vol *vol)

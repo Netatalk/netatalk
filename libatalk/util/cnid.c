@@ -160,12 +160,19 @@ EC_CLEANUP:
  * path MUST be pointing inside vol, this is usually the case as vol has been build from
  * path using loadvolinfo and friends.
  *
+ * Allocates, not just resolves: any path component missing from the database is
+ * inserted by cnid_add(). A caller that only reads, such as Spotlight result
+ * resolution, can therefore consume CNIDs and reach the 32-bit ceiling.
+ *
  * @param[in] cdb       CNID db handle
  * @param[in] volpath   UNIX path of volume
  * @param[in] path      path, see above
  * @param[out] did      parent CNID of returned CNID
  *
- * @returns CNID of path
+ * @returns CNID of path, or CNID_INVALID with errno set by the backend.
+ *          errno is preserved across cleanup so callers can act on it; in
+ *          particular CNID_ERR_RESET means the volume's CNID table was emptied
+ *          during this call and every session on it now holds stale CNIDs.
  */
 cnid_t cnid_for_path(struct _cnid_db *cdb,
                      const char *volpath,
@@ -201,10 +208,15 @@ cnid_t cnid_for_path(struct _cnid_db *cdb,
         EC_ZERO(bcatcstr(statpath, "/"));
     }
 
-EC_CLEANUP:
-    bdestroy(rpath);
-    bstrListDestroy(l);
-    bdestroy(statpath);
+EC_CLEANUP: {
+        /* The backend's classification is the only way a caller can tell a
+         * missing entry from a CNID table that was just reset under it */
+        int saved_errno = errno;
+        bdestroy(rpath);
+        bstrListDestroy(l);
+        bdestroy(statpath);
+        errno = saved_errno;
+    }
 
     if (ret != 0) {
         return CNID_INVALID;

@@ -25,11 +25,13 @@
 #define CACHE_HINT_REFRESH          0  /*!< ostat + dir_modify(DCMOD_STAT) */
 #define CACHE_HINT_DELETE           1  /*!< direct dir_remove() by CNID */
 #define CACHE_HINT_DELETE_CHILDREN  2  /*!< dircache_remove_children() + remove/refresh parent */
+#define CACHE_HINT_VOLUME_RESET     3  /*!< volume CNID table reset; cnid carries cnid_volume_tag() */
+#define CACHE_HINT_COUNT            4  /*!< number of CACHE_HINT_* event types */
 
 /* Hint payload — sent inside standard IPC wire header framing.
  * Packed to guarantee sizeof == 8. vid and cnid in network byte order. */
 struct __attribute__((packed)) ipc_cache_hint_payload {
-    uint8_t   event;       /* Hint type: CACHE_HINT_REFRESH/DELETE/DELETE_CHILDREN */
+    uint8_t   event;       /* Hint type: one of the CACHE_HINT_* values */
     uint8_t   reserved;    /* Alignment padding (could be version field in future) */
     uint16_t  vid;         /* Volume ID — network byte order (matches vol->v_vid) */
     cnid_t    cnid;        /* CNID of affected file/dir — network byte order */
@@ -37,6 +39,13 @@ struct __attribute__((packed)) ipc_cache_hint_payload {
 
 _Static_assert(sizeof(struct ipc_cache_hint_payload) == 8,
                "Hint payload must be exactly 8 bytes");
+
+/* Every event is validated against CACHE_HINT_COUNT, then used as an index */
+_Static_assert(CACHE_HINT_REFRESH < CACHE_HINT_COUNT
+               && CACHE_HINT_DELETE < CACHE_HINT_COUNT
+               && CACHE_HINT_DELETE_CHILDREN < CACHE_HINT_COUNT
+               && CACHE_HINT_VOLUME_RESET < CACHE_HINT_COUNT,
+               "CACHE_HINT_COUNT must cover every CACHE_HINT_* value");
 
 /* Hint buffer capacity — main.c checks this to trigger immediate flush
  * when buffer is full after fd event processing. */

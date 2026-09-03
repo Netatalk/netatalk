@@ -371,13 +371,22 @@ uint32_t get_id(struct vol *vol,
 
         /* Throw errors if cnid_add fails. */
         if (dbcnid == CNID_INVALID) {
-            switch (errno) {
+            /* Callers distinguish a reset by errno, and the logging and IPC
+             * send below clobber it (cnid_volume_reset()'s poll leaves EAGAIN) */
+            const int cnid_errno = errno;
+
+            switch (cnid_errno) {
             case CNID_ERR_CLOSE: /* the db is closed */
                 /* Callers reply with afp_errno after a CNID_INVALID result */
                 LOG(log_error, logtype_afpd,
                     "get_id: CNID database is not open for \"%s\"", upath);
                 afp_errno = AFPERR_MISC;
-                goto exit;
+                break;
+
+            case CNID_ERR_RESET:
+                cnid_volume_reset(vol);
+                afp_errno = AFPERR_MISC;
+                break;
 
             case CNID_ERR_BUSY:
                 /* Contention, not a broken backend: retryable, unlike the
@@ -385,14 +394,14 @@ uint32_t get_id(struct vol *vol,
                 LOG(log_warning, logtype_afpd,
                     "get_id: CNID backend busy for \"%s\"", upath);
                 afp_errno = AFPERR_MISC;
-                goto exit;
+                break;
 
             case CNID_ERR_CORRUPT:
                 LOG(log_error, logtype_afpd,
                     "get_id: CNID backend returned unusable data for \"%s\"; "
                     "the CNID database for this volume should be rebuilt", upath);
                 afp_errno = AFPERR_MISC;
-                goto exit;
+                break;
 
             case CNID_ERR_DB:
                 LOG(log_error, logtype_afpd,
@@ -406,16 +415,18 @@ uint32_t get_id(struct vol *vol,
             case CNID_ERR_PARAM:
                 LOG(log_error, logtype_afpd, "get_id: Incorrect parameters passed to cnid_add");
                 afp_errno = AFPERR_PARAM;
-                goto exit;
+                break;
 
             case CNID_ERR_PATH:
                 afp_errno = AFPERR_PARAM;
-                goto exit;
+                break;
 
             default:
                 afp_errno = AFPERR_MISC;
-                goto exit;
+                break;
             }
+
+            errno = cnid_errno;
         } else if (adp && adcnid && (adcnid != dbcnid)) { /* (3) */
             /* Update the resource fork. For a folder adp is always null */
             LOG(log_debug, logtype_afpd,
@@ -431,7 +442,6 @@ uint32_t get_id(struct vol *vol,
         }
     }
 
-exit:
     return dbcnid;
 }
 
@@ -2593,9 +2603,19 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
 
     /* update or add to cnid */
     AFP_CNID_START("cnid_add");
-    /* ignore errors */
+    /* Errors ignored, except a table reset: it invalidates every CNID this
+     * session holds, so it is reported */
     aint = cnid_add(vol->v_cdb, &path.st, did, de->d_name, strlen(de->d_name), 0);
     AFP_CNID_DONE();
+
+    if (aint == CNID_INVALID && CNID_ERRNO() == CNID_ERR_RESET) {
+        cnid_volume_reset(vol);
+        /* Continuing would mint reseeded CNIDs — values the client already
+         * holds for other objects — into a reply sent before the deferred
+         * exit. */
+        return -1;
+    }
+
     return 0;
 }
 
@@ -2731,7 +2751,12 @@ retry:
 
         if (errno == ENOENT && !retry) {
             /* cnid db is out of sync, reenumerate the directory and update ids */
-            reenumerate_id(vol, ".", dir);
+            if (reenumerate_id(vol, ".", dir) < 0) {
+                /* The table was reset: a retry would resolve this CNID against
+                 * refilled rows and return another object's metadata */
+                return AFPERR_NOID;
+            }
+
             id = cnid;
             retry = 1;
             goto retry;

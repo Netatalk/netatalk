@@ -521,6 +521,7 @@ static int copy(const char *path,
 
             if ((did = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path,
                                      &pdid)) == CNID_INVALID) {
+                nad_report_cnid_reset(dvolume.vol->v_path);
                 NAD_INFO("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;
@@ -598,6 +599,7 @@ static int copy(const char *path,
 
             if ((cnid = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path,
                                       &did)) == CNID_INVALID) {
+                nad_report_cnid_reset(dvolume.vol->v_path);
                 NAD_INFO("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;

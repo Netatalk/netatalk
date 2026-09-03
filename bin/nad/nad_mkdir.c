@@ -84,6 +84,7 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
 
     if ((did = cnid_for_path(vol->vol->v_cdb, vol->vol->v_path, path,
                              &pdid)) == CNID_INVALID) {
+        nad_report_cnid_reset(vol->vol->v_path);
         NAD_INFO("Error resolving CNID for %s", path);
         return -1;
     }
