@@ -20,13 +20,23 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#define NDEBUG
+/* assert() follows the b_ndebug build option; hash_insert() asserts key
+ * uniqueness */
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #define HASH_IMPLEMENTATION
 #include "hash.h"
+
+/* hash_verify() walks every chain and node, so asserting it per mutation
+ * turns O(1) operations into O(table); confine it to debug buildtype and
+ * leave the O(chain) asserts to b_ndebug */
+#ifdef DEBUG
+#define HASH_ASSERT_VERIFY(h) assert(hash_verify(h))
+#else
+#define HASH_ASSERT_VERIFY(h) ((void)0)
+#endif
 
 #ifdef KAZLIB_RCSID
 #endif
@@ -198,7 +208,7 @@ static void grow_table(hash_t *hash)
         hash->highmark *= 2;
     }
 
-    assert(hash_verify(hash));
+    HASH_ASSERT_VERIFY(hash);
 }
 
 /*!
@@ -277,7 +287,7 @@ static void shrink_table(hash_t *hash)
     hash->nchains = nchains;
     hash->lowmark /= 2;
     hash->highmark /= 2;
-    assert(hash_verify(hash));
+    HASH_ASSERT_VERIFY(hash);
 }
 
 
@@ -347,7 +357,7 @@ hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
             hash->dynamic = 1;
             /* 8 */
             clear_table(hash);
-            assert(hash_verify(hash));
+            HASH_ASSERT_VERIFY(hash);
             return hash;
         }
 
@@ -538,7 +548,7 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
     node->next = hash->table[chain];
     hash->table[chain] = node;
     hash->nodecount++;
-    assert(hash_verify(hash));
+    HASH_ASSERT_VERIFY(hash);
 }
 
 /*!
@@ -625,7 +635,7 @@ hnode_t *hash_delete(hash_t *hash, hnode_t *node)
     }
 
     hash->nodecount--;
-    assert(hash_verify(hash));
+    HASH_ASSERT_VERIFY(hash);
     /* 6 */
     node->next = NULL;
     return node;
@@ -633,15 +643,23 @@ hnode_t *hash_delete(hash_t *hash, hnode_t *node)
 
 int hash_alloc_insert(hash_t *hash, const void *key, void *data)
 {
+    return hash_alloc_insert_node(hash, key, data) != NULL;
+}
+
+/*!
+ * Like hash_alloc_insert, but hands back the inserted node, so a caller that
+ * keeps it can delete without a lookup.
+ */
+hnode_t *hash_alloc_insert_node(hash_t *hash, const void *key, void *data)
+{
     hnode_t *node = hash->allocnode(hash->context);
 
     if (node) {
         hnode_init(node, data);
         hash_insert(hash, node, key);
-        return 1;
     }
 
-    return 0;
+    return node;
 }
 
 void hash_delete_free(hash_t *hash, hnode_t *node)
@@ -674,7 +692,7 @@ hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
     }
 
     hash->nodecount--;
-    assert(hash_verify(hash));
+    HASH_ASSERT_VERIFY(hash);
     node->next = NULL;
     return node;
 }

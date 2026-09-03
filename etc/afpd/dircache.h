@@ -38,6 +38,9 @@
 #define DIRCACHE_NOSHRINK (1 << 3)  /* Skip hash table shrink */
 #define DIRCACHE_ALL  (DIRCACHE|DIDNAME_INDEX|QUEUE_INDEX)
 
+/*! Non-static so the unit tests can drive selection directly */
+extern qnode_t    *arc_ghost_trim_candidate(q_t *q, const struct dir *skip);
+extern void       dircache_purge_vol(const struct vol *vol);
 extern int        dircache_init(int reqsize);
 extern int        dircache_add(const struct vol *, struct dir *);
 extern void       dircache_remove(const struct vol *, struct dir *, int flag);

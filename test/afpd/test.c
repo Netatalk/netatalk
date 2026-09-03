@@ -556,13 +556,27 @@ int main(int argc, char *argv[])
              "initialize server config state");
     TEST(cnid_init(), "initialize CNID subsystem");
     TEST(load_afp_conf_vols(&obj, LV_ALL), "load all volumes from config");
-    TEST_int(dircache_init(8192), 0, "initialize dircache (8192 entries)");
     obj.afp_version = 34;
     /* No IPC channel or dircache hint pipe in test harness */
     obj.ipc_fd = -1;
     obj.hint_fd = -1;
-    /* Set global AFPobj — normally done by afp_over_dsi() which tests bypass */
+    /* Set global AFPobj — normally done by afp_over_dsi() which tests bypass.
+     * Before dircache_init() so the cache runs in the configured (default:
+     * ARC) mode, as in production. */
     AFPobj = &obj;
+    /* Both cache modes ship, so the suite runs once under each; the LRU leg
+     * is the only cover for index_queue and dircache_evict() */
+    const char *dcmode = getenv("AFPDTEST_DIRCACHE_MODE");
+
+    if (dcmode != NULL && strcmp(dcmode, "lru") == 0) {
+        obj.options.dircache_mode = 0;
+    }
+
+    TEST_int(dircache_init(8192), 0, "initialize dircache (8192 entries)");
+    test_section(obj.options.dircache_mode ? "dircache mode: ARC"
+                 : "dircache mode: LRU", "");
+    TEST_int(dircache_test_ghost_trim_selection(), 0,
+             "ARC ghost trim never releases the ghost being promoted");
 
     if (!test_output_tap) {
         fprintf(test_stream(), "\n");
@@ -665,6 +679,14 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(volsys ? test006_rflen_rfork_without_metadata(volsys)
                      : TEST_SKIP, 0,
                      "getmetadata: rfork without metadata EA reports real RFLEN");
+    TEST_int(test007_add_over_existing_key_leaves_one(vol), 0,
+             "dircache: adding over an existing key leaves exactly one entry");
+    TEST_int(test008_reindex_over_stale_key_expunges(vol), 0,
+             "dircache: re-keying onto a held name retires the stale holder");
+    TEST_int(test009_file_add_over_curdir_did(vol), 0,
+             "dircache: a file expunging curdir hands curdir to the volume root");
+    TEST_int(test010_full_cache_accepts_adds(vol, 8192), 0,
+             "dircache: a full cache keeps accepting inserts");
     /* pfd cache: strict ostat equivalence (quiescent), and the
      * divergence window — probe bound + three-way sync-check no-thrash */
     TEST_int(test_pfd_ostat_equivalence(vol), 0,

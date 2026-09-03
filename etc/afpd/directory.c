@@ -744,6 +744,9 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
         goto exit;
     }
 
+    /* dir_new took ownership; dir_free(ret) is the sole owner of it now */
+    fullpath = NULL;
+
     /* Add new struct to the cache */
     if (dircache_add(vol, ret) != 0) { /* 7 */
         afp_errno = AFPERR_MISC;
@@ -754,7 +757,7 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
 exit:
 
     /* Log result and cleanup */
-    if (ret) {
+    if (ret && !err) {
         LOG(log_debug, logtype_afpd,
             DIRLOOKUP_LOG_FMT ": SUCCESS - pdid: %u, path: \"%s\"",
             ntohl(ret->d_did), ntohl(ret->d_pdid), cfrombstr(ret->d_fullpath));
@@ -765,7 +768,7 @@ exit:
     }
 
     if (err) {
-        /* If dir_new failed, fullpath ownership not transferred to ret - free resources */
+        /* Non-NULL only before dir_new took ownership */
         if (fullpath) {
             bdestroy(fullpath);
         }
@@ -1008,6 +1011,19 @@ bstring fullpath_join(const bstring parent, const char *name)
  */
 void dir_free(struct dir *dir)
 {
+    /* A still-linked entry would leave the hash pointing at freed memory */
+    if ((dir->d_flags & DIRF_INDEXED) || dir->d_index_node
+            || dir->d_didname_node) {
+        LOG(log_error, logtype_afpd,
+            "dir_free: did:%u pdid:%u name:\"%s\" path:\"%s\" flags:0x%x "
+            "is still indexed",
+            ntohl(dir->d_did), ntohl(dir->d_pdid),
+            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)",
+            dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)",
+            (unsigned)dir->d_flags);
+        AFP_PANIC("dir_free on an indexed dircache entry");
+    }
+
     /* Free Tier 2 rfork buffer before deallocating the entry.
      * rfork_cache_free() handles budget accounting and LRU removal. */
     if (dir->dcache_rfork_buf) {
@@ -1145,7 +1161,8 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             }
         }
 
-        /* Remove from DID/name index if key is changing */
+        /* Re-keying while still indexed under the old key would leave two
+         * nodes for this entry */
         if (needs_reindex) {
             dircache_remove(vol, dir, DIDNAME_INDEX);
         }
@@ -1449,15 +1466,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
             "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
             ntohl(cdir->d_did), cfrombstr(dir->d_fullpath));
-        int remove_result = dir_remove(vol, cdir, 0);  /* Proactive cleanup of stray */
-
-        if (remove_result != 0) {
-            LOG(log_error, logtype_afpd,
-                "dir_add: CRITICAL dir_remove failed (returned -1), curdir recovery failed but curdir fallback successful");
-            dircache_dump();
-            AFP_PANIC("dir_add");
-        }
-
+        (void)dir_remove(vol, cdir, 0);  /* Proactive cleanup of stray */
         /* dir_remove() queued the stray on invalid_dircache_entries; the
          * exit block below must not free it a second time */
         cdir = NULL;
@@ -1480,6 +1489,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
 
     if (adp) {
         ad_close(adp, ADFLAGS_HF);
+        adp = NULL;
     }
 
     /* Get macname from unixname */
@@ -1586,7 +1596,8 @@ void dir_remove_and_free(const struct vol *vol, struct dir *dir)
     }
 
     dircache_remove(vol, dir,
-                    DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX | DIRCACHE_NOSHRINK);
+                    DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX |
+                    DIRCACHE_NOSHRINK);
     dir->d_did = CNID_INVALID;
     dir_free(dir);
 }
@@ -1644,7 +1655,8 @@ int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
     }
 
     /* Remove the dircache entry (also purges the entry's pfd slot) */
-    dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
+    dircache_remove(vol, dir,
+                    DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
     /* Queue pruned entry for memory deallocation */
     enqueue(invalid_dircache_entries, dir); /* 3 */
     iw_note_work();

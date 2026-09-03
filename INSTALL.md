@@ -81,6 +81,7 @@ required at the bare minimum.
 | libldap                    | LDAP support |
 | libpam                     | PAM support |
 | libtirpc **OR** libquota   | Quota support |
+| libunwind                  | symbolized backtraces when a daemon crashes |
 | Perl                       | admin scripts |
 | po4a                       | localization of documentation |
 | stuffit-ffi                | StuffIt support in `nad` |
