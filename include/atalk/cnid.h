@@ -52,6 +52,7 @@
 #define CNID_ERR_DB    0x80000003   /*!< the backend itself is gone */
 #define CNID_ERR_CLOSE 0x80000004   /*!< the db was not open */
 #define CNID_ERR_MAX   0x80000005
+#define CNID_ERR_RESET 0x80000006   /*!< CNID table was reset, all CNIDs stale */
 #define CNID_ERR_BUSY  0x80000007   /*!< contended or transient, retryable */
 #define CNID_ERR_CORRUPT 0x80000008 /*!< unusable data returned for a CNID */
 #define CNID_ERR_NOTFOUND 0x80000009 /*!< no row for the query */

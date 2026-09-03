@@ -302,6 +302,7 @@ static int do_move(const char *from, const char *to)
     if (!mustcopy) {
         if ((cnid = cnid_for_path(svolume.vol->v_cdb, svolume.vol->v_path, from,
                                   &did)) == CNID_INVALID) {
+            nad_report_cnid_reset(svolume.vol->v_path);
             NAD_INFO("Couldn't resolve CNID for %s", from);
             return -1;
         }

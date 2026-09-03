@@ -42,6 +42,22 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+/* A hint binds as an explicit Id, raising the AUTO_INCREMENT high-water mark.
+ * Hints come from AppleDouble/EA metadata any file owner can write, so the
+ * reserve must be wide enough that a planted hint cannot put the depletion
+ * reset — which empties the table and disconnects every session — within reach
+ * of ordinary file creation. Hints inside the reserve are not inserted. */
+#define CNID_MYSQL_HINT_RESERVE    (1u << 28)
+#define CNID_MYSQL_MAX_HINT        (UINT32_MAX - CNID_MYSQL_HINT_RESERVE)
+
+/* Bound on the lookup-then-insert and update-then-verify cycles: a duplicate-key
+ * race that keeps repeating would otherwise spin the session forever */
+#define CNID_MYSQL_ADD_ATTEMPTS 16
+
+/* Bound on CR_SERVER_LOST recovery: a server that reconnects but keeps dropping
+ * the execute would otherwise hold the child inside cnid_add() indefinitely,
+ * out of reach of the deferred-die path */
+#define CNID_MYSQL_RECONNECT_ATTEMPTS 2
 
 static MYSQL_BIND lookup_param[4], lookup_result[5];
 static MYSQL_BIND add_param[4], put_param[5];
@@ -73,6 +89,19 @@ static unsigned long long get_result_id;
 static unsigned long long resolve_result_did;
 static char               resolve_result_name[MAXPATHLEN];
 static unsigned long      resolve_result_name_len;
+
+/*!
+ * @brief Whether a CNID hint from AppleDouble/EA metadata is safe to bind
+ *
+ * Rejects the reserved range below CNID_START and anything above
+ * CNID_MYSQL_MAX_HINT, which as an explicit Id would raise the
+ * AUTO_INCREMENT high-water mark towards the depletion reset.
+ */
+static bool cnid_mysql_hint_usable(cnid_t hint)
+{
+    uint32_t id = ntohl(hint);
+    return id >= CNID_START && id <= CNID_MYSQL_MAX_HINT;
+}
 
 static int init_prepared_stmt_lookup(CNID_mysql_private *db)
 {
@@ -338,6 +367,63 @@ static void close_prepared_stmt(CNID_mysql_private *db)
     }
 }
 
+/* Distinguish a contended database from a broken one: afpd ends the session on
+ * CNID_ERR_DB, which is right for a backend that has gone away and wrong for a
+ * lock that will free. InnoDB reports a deadlock immediately rather than
+ * waiting, and concurrent sessions inserting into one volume's CNID table hit
+ * both codes routinely, so misclassifying them disconnects clients for ordinary
+ * contention. */
+static void cnid_mysql_set_errno(unsigned int mysql_error_code)
+{
+    switch (mysql_error_code) {
+    case ER_LOCK_WAIT_TIMEOUT:
+    case ER_LOCK_DEADLOCK:
+        errno = CNID_ERR_BUSY;
+        break;
+
+    case ER_CRASHED_ON_USAGE:
+    case ER_CRASHED_ON_REPAIR:
+        errno = CNID_ERR_CORRUPT;
+        break;
+
+    default:
+        errno = CNID_ERR_DB;
+        break;
+    }
+}
+
+/*!
+ * @brief Drain the remaining results of a multi-statement batch
+ *
+ * cnid_mysql_execute() reports only the batch's first statement.
+ * mysql_next_result() returns >0 when a later one failed, which a plain
+ * "== 0" loop reads as the end of the batch — so a wipe whose TRUNCATE or
+ * ALTER failed would be taken for a completed one.
+ *
+ * @returns 0 when every statement succeeded, -1 otherwise
+ */
+static int cnid_mysql_drain_results(MYSQL *con)
+{
+    int next;
+
+    do {
+        MYSQL_RES *result = mysql_store_result(con);
+
+        if (result) {
+            mysql_free_result(result);
+        }
+    } while ((next = mysql_next_result(con)) == 0);
+
+    if (next > 0) {
+        LOG(log_error, logtype_cnid, "MySQL multi-statement error: %s",
+            mysql_error(con));
+        cnid_mysql_set_errno(mysql_errno(con));
+        return -1;
+    }
+
+    return 0;
+}
+
 /*!
  * stmtp must point at the handle field in CNID_mysql_private:
  * CR_SERVER_LOST recovery reallocates every handle, and the retry
@@ -348,6 +434,8 @@ static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
 {
     EC_INIT;
     bool retry = true;
+    unsigned int stmt_errno = 0;
+    int reconnects = 0;
 
     /* A failed earlier recovery leaves handles NULL; re-prepare before use. */
     if (*stmtp == NULL) {
@@ -361,6 +449,14 @@ static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
         if (mysql_stmt_execute(*stmtp)) {
             switch (mysql_stmt_errno(*stmtp)) {
             case CR_SERVER_LOST:
+                if (++reconnects >= CNID_MYSQL_RECONNECT_ATTEMPTS) {
+                    LOG(log_error, logtype_cnid,
+                        "cnid_mysql_stmt_execute: server lost on %d successive "
+                        "executes, giving up", reconnects);
+                    stmt_errno = CR_SERVER_LOST;
+                    EC_FAIL;
+                }
+
                 close_prepared_stmt(db);
                 EC_ZERO(init_prepared_stmt(db));
                 retry = true;
@@ -369,6 +465,7 @@ static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
             default:
                 LOG(log_error, logtype_cnid, "MySQL statement error: %s",
                     mysql_stmt_error(*stmtp));
+                stmt_errno = mysql_stmt_errno(*stmtp);
                 EC_FAIL;
             }
         }
@@ -377,25 +474,27 @@ static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
 EC_CLEANUP:
 
     if (ret != 0) {
-        errno = CNID_ERR_DB;
+        /* 0 for the re-prepare failures above, which classify as CNID_ERR_DB */
+        cnid_mysql_set_errno(stmt_errno);
     }
 
     EC_EXIT;
 }
 
+/* Returns -1, not mysql_query()'s non-zero, so that the EC_NEG1() call sites
+ * detect a failure; the callers that test truthiness are unaffected. */
 static int cnid_mysql_execute(MYSQL *con, const char *sql)
 {
-    int rv;
     LOG(log_maxdebug, logtype_cnid, "SQL: %s", sql);
-    rv = mysql_query(con, sql);
 
-    if (rv) {
+    if (mysql_query(con, sql)) {
         LOG(log_debug, logtype_cnid, "MySQL query \"%s\", error: %s", sql,
             mysql_error(con));
-        errno = CNID_ERR_DB;
+        cnid_mysql_set_errno(mysql_errno(con));
+        return -1;
     }
 
-    return rv;
+    return 0;
 }
 
 int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
@@ -454,6 +553,7 @@ int cnid_mysql_update(struct _cnid_db *cdb,
     EC_INIT;
     CNID_mysql_private *db;
     cnid_t update_id = 0;
+    int attempts = 0;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !id || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_update: Parameter error");
@@ -500,12 +600,24 @@ int cnid_mysql_update(struct _cnid_db *cdb,
                 continue;
 
             default:
+                LOG(log_error, logtype_cnid, "cnid_mysql_update: %s",
+                    mysql_stmt_error(db->cnid_put_stmt));
+                cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_put_stmt));
                 EC_FAIL;
             }
         }
 
         update_id = (cnid_t)mysql_stmt_insert_id(db->cnid_put_stmt);
-    } while (update_id != ntohl(id));
+    } while (update_id != ntohl(id) && ++attempts < CNID_MYSQL_ADD_ATTEMPTS);
+
+    if (update_id != ntohl(id)) {
+        LOG(log_error, logtype_cnid,
+            "cnid_mysql_update: giving up after %d attempts for id: %" PRIu32
+            ", did: %" PRIu32 ", name: \"%s\"",
+            attempts, ntohl(id), ntohl(did), name);
+        errno = CNID_ERR_CORRUPT;
+        EC_FAIL;
+    }
 
 EC_CLEANUP:
     EC_EXIT;
@@ -551,9 +663,28 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
     stmt_param_dev = dev;
     stmt_param_ino = ino;
     EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_lookup_stmt));
-    EC_ZERO_LOG(mysql_stmt_store_result(db->cnid_lookup_stmt));
+
+    /* Classified rather than left to the caller's stale errno: CNID_INVALID
+     * with errno untouched would reach cnid_mysql_add()'s not-found gate.
+     * Not-found is carried as CNID_ERR_NOTFOUND, clear of the syscall errno
+     * range — the dbd wire code CNID_DBD_RES_NOTFOUND is 0x01, the same value
+     * as EPERM, and leaks into raw errno switches downstream. */
+    if (mysql_stmt_store_result(db->cnid_lookup_stmt)) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_lookup: store_result: %s",
+            mysql_stmt_error(db->cnid_lookup_stmt));
+        cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_lookup_stmt));
+        EC_FAIL;
+    }
+
     have_result = true;
-    EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_lookup_stmt, lookup_result));
+
+    if (mysql_stmt_bind_result(db->cnid_lookup_stmt, lookup_result)) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_lookup: bind_result: %s",
+            mysql_stmt_error(db->cnid_lookup_stmt));
+        cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_lookup_stmt));
+        EC_FAIL;
+    }
+
     uint64_t retdev, retino;
     cnid_t retid, retdid;
     const char *retname;
@@ -564,12 +695,19 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
         LOG(log_debug, logtype_cnid,
             "cnid_mysql_lookup: name: '%s', did: %u is not in the CNID database",
             name, ntohl(did));
-        errno = CNID_DBD_RES_NOTFOUND;
+        errno = CNID_ERR_NOTFOUND;
         EC_FAIL;
 
     case 1:
+
         /* either both OR clauses matched the same id or only one matched, handled below */
-        EC_ZERO(mysql_stmt_fetch(db->cnid_lookup_stmt));
+        if (mysql_stmt_fetch(db->cnid_lookup_stmt)) {
+            LOG(log_error, logtype_cnid, "cnid_mysql_lookup: fetch: %s",
+                mysql_stmt_error(db->cnid_lookup_stmt));
+            cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_lookup_stmt));
+            EC_FAIL;
+        }
+
         break;
 
     case 2: {
@@ -587,19 +725,26 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
 
         for (int i = 0; i < nfetched; i++) {
             if (cnid_mysql_delete(cdb, mismatched[i])) {
+                /* errno carries the delete's own classification: overwriting it
+                 * would turn a lock that will free into a session-fatal error */
                 LOG(log_error, logtype_cnid, "MySQL query error: %s",
                     mysql_error(db->cnid_mysql_con));
-                errno = CNID_ERR_DB;
                 EC_FAIL;
             }
         }
 
-        errno = CNID_DBD_RES_NOTFOUND;
+        errno = CNID_ERR_NOTFOUND;
         EC_FAIL;
     }
 
     default:
-        errno = CNID_ERR_DB;
+        /* More rows than the two UNIQUE indexes can produce: unusable data
+         * rather than a failing backend, so not session-fatal */
+        LOG(log_error, logtype_cnid,
+            "cnid_mysql_lookup: %llu rows for did: %" PRIu32 ", name: \"%s\"",
+            (unsigned long long)mysql_stmt_num_rows(db->cnid_lookup_stmt),
+            ntohl(did), name);
+        errno = CNID_ERR_CORRUPT;
         EC_FAIL;
     }
 
@@ -617,13 +762,13 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
 
         if (hint != retid) {
             if (cnid_mysql_delete(cdb, retid) != 0) {
+                /* errno carries the delete's own classification */
                 LOG(log_error, logtype_cnid, "MySQL query error: %s",
                     mysql_error(db->cnid_mysql_con));
-                errno = CNID_ERR_DB;
                 EC_FAIL;
             }
 
-            errno = CNID_DBD_RES_NOTFOUND;
+            errno = CNID_ERR_NOTFOUND;
             EC_FAIL;
         }
 
@@ -631,9 +776,9 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
             "cnid_mysql_lookup: server side mv, got hint, updating");
 
         if (cnid_mysql_update(cdb, retid, st, did, name, len) != 0) {
+            /* errno carries the update's own classification */
             LOG(log_error, logtype_cnid, "MySQL query error: %s",
                 mysql_error(db->cnid_mysql_con));
-            errno = CNID_ERR_DB;
             EC_FAIL;
         }
 
@@ -644,30 +789,36 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
             ntohl(did), name);
 
         if (cnid_mysql_delete(cdb, retid) != 0) {
+            /* errno carries the delete's own classification */
             LOG(log_error, logtype_cnid, "MySQL query error: %s",
                 mysql_error(db->cnid_mysql_con));
-            errno = CNID_ERR_DB;
             EC_FAIL;
         }
 
-        errno = CNID_DBD_RES_NOTFOUND;
+        errno = CNID_ERR_NOTFOUND;
         EC_FAIL;
     } else {
         /* everythings good */
         id = retid;
     }
 
-EC_CLEANUP:
-    LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: id: %" PRIu32, ntohl(id));
+EC_CLEANUP: {
+        /* cnid_mysql_add() inserts only on an exact CNID_ERR_NOTFOUND, so an
+         * errno clobbered by the logging or the free below would stop CNID
+         * allocation rather than merely misreport the cause */
+        const int saved_errno = errno;
+        LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: id: %" PRIu32, ntohl(id));
 
-    if (have_result) {
-        mysql_stmt_free_result(db->cnid_lookup_stmt);
+        if (have_result) {
+            mysql_stmt_free_result(db->cnid_lookup_stmt);
+        }
+
+        if (ret != 0) {
+            id = CNID_INVALID;
+        }
+
+        errno = saved_errno;
     }
-
-    if (ret != 0) {
-        id = CNID_INVALID;
-    }
-
     return id;
 }
 
@@ -679,12 +830,12 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                       cnid_t hint)
 {
     EC_INIT;
-    CNID_mysql_private *db;
+    CNID_mysql_private *db = NULL;
     char *sql = NULL;
     cnid_t id = CNID_INVALID;
-    MYSQL_RES *result = NULL;
     MYSQL_STMT *stmt;
     my_ulonglong lastid;
+    int attempts = 0;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_mysql_add: Parameter error");
@@ -705,6 +856,28 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
     }
 
     uint64_t ino = st->st_ino;
+    /* The reserve gate governs inserting the hint as an explicit Id only.
+     * The raw hint still drives lookup's update-in-place vs delete-and-reinsert
+     * choice: existing databases hold rows in the reserve range, and a
+     * server-side move must not renumber them. */
+    bool hint_insertable = hint != CNID_INVALID && cnid_mysql_hint_usable(hint);
+
+    if (hint != CNID_INVALID && !hint_insertable) {
+        /* A scan over a volume whose AppleDouble metadata is uniformly out of
+         * range would log this per file, so only the first is a warning */
+        if (db->cnid_mysql_flags & CNID_MYSQL_FLAG_HINT_RANGE_LOGGED) {
+            LOG(log_debug, logtype_cnid,
+                "cnid_mysql_add: not inserting out-of-range CNID hint %" PRIu32
+                " for name: \"%s\"", ntohl(hint), name);
+        } else {
+            db->cnid_mysql_flags |= CNID_MYSQL_FLAG_HINT_RANGE_LOGGED;
+            LOG(log_warning, logtype_cnid,
+                "cnid_mysql_add: not inserting out-of-range CNID hint %" PRIu32
+                " for name: \"%s\" (further occurrences logged at debug level)",
+                ntohl(hint), name);
+        }
+    }
+
     db->cnid_mysql_hint = hint;
     LOG(log_maxdebug, logtype_cnid,
         "cnid_mysql_add(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): START",
@@ -712,15 +885,25 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
 
     do {
         if ((id = cnid_mysql_lookup(cdb, st, did, name, len)) == CNID_INVALID) {
-            if (errno == CNID_ERR_DB) {
+            /* Only a genuine "not in the database" answer justifies an insert.
+             * Any other failure — contention, a corrupt row, a bad parameter —
+             * cannot be resolved by inserting, so retrying would waste an
+             * attempt and then report the wrong cause. errno carries the
+             * lookup's classification to the caller unchanged. */
+            if (errno != CNID_ERR_NOTFOUND) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_mysql_add: lookup failed for did: %" PRIu32
+                    ", name: \"%s\", errno=%d", ntohl(did), name, errno);
                 EC_FAIL;
             }
 
             /*
-             * If the CNID set overflowed before (CNID_MYSQL_FLAG_DEPLETED)
-             * ignore the CNID "hint" taken from the AppleDouble file
+             * The CNID "hint" from the AppleDouble file is only bound as an
+             * explicit Id when in range and the set has not overflowed
+             * before (CNID_MYSQL_FLAG_DEPLETED).
              */
-            if (!db->cnid_mysql_hint || (db->cnid_mysql_flags & CNID_MYSQL_FLAG_DEPLETED)) {
+            if (!db->cnid_mysql_hint || !hint_insertable
+                    || (db->cnid_mysql_flags & CNID_MYSQL_FLAG_DEPLETED)) {
                 stmt = db->cnid_add_stmt;
             } else {
                 stmt = db->cnid_put_stmt;
@@ -744,6 +927,9 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                     continue;
 
                 default:
+                    LOG(log_error, logtype_cnid, "cnid_mysql_add: %s",
+                        mysql_stmt_error(stmt));
+                    cnid_mysql_set_errno(mysql_stmt_errno(stmt));
                     EC_FAIL;
                 }
 
@@ -761,8 +947,24 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
 
             lastid = mysql_stmt_insert_id(stmt);
 
+            if (lastid >= (my_ulonglong) CNID_MYSQL_MAX_HINT
+                    && !(db->cnid_mysql_flags & CNID_MYSQL_FLAG_NEAR_DEPLETION)) {
+                db->cnid_mysql_flags |= CNID_MYSQL_FLAG_NEAR_DEPLETION;
+                LOG(log_warning, logtype_cnid,
+                    "cnid_mysql_add: volume '%s' has reached CNID %llu"
+                    " of %" PRIu32 "; when the ceiling is reached the CNID table "
+                    "is emptied and every session on the volume is "
+                    "disconnected. Rebuild with dbd to reclaim the range gracefully.",
+                    cdb->cnid_db_vol->v_localname, (unsigned long long) lastid,
+                    UINT32_MAX);
+            }
+
             if (lastid > UINT32_MAX) {
                 /* CNID set ist depleted, restart from scratch */
+                LOG(log_warning, logtype_cnid,
+                    "cnid_mysql_add: CNID set is depleted, emptying the CNID "
+                    "table for volume '%s'; entries are rebuilt on access",
+                    cdb->cnid_db_vol->v_localname);
                 EC_NEG1(asprintf(&sql,
                                  "START TRANSACTION;"
                                  "UPDATE volumes SET Depleted=1 WHERE VolUUID='%s';"
@@ -775,35 +977,54 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                 EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
                 free(sql);
                 sql = NULL;
+                /* Checked before the table is called reset: announcing a reset
+                 * of a table still holding its rows, with the sequence not
+                 * reseeded, would disconnect every session and do it again on
+                 * the next insert. */
+                EC_NEG1(cnid_mysql_drain_results(db->cnid_mysql_con));
                 db->cnid_mysql_flags |= CNID_MYSQL_FLAG_DEPLETED;
-
-                do {
-                    result = mysql_store_result(db->cnid_mysql_con);
-
-                    if (result) {
-                        mysql_free_result(result);
-                    }
-                } while (mysql_next_result(db->cnid_mysql_con) == 0);
-
-                continue;
+                /* CNIDs issued before the reset now name nothing, or name a
+                 * different file as the table refills. Report rather than
+                 * retry: the caller ends the session. */
+                errno = CNID_ERR_RESET;
+                EC_FAIL;
             }
 
             /* Finally assign our result */
             id = htonl((uint32_t)lastid);
         }
-    } while (id == CNID_INVALID);
+    } while (id == CNID_INVALID && ++attempts < CNID_MYSQL_ADD_ATTEMPTS);
 
-EC_CLEANUP:
-    LOG(log_debug, logtype_cnid, "cnid_mysql_add: id: %" PRIu32, ntohl(id));
-
-    if (result) {
-        mysql_free_result(result);
+    if (id == CNID_INVALID) {
+        /* Every attempt ended in a duplicate-key collision that the following
+         * lookup then failed to find: a row owns the name or the dev/ino pair
+         * but is not reachable through either index. */
+        LOG(log_error, logtype_cnid,
+            "cnid_mysql_add: giving up after %d attempts for did: %" PRIu32
+            ", name: \"%s\": colliding row is not reachable by lookup",
+            attempts, ntohl(did), name);
+        errno = CNID_ERR_CORRUPT;
+        EC_FAIL;
     }
 
-    if (sql) {
-        free(sql);
-    }
+EC_CLEANUP: {
+        /* Callers read errno to tell a table reset from an ordinary failure */
+        const int saved_errno = errno;
+        LOG(log_debug, logtype_cnid, "cnid_mysql_add: id: %" PRIu32, ntohl(id));
 
+        if (sql) {
+            free(sql);
+        }
+
+        if (db) {
+            /* The hint channel spans only this add: a later direct lookup
+             * acting on a stale hint would rewrite an unrelated row's identity
+             * in the server-side-move branch */
+            db->cnid_mysql_hint = CNID_INVALID;
+        }
+
+        errno = saved_errno;
+    }
     return id;
 }
 
@@ -834,13 +1055,36 @@ cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name,
     stmt_param_name_len = len;
     stmt_param_did = ntohl(did);
     EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_get_stmt));
-    EC_ZERO_LOG(mysql_stmt_store_result(db->cnid_get_stmt));
+
+    /* A contended database must not be reported as a missing name: the caller
+     * turns that into a permanent AFPERR_NOOBJ for the client */
+    if (mysql_stmt_store_result(db->cnid_get_stmt)) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_get: store_result: %s",
+            mysql_stmt_error(db->cnid_get_stmt));
+        cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_get_stmt));
+        EC_FAIL;
+    }
+
     have_result = true;
-    EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_get_stmt, get_result));
+
+    if (mysql_stmt_bind_result(db->cnid_get_stmt, get_result)) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_get: bind_result: %s",
+            mysql_stmt_error(db->cnid_get_stmt));
+        cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_get_stmt));
+        EC_FAIL;
+    }
 
     if (mysql_stmt_num_rows(db->cnid_get_stmt)) {
-        EC_ZERO(mysql_stmt_fetch(db->cnid_get_stmt));
+        if (mysql_stmt_fetch(db->cnid_get_stmt)) {
+            LOG(log_error, logtype_cnid, "cnid_mysql_get: fetch: %s",
+                mysql_stmt_error(db->cnid_get_stmt));
+            cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_get_stmt));
+            EC_FAIL;
+        }
+
         id = htonl((uint32_t)get_result_id);
+    } else {
+        errno = CNID_ERR_NOTFOUND;
     }
 
 EC_CLEANUP:
@@ -868,15 +1112,38 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
 
     stmt_param_id = ntohl(*id);
     EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_resolve_stmt));
-    EC_ZERO_LOG(mysql_stmt_store_result(db->cnid_resolve_stmt));
-    have_result = true;
-    EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_resolve_stmt, resolve_result));
 
-    if (mysql_stmt_num_rows(db->cnid_resolve_stmt) != 1) {
+    /* A contended database must not be reported as a missing id: afp_resolveid
+     * turns that into a permanent AFPERR_NOID and the client gives up on the
+     * alias, where a retry would have succeeded */
+    if (mysql_stmt_store_result(db->cnid_resolve_stmt)) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_resolve: store_result: %s",
+            mysql_stmt_error(db->cnid_resolve_stmt));
+        cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_resolve_stmt));
         EC_FAIL;
     }
 
-    EC_ZERO(mysql_stmt_fetch(db->cnid_resolve_stmt));
+    have_result = true;
+
+    if (mysql_stmt_bind_result(db->cnid_resolve_stmt, resolve_result)) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_resolve: bind_result: %s",
+            mysql_stmt_error(db->cnid_resolve_stmt));
+        cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_resolve_stmt));
+        EC_FAIL;
+    }
+
+    if (mysql_stmt_num_rows(db->cnid_resolve_stmt) != 1) {
+        errno = CNID_ERR_NOTFOUND;
+        EC_FAIL;
+    }
+
+    if (mysql_stmt_fetch(db->cnid_resolve_stmt)) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_resolve: fetch: %s",
+            mysql_stmt_error(db->cnid_resolve_stmt));
+        cnid_mysql_set_errno(mysql_stmt_errno(db->cnid_resolve_stmt));
+        EC_FAIL;
+    }
+
     /* The connector is not guaranteed to NUL-terminate string results;
      * Name is VARCHAR(255) against a MAXPATHLEN buffer, so there is room. */
     resolve_result_name[resolve_result_name_len] = '\0';
@@ -907,14 +1174,18 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
 
+    /* CNID_INVALID is 0, which this int-returning function's callers read as
+     * success, so parameter failures have to return -1 like every other path */
     if (!cdb || !(db = cdb->cnid_db_private)) {
-        LOG(log_error, logtype_cnid, "cnid_find: Parameter error");
+        LOG(log_error, logtype_cnid, "cnid_mysql_getstamp: Parameter error");
         errno = CNID_ERR_PARAM;
-        return CNID_INVALID;
+        return -1;
     }
 
     if (!buffer) {
-        EC_EXIT_STATUS(0);
+        LOG(log_error, logtype_cnid, "cnid_mysql_getstamp: bad buffer");
+        errno = CNID_ERR_PARAM;
+        return -1;
     }
 
     EC_NEG1(asprintf(&sql, "SELECT Stamp FROM volumes WHERE VolPath='%s'",
@@ -933,7 +1204,7 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
     if ((result = mysql_store_result(db->cnid_mysql_con)) == NULL) {
         LOG(log_error, logtype_cnid, "MySQL query error: %s",
             mysql_error(db->cnid_mysql_con));
-        errno = CNID_ERR_DB;
+        cnid_mysql_set_errno(mysql_errno(db->cnid_mysql_con));
         EC_FAIL;
     }
 
@@ -1205,7 +1476,6 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     EC_INIT;
     CNID_mysql_private *db;
     char *sql = NULL;
-    MYSQL_RES *result = NULL;
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_wipe: Parameter error");
@@ -1225,15 +1495,16 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
     free(sql);
     sql = NULL;
-
-    do {
-        result = mysql_store_result(db->cnid_mysql_con);
-
-        if (result) {
-            mysql_free_result(result);
-        }
-    } while (mysql_next_result(db->cnid_mysql_con) == 0);
-
+    /* Before the latch is cleared: a caller told the wipe succeeded rebuilds
+     * against a table that still holds its rows, with explicit-Id hint inserts
+     * re-enabled against a sequence that was never reseeded. */
+    EC_NEG1(cnid_mysql_drain_results(db->cnid_mysql_con));
+    /* The Depleted column is cleared above, but this connection latched the
+     * flag at open. Leaving it set would make the rest of a dbd rebuild
+     * silently discard every AppleDouble CNID hint it is trying to restore,
+     * renumbering the volume from scratch. */
+    db->cnid_mysql_flags &= ~(CNID_MYSQL_FLAG_DEPLETED
+                              | CNID_MYSQL_FLAG_NEAR_DEPLETION);
 EC_CLEANUP:
 
     if (sql) {
@@ -1545,7 +1816,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     if ((result = mysql_store_result(db->cnid_mysql_con)) == NULL) {
         LOG(log_error, logtype_cnid, "MySQL query error: %s",
             mysql_error(db->cnid_mysql_con));
-        errno = CNID_ERR_DB;
+        cnid_mysql_set_errno(mysql_errno(db->cnid_mysql_con));
         EC_FAIL;
     }
 

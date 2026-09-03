@@ -196,6 +196,7 @@ static int rm(const char *path,
 
             if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
                                       &did)) == CNID_INVALID) {
+                nad_report_cnid_reset(volume.vol->v_path);
                 NAD_INFO("Error resolving CNID for %s", path);
                 return -1;
             }
@@ -235,6 +236,7 @@ static int rm(const char *path,
             /* Get CNID of Parent and add new childir to CNID database */
             if ((did = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
                                      &pdid)) == CNID_INVALID) {
+                nad_report_cnid_reset(volume.vol->v_path);
                 NAD_INFO("Error resolving CNID for %s", path);
                 return -1;
             }
@@ -286,6 +288,7 @@ static int rm(const char *path,
 
             if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
                                       &did)) == CNID_INVALID) {
+                nad_report_cnid_reset(volume.vol->v_path);
                 NAD_INFO("Error resolving CNID for %s", path);
                 return -1;
             }

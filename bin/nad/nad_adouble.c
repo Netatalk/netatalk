@@ -747,6 +747,7 @@ static int nad_update_cnid(void)
                          &did);
 
     if (cnid == CNID_INVALID) {
+        nad_report_cnid_reset(nad.vol->v_path);
         fprintf(stderr, "Error resolving CNID for %s\n", nad.adpath[DATA]);
         errno = EIO;
         return -1;

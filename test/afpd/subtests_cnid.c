@@ -37,6 +37,69 @@
 
 #include "subtests_cnid.h"
 #include "test.h"
+#include "volume.h"
+
+/*!
+ * @brief cnid_volume_tag() names the CNID table, not the session's volume slot
+ *
+ * v_vid is a counter each child assigns in its own volume-load order, so the
+ * same vid names different volumes in different children. The tag is derived
+ * from the volume UUID, which every child that opens the volume agrees on.
+ */
+int utest_cnid_volume_tag_identity(void)
+{
+    struct vol vol_a;
+    struct vol vol_b;
+    char uuid_a[] = "8A1B2C3D-4E5F-6071-8293-A4B5C6D7E8F9";
+    char uuid_same[] = "8A1B2C3D-4E5F-6071-8293-A4B5C6D7E8F9";
+    char uuid_b[] = "8A1B2C3D-4E5F-6071-8293-A4B5C6D7E8FA";
+    memset(&vol_a, 0, sizeof(vol_a));
+    memset(&vol_b, 0, sizeof(vol_b));
+
+    /* A volume with no UUID cannot be named, and must say so rather than
+     * returning a tag that could collide with a real one */
+    if (cnid_volume_tag(NULL) != 0) {
+        return 1;
+    }
+
+    vol_a.v_uuid = NULL;
+
+    if (cnid_volume_tag(&vol_a) != 0) {
+        return 2;
+    }
+
+    /* Same UUID in two separate volume structs — the cross-process case, where
+     * the sender and receiver have different v_vid but the same table */
+    vol_a.v_uuid = uuid_a;
+    vol_b.v_uuid = uuid_same;
+    vol_a.v_vid = 1;
+    vol_b.v_vid = 7;
+
+    if (cnid_volume_tag(&vol_a) != cnid_volume_tag(&vol_b)) {
+        return 3;
+    }
+
+    /* v_vid must not contribute: it is exactly the field that is unreliable */
+    vol_b.v_vid = 99;
+
+    if (cnid_volume_tag(&vol_a) != cnid_volume_tag(&vol_b)) {
+        return 4;
+    }
+
+    /* A one-character UUID difference must not alias */
+    vol_b.v_uuid = uuid_b;
+
+    if (cnid_volume_tag(&vol_a) == cnid_volume_tag(&vol_b)) {
+        return 5;
+    }
+
+    /* 0 is reserved for "no tag", so a real volume never yields it */
+    if (cnid_volume_tag(&vol_a) == 0 || cnid_volume_tag(&vol_b) == 0) {
+        return 6;
+    }
+
+    return 0;
+}
 
 #ifdef CNID_BACKEND_SQLITE
 /*!
@@ -134,6 +197,37 @@ static void cnid_peer_set_seq(sqlite3 *peer, const char *uuid, long long seq)
         sqlite3_exec(peer, sql, NULL, NULL, NULL);
         free(sql);
     }
+}
+
+/*!
+ * @brief Read the volume's Depleted mark
+ *
+ * Set when the CNID space is exhausted; while it stands, the backend discards
+ * every AppleDouble CNID hint offered to it.
+ *
+ * @returns the mark, or -1 when it cannot be read
+ */
+static int cnid_peer_get_depleted(sqlite3 *peer, const char *uuid)
+{
+    sqlite3_stmt *stmt = NULL;
+    int depleted = -1;
+    char *sql = NULL;
+
+    if (asprintf(&sql, "SELECT Depleted FROM volumes WHERE VolUUID = '%s'",
+                 uuid) == -1) {
+        return -1;
+    }
+
+    if (sqlite3_prepare_v2(peer, sql, -1, &stmt, NULL) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            depleted = sqlite3_column_int(stmt, 0);
+        }
+
+        sqlite3_finalize(stmt);
+    }
+
+    free(sql);
+    return depleted;
 }
 #endif /* CNID_BACKEND_SQLITE */
 
@@ -304,6 +398,113 @@ exit:
 }
 
 /*!
+ * @brief Exhausting the CNID space reports CNID_ERR_RESET, not a recycled id
+ *
+ * The 32-bit ceiling empties the table, so every CNID any session holds now
+ * names nothing or, as the table refills, another file. Returning a fresh id
+ * as though nothing happened is what the classification exists to prevent.
+ */
+int utest_cnid_add_depletion_resets(struct vol *vol)
+{
+#ifndef CNID_BACKEND_SQLITE
+    (void) vol;
+    return TEST_SKIP;
+#else
+    sqlite3 *peer;
+    char *uuid = NULL;
+    char probe[MAXPATHLEN];
+    const char *name;
+    struct stat st;
+    long long saved_seq;
+    cnid_t id;
+    int fd;
+    int result = 0;
+    int depleted = 0;
+
+    if ((peer = cnid_peer_open(vol)) == NULL) {
+        return TEST_SKIP;
+    }
+
+    if ((uuid = uuid_strip_dashes(vol->v_uuid)) == NULL) {
+        sqlite3_close(peer);
+        return 1;
+    }
+
+    if ((saved_seq = cnid_peer_get_seq(peer, uuid)) < 0) {
+        /* Without the mark there is no way to put the sequence back */
+        result = TEST_SKIP;
+        goto exit;
+    }
+
+    snprintf(probe, sizeof(probe), "%s/cnid_depleted_XXXXXX", vol->v_path);
+
+    if ((fd = mkstemp(probe)) < 0) {
+        result = 1;
+        goto exit;
+    }
+
+    if (fstat(fd, &st) != 0) {
+        result = 2;
+        goto close_probe;
+    }
+
+    name = strrchr(probe, '/') + 1;
+    /* The next AUTOINCREMENT rowid is the last CNID the space can hold */
+    cnid_peer_set_seq(peer, uuid, (long long) UINT32_MAX - 1);
+    errno = 0;
+    /* Past here the add may have emptied the table and marked the volume,
+     * whatever it returns, so the cleanup below has to undo that */
+    depleted = 1;
+    id = cnid_add(vol->v_cdb, &st, htonl(2), name, strlen(name), CNID_INVALID);
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+        result = 3;
+        goto close_probe;
+    }
+
+    if (CNID_ERRNO() != CNID_ERR_RESET) {
+        result = 4;
+    }
+
+close_probe:
+    close(fd);
+    unlink(probe);
+exit:
+
+    /* Reaching the ceiling marked the volume depleted, on disk and latched in
+     * this connection — left set, every later test and run would have its
+     * AppleDouble CNID hints discarded. cnid_wipe() is the path that clears
+     * both; it reseeds the sequence, so the saved mark goes back after it. */
+    if (depleted && cnid_wipe(vol->v_cdb) != 0) {
+        fprintf(stderr, "# utest_cnid_add_depletion_resets: cnid_wipe failed, "
+                "volume '%s' left marked depleted\n", vol->v_localname);
+
+        if (result == 0) {
+            result = 5;
+        }
+    }
+
+    cnid_peer_set_seq(peer, uuid, saved_seq);
+
+    /* An unreadable mark says nothing about the cleanup, so only a mark still
+     * standing fails */
+    if (depleted && cnid_peer_get_depleted(peer, uuid) > 0) {
+        fprintf(stderr, "# utest_cnid_add_depletion_resets: volume '%s' still "
+                "marked depleted after cleanup\n", vol->v_localname);
+
+        if (result == 0) {
+            result = 6;
+        }
+    }
+
+    free(uuid);
+    sqlite3_close(peer);
+    return result;
+#endif /* CNID_BACKEND_SQLITE */
+}
+
+/*!
  * @brief The CNID error codes stay distinct and out of the errno range
  *
  * The codes travel in errno and are compared against it, so each must be
@@ -315,7 +516,7 @@ int utest_cnid_error_codes_distinct(void)
 {
     static const int codes[] = {
         CNID_ERR_PARAM, CNID_ERR_PATH, CNID_ERR_DB, CNID_ERR_MAX,
-        CNID_ERR_CLOSE, CNID_ERR_BUSY, CNID_ERR_CORRUPT,
+        CNID_ERR_CLOSE, CNID_ERR_RESET, CNID_ERR_BUSY, CNID_ERR_CORRUPT,
         CNID_ERR_NOTFOUND,
     };
     const int count = (int)(sizeof(codes) / sizeof(codes[0]));

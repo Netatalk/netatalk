@@ -63,10 +63,13 @@
  * out CNID_SQLITE_BUSY_TIMEOUT, so this only covers sustained contention. */
 #define CNID_SQLITE_EMPTY_PROBE_TRIES   3
 
-/* Ceiling for a CNID hint. A hint binds as an explicit rowid, which raises the
- * AUTOINCREMENT high-water mark, so the headroom below the 32-bit ceiling
- * keeps a hint out of corrupt AppleDouble/EA metadata from reaching it. */
-#define CNID_SQLITE_MAX_HINT    (UINT32_MAX - 65536)
+/* A hint binds as an explicit rowid, raising the AUTOINCREMENT high-water mark.
+ * Hints come from AppleDouble/EA metadata any file owner can write, so the
+ * reserve must be wide enough that a planted hint cannot put the depletion
+ * reset — which empties the table and disconnects every session — within reach
+ * of ordinary file creation. Hints inside the reserve are not inserted. */
+#define CNID_SQLITE_HINT_RESERVE    (1u << 28)
+#define CNID_SQLITE_MAX_HINT        (UINT32_MAX - CNID_SQLITE_HINT_RESERVE)
 
 static void cnid_sqlite_set_errno(int sqlite_return);
 
@@ -463,6 +466,39 @@ static void cnid_sqlite_rollback(sqlite3 *con, int *owned)
         sqlite3_exec(con, "ROLLBACK", NULL, NULL, NULL);
         errno = saved_errno;
     }
+}
+
+/*!
+ * @brief Reseed the volume's AUTOINCREMENT sequence to the reserved floor
+ *
+ * UPDATE first, then INSERT only where the UPDATE changed no row:
+ * sqlite_sequence has no UNIQUE constraint to upsert against. Runs inside
+ * the caller's transaction; on failure the caller owns the rollback.
+ */
+static int cnid_sqlite_seed_sequence(CNID_sqlite_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    EC_NEG1(asprintf(&sql,
+                     "UPDATE sqlite_sequence SET seq = %d WHERE name = '%s';",
+                     CNID_START - 1, db->cnid_sqlite_voluuid_str));
+    EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, sql));
+    free(sql);
+    sql = NULL;
+    EC_NEG1(asprintf(&sql,
+                     "INSERT INTO sqlite_sequence (name,seq) SELECT '%s', %d "
+                     "WHERE NOT EXISTS "
+                     "(SELECT changes() AS change "
+                     "FROM sqlite_sequence WHERE change <> 0);",
+                     db->cnid_sqlite_voluuid_str, CNID_START - 1));
+    EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, sql));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
 }
 
 int cnid_sqlite_delete(struct _cnid_db *cdb, const cnid_t id)
@@ -1004,12 +1040,26 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
     }
 
     ino = st->st_ino;
+    /* The reserve gate governs inserting the hint as an explicit rowid only.
+     * The raw hint still drives lookup's update-in-place vs delete-and-reinsert
+     * choice: existing databases hold rows in the reserve range, and a
+     * server-side move must not renumber them. */
+    bool hint_insertable = hint != CNID_INVALID && cnid_sqlite_hint_usable(hint);
 
-    if (hint != CNID_INVALID && !cnid_sqlite_hint_usable(hint)) {
-        LOG(log_warning, logtype_cnid,
-            "cnid_sqlite_add: ignoring out-of-range CNID hint %" PRIu32
-            " for name: \"%s\"", ntohl(hint), name);
-        hint = CNID_INVALID;
+    if (hint != CNID_INVALID && !hint_insertable) {
+        /* A scan over a volume whose AppleDouble metadata is uniformly out of
+         * range would log this per file, so only the first is a warning */
+        if (db->cnid_sqlite_flags & CNID_SQLITE_FLAG_HINT_RANGE_LOGGED) {
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_add: not inserting out-of-range CNID hint %" PRIu32
+                " for name: \"%s\"", ntohl(hint), name);
+        } else {
+            db->cnid_sqlite_flags |= CNID_SQLITE_FLAG_HINT_RANGE_LOGGED;
+            LOG(log_warning, logtype_cnid,
+                "cnid_sqlite_add: not inserting out-of-range CNID hint %" PRIu32
+                " for name: \"%s\" (further occurrences logged at debug level)",
+                ntohl(hint), name);
+        }
     }
 
     db->cnid_sqlite_hint = hint;
@@ -1053,10 +1103,11 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
              * (CNID_SQLITE_FLAG_DEPLETED flag) ignore the CNID "hint"
              * read from AppleDouble or Extended Attributes.
              */
-            if (!db->cnid_sqlite_hint
+            if (!hint_insertable
                     || (db->cnid_sqlite_flags & CNID_SQLITE_FLAG_DEPLETED)) {
                 LOG(log_debug, logtype_cnid,
-                    "cnid_sqlite_add: not using CNID hint, CNID set is depleted or hint not set");
+                    "cnid_sqlite_add: not inserting the CNID hint: out of range, "
+                    "depleted set, or not set");
                 sqlite3_reset(db->cnid_add_stmt);
                 sqlite3_clear_bindings(db->cnid_add_stmt);
                 sqlite3_bind_text(db->cnid_add_stmt, 1, name, (int)len,
@@ -1101,6 +1152,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                         PRIu32 ") or (dev=%" PRIu64 ", ino=%" PRIu64 ")", name, ntohl(did),
                         dev, ino);
                     db->cnid_sqlite_hint = CNID_INVALID;
+                    hint_insertable = false;
                     continue;
                 } else {
                     LOG(log_error, logtype_cnid,
@@ -1113,7 +1165,18 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
             lastid = sqlite3_last_insert_rowid(db->cnid_sqlite_con);
 
-            if ((uint32_t) lastid > UINT32_MAX) {
+            if (lastid >= (uint64_t) CNID_SQLITE_MAX_HINT
+                    && !(db->cnid_sqlite_flags & CNID_SQLITE_FLAG_NEAR_DEPLETION)) {
+                db->cnid_sqlite_flags |= CNID_SQLITE_FLAG_NEAR_DEPLETION;
+                LOG(log_warning, logtype_cnid,
+                    "cnid_sqlite_add: volume '%s' has reached CNID %" PRIu64
+                    " of %" PRIu32 "; when the ceiling is reached the CNID table "
+                    "is emptied and every session on the volume is "
+                    "disconnected. Rebuild with dbd to reclaim the range gracefully.",
+                    cdb->cnid_db_vol->v_localname, lastid, UINT32_MAX);
+            }
+
+            if (lastid >= (uint64_t) UINT32_MAX) {
                 /* CNID set is depleted, restart from scratch */
                 LOG(log_warning, logtype_cnid,
                     "cnid_sqlite_add: CNID set is depleted, emptying the CNID "
@@ -1139,33 +1202,19 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
                 free(sql);
                 sql = NULL;
-                EC_NEG1(asprintf(&sql,
-                                 "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
-                                 db->cnid_sqlite_voluuid_str));
 
-                if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
+                if (cnid_sqlite_seed_sequence(db) < 0) {
                     cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
                     EC_FAIL;
                 }
 
-                free(sql);
-                sql = NULL;
-                EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT '%s', "
-                                       "16 WHERE NOT EXISTS "
-                                       "(SELECT changes() AS change "
-                                       "FROM sqlite_sequence WHERE change <> 0);",
-                                 db->cnid_sqlite_voluuid_str));
-
-                if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
-                    cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
-                    EC_FAIL;
-                }
-
-                free(sql);
-                sql = NULL;
                 EC_NEG1(cnid_sqlite_commit(db->cnid_sqlite_con, &owned));
                 db->cnid_sqlite_flags |= CNID_SQLITE_FLAG_DEPLETED;
-                continue;
+                /* CNIDs issued before the reset now name nothing, or name a
+                 * different file as the table refills. Report rather than
+                 * retry: the caller ends the session. */
+                errno = CNID_ERR_RESET;
+                EC_FAIL;
             }
 
             /* Finally assign our result */
@@ -1192,22 +1241,30 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-EC_CLEANUP:
+EC_CLEANUP: {
+        /* Callers read errno to tell a table reset from an ordinary failure */
+        const int saved_errno = errno;
 
-    if (db) {
-        LOG(log_maxdebug, logtype_cnid,
-            "cnid_sqlite_add(id: %" PRIu32 ", did: %" PRIu32 ", name: \"%s\", hint: %"
-            PRIu32 "): END",
-            ntohl(id), ntohl(did), name, ntohl(hint));
-        cnid_sqlite_stmt_reset(db->cnid_add_stmt);
-        cnid_sqlite_stmt_reset(db->cnid_put_stmt);
-        cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
+        if (db) {
+            LOG(log_maxdebug, logtype_cnid,
+                "cnid_sqlite_add(id: %" PRIu32 ", did: %" PRIu32 ", name: \"%s\", hint: %"
+                PRIu32 "): END",
+                ntohl(id), ntohl(did), name, ntohl(hint));
+            cnid_sqlite_stmt_reset(db->cnid_add_stmt);
+            cnid_sqlite_stmt_reset(db->cnid_put_stmt);
+            cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
+            /* The hint channel spans only this add: a later direct lookup acting
+             * on a stale hint would rewrite an unrelated row's identity in the
+             * server-side-move branch */
+            db->cnid_sqlite_hint = CNID_INVALID;
+        }
+
+        if (sql) {
+            free(sql);
+        }
+
+        errno = saved_errno;
     }
-
-    if (sql) {
-        free(sql);
-    }
-
     return id;
 }
 
@@ -1692,29 +1749,19 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
 
     free(sql);
     sql = NULL;
-    EC_NEG1(asprintf(&sql,
-                     "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
-                     db->cnid_sqlite_voluuid_str));
 
-    if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
+    if (cnid_sqlite_seed_sequence(db) < 0) {
         cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
         EC_FAIL;
     }
 
-    free(sql);
-    sql = NULL;
-    EC_NEG1(asprintf(&sql,
-                     "INSERT INTO sqlite_sequence (name,seq) SELECT '%s', 16 WHERE NOT EXISTS (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
-                     db->cnid_sqlite_voluuid_str));
-
-    if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
-        cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
-        EC_FAIL;
-    }
-
-    free(sql);
-    sql = NULL;
     EC_NEG1(cnid_sqlite_commit(db->cnid_sqlite_con, &owned));
+    /* The Depleted column is cleared above, but this connection latched the
+     * flag at open. Leaving it set would make the rest of a dbd rebuild
+     * silently discard every AppleDouble CNID hint it is trying to restore,
+     * renumbering the volume from scratch. */
+    db->cnid_sqlite_flags &= ~(CNID_SQLITE_FLAG_DEPLETED
+                               | CNID_SQLITE_FLAG_NEAR_DEPLETION);
 
     if (init_prepared_stmt(db) != 0) {
         /* The wipe is committed and the handles past the failure are NULL.
@@ -2202,30 +2249,12 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         /* Seeding is one unit: a partly seeded sequence would hand out CNIDs
          * from the range AFP reserves */
         EC_NEG1(cnid_sqlite_begin(db->cnid_sqlite_con, &owned));
-        EC_NEG1(asprintf(&sql,
-                         "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
-                         db->cnid_sqlite_voluuid_str));
 
-        if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
+        if (cnid_sqlite_seed_sequence(db) < 0) {
             cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
             EC_FAIL;
         }
 
-        free(sql);
-        sql = NULL;
-        EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT '%s',"
-                               "16 WHERE NOT EXISTS "
-                               "(SELECT changes() AS change "
-                               "FROM sqlite_sequence WHERE change <> 0);",
-                         db->cnid_sqlite_voluuid_str));
-
-        if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
-            cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
-            EC_FAIL;
-        }
-
-        free(sql);
-        sql = NULL;
         EC_NEG1(cnid_sqlite_commit(db->cnid_sqlite_con, &owned));
         /* Verify the sequence was set correctly */
         sqlite3_stmt *verify_stmt = NULL;

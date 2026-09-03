@@ -35,4 +35,6 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 /* netatalk functions */
 extern void close_all_vol(const AFPObj *obj);
 extern void closevol(const AFPObj *obj, struct vol *vol);
+extern void cnid_volume_reset(const struct vol *vol);
+extern uint32_t cnid_volume_tag(const struct vol *vol);
 #endif

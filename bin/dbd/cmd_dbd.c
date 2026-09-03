@@ -325,6 +325,7 @@ int main(int argc, char **argv)
 
     if (cmd_dbd_scanvol(vol, flags) < 0) {
         dbd_log(LOGSTD, "Error repairing database.");
+        EC_STATUS(-1);
     }
 
 EC_CLEANUP:

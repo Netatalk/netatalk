@@ -690,6 +690,16 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
     /* Get CNID from database */
     if ((db_cnid = cnid_add(vol->v_cdb, st, did, (char *)name, strlen(name),
                             ad_cnid)) == CNID_INVALID) {
+        if (CNID_ERRNO() == CNID_ERR_RESET) {
+            dbd_log(LOGSTD,
+                    "CNID space exhausted at \"%s/%s\": the table was emptied "
+                    "and this scan is incomplete. Rerun to renumber the volume.",
+                    cwdbuf, name);
+            /* Walking on would renumber every remaining file against the
+             * emptied table, leaving the volume half old, half new ids */
+            longjmp(jmp, 2);
+        }
+
         return CNID_INVALID;
     }
 
@@ -978,8 +988,15 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
      */
     cnid_getstamp(vol->v_cdb, stamp, sizeof(stamp));
 
-    if (setjmp(jmp) != 0) {
+    switch (setjmp(jmp)) {
+    case 1:
         EC_EXIT_STATUS(0); /* Got signal, jump from dbd_readdir */
+
+    case 2:
+        EC_EXIT_STATUS(-1); /* CNID table reset, jump from check_cnid */
+
+    default:
+        break;
     }
 
     strlcpy(cwdbuf, vol->v_path, sizeof(cwdbuf));

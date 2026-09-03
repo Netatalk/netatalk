@@ -263,6 +263,7 @@ static int update_created_file_cnid(const struct nad_volume *volume,
     cnid = cnid_for_path(vol->v_cdb, vol->v_path, path, &did);
 
     if (cnid == CNID_INVALID) {
+        nad_report_cnid_reset(vol->v_path);
         fprintf(stderr, "Error resolving CNID for %s\n", path);
         errno = EIO;
         return -1;

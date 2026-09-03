@@ -1210,6 +1210,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                             dir->dcache_ino != args->st->st_ino);
         bool ctime_changed = (dir->dcache_ctime != 0 &&
                               dir->dcache_ctime != args->st->st_ctime);
+        bool keep_old_ino = false;
 
         if (ino_changed) {
             /* Object replaced — a cached parent fd would pin the old
@@ -1235,10 +1236,28 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             AFP_CNID_DONE();
 
             if (new_cnid == CNID_INVALID) {
-                const char *why = CNID_ERRNO_IS_BACKEND_FAILURE()
-                                  ? "CNID backend could not answer" : "no CNID for new inode";
+                const char *why = "no CNID for new inode";
 
-                if (dir == curdir) {
+                if (CNID_ERRNO_IS_BACKEND_FAILURE() && dir != curdir) {
+                    /* The next access misses the cache, re-stats, and retries
+                     * the CNID refresh once the backend recovers. Keeping the
+                     * entry instead would serve its pre-change stat from the
+                     * cache-hit path, which never re-stats. */
+                    LOG(log_debug, logtype_afpd,
+                        "dir_modify: CNID backend could not answer for did:%u, "
+                        "removing entry", ntohl(dir->d_did));
+                    dir_remove(vol, dir, 0);
+                    return 0;
+                } else if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
+                    /* curdir must stay valid. The stat refresh below keeps the
+                     * served metadata current, but recording the new inode
+                     * against the old CNID would consume the ino_changed
+                     * trigger that brings us back here */
+                    keep_old_ino = true;
+                    LOG(log_debug, logtype_afpd,
+                        "dir_modify: CNID backend could not answer for "
+                        "curdir did:%u, keeping entry", ntohl(dir->d_did));
+                } else if (dir == curdir) {
                     /* Do not remove curdir — callers rely on it being valid.
                      * AD cache already invalidated (AD_RLEN_UNKNOWN above).
                      * The DID re-index below runs only for a valid CNID, as
@@ -1301,7 +1320,11 @@ int dir_modify(const struct vol *vol, struct dir *dir,
         }
 
         dir->dcache_ctime = args->st->st_ctime;
-        dir->dcache_ino = args->st->st_ino;
+
+        if (!keep_old_ino) {
+            dir->dcache_ino = args->st->st_ino;
+        }
+
         dir->dcache_mode = args->st->st_mode;
         dir->dcache_mtime = args->st->st_mtime;
         dir->dcache_uid = args->st->st_uid;

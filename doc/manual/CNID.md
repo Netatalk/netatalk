@@ -8,13 +8,21 @@ for example: "server, please open the file named 'Test' in the directory with ID
 Mac aliases work by CNID, with a fallback to the absolute path in more recent AFP clients.
 (This fallback applies only to the Finder, not to applications.)
 
-Every file in an AFP volume must have a unique file ID.
-According to the AFP specification, CNIDs must never be reused.
-IDs are represented as 32-bit numbers, and directories share the same ID pool.
-After approximately 4 billion files and directories have been written to an AFP volume,
-the ID pool is depleted and no new files can be written to the volume.
-Some of Netatalk's CNID backends may attempt to reuse available IDs after depletion,
-which technically violates the spec but may allow continuous use on long-lived volumes.
+Every file in an AFP volume must have a unique file ID,
+and according to the AFP specification CNIDs must never be reused.
+IDs are 32-bit numbers, and directories share the same pool,
+so it is depleted after roughly 4 billion files and directories have been written.
+
+What happens then depends on the backend.
+The *dbd* backend stops allocating IDs, and no new files can be written to the volume.
+The *sqlite* and *mysql* backends empty the CNID table, restart numbering,
+and trigger all clients connected to the volume to reconnect
+so that everyone uses the new IDs.
+This keeps a long-lived volume writable, but it violates the spec
+and breaks Mac aliases pointing at the old IDs.
+Both backends log a warning as a volume approaches the ceiling,
+so it can optionally be renumbered with the **dbd** utility beforehand,
+during a maintenance window.
 
 Netatalk maps IDs to files and directories in the host filesystem.
 Several CNID backends are available and can be selected with the **cnid scheme** option in *afp.conf*.
@@ -26,7 +34,8 @@ of your system's state directory path, e.g. */var/lib*.
 You can change the state directory path with *-Dwith-statedir-path=PATH*
 at compile time.
 
-The **dbd** command-line utility can verify, repair, and rebuild the CNID database.
+The **dbd** command-line utility can verify, repair, and rebuild the CNID database
+of any backend, not just *dbd*.
 
 > **NOTE:** Keep the following CNID-related considerations in mind:
 

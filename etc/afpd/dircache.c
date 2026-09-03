@@ -19,6 +19,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2756,6 +2757,44 @@ void process_cache_hints(AFPObj *obj)
         memcpy(&hint, buf + offset + IPC_HEADERLEN, sizeof(hint));
         offset += msg_size;
         cache_hint_stat.hints_received++;
+
+        /* Resolved by tag, not vid: vid is per-process, so acting on it here
+         * could end a session whose CNIDs are fine. The tag travels in the
+         * otherwise unused cnid field. */
+        if (hint.event == CACHE_HINT_VOLUME_RESET) {
+            uint32_t reset_tag = ntohl(hint.cnid);
+            struct vol *reset_vol = NULL;
+
+            /* Tag 0 means "no UUID"; matching it would end sessions on
+             * every UUID-less volume */
+            if (reset_tag != 0) {
+                for (struct vol *v = getvolumes(); v; v = v->v_next) {
+                    if ((v->v_flags & AFPVOL_OPEN)
+                            && cnid_volume_tag(v) == reset_tag) {
+                        reset_vol = v;
+                        break;
+                    }
+                }
+            }
+
+            if (!reset_vol) {
+                cache_hint_stat.hints_no_match++;
+                continue;
+            }
+
+            cache_hint_stat.hints_acted_on++;
+            /* hints_processed counts hints that changed state */
+            hints_processed++;
+            LOG(log_warning, logtype_afpd,
+                "process_cache_hints: CNID table for volume '%s' was reset, "
+                "disconnecting so the client picks up the rebuilt table",
+                reset_vol->v_path);
+            /* Not cnid_volume_reset(): re-broadcasting would loop */
+            raise(SIGTERM);
+            /* The remaining hints mend a cache this session no longer has */
+            break;
+        }
+
         /* Resolve volume from vid (already network byte order).
          * Cannot be const — passed to dir_remove/dir_modify which take non-const vol. */
         struct vol *vol = getvolbyvid(hint.vid); // NOSONAR
