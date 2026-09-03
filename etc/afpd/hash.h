@@ -35,6 +35,7 @@ extern void hash_insert(hash_t *, hnode_t *, const void *);
 extern hnode_t *hash_lookup(hash_t *, const void *);
 extern hnode_t *hash_delete(hash_t *, hnode_t *);
 extern int hash_alloc_insert(hash_t *, const void *, void *);
+extern hnode_t *hash_alloc_insert_node(hash_t *, const void *, void *);
 extern void hash_delete_free(hash_t *, hnode_t *);
 
 extern void hnode_put(hnode_t *, void *);

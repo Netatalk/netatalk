@@ -109,6 +109,7 @@ extern pid_t server_lock(char * /*program*/, char * /*file*/, int /*debug*/);
 extern int check_lockfile(const char *program, const char *pidfile);
 extern int create_lockfile(const char *program, const char *pidfile);
 extern void fault_setup(void (*fn)(void *));
+extern void fault_setup_thread(void);
 extern void netatalk_panic(const char *why);
 #define server_unlock(x)  (unlink(x))
 

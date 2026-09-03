@@ -157,6 +157,13 @@ functionality.
     library, netatalk can produce the GSS UAM library for authentication
     with existing Kerberos infrastructure.
 
+- libunwind
+
+    When a daemon hits a fatal fault, netatalk logs a backtrace of the
+    faulting thread, and libunwind names the functions in it. Builds
+    without it fall back to `backtrace_symbols()`, or to bare addresses
+    on C libraries that lack it, such as musl.
+
 - PAM
 
     PAM provides a flexible mechanism for authenticating users. PAM was

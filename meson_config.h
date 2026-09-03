@@ -199,6 +199,9 @@
 /* define if you have libquota */
 #mesondefine HAVE_LIBQUOTA
 
+/* Whether libunwind is available for backtraces */
+#mesondefine HAVE_LIBUNWIND
+
 /* Define to 1 if you have the `listea' function. */
 #mesondefine HAVE_LISTEA
 
@@ -282,6 +285,9 @@
 
 /* Define to 1 if you have the <sgtty.h> header file. */
 #mesondefine HAVE_SGTTY_H
+
+/* Define to 1 if you have the `sigaltstack' function. */
+#mesondefine HAVE_SIGALTSTACK
 
 /* Whether Solaris ACLs are available */
 #mesondefine HAVE_SOLARIS_ACLS

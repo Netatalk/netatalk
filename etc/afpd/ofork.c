@@ -1111,10 +1111,10 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
                 cnid_delete(ofork->of_vol->v_cdb, icon_cnid);
             }
 
-            /* Remove from dircache */
+            /* Remove from dircache and queue the entry for deallocation;
+             * skip cache refresh and hint lookup below */
             if (cached) {
-                dircache_remove(ofork->of_vol, cached, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
-                /* invalidated by dircache_remove; skip cache refresh and hint lookup below */
+                (void)dir_remove(ofork->of_vol, cached, 0);
                 cached = NULL;
             }
 

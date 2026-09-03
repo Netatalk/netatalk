@@ -12,6 +12,7 @@ ARG RUN_DEPS="\
     libedit \
     libevent \
     libgcrypt \
+    libunwind \
     linux-pam \
     localsearch \
     mariadb \
@@ -40,6 +41,7 @@ ARG BUILD_DEPS="\
     libedit-dev \
     libevent-dev \
     libgcrypt-dev \
+    libunwind-dev \
     linux-pam-dev \
     mariadb-dev \
     meson \
@@ -58,6 +60,9 @@ ARG RUN_DEPS
 ARG BUILD_DEPS
 ENV RUN_DEPS=$RUN_DEPS
 ENV BUILD_DEPS=$BUILD_DEPS
+
+# Perf jobs pass release, so their numbers do not include the asserts
+ARG BUILDTYPE=debugoptimized
 
 RUN apk update \
 &&  apk add --no-cache \
@@ -113,7 +118,7 @@ COPY meson.build .
 RUN rm -rf build
 
 RUN meson setup build \
-    -Dbuildtype=debugoptimized \
+    -Dbuildtype=$BUILDTYPE \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-docs= \

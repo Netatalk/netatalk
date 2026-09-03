@@ -504,7 +504,14 @@ static int process_deferred_signals(AFPObj *obj)
         int sig = die_pending;
         die_pending = 0;
         afp_dsi_die(sig);
-        /* afp_dsi_die calls exit() — should not return */
+        /* Reached only with DSI_RECONINPROG set: the handoff failed
+         * (auth.c leaves the flag set) and this child still owns the client
+         * socket, so run the full teardown like the afp_over_dsi() backstop,
+         * keeping afp_dsi_die()'s diagnostic exit mapping. */
+        LOG(log_note, logtype_afpd, "Reconnect-state session terminating");
+        iw_shutdown();
+        afp_dsi_close(obj);
+        exit((sig == SIGTERM || sig == SIGALRM) ? 0 : sig);
     }
 
     /* Primary reconnect (SIGURG) */

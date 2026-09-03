@@ -44,4 +44,10 @@ extern int test003_dir_add_error_no_double_free(struct vol *vol);
 extern int test004_getmetadata_nostat_keeps_cache(struct vol *vol);
 extern int test005_getmetadata_open_fork_outlives_path(struct vol *vol);
 extern int test006_rflen_rfork_without_metadata(struct vol *vol);
+extern int test007_add_over_existing_key_leaves_one(struct vol *vol);
+extern int test008_reindex_over_stale_key_expunges(struct vol *vol);
+extern int test009_file_add_over_curdir_did(struct vol *vol);
+extern int test010_full_cache_accepts_adds(struct vol *vol,
+        unsigned int cache_size);
+extern int dircache_test_ghost_trim_selection(void);
 #endif  /* SUBTESTS_H */

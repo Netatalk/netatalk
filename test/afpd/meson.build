@@ -164,6 +164,23 @@ if build_afpd_tests
         # default is too close for a loaded runner
         timeout: 120,
     )
+    # Second leg in LRU mode: both cache modes ship, and index_queue and
+    # dircache_evict() run in that mode only
+    test(
+        'afpd tests - run (LRU dircache)',
+        afpdtest,
+        args: ['--tap'],
+        protocol: 'tap',
+        env: {
+            'LD_PRELOAD': faultinject_preload.full_path(),
+            'AFPDTEST_DIRCACHE_MODE': 'lru',
+        },
+        depends: faultinject_preload,
+        verbose: true,
+        is_parallel: false,
+        priority: 0,
+        timeout: 120,
+    )
 
 endif
 
