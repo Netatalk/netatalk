@@ -196,12 +196,6 @@ static int deferred_count = 0;
 /*! Peak cached entries reached this session (shared by LRU and ARC) */
 static unsigned long queue_count_max = 0;
 
-/*
- * Configuration variables for cache validation behavior
- * Controls how frequently we validate cached entries against filesystem
- */
-static unsigned int dircache_validation_freq = DEFAULT_DIRCACHE_VALIDATION_FREQ;
-
 /* Counter for probabilistic validation - thread-safe with compiler builtins */
 static volatile uint64_t validation_counter = 0;
 
@@ -1115,6 +1109,24 @@ static q_t *index_queue;
 static unsigned long queue_count;
 
 /*!
+ * @brief Validation frequency in effect
+ *
+ * Read live: the coherency defaults are applied per volume, after
+ * dircache_init().  The single reader for the validation decision and
+ * the statistics, so both always report the same frequency.
+ *
+ * @returns configured validation frequency, never 0 (divisor)
+ */
+static unsigned int validation_freq(void)
+{
+    extern AFPObj *AFPobj;
+    unsigned int freq = AFPobj
+                        ? (unsigned int)AFPobj->options.dircache_validation_freq
+                        : 0;
+    return freq ? freq : DEFAULT_DIRCACHE_VALIDATION_FREQ;
+}
+
+/*!
  * @brief Determine if cache entry should be validated against filesystem
  *
  * Uses probabilistic validation to reduce filesystem calls while still
@@ -1126,23 +1138,10 @@ static unsigned long queue_count;
  */
 static int should_validate_cache_entry(void)
 {
-    extern AFPObj *AFPobj;
     /* Thread-safe increment using compiler builtins */
     uint64_t count = __atomic_fetch_add(&validation_counter, 1, __ATOMIC_SEQ_CST);
-    /* Read the live option so config-time changes after dircache_init()
-     * (e.g. the ea = samba coherency defaults) take effect without
-     * plumbing.  Same 1-100 validity range as
-     * dircache_set_validation_params(); out-of-range config values fall
-     * back to the static (which the setter kept at the fail-safe). */
-    unsigned int freq = (AFPobj
-                         && AFPobj->options.dircache_validation_freq > 0
-                         && AFPobj->options.dircache_validation_freq <= 100)
-                        ? (unsigned int)AFPobj->options.dircache_validation_freq
-                        : dircache_validation_freq;
-    /* Use the fetched value + 1 (post-increment semantics).  freq is
-     * never 0 here: the options read is clamped to 1-100 above and the
-     * setter rejects 0 for the static fallback. */
-    return ((count + 1) % freq == 0);
+    /* Use the fetched value + 1 (post-increment semantics) */
+    return ((count + 1) % validation_freq() == 0);
 }
 
 
@@ -2153,12 +2152,7 @@ int dircache_init(int reqsize)
     rootParent.d_fullpath = bfromcstr("ROOT_PARENT");
     rootParent.d_m_name = bfromcstr("ROOT_PARENT");
     rootParent.d_u_name = rootParent.d_m_name;
-
-    /* Apply validation parameters from configuration */
-    if (AFPobj && AFPobj->options.dircache_validation_freq > 0) {
-        dircache_set_validation_params(
-            (unsigned int)AFPobj->options.dircache_validation_freq);
-    }
+    dircache_reset_validation_counter();
 
     /* Tier 2: Resource Fork data cache initialization */
     if (AFPobj) {
@@ -2212,10 +2206,10 @@ void log_dircache_stat(void)
     /* validation_ratio = validations / (entries_returned_from_cache) * 100
      * For LRU: entries_returned = hits (no ghosts)
      */
-    if (dircache_validation_freq > 0 && dircache_stat.hits > 0) {
+    if (dircache_stat.hits > 0) {
         /* Thread-safe read of validation counter */
         uint64_t counter_value = __atomic_load_n(&validation_counter, __ATOMIC_SEQ_CST);
-        validation_ratio = ((double)counter_value / (double)dircache_validation_freq) /
+        validation_ratio = ((double)counter_value / (double)validation_freq()) /
                            (double)dircache_stat.hits * 100.0;
     }
 
@@ -2242,10 +2236,10 @@ void log_dircache_stat(void)
         uint64_t validations_performed = 0;
         uint64_t entries_returned = dircache_stat.hits + dircache_stat.ghost_hits;
 
-        if (dircache_validation_freq > 0 && entries_returned > 0) {
+        if (entries_returned > 0) {
             uint64_t counter_value = __atomic_load_n(&validation_counter, __ATOMIC_SEQ_CST);
-            validations_performed = counter_value / dircache_validation_freq;
-            validation_ratio = ((double)counter_value / (double)dircache_validation_freq) /
+            validations_performed = counter_value / validation_freq();
+            validation_ratio = ((double)counter_value / (double)validation_freq()) /
                                (double)entries_returned * 100.0;
         }
 
@@ -2284,7 +2278,7 @@ void log_dircache_stat(void)
             dircache_stat.invalid_on_use,
             total_arc_evictions,
             dircache_stat.covered_cancelled,
-            dircache_validation_freq);
+            validation_freq());
         /* ARC-specific details: ghost hits breakdown and learning metrics */
         LOG(log_info, logtype_afpd,
             "ARC ghost performance: (user: %s) ghost_hits: %llu (%.1f%%), "
@@ -2344,15 +2338,15 @@ void log_dircache_stat(void)
             dircache_stat.hits, hit_ratio,
             dircache_stat.misses,
             miss_ratio,
-            dircache_validation_freq > 0 ? __atomic_load_n(&validation_counter,
-                    __ATOMIC_SEQ_CST) / dircache_validation_freq : 0, validation_ratio,
+            __atomic_load_n(&validation_counter,
+                            __ATOMIC_SEQ_CST) / validation_freq(), validation_ratio,
             dircache_stat.added,
             dircache_stat.removed,
             dircache_stat.expunged,
             dircache_stat.invalid_on_use,
             dircache_stat.evicted,
             dircache_stat.covered_cancelled,
-            dircache_validation_freq);
+            validation_freq());
     }
 
     /* Cross-process dircache hint statistics */
@@ -2642,33 +2636,6 @@ void dircache_dump(void)
     fflush(dump);
     fclose(dump);
     return;
-}
-
-/*!
- * @brief Set directory cache validation frequency
- *
- * Allows runtime configuration of cache validation behavior for performance tuning.
- * Lower validation frequency improves performance but may delay detection of
- * external filesystem changes.
- *
- * @param[in] freq  validation frequency (1 = validate every access, 100 = every 100th access)
- *
- * @returns 0 on success, -1 on invalid parameters
- */
-int dircache_set_validation_params(unsigned int freq)
-{
-    if (freq == 0 || freq > 100) {
-        LOG(log_error, logtype_afpd,
-            "dircache_set_validation_params: invalid frequency %u (must be 1-100)", freq);
-        return -1;
-    }
-
-    dircache_validation_freq = freq;
-    /* Thread-safe reset of validation counter using compiler builtins */
-    (void)__atomic_exchange_n(&validation_counter, 0, __ATOMIC_SEQ_CST);
-    LOG(log_info, logtype_afpd,
-        "dircache: validation parameters updated (freq=%u), counter reset", freq);
-    return 0;
 }
 
 /*!

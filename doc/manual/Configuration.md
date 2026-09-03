@@ -113,9 +113,9 @@ real POSIX byte-range locks on the shared files. Two settings make that happen:
 - Netatalk's **strict locking** takes a POSIX
   read lock for every AFP read and a write lock for every AFP write, making
   AFP file access conflict with Samba's locks and vice versa. It is off by
-  default; setting **ea = samba** on any volume changes the default to on
-  globally (an explicit *strict locking* setting still wins, with a logged
-  warning).
+  default; setting **multi protocol = yes** on any volume changes the default
+  to on globally (an explicit *strict locking* setting still wins, with a
+  logged warning).
 - Samba's own **strict locking** option is the same concept on the SMB side.
   Set *strict locking = yes* in smb.conf: the default *Auto* skips the check
   for files under an SMB lease. Samba's *posix locking* must stay at its
@@ -155,11 +155,12 @@ change them.
 |                                      | **fruit:encoding = native**          | Same on-disk names for characters that are illegal on Windows. |
 |                                      | **streams_xattr:prefix = user.**     | An AFP extended attribute and an SMB alternate data stream become the same object. Requires **ea = samba** on the Netatalk side (its trailing-byte format matches). |
 |                                      | **streams_xattr:store_stream_type = no** | Second half of the row above — strips the *:$DATA* suffix so the names match. |
-| **strict locking = yes** *(the default when ea = samba)* | **strict locking = yes** | Every read and write is checked against the other server's byte-range locks. Samba's default *Auto* skips the check for leased files — set *yes* explicitly. |
+| **multi protocol = yes**             | | Declares that Samba modifies the volume too; defaults every Netatalk coherency setting in this table accordingly. |
+| **strict locking = yes** *(the default when multi protocol = yes)* | **strict locking = yes** | Every read and write is checked against the other server's byte-range locks. Samba's default *Auto* skips the check for leased files — set *yes* explicitly. |
 |                                      | **posix locking = yes** *(Samba default — keep)* | Samba mirrors its locks into the kernel where Netatalk can see them. With this off, no lock crosses between the servers at all. |
 | *(built in — always on)*             | **fruit:locking = netatalk**         | AFP and SMB open/deny modes conflict across protocols: a deny-mode open on one side refuses a conflicting open on the other. |
-| **dircache validation freq = 1** *(default)*   | | Netatalk notices files that Samba created, renamed, or deleted. |
-| *(built in when ea = samba)*         | | The volume's resource forks are not cached in afpd memory, so Samba-side changes are always re-read. |
+| **dircache validation freq = 1** *(the default when multi protocol = yes)* | | Netatalk notices files that Samba created, renamed, or deleted. |
+| *(built in when multi protocol = yes)* | | The volume's resource forks are not cached in afpd memory, so Samba-side changes are always re-read. |
 |                                      | **kernel change notify = yes** *(Samba default — keep)* | Samba notices files that Netatalk changed, and notifies SMB clients. |
 |                                      | **oplocks = no**                     | SMB clients must not cache file data on a volume Netatalk also serves — a cached write could overwrite an AFP-side change. |
 |                                      | **level2 oplocks = no**              | Second half of the row above. |
@@ -172,27 +173,29 @@ change them.
 ### Caching
 
 When sharing a volume with other processes (Samba, NFS, local applications),
-keep *dircache validation freq* at **1** (the default)
+set *multi protocol = yes*, which defaults *dircache validation freq* to **1**
 so Netatalk detects external changes on every access.
-If Netatalk is the **only** process on the volume,
-you can set *dircache validation freq* = 100 for maximum performance.
+When Netatalk is the **only** process on the volume (the default posture),
+*dircache validation freq* defaults to 100 for maximum performance.
 
 ### Netatalk configuration
 
-Use *ea = samba* to store Extended Attributes in the Samba-compatible format.
-It also changes the defaults of the settings safe concurrent Samba access
-requires: *strict locking* defaults to yes, *dircache validation freq*
-defaults to 1, and the volume is excluded from the resource-fork data cache.
-Explicit settings always win — an explicit value that weakens Samba coherency
-is honored and logged with a verbose warning. The example lists the defaulted
-settings explicitly anyway, so the intended configuration is visible at a
-glance.
+Set *multi protocol = yes* on volumes Samba also serves. It changes the
+defaults of the settings safe concurrent access requires: *strict locking*
+defaults to yes, *dircache validation freq* defaults to 1, and the volume is
+excluded from the resource-fork data cache.
+Explicit settings always win — an explicit value that weakens coherency
+is honored and logged with a verbose warning. Pair it with *ea = samba*
+to store Extended Attributes in the Samba-compatible format. The example
+lists the defaulted settings explicitly anyway, so the intended
+configuration is visible at a glance.
 
     [Global]
+        multi protocol = yes
         ea = samba
         umask = 0002
-        strict locking = yes            ; the default when ea = samba
-        dircache validation freq = 1    ; the default
+        strict locking = yes            ; the default when multi protocol = yes
+        dircache validation freq = 1    ; the default when multi protocol = yes
         solaris share reservations = yes ; already the default (Solaris/illumos only)
 
     [Homes]

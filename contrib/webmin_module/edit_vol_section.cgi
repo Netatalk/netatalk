@@ -246,6 +246,13 @@ print &ui_table_row(
                     &build_parameter_select($afpconfRef, $sectionRef, \%in, 'ea')
 );
 print &ui_table_row(
+                    $text{'edit_global_section_multi_protocol'},
+                    &build_parameter_select(
+                                            $afpconfRef, $sectionRef, \%in,
+                                            'multi protocol'
+                    )
+);
+print &ui_table_row(
                     $text{'edit_vol_section_read_only'},
                     &build_parameter_select($afpconfRef, $sectionRef, \%in, 'read only')
 );

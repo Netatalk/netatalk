@@ -1438,7 +1438,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     if (eid == ADEID_RFORK
             && !(ofork->of_flags & AFPFORK_ACCWR)
-            && (!(ofork->of_vol->v_flags & AFPVOL_EA_SAMBA)
+            && (!(ofork->of_vol->v_flags & AFPVOL_MULTIPROTO)
                 || obj->options.dircache_rfork_budget_explicit)
             && obj->options.dircache_rfork_budget > 0) {
         const struct dir *parentdir = dirlookup(ofork->of_vol, ofork->of_did);

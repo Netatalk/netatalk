@@ -620,8 +620,9 @@ we can make intelligent optimizations that benefit the entire system.
 4. **Reducing I/O helps every layer of the storage stack**
 5. **Small changes can have compound effects**
 
-**By default nothing changes, as the default value for `dircache validation freq = 1`.**
-If you have Samba or other processes operating on the volume this must remain set to 1.
+**The default value of `dircache validation freq = 100` assumes Netatalk is the only process writing the volume.**
+If you have Samba or other processes operating on the volume, set `multi protocol = yes`
+(which defaults it back to 1), or set 1 explicitly.
 
 ---
 

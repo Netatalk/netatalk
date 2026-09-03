@@ -501,20 +501,31 @@ int main(int argc, char *argv[])
                      "strict locking key, afp read locks alias, precedence, explicitness");
     TEST_int_or_skip(utest_conf_spotlight_results_limit_keys(), 0,
                      "spotlight results limit key, sparql results limit alias, precedence");
-    TEST_int_or_skip(utest_conf_samba_defaults(), 0,
-                     "ea = samba applies the coherency defaults with notes");
-    TEST_int_or_skip(utest_conf_samba_explicit_wins(), 0,
-                     "ea = samba never overrides explicit settings, warns instead");
-    TEST_int_or_skip(utest_conf_no_samba_regression(), 0,
-                     "no ea = samba: strict locking off, freq honoured");
+    TEST_int_or_skip(utest_conf_multiproto_defaults(), 0,
+                     "multi protocol = yes applies the coherency defaults with notes");
+    TEST_int_or_skip(utest_conf_multiproto_explicit_wins(), 0,
+                     "multi protocol never overrides explicit settings, warns instead");
+    TEST_int_or_skip(utest_conf_no_multiproto_regression(), 0,
+                     "no multi protocol: strict locking off, freq honoured");
+    TEST_int_or_skip(utest_conf_stock_defaults(), 0,
+                     "stock config gets the single-accessor posture (freq 100)");
+    TEST_int_or_skip(utest_conf_dircache_validation_freq_range(), 0,
+                     "dircache validation freq is bounded at parse, unusable values not explicit");
+    TEST_int_or_skip(utest_conf_multiproto_reverts_unusable_freq(), 0,
+                     "multi protocol still defaults an unusable explicit freq to 1");
+    TEST_int_or_skip(utest_conf_ea_samba_no_defaults(), 0,
+                     "ea = samba selects the storage format only, no coherency defaults");
+    TEST_int_or_skip(utest_conf_multiproto_ea_recommendation(), 0,
+                     "multi protocol volume without ea = samba logs the recommendation");
     TEST_int_or_skip(utest_conf_samba_requires_ea(), 0,
                      "ea = samba volume without filesystem EAs fails to load");
     TEST_int_or_skip(utest_conf_samba_ea_failure_keeps_vid(), 0,
                      "volume refused for missing EAs returns its volume id");
-    TEST_int_or_skip(utest_conf_samba_defaults_not_leaked_on_failed_volume(), 0,
-                     "failed samba volume leaves process defaults untouched");
-    TEST_int_or_skip(utest_conf_samba_future_defaults(), 0,
-                     "ea = samba reverts performance-oriented compiled defaults (freq 100, rfork on)");
+    TEST_int_or_skip(utest_conf_multiproto_defaults_not_leaked_on_failed_volume(),
+                     0,
+                     "failed multi protocol volume leaves process defaults untouched");
+    TEST_int_or_skip(utest_conf_multiproto_reverts_compiled_defaults(), 0,
+                     "multi protocol reverts performance-oriented compiled defaults");
     TEST_int_or_skip(utest_conf_load_afp_conf_vols_locked(), 0,
                      "config loader fails closed under lock contention, state-neutral");
     TEST_int(utest_cnid_wrapper_sets_errno(), 0,

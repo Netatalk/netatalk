@@ -23,13 +23,14 @@
 #   Samba-Client (kernel CIFS mount + smbclient)
 #     -> SMB -> smbd (vfs_fruit + streams_xattr)
 #       -> disk (one shared directory, ea = samba format)
-#     <- AFP <- afpd (bare `ea = samba` volume, defaults only)
+#     <- AFP <- afpd (`multi protocol = yes` + `ea = samba` volume,
+#        coherency settings from the multi protocol defaults only)
 #   Netatalk-Client (FUSE mount, built from
 #     https://github.com/Netatalk/netatalk-client)
 #
 # The tests are plain file operations on the two mounts, asserting that
 # changes made through one client are reflected -- or blocked -- through
-# the other, covering each setting `ea = samba` defaults:
+# the other, covering each setting `multi protocol = yes` defaults:
 #
 #   1. strict locking       -- a byte-range lock taken through the CIFS
 #                              mount blocks a write through the AFP mount
@@ -235,12 +236,13 @@ ldconfig
 command -v afp_client > /dev/null 2>&1 || export PATH="$PATH:/usr/local/bin"
 
 # --------------------------------------------------------------------------
-# afp.conf: the one-option story -- a bare `ea = samba` volume, no
-# strict-locking / dircache keys anywhere; the stock entrypoint then just
-# serves (MANUAL_CONFIG keeps this config; no TESTSUITE set)
+# afp.conf: the one-switch story -- a `multi protocol = yes` volume with
+# the ea = samba storage format, no strict-locking / dircache keys
+# anywhere; the stock entrypoint then just serves (MANUAL_CONFIG keeps
+# this config; no TESTSUITE set)
 # --------------------------------------------------------------------------
 
-echo "*** Writing afp.conf (bare ea = samba) and starting netatalk"
+echo "*** Writing afp.conf (multi protocol = yes, ea = samba) and starting netatalk"
 mkdir -p "$NETATALK_CONFDIR"
 cat << EOF > "$NETATALK_CONFDIR/afp.conf"
 [Global]
@@ -253,6 +255,7 @@ uam list = uams_clrtxt.so uams_dhx2.so
 cnid scheme = sqlite
 path = ${SHARE_DIR}
 ea = samba
+multi protocol = yes
 valid users = ${AFP_USER}
 volume name = ${SHARE_NAME}
 EOF
@@ -373,22 +376,22 @@ if [ "$AFP_MNT_UP" -ne 0 ]; then
 fi
 
 # --------------------------------------------------------------------------
-# Control: the coherency behaviour below must come from the ea = samba
-# DEFAULTS -- assert no explicit strict-locking/dircache key crept into
-# the config, and that afpd logged applying the default
+# Control: the coherency behaviour below must come from the multi
+# protocol DEFAULTS -- assert no explicit strict-locking/dircache key
+# crept into the config, and that afpd logged applying the default
 # --------------------------------------------------------------------------
 
 if grep -Eq '^[[:space:]]*(strict locking|afp read locks|dircache validation freq)[[:space:]]*=' \
     "$NETATALK_CONFDIR/afp.conf"; then
     result "control: coherency settings are defaults, not explicit config" 1 \
-        "afp.conf must carry only ea = samba"
+        "afp.conf must carry only multi protocol = yes and ea = samba"
 else
     result "control: coherency settings are defaults, not explicit config" 0
 fi
 
 grep -q "defaulting 'strict locking' to yes" /var/log/afpd.log
-result "control: afpd logged the ea = samba strict-locking default" $? \
-    "expected the samba-defaults log_note in /var/log/afpd.log"
+result "control: afpd logged the multi protocol strict-locking default" $? \
+    "expected the multi protocol defaults log_note in /var/log/afpd.log"
 
 # --------------------------------------------------------------------------
 # 1. Content: Netatalk-Client writes, Samba-Client reads
@@ -669,7 +672,7 @@ if [ -f "$SHARE_DIR/lock_d.txt" ]; then
 fi
 
 # --------------------------------------------------------------------------
-# 11. Solaris share reservations: the fourth ea = samba coherency setting
+# 11. Solaris share reservations: the fourth multi protocol coherency setting
 # --------------------------------------------------------------------------
 
 skip "solaris share reservations (F_SHARE deny-mode layer)" \

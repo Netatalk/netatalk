@@ -283,8 +283,8 @@ Set this environment variable to a specific value or string.
 | **Directory Cache Configuration** |                                                                      |
 | AFP_DIRCACHESIZE                | Directory cache size in entries (default: 65536)                       |
 | AFP_DIRCACHE_MODE               | Cache algorithm: *lru* (default) or *arc*                              |
-| AFP_DIRCACHE_VALIDATION_FREQ    | Validate cache every Nth access (default: 1, higher = better performance) |
-| AFP_DIRCACHE_RFORK_BUDGET       | Total memory budget in KB for resource fork caching (default: 0 = disabled) |
+| AFP_DIRCACHE_VALIDATION_FREQ    | Validate cache every Nth access (default: 100, lower = stricter external change detection). Set AFP_MULTI_PROTOCOL instead when other processes write the share: it defaults this to 1 along with the other coherency settings |
+| AFP_DIRCACHE_RFORK_BUDGET       | Total memory budget in KB for resource fork caching (default: 32768, 0 = disabled) |
 | AFP_DIRCACHE_RFORK_MAXSIZE      | Max size in KB of a single cached resource fork entry (default: 1024)  |
 | **Charset Configuration** |                                                                              |
 | AFP_MAC_CHARSET                 | Mac client charset (default: MAC_ROMAN); see afp.conf man page         |
@@ -313,6 +313,7 @@ Set these environment variables to a non-zero value to enable, ex. "1"
 | **Volume & Access Configuration** |                                                                                     |
 | AFP_DROPBOX         | Enable dropbox mode; secondary user is guest with read only access to the second shared volume |
 | AFP_READONLY        | Mount volume as read-only                                                                      |
+| AFP_MULTI_PROTOCOL  | REQUIRED when anything other than Netatalk writes the shared storage (SMB/NFS servers, host scripts, NAS apps): applies the coherency defaults, see afp.conf(5) |
 | DISABLE_TIMEMACHINE | The secondary shared volume is a regular volume, not a backup volume                           |
 | **File System Configuration** |                                                                                         |
 | AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |

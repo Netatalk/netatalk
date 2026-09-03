@@ -436,6 +436,14 @@ else
     AFP_EA="sys"
 fi
 
+# Server-wide coherency posture: require a non-zero value, so a stray 0
+# cannot silently make every volume stricter.
+if [ -n "$AFP_MULTI_PROTOCOL" ] && [ "$AFP_MULTI_PROTOCOL" != "0" ]; then
+    AFP_MULTIPROTO="yes"
+else
+    AFP_MULTIPROTO="no"
+fi
+
 # Canonical: AFP_STRICT_LOCKING (matches the renamed 'strict locking'
 # option). AFP_READ_LOCKS is the deprecated old name, kept as a fallback;
 # the new name wins when both are set.
@@ -611,7 +619,7 @@ cnid mysql pw = $AFP_CNID_SQL_PASS
 cnid mysql db = $AFP_CNID_SQL_DB
 dircache size = ${AFP_DIRCACHESIZE:-65536}
 ${AFP_DIRCACHE_MODE:+dircache mode = $AFP_DIRCACHE_MODE}
-dircache validation freq = ${AFP_DIRCACHE_VALIDATION_FREQ:-1}
+${AFP_DIRCACHE_VALIDATION_FREQ:+dircache validation freq = $AFP_DIRCACHE_VALIDATION_FREQ}
 ${AFP_DIRCACHE_RFORK_BUDGET:+dircache rfork budget = $AFP_DIRCACHE_RFORK_BUDGET}
 dircache rfork maxsize = ${AFP_DIRCACHE_RFORK_MAXSIZE:-1024}
 server quantum = ${AFP_SERVER_QUANTUM:-1048576}
@@ -632,6 +640,7 @@ spotlight results limit = ${AFP_SPOTLIGHT_RESULTS_LIMIT:-10000}
 [${SHARE_NAME:-File Sharing}]
 cnid scheme = ${AFP_CNID_BACKEND:-sqlite}
 ea = $AFP_EA
+multi protocol = $AFP_MULTIPROTO
 path = $NETATALK_SHARE_DIR
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
@@ -641,6 +650,7 @@ spotlight = $AFP_SPOTLIGHT_GLOBAL
 [${SHARE_NAME2:-Time Machine}]
 cnid scheme = ${AFP_CNID_BACKEND:-sqlite}
 ea = $AFP_EA
+multi protocol = $AFP_MULTIPROTO
 path = $NETATALK_BACKUP_DIR
 time machine = $TIMEMACHINE
 valid users = $AFP_VALIDUSERS2

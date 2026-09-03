@@ -12,7 +12,7 @@
   GNU General Public License for more details.
 
   Config-resolution unit tests: the strict boolean parser, the ea (G)/(V)
-  fallback, the strict locking rename, and the ea = samba coherency
+  fallback, the strict locking rename, and the multi protocol coherency
   defaults.  Each test is self-contained: it writes its own afp.conf to a
   temp file, parses it into a local AFPObj, asserts, and tears down.
 */
@@ -742,27 +742,24 @@ cleanup:
     return failed;
 }
 
-/* utest_conf_samba_defaults: ea = samba with no explicit settings applies
- * the coherency defaults process-wide and logs the note; a garbled
- * strict locking value is ignored (warned) and the samba default still
- * applies; a mixed samba+sys config applies them too and both volumes
- * load. */
-int utest_conf_samba_defaults(void)
+/* utest_conf_multiproto_defaults: multi protocol = yes with no explicit
+ * settings applies the coherency defaults process-wide and logs the
+ * note; a garbled strict locking value is ignored (warned) and the
+ * default still applies; a mixed multi protocol + plain config applies
+ * them too, both volumes load, and only the declaring volume carries the
+ * flag; the key resolves through [Global]; an explicit volume-level 'no'
+ * beats a [Global] 'yes'. */
+int utest_conf_multiproto_defaults(void)
 {
     AFPObj obj;
     char logpath[64];
     char body[1024];
     int failed = -1;
+    const struct vol *vol;
     char *voldir = conf_mkvoldir();
     char *voldir2 = NULL;
 
     if (voldir == NULL) {
-        return TEST_SKIP;
-    }
-
-    if (!conf_dir_xattr_ok(voldir)) {
-        rmdir(voldir);
-        free(voldir);
         return TEST_SKIP;
     }
 
@@ -780,31 +777,34 @@ int utest_conf_samba_defaults(void)
         return TEST_SKIP;
     }
 
-    /* Case 1: bare ea = samba -> defaults applied + notes logged */
-    snprintf(body, sizeof(body), "[utestvol]\npath = %s\nea = samba\n",
-             voldir);
+    /* Case 1: bare multi protocol = yes -> defaults applied + notes logged */
+    snprintf(body, sizeof(body),
+             "[utestvol]\npath = %s\nmulti protocol = yes\n", voldir);
 
     if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
         goto cleanup;
     }
 
-    if (!(obj.options.flags & OPTION_STRICT_LOCKING)
+    vol = conf_vol_by_name("utestvol");
+
+    if (vol == NULL || !(vol->v_flags & AFPVOL_MULTIPROTO)
+            || !(obj.options.flags & OPTION_STRICT_LOCKING)
             || obj.options.dircache_validation_freq != 1
             || conf_log_contains(logpath,
                                  "defaulting 'strict locking' to yes") != 1) {
         fprintf(test_stream(),
-                "# utest_conf_samba_defaults: defaults not applied (flags 0x%x freq %d)\n",
+                "# utest_conf_multiproto_defaults: defaults not applied (flags 0x%x freq %d)\n",
                 obj.options.flags, obj.options.dircache_validation_freq);
         conf_teardown(&obj, NULL);
         goto cleanup;
     }
 
     conf_teardown(&obj, NULL);
-    /* Case 2: garbled strict locking is ignored; samba default applies */
+    /* Case 2: garbled strict locking is ignored; the default applies */
     conf_log_truncate(logpath);
     snprintf(body, sizeof(body),
-             "strict locking = garbled\n[utestvol]\npath = %s\nea = samba\n",
-             voldir);
+             "strict locking = garbled\n"
+             "[utestvol]\npath = %s\nmulti protocol = yes\n", voldir);
 
     if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
         goto cleanup;
@@ -816,28 +816,73 @@ int utest_conf_samba_defaults(void)
             || conf_log_contains(logpath,
                                  "defaulting 'strict locking' to yes") != 1) {
         fprintf(test_stream(),
-                "# utest_conf_samba_defaults: garbled value blocked the default\n");
+                "# utest_conf_multiproto_defaults: garbled value blocked the default\n");
         conf_teardown(&obj, NULL);
         goto cleanup;
     }
 
     conf_teardown(&obj, NULL);
-    /* Case 3: mixed samba + sys volumes; both load, defaults process-wide */
+    /* Case 3: mixed multi protocol + plain volumes; both load, defaults
+     * process-wide, only the declaring volume carries the flag */
     conf_log_truncate(logpath);
     snprintf(body, sizeof(body),
-             "[utestvol]\npath = %s\nea = samba\n[utestvol2]\npath = %s\nea = sys\n",
+             "[utestvol]\npath = %s\nmulti protocol = yes\n"
+             "[utestvol2]\npath = %s\n",
              voldir, voldir2);
 
     if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
         goto cleanup;
     }
 
+    vol = conf_vol_by_name("utestvol2");
+
     if (!(obj.options.flags & OPTION_STRICT_LOCKING)
             || obj.options.dircache_validation_freq != 1
             || conf_vol_by_name("utestvol") == NULL
-            || conf_vol_by_name("utestvol2") == NULL) {
+            || vol == NULL || (vol->v_flags & AFPVOL_MULTIPROTO)) {
         fprintf(test_stream(),
-                "# utest_conf_samba_defaults: mixed config failed\n");
+                "# utest_conf_multiproto_defaults: mixed config failed\n");
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    /* Case 4: [Global] multi protocol = yes reaches a plain volume */
+    conf_log_truncate(logpath);
+    snprintf(body, sizeof(body),
+             "multi protocol = yes\n[utestvol]\npath = %s\n", voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestvol");
+
+    if (vol == NULL || !(vol->v_flags & AFPVOL_MULTIPROTO)
+            || !(obj.options.flags & OPTION_STRICT_LOCKING)) {
+        fprintf(test_stream(),
+                "# utest_conf_multiproto_defaults: [Global] key did not reach the volume\n");
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    /* Case 5: explicit volume-level 'no' beats a [Global] 'yes' */
+    conf_log_truncate(logpath);
+    snprintf(body, sizeof(body),
+             "multi protocol = yes\n"
+             "[utestvol]\npath = %s\nmulti protocol = no\n", voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestvol");
+
+    if (vol == NULL || (vol->v_flags & AFPVOL_MULTIPROTO)
+            || (obj.options.flags & OPTION_STRICT_LOCKING)) {
+        fprintf(test_stream(),
+                "# utest_conf_multiproto_defaults: volume-level 'no' did not win\n");
         conf_teardown(&obj, NULL);
         goto cleanup;
     }
@@ -853,10 +898,10 @@ cleanup:
     return failed;
 }
 
-/* utest_conf_samba_explicit_wins: the core defaults-not-force test —
- * explicit weaker settings SURVIVE ea = samba, each with its verbose
- * warning. */
-int utest_conf_samba_explicit_wins(void)
+/* utest_conf_multiproto_explicit_wins: the core defaults-not-force test —
+ * explicit weaker settings SURVIVE multi protocol = yes, each with its
+ * verbose warning. */
+int utest_conf_multiproto_explicit_wins(void)
 {
     AFPObj obj;
     char logpath[64];
@@ -865,12 +910,6 @@ int utest_conf_samba_explicit_wins(void)
     char *voldir = conf_mkvoldir();
 
     if (voldir == NULL) {
-        return TEST_SKIP;
-    }
-
-    if (!conf_dir_xattr_ok(voldir)) {
-        rmdir(voldir);
-        free(voldir);
         return TEST_SKIP;
     }
 
@@ -884,7 +923,7 @@ int utest_conf_samba_explicit_wins(void)
              "strict locking = no\n"
              "dircache validation freq = 100\n"
              "dircache rfork budget = 1024\n"
-             "[utestvol]\npath = %s\nea = samba\n",
+             "[utestvol]\npath = %s\nmulti protocol = yes\n",
              voldir);
 
     if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
@@ -898,7 +937,7 @@ int utest_conf_samba_explicit_wins(void)
             || !obj.options.dircache_validation_freq_explicit
             || !obj.options.dircache_rfork_budget_explicit) {
         fprintf(test_stream(),
-                "# utest_conf_samba_explicit_wins: explicit settings overridden "
+                "# utest_conf_multiproto_explicit_wins: explicit settings overridden "
                 "(flags 0x%x freq %d budget %d)\n",
                 obj.options.flags, obj.options.dircache_validation_freq,
                 obj.options.dircache_rfork_budget);
@@ -913,7 +952,7 @@ int utest_conf_samba_explicit_wins(void)
             || conf_log_contains(logpath,
                                  "rfork caching is explicitly enabled") != 1) {
         fprintf(test_stream(),
-                "# utest_conf_samba_explicit_wins: missing coherency warnings\n");
+                "# utest_conf_multiproto_explicit_wins: missing coherency warnings\n");
         conf_teardown(&obj, NULL);
         goto cleanup;
     }
@@ -927,10 +966,10 @@ cleanup:
     return failed;
 }
 
-/* utest_conf_no_samba_regression: without ea = samba nothing changes —
- * strict locking stays off, an explicit freq keeps its value, and no
- * samba log lines appear. */
-int utest_conf_no_samba_regression(void)
+/* utest_conf_no_multiproto_regression: without multi protocol nothing
+ * changes — strict locking stays off, an explicit freq keeps its value,
+ * and no multi protocol log lines appear. */
+int utest_conf_no_multiproto_regression(void)
 {
     AFPObj obj;
     char logpath[64];
@@ -957,10 +996,10 @@ int utest_conf_no_samba_regression(void)
 
     if ((obj.options.flags & OPTION_STRICT_LOCKING)
             || obj.options.dircache_validation_freq != 7
-            || conf_log_contains(logpath, "ea = samba") != 0) {
+            || conf_log_contains(logpath, "multi protocol") != 0) {
         fprintf(test_stream(),
-                "# utest_conf_no_samba_regression: state changed without samba "
-                "(flags 0x%x freq %d)\n",
+                "# utest_conf_no_multiproto_regression: state changed without "
+                "multi protocol (flags 0x%x freq %d)\n",
                 obj.options.flags, obj.options.dircache_validation_freq);
         conf_teardown(&obj, NULL);
         goto cleanup;
@@ -975,11 +1014,322 @@ cleanup:
     return failed;
 }
 
+/* utest_conf_stock_defaults: a config that sets nothing gets the
+ * single-accessor posture — dircache validation freq 100 with the
+ * explicitness marker clear, strict locking off, and no multi protocol
+ * flag on the volume. */
+int utest_conf_stock_defaults(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[512];
+    int failed = -1;
+    const struct vol *vol;
+    char *voldir = conf_mkvoldir();
+
+    if (voldir == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body), "[utestvol]\npath = %s\n", voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestvol");
+
+    if (vol == NULL || (vol->v_flags & AFPVOL_MULTIPROTO)
+            || (obj.options.flags & OPTION_STRICT_LOCKING)
+            || obj.options.dircache_validation_freq != 100
+            || obj.options.dircache_validation_freq_explicit) {
+        fprintf(test_stream(),
+                "# utest_conf_stock_defaults: unexpected stock posture "
+                "(flags 0x%x freq %d explicit %d)\n",
+                obj.options.flags, obj.options.dircache_validation_freq,
+                obj.options.dircache_validation_freq_explicit);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
+/* utest_conf_dircache_validation_freq_range: the parser bounds the option
+ * so every reader can use it as-is.  An unparsable or out-of-range value
+ * warns, falls back to the default, and does NOT count as explicit, so
+ * the multi protocol coherency default still applies to it. */
+int utest_conf_dircache_validation_freq_range(void)
+{
+    static const struct {
+        const char *body;
+        int freq;
+        int expect_explicit;
+        int expect_warning;
+    } cases[] = {
+        {"", DEFAULT_DIRCACHE_VALIDATION_FREQ, 0, 0},
+        {"dircache validation freq = 1\n", 1, 1, 0},
+        {"dircache validation freq = 100\n", 100, 1, 0},
+        {
+            "dircache validation freq = 0\n",
+            DEFAULT_DIRCACHE_VALIDATION_FREQ, 0, 1
+        },
+        {
+            "dircache validation freq = -1\n",
+            DEFAULT_DIRCACHE_VALIDATION_FREQ, 0, 1
+        },
+        {
+            "dircache validation freq = 101\n",
+            DEFAULT_DIRCACHE_VALIDATION_FREQ, 0, 1
+        },
+        {
+            "dircache validation freq = 10O\n",
+            DEFAULT_DIRCACHE_VALIDATION_FREQ, 0, 1
+        },
+    };
+    AFPObj obj;
+    char logpath[64];
+    int failed = -1;
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        conf_log_truncate(logpath);
+
+        if (conf_parse_fixture(&obj, cases[i].body, logpath) != 0) {
+            goto cleanup;
+        }
+
+        int warned = conf_log_contains(logpath, "dircache validation freq value");
+
+        if (obj.options.dircache_validation_freq != cases[i].freq
+                || obj.options.dircache_validation_freq_explicit
+                != cases[i].expect_explicit
+                || warned != cases[i].expect_warning) {
+            fprintf(test_stream(),
+                    "# utest_conf_dircache_validation_freq_range: case %zu: "
+                    "freq %d/%d explicit %d/%d warned %d/%d\n",
+                    i, obj.options.dircache_validation_freq, cases[i].freq,
+                    obj.options.dircache_validation_freq_explicit,
+                    cases[i].expect_explicit, warned, cases[i].expect_warning);
+            conf_teardown(&obj, NULL);
+            goto cleanup;
+        }
+
+        conf_teardown(&obj, NULL);
+    }
+
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    return failed;
+}
+
+/* utest_conf_multiproto_reverts_unusable_freq: an unusable explicit freq
+ * is not an operator instruction, so multi protocol still defaults it to
+ * 1 and logs the note rather than the weakens-coherency warning. */
+int utest_conf_multiproto_reverts_unusable_freq(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[512];
+    int failed = -1;
+    char *voldir = conf_mkvoldir();
+
+    if (voldir == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body),
+             "dircache validation freq = 200\n"
+             "[utestvol]\npath = %s\nmulti protocol = yes\n", voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    if (obj.options.dircache_validation_freq != 1
+            || obj.options.dircache_validation_freq_explicit
+            || conf_log_contains(logpath,
+                                 "defaulting 'dircache validation freq' to 1") != 1
+            || conf_log_contains(logpath,
+                                 "'dircache validation freq' is explicitly") != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_multiproto_reverts_unusable_freq: unusable value "
+                "treated as explicit (freq %d explicit %d)\n",
+                obj.options.dircache_validation_freq,
+                obj.options.dircache_validation_freq_explicit);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
+/* utest_conf_ea_samba_no_defaults: ea = samba selects the storage format
+ * only — no coherency default changes, and the pointer to
+ * multi protocol is logged. */
+int utest_conf_ea_samba_no_defaults(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[512];
+    int failed = -1;
+    const struct vol *vol;
+    char *voldir = conf_mkvoldir();
+
+    if (voldir == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (!conf_dir_xattr_ok(voldir)) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body), "[utestvol]\npath = %s\nea = samba\n",
+             voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestvol");
+
+    if (vol == NULL || !(vol->v_flags & AFPVOL_EA_SAMBA)
+            || (vol->v_flags & AFPVOL_MULTIPROTO)
+            || (obj.options.flags & OPTION_STRICT_LOCKING)
+            || obj.options.dircache_validation_freq != 100
+            || conf_log_contains(logpath,
+                                 "defaulting 'strict locking' to yes") != 0
+            || conf_log_contains(logpath,
+                                 "selects only the storage format") != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_ea_samba_no_defaults: ea = samba changed the "
+                "coherency posture (flags 0x%x freq %d)\n",
+                obj.options.flags, obj.options.dircache_validation_freq);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
+/* utest_conf_multiproto_ea_recommendation: a multi protocol volume
+ * without the samba EA format gets the loud ea = samba recommendation —
+ * the unset wording when ea is absent, the explicit wording when the
+ * operator chose another format, and no recommendation at all once
+ * ea = samba is set. */
+int utest_conf_multiproto_ea_recommendation(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[512];
+    int failed = -1;
+    char *voldir = conf_mkvoldir();
+
+    if (voldir == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (!conf_dir_xattr_ok(voldir)) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    static const struct {
+        const char *ea_line;
+        const char *expect_present;
+        const char *expect_absent;
+    } cases[] = {
+        {"", "with 'ea' unset", "explicitly"},
+        {"ea = sys\n", "with 'ea' explicitly sys", NULL},
+        {"ea = samba\n", NULL, "metadata stays in Netatalk's native format"},
+    };
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        conf_log_truncate(logpath);
+        snprintf(body, sizeof(body),
+                 "[utestvol]\npath = %s\nmulti protocol = yes\n%s",
+                 voldir, cases[i].ea_line);
+
+        if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+            goto cleanup;
+        }
+
+        if ((cases[i].expect_present
+                && conf_log_contains(logpath, cases[i].expect_present) != 1)
+                || (cases[i].expect_absent
+                    && conf_log_contains(logpath, cases[i].expect_absent) != 0)) {
+            fprintf(test_stream(),
+                    "# utest_conf_multiproto_ea_recommendation: case %zu: "
+                    "wrong recommendation logging\n", i);
+            conf_teardown(&obj, NULL);
+            goto cleanup;
+        }
+
+        conf_teardown(&obj, NULL);
+    }
+
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
 /* utest_conf_samba_requires_ea: an ea = samba volume on a filesystem
  * without user-xattr support must NOT load (hard-fail), other volumes in
- * the same config still load, and the defaults are not applied.  Needs a
- * genuinely xattr-rejecting mount (probe must fail ENOTSUP); skips when
- * the host offers none. */
+ * the same config still load, and the process posture is untouched.
+ * Needs a genuinely xattr-rejecting mount (probe must fail ENOTSUP);
+ * skips when the host offers none. */
 int utest_conf_samba_requires_ea(void)
 {
     static const char *candidates[] = {"/proc", "/sys"};
@@ -1125,11 +1475,12 @@ cleanup:
     return failed;
 }
 
-/* utest_conf_samba_defaults_not_leaked_on_failed_volume: a samba volume
- * whose creatvol() fails AFTER the ea parse (vid saturation seam) must not
- * change process defaults nor log that it did — proves the defaults call
- * sits in the commit block, not at the parse. */
-int utest_conf_samba_defaults_not_leaked_on_failed_volume(void)
+/* utest_conf_multiproto_defaults_not_leaked_on_failed_volume: a multi
+ * protocol volume whose creatvol() fails AFTER the option parse (vid
+ * saturation seam) must not change process defaults nor log that it did
+ * — proves the defaults call sits in the commit block, not at the
+ * parse. */
+int utest_conf_multiproto_defaults_not_leaked_on_failed_volume(void)
 {
     AFPObj obj;
     char logpath[64];
@@ -1141,20 +1492,14 @@ int utest_conf_samba_defaults_not_leaked_on_failed_volume(void)
         return TEST_SKIP;
     }
 
-    if (!conf_dir_xattr_ok(voldir)) {
-        rmdir(voldir);
-        free(voldir);
-        return TEST_SKIP;
-    }
-
     if (conf_mklog(logpath, sizeof(logpath)) != 0) {
         rmdir(voldir);
         free(voldir);
         return TEST_SKIP;
     }
 
-    snprintf(body, sizeof(body), "[utestvol]\npath = %s\nea = samba\n",
-             voldir);
+    snprintf(body, sizeof(body),
+             "[utestvol]\npath = %s\nmulti protocol = yes\n", voldir);
 
     if (conf_parse_fixture(&obj, body, logpath) != 0) {
         goto cleanup;
@@ -1162,8 +1507,8 @@ int utest_conf_samba_defaults_not_leaked_on_failed_volume(void)
 
     /* Saturate the vid counter (after the fixture's defensive
      * unload_volumes(), which resets it): the single fresh load below then
-     * hits creatvol()'s vid-overflow EC_FAIL after the ea parse and before
-     * the commit block. */
+     * hits creatvol()'s vid-overflow EC_FAIL after the option parse and
+     * before the commit block. */
     conf_testutil_set_lastvid(UINT16_MAX);
 
     if (load_afp_conf_vols(&obj, LV_ALL) != 0) {
@@ -1173,10 +1518,10 @@ int utest_conf_samba_defaults_not_leaked_on_failed_volume(void)
 
     if (conf_vol_by_name("utestvol") != NULL
             || (obj.options.flags & OPTION_STRICT_LOCKING)
-            || conf_log_contains(logpath, "ea = samba") != 0) {
+            || conf_log_contains(logpath, "multi protocol") != 0) {
         fprintf(test_stream(),
-                "# utest_conf_samba_defaults_not_leaked: defaults leaked from a "
-                "failed volume (flags 0x%x)\n", obj.options.flags);
+                "# utest_conf_multiproto_defaults_not_leaked: defaults leaked "
+                "from a failed volume (flags 0x%x)\n", obj.options.flags);
         conf_teardown(&obj, NULL);
         goto cleanup;
     }
@@ -1193,13 +1538,12 @@ cleanup:
     return failed;
 }
 
-/* utest_conf_samba_future_defaults: ea = samba reverts
- * performance-oriented compiled defaults (dircache validation freq
- * 100, rfork cache on).  Overriding the parsed values between
- * afp_config_parse() and the volume load produces exactly the state a
- * changed built-in default would: values set, explicitness markers
- * clear, keys absent from the config. */
-int utest_conf_samba_future_defaults(void)
+/* utest_conf_multiproto_reverts_compiled_defaults: multi protocol = yes
+ * reverts the performance-oriented compiled defaults — the real freq
+ * default of 100 goes back to 1, and a simulated rfork-cache-on default
+ * (value set, explicitness marker clear, key absent from the config)
+ * logs the exclusion note while the process-global budget stays. */
+int utest_conf_multiproto_reverts_compiled_defaults(void)
 {
     AFPObj obj;
     char logpath[64];
@@ -1211,26 +1555,19 @@ int utest_conf_samba_future_defaults(void)
         return TEST_SKIP;
     }
 
-    if (!conf_dir_xattr_ok(voldir)) {
-        rmdir(voldir);
-        free(voldir);
-        return TEST_SKIP;
-    }
-
     if (conf_mklog(logpath, sizeof(logpath)) != 0) {
         rmdir(voldir);
         free(voldir);
         return TEST_SKIP;
     }
 
-    snprintf(body, sizeof(body), "[utestvol]\npath = %s\nea = samba\n",
-             voldir);
+    snprintf(body, sizeof(body),
+             "[utestvol]\npath = %s\nmulti protocol = yes\n", voldir);
 
     if (conf_parse_fixture(&obj, body, logpath) != 0) {
         goto cleanup;
     }
 
-    obj.options.dircache_validation_freq = 100;
     obj.options.dircache_rfork_budget = 1024;
 
     if (load_afp_conf_vols(&obj, LV_ALL) != 0) {
@@ -1239,7 +1576,7 @@ int utest_conf_samba_future_defaults(void)
     }
 
     /* freq reverts to 1 with the note; the budget stays (it is
-     * process-global -- non-samba volumes keep the cache; the samba
+     * process-global -- other volumes keep the cache; the multi protocol
      * volume is excluded per-volume at the fork.c gate) and the
      * exclusion note fires. */
     if (obj.options.dircache_validation_freq != 1
@@ -1249,8 +1586,8 @@ int utest_conf_samba_future_defaults(void)
             || conf_log_contains(logpath,
                                  "excluded from the rfork cache by default") != 1) {
         fprintf(test_stream(),
-                "# utest_conf_samba_future_defaults: reversion failed "
-                "(freq %d budget %d)\n",
+                "# utest_conf_multiproto_reverts_compiled_defaults: reversion "
+                "failed (freq %d budget %d)\n",
                 obj.options.dircache_validation_freq,
                 obj.options.dircache_rfork_budget);
         conf_teardown(&obj, NULL);

@@ -556,15 +556,17 @@ dircache size = *number* **(G)**
 > Minimum: 1024 (1K). Default: 65536 (64K). Maximum: 1048576 (1M).
 > Higher values improve hit ratios but use more memory.
 
-dircache validation freq = *number* **(G)**
+dircache validation freq = *number* (default: *100*) **(G)**
 
 > Directory cache validation frequency for external change detection.
-> Value of 1 means validate every access (default for backward
-compatibility), higher values validate less frequently.
-> If Netatalk is the only process accessing the volume you can safely
-set a value of 100 for maximum performance.
-> When a volume uses **ea = samba** this defaults to *1*; an explicit
-higher value wins, with a logged warning (see **ea**).
+> Value of 1 means validate every access, higher values validate less
+frequently; a value outside 1-100 is rejected with a warning and the
+default applies. The default assumes Netatalk is the only process writing
+the volume. If any other process modifies a volume, share it with
+**multi protocol = yes** (which defaults this option to 1 together with
+the other coherency settings), or set 1 explicitly.
+> An explicit higher value wins over the **multi protocol** default, with
+a logged warning (see **multi protocol**).
 
 dircache mode = *lru* | *arc* (default: *arc*) **(G)**
 
@@ -589,9 +591,10 @@ Finder resources — in whichever backend the **ea** option stores them
 (AppleDouble sidecar files or extended attributes). Other extended
 attributes are not cached.
 >
-> Volumes with **ea = samba** are excluded from the cache by default,
-because Samba can change resource forks behind afpd's back. Setting this
-option explicitly lifts the exclusion, with a logged warning (see **ea**).
+> Volumes with **multi protocol = yes** are excluded from the cache by
+default, because another process can change resource forks behind afpd's
+back. Setting this option explicitly lifts the exclusion, with a logged
+warning (see **multi protocol**).
 >
 > Maximum: 10485760 (10 GB in KB) total.
 
@@ -602,7 +605,7 @@ Resource forks larger than this value will not be cached even if the total
 budget has not been exhausted.
 >
 > Has no effect on volumes excluded from the resource fork cache, such as
-**ea = samba** volumes (see **dircache rfork budget**).
+**multi protocol = yes** volumes (see **dircache rfork budget**).
 >
 > Maximum: 10240 (10 MB in KB) per entry.
 
@@ -700,9 +703,10 @@ strict locking = *BOOLEAN* (default: *no*) **(G)**
 > Take POSIX byte-range locks on file data for every AFP read and write so
 they conflict with other POSIX lockers such as Samba (pair with Samba's own
 **strict locking = yes**); off, AFP locks are invisible to other processes.
-**afp read locks** is a deprecated synonym.
-> When a volume uses **ea = samba** this defaults to *yes*; an explicit
-*no* wins, with a logged warning (see **ea**).
+**afp read locks** is a deprecated synonym. Volumes that other processes
+modify should set **multi protocol = yes**, which defaults this option
+to *yes* together with the other coherency settings; an explicit *no*
+wins, with a logged warning (see **multi protocol**).
 
 solaris share reservations = *BOOLEAN* (default: *yes*) **(G)**
 
@@ -1268,16 +1272,13 @@ For read-only volumes, set this option explicitly.
 > samba
 >
 > > Use filesystem Extended Attributes, but append a 0 byte to each xattr in
-order to be compatible with Samba's vfs_streams_xattr.
->
-> > Selecting **samba** also changes the server defaults to the values safe
-concurrent Samba access requires: **strict locking** defaults to *yes*,
-**dircache validation freq** defaults to *1*, and the volume is excluded
-from the resource-fork data cache. Explicit settings always win; every
-explicit setting that weakens Samba coherency logs a verbose warning
-describing the risk. It
+order to be compatible with Samba's vfs_streams_xattr. It
 requires filesystem Extended Attribute support; a volume whose filesystem
 cannot store them fails to load.
+>
+> > This option selects the storage format only. A volume that other
+processes modify should additionally set **multi protocol = yes**, which
+applies the coherency defaults safe concurrent access requires.
 >
 > ad
 >
@@ -1291,6 +1292,35 @@ Extended Attributes.
 >
 > ***WARNING:*** The **samba** option should not be used on a volume that was previously
 set to **sys**. This may lead to data loss (client copy between shares to convert).
+
+multi protocol = *BOOLEAN* (default: *no*) **(G)**/**(V)**
+
+> Declare that processes other than Netatalk modify the volume: another
+file sharing protocol (Samba/SMB, NFS) or local access on the server
+(scripts, cron jobs, shell users).
+>
+> Enabling it changes the server defaults to the values safe concurrent
+access requires: **strict locking** defaults to *yes*, **dircache
+validation freq** defaults to *1*, the volume is excluded from the
+resource-fork data cache, and on Solaris **solaris share reservations**
+stays enforced. Explicit settings always win; every explicit setting
+that weakens coherency logs a verbose warning describing the risk.
+>
+> Pairing with **ea = samba** is recommended so the other accessors can
+read the volume's Extended Attributes; a warning is logged when a
+multi protocol volume uses a different ea format.
+>
+> **strict locking** and **dircache validation freq** are server-wide
+settings, so one multi protocol volume applies them to every volume:
+declaring it makes the whole server stricter, and a volume that sets
+**multi protocol = no** still gets them (only its exclusion from the
+resource fork cache is per-volume). Volumes are loaded with the
+configuration present at startup; changing this option takes effect for
+sessions that connect afterwards.
+>
+> When disabled (the default), Netatalk assumes it is the only process
+writing its volumes and serves them cache-backed for maximum
+performance.
 
 mac charset = *charset* **(V)**
 

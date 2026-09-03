@@ -12,14 +12,18 @@ While the dircache is always kept in sync with AFP operations,
 it does not detect changes made outside of Netatalk
 (e.g. local filesystem changes, or modifications by other file sharing services such as Samba).
 
-By default (with *dircache validation freq = 1*),
+With *dircache validation freq = 1*,
 Netatalk performs a *stat()* operation on every access to validate
 that the cache entry still matches the storage layer.
 While the cache still avoids most I/O operations,
 this ctime check adds some overhead.
-When Netatalk is the only process accessing a storage volume,
-you can set a high *dircache validation freq* value (e.g. 100) to skip most of these extra *stat()* calls,
+The default of 100 assumes Netatalk is the only process writing the volume
+and skips most of these extra *stat()* calls,
 reducing load on the storage and page-cache layers.
+When any other process modifies a volume,
+share it with *multi protocol = yes*
+(which defaults this option to 1 together with the other coherency settings),
+or set 1 explicitly.
 
 If a dircache entry is found to be stale when accessed,
 Netatalk gracefully detects the issue,
@@ -44,14 +48,14 @@ Directory cache validation frequency for external change detection.
 Controls how often cached entries are validated against the filesystem
 to detect changes made outside of Netatalk
 (e.g. direct filesystem modifications by other processes).
-A value of 1 means validate on every access
-(the default, for backward compatibility);
+A value of 1 means validate on every access;
 higher values validate less frequently.
 For example, 5 means validate cache entries every 5th access.
 Higher values improve performance and reduce storage I/O and page-cache stress,
 but may delay detection of external changes.
 
-Default: 1, Range: 1–100.
+Default: 100, Range: 1–100.
+*multi protocol = yes* volumes default this option to 1.
 
 Internal Netatalk operations (file/directory create, delete, rename)
 always update dircache entries immediately regardless of this setting.
@@ -133,8 +137,9 @@ Resource forks larger than this value are not cached even if the total budget ha
 
 Maximum: 10240 (10 MB in KB).
 
-Volumes with **ea = samba** are excluded from the resource fork cache by
-default, because Samba can change resource forks without afpd noticing.
+Volumes with **multi protocol = yes** are excluded from the resource fork
+cache by default, because other processes can change resource forks
+without afpd noticing.
 An explicit **dircache rfork budget** setting lifts the exclusion,
 with a logged warning.
 

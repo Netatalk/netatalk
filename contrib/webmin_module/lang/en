@@ -220,6 +220,7 @@ edit_global_section_tcpsndbuf=TCP send buffer
 edit_global_section_recvfile=Splice received data
 edit_global_section_splice_size=Splice size (bytes)
 edit_global_section_use_sendfile=Use sendfile
+edit_global_section_multi_protocol=Multi protocol (modified by other processes)
 edit_global_section_strict_locking=Strict locking
 edit_global_section_chmod_request=ACL chmod request
 edit_global_section_close_vol=Close volumes when reloaded
