@@ -516,6 +516,12 @@ print &ui_tabs_end_tab('mode', 'network');
 print &ui_tabs_start_tab('mode', 'misc');
 print &ui_table_start($text{'edit_global_section_title_table'}, 'width="100%"', 2);
 
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'multi protocol', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_multi_protocol'},
+                    &build_parameter_select($afpconfRef, $sectionRef, \%in, 'multi protocol')
+);
+
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'strict locking', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_strict_locking'},

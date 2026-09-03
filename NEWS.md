@@ -4,6 +4,27 @@ Netatalk Changelog
 Changes in 4.6.0
 ----------------
 
+* NEW: afpd: `multi protocol = yes|no` (default no) declares that other
+  processes (Samba, NFS, local tools) modify a volume, and defaults every
+  coherency setting accordingly: `strict locking = yes`, `dircache
+  validation freq = 1`, resource-fork cache exclusion, and (Solaris)
+  F_SHARE reservations. Explicit settings still win, with a logged
+  warning when they weaken coherency.
+  **Every deployment where anything other than Netatalk writes the shared
+  storage MUST set `multi protocol = yes`** - this includes volumes also
+  served over SMB/Samba or NFS, NAS products with a web UI or apps that
+  write to the share, and hosts where scripts, cron jobs, rsync, or shell
+  users modify files. The other defaults are tuned for exclusive Netatalk
+  access and are not safe for those deployments without it. Pair it with
+  `ea = samba` when Samba serves the same volume, GitHub #3270
+* BREAKING: afpd: `dircache validation freq` now defaults to 100
+  (validate every 100th access). The old default of 1 revalidated on
+  every access to detect external changes - protection the default
+  `strict locking = no` never mirrored at the locking layer. Volumes
+  modified by other processes should set `multi protocol = yes`, which
+  forces revalidation on every access along with the other coherency
+  defaults; or set `dircache validation freq = 1` explicitly,
+  GitHub #3270
 * DEPRECATED: cnid: the *dbd* CNID scheme is deprecated: it receives no new
   features and no further fixes. Remove `cnid scheme = dbd` from all
   configurations and migrate to *sqlite* (the new default) or *mysql*; dbd
@@ -42,9 +63,9 @@ Changes in 4.6.0
   change; previously it always ran when the dbd backend was compiled in,
   GitHub #3269
 * UPD: afpd: the resource-fork data cache is now enabled by default
-  (`dircache rfork budget = 32768`, 32 MB). `ea = samba` volumes remain
-  excluded (Samba mutates resource forks behind afpd's back). Set
-  `dircache rfork budget = 0` to disable, GitHub #3266
+  (`dircache rfork budget = 32768`, 32 MB). `multi protocol = yes` volumes
+  remain excluded (another process may mutate resource forks behind afpd's
+  back). Set `dircache rfork budget = 0` to disable, GitHub #3266
 * UPD: afpd: `dircache mode` now defaults to *arc* (10-50% better hit
   ratios, 2x on sequential scans). ARC can use up to 2x the dircache
   memory (~24 MB vs ~12 MB at the default size): evicted entries may be
@@ -61,12 +82,12 @@ Changes in 4.6.0
   option name for the same behaviour; the old name is a deprecated synonym
   that logs a warning. The option takes POSIX byte-range locks for both reads
   and writes, GitHub #3223
-* UPD: afpd: sharing a volume with Samba is now a single option: `ea = samba`
-  selects the Samba-compatible metadata format and defaults every related
-  setting for safe concurrent access (`strict locking = yes`,
-  `dircache validation freq = 1`, resource-fork cache off). Explicit settings
-  still win, with a logged warning when they weaken Samba coherency,
-  GitHub #3223
+* UPD: afpd: sharing a volume with Samba is now a single option:
+  `multi protocol = yes` defaults every related setting for safe concurrent
+  access (`strict locking = yes`, `dircache validation freq = 1`,
+  resource-fork cache off), and `ea = samba` selects the Samba-compatible
+  metadata format. Explicit settings still win, with a logged warning when
+  they weaken coherency, GitHub #3223
 * NEW: test: end-to-end Samba interoperability test for `ea = samba`
   volumes (`samba_interop_test.sh`, shipped in the Debian testsuite
   container): a kernel CIFS mount and a netatalk-client FUSE mount on one

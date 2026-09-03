@@ -49,7 +49,6 @@ extern struct dir *dircache_search_by_name(const struct vol *,
 extern void       dircache_dump(void);
 extern void       log_dircache_stat(void);
 extern unsigned int dircache_resolve_size(int reqsize);
-extern int        dircache_set_validation_params(unsigned int freq);
 extern void       dircache_reset_validation_counter(void);
 extern void       dircache_report_invalid_entry(struct dir *dir);
 extern int        dircache_remove_children(const struct vol *vol,

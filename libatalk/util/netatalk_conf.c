@@ -930,7 +930,7 @@ static int conf_parse_bool(const char *opt, const char *val)
 /*!
  * @brief Whether a [Global] key is present with a non-empty value
  *
- * The explicitness probe for the ea = samba defaults: "the operator said
+ * The explicitness probe for the multi protocol defaults: "the operator said
  * something" is recorded separately from the parsed value so it stays
  * correct when compiled defaults change.  Empty values ("key = ") count
  * as unset, matching every parse in this file.  Note the deliberate
@@ -948,6 +948,36 @@ static int conf_key_present(INIPARSER_DICTIONARY *conf, const char *opt)
 {
     const char *raw = INIPARSER_GETSTR(conf, INISEC_GLOBAL, opt, NULL);
     return raw && *raw;
+}
+
+/*!
+ * @brief Whether a [Global] int key holds a value within bounds
+ *
+ * Explicitness probe for bounded int options: a value that does not parse
+ * or falls outside [min, max] was replaced by the default, so it is not
+ * an operator instruction and must not suppress a coherency default.
+ *
+ * @param[in] conf  config handle
+ * @param[in] opt   option name
+ * @param[in] min   lowest accepted value
+ * @param[in] max   highest accepted value
+ *
+ * @returns 1 when the key is set to a value in [min, max], else 0
+ */
+static int conf_int_key_usable(INIPARSER_DICTIONARY *conf, const char *opt,
+                               int min, int max)
+{
+    const char *raw = INIPARSER_GETSTR(conf, INISEC_GLOBAL, opt, NULL);
+    char *endptr;
+    long val;
+
+    if (raw == NULL || *raw == '\0') {
+        return 0;
+    }
+
+    errno = 0;
+    val = strtol(raw, &endptr, 10);
+    return errno == 0 && *endptr == '\0' && val >= min && val <= max;
 }
 
 /*!
@@ -1209,69 +1239,69 @@ static const char *vdgoption_str(INIPARSER_DICTIONARY *conf, const char *vol,
 }
 
 /*!
- * @brief Apply the ea = samba coherency defaults to the process options
+ * @brief Apply the multi protocol coherency defaults to the process options
  *
- * Defaults the settings safe concurrent Samba access requires: strict
- * locking on, dircache validation on every access, rfork caching off,
- * (Solaris) F_SHARE reservations on.  Defaults only: an explicit
- * afp.conf setting wins, with a warning when it weakens Samba coherency.
- * Idempotent across config reloads.
+ * Defaults the settings safe concurrent access by other processes
+ * (Samba, NFS, local tools) requires: strict locking on, dircache
+ * validation on every access, rfork caching off, (Solaris) F_SHARE
+ * reservations on.  Defaults only: an explicit afp.conf setting wins,
+ * with a warning when it weakens coherency.  Idempotent across config
+ * reloads.
  *
  * @param[in] obj      handle (options are process-global)
  * @param[in] volname  volume name, for the log messages
  */
-static void apply_samba_defaults(AFPObj *obj, const char *volname)
+static void apply_multiprotocol_defaults(AFPObj *obj, const char *volname)
 {
     struct afp_options *options = &obj->options;
 
     if (options->strict_locking_explicit) {
         if (!(options->flags & OPTION_STRICT_LOCKING)) {
             LOG(log_warning, logtype_afpd,
-                "creatvol(\"%s\"): ea = samba, however 'strict locking' is "
-                "explicitly disabled. AFP reads and writes will not respect "
-                "Samba's byte-range locks", volname);
+                "creatvol(\"%s\"): multi protocol = yes, however 'strict "
+                "locking' is explicitly disabled. AFP reads and writes will "
+                "not respect other processes' byte-range locks", volname);
         }
     } else if (!(options->flags & OPTION_STRICT_LOCKING)) {
         LOG(log_note, logtype_afpd,
-            "creatvol(\"%s\"): ea = samba: defaulting 'strict locking' to yes "
-            "(POSIX read+write data locks, visible to Samba)", volname);
+            "creatvol(\"%s\"): multi protocol = yes: defaulting 'strict "
+            "locking' to yes (POSIX read+write data locks, visible to other "
+            "lockers such as Samba)", volname);
         options->flags |= OPTION_STRICT_LOCKING;
     }
 
     if (options->dircache_validation_freq_explicit) {
-        /* Out-of-range values (<1 or >100) already fell back to the
-         * fail-safe (validate always) at dircache_init(); only an
-         * in-range value > 1 actually weakens coherency. */
-        if (options->dircache_validation_freq > 1
-                && options->dircache_validation_freq <= 100) {
+        /* Bounded at parse, and only a usable value counts as explicit,
+         * so any value above 1 here genuinely weakens coherency. */
+        if (options->dircache_validation_freq > 1) {
             LOG(log_warning, logtype_afpd,
-                "creatvol(\"%s\"): ea = samba, however 'dircache validation "
-                "freq' is explicitly %d. Netatalk may serve stale answers for "
-                "files Samba changes", volname,
+                "creatvol(\"%s\"): multi protocol = yes, however 'dircache "
+                "validation freq' is explicitly %d. Netatalk may serve stale "
+                "answers for files other processes change", volname,
                 options->dircache_validation_freq);
         }
     } else if (options->dircache_validation_freq != 1) {
         LOG(log_note, logtype_afpd,
-            "creatvol(\"%s\"): ea = samba: defaulting 'dircache validation "
-            "freq' to 1 (revalidate on every access; Samba mutates the volume "
-            "externally)", volname);
+            "creatvol(\"%s\"): multi protocol = yes: defaulting 'dircache "
+            "validation freq' to 1 (revalidate on every access; other "
+            "processes mutate the volume)", volname);
         options->dircache_validation_freq = 1;
     }
 
     /* The rfork budget is process-global; per-volume exclusion happens at
-     * the Tier-2 cache gate in fork.c, so non-samba volumes keep the cache.
+     * the Tier-2 cache gate in fork.c, so other volumes keep the cache.
      * Here we only log the outcome for this volume. */
     if (options->dircache_rfork_budget > 0) {
         if (options->dircache_rfork_budget_explicit) {
             LOG(log_warning, logtype_afpd,
-                "creatvol(\"%s\"): ea = samba, however rfork caching is "
-                "explicitly enabled. The rfork cache cannot detect resource "
-                "fork changes made by Samba", volname);
+                "creatvol(\"%s\"): multi protocol = yes, however rfork "
+                "caching is explicitly enabled. The rfork cache cannot detect "
+                "resource fork changes made by other processes", volname);
         } else {
             LOG(log_note, logtype_afpd,
-                "creatvol(\"%s\"): ea = samba: volume excluded from "
+                "creatvol(\"%s\"): multi protocol = yes: volume excluded from "
                 "the rfork cache by default (cached resource forks cannot "
-                "track Samba's changes)", volname);
+                "track external changes)", volname);
         }
     }
 
@@ -1280,12 +1310,50 @@ static void apply_samba_defaults(AFPObj *obj, const char *volname)
     if (!(options->flags & OPTION_SHARE_RESERV)) {
         /* Default is on, so a clear bit is always an explicit 'no'. */
         LOG(log_warning, logtype_afpd,
-            "creatvol(\"%s\"): ea = samba, however 'solaris share "
+            "creatvol(\"%s\"): multi protocol = yes, however 'solaris share "
             "reservations' is explicitly disabled. F_SHARE is the only "
-            "deny-mode layer Samba sees", volname);
+            "deny-mode layer other processes see", volname);
     }
 
 #endif
+}
+
+/*!
+ * @brief Log the storage-format implications of the coherency posture
+ *
+ * States which metadata format the volume uses, since only 'ea = samba'
+ * is readable by Samba, and points an ea = samba volume that has not
+ * declared multi protocol at the switch.  The format is never changed
+ * implicitly: the other accessor may be NFS or a local process, and
+ * existing metadata is not converted in place.
+ *
+ * @param[in] volume      the volume
+ * @param[in] ea_setting  explicit non-samba ea value ("sys", "ad",
+ *                        "none"), NULL when unset (auto-detect)
+ */
+static void log_ea_format_advice(const struct vol *volume,
+                                 const char *ea_setting)
+{
+    if (volume->v_flags & AFPVOL_MULTIPROTO) {
+        if (volume->v_flags & AFPVOL_EA_SAMBA) {
+            return;
+        }
+
+        LOG(log_note, logtype_afpd,
+            "creatvol(\"%s\"): multi protocol = yes with 'ea' %s%s: metadata "
+            "stays in Netatalk's native format. Samba reads it only with "
+            "'ea = samba'; changing the format on a populated volume requires "
+            "migrating the existing metadata (see afp.conf(5))",
+            volume->v_localname, ea_setting ? "explicitly " : "unset",
+            ea_setting ? ea_setting : "");
+    } else if (volume->v_flags & AFPVOL_EA_SAMBA) {
+        LOG(log_note, logtype_afpd,
+            "creatvol(\"%s\"): ea = samba selects only the storage format; "
+            "if other processes modify this volume, set 'multi protocol = "
+            "yes' to apply the coherency defaults (strict locking, "
+            "per-access cache validation, rfork cache exclusion)",
+            volume->v_localname);
+    }
 }
 
 /*!
@@ -1316,6 +1384,7 @@ static struct vol *creatvol(AFPObj *obj,
     char        suffix[6]; /* max is #FFFF */
     uint16_t    flags;
     const char  *val;
+    const char  *ea_setting = NULL;
     char        *p;
     char        *q;
     bstring     dbpath = NULL;
@@ -1663,6 +1732,7 @@ static struct vol *creatvol(AFPObj *obj,
         if (strcasecmp(val, "sys") == 0) {
             volume->v_adouble = AD_VERSION_EA;
             volume->v_vfs_ea = AFPVOL_EA_SYS;
+            ea_setting = "sys";
         } else if (strcasecmp(val, "samba") == 0) {
             volume->v_adouble = AD_VERSION_EA;
             volume->v_vfs_ea = AFPVOL_EA_SYS;
@@ -1670,13 +1740,21 @@ static struct vol *creatvol(AFPObj *obj,
         } else if (strcasecmp(val, "ad") == 0) {
             volume->v_adouble = AD_VERSION2;
             volume->v_vfs_ea = AFPVOL_EA_AD;
+            ea_setting = "ad";
         } else if (strcasecmp(val, "none") == 0) {
             volume->v_vfs_ea = AFPVOL_EA_NONE;
+            ea_setting = "none";
         } else {
             LOG(log_warning, logtype_afpd,
                 "creatvol(\"%s\"): unknown ea mode \"%s\"; using auto-detect",
                 name, val);
         }
+    }
+
+    /* multi protocol: other processes (Samba, NFS, local tools) mutate
+     * this volume; the commit block below applies the coherency defaults. */
+    if (vdgoption_bool(obj->iniconfig, section, "multi protocol", preset, 0)) {
+        volume->v_flags |= AFPVOL_MULTIPROTO;
     }
 
     if ((val = getoption_str(obj->iniconfig, section, "casefold", preset, NULL))) {
@@ -2039,8 +2117,15 @@ static struct vol *creatvol(AFPObj *obj,
 
     /* Applied only after the volume can no longer fail: options changes
      * are process-global and volume_free() cannot undo them. */
-    if (volume->v_flags & AFPVOL_EA_SAMBA) {
-        apply_samba_defaults(obj, name);
+    if (volume->v_flags & AFPVOL_MULTIPROTO) {
+        apply_multiprotocol_defaults(obj, name);
+    }
+
+    /* Static configuration advice: log it from the startup volume load
+     * (pwd is NULL only there, not for a session's user load) so it does
+     * not repeat on every login. */
+    if (pwd == NULL) {
+        log_ea_format_advice(volume, ea_setting);
     }
 
     volume->v_next = Volumes;
@@ -3190,7 +3275,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 
         /* Explicit = parsed to a valid value from either key; invalid
          * values were ignored above and do not count.  creatvol()'s
-         * samba defaults apply only when unset. */
+         * multi protocol defaults apply only when unset. */
         options->strict_locking_explicit = (strict_locking != -1);
     }
 
@@ -3337,20 +3422,28 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
             options->dircache_mode = 1;  /* Default to ARC */
         }
     }
-    /* Parse dircache validation parameter */
-    options->dircache_validation_freq = getoption_int(config, INISEC_GLOBAL,
-                                        "dircache validation freq", NULL,
-                                        DEFAULT_DIRCACHE_VALIDATION_FREQ);
-    /* ea = samba adjusts defaults only: record whether the key was set */
+    /* Parse dircache validation parameter.  Bounded here so every reader
+     * can use the value as-is; safe_atoi() warns and returns the default
+     * for an unparsable or out-of-range one. */
+    options->dircache_validation_freq =
+        safe_atoi(INIPARSER_GETSTR(config, INISEC_GLOBAL,
+                                   "dircache validation freq", NULL),
+                  "dircache validation freq",
+                  DIRCACHE_VALIDATION_FREQ_MIN, DIRCACHE_VALIDATION_FREQ_MAX,
+                  DEFAULT_DIRCACHE_VALIDATION_FREQ);
+    /* multi protocol adjusts defaults only: record whether the operator
+     * set a usable value */
     options->dircache_validation_freq_explicit =
-        conf_key_present(config, "dircache validation freq");
+        conf_int_key_usable(config, "dircache validation freq",
+                            DIRCACHE_VALIDATION_FREQ_MIN,
+                            DIRCACHE_VALIDATION_FREQ_MAX);
     /* Tier 2: Resource Fork data cache configuration.
      * Hard caps defined in globals.h: RFORK_BUDGET_MAX_KB, RFORK_ENTRY_MAX_KB.
      * On 32-bit platforms, clamp to SIZE_MAX / 1024 to prevent overflow
      * when converting KB to bytes in dircache_init(). */
     options->dircache_rfork_budget = getoption_int(config, INISEC_GLOBAL,
                                      "dircache rfork budget", NULL, 32768);
-    /* ea = samba adjusts defaults only: record whether the key was set */
+    /* multi protocol adjusts defaults only: record whether the key was set */
     options->dircache_rfork_budget_explicit =
         conf_key_present(config, "dircache rfork budget");
 

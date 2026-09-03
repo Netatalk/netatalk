@@ -53,7 +53,9 @@
 #define DEFAULT_DIRCACHE_SIZE 65536    /*!< default 'dircache size' (entries) */
 
 /* Directory cache validation settings */
-#define DEFAULT_DIRCACHE_VALIDATION_FREQ    1     /*!< Validate every Nth access (default 1 for backward compatibility) */
+#define DEFAULT_DIRCACHE_VALIDATION_FREQ    100   /*!< Validate every Nth access; multi protocol defaults this to 1 */
+#define DIRCACHE_VALIDATION_FREQ_MIN        1     /*!< Validate on every access */
+#define DIRCACHE_VALIDATION_FREQ_MAX        100   /*!< Validate every 100th access */
 
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_CLOSEVOL      (1 << 1)
@@ -121,10 +123,10 @@ struct afp_options {
     int flags;
     int dircachesize;
     int dircache_mode;          /*!< Directory cache mode: 0=LRU, 1=ARC */
-    int dircache_validation_freq;    /*!< Validate every Nth access (default 1) */
+    int dircache_validation_freq;    /*!< Validate every Nth access (default 100) */
     int dircache_rfork_budget;   /*!< Total rfork cache memory budget (KB, 0=disabled) */
     int dircache_rfork_maxentry; /*!< Max rfork size to cache per entry (KB) */
-    int strict_locking_explicit; /*!< operator set strict locking (ea = samba changes defaults only) */
+    int strict_locking_explicit; /*!< operator set strict locking (multi protocol changes defaults only) */
     int dircache_validation_freq_explicit; /*!< operator set dircache validation freq */
     int dircache_rfork_budget_explicit;    /*!< operator set dircache rfork budget */
     int sleep;                  /*!< Maximum time allowed to sleep (in tickles) */
