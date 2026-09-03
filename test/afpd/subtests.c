@@ -43,6 +43,29 @@
 #include "test.h"
 #include "volume.h"
 
+/*!
+ * @brief Plant a cache entry keyed (DIRDID_ROOT, uname)
+ *
+ * Fullpath points at the volume root so lookup validation stats successfully
+ * and returns the entry.
+ */
+static struct dir *plant_root_entry(const struct vol *vol, const char *uname,
+                                    cnid_t did, struct stat *st)
+{
+    bstring fullpath = bfromcstr(vol->v_path);
+    struct dir *entry = dir_new(uname, uname, vol, DIRDID_ROOT, did,
+                                fullpath, st);
+
+    if (entry == NULL) {
+        /* dir_new takes ownership only on success */
+        bdestroy(fullpath);
+        return NULL;
+    }
+
+    dircache_add(vol, entry);
+    return entry;
+}
+
 int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 {
     struct dir *dir;
@@ -87,7 +110,8 @@ int test002_rem_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 int test003_dir_add_error_no_double_free(struct vol *vol)
 {
     const struct dir *root;
-    struct dir *stray, *ret;
+    const struct dir *stray;
+    const struct dir *ret;
     struct path path;
     struct stat st;
     struct _cnid_db *saved_cdb;
@@ -101,12 +125,10 @@ int test003_dir_add_error_no_double_free(struct vol *vol)
         return -1;
     }
 
-    /* Plant a stray entry for (root, uname).  Fullpath points at the volume
-     * root so the lookup validation stat succeeds and returns the entry. */
-    stray = dir_new(uname, uname, vol, DIRDID_ROOT, htonl(30003),
-                    bfromcstr(vol->v_path), &st);
+    /* Plant a stray entry for (root, uname) */
+    stray = plant_root_entry(vol, uname, htonl(30003), &st);
 
-    if (stray == NULL || dircache_add(vol, stray) != 0) {
+    if (stray == NULL) {
         return -1;
     }
 
@@ -514,5 +536,392 @@ out:
     }
 
     close(cwd_fd);
+    return ret;
+}
+
+/*!
+ * @brief A second entry may never be published under a key already in use
+ *
+ * A key may name only one entry. Adds over both keys — (vid, did) and
+ * (vid, pdid, uname) — with curdir on the entry being retired, the case that
+ * drives a recovery lookup back into dircache_add().
+ */
+int test007_add_over_existing_key_leaves_one(struct vol *vol)
+{
+    struct dir *first = NULL;
+    struct dir *second = NULL;
+    struct dir *saved_curdir = curdir;
+    const char *uname = "t007_dup_key";
+    const cnid_t did = htonl(30007);
+    struct stat st;
+    int ret = -1;
+
+    if (stat(vol->v_path, &st) != 0) {
+        return -1;
+    }
+
+    first = plant_root_entry(vol, uname, did, &st);
+
+    if (first == NULL) {
+        return -1;
+    }
+
+    /* Not looked up: validation would reject the root's inode under this CNID
+     * and retire the entry before the duplicate is attempted */
+    curdir = first;
+    /* Collides on both keys */
+    second = dir_new(uname, uname, vol, DIRDID_ROOT, did,
+                     bfromcstr(vol->v_path), &st);
+
+    if (second == NULL) {
+        ret = 3;
+        goto out;
+    }
+
+    if (dircache_add(vol, second) != 0) {
+        ret = 4;
+        goto out;
+    }
+
+    /* Retired, awaiting the deferred free */
+    if (first->d_did != CNID_INVALID) {
+        ret = 7;
+        goto out;
+    }
+
+    /* Taken over by the replacement, not recovered via dirlookup() */
+    if (curdir != second) {
+        ret = 8;
+        goto out;
+    }
+
+    ret = 0;
+out:
+
+    if (ret != 0) {
+        fprintf(stderr,
+                "test007: failed at step %d (first=%p did:%u, second=%p, curdir=%p)\n",
+                ret, (void *)first, first ? ntohl(first->d_did) : 0u,
+                (void *)second, (void *)curdir);
+    }
+
+    curdir = saved_curdir;
+
+    if (second != NULL && second->d_did != CNID_INVALID) {
+        dir_remove(vol, second, 0);
+    }
+
+    /* On the paths that never reached the duplicate add, the planted entry
+     * is still cached and must not outlive the test */
+    if (first != NULL && first->d_did != CNID_INVALID) {
+        dir_remove(vol, first, 0);
+    }
+
+    dir_free_invalid_q();
+    return ret;
+}
+
+/*!
+ * @brief Ghost-trim selection never yields the pinned entry
+ *
+ * Throwaway queues suffice: only the choice of node is under test.
+ *
+ * @returns 0, else the number of the case that disagreed
+ */
+int dircache_test_ghost_trim_selection(void)
+{
+    struct dir lru = {0};
+    struct dir mru = {0};
+    q_t *q = queue_init();
+    int ret = 0;
+
+    if (q == NULL) {
+        return -1;
+    }
+
+    /* 1: nothing queued, nothing to release */
+    if (arc_ghost_trim_candidate(q, NULL) != NULL) {
+        ret = 1;
+        goto out;
+    }
+
+    /* 2: a lone unpinned ghost is the candidate */
+    const qnode_t *lru_node = enqueue(q, &lru);
+
+    if (lru_node == NULL) {
+        ret = -1;
+        goto out;
+    }
+
+    if (arc_ghost_trim_candidate(q, NULL) != lru_node) {
+        ret = 2;
+        goto out;
+    }
+
+    /* 3: a lone ghost mid-promotion must be left alone */
+    if (arc_ghost_trim_candidate(q, &lru) != NULL) {
+        ret = 3;
+        goto out;
+    }
+
+    /* 4: pinned at LRU, so the next ghost along is released instead */
+    const qnode_t *mru_node = enqueue(q, &mru);
+
+    if (mru_node == NULL) {
+        ret = -1;
+        goto out;
+    }
+
+    if (arc_ghost_trim_candidate(q, &lru) != mru_node) {
+        ret = 4;
+        goto out;
+    }
+
+    /* 5: pinned away from LRU leaves the LRU the candidate */
+    if (arc_ghost_trim_candidate(q, &mru) != lru_node) {
+        ret = 5;
+        goto out;
+    }
+
+out:
+
+    while (dequeue(q) != NULL) {
+        /* nodes only; the entries are on this frame */
+    }
+
+    free(q);
+    return ret;
+}
+
+/*!
+ * @brief Re-keying onto a name a stale entry still holds retires the holder
+ *
+ * dir_modify(DCMOD_PATH) re-inserts under the destination key; a stale cache
+ * entry for that key must be expunged, or the key would name two entries.
+ *
+ * @returns 0, else the number of the step that disagreed
+ */
+int test008_reindex_over_stale_key_expunges(struct vol *vol)
+{
+    struct dir *root;
+    struct dir *stale = NULL;
+    struct dir *renamed = NULL;
+    struct stat st;
+    int ret = -1;
+
+    if ((root = dirlookup(vol, DIRDID_ROOT)) == NULL) {
+        return -1;
+    }
+
+    if (stat(vol->v_path, &st) != 0) {
+        return -1;
+    }
+
+    /* The stale holder of the destination key */
+    stale = plant_root_entry(vol, "t008_dst", htonl(30008), &st);
+
+    if (stale == NULL) {
+        return 1;
+    }
+
+    /* The entry being renamed onto that key */
+    renamed = plant_root_entry(vol, "t008_src", htonl(30018), &st);
+
+    if (renamed == NULL) {
+        ret = 2;
+        goto out;
+    }
+
+    if (dir_modify(vol, renamed, &(struct dir_modify_args) {
+    .flags = DCMOD_PATH,
+    .new_mname = "t008_dst",
+    .new_uname = "t008_dst",
+    .new_pdir_path = root->d_fullpath,
+}) != 0) {
+        ret = 3;
+        goto out;
+    }
+
+    /* The stale holder was retired, awaiting the deferred free */
+    if (stale->d_did != CNID_INVALID) {
+        ret = 4;
+        goto out;
+    }
+
+    /* The renamed entry owns the key */
+    if (renamed->d_did != htonl(30018)) {
+        ret = 5;
+        goto out;
+    }
+
+    ret = 0;
+out:
+
+    if (ret != 0) {
+        fprintf(stderr,
+                "test008: failed at step %d (stale=%p did:%u, renamed=%p did:%u)\n",
+                ret, (void *)stale, stale ? ntohl(stale->d_did) : 0u,
+                (void *)renamed, renamed ? ntohl(renamed->d_did) : 0u);
+    }
+
+    if (renamed != NULL && renamed->d_did != CNID_INVALID) {
+        dir_remove(vol, renamed, 0);
+    }
+
+    if (stale != NULL && stale->d_did != CNID_INVALID) {
+        dir_remove(vol, stale, 0);
+    }
+
+    dir_free_invalid_q();
+    return ret;
+}
+
+/*!
+ * @brief curdir survives its entry being expunged by a file
+ *
+ * A file colliding on the (vid, did) key retires the cached directory — a
+ * mid-session CNID reset can hand a file a directory's stale did. A file
+ * cannot stand in as curdir, so curdir must land on the volume root, never
+ * NULL.
+ *
+ * @returns 0, else the number of the step that disagreed
+ */
+int test009_file_add_over_curdir_did(struct vol *vol)
+{
+    struct dir *dir = NULL;
+    struct dir *file = NULL;
+    struct dir *saved_curdir = curdir;
+    const cnid_t did = htonl(30009);
+    struct stat st;
+    int ret = -1;
+
+    if (stat(vol->v_path, &st) != 0) {
+        return -1;
+    }
+
+    dir = plant_root_entry(vol, "t009_dir", did, &st);
+
+    if (dir == NULL) {
+        return 1;
+    }
+
+    curdir = dir;
+    /* Same did, different name: collides only on the (vid, did) key */
+    file = dir_new("t009_file", "t009_file", vol, DIRDID_ROOT, did,
+                   bfromcstr(vol->v_path), &st);
+
+    if (file == NULL) {
+        ret = 2;
+        goto out;
+    }
+
+    file->d_flags |= DIRF_ISFILE;
+
+    if (dircache_add(vol, file) != 0) {
+        ret = 3;
+        goto out;
+    }
+
+    /* The directory was retired... */
+    if (dir->d_did != CNID_INVALID) {
+        ret = 4;
+        goto out;
+    }
+
+    /* ...and curdir fell back to the volume root, not NULL or the file */
+    if (curdir != vol->v_root) {
+        ret = 5;
+        goto out;
+    }
+
+    ret = 0;
+out:
+
+    if (ret != 0) {
+        fprintf(stderr,
+                "test009: failed at step %d (dir=%p did:%u, file=%p, curdir=%p)\n",
+                ret, (void *)dir, dir ? ntohl(dir->d_did) : 0u,
+                (void *)file, (void *)curdir);
+    }
+
+    curdir = saved_curdir;
+
+    if (file != NULL && file->d_did != CNID_INVALID) {
+        dir_remove(vol, file, 0);
+    }
+
+    if (dir != NULL && dir->d_did != CNID_INVALID) {
+        dir_remove(vol, dir, 0);
+    }
+
+    dir_free_invalid_q();
+    return ret;
+}
+
+/*!
+ * @brief A full dircache keeps accepting inserts
+ *
+ * A cached entry and its ghost both occupy a hash slot, so once the working
+ * set exceeds the cache size the hash sits at its 2c capacity; every add past
+ * that point must release a slot before it inserts, or hash_insert()'s
+ * capacity assert aborts. Ghosts appear only where an eviction demotes a
+ * frequently-used entry, so each add is promoted at once: the entry moves to
+ * T2 and its eventual eviction lands in B2, filling the cache to 2c. The
+ * margin beyond that drives inserts against a cache pinned at capacity.
+ *
+ * Promoted rather than looked up: the planted names do not exist on disk, so
+ * a lookup that validated would stat through the parent and expunge.
+ *
+ * @param[in] vol         volume the entries are planted on
+ * @param[in] cache_size  the size dircache_init() was called with
+ *
+ * @returns 0, else the number of the step that disagreed
+ */
+int test010_full_cache_accepts_adds(struct vol *vol,
+                                    unsigned int cache_size)
+{
+    const uint32_t base = 40000;
+    const uint32_t count = cache_size * 2 + DIRCACHE_FREE_QUANTUM;
+    char uname[24];
+    struct stat st;
+    uint32_t at = 0;
+    int ret = 0;
+
+    if (stat(vol->v_path, &st) != 0) {
+        return -1;
+    }
+
+    for (uint32_t i = 0; i < count; i++) {
+        const cnid_t did = htonl(base + i);
+        struct dir *entry;
+        at = i;
+        snprintf(uname, sizeof(uname), "t010_%06u", i);
+
+        if ((entry = plant_root_entry(vol, uname, did, &st)) == NULL) {
+            ret = 1;
+            break;
+        }
+
+        /* Published under its CNID: a plain index probe, no validation */
+        if (dircache_lookup_parent(vol, did) != entry) {
+            ret = 2;
+            break;
+        }
+
+        dircache_promote(entry);
+    }
+
+    if (ret != 0) {
+        fprintf(stderr,
+                "test010: failed at step %d on add %u of %u (cache_size=%u)\n",
+                ret, at, count, cache_size);
+    }
+
+    /* The flood evicted everything else; leave later tests a cold cache
+     * rather than one full of t010 entries. The volume root is never cached,
+     * so parking curdir there keeps it clear of the purge. */
+    curdir = vol->v_root;
+    dircache_purge_vol(vol);
+    dir_free_invalid_q();
     return ret;
 }

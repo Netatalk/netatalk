@@ -545,6 +545,7 @@ check_functions = [
     'pselect',
     'pwrite',
     'rresvport',
+    'sigaltstack',
     'splice',
     'strlcat',
     'strlcpy',
@@ -839,6 +840,13 @@ if enable_dbd_backend
 endif
 
 # Check for mysql CNID backend
+
+# Backtraces on musl, which ships no execinfo
+libunwind = dependency('libunwind', required: false)
+
+if libunwind.found()
+    cdata.set('HAVE_LIBUNWIND', 1)
+endif
 
 mysqlclient = dependency('mysqlclient', required: false)
 mariadb = dependency('libmariadb', required: false)

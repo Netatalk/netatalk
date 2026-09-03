@@ -159,6 +159,22 @@ qnode_t *prequeue(q_t *q, void *data)
     return node;
 }
 
+/*! Unlink a node from whichever queue holds it and free it */
+void *queue_remove(qnode_t *node)
+{
+    void *data;
+
+    if (node == NULL) {
+        return NULL;
+    }
+
+    data = node->data;
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+    free(node);
+    return data;
+}
+
 /*! Take from head */
 void *dequeue(q_t *q)
 {

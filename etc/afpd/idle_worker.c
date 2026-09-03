@@ -24,6 +24,7 @@
 #include <time.h>
 
 #include <atalk/logger.h>
+#include <atalk/util.h>
 #include <atalk/queue.h>
 
 #include "dircache.h"
@@ -162,10 +163,16 @@ static int iw_work_pending(void)
 static void *iw_main(void *arg)
 {
     (void)arg;
-    /* Block all signals — worker thread must not receive process signals */
+    /* Block the asynchronous signals: those are the main thread's to handle.
+     * The handled fault signals stay deliverable because the kernel cannot
+     * queue one to a thread that blocks it -- it forces the default action
+     * instead, turning a reportable crash into a silent kill. */
     sigset_t sigs;
     sigfillset(&sigs);
+    sigdelset(&sigs, SIGSEGV);
+    sigdelset(&sigs, SIGBUS);
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
+    fault_setup_thread();
     const struct timespec sleep_ts = {
         .tv_sec = 0,
         .tv_nsec = IW_WAKE_MS * 1000000L

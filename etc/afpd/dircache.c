@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -122,6 +123,10 @@
 
 static hash_t       *dircache;
 static unsigned int dircache_maxsize;
+
+/* Cached entries per volume id, maintained in dircache_add()/dircache_remove(),
+ * so closing a volume with nothing cached costs one read, not a table scan */
+static uint32_t     vid_entry_count[UINT16_MAX + 1];
 
 /* Accessor for chain-level iteration — used by dircache_process_deferred_chain()
  * and dircache_flush_deferred_for_vol() */
@@ -329,6 +334,9 @@ static struct {
  * No separate ghost_entry_t type or pool is needed.
  */
 
+/* Ghost mid-promotion: arc_replace() can trim the very list it is leaving */
+static const struct dir *arc_promoting_ghost = NULL;
+
 /* FNV 1a - inline for performance */
 static inline hash_val_t hash_vid_did(const void *key)
 {
@@ -443,24 +451,85 @@ static void arc_verify_invariants(void)
 {
 #ifdef DEBUG
     AFP_ASSERT(arc_cache.enabled);
+    /* A ghost mid-promotion is not trimmed, so B1+B2 may sit one over c */
+    size_t slack = arc_promoting_ghost ? 1 : 0;
     /* Invariant 1: Total cached entries = c */
     AFP_ASSERT(arc_cache.t1_size + arc_cache.t2_size <= arc_cache.c);
     /* Invariant 2: Total ghost entries ≤ c */
-    AFP_ASSERT(arc_cache.b1_size + arc_cache.b2_size <= arc_cache.c);
+    AFP_ASSERT(arc_cache.b1_size + arc_cache.b2_size <= arc_cache.c + slack);
     /* Invariant 3: p within bounds */
     AFP_ASSERT(arc_cache.p <= arc_cache.c);
-    /* Invariant 4: Total directory size ≤ 2c */
+    /* Invariant 4: cached entries plus ghosts ≤ 2c */
     size_t l1 = arc_cache.t1_size + arc_cache.b1_size;
     size_t l2 = arc_cache.t2_size + arc_cache.b2_size;
-    AFP_ASSERT(l1 + l2 <= 2 * arc_cache.c);
+    AFP_ASSERT(l1 + l2 <= 2 * arc_cache.c + slack);
 
-    /* Once directory is full, maintain exact sizes */
-    if (l1 + l2 == 2 * arc_cache.c) {
+    /* Once the dircache is full, maintain exact sizes */
+    if (slack == 0 && l1 + l2 == 2 * arc_cache.c) {
         AFP_ASSERT(arc_cache.t1_size + arc_cache.t2_size == arc_cache.c);
         AFP_ASSERT(arc_cache.b1_size + arc_cache.b2_size == arc_cache.c);
     }
 
 #endif
+}
+
+static void dircache_defer_free(struct dir *dir);
+
+/*!
+ * @brief Release every cache entry belonging to a closing volume
+ *
+ * Nothing else reclaims by volume, so entries left behind are found as valid
+ * when the vid is reused. DIRCACHE_NOSHRINK keeps the scan valid: each entry
+ * deletes only its own just-returned node and the table never rehashes
+ * mid-scan.
+ *
+ * Nothing is exempt: closevol() frees v_root next, so an entry kept back
+ * would outlive its volume under a reusable vid. A curdir still inside the
+ * volume is dropped to rootParent rather than left cached.
+ *
+ * @param[in] vol  Volume being closed (required)
+ */
+void dircache_purge_vol(const struct vol *vol)
+{
+    unsigned int removed = 0;
+    hscan_t scan;
+    hnode_t *node;
+
+    if (dircache == NULL || vol == NULL) {
+        return;
+    }
+
+    const uint16_t vid = vol->v_vid;
+    uint32_t remaining = vid_entry_count[vid];
+
+    if (remaining == 0) {
+        return;
+    }
+
+    hash_scan_begin(&scan, dircache);
+
+    while (remaining > 0 && (node = hash_scan_next(&scan)) != NULL) {
+        struct dir *e = hnode_get(node);
+
+        if (e == NULL || e->d_vid != vid) {
+            continue;
+        }
+
+        remaining--;
+
+        /* v_root is freed next, so it cannot serve as the fallback */
+        if (e == curdir) {
+            curdir = &rootParent;
+        }
+
+        dircache_remove(vol, e, DIRCACHE_ALL | DIRCACHE_NOSHRINK);
+        /* Deferred: callers hold entries across a close */
+        dircache_defer_free(e);
+        removed++;
+    }
+
+    LOG(removed ? log_info : log_debug, logtype_afpd,
+        "dircache_purge_vol: vid:%u released %u entries", vid, removed);
 }
 
 /*!
@@ -488,17 +557,51 @@ static void dircache_defer_free(struct dir *dir)
 }
 
 /*!
- * @brief Ensure ghost directory has room for one more entry
+ * @brief Pick the ghost to release from a list at capacity
+ *
+ * LRU first, skipping the excluded entry; a single-node list is both MRU and
+ * LRU, so MRU ordering alone cannot exclude it.
+ *
+ * @param[in] q     Ghost queue (B1 or B2)
+ * @param[in] skip  Entry that must not be selected (ghost mid-promotion),
+ *                  or NULL
+ *
+ * @returns node to release, or NULL to leave the list alone
+ */
+qnode_t *arc_ghost_trim_candidate(q_t *q, const struct dir *skip)
+{
+    if (q == NULL || q->next == q) {
+        return NULL;
+    }
+
+    qnode_t *node = q->next;
+
+    if ((const struct dir *)node->data == skip) {
+        node = node->next;
+    }
+
+    if (node == q || node->data == NULL) {
+        return NULL;
+    }
+
+    return node;
+}
+
+/*!
+ * @brief Ensure the ghost lists have room for one more entry
  *
  * Maintains the ARC invariant: B1 + B2 ≤ c
  *
  * Called before operations that will add a ghost entry to B1 or B2.
- * If ghost directory is at or over capacity, deletes the LRU ghost
+ * If the ghost lists are at or over capacity, deletes the LRU ghost
  * from the specified target list to make room.
  *
  * This handles the edge case where entries are removed from the cache
  * via dircache_remove() (bypassing ghost lists), causing the ghost
- * directory to stay at capacity while the cache shrinks.
+ * lists to stay at capacity while the cache shrinks.
+ *
+ * A ghost mid-promotion is skipped, leaving the ghost lists one over
+ * capacity until that promotion moves it out.
  *
  * @param[in] target_list  Which ghost list will receive new entry (ARC_B1 or ARC_B2)
  */
@@ -511,29 +614,37 @@ static void arc_ensure_ghost_capacity(arc_list_t target_list)
         return;
     }
 
-    /* Ghost directory at or over capacity - must delete LRU from target list
+    /* Ghost lists at or over capacity - must delete LRU from target list
      * to maintain invariant B1+B2 <= c */
     q_t *target_queue = (target_list == ARC_B1) ? arc_cache.b1 : arc_cache.b2;
     size_t *target_size = (target_list == ARC_B1) ? &arc_cache.b1_size :
                           &arc_cache.b2_size;
+    qnode_t *victim_node = arc_ghost_trim_candidate(target_queue,
+                           arc_promoting_ghost);
 
-    /* Dequeue LRU ghost from target list */
-    if (*target_size > 0) {
-        struct dir *ghost = (struct dir *)dequeue(target_queue);
-
-        if (ghost) {
-            (*target_size)--;
-            ghost->qidx_node = NULL;  /* Clear queue pointer */
-            LOG(log_debug, logtype_afpd,
-                "arc_ensure_ghost_capacity: deleted %s ghost (did:%u) to maintain invariant (B1=%zu, B2=%zu)",
-                target_list == ARC_B1 ? "B1" : "B2",
-                ntohl(ghost->d_did),
-                arc_cache.b1_size,
-                arc_cache.b2_size);
-            dircache_remove(NULL, ghost, DIRCACHE | DIDNAME_INDEX);
-            dircache_defer_free(ghost);
-        }
+    if (victim_node == NULL) {
+        return;
     }
+
+    struct dir *ghost = (struct dir *)victim_node->data;
+
+    queue_remove(victim_node);
+
+    /* Guarded: a counter below the queue length would wrap to SIZE_MAX and
+     * disable trimming for the rest of the session */
+    if (*target_size > 0) {
+        (*target_size)--;
+    }
+
+    ghost->qidx_node = NULL;
+    LOG(log_debug, logtype_afpd,
+        "arc_ensure_ghost_capacity: deleted %s ghost (did:%u) to maintain invariant (B1=%zu, B2=%zu)",
+        target_list == ARC_B1 ? "B1" : "B2",
+        ntohl(ghost->d_did),
+        arc_cache.b1_size,
+        arc_cache.b2_size);
+    dircache_remove(NULL, ghost, DIRCACHE | DIDNAME_INDEX);
+    dircache_defer_free(ghost);
 }
 
 /*!
@@ -806,17 +917,16 @@ static void arc_case_ii_adapt_and_replace(struct dir *ghost)
         AFP_PANIC("arc_case_ii NULL qidx_node");
     }
 
-    /* Protect ghost from arc_ensure_ghost_capacity() eviction:
-     * Move ghost to MRU of B1 so it won't be the LRU victim when
-     * arc_replace() → arc_evict_to_ghost() → arc_ensure_ghost_capacity()
-     * needs to shrink B1 to maintain B1+B2 ≤ c. */
-    queue_move_to_tail(arc_cache.b1, ghost->qidx_node);
+    /* REPLACE can trim B1, and this ghost is leaving it */
+    arc_promoting_ghost = ghost;
 
-    /* Call REPLACE to make room in cache (ghost is safe at MRU of B1) */
+    /* Call REPLACE to make room in cache */
     if (arc_replace(0) != 0) {
         LOG(log_warning, logtype_afpd,
             "arc_case_ii: arc_replace failed, cache temporarily over capacity");
     }
+
+    arc_promoting_ghost = NULL;
 
     /* Promote ghost node from B1 to T2 */
     if (queue_move_to_tail_of(arc_cache.b1, arc_cache.t2,
@@ -884,17 +994,16 @@ static void arc_case_iii_adapt_and_replace(struct dir *ghost)
         AFP_PANIC("arc_case_iii NULL qidx_node");
     }
 
-    /* Protect ghost from arc_ensure_ghost_capacity() eviction:
-     * Move ghost to MRU of B2 so it won't be the LRU victim when
-     * arc_replace() → arc_evict_to_ghost() → arc_ensure_ghost_capacity()
-     * needs to shrink B2 to maintain B1+B2 ≤ c. */
-    queue_move_to_tail(arc_cache.b2, ghost->qidx_node);
+    /* REPLACE can trim B2, and this ghost is leaving it */
+    arc_promoting_ghost = ghost;
 
-    /* Call REPLACE to make room in cache (ghost is safe at MRU of B2) */
+    /* Call REPLACE to make room in cache */
     if (arc_replace(1) != 0) {  /* in_b2 = 1 */
         LOG(log_warning, logtype_afpd,
             "arc_case_iii: arc_replace failed, cache temporarily over capacity");
     }
+
+    arc_promoting_ghost = NULL;
 
     /* Move ghost node from B2 to T2 */
     if (queue_move_to_tail_of(arc_cache.b2, arc_cache.t2,
@@ -916,7 +1025,7 @@ static void arc_case_iii_adapt_and_replace(struct dir *ghost)
 }
 
 /*!
- * @brief ARC Case IV: Complete miss (not in any list)
+ * @brief ARC Case IV, eviction half: make room for a complete miss
  *
  * From paper:
  * "case (i): |L1| = c
@@ -924,16 +1033,14 @@ static void arc_case_iii_adapt_and_replace(struct dir *ghost)
  *      else delete LRU of T1, remove from cache
  *  case (ii): |L1| < c and |L1| + |L2| ≥ c
  *      if |L1| + |L2| = 2c then delete LRU of B2
- *      REPLACE(p)
- *  Put x at MRU of T1, load into cache"
+ *      REPLACE(p)"
  *
- * Adds new entry to T1 (recency list).
- *
- * @param[in] dir  New directory entry to insert
+ * Runs before the new entry's hash inserts: whenever the dircache holds 2c
+ * entries this deletes one from the hash, so hash_insert() never sees a full
+ * table (its nodecount < maxcount assert holds).
  */
-static void arc_case_iv(struct dir *dir)
+static void arc_case_iv_make_room(void)
 {
-    AFP_ASSERT(dir);
     size_t l1_size = arc_cache.t1_size + arc_cache.b1_size;
     size_t l2_size = arc_cache.t2_size + arc_cache.b2_size;
 
@@ -945,8 +1052,7 @@ static void arc_case_iv(struct dir *dir)
 
             if (ghost) {
                 arc_cache.b1_size--;
-                ghost->qidx_node = NULL;  /* Clear queue pointer after dequeue */
-                /* Ghost is a full struct dir - remove from hash, defer free */
+                ghost->qidx_node = NULL;
                 dircache_remove(NULL, ghost, DIRCACHE | DIDNAME_INDEX);
                 dircache_defer_free(ghost);
             }
@@ -967,11 +1073,8 @@ static void arc_case_iv(struct dir *dir)
             }
 
             if (victim) {
-                /* Unlink victim's node from its queue (circular doubly-linked list) */
-                qnode_t *node = victim->qidx_node;
-                node->prev->next = node->next;
-                node->next->prev = node->prev;
-                free(node);
+                queue_remove(victim->qidx_node);
+                victim->qidx_node = NULL;
 
                 if (victim->arc_list == ARC_T1) {
                     arc_cache.t1_size--;
@@ -979,7 +1082,6 @@ static void arc_case_iv(struct dir *dir)
                     arc_cache.t2_size--;
                 }
 
-                victim->qidx_node = NULL;
                 dircache_remove(NULL, victim, DIRCACHE | DIDNAME_INDEX);
                 dircache_defer_free(victim);
             } else {
@@ -991,14 +1093,13 @@ static void arc_case_iv(struct dir *dir)
     }
     /* Case (ii): |L1| < c and |L1| + |L2| ≥ c */
     else if (l1_size < arc_cache.c && (l1_size + l2_size) >= arc_cache.c) {
-        /* If directory is full (2c), delete LRU of B2 (ghost) */
+        /* If the dircache is full (2c), delete LRU of B2 (ghost) */
         if ((l1_size + l2_size) == 2 * arc_cache.c) {
             struct dir *ghost = (struct dir *)dequeue(arc_cache.b2);
 
             if (ghost) {
                 arc_cache.b2_size--;
-                ghost->qidx_node = NULL;  /* Clear queue pointer after dequeue */
-                /* Ghost is a full struct dir - remove from hash, defer free */
+                ghost->qidx_node = NULL;
                 dircache_remove(NULL, ghost, DIRCACHE | DIDNAME_INDEX);
                 dircache_defer_free(ghost);
             }
@@ -1011,16 +1112,25 @@ static void arc_case_iv(struct dir *dir)
         }
     }
 
-    /* Case (iii): Cache not full yet, just add */
+    /* Case (iii): Cache not full yet, nothing to evict */
+}
 
-    /* Add new entry to MRU (tail) of T1 */
+/*!
+ * @brief ARC Case IV, insertion half: "Put x at MRU of T1, load into cache"
+ *
+ * @param[in] dir  New directory entry, already in both hash indexes
+ */
+static void arc_case_iv_insert(struct dir *dir)
+{
+    AFP_ASSERT(dir);
+
     if ((dir->qidx_node = enqueue(arc_cache.t1, dir)) == NULL) {
         LOG(log_error, logtype_afpd, "arc_case_iv: T1 enqueue failed");
         AFP_PANIC("arc_case_iv T1 enqueue");
     }
 
     arc_cache.t1_size++;
-    dir->arc_list = ARC_T1;  /* Mark as being in T1 */
+    dir->arc_list = ARC_T1;
     /* Track peak cached entries (parallel to LRU's queue_count_max tracking) */
     size_t total_cached = arc_cache.t1_size + arc_cache.t2_size;
 
@@ -1180,8 +1290,8 @@ static void dircache_evict(void)
             continue;
         }
 
-        dircache_remove(NULL, dir, DIRCACHE | DIDNAME_INDEX); /* 3 */
-        dircache_defer_free(dir);                             /* 4 */
+        dircache_remove(NULL, dir, DIRCACHE | DIDNAME_INDEX);   /* 3 */
+        dircache_defer_free(dir);                               /* 4 */
     }
 
     AFP_ASSERT(queue_count == dircache->hash_nodecount);
@@ -1590,6 +1700,36 @@ struct dir *dircache_search_by_name(const struct vol *vol,
 }
 
 /*!
+ * @brief Retire a cached entry that a pending insert is about to supersede
+ *
+ * Not dir_remove(): its curdir recovery calls dirlookup(), which re-enters
+ * dircache_add() and re-publishes the key the caller is clearing. curdir is
+ * handed back instead, for the caller to re-point once its entry is published.
+ *
+ * @param[in]  vol         Volume the entry belongs to
+ * @param[in]  dup         Entry to retire
+ * @param[out] took_curdir set if the retired entry was curdir
+ */
+static void dircache_expunge_duplicate(const struct vol *vol, struct dir *dup,
+                                       int *took_curdir)
+{
+    /* Reserved ids are never hashed: dircache_add() asserts did >= CNID_START
+     * and invalidated entries leave the indexes before d_did is cleared */
+    AFP_ASSERT(dup->d_did != DIRDID_ROOT_PARENT && dup->d_did != DIRDID_ROOT
+               && dup->d_did != CNID_INVALID);
+
+    if ((curdir == dup) && !(dup->d_flags & DIRF_ISFILE)) {
+        curdir = NULL;
+        *took_curdir = 1;
+    }
+
+    dircache_remove(vol, dup, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
+    /* Deferred: pointers handed out earlier this request stay readable */
+    dircache_defer_free(dup);
+    dircache_stat.expunged++;
+}
+
+/*!
  * @brief create struct dir from struct path
  *
  * Add a struct dir to the cache and its indexes.
@@ -1598,13 +1738,15 @@ struct dir *dircache_search_by_name(const struct vol *vol,
  * @param[in] vol   pointer to volume
  * @param[in] dir   pointer to parent directory
  *
- * @returns 0 on success, -1 on error which should result in an abort
+ * @returns 0; a failed hash insert aborts the process
  */
 int dircache_add(const struct vol *vol,
                  struct dir *dir)
 {
     struct dir key;
     hnode_t *hn;
+    /* An expunged curdir is taken over by this entry, describing the same dir */
+    int took_curdir = 0;
     AFP_ASSERT(dir);
     AFP_ASSERT(ntohl(dir->d_pdid) >= 2);
 
@@ -1637,40 +1779,34 @@ int dircache_add(const struct vol *vol,
     key.d_did = dir->d_did;
 
     if ((hn = hash_lookup(dircache, &key))) {
-        /* Found an entry with the same CNID, delete it */
-        struct dir *duplicate = hnode_get(hn);
-        LOG(log_debug, logtype_afpd,
-            "dircache_add: found duplicate CNID entry: did:%u, removing",
-            ntohl(duplicate->d_did));
-        dir_remove(vol, duplicate, 0);  /* Proactive duplicate cleanup */
-        dircache_stat.expunged++;
+        dircache_expunge_duplicate(vol, hnode_get(hn), &took_curdir);
     }
 
-    key.d_vid = vol->v_vid;
+    /* Keyed on the entry, exactly as both inserts below are */
+    key.d_vid = dir->d_vid;
     key.d_pdid = dir->d_pdid;
     key.d_u_name = dir->d_u_name;
 
     if ((hn = hash_lookup(index_didname, &key))) {
-        /* Found an entry with the same DID/name, delete it */
-        struct dir *duplicate = hnode_get(hn);
-        LOG(log_debug, logtype_afpd,
-            "dircache_add: found duplicate DID/name entry: pdid:%u name:'%s', removing",
-            ntohl(duplicate->d_pdid),
-            duplicate->d_u_name ? cfrombstr(duplicate->d_u_name) : "(null)");
-        dir_remove(vol, duplicate, 0);  /* Proactive duplicate cleanup */
-        dircache_stat.expunged++;
+        dircache_expunge_duplicate(vol, hnode_get(hn), &took_curdir);
     }
 
-    /* LRU mode: Check cache fullness and evict BEFORE adding to hash tables */
-    if (!arc_cache.enabled && dircache->hash_nodecount >= dircache_maxsize) {
+    /* Make room BEFORE the hash inserts: hash_insert() asserts
+     * nodecount < maxcount, and a full dircache (2c in ARC, c in LRU)
+     * is this cache's steady state */
+    if (arc_cache.enabled) {
+        arc_case_iv_make_room();
+    } else if (dircache->hash_nodecount >= dircache_maxsize) {
         LOG(log_debug, logtype_afpd,
             "dircache_add: cache full, evicting before adding did:%u",
             ntohl(dir->d_did));
         dircache_evict();
     }
 
-    /* Add it to the main dircache hash table (both modes) */
-    if (hash_alloc_insert(dircache, dir, dir) == 0) {
+    /* Add it to the main dircache hash table (both modes), keeping the node
+     * so removal can delete it without a keyed lookup */
+    if ((dir->d_index_node = hash_alloc_insert_node(dircache, dir,
+                             dir)) == NULL) {
         LOG(log_error, logtype_afpd,
             "dircache_add: main hash insert failed for did:%u",
             ntohl(dir->d_did));
@@ -1678,26 +1814,37 @@ int dircache_add(const struct vol *vol,
         exit(EXITERR_SYS);
     }
 
+    vid_entry_count[dir->d_vid]++;
+
     /* Add it to the did/name index (both modes) */
-    if (hash_alloc_insert(index_didname, dir, dir) == 0) {
+    if ((dir->d_didname_node = hash_alloc_insert_node(index_didname, dir,
+                               dir)) == NULL) {
         /* insert failed; Rollback main hash to keep counts consistent */
         LOG(log_error, logtype_afpd,
             "dircache_add: didname hash insert failed for did:%u, rolling back",
             ntohl(dir->d_did));
-        hn = hash_lookup(dircache, dir);
-
-        if (hn) {
-            hash_delete_free(dircache, hn);
-        }
-
+        hash_delete_free(dircache, dir->d_index_node);
+        dir->d_index_node = NULL;
         dircache_dump();
         exit(EXITERR_SYS);
     }
 
+    /* Set before the queue insert below, whose eviction can reach this entry:
+     * dir_free() refuses only entries marked indexed */
+    dir->d_flags |= DIRF_INDEXED;
+
+    /* A file cannot be curdir, so an expunged curdir falls back to the
+     * volume root, which is not yet built during volume setup */
+    if (took_curdir) {
+        curdir = (dir->d_flags & DIRF_ISFILE)
+                 ? (vol->v_root ? vol->v_root : &rootParent)
+                 : dir;
+    }
+
     /* Add to queue index - dispatch based on mode */
     if (arc_cache.enabled) {
-        /* ARC mode: Use Case IV (complete miss) */
-        arc_case_iv(dir);
+        /* ARC mode: Case IV (complete miss); room was made above */
+        arc_case_iv_insert(dir);
     } else {
         /* LRU mode: Enqueue the new entry */
         if ((dir->qidx_node = enqueue(index_queue, dir)) == NULL) {
@@ -1726,26 +1873,77 @@ int dircache_add(const struct vol *vol,
 }
 
 /*!
+ * @brief A stored index node does not name its entry: unrecoverable
+ *
+ * Every node is created with its entry as data and freed only through the
+ * entry's own removal, so a mismatch means memory corruption or a foreign
+ * delete. Freeing what a table still points at cannot be survived.
+ */
+static void dircache_mismatch_panic(const char *index_name,
+                                    const struct dir *dir, const void *node,
+                                    const struct dir *found)
+{
+    LOG(log_severe, logtype_afpd,
+        "dircache_remove: entry %p did:%u pdid:%u name:\"%s\" flags:0x%x "
+        "arc_list:%u — %s node %p carries %p did:%u",
+        (const void *)dir, ntohl(dir->d_did), ntohl(dir->d_pdid),
+        dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)",
+        (unsigned)dir->d_flags, (unsigned)dir->arc_list,
+        index_name, node, (const void *)found,
+        found ? ntohl(found->d_did) : 0u);
+    dircache_dump();
+    AFP_PANIC("dircache index node mismatch");
+}
+
+/*!
   * @brief Remove an entry from the dircache
+  *
+  * Deletes the entry's own stored nodes, so removal can never cost another
+  * entry its node. A NULL node means the entry is not in that index and it
+  * is skipped; a node naming a different entry panics before anything is
+  * mutated or followed.
   *
   * Callers outside of dircache.c should call this with
   * flags = QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE.
   */
 void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 {
-    hnode_t *hn;
     AFP_ASSERT(dir);
     AFP_ASSERT((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE |
                           DIRCACHE_NOSHRINK)) == 0);
     AFP_ASSERT(!(flags & DIRCACHE_NOSHRINK)
                || (flags & (DIRCACHE | DIDNAME_INDEX)));
 
+    if (dir->d_didname_node && hnode_get(dir->d_didname_node) != dir) {
+        dircache_mismatch_panic("didname index", dir, dir->d_didname_node,
+                                hnode_get(dir->d_didname_node));
+    }
+
+    if (dir->d_index_node && hnode_get(dir->d_index_node) != dir) {
+        dircache_mismatch_panic("dircache", dir, dir->d_index_node,
+                                hnode_get(dir->d_index_node));
+    }
+
+    /* Marked as indexed but holding no node: some table may still point
+     * at this entry, so freeing it is not safe */
+    if ((flags & DIRCACHE) && dir->d_index_node == NULL
+            && (dir->d_flags & DIRF_INDEXED)) {
+        dircache_mismatch_panic("dircache", dir, NULL, NULL);
+    }
+
+    /* Unlinking dereferences qidx_node->prev; the node names its owner, so a
+     * mismatch catches a stale pointer before it is followed */
+    if (dir->qidx_node && dir->qidx_node->data != dir) {
+        dircache_mismatch_panic("queue", dir, dir->qidx_node,
+                                dir->qidx_node->data);
+    }
+
     if (flags & QUEUE_INDEX) {
         /* Remove from queue - dispatch based on mode */
         if (arc_cache.enabled) {
             /* ARC mode: Remove from appropriate ARC list */
             if (dir->qidx_node) {
-                dequeue(dir->qidx_node->prev);
+                queue_remove(dir->qidx_node);
 
                 /* Update list size based on which list it was in */
                 switch (dir->arc_list) {
@@ -1786,40 +1984,34 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
                     "dircache_remove: NULL qidx_node for did:%u (orphan entry!)",
                     ntohl(dir->d_did));
             } else {
-                dequeue(dir->qidx_node->prev);
-                /* Clear queue pointer after dequeue */
+                queue_remove(dir->qidx_node);
                 dir->qidx_node = NULL;
                 queue_count--;
             }
         }
     }
 
-    if (flags & DIDNAME_INDEX) {
-        if ((hn = hash_lookup(index_didname, dir)) == NULL) {
-            LOG(log_error, logtype_afpd,
-                "dircache_remove: Cache entry not in didname index: did:%u",
-                ntohl(dir->d_did));
+    if ((flags & DIDNAME_INDEX) && dir->d_didname_node) {
+        if (flags & DIRCACHE_NOSHRINK) {
+            hash_scan_delfree(index_didname, dir->d_didname_node);
         } else {
-            if (flags & DIRCACHE_NOSHRINK) {
-                hash_scan_delfree(index_didname, hn);
-            } else {
-                hash_delete_free(index_didname, hn);
-            }
+            hash_delete_free(index_didname, dir->d_didname_node);
         }
+
+        dir->d_didname_node = NULL;
     }
 
-    if (flags & DIRCACHE) {
-        if ((hn = hash_lookup(dircache, dir)) == NULL) {
-            LOG(log_error, logtype_afpd,
-                "dircache_remove: Cache entry not in dircache: did:%u",
-                ntohl(dir->d_did));
+    if ((flags & DIRCACHE) && dir->d_index_node) {
+        if (flags & DIRCACHE_NOSHRINK) {
+            hash_scan_delfree(dircache, dir->d_index_node);
         } else {
-            if (flags & DIRCACHE_NOSHRINK) {
-                hash_scan_delfree(dircache, hn);
-            } else {
-                hash_delete_free(dircache, hn);
-            }
+            hash_delete_free(dircache, dir->d_index_node);
         }
+
+        dir->d_index_node = NULL;
+        dir->d_flags &= ~DIRF_INDEXED;
+        AFP_ASSERT(vid_entry_count[dir->d_vid] > 0);
+        vid_entry_count[dir->d_vid]--;
     }
 
     /* Unpublish is the one choke point every removal funnels through
@@ -1845,117 +2037,92 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
  * CNID entries use parent DIDs and name, and requre recursion to get
  * the full path, therefore parent changes do not invalidate the CNIDs.
  *
+ * Removes as it scans: DIRCACHE_NOSHRINK deletes the entry's own
+ * just-returned node without rehashing the table, and the free is deferred,
+ * so nothing the scan is walking moves. dir_remove() cannot be used here —
+ * its curdir recovery calls dirlookup(), and an insert mid-scan can grow the
+ * table. A removed curdir is re-resolved once the scan is over instead: a
+ * rename keeps the CNID, so the lookup rebuilds the entry on the new path.
+ *
  * @param[in] vol  volume
  * @param[in] dir  parent directory whose children should be removed
- * @returns 0 on success, -1 if curdir was removed and recovery failed
+ * @returns 0 on success, -1 if a removed curdir could not be re-resolved
  */
 int dircache_remove_children(const struct vol *vol, struct dir *dir)
 {
     struct dir *entry;
     hnode_t *hn;
     hscan_t hs;
-    /* Store dir pointers */
-    struct dir **to_remove = NULL;
-    int remove_count = 0;
-    int remove_capacity = 0;
+    unsigned int removed = 0;
+    int recovery_status = 0;
 
     if (!dir || !dir->d_fullpath) {
         return 0;
     }
 
+    const char *parent_path = cfrombstr(dir->d_fullpath);
+    size_t parent_len = blength(dir->d_fullpath);
+
+    if (parent_path == NULL || parent_len == 0) {
+        return 0;
+    }
+
     LOG(log_debug, logtype_afpd,
         "dircache_remove_children: removing children of \"%s\" (did:%u)",
-        cfrombstr(dir->d_fullpath), ntohl(dir->d_did));
-    /* Two stages to avoid modifying the hash during iteration */
-    /* First pass: collect entries to remove */
+        parent_path, ntohl(dir->d_did));
+    cnid_t saved_curdir_did = curdir ? curdir->d_did : CNID_INVALID;
     hash_scan_begin(&hs, dircache);
 
     while ((hn = hash_scan_next(&hs))) {
         entry = hnode_get(hn);
 
         /* Skip the parent directory itself */
-        if (entry == dir) {
+        if (entry == dir || entry->d_fullpath == NULL) {
             continue;
         }
 
-        /* Check if entry is a decendant by comparing parent path */
-        if (entry->d_fullpath && dir->d_fullpath) {
-            const char *entry_path = cfrombstr(entry->d_fullpath);
-            const char *parent_path = cfrombstr(dir->d_fullpath);
-            size_t parent_len = blength(dir->d_fullpath);
+        /* A descendant's path is the parent's, then '/', then more */
+        const char *entry_path = cfrombstr(entry->d_fullpath);
 
-            /* Check if entry's path starts with parent's path followed by '/' */
-            if (parent_path && entry_path && parent_len > 0 &&
-                    (size_t)blength(entry->d_fullpath) > parent_len &&
-                    memcmp(entry_path, parent_path, parent_len) == 0 &&
-                    entry_path[parent_len] == '/') {
-                /* Expand to_remove array */
-                if (remove_count >= remove_capacity) {
-                    remove_capacity = remove_capacity ? remove_capacity * 2 : 16;
-                    struct dir **tmp = realloc(to_remove, remove_capacity * sizeof(struct dir*));
-
-                    if (!tmp) {
-                        LOG(log_error, logtype_afpd,
-                            "dircache_remove_children: out of memory");
-                        free(to_remove);
-                        return -1;
-                    }
-
-                    to_remove = tmp;
-                }
-
-                /* Store the dir pointer for removal */
-                to_remove[remove_count] = entry;
-                remove_count++;
-                LOG(log_debug, logtype_afpd,
-                    "dircache_remove_children: marking child \"%s\" (did:%u) for removal",
-                    entry->d_u_name ? cfrombstr(entry->d_u_name) : "(null)", ntohl(entry->d_did));
-            }
+        if (entry_path == NULL
+                || (size_t)blength(entry->d_fullpath) <= parent_len
+                || memcmp(entry_path, parent_path, parent_len) != 0
+                || entry_path[parent_len] != '/') {
+            continue;
         }
-    }
 
-    /* Save curdir DID before loop in case dir_remove recovery fails */
-    cnid_t saved_curdir_did = curdir ? curdir->d_did : CNID_INVALID;
-    int recovery_status = 0;
-
-    /* Second pass: remove collected entries from dircache */
-    for (int i = 0; i < remove_count; i++) {
-        entry = to_remove[i];
         LOG(log_debug, logtype_afpd,
             "dircache_remove_children: removing stale \"%s\" (did:%u) from dircache",
-            entry->d_u_name ? cfrombstr(entry->d_u_name) : "(null)", ntohl(entry->d_did));
+            entry->d_u_name ? cfrombstr(entry->d_u_name) : "(null)",
+            ntohl(entry->d_did));
 
-        /* dir_remove returns -1 if it removed curdir and recovery failed */
-        if (dir_remove(vol, entry, 0) != 0) {
-            /* Proactive cleanup of children after rename */
-            recovery_status = -1;
+        if (entry == curdir) {
+            curdir = NULL;
         }
+
+        dircache_remove(vol, entry, DIRCACHE_ALL | DIRCACHE_NOSHRINK);
+        dircache_defer_free(entry);
+        removed++;
     }
 
-    /* Defensive check: If curdir is NULL, dir_remove failed to recover */
+    /* Safe now the scan is over: this re-enters dircache_add() */
+    if (!curdir && saved_curdir_did != CNID_INVALID) {
+        curdir = dirlookup(vol, saved_curdir_did);
+    }
+
     if (!curdir) {
         curdir = vol->v_root ? vol->v_root : &rootParent;
         LOG(log_debug, logtype_afpd,
-            "dircache_remove_children: DEFENSIVE: curdir is NULL (was did:%u), fallback to %s",
+            "dircache_remove_children: curdir (was did:%u) not resolvable, "
+            "fallback to %s",
             ntohl(saved_curdir_did), vol->v_root ? "volume root" : "rootParent");
         recovery_status = -1;
     }
 
-    if (to_remove) {
-        free(to_remove);
-    }
-
-    if (remove_count) {
-        const char *status = recovery_status ? " (curdir recovery failed)" : "";
-        LOG(log_debug, logtype_afpd,
-            "dircache_remove_children: removed %d dircache entries of \"%s\"%s",
-            remove_count, cfrombstr(dir->d_fullpath), status);
-    } else {
-        LOG(log_debug, logtype_afpd,
-            "dircache_remove_children: removed %d dircache entries of \"%s\"",
-            remove_count, cfrombstr(dir->d_fullpath));
-    }
-
+    LOG(log_debug, logtype_afpd,
+        "dircache_remove_children: removed %u dircache entries of \"%s\"%s",
+        removed, parent_path,
+        recovery_status ? " (curdir recovery failed)" : "");
     return recovery_status;
 }
 
@@ -1971,13 +2138,29 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
  *
  * @returns 0 on success, -1 on hash insert failure
  */
-int dircache_reindex_didname(const struct vol *vol _U_, struct dir *dir)
+int dircache_reindex_didname(const struct vol *vol, struct dir *dir)
 {
+    hnode_t *hn;
     AFP_ASSERT(dir);
+
+    /* A stale entry may still hold the new key (destination deleted outside
+     * this session); retire it like dircache_add() does, or the insert below
+     * would publish a second node under one key */
+    if ((hn = hash_lookup(index_didname, dir)) != NULL) {
+        int took_curdir = 0;
+        dircache_expunge_duplicate(vol, hnode_get(hn), &took_curdir);
+
+        if (took_curdir) {
+            curdir = (dir->d_flags & DIRF_ISFILE)
+                     ? (vol->v_root ? vol->v_root : &rootParent)
+                     : dir;
+        }
+    }
 
     /* Caller has already called dircache_remove(vol, dir, DIDNAME_INDEX)
      * and updated dir->d_pdid / dir->d_u_name. Re-insert with new key. */
-    if (hash_alloc_insert(index_didname, dir, dir) == 0) {
+    if ((dir->d_didname_node = hash_alloc_insert_node(index_didname, dir,
+                               dir)) == NULL) {
         LOG(log_error, logtype_afpd,
             "dircache_reindex_didname: re-insert failed for did:%u",
             ntohl(dir->d_did));
@@ -3013,30 +3196,27 @@ void dircache_flush_deferred_for_vol(uint16_t vid)
                 const struct vol *vol = getvolbyvid(vid);
 
                 if (vol) {
-                    hashcount_t nchains = hash_size(dircache);
+                    hscan_t hs;
+                    hnode_t *hn;
+                    hash_scan_begin(&hs, dircache);
 
-                    for (hashcount_t ci = 0; ci < nchains; ci++) {
-                        hnode_t *node = hash_chain_head(dircache, ci);
+                    while ((hn = hash_scan_next(&hs)) != NULL) {
+                        struct dir *entry = hnode_get(hn);
 
-                        while (node) {
-                            hnode_t *next = node->hash_next;
-                            struct dir *entry = hnode_get(node);
+                        if (entry == curdir || entry->d_did == CNID_INVALID
+                                || entry->d_fullpath == NULL) {
+                            continue;
+                        }
 
-                            if (entry != curdir &&
-                                    entry->d_did != CNID_INVALID &&
-                                    entry->d_fullpath) {
-                                const char *ep = cfrombstr(entry->d_fullpath);
+                        const char *ep = cfrombstr(entry->d_fullpath);
 
-                                if (ep &&
-                                        (size_t)blength(entry->d_fullpath) > deferred_queue[idx].parent_len &&
-                                        memcmp(ep, deferred_queue[idx].parent_path,
-                                               deferred_queue[idx].parent_len) == 0 &&
-                                        ep[deferred_queue[idx].parent_len] == '/') {
-                                    dir_remove_and_free(vol, entry);
-                                }
-                            }
-
-                            node = next;
+                        if (ep != NULL
+                                && (size_t)blength(entry->d_fullpath) > deferred_queue[idx].parent_len
+                                && memcmp(ep, deferred_queue[idx].parent_path,
+                                          deferred_queue[idx].parent_len) == 0
+                                && ep[deferred_queue[idx].parent_len] == '/') {
+                            /* NOSHRINK inside dir_remove_and_free keeps the scan valid */
+                            dir_remove_and_free(vol, entry);
                         }
                     }
                 }

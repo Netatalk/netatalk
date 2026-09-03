@@ -32,6 +32,7 @@
 #include <bstrlib.h>
 
 #include <atalk/cnid.h>
+#include <atalk/hash.h>
 #include <atalk/queue.h>
 #include <atalk/unicode.h>
 
@@ -52,6 +53,7 @@
 #define DIRF_OFFCNT    (1<<4) /*!< offsprings count is valid */
 #define DIRF_CNID	   (1<<5) /*!< renumerate id */
 #define DIRF_ARC_GHOST (1<<6) /*!< ARC ghost entry (in B1/B2) */
+#define DIRF_INDEXED   (1<<7) /*!< linked in the dircache hash index */
 
 /* dcache_rlen states. AD_RLEN_NO_RFORK is the floor of the positive
  * range, not a sentinel: test >= 0 for "metadata cached". */
@@ -76,6 +78,8 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
     bstring     d_u_name;            /*!< unix name */
     ucs2_t      *d_m_name_ucs2;      /*!< mac name as UCS2 */
     qnode_t     *qidx_node;          /*!< pointer to position in queue index */
+    hnode_t     *d_index_node;       /*!< this entry's node in the dircache */
+    hnode_t     *d_didname_node;     /*!< this entry's node in index_didname */
 
     /* Tier 2: Resource Fork data cache.
      * Dynamically allocated buffer containing dcache_rlen bytes of rfork data.
