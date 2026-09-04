@@ -325,6 +325,15 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
         return AFPERR_NOTAUTH;
     }
 
+    /* A rootless server has no authority to adopt another account. Limit
+     * authentication to the UID that started afpd before touching groups. */
+    if ((obj->options.flags & OPTION_UNPRIVILEGED) && pwd->pw_uid != getuid()) {
+        LOG(log_error, logtype_afpd,
+            "login: rootless server rejects user %s (uid %u, server uid %u)",
+            pwd->pw_name, (unsigned int)pwd->pw_uid, (unsigned int)getuid());
+        return AFPERR_NOTAUTH;
+    }
+
     if (obj->cnx_cnt >= obj->cnx_max) {
         LOG(log_error, logtype_dsi, "login: too many connections, limit: %d",
             obj->cnx_max);

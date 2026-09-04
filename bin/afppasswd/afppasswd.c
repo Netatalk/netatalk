@@ -581,6 +581,7 @@ static void srp_encode_hex(char *out_hex, const unsigned char *salt,
 static int open_srp_verifier_directory(const char *path)
 {
     struct stat st;
+    uid_t uid = getuid();
     int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
 
     if (fd < 0) {
@@ -597,11 +598,21 @@ static int open_srp_verifier_directory(const char *path)
         return -1;
     }
 
-    if (fstat(fd, &st) < 0 || !S_ISDIR(st.st_mode) || st.st_uid != 0 ||
+    /* An unprivileged caller may also use the private directory it owns for
+     * its own single-user server; root still requires a root-owned store. */
+    if (fstat(fd, &st) < 0 || !S_ISDIR(st.st_mode) ||
+            (st.st_uid != 0 && (uid == 0 || st.st_uid != uid)) ||
             (st.st_mode & (S_IWGRP | S_IWOTH))) {
-        fprintf(stderr,
-                "afppasswd: SRP verifier directory %s must be root-owned and not writable by group or other.\n",
-                path);
+        if (uid == 0) {
+            fprintf(stderr,
+                    "afppasswd: SRP verifier directory %s must be root-owned and not writable by group or other.\n",
+                    path);
+        } else {
+            fprintf(stderr,
+                    "afppasswd: SRP verifier directory %s must be owned by root or by uid %ju and not writable by group or other.\n",
+                    path, (uintmax_t)uid);
+        }
+
         close(fd);
         return -1;
     }
@@ -706,6 +717,8 @@ static int update_srp_passwd(const char *path, const char *name, uid_t uid,
     char hex_buf[SRP_HEX_SALT_LEN + 1 + SRP_HEX_V_LEN] = {0};
     /* line buffer: username + ":" + hex_salt + ":" + hex_verifier + "\n" + NUL */
     char line[SRP_USERNAME_MAX_LEN + SRP_FORMAT_LEN + 1] = {0};
+    /* Only a user's -c -p bootstrap of a private store arrives with OPT_CREATE. */
+    const int bootstrap = !(flags & OPT_ISROOT) && (flags & OPT_CREATE);
 
     if ((flags & OPT_ADDUSER) && !(flags & OPT_ISROOT)) {
         fprintf(stderr, "afppasswd: only root can add a user.\n");
@@ -764,7 +777,8 @@ static int update_srp_passwd(const char *path, const char *name, uid_t uid,
 
     p = strchr(line, ':');
 
-    /* Root's add mode also permits empty files and stale usernames after uid reuse. */
+    /* Root's add mode also permits empty files and stale usernames after uid
+     * reuse; a user's bootstrap starts from the empty file it just created. */
     if (p && name_len == (size_t)(p - line) && strncmp(line, name, name_len) == 0) {
         p++;
 
@@ -779,7 +793,7 @@ static int update_srp_passwd(const char *path, const char *name, uid_t uid,
             err = -1;
             goto done;
         }
-    } else if (!(flags & OPT_ADDUSER)) {
+    } else if (!(flags & OPT_ADDUSER) && !bootstrap) {
         fprintf(stderr, "afppasswd: can't find verifier for %s in %s\n", name,
                 path);
         err = -1;
@@ -787,7 +801,7 @@ static int update_srp_passwd(const char *path, const char *name, uid_t uid,
     }
 
     /* Verify old password for non-root users */
-    if ((flags & OPT_ISROOT) == 0) {
+    if ((flags & OPT_ISROOT) == 0 && !bootstrap) {
         /* Recompute the verifier from the supplied old password. */
         passwd = getpass("Enter OLD AFP password: ");
 
@@ -1133,6 +1147,93 @@ static int create_srp_directory(const char *path, uid_t minuid)
     return err;
 }
 
+/* Bootstrap the private verifier directory of an unprivileged single-user
+ * server: only the calling user's own uid file is created. */
+static int create_private_srp_verifier(const char *path, uid_t uid, int flags,
+                                       const char *pass)
+{
+    const struct passwd *pwd;
+    struct stat st;
+    char uid_name[3 * sizeof(uid_t) + 1];
+    int dirfd, fd;
+
+    if (mkdir(path, 0700) < 0 && errno != EEXIST) {
+        fprintf(stderr, "afppasswd: can't create SRP verifier directory %s: %s\n",
+                path, strerror(errno));
+        return -1;
+    }
+
+    if ((dirfd = open_srp_verifier_directory(path)) < 0) {
+        return -1;
+    }
+
+    /* An existing directory must already be the caller's private store. */
+    if (fstat(dirfd, &st) < 0 || st.st_uid != uid ||
+            (st.st_mode & (S_IRWXG | S_IRWXO))) {
+        fprintf(stderr,
+                "afppasswd: SRP verifier directory %s must be a mode-0700 directory owned by uid %ju.\n",
+                path, (uintmax_t)uid);
+        close(dirfd);
+        return -1;
+    }
+
+    if (fchmod(dirfd, 0700) < 0) {
+        fprintf(stderr,
+                "afppasswd: can't set permissions on SRP verifier directory %s: %s\n",
+                path, strerror(errno));
+        close(dirfd);
+        return -1;
+    }
+
+    if (srp_uid_filename(uid, uid_name, sizeof(uid_name)) < 0) {
+        close(dirfd);
+        return -1;
+    }
+
+    fd = openat(dirfd, uid_name, O_WRONLY | O_CREAT | O_CLOEXEC | O_NOFOLLOW |
+                ((flags & OPT_FORCE) ? 0 : O_EXCL), 0600);
+
+    if (fd < 0) {
+        if (errno == EEXIST) {
+            fprintf(stderr,
+                    "afppasswd: verifier %s/%s already exists; use -f to replace it.\n",
+                    path, uid_name);
+        } else {
+            fprintf(stderr, "afppasswd: can't create verifier %s/%s: %s\n",
+                    path, uid_name, strerror(errno));
+        }
+
+        close(dirfd);
+        return -1;
+    }
+
+    if (validate_srp_verifier_file(fd, uid, path, 0) < 0) {
+        close(fd);
+        close(dirfd);
+        return -1;
+    }
+
+    /* With -f, the caller's existing verifier is emptied so that the update
+     * below proceeds without an old-password proof. */
+    if (ftruncate(fd, 0) < 0 || fsync(fd) < 0 || fsync(dirfd) < 0) {
+        fprintf(stderr, "afppasswd: can't prepare verifier %s/%s: %s\n",
+                path, uid_name, strerror(errno));
+        close(fd);
+        close(dirfd);
+        return -1;
+    }
+
+    close(fd);
+    close(dirfd);
+
+    if ((pwd = getpwuid(uid)) == NULL) {
+        fprintf(stderr, "afppasswd: can't get password entry.\n");
+        return -1;
+    }
+
+    return update_srp_passwd(path, pwd->pw_name, uid, flags, pass);
+}
+
 /* -------------------- RandNum (legacy) functions -------------------- */
 
 static int valid_hex_or_disabled(const char *field, size_t len)
@@ -1454,14 +1555,14 @@ static void print_usage(void)
             "Usage (root): afppasswd [-cfmr] [-a username | -d username] [-p directory] [-u minuid] [-w string]\n");
 #endif
     fprintf(stderr,
-            "Usage (user): afppasswd\n");
+            "Usage (user): afppasswd [-c -p directory] [-f] [-w string]\n");
     fprintf(stderr, "  -a user   add or reset password for the named user\n");
     fprintf(stderr,
             "  -d user   disable the named user's SRP verifier\n");
     fprintf(stderr,
             "  -c        create and initialize the credential store\n");
     fprintf(stderr,
-            "  -f        replace an existing Randnum credential file with -r -c\n");
+            "  -f        replace an existing Randnum credential file with -r -c, or your own verifier with -c -p\n");
     fprintf(stderr, "  -m        migrate a legacy flat SRP verifier file\n");
     fprintf(stderr, "  -r        use legacy RandNum mode (default is SRP)\n");
 #ifdef USE_CRACKLIB
@@ -1574,17 +1675,24 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    /* A regular user may only update that user's own SRP verifier. The path
-     * names no privilege boundary now that inherited setuid privileges are
-     * discarded above; the filesystem validates access to it. */
+    /* A regular user may only update that user's own SRP verifier, or
+     * bootstrap the private verifier directory of a single-user server with
+     * -c -p, where -f and -w are also accepted. The path names no privilege
+     * boundary now that inherited setuid privileges are discarded above; the
+     * filesystem validates access to it. */
     if (!(flags & OPT_ISROOT) &&
-            ((flags & (OPT_CREATE | OPT_FORCE | OPT_ADDUSER | OPT_NOCRACK |
-                       OPT_MIGRATE | OPT_DISABLE)) ||
-             (flags & OPT_RANDNUM) || adduser_seen || disable_seen ||
-             uid_seen || password_seen)) {
+            ((flags & (OPT_ADDUSER | OPT_NOCRACK | OPT_MIGRATE | OPT_DISABLE)) ||
+             (flags & OPT_RANDNUM) || adduser_seen || disable_seen || uid_seen ||
+             (!(flags & OPT_CREATE) && ((flags & OPT_FORCE) || password_seen)))) {
         fprintf(stderr,
                 "ERROR: non-root users may update only their own SRP verifier.\n\n");
         print_usage();
+        return -1;
+    }
+
+    if (!(flags & OPT_ISROOT) && (flags & OPT_CREATE) && !path_seen) {
+        fprintf(stderr,
+                "afppasswd: non-root -c requires -p with a private verifier directory; see afppasswd(1).\n");
         return -1;
     }
 
@@ -1603,8 +1711,10 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    /* A user's bootstrap keeps -w so that it can be scripted. */
     if ((flags & OPT_CREATE) &&
-            ((flags & (OPT_ADDUSER | OPT_DISABLE)) || password_seen)) {
+            ((flags & (OPT_ADDUSER | OPT_DISABLE)) ||
+             (password_seen && (flags & OPT_ISROOT)))) {
         fprintf(stderr, "afppasswd: -c cannot be combined with -a, -d, or -w.\n");
         print_usage();
         return -1;
@@ -1616,7 +1726,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    if ((flags & OPT_FORCE) &&
+    if ((flags & OPT_FORCE) && (flags & OPT_ISROOT) &&
             (!(flags & OPT_RANDNUM) || !(flags & OPT_CREATE))) {
         fprintf(stderr, "afppasswd: -f is valid only with -r -c.\n");
         print_usage();
@@ -1659,8 +1769,7 @@ int main(int argc, char **argv)
 
     if (flags & OPT_CREATE) {
         if ((flags & OPT_ISROOT) == 0) {
-            fprintf(stderr, "afppasswd: only root can initialize credentials.\n");
-            return -1;
+            return create_private_srp_verifier(path, uid, flags, pass);
         }
 
         i = lstat(path, &st);
