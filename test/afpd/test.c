@@ -538,6 +538,15 @@ int main(int argc, char *argv[])
              "CNID wrapper '..' rejection invalidates *id and classifies corrupt");
     TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
                      "dircache_resolve_size: default, minimum, round-up, clamp");
+    {
+        AFPObj unprivileged_obj = { 0 };
+        char *unprivileged_args[] = { "afpd", "-u" };
+        TEST(afp_options_parse_cmdline(&unprivileged_obj, 2, unprivileged_args),
+             "parse afpd rootless command-line option");
+        TEST_expr(reti = 0,
+                  (unprivileged_obj.cmdlineflags & OPTION_UNPRIVILEGED) != 0,
+                  "afpd rootless command-line option sets its flag");
+    }
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]),
          "parse afpd command-line options");
     TEST_int(afp_config_parse(&obj, NULL), 0,

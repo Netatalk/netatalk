@@ -1784,6 +1784,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     const char *dbpath_str = NULL;
     int sqlite_return;
     bool is_root = false;
+    const bool unprivileged = vol->v_obj != NULL
+                              && (vol->v_obj->options.flags & OPTION_UNPRIVILEGED);
     EC_NULL(cdb = cnid_sqlite_new(vol));
     EC_NULL(db =
                 (CNID_sqlite_private *) calloc(1,
@@ -1800,7 +1802,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     become_root();
     is_root = true;
 
-    if (mkdir(dirpath, 01777) != 0) {
+    if (mkdir(dirpath, unprivileged ? 0700 : 01777) != 0) {
         if (errno == EEXIST) {
             int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
 
@@ -1809,11 +1811,34 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                 EC_FAIL;
             }
 
-            /* Ensure existing directories get updated to the sticky bit permissions,
-             * so that non-root clients such as 'nad' can create SQLite WAL/SHM files. */
+            /* Normal servers share SQLite state with authenticated users and nad.
+             * A rootless server has only one user, so retain private state instead. */
             struct stat st;
 
-            if (fstat(dirfd, &st) == 0 && (st.st_mode & 01777) != 01777) {
+            if (fstat(dirfd, &st) != 0 || !S_ISDIR(st.st_mode)) {
+                LOG(log_error, logtype_cnid, "Can't stat CNID DB directory '%s': %s",
+                    dirpath, strerror(errno));
+                close(dirfd);
+                EC_FAIL;
+            }
+
+            if (unprivileged) {
+                if (st.st_uid != getuid()) {
+                    LOG(log_error, logtype_cnid,
+                        "Rootless CNID DB directory '%s' is not owned by the server user",
+                        dirpath);
+                    close(dirfd);
+                    EC_FAIL;
+                }
+
+                if ((st.st_mode & 0777) != 0700 && fchmod(dirfd, 0700) != 0) {
+                    LOG(log_error, logtype_cnid,
+                        "Can't make rootless CNID DB directory '%s' private: %s",
+                        dirpath, strerror(errno));
+                    close(dirfd);
+                    EC_FAIL;
+                }
+            } else if ((st.st_mode & 01777) != 01777) {
                 fchmod(dirfd, 01777);
             }
 
@@ -1862,13 +1887,19 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      * codes change nothing there. */
     sqlite3_extended_result_codes(db->cnid_sqlite_con, 1);
 
-    /* Setting permissions of the sqlite db file to world-writable.
-     * This is to allow CNID records to be updated by any authenticated AFP user.
+    /* Normal servers need a world-writable database so authenticated users and
+     * nad can update CNID state. A rootless server has one identity and keeps
+     * its database private.
      *
      * At the same time, do not treat a failure to change the permissions as a fatal error,
-     * because non-root clients such as 'nad' may open the database after it's been created. */
-    if (dbpath_str && chmod(dbpath_str, 0666) != 0) {
-        if (errno == EPERM || errno == EACCES) {
+     * because non-root clients such as 'nad' may open a normal server's database. */
+    if (dbpath_str && chmod(dbpath_str, unprivileged ? 0600 : 0666) != 0) {
+        if (unprivileged) {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_open: can't make rootless DB file %s private: %s",
+                dbpath_str, strerror(errno));
+            EC_FAIL;
+        } else if (errno == EPERM || errno == EACCES) {
             LOG(log_debug, logtype_cnid,
                 "cnid_sqlite_open: Current user has no permissions to set permissions on db file %s: %s",
                 dbpath_str, strerror(errno));
@@ -1897,27 +1928,38 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             vol->v_path);
     }
 
-    /* Setting permissions of the WAL and SHM files to world-writable.
-     * These files are created by SQLite when WAL mode is enabled above.
-     * Without this, files created by root would be inaccessible to non-root
-     * clients such as 'nad'. Same as with the main db file, do not treat
-     * a failure to change the permissions as a fatal error. */
+    /* SQLite creates WAL and SHM files when WAL mode is enabled. They are
+     * shared for normal servers, but private in rootless mode. */
     {
         char auxpath[PATH_MAX];
         snprintf(auxpath, sizeof(auxpath), "%s-wal", dbpath_str);
 
-        if (chmod(auxpath, 0666) != 0 && errno != ENOENT) {
-            LOG(log_debug, logtype_cnid,
-                "cnid_sqlite_open: chmod failed for %s: %s",
-                auxpath, strerror(errno));
+        if (chmod(auxpath, unprivileged ? 0600 : 0666) != 0 && errno != ENOENT) {
+            if (unprivileged) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_sqlite_open: can't make rootless WAL file %s private: %s",
+                    auxpath, strerror(errno));
+                EC_FAIL;
+            } else {
+                LOG(log_debug, logtype_cnid,
+                    "cnid_sqlite_open: chmod failed for %s: %s",
+                    auxpath, strerror(errno));
+            }
         }
 
         snprintf(auxpath, sizeof(auxpath), "%s-shm", dbpath_str);
 
-        if (chmod(auxpath, 0666) != 0 && errno != ENOENT) {
-            LOG(log_debug, logtype_cnid,
-                "cnid_sqlite_open: chmod failed for %s: %s",
-                auxpath, strerror(errno));
+        if (chmod(auxpath, unprivileged ? 0600 : 0666) != 0 && errno != ENOENT) {
+            if (unprivileged) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_sqlite_open: can't make rootless SHM file %s private: %s",
+                    auxpath, strerror(errno));
+                EC_FAIL;
+            } else {
+                LOG(log_debug, logtype_cnid,
+                    "cnid_sqlite_open: chmod failed for %s: %s",
+                    auxpath, strerror(errno));
+            }
         }
     }
 

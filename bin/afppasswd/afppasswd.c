@@ -54,6 +54,7 @@
 #define OPT_ADDUSER (1 << 3)
 #define OPT_NOCRACK (1 << 4)
 #define OPT_RANDNUM (1 << 5)
+#define OPT_INITIAL (1 << 6)
 
 #define PASSWD_ILLEGAL '*'
 
@@ -112,6 +113,17 @@ static const unsigned char srp_N_bytes[SRP_NBYTES] = {
 
 static char buf[MAXPATHLEN + 1];
 static const unsigned char hextable[] = "0123456789ABCDEF";
+
+static char *get_password(const char *prompt)
+{
+    char *password = getpass(prompt);
+
+    if (password == NULL) {
+        fprintf(stderr, "afppasswd: unable to read password.\n");
+    }
+
+    return password;
+}
 
 static int randnum_make_keypath(const char *path, char *keypath,
                                 size_t keypath_size)
@@ -497,7 +509,8 @@ static int update_srp_passwd(const char *path, const char *name, int flags,
         if (p && name_len == (size_t)(p - line) && strncmp(line, name, name_len) == 0) {
             p++;
 
-            if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
+            if (!(flags & OPT_ISROOT) && !(flags & OPT_INITIAL)
+                    && (*p == PASSWD_ILLEGAL)) {
                 fprintf(stderr, "Your password is disabled. Please see your administrator.\n");
                 err = -1;
                 goto done;
@@ -553,11 +566,15 @@ static int update_srp_passwd(const char *path, const char *name, int flags,
 found_entry:
 
     /* Verify old password for non-root users */
-    if ((flags & OPT_ISROOT) == 0) {
+    if ((flags & OPT_ISROOT) == 0 && !(flags & OPT_INITIAL)) {
         /* For SRP, we can't verify old password from verifier alone.
          * We would need to recompute the verifier from the old password
          * and compare. */
-        passwd = getpass("Enter OLD AFP password: ");
+        if ((passwd = get_password("Enter OLD AFP password: ")) == NULL) {
+            err = -1;
+            goto done;
+        }
+
         /* Parse existing salt from file */
         unsigned char old_salt[SRP_SALT_LEN];
 
@@ -612,7 +629,11 @@ found_entry:
 
     /* Get new password */
     if (pass_len < 1) {
-        passwd = getpass("Enter NEW AFP password: ");
+        if ((passwd = get_password("Enter NEW AFP password: ")) == NULL) {
+            err = -1;
+            goto done;
+        }
+
         size_t passwd_len = strnlen(passwd, SRP_PASSWDLEN + 1);
 
         if (passwd_len > SRP_PASSWDLEN) {
@@ -641,7 +662,10 @@ found_entry:
 #endif
 
     if (pass_len < 1) {
-        passwd = getpass("Enter NEW AFP password again: ");
+        if ((passwd = get_password("Enter NEW AFP password again: ")) == NULL) {
+            err = -1;
+            goto done;
+        }
 
         if (strcmp(passwd, password) != 0) {
             fprintf(stderr, "afppasswd: passwords don't match!\n");
@@ -743,6 +767,51 @@ static int create_srp_file(const char *path, uid_t minuid)
     return err;
 }
 
+/* Create a private verifier file containing only the calling user. This is
+ * the bootstrap path for a rootless, single-user AFP server. */
+static int create_srp_file_for_user(const char *path, const char *name)
+{
+    int fd;
+    size_t namelen;
+    int n;
+    namelen = strnlen(name, sizeof(buf));
+
+    if (namelen == sizeof(buf) || namelen + SRP_FORMAT_LEN > sizeof(buf) - 1) {
+        fprintf(stderr, "afppasswd: username is too long.\n");
+        return -1;
+    }
+
+    if ((fd = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0600)) < 0) {
+        fprintf(stderr, "afppasswd: can't create %s: %s\n", path, strerror(errno));
+        return -1;
+    }
+
+    if (fchmod(fd, 0600) < 0) {
+        fprintf(stderr, "afppasswd: can't set permissions on %s: %s\n", path,
+                strerror(errno));
+        close(fd);
+        return -1;
+    }
+
+    n = snprintf(buf, sizeof(buf), "%s:", name);
+    memset(buf + n, PASSWD_ILLEGAL, SRP_HEX_SALT_LEN);
+    n += SRP_HEX_SALT_LEN;
+    buf[n++] = ':';
+    memset(buf + n, PASSWD_ILLEGAL, SRP_HEX_V_LEN);
+    n += SRP_HEX_V_LEN;
+    buf[n++] = '\n';
+
+    if (write(fd, buf, n) != n) {
+        fprintf(stderr, "afppasswd: problem writing to %s: %s\n", path,
+                strerror(errno));
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+    return 0;
+}
+
 /* -------------------- RandNum (legacy) functions -------------------- */
 
 /* this matches the code in uam_randnum.c */
@@ -805,7 +874,10 @@ found_entry:
 
     /* need to verify against old password */
     if ((flags & OPT_ISROOT) == 0) {
-        passwd = getpass("Enter OLD AFP password: ");
+        if ((passwd = get_password("Enter OLD AFP password: ")) == NULL) {
+            err = -1;
+            goto update_done;
+        }
 
         if (convert_passwd(p, NULL, keyfd) < 0) {
             err = -1;
@@ -821,7 +893,11 @@ found_entry:
 
     /* new password */
     if (pass_len < 1) {
-        passwd = getpass("Enter NEW AFP password: ");
+        if ((passwd = get_password("Enter NEW AFP password: ")) == NULL) {
+            err = -1;
+            goto update_done;
+        }
+
         size_t passwd_len = strnlen(passwd, PASSWDLEN + 1);
 
         if (passwd_len > PASSWDLEN) {
@@ -864,7 +940,10 @@ found_entry:
 #endif /* USE_CRACKLIB */
 
     if (pass_len < 1) {
-        passwd = getpass("Enter NEW AFP password again: ");
+        if ((passwd = get_password("Enter NEW AFP password again: ")) == NULL) {
+            err = -1;
+            goto update_done;
+        }
     }
 
     if (strcmp(passwd, password) == 0 || pass_len > 0) {
@@ -956,7 +1035,7 @@ static void print_usage(void)
             "Usage (root): afppasswd [-cfr] [-a username] [-u minuid] [-p path] [-w string]\n");
 #endif
     fprintf(stderr,
-            "Usage (user): afppasswd [-r]\n");
+            "Usage (user): afppasswd [-cfr] [-p path] [-w string]\n");
     fprintf(stderr, "  -a user   add or update the named user\n");
     fprintf(stderr,
             "  -c        create and initialize password file or specific user\n");
@@ -1063,8 +1142,34 @@ int main(int argc, char **argv)
 
     if (flags & OPT_CREATE) {
         if ((flags & OPT_ISROOT) == 0) {
-            fprintf(stderr, "afppasswd: only root can create the RandNum password file.\n");
-            return -1;
+            const struct passwd *pwd;
+
+            if (flags & OPT_RANDNUM) {
+                fprintf(stderr,
+                        "afppasswd: only root can create a legacy RandNum password file.\n");
+                return -1;
+            }
+
+            if (flags & OPT_ADDUSER) {
+                fprintf(stderr, "afppasswd: only root can add another user.\n");
+                return -1;
+            }
+
+            if (!i && ((flags & OPT_FORCE) == 0)) {
+                fprintf(stderr, "afppasswd: SRP verifier file already exists.\n");
+                return -1;
+            }
+
+            if ((pwd = getpwuid(uid)) == NULL) {
+                fprintf(stderr, "afppasswd: can't get password entry.\n");
+                return -1;
+            }
+
+            if (create_srp_file_for_user(path, pwd->pw_name) != 0) {
+                return -1;
+            }
+
+            return update_srp_passwd(path, pwd->pw_name, flags | OPT_INITIAL, pass);
         }
 
         if (!i && ((flags & OPT_FORCE) == 0)) {
