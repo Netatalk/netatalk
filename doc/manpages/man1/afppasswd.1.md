@@ -6,7 +6,7 @@ afppasswd — AFP password maintenance utility
 
 **afppasswd** [-cfnr] [-a *username*] [-p *path*] [-u *minimum uid*] [-w *password string*]
 
-**afppasswd** [-r]
+**afppasswd** [-cfr] [-p *path*] [-w *password string*]
 
 # Description
 
@@ -30,7 +30,9 @@ There are two invocation styles:
   with **-c**.
 - *As a regular user*, **afppasswd** takes no positional arguments and
   changes the calling user's own AFP password: for SRP by default and for
-  the legacy RandNum UAM with **-r**.
+  the legacy RandNum UAM with **-r**. A regular user can also use **-c**
+  with a private path to create an SRP verifier file containing only their
+  own account. This is intended for **netatalk --unprivileged**.
 
 The named user must already exist as a local system user.
 
@@ -67,6 +69,10 @@ Local user changing their own SRP password:
 
     example% afppasswd
 
+Local user creating a private SRP verifier for an unprivileged AFP server:
+
+    example% afppasswd -c -p ~/.config/netatalk/afppasswd.srp
+
 Administrator managing the legacy Randnum file at a non-default path:
 
     example% sudo afppasswd -r -c -p /usr/local/etc/afppasswd
@@ -90,6 +96,9 @@ populated as placeholders for every local system user with a uid at or
 above the **-u** threshold; passwords still need to be set individually
 with **-a**. With **-r**, also create or validate the companion
 *afppasswd.key* file for the Randnum UAM.
+When used by a regular user in SRP mode, **-c** instead creates a mode-0600
+private file containing only the calling user and prompts for that user's
+initial password. It does not support **-r** or **-a** in this mode.
 
 **-f**
 
