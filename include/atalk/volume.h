@@ -129,16 +129,13 @@ typedef enum {
 /* volume flags */
 #define AFPVOL_OPEN (1<<0)
 
-/* flags for quota 0xxx0 */
-#define AFPVOL_GVSMASK  (7<<2)
-#define AFPVOL_NONE     (0<<2)
-#if 0
-/* Previously used for Andrew File System */
-#define AFPVOL_AFSGVS   (1<<2)
-#endif
-#define AFPVOL_USTATFS  (1<<3)
-#define AFPVOL_UQUOTA   (1<<4)
+/* Volume-space backend/state (bits 2–4); value 1 is currently unused. */
+#define AFPVOL_GVSMASK   (7 << 2)
+#define AFPVOL_NONE      (0 << 2)
+#define AFPVOL_USTATFS   (1 << 3)
+#define AFPVOL_UQUOTA    (1 << 4)
 
+/* Flags that alter per-volume behavior. */
 #define AFPVOL_NOV2TOEACONV (1 << 5) /*!< no adouble:v2 to adouble:ea conversion */
 #define AFPVOL_SPOTLIGHT (1 << 6)    /*!< Index volume for Spotlight searches */
 #define AFPVOL_EA_SAMBA  (1 << 7)    /*!< Store Samba compatible xattrs (append 0 byte) */
