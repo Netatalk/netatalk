@@ -4,168 +4,119 @@ Netatalk Changelog
 Announcing Netatalk 4.6.0, Netatalk Client 1.0, and the new netatalk.io
 -----------------------------------------------------------------------
 
-Today the Netatalk Project announces its largest coordinated release ever:
-**Netatalk 4.6.0**, the fastest, safest, and most capable AFP file server we
-have ever shipped; **Netatalk Client 1.0**, the first production release of
-the new official Netatalk client; and the all-new **netatalk.io** website,
-rebuilt as the home for the whole Netatalk family.
+Today we're releasing **Netatalk 4.6.0**, the fastest and most capable AFP
+server we've ever shipped; **Netatalk Client 1.0**, our client's first
+production release; and a rebuilt **netatalk.io**, the new home for both.
 
-When Apple announced the withdrawal of AFP support in macOS Golden Gate, it
-marked the end of an era — but not of the protocol, and certainly not of the
-community around it. Millions of Macs, decades of archives, studios, labs,
-and retro-computing setups still speak AFP every day. The Netatalk Project's
-answer to Apple's retreat is to advance: over the past release cycle the
-entire stack has been modernised, hardened, and dramatically accelerated, and
-for the first time Netatalk provides both sides of the connection — server
-and client — so AFP remains a first-class citizen on every platform, whatever
-Apple ships next.
+Apple is withdrawing AFP support in macOS Golden Gate. That ends an era,
+but not the protocol: millions of Macs, decades of archives, studios,
+labs, and retro-computing setups speak AFP every day. Our answer is to
+advance. This cycle modernised, hardened, and accelerated the whole stack,
+and for the first time Netatalk provides both sides of the connection —
+server and client — so AFP keeps working on every platform, whatever Apple
+ships next.
 
-### One suite, three releases
+**A file server rebuilt for speed**
 
-- **Netatalk 4.6.0** — the AFP file server, with a rebuilt caching core,
-  an overhauled locking subsystem, true multi-protocol coexistence, feature
-  complete Spotlight search, modern SQL database backends, and deep
-  correctness and security hardening throughout.
-- **Netatalk Client 1.0** — the official AFP client: a FUSE filesystem
-  driver, an interactive command-line client, and reusable client libraries,
-  graduating from a year of alpha and beta releases to full production status.
-- **netatalk.io** — a brand-new statically generated website carrying the
-  manual, wiki, release notes, security advisories, and developer
-  documentation for the entire suite in one place.
+The network transport now negotiates transfer sizes as the AFP
+specification intends and aligns every frame to the network path and disk,
+so bulk transfers stream at full quantum with no wasted packets or
+buffers. The directory cache defaults to adaptive replacement (ARC) for
+10–50% better hit ratios and now caches state, metadata, and resource-fork
+data, so browsing classic Mac content doesn't touch the disk once cached.
+Hot paths were profiled syscall by syscall to strip redundant lookups and
+path walks, and background cache maintenance is now lock-free, ending
+latency spikes on busy and single-core systems.
 
-### A file server rebuilt for speed
+The numbers: benchmarked with the project's lantest tooling, each release
+in its stock configuration, **4.6.0 completes the full test set ~55%
+faster than 4.4.1 and ~45% faster than 4.5.1, and is 200–300% faster on
+the operations used most** — 2.9× on bulk deletes, 2.7× on directory
+enumeration, 2.3× on file creation and server-side copies. All of it is on
+by default; every knob remains for specialists.
 
-Performance work touched every layer of the server, and the gains compound:
+**Strictly coherent caching, correct locking**
 
-- The network transport now negotiates transfer sizes exactly as the AFP
-  specification intends and aligns every frame to the network path and disk, so bulk
-  reads and writes stream at full quantum with no wasted partial packets, buffers or operations anywhere in the stack.
-- The directory cache — the heart of a file server's responsiveness — now uses an adaptive replacement policy
-  (ARC) by default for 10–50% better hit ratios, and caches state, metadata and resource-fork
-  data so Finder browsing of classic Mac content no longer touches the disk when cached.
-- Hot paths were profiled syscall-by-syscall: redundant lookups, duplicate
-  metadata probes, and repeated path walks were eliminated across
-  enumeration, file copying, and metadata queries.
-- Background cache maintenance moved to a non-blocking lock-free handshake, removing
-  latency spikes on busy and single-core systems alike.
+The caching layers are now strictly coherent: every entry is validated,
+cross-process changes propagate immediately, and structural defects in the
+directory cache — some twenty years old — were found by a purpose-built
+attack test suite and fixed. Locking and delete semantics now match POSIX,
+macOS, and Samba: files viewed over AFP no longer wedge as "in use", open
+forks behave like opens everywhere else, and byte-range locks land where
+other filesystems put them.
 
-We benchmarked the last 5 releases using the project's 'lantest' performance measurement tooling —
-each release in its out-of-the-box configuration — **Netatalk 4.6.0
-completes the full test set ~55% faster than 4.4.1 and ~45% faster than
-4.5.1. And is 200–300% faster on the operations used most**: creating,
-deleting, copying, and browsing folders (2.9× faster bulk
-deletes, 2.7× faster directory enumeration, 2.3× faster file creation and
-server-side copies).
+**Netatalk alongside Samba**
 
-Netatalk-only deployments get all of this out of the box: a stock
-configuration is now tuned for the common case, with every knob still
-available for specialists.
+That work unblocked the headline feature: **Netatalk now shares volumes
+correctly with other protocols.** What used to take several coordinated,
+easily mis-set options is now one switch — declare a volume multi-protocol
+and every coherency and locking default snaps to the safe value; leave it
+off and a Netatalk-only server keeps the fast path. Option names match
+Samba's, configuration parsing fails closed, and an end-to-end
+interoperability test — a kernel CIFS mount and a Netatalk Client mount on
+one shared volume — guards it in CI.
 
-### Strictly coherent caching and a locking overhaul
+**Spotlight search, feature complete**
 
-Speed means nothing without correctness, so the caching layers were made
-strictly coherent: every cache entry is validated, cross-process changes
-propagate immediately, and long-standing structural defects in the directory
-cache — some dating back twenty years — were found by a purpose-built attack
-test suite and fixed. The lock handling subsystem was completely overhauled
-in the same spirit, normalising Netatalk's file locking and delete semantics
-to match what POSIX, macOS, and Samba users expect. Files viewed over AFP no
-longer wedge as "in use"; open forks behave like opens everywhere else; and
-byte-range locks are taken exactly where other filesystems take them.
+Finder search over AFP now just works: multi-word searches match every
+word, quoted phrases match exactly, folder-scoped searches stay in the
+folder, and result limits are honoured — served straight from the CNID
+database with no external indexer, on every supported platform. Pluggable
+backends remain for full-text indexing.
 
-### True multi-protocol: Netatalk alongside Samba
+**Modern database backends**
 
-The coherency and locking work unblocked the headline feature: **Netatalk
-now works correctly alongside other protocols on the same shared volumes.**
-Where sharing a volume between AFP and SMB previously required several
-coordinated — and easily mis-set — options, there is now a single switch:
-declare a volume multi-protocol and every coherency and locking default
-snaps to the safe value; leave it off and a Netatalk-only server keeps the
-fast path. Option names were aligned with Samba's for the same behaviours,
-configuration parsing became strict and fail-closed, and an end-to-end
-Samba interoperability test — a kernel CIFS mount and a Netatalk Client
-mount exercising one shared volume in both directions — guards it all in
-continuous integration.
+**SQLite is now the default catalog backend** — zero-configuration and
+in-process — with **MySQL/MariaDB for large or multi-server deployments**.
+Both now distinguish contention, disk-full, and corruption instead of
+ending user sessions, and even 32-bit ID exhaustion recovers cleanly. The
+legacy Berkeley DB (*dbd*) scheme is deprecated and will be removed.
 
-### Spotlight search: feature complete
+**Security and resilience**
 
-Finder search over AFP is now feature complete, intuitive, and enabled by
-default. Multi-word searches match every word, quoted phrases match exactly,
-searching within a folder searches only that folder, and result limits are
-honoured consistently — all served at high performance directly from the
-CNID database with no external indexer required, on every platform Netatalk
-supports. Pluggable backends remain available for full-text indexing where
-deeper search is wanted.
+This cycle closed more than twenty CVEs, hardened every authentication
+method (DHX, DHX2, SRP), tightened wire-format parsing throughout, and
+added an unprivileged single-user mode. Even the classic AppleTalk
+transport was modernised — and gained its first unit tests. Every change
+is now gated by a continuous performance dashboard, a shaped-network test
+harness, thread-sanitised protocol suites, and JUnit-reported
+specification tests.
 
-### Modern database backends
+**Netatalk Client 1.0: the other half of the connection**
 
-Netatalk's catalog database has completed its move to modern SQL engines.
-**SQLite is now the default backend** — zero-configuration, in-process, and
-robust — with **MySQL/MariaDB as the first-class choice for large or
-multi-server deployments**. Both backends gained a real error contract:
-contention, disk-full, and corruption are now distinguished and handled
-gracefully instead of ending user sessions, and even 32-bit ID exhaustion
-recovers cleanly. The legacy Berkeley DB (*dbd*) scheme is deprecated and
-will be removed in a future release.
+After a year and hundreds of merged changes, the **Netatalk Client**
+graduates from beta to the project's official client:
 
-### Security and resilience
-
-The release cycle closed out more than twenty CVEs, hardened every
-authentication method (DHX, DHX2, SRP), tightened wire-format parsing
-throughout, introduced a new unprivileged single-user operating mode, and
-adopted stronger vulnerability reporting and analysis practices. Even the
-classic AppleTalk transport received its modernisation — and its first-ever
-unit tests. Behind the scenes, a continuous performance dashboard, a
-shaped-network test harness, thread-sanitised protocol test suites, and
-JUnit-reported specification tests now gate every change, so the gains in
-this release are locked in for the next one.
-
-### Netatalk Client 1.0: the other half of the connection
-
-With Apple's client going away, the community needed more than a server —
-and after a year of intensive development spanning hundreds of merged
-changes, the **Netatalk Client** makes its first production release as the
-official client of the Netatalk Project. What began as an experimental
-codebase has been transformed:
-
-- **Mount AFP volumes as a native filesystem** via a multi-threaded FUSE
-  driver, with multiple simultaneous mounts, suspend/resume and idle
+* **Mount AFP volumes as a native filesystem**: a multi-threaded FUSE
+  driver with multiple simultaneous mounts, suspend/resume and idle
   reconnection, and full extended-attribute and resource-fork fidelity.
-- **A complete interactive command-line client** (`afpcmd`) with recursive
-  transfers, tab completion, pagination, and session recovery, plus
-  discovery and status tools under one unified `afpc` command namespace.
-- **The full modern authentication suite** — DHX, DHX2, and SRP with
-  password changing throughout — hardened with server signature
-  verification and authenticated session binding.
-- **Compatibility across the entire AFP timeline**, from AFP 2.x era
-  servers, through Mac OS X personal file sharing and Time Capsules, to
-  Netatalk 4 and AFP 3.4, with Zeroconf discovery, full UTF-8 and classic
-  Mac code page handling.
-- **Reusable client libraries** (`libafpclient` and the stateless
-  `libafpsl`) with a defined public API and stable soversion, ready for
-  third-party integrations.
-- **Production engineering** to match the server: continuous integration on
-  Linux, FreeBSD, NetBSD, OpenBSD, macOS, and illumos/Solaris, containerised
-  integration tests, static analysis, and a warnings-as-errors build.
+* **A complete command-line client** (`afpcmd`) with recursive transfers,
+  pagination, and session recovery, plus discovery and status tools under
+  one `afpc` namespace.
+* **The full authentication suite** — DHX, DHX2, SRP, password changing —
+  with server signature verification and authenticated session binding.
+* **Compatibility across the whole AFP timeline**: AFP 2.x servers, Mac
+  OS X file sharing, Time Capsules, Netatalk 4, AFP 3.4 — with Zeroconf
+  discovery, full UTF-8, and classic Mac code pages.
+* **Reusable libraries** (`libafpclient`, the stateless `libafpsl`) with a
+  stable public API and soversion.
+* **CI on six platforms** — Linux, FreeBSD, NetBSD, OpenBSD, macOS,
+  illumos/Solaris — with containerised integration tests and a
+  warnings-as-errors build.
 
-Together, server and client mean AFP no longer depends on any vendor: a
-Linux box can serve, a BSD box can mount, and a fleet of Macs old and new
-sits happily in between.
+A Linux box can serve, a BSD box can mount, and Macs old and new sit in
+between. AFP no longer depends on any vendor.
 
-### The new netatalk.io
+**The new netatalk.io**
 
-The suite launches alongside a completely new project website. Rebuilt as a
-fast, statically generated site, netatalk.io brings the manual, the wiki,
-historical and current release notes, security advisories, and generated
-source documentation together — always in sync with the code, because it is
-built from the same repositories it documents.
+The manual, wiki, release notes, security advisories, and source
+documentation now live on one fast, statically generated site — built from
+the same repositories it documents, so it can't drift out of sync.
 
-### Thank you
+**Thank you**
 
-This release is the work of a worldwide community of contributors, testers,
-packagers, and users who refused to let a great protocol fade away. AFP's
-future is now firmly in the community's hands — and it has never looked
-better. Get Netatalk 4.6.0 and Netatalk Client 1.0 at
+This release is the work of a worldwide community that refused to let a
+great protocol fade away. Get Netatalk 4.6.0 and Netatalk Client 1.0 at
 [netatalk.io](https://netatalk.io).
 
 Changes in 4.6.0
