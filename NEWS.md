@@ -9,8 +9,8 @@ server we've ever shipped; **Netatalk Client 1.0**, our client's first
 production release; and a rebuilt **netatalk.io**, the new home for both.
 
 Apple is withdrawing AFP support in macOS Golden Gate. That ends an era,
-but not the protocol: millions of Macs, decades of archives, studios,
-labs, and retro-computing setups speak AFP every day. Our answer is to
+but not the protocol: millions of Macs and NAS devices, decades of
+archives, studios, labs, and retro-computing setups speak AFP every day. Our answer is to
 advance. This cycle modernised, hardened, and accelerated the whole stack,
 and for the first time Netatalk provides both sides of the connection —
 server and client — so AFP keeps working on every platform, whatever Apple
@@ -45,13 +45,14 @@ macOS, and Samba: files viewed over AFP no longer wedge as "in use", open
 forks behave like opens everywhere else, and byte-range locks land where
 other filesystems put them.
 
-**Netatalk alongside Samba**
+**Netatalk alongside other accessors (Samba, NFS, etc)**
 
 That work unblocked the headline feature: **Netatalk now shares volumes
 correctly with other protocols.** What used to take several coordinated,
 easily mis-set options is now one switch — declare a volume multi-protocol
-and every coherency and locking default snaps to the safe value; leave it
-off and a Netatalk-only server keeps the fast path. Option names match
+and every coherency and locking default snaps to the safe value, whether
+the other accessor is Samba, NFS, or a local process; leave it off and a
+Netatalk-only server keeps the fast path. Option names match
 Samba's, configuration parsing fails closed, and an end-to-end
 interoperability test — a kernel CIFS mount and a Netatalk Client mount on
 one shared volume — guards it in CI.
@@ -84,22 +85,24 @@ specification tests.
 
 **Netatalk Client 1.0: the other half of the connection**
 
-After a year and hundreds of merged changes, the **Netatalk Client**
-graduates from beta to the project's official client:
+After more than two years and hundreds of merged changes, the **Netatalk
+Client** graduates from beta to the project's official client:
 
 * **Mount AFP volumes as a native filesystem**: a multi-threaded FUSE
   driver with multiple simultaneous mounts, suspend/resume and idle
   reconnection, and full extended-attribute and resource-fork fidelity.
 * **A complete command-line client** (`afpcmd`) with recursive transfers,
-  pagination, and session recovery, plus discovery and status tools under
-  one `afpc` namespace.
-* **The full authentication suite** — DHX, DHX2, SRP, password changing —
-  with server signature verification and authenticated session binding.
+  pagination, and session recovery, plus Zeroconf service discovery and
+  status tools under one `afpc` namespace.
+* **The full authentication suite** — DHX, DHX2, SRP, legacy Classic Mac
+  OS methods, and password changing — with server signature verification
+  and authenticated session binding.
 * **Compatibility across the whole AFP timeline**: AFP 2.x servers, Mac
-  OS X file sharing, Time Capsules, Netatalk 4, AFP 3.4 — with Zeroconf
-  discovery, full UTF-8, and classic Mac code pages.
+  OS X file sharing, Time Capsules, Netatalk 4, AFP 3.4 — with full UTF-8
+  and MacRoman code page support.
 * **Reusable libraries** (`libafpclient`, the stateless `libafpsl`) with a
-  stable public API and soversion.
+  stable public API and soversion — already powering kio-afp, the AFP
+  integration for KDE's Dolphin file manager.
 * **CI on six platforms** — Linux, FreeBSD, NetBSD, OpenBSD, macOS,
   illumos/Solaris — with containerised integration tests and a
   warnings-as-errors build.
