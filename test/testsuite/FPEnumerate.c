@@ -100,8 +100,8 @@ STATIC void test34()
     ENTER_TEST
 
     if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_ACCESS))) {
+                                                   (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                   (1 << DIRPBIT_ACCESS))) {
         test_failed();
         goto test_exit;
     }
@@ -114,8 +114,8 @@ STATIC void test34()
                );
 
     if (ntohl(AFPERR_ACCESS) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_ACCESS))
+                                                   (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                   (1 << DIRPBIT_ACCESS))
        ) {
         test_failed();
         goto test_exit;
@@ -247,7 +247,7 @@ STATIC void test40()
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir, "", 0,
-            (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) | (1 << DIRPBIT_ACCESS))) {
+                                                  (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) | (1 << DIRPBIT_ACCESS))) {
         test_failed();
     }
 
@@ -453,7 +453,7 @@ STATIC void test218()
 
     /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 1, 800,  bdir, "",
-            bitmap, bitmap)) {
+                                               bitmap, bitmap)) {
         test_nottested();
         goto fin;
     }
@@ -478,17 +478,17 @@ STATIC void test218()
     }
 
     FAIL(htonl(AFPERR_PARAM) != FPEnumerateFull(Conn, vol, 0, 1, 800,  bdir, "",
-            bitmap, 0))
+                                                bitmap, 0))
     FAIL(htonl(AFPERR_PARAM) != FPEnumerateFull(Conn, vol, 1, 1, 2,  bdir, "",
-            bitmap, bitmap))
+                                                bitmap, bitmap))
     FAIL(FPEnumerateFull(Conn, vol, 1, 5, 800,  bdir, "", bitmap, bitmap))
     FAIL(htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 0, 800,  bdir, "",
-            bitmap, bitmap))
+                                                bitmap, bitmap))
     FAIL(FPEnumerateFull(Conn, vol, 2, 5, 800,  bdir, "", bitmap, bitmap))
     FAIL(htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 4, 1, 800,  bdir, "",
-            bitmap, bitmap))
+                                                bitmap, bitmap))
     FAIL(htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 5, 1, 800,  bdir, "",
-            bitmap, bitmap))
+                                                bitmap, bitmap))
     /* get the third */
     isdir = 0;
     ret = FPEnumerateFull(Conn, VolID, 3, 1, 800,  bdir, "", bitmap, 0);
@@ -519,7 +519,7 @@ fin:
     FPDelete(Conn, vol, bdir, ndir);
     FPDelete(Conn, vol, bdir, ndir1);
     FAIL(htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 1, 800,  bdir, "",
-            bitmap, bitmap))
+                                                bitmap, bitmap))
     FPDelete(Conn, vol, DIRDID_ROOT, base);
 test_exit:
     exit_test("FPEnumerate:test218: enumerate arguments");

@@ -86,8 +86,8 @@ STATIC void test211()
     /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (Conn->afp_version < 31) {
         if (ntohl(AFPERR_NOOP) != FPEnumerate_ext2(Conn, vol, DIRDID_ROOT, "",
-                (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
-                | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN), 0xffff)) {
+                                                   (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
+                                                   | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN), 0xffff)) {
             test_failed();
         }
 

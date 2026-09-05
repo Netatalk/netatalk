@@ -528,7 +528,7 @@ struct at_ifaddr	*aa;
 
         /* 0.255 to socket on receiving interface */
         if (to->sat_addr.s_node == ATADDR_BCAST && (to->sat_addr.s_net == 0 ||
-                to->sat_addr.s_net == ddp->ddp_lsat.sat_addr.s_net) &&
+                                                    to->sat_addr.s_net == ddp->ddp_lsat.sat_addr.s_net) &&
                 ddp->ddp_lsat.sat_addr.s_net == AA_SAT(aa)->sat_addr.s_net) {
             break;
         }

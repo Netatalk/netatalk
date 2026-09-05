@@ -311,7 +311,7 @@ int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
     while (*a && *b) {
         if ((0xD800 <= *a) && (*a < 0xDC00)) {
             if ((ret = tolower_sp((uint32_t) * a << 16 | (uint32_t)a[1]) - tolower_sp((
-                           uint32_t) * b << 16 | (uint32_t)b[1]))) {
+                    uint32_t) * b << 16 | (uint32_t)b[1]))) {
                 return ret;
             }
 
@@ -348,7 +348,7 @@ int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
     while ((n < len) && *a && *b) {
         if ((0xD800 <= *a) && (*a < 0xDC00)) {
             if ((ret = tolower_sp((uint32_t) * a << 16 | (uint32_t)a[1]) - tolower_sp((
-                           uint32_t) * b << 16 | (uint32_t)b[1]))) {
+                    uint32_t) * b << 16 | (uint32_t)b[1]))) {
                 return ret;
             }
 
@@ -451,7 +451,7 @@ static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
     while (max >= min) {
         mid = (min + max) / 2;
         that_sp = ((uint64_t)precompositions_sp[mid].base_sp << 32) | ((
-                      uint64_t)precompositions_sp[mid].comb_sp);
+                uint64_t)precompositions_sp[mid].comb_sp);
 
         if (that_sp < sought_sp) {
             min = mid + 1;
@@ -515,7 +515,7 @@ static uint64_t do_decomposition_sp(unsigned int base_sp)
             max = mid - 1;
         } else {
             result_sp = ((uint64_t)decompositions_sp[mid].base_sp << 32) | ((
-                            uint64_t)decompositions_sp[mid].comb_sp);
+                    uint64_t)decompositions_sp[mid].comb_sp);
             return result_sp;
         }
     }

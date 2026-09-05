@@ -97,7 +97,7 @@ STATIC void test5()
     }
 
     if (ntohl(AFPERR_ACCESS) != FPSetForkParam(Conn, fork, (1 << FILPBIT_DFLEN),
-            0)) {
+                                               0)) {
         test_failed();
         goto fin2;
     }
@@ -217,7 +217,7 @@ STATIC void test46()
     }
 
     if (ntohl(AFPERR_ACCESS) != FPSetForkParam(Conn, fork, (1 << FILPBIT_RFLEN),
-            0)) {
+                                               0)) {
         test_failed();
         goto fin1;
     }

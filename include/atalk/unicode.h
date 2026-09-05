@@ -120,7 +120,7 @@ extern size_t   charset_strupper(charset_t, const char *, size_t, char *,
 extern size_t   charset_strlower(charset_t, const char *, size_t, char *,
                                  size_t);
 extern size_t   ucs2_to_charset_allocate(charset_t, char **dest,
-        const ucs2_t *src);
+                                         const ucs2_t *src);
 extern size_t   ucs2_to_charset(charset_t, const ucs2_t *src, char *dest,
                                 size_t);
 

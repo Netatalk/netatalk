@@ -15,8 +15,8 @@
 #include <atalk/volume.h>
 
 extern int              ustatfs_getvolspace(const struct vol *,
-        VolSpace *, VolSpace *,
-        uint32_t *);
+                                            VolSpace *, VolSpace *,
+                                            uint32_t *);
 extern void             setvoltime(AFPObj *, struct vol *);
 extern int              pollvoltime(AFPObj *);
 

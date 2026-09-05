@@ -213,7 +213,7 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 
     /* Check for type (file/dir) mismatch */
     if ((devino && (type_devino != rqst->type)) || (didname
-            && (type_didname != rqst->type))) {
+                                                    && (type_didname != rqst->type))) {
         if (devino && (type_devino != rqst->type)) {
             /* one is a dir one is a file, remove from db */
             LOG(log_debug, logtype_cnid,

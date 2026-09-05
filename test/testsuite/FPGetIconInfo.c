@@ -24,7 +24,7 @@ STATIC void test213()
 
     FAIL(FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1))
     FAIL(htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt",
-            256))
+                                               256))
 
     if (!Mac) {
         ret = FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX", 1);
@@ -38,7 +38,7 @@ STATIC void test213()
             goto fin;
         } else {
             FAIL(htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX",
-                    2))
+                                                       2))
         }
     }
 

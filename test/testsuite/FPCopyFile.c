@@ -43,10 +43,10 @@ STATIC void test71()
     vol  = FPOpenVol(Conn, Vol);
     /* cname unchdirable */
     FAIL(ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol,
-            DIRDID_ROOT, ndir, "", name1))
+                                             DIRDID_ROOT, ndir, "", name1))
     /* second time once bar is in the cache */
     FAIL(ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol,
-            DIRDID_ROOT, ndir, "", name1))
+                                             DIRDID_ROOT, ndir, "", name1))
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_failed();
@@ -73,7 +73,7 @@ STATIC void test71()
 
     if (fork) {
         FAIL(ntohl(AFPERR_DENYCONF) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol,
-                DIRDID_ROOT, name, "", name1))
+                                                  DIRDID_ROOT, name, "", name1))
         FAIL(FPCloseFork(Conn, fork))
     } else {
         test_failed();
@@ -381,7 +381,7 @@ STATIC void test374()
 
     if (fork) {
         FAIL(ntohl(AFPERR_DENYCONF) != FPCopyFile(Conn2, vol2, DIRDID_ROOT, vol2,
-                DIRDID_ROOT, name, "", name1))
+                                                  DIRDID_ROOT, name, "", name1))
         FAIL(FPCloseFork(Conn, fork))
     } else {
         test_failed();
@@ -642,7 +642,7 @@ STATIC void test402()
     }
 
     FAIL(ntohl(AFPERR_DENYCONF) != FPCopyFile(Conn, vol, dir, vol, dir, name, "",
-            name1))
+                                              name1))
 fin1:
     FAIL(FPDelete(Conn, vol, dir, name))
 fin:
@@ -1068,7 +1068,7 @@ STATIC void test414()
 
     /* wrong destdir */
     FAIL(ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol,
-            DIRDID_ROOT, name, name, name1))
+                                             DIRDID_ROOT, name, name, name1))
     FAIL(ntohl(AFPERR_NOOBJ) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT,
                                            name, name2, name1))
 

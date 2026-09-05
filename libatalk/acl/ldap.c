@@ -122,11 +122,11 @@ struct pref_array prefs_array[] = {
  * You MUST dispatch the queries timely, otherwise the LDAP handle might timeout.
  */
 static int ldap_getattr_fromfilter_withbase_scope(const char *searchbase,
-        const char *filter,
-        char *attributes[],
-        int scope,
-        ldapcon_t conflags,
-        char **result)
+                                                  const char *filter,
+                                                  char *attributes[],
+                                                  int scope,
+                                                  ldapcon_t conflags,
+                                                  char **result)
 {
     int ret;
     int ldaperr;

@@ -45,7 +45,7 @@ static void usage(char *s)
     exit(1);
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     int c;
     int error_flag = 0;
@@ -171,7 +171,7 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
     uint8_t buf[600];
     buf[0] = DDPTYPE_RTMPR;
     buf[1] = RTMPROP_REQUEST;
-    ssize_t ret = netddp_sendto(sockfd, buf, 2, 0, (struct sockaddr*)sa_remote,
+    ssize_t ret = netddp_sendto(sockfd, buf, 2, 0, (struct sockaddr *)sa_remote,
                                 (int)sizeof(struct sockaddr_at));
 
     if (ret < 0) {
@@ -201,7 +201,7 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
 
         /* Skip the DDP type which we checked above */
         uint8_t *cursor = buf + 1;
-        uint16_t router_net = ntohs(*(uint16_t*)cursor);
+        uint16_t router_net = ntohs(*(uint16_t *)cursor);
         cursor += 2;
         uint8_t id_len = *cursor++;
 
@@ -220,7 +220,7 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
 
         if (((cursor + 6) - buf) <= length) {
             extended_network = true;
-            net_start = ntohs(*(uint16_t*)cursor);
+            net_start = ntohs(*(uint16_t *)cursor);
             cursor += 2;
 
             /* magic number.  Why 0x80?  Who knows! */
@@ -229,7 +229,7 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
                 exit(1);
             }
 
-            net_end = ntohs(*(uint16_t*)cursor);
+            net_end = ntohs(*(uint16_t *)cursor);
             cursor += 2;
             /* Another magic byte: I assume this is the RTMP version as it's the same
                as bytes documented as RTMP version in other packets, but IA isn't
@@ -277,7 +277,7 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
     }
 
     ssize_t ret_socket = netddp_sendto(sockfd, buf, 2, 0,
-                                       (const struct sockaddr*)sa_remote,
+                                       (const struct sockaddr *)sa_remote,
                                        (int)sizeof(struct sockaddr_at));
 
     if (ret_socket < 0) {
@@ -368,14 +368,14 @@ const uint8_t *print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor,
         }
     }
 
-    uint16_t net_start = ntohs(*(const uint16_t*)cursor);
+    uint16_t net_start = ntohs(*(const uint16_t *)cursor);
     cursor += 2;
     /* top bit of distance is the extended network bit we used above */
     uint8_t distance = (*cursor++) & 0x7f;
 
     /* If this is an extended tuple, we also have an end network and an RTMP version */
     if (tuple_extended) {
-        uint16_t net_end = ntohs(*(const uint16_t*)cursor);
+        uint16_t net_end = ntohs(*(const uint16_t *)cursor);
         cursor += 2;
         uint8_t rtmp_version = *cursor++;
 
@@ -414,7 +414,7 @@ void print_rtmp_data_packet(const uint8_t *buf, size_t len)
     }
 
     cursor++;
-    uint16_t router_net_num = ntohs(*(const uint16_t*)cursor);
+    uint16_t router_net_num = ntohs(*(const uint16_t *)cursor);
     cursor += 2;
     uint8_t id_len = *cursor++;
 

@@ -96,7 +96,7 @@ int main(int ac, char **av)
 
     /* Convert the name */
     if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac,
-            av[optind], -1, &convname)) {
+                                                av[optind], -1, &convname)) {
         convname = av[optind];
     }
 

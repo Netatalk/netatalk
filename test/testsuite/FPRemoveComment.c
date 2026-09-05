@@ -91,7 +91,7 @@ STATIC void test54()
 #if 0
 
     if (ntohl(AFPERR_NOITEM) != FPRemoveComment(Conn, vol, DIRDID_ROOT,
-            "bogus folder")) {
+                                                "bogus folder")) {
         fprintf(stdout, "\tFAILED\n");
     }
 

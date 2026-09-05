@@ -279,8 +279,8 @@ static pid_t dsi_tcp_open(DSI *dsi)
                                   DSI_SERVQUANT_DEF : dsi->server_quantum,
                                   mss);
         dsi->dsireadbuf = netatalk_readbuf_clamp((int)dsi->dsireadbuf,
-                          dsi->server_quantum,
-                          NETATALK_READBUF_LIMIT);
+                                                 dsi->server_quantum,
+                                                 NETATALK_READBUF_LIMIT);
 
         if (mss == 0) {
             LOG(log_warning, logtype_dsi,

@@ -1356,7 +1356,7 @@ EC_CLEANUP:
     return id;
 }
 
-char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
+char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
                           size_t len)
 {
     EC_INIT;
@@ -1834,7 +1834,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     EC_NULL(cdb = cnid_sqlite_new(vol));
     EC_NULL(db =
                 (CNID_sqlite_private *) calloc(1,
-                    sizeof(CNID_sqlite_private)));
+                                               sizeof(CNID_sqlite_private)));
     cdb->cnid_db_private = db;
 
     if (vol->v_dbpath) {
@@ -2045,7 +2045,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                     "cnid_sqlite_open: refusing to act on malformed stale volume "
                     "UUID for path '%s'; removing its entry", vol->v_path);
                 removed = cnid_sqlite_delete_volumes_row(db->cnid_sqlite_con,
-                          stale_uuids[i]) == 0;
+                                                         stale_uuids[i]) == 0;
 
                 if (!removed) {
                     LOG(log_warning, logtype_cnid,
@@ -2072,12 +2072,12 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
             if (removed) {
                 removed = cnid_sqlite_delete_sequence_row(db->cnid_sqlite_con,
-                          stale_uuids[i]) == 0;
+                                                          stale_uuids[i]) == 0;
             }
 
             if (removed) {
                 removed = cnid_sqlite_delete_volumes_row(db->cnid_sqlite_con,
-                          stale_uuids[i]) == 0;
+                                                         stale_uuids[i]) == 0;
             }
 
             if (!removed) {
