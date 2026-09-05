@@ -49,7 +49,6 @@
 #define mempcpy(D, S, N) ((void *) ((char *) memcpy (D, S, N) + (N)))
 #endif
 
-#define NDEBUG 1
 #include <assert.h>
 
 #ifndef _LIBC

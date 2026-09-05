@@ -1151,6 +1151,8 @@ void closevol(const AFPObj *obj, struct vol *vol)
      * struct vol and v_vid persist across logout/re-login a surviving
      * slot would satisfy (vid, did) matches after re-open. */
     pfd_purge_vol(vol->v_vid);
+    /* Before v_root is freed, so removals still have a valid volume */
+    dircache_purge_vol(vol);
     dir_free(vol->v_root);
     vol->v_root = NULL;
 

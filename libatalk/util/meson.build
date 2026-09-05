@@ -21,11 +21,18 @@ util_sources = [
     'unix.c',
 ]
 
+libutil_deps = [bstring, iniparser]
+
+# fault.c includes <libunwind.h> when HAVE_LIBUNWIND is set
+if libunwind.found()
+    libutil_deps += libunwind
+endif
+
 libutil = static_library(
     'util',
     util_sources,
     include_directories: root_includes,
-    dependencies: [bstring, iniparser],
+    dependencies: libutil_deps,
     c_args: [
         confdir,
         messagedir,

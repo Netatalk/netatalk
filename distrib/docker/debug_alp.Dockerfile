@@ -1,5 +1,5 @@
 # Debug / profiling Alpine Dockerfile for Netatalk
-# Builds with -Dbuildtype=debugoptimized (-O2 -g) and includes perf + FlameGraph tools
+# Builds with -Dbuildtype=release plus explicit -g, and includes perf + FlameGraph tools
 # See doc/developer/profiling.md for usage guidance
 
 ARG RUN_DEPS="\
@@ -91,11 +91,11 @@ COPY meson_options.txt .
 COPY meson.build .
 RUN rm -rf build
 
-# Build with debugoptimized: -O2 optimization + debug symbols (-g)
-# Also preserve frame pointers for accurate perf stack unwinding
+# Release, so the profile is not dominated by assertions. -g is explicit because
+# release omits it and perf needs symbols; frame pointers for stack unwinding.
 RUN meson setup build \
-    -Dbuildtype=debugoptimized \
-    -Dc_args=-fno-omit-frame-pointer \
+    -Dbuildtype=release \
+    -Dc_args="-fno-omit-frame-pointer -g" \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-docs= \

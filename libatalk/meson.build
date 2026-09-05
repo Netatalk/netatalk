@@ -29,6 +29,10 @@ if have_acls
     libatalk_deps += acl_deps
 endif
 
+if libunwind.found()
+    libatalk_deps += libunwind
+endif
+
 libatalk_deps += sendfile_deps
 
 if enable_appletalk

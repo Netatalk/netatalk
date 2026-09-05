@@ -8,6 +8,7 @@ ARG RUN_DEPS="\
     krb5 \
     libevent \
     libgcrypt \
+    libunwind \
     linux-pam \
     mariadb-client \
     mariadb-connector-c \
@@ -27,6 +28,7 @@ ARG BUILD_DEPS="\
     krb5-dev \
     libevent-dev \
     libgcrypt-dev \
+    libunwind-dev \
     linux-pam-dev \
     mariadb-dev \
     meson \

@@ -431,7 +431,7 @@ static int check_vol_acl_support(const struct vol *vol)
     }
 
 #endif /* HAVE_POSIX_ACLS */
-    LOG(log_debug, logtype_afpd, "Volume \"%s\" ACL support: %s",
+    LOG(log_info, logtype_afpd, "Volume \"%s\" ACL support: %s",
         vol->v_path, ret ? "yes" : "no");
     return ret;
 }
@@ -2066,7 +2066,7 @@ static struct vol *creatvol(AFPObj *obj,
 #ifdef HAVE_ACLS
 
     if (!check_vol_acl_support(volume)) {
-        LOG(log_debug, logtype_afpd, "creatvol(\"%s\"): disabling ACL support",
+        LOG(log_info, logtype_afpd, "creatvol(\"%s\"): disabling ACL support",
             volume->v_path);
         volume->v_flags &= ~AFPVOL_ACLS;
         obj->options.flags &= ~(OPTION_ACL2MODE | OPTION_ACL2MACCESS);
