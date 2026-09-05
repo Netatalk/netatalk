@@ -10,23 +10,23 @@ extern unsigned int FPSpotlightOpen(CONN *conn, uint16_t vid,
                                     char *vol_path_out,
                                     size_t vol_path_buflen);
 extern unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
-        const char *query_dsl,
-        uint64_t ctx);
+                                         const char *query_dsl,
+                                         uint64_t ctx);
 extern unsigned int FPSpotlightOpenQueryScoped(CONN *conn, uint16_t vid,
-        const char *query_dsl,
-        const char *scope,
-        uint64_t ctx);
+                                               const char *query_dsl,
+                                               const char *scope,
+                                               uint64_t ctx);
 extern unsigned int FPSpotlightDrainResults(CONN *conn, uint16_t vid,
-        uint64_t ctx,
-        int *total_results_out);
+                                            uint64_t ctx,
+                                            int *total_results_out);
 extern unsigned int FPSpotlightCloseQuery(CONN *conn, uint16_t vid,
-        uint64_t ctx);
+                                          uint64_t ctx);
 extern unsigned int FPSpotlightFetchPropertiesWithShrunkTOC(CONN *conn,
-        uint16_t vid);
+                                                            uint16_t vid);
 extern unsigned int FPSpotlightFetchPropertiesWithLargeTOCIndex(CONN *conn,
         uint16_t vid);
 extern unsigned int FPSpotlightRPCWithLargeInt64Count(CONN *conn,
-        uint16_t vid);
+                                                      uint16_t vid);
 extern unsigned int FPSpotlightPackFilemetaOverflowProbe(void);
 
 extern unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
@@ -40,7 +40,7 @@ extern unsigned int FPMapName(CONN *conn, char fn, char *name);
 extern unsigned int FPGetSessionToken(CONN *conn, int type, uint32_t time,
                                       int len, char *token);
 extern unsigned int FPDisconnectOldSession(CONN *conn, uint16_t type, int len,
-        char *token);
+                                           char *token);
 
 extern unsigned int FPGetSrvrInfo(CONN *conn);
 extern unsigned int FPGetSrvrParms(CONN *conn);

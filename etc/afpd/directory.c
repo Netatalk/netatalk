@@ -520,10 +520,10 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
  * @returns Retried struct dir from CNID, or NULL on failure
  */
 static struct dir *dirlookup_internal_retry(const struct vol *vol,
-        cnid_t did,
-        int strict,
-        bstring *fullpath_ptr,
-        char **upath_ptr)
+                                            cnid_t did,
+                                            int strict,
+                                            bstring *fullpath_ptr,
+                                            char **upath_ptr)
 {
     LOG(log_debug, logtype_afpd,
         "dirlookup_internal(did:%u): stat failed, cleaning stale entries, retrying via CNID",
@@ -2106,7 +2106,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
     /* Defensive NULL checks - return error instead of asserting */
     if (vol == NULL || dir == NULL) {
         LOG(log_error, logtype_afpd, "movecwd: NULL parameter (vol:%p, dir:%p)",
-            (void*)vol, (void*)dir);
+            (void *)vol, (void *)dir);
         afp_errno = AFPERR_PARAM;
         /* Callers read errno right after this returns */
         errno = EINVAL;
@@ -2838,7 +2838,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
                 }
 
                 if ((bshort & htons(ATTRBIT_INVISIBLE)) != (oshort & htons(
-                            ATTRBIT_INVISIBLE))) {
+                                                                ATTRBIT_INVISIBLE))) {
                     change_parent_mdate = 1;
                 }
 

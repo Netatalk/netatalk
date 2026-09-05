@@ -175,7 +175,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         *(rbuf + 2 * sizeof(uint16_t)) = (char) FILDIRBIT_ISDIR;
     } else {
         if (fbitmap && AFP_OK != (ret = getfilparams(obj, vol, fbitmap, s_path, curdir,
-                                        rbuf + 3 * sizeof(uint16_t), &buflen, 0))) {
+                                                     rbuf + 3 * sizeof(uint16_t), &buflen, 0))) {
             return ret;
         }
 
@@ -328,7 +328,7 @@ static int moveandrename(const AFPObj *obj,
         }
 
         size_t oldunixname_len = oldunixname ? strnlen(oldunixname,
-                                 CNID_MAX_PATH_LEN) : 0;
+                                                       CNID_MAX_PATH_LEN) : 0;
         AFP_CNID_START("cnid_get");
         id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, oldunixname_len);
         AFP_CNID_DONE();
@@ -956,7 +956,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 #if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
             char event_path[MAXPATHLEN + 1];
             const char *deleted_dir = dir_event_path(event_path,
-                                      sizeof(event_path), curdir, upath);
+                                                     sizeof(event_path), curdir, upath);
 #endif
 #ifdef WITH_FCE
             fce_register(obj, FCE_DIR_DELETE, deleted_dir, NULL);
@@ -980,8 +980,8 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                  * the deleted directory's parent. */
                 char event_path[MAXPATHLEN + 1];
                 const char *deleted_dir = dir_event_path(event_path,
-                                          sizeof(event_path), curdir,
-                                          cfrombstr(dname));
+                                                         sizeof(event_path), curdir,
+                                                         cfrombstr(dname));
 #endif
 #ifdef WITH_FCE
                 fce_register(obj, FCE_DIR_DELETE, deleted_dir, NULL);
@@ -1052,7 +1052,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 #if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
                 char event_path[MAXPATHLEN + 1];
                 const char *deleted_file = dir_event_path(event_path,
-                                           sizeof(event_path), curdir, upath);
+                                                          sizeof(event_path), curdir, upath);
 #endif
 #ifdef WITH_FCE
                 fce_register(obj, FCE_FILE_DELETE, deleted_file, NULL);

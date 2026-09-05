@@ -81,7 +81,7 @@ STATIC void test98()
 
         FAIL(FPSetFilDirParam(Conn, vol, dir, name1, bitmap, &filedir))
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, DIRDID_ROOT, name1,
-                bitmap, &filedir))
+                                                     bitmap, &filedir))
         FAIL(FPSetFilDirParam(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
     }
 
@@ -633,7 +633,7 @@ STATIC void test347()
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
 
     if (htonl(AFPERR_BITMAP) != FPSetFilDirParam(Conn, vol, dir, "", bitmap,
-            &filedir)) {
+                                                 &filedir)) {
         test_failed();
         filedir.unix_priv = S_IRUSR | S_IWUSR;
         FAIL(FPSetFilDirParam(Conn, vol, dir, "", bitmap, &filedir))
@@ -643,7 +643,7 @@ STATIC void test347()
              (1 << DIRPBIT_UNIXPR);
 
     if (/* htonl(AFPERR_BITMAP) != */ FPGetFileDirParams(Conn, vol, dir, name,
-                                      bitmap, 0)) {
+                                                         bitmap, 0)) {
         test_failed();
         goto fin1;
     }
@@ -663,7 +663,7 @@ STATIC void test347()
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
 
     if (htonl(AFPERR_BITMAP) != FPSetFilDirParam(Conn, vol, dir, name, bitmap,
-            &filedir)) {
+                                                 &filedir)) {
         test_failed();
         filedir.unix_priv = S_IRUSR | S_IWUSR;
         FAIL(FPSetFilDirParam(Conn, vol, dir, name, bitmap, &filedir))
@@ -967,7 +967,7 @@ STATIC void test358()
     /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FAIL(FPEnumerateFull(Conn, vol, 1, 5, 800,  dir, "", bitmap, bitmap))
     FAIL(htonl(AFPERR_ACCESS) != FPEnumerateFull(Conn2, vol2, 1, 5, 800,  dir, "",
-            bitmap, bitmap))
+                                                 bitmap, bitmap))
     memcpy(filedir.access, old_access, sizeof(old_access));
     bitmap = (1 << DIRPBIT_ACCESS);
     FAIL(FPSetDirParms(Conn, vol, dir, "", bitmap, &filedir))

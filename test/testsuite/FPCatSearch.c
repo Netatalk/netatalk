@@ -28,7 +28,7 @@ STATIC void test225()
     memset(&filedir, 0, sizeof(filedir));
     filedir.attr = 0x01a0;			/* various lock attributes */
     FAIL(htonl(AFPERR_BITMAP) != FPCatSearch(Conn, vol, 10, pos,
-            0, /* d_bitmap */ 0, bitmap, &filedir, &filedir))
+                                             0, /* d_bitmap */ 0, bitmap, &filedir, &filedir))
     filedir.attr = 0x01a0;			/* various lock attributes */
     ret = FPCatSearch(Conn, vol, 10, pos, 0x42, /* d_bitmap */ 0,
                       bitmap, &filedir, &filedir);

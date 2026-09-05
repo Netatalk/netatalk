@@ -137,15 +137,15 @@ static void register_stuff(void)
         }
 
         if (i && avahi_entry_group_add_service_strlst(ctx->group,
-                AVAHI_IF_UNSPEC,
-                AVAHI_PROTO_UNSPEC,
-                0,
-                name,
-                ADISK_SERVICE_TYPE,
-                NULL,
-                NULL,
-                9, /* discard */
-                strlist) < 0) {
+                                                      AVAHI_IF_UNSPEC,
+                                                      AVAHI_PROTO_UNSPEC,
+                                                      0,
+                                                      name,
+                                                      ADISK_SERVICE_TYPE,
+                                                      NULL,
+                                                      NULL,
+                                                      9, /* discard */
+                                                      strlist) < 0) {
             LOG(log_error, logtype_afpd, "Failed to add service: %s",
                 avahi_strerror(avahi_client_errno(ctx->client)));
             goto fail;
@@ -156,15 +156,15 @@ static void register_stuff(void)
                                                     ctx->obj->options.mimicmodel);
 
             if (avahi_entry_group_add_service_strlst(ctx->group,
-                    AVAHI_IF_UNSPEC,
-                    AVAHI_PROTO_UNSPEC,
-                    0,
-                    name,
-                    DEV_INFO_SERVICE_TYPE,
-                    NULL,
-                    NULL,
-                    0,
-                    strlist2) < 0) {
+                                                     AVAHI_IF_UNSPEC,
+                                                     AVAHI_PROTO_UNSPEC,
+                                                     0,
+                                                     name,
+                                                     DEV_INFO_SERVICE_TYPE,
+                                                     NULL,
+                                                     NULL,
+                                                     0,
+                                                     strlist2) < 0) {
                 LOG(log_error, logtype_afpd, "Failed to add service: %s",
                     avahi_strerror(avahi_client_errno(ctx->client)));
                 goto fail;
@@ -253,7 +253,7 @@ static void client_callback(AvahiClient *client,
 
             /* Reconnect to the server */
             if (!(ctx->client = avahi_client_new(avahi_threaded_poll_get(
-                    ctx->threaded_poll),
+                                                     ctx->threaded_poll),
                                                  AVAHI_CLIENT_NO_FAIL,
                                                  client_callback,
                                                  ctx,
@@ -308,7 +308,7 @@ void av_zeroconf_register(const AFPObj *obj)
 
     /* now we need to acquire a client */
     if (!(ctx->client = avahi_client_new(avahi_threaded_poll_get(
-            ctx->threaded_poll),
+                                             ctx->threaded_poll),
                                          AVAHI_CLIENT_NO_FAIL,
                                          client_callback,
                                          NULL,

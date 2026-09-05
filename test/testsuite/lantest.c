@@ -2351,8 +2351,8 @@ int main(int32_t ac, char **av)
     /* Login to AFP server */
     if (afptest_uam) {
         ExitCode = ntohs((uint16_t)afptest_uam_login(Conn, vers,
-                         afptest_uam, User,
-                         Password));
+                                                     afptest_uam, User,
+                                                     Password));
     } else if (Version >= 30) {
         ExitCode = ntohs((uint16_t)FPopenLoginExt(Conn, vers, uam, User, Password));
     } else {

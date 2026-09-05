@@ -63,10 +63,10 @@ extern void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
                                         uid_t, uint32_t len, char *id,
                                         uint32_t boottime);
 extern int  server_child_set_session_token(server_child_t *children, pid_t pid,
-        uid_t uid, const void *token, size_t token_len);
+                                           uid_t uid, const void *token, size_t token_len);
 extern int  server_child_transfer_session(server_child_t *children, uid_t uid,
-        const void *token, size_t token_len, int afp_socket,
-        uint16_t DSI_requestID);
+                                          const void *token, size_t token_len, int afp_socket,
+                                          uint16_t DSI_requestID);
 extern void server_child_handler(server_child_t *);
 extern void server_child_login_done(server_child_t *children, pid_t pid,
                                     uid_t, const char *client_address);

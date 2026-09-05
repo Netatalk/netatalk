@@ -1065,6 +1065,7 @@ void afp_over_dsi(AFPObj *obj)
 #ifdef WITH_FCE
         fce_pending_events(obj);
 #endif /* WITH_FCE */
-restart_outer: ;
+restart_outer:
+        ;
     }
 }

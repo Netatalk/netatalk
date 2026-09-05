@@ -426,7 +426,7 @@ int utest_conf_permission_options_require_unix_priv(void)
         mode_t expected_effective_file_perm = cases[i].expect_unix_priv
                                               ? cases[i].expected_file_perm : 0;
         mode_t expected_effective_directory_perm = cases[i].expect_unix_priv
-            ? cases[i].expected_directory_perm : 0;
+                                                   ? cases[i].expected_directory_perm : 0;
 
         if (vol == NULL || unix_priv != cases[i].expect_unix_priv
                 || vol->v_umask != cases[i].expected_umask

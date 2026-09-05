@@ -299,7 +299,7 @@ int main(int ac, char **av)
 
         if (!(pr->p_flags & P_CUPS)) {
             if ((size_t) -1 != convert_string_allocate(CH_UNIX, CH_MAC, pr->p_name, -1,
-                    &atname)) {
+                                                       &atname)) {
                 pr->p_u_name = pr->p_name;
                 pr->p_name = atname;
             }

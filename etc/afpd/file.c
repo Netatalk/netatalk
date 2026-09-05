@@ -81,14 +81,14 @@ static const uint8_t old_ufinderi[] = {
  * memoized d_cached first (strnlen and hash walk skipped on a hit), fall
  * back to the by-name search, and memoize the result for later consumers. */
 static struct dir *path_resolve_cached_file(const struct vol *vol,
-        const struct dir *dir, struct path *path)
+                                            const struct dir *dir, struct path *path)
 {
     struct dir *cached = path_cached_file(path);
 
     if (cached == NULL && path->u_name != NULL) {
         cached = dircache_search_by_name(vol, dir, path->u_name,
                                          strnlen(path->u_name,
-                                             CNID_MAX_PATH_LEN));
+                                                 CNID_MAX_PATH_LEN));
         path->d_cached = cached;
     }
 
@@ -1188,7 +1188,7 @@ createfile_iderr:
      * Eliminates per-file getxattr on first enumerate after creation. */
     {
         struct dir *cachedfile = dircache_search_by_name(vol, dir,
-                                 upath, (int)upath_len);
+                                                         upath, (int)upath_len);
 
         if (!cachedfile && id != CNID_INVALID) {
             bstring fullpath = fullpath_join(dir->d_fullpath, upath);
@@ -1221,7 +1221,7 @@ createfile_iderr:
     /* upath is a bare filename and curdir is its parent. */
     char event_path[MAXPATHLEN + 1];
     const char *created_path = dir_event_path(event_path, sizeof(event_path),
-                               curdir, upath);
+                                              curdir, upath);
 #endif
 #ifdef WITH_FCE
     fce_register(obj, FCE_FILE_CREATE, created_path, NULL);
@@ -1484,7 +1484,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 {
                     size_t upath_slen = strnlen(upath, CNID_MAX_PATH_LEN);
                     struct dir *stale = dircache_search_by_name(vol, curdir,
-                                        upath, upath_slen);
+                                                                upath, upath_slen);
 
                     if (stale) {
                         dir_remove(vol, stale, 0);
@@ -1626,7 +1626,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             }
 
             if ((bshort & htons(ATTRBIT_INVISIBLE)) != (oshort & htons(
-                        ATTRBIT_INVISIBLE))) {
+                                                            ATTRBIT_INVISIBLE))) {
                 change_parent_mdate = 1;
             }
 
@@ -1734,7 +1734,7 @@ setfilparam_done:
 
     if (!symlinked && upath) {
         cached = dircache_search_by_name(vol, curdir, upath, strnlen(upath,
-                                         CNID_MAX_PATH_LEN));
+            CNID_MAX_PATH_LEN));
     }
 
     if (isad) {
@@ -1889,7 +1889,7 @@ size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
     size_t    outlen;
 
     if ((size_t) -1 == (outlen = convert_string(vol->v_maccharset, CH_UTF8_MAC, src,
-                                 srclen, dest, destlen))) {
+                                                srclen, dest, destlen))) {
         return -1;
     }
 

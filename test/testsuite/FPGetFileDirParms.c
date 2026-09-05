@@ -68,10 +68,10 @@ STATIC void test58()
     ENTER_TEST
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, "",
-            0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_UID) |
-            (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
+                                                  0,
+                                                  (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_UID) |
+                                                  (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
        ) {
         test_failed();
     }
@@ -411,7 +411,7 @@ STATIC void test132()
     }
 
     FAIL(htonl(AFPERR_BITMAP) != FPGetFileDirParams(Conn, vol, dir, name, 0xffff,
-            0))
+                                                    0))
     FAIL(htonl(AFPERR_BITMAP) != FPGetFileDirParams(Conn, vol, dir, "", 0, 0xffff))
     bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
              (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
@@ -565,7 +565,7 @@ STATIC void test307()
     }
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "???#2",
-            0, bitmap)) {
+                                                  0, bitmap)) {
         test_failed();
     }
 

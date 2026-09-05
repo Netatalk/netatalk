@@ -84,7 +84,7 @@ static uint32_t macbin_u32_from_header(const unsigned char *header,
 }
 
 static uint16_t macbin_fdflags_from_header(const unsigned char *header,
-        int revision)
+                                           int revision)
 {
     unsigned char flags_low = 0;
 

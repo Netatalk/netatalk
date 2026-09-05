@@ -44,7 +44,7 @@ extern void       dircache_remove(const struct vol *, struct dir *, int flag);
 extern struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did);
 extern struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did);
 extern struct dir *dircache_search_by_name(const struct vol *,
-        const struct dir *dir, char *name, size_t len);
+                                           const struct dir *dir, char *name, size_t len);
 
 extern void       dircache_dump(void);
 extern void       log_dircache_stat(void);
@@ -52,13 +52,13 @@ extern unsigned int dircache_resolve_size(int reqsize);
 extern void       dircache_reset_validation_counter(void);
 extern void       dircache_report_invalid_entry(struct dir *dir);
 extern int        dircache_remove_children(const struct vol *vol,
-        struct dir *dir);
+                                           struct dir *dir);
 extern int        dircache_reindex_didname(const struct vol *vol,
-        struct dir *dir);
+                                           struct dir *dir);
 extern void       dircache_promote(struct dir *dir);
 extern void       process_cache_hints(AFPObj *obj);
 extern void       dircache_remove_children_defer(const struct vol *vol,
-        struct dir *dir);
+                                                 struct dir *dir);
 extern void       dircache_flush_deferred_for_vol(uint16_t vid);
 extern int        dircache_has_deferred_work(void);
 extern int        dircache_process_deferred_chain(void);

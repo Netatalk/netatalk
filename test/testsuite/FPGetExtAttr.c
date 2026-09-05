@@ -60,7 +60,7 @@ STATIC void test399()
     }
 
     if (ntohl(AFPERR_MISC) != FPRemoveExtAttr(Conn, vol, DIRDID_ROOT, 0, file,
-            attr_name)) {
+                                              attr_name)) {
         test_failed();
     }
 
@@ -146,13 +146,13 @@ STATIC void test432()
      * specifying an req_count of 7.
      */
     FAIL(htonl(AFPERR_PARAM) != FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 1, file,
-            attr_name));
+                                             attr_name));
     FAIL(htonl(AFPERR_PARAM) != FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 6, file,
-            attr_name));
+                                             attr_name));
     FAIL(htonl(AFPERR_PARAM) != FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 7, file,
-            attr_name));
+                                             attr_name));
     FAIL(htonl(AFPERR_PARAM) != FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 15, file,
-            attr_name));
+                                             attr_name));
     FAIL(FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 16, file, attr_name));
     FAIL(FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 17, file, attr_name));
     memcpy(&attrlen, dsi->data + 2, 4);

@@ -371,7 +371,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
          * sentinel to a bogus positive entry. */
         adp = of->of_ad;
         struct dir *cached = dircache_search_by_name(vol, curdir,
-                             path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
+                                                     path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
 
         if (cached && cached->dcache_rlen < 0 && ad_meta_loaded(adp)) {
             ad_store_to_cache(adp, cached);
@@ -381,7 +381,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
         adp = &ad;
         struct dir *cached = isdir ? path->d_dir
                              : dircache_search_by_name(vol, curdir,
-                                 path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
+                                                       path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
 
         if (ad_metadata_cached(path->u_name, (isdir ? ADFLAGS_DIR : 0),
                                adp, vol, cached, false,
@@ -508,7 +508,7 @@ static int crit_check(struct vol *vol, struct path *path)
     /* Check for filename */
     if (c1.rbitmap & (1U << DIRPBIT_LNAME)) {
         if ((size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2,
-                                   path->m_name, -1, convbuf, 512))) {
+                                                  path->m_name, -1, convbuf, 512))) {
             goto crit_check_ret;
         }
 
@@ -523,7 +523,7 @@ static int crit_check(struct vol *vol, struct path *path)
 
     if (c1.rbitmap & (1U << FILPBIT_PDINFO)) {
         if ((size_t)(-1) == (len = convert_charset(CH_UTF8_MAC, CH_UCS2, CH_UTF8,
-                                   path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
+                                                   path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
             goto crit_check_ret;
         }
 
