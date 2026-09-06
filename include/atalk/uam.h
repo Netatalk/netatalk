@@ -80,7 +80,7 @@ struct session_info {
 
 /* register and unregister uams with these functions */
 extern UAM_MODULE_EXPORT int uam_register(const int, const char *, const char *,
-        ...);
+                                          ...);
 extern UAM_MODULE_EXPORT void uam_unregister(const int, const char *);
 
 /* helper functions */
@@ -89,8 +89,8 @@ extern UAM_MODULE_EXPORT int uam_checkuser(void *, const struct passwd *);
 
 /* afp helper functions */
 extern UAM_MODULE_EXPORT int uam_afp_read(void *, char *, size_t *,
-        int (*)(void *, void *, const int));
+                                          int (*)(void *, void *, const int));
 extern UAM_MODULE_EXPORT int uam_afpserver_option(void *, const int, void *,
-        size_t *);
+                                                  size_t *);
 
 #endif

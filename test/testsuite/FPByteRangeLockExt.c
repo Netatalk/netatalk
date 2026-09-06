@@ -34,9 +34,9 @@ static void test_bytelock_ext(uint16_t vol, char *name, int type)
     FAIL(FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100))
     FAIL(htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0, 0, -1, 75))
     FAIL(htonl(AFPERR_NORANGE) != FPByteLock_ext(Conn, fork, 0, 1 /* clear */, 0,
-            75))
+                                                 75))
     FAIL(htonl(AFPERR_RANGEOVR) != FPByteLock_ext(Conn, fork, 0, 0, 80 /* set */,
-            100))
+                                                  100))
     fork1 = FPOpenFork(Conn, vol, type, bitmap, DIRDID_ROOT, name,
                        OPENACC_WR | OPENACC_RD);
 
@@ -55,7 +55,7 @@ static void test_bytelock_ext(uint16_t vol, char *name, int type)
     /* Netatalk 2 doesn't drop locks when a fork is closed, 3 does */
     FPByteLock_ext(Conn, fork, 0, 1 /* clear */, 0, 100);
     FAIL(htonl(AFPERR_NORANGE) != FPByteLock_ext(Conn, fork, 0, 1 /* clear */, 0,
-            50))
+                                                 50))
     FAIL(FPSetForkParam(Conn, fork, len, 200))
 
     if (FPByteLock_ext(Conn, fork, 1 /* end */, 0 /* set */, 0, 100)) {
@@ -71,9 +71,9 @@ static void test_bytelock_ext(uint16_t vol, char *name, int type)
     }
 
     FAIL(htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0 /* start */,
-            0 /* set */, 0, 0))
+                                               0 /* set */, 0, 0))
     FAIL(htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0 /* start */,
-            0 /* set */, 0, -2))
+                                               0 /* set */, 0, -2))
     FAIL(FPCloseFork(Conn, fork))
     FAIL(htonl(AFPERR_PARAM) != FPByteLock_ext(Conn, fork, 0, 0 /* set */, 0, 100))
 fin:

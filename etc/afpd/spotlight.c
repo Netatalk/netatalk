@@ -553,7 +553,7 @@ static bool create_result_handle(slq_t *slq)
     }
 
     query_results->cnids->ca_cnids = talloc_zero(query_results->cnids,
-                                     DALLOC_CTX);
+                                                 DALLOC_CTX);
 
     if (query_results->cnids->ca_cnids == NULL) {
         return false;
@@ -848,9 +848,9 @@ static bool localsearch_backend_active(const AFPObj *obj)
  ******************************************************************************/
 
 static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj _U_,
-        const DALLOC_CTX *query _U_,
-        DALLOC_CTX *reply,
-        const struct vol *v)
+                                            const DALLOC_CTX *query _U_,
+                                            DALLOC_CTX *reply,
+                                            const struct vol *v)
 {
     EC_INIT;
     char *s;
@@ -1226,9 +1226,9 @@ EC_CLEANUP: {
 }
 
 static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj _U_,
-        const DALLOC_CTX *query,
-        DALLOC_CTX *reply,
-        const struct vol *v _U_)
+                                              const DALLOC_CTX *query,
+                                              DALLOC_CTX *reply,
+                                              const struct vol *v _U_)
 {
     EC_INIT;
     slq_t *slq = NULL;
@@ -1314,9 +1314,9 @@ EC_CLEANUP:
 }
 
 static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj _U_,
-        const DALLOC_CTX *query,
-        DALLOC_CTX *reply,
-        const struct vol *vol)
+                                             const DALLOC_CTX *query,
+                                             DALLOC_CTX *reply,
+                                             const struct vol *vol)
 {
     EC_INIT;
     uint64_t uint64;
@@ -1357,7 +1357,7 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj _U_,
         ts[1] = ts[0];
         utimensat(AT_FDCWD, path, ts, 0);
     } else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX",
-                          1, "DALLOC_CTX", 1, "kMDItemLastUsedDate", "sl_time_t"))) {
+                                               1, "DALLOC_CTX", 1, "kMDItemLastUsedDate", "sl_time_t"))) {
         struct timespec ts[2] = {{0}};
         ts[0].tv_sec  = sl_time->tv_sec;
         ts[0].tv_nsec = sl_time->tv_usec * 1000;
@@ -1374,7 +1374,7 @@ EC_CLEANUP:
 }
 
 static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj _U_,
-        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol _U_)
+                                                 const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol _U_)
 {
     EC_INIT;
     uint64_t uint64;
@@ -1420,7 +1420,7 @@ EC_CLEANUP:
 }
 
 static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj _U_,
-        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
+                                             const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 {
     EC_INIT;
     uint64_t uint64;

@@ -241,9 +241,9 @@ STATIC void test510()
 
     FAIL(htonl(AFPERR_VLOCK) != FPDelete(Conn, VolID, DIRDID_ROOT, file))
     FAIL(htonl(AFPERR_VLOCK) != FPMoveAndRename(Conn, VolID, DIRDID_ROOT,
-            DIRDID_ROOT, file, nfile))
+                                                DIRDID_ROOT, file, nfile))
     FAIL(htonl(AFPERR_VLOCK) != FPMoveAndRename(Conn, VolID, DIRDID_ROOT,
-            DIRDID_ROOT, dir, ndir))
+                                                DIRDID_ROOT, dir, ndir))
     /* -- directory.c -- */
     bitmap = (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) |
              (1 << DIRPBIT_MDATE);

@@ -135,7 +135,7 @@ STATIC void test73()
 
     /* bad ddid */
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name,
-            name1))
+                                                name1))
     FAIL(!(dir1 = FPCreateDir(Conn, vol, DIRDID_ROOT, name2)))
     FAIL(FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir1, name, ""))
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT, name))
@@ -154,7 +154,7 @@ STATIC void test73()
 
     if (fork) {
         FAIL(ntohl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT,
-                name1, name))
+                                                    name1, name))
         FAIL(FPCloseFork(Conn, fork))
     }
 
@@ -253,9 +253,9 @@ STATIC void test123()
     }
 
     FAIL(ntohl(AFPERR_CANTMOVE) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir,
-            name, ""))
+                                                   name, ""))
     FAIL(ntohl(AFPERR_CANTMOVE) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir,
-            name, "new"))
+                                                   name, "new"))
     FAIL(FPMoveAndRename(Conn, vol, dir2, dir4, "", ""))
 fin:
     FAIL(dir5 && FPDelete(Conn, vol, dir5, ""))
@@ -306,7 +306,7 @@ STATIC void test138()
     }
 
     FAIL(ntohl(AFPERR_ACCESS) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir, name,
-            ""))
+                                                 ""))
     filedir.access[1] = 7;
     filedir.access[2] = 7;
     filedir.access[3] = 7;
@@ -384,7 +384,7 @@ STATIC void test378()
         FAIL(FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
     } else {
         FAIL(htonl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT,
-                name, name1))
+                                                    name, name1))
     }
 
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))

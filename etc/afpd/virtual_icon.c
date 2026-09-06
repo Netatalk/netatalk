@@ -293,7 +293,7 @@ void virtual_icon_init(struct vol *vol)
 }
 
 const unsigned char *virtual_icon_get_rfork(const struct vol *vol,
-        size_t *outlen)
+                                            size_t *outlen)
 {
     if (!vol->v_icon_rfork) {
         *outlen = 0;

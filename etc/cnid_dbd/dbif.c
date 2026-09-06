@@ -612,7 +612,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
 
         if (dbd->db_table[i].flags) {
             if ((ret = dbd->db_table[i].db->set_flags(dbd->db_table[i].db,
-                       dbd->db_table[i].flags))) {
+                                                      dbd->db_table[i].flags))) {
                 LOG(log_error, logtype_cnid, "error setting flags for database %s: %s",
                     dbd->db_table[i].name, db_strerror(ret));
                 return -1;
@@ -622,9 +622,9 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
         /* In memory db */
         if (! dbd->db_env) {
             if ((ret = dbd->db_table[i].db->set_cachesize(dbd->db_table[i].db,
-                       0,
-                       dbp->cachesize,
-                       4)) /* split in 4 memory chunks */
+                                                          0,
+                                                          dbp->cachesize,
+                                                          4)) /* split in 4 memory chunks */
                     < 0)  {
                 LOG(log_error, logtype_cnid,
                     "error setting cachesize %u KB for database %s: %s",
@@ -648,7 +648,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
             LOG(log_info, logtype_cnid, "Truncating CNID index.");
 
             if ((ret = dbd->db_table[i].db->truncate(dbd->db_table[i].db, NULL, &count,
-                       0))) {
+                                                     0))) {
                 LOG(log_error, logtype_cnid, "error truncating database %s: %s",
                     dbd->db_table[i].name, db_strerror(ret));
                 return -1;
@@ -664,10 +664,10 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
     }
 
     if ((ret = dbd->db_table[0].db->associate(dbd->db_table[DBIF_CNID].db,
-               dbd->db_txn,
-               dbd->db_table[DBIF_IDX_DIDNAME].db,
-               didname,
-               reindex ? DB_CREATE : 0))
+                                              dbd->db_txn,
+                                              dbd->db_table[DBIF_IDX_DIDNAME].db,
+                                              didname,
+                                              reindex ? DB_CREATE : 0))
             != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate didname database: %s",
             db_strerror(ret));
@@ -683,10 +683,10 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
     }
 
     if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db,
-               dbd->db_txn,
-               dbd->db_table[DBIF_IDX_DEVINO].db,
-               devino,
-               reindex ? DB_CREATE : 0))
+                                              dbd->db_txn,
+                                              dbd->db_table[DBIF_IDX_DEVINO].db,
+                                              devino,
+                                              reindex ? DB_CREATE : 0))
             != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate devino database: %s",
             db_strerror(ret));
@@ -714,13 +714,13 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
     }
 
     if ((ret = dbd->db_table[0].db->associate(dbd->db_table[0].db,
-               dbd->db_txn,
-               dbd->db_table[DBIF_IDX_NAME].db,
-               idxname,
-               (reindex
-                ||
-                ((CNID_VERSION == CNID_VERSION_1) && (version == CNID_VERSION_0)))
-               ? DB_CREATE : 0)) != 0) {
+                                              dbd->db_txn,
+                                              dbd->db_table[DBIF_IDX_NAME].db,
+                                              idxname,
+                                              (reindex
+                                               ||
+                                               ((CNID_VERSION == CNID_VERSION_1) && (version == CNID_VERSION_0)))
+                                              ? DB_CREATE : 0)) != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate name index: %s",
             db_strerror(ret));
         return -1;

@@ -81,7 +81,7 @@ static inline struct timespec atalk_stat_atime_timespec(const struct stat *st)
 }
 
 static inline void atalk_timespec_to_timeval(struct timeval *tv,
-        const struct timespec *ts)
+                                             const struct timespec *ts)
 {
     tv->tv_sec = ts->tv_sec;
     tv->tv_usec = ts->tv_nsec / 1000;

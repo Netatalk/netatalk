@@ -766,7 +766,7 @@ EC_CLEANUP:
  * @returns mapping result as acl_perm_t, -1 on error
  */
 static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
-        int is_dir)
+                                                    int is_dir)
 {
     acl_perm_t perm = 0;
 
@@ -775,7 +775,7 @@ static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
     }
 
     if (darwin_ace_rights & (DARWIN_ACE_WRITE_DATA | (is_dir ?
-                             DARWIN_ACE_DELETE_CHILD : 0))) {
+                                                      DARWIN_ACE_DELETE_CHILD : 0))) {
         perm |= ACL_WRITE;
     }
 

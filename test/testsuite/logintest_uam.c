@@ -269,8 +269,8 @@ int uamtest_run_selected(const char *filter)
 {
     bool matched = false;
     advertised_uams = uamtest_libafpclient_discover_uams(Server, Port,
-                      Version, User ? User : "", Password ? Password : "",
-                      &advertised_known);
+                                                         Version, User ? User : "", Password ? Password : "",
+                                                         &advertised_known);
 
     if (Verbose && advertised_known) {
         char *uam_list = uam_bitmap_to_string(advertised_uams);

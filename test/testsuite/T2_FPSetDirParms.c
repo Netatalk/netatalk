@@ -44,7 +44,7 @@ STATIC void test121()
 
         FAIL(FPSetDirParms(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
         FAIL(htonl(AFPERR_BITMAP) != FPSetDirParms(Conn, vol, DIRDID_ROOT, name, 0xffff,
-                &filedir))
+                                                   &filedir))
     }
 
 fin:

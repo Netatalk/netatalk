@@ -808,7 +808,7 @@ int main(int argc, char **argv)
     if (volumes_loaded && !conf_cnid_scheme_in_use(&obj, "dbd")) {
         cnid_metad_pid = NETATALK_SRV_OPTIONAL;
     } else if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
-                                 obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
+                                             obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
         netatalk_exit(EXITERR_CONF);
     }

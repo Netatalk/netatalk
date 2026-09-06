@@ -620,7 +620,7 @@ static void arc_ensure_ghost_capacity(arc_list_t target_list)
     size_t *target_size = (target_list == ARC_B1) ? &arc_cache.b1_size :
                           &arc_cache.b2_size;
     qnode_t *victim_node = arc_ghost_trim_candidate(target_queue,
-                           arc_promoting_ghost);
+                                                    arc_promoting_ghost);
 
     if (victim_node == NULL) {
         return;
@@ -1806,7 +1806,7 @@ int dircache_add(const struct vol *vol,
     /* Add it to the main dircache hash table (both modes), keeping the node
      * so removal can delete it without a keyed lookup */
     if ((dir->d_index_node = hash_alloc_insert_node(dircache, dir,
-                             dir)) == NULL) {
+                                                    dir)) == NULL) {
         LOG(log_error, logtype_afpd,
             "dircache_add: main hash insert failed for did:%u",
             ntohl(dir->d_did));
@@ -1818,7 +1818,7 @@ int dircache_add(const struct vol *vol,
 
     /* Add it to the did/name index (both modes) */
     if ((dir->d_didname_node = hash_alloc_insert_node(index_didname, dir,
-                               dir)) == NULL) {
+                                                      dir)) == NULL) {
         /* insert failed; Rollback main hash to keep counts consistent */
         LOG(log_error, logtype_afpd,
             "dircache_add: didname hash insert failed for did:%u, rolling back",
@@ -2160,7 +2160,7 @@ int dircache_reindex_didname(const struct vol *vol, struct dir *dir)
     /* Caller has already called dircache_remove(vol, dir, DIDNAME_INDEX)
      * and updated dir->d_pdid / dir->d_u_name. Re-insert with new key. */
     if ((dir->d_didname_node = hash_alloc_insert_node(index_didname, dir,
-                               dir)) == NULL) {
+                                                      dir)) == NULL) {
         LOG(log_error, logtype_afpd,
             "dircache_reindex_didname: re-insert failed for did:%u",
             ntohl(dir->d_did));

@@ -153,7 +153,7 @@ STATIC void test172()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                    &filedir))
     }
 
     /* -------------------- */
@@ -196,13 +196,13 @@ STATIC void test172()
     }
 
     FAIL(ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                               tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
     /* ---- directory.c ---- */
     filedir.isdir = 1;
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetDirParms(Conn, vol, tdir, tname, bitmap,
-            &filedir))
+                                              &filedir))
     /* ---------------- */
     dir  = FPCreateDir(Conn, vol, tdir, tname);
 
@@ -220,9 +220,9 @@ STATIC void test172()
     /* ---- filedir.c ---- */
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, tdir, tname, 0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_UID) |
-            (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
+                                                  (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_UID) |
+                                                  (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
        ) {
         test_failed();
     }
@@ -234,7 +234,7 @@ STATIC void test172()
         filedir.isdir = 1;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                     &filedir))
     }
 
     /* ---------------- */
@@ -243,10 +243,10 @@ STATIC void test172()
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, tdir, tname))
     /* ---------------- */
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, tdir, DIRDID_ROOT, tname,
-            name1))
+                                                name1))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                                tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     /* ---- enumerate.c ---- */
     /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */

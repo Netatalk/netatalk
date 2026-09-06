@@ -263,9 +263,9 @@ int writeconf(char *cf)
             for (l = iface->i_rt->rt_zt; l; l = l->l_next) {
                 /* codepage conversion */
                 if ((size_t)(-1) == (len = convert_string_allocate(CH_MAC, CH_UNIX,
-                                           ((struct ziptab *)l->l_data)->zt_name,
-                                           ((struct ziptab *)l->l_data)->zt_len,
-                                           &zonename))) {
+                                                                   ((struct ziptab *)l->l_data)->zt_name,
+                                                                   ((struct ziptab *)l->l_data)->zt_len,
+                                                                   &zonename))) {
                     if (NULL ==
                             (zonename = strdup(((struct ziptab *)l->l_data)->zt_name))) {
                         LOG(log_error, logtype_atalkd, "malloc: %s",  strerror(errno));
@@ -688,7 +688,7 @@ int zone(struct interface *iface, char **av)
 
     /* codepage conversion */
     if ((size_t)(-1) == convert_string_allocate(CH_UNIX, CH_MAC, av[0], -1,
-            &zname)) {
+                                                &zname)) {
         zname = strdup(av[0]);
     }
 

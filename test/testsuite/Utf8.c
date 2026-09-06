@@ -270,7 +270,7 @@ STATIC void test185()
 
     FAIL(ntohl(AFPERR_PARAM) != FPRename(Conn, vol, DIRDID_ROOT, name, name1))
     FAIL(ntohl(AFPERR_PARAM) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT,
-            name, name1))
+                                                name, name1))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     FPFlush(Conn, vol);
 test_exit:
@@ -315,7 +315,7 @@ STATIC void test233()
     sprintf(temp, "t23#%X", ntohl(dir));
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0,
-            bitmap)) {
+                                                  bitmap)) {
         /* MAC OK */
         test_failed();
     }
@@ -325,7 +325,7 @@ STATIC void test233()
     sprintf(temp, "t233 dire#%X", ntohl(dir));
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0,
-            bitmap)) {
+                                                  bitmap)) {
         /* MAC OK */
         test_failed();
     }
@@ -373,7 +373,7 @@ STATIC void test234()
         sprintf(temp, "t23#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
-                bitmap, 0)) {
+                                                      bitmap, 0)) {
             test_failed();
         }
 
@@ -382,7 +382,7 @@ STATIC void test234()
         sprintf(temp, "t234 file#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
-                bitmap, 0)) {
+                                                      bitmap, 0)) {
             test_failed();
         }
 
@@ -431,7 +431,7 @@ STATIC void test312()
         sprintf(temp, "t312-#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
-                bitmap, 0)) {
+                                                       bitmap, 0)) {
             test_failed();
         }
 
@@ -451,7 +451,7 @@ STATIC void test312()
         sprintf(temp, "t3-#%X.mp3", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
-                bitmap, 0)) {
+                                                       bitmap, 0)) {
             test_failed();
         }
     }
@@ -578,7 +578,7 @@ STATIC void test337()
         sprintf(temp, "???#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
-                bitmap, 0)) {
+                                                       bitmap, 0)) {
             /* MAC OK */
             test_failed();
         }
@@ -599,7 +599,7 @@ STATIC void test337()
         sprintf(temp, "t#%X.mp3", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
-                bitmap, 0)) {
+                                                       bitmap, 0)) {
             /* MAC OK */
             test_failed();
         }

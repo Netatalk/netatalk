@@ -37,9 +37,9 @@ STATIC void test83()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name1,
-                bitmap, &filedir))
+                                                    bitmap, &filedir))
         FAIL(htonl(AFPERR_BADTYPE) != FPSetFileParams(Conn, vol, DIRDID_ROOT, ndir,
-                bitmap, &filedir))
+                                                      bitmap, &filedir))
     }
 
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
@@ -210,7 +210,7 @@ STATIC void test122()
                  (1 << FILPBIT_MDATE);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
         FAIL(htonl(AFPERR_BITMAP) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name,
-                0xffff, &filedir))
+                                                     0xffff, &filedir))
     }
 
     fork1 = FPOpenFork(Conn, vol, type, 0, DIRDID_ROOT, name, OPENACC_RD);
@@ -255,7 +255,7 @@ STATIC void test318()
         filedir.isdir = 0;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(htonl(AFPERR_BITMAP) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name,
-                bitmap, &filedir))
+                                                     bitmap, &filedir))
     }
 
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
