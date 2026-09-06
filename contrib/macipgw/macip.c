@@ -141,10 +141,10 @@ static const char error_noip[] = "No Address Available.";
 static const char error_noop[] = "Unknown Operation.";
 
 _Static_assert(sizeof(error_noip) <= sizeof(((struct macip_req_data *)
-               0)->mipr_error),
+                                             0)->mipr_error),
                "error_noip does not fit in mipr_error");
 _Static_assert(sizeof(error_noop) <= sizeof(((struct macip_req_data *)
-               0)->mipr_error),
+                                             0)->mipr_error),
                "error_noop does not fit in mipr_error");
 
 static uint16_t cksum(char *buffer, int len)

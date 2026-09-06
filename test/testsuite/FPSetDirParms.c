@@ -174,11 +174,11 @@ STATIC void test88()
 
         bitmap = (1 << DIRPBIT_UID) | (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
         FAIL(ntohl(AFPERR_ACCESS) != FPSetDirParms(Conn, vol, DIRDID_ROOT, ndir, bitmap,
-                &filedir))
+                                                   &filedir))
         FAIL(ntohl(AFPERR_BADTYPE) != FPSetDirParms(Conn, vol, dir, name1, bitmap,
-                &filedir))
+                                                    &filedir))
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetDirParms(Conn, vol, dir, name2, bitmap,
-                &filedir))
+                                                  &filedir))
     }
 
 fin:
@@ -336,7 +336,7 @@ STATIC void test189()
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     FAIL(ntohl(AFPERR_BADTYPE) != FPSetDirParms(Conn, vol, dir, name1, bitmap,
-            &filedir))
+                                                &filedir))
     FAIL(FPDelete(Conn, vol, dir, name1))
 fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
@@ -562,7 +562,7 @@ STATIC void test353()
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
 
     if (htonl(AFPERR_BITMAP) != FPSetDirParms(Conn, vol, dir, "", bitmap,
-            &filedir)) {
+                                              &filedir)) {
         test_failed();
         filedir.unix_priv = S_IRUSR | S_IWUSR;
         FAIL(FPSetDirParms(Conn, vol, dir, "", bitmap, &filedir))
@@ -572,7 +572,7 @@ STATIC void test353()
              (1 << DIRPBIT_UNIXPR);
 
     if (/* htonl(AFPERR_BITMAP) != */ FPGetFileDirParams(Conn, vol, dir, name,
-                                      bitmap, 0)) {
+                                                         bitmap, 0)) {
         test_failed();
         goto fin1;
     }
@@ -592,7 +592,7 @@ STATIC void test353()
     filedir.access[1] = filedir.access[2] = filedir.access[3] = 0;
 
     if (htonl(AFPERR_BITMAP) != FPSetFilDirParam(Conn, vol, dir, name, bitmap,
-            &filedir)) {
+                                                 &filedir)) {
         test_failed();
         filedir.unix_priv = S_IRUSR | S_IWUSR;
         FAIL(FPSetFilDirParam(Conn, vol, dir, name, bitmap, &filedir))

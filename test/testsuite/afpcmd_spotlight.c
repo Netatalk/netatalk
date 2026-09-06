@@ -220,7 +220,7 @@ unsigned int FPSpotlightFetchPropertiesWithShrunkTOC(CONN *conn, uint16_t vid)
  *        tag references a far out-of-range TOC index
  */
 unsigned int FPSpotlightFetchPropertiesWithLargeTOCIndex(CONN *conn,
-        uint16_t vid)
+                                                         uint16_t vid)
 {
     char rpcbuf[SL_PACK_BUFLEN];
     int  rpclen;
@@ -252,7 +252,7 @@ unsigned int FPSpotlightRPCWithLargeInt64Count(CONN *conn, uint16_t vid)
     spotlight_test_put_le32(rpcbuf, 12, 3);
     spotlight_test_put_le64(rpcbuf, 16,
                             spotlight_test_pack_tag(TEST_SQ_TYPE_INT64, 2,
-                                    0x7fffffff));
+                                                    0x7fffffff));
     spotlight_test_put_le64(rpcbuf, 24, 0);
     spotlight_test_put_le64(rpcbuf, 32,
                             spotlight_test_pack_tag(TEST_SQ_TYPE_TOC, 1, 0));
@@ -420,9 +420,9 @@ unsigned int FPSpotlightOpen(CONN *conn, uint16_t vid,
  * and "uint64_t", 2.
  */
 static unsigned int spotlight_open_query_send(CONN *conn, uint16_t vid,
-        const char *query_dsl,
-        const char *scope,
-        uint64_t ctx)
+                                              const char *query_dsl,
+                                              const char *scope,
+                                              uint64_t ctx)
 {
     /* sl_pack writes up to SL_PACK_BUFLEN bytes regardless of caller
      * buffer; see comment at top of this TU. */

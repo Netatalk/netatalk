@@ -224,7 +224,7 @@ out:
      * different pointer — remove whatever the cache now holds. */
     {
         struct dir *now = dircache_search_by_name(vol, root, fname,
-                          strlen(fname));
+                                                  strlen(fname));
 
         if (now) {
             dir_remove(vol, now, 0);
@@ -382,7 +382,7 @@ out:
     {
         /* Reruns and later tests start clean */
         struct dir *now = dircache_search_by_name(vol, root, fname,
-                          strlen(fname));
+                                                  strlen(fname));
 
         if (now) {
             dir_remove(vol, now, 0);

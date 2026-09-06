@@ -990,7 +990,7 @@ void collect_values_after_key(const std::string &q,
         }
 
         if (std::string value = strip_wildcards(q.substr(quote1 + 1,
-                                                quote2 - quote1 - 1)); !value.empty()) {
+                                                         quote2 - quote1 - 1)); !value.empty()) {
             values.push_back(value);
         }
 
@@ -1017,7 +1017,7 @@ std::vector<std::string> collect_any_values(const std::string &q)
         }
 
         if (std::string value = strip_wildcards(q.substr(quote1 + 1,
-                                                quote2 - quote1 - 1)); !value.empty()) {
+                                                         quote2 - quote1 - 1)); !value.empty()) {
             values.push_back(value);
         }
 
@@ -1541,11 +1541,11 @@ extern "C" int sl_xapian_delete_prefix(const char *db_path,
 }
 
 extern "C" int sl_xapian_reindex_subtree(const char *db_path,
-        const char *volume_path,
-        const char *path,
-        const char *oldpath,
-        char *errbuf,
-        size_t errlen)
+                                         const char *volume_path,
+                                         const char *path,
+                                         const char *oldpath,
+                                         char *errbuf,
+                                         size_t errlen)
 {
     try {
         std::string magic_error;

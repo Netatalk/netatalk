@@ -30,7 +30,7 @@ static void print_gnireply(ssize_t len, uint8_t *buf, charset_t charset);
 void do_getnetinfo(struct sockaddr_at *dest, const char *zone_to_confirm,
                    charset_t charset);
 static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
-        charset_t charset);
+                                          charset_t charset);
 void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset);
 
 static void usage(char *s)
@@ -295,7 +295,7 @@ static void print_zones(short n, const char *buf, charset_t charset)
 
     for (; n--; buf += (*buf) + 1) {
         if ((size_t)(-1) == (zone_len = convert_string_allocate(charset,
-                                        CH_UNIX, buf + 1, *buf, &zone))) {
+                                                                CH_UNIX, buf + 1, *buf, &zone))) {
             /* If the string conversion fails, just copy the MacRoman string
                and hope it makes sense as whatever our UNIX charset is */
             zone_len = *buf;
@@ -569,7 +569,7 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
             }
 
             replied_zone_count += print_and_count_zones_in_reply(buf + 3, length - 3,
-                                  charset);
+                                                                 charset);
 
             if (replied_zone_count >= expected_zone_count) {
                 break;
@@ -579,7 +579,7 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
 }
 
 static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
-        charset_t charset)
+                                          charset_t charset)
 {
     uint8_t *cursor = buf;
     int count = 0;

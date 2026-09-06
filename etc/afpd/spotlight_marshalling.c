@@ -163,7 +163,7 @@ static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
  * @returns If there is no byte order mark, -1 is returned.
  */
 static uint spotlight_get_utf16_string_encoding(const char *buf, int offset,
-        int query_length, uint encoding)
+                                                int query_length, uint encoding)
 {
     uint utf16_encoding;
     /* Assumed encoding in absence of a bom is little endian */
@@ -232,7 +232,7 @@ static int sl_pack_bool(sl_bool_t bl, char *buf, int offset, off_t maxoff)
 {
     EC_INIT;
     EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(SQ_TYPE_BOOL, 1,
-                   bl ? 1 : 0)));
+                                                    bl ? 1 : 0)));
 EC_CLEANUP:
 
     if (ret != 0) {
@@ -306,7 +306,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, off_t maxoff,
     EC_ZERO(slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC,
                    sl_pack_tag(SQ_CPX_TYPE_CNIDS, (offset + SL_OFFSET_DELTA) / 8, 0)));
     EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(SQ_TYPE_COMPLEX, 1,
-                   *toc_idx + 1)));
+                                                    *toc_idx + 1)));
     *toc_idx += 1;
     offset += 8;
     len = cnid_count + 1;
@@ -321,7 +321,7 @@ static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, off_t maxoff,
 
     if (cnid_count > 0) {
         EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(cnids->ca_unkn1,
-                       cnid_count, cnids->ca_context)));
+                                                        cnid_count, cnids->ca_context)));
         offset += 8;
 
         for (int i = 0; i < cnid_count; i++) {
@@ -349,7 +349,7 @@ static int sl_pack_array(sl_array_t *array, char *buf, int offset, off_t maxoff,
     EC_ZERO(slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC,
                    sl_pack_tag(SQ_CPX_TYPE_ARRAY, octets, count)));
     EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(SQ_TYPE_COMPLEX, 1,
-                   *toc_idx + 1)));
+                                                    *toc_idx + 1)));
     *toc_idx += 1;
     offset += 8;
     EC_NEG1(offset = sl_pack_loop(array, buf, offset, maxoff, toc_buf, toc_idx));
@@ -373,7 +373,7 @@ static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, off_t maxoff,
                                (offset + SL_OFFSET_DELTA) / 8,
                                talloc_array_length(dict->dd_talloc_array))));
     EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(SQ_TYPE_COMPLEX, 1,
-                   *toc_idx + 1)));
+                                                    *toc_idx + 1)));
     *toc_idx += 1;
     offset += 8;
     EC_NEG1(offset = sl_pack_loop(dict, buf, offset, maxoff, toc_buf, toc_idx));
@@ -393,7 +393,7 @@ static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset,
     int fmlen;                  /* lenght of filemeta */
     int saveoff = offset;
     EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(SQ_TYPE_COMPLEX, 1,
-                   *toc_idx + 1)));
+                                                    *toc_idx + 1)));
     offset += 16;
 
     if (maxoff - offset <= 16) {
@@ -412,7 +412,7 @@ static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset,
 
     /* 3rd parameter of sl_pack_tag has unknown meaning, but always 8 */
     EC_ZERO(slvalc(buf, saveoff + 8, maxoff, sl_pack_tag(SQ_TYPE_DATA,
-                   (fmlen / 8) + 1, 8)));
+                                                         (fmlen / 8) + 1, 8)));
     EC_ZERO(slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC,
                    sl_pack_tag(SQ_CPX_TYPE_FILEMETA, (saveoff + SL_OFFSET_DELTA) / 8, fmlen / 8)));
     *toc_idx += 1;
@@ -443,11 +443,11 @@ static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf,
                    sl_pack_tag(SQ_CPX_TYPE_STRING, (offset + SL_OFFSET_DELTA) / 8,
                                used_in_last_octet)));
     EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(SQ_TYPE_COMPLEX, 1,
-                   *toc_idx + 1)));
+                                                    *toc_idx + 1)));
     *toc_idx += 1;
     offset += 8;
     EC_ZERO(slvalc(buf, offset, maxoff, sl_pack_tag(SQ_TYPE_DATA, octets + 1,
-                   used_in_last_octet)));
+                                                    used_in_last_octet)));
     offset += 8;
 
     if (offset < 0 || maxoff < 0 || octets > (maxoff - offset) / 8) {
@@ -881,7 +881,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
             p = dalloc_strndup(query, buf + offset + 8, slen);
         } else {
             unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 8, slen,
-                               encoding);
+                                                                   encoding);
             mark_exists = (unicode_encoding & SL_ENC_UTF_16);
 
             if (unicode_encoding & SL_ENC_BIG_ENDIAN) {
@@ -896,10 +896,10 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
 
             size_t tmp_len;
             EC_NEG1(tmp_len = convert_string_allocate(CH_UCS2,
-                              CH_UTF8,
-                              buf + offset + (mark_exists ? 10 : 8),
-                              slen,
-                              &tmp));
+                                                      CH_UTF8,
+                                                      buf + offset + (mark_exists ? 10 : 8),
+                                                      slen,
+                                                      &tmp));
             p = dalloc_strndup(query, tmp, tmp_len);
             free(tmp);
         }
@@ -1150,7 +1150,7 @@ static int sl_pack_len(DALLOC_CTX *query, char *buf, off_t maxoff)
     EC_ZERO(sivalc(buf, 8, maxoff, len / 8 + 1 + toc_index + 1));
     EC_ZERO(sivalc(buf, 12, maxoff, len / 8 + 1));
     EC_ZERO(slvalc(toc_buf, 0, MAX_SLQ_TOC, sl_pack_tag(SQ_TYPE_TOC, toc_index + 1,
-                   0)));
+                                                        0)));
     toc_len = (toc_index + 1) * 8;
 
     if (16 + len + toc_len >= maxoff) {

@@ -91,12 +91,12 @@ STATIC void test32()
     }
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir, "",
-            0
-            ,
-            (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-            (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_ACCESS)
+                                                  0
+                                                  ,
+                                                  (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
+                                                  (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
+                                                  (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_ACCESS)
                                                  )
        ) {
         test_failed();
@@ -206,12 +206,12 @@ STATIC void test33()
     }
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name,
-            0
-            ,
-            (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-            (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_ACCESS)
+                                                  0
+                                                  ,
+                                                  (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
+                                                  (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
+                                                  (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_ACCESS)
                                                  )
        ) {
         test_failed();
@@ -301,12 +301,12 @@ STATIC void test42()
 
     /* our curdir is in the deleted folder so no error! */
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir, "bar",
-            0
-            ,
-            (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-            (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_ACCESS)
+                                                  0
+                                                  ,
+                                                  (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
+                                                  (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
+                                                  (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_ACCESS)
                                                  )
        ) {
         test_failed();
@@ -656,12 +656,12 @@ STATIC void test182()
     }
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir, "",
-            0
-            ,
-            (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-            (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_ACCESS)
+                                                  0
+                                                  ,
+                                                  (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
+                                                  (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
+                                                  (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_ACCESS)
                                                  )
        ) {
         test_failed();
@@ -974,12 +974,12 @@ STATIC void test340()
     }
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir, "",
-            0
-            ,
-            (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
-            (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
-            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_ACCESS)
+                                                  0
+                                                  ,
+                                                  (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
+                                                  (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
+                                                  (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_ACCESS)
                                                  )
        ) {
         test_failed();

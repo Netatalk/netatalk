@@ -115,11 +115,11 @@ STATIC void test141()
     }
 
     FAIL(ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1 << FILPBIT_RFLEN),
-            0))
+                                                0))
 
     if (Conn->afp_version < 30) {
         FAIL(ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1 << FILPBIT_EXTDFLEN),
-                0))
+                                                    0))
     }
 
     FAIL(FPCloseFork(Conn, fork))
@@ -132,11 +132,11 @@ STATIC void test141()
     }
 
     FAIL(ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1 << FILPBIT_DFLEN),
-            0))
+                                                0))
 
     if (Conn->afp_version < 30) {
         FAIL(ntohl(AFPERR_BITMAP) != FPSetForkParam(Conn, fork, (1 << FILPBIT_EXTRFLEN),
-                0))
+                                                    0))
     }
 
     FAIL(FPCloseFork(Conn, fork))
@@ -180,7 +180,7 @@ STATIC void test217()
     FAIL(FPSetForkParam(Conn, fork, (1 << FILPBIT_EXTDFLEN), 0))
     FAIL(ntohl(AFPERR_EOF) != FPRead(Conn, fork, 1, 1, Data))
     FAIL(ntohl(AFPERR_PARAM) != FPSetForkParam(Conn, fork, (1 << FILPBIT_EXTDFLEN),
-            1 << 31))
+                                               1 << 31))
     ret = FPSetForkParam(Conn, fork, (1 << FILPBIT_EXTDFLEN), (1UL << 31));
 
     if (ret) {

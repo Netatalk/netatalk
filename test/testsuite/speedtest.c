@@ -692,8 +692,8 @@ static int check_test_dir_exists(uint16_t vol, char *dir_name,
     uint16_t dir_bitmap = (uint16_t)((1U << DIRPBIT_LNAME) | (1U << DIRPBIT_PDID));
 
     if (ntohl(AFPERR_NOOBJ) != VFS.getfiledirparams(Conn, vol, DIRDID_ROOT,
-            dir_name,
-            dir_bitmap, dir_bitmap)) {
+                                                    dir_name,
+                                                    dir_bitmap, dir_bitmap)) {
         fprintf(stderr, "Warning: %s test skipped - directory '%s' already exists\n",
                 test_name, dir_name);
         test_nottested();

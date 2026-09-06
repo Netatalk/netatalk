@@ -543,7 +543,7 @@ static int RF_renamedir_ea(const struct vol *vol _U_, int dirfd _U_,
 
 /* Returns 1 if the entry is NOT an ._ file */
 static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol,
-        struct dirent *de, char *name, void *data _U_, int flag _U_)
+                                               struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
     if (de->d_name[0] != '.' || de->d_name[0] == '_') {
         return 1;
@@ -945,7 +945,7 @@ static int vfs_solaris_acl(const struct vol *vol, const char *path, int cmd,
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_solaris_acl) {
             int curr_ret = vol->vfs_modules[i]->vfs_solaris_acl(vol, path, cmd, count,
-                           aces);
+                                                                aces);
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;
@@ -1017,7 +1017,7 @@ static int vfs_ea_getsize(const struct vol *vol, char *rbuf,
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_getsize) {
             int curr_ret = vol->vfs_modules[i]->vfs_ea_getsize(vol, rbuf, rbuflen, uname,
-                           oflag, attruname, fd);
+                                                               oflag, attruname, fd);
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;
@@ -1041,7 +1041,7 @@ static int vfs_ea_getcontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_getcontent) {
             int curr_ret = vol->vfs_modules[i]->vfs_ea_getcontent(vol, rbuf, rbuflen, uname,
-                           oflag, attruname, maxreply, fd);
+                                                                  oflag, attruname, maxreply, fd);
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;
@@ -1061,7 +1061,7 @@ static int vfs_ea_list(const struct vol *vol,
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_list) {
             int curr_ret = vol->vfs_modules[i]->vfs_ea_list(vol, attrnamebuf, buflen, uname,
-                           oflag, fd);
+                                                            oflag, fd);
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;
@@ -1085,7 +1085,7 @@ static int vfs_ea_set(const struct vol *vol, const char *uname,
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_set) {
             int curr_ret = vol->vfs_modules[i]->vfs_ea_set(vol, uname, attruname, ibuf,
-                           attrsize, oflag, fd);
+                                                           attrsize, oflag, fd);
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;
@@ -1108,7 +1108,7 @@ static int vfs_ea_remove(const struct vol *vol, const char *uname,
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_remove) {
             int curr_ret = vol->vfs_modules[i]->vfs_ea_remove(vol, uname, attruname, oflag,
-                           fd);
+                                                              fd);
 
             if (curr_ret != AFP_OK) {
                 ret = curr_ret;

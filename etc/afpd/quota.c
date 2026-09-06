@@ -738,7 +738,7 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
         *btotal = *bfree = ~((VolSpace) 0);
     } else if (overquota(&dqblk)) {
         if (tobytes(dqblk.dqb_curblocks, this_bsize) > tobytes(dqblk.dqb_bsoftlimit,
-                this_bsize)) {
+                                                               this_bsize)) {
             *btotal = tobytes(dqblk.dqb_curblocks, this_bsize);
             *bfree = 0;
         } else {

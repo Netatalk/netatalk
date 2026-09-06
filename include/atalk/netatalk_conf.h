@@ -27,7 +27,7 @@ extern int        load_afp_conf_vols(AFPObj *obj, lv_flags_t flags);
 extern void       unload_volumes(AFPObj *obj);
 extern struct vol *getvolumes(void);
 extern int        conf_cnid_scheme_in_use(const AFPObj *obj,
-        const char *scheme);
+                                          const char *scheme);
 extern struct vol *getvolbyvid(const uint16_t);
 extern struct vol *getvolbypath(AFPObj *obj, const char *path);
 extern struct vol *getvolbyname(const char *name);
@@ -37,7 +37,7 @@ extern void       volume_unlink(struct vol *volume);
 #define NETATALK_READBUF_LIMIT ((uint64_t)1 << 30)
 
 extern int        netatalk_readbuf_clamp(int readbuf, uint32_t quantum,
-        uint64_t limit);
+                                         uint64_t limit);
 
 /* Extension type/creator mapping */
 struct extmap *getdefextmap(void);

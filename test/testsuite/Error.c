@@ -898,7 +898,7 @@ STATIC void test95()
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name2))
     /* sdid bad */
     FAIL(ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, dir, DIRDID_ROOT, name,
-            name1))
+                                               name1))
     /* name bad */
     ret = FPExchangeFile(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1);
 
@@ -936,7 +936,7 @@ STATIC void test95()
 
     if (fork) {
         if (ntohl(AFPERR_DENYCONF) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol,
-                DIRDID_ROOT, name, "", name1)) {
+                                                 DIRDID_ROOT, name, "", name1)) {
             fprintf(stdout, "\tFAILED\n");
         }
 
@@ -946,7 +946,7 @@ STATIC void test95()
 #endif
     /* sdid bad */
     FAIL(ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, DIRDID_ROOT, dir, name,
-            name1))
+                                               name1))
     /* name bad */
     ret = FPExchangeFile(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1);
 
@@ -956,10 +956,10 @@ STATIC void test95()
 
     /* same object */
     FAIL(ntohl(AFPERR_SAMEOBJ) != FPExchangeFile(Conn, vol, DIRDID_ROOT,
-            DIRDID_ROOT, name, name))
+                                                 DIRDID_ROOT, name, name))
     /* a dir */
     FAIL(ntohl(AFPERR_BADTYPE) != FPExchangeFile(Conn, vol, DIRDID_ROOT,
-            DIRDID_ROOT, name, ""))
+                                                 DIRDID_ROOT, name, ""))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1))
     FAIL(FPExchangeFile(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
     delete_folder(vol, DIRDID_ROOT, pname);
@@ -1011,14 +1011,14 @@ STATIC void test100()
     ENTER_TEST
     dt = FPOpenDT(Conn, vol);
     FAIL(ntohl(AFPERR_NOOBJ) != FPAddComment(Conn, vol, DIRDID_ROOT, name1,
-            "essai"))
+                                             "essai"))
     FAIL(ntohl(AFPERR_NOOBJ) != FPGetComment(Conn, vol, DIRDID_ROOT, name1))
     FAIL(ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, DIRDID_ROOT, name1))
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
     filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetDirParms(Conn, vol, DIRDID_ROOT, name1, bitmap,
-            &filedir))
+                                              &filedir))
 
     if ((dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_failed();
@@ -1063,18 +1063,18 @@ STATIC void test100()
 
     /* FIXME ? */
     if (ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, DIRDID_ROOT, DIRDID_ROOT,
-            name1, name)) {
+                                              name1, name)) {
         test_failed();
     }
 
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name1,
-            bitmap, &filedir))
+                                                bitmap, &filedir))
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, DIRDID_ROOT, name1,
-            bitmap, &filedir))
+                                                 bitmap, &filedir))
     FAIL(ntohl(AFPERR_NOOBJ) != FPRename(Conn, vol, DIRDID_ROOT, name1, name))
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT, name1))
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT,
-            name1, name))
+                                                name1, name))
     exit_test("Error:test100: no obj cname error (AFPERR_NOOBJ)");
 }
 
@@ -1105,7 +1105,7 @@ STATIC void test101()
 
     dt = FPOpenDT(Conn, vol);
     FAIL(ntohl(AFPERR_ACCESS) != FPAddComment(Conn, vol, DIRDID_ROOT, name1,
-            "essai"))
+                                              "essai"))
     ret = FPGetComment(Conn, vol, DIRDID_ROOT, name1);
 
     if (not_valid(ret, /* MAC */AFPERR_NOOBJ, AFPERR_ACCESS)) {
@@ -1117,7 +1117,7 @@ STATIC void test101()
     filedir.isdir = 1;
     filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
     FAIL(ntohl(AFPERR_ACCESS) != FPSetDirParms(Conn, vol, DIRDID_ROOT, name1,
-            bitmap, &filedir))
+                                               bitmap, &filedir))
 
     if ((dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_failed();
@@ -1164,11 +1164,11 @@ STATIC void test101()
     }
 
     FAIL(ntohl(AFPERR_ACCESS) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name1,
-            bitmap, &filedir))
+                                                 bitmap, &filedir))
     FAIL(ntohl(AFPERR_ACCESS) != FPRename(Conn, vol, DIRDID_ROOT, name1, name))
     FAIL(ntohl(AFPERR_ACCESS) != FPDelete(Conn, vol, DIRDID_ROOT, name1))
     FAIL(ntohl(AFPERR_ACCESS) != FPMoveAndRename(Conn, vol, DIRDID_ROOT,
-            DIRDID_ROOT, name1, name))
+                                                 DIRDID_ROOT, name1, name))
     delete_folder(vol, DIRDID_ROOT, ndir);
 test_exit:
     exit_test("Error:test101: access error cname");
@@ -1231,7 +1231,7 @@ STATIC void test102()
     filedir.isdir = 1;
     filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
     FAIL(ntohl(AFPERR_ACCESS) != FPSetDirParms(Conn, vol, DIRDID_ROOT, name1,
-            bitmap, &filedir))
+                                               bitmap, &filedir))
 
     if ((dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_failed();
@@ -1265,7 +1265,7 @@ STATIC void test102()
     }
 
     FAIL(ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol,
-            DIRDID_ROOT, name1, "", name))
+                                             DIRDID_ROOT, name1, "", name))
 
     if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
         FAIL(ntohl(AFPERR_BADTYPE) != FPCreateID(Conn, vol, DIRDID_ROOT, name1))
@@ -1278,7 +1278,7 @@ STATIC void test102()
     }
 
     FAIL(ntohl(AFPERR_BADTYPE) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name1,
-            bitmap, &filedir))
+                                                  bitmap, &filedir))
 
     if (FPRename(Conn, vol, DIRDID_ROOT, name1, name)) {
 #if 0
@@ -1627,7 +1627,7 @@ STATIC void test170()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_PARAM) != FPSetFileParams(Conn, vol, DIRDID_ROOT_PARENT, "",
-                bitmap, &filedir))
+                                                    bitmap, &filedir))
     }
 
     /* -------------------- */
@@ -1672,7 +1672,7 @@ STATIC void test170()
     /* ---- directory.c ---- */
     filedir.isdir = 1;
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetDirParms(Conn, vol, DIRDID_ROOT_PARENT, "",
-            bitmap, &filedir))
+                                              bitmap, &filedir))
     /* ---------------- */
     dir  = FPCreateDir(Conn, vol, DIRDID_ROOT_PARENT, "");
 
@@ -1692,10 +1692,10 @@ STATIC void test170()
     /* ---- filedir.c ---- */
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT_PARENT, "",
-            0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_UID) |
-            (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
+                                                  0,
+                                                  (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_UID) |
+                                                  (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
        ) {
         test_failed();
         goto test_exit;
@@ -1710,7 +1710,7 @@ STATIC void test170()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
         if (ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, DIRDID_ROOT_PARENT, "",
-                bitmap, &filedir)) {
+                                                    bitmap, &filedir)) {
             test_failed();
             goto test_exit;
         }
@@ -1722,10 +1722,10 @@ STATIC void test170()
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT_PARENT, ""))
     /* ---------------- */
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT_PARENT,
-            DIRDID_ROOT, "", name1))
+                                                DIRDID_ROOT, "", name1))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT,
-            DIRDID_ROOT_PARENT, name, ""))
+                                                DIRDID_ROOT_PARENT, name, ""))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 
     /* ---- enumerate.c ---- */
@@ -1745,7 +1745,7 @@ STATIC void test170()
     /* ---- desktop.c ---- */
     dt = FPOpenDT(Conn, vol);
     FAIL(ntohl(AFPERR_NOOBJ) != FPAddComment(Conn, vol, DIRDID_ROOT_PARENT, "",
-            "Comment"))
+                                             "Comment"))
     FAIL(ntohl(AFPERR_NOOBJ) != FPGetComment(Conn, vol, DIRDID_ROOT_PARENT, ""))
     FAIL(ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, DIRDID_ROOT_PARENT, ""))
     FAIL(FPCloseDT(Conn, dt))
@@ -1802,7 +1802,7 @@ STATIC void test171()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                    &filedir))
     }
 
     /* -------------------- */
@@ -1834,13 +1834,13 @@ STATIC void test171()
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1))
     FAIL(ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, tdir, dir, tname, name1))
     FAIL(ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                               tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
     /* ---- directory.c ---- */
     filedir.isdir = 1;
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetDirParms(Conn, vol, tdir, tname, bitmap,
-            &filedir))
+                                              &filedir))
     /* ---------------- */
     dir  = FPCreateDir(Conn, vol, tdir, tname);
 
@@ -1854,9 +1854,9 @@ STATIC void test171()
     /* ---- filedir.c ---- */
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, tdir, tname, 0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_UID) |
-            (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
+                                                  (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_UID) |
+                                                  (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
        ) {
         test_failed();
     }
@@ -1868,7 +1868,7 @@ STATIC void test171()
         filedir.isdir = 1;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                     &filedir))
     }
 
     /* ---------------- */
@@ -1877,10 +1877,10 @@ STATIC void test171()
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, tdir, tname))
     /* ---------------- */
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, tdir, DIRDID_ROOT, tname,
-            name1))
+                                                name1))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                                tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     /* ---- enumerate.c ---- */
     ret = FPEnumerate(Conn, vol, tdir, tname,
@@ -1956,7 +1956,7 @@ STATIC void test173()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_PARAM) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                    &filedir))
     }
 
     /* -------------------- */
@@ -1990,13 +1990,13 @@ STATIC void test173()
     }
 
     FAIL(ntohl(AFPERR_PARAM) != FPExchangeFile(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                               tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
     /* ---- directory.c ---- */
     filedir.isdir = 1;
     FAIL(ntohl(AFPERR_PARAM) != FPSetDirParms(Conn, vol, tdir, tname, bitmap,
-            &filedir))
+                                              &filedir))
     /* ---------------- */
     dir  = FPCreateDir(Conn, vol, tdir, tname);
 
@@ -2016,9 +2016,9 @@ STATIC void test173()
     /* ---- filedir.c ---- */
 
     if (ntohl(AFPERR_PARAM) != FPGetFileDirParams(Conn, vol, tdir, tname, 0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_UID) |
-            (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
+                                                  (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_UID) |
+                                                  (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
        ) {
         test_failed();
         goto test_exit;
@@ -2032,7 +2032,7 @@ STATIC void test173()
         filedir.isdir = 1;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_PARAM) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                     &filedir))
     }
 
     /* ---------------- */
@@ -2041,10 +2041,10 @@ STATIC void test173()
     FAIL(ntohl(AFPERR_PARAM) != FPDelete(Conn, vol, tdir, tname))
     /* ---------------- */
     FAIL(ntohl(AFPERR_PARAM) != FPMoveAndRename(Conn, vol, tdir, DIRDID_ROOT, tname,
-            name1))
+                                                name1))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(ntohl(AFPERR_PARAM) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                                tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 
     /* ---- enumerate.c ---- */
@@ -2150,7 +2150,7 @@ STATIC void test174()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                    &filedir))
     }
 
     /* -------------------- */
@@ -2193,13 +2193,13 @@ STATIC void test174()
     }
 
     FAIL(ntohl(AFPERR_NOOBJ) != FPExchangeFile(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                               tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
     /* ---- directory.c ---- */
     filedir.isdir = 1;
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetDirParms(Conn, vol, tdir, tname, bitmap,
-            &filedir))
+                                              &filedir))
     /* ---------------- */
     dir  = FPCreateDir(Conn, vol, tdir, tname);
 
@@ -2217,9 +2217,9 @@ STATIC void test174()
     /* ---- filedir.c ---- */
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, tdir, tname, 0,
-            (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-            (1 << DIRPBIT_UID) |
-            (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
+                                                  (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                                                  (1 << DIRPBIT_UID) |
+                                                  (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS))
        ) {
         test_failed();
     }
@@ -2231,7 +2231,7 @@ STATIC void test174()
         filedir.isdir = 1;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
-                &filedir))
+                                                     &filedir))
     }
 
     /* ---------------- */
@@ -2240,10 +2240,10 @@ STATIC void test174()
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, tdir, tname))
     /* ---------------- */
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, tdir, DIRDID_ROOT, tname,
-            name1))
+                                                name1))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(ntohl(AFPERR_NOOBJ) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, tdir, name,
-            tname))
+                                                tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 
     /* ---- enumerate.c ---- */

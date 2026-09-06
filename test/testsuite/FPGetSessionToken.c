@@ -42,8 +42,8 @@ STATIC void test220()
 
     if (Conn->afp_version < 30) {
         if (ntohl(AFPERR_NOOP) != FPEnumerate_ext(Conn, vol, DIRDID_ROOT, "",
-                (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
-                | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN), 0xffff)) {
+                                                  (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
+                                                  | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN), 0xffff)) {
             test_failed();
         }
 

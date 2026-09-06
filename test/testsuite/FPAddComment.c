@@ -98,7 +98,7 @@ STATIC void test55()
 #if 0
 
     if (ntohl(AFPERR_ACCESS) != FPAddComment(Conn, vol, DIRDID_ROOT,
-            "bogus folder", "essai")) {
+                                             "bogus folder", "essai")) {
         fprintf(stdout, "\tFAILED\n");
         return;
     }

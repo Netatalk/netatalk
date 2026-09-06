@@ -113,10 +113,10 @@ const char *uamtest_libafpclient_resolve_uam(const char *uam)
 }
 
 unsigned int uamtest_libafpclient_discover_uams(const char *host, int port,
-        int afp_version,
-        const char *user,
-        const char *password,
-        bool *known)
+                                                int afp_version,
+                                                const char *user,
+                                                const char *password,
+                                                bool *known)
 {
     struct afp_connection_request req;
     struct afp_server *server;
