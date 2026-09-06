@@ -822,7 +822,6 @@ static void cname_test(char *name)
         test_failed();
     }
 
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FAIL(FPEnumerate(Conn, vol, DIRDID_ROOT, "", 0, bitmap))
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap)) {
@@ -1034,7 +1033,6 @@ STATIC void test100()
         test_failed();
     }
 
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     ret = FPEnumerate(Conn, vol, DIRDID_ROOT, name1,
                       (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                       (1 << FILPBIT_FINFO) |
@@ -1134,7 +1132,6 @@ STATIC void test101()
         test_failed();
     }
 
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     ret = FPEnumerate(Conn, vol, DIRDID_ROOT, name1,
                       (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                       (1 << FILPBIT_FINFO) |
@@ -1254,8 +1251,6 @@ STATIC void test102()
     if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
         test_failed();
     }
-
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
 
     if (ntohl(AFPERR_ACCESS) != FPEnumerate(Conn, vol, DIRDID_ROOT, name1,
                                             (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
@@ -1389,7 +1384,6 @@ STATIC void test103()
         test_failed();
     }
 
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     ret = FPEnumerate(Conn, vol, dir, "",
                       (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                       (1 << FILPBIT_FINFO) |
@@ -1555,8 +1549,6 @@ STATIC void test105()
     if (dir || err != dsi->header.dsi_code) {
         test_failed();
     }
-
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
 
     if (err  != FPEnumerate(Conn, vol, dir, name1,
                             (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
@@ -1737,7 +1729,6 @@ STATIC void test170()
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 
     /* ---- enumerate.c ---- */
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (ntohl(AFPERR_NOOBJ) != FPEnumerate(Conn, vol, DIRDID_ROOT_PARENT, "",
                                            (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                                            (1 << FILPBIT_FINFO) |
@@ -1892,7 +1883,6 @@ STATIC void test171()
             tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     /* ---- enumerate.c ---- */
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     ret = FPEnumerate(Conn, vol, tdir, tname,
                       (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                       (1 << FILPBIT_FINFO) |
@@ -2058,7 +2048,6 @@ STATIC void test173()
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 
     /* ---- enumerate.c ---- */
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (ntohl(AFPERR_PARAM) != FPEnumerate(Conn, vol, tdir, tname,
                                            (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                                            (1 << FILPBIT_FINFO) |
@@ -2258,7 +2247,6 @@ STATIC void test174()
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 
     /* ---- enumerate.c ---- */
-    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (ntohl(AFPERR_NODIR) != FPEnumerate(Conn, vol, tdir, tname,
                                            (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                                            (1 << FILPBIT_FINFO) |
