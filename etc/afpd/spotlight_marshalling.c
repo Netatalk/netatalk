@@ -438,7 +438,7 @@ static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf,
     }
 
     octets = (int)((len / 8) + (len & 7 ? 1 : 0));
-    used_in_last_octet = 8 - (octets * 8 - len);
+    used_in_last_octet = len % 8 ? (int)(len % 8) : 8;
     EC_ZERO(slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC,
                    sl_pack_tag(SQ_CPX_TYPE_STRING, (offset + SL_OFFSET_DELTA) / 8,
                                used_in_last_octet)));
