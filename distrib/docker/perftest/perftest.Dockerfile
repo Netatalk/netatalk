@@ -6,7 +6,7 @@
 #   docker build -f distrib/docker/perftest/perftest.Dockerfile \
 #       --build-arg BASE_IMAGE=netatalk-testsuite -t netatalk-perftest .
 
-ARG BASE_IMAGE=netatalk-testsuite
+ARG BASE_IMAGE
 
 FROM ${BASE_IMAGE}
 
