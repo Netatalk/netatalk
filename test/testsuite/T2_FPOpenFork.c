@@ -1633,9 +1633,7 @@ STATIC void test431()
         }
     }
 
-    /* Enumerate triggers v2→EA conversion (if 'convert appledouble = yes').
-     * NB: FPEnumerate* uses dsi_data_receive (should be normalised).
-     * See afphelper.c:delete_directory_tree() */
+    /* Enumerate triggers v2→EA conversion (if 'convert appledouble = yes'). */
     if (FPEnumerate_ext2(Conn, vol, DIRDID_ROOT, "",
                          (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN),
                          (1 << DIRPBIT_PDINFO) | (1 << DIRPBIT_OFFCNT))) {

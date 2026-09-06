@@ -1185,8 +1185,10 @@ unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did)
 }
 
 /* -------------------------------
-* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
-*/
+ * FPEnumerate* replies are stored in conn->dsi.data; conn->dsi.cmdlen is
+ * their length. Copy a reply before issuing another command that receives
+ * into dsi.data.
+ */
 unsigned int FPEnumerate(CONN *conn,
                          uint16_t vol,
                          int did,
@@ -1248,8 +1250,10 @@ unsigned int FPEnumerate(CONN *conn,
 
 
 /* -------------------------------
-* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
-*/
+ * FPEnumerate* replies are stored in conn->dsi.data; conn->dsi.cmdlen is
+ * their length. Copy a reply before issuing another command that receives
+ * into dsi.data.
+ */
 unsigned int FPEnumerateFull(CONN *conn,
                              uint16_t vol,
                              uint16_t sindex,
@@ -1465,8 +1469,10 @@ unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap)
     return dsi->header.dsi_code;
 }
 /* -------------------------------
-* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
-*/
+ * FPEnumerate* replies are stored in conn->dsi.data; conn->dsi.cmdlen is
+ * their length. Copy a reply before issuing another command that receives
+ * into dsi.data.
+ */
 unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
                              uint16_t f_bitmap, uint16_t d_bitmap)
 {
@@ -1530,8 +1536,10 @@ unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
 }
 
 /* -------------------------------
-* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
-*/
+ * FPEnumerate* replies are stored in conn->dsi.data; conn->dsi.cmdlen is
+ * their length. Copy a reply before issuing another command that receives
+ * into dsi.data.
+ */
 unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did, char *name,
                               uint16_t f_bitmap, uint16_t d_bitmap)
 {
@@ -1596,8 +1604,10 @@ unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did, char *name,
 }
 
 /* -------------------------------
-* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
-*/
+ * FPEnumerate* replies are stored in conn->dsi.data; conn->dsi.cmdlen is
+ * their length. Copy a reply before issuing another command that receives
+ * into dsi.data.
+ */
 unsigned int FPEnumerateExt2Full(CONN *conn,
                                  uint16_t vol,
                                  uint32_t did,
