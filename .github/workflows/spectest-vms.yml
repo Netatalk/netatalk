@@ -21,6 +21,9 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: read
+
 env:
   CMARK_TARBALL_URL: https://github.com/commonmark/cmark/archive/refs/tags/0.31.2.tar.gz
   INIPARSER_TARBALL_URL: https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
@@ -35,7 +38,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -128,7 +130,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -218,7 +219,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -316,7 +316,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -409,7 +408,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -499,7 +497,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -603,7 +600,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -701,7 +697,6 @@ jobs:
     timeout-minutes: 24
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

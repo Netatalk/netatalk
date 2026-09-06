@@ -262,7 +262,6 @@ jobs:
     if: ${{ !github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Lower ASLR entropy for TSAN shadow-memory compatibility
         run: sudo sysctl vm.mmap_rnd_bits=28
@@ -362,7 +361,6 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
     permissions:
       contents: write
-      checks: write
     outputs:
       self_time: ${{ steps.flamegraph-summary.outputs.SELF_TIME }}
       self_time_warning: ${{ steps.flamegraph-summary.outputs.SELF_TIME_WARNING }}
@@ -492,7 +490,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Create Docker network
         run: |
@@ -561,7 +558,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Create container network
         run: |
@@ -643,7 +639,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Create Docker network
         run: |
@@ -710,7 +705,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Create container network
         run: |
@@ -770,7 +764,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -814,7 +807,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -880,7 +872,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -923,7 +914,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -966,7 +956,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1008,7 +997,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1054,7 +1042,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1098,7 +1085,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1141,7 +1127,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1184,7 +1169,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1226,7 +1210,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1268,7 +1251,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1310,7 +1292,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1353,7 +1334,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1396,7 +1376,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1439,7 +1418,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1482,7 +1460,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1524,7 +1501,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1566,7 +1542,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1608,7 +1583,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1652,7 +1626,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1696,7 +1669,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1734,7 +1706,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1772,7 +1743,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -1810,7 +1780,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite
         run: |
@@ -2509,7 +2478,6 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
       contents: read
-      checks: write
     steps:
       - name: Run Netatalk testsuite with ARC stress test
         run: |

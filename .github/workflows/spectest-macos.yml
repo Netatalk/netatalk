@@ -16,7 +16,6 @@ on:
 
 permissions:
   contents: read
-  checks: write
 
 env:
   AFP_USER: atalk1
