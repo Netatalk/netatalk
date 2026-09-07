@@ -175,9 +175,6 @@
 
 typedef struct CONN {
     DSI	dsi;
-#if 0
-    ASP asp;
-#endif
     int type;
     int afp_version;
 
@@ -201,9 +198,6 @@ int dsi_data_receive(DSI *x);
 void SendInit(DSI *dsi);
 void SetLen(DSI *dsi, int ofs);
 
-/* from
-   modified
- */
 /* Files and directories */
 struct afp_filedir_parms {
     int isdir;
@@ -218,11 +212,10 @@ struct afp_filedir_parms {
     uint64_t ext_rflen;
     uint16_t offcnt;
     uint32_t uid, gid;
-    uint32_t unix_priv;   /* FIXME what if mode_t != uint32_t */
-    uint8_t access[4];    /*!< Access bits */
-    uint8_t pdinfo[6];    /*!< ProDOS info... */
-    /* FIXME: Finder info ! */
-    char finder_info[32];
+    uint32_t unix_priv;   /*!< AFP FPUnixPrivs permissions */
+    uint8_t access[4];    /*!< AFP FPUnixPrivs ua_permissions */
+    uint8_t pdinfo[6];    /*!< ProDOS info bit (AFP 2.2) */
+    char finder_info[ADEDLEN_FINDERI]; /*!< FinderInfo opaque byte record */
     int  name_type;
     char *lname;
     char *sname;
@@ -230,8 +223,6 @@ struct afp_filedir_parms {
 };
 
 struct afp_volume_parms {
-    /* FIXME: keep state across calls here (OPENED/CLOSED) */
-    uint8_t state;
     uint8_t flags;
     uint16_t attr;
     uint16_t sig;
