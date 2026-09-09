@@ -32,6 +32,7 @@
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/queue.h>
+#include <atalk/unicode.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
@@ -73,6 +74,66 @@ static char *args[] = {"test", "-F", confpath};
 int test_output_tap = 0;
 int test_case_num = 0;
 FILE *test_report_stream = NULL;
+
+static int utest_decompose_reserves_terminator(void)
+{
+    ucs2_t input[] = {0x01d5}; /* U with diaeresis and macron */
+    ucs2_t exact_fit[] = {0xa5a5, 0xa5a5, 0xa5a5};
+    ucs2_t sufficient[4] = {0, 0, 0, 0};
+    ucs2_t surrogate_input[] = {0xd800, 0xdc00};
+    ucs2_t surrogate_exact_fit[] = {0xa5a5, 0xa5a5};
+    ucs2_t surrogate_sufficient[3] = {0, 0, 0};
+    size_t outlen;
+    int saved_errno = errno;
+    int result = -1;
+    outlen = sizeof(exact_fit);
+    errno = 0;
+
+    if (decompose_w(input, sizeof(input), exact_fit, &outlen)
+            != (size_t) -1
+            || errno != E2BIG
+            || exact_fit[0] != 0xa5a5
+            || exact_fit[1] != 0xa5a5
+            || exact_fit[2] != 0xa5a5) {
+        goto done;
+    }
+
+    outlen = sizeof(sufficient);
+
+    if (decompose_w(input, sizeof(input), sufficient, &outlen) != 6
+            || sufficient[0] != 0x0055
+            || sufficient[1] != 0x0308
+            || sufficient[2] != 0x0304
+            || sufficient[3] != 0) {
+        goto done;
+    }
+
+    outlen = sizeof(surrogate_exact_fit);
+    errno = 0;
+
+    if (decompose_w(surrogate_input, sizeof(surrogate_input),
+                    surrogate_exact_fit, &outlen) != (size_t) -1
+            || errno != E2BIG
+            || surrogate_exact_fit[0] != 0xa5a5
+            || surrogate_exact_fit[1] != 0xa5a5) {
+        goto done;
+    }
+
+    outlen = sizeof(surrogate_sufficient);
+
+    if (decompose_w(surrogate_input, sizeof(surrogate_input),
+                    surrogate_sufficient, &outlen) != 4
+            || surrogate_sufficient[0] != 0xd800
+            || surrogate_sufficient[1] != 0xdc00
+            || surrogate_sufficient[2] != 0) {
+        goto done;
+    }
+
+    result = 0;
+done:
+    errno = saved_errno;
+    return result;
+}
 
 #ifdef WITH_SPOTLIGHT
 static uint64_t spotlight_test_get_le64(const char *buf, size_t offset)
@@ -579,6 +640,8 @@ int main(int argc, char *argv[])
      * fail with ENXIO and every LOG() is silently dropped.  stderr is captured. */
     TEST(setuplog("default:note", "/dev/stderr", true),
          "init logging to stderr");
+    TEST_int(utest_decompose_reserves_terminator(), 0,
+             "decompose_w reserves space for its UTF-16 terminator");
     /* DSI unit tests: frame acceptance, write handoff, quantum shaping. */
     TEST_int(utest_dsi_receive_accepts_full_quantum_write(DSI_WROFF_FPWRITE), 0,
              "dsi_stream_receive accepts full-quantum FPWrite in one record");

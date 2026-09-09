@@ -710,7 +710,8 @@ size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
                     comb[COMBBUFLEN - comblen + 1] = result_sp & 0xFFFF;    /* lo */
                 } while (comblen < MAXCOMBSPLEN);
 
-                if (*outlen < (comblen + 1) << 1) {
+                /* Reserve space for the lower code unit and terminator below. */
+                if (*outlen < (comblen + 3) << 1) {
                     errno = E2BIG;
                     return (size_t) -1;
                 }
@@ -736,7 +737,8 @@ size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
             } while ((0x007f < base) && (comblen < MAXCOMBLEN));
         }
 
-        if (*outlen < (comblen + 1) << 1) {
+        /* Reserve space for the UTF-16 terminator below. */
+        if (*outlen < (comblen + 2) << 1) {
             errno = E2BIG;
             return (size_t) -1;
         }
