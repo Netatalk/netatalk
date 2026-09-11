@@ -34,6 +34,13 @@ There are two invocation styles:
 
 The named user must already exist as a local system user.
 
+For safety, existing credential files and Randnum key files must be regular
+files owned by the account running **afppasswd**, must have exactly one hard
+link, and must not be accessible by group or other. Symbolic links are not
+followed. When a setuid-root invocation is initiated by a regular user, every
+directory in the configured credential path must also be root-owned and not
+writable by group or other.
+
 > ***NOTE:*** The legacy Randnum and 2-Way Randnum UAMs only provide
 weak password protection and are discouraged. They should only be enabled
 to support very old AFP clients that cannot use SRP, DHX, or DHX2.
