@@ -17,11 +17,13 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
@@ -29,6 +31,7 @@
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <bstrlib.h>
 
@@ -63,6 +66,7 @@
 
 /* forward declarations */
 static pid_t run_process(const char *path, ...);
+static pid_t run_afpd(void);
 static void kill_childs(int sig, ...);
 static void netatalk_exit(int ret);
 
@@ -90,6 +94,10 @@ struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *sighup_ev, *timer_ev;
 static int in_shutdown;
 static const char *dbus_path _U_;
 
+/* The lock path is normally compiled in for a system service. In rootless
+ * mode it is supplied by the caller and must live in private user state. */
+static const char *lockfile_path = PATH_NETATALK_LOCK;
+
 /******************************************************************
  * Misc stuff
  ******************************************************************/
@@ -101,6 +109,214 @@ static bool service_running(pid_t pid)
     }
 
     return false;
+}
+
+static bool srp_is_the_only_uam(const char *uamlist)
+{
+    const unsigned char *p = (const unsigned char *)uamlist;
+    size_t count = 0;
+
+    if (p == NULL) {
+        return false;
+    }
+
+    while (*p != '\0') {
+        const unsigned char *start;
+        size_t len;
+
+        while (*p != '\0' && (isspace(*p) || *p == ',')) {
+            p++;
+        }
+
+        if (*p == '\0') {
+            break;
+        }
+
+        start = p;
+
+        while (*p != '\0' && !isspace(*p) && *p != ',') {
+            p++;
+        }
+
+        len = (size_t)(p - start);
+
+        if (len != strlen("uams_srp.so") || strncmp((const char *)start,
+                "uams_srp.so", len) != 0) {
+            return false;
+        }
+
+        count++;
+    }
+
+    return count == 1;
+}
+
+static bool dbpath_parent_is_writable(const char *path)
+{
+    char parent[MAXPATHLEN];
+    char *slash;
+    size_t len;
+
+    if (path == NULL || strlcpy(parent, path, sizeof(parent)) >= sizeof(parent)) {
+        return false;
+    }
+
+    len = strlen(parent);
+
+    while (len > 1 && parent[len - 1] == '/') {
+        parent[--len] = '\0';
+    }
+
+    slash = strrchr(parent, '/');
+
+    if (slash == NULL) {
+        strlcpy(parent, ".", sizeof(parent));
+    } else if (slash == parent) {
+        parent[1] = '\0';
+    } else {
+        *slash = '\0';
+    }
+
+    return access(parent, W_OK | X_OK) == 0;
+}
+
+static bool pidfile_path_is_private(const char *path)
+{
+    char parent[MAXPATHLEN];
+    char *slash;
+    struct stat st;
+    size_t len;
+
+    if (path == NULL || strlcpy(parent, path, sizeof(parent)) >= sizeof(parent)) {
+        return false;
+    }
+
+    len = strlen(parent);
+
+    while (len > 1 && parent[len - 1] == '/') {
+        parent[--len] = '\0';
+    }
+
+    slash = strrchr(parent, '/');
+
+    if (slash == NULL) {
+        strlcpy(parent, ".", sizeof(parent));
+    } else if (slash == parent) {
+        parent[1] = '\0';
+    } else {
+        *slash = '\0';
+    }
+
+    if (stat(parent, &st) != 0 || !S_ISDIR(st.st_mode) || st.st_uid != getuid()
+            || (st.st_mode & 0077) != 0) {
+        return false;
+    }
+
+    if (lstat(path, &st) == 0) {
+        return S_ISREG(st.st_mode) && st.st_uid == getuid();
+    }
+
+    return errno == ENOENT;
+}
+
+static int validate_unprivileged_config(void)
+{
+    struct stat st;
+    uid_t uid = getuid();
+
+    if (obj.options.flags & OPTION_DDP) {
+        fprintf(stderr, "netatalk: --unprivileged does not support AppleTalk.\n");
+        return -1;
+    }
+
+    if (obj.options.flags & OPTION_AFPSTATS) {
+        fprintf(stderr, "netatalk: --unprivileged does not support afpstats.\n");
+        return -1;
+    }
+
+    if (obj.options.force_user || obj.options.force_group
+            || obj.options.admingid != 0) {
+        fprintf(stderr,
+                "netatalk: --unprivileged does not support admin or forced identities.\n");
+        return -1;
+    }
+
+    if (obj.options.signatureopt == NULL || obj.options.signatureopt[0] == '\0') {
+        fprintf(stderr,
+                "netatalk: --unprivileged requires an explicit [Global] signature.\n");
+        return -1;
+    }
+
+    if (!srp_is_the_only_uam(obj.options.uamlist)) {
+        fprintf(stderr,
+                "netatalk: --unprivileged requires 'uam list = uams_srp.so'.\n");
+        return -1;
+    }
+
+    if (stat(obj.options.configfile, &st) != 0 || st.st_uid != uid
+            || (st.st_mode & 0022) != 0) {
+        fprintf(stderr,
+                "netatalk: --unprivileged requires a configuration file owned by the calling user and not writable by group or others.\n");
+        return -1;
+    }
+
+    if (stat(obj.options.srppasswdfile, &st) != 0 || !S_ISREG(st.st_mode)
+            || st.st_uid != uid || (st.st_mode & 0077) != 0) {
+        fprintf(stderr,
+                "netatalk: --unprivileged requires a mode-0600 SRP verifier file owned by the calling user.\n");
+        return -1;
+    }
+
+    if (INIPARSER_GETSTR(obj.iniconfig, INISEC_HOMES, "basedir regex",
+                         NULL) != NULL) {
+        fprintf(stderr, "netatalk: --unprivileged does not support [Homes] volumes.\n");
+        return -1;
+    }
+
+    if (!volumes_loaded || getvolumes() == NULL) {
+        fprintf(stderr,
+                "netatalk: --unprivileged requires at least one static volume.\n");
+        return -1;
+    }
+
+    for (const struct vol *vol = getvolumes(); vol != NULL; vol = vol->v_next) {
+        if (vol->v_cnidscheme == NULL || strcasecmp(vol->v_cnidscheme, "sqlite") != 0) {
+            fprintf(stderr, "netatalk: --unprivileged volume '%s' must use sqlite CNID.\n",
+                    vol->v_localname);
+            return -1;
+        }
+
+        if (vol->v_uuid == NULL || vol->v_uuid[0] == '\0') {
+            fprintf(stderr,
+                    "netatalk: --unprivileged volume '%s' requires an explicit volume uuid.\n",
+                    vol->v_localname);
+            return -1;
+        }
+
+        if (vol->v_flags & AFPVOL_SPOTLIGHT) {
+            fprintf(stderr,
+                    "netatalk: --unprivileged does not support Spotlight on volume '%s'.\n",
+                    vol->v_localname);
+            return -1;
+        }
+
+        if (access(vol->v_path, R_OK | X_OK) != 0
+                || (!(vol->v_flags & AFPVOL_RO) && access(vol->v_path, W_OK | X_OK) != 0)) {
+            fprintf(stderr,
+                    "netatalk: --unprivileged cannot access volume '%s' as the calling user.\n",
+                    vol->v_localname);
+            return -1;
+        }
+
+        if (!dbpath_parent_is_writable(vol->v_dbpath)) {
+            fprintf(stderr,
+                    "netatalk: --unprivileged requires a writable parent directory for vol dbpath of volume '%s'.\n",
+                    vol->v_localname);
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
@@ -387,6 +603,12 @@ static void sigquit_impl(void)
 /*! SIGHUP implementation */
 static void sighup_impl(void)
 {
+    if (obj.cmdlineflags & OPTION_UNPRIVILEGED) {
+        LOG(log_note, logtype_afpd,
+            "Ignoring SIGHUP: configuration reload is disabled in unprivileged mode");
+        return;
+    }
+
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
 
@@ -471,8 +693,7 @@ static void timer_impl(void)
         afpd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
 
-        if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile,
-                                    NULL)) == -1) {
+        if ((afpd_pid = run_afpd()) == -1) {
             LOG(log_error, logtype_default, "Error starting 'afpd'");
         }
     }
@@ -633,7 +854,7 @@ static void kill_childs(int sig, ...)
 /*! this get called when error conditions are met that require us to exit gracefully */
 static void netatalk_exit(int ret)
 {
-    server_unlock(PATH_NETATALK_LOCK);
+    server_unlock(lockfile_path);
     exit(ret);
 }
 
@@ -669,6 +890,15 @@ static pid_t run_process(const char *path, ...)
     }
 
     return pid;
+}
+
+static pid_t run_afpd(void)
+{
+    if (obj.cmdlineflags & OPTION_UNPRIVILEGED) {
+        return run_process(_PATH_AFPD, "-d", "-u", "-F", obj.options.configfile, NULL);
+    }
+
+    return run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL);
 }
 
 static void show_netatalk_version(void)
@@ -713,7 +943,8 @@ static void show_netatalk_paths(void)
 
 static void usage(void)
 {
-    printf("usage: netatalk [-F configfile] \n");
+    printf("usage: netatalk [-d] [-F configfile] \n");
+    printf("       netatalk -u -P pidfile [-d] [-F configfile] \n");
     printf("       netatalk -d \n");
     printf("       netatalk -v|-V \n");
 }
@@ -737,7 +968,16 @@ static bool any_volume_uses_localsearch(void)
 
 int main(int argc, char **argv)
 {
-    int c, ret, debug = 0;
+    static const struct option long_options[] = {
+        { "debug",        no_argument,       NULL, 'd' },
+        { "config",       required_argument, NULL, 'F' },
+        { "pidfile",      required_argument, NULL, 'P' },
+        { "unprivileged", no_argument,       NULL, 'u' },
+        { "version",      no_argument,       NULL, 'v' },
+        { NULL,            0,                 NULL,  0  }
+    };
+    int c, ret, debug = 0, unprivileged = 0;
+    const char *pidfile = NULL;
     sigset_t blocksigs;
 #ifndef WITH_LIBEV
     struct timeval tv;
@@ -745,7 +985,7 @@ int main(int argc, char **argv)
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
-    while ((c = getopt(argc, argv, ":dF:vV")) != -1) {
+    while ((c = getopt_long(argc, argv, ":dF:P:uvV", long_options, NULL)) != -1) {
         switch (c) {
         case 'd':
             debug = 1;
@@ -753,6 +993,15 @@ int main(int argc, char **argv)
 
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
+            break;
+
+        case 'P':
+            pidfile = optarg;
+            break;
+
+        case 'u':
+            unprivileged = 1;
+            obj.cmdlineflags |= OPTION_UNPRIVILEGED;
             break;
 
         case 'v':       /* version */
@@ -769,7 +1018,52 @@ int main(int argc, char **argv)
         }
     }
 
-    if (check_lockfile("netatalk", PATH_NETATALK_LOCK) != 0) {
+    if (unprivileged) {
+        if (getuid() == 0 || geteuid() == 0) {
+            fprintf(stderr,
+                    "netatalk: --unprivileged must be started by a non-root user.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (pidfile == NULL || pidfile[0] == '\0') {
+            fprintf(stderr,
+                    "netatalk: --unprivileged requires -P with a PID file in private user state.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        lockfile_path = pidfile;
+
+        if (lockfile_path[0] != '/') {
+            fprintf(stderr,
+                    "netatalk: --unprivileged requires -P with an absolute PID file path.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (!pidfile_path_is_private(lockfile_path)) {
+            fprintf(stderr,
+                    "netatalk: --unprivileged requires -P in a mode-0700 directory owned by the calling user.\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if (getuid() != 0 || geteuid() != 0) {
+        fprintf(stderr,
+                "netatalk: must run as root; use --unprivileged (-u) for a single-user AFP server.\n");
+        exit(EXIT_FAILURE);
+    } else if (pidfile != NULL) {
+        fprintf(stderr, "netatalk: -P is only valid together with --unprivileged.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (afp_config_parse(&obj, "netatalk") != 0) {
+        exit(EXITERR_CONF);
+    }
+
+    volumes_loaded = (load_afp_conf_vols(&obj, LV_ALL) == 0);
+
+    if (unprivileged && validate_unprivileged_config() != 0) {
+        exit(EXITERR_CONF);
+    }
+
+    if (check_lockfile("netatalk", lockfile_path) != 0) {
         exit(EXITERR_SYS);
     }
 
@@ -777,18 +1071,12 @@ int main(int argc, char **argv)
         exit(EXITERR_SYS);
     }
 
-    if (create_lockfile("netatalk", PATH_NETATALK_LOCK) != 0) {
+    if (create_lockfile("netatalk", lockfile_path) != 0) {
         exit(EXITERR_SYS);
     }
 
     sigfillset(&blocksigs);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
-
-    if (afp_config_parse(&obj, "netatalk") != 0) {
-        netatalk_exit(EXITERR_CONF);
-    }
-
-    volumes_loaded = (load_afp_conf_vols(&obj, LV_ALL) == 0);
 #ifdef WITH_LIBEV
     ev_set_syserr_cb(libev_syserr_cb);
 #else
@@ -797,8 +1085,7 @@ int main(int argc, char **argv)
 #endif
     LOG(log_note, logtype_default, "Netatalk AFP server starting");
 
-    if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile,
-                                NULL)) == NETATALK_SRV_ERROR) {
+    if ((afpd_pid = run_afpd()) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'afpd'");
         netatalk_exit(EXITERR_CONF);
     }

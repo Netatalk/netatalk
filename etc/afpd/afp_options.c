@@ -182,7 +182,7 @@ static void show_paths(void)
  */
 static void show_usage(void)
 {
-    fprintf(stderr, "Usage:\tafpd [-d] [-F configfile]\n");
+    fprintf(stderr, "Usage:\tafpd [-du] [-F configfile]\n");
     fprintf(stderr, "\tafpd -h|-v|-V\n");
 }
 
@@ -191,10 +191,14 @@ void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
     int c, err = 0;
     optind = 1;
 
-    while (EOF != (c = getopt(ac, av, "dF:vVh"))) {
+    while (EOF != (c = getopt(ac, av, "duF:vVh"))) {
         switch (c) {
         case 'd':
             obj->cmdlineflags |= OPTION_DEBUG;
+            break;
+
+        case 'u':
+            obj->cmdlineflags |= OPTION_UNPRIVILEGED;
             break;
 
         case 'F':

@@ -69,6 +69,74 @@ For example, when */home* links to */usr/home*:
 For a detailed explanation of all available options,
 refer to the [afp.conf](afp.conf.5.html) man page.
 
+### Running a single-user server without root
+
+Normally **netatalk** is a system service and must run as root. To share
+directories owned by one regular user without granting the server access to
+other accounts, start the controller with **--unprivileged** (**-u**).
+This is an intentionally restricted, single-user mode: every AFP session
+must authenticate as the UNIX user that started the daemon, and all file
+operations use that user's permissions.
+
+The mode is suitable for sharing a home-directory subdirectory to another
+Mac. It is not a replacement for a multi-user system AFP server.
+
+Create private configuration and state directories first. The configuration
+file must be owned by the serving user and must not be writable by group or
+other users. The SRP verifier file and the directory containing the PID file
+should be private to that user (mode 0700 for directories and 0600 for the
+verifier file).
+
+Use the SRP UAM and create its one-user verifier file as that user:
+
+    afppasswd -c -p "$HOME/.config/netatalk/afppasswd.srp"
+
+The command prompts for the AFP password and creates a verifier for the
+calling user only. Do not enable ClearTxt, DHX, DHX2, guest, or legacy RandNum
+authentication in this mode: those methods depend on system account access or
+are unsuitable for this single-user profile.
+
+Use a configuration like the following, replacing the paths and UUID with
+your own values. Generate and keep a distinct UUID for each volume. The
+signature must be stable and no longer than 16 characters.
+
+    [Global]
+    cnid scheme = sqlite
+    vol dbpath = /home/alice/.local/state/netatalk/cnid
+    signature = alice-afp-server
+    uam list = uams_srp.so
+    srp passwd file = /home/alice/.config/netatalk/afppasswd.srp
+    spotlight = no
+
+    [Files]
+    path = /home/alice/Files
+    volume name = Alice's Files
+    volume uuid = 550E8400-E29B-41D4-A716-446655440000
+
+The **vol dbpath** directory must already exist and be writable by the serving
+user. Set **zeroconf = no** if clients will connect directly; otherwise the
+user's server can advertise itself over Bonjour like a normal AFP service.
+
+Start the server with a PID file in private user state. Use **-d** while
+testing to keep it in the foreground:
+
+    netatalk --unprivileged --pidfile "$HOME/.local/state/netatalk/netatalk.pid" \
+        --config "$HOME/.config/netatalk/afp.conf" -d
+
+The long options above correspond to **-u**, **-P**, and **-F** respectively.
+Without **--unprivileged**, a regular-user invocation is rejected with an
+explicit diagnostic instead of starting a partially functional server.
+
+Rootless mode requires SQLite CNID, static volume sections with explicit
+**volume uuid** values, an explicit global **signature**, and SRP-only
+authentication. It does not support AppleTalk, the DBD or MySQL CNID backends,
+**[Homes]** volumes, Spotlight, AFP statistics, or administrator/forced-user
+configuration. A volume that the serving user cannot read and search (or write
+when it is not read-only) is rejected at startup.
+
+Configuration reloads are disabled in this mode. Restart **netatalk** after
+changing *afp.conf*.
+
 ### Backup Volumes
 
 Netatalk provides remote backup functionality for macOS Time Machine over AFP.

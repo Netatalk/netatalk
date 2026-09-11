@@ -76,6 +76,7 @@
 #define OPTION_SPOTLIGHT_EXPR (1 << 16) /*!< whether to allow Spotlight logic expressions */
 #define OPTION_DDP     (1 << 17) /*!< whether to allow connections via appletalk/ddp */
 #define OPTION_VALID_SHELLCHECK (1 << 18) /*!< whether to check for valid login shell */
+#define OPTION_UNPRIVILEGED (1 << 19) /*!< single-user server without root privileges */
 
 #define PASSWD_NONE     0
 #define PASSWD_SET     (1 << 0)
