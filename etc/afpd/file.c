@@ -2255,7 +2255,10 @@ int copyfile(struct vol *s_vol,
 
     if (ad_meta_open(&add)) {
         if (ad_meta_open(adp)) {
-            ad_copy_header(&add, adp);
+            if (ad_copy_header(&add, adp) != 0) {
+                err = EIO;
+                goto error;
+            }
         }
 
         ad_setname(&add, dst);

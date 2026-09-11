@@ -18,6 +18,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -25,6 +26,7 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
 #include <atalk/dsi.h>
@@ -133,6 +135,142 @@ static int utest_decompose_reserves_terminator(void)
 done:
     errno = saved_errno;
     return result;
+}
+
+struct guarded_adouble {
+    struct adouble ad;
+    uint8_t guard[AD_DATASZ_MAX];
+};
+
+_Static_assert(offsetof(struct guarded_adouble,
+                        guard) == sizeof(struct adouble),
+               "guard must immediately follow struct adouble");
+
+static int utest_ad_copy_header_valid_finderinfo(void)
+{
+    struct adouble src;
+    struct adouble dst;
+    char *src_finderinfo;
+    char *dst_finderinfo;
+    ad_init_old(&src, AD_VERSION2, 0);
+    ad_init_old(&dst, AD_VERSION2, 0);
+
+    if (ad_init_offsets(&src) != 0 || ad_init_offsets(&dst) != 0) {
+        return 1;
+    }
+
+    src_finderinfo = ad_entry(&src, ADEID_FINDERI);
+
+    if (src_finderinfo == NULL) {
+        return 2;
+    }
+
+    memset(src_finderinfo, 'F', ADEDLEN_FINDERI);
+
+    if (ad_copy_header(&dst, &src) != 0) {
+        return 3;
+    }
+
+    dst_finderinfo = ad_entry(&dst, ADEID_FINDERI);
+
+    if (dst_finderinfo == NULL
+            || ad_getentrylen(&dst, ADEID_FINDERI) != ADEDLEN_FINDERI
+            || memcmp(dst_finderinfo, src_finderinfo, ADEDLEN_FINDERI) != 0) {
+        return 4;
+    }
+
+    return 0;
+}
+
+static int utest_ad_copy_header_bounds_finderinfo(void)
+{
+    static const uint8_t guard_byte = 0xa5;
+    struct adouble src;
+    struct guarded_adouble dst;
+    const uint32_t finderi_len = AD_DATASZ2 - 1;
+    int copy_ret;
+    ad_init_old(&src, AD_VERSION2, 0);
+    ad_init_old(&dst.ad, AD_VERSION2, 0);
+
+    if (ad_init_offsets(&src) != 0 || ad_init_offsets(&dst.ad) != 0) {
+        return 1;
+    }
+
+    memset(src.ad_data, 'A', src.valid_data_len);
+    ad_setentryoff(&src, ADEID_FINDERI, 1);
+    ad_setentrylen(&src, ADEID_FINDERI, finderi_len);
+    memset(dst.guard, guard_byte, sizeof(dst.guard));
+
+    /* Both operands pass the same ad_entry() checks used by
+     * ad_copy_header(): source against 740 bytes, destination against its old
+     * 32-byte length. */
+    if (ad_entry(&src, ADEID_FINDERI) == NULL
+            || ad_entry(&dst.ad, ADEID_FINDERI) == NULL) {
+        return 2;
+    }
+
+    copy_ret = ad_copy_header(&dst.ad, &src);
+
+    for (size_t i = 0; i < sizeof(dst.guard); i++) {
+        if (dst.guard[i] != guard_byte) {
+            return 3;
+        }
+    }
+
+    /* An oversized entry must be rejected without committing its length. */
+    if (copy_ret != -1) {
+        return 4;
+    }
+
+    if (ad_getentrylen(&dst.ad, ADEID_FINDERI) != ADEDLEN_FINDERI) {
+        return 5;
+    }
+
+    return 0;
+}
+
+static int utest_ad_copy_header_skips_dfork(void)
+{
+    static const uint8_t guard_byte = 0xa5;
+    struct adouble src;
+    struct guarded_adouble dst;
+    int copy_ret;
+    ad_init_old(&src, AD_VERSION2, 0);
+    ad_init_old(&dst.ad, AD_VERSION2, 0);
+
+    if (ad_init_offsets(&src) != 0 || ad_init_offsets(&dst.ad) != 0) {
+        return 1;
+    }
+
+    /* Reproduce the attacker-controlled entries from poc_dfork.py.  Each
+     * entry fits by itself, but copying the source length at the destination
+     * offset would write 739 bytes beyond valid_data_len. */
+    memset(src.ad_data, 'D', src.valid_data_len);
+    ad_setentryoff(&src, ADEID_DFORK, 1);
+    ad_setentrylen(&src, ADEID_DFORK, AD_DATASZ2 - 1);
+    ad_setentryoff(&dst.ad, ADEID_DFORK, AD_DATASZ2 - 1);
+    ad_setentrylen(&dst.ad, ADEID_DFORK, 1);
+    memset(dst.guard, guard_byte, sizeof(dst.guard));
+
+    copy_ret = ad_copy_header(&dst.ad, &src);
+
+    if (copy_ret != 0) {
+        return 2;
+    }
+
+    for (size_t i = 0; i < sizeof(dst.guard); i++) {
+        if (dst.guard[i] != guard_byte) {
+            return 3;
+        }
+    }
+
+    /* Fork contents and their entry metadata are not header metadata. */
+    if (ad_getentryoff(&dst.ad, ADEID_DFORK) != AD_DATASZ2 - 1
+            || ad_getentrylen(&dst.ad, ADEID_DFORK) != 1) {
+        return 4;
+    }
+
+    return 0;
 }
 
 #ifdef WITH_SPOTLIGHT
@@ -642,6 +780,12 @@ int main(int argc, char *argv[])
          "init logging to stderr");
     TEST_int(utest_decompose_reserves_terminator(), 0,
              "decompose_w reserves space for its UTF-16 terminator");
+    TEST_int(utest_ad_copy_header_valid_finderinfo(), 0,
+             "ad_copy_header copies a valid FinderInfo entry");
+    TEST_int(utest_ad_copy_header_bounds_finderinfo(), 0,
+             "ad_copy_header rejects oversized FinderInfo without overwriting destination");
+    TEST_int(utest_ad_copy_header_skips_dfork(), 0,
+             "ad_copy_header does not copy data-fork entries");
     /* DSI unit tests: frame acceptance, write handoff, quantum shaping. */
     TEST_int(utest_dsi_receive_accepts_full_quantum_write(DSI_WROFF_FPWRITE), 0,
              "dsi_stream_receive accepts full-quantum FPWrite in one record");

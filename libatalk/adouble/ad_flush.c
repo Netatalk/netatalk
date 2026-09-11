@@ -194,6 +194,7 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
 {
     uint32_t       eid;
     uint32_t       len;
+    ssize_t        dst_len;
     char *src = NULL;
     char *dst = NULL;
 
@@ -218,6 +219,7 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
 
         switch (eid) {
         case ADEID_COMMENT:
+        case ADEID_DFORK:
         case ADEID_RFORK:
             continue;
 
@@ -228,14 +230,30 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
                 continue;
             }
 
-            if ((dst = ad_entry(add, eid)) == NULL) {
+            /*
+             * Validate the destination against the length memcpy() will
+             * actually use.  Checking it with the old destination length is
+             * insufficient: FinderInfo accepts any length of at least 32
+             * bytes, so a large but source-valid entry could otherwise be
+             * copied past add->ad_data.
+             *
+             * Keep the old length until validation and copying succeed so an
+             * error leaves this destination entry's metadata unchanged.
+             */
+            dst_len = add->ad_eid[eid].ade_len;
+            ad_setentrylen(add, eid, len);
+            dst = ad_entry(add, eid);
+            ad_setentrylen(add, eid, dst_len);
+
+            if (dst == NULL) {
                 LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid dst eid[%d]",
                     add->ad_name, eid);
-                continue;
+                errno = EIO;
+                return -1;
             }
 
-            ad_setentrylen(add, eid, len);
             memcpy(dst, src, len);
+            ad_setentrylen(add, eid, len);
         }
     }
 
