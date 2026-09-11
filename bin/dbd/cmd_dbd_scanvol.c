@@ -61,7 +61,6 @@ static char           *special_dirs[] = {
     NULL
 };
 static jmp_buf jmp;
-static char pname[MAXPATHLEN] = "../";
 
 /*!
  * @brief Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
@@ -218,7 +217,8 @@ static int check_adfile(const char *fname, const struct stat *st,
  */
 static void remove_eafiles(const char *name, struct ea *ea _U_)
 {
-    DIR *dp = NULL;
+    DIR *dp;
+    int addir_fd;
     struct dirent *ep;
     char eaname[MAXPATHLEN];
     strlcpy(eaname, name, sizeof(eaname));
@@ -228,16 +228,20 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
         return;
     }
 
-    if ((chdir(ADv2_DIRNAME)) != 0) {
-        dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
+    addir_fd = open(ADv2_DIRNAME,
+                    O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+
+    if (addir_fd == -1) {
+        dbd_log(LOGSTD, "Couldn't open '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
         return;
     }
 
-    if ((dp = opendir(".")) == NULL) {
+    if ((dp = fdopendir(addir_fd)) == NULL) {
         dbd_log(LOGSTD, "Couldn't open the directory '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
-        goto exit;
+        close(addir_fd);
+        return;
     }
 
     while ((ep = readdir(dp))) {
@@ -245,25 +249,14 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
             dbd_log(LOGSTD, "Removing EA file: '%s/%s/%s'",
                     cwdbuf, ADv2_DIRNAME, ep->d_name);
 
-            if ((unlink(ep->d_name)) != 0) {
+            if ((unlinkat(dirfd(dp), ep->d_name, 0)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking EA file '%s/%s/%s': %s",
                         cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
             }
         } /* if */
     } /* while */
 
-exit:
-
-    if (dp) {
-        closedir(dp);
-    }
-
-    if ((chdir("..")) != 0) {
-        dbd_log(LOGSTD, "Couldn't chdir to '%s': %s", cwdbuf, strerror(errno));
-        /* we can't proceed */
-        /* this jumps back to cmd_dbd_scanvol() */
-        longjmp(jmp, 1);
-    }
+    closedir(dp);
 }
 
 /*!
@@ -345,7 +338,8 @@ static int check_addir(int volroot _U_)
     }
 
     /* Check for ad-dir */
-    addir_fd = open(ADv2_DIRNAME, O_RDONLY);
+    addir_fd = open(ADv2_DIRNAME,
+                    O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
     if (addir_fd == -1) {
         if (errno != ENOENT) {
@@ -359,10 +353,13 @@ static int check_addir(int volroot _U_)
 
     /* Check for ".Parent" */
     ad_parent_path = vol->ad_path(".", ADFLAGS_DIR);
-    parent_fd = open(ad_parent_path, O_RDONLY);
+
+    if (addir_fd != -1) {
+        parent_fd = openat(addir_fd, ".Parent", O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    }
 
     if (parent_fd == -1) {
-        if (errno != ENOENT) {
+        if (addir_fd != -1 && errno != ENOENT) {
             dbd_log(LOGSTD, "Open error on '%s/%s': %s",
                     cwdbuf, ad_parent_path, strerror(errno));
 
@@ -437,7 +434,8 @@ static int check_addir(int volroot _U_)
 
         /* If directories were created, we need their new file descriptors */
         if (addir_fd == -1) {
-            addir_fd = open(ADv2_DIRNAME, O_RDONLY);
+            addir_fd = open(ADv2_DIRNAME,
+                            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
             if (addir_fd != -1) {
                 if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
@@ -449,7 +447,8 @@ static int check_addir(int volroot _U_)
         }
 
         if (parent_fd == -1) {
-            parent_fd = open(ad_parent_path, O_RDONLY);
+            parent_fd = openat(addir_fd, ".Parent",
+                               O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
 
             if (parent_fd != -1) {
                 if (fchown(parent_fd, st.st_uid, st.st_gid) < 0) {
@@ -478,9 +477,11 @@ static int check_addir(int volroot _U_)
  * @returns 1 = name is an EA file and no problem was found
  * @returns -1 = name is an EA file and data fork is gone
  */
-static int check_eafile_in_adouble(const char *name)
+static int check_eafile_in_adouble(int parent_fd, int addir_fd,
+                                   const char *name)
 {
     int ret = 0;
+    struct stat st;
     char *namep, *namedup = NULL;
 
     /* Check if this is an AFPVOL_EA_AD vol */
@@ -495,10 +496,8 @@ static int check_eafile_in_adouble(const char *name)
             /* File contains "::EA" so it's an EA file. Check for data file  */
             /* Get string before "::EA" from EA filename */
             namep[0] = 0;
-            /* Prepends "../" */
-            strlcpy(pname + 3, namedup, sizeof(pname) - 3);
 
-            if ((access(pname, F_OK)) == 0) {
+            if ((fstatat(parent_fd, namedup, &st, 0)) == 0) {
                 ret = 1;
                 goto ea_check_done;
             } else {
@@ -520,7 +519,7 @@ static int check_eafile_in_adouble(const char *name)
                     goto ea_check_done;
                 }
 
-                if ((unlink(name)) != 0) {
+                if ((unlinkat(addir_fd, name, 0)) != 0) {
                     dbd_log(LOGSTD, "Error unlinking orphaned Extended Attribute file '%s/%s/%s'",
                             cwdbuf, ADv2_DIRNAME, name);
                 }
@@ -545,22 +544,38 @@ ea_check_done:
 static int read_addir(void)
 {
     DIR *dp;
+    int addir_fd;
+    int parent_fd;
     struct dirent *ep;
     struct stat st;
+    parent_fd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
 
-    if ((chdir(ADv2_DIRNAME)) != 0) {
-        if (vol->v_adouble == AD_VERSION_EA) {
-            return 0;
-        }
-
-        dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
-                cwdbuf, ADv2_DIRNAME, strerror(errno));
+    if (parent_fd == -1) {
+        dbd_log(LOGSTD, "Couldn't open '%s': %s", cwdbuf, strerror(errno));
         return -1;
     }
 
-    if ((dp = opendir(".")) == NULL) {
+    addir_fd = openat(parent_fd, ADv2_DIRNAME,
+                      O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+
+    if (addir_fd == -1) {
+        int saved_errno = errno;
+        close(parent_fd);
+
+        if (vol->v_adouble == AD_VERSION_EA && saved_errno == ENOENT) {
+            return 0;
+        }
+
+        dbd_log(LOGSTD, "Couldn't open '%s/%s': %s",
+                cwdbuf, ADv2_DIRNAME, strerror(saved_errno));
+        return -1;
+    }
+
+    if ((dp = fdopendir(addir_fd)) == NULL) {
         dbd_log(LOGSTD, "Couldn't open the directory '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
+        close(addir_fd);
+        close(parent_fd);
         return -1;
     }
 
@@ -575,7 +590,7 @@ static int read_addir(void)
             continue;
         }
 
-        if ((lstat(ep->d_name, &st)) < 0) {
+        if ((fstatat(dirfd(dp), ep->d_name, &st, AT_SYMLINK_NOFOLLOW)) < 0) {
             dbd_log(LOGSTD,
                     "Lost file or dir while enumeratin dir '%s/%s/%s', probably removed: %s",
                     cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
@@ -590,17 +605,15 @@ static int read_addir(void)
         }
 
         /* Check if for orphaned and corrupt Extended Attributes file */
-        if (check_eafile_in_adouble(ep->d_name) != 0) {
+        if (check_eafile_in_adouble(parent_fd, dirfd(dp), ep->d_name) != 0) {
             continue;
         }
 
         /* Check for data file */
-        strlcpy(pname + 3, ep->d_name, sizeof(pname) - 3);
-
-        if ((access(pname, F_OK)) != 0) {
+        if ((fstatat(parent_fd, ep->d_name, &st, 0)) != 0) {
             if (errno != ENOENT) {
                 dbd_log(LOGSTD, "Access error for file '%s/%s': %s",
-                        cwdbuf, pname, strerror(errno));
+                        cwdbuf, ep->d_name, strerror(errno));
                 continue;
             }
 
@@ -613,22 +626,15 @@ static int read_addir(void)
                 continue;
             }
 
-            if ((unlink(ep->d_name)) != 0) {
+            if ((unlinkat(dirfd(dp), ep->d_name, 0)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking orphaned AppleDoube file '%s/%s/%s'",
                         cwdbuf, ADv2_DIRNAME, ep->d_name);
             }
         }
     }
 
-    if ((chdir("..")) != 0) {
-        dbd_log(LOGSTD, "Couldn't chdir back to '%s' from AppleDouble dir: %s",
-                cwdbuf, strerror(errno));
-        /* This really is EOT! */
-        /* this jumps back to cmd_dbd_scanvol() */
-        longjmp(jmp, 1);
-    }
-
     closedir(dp);
+    close(parent_fd);
     return 0;
 }
 
