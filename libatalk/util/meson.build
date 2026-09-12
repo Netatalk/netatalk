@@ -37,7 +37,7 @@ libutil = static_library(
         confdir,
         messagedir,
         afpdpwfile,
-        afpdsrppwfile,
+        afpdsrpverifierpath,
         uamdir,
         statedir,
         dversion,

@@ -667,6 +667,65 @@ cleanup:
     return failed;
 }
 
+/* The directory-valued SRP option supersedes the old single-file name. */
+int utest_conf_srp_verifier_path_keys(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    int failed = -1;
+    static const struct {
+        const char *body;
+        const char *expected;
+        int expect_deprecation;
+    } cases[] = {
+        {"srp verifier path = /new/verifiers\n", "/new/verifiers", 0},
+        {"srp passwd file = /old/value\n", "/old/value", 1},
+        {
+            "srp verifier path = /new/verifiers\n"
+            "srp passwd file = /old/value\n",
+            "/new/verifiers", 1
+        },
+    };
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        conf_log_truncate(logpath);
+
+        if (conf_parse_fixture(&obj, cases[i].body, logpath) != 0) {
+            goto cleanup;
+        }
+
+        int deprecated = conf_log_contains(logpath,
+                                           "deprecated 'srp passwd file'");
+        int migration = conf_log_contains(logpath,
+                                          "run 'afppasswd -m'");
+
+        if (obj.options.srpverifierpath == NULL ||
+                strcmp(obj.options.srpverifierpath, cases[i].expected) != 0 ||
+                deprecated != cases[i].expect_deprecation ||
+                migration != cases[i].expect_deprecation) {
+            fprintf(test_stream(),
+                    "# utest_conf_srp_verifier_path_keys: case %zu: path %s/%s depr %d/%d migration %d/%d\n",
+                    i,
+                    obj.options.srpverifierpath ? obj.options.srpverifierpath : "(null)",
+                    cases[i].expected, deprecated, cases[i].expect_deprecation,
+                    migration, cases[i].expect_deprecation);
+            conf_teardown(&obj, NULL);
+            goto cleanup;
+        }
+
+        conf_teardown(&obj, NULL);
+    }
+
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    return failed;
+}
+
 /* utest_conf_spotlight_results_limit_keys: the canonical key, the
  * deprecated alias, and their precedence.  Global-only parse, no
  * volumes. */

@@ -117,14 +117,17 @@ separate files managed with **afppasswd**:
   **afppasswd -r -c** creates this key file if it is missing and validates an
   existing one; password updates refuse to proceed unless the key file is
   present and valid. The Randnum UAM logs a startup warning when the key file
-  is missing or invalid, but authentication and password changes still fail
-  until it is fixed. Stored passwords are DES-encrypted using that key.
+  is missing or invalid, but authentication fails until it is fixed. Stored
+  passwords are DES-encrypted using that key. Randnum credentials can be reset
+  only by root with **afppasswd -r**; changing them over AFP is not supported.
 
   The key file must contain exactly 16 hexadecimal characters, such as
   `0123456789ABCDEF`, with an optional trailing newline. Generate a fresh
   random key for each server instead of reusing this example value.
 
-- **SRP** uses *afppasswd.srp*, which stores per-user salts and verifiers.
+- **SRP** uses the *afppasswd.srp* directory, with one mode-0600 salt and
+  verifier file owned by each user. Initialize it as root with **afppasswd -c**;
+  users can then update their own verifier without an elevated executable.
 
 ## Using different authentication backends
 
@@ -159,7 +162,7 @@ An overview of the officially supported UAMs on Macs.
 | Client support   | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0; deprecated in 10.7 and later | built-in into almost all Mac OS versions; deprecated in 10.7 and later | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3; deprecated in 10.7 and later | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.7 |
 | Encryption       | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all costs. | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires separately stored server-side passwords. | Password will be encrypted with 128 bit CAST, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted with 128 bit CAST in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. | Password is never sent; SRP uses a verifier and mutual proofs (M1/M2) to authenticate both client and server, providing protection against man‑in‑the‑middle attacks. |
 | Server support   | uams_guest.so | uams_clrtxt.so   | uams_randnum.so  | uams_dhx.so  | uams_dhx2.so  | uams_gss.so      | uams_srp.so      |
-| Password storage | None          | Either system auth or PAM | Separate *afppasswd* file (DES-encrypted) | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center | Separate *afppasswd.srp* verifier file |
+| Password storage | None          | Either system auth or PAM | Separate *afppasswd* file (DES-encrypted) | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center | Per-user files under *afppasswd.srp* |
 
 See the Apple Support knowledge base article on [Connecting to legacy AFP services](https://support.apple.com/en-us/101137)
 on how to enable deprecated legacy UAM in macOS.
@@ -178,3 +181,5 @@ but the AFP client must also support and honor this flag.
 To allow clients to change their passwords, set the **set password** option.
 This depends on the UAM in use and is not supported by all of them.
 Notably, the PAM-based UAMs support this feature, while those based on classic UNIX passwords do not.
+The Randnum UAM supports authentication only and does not register an AFP
+password-change handler.

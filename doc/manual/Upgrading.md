@@ -1,5 +1,81 @@
 # Upgrading from prior Netatalk versions
 
+## Upgrading from Netatalk 4.5
+
+Netatalk 4.6 changes how the separate credential stores used by the SRP and
+legacy Randnum UAMs are maintained. Review the following steps before starting
+the new server, especially if **uams_srp.so** or **uams_randnum.so** is enabled.
+
+### afppasswd invocation
+
+**afppasswd** now obtains the credential path from *afp.conf*. The former
+**-p** *path* option has been removed. Administrators selecting a nonstandard
+configuration use **-F** *afp.conf* instead; **-F** is root-only and the
+configuration file must be root-owned and not writable by group or other.
+
+For example, with a **srp verifier path** setting in */path/to/afp.conf*, run:
+
+    sudo afppasswd -F /path/to/afp.conf -a alice
+
+Regular users cannot choose a configuration file and can update only their
+own SRP verifier. If **afpd** is started with **-F** and a nonstandard
+configuration, either mirror its **srp verifier path** in the installed
+standard *afp.conf* for local user password changes, or have an administrator
+perform the update with **afppasswd -F**.
+
+### SRP verifier migration
+
+SRP no longer uses one shared *afppasswd.srp* flat file. Its configured path
+is now a root-owned verifier directory containing one file for each numeric
+uid. Each verifier file is owned by that user and is mode 0600. This allows a
+user to change only that user's own SRP password without giving **afppasswd**
+elevated privileges.
+
+In *afp.conf*, the new **srp verifier path** option replaces the old
+**srp passwd file** option. The old name is still accepted as a deprecated alias,
+but its value is now interpreted as a directory and logs a migration warning.
+
+Existing SRP credentials must be migrated before users can log in with their
+existing passwords. The migration is performed with **afppasswd -m**.
+
+1. Stop **netatalk** and keep it stopped for the complete migration.
+
+2. Ensure that the selected *afp.conf* either does not configure the
+   **srp passwd file** option, or configures the **srp verifier path** option
+   pointing to the location of the existing flat file to be migrated.
+
+3. Run the migration as root. For the standard configuration, use:
+
+       sudo afppasswd -m
+
+   If **netatalk** uses a nonstandard configuration file, use that same file:
+
+       sudo afppasswd -m -F /path/to/afp.conf
+
+   The migration preserves the existing salts and verifiers, so users keep
+   their SRP passwords. It validates all records and local accounts, creates
+   the new directory atomically, and retains the original flat file as
+   *afppasswd.srp.legacy* (or a numbered sibling). Do not start **netatalk** if
+   migration reports a failure; resolve the reported condition first.
+
+4. Start **netatalk** and test an SRP login. Thereafter, a local user changes that
+   user's SRP password simply with **afppasswd**. An administrator uses
+   **afppasswd -a** *username* to set or reset a user's SRP credential.
+
+Alternatively, if retaining user passwords is not desired: delete the legacy file,
+typically at */etc/netatalk/afppasswd.srp*, and initialize a new store with
+**afppasswd -c**.
+
+### Randnum hardening
+
+Randnum remains a legacy, weak UAM intended only for old clients. Managing its
+*afppasswd* file is now root-only: use **afppasswd -r -a** *username* to reset
+or update a Randnum credential.
+
+The Randnum UAM no longer permits remote password changes from an AFP client,
+even when **set password = yes** is configured; users must ask an
+administrator to reset their password.
+
 ## Upgrading from Netatalk 3
 
 Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the new

@@ -15,17 +15,17 @@ endif
 
 executable(
     'afppasswd',
-    ['afppasswd.c'],
+    ['afppasswd.c', 'afppasswd_migrate.c'],
     include_directories: root_includes,
     dependencies: afppasswd_deps,
     link_with: afppasswd_libs,
     c_args: [
         afpdpwfile,
-        afpdsrppwfile,
+        afpdsrpverifierpath,
+        confdir,
         dversion,
     ],
     install: true,
-    install_mode: 'rwsr-xr-x',
     build_rpath: rpath_libdir,
     install_rpath: rpath_libdir,
 )

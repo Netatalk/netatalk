@@ -20,10 +20,6 @@
 #include <sys/param.h>
 #include <unistd.h>
 
-#ifdef USE_CRACKLIB
-#include <crack.h>
-#endif /* USE_CRACKLIB */
-
 #include <gcrypt.h>
 
 #ifndef DES_KEY_SZ
@@ -544,88 +540,6 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     return AFP_OK;
 }
 
-/*!
- * @brief change password
- * @note an FPLogin must already have completed successfully for this
- *       to work.
- */
-static int randnum_changepw(void *obj, const char *username _U_,
-                            struct passwd *pwd, char *ibuf,
-                            size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen _U_)
-{
-    char *passwdfile;
-    int err;
-    size_t len;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
-
-    if (!gcry_check_version(GCRYPT_VERSION)) {
-        LOG(log_info, logtype_uams, "RandNum: libgcrypt versions mismatch. Need: %s",
-            GCRYPT_VERSION);
-    }
-
-    if (uam_checkuser(obj, pwd) < 0) {
-        return AFPERR_ACCESS;
-    }
-
-    len = UAM_PASSWD_FILENAME;
-
-    if (uam_afpserver_option(obj, UAM_OPTION_PASSWDOPT,
-                             (void *) &passwdfile, &len) < 0) {
-        return AFPERR_PARAM;
-    }
-
-    /* old password is encrypted with new password and new password is
-     * encrypted with old. */
-    if ((err = randpass(pwd, passwdfile, seskey,
-                        sizeof(seskey), 0)) != AFP_OK) {
-        return err;
-    }
-
-    /* use old passwd to decrypt new passwd */
-    ibuf += PASSWDLEN; /* new passwd */
-    ibuf[PASSWDLEN] = '\0';
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
-    ctxerror = gcry_cipher_setkey(ctx, seskey, DES_KEY_SZ);
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, PASSWDLEN, NULL, 0);
-    gcry_cipher_close(ctx);
-    /* now use new passwd to decrypt old passwd */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
-    ctxerror = gcry_cipher_setkey(ctx, ibuf, DES_KEY_SZ);
-    ibuf -= PASSWDLEN; /* old passwd */
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, PASSWDLEN, NULL, 0);
-    gcry_cipher_close(ctx);
-
-    if (atalk_ct_memcmp(seskey, ibuf, sizeof(seskey))) {
-        err = AFPERR_NOTAUTH;
-    } else if (atalk_ct_memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0) {
-        err = AFPERR_PWDSAME;
-    }
-
-#ifdef USE_CRACKLIB
-    else if (FascistCheck(ibuf + PASSWDLEN, _PATH_CRACKLIB)) {
-        err = AFPERR_PWDPOLCY;
-    }
-
-#endif /* USE_CRACKLIB */
-
-    if (!err) {
-        err = randpass(pwd, passwdfile, (unsigned char *)ibuf + PASSWDLEN,
-                       sizeof(seskey), 1);
-    }
-
-    /* zero out some fields */
-    explicit_bzero(seskey, sizeof(seskey));
-    explicit_bzero(ibuf, sizeof(seskey)); /* old passwd */
-    explicit_bzero(ibuf + PASSWDLEN, sizeof(seskey)); /* new passwd */
-
-    if (err) {
-        return err;
-    }
-
-    return AFP_OK;
-}
-
 /*! randnum login */
 static int randnum_login(void *obj, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
@@ -711,13 +625,6 @@ static int uam_setup(void *obj, const char *path)
         return -1;
     }
 
-    if (uam_register(UAM_SERVER_CHANGEPW, path, "Randnum Exchange",
-                     randnum_changepw) < 0) {
-        uam_unregister(UAM_SERVER_LOGIN, "Randnum exchange");
-        uam_unregister(UAM_SERVER_LOGIN, "2-Way Randnum exchange");
-        return -1;
-    }
-
 #if 0
     uam_register(UAM_SERVER_PRINTAUTH, path, "Randnum Exchange", pam_printer);
 #endif
@@ -728,7 +635,6 @@ static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "Randnum exchange");
     uam_unregister(UAM_SERVER_LOGIN, "2-Way Randnum exchange");
-    uam_unregister(UAM_SERVER_CHANGEPW, "Randnum Exchange");
 #if 0
     uam_unregister(UAM_SERVER_PRINTAUTH, "Randnum Exchange");
 #endif

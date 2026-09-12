@@ -358,7 +358,7 @@ endif
 
 afpd = '-D_PATH_AFPD="' + sbindir + '/afpd"'
 afpdpwfile = '-D_PATH_AFPDPWFILE="' + pkgconfdir + '/afppasswd"'
-afpdsrppwfile = '-D_PATH_AFPDSRPPWFILE="' + pkgconfdir + '/afppasswd.srp"'
+afpdsrpverifierpath = '-D_PATH_AFPSRPVERIFIERPATH="' + pkgconfdir + '/afppasswd.srp"'
 cnid_dbd = '-D_PATH_CNID_DBD="' + sbindir + '/cnid_dbd"'
 cnid_metad = '-D_PATH_CNID_METAD="' + sbindir + '/cnid_metad"'
 confdir = '-D_PATH_CONFDIR="' + pkgconfdir + '/"'

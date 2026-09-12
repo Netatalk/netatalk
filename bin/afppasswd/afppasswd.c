@@ -11,7 +11,7 @@
  * Supports two modes:
  *
  * **SRP mode** (default):
- * Manages SRP verifier file for use with the SRP UAM.
+ * Manages one SRP verifier file per numeric UID for use with the SRP UAM.
  * Format: username:hex_salt(32):hex_verifier(384)
  *
  * **RandNum mode** (-r flag):
@@ -27,6 +27,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +41,8 @@
 
 #include <atalk/compat.h>
 #include <atalk/constant_time.h>
+
+#include "afppasswd_migrate.h"
 
 #ifndef DES_KEY_SZ
 #define DES_KEY_SZ 8
@@ -55,6 +58,7 @@
 #define OPT_ADDUSER (1 << 3)
 #define OPT_NOCRACK (1 << 4)
 #define OPT_RANDNUM (1 << 5)
+#define OPT_MIGRATE (1 << 6)
 
 #define PASSWD_ILLEGAL '*'
 
@@ -114,6 +118,161 @@ static const unsigned char srp_N_bytes[SRP_NBYTES] = {
 static char buf[MAXPATHLEN + 1];
 static const unsigned char hextable[] = "0123456789ABCDEF";
 
+/*!
+ * @brief Resolve one credential path from an administrator-controlled afp.conf
+ *
+ * The caller chooses the configuration file only after privilege checks; a
+ * regular user is always passed the installed standard configuration file.
+ */
+static int configured_credential_path(const char *config_path,
+                                      uid_t administrator_uid,
+                                      const char *option, const char *alias,
+                                      const char *default_path, char *path,
+                                      size_t path_size, int allow_missing)
+{
+    char line[MAXPATHLEN + 2];
+    char configured_path[MAXPATHLEN + 1] = {0};
+    FILE *fp;
+    struct stat st;
+    int fd;
+    int in_global = 0;
+    int have_option = 0;
+    int have_alias = 0;
+    fd = open(config_path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+
+    if (fd < 0) {
+        if (errno == ENOENT && allow_missing) {
+            strlcpy(path, default_path, path_size);
+            return 0;
+        }
+
+        fprintf(stderr, "afppasswd: can't open trusted configuration %s: %s\n",
+                config_path, strerror(errno));
+        return -1;
+    }
+
+    if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode) ||
+            st.st_uid != administrator_uid ||
+            st.st_nlink != 1 || (st.st_mode & (S_IWGRP | S_IWOTH))) {
+        fprintf(stderr,
+                "afppasswd: configuration %s must be a single-link regular file owned by root and not writable by group or other.\n",
+                config_path);
+        close(fd);
+        return -1;
+    }
+
+    fp = fdopen(fd, "r");
+
+    if (fp == NULL) {
+        fprintf(stderr, "afppasswd: can't read configuration %s: %s\n",
+                config_path, strerror(errno));
+        close(fd);
+        return -1;
+    }
+
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        char *key;
+        char *value;
+        char *end;
+
+        if (strchr(line, '\n') == NULL && !feof(fp)) {
+            int c;
+
+            while ((c = fgetc(fp)) != '\n' && c != EOF) {
+                continue;
+            }
+
+            continue;
+        }
+
+        key = line;
+
+        while (isspace((unsigned char) * key)) {
+            key++;
+        }
+
+        if (*key == '\0' || *key == '#' || *key == ';') {
+            continue;
+        }
+
+        if (*key == '[') {
+            size_t section_len;
+            end = strchr(key, ']');
+            section_len = end != NULL ? (size_t)(end - key - 1) : 0;
+            in_global = end != NULL && section_len == strlen("Global") &&
+                        strncasecmp(key + 1, "Global", section_len) == 0;
+            continue;
+        }
+
+        if (!in_global || (value = strchr(key, '=')) == NULL) {
+            continue;
+        }
+
+        *value++ = '\0';
+        end = key + strlen(key);
+
+        while (end > key && isspace((unsigned char)end[-1])) {
+            *--end = '\0';
+        }
+
+        while (isspace((unsigned char) * value)) {
+            value++;
+        }
+
+        end = value + strlen(value);
+
+        while (end > value && isspace((unsigned char)end[-1])) {
+            *--end = '\0';
+        }
+
+        if (*value == '\0') {
+            continue;
+        }
+
+        if (strcasecmp(key, option) == 0) {
+            if (strlcpy(configured_path, value, sizeof(configured_path)) >=
+                    sizeof(configured_path)) {
+                fprintf(stderr,
+                        "afppasswd: %s in %s is too long.\n", option,
+                        config_path);
+                fclose(fp);
+                return -1;
+            }
+
+            have_option = 1;
+        } else if (alias != NULL && strcasecmp(key, alias) == 0 &&
+                   !have_option && !have_alias) {
+            if (strlcpy(configured_path, value, sizeof(configured_path)) >=
+                    sizeof(configured_path)) {
+                fprintf(stderr,
+                        "afppasswd: %s in %s is too long.\n", alias,
+                        config_path);
+                fclose(fp);
+                return -1;
+            }
+
+            have_alias = 1;
+        }
+    }
+
+    if (ferror(fp)) {
+        fprintf(stderr, "afppasswd: can't read configuration %s: %s\n",
+                config_path, strerror(errno));
+        fclose(fp);
+        return -1;
+    }
+
+    fclose(fp);
+
+    if (have_option || have_alias) {
+        strlcpy(path, configured_path, path_size);
+    } else {
+        strlcpy(path, default_path, path_size);
+    }
+
+    return 0;
+}
+
 static int validate_opened_file(int fd, const char *path)
 {
     struct stat st;
@@ -151,137 +310,16 @@ static int validate_opened_file(int fd, const char *path)
     return 0;
 }
 
-static int validate_trusted_directory(int fd, const char *path)
+static int open_credential_file(const char *path, int access_mode)
 {
-    struct stat st;
+    int fd;
+    fd = open(path, access_mode | O_CLOEXEC | O_NOFOLLOW);
 
-    if (fstat(fd, &st) < 0) {
-        fprintf(stderr, "afppasswd: can't inspect directory for %s: %s\n",
-                path, strerror(errno));
+    if (fd < 0) {
+        fprintf(stderr, "afppasswd: can't open %s: %s\n", path,
+                strerror(errno));
         return -1;
     }
-
-    if (!S_ISDIR(st.st_mode) || st.st_uid != geteuid() ||
-            (st.st_mode & (S_IWGRP | S_IWOTH))) {
-        fprintf(stderr,
-                "afppasswd: every directory containing %s must be administrator-owned and not writable by group or other.\n",
-                path);
-        return -1;
-    }
-
-    return 0;
-}
-
-/*
- * Open an existing credential file without following symlinks. For a setuid
- * invocation, also walk the complete path beneath administrator-controlled
- * directory descriptors so an unprivileged caller cannot redirect an
- * intermediate component.
- */
-static int open_credential_file(const char *path, int access_mode, int flags)
-{
-    char pathbuf[MAXPATHLEN + 1];
-    char *component, *next;
-    int dirfd = -1, fd = -1;
-
-    if ((flags & OPT_ISROOT) || getuid() == geteuid()) {
-        fd = open(path, access_mode | O_CLOEXEC | O_NOFOLLOW);
-
-        if (fd < 0) {
-            fprintf(stderr, "afppasswd: can't open %s: %s\n", path,
-                    strerror(errno));
-            return -1;
-        }
-
-        goto validate;
-    }
-
-    if (path[0] != '/') {
-        fprintf(stderr,
-                "afppasswd: the credential path must be absolute for non-root users.\n");
-        return -1;
-    }
-
-    if (strlcpy(pathbuf, path, sizeof(pathbuf)) >= sizeof(pathbuf)) {
-        fprintf(stderr, "afppasswd: credential path is too long.\n");
-        return -1;
-    }
-
-    dirfd = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
-
-    if (dirfd < 0 || validate_trusted_directory(dirfd, path) < 0) {
-        if (dirfd >= 0) {
-            close(dirfd);
-        }
-
-        return -1;
-    }
-
-    component = pathbuf;
-
-    while (*component == '/') {
-        component++;
-    }
-
-    if (*component == '\0') {
-        fprintf(stderr, "afppasswd: credential path names a directory.\n");
-        close(dirfd);
-        return -1;
-    }
-
-    for (;;) {
-        int componentfd;
-        next = strchr(component, '/');
-
-        if (next != NULL) {
-            *next = '\0';
-        }
-
-        if (strcmp(component, ".") == 0 || strcmp(component, "..") == 0 ||
-                *component == '\0') {
-            fprintf(stderr,
-                    "afppasswd: credential path contains an unsafe component.\n");
-            close(dirfd);
-            return -1;
-        }
-
-        if (next == NULL) {
-            fd = openat(dirfd, component,
-                        access_mode | O_CLOEXEC | O_NOFOLLOW);
-            close(dirfd);
-
-            if (fd < 0) {
-                fprintf(stderr, "afppasswd: can't open %s: %s\n", path,
-                        strerror(errno));
-                return -1;
-            }
-
-            break;
-        }
-
-        componentfd = openat(dirfd, component,
-                             O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
-
-        if (componentfd < 0 ||
-                validate_trusted_directory(componentfd, path) < 0) {
-            if (componentfd >= 0) {
-                close(componentfd);
-            }
-
-            close(dirfd);
-            return -1;
-        }
-
-        close(dirfd);
-        dirfd = componentfd;
-        component = next + 1;
-
-        while (*component == '/') {
-            component++;
-        }
-    }
-
-validate:
 
     if (validate_opened_file(fd, path) < 0) {
         close(fd);
@@ -412,7 +450,7 @@ static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
     return 0;
 }
 
-static int randnum_open_keyfile(const char *path, int flags, int *keyfd_out)
+static int randnum_open_keyfile(const char *path, int *keyfd_out)
 {
     char keypath[MAXPATHLEN + 1];
     uint8_t key[DES_KEY_SZ];
@@ -422,7 +460,7 @@ static int randnum_open_keyfile(const char *path, int flags, int *keyfd_out)
         return -1;
     }
 
-    keyfd = open_credential_file(keypath, O_RDONLY, flags);
+    keyfd = open_credential_file(keypath, O_RDONLY);
 
     if (keyfd < 0) {
         fprintf(stderr, "afppasswd: required Randnum key file is unavailable.\n");
@@ -734,15 +772,109 @@ static int valid_srp_record(const char *fields)
     return 1;
 }
 
-static int update_srp_passwd(const char *path, const char *name, int flags,
-                             const char *pass)
+static int open_srp_verifier_directory(const char *path)
 {
-    const char *passwd = NULL;
+    struct stat st;
+    int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+
+    if (fd < 0) {
+        if (lstat(path, &st) == 0 && S_ISREG(st.st_mode)) {
+            fprintf(stderr,
+                    "afppasswd: %s is a legacy flat SRP verifier file; stop afpd and run 'afppasswd -m'.\n",
+                    path);
+        } else {
+            fprintf(stderr,
+                    "afppasswd: can't open SRP verifier directory %s: %s\n",
+                    path, strerror(errno));
+        }
+
+        return -1;
+    }
+
+    if (fstat(fd, &st) < 0 || !S_ISDIR(st.st_mode) || st.st_uid != 0 ||
+            (st.st_mode & (S_IWGRP | S_IWOTH))) {
+        fprintf(stderr,
+                "afppasswd: SRP verifier directory %s must be root-owned and not writable by group or other.\n",
+                path);
+        close(fd);
+        return -1;
+    }
+
+    return fd;
+}
+
+static int srp_uid_filename(uid_t uid, char *name, size_t size)
+{
+    int len = snprintf(name, size, "%ju", (uintmax_t)uid);
+    return len < 0 || (size_t)len >= size ? -1 : 0;
+}
+
+static int validate_srp_verifier_file(int fd, uid_t uid, const char *path)
+{
+    struct stat st;
+
+    if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode) || st.st_uid != uid ||
+            (st.st_mode & 07777) != 0600 || st.st_nlink != 1) {
+        fprintf(stderr,
+                "afppasswd: verifier in %s must be a single-link regular file owned by uid %ju and accessible only by its owner.\n",
+                path, (uintmax_t)uid);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int open_srp_verifier(int dirfd, const char *path, uid_t uid,
+                             int create)
+{
+    char uid_name[3 * sizeof(uid_t) + 1];
+    int fd;
+    int created = 0;
+
+    if (srp_uid_filename(uid, uid_name, sizeof(uid_name)) < 0) {
+        return -1;
+    }
+
+    fd = openat(dirfd, uid_name, O_RDWR | O_CLOEXEC | O_NOFOLLOW |
+                (create ? O_CREAT | O_EXCL : 0), 0600);
+
+    if (fd < 0 && create && errno == EEXIST) {
+        fd = openat(dirfd, uid_name, O_RDWR | O_CLOEXEC | O_NOFOLLOW);
+    } else if (fd >= 0) {
+        created = create;
+    }
+
+    if (fd < 0) {
+        fprintf(stderr, "afppasswd: can't open verifier %s/%s: %s\n",
+                path, uid_name, strerror(errno));
+        return -1;
+    }
+
+    if (!created && validate_srp_verifier_file(fd, uid, path) < 0) {
+        close(fd);
+        return -1;
+    }
+
+    if (created && (fchown(fd, uid, (gid_t) -1) < 0 || fchmod(fd, 0600) < 0 ||
+                    validate_srp_verifier_file(fd, uid, path) < 0)) {
+        fprintf(stderr, "afppasswd: can't prepare verifier %s/%s: %s\n",
+                path, uid_name, strerror(errno));
+        close(fd);
+        return -1;
+    }
+
+    return fd;
+}
+
+static int update_srp_passwd(const char *path, const char *name, uid_t uid,
+                             int flags, const char *pass)
+{
+    char *passwd = NULL;
     char password[SRP_PASSWDLEN + 1] = {0};
     FILE *fp = NULL;
     off_t pos = 0;
     int err = 0;
-    int fd;
+    int dirfd = -1, fd;
     const char *p = NULL;
     size_t pass_len;
     size_t name_len;
@@ -773,9 +905,17 @@ static int update_srp_passwd(const char *path, const char *name, int flags,
     }
 
     name_len = strnlen(name, sizeof(line));
-    fd = open_credential_file(path, O_RDWR, flags);
+    dirfd = open_srp_verifier_directory(path);
+
+    if (dirfd < 0) {
+        return -1;
+    }
+
+    fd = open_srp_verifier(dirfd, path, uid,
+                           (flags & OPT_ISROOT) && (flags & OPT_ADDUSER));
 
     if (fd < 0) {
+        close(dirfd);
         return -1;
     }
 
@@ -783,6 +923,7 @@ static int update_srp_passwd(const char *path, const char *name, int flags,
         fprintf(stderr, "afppasswd: can't open stream for %s: %s\n", path,
                 strerror(errno));
         close(fd);
+        close(dirfd);
         return -1;
     }
 
@@ -801,6 +942,13 @@ static int update_srp_passwd(const char *path, const char *name, int flags,
                 goto done;
             }
 
+            if (fgetc(fp) != EOF) {
+                fprintf(stderr,
+                        "afppasswd: verifier file must contain exactly one record.\n");
+                err = -1;
+                goto done;
+            }
+
             if (!(flags & OPT_ISROOT) && (*p == PASSWD_ILLEGAL)) {
                 fprintf(stderr, "Your password is disabled. Please see your administrator.\n");
                 err = -1;
@@ -814,13 +962,11 @@ static int update_srp_passwd(const char *path, const char *name, int flags,
     }
 
     if (flags & OPT_ADDUSER) {
-        /* Keep a new entry entirely in memory until its password is ready. */
-        if (find_append_position(fp, path, &pos) < 0) {
-            err = -1;
-            goto done;
-        }
+        /* Root may replace a stale record left behind after uid reuse. */
+        pos = 0;
     } else {
-        fprintf(stderr, "afppasswd: can't find %s in %s\n", name, path);
+        fprintf(stderr, "afppasswd: can't find verifier for %s in %s\n", name,
+                path);
         err = -1;
         goto done;
     }
@@ -829,9 +975,7 @@ found_entry:
 
     /* Verify old password for non-root users */
     if ((flags & OPT_ISROOT) == 0) {
-        /* For SRP, we can't verify old password from verifier alone.
-         * We would need to recompute the verifier from the old password
-         * and compare. */
+        /* Recompute the verifier from the supplied old password. */
         passwd = getpass("Enter OLD AFP password: ");
 
         if (passwd == NULL || passwd[0] == '\0') {
@@ -965,7 +1109,8 @@ found_entry:
         /* Write: username:hex_salt:hex_verifier\n */
         written = fprintf(fp, "%s:%.*s\n", name, (int)sizeof(hex_buf), hex_buf);
 
-        if (written != expected_len || fflush(fp) != 0) {
+        if (written != expected_len || fflush(fp) != 0 ||
+                ftruncate(fd, expected_len) < 0 || fsync(fd) < 0) {
             fprintf(stderr, "afppasswd: problem writing to %s: %s\n", path,
                     strerror(errno));
             err = -1;
@@ -987,8 +1132,7 @@ found_entry:
 done:
 
     if (passwd != NULL) {
-        explicit_bzero((char *)passwd,
-                       strnlen(passwd, SRP_PASSWDLEN + 1));
+        explicit_bzero(passwd, strnlen(passwd, SRP_PASSWDLEN + 1));
     }
 
     explicit_bzero(new_salt, sizeof(new_salt));
@@ -1000,15 +1144,30 @@ done:
     explicit_bzero(password, sizeof(password));
     explicit_bzero(line, sizeof(line));
     fclose(fp);
+    close(dirfd);
     return err;
 }
 
-static int create_srp_file(const char *path, uid_t minuid)
+static int create_srp_directory(const char *path, uid_t minuid)
 {
     struct passwd *pwd;
-    int fd, err = 0;
+    int dirfd, err = 0;
 
-    if ((fd = open_credential_for_replacement(path)) < 0) {
+    if (mkdir(path, 0755) < 0 && errno != EEXIST) {
+        fprintf(stderr, "afppasswd: can't create SRP verifier directory %s: %s\n",
+                path, strerror(errno));
+        return -1;
+    }
+
+    if ((dirfd = open_srp_verifier_directory(path)) < 0) {
+        return -1;
+    }
+
+    if (fchmod(dirfd, 0755) < 0) {
+        fprintf(stderr,
+                "afppasswd: can't set permissions on SRP verifier directory %s: %s\n",
+                path, strerror(errno));
+        close(dirfd);
         return -1;
     }
 
@@ -1019,6 +1178,7 @@ static int create_srp_file(const char *path, uid_t minuid)
             continue;
         }
 
+        int fd;
         /* username + ":" + placeholder salt + ":" + placeholder verifier + "\n" */
         size_t namelen = strnlen(pwd->pw_name, sizeof(buf));
 
@@ -1042,17 +1202,27 @@ static int create_srp_file(const char *path, uid_t minuid)
         }
 
         buf[n++] = '\n';
+        fd = open_srp_verifier(dirfd, path, pwd->pw_uid, 1);
 
-        if (write(fd, buf, n) != n) {
-            fprintf(stderr, "afppasswd: problem writing to %s: %s\n",
-                    path, strerror(errno));
+        if (fd < 0) {
             err = -1;
             break;
         }
+
+        if (ftruncate(fd, 0) < 0 || lseek(fd, 0, SEEK_SET) < 0 ||
+                write(fd, buf, n) != n) {
+            fprintf(stderr, "afppasswd: problem writing to %s: %s\n",
+                    path, strerror(errno));
+            err = -1;
+            close(fd);
+            break;
+        }
+
+        close(fd);
     }
 
     endpwent();
-    close(fd);
+    close(dirfd);
     return err;
 }
 
@@ -1101,8 +1271,8 @@ static int update_passwd(const char *path, const char *name, int flags,
     size_t pass_len;
     size_t name_len;
 
-    if ((flags & OPT_ADDUSER) && !(flags & OPT_ISROOT)) {
-        fprintf(stderr, "afppasswd: only root can add a user.\n");
+    if (!(flags & OPT_ISROOT)) {
+        fprintf(stderr, "afppasswd: only root can manage RandNum passwords.\n");
         return -1;
     }
 
@@ -1111,11 +1281,11 @@ static int update_passwd(const char *path, const char *name, int flags,
         return -1;
     }
 
-    if (randnum_open_keyfile(path, flags, &keyfd) < 0) {
+    if (randnum_open_keyfile(path, &keyfd) < 0) {
         return -1;
     }
 
-    fd = open_credential_file(path, O_RDWR, flags);
+    fd = open_credential_file(path, O_RDWR);
 
     if (fd < 0) {
         close(keyfd);
@@ -1371,23 +1541,24 @@ static void print_usage(void)
     fprintf(stderr, "afppasswd (Netatalk %s)\n", VERSION);
 #ifdef USE_CRACKLIB
     fprintf(stderr,
-            "Usage (root): afppasswd [-cfrn] [-a username] [-u minuid] [-p path] [-w string]\n");
+            "Usage (root): afppasswd [-cfmrn] [-a username] [-F afp.conf] [-u minuid] [-w string]\n");
 #else
     fprintf(stderr,
-            "Usage (root): afppasswd [-cfr] [-a username] [-u minuid] [-p path] [-w string]\n");
+            "Usage (root): afppasswd [-cfmr] [-a username] [-F afp.conf] [-u minuid] [-w string]\n");
 #endif
     fprintf(stderr,
-            "Usage (user): afppasswd [-r]\n");
+            "Usage (user): afppasswd\n");
     fprintf(stderr, "  -a user   add or update the named user\n");
     fprintf(stderr,
-            "  -c        create and initialize password file or specific user\n");
+            "  -c        create and initialize the credential store\n");
     fprintf(stderr, "  -f        force an action\n");
+    fprintf(stderr, "  -m        migrate a legacy flat SRP verifier file\n");
     fprintf(stderr, "  -r        use legacy RandNum mode (default is SRP)\n");
 #ifdef USE_CRACKLIB
-    fprintf(stderr, "  -n        disable cracklib checking of passwords\n");
+    fprintf(stderr, "  -n        disable password strength check\n");
 #endif
     fprintf(stderr, "  -u uid    minimum uid to use, defaults to 100\n");
-    fprintf(stderr, "  -p path   path to password/verifier file\n");
+    fprintf(stderr, "  -F path   path to afp.conf (root only)\n");
     fprintf(stderr, "  -w string use string as password\n");
 }
 
@@ -1396,18 +1567,30 @@ int main(int argc, char **argv)
     struct stat st;
     int flags;
     uid_t uid_min = UID_START, uid;
-    char *path = NULL;
-    int adduser_seen = 0, path_seen = 0, password_seen = 0, uid_seen = 0;
+    const char *path;
+    const char *config_path = _PATH_CONFDIR "afp.conf";
+    int adduser_seen = 0, config_seen = 0, password_seen = 0, uid_seen = 0;
     const char *pass = "";
     const char *add_username = NULL;
     int i, err = 0;
     extern char *optarg;
     extern int optind;
-    flags = ((uid = getuid()) == 0) ? OPT_ISROOT : 0;
+    uid = getuid();
 
-    while ((i = getopt(argc, argv, "cfnra:u:p:w:")) != EOF) {
+    /* Permanently discard an inherited setuid-root installation during an
+     * upgrade before parsing even a path option. New installations are 0755. */
+    if (uid != 0 && geteuid() != uid &&
+            (setuid(uid) < 0 || geteuid() != uid)) {
+        fprintf(stderr, "afppasswd: can't drop obsolete elevated privileges: %s\n",
+                strerror(errno));
+        return -1;
+    }
+
+    flags = (uid == 0) ? OPT_ISROOT : 0;
+
+    while ((i = getopt(argc, argv, "cfmnra:F:u:w:")) != EOF) {
         switch (i) {
-        case 'c': /* create and initialize password file or specific user */
+        case 'c': /* create and initialize the credential store */
             flags |= OPT_CREATE;
             break;
 
@@ -1419,6 +1602,10 @@ int main(int argc, char **argv)
 
         case 'f': /* force an action */
             flags |= OPT_FORCE;
+            break;
+
+        case 'm': /* migrate the legacy flat SRP verifier file */
+            flags |= OPT_MIGRATE;
             break;
 
         case 'r': /* legacy RandNum mode */
@@ -1436,9 +1623,9 @@ int main(int argc, char **argv)
             break;
 #endif /* USE_CRACKLIB */
 
-        case 'p': /* path to password/verifier file */
-            path = optarg;
-            path_seen = 1;
+        case 'F': /* administrator-selected afp.conf */
+            config_path = optarg;
+            config_seen = 1;
             break;
 
         case 'w': /* password string */
@@ -1461,36 +1648,44 @@ int main(int argc, char **argv)
     }
 
     /*
-     * A setuid invocation by a regular user has one narrow interface: change
-     * that user's own password, optionally selecting RandNum with -r. Reject
-     * every administrative option before choosing or touching a path, looking
-     * up an account, or prompting for a password.
+     * A regular user may only update that user's own SRP verifier. RandNum
+     * administration and all other options, including choosing afp.conf,
+     * remain root-only.
      */
     if (!(flags & OPT_ISROOT) &&
-            ((flags & (OPT_CREATE | OPT_FORCE | OPT_ADDUSER | OPT_NOCRACK)) ||
-             adduser_seen || uid_seen || path_seen || password_seen)) {
+            ((flags & (OPT_CREATE | OPT_FORCE | OPT_ADDUSER | OPT_NOCRACK |
+                       OPT_MIGRATE)) ||
+             (flags & OPT_RANDNUM) || adduser_seen || config_seen || uid_seen ||
+             password_seen)) {
         fprintf(stderr,
-                "afppasswd: non-root users may specify only the -r option.\n");
+                "ERROR: non-root users may update only their own SRP verifier.\n\n");
         print_usage();
         return -1;
     }
 
     /* Root running an update must specify the user via -a. */
-    if ((flags & OPT_ISROOT) && !(flags & OPT_CREATE) && !(flags & OPT_ADDUSER)) {
+    if ((flags & OPT_ISROOT) && !(flags & OPT_CREATE) &&
+            !(flags & OPT_ADDUSER) && !(flags & OPT_MIGRATE)) {
         fprintf(stderr,
-                "afppasswd: root must specify a user with -a username.\n");
+                "ERROR: root must specify a user with -a username.\n");
         print_usage();
         return -1;
     }
 
-    /* Set default path based on mode */
-    if (!path_seen) {
-        if (flags & OPT_RANDNUM) {
-            path = _PATH_AFPDPWFILE;
-        } else {
-            path = _PATH_AFPDSRPPWFILE;
-        }
+    /* Both credential paths are read from the selected trusted afp.conf.
+     * Non-root calls can reach only the installed standard file. */
+    if (configured_credential_path(config_path, 0,
+                                   (flags & OPT_RANDNUM) ? "passwd file" :
+                                   "srp verifier path",
+                                   (flags & OPT_RANDNUM) ? NULL :
+                                   "srp passwd file",
+                                   (flags & OPT_RANDNUM) ? _PATH_AFPDPWFILE :
+                                   _PATH_AFPSRPVERIFIERPATH,
+                                   buf, sizeof(buf), !config_seen) < 0) {
+        return -1;
     }
+
+    path = buf;
 
     /* Validate password length for RandNum mode */
     if ((flags & OPT_RANDNUM) && strnlen(pass, PASSWDLEN + 1) > PASSWDLEN) {
@@ -1498,16 +1693,41 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    if (flags & OPT_MIGRATE) {
+        if (!(flags & OPT_ISROOT)) {
+            fprintf(stderr, "afppasswd: only root can migrate SRP credentials.\n");
+            return -1;
+        }
+
+        if ((flags & (OPT_CREATE | OPT_FORCE | OPT_ADDUSER | OPT_NOCRACK |
+                      OPT_RANDNUM)) || adduser_seen || uid_seen || password_seen) {
+            fprintf(stderr,
+                    "afppasswd: -m accepts only -F; stop afpd before migration.\n");
+            print_usage();
+            return -1;
+        }
+
+        return afppasswd_migrate_srp(path, 0, NULL);
+    }
+
     if (flags & OPT_CREATE) {
         if ((flags & OPT_ISROOT) == 0) {
-            fprintf(stderr, "afppasswd: only root can create the RandNum password file.\n");
+            fprintf(stderr, "afppasswd: only root can initialize credentials.\n");
             return -1;
         }
 
         i = lstat(path, &st);
 
         if (!i && ((flags & OPT_FORCE) == 0)) {
-            fprintf(stderr, "afppasswd: RandNum password file already exists.\n");
+            if (!(flags & OPT_RANDNUM) && S_ISREG(st.st_mode)) {
+                fprintf(stderr,
+                        "afppasswd: %s is a legacy flat SRP verifier file; stop afpd and run 'afppasswd -m -F %s'.\n",
+                        path, config_path);
+            } else {
+                fprintf(stderr,
+                        "afppasswd: credential path already exists.\n");
+            }
+
             return -1;
         }
 
@@ -1518,7 +1738,7 @@ int main(int argc, char **argv)
 
             return create_file(path, uid_min);
         } else {
-            return create_srp_file(path, uid_min);
+            return create_srp_directory(path, uid_min);
         }
     } else {
         struct passwd *pwd = NULL;
@@ -1529,7 +1749,8 @@ int main(int argc, char **argv)
             if (flags & OPT_RANDNUM) {
                 return update_passwd(path, pwd->pw_name, flags, pass);
             } else {
-                return update_srp_passwd(path, pwd->pw_name, flags, pass);
+                return update_srp_passwd(path, pwd->pw_name, pwd->pw_uid,
+                                         flags, pass);
             }
         }
 

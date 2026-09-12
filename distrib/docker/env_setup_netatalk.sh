@@ -234,6 +234,10 @@ if [ -f "$NETATALK_CONFDIR/afppasswd.srp" ]; then
     rm -f "$NETATALK_CONFDIR/afppasswd.srp"
 fi
 
+if [ -d "$NETATALK_CONFDIR/afppasswd.srp" ]; then
+    rm -rf "$NETATALK_CONFDIR/afppasswd.srp"
+fi
+
 # Use AFP_UAMS verbatim if set, otherwise build from defaults
 if [ -n "$AFP_UAMS" ]; then
     UAMS="$AFP_UAMS"
