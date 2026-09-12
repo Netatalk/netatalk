@@ -1994,24 +1994,28 @@ static bool ad_entry_check_size(uint32_t eid,
     return true;
 }
 
+/*!
+ * @brief Whether an entry of @p len bytes fits at eid's offset in ad
+ *
+ * ad_entry()'s bounds check against a caller-supplied length, so a
+ * destination can be checked before its length is committed.
+ */
+bool ad_entry_fits(const struct adouble *ad, int eid, uint32_t len)
+{
+    off_t off = ad_getentryoff(ad, eid);
+    return off != 0
+           && ad_entry_check_size(eid, ad->valid_data_len, (uint32_t) off, len);
+}
+
 void *ad_entry(const struct adouble *ad, int eid)
 {
-    size_t bufsize = ad->valid_data_len;
     off_t off = ad_getentryoff(ad, eid);
-    size_t len = ad_getentrylen(ad, eid);
-    bool valid;
-    valid = ad_entry_check_size(eid, bufsize, off, len);
+    uint32_t len = (uint32_t) ad_getentrylen(ad, eid);
 
-    if (!valid) {
+    if (!ad_entry_fits(ad, eid, len)) {
         LOG(log_debug, logtype_ad,
-            "ad_entry(%s, %d): invalid off: %d, len: %llu, buf: %llu",
-            ad->ad_name, eid, off, len, bufsize);
-        return NULL;
-    }
-
-    if (off == 0) {
-        LOG(log_debug, logtype_ad, "ad_entry(%s, %d): invalid off: %d, len: %llu",
-            ad->ad_name, eid, off, len);
+            "ad_entry(%s, %d): invalid off: %lld, len: %u, buf: %zu",
+            ad->ad_name, eid, (long long) off, len, ad->valid_data_len);
         return NULL;
     }
 

@@ -250,6 +250,44 @@ static int utest_ad_copy_header_bounds_finderinfo(void)
     return 0;
 }
 
+/*!
+ * @brief A rejected entry leaves every earlier entry of the destination intact
+ *
+ * ADEID_NAME precedes ADEID_FINDERI, so the name is what a per-entry copy
+ * would already have committed when the oversized FinderInfo is refused.
+ */
+static int utest_ad_copy_header_rejects_before_writing(void)
+{
+    struct adouble src;
+    struct adouble dst;
+    const char *dst_name;
+    ad_init_old(&src, AD_VERSION2, 0);
+    ad_init_old(&dst, AD_VERSION2, 0);
+
+    if (ad_init_offsets(&src) != 0 || ad_init_offsets(&dst) != 0) {
+        return 1;
+    }
+
+    ad_setentrylen(&src, ADEID_NAME, 4);
+    memcpy(ad_entry(&src, ADEID_NAME), "NAME", 4);
+    memset(ad_entry(&src, ADEID_FINDERI), 'F', ADEDLEN_FINDERI);
+    ad_setentryoff(&src, ADEID_FINDERI, 1);
+    ad_setentrylen(&src, ADEID_FINDERI, AD_DATASZ2 - 1);
+
+    if (ad_copy_header(&dst, &src) != -1) {
+        return 2;
+    }
+
+    dst_name = dst.ad_data + ad_getentryoff(&dst, ADEID_NAME);
+
+    if (ad_getentrylen(&dst, ADEID_NAME) != 0
+            || memcmp(dst_name, "\0\0\0\0", 4) != 0) {
+        return 3;
+    }
+
+    return 0;
+}
+
 static int utest_ad_copy_header_skips_dfork(void)
 {
     static const uint8_t guard_byte = 0xa5;
@@ -263,9 +301,8 @@ static int utest_ad_copy_header_skips_dfork(void)
         return 1;
     }
 
-    /* Reproduce the attacker-controlled entries from poc_dfork.py.  Each
-     * entry fits by itself, but copying the source length at the destination
-     * offset would write 739 bytes beyond valid_data_len. */
+    /* Each entry fits by itself, but copying the source length at the
+     * destination offset would write 739 bytes beyond valid_data_len. */
     memset(src.ad_data, 'D', src.valid_data_len);
     ad_setentryoff(&src, ADEID_DFORK, 1);
     ad_setentrylen(&src, ADEID_DFORK, AD_DATASZ2 - 1);
@@ -806,6 +843,8 @@ int main(int argc, char *argv[])
              "ad_copy_header copies a valid FinderInfo entry");
     TEST_int(utest_ad_copy_header_bounds_finderinfo(), 0,
              "ad_copy_header rejects oversized FinderInfo without overwriting destination");
+    TEST_int(utest_ad_copy_header_rejects_before_writing(), 0,
+             "ad_copy_header leaves the destination untouched when an entry is rejected");
     TEST_int(utest_ad_copy_header_skips_dfork(), 0,
              "ad_copy_header does not copy data-fork entries");
     /* DSI unit tests: frame acceptance, write handoff, quantum shaping. */
@@ -981,6 +1020,8 @@ int main(int argc, char *argv[])
                      "cnid_find: search results never carry a truncated id");
     TEST_int_or_skip(utest_cnid_dup_row_no_truncated_delete(vol), 0,
                      "cnid_lookup: duplicate cleanup never deletes through a truncated id");
+    TEST_int_or_skip(utest_cnid_uuid_case_keeps_table(vol), 0,
+                     "cnid_open: a case-flipped volume UUID reuses the live table");
     /* Last of the CNID group: recovering from the reset empties the volume's
      * table, so anything expecting a CNID minted earlier must run before it */
     TEST_int_or_skip(utest_cnid_add_depletion_resets(vol), 0,

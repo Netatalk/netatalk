@@ -74,26 +74,6 @@
 static void cnid_sqlite_set_errno(int sqlite_return);
 
 /*!
- * @brief Whether a string is one of this backend's per-volume table names
- *
- * uuid_strip_dashes() yields exactly 32 hex digits, so a value in any other
- * form was not written by this backend. A table name cannot be a bound
- * parameter, so statements that name one accept only this form.
- */
-static bool cnid_sqlite_is_table_name(const char *name)
-{
-    size_t i;
-
-    for (i = 0; name[i] != '\0'; i++) {
-        if (!isxdigit((unsigned char) name[i])) {
-            return false;
-        }
-    }
-
-    return i == 32;
-}
-
-/*!
  * @brief Prepare one per-volume statement, replacing any previous handle
  *
  * @param[in,out] db      backend private data
@@ -2007,6 +1987,51 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     }
 
     /*
+     * SQLite table names are case-insensitive while VolUUID compares bytewise,
+     * so a row for this path differing from the configured UUID only in case
+     * names this volume's live table, and the stale scan below would drop it.
+     * Adopt the spelling on disk instead.
+     */
+    if (sqlite3_prepare_v2(db->cnid_sqlite_con,
+                           "SELECT VolUUID FROM volumes WHERE VolPath = ? "
+                           "AND VolUUID != ? AND VolUUID = ? COLLATE NOCASE",
+                           -1, &transient_stmt, NULL) == SQLITE_OK) {
+        char *same_table_uuid = NULL;
+        sqlite3_bind_text(transient_stmt, 1, vol->v_path, -1, SQLITE_STATIC);
+        sqlite3_bind_text(transient_stmt, 2, db->cnid_sqlite_voluuid_str, -1,
+                          SQLITE_STATIC);
+        sqlite3_bind_text(transient_stmt, 3, db->cnid_sqlite_voluuid_str, -1,
+                          SQLITE_STATIC);
+
+        if (sqlite3_step(transient_stmt) == SQLITE_ROW) {
+            const char *on_disk = (const char *)sqlite3_column_text(transient_stmt, 0);
+
+            if (on_disk != NULL && cnid_sqlite_uuid_usable(on_disk)) {
+                same_table_uuid = strdup(on_disk);
+            }
+        }
+
+        /* The statement still reads the bound string, so it is finalized
+         * before the swap */
+        sqlite3_finalize(transient_stmt);
+        transient_stmt = NULL;
+
+        if (same_table_uuid != NULL) {
+            LOG(log_info, logtype_cnid,
+                "cnid_sqlite_open: volume '%s' UUID '%s' names the existing CNID "
+                "table '%s'; keeping that spelling",
+                vol->v_path, db->cnid_sqlite_voluuid_str, same_table_uuid);
+            free(db->cnid_sqlite_voluuid_str);
+            db->cnid_sqlite_voluuid_str = same_table_uuid;
+        }
+    } else {
+        LOG(log_error, logtype_cnid,
+            "cnid_sqlite_open: could not check the CNID table spelling for '%s': %s",
+            vol->v_path, sqlite3_errmsg(db->cnid_sqlite_con));
+        EC_FAIL;
+    }
+
+    /*
      * Clean up stale volume entries for the same path but with a different UUID.
      * This can happen when the UUID config file is rewritten without the entry
      * for this volume (e.g. [Homes] volumes not loaded during load_afp_conf_vols),
@@ -2031,17 +2056,20 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                 && stale_count < 64) {
             const char *stale_uuid = (const char *)sqlite3_column_text(transient_stmt, 0);
 
+            if (stale_uuid == NULL) {
+                continue;
+            }
+
             /* Only names this backend created are cleaned up; a row whose
              * VolUUID is not in table-name form is left in place and logged */
-            if (stale_uuid != NULL && !cnid_sqlite_is_table_name(stale_uuid)) {
+            if (!cnid_sqlite_uuid_usable(stale_uuid)) {
                 LOG(log_warning, logtype_cnid,
                     "cnid_sqlite_open: ignoring volumes row for path '%s' whose "
                     "VolUUID is not a CNID table name", vol->v_path);
                 continue;
             }
 
-            if (stale_uuid == NULL
-                    || (stale_uuids[stale_count] = strdup(stale_uuid)) == NULL) {
+            if ((stale_uuids[stale_count] = strdup(stale_uuid)) == NULL) {
                 continue;
             }
 
@@ -2065,27 +2093,6 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         for (int i = 0; i < stale_count; i++) {
             char *stale_sql = NULL;
             int removed;
-
-            /* A UUID that is not 32 hex digits names no table this code
-             * created, so only its row is removed. The row is what brings it
-             * back at the next open. */
-            if (!cnid_sqlite_uuid_usable(stale_uuids[i])) {
-                LOG(log_error, logtype_cnid,
-                    "cnid_sqlite_open: refusing to act on malformed stale volume "
-                    "UUID for path '%s'; removing its entry", vol->v_path);
-                removed = cnid_sqlite_delete_volumes_row(db->cnid_sqlite_con,
-                                                         stale_uuids[i]) == 0;
-
-                if (!removed) {
-                    LOG(log_warning, logtype_cnid,
-                        "cnid_sqlite_open: could not remove malformed stale volume "
-                        "entry for path '%s'", vol->v_path);
-                }
-
-                free(stale_uuids[i]);
-                continue;
-            }
-
             LOG(log_warning, logtype_cnid,
                 "cnid_sqlite_open: removing stale volume entry UUID '%s' for path '%s'",
                 stale_uuids[i], vol->v_path);

@@ -35,6 +35,7 @@
 
 #include <fcntl.h>
 #include <inttypes.h>
+#include <stdbool.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -467,6 +468,7 @@ extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off,
 
 /* ad_open.c */
 extern void *ad_entry(const struct adouble *ad, int eid);
+extern bool ad_entry_fits(const struct adouble *ad, int eid, uint32_t len);
 extern off_t ad_getentryoff(const struct adouble *ad, int eid);
 extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid(const uid_t);

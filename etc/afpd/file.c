@@ -2256,7 +2256,10 @@ int copyfile(struct vol *s_vol,
     if (ad_meta_open(&add)) {
         if (ad_meta_open(adp)) {
             if (ad_copy_header(&add, adp) != 0) {
-                err = EIO;
+                if (err == 0) {
+                    err = EIO;
+                }
+
                 goto error;
             }
         }
@@ -2333,6 +2336,9 @@ done:
 
     case EROFS:
         return AFPERR_VLOCK;
+
+    case EIO:
+        return AFPERR_MISC;
     }
 
     return AFPERR_PARAM;

@@ -623,7 +623,6 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
                 i += 2;
 
                 if (i == inplen) {
-                    out++;
                     *out = 0;
                     return o_len - *outlen;
                 }
