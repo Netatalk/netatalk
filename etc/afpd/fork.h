@@ -52,6 +52,15 @@ struct ofork {
 #define AFPFORK_VIRTUAL (1<<8)  /*!< virtual file fork */
 
 #define of_name(a) (a)->of_ad->ad_name
+
+/* Check that [offset, offset + length) is contained in a fork without
+ * evaluating the potentially overflowing addition. */
+static inline int fork_range_within(off_t offset, off_t length, off_t size)
+{
+    return offset >= 0 && length >= 0 && size >= 0
+           && offset <= size && length <= size - offset;
+}
+
 /* in ofork.c */
 extern struct ofork *of_alloc(struct vol *, struct dir *,
                               char *, uint16_t *, const int,

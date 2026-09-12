@@ -1253,10 +1253,9 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
     }
 
     /* Defense-in-depth: validate bounds before any memcpy from rfork buffer.
-     * Callers maintain offset + reqcount <= dcache_rlen, but verify here to
-     * prevent heap over-read if invariants are ever violated. */
-    if (offset < 0 || reqcount < 0
-            || offset + reqcount > cached_entry->dcache_rlen) {
+     * Use subtraction-based validation: offset + reqcount may overflow for a
+     * malicious FPReadExt count before it can be compared with dcache_rlen. */
+    if (!fork_range_within(offset, reqcount, cached_entry->dcache_rlen)) {
         LOG(log_error, logtype_afpd,
             "rfork_cache_serve_from_buf: bounds violation "
             "(offset=%lld, reqcount=%lld, rlen=%lld, did:%u)",
@@ -1493,8 +1492,10 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_err;
         }
 
-        /* subtract off the offset */
-        if (reqcount + offset > size) {
+        /* Subtract only after offset has been checked against size.  Adding a
+         * client-controlled FPReadExt count here can overflow signed off_t and
+         * leave reqcount unbounded on the resource-fork cache path. */
+        if (!fork_range_within(offset, reqcount, size)) {
             reqcount = size - offset;
             err = AFPERR_EOF;
         }

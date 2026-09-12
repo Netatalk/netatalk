@@ -53,6 +53,7 @@
 #include "directory.h"
 #include "file.h"
 #include "filedir.h"
+#include "fork.h"
 #include "hash.h"
 #include "subtests.h"
 #include "subtests_cnid.h"
@@ -141,6 +142,26 @@ struct guarded_adouble {
     struct adouble ad;
     uint8_t guard[AD_DATASZ_MAX];
 };
+
+static int utest_fork_range_rejects_wrapped_read(void)
+{
+    if (fork_range_within(1, (off_t)INT64_MAX, 1024)) {
+        return 1;
+    }
+
+    if (!fork_range_within(1, 1023, 1024)) {
+        return 2;
+    }
+
+    if (fork_range_within(1, 1024, 1024)
+            || fork_range_within(1024, 1, 1024)
+            || fork_range_within(-1, 1, 1024)
+            || fork_range_within(0, -1, 1024)) {
+        return 3;
+    }
+
+    return 0;
+}
 
 _Static_assert(offsetof(struct guarded_adouble,
                         guard) == sizeof(struct adouble),
@@ -780,6 +801,8 @@ int main(int argc, char *argv[])
          "init logging to stderr");
     TEST_int(utest_decompose_reserves_terminator(), 0,
              "decompose_w reserves space for its UTF-16 terminator");
+    TEST_int(utest_fork_range_rejects_wrapped_read(), 0,
+             "fork read bounds reject signed offset-plus-count overflow");
     TEST_int(utest_ad_copy_header_valid_finderinfo(), 0,
              "ad_copy_header copies a valid FinderInfo entry");
     TEST_int(utest_ad_copy_header_bounds_finderinfo(), 0,
