@@ -172,7 +172,7 @@ static int utest_ad_copy_header_valid_finderinfo(void)
     struct adouble src;
     struct adouble dst;
     char *src_finderinfo;
-    char *dst_finderinfo;
+    const char *dst_finderinfo;
     ad_init_old(&src, AD_VERSION2, 0);
     ad_init_old(&dst, AD_VERSION2, 0);
 
@@ -272,7 +272,6 @@ static int utest_ad_copy_header_skips_dfork(void)
     ad_setentryoff(&dst.ad, ADEID_DFORK, AD_DATASZ2 - 1);
     ad_setentrylen(&dst.ad, ADEID_DFORK, 1);
     memset(dst.guard, guard_byte, sizeof(dst.guard));
-
     copy_ret = ad_copy_header(&dst.ad, &src);
 
     if (copy_ret != 0) {
