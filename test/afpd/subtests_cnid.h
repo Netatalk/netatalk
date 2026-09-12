@@ -10,6 +10,7 @@ extern int utest_cnid_valide_byteorder(void);
 extern int utest_cnid_resolve_dotdot_rejected(void);
 extern int utest_cnid_add_busy_not_fatal(struct vol *vol);
 extern int utest_cnid_add_depletion_resets(struct vol *vol);
+extern int utest_cnid_uuid_case_keeps_table(struct vol *vol);
 extern int utest_cnid_resolve_notfound_errno(struct vol *vol);
 extern int utest_cnid_corrupt_row_classified(struct vol *vol);
 extern int utest_cnid_find_no_truncated_id(struct vol *vol);

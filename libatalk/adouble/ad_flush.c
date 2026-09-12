@@ -185,16 +185,61 @@ int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
     return AD_DATASZ_OSX;
 }
 
+/*!
+ * @brief The source entry to copy for eid, or NULL to skip it
+ *
+ * Forks and the comment are never copied; anything else must be present on
+ * both sides and valid in the source. @p len receives its source length.
+ */
+static char *ad_copy_header_entry(const struct adouble *add,
+                                  const struct adouble *ads,
+                                  uint32_t eid, uint32_t *len)
+{
+    char *src;
+    ssize_t ade_len;
+
+    switch (eid) {
+    case ADEID_COMMENT:
+    case ADEID_DFORK:
+    case ADEID_RFORK:
+        return NULL;
+
+    default:
+        break;
+    }
+
+    if (ads->ad_eid[eid].ade_off == 0 || add->ad_eid[eid].ade_off == 0) {
+        return NULL;
+    }
+
+    ade_len = ads->ad_eid[eid].ade_len;
+
+    if (ade_len <= 0) {
+        return NULL;
+    }
+
+    *len = (uint32_t) ade_len;
+
+    if ((src = ad_entry(ads, eid)) == NULL) {
+        LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid src eid[%d]",
+            ads->ad_name, eid);
+    }
+
+    return src;
+}
+
 /* -------------------
  * XXX copy only header with same size or comment
  * doesn't work well for adouble with different version.
  *
+ * Every destination entry is checked against the length to be copied before
+ * anything is written: exchangefiles runs this on live open forks, so a
+ * failure must leave the header untouched.
  */
 int ad_copy_header(struct adouble *add, struct adouble *ads)
 {
     uint32_t       eid;
     uint32_t       len;
-    ssize_t        dst_len;
     char *src = NULL;
     char *dst = NULL;
 
@@ -205,56 +250,28 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     }
 
     for (eid = 0; eid < ADEID_MAX; eid++) {
-        src = dst = NULL;
-
-        if (ads->ad_eid[eid].ade_off == 0 || add->ad_eid[eid].ade_off == 0) {
+        if (ad_copy_header_entry(add, ads, eid, &len) == NULL) {
             continue;
         }
 
-        len = ads->ad_eid[eid].ade_len;
+        /* FinderInfo accepts any length of at least 32 bytes, so a large but
+         * source-valid entry could otherwise be copied past add->ad_data */
+        if (!ad_entry_fits(add, eid, len)) {
+            LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid dst eid[%d]",
+                add->ad_name, eid);
+            errno = EIO;
+            return -1;
+        }
+    }
 
-        if (len == 0) {
+    for (eid = 0; eid < ADEID_MAX; eid++) {
+        if ((src = ad_copy_header_entry(add, ads, eid, &len)) == NULL) {
             continue;
         }
 
-        switch (eid) {
-        case ADEID_COMMENT:
-        case ADEID_DFORK:
-        case ADEID_RFORK:
-            continue;
-
-        default:
-            if ((src = ad_entry(ads, eid)) == NULL) {
-                LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid src eid[%d]",
-                    ads->ad_name, eid);
-                continue;
-            }
-
-            /*
-             * Validate the destination against the length memcpy() will
-             * actually use.  Checking it with the old destination length is
-             * insufficient: FinderInfo accepts any length of at least 32
-             * bytes, so a large but source-valid entry could otherwise be
-             * copied past add->ad_data.
-             *
-             * Keep the old length until validation and copying succeed so an
-             * error leaves this destination entry's metadata unchanged.
-             */
-            dst_len = add->ad_eid[eid].ade_len;
-            ad_setentrylen(add, eid, len);
-            dst = ad_entry(add, eid);
-            ad_setentrylen(add, eid, dst_len);
-
-            if (dst == NULL) {
-                LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid dst eid[%d]",
-                    add->ad_name, eid);
-                errno = EIO;
-                return -1;
-            }
-
-            memcpy(dst, src, len);
-            ad_setentrylen(add, eid, len);
-        }
+        dst = add->ad_data + ad_getentryoff(add, eid);
+        memcpy(dst, src, len);
+        ad_setentrylen(add, eid, len);
     }
 
     add->ad_rlen = ads->ad_rlen;

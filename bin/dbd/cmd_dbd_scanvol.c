@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <setjmp.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -231,7 +232,7 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
     addir_fd = open(ADv2_DIRNAME,
                     O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-    if (addir_fd == -1) {
+    if (addir_fd < 0) {
         dbd_log(LOGSTD, "Couldn't open '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
         return;
@@ -322,6 +323,16 @@ static int check_eafiles(const char *fname)
 }
 
 /*!
+ * @brief Whether a non-directory holds the AppleDouble dir name
+ *
+ * A regular file gives ENOTDIR, a symlink the platform's O_NOFOLLOW errno.
+ */
+static bool adouble_dir_unusable(int err)
+{
+    return err == ENOTDIR || err == OPEN_NOFOLLOW_ERRNO;
+}
+
+/*!
  * Check for .AppleDouble folder and .Parent, create if missing
  */
 static int check_addir(int volroot _U_)
@@ -342,6 +353,15 @@ static int check_addir(int volroot _U_)
                     O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
     if (addir_fd == -1) {
+        if (adouble_dir_unusable(errno)) {
+            /* Left by a non-AFP client: skip this directory's AppleDouble
+             * checks rather than fail the volume */
+            dbd_log(LOGSTD,
+                    "Skipping AppleDouble checks in '%s': %s is not a directory",
+                    cwdbuf, ADv2_DIRNAME);
+            return 1;
+        }
+
         if (errno != ENOENT) {
             dbd_log(LOGSTD, "Open error for directory %s/%s: %s", cwdbuf, ADv2_DIRNAME,
                     strerror(errno));
@@ -437,22 +457,16 @@ static int check_addir(int volroot _U_)
             addir_fd = open(ADv2_DIRNAME,
                             O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-            if (addir_fd == -1) {
-                dbd_log(LOGSTD, "Couldn't open newly created directory \"%s\"", ADv2_DIRNAME);
-
-                if (parent_fd != -1) {
-                    close(parent_fd);
+            if (addir_fd != -1) {
+                if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
+                    dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
                 }
-
-                return -1;
-            }
-
-            if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
-                dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
+            } else {
+                dbd_log(LOGSTD, "Couldn't open newly created directory \"%s\"", ADv2_DIRNAME);
             }
         }
 
-        if (parent_fd == -1) {
+        if (parent_fd == -1 && addir_fd != -1) {
             parent_fd = openat(addir_fd, ".Parent",
                                O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
 
@@ -462,8 +476,6 @@ static int check_addir(int volroot _U_)
                 }
             } else {
                 dbd_log(LOGSTD, "Couldn't open newly created file \"%s\"", ad_parent_path);
-                close(addir_fd);
-                return -1;
             }
         }
     }
@@ -494,13 +506,6 @@ static int check_eafile_in_adouble(int parent_fd, int addir_fd,
 
     /* Check if this is an AFPVOL_EA_AD vol */
     if (vol->v_vfs_ea == AFPVOL_EA_AD) {
-        /* Both descriptors name the containing directories. */
-        if (parent_fd < 0 || addir_fd < 0) {
-            dbd_log(LOGSTD, "Invalid directory descriptor while checking '%s/%s'",
-                    ADv2_DIRNAME, name);
-            return -1;
-        }
-
         /* Does the filename contain "::EA" ? */
         namedup = strdup(name);
 
@@ -565,7 +570,7 @@ static int read_addir(void)
     struct stat st;
     parent_fd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
 
-    if (parent_fd == -1) {
+    if (parent_fd < 0) {
         dbd_log(LOGSTD, "Couldn't open '%s': %s", cwdbuf, strerror(errno));
         return -1;
     }
@@ -573,11 +578,18 @@ static int read_addir(void)
     addir_fd = openat(parent_fd, ADv2_DIRNAME,
                       O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-    if (addir_fd == -1) {
+    if (addir_fd < 0) {
         int saved_errno = errno;
         close(parent_fd);
 
-        if (vol->v_adouble == AD_VERSION_EA && saved_errno == ENOENT) {
+        /* On an ea volume the directory is at most a v2 leftover, never a
+         * reason to stop the rebuild */
+        if (vol->v_adouble == AD_VERSION_EA) {
+            if (saved_errno != ENOENT) {
+                dbd_log(LOGSTD, "Skipping '%s/%s': %s",
+                        cwdbuf, ADv2_DIRNAME, strerror(saved_errno));
+            }
+
             return 0;
         }
 
@@ -788,9 +800,10 @@ static int dbd_readdir(int volroot, cnid_t did)
     struct dirent *ep;
     static struct stat st;      /* Save some stack space */
 
-    /* Check again for .AppleDouble folder, check_adfile also checks/creates it */
-    if ((addir_ok = check_addir(volroot)) != 0 && !(dbd_flags & DBD_FLAGS_SCAN)) {
-        /* Fatal on rebuild run, continue if only scanning ! */
+    /* Check again for .AppleDouble folder, check_adfile also checks/creates it.
+     * Positive: skip this directory's AppleDouble checks; negative: fatal on a
+     * rebuild run. */
+    if ((addir_ok = check_addir(volroot)) < 0 && !(dbd_flags & DBD_FLAGS_SCAN)) {
         return -1;
     }
 
@@ -922,8 +935,8 @@ static int dbd_readdir(int volroot, cnid_t did)
             /* Check CNIDs */
             cnid = check_cnid(name, did, &st, adfile_ok);
 
-            /* Check EA files */
-            if (vol->v_vfs_ea == AFPVOL_EA_AD) {
+            /* Check EA files, which live in the AppleDouble dir too */
+            if (ADDIR_OK && vol->v_vfs_ea == AFPVOL_EA_AD) {
                 check_eafiles(name);
             }
         }

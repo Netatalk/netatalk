@@ -16,6 +16,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -393,6 +394,100 @@ exit:
 
     close(fd);
     unlink(probe);
+    return result;
+#endif /* CNID_BACKEND_SQLITE */
+}
+
+/*!
+ * @brief A UUID differing only in case reuses the live table, never drops it
+ *
+ * SQLite table names are case-insensitive, but the stale-volume scan compares
+ * VolUUID bytewise. A second session under a case-flipped spelling of the same
+ * UUID must therefore find the same table, and the CNIDs in it must survive.
+ */
+int utest_cnid_uuid_case_keeps_table(struct vol *vol)
+{
+#ifndef CNID_BACKEND_SQLITE
+    (void) vol;
+    return TEST_SKIP;
+#else
+    struct vol peer_vol;
+    struct _cnid_db *peer_db;
+    char *flipped = NULL;
+    char probe[MAXPATHLEN];
+    char resolved[MAXPATHLEN];
+    const char *name;
+    struct stat st;
+    cnid_t id;
+    cnid_t did;
+    int fd;
+    int result = 0;
+
+    if (vol->v_cdb == NULL || vol->v_uuid == NULL
+            || vol->v_cnidscheme == NULL
+            || strcmp(vol->v_cnidscheme, "sqlite") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((flipped = strdup(vol->v_uuid)) == NULL) {
+        return 1;
+    }
+
+    for (char *c = flipped; *c != '\0'; c++) {
+        unsigned char ch = *c;
+        *c = (char)(isupper(ch) ? tolower(ch) : toupper(ch));
+    }
+
+    /* An all-digit UUID has nothing to flip */
+    if (strcmp(flipped, vol->v_uuid) == 0) {
+        free(flipped);
+        return TEST_SKIP;
+    }
+
+    snprintf(probe, sizeof(probe), "%s/cnid_uuidcase_XXXXXX", vol->v_path);
+
+    if ((fd = mkstemp(probe)) < 0) {
+        free(flipped);
+        return 2;
+    }
+
+    if (fstat(fd, &st) != 0) {
+        result = 3;
+        goto close_probe;
+    }
+
+    name = strrchr(probe, '/') + 1;
+    id = cnid_add(vol->v_cdb, &st, htonl(2), name, strlen(name), CNID_INVALID);
+
+    if (id == CNID_INVALID) {
+        result = 4;
+        goto close_probe;
+    }
+
+    peer_vol = *vol;
+    peer_vol.v_uuid = flipped;
+    peer_vol.v_cdb = NULL;
+    peer_db = cnid_open(&peer_vol, vol->v_cnidscheme, 0);
+
+    if (peer_db == NULL) {
+        result = 5;
+        goto delete_id;
+    }
+
+    cnid_close(peer_db);
+    did = id;
+
+    if (cnid_resolve(vol->v_cdb, &did, resolved, sizeof(resolved)) == NULL
+            || strcmp(resolved, name) != 0) {
+        result = 6;
+    }
+
+delete_id:
+    cnid_delete(vol->v_cdb, id);
+close_probe:
+    close(fd);
+    unlink(probe);
+    free(flipped);
     return result;
 #endif /* CNID_BACKEND_SQLITE */
 }
