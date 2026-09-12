@@ -249,7 +249,7 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
             dbd_log(LOGSTD, "Removing EA file: '%s/%s/%s'",
                     cwdbuf, ADv2_DIRNAME, ep->d_name);
 
-            if ((unlinkat(dirfd(dp), ep->d_name, 0)) != 0) {
+            if ((unlinkat(addir_fd, ep->d_name, 0)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking EA file '%s/%s/%s': %s",
                         cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
             }
@@ -437,12 +437,18 @@ static int check_addir(int volroot _U_)
             addir_fd = open(ADv2_DIRNAME,
                             O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-            if (addir_fd != -1) {
-                if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
-                    dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
-                }
-            } else {
+            if (addir_fd == -1) {
                 dbd_log(LOGSTD, "Couldn't open newly created directory \"%s\"", ADv2_DIRNAME);
+
+                if (parent_fd != -1) {
+                    close(parent_fd);
+                }
+
+                return -1;
+            }
+
+            if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
+                dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
             }
         }
 
@@ -456,6 +462,8 @@ static int check_addir(int volroot _U_)
                 }
             } else {
                 dbd_log(LOGSTD, "Couldn't open newly created file \"%s\"", ad_parent_path);
+                close(addir_fd);
+                return -1;
             }
         }
     }
@@ -486,6 +494,13 @@ static int check_eafile_in_adouble(int parent_fd, int addir_fd,
 
     /* Check if this is an AFPVOL_EA_AD vol */
     if (vol->v_vfs_ea == AFPVOL_EA_AD) {
+        /* Both descriptors name the containing directories. */
+        if (parent_fd < 0 || addir_fd < 0) {
+            dbd_log(LOGSTD, "Invalid directory descriptor while checking '%s/%s'",
+                    ADv2_DIRNAME, name);
+            return -1;
+        }
+
         /* Does the filename contain "::EA" ? */
         namedup = strdup(name);
 
@@ -590,7 +605,7 @@ static int read_addir(void)
             continue;
         }
 
-        if ((fstatat(dirfd(dp), ep->d_name, &st, AT_SYMLINK_NOFOLLOW)) < 0) {
+        if ((fstatat(addir_fd, ep->d_name, &st, AT_SYMLINK_NOFOLLOW)) < 0) {
             dbd_log(LOGSTD,
                     "Lost file or dir while enumeratin dir '%s/%s/%s', probably removed: %s",
                     cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
@@ -605,7 +620,7 @@ static int read_addir(void)
         }
 
         /* Check if for orphaned and corrupt Extended Attributes file */
-        if (check_eafile_in_adouble(parent_fd, dirfd(dp), ep->d_name) != 0) {
+        if (check_eafile_in_adouble(parent_fd, addir_fd, ep->d_name) != 0) {
             continue;
         }
 
@@ -626,7 +641,7 @@ static int read_addir(void)
                 continue;
             }
 
-            if ((unlinkat(dirfd(dp), ep->d_name, 0)) != 0) {
+            if ((unlinkat(addir_fd, ep->d_name, 0)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking orphaned AppleDoube file '%s/%s/%s'",
                         cwdbuf, ADv2_DIRNAME, ep->d_name);
             }
