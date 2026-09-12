@@ -43,7 +43,7 @@ library(
     'uams_randnum',
     ['uams_randnum.c'],
     include_directories: root_includes,
-    dependencies: [crack, libgcrypt],
+    dependencies: [libgcrypt],
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',

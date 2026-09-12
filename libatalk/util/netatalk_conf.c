@@ -3312,9 +3312,25 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                                NULL, _PATH_CONFDIR "extmap.conf");
     options->passwdfile     = getoption_strdup(config, INISEC_GLOBAL, "passwd file",
                                                NULL, _PATH_AFPDPWFILE);
-    options->srppasswdfile  = getoption_strdup(config, INISEC_GLOBAL,
-                                               "srp passwd file",
-                                               NULL, _PATH_AFPDSRPPWFILE);
+    {
+        const char *old_srp_option = INIPARSER_GETSTR(config, INISEC_GLOBAL,
+                                                      "srp passwd file", NULL);
+        const char *srp_option = INIPARSER_GETSTR(config, INISEC_GLOBAL,
+                                                  "srp verifier path", NULL);
+
+        if (old_srp_option && *old_srp_option) {
+            LOG(log_warning, logtype_afpd,
+                "Using deprecated 'srp passwd file' option; its value is now a verifier directory. If it names a legacy flat file, stop afpd and run 'afppasswd -m', then use 'srp verifier path'");
+        }
+
+        if (srp_option && *srp_option) {
+            options->srpverifierpath = strdup(srp_option);
+        } else if (old_srp_option && *old_srp_option) {
+            options->srpverifierpath = strdup(old_srp_option);
+        } else {
+            options->srpverifierpath = strdup(_PATH_AFPSRPVERIFIERPATH);
+        }
+    }
     options->uampath        = getoption_strdup(config, INISEC_GLOBAL, "uam path",
                                                NULL, _PATH_AFPDUAMPATH);
     options->uamlist        = getoption_strdup(config, INISEC_GLOBAL, "uam list",
@@ -3874,8 +3890,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.passwdfile)
     }
 
-    if (obj->options.srppasswdfile) {
-        CONFIG_ARG_FREE(obj->options.srppasswdfile)
+    if (obj->options.srpverifierpath) {
+        CONFIG_ARG_FREE(obj->options.srpverifierpath)
     }
 
     if (obj->options.uampath) {

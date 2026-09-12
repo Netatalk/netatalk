@@ -898,6 +898,8 @@ int main(int argc, char *argv[])
                      "ea resolves volume -> preset -> [Global] -> auto-detect");
     TEST_int_or_skip(utest_conf_strict_locking_keys(), 0,
                      "strict locking key, afp read locks alias, precedence, explicitness");
+    TEST_int_or_skip(utest_conf_srp_verifier_path_keys(), 0,
+                     "SRP verifier path key, deprecated passwd-file alias, precedence");
     TEST_int_or_skip(utest_conf_spotlight_results_limit_keys(), 0,
                      "spotlight results limit key, sparql results limit alias, precedence");
     TEST_int_or_skip(utest_conf_multiproto_defaults(), 0,

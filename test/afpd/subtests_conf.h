@@ -11,6 +11,7 @@ extern int utest_conf_parse_bool(void);
 extern int utest_conf_permission_options_require_unix_priv(void);
 extern int utest_conf_ea_fallback(void);
 extern int utest_conf_strict_locking_keys(void);
+extern int utest_conf_srp_verifier_path_keys(void);
 extern int utest_conf_spotlight_results_limit_keys(void);
 extern int utest_conf_multiproto_defaults(void);
 extern int utest_conf_multiproto_explicit_wins(void);

@@ -360,10 +360,10 @@ print &ui_table_row(
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'srp passwd file', \%in);
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'srp verifier path', \%in);
 print &ui_table_row(
-                    $text{'edit_global_section_srp_passwd_file'},
-                    &ui_filebox('p_srp passwd file', $values[0]) . " "
+                    $text{'edit_global_section_srp_verifier_path'},
+                    &ui_filebox('p_srp verifier path', $values[0]) . " "
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );
 
