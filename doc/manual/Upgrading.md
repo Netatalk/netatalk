@@ -1,5 +1,99 @@
 # Upgrading from prior Netatalk versions
 
+## Upgrading from Netatalk 4.5
+
+Netatalk 4.6 changes how the credential store used by the SRP UAM
+is maintained. Review the following steps before starting
+the new server if **uams_srp.so** is enabled.
+
+### afppasswd invocation
+
+**afppasswd** again accepts **-p** *path* for a non-default credential store.
+In SRP mode, *path* is the verifier directory and must match **srp verifier
+path** in *afp.conf*. With **-r**, it is the Randnum password file and must
+match **passwd file**. The compiled-in default covers packaged installations.
+
+For example, with a **srp verifier path** setting of */path/to/verifiers*, run:
+
+    sudo afppasswd -p /path/to/verifiers -a alice
+
+Regular users may use **-p** when changing their own SRP verifier. It grants
+no additional privilege: filesystem permissions enforce access, so selecting
+someone else's store results in an access error.
+
+### SRP verifier migration
+
+SRP no longer uses one shared *afppasswd.srp* flat file. Its configured path
+is now a root-owned verifier directory containing one file for each numeric
+uid. Each verifier file is mode 0600. Active verifiers are user-owned, allowing
+enrolled users to change their own SRP password without giving **afppasswd**
+elevated privileges. Disabled placeholders are root-owned and cannot be
+enabled by the corresponding local user. Root enrolls a user with
+**afppasswd -a** *username*: ownership is transferred to the user only after
+a real verifier has been written and synchronized.
+
+If a restore changes an enrolled verifier's ownership or mode, stop **afpd**
+and repair that uid-named file as root before restarting it. Restore ownership
+to the matching local user and mode 0600; for example, alice's verifier at a
+custom path can be repaired with **chown** *alice*
+*/path/to/verifiers/$(id -u alice)* followed by **chmod 0600** on that file.
+Do not apply this to root-owned disabled placeholders: use
+**afppasswd -a** *username* to set a password and re-enable the account. A
+verifier with more than one hard link must be replaced or have its additional
+links removed.
+
+In *afp.conf*, the new **srp verifier path** option replaces the old
+**srp passwd file** option. The old name is still accepted as a deprecated alias,
+but its value is now interpreted as a directory and logs a migration warning.
+
+Existing SRP credentials must be migrated before users can log in with their
+existing passwords. The migration is performed with **afppasswd -m**.
+
+1. Stop **netatalk** and keep it stopped for the complete migration.
+
+2. If your *afp.conf* explicitly configures the **srp passwd file** path,
+   update it to the **srp verifier path** option pointing to the location
+   of the existing flat file to be migrated.
+
+3. Run the migration as root. For the standard configuration, use:
+
+       sudo afppasswd -m
+
+   If the verifier path is non-default, pass that directory:
+
+       sudo afppasswd -m -p /path/to/verifiers
+
+   The migration preserves the existing salts and verifiers, so users keep
+   their SRP passwords. Active credentials become user-owned; disabled
+   placeholders remain root-owned and require root's **afppasswd -a** before
+   use. It validates all records and local accounts, creates
+   the new directory atomically, and retains the original flat file as
+   *afppasswd.srp.legacy* (or a numbered sibling). Do not start **netatalk** if
+   migration reports a failure; resolve the reported condition first.
+
+4. Start **netatalk** and test an SRP login. Thereafter, a local user changes that
+   user's SRP password simply with **afppasswd**. An administrator uses
+   **afppasswd -a** *username* to set or reset a user's SRP credential.
+
+Alternatively, if retaining user passwords is not desired: delete the legacy file,
+typically at */etc/netatalk/afppasswd.srp*, and initialize a new store with
+**afppasswd -c**. This creates root-owned disabled placeholders; set passwords
+individually as root with **afppasswd -a** *username* to enroll users.
+
+After enrollment, users own their verifier and can replace it directly.
+The old-password proof and optional CrackLib check in **afppasswd** do not
+enforce server-wide password policy. To disable future SRP logins for a user,
+run **afppasswd -d** *username* as root. It replaces the uid verifier with a
+root-owned disabled placeholder (and creates one if it is absent); use
+**afppasswd -a** *username* to set a password and re-enable the account.
+Existing sessions and other UAMs are unaffected.
+
+### Randnum hardening
+
+Randnum remains a legacy, weak UAM intended only for old clients. Managing its
+*afppasswd* file is now root-only: use **afppasswd -r -a** *username* to reset
+or update a Randnum credential.
+
 ## Upgrading from Netatalk 3
 
 Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the new

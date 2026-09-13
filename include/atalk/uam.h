@@ -20,8 +20,8 @@
 /* in case something drastic has to change */
 #define UAM_MODULE_VERSION       1
 
-/* define if minimum version of libgcrypt is required */
-#define UAM_NEED_LIBGCRYPT_VERSION  NULL
+/* Keep this in sync with the minimum version required by the build system. */
+#define UAM_NEED_LIBGCRYPT_VERSION  "1.2.3"
 
 /* things for which we can have uams */
 #define UAM_SERVER_LOGIN         (1 << 0)
@@ -50,7 +50,7 @@
  * get back the corresponding option. not all of these are implemented. */
 #define UAM_PASSWD_FILENAME     (1 << 0)
 #define UAM_PASSWD_MINLENGTH    (1 << 1)
-#define UAM_PASSWD_SRP_FILENAME (1 << 2)
+#define UAM_PASSWD_SRP_VERIFIER_PATH (1 << 2)
 #define UAM_PASSWD_EXPIRETIME   (1 << 3) /*!< not implemented yet. */
 
 /* max lenght of username  */

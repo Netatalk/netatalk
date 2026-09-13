@@ -128,6 +128,17 @@ great protocol fade away. Get Netatalk 4.6.0 and Netatalk Client 1.0 at
 Changes in 4.6.0
 ----------------
 
+* BREAKING: afppasswd/SRP: replace the shared *afppasswd.srp* file with a
+  root-owned verifier directory at the same path and one mode-0600 file per
+  numeric uid. Active verifiers are user-owned; disabled placeholders remain
+  root-owned until root sets a password with `afppasswd -a`.
+  This removes the need to install **afppasswd** setuid-root.
+  After stopping **afpd**, migrate an existing flat
+  file without resetting passwords by running `afppasswd -m`.
+  The new `srp verifier path` option replaces `srp passwd file`.
+* BREAKING: afppasswd/Randnum: legacy Randnum password management is now
+  root-only. Randnum and 2-Way Randnum authentication remain available as
+  an opt-in configuration for legacy clients.
 * NEW: afpd: `multi protocol = yes|no` (default no) declares that other
   processes (Samba, NFS, local tools) modify a volume, and defaults every
   coherency setting accordingly: `strict locking = yes`, `dircache

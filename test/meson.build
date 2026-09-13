@@ -1,4 +1,6 @@
 if build_afpd_tests
+    subdir('afppasswd')
+
     if use_sqlite_backend
         subdir('afpd')
     else

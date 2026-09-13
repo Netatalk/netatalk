@@ -33,12 +33,12 @@
 #include <gcrypt.h>
 
 #include <atalk/afp.h>
+#include <atalk/uam.h>
 
 #include "afpclient.h"
 #include "afptest_uam.h"
 
 #define AFP_MAX_USERNAME_LEN 127
-#define UAM_NEED_LIBGCRYPT_VERSION "1.4.0"
 #define kFPAuthContinue AFPERR_AUTHCONT
 
 struct afptest_uam_server {
