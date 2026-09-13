@@ -150,7 +150,7 @@ struct afp_options {
     char *uampath, *fqdn;
     char *sigconffile;
     char *uuidconf;
-    char *guest, *loginmesg, *keyfile, *passwdfile, *srppasswdfile, *extmapfile;
+    char *guest, *loginmesg, *keyfile, *passwdfile, *srpverifierpath, *extmapfile;
     char *uamlist;
     char *signatureopt;
     unsigned char signature[16];

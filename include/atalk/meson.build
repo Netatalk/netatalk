@@ -21,6 +21,7 @@ headers = [
     'pap.h',
     'queue.h',
     'rtmp.h',
+    'srp.h',
     'uam.h',
     'unicode.h',
     'unix.h',

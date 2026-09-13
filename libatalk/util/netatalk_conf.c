@@ -889,6 +889,56 @@ static char *getoption_strdup(INIPARSER_DICTIONARY *conf, const char *vol,
 }
 
 /*!
+ * @brief Get a string option with a deprecated alias
+ *
+ * The canonical option wins when it has a non-empty value.  A non-empty
+ * alias is still reported even when the canonical option is also present,
+ * so stale deprecated settings are not silently hidden.
+ *
+ * @param[in] conf       config handle
+ * @param[in] vol        section name
+ * @param[in] opt        canonical option
+ * @param[in] alias      deprecated option name
+ * @param[in] defsec     fallback section for both options
+ * @param[in] defval     default value when neither option is set
+ * @param[in] alias_warn warning to emit when the alias is set
+ * @param[out] alias_used set when the returned value is from the alias;
+ *                        may be NULL
+ *
+ * @returns dynamically allocated option string, or NULL on allocation failure
+ */
+static char *getoption_strdup_alias(INIPARSER_DICTIONARY *conf, const char *vol,
+                                    const char *opt, const char *alias,
+                                    const char *defsec, const char *defval,
+                                    const char *alias_warn, bool *alias_used)
+{
+    const char *canonical = getoption_str(conf, vol, opt, defsec, NULL);
+    const char *deprecated = getoption_str(conf, vol, alias, defsec, NULL);
+
+    if (alias_used) {
+        *alias_used = false;
+    }
+
+    if (deprecated && *deprecated) {
+        LOG(log_warning, logtype_afpd, "%s", alias_warn);
+    }
+
+    if (canonical && *canonical) {
+        return strdup(canonical);
+    }
+
+    if (deprecated && *deprecated) {
+        if (alias_used) {
+            *alias_used = true;
+        }
+
+        return strdup(deprecated);
+    }
+
+    return defval ? strdup(defval) : NULL;
+}
+
+/*!
  * @brief Parse one boolean config value strictly
  *
  * Accepted spellings (case-insensitive, whole-word):
@@ -3245,29 +3295,27 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
     /* "strict locking" (canonical) with "afp read locks" as deprecated
-     * alias.  One raw read per key: conf_parse_bool() gives the tri-state
-     * value (-1 = unset; invalid values warn and read as unset) and the
-     * raw pointer gives presence for the deprecation notice, so an
-     * explicit new-key value always beats the alias. */
+     * alias.  Invalid canonical values count as unset, so a valid alias can
+     * still backfill them. */
     {
-        const char *raw_alias = INIPARSER_GETSTR(config, INISEC_GLOBAL,
-                                                 "afp read locks", NULL);
-        int strict_locking = conf_parse_bool("strict locking",
-                                             INIPARSER_GETSTR(config,
-                                                              INISEC_GLOBAL,
-                                                              "strict locking",
-                                                              NULL));
+        bool alias_used;
+        char *strict_locking_value = getoption_strdup_alias(
+                                         config, INISEC_GLOBAL, "strict locking", "afp read locks", NULL,
+                                         NULL,
+                                         "Using deprecated 'afp read locks' option, please update to 'strict locking'",
+                                         &alias_used);
+        int strict_locking = conf_parse_bool(alias_used ? "afp read locks"
+                                             : "strict locking",
+                                             strict_locking_value);
 
-        /* Notice keys on key presence with a non-empty value (valid or
-         * not), not on parse success; empty counts as unset. */
-        if (raw_alias && *raw_alias) {
-            LOG(log_warning, logtype_afpd,
-                "Using deprecated 'afp read locks' option, please update to 'strict locking'");
+        if (strict_locking == -1 && !alias_used) {
+            strict_locking = conf_parse_bool("afp read locks",
+                                             getoption_str(config, INISEC_GLOBAL,
+                                                           "afp read locks", NULL,
+                                                           NULL));
         }
 
-        if (strict_locking == -1) {
-            strict_locking = conf_parse_bool("afp read locks", raw_alias);
-        }
+        free(strict_locking_value);
 
         if (strict_locking == 1) {
             options->flags |= OPTION_STRICT_LOCKING;
@@ -3312,9 +3360,11 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                                NULL, _PATH_CONFDIR "extmap.conf");
     options->passwdfile     = getoption_strdup(config, INISEC_GLOBAL, "passwd file",
                                                NULL, _PATH_AFPDPWFILE);
-    options->srppasswdfile  = getoption_strdup(config, INISEC_GLOBAL,
-                                               "srp passwd file",
-                                               NULL, _PATH_AFPDSRPPWFILE);
+    options->srpverifierpath = getoption_strdup_alias(
+                                   config, INISEC_GLOBAL, "srp verifier path", "srp passwd file", NULL,
+                                   _PATH_AFPSRPVERIFIERPATH,
+                                   "Using deprecated 'srp passwd file' option; its value is now a verifier directory. If it names a legacy flat file, stop afpd and run 'afppasswd -m', then use 'srp verifier path'",
+                                   NULL);
     options->uampath        = getoption_strdup(config, INISEC_GLOBAL, "uam path",
                                                NULL, _PATH_AFPDUAMPATH);
     options->uamlist        = getoption_strdup(config, INISEC_GLOBAL, "uam list",
@@ -3874,8 +3924,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.passwdfile)
     }
 
-    if (obj->options.srppasswdfile) {
-        CONFIG_ARG_FREE(obj->options.srppasswdfile)
+    if (obj->options.srpverifierpath) {
+        CONFIG_ARG_FREE(obj->options.srpverifierpath)
     }
 
     if (obj->options.uampath) {

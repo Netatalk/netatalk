@@ -451,15 +451,15 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
             break;
 
-        case UAM_PASSWD_SRP_FILENAME:
-            if (!obj->options.srppasswdfile) {
+        case UAM_PASSWD_SRP_VERIFIER_PATH:
+            if (!obj->options.srpverifierpath) {
                 *buf = NULL;
                 *len = 0;
                 break;
             }
 
-            *buf = obj->options.srppasswdfile;
-            *len = strnlen(obj->options.srppasswdfile, MAXPATHLEN + 1);
+            *buf = obj->options.srpverifierpath;
+            *len = strnlen(obj->options.srpverifierpath, MAXPATHLEN + 1);
 
             if (*len > MAXPATHLEN) {
                 return -1;

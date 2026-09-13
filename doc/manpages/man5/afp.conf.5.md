@@ -247,9 +247,12 @@ uam list = *uam list* (default: *uams_dhx2.so*) **(G)**
 (DHX2) for authentication.
 >
 > uams_srp.so
-> > Allow SRP ("Secure Remote Password") for authentication. Requires a separate
-file containing the SRP salts and verifiers, either the default *afppasswd.srp* file
-or the one specified via "**srp passwd file**". See **afppasswd**(1) for details.
+> > Allow SRP ("Secure Remote Password") for authentication. Requires a verifier
+directory containing one file per numeric uid, either the default
+*afppasswd.srp* directory or the one specified via "**srp verifier path**".
+Active verifiers are user-owned; root-owned disabled placeholders require
+an administrator to set a password with **afppasswd -a** before use.
+See **afppasswd**(1) for details.
 >
 > uam_gss.so
 >
@@ -352,9 +355,11 @@ set password = *BOOLEAN* (default: *no*) **(G)**
 > Enables or disables the ability of clients to change their passwords.
 Setting this option to *yes* will allow clients to change their passwords if the UAM in use supports this feature.
 
-srp passwd file = *path* **(G)**
+srp verifier path = *path* **(G)**
 
-> Sets the path to the SRP UAM verifier file for this server.
+> Sets the path to the SRP UAM verifier directory for this server. The legacy
+"**srp passwd file**" name is accepted as a deprecated alias and produces a
+warning; its value is interpreted as a directory, not as the former flat file.
 
 ## Network Options
 

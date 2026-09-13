@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <gcrypt.h>
+#include <inttypes.h>
 #include <pwd.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -41,6 +42,7 @@
 #include <atalk/compat.h>
 #include <atalk/constant_time.h>
 #include <atalk/logger.h>
+#include <atalk/srp.h>
 #include <atalk/uam.h>
 
 /* -------------------- Constants -------------------- */
@@ -49,50 +51,10 @@
 #define SRP_CLIENT_PROOF  0x0003
 #define SRP_SERVER_PROOF  0x0004
 
-#define SRP_SHA1_LEN      20
-#define SRP_SALT_LEN      16
-#define SRP_GROUP_INDEX   0x0002  /* RFC 5054 group #2 */
-#define SRP_NBYTES        192     /* 1536-bit prime = 192 bytes */
 #define SRP_SESSION_KEY_LEN 40
-
-#define SRP_HEX_SALT_LEN  (SRP_SALT_LEN * 2)
-#define SRP_HEX_V_LEN     (SRP_NBYTES * 2)
 
 /* Error code for authentication failure (as observed on Apple servers) */
 #define SRP_AUTH_FAILURE   (-6754)
-
-/*!
- * RFC 5054 group #2: 1536-bit MODP group.
- * N is the safe prime, g = 2.
- */
-static const unsigned char srp_N_bytes[SRP_NBYTES] = {
-    0x9D, 0xEF, 0x3C, 0xAF, 0xB9, 0x39, 0x27, 0x7A,
-    0xB1, 0xF1, 0x2A, 0x86, 0x17, 0xA4, 0x7B, 0xBB,
-    0xDB, 0xA5, 0x1D, 0xF4, 0x99, 0xAC, 0x4C, 0x80,
-    0xBE, 0xEE, 0xA9, 0x61, 0x4B, 0x19, 0xCC, 0x4D,
-    0x5F, 0x4F, 0x5F, 0x55, 0x6E, 0x27, 0xCB, 0xDE,
-    0x51, 0xC6, 0xA9, 0x4B, 0xE4, 0x60, 0x7A, 0x29,
-    0x15, 0x58, 0x90, 0x3B, 0xA0, 0xD0, 0xF8, 0x43,
-    0x80, 0xB6, 0x55, 0xBB, 0x9A, 0x22, 0xE8, 0xDC,
-    0xDF, 0x02, 0x8A, 0x7C, 0xEC, 0x67, 0xF0, 0xD0,
-    0x81, 0x34, 0xB1, 0xC8, 0xB9, 0x79, 0x89, 0x14,
-    0x9B, 0x60, 0x9E, 0x0B, 0xE3, 0xBA, 0xB6, 0x3D,
-    0x47, 0x54, 0x83, 0x81, 0xDB, 0xC5, 0xB1, 0xFC,
-    0x76, 0x4E, 0x3F, 0x4B, 0x53, 0xDD, 0x9D, 0xA1,
-    0x15, 0x8B, 0xFD, 0x3E, 0x2B, 0x9C, 0x8C, 0xF5,
-    0x6E, 0xDF, 0x01, 0x95, 0x39, 0x34, 0x96, 0x27,
-    0xDB, 0x2F, 0xD5, 0x3D, 0x24, 0xB7, 0xC4, 0x86,
-    0x65, 0x77, 0x2E, 0x43, 0x7D, 0x6C, 0x7F, 0x8C,
-    0xE4, 0x42, 0x73, 0x4A, 0xF7, 0xCC, 0xB7, 0xAE,
-    0x83, 0x7C, 0x26, 0x4A, 0xE3, 0xA9, 0xBE, 0xB8,
-    0x7F, 0x8A, 0x2F, 0xE9, 0xB8, 0xB5, 0x29, 0x2E,
-    0x5A, 0x02, 0x1F, 0xFF, 0x5E, 0x91, 0x47, 0x9E,
-    0x8C, 0xE7, 0xA2, 0x8C, 0x24, 0x42, 0xC6, 0xF3,
-    0x15, 0x18, 0x0F, 0x93, 0x49, 0x9A, 0x23, 0x4D,
-    0xCF, 0x76, 0xE3, 0xFE, 0xD1, 0x35, 0xF9, 0xBB,
-};
-
-static const unsigned char srp_g_byte = 0x02;
 
 /* -------------------- Per-session state -------------------- */
 
@@ -253,101 +215,219 @@ static uint16_t read_uint16_be(unsigned char **p)
     return val;
 }
 
-/* -------------------- Verifier file I/O -------------------- */
+/* -------------------- Verifier directory I/O -------------------- */
 
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 
+enum srp_verifier_status {
+    SRP_VERIFIER_OK,
+    SRP_VERIFIER_MISSING,
+    SRP_VERIFIER_NOT_ENROLLED,
+    SRP_VERIFIER_DISABLED,
+    SRP_VERIFIER_UNSAFE,
+    SRP_VERIFIER_INVALID,
+};
+
 /*!
- * @brief Look up a user's salt and verifier from the SRP verifier file.
+ * @brief Look up a user's salt and verifier from their SRP verifier file.
  *
- * The file format is one line per user: username:hex_salt:hex_verifier
+ * The verifier directory is administrator-owned. An enrolled user's numeric-UID
+ * file is owned and writable only by that user and contains exactly one record:
+ * username:hex_salt:hex_verifier.
+ * A root-owned, disabled placeholder denotes a non-enrolled user. It is
+ * distinguished from a root-owned active verifier, which remains unsafe.
  *
- * @param[in]  path     Path to the verifier file.
+ * @param[in]  path     Path to the verifier directory.
  * @param[in]  username User to look up.
+ * @param[in]  uid      Numeric uid used as the verifier filename.
  * @param[out] salt_out Buffer for the salt (SRP_SALT_LEN bytes).
  * @param[out] v_out    MPI set to the verifier on success.
- * @returns 0 on success, -1 on failure (user not found or file error).
+ * @returns a status identifying an active, missing, disabled, or unsafe
+ * verifier.
  */
-static int srp_lookup_verifier(const char *path, const char *username,
-                               unsigned char *salt_out,
-                               gcry_mpi_t *v_out)
+static enum srp_verifier_status srp_lookup_verifier(const char *path,
+                                                    const char *username,
+                                                    uid_t uid,
+                                                    unsigned char *salt_out,
+                                                    gcry_mpi_t *v_out)
 {
-    FILE *fp;
-    char line[UAM_USERNAMELEN + 1 + SRP_HEX_SALT_LEN + 1 + SRP_HEX_V_LEN + 2];
+    FILE *fp = NULL;
+    struct stat st;
+    char uid_name[3 * sizeof(uid_t) + 1];
+    char line[SRP_USERNAME_MAX_LEN + SRP_FORMAT_LEN + 1];
     const char *p;
-    size_t ulen = strnlen(username, UAM_USERNAMELEN + 1);
+    size_t ulen = strnlen(username, SRP_USERNAME_MAX_LEN + 1);
+    int dirfd = -1, fd = -1;
+    enum srp_verifier_status ret = SRP_VERIFIER_MISSING;
 
-    if (ulen > UAM_USERNAMELEN) {
-        return -1;
+    if (!srp_valid_username(username)) {
+        return SRP_VERIFIER_INVALID;
     }
 
-    fp = fopen(path, "r");
+    int uid_len = snprintf(uid_name, sizeof(uid_name), "%ju", (uintmax_t)uid);
+
+    if (uid_len < 0 || uid_len >= (int)sizeof(uid_name)) {
+        return SRP_VERIFIER_INVALID;
+    }
+
+    dirfd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+
+    if (dirfd < 0 || fstat(dirfd, &st) < 0 || !S_ISDIR(st.st_mode) ||
+            st.st_uid != 0 || (st.st_mode & (S_IWGRP | S_IWOTH))) {
+        if (dirfd < 0 && lstat(path, &st) == 0 && S_ISREG(st.st_mode)) {
+            LOG(log_error, logtype_uams,
+                "srp_lookup_verifier: %s is a legacy flat SRP verifier file; stop afpd and run 'afppasswd -m'",
+                path);
+        } else {
+            LOG(log_error, logtype_uams,
+                "srp_lookup_verifier: unsafe or unavailable verifier directory %s",
+                path);
+        }
+
+        ret = SRP_VERIFIER_UNSAFE;
+        goto done;
+    }
+
+    fd = openat(dirfd, uid_name, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+
+    if (fd < 0) {
+        if (errno != ENOENT) {
+            LOG(log_error, logtype_uams,
+                "srp_lookup_verifier: can't open verifier %s/%s: %s", path,
+                uid_name, strerror(errno));
+            ret = SRP_VERIFIER_UNSAFE;
+        }
+
+        goto done;
+    }
+
+    if (fstat(fd, &st) < 0) {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: can't stat verifier %s/%s: %s", path,
+            uid_name, strerror(errno));
+        ret = SRP_VERIFIER_UNSAFE;
+        goto done;
+    }
+
+    if (!S_ISREG(st.st_mode)) {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: verifier %s/%s for user %s is not a regular file",
+            path, uid_name, username);
+        ret = SRP_VERIFIER_UNSAFE;
+        goto done;
+    }
+
+    if ((st.st_uid != uid && st.st_uid != 0) ||
+            !srp_verifier_mode_is_safe(st.st_mode) || st.st_nlink != 1) {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: unsafe verifier %s/%s for user %s: "
+            "owner uid %ju (expected %ju), mode %04o (must not grant group "
+            "or other access), link count %ju (expected 1)",
+            path, uid_name, username, (uintmax_t)st.st_uid, (uintmax_t)uid,
+            (unsigned int)(st.st_mode & 07777), (uintmax_t)st.st_nlink);
+        ret = SRP_VERIFIER_UNSAFE;
+        goto done;
+    }
+
+    fp = fdopen(fd, "r");
 
     if (fp == NULL) {
         LOG(log_error, logtype_uams,
-            "srp_lookup_verifier: can't open verifier file %s: %s", path, strerror(errno));
-        return -1;
+            "srp_lookup_verifier: can't open verifier stream %s/%s: %s",
+            path, uid_name, strerror(errno));
+        ret = SRP_VERIFIER_UNSAFE;
+        goto done;
     }
 
-    while (fgets(line, sizeof(line), fp)) {
-        /* Find first colon */
-        p = strchr(line, ':');
+    fd = -1;
 
-        if (p == NULL) {
-            continue;
-        }
+    if (fgets(line, sizeof(line), fp) == NULL || fgetc(fp) != EOF) {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: invalid verifier %s/%s for user %s: must contain exactly one record",
+            path, uid_name, username);
+        ret = SRP_VERIFIER_INVALID;
+        goto done;
+    }
 
-        /* Check username match */
-        if ((size_t)(p - line) != ulen || strncmp(line, username, ulen) != 0) {
-            continue;
-        }
+    p = strchr(line, ':');
 
-        p++; /* skip colon, now pointing at hex salt */
+    if (p == NULL || (size_t)(p - line) != ulen ||
+            strncmp(line, username, ulen) != 0) {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: invalid verifier %s/%s for user %s: username does not match",
+            path, uid_name, username);
+        ret = SRP_VERIFIER_INVALID;
+        goto done;
+    }
 
-        /* Check for placeholder (starts with '*') */
-        if (*p == '*') {
-            fclose(fp);
-            return -1;
-        }
+    p++;
 
-        /* Parse hex salt (32 hex chars = 16 bytes) */
-        for (int i = 0; i < SRP_SALT_LEN; i++) {
-            if (!isxdigit(p[0]) || !isxdigit(p[1])) {
-                fclose(fp);
-                return -1;
-            }
+    if (!srp_valid_fields(p)) {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: invalid verifier %s/%s for user %s: malformed fields",
+            path, uid_name, username);
+        ret = SRP_VERIFIER_INVALID;
+        goto done;
+    }
 
-            salt_out[i] = (unsigned char)((unhex(p[0]) << 4) | unhex(p[1]));
-            p += 2;
-        }
+    if (*p == SRP_DISABLED_CHAR) {
+        ret = st.st_uid == 0 && uid != 0 ? SRP_VERIFIER_NOT_ENROLLED :
+              SRP_VERIFIER_DISABLED;
+        goto done;
+    }
 
-        if (*p != ':') {
-            fclose(fp);
-            return -1;
-        }
+    if (st.st_uid != uid) {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: unsafe active verifier %s/%s for user %s: "
+            "owner uid %ju (expected %ju)", path, uid_name, username,
+            (uintmax_t)st.st_uid, (uintmax_t)uid);
+        ret = SRP_VERIFIER_UNSAFE;
+        goto done;
+    }
 
-        p++; /* skip colon, now pointing at hex verifier */
-        /* Parse hex verifier (384 hex chars = 192 bytes) */
-        unsigned char v_bytes[SRP_NBYTES];
+    for (int i = 0; i < SRP_SALT_LEN; i++) {
+        salt_out[i] = (unsigned char)((unhex(p[0]) << 4) | unhex(p[1]));
+        p += 2;
+    }
 
-        for (int i = 0; i < SRP_NBYTES; i++) {
-            if (!isxdigit(p[0]) || !isxdigit(p[1])) {
-                fclose(fp);
-                return -1;
-            }
+    p++; /* Skip the validated separator. */
+    unsigned char v_bytes[SRP_NBYTES];
 
-            v_bytes[i] = (unsigned char)((unhex(p[0]) << 4) | unhex(p[1]));
-            p += 2;
-        }
+    for (int i = 0; i < SRP_NBYTES; i++) {
+        v_bytes[i] = (unsigned char)((unhex(p[0]) << 4) | unhex(p[1]));
+        p += 2;
+    }
 
-        gcry_mpi_scan(v_out, GCRYMPI_FMT_USG, v_bytes, SRP_NBYTES, NULL);
-        explicit_bzero(v_bytes, sizeof(v_bytes));
+    if (gcry_mpi_scan(v_out, GCRYMPI_FMT_USG, v_bytes, SRP_NBYTES,
+                      NULL) == 0) {
+        ret = SRP_VERIFIER_OK;
+    } else {
+        LOG(log_error, logtype_uams,
+            "srp_lookup_verifier: invalid verifier %s/%s for user %s",
+            path, uid_name, username);
+        ret = SRP_VERIFIER_INVALID;
+    }
+
+    explicit_bzero(v_bytes, sizeof(v_bytes));
+done:
+
+    if (fp != NULL) {
         fclose(fp);
-        return 0;
     }
 
-    fclose(fp);
-    return -1;
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    if (dirfd >= 0) {
+        close(dirfd);
+    }
+
+    if (ret != 0) {
+        explicit_bzero(salt_out, SRP_SALT_LEN);
+    }
+
+    return ret;
 }
 
 /* -------------------- SRP protocol handlers -------------------- */
@@ -365,6 +445,7 @@ static void srp_session_free(void)
     session_v = NULL;
     session_b = NULL;
     session_B = NULL;
+    srppwd = NULL;
     explicit_bzero(session_salt, sizeof(session_salt));
     explicit_bzero(session_B_buf, sizeof(session_B_buf));
     explicit_bzero(session_username, sizeof(session_username));
@@ -373,7 +454,7 @@ static void srp_session_free(void)
 /*!
  * @brief SRP Round 1 setup.
  *
- * Looks up the user's verifier from the verifier file, generates the
+ * Looks up the user's verifier from the verifier directory, generates the
  * server ephemeral key pair (b, B), and builds the FPLoginExt response
  * containing the SRP group parameters, salt, and server public ephemeral B.
  *
@@ -382,23 +463,26 @@ static void srp_session_free(void)
 static int srp_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen)
 {
-    char *srpfile = NULL;
+    char *verifier_path = NULL;
     size_t len;
     unsigned char *b_binary = NULL;
     gcry_mpi_t k = NULL, kv = NULL;
+    enum srp_verifier_status verifier_status;
     int ret;
     *rbuflen = 0;
-    /* Get the SRP verifier file path */
-    len = UAM_PASSWD_SRP_FILENAME;
+    /* Get the SRP verifier directory path */
+    len = UAM_PASSWD_SRP_VERIFIER_PATH;
 
     if (uam_afpserver_option(obj, UAM_OPTION_PASSWDOPT,
-                             (void *)&srpfile, &len) < 0) {
-        LOG(log_error, logtype_uams, "srp_setup: can't get srp passwd file option");
+                             (void *)&verifier_path, &len) < 0) {
+        LOG(log_error, logtype_uams,
+            "srp_setup: can't get SRP verifier path option");
         return AFPERR_MISC;
     }
 
-    if (!srpfile || len == 0) {
-        LOG(log_error, logtype_uams, "srp_setup: SRP password file not configured");
+    if (!verifier_path || len == 0) {
+        LOG(log_error, logtype_uams,
+            "srp_setup: SRP verifier path not configured");
         return AFPERR_MISC;
     }
 
@@ -407,11 +491,41 @@ static int srp_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     gcry_mpi_scan(&session_g, GCRYMPI_FMT_USG, &srp_g_byte, 1, NULL);
     /* Look up verifier */
     session_v = NULL;
+    verifier_status = srp_lookup_verifier(verifier_path, session_username,
+                                          srppwd->pw_uid, session_salt,
+                                          &session_v);
 
-    if (srp_lookup_verifier(srpfile, session_username,
-                            session_salt, &session_v) != 0) {
-        LOG(log_info, logtype_uams, "srp_setup: no verifier for user %s",
-            session_username);
+    if (verifier_status != SRP_VERIFIER_OK) {
+        switch (verifier_status) {
+        case SRP_VERIFIER_MISSING:
+            LOG(log_info, logtype_uams, "srp_setup: no verifier for user %s",
+                session_username);
+            break;
+
+        case SRP_VERIFIER_NOT_ENROLLED:
+            LOG(log_info, logtype_uams,
+                "srp_setup: user %s is not enrolled (root-owned disabled verifier)",
+                session_username);
+            break;
+
+        case SRP_VERIFIER_DISABLED:
+            LOG(log_info, logtype_uams,
+                "srp_setup: SRP verifier is disabled for user %s",
+                session_username);
+            break;
+
+        case SRP_VERIFIER_UNSAFE:
+        case SRP_VERIFIER_INVALID:
+            /* srp_lookup_verifier() emitted the specific error. */
+            break;
+
+        default:
+            LOG(log_error, logtype_uams,
+                "srp_setup: unknown verifier state for user %s",
+                session_username);
+            break;
+        }
+
         /*
          * Unknown user: return AFPERR_NOTAUTH with 2-byte init marker payload.
          * This matches the observed Apple server behavior.
@@ -517,6 +631,7 @@ static int srp_login(void *obj, struct passwd **uam_pwd _U_,
 {
     char *username;
     size_t len, ulen;
+    srp_session_free();
     *rbuflen = 0;
 
     if (ibuflen < 1) {
@@ -571,6 +686,7 @@ static int srp_login_ext(void *obj, char *uname, struct passwd **uam_pwd _U_,
     char *username;
     size_t len, ulen;
     uint16_t temp16;
+    srp_session_free();
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
@@ -874,6 +990,13 @@ fail:
 
 static int uam_setup(void *obj _U_, const char *path)
 {
+    /* Libgcrypt must be initialized before the SRP login handlers use it. */
+    if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
+        LOG(log_error, logtype_uams,
+            "SRP: unable to initialize libgcrypt");
+        return -1;
+    }
+
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "SRP",
                      srp_login, srp_logincont, NULL, srp_login_ext) < 0) {
         return -1;

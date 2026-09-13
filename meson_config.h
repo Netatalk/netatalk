@@ -160,6 +160,9 @@
 /* Define to 1 if iniparser functions accept const dictionary pointers. */
 #mesondefine HAVE_INIPARSER_CONST_DICTIONARY
 
+/* Whether iniparser can parse an already-open stream */
+#mesondefine HAVE_INIPARSER_LOAD_FILE
+
 /* Define if Kerberos 5 is available */
 #mesondefine HAVE_KERBEROS
 

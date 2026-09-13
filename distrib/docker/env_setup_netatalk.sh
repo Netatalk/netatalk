@@ -234,6 +234,10 @@ if [ -f "$NETATALK_CONFDIR/afppasswd.srp" ]; then
     rm -f "$NETATALK_CONFDIR/afppasswd.srp"
 fi
 
+if [ -d "$NETATALK_CONFDIR/afppasswd.srp" ]; then
+    rm -rf "$NETATALK_CONFDIR/afppasswd.srp"
+fi
+
 # Use AFP_UAMS verbatim if set, otherwise build from defaults
 if [ -n "$AFP_UAMS" ]; then
     UAMS="$AFP_UAMS"
@@ -260,7 +264,7 @@ esac
 RANDNUM_OK=0
 if [ "$RANDNUM_WANTED" = "1" ]; then
     if afppasswd -c -f -r; then
-        if afppasswd -a "$AFP_USER" -f -r -w "$AFP_PASS" > /dev/null; then
+        if afppasswd -a "$AFP_USER" -r -w "$AFP_PASS" > /dev/null; then
             RANDNUM_OK=1
         fi
     else
@@ -273,7 +277,7 @@ SRP_OK=0
 if [ "$SRP_WANTED" = "1" ]; then
     afppasswd -c
 
-    if afppasswd -a "$AFP_USER" -f -w "$AFP_PASS" > /dev/null; then
+    if afppasswd -a "$AFP_USER" -w "$AFP_PASS" > /dev/null; then
         SRP_OK=1
     fi
 fi
@@ -328,7 +332,7 @@ elif [ -n "$AFP_USER2" ]; then
     if [ "$RANDNUM_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
         RANDNUM_OK=0
     fi
-    if [ "$SRP_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -f -w "$AFP_PASS2" > /dev/null; then
+    if [ "$SRP_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -w "$AFP_PASS2" > /dev/null; then
         SRP_OK=0
     fi
 fi
