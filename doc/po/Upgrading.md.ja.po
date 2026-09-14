@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-28 19:53+0200\n"
+"POT-Creation-Date: 2026-09-14 22:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Title ####
-#: manual/Configuration.md:13 manual/Upgrading.md:58
+#: manual/Configuration.md:14 manual/Upgrading.md:153
 #, no-wrap
 msgid "afp.conf"
 msgstr ""
@@ -32,11 +32,263 @@ msgstr "以前の Netatalk バージョンからのアップグレード"
 #. type: Title ##
 #: manual/Upgrading.md:3
 #, no-wrap
+msgid "Upgrading from Netatalk 4.5"
+msgstr "Netatalk 4.5 からのアップグレード"
+
+#. type: Plain text
+#: manual/Upgrading.md:8
+msgid ""
+"Netatalk 4.6 changes how the credential store used by the SRP UAM is "
+"maintained. Review the following steps before starting the new server if "
+"**uams_srp.so** is enabled."
+msgstr ""
+"Netatalk 4.6 では、SRP UAM が使用する資格情報ストアの管理方法が変更される。"
+"**uams_srp.so** が有効になっている場合は、新しいサーバーを起動する前に、以下"
+"の手順を確認すること。"
+
+#. type: Title ###
+#: manual/Upgrading.md:9
+#, no-wrap
+msgid "afppasswd invocation"
+msgstr "afppasswd の呼び出し"
+
+#. type: Plain text
+#: manual/Upgrading.md:15
+#, no-wrap
+msgid ""
+"**afppasswd** again accepts **-p** *path* for a non-default credential store.\n"
+"In SRP mode, *path* is the verifier directory and must match **srp verifier\n"
+"path** in *afp.conf*. With **-r**, it is the Randnum password file and must\n"
+"match **passwd file**. The compiled-in default covers packaged installations.\n"
+msgstr ""
+"**afppasswd** は再び、非デフォルトの資格情報ストアに対して **-p** *path* を受け入れる。\n"
+"SRP モードでは、*path* は検証ディレクトリであり、*afp.conf* の **srp verifier\n"
+"path** と一致する必要がある。**-r** を使用する場合、それは Randnum パスワードファイルであり、\n"
+"**passwd file** と一致する必要がある。コンパイル時に組み込まれたデフォルトは、\n"
+"パッケージ化されたインストールをカバーしている。\n"
+
+#. type: Plain text
+#: manual/Upgrading.md:17
+msgid ""
+"For example, with a **srp verifier path** setting of */path/to/verifiers*, "
+"run:"
+msgstr ""
+"例えば、**srp verifier path** が */path/to/verifiers* に設定されている場合、"
+"次のように実行する："
+
+#. type: Plain text
+#: manual/Upgrading.md:19
+#, no-wrap
+msgid "    sudo afppasswd -p /path/to/verifiers -a alice\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Upgrading.md:23
+msgid ""
+"Regular users may use **-p** when changing their own SRP verifier. It grants "
+"no additional privilege: filesystem permissions enforce access, so selecting "
+"someone else's store results in an access error."
+msgstr ""
+"通常のユーザーは、自分の SRP 検証を変更する際に **-p** を使用できる。追加の特"
+"権は付与されない：ファイルシステムのアクセス権がアクセスを強制するため、他人"
+"のストアを選択するとアクセスエラーになる。"
+
+#. type: Title ###
+#: manual/Upgrading.md:24
+#, no-wrap
+msgid "SRP verifier migration"
+msgstr "SRP 検証の移行"
+
+#. type: Plain text
+#: manual/Upgrading.md:34
+msgid ""
+"SRP no longer uses one shared *afppasswd.srp* flat file. Its configured path "
+"is now a root-owned verifier directory containing one file for each numeric "
+"uid. Each verifier file is mode 0600. Active verifiers are user-owned, "
+"allowing enrolled users to change their own SRP password without giving "
+"**afppasswd** elevated privileges. Disabled placeholders are root-owned and "
+"cannot be enabled by the corresponding local user. Root enrolls a user with "
+"**afppasswd -a** *username*: ownership is transferred to the user only after "
+"a real verifier has been written and synchronized."
+msgstr ""
+"SRP はもはや、1 つの共有された *afppasswd.srp* フラットファイルを使用しない。"
+"設定されたパスは、現在、数値 uid ごとに 1 つのファイルを含む root 所有の検証"
+"ディレクトリである。各検証ファイルのモードは 0600 である。アクティブな検証は"
+"ユーザー所有であり、登録済みユーザーが自分の SRP パスワードを変更できるように"
+"するため、**afppasswd** に昇格した特権を与える必要はない。無効なプレースホル"
+"ダーは root 所有であり、対応するローカルユーザーによって有効化することはでき"
+"ない。root は **afppasswd -a** *username* を使用してユーザーを登録する：実際"
+"の検証が書き込まれ同期された後にのみ、所有権がユーザーに移される。"
+
+#. type: Plain text
+#: manual/Upgrading.md:44
+msgid ""
+"If a restore changes an enrolled verifier's ownership or mode, stop **afpd** "
+"and repair that uid-named file as root before restarting it. Restore "
+"ownership to the matching local user and mode 0600; for example, alice's "
+"verifier at a custom path can be repaired with **chown** *alice* */path/to/"
+"verifiers/$(id -u alice)* followed by **chmod 0600** on that file.  Do not "
+"apply this to root-owned disabled placeholders: use **afppasswd -a** "
+"*username* to set a password and re-enable the account. A verifier with more "
+"than one hard link must be replaced or have its additional links removed."
+msgstr ""
+"復元によって登録済みの検証の所有権またはモードが変更された場合、**afpd** を停"
+"止し、再起動する前に root としてその uid 名のファイルを修復する。所有権を一致"
+"するローカルユーザーに戻し、モードを 0600 に設定する。例えば、カスタムパスに"
+"ある alice の検証は、**chown** *alice* */path/to/verifiers/$(id -u alice)* を"
+"使用して修復し、その後そのファイルに **chmod 0600** を適用することで修復でき"
+"る。root 所有の無効なプレースホルダーにはこれを適用しないこと：**afppasswd "
+"-a** *username* を使用してパスワードを設定し、アカウントを再有効化すること。"
+"複数のハードリンクを持つ検証は、置き換えるか追加のリンクを削除する必要があ"
+"る。"
+
+#. type: Plain text
+#: manual/Upgrading.md:48
+msgid ""
+"In *afp.conf*, the new **srp verifier path** option replaces the old **srp "
+"passwd file** option. The old name is still accepted as a deprecated alias, "
+"but its value is now interpreted as a directory and logs a migration warning."
+msgstr ""
+"*afp.conf* では、新しい **srp verifier path** オプションが古い **srp passwd "
+"file** オプションに置き換わる。古い名前は非推奨のエイリアスとしてまだ受け入れ"
+"られるが、その値は現在ディレクトリとして解釈され、移行警告をログに記録する。"
+
+#. type: Plain text
+#: manual/Upgrading.md:51
+msgid ""
+"Existing SRP credentials must be migrated before users can log in with their "
+"existing passwords. The migration is performed with **afppasswd -m**."
+msgstr ""
+"既存の SRP 資格情報は、ユーザーが既存のパスワードでログインできるようにする前"
+"に移行する必要がある。移行は **afppasswd -m** で実行される。"
+
+#. type: Bullet: '1. '
+#: manual/Upgrading.md:53
+msgid "Stop **netatalk** and keep it stopped for the complete migration."
+msgstr "**netatalk** を停止し、完全な移行の間は停止したままにする。"
+
+#. type: Bullet: '2. '
+#: manual/Upgrading.md:57
+msgid ""
+"If your *afp.conf* explicitly configures the **srp passwd file** path, "
+"update it to the **srp verifier path** option pointing to the location of "
+"the existing flat file to be migrated."
+msgstr ""
+"*afp.conf* が明示的に **srp passwd file** パスを設定している場合、既存のフ"
+"ラットファイルの場所を指す **srp verifier path** オプションに更新する。"
+
+#. type: Bullet: '3. '
+#: manual/Upgrading.md:59
+msgid "Run the migration as root. For the standard configuration, use:"
+msgstr "root として移行を実行する。標準構成では、次のように使用する："
+
+#. type: Plain text
+#: manual/Upgrading.md:61
+#, no-wrap
+msgid "       sudo afppasswd -m\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Upgrading.md:63
+#, no-wrap
+msgid "   If the verifier path is non-default, pass that directory:\n"
+msgstr "   検証パスがデフォルトでない場合は、そのディレクトリを渡す：\n"
+
+#. type: Plain text
+#: manual/Upgrading.md:65
+#, no-wrap
+msgid "       sudo afppasswd -m -p /path/to/verifiers\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Upgrading.md:73
+#, no-wrap
+msgid ""
+"   The migration preserves the existing salts and verifiers, so users keep\n"
+"   their SRP passwords. Active credentials become user-owned; disabled\n"
+"   placeholders remain root-owned and require root's **afppasswd -a** before\n"
+"   use. It validates all records and local accounts, creates\n"
+"   the new directory atomically, and retains the original flat file as\n"
+"   *afppasswd.srp.legacy* (or a numbered sibling). Do not start **netatalk** if\n"
+"   migration reports a failure; resolve the reported condition first.\n"
+msgstr ""
+"   移行は既存のソルトと検証を保持するため、ユーザーは SRP パスワードを保持する。\n"
+"   アクティブな資格情報はユーザー所有となる。無効なプレースホルダーは root 所有のままであり、使用する前に root の **afppasswd -a** が必要である。\n"
+"   すべてのレコードとローカルアカウントを検証し、新しいディレクトリを原子性に作成し、\n"
+"   元のフラットファイルを *afppasswd.srp.legacy*（または番号付きの兄弟）として保持する。\n"
+"   移行が失敗した場合は **netatalk** を起動しないこと。まず報告された条件を解決すること。\n"
+
+#. type: Bullet: '4. '
+#: manual/Upgrading.md:77
+msgid ""
+"Start **netatalk** and test an SRP login. Thereafter, a local user changes "
+"that user's SRP password simply with **afppasswd**. An administrator uses "
+"**afppasswd -a** *username* to set or reset a user's SRP credential."
+msgstr ""
+"**netatalk** を起動し、SRP ログインをテストする。その後、ローカルユーザーは単"
+"に **afppasswd** を使用してそのユーザーの SRP パスワードを変更する。管理者は "
+"**afppasswd -a** *username* を使用してユーザーの SRP 資格情報を設定またはリ"
+"セットする。"
+
+#. type: Plain text
+#: manual/Upgrading.md:82
+msgid ""
+"Alternatively, if retaining user passwords is not desired: delete the legacy "
+"file, typically at */etc/netatalk/afppasswd.srp*, and initialize a new store "
+"with **afppasswd -c**. This creates root-owned disabled placeholders; set "
+"passwords individually as root with **afppasswd -a** *username* to enroll "
+"users."
+msgstr ""
+"あるいは、ユーザーパスワードを保持することが望ましくない場合：レガシーファイ"
+"ル（通常は */etc/netatalk/afppasswd.srp* にある）を削除し、**afppasswd -c** "
+"で新しいストアを初期化する。これにより root 所有の無効なプレースホルダーが作"
+"成される。**afppasswd -a** *username* を使用して root として個別にパスワード"
+"を設定し、ユーザーを登録する。"
+
+#. type: Plain text
+#: manual/Upgrading.md:90
+msgid ""
+"After enrollment, users own their verifier and can replace it directly.  The "
+"old-password proof and optional CrackLib check in **afppasswd** do not "
+"enforce server-wide password policy. To disable future SRP logins for a "
+"user, run **afppasswd -d** *username* as root. It replaces the uid verifier "
+"with a root-owned disabled placeholder (and creates one if it is absent); "
+"use **afppasswd -a** *username* to set a password and re-enable the "
+"account.  Existing sessions and other UAMs are unaffected."
+msgstr ""
+"登録後、ユーザーは自分の検証を所有し、直接置き換えることができる。"
+"**afppasswd** の古いパスワードの証明とオプションの CrackLib チェックは、サー"
+"バー全体のパスワードポリシーを強制しない。ユーザーの将来の SRP ログインを無効"
+"にするには、root として **afppasswd -d** *username* を実行する。これにより、"
+"uid 検証が root 所有の無効なプレースホルダーに置き換えられる（存在しない場合"
+"は作成される）；**afppasswd -a** *username* を使用してパスワードを設定し、ア"
+"カウントを再有効化する。既存のセッションや他の UAM は影響を受けない。"
+
+#. type: Title ###
+#: manual/Upgrading.md:91
+#, no-wrap
+msgid "Randnum hardening"
+msgstr "Randnum の強化"
+
+#. type: Plain text
+#: manual/Upgrading.md:96
+msgid ""
+"Randnum remains a legacy, weak UAM intended only for old clients. Managing "
+"its *afppasswd* file is now root-only: use **afppasswd -r -a** *username* to "
+"reset or update a Randnum credential."
+msgstr ""
+"Randnum は依然として古いクライアント専用のレガシーで弱い UAM である。その "
+"*afppasswd* ファイルの管理は現在 root のみ：**afppasswd -r -a** *username* を"
+"使用して Randnum 資格情報をリセットまたは更新する。"
+
+#. type: Title ##
+#: manual/Upgrading.md:97
+#, no-wrap
 msgid "Upgrading from Netatalk 3"
 msgstr "Netatalk 3 からのアップグレード"
 
 #. type: Plain text
-#: manual/Upgrading.md:9
+#: manual/Upgrading.md:103
 msgid ""
 "Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the new "
 "version on top of the old one. The primary difference is that Netatalk 4 "
@@ -49,7 +301,7 @@ msgstr ""
 "ルを一部復活させたことである。"
 
 #. type: Plain text
-#: manual/Upgrading.md:13
+#: manual/Upgrading.md:107
 msgid ""
 "Notably, the **atalkd** daemon with its **atalkd.conf** configuration file, "
 "and the **papd** daemon with its **papd.conf** configuration file are once "
@@ -59,7 +311,7 @@ msgstr ""
 "モンと **papd.conf** 設定ファイルが追加された。"
 
 #. type: Plain text
-#: manual/Upgrading.md:17
+#: manual/Upgrading.md:111
 msgid ""
 "A handful of options in *afp.conf* have been changed or removed "
 "incrementally throughout the Netatalk v4 release history.  See the table of "
@@ -69,11 +321,12 @@ msgstr ""
 "更または削除されている。詳細は以下の新旧オプション名対応表を参照のこと。"
 
 #. type: Plain text
-#: manual/Upgrading.md:29
+#: manual/Upgrading.md:124
 #, no-wrap
 msgid ""
 "| v3 afp.conf        | v4 afp.conf      | Change in | Remarks                                                  |\n"
 "| ------------------ | ---------------- | --------- | -------------------------------------------------------- |\n"
+"| afp read locks     | strict locking   | 4.6.0     | old name is a deprecated synonym that logs a warning     |\n"
 "| appledouble        | -                | 4.2.0     | controlled solely by 'ea' now                            |\n"
 "| dircachesize       | dircache size    | 4.5.0     | -                                                        |\n"
 "| fce ignore names   | fce ignore names | 4.2.0     | comma delineation rather than forward slash delineation  |\n"
@@ -86,6 +339,7 @@ msgid ""
 msgstr ""
 "| v3 afp.conf | v4 afp.conf | 変更バージョン | 詳細 |\n"
 "|----|----|----|----|\n"
+"| afp read locks | strict locking | 4.6.0 | 古い名前は非推奨の同義語であり、警告をログに記録する |\n"
 "| appledouble | - | 4.2.0 | 'ea' のみで制御されるようになった |\n"
 "| dircachesize | dircache size | 4.5.0 | - |\n"
 "| fce ignore names | fce ignore names | 4.2.0 | スラッシュ区切りからカンマ区切りへ |\n"
@@ -97,13 +351,13 @@ msgstr ""
 "| zeroconf name | server name | 4.2.0 | Classic Mac OS クライアントにも適用されるようになった |\n"
 
 #. type: Title ###
-#: manual/Upgrading.md:30
+#: manual/Upgrading.md:125
 #, no-wrap
 msgid "afpstats breaking changes"
 msgstr "afpstats の破壊的変更点"
 
 #. type: Plain text
-#: manual/Upgrading.md:36
+#: manual/Upgrading.md:131
 msgid ""
 "The **afpstats** tool was introduced as a replacement for the historical "
 "**macusers** script in Netatalk 3.0. In its original shape, the tool "
@@ -116,7 +370,7 @@ msgstr ""
 "するように書き換えられた。"
 
 #. type: Plain text
-#: manual/Upgrading.md:39
+#: manual/Upgrading.md:134
 msgid ""
 "If you upgrade from a previous version, you may need to manually delete the "
 "*netatalk-dbus.conf* file which is usually stored in */usr/share/dbus-1/"
@@ -127,18 +381,18 @@ msgstr ""
 "があるかもしれない。"
 
 #. type: Title ##
-#: manual/Upgrading.md:40
+#: manual/Upgrading.md:135
 #, no-wrap
 msgid "Upgrading from Netatalk 2"
 msgstr "Netatalk 2 からのアップグレード"
 
 #. type: Plain text
-#: manual/Upgrading.md:43
+#: manual/Upgrading.md:138
 msgid "There are three major changes between Netatalk 2 and Netatalk 4:"
 msgstr "Netatalk 4 の主要な変更は以下の3点："
 
 #. type: Bullet: '1. '
-#: manual/Upgrading.md:46
+#: manual/Upgrading.md:141
 msgid ""
 "New configuration files that replaces most of the previous ones: *afp.conf* "
 "and *extmap.conf*"
@@ -147,7 +401,7 @@ msgstr ""
 "を変更し、新しい設定ファイルを追加した： *afp.conf* と *extmap.conf*"
 
 #. type: Bullet: '2. '
-#: manual/Upgrading.md:49
+#: manual/Upgrading.md:144
 msgid ""
 "New backend for file metadata which stores metadata in extended attributes "
 "of the filesystem."
@@ -155,7 +409,7 @@ msgstr ""
 "ファイルメタデータをファイルシステムの拡張属性に保存する新しいバックエンド。"
 
 #. type: Bullet: '3. '
-#: manual/Upgrading.md:55
+#: manual/Upgrading.md:150
 msgid ""
 "The AppleTalk transport layer is disabled by default. If you want to use "
 "Netatalk with very old Macs, turn it on with the **appletalk = yes** option "
@@ -168,25 +422,25 @@ msgstr ""
 "を立ち上げてください。"
 
 #. type: Title ###
-#: manual/Upgrading.md:56
+#: manual/Upgrading.md:151
 #, no-wrap
 msgid "New configuration"
 msgstr "設定まわりの変更点"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:61
+#: manual/Upgrading.md:156
 msgid "ini style syntax (akin to Samba's smb.conf)"
 msgstr "（Samba の smb.conf のような） \"ini\" スタイルの構文"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:63
+#: manual/Upgrading.md:158
 msgid "one to rule them all: configure AFP settings and volumes in one file"
 msgstr ""
 "一つで設定すべてを指示するという点： AFP 及びボリュームの構成を共に一つのファ"
 "イルで設定することになるという点"
 
 #. type: Plain text
-#: manual/Upgrading.md:66
+#: manual/Upgrading.md:161
 msgid ""
 "- obsoletes *afpd.conf*, *netatalk.conf*, *AppleVolumes.default* and "
 "*afp_ldap.conf*"
@@ -195,7 +449,7 @@ msgstr ""
 "*afp_ldap.conf* の廃止"
 
 #. type: Plain text
-#: manual/Upgrading.md:69
+#: manual/Upgrading.md:164
 #, no-wrap
 msgid ""
 "> ***WARNING:*** Most option names have changed. Read the full manpage\n"
@@ -205,18 +459,18 @@ msgstr ""
 "[afp.conf](afp.conf.5.html) の manpage 全体を読むこと\n"
 
 #. type: Title ####
-#: manual/Upgrading.md:70
+#: manual/Upgrading.md:165
 #, no-wrap
 msgid "extmap.conf"
 msgstr ""
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:73
+#: manual/Upgrading.md:168
 msgid "maps file extensions to Classic Mac OS type/creator"
 msgstr "Classic Mac OS type/creator と拡張子の関連付け"
 
 #. type: Plain text
-#: manual/Upgrading.md:76
+#: manual/Upgrading.md:171
 msgid ""
 "- unlike 2.x, the mappings are disabled by default; uncomment the lines in "
 "the file to enable them"
@@ -225,18 +479,18 @@ msgstr ""
 "ファイル内の行のコメントを解除する"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:78
+#: manual/Upgrading.md:173
 msgid "obsoletes *AppleVolumes.system*"
 msgstr "*AppleVolumes.system* の廃止"
 
 #. type: Title ###
-#: manual/Upgrading.md:79
+#: manual/Upgrading.md:174
 #, no-wrap
 msgid "New metadata backend"
 msgstr "新たなメタデータバックエンド"
 
 #. type: Plain text
-#: manual/Upgrading.md:83
+#: manual/Upgrading.md:178
 msgid ""
 "New file metadata backend **ea = sys** which stores macOS extended "
 "attributes and Classic Mac OS resource forks in extended attributes of the "
@@ -246,12 +500,12 @@ msgstr ""
 "性に保存する **ea = sys** という新しいバックエンド。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:85
+#: manual/Upgrading.md:180
 msgid "default backend (!)"
 msgstr "デフォルトのバックエンドである（！）"
 
 #. type: Plain text
-#: manual/Upgrading.md:88
+#: manual/Upgrading.md:183
 msgid ""
 "- requires a filesystem with Extended Attributes, fallback is AppleDouble v2 "
 "which is enabled with **ea = ad**"
@@ -260,7 +514,7 @@ msgstr ""
 "使用が代替となる"
 
 #. type: Plain text
-#: manual/Upgrading.md:91
+#: manual/Upgrading.md:186
 msgid ""
 "- on the fly conversion from AppleDouble v2 to Extended Attributes when "
 "accessed by clients, enabled with **convert appledouble = yes**"
@@ -269,17 +523,17 @@ msgstr ""
 "変換が行われる。**convert appledouble = yes** で有効化される。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:93
+#: manual/Upgrading.md:188
 msgid "**dbd** can be used to do conversion in one shot"
 msgstr "一括で変換する場合 **dbd** を用いることができる"
 
 #. type: Plain text
-#: manual/Upgrading.md:95
+#: manual/Upgrading.md:190
 msgid "Implementation details:"
 msgstr "実装の詳細："
 
 #. type: Plain text
-#: manual/Upgrading.md:98
+#: manual/Upgrading.md:193
 msgid ""
 "- stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an "
 "Extended Attributed named *org.netatalk.Metadata*"
@@ -288,7 +542,7 @@ msgstr ""
 "*org.netatalk.Metadata*という名前の拡張属性に保存される。"
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:102
+#: manual/Upgrading.md:197
 msgid ""
 "Additionally, on macOS hosts running Netatalk 4.1.0 or later, FinderInfo is "
 "natively stored in the file system and appears as an Extended Attribute "
@@ -299,12 +553,12 @@ msgstr ""
 "として表示される。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:104
+#: manual/Upgrading.md:199
 msgid "stores Mac ResourceFork either in"
 msgstr "マックのリソースフォークは："
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:107
+#: manual/Upgrading.md:202
 msgid ""
 "an Extended Attribute named *org.netatalk.ResourceFork* on Solaris w. ZFS, "
 "or in"
@@ -312,14 +566,14 @@ msgstr ""
 "ZFSを用いたSolarisでは*org.netatalk.ResourceFork*という拡張属性に保存される。"
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:110
+#: manual/Upgrading.md:205
 msgid "an extra AppleDouble file named *._file* for a file named *file*, or"
 msgstr ""
 "ないしは、ファイル名が*file*であるものに対して各々、*._file*という名の別の"
 "AppleDoubleファイルに保存される。"
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:113
+#: manual/Upgrading.md:208
 msgid ""
 "natively stored in the resource fork on macOS hosts as of Netatalk 4.1.0."
 msgstr ""
@@ -327,7 +581,7 @@ msgstr ""
 "いる。"
 
 #. type: Plain text
-#: manual/Upgrading.md:121
+#: manual/Upgrading.md:216
 msgid ""
 "- the format of the .\\_ file is exactly as the Mac’s CIFS client expects it "
 "when accessing the same filesystem via a CIFS server (Samba), thus you can "
@@ -347,13 +601,13 @@ msgstr ""
 "要である。"
 
 #. type: Title ###
-#: manual/Upgrading.md:122
+#: manual/Upgrading.md:217
 #, no-wrap
 msgid "Other major changes"
 msgstr "そのほかの主要な変更点"
 
 #. type: Plain text
-#: manual/Upgrading.md:127
+#: manual/Upgrading.md:222
 msgid ""
 "- New service controller daemon [netatalk](netatalk.8.html) which is "
 "responsible for starting and restarting the AFP and CNID daemons. All "
@@ -365,7 +619,7 @@ msgstr ""
 "要あり！"
 
 #. type: Plain text
-#: manual/Upgrading.md:131
+#: manual/Upgrading.md:226
 msgid ""
 "- All CNID databases are now stored in a *netatalk/CNID* subdirectory of "
 "your system's state directory path, e.g. */var/lib*, rather than in the "
@@ -376,7 +630,7 @@ msgstr ""
 "前は各共有ボリュームにて保存されていた。"
 
 #. type: Plain text
-#: manual/Upgrading.md:134
+#: manual/Upgrading.md:229
 msgid ""
 "- Netatalk 2.x volume options **usedots** and **upriv** now enabled by "
 "default"
@@ -385,33 +639,33 @@ msgstr ""
 "なった。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:136
+#: manual/Upgrading.md:231
 msgid "Removed SLP and AFP proxy support"
 msgstr "SLP 及び AFP プロキシのサポート機能は削除。"
 
 #. type: Title ###
-#: manual/Upgrading.md:137
+#: manual/Upgrading.md:232
 #, no-wrap
 msgid "Upgrading procedure"
 msgstr "アップグレード手段"
 
 #. type: Bullet: '1. '
-#: manual/Upgrading.md:140
+#: manual/Upgrading.md:235
 msgid "Stop Netatalk 2.x"
 msgstr "Netatalk 2.x を停止する"
 
 #. type: Bullet: '2. '
-#: manual/Upgrading.md:142
+#: manual/Upgrading.md:237
 msgid "Install Netatalk 4"
 msgstr "Netatalk 4 をインストールする"
 
 #. type: Bullet: '3. '
-#: manual/Upgrading.md:144
+#: manual/Upgrading.md:239
 msgid "Manually recreate configurations in *afp.conf* and *extmap.conf*"
 msgstr "設定 *afp.conf* 及び *extmap.conf* を自力で書き換える"
 
 #. type: Bullet: '4. '
-#: manual/Upgrading.md:148
+#: manual/Upgrading.md:243
 msgid ""
 "Update your Netatalk init script to start **netatalk** instead of **afpd** "
 "and **cnid_metad**, or replace it with the appropriate stock init script for "
@@ -421,7 +675,7 @@ msgstr ""
 "Netatalk 起動スクリプトを更新するか、標準の起動スクリプトに置き換える。"
 
 #. type: Bullet: '5. '
-#: manual/Upgrading.md:152
+#: manual/Upgrading.md:247
 msgid ""
 "Move *afp_voluuid.conf* and *afp_signature.conf* to the localstate directory "
 "(default *$prefix/var/netatalk/*), you can use **afpd -v** in order to find "
@@ -432,18 +686,18 @@ msgstr ""
 "**afpd -v** コマンドが有用"
 
 #. type: Bullet: '6. '
-#: manual/Upgrading.md:154
+#: manual/Upgrading.md:249
 msgid "Start Netatalk 4"
 msgstr "Netatalk 4 を起動する"
 
 #. type: Title ###
-#: manual/Upgrading.md:155
+#: manual/Upgrading.md:250
 #, no-wrap
 msgid "Old and new configuration file names"
 msgstr "新旧設定ファイル名"
 
 #. type: Plain text
-#: manual/Upgrading.md:168
+#: manual/Upgrading.md:263
 #, no-wrap
 msgid ""
 "| Old File Name        | New File Name      | Remarks                       |\n"
@@ -471,13 +725,13 @@ msgstr ""
 "| ~/.AppleVolumes | - | 廃止 |\n"
 
 #. type: Title ###
-#: manual/Upgrading.md:169
+#: manual/Upgrading.md:264
 #, no-wrap
 msgid "Old and new option names"
 msgstr "新旧オプション対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:173
+#: manual/Upgrading.md:268
 msgid ""
 "Mappings from netatalk.conf (Debian: */etc/default/netatalk*) to afp.conf or "
 "to the means of invocation"
@@ -486,7 +740,7 @@ msgstr ""
 "表、および起動手段の対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:192
+#: manual/Upgrading.md:287
 #, no-wrap
 msgid ""
 "| Old netatalk.conf  | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                       |\n"
@@ -528,12 +782,12 @@ msgstr ""
 "| ATALK_ZONE | ddp zone | - | - | (G) | 4.0.0で復活 |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:194
+#: manual/Upgrading.md:289
 msgid "Mappings from afpd.conf to afp.conf"
 msgstr "afpd.conf から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:258
+#: manual/Upgrading.md:353
 #, no-wrap
 msgid ""
 "| Old afpd.conf      | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                              |\n"
@@ -665,12 +919,12 @@ msgstr ""
 "| -keepsessions | - | - | - | - | 廃止。kill -HUP を使用 |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:260
+#: manual/Upgrading.md:355
 msgid "Mappings from afp_ldap.conf to afp.conf"
 msgstr "afp_ldap.conf から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:275
+#: manual/Upgrading.md:370
 #, no-wrap
 msgid ""
 "| Old afp_ldap.conf | New afp.conf     | Old Default Value | New Default Value | Section | Remarks |\n"
@@ -704,12 +958,12 @@ msgstr ""
 "| ldap_group_attr | ldap group attr | - | - | (G) | - |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:277
+#: manual/Upgrading.md:372
 msgid "Mappings from AppleVolumes.\\* to afp.conf"
 msgstr "AppleVolumes.\\* から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:335
+#: manual/Upgrading.md:430
 #, no-wrap
 msgid ""
 "| Old AppleVolumes.\\*         | New afp.conf       | Old Default Value     | New Default Value | Section | Remarks                          |\n"
@@ -726,7 +980,7 @@ msgid ""
 "| volcharset:                | vol charset        | UTF8                  | *unix charset*      | (G)/(V) | -                                |\n"
 "| maccharset:                | mac charset        | MAC_ROMAN             | MAC_ROMAN         | (G)/(V) | -                                |\n"
 "| veto:                      | veto files         | -                     | -                 | (V)     | -                                |\n"
-"| cnidscheme:                | cnid scheme        | dbd                   | dbd\\*              | (G)/(V) | \\* may vary per installation      |\n"
+"| cnidscheme:                | cnid scheme        | dbd                   | sqlite\\*           | (G)/(V) | \\* may vary per installation      |\n"
 "| casefold:                  | casefold           | -                     | -                 | (V)     | -                                |\n"
 "| adouble:                   | -                  | v2                    | -                 | -       | removed in 4.2.0                 |\n"
 "| cnidserver:                | cnid server        | localhost:4700        | localhost:4700    | (G)/(V) | -                                |\n"
@@ -785,7 +1039,7 @@ msgstr ""
 "| volcharset: | vol charset | UTF8 | *unix charset* を使用する | (G)/(V) | - |\n"
 "| maccharset: | mac charset | MAC_ROMAN | MAC_ROMAN | (G)/(V) | - |\n"
 "| veto: | veto files | - | - | (V) | - |\n"
-"| cnidscheme: | cnid scheme | dbd | dbd\\* | (G)/(V) | \\* インストール環境によって異なる場合がある |\n"
+"| cnidscheme: | cnid scheme | dbd | sqlite\\* | (G)/(V) | \\* インストール環境によって異なる場合がある |\n"
 "| casefold: | casefold | - | - | (V) | - |\n"
 "| adouble: | appledouble | v2 | ea | (V) | 4.2.0で廃止 |\n"
 "| cnidserver: | cnid server | localhost:4700 | localhost:4700 | (G)/(V) | - |\n"

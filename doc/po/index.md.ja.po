@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-09-14 22:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -24,73 +24,107 @@ msgid "Introduction to Netatalk"
 msgstr "序説"
 
 #. type: Plain text
-#: manual/index.md:8
+#: manual/index.md:5
 msgid ""
 "Netatalk is an Open Source software package that can be used to turn a "
-"\\*NIX machine into a performant and light-weight file server.  Any computer "
-"with an AFP client can connect to a Netatalk server.  AFP clients include "
-"macOS, Classic Mac OS, Apple II ProDOS or GS/OS, and other operating systems "
-"with 3rd party AFP client software."
+"\\*NIX machine into a performant and light-weight AFP file server."
 msgstr ""
-"Netatalk は、\\*NIX マシンを高性能かつ軽量なファイルサーバーへと転換できる、"
-"オープンソースのソフトウェアパッケージである。AFP クライアントを搭載したコン"
-"ピュータであれば、いずれも Netatalk サーバーに接続できる。AFP クライアントに"
-"は、macOS、Classic Mac OS、Apple II ProDOS や GS/OS、さらにサードパーティ製"
-"の AFP クライアントソフトウェアを備えた他のオペレーティングシステムが含まれ"
-"る。"
+"Netatalk は、\\*NIX マシンを高性能で軽量な AFP ファイルサーバーに変換するため"
+"に\n"
+"使用できるオープンソースのソフトウェアパッケージである。"
 
 #. type: Plain text
-#: manual/index.md:11
+#: manual/index.md:13
 msgid ""
-"It provides a modern TCP/IP transport layer, as well as a traditional "
-"AppleTalk transport layer for very old Mac and Apple II clients."
+"AFP (Apple Filing Protocol) is a network file system protocol originally "
+"developed by Apple for use in their Macintosh computers. It was the primary "
+"file sharing protocol for Mac OS for the better part of 30 years.  AFP 3.4 "
+"is the latest version of the protocol, introduced with Mac OS X 10.8 "
+"Mountain Lion. Netatalk can speak AFP 2 and AFP 3, allowing it to support a "
+"wide range of clients from the latest macOS to very old Classic Mac OS and "
+"Apple II machines."
 msgstr ""
-"モダンな TCP/IP トランスポート層と非常に古い Mac や Apple II クライアントに使"
-"える、従来の AppleTalk トランスポート層を両方提供する。"
+"AFP (Apple Filing Protocol) は、もともと Apple が Macintosh コンピュータで使"
+"用するために\n"
+"開発したネットワークファイルシステムプロトコルである。 30 年以上にわたり、"
+"Mac OS の主要なファイル共有プロトコルであった。 AFP 3.4 は、Mac OS X 10.8 "
+"Mountain Lion で導入されたプロトコルの最新バージョンである。 Netatalk は AFP "
+"2 および AFP 3 をサポートしており、最新の macOS から非常に古い Classic Mac "
+"OS および Apple II マシンまで、幅広いクライアントをサポートできる。"
 
 #. type: Plain text
-#: manual/index.md:18
+#: manual/index.md:17
 msgid ""
-"Using Netatalk's AFP 3.4 compliant file-server leads to noticeably higher "
+"A number of 3rd party AFP client implementations exist for other operating "
+"systems, including the _Netatalk Client_, which is an improved fork of "
+"_afpfs-ng_ that is available for Linux, FreeBSD, OpenBSD, NetBSD, and macOS."
+msgstr ""
+"他のオペレーティングシステム用の多くのサードパーティ製 AFP クライアント実装が"
+"存在する。Netatalk Client は、Linux、FreeBSD、OpenBSD、NetBSD、および macOS "
+"で利用可能な afpfs-ng の改良されたフォークである。"
+
+#. type: Plain text
+#: manual/index.md:24
+msgid ""
+"Using Netatalk's AFP 3.4 compliant file server leads to noticeably higher "
 "transmission speeds for macOS clients compared to Samba/NFS, while providing "
 "users with the best possible Mac-like user experience.  It can read and "
 "write Mac metadata - macOS extended file attributes as well as Classic Mac "
 "OS resource forks - facilitating mixed environments of new and old Macs."
 msgstr ""
-"Netatalk の AFP 3.4 準拠のファイル サーバーを使用すると、macOS クライアントの"
+"Netatalk の AFP 3.4 準拠のファイルサーバーを使用すると、macOS クライアントの"
 "転送速度が Samba/NFS に比べて著しく高速になり、ユーザーには可能な限り Mac の"
 "ようなユーザー エクスペリエンスが提供される。Mac メタデータ (macOS 拡張ファイ"
 "ル属性と Classic Mac OS リソース フォーク) の読み取りと書き込みが可能で、新旧"
 "の Mac が混在する環境を容易にする。"
 
 #. type: Plain text
-#: manual/index.md:23
+#: manual/index.md:29
 msgid ""
 "Netatalk ships with range of capabilities to accommodate most deployment "
 "environments, including Kerberos, ACLs and LDAP. Modern macOS features such "
 "as Zeroconf (Bonjour) service discovery, Time Machine backups, and Spotlight "
-"indexed search are provided."
+"(Finder search) indexed search are provided."
 msgstr ""
 "Netatalk には、Kerberos、ACL、LDAP など、ほとんどの展開環境に対応できるさまざ"
 "まな機能が搭載されている。 Zeroconf（Bonjour）サービス検出、Time Machine バッ"
-"クアップ、Spotlight インデックス検索などの最新の macOS 機能が提供される。"
+"クアップ、Spotlight（Finder 検索）インデックス検索などの最新の macOS 機能が提"
+"供される。"
+
+#. type: Title ##
+#: manual/index.md:30
+#, no-wrap
+msgid "AppleTalk Services"
+msgstr "AppleTalk サービス"
 
 #. type: Plain text
-#: manual/index.md:28
+#: manual/index.md:34
+msgid ""
+"Netatalk provides a modern TCP/IP transport layer, as well as a traditional "
+"AppleTalk transport layer for very old Mac and Apple II clients."
+msgstr ""
+"Netatalk は、現代的な TCP/IP トランスポート層と、非常に古い Mac や Apple II "
+"クライアントに使える、従来の AppleTalk トランスポート層を両方提供する。"
+
+#. type: Plain text
+#: manual/index.md:41
 msgid ""
 "For AppleTalk networks with legacy Macs and Apple IIs, Netatalk provides a "
 "print server, time server, and Apple II network boot server. The print "
 "server is fully integrated with CUPS, allowing old Macs to discover and "
-"print to a modern CUPS/AirPrint compatible printer on the network."
+"print to a modern CUPS/AirPrint compatible printer on the network.  Netatalk "
+"can also provide a MacIP gateway, allowing AppleTalk-only Macintosh clients "
+"to reach TCP/IP networks."
 msgstr ""
 "レガシー Mac および Apple II を使用した AppleTalk ネットワークの場合、"
 "Netatalk はプリント サーバー、タイム サーバー、および Apple II ネットブート"
 "サーバーを提供する。プリント サーバーは CUPS と完全に統合されているため、古"
 "い Mac はネットワーク上の最新の CUPS/AirPrint 互換プリンターを検出して印刷で"
-"きる。"
+"きる。 Netatalk は MacIP ゲートウェイも提供できるため、AppleTalk 専用の "
+"Macintosh クライアントが TCP/IP ネットワークにアクセスできる。"
 
 #. type: Plain text
-#: manual/index.md:31
+#: manual/index.md:44
 msgid ""
 "Additionally, Netatalk can be configured as an AppleTalk router through its "
 "AppleTalk Network Management daemon, providing both segmentation and zone "

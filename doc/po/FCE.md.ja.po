@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-09-14 22:40+0200\n"
 "PO-Revision-Date: 2026-05-17 23:17+0200\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,6 +17,41 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Bullet: '- '
+#: manpages/man5/afp.conf.5.md:884 manual/FCE.md:30
+msgid "file modification (**fmod**)"
+msgstr "ファイル変更 (**fmod**)"
+
+#. type: Bullet: '- '
+#: manpages/man5/afp.conf.5.md:886 manual/FCE.md:30
+msgid "file deletion (**fdel**)"
+msgstr "ファイル削除 (**fdel**)"
+
+#. type: Bullet: '- '
+#: manpages/man5/afp.conf.5.md:888 manual/FCE.md:30
+msgid "directory deletion (**ddel**)"
+msgstr "ディレクトリ削除 (**ddel**)"
+
+#. type: Bullet: '- '
+#: manpages/man5/afp.conf.5.md:890 manual/FCE.md:30
+msgid "file creation (**fcre**)"
+msgstr "ファイル作成 (**fcre**)"
+
+#. type: Bullet: '- '
+#: manpages/man5/afp.conf.5.md:892 manual/FCE.md:30
+msgid "directory creation (**dcre**)"
+msgstr "ディレクトリ作成 (**dcre**)"
+
+#. type: Bullet: '- '
+#: manpages/man5/afp.conf.5.md:894 manual/FCE.md:30
+msgid "file move or rename (**fmov**)"
+msgstr "ファイル移動または名前変更 (**fmov**)"
+
+#. type: Bullet: '- '
+#: manpages/man5/afp.conf.5.md:896 manual/FCE.md:30
+msgid "directory move or rename (**dmov**)"
+msgstr "ディレクトリ移動または名前変更 (**dmov**)"
 
 #. type: Title #
 #: manual/FCE.md:1
@@ -28,105 +63,521 @@ msgstr "ファイルシステム変更イベント"
 #: manual/FCE.md:5
 msgid ""
 "Netatalk includes a filesystem change event (FCE) mechanism that allows "
-"**afpd** processes to notify interested listeners about certain filesystem "
-"events via UDP network datagrams."
+"**afpd** processes to report selected AFP session and filesystem activity."
 msgstr ""
-"Netatalk にはファイルシステム変更イベント (Filesystem Change Events, FCE) 機"
-"構が含まれている。ここで、**afpd** プロセスは、なにがしかのファイルシステムイ"
-"ベントについて、関心を寄せているリスナーに、UDP ネットワークデータグラム経由"
-"で通知する。"
+"Netatalkには、**afpd**プロセスが特定のAFPセッションやファイルシステムの動作を"
+"報告できるようにする、ファイルシステム変更イベント（FCE）メカニズムが組み込ま"
+"れている。"
 
 #. type: Plain text
+#: manual/FCE.md:7
+msgid "There are two ways to capture emitted FCE events:"
+msgstr "発生した FCE イベントを捕捉する方法は二つある:"
+
+#. type: Bullet: '- '
 #: manual/FCE.md:10
-msgid ""
-"This feature is disabled by default.  To enable it, set the **fce listener** "
-"option in *afp.conf* to the hostname or IP address of the host that should "
-"listen for FCE events."
-msgstr ""
-"この機能はデフォルトでは無効になっている。有効にするには、*afp.conf* の "
-"**fce listener** オプションを、FCE イベントを受け取るべきホストのホスト名また"
-"は IP アドレスに設定する。"
-
-#. type: Plain text
-#: manual/FCE.md:14
-msgid ""
-"Netatalk distributes a simple FCE listener application called "
-"**fce_listen**.  It prints any UDP datagrams received from the AFP server.  "
-"Its source code also serves as documentation for the format of the UDP "
-"packets."
-msgstr ""
-"Netatalk には、UDP データグラムを受信した AFP サーバーについての情報を出力す"
-"る簡単な FCE リスナーアプリケーション **fce_listen** が含まれている。このアプ"
-"リケーションのソースコードは、UDP パケットのフォーマットについてのドキュメン"
-"トとしても役立つ。"
-
-#. type: Title ##
-#: manual/FCE.md:15
-#, no-wrap
-msgid "FCE v1"
-msgstr ""
-
-#. type: Plain text
-#: manual/FCE.md:18
-msgid "The supported FCE v1 events are:"
-msgstr "サポートされているファイルシステム変更イベントは以下である："
+msgid "send FCE packets over UDP to one or more listener applications"
+msgstr "UDP 経由で FCE パケットを一つ以上のリスナーアプリケーションに送信する"
 
 #. type: Bullet: '- '
+#: manual/FCE.md:10
+msgid "execute a local notification script for every emitted event"
+msgstr "発生したイベントごとにローカル通知スクリプトを実行する"
+
+#. type: Plain text
+#: manual/FCE.md:13
+msgid ""
+"The two methods are independent.  A server may use either one, or both at "
+"the same time."
+msgstr ""
+"二つの方法は独立している。サーバーはどちらか一方、あるいは両方を同時に使用す"
+"ることができる。"
+
+#. type: Plain text
+#: manual/FCE.md:16
+msgid ""
+"FCE support must be enabled at build time.  The Meson option is *-Dwith-"
+"fce=true*, which is enabled by default."
+msgstr ""
+"FCE サポートはビルド時に有効化されていなければならない。Meson オプションは *-"
+"Dwith-fce=true* であり、デフォルトで有効になっている。"
+
+#. type: Title ##
+#: manual/FCE.md:17
+#, no-wrap
+msgid "Events"
+msgstr "イベント"
+
+#. type: Plain text
 #: manual/FCE.md:20
-msgid "file modification (fmod)"
-msgstr "ファイル変更：file modification (fmod)"
+msgid "The following event names are used in the **fce events** option:"
+msgstr "以下の FCE イベント名は **fce events** オプションで使用される:"
 
 #. type: Bullet: '- '
-#: manual/FCE.md:22
-msgid "file deletion (fdel)"
-msgstr "ファイル削除：file deletion (fdel)"
+#: manual/FCE.md:30
+msgid "user login (**login**)"
+msgstr "ユーザーログイン (**login**)"
 
 #. type: Bullet: '- '
-#: manual/FCE.md:24
-msgid "directory deletion (ddel)"
-msgstr "ディレクトリ削除：directory deletion (ddel)"
+#: manual/FCE.md:30
+msgid "user logout (**logout**)"
+msgstr "ユーザーログアウト (**logout**)"
+
+#. type: Plain text
+#: manual/FCE.md:32
+msgid "FCE protocol version 1 supports the basic file and directory events:"
+msgstr ""
+"FCE プロトコルバージョン 1 は基本的なファイルおよびディレクトリイベントをサ"
+"ポートする:"
 
 #. type: Bullet: '- '
-#: manual/FCE.md:26
-msgid "file creation (fcre)"
-msgstr "ファイル作成：file creation (fcre)"
+#: manual/FCE.md:38
+msgid "**fmod**"
+msgstr ""
 
 #. type: Bullet: '- '
-#: manual/FCE.md:28
-msgid "directory creation (dcre)"
-msgstr "ディレクトリ削除：directory deletion (ddel)"
+#: manual/FCE.md:38
+msgid "**fdel**"
+msgstr ""
 
-#. type: Title ##
-#: manual/FCE.md:29
-#, no-wrap
-msgid "FCE v2"
+#. type: Bullet: '- '
+#: manual/FCE.md:38
+msgid "**ddel**"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/FCE.md:38
+msgid "**fcre**"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/FCE.md:38
+msgid "**dcre**"
 msgstr ""
 
 #. type: Plain text
-#: manual/FCE.md:33
+#: manual/FCE.md:41
 msgid ""
-"FCE v2 events provide additional context such as the user who performed the "
-"action.  FCE v2 also adds the following events:"
+"FCE protocol version 2 adds event metadata such as the process id and user "
+"name, and is required for move, login, and logout events:"
 msgstr ""
-"FCE v2 イベントは、アクションを実行したユーザーなどの追加のコンテキストを提供"
-"する。また、FCE v2 では以下のイベントは加われた："
+"FCE プロトコルバージョン 2 はプロセス ID やユーザー名などのイベントメタデータ"
+"を追加し、移動、ログイン、およびログアウトイベントに必要である:"
 
 #. type: Bullet: '- '
-#: manual/FCE.md:35
-msgid "file moving (fmov)"
-msgstr "ファイル移動 (fmov)"
+#: manual/FCE.md:46
+msgid "**fmov**"
+msgstr ""
 
 #. type: Bullet: '- '
-#: manual/FCE.md:37
-msgid "directory moving (dmov)"
-msgstr "ディレクトリー移動 (dmov)"
+#: manual/FCE.md:46
+msgid "**dmov**"
+msgstr ""
 
 #. type: Bullet: '- '
-#: manual/FCE.md:39
-msgid "user login (login)"
-msgstr "ユーザーログイン (login)"
+#: manual/FCE.md:46
+msgid "**login**"
+msgstr ""
 
 #. type: Bullet: '- '
-#: manual/FCE.md:40
-msgid "user logout (logout)"
-msgstr "ユーザーログアウト (logout)"
+#: manual/FCE.md:46
+msgid "**logout**"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:48
+msgid "For new deployments, use **fce version = 2**."
+msgstr "新しい展開では、**fce version = 2** を使用する。"
+
+#. type: Title ##
+#: manual/FCE.md:49
+#, no-wrap
+msgid "Capturing Events with UDP"
+msgstr "UDP でイベントを捕捉する"
+
+#. type: Plain text
+#: manual/FCE.md:53
+msgid ""
+"The **fce listener** option sends FCE events as UDP datagrams to a host and "
+"optional port:"
+msgstr ""
+"**fce listener** オプションは、FCE イベントを UDP データグラムとしてホストと"
+"オプションのポートに送信する:"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:54
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce listener = localhost:12250\n"
+"fce version = 2\n"
+"fce events = fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:63
+msgid ""
+"If no port is specified, Netatalk uses port *12250*.  Multiple listeners can "
+"be configured by adding **fce listener** more than once."
+msgstr ""
+"ポートが指定されていない場合、Netatalk はポート *12250* を使用する。複数のリ"
+"スナーは、**fce listener** を複数回追加することで設定できる。"
+
+#. type: Plain text
+#: manual/FCE.md:66
+msgid ""
+"Netatalk includes a simple listener application, **fce_listen**, that can be "
+"used for testing:"
+msgstr ""
+"Netatalk には、テストに使用できるシンプルなリスナーアプリケーション "
+"**fce_listen** が含まれている:"
+
+#. type: Fenced code block (sh)
+#: manual/FCE.md:67
+#, no-wrap
+msgid ""
+"$ fce_listen -h localhost -p 12250\n"
+"Listening for Netatalk FCE datagrams on localhost:12250...\n"
+"FCE Start\n"
+"ID: 1, Event: FCE_LOGIN, pid: 429924, user: myuser, Path:\n"
+"ID: 2, Event: FCE_FILE_CREATE, pid: 429924, user: myuser, Path: /srv/afp/untitled folder\n"
+"ID: 3, Event: FCE_DIR_MOVE, pid: 429924, user: myuser, source: /srv/afp/untitled folder, Path: /srv/afp/My Folder\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:80
+msgid ""
+"UDP delivery is useful for external indexers, audit collectors, or other "
+"programs that should receive events without being executed by **afpd**.  "
+"Because UDP is not reliable, receivers should use the FCE event id to detect "
+"missing packets."
+msgstr ""
+"UDP 配信は、外部インデクサー、監査コレクター、または **afpd** によって実行さ"
+"れることなくイベントを受信する必要がある他のプログラムに便利である。UDP は信"
+"頼性がないため、受信者は FCE イベント ID を使用して欠落したパケットを検出する"
+"必要がある。"
+
+#. type: Plain text
+#: manual/FCE.md:83
+msgid ""
+"If a burst of filesystem activity causes packet loss, **fce sendwait** can "
+"add a small delay between emitted UDP events:"
+msgstr ""
+"ファイルシステムのアクティビティのバーストがパケット損失を引き起こす場合、"
+"**fce sendwait** は発生した UDP イベントの間に小さな遅延を追加できる:"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:84
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce listener = localhost:12250\n"
+"fce sendwait = 10\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:91
+msgid "The value is in milliseconds and must be between *0* and *999*."
+msgstr "値はミリ秒単位で、*0* から *999* の間でなければならない。"
+
+#. type: Title ##
+#: manual/FCE.md:92
+#, no-wrap
+msgid "Capturing Events with a Script"
+msgstr "スクリプトでイベントを捕捉する"
+
+#. type: Plain text
+#: manual/FCE.md:96
+msgid ""
+"The **fce notify script** option executes a local script for every emitted "
+"FCE event:"
+msgstr ""
+"**fce notify script** オプションは、発生した FCE イベントごとにローカルスクリ"
+"プトを実行する:"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:97
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce notify script = /usr/local/libexec/netatalk/fce_ev_script\n"
+"fce version = 2\n"
+"fce events = fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:106
+msgid ""
+"The script method does not require **fce listener**.  It can be used by "
+"itself, or together with UDP listeners."
+msgstr ""
+"スクリプトメソッドは **fce listener** を必要としない。単独で使用することも、"
+"UDP リスナーと一緒に使用することもできる。"
+
+#. type: Plain text
+#: manual/FCE.md:110
+msgid ""
+"Netatalk runs the script in the background through */bin/sh -c*.  The "
+"configured script path is followed by command-line options describing the "
+"event.  For example:"
+msgstr ""
+"Netatalk はスクリプトをバックグラウンドで */bin/sh -c* を通して実行する。設定"
+"されたスクリプトパスの後に、イベントを説明するコマンドラインオプションが続"
+"く。例えば:"
+
+#. type: Fenced code block (sh)
+#: manual/FCE.md:111
+#, no-wrap
+msgid "running /usr/local/libexec/netatalk/fce_ev_script -v 2 -e FCE_FILE_CREATE -i 2 -P '/srv/afp/Example File' -p 60246 -u 'myuser' as user 503\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:116
+msgid "The options passed to the script are:"
+msgstr "スクリプトに渡されるオプションは以下の通り:"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:124
+msgid "**-v VERSION**: FCE script argument version"
+msgstr "**-v VERSION**: FCE スクリプト引数バージョン"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:124
+msgid "**-e EVENT**: event name, such as **FCE_FILE_CREATE**"
+msgstr "**-e EVENT**: イベント名、例えば **FCE_FILE_CREATE**"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:124
+msgid "**-i ID**: event id"
+msgstr "**-i ID**: イベント ID"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:124
+msgid "**-P PATH**: event path, when the event has a path"
+msgstr "**-P PATH**: イベントパス、イベントにパスがある場合"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:124
+msgid "**-S SOURCE**: source path for move or rename events"
+msgstr "**-S SOURCE**: 移動または名前変更イベントのソースパス"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:124
+msgid "**-p PID**: **afpd** process id"
+msgstr "**-p PID**: **afpd** プロセス ID"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:124
+msgid "**-u USER**: AFP session user"
+msgstr "**-u USER**: AFP セッションユーザー"
+
+#. type: Plain text
+#: manual/FCE.md:126
+msgid "The **-p** and **-u** options are available with **fce version = 2**."
+msgstr ""
+"**-p** および **-u** オプションは **fce version = 2** で使用可能である。"
+
+#. type: Plain text
+#: manual/FCE.md:130
+msgid ""
+"The installed **fce_ev_script** helper accepts these options and writes a "
+"human-readable event line to syslog with the tag *netatalk-fce*.  The source "
+"script is maintained as *contrib/scripts/fce_ev_script.sh*."
+msgstr ""
+"インストールされた **fce_ev_script** ヘルパーはこれらのオプションを受け入れ、"
+"タグ *netatalk-fce* で syslog に人間が読めるイベント行を書き込む。ソーススク"
+"リプトは *contrib/scripts/fce_ev_script.sh* として管理されている。"
+
+#. type: Plain text
+#: manual/FCE.md:132
+msgid "Example output:"
+msgstr "出力の例："
+
+#. type: Fenced code block (text)
+#: manual/FCE.md:133
+#, no-wrap
+msgid "FCE Event: FCE_FILE_MOVE, protocol: 2, ID: 4, pid: 429924, user: myuser, source: /srv/afp/old.txt, path: /srv/afp/new.txt\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/FCE.md:137
+#, no-wrap
+msgid "Script Execution Environment"
+msgstr "スクリプト実行環境"
+
+#. type: Plain text
+#: manual/FCE.md:141
+msgid ""
+"The notification script is executed as the AFP session user, not necessarily "
+"as root or as the user that started Netatalk."
+msgstr ""
+"通知スクリプトは AFP セッションユーザーとして実行され、必ずしも root または "
+"Netatalk を開始したユーザーとして実行されるわけではない。"
+
+#. type: Plain text
+#: manual/FCE.md:143
+msgid "This has a few practical consequences:"
+msgstr "いくつかの実際的な結果がある:"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:149
+msgid "the script path must be executable by the AFP session user"
+msgstr ""
+"スクリプトパスは AFP セッションユーザーによって実行可能でなければならない"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:149
+msgid ""
+"every parent directory in the script path must be searchable by that user"
+msgstr ""
+"スクリプトパス内のすべての親ディレクトリは、そのユーザーによって検索可能でな"
+"ければならない"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:149
+msgid "files written by the script must be writable by that user"
+msgstr ""
+"スクリプトによって書き込まれたファイルは、そのユーザーによって書き込み可能で"
+"なければならない"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:149
+msgid ""
+"relative paths should be avoided because the helper changes directory to */* "
+"before executing the command"
+msgstr ""
+"相対パスは避けるべきである。なぜなら、ヘルパーはコマンドを実行する前に */* に"
+"ディレクトリを変更するからである"
+
+#. type: Plain text
+#: manual/FCE.md:154
+msgid ""
+"The build system installs the helper under Netatalk's libexec directory.  "
+"Replace */usr/local/libexec* with the libexec directory configured for your "
+"installation.  Configure **afpd** with that installed path:"
+msgstr ""
+"ビルドシステムは、ヘルパーを Netatalk の libexec ディレクトリの下にインストー"
+"ルする。*/usr/local/libexec* をインストール用に設定された libexec ディレクト"
+"リに置き換える。**afpd** をそのインストール済みパスで設定する:"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:155
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce notify script = /usr/local/libexec/netatalk/fce_ev_script\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:162
+msgid ""
+"For diagnostic file logging, wrap the helper and set "
+"**NETATALK_FCE_LOG_FILE**:"
+msgstr ""
+"診断用のファイルログを取得するために、ヘルパーをラップして "
+"**NETATALK_FCE_LOG_FILE** を設定する:"
+
+#. type: Fenced code block (sh)
+#: manual/FCE.md:163
+#, no-wrap
+msgid ""
+"#!/bin/sh\n"
+"NETATALK_FCE_LOG_FILE=/tmp/fce.log\n"
+"export NETATALK_FCE_LOG_FILE\n"
+"exec /usr/local/libexec/netatalk/fce_ev_script \"$@\"\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:172
+msgid ""
+"If file logging is enabled but */tmp/fce.log* is not updated, check the "
+"owner and mode of the log file."
+msgstr ""
+"ファイルログが有効になっているが */tmp/fce.log* が更新されない場合は、ログ"
+"ファイルの所有者とモードを確認する。"
+
+#. type: Title ##
+#: manual/FCE.md:173
+#, no-wrap
+msgid "Event Filtering and Coalescing"
+msgstr "イベントのフィルタリングと集約"
+
+#. type: Plain text
+#: manual/FCE.md:176
+msgid "The **fce events** option controls which events are emitted:"
+msgstr "**fce events** オプションは、どのイベントが発生するかを制御する:"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:177
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce events = fcre,dcre,fmov,dmov\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:184
+msgid ""
+"The **fce ignore names** option suppresses events for selected filenames.  "
+"The default ignored name is *.DS_Store*."
+msgstr ""
+"**fce ignore names** オプションは、選択されたファイル名のイベントを抑制する。"
+"デフォルトで無視される名前は *.DS_Store* である。"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:185
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce ignore names = .DS_Store,Thumbs.db\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:192
+msgid ""
+"The **fce ignore directories** option suppresses events below selected "
+"absolute directory paths.  The paths must not end with a slash."
+msgstr ""
+"**fce ignore directories** オプションは、選択された絶対ディレクトリパスの下の"
+"イベントを抑制する。パスはスラッシュで終わってはいけない。"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:193
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce ignore directories = /srv/afp/cache,/srv/afp/tmp\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:199
+msgid ""
+"The **fce coalesce** option can reduce noisy create and delete event bursts:"
+msgstr ""
+"**fce coalesce** オプションは、騒々しい作成および削除イベントのバーストを減ら"
+"すことができる:"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:200
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce coalesce = all\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:207
+msgid ""
+"File modification events are delayed by **fce holdfmod**, which defaults to "
+"*60* seconds.  For immediate script testing, set it to *0*:"
+msgstr ""
+"ファイル変更イベントは **fce holdfmod** によって遅延され、デフォルトでは "
+"*60* 秒である。スクリプトの即時テストのために、*0* に設定する:"
+
+#. type: Fenced code block (ini)
+#: manual/FCE.md:208
+#, no-wrap
+msgid ""
+"[Global]\n"
+"fce holdfmod = 0\n"
+msgstr ""

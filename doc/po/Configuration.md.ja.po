@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-06-08 23:30+0200\n"
+"POT-Creation-Date: 2026-09-14 22:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -36,13 +36,14 @@ msgid ""
 "usually launch the AFP file service daemon through the **netatalk** "
 "controller daemon.  The controller daemon manages the lifecycle of the AFP "
 "file service daemon, including Zeroconf service registration, and "
-"housekeeping for certain CNID backends and Spotlight indexing."
+"housekeeping for certain CNID backends and Spotlight (Finder search) "
+"indexing."
 msgstr ""
 "Netatalk の **afpd** デーモンは AFP クライアントに対してファイルサービスを提"
 "供する。AFP ファイルサービスデーモンは通常、netatalk コントローラーデーモンを"
 "通じて起動する。コントローラーデーモンは、Zeroconf サービス登録を含む AFP "
 "ファイルサービスデーモンのライフサイクル管理、および特定の CNID バックエンド"
-"と Spotlight インデックスのハウスキーピングを管理する。"
+"と Spotlight (Finder 検索) インデックスのハウスキーピングを管理する。"
 
 #. type: Plain text
 #: manual/Configuration.md:13
@@ -54,7 +55,7 @@ msgstr ""
 "*afp.conf* ファイルを通じて管理される。"
 
 #. type: Title ####
-#: manual/Configuration.md:14 manual/Upgrading.md:58
+#: manual/Configuration.md:14 manual/Upgrading.md:153
 #, no-wrap
 msgid "afp.conf"
 msgstr ""
@@ -136,7 +137,7 @@ msgstr ""
 "ディレクトリのパスあるいは正規表現からなる単純な文字列でよい。"
 
 #. type: Plain text
-#: manual/Configuration.md:44 manual/Search.md:32 manual/Search.md:77
+#: manual/Configuration.md:44 manual/Search.md:32 manual/Search.md:95
 msgid "Example:"
 msgstr "例："
 
@@ -319,45 +320,235 @@ msgstr ""
 "> デフォルト設定を使用している既存の Netatalk ボリュームに Samba 共有を追加したい場合は、\n"
 "> AFP クライアントを使用してファイルを別のボリュームにコピーすることが推奨の移行方法である。\n"
 
+#. type: Title ###
+#: manual/Configuration.md:108
+#, no-wrap
+msgid "Locking"
+msgstr "ロック"
+
 #. type: Plain text
-#: manual/Configuration.md:113
+#: manual/Configuration.md:112
 msgid ""
-"When sharing a volume with other processes (Samba, NFS, local applications), "
-"keep *dircache validation freq* at **1** (the default)  so Netatalk detects "
-"external changes on every access.  If Netatalk is the **only** process on "
-"the volume, you can set *dircache validation freq* = 100 for maximum "
-"performance."
+"AFP and SMB clients only respect each other's locks when both servers place "
+"real POSIX byte-range locks on the shared files. Two settings make that "
+"happen:"
 msgstr ""
-"Samba、NFS、ローカルアプリケーションなど他のプロセスとボリュームを共有する場"
-"合は、Netatalk がアクセスのたびに外部の変更を検出できるよう、*dircache "
-"validation freq* を **1** (デフォルト) のままにしておくこと。Netatalk がその"
-"ボリュームの**唯一の**プロセスであれば、最大パフォーマンスのために *dircache "
-"validation freq* = 100 に設定できる。"
+"AFP と SMB クライアントは、両方のサーバーが共有ファイルに対して実際の POSIX "
+"バイト範囲ロックを配置する場合にのみ、お互いのロックを尊重する。これを実現す"
+"るには、2 つの設定が必要である："
+
+#. type: Bullet: '- '
+#: manual/Configuration.md:123
+msgid ""
+"Netatalk's **strict locking** takes a POSIX read lock for every AFP read and "
+"a write lock for every AFP write, making AFP file access conflict with "
+"Samba's locks and vice versa. It is off by default; setting **multi protocol "
+"= yes** on any volume changes the default to on globally (an explicit "
+"*strict locking* setting still wins, with a logged warning)."
+msgstr ""
+"Netatalk の **strict locking** は、すべての AFP 読み取りに対して POSIX 読み取"
+"りロックを取得し、すべての AFP 書き込みに対して書き込みロックを取得すること"
+"で、AFP ファイルアクセスが Samba のロックと競合するようにする。デフォルトでは"
+"オフになっており、任意のボリュームで **multi protocol = yes** を設定すると、"
+"デフォルトがグローバルにオンに変更される（明示的な *strict locking* 設定は依"
+"然として優先され、警告がログに記録される）。"
+
+#. type: Bullet: '- '
+#: manual/Configuration.md:123
+msgid ""
+"Samba's own **strict locking** option is the same concept on the SMB side.  "
+"Set *strict locking = yes* in smb.conf: the default *Auto* skips the check "
+"for files under an SMB lease. Samba's *posix locking* must stay at its "
+"default *yes*, otherwise neither server sees the other's locks at all."
+msgstr ""
+"Samba の **strict locking** オプションは、SMB 側で同じ概念である。smb.conf "
+"で *strict locking = yes* を設定する：デフォルトの *Auto* は、SMB リース下の"
+"ファイルのチェックをスキップする。Samba の *posix locking* はデフォルトの "
+"*yes* のままにしておく必要がある。そうしないと、どちらのサーバーも相手のロッ"
+"クをまったく認識できなくなる。"
+
+#. type: Plain text
+#: manual/Configuration.md:129
+msgid ""
+"Samba's **fruit:locking = netatalk** module option (off by default in "
+"Samba)  additionally maps SMB open and deny modes onto the same on-disk "
+"convention Netatalk uses for AFP deny modes, so conflicting opens are "
+"refused across protocols and a file with open AFP forks is protected from "
+"deletion over SMB when deny modes are in effect."
+msgstr ""
+"Samba の **fruit:locking = netatalk** モジュールオプション（Samba ではデフォ"
+"ルトでオフ）は、さらに SMB のオープンおよび拒否モードを、Netatalk が AFP の拒"
+"否モードに使用するのと同じオンディスクの規約にマッピングするため、プロトコル"
+"間で競合するオープンが拒否され、拒否モードが有効な場合、オープンされた AFP "
+"フォークを持つファイルは SMB 経由での削除から保護される。"
+
+#. type: Plain text
+#: manual/Configuration.md:136
+msgid ""
+"SMB client-side caching (oplocks and leases) is not aware of AFP activity: "
+"with Samba's defaults, an SMB client may cache stale data and overwrite AFP-"
+"side changes. On a volume shared by both servers, disable it in smb.conf "
+"(*oplocks = no*, *level2 oplocks = no*, *smb2 leases = no*) or, on Linux, "
+"set *kernel oplocks = yes* instead (real kernel leases that Netatalk's file "
+"access breaks; this disables SMB2 leases and durable handles)."
+msgstr ""
+"SMB クライアント側のキャッシュ（oplocks および leases）は AFP のアクティビ"
+"ティを認識しない：Samba のデフォルトでは、SMB クライアントは古いデータを"
+"キャッシュし、AFP 側の変更を上書きする可能性がある。両方のサーバーで共有され"
+"るボリュームでは、smb.conf で無効にする（*oplocks = no*、*level2 oplocks = "
+"no*、*smb2 leases = no*）か、Linux では代わりに *kernel oplocks = yes* を設定"
+"する（Netatalk のファイルアクセスが壊す実際のカーネルリース；これにより SMB2 "
+"リースと耐久ハンドルが無効になる）。"
+
+#. type: Plain text
+#: manual/Configuration.md:141
+#, no-wrap
+msgid ""
+"> ***WARNING:*** Do not export a Time Machine share over both protocols.\n"
+"> Samba's *fruit:time machine = yes* preset disables *posix locking* and\n"
+"> kernel oplocks, removing every cross-protocol safety described here.\n"
+"> Time Machine shares should be served by one protocol only.\n"
+msgstr ""
+"> 【警告】 Time Machine 共有を両方のプロトコルでエクスポートしないでください。\n"
+"> Samba の *fruit:time machine = yes* プリセットは *posix locking* と\n"
+"> kernel oplocks を無効にし、ここで説明されているすべてのプロトコル間の安全性を削除します。\n"
+"> Time Machine 共有は、1 つのプロトコルのみで提供する必要があります。\n"
 
 #. type: Title ###
-#: manual/Configuration.md:114
+#: manual/Configuration.md:142
+#, no-wrap
+msgid "Settings side by side"
+msgstr "設定の比較"
+
+#. type: Plain text
+#: manual/Configuration.md:149
+msgid ""
+"Each row pairs the afp.conf and smb.conf settings that serve the same "
+"purpose.  An empty cell means that side needs no setting for that row — "
+"either the behavior is built in, or the other server needs several settings "
+"to match one setting on this side. Settings marked *default* are listed so "
+"you know not to change them."
+msgstr ""
+"各行は、同じ目的を果たす afp.conf と smb.conf の設定をペアにしている。空のセ"
+"ルは、その行に対してその側に設定が必要ないことを意味する — 挙動が組み込まれて"
+"いるか、または他方のサーバーがこの側の 1 つの設定に一致するために複数の設定を"
+"必要とする。*default* とマークされた設定は、変更しないように知っておくために"
+"リストされている。"
+
+#. type: Plain text
+#: manual/Configuration.md:172
+#, no-wrap
+msgid ""
+"| Netatalk (afp.conf)                  | Samba (smb.conf)                     | What it does |\n"
+"| ------------------------------------ | ------------------------------------ | ------------ |\n"
+"| **ea = samba**                       | **vfs objects = catia fruit streams_xattr** | Apple metadata (Finder info, resource forks) stored in a format both servers read and write. |\n"
+"|                                      | **fruit:metadata = netatalk** *(Samba default)* | Finder metadata in the same extended attribute Netatalk uses. |\n"
+"|                                      | **fruit:resource = file** *(Samba default)* | Resource forks in the same *._* AppleDouble files Netatalk uses. |\n"
+"|                                      | **fruit:encoding = native**          | Same on-disk names for characters that are illegal on Windows. |\n"
+"|                                      | **streams_xattr:prefix = user.**     | An AFP extended attribute and an SMB alternate data stream become the same object. Requires **ea = samba** on the Netatalk side (its trailing-byte format matches). |\n"
+"|                                      | **streams_xattr:store_stream_type = no** | Second half of the row above — strips the *:$DATA* suffix so the names match. |\n"
+"| **multi protocol = yes**             | | Declares that Samba modifies the volume too; defaults every Netatalk coherency setting in this table accordingly. |\n"
+"| **strict locking = yes** *(the default when multi protocol = yes)* | **strict locking = yes** | Every read and write is checked against the other server's byte-range locks. Samba's default *Auto* skips the check for leased files — set *yes* explicitly. |\n"
+"|                                      | **posix locking = yes** *(Samba default — keep)* | Samba mirrors its locks into the kernel where Netatalk can see them. With this off, no lock crosses between the servers at all. |\n"
+"| *(built in — always on)*             | **fruit:locking = netatalk**         | AFP and SMB open/deny modes conflict across protocols: a deny-mode open on one side refuses a conflicting open on the other. |\n"
+"| **dircache validation freq = 1** *(the default when multi protocol = yes)* | | Netatalk notices files that Samba created, renamed, or deleted. |\n"
+"| *(built in when multi protocol = yes)* | | The volume's resource forks are not cached in afpd memory, so Samba-side changes are always re-read. |\n"
+"|                                      | **kernel change notify = yes** *(Samba default — keep)* | Samba notices files that Netatalk changed, and notifies SMB clients. |\n"
+"|                                      | **oplocks = no**                     | SMB clients must not cache file data on a volume Netatalk also serves — a cached write could overwrite an AFP-side change. |\n"
+"|                                      | **level2 oplocks = no**              | Second half of the row above. |\n"
+"|                                      | **smb2 leases = no**                 | Third half of the row above. On Linux, **kernel oplocks = yes** may replace all three (real kernel leases that Netatalk's file access breaks). |\n"
+"| **solaris share reservations = yes** *(default; Solaris/illumos only)* | | F_SHARE reservations — the one deny-mode layer Samba can see on illumos without *fruit:locking*. |\n"
+"| **umask = 0002**                     | **create mask = 0664**               | New files get the same permissions no matter which protocol created them. |\n"
+"|                                      | **directory mask = 0775**            | Same, for directories. |\n"
+"|                                      | **map archive = no**                 | Stops Samba from setting a phantom execute bit on every new file (the DOS archive flag mapped to a mode bit). |\n"
+msgstr ""
+"| Netatalk (afp.conf)                  | Samba (smb.conf)                     | その機能 |\n"
+"| ------------------------------------ | ------------------------------------ | ------------ |\n"
+"| **ea = samba**                       | **vfs objects = catia fruit streams_xattr** | Apple メタデータ (Finder 情報、リソースフォーク) を両方のサーバーが読み書きできる形式で保存する。 |\n"
+"|                                      | **fruit:metadata = netatalk** *(Samba デフォルト)* | Finder メタデータを Netatalk が使用するのと同じ拡張属性に保存する。 |\n"
+"|                                      | **fruit:resource = file** *(Samba デフォルト)* | リソースフォークを Netatalk が使用するのと同じ *._* AppleDouble ファイルに保存する。 |\n"
+"|                                      | **fruit:encoding = native**          | Windows では違法な文字のオンディスク名を同じにする。 |\n"
+"|                                      | **streams_xattr:prefix = user.**     | AFP 拡張属性と SMB 代替データストリームが同じオブジェクトになる。Netatalk 側で **ea = samba** が必要（その末尾バイト形式が一致する）。 |\n"
+"|                                      | **streams_xattr:store_stream_type = no** | 上の行の後半 — *:$DATA* 接尾辞を削除して名前を一致させる。 |\n"
+"| **multi protocol = yes**             | | Samba もボリュームを変更することを宣言する。これにより、この表のすべての Netatalk コヒーレンシー設定のデフォルトが変更される。 |\n"
+"| **strict locking = yes** *(multi protocol = yes の場合のデフォルト)* | **strict locking = yes** | すべての読み取りと書き込みが、他方のサーバーのバイト範囲ロックと照合される。Samba のデフォルト *Auto* は、リースされたファイルのチェックをスキップする — *yes* を明示的に設定する。 |\n"
+"|                                      | **posix locking = yes** *(Samba デフォルト — そのまま)* | Samba はロックをカーネルにミラーリングし、Netatalk がそれを認識できるようにする。これをオフにすると、どちらのサーバーも相手のロックをまったく認識できなくなる。 |\n"
+"| *(組み込み — 常にオン)*             | **fruit:locking = netatalk**         | AFP と SMB のオープン/拒否モードがプロトコル間で競合する：一方の側の拒否モードオープンは、他方の側の競合するオープンを拒否する。 |\n"
+"| **dircache validation freq = 1** *(multi protocol = yes の場合のデフォルト)* | | Netatalk は Samba が作成、名前変更、削除したファイルを認識する。 |\n"
+"| *(multi protocol = yes の場合の組み込み)* | | ボリュームのリソースフォークは afpd メモリにキャッシュされないため、Samba 側の変更は常に再読み込みされる。 |\n"
+"|                                      | **kernel change notify = yes** *(Samba デフォルト — そのまま)* | Samba は Netatalk が変更したファイルを認識し、SMB クライアントに通知する。 |\n"
+"|                                      | **oplocks = no**                     | SMB クライアントは、Netatalk も提供するボリューム上でファイルデータをキャッシュしてはならない — キャッシュされた書き込みは AFP 側の変更を上書きする可能性がある。 |\n"
+"|                                      | **level2 oplocks = no**              | 上の行の後半。 |\n"
+"|                                      | **smb2 leases = no**                 | 上の行の後半。Linux では、**kernel oplocks = yes** が 3 つすべての代わりになる場合がある（Netatalk のファイルアクセスが壊す実際のカーネルリース）。 |\n"
+"| **solaris share reservations = yes** *(デフォルト; Solaris/illumos のみ)* | | F_SHARE 予約 — *fruit:locking* なしで illumos 上の Samba が認識できる唯一の拒否モード層。 |\n"
+"| **umask = 0002**                     | **create mask = 0664**               | 新しいファイルは、どのプロトコルで作成されたかに関係なく、同じアクセス権を取得する。 |\n"
+"|                                      | **directory mask = 0775**            | 同じく、ディレクトリの場合。 |\n"
+"|                                      | **map archive = no**                 | Samba がすべての新しいファイルに対して、幻の実行ビットを設定するのを防ぐ（DOS アーカイブフラグをモードビットにマッピングする）。 |\n"
+
+#. type: Title ###
+#: manual/Configuration.md:173
+#, no-wrap
+msgid "Caching"
+msgstr "キャッシュ"
+
+#. type: Plain text
+#: manual/Configuration.md:180
+msgid ""
+"When sharing a volume with other processes (Samba, NFS, local applications), "
+"set *multi protocol = yes*, which defaults *dircache validation freq* to "
+"**1** so Netatalk detects external changes on every access.  When Netatalk "
+"is the **only** process on the volume (the default posture), *dircache "
+"validation freq* defaults to 100 for maximum performance."
+msgstr ""
+"Samba、NFS、ローカルアプリケーションなど他のプロセスとボリュームを共有する場"
+"合は、*multi protocol = yes* を設定し、*dircache validation freq* のデフォル"
+"トを **1** にすることで、Netatalk がすべてのアクセスで外部の変更を検出できる"
+"ようにする。Netatalk がボリューム上の **唯一の** プロセスである場合（デフォル"
+"トの姿勢）、*dircache validation freq* のデフォルトは最大パフォーマンスのため"
+"に 100 になる。"
+
+#. type: Title ###
+#: manual/Configuration.md:181
 #, no-wrap
 msgid "Netatalk configuration"
 msgstr "Netatalk の設定"
 
 #. type: Plain text
-#: manual/Configuration.md:117
+#: manual/Configuration.md:192
 msgid ""
-"Use *ea = samba* to store Extended Attributes in the Samba-compatible format."
-msgstr "*ea = samba* を使用して、Samba 互換形式で拡張属性を保存する。"
+"Set *multi protocol = yes* on volumes Samba also serves. It changes the "
+"defaults of the settings safe concurrent access requires: *strict locking* "
+"defaults to yes, *dircache validation freq* defaults to 1, and the volume is "
+"excluded from the resource-fork data cache.  Explicit settings always win — "
+"an explicit value that weakens coherency is honored and logged with a "
+"verbose warning. Pair it with *ea = samba* to store Extended Attributes in "
+"the Samba-compatible format. The example lists the defaulted settings "
+"explicitly anyway, so the intended configuration is visible at a glance."
+msgstr ""
+"ボリューム Samba も提供する場合は、*multi protocol = yes* を設定する。これに"
+"より、安全な同時アクセスに必要な設定のデフォルトが変更される：*strict "
+"locking* のデフォルトは yes、*dircache validation freq* のデフォルトは 1 にな"
+"り、ボリュームはリソースフォークデータキャッシュから除外される。明示的な設定"
+"が常に優先される — コヒーレンシーを弱める明示的な値は尊重され、詳細な警告とと"
+"もにログに記録される。拡張属性を Samba 互換形式で保存するには、*ea = samba* "
+"と組み合わせて使用する。例では、意図した構成が一目でわかるように、デフォルト"
+"設定を明示的にリストしている。"
 
 #. type: Plain text
-#: manual/Configuration.md:122
+#: manual/Configuration.md:200
 #, no-wrap
 msgid ""
 "    [Global]\n"
-"        vol preset = my default values\n"
-"        dircache validation freq = 1\n"
+"        multi protocol = yes\n"
 "        ea = samba\n"
+"        umask = 0002\n"
+"        strict locking = yes            ; the default when multi protocol = yes\n"
+"        dircache validation freq = 1    ; the default when multi protocol = yes\n"
+"        solaris share reservations = yes ; already the default (Solaris/illumos only)\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:125
+#: manual/Configuration.md:203
 #, no-wrap
 msgid ""
 "    [Homes]\n"
@@ -365,7 +556,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:128 manual/Configuration.md:155
+#: manual/Configuration.md:206 manual/Configuration.md:247
 #, no-wrap
 msgid ""
 "    [Test Volume]\n"
@@ -373,22 +564,23 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:132
+#: manual/Configuration.md:211
 #, no-wrap
 msgid ""
 "    [My Time Machine Volume]\n"
 "        path = /export/timemachine\n"
 "        time machine = yes\n"
+"        ; Time Machine over AFP only -- do not also export this path via SMB\n"
 msgstr ""
 
 #. type: Title ###
-#: manual/Configuration.md:133
+#: manual/Configuration.md:212
 #, no-wrap
 msgid "Samba configuration"
 msgstr "Samba の設定"
 
 #. type: Plain text
-#: manual/Configuration.md:138
+#: manual/Configuration.md:217
 msgid ""
 "The Samba **catia**, **fruit**, and **streams_xattr** VFS modules provide "
 "compatibility for Apple SMB clients and interoperability with Netatalk.  Use "
@@ -401,7 +593,7 @@ msgstr ""
 "Windows クライアントから隠す。"
 
 #. type: Plain text
-#: manual/Configuration.md:142
+#: manual/Configuration.md:221
 #, no-wrap
 msgid ""
 "    [global]\n"
@@ -410,36 +602,57 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:146
+#: manual/Configuration.md:226
 #, no-wrap
 msgid ""
 "        fruit:encoding = native\n"
+"        fruit:locking = netatalk\n"
 "        streams_xattr:prefix = user.\n"
 "        streams_xattr:store_stream_type = no\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:148
+#: manual/Configuration.md:229
+#, no-wrap
+msgid ""
+"        strict locking = yes\n"
+"        ; posix locking = yes is the Samba default; do not disable it\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:234
+#, no-wrap
+msgid ""
+"        ; no SMB client caching on a volume Netatalk also serves\n"
+"        oplocks = no\n"
+"        level2 oplocks = no\n"
+"        smb2 leases = no\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:239
+#, no-wrap
+msgid ""
+"        ; same permissions from both protocols\n"
+"        create mask = 0664\n"
+"        directory mask = 0775\n"
+"        map archive = no\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:241
 #, no-wrap
 msgid "        hide files = /.DS_Store/Network Trash Folder/TheFindByContentFolder/TheVolumeSettingsFolder/Temporary Items/.TemporaryItems/.VolumeIcon.icns/Icon?/.FBCIndex/.FBCLockFolder/\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:150
+#: manual/Configuration.md:243
 #, no-wrap
 msgid "        read only = no\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:152
+#: manual/Configuration.md:245
 #, no-wrap
 msgid "    [homes]\n"
-msgstr ""
-
-#. type: Plain text
-#: manual/Configuration.md:157
-#, no-wrap
-msgid ""
-"    [My Time Machine Volume]\n"
-"        path = /export/timemachine\n"
 msgstr ""

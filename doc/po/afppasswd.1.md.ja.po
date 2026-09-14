@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-20 20:48+0200\n"
+"POT-Creation-Date: 2026-09-15 02:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -68,7 +68,7 @@ msgstr "概要"
 #: manpages/man1/afppasswd.1.md:11 manpages/man1/afpstats.1.md:11
 #: manpages/man1/asip-status.1.md:13 manpages/man1/dbd.1.md:11
 #: manpages/man1/fce_listen.1.md:9 manpages/man1/getzones.1.md:9
-#: manpages/man1/nad.1.md:11 manpages/man1/nbplkup.1.md:9
+#: manpages/man1/nad.1.md:12 manpages/man1/nbplkup.1.md:9
 #: manpages/man1/nbprgstr.1.md:11 manpages/man1/pap.1.md:9
 #: manpages/man1/rtmpqry.1.md:9 manpages/man5/afp_signature.conf.5.md:5
 #: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
@@ -84,13 +84,13 @@ msgstr "説明"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
-#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:17
+#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:29
 #: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:27
 #: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
-#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:16
+#: manpages/man1/afppasswd.1.md:142 manpages/man1/afpstats.1.md:22
 #: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:24
 #: manpages/man1/fce_listen.1.md:17 manpages/man1/getzones.1.md:16
-#: manpages/man1/nad.1.md:31 manpages/man1/nbplkup.1.md:19
+#: manpages/man1/nad.1.md:47 manpages/man1/nbplkup.1.md:19
 #: manpages/man1/nbprgstr.1.md:20 manpages/man1/pap.1.md:29
 #: manpages/man1/rtmpqry.1.md:15 manpages/man8/a2boot.8.md:32
 #: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
@@ -104,17 +104,17 @@ msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:308 manpages/man1/afp_logintest.1.md:112
-#: manpages/man1/afp_spectest.1.md:243 manpages/man1/afp_speedtest.1.md:238
-#: manpages/man1/afparg.1.md:112 manpages/man1/afpldaptest.1.md:34
-#: manpages/man1/afppasswd.1.md:148 manpages/man1/afpstats.1.md:44
+#: manpages/man1/afp_lantest.1.md:370 manpages/man1/afp_logintest.1.md:156
+#: manpages/man1/afp_spectest.1.md:268 manpages/man1/afp_speedtest.1.md:246
+#: manpages/man1/afparg.1.md:147 manpages/man1/afpldaptest.1.md:34
+#: manpages/man1/afppasswd.1.md:237 manpages/man1/afpstats.1.md:56
 #: manpages/man1/fce_listen.1.md:48 manpages/man1/getzones.1.md:84
 #: manpages/man1/pap.1.md:93 manpages/man1/rtmpqry.1.md:52
-#: manpages/man5/afp.conf.5.md:1453 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1564 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:171
 #: manpages/man8/afpd.8.md:139 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:148 manpages/man8/cnid_metad.8.md:47
-#: manpages/man8/macipgw.8.md:98 manpages/man8/netatalk.8.md:57
+#: manpages/man8/macipgw.8.md:110 manpages/man8/netatalk.8.md:57
 #: manpages/man8/papstatus.8.md:49
 #, no-wrap
 msgid "See Also"
@@ -122,18 +122,19 @@ msgstr "関連項目"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:73 manpages/man1/aecho.1.md:50
-#: manpages/man1/afpldaptest.1.md:38 manpages/man1/afppasswd.1.md:152
-#: manpages/man1/afpstats.1.md:48 manpages/man1/asip-status.1.md:106
-#: manpages/man1/dbd.1.md:81 manpages/man1/getzones.1.md:88
-#: manpages/man1/nad.1.md:394 manpages/man1/nbplkup.1.md:105
-#: manpages/man1/nbprgstr.1.md:59 manpages/man1/pap.1.md:97
-#: manpages/man1/rtmpqry.1.md:56 manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1458
+#: manpages/man1/afp_logintest.1.md:161 manpages/man1/afpldaptest.1.md:38
+#: manpages/man1/afppasswd.1.md:241 manpages/man1/afpstats.1.md:60
+#: manpages/man1/asip-status.1.md:106 manpages/man1/dbd.1.md:81
+#: manpages/man1/getzones.1.md:88 manpages/man1/nad.1.md:597
+#: manpages/man1/nbplkup.1.md:105 manpages/man1/nbprgstr.1.md:59
+#: manpages/man1/pap.1.md:97 manpages/man1/rtmpqry.1.md:56
+#: manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1569
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:175 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:145 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:152 manpages/man8/cnid_metad.8.md:57
-#: manpages/man8/macipgw.8.md:107 manpages/man8/netatalk.8.md:61
+#: manpages/man8/macipgw.8.md:119 manpages/man8/netatalk.8.md:61
 #: manpages/man8/papd.8.md:134 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:44
 #, no-wrap
@@ -142,13 +143,14 @@ msgstr "著者"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:75 manpages/man1/aecho.1.md:52
-#: manpages/man1/afpldaptest.1.md:40 manpages/man1/afppasswd.1.md:154
-#: manpages/man1/afpstats.1.md:50 manpages/man1/asip-status.1.md:108
-#: manpages/man1/dbd.1.md:83 manpages/man1/getzones.1.md:90
-#: manpages/man1/nad.1.md:396 manpages/man1/nbplkup.1.md:107
-#: manpages/man1/nbprgstr.1.md:61 manpages/man1/pap.1.md:99
-#: manpages/man1/rtmpqry.1.md:58 manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:46 manpages/man5/afp.conf.5.md:1460
+#: manpages/man1/afp_logintest.1.md:163 manpages/man1/afpldaptest.1.md:40
+#: manpages/man1/afppasswd.1.md:243 manpages/man1/afpstats.1.md:62
+#: manpages/man1/asip-status.1.md:108 manpages/man1/dbd.1.md:83
+#: manpages/man1/getzones.1.md:90 manpages/man1/nad.1.md:599
+#: manpages/man1/nbplkup.1.md:107 manpages/man1/nbprgstr.1.md:61
+#: manpages/man1/pap.1.md:99 manpages/man1/rtmpqry.1.md:58
+#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:46 manpages/man5/afp.conf.5.md:1571
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:177 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:147 manpages/man8/atalkd.8.md:85
@@ -160,17 +162,17 @@ msgid ""
 msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 
 #. type: Title #
-#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
-#: manpages/man1/afp_logintest.1.md:84 manpages/man1/afp_spectest.1.md:196
-#: manpages/man1/afp_speedtest.1.md:170 manpages/man1/afparg.1.md:73
-#: manpages/man1/afppasswd.1.md:52 manpages/man1/afpstats.1.md:35
+#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:207
+#: manpages/man1/afp_logintest.1.md:108 manpages/man1/afp_spectest.1.md:210
+#: manpages/man1/afp_speedtest.1.md:178 manpages/man1/afparg.1.md:80
+#: manpages/man1/afppasswd.1.md:110 manpages/man1/afpstats.1.md:47
 #: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:25
-#: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:359
+#: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:521
 #: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
 #: manpages/man1/rtmpqry.1.md:34 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1408
+#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1518
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
-#: manpages/man5/papd.conf.5.md:98 manpages/man8/macipgw.8.md:78
+#: manpages/man5/papd.conf.5.md:98 manpages/man8/macipgw.8.md:90
 #, no-wrap
 msgid "Examples"
 msgstr "例"
@@ -183,85 +185,223 @@ msgstr "afppasswd — AFP パスワード保守ユーティリティ"
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:8
 #, no-wrap
-msgid "**afppasswd** [-cfnr] [-a *username*] [-p *path*] [-u *minimum uid*] [-w *password string*]\n"
+msgid "**afppasswd** [-cdfmnr] [-a *username* | -d *username*] [-p *directory*] [-u *minimum uid*] [-w *password*]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:10
 #, no-wrap
-msgid "**afppasswd** [-r]\n"
+msgid "**afppasswd** [-n]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:16
 #, no-wrap
 msgid ""
-"**afppasswd** creates and maintains the credential file used by the SRP\n"
+"**afppasswd** creates and maintains the credential directory used by the SRP\n"
 "(\"Secure Remote Password\") UAM and, with **-r**, the legacy *afppasswd*\n"
 "file used by the \"Randnum exchange\" and \"2-Way Randnum exchange\" UAMs.\n"
 msgstr ""
-"**afppasswd** は SRP（\"Secure Remote Password\"）UAMで使用される資格情報ファイルを作成および管理し、\n"
+"**afppasswd** は SRP（\"Secure Remote Password\"）UAMで使用される資格情報ディレクトリを作成および管理し、\n"
 "**-r** オプションを使用すると、\"Randnum exchange\" および \"2-Way Randnum exchange\" UAM \n"
 "で使用される従来の *afppasswd* ファイルも管理する。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:24
+#: manpages/man1/afppasswd.1.md:22
 msgid ""
 "By default **afppasswd** operates in **SRP mode** and stores per-user salts "
-"and verifiers in the SRP verifier file (default *afppasswd.srp* under the "
-"netatalk configuration directory, or whatever is configured via the \"**srp "
-"passwd file**\" option in **afp.conf**(5)). Pass **-r** to operate on the "
-"legacy Randnum file (default *afppasswd* under the netatalk configuration "
-"directory, or as configured via the \"**passwd file**\" option) instead."
+"and verifiers in separate per-user files under the SRP verifier directory "
+"(default *afppasswd.srp* under the netatalk configuration directory). Pass "
+"**-r** as root to operate on the legacy Randnum file (default *afppasswd* "
+"under the netatalk configuration directory) instead."
 msgstr ""
 "デフォルトでは、**afppasswd**は**SRPモード**で動作し、ユーザごとのソルトと検"
-"証子をSRP検証子ファイル\n"
-"（netatalk構成ディレクトリのデフォルト*afppasswd.srp*、または**afp.conf**(5)"
-"の\"**srp passwd file**\"オプションで構成されたファイル）\n"
-"に保存する。代わりに従来のRandnumファイル（netatalk構成ディレクトリのデフォル"
-"ト*afppasswd*、\n"
-"または\"**passwd file**\"オプションで構成されたファイル）を操作するには、**-"
-"r**を指定すること。"
+"証子をSRP検証ディレクトリの個別のユーザファイルに保存する（デフォルトは"
+"netatalk構成ディレクトリの*afppasswd.srp*）。代わりに、**-r**をrootとして渡す"
+"と、従来のRandnumファイル（デフォルトはnetatalk構成ディレクトリの"
+"*afppasswd*）で操作することができる。"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:26
+#: manpages/man1/afppasswd.1.md:24
 msgid "There are two invocation styles:"
 msgstr "呼び出しパターンは2つある:"
 
 #. type: Bullet: '- '
-#: manpages/man1/afppasswd.1.md:34
+#: manpages/man1/afppasswd.1.md:32
 msgid ""
 "*As root*, **afppasswd** manages credentials for any system user.  The user "
 "is named with **-a** *username* (which both adds new entries and updates "
-"existing ones), or the entire file is initialized at once with **-c**."
+"existing ones) or **-d** *username* (which disables SRP for that user), or "
+"the credential store is initialized at once with **-c**."
 msgstr ""
 "*rootユーザとして*, **afppasswd**は任意のシステムユーザの資格情報を管理す"
 "る。\n"
 "ユーザは**-a** *username* で指定する（新しいエントリの追加と既存エントリの更"
-"新の両方を行う）。\n"
-"または、**-c**でファイル全体を一度に初期化することもできる。"
+"新の両方を行う）、または**-d** *username* で指定する（そのユーザのSRPを無効化"
+"する）、または資格情報ストアを**-c**で一度に初期化する。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afppasswd.1.md:34
+#: manpages/man1/afppasswd.1.md:32
 msgid ""
 "*As a regular user*, **afppasswd** takes no positional arguments and changes "
-"the calling user's own AFP password: for SRP by default and for the legacy "
-"RandNum UAM with **-r**."
+"the calling user's own SRP password. The caller may use **-p** to select the "
+"verifier directory. Randnum mode remains root-only."
 msgstr ""
-"*通常ユーザとして*, **afppasswd**は位置引数を取らず、呼び出しユーザ自身のAFP"
-"パスワードを変更する。\n"
-"デフォルトではSRPのパスワードを変更し、**-r**を指定すると従来のRandNum UAMの"
-"パスワードを変更する。"
+"*通常ユーザとして*, **afppasswd**は位置引数を取らず、呼び出しユーザ自身のSRP"
+"パスワードを変更する。呼び出し元は**-p**を使用して検証ディレクトリを選択でき"
+"る。Randnumモードは引き続きroot専用である。"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:36
+#: manpages/man1/afppasswd.1.md:34
 msgid "The named user must already exist as a local system user."
 msgstr ""
 "対象ユーザはすでにローカルシステムユーザとして存在している必要があることに注"
 "意。"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:47
+#: manpages/man1/afppasswd.1.md:42
+msgid ""
+"When upgrading from the flat-file layout, stop **afpd** and run **afppasswd "
+"-m** as root. The migration validates every record and local user, builds "
+"and synchronizes a temporary verifier directory, retains the flat file as "
+"*afppasswd.srp.legacy* (or a numbered sibling if that name exists), and only "
+"then installs the completed directory. Salts and verifiers are copied "
+"without cryptographic conversion, so users keep their existing SRP "
+"passwords. Use **-p** with **-m** when migrating a store at a non-default "
+"path."
+msgstr ""
+"フラットファイルレイアウトからアップグレードする場合は、**afpd**を停止し、"
+"rootとして**afppasswd -m**を実行する。マイグレーションはすべてのレコードと"
+"ローカルユーザを検証し、一時的な検証ディレクトリを構築して同期し、フラット"
+"ファイルを*afppasswd.srp.legacy*（またはその名前が存在する場合は番号付きの兄"
+"弟）として保持し、完了したディレクトリをインストールする。ソルトと検証子は暗"
+"号変換なしでコピーされるため、ユーザは既存のSRPパスワードを保持する。非デフォ"
+"ルトのパスにあるストアを移行する場合は、**-m**とともに**-p**を使用する。"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:51
+msgid ""
+"Migration rejects malformed records, duplicate users, numeric-uid "
+"collisions, unknown local users, unsafe source metadata, an existing "
+"verifier directory, a partial migration sibling, and a source that changes "
+"during the operation.  Before publication, failures remove the temporary "
+"directory and leave the source untouched. Publication failures trigger an "
+"automatic rollback; if rollback itself cannot complete, **afppasswd** "
+"reports the exact backup name containing the original. Do not start **afpd** "
+"until that condition has been resolved."
+msgstr ""
+"マイグレーションは、形式不正なレコード、重複するユーザ、数値UIDの衝突、不明な"
+"ローカルユーザ、安全でないソースメタデータ、既存の検証ディレクトリ、部分的な"
+"マイグレーションの兄弟、および操作中に変更されるソースを拒否する。公開前に、"
+"失敗は一時ディレクトリを削除し、ソースをそのままにしておく。公開の失敗は自動"
+"ロールバックを引き起こす。ロールバック自体が完了できない場合、**afppasswd**は"
+"元のものを含む正確なバックアップ名を報告する。その条件が解決されるまで"
+"**afpd**を開始しないこと。"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:59
+msgid ""
+"For manual recovery, keep **afpd** stopped, move any incomplete verifier "
+"directory at the configured path aside, and move the reported *.legacy* "
+"backup back to the configured path. After verifying that the restored object "
+"is a root-owned flat file inaccessible to group and other, retry **afppasswd "
+"-m**. If the automatic migration cannot be used, the password-reset fallback "
+"is to move the flat file aside, run **afppasswd -c**, and reset each "
+"affected password with **afppasswd -a** *username*."
+msgstr ""
+"手動での復旧の場合、**afpd**を停止したままにし、構成されたパスにある不完全な"
+"検証ディレクトリを脇に移動し、報告された*.legacy*バックアップを構成されたパス"
+"に戻す。復元されたオブジェクトがグループおよびその他からアクセスできないroot"
+"所有のフラットファイルであることを確認した後、**afppasswd -m**を再試行する。"
+"自動マイグレーションが使用できない場合、パスワードリセットのフォールバック"
+"は、フラットファイルを脇に移動し、**afppasswd -c**を実行し、影響を受ける各パ"
+"スワードを**afppasswd -a** *username*でリセットすることである。"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:74
+msgid ""
+"The SRP verifier directory must be root-owned, searchable by users, and not "
+"writable by group or other. Its files are named by numeric uid, have mode "
+"0600, and contain one *username:hex_salt:hex_verifier* record. Disabled "
+"placeholders created by **-c** or preserved by **-m** are root-owned. Root's "
+"**-a** operation transfers ownership to the corresponding user only after "
+"writing and synchronizing a real verifier. User ownership enables SRP login "
+"and lets enrolled users update their own verifier without elevated "
+"privileges.  If a restore changes an enrolled verifier's metadata, stop "
+"**afpd**, restore the file's ownership to its local user and its mode to "
+"0600, then restart **afpd**. For example, to repair alice's verifier in */"
+"path/to/verifiers*, run **chown** *alice* */path/to/verifiers/$(id -u "
+"alice)* and **chmod 0600** on that file as root. Do not change a root-owned "
+"disabled placeholder this way; use **afppasswd -a** *username* to set a "
+"password and re-enable it. A verifier with more than one hard link must be "
+"replaced or have its extra links removed."
+msgstr ""
+"SRP検証ディレクトリはroot所有で、ユーザが検索可能であり、グループやその他に"
+"よって書き込み可能であってはならない。そのファイルは数値UIDで命名され、モード"
+"0600を持ち、1つの*username:hex_salt:hex_verifier*レコードを含む。**-c**によっ"
+"て作成された無効なプレースホルダや**-m**によって保持されたものはroot所有であ"
+"る。Rootの**-a**操作は、実際の検証子を書き込み同期した後にのみ対応するユーザ"
+"に所有権を移転する。ユーザ所有権はSRPログインを有効にし、登録済みのユーザが昇"
+"格した特権なしで自分の検証子を更新できるようにする。復元が登録済みの検証子の"
+"メタデータを変更した場合、**afpd**を停止し、そのファイルの所有権をローカル"
+"ユーザに戻し、モードを0600に戻してから**afpd**を再起動する。例えば、*/path/"
+"to/verifiers*内のaliceの検証子を修復するには、rootとして**chown** *alice* */"
+"path/to/verifiers/$(id -u alice)*およびそのファイルに対して**chmod 0600**を実"
+"行する。この方法でroot所有の無効なプレースホルダを変更しないでください。パス"
+"ワードを設定して再度有効化するには、**afppasswd -a** *username* を使用してく"
+"ださい。複数のハードリンクを持つ検証子は置き換えるか、余分なリンクを削除する"
+"必要があります。"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:82
+msgid ""
+"Once enrolled, users can also replace their verifier directly. The old-"
+"password proof and optional CrackLib password-quality checks in "
+"**afppasswd** are utility checks, not server-enforced password policy. Root "
+"can use **-d** to disable an SRP account: it writes a root-owned disabled "
+"placeholder, creating one when the uid file is absent. Use **-a** to set a "
+"new password and re-enable the account. Disabling does not terminate "
+"existing sessions or disable other UAMs."
+msgstr ""
+"登録後、ユーザは自分の検証子を直接置き換えることもできる。**afppasswd**の古い"
+"パスワードの証明とオプションのCrackLibパスワード品質チェックは、ユーティリ"
+"ティチェックであり、サーバーが強制するパスワードポリシーではない。Rootは**-"
+"d**を使用してSRPアカウントを無効化できる：それはroot所有の無効なプレースホル"
+"ダを書き込み、uidファイルが存在しない場合に作成する。新しいパスワードを設定し"
+"てアカウントを再度有効化するには**-a**を使用する。無効化は既存のセッションを"
+"終了させたり、他のUAMを無効化したりしない。"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:86
+msgid ""
+"Existing Randnum credential and key files must be single-link regular files "
+"owned by root and inaccessible to group or other.  Symbolic links are not "
+"followed."
+msgstr ""
+"既存のRandnum資格情報およびキーファイルは、root所有でグループやその他からアク"
+"セスできない単一リンクの通常ファイルである必要がある。シンボリックリンクはた"
+"どられない。"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:93
+msgid ""
+"The compiled-in defaults cover packaged installations. For a non-default "
+"installation, pass **-p** the same directory configured by \"**srp verifier "
+"path**\" in **afp.conf**(5), or, with **-r**, the same file configured by "
+"\"**passwd file**\". **afppasswd** does not read *afp.conf* to resolve this "
+"path. The kernel enforces access to an explicitly selected path; a user who "
+"selects another user's credential store simply receives an access error."
+msgstr ""
+"コンパイル時に組み込まれたデフォルトは、パッケージ化されたインストールをカ"
+"バーする。非デフォルトのインストールの場合、**-p**を使用して**afp.conf**(5)の"
+"\"**srp verifier path**\"で構成されたのと同じディレクトリ、または**-r**を使用"
+"して\"**passwd file**\"で構成されたのと同じファイルを指定する。**afppasswd**"
+"はこのパスを解決するために*afp.conf*を読み込まない。カーネルは明示的に選択さ"
+"れたパスへのアクセスを強制する。他のユーザの資格情報ストアを選択したユーザ"
+"は、単にアクセスエラーを受け取るだけである。"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:105
 #, no-wrap
 msgid ""
 "> ***NOTE:*** The legacy Randnum and 2-Way Randnum UAMs only provide\n"
@@ -272,8 +412,9 @@ msgid ""
 "Randnum uses to encrypt the stored password. **afppasswd -r -c** creates\n"
 "this key file if it is missing and validates an existing one. Randnum\n"
 "password updates refuse to proceed unless the key file is present and valid.\n"
+"Randnum passwords can be reset only by root with **afppasswd -r**.\n"
 "The Randnum UAM logs a warning at startup when the key file is missing or\n"
-"invalid, but authentication and password changes still fail until it is fixed.\n"
+"invalid, but authentication fails until it is fixed.\n"
 msgstr ""
 "> ***注意:*** 従来のRandnumおよび2-Way Randnum UAMは弱いパスワード保護しか提供せず、推奨しない。\n"
 "SRP、DHX、またはDHX2を使用できない非常に古いAFPクライアントをサポートするためにのみ有効にすべき。\n"
@@ -281,11 +422,12 @@ msgstr ""
 "キーファイルには、Randnumが保存されたパスワードを暗号化するために使用する16進エンコードされた8バイトのDESキーが含まれている。\n"
 "**afppasswd -r -c**は、このキーファイルが存在しない場合に作成し、既存のファイルを検証する。\n"
 "キーファイルが存在し、有効でない限り、Randnumのパスワードの更新は続行を拒否する。\n"
-"Randnum UAMは、キーファイルが存在しないか無効な場合に起動時に警告をログに記録し、\n"
-"修正されるまで認証とパスワードの変更は失敗する。\n"
+"Randnumのパスワードは、rootが**afppasswd -r**を使用してのみリセットできる。\n"
+"Randnum UAMは、キーファイルが存在しないか無効な場合、起動時に警告をログに記録するが、\n"
+"修正されるまで認証は失敗する。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:51
+#: manpages/man1/afppasswd.1.md:109
 msgid ""
 "The key file must contain exactly 16 hexadecimal characters, such as "
 "`0123456789ABCDEF`, with an optional trailing newline. Generate a fresh "
@@ -296,12 +438,13 @@ msgstr ""
 "のではなく、新しいランダムなキーを生成すると良い。"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:55
-msgid "Administrator initializing the SRP verifier file and adding a new user:"
-msgstr "管理者がSRP検証ファイルを初期化し、新しいユーザを追加する："
+#: manpages/man1/afppasswd.1.md:113
+msgid ""
+"Administrator initializing the SRP verifier directory and adding a new user:"
+msgstr "管理者がSRP検証ディレクトリを初期化し、新しいユーザを追加する："
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:61
+#: manpages/man1/afppasswd.1.md:119
 #, no-wrap
 msgid ""
 "    example% sudo afppasswd -c\n"
@@ -317,34 +460,51 @@ msgstr ""
 "    afppasswd: updated SRP verifier.\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:63
+#: manpages/man1/afppasswd.1.md:121
 msgid "Administrator updating an existing user's SRP password:"
 msgstr "管理者が既存ユーザのSRPパスワードを更新する："
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:65
+#: manpages/man1/afppasswd.1.md:123
 #, no-wrap
 msgid "    example% sudo afppasswd -a someuser\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:67
+#: manpages/man1/afppasswd.1.md:126
+msgid ""
+"Administrator migrating the default legacy flat SRP file after stopping "
+"**afpd**:"
+msgstr ""
+"管理者が**afpd**を停止した後、デフォルトの従来のフラットSRPファイルを移行す"
+"る："
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:129
+#, no-wrap
+msgid ""
+"    example% sudo afppasswd -m\n"
+"    afppasswd: migrated 2 SRP verifiers; original retained as /etc/netatalk/afppasswd.srp.legacy\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:131
 msgid "Local user changing their own SRP password:"
 msgstr "ローカルユーザが自分のSRPパスワードを変更する:"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:69
+#: manpages/man1/afppasswd.1.md:133
 #, no-wrap
 msgid "    example% afppasswd\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:71
-msgid "Administrator managing the legacy Randnum file at a non-default path:"
-msgstr "管理者が非デフォルトのパスで従来のRandnumファイルを管理する："
+#: manpages/man1/afppasswd.1.md:135
+msgid "Administrator managing credentials at a non-default path:"
+msgstr "管理者が非デフォルトのパスで資格情報を管理する："
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:77
+#: manpages/man1/afppasswd.1.md:141
 #, no-wrap
 msgid ""
 "    example% sudo afppasswd -r -c -p /usr/local/etc/afppasswd\n"
@@ -360,104 +520,165 @@ msgstr ""
 "    afppasswd: updated Randnum password.\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:81
+#: manpages/man1/afppasswd.1.md:145
 #, no-wrap
 msgid "**-a** *username*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:85
+#: manpages/man1/afppasswd.1.md:153
 #, no-wrap
 msgid ""
 "> Add or update the named user. Required when an administrator operates\n"
 "on a specific user. Non-root invocations always operate on the calling\n"
-"user and do not accept this option.\n"
+"user and do not accept this option. In SRP mode, a successful password set\n"
+"also enables the user's verifier by transferring file ownership to that user.\n"
+"Existing SRP verifiers may have any permission mode; permissions are reset to\n"
+"0600 before processing the verifier. Files must still be owned by the named\n"
+"user or root and be regular files with exactly one hard link.\n"
 msgstr ""
-"> 指定されたユーザを追加または更新する。管理者が特定のユーザを操作する場合に必要。\n"
-"非rootユーザの呼び出しは常に呼び出しユーザを操作し、このオプションは受け付けない。\n"
+"> 指定されたユーザを追加または更新する。管理者が特定のユーザに対して操作する場合に必要である。\n"
+"非rootの呼び出しは常に呼び出し元のユーザに対して操作し、このオプションを受け付けない。SRPモードでは、\n"
+"パスワードの設定が成功すると、ファイル所有権をそのユーザに移転することでユーザの検証子も有効になる。\n"
+"既存のSRP検証子は任意のパーミッションモードを持つことができる; 処理前にパーミッションは0600にリセットされる。\n"
+"ファイルは依然として指定されたユーザまたはrootが所有し、正規ファイルであり、正確に1つのハードリンクを持つ必要がある。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:87 manpages/man1/dbd.1.md:27
+#: manpages/man1/afppasswd.1.md:155
+#, no-wrap
+msgid "**-d** *username*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:163
+#, no-wrap
+msgid ""
+"> As root, disable the named user's SRP credential. The uid verifier is\n"
+"replaced with a root-owned, mode-0600 disabled placeholder; a missing verifier\n"
+"is created with that state. This is idempotent and is useful when cleaning up a\n"
+"reused uid. Use **-a** to set a new password and re-enable the user. This\n"
+"option accepts only **-p** and cannot be used with **-r**.\n"
+"Existing verifiers may have any permission mode; permissions are reset to 0600.\n"
+"The same ownership and file-type requirements as **-a** apply.\n"
+msgstr ""
+"> rootとして、指定されたユーザのSRP資格情報を無効化する。\n"
+"uid検証子は、root所有のモード0600の無効なプレースホルダに置き換えられる; 欠落している検証子はその状態で作成される。\n"
+"これは冪等であり、再利用されたuidをクリーンアップする際に便利である。\n"
+"新しいパスワードを設定してユーザを再度有効化するには**-a**を使用する。\n"
+"このオプションは**-p**のみを受け入れ、**-r**と一緒に使用することはできない。\n"
+"既存の検証子は任意のパーミッションモードを持つことができる; パーミッションは0600にリセットされる。\n"
+"**-a**と同じ所有権およびファイルタイプの要件が適用される。\n"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:165 manpages/man1/dbd.1.md:27
 #: manpages/man1/getzones.1.md:48 manpages/man1/pap.1.md:38
 #, no-wrap
 msgid "**-c**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:93
+#: manpages/man1/afppasswd.1.md:174
 #, no-wrap
 msgid ""
-"> Create and initialize the password/verifier file. Existing entries are\n"
-"populated as placeholders for every local system user with a uid at or\n"
-"above the **-u** threshold; passwords still need to be set individually\n"
-"with **-a**. With **-r**, also create or validate the companion\n"
-"*afppasswd.key* file for the Randnum UAM.\n"
+"> Create and initialize the password file or verifier directory. In SRP mode,\n"
+"a root-owned mode-0600 verifier file for each local system user with a uid at\n"
+"or above the **-u** threshold is populated with a disabled placeholder.\n"
+"Passwords must be set individually by root with **-a** before users can log\n"
+"in over SRP or change their own SRP password. SRP initialization refuses an\n"
+"existing credential path; migrate a legacy flat file with **-m** or move it\n"
+"aside before intentionally starting with an empty store. With **-r**, also create or validate\n"
+"the companion *afppasswd.key* file for the Randnum UAM.\n"
 msgstr ""
-"> パスワード/検証子ファイルを作成して初期化する。\n"
-"既存のエントリは、**-u**の閾値以上のuidを持つすべてのローカルシステムユーザのプレースホルダとして配置される。\n"
-"パスワードは**-a**で個別に設定する必要がある。**-r**を使用すると、\n"
-"Randnum UAMのコンパニオン*afppasswd.key*ファイルも作成または検証する。\n"
+"> パスワードファイルまたは検証ディレクトリを作成して初期化する。\n"
+"SRPモードでは、**-u**の閾値以上のuidを持つ各ローカルシステムユーザのroot所有のモード0600の\n"
+"検証子ファイルが無効なプレースホルダで埋められる。\n"
+"ユーザがSRP経由でログインしたり、自分のSRPパスワードを変更したりする前に、\n"
+"rootが**-a**で個別にパスワードを設定する必要がある。\n"
+"SRPの初期化は既存の資格情報パスを拒否する; 従来のフラットファイルを**-m**で移行するか、\n"
+"意図的に空のストアから開始する前に脇に移動する。**-r**を使用すると、\n"
+"Randnum UAM用の補助的な*afppasswd.key*ファイルも作成または検証される。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:95 manpages/man1/dbd.1.md:31
-#: manpages/man1/nad.1.md:157 manpages/man1/nad.1.md:210
+#: manpages/man1/afppasswd.1.md:176 manpages/man1/dbd.1.md:31
+#: manpages/man1/nad.1.md:195 manpages/man1/nad.1.md:250
 #, no-wrap
 msgid "**-f**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:98
+#: manpages/man1/afppasswd.1.md:179
 #, no-wrap
 msgid ""
-"> Force the action. With **-c**, allows overwriting an existing\n"
-"password/verifier file.\n"
-msgstr "> アクションを強制する。**-c**を使用すると、既存のパスワード/検証子ファイルを上書きできるようになる。\n"
+"> With **-r -c**, replace an existing Randnum credential file and, if needed,\n"
+"an invalid Randnum key file. This legacy option is not available in SRP mode.\n"
+msgstr ""
+"> **-r -c**を使用すると、既存のRandnum資格情報ファイルと、\n"
+"必要に応じて無効なRandnumキーファイルを置き換えることができる。\n"
+"この従来のオプションはSRPモードでは利用できない。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:100 manpages/man1/rtmpqry.1.md:27
+#: manpages/man1/afppasswd.1.md:181 manpages/man1/getzones.1.md:30
+#, no-wrap
+msgid "**-m**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:186
+#, no-wrap
+msgid ""
+"> As root, migrate the legacy flat SRP verifier file at the selected path to\n"
+"the per-uid verifier directory layout without resetting passwords. No option\n"
+"other than **-p** may be combined with **-m**. **afpd** must remain stopped for\n"
+"the entire operation.\n"
+msgstr ""
+"> rootとして、選択されたパスにある従来のフラットSRP検証子ファイルを、\n"
+"パスワードをリセットせずにuidごとの検証ディレクトリレイアウトに移行する。\n"
+"**-m**と組み合わせることができるオプションは**-p**のみである。\n"
+"操作全体を通して**afpd**は停止したままでなければならない。\n"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:188 manpages/man1/rtmpqry.1.md:27
 #, no-wrap
 msgid "**-r**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:104
+#: manpages/man1/afppasswd.1.md:192
 #, no-wrap
 msgid ""
-"> Operate on the legacy Randnum *afppasswd* file instead of the SRP\n"
-"verifier file. Affects which file is read or created and which default\n"
-"path is used when **-p** is not given.\n"
+"> As root, operate on the legacy Randnum *afppasswd* file instead of the SRP\n"
+"verifier directory. Affects which object is read or created and which\n"
+"compiled-in default is used. Regular users may not use this option.\n"
 msgstr ""
-"> SRP検証子ファイルの代わりに、従来のRandnum *afppasswd*ファイルを操作する。\n"
-"**-p**が指定されない場合のデフォルトのパスや、どのファイルが読み取られるか、作成されるかに影響する。\n"
+"> rootとして、SRP検証子ファイルの代わりに、従来のRandnum *afppasswd*ファイルを操作する。\n"
+"どのオブジェクトが読み込まれるか、作成されるか、およびどのコンパイル時デフォルトが使用されるかに影響する。\n"
+"通常のユーザはこのオプションを使用できない。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:106
+#: manpages/man1/afppasswd.1.md:194
 #, no-wrap
 msgid "**-p** *path*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:111
+#: manpages/man1/afppasswd.1.md:197
 #, no-wrap
 msgid ""
-"> Override the default path of the password/verifier file. The default is\n"
-"the SRP verifier file in SRP mode and the Randnum *afppasswd* file with\n"
-"**-r**; both defaults can also be configured globally in **afp.conf**(5)\n"
-"via \"**srp passwd file**\" and \"**passwd file**\" respectively.\n"
+"> Override the compiled-in credential path. In SRP mode, *path* is a verifier\n"
+"directory. With **-r**, *path* is a Randnum password file.\n"
 msgstr ""
-"> パスワード/検証子ファイルのデフォルトのパスを上書きする。\n"
-"デフォルトはSRPモードではSRP検証子ファイルで、**-r**を使用するとRandnum *afppasswd*ファイルになる。\n"
-"両方のデフォルトは**afp.conf**(5)の\"**srp passwd file**\"と\"**passwd file**\"でグローバルにも設定できる。\n"
+"> コンパイル時に組み込まれた資格情報パスを上書きする。SRPモードでは、*path*は検証ディレクトリである。\n"
+"**-r**を使用すると、*path*はRandnumパスワードファイルである。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:113 manpages/man1/nad.1.md:170
-#: manpages/man1/nad.1.md:222
+#: manpages/man1/afppasswd.1.md:199 manpages/man1/nad.1.md:208
+#: manpages/man1/nad.1.md:262
 #, no-wrap
 msgid "**-n**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:116
+#: manpages/man1/afppasswd.1.md:202
 #, no-wrap
 msgid ""
 "> If cracklib support is built into *netatalk*, this option disables\n"
@@ -467,13 +688,13 @@ msgstr ""
 "cracklib辞書に対して実行されたパスワードを持つことができる場合、このオプションはこの呼び出しのパスワード強度検証を無効にする。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:118
+#: manpages/man1/afppasswd.1.md:204
 #, no-wrap
 msgid "**-u** *minimum uid*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:121
+#: manpages/man1/afppasswd.1.md:207
 #, no-wrap
 msgid ""
 "> The minimum *user id* (uid) that **afppasswd** considers when **-c**\n"
@@ -483,13 +704,13 @@ msgstr ""
 "デフォルトは100。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:123
+#: manpages/man1/afppasswd.1.md:209
 #, no-wrap
-msgid "**-w** *password string*\n"
+msgid "**-w** *password*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:127
+#: manpages/man1/afppasswd.1.md:213
 #, no-wrap
 msgid ""
 "> Use *string* as the password instead of typing it interactively. Use\n"
@@ -500,7 +721,7 @@ msgstr ""
 "パスワードは平文で端末履歴に残るため、このオプションは絶対に必要な場合にのみ使用してください。\n"
 
 #. type: Title #
-#: manpages/man1/afppasswd.1.md:128 manpages/man1/pap.1.md:87
+#: manpages/man1/afppasswd.1.md:214 manpages/man1/pap.1.md:87
 #: manpages/man8/afpd.8.md:113 manpages/man8/atalkd.8.md:75
 #: manpages/man8/netatalk.8.md:51 manpages/man8/papd.8.md:97
 #: manpages/man8/papstatus.8.md:43
@@ -509,49 +730,61 @@ msgid "Files"
 msgstr "ファイル"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:131
+#: manpages/man1/afppasswd.1.md:217
 #, no-wrap
 msgid "*afppasswd.srp*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:136
+#: manpages/man1/afppasswd.1.md:221
 #, no-wrap
 msgid ""
-"> Default SRP verifier file, located under the netatalk configuration\n"
-"directory. One line per user, formatted as\n"
-"*username:hex_salt:hex_verifier*. Override with **-p** or with the\n"
-"\"**srp passwd file**\" option in **afp.conf**(5).\n"
+"> Default SRP verifier directory, located under the netatalk configuration\n"
+"directory. Each numeric-uid file contains one\n"
+"*username:hex_salt:hex_verifier* record. Override with **-p**.\n"
 msgstr ""
-"> netatalk構成ディレクトリのデフォルトSRP検証子ファイル。ユーザごとに1行で、\n"
-"*username:hex_salt:hex_verifier*の形式。\n"
-"**-p**または**afp.conf**(5)の\"**srp passwd file**\"オプションで上書きすることができる。\n"
+"> netatalk構成ディレクトリのデフォルトSRP検証子ディレクトリ。\n"
+"各数値uidファイルには1つの*username:hex_salt:hex_verifier*レコードが含まれる。\n"
+"**-p**で上書きすることができる。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:138
+#: manpages/man1/afppasswd.1.md:223
+#, no-wrap
+msgid "*afppasswd.srp.legacy*, *afppasswd.srp.legacy.N*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:226
+#, no-wrap
+msgid ""
+"> Collision-safe backup names used by **-m** for the original flat verifier\n"
+"file.\n"
+msgstr "> **-m**によって元のフラット検証子ファイルのために使用される衝突安全なバックアップ名。\n"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:228
 #, no-wrap
 msgid "*afppasswd*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:142
+#: manpages/man1/afppasswd.1.md:231
 #, no-wrap
 msgid ""
 "> Default legacy Randnum file, located under the netatalk configuration\n"
-"directory. Used only with **-r**. Override with **-p** or with the\n"
-"\"**passwd file**\" option in **afp.conf**(5).\n"
+"directory. Used only with **-r**. Override with **-p**.\n"
 msgstr ""
 "> netatalk構成ディレクトリのデフォルトの従来のRandnumファイル。**-r**でのみ使用される。\n"
-"**-p**または**afp.conf**(5)の\"**passwd file**\"オプションで上書きすることができる。\n"
+"**-p**で上書きすることができる。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:144
+#: manpages/man1/afppasswd.1.md:233
 #, no-wrap
 msgid "*afppasswd.key*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:147
+#: manpages/man1/afppasswd.1.md:236
 #, no-wrap
 msgid ""
 "> Companion key file for the legacy Randnum file. It must contain exactly\n"
@@ -561,6 +794,6 @@ msgstr ""
 "オプションの改行を含む16個の16進文字が正確に含まれている必要がある。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:151
+#: manpages/man1/afppasswd.1.md:240 manpages/man1/afpstats.1.md:59
 msgid "afpd(8), afp.conf(5)"
 msgstr ""

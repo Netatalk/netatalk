@@ -244,7 +244,7 @@ Changes in 4.6.0
 * UPD: dsi: cap server quantum at 256 MiB, raise dsireadbuf default to
   32 (maximum 1024) with a platform-safe product guard, GitHub #3196
 * BREAKING: libatalk: dsi_writeinit signature changed to pointer handoff;
-  soversion bumped to 21, GitHub #3196
+  soversion bumped to 22, GitHub #3196
 * UPD: contrib: harden and install FCE notify script helper, GitHub #3155
 
 Changes in 4.5.2
