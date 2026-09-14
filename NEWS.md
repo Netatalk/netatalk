@@ -245,6 +245,41 @@ Changes in 4.6.0
   32 (maximum 1024) with a platform-safe product guard, GitHub #3196
 * BREAKING: libatalk: dsi_writeinit signature changed to pointer handoff;
   soversion bumped to 21, GitHub #3196
+* UPD: contrib: harden and install FCE notify script helper, GitHub #3155
+
+Changes in 4.5.2
+----------------
+
+* BREAKING: libatalk: dsi_writeinit changed to a pointer handoff signature;
+  the libatalk soversion is bumped to 21
+* FIX: libatalk: bound AppleDouble EA reads
+* FIX: spotlight: reject empty CNID arrays
+* FIX: spotlight: validate CNID array elements
+* FIX: dsi: accept spec-legal writes of a full server quantum of data; the
+  DSI server quantum bounds FPWrite/FPWriteExt data only, not the whole
+  DSI frame, so a client may write (and request) a full configured quantum
+* FIX: dsi: harden FPWrite/FPWriteExt data-offset parsing on top of
+  CVE-2026-62319/CVE-2026-62320 — only the spec-legal offsets 12 and 20 are
+  accepted; malformed offsets 13-19 are rejected instead of parsed
+* FIX: dsi: remove the second userspace copy of buffered write payload in
+  dsi_writeinit and fix a latent truncation that caused an FPAddIcon
+  out-of-bounds read against buffers smaller than the server quantum
+* UPD: testsuite: size speedtest and lantest remote I/O from the full
+  advertised server quantum again (reverts the speedtest overhead workaround,
+  GitHub #3185)
+* UPD: distrib: update Webmin version to 2.660 in Dockerfile
+
+Changes in 4.5.1
+----------------
+
+* CVE-2026-62318: uams: harden auth state for DHX2 UAM
+* CVE-2026-62319,CVE-2026-62320: libatalk: harden DSI frame parsing
+* CVE-2026-62321: afpd: harden spotlight marshalling
+* FIX: afpd: make SpotlightRPC big-endian safe, GitHub #3127
+* FIX: afpd: explicit libatalk header include in file.c, GitHub #3125
+* UPD: docs: replace the C font style with CR in cmark manpages, GitHub #3126
+* testsuite: capture and print AFP errors in SpotlightRPC tests, GitHub #3127
+* testsuite: keep write frames within DSI quantum in speedtest, GitHub #3185
 
 Changes in 4.5.0
 ----------------
@@ -1205,6 +1240,23 @@ Changes in 3.2.0
 * FIX: Control all Spotlight dependencies at compile time, GitHub #571
 * REM: Remove redundant AUTHORS file, GitHub #538
 
+Changes in 3.1.19
+-----------------
+
+* FIX: CVE-2024-38439,CVE-2024-38440,CVE-2024-38441: Harden user login,
+       GitHub #1158
+* NEW: Introduce an official Dockerfile and entry script, GitHub #713
+* UPD: docs: Improvements to manual, GitHub #744
+       - Move legal notice into the Introduction chapter
+       - Improve manual page summaries
+       - Print netatalk version number as subtitle
+* NEW: docs: Distribute a manual appendix with the GNU GPL v2 text, GitHub #745
+* NEW: docs: Distribute the Japanese localization of the manual, GitHub #806
+* FIX: docs: Inconsistent man page heading case, GitHub #545
+* UPD: docs: Refresh DEVELOPER readme and Docbook templates, GitHub #638
+* UPD: docs: Clean up remainders of SourgeForge hosting, GitHub #703
+* UPD: docs: Limit max TOC depth to 2 in manual, bump DocBook to 4.5, GitHub #747
+
 Changes in 3.1.18
 -----------------
 
@@ -1488,7 +1540,7 @@ Changes in 3.1.3
 * UPD: Update Unicode support to version 7.0.0
 * FIX: Memory overflow caused by 'basedir regex', bug #567
 * NEW: afpd: delete empty resource forks, from FR #92
-* FIX: afpd: fix a crash when accessing ._ AppleDouble files created
+* FIX: afpd: fix a crash when accessing .\_ AppleDouble files created
        by OS X via SMB, bug #564
 * FIX: afpd and dbd: Converting from AppleDouble v2 to ea may corrupt
        the resource fork. In some circumstances an offset calculation
@@ -1549,6 +1601,20 @@ Changes in 3.1.0
 * NEW: Add recvfile support with splice() on Linux. New global options
        "recvfile" (default: no) and "splice size" (default 64k).
 * NEW: CNID backend "mysql" for use with a MySQL server
+
+Changes in 3.0.9
+----------------
+
+* FIX: dbd: Don't print message "Ignoring .\_file" for every .\_ file.
+       Bug #552.
+* FIX: afpd: Don't flood log with failed sys_set_ea() messages.
+* FIX: debian initscript: add 0 and 6 to Default-Stop. debian-bug#745520
+
+Changes in 3.0.8
+----------------
+
+* FIX: dbd: remove orphaned .\_ AppleDouble files. Bug #549.
+* FIX: afpd: Fix a crash in of\_closefork(). Bug #551.
 
 Changes in 3.0.7
 ----------------
@@ -1830,6 +1896,469 @@ Changes in 3.0 alpha1
 * REM: afpd: SLP and AFP proxy support have been removed
 * REM: afpd: legacy file extension to type/creator mapping has been removed
 * REM: afpd: AppleDouble backends v1, osx and sfm have been removed
+
+Changes in 2.4.10
+----------------
+
+* FIX: uams: Correct shadow password length check for ClearTxt, GitHub #1528
+* FIX: cnid_dbd: Set explicit max length of db_params to prevent potential
+       buffer overflow, GitHub #694
+* FIX: meson: Format afpd help text output to match autotools, GitHub #1499
+* FIX: meson: Throw missing cracklib dictionary warning, GitHub #1495
+* FIX: meson: Use a valid code sample for the TCP Wrappers check, GitHub #1491
+
+Changes in 2.4.9
+----------------
+
+* FIX: uams: Make sure the DHX2 client nonce is aligned appropriately,
+       GitHub #1456
+* FIX: uams: Fix DHCAST128 key alignment problem, GitHub #1464
+* FIX: wolfssl: OpenSSL coexistence tweaks, GitHub #1469
+
+Changes in 2.4.8
+----------------
+
+* UPD: Bump bundled WolfSSL library to stable version 5.7.2, GitHub #1433
+       Resolves CVE-2024-1544, CVE-2024-5288, CVE-2024-5991, CVE-2024-5814
+* UPD: Revert local modifications to the bundled WolfSSL library, GitHub #1432
+* FIX: Enable building against a shared WolfSSL 5.7.2 library, GitHub #1421
+* FIX: meson: Do not define rpath with a linker argument, GitHub #1443
+
+Changes in 2.4.7
+----------------
+
+* NEW: meson: Ability to control the run-time linker path config file,
+       GitHub #1395
+       New boolean Meson option: '-Dwith-ldsoconf'
+       When set to false, do not create /etc/ld.so.conf.d/libatalk.conf
+* BREAKING: meson: Enable rpath by default, while disabling ldsoconf
+       by default, GitHub #1419
+* NEW: meson: Introduce a with-init-dir option, GitHub #1403
+* NEW: meson: Introduce a with-lockfile-path option, GitHub #1404
+* FIX: meson: Allow ldconfig to run unprivileged during setup, GitHub #1408
+* FIX: meson: Correctly install AppleTalk headers and etc2ps.sh, GitHub #1398
+* NEW: docker: Ship a docker-compose.yml sample file, GitHub #1416
+
+Changes in 2.4.6
+----------------
+
+* BREAKING: meson: Refresh the dynamic linker cache when installing on Linux,
+       GitHub #1387
+       This fixes the issue of the libatalk.so shared library not being found
+       when configuring with a non-standard library path, e.g. /usr/local/lib .
+       New Meson option '-Dwith-install-hooks' controls this behavior,
+       allowing you to disable the install hook in non-privileged environments.
+       On Linux systems with glibc, we now install the following config file:
+       /etc/ld.so.conf.d/libatalk.conf
+* BREAKING: meson: Install htmldocs into htmldocs subdir, GitHub #1392
+       Previously, the html manual files were installed into the root
+       of the netatalk doc directory. Now they are put under netatalk/htmldocs .
+* BREAKING: meson: Use modern linker flag for rpath, remove dtags override,
+       GitHub #1385
+       When configuring with '-Dwith-rpath=true' the linker flags
+       '-Wl,-rpath,' will be prepended instead of the old '-R' flag.
+       On Linux platforms, we no longer prepend '-Wl,\-\-enable-new-dtags',
+       either.
+
+Changes in 2.4.5
+----------------
+
+* BREAKING: meson: Allow choosing shared or static libraries to build,
+       GitHub #1322
+       In practice, only shared libraries are built by default now.
+       Use the `default_library' option to control what is built.
+* FIX: meson: Fix syntax error with libiconv path, GitHub #1280
+* FIX: meson: default OPEN_NOFOLLOW_ERRNO overwrites platform customization,
+       GitHub #1287
+* FIX: meson: Remove duplicate dependency check for posix threads, GitHub #1298
+* FIX: meson: Better output when cryptographic UAMs aren't built, GitHub #1301
+* FIX: meson: Prioritize tests and run single-threaded to avoid race condition,
+       GitHub #1313
+* FIX: meson: Better way to handle rpath executable targets, GitHub #1318
+* FIX: meson: Refactor libcrypto check and print better status messages,
+       GitHub #1319
+* FIX: meson: Do a compiler sanity check before header checks, GitHub #1362
+* FIX: meson: Declare have_atfuncs globally to avoid failure later,
+       GitHub #1364
+* FIX: autotools/meson: Avoid using reserved keyword to build the tests
+       on NetBSD, GitHub #1329
+* FIX: Remove duplicate header include in server_child.h, GitHub #1304
+
+Changes in 2.4.4
+----------------
+
+* BREAKING: meson: Adjust libatalk soversion to 0.0.0, GitHub #1258
+       This was previously set to '18' which was a mistake from when
+       the Meson build system was backported from 3.x.
+       '0.0.0' is in line with the soversion used by Autotools.
+* FIX: meson: Remove redundant space in psf symlink list, GitHub #1247
+* UPD: meson: Print spool dir in setup summary, GitHub #1248
+* FIX: meson: Overwrite install logic for package config files, GitHub #1252
+* FIX: meson: Symlink select binaries and install man page aliases,
+       GitHub #1255
+* FIX: docker: Move config files from the old pkgconfdir location, GitHub #1260
+
+Changes in 2.4.3
+----------------
+
+* NEW: meson: Introduce pkgconfdir override option, GitHub #1238
+       The new option is called 'with-pkgconfdir-path'
+       and is analogous to the 'with-pkgconfdir' Autotools option.
+       Additionally, the hard-coded "netatalk" path suffix has been removed.
+* NEW: meson: Introduce 'debian' init style option
+       that installs both sysv and systemd, GitHub #1118
+* FIX: meson: Enable rpath for binaries
+       only when with-rpath is enabled, GitHub #1216
+* UPD: meson: Introduce check for Kerberos API
+       when building krbV UAM, GitHub #1219
+* FIX: meson: Restore the missing papd.conf manual html page, GitHub #1209
+* UPD: meson: Remove obsolete 64 bit library check, GitHub #1211
+* FIX: meson: Restore linking with 64-bit libdb on Solaris, GitHub #1223
+* FIX: meson: Fixing linking when building with
+       the 'with-ssl-override' option, GitHub #1229
+* FIX: meson: Add DES library check, POSIX threads check,
+       SSL capability check, additional refactoring, GitHub #1244
+* UPD: Record note of permission to upgrade CNID code
+       to a later GPL, GitHub #1195
+
+Changes in 2.4.2
+----------------
+
+* UPD: meson: Use external SSL dependency to provide cast header, GitHub #1187
+       This reintroduces OpenSSL/LibreSSL as a dependency for the DHX UAM,
+       while removing all source files with the SSLeay copyright notice.
+* UPD: meson: Add option to override system WolfSSL
+       with embedded WolfSSL: 'with-ssl-override', GitHub #1175
+* UPD: Remove obsolete Red Hat Upstart and SuSE SysV init scripts, GitHub #1162
+* FIX: Restore Zeroconf functionality for Alpine Linux, GitHub #1198
+* FIX: meson: Fix errors in PAM support macro, GitHub #1179
+* FIX: meson: Fix perl shebang substitution in cnid2_create script, GitHub #1184
+* FIX: meson: Fix errors in shadow password macro, GitHub #1191
+* FIX: autotools: gcc 8.5 expects explicit library flags
+       for libgcrypt, GitHub #1189
+
+Changes in 2.4.1
+----------------
+
+* FIX: CVE-2024-38439,CVE-2024-38440,CVE-2024-38441: Harden user login,
+       GitHub #1159
+* UPD: meson: Enable building with system WolfSSL library, GitHub #1161
+       - Build system will attempt to detect
+       that all required headers and symbols are supported
+       - Falls back to the bundled WolfSSL library
+* UPD: meson: Restore SLP (srvloc) support, GitHub #1153
+* FIX: meson: with-rpath syntax is invalid, GitHub #1131
+* FIX: meson: Remove obsolete with-libtirpc option, GitHub #1129
+* FIX: meson: Fix version number substitution, GitHub #1150
+* UPD: autotools and meson: Use pkg-config to find libgcrypt, GitHub #1133
+       - This removes dependency on the now-obsolete libgcrypt-config
+* UPD: docker: Use guest auth only with INSECURE_AUTH flag, GitHub #1127
+* UPD: Debian Trixie expects systemd scripts in /usr/lib, GitHub #1136
+* FIX: Don't attempt to restart atalkd systemd service
+       if NBP registrations fail, GitHub #1141
+* FIX: Add copyright for mac_roman.h, GitHub #1138
+* FIX: Cleanup of copyright headers to make them scanner friendly, GitHub #1143
+* UPD: docs: Indicate license for software package,
+       and add SSLeay notice GitHub, #1126
+* FIX: docs: Rephrase tarball section of manual, GitHub #1165
+
+Changes in 2.4.0
+----------------
+
+* BREAKING: Introduce the Meson build system, GitHub #776
+  GNU Autotools is still supported, but will be removed
+  in a future release. See the newly added INSTALL.md file.
+* BREAKING: Bundle WolfSSL for DHX/RandNum UAM encryption, GitHub #980
+  Requires the Meson build system, controlled by option '-Dwith-embedded-ssl'.
+  External OpenSSL 1.1 and LibreSSL providers are still supported.
+* BREAKING: LDAP API bump, OpenLDAP v2.3 or later required, GitHub #767
+  afp_ldap.conf option "ldap_server" has been replaced with "ldap_uri"
+  and has a new syntax. See the manual for details.
+* BREAKING: Removed obsolete AppleTalk kernel module for Solaris, GitHub #830
+* BREAKING: Overhauled the init scripts, GitHub #869
+       - Gentoo init script turned into cross-platform OpenRC init script,
+       moved to openrc-run, and made avahi-daemon a dependency
+       - Removed superfluous env overrides, relying on netatalk.conf instead
+       - Removed obsoleted rc.atalk.systemd script
+* FIX: OpenRC: a2boot and timelord depend on atalkd; use Port 4 #927
+* UPD: afpd: Remove unused UAM password options, GitHub #1001
+       - loginmaxfail
+       - passwdminlen
+* UPD: atalkd: Remove ancient multicast workaround for Linux, GitHub #1091
+       Removes '-noallmulti' option in atalkd.conf.
+* FIX: afppasswd: Check for valid password length, GitHub #931
+* NEW: afppasswd: -w option to set password from terminal, GitHub #936
+* UPD: Renamed lp2pap.sh to lp2pap to follow naming scheme, GitHub #1112
+* FIX: docs: Refresh DEVELOPER and AppleTalk readmes, GitHub #831
+* NEW: docs: Generate compilation manual page from build.yml, GitHub #838
+* UPD: docs: Overhaul the install and configuration chapters, GitHub #874
+* UPD: docs: Move documentation from conf file templates
+       to man pages, GitHub #1012
+* UPD: build system: Remove hard dependencies on perl and grep, GitHub #886
+* FIX: build system: Autotools can find the cracklib dictionary, GitHub #940
+* FIX: Fix missing rresvport function when using musl C library, GitHub #920
+* UPD: docker: Use Alpine Linux based image instead of Debian 11, GitHub #866
+* FIX: On macOS, graceful handling of init script stop
+       when not running, GitHub #966
+* FIX: Enable building with quota and libtirpc on Fedora, GitHub #1044
+* FIX: Update to modern C data types in codebase, GitHub #1009
+
+Changes in 2.3.2
+----------------
+
+* FIX: atalkd: Bail out when attempting to seed a single interface, GitHub #719
+* NEW: pap: Compatibility and nicer status messages for ImageWriters.
+       Based on code from the `image-writer' project by kakwa, GitHub #722
+* NEW: init: Add macOS launchd init config and helper script, GitHub #735
+* FIX: build system: Detect system docbook stylesheets
+       at configure time, GitHub #746
+* FIX: docs: Correct descriptions for afpd -D and -T options, GitHub #725
+* FIX: docs: Improve man page summaries and contents, GitHub #733
+* FIX: docs: Improve layout of generated html and pdf manuals, GitHub #739
+* NEW: docs: Add the full text of the GNU GPL v2 license
+       to the manual, GitHub #753
+* NEW: Introduce a Docker container configuration and entry script, GitHub #712
+       Special thanks to Eric Harmon for the initial POC and encouragement.
+* UPD: Remove binary logo images from revision control, GitHub #715
+       These files now live in the `netatalk-homepage' repo.
+
+Changes in 2.3.1
+----------------
+
+* UPD: afpd: Remove obsoleted AppleDouble osx and sfm formats, GitHub #668
+* UPD: uams: Remove obsoleted Kerberos v4 UAM, GitHub #676
+* NEW: atalkd: Automatically enable RTMP broadcast quirks mode
+       when configured with the -router switch.
+       Removes the -q command line parameter, GitHub #679
+* NEW: papd: Modernize CUPS API usage,
+       GitHub #651 #655 #672 #674 #678 #696 #700
+* UPD: macusers: Fallback output when full name not available, GitHub #652
+* FIX: libatalk: Appease Fedora gcc incompatible pointer error, GitHub #682
+* FIX: Two small memory handling patches ported
+       from netatalk-classic, GitHub #645
+* NEW: Generate manual pages through the build system.
+       Introduces the \-\-with-docbook configure option, GitHub #675
+* FIX: Fix Zeroconf support on *BSD platforms, GitHub #647
+* FIX: Use correct BSD make syntax in initscripts Makefile, GitHub #644
+* UPD: Remove obsoleted README and VERSION files for contrib, GitHub #641
+* FIX: Update README.AppleTalk with the current state of Linux support.
+* FIX: Factual corrections and updates to manual pages.
+
+Changes in 2.3.0
+----------------
+
+* UPD: afpd: Remove cdb and tdb CNID backends, GitHub #535
+* UPD: afpd: Remove nostat option, GitHub #540
+* UPD: afpd: Remove the "Force UID/GID" feature, GitHub #516
+* UPD: afpd: Remove experimental Dropbox Kludge feature, GitHub #515
+* UPD: afpd: Remove afprun module from codebase, GitHub #526
+* UPD: afpd: Deprecate AFS (Andrew File System) support, GitHub #554
+* UPD: afpd: Enable only DHX2 UAM by default, GitHub #358
+* FIX: afpd: Validate size of ace_count in FPSetACL request, GitHub #364
+* UPD: afpd: Enable, sort, and flesh out Mac file type translation, GitHub #534
+* FIX: afpd: Don't seteuid() if process is already
+       running as that uid, GitHub #532
+* FIX: afpd: Use correct username length in afp_changepw, GitHub #627
+* FIX: uams: Link PGP UAM with CRYPT_LIBS, GitHub #548
+* FIX: uams: Use correct data type to build
+       with PAM support on FreeBSD, GitHub #563
+* NEW: atalkd: Introduce 3rd party bridge quirks mode
+       for Asante and Dayna bridges, GitHub #585
+* UPD: atalkd: Revert registering of NBP entries of
+       "Workstation" and "netatalk", GitHub #473
+* FIX: papd: Use packed structs for pap packets, GitHub #527
+* FIX: papd: Use a portable fcntl() call instead of flock(), GitHub #625
+* FIX: timelord: Flip the check for tm->tm_gmtoff
+       to appease FreeBSD, GitHub #415
+* UPD: config: Name the default home dir shared volume
+       in AppleVolumes.default, GitHub #469
+* FIX: distrib: Add Documentation tags to systemd templates, GitHub #378
+* FIX: distrib: Write a Description and Short-Description
+       for the Debian init script, GitHub #428
+* UPD: docs: Remove redundant AUTHORS file, GitHub #454
+* NEW: docs: Add README for the v2.3 branch, GitHub #588
+* FIX: docs: Remove obsoleted bug reporting sections, GitHub #455
+* FIX: docs: Remove redundant id properties, GitHub #520
+* UPD: docs: Use absolute XSL stylesheet path,
+       source VERSION in manpages script, GitHub #458
+* FIX: docs: Update URLs in website, GitHub #445
+       - Point to the root of SF downloads where new files are added
+       - Load CSS from the current protocol and domain
+* FIX: docs: Standardize man page heading case, GitHub #545
+* FIX: docs: Minor cleanup of man pages, GitHub #470
+* FIX: docs: Document the correct default log level for afpd, GitHub #552
+* FIX: docs: Improve readability of manual README, GitHub #440
+* NEW: docs: Document binheader, nadheader, and showpap, GitHub #430
+* FIX: docs: Fix user visible typos and improve English grammar,
+       GitHub #381 #382
+* NEW: docs: Create man page for cnid2_create tool, GitHub #402
+* FIX: docs: Fix typos, improve layout in afpd.conf man page, GitHub #472
+* NEW: build system: Default to xz compression for tarballs, GitHub #483
+* UPD: build system: Remove vestiges of a Webmin install target, GitHub #467
+* FIX: build system: Fold a2boot and timelord
+       under the appletalk conditional, GitHub #423
+* FIX: build system: Don't install at.h when glibc header found, GitHub #409
+* NEW: build system: Switch from compile-time debug
+       to run-time debug, GitHub #536
+* FIX: build system: Correct install hook for static config files, GitHub #408
+* FIX: build system: Make libdir the default install location
+       for UAM libs, GitHub #407
+* NEW: build system: Option to skip privileged hooks
+       for make install: \-\-disable-install-privileged, GitHub #405
+* FIX: build system: Rearrange the dummy paths
+       for the distribution tests, GitHub #522
+* NEW: build system: Configurable systemd prefix,
+       with default to /usr/lib, GitHub #404
+       - Remove hard-coded systemd path /lib/systemd in Makefile
+       - Introduce check for the two known common prefixes
+       - Introduce \-\-with-systemd-prefix autoconf option
+* FIX: build system: Fix detection of Berkeley DB
+       installed in multiarch location, GitHub #380
+* NEW: build system: Support building against libtirpc
+       as separate from glibc, GitHub #385
+* UPD: build system: Recommend BerkeleyDB 5.3, GitHub #8
+* FIX: Port 2.x fork code quality improvements GitHub #488
+       - Remove support for ancient OSes:
+         SunOS, IRIX, AIX, Ultrix, HPUX, Tru64, GNU/kFreeBSD, UnixWare
+       - Remove ancient bug workarounds and standard library shortcomings
+       - Refactor functions
+       - More granular typecasting
+       - Initialize variables
+       - Prevent potential memory leaks
+       - Handle system call return values
+* FIX: Improve logger_test, while re-enabling the syslog tests, GitHub #584
+* UPD: Rename asip-status.pl to asip-status, GitHub #379
+* FIX: Clean up residual CVS commit headers, GitHub #631
+
+Changes in 2.2.10
+-----------------
+
+* UPD: The ability to build and run on macOS Ventura, GH#350
+       - Removed legacy conditionals for Mac OS X Server
+       - Modernized autotools syntax
+* UPD: papd: CUPS API improvements, GH#371
+       - Fix printing to Avahi discovered "driverless" printers
+       - Remove CUPS PPD API dependency, which is slated for deprecation
+       - Allow papd to return a printer resolution with LaserWriter 8
+* UPD: Remove redundant documentation in conf files, GH#333
+       - Add man page paragraph on the illegalseq option
+* FIX: Use non-interactive PAM session to avoid spurious error, GH#361
+* FIX: Adopt Debian downstream patches, GH#369
+       - Drop bogus warning in AppleVolumes.default
+       - Fix syntax and typo in add_netatalk_printer script
+       - Fix user-visible typos in log output and documentation
+       - Improvements to Debian legacy init.d script
+* FIX: atalkd.service register NBP entries "Workstation" and "netatalk", GH#372
+* FIX: Restore tarball distribution of READMEs in doc/ GH#374
+
+Changes in 2.2.9
+----------------
+
+* FIX: Fix printing from old Mac OS LaserWriter drivers
+* FIX: CVE-2022-45188
+* FIX: Improve systemd service dependencies GH#232
+* FIX: macusers: Fix output for long usernames
+* FIX: macusers: account for usernames with non-word characters
+* FIX: macusers: do not show root user. SF bug #495
+* NEW: Add manpage for a2boot
+* UPD: Manpage and html manual updates
+
+Changes in 2.2.8
+----------------
+
+* NEW: asip-status.pl: IPv6 support; show GSS-UAM SPNEGO blob;
+       improved layout of output. (3.1 backport)
+* NEW: apple_dump: support for EA meta data. (3.1 backport)
+* NEW: Import netatalk-doc into the main repo, and overhaul
+       scripts, man pages and html manual sources.
+* UPD: Display the Netatalk Daemon icon with the '-icon' afpd.conf
+       option for all platforms. GH #214
+* UPD: Remove OpenSSL 1.0 backwards compatibility header.
+       Please use OpenSSL 1.1 or later.
+* UPD: configure: Enable DDP, timelord, and a2boot by default. GH #215
+* UPD: configure: Disable Quota by default. GH #198
+* FIX: afpd: Create tmp files in /tmp rather than / and clean up
+       after use. Regression in 2.2.7. GH #188
+* FIX: Provide MNTTYPE_NFS for Solaris descendents to enable
+       compiling with Quota. GH #117
+* FIX: afpd: reading from file may fail. SF Bug #619 (3.1 backport)
+* FIX: timelord: Fall back to timezone when tm_gmtoff is unavailable.
+       Makes it work on Solaris descendents. GH #194
+* FIX: fix largefile-check macro for largefile with clang 16.
+* FIX: Typo fixes in user facing strings.
+
+Changes in 2.2.7
+----------------
+
+* FIX: CVE-2022-23121
+* FIX: CVE-2022-23123
+* FIX: CVE-2022-23125
+* NEW: Stable systemd service unit configurations for all daemons.
+       Use '--enable-systemd' to configure and install.
+* NEW: Init script templates for the a2boot daemon for all supported
+       platforms.
+* FIX: CVE-2018-1160: libatalk/dsi: add correct bound checking
+       to dsi_opensession
+* FIX: CVE-2018-1160: libatalk/dsi: avoid double use of variable i
+* FIX: Compatibility with OpenSSL 1.1. Bug #653.
+* UPD: Add OpenSSL 1.0 backwards compatibility layer.
+* FIX: Resolve gcc 10 compile time errors and warnings.
+* FIX: Remove bitrotted inline prototype for a libc function
+       which caused a build error on NetBSD.
+* FIX: Update configure and Makefile syntax to avoid autoconf
+       deprecation warnings.
+* FIX: Restore LDAP support when ACLs are unavailable.
+* NEW: afpd: Add option to disable afp session timeouts.
+* FIX: afpd: Saving from applications like Photoshop may fail, because
+       removing the resource fork AppleDouble file failed. Bug #542.
+       (Netatalk 3 backport.)
+* FIX: afpd: Return the correct error for non-existent volume
+       (Netatalk 3 backport.)
+* FIX: afpd: Update Netatalk volume capacity reporting to match Samba behavior
+       (Netatalk 3 backport.)
+* FIX: afpd: Fix crash when moving files that used to have long names.
+       (Netatalk 3 backport.)
+* FIX: atalkd: Restore compatibility with Linux and routerless networks.
+* FIX: atalkd: Improve compatibility with LocalTalk bridge hardware
+       in GS/OS.
+* FIX: atalkd: Set interface address correctly for phase 1 networks on NetBSD.
+* UPD: macusers: Make the script work on NetBSD.
+* UPD: papd: Compatibility with LaserWriter 7 and 8 drivers on GS/OS and Mac OS.
+* UPD: papd: Send replies to client when printing to prompt more data to be sent.
+* FIX: papd: Make it compile and run when using post-1.7 CUPS.
+* UPD: timelord: Introduce an '-l' option to sync localtime (time zone aware)
+       instead of GMT.
+* FIX: timelord: Make it work on non-big-endian and 64-bit systems.
+* FIX: cnid_dbd: Allow non-Unicode volumes to be scanned by the repair tool.
+* FIX: zeroconf: Native avahi API should be the default choice.
+       (Netatalk 3 backport.)
+* FIX: Fix possible alignment violations due to bad casts.
+       (Netatalk 3 backport.)
+
+Changes in 2.2.6
+----------------
+
+* FIX: Fix handling of large number of volumes. Bug #527.
+* FIX: Made AppleTalk systems function properly when coexisting with
+       TCP systems.
+* FIX: papd: make it work better with post-1.6 CUPS.
+* FIX: Various fixes for building and running on NetBSD.
+* FIX: Better compatibility with OpenSSL.
+
+Changes in 2.2.5
+----------------
+
+* FIX: Fix errors searching volumes
+* NEW: Configurable symlink handling with a new volume option
+       'followsymlinks'. Setting the option causes afpd to follow
+       symlinks on the server side.
+* UPD: Reload groups when reloading volumes. FR #71.
+* FIX: Fix a possible crash in cname() where cname_mtouname calls
+       dirlookup() where the curdir is freed because the dircache
+       detected a dev/inode cache difference and evicted the object
+       from the cache. Fixes bug #498.
+* FIX: Change default FinderInfo for directories to be all 0, fixes
+       bug 514.
 
 Changes in 2.2.4
 ----------------
