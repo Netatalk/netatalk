@@ -17,7 +17,7 @@ if enable_appletalk
     afpd_test_extra_sources += files('subtests_atp.c')
 endif
 
-if build_afpd_tests
+if build_tests
 
     # For dtrace probes we need to invoke dtrace on all input files, before
     # linking the final executable.

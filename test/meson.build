@@ -1,11 +1,11 @@
-if build_afpd_tests
+if build_tests
     subdir('afppasswd')
 
     if use_sqlite_backend
         subdir('afpd')
     else
-        error(
-            'The afpd tests require the "sqlite" backend to be built',
+        warning(
+            'The afpd unit tests require the "sqlite" backend to be built',
         )
     endif
 endif
@@ -14,7 +14,7 @@ if build_testsuite
     subdir('testsuite')
 endif
 
-if not build_afpd_tests and build_fuzzing
+if not build_tests and build_fuzzing
     if use_sqlite_backend
         subdir('afpd')
     endif

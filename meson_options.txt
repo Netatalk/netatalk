@@ -199,7 +199,7 @@ option(
     'with-tests',
     type: 'boolean',
     value: false,
-    description: 'Compile the afpd integration tests',
+    description: 'Compile the unit tests',
 )
 option(
     'with-testsuite',

@@ -80,10 +80,10 @@ enable_stuffit = get_option('with-stuffit')
 enable_tcpwrap = get_option('with-tcp-wrappers')
 enable_zeroconf = get_option('with-zeroconf')
 
-build_afpd_tests = get_option('with-tests')
 build_docs_l10n = get_option('with-docs-l10n')
 build_docs_only = get_option('with-docs-only')
 build_fuzzing = get_option('with-fuzzing')
+build_tests = get_option('with-tests')
 build_testsuite = get_option('with-testsuite')
 build_testsuite_uams = get_option('with-testsuite-uams')
 build_webmin = get_option('with-webmin')
@@ -2724,7 +2724,7 @@ if 'none' not in init_style
 endif
 
 testsuite_libafpclient = disabler()
-if build_afpd_tests or build_testsuite or build_fuzzing
+if build_tests or build_testsuite or build_fuzzing
     subdir('test')
 endif
 
@@ -2848,7 +2848,7 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  Documentation:')
 
 summary_info = {
-    '  afpd': build_afpd_tests,
+    '  unit tests': build_tests,
     '  fuzzing': build_fuzzing,
     '  testsuite': build_testsuite,
     '  UAM logintest': testsuite_libafpclient.found(),
