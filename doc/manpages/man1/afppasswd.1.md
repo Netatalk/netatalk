@@ -99,9 +99,7 @@ Randnum requires a file named *afppasswd.key* at the same path as the
 Randnum uses to encrypt the stored password. **afppasswd -r -c** creates
 this key file if it is missing and validates an existing one. Randnum
 password updates refuse to proceed unless the key file is present and valid.
-Randnum passwords can be reset only by root with **afppasswd -r**. The Randnum
-UAM no longer accepts password changes over AFP; it remains available for
-authentication.
+Randnum passwords can be reset only by root with **afppasswd -r**.
 The Randnum UAM logs a warning at startup when the key file is missing or
 invalid, but authentication fails until it is fixed.
 
@@ -195,8 +193,7 @@ compiled-in default is used. Regular users may not use this option.
 **-p** *path*
 
 > Override the compiled-in credential path. In SRP mode, *path* is a verifier
-directory and must match "**srp verifier path**" in **afp.conf**(5). With
-**-r**, *path* is a Randnum password file and must match "**passwd file**".
+directory. With **-r**, *path* is a Randnum password file.
 
 **-n**
 
@@ -220,8 +217,7 @@ remain in the terminal history in plain text.
 
 > Default SRP verifier directory, located under the netatalk configuration
 directory. Each numeric-uid file contains one
-*username:hex_salt:hex_verifier* record. Override with **-p**; the directory
-must match "**srp verifier path**" in **afp.conf**(5).
+*username:hex_salt:hex_verifier* record. Override with **-p**.
 
 *afppasswd.srp.legacy*, *afppasswd.srp.legacy.N*
 
@@ -231,8 +227,7 @@ file.
 *afppasswd*
 
 > Default legacy Randnum file, located under the netatalk configuration
-directory. Used only with **-r**. Override with **-p**; the file must match
-"**passwd file**" in **afp.conf**(5).
+directory. Used only with **-r**. Override with **-p**.
 
 *afppasswd.key*
 
