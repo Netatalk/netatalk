@@ -119,7 +119,7 @@ separate files managed with **afppasswd**:
   present and valid. The Randnum UAM logs a startup warning when the key file
   is missing or invalid, but authentication fails until it is fixed. Stored
   passwords are DES-encrypted using that key. Randnum credentials can be reset
-  only by root with **afppasswd -r**; changing them over AFP is not supported.
+  only by root.
 
   The key file must contain exactly 16 hexadecimal characters, such as
   `0123456789ABCDEF`, with an optional trailing newline. Generate a fresh
@@ -182,8 +182,7 @@ Netatalk can be configured to allow clients to save or change their passwords on
 The **save password** option in the **Global** section of *afp.conf* enables this feature,
 but the AFP client must also support and honor this flag.
 
-To allow clients to change their passwords, set the **set password** option.
+To allow users to change their passwords remotely through the client, set the **set password** option.
 This depends on the UAM in use and is not supported by all of them.
 Notably, the PAM-based UAMs support this feature, while those based on classic UNIX passwords do not.
-The Randnum UAM supports authentication only and does not register an AFP
-password-change handler.
+The legacy Randnum UAM supports password changes, but the SRP UAM does not.
