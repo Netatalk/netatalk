@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-20 20:48+0200\n"
+"POT-Creation-Date: 2026-09-14 22:40+0200\n"
 "PO-Revision-Date: 2026-05-17 23:17+0200\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -45,28 +45,42 @@ msgstr ""
 "は Finder のみで当てはまることであり、アプリケーションでは当てはまらない）。"
 
 #. type: Plain text
-#: manual/CNID.md:18
+#: manual/CNID.md:15
 msgid ""
-"Every file in an AFP volume must have a unique file ID.  According to the "
-"AFP specification, CNIDs must never be reused.  IDs are represented as 32-"
-"bit numbers, and directories share the same ID pool.  After approximately 4 "
-"billion files and directories have been written to an AFP volume, the ID "
-"pool is depleted and no new files can be written to the volume.  Some of "
-"Netatalk's CNID backends may attempt to reuse available IDs after depletion, "
-"which technically violates the spec but may allow continuous use on long-"
-"lived volumes."
+"Every file in an AFP volume must have a unique file ID, and according to the "
+"AFP specification CNIDs must never be reused.  IDs are 32-bit numbers, and "
+"directories share the same pool, so it is depleted after roughly 4 billion "
+"files and directories have been written."
 msgstr ""
-"AFP ボリュームにある各々のファイルに一意のファイル ID が割り当てられる。仕様"
-"により CNID は絶対に再利用禁止であり、32 bit の数字である。ディレクトリ ID も"
-"同じ ID プールを使用する。このため、ある AFP ボリュームにおよそ 40 億個以上の"
-"ファイル・フォルダーを書き込むと、その時点で ID プールが枯渇され、当該ボ"
-"リュームへの新ファイルの書き込みができなくなる。Netatalk の CNID バックエンド"
-"の一部は、利用可能な ID を使い果たした後に再利用しようとする場合がある。これ"
-"は厳密的には仕様違反にはなるが、長期間有効なボリュームでは継続的な使用可能に"
-"する。"
+"AFP ボリューム内のすべてのファイルは一意のファイル ID を持たなければならず、"
+"AFP 仕様によると CNID は再利用されてはならない。ID は 32 ビットの数値であり、"
+"ディレクトリは同じプールを共有するため、約 40 億のファイルとディレクトリが書"
+"き込まれた後に枯渇する。"
 
 #. type: Plain text
-#: manual/CNID.md:22
+#: manual/CNID.md:26
+msgid ""
+"What happens then depends on the backend.  The *dbd* backend stops "
+"allocating IDs, and no new files can be written to the volume.  The *sqlite* "
+"and *mysql* backends empty the CNID table, restart numbering, and trigger "
+"all clients connected to the volume to reconnect so that everyone uses the "
+"new IDs.  This keeps a long-lived volume writable, but it violates the spec "
+"and breaks Mac aliases pointing at the old IDs.  Both backends log a warning "
+"as a volume approaches the ceiling, so it can optionally be renumbered with "
+"the **dbd** utility beforehand, during a maintenance window."
+msgstr ""
+"その後に何が起こるかはバックエンドによって異なる。*dbd* バックエンドは ID の"
+"割り当てを停止し、新しいファイルはボリュームに書き込めなくなる。*sqlite* およ"
+"び *mysql* バックエンドは CNID テーブルを空にし、番号付けを再開し、ボリューム"
+"に接続されているすべてのクライアントに再接続をトリガーして、すべてのクライア"
+"ントが新しい ID を使用するようにする。これにより長期間使用されるボリュームを"
+"引き続き書き込み可能に保つことができるが、仕様に違反し、古い ID を指す Mac の"
+"エイリアスを壊してしまう。両方のバックエンドは、ボリュームが上限に近づくと警"
+"告をログに記録するので、オプションとして、メンテナンスウィンドウ中に **dbd** "
+"ユーティリティで事前に番号を再割り当てすることができる。"
+
+#. type: Plain text
+#: manual/CNID.md:30
 msgid ""
 "Netatalk maps IDs to files and directories in the host filesystem.  Several "
 "CNID backends are available and can be selected with the **cnid scheme** "
@@ -80,7 +94,7 @@ msgstr ""
 "された ID ↔ 名前を一対一対応させるデータベースである。"
 
 #. type: Plain text
-#: manual/CNID.md:28
+#: manual/CNID.md:36
 msgid ""
 "For CNID backends that use a zero-configuration database, the database files "
 "are located by default in a *netatalk/CNID* subdirectory of your system's "
@@ -93,29 +107,29 @@ msgstr ""
 "所を変えられる。"
 
 #. type: Plain text
-#: manual/CNID.md:30
+#: manual/CNID.md:39
 msgid ""
 "The **dbd** command-line utility can verify, repair, and rebuild the CNID "
-"database."
+"database of any backend, not just *dbd*."
 msgstr ""
-"CNID データベースの検証・修復・再構築のために用いることができる **dbd** とい"
-"う名のコマンドが用意されている。"
+"**dbd** コマンドラインユーティリティは、*dbd* バックエンドだけでなく、任意の"
+"バックエンドの CNID データベースを検証、修復、および再構築できる。"
 
 #. type: Plain text
-#: manual/CNID.md:32
+#: manual/CNID.md:41
 #, no-wrap
 msgid "> **NOTE:** Keep the following CNID-related considerations in mind:\n"
 msgstr "> 【注記】 以下の CNID 関連の考慮事項を念頭に置くと良い:\n"
 
 #. type: Bullet: '- '
-#: manual/CNID.md:45
+#: manual/CNID.md:54
 msgid "Don't nest volumes unless **vol dbnest = yes** is set."
 msgstr ""
 "**vol dbnest = yes** が指定してある時以外はボリュームをネスト（入れ子）にして"
 "はならない。"
 
 #. type: Bullet: '- '
-#: manual/CNID.md:45
+#: manual/CNID.md:54
 msgid ""
 "CNID backends are databases, so they make **afpd** a combined file server "
 "and database system."
@@ -124,7 +138,7 @@ msgstr ""
 "データベースの混成物とならしめている。"
 
 #. type: Bullet: '- '
-#: manual/CNID.md:45
+#: manual/CNID.md:54
 msgid ""
 "If the filesystem runs out of space, the database will become corrupted.  "
 "You can work around this by using the **vol dbpath** option to store "
@@ -137,7 +151,7 @@ msgstr ""
 "なっているか確認する。のいずれかである。"
 
 #. type: Bullet: '- '
-#: manual/CNID.md:45
+#: manual/CNID.md:54
 msgid ""
 "Be careful with CNID databases on NFS-mounted volumes.  Serving AFP volumes "
 "over NFS is already risky, and placing a database there compounds the risk "
@@ -152,7 +166,7 @@ msgstr ""
 "ブを使用するべきである。"
 
 #. type: Plain text
-#: manual/CNID.md:49
+#: manual/CNID.md:58
 msgid ""
 "The following sections describe the CNID backends included with Netatalk.  "
 "You can choose to build one or several of them at compile time.  Run *afpd "
@@ -164,13 +178,13 @@ msgstr ""
 "こと。"
 
 #. type: Title ##
-#: manual/CNID.md:50
+#: manual/CNID.md:59
 #, no-wrap
 msgid "dbd"
 msgstr ""
 
 #. type: Plain text
-#: manual/CNID.md:56
+#: manual/CNID.md:65
 msgid ""
 "The \"Database Daemon\" backend is built on Berkeley DB.  Rather than "
 "accessing the database directly, **afpd** processes communicate with one or "
@@ -184,18 +198,18 @@ msgstr ""
 "て制御されている。"
 
 #. type: Plain text
-#: manual/CNID.md:58
+#: manual/CNID.md:67
 msgid "It is deprecated and not recommended for new deployments."
 msgstr "本バックエンドは非推奨であり、新規導入の際に選択しないことを推奨する。"
 
 #. type: Title ##
-#: manual/CNID.md:59
+#: manual/CNID.md:68
 #, no-wrap
 msgid "mysql"
 msgstr ""
 
 #. type: Plain text
-#: manual/CNID.md:64
+#: manual/CNID.md:73
 msgid ""
 "CNID backend using a MySQL or MariaDB server.  This is the most performant "
 "and scalable backend option, and is recommended for large deployments with "
@@ -206,7 +220,7 @@ msgstr ""
 "展開に推奨される。"
 
 #. type: Plain text
-#: manual/CNID.md:67
+#: manual/CNID.md:76
 msgid ""
 "The SQL server must be provisioned by the system administrator, and Netatalk "
 "configured to connect to it over a Unix socket or a network interface."
@@ -215,13 +229,13 @@ msgstr ""
 "タベースに接続する設定する必要もある。"
 
 #. type: Title ##
-#: manual/CNID.md:68
+#: manual/CNID.md:77
 #, no-wrap
 msgid "sqlite"
 msgstr ""
 
 #. type: Plain text
-#: manual/CNID.md:75
+#: manual/CNID.md:84
 msgid ""
 "A fast and lightweight CNID database backend that uses the SQLite v3 "
 "embedded database engine.  It has a simpler architecture compared to *dbd* "
@@ -236,7 +250,7 @@ msgstr ""
 "者が別の SQL サーバーをセットアップして維持する必要もない。"
 
 #. type: Plain text
-#: manual/CNID.md:79
+#: manual/CNID.md:88
 msgid ""
 "The tradeoff is that SQLite's embedded database is not the most scalable for "
 "concurrent write operations.  It is therefore recommended for deployments "

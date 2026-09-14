@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-09-14 22:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -23,76 +23,71 @@ msgid "Netatalk Manual"
 msgstr "Netatalk マニュアル"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Introduction](index.html)"
 msgstr "[序説](index.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Installation](Installation.html)"
 msgstr "[インストール](Installation.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Configuration](Configuration.html)"
 msgstr "[セットアップ](Configuration.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[CNID Backends](CNID.html)"
 msgstr "[CNID バックエンド](CNID.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Character Sets](Charsets.html)"
 msgstr "[文字セット](Charsets.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Authentication](Authentication.html)"
 msgstr "[認証](Authentication.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[ACL Support](ACL.html)"
 msgstr "[ACL](ACL.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Directory Caching](Dircache.html)"
 msgstr "[ディレクトリキャッシュ](Dircache.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
-msgid "[Interoperability](Interoperability.html)"
-msgstr "[相互運用性](Interoperability.html)"
-
-#. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Filesystem Change Events](FCE.html)"
-msgstr "[FCE](FCE.html)"
+msgstr "[ファイルシステム変更イベント](FCE.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Search](Search.html)"
 msgstr "[検索](Search.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[AppleTalk](AppleTalk.html)"
 msgstr "[AppleTalk](AppleTalk.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Upgrading](Upgrading.html)"
 msgstr "[アップグレード](Upgrading.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[License](License.html)"
 msgstr "[ライセンス](License.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+#: manual/_Navlinks.md:16 manual/_Sidebar.md:19
 msgid "[Legal Notices](Legal.html)"
 msgstr "[法的条項](Legal.html)"
