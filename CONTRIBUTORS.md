@@ -285,6 +285,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Jakub Jirutka <jakub@jirutka.cz>
 - Blake Garner
 - OrbisAI Security
+- DerVerruckteFuchs
 
 And thanks to everyone on the netatalk-devel and netatalk-docs
 lists. And in recent years, the TinkerDifferent, 68kmla, E-Maculation,
