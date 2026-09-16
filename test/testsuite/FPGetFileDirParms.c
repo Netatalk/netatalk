@@ -1,5 +1,7 @@
 /* ----------------------------------------------
 */
+#include <atalk/compat.h>
+
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"

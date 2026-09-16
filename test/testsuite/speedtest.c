@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
+#include <atalk/compat.h>
 
 #include "afpclient.h"
 #include "afptest_uam.h"

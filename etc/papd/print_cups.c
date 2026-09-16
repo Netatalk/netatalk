@@ -31,7 +31,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <errno.h>
-
+#include <atalk/compat.h>
 
 #ifdef HAVE_CUPS
 

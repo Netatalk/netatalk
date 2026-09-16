@@ -18,6 +18,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <atalk/compat.h>
 #include <atalk/logger.h>
 
 #include "db_param.h"

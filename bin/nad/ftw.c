@@ -41,6 +41,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <atalk/compat.h>
 #include <atalk/util.h>
 
 #include "ftw.h"
