@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <atalk/compat.h>
 
 #include "adoublehelper.h"
 #include "afpcmd.h"

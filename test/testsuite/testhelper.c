@@ -3,6 +3,7 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <atalk/compat.h>
 
 #include "afpcmd.h"
 #include "afphelper.h"

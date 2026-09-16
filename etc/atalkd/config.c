@@ -29,6 +29,7 @@
 #include <sys/stropts.h>
 #endif /* __svr4__ */
 
+#include <atalk/compat.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>

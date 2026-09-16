@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <atalk/compat.h>
 
 static char temp[MAXPATHLEN];
 
