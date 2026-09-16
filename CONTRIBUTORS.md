@@ -94,24 +94,24 @@ Contributors to the original macipgw project and forks,
 at the time the codebase was merged into netatalk.
 
 - Stefan Bethke <Stefan.Bethke@Hanse.DE>: original author
-- Jason King
-- Adam Seering
-- Christopher Kobayashi
+- Jason King (@jasonking3)
+- Adam Seering (@aseering)
+- Christopher Kobayashi (@christopherkobayashi)
 
 ### Package Maintainers and Contributors
 
-- Arvid Norlander (Arch Linux, version 2.x)
+- Arvid Norlander (@VorpalBlade) (Arch Linux, version 2.x)
 - Sebastian Rittau <srittau@debian.org> (Debian GNU/Linux)
 - Jonas Smedegaard <dr@jones.dk> (Debian GNU/Linux)
 - Daniel Markstedt <daniel@mindani.net> (Debian GNU/Linux)
 - Andrew Bauer <zonexpertconsulting@outlook.com> (Fedora)
 - Joe Clarke <jclarke@marcuscom.com> (FreeBSD)
-- Eric Knibbe (Homebrew)
-- Blake Garner (MacPorts)
+- Eric Knibbe (@EricFromCanada) (Homebrew)
+- Blake Garner (@trodemaster) (MacPorts)
 - David Rankin <drankin@bohemians.lexington.ky.us> (NetBSD)
 - Hauke Fath <hf@spg.tu-darmstadt.de> (NetBSD)
 - Antoine Jacoutot <ajacoutot@openbsd.org> (OpenBSD)
-- Antonio Pastor (OpenWrt)
+- Antonio Pastor <antonio.pastor@gmail.com> (OpenWrt)
 
 > ***NOTE:*** This list of package maintainers is nowhere near complete,
 but rather folks who have engaged directly with the Netatalk project.
@@ -169,7 +169,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Mikko Hellsing <mikko@fs.sorl.net>
 - Roger Day <roger.day@globalgraphics.com>
 
-## Version 2.1 - 3.1 (ca. 2005-2018)
+## Version 2.1 - 3.1 (2005-2022)
 
 ### Developers: Version 2.1 - 3.1
 
@@ -177,7 +177,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Didier Gautheron <dgautheron@magic.fr> (-2010)
 - Frank Lahm <franklahm@gmail.com> (2008-2014)
 - HAT <hat@fa2.so-net.ne.jp> (2008-2017)
-- Ralph Boehme <slow@samba.org> (2012-2023)
+- Ralph Boehme <slow@samba.org> (2012-2022)
 - Andrew Stormont <andyjstormont@gmail.com> (2016)
 
 ### Patches: Version 2.1 - 3.1
@@ -213,10 +213,10 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Oichinokata
 - Don Lee
 - Justin Maggard <jmaggard10@gmail.com>
-- Ross Lagerwall
+- Ross Lagerwall (@rosslagerwall)
 - Shannon Wynter <s.wynter@bookmaker.com.au>
 - Doug Goldstein <cardoe@cardoe.com>
-- Eiichirou UDA
+- Eiichirou UDA (@eiichirou)
 - Kyle VanderBeek <kylev@gametime.co>
 - Phil Kauffman <kauffman@cs.uchicago.edu>
 - David Buckley <dbuckley@oreilly.com>
@@ -228,25 +228,24 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Sergei Lomakov
 - Dave Horlick
 - Ruben Kerkhof
-- Michael Witten
+- Michael Witten <mfwitten@gmail.com>
 - Jason
 
 ### Documentation: Version 2.1 - 3.1
 
 - Frank Lahm <franklahm@gmail.com> (Upgrade chapter)
-- Eiichirou UDA (Japanese localization)
+- Eiichirou UDA (@eiichirou) (Japanese localization)
 - HAT <hat@fa2.so-net.ne.jp> (Japanese localization)
 
-## Version 3.2 - 4.x (2019 - present)
+## Version 3.2 - 4.x (2022 - present)
 
 ### Developers: Version 3.2 - 4.x
 
-- Ralph Boehme <slow@samba.org> (2012-2023)
 - Daniel Markstedt <daniel@mindani.net> (2022-)
 - dgsga (2023-2024)
 - NJRoadfan (2023-)
-- Rob Mitchelmore (2025-)
-- Andy Lemin (2025-)
+- Rob Mitchelmore (@cheesestraws) (2025-)
+- Andy Lemin (@andylemin) (2025-)
 
 ### Patches: Version 3.2 - 4.x
 
@@ -255,10 +254,10 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>
 - Andrew Walker <awalker@ixsystems.com>
 - Simon Muras <s.muras@laudert.de>
-- Fabrice Fontaine
+- Fabrice Fontaine (@ffontaine)
 - Etienne Helluy-Lafont <etienne.helluy-lafont@synacktiv.com>
 - Hauke Fath <hf@spg.tu-darmstadt.de>
-- Christopher Kobayashi
+- Christopher Kobayashi (@christopherkobayashi)
 - pgajdos
 - psykose
 - Mikhail Emelchenkov <m@emelchenkov.pro>
@@ -268,13 +267,13 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Petr Gajdos
 - Dohwan Kim <dohwan09@cau.ac.kr>
 - Eric Harmon
-- Derrik Pates
+- Derrik Pates (@demonfoo)
 - Simon McVittie <smcv@collabora.com>
 - cy384
-- Denis Yantarev
-- Ken McLeod
-- Antonio Pastor
-- Eric Knibbe
+- Denis Yantarev <denis.yantarev@gmail.com>
+- Ken McLeod (@thecloudexpanse)
+- Antonio Pastor <antonio.pastor@gmail.com>
+- Eric Knibbe (@EricFromCanada)
 - Eric Helgeson <erichelgeson@gmail.com>
 - sqrmax
 - Nils Frohberg
@@ -283,8 +282,8 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Antoine Jacoutot <ajacoutot@openbsd.org>
 - Sergey Fedorov <vital.had@gmail.com>
 - Jakub Jirutka <jakub@jirutka.cz>
-- Blake Garner
-- OrbisAI Security
+- Blake Garner (@trodemaster)
+- OrbisAI Security (@orbisai0security)
 - DerVerruckteFuchs
 
 And thanks to everyone on the netatalk-devel and netatalk-docs
