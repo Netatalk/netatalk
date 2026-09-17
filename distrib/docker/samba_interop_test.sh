@@ -74,9 +74,7 @@
 #
 # Required env: AFP_USER, AFP_PASS, AFP_GROUP, SHARE_NAME (the first
 # three are hard-required by the sourced env_setup as well)
-# Optional: AFP_VERSION (default 7), SMB_PORT (default 445),
-#           NETATALK_CLIENT_REPO (default the upstream GitHub URL),
-#           NETATALK_CLIENT_REF (default: the repo's latest release tag)
+# Optional: AFP_VERSION (default 7), SMB_PORT (default 445)
 
 set -u
 
@@ -84,7 +82,6 @@ AFP_VERSION="${AFP_VERSION:-7}"
 SMB_PORT="${SMB_PORT:-445}"
 NETATALK_CONFDIR="${NETATALK_CONFDIR:-/etc/netatalk}"
 SHARE_DIR="${NETATALK_SHARE_DIR:-/mnt/afpshare}"
-NETATALK_CLIENT_REPO="${NETATALK_CLIENT_REPO:-https://github.com/Netatalk/netatalk-client.git}"
 SMB_UNC="//localhost/${SHARE_NAME}"
 AFP_MNT=/mnt/afpclient
 SMB_MNT=/mnt/smbclient
@@ -194,46 +191,67 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -qq --yes --no-install-recommends \
     samba smbclient cifs-utils attr python3 fuse3 procps \
-    git ca-certificates meson ninja-build pkg-config build-essential \
-    libgcrypt20-dev libreadline-dev libfuse3-dev > /dev/null || {
+    curl ca-certificates xz-utils meson ninja-build pkg-config build-essential \
+    libgcrypt20-dev libreadline-dev libfuse3-dev || {
     echo "FATAL: package installation failed"
     exit 1
 }
 
 # --------------------------------------------------------------------------
-# Netatalk-Client: pull from GitHub and build (FUSE enabled)
+# Netatalk-Client: download the release tarball and build (FUSE enabled)
 # --------------------------------------------------------------------------
 
-# Build the latest RELEASE of netatalk-client, not a development
-# snapshot: the leg tests the published client against this server.
-# NETATALK_CLIENT_REF overrides (any tag or branch) for pinning or for
-# testing an unreleased client.
-if [ -z "${NETATALK_CLIENT_REF:-}" ]; then
-    NETATALK_CLIENT_REF=$(git ls-remote --tags --sort=-v:refname \
-        "$NETATALK_CLIENT_REPO" \
-        | grep -v '\^{}' | head -1 | sed 's|.*refs/tags/||')
-fi
+# Build the published 1.0.0 release, rather than a development snapshot:
+# the leg tests the released client against this server.
+NETATALK_CLIENT_VERSION=1.0.0
+NETATALK_CLIENT_TARBALL="netatalk-client-${NETATALK_CLIENT_VERSION}.tar.xz"
+NETATALK_CLIENT_URL="https://github.com/Netatalk/netatalk-client/releases/download/${NETATALK_CLIENT_VERSION}/${NETATALK_CLIENT_TARBALL}"
+NETATALK_CLIENT_SHA256=5378b8fdb282a12be9979d4c583d674064b16a5b16041644ab6fa53418757d00
 
-if [ -z "$NETATALK_CLIENT_REF" ]; then
-    echo "FATAL: could not resolve a netatalk-client release tag"
+echo "*** Downloading netatalk-client $NETATALK_CLIENT_VERSION"
+if ! curl --proto '=https' --location --fail --silent --show-error \
+    -o "/tmp/$NETATALK_CLIENT_TARBALL" "$NETATALK_CLIENT_URL"; then
+    echo "FATAL: could not download netatalk-client $NETATALK_CLIENT_VERSION"
     exit 1
 fi
 
-echo "*** Building netatalk-client $NETATALK_CLIENT_REF from $NETATALK_CLIENT_REPO"
-git clone --quiet --depth 1 --branch "$NETATALK_CLIENT_REF" \
-    "$NETATALK_CLIENT_REPO" /tmp/netatalk-client
+if ! (
+    cd /tmp || exit 1
+    printf '%s  %s\n' "$NETATALK_CLIENT_SHA256" "$NETATALK_CLIENT_TARBALL" \
+        | sha256sum -c -
+); then
+    echo "FATAL: netatalk-client checksum verification failed"
+    exit 1
+fi
+
+rm -rf /tmp/netatalk-client
+mkdir -p /tmp/netatalk-client
+if ! tar -xJf "/tmp/$NETATALK_CLIENT_TARBALL" -C /tmp/netatalk-client \
+    --strip-components=1; then
+    echo "FATAL: could not extract netatalk-client $NETATALK_CLIENT_VERSION"
+    exit 1
+fi
+
+echo "*** Building netatalk-client $NETATALK_CLIENT_VERSION"
 (
     cd /tmp/netatalk-client || exit 1
-    meson setup build --buildtype=release > /dev/null
-    meson compile -C build > /dev/null
-    meson install -C build > /dev/null
+    echo "*** Configuring netatalk-client"
+    # libfuse 3.17.2 exposes a stray file-scope semicolon in its public
+    # header; keep all other warnings fatal while allowing that pedantic
+    # third-party-header warning.
+    meson setup build --buildtype=release \
+        -Dc_args=-Wno-error=pedantic || exit 1
+    echo "*** Compiling netatalk-client"
+    meson compile -C build || exit 1
+    echo "*** Installing netatalk-client"
+    meson install -C build || exit 1
 ) || {
     echo "FATAL: netatalk-client build failed"
     exit 1
 }
 # meson installs to /usr/local; register libafpclient with the loader
 ldconfig
-command -v afp_client > /dev/null 2>&1 || export PATH="$PATH:/usr/local/bin"
+command -v afpc > /dev/null 2>&1 || export PATH="$PATH:/usr/local/bin"
 
 # --------------------------------------------------------------------------
 # afp.conf: the one-switch story -- a `multi protocol = yes` volume with
@@ -356,8 +374,8 @@ mount -t cifs "$SMB_UNC" "$SMB_MNT" \
     exit 1
 }
 
-# Netatalk-Client: FUSE mount (afp_client starts afpfsd on demand).
-afp_client mount --user "$AFP_USER" --pass "$AFP_PASS" \
+# Netatalk-Client: FUSE mount (afpc starts afpfsd on demand).
+afpc fs mount --user "$AFP_USER" --pass "$AFP_PASS" \
     "localhost:${SHARE_NAME}" "$AFP_MNT"
 
 AFP_MNT_UP=1
@@ -688,7 +706,7 @@ echo "==== CLIENT-CHAIN INTEROP: $PASS_COUNT passed, $FAIL_COUNT failed, $SKIP_C
 # Teardown after the summary so a wedged unmount cannot eat the results;
 # bounded so it cannot hang the job either.
 timeout 30 umount "$SMB_MNT" 2> /dev/null
-timeout 30 afp_client unmount "$AFP_MNT" 2> /dev/null
+timeout 30 afpc fs unmount "$AFP_MNT" 2> /dev/null
 
 if [ "$FAIL_COUNT" -ne 0 ]; then
     echo "==== smbd log tail ===="
