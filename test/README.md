@@ -25,6 +25,92 @@ clean up any state they create so they remain independent and repeatable.
 directory operations.  Enable it with `-Dwith-fuzzing=true`; see
 [`afpd/FUZZING.md`](afpd/FUZZING.md) for build and usage instructions.
 
+### Code coverage
+
+Build the afpd tests with GCC or Apple Clang coverage instrumentation, then use gcovr to
+collect gcov data and report line, function, and branch coverage. The commands
+below run both directory-cache modes and measure `etc/afpd` and `libatalk`,
+excluding test harness and third-party sources.
+
+#### GCC on Linux
+
+On Linux, install GCC (including G++ and the matching gcov), gcovr, Meson,
+Ninja, and the usual build dependencies, including SQLite development headers.
+From the repository root, configure a fresh build directory and run the tests:
+
+```sh
+CC=gcc CXX=g++ meson setup build-coverage \
+    -Dbuildtype=debug \
+    -Db_coverage=true \
+    -Dwith-appletalk=true \
+    -Dwith-cnid-backends=sqlite \
+    -Dwith-docs= \
+    -Dwith-dtrace=false \
+    -Dwith-init-style=none \
+    -Dwith-tests=true
+meson compile -C build-coverage
+meson test -C build-coverage 'afpd tests*' --print-errorlogs
+```
+
+Generate the coverage reports:
+
+```sh
+mkdir -p build-coverage/coverage
+gcovr --root . --gcov-executable gcov \
+    --filter 'etc/afpd/' --filter 'libatalk/' \
+    --html-details build-coverage/coverage/index.html \
+    --xml-pretty --xml build-coverage/coverage/coverage.xml \
+    --txt build-coverage/coverage/coverage.txt \
+    --print-summary build-coverage
+```
+
+The command prints coverage totals to the terminal. Open
+`build-coverage/coverage/index.html` in a browser for annotated source coverage.
+The same directory contains `coverage.xml` in Cobertura format and
+`coverage.txt` with per-file statistics. Test logs are in
+`build-coverage/meson-logs/`.
+
+#### Apple Clang on macOS
+
+Install Xcode or the Command Line Tools, plus gcovr, Meson, Ninja, and the
+usual build dependencies through Homebrew. From the repository root, use a
+separate build directory for Apple Clang:
+
+```sh
+CC=clang CXX=clang++ \
+    meson setup build-coverage \
+    -Dbuildtype=debug \
+    -Db_coverage=true \
+    -Dwith-homebrew=true \
+    -Dwith-cnid-backends=sqlite \
+    -Dwith-docs= \
+    -Dwith-dtrace=false \
+    -Dwith-init-style=none \
+    -Dwith-tests=true
+meson compile -C build-coverage
+meson test -C build-coverage 'afpd tests*' --print-errorlogs
+mkdir -p build-coverage/coverage
+gcovr --root . --gcov-executable 'xcrun llvm-cov gcov' \
+    --filter 'etc/afpd/' --filter 'libatalk/' \
+    --html-details build-coverage/coverage/index.html \
+    --xml-pretty --xml build-coverage/coverage/coverage.xml \
+    --txt build-coverage/coverage/coverage.txt \
+    --print-summary build-coverage
+```
+
+Apple Clang produces gcov-compatible coverage data, which gcovr reads through
+LLVM's gcov reader supplied by Xcode. Fault-injection tests that require
+`LD_PRELOAD` interposition skip when it is unavailable on macOS, so coverage
+totals will differ from Linux.
+
+#### Interpreting results
+
+Coverage describes the code compiled for this configuration and exercised by
+the harness. Optional features and platform-dependent test skips affect the
+results; server startup and other paths that the harness bypasses remain
+uncovered. Repeated runs accumulate coverage counters, so use a fresh build
+directory when measuring a new baseline.
+
 ## testsuite
 
 `testsuite/` contains AFP client programs that test a running AFP server over

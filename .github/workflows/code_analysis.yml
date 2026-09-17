@@ -17,6 +17,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   static_analysis:
     name: SonarQube Static Analysis
@@ -29,6 +33,8 @@ jobs:
       image: ubuntu:25.10
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
+      CC: gcc
+      CXX: g++
     steps:
       - name: Install dependencies
         run: |
@@ -41,6 +47,7 @@ jobs:
               flex \
               g++ \
               gcc \
+              gcovr \
               git \
               libacl1-dev \
               libavahi-client-dev \
@@ -57,6 +64,7 @@ jobs:
               libmagic-dev \
               libmariadb-dev \
               libpam0g-dev \
+              libsqlite3-dev \
               libtalloc-dev \
               libtirpc-dev \
               libtracker-sparql-3.0-dev \
@@ -77,16 +85,125 @@ jobs:
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           meson setup build \
               -Dbuildtype=debug \
+              -Db_coverage=true \
               -Dwith-appletalk=true \
               -Dwith-docs= \
               -Dwith-init-style=none \
               -Dwith-tests=true \
               -Dwith-testsuite=true
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
+      - name: Run afpd tests
+        run: meson test -C build 'afpd tests*' --print-errorlogs
+      - name: Generate SonarQube coverage report
+        run: |
+          mkdir -p build/coverage
+          gcovr --root . --gcov-executable gcov \
+            --filter 'etc/afpd/' \
+            --filter 'libatalk/' \
+            --sonarqube build/coverage/sonarqube.xml \
+            --print-summary build
       - name: Run SonarQube scan
         uses: sonarsource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          args: --define sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json
+          args: >-
+            --define sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json --define sonar.coverageReportPaths=build/coverage/sonarqube.xml
+
+  afpd-coverage:
+    name: afpd Code Coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    env:
+      CC: gcc
+      CXX: g++
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends \
+            ca-certificates \
+            g++ \
+            gcc \
+            gcovr \
+            libacl1-dev \
+            libevent-dev \
+            libgcrypt20-dev \
+            libiniparser-dev \
+            libsqlite3-dev \
+            meson \
+            ninja-build \
+            pkg-config
+      - name: Configure
+        run: |
+          meson setup build-coverage \
+            -Dbuildtype=debug \
+            -Db_coverage=true \
+            -Dwith-appletalk=true \
+            -Dwith-cnid-backends=sqlite \
+            -Dwith-docs= \
+            -Dwith-dtrace=false \
+            -Dwith-init-style=none \
+            -Dwith-tests=true
+      - name: Build
+        id: build
+        run: meson compile -C build-coverage
+      - name: Run afpd tests
+        run: meson test -C build-coverage 'afpd tests*' --print-errorlogs
+      - name: Generate coverage reports
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          mkdir -p build-coverage/coverage
+          gcovr --root . --gcov-executable gcov \
+            --filter 'etc/afpd/' \
+            --filter 'libatalk/' \
+            --html-details build-coverage/coverage/index.html \
+            --txt build-coverage/coverage/coverage.txt \
+            --print-summary build-coverage \
+            | tee build-coverage/coverage/summary.txt
+          {
+            echo '## afpd code coverage'
+            echo
+            echo 'Coverage of `etc/afpd` and `libatalk` from the afpd tests in both directory-cache modes.'
+            echo
+            echo '```text'
+            cat build-coverage/coverage/summary.txt
+            echo '```'
+            echo
+            echo 'Download the `afpd-coverage` artifact and open `coverage/index.html` for annotated source coverage.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Report code coverage
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        uses: threeal/gcovr-action@64cb417ed6f143cafe1c69611922672002f460bb # v1.2.0
+        with:
+          filter: |
+            etc/afpd/
+            libatalk/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          xml-out: build-coverage/coverage/coverage.xml
+      - name: Publish Cobertura coverage report
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        uses: 5monkeys/cobertura-action@ee5787cc56634acddedc51f21c7947985531e6eb # v14
+        with:
+          path: build-coverage/coverage/coverage.xml
+          fail_below_threshold: false
+          minimum_coverage: 50
+          only_changed_files: true
+          show_line: true
+          show_branch: true
+      - name: Upload coverage reports and test logs
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: afpd-coverage
+          path: |
+            build-coverage/coverage/
+            build-coverage/meson-logs/
+          if-no-files-found: error
+          retention-days: 30
