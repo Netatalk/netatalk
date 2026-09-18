@@ -188,7 +188,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           xml-out: build-coverage/coverage/coverage.xml
       - name: Publish Cobertura coverage report
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        # This action annotates changed lines on a pull request
+        if: ${{ github.event_name == 'pull_request' && !cancelled() && steps.build.outcome == 'success' }}
         uses: 5monkeys/cobertura-action@ee5787cc56634acddedc51f21c7947985531e6eb # v14
         with:
           path: build-coverage/coverage/coverage.xml
