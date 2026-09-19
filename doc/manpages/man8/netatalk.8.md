@@ -4,7 +4,9 @@ netatalk — Netatalk AFP server service controller daemon
 
 # Synopsis
 
-**netatalk** [-F *configfile*]
+**netatalk** [-d] [-F *configfile*]
+
+**netatalk** --unprivileged --pidfile *path* [-d] [-F *configfile*]
 
 **netatalk** [-v | -V]
 
@@ -33,6 +35,19 @@ configuration file called *afp.conf*.
 
 > Specifies the configuration file to use.
 
+**-u** | **--unprivileged**
+
+> Start a restricted single-user AFP server without root privileges. The
+> daemon only accepts the UNIX identity that started it, uses that identity's
+> filesystem permissions, and requires SQLite CNID plus SRP authentication.
+> See the Configuration manual for all requirements and limitations.
+
+**-P** *path* | **--pidfile** *path*
+
+> Set the controller PID file used by unprivileged mode. This option is
+> required with **--unprivileged**. The path must be absolute and located in
+> private, user-owned state; it is not accepted for the normal system service.
+
 **-v** | **-V**
 
 > Print version information and exit.
@@ -46,7 +61,8 @@ SIGTERM
 SIGHUP
 
 > Sending a *SIGHUP* will cause the Netatalk AFP and CNID daemons to reload
-their configurations from *afp.conf*.
+their configurations from *afp.conf*. Configuration reloads are disabled in
+unprivileged mode; restart **netatalk** after changing *afp.conf*.
 
 # Files
 
