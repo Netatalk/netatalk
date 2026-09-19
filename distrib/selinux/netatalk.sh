@@ -1,52 +1,56 @@
-#!/bin/sh -e
+#!/bin/sh
+set -eu
 
-DIRNAME=$(dirname $0)
-cd $DIRNAME
-USAGE="$0 [ --update ]"
-if [ $(id -u) != 0 ]; then
-    echo 'You must be root to run this script'
+cd "$(dirname "$0")"
+usage="Usage: $0 [--build | --audit]"
+if [ "$#" -gt 1 ]; then
+    printf '%s\n' "$usage" >&2
     exit 1
 fi
 
-if [ $# -eq 1 ]; then
-    if [ "$1" = "--update" ]; then
-        time=$(ls -l --time-style="+%x %X" netatalk.te | awk '{ printf "%s %s", $6, $7 }')
-        rules=$(ausearch --start $time -m avc --raw -se netatalk)
-        if [ x"$rules" != "x" ]; then
-            echo "Found avc's to update policy with"
-            echo -e "$rules" | audit2allow -R
-            echo "Do you want these changes added to policy [y/n]?"
-            read ANS
-            if [ "$ANS" = "y" -o "$ANS" = "Y" ]; then
-                echo "Updating policy"
-                echo -e "$rules" | audit2allow -R >> netatalk.te
-                # Fall though and rebuild policy
-            else
-                exit 0
-            fi
-        else
-            echo "No new avcs found"
-            exit 0
-        fi
-    else
-        echo -e $USAGE
+case "${1:-}" in
+    --build)
+        # Compilation does not require root or modify the installed policy.
+        exec make -f /usr/share/selinux/devel/Makefile netatalk.pp
+        ;;
+    --audit | '') ;;
+    *)
+        printf '%s\n' "$usage" >&2
+        printf '%s\n' 'Use --audit to inspect denials; automatic policy updates are not supported.' >&2
         exit 1
-    fi
-elif [ $# -ge 2 ]; then
-    echo -e $USAGE
+        ;;
+esac
+
+if [ "$(id -u)" -ne 0 ]; then
+    printf '%s\n' 'Run as root to inspect audit logs or install the policy.' >&2
     exit 1
 fi
 
-echo "Building and Loading Policy"
-set -x
-make -f /usr/share/selinux/devel/Makefile netatalk.pp || exit
-/usr/sbin/semodule -i netatalk.pp
+if [ "${1:-}" = '--audit' ]; then
+    # Denials for excluded backends are intentional. Never feed them
+    # automatically into audit2allow or append generated rules to the policy.
+    exec ausearch -m AVC,USER_AVC -ts recent -se netatalk_t -i
+fi
 
-# Generate a man page of the installed module
+printf '%s\n' 'Building and loading policy'
+make -f /usr/share/selinux/devel/Makefile netatalk.pp
+semodule -i netatalk.pp
+
+# Apply both supported and excluded labels to files already installed.
+# Keep this list in sync with the RPM spec's relabel_files macro.
+for path in /usr/sbin/netatalk /usr/sbin/afpd \
+    /usr/sbin/cnid_metad /usr/sbin/cnid_dbd /etc/netatalk \
+    /var/lib/netatalk /var/lock/netatalk /run/lock/netatalk \
+    /var/log/netatalk.log /var/log/netatalk; do
+    if [ -e "$path" ]; then
+        restorecon -R -v "$path"
+    fi
+done
+
+# Generate documentation and an RPM for distribution.
 sepolicy manpage -p . -d netatalk_t
-# Fixing the file context on /usr/local/sbin/netatalk
-/sbin/restorecon -F -R -v /usr/sbin/netatalk
-# Generate a rpm package for the newly generated policy
-
-pwd=$(pwd)
-rpmbuild --define "_sourcedir ${pwd}" --define "_specdir ${pwd}" --define "_builddir ${pwd}" --define "_srcrpmdir ${pwd}" --define "_rpmdir ${pwd}" --define "_buildrootdir ${pwd}/.build" -ba netatalk_selinux.spec
+build_dir=$(pwd)
+rpmbuild --define "_sourcedir ${build_dir}" --define "_specdir ${build_dir}" \
+    --define "_builddir ${build_dir}" --define "_srcrpmdir ${build_dir}" \
+    --define "_rpmdir ${build_dir}" --define "_buildrootdir ${build_dir}/.build" \
+    -ba netatalk_selinux.spec
