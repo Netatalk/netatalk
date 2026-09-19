@@ -1,0 +1,395 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.6.0\n"
+"POT-Creation-Date: 2026-09-19 22:42+0200\n"
+"PO-Revision-Date: 2026-09-19 22:42+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:1 manpages/man1/aecho.1.md:1
+#: manpages/man1/afp_lantest.1.md:1 manpages/man1/afp_logintest.1.md:1
+#: manpages/man1/afp_spectest.1.md:1 manpages/man1/afp_speedtest.1.md:1
+#: manpages/man1/afparg.1.md:1 manpages/man1/afpldaptest.1.md:1
+#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
+#: manpages/man1/asip-status.1.md:1 manpages/man1/dbd.1.md:1
+#: manpages/man1/fce_listen.1.md:1 manpages/man1/getzones.1.md:1
+#: manpages/man1/nad.1.md:1 manpages/man1/nbplkup.1.md:1
+#: manpages/man1/nbprgstr.1.md:1 manpages/man1/pap.1.md:1
+#: manpages/man1/rtmpqry.1.md:1 manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/fce_ev_script.8.md:1 manpages/man8/macipgw.8.md:1
+#: manpages/man8/netatalk.8.md:1 manpages/man8/papd.8.md:1
+#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
+msgstr "名前"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:5 manpages/man1/aecho.1.md:5
+#: manpages/man1/afp_lantest.1.md:5 manpages/man1/afp_logintest.1.md:5
+#: manpages/man1/afp_spectest.1.md:5 manpages/man1/afp_speedtest.1.md:5
+#: manpages/man1/afparg.1.md:5 manpages/man1/afpldaptest.1.md:5
+#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
+#: manpages/man1/asip-status.1.md:5 manpages/man1/dbd.1.md:5
+#: manpages/man1/fce_listen.1.md:5 manpages/man1/getzones.1.md:5
+#: manpages/man1/nad.1.md:5 manpages/man1/nbplkup.1.md:5
+#: manpages/man1/nbprgstr.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man1/rtmpqry.1.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/fce_ev_script.8.md:5
+#: manpages/man8/macipgw.8.md:5 manpages/man8/netatalk.8.md:5
+#: manpages/man8/papd.8.md:5 manpages/man8/papstatus.8.md:5
+#: manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
+msgstr "概要"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:19 manpages/man1/aecho.1.md:9
+#: manpages/man1/afp_lantest.1.md:10 manpages/man1/afp_logintest.1.md:11
+#: manpages/man1/afp_spectest.1.md:12 manpages/man1/afp_speedtest.1.md:11
+#: manpages/man1/afparg.1.md:11 manpages/man1/afpldaptest.1.md:11
+#: manpages/man1/afppasswd.1.md:11 manpages/man1/afpstats.1.md:11
+#: manpages/man1/asip-status.1.md:13 manpages/man1/dbd.1.md:11
+#: manpages/man1/fce_listen.1.md:9 manpages/man1/getzones.1.md:9
+#: manpages/man1/nad.1.md:12 manpages/man1/nbplkup.1.md:9
+#: manpages/man1/nbprgstr.1.md:11 manpages/man1/pap.1.md:9
+#: manpages/man1/rtmpqry.1.md:9 manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/fce_ev_script.8.md:9
+#: manpages/man8/macipgw.8.md:11 manpages/man8/netatalk.8.md:11
+#: manpages/man8/papd.8.md:11 manpages/man8/papstatus.8.md:9
+#: manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
+msgstr "説明"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
+#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:29
+#: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:27
+#: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
+#: manpages/man1/afppasswd.1.md:142 manpages/man1/afpstats.1.md:22
+#: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:24
+#: manpages/man1/fce_listen.1.md:17 manpages/man1/getzones.1.md:16
+#: manpages/man1/nad.1.md:47 manpages/man1/nbplkup.1.md:19
+#: manpages/man1/nbprgstr.1.md:20 manpages/man1/pap.1.md:29
+#: manpages/man1/rtmpqry.1.md:15 manpages/man8/a2boot.8.md:32
+#: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
+#: manpages/man8/cnid_dbd.8.md:58 manpages/man8/cnid_metad.8.md:21
+#: manpages/man8/fce_ev_script.8.md:26 manpages/man8/macipgw.8.md:38
+#: manpages/man8/netatalk.8.md:26 manpages/man8/papd.8.md:37
+#: manpages/man8/papstatus.8.md:24 manpages/man8/timelord.8.md:25
+#, no-wrap
+msgid "Options"
+msgstr "オプション"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
+#: manpages/man1/afp_lantest.1.md:370 manpages/man1/afp_logintest.1.md:156
+#: manpages/man1/afp_spectest.1.md:268 manpages/man1/afp_speedtest.1.md:246
+#: manpages/man1/afparg.1.md:147 manpages/man1/afpldaptest.1.md:34
+#: manpages/man1/afppasswd.1.md:237 manpages/man1/afpstats.1.md:56
+#: manpages/man1/fce_listen.1.md:48 manpages/man1/getzones.1.md:84
+#: manpages/man1/pap.1.md:93 manpages/man1/rtmpqry.1.md:52
+#: manpages/man5/afp.conf.5.md:1564 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:171
+#: manpages/man8/afpd.8.md:139 manpages/man8/atalkd.8.md:79
+#: manpages/man8/cnid_dbd.8.md:148 manpages/man8/cnid_metad.8.md:47
+#: manpages/man8/fce_ev_script.8.md:95 manpages/man8/macipgw.8.md:110
+#: manpages/man8/netatalk.8.md:57 manpages/man8/papstatus.8.md:49
+#, no-wrap
+msgid "See Also"
+msgstr "関連項目"
+
+#. type: Title #
+#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:207
+#: manpages/man1/afp_logintest.1.md:108 manpages/man1/afp_spectest.1.md:210
+#: manpages/man1/afp_speedtest.1.md:178 manpages/man1/afparg.1.md:80
+#: manpages/man1/afppasswd.1.md:110 manpages/man1/afpstats.1.md:47
+#: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:25
+#: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:521
+#: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
+#: manpages/man1/rtmpqry.1.md:34 manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1518
+#: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
+#: manpages/man5/papd.conf.5.md:98 manpages/man8/fce_ev_script.8.md:76
+#: manpages/man8/macipgw.8.md:90
+#, no-wrap
+msgid "Examples"
+msgstr "例"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:4
+msgid "fce_ev_script — Netatalk Filesystem Change Events notification helper"
+msgstr "fce_ev_script — Netatalk Filesystem Change Event 通知ヘルパー"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:8
+#, no-wrap
+msgid "**fce_ev_script** [-h] [-v *version*] [-e *event*] [-i *id*] [-P *path*] [-S *source*] [-p *pid*] [-u *user*]\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:14
+#, no-wrap
+msgid ""
+"**fce_ev_script** is a notification helper for Netatalk's Filesystem Change\n"
+"Event (FCE) mechanism.  It is intended to be used with the **fce notify script**\n"
+"option in *afp.conf*.\n"
+msgstr ""
+"**fce_ev_script** は、Netatalk の Filesystem Change Event (FCE) 機構用の通知ヘルパー\n"
+"である。*afp.conf* の **fce notify script** オプションと併用することを想定している。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:18
+msgid ""
+"When **afpd** emits an FCE event and **fce notify script** is configured, "
+"**afpd** executes the configured script in the background and passes event "
+"details as command-line options."
+msgstr ""
+"**afpd** が FCE イベントを発行し、**fce notify script** が設定されている場"
+"合、**afpd** は設定されたスクリプトをバックグラウンドで実行し、コマンドライン"
+"オプションとしてイベントの詳細を渡す。"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:22
+msgid ""
+"By default, **fce_ev_script** writes events to syslog with the tag *netatalk-"
+"fce*.  If the **NETATALK_FCE_LOG_FILE** environment variable is set, events "
+"are appended to that file instead."
+msgstr ""
+"デフォルトでは、**fce_ev_script** は *netatalk-fce* というタグを付けてイベン"
+"トを syslog に書き込む。**NETATALK_FCE_LOG_FILE** 環境変数が設定されている場"
+"合は、代わりにそのファイルへイベントを追記する。"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:25
+#, no-wrap
+msgid ""
+"> **Note:** This utility requires netatalk to be built with FCE support enabled\n"
+"> (the *-Dwith-fce=true* meson build option, which is enabled by default).\n"
+msgstr ""
+"> **注記:** このユーティリティーを使用するには、FCE サポートを有効にして netatalk をビルド\n"
+"> する必要がある（デフォルトで有効な *-Dwith-fce=true* Meson ビルドオプション）。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:30
+#, no-wrap
+msgid ""
+"**-h**\n"
+": Show help text and exit.\n"
+msgstr ""
+"**-h**\n"
+": ヘルプテキストを表示して終了する。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:33
+#, no-wrap
+msgid ""
+"**-v** *version*\n"
+": FCE script argument version.\n"
+msgstr ""
+"**-v** *version*\n"
+": FCE スクリプト引数のバージョン。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:36
+#, no-wrap
+msgid ""
+"**-e** *event*\n"
+": FCE event name, such as *FCE_FILE_CREATE*.\n"
+msgstr ""
+"**-e** *event*\n"
+": *FCE_FILE_CREATE* などの FCE イベント名。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:39
+#, no-wrap
+msgid ""
+"**-i** *id*\n"
+": FCE event id.\n"
+msgstr ""
+"**-i** *id*\n"
+": FCE イベント ID。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:42
+#, no-wrap
+msgid ""
+"**-P** *path*\n"
+": Event path.\n"
+msgstr ""
+"**-P** *path*\n"
+": イベントのパス。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:45
+#, no-wrap
+msgid ""
+"**-S** *source*\n"
+": Source path for move or rename events.\n"
+msgstr ""
+"**-S** *source*\n"
+": 移動または名前変更イベントの移動元パス。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:48
+#, no-wrap
+msgid ""
+"**-p** *pid*\n"
+": Process id of the **afpd** process that emitted the event.\n"
+msgstr ""
+"**-p** *pid*\n"
+": イベントを発行した **afpd** プロセスのプロセス ID。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:51
+#, no-wrap
+msgid ""
+"**-u** *user*\n"
+": AFP session user that emitted the event.\n"
+msgstr ""
+"**-u** *user*\n"
+": イベントを発行した AFP セッションユーザー。\n"
+
+#. type: Title #
+#: manpages/man8/fce_ev_script.8.md:52
+#, no-wrap
+msgid "Environment"
+msgstr "環境"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:57
+#, no-wrap
+msgid ""
+"**NETATALK_FCE_LOG_FILE**\n"
+": Append event lines to this file instead of syslog.  The file must be writable\n"
+"by the AFP session users that may trigger events.\n"
+msgstr ""
+"**NETATALK_FCE_LOG_FILE**\n"
+": syslog ではなく、このファイルにイベント行を追記する。このファイルは、イベントを発生させる\n"
+"可能性のある AFP セッションユーザーが書き込み可能でなければならない。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:61
+#, no-wrap
+msgid ""
+"**NETATALK_FCE_LOGGER**\n"
+": Logger command to use when **NETATALK_FCE_LOG_FILE** is not set.  Default:\n"
+"*logger*.\n"
+msgstr ""
+"**NETATALK_FCE_LOGGER**\n"
+": **NETATALK_FCE_LOG_FILE** が設定されていない場合に使用する logger コマンド。デフォルトは\n"
+"*logger*。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:65
+#, no-wrap
+msgid ""
+"**NETATALK_FCE_LOG_TAG**\n"
+": Syslog tag to use when **NETATALK_FCE_LOG_FILE** is not set.  Default:\n"
+"*netatalk-fce*.\n"
+msgstr ""
+"**NETATALK_FCE_LOG_TAG**\n"
+": **NETATALK_FCE_LOG_FILE** が設定されていない場合に使用する syslog タグ。デフォルトは\n"
+"*netatalk-fce*。\n"
+
+#. type: Title #
+#: manpages/man8/fce_ev_script.8.md:66
+#, no-wrap
+msgid "Execution Context"
+msgstr "実行コンテキスト"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:70
+#, no-wrap
+msgid ""
+"**afpd** executes the configured notification script as the AFP session user,\n"
+"not necessarily as root or as the user that started Netatalk.\n"
+msgstr ""
+"**afpd** は設定された通知スクリプトを AFP セッションユーザーとして実行する。\n"
+"root や Netatalk を起動したユーザーとして実行されるとは限らない。\n"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:75
+msgid ""
+"The configured script path must be executable by that user, and every parent "
+"directory in the path must be searchable by that user.  If file logging is "
+"enabled with **NETATALK_FCE_LOG_FILE**, the log file must also be writable "
+"by that user."
+msgstr ""
+"設定したスクリプトのパスはそのユーザーが実行可能でなければならず、パス内のす"
+"べての親ディレクトリーはそのユーザーが検索可能でなければならない。"
+"**NETATALK_FCE_LOG_FILE** によるファイルログが有効な場合、ログファイルもその"
+"ユーザーが書き込み可能でなければならない。"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:79
+msgid "Configure **afpd** to run the installed helper for each FCE event:"
+msgstr ""
+"各 FCE イベントでインストール済みのヘルパーを実行するよう **afpd** を設定す"
+"る:"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:84
+#, no-wrap
+msgid ""
+"    [Global]\n"
+"    fce notify script = /usr/local/libexec/netatalk/fce_ev_script\n"
+"    fce version = 2\n"
+"    fce events = fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:87
+msgid ""
+"Replace */usr/local/libexec* with the libexec directory configured for your "
+"installation."
+msgstr ""
+"インストール環境で設定された libexec ディレクトリーで */usr/local/libexec* を"
+"置き換える。"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:89 manual/FCE.md:162
+msgid ""
+"For diagnostic file logging, wrap the helper and set "
+"**NETATALK_FCE_LOG_FILE**:"
+msgstr ""
+"診断用のファイルログを取得するために、ヘルパーをラップして "
+"**NETATALK_FCE_LOG_FILE** を設定する:"
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:94
+#, no-wrap
+msgid ""
+"    #!/bin/sh\n"
+"    NETATALK_FCE_LOG_FILE=/tmp/fce.log\n"
+"    export NETATALK_FCE_LOG_FILE\n"
+"    exec /usr/local/libexec/netatalk/fce_ev_script \"$@\"\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/fce_ev_script.8.md:97
+#, no-wrap
+msgid "**afpd**(8), **afp.conf**(5), **fce_listen**(1)\n"
+msgstr ""
