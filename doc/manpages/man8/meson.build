@@ -1,31 +1,4 @@
-manfiles = [
-    'afpd',
-    'netatalk',
-]
-
-if enable_fce
-    manfiles += [
-        'fce_ev_script',
-    ]
-endif
-
-if build_dbd_docs
-    manfiles += [
-        'cnid_dbd',
-        'cnid_metad',
-    ]
-endif
-
-if enable_appletalk
-    manfiles += [
-        'a2boot',
-        'atalkd',
-        'macipgw',
-        'papd',
-        'papstatus',
-        'timelord',
-    ]
-endif
+manfiles = manpage_admin_commands
 
 foreach man : manfiles
     custom_target(

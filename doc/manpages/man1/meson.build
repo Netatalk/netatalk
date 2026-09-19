@@ -1,24 +1,6 @@
-manfiles = [
-    'afpldaptest',
-    'afppasswd',
-    'afpstats',
-    'addump',
-    'asip-status',
-    'dbd',
-    'fce_listen',
-    'nad',
-]
+manfiles = manpage_user_commands
 
 if enable_appletalk
-    manfiles += [
-        'aecho',
-        'getzones',
-        'nbplkup',
-        'nbprgstr',
-        'pap',
-        'rtmpqry',
-    ]
-
     install_data(
         ['nbp.1', 'nbpunrgstr.1'],
         install_dir: mandir / 'man1',
@@ -27,14 +9,6 @@ if enable_appletalk
 endif
 
 if build_testsuite
-    manfiles += [
-        'afp_lantest',
-        'afp_logintest',
-        'afp_spectest',
-        'afp_speedtest',
-        'afparg',
-    ]
-
     install_data('afptest.1', install_dir: mandir / 'man1', install_tag: 'man')
 endif
 

@@ -1,16 +1,6 @@
-manfiles = [
-    'afp_signature.conf',
-    'afp_voluuid.conf',
-    'afp.conf',
-    'extmap.conf',
-]
+manfiles = manpage_configuration_files
 
 if enable_appletalk
-    manfiles += [
-        'atalkd.conf',
-        'papd.conf',
-    ]
-
     install_data('macipgw.conf.5', install_dir: mandir / 'man5', install_tag: 'man')
 endif
 
