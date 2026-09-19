@@ -17,46 +17,14 @@ Manual
 * [License](License.html)
 * [Legal Notices](Legal.html)
 
-User Tools
+User Commands
 
-* [addump](addump.1.html)
-* [aecho](aecho.1.html)
-* [afp_lantest](afp_lantest.1.html)
-* [afp_logintest](afp_logintest.1.html)
-* [afp_spectest](afp_spectest.1.html)
-* [afp_speedtest](afp_speedtest.1.html)
-* [afparg](afparg.1.html)
-* [afpldaptest](afpldaptest.1.html)
-* [afppasswd](afppasswd.1.html)
-* [afpstats](afpstats.1.html)
-* [asip-status](asip-status.1.html)
-* [dbd](dbd.1.html)
-* [fce_listen](fce_listen.1.html)
-* [getzones](getzones.1.html)
-* [nad](nad.1.html)
-* [nbplkup](nbplkup.1.html)
-* [nbprgstr](nbprgstr.1.html)
-* [pap](pap.1.html)
-* [rtmpqry](rtmpqry.1.html)
+@USER_COMMANDS@
 
 Configuration Files
 
-* [afp.conf](afp.conf.5.html)
-* [afp_signature.conf](afp_signature.conf.5.html)
-* [afp_voluuid.conf](afp_voluuid.conf.5.html)
-* [atalkd.conf](atalkd.conf.5.html)
-* [extmap.conf](extmap.conf.5.html)
-* [papd.conf](papd.conf.5.html)
+@CONFIGURATION_FILES@
 
-Daemons and Admin Tools
+Administrator Commands
 
-* [a2boot](a2boot.8.html)
-* [afpd](afpd.8.html)
-* [atalkd](atalkd.8.html)
-* [cnid_dbd](cnid_dbd.8.html)
-* [cnid_metad](cnid_metad.8.html)
-* [macipgw](macipgw.8.html)
-* [netatalk](netatalk.8.html)
-* [papd](papd.8.html)
-* [papstatus](papstatus.8.html)
-* [timelord](timelord.8.html)
+@ADMIN_COMMANDS@

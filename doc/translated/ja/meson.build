@@ -15,49 +15,154 @@ manual_pages = [
     'Upgrading',
 ]
 
+ja_manpage_user_commands_files = []
+ja_manpage_configuration_file_files = []
+ja_manpage_admin_commands_files = []
+if build_man_docs
+    make_manpage_toc = find_program(
+        meson.project_source_root() / 'doc' / 'manual' / 'make_manpage_toc.sh',
+    )
+    foreach page : manpage_user_commands
+        ja_manpage_user_commands_files += meson.project_source_root() / 'doc' / 'manpages' / 'man1' / (page + '.1.md')
+    endforeach
+
+    foreach page : manpage_configuration_files
+        ja_manpage_configuration_file_files += meson.project_source_root() / 'doc' / 'manpages' / 'man5' / (page + '.5.md')
+    endforeach
+
+    foreach page : manpage_admin_commands
+        # fce_ev_script has no Japanese translation to install yet.
+        if page != 'fce_ev_script'
+            ja_manpage_admin_commands_files += meson.project_source_root() / 'doc' / 'manpages' / 'man8' / (page + '.8.md')
+        endif
+    endforeach
+endif
+
+ja_sidebar_config = configuration_data()
+if build_man_docs
+    ja_sidebar_config.set(
+        'USER_COMMANDS',
+        run_command(
+            make_manpage_toc,
+            'sidebar',
+            ja_manpage_user_commands_files,
+            check: true,
+        ).stdout().strip(),
+    )
+    ja_sidebar_config.set(
+        'CONFIGURATION_FILES',
+        run_command(
+            make_manpage_toc,
+            'sidebar',
+            ja_manpage_configuration_file_files,
+            check: true,
+        ).stdout().strip(),
+    )
+    ja_sidebar_config.set(
+        'ADMIN_COMMANDS',
+        run_command(
+            make_manpage_toc,
+            'sidebar',
+            ja_manpage_admin_commands_files,
+            check: true,
+        ).stdout().strip(),
+    )
+else
+    ja_sidebar_config.set('USER_COMMANDS', '')
+    ja_sidebar_config.set('CONFIGURATION_FILES', '')
+    ja_sidebar_config.set('ADMIN_COMMANDS', '')
+endif
+manual_sidebar = configure_file(
+    input: '_Sidebar.md',
+    output: '_Sidebar.md',
+    configuration: ja_sidebar_config,
+    install: build_website,
+    install_dir: docs_install_path / 'manual' / 'ja',
+)
+
+ja_index_config = configuration_data()
+if build_man_docs
+    ja_index_config.set(
+        'USER_COMMANDS',
+        run_command(
+            make_manpage_toc,
+            'toc',
+            ja_manpage_user_commands_files,
+            check: true,
+        ).stdout().strip(),
+    )
+    ja_index_config.set(
+        'CONFIGURATION_FILES',
+        run_command(
+            make_manpage_toc,
+            'toc',
+            ja_manpage_configuration_file_files,
+            check: true,
+        ).stdout().strip(),
+    )
+    ja_index_config.set(
+        'ADMIN_COMMANDS',
+        run_command(
+            make_manpage_toc,
+            'toc',
+            ja_manpage_admin_commands_files,
+            check: true,
+        ).stdout().strip(),
+    )
+else
+    ja_index_config.set('USER_COMMANDS', '')
+    ja_index_config.set('CONFIGURATION_FILES', '')
+    ja_index_config.set('ADMIN_COMMANDS', '')
+endif
+manual_index = configure_file(
+    input: 'index.md',
+    output: 'index.md',
+    configuration: ja_index_config,
+    install: build_website,
+    install_dir: docs_install_path / 'manual' / 'ja',
+)
+
+# Localized HTML manuals are built without localized HTML man pages.  Keep
+# these references for the website, but omit them from local HTML output.
+manual_html_index = custom_target(
+    'manual_html_index',
+    input: manual_index,
+    output: 'index-html.md',
+    command: [
+        'sed',
+        '/^## ユーザーコマンド$/,$d',
+        '@INPUT@',
+    ],
+    capture: true,
+)
+
 if build_website
     manual_pages += [
         '_Sidebar',
-        'a2boot.8',
-        'addump.1',
-        'aecho.1',
-        'afp.conf.5',
-        'afp_signature.conf.5',
-        'afp_voluuid.conf.5',
-        'afpd.8',
-        'afp_lantest.1',
-        'afp_logintest.1',
-        'afp_spectest.1',
-        'afp_speedtest.1',
-        'afparg.1',
-        'afpldaptest.1',
-        'afppasswd.1',
-        'afpstats.1',
-        'asip-status.1',
-        'atalkd.8',
-        'atalkd.conf.5',
-        'cnid_dbd.8',
-        'cnid_metad.8',
-        'dbd.1',
-        'extmap.conf.5',
-        'fce_listen.1',
-        'getzones.1',
-        'macipgw.8',
-        'nad.1',
-        'nbplkup.1',
-        'nbprgstr.1',
-        'netatalk.8',
-        'pap.1',
-        'papd.8',
-        'papd.conf.5',
-        'papstatus.8',
-        'rtmpqry.1',
-        'timelord.8',
     ]
-endif
 
-if build_website
+    if build_man_docs
+        foreach page : manpage_user_commands
+            manual_pages += page + '.1'
+        endforeach
+
+        foreach page : manpage_configuration_files
+            manual_pages += page + '.5'
+        endforeach
+
+        foreach page : manpage_admin_commands
+            # fce_ev_script has no Japanese translation to install yet.
+            if page != 'fce_ev_script'
+                manual_pages += page + '.8'
+            endif
+        endforeach
+    endif
+
     foreach page : manual_pages
+        if page == 'index' or page == '_Sidebar'
+            continue
+        endif
+
         custom_target(
             'website_' + page,
             input: page + '.md',
@@ -75,10 +180,15 @@ if build_website
     endforeach
 else
     foreach page : manual_pages
+        page_input = page + '.md'
+        if page == 'index'
+            page_input = manual_html_index
+        endif
+
         if pandoc.found()
             custom_target(
                 'manual_' + page,
-                input: [navlinks, page + '.md'],
+                input: page_input,
                 output: page + '.html',
                 command: [
                     pandoc,
@@ -93,7 +203,7 @@ else
         elif cmarkgfm.found()
             custom_target(
                 'manual_' + page,
-                input: [navlinks, page + '.md'],
+                input: page_input,
                 output: page + '.html',
                 command: [
                     cmarkgfm,
@@ -109,7 +219,7 @@ else
         elif cmark.found()
             custom_target(
                 'manual_' + page,
-                input: [navlinks, page + '.md'],
+                input: page_input,
                 output: page + '.html',
                 command: [
                     'sh',

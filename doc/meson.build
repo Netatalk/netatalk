@@ -1,8 +1,75 @@
+manpage_user_commands = [
+    'addump',
+    'afpldaptest',
+    'afppasswd',
+    'afpstats',
+    'asip-status',
+    'dbd',
+    'fce_listen',
+    'nad',
+]
+
+manpage_configuration_files = [
+    'afp.conf',
+    'afp_signature.conf',
+    'afp_voluuid.conf',
+    'extmap.conf',
+]
+
+manpage_admin_commands = [
+    'afpd',
+    'netatalk',
+]
+
+if build_dbd_docs
+    manpage_admin_commands += [
+        'cnid_dbd',
+        'cnid_metad',
+    ]
+endif
+
+if enable_fce
+    manpage_admin_commands += [
+        'fce_ev_script',
+    ]
+endif
+
+if build_testsuite
+    manpage_user_commands += [
+        'afp_lantest',
+        'afp_logintest',
+        'afp_spectest',
+        'afp_speedtest',
+        'afparg',
+    ]
+endif
+
+if enable_appletalk
+    manpage_user_commands += [
+        'aecho',
+        'getzones',
+        'nbplkup',
+        'nbprgstr',
+        'pap',
+        'rtmpqry',
+    ]
+    manpage_configuration_files += [
+        'atalkd.conf',
+        'papd.conf',
+    ]
+    manpage_admin_commands += [
+        'a2boot',
+        'atalkd',
+        'macipgw',
+        'papd',
+        'papstatus',
+        'timelord',
+    ]
+endif
+
 if build_man_docs
     subdir('manpages')
 endif
-
-navlinks = '_Navlinks.md'
 
 if build_html_docs
     subdir('manual')

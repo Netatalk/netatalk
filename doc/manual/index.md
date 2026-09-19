@@ -1,44 +1,46 @@
 # Introduction to Netatalk
 
-Netatalk is an Open Source software package that can be used to turn a
-\*NIX machine into a performant and light-weight AFP file server.
+This manual explains how to install, configure, and operate Netatalk. It is
+intended for system administrators setting up AFP file services, whether for
+current macOS systems or older Macintosh and Apple II clients.
 
-AFP (Apple Filing Protocol) is a network file system protocol originally
-developed by Apple for use in their Macintosh computers. It was the
-primary file sharing protocol for Mac OS for the better part of 30 years.
-AFP 3.4 is the latest version of the protocol, introduced with Mac OS X 10.8
-Mountain Lion. Netatalk can speak AFP 2 and AFP 3, allowing it to support
-a wide range of clients from the latest macOS to very old Classic Mac OS
-and Apple II machines.
+Start with [Installation](Installation.html) to obtain Netatalk and prepare
+the host, then continue to [Configuration](Configuration.html) for the
+initial server and volume setup. The following chapters describe individual
+features and supporting components, such as CNID backends, character sets,
+authentication, access control, search, and legacy AppleTalk services. Read
+[Upgrading](Upgrading.html) before moving an existing server to a new major
+Netatalk release.
 
-A number of 3rd party AFP client implementations exist for other operating systems,
-including the _Netatalk Client_, which is an improved fork of _afpfs-ng_ that
-is available for Linux, FreeBSD, OpenBSD, NetBSD, and macOS.
+The command, configuration-file, and administrator-command references link
+to the corresponding manual pages, where complete option descriptions and
+command syntax are maintained.
 
-Using Netatalk's AFP 3.4 compliant file server leads to noticeably
-higher transmission speeds for macOS clients compared to Samba/NFS,
-while providing users with the best possible Mac-like user experience.
-It can read and write Mac metadata - macOS extended file attributes as
-well as Classic Mac OS resource forks - facilitating mixed environments
-of new and old Macs.
+## Manual Chapters
 
-Netatalk ships with range of capabilities to accommodate most deployment
-environments, including Kerberos, ACLs and LDAP. Modern macOS features
-such as Zeroconf (Bonjour) service discovery, Time Machine backups,
-and Spotlight (Finder search) indexed search are provided.
+* Introduction
+* [Installation](Installation.html)
+* [Configuration](Configuration.html)
+* [CNID Backends](CNID.html)
+* [Character Sets](Charsets.html)
+* [Authentication](Authentication.html)
+* [ACL Support](ACL.html)
+* [Directory Caching](Dircache.html)
+* [Filesystem Change Events](FCE.html)
+* [Search](Search.html)
+* [AppleTalk](AppleTalk.html)
+* [Upgrading](Upgrading.html)
+* [License](License.html)
+* [Legal Notices](Legal.html)
 
-## AppleTalk Services
+## User Commands
 
-Netatalk provides a modern TCP/IP transport layer, as well as a traditional
-AppleTalk transport layer for very old Mac and Apple II clients.
+@USER_COMMANDS@
 
-For AppleTalk networks with legacy Macs and Apple IIs, Netatalk provides
-a print server, time server, and Apple II network boot server. The print
-server is fully integrated with CUPS, allowing old Macs to discover and
-print to a modern CUPS/AirPrint compatible printer on the network.
-Netatalk can also provide a MacIP gateway, allowing AppleTalk-only
-Macintosh clients to reach TCP/IP networks.
+## Configuration Files
 
-Additionally, Netatalk can be configured as an AppleTalk router through
-its AppleTalk Network Management daemon, providing both segmentation and
-zone names in traditional Macintosh networks.
+@CONFIGURATION_FILES@
+
+## Administrator Commands
+
+@ADMIN_COMMANDS@
