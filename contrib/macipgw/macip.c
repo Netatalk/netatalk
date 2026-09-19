@@ -562,22 +562,41 @@ static int init_ip(uint32_t net, uint32_t mask, uint32_t nameserver)
 }
 
 
-static void add_zones(short n, char *buf)
+static int add_zones(uint16_t n, const unsigned char *buf, size_t len)
 {
-    char s[32];
+    char s[MAX_ZONE_LENGTH + 1];
 
-    for (; n--; buf += (*buf) + 1) {
-        if (gDebug & DEBUG_MACIP) {
-            printf("add_zones: %.*s\n", *buf, buf + 1);
+    for (uint16_t i = 0; i < n; i++) {
+        size_t zone_len;
+
+        if (len < 1) {
+            return -1;
         }
 
-        bcopy(buf + 1, s, *buf);
-        s[(int) *buf] = 0;
+        zone_len = buf[0];
+
+        if (zone_len == 0 || zone_len > MAX_ZONE_LENGTH ||
+                zone_len > len - 1) {
+            return -1;
+        }
+
+        if (gDebug & DEBUG_MACIP) {
+            printf("add_zones: %.*s\n", (int) zone_len,
+                   (const char *) buf + 1);
+        }
+
+        memcpy(s, buf + 1, zone_len);
+        s[zone_len] = '\0';
 
         if (gZones.n < MAXZONES) {
             gZones.z[gZones.n++] = strdup(s);
         }
+
+        buf += zone_len + 1;
+        len -= zone_len + 1;
     }
+
+    return 0;
 }
 
 static int get_zones(void)
@@ -588,8 +607,8 @@ static int get_zones(void)
     struct servent *se;
     char reqdata[4], buf[ATP_MAXDATA];
     struct iovec iov;
-    short temp, index = 0;
-    int i;
+    uint16_t count, index = 1, temp;
+    int i, last, result = -1;
     gZones.n = 0;
     reqdata[0] = ZIPOP_GETZONELIST;
 
@@ -612,7 +631,6 @@ static int get_zones(void)
 
     saddr.sat_addr.s_net = ATADDR_ANYNET;
     saddr.sat_addr.s_node = ATADDR_ANYNODE;
-    index = 1;
     reqdata[1] = 0;
 
     do {
@@ -628,7 +646,7 @@ static int get_zones(void)
          */
         if (atp_sreq(ah, &atpb, 1, 0) < 0) {
             perror("atp_sreq");
-            return -1;
+            goto out;
         }
 
         iov.iov_base = buf;
@@ -646,25 +664,46 @@ static int get_zones(void)
                     printf("no zones on network\n");
                 }
 
-                return 0;
+                result = 0;
+                goto out;
             }
 
             perror("get_zones: atp_rresp");
-            return -1;
+            goto out;
         }
 
-        bcopy(&((char *) iov.iov_base)[2], &temp, 2);
-        temp = ntohs(temp);
-        add_zones(temp, iov.iov_base + 4);
-        index += temp;
-    } while (!((char *) iov.iov_base)[0]);
+        if (iov.iov_len < 4) {
+            errno = EPROTO;
+            perror("get_zones: malformed ZIP response");
+            goto out;
+        }
+
+        last = ((unsigned char *) iov.iov_base)[0] != 0;
+        memcpy(&temp, (unsigned char *) iov.iov_base + 2, sizeof(temp));
+        count = ntohs(temp);
+
+        if (add_zones(count, (unsigned char *) iov.iov_base + 4,
+                      iov.iov_len - 4) < 0 ||
+                (!last && (count == 0 || count > UINT16_MAX - index))) {
+            errno = EPROTO;
+            perror("get_zones: malformed ZIP response");
+            goto out;
+        }
+
+        if (!last) {
+            index += count;
+        }
+    } while (!last);
+
+    result = 0;
+out:
 
     if (atp_close(ah) != 0) {
         perror("atp_close");
         return -1;
     }
 
-    return 0;
+    return result;
 }
 
 
