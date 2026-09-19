@@ -7,6 +7,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -16,6 +17,7 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <atalk/logger.h>
+#include <atalk/zip.h>
 
 #ifdef __svr4__
 #include <sys/sockio.h>
@@ -337,9 +339,16 @@ atalk_cksum(unsigned char *data, int len)
 int
 zone_bcast(struct ziptab *zt)
 {
-    unsigned char		uname[32];
+    unsigned char		uname[MAX_ZONE_LENGTH];
     uint16_t		cksum;
     int			i;
+
+    if (zt == NULL || zt->zt_name == NULL || zt->zt_len == 0 ||
+            zt->zt_len > MAX_ZONE_LENGTH) {
+        LOG(log_error, logtype_atalkd, "zone_bcast: invalid zone");
+        errno = EINVAL;
+        return -1;
+    }
 
     if (!zt->zt_bcast &&
             (zt->zt_bcast = (unsigned char *) malloc(sizeof(ethermulti))) == NULL) {

@@ -92,7 +92,7 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     struct list		*l;
     struct ziptab	*zt;
     unsigned short		firstnet, lastnet, index, nz;
-    char		*end, zname[32], packet[ATP_BUFSIZ], *nzones, *lastflag;
+    char		*end, zname[MAX_ZONE_LENGTH], packet[ATP_BUFSIZ], *nzones, *lastflag;
     char		*reply, *rend, *ziphdr;
     int			zlen, n, zipop, rcnt, qcnt, zcnt, zsz;
     extern int		stabletimer;
@@ -315,7 +315,7 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 
                 zlen = *data++;
 
-                if (zlen > 32 || zlen <= 0) {
+                if (zlen > MAX_ZONE_LENGTH || zlen <= 0) {
                     LOG(log_info, logtype_atalkd, "zip reply bad packet");
                     return 1;
                 }
@@ -472,7 +472,7 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 
                 zlen = *data++;
 
-                if (zlen > 32 || zlen <= 0) {
+                if (zlen > MAX_ZONE_LENGTH || zlen <= 0) {
                     LOG(log_info, logtype_atalkd, "zip ereply bad zone length (%d)", zlen);
                     return 1;
                 }
@@ -542,7 +542,7 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 
             zlen = *data++;
 
-            if (zlen < 0 || zlen > 32) {
+            if (zlen < 0 || zlen > MAX_ZONE_LENGTH) {
                 LOG(log_info, logtype_atalkd, "zip_packet malformed packet");
                 return 1;
             }
@@ -665,26 +665,48 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
              * We never ask for a zone, so we can get back what the
              * default zone is.
              */
-            if (data >= end || data + *data > end) {
+            if (data >= end) {
                 LOG(log_info, logtype_atalkd, "zip_packet malformed packet");
                 return 1;
             }
 
-            if (*data++ != 0) {
+            zlen = (unsigned char) * data++;
+
+            if (zlen > end - data) {
+                LOG(log_info, logtype_atalkd, "zip_packet malformed packet");
+                return 1;
+            }
+
+            if (zlen != 0) {
                 LOG(log_info, logtype_atalkd, "zip_packet unsolicited zone");
                 return 1;
             }
 
             /* skip multicast (should really check it) */
-            if (data >= end || data + *data > end) {
+            if (data >= end) {
                 LOG(log_info, logtype_atalkd, "zip_packet malformed packet");
                 return 1;
             }
 
-            data += *data + 1;
+            zlen = (unsigned char) * data++;
 
-            if (data >= end || data + *data > end) {
+            if (zlen > end - data) {
                 LOG(log_info, logtype_atalkd, "zip_packet malformed packet");
+                return 1;
+            }
+
+            data += zlen;
+
+            if (data >= end) {
+                LOG(log_info, logtype_atalkd, "zip_packet malformed packet");
+                return 1;
+            }
+
+            zlen = (unsigned char) * data++;
+
+            if (zlen <= 0 || zlen > MAX_ZONE_LENGTH || data + zlen > end) {
+                LOG(log_info, logtype_atalkd, "zip_packet bad zone length (%d)",
+                    zlen);
                 return 1;
             }
 
@@ -696,20 +718,20 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
              * to check that the net is giving us good zones.
              */
             if ((iface->i_flags & IFACE_SEED) && iface->i_czt) {
-                if (iface->i_czt->zt_len != *data ||
+                if (iface->i_czt->zt_len != zlen ||
                         strndiacasecmp(iface->i_czt->zt_name,
-                                       data + 1, *data) != 0) {
+                                       data, zlen) != 0) {
                     LOG(log_error, logtype_atalkd, "default zone mismatch on %s",
                         iface->i_name);
                     LOG(log_error, logtype_atalkd, "%.*s != %.*s",
                         iface->i_czt->zt_len, iface->i_czt->zt_name,
-                        *data, data + 1);
+                        zlen, data);
                     LOG(log_error, logtype_atalkd, "Seed error! Exiting!");
                     return -1;
                 }
             }
 
-            if (addzone(iface->i_rt, *data, data + 1) < 0) {
+            if (addzone(iface->i_rt, zlen, data) < 0) {
                 LOG(log_error, logtype_atalkd, "zip_packet: addzone");
                 return -1;
             }
@@ -1007,6 +1029,11 @@ struct ziptab *newzt(const int len, const char *name)
 {
     struct ziptab	*zt;
 
+    if (len <= 0 || len > MAX_ZONE_LENGTH || name == NULL) {
+        errno = EINVAL;
+        return NULL;
+    }
+
     if ((zt = (struct ziptab *)calloc(1, sizeof(struct ziptab))) == NULL) {
         return NULL;
     }
@@ -1064,6 +1091,11 @@ int addzone(struct rtmptab *rt, int len, char *zone)
 {
     struct ziptab	*zt;
     int			cc, exists = 0;
+
+    if (len <= 0 || len > MAX_ZONE_LENGTH || zone == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
 
     for (zt = ziptab; zt; zt = zt->zt_next) {
         if (zt->zt_len == len &&
