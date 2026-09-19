@@ -1,103 +1,144 @@
-policy_module(netatalk, 1.0.0)
+policy_module(netatalk, 1.1.0)
 
 ########################################
-#
 # Declarations
-#
 
 type netatalk_t;
 type netatalk_exec_t;
 init_daemon_domain(netatalk_t, netatalk_exec_t)
 
-# Ensure proper entrypoint
-allow netatalk_t netatalk_exec_t:file entrypoint;
+# Label deprecated daemons explicitly so they cannot fall back to bin_t.
+# There is deliberately no domain or execution interface for these files.
+type netatalk_legacy_exec_t;
+corecmd_executable_file(netatalk_legacy_exec_t)
 
-# Allow netatalk to execute and transition to its child daemons
-# This handles the forking structure: netatalk -> afpd, cnid_metad -> cnid_dbd
-allow netatalk_t netatalk_exec_t:file execute;
-domtrans_pattern(netatalk_t, netatalk_exec_t, netatalk_t)
-
-# Configuration files
 type netatalk_etc_t;
 files_config_file(netatalk_etc_t)
 
-# Variable library files
+# Localsearch's private session bus is outside this policy's scope.
+type netatalk_dbus_conf_t;
+files_config_file(netatalk_dbus_conf_t)
+
 type netatalk_var_lib_t;
 files_type(netatalk_var_lib_t)
 
-# Lock files
+type netatalk_cnid_t;
+files_type(netatalk_cnid_t)
+
+# Administrators assign this type only to directories exported over AFP.
+type netatalk_share_t;
+files_type(netatalk_share_t)
+
 type netatalk_lock_t;
 files_lock_file(netatalk_lock_t)
 
-# Log files
 type netatalk_log_t;
 logging_log_file(netatalk_log_t)
 
 ########################################
-#
-# netatalk local policy
-#
+# Local policy: SQLite CNID and CNID Spotlight
 
-# Basic process and IPC permissions
-allow netatalk_t self:process { fork signal_perms };
+# netatalk launches afpd; both remain in netatalk_t.
+can_exec(netatalk_t, netatalk_exec_t)
+allow netatalk_t self:process { fork signal_perms setrlimit setpgid setsched };
 allow netatalk_t self:fifo_file rw_fifo_file_perms;
 allow netatalk_t self:unix_stream_socket create_stream_socket_perms;
 
-# Process management for forking daemons
-allow netatalk_t self:process { setrlimit setpgid setsched };
+# AFP sessions switch user/group and maintain ownership and permissions.
+allow netatalk_t self:capability { chown dac_override fowner fsetid setgid setuid net_bind_service };
 
-# Allow netatalk to bind to privileged ports
-allow netatalk_t self:capability net_bind_service;
-
-# Socket permissions
 allow netatalk_t self:netlink_route_socket { bind create getattr nlmsg_read };
-allow netatalk_t self:tcp_socket { bind create ioctl listen setopt };
+allow netatalk_t self:tcp_socket create_stream_socket_perms;
 allow netatalk_t self:udp_socket { connect create getattr };
-allow netatalk_t self:unix_dgram_socket { connect create };
+allow netatalk_t self:unix_dgram_socket create_socket_perms;
 
-# Core command execution and binary mapping
-corecmd_exec_bin(netatalk_t)
-corecmd_exec_shell(netatalk_t)
-corecmd_mmap_bin_files(netatalk_t)
+corecmd_search_bin(netatalk_t)
+libs_use_ld_so(netatalk_t)
+libs_use_shared_libs(netatalk_t)
+dev_read_urand(netatalk_t)
 
-# Network binding permissions
+# Reference policy labels TCP 548 (AFP) as dhcpd_port_t. Check the target
+# distribution's port map before changing this interface. No generic binds
+# or CNID daemon connections are needed by SQLite.
 corenet_tcp_bind_dhcpd_port(netatalk_t)
 corenet_tcp_bind_generic_node(netatalk_t)
-corenet_tcp_bind_generic_port(netatalk_t)
-corenet_udp_bind_generic_node(netatalk_t)
-corenet_udp_bind_generic_port(netatalk_t)
 
-# D-Bus communication
-dbus_read_pid_sock_files(netatalk_t)
-dbus_stream_connect_system_dbusd(netatalk_t)
-dbus_write_pid_sock_files(netatalk_t)
+# AFP TCP traffic on ordinary networks.
+corenet_tcp_sendrecv_generic_if(netatalk_t)
+corenet_tcp_sendrecv_generic_node(netatalk_t)
 
-# File and lock management
-files_create_lock_dirs(netatalk_t)
-files_manage_generic_locks(netatalk_t)
-files_rw_var_files(netatalk_t)
+# Use the complete TCP receive interface, including peer and association
+# permissions. Some distributions omit the wrapper; retain its expansion.
+ifdef(`corenet_tcp_recvfrom_unlabeled',`
+    corenet_tcp_recvfrom_unlabeled(netatalk_t)
+',`
+    kernel_tcp_recvfrom_unlabeled(netatalk_t)
+    kernel_recvfrom_unlabeled_peer(netatalk_t)
+    kernel_sendrecv_unlabeled_association(netatalk_t)
+')
+
+files_search_etc(netatalk_t)
+allow netatalk_t netatalk_etc_t:dir list_dir_perms;
+allow netatalk_t netatalk_etc_t:file read_file_perms;
+allow netatalk_t netatalk_etc_t:lnk_file read_lnk_file_perms;
+
+files_search_var_lib(netatalk_t)
+manage_dirs_pattern(netatalk_t, netatalk_var_lib_t, netatalk_var_lib_t)
+manage_files_pattern(netatalk_t, netatalk_var_lib_t, netatalk_var_lib_t)
+files_var_lib_filetrans(netatalk_t, netatalk_var_lib_t, dir, "netatalk")
+
+# SQLite databases and their WAL/SHM/journal files inherit this directory
+# type. Mapping is needed for WAL shared memory, not for all variable data.
+manage_dirs_pattern(netatalk_t, netatalk_cnid_t, netatalk_cnid_t)
+manage_files_pattern(netatalk_t, netatalk_cnid_t, netatalk_cnid_t)
+allow netatalk_t netatalk_cnid_t:file map;
+filetrans_pattern(netatalk_t, netatalk_var_lib_t, netatalk_cnid_t, dir, "CNID")
+
+files_search_var(netatalk_t)
+manage_dirs_pattern(netatalk_t, netatalk_share_t, netatalk_share_t)
+manage_files_pattern(netatalk_t, netatalk_share_t, netatalk_share_t)
+manage_lnk_files_pattern(netatalk_t, netatalk_share_t, netatalk_share_t)
+allow netatalk_t netatalk_share_t:file map;
+
 files_search_locks(netatalk_t)
-files_read_etc_files(netatalk_t)
+manage_dirs_pattern(netatalk_t, netatalk_lock_t, netatalk_lock_t)
+manage_files_pattern(netatalk_t, netatalk_lock_t, netatalk_lock_t)
+# The default PID lock is a file named netatalk directly under /var/lock.
+files_lock_filetrans(netatalk_t, netatalk_lock_t, file, "netatalk")
 
-# Kernel communication
+logging_search_logs(netatalk_t)
+manage_dirs_pattern(netatalk_t, netatalk_log_t, netatalk_log_t)
+manage_files_pattern(netatalk_t, netatalk_log_t, netatalk_log_t)
+logging_log_filetrans(netatalk_t, netatalk_log_t, file, "netatalk.log")
+logging_log_filetrans(netatalk_t, netatalk_log_t, dir, "netatalk")
+logging_send_syslog_msg(netatalk_t)
+
 kernel_dgram_send(netatalk_t)
 kernel_read_proc_files(netatalk_t)
 kernel_read_system_state(netatalk_t)
-
-# Logging
-logging_create_devlog_dev(netatalk_t)
-logging_read_syslog_pid(netatalk_t)
-logging_send_syslog_msg(netatalk_t)
-
-# System network configuration
 sysnet_read_config(netatalk_t)
-
-# Interactive and standard daemon permissions
+files_read_etc_files(netatalk_t)
+auth_use_nsswitch(netatalk_t)
+auth_domtrans_chk_passwd(netatalk_t)
+miscfiles_read_localization(netatalk_t)
 domain_use_interactive_fds(netatalk_t)
 
-# Allow systemd to transition to netatalk
-init_domtrans_script(netatalk_exec_t)
+# Avahi service discovery uses the system bus, independently of Spotlight.
+optional_policy(`
+    dbus_system_bus_client(netatalk_t)
+    avahi_dbus_chat(netatalk_t)
+')
 
-# Additional permissions that might be needed
-auth_use_nsswitch(netatalk_t)
-miscfiles_read_localization(netatalk_t)
+# These assertions guard against accidentally reintroducing excluded
+# features. They are compile-time checks, not overrides for allow rules.
+neverallow netatalk_t netatalk_legacy_exec_t:file { execute execute_no_trans entrypoint };
+neverallow netatalk_t netatalk_dbus_conf_t:file { open read };
+
+# A transitioned dbus-daemon must not bypass the configuration restriction.
+# Connecting to Avahi does not require executing a D-Bus daemon.
+optional_policy(`
+    gen_require(`
+        type dbusd_exec_t;
+    ')
+    neverallow netatalk_t dbusd_exec_t:file { execute execute_no_trans };
+')

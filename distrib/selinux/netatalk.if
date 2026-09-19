@@ -1,4 +1,3 @@
-
 ## <summary>policy for netatalk</summary>
 
 ########################################
@@ -41,7 +40,7 @@ interface(`netatalk_exec',`
 
 ########################################
 ## <summary>
-##      Read netatalk configuration files.
+##      Read supported netatalk configuration files (excluding the session bus).
 ## </summary>
 ## <param name="domain">
 ##      <summary>
@@ -78,16 +77,3 @@ interface(`netatalk_manage_log',`
         allow $1 netatalk_log_t:dir rw_dir_perms;
         allow $1 netatalk_log_t:file manage_file_perms;
 ')
-
-# Additional rules for the new types
-allow netatalk_t netatalk_etc_t:dir list_dir_perms;
-allow netatalk_t netatalk_etc_t:file read_file_perms;
-
-allow netatalk_t netatalk_var_lib_t:dir manage_dir_perms;
-allow netatalk_t netatalk_var_lib_t:file manage_file_perms;
-
-allow netatalk_t netatalk_lock_t:dir manage_dir_perms;
-allow netatalk_t netatalk_lock_t:file manage_file_perms;
-
-allow netatalk_t netatalk_log_t:dir manage_dir_perms;
-allow netatalk_t netatalk_log_t:file manage_file_perms;
