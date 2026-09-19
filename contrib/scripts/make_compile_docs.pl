@@ -61,6 +61,48 @@ sub format_shell_command {
     return $shell;
 }
 
+sub merged_environment {
+    my (@environments) = @_;
+    my %environment;
+
+    foreach my $source (@environments) {
+        next unless defined $source;
+        @environment{keys %{$source}} = values %{$source};
+    }
+
+    return \%environment;
+}
+
+sub substitute_environment_variables {
+    my ($shell, $environment) = @_;
+
+    return unless defined $shell;
+
+    my %resolved;
+    my %resolving;
+    my $replacement;
+    my $resolve_value;
+    $resolve_value = sub {
+        my ($name) = @_;
+
+        return $resolved{$name} if exists $resolved{$name};
+        return undef unless exists $environment->{$name};
+        return undef if $resolving{$name};
+
+        local $resolving{$name} = 1;
+        my $value = $environment->{$name};
+        $value = '' unless defined $value;
+        $value =~ s/\$\{\{\s*env\.([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/
+            defined($replacement = $resolve_value->($1)) ? $replacement : $&/gex;
+        return $resolved{$name} = $value;
+    };
+
+    $shell =~ s/\$\{\{\s*env\.([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/
+        defined($replacement = $resolve_value->($1)) ? $replacement : $&/gex;
+
+    return $shell;
+}
+
 sub wanted_step {
     my ($step) = @_;
 
@@ -89,20 +131,20 @@ sub format_job_name {
 }
 
 sub render_step {
-    my ($markdown, $step) = @_;
+    my ($markdown, $step, $environment) = @_;
 
     if (exists $step->{uses} && $step->{uses} =~ /^vmactions\//) {
         push @{$markdown},
           "Install dependencies",
           "",
           "```shell",
-          format_shell_command($step->{with}->{prepare}),
+          format_shell_command(substitute_environment_variables($step->{with}->{prepare}, $environment)),
           "```",
           "",
           "Build and install",
           "",
           "```shell",
-          format_shell_command($step->{with}->{run}),
+          format_shell_command(substitute_environment_variables($step->{with}->{run}, $environment)),
           "```",
           "";
     } else {
@@ -110,7 +152,7 @@ sub render_step {
           $step->{name},
           "",
           "```shell",
-          format_shell_command($step->{run}),
+          format_shell_command(substitute_environment_variables($step->{run}, $environment)),
           "```",
           "";
     }
@@ -133,18 +175,24 @@ foreach my $input_file (@input_files) {
         die "Error parsing YAML file '$input_file': $@\n";
     }
 
+    my %rendered_jobs;
     foreach my $key (keys %{$workflow->{jobs}}) {
         my $job = $workflow->{jobs}->{$key};
 
         next if $job->{name} =~ /\(32-bit\)$/;
 
-        my @steps = grep { wanted_step($_) } @{$job->{steps}};
+        my $job_name = format_job_name($job->{name});
+        my @steps    = grep { wanted_step($_) } @{$job->{steps}};
         next unless @steps;
+        next if $rendered_jobs{$job_name}++;
 
-        push @markdown, "### " . format_job_name($job->{name}), "";
+        push @markdown, "### " . $job_name, "";
 
         foreach my $step (@steps) {
-            render_step(\@markdown, $step);
+            my $environment = merged_environment(
+                                                 $workflow->{env}, $job->{env}, $step->{env},
+            );
+            render_step(\@markdown, $step, $environment);
         }
     }
 }
