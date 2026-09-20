@@ -109,7 +109,9 @@ STATIC void test426()
     int len;
     unsigned int ret;
     char temp[MAXPATHLEN];
+    char contents[sizeof(target)] = {0};
     struct stat st;
+    int fd = -1;
     dsi = &Conn->dsi;
     ENTER_TEST
 
@@ -175,15 +177,24 @@ STATIC void test426()
         goto test_exit;
     }
 
-    if (lstat(temp, &st) == 0) {
-        if (S_ISLNK(st.st_mode)) {
-            test_failed();
-        }
-    } else if (errno != ENOENT) {
+    if (lstat(temp, &st) != 0 || !S_ISREG(st.st_mode)) {
+        test_failed();
+        goto test_exit;
+    }
+
+    fd = open(temp, O_RDONLY);
+
+    if (fd < 0
+            || read(fd, contents, sizeof(target) - 1) != sizeof(target) - 1
+            || memcmp(contents, target, sizeof(target) - 1) != 0) {
         test_failed();
     }
 
 test_exit:
+
+    if (fd >= 0) {
+        close(fd);
+    }
 
     if (fork) {
         FPCloseFork(Conn, fork);
@@ -198,6 +209,132 @@ test_exit:
     }
 
     exit_test("FPSetFileParms:test426: Reject a dangling symlink");
+}
+
+/* Verify that the legacy FinderInfo symlink conversion obeys the same
+ * DeleteInhibit policy as FPDelete and leaves the original file intact. */
+STATIC void test435()
+{
+    char *name = "t435 NODELETE symlink";
+    char *target = "t435 target";
+    int ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = {0};
+    uint16_t bitmap;
+    uint16_t vol = VolID;
+    const DSI *dsi = &Conn->dsi;
+    uint16_t fork = 0;
+    int name_created = 0;
+    int target_created = 0;
+    int len;
+    unsigned int ret;
+    char temp[MAXPATHLEN];
+    char contents[MAXPATHLEN + 1] = {0};
+    struct stat st;
+    int fd = -1;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    if (Path[0] == '\0') {
+        test_skipped(T_PATH);
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, target)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    target_created = 1;
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    name_created = 1;
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPWrite(Conn, fork, 0, (int)strlen(target), target, 0)
+            || FPCloseFork(Conn, fork)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = 0;
+    bitmap = (1 << FILPBIT_ATTR);
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    memset(&filedir, 0, sizeof(filedir));
+    memcpy(filedir.finder_info, "slnkrhap", 8);
+    bitmap = (1 << FILPBIT_FINFO);
+    ret = FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir);
+
+    if (ret != htonl(AFPERR_OLOCK)) {
+        test_failed();
+    }
+
+    len = snprintf(temp, sizeof(temp), "%s/%s", Path, name);
+
+    if (len < 0 || len >= (int)sizeof(temp)
+            || lstat(temp, &st) != 0 || !S_ISREG(st.st_mode)) {
+        test_failed();
+        goto test_exit;
+    }
+
+    fd = open(temp, O_RDONLY);
+
+    if (fd < 0
+            || read(fd, contents, strlen(target)) != (ssize_t)strlen(target)
+            || memcmp(contents, target, strlen(target)) != 0) {
+        test_failed();
+    }
+
+test_exit:
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    if (fork) {
+        FPCloseFork(Conn, fork);
+    }
+
+    if (name_created) {
+        memset(&filedir, 0, sizeof(filedir));
+        filedir.attr = ATTRBIT_NODELETE;
+        FPSetFileParams(Conn, vol, DIRDID_ROOT, name,
+                        (1 << FILPBIT_ATTR), &filedir);
+        FPDelete(Conn, vol, DIRDID_ROOT, name);
+    }
+
+    if (target_created) {
+        FPDelete(Conn, vol, DIRDID_ROOT, target);
+    }
+
+    exit_test("FPSetFileParms:test435: NODELETE blocks symlink conversion");
 }
 
 /* test543: FinderInfo round-trip verification
@@ -963,6 +1100,7 @@ void T2FPSetFileParms_test()
     test89();
     test120();
     test426();
+    test435();
     test543();
     test534();
     test538();
