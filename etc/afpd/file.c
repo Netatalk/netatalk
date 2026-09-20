@@ -185,6 +185,112 @@ static int symlink_target_safe(const struct vol *vol,
     return safe;
 }
 
+/*!
+ * @brief Check whether AFP DeleteInhibit forbids a destructive operation.
+ *
+ * Read the in-core header when a fork with loaded metadata is held; otherwise
+ * use a private ad_metadata().  Never ad_open(HF) onto of->of_ad: with v2 the
+ * sidecar shares the resource-fork inode and with EA the metadata fd is the
+ * data fd, so a transient metadata open and close could strand a held lock.
+ * Metadata read errors fail closed.
+ *
+ * @param[in] vol       volume containing the file
+ * @param[in] dirfd     parent directory fd, or -1 for the current directory
+ * @param[in] file      file name to check
+ *
+ * @returns AFP_OK when replacement is allowed, AFPERR_OLOCK when DeleteInhibit
+ *          is set, or AFPERR_ACCESS when the metadata cannot be read safely
+ */
+static int check_delete_inhibit(const struct vol *vol, int dirfd, char *file)
+{
+    struct path dpath = {0};
+    const struct ofork *ofm;
+    uint16_t attr = 0;
+    dpath.u_name = file;
+    ofm = (dirfd != -1) ? of_findnameat(dirfd, &dpath)
+          : of_findname(vol, &dpath);
+
+    if (ofm != NULL && ad_meta_open(ofm->of_ad)) {
+        ad_getattr(ofm->of_ad, &attr);
+    } else {
+        struct adouble admeta;
+        ad_init(&admeta, vol);
+
+        /* ADFLAGS_CHECK_OF opens the data fork, allowing ad_metadata() to retry
+         * an EACCES read as root.  Without it, an EA path read can mask EACCES
+         * as ENOENT and miss NODELETE.  This transient open is safe because no
+         * metadata-bearing fork was found above. */
+        if (ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &admeta) == 0) {
+            ad_getattr(&admeta, &attr);
+            ad_close(&admeta, ADFLAGS_HF | ADFLAGS_CHECK_OF);
+        } else if (errno != ENOENT) {
+            LOG(log_error, logtype_afpd,
+                "check_delete_inhibit('%s'): metadata read failed (%s); "
+                "refusing destructive operation with AFPERR_ACCESS",
+                file, strerror(errno));
+            return AFPERR_ACCESS;
+        }
+    }
+
+    if (!(vol->v_ignattr & ATTRBIT_NODELETE)
+            && (attr & htons(ATTRBIT_NODELETE))) {
+        return AFPERR_OLOCK;
+    }
+
+    return AFP_OK;
+}
+
+/*!
+ * @brief Atomically replace a file with a symbolic link.
+ *
+ * Stage the symlink beside its destination and rename it over the file.
+ * symlink() supplies O_EXCL-like collision handling, so an existing temporary
+ * name is never overwritten.  If staging or rename fails, the original file
+ * remains in place and the temporary symlink is removed when possible.
+ *
+ * @param[in] path      path of the file to replace
+ * @param[in] target    symbolic link target
+ *
+ * @returns 0 on success, -1 on error with errno set
+ */
+static int replace_with_symlink(const char *path, const char *target)
+{
+    static unsigned int serial;
+    char tmppath[MAXPATHLEN + 1];
+    const char *slash = strrchr(path, '/');
+    size_t dirlen = slash ? (size_t)(slash - path + 1) : 0;
+    int saved_errno;
+
+    for (unsigned int attempt = 0; attempt < 128; attempt++) {
+        int len = snprintf(tmppath, sizeof(tmppath),
+                           "%.*s.netatalk-symlink-%ld-%u",
+                           (int)dirlen, path, (long)getpid(), serial++);
+
+        if (len < 0 || (size_t)len >= sizeof(tmppath)) {
+            errno = ENAMETOOLONG;
+            return -1;
+        }
+
+        if (symlink(target, tmppath) == 0) {
+            if (rename(tmppath, path) == 0) {
+                return 0;
+            }
+
+            saved_errno = errno;
+            netatalk_unlink(tmppath);
+            errno = saved_errno;
+            return -1;
+        }
+
+        if (errno != EEXIST) {
+            return -1;
+        }
+    }
+
+    errno = EEXIST;
+    return -1;
+}
+
 /* ----------------------
 */
 static int default_type(void *finder)
@@ -1449,11 +1555,6 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                     goto setfilparam_done;
                 }
 
-                if (unlink(path->u_name) != 0) {
-                    err = AFPERR_MISC;
-                    goto setfilparam_done;
-                }
-
                 symbuf[len] = 0;
 
                 if (!symlink_target_safe(vol, path->u_name, symbuf)) {
@@ -1461,7 +1562,13 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                     goto setfilparam_done;
                 }
 
-                if (symlink(symbuf, path->u_name) != 0) {
+                err = check_delete_inhibit(vol, -1, path->u_name);
+
+                if (err != AFP_OK) {
+                    goto setfilparam_done;
+                }
+
+                if (replace_with_symlink(path->u_name, symbuf) != 0) {
                     err = AFPERR_MISC;
                     goto setfilparam_done;
                 }
@@ -2382,46 +2489,12 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib,
      * fork on this inode?" and reporting a missing target as OF_LOCKS_NOENT. */
     dpath.u_name = file;
 
-    /* --- NODELETE / kFPDeleteInhibitBit (afp_delete only) ---
-     * Read the in-core header when a fork with loaded metadata is held (no open),
-     * else a private ad_metadata().  Never ad_open(HF) onto of->of_ad: on v2 the
-     * ._ sidecar shares the rfork inode and on EA the meta fd is the data fd, so a
-     * transient meta open+close there would strand a held lock.  The EA metadata
-     * read must stay RDONLY (an RDWR read would open() the data inode). */
+    /* --- NODELETE / kFPDeleteInhibitBit (afp_delete only) --- */
     if (checkAttrib) {
-        const struct ofork *ofm = (dirfd != -1) ? of_findnameat(dirfd, &dpath)
-                                  : of_findname(vol, &dpath);
-        uint16_t      attr = 0;
+        err = check_delete_inhibit(vol, dirfd, file);
 
-        if (ofm != NULL && ad_meta_open(ofm->of_ad)) {
-            ad_getattr(ofm->of_ad, &attr);
-        } else {
-            /* No usable in-core header: read it privately.  ADFLAGS_CHECK_OF opens
-             * the data fork (-> SETSHRMD -> DF), so an EACCES on a no-access file
-             * propagates and ad_metadata() retries the read as root; flags=0 would
-             * read the EA by path, get EACCES masked to ENOENT, and miss the bit.
-             * The transient open+close strands no lock of ours: this branch only
-             * runs when no metadata-bearing fork is held on the inode. */
-            struct adouble admeta;
-            ad_init(&admeta, vol);
-
-            if (ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &admeta) == 0) {
-                ad_getattr(&admeta, &attr);
-                ad_close(&admeta, ADFLAGS_HF | ADFLAGS_CHECK_OF);
-            } else if (errno != ENOENT) {
-                /* Fail closed: an errored metadata read leaves NODELETE unknown,
-                 * so refuse rather than risk bypassing it.  ENOENT is not an error
-                 * here - a file with no header simply has no NODELETE bit. */
-                LOG(log_error, logtype_afpd,
-                    "deletefile('%s'): NODELETE metadata read failed (%s); refusing "
-                    "delete with AFPERR_ACCESS", file, strerror(errno));
-                return AFPERR_ACCESS;
-            }
-        }
-
-        if (!(vol->v_ignattr & ATTRBIT_NODELETE)
-                && (attr & htons(ATTRBIT_NODELETE))) {
-            return AFPERR_OLOCK;
+        if (err != AFP_OK) {
+            return err;
         }
     }
 
