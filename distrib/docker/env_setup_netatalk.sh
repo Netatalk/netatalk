@@ -329,7 +329,7 @@ elif [ -n "$AFP_USER2" ]; then
         echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
     fi
 
-    if [ "$RANDNUM_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
+    if [ "$RANDNUM_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -r -w "$AFP_PASS2" > /dev/null; then
         RANDNUM_OK=0
     fi
     if [ "$SRP_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -w "$AFP_PASS2" > /dev/null; then
@@ -590,7 +590,7 @@ fi
 # Testsuite and config file flags
 # --------------------------------------------------------------------------
 
-if [ "$TESTSUITE" = "spectest" ] && [ -z "$AFP_REMOTE" ]; then
+if [ "$TESTSUITE" = "spec" ] && [ -z "$AFP_REMOTE" ]; then
     TEST_FLAGS="$TEST_FLAGS -c $NETATALK_SHARE_DIR"
 fi
 
@@ -598,7 +598,7 @@ fi
 # byte-range read-lock conflict tests run instead of skipping (T_LOCKING).
 # -L is an afp_spectest-only flag, so gate it on the spectest suite to avoid
 # passing an unknown option to the other test runners.
-if [ "$TESTSUITE" = "spectest" ] && [ "$AFP_STRICT_LOCKING" = "yes" ]; then
+if [ "$TESTSUITE" = "spec" ] && [ "$AFP_STRICT_LOCKING" = "yes" ]; then
     TEST_FLAGS="$TEST_FLAGS -L"
 fi
 
