@@ -1,5 +1,7 @@
 /* ----------------------------------------------
 */
+#include <limits.h>
+
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
@@ -17,6 +19,74 @@ static void pipe_handler(int signum)
 {
     (void)signum;
     sigp = 1;
+}
+
+static int get_positive_env_uint(const char *name, unsigned int default_value,
+                                 unsigned int max_value, unsigned int *result)
+{
+    const char *value = getenv(name);
+    char *end;
+    unsigned long parsed;
+
+    if (!value || !*value) {
+        *result = default_value;
+        return 0;
+    }
+
+    errno = 0;
+    parsed = strtoul(value, &end, 10);
+
+    if (value[0] == '-' || errno || end == value || *end || parsed == 0 ||
+            parsed > max_value) {
+        fprintf(stderr, "%s must be an integer between 1 and %u\n", name,
+                max_value);
+        return -1;
+    }
+
+    *result = (unsigned int)parsed;
+    return 0;
+}
+
+/* Wait beyond the ordinary two-minute idle timeout. The server may skip
+ * one tick after client traffic, so allow an extra tick plus scheduling
+ * margin. CI uses tickleval=10, timeout=12 and a 140-second wait. */
+static int wait_for_idle_timeout(void)
+{
+    unsigned int seconds = 180;
+    unsigned int tickleval;
+    unsigned int timeout;
+    unsigned int minimum_wait;
+
+    if (get_positive_env_uint("AFP_SLEEP_TEST_WAIT", seconds, UINT_MAX,
+                              &seconds) ||
+            get_positive_env_uint("AFP_TICKLEVAL", 30, INT_MAX,
+                                  &tickleval) ||
+            get_positive_env_uint("AFP_TIMEOUT", 4, INT_MAX, &timeout)) {
+        return -1;
+    }
+
+    if (timeout == UINT_MAX || tickleval > UINT_MAX / (timeout + 1)) {
+        fprintf(stderr, "configured idle timeout is too large\n");
+        return -1;
+    }
+
+    minimum_wait = (timeout + 1) * tickleval;
+
+    if (seconds <= 120 || seconds <= minimum_wait) {
+        fprintf(stderr,
+                "AFP_SLEEP_TEST_WAIT must exceed 120 seconds and %u seconds "
+                "for AFP_TICKLEVAL=%u and AFP_TIMEOUT=%u\n",
+                minimum_wait, tickleval, timeout);
+        return -1;
+    }
+
+    fprintf(stdout, "sleep %u seconds\n", seconds);
+
+    while ((seconds = sleep(seconds)) != 0) {
+        /* A signal must not shorten the interval being tested. */
+    }
+
+    return 0;
 }
 
 /* ------------------------- */
@@ -55,8 +125,7 @@ STATIC void test223()
     /* Get session token */
     FAIL(FPGetSessionToken(Conn, 3, time, strlen("test223"), "test223"))
     FAIL(FPZzzzz(Conn, 0))
-    fprintf(stdout, "sleep more than 2 mn\n");
-    sleep(60 * 3);
+    FAILEXIT(wait_for_idle_timeout(), fin)
     ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
     if (sigp || ret == (unsigned) - 1) {
@@ -142,8 +211,7 @@ STATIC void test224()
 
     /* Get session token */
     FAIL(FPGetSessionToken(Conn, 3, time, strlen("test224"), "test224"))
-    fprintf(stdout, "sleep more than 2 mn\n");
-    sleep(60 * 3);
+    FAILEXIT(wait_for_idle_timeout(), fin)
     ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
     if (!sigp && ret != (unsigned) - 1) {
@@ -224,11 +292,11 @@ STATIC void test239()
     }
 
     FAIL(FPZzzzz(Conn, 1))
-    fprintf(stdout, "sleep more than 2 mn\n");
-    sleep(60 * 3);
+    FAILEXIT(wait_for_idle_timeout(), fin)
     FAIL(FPZzzzz(Conn, 2))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+fin:
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;

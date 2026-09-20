@@ -268,6 +268,8 @@ Set this environment variable to a specific value or string.
 | SHARE_NAME                      | The name of the primary shared volume                                  |
 | SHARE_NAME2                     | The name of the secondary shared (Time Machine) volume                 |
 | AFP_LOGLEVEL                    | The verbosity of logs; default is "info"                               |
+| AFP_TICKLEVAL                   | Server tickle interval in seconds (`tickleval`, default: 30)           |
+| AFP_TIMEOUT                     | Idle timeout in tickle intervals (`timeout`, default: 4)               |
 | AFP_MIMIC_MODEL                 | Use a custom macOS (OSX) AFP icon; examples: *Tower*, *RackMount*      |
 | AFP_LEGACY_ICON                 | Use a custom Classic Mac OS AFP icon; examples: *daemon*, *sdcard*     |
 | AFP_LOGIN_MESSAGE               | A message to display when a user logs in (Classic Mac OS only)         |
@@ -293,6 +295,7 @@ Set this environment variable to a specific value or string.
 | **Test Suite Configuration** |                                                                           |
 | TESTSUITE                       | Run test suite on startup: *spec*, *lan*, *speed*, or *login*          |
 | AFP_SUBTESTS                    | Optional comma separated list of tests to run                          |
+| AFP_SLEEP_TEST_WAIT             | Wait in seconds for each FPZzzzz test (default: 180; must exceed 120). Must also exceed the server idle timeout plus one tickle interval, with scheduling margin |
 | AFP_TESTSUITE_UAM               | UAM selector or protocol name: *clrtxt*, *dhx*, or *dhx2*              |
 | AFP_VERSION                     | AFP protocol version for tests: 1-7 (default: 7 = AFP 3.4)             |
 | AFP_HOST                        | AFP server hostname/IP for tests (default: 127.0.0.1)                  |

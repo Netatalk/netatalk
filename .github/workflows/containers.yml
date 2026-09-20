@@ -1735,6 +1735,9 @@ jobs:
           path: ${{ runner.temp }}/afp-spectest.junit.xml
           reporter: java-junit
 
+  # Both sleep jobs keep the nominal 120-second idle timeout. Ten-second
+  # ticks allow one skipped tick plus 10 seconds of margin in a 140-second
+  # wait, saving 40 seconds per test (two minutes across the three tests).
   afp-sleeptest-afp34:
     name: AFP spec test (sleep) AFP 3.4 - Alpine
     needs: build-container-testsuite
@@ -1756,6 +1759,9 @@ jobs:
             -v "$RUNNER_TEMP:/reports" \
             -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_SUBTESTS="FPZzzzz" \
+            -e AFP_TICKLEVAL="10" \
+            -e AFP_TIMEOUT="12" \
+            -e AFP_SLEEP_TEST_WAIT="140" \
             -e AFP_TESTSUITE_UAM="dhx2" \
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
@@ -1793,6 +1799,9 @@ jobs:
             -v "$RUNNER_TEMP:/reports" \
             -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
             -e AFP_SUBTESTS="FPZzzzz" \
+            -e AFP_TICKLEVAL="10" \
+            -e AFP_TIMEOUT="12" \
+            -e AFP_SLEEP_TEST_WAIT="140" \
             -e AFP_TESTSUITE_UAM="dhx" \
             -e VERBOSE="1" \
             -e AFP_VERSION="3" \
