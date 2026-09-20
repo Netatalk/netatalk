@@ -288,7 +288,7 @@ static int passwd_printer(char	*start, char *stop, char *username,
 
 #ifdef HAVE_CRYPT_CHECKPASS
 
-    if (crypt_checkpass(password, pwd->pw_passwd) == 0) {
+    if (crypt_checkpass(password, pwd->pw_passwd) != 0) {
 #else
     p = crypt(password, pwd->pw_passwd);
 
@@ -296,11 +296,12 @@ static int passwd_printer(char	*start, char *stop, char *username,
 #endif
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: bad password",
             username);
-        explicit_bzero(password, PASSWDLEN);
+        explicit_bzero(password, sizeof(password));
         return -1;
     }
 
     /* Login successful */
+    explicit_bzero(password, sizeof(password));
     append(out, loginok, strlen(loginok));
     LOG(log_warning, logtype_uams, "Login ClearTxtUAM: %s (INSECURE)", username);
     return 0;
