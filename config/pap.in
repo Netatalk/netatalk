@@ -308,7 +308,7 @@ CollectAccountingData ()
         NeededCopies=$4
 
 	# parse the options passed from CUPS
-	eval ParseCUPSOptions $5
+	ParseCUPSOptions "$5"
 }
 
 ParseCUPSOptions()
@@ -317,14 +317,32 @@ ParseCUPSOptions()
 	# their names, prepend the variable names with "CUPS_", define
 	# them as variables and export them
 
-	i="com\.apple\.print\."
-        while [ $# -ge 1 ]; do
-		VarName=`echo $1 | cut -d"=" -f1 | sed "s|^$i||g;s|\.[nb]\.$||g;s|\.||g"`
-		VarValue=`echo $1 | cut -d"=" -f2 | sed "s|\ |\\\\\ |g"`
-		eval CUPS_${VarName}=${VarValue}
-		eval export CUPS_${VarName}
-                shift
-        done
+	local Option VarName VarValue
+	local IFS=$' \t\n'
+	local -a Options
+
+	read -r -a Options <<< "$1"
+	for Option in "${Options[@]}"; do
+		VarName=${Option%%=*}
+		VarName=${VarName#com.apple.print.}
+		VarName=${VarName%.n.}
+		VarName=${VarName%.b.}
+		VarName=${VarName//./}
+
+		# Only allow names that can safely form a shell variable.
+		case "${VarName}" in
+			''|*[!A-Za-z0-9_]*) continue ;;
+		esac
+
+		if [[ "${Option}" == *=* ]]; then
+			VarValue=${Option#*=}
+		else
+			VarValue=${Option}
+		fi
+
+		printf -v "CUPS_${VarName}" '%s' "${VarValue}"
+		export "CUPS_${VarName}"
+	done
 }
 
 #############################################################################
