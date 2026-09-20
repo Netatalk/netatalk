@@ -1,6 +1,8 @@
 if build_tests
     subdir('afppasswd')
 
+    subdir('adouble')
+
     if use_sqlite_backend
         subdir('nad')
     endif
