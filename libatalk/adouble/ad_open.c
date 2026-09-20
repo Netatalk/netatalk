@@ -661,6 +661,120 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Read an exact byte range from an AppleDouble fork
+ *
+ * Retries interrupted and short reads. Reaching EOF before @p count bytes
+ * have been read is reported as an I/O error.
+ *
+ * @param[in] adf      open AppleDouble fork
+ * @param[out] buf     destination buffer
+ * @param[in] count    number of bytes to read
+ * @param[in] offset   starting file offset
+ * @returns 0 on success, -1 on error with errno set
+ */
+static int ad_convert_pread_full(struct ad_fd *adf, void *buf, size_t count,
+                                 off_t offset)
+{
+    size_t done = 0;
+
+    while (done < count) {
+        ssize_t cc = adf_pread(adf, (char *)buf + done, count - done,
+                               offset + (off_t)done);
+
+        if (cc < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+
+            return -1;
+        }
+
+        if (cc == 0) {
+            errno = EIO;
+            return -1;
+        }
+
+        done += (size_t)cc;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Write an exact byte range to an AppleDouble fork
+ *
+ * Retries interrupted and short writes. A zero-length write before @p count
+ * bytes have been written is reported as an I/O error.
+ *
+ * @param[in] adf      open AppleDouble fork
+ * @param[in] buf      source buffer
+ * @param[in] count    number of bytes to write
+ * @param[in] offset   starting file offset
+ * @returns 0 on success, -1 on error with errno set
+ */
+static int ad_convert_pwrite_full(struct ad_fd *adf, const void *buf,
+                                  size_t count, off_t offset)
+{
+    size_t done = 0;
+
+    while (done < count) {
+        ssize_t cc = adf_pwrite(adf, (const char *)buf + done, count - done,
+                                offset + (off_t)done);
+
+        if (cc < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+
+            return -1;
+        }
+
+        if (cc == 0) {
+            errno = EIO;
+            return -1;
+        }
+
+        done += (size_t)cc;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Move a resource fork towards the start of its AppleDouble file
+ *
+ * The caller must validate both ranges and ensure @p src is not before
+ * @p dst. Copying proceeds forwards in bounded chunks so overlapping ranges
+ * are safe when moving data towards the start of the file.
+ *
+ * @param[in] adf      open AppleDouble fork to modify
+ * @param[in] src      source range offset
+ * @param[in] dst      destination range offset
+ * @param[in] len      number of bytes to move
+ * @returns 0 on success, -1 on read or write error with errno set
+ */
+static int ad_convert_move_rfork(struct ad_fd *adf, off_t src, off_t dst,
+                                 off_t len)
+{
+    char buf[8192];
+
+    while (len > 0) {
+        size_t count = len > (off_t)sizeof(buf) ? sizeof(buf) : (size_t)len;
+
+        if (ad_convert_pread_full(adf, buf, count, src) != 0
+                || ad_convert_pwrite_full(adf, buf, count, dst) != 0) {
+            return -1;
+        }
+
+        src += (off_t)count;
+        dst += (off_t)count;
+        len -= (off_t)count;
+    }
+
+    return 0;
+}
+
+/*!
  * @brief Convert from Apple's ._ file to Netatalk
  *
  * Apple's AppleDouble may contain a FinderInfo entry longer then 32 bytes
@@ -673,46 +787,138 @@ EC_CLEANUP:
  * @returns -1 in case an error occured, 0 if no conversion was done,
  * 1 otherwise
  */
-static int ad_convert_osx(const char *path, struct adouble *ad)
+static int ad_convert_osx(const char *path, struct adouble *ad,
+                          const struct stat *hst)
 {
     EC_INIT;
     static bool in_conversion = false;
-    char *map;
-    int finderlen = ad_getentrylen(ad, ADEID_FINDERI);
-    ssize_t origlen;
+    char header[AD_DATASZ_OSX];
+    uint32_t finderlen = (uint32_t)ad_getentrylen(ad, ADEID_FINDERI);
+    off_t roff, doff, rlen;
+    int headerlen;
 
     if (in_conversion || finderlen == ADEDLEN_FINDERI) {
         return 0;
     }
 
     in_conversion = true;
-    LOG(log_debug, logtype_ad,
-        "Converting OS X AppleDouble %s, FinderInfo length: %d",
-        fullpathname(path), finderlen);
-    origlen = ad_getentryoff(ad, ADEID_RFORK) + ad_getentrylen(ad, ADEID_RFORK);
-    map = mmap(NULL, origlen, PROT_READ | PROT_WRITE, MAP_SHARED,
-               ad_reso_fileno(ad), 0);
+    /* Entry offsets and lengths are attacker controlled. The header
+     * buffer only holds the first AD_DATASZ_OSX bytes of the sidecar
+     * (valid_data_len tracks the whole file size), so ad_entry() alone
+     * does not prove that FinderInfo lies within the bytes actually
+     * read. Require the canonical, in-buffer position; together with
+     * ad_header_read_osx() requiring a complete AD_DATASZ_OSX read, this
+     * proves that the first ADEDLEN_FINDERI bytes of FinderInfo were read. */
+    _Static_assert(ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI <= AD_DATASZ_OSX,
+                   "FinderInfo must be inside the OS X header buffer");
 
-    if (map == MAP_FAILED) {
-        LOG(log_error, logtype_ad, "mmap AppleDouble: %s\n", strerror(errno));
+    if ((uint32_t)ad_getentryoff(ad, ADEID_FINDERI) != ADEDOFF_FINDERI_OSX) {
+        LOG(log_error, logtype_ad,
+            "ad_convert_osx(%s): malformed FinderInfo entry, refusing conversion",
+            path ? fullpathname(path) : "");
+        errno = EIO;
         EC_FAIL;
     }
 
-    memmove(map + ad_getentryoff(ad, ADEID_FINDERI) + ADEDLEN_FINDERI,
-            map + ad_getentryoff(ad, ADEID_RFORK),
-            ad_getentrylen(ad, ADEID_RFORK));
-    ad_setentrylen(ad, ADEID_FINDERI, ADEDLEN_FINDERI);
-    ad->ad_rlen = ad_getentrylen(ad, ADEID_RFORK);
-    ad_setentryoff(ad, ADEID_RFORK, ad_getentryoff(ad,
-                                                   ADEID_FINDERI) + ADEDLEN_FINDERI);
-    EC_ZERO_LOG(ftruncate(ad_reso_fileno(ad),
-                          ad_getentryoff(ad, ADEID_RFORK)
-                          + ad_getentrylen(ad, ADEID_RFORK)));
-    (void)ad_rebuild_adouble_header_osx(ad, map);
-    munmap(map, origlen);
+    /* Apple packs xattrs into FinderInfo entries longer than 32 bytes;
+     * anything shorter than the canonical 32 is malformed. */
+    if (finderlen < ADEDLEN_FINDERI) {
+        LOG(log_error, logtype_ad,
+            "ad_convert_osx(%s): FinderInfo length %" PRIu32 " too short, "
+            "refusing conversion",
+            path ? fullpathname(path) : "", finderlen);
+        errno = EIO;
+        EC_FAIL;
+    }
 
-    /* Create a metadata EA if one doesn't exit */
-    if (strlen(path) < 3) {
+    LOG(log_debug, logtype_ad,
+        "Converting OS X AppleDouble %s, FinderInfo length: %" PRIu32,
+        path ? fullpathname(path) : "", finderlen);
+
+    /* Reject sidecars too small to hold a complete OS X header before
+     * modifying them. Use the caller's fstat() result in hst, which
+     * describes the open sidecar the header was read from. Do not restat:
+     * the size we validate must describe the same file accessed below. */
+    if (hst->st_size < AD_DATASZ_OSX) {
+        errno = EIO;
+        EC_FAIL;
+    }
+
+    /* Widen the on-disk uint32 offset/length pair explicitly. Reading
+     * them through the ssize_t accessors would make values >= 0x80000000
+     * negative on 32-bit builds and defeat the bounds checks below.
+     * parse_entries() exempts ADEID_RFORK from its bounds check, so both
+     * values are still exactly what the attacker wrote. */
+    roff = (off_t)(uint32_t)ad_getentryoff(ad, ADEID_RFORK);
+    rlen = (off_t)(uint32_t)ad_getentrylen(ad, ADEID_RFORK);
+    doff = ADEDOFF_RFORK_OSX;
+
+    /* The fork must not sit before its canonical destination, or the move
+     * below would overwrite the header and the rebuilt entries. Reject
+     * instead of clamping: rewriting a malformed sidecar would be
+     * destructive. The lower bound also keeps the subtraction below from
+     * going negative. */
+    if (roff < doff) {
+        LOG(log_error, logtype_ad,
+            "ad_convert_osx(%s): resource fork entry starts before its "
+            "canonical destination (off %" PRIu64 ", destination %" PRIu64 ")",
+            path ? fullpathname(path) : "", (uint64_t)roff, (uint64_t)doff);
+        errno = EIO;
+        EC_FAIL;
+    }
+
+    /* Validate the source range [roff, roff + rlen) against the opened
+     * sidecar before copying anything. The comparison is written as a
+     * subtraction so an oversized offset cannot wrap the addition. Because
+     * roff >= doff, the source proof also proves that the destination range
+     * [doff, doff + rlen) fits; no second, unreachable branch is needed.
+     *
+     * For a well-formed sidecar the fork runs to end of file, i.e.
+     * roff + rlen == st_size, so validating the declared length here is
+     * equivalent to the old st_size - roff derivation. Oversized declared
+     * ranges are rejected rather than silently truncated. */
+    if (roff > hst->st_size || rlen > hst->st_size - roff) {
+        LOG(log_error, logtype_ad,
+            "ad_convert_osx(%s): resource fork entry out of bounds "
+            "(off %" PRIu64 ", len %" PRIu64 ", file size %" PRId64 ")",
+            path ? fullpathname(path) : "",
+            (uint64_t)roff, (uint64_t)rlen, (int64_t)hst->st_size);
+        errno = EIO;
+        EC_FAIL;
+    }
+
+    /* roff >= doff, so the validated source end also proves that the
+     * destination end fits. Use bounded positioned I/O instead of mmap():
+     * a concurrent truncate becomes a short read and EIO rather than
+     * SIGBUS, and a sparse sidecar never consumes a file-sized mapping. */
+    if (ad_convert_move_rfork(ad->ad_rfp, roff, doff, rlen) != 0) {
+        LOG(log_error, logtype_ad, "relocate AppleDouble resource fork: %s",
+            strerror(errno));
+        EC_FAIL;
+    }
+
+    ad_setentrylen(ad, ADEID_FINDERI, ADEDLEN_FINDERI);
+    ad->ad_rlen = rlen;
+    ad_setentrylen(ad, ADEID_RFORK, rlen);
+    ad_setentryoff(ad, ADEID_RFORK, doff);
+    headerlen = ad_rebuild_adouble_header_osx(ad, header);
+
+    if (ftruncate(ad_reso_fileno(ad), doff + rlen) != 0) {
+        LOG(log_error, logtype_ad, "ftruncate AppleDouble: %s", strerror(errno));
+        EC_FAIL;
+    }
+
+    if (ad_convert_pwrite_full(ad->ad_rfp, header, (size_t)headerlen, 0) != 0) {
+        LOG(log_error, logtype_ad, "rewrite AppleDouble header: %s",
+            strerror(errno));
+        EC_FAIL;
+    }
+
+    /* Create a metadata EA if one doesn't exit. path can be NULL when
+     * reached through ad_refresh(); also, the data fork name is derived
+     * from the sidecar path below, which only works for the afpd-style
+     * "._<name>" form. */
+    if (path == NULL || strlen(path) < 3) {
         EC_EXIT_STATUS(0);
     }
 
@@ -738,7 +944,7 @@ static int ad_convert_osx(const char *path, struct adouble *ad)
                    ADEDLEN_FINDERI);
         } else {
             LOG(log_debug, logtype_ad, "ad_convert_osx(%s): invalid FinderInfo",
-                fullpathname(path));
+                path ? fullpathname(path) : "");
         }
 
         ad_flush(&adea);
@@ -782,7 +988,7 @@ reread:
     /* read the header */
     EC_NEG1(header_len = adf_pread(ad->ad_rfp, buf, AD_DATASZ_OSX, 0));
 
-    if (header_len < AD_HEADER_LEN) {
+    if (header_len < AD_DATASZ_OSX) {
         errno = EIO;
         return -1;
     }
@@ -836,7 +1042,7 @@ reread:
 
         retry_read++;
 
-        if (ad_convert_osx(path, &adosx) == 1) {
+        if (ad_convert_osx(path, &adosx, hst) == 1) {
             hst = NULL;
             goto reread;
         }
