@@ -31,10 +31,7 @@ if build_man_docs
     endforeach
 
     foreach page : manpage_admin_commands
-        # fce_ev_script has no Japanese translation to install yet.
-        if page != 'fce_ev_script'
-            ja_manpage_admin_commands_files += meson.project_source_root() / 'doc' / 'manpages' / 'man8' / (page + '.8.md')
-        endif
+        ja_manpage_admin_commands_files += meson.project_source_root() / 'doc' / 'manpages' / 'man8' / (page + '.8.md')
     endforeach
 endif
 
@@ -151,10 +148,7 @@ if build_website
         endforeach
 
         foreach page : manpage_admin_commands
-            # fce_ev_script has no Japanese translation to install yet.
-            if page != 'fce_ev_script'
-                manual_pages += page + '.8'
-            endif
+            manual_pages += page + '.8'
         endforeach
     endif
 
