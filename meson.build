@@ -881,7 +881,7 @@ endif
 
 # Check for sqlite CNID backend
 
-sqlite_deps = dependency('sqlite3', required: false)
+sqlite_deps = dependency('sqlite3', version: '>=3.31.0', required: false)
 
 use_sqlite_backend = false
 
