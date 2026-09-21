@@ -73,6 +73,88 @@
 
 static void cnid_sqlite_set_errno(int sqlite_return);
 
+/*
+ * Change the mode of a SQLite file without following a symbolic link.
+ *
+ * The SQLite database directory is intentionally shared between local users,
+ * so a pathname must never be passed to chmod() while afpd is privileged.
+ * Reject multiply-linked files as well: an otherwise regular entry could be a
+ * hard link to an object outside the CNID directory.
+ */
+static int cnid_sqlite_fchmod_regular(const char *path, mode_t mode,
+                                      bool missing_ok)
+{
+    int fd;
+    int saved_errno;
+    struct stat st;
+    fd = open(path, O_RDWR | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+
+    if (fd < 0) {
+        if (missing_ok && errno == ENOENT) {
+            return 0;
+        }
+
+        return -1;
+    }
+
+    if (fstat(fd, &st) != 0) {
+        saved_errno = errno;
+        close(fd);
+        errno = saved_errno;
+        return -1;
+    }
+
+    if (!S_ISREG(st.st_mode)) {
+        close(fd);
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (st.st_nlink != 1) {
+        close(fd);
+        errno = EMLINK;
+        return -1;
+    }
+
+    if ((st.st_mode & 07777) != mode && fchmod(fd, mode) != 0) {
+        saved_errno = errno;
+        close(fd);
+        errno = saved_errno;
+        return -1;
+    }
+
+    if (close(fd) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/* Validate existing SQLite companion files before SQLite can open them, and
+ * set the mode of companions SQLite has just created. */
+static int cnid_sqlite_fchmod_companions(const char *dbpath)
+{
+    static const char *suffixes[] = { "-wal", "-shm" };
+    char path[PATH_MAX];
+
+    for (size_t i = 0; i < sizeof(suffixes) / sizeof(suffixes[0]); i++) {
+        if (snprintf(path, sizeof(path), "%s%s", dbpath, suffixes[i])
+                >= sizeof(path)) {
+            errno = ENAMETOOLONG;
+            return -1;
+        }
+
+        if (cnid_sqlite_fchmod_regular(path, 0666, true) != 0) {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_open: refusing unsafe SQLite companion %s: %s",
+                path, strerror(errno));
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 /*!
  * @brief Prepare one per-volume statement, replacing any previous handle
  *
@@ -1827,6 +1909,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     struct vol *vol = args->cnid_args_vol;
     sqlite3_stmt *transient_stmt = NULL;
     char dirpath[PATH_MAX];
+    char resolved_dirpath[PATH_MAX];
     bstring dbpath = NULL;
     const char *dbpath_str = NULL;
     int sqlite_return;
@@ -1838,10 +1921,17 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     cdb->cnid_db_private = db;
 
     if (vol->v_dbpath) {
-        snprintf(dirpath, sizeof(dirpath), "%s", vol->v_dbpath);
+        if (snprintf(dirpath, sizeof(dirpath), "%s", vol->v_dbpath)
+                >= sizeof(dirpath)) {
+            errno = ENAMETOOLONG;
+            EC_FAIL;
+        }
     } else {
-        snprintf(dirpath, sizeof(dirpath), "%sCNID/%s", _PATH_STATEDIR,
-                 vol->v_localname);
+        if (snprintf(dirpath, sizeof(dirpath), "%sCNID/%s", _PATH_STATEDIR,
+                     vol->v_localname) >= sizeof(dirpath)) {
+            errno = ENAMETOOLONG;
+            EC_FAIL;
+        }
     }
 
     become_root();
@@ -1849,7 +1939,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
     if (mkdir(dirpath, 01777) != 0) {
         if (errno == EEXIST) {
-            int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+            int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW
+                             | O_CLOEXEC);
 
             if (dirfd < 0) {
                 LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
@@ -1860,8 +1951,19 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
              * so that non-root clients such as 'nad' can create SQLite WAL/SHM files. */
             struct stat st;
 
-            if (fstat(dirfd, &st) == 0 && (st.st_mode & 01777) != 01777) {
-                fchmod(dirfd, 01777);
+            if (fstat(dirfd, &st) != 0) {
+                int saved_errno = errno;
+                close(dirfd);
+                errno = saved_errno;
+                EC_FAIL;
+            }
+
+            if ((st.st_mode & 01777) != 01777
+                    && fchmod(dirfd, 01777) != 0) {
+                int saved_errno = errno;
+                close(dirfd);
+                errno = saved_errno;
+                EC_FAIL;
             }
 
             close(dirfd);
@@ -1874,7 +1976,13 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
     unbecome_root();
     is_root = false;
-    EC_NULL(dbpath = bformat("%s/%s.sqlite", dirpath, vol->v_localname));
+    /* SQLITE_OPEN_NOFOLLOW rejects a symlink in any pathname component on
+     * some platforms. Resolve trusted ancestor aliases such as macOS /tmp
+     * after the directory itself has been opened with O_NOFOLLOW, leaving the
+     * database leaf as the only unresolved component. */
+    EC_NULL(realpath(dirpath, resolved_dirpath));
+    EC_NULL(dbpath = bformat("%s/%s.sqlite", resolved_dirpath,
+                             vol->v_localname));
     dbpath_str = bdata(dbpath);
     EC_NULL(db->cnid_sqlite_voluuid_str = uuid_strip_dashes(vol->v_uuid));
 
@@ -1895,7 +2003,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
     if (sqlite3_open_v2(dbpath_str,
                         &db->cnid_sqlite_con,
-                        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL)) {
+                        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE |
+                        SQLITE_OPEN_NOFOLLOW, NULL)) {
         LOG(log_error, logtype_cnid, "sqlite open error: %s, path: %s",
             sqlite3_errmsg(db->cnid_sqlite_con),
             dbpath_str);
@@ -1912,9 +2021,11 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     /* Setting permissions of the sqlite db file to world-writable.
      * This is to allow CNID records to be updated by any authenticated AFP user.
      *
-     * At the same time, do not treat a failure to change the permissions as a fatal error,
-     * because non-root clients such as 'nad' may open the database after it's been created. */
-    if (dbpath_str && chmod(dbpath_str, 0666) != 0) {
+     * A non-owner such as 'nad' may be unable to repair an old mode, which is
+     * nonfatal. Other failures mean the pathname did not resolve to the safe,
+     * single-link regular file expected here. */
+    if (dbpath_str
+            && cnid_sqlite_fchmod_regular(dbpath_str, 0666, false) != 0) {
         if (errno == EPERM || errno == EACCES) {
             LOG(log_debug, logtype_cnid,
                 "cnid_sqlite_open: Current user has no permissions to set permissions on db file %s: %s",
@@ -1923,10 +2034,14 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_open: Failed to set permissions on db file %s: %s",
                 dbpath_str, strerror(errno));
+            EC_FAIL;
         }
     }
 
     sqlite3_busy_timeout(db->cnid_sqlite_con, CNID_SQLITE_BUSY_TIMEOUT);
+    /* Do not let SQLite process an attacker-planted companion entry before
+     * it has been verified without following links. */
+    EC_ZERO(cnid_sqlite_fchmod_companions(dbpath_str));
 
     /* Neither pragma is worth refusing the volume over: a contended
      * journal_mode conversion leaves the database in rollback-journal mode,
@@ -1947,26 +2062,9 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     /* Setting permissions of the WAL and SHM files to world-writable.
      * These files are created by SQLite when WAL mode is enabled above.
      * Without this, files created by root would be inaccessible to non-root
-     * clients such as 'nad'. Same as with the main db file, do not treat
-     * a failure to change the permissions as a fatal error. */
-    {
-        char auxpath[PATH_MAX];
-        snprintf(auxpath, sizeof(auxpath), "%s-wal", dbpath_str);
-
-        if (chmod(auxpath, 0666) != 0 && errno != ENOENT) {
-            LOG(log_debug, logtype_cnid,
-                "cnid_sqlite_open: chmod failed for %s: %s",
-                auxpath, strerror(errno));
-        }
-
-        snprintf(auxpath, sizeof(auxpath), "%s-shm", dbpath_str);
-
-        if (chmod(auxpath, 0666) != 0 && errno != ENOENT) {
-            LOG(log_debug, logtype_cnid,
-                "cnid_sqlite_open: chmod failed for %s: %s",
-                auxpath, strerror(errno));
-        }
-    }
+     * clients such as 'nad'. Missing companions are normal, but an entry that
+     * exists and cannot be verified is fatal. */
+    EC_ZERO(cnid_sqlite_fchmod_companions(dbpath_str));
 
     /* Add volume to volume table */
     if (cnid_sqlite_execute(db->cnid_sqlite_con,

@@ -18,6 +18,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +40,189 @@
 #include "subtests_cnid.h"
 #include "test.h"
 #include "volume.h"
+
+/*
+ * A CNID path is predictable and its directory is intentionally writable by
+ * local users. Verify that neither the main SQLite path nor a companion path
+ * can redirect the backend's permission change to another file.
+ */
+int utest_cnid_sqlite_symlinks_rejected(void)
+{
+#ifndef CNID_BACKEND_SQLITE
+    return TEST_SKIP;
+#else
+    char base[] = "/tmp/netatalk-cnid-symlink-XXXXXX";
+    char main_dir[MAXPATHLEN];
+    char aux_dir[MAXPATHLEN];
+    char sentinel[MAXPATHLEN];
+    char main_link[MAXPATHLEN];
+    char aux_db[MAXPATHLEN];
+    char aux_wal[MAXPATHLEN];
+    char aux_shm[MAXPATHLEN];
+    char aux_journal[MAXPATHLEN];
+    char uuid_main[] = "11111111-2222-3333-4444-555555555555";
+    char uuid_aux[] = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
+    const char sentinel_data[] = "netatalk-sentinel";
+    struct _cnid_db *cdb = NULL;
+    struct stat st;
+    struct vol vol;
+    sqlite3 *seed = NULL;
+    int fd = -1;
+    int result = 1;
+
+    if (mkdtemp(base) == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (snprintf(main_dir, sizeof(main_dir), "%s/main", base)
+            >= sizeof(main_dir)
+            || snprintf(aux_dir, sizeof(aux_dir), "%s/aux", base)
+            >= sizeof(aux_dir)
+            || snprintf(sentinel, sizeof(sentinel), "%s/sentinel", base)
+            >= sizeof(sentinel)
+            || snprintf(main_link, sizeof(main_link), "%s/main.sqlite", main_dir)
+            >= sizeof(main_link)
+            || snprintf(aux_db, sizeof(aux_db), "%s/aux.sqlite", aux_dir)
+            >= sizeof(aux_db)
+            || snprintf(aux_wal, sizeof(aux_wal), "%s-wal", aux_db)
+            >= sizeof(aux_wal)
+            || snprintf(aux_shm, sizeof(aux_shm), "%s-shm", aux_db)
+            >= sizeof(aux_shm)
+            || snprintf(aux_journal, sizeof(aux_journal), "%s-journal", aux_db)
+            >= sizeof(aux_journal)) {
+        result = 2;
+        goto cleanup;
+    }
+
+    if (mkdir(main_dir, 0700) != 0 || mkdir(aux_dir, 0700) != 0) {
+        result = 3;
+        goto cleanup;
+    }
+
+    fd = open(sentinel, O_RDWR | O_CREAT | O_EXCL, 0600);
+
+    if (fd < 0
+            || write(fd, sentinel_data, sizeof(sentinel_data) - 1)
+            != sizeof(sentinel_data) - 1
+            || fchmod(fd, 0600) != 0 || close(fd) != 0) {
+        fd = -1;
+        result = 4;
+        goto cleanup;
+    }
+
+    fd = -1;
+
+    if (symlink(sentinel, main_link) != 0) {
+        result = 5;
+        goto cleanup;
+    }
+
+    memset(&vol, 0, sizeof(vol));
+    vol.v_dbpath = main_dir;
+    vol.v_localname = "main";
+    vol.v_path = main_dir;
+    vol.v_uuid = uuid_main;
+    cdb = cnid_open(&vol, "sqlite", 0);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        cdb = NULL;
+        result = 6;
+        goto cleanup;
+    }
+
+    if (stat(sentinel, &st) != 0 || (st.st_mode & 07777) != 0600
+            || st.st_size != sizeof(sentinel_data) - 1) {
+        result = 7;
+        goto cleanup;
+    }
+
+    if (sqlite3_open_v2(aux_db, &seed,
+                        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                        NULL) != SQLITE_OK) {
+        result = 8;
+        goto cleanup;
+    }
+
+    if (sqlite3_close(seed) != SQLITE_OK) {
+        result = 8;
+        goto cleanup;
+    }
+
+    seed = NULL;
+
+    if (chmod(aux_db, 0666) != 0 || symlink(sentinel, aux_wal) != 0) {
+        result = 9;
+        goto cleanup;
+    }
+
+    memset(&vol, 0, sizeof(vol));
+    vol.v_dbpath = aux_dir;
+    vol.v_localname = "aux";
+    vol.v_path = aux_dir;
+    vol.v_uuid = uuid_aux;
+    cdb = cnid_open(&vol, "sqlite", 0);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        cdb = NULL;
+        result = 10;
+        goto cleanup;
+    }
+
+    if (stat(sentinel, &st) != 0 || (st.st_mode & 07777) != 0600
+            || st.st_size != sizeof(sentinel_data) - 1) {
+        result = 11;
+        goto cleanup;
+    }
+
+    if (unlink(aux_wal) != 0 || symlink(sentinel, aux_shm) != 0) {
+        result = 12;
+        goto cleanup;
+    }
+
+    cdb = cnid_open(&vol, "sqlite", 0);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        cdb = NULL;
+        result = 13;
+        goto cleanup;
+    }
+
+    if (stat(sentinel, &st) != 0 || (st.st_mode & 07777) != 0600
+            || st.st_size != sizeof(sentinel_data) - 1) {
+        result = 14;
+        goto cleanup;
+    }
+
+    result = 0;
+cleanup:
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    if (seed != NULL) {
+        sqlite3_close(seed);
+    }
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    unlink(main_link);
+    unlink(aux_wal);
+    unlink(aux_shm);
+    unlink(aux_journal);
+    unlink(aux_db);
+    unlink(sentinel);
+    rmdir(main_dir);
+    rmdir(aux_dir);
+    rmdir(base);
+    return result;
+#endif
+}
 
 /*!
  * @brief cnid_volume_tag() names the CNID table, not the session's volume slot

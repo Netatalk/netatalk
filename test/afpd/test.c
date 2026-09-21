@@ -956,6 +956,8 @@ int main(int argc, char *argv[])
     TEST_int(configinit(&obj, &aspobj), 0,
              "initialize server config state");
     TEST(cnid_init(), "initialize CNID subsystem");
+    TEST_int_or_skip(utest_cnid_sqlite_symlinks_rejected(), 0,
+                     "sqlite CNID rejects main, WAL, and SHM symlink attacks");
     TEST(load_afp_conf_vols(&obj, LV_ALL), "load all volumes from config");
     obj.afp_version = 34;
     /* No IPC channel or dircache hint pipe in test harness */

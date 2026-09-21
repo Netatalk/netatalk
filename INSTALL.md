@@ -56,7 +56,7 @@ At least one CNID backend is required for netatalk to function.
 |--------------|---------|---------|
 | Berkeley DB  | dbd     | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
 | mysql-client **OR** mariadb-client | mysql |  |
-| sqlite3      | sqlite  |  |
+| sqlite3      | sqlite  | v3.31.0 or later |
 
 ### Required for Build Environment
 
