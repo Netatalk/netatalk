@@ -36,6 +36,17 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+/* On macOS ad_path_osx() resolves to the native APFS named resource fork,
+ * not to an AppleDouble sidecar.  Building the sidecar backend there would
+ * make it parse and rewrite that named stream as an AppleDouble file; among
+ * other corruption risks, mmap()/truncate conversion can panic APFS.
+ *
+ * This is an extremely unlikely state, but the outcome is catastrophic
+ * (kernel panic) so adding a guard out of an abundance of caution. */
+#if defined(__APPLE__) && !defined(HAVE_EAFD)
+#error "macOS requires full fledged fds for native resource fork handling"
+#endif
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <stdarg.h>
