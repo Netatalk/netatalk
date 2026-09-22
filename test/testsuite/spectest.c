@@ -390,7 +390,7 @@ void usage(char *av0)
             "usage:\t%s [-1234567aCEiLlmVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test] [-j path]\n", av0);
     fprintf(stdout,
-            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2)\n");
+            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2; SRP: srp)\n");
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");

@@ -13,6 +13,8 @@
 
 EXT_FN(FPResolveID);
 EXT_FN(FPEnumerate);
+EXT_FN(FPEnumerateExt);
+EXT_FN(FPOpenDT);
 EXT_FN(FPCopyFile);
 EXT_FN(FPLockrw);
 EXT_FN(FPLockw);
@@ -29,10 +31,14 @@ struct test_fn {
     char *helptext;
 };
 #define FN_N(a,b) { # a, FN(a) , # a " " # b},
+/* Verbs that take no arguments; FN_N would append a trailing space. */
+#define FN_0(a) { # a, FN(a) , # a },
 
 static struct test_fn Test_list[] = {
     FN_N(FPResolveID, CNID)
     FN_N(FPEnumerate, dir)
+    FN_0(FPEnumerateExt)
+    FN_0(FPOpenDT)
     FN_N(FPCopyFile, source dest)
     FN_N(FPLockrw, d | r file [seconds])
     FN_N(FPLockw, d | r file [seconds])
@@ -133,7 +139,7 @@ void usage(char *av0)
             "usage:\t%s [-1234567lVv] [-A uam] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f command args]\n",
             av0);
     fprintf(stdout,
-            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2)\n");
+            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2; SRP: srp)\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
     fprintf(stdout, "\t-s\tvolume to mount\n");

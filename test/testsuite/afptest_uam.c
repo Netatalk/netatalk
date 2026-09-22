@@ -1,5 +1,5 @@
 /*
- * Native DHCAST128 and DHX2 authentication for the afptest client.
+ * Native DHCAST128, DHX2 and SRP authentication for the afptest client.
  * Derived from afpfs-ng's AFP client UAM implementations.
  *
  * Copyright (C) 2006 Alex deVries <alexthepuffin@gmail.com>
@@ -33,10 +33,13 @@
 #include <gcrypt.h>
 
 #include <atalk/afp.h>
+#include <atalk/compat.h>
+#include <atalk/constant_time.h>
 #include <atalk/uam.h>
 
 #include "afpclient.h"
 #include "afptest_uam.h"
+#include "afptest_srp.h"
 
 #define AFP_MAX_USERNAME_LEN 127
 #define kFPAuthContinue AFPERR_AUTHCONT
@@ -145,7 +148,7 @@ static int afptest_uam_login_cont(struct afptest_uam_server *server,
     result = AFPLoginCont(server->conn, auth_info, auth_info_len);
     error = (int)ntohl(result);
 
-    if (error == AFPERR_AUTHCONT) {
+    if (error == AFPERR_AUTHCONT || error == AFP_OK) {
         int copy_error = afptest_uam_copy_reply(server, reply);
 
         if (copy_error != 0) {
@@ -695,6 +698,326 @@ dhx2_noctx_cleanup:
     return ret;
 }
 
+/*!
+ * @brief SRP-6a client half of etc/uams/uams_srp.c
+ *
+ * Round 1 sends the Pascal username and receives the group parameters, salt
+ * and the server ephemeral B. The group must be the compiled-in RFC 5054
+ * group #2: k, M1 and M2 are hashed over srp_N_bytes and srp_g_byte, so a
+ * server offering any other N or g is refused rather than exponentiated
+ * with. Round 2 sends A and the client proof M1 and verifies the server
+ * proof M2, which is what proves the server holds the verifier and not
+ * merely a copy of the password hash. A server that answers round 1 with
+ * success has skipped that proof and is refused, and so is a B that is zero
+ * mod N (RFC 5054 s2.5.4), the client's mirror of the server's check on A.
+ *
+ * @returns AFP_OK on success, an AFP error otherwise
+ */
+static int srp_login(struct afptest_uam_server *server, const char *username,
+                     const char *passwd)
+{
+    unsigned char a_binary[SRP_NBYTES], salt[SRP_SALT_LEN];
+    unsigned char a_padded[SRP_NBYTES], b_padded[SRP_NBYTES];
+    unsigned char x_hash[SRP_SHA1_LEN], k_hash[SRP_SHA1_LEN];
+    unsigned char u_hash[SRP_SHA1_LEN];
+    unsigned char key[SRP_SESSION_KEY_LEN];
+    unsigned char m1[SRP_SHA1_LEN], m2_expected[SRP_SHA1_LEN];
+    unsigned char s_binary[SRP_NBYTES];
+    gcry_mpi_t N = NULL, g = NULL, A = NULL, B = NULL, a = NULL;
+    gcry_mpi_t k = NULL, u = NULL, x = NULL, gx = NULL, kgx = NULL;
+    gcry_mpi_t base = NULL, exp = NULL, ux = NULL, S = NULL, tmp = NULL;
+    struct afp_rx_buffer rbuf;
+    char *ai = NULL;
+    unsigned char *d;
+    unsigned short ID;
+    size_t a_stripped_len, b_stripped_len, s_stripped_len;
+    const unsigned char *a_stripped, *b_stripped, *s_stripped;
+    int ai_len, ret = AFPERR_MISC;
+
+    if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
+        return AFPERR_MISC;
+    }
+
+    /* copy_to_pascal() truncates at AFP_MAX_USERNAME_LEN and the server
+     * hashes the name it received, so a longer name could never match */
+    if (strnlen(username, AFP_MAX_USERNAME_LEN + 1) > AFP_MAX_USERNAME_LEN) {
+        fprintf(stderr, "SRP: username longer than %d bytes\n",
+                AFP_MAX_USERNAME_LEN);
+        return AFPERR_PARAM;
+    }
+
+    /* Round 1 reply: context(2) | group(2) | N_len(2) | N(192) | g_len(2) |
+     * g(1) | salt_len(2) | salt(16) | B_len(2) | B(192). afpd adds nothing;
+     * the UAM's own leading context word is the transaction ID the client
+     * echoes in round 2. */
+    rbuf.maxsize = 2 + 2 + 2 + SRP_NBYTES + 2 + 1 + 2 + SRP_SALT_LEN + 2
+                   + SRP_NBYTES;
+    rbuf.data = calloc(1, rbuf.maxsize);
+
+    if (rbuf.data == NULL) {
+        goto cleanup;
+    }
+
+    rbuf.size = 0;
+    ai_len = 1 + (int)strnlen(username, AFP_MAX_USERNAME_LEN);
+    ai = calloc(1, ai_len);
+
+    if (ai == NULL) {
+        goto cleanup;
+    }
+
+    copy_to_pascal(ai, username);
+    ret = afptest_uam_login_initial(server, "SRP", ai, ai_len, &rbuf);
+    free(ai);
+    ai = NULL;
+
+    if (ret != kFPAuthContinue) {
+        if (ret == AFP_OK) {
+            fprintf(stderr,
+                    "SRP: server accepted the login without the proof exchange\n");
+            ret = AFPERR_MISC;
+        }
+
+        goto cleanup;
+    }
+
+    if (rbuf.size != rbuf.maxsize) {
+        fprintf(stderr, "SRP: round 1 reply is %zu bytes, expected %zu\n",
+                (size_t)rbuf.size, (size_t)rbuf.maxsize);
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d = (unsigned char *)rbuf.data;
+    ID = afptest_read_be16((const char *)d);
+    d += 2;
+
+    if (afptest_read_be16((const char *)d) != SRP_GROUP_INDEX) {
+        fprintf(stderr, "SRP: server offered a group the client does not accept\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d += 2;
+
+    if (afptest_read_be16((const char *)d) != SRP_NBYTES) {
+        fprintf(stderr, "SRP: server sent an N of unexpected length\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d += 2;
+
+    /* N, then g_len(2), then the g byte: all must be the compiled-in group */
+    if (memcmp(d, srp_N_bytes, SRP_NBYTES) != 0
+            || d[SRP_NBYTES + 2] != srp_g_byte) {
+        fprintf(stderr,
+                "SRP: server offered a group the client does not accept\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    gcry_mpi_scan(&N, GCRYMPI_FMT_USG, srp_N_bytes, SRP_NBYTES, NULL);
+    d += SRP_NBYTES;
+
+    /* g_len, the g byte itself, salt_len, the salt, B_len, then B: each
+     * length word is checked before the value it introduces is read. */
+    if (afptest_read_be16((const char *)d) != 1) {
+        fprintf(stderr, "SRP: server sent a generator longer than one byte\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d += 2;
+    gcry_mpi_scan(&g, GCRYMPI_FMT_USG, &srp_g_byte, 1, NULL);
+    d += 1;
+
+    if (afptest_read_be16((const char *)d) != SRP_SALT_LEN) {
+        fprintf(stderr, "SRP: server sent a salt of unexpected length\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d += 2;
+    memcpy(salt, d, SRP_SALT_LEN);
+    d += SRP_SALT_LEN;
+
+    if (afptest_read_be16((const char *)d) != SRP_NBYTES) {
+        fprintf(stderr, "SRP: server sent a B of unexpected length\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d += 2;
+    memcpy(b_padded, d, SRP_NBYTES);
+    gcry_mpi_scan(&B, GCRYMPI_FMT_USG, b_padded, SRP_NBYTES, NULL);
+    free(rbuf.data);
+    rbuf.data = NULL;
+    /* RFC 5054 s2.5.4: abort on B mod N == 0, as the server does on A */
+    tmp = gcry_mpi_new(0);
+    gcry_mpi_mod(tmp, B, N);
+
+    if (gcry_mpi_cmp_ui(tmp, 0) == 0) {
+        fprintf(stderr, "SRP: server sent B == 0 mod N\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    /* a random, A = g^a mod N. The server rejects an A that is 0 mod N, but
+     * g^a mod N is never 0 for the prime N, so there is nothing to retry. */
+    A = gcry_mpi_new(0);
+    gcry_randomize(a_binary, SRP_NBYTES, GCRY_STRONG_RANDOM);
+    gcry_mpi_scan(&a, GCRYMPI_FMT_USG, a_binary, SRP_NBYTES, NULL);
+    gcry_mpi_mod(a, a, N);
+    gcry_mpi_powm(A, g, a, N);
+    srp_mpi_to_padded_buf(a_padded, SRP_NBYTES, A);
+
+    if (srp_derive_x(username, passwd, salt, x_hash) != 0
+            || srp_compute_k(k_hash) != 0
+            || srp_compute_u(a_padded, b_padded, u_hash) != 0) {
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    gcry_mpi_scan(&x, GCRYMPI_FMT_USG, x_hash, SRP_SHA1_LEN, NULL);
+    gcry_mpi_scan(&k, GCRYMPI_FMT_USG, k_hash, SRP_SHA1_LEN, NULL);
+    gcry_mpi_scan(&u, GCRYMPI_FMT_USG, u_hash, SRP_SHA1_LEN, NULL);
+
+    if (gcry_mpi_cmp_ui(u, 0) == 0) {
+        fprintf(stderr, "SRP: u == 0\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    /* S = (B - k*g^x)^(a + u*x) mod N */
+    gx = gcry_mpi_new(0);
+    kgx = gcry_mpi_new(0);
+    base = gcry_mpi_new(0);
+    ux = gcry_mpi_new(0);
+    exp = gcry_mpi_new(0);
+    S = gcry_mpi_new(0);
+    gcry_mpi_powm(gx, g, x, N);
+    gcry_mpi_mulm(kgx, k, gx, N);
+    gcry_mpi_subm(base, B, kgx, N);
+    gcry_mpi_mul(ux, u, x);
+    gcry_mpi_add(exp, a, ux);
+    gcry_mpi_powm(S, base, exp, N);
+    srp_mpi_to_padded_buf(s_binary, SRP_NBYTES, S);
+    s_stripped = srp_strip_leading_zeros(s_binary, SRP_NBYTES,
+                                         &s_stripped_len);
+
+    if (srp_mgf1_sha1(s_stripped, s_stripped_len, key, sizeof(key)) != 0) {
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    a_stripped = srp_strip_leading_zeros(a_padded, SRP_NBYTES,
+                                         &a_stripped_len);
+    b_stripped = srp_strip_leading_zeros(b_padded, SRP_NBYTES,
+                                         &b_stripped_len);
+
+    if (srp_compute_proofs(username, salt, a_stripped, a_stripped_len,
+                           b_stripped, b_stripped_len, key, m1) != 0) {
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    /* Round 2: step(2) | A_len(2) | A(192) | M1_len(2) | M1(20) */
+    ai_len = 2 + 2 + SRP_NBYTES + 2 + SRP_SHA1_LEN;
+    ai = calloc(1, ai_len);
+
+    if (ai == NULL) {
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d = (unsigned char *)ai;
+    d[0] = (SRP_CLIENT_PROOF >> 8) & 0xFF;
+    d[1] = SRP_CLIENT_PROOF & 0xFF;
+    d += 2;
+    d[0] = (SRP_NBYTES >> 8) & 0xFF;
+    d[1] = SRP_NBYTES & 0xFF;
+    d += 2;
+    memcpy(d, a_padded, SRP_NBYTES);
+    d += SRP_NBYTES;
+    d[0] = 0;
+    d[1] = SRP_SHA1_LEN;
+    d += 2;
+    memcpy(d, m1, SRP_SHA1_LEN);
+    /* Round 2 reply: step(2) | M2_len(2) | M2(20), again with no prefix */
+    rbuf.maxsize = 2 + 2 + SRP_SHA1_LEN;
+    rbuf.data = calloc(1, rbuf.maxsize);
+
+    if (rbuf.data == NULL) {
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    rbuf.size = 0;
+    ret = afptest_uam_login_cont(server, ID, ai, ai_len, &rbuf);
+    free(ai);
+    ai = NULL;
+
+    if (ret != AFP_OK) {
+        goto cleanup;
+    }
+
+    if (rbuf.size != rbuf.maxsize) {
+        fprintf(stderr, "SRP: round 2 reply is %zu bytes, expected %zu\n",
+                (size_t)rbuf.size, (size_t)rbuf.maxsize);
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    d = (unsigned char *)rbuf.data;
+
+    if (afptest_read_be16((const char *)d) != SRP_SERVER_PROOF
+            || afptest_read_be16((const char *)d + 2) != SRP_SHA1_LEN) {
+        fprintf(stderr, "SRP: round 2 reply is not the server's proof\n");
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    if (srp_compute_server_proof(a_stripped, a_stripped_len, m1, key,
+                                 m2_expected) != 0) {
+        ret = AFPERR_MISC;
+        goto cleanup;
+    }
+
+    /* Mandatory: a server that cannot produce M2 does not hold the verifier.
+     * Compared in constant time, as uams_srp.c compares the client's M1. */
+    if (atalk_ct_memcmp(d + 4, m2_expected, SRP_SHA1_LEN) != 0) {
+        fprintf(stderr, "SRP: server proof M2 does not verify\n");
+        ret = AFPERR_NOTAUTH;
+        goto cleanup;
+    }
+
+    ret = AFP_OK;
+cleanup:
+    explicit_bzero(x_hash, sizeof(x_hash));
+    explicit_bzero(key, sizeof(key));
+    explicit_bzero(a_binary, sizeof(a_binary));
+    explicit_bzero(s_binary, sizeof(s_binary));
+    gcry_mpi_release(N);
+    gcry_mpi_release(g);
+    gcry_mpi_release(A);
+    gcry_mpi_release(B);
+    gcry_mpi_release(a);
+    gcry_mpi_release(k);
+    gcry_mpi_release(u);
+    gcry_mpi_release(x);
+    gcry_mpi_release(gx);
+    gcry_mpi_release(kgx);
+    gcry_mpi_release(base);
+    gcry_mpi_release(exp);
+    gcry_mpi_release(ux);
+    gcry_mpi_release(S);
+    gcry_mpi_release(tmp);
+    free(ai);
+    free(rbuf.data);
+    return ret;
+}
+
 int afptest_uam_uses_legacy_login(const char *uam)
 {
     return uam && (strcasecmp(uam, "clrtxt") == 0 ||
@@ -731,6 +1054,8 @@ unsigned int afptest_uam_login(CONN *conn, const char *vers,
         result = dhx_login(&server, username, password);
     } else if (strcasecmp(uam, "dhx2") == 0 || strcasecmp(uam, "DHX2") == 0) {
         result = dhx2_login(&server, username, password);
+    } else if (strcasecmp(uam, "srp") == 0) {
+        result = srp_login(&server, username, password);
     } else {
         return htonl((uint32_t)AFPERR_BADUAM);
     }

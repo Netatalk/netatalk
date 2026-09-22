@@ -25,9 +25,9 @@ libafptest_extra = []
 libafptest_deps = []
 spectest_extra_c_args = []
 
-# afptest implements the DHCAST128 and DHX2 exchanges itself. The separate
+# afptest implements the DHCAST128, DHX2 and SRP exchanges itself. The separate
 # afp_logintest UAM matrix continues to use libafpclient when it is available.
-libafptest_extra += ['afptest_uam.c']
+libafptest_extra += ['afptest_srp.c', 'afptest_uam.c']
 libafptest_deps += libgcrypt
 
 if have_spotlight

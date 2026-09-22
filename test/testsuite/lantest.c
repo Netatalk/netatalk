@@ -2011,7 +2011,7 @@ void usage(char *av0)
             "usage:\t%s [-34567bcGgKVv] [-A uam] [-h host] [-p port] [-s vol] [-u user] [-w password] "
             "[-n iterations] [-f tests] [-F bigfile]\n", av0);
     fprintf(stdout,
-            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2)\n");
+            "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2; SRP: srp)\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
     fprintf(stdout, "\t-s\tvolume to mount\n");
