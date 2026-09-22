@@ -734,31 +734,47 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  * @returns 0 if the directory upath and all of its contents were deleted, otherwise -1.
  * @returns If the volume option is not set it returns -1.
  */
-int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
+static int delete_vetoed_files_at(struct vol *vol, int parent_fd,
+                                  const char *name, bool in_vetodir)
 {
     EC_INIT;
     DIR            *dp = NULL;
     struct dirent  *de;
     struct stat     sb;
-    int             pwd = -1;
+    int             directory_fd;
     bool            vetoed;
+    /* Do not let a directory-to-symlink replacement redirect recursion. */
+    directory_fd = openat(parent_fd, name,
+                          O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-    if (!(vol->v_flags & AFPVOL_DELVETO)) {
+    if (directory_fd == -1) {
+        LOG(log_error, logtype_afpd,
+            "delete_vetoed_files: cannot open directory \"%s\": %s",
+            name, strerror(errno));
         return -1;
     }
 
-    EC_NEG1(pwd = open(".", O_RDONLY));
-    EC_ZERO(chdir(upath));
-    EC_NULL(dp = opendir("."));
+    dp = fdopendir(directory_fd);
+
+    if (dp == NULL) {
+        LOG(log_error, logtype_afpd,
+            "delete_vetoed_files: cannot read directory \"%s\": %s",
+            name, strerror(errno));
+        close(directory_fd);
+        return -1;
+    }
+
+    /* fdopendir() owns directory_fd from here on. */
 
     while ((de = readdir(dp))) {
         if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
             continue;
         }
 
-        if (stat(de->d_name, &sb) != 0) {
+        /* Classify symlinks as leaves; all later operations use this dirfd. */
+        if (fstatat(dirfd(dp), de->d_name, &sb, AT_SYMLINK_NOFOLLOW) != 0) {
             LOG(log_error, logtype_afpd, "delete_vetoed_files(\"%s/%s\"): %s",
-                upath, de->d_name, strerror(errno));
+                name, de->d_name, strerror(errno));
             EC_EXIT_STATUS(AFPERR_DIRNEMPT);
         }
 
@@ -771,17 +787,17 @@ int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
         if (vetoed) {
             LOG(log_debug, logtype_afpd,
                 "delete_vetoed_files(\"%s/%s\"): deleting vetoed file",
-                upath, de->d_name);
+                name, de->d_name);
 
             switch (sb.st_mode & S_IFMT) {
             case S_IFDIR:
-                /* recursion */
-                EC_ZERO(delete_vetoed_files(vol, de->d_name, vetoed));
+                EC_ZERO(delete_vetoed_files_at(vol, dirfd(dp), de->d_name,
+                                               true));
                 break;
 
             case S_IFREG:
             case S_IFLNK:
-                EC_ZERO(netatalk_unlink(de->d_name));
+                EC_ZERO(netatalk_unlinkat(dirfd(dp), de->d_name));
                 break;
 
             default:
@@ -790,22 +806,40 @@ int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
         }
     }
 
-    EC_ZERO_LOG(fchdir(pwd));
-    pwd = -1;
-    EC_ZERO_LOG(rmdir(upath));
+    if (closedir(dp) != 0) {
+        dp = NULL;
+        EC_FAIL;
+    }
+
+    dp = NULL;
+    EC_ZERO_LOG(unlinkat(parent_fd, name, AT_REMOVEDIR));
 EC_CLEANUP:
 
     if (dp) {
         closedir(dp);
     }
 
-    if (pwd != -1) {
-        if (fchdir(pwd) != 0) {
-            ret = -1;
-        }
+    EC_EXIT;
+}
+
+int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
+{
+    int parent_fd;
+    int ret;
+
+    if (!(vol->v_flags & AFPVOL_DELVETO)) {
+        return -1;
     }
 
-    EC_EXIT;
+    parent_fd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+
+    if (parent_fd == -1) {
+        return -1;
+    }
+
+    ret = delete_vetoed_files_at(vol, parent_fd, upath, in_vetodir);
+    close(parent_fd);
+    return ret;
 }
 
 /* ------------------------------- */
