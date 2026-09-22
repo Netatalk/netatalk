@@ -835,6 +835,8 @@ int main(int argc, char *argv[])
      * fail with ENXIO and every LOG() is silently dropped.  stderr is captured. */
     TEST(setuplog("default:note", "/dev/stderr", true),
          "init logging to stderr");
+    TEST_int(test011_delete_veto_symlink_stays_in_volume(), 0,
+             "delete veto files unlinks directory symlinks without following them");
     TEST_int(utest_decompose_reserves_terminator(), 0,
              "decompose_w reserves space for its UTF-16 terminator");
     TEST_int(utest_fork_range_rejects_wrapped_read(), 0,

@@ -49,5 +49,6 @@ extern int test008_reindex_over_stale_key_expunges(struct vol *vol);
 extern int test009_file_add_over_curdir_did(struct vol *vol);
 extern int test010_full_cache_accepts_adds(struct vol *vol,
                                            unsigned int cache_size);
+extern int test011_delete_veto_symlink_stays_in_volume(void);
 extern int dircache_test_ghost_trim_selection(void);
 #endif  /* SUBTESTS_H */
