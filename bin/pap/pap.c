@@ -27,9 +27,37 @@
 #define IMAGEWRITER "ImageWriter"
 #define IMAGEWRITER_LQ "LQ"
 
+#define PAP_STATUS_HEADER_SIZE 9
+#define PAP_STATUS_BUFFER_SIZE 256
+
 /* Forward Declarations */
+static int copy_status(const struct iovec *response, char *status_buf,
+                       size_t status_buf_size, size_t *status_len);
 static void updatestatus(char *s, int len);
 static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter);
+
+static int copy_status(const struct iovec *response, char *status_buf,
+                       size_t status_buf_size, size_t *status_len)
+{
+    const unsigned char *data = response->iov_base;
+    size_t len;
+
+    if (response->iov_len < PAP_STATUS_HEADER_SIZE) {
+        return -1;
+    }
+
+    len = data[PAP_STATUS_HEADER_SIZE - 1];
+
+    if (len > response->iov_len - PAP_STATUS_HEADER_SIZE ||
+            len >= status_buf_size) {
+        return -1;
+    }
+
+    memcpy(status_buf, data + PAP_STATUS_HEADER_SIZE, len);
+    status_buf[len] = '\0';
+    *status_len = len;
+    return 0;
+}
 
 static void usage(char *path)
 {
@@ -266,7 +294,8 @@ int main(int ac, char	**av)
                       0 == strcmp(IMAGEWRITER_LQ, type));
 
     while (waitforidle) {
-        char	st_buf[1024];	/* XXX too big */
+        char	st_buf[PAP_STATUS_BUFFER_SIZE];
+        size_t	status_len;
         cbuf[0] = 0;
         cbuf[1] = PAP_SENDSTATUS;
         cbuf[2] = cbuf[3] = 0;
@@ -295,6 +324,13 @@ int main(int ac, char	**av)
             continue;
         }
 
+        if (atpb.atp_rresiovcnt != 1 ||
+                copy_status(&rniov[0], st_buf, sizeof(st_buf),
+                            &status_len) < 0) {
+            fprintf(stderr, "Bad status response!\n");
+            exit(1);
+        }
+
 #ifndef NONZEROSTATUS
 
         /*
@@ -308,8 +344,7 @@ int main(int ac, char	**av)
 
 #endif /* NONZEROSTATUS */
 
-        if (((char *)rniov[0].iov_base)[1] != PAP_STATUS ||
-                atpb.atp_rresiovcnt != 1) {
+        if (((char *)rniov[0].iov_base)[1] != PAP_STATUS) {
             fprintf(stderr, "Bad status response!\n");
             exit(1);
         }
@@ -318,15 +353,10 @@ int main(int ac, char	**av)
             printf("< STATUS\n"), fflush(stdout);
         }
 
-        memcpy(st_buf, (char *) rniov[0].iov_base + 9,
-               ((char *)rniov[0].iov_base)[8]);
-        st_buf[(int)((char *)rniov[0].iov_base)[8]] = '\0';
-
         if (strstr(st_buf, "idle") != NULL) {
             waitforidle = 0;
         } else {
-            updatestatus((char *) rniov[0].iov_base + 9,
-                         ((char *)rniov[0].iov_base)[8]);
+            updatestatus(st_buf, (int)status_len);
             sleep(5);
         }
     }
@@ -868,6 +898,8 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
                 return 0;
             }
         } else {
+            char	st_buf[PAP_STATUS_BUFFER_SIZE];
+            size_t	status_len;
             /*
              * If we can't send data right now, go ahead and get the
              * status. This is cool, because we get here reliably
@@ -901,6 +933,13 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
                 continue;
             }
 
+            if (atpb.atp_rresiovcnt != 1 ||
+                    copy_status(&rniov[0], st_buf, sizeof(st_buf),
+                                &status_len) < 0) {
+                fprintf(stderr, "Bad status response!\n");
+                exit(1);
+            }
+
 #ifndef NONZEROSTATUS
 
             /*
@@ -916,8 +955,8 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
 
 #endif /* NONZEROSTATUS */
 
-            if (! is_imagewriter && ((char *)rniov[0].iov_base)[1] != PAP_STATUS ||
-                    atpb.atp_rresiovcnt != 1) {
+            if (! is_imagewriter &&
+                    ((char *)rniov[0].iov_base)[1] != PAP_STATUS) {
                 fprintf(stderr, "Bad status response!\n");
                 exit(1);
             }
@@ -927,18 +966,12 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
             }
 
             if (waitforprinter) {
-                char	st_buf[1024];	/* XXX too big */
-                memcpy(st_buf, (char *) rniov[0].iov_base + 9,
-                       ((char *)rniov[0].iov_base)[8]);
-                st_buf[(int)((char *)rniov[0].iov_base)[8]] = '\0';
-
                 if (strstr(st_buf, "waiting") != NULL) {
                     waitforprinter = 0;
                 }
             }
 
-            updatestatus((char *) rniov[0].iov_base + 9,
-                         ((char *)rniov[0].iov_base)[8]);
+            updatestatus(st_buf, (int)status_len);
         }
     }
 }
