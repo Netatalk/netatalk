@@ -76,6 +76,11 @@ int atp_rresp(ATP ah, struct atp_block *atpb)
             break;
         }
 
+        if (ah->atph_resppkt[i]->atpbuf_dlen < ATP_HDRSIZE) {
+            errno = EMSGSIZE;
+            return -1;
+        }
+
         len = ah->atph_resppkt[i]->atpbuf_dlen - ATP_HDRSIZE;
 
         if (i > atpb->atp_rresiovcnt - 1 ||
