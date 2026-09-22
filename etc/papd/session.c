@@ -242,6 +242,17 @@ int session(ATP atp, struct sockaddr_at *sat)
                 return -1;
             }
 
+            /* Every fragment must carry the 4 byte PAP header.  A short one
+             * cannot be truncated, so reject the whole response and end the
+             * session rather than subtracting a length below zero. */
+            for (i = 0; i < atpb.atp_rresiovcnt; i++) {
+                if (niov[i].iov_len < 4) {
+                    LOG(log_error, logtype_papd,
+                        "Short PAP response, ending session");
+                    return -1;
+                }
+            }
+
             /* sanity */
             if (((unsigned char *)niov[0].iov_base)[0] != connid ||
                     ((char *)niov[0].iov_base)[1] != PAP_DATA) {
