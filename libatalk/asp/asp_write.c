@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <sys/types.h>
+#include <errno.h>
 #include <sys/uio.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>
@@ -80,6 +81,13 @@ int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
     asp->asp_sat.sat_port = oport;
     /* get rid of the 4-byte headers */
     p = buf;
+
+    for (iovcnt = 0; iovcnt < atpb.atp_rresiovcnt; iovcnt++) {
+        if (iov[iovcnt].iov_len < ASP_HDRSIZ) {
+            errno = EMSGSIZE;
+            return -1;
+        }
+    }
 
     for (iovcnt = 0; iovcnt < atpb.atp_rresiovcnt; iovcnt++) {
         memmove(p, (char *) iov[iovcnt].iov_base + ASP_HDRSIZ,
