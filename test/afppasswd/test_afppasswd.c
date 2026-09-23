@@ -41,6 +41,8 @@ static int test_fsync(int fd);
 static void test_setpwent(void);
 static struct passwd *test_getpwent(void);
 static void test_endpwent(void);
+static struct passwd *test_getpwuid(uid_t uid);
+static char *test_getpass(const char *prompt);
 #define fstat test_fstat
 #define fchown test_fchown
 #define fchmod test_fchmod
@@ -49,6 +51,8 @@ static void test_endpwent(void);
 #define setpwent test_setpwent
 #define getpwent test_getpwent
 #define endpwent test_endpwent
+#define getpwuid test_getpwuid
+#define getpass test_getpass
 #define main afppasswd_program_main
 #include "../../bin/afppasswd/afppasswd.c"
 #undef main
@@ -60,6 +64,8 @@ static void test_endpwent(void);
 #undef setpwent
 #undef getpwent
 #undef endpwent
+#undef getpwuid
+#undef getpass
 
 static struct stat verifier_directory;
 static int mock_directory_owner;
@@ -182,6 +188,42 @@ static void test_endpwent(void)
     if (mock_passwd == NULL) {
         endpwent();
     }
+}
+
+/*!
+ * @brief getpwuid() over the file's account fixture
+ *
+ * @returns the fixture when one is set, else the real record
+ */
+static struct passwd *test_getpwuid(uid_t uid)
+{
+    return mock_passwd != NULL ? mock_passwd : getpwuid(uid);
+}
+
+static const char *mock_prompt_answers[2];
+static int mock_prompts;
+
+/*!
+ * @brief getpass() over a scripted pair of answers
+ *
+ * getpass() hands out one static buffer, which afppasswd wipes after use, so
+ * this hands out one too and counts the calls.
+ *
+ * @returns the next scripted answer, or NULL once they run out
+ */
+static char *test_getpass(const char *prompt)
+{
+    static char answer[SRP_PASSWDLEN + 1];
+    const char *next = mock_prompts < 2 ? mock_prompt_answers[mock_prompts] : NULL;
+    (void)prompt;
+    mock_prompts++;
+
+    if (next == NULL) {
+        return NULL;
+    }
+
+    snprintf(answer, sizeof(answer), "%s", next);
+    return answer;
 }
 
 static int tests_run;
@@ -572,6 +614,194 @@ static void test_enrollment_ownership(void)
     rmdir(directory);
 }
 
+/*!
+ * @brief A bootstrap that aborts at the confirmation leaves the record alone
+ */
+static void test_aborted_bootstrap_keeps_verifier(void)
+{
+    char directory[MAXPATHLEN + 1] = {0};
+    char verifier[MAXPATHLEN + 1] = {0};
+    char actual[64] = {0};
+    const char *existing = "alice:existing-record\n";
+    struct passwd account = {.pw_name = "alice", .pw_uid = getuid()};
+    FILE *fp;
+    size_t length = 0;
+    int result;
+
+    if (make_case(directory) != 0 ||
+            snprintf(verifier, sizeof(verifier), "%s/%ju", directory,
+                     (uintmax_t)getuid()) <= 0 ||
+            write_file(verifier, existing) != 0) {
+        report(0, "prepare aborted bootstrap test");
+        unlink(verifier);
+        rmdir(directory);
+        return;
+    }
+
+    mock_passwd = &account;
+    mock_prompt_answers[0] = "Password2xyz";
+    mock_prompt_answers[1] = "MISMATCHED";
+    mock_prompts = 0;
+    result = create_private_srp_verifier(directory, getuid(),
+                                         OPT_CREATE | OPT_FORCE | OPT_NOCRACK, "");
+    mock_passwd = NULL;
+    fp = fopen(verifier, "r");
+
+    if (fp != NULL) {
+        length = fread(actual, 1, sizeof(actual) - 1, fp);
+        fclose(fp);
+    }
+
+    report(result < 0 && mock_prompts == 2 && length == strlen(existing) &&
+           memcmp(actual, existing, length) == 0,
+           "mismatched confirmation leaves the existing private verifier unchanged");
+    unlink(verifier);
+    rmdir(directory);
+}
+
+/*!
+ * @brief Read the verifier's first line and whether a second one follows
+ *
+ * @returns 1 when the file holds exactly one line, copied to line
+ */
+static int read_single_record(const char *path, char *line, size_t size)
+{
+    FILE *fp = fopen(path, "r");
+    int single;
+
+    if (fp == NULL) {
+        return 0;
+    }
+
+    single = fgets(line, size, fp) != NULL && fgetc(fp) == EOF;
+    fclose(fp);
+    return single;
+}
+
+/*!
+ * @brief The bootstrap's other exits: refused before a prompt, cancelled, failed
+ *        after the file was created, and the successful record
+ */
+static void test_bootstrap_exits(void)
+{
+    char directory[MAXPATHLEN + 1] = {0};
+    char verifier[MAXPATHLEN + 1] = {0};
+    char line[SRP_HEX_SALT_LEN + SRP_HEX_V_LEN + 32] = {0};
+    char actual[64] = {0};
+    const char *existing = "alice:existing-record\n";
+    struct passwd account = {.pw_name = "alice", .pw_uid = getuid()};
+    struct stat st;
+    size_t length = 0;
+    FILE *fp;
+    int result;
+
+    if (make_case(directory) != 0 ||
+            snprintf(verifier, sizeof(verifier), "%s/%ju", directory,
+                     (uintmax_t)getuid()) <= 0 ||
+            write_file(verifier, existing) != 0) {
+        report(0, "prepare bootstrap exit tests");
+        unlink(verifier);
+        rmdir(directory);
+        return;
+    }
+
+    mock_passwd = &account;
+    /* an existing verifier without -f is refused before any prompt runs */
+    mock_prompt_answers[0] = "Password2xyz";
+    mock_prompt_answers[1] = "Password2xyz";
+    mock_prompts = 0;
+    result = create_private_srp_verifier(directory, getuid(),
+                                         OPT_CREATE | OPT_NOCRACK, "");
+    fp = fopen(verifier, "r");
+
+    if (fp != NULL) {
+        length = fread(actual, 1, sizeof(actual) - 1, fp);
+        fclose(fp);
+    }
+
+    report(result < 0 && mock_prompts == 0 && length == strlen(existing) &&
+           memcmp(actual, existing, length) == 0,
+           "existing verifier without -f is refused before the prompt");
+    unlink(verifier);
+    /* a cancelled first prompt on a fresh directory leaves no file behind */
+    mock_prompt_answers[0] = NULL;
+    mock_prompts = 0;
+    result = create_private_srp_verifier(directory, getuid(),
+                                         OPT_CREATE | OPT_NOCRACK, "");
+    report(result < 0 && mock_prompts == 1 && stat(verifier, &st) != 0,
+           "cancelled bootstrap on a fresh directory leaves no verifier");
+    /* a write that fails after the file was created removes the file again */
+    mock_prompt_answers[0] = "Password2xyz";
+    mock_prompt_answers[1] = "Password2xyz";
+    mock_prompts = 0;
+    mock_verifier_path = verifier;
+    mock_verifier_owner = getuid();
+    fail_verifier_lock = 1;
+    result = create_private_srp_verifier(directory, getuid(),
+                                         OPT_CREATE | OPT_NOCRACK, "");
+    fail_verifier_lock = 0;
+    mock_verifier_path = NULL;
+    report(result < 0 && mock_prompts == 2 && stat(verifier, &st) != 0,
+           "bootstrap that fails after creating the file leaves no verifier");
+    /* the successful bootstrap writes one owner-only record the UAM accepts */
+    unlink(verifier);
+    mock_prompts = 0;
+    result = create_private_srp_verifier(directory, getuid(),
+                                         OPT_CREATE | OPT_NOCRACK, "");
+    report(result == 0 && mock_prompts == 2 && stat(verifier, &st) == 0 &&
+           (st.st_mode & 07777) == 0600 &&
+           read_single_record(verifier, line, sizeof(line)) &&
+           strncmp(line, "alice:", 6) == 0 && line[6] != '*' &&
+           srp_valid_fields(line + 6),
+           "bootstrap writes a single owner-only verifier record");
+    /* -w that is too long is refused before the file exists */
+    unlink(verifier);
+    memset(line, 'x', SRP_PASSWDLEN + 1);
+    line[SRP_PASSWDLEN + 1] = '\0';
+    mock_prompts = 0;
+    result = create_private_srp_verifier(directory, getuid(),
+                                         OPT_CREATE | OPT_NOCRACK, line);
+    report(result < 0 && mock_prompts == 0 && stat(verifier, &st) != 0,
+           "overlong -w bootstrap leaves no verifier");
+    mock_passwd = NULL;
+    unlink(verifier);
+    rmdir(directory);
+}
+
+/*!
+ * @brief Root's -a with an overlong -w on a missing verifier creates nothing
+ */
+static void test_overlong_password_creates_nothing(void)
+{
+    char directory[MAXPATHLEN + 1] = {0};
+    char verifier[MAXPATHLEN + 1] = {0};
+    char password[SRP_PASSWDLEN + 2];
+    struct stat st;
+    int result;
+
+    if (make_case(directory) != 0 || stat(directory, &verifier_directory) != 0 ||
+            snprintf(verifier, sizeof(verifier), "%s/%ju", directory,
+                     (uintmax_t)getuid()) <= 0) {
+        report(0, "prepare overlong password test");
+        rmdir(directory);
+        return;
+    }
+
+    memset(password, 'x', SRP_PASSWDLEN + 1);
+    password[SRP_PASSWDLEN + 1] = '\0';
+    mock_directory_owner = 1;
+    mock_verifier_path = verifier;
+    mock_verifier_owner = 0;
+    result = update_srp_passwd(directory, "alice", getuid(),
+                               OPT_ISROOT | OPT_ADDUSER | OPT_NOCRACK, password);
+    mock_directory_owner = 0;
+    mock_verifier_path = NULL;
+    report(result < 0 && stat(verifier, &st) != 0,
+           "root -a with an overlong -w creates no verifier");
+    unlink(verifier);
+    rmdir(directory);
+}
+
 static void test_unenrolled_user_message(void)
 {
     char directory[MAXPATHLEN + 1] = {0};
@@ -729,6 +959,9 @@ int main(void)
     test_verifier_permissions();
     test_single_record_updates();
     test_enrollment_ownership();
+    test_aborted_bootstrap_keeps_verifier();
+    test_bootstrap_exits();
+    test_overlong_password_creates_nothing();
     test_unenrolled_user_message();
     test_minimum_uid_parser();
     test_disable_option_argument();

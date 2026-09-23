@@ -184,9 +184,11 @@ When run by a regular user, **-c** requires **-p** and instead creates a
 mode-0700 verifier directory owned by that user (an existing directory must
 already have that ownership and mode) containing only the calling user's own
 mode-0600 verifier, then prompts for the initial password or takes it from
-**-w**. Use **-f** to replace the caller's existing verifier. This form is
-intended for **netatalk --unprivileged** and does not accept **-r**, **-a**,
-**-d**, **-m**, or **-u**.
+**-w**. Use **-f** to replace the caller's existing verifier. The password is
+collected (and, when prompted for, confirmed) before the directory or verifier
+is created or replaced, so an aborted prompt leaves an existing verifier
+intact. This form is intended for **netatalk --unprivileged** and does not
+accept **-r**, **-a**, **-d**, **-m**, or **-u**.
 
 **-f**
 

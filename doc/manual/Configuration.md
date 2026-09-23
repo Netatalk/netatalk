@@ -95,9 +95,11 @@ user:
 The command creates the directory with mode 0700 and, inside it, a single
 mode-0600 verifier file named after the calling user's numeric uid, then
 prompts for the AFP password (or takes it from **-w**). Use **-f** to replace
-an existing verifier. Do not enable ClearTxt, DHX, DHX2, guest, or legacy RandNum
-authentication in this mode: those methods depend on system account access or
-are unsuitable for this single-user profile.
+an existing verifier. The password is collected (and, when prompted for,
+confirmed) before the directory or verifier is created or replaced, so an
+aborted prompt leaves an existing verifier intact. Do not enable ClearTxt, DHX,
+DHX2, guest, or legacy RandNum authentication in this mode: those methods
+depend on system account access or are unsuitable for this single-user profile.
 
 Use a configuration like the following, replacing the paths and UUID with
 your own values. Generate and keep a distinct UUID for each volume. The
