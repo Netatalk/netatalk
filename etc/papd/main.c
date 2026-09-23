@@ -627,37 +627,37 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 
 #else
     char path[MAXPATHLEN];
-    char getstatus_buffer[255];
-    char *temp = NULL;
-    FILE *fd = NULL;
-    int rc;
+    int fd = -1;
+    int path_len;
+    ssize_t status_len;
 
-    if (pr->p_flags & P_SPOOLED && (pr->p_spool != NULL)) {
-        snprintf(path, MAXPATHLEN - 1, "%s/status", pr->p_spool);
-        fd = fopen(path, O_RDONLY);
+    if (!(pr->p_flags & P_PIPED)
+            && (pr->p_flags & P_SPOOLED)
+            && (pr->p_spool != NULL)) {
+        path_len = snprintf(path, sizeof(path), "%s/status", pr->p_spool);
+
+        if (path_len >= 0 && (size_t)path_len < sizeof(path)) {
+            fd = open(path, O_RDONLY);
+        }
     }
 
-    if ((pr->p_flags & P_PIPED) || (fd == NULL)) {
+    if (fd < 0) {
         buf->buf_len = strlen(cannedstatus);
         snprintf(buf->buf, 255, "%s", cannedstatus);
         return buf->buf_len + 1;
-    } else {
-        rc = fread(getstatus_buffer, 255, sizeof(unsigned char), fd);
-        fclose(fd);
-
-        if (rc > 0) {
-            if (temp != NULL) {
-                temp[strcspn(temp, "\n")] = '\0';
-                snprintf(buf->buf, 255, "%s", temp);
-                buf->buf_len = strlen(buf->buf);
-            }
-        } else {
-            snprintf(buf->buf, 255, "%s", "thisisanemptystring");
-            buf->buf_len = 0;
-        }
-
-        return buf->buf_len + 1;
     }
+
+    status_len = read(fd, buf->buf, sizeof(buf->buf));
+    close(fd);
+
+    if (status_len < 0) {
+        status_len = 0;
+    } else if (status_len > 0 && buf->buf[status_len - 1] == '\n') {
+        status_len--;
+    }
+
+    buf->buf_len = (uint8_t)status_len;
+    return buf->buf_len + 1;
 
 #endif /* HAVE_CUPS */
 }
