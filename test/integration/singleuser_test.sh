@@ -1,5 +1,17 @@
 #!/bin/sh
 # Single-user mode integration tests.
+# Copyright (C) 2026  Andy Lemin (andylemin)
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
 # Run as root inside the netatalk testsuite container.
 set -e
 . /integration/lib.sh
@@ -28,6 +40,7 @@ su $USER1 -c "mkdir -p $SHARE $SHARE2 $STATE/cnid"
 su $USER1 -c "afppasswd -c -f -p $STORE -w Password1"
 VERIFIER1=$STORE/$(id -u $USER1)
 CNID1=$STATE/cnid/files
+CNID_DIR_DIAG="requires the CNID directory of volume"
 
 # Two volumes: "single-user" is about privileges and accounts, not about how
 # many volumes the daemon may serve. The global vol dbpath puts each volume's
@@ -59,7 +72,18 @@ EOF
 
 # True once a start in the background has either bound port $1 or exited.
 settled() {
-    afp_listening "$1" || ! kill -0 "$2" 2> /dev/null
+    settled_port=$1
+    settled_pid=$2
+
+    if afp_listening "$settled_port"; then
+        return 0
+    fi
+
+    if kill -0 "$settled_pid" 2> /dev/null; then
+        return 1
+    fi
+
+    return 0
 }
 
 # Start with the current config and report whether afpd is accepting
@@ -67,12 +91,17 @@ settled() {
 # needs this rather than a grep alone, because a grep-only check passes when
 # the diagnostic is printed as a warning and the daemon starts anyway.
 try_start() {
-    # $1 = the port the config uses, default 5548
+    ts_port=${1:-5548}
     su $USER1 -c \
         "netatalk --single-user -P $STATE/netatalk.pid -F $CONF/afp.conf -d" \
         > /tmp/su_out 2>&1 &
-    wait_for 10 settled "${1:-5548}" $! || return 1
-    afp_listening "${1:-5548}"
+    wait_for 10 settled "$ts_port" $! || return 1
+
+    if afp_listening "$ts_port"; then
+        return 0
+    fi
+
+    return 1
 }
 
 start_singleuser() {
@@ -115,14 +144,20 @@ pass "an invalid config is rejected before any load side effect"
 
 # --- the clause matrix: each bad config trips exactly its own clause
 check_reject() {
-    # $1 = description, $2 = conf mutation, $3 = expected diagnostic
+    cr_case=$1
+    cr_mutation=$2
+    cr_diag=$3
     write_conf
-    su $USER1 -c "$2"
-    try_start && { stop_netatalk $USER1
-        fail "$1: the daemon started instead of rejecting the config"; }
+    su $USER1 -c "$cr_mutation"
+    try_start && {
+        stop_netatalk $USER1
+        fail "$cr_case: the daemon started instead of rejecting the config"
+    }
     stop_netatalk $USER1
-    grep -q "$3" /tmp/su_out || fail "$1: the expected diagnostic is missing"
-    pass "$1 rejected"
+    grep -q "$cr_diag" /tmp/su_out \
+        || fail "$cr_case: the expected diagnostic is missing"
+    pass "$cr_case rejected"
+    return 0
 }
 
 # --- one volume without a uuid refuses the whole config: the survivor would
@@ -134,6 +169,11 @@ grep -q "volume \"backup\": single-user mode requires an explicit 'volume uuid'"
     || fail "the log does not name the one volume without a uuid"
 grep -q "volume \"files\": single-user mode" $LOG1 \
     && fail "the volume with a uuid was reported as skipped"
+check_reject "a volume section without a path" \
+    ": > $LOG1; sed -i 's|^path = $SHARE2$|paht = $SHARE2|' $CONF/afp.conf" \
+    "requires every configured volume to load"
+grep -q "section \[backup\] has no 'path'" $LOG1 \
+    || fail "the log does not name the section without a path"
 
 check_reject "no uam list at all" \
     "sed -i '/uam list =/d' $CONF/afp.conf" \
@@ -150,18 +190,21 @@ check_reject "config directory not private" \
 su $USER1 -c "chmod 700 $CONF"
 check_reject "CNID directory that cannot be created" \
     "sed -i 's|^vol dbpath = .*|vol dbpath = /var/lib/nowhere|' $CONF/afp.conf" \
-    "requires the CNID directory of volume"
-# the sqlite backend opens the directory O_NOFOLLOW and needs to write it, so
-# a symbolic link or a read-only directory would fail every mount instead. The
-# link is named by a volume-level vol dbpath: a [Global] one gets the volume
-# name and a trailing slash appended, and a trailing slash follows the link.
+    "$CNID_DIR_DIAG"
+# a symbolic link or a read-only directory would fail at every mount instead,
+# so both are refused here; the link is tried by a volume-level vol dbpath and
+# under the [Global] one, which appends the volume name and a trailing slash
 check_reject "CNID directory that is a symbolic link" \
     "ln -sfn $STATE/cnid/files $STATE/cnid/link; printf 'vol dbpath = %s/link\n' $STATE/cnid >> $CONF/afp.conf" \
-    "requires the CNID directory of volume"
+    "$CNID_DIR_DIAG"
 su $USER1 -c "rm $STATE/cnid/link"
+check_reject "CNID directory that is a symbolic link under a [Global] vol dbpath" \
+    "ln -sfn $STATE/cnid/files $STATE/cnid/backup" \
+    "$CNID_DIR_DIAG"
+su $USER1 -c "rm $STATE/cnid/backup"
 check_reject "CNID directory that exists but is not writable" \
     "mkdir -m 500 $STATE/cnid/backup" \
-    "requires the CNID directory of volume"
+    "$CNID_DIR_DIAG"
 su $USER1 -c "rmdir $STATE/cnid/backup"
 check_reject "no signature" \
     "sed -i '/^signature =/d' $CONF/afp.conf" \
@@ -169,6 +212,14 @@ check_reject "no signature" \
 check_reject "a .Homes. section" \
     "printf '\n[Homes]\nbasedir regex = /home\n' >> $CONF/afp.conf" \
     "does not support .Homes. volumes"
+check_reject "a .Homes. section without a basedir regex" \
+    "printf '\n[Homes]\npath = Public\n' >> $CONF/afp.conf" \
+    "does not support .Homes. volumes"
+# nested state would make each volume root its own CNID directory, which the
+# owner-only rule would then close to everyone else
+check_reject "vol dbnest" \
+    "sed -i 's/^\[Global\]\$/[Global]\nvol dbnest = yes/' $CONF/afp.conf" \
+    "does not support 'vol dbnest'"
 check_reject "a non-sqlite CNID scheme" \
     "sed -i 's/cnid scheme = sqlite/cnid scheme = last/' $CONF/afp.conf" \
     "must use sqlite CNID"
@@ -203,8 +254,10 @@ su $USER1 -c "rm $STORE/second"
 # other bits", not one exact mode
 write_conf
 su $USER1 -c "chmod 400 $VERIFIER1"
-try_start || { su $USER1 -c "chmod 600 $VERIFIER1"
-    fail "a read-only verifier with no group or other bits was refused"; }
+try_start || {
+    su $USER1 -c "chmod 600 $VERIFIER1"
+    fail "a read-only verifier with no group or other bits was refused"
+}
 stop_netatalk $USER1
 su $USER1 -c "chmod 600 $VERIFIER1"
 pass "a verifier with owner bits only is accepted"
@@ -217,7 +270,7 @@ pass "a verifier with owner bits only is accepted"
 VER2=/tmp/su_v2
 rm -rf $VER2
 su $USER2 -c "afppasswd -c -p $VER2 -w Password2"
-cp -p $VER2/$(id -u $USER2) $STORE/
+cp -p "$VER2/$(id -u $USER2)" $STORE/
 rm -rf $VER2
 VERIFIER2=$STORE/$(id -u $USER2)
 owned $VERIFIER2 "$USER2 600" \
@@ -238,6 +291,46 @@ owner_afparg -s backup -f FPEnumerateExt > /dev/null \
 grep -q "initgroups" $LOG1 \
     && fail "a single-user login tried to set the group list"
 
+# --- a connection that opens a DSI session and drops before logging in must
+# end its afpd child rather than wait out 'disconnect time'; the bytes are a
+# DSIOpenSession request. The child's own last line is the observable, and only
+# the listening afpd may remain: an exited child the parent has not reaped yet
+# is a zombie, not a survivor, so state Z is not counted. The state comes from
+# /proc, because busybox ps cuts the user column to eight characters.
+only_afpd_parent() {
+    oap_live=0
+
+    for oap_pid in $(pgrep -u $USER1 afpd); do
+        oap_state=$(awk '{print $3}' "/proc/$oap_pid/stat" 2> /dev/null)
+        [ "$oap_state" = Z ] || oap_live=$((oap_live + 1))
+    done
+
+    [ "$oap_live" -le 1 ]
+}
+wait_for 10 only_afpd_parent \
+    || fail "a child of an earlier login is still running"
+drop_lines=$(($(wc -l < "$LOG1") + 0))
+{
+    printf '\000\004\000\001\000\000\000\000\000\000\000\000\000\000\000\000'
+    sleep 1
+} | timeout 3 nc 127.0.0.1 5548 > /dev/null 2>&1 || true
+# only lines written after the drop count, as controller_started reads a log
+dropped_child_terminated() {
+    tail -n +"$((drop_lines + 1))" "$LOG1" \
+        | grep -q "Disconnected session terminating"
+}
+wait_for 10 dropped_child_terminated \
+    || {
+        grep -iE "dsi_disconnect|afp_alarm|afp_over_dsi" $LOG1 | tail -6 >&2
+        fail "the child of a client that dropped before login did not terminate"
+    }
+wait_for 10 only_afpd_parent \
+    || {
+        ps -o pid,stat,etime,args | grep "[a]fpd" >&2
+        fail "an afpd child survived a client that dropped before login"
+    }
+pass "a connection dropped before login leaves no child behind"
+
 # --- a second account cannot authenticate: its verifier is a real record (a
 # hex salt, not the disabled placeholder) but it is $USER2's mode-0600 file,
 # which a daemon running as $USER1 cannot open, so srp_lookup_verifier()
@@ -246,11 +339,15 @@ grep -q "initgroups" $LOG1 \
 grep -q "^$USER2:[0-9A-Fa-f]" $VERIFIER2 \
     || fail "the store has no usable verifier for $USER2"
 afp_can_open $USER2 Password2 files 5548 \
-    && { stop_netatalk $USER1
-        fail "a second account was served by the single-user daemon"; }
+    && {
+        stop_netatalk $USER1
+        fail "a second account was served by the single-user daemon"
+    }
 grep -q "can't open verifier .*/$(id -u $USER2)" $LOG1 \
-    || { stop_netatalk $USER1
-        fail "the second account's verifier was not refused by the uam"; }
+    || {
+        stop_netatalk $USER1
+        fail "the second account's verifier was not refused by the uam"
+    }
 pass "a second account's verifier is unreadable to the single-user daemon and its login is refused"
 
 # --- the CNID state lives where vol dbpath puts it, owner-only: the
@@ -277,6 +374,27 @@ for f in $CNID1/*.sqlite; do
 done
 pass "the serving user's nad keeps the CNID state owner-only"
 
+# --- state the user's nad creates before the server's first start is the
+# shared kind any non-root tool creates, and the server's first open makes it
+# owner-only
+rm -rf $CNID1
+su $USER1 -c "nad -F $CONF/afp.conf ls $SHARE" > /dev/null \
+    || fail "nad could not create the CNID state as its user"
+[ -d "$CNID1" ] \
+    || fail "nad did not create the CNID state under vol dbpath"
+[ "$(stat -c %a "$CNID1")" != 700 ] \
+    || fail "nad created owner-only state for a server that has not started"
+start_singleuser
+owner_afparg -s files -f FPEnumerateExt > /dev/null \
+    || {
+        stop_netatalk $USER1
+        fail "the volume could not be opened over state nad created"
+    }
+stop_netatalk $USER1
+owned $CNID1 "$USER1 700" \
+    || fail "the server did not make the state nad created owner-only"
+pass "state created by the user's nad is made owner-only at the server's first open"
+
 # --- foreign-owned CNID state is refused at the first mount, not at startup:
 # the controller judges only that the directory is writable, the backend
 # refuses the open when the session runs it, and the other volume is
@@ -287,11 +405,15 @@ chmod 0777 $CNID1
 su $USER1 -c ": > $LOG1"
 start_singleuser
 owner_afparg -s files -f FPEnumerateExt > /dev/null 2>&1 \
-    && { stop_netatalk $USER1
-        fail "a volume with CNID state the owner does not own was opened"; }
+    && {
+        stop_netatalk $USER1
+        fail "a volume with CNID state the owner does not own was opened"
+    }
 owner_afparg -s backup -f FPEnumerateExt > /dev/null \
-    || { stop_netatalk $USER1
-        fail "the volume with usable state was not served"; }
+    || {
+        stop_netatalk $USER1
+        fail "the volume with usable state was not served"
+    }
 stop_netatalk $USER1
 grep -q "not owned by the server user" $LOG1 \
     || fail "the backend's ownership diagnostic is missing from the log"
@@ -304,9 +426,13 @@ pass "foreign-owned CNID state refuses the mount of that volume only"
 su $USER1 -c ": > $LOG1"
 start_singleuser
 owner_afparg -s files -f FPOpenDT > /dev/null 2>&1 \
-    || { stop_netatalk $USER1
-        fail "FPOpenDT failed on a single-user volume"; }
+    || {
+        stop_netatalk $USER1
+        fail "FPOpenDT failed on a single-user volume"
+    }
 stop_netatalk $USER1
+owned $CNID1 "$USER1 700" \
+    || fail "the CNID directory is no longer owner-only after the desktop database was created"
 [ "$(stat -c %U $CNID1/.AppleDesktop 2> /dev/null)" = "$USER1" ] \
     || fail "the desktop database is not owned by the serving user"
 pass "the desktop database is created by the serving user under vol dbpath"
@@ -318,11 +444,16 @@ pass "the desktop database is created by the serving user under vol dbpath"
 cd $CONF
 su $USER1 -c "netatalk --single-user -P $STATE/netatalk.pid -F afp.conf" \
     > /tmp/su_out 2>&1 \
-    || { cd /; fail "a relative -F was refused (see /tmp/su_out)"; }
+    || {
+        cd /
+        fail "a relative -F was refused (see /tmp/su_out)"
+    }
 cd /
 wait_for 10 afp_listening 5548 \
-    || { stop_netatalk $USER1
-        fail "a relative -F did not start afpd (see /tmp/su_out and $LOG1)"; }
+    || {
+        stop_netatalk $USER1
+        fail "a relative -F did not start afpd (see /tmp/su_out and $LOG1)"
+    }
 stop_netatalk $USER1
 pass "a relative -F is resolved before afpd is started"
 
@@ -333,8 +464,10 @@ start_singleuser
 su $USER1 -c "sed -i '/uam list =/d' $CONF/afp.conf"
 su $USER1 -c "netatalk --single-user -P $STATE/netatalk.pid -F $CONF/afp.conf -d" \
     > /tmp/su_out 2>&1 \
-    && { stop_netatalk $USER1
-        fail "a second start against a running instance was not refused"; }
+    && {
+        stop_netatalk $USER1
+        fail "a second start against a running instance was not refused"
+    }
 stop_netatalk $USER1
 grep -qi "lock" /tmp/su_out \
     || fail "the refusal does not name the lock file"

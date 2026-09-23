@@ -43,7 +43,8 @@ configuration file called *afp.conf*.
 > kept under **vol dbpath**, owned by that user and readable by nobody else.
 > Authentication is SRP against the verifier directory the user created with
 > **afppasswd -c -p**. See the Configuration manual for all requirements and
-> limitations.
+> limitations. Without this option **netatalk** must run as root and exits
+> with status 1 otherwise.
 
 **-P** *path* | **--pidfile** *path*
 

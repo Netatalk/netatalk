@@ -16,6 +16,7 @@
 #define AFPTEST_SRP_H
 
 #include <stddef.h>
+
 #include <gcrypt.h>
 
 #include <atalk/srp.h>

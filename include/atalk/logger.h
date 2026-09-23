@@ -5,7 +5,6 @@
 #include "config.h"
 #endif
 
-#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -93,7 +92,7 @@ typedef struct {
     enum loglevels level;         /*!< Log Level to put in this file */
     int            display_options;
     bool           timestamp_us;  /*!< Log time stamps in us instead of s */
-    char           filename[PATH_MAX];  /*!< the file open() was given; "" when fd is not a reopenable file */
+    char           *filename;     /*!< the name fd was opened by, for log_reopen(); NULL for fd 1 */
 } logtype_conf_t;
 
 
@@ -113,6 +112,7 @@ type_configs[logtype_end_of_list_marker];
 
 void setuplog(const char *loglevel, const char *logfile,
               const bool log_us_timestamp);
+void log_close_all(void);
 void log_reopen(void);
 void set_processname(const char *processname);
 

@@ -11,6 +11,8 @@ Changes in 4.7.0
   `volume uuid`, its CNID state under `vol dbpath` is kept readable by that
   user alone, the configuration file must live in a mode-0700 directory the
   user owns, and an `afp port` below 1024 is warned about rather than refused.
+  Without `--single-user`, `netatalk` requires root and exits with status 1
+  otherwise.
 
 Announcing Netatalk 4.6.0, Netatalk Client 1.0, and the new netatalk.io
 -----------------------------------------------------------------------

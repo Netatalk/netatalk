@@ -868,7 +868,6 @@ jobs:
             -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_DIRCACHESIZE="1024" \
-            -e SERVER_LOGS="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
       - name: Checkout repository for test report

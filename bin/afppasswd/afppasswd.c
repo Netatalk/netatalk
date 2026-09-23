@@ -1,6 +1,7 @@
 /*
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * Copyright 2026 (c) Daniel Markstedt <daniel@mindani.net>
+ * Copyright 2026 (c) Andy Lemin (andylemin)
  * All Rights Reserved. See COPYRIGHT.
  */
 
@@ -789,7 +790,7 @@ static int collect_new_password(char *password, size_t password_size,
  * Under the write lock: "name:hex_salt:hex_verifier\n" from offset 0,
  * truncate to that length, fsync, and hand the file to its owner when asked.
  *
- * @param[in] fd       the <uid> file, open for writing
+ * @param[in] fd       the uid-named verifier file, open for writing
  * @param[in] path     the verifier directory, for messages
  * @param[in] name     the record's username, already validated
  * @param[in] hex_buf  SRP_HEX_SALT_LEN + 1 + SRP_HEX_V_LEN bytes from
@@ -807,7 +808,7 @@ static int srp_write_record(int fd, const char *path, const char *name,
     int len;
     int err = 0;
     len = snprintf(line, sizeof(line), "%s:%.*s\n", name,
-                   (int)(SRP_HEX_SALT_LEN + 1 + SRP_HEX_V_LEN), hex_buf);
+                   SRP_HEX_SALT_LEN + 1 + SRP_HEX_V_LEN, hex_buf);
 
     if (len < 0 || (size_t)len >= sizeof(line)) {
         fprintf(stderr, "afppasswd: verifier record for %s is too long.\n",
@@ -1257,6 +1258,7 @@ static int create_private_srp_verifier(const char *path, uid_t uid, int flags,
     char hex_buf[SRP_HEX_SALT_LEN + 1 + SRP_HEX_V_LEN] = {0};
     int dirfd = -1, fd = -1;
     int existed;
+    int created = 0;
     int err = -1;
 
     if ((pwd = getpwuid(uid)) == NULL) {
@@ -1343,8 +1345,16 @@ static int create_private_srp_verifier(const char *path, uid_t uid, int flags,
         goto done;
     }
 
-    fd = openat(dirfd, uid_name, O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW |
-                ((flags & OPT_FORCE) ? 0 : O_EXCL), 0600);
+    /* O_EXCL tells this call's file from one another run created since the
+     * prompt; only the former is removed on failure */
+    fd = openat(dirfd, uid_name,
+                O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0600);
+
+    if (fd >= 0) {
+        created = 1;
+    } else if (errno == EEXIST && (flags & OPT_FORCE)) {
+        fd = openat(dirfd, uid_name, O_RDWR | O_CLOEXEC | O_NOFOLLOW);
+    }
 
     if (fd < 0) {
         if (errno == EEXIST) {
@@ -1379,7 +1389,7 @@ done:
 
     /* Remove a file this call created and could not finish, so the retry
      * needs no -f. An existing verifier is left as the write left it. */
-    if (err != 0 && fd >= 0 && !existed) {
+    if (err != 0 && created) {
         unlinkat(dirfd, uid_name, 0);
     }
 

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
 #include <dlfcn.h>
 #include <getopt.h>
 #include <signal.h>

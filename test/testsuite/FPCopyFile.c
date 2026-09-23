@@ -1,5 +1,8 @@
-/* ----------------------------------------------
-*/
+/*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"

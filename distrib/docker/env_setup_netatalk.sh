@@ -305,7 +305,7 @@ if [ "$SRP_WANTED" = "1" ]; then
         # user, at the path the generated afp.conf names, holding that one
         # account's file.
         if su "$AFP_USER" -c 'afppasswd -c -p "$1" -w "$2"' sh \
-                "$NETATALK_CONFDIR/afppasswd.srp" "$AFP_PASS"; then
+            "$NETATALK_CONFDIR/afppasswd.srp" "$AFP_PASS"; then
             SRP_OK=1
         fi
     else

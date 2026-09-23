@@ -1,5 +1,6 @@
 /*
    Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
+   Copyright (c) 2026 Andy Lemin (andylemin)
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -19,13 +20,12 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <inttypes.h>
-#include <libgen.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <strings.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
@@ -117,47 +117,21 @@ static bool service_running(pid_t pid)
 /*!
  * @brief Whether uamlist names uams_srp.so and nothing else
  *
- * Tokens are separated by whitespace or commas, the separators afpd's own
- * uam list parser accepts.
+ * Split the way auth_load() splits it, on commas and spaces.
  */
 static bool srp_is_the_only_uam(const char *uamlist)
 {
-    const unsigned char *p = (const unsigned char *)uamlist;
-    size_t count = 0;
+    char buf[MAXPATHLEN];
+    char *last;
+    const char *first;
 
-    if (p == NULL) {
+    if (uamlist == NULL || strlcpy(buf, uamlist, sizeof(buf)) >= sizeof(buf)) {
         return false;
     }
 
-    while (*p != '\0') {
-        const unsigned char *start;
-        size_t len;
-
-        while (*p != '\0' && (isspace(*p) || *p == ',')) {
-            p++;
-        }
-
-        if (*p == '\0') {
-            break;
-        }
-
-        start = p;
-
-        while (*p != '\0' && !isspace(*p) && *p != ',') {
-            p++;
-        }
-
-        len = (size_t)(p - start);
-
-        if (len != strlen("uams_srp.so") || strncmp((const char *)start,
-                                                    "uams_srp.so", len) != 0) {
-            return false;
-        }
-
-        count++;
-    }
-
-    return count == 1;
+    first = strtok_r(buf, ", ", &last);
+    return first != NULL && strcmp(first, "uams_srp.so") == 0
+           && strtok_r(NULL, ", ", &last) == NULL;
 }
 
 /*!
@@ -170,19 +144,28 @@ static bool srp_is_the_only_uam(const char *uamlist)
  */
 static int path_parent(char *dst, size_t dstlen, const char *path)
 {
-    char *p;
+    size_t len;
+    char *slash;
 
-    if (path == NULL || strlcpy(dst, path, dstlen) >= dstlen) {
+    if (path == NULL || (len = strlcpy(dst, path, dstlen)) >= dstlen) {
         return -1;
     }
 
-    /* dirname() may edit dst in place or return storage of its own */
-    p = dirname(dst);
-
-    if (p != dst) {
-        strlcpy(dst, p, dstlen);
+    while (len > 1 && dst[len - 1] == '/') {
+        dst[--len] = '\0';
     }
 
+    if ((slash = strrchr(dst, '/')) == NULL) {
+        strlcpy(dst, ".", dstlen);
+        return 0;
+    }
+
+    /* cut at the last slash, and at the run of slashes before it */
+    while (slash > dst && slash[-1] == '/') {
+        slash--;
+    }
+
+    slash[slash == dst ? 1 : 0] = '\0';
     return 0;
 }
 
@@ -236,18 +219,30 @@ static bool dir_is_private(const char *path, mode_t file_mask,
 /*!
  * @brief The CNID directory is one the caller can write, or can create
  *
- * The sqlite backend opens it O_NOFOLLOW, so a symbolic link does not pass.
+ * A symbolic link does not pass. Trailing slashes are dropped first: a
+ * [Global] vol dbpath gets the volume name and one appended, and a trailing
+ * slash makes lstat() follow a link.
  */
 static bool dbpath_is_creatable(const char *path)
 {
+    char dir[MAXPATHLEN];
     char parent[MAXPATHLEN];
     struct stat st;
+    size_t len = strlcpy(dir, path, sizeof(dir));
 
-    if (lstat(path, &st) == 0) {
-        return S_ISDIR(st.st_mode) && access(path, W_OK | X_OK) == 0;
+    if (len >= sizeof(dir)) {
+        return false;
     }
 
-    return errno == ENOENT && path_parent(parent, sizeof(parent), path) == 0
+    while (len > 1 && dir[len - 1] == '/') {
+        dir[--len] = '\0';
+    }
+
+    if (lstat(dir, &st) == 0) {
+        return S_ISDIR(st.st_mode) && access(dir, W_OK | X_OK) == 0;
+    }
+
+    return errno == ENOENT && path_parent(parent, sizeof(parent), dir) == 0
            && access(parent, W_OK | X_OK) == 0;
 }
 
@@ -313,7 +308,8 @@ static int validate_singleuser_config(void)
         return -1;
     }
 
-    if (obj.options.signatureopt == NULL || obj.options.signatureopt[0] == '\0') {
+    if (obj.options.signatureopt == NULL
+            || obj.options.signatureopt[0] == '\0') {
         fprintf(stderr,
                 "netatalk: --single-user requires an explicit [Global] signature.\n");
         return -1;
@@ -339,9 +335,16 @@ static int validate_singleuser_config(void)
         return -1;
     }
 
-    if (INIPARSER_GETSTR(obj.iniconfig, INISEC_HOMES, "basedir regex",
-                         NULL) != NULL) {
+    if (iniparser_find_entry(obj.iniconfig, INISEC_HOMES)) {
         fprintf(stderr, "netatalk: --single-user does not support [Homes] volumes.\n");
+        return -1;
+    }
+
+    /* nested state makes the volume root the CNID directory, which the
+     * owner-only rule would then chmod 0700 */
+    if (iniparser_getboolean(obj.iniconfig, INISEC_GLOBAL ":vol dbnest", 0)) {
+        fprintf(stderr,
+                "netatalk: --single-user does not support 'vol dbnest': the CNID directory would be the volume itself, which the mode keeps owner-only.\n");
         return -1;
     }
 
@@ -375,8 +378,9 @@ static int validate_singleuser_config(void)
             return -1;
         }
 
-        if (access(vol->v_path, R_OK | X_OK) != 0
-                || (!(vol->v_flags & AFPVOL_RO) && access(vol->v_path, W_OK | X_OK) != 0)) {
+        int want = R_OK | X_OK | ((vol->v_flags & AFPVOL_RO) ? 0 : W_OK);
+
+        if (access(vol->v_path, want) != 0) {
             fprintf(stderr,
                     "netatalk: --single-user cannot access volume '%s' as the calling user.\n",
                     vol->v_localname);
@@ -1176,11 +1180,6 @@ int main(int argc, char **argv)
 
     if (!debug && daemonize() != 0) {
         exit(EXITERR_SYS);
-    }
-
-    /* daemonize() closed the log file afp_config_parse() opened. */
-    if (!debug) {
-        log_reopen();
     }
 
     if (create_lockfile("netatalk", lockfile_path) != 0) {

@@ -2,6 +2,7 @@
  * Tests for afppasswd's SRP verifier validation
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -673,7 +674,7 @@ static int read_single_record(const char *path, char *line, size_t size)
         return 0;
     }
 
-    single = fgets(line, size, fp) != NULL && fgetc(fp) == EOF;
+    single = fgets(line, (int)size, fp) != NULL && fgetc(fp) == EOF;
     fclose(fp);
     return single;
 }

@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2026 Andy Lemin (andylemin)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -2341,6 +2342,9 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         } else {
             /* Get path */
             if ((p = getoption_str(obj->iniconfig, secname, "path", NULL, NULL)) == NULL) {
+                LOG(log_error, logtype_afpd,
+                    "readvolfile: section [%s] has no 'path', skipping", secname);
+                obj->vols_skipped++;
                 continue;
             }
 
@@ -2348,6 +2352,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         }
 
         if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL) {
+            obj->vols_skipped++;
             continue;
         }
 
@@ -2373,6 +2378,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path,
                      NULL) == NULL) {
+            obj->vols_skipped++;
             continue;
         }
 

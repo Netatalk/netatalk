@@ -121,9 +121,9 @@ static void afp_dsi_close(AFPObj *obj)
 
     /* euid may not be the login user if an error path exited mid-command
      * (e.g. after become_root()); volume prexec_close scripts need the
-     * login user, restore it
+     * login user, restore it. Before login there is none to restore.
      */
-    if (geteuid() != obj->uid) {
+    if (obj->logout != NULL && geteuid() != obj->uid) {
         if (seteuid(obj->uid) < 0) {
             LOG(log_error, logtype_afpd, "can't seteuid(%u) back %s: uid: %u, euid: %u",
                 obj->uid, strerror(errno), getuid(), geteuid());
@@ -435,7 +435,8 @@ static void handle_alarm(AFPObj *obj)
     }
 
     if (dsi->flags & DSI_DISCONNECTED) {
-        if (geteuid() == 0) {
+        /* login() sets logout; euid 0 would miss a server started without root */
+        if (obj->logout == NULL) {
             LOG(log_note, logtype_afpd,
                 "afp_alarm: unauthenticated user, connection problem");
             afp_dsi_die(EXITERR_CLNT);
@@ -469,7 +470,7 @@ static void handle_alarm(AFPObj *obj)
     }
 
     if (err <= 0) {
-        if (geteuid() == 0) {
+        if (obj->logout == NULL) {
             LOG(log_note, logtype_afpd,
                 "afp_alarm: unauthenticated user, connection problem");
             afp_dsi_die(EXITERR_CLNT);

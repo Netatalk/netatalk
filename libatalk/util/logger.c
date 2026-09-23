@@ -5,6 +5,7 @@ logger.c was written by Simon Bazley (sibaz@sibaz.com)
 I believe libatalk is released under the L/GPL licence.
 Just incase, it is, thats the licence I'm applying to this file.
 Netatalk 2001 (c)
+Copyright (c) 2026 Andy Lemin (andylemin)
 
  */
 
@@ -83,7 +84,7 @@ log_config_t log_config = { 0 };
    log_none:        no logging by default
    0:               Display options
    true             timestamp_us
-   ""               filename (implicit)
+   NULL             filename (implicit)
  @endcode
  */
 #define DEFAULT_LOG_CONFIG {0, 0, -1, log_none, 0, true}
@@ -249,6 +250,28 @@ static int log_open_file(const char *filename)
     return fd;
 }
 
+/*!
+ * @brief The name to reopen filename by once the process may have chdir()ed
+ *
+ * @returns an allocated absolute path, or NULL
+ */
+static char *log_absolute_name(const char *filename)
+{
+    char cwd[PATH_MAX];
+    char *abs;
+
+    if (filename[0] == '/') {
+        return strdup(filename);
+    }
+
+    if (getcwd(cwd, sizeof(cwd)) == NULL
+            || asprintf(&abs, "%s/%s", cwd, filename) == -1) {
+        return NULL;
+    }
+
+    return abs;
+}
+
 static void log_setup(const char *filename, enum loglevels loglevel,
                       enum logtypes logtype, const bool log_us_timestamp)
 {
@@ -260,7 +283,8 @@ static void log_setup(const char *filename, enum loglevels loglevel,
             }
 
             type_configs[logtype].fd = -1;
-            type_configs[logtype].filename[0] = '\0';
+            free(type_configs[logtype].filename);
+            type_configs[logtype].filename = NULL;
             type_configs[logtype].level = -1;
             type_configs[logtype].set = false;
 
@@ -291,7 +315,8 @@ static void log_setup(const char *filename, enum loglevels loglevel,
         }
 
         type_configs[logtype].fd = -1;
-        type_configs[logtype].filename[0] = '\0';
+        free(type_configs[logtype].filename);
+        type_configs[logtype].filename = NULL;
         type_configs[logtype].level = -1;
         type_configs[logtype].set = false;
         type_configs[logtype].syslog = false;
@@ -323,15 +348,26 @@ static void log_setup(const char *filename, enum loglevels loglevel,
     } else if (strcmp(filename + strlen(filename) - 6, "XXXXXX") == 0) {
         char *tmp = strdup(filename);
         type_configs[logtype].fd = mkstemp(tmp);
+
+        /* the generated name is what log_reopen() opens again */
+        if (type_configs[logtype].fd != -1) {
+            type_configs[logtype].filename = log_absolute_name(tmp);
+        }
+
         free(tmp);
     } else {
         type_configs[logtype].fd = log_open_file(filename);
 
-        /* only a file open() gave us can be reopened by name */
         if (type_configs[logtype].fd != -1) {
-            strlcpy(type_configs[logtype].filename, filename,
-                    sizeof(type_configs[logtype].filename));
+            type_configs[logtype].filename = log_absolute_name(filename);
         }
+    }
+
+    /* a file that cannot be reopened by name is not set up: after a
+     * daemonize() its descriptor would be stale */
+    if (type_configs[logtype].fd > 1 && type_configs[logtype].filename == NULL) {
+        close(type_configs[logtype].fd);
+        type_configs[logtype].fd = -1;
     }
 
     /* Check for error opening/creating logfile */
@@ -373,23 +409,47 @@ static void log_setup(const char *filename, enum loglevels loglevel,
 }
 
 /*!
+ * @brief Close the syslog connection and every log file before a closeall()
+ *
+ * Called while the descriptors are still ours: closelog() on a closed and
+ * reused number would close the newcomer, and a stale file number kept in
+ * type_configs would be closed by log_reopen() after another type had already
+ * been given it. The next syslog message opens a new connection; log_reopen()
+ * reopens the files.
+ */
+void log_close_all(void)
+{
+    if (log_config.syslog_opened) {
+        closelog();
+        log_config.syslog_opened = false;
+    }
+
+    for (int i = 0; i < logtype_end_of_list_marker; i++) {
+        if (type_configs[i].set && type_configs[i].filename != NULL
+                && type_configs[i].fd != -1) {
+            close(type_configs[i].fd);
+            type_configs[i].fd = -1;
+        }
+    }
+}
+
+/*!
  * @brief Reopen the log files a previous setuplog() opened
  *
  * daemonize() closes every descriptor, so a process that set up logging
- * before it daemonized would write to a closed or reused one. Only files that
- * came from open() are reopened: fd 1 for "/dev/tty" is not ours to close,
- * and a second mkstemp() would create a second file. A file that cannot be
- * reopened falls back to syslog, as a type with no file does.
+ * before it daemonized would write to a closed or reused one. Files opened by
+ * name are reopened by it, a mkstemp() file by the name it got; fd 1 for
+ * "/dev/tty" is not ours to close. Only a type whose descriptor
+ * log_close_all() has already closed is reopened, so a number another type
+ * was just given is never closed here. A file that cannot be reopened falls
+ * back to syslog, as a type with no file does.
  */
 void log_reopen(void)
 {
     for (int i = 0; i < logtype_end_of_list_marker; i++) {
-        if (!type_configs[i].set || type_configs[i].filename[0] == '\0') {
+        if (!type_configs[i].set || type_configs[i].filename == NULL
+                || type_configs[i].fd != -1) {
             continue;
-        }
-
-        if (type_configs[i].fd != -1) {
-            close(type_configs[i].fd);
         }
 
         type_configs[i].fd = log_open_file(type_configs[i].filename);

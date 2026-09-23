@@ -6,6 +6,7 @@
  *
  * Copyright (C) 2013 Ralph Boehme
  * Copyright (C) 2024-2026 Daniel Markstedt
+ * Copyright (C) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYING.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1817,21 +1818,13 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
 }
 
 /*!
- * @brief Whether a CNID directory is, or would be, a non-root opener's own
- *
- * @returns true when path does not exist yet, or is a directory owned by the
- *          caller with no group or other bits
+ * @brief Whether a CNID directory is the opener's own owner-only directory
  */
 static bool cnid_sqlite_dir_owner_only(const char *path)
 {
     struct stat st;
-
-    if (lstat(path, &st) != 0) {
-        return errno == ENOENT;
-    }
-
-    return S_ISDIR(st.st_mode) && st.st_uid == getuid()
-           && (st.st_mode & 077) == 0;
+    return lstat(path, &st) == 0 && S_ISDIR(st.st_mode)
+           && st.st_uid == getuid() && (st.st_mode & 077) == 0;
 }
 
 /* ---------------------- */
@@ -1863,12 +1856,12 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                  vol->v_localname);
     }
 
-    /* Owner-only state: the single-user server's, and any state a non-root
-     * process creates or already owns as a 0700 directory. The serving user's
-     * own nad and dbd open this directory without the server's flag and would
-     * otherwise widen what the server keeps owner-only; a process that is not
-     * root cannot create shared state anyway. Root, and a directory another
-     * account owns, follow the shared rules. */
+    /* Owner-only state: the single-user server's, and a directory a non-root
+     * opener already holds as its own 0700 directory, so the serving user's
+     * nad and dbd keep what the server keeps. A directory that does not exist
+     * yet is created shared, whoever creates it, and a single-user server
+     * tightens it at its next open. Root, and a directory another account
+     * owns, follow the shared rules. */
     priv = (vol->v_obj != NULL
             && (vol->v_obj->options.flags & OPTION_SINGLEUSER) != 0)
            || (getuid() != 0 && cnid_sqlite_dir_owner_only(dirpath));
@@ -1880,7 +1873,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
 
             if (dirfd < 0) {
-                LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
+                LOG(log_error, logtype_cnid, "Can't open CNID DB directory '%s': %s",
+                    dirpath, strerror(errno));
                 EC_FAIL;
             }
 

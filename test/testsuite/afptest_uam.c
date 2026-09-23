@@ -5,6 +5,7 @@
  * Copyright (C) 2006 Alex deVries <alexthepuffin@gmail.com>
  * Copyright (C) 2007 Derrik Pates <dpates@dsdk12.net>
  * Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (C) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,8 +39,8 @@
 #include <atalk/uam.h>
 
 #include "afpclient.h"
-#include "afptest_uam.h"
 #include "afptest_srp.h"
+#include "afptest_uam.h"
 
 #define AFP_MAX_USERNAME_LEN 127
 #define kFPAuthContinue AFPERR_AUTHCONT
@@ -783,7 +784,7 @@ static int srp_login(struct afptest_uam_server *server, const char *username,
 
     if (rbuf.size != rbuf.maxsize) {
         fprintf(stderr, "SRP: round 1 reply is %zu bytes, expected %zu\n",
-                (size_t)rbuf.size, (size_t)rbuf.maxsize);
+                rbuf.size, rbuf.maxsize);
         ret = AFPERR_MISC;
         goto cleanup;
     }
@@ -964,7 +965,7 @@ static int srp_login(struct afptest_uam_server *server, const char *username,
 
     if (rbuf.size != rbuf.maxsize) {
         fprintf(stderr, "SRP: round 2 reply is %zu bytes, expected %zu\n",
-                (size_t)rbuf.size, (size_t)rbuf.maxsize);
+                rbuf.size, rbuf.maxsize);
         ret = AFPERR_MISC;
         goto cleanup;
     }

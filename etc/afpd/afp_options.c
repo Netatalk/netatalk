@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.

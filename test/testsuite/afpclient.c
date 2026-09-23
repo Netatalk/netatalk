@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

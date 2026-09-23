@@ -1,5 +1,6 @@
 /*
    Copyright (c) 2026 Contributors to the Netatalk Project
+   Copyright (c) 2026 Andy Lemin (andylemin)
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -86,10 +87,9 @@ int srp_mgf1_sha1(const unsigned char *seed, size_t seed_len,
 /*!
  * @brief Compute SHA-1 incrementally from multiple buffers.
  *
- * Arguments after @p out are pairs of (const unsigned char *data, size_t len),
- * terminated by a NULL data pointer.
- *
- * @param[out] out 20-byte buffer for the SHA-1 digest.
+ * @param[out] out  20-byte buffer for the SHA-1 digest.
+ * @param[in]  ...  pairs of (const unsigned char *data, size_t len),
+ *                  terminated by a NULL data pointer
  *
  * @returns 0 on success, -1 on failure.
  */
@@ -149,7 +149,10 @@ void srp_mpi_to_padded_buf(unsigned char *buf, size_t nbytes, gcry_mpi_t m)
  * The private key both the verifier and the client proof derive from. Bounds
  * both inputs so a caller cannot hash past its buffers.
  *
- * @param[out] x_out  SRP_SHA1_LEN bytes
+ * @param[in]  username  at most SRP_USERNAME_MAX_LEN bytes
+ * @param[in]  password  at most SRP_PASSWDLEN bytes
+ * @param[in]  salt      SRP_SALT_LEN bytes
+ * @param[out] x_out     SRP_SHA1_LEN bytes
  *
  * @returns 0 on success, -1 on a length or libgcrypt failure
  */
@@ -210,7 +213,9 @@ int srp_compute_k(unsigned char *k_out)
  *
  * Both inputs must already be SRP_NBYTES, zero-padded on the left.
  *
- * @param[out] u_out  SRP_SHA1_LEN bytes
+ * @param[in]  a_padded  the client's public value, SRP_NBYTES
+ * @param[in]  b_padded  the server's public value, SRP_NBYTES
+ * @param[out] u_out     SRP_SHA1_LEN bytes
  *
  * @returns 0 on success, -1 on failure
  */
@@ -229,7 +234,14 @@ int srp_compute_u(const unsigned char *a_padded, const unsigned char *b_padded,
  * A and B are the stripped (leading zeros removed) forms, matching Tom Wu's
  * reference SRP-6a derivation and uams_srp.c.
  *
- * @param[out] m1_out  SRP_SHA1_LEN bytes
+ * @param[in]  username    at most SRP_USERNAME_MAX_LEN bytes
+ * @param[in]  salt        SRP_SALT_LEN bytes
+ * @param[in]  a_stripped  the client's public value without leading zeros
+ * @param[in]  a_len       its length
+ * @param[in]  b_stripped  the server's public value without leading zeros
+ * @param[in]  b_len       its length
+ * @param[in]  key         the session key K, SRP_SESSION_KEY_LEN bytes
+ * @param[out] m1_out      SRP_SHA1_LEN bytes
  *
  * @returns 0 on success, -1 on failure
  */
@@ -275,7 +287,11 @@ int srp_compute_proofs(const char *username, const unsigned char *salt,
 /*!
  * @brief M2 = SHA1(A | M1 | K), the server's proof to the client
  *
- * @param[out] m2_out  SRP_SHA1_LEN bytes
+ * @param[in]  a_stripped  the client's public value without leading zeros
+ * @param[in]  a_len       its length
+ * @param[in]  m1          the client's proof, SRP_SHA1_LEN bytes
+ * @param[in]  key         the session key K, SRP_SESSION_KEY_LEN bytes
+ * @param[out] m2_out      SRP_SHA1_LEN bytes
  *
  * @returns 0 on success, -1 on failure
  */

@@ -128,8 +128,12 @@ The **vol dbpath** directory must already exist and be writable by the serving
 user; the second `mkdir` above creates it, and the server creates one
 directory per volume beneath it, owned by the serving user with owner-only
 permissions (directory 0700, database files 0600). **nad** and **dbd** run by
-that user keep those permissions; run by root they widen them to the shared
-defaults, which the next server start tightens again.
+that user keep those permissions once the server has created the directory,
+and create the shared defaults before it has, which the server's first start
+tightens. Run by root they widen the permissions to the shared defaults; the
+next server start tightens the user's own files again, but a file root created
+(a database root opened first, or the WAL and SHM files a killed root run left
+behind) stays root-owned and the volume fails to open until it is removed.
 
 The default AFP port 548 is privileged on many systems, so the example uses
 **afp port = 5548** and the server can bind without any privileges. Clients
@@ -158,9 +162,10 @@ with mode 0700 holding that user's verifier file with no group or other
 permissions, and a configuration file that is owned by the serving user, not
 writable by group or others, and kept in a mode-0700 directory owned by that
 user. It does not support AppleTalk, the DBD or MySQL CNID backends,
-**[Homes]** volumes, Spotlight backends other than **cnid** (the default, which
-searches the volume's own CNID database), AFP statistics, or administrator and
-forced-user configuration. A volume the serving user cannot read and search, or
+**[Homes]** volumes, **vol dbnest** (the CNID directory would be the volume
+itself, which the mode keeps owner-only), Spotlight backends other than
+**cnid** (the default, which searches the volume's own CNID database), AFP
+statistics, or administrator and forced-user configuration. A volume the serving user cannot read and search, or
 cannot write when it is not read-only, is rejected at startup, as is one whose
 CNID directory does not exist and cannot be created: **vol dbpath** must name a
 directory the serving user owns. CNID state owned by another user is not taken

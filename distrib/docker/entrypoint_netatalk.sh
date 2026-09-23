@@ -55,7 +55,7 @@ else
     if [ -r /integration/lib.sh ]; then
         . /integration/lib.sh
 
-        if ! wait_for 10 afp_listening "$AFP_PORT"; then
+        if ! wait_for 10 afp_listening "$AFP_PORT" "$AFP_HOST"; then
             echo "ERROR: the AFP server did not start" >&2
             SERVER_LOG_FILE=${NETATALK_LOG_FILE:-/var/log/afpd.log}
 

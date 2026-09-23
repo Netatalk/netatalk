@@ -1,5 +1,7 @@
-/* ----------------------------------------------
-*/
+/*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
+ * All Rights Reserved.  See COPYRIGHT.
+ */
 
 #include <signal.h>
 #include <stdio.h>
