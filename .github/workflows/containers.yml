@@ -840,6 +840,70 @@ jobs:
           path: ${{ runner.temp }}/afp-spectest.junit.xml
           reporter: java-junit
 
+  afp-spectest-singleuser-afp34:
+    name: AFP spec test (single-user) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e SINGLE_USER="1" \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_UAMS="uams_srp.so" \
+            -e AFP_TESTSUITE_UAM="SRP" \
+            -e AFP_PORT="5548" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="7" \
+            -e AFP_DIRCACHESIZE="1024" \
+            -e SERVER_LOGS="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
+  netatalk-integration:
+    name: Integration scripts - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        script:
+          - afppasswd_test
+          - logreopen_test
+          - singleuser_test
+    steps:
+      - name: Run ${{ matrix.script }}
+        run: |
+          docker run --rm --entrypoint /bin/sh \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }} \
+            "/integration/${{ matrix.script }}.sh"
+
   samba-interop:
     name: samba-client and netatalk-client interop (ea:samba) - Debian
     needs: build-container-testsuite-debian

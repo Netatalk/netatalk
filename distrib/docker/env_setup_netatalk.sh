@@ -224,6 +224,31 @@ else
     echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 fi
 
+# --------------------------------------------------------------------------
+# Single-user mode paths
+# --------------------------------------------------------------------------
+# The daemon runs as AFP_USER with all state under that user's home, so the
+# config directory moves there. Everything above this point (user creation,
+# password setup) and below it (UAM selection, EA mode, client defaults) is
+# shared with the root service. The CNID directories go under the user's
+# state directory, one per volume, where vol dbpath points.
+
+if [ -n "$SINGLE_USER" ]; then
+    SU_HOME=$(getent passwd "$AFP_USER" | cut -d: -f6)
+
+    if [ -z "$SU_HOME" ] || [ ! -d "$SU_HOME" ]; then
+        SU_HOME=/home/$AFP_USER
+        mkdir -p "$SU_HOME"
+        chown "$AFP_USER" "$SU_HOME"
+    fi
+
+    NETATALK_CONFDIR="$SU_HOME/.config/netatalk"
+    SU_STATE="$SU_HOME/.local/state/netatalk"
+    NETATALK_LOG_FILE="$SU_HOME/netatalk.log"
+    su "$AFP_USER" -c 'mkdir -p -m 700 "$1" "$2" && mkdir -p "$2/cnid"' sh \
+        "$NETATALK_CONFDIR" "$SU_STATE"
+fi
+
 RANDNUM_PASSWD_FILE="$NETATALK_CONFDIR/afppasswd"
 
 if [ -f "$RANDNUM_PASSWD_FILE" ]; then
@@ -275,10 +300,20 @@ fi
 # Creating credentials for the SRP UAM
 SRP_OK=0
 if [ "$SRP_WANTED" = "1" ]; then
-    afppasswd -c
+    if [ -n "$SINGLE_USER" ]; then
+        # The verifier directory is the serving user's own: created by that
+        # user, at the path the generated afp.conf names, holding that one
+        # account's file.
+        if su "$AFP_USER" -c 'afppasswd -c -p "$1" -w "$2"' sh \
+                "$NETATALK_CONFDIR/afppasswd.srp" "$AFP_PASS"; then
+            SRP_OK=1
+        fi
+    else
+        afppasswd -c
 
-    if afppasswd -a "$AFP_USER" -w "$AFP_PASS" > /dev/null; then
-        SRP_OK=1
+        if afppasswd -a "$AFP_USER" -w "$AFP_PASS" > /dev/null; then
+            SRP_OK=1
+        fi
     fi
 fi
 
@@ -293,7 +328,7 @@ if [ -n "$AFP_DROPBOX" ]; then
     else
         usermod -aG $AFP_GROUP nobody 2> /dev/null || true
     fi
-elif [ -n "$AFP_USER2" ]; then
+elif [ -n "$AFP_USER2" ] && [ -z "$SINGLE_USER" ]; then
     echo "*** Setting up second AFP user"
 
     if [ "$USER_TOOL" = "pw" ]; then
@@ -635,6 +670,11 @@ login message = $AFP_LOGIN_MESSAGE
 mimic model = $AFP_MIMIC_MODEL
 server name = ${SERVER_NAME:-Netatalk File Server}
 uam list = $UAMS
+${SINGLE_USER:+signature = singleuser-ci}
+${SINGLE_USER:+srp verifier path = $NETATALK_CONFDIR/afppasswd.srp}
+${SINGLE_USER:+vol dbpath = $SU_STATE/cnid}
+${SINGLE_USER:+afp port = $AFP_PORT}
+${SINGLE_USER:+zeroconf = no}
 mac charset = ${AFP_MAC_CHARSET:-MAC_ROMAN}
 unix charset = ${AFP_UNIX_CHARSET:-UTF8}
 vol charset = ${AFP_VOL_CHARSET:-UTF8}
@@ -647,6 +687,7 @@ ea = $AFP_EA
 multi protocol = $AFP_MULTIPROTO
 path = $NETATALK_SHARE_DIR
 valid users = $AFP_VALIDUSERS1
+${SINGLE_USER:+volume uuid = 550E8400-E29B-41D4-A716-446655440000}
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
 convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-no}
@@ -658,11 +699,17 @@ multi protocol = $AFP_MULTIPROTO
 path = $NETATALK_BACKUP_DIR
 time machine = $TIMEMACHINE
 valid users = $AFP_VALIDUSERS2
+${SINGLE_USER:+volume uuid = 6F9619FF-8B86-D011-B42D-00CF4FC964FF}
 volume name = ${SHARE_NAME2:-Time Machine}
 $AFP_RWRO = $AFP_VALIDUSERS2
 convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-no}
 spotlight = $AFP_SPOTLIGHT_GLOBAL
 EOF
+fi
+
+if [ -n "$SINGLE_USER" ]; then
+    chown "$AFP_USER" "$NETATALK_CONFDIR/afp.conf"
+    chmod 600 "$NETATALK_CONFDIR/afp.conf"
 fi
 
 if [ -n "$AFP_EXTMAP" ]; then

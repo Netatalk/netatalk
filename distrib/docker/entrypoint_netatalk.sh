@@ -40,8 +40,35 @@ echo "*** Starting AFP server"
 if [ -z "$TESTSUITE" ]; then
     netatalk -d
 else
-    netatalk
-    sleep 2
+    if [ -n "$SINGLE_USER" ]; then
+        echo "*** Starting single-user AFP server as $AFP_USER"
+        su "$AFP_USER" -c 'netatalk --single-user -P "$1" -F "$2"' sh \
+            "$SU_STATE/netatalk.pid" "$NETATALK_CONFDIR/afp.conf"
+    else
+        netatalk
+    fi
+
+    # The daemonized controller returns immediately, so wait for the listener
+    # where the image can: only the Alpine testsuite image ships /integration
+    # and a netcat. A daemon that never came up fails the leg here, not as an
+    # unexplained login failure in every test.
+    if [ -r /integration/lib.sh ]; then
+        . /integration/lib.sh
+
+        if ! wait_for 10 afp_listening "$AFP_PORT"; then
+            echo "ERROR: the AFP server did not start" >&2
+            SERVER_LOG_FILE=${NETATALK_LOG_FILE:-/var/log/afpd.log}
+
+            if [ -f "$SERVER_LOG_FILE" ]; then
+                cat "$SERVER_LOG_FILE"
+            fi
+
+            exit 1
+        fi
+    else
+        sleep 2
+    fi
+
     echo "*** Running testsuite: $TESTSUITE"
     echo ""
     # Temporarily disable exit-on-error to ensure we can dump logs even if test fails
@@ -70,6 +97,9 @@ else
             fi
             if [ -n "$AFP_JUNIT_REPORT_PATH" ]; then
                 set -- "$@" -j "$AFP_JUNIT_REPORT_PATH"
+            fi
+            if [ -n "$SINGLE_USER" ]; then
+                set -- "$@" -N
             fi
             afp_spectest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
@@ -117,13 +147,15 @@ else
     # Display Netatalk's server logs if SERVER_LOGS is set, and always on a
     # failed run: a dying afpd child takes its diagnosis with it otherwise
     if [ -n "$SERVER_LOGS" ] || [ "$TEST_EXIT_CODE" -ne 0 ]; then
-        if [ -f /var/log/afpd.log ]; then
-            echo "/var/log/afpd.log log lines: $(wc -l /var/log/afpd.log | awk '{print $1}')"
+        SERVER_LOG_FILE=${NETATALK_LOG_FILE:-/var/log/afpd.log}
+
+        if [ -f "$SERVER_LOG_FILE" ]; then
+            echo "$SERVER_LOG_FILE log lines: $(wc -l "$SERVER_LOG_FILE" | awk '{print $1}')"
             echo "==== AFPD LOG CONTENT ===="
-            cat /var/log/afpd.log
+            cat "$SERVER_LOG_FILE"
             echo "==== AFPD LOG END ===="
         else
-            echo "NOTE: /var/log/afpd.log does not exist"
+            echo "NOTE: $SERVER_LOG_FILE does not exist"
         fi
     fi
 
@@ -131,14 +163,16 @@ else
     # set. CI-only diagnostic; redact lines that look like credentials so the
     # output is safe to attach to GitHub Actions logs.
     if [ -n "$SERVER_CONFIG" ]; then
-        if [ -f /etc/netatalk/afp.conf ]; then
+        SERVER_CONFIG_FILE=${NETATALK_CONFDIR:-/etc/netatalk}/afp.conf
+
+        if [ -f "$SERVER_CONFIG_FILE" ]; then
             echo "==== AFPD CONFIG CONTENT (redacted) ===="
             sed -E \
                 -e 's/^([[:space:]]*[^=#]*(pass|secret|token|key)[^=]*=[[:space:]]*).*/\1***REDACTED***/I' \
-                /etc/netatalk/afp.conf
+                "$SERVER_CONFIG_FILE"
             echo "==== AFPD CONFIG END ===="
         else
-            echo "NOTE: /etc/netatalk/afp.conf does not exist"
+            echo "NOTE: $SERVER_CONFIG_FILE does not exist"
         fi
     fi
     exit $TEST_EXIT_CODE
