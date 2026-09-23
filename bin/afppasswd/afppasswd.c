@@ -598,8 +598,8 @@ static int open_srp_verifier_directory(const char *path)
         return -1;
     }
 
-    /* An unprivileged caller may also use the private directory it owns for
-     * its own single-user server; root still requires a root-owned store. */
+    /* A non-root caller may also use the private directory it owns for its
+     * own single-user server; root still requires a root-owned store. */
     if (fstat(fd, &st) < 0 || !S_ISDIR(st.st_mode) ||
             (st.st_uid != 0 && (uid == 0 || st.st_uid != uid)) ||
             (st.st_mode & (S_IWGRP | S_IWOTH))) {

@@ -1,6 +1,17 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.7.0
+----------------
+
+* NEW: netatalk: `--single-user` (`-u`) runs an AFP server without root for
+  the invoking account, authenticating with SRP against the user's own
+  verifier directory (`afppasswd -c -p`), with `-P`/`--pidfile` for its PID
+  file. Every volume must use the sqlite CNID backend with an explicit
+  `volume uuid`, its CNID state under `vol dbpath` is kept readable by that
+  user alone, the configuration file must live in a mode-0700 directory the
+  user owns, and an `afp port` below 1024 is warned about rather than refused.
+
 Announcing Netatalk 4.6.0, Netatalk Client 1.0, and the new netatalk.io
 -----------------------------------------------------------------------
 

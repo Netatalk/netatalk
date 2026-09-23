@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <inttypes.h>
+#include <libgen.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
@@ -53,6 +54,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
+#include <atalk/srp.h>
 #include <atalk/util.h>
 
 #include "afp_zeroconf.h"
@@ -95,7 +97,7 @@ struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *sighup_ev, *timer_ev;
 static int in_shutdown;
 static const char *dbus_path _U_;
 
-/* The lock path is normally compiled in for a system service. In rootless
+/* The lock path is normally compiled in for a system service. In single-user
  * mode it is supplied by the caller and must live in private user state. */
 static const char *lockfile_path = PATH_NETATALK_LOCK;
 
@@ -112,6 +114,12 @@ static bool service_running(pid_t pid)
     return false;
 }
 
+/*!
+ * @brief Whether uamlist names uams_srp.so and nothing else
+ *
+ * Tokens are separated by whitespace or commas, the separators afpd's own
+ * uam list parser accepts.
+ */
 static bool srp_is_the_only_uam(const char *uamlist)
 {
     const unsigned char *p = (const unsigned char *)uamlist;
@@ -152,196 +160,250 @@ static bool srp_is_the_only_uam(const char *uamlist)
     return count == 1;
 }
 
-static bool dbpath_parent_is_writable(const char *path)
+/*!
+ * @brief Copy the parent directory of path into dst
+ *
+ * dirname(3) semantics: trailing slashes are ignored, a path with no slash
+ * yields ".", and a child of the root yields "/".
+ *
+ * @returns 0 on success, -1 when path is NULL or does not fit dst
+ */
+static int path_parent(char *dst, size_t dstlen, const char *path)
 {
-    char parent[MAXPATHLEN];
-    char *slash;
-    size_t len;
+    char *p;
 
-    if (path == NULL || strlcpy(parent, path, sizeof(parent)) >= sizeof(parent)) {
-        return false;
+    if (path == NULL || strlcpy(dst, path, dstlen) >= dstlen) {
+        return -1;
     }
 
-    len = strlen(parent);
+    /* dirname() may edit dst in place or return storage of its own */
+    p = dirname(dst);
 
-    while (len > 1 && parent[len - 1] == '/') {
-        parent[--len] = '\0';
+    if (p != dst) {
+        strlcpy(dst, p, dstlen);
     }
 
-    slash = strrchr(parent, '/');
-
-    if (slash == NULL) {
-        strlcpy(parent, ".", sizeof(parent));
-    } else if (slash == parent) {
-        parent[1] = '\0';
-    } else {
-        *slash = '\0';
-    }
-
-    return access(parent, W_OK | X_OK) == 0;
+    return 0;
 }
 
-static bool pidfile_path_is_private(const char *path)
+/*!
+ * @brief A mode-0700 directory owned by the caller, not reached through a symlink
+ */
+static bool owned_private_dir(const char *path)
+{
+    struct stat st;
+    return lstat(path, &st) == 0 && S_ISDIR(st.st_mode)
+           && st.st_uid == getuid() && (st.st_mode & 0077) == 0;
+}
+
+/*!
+ * @brief The directory holding path is private to the caller
+ */
+static bool parent_is_private(const char *path)
 {
     char parent[MAXPATHLEN];
-    char *slash;
+    return path_parent(parent, sizeof(parent), path) == 0
+           && owned_private_dir(parent);
+}
+
+/*!
+ * @brief A path only the caller can reach and replace
+ *
+ * @param[in] path           the file to judge
+ * @param[in] file_mask      mode bits the file must not carry
+ * @param[in] may_be_absent  whether an absent path passes
+ *
+ * @returns true when the parent is private to the caller and path is either
+ *          absent-and-allowed or a regular file the caller owns
+ */
+static bool dir_is_private(const char *path, mode_t file_mask,
+                           bool may_be_absent)
+{
     struct stat st;
-    size_t len;
 
-    if (path == NULL || strlcpy(parent, path, sizeof(parent)) >= sizeof(parent)) {
+    if (!parent_is_private(path)) {
         return false;
     }
 
-    len = strlen(parent);
-
-    while (len > 1 && parent[len - 1] == '/') {
-        parent[--len] = '\0';
+    if (lstat(path, &st) != 0) {
+        return may_be_absent && errno == ENOENT;
     }
 
-    slash = strrchr(parent, '/');
+    return S_ISREG(st.st_mode) && st.st_uid == getuid()
+           && (st.st_mode & file_mask) == 0;
+}
 
-    if (slash == NULL) {
-        strlcpy(parent, ".", sizeof(parent));
-    } else if (slash == parent) {
-        parent[1] = '\0';
-    } else {
-        *slash = '\0';
-    }
-
-    if (stat(parent, &st) != 0 || !S_ISDIR(st.st_mode) || st.st_uid != getuid()
-            || (st.st_mode & 0077) != 0) {
-        return false;
-    }
+/*!
+ * @brief The CNID directory is one the caller can write, or can create
+ *
+ * The sqlite backend opens it O_NOFOLLOW, so a symbolic link does not pass.
+ */
+static bool dbpath_is_creatable(const char *path)
+{
+    char parent[MAXPATHLEN];
+    struct stat st;
 
     if (lstat(path, &st) == 0) {
-        return S_ISREG(st.st_mode) && st.st_uid == getuid();
+        return S_ISDIR(st.st_mode) && access(path, W_OK | X_OK) == 0;
     }
 
-    return errno == ENOENT;
+    return errno == ENOENT && path_parent(parent, sizeof(parent), path) == 0
+           && access(parent, W_OK | X_OK) == 0;
 }
 
-/* The verifier store of an unprivileged server is the calling user's private
- * directory holding that user's own verifier, named by numeric uid like the
- * SRP UAM expects. Symbolic links are refused, as the UAM refuses them. */
+/*!
+ * @brief The verifier store is the calling user's own, holding their verifier
+ *
+ * The store of a single-user server is the calling user's private directory
+ * holding that user's own verifier, named by numeric uid like the SRP UAM
+ * expects. Symbolic links are refused, as the UAM refuses them.
+ */
 static bool srp_verifier_store_is_private(const char *path)
 {
     char verifier[MAXPATHLEN];
     struct stat st;
-    uid_t uid = getuid();
     int len;
 
     if (path == NULL) {
         path = _PATH_AFPSRPVERIFIERPATH;
     }
 
-    if (lstat(path, &st) != 0 || !S_ISDIR(st.st_mode) || st.st_uid != uid
-            || (st.st_mode & 0077) != 0) {
+    if (!owned_private_dir(path)) {
         return false;
     }
 
-    len = snprintf(verifier, sizeof(verifier), "%s/%ju", path, (uintmax_t)uid);
+    len = snprintf(verifier, sizeof(verifier), "%s/%ju", path,
+                   (uintmax_t)getuid());
 
     if (len < 0 || (size_t)len >= sizeof(verifier)) {
         return false;
     }
 
-    return lstat(verifier, &st) == 0 && S_ISREG(st.st_mode) && st.st_uid == uid
-           && (st.st_mode & 07777) == 0600;
+    /* the UAM's own file rule, plus owner-readable: a verifier the UAM cannot
+     * open would fail every login instead of this start */
+    return lstat(verifier, &st) == 0 && S_ISREG(st.st_mode) && st.st_nlink == 1
+           && st.st_uid == getuid() && srp_verifier_mode_is_safe(st.st_mode)
+           && (st.st_mode & S_IRUSR) != 0;
 }
 
-static int validate_unprivileged_config(void)
+/*!
+ * @brief Refuse a single-user configuration the mode cannot serve
+ *
+ * Runs after the volumes are loaded and before daemonize(), so every message
+ * reaches the operator's terminal.
+ *
+ * @returns 0 when every clause passes, -1 after printing the first failure
+ */
+static int validate_singleuser_config(void)
 {
-    struct stat st;
-    uid_t uid = getuid();
-
     if (obj.options.flags & OPTION_DDP) {
-        fprintf(stderr, "netatalk: --unprivileged does not support AppleTalk.\n");
+        fprintf(stderr, "netatalk: --single-user does not support AppleTalk.\n");
         return -1;
     }
 
     if (obj.options.flags & OPTION_AFPSTATS) {
-        fprintf(stderr, "netatalk: --unprivileged does not support afpstats.\n");
+        fprintf(stderr, "netatalk: --single-user does not support afpstats.\n");
         return -1;
     }
 
     if (obj.options.force_user || obj.options.force_group
             || obj.options.admingid != 0) {
         fprintf(stderr,
-                "netatalk: --unprivileged does not support admin or forced identities.\n");
+                "netatalk: --single-user does not support admin or forced identities.\n");
         return -1;
     }
 
     if (obj.options.signatureopt == NULL || obj.options.signatureopt[0] == '\0') {
         fprintf(stderr,
-                "netatalk: --unprivileged requires an explicit [Global] signature.\n");
+                "netatalk: --single-user requires an explicit [Global] signature.\n");
         return -1;
     }
 
     if (!srp_is_the_only_uam(obj.options.uamlist)) {
         fprintf(stderr,
-                "netatalk: --unprivileged requires 'uam list = uams_srp.so'.\n");
+                "netatalk: --single-user requires 'uam list = uams_srp.so'.\n");
         return -1;
     }
 
-    if (stat(obj.options.configfile, &st) != 0 || st.st_uid != uid
-            || (st.st_mode & 0022) != 0) {
+    /* afpd re-parses -F on its own; a directory someone else can write into
+     * lets the file be swapped between this validation and that parse. */
+    if (!dir_is_private(obj.options.configfile, 0022, false)) {
         fprintf(stderr,
-                "netatalk: --unprivileged requires a configuration file owned by the calling user and not writable by group or others.\n");
+                "netatalk: --single-user requires a configuration file owned by the calling user, not writable by group or others, that lives in a mode-0700 directory owned by that user.\n");
         return -1;
     }
 
     if (!srp_verifier_store_is_private(obj.options.srpverifierpath)) {
         fprintf(stderr,
-                "netatalk: --unprivileged requires 'srp verifier path' to be a mode-0700 directory owned by the calling user containing that user's verifier.\n");
+                "netatalk: --single-user requires 'srp verifier path' to be a mode-0700 directory owned by the calling user containing that user's verifier.\n");
         return -1;
     }
 
     if (INIPARSER_GETSTR(obj.iniconfig, INISEC_HOMES, "basedir regex",
                          NULL) != NULL) {
-        fprintf(stderr, "netatalk: --unprivileged does not support [Homes] volumes.\n");
+        fprintf(stderr, "netatalk: --single-user does not support [Homes] volumes.\n");
+        return -1;
+    }
+
+    if (obj.vols_skipped != 0) {
+        fprintf(stderr,
+                "netatalk: --single-user requires every configured volume to load: %d skipped, the log says why.\n",
+                obj.vols_skipped);
         return -1;
     }
 
     if (!volumes_loaded || getvolumes() == NULL) {
         fprintf(stderr,
-                "netatalk: --unprivileged requires at least one static volume.\n");
+                "netatalk: --single-user requires at least one static volume.\n");
         return -1;
     }
 
     for (const struct vol *vol = getvolumes(); vol != NULL; vol = vol->v_next) {
         if (vol->v_cnidscheme == NULL || strcasecmp(vol->v_cnidscheme, "sqlite") != 0) {
-            fprintf(stderr, "netatalk: --unprivileged volume '%s' must use sqlite CNID.\n",
+            fprintf(stderr, "netatalk: --single-user volume '%s' must use sqlite CNID.\n",
                     vol->v_localname);
             return -1;
         }
 
-        if (vol->v_uuid == NULL || vol->v_uuid[0] == '\0') {
+        /* the cnid backend searches the volume's own sqlite database; the
+         * others keep their index under system directories */
+        if ((vol->v_flags & AFPVOL_SPOTLIGHT) && vol->v_sl_backend_name != NULL
+                && strcasecmp(vol->v_sl_backend_name, "cnid") != 0) {
             fprintf(stderr,
-                    "netatalk: --unprivileged volume '%s' requires an explicit volume uuid.\n",
-                    vol->v_localname);
-            return -1;
-        }
-
-        if (vol->v_flags & AFPVOL_SPOTLIGHT) {
-            fprintf(stderr,
-                    "netatalk: --unprivileged does not support Spotlight on volume '%s'.\n",
-                    vol->v_localname);
+                    "netatalk: --single-user supports only 'spotlight backend = cnid'; volume '%s' uses '%s'.\n",
+                    vol->v_localname, vol->v_sl_backend_name);
             return -1;
         }
 
         if (access(vol->v_path, R_OK | X_OK) != 0
                 || (!(vol->v_flags & AFPVOL_RO) && access(vol->v_path, W_OK | X_OK) != 0)) {
             fprintf(stderr,
-                    "netatalk: --unprivileged cannot access volume '%s' as the calling user.\n",
+                    "netatalk: --single-user cannot access volume '%s' as the calling user.\n",
                     vol->v_localname);
             return -1;
         }
 
-        if (!dbpath_parent_is_writable(vol->v_dbpath)) {
+        /* CNID state is created at first mount, as the serving user; a
+         * directory that cannot come into being is refused here, with the
+         * fix, rather than at every mount by the backend. */
+        if (!dbpath_is_creatable(vol->v_dbpath)) {
             fprintf(stderr,
-                    "netatalk: --unprivileged requires a writable parent directory for vol dbpath of volume '%s'.\n",
-                    vol->v_localname);
+                    "netatalk: --single-user requires the CNID directory of volume '%s' (%s) to be a writable directory, not a symbolic link, or one the calling user can create: set 'vol dbpath' to a directory the calling user owns.\n",
+                    vol->v_localname, vol->v_dbpath);
             return -1;
+        }
+    }
+
+    {
+        int port = atoi(obj.options.port);
+
+        if (port > 0 && port < 1024) {
+            fprintf(stderr,
+                    "netatalk: warning: afp port %d is below 1024 (548 is the default "
+                    "when 'afp port' is not set, and a port in 'afp listen' takes "
+                    "precedence); binding it may need privileges this mode does not "
+                    "have. Set 'afp port = 5548' or another port above 1023 if afpd "
+                    "fails to start.\n", port);
         }
     }
 
@@ -632,9 +694,9 @@ static void sigquit_impl(void)
 /*! SIGHUP implementation */
 static void sighup_impl(void)
 {
-    if (obj.cmdlineflags & OPTION_UNPRIVILEGED) {
+    if (obj.cmdlineflags & OPTION_SINGLEUSER) {
         LOG(log_note, logtype_afpd,
-            "Ignoring SIGHUP: configuration reload is disabled in unprivileged mode");
+            "Ignoring SIGHUP: configuration reload is disabled in single-user mode");
         return;
     }
 
@@ -921,9 +983,17 @@ static pid_t run_process(const char *path, ...)
     return pid;
 }
 
+/*!
+ * @brief Start afpd on the controller's configuration file
+ *
+ * A single-user controller passes the mode on with -u, so afpd applies the
+ * uid check in login().
+ *
+ * @returns the child pid, or NETATALK_SRV_ERROR
+ */
 static pid_t run_afpd(void)
 {
-    if (obj.cmdlineflags & OPTION_UNPRIVILEGED) {
+    if (obj.cmdlineflags & OPTION_SINGLEUSER) {
         return run_process(_PATH_AFPD, "-d", "-u", "-F", obj.options.configfile, NULL);
     }
 
@@ -1001,11 +1071,11 @@ int main(int argc, char **argv)
         { "debug",        no_argument,       NULL, 'd' },
         { "config",       required_argument, NULL, 'F' },
         { "pidfile",      required_argument, NULL, 'P' },
-        { "unprivileged", no_argument,       NULL, 'u' },
+        { "single-user",  no_argument,       NULL, 'u' },
         { "version",      no_argument,       NULL, 'v' },
         { NULL,            0,                 NULL,  0  }
     };
-    int c, ret, debug = 0, unprivileged = 0;
+    int c, ret, debug = 0, singleuser = 0;
     const char *pidfile = NULL;
     sigset_t blocksigs;
 #ifndef WITH_LIBEV
@@ -1021,7 +1091,15 @@ int main(int argc, char **argv)
             break;
 
         case 'F':
-            obj.cmdlineconfigfile = strdup(optarg);
+
+            /* daemonize() chdir()s to "/" and run_afpd() passes this string
+             * on as given, so a relative path is resolved here */
+            if ((obj.cmdlineconfigfile = realpath_safe(optarg)) == NULL) {
+                fprintf(stderr, "netatalk: cannot resolve config file '%s': %s\n",
+                        optarg, strerror(errno));
+                exit(EXITERR_CONF);
+            }
+
             break;
 
         case 'P':
@@ -1029,8 +1107,8 @@ int main(int argc, char **argv)
             break;
 
         case 'u':
-            unprivileged = 1;
-            obj.cmdlineflags |= OPTION_UNPRIVILEGED;
+            singleuser = 1;
+            obj.cmdlineflags |= OPTION_SINGLEUSER;
             break;
 
         case 'v':       /* version */
@@ -1047,16 +1125,16 @@ int main(int argc, char **argv)
         }
     }
 
-    if (unprivileged) {
+    if (singleuser) {
         if (getuid() == 0 || geteuid() == 0) {
             fprintf(stderr,
-                    "netatalk: --unprivileged must be started by a non-root user.\n");
+                    "netatalk: --single-user must be started by a non-root user.\n");
             exit(EXIT_FAILURE);
         }
 
         if (pidfile == NULL || pidfile[0] == '\0') {
             fprintf(stderr,
-                    "netatalk: --unprivileged requires -P with a PID file in private user state.\n");
+                    "netatalk: --single-user requires -P with a PID file in private user state.\n");
             exit(EXIT_FAILURE);
         }
 
@@ -1064,22 +1142,26 @@ int main(int argc, char **argv)
 
         if (lockfile_path[0] != '/') {
             fprintf(stderr,
-                    "netatalk: --unprivileged requires -P with an absolute PID file path.\n");
+                    "netatalk: --single-user requires -P with an absolute PID file path.\n");
             exit(EXIT_FAILURE);
         }
 
-        if (!pidfile_path_is_private(lockfile_path)) {
+        if (!dir_is_private(lockfile_path, 0, true)) {
             fprintf(stderr,
-                    "netatalk: --unprivileged requires -P in a mode-0700 directory owned by the calling user.\n");
+                    "netatalk: --single-user requires -P in a mode-0700 directory owned by the calling user.\n");
             exit(EXIT_FAILURE);
         }
     } else if (getuid() != 0 || geteuid() != 0) {
         fprintf(stderr,
-                "netatalk: must run as root; use --unprivileged (-u) for a single-user AFP server.\n");
+                "netatalk: must run as root; use --single-user (-u) for a single-user AFP server.\n");
         exit(EXIT_FAILURE);
     } else if (pidfile != NULL) {
-        fprintf(stderr, "netatalk: -P is only valid together with --unprivileged.\n");
+        fprintf(stderr, "netatalk: -P is only valid together with --single-user.\n");
         exit(EXIT_FAILURE);
+    }
+
+    if (check_lockfile("netatalk", lockfile_path) != 0) {
+        exit(EXITERR_SYS);
     }
 
     if (afp_config_parse(&obj, "netatalk") != 0) {
@@ -1088,12 +1170,8 @@ int main(int argc, char **argv)
 
     volumes_loaded = (load_afp_conf_vols(&obj, LV_ALL) == 0);
 
-    if (unprivileged && validate_unprivileged_config() != 0) {
+    if (singleuser && validate_singleuser_config() != 0) {
         exit(EXITERR_CONF);
-    }
-
-    if (check_lockfile("netatalk", lockfile_path) != 0) {
-        exit(EXITERR_SYS);
     }
 
     if (!debug && daemonize() != 0) {

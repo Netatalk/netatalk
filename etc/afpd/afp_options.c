@@ -198,7 +198,7 @@ void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
             break;
 
         case 'u':
-            obj->cmdlineflags |= OPTION_UNPRIVILEGED;
+            obj->cmdlineflags |= OPTION_SINGLEUSER;
             break;
 
         case 'F':

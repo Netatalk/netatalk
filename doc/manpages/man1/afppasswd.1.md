@@ -30,7 +30,7 @@ There are two invocation styles:
   changes the calling user's own SRP password. The caller may use **-p** to
   select the verifier directory. Randnum mode remains root-only. A regular
   user can also use **-c** with **-p** to create a private verifier directory
-  containing only their own account, for use with **netatalk --unprivileged**.
+  containing only their own account, for use with **netatalk --single-user**.
 
 The named user must already exist as a local system user.
 
@@ -73,7 +73,7 @@ the file's ownership to its local user and its mode to 0600, then restart
 that file as root. Do not change a root-owned disabled placeholder this way;
 use **afppasswd -a** *username* to set a password and re-enable it. A verifier
 with more than one hard link must be replaced or have its extra links removed.
-The private verifier directory of an unprivileged single-user server is
+The private verifier directory of a single-user server is
 instead owned by its user; see **-c**.
 
 Once enrolled, users can also replace their verifier directly. The old-password
@@ -135,7 +135,7 @@ Local user changing their own SRP password:
 
     example% afppasswd
 
-Local user creating a private SRP verifier directory for an unprivileged AFP
+Local user creating a private SRP verifier directory for a single-user AFP
 server:
 
     example% afppasswd -c -p ~/.config/netatalk/afppasswd.srp
@@ -187,7 +187,7 @@ mode-0600 verifier, then prompts for the initial password or takes it from
 **-w**. Use **-f** to replace the caller's existing verifier. The password is
 collected (and, when prompted for, confirmed) before the directory or verifier
 is created or replaced, so an aborted prompt leaves an existing verifier
-intact. This form is intended for **netatalk --unprivileged** and does not
+intact. This form is intended for **netatalk --single-user** and does not
 accept **-r**, **-a**, **-d**, **-m**, or **-u**.
 
 **-f**

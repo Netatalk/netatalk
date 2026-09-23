@@ -232,7 +232,7 @@ enum srp_verifier_status {
  * @brief Look up a user's salt and verifier from their SRP verifier file.
  *
  * The verifier directory is administrator-owned, or owned by the serving user
- * when an unprivileged single-user afpd runs as that user. An enrolled user's
+ * when a single-user afpd runs as that user. An enrolled user's
  * numeric-UID file is owned and writable only by that user and contains exactly
  * one record: username:hex_salt:hex_verifier.
  * A root-owned, disabled placeholder denotes a non-enrolled user. It is
@@ -259,7 +259,7 @@ static enum srp_verifier_status srp_lookup_verifier(const char *path,
     const char *p;
     size_t ulen = strnlen(username, SRP_USERNAME_MAX_LEN + 1);
     int dirfd = -1, fd = -1;
-    uid_t server_uid = geteuid();
+    uid_t server_uid = getuid();
     enum srp_verifier_status ret = SRP_VERIFIER_MISSING;
 
     if (!srp_valid_username(username)) {
@@ -274,7 +274,7 @@ static enum srp_verifier_status srp_lookup_verifier(const char *path,
 
     dirfd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
 
-    /* An unprivileged afpd runs as its single user, who owns the store. */
+    /* A single-user afpd runs as its user, who owns the store. */
     if (dirfd < 0 || fstat(dirfd, &st) < 0 || !S_ISDIR(st.st_mode) ||
             (st.st_uid != 0 && (server_uid == 0 || st.st_uid != server_uid)) ||
             (st.st_mode & (S_IWGRP | S_IWOTH))) {

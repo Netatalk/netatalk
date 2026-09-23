@@ -6,7 +6,7 @@ netatalk — Netatalk AFP server service controller daemon
 
 **netatalk** [-d] [-F *configfile*]
 
-**netatalk** --unprivileged --pidfile *path* [-d] [-F *configfile*]
+**netatalk** --single-user --pidfile *path* [-d] [-F *configfile*]
 
 **netatalk** [-v | -V]
 
@@ -35,17 +35,20 @@ configuration file called *afp.conf*.
 
 > Specifies the configuration file to use.
 
-**-u** | **--unprivileged**
+**-u** | **--single-user**
 
 > Start a restricted single-user AFP server without root privileges. The
-> daemon only accepts the UNIX identity that started it, uses that identity's
-> filesystem permissions, and requires SQLite CNID plus SRP authentication.
-> See the Configuration manual for all requirements and limitations.
+> daemon only accepts the UNIX identity that started it and uses that
+> identity's filesystem permissions. Each volume's SQLite CNID database is
+> kept under **vol dbpath**, owned by that user and readable by nobody else.
+> Authentication is SRP against the verifier directory the user created with
+> **afppasswd -c -p**. See the Configuration manual for all requirements and
+> limitations.
 
 **-P** *path* | **--pidfile** *path*
 
-> Set the controller PID file used by unprivileged mode. This option is
-> required with **--unprivileged**. The path must be absolute and located in
+> Set the controller PID file used by single-user mode. This option is
+> required with **--single-user**. The path must be absolute and located in
 > private, user-owned state; it is not accepted for the normal system service.
 
 **-v** | **-V**
@@ -62,7 +65,7 @@ SIGHUP
 
 > Sending a *SIGHUP* will cause the Netatalk AFP and CNID daemons to reload
 their configurations from *afp.conf*. Configuration reloads are disabled in
-unprivileged mode; restart **netatalk** after changing *afp.conf*.
+single-user mode; restart **netatalk** after changing *afp.conf*.
 
 # Files
 

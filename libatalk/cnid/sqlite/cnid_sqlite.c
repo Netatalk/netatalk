@@ -1816,6 +1816,24 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     return cdb;
 }
 
+/*!
+ * @brief Whether a CNID directory is, or would be, a non-root opener's own
+ *
+ * @returns true when path does not exist yet, or is a directory owned by the
+ *          caller with no group or other bits
+ */
+static bool cnid_sqlite_dir_owner_only(const char *path)
+{
+    struct stat st;
+
+    if (lstat(path, &st) != 0) {
+        return errno == ENOENT;
+    }
+
+    return S_ISDIR(st.st_mode) && st.st_uid == getuid()
+           && (st.st_mode & 077) == 0;
+}
+
 /* ---------------------- */
 struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 {
@@ -1831,8 +1849,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     const char *dbpath_str = NULL;
     int sqlite_return;
     bool is_root = false;
-    const bool unprivileged = vol->v_obj != NULL
-                              && (vol->v_obj->options.flags & OPTION_UNPRIVILEGED);
+    bool priv = false;
     EC_NULL(cdb = cnid_sqlite_new(vol));
     EC_NULL(db =
                 (CNID_sqlite_private *) calloc(1,
@@ -1846,10 +1863,19 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                  vol->v_localname);
     }
 
+    /* Owner-only state: the single-user server's, and any state a non-root
+     * process creates or already owns as a 0700 directory. The serving user's
+     * own nad and dbd open this directory without the server's flag and would
+     * otherwise widen what the server keeps owner-only; a process that is not
+     * root cannot create shared state anyway. Root, and a directory another
+     * account owns, follow the shared rules. */
+    priv = (vol->v_obj != NULL
+            && (vol->v_obj->options.flags & OPTION_SINGLEUSER) != 0)
+           || (getuid() != 0 && cnid_sqlite_dir_owner_only(dirpath));
     become_root();
     is_root = true;
 
-    if (mkdir(dirpath, unprivileged ? 0700 : 01777) != 0) {
+    if (mkdir(dirpath, priv ? 0700 : 01777) != 0) {
         if (errno == EEXIST) {
             int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
 
@@ -1858,8 +1884,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                 EC_FAIL;
             }
 
-            /* Normal servers share SQLite state with authenticated users and nad.
-             * A rootless server has only one user, so retain private state instead. */
+            /* Shared state is shared with authenticated users and nad; owner-only
+             * state is kept owner-only and refused when it is not the opener's. */
             struct stat st;
 
             if (fstat(dirfd, &st) != 0 || !S_ISDIR(st.st_mode)) {
@@ -1869,10 +1895,10 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                 EC_FAIL;
             }
 
-            if (unprivileged) {
+            if (priv) {
                 if (st.st_uid != getuid()) {
                     LOG(log_error, logtype_cnid,
-                        "Rootless CNID DB directory '%s' is not owned by the server user",
+                        "CNID DB directory '%s' is not owned by the server user",
                         dirpath);
                     close(dirfd);
                     EC_FAIL;
@@ -1880,7 +1906,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
                 if ((st.st_mode & 0777) != 0700 && fchmod(dirfd, 0700) != 0) {
                     LOG(log_error, logtype_cnid,
-                        "Can't make rootless CNID DB directory '%s' private: %s",
+                        "Can't make CNID DB directory '%s' owner-only: %s",
                         dirpath, strerror(errno));
                     close(dirfd);
                     EC_FAIL;
@@ -1935,15 +1961,15 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     sqlite3_extended_result_codes(db->cnid_sqlite_con, 1);
 
     /* Normal servers need a world-writable database so authenticated users and
-     * nad can update CNID state. A rootless server has one identity and keeps
-     * its database private.
+     * nad can update CNID state. A single-user server has one identity and
+     * keeps its database private.
      *
      * At the same time, do not treat a failure to change the permissions as a fatal error,
      * because non-root clients such as 'nad' may open a normal server's database. */
-    if (dbpath_str && chmod(dbpath_str, unprivileged ? 0600 : 0666) != 0) {
-        if (unprivileged) {
+    if (dbpath_str && chmod(dbpath_str, priv ? 0600 : 0666) != 0) {
+        if (priv) {
             LOG(log_error, logtype_cnid,
-                "cnid_sqlite_open: can't make rootless DB file %s private: %s",
+                "cnid_sqlite_open: can't make DB file %s owner-only: %s",
                 dbpath_str, strerror(errno));
             EC_FAIL;
         } else if (errno == EPERM || errno == EACCES) {
@@ -1976,15 +2002,15 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     }
 
     /* SQLite creates WAL and SHM files when WAL mode is enabled. They are
-     * shared for normal servers, but private in rootless mode. */
+     * shared for normal servers, but private in single-user mode. */
     {
         char auxpath[PATH_MAX];
         snprintf(auxpath, sizeof(auxpath), "%s-wal", dbpath_str);
 
-        if (chmod(auxpath, unprivileged ? 0600 : 0666) != 0 && errno != ENOENT) {
-            if (unprivileged) {
+        if (chmod(auxpath, priv ? 0600 : 0666) != 0 && errno != ENOENT) {
+            if (priv) {
                 LOG(log_error, logtype_cnid,
-                    "cnid_sqlite_open: can't make rootless WAL file %s private: %s",
+                    "cnid_sqlite_open: can't make WAL file %s owner-only: %s",
                     auxpath, strerror(errno));
                 EC_FAIL;
             } else {
@@ -1996,10 +2022,10 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
         snprintf(auxpath, sizeof(auxpath), "%s-shm", dbpath_str);
 
-        if (chmod(auxpath, unprivileged ? 0600 : 0666) != 0 && errno != ENOENT) {
-            if (unprivileged) {
+        if (chmod(auxpath, priv ? 0600 : 0666) != 0 && errno != ENOENT) {
+            if (priv) {
                 LOG(log_error, logtype_cnid,
-                    "cnid_sqlite_open: can't make rootless SHM file %s private: %s",
+                    "cnid_sqlite_open: can't make SHM file %s owner-only: %s",
                     auxpath, strerror(errno));
                 EC_FAIL;
             } else {

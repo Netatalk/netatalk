@@ -712,7 +712,9 @@ char *strtok_quote(char *s, const char *delim)
 
 int set_groups(AFPObj *obj, struct passwd *pwd)
 {
-    if (initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
+    /* only root may set the group list; a server started by its user
+     * already carries that user's groups */
+    if (getuid() == 0 && initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
         LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name,
             pwd->pw_gid, strerror(errno));
     }

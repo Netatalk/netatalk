@@ -1771,6 +1771,15 @@ static struct vol *creatvol(AFPObj *obj,
         EC_NULL(volume->v_uuid = strdup(val));
         LOG(log_debug, logtype_afpd, "Volume '%s': UUID set from config: '%s'",
             name, volume->v_uuid);
+    } else if (obj->options.flags & OPTION_SINGLEUSER) {
+        /* get_vol_uuid() below would generate one and append it to
+         * afp_voluuid.conf in the system state directory: a load side effect
+         * the serving user usually cannot perform, and must not perform for a
+         * volume that is refused. */
+        LOG(log_error, logtype_afpd,
+            "creatvol: volume \"%s\": single-user mode requires an explicit "
+            "'volume uuid', skipping", name);
+        EC_FAIL;
     }
 
     /* Resolve ea from: volume section -> preset -> [Global] -> built-in
@@ -2370,11 +2379,15 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         preset = getoption_str(obj->iniconfig, secname, "vol preset", NULL, NULL);
 
         if ((realvolpath = realpath_safe(path)) == NULL) {
+            obj->vols_skipped++;
             continue;
         }
 
-        creatvol(obj, pwent, secname, volname, realvolpath,
-                 preset ? preset : default_preset ? default_preset : NULL);
+        if (creatvol(obj, pwent, secname, volname, realvolpath,
+                     preset ? preset : default_preset ? default_preset : NULL) == NULL) {
+            obj->vols_skipped++;
+        }
+
         free(realvolpath);
     }
 
@@ -2752,6 +2765,7 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     become_root();
     obj->iniconfig = iniparser_load(obj->options.configfile);
     unbecome_root();
+    obj->vols_skipped = 0;
     EC_ZERO_LOG(readvolfile(obj, pwresult));
     struct vol *nextvol, *prevvol;
     vol = Volumes;
