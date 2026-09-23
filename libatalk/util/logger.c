@@ -30,6 +30,7 @@ Netatalk 2001 (c)
 #include <time.h>
 #include <unistd.h>
 
+#include <atalk/compat.h>
 #include <atalk/logger.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
@@ -81,7 +82,8 @@ log_config_t log_config = { 0 };
    -1:              logfiles fd
    log_none:        no logging by default
    0:               Display options
-   false            timestamp_us
+   true             timestamp_us
+   ""               filename (implicit)
  @endcode
  */
 #define DEFAULT_LOG_CONFIG {0, 0, -1, log_none, 0, true}
@@ -232,6 +234,21 @@ static void log_init(void)
                  logfacility_daemon);
 }
 
+/*!
+ * @brief Open a log file for appending, as root and close-on-exec
+ *
+ * @returns the descriptor, or -1 with errno set
+ */
+static int log_open_file(const char *filename)
+{
+    int fd;
+    become_root();
+    fd = open(filename, O_CREAT | O_WRONLY | O_APPEND | O_CLOEXEC,
+              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    unbecome_root();
+    return fd;
+}
+
 static void log_setup(const char *filename, enum loglevels loglevel,
                       enum logtypes logtype, const bool log_us_timestamp)
 {
@@ -243,6 +260,7 @@ static void log_setup(const char *filename, enum loglevels loglevel,
             }
 
             type_configs[logtype].fd = -1;
+            type_configs[logtype].filename[0] = '\0';
             type_configs[logtype].level = -1;
             type_configs[logtype].set = false;
 
@@ -273,6 +291,7 @@ static void log_setup(const char *filename, enum loglevels loglevel,
         }
 
         type_configs[logtype].fd = -1;
+        type_configs[logtype].filename[0] = '\0';
         type_configs[logtype].level = -1;
         type_configs[logtype].set = false;
         type_configs[logtype].syslog = false;
@@ -306,11 +325,13 @@ static void log_setup(const char *filename, enum loglevels loglevel,
         type_configs[logtype].fd = mkstemp(tmp);
         free(tmp);
     } else {
-        become_root();
-        type_configs[logtype].fd = open(filename,
-                                        O_CREAT | O_WRONLY | O_APPEND,
-                                        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-        unbecome_root();
+        type_configs[logtype].fd = log_open_file(filename);
+
+        /* only a file open() gave us can be reopened by name */
+        if (type_configs[logtype].fd != -1) {
+            strlcpy(type_configs[logtype].filename, filename,
+                    sizeof(type_configs[logtype].filename));
+        }
     }
 
     /* Check for error opening/creating logfile */
@@ -349,6 +370,38 @@ static void log_setup(const char *filename, enum loglevels loglevel,
         "Setup file logging: type: %s, level: %s, file: %s, timestamp_us: %d",
         arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], filename,
         log_us_timestamp);
+}
+
+/*!
+ * @brief Reopen the log files a previous setuplog() opened
+ *
+ * daemonize() closes every descriptor, so a process that set up logging
+ * before it daemonized would write to a closed or reused one. Only files that
+ * came from open() are reopened: fd 1 for "/dev/tty" is not ours to close,
+ * and a second mkstemp() would create a second file. A file that cannot be
+ * reopened falls back to syslog, as a type with no file does.
+ */
+void log_reopen(void)
+{
+    for (int i = 0; i < logtype_end_of_list_marker; i++) {
+        if (!type_configs[i].set || type_configs[i].filename[0] == '\0') {
+            continue;
+        }
+
+        if (type_configs[i].fd != -1) {
+            close(type_configs[i].fd);
+        }
+
+        type_configs[i].fd = log_open_file(type_configs[i].filename);
+
+        if (type_configs[i].fd == -1) {
+            int err = errno;
+            syslog_setup(type_configs[i].level, i,
+                         logoption_ndelay | logoption_pid, logfacility_daemon);
+            LOG(log_error, i, "log_reopen: %s: %s", type_configs[i].filename,
+                strerror(err));
+        }
+    }
 }
 
 /*! Setup syslog logging */

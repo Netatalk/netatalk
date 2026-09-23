@@ -1100,6 +1100,11 @@ int main(int argc, char **argv)
         exit(EXITERR_SYS);
     }
 
+    /* daemonize() closed the log file afp_config_parse() opened. */
+    if (!debug) {
+        log_reopen();
+    }
+
     if (create_lockfile("netatalk", lockfile_path) != 0) {
         exit(EXITERR_SYS);
     }
