@@ -89,6 +89,10 @@ run the byte-range read-lock conflict tests instead of skipping them
 **-m**
 : Run tests in AppleShare (Mac) AFP server compatibility mode
 
+**-N**
+: Server under test runs without root privileges (netatalk --single-user);
+skip the tests that rely on root reading a file whose mode denies its owner
+
 **-p** *port*
 : Server port number (default: 548)
 

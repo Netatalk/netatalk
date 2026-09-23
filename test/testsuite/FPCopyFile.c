@@ -578,6 +578,12 @@ STATIC void test402()
         goto test_exit;
     }
 
+    /* a mode-0222 file's metadata is read by root bypassing the mode */
+    if (NoRoot) {
+        test_skipped(T_NOROOT);
+        goto test_exit;
+    }
+
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, ndir))) {
         test_nottested();
         goto test_exit;

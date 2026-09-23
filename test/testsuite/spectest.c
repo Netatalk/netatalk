@@ -359,6 +359,7 @@ int     List = 0;
 int     Mac = 0;
 char    *Test;
 int		Locking;
+int     NoRoot = 0;
 int     EmptyVol = 0;
 enum ad_format adouble = AD_EA;
 
@@ -387,7 +388,7 @@ static int finish_report(int code)
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567aCEiLlmVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+            "usage:\t%s [-1234567aCEiLlmNVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test] [-j path]\n", av0);
     fprintf(stdout,
             "\t-A\tafptest UAM name or alias (ClearTxt: clrtxt; DHCAST128: dhx; DHX2: dhx2; SRP: srp)\n");
@@ -417,6 +418,8 @@ void usage(char *av0)
     fprintf(stdout,
             "\t-L\tserver has 'strict locking = yes'; run byte-range read-lock conflict tests\n");
     fprintf(stdout,
+            "\t-N\tserver runs without root privileges; skip tests that need root to bypass a file's mode\n");
+    fprintf(stdout,
             "\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
     fprintf(stdout, "\t-C\tturn off terminal color output\n");
     fprintf(stdout,
@@ -440,7 +443,7 @@ int main(int ac, char **av)
     }
 
     while ((cc = getopt(ac, av,
-                        "1234567aCEiLlmVvA:c:d:f:H:h:j:p:S:s:u:w:")) != EOF) {
+                        "1234567aCEiLlmNVvA:c:d:f:H:h:j:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -523,6 +526,10 @@ int main(int ac, char **av)
 
         case 'l' :
             List = 1;
+            break;
+
+        case 'N':
+            NoRoot = 1;
             break;
 
         case 'm':

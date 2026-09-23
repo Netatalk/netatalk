@@ -126,6 +126,10 @@ void test_skipped(int why)
         s = "nondeterministic behavior";
         break;
 
+    case T_NOROOT:
+        s = "server without root privileges";
+        break;
+
     case T_CRED:
         s = "username/password for the AFP server";
         break;
