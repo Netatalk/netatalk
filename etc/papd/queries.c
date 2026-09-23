@@ -287,36 +287,39 @@ int cq_query(struct papfile *in, struct papfile *out,
 
 void cq_font_answer(char *start, char *stop, struct papfile *out)
 {
-    char		*p, *q, buf[256];
+    char		*p, *font, buf[256];
+    size_t		font_len;
     struct ppd_font	*pfo;
     p = start;
 
     while (p < stop) {
-        unsigned int count = 0;
-
-        while ((*p == ' ' || *p == '\t') && p < stop) {
+        while (p < stop &&
+                (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) {
             p++;
         }
 
-        q = buf;
+        font = p;
+        while (p < stop && *p != ' ' && *p != '\t' &&
+                *p != '\n' && *p != '\r') {
+            p++;
+        }
+        font_len = p - font;
 
-        while (*p != ' ' && *p != '\t' &&
-                *p != '\n' && *p != '\r' && p < stop && count < sizeof(buf)) {
-            *q++ = *p++;
-            count++;
+        /* Ignore overlong names as a unit instead of splitting the token. */
+        if (font_len == 0 || font_len >= sizeof(buf)) {
+            continue;
         }
 
-        if (q != buf) {
-            *q = '\0';
-            append(out, "/", 1);
-            append(out, buf, strlen(buf));
-            append(out, ":", 1);
+        memcpy(buf, font, font_len);
+        buf[font_len] = '\0';
+        append(out, "/", 1);
+        append(out, buf, strlen(buf));
+        append(out, ":", 1);
 
-            if ((pfo = ppd_font(buf)) == NULL) {
-                append(out, "No\n", 3);
-            } else {
-                append(out, "Yes\n", 4);
-            }
+        if ((pfo = ppd_font(buf)) == NULL) {
+            append(out, "No\n", 3);
+        } else {
+            append(out, "Yes\n", 4);
         }
     }
 
