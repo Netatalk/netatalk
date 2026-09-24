@@ -7,6 +7,10 @@ if build_tests
         subdir('nad')
     endif
 
+    if enable_appletalk
+        subdir('nbp')
+    endif
+
     if use_sqlite_backend
         subdir('afpd')
     else
