@@ -55,6 +55,11 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
     SOCKLEN_T namelen;
     int s, cnt, tries, sc, cc, i, c;
 
+    if (nn == NULL || nncnt <= 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (srcaddr) {
         memcpy(&addr.sat_addr, srcaddr, sizeof(struct at_addr));
     }
@@ -222,17 +227,17 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
                     }
                 }
 
-                if (i == cnt) {
+                if (i == cnt && cnt < nncnt) {
                     nn[cnt++] = nve;
                 }
 
-                if (cnt == nncnt) {
+                if (cnt >= nncnt) {
                     tries = 0;
                     break;
                 }
             }
 
-            if (cnt == nncnt) {
+            if (cnt >= nncnt) {
                 tries = 0;
                 break;
             }

@@ -32,11 +32,16 @@ unsigned char   nbp_id = 0;
 int nbp_parse(char *data, struct nbpnve *nn, int len)
 {
     struct nbptuple	nt;
+
+    if (len < SZ_NBPTUPLE) {
+        return -1;
+    }
+
     memcpy(&nt, data, SZ_NBPTUPLE);
     data += SZ_NBPTUPLE;
     len -= SZ_NBPTUPLE;
 
-    if (len < 0) {
+    if (len < 1) {
         return -1;
     }
 
@@ -48,43 +53,44 @@ int nbp_parse(char *data, struct nbpnve *nn, int len)
     nn->nn_sat.sat_addr.s_node = nt.nt_node;
     nn->nn_sat.sat_port = nt.nt_port;
     nn->nn_objlen = *data++;
-    len -= nn->nn_objlen + 1;
+    len--;
 
-    if (len < 0) {
-        return -1;
-    }
-
-    if (nn->nn_objlen > NBPSTRLEN) {
+    if (nn->nn_objlen > NBPSTRLEN || nn->nn_objlen > len) {
         return -1;
     }
 
     memcpy(nn->nn_obj, data, nn->nn_objlen);
     data += nn->nn_objlen;
-    nn->nn_typelen = *data++;
-    len -= nn->nn_typelen + 1;
+    len -= nn->nn_objlen;
 
-    if (len < 0) {
+    if (len < 1) {
         return -1;
     }
 
-    if (nn->nn_typelen > NBPSTRLEN) {
-        return 1;
+    nn->nn_typelen = *data++;
+    len--;
+
+    if (nn->nn_typelen > NBPSTRLEN || nn->nn_typelen > len) {
+        return -1;
     }
 
     memcpy(nn->nn_type, data, nn->nn_typelen);
     data += nn->nn_typelen;
-    nn->nn_zonelen = *data++;
-    len -= nn->nn_zonelen + 1;
+    len -= nn->nn_typelen;
 
-    if (len < 0) {
+    if (len < 1) {
         return -1;
     }
 
-    if (nn->nn_zonelen > NBPSTRLEN) {
-        return 1;
+    nn->nn_zonelen = *data++;
+    len--;
+
+    if (nn->nn_zonelen > NBPSTRLEN || nn->nn_zonelen > len) {
+        return -1;
     }
 
     memcpy(nn->nn_zone, data, nn->nn_zonelen);
+    len -= nn->nn_zonelen;
     return len;
 }
 
@@ -111,21 +117,24 @@ int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags)
     }
 
     if (!(match & NBPM_OBJ)) {
-        if (n1->nn_objlen != n2->nn_objlen ||
+        if (n1->nn_objlen > NBPSTRLEN || n2->nn_objlen > NBPSTRLEN ||
+                n1->nn_objlen != n2->nn_objlen ||
                 strndiacasecmp(n1->nn_obj, n2->nn_obj, n1->nn_objlen)) {
             return 0;
         }
     }
 
     if (!(match & NBPM_TYPE)) {
-        if (n1->nn_typelen != n2->nn_typelen ||
+        if (n1->nn_typelen > NBPSTRLEN || n2->nn_typelen > NBPSTRLEN ||
+                n1->nn_typelen != n2->nn_typelen ||
                 strndiacasecmp(n1->nn_type, n2->nn_type, n1->nn_typelen)) {
             return 0;
         }
     }
 
     if (!(match & NBPM_ZONE)) {
-        if (n1->nn_zonelen != n2->nn_zonelen ||
+        if (n1->nn_zonelen > NBPSTRLEN || n2->nn_zonelen > NBPSTRLEN ||
+                n1->nn_zonelen != n2->nn_zonelen ||
                 strndiacasecmp(n1->nn_zone, n2->nn_zone, n1->nn_zonelen)) {
             return 0;
         }
