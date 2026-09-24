@@ -25,16 +25,19 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <sys/types.h>
-#include <netatalk/at.h>
-#include <atalk/nbp.h>
-#include <atalk/unicode.h>
-#include <atalk/util.h>
-#include <string.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+
+#include <atalk/nbp.h>
+#include <atalk/unicode.h>
+#include <atalk/util.h>
+#include <netatalk/at.h>
 
 #define MACCHARSET "MAC_ROMAN"
 
@@ -67,6 +70,8 @@ int main(int ac, char **av)
     struct at_addr *dst_addr = NULL;
     char *obj = NULL;
     char *type = NULL;
+    char *endptr;
+    long responses;
     size_t obj_len;
     size_t type_len;
     charset_t chMac = CH_MAC;
@@ -133,7 +138,16 @@ int main(int ac, char **av)
             break;
 
         case 'r' :
-            nresp = atoi(optarg);
+            errno = 0;
+            responses = strtol(optarg, &endptr, 10);
+
+            if (errno == ERANGE || optarg[0] == '\0' || endptr[0] != '\0'
+                    || responses <= 0 || responses > INT_MAX) {
+                fprintf(stderr, "Responses must be a positive integer.\n");
+                exit(1);
+            }
+
+            nresp = (int)responses;
             break;
 
         default:
@@ -142,7 +156,12 @@ int main(int ac, char **av)
         }
     }
 
-    nn = (struct nbpnve *)malloc(nresp * sizeof(struct nbpnve));
+    if ((size_t)nresp > SIZE_MAX / sizeof(struct nbpnve)) {
+        fprintf(stderr, "Too many responses requested.\n");
+        exit(1);
+    }
+
+    nn = (struct nbpnve *)malloc((size_t)nresp * sizeof(struct nbpnve));
 
     if (nn == NULL) {
         perror("malloc");
