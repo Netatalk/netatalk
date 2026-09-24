@@ -117,6 +117,11 @@ ssize_t readt(int socket, void *data, const size_t length, int setnonblocking,
                 continue;
 
             case EAGAIN:
+                if (socket >= FD_SETSIZE) {
+                    errno = EINVAL;
+                    goto exit;
+                }
+
                 FD_SET(socket, &rfds);
 
                 if (timeout) {
@@ -243,6 +248,11 @@ ssize_t writet(int socket, void *data, const size_t length, int setnonblocking,
                 continue;
 
             case EAGAIN:
+                if (socket >= FD_SETSIZE) {
+                    errno = EINVAL;
+                    goto exit;
+                }
+
                 FD_ZERO(&rfds);
                 FD_SET(socket, &rfds);
                 tv.tv_usec = 0;
