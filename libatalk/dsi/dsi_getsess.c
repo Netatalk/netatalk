@@ -185,6 +185,12 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         static struct timeval timeout = {120, 0};
         fd_set readfds;
         dsi_getstatus(dsi);
+
+        if (dsi->socket >= FD_SETSIZE) {
+            free(dsi);
+            exit(0);
+        }
+
         FD_ZERO(&readfds);
         FD_SET(dsi->socket, &readfds);
         free(dsi);

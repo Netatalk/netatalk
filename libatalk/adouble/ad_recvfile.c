@@ -136,8 +136,15 @@ static ssize_t default_sys_recvfile(int fromfd,
 static int waitfordata(int socket)
 {
     fd_set readfds;
-    int maxfd = socket + 1;
+    int maxfd;
     int ret;
+
+    if (socket < 0 || socket >= FD_SETSIZE) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    maxfd = socket + 1;
     FD_ZERO(&readfds);
 
     while (1) {

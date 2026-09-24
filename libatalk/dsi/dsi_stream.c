@@ -69,15 +69,20 @@ static int dsi_peek(DSI *dsi)
     int    maxfd;
     int    ret;
     LOG(log_maxdebug, logtype_dsi, "dsi_peek");
-    maxfd = dsi->socket + 1;
 
     while (1) {
-        if (dsi->socket == -1)
+        if (dsi->socket < 0)
             /* e.g. dsi_disconnect() might have disconnected us */
         {
             return -1;
         }
 
+        if (dsi->socket >= FD_SETSIZE) {
+            errno = EINVAL;
+            return -1;
+        }
+
+        maxfd = dsi->socket + 1;
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
 
