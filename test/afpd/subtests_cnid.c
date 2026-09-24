@@ -1045,3 +1045,82 @@ exit:
     return result;
 #endif /* CNID_BACKEND_SQLITE */
 }
+
+/*!
+ * @brief Single-user CNID state is owner-only, and a root opener widens it
+ *
+ * The sqlite backend creates the directory 0700 and the database 0600 for a
+ * volume whose server carries OPTION_SINGLEUSER, and follows the shared rules
+ * (01777, 0666) for root, the widening a single-user server undoes at its
+ * next open.
+ *
+ * @returns 0 when both openers leave the modes the rule gives them
+ */
+int utest_cnid_sqlite_owner_only(struct vol *vol)
+{
+#ifndef CNID_BACKEND_SQLITE
+    (void) vol;
+    return TEST_SKIP;
+#else
+    struct vol su_vol;
+    AFPObj su_obj = { 0 };
+    struct _cnid_db *db;
+    struct stat st;
+    char dbdir[MAXPATHLEN];
+    char dbfile[MAXPATHLEN];
+    char aux[MAXPATHLEN];
+    int result = 0;
+
+    if (vol->v_cdb == NULL || vol->v_dbpath == NULL
+            || vol->v_cnidscheme == NULL
+            || strcmp(vol->v_cnidscheme, "sqlite") != 0 || getuid() != 0) {
+        return TEST_SKIP;
+    }
+
+    snprintf(dbdir, sizeof(dbdir), "%s.owneronly", vol->v_dbpath);
+    snprintf(dbfile, sizeof(dbfile), "%s/%s.sqlite", dbdir, vol->v_localname);
+    su_obj.options.flags = OPTION_SINGLEUSER;
+    su_vol = *vol;
+    su_vol.v_dbpath = dbdir;
+    su_vol.v_cdb = NULL;
+    su_vol.v_obj = &su_obj;
+
+    if ((db = cnid_open(&su_vol, vol->v_cnidscheme, 0)) == NULL) {
+        return 1;
+    }
+
+    cnid_close(db);
+
+    if (stat(dbdir, &st) != 0 || (st.st_mode & 07777) != 0700) {
+        result = 2;
+    } else if (stat(dbfile, &st) != 0 || (st.st_mode & 0777) != 0600) {
+        result = 3;
+    }
+
+    /* the same directory opened by root without the flag follows the shared
+     * rules */
+    su_vol.v_obj = vol->v_obj;
+
+    if (result == 0) {
+        if ((db = cnid_open(&su_vol, vol->v_cnidscheme, 0)) == NULL) {
+            result = 4;
+        } else {
+            cnid_close(db);
+
+            if (stat(dbdir, &st) != 0 || (st.st_mode & 07777) != 01777) {
+                result = 5;
+            } else if (stat(dbfile, &st) != 0 || (st.st_mode & 0777) != 0666) {
+                result = 6;
+            }
+        }
+    }
+
+    unlink(dbfile);
+    snprintf(aux, sizeof(aux), "%s-wal", dbfile);
+    unlink(aux);
+    snprintf(aux, sizeof(aux), "%s-shm", dbfile);
+    unlink(aux);
+    rmdir(dbdir);
+    return result;
+#endif /* CNID_BACKEND_SQLITE */
+}

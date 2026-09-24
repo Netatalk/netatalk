@@ -1,3 +1,4 @@
+#!/bin/sh
 # Shared helpers for the netatalk integration scripts.
 # Copyright (C) 2026  Andy Lemin (andylemin)
 #

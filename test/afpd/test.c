@@ -49,6 +49,7 @@
 
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
+#include "auth.h"
 #include "dircache.h"
 #include "directory.h"
 #include "file.h"
@@ -835,6 +836,8 @@ int main(int argc, char *argv[])
      * fail with ENXIO and every LOG() is silently dropped.  stderr is captured. */
     TEST(setuplog("default:note", "/dev/stderr", true),
          "init logging to stderr");
+    TEST_int(utest_logger_reopen_keeps_files(), 0,
+             "logger: log_close_all/log_reopen keep a relative and a mkstemp log file");
     TEST_int(utest_decompose_reserves_terminator(), 0,
              "decompose_w reserves space for its UTF-16 terminator");
     TEST_int(utest_fork_range_rejects_wrapped_read(), 0,
@@ -949,6 +952,14 @@ int main(int argc, char *argv[])
         TEST_expr(reti = 0,
                   (singleuser_obj.cmdlineflags & OPTION_SINGLEUSER) != 0,
                   "afpd single-user command-line option sets its flag");
+        singleuser_obj.options.flags = OPTION_SINGLEUSER;
+        TEST_expr(reti = 0, singleuser_admits_uid(&singleuser_obj, getuid()),
+                  "single-user login admits the uid that started the server");
+        TEST_expr(reti = 0, !singleuser_admits_uid(&singleuser_obj, getuid() + 1),
+                  "single-user login refuses every other uid");
+        singleuser_obj.options.flags = 0;
+        TEST_expr(reti = 0, singleuser_admits_uid(&singleuser_obj, getuid() + 1),
+                  "a root service's login admits other uids");
     }
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]),
          "parse afpd command-line options");
@@ -1033,6 +1044,8 @@ int main(int argc, char *argv[])
                      "cnid_lookup: duplicate cleanup never deletes through a truncated id");
     TEST_int_or_skip(utest_cnid_uuid_case_keeps_table(vol), 0,
                      "cnid_open: a case-flipped volume UUID reuses the live table");
+    TEST_int_or_skip(utest_cnid_sqlite_owner_only(vol), 0,
+                     "cnid_open: single-user state is 0700/0600 and a root opener widens it");
     /* Last of the CNID group: recovering from the reset empties the volume's
      * table, so anything expecting a CNID minted earlier must run before it */
     TEST_int_or_skip(utest_cnid_add_depletion_resets(vol), 0,

@@ -314,6 +314,17 @@ static int set_auth_switch(const AFPObj *obj, int expired)
     return AFP_OK;
 }
 
+/*!
+ * @brief Whether this server may serve uid
+ *
+ * A single-user server has no authority to adopt another account, so only the
+ * uid that started it logs in; a root service serves anyone login() admits.
+ */
+bool singleuser_admits_uid(const AFPObj *obj, uid_t uid)
+{
+    return !(obj->options.flags & OPTION_SINGLEUSER) || uid == getuid();
+}
+
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
                  int expired)
 {
@@ -326,9 +337,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
         return AFPERR_NOTAUTH;
     }
 
-    /* A single-user server has no authority to adopt another account. Limit
-     * authentication to the UID that started afpd before touching groups. */
-    if ((obj->options.flags & OPTION_SINGLEUSER) && pwd->pw_uid != getuid()) {
+    /* judged before any group is touched */
+    if (!singleuser_admits_uid(obj, pwd->pw_uid)) {
         LOG(log_error, logtype_afpd,
             "login: single-user server rejects user %s (uid %u, server uid %u)",
             pwd->pw_name, (unsigned int)pwd->pw_uid, (unsigned int)getuid());
