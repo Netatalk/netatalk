@@ -2,6 +2,7 @@ if build_tests
     subdir('afppasswd')
 
     subdir('adouble')
+    subdir('libatalk')
 
     if use_sqlite_backend
         subdir('nad')

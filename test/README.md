@@ -2,6 +2,13 @@
 
 This directory contains test modules for the Netatalk tools and server.
 
+## libatalk
+
+`libatalk/` contains focused unit tests for library code that does not depend
+on `afpd` state or a running AFP server. Put a test here when it can exercise
+the library API or implementation directly, including with controlled test
+doubles for operating-system calls.
+
 ## nad
 
 `nad/` contains Perl TAP tests for the built `nad` command. Each creates a
@@ -158,6 +165,7 @@ the test volume.  Register a new source file in both `spectest.c` and
 ## Choosing a module
 
 Use `testsuite/` by default for a user-visible AFP correctness test.
+Use `libatalk/` for library behaviour that is independent of `afpd`.
 Use `afpd/` when the test depends on server-private state, a controlled fault,
 or a path that cannot be reached reliably by an external AFP client.
 A change may warrant one test in each module: an `afpd/` test for a precise
