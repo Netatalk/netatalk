@@ -2,6 +2,10 @@ if build_tests
     subdir('afppasswd')
 
     if use_sqlite_backend
+        subdir('nad')
+    endif
+
+    if use_sqlite_backend
         subdir('afpd')
     else
         warning(

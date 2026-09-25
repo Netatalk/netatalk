@@ -112,7 +112,7 @@ jobs:
           paths: build/meson-logs/testlog.junit.xml
           folded: true
       - name: Run memory profiling
-        run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
+        run: meson test --no-suite nad --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
@@ -300,7 +300,7 @@ jobs:
           paths: build/meson-logs/testlog.junit.xml
           folded: true
       - name: Run memory profiling
-        run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
+        run: meson test --no-suite nad --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
@@ -397,7 +397,7 @@ jobs:
           paths: build/meson-logs/testlog.junit.xml
           folded: true
       - name: Run memory profiling
-        run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
+        run: meson test --no-suite nad --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
         run: sudo meson install -C build
       - name: Check netatalk capabilities
