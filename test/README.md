@@ -1,6 +1,30 @@
 # Tests
 
-This directory contains two complementary test modules for `afpd`.
+This directory contains test modules for the Netatalk tools and server.
+
+## nad
+
+`nad/` contains Perl TAP tests for the built `nad` command. Each creates a
+temporary AFP volume with a SQLite CNID database and `ea = sys`. The basic
+test checks file operations and CNID search. The MacBinary and BinHex test
+round trips a file with data and resource forks. The separate StuffIt test
+runs only when built with `-Dwith-stuffit=true`. These tests need no running
+AFP server or C test helper. Perl is optional at configure time; when
+available, the tests run with `-Dwith-tests=true` and the SQLite CNID backend:
+
+```sh
+meson test -C build 'nad*' --print-errorlogs
+```
+
+With StuffIt enabled, run just its module with
+`meson test -C build 'nad StuffIt' --print-errorlogs`.
+
+Each run removes its temporary files. Set `NAD_TEST_KEEP_DIR=1` to retain them
+for debugging; the TAP output reports the path.
+
+The CI Valgrind step excludes the `nad` suite with `--no-suite nad`. Meson's
+Valgrind wrapper would profile the Perl test driver rather than the `nad`
+commands it launches. The regular CI test step still runs all `nad` tests.
 
 ## afpd
 
