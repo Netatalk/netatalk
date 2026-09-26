@@ -11,6 +11,7 @@
 use strict;
 use warnings;
 
+use File::Path qw(make_path);
 use FindBin;
 use lib $FindBin::Bin;
 use NadTest;
@@ -19,10 +20,6 @@ use Test::More;
 my $fixture = NadTest->new(shift @ARGV);
 my $volume = $fixture->volume;
 my $outside = $fixture->outside;
-my $adouble_v2 = $fixture->uses_adouble_v2;
-# TODO: Re-enable mkdir/cp and dependent tests after fixing issue #3340, item 4.
-# https://github.com/Netatalk/netatalk/issues/3340
-my $v2_skip = 'AppleDouble v2 mkdir/cp crash (issue #3340, item 4)';
 
 sub nad_cmd { return $fixture->run(@_); }
 sub succeeds { return $fixture->succeeds(@_); }
@@ -40,9 +37,8 @@ sub file_contents { return $fixture->file_contents(@_); }
     ok(!-e $path, 'forced directory was removed');
 }
 
-SKIP: {
+{
     note('directory operations');
-    skip $v2_skip, 11 if $adouble_v2;
     my $top = "$volume/nad_tree";
     my $leaf = "$top/child";
     succeeds('mkdir -p creates nested directories', 'mkdir', '-p', $leaf);
@@ -64,9 +60,8 @@ SKIP: {
     isnt($gone->{status}, 0, 'removed directory is absent from CNID search');
 }
 
-SKIP: {
+{
     note('copy, metadata, move, and remove');
-    skip $v2_skip, 15 if $adouble_v2;
     my $source = "$outside/source.txt";
     my $first = "$volume/nad_first.txt";
     my $copy = "$volume/nad_copy.txt";
@@ -84,9 +79,8 @@ SKIP: {
 
     succeeds('copy within the volume', 'cp', $first, $copy);
     is(file_contents($copy), $payload, 'second copy preserves data fork');
-    # TODO: Re-enable when the cp Finder metadata bug is fixed in a future PR.
-    # my $copy_list = succeeds('ls -l reads copied metadata', 'ls', '-l', $copy);
-    # like($copy_list->{out}, qr/\bTEXT NADT\b/, 'second copy preserves Finder metadata');
+    my $copy_list = succeeds('ls -l reads copied metadata', 'ls', '-l', $copy);
+    like($copy_list->{out}, qr/\bTEXT NADT\b/, 'second copy preserves Finder metadata');
 
     succeeds('move within the volume', 'mv', $copy, $moved);
     ok(!-e $copy, 'old pathname is gone');
@@ -101,9 +95,8 @@ SKIP: {
     isnt($gone->{status}, 0, 'removed file is absent from CNID search');
 }
 
-SKIP: {
+{
     note('listing and search modes');
-    skip $v2_skip, 21 if $adouble_v2;
     my $dir = "$volume/list_modes";
     my $nested = "$dir/nested";
     succeeds('mkdir prepares listing tree', 'mkdir', '-p', $nested);
@@ -149,9 +142,8 @@ SKIP: {
     is($local_find->{out}, "$local\n", 'filesystem search finds the local file');
 }
 
-SKIP: {
+{
     note('directory options and failures');
-    skip $v2_skip, 13 if $adouble_v2;
     my $one = "$volume/verbose_one";
     my $two = "$volume/verbose_two";
     my $created = succeeds('mkdir -v accepts multiple directories',
@@ -189,21 +181,25 @@ SKIP: {
     like($cleared->{out}, qr/\s-----------\s+------\s+---\s/,
         'file flags, attributes, and label were cleared');
 
-    SKIP: {
-        skip $v2_skip, 4 if $adouble_v2;
-        my $dir = "$volume/set_directory";
-        succeeds('mkdir prepares directory metadata test', 'mkdir', $dir);
-        succeeds('set directory Finder flag and color label',
-            'set', '-f', 'D', '-l', 'blue', $dir);
-        my $dir_list = succeeds('ls reads directory metadata', 'ls', '-l', '-d', $dir);
-        like($dir_list->{out}, qr/\sd----------\s+------\s+blu\s/,
-            'set updates metadata on a directory');
-    }
+    my $dir = "$volume/set_directory";
+    succeeds('mkdir prepares directory metadata test', 'mkdir', $dir);
+    succeeds('set directory Finder flag and color label',
+        'set', '-f', 'D', '-l', 'blue', $dir);
+    my $dir_list = succeeds('ls reads directory metadata', 'ls', '-l', '-d', $dir);
+    like($dir_list->{out}, qr/\sd----------\s+------\s+blu\s/,
+        'set updates metadata on a directory');
+
+    succeeds('set directory AFP system attribute', 'set', '-a', 'Y', $dir);
+    my $dir_attr = succeeds('ls reads directory AFP attributes', 'ls', '-l', '-d', $dir);
+    like($dir_attr->{out}, qr/\sy-----\s/, 'directory system attribute was set');
+    succeeds('clear directory AFP system attribute', 'set', '-a', 'y', $dir);
+    my $dir_clear = succeeds('ls reads cleared directory AFP attributes',
+        'ls', '-l', '-d', $dir);
+    like($dir_clear->{out}, qr/\s------\s/, 'directory system attribute was cleared');
 }
 
-SKIP: {
+{
     note('copy variants');
-    skip $v2_skip, 33 if $adouble_v2;
     my $source = "$volume/copy_source";
     my $dest = "$volume/copy_dest";
     $fixture->write_file($source, "new\n");
@@ -252,13 +248,18 @@ SKIP: {
     succeeds('cp -p preserves file mode and mtime', 'cp', '-p', $source, $preserved);
     is((stat($preserved))[2] & 0777, 0600, 'cp -p preserves mode');
     is((stat($preserved))[9], $timestamp, 'cp -p preserves modification time');
-    my $archive_child = "$tree/nested/child";
+    # Use an independent source so a mkdir/cp setup failure cannot abort this
+    # preservation test or prevent the later move/remove tests from running.
+    my $archive_source = "$volume/archive_source";
+    make_path("$archive_source/nested");
+    my $archive_child = "$archive_source/nested/child";
+    $fixture->write_file($archive_child, "new\n");
     chmod 0640, $archive_child
         or BAIL_OUT("Cannot chmod $archive_child: $!");
     utime $timestamp, $timestamp, $archive_child
         or BAIL_OUT("Cannot set times on $archive_child: $!");
     succeeds('cp -a recursively preserves file mode and mtime',
-        'cp', '-a', $tree, "$volume/copy_archive");
+        'cp', '-a', $archive_source, "$volume/copy_archive");
     my $archived_child = "$volume/copy_archive/nested/child";
     is(file_contents($archived_child), "new\n", 'cp -a copies a directory tree');
     is((stat($archived_child))[2] & 0777, 0640, 'cp -a preserves child mode');
@@ -310,30 +311,44 @@ SKIP: {
     ok(!-e $source, 'mv -f removes the source');
     is(file_contents($dest), "move new\n", 'mv -f replaces the destination');
 
-    SKIP: {
-        skip $v2_skip, 9 if $adouble_v2;
-        my $dir = "$volume/move_directory";
-        succeeds('mkdir prepares directory move', 'mkdir', $dir);
-        $fixture->write_file("$dir/child", "directory move\n");
-        succeeds('mv moves a directory', 'mv', $dir, "$volume/moved_directory");
-        ok(!-e $dir, 'directory move removes old path');
-        is(file_contents("$volume/moved_directory/child"), "directory move\n",
-            'directory move retains nested contents');
+    my $dir = "$volume/move_directory";
+    succeeds('mkdir prepares directory move', 'mkdir', $dir);
+    $fixture->write_file("$dir/child", "directory move\n");
+    succeeds('mv moves a directory', 'mv', $dir, "$volume/moved_directory");
+    ok(!-e $dir, 'directory move removes old path');
+    is(file_contents("$volume/moved_directory/child"), "directory move\n",
+        'directory move retains nested contents');
 
-        my $multi = "$volume/move_targets";
-        succeeds('mkdir prepares multi-source move', 'mkdir', $multi);
-        my $first = "$volume/move_first";
-        my $second = "$volume/move_second";
-        $fixture->seed_forked_file('move_first', "first\n", '',
-            'TEXT', 'NADT');
-        $fixture->seed_forked_file('move_second', "second\n", '',
-            'TEXT', 'NADT');
-        succeeds('mv moves multiple sources into a directory',
-            'mv', $first, $second, $multi);
-        is(file_contents("$multi/move_first"), "first\n", 'first source was moved');
-        is(file_contents("$multi/move_second"), "second\n", 'second source was moved');
-        ok(!-e $first && !-e $second, 'both old paths are gone');
-    }
+    my $multi = "$volume/move_targets";
+    succeeds('mkdir prepares multi-source move', 'mkdir', $multi);
+    my $first = "$volume/move_first";
+    my $second = "$volume/move_second";
+    $fixture->seed_forked_file('move_first', "first\n", '',
+        'TEXT', 'NADT');
+    $fixture->seed_forked_file('move_second', "second\n", '',
+        'TEXT', 'NADT');
+    succeeds('mv moves multiple sources into a directory',
+        'mv', $first, $second, $multi);
+    is(file_contents("$multi/move_first"), "first\n", 'first source was moved');
+    is(file_contents("$multi/move_second"), "second\n", 'second source was moved');
+    ok(!-e $first && !-e $second, 'both old paths are gone');
+
+    my $raw_source = "$volume/raw_move_source";
+    my $raw_dest = "$volume/raw_destination";
+    $fixture->write_file($raw_source, "raw new\n");
+    $fixture->write_file($raw_dest, "raw old\n");
+    succeeds('mv -f accepts a file without AppleDouble metadata',
+        'mv', '-f', $raw_source, $raw_dest);
+    ok(!-e $raw_source, 'raw file move removes the source');
+    is(file_contents($raw_dest), "raw new\n", 'raw file move preserves contents');
+    succeeds('set metadata on the moved raw file',
+        'set', '-t', 'TEXT', '-c', 'NADT', $raw_dest);
+    my $raw_list = succeeds('ls reads metadata on the moved raw file',
+        'ls', '-l', $raw_dest);
+    like($raw_list->{out}, qr/\bTEXT NADT\b/, 'moved raw file has usable metadata');
+    my $raw_find = succeeds('find locates the moved raw file in CNID',
+        'find', '-v', $volume, 'raw_destination');
+    is($raw_find->{out}, "$raw_dest\n", 'CNID search reports the moved raw file');
 
     my $resource = "move resource fork\n";
     my $forked = $fixture->seed_forked_file('move_forked', "fork data\n",
@@ -360,28 +375,23 @@ SKIP: {
 
 {
     note('recursive and verbose remove');
-    SKIP: {
-        skip $v2_skip, 7 if $adouble_v2;
-        my $tree = "$volume/remove_tree";
-        succeeds('mkdir -p prepares recursive removal',
-            'mkdir', '-p', "$tree/nested");
-        $fixture->write_file("$tree/nested/child", "remove me\n");
-        SKIP: {
-            # TODO: Issue #3340, item 1: rm without -R deletes child files.
-            # Re-enable with assertions for nonzero status and untouched contents.
-            skip 'rm without -R deletes directory contents (issue #3340, item 1)', 2;
-            my $not_recursive = nad_cmd('rm', $tree);
-            like($not_recursive->{out}, qr/\Q$tree\E\/nested is a directory/,
-                'rm without -R reports the directory');
-            ok(-d $tree, 'rm without -R leaves a directory intact');
-        }
-        my $removed = succeeds('rm -Rv removes a directory tree',
-            'rm', '-R', '-v', $tree);
-        ok(!-e $tree, 'rm -R removes the tree');
-        like($removed->{out}, qr/\Q$tree\E/, 'rm -v reports removed paths');
-        isnt(nad_cmd('find', '-v', $volume, 'remove_tree')->{status}, 0,
-            'rm -R removes the directory from CNID');
-    }
+    my $tree = "$volume/remove_tree";
+    # Isolate removal from nad mkdir failures, which are tested above.
+    make_path("$tree/nested");
+    $fixture->write_file("$tree/nested/child", "remove me\n");
+    my $not_recursive = nad_cmd('rm', $tree);
+    isnt($not_recursive->{status}, 0, 'rm without -R rejects a directory');
+    like($not_recursive->{out}, qr/\Q$tree\E is a directory/,
+        'rm without -R reports the directory');
+    ok(-d $tree && -d "$tree/nested", 'rm without -R leaves directories intact');
+    is(file_contents("$tree/nested/child"), "remove me\n",
+        'rm without -R leaves nested file contents intact');
+    my $removed = succeeds('rm -Rv removes a directory tree',
+        'rm', '-R', '-v', $tree);
+    ok(!-e $tree, 'rm -R removes the tree');
+    like($removed->{out}, qr/\Q$tree\E/, 'rm -v reports removed paths');
+    isnt(nad_cmd('find', '-v', $volume, 'remove_tree')->{status}, 0,
+        'rm -R removes the directory from CNID');
 
     my $link = "$volume/remove_link";
     symlink 'missing_target', $link or BAIL_OUT("Cannot create $link: $!");

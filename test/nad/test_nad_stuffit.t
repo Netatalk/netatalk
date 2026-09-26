@@ -18,10 +18,6 @@ use Test::More;
 
 my $fixture = NadTest->new(shift @ARGV);
 my $volume = $fixture->volume;
-# TODO: Re-enable after issue #3340, item 4 is fixed; the fixtures use mkdir.
-# https://github.com/Netatalk/netatalk/issues/3340
-plan skip_all => 'AppleDouble v2 mkdir crash (issue #3340, item 4)'
-    if $fixture->uses_adouble_v2;
 my $data = pack('C*', map { ($_ * 23 + 5) & 0xff } 0 .. 9000);
 my $resource = pack('C*', map { ($_ * 11 + 17) & 0xff } 0 .. 4000);
 my $source = $fixture->seed_forked_file('payload', $data, $resource,
