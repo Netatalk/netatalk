@@ -40,8 +40,8 @@ Run *afparg -l* to list available commands and their arguments.
 
 **-A** *uam*
 : Select authentication with the specified UAM name or alias.
-  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128, and
-  *dhx2* for DHX2.
+  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128,
+  *dhx2* for DHX2, and *srp* for SRP.
 
 **-f** *command* *arguments*
 : Command to execute
@@ -84,6 +84,8 @@ List available commands and their arguments
     $ afparg -l
     FPResolveID CNID
     FPEnumerate dir
+    FPEnumerateExt
+    FPOpenDT
     FPCopyFile source dest
     FPLockrw d | r file [seconds]
     FPLockw d | r file [seconds]

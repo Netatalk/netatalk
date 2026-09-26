@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -231,9 +232,10 @@ enum srp_verifier_status {
 /*!
  * @brief Look up a user's salt and verifier from their SRP verifier file.
  *
- * The verifier directory is administrator-owned. An enrolled user's numeric-UID
- * file is owned and writable only by that user and contains exactly one record:
- * username:hex_salt:hex_verifier.
+ * The verifier directory is administrator-owned, or owned by the serving user
+ * when a single-user afpd runs as that user. An enrolled user's
+ * numeric-UID file is owned and writable only by that user and contains exactly
+ * one record: username:hex_salt:hex_verifier.
  * A root-owned, disabled placeholder denotes a non-enrolled user. It is
  * distinguished from a root-owned active verifier, which remains unsafe.
  *
@@ -258,6 +260,7 @@ static enum srp_verifier_status srp_lookup_verifier(const char *path,
     const char *p;
     size_t ulen = strnlen(username, SRP_USERNAME_MAX_LEN + 1);
     int dirfd = -1, fd = -1;
+    uid_t server_uid = getuid();
     enum srp_verifier_status ret = SRP_VERIFIER_MISSING;
 
     if (!srp_valid_username(username)) {
@@ -272,8 +275,10 @@ static enum srp_verifier_status srp_lookup_verifier(const char *path,
 
     dirfd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
 
+    /* A single-user afpd runs as its user, who owns the store. */
     if (dirfd < 0 || fstat(dirfd, &st) < 0 || !S_ISDIR(st.st_mode) ||
-            st.st_uid != 0 || (st.st_mode & (S_IWGRP | S_IWOTH))) {
+            (st.st_uid != 0 && (server_uid == 0 || st.st_uid != server_uid)) ||
+            (st.st_mode & (S_IWGRP | S_IWOTH))) {
         if (dirfd < 0 && lstat(path, &st) == 0 && S_ISREG(st.st_mode)) {
             LOG(log_error, logtype_uams,
                 "srp_lookup_verifier: %s is a legacy flat SRP verifier file; stop afpd and run 'afppasswd -m'",

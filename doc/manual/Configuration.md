@@ -69,6 +69,112 @@ For example, when */home* links to */usr/home*:
 For a detailed explanation of all available options,
 refer to the [afp.conf](afp.conf.5.html) man page.
 
+### Running a single-user server without root
+
+Normally **netatalk** is a system service and must run as root. To share
+directories owned by one regular user without granting the server access to
+other accounts, start the controller with **--single-user** (**-u**).
+This is an intentionally restricted, single-user mode: every AFP session
+must authenticate as the UNIX user that started the daemon, and all file
+operations use that user's permissions.
+
+The mode is suitable for sharing a home-directory subdirectory to another
+Mac. It is not a replacement for a multi-user system AFP server.
+
+Create private configuration and state directories first. The configuration
+file must be owned by the serving user, must not be writable by group or other
+users, and must live in a directory owned by that user with mode 0700, because
+the controller validates the file and **afpd** then reads it again on its own.
+The SRP verifier directory and the directory holding the PID file are private
+to that user in the same way, each owned by that user with mode 0700, and the
+verifier file inside the SRP verifier directory is readable by its owner
+alone:
+
+    mkdir -p -m 700 "$HOME/.config/netatalk" "$HOME/.local/state/netatalk"
+    mkdir -p "$HOME/.local/state/netatalk/cnid"
+
+Use the SRP UAM and create its private one-user verifier directory as that
+user:
+
+    afppasswd -c -p "$HOME/.config/netatalk/afppasswd.srp"
+
+The command creates the directory with mode 0700 and, inside it, a single
+mode-0600 verifier file named after the calling user's numeric uid, then
+prompts for the AFP password (or takes it from **-w**). Use **-f** to replace
+an existing verifier. The password is collected (and, when prompted for,
+confirmed) before the directory or verifier is created or replaced, so an
+aborted prompt leaves an existing verifier intact. Do not enable ClearTxt, DHX,
+DHX2, guest, or legacy RandNum authentication in this mode: those methods
+depend on system account access or are unsuitable for this single-user profile.
+
+Use a configuration like the following, replacing the paths and UUID with
+your own values. Generate and keep a distinct UUID for each volume. The
+signature must be stable and no longer than 16 characters.
+
+    [Global]
+    cnid scheme = sqlite
+    vol dbpath = /home/alice/.local/state/netatalk/cnid
+    signature = alice-afp-server
+    uam list = uams_srp.so
+    srp verifier path = /home/alice/.config/netatalk/afppasswd.srp
+    afp port = 5548
+
+    [Files]
+    path = /home/alice/Files
+    volume name = Alice's Files
+    volume uuid = 550E8400-E29B-41D4-A716-446655440000
+
+The **vol dbpath** directory must already exist and be writable by the serving
+user; the second `mkdir` above creates it, and the server creates one
+directory per volume beneath it, owned by the serving user with owner-only
+permissions (directory 0700, database files 0600). **nad** and **dbd** run by
+that user keep those permissions once the server has created the directory,
+and create the shared defaults before it has, which the server's first start
+tightens. Run by root they widen the permissions to the shared defaults; the
+next server start tightens the user's own files again, but a file root created
+(a database root opened first, or the WAL and SHM files a killed root run left
+behind) stays root-owned and the volume fails to open until it is removed.
+
+The default AFP port 548 is privileged on many systems, so the example uses
+**afp port = 5548** and the server can bind without any privileges. Clients
+connect with `afp://server:5548`. **netatalk** warns at startup when
+**afp port** is below 1024 and lets the start proceed rather than rejecting the
+configuration, because a process without root can bind 548 on macOS 10.14 and
+later and on Linux with **CAP_NET_BIND_SERVICE** or a lowered
+**net.ipv4.ip_unprivileged_port_start**. Set **zeroconf = no** if clients will
+connect directly; otherwise the user's server can advertise itself over Bonjour
+like a normal AFP service.
+
+Start the server with a PID file in private user state. Use **-d** while
+testing to keep it in the foreground:
+
+    netatalk --single-user --pidfile "$HOME/.local/state/netatalk/netatalk.pid" \
+        --config "$HOME/.config/netatalk/afp.conf" -d
+
+The long options above correspond to **-u**, **-P**, and **-F** respectively.
+Without **--single-user**, a regular-user invocation is rejected with an
+explicit diagnostic instead of starting a partially functional server.
+
+Single-user mode requires **cnid scheme = sqlite**, static volume sections with
+explicit **volume uuid** values, an explicit global **signature**,
+**uam list = uams_srp.so**, an SRP verifier directory owned by the serving user
+with mode 0700 holding that user's verifier file with no group or other
+permissions, and a configuration file that is owned by the serving user, not
+writable by group or others, and kept in a mode-0700 directory owned by that
+user. It does not support AppleTalk, the DBD or MySQL CNID backends,
+**[Homes]** volumes, **vol dbnest** (the CNID directory would be the volume
+itself, which the mode keeps owner-only), Spotlight backends other than
+**cnid** (the default, which searches the volume's own CNID database), AFP
+statistics, or administrator and forced-user configuration. A volume the serving user cannot read and search, or
+cannot write when it is not read-only, is rejected at startup, as is one whose
+CNID directory does not exist and cannot be created: **vol dbpath** must name a
+directory the serving user owns. CNID state owned by another user is not taken
+over: that volume fails to open and the log says which directory is not the
+serving user's.
+
+Configuration reloads are disabled in this mode. Restart **netatalk** after
+changing *afp.conf*.
+
 ### Backup Volumes
 
 Netatalk provides remote backup functionality for macOS Time Machine over AFP.

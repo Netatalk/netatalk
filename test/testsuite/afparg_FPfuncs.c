@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
 #include <errno.h>
 #include <limits.h>
 #include <time.h>
@@ -103,6 +108,58 @@ void FPResolveID_arg(char **argv)
     filedir.isdir = 0;
     afp_filedir_unpack(Conn, &filedir, dsi->data + 2, bitmap, 0);
     fprintf(stdout, "Resolved ID %d to: '%s'\n", id, filedir.utf8_name);
+}
+
+/*!
+ * @brief Open the volume's desktop database, which creates it on first use
+ */
+void FPOpenDT_arg(char **argv _U_)
+{
+    uint16_t dt;
+    fprintf(stdout, "======================\n");
+    fprintf(stdout, "FPOpenDT with args:\n");
+    dt = FPOpenDT(Conn, VolID);
+
+    if (dt == 0xffff) {
+        test_failed();
+        return;
+    }
+
+    if (FPCloseDT(Conn, dt)) {
+        test_failed();
+    }
+}
+
+/*!
+ * @brief Enumerate the volume root with the AFP 3.x call
+ *
+ * The FPEnumerate verb drives AFP_ENUMERATE, which no AFP 3.x client sends.
+ * This drives AFP_ENUMERATE_EXT2, so a caller probing whether a volume opened
+ * exercises the request a real session makes.
+ */
+void FPEnumerateExt_arg(char **argv _U_)
+{
+    uint16_t f_bitmap = (1 << FILPBIT_FNUM) | (1 << FILPBIT_LNAME)
+                        | (1 << FILPBIT_PDINFO);
+    uint16_t d_bitmap = (1 << DIRPBIT_DID) | (1 << FILPBIT_LNAME)
+                        | (1 << FILPBIT_PDINFO);
+    unsigned int ret;
+    fprintf(stdout, "======================\n");
+    fprintf(stdout, "FPEnumerateExt with args:\n");
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        return;
+    }
+
+    ret = FPEnumerateExt2Full(Conn, VolID, DIRDID_ROOT, "", f_bitmap, d_bitmap,
+                              1, 40);
+
+    /* An empty volume root answers AFPERR_NOOBJ, which still proves the volume
+     * opened and the request reached the server. */
+    if (ret != 0 && ntohl(ret) != (unsigned int)AFPERR_NOOBJ) {
+        test_failed();
+    }
 }
 
 static void handler()

@@ -4,7 +4,7 @@ afpd — Apple Filing Protocol daemon
 
 # Synopsis
 
-**afpd** [-d] [-F *configfile*]
+**afpd** [-d] [-u] [-F *configfile*]
 
 **afpd** [-v | -V | -h]
 
@@ -37,6 +37,13 @@ behavior and configuration of a file server.
 **-F** *configfile*
 
 > Specifies the configuration file to use.
+
+**-u**
+
+> Single-user mode: accept authentication only for the UNIX user that started
+> **afpd**, and keep each volume's SQLite CNID database readable by that user
+> alone. Normally set by the **netatalk**(8) controller when it is started with
+> **--single-user**, not given by hand. See **netatalk**(8).
 
 # Signals
 

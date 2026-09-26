@@ -6,7 +6,7 @@ afppasswd — AFP password maintenance utility
 
 **afppasswd** [-cdfmnr] [-a *username* | -d *username*] [-p *directory*] [-u *minimum uid*] [-w *password*]
 
-**afppasswd** [-n]
+**afppasswd** [-c -p *directory*] [-f] [-w *password*]
 
 # Description
 
@@ -28,7 +28,9 @@ There are two invocation styles:
   user), or the credential store is initialized at once with **-c**.
 - *As a regular user*, **afppasswd** takes no positional arguments and
   changes the calling user's own SRP password. The caller may use **-p** to
-  select the verifier directory. Randnum mode remains root-only.
+  select the verifier directory. Randnum mode remains root-only. A regular
+  user can also use **-c** with **-p** to create a private verifier directory
+  containing only their own account, for use with **netatalk --single-user**.
 
 The named user must already exist as a local system user.
 
@@ -71,6 +73,8 @@ the file's ownership to its local user and its mode to 0600, then restart
 that file as root. Do not change a root-owned disabled placeholder this way;
 use **afppasswd -a** *username* to set a password and re-enable it. A verifier
 with more than one hard link must be replaced or have its extra links removed.
+The private verifier directory of a single-user server is
+instead owned by its user; see **-c**.
 
 Once enrolled, users can also replace their verifier directly. The old-password
 proof and optional CrackLib password-quality checks in **afppasswd** are
@@ -131,6 +135,11 @@ Local user changing their own SRP password:
 
     example% afppasswd
 
+Local user creating a private SRP verifier directory for a single-user AFP
+server:
+
+    example% afppasswd -c -p ~/.config/netatalk/afppasswd.srp
+
 Administrator managing credentials at a non-default path:
 
     example% sudo afppasswd -r -c -p /usr/local/etc/afppasswd
@@ -171,11 +180,22 @@ in over SRP or change their own SRP password. SRP initialization refuses an
 existing credential path; migrate a legacy flat file with **-m** or move it
 aside before intentionally starting with an empty store. With **-r**, also create or validate
 the companion *afppasswd.key* file for the Randnum UAM.
+When run by a regular user, **-c** requires **-p** and instead creates a
+mode-0700 verifier directory owned by that user (an existing directory must
+already have that ownership and mode) containing only the calling user's own
+mode-0600 verifier, then prompts for the initial password or takes it from
+**-w**. Use **-f** to replace the caller's existing verifier. The password is
+collected (and, when prompted for, confirmed) before the directory or verifier
+is created or replaced, so an aborted prompt leaves an existing verifier
+intact. This form is intended for **netatalk --single-user** and does not
+accept **-r**, **-a**, **-d**, **-m**, or **-u**.
 
 **-f**
 
 > With **-r -c**, replace an existing Randnum credential file and, if needed,
-an invalid Randnum key file. This legacy option is not available in SRP mode.
+an invalid Randnum key file. In SRP mode this option is accepted only by a
+regular user's **-c -p** bootstrap, where it replaces the caller's own
+existing verifier.
 
 **-m**
 

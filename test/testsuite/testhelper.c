@@ -1,5 +1,7 @@
-/* ----------------------------------------------
-*/
+/*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
+ * All Rights Reserved.  See COPYRIGHT.
+ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -124,6 +126,10 @@ void test_skipped(int why)
 
     case T_NONDETERM:
         s = "nondeterministic behavior";
+        break;
+
+    case T_NOROOT:
+        s = "server without root privileges";
         break;
 
     case T_CRED:

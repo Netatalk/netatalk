@@ -17,15 +17,19 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
 #include <unistd.h>
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 #include <atalk/directory.h>
 #include <atalk/ea.h>
 #include <atalk/globals.h>
@@ -924,4 +928,129 @@ int test010_full_cache_accepts_adds(struct vol *vol,
     dircache_purge_vol(vol);
     dir_free_invalid_q();
     return ret;
+}
+
+/*!
+ * @brief Whether the file at path contains needle on some line
+ */
+static bool file_contains(const char *path, const char *needle)
+{
+    char buf[4096];
+    FILE *fp = fopen(path, "r");
+    bool found = false;
+
+    if (fp == NULL) {
+        return false;
+    }
+
+    while (fgets(buf, sizeof(buf), fp) != NULL) {
+        if (strstr(buf, needle) != NULL) {
+            found = true;
+            break;
+        }
+    }
+
+    fclose(fp);
+    return found;
+}
+
+/*!
+ * @brief log_close_all() and log_reopen() bring back a relative and a mkstemp log
+ *
+ * daemonize() chdir()s to / between the two calls, so the logger has to keep
+ * absolute names: a relative "log file" stays in the launch directory and a
+ * mkstemp() file is reopened under the name it got.
+ *
+ * @returns 0 when both files receive the line written after the reopen
+ */
+int utest_logger_reopen_keeps_files(void)
+{
+    char tmpdir[MAXPATHLEN];
+    char rel_path[MAXPATHLEN] = "";
+    char generated[MAXPATHLEN] = "";
+    char tmpl[MAXPATHLEN];
+    DIR *dir;
+    struct dirent *ent;
+    int cwd;
+    int result = 0;
+
+    if ((cwd = open(".", O_RDONLY)) < 0) {
+        return 1;
+    }
+
+    /* the scratch directory lives under the working directory, the build
+     * tree, not under a world-writable /tmp */
+    if (getcwd(tmpdir, sizeof(tmpdir)) == NULL
+            || strlcat(tmpdir, "/afpd_logger_XXXXXX", sizeof(tmpdir))
+            >= sizeof(tmpdir) || mkdtemp(tmpdir) == NULL) {
+        close(cwd);
+        return 2;
+    }
+
+    if (chdir(tmpdir) != 0) {
+        result = 3;
+        goto out;
+    }
+
+    setuplog("default:note", "reopen.log", true);
+    log_close_all();
+
+    if (chdir("/") != 0) {
+        result = 4;
+        goto out;
+    }
+
+    log_reopen();
+    LOG(log_note, logtype_default, "utest marker: relative log reopened");
+    snprintf(rel_path, sizeof(rel_path), "%s/reopen.log", tmpdir);
+
+    if (!file_contains(rel_path, "relative log reopened")) {
+        result = 5;
+    }
+
+    if (access("/reopen.log", F_OK) == 0) {
+        unlink("/reopen.log");
+        result = 6;
+    }
+
+    snprintf(tmpl, sizeof(tmpl), "%s/mkstemp.XXXXXX", tmpdir);
+    setuplog("default:note", tmpl, true);
+    log_close_all();
+    log_reopen();
+    LOG(log_note, logtype_default, "utest marker: mkstemp log reopened");
+
+    if ((dir = opendir(tmpdir)) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            if (strncmp(ent->d_name, "mkstemp.", 8) == 0) {
+                snprintf(generated, sizeof(generated), "%s/%s", tmpdir,
+                         ent->d_name);
+            }
+        }
+
+        closedir(dir);
+    }
+
+    if (generated[0] == '\0' || !file_contains(generated, "mkstemp log reopened")) {
+        result = result ? result : 7;
+    }
+
+out:
+    setuplog("default:note", "/dev/stderr", true);
+
+    if (fchdir(cwd) != 0 && result == 0) {
+        result = 8;
+    }
+
+    close(cwd);
+
+    if (rel_path[0] != '\0') {
+        unlink(rel_path);
+    }
+
+    if (generated[0] != '\0') {
+        unlink(generated);
+    }
+
+    rmdir(tmpdir);
+    return result;
 }

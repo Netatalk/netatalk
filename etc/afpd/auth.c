@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
  */
@@ -313,6 +314,17 @@ static int set_auth_switch(const AFPObj *obj, int expired)
     return AFP_OK;
 }
 
+/*!
+ * @brief Whether this server may serve uid
+ *
+ * A single-user server has no authority to adopt another account, so only the
+ * uid that started it logs in; a root service serves anyone login() admits.
+ */
+bool singleuser_admits_uid(const AFPObj *obj, uid_t uid)
+{
+    return !(obj->options.flags & OPTION_SINGLEUSER) || uid == getuid();
+}
+
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
                  int expired)
 {
@@ -322,6 +334,14 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     /* don't allow root login */
     if (pwd->pw_uid == 0) {
         LOG(log_error, logtype_afpd, "login: root login denied!");
+        return AFPERR_NOTAUTH;
+    }
+
+    /* judged before any group is touched */
+    if (!singleuser_admits_uid(obj, pwd->pw_uid)) {
+        LOG(log_error, logtype_afpd,
+            "login: single-user server rejects user %s (uid %u, server uid %u)",
+            pwd->pw_name, (unsigned int)pwd->pw_uid, (unsigned int)getuid());
         return AFPERR_NOTAUTH;
     }
 

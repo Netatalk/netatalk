@@ -15,5 +15,6 @@ extern int utest_cnid_resolve_notfound_errno(struct vol *vol);
 extern int utest_cnid_corrupt_row_classified(struct vol *vol);
 extern int utest_cnid_find_no_truncated_id(struct vol *vol);
 extern int utest_cnid_dup_row_no_truncated_delete(struct vol *vol);
+extern int utest_cnid_sqlite_owner_only(struct vol *vol);
 
 #endif /* SUBTESTS_CNID_H */
