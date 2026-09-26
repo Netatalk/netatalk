@@ -320,6 +320,29 @@ static int do_move(const char *from, const char *to)
             return -1;
         }
 
+        /* Create missing metadata, or reject an unreadable header, before
+         * renaming the data fork. The VFS move then carries it to the target. */
+        struct adouble source_ad;
+        int source_flags = ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE;
+
+        if (S_ISDIR(sb.st_mode)) {
+            source_flags |= ADFLAGS_DIR;
+        }
+
+        ad_init(&source_ad, svolume.vol);
+
+        if (ad_open(&source_ad, from, source_flags, 0666) != 0) {
+            NAD_INFO("Error opening adouble for: %s", from);
+            close(srcfd);
+            return 1;
+        }
+
+        if (ad_close(&source_ad, ADFLAGS_HF) != 0) {
+            NAD_INFO("Error closing adouble for: %s", from);
+            close(srcfd);
+            return 1;
+        }
+
         if (renameat(AT_FDCWD, from, AT_FDCWD, to) != 0) {
             close(srcfd);
 
@@ -395,16 +418,24 @@ static int do_move(const char *from, const char *to)
         free(p);
         struct adouble ad;
         ad_init(&ad, dvolume.vol);
+        int adflags = ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE;
 
-        if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF |
-                                                    ADFLAGS_RDWR) : ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
+        if (S_ISDIR(sb.st_mode)) {
+            adflags |= ADFLAGS_DIR;
+        }
+
+        if (ad_open(&ad, to, adflags, 0666) != 0) {
             NAD_INFO("Error opening adouble for: %s", to);
             return 1;
         }
 
         ad_setid(&ad, sb.st_dev, sb.st_ino, cnid, newdid, dvolume.db_stamp);
-        ad_flush(&ad);
-        ad_close(&ad, ADFLAGS_HF);
+        int metadata_error = ad_flush(&ad);
+
+        if (ad_close(&ad, ADFLAGS_HF) != 0 || metadata_error != 0) {
+            NAD_INFO("Error saving adouble for: %s", to);
+            return 1;
+        }
 
         if (vflg) {
             printf("%s -> %s\n", from, to);

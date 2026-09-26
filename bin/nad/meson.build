@@ -57,7 +57,7 @@ if enable_stuffit
     nad_c_args += '-DHAVE_STUFFIT'
 endif
 
-executable(
+nad = executable(
     'nad',
     nad_sources,
     include_directories: root_includes,

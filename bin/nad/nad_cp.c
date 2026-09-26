@@ -95,7 +95,7 @@ static afpvol_t svolume, dvolume;
 static enum op type;
 static int Rflag;
 static int badcp, rval;
-static int ftw_options = FTW_MOUNT | FTW_PHYS | FTW_ACTIONRETVAL;
+static int ftw_options = FTW_PHYS | FTW_ACTIONRETVAL;
 
 /* Forward declarations */
 static int copy(const char *fpath, const struct stat *sb, int tflag,
@@ -105,6 +105,7 @@ static int ftw_copy_file(const struct FTW *, const char *, const struct stat *,
 static int ftw_copy_link(const struct FTW *, const char *, const struct stat *,
                          int);
 static int setfile(const struct stat *, int);
+static int copy_source_header(struct adouble *, const char *, int);
 
 static void upfunc(void)
 {
@@ -145,6 +146,54 @@ static void usage_cp(void)
         "     -x    File system mount points are not traversed.\n\n"
     );
     exit(EXIT_FAILURE);
+}
+
+/* Return 1 when metadata was copied, 0 when absent, and -1 on a read error. */
+static int copy_source_header(struct adouble *dest, const char *path, int flags)
+{
+    struct adouble source;
+    int ret;
+
+    if (!svolume.vol->v_path || !ADVOL_V2_OR_EA(svolume.vol->v_adouble)) {
+        return 0;
+    }
+
+    ad_init(&source, svolume.vol);
+
+    if (ad_open(&source, path, ADFLAGS_HF | ADFLAGS_RDONLY | flags) != 0) {
+        /* Ordinary files need not have metadata; other read errors matter. */
+        return errno == ENOENT ? 0 : -1;
+    }
+
+    ret = ad_copy_header(dest, &source);
+
+    /* ad_copy_header deliberately excludes comments for exchangefiles.
+     * A copy should preserve them along with the other Finder metadata. */
+    if (ret == 0) {
+        size_t len = ad_getentrylen(&source, ADEID_COMMENT);
+        const void *src = ad_entry(&source, ADEID_COMMENT);
+        void *dst = ad_entry(dest, ADEID_COMMENT);
+
+        if (len > ADEDLEN_COMMENT || (len != 0 && (src == NULL || dst == NULL))) {
+            errno = EIO;
+            ret = -1;
+        } else {
+            if (len != 0) {
+                memcpy(dst, src, len);
+            }
+
+            ad_setentrylen(dest, ADEID_COMMENT, len);
+        }
+    }
+
+    int saved_errno = errno;
+
+    if (ad_close(&source, ADFLAGS_HF) != 0) {
+        return -1;
+    }
+
+    errno = saved_errno;
+    return ret == 0 ? 1 : -1;
 }
 
 int nad_cp(int argc, char *argv[], AFPObj *obj)
@@ -325,6 +374,8 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
             } else if (!badcp) {
                 NAD_INFO("Error: %s: %s", argv[i], strerror(errno));
             }
+
+            badcp = rval = 1;
         }
 
         closevol(&svolume);
@@ -345,6 +396,7 @@ static int copy(const char *path,
     size_t nlen;
     const char *p;
     char *target_mid;
+    char macname[MAXPATHLEN + 2];
 
     if (alarmed) {
         return -1;
@@ -456,12 +508,36 @@ static int copy(const char *path,
         dne = 0;
     }
 
+    if (!dne && nflag && !S_ISDIR(statp->st_mode)) {
+        if (vflag) {
+            printf("%s not overwritten\n", to.p_path);
+        }
+
+        return 0;
+    }
+
     /* Convert basename to appropriate volume encoding */
     if (dvolume.vol->v_path
             && (convert_dots_encoding(&svolume, &dvolume, to.p_path)) == -1) {
         NAD_INFO("Error converting name for %s", to.p_path);
         badcp = rval = 1;
         return -1;
+    }
+
+    /* Validate the Mac filename before creating or overwriting the target.
+     * basename() may modify its argument on BSD, so use a separate buffer. */
+    if (dvolume.vol->v_path && dvolume.vol->v_adouble == AD_VERSION2) {
+        char buf[MAXPATHLEN + 1];
+        strlcpy(buf, to.p_path, sizeof(buf));
+        const char *name = convert_utf8_to_mac(dvolume.vol, basename(buf));
+
+        if (name == NULL) {
+            NAD_INFO("Error converting name for %s", to.p_path);
+            badcp = rval = 1;
+            return -1;
+        }
+
+        strlcpy(macname, name, sizeof(macname));
     }
 
     switch (statp->st_mode & S_IFMT) {
@@ -512,6 +588,7 @@ static int copy(const char *path,
             if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
                     && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
                 NAD_INFO("Error copying adouble for %s -> %s", path, to.p_path);
+                umask(omask);
                 badcp = rval = 1;
                 break;
             }
@@ -523,6 +600,7 @@ static int copy(const char *path,
                                      &pdid)) == CNID_INVALID) {
                 nad_report_cnid_reset(dvolume.vol->v_path);
                 NAD_INFO("Error resolving CNID for %s", to.p_path);
+                umask(omask);
                 badcp = rval = 1;
                 return -1;
             }
@@ -532,6 +610,7 @@ static int copy(const char *path,
             struct stat st;
 
             if (lstat(to.p_path, &st) != 0) {
+                umask(omask);
                 badcp = rval = 1;
                 break;
             }
@@ -543,18 +622,37 @@ static int copy(const char *path,
                 NAD_FATAL("Error opening adouble for: %s", to.p_path);
             }
 
+            int copied_header = copy_source_header(&ad, path, ADFLAGS_DIR);
+
+            if (copied_header < 0) {
+                NAD_INFO("Error copying adouble header for %s -> %s: %s",
+                         path, to.p_path, strerror(errno));
+                ad_close(&ad, ADFLAGS_HF);
+                umask(omask);
+                badcp = rval = 1;
+                return -1;
+            }
+
             ad_setid(&ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
 
             if (dvolume.vol->v_adouble == AD_VERSION2) {
-                ad_setname(&ad, convert_utf8_to_mac(dvolume.vol, basename(to.p_path)));
+                ad_setname(&ad, macname);
             }
 
-            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
-            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
-            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
-            ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
-            ad_flush(&ad);
-            ad_close(&ad, ADFLAGS_HF);
+            if (!copied_header) {
+                ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+                ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+                ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+                ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
+            }
+
+            int metadata_error = ad_flush(&ad);
+
+            if (ad_close(&ad, ADFLAGS_HF) != 0 || metadata_error != 0) {
+                NAD_INFO("Error saving adouble for: %s", to.p_path);
+                badcp = rval = 1;
+            }
+
             umask(omask);
         }
 
@@ -580,6 +678,7 @@ static int copy(const char *path,
     default:
         if (ftw_copy_file(ftw, path, statp, dne)) {
             badcp = rval = 1;
+            break;
         }
 
         if (dvolume.vol->v_path && ADVOL_V2_OR_EA(dvolume.vol->v_adouble)) {
@@ -589,6 +688,7 @@ static int copy(const char *path,
             if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
                     && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
                 NAD_INFO("Error copying adouble for %s -> %s", path, to.p_path);
+                umask(omask);
                 badcp = rval = 1;
                 break;
             }
@@ -601,6 +701,7 @@ static int copy(const char *path,
                                       &did)) == CNID_INVALID) {
                 nad_report_cnid_reset(dvolume.vol->v_path);
                 NAD_INFO("Error resolving CNID for %s", to.p_path);
+                umask(omask);
                 badcp = rval = 1;
                 return -1;
             }
@@ -610,6 +711,7 @@ static int copy(const char *path,
             struct stat st;
 
             if (lstat(to.p_path, &st) != 0) {
+                umask(omask);
                 badcp = rval = 1;
                 break;
             }
@@ -621,18 +723,37 @@ static int copy(const char *path,
                 NAD_FATAL("Error opening adouble for: %s", to.p_path);
             }
 
+            int copied_header = copy_source_header(&ad, path, 0);
+
+            if (copied_header < 0) {
+                NAD_INFO("Error copying adouble header for %s -> %s: %s",
+                         path, to.p_path, strerror(errno));
+                ad_close(&ad, ADFLAGS_HF);
+                umask(omask);
+                badcp = rval = 1;
+                return -1;
+            }
+
             ad_setid(&ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
 
             if (dvolume.vol->v_adouble == AD_VERSION2) {
-                ad_setname(&ad, convert_utf8_to_mac(dvolume.vol, basename(to.p_path)));
+                ad_setname(&ad, macname);
             }
 
-            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
-            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
-            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
-            ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
-            ad_flush(&ad);
-            ad_close(&ad, ADFLAGS_HF);
+            if (!copied_header) {
+                ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+                ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+                ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+                ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
+            }
+
+            int metadata_error = ad_flush(&ad);
+
+            if (ad_close(&ad, ADFLAGS_HF) != 0 || metadata_error != 0) {
+                NAD_INFO("Error saving adouble for: %s", to.p_path);
+                badcp = rval = 1;
+            }
+
             umask(omask);
         }
 
@@ -737,7 +858,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
         return 1;
     }
 
-    rval = 0;
+    int result = 0;
 
     /*
      * Mmap and write if less than 8M (the limit is so we don't totally
@@ -770,13 +891,13 @@ static int ftw_copy_file(const struct FTW *entp _U_,
 
         if (wcount != (ssize_t)wresid) {
             NAD_INFO("%s: %s", to.p_path, strerror(errno));
-            rval = 1;
+            result = 1;
         }
 
         /* Some systems don't unmap on close(2). */
         if (munmap(p, sp->st_size) < 0) {
             NAD_INFO("%s: %s", spath, strerror(errno));
-            rval = 1;
+            result = 1;
         }
     } else {
         if (buf == NULL) {
@@ -840,14 +961,14 @@ static int ftw_copy_file(const struct FTW *entp _U_,
 
             if (wcount != (ssize_t)wresid) {
                 NAD_INFO("%s: %s", to.p_path, strerror(errno));
-                rval = 1;
+                result = 1;
                 break;
             }
         }
 
         if (rcount < 0) {
             NAD_INFO("%s: %s", spath, strerror(errno));
-            rval = 1;
+            result = 1;
         }
     }
 
@@ -859,16 +980,16 @@ static int ftw_copy_file(const struct FTW *entp _U_,
      */
 
     if (pflag && setfile(sp, to_fd)) {
-        rval = 1;
+        result = 1;
     }
 
     if (close(to_fd)) {
         NAD_INFO("%s: %s", to.p_path, strerror(errno));
-        rval = 1;
+        result = 1;
     }
 
     (void)close(from_fd);
-    return rval;
+    return result;
 }
 
 static int ftw_copy_link(const struct FTW *p _U_,
@@ -909,9 +1030,8 @@ static int setfile(const struct stat *fs, int fd)
     static struct timeval tv[2];
     struct stat ts;
     int gotstat, islink, fdval;
-    int result;
+    int result, error = 0;
     mode_t mode;
-    rval = 0;
     fdval = fd != -1;
     islink = !fdval && S_ISLNK(fs->st_mode);
     mode = fs->st_mode & (S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG |
@@ -923,7 +1043,7 @@ static int setfile(const struct stat *fs, int fd)
 
     if (utimes(to.p_path, tv)) {
         NAD_INFO("utimes: %s", to.p_path);
-        rval = 1;
+        error = 1;
     }
 
     if (fdval) {
@@ -960,7 +1080,7 @@ static int setfile(const struct stat *fs, int fd)
 
         if (result != 0 && errno != EPERM) {
             NAD_INFO("chown: %s: %s", to.p_path, strerror(errno));
-            rval = 1;
+            error = 1;
         }
 
         mode &= ~(S_ISUID | S_ISGID);
@@ -969,7 +1089,7 @@ static int setfile(const struct stat *fs, int fd)
     if ((!gotstat || mode != ts.st_mode)
             && (fdval ? fchmod(fd, mode) : chmod(to.p_path, mode))) {
         NAD_INFO("chmod: %s: %s", to.p_path, strerror(errno));
-        rval = 1;
+        error = 1;
     }
 
 #ifdef HAVE_ST_FLAGS
@@ -979,9 +1099,9 @@ static int setfile(const struct stat *fs, int fd)
         (islink ? lchflags(to.p_path, fs->st_flags) :
          chflags(to.p_path, fs->st_flags))) {
         NAD_INFO("chflags: %s: %s", to.p_path, strerror(errno));
-        rval = 1;
+        error = 1;
     }
 
 #endif
-    return rval;
+    return error;
 }

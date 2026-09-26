@@ -866,6 +866,10 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
     }
 
     if (header_len < 1) {
+        if (header_len == 0) {
+            errno = EINVAL;
+        }
+
         LOG(log_debug, logtype_ad, "ad_header_read_ea: %s", strerror(errno));
         EC_FAIL;
     }
@@ -933,7 +937,10 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
 #endif
 EC_CLEANUP:
 
-    if (ret != 0 && errno == EINVAL) {
+    /* A read-only caller must see corrupt metadata as an error, rather than
+     * silently deleting it and treating the source as having no header.
+     * Retain the repair path for callers that explicitly allow creation. */
+    if (ret != 0 && errno == EINVAL && (ad->ad_adflags & ADFLAGS_CREATE)) {
         become_root();
         (void)sys_removexattr(path, AD_EA_META);
         unbecome_root();
@@ -1507,7 +1514,11 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
         if (!(adflags & ADFLAGS_CREATE)) {
             LOG(log_debug, logtype_ad, "ad_open_hf_ea(\"%s\"): can't read metadata EA",
                 path);
-            errno = ENOENT;
+
+            if (errno == ENOATTR) {
+                errno = ENOENT;
+            }
+
             EC_FAIL;
         }
 
