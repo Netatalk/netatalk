@@ -1,6 +1,30 @@
 perl = find_program('perl', required: false)
 
 if perl.found()
+    metadata_helper = executable(
+        'nad_metadata_helper',
+        'metadata_helpers.c',
+        include_directories: root_includes,
+        dependencies: [bstring, iniparser],
+        link_with: libatalk,
+        install: false,
+    )
+
+    test(
+        'nad metadata errors',
+        perl,
+        args: [
+            files('test_nad_metadata.t'),
+            nad.full_path(),
+            metadata_helper.full_path(),
+        ],
+        depends: [nad, metadata_helper],
+        env: {'NAD_TEST_EA': 'sys'},
+        protocol: 'tap',
+        suite: 'nad',
+        timeout: 120,
+    )
+
     foreach ea : ['sys', 'ad']
         suffix = ea == 'ad' ? ' AppleDouble' : ''
         test(
