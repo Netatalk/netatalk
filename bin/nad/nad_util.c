@@ -185,6 +185,13 @@ int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol)
         NAD_FATAL("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
     }
 
+    /* Configuration loading sets codepage names, but not charset handles.
+     * AppleDouble v2 needs these when storing the Mac filename. */
+    if (load_charset(vol->vol) != 0) {
+        NAD_INFO("Error loading character sets for %s", vol->vol->v_path);
+        return -1;
+    }
+
     if (vol->vol->v_cdb) {
         /* Another afpvol_t already opened this volume's CNID db */
         vol->owns_cdb = false;

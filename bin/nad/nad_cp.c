@@ -345,6 +345,7 @@ static int copy(const char *path,
     size_t nlen;
     const char *p;
     char *target_mid;
+    char macname[MAXPATHLEN + 2];
 
     if (alarmed) {
         return -1;
@@ -464,6 +465,22 @@ static int copy(const char *path,
         return -1;
     }
 
+    /* Validate the Mac filename before creating or overwriting the target.
+     * basename() may modify its argument on BSD, so use a separate buffer. */
+    if (dvolume.vol->v_path && dvolume.vol->v_adouble == AD_VERSION2) {
+        char buf[MAXPATHLEN + 1];
+        strlcpy(buf, to.p_path, sizeof(buf));
+        const char *name = convert_utf8_to_mac(dvolume.vol, basename(buf));
+
+        if (name == NULL) {
+            NAD_INFO("Error converting name for %s", to.p_path);
+            badcp = rval = 1;
+            return -1;
+        }
+
+        strlcpy(macname, name, sizeof(macname));
+    }
+
     switch (statp->st_mode & S_IFMT) {
     case S_IFLNK:
         if (ftw_copy_link(ftw, path, statp, !dne)) {
@@ -546,7 +563,7 @@ static int copy(const char *path,
             ad_setid(&ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
 
             if (dvolume.vol->v_adouble == AD_VERSION2) {
-                ad_setname(&ad, convert_utf8_to_mac(dvolume.vol, basename(to.p_path)));
+                ad_setname(&ad, macname);
             }
 
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
@@ -624,7 +641,7 @@ static int copy(const char *path,
             ad_setid(&ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
 
             if (dvolume.vol->v_adouble == AD_VERSION2) {
-                ad_setname(&ad, convert_utf8_to_mac(dvolume.vol, basename(to.p_path)));
+                ad_setname(&ad, macname);
             }
 
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);

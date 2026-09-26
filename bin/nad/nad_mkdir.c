@@ -64,6 +64,20 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
     cnid_t did, pdid;
     struct adouble ad;
     struct stat st;
+    char macname[MAXPATHLEN + 2];
+
+    if (vol->vol->v_path && vol->vol->v_adouble == AD_VERSION2) {
+        char buf[MAXPATHLEN + 1];
+        strlcpy(buf, path, sizeof(buf));
+        const char *name = convert_utf8_to_mac(vol->vol, basename(buf));
+
+        if (name == NULL) {
+            NAD_INFO("Error converting name for %s", path);
+            return -1;
+        }
+
+        strlcpy(macname, name, sizeof(macname));
+    }
 
     if (mkdir(path, mode) != 0) {
         NAD_INFO("mkdir: %s: %s", path, strerror(errno));
@@ -106,9 +120,7 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
     ad_setid(&ad, st.st_dev, st.st_ino, did, pdid, vol->db_stamp);
 
     if (vol->vol->v_adouble == AD_VERSION2) {
-        char buf[MAXPATHLEN + 1];
-        strlcpy(buf, path, sizeof(buf));
-        ad_setname(&ad, convert_utf8_to_mac(vol->vol, basename(buf)));
+        ad_setname(&ad, macname);
     }
 
     ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t)st.st_mtime);
