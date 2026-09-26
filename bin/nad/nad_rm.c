@@ -127,6 +127,20 @@ int nad_rm(int argc, char *argv[], AFPObj *obj)
     cnid_init();
     /* Set end of argument list */
     argv[argc] = NULL;
+    /* A glob can name both a data file and its sidecar. Remember existing
+     * sidecars before deleting any data files, which also removes metadata. */
+    unsigned char *sidecars = calloc(argc, sizeof(*sidecars));
+
+    if (sidecars == NULL) {
+        NAD_FATAL("Cannot allocate sidecar list: %s", strerror(errno));
+    }
+
+    for (int i = 0; i < argc; i++) {
+        const char *name = strrchr(argv[i], '/');
+        name = name ? name + 1 : argv[i];
+        sidecars[i] = strncmp(name, "._", 2) == 0
+                      && ad_valid_header_osx(argv[i]) == 0;
+    }
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
@@ -135,7 +149,26 @@ int nad_rm(int argc, char *argv[], AFPObj *obj)
             continue;
         }
 
-        if (nftw(argv[i], rm, upfunc, 20, FTW_DEPTH | FTW_PHYS) == -1) {
+        /* Reject directories before the depth-first walk can unlink children. */
+        struct stat st;
+
+        if (sidecars[i] && volume.vol->v_path
+                && volume.vol->v_adouble == AD_VERSION_EA
+                && lstat(argv[i], &st) != 0 && errno == ENOENT) {
+            closevol(&volume);
+            continue;
+        }
+
+        if (!Rflag && lstat(argv[i], &st) == 0 && S_ISDIR(st.st_mode)) {
+            NAD_INFO("%s is a directory", argv[i]);
+            badrm = rval = 1;
+            closevol(&volume);
+            continue;
+        }
+
+        if (nftw(argv[i], rm, upfunc, 20, FTW_DEPTH | FTW_PHYS) != 0) {
+            badrm = rval = 1;
+
             if (alarmed) {
                 NAD_INFO("...break");
             } else {
@@ -146,12 +179,13 @@ int nad_rm(int argc, char *argv[], AFPObj *obj)
         closevol(&volume);
     }
 
+    free(sidecars);
     return rval;
 }
 
 static int rm(const char *path,
               const struct stat *statp,
-              int tflag _U_,
+              int tflag,
               struct FTW *ftw _U_)
 {
     cnid_t cnid;
@@ -176,6 +210,32 @@ static int rm(const char *path,
 
     if (check_netatalk_dirs(dir) != NULL) {
         return FTW_SKIP_SUBTREE;
+    }
+
+    /* ._ resource sidecars have no CNID of their own. They may already have
+     * been removed by vfs_deletefile() while walking a sibling data file. */
+    if (volume.vol->v_path && volume.vol->v_adouble == AD_VERSION_EA
+            && strncmp(dir, "._", 2) == 0) {
+        if (tflag == FTW_NS && errno == ENOENT) {
+            return 0;
+        }
+
+        if (tflag != FTW_NS && S_ISREG(statp->st_mode)
+                && ad_valid_header_osx(path) == 0) {
+            if (unlink(path) != 0 && errno != ENOENT) {
+                NAD_INFO("unlink: %s: %s", path, strerror(errno));
+                badrm = rval = 1;
+                return -1;
+            }
+
+            return 0;
+        }
+    }
+
+    if (tflag == FTW_NS || tflag == FTW_DNR) {
+        NAD_INFO("Cannot access %s: %s", path, strerror(errno));
+        badrm = rval = 1;
+        return -1;
     }
 
     switch (statp->st_mode & S_IFMT) {
@@ -217,7 +277,8 @@ static int rm(const char *path,
     case S_IFDIR:
         if (!Rflag) {
             NAD_INFO("%s is a directory", path);
-            return FTW_SKIP_SUBTREE;
+            badrm = rval = 1;
+            return -1;
         }
 
         if (volume.vol->v_path) {
