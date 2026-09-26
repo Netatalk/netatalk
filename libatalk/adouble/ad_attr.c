@@ -80,7 +80,7 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
     /* Proactively (10.4 does indeed try to set ATTRBIT_MULTIUSER (=ATTRBIT_EXPFLDR)
        for dirs with SetFile -a M <dir> ) disable all flags not defined for dirs. */
     if (ad->ad_adflags & ADFLAGS_DIR) {
-        attr &= ~(ATTRBIT_MULTIUSER | ATTRBIT_NOWRITE | ATTRBIT_NOCOPY);
+        attr &= ~htons(ATTRBIT_MULTIUSER | ATTRBIT_NOWRITE | ATTRBIT_NOCOPY);
     }
 
     if (ad_getentryoff(ad, ADEID_AFPFILEI)
