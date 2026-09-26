@@ -95,7 +95,7 @@ static afpvol_t svolume, dvolume;
 static enum op type;
 static int Rflag;
 static int badcp, rval;
-static int ftw_options = FTW_MOUNT | FTW_PHYS | FTW_ACTIONRETVAL;
+static int ftw_options = FTW_PHYS | FTW_ACTIONRETVAL;
 
 /* Forward declarations */
 static int copy(const char *fpath, const struct stat *sb, int tflag,
