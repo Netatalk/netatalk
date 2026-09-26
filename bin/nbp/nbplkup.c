@@ -39,6 +39,8 @@
 #include <atalk/util.h>
 #include <netatalk/at.h>
 
+#include "nbplkup_output.h"
+
 #define MACCHARSET "MAC_ROMAN"
 
 static char *Obj = "=";
@@ -229,19 +231,21 @@ int main(int ac, char **av)
     }
 
     for (i = 0; i < c; i++) {
-        obj_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_obj,
-                                          nn[i].nn_objlen, &obj);
-        type_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_type,
-                                           nn[i].nn_typelen, &type);
+        obj_len = nbplkup_convert_field(chMac, nn[i].nn_obj,
+                                        nn[i].nn_objlen, &obj);
 
         if ((size_t)(-1) == obj_len) {
-            obj_len = nn[i].nn_objlen;
-            obj = strdup(nn[i].nn_obj);
+            perror("nbplkup_convert_field");
+            exit(1);
+        }
 
-            if (obj == NULL) {
-                perror("strdup");
-                exit(1);
-            }
+        type_len = nbplkup_convert_field(chMac, nn[i].nn_type,
+                                         nn[i].nn_typelen, &type);
+
+        if ((size_t)(-1) == type_len) {
+            perror("nbplkup_convert_field");
+            free(obj);
+            exit(1);
         }
 
         if (script_friendly_output) {

@@ -6,7 +6,7 @@ endif
 
 executable(
     'nbplkup',
-    'nbplkup.c',
+    ['nbplkup.c', 'nbplkup_output.c'],
     include_directories: root_includes,
     link_with: libatalk,
     dependencies: npb_deps,
