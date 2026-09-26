@@ -62,19 +62,6 @@ sub work { return $_[0]->{work}; }
 sub volume { return $_[0]->{volume}; }
 sub outside { return $_[0]->{outside}; }
 
-# Detect the actual metadata backend, including ea=sys fallback on filesystems
-# without native EAs. Importing MacBinary avoids the known mkdir/cp v2 crash.
-sub uses_adouble_v2 {
-    my ($self) = @_;
-    return $self->{adouble_v2} if exists $self->{adouble_v2};
-    my $probe = $self->seed_forked_file('backend_probe', '', '', 'TEXT', 'NADT');
-    $self->{adouble_v2} = -d "$self->{volume}/.AppleDouble" ? 1 : 0;
-    my $removed = $self->run('rm', $probe);
-    BAIL_OUT("Cannot remove backend probe: $removed->{err}$removed->{out}")
-        if $removed->{status} != 0;
-    return $self->{adouble_v2};
-}
-
 # Capture both streams without a shell or a non-core Perl module.
 sub _run {
     my ($self, $dir, @args) = @_;
