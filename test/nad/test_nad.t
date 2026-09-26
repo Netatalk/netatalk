@@ -278,6 +278,16 @@ sub file_contents { return $fixture->file_contents(@_); }
         $resource, 'TEXT', 'NADT');
     my $fork_copy = "$volume/copied_forked";
     succeeds('cp copies a file with a resource fork', 'cp', $forked, $fork_copy);
+    my $fork_list = succeeds('ls reads copied Finder metadata', 'ls', '-l', $fork_copy);
+    like($fork_list->{out}, qr/\bTEXT NADT\b/, 'forked copy preserves type and creator');
+    my $fork_find = succeeds('find locates the forked copy in CNID',
+        'find', '-v', $volume, 'copied_forked');
+    is($fork_find->{out}, "$fork_copy\n", 'copied header has the destination CNID');
+    succeeds('set distinct metadata on the copy',
+        'set', '-t', 'BINA', '-c', 'DEST', $fork_copy);
+    succeeds('cp -n leaves existing metadata untouched', 'cp', '-n', $forked, $fork_copy);
+    my $kept_metadata = succeeds('ls reads metadata after cp -n', 'ls', '-l', $fork_copy);
+    like($kept_metadata->{out}, qr/\bBINA DEST\b/, 'cp -n preserves destination metadata');
     $fixture->succeeds_at('bin exports the copied resource fork',
         $volume, 'bin', '--filename', 'verify_copy', $fork_copy);
     my $binary = file_contents("$volume/verify_copy.bin");
@@ -397,6 +407,33 @@ sub file_contents { return $fixture->file_contents(@_); }
     symlink 'missing_target', $link or BAIL_OUT("Cannot create $link: $!");
     succeeds('rm removes a symbolic link', 'rm', $link);
     ok(!-l $link, 'rm removed the symbolic link');
+}
+
+{
+    note('recursive removal of Netatalk resource sidecars');
+    # Construct a sidecar independently of the host's native resource storage.
+    # Netatalk sidecars must not acquire CNIDs or disrupt a recursive walk.
+    my $header = pack('NN', 0x00051607, 0x00020000) . 'Netatalk        '
+        . pack('n', 2) . pack('NNN', 9, 50, 32) . pack('NNN', 2, 82, 4)
+        . ("\0" x 32) . 'rsrc';
+    my $tree = "$volume/remove_sidecars";
+    make_path("$tree/nested");
+    $fixture->write_file("$tree/nested/data", "data\n");
+    $fixture->write_file("$tree/nested/._data", $header);
+    $fixture->write_file("$tree/nested/._orphan", $header);
+    $fixture->write_file("$tree/nested/._ordinary", "ordinary file\n");
+    succeeds('rm -R handles sidecars and ordinary dot-underscore files', 'rm', '-R', $tree);
+    ok(!-e $tree, 'recursive removal clears all sidecars');
+
+    for my $sidecar_first (0, 1) {
+        my $file = $fixture->seed_forked_file("remove_order_$sidecar_first", "data\n",
+            'rsrc', 'TEXT', 'NADT');
+        my $sidecar = "$volume/._remove_order_$sidecar_first";
+        $fixture->write_file($sidecar, $header);
+        my @paths = $sidecar_first ? ($sidecar, $file) : ($file, $sidecar);
+        succeeds('rm accepts data and sidecar operands in either order', 'rm', '-R', @paths);
+        ok(!-e $file && !-e $sidecar, 'both data and sidecar operands were removed');
+    }
 }
 
 done_testing;
