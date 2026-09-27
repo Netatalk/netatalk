@@ -246,11 +246,21 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
     }
 
     while ((ep = readdir(dp))) {
+        /* fdopendir() transferred ownership to dp. Validate its descriptor
+         * in the same iteration as the descriptor-relative operations. */
+        const int dir_fd = dirfd(dp);
+
+        if (dir_fd < 0) {
+            dbd_log(LOGSTD, "Invalid directory descriptor for '%s/%s'",
+                    cwdbuf, ADv2_DIRNAME);
+            break;
+        }
+
         if (strstr(ep->d_name, eaname) != NULL) {
             dbd_log(LOGSTD, "Removing EA file: '%s/%s/%s'",
                     cwdbuf, ADv2_DIRNAME, ep->d_name);
 
-            if ((unlinkat(addir_fd, ep->d_name, 0)) != 0) {
+            if ((unlinkat(dir_fd, ep->d_name, 0)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking EA file '%s/%s/%s': %s",
                         cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
             }
@@ -352,7 +362,7 @@ static int check_addir(int volroot _U_)
     addir_fd = open(ADv2_DIRNAME,
                     O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-    if (addir_fd == -1) {
+    if (addir_fd < 0) {
         if (adouble_dir_unusable(errno)) {
             /* Left by a non-AFP client: skip this directory's AppleDouble
              * checks rather than fail the volume */
@@ -374,16 +384,16 @@ static int check_addir(int volroot _U_)
     /* Check for ".Parent" */
     ad_parent_path = vol->ad_path(".", ADFLAGS_DIR);
 
-    if (addir_fd != -1) {
+    if (addir_fd >= 0) {
         parent_fd = openat(addir_fd, ".Parent", O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
     }
 
-    if (parent_fd == -1) {
-        if (addir_fd != -1 && errno != ENOENT) {
+    if (parent_fd < 0) {
+        if (addir_fd >= 0 && errno != ENOENT) {
             dbd_log(LOGSTD, "Open error on '%s/%s': %s",
                     cwdbuf, ad_parent_path, strerror(errno));
 
-            if (addir_fd != -1) {
+            if (addir_fd >= 0) {
                 close(addir_fd);
             }
 
@@ -394,18 +404,18 @@ static int check_addir(int volroot _U_)
     }
 
     /* Is one missing ? */
-    if ((addir_fd == -1) || (parent_fd == -1)) {
+    if ((addir_fd < 0) || (parent_fd < 0)) {
         /* Yes, but are we only scanning ? */
         if (dbd_flags & DBD_FLAGS_SCAN) {
             /* Yes:  missing .Parent is not a problem, but missing ad-dir
                causes later checking of ad-files to fail. So we have to return appropriately */
-            if (addir_fd == -1) {
-                if (parent_fd != -1) {
+            if (addir_fd < 0) {
+                if (parent_fd >= 0) {
                     close(parent_fd);
                 }
 
                 return -1;
-            } else { /* (parent_fd == -1) */
+            } else { /* (parent_fd < 0) */
                 close(addir_fd);
                 return 0;
             }
@@ -419,11 +429,11 @@ static int check_addir(int volroot _U_)
             dbd_log(LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf,
                     strerror(errno));
 
-            if (addir_fd != -1) {
+            if (addir_fd >= 0) {
                 close(addir_fd);
             }
 
-            if (parent_fd != -1) {
+            if (parent_fd >= 0) {
                 close(parent_fd);
             }
 
@@ -441,11 +451,11 @@ static int check_addir(int volroot _U_)
         if ((lstat(".", &st)) != 0) {
             dbd_log(LOGSTD, "Couldn't stat %s: %s", cwdbuf, strerror(errno));
 
-            if (addir_fd != -1) {
+            if (addir_fd >= 0) {
                 close(addir_fd);
             }
 
-            if (parent_fd != -1) {
+            if (parent_fd >= 0) {
                 close(parent_fd);
             }
 
@@ -453,11 +463,11 @@ static int check_addir(int volroot _U_)
         }
 
         /* If directories were created, we need their new file descriptors */
-        if (addir_fd == -1) {
+        if (addir_fd < 0) {
             addir_fd = open(ADv2_DIRNAME,
                             O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-            if (addir_fd != -1) {
+            if (addir_fd >= 0) {
                 if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
                     dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
                 }
@@ -466,11 +476,11 @@ static int check_addir(int volroot _U_)
             }
         }
 
-        if (parent_fd == -1 && addir_fd != -1) {
+        if (parent_fd < 0 && addir_fd >= 0) {
             parent_fd = openat(addir_fd, ".Parent",
                                O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
 
-            if (parent_fd != -1) {
+            if (parent_fd >= 0) {
                 if (fchown(parent_fd, st.st_uid, st.st_gid) < 0) {
                     dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ad_parent_path);
                 }
@@ -480,11 +490,11 @@ static int check_addir(int volroot _U_)
         }
     }
 
-    if (addir_fd != -1) {
+    if (addir_fd >= 0) {
         close(addir_fd);
     }
 
-    if (parent_fd != -1) {
+    if (parent_fd >= 0) {
         close(parent_fd);
     }
 
@@ -566,6 +576,7 @@ static int read_addir(void)
     DIR *dp;
     int addir_fd;
     int parent_fd;
+    int ret = 0;
     struct dirent *ep;
     struct stat st;
     parent_fd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
@@ -617,7 +628,17 @@ static int read_addir(void)
             continue;
         }
 
-        if ((fstatat(addir_fd, ep->d_name, &st, AT_SYMLINK_NOFOLLOW)) < 0) {
+        /* Use the stream's descriptor, checked within this iteration. */
+        const int dir_fd = dirfd(dp);
+
+        if (dir_fd < 0) {
+            dbd_log(LOGSTD, "Invalid directory descriptor for '%s/%s'",
+                    cwdbuf, ADv2_DIRNAME);
+            ret = -1;
+            break;
+        }
+
+        if ((fstatat(dir_fd, ep->d_name, &st, AT_SYMLINK_NOFOLLOW)) < 0) {
             dbd_log(LOGSTD,
                     "Lost file or dir while enumeratin dir '%s/%s/%s', probably removed: %s",
                     cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
@@ -632,7 +653,7 @@ static int read_addir(void)
         }
 
         /* Check if for orphaned and corrupt Extended Attributes file */
-        if (check_eafile_in_adouble(parent_fd, addir_fd, ep->d_name) != 0) {
+        if (check_eafile_in_adouble(parent_fd, dir_fd, ep->d_name) != 0) {
             continue;
         }
 
@@ -653,7 +674,7 @@ static int read_addir(void)
                 continue;
             }
 
-            if ((unlinkat(addir_fd, ep->d_name, 0)) != 0) {
+            if ((unlinkat(dir_fd, ep->d_name, 0)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking orphaned AppleDoube file '%s/%s/%s'",
                         cwdbuf, ADv2_DIRNAME, ep->d_name);
             }
@@ -662,7 +683,7 @@ static int read_addir(void)
 
     closedir(dp);
     close(parent_fd);
-    return 0;
+    return ret;
 }
 
 /*!
