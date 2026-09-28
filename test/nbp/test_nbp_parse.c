@@ -1,5 +1,5 @@
 /*
- * Regression tests for NBP input validation.
+ * Regression tests for NBP input validation
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *

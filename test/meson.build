@@ -1,32 +1,30 @@
+if build_tests or build_fuzzing
+    if use_sqlite_backend
+        subdir('afpd')
+    else
+        warning(
+            'afpd tests require the sqlite CNID backend',
+        )
+    endif
+endif
+
 if build_tests
     subdir('afppasswd')
-
-    subdir('adouble')
     subdir('libatalk')
 
     if use_sqlite_backend
         subdir('nad')
+    else
+        warning(
+            'nad tests require the sqlite CNID backend',
+        )
     endif
 
     if enable_appletalk
         subdir('nbp')
     endif
-
-    if use_sqlite_backend
-        subdir('afpd')
-    else
-        warning(
-            'The afpd unit tests require the "sqlite" backend to be built',
-        )
-    endif
 endif
 
 if build_testsuite
     subdir('testsuite')
-endif
-
-if not build_tests and build_fuzzing
-    if use_sqlite_backend
-        subdir('afpd')
-    endif
 endif
