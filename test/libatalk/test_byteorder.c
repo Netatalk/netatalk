@@ -70,7 +70,7 @@ static void test_roundtrip(void)
         for (int i = 0; i < (int)(sizeof(vals16) / sizeof(vals16[0])); i++) {
             memset(buf, 0xAA, sizeof(buf));
             SSVAL(buf, pos, vals16[i]);
-            uint16_t got = SVAL(buf, pos);
+            uint16_t got = (uint16_t)SVAL(buf, pos);
             CHECK("16-bit round-trip", got, vals16[i]);
         }
 
@@ -132,8 +132,8 @@ static void test_reverse_vs_swap(void)
         uint16_t val = vals16[i];
         memset(buf, 0, sizeof(buf));
         SSVAL(buf, 0, val);
-        uint16_t reversed = RSVAL(buf, 0);
-        uint16_t expected = SREV(val);
+        uint16_t reversed = (uint16_t)RSVAL(buf, 0);
+        uint16_t expected = (uint16_t)SREV(val);
         CHECK("RSVAL vs SREV", reversed, expected);
     }
 
@@ -225,7 +225,7 @@ static void test_reverse_roundtrip(void)
 
     for (int i = 0; i < (int)(sizeof(vals16) / sizeof(vals16[0])); i++) {
         RSSVAL(buf, 0, vals16[i]);
-        uint16_t got = RSVAL(buf, 0);
+        uint16_t got = (uint16_t)RSVAL(buf, 0);
         CHECK("16-bit reverse round-trip", got, vals16[i]);
     }
 
