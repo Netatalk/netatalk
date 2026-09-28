@@ -22,7 +22,9 @@
  * The suite is skipped whenever HAVE_EAFD is enabled because the converter
  * is unreachable, and unconditionally on macOS because ad_path_osx() names
  * a native /..namedfork/rsrc stream there. Such a stream must never be used
- * as an AppleDouble fixture, including in unsupported fallback builds.
+ * as an AppleDouble fixture, including in unsupported fallback builds. It
+ * also skips when the test filesystem cannot store the metadata EA required
+ * by ad_open() to reach the converter.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +40,7 @@
 #include "config.h"
 
 #include <atalk/adouble.h>
+#include <atalk/ea.h>
 #include <atalk/logger.h>
 
 #include <arpa/inet.h>
@@ -201,17 +204,33 @@ static int open_rf_write(void)
  * EA so that later resource-fork opens take the OS X sidecar path. The
  * variadic argument of ad_open() is the creation mode, and ADFLAGS_CREATE
  * alone makes it create the forks. */
-static void init_meta(void)
+static int init_meta(void)
 {
     struct adouble ad;
+    int rc;
     memset(&ad, 0, sizeof(ad));
     ad_init_old(&ad, AD_VERSION_EA, 0);
+    rc = ad_open(&ad, dfpath,
+                 ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_CREATE | ADFLAGS_RDWR,
+                 0644);
 
-    if (ad_open(&ad, dfpath,
-                ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_CREATE | ADFLAGS_RDWR,
-                0644) == 0) {
-        ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
+    if (rc != 0) {
+        return -1;
     }
+
+    ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
+    /* Creation alone is insufficient: ad_flush() may fail to store the EA
+     * on a filesystem without runtime extended-attribute support. */
+    memset(&ad, 0, sizeof(ad));
+    ad_init_old(&ad, AD_VERSION_EA, 0);
+    rc = ad_open(&ad, dfpath, ADFLAGS_HF | ADFLAGS_RDONLY);
+
+    if (rc != 0) {
+        return -1;
+    }
+
+    ad_close(&ad, ADFLAGS_HF);
+    return 0;
 }
 
 static off_t file_size(const char *p)
@@ -800,7 +819,31 @@ int main(void)
     }
 
     close(df);
-    init_meta();
+
+    if (init_meta() != 0) {
+        int err = errno;
+        int ea_errno = 0;
+
+        /* ad_open() may close file descriptors on its error path, so query
+         * the EA backend directly before classifying a setup failure. */
+        if (sys_getxattr(dfpath, AD_EA_META, NULL, 0) < 0) {
+            ea_errno = errno;
+        }
+
+        unlink(dfpath);
+        (void)chdir(origcwd);
+        rmdir(tmpdirpath);
+
+        if (ea_errno == ENOSYS || ea_errno == ENOTSUP
+                || ea_errno == EOPNOTSUPP) {
+            printf("metadata EAs unavailable on the test filesystem, skipping\n");
+            return 77;
+        }
+
+        fprintf(stderr, "cannot initialize metadata EA: %s\n", strerror(err));
+        return 1;
+    }
+
     /*
      * 1. The advisory's 1 GiB resource fork length. FinderInfo is a valid
      *    64-byte entry at its canonical offset and the resource fork starts

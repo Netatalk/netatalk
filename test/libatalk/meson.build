@@ -48,6 +48,7 @@ adouble_convert_test = executable(
     'adouble_convert_test',
     'test_convert.c',
     include_directories: [root_includes],
+    dependencies: [bstring, iniparser],
     link_with: libatalk,
     c_args: adouble_convert_c_args,
     export_dynamic: true,
