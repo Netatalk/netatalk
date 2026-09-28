@@ -299,10 +299,12 @@ void cq_font_answer(char *start, char *stop, struct papfile *out)
         }
 
         font = p;
+
         while (p < stop && *p != ' ' && *p != '\t' &&
                 *p != '\n' && *p != '\r') {
             p++;
         }
+
         font_len = p - font;
 
         /* Ignore overlong names as a unit instead of splitting the token. */

@@ -658,7 +658,6 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 
     buf->buf_len = (uint8_t)status_len;
     return buf->buf_len + 1;
-
 #endif /* HAVE_CUPS */
 }
 
