@@ -1,5 +1,5 @@
 /*
- * Regression tests for nbplkup output handling.
+ * Regression tests for nbplkup output handling
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *

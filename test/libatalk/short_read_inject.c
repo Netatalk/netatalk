@@ -1,10 +1,22 @@
 /*
- * Test-only LD_PRELOAD interposer for the OS X AppleDouble header reader.
+ * Test-only LD_PRELOAD interposer for the OS X AppleDouble header reader
+ *
+ * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *
  * When armed by test_convert.c, make one AD_DATASZ_OSX header read return
  * only the fixed header and two-entry table. This deterministically models a
  * sidecar truncated from 114 bytes to 50 bytes after fstat() but before
  * pread(), without adding a timing-dependent race to the regression test.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include "config.h"
