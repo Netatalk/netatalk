@@ -93,7 +93,6 @@ static void write_sidecar(const struct adent *ents, size_t nents,
     uint32_t magic = htonl(AD_MAGIC);
     uint32_t version = htonl(AD_VERSION2);
     uint16_t nent = htons((uint16_t)nents);
-    size_t i;
     memset(hdr, 0, sizeof(hdr));
     memcpy(hdr + 4u, &version, sizeof(version));
     memcpy(hdr, &magic, sizeof(magic));
@@ -110,7 +109,7 @@ static void write_sidecar(const struct adent *ents, size_t nents,
         exit(1);
     }
 
-    for (i = 0; i < nents; i++) {
+    for (size_t i = 0; i < nents; i++) {
         uint32_t e = htonl(ents[i].eid);
         uint32_t o = htonl(ents[i].off);
         uint32_t l = htonl(ents[i].len);
@@ -160,11 +159,18 @@ static void save_sidecar(void)
 static int sidecar_unchanged(void)
 {
     FILE *a = fopen(scpath, "rb");
-    FILE *b = fopen(bakpath, "rb");
+    FILE *b;
     char buf1[4096], buf2[4096];
     size_t n1, n2;
 
-    if (a == NULL || b == NULL) {
+    if (a == NULL) {
+        return 0;
+    }
+
+    b = fopen(bakpath, "rb");
+
+    if (b == NULL) {
+        fclose(a);
         return 0;
     }
 
@@ -284,9 +290,8 @@ static void expect_reject(const char *name, enum reject_reason reason,
         const struct adent *rf = NULL;
         off_t roff, rlen;
         int low, source;
-        size_t k;
 
-        for (k = 0; k < nents; k++) {
+        for (size_t k = 0; k < nents; k++) {
             if (ents[k].eid == ADEID_FINDERI) {
                 fi = &ents[k];
             }
@@ -407,7 +412,6 @@ static int find_entry(const unsigned char *buf, size_t buflen,
                       uint32_t eid, uint32_t *off, uint32_t *len)
 {
     uint16_t nent;
-    size_t i;
 
     if (buflen < AD_HEADER_LEN + 2) {
         return -1;
@@ -416,7 +420,7 @@ static int find_entry(const unsigned char *buf, size_t buflen,
     memcpy(&nent, buf + 24u, sizeof(nent));
     nent = ntohs(nent);
 
-    for (i = 0; i < nent; i++) {
+    for (size_t i = 0; i < nent; i++) {
         size_t eoff = AD_HEADER_LEN + i * AD_ENTRY_LEN;
         uint32_t e, o, l;
 
@@ -546,7 +550,6 @@ static void expect_empty_rfork(void)
     unsigned char buf[1024];
     ssize_t got;
     uint32_t off, len;
-    size_t i;
     int rc;
     memset(tail, 'F', sizeof(tail));
     write_sidecar(ents, 2, (char *)tail, sizeof(tail));
@@ -584,7 +587,7 @@ static void expect_empty_rfork(void)
         return;
     }
 
-    for (i = 0; i < ADEDLEN_FINDERI; i++) {
+    for (size_t i = 0; i < ADEDLEN_FINDERI; i++) {
         if (buf[ADEDOFF_FINDERI_OSX + i] != 'F') {
             printf("not ok empty rfork: FinderInfo payload corrupted at %zu\n", i);
             failures++;
@@ -753,7 +756,7 @@ int main(void)
     char origcwd[PATH_MAX];
     unsigned char tail8k[8192];
     unsigned char tail1m[1024 * 1024];
-    char *tmpdirpath;
+    const char *tmpdirpath;
     int len;
     int df;
 #if defined(HAVE_EAFD) || defined(__APPLE__)
