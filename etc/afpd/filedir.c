@@ -742,6 +742,7 @@ static int delete_vetoed_files_at(struct vol *vol, int parent_fd,
     struct dirent  *de;
     struct stat     sb;
     int             directory_fd;
+    int             dir_fd;
     bool            vetoed;
     /* Do not let a directory-to-symlink replacement redirect recursion. */
     directory_fd = openat(parent_fd, name,
@@ -765,6 +766,14 @@ static int delete_vetoed_files_at(struct vol *vol, int parent_fd,
     }
 
     /* fdopendir() owns directory_fd from here on. */
+    dir_fd = dirfd(dp);
+
+    if (dir_fd == -1) {
+        LOG(log_error, logtype_afpd,
+            "delete_vetoed_files: cannot get descriptor for directory \"%s\": %s",
+            name, strerror(errno));
+        EC_FAIL;
+    }
 
     while ((de = readdir(dp))) {
         if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
@@ -772,7 +781,7 @@ static int delete_vetoed_files_at(struct vol *vol, int parent_fd,
         }
 
         /* Classify symlinks as leaves; all later operations use this dirfd. */
-        if (fstatat(dirfd(dp), de->d_name, &sb, AT_SYMLINK_NOFOLLOW) != 0) {
+        if (fstatat(dir_fd, de->d_name, &sb, AT_SYMLINK_NOFOLLOW) != 0) {
             LOG(log_error, logtype_afpd, "delete_vetoed_files(\"%s/%s\"): %s",
                 name, de->d_name, strerror(errno));
             EC_EXIT_STATUS(AFPERR_DIRNEMPT);
@@ -791,13 +800,13 @@ static int delete_vetoed_files_at(struct vol *vol, int parent_fd,
 
             switch (sb.st_mode & S_IFMT) {
             case S_IFDIR:
-                EC_ZERO(delete_vetoed_files_at(vol, dirfd(dp), de->d_name,
+                EC_ZERO(delete_vetoed_files_at(vol, dir_fd, de->d_name,
                                                true));
                 break;
 
             case S_IFREG:
             case S_IFLNK:
-                EC_ZERO(netatalk_unlinkat(dirfd(dp), de->d_name));
+                EC_ZERO(netatalk_unlinkat(dir_fd, de->d_name));
                 break;
 
             default:
