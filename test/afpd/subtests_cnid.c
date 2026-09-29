@@ -51,7 +51,7 @@ int utest_cnid_sqlite_symlinks_rejected(void)
 #ifndef CNID_BACKEND_SQLITE
     return TEST_SKIP;
 #else
-    char base[] = "/tmp/netatalk-cnid-symlink-XXXXXX";
+    char base[MAXPATHLEN];
     char main_dir[MAXPATHLEN];
     char aux_dir[MAXPATHLEN];
     char sentinel[MAXPATHLEN];
@@ -69,8 +69,11 @@ int utest_cnid_sqlite_symlinks_rejected(void)
     sqlite3 *seed = NULL;
     int fd = -1;
     int result = 1;
+    int len;
+    len = snprintf(base, sizeof(base),
+                   "%s/netatalk-cnid-symlink-XXXXXX", tmpdir());
 
-    if (mkdtemp(base) == NULL) {
+    if (len <= 0 || (size_t)len >= sizeof(base) || mkdtemp(base) == NULL) {
         return TEST_SKIP;
     }
 
@@ -104,13 +107,10 @@ int utest_cnid_sqlite_symlinks_rejected(void)
     if (fd < 0
             || write(fd, sentinel_data, sizeof(sentinel_data) - 1)
             != sizeof(sentinel_data) - 1
-            || fchmod(fd, 0600) != 0 || close(fd) != 0) {
-        fd = -1;
+            || fchmod(fd, 0600) != 0) {
         result = 4;
         goto cleanup;
     }
-
-    fd = -1;
 
     if (symlink(sentinel, main_link) != 0) {
         result = 5;
@@ -131,7 +131,7 @@ int utest_cnid_sqlite_symlinks_rejected(void)
         goto cleanup;
     }
 
-    if (stat(sentinel, &st) != 0 || (st.st_mode & 07777) != 0600
+    if (fstat(fd, &st) != 0 || (st.st_mode & 07777) != 0600
             || st.st_size != sizeof(sentinel_data) - 1) {
         result = 7;
         goto cleanup;
@@ -170,7 +170,7 @@ int utest_cnid_sqlite_symlinks_rejected(void)
         goto cleanup;
     }
 
-    if (stat(sentinel, &st) != 0 || (st.st_mode & 07777) != 0600
+    if (fstat(fd, &st) != 0 || (st.st_mode & 07777) != 0600
             || st.st_size != sizeof(sentinel_data) - 1) {
         result = 11;
         goto cleanup;
@@ -190,7 +190,7 @@ int utest_cnid_sqlite_symlinks_rejected(void)
         goto cleanup;
     }
 
-    if (stat(sentinel, &st) != 0 || (st.st_mode & 07777) != 0600
+    if (fstat(fd, &st) != 0 || (st.st_mode & 07777) != 0600
             || st.st_size != sizeof(sentinel_data) - 1) {
         result = 14;
         goto cleanup;
