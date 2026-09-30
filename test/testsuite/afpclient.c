@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2003-2005,2010 Didier Gautheron <dgautheron@magic.fr>
+ * Copyright (c) 2009,2011-2013 Frank Lahm (franklahm)
+ * Copyright (c) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
+ * Copyright (c) 2026 NJRoadfan
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -589,7 +598,10 @@ unsigned int AFPopenLogin(CONN *conn, const char *vers, const char *uam,
     return dsi->header.dsi_code;
 }
 
-/* Capture FPLogin/FPLoginExt/FPLoginCont reply block on kFPAuthContinue.
+/* Capture the FPLogin/FPLoginExt/FPLoginCont reply block on kFPAuthContinue,
+ * and from an FPLoginCont success that carries a payload: a UAM whose last
+ * round trip returns data, as SRP's server proof does, returns it with AFP_OK.
+ * An empty success leaves the previous capture untouched.
  * Reply payload layout (AFP Reference table 51): int16_t ID, then UAM-specific
  * UserAuthInfo. */
 static void capture_login_cont(CONN *conn)
@@ -794,7 +806,8 @@ unsigned int AFPLoginCont(CONN *conn,
     dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     dsi_cmd_receive(dsi);
 
-    if (dsi->header.dsi_code == htonl((uint32_t) AFPERR_AUTHCONT)) {
+    if (dsi->header.dsi_code == htonl((uint32_t) AFPERR_AUTHCONT)
+            || (dsi->header.dsi_code == 0 && dsi->cmdlen > 0)) {
         capture_login_cont(conn);
     }
 

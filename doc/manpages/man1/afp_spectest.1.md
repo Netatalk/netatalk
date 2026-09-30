@@ -4,7 +4,7 @@ afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
-**afp_spectest** [-1234567aCEiLmVv] [-A *uam*] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
+**afp_spectest** [-1234567aCEiLlmNVv] [-A *uam*] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
 [-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*] [-j *path*]
 
 **afp_spectest** -l
@@ -45,8 +45,8 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 **-A** *uam*
 : Select authentication with the specified UAM name or alias.
-  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128, and
-  *dhx2* for DHX2.
+  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128,
+  *dhx2* for DHX2, and *srp* for SRP.
 
 **-c** *path*
 : Local filesystem path to test volume (required for tier 2 tests)
@@ -88,6 +88,10 @@ run the byte-range read-lock conflict tests instead of skipping them
 
 **-m**
 : Run tests in AppleShare (Mac) AFP server compatibility mode
+
+**-N**
+: Server under test runs without root privileges (netatalk --single-user);
+skip the tests that rely on root reading a file whose mode denies its owner
 
 **-p** *port*
 : Server port number (default: 548)

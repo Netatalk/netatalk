@@ -24,11 +24,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <pwd.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -118,8 +120,8 @@ static char *conf_slurp(const char *path)
  * here are deliberately RED, not skips: pre-test env probes (conf_mklog,
  * conf_mkvoldir) skip, but a failure after setup succeeded once is
  * either product behaviour or a mid-run host problem worth surfacing. */
-static int conf_parse_fixture(AFPObj *obj, const char *ini_body,
-                              const char *logpath)
+static int conf_parse_fixture_flags(AFPObj *obj, const char *ini_body,
+                                    const char *logpath, int cmdlineflags)
 {
     char ini[8192];
     int inilen = snprintf(ini, sizeof(ini),
@@ -142,6 +144,7 @@ static int conf_parse_fixture(AFPObj *obj, const char *ini_body,
 
     memset(obj, 0, sizeof(*obj));
     obj->cmdlineconfigfile = conf;
+    obj->cmdlineflags = cmdlineflags;
     obj->uid = getuid();
     /* A previous test that failed mid-body may not have reached teardown:
      * reset the volume-list statics defensively before parsing. */
@@ -155,6 +158,12 @@ static int conf_parse_fixture(AFPObj *obj, const char *ini_body,
     }
 
     return 0;
+}
+
+static int conf_parse_fixture(AFPObj *obj, const char *ini_body,
+                              const char *logpath)
+{
+    return conf_parse_fixture_flags(obj, ini_body, logpath, 0);
 }
 
 static void conf_teardown(AFPObj *obj, const char *logpath)
@@ -1786,4 +1795,368 @@ int utest_conf_dircache_resolve_size(void)
     }
 
     return 0;
+}
+
+/* Parse ini_body without the single-user flag as user pw, in a forked child,
+ * and report whether both state file paths were under state (expect_under
+ * = 1) or neither was (expect_under = 0). The parent writes the conf file,
+ * readable by pw's group, and resolves it, since the child cannot write the
+ * build directory and inherits the cwd only by permission. The verdict comes
+ * back through a pipe rather than the exit status, which a wrapper such as
+ * valgrind's --error-exitcode rewrites. 0 when the child saw what was
+ * expected, 1 when the child cannot reach the conf file or state at all (a
+ * build tree under a directory closed to other users, as on the VM runners),
+ * -1 when it saw the wrong paths. */
+static int conf_paths_as_user(const struct passwd *pw, const char *ini_body,
+                              const char *logpath, const char *state,
+                              int expect_under)
+{
+    char ini[8192];
+    char abspath[MAXPATHLEN + 1];
+    char *conf;
+    char verdict = '?';
+    int pipefd[2];
+    pid_t pid;
+    int status;
+    struct stat st;
+    int inilen = snprintf(ini, sizeof(ini),
+                          "[Global]\n"
+                          "log level = default:note\n"
+                          "log file = %s\n"
+                          "%s",
+                          logpath, ini_body);
+
+    if (inilen < 0 || (size_t)inilen >= sizeof(ini)) {
+        return -1;
+    }
+
+    if ((conf = conf_write_tmp(ini)) == NULL) {
+        return -1;
+    }
+
+    if (chown(conf, 0, pw->pw_gid) != 0 || chmod(conf, 0640) != 0
+            || realpath(conf, abspath) == NULL || pipe(pipefd) != 0) {
+        unlink(conf);
+        free(conf);
+        return -1;
+    }
+
+    pid = fork();
+
+    if (pid == 0) {
+        AFPObj obj;
+        int under;
+        close(pipefd[0]);
+
+        if (setgid(pw->pw_gid) != 0 || setuid(pw->pw_uid) != 0) {
+            verdict = 'u';
+        } else if (access(abspath, R_OK) != 0 || lstat(state, &st) != 0) {
+            verdict = 'r';
+        } else {
+            memset(&obj, 0, sizeof(obj));
+            obj.cmdlineconfigfile = abspath;
+            obj.uid = pw->pw_uid;
+
+            if (afp_config_parse(&obj, NULL) != 0) {
+                verdict = 'p';
+            } else {
+                under = obj.options.sigconffile != NULL
+                        && obj.options.uuidconf != NULL
+                        && strstr(obj.options.sigconffile, state) != NULL
+                        && strstr(obj.options.uuidconf, state) != NULL;
+
+                if (!expect_under) {
+                    under = obj.options.sigconffile == NULL
+                            || obj.options.uuidconf == NULL
+                            || strstr(obj.options.sigconffile, state) != NULL
+                            || strstr(obj.options.uuidconf, state) != NULL;
+                    verdict = under ? 'n' : 'y';
+                } else {
+                    verdict = under ? 'y' : 'n';
+                }
+            }
+
+            afp_config_free(&obj);
+        }
+
+        if (write(pipefd[1], &verdict, 1) != 1) {
+            _exit(1);
+        }
+
+        _exit(0);
+    }
+
+    close(pipefd[1]);
+
+    if (pid < 0 || read(pipefd[0], &verdict, 1) != 1) {
+        verdict = '?';
+    }
+
+    close(pipefd[0]);
+
+    if (pid > 0) {
+        waitpid(pid, &status, 0);
+    }
+
+    unlink(conf);
+    free(conf);
+
+    if (verdict == 'r') {
+        return 1;
+    }
+
+    if (verdict != 'y') {
+        fprintf(test_stream(),
+                "# conf_paths_as_user(%s, expect_under=%d): child verdict '%c'\n",
+                pw->pw_name, expect_under, verdict);
+        return -1;
+    }
+
+    return 0;
+}
+
+/* utest_conf_singleuser_state_paths: with the single-user flag the signature
+ * and volume uuid files live in the [Global] vol dbpath directory, which the
+ * parse names without the trailing slash and makes mode 0700, whether it
+ * creates it or finds it wider; a vol dbpath with a variable, or none, fails
+ * the parse, so the system state directory is never the fallback. Without
+ * the flag the paths move only for a non-root user's owner-only directory:
+ * the root service keeps the built-in paths for its own, root's tools take a
+ * user's, and a user's tool takes its own and no other. */
+int utest_conf_singleuser_state_paths(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[MAXPATHLEN + 64];
+    char body_var[MAXPATHLEN + 64];
+    char state[MAXPATHLEN + 16];
+    char want[MAXPATHLEN + 32];
+    char *voldir;
+    const struct passwd *nobody;
+    struct stat st;
+    int failed = -1;
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((voldir = conf_mkvoldir()) == NULL) {
+        unlink(logpath);
+        return TEST_SKIP;
+    }
+
+    snprintf(state, sizeof(state), "%s/state", voldir);
+    snprintf(body, sizeof(body), "vol dbpath = %s/\n", state);
+    snprintf(body_var, sizeof(body_var), "vol dbpath = %s/$u\n", state);
+
+    /* a directory the user made wider than owner-only, which the server must
+     * tighten rather than leave its files readable to the group. On a mount
+     * that squashes root the directory is not ours once made and the parse
+     * rightly refuses it, so there the parse creates it instead. */
+    if (mkdir(state, 0750) != 0) {
+        rmdir(voldir);
+        free(voldir);
+        unlink(logpath);
+        return TEST_SKIP;
+    }
+
+    if (lstat(state, &st) == 0 && st.st_uid != getuid()) {
+        rmdir(state);
+    }
+
+    if (conf_parse_fixture_flags(&obj, body, logpath, OPTION_SINGLEUSER) != 0) {
+        setuplog("default:note", "/dev/stderr", true);
+        afp_config_free(&obj);
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: the parse with a vol dbpath failed\n");
+        goto cleanup;
+    }
+
+    snprintf(want, sizeof(want), "%s/afp_signature.conf", state);
+
+    if (obj.options.sigconffile == NULL
+            || strcmp(obj.options.sigconffile, want) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: sigconffile '%s', want '%s'\n",
+                obj.options.sigconffile ? obj.options.sigconffile : "(null)", want);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    snprintf(want, sizeof(want), "%s/afp_voluuid.conf", state);
+
+    if (obj.options.uuidconf == NULL || strcmp(obj.options.uuidconf, want) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: uuidconf '%s', want '%s'\n",
+                obj.options.uuidconf ? obj.options.uuidconf : "(null)", want);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+
+    if (lstat(state, &st) != 0 || !S_ISDIR(st.st_mode)
+            || (st.st_mode & 0777) != 0700) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: %s was not made mode 0700\n",
+                state);
+        goto cleanup;
+    }
+
+    conf_log_truncate(logpath);
+
+    if (conf_parse_fixture_flags(&obj, "", logpath, OPTION_SINGLEUSER) == 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: a single-user parse without vol dbpath succeeded\n");
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    setuplog("default:note", "/dev/stderr", true);
+    /* the refused parse leaves the options it read before refusing */
+    afp_config_free(&obj);
+
+    if (conf_log_contains(logpath, "requires a [Global] 'vol dbpath'") != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: the vol dbpath refusal is not in the log\n");
+        goto cleanup;
+    }
+
+    /* a variable cannot expand at parse time: refused, and no literal
+     * directory is created for it */
+    conf_log_truncate(logpath);
+
+    if (conf_parse_fixture_flags(&obj, body_var, logpath, OPTION_SINGLEUSER) == 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: a vol dbpath with a variable was accepted\n");
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    setuplog("default:note", "/dev/stderr", true);
+    afp_config_free(&obj);
+    snprintf(want, sizeof(want), "%s/$u", state);
+
+    if (conf_log_contains(logpath, "must not use variables") != 1
+            || lstat(want, &st) == 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: a vol dbpath with a variable was not refused as such\n");
+        rmdir(want);
+        goto cleanup;
+    }
+
+    /* The unflagged rule keys on the real uid, which only root can change
+     * below; without root the root-service case would read as a user's tool. */
+    if (getuid() != 0) {
+        failed = 0;
+        goto cleanup;
+    }
+
+    if (conf_parse_fixture_flags(&obj, body, logpath, 0) != 0) {
+        setuplog("default:note", "/dev/stderr", true);
+        afp_config_free(&obj);
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: the root-service parse failed\n");
+        goto cleanup;
+    }
+
+    /* a root service keeps the built-in paths for a directory of root's own.
+     * On a mount that squashes root the directory the parse created belongs
+     * to the squashed uid, a non-root user's owner-only directory, and the
+     * paths follow it as the rule says. */
+    if (obj.options.sigconffile == NULL || obj.options.uuidconf == NULL
+            || (lstat(state, &st) == 0 && st.st_uid == 0)
+            != (strstr(obj.options.sigconffile, state) == NULL
+                && strstr(obj.options.uuidconf, state) == NULL)) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: the root service's paths do not match the owner of %s\n",
+                state);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    /* the serving user's own tools: no flag, a real uid that is not 0. With
+     * the directory theirs the paths follow it; with it root's they stay.
+     * mkdtemp made voldir 0700: the child's group gets search permission on
+     * it, and in the second case on state too, so that ownership is what
+     * decides, not access. A tree root cannot hand over (a mount that squashes
+     * root) or that the child cannot reach (a build directory under a home
+     * closed to other users) cannot host these two cases, which say so. */
+    nobody = getpwnam("nobody");
+
+    if (nobody == NULL) {
+        failed = 0;
+        goto cleanup;
+    }
+
+    if (chown(voldir, 0, nobody->pw_gid) != 0 || chmod(voldir, 0750) != 0
+            || chown(state, nobody->pw_uid, nobody->pw_gid) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: cannot hand the fixture to %s (%s), the unflagged-tool cases were not run\n",
+                nobody->pw_name, strerror(errno));
+        failed = 0;
+        goto cleanup;
+    }
+
+    /* root's tools on a user's owner-only state use that user's files */
+    if (conf_parse_fixture_flags(&obj, body, logpath, 0) != 0) {
+        setuplog("default:note", "/dev/stderr", true);
+        afp_config_free(&obj);
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: the root parse on a user's vol dbpath failed\n");
+        goto cleanup;
+    }
+
+    if (obj.options.sigconffile == NULL
+            || strstr(obj.options.sigconffile, state) == NULL
+            || obj.options.uuidconf == NULL
+            || strstr(obj.options.uuidconf, state) == NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: a root-run tool did not take the paths under the user's owner-only vol dbpath\n");
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+
+    switch (conf_paths_as_user(nobody, body, logpath, state, 1)) {
+    case 1:
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: %s cannot reach the build directory, the unflagged-tool cases were not run\n",
+                nobody->pw_name);
+        failed = 0;
+        goto cleanup;
+
+    case 0:
+        break;
+
+    default:
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: a user's tool did not take the paths under its own vol dbpath\n");
+        goto cleanup;
+    }
+
+    /* the user's own directory, but not owner-only: the built-in paths stay */
+    if (chmod(state, 0750) != 0
+            || conf_paths_as_user(nobody, body, logpath, state, 0) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: a user's tool took the paths under a vol dbpath that is not owner-only\n");
+        goto cleanup;
+    }
+
+    if (chown(state, 0, nobody->pw_gid) != 0 || chmod(state, 0750) != 0
+            || conf_paths_as_user(nobody, body, logpath, state, 0) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_state_paths: a user's tool moved its state files under a vol dbpath it does not own\n");
+        goto cleanup;
+    }
+
+    failed = 0;
+cleanup:
+    rmdir(state);
+    rmdir(voldir);
+    free(voldir);
+    unlink(logpath);
+    return failed;
 }

@@ -27,5 +27,6 @@ extern int utest_conf_multiproto_defaults_not_leaked_on_failed_volume(void);
 extern int utest_conf_multiproto_reverts_compiled_defaults(void);
 extern int utest_conf_load_afp_conf_vols_locked(void);
 extern int utest_conf_dircache_resolve_size(void);
+extern int utest_conf_singleuser_state_paths(void);
 
 #endif /* SUBTESTS_CONF_H */

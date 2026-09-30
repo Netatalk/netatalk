@@ -26,6 +26,7 @@
 
 #include <errno.h>
 #include <grp.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -271,6 +272,8 @@ int afprun(char *cmd, int *outfd)
     pid_t pid;
     uid_t uid = geteuid();
     gid_t gid = getegid();
+    struct sigaction dfl;
+    struct sigaction saved;
 
     /* point our stdout at the file we want output to go into */
     if (outfd && ((*outfd = setup_out_fd()) == -1)) {
@@ -280,10 +283,18 @@ int afprun(char *cmd, int *outfd)
     LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, uid);
     /* in this method we will exec /bin/sh with the correct
        arguments, after first setting stdout to point at the file */
+    /* an afpd session reaps every child as it exits (SIGCHLD handler with
+       SA_NOCLDWAIT), which would leave waitpid() nothing to report: keep the
+       default disposition until the command's status is in */
+    memset(&dfl, 0, sizeof(dfl));
+    dfl.sa_handler = SIG_DFL;
+    sigemptyset(&dfl.sa_mask);
+    sigaction(SIGCHLD, &dfl, &saved);
 
     if ((pid = fork()) < 0) {
         LOG(log_error, logtype_afpd, "afprun: fork failed with error %s",
             strerror(errno));
+        sigaction(SIGCHLD, &saved, NULL);
 
         if (outfd) {
             close(*outfd);
@@ -309,6 +320,8 @@ int afprun(char *cmd, int *outfd)
 
             break;
         }
+
+        sigaction(SIGCHLD, &saved, NULL);
 
         if (wpid != pid) {
             LOG(log_error, logtype_afpd, "waitpid(%d) : %s", (int)pid, strerror(errno));
@@ -360,7 +373,9 @@ int afprun(char *cmd, int *outfd)
     /* now completely lose our privileges. This is a fairly paranoid
        way of doing it, but it does work on all systems that I know of */
 
-    if (become_user_permanently(uid, gid) != 0) {
+    /* a server started without root is already its user and has no
+     * privilege to drop; setgroups() would refuse it */
+    if (getuid() == 0 && become_user_permanently(uid, gid) != 0) {
         exit(82);
     }
 
@@ -424,7 +439,9 @@ int afprun_bg(char *cmd)
     /* now completely lose our privileges. This is a fairly paranoid
        way of doing it, but it does work on all systems that I know of */
 
-    if (become_user_permanently(uid, gid) != 0) {
+    /* a server started without root is already its user and has no
+     * privilege to drop; setgroups() would refuse it */
+    if (getuid() == 0 && become_user_permanently(uid, gid) != 0) {
         exit(82);
     }
 

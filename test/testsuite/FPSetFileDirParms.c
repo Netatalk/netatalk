@@ -1,5 +1,13 @@
-/* ----------------------------------------------
-*/
+/*
+ * Copyright (c) 2003-2005,2009 Didier Gautheron <dgautheron@magic.fr>
+ * Copyright (c) 2012 Frank Lahm (franklahm)
+ * Copyright (c) 2013 Ralph Boehme (slowfranklin)
+ * Copyright (c) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
+ * Copyright (c) 2026 NJRoadfan
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
@@ -541,6 +549,12 @@ STATIC void test346()
         goto test_exit;
     }
 
+    /* a mode-0 file's metadata is read by root bypassing the mode */
+    if (NoRoot) {
+        test_skipped(T_NOROOT);
+        goto test_exit;
+    }
+
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, ndir))) {
         test_nottested();
         goto test_exit;
@@ -999,6 +1013,12 @@ STATIC void test359()
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);
+        goto test_exit;
+    }
+
+    /* a mode-0 file's metadata is read by root bypassing the mode */
+    if (NoRoot) {
+        test_skipped(T_NOROOT);
         goto test_exit;
     }
 

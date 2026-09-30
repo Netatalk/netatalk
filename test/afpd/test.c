@@ -49,6 +49,7 @@
 
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
+#include "auth.h"
 #include "dircache.h"
 #include "directory.h"
 #include "file.h"
@@ -733,6 +734,45 @@ static int utest_dsi_receive_rejects_zero_length_cmd(void)
     return ret == 0 ? 0 : -1;
 }
 
+static void dsi_test_noop_close(DSI *dsi)
+{
+    (void)dsi;
+}
+
+/* dsi_disconnect() enters the disconnected state for a session that logged
+ * in and refuses one that did not. login() refuses uid 0 and sets obj->uid
+ * only on success, so that is the mark; the UAM's logout hook is not, since
+ * the SRP, passwd, randnum and guest UAMs register none. */
+static int utest_dsi_disconnect_needs_login(void)
+{
+    DSI dsi;
+    AFPObj sess;
+    memset(&dsi, 0, sizeof(dsi));
+    memset(&sess, 0, sizeof(sess));
+    dsi.proto_close = dsi_test_noop_close;
+    dsi.AFPobj = &sess;
+
+    if (dsi_disconnect(&dsi) != -1 || !(dsi.flags & DSI_DISCONNECTED)) {
+        return 1;
+    }
+
+    sess.uid = 1000;
+    sess.logout = NULL;
+    dsi.flags = 0;
+
+    if (dsi_disconnect(&dsi) != 0 || !(dsi.flags & DSI_DISCONNECTED)) {
+        return 2;
+    }
+
+    dsi.AFPobj = NULL;
+
+    if (dsi_disconnect(&dsi) != -1) {
+        return 3;
+    }
+
+    return 0;
+}
+
 static int utest_dsi_receive_valid_cmd(void)
 {
     uint8_t payload[2] = {AFP_LOGIN, 0};
@@ -842,6 +882,8 @@ int main(int argc, char *argv[])
              "delete veto files removes matching trees and preserves ordinary files");
     TEST_int_or_skip(utest_delete_veto_dirfd_failure(), 0,
                      "delete veto files closes its directory stream when dirfd fails");
+    TEST_int(utest_logger_reopen_keeps_files(), 0,
+             "logger: log_close_all/log_reopen keep a relative and a mkstemp log file");
     TEST_int(utest_decompose_reserves_terminator(), 0,
              "decompose_w reserves space for its UTF-16 terminator");
     TEST_int(utest_fork_range_rejects_wrapped_read(), 0,
@@ -887,6 +929,8 @@ int main(int argc, char *argv[])
 #endif
     TEST_int(utest_dsi_receive_rejects_zero_length_cmd(), 0,
              "DSI receive rejects a command frame with no AFP function byte");
+    TEST_int(utest_dsi_disconnect_needs_login(), 0,
+             "dsi_disconnect enters the disconnected state for a login whose UAM has no logout hook");
 #ifndef NO_DDP
     TEST_int(utest_atp_queue_push_evicts_oldest(), 0,
              "ATP queue: full queue evicts the oldest, not the arrival");
@@ -899,6 +943,8 @@ int main(int argc, char *argv[])
      * lock/fork tests. */
     TEST_int_or_skip(utest_conf_parse_bool(), 0,
                      "conf_parse_bool: strict boolean spellings, invalid values warn");
+    TEST_int_or_skip(utest_conf_singleuser_state_paths(), 0,
+                     "single-user: signature and volume uuid files live under vol dbpath, created 0700");
     TEST_int_or_skip(utest_conf_permission_options_require_unix_priv(), 0,
                      "volume permission options are ignored when unix priv is disabled");
     TEST_int_or_skip(utest_conf_ea_fallback(), 0,
@@ -948,6 +994,23 @@ int main(int argc, char *argv[])
              "CNID wrapper '..' rejection invalidates *id and classifies corrupt");
     TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
                      "dircache_resolve_size: default, minimum, round-up, clamp");
+    {
+        AFPObj singleuser_obj = { 0 };
+        char *singleuser_args[] = { "afpd", "-u" };
+        TEST(afp_options_parse_cmdline(&singleuser_obj, 2, singleuser_args),
+             "parse afpd single-user command-line option");
+        TEST_expr(reti = 0,
+                  (singleuser_obj.cmdlineflags & OPTION_SINGLEUSER) != 0,
+                  "afpd single-user command-line option sets its flag");
+        singleuser_obj.options.flags = OPTION_SINGLEUSER;
+        TEST_expr(reti = 0, singleuser_admits_uid(&singleuser_obj, getuid()),
+                  "single-user login admits the uid that started the server");
+        TEST_expr(reti = 0, !singleuser_admits_uid(&singleuser_obj, getuid() + 1),
+                  "single-user login refuses every other uid");
+        singleuser_obj.options.flags = 0;
+        TEST_expr(reti = 0, singleuser_admits_uid(&singleuser_obj, getuid() + 1),
+                  "a root service's login admits other uids");
+    }
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]),
          "parse afpd command-line options");
     TEST_int(afp_config_parse(&obj, NULL), 0,
@@ -1033,6 +1096,8 @@ int main(int argc, char *argv[])
                      "cnid_lookup: duplicate cleanup never deletes through a truncated id");
     TEST_int_or_skip(utest_cnid_uuid_case_keeps_table(vol), 0,
                      "cnid_open: a case-flipped volume UUID reuses the live table");
+    TEST_int_or_skip(utest_cnid_sqlite_owner_only(vol), 0,
+                     "cnid_open: single-user state is 0700/0600 and a root opener widens it");
     /* Last of the CNID group: recovering from the reset empties the volume's
      * table, so anything expecting a CNID minted earlier must run before it */
     TEST_int_or_skip(utest_cnid_add_depletion_resets(vol), 0,

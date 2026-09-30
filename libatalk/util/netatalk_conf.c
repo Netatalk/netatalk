@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2012 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2026 Andy Lemin (andylemin)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -43,6 +44,7 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <time.h>
+#include <unistd.h>
 #include <utime.h>
 
 #include <bstrlib.h>
@@ -2332,6 +2334,9 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         } else {
             /* Get path */
             if ((p = getoption_str(obj->iniconfig, secname, "path", NULL, NULL)) == NULL) {
+                LOG(log_error, logtype_afpd,
+                    "readvolfile: section [%s] has no 'path', skipping", secname);
+                obj->vols_skipped++;
                 continue;
             }
 
@@ -2339,6 +2344,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         }
 
         if (volxlate(obj, path, sizeof(path) - 1, tmp, pwent, NULL, NULL) == NULL) {
+            obj->vols_skipped++;
             continue;
         }
 
@@ -2364,17 +2370,22 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path,
                      NULL) == NULL) {
+            obj->vols_skipped++;
             continue;
         }
 
         preset = getoption_str(obj->iniconfig, secname, "vol preset", NULL, NULL);
 
         if ((realvolpath = realpath_safe(path)) == NULL) {
+            obj->vols_skipped++;
             continue;
         }
 
-        creatvol(obj, pwent, secname, volname, realvolpath,
-                 preset ? preset : default_preset ? default_preset : NULL);
+        if (creatvol(obj, pwent, secname, volname, realvolpath,
+                     preset ? preset : default_preset ? default_preset : NULL) == NULL) {
+            obj->vols_skipped++;
+        }
+
         free(realvolpath);
     }
 
@@ -2752,6 +2763,7 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     become_root();
     obj->iniconfig = iniparser_load(obj->options.configfile);
     unbecome_root();
+    obj->vols_skipped = 0;
     EC_ZERO_LOG(readvolfile(obj, pwresult));
     struct vol *nextvol, *prevvol;
     vol = Volumes;
@@ -3199,6 +3211,143 @@ struct vol *getvolbyname(const char *name)
     return vol;
 }
 
+/*!
+ * @brief Drop trailing slashes, which make lstat() and an O_NOFOLLOW open
+ *        follow a final symbolic link
+ */
+static void strip_trailing_slashes(char *path)
+{
+    size_t len = strlen(path);
+
+    while (len > 1 && path[len - 1] == '/') {
+        path[--len] = '\0';
+    }
+}
+
+/*!
+ * @brief Keep the signature and volume uuid files in the user's state
+ *
+ * A single-user server cannot write the system state directory, so its
+ * afp_signature.conf and afp_voluuid.conf live in the [Global] vol dbpath
+ * directory, the parent of its CNID directories, which the server creates or
+ * makes mode 0700 as it does the CNID directories below it. Every other
+ * process takes the same paths when that directory is a user's owner-only
+ * directory and the caller is root or that user: the serving user's nad and
+ * dbd, which carry no --single-user flag, and root's tools run on the user's
+ * configuration, so the uuid any of them generates is the one the server
+ * reads back, and a root service's own state keeps the built-in paths. A
+ * variable in the value cannot expand at parse time, before the session's
+ * user and the host name are known. The generate-once, read-back-later code
+ * that serves the root service then runs unchanged.
+ *
+ * @param obj         the object being configured; its options take the paths
+ * @param singleuser  the server's flag: the directory is required, created
+ *                    when absent and tightened when wider than 0700
+ * @returns 0, with both paths set when the directory qualifies;
+ *          -1 (logged) when a single-user server has no usable directory
+ */
+static int user_state_paths(AFPObj *obj, bool singleuser)
+{
+    struct afp_options *options = &obj->options;
+    const struct passwd *pwd;
+    const char *val;
+    char dbpath[MAXPATHLEN + 1];
+    char file[MAXPATHLEN + 1];
+    struct stat st;
+    val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", NULL, NULL);
+
+    if (val == NULL || val[0] == '\0') {
+        if (!singleuser) {
+            return 0;
+        }
+
+        LOG(log_error, logtype_afpd,
+            "single-user mode requires a [Global] 'vol dbpath' the calling user owns: "
+            "the signature, the volume uuids and the CNID databases are kept there");
+        return -1;
+    }
+
+    if (strchr(val, '$') != NULL) {
+        if (!singleuser) {
+            return 0;
+        }
+
+        LOG(log_error, logtype_afpd,
+            "single-user mode requires a [Global] 'vol dbpath' that must not use "
+            "variables: %s", val);
+        return -1;
+    }
+
+    if ((pwd = getpwuid(getuid())) == NULL) {
+        if (!singleuser) {
+            return 0;
+        }
+
+        LOG(log_error, logtype_afpd, "getpwuid(%ju): %s", (uintmax_t)getuid(),
+            strerror(errno));
+        return -1;
+    }
+
+    if (volxlate(obj, dbpath, MAXPATHLEN, val, pwd, NULL, NULL) == NULL) {
+        if (!singleuser) {
+            return 0;
+        }
+
+        LOG(log_error, logtype_afpd, "cannot expand 'vol dbpath' %s", val);
+        return -1;
+    }
+
+    strip_trailing_slashes(dbpath);
+
+    if (lstat(dbpath, &st) == 0) {
+        if (!singleuser) {
+            if (!S_ISDIR(st.st_mode) || st.st_uid == 0 || (st.st_mode & 077) != 0
+                    || (getuid() != 0 && st.st_uid != getuid())) {
+                return 0;
+            }
+        } else if (!S_ISDIR(st.st_mode) || st.st_uid != getuid()) {
+            LOG(log_error, logtype_afpd,
+                "single-user mode requires 'vol dbpath' %s to be a directory owned by "
+                "the calling user, not a symbolic link", dbpath);
+            return -1;
+        } else if ((st.st_mode & 077) != 0 && chmod(dbpath, 0700) != 0) {
+            LOG(log_error, logtype_afpd,
+                "cannot make 'vol dbpath' %s owner-only: %s", dbpath, strerror(errno));
+            return -1;
+        }
+    } else if (!singleuser) {
+        return 0;
+    } else if (errno != ENOENT || mkdir(dbpath, 0700) != 0) {
+        LOG(log_error, logtype_afpd, "cannot use 'vol dbpath' %s: %s", dbpath,
+            strerror(errno));
+        return -1;
+    }
+
+    if (snprintf(file, sizeof(file), "%s/afp_signature.conf",
+                 dbpath) >= (int)sizeof(file)) {
+        return -1;
+    }
+
+    free(options->sigconffile);
+
+    if ((options->sigconffile = strdup(file)) == NULL) {
+        return -1;
+    }
+
+    if (snprintf(file, sizeof(file), "%s/afp_voluuid.conf",
+                 dbpath) >= (int)sizeof(file)) {
+        return -1;
+    }
+
+    free(options->uuidconf);
+
+    if ((options->uuidconf = strdup(file)) == NULL) {
+        return -1;
+    }
+
+    return 0;
+}
+
 #define MAXVAL 1024
 /*!
  * Initialize an AFPObj and options from ini config file
@@ -3365,6 +3514,13 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                    _PATH_AFPSRPVERIFIERPATH,
                                    "Using deprecated 'srp passwd file' option; its value is now a verifier directory. If it names a legacy flat file, stop afpd and run 'afppasswd -m', then use 'srp verifier path'",
                                    NULL);
+
+    /* the UAM opens the store O_NOFOLLOW and the controller lstat()s it; a
+     * trailing slash would make both follow a final symbolic link */
+    if (options->srpverifierpath != NULL) {
+        strip_trailing_slashes(options->srpverifierpath);
+    }
+
     options->uampath        = getoption_strdup(config, INISEC_GLOBAL, "uam path",
                                                NULL, _PATH_AFPDUAMPATH);
     options->uamlist        = getoption_strdup(config, INISEC_GLOBAL, "uam list",
@@ -3373,6 +3529,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                                NULL, "548");
     options->signatureopt   = getoption_strdup(config, INISEC_GLOBAL, "signature",
                                                NULL, "");
+    EC_NEG1(user_state_paths(AFPObj, (options->flags & OPTION_SINGLEUSER) != 0));
     options->k5service      = getoption_strdup(config, INISEC_GLOBAL, "k5 service",
                                                NULL, NULL);
     options->k5realm        = getoption_strdup(config, INISEC_GLOBAL, "k5 realm",
