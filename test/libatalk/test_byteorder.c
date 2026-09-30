@@ -3,12 +3,6 @@
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *
- * Verifies that the byte-by-byte shift macros produce identical results
- * to direct pointer dereferences on architectures where unaligned access
- * is permitted (e.g. x86). These tests were originally written to verify
- * that removing Samba's CAREFUL_ALIGNMENT=0 optimization had no side
- * effects.
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -18,6 +12,14 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ */
+
+/*!
+ * @file
+ * Verifies that the byte-by-byte shift macros agree with host-native
+ * values loaded by memcpy at aligned and unaligned offsets. These tests
+ * were originally written to verify that removing Samba's
+ * CAREFUL_ALIGNMENT=0 optimization had no side effects.
  */
 
 #include <arpa/inet.h>
