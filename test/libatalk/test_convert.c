@@ -3,29 +3,6 @@
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *
- * Crafted ._ sidecars are opened through ad_open() with resource-fork
- * write intent, mirroring the afpd call sequence. Malformed entries must
- * be rejected with errno EIO and the sidecar must be left untouched; a
- * well-formed sidecar must be rewritten to the canonical OS X layout with
- * the resource fork payload preserved byte for byte.
- *
- * The conversion relies on these two properties:
- *
- *   source range  [roff, roff + rlen)      is inside the sidecar
- *   destination   [ADEDOFF_RFORK_OSX, +rlen) is inside the sidecar
- *
- * Both are attacker controlled because parse_entries() exempts ADEID_RFORK
- * from its bounds check. The converter validates the source before copying.
- * Since it separately requires roff >= ADEDOFF_RFORK_OSX, that proof also
- * proves the destination range fits.
- *
- * The suite is skipped whenever HAVE_EAFD is enabled because the converter
- * is unreachable, and unconditionally on macOS because ad_path_osx() names
- * a native /..namedfork/rsrc stream there. Such a stream must never be used
- * as an AppleDouble fixture, including in unsupported fallback builds. It
- * also skips when the test filesystem cannot store the metadata EA required
- * by ad_open() to reach the converter.
- *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -35,6 +12,15 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ */
+
+/*!
+ * @file
+ * Crafted ._ sidecars are opened through ad_open() with resource-fork
+ * write intent, mirroring the afpd call sequence. Malformed entries must
+ * be rejected with errno EIO and leave the sidecar untouched. A well-formed
+ * sidecar must be rewritten to the canonical OS X layout with its resource
+ * fork payload preserved byte for byte.
  */
 
 #include "config.h"
@@ -269,6 +255,13 @@ static ssize_t read_sidecar(unsigned char *buf, size_t buflen)
  * the converter decides. Bounds vectors carry one of these so that the
  * fixture itself is checked and a vector cannot pass by accident;
  * structural vectors (malformed FinderInfo, missing entry) use REASON_NONE.
+ *
+ * Conversion requires the source range [roff, roff + rlen) and destination
+ * range [ADEDOFF_RFORK_OSX, ADEDOFF_RFORK_OSX + rlen) to fit in the sidecar.
+ * The fork offset and length are attacker controlled: parse_entries()
+ * exempts ADEID_RFORK from its bounds check. The converter validates the
+ * source before copying. It also requires roff >= ADEDOFF_RFORK_OSX, so
+ * the source check proves the destination fits as well.
  */
 enum reject_reason {
     REASON_NONE = 0,   /* rejected structurally, not by a resource fork bound */
@@ -767,6 +760,8 @@ int main(void)
      * rejection cases as well as the conversion cases -- would fail for
      * want of the code under test, so skip the suite rather than report
      * failures that say nothing about the converter.
+     * On macOS, ad_path_osx() names a native /..namedfork/rsrc stream. Never
+     * use that stream as an AppleDouble fixture, even in fallback builds.
      *
      * The suite is driven by meson's default "exitcode" protocol, where 77
      * is the skip code (the TAP "1..0 # SKIP" directive only applies with
@@ -839,6 +834,7 @@ int main(void)
 
         if (ea_errno == ENOSYS || ea_errno == ENOTSUP
                 || ea_errno == EOPNOTSUPP) {
+            /* Without the metadata EA, ad_open() cannot reach the converter. */
             printf("metadata EAs unavailable on the test filesystem, skipping\n");
             return 77;
         }
