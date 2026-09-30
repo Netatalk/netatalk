@@ -107,6 +107,7 @@ if build_tests
         'subtests_conf.c',
         'subtests_lock.c',
         'subtests_pfd.c',
+        'subtests_veto.c',
         afpd_test_extra_sources,
         include_directories: test_includes,
         objects: afpdtest_objects,

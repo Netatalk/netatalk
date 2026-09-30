@@ -60,6 +60,7 @@
 #include "subtests_conf.h"
 #include "subtests_lock.h"
 #include "subtests_pfd.h"
+#include "subtests_veto.h"
 #ifndef NO_DDP
 #include "subtests_atp.h"
 #endif /* NO_DDP */
@@ -835,8 +836,12 @@ int main(int argc, char *argv[])
      * fail with ENXIO and every LOG() is silently dropped.  stderr is captured. */
     TEST(setuplog("default:note", "/dev/stderr", true),
          "init logging to stderr");
-    TEST_int(test011_delete_veto_symlink_stays_in_volume(), 0,
+    TEST_int(utest_delete_veto_symlink_stays_in_volume(), 0,
              "delete veto files unlinks directory symlinks without following them");
+    TEST_int(utest_delete_veto_recursive(), 0,
+             "delete veto files removes matching trees and preserves ordinary files");
+    TEST_int_or_skip(utest_delete_veto_dirfd_failure(), 0,
+                     "delete veto files closes its directory stream when dirfd fails");
     TEST_int(utest_decompose_reserves_terminator(), 0,
              "decompose_w reserves space for its UTF-16 terminator");
     TEST_int(utest_fork_range_rejects_wrapped_read(), 0,

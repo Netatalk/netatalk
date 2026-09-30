@@ -54,6 +54,11 @@ struct fault_inject {
     int fchdir_armed;
     int fchdir_fail_after;
     int fchdir_errno;
+    int dirfd_armed;
+    int dirfd_fail_after;
+    int dirfd_errno;
+    int dirfd_calls;
+    int dirfd_failed_fd;  /*!< descriptor from the injected call */
 };
 
 extern struct fault_inject fi;

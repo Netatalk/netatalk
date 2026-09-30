@@ -23,7 +23,7 @@
  *    the operation under test and disarms it right after.
  *
  *  - Built as libfaultinject.so (-DFAULTINJECT_PRELOAD) and loaded via
- *    LD_PRELOAD: interposes open/close/fcntl/fchdir at dynamic-symbol
+ *    LD_PRELOAD: interposes open/close/fcntl/fchdir/dirfd at dynamic-symbol
  *    resolution, so calls made INSIDE libatalk.so (ad_open/ad_close/ad_lock/…)
  *    are intercepted — which a link-time --wrap on the executable cannot reach,
  *    because libatalk is a shared library.  The interposer references the `fi`
@@ -101,6 +101,7 @@ int faultinject_open_works(const char *scratch_path)
 /* ---- Role 2: LD_PRELOAD interposer (libfaultinject.so) ---- */
 
 #include <dlfcn.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -138,6 +139,9 @@ typedef int (*open2_fn)(const char *, int);
 typedef int (*close_fn)(int);
 typedef int (*fcntl_fn)(int, int, ...);
 typedef int (*fchdir_fn)(int);
+#ifndef dirfd
+typedef int (*dirfd_fn)(DIR *);
+#endif
 
 static open_fn   real_open;
 static open2_fn  real_open_2;
@@ -145,6 +149,9 @@ static open2_fn  real_open64_2;
 static close_fn  real_close;
 static fcntl_fn  real_fcntl;
 static fchdir_fn real_fchdir;
+#ifndef dirfd
+static dirfd_fn  real_dirfd;
+#endif
 
 #ifndef O_TMPFILE
 #define O_TMPFILE 0
@@ -332,5 +339,32 @@ int fchdir(int fd)
 
     return real_fchdir(fd);
 }
+
+/* Some systems (notably NetBSD) define dirfd as a DIR-field macro.  Those
+ * calls cannot reach an interposer; the veto fault test probes and skips. */
+#ifndef dirfd
+int dirfd(DIR *dirp)
+{
+    int fd;
+
+    if (!real_dirfd) {
+        real_dirfd = (dirfd_fn)dlsym(RTLD_NEXT, "dirfd");
+    }
+
+    fd = real_dirfd(dirp);
+
+    if (fi.dirfd_armed) {
+        fi.dirfd_calls++;
+    }
+
+    if (fault_should_fire(fi.dirfd_armed, &fi.dirfd_fail_after,
+                          fi.dirfd_errno)) {
+        fi.dirfd_failed_fd = fd;
+        return -1;
+    }
+
+    return fd;
+}
+#endif
 
 #endif /* FAULTINJECT_PRELOAD */
