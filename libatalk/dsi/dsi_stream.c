@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 2010,2011,2012 Frank Lahm <franklahm@googlemail.com>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All rights reserved. See COPYRIGHT.
  *
  * this file provides the following functions:
@@ -282,7 +283,9 @@ static void unblock_sig(DSI *dsi)
  *
  * @returns  0 if successfully entered disconnected state
  * @returns -1 if ppid is 1 which means afpd master died,
- *             or euid == 0 i.e. where still running as root (unauthenticated session)
+ *             or the session has not logged in: login() refuses uid 0 and
+ *             sets AFPobj->uid on success, so a zero uid is no login (the
+ *             UAM's logout hook is no mark, most UAMs register none)
  */
 int dsi_disconnect(DSI *dsi)
 {
@@ -291,7 +294,7 @@ int dsi_disconnect(DSI *dsi)
     dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP); /* 2 */
     dsi->flags |= DSI_DISCONNECTED;
 
-    if (geteuid() == 0) {
+    if (dsi->AFPobj == NULL || dsi->AFPobj->uid == 0) {
         return -1;
     }
 

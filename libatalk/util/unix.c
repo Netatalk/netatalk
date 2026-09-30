@@ -1,5 +1,6 @@
 /*
   Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
+  Copyright (c) 2026 Andy Lemin (andylemin)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -150,6 +151,9 @@ int daemonize(void)
         return -1;
     }
 
+    /* the logger's descriptors go with the rest; a process that logged
+     * before daemonizing gets them back once 0-2 are /dev/null */
+    log_close_all();
     closeall(0);
     open("/dev/null", O_RDWR);
 
@@ -165,6 +169,7 @@ int daemonize(void)
         return -1;
     }
 
+    log_reopen();
     return 0;
 }
 
@@ -712,7 +717,9 @@ char *strtok_quote(char *s, const char *delim)
 
 int set_groups(AFPObj *obj, struct passwd *pwd)
 {
-    if (initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
+    /* only root may set the group list; a server started by its user
+     * already carries that user's groups */
+    if (getuid() == 0 && initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
         LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name,
             pwd->pw_gid, strerror(errno));
     }

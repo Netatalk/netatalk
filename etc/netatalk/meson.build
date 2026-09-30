@@ -21,7 +21,7 @@ executable(
     include_directories: root_includes,
     link_with: libatalk,
     dependencies: netatalk_deps,
-    c_args: [confdir, statedir, afpd, cnid_metad, dversion],
+    c_args: [confdir, statedir, afpd, afpdsrpverifierpath, cnid_metad, dversion],
     install: true,
     install_dir: sbindir,
     build_rpath: rpath_libdir,

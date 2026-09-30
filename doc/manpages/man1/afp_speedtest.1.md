@@ -49,8 +49,8 @@ The tool supports comprehensive performance analysis including:
 
 **-A** *uam*
 : Select authentication with the specified UAM name or alias.
-  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128, and
-  *dhx2* for DHX2.
+  Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128,
+  *dhx2* for DHX2, and *srp* for SRP.
 
 **-a**
 : Don't flush to disk after write

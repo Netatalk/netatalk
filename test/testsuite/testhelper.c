@@ -1,5 +1,13 @@
-/* ----------------------------------------------
-*/
+/*
+ * Copyright (c) 2003-2005,2009 Didier Gautheron <dgautheron@magic.fr>
+ * Copyright (c) 2010-2012 Frank Lahm (franklahm)
+ * Copyright (c) 2013 Ralph Boehme (slowfranklin)
+ * Copyright (c) 2017 CHANG-NING TSAI (crazyguitar)
+ * Copyright (c) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Josh Nutzman (nutzman)
+ * Copyright (c) 2026 Andy Lemin (andylemin)
+ * All Rights Reserved.  See COPYRIGHT.
+ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -124,6 +132,10 @@ void test_skipped(int why)
 
     case T_NONDETERM:
         s = "nondeterministic behavior";
+        break;
+
+    case T_NOROOT:
+        s = "server without root privileges";
         break;
 
     case T_CRED:

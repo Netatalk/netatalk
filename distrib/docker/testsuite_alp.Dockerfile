@@ -149,6 +149,7 @@ RUN apk update \
 COPY --from=build /netatalk-code/distrib/docker/config_watch.sh /config_watch.sh
 COPY /distrib/docker/env_setup_netatalk.sh /env_setup.sh
 COPY /distrib/docker/entrypoint_netatalk.sh /entrypoint.sh
+COPY /test/integration/ /integration/
 
 WORKDIR /mnt
 EXPOSE 548

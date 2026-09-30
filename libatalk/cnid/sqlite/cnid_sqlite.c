@@ -6,6 +6,7 @@
  *
  * Copyright (C) 2013 Ralph Boehme
  * Copyright (C) 2024-2026 Daniel Markstedt
+ * Copyright (C) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYING.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -132,7 +133,7 @@ static int cnid_sqlite_fchmod_regular(const char *path, mode_t mode,
 
 /* Validate existing SQLite companion files before SQLite can open them, and
  * set the mode of companions SQLite has just created. */
-static int cnid_sqlite_fchmod_companions(const char *dbpath)
+static int cnid_sqlite_fchmod_companions(const char *dbpath, mode_t mode)
 {
     static const char *suffixes[] = { "-wal", "-shm" };
     char path[PATH_MAX];
@@ -144,7 +145,7 @@ static int cnid_sqlite_fchmod_companions(const char *dbpath)
             return -1;
         }
 
-        if (cnid_sqlite_fchmod_regular(path, 0666, true) != 0) {
+        if (cnid_sqlite_fchmod_regular(path, mode, true) != 0) {
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_open: refusing unsafe SQLite companion %s: %s",
                 path, strerror(errno));
@@ -1898,6 +1899,29 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     return cdb;
 }
 
+/*!
+ * @brief Whether a CNID directory is the opener's own owner-only directory
+ */
+static bool cnid_sqlite_dir_owner_only(const char *path)
+{
+    char dir[PATH_MAX];
+    struct stat st;
+    size_t len = strlcpy(dir, path, sizeof(dir));
+
+    if (len >= sizeof(dir)) {
+        return false;
+    }
+
+    /* a [Global] vol dbpath derives the directory with a trailing slash,
+     * which would make lstat() follow a symbolic link */
+    while (len > 1 && dir[len - 1] == '/') {
+        dir[--len] = '\0';
+    }
+
+    return lstat(dir, &st) == 0 && S_ISDIR(st.st_mode)
+           && st.st_uid == getuid() && (st.st_mode & 077) == 0;
+}
+
 /* ---------------------- */
 struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 {
@@ -1914,6 +1938,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     const char *dbpath_str = NULL;
     int sqlite_return;
     bool is_root = false;
+    bool priv = false;
     EC_NULL(cdb = cnid_sqlite_new(vol));
     EC_NULL(db =
                 (CNID_sqlite_private *) calloc(1,
@@ -1934,32 +1959,63 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         }
     }
 
+    /* Owner-only state: the single-user server's, and a directory a non-root
+     * opener already holds as its own 0700 directory, so the serving user's
+     * nad and dbd keep what the server keeps. A directory that does not exist
+     * yet is created shared, whoever creates it, and a single-user server
+     * tightens it at its next open. Root, and a directory another account
+     * owns, follow the shared rules. */
+    priv = (vol->v_obj != NULL
+            && (vol->v_obj->options.flags & OPTION_SINGLEUSER) != 0)
+           || (getuid() != 0 && cnid_sqlite_dir_owner_only(dirpath));
     become_root();
     is_root = true;
 
-    if (mkdir(dirpath, 01777) != 0) {
+    if (mkdir(dirpath, priv ? 0700 : 01777) != 0) {
         if (errno == EEXIST) {
             int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW
                              | O_CLOEXEC);
 
             if (dirfd < 0) {
-                LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
+                LOG(log_error, logtype_cnid, "Can't open CNID DB directory '%s': %s",
+                    dirpath, strerror(errno));
                 EC_FAIL;
             }
 
-            /* Ensure existing directories get updated to the sticky bit permissions,
-             * so that non-root clients such as 'nad' can create SQLite WAL/SHM files. */
+            /* Shared state is shared with authenticated users and nad; owner-only
+             * state is kept owner-only and refused when it is not the opener's. */
             struct stat st;
 
             if (fstat(dirfd, &st) != 0) {
                 int saved_errno = errno;
+                LOG(log_error, logtype_cnid, "Can't stat CNID DB directory '%s': %s",
+                    dirpath, strerror(errno));
                 close(dirfd);
                 errno = saved_errno;
                 EC_FAIL;
             }
 
-            if ((st.st_mode & 01777) != 01777
-                    && fchmod(dirfd, 01777) != 0) {
+            if (priv) {
+                if (st.st_uid != getuid()) {
+                    LOG(log_error, logtype_cnid,
+                        "CNID DB directory '%s' is not owned by the server user",
+                        dirpath);
+                    close(dirfd);
+                    errno = EPERM;
+                    EC_FAIL;
+                }
+
+                if ((st.st_mode & 0777) != 0700 && fchmod(dirfd, 0700) != 0) {
+                    int saved_errno = errno;
+                    LOG(log_error, logtype_cnid,
+                        "Can't make CNID DB directory '%s' owner-only: %s",
+                        dirpath, strerror(errno));
+                    close(dirfd);
+                    errno = saved_errno;
+                    EC_FAIL;
+                }
+            } else if ((st.st_mode & 01777) != 01777
+                       && fchmod(dirfd, 01777) != 0) {
                 int saved_errno = errno;
                 close(dirfd);
                 errno = saved_errno;
@@ -2018,15 +2074,22 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      * codes change nothing there. */
     sqlite3_extended_result_codes(db->cnid_sqlite_con, 1);
 
-    /* Setting permissions of the sqlite db file to world-writable.
-     * This is to allow CNID records to be updated by any authenticated AFP user.
+    /* Normal servers need a world-writable database so authenticated users and
+     * nad can update CNID state. A single-user server has one identity and
+     * keeps its database private.
      *
      * A non-owner such as 'nad' may be unable to repair an old mode, which is
      * nonfatal. Other failures mean the pathname did not resolve to the safe,
      * single-link regular file expected here. */
     if (dbpath_str
-            && cnid_sqlite_fchmod_regular(dbpath_str, 0666, false) != 0) {
-        if (errno == EPERM || errno == EACCES) {
+            && cnid_sqlite_fchmod_regular(dbpath_str, priv ? 0600 : 0666,
+                                          false) != 0) {
+        if (priv) {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_open: can't make DB file %s owner-only: %s",
+                dbpath_str, strerror(errno));
+            EC_FAIL;
+        } else if (errno == EPERM || errno == EACCES) {
             LOG(log_debug, logtype_cnid,
                 "cnid_sqlite_open: Current user has no permissions to set permissions on db file %s: %s",
                 dbpath_str, strerror(errno));
@@ -2041,7 +2104,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     sqlite3_busy_timeout(db->cnid_sqlite_con, CNID_SQLITE_BUSY_TIMEOUT);
     /* Do not let SQLite process an attacker-planted companion entry before
      * it has been verified without following links. */
-    EC_ZERO(cnid_sqlite_fchmod_companions(dbpath_str));
+    EC_ZERO(cnid_sqlite_fchmod_companions(dbpath_str, priv ? 0600 : 0666));
 
     /* Neither pragma is worth refusing the volume over: a contended
      * journal_mode conversion leaves the database in rollback-journal mode,
@@ -2059,12 +2122,11 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             vol->v_path);
     }
 
-    /* Setting permissions of the WAL and SHM files to world-writable.
-     * These files are created by SQLite when WAL mode is enabled above.
-     * Without this, files created by root would be inaccessible to non-root
-     * clients such as 'nad'. Missing companions are normal, but an entry that
-     * exists and cannot be verified is fatal. */
-    EC_ZERO(cnid_sqlite_fchmod_companions(dbpath_str));
+    /* SQLite creates WAL and SHM files when WAL mode is enabled. They are
+     * shared for normal servers, but private in single-user mode. Missing
+     * companions are normal, but an entry that exists and cannot be verified
+     * is fatal. */
+    EC_ZERO(cnid_sqlite_fchmod_companions(dbpath_str, priv ? 0600 : 0666));
 
     /* Add volume to volume table */
     if (cnid_sqlite_execute(db->cnid_sqlite_con,

@@ -7,6 +7,7 @@
 #define AFPD_AUTH_H 1
 
 #include <limits.h>
+#include <stdbool.h>
 
 #include <atalk/globals.h>
 
@@ -38,6 +39,8 @@ static const struct afp_versions  afp_versions[] = {
 extern uid_t    uuid;
 extern gid_t	*groups;
 extern int	ngroups;
+
+bool singleuser_admits_uid(const AFPObj *obj, uid_t uid);
 
 /* FP functions */
 int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

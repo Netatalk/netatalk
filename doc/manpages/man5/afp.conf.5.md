@@ -700,7 +700,8 @@ signature = *STRING* **(G)**
 > Specify a server signature. The maximum length is 16 characters. This
 option is useful for clustered environments, to provide fault isolation
 etc. By default, afpd generates a signature and saves it to a file
-called **afp_signature.conf** automatically (based on random numbers). See
+called **afp_signature.conf** automatically (based on random numbers); a
+**netatalk --single-user** server keeps that file under **vol dbpath**. See
 also asip-status(1).
 
 strict locking = *BOOLEAN* (default: *no*) **(G)**
@@ -1404,11 +1405,13 @@ volume uuid = *UUID* **(V)**
 > Specify a custom UUID for the volume. The UUID must be in the standard
 format, e.g. **550E8400-E29B-41D4-A716-446655440000**.
 If not specified, a random UUID is generated for the volume at
-startup and saved in the file **afp_voluuid.conf** in the shared state directory.
+startup and saved in the file **afp_voluuid.conf** in the shared state directory,
+or under **vol dbpath** for a **netatalk --single-user** server.
 >
 > In most circumstances, you should not need to set this option, but rather let netatalk manage it for you.
 One reason to set it manually is when you want to run **afpd** as a non-privileged user
-who does not have write access to the shared state directory.
+who does not have write access to the shared state directory and is not a
+**netatalk --single-user** server.
 
 ## Volume options
 
