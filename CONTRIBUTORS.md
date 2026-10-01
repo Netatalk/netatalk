@@ -285,6 +285,8 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Blake Garner (@trodemaster)
 - OrbisAI Security (@orbisai0security)
 - DerVerruckteFuchs
+- Josh Nutzman (@nutzman)
+- M. Umut Aydın (@ydnmu)
 
 And thanks to everyone on the netatalk-devel and netatalk-docs
 lists. And in recent years, the TinkerDifferent, 68kmla, E-Maculation,
