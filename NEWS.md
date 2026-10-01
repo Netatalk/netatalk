@@ -1,6 +1,45 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.6.1
+----------------
+
+* FIX: afpd: protect against veto file cleanup symlink traversal
+* FIX: afpd: harden legacy FinderInfo symlink handling, GitHub #3327
+* FIX: afpd: check dirfd before vetoed-file operations, GitHub #3345
+* FIX: atalkd: validate AppleTalk zone lengths
+* FIX: dbd: make directory descriptor validation explicit in scanvol, GitHub #3342
+* UPD: doc: programmatically generate TOC index for manpages, GitHub #3322
+* FIX: doc: Japanese localization of the fce_ev_script.8 man page, GitHub #3325
+* FIX: config: avoid command injection in CUPS PAP backend options, GitHub #3328
+* UPD: distrib: overhaul SELinux policy and confine SQLite CNID deployment, GitHub #3324
+* UPD: distrib: update Webmin version to v2.670, GitHub #3332
+* FIX: libatalk: reject oversized fds in dsi and adouble modules
+* FIX: libatalk: reject oversized fds in socket helpers
+* FIX: libatalk: harden NBP tuple length validation
+* FIX: libatalk: protect against symlink attacks with SQLite CNID database files
+* FIX: libatalk: validate OS X adouble sidecar conversion bounds
+* FIX: libatalk: reject response packets shorter than the ATP header
+* FIX: libatalk: reject short write-continue ASP fragments and set EMSGSIZE
+* FIX: libatalk: guard against non-native EA on macOS, GitHub #3339
+* FIX: libatalk: add header so strlcpy is defined on platforms with older glibc, GitHub #3318
+* FIX: macipgw: harden MacIP ZIP zone list parsing
+* FIX: nbp: guard against invalid NBP request numbers
+* FIX: nbplkup: safely handle charset conversion failures
+* FIX: pap: validate status response length
+* FIX: papd: fix crash when reading printer status
+* FIX: papd: prevent font query stack buffer overflow
+* FIX: papd: reject short PAP response fragments before stripping the header
+* UPD: test: regression tests for NBP input validation in libatalk
+* UPD: test: afpd unit test for veto file symlink traversal
+* UPD: test: unit tests for readt and writet timeout helpers
+* UPD: test: add adouble sidecar conversion coverage
+* UPD: test: shorten sleep test runtime by two minutes in container, GitHub #3331
+* NEW: test: add CLI test suite for nad and fix nad/libatalk bugs, GitHub #3341
+* UPD: test: consolidate libatalk tests and fix meson gating, GitHub #3343
+* UPD: test: safe tmp dir creation, remove race conditions, etc., GitHub #3344
+* FIX: uams: correct ClearTxt printer authentication bypass, GitHub #3330
+
 Announcing Netatalk 4.6.0, Netatalk Client 1.0, and the new netatalk.io
 -----------------------------------------------------------------------
 
