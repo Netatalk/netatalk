@@ -29,3 +29,20 @@ if have_pam
         dhx2_pam_bounds_test,
     )
 endif
+
+if have_krb5_uam
+    gss_logincont_bounds_test = executable(
+        'gss_logincont_bounds_test',
+        'test_gss_logincont_bounds.c',
+        include_directories: [gssapi_includes, root_includes],
+        dependencies: [bstring, iniparser, gss_libs],
+        link_with: libatalk,
+        c_args: kerberos_c_args,
+        install: false,
+    )
+
+    test(
+        'GSS LoginCont username and reply bounds',
+        gss_logincont_bounds_test,
+    )
+endif
