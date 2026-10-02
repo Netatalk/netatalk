@@ -6,7 +6,6 @@ ARG RUN_DEPS="\
     acl \
     avahi \
     cups \
-    db \
     dbus \
     glib \
     iniparser \
@@ -29,7 +28,6 @@ ARG BUILD_DEPS="\
     avahi-dev \
     bison \
     cups-dev \
-    db-dev \
     dbus-dev \
     build-base \
     flex \

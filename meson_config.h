@@ -1,14 +1,8 @@
 /* BSD compatiblity macro */
 #mesondefine BSD4_4
 
-/* Define if CNID Database Daemon backend should be compiled. */
-#mesondefine CNID_BACKEND_DBD
-
 /* whether the MySQL CNID module is available */
 #mesondefine CNID_BACKEND_MYSQL
-
-/* whether the SQLite CNID module is available */
-#mesondefine CNID_BACKEND_SQLITE
 
 /* CUPS API Version */
 #mesondefine CUPS_API_VERSION

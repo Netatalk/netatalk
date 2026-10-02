@@ -33,7 +33,6 @@
 #include <mysqld_error.h>
 
 #include <atalk/adouble.h>
-#include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid_mysql_private.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
@@ -667,8 +666,7 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
     /* Classified rather than left to the caller's stale errno: CNID_INVALID
      * with errno untouched would reach cnid_mysql_add()'s not-found gate.
      * Not-found is carried as CNID_ERR_NOTFOUND, clear of the syscall errno
-     * range — the dbd wire code CNID_DBD_RES_NOTFOUND is 0x01, the same value
-     * as EPERM, and leaks into raw errno switches downstream. */
+     * range. */
     if (mysql_stmt_store_result(db->cnid_lookup_stmt)) {
         LOG(log_error, logtype_cnid, "cnid_mysql_lookup: store_result: %s",
             mysql_stmt_error(db->cnid_lookup_stmt));
@@ -1263,7 +1261,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     int fetch_ret = MYSQL_NO_DATA;
 
     /* Parameters pre-validated by the libatalk/cnid/cnid.c wrapper:
-     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN-sizeof(uint32_t)];
+     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN];
      *   buflen >= CNID_FIND_MIN_BUFLEN.
      * Re-checking here would risk emitting a different errno value than
      * the wrapper for the same input. */
@@ -1462,15 +1460,6 @@ EC_CLEANUP:
     return count;
 }
 
-cnid_t cnid_mysql_rebuild_add(struct _cnid_db *cdb _U_,
-                              const struct stat *st _U_,
-                              cnid_t did _U_, const char *name, size_t len _U_, cnid_t hint _U_)
-{
-    LOG(log_error, logtype_cnid,
-        "cnid_mysql_rebuild_add(\"%s\"): not supported with MySQL CNID backend", name);
-    return CNID_INVALID;
-}
-
 int cnid_mysql_wipe(struct _cnid_db *cdb)
 {
     EC_INIT;
@@ -1483,7 +1472,7 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
         return -1;
     }
 
-    LOG(log_debug, logtype_cnid, "cnid_dbd_wipe");
+    LOG(log_debug, logtype_cnid, "cnid_mysql_wipe");
     EC_NEG1(asprintf(&sql, "START TRANSACTION;"
                            "UPDATE volumes SET Depleted=0 WHERE VolUUID='%s';"
                            "TRUNCATE TABLE `%s`;"
@@ -1523,17 +1512,15 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     }
 
     cdb->cnid_db_vol = vol;
-    cdb->cnid_db_flags = CNID_FLAG_PERSISTENT | CNID_FLAG_LAZY_INIT;
+    cdb->cnid_db_flags = CNID_FLAG_PERSISTENT;
     cdb->cnid_add = cnid_mysql_add;
     cdb->cnid_delete = cnid_mysql_delete;
     cdb->cnid_get = cnid_mysql_get;
     cdb->cnid_lookup = cnid_mysql_lookup;
     cdb->cnid_find = cnid_mysql_find;
-    cdb->cnid_nextid = NULL;
     cdb->cnid_resolve = cnid_mysql_resolve;
     cdb->cnid_getstamp = cnid_mysql_getstamp;
     cdb->cnid_update = cnid_mysql_update;
-    cdb->cnid_rebuild_add = cnid_mysql_rebuild_add;
     cdb->cnid_close = cnid_mysql_close;
     cdb->cnid_wipe = cnid_mysql_wipe;
     return cdb;
@@ -1886,6 +1873,5 @@ EC_CLEANUP:
 struct _cnid_module cnid_mysql_module = {
     "mysql",
     {NULL, NULL},
-    cnid_mysql_open,
-    0
+    cnid_mysql_open
 };

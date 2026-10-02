@@ -17,9 +17,8 @@ It must be run with appropriate permissions, i.e. as root.
 When run with the **-f** parameter, it will completely wipe the existing
 volume table in the database and create a new one from scratch.
 This can be used for example to convert a volume from one CNID scheme to another.
-
-Despite sharing a name with the **dbd** (Database Daemon) CNID backend module,
-this tool can be used with any CNID backend.
+A volume whose **cnid scheme** names a CNID backend this installation does not
+have is refused with a message naming the scheme; correct *afp.conf* first.
 
 # Options
 
@@ -76,7 +75,7 @@ modifying files.
 
 # See also
 
-nad(1), afpd(8), cnid_dbd(8)
+nad(1), afpd(8)
 
 # Author
 

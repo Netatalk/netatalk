@@ -364,12 +364,6 @@ if ($subject ne 'homes') {
                         &build_parameter_select($afpconfRef, $sectionRef, \%in, 'cnid scheme')
     );
 
-    @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid server', \%in);
-    print &ui_table_row(
-                        $text{'edit_global_section_cnid_server'},
-                        &ui_textbox('p_cnid server', $values[0], 40)
-    );
-
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'spotlight', \%in);
     print &ui_table_row(
                         $text{'edit_global_section_spotlight'},

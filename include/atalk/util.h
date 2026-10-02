@@ -31,12 +31,6 @@
 #define RLIM_MAX 133120
 #endif
 
-#ifndef RLIM_MAX_CNID_METAD
-/* cnid_metad's fd need is bounded by MAXVOLS, not the refnum space; modest fixed
- * raise.  Guarded separately so a platform-defined RLIM_MAX can't skip it. */
-#define RLIM_MAX_CNID_METAD 4200
-#endif
-
 /* exit error codes */
 #define EXITERR_CLNT 1  /*!< client related error */
 #define EXITERR_CONF 2  /*!< error in config files/cmd line parameters */
@@ -76,11 +70,9 @@
 
 #ifdef WORDS_BIGENDIAN
 #define hton64(x)       (x)
-#define ntoh64(x)       (x)
 #else
 #define hton64(x)       ((uint64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
                          (uint64_t) ((htonl(x) & 0xffffffffLL) << 32))
-#define ntoh64(x)       (hton64(x))
 #endif
 
 #ifndef SAFE_FREE
@@ -223,7 +215,6 @@ extern const char *fullpathname(const char *);
 extern char *stripped_slashes_basename(char *p);
 extern void randombytes(void *buf, int n);
 extern int daemonize(void);
-extern int run_cmd(const char *cmd, char **cmd_argv);
 extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
 extern char *strtok_quote(char *s, const char *delim);

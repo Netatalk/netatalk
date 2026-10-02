@@ -485,14 +485,6 @@ splice size = *number* (default: *64k*) **(G)**
 Global configurations specific to the CNID database backends, which
 controls how the database is stored and accessed.
 
-cnid listen = *host[:port]* **(G)**
-
-> Specifies the hostname or IP address and port that the CNID server should listen on.
-The host must resolve to a local address that cnid_metad can bind.
-This should match the address and port of the **cnid server** option for most
-deployments. The default is **localhost:4700**. When only a hostname or IP
-address is specified, the default port 4700 is used.
-
 cnid mysql host = *MySQL server address* **(G)**
 
 > Name or address of a MySQL server for use with the mysql CNID backend.
@@ -516,42 +508,36 @@ cnid mysql db = *database name* **(G)**
 > exist, Netatalk will attempt to create it automatically (requires the
 > specified user to have CREATE DATABASE privileges).
 
-cnid scheme = *dbd* | *mysql* | *sqlite* **(G)**/**(V)**
+cnid scheme = *mysql* | *sqlite* **(G)**/**(V)**
 
 > Set the CNID backend to be used for the volumes.
-Not all backends may be available with your netatalk installation.
-Run **afpd -v** to see a list of available backends, as well as which one is the default.
->
-> *dbd*: uses Berkeley DB, with database reads and writes managed through the **cnid_dbd** daemon.
-It is deprecated and not recommended for new deployments.
+The *mysql* backend may be absent from your netatalk installation;
+run **afpd -v** to see a list of available backends.
+A scheme the installation does not know is served with *sqlite*,
+and **afpd** logs a warning; a backend your installation was built without
+is refused and the volume does not open. A **netatalk \-\-single-user** server
+requires *sqlite*. The **dbd** and **nad** commands refuse a scheme your
+installation cannot serve until *afp.conf* is corrected.
 >
 > *mysql*: connects to a MySQL (or MariaDB) database instance that has been provisioned for use with Netatalk.
-Requires datbase administration, giving you full control over how the CNID data is stored.
+Requires database administration, giving you full control over how the CNID data is stored.
 >
 > *sqlite*: uses the SQLite embedded database library.
 It is performant and lean, requiring no external database or daemon.
-This is the default backend when compiled in.
-
-cnid server = *host[:port]* **(G)**/**(V)**
-
-> Specifies the hostname or IP address and port of a cnid_metad server, required
-for the CNID dbd backend. This should match the address and port of the
-**cnid listen** option for most deployments. Defaults to localhost:4700.
-When only a hostname or IP address is specified, the default port 4700 is used.
->
-> Hostnames and IPv4 addresses are accepted. Hostnames may resolve to IPv4
-or IPv6 addresses.
+This is the default backend.
 
 vol dbpath = *path* **(G)**/**(V)**
 
 > Sets the path where the database information will be stored. You have to
 specify a writable location, even if the volume is read only.
-
-vol dbnest = *BOOLEAN* (default: *no*) **(G)**
-
-> Setting this option to true brings back Netatalk 2 behaviour of storing
-the CNID database in a folder called .AppleDB inside the volume root of
-each share.
+The default is a subdirectory named after the volume under
+*$localstatedir/netatalk/CNID*. A **(G)** value without a variable gets the
+volume name appended as a subdirectory; a volume or preset value is used as
+given. For a server run as root the *sqlite* backend sets the directory to
+mode 1777, creating it if needed, and its database files to 0666, so that
+**afpd** sessions running as the connected user and **nad** can share them;
+a **netatalk \-\-single-user** server keeps them owner-only (0700 and 0600).
+Keep the path outside any share.
 
 ## Directory Cache Tuning
 
@@ -816,15 +802,13 @@ spotlight results limit = *NUMBER* (default: *10000*) **(G)**
 
 > Maximum number of Spotlight (Finder search) results returned per query.
 Set *0* to remove the limit. A nonzero value below *100* is raised to
-*100*, the size of one CNID search batch; a value above *16000000*, or one
+*100*, the smallest result buffer the CNID search accepts; a value above
+*16000000*, or one
 that is negative or unparsable, is rejected in favour of the default and
 logged.
 >
 > Raise it if searches on large volumes are truncated; a larger limit costs
 memory and query time in proportion.
->
-> The end-of-life *dbd* CNID scheme is excluded: it keeps a fixed cap of
-10000 results whatever this option is set to.
 >
 > This option was called **sparql results limit** before it applied to all
 backends. The old name still works and logs a deprecation warning.
@@ -1566,8 +1550,7 @@ as well as limiting the reported free space on the volume to 32 MB.
 
 # See Also
 
-afpd(8), afppasswd(5), afp_signature.conf(5), extmap.conf(5),
-cnid_metad(8)
+afpd(8), afppasswd(5), afp_signature.conf(5), extmap.conf(5)
 
 # Author
 

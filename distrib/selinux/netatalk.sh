@@ -36,10 +36,9 @@ printf '%s\n' 'Building and loading policy'
 make -f /usr/share/selinux/devel/Makefile netatalk.pp
 semodule -i netatalk.pp
 
-# Apply both supported and excluded labels to files already installed.
+# Apply the labels to files already installed.
 # Keep this list in sync with the RPM spec's relabel_files macro.
-for path in /usr/sbin/netatalk /usr/sbin/afpd \
-    /usr/sbin/cnid_metad /usr/sbin/cnid_dbd /etc/netatalk \
+for path in /usr/sbin/netatalk /usr/sbin/afpd /etc/netatalk \
     /var/lib/netatalk /var/lock/netatalk /run/lock/netatalk \
     /var/log/netatalk.log /var/log/netatalk; do
     if [ -e "$path" ]; then

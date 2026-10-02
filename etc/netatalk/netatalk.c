@@ -76,16 +76,8 @@ static void netatalk_exit(int ret);
 /* static variables */
 static AFPObj obj;
 static pid_t afpd_pid = NETATALK_SRV_NEEDED;
-#ifdef CNID_BACKEND_DBD
-static pid_t cnid_metad_pid = NETATALK_SRV_NEEDED;
-#else
-static pid_t cnid_metad_pid = NETATALK_SRV_OPTIONAL;
-#endif
 static pid_t dbus_pid = NETATALK_SRV_OPTIONAL;
-/* whether the volume list loaded; without it the cnid_metad
- * decisions fail conservative (run the daemon) */
-static bool volumes_loaded;
-static uint afpd_restarts, cnid_metad_restarts, dbus_restarts _U_;
+static uint afpd_restarts, dbus_restarts _U_;
 #ifdef WITH_LIBEV
 static struct ev_loop *loop;
 static ev_signal sigterm_ev, sigquit_ev, sigchld_ev, sighup_ev;
@@ -304,7 +296,7 @@ static bool srp_verifier_store_is_private(const char *path)
  *
  * @returns 0 when every clause passes, -1 after printing the first failure
  */
-static int validate_singleuser_config(void)
+static int validate_singleuser_config(bool volumes_loaded)
 {
     if (obj.options.flags & OPTION_DDP) {
         fprintf(stderr, "netatalk: --single-user does not support AppleTalk.\n");
@@ -387,13 +379,20 @@ static int validate_singleuser_config(void)
             return -1;
         }
 
-        /* nested state makes the volume root its own CNID directory, which
-         * the owner-only rule would then close to everyone else; judged by
-         * the directory the volume ended up with, whatever spelling of
-         * 'vol dbnest' put it there */
-        if (strcmp(vol->v_dbpath, vol->v_path) == 0) {
+        /* a volume root that is its own CNID directory would be closed to
+         * everyone else by the owner-only rule; v_path is canonical, the
+         * configured dbpath is not */
+        char *dbreal = access(vol->v_dbpath, F_OK) == 0
+                       ? realpath_safe(vol->v_dbpath) : NULL;
+        bool nested = dbreal != NULL && strcmp(dbreal, vol->v_path) == 0;
+        free(dbreal);
+
+        if (nested) {
             fprintf(stderr,
-                    "netatalk: --single-user does not support 'vol dbnest': the CNID directory would be the volume itself, which the mode keeps owner-only.\n");
+                    "netatalk: --single-user volume '%s' names itself as its "
+                    "CNID directory ('vol dbpath' %s): the mode would keep the "
+                    "share owner-only.\n",
+                    vol->v_localname, vol->v_dbpath);
             return -1;
         }
 
@@ -696,14 +695,14 @@ static void sigterm_impl(void)
     sigfillset(&sigs);
     sigdelset(&sigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &sigs, NULL);
-    kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
+    kill_childs(SIGTERM, &afpd_pid, &dbus_pid, NULL);
 }
 
 /*! SIGQUIT implementation */
 static void sigquit_impl(void)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-    kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
+    kill_childs(SIGQUIT, &afpd_pid, &dbus_pid, NULL);
 }
 
 /*! SIGHUP implementation */
@@ -717,10 +716,7 @@ static void sighup_impl(void)
 
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
-
-    if (load_afp_conf_vols(&obj, LV_ALL) == 0) {
-        volumes_loaded = true;
-    }
+    load_afp_conf_vols(&obj, LV_ALL);
 
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_deregister();
@@ -728,24 +724,7 @@ static void sighup_impl(void)
         LOG(log_note, logtype_default, "Re-registered with Zeroconf");
     }
 
-    kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
-#ifdef CNID_BACKEND_DBD
-
-    if (volumes_loaded) {
-        bool dbd_in_use = conf_cnid_scheme_in_use(&obj, "dbd");
-
-        if (service_running(cnid_metad_pid) && !dbd_in_use) {
-            LOG(log_note, logtype_afpd,
-                "Stopping 'cnid_metad': no volume uses the dbd CNID scheme");
-            kill_childs(SIGTERM, &cnid_metad_pid, NULL);
-        } else if (!service_running(cnid_metad_pid) && dbd_in_use) {
-            LOG(log_note, logtype_afpd,
-                "Starting 'cnid_metad': a volume now uses the dbd CNID scheme");
-            cnid_metad_pid = NETATALK_SRV_NEEDED;
-        }
-    }
-
-#endif
+    kill_childs(SIGHUP, &afpd_pid, NULL);
 }
 
 /*! SIGCHLD implementation, returns true if all services have exited during shutdown */
@@ -773,8 +752,6 @@ static bool sigchld_impl(void)
 
         if (pid == afpd_pid) {
             afpd_pid = NETATALK_SRV_ERROR;
-        } else if (pid == cnid_metad_pid) {
-            cnid_metad_pid = NETATALK_SRV_ERROR;
         } else if (pid == dbus_pid) {
             dbus_pid = NETATALK_SRV_ERROR;
         } else {
@@ -784,7 +761,6 @@ static bool sigchld_impl(void)
 
     return in_shutdown
            && !service_running(afpd_pid)
-           && !service_running(cnid_metad_pid)
            && !service_running(dbus_pid);
 }
 
@@ -801,21 +777,6 @@ static void timer_impl(void)
 
         if ((afpd_pid = run_afpd()) == -1) {
             LOG(log_error, logtype_default, "Error starting 'afpd'");
-        }
-    }
-
-    if (cnid_metad_pid == NETATALK_SRV_NEEDED) {
-        if (volumes_loaded && !conf_cnid_scheme_in_use(&obj, "dbd")) {
-            cnid_metad_pid = NETATALK_SRV_OPTIONAL;
-        } else {
-            cnid_metad_restarts++;
-            LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)",
-                cnid_metad_restarts);
-
-            if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
-                                              obj.options.configfile, NULL)) == -1) {
-                LOG(log_error, logtype_default, "Error starting 'cnid_metad'");
-            }
         }
     }
 
@@ -1045,7 +1006,6 @@ static void show_netatalk_paths(void)
 {
     printf("                  afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
     printf("                      afpd:\t%s\n", _PATH_AFPD);
-    printf("                cnid_metad:\t%s\n", _PATH_CNID_METAD);
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
     printf("               dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
     printf("         dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
@@ -1188,9 +1148,9 @@ int main(int argc, char **argv)
         exit(EXITERR_CONF);
     }
 
-    volumes_loaded = (load_afp_conf_vols(&obj, LV_ALL) == 0);
+    bool volumes_loaded = (load_afp_conf_vols(&obj, LV_ALL) == 0);
 
-    if (singleuser && validate_singleuser_config() != 0) {
+    if (singleuser && validate_singleuser_config(volumes_loaded) != 0) {
         exit(EXITERR_CONF);
     }
 
@@ -1217,17 +1177,6 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
-#ifdef CNID_BACKEND_DBD
-
-    if (volumes_loaded && !conf_cnid_scheme_in_use(&obj, "dbd")) {
-        cnid_metad_pid = NETATALK_SRV_OPTIONAL;
-    } else if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
-                                             obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
-        LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
-        netatalk_exit(EXITERR_CONF);
-    }
-
-#endif
 #ifdef WITH_LIBEV
 
     if ((loop = ev_default_loop(EVFLAG_NOENV)) == NULL) {
@@ -1313,22 +1262,16 @@ int main(int argc, char **argv)
     ret = event_base_dispatch(base);
 #endif
 
-    if (service_running(afpd_pid) || service_running(cnid_metad_pid)
-            || service_running(dbus_pid)) {
+    if (service_running(afpd_pid) || service_running(dbus_pid)) {
         if (service_running(afpd_pid)) {
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
-        }
-
-        if (service_running(cnid_metad_pid)) {
-            LOG(log_error, logtype_afpd,
-                "CNID database service did not shutdown, killing it");
         }
 
         if (service_running(dbus_pid)) {
             LOG(log_error, logtype_afpd, "DBUS session daemon still running, killing it");
         }
 
-        kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
+        kill_childs(SIGKILL, &afpd_pid, &dbus_pid, NULL);
     }
 
     LOG(log_note, logtype_afpd, "Netatalk AFP server exiting");

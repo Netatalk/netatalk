@@ -258,17 +258,22 @@ Ex.
 
 ```C
 /*!
- * @brief Inititialize rootinfo key (which has CNID 0 as key)
+ * @brief Write a sibling's hint batch, waiting once if it carries a reset
  *
- * @note This also "stamps" the database, which means storing st.st_ctime
- * of the "cnid2.db" file in the rootinfo data at the DEV offset
+ * A full sibling pipe drops a best-effort batch: those hints only cost a
+ * lookup. A batch carrying a reset waits briefly for pipe space instead, since
+ * the sibling would otherwise keep resolving recycled CNIDs. Waits are budgeted
+ * per second across flushes so backed-up siblings cannot stall the master.
  *
- * @param[in,out] dbd       database handle
- * @param[in] version       database version number
- *
- * @returns -1 on error, 0 on success
+ * @param[in]     fd          sibling's hint pipe
+ * @param[in]     buf         serialized batch
+ * @param[in]     len         bytes to write
+ * @param[in]     has_reset   batch contains a CACHE_HINT_VOLUME_RESET
+ * @param[in,out] waits_left  this second's remaining waits, spent here
+ * @returns 0 on success, -1 if the batch was not delivered
  */
-static int dbif_init_rootinfo(DBD *dbd, int version)
+static int hint_write_batch(int fd, const char *buf, int len, int has_reset,
+                            int *waits_left)
 {
     ...
 }

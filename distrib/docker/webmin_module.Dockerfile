@@ -3,22 +3,22 @@ FROM debian:13.6-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c
 ARG RUN_DEPS="\
     ca-certificates \
     iproute2 \
-    libdb5.3t64 \
     libevent-2.1-7 \
     libgcrypt20 \
     libiniparser4 \
     libpam0g \
+    libsqlite3-0 \
     sudo \
     systemtap \
     "
 ARG BUILD_DEPS="\
     build-essential \
     file \
-    libdb-dev \
     libevent-dev \
     libgcrypt20-dev \
     libiniparser-dev \
     libpam0g-dev \
+    libsqlite3-dev \
     meson \
     ninja-build \
     pkg-config \

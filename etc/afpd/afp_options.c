@@ -68,15 +68,10 @@ static void show_version(void)
     puts("TCP/IP AppleTalk");
 #endif
     printf("              CNID backends:\t");
-#ifdef CNID_BACKEND_DBD
-    printf("dbd ");
-#endif
 #ifdef CNID_BACKEND_MYSQL
     printf("mysql ");
 #endif
-#ifdef CNID_BACKEND_SQLITE
     printf("sqlite ");
-#endif
     puts("");
     printf("       Default CNID backend:\t");
     puts(DEFAULT_CNID_SCHEME);

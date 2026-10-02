@@ -53,7 +53,6 @@ jobs:
               libavahi-client-dev \
               libcrack2-dev \
               libcups2-dev \
-              libdb-dev \
               libdbus-1-dev \
               libevent-dev \
               libgcrypt20-dev \
@@ -146,7 +145,7 @@ jobs:
             -Dbuildtype=debug \
             -Db_coverage=true \
             -Dwith-appletalk=true \
-            -Dwith-cnid-backends=sqlite \
+            -Dwith-cnid-backends= \
             -Dwith-docs= \
             -Dwith-dtrace=false \
             -Dwith-init-style=none \

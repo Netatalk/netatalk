@@ -41,7 +41,6 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
@@ -988,7 +987,7 @@ static int catsearch_db(const AFPObj *obj,
                         int ext)
 {
     /* resbuf must be >= CNID_FIND_MIN_BUFLEN; see libatalk/cnid/cnid.c. */
-    static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
+    static char resbuf[CNID_FIND_MIN_BUFLEN];
     static uint32_t cur_pos;
     static int num_matches;
     int ccr, r;

@@ -43,7 +43,6 @@
 #include <sqlite3.h>
 
 #include <atalk/adouble.h>
-#include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid_sqlite_private.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
@@ -342,10 +341,9 @@ static bool cnid_sqlite_uuid_usable(const char *uuid)
  * the state survives a retry.
  *
  * CNID_ERR_DB, which get_id() in etc/afpd/file.c answers by ending the session,
- * means the backend itself is unreachable — for the dbd backend, cnid_metad
- * being gone. A local database file has no such state: the connection outlives
- * whatever one statement returns, so an unrecognised code fails the single
- * operation as CNID_ERR_CORRUPT.
+ * means the backend itself is unreachable. A local database file has no such
+ * state: the connection outlives whatever one statement returns, so an
+ * unrecognised code fails the single operation as CNID_ERR_CORRUPT.
  */
 static void cnid_sqlite_set_errno(int sqlite_return)
 {
@@ -1639,7 +1637,7 @@ EC_CLEANUP:
  * @p namelen is unused: the SQLite backend builds the LIKE pattern via
  * asprintf("%%%s%%", name), which already requires a NUL-terminated
  * @p name. The parameter is kept to satisfy the cnid_db function-pointer
- * signature shared with the dbd / mysql backends.
+ * signature shared with the mysql backend.
  *
  * @p scope_did selects the statement: CNID_INVALID searches the whole
  * volume, anything else only the subtree rooted at that directory.
@@ -1671,7 +1669,7 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen _U_,
     }
 
     /* Parameters pre-validated by the libatalk/cnid/cnid.c wrapper:
-     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN-sizeof(uint32_t)];
+     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN];
      *   buflen >= CNID_FIND_MIN_BUFLEN.
      * Re-checking here would risk emitting a different errno value
      * (CNID_ERR_PATH) than the wrapper (CNID_ERR_PARAM) for the same
@@ -1681,7 +1679,6 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen _U_,
         *more_available = false;
     }
 
-    /* Construct the LIKE pattern, escaping any special characters */
     EC_NEG1(asprintf(&namelike, "%%%s%%", name));
     sqlite3_reset(stmt);
     sqlite3_clear_bindings(stmt);
@@ -1785,17 +1782,6 @@ EC_CLEANUP:
     return count;
 }
 
-cnid_t cnid_sqlite_rebuild_add(struct _cnid_db *cdb _U_,
-                               const struct stat *st _U_,
-                               cnid_t did _U_, const char *name _U_, size_t len _U_,
-                               cnid_t hint _U_)
-{
-    LOG(log_error, logtype_cnid,
-        "cnid_sqlite_rebuild_add(\"%s\"): not supported with sqlite CNID backend",
-        name);
-    return CNID_INVALID;
-}
-
 int cnid_sqlite_wipe(struct _cnid_db *cdb)
 {
     EC_INIT;
@@ -1883,17 +1869,15 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     }
 
     cdb->cnid_db_vol = vol;
-    cdb->cnid_db_flags = CNID_FLAG_PERSISTENT | CNID_FLAG_LAZY_INIT;
+    cdb->cnid_db_flags = CNID_FLAG_PERSISTENT;
     cdb->cnid_add = cnid_sqlite_add;
     cdb->cnid_delete = cnid_sqlite_delete;
     cdb->cnid_get = cnid_sqlite_get;
     cdb->cnid_lookup = cnid_sqlite_lookup;
     cdb->cnid_find = cnid_sqlite_find;
-    cdb->cnid_nextid = NULL;
     cdb->cnid_resolve = cnid_sqlite_resolve;
     cdb->cnid_getstamp = cnid_sqlite_getstamp;
     cdb->cnid_update = cnid_sqlite_update;
-    cdb->cnid_rebuild_add = cnid_sqlite_rebuild_add;
     cdb->cnid_close = cnid_sqlite_close;
     cdb->cnid_wipe = cnid_sqlite_wipe;
     return cdb;
@@ -1923,6 +1907,49 @@ static bool cnid_sqlite_dir_owner_only(const char *path)
 }
 
 /* ---------------------- */
+/*!
+ * @brief Log a database named after the volume in its share root, unused
+ *        unless the share root is the database directory
+ *
+ * Only a regular file with the SQLite header counts, opened without
+ * following a link or blocking.
+ */
+static void cnid_sqlite_report_orphan(const struct vol *vol, const char *dbdir)
+{
+    static const char magic[] = "SQLite format 3";
+    char path[MAXPATHLEN];
+    char header[sizeof(magic)];
+    struct stat st;
+    int fd;
+    int len;
+
+    if (vol->v_path == NULL || strcmp(dbdir, vol->v_path) == 0) {
+        return;
+    }
+
+    len = snprintf(path, sizeof(path), "%s/%s.sqlite", vol->v_path,
+                   vol->v_localname);
+
+    if (len <= 0 || (size_t)len >= sizeof(path) || lstat(path, &st) != 0
+            || !S_ISREG(st.st_mode)) {
+        return;
+    }
+
+    if ((fd = open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)) < 0) {
+        return;
+    }
+
+    if (fstat(fd, &st) == 0 && S_ISREG(st.st_mode)
+            && read(fd, header, sizeof(header)) == (ssize_t)sizeof(header)
+            && memcmp(header, magic, sizeof(magic)) == 0) {
+        LOG(log_error, logtype_cnid,
+            "Volume \"%s\": CNID database %s in the share root is not used, "
+            "see the Upgrading chapter", vol->v_localname, path);
+    }
+
+    close(fd);
+}
+
 struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 {
     EC_INIT;
@@ -2037,6 +2064,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      * after the directory itself has been opened with O_NOFOLLOW, leaving the
      * database leaf as the only unresolved component. */
     EC_NULL(realpath(dirpath, resolved_dirpath));
+    cnid_sqlite_report_orphan(vol, resolved_dirpath);
     EC_NULL(dbpath = bformat("%s/%s.sqlite", resolved_dirpath,
                              vol->v_localname));
     dbpath_str = bdata(dbpath);
@@ -2367,6 +2395,25 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
     sqlite3_reset(transient_stmt);
     sqlite3_clear_bindings(transient_stmt);
+    sqlite3_stmt *exists_stmt = NULL;
+    bool created = false;
+
+    if (sqlite3_prepare_v2(db->cnid_sqlite_con,
+                           "SELECT 1 FROM sqlite_master WHERE type = 'table' "
+                           "AND name = ? COLLATE NOCASE", -1, &exists_stmt,
+                           NULL) == SQLITE_OK) {
+        sqlite3_bind_text(exists_stmt, 1, db->cnid_sqlite_voluuid_str, -1,
+                          SQLITE_STATIC);
+        created = sqlite3_step(exists_stmt) == SQLITE_DONE;
+        sqlite3_finalize(exists_stmt);
+    }
+
+    if (created) {
+        LOG(log_info, logtype_cnid,
+            "Creating new %s SQLite CNID database for volume '%s' in %s",
+            priv ? "private" : "shared", vol->v_path, dbpath_str);
+    }
+
     /* Create volume table */
     EC_NEG1(asprintf(&sql, "CREATE TABLE IF NOT EXISTS \"%s\" ("
                            "Id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -2477,7 +2524,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         free(sql);
         sql = NULL;
     } else {
-        LOG(log_info, logtype_cnid,
+        LOG(log_debug, logtype_cnid,
             "CNID table for volume '%s' is already initialized", vol->v_path);
     }
 
@@ -2534,6 +2581,5 @@ EC_CLEANUP:
 struct _cnid_module cnid_sqlite_module = {
     "sqlite",
     { NULL, NULL },
-    cnid_sqlite_open,
-    0
+    cnid_sqlite_open
 };

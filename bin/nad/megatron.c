@@ -535,6 +535,18 @@ static int resolve_metadata_volume(AFPObj *obj, int module,
             cnid_flags |= CNID_FLAG_NODEV;
         }
 
+        /* afpd falls back to the default backend; a tool refuses instead */
+        if (!cnid_scheme_registered(cnid_vol->v_cnidscheme)) {
+            fprintf(stderr,
+                    "Volume \"%s\": this build has no CNID backend named "
+                    "\"%s\"; set 'cnid scheme = sqlite' (or another backend "
+                    "afpd -v lists) in afp.conf\n",
+                    cnid_vol->v_path, cnid_vol->v_cnidscheme);
+            volume->vol = NULL;
+            volume->cnid_vol = NULL;
+            return -1;
+        }
+
         cnid_vol->v_cdb = cnid_open(cnid_vol, cnid_vol->v_cnidscheme,
                                     cnid_flags);
 

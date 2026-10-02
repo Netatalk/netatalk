@@ -200,6 +200,14 @@ int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol)
             flags |= CNID_FLAG_NODEV;
         }
 
+        /* afpd falls back to the default backend; a tool refuses instead */
+        if (!cnid_scheme_registered(vol->vol->v_cnidscheme)) {
+            NAD_FATAL("Volume \"%s\": this build has no CNID backend named "
+                      "\"%s\"; set 'cnid scheme = sqlite' (or another backend "
+                      "afpd -v lists) in afp.conf",
+                      vol->vol->v_path, vol->vol->v_cnidscheme);
+        }
+
         if ((vol->vol->v_cdb = cnid_open(vol->vol,
                                          vol->vol->v_cnidscheme,
                                          flags)) == NULL) {

@@ -81,7 +81,8 @@ built. Supported values are `cnid`, `localsearch`, and `xapian`.
 The global `spotlight results limit` option (default 10000; former name
 `sparql results limit` remains as a deprecated alias) caps the backends
 identically, and `0` removes the limit. A nonzero value below
-`SPOTLIGHT_RESULTS_LIMIT_MIN` (100, one CNID search batch) is raised to it
+`SPOTLIGHT_RESULTS_LIMIT_MIN` (100, the smallest result buffer `cnid_find()`
+accepts) is raised to it
 at parse time, and one above `SPOTLIGHT_RESULTS_LIMIT_MAX` falls back to
 the default, so every backend sees a usable value. The maximum keeps the
 limit clear of the 32-bit match counts the Xapian API uses and bounds the
@@ -89,12 +90,9 @@ CNID candidate buffer at 64 MB. LocalSearch maps it to a SPARQL
 `LIMIT`, Xapian to the requested match count, and the CNID backend to the
 size of its candidate buffer — which, when unlimited, starts at 10000 CNIDs
 and doubles until `cnid_find()` reports no further matches. The capacity
-always leaves each search term a full `CNID_FIND_MIN_RESULTS` batch,
+always leaves each search term `CNID_FIND_MIN_RESULTS` entries of room,
 because `cnid_find()` rejects a smaller buffer and a term with no room
 would be dropped from the search.
-
-The end-of-life `dbd` CNID scheme is excluded from the option and keeps a
-fixed 10000-result cap.
 
 ## Query flow
 
@@ -123,10 +121,9 @@ It searches the Netatalk CNID database with `cnid_find_scoped()`, once per
 term, and unites the results. When the query carries a folder scope, the
 scope path is resolved to its directory CNID with `cnid_for_path()` and
 the subtree restriction is applied inside the database: a recursive CTE
-for the sqlite and mysql schemes, an ancestor-chain check in `cnid_dbd`.
+for the sqlite and mysql schemes.
 Resolved paths are still checked against the scope afterwards, which
-covers a `cnid_dbd` that predates the scope field and the mysql fallback
-for servers without recursive CTEs.
+covers the mysql fallback for servers without recursive CTEs.
 
 It resolves CNIDs back to paths with `cnid_resolve()`, memoizing ancestor
 directories for the duration of a query, and returns matching files. It

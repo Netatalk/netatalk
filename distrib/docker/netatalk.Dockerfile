@@ -1,7 +1,6 @@
 ARG RUN_DEPS="\
     avahi \
     cups \
-    db \
     dbus \
     glib \
     iniparser \
@@ -20,7 +19,6 @@ ARG RUN_DEPS="\
 ARG BUILD_DEPS="\
     avahi-dev \
     cups-dev \
-    db-dev \
     dbus-dev \
     build-base \
     gcc \
@@ -73,7 +71,7 @@ RUN meson setup build \
     -Dbuildtype=release \
     -Dwith-acls=false \
     -Dwith-appletalk=true \
-    -Dwith-cnid-backends=dbd,mysql,sqlite \
+    -Dwith-cnid-backends=mysql \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \

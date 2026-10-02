@@ -73,7 +73,7 @@ static int cnid32_comp_fn(const void *p1, const void *p2)
  * until cnid_find() stops reporting further matches.
  *
  * cnid_find() rejects a buffer smaller than CNID_FIND_MIN_RESULTS, so the
- * capacity must also leave every term a full minimum batch, or the terms
+ * capacity must also leave every term that many entries, or the terms
  * that find no room are silently dropped from the search.
  *
  * SL_CNID_MAX_CAP keeps the growth loop's arithmetic in range and bounds
@@ -83,13 +83,6 @@ static int cnid32_comp_fn(const void *p1, const void *p2)
 #define SL_CNID_START_RESULTS 10000
 #define SL_CNID_MAX_CAP       SPOTLIGHT_RESULTS_LIMIT_MAX
 #define SL_CNID_GROWTH        8
-
-/*
- * The dbd CNID scheme is end-of-life: it is excluded from 'spotlight
- * results limit' and hard capped here, so neither a raised limit nor an
- * unlimited one widens a dbd search.
- */
-#define SL_CNID_DBD_HARD_CAP  10000
 
 /*
  * Minimum filename-substring length the Spotlight CNID backend will pass
@@ -591,9 +584,8 @@ static int sl_cnid_fill_results(slq_t *slq)
         }
 
         /*
-         * Guard for cases the database-side scope cannot cover: an old
-         * cnid_dbd daemon ignoring the scope field, the mysql CTE
-         * fallback on old servers, and renames racing the query.
+         * Guard for cases the database-side scope cannot cover: the mysql
+         * CTE fallback on old servers, and renames racing the query.
          */
         if (!sl_path_in_scope(path, slq->slq_scope)) {
             LOG(log_debug, logtype_sl,
@@ -650,7 +642,7 @@ EC_CLEANUP:
 /*!
  * Candidate capacity for `want` results across `nterms` search terms.
  *
- * Every term needs a full CNID_FIND_MIN_RESULTS batch of room or
+ * Every term needs CNID_FIND_MIN_RESULTS entries of room or
  * cnid_find() refuses the call, so a small limit still allocates enough
  * for all the terms; the surplus is trimmed from the results afterwards.
  */
@@ -675,8 +667,6 @@ static int sl_cnid_cap_for(uint64_t want, int nterms)
  * Finder joins one predicate per typed word with ||, so the terms are
  * alternatives: one cnid_find() per term into the shared buffer, then a
  * sort and unique pass because a name can match more than one term.
- * Each call's slice is kept a multiple of CNID_FIND_MIN_RESULTS so the
- * DBD pagination loop fills complete batches.
  *
  * Restartable: count and the truncation flag are reset on entry so the
  * caller can re-run against a grown buffer.
@@ -691,7 +681,7 @@ static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq,
 
     for (int i = 0; i < nterms; i++) {
         /*
-         * Hold back a batch for each term still to come: a broad early
+         * Hold back room for each term still to come: a broad early
          * term would otherwise consume the buffer and the rest of the
          * words would silently drop out of the search.
          */
@@ -699,10 +689,7 @@ static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq,
         int remaining = csq->cap - csq->count - reserve;
         int found;
         bool more = false;
-        /* whole batches only: cnid_find() discards a partial tail */
-        remaining -= remaining % CNID_FIND_MIN_RESULTS;
 
-        /* cnid_find() requires at least a minimum batch of room */
         if (remaining < CNID_FIND_MIN_RESULTS) {
             csq->more_available = true;
             LOG(log_debug, logtype_sl,
@@ -713,8 +700,10 @@ static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq,
 
         LOG(log_debug, logtype_sl,
             "cnid backend: calling cnid_find for term \"%s\"", terms[i]);
+        /* one past the wrapper's bound: an over-long term is refused, not
+         * truncated */
         found = cnid_find_scoped(slq->slq_vol->v_cdb,
-                                 terms[i], strnlen(terms[i], MAXPATHLEN),
+                                 terms[i], strnlen(terms[i], MAXPATHLEN + 1),
                                  scope_did,
                                  csq->cnids + csq->count,
                                  (size_t)remaining * sizeof(cnid_t),
@@ -810,20 +799,6 @@ static int sl_cnid_open_query(slq_t *slq)
 
     slq->slq_backend_private = csq;
     limit = slq->slq_result_limit;
-
-    /*
-     * dbd is end-of-life and takes no part in 'spotlight results limit':
-     * it keeps its own hard cap whatever the option says.
-     */
-    if (slq->slq_vol->v_cnidscheme != NULL
-            && STRCMP(slq->slq_vol->v_cnidscheme, ==, "dbd")
-            && (limit == 0 || limit > SL_CNID_DBD_HARD_CAP)) {
-        LOG(log_debug, logtype_sl,
-            "cnid backend: dbd scheme is capped at %d results",
-            SL_CNID_DBD_HARD_CAP);
-        limit = SL_CNID_DBD_HARD_CAP;
-    }
-
     unlimited = (limit == 0);
     csq->cap = sl_cnid_cap_for(unlimited ? SL_CNID_START_RESULTS : limit,
                                nterms);
@@ -914,8 +889,8 @@ static int sl_cnid_open_query(slq_t *slq)
     }
 
     /*
-     * The capacity is rounded up to a whole batch, so a bounded search
-     * can collect a few more candidates than asked for.
+     * The capacity is at least CNID_FIND_MIN_RESULTS per term, so a
+     * bounded search can collect a few more candidates than asked for.
      */
     if (!unlimited && (uint64_t)csq->count > limit) {
         csq->count = (int)limit;

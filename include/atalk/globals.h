@@ -98,16 +98,9 @@ struct afp_volume_name {
 #define RFORK_BUDGET_MAX_KB   (10 * 1024 * 1024)   /*!< Hard cap: 10 GB in KB */
 #define RFORK_ENTRY_MAX_KB    (10 * 1024)           /*!< Hard cap: 10 MB in KB */
 
-/*
- * Default 'spotlight results limit': the number of results any search
- * backend returns for one query when the option is unset. 0 removes the
- * limit for every backend.
- *
- * A nonzero value below the minimum is raised to it: the CNID search
- * pagination batch is 100 entries, so a smaller limit buys nothing and
- * costs a search that cannot fill one batch per term.
- */
+/* 'spotlight results limit' default; 0 removes the limit for every backend */
 #define SPOTLIGHT_RESULTS_LIMIT_DEFAULT 10000
+/* Floor for a nonzero limit: cnid_find()'s minimum result buffer */
 #define SPOTLIGHT_RESULTS_LIMIT_MIN     100
 
 /*
@@ -146,7 +139,6 @@ struct afp_options {
     struct at_addr ddpaddr;
 #endif
     char *listen, *interfaces, *port;
-    char *Cnid_srv, *Cnid_port;
     char *configfile;
     char *uampath, *fqdn;
     char *sigconffile;
@@ -244,8 +236,6 @@ extern unsigned char      nologin;
 extern struct dir         *curdir;
 extern char               getwdbuf[];
 extern struct afp_options default_options;
-extern const char         *Cnid_srv;
-extern const char         *Cnid_port;
 
 extern int  get_afp_errno(const int param);
 extern void afp_options_init(struct afp_options *);

@@ -1,5 +1,5 @@
 /*
- * FPSpotlightRPC — exercises the paginated cnid_find() path through
+ * FPSpotlightRPC — exercises the paged cnid Spotlight search through
  * FPSpotlightRPC. test volume must be configured with `spotlight = yes`
  *
  * Determinism invariants:
@@ -12,11 +12,8 @@
  *      test-unique prefixes (`paginate530-f-` / `paginate531-p-`).
  *
  *   2. The test corpus must NOT be mutated by another AFP client
- *      during the test. cnid_dbd pagination is stateless on the daemon
- *      side, so concurrent CNID ADDs/DELETEs between paginated batches
- *      can produce duplicates or misses — the deterministic raw-count
- *      assertion (`got == 50` / `got == 250`) relies on a static
- *      corpus.
+ *      during the test: the deterministic raw-count assertion
+ *      (`got == 50` / `got == 250`) relies on a static corpus.
  *
  *   3. T_AFP32 corresponds to `Conn->afp_version >= 5` (netatalk's
  *      internal index for AFP 3.2+). The Spotlight RPC subprotocol was
@@ -225,7 +222,7 @@ close_query:
 cleanup:
     delete_directory_tree(Conn, vol, DIRDID_ROOT, PAG_DIR_SMALL);
 test_exit:
-    exit_test("FPSpotlightRPC:test547: small-corpus single-batch search");
+    exit_test("FPSpotlightRPC:test547: small-corpus search (50 files)");
 }
 
 STATIC void test548()
@@ -303,7 +300,7 @@ close_query:
 cleanup:
     delete_directory_tree(Conn, vol, DIRDID_ROOT, PAG_DIR_PAGED);
 test_exit:
-    exit_test("FPSpotlightRPC:test548: paged search (>=3 SEARCH batches)");
+    exit_test("FPSpotlightRPC:test548: paged search (250 files)");
 }
 
 STATIC void test560()

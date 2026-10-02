@@ -31,13 +31,10 @@ extern bool Debug;
 
 #ifdef __linux__
 
-/*! Process filtering configuration for finding Netatalk daemons.
- * Supports two modes: filter by process UID ownership (for afpd which drops privileges)
- * or filter by cmdline -u argument (for cnid_dbd which runs as root). */
+/*! Process filtering configuration for finding afpd processes. */
 typedef struct {
     const char *process_name;
     const char *username;
-    int32_t filter_by_cmdline;  /*!< 0 = filter by UID ownership, 1 = filter by cmdline -u arg */
     uid_t target_uid;       /*!< For ownership filtering */
 } ProcessFilter;
 
@@ -52,11 +49,8 @@ typedef struct {
 /* External variables for IO monitoring */
 extern bool io_monitoring_enabled;
 extern pid_t afpd_pid;
-extern pid_t cnid_dbd_pid;
 extern uint64_t afpd_start_reads, afpd_start_writes;
-extern uint64_t cnid_start_reads, cnid_start_writes;
 extern uint64_t afpd_end_reads, afpd_end_writes;
-extern uint64_t cnid_end_reads, cnid_end_writes;
 
 /* Constants for capture_io_values() */
 #define TEST_START 1
@@ -64,8 +58,7 @@ extern uint64_t cnid_end_reads, cnid_end_writes;
 
 /* Function declarations */
 int32_t check_proc_io_availability(void);
-pid_t find_process_pid(const char *process_name, const char *username,
-                       int32_t filter_by_cmdline);
+pid_t find_process_pid(const char *process_name, const char *username);
 void capture_io_values(int32_t is_start);
 uint64_t iodiff_io(pid_t pid, int32_t is_write);
 

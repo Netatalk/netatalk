@@ -32,7 +32,6 @@
 #include <atalk/acl.h>
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
-#include <atalk/cnid_private.h>
 #include <atalk/compat.h>
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
@@ -51,7 +50,7 @@
 static char           cwdbuf[MAXPATHLEN + 1];
 static struct vol     *vol;
 static dbd_flags_t    dbd_flags;
-static char           stamp[CNID_DEV_LEN];
+static char           stamp[ADEDLEN_PRIVSYN];
 static char           *netatalk_dirs[] = {
     ".AppleDB",
     ".AppleDesktop",

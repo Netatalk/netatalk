@@ -945,8 +945,16 @@ int main(int argc, char *argv[])
                      "conf_parse_bool: strict boolean spellings, invalid values warn");
     TEST_int_or_skip(utest_conf_singleuser_state_paths(), 0,
                      "single-user: signature and volume uuid files live under vol dbpath, created 0700");
+    TEST_int_or_skip(utest_conf_singleuser_dbpath_volume_root(), 0,
+                     "single-user: a [Global] vol dbpath at a volume's path is refused");
     TEST_int_or_skip(utest_conf_permission_options_require_unix_priv(), 0,
                      "volume permission options are ignored when unix priv is disabled");
+    TEST_int_or_skip(utest_conf_cnid_server_listen_ignored(), 0,
+                     "config: cnid server and cnid listen are ignored");
+    TEST_int_or_skip(utest_conf_vol_dbnest_ignored(), 0,
+                     "config: vol dbnest is ignored");
+    TEST_int_or_skip(utest_conf_removed_options_appletalk_parse(), 0,
+                     "config: the AppleTalk parse repeats no removed-option warning");
     TEST_int_or_skip(utest_conf_ea_fallback(), 0,
                      "ea resolves volume -> preset -> [Global] -> auto-detect");
     TEST_int_or_skip(utest_conf_strict_locking_keys(), 0,
@@ -992,6 +1000,8 @@ int main(int argc, char *argv[])
              "CNID wrapper validates returned ids in host byte order");
     TEST_int(utest_cnid_resolve_dotdot_rejected(), 0,
              "CNID wrapper '..' rejection invalidates *id and classifies corrupt");
+    TEST_int(utest_cnid_find_name_bound(), 0,
+             "CNID wrapper accepts a MAXPATHLEN name, rejects one byte more");
     TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
                      "dircache_resolve_size: default, minimum, round-up, clamp");
     {
@@ -1015,19 +1025,23 @@ int main(int argc, char *argv[])
          "parse afpd command-line options");
     TEST_int(afp_config_parse(&obj, NULL), 0,
              "parse afp.conf into AFPObj config");
-    TEST_expr(reti = 0,
-              obj.options.Cnid_srv != NULL
-              && strcmp(obj.options.Cnid_srv, "127.0.0.1") == 0,
-              "config: CNID server parsed as 127.0.0.1");
-    TEST_expr(reti = 0,
-              obj.options.Cnid_port != NULL
-              && strcmp(obj.options.Cnid_port, "4700") == 0,
-              "config: CNID port parsed as 4700");
     TEST_int(configinit(&obj, &aspobj), 0,
              "initialize server config state");
     TEST(cnid_init(), "initialize CNID subsystem");
     TEST_int_or_skip(utest_cnid_sqlite_symlinks_rejected(), 0,
                      "sqlite CNID rejects main, WAL, and SHM symlink attacks");
+    TEST_int_or_skip(utest_cnid_open_unknown_scheme_uses_sqlite(), 0,
+                     "cnid_open: an unknown scheme opens the sqlite backend");
+    TEST_int_or_skip(utest_cnid_open_scheme_case_insensitive(), 0,
+                     "cnid_open: scheme names match without regard to case");
+    TEST_int_or_skip(utest_cnid_open_missing_backend_refused(), 0,
+                     "cnid_open: a backend this build lacks is refused");
+    TEST_int(utest_cnid_scheme_registered(), 0,
+             "cnid_scheme_registered: names the registered backends");
+    TEST_int_or_skip(utest_cnid_sqlite_orphan_reported(), 0,
+                     "cnid_open: a sqlite database left in the share root is reported");
+    TEST_int_or_skip(utest_cnid_sqlite_creation_logged(), 0,
+                     "cnid_open: creating a new sqlite database is logged once");
     TEST(load_afp_conf_vols(&obj, LV_ALL), "load all volumes from config");
     obj.afp_version = 34;
     /* No IPC channel or dircache hint pipe in test harness */
@@ -1074,16 +1088,6 @@ int main(int argc, char *argv[])
                   "resolve ea=sys volume by volume id");
     }
 
-    /* No volume-level "cnid server" (only the dbd backend uses it), so the volume
-     * inherits the Global value; the port exercises the no-port default. */
-    TEST_expr(reti = 0,
-              vol->v_cnidserver != NULL
-              && strcmp(vol->v_cnidserver, "127.0.0.1") == 0,
-              "volume: CNID server inherited from Global");
-    TEST_expr(reti = 0,
-              vol->v_cnidport != NULL
-              && strcmp(vol->v_cnidport, "4700") == 0,
-              "volume: CNID port defaults to 4700");
     TEST_int_or_skip(utest_cnid_add_busy_not_fatal(vol), 0,
                      "cnid_add: contended backend classifies BUSY, not session-fatal");
     TEST_int_or_skip(utest_cnid_resolve_notfound_errno(vol), 0,

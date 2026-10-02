@@ -5,7 +5,6 @@ ARG RUN_DEPS="\
     cracklib-runtime \
     libacl1 \
     libavahi-client3 \
-    libdb5.3t64 \
     libcups2t64 \
     libevent-2.1-7 \
     libgcrypt20 \
@@ -35,7 +34,6 @@ ARG BUILD_DEPS="\
     libavahi-client-dev \
     libcrack2-dev \
     libcups2-dev \
-    libdb-dev \
     libevent-dev \
     libgcrypt20-dev \
     libglib2.0-dev \

@@ -55,7 +55,6 @@ enable_acls = get_option('with-acls')
 enable_appletalk = get_option('with-appletalk')
 enable_cracklib = get_option('with-cracklib')
 enable_cups = get_option('with-cups')
-enable_dbd_backend = 'dbd' in get_option('with-cnid-backends')
 enable_debug = get_option('with-debug')
 enable_debugging = get_option('with-debugging')
 enable_dtrace = get_option('with-dtrace')
@@ -75,7 +74,6 @@ enable_spotlight = get_option('with-spotlight')
 enable_spotlight_cnid = 'cnid' in get_option('with-spotlight-backends')
 enable_spotlight_localsearch = 'localsearch' in get_option('with-spotlight-backends')
 enable_spotlight_xapian = 'xapian' in get_option('with-spotlight-backends')
-enable_sqlite_backend = 'sqlite' in get_option('with-cnid-backends')
 enable_stuffit = get_option('with-stuffit')
 enable_tcpwrap = get_option('with-tcp-wrappers')
 enable_zeroconf = get_option('with-zeroconf')
@@ -161,6 +159,8 @@ if perl_path == ''
 else
     perl = find_program(perl_path / 'perl', required: false)
 endif
+
+grep = find_program('grep', required: false)
 
 #########################
 # Prepare documentation #
@@ -275,8 +275,6 @@ if 'developer' in docs_options
 endif
 
 if build_docs_only
-    build_dbd_docs = enable_dbd_backend
-
     if docs_options != []
         subdir('doc')
     endif
@@ -359,8 +357,6 @@ endif
 afpd = '-D_PATH_AFPD="' + sbindir + '/afpd"'
 afpdpwfile = '-D_PATH_AFPDPWFILE="' + pkgconfdir + '/afppasswd"'
 afpdsrpverifierpath = '-D_PATH_AFPSRPVERIFIERPATH="' + pkgconfdir + '/afppasswd.srp"'
-cnid_dbd = '-D_PATH_CNID_DBD="' + sbindir + '/cnid_dbd"'
-cnid_metad = '-D_PATH_CNID_METAD="' + sbindir + '/cnid_metad"'
 confdir = '-D_PATH_CONFDIR="' + pkgconfdir + '/"'
 dversion = '-DVERSION="' + netatalk_version + '"'
 messagedir = '-DSERVERTEXT="' + localstatedir + '/netatalk/msg/"'
@@ -622,27 +618,6 @@ endif
 #################
 
 #
-# Check for 64-bit libraries
-#
-
-compiler_64_bit_mode = false
-file = find_program('file', required: false)
-if file.found()
-    run_command(
-        cc,
-        '-c', meson.project_source_root() / 'libatalk/dummy.c',
-        '-o', meson.global_build_root() / 'dummy.o',
-        check: false,
-    )
-
-    compiler_64_bit_mode = run_command(
-        file,
-        meson.global_build_root() / 'dummy.o',
-        check: true,
-    ).stdout().strip().contains('ELF 64')
-endif
-
-#
 # Check whether to enable rpath (the default on Solaris and NetBSD)
 #
 
@@ -657,187 +632,6 @@ endif
 #
 
 cnid_backends = ''
-
-#
-# Check for the Berkeley DB library for the Database Daemon CNID backend
-#
-
-use_dbd_backend = false
-have_bdb = false
-grep = find_program('grep', required: false)
-
-if enable_dbd_backend
-    bdb_path = get_option('with-bdb-path')
-    bdb_include_path_override = get_option('with-bdb-include-path')
-    bdb_req_version = get_option('with-bdb-version')
-
-    bdb_header = ''
-    bdb_includes = []
-    bdb_libdir = ''
-    bdb_major_version = ''
-    bdb_minor_version = ''
-    bdb_version = ''
-    bdb_dirs = []
-
-    if bdb_path != ''
-        bdb_dirs += [bdb_path]
-    else
-        if brew_prefix != ''
-            bdb_dirs += [
-                brew_prefix / 'opt/berkeley-db@5',
-                brew_prefix / 'opt/berkeley-db@4',
-                brew_prefix / 'opt/berkeley-db',
-            ]
-        endif
-
-        bdb_dirs += [
-            '/usr/local',
-            '/usr/pkg',
-            '/opt/local',
-            '/usr',
-        ]
-    endif
-
-    bdb_subdirs = [
-        'db62',
-        'db6.2',
-        'db61',
-        'db6.1',
-        'db5',
-        'db53',
-        'db5.3',
-        'db52',
-        'db5.2',
-        'db51',
-        'db5.1',
-        'db50',
-        'db5.0',
-        'db4',
-        'db48',
-        'db4.8',
-        'db47',
-        'db4.7',
-        'db46',
-        'db4.6',
-        '',
-    ]
-
-    if bdb_req_version != ''
-        if not bdb_req_version.version_compare('>=4.6')
-            error('Berkeley DB library version is below supported 4.6')
-        endif
-        message('Searching for Berkeley DB library version', bdb_req_version)
-    endif
-
-    foreach dir : bdb_dirs
-        foreach subdir : bdb_subdirs
-            if bdb_include_path_override != ''
-                bdb_include_path = bdb_include_path_override
-            else
-                bdb_include_path = dir / 'include' / subdir
-            endif
-            bdb_header = bdb_include_path / 'db.h'
-            if fs.exists(bdb_header)
-                bdb_includes = include_directories(bdb_include_path)
-
-                grep_result = run_command(
-                    'grep',
-                    'DB_VERSION_MAJOR',
-                    bdb_header,
-                    check: false,
-                )
-                if grep_result.returncode() != 0
-                    warning(
-                        'Unable to determine Berkeley DB major version from header',
-                        bdb_header,
-                    )
-                    continue
-                endif
-                bdb_major_version = grep_result.stdout().strip().substring(25)
-
-                grep_result = run_command(
-                    'grep',
-                    'DB_VERSION_MINOR',
-                    bdb_header,
-                    check: false,
-                )
-                if grep_result.returncode() != 0
-                    warning(
-                        'Unable to determine Berkeley DB minor version from header',
-                        bdb_header,
-                    )
-                    continue
-                endif
-                bdb_minor_version = grep_result.stdout().strip().substring(25)
-
-                bdb_version = bdb_major_version + '.' + bdb_minor_version
-
-                if not bdb_version.version_compare('>=4.6')
-                    continue
-                endif
-
-                if bdb_req_version != '' and not bdb_version.version_compare('~' + bdb_req_version)
-                    continue
-                endif
-
-                message('Berkeley DB header found at', bdb_header)
-
-                # Now find lib file matching header
-                if target_os == 'sunos' and compiler_64_bit_mode and fs.exists(dir / 'lib/64')
-                    bdb_libdir = dir / 'lib/64'
-                else
-                    bdb_libdir = dir / 'lib'
-                endif
-
-                # Guess lib name starting from more specific ones
-                bdb_libnames = [
-                    'db-' + bdb_major_version + '.' + bdb_minor_version,
-                    'db' + bdb_major_version + '.' + bdb_minor_version,
-                    'db' + bdb_major_version + bdb_minor_version,
-                    'db-' + bdb_major_version,
-                    'db' + bdb_major_version,
-                    'db',
-                ]
-
-                foreach name : bdb_libnames
-                    libdb = cc.find_library(name, dirs: bdb_libdir, required: false)
-                    if not libdb.found()
-                        libdb = cc.find_library(name, dirs: bdb_libdir / subdir, required: false)
-                    endif
-
-                    if libdb.found()
-                        have_bdb = true
-                        break
-                    endif
-                endforeach
-
-                if have_bdb
-                    break
-                endif
-            endif
-        endforeach
-
-        if have_bdb
-            break
-        endif
-    endforeach
-
-    if have_bdb
-        use_dbd_backend = true
-        cnid_backends += 'dbd'
-        cdata.set('CNID_BACKEND_DBD', 1)
-    else
-        if bdb_req_version != ''
-            msg = 'Berkeley DB library version ' + bdb_req_version + ' requested via -Dwith-bdb-version= not found!'
-        else
-            msg = 'Berkeley DB library not found, bdb CNID backend will not be built!'
-        endif
-        message(
-            msg,
-            'If you want dbd CNID backend support, define the Berkeley DB path using the -Dwith-bdb-path= configure option (must include lib and include dirs)',
-        )
-    endif
-endif
 
 # Check for mysql CNID backend
 
@@ -867,10 +661,7 @@ if enable_mysql_backend
         )
     endif
     if use_mysql_backend
-        if cnid_backends != ''
-            cnid_backends += ' | '
-        endif
-        cnid_backends += 'mysql'
+        cnid_backends = 'mysql'
         cdata.set('CNID_BACKEND_MYSQL', 1)
         # Check for mysql_get_socket() function (added in MySQL 5.7.9 / MariaDB 10.0)
         if cc.has_function('mysql_get_socket', dependencies: mysql_deps)
@@ -879,38 +670,27 @@ if enable_mysql_backend
     endif
 endif
 
-# Check for sqlite CNID backend
+# The sqlite CNID backend is always built
 
 sqlite_deps = dependency('sqlite3', version: '>=3.31.0', required: false)
 
-use_sqlite_backend = false
-
-if enable_sqlite_backend and sqlite_deps.found()
-    use_sqlite_backend = true
-    if cnid_backends != ''
-        cnid_backends += ' | '
-    endif
-    cnid_backends += 'sqlite'
-    cdata.set('CNID_BACKEND_SQLITE', 1)
+if not sqlite_deps.found()
+    error(
+        'SQLite 3.31 or later is required for the CNID database! Please install it.',
+    )
 endif
+
+if cnid_backends != ''
+    cnid_backends += ' | '
+endif
+cnid_backends += 'sqlite'
 
 compiled_backends = '"' + cnid_backends + '"'
 cdata.set('compiled_backends', compiled_backends)
 
 summary_backends = cnid_backends
 
-# Determine default CNID backend
-
-if use_sqlite_backend
-    default_backend = 'sqlite'
-elif use_mysql_backend
-    default_backend = 'mysql'
-elif use_dbd_backend
-    default_backend = 'dbd'
-else
-    error('No CNID backends selected for compilation')
-endif
-
+default_backend = 'sqlite'
 cdata.set('DEFAULT_CNID_SCHEME', '"' + default_backend + '"')
 
 #
@@ -2714,7 +2494,6 @@ subdir('contrib')
 subdir('sys')
 
 if docs_options != []
-    build_dbd_docs = use_dbd_backend
     subdir('doc')
 endif
 

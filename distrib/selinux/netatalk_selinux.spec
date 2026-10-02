@@ -2,7 +2,7 @@
 
 # Keep this list in sync with netatalk.sh. Missing optional files are normal.
 %define relabel_files() \
-for path in /usr/sbin/netatalk /usr/sbin/afpd /usr/sbin/cnid_metad /usr/sbin/cnid_dbd /etc/netatalk /var/lib/netatalk /var/lock/netatalk /run/lock/netatalk /var/log/netatalk.log /var/log/netatalk; do \
+for path in /usr/sbin/netatalk /usr/sbin/afpd /etc/netatalk /var/lib/netatalk /var/lock/netatalk /run/lock/netatalk /var/log/netatalk.log /var/log/netatalk; do \
     if [ -e "$path" ]; then \
         restorecon -R "$path" || exit 1; \
     fi; \
@@ -11,7 +11,7 @@ done; \
 %define selinux_policyver 41.44-1
 
 Name: netatalk_selinux
-Version: 1.1.0
+Version: 1.2.0
 Release: 1%{?dist}
 Summary: SELinux policy module for Netatalk with SQLite CNID
 
@@ -28,8 +28,8 @@ BuildArch: noarch
 
 %description
 This package confines Netatalk using SQLite CNID and CNID Spotlight.
-The deprecated cnid_metad and cnid_dbd daemons and the Localsearch
-private session bus are excluded from the supported configuration.
+The Localsearch private session bus is excluded from the supported
+configuration.
 
 %install
 install -d %{buildroot}%{_datadir}/selinux/packages
@@ -63,6 +63,10 @@ exit 0
 %{_mandir}/man8/netatalk_selinux.8*
 
 %changelog
+* Wed Sep 30 2026 Andy Lemin <andlemin@amazon.com> 1.2.0-1
+- Drop the netatalk_legacy_exec_t type; the cnid_metad and cnid_dbd
+  daemons are removed from Netatalk
+
 * Sat Sep 19 2026 Daniel Markstedt <daniel@mindani.net> 1.1-1
 - Confine SQLite CNID backend and CNID Spotlight backend
 - Exclude deprecated daemons and Localsearch Spotlight backend

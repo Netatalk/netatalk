@@ -30,7 +30,6 @@
 #include <bstrlib.h>
 
 #include <atalk/adouble.h>
-#include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
 #include <atalk/unicode.h>
@@ -255,6 +254,11 @@ int nad_find(int argc, char **argv, AFPObj *obj)
     uint16_t flags = CONV_TOLOWER;
     char namebuf[MAXPATHLEN + 1];
 
+    /* an empty source converts to nothing and leaves namebuf unwritten */
+    if (argv[optind][0] == '\0') {
+        NAD_FATAL("empty search term");
+    }
+
     if (convert_charset(CH_UNIX,
                         CH_UNIX,
                         vol.vol->v_maccharset,
@@ -268,7 +272,7 @@ int nad_find(int argc, char **argv, AFPObj *obj)
 
     int count;
     /* Must be >= CNID_FIND_MIN_BUFLEN; see libatalk/cnid/cnid.c. */
-    char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
+    char resbuf[CNID_FIND_MIN_BUFLEN];
 
     if ((count = cnid_find(vol.vol->v_cdb,
                            namebuf,

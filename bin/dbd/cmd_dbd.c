@@ -274,12 +274,13 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    /* open volume */
-    if (STRCMP(vol->v_cnidscheme, !=, "dbd")
-            && STRCMP(vol->v_cnidscheme, !=, "mysql")
-            && STRCMP(vol->v_cnidscheme, !=, "sqlite")
-       ) {
-        dbd_log(LOGSTD, "\"%s\" isn't a compatible CNID volume", vol->v_path);
+    /* afpd falls back to the default backend; a tool refuses instead */
+    if (!cnid_scheme_registered(vol->v_cnidscheme)) {
+        dbd_log(LOGSTD,
+                "Volume \"%s\": this build has no CNID backend named \"%s\"; "
+                "set 'cnid scheme = sqlite' (or another backend "
+                "afpd -v lists) in afp.conf",
+                vol->v_path, vol->v_cnidscheme);
         exit(EXIT_FAILURE);
     }
 
