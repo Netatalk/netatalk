@@ -11,6 +11,7 @@ endif
 if build_tests
     subdir('afppasswd')
     subdir('libatalk')
+    subdir('uams')
 
     if use_sqlite_backend
         subdir('nad')
