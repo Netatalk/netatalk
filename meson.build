@@ -1147,7 +1147,6 @@ else
     if not enable_gssapi
         have_gssapi = false
     elif gssapi_path != ''
-        have_gssapi = true
         gss = cc.find_library(
             'gssapi',
             dirs: gssapi_path / 'lib',
@@ -1164,11 +1163,11 @@ else
                     dirs: libsearch_dirs,
                     required: false,
                 )
-                if not gss.found()
-                    have_gssapi = false
-                endif
             endif
         endif
+    endif
+
+    if enable_gssapi
         have_gssapi = gss.found() and cc.has_function('gss_acquire_cred', dependencies: gss)
         if have_gssapi
             gss_libs += gss
