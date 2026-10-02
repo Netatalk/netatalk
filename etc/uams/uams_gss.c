@@ -375,8 +375,8 @@ static int gss_logincont(void *obj,
     uint16_t login_id;
     char *username;
     uint16_t ticket_len;
-    char *p;
-    char *username_end;
+    const char *p;
+    const char *username_end;
     int rblen;
     size_t username_len;
     size_t userlen;
