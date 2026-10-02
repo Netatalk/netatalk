@@ -33,7 +33,7 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
-#define PASSWDLEN 255
+#define PASSWDBUFLEN 256
 
 /*! Number of bits for p which we generate. Everybody out there uses 512, so we beat them */
 #define PRIMEBITS 1024
@@ -583,11 +583,11 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
 #endif /* SHADOWPW */
     int ret;
     char *p;
-    gcry_mpi_t retServerNonce;
+    char *password = NULL;
+    gcry_mpi_t retServerNonce = NULL;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
     *rbuflen = 0;
-    retServerNonce = gcry_mpi_new(0);
 
     if (dhx2_state != DHX2_STATE_EXPECT_CONT2 ||
             K_MD5hash == NULL || serverNonce == NULL) {
@@ -599,7 +599,8 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     }
 
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs)*/
-    if ((ibuflen != 2 + 16 + 256) && (ibuflen != 2 + 16 + 256 + 10)) {
+    if ((ibuflen != 2 + 16 + PASSWDBUFLEN) &&
+            (ibuflen != 2 + 16 + PASSWDBUFLEN + 10)) {
         LOG(log_error, logtype_uams,
             "DHX2: Packet length not correct: %d. Should be 274 or 284.", ibuflen);
         ret = AFPERR_PARAM;
@@ -633,15 +634,22 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     /* Skip Session ID */
     ibuf += 2;
     /* Finally: decrypt client's md5_K(serverNonce+1, passwor, C2SIV) inplace */
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16 + 256, NULL, 0);
+    ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16 + PASSWDBUFLEN, NULL, 0);
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
         ret = AFPERR_MISC;
         goto error_ctx;
     }
 
+    password = ibuf + 16;
     /* Pull out nonce. Should be serverNonce+1 */
-    gcry_mpi_scan(&retServerNonce, GCRYMPI_FMT_USG, ibuf, 16, NULL);
+    ctxerror = gcry_mpi_scan(&retServerNonce, GCRYMPI_FMT_USG, ibuf, 16, NULL);
+
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        ret = AFPERR_MISC;
+        goto error_ctx;
+    }
+
     gcry_mpi_sub_ui(retServerNonce, retServerNonce, 1);
 
     if (gcry_mpi_cmp(serverNonce, retServerNonce) != 0) {
@@ -650,22 +658,27 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
         goto error_ctx;
     }
 
-    ibuf += 16;         /* ibuf now point to passwd in cleartext */
+    if (memchr(password, '\0', PASSWDBUFLEN) == NULL) {
+        ret = AFPERR_NOTAUTH;
+        goto error_ctx;
+    }
+
     /* ---- Start authentication --- */
     ret = AFPERR_NOTAUTH;
 #ifdef HAVE_CRYPT_CHECKPASS
 
-    if (crypt_checkpass(ibuf, dhxpwd->pw_passwd) == 0) {
+    if (crypt_checkpass(password, dhxpwd->pw_passwd) == 0) {
 #else
-    p = crypt(ibuf, dhxpwd->pw_passwd);
+    p = crypt(password, dhxpwd->pw_passwd);
 
-    if (strcmp(p, dhxpwd->pw_passwd) == 0) {
+    if (p != NULL && strcmp(p, dhxpwd->pw_passwd) == 0) {
 #endif
         *uam_pwd = dhxpwd;
         ret = AFP_OK;
     }
 
-    explicit_bzero(ibuf, PASSWDLEN);
+    explicit_bzero(password, PASSWDBUFLEN);
+    password = NULL;
 #ifdef SHADOWPW
 
     if ((sp = getspnam(dhxpwd->pw_name)) == NULL) {
@@ -688,6 +701,11 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
 
 #endif /* SHADOWPW */
 error_ctx:
+
+    if (password != NULL) {
+        explicit_bzero(password, PASSWDBUFLEN);
+    }
+
     gcry_cipher_close(ctx);
 error_noctx:
 exit:

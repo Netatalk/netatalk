@@ -32,6 +32,8 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
+#define PASSWDBUFLEN 256
+
 /*! Number of bits for p which we generate. Everybody out there uses 512, so we beat them */
 #define PRIMEBITS 1024
 
@@ -649,7 +651,11 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     gcry_mpi_t retServerNonce = NULL;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
+    char *password = NULL;
+    const char *password_end;
     char *utfpass = NULL;
+    size_t password_len;
+    size_t utfpass_len = 0;
     *rbuflen = 0;
 
     if (dhx2_state != DHX2_STATE_EXPECT_CONT2 ||
@@ -661,14 +667,14 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     }
 
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs) */
-    if ((ibuflen != 2 + 16 + 256) && (ibuflen != 2 + 16 + 256 + 10)) {
+    if ((ibuflen != 2 + 16 + PASSWDBUFLEN) &&
+            (ibuflen != 2 + 16 + PASSWDBUFLEN + 10)) {
         LOG(log_error, logtype_uams,
             "DHX2: Packet length not correct: %u. Should be 274 or 284.", ibuflen);
         ret = AFPERR_PARAM;
         goto error_noctx;
     }
 
-    retServerNonce = gcry_mpi_new(0);
     /* For PAM */
     uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME, (void *) &hostname, NULL);
     /* Set up our encryption context. */
@@ -698,15 +704,22 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     /* Skip Session ID */
     ibuf += 2;
     /* Finally: decrypt client's md5_K(serverNonce+1, passwor, C2SIV) inplace */
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16 + 256, NULL, 0);
+    ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16 + PASSWDBUFLEN, NULL, 0);
 
     if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
         ret = AFPERR_MISC;
         goto error_ctx;
     }
 
+    password = ibuf + 16;
     /* Pull out nonce. Should be serverNonce+1 */
-    gcry_mpi_scan(&retServerNonce, GCRYMPI_FMT_USG, ibuf, 16, NULL);
+    ctxerror = gcry_mpi_scan(&retServerNonce, GCRYMPI_FMT_USG, ibuf, 16, NULL);
+
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        ret = AFPERR_MISC;
+        goto error_ctx;
+    }
+
     gcry_mpi_sub_ui(retServerNonce, retServerNonce, 1);
 
     if (gcry_mpi_cmp(serverNonce, retServerNonce) != 0) {
@@ -715,20 +728,27 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         goto error_ctx;
     }
 
-    ibuf += 16;
-
     /* ---- Start authentication with PAM --- */
+    password_end = memchr(password, '\0', PASSWDBUFLEN);
 
+    if (password_end == NULL) {
+        ret = AFPERR_NOTAUTH;
+        goto error_ctx;
+    }
+
+    password_len = (size_t)(password_end - password);
+    ret = AFPERR_NOTAUTH;
     /* The password is in legacy Mac encoding, convert it to host encoding */
-    if (convert_string_allocate(CH_MAC, CH_UNIX, ibuf, -1,
-                                &utfpass) == (size_t) -1) {
+    utfpass_len = convert_string_allocate(CH_MAC, CH_UNIX, password,
+                                          password_len, &utfpass);
+
+    if (utfpass_len == (size_t) -1) {
         LOG(log_error, logtype_uams, "DHX2: conversion error");
         goto error_ctx;
     }
 
     PAM_password = utfpass;
     /* Set these things up for the conv function */
-    ret = AFPERR_NOTAUTH;
     PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
@@ -810,23 +830,24 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         goto error_ctx;
     }
 
-    explicit_bzero(ibuf, 256); /* zero out the password */
-
-    if (utfpass) {
-        explicit_bzero(utfpass, strlen(utfpass));
-    }
-
     *uam_pwd = dhxpwd;
     LOG(log_info, logtype_uams, "DHX2: PAM Auth OK!");
     ret = AFP_OK;
 error_ctx:
+
+    if (password != NULL) {
+        explicit_bzero(password, PASSWDBUFLEN);
+    }
+
     gcry_cipher_close(ctx);
 error_noctx:
 
-    if (utfpass) {
+    if (utfpass != NULL) {
+        explicit_bzero(utfpass, utfpass_len + 1);
         free(utfpass);
     }
 
+    PAM_password = NULL;
     dhx2_clear_session();
     gcry_mpi_release(retServerNonce);
     return ret;
@@ -913,7 +934,6 @@ static int changepw_3(void *obj _U_,
         goto error_noctx;
     }
 
-    retServerNonce = gcry_mpi_new(0);
     /* For PAM */
     uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME, (void *) &hostname, NULL);
     /* Set up our encryption context. */
@@ -951,7 +971,13 @@ static int changepw_3(void *obj _U_,
     }
 
     /* Pull out nonce. Should be serverNonce+1 */
-    gcry_mpi_scan(&retServerNonce, GCRYMPI_FMT_USG, ibuf, 16, NULL);
+    ctxerror = gcry_mpi_scan(&retServerNonce, GCRYMPI_FMT_USG, ibuf, 16, NULL);
+
+    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+        ret = AFPERR_MISC;
+        goto error_ctx;
+    }
+
     gcry_mpi_sub_ui(retServerNonce, retServerNonce, 1);
 
     if (gcry_mpi_cmp(serverNonce, retServerNonce) != 0) {
