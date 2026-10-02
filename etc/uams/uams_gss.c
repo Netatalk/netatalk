@@ -376,7 +376,9 @@ static int gss_logincont(void *obj,
     char *username;
     uint16_t ticket_len;
     char *p;
+    char *username_end;
     int rblen;
+    size_t username_len;
     size_t userlen;
     struct session_info *sinfo;
     /* Apple's AFP 3.1 documentation specifies that this command
@@ -433,24 +435,34 @@ static int gss_logincont(void *obj,
 
     /* We skip past the 'username' parameter because all that matters is the ticket */
     p = ibuf;
+    username_end = memchr(p, '\0', ibuflen);
 
-    while (*ibuf && ibuflen) {
-        ibuf++, ibuflen--;
-    }
-
-    if (ibuflen < 4) {
-        LOG_LOGINCONT(log_info, "user is %s, no ticket", p);
+    if (username_end == NULL) {
+        LOG_LOGINCONT(log_info, "unterminated username");
         return AFPERR_PARAM;
     }
 
-    ibuf++, ibuflen--; /* null termination */
+    username_len = (size_t)(username_end - p) + 1;
+    ibuf += username_len;
+    ibuflen -= username_len;
 
-    if ((ibuf - p + 1) % 2) {
+    if (username_len % 2) {
         /* deal with potential padding */
+        if (ibuflen < 1) {
+            LOG_LOGINCONT(log_info, "missing username padding");
+            return AFPERR_PARAM;
+        }
+
         ibuf++, ibuflen--;
     }
 
-    LOG_LOGINCONT(log_debug, "client thinks user is %s", p);
+    if (ibuflen < sizeof(ticket_len)) {
+        LOG_LOGINCONT(log_info, "missing ticket length");
+        return AFPERR_PARAM;
+    }
+
+    LOG_LOGINCONT(log_debug, "ignored client username of %zu bytes",
+                  username_len - 1);
     /* get the length of the ticket the client sends us */
     memcpy(&ticket_len, ibuf, sizeof(ticket_len));
     ibuf += sizeof(ticket_len);
@@ -460,7 +472,7 @@ static int gss_logincont(void *obj,
     /* a little bounds checking */
     if (ticket_len > ibuflen) {
         LOG_LOGINCONT(log_info,
-                      "invalid ticket length (%u > %u)",
+                      "invalid ticket length (%u > %zu)",
                       ticket_len, ibuflen);
         return AFPERR_PARAM;
     }
