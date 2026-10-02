@@ -1437,8 +1437,6 @@ static struct vol *creatvol(AFPObj *obj,
     uint16_t    flags;
     const char  *val;
     const char  *ea_setting = NULL;
-    char        *p;
-    char        *q;
     bstring     dbpath = NULL;
     bstring     global_path_tmp = NULL;
     strlcpy(path, path_in, MAXPATHLEN);
@@ -1677,41 +1675,33 @@ static struct vol *creatvol(AFPObj *obj,
             tmpname[i] = ':';
         }
 
-    if (getoption_bool(obj->iniconfig, INISEC_GLOBAL, "vol dbnest", NULL, 0)) {
-        EC_NULL(volume->v_dbpath = strdup(path));
-    } else {
-        /* Not vdgoption_str(): the [Global] level has its own semantics
-         * here -- a value without a variable is pre-3.1.1 behaviour and
-         * gets the volume name appended, which must not apply to
-         * volume/preset values. */
-        val = getoption_str(obj->iniconfig, section, "vol dbpath", preset,
-                            NULL);
+    /* Not vdgoption_str(): only a [Global] value without a variable gets
+     * the volume name appended */
+    val = getoption_str(obj->iniconfig, section, "vol dbpath", preset, NULL);
 
-        if (val == NULL) {
-            val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath",
-                                NULL, NULL);
+    if (val == NULL) {
+        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath",
+                            NULL, NULL);
 
-            if (val && strchr(val, '$') == NULL) {
-                EC_NULL(global_path_tmp = bformat("%s/%s/", val, tmpname));
-                val = cfrombstr(global_path_tmp);
-            }
+        if (val && strchr(val, '$') == NULL) {
+            EC_NULL(global_path_tmp = bformat("%s/%s/", val, tmpname));
+            val = cfrombstr(global_path_tmp);
         }
-
-        if (val == NULL) {
-            LOG(log_debug, logtype_afpd,
-                "creatvol: using default cnid vol dbpath for volume \"%s\"", name);
-            EC_NULL(dbpath = bformat("%s/%s/", _PATH_STATEDIR "CNID/", tmpname));
-        } else {
-            LOG(log_debug, logtype_afpd,
-                "creatvol: using configured cnid vol dbpath '%s' for volume \"%s\"",
-                val, name);
-            EC_NULL(dbpath = bfromcstr(val));
-        }
-
-        EC_NULL(volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN + 1,
-                                            cfrombstr(dbpath), pwd, NULL, tmpname));
     }
 
+    if (val == NULL) {
+        LOG(log_debug, logtype_afpd,
+            "creatvol: using default cnid vol dbpath for volume \"%s\"", name);
+        EC_NULL(dbpath = bformat("%s/%s/", _PATH_STATEDIR "CNID/", tmpname));
+    } else {
+        LOG(log_debug, logtype_afpd,
+            "creatvol: using configured cnid vol dbpath '%s' for volume \"%s\"",
+            val, name);
+        EC_NULL(dbpath = bfromcstr(val));
+    }
+
+    EC_NULL(volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN + 1,
+                                        cfrombstr(dbpath), pwd, NULL, tmpname));
     val = vdgoption_str(obj->iniconfig, section, "cnid scheme", preset,
                         DEFAULT_CNID_SCHEME);
     EC_NULL(volume->v_cnidscheme = strdup(val));
@@ -1747,22 +1737,6 @@ static struct vol *creatvol(AFPObj *obj,
     if ((val = getoption_str(obj->iniconfig, section, "postexec", preset, NULL))) {
         EC_NULL(volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path,
                                               name));
-    }
-
-    if ((val = getoption_str(obj->iniconfig, section, "cnid server", preset,
-                             NULL))) {
-        EC_NULL(p = strdup(val));
-        volume->v_cnidserver = p;
-
-        if ((q = strrchr(p, ':'))) {
-            *q++ = 0;
-            volume->v_cnidport = strdup(q);
-        } else {
-            volume->v_cnidport = strdup("4700");
-        }
-    } else {
-        volume->v_cnidserver = strdup(obj->options.Cnid_srv);
-        volume->v_cnidport = strdup(obj->options.Cnid_port);
     }
 
     /* iniparser answers an empty "volume uuid =" with "", not NULL, so the
@@ -2282,7 +2256,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
             if (!IS_AFP_SESSION(obj)
                     || strcmp(obj->username, obj->options.guest) == 0)
-                /* not an AFP session, but cnid daemon, dbd or ad util, or guest login */
+                /* not an AFP session, but dbd or ad util, or guest login */
             {
                 continue;
             }
@@ -2604,8 +2578,6 @@ void volume_free(struct vol *vol)
     free(vol->v_dbpath);
     free(vol->v_gvs);
     free(vol->v_uuid);
-    free(vol->v_cnidserver);
-    free(vol->v_cnidport);
     free(vol->v_legacyicon);
     free(vol->v_icon_rfork);
     free(vol->v_preexec);
@@ -2841,41 +2813,6 @@ struct vol *getvolumes(void)
     return Volumes;
 }
 
-/*!
- * @brief Whether any configured volume resolves to the given CNID scheme
- *
- * Scans the loaded volume list, then the [Homes] section: homes
- * volumes are instantiated per-user at login, so outside AFP sessions
- * they never appear in the list. The section's scheme is resolved the
- * same way creatvol() resolves it (section -> preset -> global ->
- * compiled default).
- */
-int conf_cnid_scheme_in_use(const AFPObj *obj, const char *scheme)
-{
-    const char *preset, *default_preset;
-
-    for (const struct vol *vol = Volumes; vol; vol = vol->v_next) {
-        if (vol->v_cnidscheme && strcmp(vol->v_cnidscheme, scheme) == 0) {
-            return 1;
-        }
-    }
-
-    /* basedir regex is the one mandatory [Homes] option: absent means
-     * no homes sharing is configured */
-    if (getoption_str(obj->iniconfig, INISEC_HOMES, "basedir regex",
-                      NULL, NULL) == NULL) {
-        return 0;
-    }
-
-    default_preset = getoption_str(obj->iniconfig, INISEC_GLOBAL,
-                                   "vol preset", NULL, NULL);
-    preset = getoption_str(obj->iniconfig, INISEC_HOMES, "vol preset",
-                           NULL, NULL);
-    return strcmp(vdgoption_str(obj->iniconfig, INISEC_HOMES, "cnid scheme",
-                                preset ? preset : default_preset,
-                                DEFAULT_CNID_SCHEME), scheme) == 0;
-}
-
 struct vol *getvolbyvid(const uint16_t vid)
 {
     struct vol  *vol;
@@ -2957,9 +2894,9 @@ EC_CLEANUP:
  * Path may be absolute or relative. Ordinary volume structs are created when
  * the ini config is initially parsed (load_afp_conf_vols()), but user volumes are
  * as load_afp_conf_vols() only can create the user volume of the logged in user
- * in an AFP session in afpd, but not when called from e.g. cnid_metad or dbd.
- * Both cnid_metad and dbd thus need a way to lookup and create struct vols
- * for user home by path. This is what this func does as well.
+ * in an AFP session in afpd, but not when called from e.g. dbd. dbd thus
+ * needs a way to lookup and create struct vols for user home by path. This
+ * is what this func does as well.
  *
  * 1. Search "normal" volume list
  * 2. Check if theres a [Homes] section, load_afp_conf_vols() remembers this for us
@@ -3225,6 +3162,53 @@ static void strip_trailing_slashes(char *path)
 }
 
 /*!
+ * @brief Whether a directory is the path of a volume the configuration names
+ *
+ * A single-user server makes its [Global] vol dbpath owner-only, which would
+ * close such a share to everyone else; logged when it is one.
+ */
+static bool dbpath_is_volume_root(AFPObj *obj, const char *dbpath,
+                                  const struct passwd *pwd)
+{
+    char volpath[MAXPATHLEN + 1];
+    char *dbreal;
+    bool found = false;
+    int nsec = iniparser_getnsec(obj->iniconfig);
+
+    if (access(dbpath, F_OK) != 0 || (dbreal = realpath_safe(dbpath)) == NULL) {
+        return false;
+    }
+
+    for (int i = 0; i < nsec && !found; i++) {
+        const char *secname = iniparser_getsecname(obj->iniconfig, i);
+        const char *val = getoption_str(obj->iniconfig, secname, "path", NULL,
+                                        NULL);
+        char *volreal;
+
+        if (val == NULL || strcasecmp(secname, INISEC_HOMES) == 0
+                || volxlate(obj, volpath, MAXPATHLEN, val, pwd, NULL,
+                            NULL) == NULL
+                || access(volpath, F_OK) != 0
+                || (volreal = realpath_safe(volpath)) == NULL) {
+            continue;
+        }
+
+        if (strcmp(volreal, dbreal) == 0) {
+            LOG(log_error, logtype_afpd,
+                "single-user mode requires a [Global] 'vol dbpath' that is not "
+                "a volume's directory: %s is the path of volume [%s]", dbpath,
+                secname);
+            found = true;
+        }
+
+        free(volreal);
+    }
+
+    free(dbreal);
+    return found;
+}
+
+/*!
  * @brief Keep the signature and volume uuid files in the user's state
  *
  * A single-user server cannot write the system state directory, so its
@@ -3298,6 +3282,10 @@ static int user_state_paths(AFPObj *obj, bool singleuser)
     }
 
     strip_trailing_slashes(dbpath);
+
+    if (singleuser && dbpath_is_volume_root(obj, dbpath, pwd)) {
+        return -1;
+    }
 
     if (lstat(dbpath, &st) == 0) {
         if (!singleuser) {
@@ -3571,6 +3559,27 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                                "cnid mysql pw", NULL, NULL);
     options->cnid_mysql_db  = getoption_strdup(config, INISEC_GLOBAL,
                                                "cnid mysql db",  NULL, NULL);
+    static const char *const removed_cnid_options[] = {
+        "cnid listen", "cnid server", "vol dbnest", NULL
+    };
+    /* afpd parses the file once more for its AppleTalk listener */
+    int nsec = AFPObj->proto == AFPPROTO_ASP ? 0 : iniparser_getnsec(config);
+
+    for (int i = 0; i < nsec; i++) {
+        const char *secname = iniparser_getsecname(config, i);
+
+        for (const char *const *opt = removed_cnid_options; *opt; opt++) {
+            const char *setting = getoption_str(config, secname, *opt, NULL,
+                                                NULL);
+
+            if (setting && setting[0] != '\0') {
+                LOG(log_warning, logtype_afpd,
+                    "Ignoring removed option '%s' in section [%s]", *opt,
+                    secname);
+            }
+        }
+    }
+
     options->connections    = getoption_int(config, INISEC_GLOBAL,
                                             "max connections", NULL, 200);
     options->passwdminlen   = (unsigned char) getoption_int(config, INISEC_GLOBAL,
@@ -3727,7 +3736,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                                NULL, 0, SPOTLIGHT_RESULTS_LIMIT_MAX,
                                                SPOTLIGHT_RESULTS_LIMIT_DEFAULT);
 
-        /* 0 stays unlimited; anything else gets at least one batch */
+        /* 0 stays unlimited; a nonzero limit is at least cnid_find()'s minimum */
         if (options->spotlight_results_limit > 0
                 && options->spotlight_results_limit
                 < SPOTLIGHT_RESULTS_LIMIT_MIN) {
@@ -3849,29 +3858,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
 
         free(p);
-    }
-
-    EC_NULL_LOG(q = getoption_strdup(config, INISEC_GLOBAL, "cnid server", NULL,
-                                     "localhost:4700"));
-    r = strrchr(q, ':');
-
-    if (r) {
-        size_t hostname_length = r - q;
-        EC_NULL_LOG(options->Cnid_srv = (char *)malloc(hostname_length + 1));
-        strlcpy(options->Cnid_srv, q, hostname_length + 1);
-        EC_NULL_LOG(options->Cnid_port = strdup(r + 1));
-    } else {
-        LOG(log_debug, logtype_afpd,
-            "CNID Server: no port number detected, so falling back to default 4700");
-        EC_NULL_LOG(options->Cnid_srv = strdup(q));
-        EC_NULL_LOG(options->Cnid_port = strdup("4700"));
-    }
-
-    LOG(log_debug, logtype_afpd, "CNID Server: %s:%s", options->Cnid_srv,
-        options->Cnid_port);
-
-    if (q) {
-        free(q);
     }
 
     if ((q = getoption_strdup(config, INISEC_GLOBAL, "fqdn", NULL, NULL))) {
@@ -4151,14 +4137,6 @@ void afp_config_free(AFPObj *obj)
 
     if (obj->options.k5keytab) {
         CONFIG_ARG_FREE(obj->options.k5keytab)
-    }
-
-    if (obj->options.Cnid_srv) {
-        CONFIG_ARG_FREE(obj->options.Cnid_srv)
-    }
-
-    if (obj->options.Cnid_port) {
-        CONFIG_ARG_FREE(obj->options.Cnid_port)
     }
 
     if (obj->options.fqdn) {

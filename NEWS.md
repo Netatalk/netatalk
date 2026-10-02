@@ -14,6 +14,27 @@ Changes in 4.7.0
   warned about rather than refused.
   Without `--single-user`, `netatalk` requires root and exits with status 1
   otherwise.
+* REM: cnid: Removed the deprecated Berkeley DB (dbd) CNID backend with its
+  cnid_dbd and cnid_metad daemons and the 'cnid server', 'cnid listen' and
+  'vol dbnest' options; afpd serves a volume whose scheme the installation
+  does not know, 'dbd' included, with sqlite (scheme names match without
+  regard to case) while a backend the build lacks is still refused, and the
+  dbd and nad tools stop on a scheme the installation cannot serve, see the
+  Upgrading chapter, GitHub #3351
+* BREAKING: libatalk: Soversion bumped to 23; struct vol and struct
+  afp_options lose their CNID server fields, the cnid_db struct loses
+  cnid_nextid and cnid_rebuild_add and the cnid_module struct its flags,
+  cnid_rebuild_add(), run_cmd(), conf_cnid_scheme_in_use(),
+  RLIM_MAX_CNID_METAD, the ntoh64 macro and the unused CNID_FLAG_MANGLING,
+  CNID_FLAG_SETUID, CNID_FLAG_BLOCK, CNID_FLAG_LAZY_INIT and CNID_FLAG_INODE
+  flags are gone, cnid_scheme_registered() is added and cnid_find() accepts
+  names up to MAXPATHLEN bytes, GitHub #3351
+* BREAKING: meson: SQLite 3.31 or later is a required dependency; the sqlite
+  CNID backend is always built, 'with-cnid-backends' lists the optional
+  backends, mysql alone, and the 'with-bdb-path', 'with-bdb-include-path'
+  and 'with-bdb-version' options are gone, GitHub #3351
+* FIX: testsuite: afp_lantest CSV summary rows carry one field per header
+  column, GitHub #3351
 
 Changes in 4.6.1
 ----------------

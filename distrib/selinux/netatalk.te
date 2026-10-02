@@ -1,4 +1,4 @@
-policy_module(netatalk, 1.1.0)
+policy_module(netatalk, 1.2.0)
 
 ########################################
 # Declarations
@@ -6,11 +6,6 @@ policy_module(netatalk, 1.1.0)
 type netatalk_t;
 type netatalk_exec_t;
 init_daemon_domain(netatalk_t, netatalk_exec_t)
-
-# Label deprecated daemons explicitly so they cannot fall back to bin_t.
-# There is deliberately no domain or execution interface for these files.
-type netatalk_legacy_exec_t;
-corecmd_executable_file(netatalk_legacy_exec_t)
 
 type netatalk_etc_t;
 files_config_file(netatalk_etc_t)
@@ -59,7 +54,7 @@ dev_read_urand(netatalk_t)
 
 # Reference policy labels TCP 548 (AFP) as dhcpd_port_t. Check the target
 # distribution's port map before changing this interface. No generic binds
-# or CNID daemon connections are needed by SQLite.
+# are needed by SQLite.
 corenet_tcp_bind_dhcpd_port(netatalk_t)
 corenet_tcp_bind_generic_node(netatalk_t)
 
@@ -131,7 +126,6 @@ optional_policy(`
 
 # These assertions guard against accidentally reintroducing excluded
 # features. They are compile-time checks, not overrides for allow rules.
-neverallow netatalk_t netatalk_legacy_exec_t:file { execute execute_no_trans entrypoint };
 neverallow netatalk_t netatalk_dbus_conf_t:file { open read };
 
 # A transitioned dbus-daemon must not bypass the configuration restriction.

@@ -256,24 +256,6 @@ option(
 # The dependency directory must include lib and include dirs
 
 option(
-    'with-bdb-path',
-    type: 'string',
-    value: '',
-    description: 'Set path to Berkeley DB installation. Must contain lib and include dirs',
-)
-option(
-    'with-bdb-include-path',
-    type: 'string',
-    value: '',
-    description: 'Set path to Berkeley DB include dir. When defined, -Dwith-bdb-path is used only for lib dir',
-)
-option(
-    'with-bdb-version',
-    type: 'string',
-    value: '',
-    description: 'Set installed Berkeley DB version x.y (major.minor) to link against',
-)
-option(
     'with-cracklib-path',
     type: 'string',
     value: '',
@@ -394,12 +376,10 @@ option(
     'with-cnid-backends',
     type: 'array',
     choices: [
-        'dbd',
         'mysql',
-        'sqlite',
     ],
-    value: ['dbd', 'mysql', 'sqlite'],
-    description: 'Choose the CNID backends to build and install',
+    value: ['mysql'],
+    description: 'Optional CNID backends to build',
 )
 option(
     'with-docs',

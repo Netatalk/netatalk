@@ -2,7 +2,7 @@
 
 [Unit]
 Description=Netatalk AFP fileserver
-Documentation=man:afp.conf(5) man:netatalk(8) man:afpd(8) man:cnid_metad(8) man:cnid_dbd(8)
+Documentation=man:afp.conf(5) man:netatalk(8) man:afpd(8)
 Documentation=https://netatalk.io/
 After=network-online.target avahi-daemon.service atalkd.service
 

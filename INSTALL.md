@@ -47,16 +47,7 @@ These are the libraries that are hard requirements for netatalk.
 | iniparser    | v3.1 or later |
 | libevent2 **OR** libev |  |
 | libgcrypt    | v1.2.3 or later |
-
-### CNID Backend Requirements
-
-At least one CNID backend is required for netatalk to function.
-
-| Package      | Backend | Details |
-|--------------|---------|---------|
-| Berkeley DB  | dbd     | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
-| mysql-client **OR** mariadb-client | mysql |  |
-| sqlite3      | sqlite  | v3.31.0 or later |
+| sqlite3      | v3.31.0 or later; the sqlite CNID backend |
 
 ### Required for Build Environment
 
@@ -82,6 +73,7 @@ required at the bare minimum.
 | libpam                     | PAM support |
 | libtirpc **OR** libquota   | Quota support |
 | libunwind                  | symbolized backtraces when a daemon crashes |
+| mysql-client **OR** mariadb-client | mysql CNID backend |
 | Perl                       | admin scripts |
 | po4a                       | localization of documentation |
 | stuffit-ffi                | StuffIt support in `nad` |

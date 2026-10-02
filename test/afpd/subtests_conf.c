@@ -35,6 +35,7 @@
 #include <unistd.h>
 
 #include <atalk/adouble.h>
+#include <atalk/afp.h>
 #include <atalk/ea.h>
 
 #include <atalk/globals.h>
@@ -120,8 +121,9 @@ static char *conf_slurp(const char *path)
  * here are deliberately RED, not skips: pre-test env probes (conf_mklog,
  * conf_mkvoldir) skip, but a failure after setup succeeded once is
  * either product behaviour or a mid-run host problem worth surfacing. */
-static int conf_parse_fixture_flags(AFPObj *obj, const char *ini_body,
-                                    const char *logpath, int cmdlineflags)
+static int conf_parse_fixture_proto(AFPObj *obj, const char *ini_body,
+                                    const char *logpath, int cmdlineflags,
+                                    int proto)
 {
     char ini[8192];
     int inilen = snprintf(ini, sizeof(ini),
@@ -145,6 +147,7 @@ static int conf_parse_fixture_flags(AFPObj *obj, const char *ini_body,
     memset(obj, 0, sizeof(*obj));
     obj->cmdlineconfigfile = conf;
     obj->cmdlineflags = cmdlineflags;
+    obj->proto = proto;
     obj->uid = getuid();
     /* A previous test that failed mid-body may not have reached teardown:
      * reset the volume-list statics defensively before parsing. */
@@ -158,6 +161,12 @@ static int conf_parse_fixture_flags(AFPObj *obj, const char *ini_body,
     }
 
     return 0;
+}
+
+static int conf_parse_fixture_flags(AFPObj *obj, const char *ini_body,
+                                    const char *logpath, int cmdlineflags)
+{
+    return conf_parse_fixture_proto(obj, ini_body, logpath, cmdlineflags, 0);
 }
 
 static int conf_parse_fixture(AFPObj *obj, const char *ini_body,
@@ -188,7 +197,7 @@ static void conf_teardown(AFPObj *obj, const char *logpath)
 
 /* Truncate the log file between sub-cases so greps see only the current
  * case's messages. */
-static void conf_log_truncate(const char *logpath)
+void conf_log_truncate(const char *logpath)
 {
     int fd = open(logpath, O_WRONLY | O_TRUNC);
 
@@ -200,7 +209,7 @@ static void conf_log_truncate(const char *logpath)
 /* 1 = needle present, 0 = definitely absent, -1 = log unreadable or
  * overflowed.  Callers compare against the exact value they assert so a
  * bad log can never satisfy either a positive or a negative assertion. */
-static int conf_log_contains(const char *logpath, const char *needle)
+int conf_log_contains(const char *logpath, const char *needle)
 {
     char *log = conf_slurp(logpath);
     int found;
@@ -269,7 +278,7 @@ static int conf_parse_fixture_vols(AFPObj *obj, const char *ini_body,
 }
 
 /* Make a mkstemp'd log path; returns 0 and fills buf, or -1. */
-static int conf_mklog(char *buf, size_t buflen)
+int conf_mklog(char *buf, size_t buflen)
 {
     int fd;
     snprintf(buf, buflen, "utest_conf_log_XXXXXX");
@@ -600,6 +609,266 @@ int utest_conf_ea_fallback(void)
         }
 
         conf_teardown(&obj, NULL);
+    }
+
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
+/* utest_conf_cnid_server_listen_ignored: 'cnid server' and 'cnid listen'
+ * are removed options; a configuration that still sets them loads its
+ * volume with the default scheme and logs one warning per option and
+ * section, nothing else about them at debug level. An empty value is not
+ * reported. */
+int utest_conf_cnid_server_listen_ignored(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    int failed = -1;
+    int server_named;
+    int listen_named;
+    int volume_named;
+    int server_logged;
+    char body[1024];
+    const struct vol *vol;
+    char *voldir = conf_mkvoldir();
+
+    if (voldir == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body),
+             "log level = default:debug\n"
+             "cnid server = localhost:4700\n"
+             "cnid listen = localhost:4700\n"
+             "[utestvol]\n"
+             "path = %s\n"
+             "cnid server = localhost:4700\n",
+             voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestvol");
+    server_named = conf_log_contains(logpath,
+                                     "removed option 'cnid server' "
+                                     "in section [global]\n");
+    listen_named = conf_log_contains(logpath,
+                                     "removed option 'cnid listen' "
+                                     "in section [global]\n");
+    volume_named = conf_log_contains(logpath,
+                                     "removed option 'cnid server' "
+                                     "in section [utestvol]\n");
+    server_logged = conf_log_contains(logpath, "CNID Server");
+
+    if (vol == NULL || vol->v_cnidscheme == NULL
+            || strcmp(vol->v_cnidscheme, DEFAULT_CNID_SCHEME) != 0
+            || server_named != 1 || listen_named != 1 || volume_named != 1
+            || server_logged != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_cnid_server_listen_ignored: volume %s, "
+                "cnid server in log: %d, cnid listen in log: %d, "
+                "volume's cnid server in log: %d, CNID Server in log: %d\n",
+                vol == NULL ? "did not load" : "loaded", server_named,
+                listen_named, volume_named, server_logged);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    snprintf(body, sizeof(body),
+             "log level = default:debug\n"
+             "cnid server = localhost:4700\n"
+             "cnid listen =\n"
+             "[utestvol]\n"
+             "path = %s\n",
+             voldir);
+    conf_log_truncate(logpath);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    server_named = conf_log_contains(logpath,
+                                     "removed option 'cnid server' "
+                                     "in section [global]\n");
+    listen_named = conf_log_contains(logpath,
+                                     "removed option 'cnid listen' "
+                                     "in section [global]\n");
+    volume_named = conf_log_contains(logpath,
+                                     "removed option 'cnid server' "
+                                     "in section [utestvol]\n");
+
+    if (server_named != 1 || listen_named != 0 || volume_named != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_cnid_server_listen_ignored: Global-only case: "
+                "cnid server in log: %d, empty cnid listen in log: %d, "
+                "volume's cnid server in log: %d\n",
+                server_named, listen_named, volume_named);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
+/* utest_conf_vol_dbnest_ignored: 'vol dbnest' is a removed option; a
+ * volume's database directory stays the default under the state directory
+ * and the option is named in a warning. */
+int utest_conf_vol_dbnest_ignored(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    int failed = -1;
+    int dbnest_named;
+    char body[1024];
+    const struct vol *vol;
+    char *voldir = conf_mkvoldir();
+
+    if (voldir == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body),
+             "vol dbnest = yes\n"
+             "[utestvol]\n"
+             "path = %s\n",
+             voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestvol");
+    dbnest_named = conf_log_contains(logpath,
+                                     "removed option 'vol dbnest' "
+                                     "in section [global]\n");
+
+    if (vol == NULL || vol->v_dbpath == NULL
+            || strcmp(vol->v_dbpath, voldir) == 0
+            || strncmp(vol->v_dbpath, _PATH_STATEDIR "CNID/",
+                       strlen(_PATH_STATEDIR "CNID/")) != 0
+            || strstr(vol->v_dbpath, "/utestvol/") == NULL
+            || dbnest_named != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_vol_dbnest_ignored: volume %s, dbpath %s, "
+                "warning in log: %d\n",
+                vol == NULL ? "did not load" : "loaded",
+                vol == NULL || vol->v_dbpath == NULL ? "(none)" : vol->v_dbpath,
+                dbnest_named);
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    conf_teardown(&obj, NULL);
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    rmdir(voldir);
+    free(voldir);
+    return failed;
+}
+
+/* utest_conf_removed_options_appletalk_parse: afpd's parse for its AppleTalk
+ * listener names no removed option. */
+int utest_conf_removed_options_appletalk_parse(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    int named;
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    if (conf_parse_fixture_proto(&obj, "cnid server = localhost:4700\n",
+                                 logpath, 0, AFPPROTO_ASP) != 0) {
+        unlink(logpath);
+        return -1;
+    }
+
+    named = conf_log_contains(logpath, "removed option 'cnid server'");
+    conf_teardown(&obj, logpath);
+
+    if (named != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_removed_options_appletalk_parse: warning in "
+                "log %d\n", named);
+        return -1;
+    }
+
+    return 0;
+}
+
+/* utest_conf_singleuser_dbpath_volume_root: a single-user parse refuses a
+ * [Global] vol dbpath that is a volume's path before making it owner-only. */
+int utest_conf_singleuser_dbpath_volume_root(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[2 * MAXPATHLEN + 64];
+    struct stat st = { 0 };
+    int named;
+    int failed = -1;
+    char *voldir = conf_mkvoldir();
+
+    if (voldir == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0 || chmod(voldir, 0750) != 0) {
+        unlink(logpath);
+        rmdir(voldir);
+        free(voldir);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body),
+             "vol dbpath = %s\n"
+             "[utestvol]\n"
+             "path = %s\n",
+             voldir, voldir);
+
+    if (conf_parse_fixture_flags(&obj, body, logpath, OPTION_SINGLEUSER) == 0) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_dbpath_volume_root: the parse took "
+                "the volume's path as the [Global] vol dbpath\n");
+        conf_teardown(&obj, NULL);
+        goto cleanup;
+    }
+
+    setuplog("default:note", "/dev/stderr", true);
+    afp_config_free(&obj);
+    named = conf_log_contains(logpath, "is the path of volume [utestvol]");
+
+    if (named != 1 || stat(voldir, &st) != 0 || (st.st_mode & 0777) != 0750) {
+        fprintf(test_stream(),
+                "# utest_conf_singleuser_dbpath_volume_root: refusal in log "
+                "%d, mode %o\n", named, (unsigned int)(st.st_mode & 0777));
+        goto cleanup;
     }
 
     failed = 0;

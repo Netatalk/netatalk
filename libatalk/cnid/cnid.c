@@ -20,125 +20,82 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
-#include <signal.h>
-#include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/param.h>
-#include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
-#include <unistd.h>
 
 #include <atalk/cnid.h>
-#include <atalk/compat.h>
 #include <atalk/list.h>
 #include <atalk/logger.h>
-#include <atalk/util.h>
 #include <atalk/volume.h>
 
 /*! List of all registered modules. */
 static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
 
-static sigset_t sigblockset;
+/*!
+ * @brief Registered backend module named @p name, or NULL
+ */
+static const cnid_module *cnid_module_named(const char *name)
+{
+    struct list_head *ptr;
+    list_for_each(ptr, &modules) {
+        if (0 == strcasecmp(list_entry(ptr, cnid_module, db_list)->name, name)) {
+            return list_entry(ptr, cnid_module, db_list);
+        }
+    }
+    return NULL;
+}
+
+bool cnid_scheme_registered(const char *name)
+{
+    return cnid_module_named(name) != NULL;
+}
 
 /* Registers new CNID backend module. */
 
 /*! Once module has been registered, it cannot be unregistered. */
 void cnid_register(struct _cnid_module *module)
 {
-    struct list_head *ptr;
-    /* Check if our module is already registered. */
-    list_for_each(ptr, &modules)
-
-    if (0 == strcmp(list_entry(ptr, cnid_module, db_list)->name, module->name)) {
+    if (cnid_module_named(module->name) != NULL) {
         LOG(log_error, logtype_afpd, "Module with name [%s] is already registered !",
             module->name);
         return;
     }
 
     LOG(log_info, logtype_afpd, "Registering CNID module [%s]", module->name);
-    ptr = &(module->db_list);
-    list_add_tail(ptr, &modules);
-}
-
-/* --------------- */
-static int cnid_dir(const char *dir, mode_t mask)
-{
-    struct stat st, st1;
-    char tmp[MAXPATHLEN];
-
-    if (ad_stat(dir, &st) < 0) {
-        return -1;
-    }
-
-    LOG(log_info, logtype_cnid, "Setting uid/gid to %d/%d", st.st_uid, st.st_gid);
-
-    if (setegid(st.st_gid) < 0 || seteuid(st.st_uid) < 0) {
-        LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
-        return -1;
-    }
-
-    if (mkdir(dir, 0777 & ~mask) < 0 && errno != EEXIST) {
-        return -1;
-    }
-
-    strlcpy(tmp, dir, sizeof(tmp));
-    strlcat(tmp, "/.AppleDB", sizeof(tmp));
-
-    /* use .AppleDB owner, if folder already exists */
-    if (stat(tmp, &st1) < 0) {
-        st1 = st;
-    }
-
-    LOG(log_info, logtype_cnid, "Setting uid/gid to %d/%d", st1.st_uid, st1.st_gid);
-
-    if (setegid(st1.st_gid) < 0 || seteuid(st1.st_uid) < 0) {
-        LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
-        return -1;
-    }
-
-    return 0;
+    list_add_tail(&module->db_list, &modules);
 }
 
 /*! Opens CNID database using particular back-end */
 struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 {
     struct _cnid_db *db;
-    cnid_module *mod = NULL;
-    struct list_head *ptr;
-    uid_t uid = -1;
-    gid_t gid = -1;
-    list_for_each(ptr, &modules) {
-        if (0 == strcmp(list_entry(ptr, cnid_module, db_list)->name, type)) {
-            mod = list_entry(ptr, cnid_module, db_list);
-            break;
+    const cnid_module *mod = cnid_module_named(type);
+
+    if (NULL == mod) {
+#ifndef CNID_BACKEND_MYSQL
+
+        if (0 == strcasecmp(type, "mysql")) {
+            LOG(log_error, logtype_afpd,
+                "CNID backend [%s] for volume %s is not compiled in",
+                type, vol->v_path);
+            return NULL;
         }
+
+#endif
+        LOG(log_warning, logtype_afpd,
+            "Unknown cnid scheme [%s] for volume %s, using [%s]",
+            type, vol->v_path, DEFAULT_CNID_SCHEME);
+        mod = cnid_module_named(DEFAULT_CNID_SCHEME);
     }
 
     if (NULL == mod) {
         LOG(log_error, logtype_afpd,
-            "Cannot find module named [%s] in registered module list!", type);
+            "Cannot find module named [%s] in registered module list!",
+            DEFAULT_CNID_SCHEME);
         return NULL;
-    }
-
-    if (mod->flags & CNID_FLAG_SETUID) {
-        uid = geteuid();
-        gid = getegid();
-
-        if (seteuid(0)) {
-            LOG(log_error, logtype_afpd, "seteuid failed %s", strerror(errno));
-            return NULL;
-        }
-
-        if (cnid_dir(vol->v_path, vol_umask(vol)) < 0) {
-            if (setegid(gid) < 0 || seteuid(uid) < 0) {
-                LOG(log_error, logtype_afpd, "can't seteuid back %s", strerror(errno));
-                exit(EXITERR_SYS);
-            }
-
-            return NULL;
-        }
     }
 
     struct cnid_open_args args =  {
@@ -148,63 +105,16 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 
     db = mod->cnid_open(&args);
 
-    if (mod->flags & CNID_FLAG_SETUID) {
-        if ((geteuid() != 0) && (seteuid(0) < 0)) {
-            LOG(log_error, logtype_afpd,
-                "can't seteuid to 0 (%s)", strerror(errno));
-            exit(EXITERR_SYS);
-        }
-
-        if ((gid != getegid()) && (setegid(gid) < 0)) {
-            LOG(log_error, logtype_afpd,
-                "can't setegid to %i (%s)", gid, strerror(errno));
-            exit(EXITERR_SYS);
-        }
-
-        if ((uid != geteuid()) && (seteuid(uid) < 0)) {
-            LOG(log_error, logtype_afpd,
-                "can't seteuid to %i (%s)", uid, strerror(errno));
-            exit(EXITERR_SYS);
-        }
-    }
-
     if (NULL == db) {
         LOG(log_error, logtype_afpd, "Cannot open CNID db at [%s].", vol->v_path);
         return NULL;
     }
 
-    db->cnid_db_flags |= mod->flags;
-
     if (flags & CNID_FLAG_NODEV) {
         db->cnid_db_flags |= CNID_FLAG_NODEV;
     }
 
-    if (db->cnid_db_flags & CNID_FLAG_BLOCK) {
-        sigemptyset(&sigblockset);
-        sigaddset(&sigblockset, SIGTERM);
-        sigaddset(&sigblockset, SIGHUP);
-        sigaddset(&sigblockset, SIGUSR1);
-        sigaddset(&sigblockset, SIGUSR2);
-        sigaddset(&sigblockset, SIGALRM);
-    }
-
     return db;
-}
-
-/* ------------------- */
-static void block_signal(uint32_t flags)
-{
-    if (flags & CNID_FLAG_BLOCK) {
-        pthread_sigmask(SIG_BLOCK, &sigblockset, NULL);
-    }
-}
-
-/* ------------------- */
-static void unblock_signal(uint32_t flags)
-{
-    if (flags & CNID_FLAG_BLOCK) {
-        pthread_sigmask(SIG_UNBLOCK, &sigblockset, NULL);
-    }
 }
 
 /*!
@@ -243,18 +153,12 @@ static cnid_t valide(cnid_t id)
 /*! Closes CNID database. Currently it's just a wrapper around db->cnid_close(). */
 void cnid_close(struct _cnid_db *db)
 {
-    uint32_t flags;
-
     if (NULL == db) {
         LOG(log_error, logtype_afpd, "Error: cnid_close called with NULL argument !");
         return;
     }
 
-    /* cnid_close free db */
-    flags = db->cnid_db_flags;
-    block_signal(flags);
     db->cnid_close(db);
-    unblock_signal(flags);
 }
 
 /* --------------- */
@@ -271,9 +175,7 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
     /* Cleared for every backend and caller here, so errno reads as this
      * operation's verdict. Not every backend classifies every failure. */
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_add(cdb, st, did, name, len, hint));
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -282,9 +184,7 @@ int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 {
     int ret;
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_delete(cdb, id);
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -295,9 +195,7 @@ cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,
 {
     cnid_t ret;
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_get(cdb, did, name, len));
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -321,9 +219,7 @@ int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len)
     }
 
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_getstamp(cdb, buffer, len);
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -334,9 +230,7 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
 {
     cnid_t ret;
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_lookup(cdb, st, did, name, len));
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -344,27 +238,24 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
 /*!
  * @brief Search the CNID database for entries whose name contains a substring
  *
- * Centralises parameter validation so all three CNID backends (dbd, sqlite,
- * mysql) behave identically against bad input. The 4-byte upper-bound shrink
- * on namelen leaves room for the DBD backend's pagination offset prefix in
- * the wire payload; the constraint is applied uniformly here so callers see
- * consistent behaviour regardless of the configured backend.
+ * Centralises parameter validation so all CNID backends behave identically
+ * against bad input.
  *
  * The optional @p more_available out-parameter, when non-NULL, is written
  * unconditionally on entry to false and again by the backend: false on
  * error, true iff the result set was truncated on success (more matches
- * exist than fit in @p buffer, or were collected within the daemon's
- * wall-clock budget).
+ * exist than fit in @p buffer).
  *
  * @param[in]  cdb            CNID database handle
- * @param[in]  name           UTF-8 substring to search for, not necessarily NUL-terminated
- * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN-sizeof(uint32_t)
+ * @param[in]  name           UTF-8 substring to search for, NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
  * @param[out] buffer         caller-provided buffer for matching CNIDs in network byte order
  * @param[in]  buflen         capacity of @p buffer in bytes, must be >= CNID_FIND_MIN_BUFLEN
  * @param[out] more_available set to true iff result set was truncated, NULL to opt out
  *
  * @returns number of CNIDs written to @p buffer on success, -1 on failure
- *          (errno = CNID_ERR_PARAM or CNID_ERR_DB)
+ *          (errno = CNID_ERR_PARAM for invalid arguments, otherwise the
+ *          backend's CNID_ERR_* classification, or 0 where it makes none)
  */
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
               void *buffer, size_t buflen, bool *more_available)
@@ -381,8 +272,8 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
  * match. The scope directory itself is not a result.
  *
  * @param[in]  cdb            CNID database handle
- * @param[in]  name           UTF-8 substring to search for, not necessarily NUL-terminated
- * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN-sizeof(uint32_t)
+ * @param[in]  name           UTF-8 substring to search for, NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
  * @param[in]  scope_did      CNID of the scope directory in network byte
  *                            order, or CNID_INVALID for the whole volume
  * @param[out] buffer         caller-provided buffer for matching CNIDs in network byte order
@@ -390,7 +281,8 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
  * @param[out] more_available set to true iff result set was truncated, NULL to opt out
  *
  * @returns number of CNIDs written to @p buffer on success, -1 on failure
- *          (errno = CNID_ERR_PARAM or CNID_ERR_DB)
+ *          (errno = CNID_ERR_PARAM for invalid arguments, otherwise the
+ *          backend's CNID_ERR_* classification, or 0 where it makes none)
  */
 int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
                      size_t namelen, cnid_t scope_did,
@@ -410,10 +302,10 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
     }
 
     if (name == NULL || namelen == 0
-            || namelen > (size_t)(MAXPATHLEN - sizeof(uint32_t))) {
+            || namelen > (size_t)MAXPATHLEN) {
         LOG(log_error, logtype_cnid,
             "cnid_find: invalid name (namelen=%zu, max=%zu)",
-            namelen, (size_t)(MAXPATHLEN - sizeof(uint32_t)));
+            namelen, (size_t)MAXPATHLEN);
         errno = CNID_ERR_PARAM;
         return -1;
     }
@@ -427,10 +319,8 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
     }
 
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_find(cdb, name, namelen, scope_did,
                          buffer, buflen, more_available);
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -439,9 +329,7 @@ char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 {
     char *ret;
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_resolve(cdb, id, buffer, len);
-    unblock_signal(cdb->cnid_db_flags);
 
     if (ret && !strcmp(ret, "..")) {
         LOG(log_error, logtype_afpd, "cnid_resolve: name is '..', corrupted db? ");
@@ -461,22 +349,7 @@ int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
 {
     int ret;
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_update(cdb, id, st, did, name, len);
-    unblock_signal(cdb->cnid_db_flags);
-    return ret;
-}
-
-/* --------------- */
-cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
-                        const cnid_t did,
-                        char *name, const size_t len, cnid_t hint)
-{
-    cnid_t ret;
-    errno = 0;
-    block_signal(cdb->cnid_db_flags);
-    ret = cdb->cnid_rebuild_add(cdb, st, did, name, len, hint);
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }
 
@@ -485,12 +358,10 @@ int cnid_wipe(struct _cnid_db *cdb)
 {
     int ret = 0;
     errno = 0;
-    block_signal(cdb->cnid_db_flags);
 
     if (cdb->cnid_wipe) {
         ret = cdb->cnid_wipe(cdb);
     }
 
-    unblock_signal(cdb->cnid_db_flags);
     return ret;
 }

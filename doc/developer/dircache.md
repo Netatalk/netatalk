@@ -244,7 +244,7 @@ flowchart TD
 graph TB
     subgraph "Lookup Precedence"
         L1[Directory Cache - Fastest - Memory]
-        L2[CNID Database - Fast - BerkeleyDB]
+        L2[CNID Database - Fast - SQLite or MySQL]
         L3[Filesystem - Slow - Disk I/O]
         
         L1 -->|Miss or Invalid| L2

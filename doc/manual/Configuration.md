@@ -5,8 +5,8 @@
 Netatalk's **afpd** daemon provides AFP file services to clients.
 You usually launch the AFP file service daemon through the **netatalk** controller daemon.
 The controller daemon manages the lifecycle of the AFP file service daemon,
-including Zeroconf service registration, and housekeeping for certain CNID backends
-and Spotlight (Finder search) indexing.
+including Zeroconf service registration and housekeeping for
+Spotlight (Finder search) indexing.
 
 Configuration of both the daemons and the AFP volumes are managed through the *afp.conf* file,
 which uses an ini-style syntax.
@@ -165,9 +165,10 @@ static volume sections, **uam list = uams_srp.so**, an SRP verifier directory ow
 with mode 0700 holding that user's verifier file with no group or other
 permissions, and a configuration file that is owned by the serving user, not
 writable by group or others, and kept in a mode-0700 directory owned by that
-user. It does not support AppleTalk, the DBD or MySQL CNID backends,
-**[Homes]** volumes, **vol dbnest** (the CNID directory would be the volume
-itself, which the mode keeps owner-only), Spotlight backends other than
+user. It does not support AppleTalk, the MySQL CNID backend, **[Homes]**
+volumes, a **vol dbpath**, for a volume or in **[Global]**, naming a volume's
+own directory (the mode would keep the share owner-only), Spotlight backends
+other than
 **cnid** (the default, which searches the volume's own CNID database), AFP
 statistics, or administrator and forced-user configuration. A volume the serving user cannot read and search, or
 cannot write when it is not read-only, is rejected at startup, as is one whose

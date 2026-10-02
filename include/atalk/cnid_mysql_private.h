@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 
-#include <atalk/cnid_private.h>
 #include <atalk/uuid.h>
 
 #define CNID_MYSQL_FLAG_DEPLETED (1 << 0) /*!< CNID set overflowed */

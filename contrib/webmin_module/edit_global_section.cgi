@@ -670,30 +670,10 @@ print &ui_table_row(
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '')
 );
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid listen', \%in);
-print &ui_table_row(
-                    $text{'edit_global_section_cnid_listen'},
-                    &ui_textbox('p_cnid listen', $values[0], 20) . " "
-                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
-);
-
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid scheme', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_cnid_scheme'},
                     &build_parameter_select($afpconfRef, $sectionRef, \%in, 'cnid scheme')
-);
-
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid server', \%in);
-print &ui_table_row(
-                    $text{'edit_global_section_cnid_server'},
-                    &ui_textbox('p_cnid server', $values[0], 20) . " "
-                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
-);
-
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'vol dbnest', \%in);
-print &ui_table_row(
-                    $text{'edit_global_section_vol_dbnest'},
-                    &build_parameter_select($afpconfRef, $sectionRef, \%in, 'vol dbnest')
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid mysql host', \%in);

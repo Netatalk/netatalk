@@ -32,7 +32,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -42,7 +41,6 @@
 #include <atalk/bstrlib_compat.h>
 #include <atalk/compat.h>
 #include <atalk/ea.h>
-#include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
@@ -56,60 +54,6 @@ static void closeall(int fd)
     while (fd < fdlimit) {
         close(fd++);
     }
-}
-
-/*!
- * Run command in a child and wait for it to finish
- */
-int run_cmd(const char *cmd, char **cmd_argv)
-{
-    EC_INIT;
-    pid_t pid, wpid;
-    sigset_t sigs, oldsigs;
-    int status = 0;
-    sigfillset(&sigs);
-    pthread_sigmask(SIG_SETMASK, &sigs, &oldsigs);
-
-    if ((pid = fork()) < 0) {
-        LOG(log_error, logtype_default, "run_cmd: fork: %s", strerror(errno));
-        return -1;
-    }
-
-    if (pid == 0) {
-        /* child */
-        closeall(3);
-        execvp("mv", cmd_argv);
-    }
-
-    /* parent */
-    while ((wpid = waitpid(pid, &status, 0)) < 0) {
-        if (errno == EINTR) {
-            continue;
-        }
-
-        break;
-    }
-
-    if (wpid != pid) {
-        LOG(log_error, logtype_default, "waitpid(%d): %s", (int)pid, strerror(errno));
-        EC_FAIL;
-    }
-
-    if (WIFEXITED(status)) {
-        status = WEXITSTATUS(status);
-    } else if (WIFSIGNALED(status)) {
-        status = WTERMSIG(status);
-    }
-
-    LOG(log_note, logtype_default, "run_cmd(\"%s\"): status: %d", cmd, status);
-EC_CLEANUP:
-
-    if (status != 0) {
-        ret = status;
-    }
-
-    pthread_sigmask(SIG_SETMASK, &oldsigs, NULL);
-    EC_EXIT;
 }
 
 /*!

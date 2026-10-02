@@ -52,7 +52,6 @@ jobs:
             cups \
             cups-dev \
             curl \
-            db-dev \
             dbus-dev \
             dconf \
             flex \
@@ -148,7 +147,6 @@ jobs:
             cracklib \
             cups \
             curl \
-            db \
             dconf \
             flex \
             file \
@@ -242,7 +240,6 @@ jobs:
             libcrack2-dev \
             libcrypt-dev \
             libcups2-dev \
-            libdb-dev \
             libdbus-1-dev \
             libev-dev \
             libgcrypt20-dev \
@@ -345,7 +342,6 @@ jobs:
             iniparser-devel \
             krb5-devel \
             libacl-devel \
-            libdb-devel \
             libev-devel \
             file-devel \
             libgcrypt-devel \
@@ -443,7 +439,6 @@ jobs:
             libavahi-client-dev \
             libcrack2-dev \
             libcups2-dev \
-            libdb-dev \
             libdbus-1-dev \
             libev-dev \
             libgcrypt20-dev \
@@ -539,7 +534,6 @@ jobs:
             libavahi-client-dev:i386 \
             libcrack2-dev:i386 \
             libcups2-dev:i386 \
-            libdb-dev:i386 \
             libdbus-1-dev:i386 \
             libevent-dev:i386 \
             libgcrypt20-dev:i386 \

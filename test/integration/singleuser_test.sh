@@ -15,7 +15,6 @@
 # Run as root inside the netatalk testsuite container.
 set -e
 . /integration/lib.sh
-have_sqlite_cnid || skip_all "sqlite CNID backend not built"
 
 USER1=afpsingle
 USER2=afpother
@@ -213,12 +212,22 @@ check_reject "a .Homes. section" \
 check_reject "a .Homes. section without a basedir regex" \
     "printf '\n[Homes]\npath = Public\n' >> $CONF/afp.conf" \
     "does not support .Homes. volumes"
-# nested state would make each volume root its own CNID directory, which the
-# owner-only rule would then close to everyone else; judged by the directory
-# the volume ends up with, so every spelling of the switch is caught
-check_reject "vol dbnest" \
-    "sed -i 's/^\[Global\]\$/[Global]\nvol dbnest = on/' $CONF/afp.conf" \
-    "does not support 'vol dbnest'"
+# a volume root that is its own CNID directory would be closed to everyone
+# else by the owner-only rule
+check_reject "a vol dbpath naming the volume itself" \
+    "sed -i 's|^\[backup\]\$|[backup]\nvol dbpath = $SHARE2|' $CONF/afp.conf" \
+    "volume 'backup' names itself as its CNID directory"
+# the [Global] form derives every volume's directory with a trailing slash
+check_reject "a vol dbpath naming the volume itself with a trailing slash" \
+    "sed -i 's|^\[backup\]\$|[backup]\nvol dbpath = $SHARE2/|' $CONF/afp.conf" \
+    "volume 'backup' names itself as its CNID directory"
+# the parse makes the [Global] directory owner-only before any volume loads
+SHARE2_MODE=$(stat -c %a "$SHARE2")
+check_reject "a [Global] vol dbpath naming a volume's directory" \
+    "sed -i 's|^vol dbpath = .*|vol dbpath = $SHARE2|' $CONF/afp.conf" \
+    "is the path of volume .backup." $LOG1
+[ "$(stat -c %a "$SHARE2")" = "$SHARE2_MODE" ] \
+    || fail "the refused [Global] vol dbpath changed the mode of $SHARE2"
 check_reject "a non-sqlite CNID scheme" \
     "sed -i 's/cnid scheme = sqlite/cnid scheme = last/' $CONF/afp.conf" \
     "must use sqlite CNID"

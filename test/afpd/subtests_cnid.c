@@ -27,17 +27,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef CNID_BACKEND_SQLITE
 #include <sqlite3.h>
-#endif
 
 #include <atalk/cnid.h>
-#include <atalk/cnid_bdb_private.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
 #include "subtests_cnid.h"
+#include "subtests_conf.h"
 #include "test.h"
 #include "volume.h"
 
@@ -48,9 +47,6 @@
  */
 int utest_cnid_sqlite_symlinks_rejected(void)
 {
-#ifndef CNID_BACKEND_SQLITE
-    return TEST_SKIP;
-#else
     char base[MAXPATHLEN];
     char main_dir[MAXPATHLEN];
     char aux_dir[MAXPATHLEN];
@@ -221,7 +217,404 @@ cleanup:
     rmdir(aux_dir);
     rmdir(base);
     return result;
+}
+
+/* Scratch volume for cnid_open() tests: a mkdtemp directory serving as share
+ * and, unless cnid_scratch_separate_db() moves it, as database directory */
+struct cnid_scratch {
+    char base[MAXPATHLEN];
+    char dbdir[MAXPATHLEN];
+    char dbfile[MAXPATHLEN];
+    char uuid[37];
+    struct vol vol;
+};
+
+/*!
+ * @brief Create the scratch volume; -1 when the directory cannot be made
+ */
+static int cnid_scratch_setup(struct cnid_scratch *s, const char *tag,
+                              char *localname, const char *uuid)
+{
+    char made[MAXPATHLEN];
+    int len = snprintf(made, sizeof(made), "%s/netatalk-cnid-%s-XXXXXX",
+                       tmpdir(), tag);
+
+    if (len <= 0 || (size_t)len >= sizeof(made) || mkdtemp(made) == NULL) {
+        return -1;
+    }
+
+    /* canonical like a loaded volume's path, which the backend compares
+     * with its resolved database directory */
+    if (realpath(made, s->base) == NULL) {
+        rmdir(made);
+        return -1;
+    }
+
+    s->dbdir[0] = '\0';
+    snprintf(s->dbfile, sizeof(s->dbfile), "%s/%s.sqlite", s->base, localname);
+    snprintf(s->uuid, sizeof(s->uuid), "%s", uuid);
+    memset(&s->vol, 0, sizeof(s->vol));
+    s->vol.v_dbpath = s->base;
+    s->vol.v_localname = localname;
+    s->vol.v_path = s->base;
+    s->vol.v_uuid = s->uuid;
+    return 0;
+}
+
+/*!
+ * @brief Keep the scratch volume's database in a subdirectory of its share
+ */
+static int cnid_scratch_separate_db(struct cnid_scratch *s)
+{
+    snprintf(s->dbdir, sizeof(s->dbdir), "%s/db", s->base);
+
+    if (mkdir(s->dbdir, 0700) != 0) {
+        s->dbdir[0] = '\0';
+        return -1;
+    }
+
+    snprintf(s->dbfile, sizeof(s->dbfile), "%s/%s.sqlite", s->dbdir,
+             s->vol.v_localname);
+    s->vol.v_dbpath = s->dbdir;
+    return 0;
+}
+
+/*!
+ * @brief Whether the scratch volume's sqlite database exists
+ */
+static bool cnid_scratch_db_exists(const struct cnid_scratch *s)
+{
+    struct stat st;
+    return stat(s->dbfile, &st) == 0;
+}
+
+/*!
+ * @brief Remove the scratch volume with its database and companions
+ */
+static void cnid_scratch_cleanup(const struct cnid_scratch *s)
+{
+    const char *suffixes[] = { "-wal", "-shm", "-journal" };
+    char companion[MAXPATHLEN];
+
+    for (size_t i = 0; i < sizeof(suffixes) / sizeof(suffixes[0]); i++) {
+        snprintf(companion, sizeof(companion), "%s%s", s->dbfile, suffixes[i]);
+        unlink(companion);
+    }
+
+    unlink(s->dbfile);
+
+    if (s->dbdir[0] != '\0') {
+        rmdir(s->dbdir);
+    }
+
+    rmdir(s->base);
+}
+
+/*!
+ * @brief cnid_open() serves an unknown scheme through the sqlite backend
+ */
+int utest_cnid_open_unknown_scheme_uses_sqlite(void)
+{
+    static char scheme[] = "dbd";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    int result = 1;
+
+    if (cnid_scratch_setup(&s, "scheme", "fallback",
+                           "0F0F0F0F-1111-2222-3333-444444444444") != 0) {
+        return TEST_SKIP;
+    }
+
+    cdb = cnid_open(&s.vol, scheme, 0);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        result = cnid_scratch_db_exists(&s) ? 0 : 2;
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief cnid_open() refuses a backend this build was compiled without
+ */
+int utest_cnid_open_missing_backend_refused(void)
+{
+#ifdef CNID_BACKEND_MYSQL
+    return TEST_SKIP;
+#else
+    static char scheme[] = "mysql";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    int result = 0;
+
+    if (cnid_scratch_setup(&s, "missing", "missing",
+                           "0F0F0F0F-1111-2222-3333-666666666666") != 0) {
+        return TEST_SKIP;
+    }
+
+    cdb = cnid_open(&s.vol, scheme, 0);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        result = 1;
+    }
+
+    if (cnid_scratch_db_exists(&s)) {
+        result = 2;
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
 #endif
+}
+
+/*!
+ * @brief cnid_scheme_registered() knows the registered backends by name
+ */
+int utest_cnid_scheme_registered(void)
+{
+    if (!cnid_scheme_registered("sqlite")
+            || !cnid_scheme_registered("SQLite")) {
+        return 1;
+    }
+
+    if (cnid_scheme_registered("dbd") || cnid_scheme_registered("")) {
+        return 2;
+    }
+
+#ifdef CNID_BACKEND_MYSQL
+    return cnid_scheme_registered("mysql") ? 0 : 3;
+#else
+    return cnid_scheme_registered("mysql") ? 3 : 0;
+#endif
+}
+
+/*!
+ * @brief Write a scratch file's whole content
+ */
+static int cnid_scratch_write(const char *path, const void *data, size_t len)
+{
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    ssize_t written;
+
+    if (fd < 0) {
+        return -1;
+    }
+
+    written = write(fd, data, len);
+    close(fd);
+    return written == (ssize_t)len ? 0 : -1;
+}
+
+/*!
+ * @brief Open and close the scratch volume's database, then report whether
+ *        that open logged @p needle
+ */
+static int cnid_open_logged(struct cnid_scratch *s, const char *logpath,
+                            const char *needle)
+{
+    static char scheme[] = "sqlite";
+    struct _cnid_db *cdb;
+    conf_log_truncate(logpath);
+
+    if ((cdb = cnid_open(&s->vol, scheme, 0)) == NULL) {
+        return -1;
+    }
+
+    cnid_close(cdb);
+    return conf_log_contains(logpath, needle);
+}
+
+/*!
+ * @brief cnid_open() logs the creation of a new database once
+ */
+int utest_cnid_sqlite_creation_logged(void)
+{
+    struct cnid_scratch s;
+    char logpath[64];
+    char needle[MAXPATHLEN + 64];
+    int first;
+    int second = -2;
+
+    if (cnid_scratch_setup(&s, "create", "createvol",
+                           "0F0F0F0F-1111-2222-3333-999999999999") != 0) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        cnid_scratch_cleanup(&s);
+        return TEST_SKIP;
+    }
+
+    /* shared or private depends on who runs the test */
+    snprintf(needle, sizeof(needle),
+             " SQLite CNID database for volume '%s' in %s", s.base, s.dbfile);
+    setuplog("default:info", logpath, true);
+
+    if ((first = cnid_open_logged(&s, logpath, needle)) == 1) {
+        second = cnid_open_logged(&s, logpath, needle);
+    }
+
+    setuplog("default:note", "/dev/stderr", true);
+    unlink(logpath);
+    cnid_scratch_cleanup(&s);
+
+    if (first != 1 || second != 0) {
+        fprintf(test_stream(),
+                "# utest_cnid_sqlite_creation_logged: first open %d, "
+                "second open %d\n", first, second);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Whether opening the scratch volume reports @p orphan as a database
+ *        left in the share root
+ */
+static int cnid_orphan_logged(struct cnid_scratch *s, const char *logpath,
+                              const char *orphan)
+{
+    char needle[MAXPATHLEN + 64];
+    snprintf(needle, sizeof(needle),
+             "CNID database %s in the share root is not used", orphan);
+    return cnid_open_logged(s, logpath, needle);
+}
+
+/*!
+ * @brief cnid_open() reports a sqlite database left in the share root
+ *
+ * A regular file with the SQLite header is reported; a file without it, a
+ * symbolic link, and the live database of a volume whose database directory
+ * is its share root are not.
+ */
+int utest_cnid_sqlite_orphan_reported(void)
+{
+    static const char header[] = "SQLite format 3";
+    struct cnid_scratch s;
+    struct cnid_scratch symvol;
+    struct cnid_scratch live;
+    char logpath[64];
+    char orphan[MAXPATHLEN];
+    char linked[MAXPATHLEN];
+    char target[MAXPATHLEN];
+    int got[4] = { -2, -2, -2, -2 };
+    int result = 0;
+
+    if (cnid_scratch_setup(&s, "orphan", "orphanvol",
+                           "0F0F0F0F-1111-2222-3333-777777777777") != 0) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&symvol, "link", "linkvol",
+                           "0F0F0F0F-1111-2222-3333-AAAAAAAAAAAA") != 0) {
+        cnid_scratch_cleanup(&s);
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&live, "live", "livevol",
+                           "0F0F0F0F-1111-2222-3333-888888888888") != 0) {
+        cnid_scratch_cleanup(&symvol);
+        cnid_scratch_cleanup(&s);
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_separate_db(&s) != 0
+            || cnid_scratch_separate_db(&symvol) != 0
+            || conf_mklog(logpath, sizeof(logpath)) != 0) {
+        cnid_scratch_cleanup(&live);
+        cnid_scratch_cleanup(&symvol);
+        cnid_scratch_cleanup(&s);
+        return TEST_SKIP;
+    }
+
+    snprintf(orphan, sizeof(orphan), "%s/orphanvol.sqlite", s.base);
+    snprintf(linked, sizeof(linked), "%s/linkvol.sqlite", symvol.base);
+    snprintf(target, sizeof(target), "%s/target.sqlite", symvol.base);
+    setuplog("default:note", logpath, true);
+
+    if (cnid_scratch_write(orphan, header, sizeof(header)) == 0) {
+        got[0] = cnid_orphan_logged(&s, logpath, orphan);
+    }
+
+    if (cnid_scratch_write(orphan, "plain text\n", 11) == 0) {
+        got[1] = cnid_orphan_logged(&s, logpath, orphan);
+    }
+
+    if (cnid_scratch_write(target, header, sizeof(header)) == 0
+            && symlink(target, linked) == 0) {
+        got[2] = cnid_orphan_logged(&symvol, logpath, linked);
+    }
+
+    /* the second open finds the database the first one created */
+    if (cnid_orphan_logged(&live, logpath, live.dbfile) >= 0) {
+        got[3] = cnid_orphan_logged(&live, logpath, live.dbfile);
+    }
+
+    setuplog("default:note", "/dev/stderr", true);
+
+    if (got[0] != 1 || got[1] != 0 || got[2] != 0 || got[3] != 0) {
+        fprintf(test_stream(),
+                "# utest_cnid_sqlite_orphan_reported: header %d, plain %d, "
+                "symlink %d, live %d\n", got[0], got[1], got[2], got[3]);
+        result = 1;
+    }
+
+    unlink(orphan);
+    unlink(linked);
+    unlink(target);
+    unlink(logpath);
+    cnid_scratch_cleanup(&live);
+    cnid_scratch_cleanup(&symvol);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+static int fake_open_calls;
+
+/*!
+ * @brief Backend open that records the call and opens nothing
+ */
+static struct _cnid_db *fake_cnid_open(struct cnid_open_args *args _U_)
+{
+    fake_open_calls++;
+    return NULL;
+}
+
+/*!
+ * @brief cnid_open() matches the scheme name without regard to case
+ */
+int utest_cnid_open_scheme_case_insensitive(void)
+{
+    static struct _cnid_module fake = {
+        .name = "UTestScheme",
+        .cnid_open = fake_cnid_open,
+    };
+    static char scheme[] = "utestscheme";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    int result;
+
+    if (cnid_scratch_setup(&s, "case", "casevol",
+                           "0F0F0F0F-1111-2222-3333-555555555555") != 0) {
+        return TEST_SKIP;
+    }
+
+    cnid_register(&fake);
+    fake_open_calls = 0;
+    cdb = cnid_open(&s.vol, scheme, 0);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    result = fake_open_calls == 1 ? 0 : 1;
+    /* a fallback to sqlite, the failing case, leaves a database to remove */
+    cnid_scratch_cleanup(&s);
+    return result;
 }
 
 /*!
@@ -286,7 +679,6 @@ int utest_cnid_volume_tag_identity(void)
     return 0;
 }
 
-#ifdef CNID_BACKEND_SQLITE
 /*!
  * @brief Second connection to the volume's CNID database
  *
@@ -414,7 +806,6 @@ static int cnid_peer_get_depleted(sqlite3 *peer, const char *uuid)
     free(sql);
     return depleted;
 }
-#endif /* CNID_BACKEND_SQLITE */
 
 /*!
  * @brief Every CNID_INVALID from the wrapper carries its own errno
@@ -423,7 +814,7 @@ static int cnid_peer_get_depleted(sqlite3 *peer, const char *uuid)
  * and a retryable one, and get_id() (etc/afpd/file.c) ends the session on
  * CNID_ERR_DB, so a rejection sets errno itself rather than leaving an earlier
  * operation's value in place. The poison value here, EPERM, is what a failed
- * chown or seteuid leaves behind and is also CNID_DBD_RES_NOTFOUND's value.
+ * chown or seteuid leaves behind.
  */
 int utest_cnid_wrapper_sets_errno(void)
 {
@@ -504,10 +895,6 @@ int utest_cnid_valide_byteorder(void)
  */
 int utest_cnid_add_busy_not_fatal(struct vol *vol)
 {
-#ifndef CNID_BACKEND_SQLITE
-    (void) vol;
-    return TEST_SKIP;
-#else
     sqlite3 *peer;
     char probe[MAXPATHLEN];
     const char *name;
@@ -579,7 +966,6 @@ exit:
     close(fd);
     unlink(probe);
     return result;
-#endif /* CNID_BACKEND_SQLITE */
 }
 
 /*!
@@ -591,10 +977,6 @@ exit:
  */
 int utest_cnid_uuid_case_keeps_table(struct vol *vol)
 {
-#ifndef CNID_BACKEND_SQLITE
-    (void) vol;
-    return TEST_SKIP;
-#else
     struct vol peer_vol;
     struct _cnid_db *peer_db;
     char *flipped = NULL;
@@ -673,7 +1055,6 @@ close_probe:
     unlink(probe);
     free(flipped);
     return result;
-#endif /* CNID_BACKEND_SQLITE */
 }
 
 /*!
@@ -685,10 +1066,6 @@ close_probe:
  */
 int utest_cnid_add_depletion_resets(struct vol *vol)
 {
-#ifndef CNID_BACKEND_SQLITE
-    (void) vol;
-    return TEST_SKIP;
-#else
     sqlite3 *peer;
     char *uuid = NULL;
     char probe[MAXPATHLEN];
@@ -780,7 +1157,6 @@ exit:
     free(uuid);
     sqlite3_close(peer);
     return result;
-#endif /* CNID_BACKEND_SQLITE */
 }
 
 /*!
@@ -820,8 +1196,7 @@ int utest_cnid_error_codes_distinct(void)
 /*!
  * @brief A not-found answer classifies out of the syscall errno range
  *
- * The dbd wire constant CNID_DBD_RES_NOTFOUND equals EPERM, and callers that
- * switch on raw errno map EPERM to AFPERR_ACCESS (movecwd() in
+ * Callers that switch on raw errno map EPERM to AFPERR_ACCESS (movecwd() in
  * etc/afpd/directory.c), so an absent row answers CNID_ERR_NOTFOUND. The CNID
  * probed here is high in the range and has no row.
  */
@@ -890,6 +1265,69 @@ int utest_cnid_resolve_dotdot_rejected(void)
     return 0;
 }
 
+static size_t fake_find_namelen;
+
+/*!
+ * @brief Backend cnid_find that records the name length handed to it
+ */
+static int fake_cnid_find(struct _cnid_db *cdb _U_, const char *name _U_,
+                          size_t namelen, cnid_t scope_did _U_,
+                          void *buffer _U_, size_t buflen _U_,
+                          bool *more_available _U_)
+{
+    fake_find_namelen = namelen;
+    return 0;
+}
+
+/*!
+ * @brief cnid_find() accepts a name of MAXPATHLEN bytes and rejects one more
+ *
+ * The wrapper's bound is the path-buffer limit; a longer name, or an empty
+ * one, is a parameter error that never reaches the backend.
+ */
+int utest_cnid_find_name_bound(void)
+{
+    struct _cnid_db cdb = { 0 };
+    char name[MAXPATHLEN + 1];
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    bool more = false;
+    cdb.cnid_find = fake_cnid_find;
+    memset(name, 'a', MAXPATHLEN);
+    name[MAXPATHLEN] = '\0';
+    fake_find_namelen = 0;
+    errno = 0;
+
+    if (cnid_find(&cdb, name, MAXPATHLEN, results, sizeof(results), &more) != 0
+            || fake_find_namelen != MAXPATHLEN) {
+        return 1;
+    }
+
+    fake_find_namelen = 0;
+    errno = 0;
+
+    if (cnid_find(&cdb, name, MAXPATHLEN + 1, results, sizeof(results),
+                  &more) != -1 || fake_find_namelen != 0) {
+        return 2;
+    }
+
+    if (CNID_ERRNO() != CNID_ERR_PARAM) {
+        return 3;
+    }
+
+    errno = 0;
+
+    if (cnid_find(&cdb, name, 0, results, sizeof(results), &more) != -1
+            || fake_find_namelen != 0) {
+        return 4;
+    }
+
+    if (CNID_ERRNO() != CNID_ERR_PARAM) {
+        return 5;
+    }
+
+    return 0;
+}
+
 /*!
  * @brief 64-bit rows that do not fit a CNID classify as corrupt, not truncate
  *
@@ -899,10 +1337,6 @@ int utest_cnid_resolve_dotdot_rejected(void)
  */
 int utest_cnid_corrupt_row_classified(struct vol *vol)
 {
-#ifndef CNID_BACKEND_SQLITE
-    (void) vol;
-    return TEST_SKIP;
-#else
     sqlite3 *peer;
     char *uuid = NULL;
     char *sql = NULL;
@@ -1008,7 +1442,6 @@ exit:
     free(uuid);
     sqlite3_close(peer);
     return result;
-#endif /* CNID_BACKEND_SQLITE */
 }
 
 /*!
@@ -1020,10 +1453,6 @@ exit:
  */
 int utest_cnid_find_no_truncated_id(struct vol *vol)
 {
-#ifndef CNID_BACKEND_SQLITE
-    (void) vol;
-    return TEST_SKIP;
-#else
     sqlite3 *peer;
     char *uuid = NULL;
     char *sql = NULL;
@@ -1100,7 +1529,6 @@ exit:
     free(uuid);
     sqlite3_close(peer);
     return result;
-#endif /* CNID_BACKEND_SQLITE */
 }
 
 /*!
@@ -1113,10 +1541,6 @@ exit:
  */
 int utest_cnid_dup_row_no_truncated_delete(struct vol *vol)
 {
-#ifndef CNID_BACKEND_SQLITE
-    (void) vol;
-    return TEST_SKIP;
-#else
     sqlite3 *peer;
     char *uuid = NULL;
     char *sql = NULL;
@@ -1227,7 +1651,6 @@ exit:
     free(uuid);
     sqlite3_close(peer);
     return result;
-#endif /* CNID_BACKEND_SQLITE */
 }
 
 /*!
@@ -1242,10 +1665,6 @@ exit:
  */
 int utest_cnid_sqlite_owner_only(struct vol *vol)
 {
-#ifndef CNID_BACKEND_SQLITE
-    (void) vol;
-    return TEST_SKIP;
-#else
     struct vol su_vol;
     AFPObj su_obj = { 0 };
     struct _cnid_db *db;
@@ -1306,5 +1725,4 @@ int utest_cnid_sqlite_owner_only(struct vol *vol)
     unlink(aux);
     rmdir(dbdir);
     return result;
-#endif /* CNID_BACKEND_SQLITE */
 }

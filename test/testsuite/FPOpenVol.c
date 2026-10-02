@@ -116,7 +116,7 @@ fin:
         test_failed();
     }
 
-    exit_test("FPOpenVol:test404: lazy init of dbd cnid");
+    exit_test("FPOpenVol:test404: lazy init of cnid");
 }
 
 /* ----------- */

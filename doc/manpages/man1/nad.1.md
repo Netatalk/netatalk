@@ -18,7 +18,9 @@ AppleDouble data, which could be one of extended attributes of files,
 as well as the CNID databases are updated appropriately
 when files in the shared Netatalk volume are modified.
 By default, **nad** refuses to operate on paths outside configured AFP
-volumes. Use **\-\-force** to override this validation.
+volumes. Use **\-\-force** to override this validation. A volume whose
+**cnid scheme** names a CNID backend this installation does not have is
+refused with a message naming the scheme; correct *afp.conf* first.
 
 Using **nad** is preferable over the operating system's native file operation commands
 on files and directories in a Netatalk AFP volume, because it preserves the integrity
@@ -181,7 +183,7 @@ to copy a file to itself, the copy will fail.
 
 Source and destination paths must be inside configured AFP volumes unless
 **\-\-force** is used. When a copy targeting an AFP volume is detected, its
-CNID database daemon is connected and all copies will also go through the
+CNID database is opened and all copies will also go through the
 CNID database. AppleDouble data are also copied and created as needed when the
 target is an AFP volume.
 

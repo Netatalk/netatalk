@@ -32,27 +32,16 @@
 #include <atalk/list.h>
 #include <atalk/logger.h>
 
-#ifdef CNID_BACKEND_DBD
-extern struct _cnid_module cnid_dbd_module;
-#endif
-
 #ifdef CNID_BACKEND_MYSQL
 extern struct _cnid_module cnid_mysql_module;
 #endif
 
-#ifdef CNID_BACKEND_SQLITE
 extern struct _cnid_module cnid_sqlite_module;
-#endif
 
 void cnid_init(void)
 {
-#ifdef CNID_BACKEND_DBD
-    cnid_register(&cnid_dbd_module);
-#endif
 #ifdef CNID_BACKEND_MYSQL
     cnid_register(&cnid_mysql_module);
 #endif
-#ifdef CNID_BACKEND_SQLITE
     cnid_register(&cnid_sqlite_module);
-#endif
 }

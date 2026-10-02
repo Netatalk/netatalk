@@ -13,9 +13,7 @@ and according to the AFP specification CNIDs must never be reused.
 IDs are 32-bit numbers, and directories share the same pool,
 so it is depleted after roughly 4 billion files and directories have been written.
 
-What happens then depends on the backend.
-The *dbd* backend stops allocating IDs, and no new files can be written to the volume.
-The *sqlite* and *mysql* backends empty the CNID table, restart numbering,
+When that happens, the *sqlite* and *mysql* backends empty the CNID table, restart numbering,
 and trigger all clients connected to the volume to reconnect
 so that everyone uses the new IDs.
 This keeps a long-lived volume writable, but it violates the spec
@@ -25,7 +23,7 @@ so it can optionally be renumbered with the **dbd** utility beforehand,
 during a maintenance window.
 
 Netatalk maps IDs to files and directories in the host filesystem.
-Several CNID backends are available and can be selected with the **cnid scheme** option in *afp.conf*.
+Two CNID backends are available and can be selected with the **cnid scheme** option in *afp.conf*.
 A CNID backend is essentially a database storing ID ↔ name mappings.
 
 For CNID backends that use a zero-configuration database,
@@ -35,11 +33,13 @@ You can change the state directory path with *-Dwith-statedir-path=PATH*
 at compile time.
 
 The **dbd** command-line utility can verify, repair, and rebuild the CNID database
-of any backend, not just *dbd*.
+of either backend.
 
 > **NOTE:** Keep the following CNID-related considerations in mind:
 
-- Don't nest volumes unless **vol dbnest = yes** is set.
+- Don't nest volumes: when one volume's path lies inside another's, the one
+  defined later in *afp.conf* is skipped with a warning (see the
+  Configuration chapter).
 - CNID backends are databases, so they make **afpd** a combined file
   server and database system.
 - If the filesystem runs out of space,
@@ -53,17 +53,8 @@ of any backend, not just *dbd*.
   if you must use NFS-mounted volumes.
 
 The following sections describe the CNID backends included with Netatalk.
-You can choose to build one or several of them at compile time.
-Run *afpd -v* to see which backends are available and which one is the default.
-
-## dbd
-
-The "Database Daemon" backend is built on Berkeley DB.
-Rather than accessing the database directly,
-**afpd** processes communicate with one or more **cnid_dbd** daemon processes over a wire protocol.
-The **cnid_dbd** daemon is responsible for database reads and updates.
-
-It is deprecated and not recommended for new deployments.
+The *sqlite* backend is always built; *mysql* is added at compile time.
+Run *afpd -v* to see which backends are available.
 
 ## mysql
 
@@ -77,9 +68,8 @@ and Netatalk configured to connect to it over a Unix socket or a network interfa
 ## sqlite
 
 A fast and lightweight CNID database backend that uses the SQLite v3 embedded database engine.
-It has a simpler architecture compared to *dbd* because the database is accessed directly by **afpd**,
-which means that it does not require separate controller daemon processes.
-And compared to *mysql*, it does not require a separate SQL server
+The database is accessed directly by **afpd**, and compared to *mysql*,
+it does not require a separate SQL server
 to be set up and maintained by the system administrator.
 
 The tradeoff is that SQLite's embedded database is not the most scalable

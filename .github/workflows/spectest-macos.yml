@@ -40,7 +40,6 @@ jobs:
         run: |
           brew update
           brew install \
-            berkeley-db@5 \
             bstring \
             cmark-gfm \
             cracklib \
@@ -166,7 +165,7 @@ jobs:
           dircache size = 1024
           dircache validation freq = 100
           afp listen = 0.0.0.0:5548
-          cnid scheme = dbd
+          cnid scheme = sqlite
 
           [test1]
           ea = sys
@@ -252,7 +251,7 @@ jobs:
 
       - name: Stop netatalk
         if: always()
-        run: sudo netatalkd stop || sudo killall netatalk afpd cnid_metad 2>/dev/null || true
+        run: sudo netatalkd stop || sudo killall netatalk afpd 2>/dev/null || true
 
       - name: Cleanup test users
         if: always()

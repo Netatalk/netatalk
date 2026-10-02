@@ -7,11 +7,9 @@ volumes before deploying it in enforcing mode.
 
 ## Recommended configuration
 
-Migrating from the deprecated **dbd CNID backend to SQLite is recommended for
-security-conscious deployments**. SQLite operates in-process, eliminating the
-`cnid_metad` and `cnid_dbd` daemons and their database communication channels.
-SQLite is the default CNID backend when compiled in; CNID is the default
-Spotlight backend.
+SQLite operates in-process: there are no database daemons and no database
+communication channels to confine. SQLite is the default CNID backend; CNID
+is the default Spotlight backend.
 
 Set these options explicitly in `afp.conf` and check volume sections and presets
 for overrides:
@@ -26,10 +24,6 @@ Spotlight search still needs `spotlight = yes` on the volumes where it is wanted
 The CNID Spotlight backend searches filenames recorded in the CNID database; it
 does not provide Localsearch's full-text content indexing.
 
-The dbd backend remains available in Netatalk, but **this policy provides no
-compatibility mode for it**. `cnid_metad` and `cnid_dbd` receive a separate
-executable label with no execution permission from `netatalk_t`.
-
 Localsearch Spotlight is not recommended for this configuration. Its
 `dbus-session.conf` receives a separate label that `netatalk_t` cannot read, and
 Netatalk is not allowed to execute `dbus-daemon`. Avahi service discovery can
@@ -39,27 +33,6 @@ session bus, shell hooks, or arbitrary helper execution.
 Check `afpd -v` and `netatalk -v` for the backends present in your installation.
 The build installs `dbus-session.conf` only when Localsearch support is enabled;
 existing copies still need the restricted label when installing this policy.
-
-### Migrating existing dbd volumes
-
-Before installing this policy:
-
-1. Disconnect AFP clients, stop Netatalk, and verify that `afpd`, `cnid_metad`,
-   and `cnid_dbd` have stopped. Keep Netatalk stopped throughout the migration.
-2. Back up `afp.conf`, volume metadata, CNID databases, and the state files
-   `afp_signature.conf` and `afp_voluuid.conf`.
-3. Set `cnid scheme = sqlite` for every volume, including presets and dynamic
-   home volumes. Verify SQLite is compiled in. Set `spotlight backend = cnid`
-   wherever Spotlight is used.
-4. Rebuild each volume's SQLite CNID database using the administrator-run
-   `dbd` utility, following [dbd(1)](../../doc/manpages/man1/dbd.1.md).
-   For example, `dbd -f /srv/afp/share` recreates the configured volume's CNID
-   table. This is a rebuild, not an in-place conversion of Berkeley DB files;
-   `-f` deletes the target table's existing records. Preserve backups and
-   validate client references after migration.
-5. Install the policy and label database and shared-volume paths as described
-   below. Restart Netatalk and verify AFP operations and searches. Confirm that
-   neither deprecated daemon nor a private Spotlight bus starts.
 
 ## Build and installation
 
@@ -116,10 +89,11 @@ sudo restorecon -Rv /srv/afp-database
 
 Database labeling must cover the directory, SQLite databases, and their
 `-wal`, `-shm`, and journal files. New files inherit the database directory's
-label. Prefer a dedicated database directory. For `vol dbnest` or a database
-inside a share, inspect the actual layout and add specific database mappings;
-do not relabel the whole shared volume as database storage. Local fcontext
-rules take precedence over module rules, so check overlapping mappings.
+label. Prefer a dedicated database directory. For a database inside a share
+(a `vol dbpath` under the share path), inspect the actual layout and add
+specific database mappings; do not relabel the whole shared volume as database
+storage. Local fcontext rules take precedence over module rules, so check
+overlapping mappings.
 
 Parent directories must be searchable by the service. Home directories,
 alternate authentication modules, and shares also served by Samba may need
@@ -171,7 +145,6 @@ to label all home directories as traversal parents.
 | --- | --- |
 | `netatalk_t` | Netatalk and AFP processes |
 | `netatalk_exec_t` | Supported daemon executables |
-| `netatalk_legacy_exec_t` | Deprecated daemons, not executable by Netatalk |
 | `netatalk_etc_t` | Supported configuration files |
 | `netatalk_dbus_conf_t` | Excluded private session-bus configuration |
 | `netatalk_var_lib_t` | State directory, signatures, and volume UUIDs |
@@ -211,16 +184,15 @@ On an enforcing test host, verify:
 - AFP authentication, file creation/read/write/rename/delete, metadata updates,
   concurrent SQLite sessions, and CNID Spotlight searches work.
 - Avahi discovery works with the system bus.
-- Attempts from the confined service to execute either deprecated daemon or
-  `dbus-daemon`, or to read `dbus-session.conf`, are denied. Test configuration
-  changes only against disposable volumes. An administrator's unconfined shell
-  is not an equivalent negative test.
+- Attempts from the confined service to execute `dbus-daemon`, or to read
+  `dbus-session.conf`, are denied. Test configuration changes only against
+  disposable volumes. An administrator's unconfined shell is not an equivalent
+  negative test.
 
 Use `sesearch` against the installed policy to inspect effective allows. These
 queries should return no allows, including conditional ones:
 
 ```shell
-sesearch --allow -s netatalk_t -t netatalk_legacy_exec_t -c file -p execute
 sesearch --allow -s netatalk_t -t netatalk_dbus_conf_t -c file -p read
 if seinfo -t dbusd_exec_t | grep -q '^[[:space:]]*dbusd_exec_t[[:space:]]*$'; then
     sesearch --allow -s netatalk_t -t dbusd_exec_t -c file -p execute
@@ -240,9 +212,9 @@ sudo ./netatalk.sh --audit
 No matching audit records may produce a nonzero exit status. Check the selected
 backends, Unix permissions, labels, local fcontext overrides, and parent-directory
 access before adding permissions. Denials for excluded backends are intentional:
-correct the configuration or complete the migration. Do not feed these denials
-into `audit2allow`. The former `--update` option has been removed; the helper no
-longer appends generated rules to the policy.
+correct the configuration. Do not feed these denials into `audit2allow`. The
+former `--update` option has been removed; the helper no longer appends
+generated rules to the policy.
 
 ## Further reading
 

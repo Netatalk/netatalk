@@ -24,12 +24,6 @@ pass() {
     echo "ok: $pass_msg"
     return 0
 }
-# A precondition this image cannot meet: say so and end the whole script green.
-skip_all() {
-    skip_msg=$1
-    echo "SKIP: $skip_msg"
-    exit 0
-}
 
 # Negate a command, for use as a wait_for predicate.
 not_() {
@@ -192,7 +186,7 @@ owned() {
 # The value of one `afpd -v` line, by its label ($1, without the colon).
 # Labels are right-aligned with leading spaces and tab-separated from the
 # value, e.g. "                   afp.conf:<TAB>/etc/netatalk/afp.conf" or
-# "              CNID backends:<TAB>dbd mysql sqlite ". Read from the binary
+# "              CNID backends:<TAB>mysql sqlite ". Read from the binary
 # rather than guessed: the testsuite image builds with a non-default prefix.
 afpd_buildinfo() {
     ab_label=$1
@@ -205,13 +199,4 @@ afpd_buildinfo() {
 netatalk_confdir() {
     dirname "$(afpd_buildinfo afp.conf)"
     return $?
-}
-
-# True when afpd was built with the sqlite CNID backend.
-have_sqlite_cnid() {
-    if afpd_buildinfo 'CNID backends' | grep -qw sqlite; then
-        return 0
-    fi
-
-    return 1
 }

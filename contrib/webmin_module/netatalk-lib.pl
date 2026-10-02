@@ -41,8 +41,6 @@ our %netatalkParameterDefaults = (
                                   'chmod request'               => 'preserve',
                                   'close vol'                   => 'no',
                                   'cnid dev'                    => 'yes',
-                                  'cnid listen'                 => 'localhost:4700',
-                                  'cnid server'                 => 'localhost:4700',
                                   'convert appledouble'         => 'no',
                                   'ddp address'                 => '0.0',
                                   'delete veto files'           => 'no',
@@ -97,7 +95,6 @@ our %netatalkParameterDefaults = (
                                   'use sendfile'                => 'yes',
                                   'valid shellcheck'            => 'yes',
                                   'veto message'                => 'no',
-                                  'vol dbnest'                  => 'no',
                                   'vol dbpath'                  => '@localstatedir@/netatalk/CNID/',
                                   'volnamelen'                  => '80',
                                   'zeroconf'                    => 'yes',
@@ -128,7 +125,7 @@ our %netatalkParameterSelectOptions = (
                                        'chmod request'               => ['preserve', 'ignore', 'simple'],
                                        'close vol'                   => [@yesNoSelectOptions],
                                        'cnid dev'                    => [@yesNoSelectOptions],
-                                       'cnid scheme'                 => ['dbd', 'mysql', 'sqlite'],
+                                       'cnid scheme'                 => ['mysql', 'sqlite'],
                                        'convert appledouble'         => [@yesNoSelectOptions],
                                        'delete veto files'           => [@yesNoSelectOptions],
                                        'dircache mode'               => ['lru', 'arc'],
@@ -182,7 +179,6 @@ our %netatalkParameterSelectOptions = (
                                        'use sendfile'               => [@yesNoSelectOptions],
                                        'valid shellcheck'           => [@yesNoSelectOptions],
                                        'veto message'               => [@yesNoSelectOptions],
-                                       'vol dbnest'                 => [@yesNoSelectOptions],
                                        'zeroconf'                   => [@yesNoSelectOptions],
 );
 
@@ -639,7 +635,9 @@ sub build_select {
         my $value            = shift;
         my $userVisibleValue = shift;
         $select .=
-          "<option value='$value' " . ($values[0] eq $value ? "selected" : "") . ">$userVisibleValue</option>\n";
+            "<option value='$value' "
+          . (lc($values[0]) eq lc($value) ? "selected" : "")
+          . ">$userVisibleValue</option>\n";
     }
 
     return $select . "</select>\n";

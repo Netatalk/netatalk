@@ -54,7 +54,6 @@ jobs:
               avahi \
               curl \
               cmark \
-              db5 \
               gmake \
               iniparser \
               libev \
@@ -145,7 +144,6 @@ jobs:
               bison \
               cmark \
               curl \
-              db5 \
               dconf \
               flex \
               git \
@@ -234,7 +232,6 @@ jobs:
               bison \
               cmark \
               curl \
-              db5 \
               dconf \
               flex \
               git \
@@ -329,7 +326,6 @@ jobs:
             pkg_add \
               cmark \
               curl \
-              db5 \
               gcc13 \
               gmake \
               heimdal \
@@ -422,7 +418,6 @@ jobs:
               avahi \
               cmark \
               curl \
-              db-4.6.21p8v0 \
               dbus \
               git \
               gmake \

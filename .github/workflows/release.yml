@@ -58,6 +58,7 @@ jobs:
             libevent-dev \
             libgcrypt20-dev \
             libiniparser-dev \
+            libsqlite3-dev \
             meson \
             ninja-build
       - name: Configure build

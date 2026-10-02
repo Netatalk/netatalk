@@ -100,7 +100,7 @@ for technical and privacy reasons.
 
 ## MySQL CNID Backend
 
-The MySQL CNID backend is an alternative to the default Berkeley DB CNID backend which offers better scalability.
+The MySQL CNID backend offers better scalability than the default SQLite CNID backend.
 
 Here follows a compose example to run a container network with MariaDB as the database for the MySQL CNID backend,
 plus a web interface to administer the database for good measure.
@@ -277,7 +277,7 @@ Set this environment variable to a specific value or string.
 | **Authentication Configuration** |                                                                       |
 | AFP_UAMS                        | Space-separated list of UAM .so files to load, overriding the default list (`uams_dhx2.so uams_srp.so`) as well as the INSECURE_AUTH flag |
 | **CNID Database Configuration** |                                                                        |
-| AFP_CNID_BACKEND                | The backend to use for the CNID database: *dbd*, *sqlite*, or *mysql*  |
+| AFP_CNID_BACKEND                | The backend for the CNID database: *sqlite* (default) or *mysql*, in lower case; any other value falls back to *sqlite* |
 | AFP_CNID_SQL_HOST               | The hostname or IP address of the CNID SQL server                      |
 | AFP_CNID_SQL_USER               | The username to use when connecting to the CNID SQL server             |
 | AFP_CNID_SQL_PASS               | The password to use when connecting to the CNID SQL server             |

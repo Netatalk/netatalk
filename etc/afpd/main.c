@@ -362,6 +362,7 @@ int main(int ac, char **av)
     /* initialize appletalk protocol support if enabled */
     if (dsi_obj.options.flags & OPTION_DDP) {
         afp_options_parse_cmdline(&asp_obj, ac, av);
+        asp_obj.proto = AFPPROTO_ASP;
 
         if (afp_config_parse(&asp_obj, "afpd") != 0) {
             afp_exit(EXITERR_CONF);
@@ -574,6 +575,7 @@ int main(int ac, char **av)
             /* initialize appletalk protocol support if enabled */
             if (dsi_obj.options.flags & OPTION_DDP) {
                 afp_options_parse_cmdline(&asp_obj, ac, av);
+                asp_obj.proto = AFPPROTO_ASP;
 
                 if (afp_config_parse(&asp_obj, "afpd") != 0) {
                     afp_exit(EXITERR_CONF);

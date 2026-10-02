@@ -55,9 +55,7 @@
 #define MEASURE_TIME_MS 0
 #define MEASURE_AFPD_READ_IO 1
 #define MEASURE_AFPD_WRITE_IO 2
-#define MEASURE_CNID_READ_IO 3
-#define MEASURE_CNID_WRITE_IO 4
-#define NUM_MEASUREMENTS 5
+#define NUM_MEASUREMENTS 3
 
 #define FPWRITE_RPLY_SIZE 24
 
@@ -252,21 +250,15 @@ static void addresult(int32_t test, uint8_t iteration)
     if (io_monitoring_enabled) {
         (*results)[iteration][test][MEASURE_AFPD_READ_IO] = iodiff_io(afpd_pid, 0);
         (*results)[iteration][test][MEASURE_AFPD_WRITE_IO] = iodiff_io(afpd_pid, 1);
-        (*results)[iteration][test][MEASURE_CNID_READ_IO] = iodiff_io(cnid_dbd_pid, 0);
-        (*results)[iteration][test][MEASURE_CNID_WRITE_IO] = iodiff_io(cnid_dbd_pid, 1);
     } else {
         (*results)[iteration][test][MEASURE_AFPD_READ_IO] = 0;
         (*results)[iteration][test][MEASURE_AFPD_WRITE_IO] = 0;
-        (*results)[iteration][test][MEASURE_CNID_READ_IO] = 0;
-        (*results)[iteration][test][MEASURE_CNID_WRITE_IO] = 0;
     }
 
 #else
     /* Non-Linux platforms: set IO measurements to 0 */
     (*results)[iteration][test][MEASURE_AFPD_READ_IO] = 0;
     (*results)[iteration][test][MEASURE_AFPD_WRITE_IO] = 0;
-    (*results)[iteration][test][MEASURE_CNID_READ_IO] = 0;
-    (*results)[iteration][test][MEASURE_CNID_WRITE_IO] = 0;
 #endif
     /* Display human-readable progress */
     char padded_name[TEST_NAME_DISPLAY_WIDTH + 1];
@@ -290,11 +282,9 @@ static void addresult(int32_t test, uint8_t iteration)
     if (io_monitoring_enabled) {
         fprintf(stdout,
                 "\n         IO Operations; afpd: %" PRIu64 " READs, %" PRIu64
-                " WRITEs | cnid_dbd: %" PRIu64 " READs, %" PRIu64 " WRITEs",
+                " WRITEs",
                 (*results)[iteration][test][MEASURE_AFPD_READ_IO],
-                (*results)[iteration][test][MEASURE_AFPD_WRITE_IO],
-                (*results)[iteration][test][MEASURE_CNID_READ_IO],
-                (*results)[iteration][test][MEASURE_CNID_WRITE_IO]);
+                (*results)[iteration][test][MEASURE_AFPD_WRITE_IO]);
     }
 
 #endif
@@ -382,16 +372,15 @@ static void results_print_headers(bool is_csv)
     if (io_monitoring_enabled) {
         if (is_csv) {
             fprintf(stdout,
-                    "Test,Time_ms,Time±,Min_ms,Max_ms,Median_ms,AFPD_R,AFPD_R±,AFPD_W,AFPD_W±,CNID_R,CNID_R±,CNID_W,CNID_W±,MB/s\n");
+                    "Test,Time_ms,Time±,Min_ms,Max_ms,Median_ms,AFPD_R,AFPD_R±,AFPD_W,AFPD_W±,MB/s\n");
         } else {
-            fprintf(stdout, "%-66s %8s %6s %6s %7s %6s %7s %6s %7s %6s %7s %6s\n",
+            fprintf(stdout, "%-66s %8s %6s %6s %7s %6s %7s %6s\n",
                     "Test", " Time_ms", " Time±", "AFPD_R", "AFPD_R±", "AFPD_W", "AFPD_W±",
-                    "CNID_R", "CNID_R±", "CNID_W", "CNID_W±", "MB/s");
-            fprintf(stdout, "%-66s %8s %6s %6s %7s %6s %7s %6s %7s %6s %7s %6s\n",
+                    "MB/s");
+            fprintf(stdout, "%-66s %8s %6s %6s %7s %6s %7s %6s\n",
                     "------------------------------------------------------------------",
                     "--------", "------",
-                    "------", "-------", "------", "-------", "------", "-------", "------",
-                    "-------", "------");
+                    "------", "-------", "------", "-------", "------");
         }
     } else {
         if (is_csv) {
@@ -488,25 +477,21 @@ static void results_print_row(int32_t test, bool is_csv,
         if (is_csv) {
             fprintf(stdout,
                     "%s,%" PRIu64 ",%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.1f,%"
-                    PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 "\n",
+                    PRIu64 ",%.1f,%" PRIu64 "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                     time_min, time_max, time_median,
                     averages[test][MEASURE_AFPD_READ_IO], std_devs[test][MEASURE_AFPD_READ_IO],
                     averages[test][MEASURE_AFPD_WRITE_IO], std_devs[test][MEASURE_AFPD_WRITE_IO],
-                    averages[test][MEASURE_CNID_READ_IO], std_devs[test][MEASURE_CNID_READ_IO],
-                    averages[test][MEASURE_CNID_WRITE_IO], std_devs[test][MEASURE_CNID_WRITE_IO],
                     thrput);
         } else {
             fprintf(stdout,
                     "%-66s %8" PRIu64 " %6.1f %6" PRIu64 " %7.1f %6" PRIu64 " %7.1f %6" PRIu64
-                    " %7.1f %6" PRIu64 " %7.1f %6" PRIu64 "\n",
+                    "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                     averages[test][MEASURE_AFPD_READ_IO], std_devs[test][MEASURE_AFPD_READ_IO],
                     averages[test][MEASURE_AFPD_WRITE_IO], std_devs[test][MEASURE_AFPD_WRITE_IO],
-                    averages[test][MEASURE_CNID_READ_IO], std_devs[test][MEASURE_CNID_READ_IO],
-                    averages[test][MEASURE_CNID_WRITE_IO], std_devs[test][MEASURE_CNID_WRITE_IO],
                     thrput);
         }
     } else {
@@ -570,11 +555,10 @@ static void result_print_summary(uint64_t
 #ifdef __linux__
 
         if (io_monitoring_enabled) {
-            fprintf(stdout, "%-66s %8s %6s %6s %7s %6s %7s %6s %7s %6s %7s %6s\n",
+            fprintf(stdout, "%-66s %8s %6s %6s %7s %6s %7s %6s\n",
                     "------------------------------------------------------------------",
                     "--------", "------",
-                    "------", "-------", "------", "-------", "------", "-------", "------",
-                    "-------", "------");
+                    "------", "-------", "------", "-------", "------");
         } else {
             fprintf(stdout, "%-66s %7s %6s %6s\n",
                     "------------------------------------------------------------------", "-------",
@@ -596,30 +580,26 @@ static void result_print_summary(uint64_t
     if (io_monitoring_enabled) {
         if (is_csv) {
             fprintf(stdout,
-                    "Sum of all AFP OPs = %d,%.0f,,%.0f,,%.0f,,%.0f,,%.0f,,\n",
+                    "Sum of all AFP OPs = %d,%.0f,,,,,%.0f,,%.0f,,\n",
                     TOTAL_AFP_OPS,
                     column_sums[MEASURE_TIME_MS],
                     column_sums[MEASURE_AFPD_READ_IO],
-                    column_sums[MEASURE_AFPD_WRITE_IO],
-                    column_sums[MEASURE_CNID_READ_IO],
-                    column_sums[MEASURE_CNID_WRITE_IO]);
+                    column_sums[MEASURE_AFPD_WRITE_IO]);
         } else {
             char summary_str[100];
             snprintf(summary_str, sizeof(summary_str), "Sum of all AFP OPs = %d",
                      TOTAL_AFP_OPS);
             fprintf(stdout,
-                    "%-66s %8.0f %6s %6.0f %7s %6.0f %7s %6.0f %7s %6.0f %7s %6s\n",
+                    "%-66s %8.0f %6s %6.0f %7s %6.0f %7s %6s\n",
                     summary_str,
                     column_sums[MEASURE_TIME_MS], "",
                     column_sums[MEASURE_AFPD_READ_IO], "",
                     column_sums[MEASURE_AFPD_WRITE_IO], "",
-                    column_sums[MEASURE_CNID_READ_IO], "",
-                    column_sums[MEASURE_CNID_WRITE_IO], "",
                     "");
         }
     } else {
         if (is_csv) {
-            fprintf(stdout, "Sum of all AFP OPs = %d,%.0f,,\n",
+            fprintf(stdout, "Sum of all AFP OPs = %d,%.0f,,,,,\n",
                     TOTAL_AFP_OPS,
                     column_sums[MEASURE_TIME_MS]);
         } else {

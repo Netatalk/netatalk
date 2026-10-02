@@ -21,13 +21,6 @@ manpage_admin_commands = [
     'netatalk',
 ]
 
-if build_dbd_docs
-    manpage_admin_commands += [
-        'cnid_dbd',
-        'cnid_metad',
-    ]
-endif
-
 if enable_fce
     manpage_admin_commands += [
         'fce_ev_script',

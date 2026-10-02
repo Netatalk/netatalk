@@ -17,10 +17,9 @@
  * @file
  * @brief Linux I/O monitoring for Netatalk performance testing
  *
- * Monitors system call I/O statistics for afpd and cnid_dbd processes during tests.
+ * Monitors system call I/O statistics for afpd processes during tests.
  * Uses /proc_io filesystem (a secondary mount of proc) to track read/write syscalls.
- * Automatically discovers target processes by name and user, handling both privilege-dropped
- * processes (afpd) and root processes with user arguments (cnid_dbd).
+ * Automatically discovers target processes by name and user.
  * Provides before/after test IO metrics to measure actual filesystem activity during AFP operations.
  */
 
@@ -57,25 +56,20 @@
 #define PATH_BUFFER_SIZE 256
 #define LINE_BUFFER_SIZE 256
 #define COMM_BUFFER_SIZE 256
-#define CMDLINE_BUFFER_SIZE 1024
 
 /* Global variables for IO monitoring */
 bool io_monitoring_enabled = false;
 pid_t afpd_pid = 0;
-pid_t cnid_dbd_pid = 0;
 uint64_t afpd_start_reads = 0, afpd_start_writes = 0;
-uint64_t cnid_start_reads = 0, cnid_start_writes = 0;
 uint64_t afpd_end_reads = 0, afpd_end_writes = 0;
-uint64_t cnid_end_reads = 0, cnid_end_writes = 0;
 
 /* Static helper function prototypes */
 static pid_t safe_parse_pid(const char *pidstr);
 static int32_t init_process_filter(ProcessFilter *filter,
                                    const char *process_name,
-                                   const char *username, int32_t filter_by_cmdline);
+                                   const char *username);
 static int32_t check_process_name_match(const char *pid_dir,
                                         const char *target_name);
-static int32_t check_cmdline_filter(const char *pid_dir, const char *username);
 static int32_t check_uid_filter(const char *pid_dir, uid_t target_uid);
 static int32_t process_proc_entry(const char *pid_dir,
                                   const ProcessFilter *filter,
@@ -154,36 +148,26 @@ int32_t check_proc_io_availability(void)
 /*! Helper: Initialize process filter configuration */
 static int32_t init_process_filter(ProcessFilter *filter,
                                    const char *process_name,
-                                   const char *username, int32_t filter_by_cmdline)
+                                   const char *username)
 {
     filter->process_name = process_name;
     filter->username = username;
-    filter->filter_by_cmdline = filter_by_cmdline;
+    struct passwd pwd_buffer;
+    struct passwd *pwd = NULL;
+    char buffer[1024];
+    int ret = getpwnam_r(username, &pwd_buffer, buffer, sizeof(buffer), &pwd);
 
-    if (!filter_by_cmdline) {
-        /* Convert username to UID for ownership-based filtering */
-        struct passwd pwd_buffer;
-        struct passwd *pwd = NULL;
-        char buffer[1024];
-        int ret = getpwnam_r(username, &pwd_buffer, buffer, sizeof(buffer), &pwd);
+    if (ret != 0 || pwd == NULL) {
+        fprintf(stderr, "Error: Unable to find UID for user '%s'\n", username);
+        return -1;
+    }
 
-        if (ret != 0 || pwd == NULL) {
-            fprintf(stderr, "Error: Unable to find UID for user '%s'\n", username);
-            return -1;
-        }
+    filter->target_uid = pwd->pw_uid;
 
-        filter->target_uid = pwd->pw_uid;
-
-        if (Debug) {
-            fprintf(stderr,
-                    "DEBUG: Looking for %s processes owned by user '%s' (UID: %u)\n",
-                    process_name, username, filter->target_uid);
-        }
-    } else {
-        if (Debug) {
-            fprintf(stderr, "DEBUG: Looking for %s processes with -u %s in command line\n",
-                    process_name, username);
-        }
+    if (Debug) {
+        fprintf(stderr,
+                "DEBUG: Looking for %s processes owned by user '%s' (UID: %u)\n",
+                process_name, username, filter->target_uid);
     }
 
     return 0;
@@ -220,64 +204,6 @@ static int32_t check_process_name_match(const char *pid_dir,
 
     fclose(comm_file);
     return matches;
-}
-
-/*! Helper: Check if process matches cmdline filter (-u username) */
-static int32_t check_cmdline_filter(const char *pid_dir, const char *username)
-{
-    char cmdline_path[PATH_BUFFER_SIZE];
-    char cmdline_buffer[CMDLINE_BUFFER_SIZE];
-    FILE *cmdline_file;
-    snprintf(cmdline_path, sizeof(cmdline_path), "/proc_io/%s/cmdline", pid_dir);
-    cmdline_file = fopen(cmdline_path, "r");
-
-    if (!cmdline_file) {
-        fprintf(stderr, "Could not open %s\n", cmdline_path);
-        return 0;
-    }
-
-    size_t bytes_read = fread(cmdline_buffer, 1, sizeof(cmdline_buffer) - 1,
-                              cmdline_file);
-    cmdline_buffer[bytes_read] = '\0';
-    fclose(cmdline_file);
-
-    if (Debug) {
-        fprintf(stderr, "DEBUG: PID %s cmdline: ", pid_dir);
-
-        for (size_t i = 0; i < bytes_read; i++) {
-            if (cmdline_buffer[i] == '\0') {
-                fprintf(stderr, " ");
-            } else {
-                fprintf(stderr, "%c", cmdline_buffer[i]);
-            }
-        }
-    }
-
-    /* Parse null-separated command line arguments */
-    const char *arg = cmdline_buffer;
-    const char *end = cmdline_buffer + bytes_read;
-
-    while (arg < end) {
-        if (strcmp(arg, "-u") == 0) {
-            arg += strlen(arg) + 1;  /* Move to next argument */
-
-            if (arg < end && strcmp(arg, username) == 0) {
-                if (Debug) {
-                    fprintf(stderr, "DEBUG: Found matching -u %s in cmdline\n", username);
-                }
-
-                return 1;  /* Found matching -u username */
-            }
-        }
-
-        arg += strlen(arg) + 1;
-    }
-
-    if (Debug) {
-        fprintf(stderr, "DEBUG: No matching -u %s in cmdline\n", username);
-    }
-
-    return 0;
 }
 
 /*! Helper: Check if process matches UID filter (ownership) */
@@ -328,14 +254,7 @@ static int32_t process_proc_entry(const char *pid_dir,
         return 0;
     }
 
-    /* Apply appropriate filter based on configuration */
-    int32_t process_matches = 0;
-
-    if (filter->filter_by_cmdline) {
-        process_matches = check_cmdline_filter(pid_dir, filter->username);
-    } else {
-        process_matches = check_uid_filter(pid_dir, filter->target_uid);
-    }
+    int32_t process_matches = check_uid_filter(pid_dir, filter->target_uid);
 
     /* Add to found list if matches */
     if (process_matches && found->count < MAX_PROCESSES_TO_TRACK) {
@@ -355,13 +274,8 @@ static void report_multiple_pids(const ProcessFilter *filter,
                                  const ProcessList *found,
                                  pid_t highest_pid)
 {
-    if (filter->filter_by_cmdline) {
-        fprintf(stderr, "Warning: Multiple %s processes with -u %s found (",
-                filter->process_name, filter->username);
-    } else {
-        fprintf(stderr, "Warning: Multiple %s processes owned by %s found (",
-                filter->process_name, filter->username);
-    }
+    fprintf(stderr, "Warning: Multiple %s processes owned by %s found (",
+            filter->process_name, filter->username);
 
     for (int32_t i = 0; i < found->count; i++) {
         fprintf(stderr, "%d", found->pids[i]);
@@ -375,8 +289,7 @@ static void report_multiple_pids(const ProcessFilter *filter,
 }
 
 /*! Main Netatalk process find function for IO monitoring */
-pid_t find_process_pid(const char *process_name, const char *username,
-                       int32_t filter_by_cmdline)
+pid_t find_process_pid(const char *process_name, const char *username)
 {
     /* Check prerequisites */
     if (!io_monitoring_enabled) {
@@ -386,8 +299,7 @@ pid_t find_process_pid(const char *process_name, const char *username,
     /* Initialize filter configuration */
     ProcessFilter filter;
 
-    if (init_process_filter(&filter, process_name, username,
-                            filter_by_cmdline) < 0) {
+    if (init_process_filter(&filter, process_name, username) < 0) {
         if (Debug) {
             fprintf(stderr, "DEBUG: Failed to initialize process filter\n");
         }
@@ -515,16 +427,6 @@ void capture_io_values(int32_t is_start)
             *reads = *writes = 0;
         }
     }
-
-    /* Process cnid_dbd_pid */
-    if (cnid_dbd_pid > 0) {
-        uint64_t *reads = is_start ? &cnid_start_reads : &cnid_end_reads;
-        uint64_t *writes = is_start ? &cnid_start_writes : &cnid_end_writes;
-
-        if (read_proc_io(cnid_dbd_pid, reads, writes) != 0) {
-            *reads = *writes = 0;
-        }
-    }
 }
 
 /*! Get IO delta between stored cumulative counts - consolidated for read and write */
@@ -539,9 +441,6 @@ uint64_t iodiff_io(pid_t pid, int32_t is_write)
     if (pid == afpd_pid) {
         start_val = is_write ? afpd_start_writes : afpd_start_reads;
         end_val = is_write ? afpd_end_writes : afpd_end_reads;
-    } else if (pid == cnid_dbd_pid) {
-        start_val = is_write ? cnid_start_writes : cnid_start_reads;
-        end_val = is_write ? cnid_end_writes : cnid_end_reads;
     } else {
         return 0;
     }
@@ -585,35 +484,15 @@ void init_io_monitoring(const char *username)
     }
 
     fprintf(stdout, "IO monitoring: /proc_io is available\n");
-
-    /* Wait for child processes to be created */
-    if (Debug) {
-        fprintf(stderr,
-                "DEBUG: Waiting for login user child processes to be created...\n");
-    }
-
-    sleep(PROC_IO_WAIT_SECONDS);
     /* Temporarily enable monitoring for process discovery */
     io_monitoring_enabled = true;
-    /* First, search for cnid_dbd (optional - doesn't drop privileges) */
-    cnid_dbd_pid = find_process_pid("cnid_dbd", username,
-                                    1);  /* Filter -u argument */
-
-    if (cnid_dbd_pid > 0) {
-        fprintf(stdout, "Found cnid_dbd process for user '%s': PID %d\n", username,
-                cnid_dbd_pid);
-    } else {
-        fprintf(stdout, "cnid_dbd not found (optional), continuing...\n");
-        cnid_dbd_pid = 0;  /* Explicitly set to 0 */
-    }
-
     /* Always search for afpd (mandatory - drops privileges) */
     int32_t attempts = 0;
     const int32_t max_attempts = MAX_RETRY_ATTEMPTS;
 
     while (attempts < max_attempts) {
         attempts++;
-        afpd_pid = find_process_pid("afpd", username, 0);  /* Filter ownership */
+        afpd_pid = find_process_pid("afpd", username);
 
         if (afpd_pid > 0) {
             break;
@@ -637,10 +516,9 @@ void init_io_monitoring(const char *username)
         fprintf(stderr, "Error: afpd process not found (mandatory)\n");
     }
 
-    /* Only check afpd since it's mandatory; cnid_dbd is optional */
     if (afpd_pid > 0) {
         /* Test that we can actually read from the processes we found */
-        int32_t afpd_valid = 0, cnid_dbd_valid = 0;
+        int32_t afpd_valid = 0;
         uint64_t dummy_read, dummy_write;
         /* Validate afpd (mandatory) */
         afpd_valid = (read_proc_io(afpd_pid, &dummy_read, &dummy_write) == 0);
@@ -650,27 +528,10 @@ void init_io_monitoring(const char *username)
             afpd_pid = 0;
         }
 
-        /* Validate cnid_dbd if found (optional) */
-        if (cnid_dbd_pid > 0) {
-            cnid_dbd_valid = (read_proc_io(cnid_dbd_pid, &dummy_read, &dummy_write) == 0);
-
-            if (!cnid_dbd_valid) {
-                fprintf(stderr, "Warning: Cannot read /proc_io/%d/io for cnid_dbd (optional)\n",
-                        cnid_dbd_pid);
-                cnid_dbd_pid = 0;  /* Set to 0 to skip its monitoring */
-            }
-        }
-
         /* Keep monitoring enabled only if afpd is valid */
         if (afpd_pid > 0) {
             /* afpd found and /proc_io readable - keep monitoring enabled */
-            if (cnid_dbd_pid > 0) {
-                fprintf(stdout, "IO monitoring enabled (afpd: %d, cnid_dbd: %d)\n",
-                        afpd_pid, cnid_dbd_pid);
-            } else {
-                fprintf(stdout, "IO monitoring enabled (afpd: %d, cnid_dbd: not found)\n",
-                        afpd_pid);
-            }
+            fprintf(stdout, "IO monitoring enabled (afpd: %d)\n", afpd_pid);
         } else {
             /* /proc_io available but cannot read from afpd - disable monitoring */
             io_monitoring_enabled = false;
@@ -695,11 +556,8 @@ void init_io_monitoring(const char *username)
 /* Global variables - stub versions for non-Linux */
 bool io_monitoring_enabled = false;
 pid_t afpd_pid = 0;
-pid_t cnid_dbd_pid = 0;
 uint64_t afpd_start_reads = 0, afpd_start_writes = 0;
-uint64_t cnid_start_reads = 0, cnid_start_writes = 0;
 uint64_t afpd_end_reads = 0, afpd_end_writes = 0;
-uint64_t cnid_end_reads = 0, cnid_end_writes = 0;
 
 /* Stub function implementations */
 int32_t check_proc_io_availability(void)
@@ -707,12 +565,10 @@ int32_t check_proc_io_availability(void)
     return 0;  /* IO monitoring not available on non-Linux */
 }
 
-pid_t find_process_pid(const char *process_name, const char *username,
-                       int32_t filter_by_cmdline)
+pid_t find_process_pid(const char *process_name, const char *username)
 {
     (void)process_name;
     (void)username;
-    (void)filter_by_cmdline;
     return 0;  /* Process not found */
 }
 

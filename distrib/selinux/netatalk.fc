@@ -3,10 +3,6 @@
 /usr/s?bin/netatalk               --      gen_context(system_u:object_r:netatalk_exec_t,s0)
 /usr/s?bin/afpd                   --      gen_context(system_u:object_r:netatalk_exec_t,s0)
 
-# Keep excluded executables labeled even when a full build installs them.
-/usr/s?bin/cnid_metad             --      gen_context(system_u:object_r:netatalk_legacy_exec_t,s0)
-/usr/s?bin/cnid_dbd               --      gen_context(system_u:object_r:netatalk_legacy_exec_t,s0)
-
 # The specific session-bus label overrides the configuration directory rule.
 /etc/netatalk(/.*)?                      gen_context(system_u:object_r:netatalk_etc_t,s0)
 /etc/netatalk/dbus-session\.conf --      gen_context(system_u:object_r:netatalk_dbus_conf_t,s0)

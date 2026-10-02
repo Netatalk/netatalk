@@ -1,5 +1,21 @@
 # Upgrading from prior Netatalk versions
 
+## Upgrading from Netatalk 4.6
+
+### Berkeley DB (dbd) CNID backend removal
+
+Netatalk 4.7 ships two CNID backends, *sqlite* (always built, the default)
+and *mysql*. The *dbd* backend, its **cnid_metad** and **cnid_dbd** daemons
+and the **cnid server**, **cnid listen** and **vol dbnest** options are gone;
+a volume still set to **cnid scheme = dbd** is served with *sqlite*.
+
+Nothing reads the Berkeley DB files any more; delete them. They live in the
+*.AppleDB* folder of each volume's CNID directory (**vol dbpath**, by default
+the volume's own subdirectory of *$localstatedir/netatalk/CNID*), or of the
+share root where **vol dbnest** was set. A **vol dbnest** volume served by
+*sqlite* kept its database in the share root, a *.sqlite* file named after
+the volume with *-wal* and *-shm* companions; delete it too.
+
 ## Upgrading from Netatalk 4.5
 
 Netatalk 4.6 changes how the credential store used by the SRP UAM
@@ -113,6 +129,8 @@ See the table of old and new option names below for details.
 | ------------------ | ---------------- | --------- | -------------------------------------------------------- |
 | afp read locks     | strict locking   | 4.6.0     | old name is a deprecated synonym that logs a warning     |
 | appledouble        | -                | 4.2.0     | controlled solely by 'ea' now                            |
+| cnid listen        | -                | 4.7.0     | dbd CNID backend removed                                 |
+| cnid server        | -                | 4.7.0     | dbd CNID backend removed                                 |
 | dircachesize       | dircache size    | 4.5.0     | -                                                        |
 | fce ignore names   | fce ignore names | 4.2.0     | comma delineation rather than forward slash delineation  |
 | root postexec      | -                | 4.1.0     | use 'postexec' instead                                   |
@@ -120,6 +138,7 @@ See the table of old and new option names below for details.
 | root preexec close | -                | 4.1.0     | use 'preexec close' instead                              |
 | start dbus         | -                | 4.1.0     | D-Bus is controlled with 'spotlight'                     |
 | start tracker      | -                | 4.1.0     | Tracker/Localsearch is controlled with 'spotlight'       |
+| vol dbnest         | -                | 4.7.0     | dbd CNID backend removed                                 |
 | zeroconf name      | server name      | 4.2.0     | now applies to Classic Mac OS clients too                |
 
 ### afpstats breaking changes
@@ -217,7 +236,7 @@ break the coupling of *file* and *._file* on non ZFS filesystems
 ### Other major changes
 
 - New service controller daemon [netatalk](netatalk.8.html) which is
-responsible for starting and restarting the AFP and CNID daemons. All
+responsible for starting and restarting the AFP daemon. All
 bundled start scripts have been updated, make sure to update yours!
 
 - All CNID databases are now stored in a *netatalk/CNID* subdirectory
@@ -271,7 +290,7 @@ to the means of invocation
 | ATALK_NAME         | hostname        | -                        | -                        | (G)     | use gethostname() by default  |
 | ATALK_UNIX_CHARSET | unix charset    | LOCALE                   | UTF8                     | (G)     | -                             |
 | ATALK_MAC_CHARSET  | mac charset     | MAC_ROMAN                | MAC_ROMAN                | (G)/(V) | -                             |
-| CNID_METAD_RUN     | -               | yes                      | -                        | -       | controlled by netatalk(8)     |
+| CNID_METAD_RUN     | -               | yes                      | -                        | -       | cnid_metad removed in 4.7.0   |
 | AFPD_RUN           | -               | yes                      | -                        | -       | controlled by netatalk(8)     |
 | AFPD_MAX_CLIENTS   | max connections | 20                       | 200                      | (G)     | -                             |
 | AFPD_UAMLIST       | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx2.so             | (G)     | -                             |
@@ -315,7 +334,7 @@ Mappings from afpd.conf to afp.conf
 | -k5keytab          | k5 keytab       | -                        | -                        | (G)     | -                                    |
 | -uampath           | uam path        | etc/netatalk/uams        | lib/netatalk             | (G)     | moved to $libdir                     |
 | -ipaddr            | afp listen      | -                        | -                        | (G)     | -                                    |
-| -cnidserver        | cnid server     | localhost:4700           | localhost:4700           | (G)/(V) | -                                    |
+| -cnidserver        | -               | localhost:4700           | -                        | -       | removed in 4.7.0                     |
 | -port              | port            | 548                      | 548                      | (G)     | -                                    |
 | -signature         | signature       | auto                     | -                        | (G)     | -                                    |
 | -fqdn              | fqdn            | -                        | -                        | (G)     | -                                    |
@@ -384,10 +403,10 @@ Mappings from AppleVolumes.\* to afp.conf
 | volcharset:                | vol charset        | UTF8                  | *unix charset*      | (G)/(V) | -                                |
 | maccharset:                | mac charset        | MAC_ROMAN             | MAC_ROMAN         | (G)/(V) | -                                |
 | veto:                      | veto files         | -                     | -                 | (V)     | -                                |
-| cnidscheme:                | cnid scheme        | dbd                   | sqlite\*           | (G)/(V) | \* may vary per installation      |
+| cnidscheme:                | cnid scheme        | dbd                   | sqlite             | (G)/(V) | -                                 |
 | casefold:                  | casefold           | -                     | -                 | (V)     | -                                |
 | adouble:                   | -                  | v2                    | -                 | -       | removed in 4.2.0                 |
-| cnidserver:                | cnid server        | localhost:4700        | localhost:4700    | (G)/(V) | -                                |
+| cnidserver:                | -                  | localhost:4700        | -                 | -       | removed in 4.7.0                 |
 | dbpath:                    | vol dbpath         | (volume directory)    | var/netatalk/CNID | (G)     | moved to $localstatedir          |
 | umask:                     | umask              | 0000                  | 0000              | (V)     | -                                |
 | dperm:                     | directory perm     | 0000                  | 0000              | (V)     | -                                |

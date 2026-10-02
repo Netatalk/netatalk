@@ -1,21 +1,12 @@
-libcnid_deps = [bstring, iniparser]
-libcnid_libs = []
+subdir('sqlite')
 
-if use_dbd_backend
-    subdir('dbd')
-    libcnid_libs += libcnid_dbd
-endif
+libcnid_deps = [bstring, iniparser, sqlite_deps]
+libcnid_libs = [libcnid_sqlite]
 
 if use_mysql_backend
     subdir('mysql')
     libcnid_libs += libcnid_mysql
     libcnid_deps += mysql_deps
-endif
-
-if use_sqlite_backend
-    subdir('sqlite')
-    libcnid_libs += libcnid_sqlite
-    libcnid_deps += sqlite_deps
 endif
 
 cnid_sources = ['cnid_init.c', 'cnid.c']

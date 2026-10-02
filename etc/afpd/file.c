@@ -513,7 +513,6 @@ uint32_t get_id(struct vol *vol,
                 LOG(log_error, logtype_afpd,
                     "get_id: Connection to the CNID backend DB failed. "
                     "This is now treated as a fatal error. "
-                    "Is the cnid_metad process running? "
                     "Please escalate to the upstream project "
                     "if you suspect this is a bug");
                 exit(EXITERR_SYS);

@@ -52,7 +52,6 @@ afp port = 10548
 log file = $(pwd)/meson-logs/afpd.log
 log level = default:debug
 signature = $SIGNATURE
-cnid server = 127.0.0.1
 
 [test]
 cnid scheme = sqlite

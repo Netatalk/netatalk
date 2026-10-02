@@ -74,30 +74,12 @@ packages that can be installed to enhance Netatalk's functionality.
     supplies the encryption for the password based User Authentication Methods
     (UAMs).
 
-#### CNID database backends
-
-At least one of the below database libraries is required to power the CNID scheme of your choice.
-
-- Berkeley DB
-
-    The *dbd* (*Database Daemon*) CNID backend for netatalk uses Berkeley DB to store
-    unique file identifiers.
-
-    The recommended Berekeley DB version is 5.3, while versions 4.6 and later should work as well.
-    Version 6 and later should generally be avoided due to licensing issues.
-
-- MySQL Client or MariaDB Client
-
-    By leveraging a MySQL-compatible client library, netatalk can be built
-    with the *mysql* CNID backend that is highly scalable and reliable.
-    The administrator has to provide a separate database instance for use with
-    this backend.
-
 - SQLite v3
 
-    The SQLite library version 3 enables the *sqlite* CNID backend
-    which is an embedded database option that does not require a separate database server
-    to be set up and maintained by the system administrator.
+    The SQLite library version 3.31 or later is required. It provides the
+    *sqlite* CNID backend, an embedded database that does not require a
+    separate database server to be set up and maintained by the system
+    administrator.
 
 ### Optional third-party software
 
@@ -163,6 +145,13 @@ functionality.
     faulting thread, and libunwind names the functions in it. Builds
     without it fall back to `backtrace_symbols()`, or to bare addresses
     on C libraries that lack it, such as musl.
+
+- MySQL Client or MariaDB Client
+
+    By leveraging a MySQL-compatible client library, netatalk can also be built
+    with the *mysql* CNID backend that is highly scalable and reliable.
+    The administrator has to provide a separate database instance for use with
+    this backend.
 
 - PAM
 

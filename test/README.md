@@ -62,7 +62,7 @@ CC=gcc CXX=g++ meson setup build-coverage \
     -Dbuildtype=debug \
     -Db_coverage=true \
     -Dwith-appletalk=true \
-    -Dwith-cnid-backends=sqlite \
+    -Dwith-cnid-backends= \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \
@@ -101,7 +101,7 @@ CC=clang CXX=clang++ \
     -Dbuildtype=debug \
     -Db_coverage=true \
     -Dwith-homebrew=true \
-    -Dwith-cnid-backends=sqlite \
+    -Dwith-cnid-backends= \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \
