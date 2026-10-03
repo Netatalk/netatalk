@@ -883,7 +883,9 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_delete_veto_dirfd_failure(), 0,
                      "delete veto files closes its directory stream when dirfd fails");
     TEST_int(utest_logger_reopen_keeps_files(), 0,
-             "logger: log_close_all/log_reopen keep a relative and a mkstemp log file");
+             "logger: log_close_all/log_reopen preserve files and private permissions");
+    TEST_int(utest_lockfile_restores_umask(), 0,
+             "PID files: creation and startup errors restore the caller's umask");
     TEST_int(utest_decompose_reserves_terminator(), 0,
              "decompose_w reserves space for its UTF-16 terminator");
     TEST_int(utest_fork_range_rejects_wrapped_read(), 0,

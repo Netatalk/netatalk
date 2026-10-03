@@ -821,6 +821,8 @@ log file = *logfile* **(G)**
 
 > Write logs to *logfile* on the file system. If not specified, Netatalk
 logs to the syslog daemon facility.
+New log files are created with mode `0640`, restricted further by the process
+umask. Existing log file permissions are preserved.
 
 log level = *type:level [type:level ...]*; log level = *type:level,[type:level, ...]* **(G)**
 

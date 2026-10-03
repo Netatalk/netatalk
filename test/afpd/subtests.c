@@ -972,6 +972,8 @@ int utest_logger_reopen_keeps_files(void)
     char tmpl[MAXPATHLEN];
     DIR *dir;
     struct dirent *ent;
+    struct stat st;
+    mode_t saved_umask;
     int cwd;
     int result = 0;
 
@@ -993,7 +995,23 @@ int utest_logger_reopen_keeps_files(void)
         goto out;
     }
 
+    /* Even a permissive caller umask must not expose log contents to others. */
+    saved_umask = umask(0); //NOSONAR: exercise log creation with no umask protection
     setuplog("default:note", "reopen.log", true);
+    umask(saved_umask); //NOSONAR: restore the caller's original umask
+    snprintf(rel_path, sizeof(rel_path), "%s/reopen.log", tmpdir);
+
+    if (stat(rel_path, &st) != 0 || (st.st_mode & 0777) != 0640) {
+        result = 9;
+        goto out;
+    }
+
+    /* Reopening an administrator-restricted file must preserve its mode. */
+    if (chmod(rel_path, 0600) != 0) {
+        result = 10;
+        goto out;
+    }
+
     log_close_all();
 
     if (chdir("/") != 0) {
@@ -1003,10 +1021,13 @@ int utest_logger_reopen_keeps_files(void)
 
     log_reopen();
     LOG(log_note, logtype_default, "utest marker: relative log reopened");
-    snprintf(rel_path, sizeof(rel_path), "%s/reopen.log", tmpdir);
 
     if (!file_contains(rel_path, "relative log reopened")) {
         result = 5;
+    }
+
+    if (stat(rel_path, &st) != 0 || (st.st_mode & 0777) != 0600) {
+        result = result ? result : 11;
     }
 
     if (access("/reopen.log", F_OK) == 0) {
@@ -1035,6 +1056,10 @@ int utest_logger_reopen_keeps_files(void)
         result = result ? result : 7;
     }
 
+    if (stat(generated, &st) != 0 || (st.st_mode & 0777) != 0600) {
+        result = result ? result : 12;
+    }
+
 out:
     setuplog("default:note", "/dev/stderr", true);
 
@@ -1054,4 +1079,58 @@ out:
 
     rmdir(tmpdir);
     return result;
+}
+
+/* PID files are public, but creating one must not relax subsequent creations,
+ * including when daemon startup aborts because the file is stale or unwritable. */
+int utest_lockfile_restores_umask(void)
+{
+#ifndef SOLARIS
+    char tmpdir[] = "afpd_lockfile_XXXXXX";
+    char pidfile[MAXPATHLEN];
+    struct stat st;
+    mode_t saved_umask;
+    int result = 0;
+
+    if (mkdtemp(tmpdir) == NULL) {
+        return 1;
+    }
+
+    snprintf(pidfile, sizeof(pidfile), "%s/server.pid", tmpdir);
+    /* A restrictive caller mask exposes any failure to restore it from 022. */
+    saved_umask = umask(077); //NOSONAR: establish a restrictive mask for the restoration test
+
+    if (create_lockfile("utest", pidfile) != 0
+            || stat(pidfile, &st) != 0 || (st.st_mode & 0777) != 0644
+            || umask(077) != 077) { //NOSONAR: check and reset the test's restrictive mask
+        result = 2;
+        goto out;
+    }
+
+    /* The PID is our own, so neither call will proceed to daemonize. */
+    if (server_lock("utest", pidfile, 0) != -1 || umask(077) != 077 //NOSONAR: check and reset the test's restrictive mask
+            || create_lockfile("utest", pidfile) != -1 || umask(077) != 077) { //NOSONAR: check and reset the test's restrictive mask
+        result = 3;
+        goto out;
+    }
+
+    if (unlink(pidfile) != 0 || rmdir(tmpdir) != 0) {
+        result = 4;
+        goto out;
+    }
+
+    /* The parent is now absent, so opening the PID file must fail. */
+    if (create_lockfile("utest", pidfile) != -1 || umask(077) != 077 //NOSONAR: check and reset the test's restrictive mask
+            || server_lock("utest", pidfile, 0) != -1 || umask(077) != 077) { //NOSONAR: check and reset the test's restrictive mask
+        result = 5;
+    }
+
+out:
+    umask(saved_umask); //NOSONAR: restore the caller's original umask
+    unlink(pidfile);
+    rmdir(tmpdir);
+    return result;
+#else
+    return 0;
+#endif
 }
