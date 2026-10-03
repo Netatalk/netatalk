@@ -287,9 +287,35 @@ static int accept_sec_context(gss_ctx_id_t *context,
     return 0;
 }
 
+/* Encode the authenticator only if the entire reply fits. */
+static int build_gss_reply(char *rbuf, size_t rbufsize, size_t *rbuflen,
+                           const gss_buffer_desc *authenticator)
+{
+    uint16_t auth_len;
+    *rbuflen = 0;
+
+    if (authenticator->length > UINT16_MAX ||
+            rbufsize < sizeof(auth_len) ||
+            authenticator->length > rbufsize - sizeof(auth_len)) {
+        LOG_LOGINCONT(log_error, "authenticator does not fit in reply buffer");
+        return 1;
+    }
+
+    auth_len = htons((uint16_t)authenticator->length);
+    memcpy(rbuf, &auth_len, sizeof(auth_len));
+
+    if (authenticator->length != 0) {
+        memcpy(rbuf + sizeof(auth_len), authenticator->value,
+               authenticator->length);
+    }
+
+    *rbuflen = sizeof(auth_len) + authenticator->length;
+    return 0;
+}
+
 static int do_gss_auth(void *obj _U_,
                        char *ibuf, size_t ibuflen,
-                       char *rbuf, int *rbuflen,
+                       char *rbuf, size_t rbufsize, size_t *rbuflen,
                        char *username, size_t ulen,
                        struct session_info *sinfo)
 {
@@ -329,14 +355,7 @@ static int do_gss_auth(void *obj _U_,
      * authenticator length (uint16_t)
      * authenticator
      */
-    /* copy the authenticator length into the reply buffer */
-    uint16_t auth_len = htons(authenticator_buff.length);
-    memcpy(rbuf, &auth_len, sizeof(auth_len));
-    *rbuflen += sizeof(auth_len);
-    rbuf += sizeof(auth_len);
-    /* copy the authenticator value into the reply buffer */
-    memcpy(rbuf, authenticator_buff.value, authenticator_buff.length);
-    *rbuflen += authenticator_buff.length;
+    ret = build_gss_reply(rbuf, rbufsize, rbuflen, &authenticator_buff);
 cleanup_client_name:
     gss_release_name(&status, &client_name);
     gss_release_buffer(&status, &authenticator_buff);
@@ -377,7 +396,8 @@ static int gss_logincont(void *obj,
     uint16_t ticket_len;
     const char *p;
     const char *username_end;
-    int rblen;
+    size_t rblen;
+    const size_t rbufsize = *rbuflen;
     size_t username_len;
     size_t userlen;
     struct session_info *sinfo;
@@ -478,8 +498,8 @@ static int gss_logincont(void *obj,
     }
 
     /* now try to authenticate */
-    if (do_gss_auth(obj, ibuf, ticket_len, rbuf, &rblen, username, userlen,
-                    sinfo)) {
+    if (do_gss_auth(obj, ibuf, ticket_len, rbuf, rbufsize, &rblen,
+                    username, userlen, sinfo)) {
         LOG_LOGINCONT(log_info, "do_gss_auth() failed");
         *rbuflen = 0;
         return AFPERR_MISC;
