@@ -258,7 +258,7 @@ const char *tmpdir(void)
 
     snprintf(dirname, sizeof(dirname), "netatalk-%u", getpid());
     snprintf(netatalk_tmpdir, MAXPATHLEN, "%s/%s", systmp, dirname);
-    oldmask = umask(0077);
+    oldmask = umask(0077); //NOSONAR: Restrict temporary directory access to its owner; restore umask below.
 
     if (mkdirat(tmpfd, dirname, 0700) != 0) {
         if (errno != EEXIST) {

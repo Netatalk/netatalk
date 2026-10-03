@@ -31,7 +31,7 @@ STATIC void test136()
         fprintf(stdout, "mkdir(%s)\n", temp);
     }
 
-    if (mkdir(temp, 0777)) {
+    if (mkdir(temp, 0777)) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED mkdir %s %s\n", temp, strerror(errno));
         }
@@ -40,7 +40,7 @@ STATIC void test136()
     }
 
     /* Workaround for musl mkdir() not setting the right permissions */
-    if (chmod(temp, 0777)) {
+    if (chmod(temp, 0777)) { //NOSONAR: Intentional permissions for AFP test fixtures.
         test_failed();
     }
 
@@ -85,7 +85,7 @@ STATIC void test137()
         fprintf(stdout, "mkdir(%s)\n", temp);
     }
 
-    if (mkdir(temp, 0777)) {
+    if (mkdir(temp, 0777)) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED mkdir %s %s\n", temp, strerror(errno));
         }
@@ -94,7 +94,7 @@ STATIC void test137()
     }
 
     /* Workaround for musl mkdir() not setting the right permissions */
-    if (chmod(temp, 0777)) {
+    if (chmod(temp, 0777)) { //NOSONAR: Intentional permissions for AFP test fixtures.
         test_failed();
     }
 

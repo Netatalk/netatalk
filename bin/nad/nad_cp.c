@@ -349,7 +349,7 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
      * Keep an inverted copy of the umask, for use in correcting
      * permissions on created directories when not using -p.
      */
-    mask = ~umask(0777);
+    mask = ~umask(0777); //NOSONAR: Read caller umask and immediately restore it.
     umask(~mask);
 #if 0
     /* Inhereting perms in ad_mkdir etc requires this */
@@ -574,13 +574,13 @@ static int copy(const char *path,
 
         /* Create ad dir and copy ".Parent" */
         if (dvolume.vol->v_path && ADVOL_V2_OR_EA(dvolume.vol->v_adouble)) {
-            mode_t omask = umask(0);
+            mode_t omask = umask(0); //NOSONAR: Preserve shared AppleDouble metadata permissions; restore umask below.
 
             if (dvolume.vol->v_adouble == AD_VERSION2) {
                 /* Create ".AppleDouble" dir */
                 bstring addir = bfromcstr(to.p_path);
                 bcatcstr(addir, "/.AppleDouble");
-                mkdir(cfrombstr(addir), 02777);
+                mkdir(cfrombstr(addir), 02777); //NOSONAR: Shared AppleDouble metadata requires group inheritance and multiuser access.
                 bdestroy(addir);
             }
 
@@ -682,7 +682,7 @@ static int copy(const char *path,
         }
 
         if (dvolume.vol->v_path && ADVOL_V2_OR_EA(dvolume.vol->v_adouble)) {
-            mode_t omask = umask(0);
+            mode_t omask = umask(0); //NOSONAR: Preserve copied AppleDouble metadata permissions; restore umask below.
 
             /* copy ad-file */
             if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)

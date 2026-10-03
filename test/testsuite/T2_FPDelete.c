@@ -86,7 +86,7 @@ STATIC void test146()
     if (adouble == AD_V2) {
         snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", Path, name1, name);
 
-        if (chmod(temp, 0644) < 0) {
+        if (chmod(temp, 0644) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
             if (!Quiet) {
                 fprintf(stdout, "\tFAILED chmod(%s) %s\n", temp, strerror(errno));
             }
@@ -113,7 +113,7 @@ STATIC void test146()
         }
     } else {
         if (adouble == AD_V2) {
-            if (chmod(temp, 0666) < 0) {
+            if (chmod(temp, 0666) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
                 if (!Quiet) {
                     fprintf(stdout, "\tFAILED chmod(%s) %s\n", temp, strerror(errno));
                 }

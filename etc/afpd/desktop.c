@@ -255,13 +255,15 @@ static void create_appledesktop_folder(const struct vol *vol)
                 LOG(log_error, logtype_afpd,
                     "moving .AppleDesktop from \"%s\" failed; creating new dir \"%s\"",
                     bdata(olddtpath), bdata(dtpath));
-                mkdir(cfrombstr(dtpath), 0777);
+                /* Root-owned desktop metadata is shared by AFP users; umask applies. */
+                mkdir(cfrombstr(dtpath), 0777); //NOSONAR
             }
         } else {
             LOG(log_debug, logtype_afpd,
                 "no valid .AppleDesktop dir found; creating new dir \"%s\"",
                 bdata(dtpath));
-            mkdir(cfrombstr(dtpath), 0777);
+            /* Root-owned desktop metadata is shared by AFP users; umask applies. */
+            mkdir(cfrombstr(dtpath), 0777); //NOSONAR
         }
     }
 
