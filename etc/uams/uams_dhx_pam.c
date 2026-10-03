@@ -451,6 +451,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     uint16_t sessid;
     int err, PAM_error;
     unsigned char K_binary[16];
+    unsigned char password[PASSWDLEN + 1];
     size_t i;
     *rbuflen = 0;
 
@@ -545,7 +546,6 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     /* zero out the random number */
     explicit_bzero(rbuf, sizeof(randbuf));
     explicit_bzero(randbuf, sizeof(randbuf));
-    rbuf += KEYSIZE;
     bn3 = gcry_mpi_snew(0);
     gcry_mpi_sub(bn3, bn1, bn2);
     gcry_mpi_release(bn2);
@@ -557,9 +557,12 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     gcry_mpi_release(bn3);
+    /* The wire password fills its field; terminate it in a separate buffer. */
+    memcpy(password, rbuf + KEYSIZE, PASSWDLEN);
+    password[PASSWDLEN] = '\0';
+    explicit_bzero(rbuf, CRYPT2BUFLEN);
     /* Set these things up for the conv function */
-    rbuf[PASSWDLEN] = '\0';
-    PAM_password = rbuf;
+    PAM_password = password;
     err = AFPERR_NOTAUTH;
     PAM_error = pam_start("netatalk", (const char *)PAM_username,
                           &PAM_conversation, &pamh);
@@ -654,7 +657,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
         goto logincont_err;
     }
 
-    explicit_bzero(rbuf, PASSWDLEN); /* zero out the password */
+    explicit_bzero(password, sizeof(password));
+    PAM_password = NULL;
     *uam_pwd = dhxpwd;
     /* Log Entry */
     LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Auth OK!");
@@ -668,7 +672,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 logincont_err:
     pam_end(pamh, PAM_error);
     pamh = NULL;
-    explicit_bzero(rbuf, CRYPT2BUFLEN);
+    explicit_bzero(password, sizeof(password));
+    PAM_password = NULL;
     return err;
 }
 
