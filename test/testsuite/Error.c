@@ -802,7 +802,12 @@ static void cname_test(char *name)
     uint16_t vol = VolID;
     const DSI *dsi;
     dsi = &Conn->dsi;
-    FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap))
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap)) {
+        test_failed();
+        return;
+    }
+
     filedir.isdir = 1;
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 

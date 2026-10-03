@@ -1596,3 +1596,81 @@ out:
     (void)unlink(full);
     return rc;
 }
+
+/*!
+ * @brief of_breakdown() counts the live forks by fork and access mode.
+ *
+ * Pins the exact format the usage and close-sweep log lines carry, the
+ * empty table, and truncation into a short buffer.
+ */
+int utest_of_breakdown(struct vol *vol)
+{
+    enum { N = 5 };
+    static const int eid[N] = {
+        ADEID_DFORK, ADEID_DFORK, ADEID_DFORK, ADEID_RFORK, ADEID_DFORK
+    };
+    static const int mode[N] = {
+        AFPFORK_ACCRD, AFPFORK_ACCRD, AFPFORK_ACCRD | AFPFORK_ACCWR,
+        AFPFORK_ACCWR, 0
+    };
+    struct ofork *of[N] = {0};
+    uint16_t refnum;
+    char leaf[32], full[MAXPATHLEN + 1], buf[128], small[8];
+    struct stat st;
+    int i, rc = 0;
+
+    /* the expected string counts this test's forks only */
+    if (of_breakdown(buf, sizeof(buf))[0] != '\0') {
+        rc = 1;
+        goto out;
+    }
+
+    for (i = 0; i < N; i++) {
+        snprintf(leaf, sizeof(leaf), "fi_mix_%d", i);
+
+        if (make_scratch(vol, leaf, 0, full, sizeof(full)) != 0
+                || stat(full, &st) != 0) {
+            rc = 10 + i;
+            goto out;
+        }
+
+        of[i] = of_alloc(vol, curdir, leaf, &refnum, eid[i], NULL, &st);
+
+        if (of[i] == NULL) {
+            rc = 20 + i;
+            goto out;
+        }
+
+        of[i]->of_flags |= mode[i];
+    }
+
+    if (strcmp(of_breakdown(buf, sizeof(buf)),
+               "data none 1, data rd 2, data rw 1, rsrc wr 1") != 0) {
+        rc = 30;
+        goto out;
+    }
+
+    if (strlen(of_breakdown(small, sizeof(small))) >= sizeof(small)) {
+        rc = 40;
+        goto out;
+    }
+
+out:
+
+    for (i = 0; i < N; i++) {
+        if (of[i]) {
+            of_dealloc(of[i]);
+        }
+    }
+
+    if (rc == 0 && of_breakdown(buf, sizeof(buf))[0] != '\0') {
+        rc = 50;
+    }
+
+    for (i = 0; i < N; i++) {
+        snprintf(full, sizeof(full), "%s/fi_mix_%d", vol->v_path, i);
+        (void)unlink(full);
+    }
+
+    return rc;
+}

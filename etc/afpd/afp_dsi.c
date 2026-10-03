@@ -97,6 +97,13 @@ static volatile sig_atomic_t timedown_pending = 0;
 static volatile sig_atomic_t getmesg_pending = 0;
 /* Non-static: also checked by afp_disconnect() in auth.c */
 volatile sig_atomic_t die_pending = 0;
+/* sender of the last SIGTERM/SIGQUIT, 0 when unknown: a timer, or a kernel
+ * that does not pass the sender */
+static volatile sig_atomic_t die_sender = 0;
+/* afp_dsi_die() is acting on a received signal, not an EXITERR_* code */
+static bool die_signalled = false;
+/* the master that started the session: once it exits the parent is init */
+static pid_t session_master = 0;
 
 /* The self-pipe that wakes poll() from a signal handler lives in
  * libatalk/util/sigpipe.c and is shared with the ASP transport. */
@@ -157,12 +164,37 @@ static void afp_dsi_close(AFPObj *obj)
     LOG(log_note, logtype_afpd,
         "AFP statistics: %.2f KB read, %.2f KB written via DSI",
         dsi->read_count / 1024.0, dsi->write_count / 1024.0);
-    of_log_highwater();
+    of_log_usage(log_info, "session close");
     log_dircache_stat();
     pfd_log_stats();
     pfd_shutdown();
     dircache_rfork_shutdown();
     dsi_close(dsi);
+}
+
+/*!
+ * @brief Describe what made afp_dsi_die() run
+ *
+ * @param[in]  sig  the afp_dsi_die() argument
+ * @param[out] buf  destination
+ * @param[in]  len  size of @p buf
+ *
+ * @returns @p buf
+ */
+static const char *afp_dsi_die_cause(int sig, char *buf, size_t len)
+{
+    if (die_signalled && die_sender > 0) {
+        snprintf(buf, len, "signal %d from pid %d, master %d", sig,
+                 (int)die_sender, (int)session_master);
+    } else if (die_signalled) {
+        snprintf(buf, len, "signal %d, sender unknown, master %d", sig,
+                 (int)session_master);
+    } else {
+        snprintf(buf, len, "exit code %d, euid %u", sig,
+                 (unsigned int)geteuid());
+    }
+
+    return buf;
 }
 
 /*!
@@ -186,7 +218,12 @@ static void afp_dsi_die(int sig)
     }
 
     if (dsi->flags & DSI_DISCONNECTED) {
-        LOG(log_note, logtype_afpd, "Disconnected session terminating");
+        char cause[64];
+        LOG(log_note, logtype_afpd,
+            "Disconnected session terminating: %s, idle %d tickles of %ds",
+            afp_dsi_die_cause(sig, cause, sizeof(cause)), dsi->tickle,
+            AFPobj->options.tickleval);
+        of_log_usage(log_note, "disconnected exit");
         exit(0);
     }
 
@@ -196,7 +233,9 @@ static void afp_dsi_die(int sig)
     if (sig) /* if no signal, assume dying because logins are disabled &
                 don't log it (maintenance mode)*/
     {
-        LOG(log_info, logtype_afpd, "Connection terminated");
+        char cause[64];
+        LOG(log_info, logtype_afpd, "Connection terminated: %s",
+            afp_dsi_die_cause(sig, cause, sizeof(cause)));
     }
 
     if (sig == SIGTERM || sig == SIGALRM) {
@@ -267,7 +306,7 @@ static void handle_transfer_session(AFPObj *obj)
 }
 
 /* Forward declaration — defined after alarm_handler */
-static void afp_dsi_die_handler(int sig);
+static void afp_dsi_die_handler(int sig, siginfo_t *si, void *uc);
 
 /*! SIGUSR1 handler — async-signal-safe */
 static void afp_dsi_timedown_handler(int sig _U_)
@@ -306,11 +345,11 @@ static void handle_timedown(AFPObj *obj)
     }
 
     memset(&sv, 0, sizeof(sv));
-    sv.sa_handler = afp_dsi_die_handler;
+    sv.sa_sigaction = afp_dsi_die_handler;
     sigemptyset(&sv.sa_mask);
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGTERM);
-    sv.sa_flags = SA_RESTART;
+    sv.sa_flags = SA_RESTART | SA_SIGINFO;
 
     if (sigaction(SIGALRM, &sv, NULL) < 0) {
         LOG(log_error, logtype_afpd, "afp_timedown: sigaction: %s", strerror(errno));
@@ -373,9 +412,14 @@ static void handle_getmesg(AFPObj *obj)
     }
 }
 
-/*! SIGTERM/SIGQUIT handler — async-signal-safe */
-static void afp_dsi_die_handler(int sig)
+/*! SIGTERM/SIGQUIT handler, records the sending process — async-signal-safe */
+static void afp_dsi_die_handler(int sig, siginfo_t *si, void *uc _U_)
 {
+    /* kill() arrives as SI_USER, sigqueue() as SI_QUEUE, and on macOS kill()
+     * as si_code 0 */
+    die_sender = (si != NULL && (si->si_code == SI_USER || si->si_code == SI_QUEUE
+                                 || si->si_code == 0))
+                 ? (sig_atomic_t)si->si_pid : 0;
     die_pending = sig ? sig : -1;
     atalk_sigpipe_notify();
 }
@@ -506,6 +550,7 @@ static int process_deferred_signals(AFPObj *obj)
     if (die_pending) {
         int sig = die_pending;
         die_pending = 0;
+        die_signalled = true;
         afp_dsi_die(sig);
         /* Reached only with DSI_RECONINPROG set: the handoff failed
          * (auth.c leaves the flag set) and this child still owns the client
@@ -572,6 +617,38 @@ static void pending_request(DSI *dsi)
     }
 }
 
+/*!
+ * @brief Log why the session is disconnecting and what it keeps meanwhile
+ *
+ * A disconnected session holds every fork and descriptor until the client
+ * reconnects or the disconnect timer expires.
+ *
+ * @param[in] obj       AFP session
+ * @param[in] rx_errno  errno of the failed receive, 0 at end of stream
+ * @param[in] already   the session was disconnected before this receive
+ */
+static void afp_dsi_log_disconnect(const AFPObj *obj, int rx_errno,
+                                   bool already)
+{
+    const char *cause;
+
+    if (already) {
+        cause = "already disconnected by a timeout or failed reply";
+    } else if (rx_errno != 0 && rx_errno != EAGAIN && rx_errno != EWOULDBLOCK
+               && rx_errno != EINTR) {
+        /* the read loop retries those three, so one left over is no cause */
+        cause = strerror(rx_errno);
+    } else {
+        cause = "end of stream or empty request";
+    }
+
+    LOG(log_note, logtype_afpd,
+        "afp_over_dsi: session of \"%s\" disconnected: %s; kept up to %ds "
+        "after the last request", obj->username, cause,
+        obj->options.disconnected * obj->options.tickleval);
+    of_log_usage(log_note, "disconnect");
+}
+
 void afp_over_dsi_sighandlers(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->dsi;
@@ -596,7 +673,8 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* install SIGTERM */
-    action.sa_handler = afp_dsi_die_handler;
+    action.sa_sigaction = afp_dsi_die_handler;
+    action.sa_flags = SA_RESTART | SA_SIGINFO;
 
     if (sigaction(SIGTERM, &action, NULL) < 0) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno));
@@ -604,7 +682,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* install SIGQUIT */
-    action.sa_handler = afp_dsi_die_handler;
+    action.sa_sigaction = afp_dsi_die_handler;
 
     if (sigaction(SIGQUIT, &action, NULL) < 0) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno));
@@ -612,6 +690,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* SIGUSR2 - server message support */
+    action.sa_flags = SA_RESTART;
     action.sa_handler = afp_dsi_getmesg_handler;
 
     if (sigaction(SIGUSR2, &action, NULL) < 0) {
@@ -666,9 +745,11 @@ void afp_over_dsi(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->dsi;
     int rc_idx;
+    int rx_errno;
     uint32_t err, cmd;
     uint8_t function;
     AFPobj = obj;
+    session_master = getppid();
     obj->exit = afp_dsi_die;
     obj->reply = (int (*)(void *, int))dsi_cmdreply;
     obj->attention = (int (*)(void *, AFPUserBytes))dsi_attention;
@@ -851,7 +932,9 @@ void afp_over_dsi(AFPObj *obj)
 
         /* Blocking read on the network socket (now guaranteed to not block
          * when client data is available from poll()) */
+        errno = 0;
         cmd = dsi_stream_receive(dsi);
+        rx_errno = errno;
 
         if (cmd == 0) {
             /* cmd == 0 is the error condition */
@@ -886,10 +969,14 @@ void afp_over_dsi(AFPObj *obj)
             }
 
             /* Some error on the client connection, enter disconnected state */
+            bool already = (dsi->flags & DSI_DISCONNECTED) != 0;
+
             if (dsi_disconnect(dsi) != 0) {
+                /* a session that never logged in is not kept */
                 afp_dsi_die(EXITERR_CLNT);
             }
 
+            afp_dsi_log_disconnect(obj, rx_errno, already);
             ipc_child_state(obj, DSI_DISCONNECTED);
 
             while (dsi->flags & DSI_DISCONNECTED) {

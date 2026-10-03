@@ -25,6 +25,7 @@
 #include <netatalk/at.h>
 #include <atalk/logger.h>
 #include <atalk/compat.h>
+#include <atalk/dsi.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/server_child.h>
@@ -328,6 +329,8 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                 atp_close(asp->asp_atp);
                 close(ipc_fds[0]);
                 close(hint_pipe[1]);
+                /* the master's spare descriptor, which only it needs */
+                dsi_close_spare_fd();
                 asp->child = 1;
                 asp->asp_atp = atp;
                 asp->asp_sat = sat;
