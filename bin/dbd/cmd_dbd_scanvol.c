@@ -1023,8 +1023,9 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
 {
     EC_INIT;
     struct stat st;
-    /* Run with umask 0 */
-    umask(0);
+    /* Preserve repaired AppleDouble permissions derived by ad_open/ad_mkdir
+     * from the volume's existing files and directories, regardless of shell umask. */
+    mode_t saved_umask = umask(0); //NOSONAR
     /* Make vol accessible for all funcs */
     vol = vol_in;
     dbd_flags = flags;
@@ -1081,5 +1082,6 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
     /* Start recursion */
     EC_NEG1(dbd_readdir(1, htonl(2)));    /* 2 = volumeroot CNID */
 EC_CLEANUP:
+    umask(saved_umask);
     EC_EXIT;
 }
