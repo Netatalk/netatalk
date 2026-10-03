@@ -56,8 +56,8 @@ static struct passwd *dhxpwd;
 static uint8_t randbuf[KEYSIZE];
 
 /* diffie-hellman bits */
-static unsigned char msg2_iv[] = "CJalbert";
-static unsigned char msg3_iv[] = "LWallace";
+static unsigned char msg2_iv[8] = "CJalbert";
+static unsigned char msg3_iv[8] = "LWallace";
 static const unsigned char p_binary[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
                                          0x3F, 0x20, 0x24, 0x74, 0x4C, 0xEE, 0xE7, 0x5B
                                         };
@@ -209,10 +209,6 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     }
 
     gcry_mpi_t p, g, Rb, Ma, Mb;
-    p = gcry_mpi_new(0);
-    g = gcry_mpi_new(0);
-    Rb = gcry_mpi_new(0);
-    Ma = gcry_mpi_new(0);
     Mb = gcry_mpi_new(0);
     dhx_release_key();
     K = gcry_mpi_new(0);
@@ -544,9 +540,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     gcry_cipher_close(ctx);
-    bn1 = gcry_mpi_snew(KEYSIZE);
     gcry_mpi_scan(&bn1, GCRYMPI_FMT_STD, rbuf, KEYSIZE, NULL);
-    bn2 = gcry_mpi_snew(sizeof(randbuf));
     gcry_mpi_scan(&bn2, GCRYMPI_FMT_STD, randbuf, sizeof(randbuf), NULL);
     /* zero out the random number */
     explicit_bzero(rbuf, sizeof(randbuf));
@@ -803,9 +797,7 @@ static int pam_changepw(void *obj, unsigned char *username,
     }
 
     gcry_cipher_close(ctx);
-    bn1 = gcry_mpi_snew(KEYSIZE);
     gcry_mpi_scan(&bn1, GCRYMPI_FMT_STD, ibuf, KEYSIZE, NULL);
-    bn2 = gcry_mpi_snew(sizeof(randbuf));
     gcry_mpi_scan(&bn2, GCRYMPI_FMT_STD, randbuf, sizeof(randbuf), NULL);
     /* zero out the random number */
     explicit_bzero(ibuf, sizeof(randbuf));
