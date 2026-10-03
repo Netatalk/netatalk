@@ -62,7 +62,7 @@ static int pwd_login(void *obj, char *username, int ulen,
                      char *ibuf, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen)
 {
-    unsigned char iv[] = "CJalbert";
+    unsigned char iv[8] = "CJalbert";
     static const unsigned char p_binary[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
                                              0x3F, 0x20, 0x24, 0x74, 0x4C, 0xEE, 0xE7, 0x5B
                                             };
@@ -82,10 +82,6 @@ static int pwd_login(void *obj, char *username, int ulen,
     }
 
     gcry_mpi_t p, g, Rb, Ma, Mb;
-    p = gcry_mpi_new(0);
-    g = gcry_mpi_new(0);
-    Rb = gcry_mpi_new(0);
-    Ma = gcry_mpi_new(0);
     Mb = gcry_mpi_new(0);
     dhx_release_key();
     K = gcry_mpi_new(0);
@@ -315,7 +311,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
-    unsigned char iv[] = "LWallace";
+    unsigned char iv[8] = "LWallace";
     gcry_mpi_t bn1, bn2, bn3;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
@@ -398,9 +394,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     gcry_cipher_close(ctx);
-    bn1 = gcry_mpi_snew(KEYSIZE);
     gcry_mpi_scan(&bn1, GCRYMPI_FMT_STD, rbuf, KEYSIZE, NULL);
-    bn2 = gcry_mpi_snew(sizeof(randbuf));
     gcry_mpi_scan(&bn2, GCRYMPI_FMT_STD, randbuf, sizeof(randbuf), NULL);
     /* zero out the random number */
     explicit_bzero(rbuf, sizeof(randbuf));
