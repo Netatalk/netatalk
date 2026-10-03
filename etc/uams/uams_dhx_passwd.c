@@ -309,7 +309,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 }
 
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
-                            char *ibuf, size_t ibuflen _U_,
+                            char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
 {
 #ifdef SHADOWPW
@@ -329,6 +329,15 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     /* Make sure pwd_login actually ran and established the shared key */
     if (K == NULL) {
         LOG(log_error, logtype_uams, "DHX: logincont called without completing login");
+        return AFPERR_PARAM;
+    }
+
+    /* Require the session ID and complete encrypted nonce/password block. */
+    if (ibuflen < sizeof(sessid) + CRYPT2BUFLEN) {
+        LOG(log_info, logtype_uams,
+            "DHX: short logincont packet: %zu bytes", ibuflen);
+        dhx_release_key();
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
 
