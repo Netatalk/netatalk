@@ -110,8 +110,8 @@ jobs:
           args: >-
             --define sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json --define sonar.coverageReportPaths=build/coverage/sonarqube.xml
 
-  afpd-coverage:
-    name: afpd Code Coverage
+  code-coverage:
+    name: Code Coverage
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -153,37 +153,43 @@ jobs:
       - name: Build
         id: build
         run: meson compile -C build-coverage
-      - name: Run afpd tests
-        run: meson test -C build-coverage 'afpd tests*' --print-errorlogs
+      - name: Run tests
+        run: meson test -C build-coverage --print-errorlogs
       - name: Generate coverage reports
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           mkdir -p build-coverage/coverage
           gcovr --root . --gcov-executable gcov \
-            --filter 'etc/afpd/' \
+            --filter 'bin/' \
+            --filter 'etc/' \
+            --filter 'include/' \
             --filter 'libatalk/' \
+            --filter 'sys/' \
             --html-details build-coverage/coverage/index.html \
             --txt build-coverage/coverage/coverage.txt \
             --print-summary build-coverage \
             | tee build-coverage/coverage/summary.txt
           {
-            echo '## afpd code coverage'
+            echo '## code coverage'
             echo
-            echo 'Coverage of `etc/afpd` and `libatalk` from the afpd tests in both directory-cache modes.'
+            echo 'Coverage of Netatalk C code.'
             echo
             echo '```text'
             cat build-coverage/coverage/summary.txt
             echo '```'
             echo
-            echo 'Download the `afpd-coverage` artifact and open `coverage/index.html` for annotated source coverage.'
+            echo 'Download the `netatalk-code-coverage` artifact and open `coverage/index.html` for annotated source coverage.'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Report code coverage
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         uses: threeal/gcovr-action@64cb417ed6f143cafe1c69611922672002f460bb # v1.2.0
         with:
           filter: |
-            etc/afpd/
+            bin/
+            etc/
+            include/
             libatalk/
+            sys/
           github-token: ${{ secrets.GITHUB_TOKEN }}
           xml-out: build-coverage/coverage/coverage.xml
       - name: Publish Cobertura coverage report
@@ -201,7 +207,7 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: afpd-coverage
+          name: netatalk-code-coverage
           path: |
             build-coverage/coverage/
             build-coverage/meson-logs/
