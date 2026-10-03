@@ -39,7 +39,8 @@ pid_t server_lock(char *program, char *pidfile, int debug)
     int mask;
 
     if (!debug) {
-        mask = umask(022);
+        /* PID files contain only a public process ID; only the owner may write. */
+        mask = umask(022); //NOSONAR
 
         /* check for pid. this can get fooled by stale pid's. */
         if ((pf = fopen(pidfile, "r"))) {
@@ -48,6 +49,7 @@ pid_t server_lock(char *program, char *pidfile, int debug)
                         "%s is already running (pid = %d), or the lock file is stale.\n",
                         program, pid);
                 fclose(pf);
+                umask(mask);
                 return -1;
             }
 
@@ -55,6 +57,7 @@ pid_t server_lock(char *program, char *pidfile, int debug)
         }
 
         if ((pf = fopen(pidfile, "w")) == NULL) {
+            umask(mask);
             fprintf(stderr, "%s: can't open lock file, \"%s\"\n", program,
                     pidfile);
             return -1;
@@ -146,9 +149,11 @@ int create_lockfile(const char *program, const char *pidfile)
     }
 
     /* Write PID to pidfile */
-    mask = umask(022);
+    /* PID files contain only a public process ID; only the owner may write. */
+    mask = umask(022); //NOSONAR
 
     if ((pf = fopen(pidfile, "w")) == NULL) {
+        umask(mask);
         fprintf(stderr, "%s: can't open lock file, \"%s\"\n", program,
                 pidfile);
         return -1;

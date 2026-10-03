@@ -244,8 +244,9 @@ static int log_open_file(const char *filename)
 {
     int fd;
     become_root();
+    /* Logs can contain user names and paths; keep them private to owner/group. */
     fd = open(filename, O_CREAT | O_WRONLY | O_APPEND | O_CLOEXEC,
-              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+              S_IRUSR | S_IWUSR | S_IRGRP);
     unbecome_root();
     return fd;
 }
