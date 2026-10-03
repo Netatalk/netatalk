@@ -280,7 +280,8 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     tempfile = obj->oldtmp;
     strlcpy(tempfile, dtf, AFPOBJ_TMPSIZ + 1);
 
-    if ((tfd = open(tempfile, O_RDWR | O_CREAT, 0666)) < 0) {
+    /* Renamed into the shared desktop DB: inherit parent permissions and umask. */
+    if ((tfd = open(tempfile, O_RDWR | O_CREAT, ad_mode(tempfile, 0666))) < 0) { //NOSONAR
         return AFPERR_PARAM;
     }
 
@@ -423,7 +424,8 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     strlcpy(tempfile, dtf, AFPOBJ_TMPSIZ + 1);
 
-    if ((tfd = open(tempfile, O_RDWR | O_CREAT, 0666)) < 0) {
+    /* Renamed into the shared desktop DB: inherit parent permissions and umask. */
+    if ((tfd = open(tempfile, O_RDWR | O_CREAT, ad_mode(tempfile, 0666))) < 0) { //NOSONAR
         close(sa.sdt_fd);
         sa.sdt_fd = -1;
         return AFPERR_PARAM;
