@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -12,6 +13,7 @@
 #include <errno.h>
 #include <gcrypt.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -250,7 +252,7 @@ static int PAM_conv(int num_msg,
     }
 
     *resp = reply;
-    LOG(log_info, logtype_uams, "PAM DHX2: PAM Success");
+    LOG(log_info, logtype_uams, "PAM DHX2: password passed to PAM");
     return PAM_SUCCESS;
 pam_fail_conv:
 
@@ -640,6 +642,22 @@ exit:
 }
 
 
+/*!
+ * @brief Log a failed PAM step through uam_log_pam_failure()
+ *
+ * errno is read before pam_strerror(), whose message lookup can change it.
+ *
+ * @param[in] ph       PAM handle, NULL when pam_start() failed
+ * @param[in] step     PAM function that failed
+ * @param[in] pam_err  its return code
+ */
+static void dhx2_log_pam_error(pam_handle_t *ph, const char *step, int pam_err)
+{
+    int saved_errno = errno;
+    uam_log_pam_failure(log_info, "DHX2", PAM_username, step,
+                        pam_strerror(ph, pam_err), pam_err, saved_errno);
+}
+
 static int logincont2(void *obj_in, struct passwd **uam_pwd,
                       char *ibuf, size_t ibuflen,
                       char *rbuf _U_, size_t *rbuflen)
@@ -656,6 +674,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     char *utfpass = NULL;
     size_t password_len;
     size_t utfpass_len = 0;
+    bool pam_started = false;
     *rbuflen = 0;
 
     if (dhx2_state != DHX2_STATE_EXPECT_CONT2 ||
@@ -724,6 +743,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
 
     if (gcry_mpi_cmp(serverNonce, retServerNonce) != 0) {
         /* We're hacked!  */
+        LOG(log_info, logtype_uams, "DHX2: server nonce mismatch, login refused");
         ret = AFPERR_NOTAUTH;
         goto error_ctx;
     }
@@ -752,11 +772,13 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,
-                PAM_error));
+        dhx2_log_pam_error(NULL, "pam_start", PAM_error);
+        /* a failed pam_start() leaves the handle undefined */
+        pamh = NULL;
         goto error_ctx;
     }
 
+    pam_started = true;
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
     pam_set_item(pamh, PAM_TTY, "afpd");
     pam_set_item(pamh, PAM_RHOST, hostname);
@@ -774,6 +796,8 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     PAM_error = pam_authenticate(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
+        dhx2_log_pam_error(pamh, "pam_authenticate", PAM_error);
+
         if (sigchld_saved) {
             sigaction(SIGCHLD, &sa_old, NULL);
         }
@@ -782,8 +806,6 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
             ret = AFPERR_PWDEXPR;
         }
 
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,
-                PAM_error));
         goto error_ctx;
     }
 
@@ -794,8 +816,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     }
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
+        dhx2_log_pam_error(pamh, "pam_acct_mgmt", PAM_error);
 
         if (PAM_error == PAM_NEW_AUTHTOK_REQD) {
             /* password expired */
@@ -817,16 +838,14 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
+        dhx2_log_pam_error(pamh, "pam_setcred", PAM_error);
         goto error_ctx;
     }
 
     PAM_error = pam_open_session(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
+        dhx2_log_pam_error(pamh, "pam_open_session", PAM_error);
         goto error_ctx;
     }
 
@@ -840,6 +859,13 @@ error_ctx:
     }
 
     gcry_cipher_close(ctx);
+
+    /* a refused login leaves no handle behind; pam_logout() ends a kept one */
+    if (pam_started && ret != AFP_OK) {
+        pam_end(pamh, PAM_error);
+        pamh = NULL;
+    }
+
 error_noctx:
 
     if (utfpass != NULL) {
@@ -1003,7 +1029,7 @@ static int changepw_3(void *obj _U_,
     PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &lpamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2 Chgpwd: PAM error in pam_start");
+        dhx2_log_pam_error(NULL, "pam_start", PAM_error);
         ret = AFPERR_PARAM;
         goto error_ctx;
     }
@@ -1023,7 +1049,7 @@ static int changepw_3(void *obj _U_,
     PAM_error = pam_authenticate(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error authenticating with PAM");
+        dhx2_log_pam_error(lpamh, "pam_authenticate", PAM_error);
 
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
@@ -1040,7 +1066,7 @@ static int changepw_3(void *obj _U_,
     PAM_error = pam_acct_mgmt(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error validating PAM account");
+        dhx2_log_pam_error(lpamh, "pam_acct_mgmt", PAM_error);
 
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
@@ -1068,7 +1094,7 @@ static int changepw_3(void *obj _U_,
     explicit_bzero(ibuf, 512);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error changing pw with PAM");
+        dhx2_log_pam_error(lpamh, "pam_chauthtok", PAM_error);
         pam_end(lpamh, PAM_error);
         ret = AFPERR_ACCESS;
         goto error_ctx;

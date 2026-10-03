@@ -13,6 +13,51 @@ test(
     protocol: 'tap',
 )
 
+count_open_fds_test = executable(
+    'count_open_fds_test',
+    'test_count_open_fds.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk count_open_fds',
+    count_open_fds_test,
+    protocol: 'tap',
+)
+
+logger_failure_test = executable(
+    'logger_failure_test',
+    'test_logger_failure.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk logger failed write',
+    logger_failure_test,
+    protocol: 'tap',
+)
+
+dsi_getsess_test = executable(
+    'dsi_getsess_test',
+    'test_dsi_getsess.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk dsi session start failures',
+    dsi_getsess_test,
+    protocol: 'tap',
+)
+
 byteorder_test = executable(
     'byteorder_test',
     'test_byteorder.c',

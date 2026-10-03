@@ -443,6 +443,24 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
+/*!
+ * @brief Log a failed PAM step through uam_log_pam_failure()
+ *
+ * errno is read before pam_strerror(), whose message lookup can change it.
+ *
+ * @param[in] ph       PAM handle, NULL when pam_start() failed
+ * @param[in] user     user being authenticated
+ * @param[in] step     PAM function that failed
+ * @param[in] pam_err  its return code
+ */
+static void dhx_log_pam_error(pam_handle_t *ph, const char *user,
+                              const char *step, int pam_err)
+{
+    int saved_errno = errno;
+    uam_log_pam_failure(log_info, "DHCAST128", user, step,
+                        pam_strerror(ph, pam_err), pam_err, saved_errno);
+}
+
 /* -------------------------------- */
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
@@ -563,10 +581,10 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
                           &PAM_conversation, &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
-        /* Log Entry */
+        dhx_log_pam_error(NULL, (const char *)PAM_username, "pam_start",
+                          PAM_error);
+        /* a failed pam_start() leaves the handle undefined */
+        pamh = NULL;
         goto logincont_err;
     }
 
@@ -594,10 +612,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
             err = AFPERR_PWDEXPR;
         }
 
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
-        /* Log Entry */
+        dhx_log_pam_error(pamh, (const char *)PAM_username, "pam_authenticate",
+                          PAM_error);
         goto logincont_err;
     }
 
@@ -608,11 +624,9 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     if (PAM_error != PAM_SUCCESS) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
+        dhx_log_pam_error(pamh, (const char *)PAM_username, "pam_acct_mgmt",
+                          PAM_error);
 
-        /* Log Entry */
         if (PAM_error == PAM_NEW_AUTHTOK_REQD) {
             /* password expired */
             err = AFPERR_PWDEXPR;
@@ -635,20 +649,16 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
 
     if (PAM_error != PAM_SUCCESS) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
-        /* Log Entry */
+        dhx_log_pam_error(pamh, (const char *)PAM_username, "pam_setcred",
+                          PAM_error);
         goto logincont_err;
     }
 
     PAM_error = pam_open_session(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
-            pam_strerror(pamh, PAM_error));
-        /* Log Entry */
+        dhx_log_pam_error(pamh, (const char *)PAM_username, "pam_open_session",
+                          PAM_error);
         goto logincont_err;
     }
 
@@ -664,8 +674,12 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 
     return AFP_OK;
 logincont_err:
-    pam_end(pamh, PAM_error);
-    pamh = NULL;
+
+    if (pamh != NULL) {
+        pam_end(pamh, PAM_error);
+        pamh = NULL;
+    }
+
     explicit_bzero(rbuf, CRYPT2BUFLEN);
     return err;
 }
@@ -827,11 +841,7 @@ static int pam_changepw(void *obj, unsigned char *username,
                           &lpamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams,
-            "uams_dhx_pam.c :PAM: Needless to say, PAM_error is != to PAM_SUCCESS -- %s",
-            strerror(errno));
-        /* Log Entry */
+        dhx_log_pam_error(NULL, (const char *)username, "pam_start", PAM_error);
         return AFPERR_PARAM;
     }
 
@@ -847,6 +857,9 @@ static int pam_changepw(void *obj, unsigned char *username,
     PAM_error = pam_authenticate(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
+        dhx_log_pam_error(lpamh, (const char *)username, "pam_authenticate",
+                          PAM_error);
+
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
         }
@@ -858,6 +871,9 @@ static int pam_changepw(void *obj, unsigned char *username,
     PAM_error = pam_acct_mgmt(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
+        dhx_log_pam_error(lpamh, (const char *)username, "pam_acct_mgmt",
+                          PAM_error);
+
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
         }
@@ -886,6 +902,8 @@ static int pam_changepw(void *obj, unsigned char *username,
     explicit_bzero(ibuf, PASSWDLEN);
 
     if (PAM_error != PAM_SUCCESS) {
+        dhx_log_pam_error(lpamh, (const char *)username, "pam_chauthtok",
+                          PAM_error);
         pam_end(lpamh, PAM_error);
         return AFPERR_ACCESS;
     }

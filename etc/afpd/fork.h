@@ -75,7 +75,10 @@ extern int          of_rename(const struct vol *,
                               struct dir *, const char *);
 extern int          of_flush(const struct vol *);
 extern void         of_pforkdesc(FILE *);
-extern void         of_log_highwater(void);
+extern void         of_log_usage(int level, const char *event);
+extern void         of_log_nfile(const char *name, int err);
+extern void         of_note_open(int newfd);
+extern const char   *of_breakdown(char *buf, size_t len);
 extern int          of_stat(const struct vol *vol, struct path *);
 extern int          of_statdir(struct vol *vol, struct path *);
 extern int          of_closefork(const AFPObj *obj, struct ofork *ofork);

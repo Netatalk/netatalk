@@ -8,6 +8,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,133 @@
 #include <atalk/dsi.h>
 #include <atalk/logger.h>
 #include <atalk/server_child.h>
+#include <atalk/unix.h>
 #include <atalk/util.h>
+
+/* descriptor held in reserve so a master out of descriptors can still accept */
+static int dsi_spare_fd = -1;
+/* the master's descriptor limit, read when the spare is reserved */
+static int dsi_fdlimit = 0;
+/* connections refused for lack of descriptors, for log backoff */
+static unsigned int dsi_starved_refusals = 0;
+/* descriptor-use warning thresholds reached, see usage_level_update() */
+static int dsi_fd_level = 0;
+
+/*!
+ * @brief Hold one descriptor in reserve for refusing connections
+ *
+ * A master with no descriptor left closes the spare to accept the waiting
+ * connection and refuse it, so the connection does not stay queued with
+ * poll() reporting the listening socket ready again at once.
+ */
+void dsi_reserve_spare_fd(void)
+{
+    dsi_fdlimit = getdtablesize();
+
+    if (dsi_spare_fd < 0) {
+        dsi_spare_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    }
+}
+
+/*!
+ * @brief Release the spare descriptor, in a session child or before a refusal
+ */
+void dsi_close_spare_fd(void)
+{
+    if (dsi_spare_fd >= 0) {
+        close(dsi_spare_fd);
+        dsi_spare_fd = -1;
+    }
+}
+
+/*!
+ * @brief Accept the waiting connection and reply that the server is busy
+ *
+ * @returns false when accept() fails, with errno set
+ *
+ * The reply echoes the client's request ID when its DSIOpenSession header
+ * has already arrived, else uses 0.
+ *
+ * @param[in,out] dsi  listening DSI handle
+ */
+static bool dsi_reject_busy(DSI *dsi)
+{
+    socklen_t addrlen = sizeof(dsi->client);
+    uint8_t block[DSI_BLOCKSIZ];
+    ssize_t n;
+    dsi->socket = accept(dsi->serversock,
+                         (struct sockaddr *)&dsi->client, &addrlen);
+
+    if (dsi->socket < 0) {
+        return false;
+    }
+
+    n = recv(dsi->socket, block, DSI_BLOCKSIZ, MSG_DONTWAIT);
+    memset(&dsi->header, 0, sizeof(dsi->header));
+    dsi->header.dsi_flags = DSIFL_REPLY;
+    dsi->header.dsi_command = DSIFUNC_OPEN;
+
+    if (n == DSI_BLOCKSIZ) {
+        memcpy(&dsi->header.dsi_requestID, block + 2,
+               sizeof(dsi->header.dsi_requestID));
+    } else {
+        dsi->header.dsi_requestID = 0;
+    }
+
+    dsi->header.dsi_data.dsi_code = htonl(DSIERR_SERVBUSY);
+    dsi->cmdlen = 0;
+    dsi_send(dsi);
+    close(dsi->socket);
+    dsi->socket = -1;
+    return true;
+}
+
+/*!
+ * @brief Refuse the waiting connection when the master is out of descriptors
+ *
+ * @param[in,out] dsi       listening DSI handle
+ * @param[in]     children  the master's session table
+ * @param[in]     err       errno of the failed descriptor allocation
+ */
+static void dsi_refuse_starved(DSI *dsi, const server_child_t *children,
+                               int err)
+{
+    dsi_close_spare_fd();
+    dsi_reject_busy(dsi);
+    dsi_reserve_spare_fd();
+
+    if (log_backoff(&dsi_starved_refusals)) {
+        int fdlimit;
+        int fds = count_open_fds(&fdlimit);
+        LOG(log_error, logtype_dsi,
+            "dsi_getsess: %s, refused a connection as busy (refusal %u): "
+            "%d sessions, %d fds open of %d", strerror(err),
+            dsi_starved_refusals, children->servch_count, fds, fdlimit);
+    }
+
+    errno = err;
+}
+
+/*!
+ * @brief Warn as the master's descriptor use climbs toward its limit
+ *
+ * accept(2) returns the lowest free descriptor, so the accepted socket's
+ * number is a lower bound on the master's descriptors in use, at no cost.
+ *
+ * @param[in] children  the master's session table
+ * @param[in] fd        descriptor the master just accepted
+ */
+static void dsi_note_master_fd(const server_child_t *children, int fd)
+{
+    if (usage_level_update(&dsi_fd_level, fd + 1, dsi_fdlimit)) {
+        int fdlimit;
+        int fds = count_open_fds(&fdlimit);
+        LOG(log_warning, logtype_dsi,
+            "master fd use over %d%% of the limit: %d sessions, "
+            "%d fds open of %d", usage_level_pct(dsi_fd_level),
+            children->servch_count, fds, fdlimit);
+    }
+}
 
 /*!
  * @brief Start a DSI session, fork an afpd process
@@ -47,33 +174,14 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
      * echoing the client's ID.  The post-fork check in server_child_add
      * remains as defence-in-depth for the narrow race window. */
     if (serv_children->servch_count >= serv_children->servch_nsessions) {
-        socklen_t addrlen = sizeof(dsi->client);
-        uint8_t block[DSI_BLOCKSIZ];
-        ssize_t n;
         LOG(log_note, logtype_dsi,
             "dsi_getsess: at session cap (%d/%d), rejecting without fork",
             serv_children->servch_count, serv_children->servch_nsessions);
-        dsi->socket = accept(dsi->serversock,
-                             (struct sockaddr *)&dsi->client, &addrlen);
 
-        if (dsi->socket >= 0) {
-            n = recv(dsi->socket, block, DSI_BLOCKSIZ, MSG_DONTWAIT);
-            memset(&dsi->header, 0, sizeof(dsi->header));
-            dsi->header.dsi_flags = DSIFL_REPLY;
-            dsi->header.dsi_command = DSIFUNC_OPEN;
-
-            if (n == DSI_BLOCKSIZ)
-                memcpy(&dsi->header.dsi_requestID, block + 2,
-                       sizeof(dsi->header.dsi_requestID));
-            else {
-                dsi->header.dsi_requestID = 0;
-            }
-
-            dsi->header.dsi_data.dsi_code = htonl(DSIERR_SERVBUSY);
-            dsi->cmdlen = 0;
-            dsi_send(dsi);
-            close(dsi->socket);
-            dsi->socket = -1;
+        /* out of descriptors as well, the spare is what lets it refuse */
+        if (!dsi_reject_busy(dsi) && (errno == EMFILE || errno == ENFILE)) {
+            dsi_refuse_starved(dsi, serv_children, errno);
+            return -1;
         }
 
         errno = 0;
@@ -81,12 +189,21 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
     }
 
     if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
-        LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
+        int err = errno;
+
+        if (err == EMFILE || err == ENFILE) {
+            dsi_refuse_starved(dsi, serv_children, err);
+        } else {
+            LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(err));
+        }
+
         return -1;
     }
 
     if (setnonblock(ipc_fds[0], 1) != 0 || setnonblock(ipc_fds[1], 1) != 0) {
         LOG(log_error, logtype_dsi, "dsi_getsess: setnonblock: %s", strerror(errno));
+        close(ipc_fds[0]);
+        close(ipc_fds[1]);
         return -1;
     }
 
@@ -96,9 +213,16 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
      * ≤ PIPE_BUF (4096) are POSIX-guaranteed atomic — our 22-byte
      * dircache hint messages always arrive as complete messages. */
     if (pipe(hint_pipe) < 0) {
-        LOG(log_error, logtype_dsi, "dsi_getsess: pipe: %s", strerror(errno));
+        int err = errno;
         close(ipc_fds[0]);
         close(ipc_fds[1]);
+
+        if (err == EMFILE || err == ENFILE) {
+            dsi_refuse_starved(dsi, serv_children, err);
+        } else {
+            LOG(log_error, logtype_dsi, "dsi_getsess: pipe: %s", strerror(err));
+        }
+
         return -1;
     }
 
@@ -118,12 +242,27 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
     LOG(log_debug, logtype_dsi, "dsi_getsess: about to fork child (proto_open)");
 
     switch (pid = dsi->proto_open(dsi)) { /* in libatalk/dsi/dsi_tcp.c */
-    case -1:
-        /* if we fail, just return. it might work later */
-        LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
+    case -1: {
+        int err = errno;
+        close(ipc_fds[0]);
+        close(ipc_fds[1]);
         close(hint_pipe[0]);
         close(hint_pipe[1]);
+
+        /* accept() succeeded but fork() did not */
+        if (dsi->socket >= 0) {
+            close(dsi->socket);
+            dsi->socket = -1;
+        }
+
+        if (err == EMFILE || err == ENFILE) {
+            dsi_refuse_starved(dsi, serv_children, err);
+        } else {
+            LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(err));
+        }
+
         return -1;
+    }
 
     case 0: /* child. mostly handled below. */
         LOG(log_debug, logtype_dsi, "dsi_getsess: child process started (pid %d)",
@@ -151,6 +290,7 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
             return -1;
         }
 
+        dsi_note_master_fd(serv_children, dsi->socket);
         dsi->proto_close(dsi);
         *childp = child;
         return 0;
@@ -172,6 +312,7 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
     close(hint_pipe[1]);
     close(dsi->serversock);
     dsi->serversock = -1;
+    dsi_close_spare_fd();
     server_child_free(serv_children);
 
     switch (dsi->header.dsi_command) {

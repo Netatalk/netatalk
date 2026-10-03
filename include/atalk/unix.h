@@ -20,6 +20,7 @@
 #endif
 
 #include <dirent.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -55,4 +56,8 @@ extern void unbecome_root(void);
 extern int gmem(gid_t gid, int ngroups, gid_t *groups);
 extern int set_groups(AFPObj *obj, struct passwd *pwd);
 extern const char *print_groups(int ngroups, gid_t *groups);
+extern int count_open_fds(int *limit);
+extern bool log_backoff(unsigned int *count);
+extern bool usage_level_update(int *level, int64_t used, int64_t limit);
+extern int usage_level_pct(int level);
 #endif  /* ATALK_UNIX_H */

@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <poll.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,6 +45,7 @@
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
+#include <atalk/uam.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/vfs.h>
@@ -171,6 +173,212 @@ int daemonize(void)
 
     log_reopen();
     return 0;
+}
+
+#define FD_POLL_CHUNK 1024
+
+/*!
+ * @brief Count open descriptors in [base, base + n) with one fcntl(2) each
+ *
+ * @param[in] base  first descriptor
+ * @param[in] n     descriptors to probe
+ *
+ * @returns number of open descriptors in the range
+ */
+static int count_fds_probed(int base, int n)
+{
+    int open_fds = 0;
+
+    for (int fd = base; fd < base + n; fd++) {
+        if (fcntl(fd, F_GETFD) != -1) {
+            open_fds++;
+        }
+    }
+
+    return open_fds;
+}
+
+/*!
+ * @brief Count open descriptors below @p max, FD_POLL_CHUNK per poll(2)
+ *
+ * poll() marks a closed descriptor POLLNVAL without using a descriptor of
+ * its own.  macOS poll() rejects device descriptors and DragonFly's
+ * kqueue-based poll() miscounts them, so both probe instead.
+ *
+ * @param[in] max  number of descriptors to scan from 0
+ *
+ * @returns number of open descriptors below @p max
+ */
+static int count_fds_polled(int max)
+{
+#if defined(__APPLE__) || defined(__DragonFly__)
+    return count_fds_probed(0, max);
+#else
+    struct pollfd pfd[FD_POLL_CHUNK];
+    int open_fds = 0;
+
+    for (int base = 0; base < max; base += FD_POLL_CHUNK) {
+        int n = (max - base < FD_POLL_CHUNK) ? max - base : FD_POLL_CHUNK;
+
+        for (int i = 0; i < n; i++) {
+            pfd[i].fd = base + i;
+            pfd[i].events = 0;
+            pfd[i].revents = 0;
+        }
+
+        if (poll(pfd, (nfds_t)n, 0) < 0) {
+            open_fds += count_fds_probed(base, n);
+            continue;
+        }
+
+        for (int i = 0; i < n; i++) {
+            if (!(pfd[i].revents & POLLNVAL)) {
+                open_fds++;
+            }
+        }
+    }
+
+    return open_fds;
+#endif
+}
+
+/*!
+ * @brief Count the descriptors this process has open
+ *
+ * Lists /proc/self/fd where procfs enumerates every descriptor; otherwise,
+ * or when no descriptor is free for the listing, scans the descriptors
+ * below the limit with poll(2).  Meant for logging on rare events.
+ *
+ * @param[out] limit  set to getdtablesize() unless NULL
+ *
+ * @returns number of open descriptors
+ */
+int count_open_fds(int *limit)
+{
+    int max = getdtablesize();
+
+    if (limit != NULL) {
+        *limit = max;
+    }
+
+#if defined(__linux__) || defined(__sun)
+    DIR *dp = opendir("/proc/self/fd");
+
+    if (dp != NULL) {
+        const struct dirent *de;
+        int open_fds = 0;
+
+        while ((de = readdir(dp)) != NULL) {
+            if (de->d_name[0] != '.') {
+                open_fds++;
+            }
+        }
+
+        closedir(dp);
+        /* the listing includes the descriptor opendir() holds */
+        return open_fds - 1;
+    }
+
+#endif
+    return count_fds_polled(max);
+}
+
+/*!
+ * @brief Log a failed PAM step with the errno it left and the fds in use
+ *
+ * The descriptor count tells a module that cannot open its files from a
+ * wrong password.  Takes pam_strerror() text, never a handle, which a
+ * failed pam_start() leaves undefined.  Both afpd and papd load the PAM
+ * UAMs.
+ *
+ * @param[in] level    log level of the line
+ * @param[in] uam      UAM name that leads the log line
+ * @param[in] user     user being authenticated
+ * @param[in] step     PAM function that failed
+ * @param[in] errtext  pam_strerror() text for @p code
+ * @param[in] code     PAM return code
+ * @param[in] err      errno as the failed step left it
+ */
+void uam_log_pam_failure(enum loglevels level, const char *uam,
+                         const char *user, const char *step,
+                         const char *errtext, int code, int err)
+{
+    int fdlimit;
+    int fds;
+
+    /* LOG()'s own level test, so a filtered line costs no count */
+    if (level > type_configs[logtype_uams].level) {
+        return;
+    }
+
+    fds = count_open_fds(&fdlimit);
+    LOG(level, logtype_uams,
+        "%s: PAM_Error: %s for %s: %s (PAM %d, errno %d: %s), fds %d open of %d",
+        uam, step, user ? user : "?", errtext, code, err, strerror(err), fds,
+        fdlimit);
+}
+
+static const int usage_warn_pct[] = { 50, 75, 90 };
+#define USAGE_LEVELS ((int)(sizeof(usage_warn_pct) / sizeof(usage_warn_pct[0])))
+
+/*!
+ * @brief Count an event, reporting its 1st, 2nd, 4th, 8th... occurrence
+ *
+ * @param[in,out] count  occurrences so far
+ *
+ * @returns true when this occurrence should be logged
+ */
+bool log_backoff(unsigned int *count)
+{
+    unsigned int n = ++*count;
+    return (n & (n - 1)) == 0;
+}
+
+/*!
+ * @brief Track usage against the 50, 75 and 90 percent warning thresholds
+ *
+ * Raises @p level past each threshold @p used has reached, and lowers it
+ * once @p used is ten points below the highest one reached, so a threshold
+ * is reported once per climb rather than on every crossing.
+ *
+ * @param[in,out] level  thresholds reached so far, 0 to 3
+ * @param[in]     used   current usage
+ * @param[in]     limit  capacity the thresholds are percentages of
+ *
+ * @returns true when @p level rose
+ */
+bool usage_level_update(int *level, int64_t used, int64_t limit)
+{
+    bool rose = false;
+
+    if (limit <= 0) {
+        return false;
+    }
+
+    while (*level < USAGE_LEVELS
+            && used * 100 >= usage_warn_pct[*level] * limit) {
+        (*level)++;
+        rose = true;
+    }
+
+    if (!rose && *level > 0
+            && used * 100 < (usage_warn_pct[*level - 1] - 10) * limit) {
+        (*level)--;
+    }
+
+    return rose;
+}
+
+/*!
+ * @brief Threshold, in percent, that @p level has reached
+ *
+ * @param[in] level  a level raised by usage_level_update(), 1 to 3
+ *
+ * @returns the threshold in percent
+ */
+int usage_level_pct(int level)
+{
+    return usage_warn_pct[level - 1];
 }
 
 static uid_t saved_uid = -1;
