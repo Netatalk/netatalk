@@ -92,7 +92,7 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
         bstring addir = bfromcstr(path);
         bcatcstr(addir, "/.AppleDouble");
         mkdir(cfrombstr(addir), 0777);
-        chmod(cfrombstr(addir), 02777);
+        chmod(cfrombstr(addir), 02777); //NOSONAR: Shared AppleDouble metadata requires group inheritance and multiuser access.
         bdestroy(addir);
     }
 

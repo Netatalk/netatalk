@@ -121,7 +121,7 @@ STATIC void test528()
     /* Set parent permissions to rwxrwxrwx (0777) */
     snprintf(parent_path, sizeof(parent_path), "%s/%s", Path, parent_name);
 
-    if (chmod(parent_path, 0777) < 0) {
+    if (chmod(parent_path, 0777) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED unable to chmod parent: %s\n", strerror(errno));
         }
@@ -185,7 +185,7 @@ STATIC void test528()
 
     /* Remove execute permission - this prevents traversing into the directory,
      * which means accessing files in subdirectories will fail */
-    if (chmod(parent_path, 0444) < 0) {
+    if (chmod(parent_path, 0444) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED unable to chmod parent: %s\n", strerror(errno));
         }
@@ -255,7 +255,7 @@ STATIC void test528()
     }
 
     /* Restore execute permission - this allows traversing the directory again */
-    if (chmod(parent_path, 0777) < 0) {
+    if (chmod(parent_path, 0777) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED unable to chmod parent back: %s\n", strerror(errno));
         }
@@ -310,7 +310,7 @@ fin:
     }
 
     /* Restore permissions for cleanup */
-    chmod(parent_path, 0777);
+    chmod(parent_path, 0777); //NOSONAR: Intentional permissions for AFP test fixtures.
 
     if (child_dir) {
         FPDelete(Conn, vol, child_dir, file_name);

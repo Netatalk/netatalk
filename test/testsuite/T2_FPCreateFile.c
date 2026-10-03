@@ -52,7 +52,7 @@ STATIC void test325()
         fprintf(stdout, "chmod 444 resource fork\n");
     }
 
-    if (chmod(temp, 0444) < 0) {
+    if (chmod(temp, 0444) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED chmod(%s) %s\n", temp, strerror(errno));
         }
