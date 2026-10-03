@@ -1,5 +1,4 @@
 /*
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -446,7 +445,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 /* -------------------------------- */
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
-                         const unsigned char *ibuf, size_t ibuflen _U_,
+                         const unsigned char *ibuf, size_t ibuflen,
                          unsigned char *rbuf, size_t *rbuflen)
 {
     const char *hostname;
@@ -462,6 +461,15 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     /* Make sure dhx_setup actually ran and established the shared key */
     if (K == NULL) {
         LOG(log_error, logtype_uams, "DHX: logincont called without completing login");
+        explicit_bzero(randbuf, sizeof(randbuf));
+        return AFPERR_PARAM;
+    }
+
+    /* Require the session ID and complete encrypted nonce/password block. */
+    if (ibuflen < sizeof(sessid) + CRYPT2BUFLEN) {
+        LOG(log_info, logtype_uams,
+            "DHX: short logincont packet: %zu bytes", ibuflen);
+        dhx_release_key();
         explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_PARAM;
     }
