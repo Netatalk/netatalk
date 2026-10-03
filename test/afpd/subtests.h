@@ -51,4 +51,5 @@ extern int test010_full_cache_accepts_adds(struct vol *vol,
                                            unsigned int cache_size);
 extern int dircache_test_ghost_trim_selection(void);
 extern int utest_logger_reopen_keeps_files(void);
+extern int utest_lockfile_restores_umask(void);
 #endif  /* SUBTESTS_H */
