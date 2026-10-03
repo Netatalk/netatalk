@@ -319,6 +319,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     size_t i;
     uint16_t sessid;
     char *p;
+    char password[PASSWDLEN + 1];
     int err = AFPERR_NOTAUTH;
     *rbuflen = 0;
 
@@ -399,7 +400,6 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     /* zero out the random number */
     explicit_bzero(rbuf, sizeof(randbuf));
     explicit_bzero(randbuf, sizeof(randbuf));
-    rbuf += KEYSIZE;
     bn3 = gcry_mpi_snew(0);
     gcry_mpi_sub(bn3, bn1, bn2);
     gcry_mpi_release(bn2);
@@ -411,12 +411,15 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     gcry_mpi_release(bn3);
-    rbuf[PASSWDLEN] = '\0';
+    /* The wire password fills its field; terminate it in a separate buffer. */
+    memcpy(password, rbuf + KEYSIZE, PASSWDLEN);
+    password[PASSWDLEN] = '\0';
+    explicit_bzero(rbuf, CRYPT2BUFLEN);
 #ifdef HAVE_CRYPT_CHECKPASS
 
-    if (crypt_checkpass(rbuf, dhxpwd->pw_passwd) == 0) {
+    if (crypt_checkpass(password, dhxpwd->pw_passwd) == 0) {
 #else
-    p = crypt(rbuf, dhxpwd->pw_passwd);
+    p = crypt(password, dhxpwd->pw_passwd);
 
     if (strcmp(p, dhxpwd->pw_passwd) == 0) {
 #endif
@@ -424,7 +427,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
         err = AFP_OK;
     }
 
-    explicit_bzero(rbuf, PASSWDLEN);
+    explicit_bzero(password, sizeof(password));
 #ifdef SHADOWPW
 
     if ((sp = getspnam(dhxpwd->pw_name)) == NULL) {
