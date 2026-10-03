@@ -689,7 +689,7 @@ STATIC void test321()
 
     snprintf(temp, sizeof(temp), "%s/%s", Path, file);
 
-    if (chmod(temp, 0444) < 0) {
+    if (chmod(temp, 0444) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED unable to chmod %s :%s\n", temp, strerror(errno));
         }
@@ -705,7 +705,7 @@ STATIC void test321()
     }
 
     unlink(temp);
-    fd = open(temp, O_RDWR | O_CREAT, 0666);
+    fd = open(temp, O_RDWR | O_CREAT, 0666); //NOSONAR: Intentional permissions for AFP test fixtures.
 
     if (fd < 0) {
         if (!Quiet) {
@@ -718,7 +718,7 @@ STATIC void test321()
 
     close(fd);
 
-    if (chmod(temp, 0444) < 0) {
+    if (chmod(temp, 0444) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED unable to chmod %s :%s\n", temp, strerror(errno));
         }
@@ -823,7 +823,7 @@ STATIC void test372()
     }
 
     snprintf(temp, sizeof(temp), "%s/%s", Path, name);
-    fd = open(temp, O_RDWR, 0666);
+    fd = open(temp, O_RDWR, 0666); //NOSONAR: No O_CREAT: the mode argument does not change permissions.
 
     if (fd < 0) {
         if (!Quiet) {
@@ -927,7 +927,7 @@ STATIC void test388()
     }
 
     snprintf(temp, sizeof(temp), "%s/%s", Path, name);
-    fd = open(temp, O_RDWR, 0666);
+    fd = open(temp, O_RDWR, 0666); //NOSONAR: No O_CREAT: the mode argument does not change permissions.
 
     if (fd < 0) {
         if (!Quiet) {
@@ -1031,7 +1031,7 @@ STATIC void test392()
     }
 
     snprintf(temp, sizeof(temp), "%s/%s", Path, name);
-    fd = open(temp, O_RDWR, 0666);
+    fd = open(temp, O_RDWR, 0666); //NOSONAR: No O_CREAT: the mode argument does not change permissions.
 
     if (fd < 0) {
         if (!Quiet) {
@@ -1532,7 +1532,7 @@ STATIC void test431()
 
     fd = -1;
 
-    if (chmod(cmd, 0666) != 0) {
+    if (chmod(cmd, 0666) != 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         test_failed();
         goto fin;
     }
@@ -1551,7 +1551,7 @@ STATIC void test431()
         }
     }
 
-    if (mkdir(cmd, 0777) != 0 && errno != EEXIST) {
+    if (mkdir(cmd, 0777) != 0 && errno != EEXIST) { //NOSONAR: Intentional permissions for AFP test fixtures.
         test_failed();
         goto fin;
     }
@@ -1853,7 +1853,7 @@ STATIC void test526()
                 "\t  Step 4: Client 2 changes file permissions (chmod #1 -> 0444)\n");
     }
 
-    if (chmod(temp, 0444) < 0) {
+    if (chmod(temp, 0444) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED unable to chmod %s: %s\n", temp, strerror(errno));
         }
@@ -1898,7 +1898,7 @@ STATIC void test526()
                 "\t  Step 6: Client 2 changes permissions again (chmod #2 -> 0644)\n");
     }
 
-    if (chmod(temp, 0644) < 0) {
+    if (chmod(temp, 0644) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED unable to chmod %s: %s\n", temp, strerror(errno));
         }

@@ -1544,7 +1544,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     /* We need the volume dir under CNID to store .AppleDesktop,
        although this backend does not keep any database file here. */
-    if (mkdir(dirpath, 0755) != 0) {
+    if (mkdir(dirpath, 0755) != 0) { //NOSONAR: AFP users need desktop directory access; only the owner can write.
         if (errno == EEXIST) {
             struct stat st;
 

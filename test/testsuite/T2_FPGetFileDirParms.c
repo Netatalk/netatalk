@@ -432,7 +432,7 @@ STATIC void test106()
         fprintf(stdout, "mkdir(%s)\n", temp);
     }
 
-    if (mkdir(temp, 0777)) {
+    if (mkdir(temp, 0777)) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
             fprintf(stdout, "\tFAILED mkdir %s %s\n", temp, strerror(errno));
         }
@@ -723,7 +723,7 @@ STATIC void test235()
     sleep(2);
 #endif
     sprintf(temp, "%s/%s/%s", Path, name, name2);
-    fd = open(temp, O_RDWR | O_CREAT, 0666);
+    fd = open(temp, O_RDWR | O_CREAT, 0666); //NOSONAR: Intentional permissions for AFP test fixtures.
 
     if (fd < 0) {
         if (!Quiet) {
