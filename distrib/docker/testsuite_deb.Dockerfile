@@ -27,6 +27,7 @@ ARG RUN_DEPS="\
 ARG BUILD_DEPS="\
     bison \
     build-essential \
+    cmake \
     file \
     flex \
     libacl1-dev \
