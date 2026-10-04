@@ -97,8 +97,11 @@ jobs:
         run: |
           mkdir -p build/coverage
           gcovr --root . --gcov-executable gcov \
-            --filter 'etc/afpd/' \
+            --filter 'bin/' \
+            --filter 'etc/' \
+            --filter 'include/' \
             --filter 'libatalk/' \
+            --filter 'sys/' \
             --sonarqube build/coverage/sonarqube.xml \
             --print-summary build
       - name: Run SonarQube scan
