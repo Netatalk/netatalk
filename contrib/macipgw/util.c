@@ -19,20 +19,26 @@
  */
 
 #include <sys/types.h>
+#include <sys/socket.h>
 
-#include <stdio.h>
+#include <arpa/inet.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+#include "util.h"
 
 int gDebug;
 
 
 char *iptoa(uint32_t ip)
 {
-    static char s[16];
-    sprintf(s, "%u.%u.%u.%u",
-            (ip >> 24) & 0xff, (ip >> 16) & 0xff,
-            (ip >> 8) & 0xff, ip & 0xff);
+    static char s[INET_ADDRSTRLEN];
+    struct in_addr addr = {.s_addr = htonl(ip)};
+
+    if (inet_ntop(AF_INET, &addr, s, sizeof(s)) == NULL) {
+        s[0] = '\0';
+    }
+
     return s;
 }
 

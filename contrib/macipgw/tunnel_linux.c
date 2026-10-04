@@ -181,7 +181,8 @@ int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o)
     gTunnel.dev = 0;
 
     for (i = 0; i <= 9; i++) {
-        sprintf(s, "tun%d", i);
+        memcpy(s, "tun0", sizeof("tun0"));
+        s[3] = "0123456789"[i];
         gTunnel.dev = tunnel_create(s, IFF_TUN | IFF_NO_PI);
 
         if (gTunnel.dev > 0) {
