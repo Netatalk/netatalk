@@ -1050,6 +1050,8 @@ ldap uuid string = *STRING* **(G)**
 
 > Format of the uuid string in the directory. A series of x and -, where
 every x denotes a value 0-9a-f and every - is a separator.
+The format must contain exactly 32 x characters and be at most 63 characters
+long, including separators. Invalid formats fall back to the default.
 >
 > Default: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
