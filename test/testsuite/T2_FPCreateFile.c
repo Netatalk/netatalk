@@ -9,6 +9,8 @@ static char temp[MAXPATHLEN];
 /* -------------------------- */
 STATIC void test325()
 {
+    char metadata_path[MAXPATHLEN];
+    const char *cleanup_path = temp;
     char *name = "t325 file";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -26,12 +28,14 @@ STATIC void test325()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s", Path, name), test_exit)
+    FAILEXIT(test_format(metadata_path, sizeof(metadata_path), "%s/.AppleDouble/%s",
+                         Path, name), test_exit)
+
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
-
-    sprintf(temp, "%s/%s", Path, name);
 
     if (!Quiet) {
         fprintf(stdout, "unlink data fork\n");
@@ -46,15 +50,15 @@ STATIC void test325()
         goto fin;
     }
 
-    sprintf(temp, "%s/.AppleDouble/%s", Path, name);
+    cleanup_path = metadata_path;
 
     if (!Quiet) {
         fprintf(stdout, "chmod 444 resource fork\n");
     }
 
-    if (chmod(temp, 0444) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
+    if (chmod(metadata_path, 0444) < 0) { //NOSONAR: Intentional permissions for AFP test fixtures.
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED chmod(%s) %s\n", temp, strerror(errno));
+            fprintf(stdout, "\tFAILED chmod(%s) %s\n", metadata_path, strerror(errno));
         }
 
         test_failed();
@@ -75,7 +79,7 @@ STATIC void test325()
 
 fin:
     FPDelete(Conn, vol, DIRDID_ROOT, name);
-    unlink(temp);
+    unlink(cleanup_path);
 test_exit:
     exit_test("FPCreateFile:test325: recreate a file with dangling symlink and no right");
 }

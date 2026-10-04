@@ -9,7 +9,9 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+#include <errno.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <atalk/compat.h>
 
@@ -27,6 +29,41 @@ static char *Why;
 static char skipped_msg_buf[SKIPPED_MSG_BUFSIZE];
 static char failure_location[256];
 static char skip_reason[SKIPPED_MSG_BUFSIZE];
+
+/*!
+ * @brief Format a complete test string without accepting truncation.
+ *
+ * @param[out] dst  Destination buffer; may be NULL when size is zero
+ * @param[in] size  Buffer capacity in bytes, including the terminating NUL
+ * @param[in] fmt   printf-style format string
+ *
+ * @returns 0 on success, -1 on formatting error or insufficient capacity
+ *
+ * On failure, clear dst when size is nonzero. Set errno to ENAMETOOLONG
+ * for insufficient capacity; otherwise preserve the error from vsnprintf.
+ */
+int test_format(char *dst, size_t size, const char *fmt, ...)
+{
+    va_list args;
+    int len;
+    va_start(args, fmt);
+    len = vsnprintf(dst, size, fmt, args);
+    va_end(args);
+
+    if (len < 0 || (size_t)len >= size) {
+        if (size) {
+            dst[0] = '\0';
+        }
+
+        if (len >= 0) {
+            errno = ENAMETOOLONG;
+        }
+
+        return -1;
+    }
+
+    return 0;
+}
 
 /* ------------------------- */
 void test_skipped(int why)

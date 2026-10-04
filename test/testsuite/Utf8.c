@@ -6,6 +6,49 @@
 
 static char temp[MAXPATHLEN];
 
+/* Servers may accept the base of a decomposed character as a mangled prefix.
+ * If accepted, it must resolve to the original object, not just any object
+ * whose name contains the same #ID suffix.
+ */
+static int check_optional_mangled_name(uint16_t vol, char *mangled,
+                                       uint32_t id, const char *name, int isdir)
+{
+    const DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir = { 0 };
+    uint16_t f_bitmap = (1 << FILPBIT_PDID) | (1 << FILPBIT_FNUM) |
+                        (1 << FILPBIT_PDINFO);
+    uint16_t d_bitmap = (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                        (1 << DIRPBIT_PDINFO);
+    unsigned int result;
+    int mismatch;
+    result = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, mangled,
+                                f_bitmap, d_bitmap);
+
+    if (result == ntohl(AFPERR_NOOBJ)) {
+        return 0;
+    }
+
+    if (result != AFP_OK) {
+        return -1;
+    }
+
+    filedir.isdir = !!(dsi->data[4] & FILDIRBIT_ISDIR);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + 3 * sizeof(uint16_t),
+                       f_bitmap, d_bitmap);
+    /* did stays in network byte order; unpack converts pdid to host order. */
+    mismatch = filedir.isdir != isdir || filedir.did != id ||
+               filedir.pdid != ntohl(DIRDID_ROOT) || !filedir.utf8_name ||
+               strcmp(filedir.utf8_name, name);
+
+    if (mismatch && !Quiet) {
+        fprintf(stdout, "\tFAILED %s should resolve to %s (ID %" PRIX32 ")\n",
+                mangled, name, ntohl(id));
+    }
+
+    free(filedir.utf8_name);
+    return mismatch;
+}
+
 /* ------------------------- */
 STATIC void test162()
 {
@@ -279,10 +322,8 @@ STATIC void test233()
 {
     char *name = "t233 dire\314\201";
     uint16_t vol = VolID;
-    DSI *dsi;
     int  dir;
     uint16_t bitmap = 0;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -309,7 +350,7 @@ STATIC void test233()
         test_failed();
     }
 
-    sprintf(temp, "t23#%X", ntohl(dir));
+    FAILEXIT(test_format(temp, sizeof(temp), "t23#%X", ntohl(dir)), fin)
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0,
                                                   bitmap)) {
@@ -317,17 +358,9 @@ STATIC void test233()
         test_failed();
     }
 
-#if 0
-    /* NOTE: This assertion is not portable. On big-endian Linux, we get success here. */
-    sprintf(temp, "t233 dire#%X", ntohl(dir));
-
-    if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0,
-                                                  bitmap)) {
-        /* MAC OK */
-        test_failed();
-    }
-
-#endif
+    FAILEXIT(test_format(temp, sizeof(temp), "t233 dire#%X", ntohl(dir)), fin)
+    FAIL(check_optional_mangled_name(vol, temp, dir, name, 1))
+fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("Utf8:test233: false mangled UTF8 dirname");
@@ -367,25 +400,21 @@ STATIC void test234()
     } else {
         filedir.isdir = 0;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
-        sprintf(temp, "t23#%X", ntohl(filedir.did));
+        FAILEXIT(test_format(temp, sizeof(temp), "t23#%X", ntohl(filedir.did)), fin)
 
         if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
                                                       bitmap, 0)) {
             test_failed();
         }
 
-#if 0
-        /* NOTE: This assertion is not portable. On big-endian Linux, we get success here. */
-        sprintf(temp, "t234 file#%X", ntohl(filedir.did));
-
-        if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
-                                                      bitmap, 0)) {
-            test_failed();
-        }
-
-#endif
+        FAILEXIT(test_format(temp, sizeof(temp), "t234 file#%X", ntohl(filedir.did)),
+                 fin)
+        FAIL(check_optional_mangled_name(vol, temp, filedir.did, name, 0))
     }
 
+fin:
+    free(filedir.lname);
+    free(filedir.utf8_name);
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("Utf8:test234: false mangled UTF8 filename");
@@ -425,14 +454,15 @@ STATIC void test312()
     } else {
         filedir.isdir = 0;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
-        sprintf(temp, "t312-#%X", ntohl(filedir.did));
+        FAILEXIT(test_format(temp, sizeof(temp), "t312-#%X", ntohl(filedir.did)), fin)
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
                                                        bitmap, 0)) {
             test_failed();
         }
 
-        sprintf(temp, "t312-#%X.mp3", ntohl(filedir.did));
+        FAILEXIT(test_format(temp, sizeof(temp), "t312-#%X.mp3", ntohl(filedir.did)),
+                 fin)
 
         if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
             test_failed();
@@ -445,7 +475,7 @@ STATIC void test312()
             }
         }
 
-        sprintf(temp, "t3-#%X.mp3", ntohl(filedir.did));
+        FAILEXIT(test_format(temp, sizeof(temp), "t3-#%X.mp3", ntohl(filedir.did)), fin)
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
                                                        bitmap, 0)) {
@@ -453,6 +483,7 @@ STATIC void test312()
         }
     }
 
+fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("Utf8:test312: mangled UTF8 filename");
@@ -491,12 +522,13 @@ STATIC void test313()
         test_failed();
     }
 
-    sprintf(temp, "t313-#%X", ntohl(dir));
+    FAILEXIT(test_format(temp, sizeof(temp), "t313-#%X", ntohl(dir)), fin)
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0, bitmap)) {
         test_failed();
     }
 
+fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("Utf8:test313: mangled UTF8 dirname");
@@ -572,7 +604,7 @@ STATIC void test337()
     } else {
         filedir.isdir = 0;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
-        sprintf(temp, "???#%X", ntohl(filedir.did));
+        FAILEXIT(test_format(temp, sizeof(temp), "???#%X", ntohl(filedir.did)), fin)
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
                                                        bitmap, 0)) {
@@ -580,7 +612,7 @@ STATIC void test337()
             test_failed();
         }
 
-        sprintf(temp, "???#%X.mp3", ntohl(filedir.did));
+        FAILEXIT(test_format(temp, sizeof(temp), "???#%X.mp3", ntohl(filedir.did)), fin)
 
         if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
             test_failed();
@@ -593,7 +625,7 @@ STATIC void test337()
             }
         }
 
-        sprintf(temp, "t#%X.mp3", ntohl(filedir.did));
+        FAILEXIT(test_format(temp, sizeof(temp), "t#%X.mp3", ntohl(filedir.did)), fin)
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
                                                        bitmap, 0)) {
@@ -602,6 +634,7 @@ STATIC void test337()
         }
     }
 
+fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("Utf8:test337: mangled UTF8 filename");

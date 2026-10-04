@@ -376,6 +376,9 @@ STATIC void test106()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/t104 dir1/t104 dir2/t104 dir2_1",
+                         Path), test_exit)
+
     if (!(dir1 = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_nottested();
         goto test_exit;
@@ -426,7 +429,6 @@ STATIC void test106()
     }
 
     sleep(1);
-    sprintf(temp, "%s/t104 dir1/t104 dir2/t104 dir2_1", Path);
 
     if (!Quiet) {
         fprintf(stdout, "mkdir(%s)\n", temp);
@@ -521,6 +523,8 @@ STATIC void test127()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s", name, name1), test_exit)
+
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
         test_nottested();
         goto test_exit;
@@ -530,7 +534,6 @@ STATIC void test127()
         test_failed();
     }
 
-    sprintf(temp, "%s/%s", name, name1);
     delete_unix_dir(Path, temp);
     FAIL(FPCloseVol(Conn, vol))
     vol  = VolID = FPOpenVol(Conn, Vol);
@@ -568,6 +571,8 @@ STATIC void test128()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s", name, name1), test_exit)
+
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
         test_nottested();
         goto test_exit;
@@ -577,7 +582,6 @@ STATIC void test128()
         test_failed();
     }
 
-    sprintf(temp, "%s/%s", name, name1);
     delete_unix_dir(Path, temp);
     FAIL(FPDelete(Conn, vol, dir, ""))
     FAIL(FPCloseVol(Conn, vol))
@@ -609,6 +613,7 @@ STATIC void test182()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s", name, name), test_exit)
     dir  = FPCreateDir(Conn, vol, DIRDID_ROOT, name);
 
     if (!dir) {
@@ -640,7 +645,6 @@ STATIC void test182()
     }
 
     FAIL(FPDelete(Conn, vol, dir, name1))
-    sprintf(temp, "%s/%s", name, name);
 
     if (delete_unix_dir(Path, temp)) {
         test_failed();
@@ -708,6 +712,10 @@ STATIC void test235()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s/%s", Path, name, name2),
+             test_exit)
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name, name1),
+             test_exit)
     dir  = FPCreateDir(Conn, vol, DIRDID_ROOT, name);
 
     if (!dir) {
@@ -722,7 +730,6 @@ STATIC void test235()
     /* FIXME: Ensure ctimes differ, this circumvents dircache caching which only has second granularity */
     sleep(2);
 #endif
-    sprintf(temp, "%s/%s/%s", Path, name, name2);
     fd = open(temp, O_RDWR | O_CREAT, 0666); //NOSONAR: Intentional permissions for AFP test fixtures.
 
     if (fd < 0) {
@@ -736,7 +743,6 @@ STATIC void test235()
 
     close(fd);
     delete_unix_file(Path, name, name1);
-    sprintf(temp1, "%s/%s/%s", Path, name, name1);
 
     if (rename(temp, temp1) < 0) {
         if (!Quiet) {

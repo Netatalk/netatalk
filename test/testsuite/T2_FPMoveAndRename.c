@@ -24,8 +24,8 @@ STATIC void test136()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s", Path, ndir), test_exit)
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
-    sprintf(temp, "%s/%s", Path, ndir);
 
     if (!Quiet) {
         fprintf(stdout, "mkdir(%s)\n", temp);
@@ -78,8 +78,8 @@ STATIC void test137()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s", Path, ndir), test_exit)
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
-    sprintf(temp, "%s/%s", Path, ndir);
 
     if (!Quiet) {
         fprintf(stdout, "mkdir(%s)\n", temp);
@@ -167,6 +167,13 @@ STATIC void test302()
         goto test_exit;
     }
 
+    if (adouble != AD_V2) {
+        FAILEXIT(test_format(temp, sizeof(temp), "%s/%s/%s", Path, name, name1),
+                 test_exit)
+        FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name, name2),
+                 test_exit)
+    }
+
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
         test_nottested();
         goto test_exit;
@@ -186,9 +193,6 @@ STATIC void test302()
             goto fin;
         }
     } else {
-        sprintf(temp, "%s/%s/%s", Path, name, name1);
-        sprintf(temp1, "%s/%s/%s", Path, name, name2);
-
         if (rename(temp, temp1) < 0) {
             if (!Quiet) {
                 fprintf(stdout, "\tFAILED unable to rename \"%s\" to \"%s\" :%s\n", temp, temp1,
@@ -233,6 +237,11 @@ STATIC void test323()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s/%s", Path, name, file),
+             test_exit)
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, file),
+             test_exit)
+
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
         test_nottested();
         goto test_exit;
@@ -248,8 +257,6 @@ STATIC void test323()
     bitmap = (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM);
     FAIL(FPGetFileDirParams(Conn, vol, dir, file, bitmap, 0))
     FAIL(FPGetFileDirParams(Conn, vol, dir1, file, bitmap, 0))
-    sprintf(temp, "%s/%s/%s", Path, name, file);
-    sprintf(temp1, "%s/%s/%s", Path, name1, file);
 
     if (!Quiet) {
         fprintf(stdout, "rename %s --> %s\n", temp, temp1);
@@ -278,6 +285,8 @@ test_exit:
 /* ------------------------- */
 STATIC void test365()
 {
+    char metadata_path1[MAXPATHLEN];
+    char metadata_path[MAXPATHLEN];
     char *name  = "t365 in";
     char *name1 = "t365 out";
     char *file = "t365 file";
@@ -289,6 +298,18 @@ STATIC void test365()
     if (Path[0] == '\0') {
         test_skipped(T_PATH);
         goto test_exit;
+    }
+
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s/%s", Path, name, file),
+             test_exit)
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, file),
+             test_exit)
+
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path, sizeof(metadata_path),
+                             "%s/%s/.AppleDouble/%s", Path, name, file), test_exit)
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/%s/.AppleDouble/%s", Path, name1, file), test_exit)
     }
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -304,8 +325,6 @@ STATIC void test365()
     FAIL(FPCreateFile(Conn, vol, 0, dir, file))
     bitmap = (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM);
     FAIL(FPGetFileDirParams(Conn, vol, dir, file, bitmap, 0))
-    sprintf(temp, "%s/%s/%s", Path, name, file);
-    sprintf(temp1, "%s/%s/%s", Path, name1, file);
 
     if (!Quiet) {
         fprintf(stdout, "rename %s --> %s\n", temp, temp1);
@@ -321,16 +340,14 @@ STATIC void test365()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name, file);
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, file);
-
         if (!Quiet) {
-            fprintf(stdout, "rename %s --> %s\n", temp, temp1);
+            fprintf(stdout, "rename %s --> %s\n", metadata_path, metadata_path1);
         }
 
-        if (rename(temp, temp1) < 0) {
+        if (rename(metadata_path, metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", temp, temp1,
+                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", metadata_path,
+                        metadata_path1,
                         strerror(errno));
             }
 
