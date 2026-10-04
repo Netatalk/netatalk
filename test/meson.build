@@ -9,7 +9,9 @@ if build_tests
     subdir('uams')
 
     if enable_appletalk
+        subdir('macipgw')
         subdir('nbp')
+        subdir('papd')
     endif
 endif
 

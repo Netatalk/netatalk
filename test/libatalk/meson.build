@@ -70,6 +70,17 @@ test(
     byteorder_test,
 )
 
+uuid_format_test = executable(
+    'uuid_format_test',
+    'test_uuid_format.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test('libatalk UUID formatting bounds', uuid_format_test)
+
 adouble_convert_c_args = []
 adouble_convert_env = {}
 adouble_convert_depends = []
