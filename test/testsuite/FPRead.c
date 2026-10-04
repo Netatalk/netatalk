@@ -600,14 +600,13 @@ void test328()
     DSI *dsi;
     dsi = &Conn->dsi;
     ENTER_TEST
-    sprintf(temp, "test328 dir");
 
     if (get_vol_free(vol) < 17 * 1024 * 1024) {
         test_skipped(T_VOL_SMALL);
         goto test_exit;
     }
 
-    ndir = strdup(temp);
+    ndir = strdup("test328 dir");
     size = min(65536, dsi->server_quantum);
     data = calloc(1, size);
 

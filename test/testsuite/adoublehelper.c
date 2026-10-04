@@ -18,9 +18,16 @@ int delete_unix_md(char *path, char *name, char *file)
 {
     if (adouble == AD_V2) {
         if (!*file) {
-            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name);
+            if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name)) {
+                test_failed();
+                return -1;
+            }
         } else {
-            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
+            if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name,
+                            file)) {
+                test_failed();
+                return -1;
+            }
         }
 
         if (!Quiet) {
@@ -35,7 +42,10 @@ int delete_unix_md(char *path, char *name, char *file)
             return -1;
         }
     } else {
-        snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
+        if (test_format(temp, sizeof(temp), "%s/%s/%s", path, name, file)) {
+            test_failed();
+            return -1;
+        }
 
         if (sys_lremovexattr(temp, AD_EA_META) != 0) {
             if (!Quiet) {
@@ -57,9 +67,16 @@ int delete_unix_rf(char *path, char *name, char *file)
 {
     if (adouble == AD_V2) {
         if (!*file) {
-            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name);
+            if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name)) {
+                test_failed();
+                return -1;
+            }
         } else {
-            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
+            if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name,
+                            file)) {
+                test_failed();
+                return -1;
+            }
         }
 
         if (!Quiet) {
@@ -77,7 +94,10 @@ int delete_unix_rf(char *path, char *name, char *file)
 #ifdef HAVE_EAFD
 
         if (file) {
-            snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
+            if (test_format(temp, sizeof(temp), "%s/%s/%s", path, name, file)) {
+                test_failed();
+                return -1;
+            }
 
             if (sys_lremovexattr(temp, AD_EA_RESO) != 0) {
                 if (!Quiet) {
@@ -92,7 +112,10 @@ int delete_unix_rf(char *path, char *name, char *file)
 #else
 
         if (file) {
-            snprintf(temp, sizeof(temp), "%s/%s/._%s", path, name, file);
+            if (test_format(temp, sizeof(temp), "%s/%s/._%s", path, name, file)) {
+                test_failed();
+                return -1;
+            }
 
             if (!Quiet) {
                 fprintf(stdout, "unlink(%s)\n", temp);
@@ -118,21 +141,25 @@ int delete_unix_rf(char *path, char *name, char *file)
 */
 int delete_unix_file(char *path, char *name, char *file)
 {
+    char data_path[MAXPATHLEN];
     int rc = 0;
+
+    if (test_format(data_path, sizeof(data_path), "%s/%s/%s", path, name, file)) {
+        test_failed();
+        return -1;
+    }
 
     if (delete_unix_rf(path, name, file)) {
         rc = -1;
     }
 
-    snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
-
     if (!Quiet) {
-        fprintf(stdout, "unlink(%s)\n", temp);
+        fprintf(stdout, "unlink(%s)\n", data_path);
     }
 
-    if (unlink(temp) < 0) {
+    if (unlink(data_path) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+            fprintf(stdout, "\tFAILED unlink(%s) %s\n", data_path, strerror(errno));
         }
 
         rc = -1;
@@ -144,8 +171,48 @@ int delete_unix_file(char *path, char *name, char *file)
 /*! Rename a file and its resource fork */
 int rename_unix_file(char *path, char *dir, char *src, char *dst)
 {
-    snprintf(temp, sizeof(temp), "%s/%s/%s", Path, dir, src);
-    snprintf(temp1, sizeof(temp1), "%s/%s/%s", Path, dir, dst);
+    char metadata_path[MAXPATHLEN];
+    char metadata_path1[MAXPATHLEN];
+
+    if (test_format(temp, sizeof(temp), "%s/%s/%s", Path, dir, src)) {
+        test_failed();
+        return -1;
+    }
+
+    if (test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, dir, dst)) {
+        test_failed();
+        return -1;
+    }
+
+    if (adouble == AD_V2) {
+        if (test_format(metadata_path, sizeof(metadata_path), "%s/%s/.AppleDouble/%s",
+                        Path, dir, src)) {
+            test_failed();
+            return -1;
+        }
+
+        if (test_format(metadata_path1, sizeof(metadata_path1), "%s/%s/.AppleDouble/%s",
+                        Path, dir, dst)) {
+            test_failed();
+            return -1;
+        }
+    } else {
+#ifndef HAVE_EAFD
+
+        if (test_format(metadata_path, sizeof(metadata_path), "%s/%s/._%s", Path, dir,
+                        src)) {
+            test_failed();
+            return -1;
+        }
+
+        if (test_format(metadata_path1, sizeof(metadata_path1), "%s/%s/._%s", Path, dir,
+                        dst)) {
+            test_failed();
+            return -1;
+        }
+
+#endif
+    }
 
     if (!Quiet) {
         fprintf(stdout, "rename %s %s\n", temp, temp1);
@@ -162,16 +229,14 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
     }
 
     if (adouble == AD_V2) {
-        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", Path, dir, src);
-        snprintf(temp1, sizeof(temp1), "%s/%s/.AppleDouble/%s", Path, dir, dst);
-
         if (!Quiet) {
-            fprintf(stdout, "rename %s %s\n", temp, temp1);
+            fprintf(stdout, "rename %s %s\n", metadata_path, metadata_path1);
         }
 
-        if (rename(temp, temp1) < 0) {
+        if (rename(metadata_path, metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", temp, temp1,
+                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", metadata_path,
+                        metadata_path1,
                         strerror(errno));
             }
 
@@ -180,16 +245,15 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
         }
     } else {
 #ifndef HAVE_EAFD
-        snprintf(temp, sizeof(temp), "%s/%s/._%s", Path, dir, src);
-        snprintf(temp1, sizeof(temp1), "%s/%s/._%s", Path, dir, dst);
 
         if (!Quiet) {
-            fprintf(stdout, "rename %s %s\n", temp, temp1);
+            fprintf(stdout, "rename %s %s\n", metadata_path, metadata_path1);
         }
 
-        if (rename(temp, temp1) < 0) {
+        if (rename(metadata_path, metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", temp, temp1,
+                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", metadata_path,
+                        metadata_path1,
                         strerror(errno));
             }
 
@@ -206,7 +270,10 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
 /*! unlink file only, dont care about adouble file */
 int unlink_unix_file(char *path, char *name, char *file)
 {
-    snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
+    if (test_format(temp, sizeof(temp), "%s/%s/%s", path, name, file)) {
+        test_failed();
+        return -1;
+    }
 
     if (!Quiet) {
         fprintf(stdout, "unlink(%s)\n", temp);
@@ -227,7 +294,10 @@ int unlink_unix_file(char *path, char *name, char *file)
 /* ----------------------------- */
 int symlink_unix_file(char *target, char *path, char *source)
 {
-    snprintf(temp, sizeof(temp), "%s/%s", path, source);
+    if (test_format(temp, sizeof(temp), "%s/%s", path, source)) {
+        test_failed();
+        return -1;
+    }
 
     if (!Quiet) {
         fprintf(stdout, "symlink(%s -> %s)\n", temp, target);
@@ -249,8 +319,14 @@ int symlink_unix_file(char *target, char *path, char *source)
 /*! Delete metadata of directory */
 int delete_unix_adouble(char *path, char *name)
 {
+    char parent_path[MAXPATHLEN];
+
     if (adouble == AD_EA) {
-        snprintf(temp, sizeof(temp), "%s/%s", path, name);
+        if (test_format(temp, sizeof(temp), "%s/%s", path, name)) {
+            test_failed();
+            return -1;
+        }
+
         sys_lremovexattr(temp, AD_EA_META);
         sys_lremovexattr(temp, AD_EA_RESO);
     } else {
@@ -258,18 +334,25 @@ int delete_unix_adouble(char *path, char *name)
             fprintf(stdout, "rmdir(%s/.AppleDouble) \n", name);
         }
 
-        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name);
+        if (test_format(parent_path, sizeof(parent_path), "%s/%s/.AppleDouble/.Parent",
+                        path, name)) {
+            test_failed();
+            return -1;
+        }
 
-        if (unlink(temp) < 0) {
+        if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble", path, name)) {
+            test_failed();
+            return -1;
+        }
+
+        if (unlink(parent_path) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unlink(%s) %s\n", temp, strerror(errno));
+                fprintf(stdout, "\tFAILED unlink(%s) %s\n", parent_path, strerror(errno));
             }
 
             test_failed();
             return -1;
         }
-
-        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble", path, name);
 
         if (rmdir(temp) < 0) {
             if (!Quiet) {
@@ -291,7 +374,10 @@ static int chmod_unix_adouble(char *path, char *name, int mode)
         return 0;
     }
 
-    snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble", path, name);
+    if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble", path, name)) {
+        test_failed();
+        return -1;
+    }
 
     if (!Quiet) {
         fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
@@ -315,8 +401,13 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
-        snprintf(temp, sizeof(temp), "runat '%s/%s/%s' chmod 0%o %s", path, name, file,
-                 mode, AD_EA_META);
+
+        if (test_format(temp, sizeof(temp), "runat '%s/%s/%s' chmod 0%o %s", path, name,
+                        file,
+                        mode, AD_EA_META)) {
+            test_failed();
+            return -1;
+        }
 
         if (!Quiet) {
             fprintf(stdout, "%s\n", temp);
@@ -336,7 +427,11 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
         return 0;
 #endif
     } else {
-        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
+        if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name,
+                        file)) {
+            test_failed();
+            return -1;
+        }
 
         if (!Quiet) {
             fprintf(stdout, "chmod (%s, 0%o)\n", temp, mode);
@@ -361,8 +456,13 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
-        snprintf(temp, sizeof(temp), "runat '%s/%s/%s' chmod 0%o %s", path, name, file,
-                 mode, AD_EA_RESO);
+
+        if (test_format(temp, sizeof(temp), "runat '%s/%s/%s' chmod 0%o %s", path, name,
+                        file,
+                        mode, AD_EA_RESO)) {
+            test_failed();
+            return -1;
+        }
 
         if (!Quiet) {
             fprintf(stdout, "%s\n", temp);
@@ -380,7 +480,11 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
         return 0;
 #else
 #ifndef __APPLE__
-        snprintf(temp, sizeof(temp), "%s/%s/._%s", path, name, file);
+
+        if (test_format(temp, sizeof(temp), "%s/%s/._%s", path, name, file)) {
+            test_failed();
+            return -1;
+        }
 
         if (!Quiet) {
             fprintf(stdout, "chmod(%s, 0%o)\n", temp, mode);
@@ -399,7 +503,11 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
         return 0;
 #endif
     } else {
-        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
+        if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name,
+                        file)) {
+            test_failed();
+            return -1;
+        }
 
         if (!Quiet) {
             fprintf(stdout, "chmod (%s, 0%o)\n", temp, mode);
@@ -423,6 +531,13 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
 */
 int delete_unix_dir(char *path, char *name)
 {
+    char dir_path[MAXPATHLEN];
+
+    if (test_format(dir_path, sizeof(dir_path), "%s/%s", path, name)) {
+        test_failed();
+        return -1;
+    }
+
     if (!Quiet) {
         fprintf(stdout, "rmdir(%s)\n", name);
     }
@@ -432,11 +547,9 @@ int delete_unix_dir(char *path, char *name)
             return -1;
         }
 
-    snprintf(temp, sizeof(temp), "%s/%s", path, name);
-
-    if (rmdir(temp) < 0) {
+    if (rmdir(dir_path) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED rmdir %s %s\n", temp, strerror(errno));
+            fprintf(stdout, "\tFAILED rmdir %s %s\n", dir_path, strerror(errno));
         }
 
         return -1;

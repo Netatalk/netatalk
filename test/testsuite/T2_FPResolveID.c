@@ -15,6 +15,7 @@ static char temp1[MAXPATHLEN];
 /* -------------------------- */
 STATIC void test129()
 {
+    char metadata_path1[MAXPATHLEN];
     int  dir;
     uint16_t vol = VolID;
     char *name = "t129 Resolve ID file";
@@ -29,6 +30,14 @@ STATIC void test129()
         test_skipped(T_PATH);
         goto test_exit;
     }
+
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name), test_exit)
+    }
+
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name),
+             test_exit)
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_failed();
@@ -46,22 +55,18 @@ STATIC void test129()
     }
 
     if (adouble == AD_V2) {
-        snprintf(temp1, sizeof(temp1), "%s/%s/.AppleDouble/%s", Path, name1, name);
-
-        if (unlink(temp1) < 0) {
+        if (unlink(metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+                fprintf(stdout, "\tFAILED unlink %s %s\n", metadata_path1, strerror(errno));
             }
 
             test_failed();
         }
     }
 
-    snprintf(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name);
-
     if (unlink(temp1) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+            fprintf(stdout, "\tFAILED unlink %s %s\n", temp1, strerror(errno));
         }
 
         test_failed();
@@ -82,6 +87,7 @@ test_exit:
 /* -------------------------- */
 STATIC void test130()
 {
+    char metadata_path1[MAXPATHLEN];
     uint16_t vol = VolID;
     int  dir;
     char *name = "t130 Delete ID file";
@@ -97,6 +103,14 @@ STATIC void test130()
         test_skipped(T_PATH);
         goto test_exit;
     }
+
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name), test_exit)
+    }
+
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name),
+             test_exit)
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_failed();
@@ -115,22 +129,18 @@ STATIC void test130()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
-
-        if (unlink(temp1) < 0) {
+        if (unlink(metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+                fprintf(stdout, "\tFAILED unlink %s %s\n", metadata_path1, strerror(errno));
             }
 
             test_failed();
         }
     }
 
-    sprintf(temp1, "%s/%s/%s", Path, name1, name);
-
     if (unlink(temp1) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+            fprintf(stdout, "\tFAILED unlink %s %s\n", temp1, strerror(errno));
         }
 
         test_failed();
@@ -155,6 +165,7 @@ test_exit:
 /* -------------------------- */
 STATIC void test131()
 {
+    char metadata_path1[MAXPATHLEN];
     uint16_t vol = VolID;
     int  dir;
     char *name = "t131 Delete ID file";
@@ -169,6 +180,14 @@ STATIC void test131()
         test_skipped(T_PATH);
         goto test_exit;
     }
+
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name), test_exit)
+    }
+
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name),
+             test_exit)
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_failed();
@@ -186,22 +205,18 @@ STATIC void test131()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
-
-        if (unlink(temp1) < 0) {
+        if (unlink(metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+                fprintf(stdout, "\tFAILED unlink %s %s\n", metadata_path1, strerror(errno));
             }
 
             test_failed();
         }
     }
 
-    sprintf(temp1, "%s/%s/%s", Path, name1, name);
-
     if (unlink(temp1) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+            fprintf(stdout, "\tFAILED unlink %s %s\n", temp1, strerror(errno));
         }
 
         test_failed();
@@ -223,6 +238,8 @@ test_exit:
 /* -------------------------- */
 STATIC void test331()
 {
+    char metadata_path1[MAXPATHLEN];
+    char metadata_path[MAXPATHLEN];
     uint16_t vol = VolID;
     int  dir;
     char *name  = "t331 file";
@@ -238,6 +255,18 @@ STATIC void test331()
     if (Path[0] == '\0') {
         test_skipped(T_PATH);
         goto test_exit;
+    }
+
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s/%s", Path, name1, name),
+             test_exit)
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name2),
+             test_exit)
+
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path, sizeof(metadata_path),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name), test_exit)
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name2), test_exit)
     }
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
@@ -261,9 +290,6 @@ STATIC void test331()
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
 
-    sprintf(temp, "%s/%s/%s", Path, name1, name);
-    sprintf(temp1, "%s/%s/%s", Path, name1, name2);
-
     if (!Quiet) {
         fprintf(stdout, "rename %s %s\n", temp, temp1);
     }
@@ -278,16 +304,14 @@ STATIC void test331()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name1, name);
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name2);
-
         if (!Quiet) {
-            fprintf(stdout, "rename %s %s\n", temp, temp1);
+            fprintf(stdout, "rename %s %s\n", metadata_path, metadata_path1);
         }
 
-        if (rename(temp, temp1) < 0) {
+        if (rename(metadata_path, metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", temp, temp1,
+                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", metadata_path,
+                        metadata_path1,
                         strerror(errno));
             }
 
@@ -329,9 +353,16 @@ static int get_fs_lock(char *folder, char *file)
     int ret;
 
     if (adouble == AD_V2) {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", Path, folder, file);
+        if (test_format(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", Path, folder,
+                        file)) {
+            test_failed();
+            return -1;
+        }
     } else {
-        sprintf(temp, "%s/%s/%s", Path, folder, file);
+        if (test_format(temp, sizeof(temp), "%s/%s/%s", Path, folder, file)) {
+            test_failed();
+            return -1;
+        }
     }
 
     if (!Quiet) {
@@ -383,6 +414,8 @@ static int get_fs_lock(char *folder, char *file)
 /* -------------------------- */
 STATIC void test360()
 {
+    char metadata_path1[MAXPATHLEN];
+    char metadata_path[MAXPATHLEN];
     uint16_t vol = VolID;
     int  dir;
     char *name  = "t360 file";
@@ -400,6 +433,18 @@ STATIC void test360()
     if (Path[0] == '\0') {
         test_skipped(T_PATH);
         goto test_exit;
+    }
+
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s/%s", Path, name1, name),
+             test_exit)
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name2),
+             test_exit)
+
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path, sizeof(metadata_path),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name), test_exit)
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name2), test_exit)
     }
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
@@ -436,9 +481,6 @@ STATIC void test360()
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
 
-    sprintf(temp, "%s/%s/%s", Path, name1, name);
-    sprintf(temp1, "%s/%s/%s", Path, name1, name2);
-
     if (!Quiet) {
         fprintf(stdout, "rename %s %s\n", temp, temp1);
     }
@@ -453,16 +495,14 @@ STATIC void test360()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name1, name);
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name2);
-
         if (!Quiet) {
-            fprintf(stdout, "rename %s %s\n", temp, temp1);
+            fprintf(stdout, "rename %s %s\n", metadata_path, metadata_path1);
         }
 
-        if (rename(temp, temp1) < 0) {
+        if (rename(metadata_path, metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", temp, temp1,
+                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", metadata_path,
+                        metadata_path1,
                         strerror(errno));
             }
 
@@ -509,6 +549,7 @@ test_exit:
 /* -------------------------- */
 STATIC void test397()
 {
+    char metadata_path1[MAXPATHLEN];
     uint16_t vol = VolID;
     char *name = "t397 Resolve ID file";
     int  ofs =  3 * sizeof(uint16_t);
@@ -522,6 +563,12 @@ STATIC void test397()
         goto test_exit;
     }
 
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/.AppleDouble/%s", Path, name), test_exit)
+    }
+
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s", Path, name), test_exit)
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
@@ -533,22 +580,18 @@ STATIC void test397()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp1, "%s/.AppleDouble/%s", Path, name);
-
-        if (unlink(temp1) < 0) {
+        if (unlink(metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+                fprintf(stdout, "\tFAILED unlink %s %s\n", metadata_path1, strerror(errno));
             }
 
             test_failed();
         }
     }
 
-    sprintf(temp1, "%s/%s", Path, name);
-
     if (unlink(temp1) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unlink %s %s\n", temp, strerror(errno));
+            fprintf(stdout, "\tFAILED unlink %s %s\n", temp1, strerror(errno));
         }
 
         test_failed();
@@ -580,6 +623,10 @@ STATIC void test412()
         goto test_exit;
     }
 
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s", Path, ndir1), test_exit)
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, ndir2, ndir1),
+             test_exit)
+
     if (!(dir1 = FPCreateDir(Conn, vol, DIRDID_ROOT, ndir1))) {
         test_nottested();
         goto test_exit;
@@ -601,8 +648,6 @@ STATIC void test412()
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     fid = filedir.did;
     FAIL(FPResolveID(Conn, vol, fid, bitmap))
-    sprintf(temp, "%s/%s", Path, ndir1);
-    sprintf(temp1, "%s/%s/%s", Path, ndir2, ndir1);
 
     if (!Quiet) {
         fprintf(stdout, "rename %s %s\n", temp, temp1);
@@ -663,6 +708,8 @@ test_exit:
 /* -------------------------- */
 STATIC void test413()
 {
+    char metadata_path1[MAXPATHLEN];
+    char metadata_path[MAXPATHLEN];
     uint16_t vol = VolID;
     int  dir;
     int  dir2;
@@ -679,6 +726,18 @@ STATIC void test413()
     if (Path[0] == '\0') {
         test_skipped(T_PATH);
         goto test_exit;
+    }
+
+    FAILEXIT(test_format(temp, sizeof(temp), "%s/%s/%s", Path, name1, name),
+             test_exit)
+    FAILEXIT(test_format(temp1, sizeof(temp1), "%s/%s/%s", Path, name2, name),
+             test_exit)
+
+    if (adouble == AD_V2) {
+        FAILEXIT(test_format(metadata_path, sizeof(metadata_path),
+                             "%s/%s/.AppleDouble/%s", Path, name1, name), test_exit)
+        FAILEXIT(test_format(metadata_path1, sizeof(metadata_path1),
+                             "%s/%s/.AppleDouble/%s", Path, name2, name), test_exit)
     }
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
@@ -702,8 +761,6 @@ STATIC void test413()
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     fid = filedir.did;
     FAIL(FPResolveID(Conn, vol, fid, bitmap))
-    sprintf(temp, "%s/%s/%s", Path, name1, name);
-    sprintf(temp1, "%s/%s/%s", Path, name2, name);
 
     if (!Quiet) {
         fprintf(stdout, "rename %s %s\n", temp, temp1);
@@ -719,16 +776,14 @@ STATIC void test413()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name1, name);
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name2, name);
-
         if (!Quiet) {
-            fprintf(stdout, "rename %s %s\n", temp, temp1);
+            fprintf(stdout, "rename %s %s\n", metadata_path, metadata_path1);
         }
 
-        if (rename(temp, temp1) < 0) {
+        if (rename(metadata_path, metadata_path1) < 0) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", temp, temp1,
+                fprintf(stdout, "\tFAILED unable to rename %s to %s :%s\n", metadata_path,
+                        metadata_path1,
                         strerror(errno));
             }
 

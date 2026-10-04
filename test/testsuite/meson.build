@@ -62,6 +62,14 @@ testreport_test = executable(
 )
 test('testreport', testreport_test)
 
+test_format_test = executable(
+    'test_format_test',
+    ['test_format_test.c', 'testhelper.c', 'testreport.c'],
+    include_directories: root_includes,
+    link_with: libatalk,
+)
+test('test_format', test_format_test)
+
 afparg_sources = [
     'afparg.c',
     'afparg_FPfuncs.c',

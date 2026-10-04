@@ -863,7 +863,13 @@ static int init_trash(CONN *conn, uint16_t vol, int *result)
             continue;
         }
 
-        sprintf(temp, "Trash Can #%d", indice);
+        if (test_format(temp, sizeof(temp), "Trash Can #%d", indice)) {
+            test_failed();
+            FAIL(FPByteLock(conn, fork, 0, 1 /* clear */, indice, 1))
+            FAIL(FPCloseFork(conn, fork))
+            return 0;
+        }
+
         dir2 = FPCreateDir(conn, vol, dir, temp);
 
         if (dir2) {

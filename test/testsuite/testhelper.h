@@ -2,6 +2,8 @@
 #ifndef TESTHELPER_H
 #define TESTHELPER_H
 
+#include <stddef.h>
+
 /* Macros */
 #define FAIL(a) \
     if ((a)) { \
@@ -91,6 +93,11 @@
 #define ANSI_BOLD     "\033[1m"
 
 /* Function declarations */
+extern int test_format(char *dst, size_t size, const char *fmt, ...)
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((format(printf, 3, 4)))
+#endif
+;
 extern void test_failed_at(const char *file, int line);
 extern void test_skipped(int why);
 extern void test_nottested(void);
