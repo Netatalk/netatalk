@@ -128,7 +128,8 @@ int gq_pagecost(struct papfile *out)
 #ifdef ABS_PRINT
         lp_pagecost();
 #endif /* ABS_PRINT */
-        sprintf(cost, "%d", printer->p_pagecost);
+        /* An int in decimal, including its sign, fits in this buffer. */
+        snprintf(cost, sizeof(cost), "%d", printer->p_pagecost);
         append(out, cost, strlen(cost));
     } else {
         return -1;

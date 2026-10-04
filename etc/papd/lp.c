@@ -498,10 +498,17 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
             char *username, *afpdpid;
             FILE *cap_file;
             int fd;
+            int namelen;
             memset(auth_string, 0, 256);
-            sprintf(addr_filename, "%s/net%d.%dnode%d",
-                    printer->p_authprintdir, addr_net / 256, addr_net % 256,
-                    addr_node);
+            namelen = snprintf(addr_filename, sizeof(addr_filename),
+                               "%s/net%d.%dnode%d", printer->p_authprintdir,
+                               addr_net / 256, addr_net % 256, addr_node);
+
+            if (namelen < 0 || (size_t)namelen >= sizeof(addr_filename)) {
+                LOG(log_error, logtype_papd, "lp_init: CAP authentication path too long");
+                spoolerror(out, "Authentication path too long.");
+                return -1;
+            }
 
             if ((fd = open(addr_filename, O_RDONLY | O_NOFOLLOW)) >= 0) {
                 if ((cap_file = fdopen(fd, "r")) != NULL) {
@@ -563,6 +570,8 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
         LOG(log_error, logtype_papd, "gethostname: %s", strerror(errno));
         exit(1);
     }
+
+    hostname[sizeof(hostname) - 1] = '\0';
 
     if (lp.lp_flags & LP_INIT) {
         LOG(log_error, logtype_papd, "lp_init: already inited, die!");
@@ -653,7 +662,7 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 int lp_open(struct papfile *out, struct sockaddr_at *sat)
 {
     char	name[MAXPATHLEN];
-    int		fd;
+    int		fd, namelen;
     struct passwd	*pwent;
     LOG(log_debug9, logtype_papd, "lp_open");
 
@@ -709,7 +718,16 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
 
         LOG(log_debug, logtype_papd, "lp_open: opened %s",  pipe_cmd);
     } else {
-        sprintf(name, "df%c%03d%s", lp.lp_letter++, lp.lp_seq, hostname);
+        namelen = snprintf(name, sizeof(name), "df%c%03d%s",
+                           lp.lp_letter, lp.lp_seq, hostname);
+
+        if (namelen < 0 || (size_t)namelen >= sizeof(name)) {
+            LOG(log_error, logtype_papd, "lp_open: spool filename too long");
+            spoolerror(out, "Spool filename too long.");
+            return -1;
+        }
+
+        lp.lp_letter++;
 
         if ((fd = open(name, O_WRONLY | O_CREAT | O_EXCL, 0660)) < 0) {
             LOG(log_error, logtype_papd, "lp_open %s: %s", name, strerror(errno));
@@ -861,6 +879,7 @@ int lp_cancel(void)
 {
     char	name[MAXPATHLEN];
     char	letter;
+    int namelen;
 
     if ((lp.lp_flags & LP_INIT) == 0 || lp.lp_letter == 'A') {
         return 0;
@@ -871,7 +890,13 @@ int lp_cancel(void)
     }
 
     for (letter = 'A'; letter < lp.lp_letter; letter++) {
-        sprintf(name, "df%c%03d%s", letter, lp.lp_seq, hostname);
+        namelen = snprintf(name, sizeof(name), "df%c%03d%s",
+                           letter, lp.lp_seq, hostname);
+
+        if (namelen < 0 || (size_t)namelen >= sizeof(name)) {
+            LOG(log_error, logtype_papd, "lp_cancel: spool filename too long");
+            return -1;
+        }
 
         if (unlink(name) < 0) {
             LOG(log_error, logtype_papd, "lp_cancel unlink %s: %s", name, strerror(errno));
@@ -1074,6 +1099,8 @@ int lp_conn_inet(void)
         LOG(log_error, logtype_papd, "gethostname: %s", strerror(errno));
         exit(1);
     }
+
+    hostname[sizeof(hostname) - 1] = '\0';
 
     if ((hp = gethostbyname(hostname)) == NULL) {
         LOG(log_error, logtype_papd, "%s: unknown host", hostname);
