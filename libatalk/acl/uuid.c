@@ -115,27 +115,44 @@ void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
 const char *uuid_bin2string(const unsigned char *uuid)
 {
     static char uuidstring[64];
-    const char *uuidmask;
-    int i = 0;
-    unsigned char c;
+    static const char default_mask[] = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+    static const char hex[] = "0123456789ABCDEF";
+    const char *uuidmask = default_mask;
+    size_t i, nibbles = 0;
 #ifdef HAVE_LDAP
 
     if (ldap_uuid_string) {
         uuidmask = ldap_uuid_string;
-    } else
+    }
+
 #endif
-        uuidmask = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+
+    /* A mask must describe exactly 16 bytes and fit with its terminator.
+     * Fall back to the standard representation for malformed configuration. */
+    for (i = 0; i < sizeof(uuidstring) && uuidmask[i] != '\0'; i++) {
+        if (uuidmask[i] == 'x') {
+            nibbles++;
+        } else if (uuidmask[i] != '-') {
+            break;
+        }
+    }
+
+    if (i == sizeof(uuidstring) || uuidmask[i] != '\0' ||
+            nibbles != UUID_BINSIZE * 2) {
+        LOG(log_error, logtype_afpd,
+            "uuid_bin2string: invalid UUID mask; using default");
+        uuidmask = default_mask;
+    }
 
     LOG(log_debug, logtype_afpd, "uuid_bin2string{uuid}: mask: %s", uuidmask);
 
-    while (i < strlen(uuidmask)) {
-        c = *uuid;
-        uuid++;
-        sprintf(uuidstring + i, "%02X", c);
-        i += 2;
-
+    for (i = 0, nibbles = 0; uuidmask[i] != '\0'; i++) {
         if (uuidmask[i] == '-') {
-            uuidstring[i++] = '-';
+            uuidstring[i] = '-';
+        } else {
+            unsigned char c = uuid[nibbles / 2];
+            uuidstring[i] = hex[(nibbles % 2 == 0) ? c >> 4 : c & 0x0f];
+            nibbles++;
         }
     }
 
