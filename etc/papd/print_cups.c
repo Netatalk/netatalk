@@ -720,26 +720,37 @@ cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
 static int cups_mangle_printer_name(struct printer *pr,
                                     struct printer *printers)
 {
-    size_t 	count, name_len;
-    char	name[MAXCHOOSERLEN];
-    count = 1;
-    name_len = strlen(pr->p_name);
-    strncpy(name, pr->p_name, MAXCHOOSERLEN - 3);
-    /* Reallocate necessary space */
-    (name_len >= MAXCHOOSERLEN - 3) ? (name_len = MAXCHOOSERLEN + 1) :
-    (name_len = name_len + 4);
-    pr->p_name = (char *) realloc(pr->p_name, name_len);
+    size_t name_len;
+    char name[MAXCHOOSERLEN - 3];
+    char *new_name;
 
-    while ((cups_check_printer(pr, printers, 0)) && count < 100) {
-        memset(pr->p_name, 0, name_len);
-        sprintf(pr->p_name, "%s#%2.2lu", name, (unsigned long) count++);
+    if (cups_check_printer(pr, printers, 0) == 0) {
+        return 0;
     }
 
-    if (count > 99) {
+    name_len = strnlen(pr->p_name, sizeof(name));
+    memcpy(name, pr->p_name, name_len);
+    new_name = realloc(pr->p_name, name_len + sizeof("#00"));
+
+    if (new_name == NULL) {
         return 2;
     }
 
-    return 0;
+    pr->p_name = new_name;
+    memcpy(pr->p_name, name, name_len);
+    pr->p_name[name_len] = '#';
+    pr->p_name[name_len + 3] = '\0';
+
+    for (size_t count = 1; count < 100; count++) {
+        pr->p_name[name_len + 1] = "0123456789"[count / 10];
+        pr->p_name[name_len + 2] = "0123456789"[count % 10];
+
+        if (cups_check_printer(pr, printers, 0) == 0) {
+            return 0;
+        }
+    }
+
+    return 2;
 }
 
 /*------------------------------------------------------------------------*/
