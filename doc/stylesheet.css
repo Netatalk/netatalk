@@ -1,20 +1,62 @@
+/* Header palette and typography shared with netatalk.io/css/site.css */
+:root {
+  --netatalk-navy: #0B1F3A;
+  --netatalk-blue: #3D82FF;
+  --netatalk-cyan: #19E3D2;
+  --netatalk-header-muted: #b8c6dd;
+  --netatalk-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 #titlearea {
   width: 100%;
+  padding: 0;
+  background: var(--netatalk-navy);
+  color: #ffffff;
+  border-bottom: 3px solid var(--netatalk-blue);
+  border-image: linear-gradient(90deg, var(--netatalk-blue), var(--netatalk-cyan), var(--netatalk-blue)) 1;
 }
 
 #projectrow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
-  padding: 0;
+  height: auto;
+  padding: 0.9rem 1rem;
 }
 
 #projectlogo {
   flex-shrink: 0;
 }
 
+#projectlogo img {
+  display: block;
+}
+
+#projectlogo a:focus-visible {
+  outline: 2px solid var(--netatalk-cyan);
+  outline-offset: 4px;
+}
+
 #projectalign {
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0;
+  padding-left: 0;
+}
+
+#projectname,
+#projectbrief,
+#projectnumber {
+  font-family: var(--netatalk-font);
+}
+
+#projectname {
+  color: #ffffff;
+}
+
+#projectbrief,
+#projectnumber {
+  color: var(--netatalk-header-muted);
 }
 
 .searchbox-container {
@@ -24,5 +66,19 @@
 
 .searchbox-full {
   width: 100%;
-  margin-top: 1rem;
+  padding: 0 1rem 1rem;
+  box-sizing: border-box;
+}
+
+#nav-path ul {
+  background: var(--page-background-color, #ffffff);
+  border-top: 1px solid var(--separator-color, #e6ebf2);
+  border-bottom: 0;
+  font-family: var(--netatalk-font);
+}
+
+.navpath li.footer,
+address.footer {
+  color: var(--page-secondary-foreground-color, #5b6b82);
+  font-family: var(--netatalk-font);
 }
