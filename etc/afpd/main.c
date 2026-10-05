@@ -20,6 +20,7 @@
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <sys/wait.h>
+#include <time.h>
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
@@ -34,6 +35,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/server_child.h>
 #include <atalk/server_ipc.h>
+#include <atalk/unix.h>
 #include <atalk/util.h>
 
 #include "afp_config.h"
@@ -125,6 +127,28 @@ static bool reset_listening_sockets(const AFPObj *dsiconfig,
     return true;
 }
 
+/*!
+ * @brief End the master's sessions and remove its stats socket before it exits
+ */
+static void afp_end_sessions(void)
+{
+    if (server_children) {
+        server_child_kill(server_children, SIGTERM);
+    }
+
+#ifndef NO_DDP
+
+    if (asp_obj.handle) {
+        asp_cleanup(&asp_obj);
+    }
+
+#endif /* ! NO_DDP */
+
+    if (afpstats_listen_fd >= 0) {
+        unlink(_PATH_STATEDIR "afpstats.sock");
+    }
+}
+
 /* ------------------ */
 static void afp_goaway(int sig)
 {
@@ -136,23 +160,7 @@ static void afp_goaway(int sig)
     case SIGTERM:
     case SIGQUIT:
         LOG(log_note, logtype_afpd, "AFP Server shutting down");
-
-        if (server_children) {
-            server_child_kill(server_children, SIGTERM);
-        }
-
-#ifndef NO_DDP
-
-        if (asp_obj.handle) {
-            asp_cleanup(&asp_obj);
-        }
-
-#endif /* ! NO_DDP */
-
-        if (afpstats_listen_fd >= 0) {
-            unlink(_PATH_STATEDIR "afpstats.sock");
-        }
-
+        afp_end_sessions();
         _exit(0);
 
     case SIGUSR1 :
@@ -506,6 +514,8 @@ int main(int ac, char **av)
 
     /* set limits */
     (void)setlimits();
+    /* the limit setlimits() raised is the one the master's warnings rate against */
+    dsi_reserve_spare_fd();
     afp_child_t *child;
     int saveerrno;
 
@@ -697,13 +707,59 @@ int main(int ac, char **av)
     return 0;
 }
 
+/* seconds of failing sessions for lack of descriptors before the master exits */
+#define FDS_STARVED_RESTART 60
+
+/* first and latest such failure of the current episode, 0 when none */
+static time_t fds_starved_since = 0;
+static time_t fds_starved_last = 0;
+
+/*!
+ * @brief Exit for a restart once the master has been out of descriptors too long
+ *
+ * Failures closer together than FDS_STARVED_RESTART form one episode, which
+ * any session that starts ends.  The master ends every session, as at a
+ * shutdown, then exits for the supervisor to start a new one: a new master
+ * can neither reconnect, hint nor stop sessions it did not start.
+ *
+ * @param[in] children  the master's session table
+ */
+static void master_out_of_fds(const server_child_t *children)
+{
+    time_t now = time(NULL);
+
+    if (fds_starved_since == 0 || now - fds_starved_last > FDS_STARVED_RESTART) {
+        fds_starved_since = now;
+    }
+
+    fds_starved_last = now;
+
+    if (now - fds_starved_since < FDS_STARVED_RESTART) {
+        return;
+    }
+
+    int fdlimit;
+    int fds = count_open_fds(&fdlimit);
+    LOG(log_error, logtype_afpd,
+        "out of descriptors for %ld seconds with %d sessions, %d fds open of %d: "
+        "ending every session and exiting for the supervisor to restart afpd",
+        (long)(now - fds_starved_since), children->servch_count, fds, fdlimit);
+#ifndef NO_DDP
+    asp_kill(SIGTERM);
+#endif /* ! NO_DDP */
+    afp_end_sessions();
+    afp_exit(EXITERR_SYS);
+}
+
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
                               server_child_t *server_children)
 {
     afp_child_t *child = NULL;
 
     if (dsi_getsession(dsi, server_children, obj->options.tickleval, &child) != 0) {
-        if (errno) {
+        if (errno == EMFILE || errno == ENFILE) {
+            master_out_of_fds(server_children);
+        } else if (errno) {
             LOG(log_error, logtype_afpd, "dsi_start: session error: %s", strerror(errno));
         }
 
@@ -717,6 +773,8 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
         exit(0);
     }
 
+    fds_starved_since = 0;
+    fds_starved_last = 0;
     return child;
 }
 #ifndef NO_DDP

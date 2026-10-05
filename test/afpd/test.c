@@ -1231,6 +1231,8 @@ int main(int argc, char *argv[])
                      "fork_setmode_deny: each access mode maps to the correct deny bits");
     TEST_int(utest_of_alloc_fifo(vol), 0,
              "of_alloc: refnum==slot, never 0, of_find round-trip, FIFO reuse window");
+    TEST_int(utest_of_breakdown(vol), 0,
+             "of_breakdown: live forks counted by fork and access mode");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

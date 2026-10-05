@@ -251,6 +251,35 @@ static int log_open_file(const char *filename)
     return fd;
 }
 
+/* the file each type's descriptor was opened on, to tell it from a stranger */
+static dev_t log_file_dev[logtype_end_of_list_marker];
+static ino_t log_file_ino[logtype_end_of_list_marker];
+
+/* lines lost since the last write that worked, why the first failed, and the
+ * process that lost them */
+static unsigned long log_lost[logtype_end_of_list_marker];
+static int log_lost_errno[logtype_end_of_list_marker];
+static pid_t log_lost_pid[logtype_end_of_list_marker];
+
+/* the file ends in part of a line whose rest could not be written */
+static bool log_file_midline[logtype_end_of_list_marker];
+
+/*!
+ * @brief Remember which file a type's new descriptor was opened on
+ */
+static void log_file_opened(enum logtypes logtype)
+{
+    struct stat st;
+    log_file_dev[logtype] = 0;
+    log_file_ino[logtype] = 0;
+    log_file_midline[logtype] = false;
+
+    if (fstat(type_configs[logtype].fd, &st) == 0) {
+        log_file_dev[logtype] = st.st_dev;
+        log_file_ino[logtype] = st.st_ino;
+    }
+}
+
 /*!
  * @brief The name to reopen filename by once the process may have chdir()ed
  *
@@ -383,6 +412,8 @@ static void log_setup(const char *filename, enum loglevels loglevel,
     type_configs[logtype].set = true;
     type_configs[logtype].syslog = false;
     log_config.inited = true;
+    log_file_opened(logtype);
+    log_lost[logtype] = 0;
 
     /* Here's how we make it possible to LOG to a logtype like "logtype_afpd" */
     /* which then uses the default logtype setup if it isn't setup itself: */
@@ -462,6 +493,8 @@ void log_reopen(void)
                          logoption_ndelay | logoption_pid, logfacility_daemon);
             LOG(log_error, i, "log_reopen: %s: %s", type_configs[i].filename,
                 strerror(err));
+        } else {
+            log_file_opened(i);
         }
     }
 }
@@ -559,6 +592,165 @@ static void setuplog_internal(const char *loglevel, const char *logtype,
     return;
 }
 
+/*!
+ * @brief Reopen a log file by name after a failed write, where that can help
+ *
+ * A reopen helps when the name no longer names the open file, as after a
+ * delete or a rotation, or when the descriptor is no longer the file's; a
+ * full disk under the same name gains nothing from one.  The new descriptor
+ * takes the slot before the old one is closed, so no slot holds a closed
+ * number.
+ *
+ * @param[in] owner  type whose slot holds the descriptor
+ * @param[in] fd     descriptor the write failed on
+ * @param[in] err    errno of the failed write
+ *
+ * @returns true when the slot holds a new descriptor to retry on
+ */
+static bool log_file_reopen(enum logtypes owner, int fd, int err)
+{
+    const char *name = type_configs[owner].filename;
+    struct stat st;
+    bool ours;
+    int newfd;
+
+    /* fd 1 for "/dev/tty" has no name to reopen */
+    if (name == NULL) {
+        return false;
+    }
+
+    ours = err != EBADF && fstat(fd, &st) == 0
+           && st.st_dev == log_file_dev[owner] && st.st_ino == log_file_ino[owner];
+
+    if (ours && stat(name, &st) == 0
+            && st.st_dev == log_file_dev[owner] && st.st_ino == log_file_ino[owner]) {
+        return false;
+    }
+
+    newfd = log_open_file(name);
+
+    if (newfd == -1) {
+        if (!ours) {
+            type_configs[owner].fd = -1;
+        }
+
+        return false;
+    }
+
+    type_configs[owner].fd = newfd;
+    log_file_opened(owner);
+
+    if (ours) {
+        close(fd);
+    }
+
+    return true;
+}
+
+/*!
+ * @brief Write a formatted line to a type's log file, reopening it once if needed
+ *
+ * A short write continues with the rest of the line; a reopened file gets
+ * the whole line.  A line whose rest never made it leaves the file mid-line,
+ * and the next line written there starts with a newline.
+ *
+ * @returns 0, or the errno of the write that failed
+ */
+static int log_file_write(enum logtypes owner, const char *line, size_t len)
+{
+    bool reopened = false;
+    size_t done = 0;
+
+    if (log_file_midline[owner]) {
+        if (write(type_configs[owner].fd, "\n", 1) != 1) {
+            return errno;
+        }
+
+        log_file_midline[owner] = false;
+    }
+
+    while (done < len) {
+        ssize_t n = write(type_configs[owner].fd, line + done, len - done);
+        int err;
+
+        if (n > 0) {
+            done += (size_t)n;
+            continue;
+        }
+
+        err = n == 0 ? EIO : errno;
+
+        if (err == EINTR) {
+            continue;
+        }
+
+        if (reopened || !log_file_reopen(owner, type_configs[owner].fd, err)) {
+            log_file_midline[owner] = done > 0;
+            return err;
+        }
+
+        reopened = true;
+        done = 0;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Give a type whose slot is empty its file back, once it can be opened
+ *
+ * @returns true when the slot holds a descriptor
+ */
+static bool log_file_recover(enum logtypes owner)
+{
+    if (type_configs[owner].fd >= 0) {
+        return true;
+    }
+
+    if (type_configs[owner].filename == NULL) {
+        return false;
+    }
+
+    type_configs[owner].fd = log_open_file(type_configs[owner].filename);
+
+    if (type_configs[owner].fd == -1) {
+        return false;
+    }
+
+    log_file_opened(owner);
+    return true;
+}
+
+/*!
+ * @brief Note in a type's log file how many lines it lost, before the next one
+ */
+static void log_file_note_lost(enum logtypes owner, bool log_us_timestamp)
+{
+    const char *caller_file = log_src_filename;
+    int caller_line = log_src_linenumber;
+    char text[128];
+    char *line;
+    int len;
+    snprintf(text, sizeof(text), "lost %lu log lines: %s", log_lost[owner],
+             strerror(log_lost_errno[owner]));
+    log_src_filename = __FILE__;
+    log_src_linenumber = __LINE__;
+    len = generate_message(&line, text, type_configs[owner].display_options,
+                           log_error, logtype_logger, log_us_timestamp);
+    log_src_filename = caller_file;
+    log_src_linenumber = caller_line;
+
+    if (len == -1) {
+        return;
+    }
+
+    if (log_file_write(owner, line, len) == 0) {
+        log_lost[owner] = 0;
+    }
+
+    free(line);
+}
+
 /* =========================================================================
    Global function definitions
  */
@@ -582,7 +774,8 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
      * with LOGGER it's a little late source name and line number
      * are already changed. */
     static volatile sig_atomic_t inlog = 0;
-    int fd, len;
+    enum logtypes owner;
+    int len, err;
     char *user_message, *log_message;
     va_list args;
     /* A logger must not perturb the caller's errno: the write()/vasprintf()
@@ -626,30 +819,36 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     /* logging to a file */
     log_src_filename = file;
     log_src_linenumber = line;
+    /* a type that is not set up writes through the default's file */
+    owner = type_configs[logtype].set ? logtype : logtype_default;
 
-    /* Check if requested logtype is setup */
-    if (type_configs[logtype].set) {
-        /* Yes */
-        fd = type_configs[logtype].fd;
-    } else {
-        /* No: use default */
-        fd = type_configs[logtype_default].fd;
+    /* a forked process inherits its parent's count, which is not its own */
+    if (log_lost[owner] != 0 && log_lost_pid[owner] != getpid()) {
+        log_lost[owner] = 0;
     }
 
-    if (fd < 0) {
-        /* no where to send the output, give up */
+    /* a slot emptied by a failed reopen is tried again for every line */
+    if (!log_file_recover(owner)) {
+        if (type_configs[owner].filename != NULL) {
+            /* the line is lost; it has no text yet, so it only counts */
+            if (log_lost[owner]++ == 0) {
+                log_lost_errno[owner] = errno;
+                log_lost_pid[owner] = getpid();
+            }
+        }
+
         goto exit;
     }
 
     /* Initialise the Messages */
     va_start(args, message);
     len = vasprintf(&user_message, message, args);
+    va_end(args);
 
     if (len == -1) {
         goto exit;
     }
 
-    va_end(args);
     len = generate_message(&log_message,
                            user_message,
                            type_configs[logtype].set ?
@@ -658,17 +857,24 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
                            loglevel, logtype, log_us_timestamp);
 
     if (len == -1) {
+        free(user_message);
         goto exit;
     }
 
-    if (write(fd, log_message, len) < 0) {
-        LOG(log_error, logtype_logger,
-            "make_log_entry: write to log file %s failed: %s",
-            log_src_filename, strerror(errno));
-        close(fd);
-        /* forget the descriptor in the slot it came from */
-        type_configs[type_configs[logtype].set ? logtype : logtype_default].fd = -1;
-        goto exit;
+    if (log_lost[owner] != 0) {
+        log_file_note_lost(owner, log_us_timestamp);
+    }
+
+    /* the note's write can leave the slot empty */
+    if (type_configs[owner].fd < 0) {
+        err = EBADF;
+    } else {
+        err = log_file_write(owner, log_message, len);
+    }
+
+    if (err != 0 && log_lost[owner]++ == 0) {
+        log_lost_errno[owner] = err;
+        log_lost_pid[owner] = getpid();
     }
 
     free(log_message);

@@ -57,6 +57,123 @@ static int            of_freeq_tail = 0;
 static int            of_curr_forks = 0;
 static int            of_peak_forks = 0;
 
+/* forks opened over the session's life: refnums recycle, this does not */
+static uintmax_t      of_opens = 0;
+
+/* descriptor limit the table was sized from */
+static int            of_fdlimit = 0;
+
+/* refused opens, counted for log backoff */
+static unsigned int   of_full_refusals = 0;
+static unsigned int   of_nfile_refusals = 0;
+
+/* warning thresholds reached, see usage_level_update() */
+static int            of_fork_level = 0;
+static int            of_fd_level = 0;
+
+#define OF_USAGE_LEN    320
+#define OF_MIX_LEN      160
+
+/* forks counted by fork (data, resource) and access (none, read, write, both) */
+struct of_mix {
+    int n[2][4];
+};
+
+/*!
+ * @brief Count one fork into its fork and access bucket
+ *
+ * @param[in,out] mix  bucket counts
+ * @param[in]     of   fork to count
+ */
+static void of_mix_add(struct of_mix *mix, const struct ofork *of)
+{
+    int fork = (of->of_flags & AFPFORK_RSRC) ? 1 : 0;
+    int access = ((of->of_flags & AFPFORK_ACCRD) ? 1 : 0)
+                 | ((of->of_flags & AFPFORK_ACCWR) ? 2 : 0);
+    mix->n[fork][access]++;
+}
+
+/*!
+ * @brief Format the non-empty buckets, e.g. "data rd 10, rsrc rw 1"
+ *
+ * @param[in]  mix  bucket counts
+ * @param[out] buf  destination
+ * @param[in]  len  size of @p buf
+ *
+ * @returns @p buf, empty when every bucket is
+ */
+static const char *of_mix_str(const struct of_mix *mix, char *buf, size_t len)
+{
+    static const char *const forkname[2] = { "data", "rsrc" };
+    static const char *const accessname[4] = { "none", "rd", "wr", "rw" };
+    size_t off = 0;
+    buf[0] = '\0';
+
+    for (int f = 0; f < 2; f++) {
+        for (int a = 0; a < 4; a++) {
+            if (mix->n[f][a] > 0 && off < len) {
+                int w = snprintf(buf + off, len - off, "%s%s %s %d",
+                                 off ? ", " : "", forkname[f], accessname[a],
+                                 mix->n[f][a]);
+
+                if (w > 0) {
+                    off += (size_t)w;
+                }
+            }
+        }
+    }
+
+    return buf;
+}
+
+/*!
+ * @brief Format the live forks by fork and access mode
+ *
+ * Scans the whole table, so it is for log lines on rare events only.
+ *
+ * @param[out] buf  destination
+ * @param[in]  len  size of @p buf
+ *
+ * @returns @p buf, empty when no fork is open
+ */
+const char *of_breakdown(char *buf, size_t len)
+{
+    struct of_mix mix = { { { 0 } } };
+
+    for (int i = 0; oforks != NULL && i < nforks; i++) {
+        if (oforks[i] != NULL) {
+            of_mix_add(&mix, oforks[i]);
+        }
+    }
+
+    return of_mix_str(&mix, buf, len);
+}
+
+/*!
+ * @brief Format fork-table and descriptor usage for a log line
+ *
+ * @param[out] buf  destination
+ * @param[in]  len  size of @p buf
+ *
+ * @returns @p buf
+ */
+static const char *of_usage_str(char *buf, size_t len)
+{
+    char mix[OF_MIX_LEN + 3] = "";
+    int fdlimit;
+    int fds = count_open_fds(&fdlimit);
+
+    if (of_curr_forks > 0) {
+        char kinds[OF_MIX_LEN];
+        snprintf(mix, sizeof(mix), " (%s)", of_breakdown(kinds, sizeof(kinds)));
+    }
+
+    snprintf(buf, len,
+             "%d forks open%s, peak %d of %d slots, %ju opens, %d fds open of %d",
+             of_curr_forks, mix, of_peak_forks, nforks, of_opens, fds, fdlimit);
+    return buf;
+}
+
 /* OR some of each character for the hash */
 static unsigned long hashfn(const struct file_key *key)
 {
@@ -222,6 +339,7 @@ of_alloc(struct vol *vol,
         }
 
         nforks = (fdcap < 0xffff) ? fdcap : 0xffff;
+        of_fdlimit   = fdlimit;
         oforks       = (struct ofork **) calloc(nforks, sizeof(struct ofork *));
         of_freeq_cap = nforks + 1;
         of_freeq     = (uint16_t *) calloc(of_freeq_cap, sizeof(uint16_t));
@@ -253,7 +371,13 @@ of_alloc(struct vol *vol,
      * the upper bound is stated explicitly so the array access is provably in
      * range. */
     if (slot < 1 || slot >= nforks) {
-        LOG(log_error, logtype_afpd, "of_alloc: maximum number of forks exceeded.");
+        if (log_backoff(&of_full_refusals)) {
+            char usage[OF_USAGE_LEN];
+            LOG(log_error, logtype_afpd,
+                "of_alloc: maximum number of forks exceeded, refusal %u: %s",
+                of_full_refusals, of_usage_str(usage, sizeof(usage)));
+        }
+
         return NULL;
     }
 
@@ -908,6 +1032,7 @@ void of_dealloc(struct ofork *of)
     oforks[slot] = NULL;
     of_freeq_push((uint16_t)slot);
     of_curr_forks--;
+    (void)usage_level_update(&of_fork_level, of_curr_forks, nforks);
 
     /* decrease refcount; guard so a stray double-dealloc on a shared adouble is
      * logged (and asserts in non-NDEBUG builds) instead of silently absorbed. */
@@ -926,15 +1051,61 @@ void of_dealloc(struct ofork *of)
     free(of);
 }
 
-/* Log current + lifetime-peak fork-table occupancy (once, at session close).
- * Current should be ~0 at a clean close; a nonzero value flags leaked forks. */
-void of_log_highwater(void)
+/*!
+ * @brief Log fork-table and descriptor usage at a session event
+ *
+ * After a clean session close no forks remain and only the session's own
+ * few descriptors are open; more of either flags a leak.
+ *
+ * @param[in] level  log level
+ * @param[in] event  session event being logged
+ */
+void of_log_usage(int level, const char *event)
 {
-    if (nforks > 0) {
-        LOG(log_info, logtype_afpd,
-            "fork table: %d open now, %d of %d slots peak (%.1f%%)",
-            of_curr_forks, of_peak_forks, nforks,
-            100.0 * of_peak_forks / nforks);
+    char usage[OF_USAGE_LEN];
+    LOG(level, logtype_afpd, "fork table at %s: %s", event,
+        of_usage_str(usage, sizeof(usage)));
+}
+
+/*!
+ * @brief Log an open refused because descriptors ran out
+ *
+ * @param[in] name  file being opened
+ * @param[in] err   errno of the failed open
+ */
+void of_log_nfile(const char *name, int err)
+{
+    if (log_backoff(&of_nfile_refusals)) {
+        char usage[OF_USAGE_LEN];
+        LOG(log_error, logtype_afpd, "afp_openfork(\"%s\"): %s, refusal %u: %s",
+            name, strerror(err), of_nfile_refusals,
+            of_usage_str(usage, sizeof(usage)));
+    }
+}
+
+/*!
+ * @brief Warn as fork or descriptor use climbs toward its limit
+ *
+ * Runs once the fork is fully open: the open counts, and the breakdown sees
+ * its access mode.  open(2) returns the lowest free descriptor, so the
+ * highest one this open created bounds those in use from below, at no cost.
+ *
+ * @param[in] newfd  highest descriptor the open created, or -1 for none
+ */
+void of_note_open(int newfd)
+{
+    of_opens++;
+
+    if (usage_level_update(&of_fork_level, of_curr_forks, nforks)) {
+        char usage[OF_USAGE_LEN];
+        LOG(log_warning, logtype_afpd, "fork table over %d%% full: %s",
+            usage_level_pct(of_fork_level), of_usage_str(usage, sizeof(usage)));
+    }
+
+    if (newfd >= 0 && usage_level_update(&of_fd_level, newfd + 1, of_fdlimit)) {
+        char usage[OF_USAGE_LEN];
+        LOG(log_warning, logtype_afpd, "fd use over %d%% of the limit: %s",
+            usage_level_pct(of_fd_level), of_usage_str(usage, sizeof(usage)));
     }
 }
 
@@ -1227,25 +1398,59 @@ struct adouble *of_ad(const struct vol *vol, struct path *path,
 }
 
 /*!
-   close all forks for a volume
-*/
-void of_closevol(const AFPObj *obj, const struct vol *vol)
+ * @brief Close every fork on @p vol, or every fork when @p vol is NULL
+ *
+ * Logs what it closed by fork and access mode: at logout these are the
+ * forks the client never closed.  of_closefork() deallocs even on flush
+ * error, so a failed close is logged and the sweep continues.
+ *
+ * @param[in] obj  AFP session
+ * @param[in] vol  volume whose forks to close, NULL for all
+ * @param[in] who  caller name for log lines
+ */
+static void of_close_sweep(const AFPObj *obj, const struct vol *vol,
+                           const char *who)
 {
-    int refnum;
+    struct of_mix mix = { { { 0 } } };
+    int closed = 0;
 
     if (!oforks) {
         return;
     }
 
-    for (refnum = 0; refnum < nforks; refnum++) {
-        if (oforks[refnum] != NULL && oforks[refnum]->of_vol == vol) {
+    for (int refnum = 0; refnum < nforks; refnum++) {
+        if (oforks[refnum] != NULL
+                && (vol == NULL || oforks[refnum]->of_vol == vol)) {
+            of_mix_add(&mix, oforks[refnum]);
+            closed++;
+
             if (of_closefork(obj, oforks[refnum]) < 0) {
-                LOG(log_error, logtype_afpd, "of_closevol: %s", strerror(errno));
+                LOG(log_error, logtype_afpd, "%s: %s", who, strerror(errno));
             }
         }
     }
 
-    return;
+    if (closed == 0) {
+        return;
+    }
+
+    char kinds[OF_MIX_LEN];
+
+    if (vol != NULL) {
+        LOG(log_info, logtype_afpd, "%s(\"%s\"): closed %d forks still open (%s)",
+            who, vol->v_localname, closed, of_mix_str(&mix, kinds, sizeof(kinds)));
+    } else {
+        LOG(log_info, logtype_afpd, "%s: closed %d forks still open (%s)",
+            who, closed, of_mix_str(&mix, kinds, sizeof(kinds)));
+    }
+}
+
+/*!
+   close all forks for a volume
+*/
+void of_closevol(const AFPObj *obj, const struct vol *vol)
+{
+    of_close_sweep(obj, vol, "of_closevol");
 }
 
 /*!
@@ -1253,19 +1458,5 @@ void of_closevol(const AFPObj *obj, const struct vol *vol)
 */
 void of_close_all_forks(const AFPObj *obj)
 {
-    int refnum;
-
-    if (!oforks) {
-        return;
-    }
-
-    for (refnum = 0; refnum < nforks; refnum++) {
-        if (oforks[refnum] != NULL) {
-            if (of_closefork(obj, oforks[refnum]) < 0) {
-                LOG(log_error, logtype_afpd, "of_close_all_forks: %s", strerror(errno));
-            }
-        }
-    }
-
-    return;
+    of_close_sweep(obj, NULL, "of_close_all_forks");
 }

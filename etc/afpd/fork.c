@@ -450,6 +450,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct adouble  *adsame = NULL;
     size_t          buflen = 0;
     int             ret, adflags, eid;
+    int             nfile_err = 0;
     uint32_t        did;
     uint16_t        vid, bitmap, access, ofrefnum;
     char            fork, *path, *upath;
@@ -573,6 +574,8 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             memcpy(rbuf, &bitmap, sizeof(uint16_t));
             rbuf += sizeof(uint16_t);
             memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
+            /* a virtual fork takes a slot but opens no descriptor */
+            of_note_open(-1);
             return AFP_OK;
         }
 
@@ -660,6 +663,10 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return AFPERR_NFILE;
     }
 
+    /* a shared adouble keeps its descriptors; the open may add others */
+    int had_data = ad_data_fileno(ofork->of_ad);
+    int had_meta = ad_meta_fileno(ofork->of_ad);
+    int had_reso = ad_reso_fileno(ofork->of_ad);
     LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\", %s, %s)",
         fullpathname(s_path->u_name),
         (fork == OPENFORK_DATA) ? "data" : "reso",
@@ -684,6 +691,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         case EMFILE :
         case ENFILE :
+            nfile_err = errno;
             ret = AFPERR_NFILE;
             goto openfork_err;
 
@@ -739,6 +747,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         case EMFILE :
         case ENFILE :
+            nfile_err = errno;
             ret = AFPERR_NFILE;
             goto openfork_err;
 
@@ -832,6 +841,21 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         ofork->of_flags |= AFPFORK_ACCRD;
     }
 
+    int newfd = -1;
+
+    if (had_data < 0) {
+        newfd = MAX(newfd, ad_data_fileno(ofork->of_ad));
+    }
+
+    if (had_meta < 0) {
+        newfd = MAX(newfd, ad_meta_fileno(ofork->of_ad));
+    }
+
+    if (had_reso < 0) {
+        newfd = MAX(newfd, ad_reso_fileno(ofork->of_ad));
+    }
+
+    of_note_open(newfd);
     LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\"): fork: %" PRIu16,
         fullpathname(s_path->m_name), ofork->of_refnum);
     memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
@@ -849,6 +873,12 @@ openfork_err:
     }
 
     of_dealloc(ofork);
+
+    /* the refused fork is released, so the counts cover open forks only */
+    if (nfile_err) {
+        of_log_nfile(s_path->m_name, nfile_err);
+    }
+
     return ret;
 }
 
