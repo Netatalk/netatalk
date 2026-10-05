@@ -8,6 +8,8 @@
 #include <pwd.h>
 #include <stdarg.h>
 
+#include <atalk/logger.h>
+
 /* just a label for exported bits */
 #ifndef UAM_MODULE_EXPORT
 #define UAM_MODULE_EXPORT
@@ -86,6 +88,12 @@ extern UAM_MODULE_EXPORT void uam_unregister(const int, const char *);
 /* helper functions */
 extern UAM_MODULE_EXPORT struct passwd *uam_getname(void *, char *, const int);
 extern UAM_MODULE_EXPORT int uam_checkuser(void *, const struct passwd *);
+extern UAM_MODULE_EXPORT void uam_log_pam_failure(enum loglevels level,
+                                                  const char *uam,
+                                                  const char *user,
+                                                  const char *step,
+                                                  const char *errtext,
+                                                  int code, int err);
 
 /* afp helper functions */
 extern UAM_MODULE_EXPORT int uam_afp_read(void *, char *, size_t *,

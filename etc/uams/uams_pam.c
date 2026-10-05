@@ -10,6 +10,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <arpa/inet.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -146,6 +147,28 @@ static struct pam_conv PAM_conversation = {
     NULL
 };
 
+/*!
+ * @brief Log a failed PAM step through uam_log_pam_failure()
+ *
+ * errno is read before pam_strerror(), whose message lookup can change it.
+ * A failed pam_start(), and a failed account or session step of a printer
+ * login, are errors; the other steps are informational.
+ *
+ * @param[in] level    log level of the line
+ * @param[in] ph       PAM handle, NULL when pam_start() failed
+ * @param[in] user     user being authenticated
+ * @param[in] step     PAM function that failed
+ * @param[in] pam_err  its return code
+ */
+static void clrtxt_log_pam_error(enum loglevels level, pam_handle_t *ph,
+                                 const char *user, const char *step,
+                                 int pam_err)
+{
+    int saved_errno = errno;
+    uam_log_pam_failure(level, "ClearTxt", user, step,
+                        pam_strerror(ph, pam_err), pam_err, saved_errno);
+}
+
 static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
                  char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen _U_)
@@ -185,7 +208,9 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
                           &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_error, logtype_uams, "PAM: pam_start failed: %d", PAM_error);
+        clrtxt_log_pam_error(log_error, NULL, username, "pam_start", PAM_error);
+        /* a failed pam_start() leaves the handle undefined */
+        pamh = NULL;
         goto login_err;
     }
 
@@ -208,6 +233,9 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
     LOG(log_debug, logtype_uams, "PAM: pam_authenticate returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_info, pamh, username, "pam_authenticate",
+                             PAM_error);
+
         if (sigchld_saved) {
             sigaction(SIGCHLD, &sa_old, NULL);
         }
@@ -228,6 +256,8 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
     }
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_info, pamh, username, "pam_acct_mgmt", PAM_error);
+
         /* Password change required */
         if (PAM_error == PAM_NEW_AUTHTOK_REQD) {
             err = AFPERR_PWDEXPR;
@@ -252,6 +282,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
     LOG(log_debug, logtype_uams, "PAM: pam_setcred returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_info, pamh, username, "pam_setcred", PAM_error);
         goto login_err;
     }
 
@@ -260,6 +291,8 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
     LOG(log_debug, logtype_uams, "PAM: pam_open_session returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_info, pamh, username, "pam_open_session",
+                             PAM_error);
         goto login_err;
     }
 
@@ -272,8 +305,12 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 
     return AFP_OK;
 login_err:
-    pam_end(pamh, PAM_error);
-    pamh = NULL;
+
+    if (pamh != NULL) {
+        pam_end(pamh, PAM_error);
+        pamh = NULL;
+    }
+
     return err;
 }
 
@@ -384,6 +421,7 @@ static int pam_changepw(void *obj _U_, char *username,
                           &lpamh);
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_error, NULL, username, "pam_start", PAM_error);
         ret = AFPERR_PARAM;
         goto changepw_done;
     }
@@ -406,6 +444,9 @@ static int pam_changepw(void *obj _U_, char *username,
     PAM_error = pam_authenticate(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_info, lpamh, username, "pam_authenticate",
+                             PAM_error);
+
         if (sigchld_saved2) {
             sigaction(SIGCHLD, &sa_old2, NULL);
         }
@@ -421,6 +462,7 @@ static int pam_changepw(void *obj _U_, char *username,
     }
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_info, lpamh, username, "pam_acct_mgmt", PAM_error);
         ret = AFPERR_NOTAUTH;
         goto changepw_restore_uid;
     }
@@ -447,6 +489,7 @@ static int pam_changepw(void *obj _U_, char *username,
     PAM_chauthtok_mode = 0;
 
     if (PAM_error != PAM_SUCCESS) {
+        clrtxt_log_pam_error(log_info, lpamh, username, "pam_chauthtok", PAM_error);
         ret = AFPERR_ACCESS;
         goto changepw_restore_uid;
     }
@@ -556,9 +599,7 @@ static int pam_printer(char *start, char *stop, char *username,
                           &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
-            username, pam_strerror(pamh, PAM_error));
-        pam_end(pamh, PAM_error);
+        clrtxt_log_pam_error(log_error, NULL, username, "pam_start", PAM_error);
         pamh = NULL;
         free(PAM_password);
         PAM_password = NULL;
@@ -579,8 +620,8 @@ static int pam_printer(char *start, char *stop, char *username,
             sigaction(SIGCHLD, &sa_old3, NULL);
         }
 
-        LOG(log_debug, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
-            username, pam_strerror(pamh, PAM_error));
+        clrtxt_log_pam_error(log_info, pamh, username, "pam_authenticate",
+                             PAM_error);
         pam_end(pamh, PAM_error);
         pamh = NULL;
         free(PAM_password);
@@ -595,8 +636,7 @@ static int pam_printer(char *start, char *stop, char *username,
     }
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
-            username, pam_strerror(pamh, PAM_error));
+        clrtxt_log_pam_error(log_error, pamh, username, "pam_acct_mgmt", PAM_error);
         pam_end(pamh, PAM_error);
         pamh = NULL;
         free(PAM_password);
@@ -607,8 +647,8 @@ static int pam_printer(char *start, char *stop, char *username,
     PAM_error = pam_open_session(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
-            username, pam_strerror(pamh, PAM_error));
+        clrtxt_log_pam_error(log_error, pamh, username, "pam_open_session",
+                             PAM_error);
         pam_end(pamh, PAM_error);
         pamh = NULL;
         free(PAM_password);

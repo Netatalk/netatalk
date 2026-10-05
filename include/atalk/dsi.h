@@ -173,6 +173,8 @@ extern void dsi_free(DSI *dsi);
 
 /* in dsi_getsess.c */
 extern int dsi_getsession(DSI *, server_child_t *, const int, afp_child_t **);
+extern void dsi_reserve_spare_fd(void);
+extern void dsi_close_spare_fd(void);
 extern void dsi_kill(int);
 
 
