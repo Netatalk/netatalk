@@ -33,18 +33,15 @@
 
 /*!
  * @file
- * @brief Cp copies source files to target files.
+ * @brief AFP-aware copying of files and directory trees for nad
  *
- * The global PATH_T structure "to" always contains the path to the
- * current target file.  Since fts(3) does not change directories,
- * this path can be either absolute or dot-relative.
+ * Implements the nad cp command, combining filesystem copying with
+ * Netatalk volume services. When AFP volume information is available,
+ * copying also handles volume-specific filename encoding, AppleDouble
+ * metadata, and destination CNID registration.
  *
- * The basic algorithm is to initialize "to" and use fts(3) to traverse
- * the file hierarchy rooted in the argument list.  A trivial case is the
- * case of 'cp file1 file2'.  The more interesting case is the case of
- * 'cp file1 file2 ... fileN dir' where the hierarchy is traversed and the
- * path (relative to the root of the traversal) is appended to dir (stored
- * in "to") to form the final target path.
+ * Source and destination volume contexts are managed independently,
+ * allowing copying between paths with different volume settings.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -83,6 +80,13 @@
 
 static char emptystring[] = "";
 
+/*!
+ * @brief Shared destination-path state for the copy operation.
+ *
+ * Initially holds the destination base, then the current target file or
+ * directory path during copying. The target_end member marks the end of
+ * the base used to construct subsequent target paths.
+ */
 PATH_T to = { to.p_path, emptystring, "" };
 enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
 
@@ -196,6 +200,19 @@ static int copy_source_header(struct adouble *dest, const char *path, int flags)
     return ret == 0 ? 1 : -1;
 }
 
+/*!
+ * @brief execute the nad cp command
+ *
+ * Parses options and initializes the destination base in to, distinguishing
+ * a single destination file, an existing destination directory, and a new
+ * destination directory for a recursive copy. Multiple sources require an
+ * existing destination directory.
+ *
+ * Uses the custom nftw() implementation to traverse each source separately,
+ * with copy() processing entries and upfunc() tracking directory CNID state.
+ * Traversal runs without FTW_CHDIR, so source and destination paths may be
+ * absolute or relative to the caller's working directory.
+ */
 int nad_cp(int argc, char *argv[], AFPObj *obj)
 {
     struct stat to_stat, tmp_stat;
@@ -385,6 +402,18 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
     return rval;
 }
 
+/*!
+ * @brief process a source entry during the nftw() traversal
+ *
+ * Constructs the current destination path in to. For an existing destination
+ * directory, appends the source basename and any descendant path to the
+ * destination base. When copying a directory to a new destination directory,
+ * omits the source directory's basename and appends only the descendant path.
+ * For a file-to-file copy, uses the destination path directly.
+ *
+ * Dispatches copying by entry type and handles destination volume metadata
+ * and CNID registration where applicable.
+ */
 static int copy(const char *path,
                 const struct stat *statp,
                 int tflag _U_,

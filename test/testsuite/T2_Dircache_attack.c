@@ -3,126 +3,29 @@
 #include "testhelper.h"
 
 /*!
-  @file
-  @brief Test the following:
-  @code
-   test500()
-   =========
-
-   client 1:
-      mkdir dir1
-      mkdir dir2
-
-   client 2:
-      mv dir1 dir2/renamed
-
-   client 1:
-      ls dir2
-      stat dir2/renamed
-
-   Check: CNID must not change
-   Targets: enumerate()
-
-   test501()
-   =========
-
-   client 1:
-      mkdir dir1
-      mkdir dir2
-
-   client 2:
-      mv dir1 dir2/renamed
-
-   client 1:
-      stat renamed
-
-   Check: CNID must not change
-   Targets: getfildirparms()
-
-
-   test502()
-   =========
-
-   client 1:
-      mkdir dir1
-      mkdir dir2
-
-   client 2:
-      mv dir1 dir2/renamed
-
-   client 1:
-      ls renamed
-
-   Check: CNID must not change
-   Targets: enumerate()
-
-
-   test503()
-   =========
-
-   client 1:
-      mkdir dir1
-      mkdir dir2
-
-   client 2:
-      mv dir1 dir2/renamed
-
-   client 1:
-      stat renamed
-
-   Check: CNID must not change
-   Targets: getfildirparms()
-
-
-   test504()
-   =========
-
-   client 1:
-      mkdir -p dir1/dir2
-      touch dir1/dir2/file
-
-   client 2:
-      mv dir1 renamed1
-
-   client 1:
-      stat file
-
-   Check: CNID must not change
-   Targets: getfildirparms()
-
-
-   test505()
-   =========
-
-   client 1:
-      mkdir -p dir1/dir2
-
-   client 2:
-      mv dir1 renamed1
-
-   client 1:
-      stat dir2
-
-   Check: CNID must not change
-   Targets: getfildirparms()
-
-
-   test506()
-   =========
-
-   client 1:
-      mkdir -p dir1/dir2
-
-   client 2:
-      mv dir1 renamed1
-      mkdir dir1
-
-   client 1:
-      stat dir2
-  @endcode
+ * @file
+ * @brief directory cache consistency and stress tests
  */
 
-/*! move and rename dir, enumerate new parent, stat renamed dir */
+/*!
+ * @brief move and rename dir, enumerate new parent, stat renamed dir
+ *
+ * @code
+ * client 1:
+ *    mkdir dir1
+ *    mkdir dir2
+ *
+ * client 2:
+ *    mv dir1 dir2/renamed
+ *
+ * client 1:
+ *    ls dir2
+ *    stat dir2/renamed
+ *
+ * Check: CNID must not change
+ * Targets: enumerate()
+ * @endcode
+ */
 STATIC void test500()
 {
     const DSI *dsi = &Conn->dsi;
@@ -202,7 +105,24 @@ test_exit:
     exit_test("Dircache:test500: move and rename dir, enumerate new parent, stat renamed dir");
 }
 
-/*! move and rename dir, then stat it */
+/*!
+ * @brief move and rename dir, then stat it
+ *
+ * @code
+ * client 1:
+ *    mkdir dir1
+ *    mkdir dir2
+ *
+ * client 2:
+ *    mv dir1 dir2/renamed
+ *
+ * client 1:
+ *    stat renamed
+ *
+ * Check: CNID must not change
+ * Targets: getfildirparms()
+ * @endcode
+ */
 STATIC void test501()
 {
     const DSI *dsi = &Conn->dsi;
@@ -279,7 +199,24 @@ test_exit:
     exit_test("Dircache:test501: move and rename dir, then stat it");
 }
 
-/*! move and rename dir, enumerate renamed dir */
+/*!
+ * @brief move and rename dir, enumerate renamed dir
+ *
+ * @code
+ * client 1:
+ *    mkdir dir1
+ *    mkdir dir2
+ *
+ * client 2:
+ *    mv dir1 dir2/renamed
+ *
+ * client 1:
+ *    ls renamed
+ *
+ * Check: CNID must not change
+ * Targets: enumerate()
+ * @endcode
+ */
 STATIC void test502()
 {
     const DSI *dsi = &Conn->dsi;
@@ -361,7 +298,24 @@ test_exit:
     exit_test("Dircache:test502: move and rename dir, enumerate renamed dir");
 }
 
-/*! move and rename dir, stat renamed dir */
+/*!
+ * @brief move and rename dir, stat renamed dir
+ *
+ * @code
+ * client 1:
+ *    mkdir dir1
+ *    mkdir dir2
+ *
+ * client 2:
+ *    mv dir1 dir2/renamed
+ *
+ * client 1:
+ *    stat renamed
+ *
+ * Check: CNID must not change
+ * Targets: getfildirparms()
+ * @endcode
+ */
 STATIC void test503()
 {
     const DSI *dsi = &Conn->dsi;
@@ -437,7 +391,24 @@ test_exit:
     exit_test("Dircache:test503: move and rename dir, enumerate renamed dir");
 }
 
-/*! rename topdir, stat file in subdir of renamed topdir */
+/*!
+ * @brief rename topdir, stat file in subdir of renamed topdir
+ *
+ * @code
+ * client 1:
+ *    mkdir -p dir1/dir2
+ *    touch dir1/dir2/file
+ *
+ * client 2:
+ *    mv dir1 renamed1
+ *
+ * client 1:
+ *    stat file
+ *
+ * Check: CNID must not change
+ * Targets: getfildirparms()
+ * @endcode
+ */
 STATIC void test504()
 {
     const DSI *dsi = &Conn->dsi;
@@ -512,7 +483,23 @@ test_exit:
     exit_test("Dircache:test504: rename topdir, stat file in subdir of renamed topdir");
 }
 
-/*! rename dir, stat subdir in renamed dir */
+/*!
+ * @brief rename dir, stat subdir in renamed dir
+ *
+ * @code
+ * client 1:
+ *    mkdir -p dir1/dir2
+ *
+ * client 2:
+ *    mv dir1 renamed1
+ *
+ * client 1:
+ *    stat dir2
+ *
+ * Check: CNID must not change
+ * Targets: getfildirparms()
+ * @endcode
+ */
 STATIC void test505()
 {
     const DSI *dsi = &Conn->dsi;
@@ -589,7 +576,21 @@ test_exit:
     exit_test("Dircache:test505: rename dir, stat subdir in renamed dir");
 }
 
-/*! stat subdir in poisened path */
+/*!
+ * @brief stat subdir in poisoned path
+ *
+ * @code
+ * client 1:
+ *    mkdir -p dir1/dir2
+ *
+ * client 2:
+ *    mv dir1 renamed1
+ *    mkdir dir1
+ *
+ * client 1:
+ *    stat original dir2 by its directory ID (subdir2_id)
+ * @endcode
+ */
 STATIC void test506()
 {
     const DSI *dsi = &Conn->dsi;
