@@ -310,7 +310,7 @@ static int addstack(char *uname _U_, struct dir *dir, int pidx _U_)
         dstack = tmpds;
     }
 
-    /* Put new element. Allocate and copy lname and path. */
+    /* Put a new directory ID on the stack. */
     ds = dstack + dsidx++;
     ds->ds_did = dir->d_did;
     ds->ds_checked = 0;
@@ -334,9 +334,6 @@ static int reducestack(void)
     while (dsidx > 0) {
         if (dstack[dsidx - 1].ds_checked) {
             dsidx--;
-#if 0
-            free(dstack[dsidx].path);
-#endif
         } else {
             return dsidx - 1;
         }
@@ -1154,7 +1151,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     uint32_t   ad_date;
     int ret, rsize;
     uint32_t nrecs = 0;
-    unsigned char *spec1, *spec2, *bspec1, *bspec2;
+    unsigned char *spec1, *spec2, *bspec1;
     size_t	len;
     size_t spec_area_len;
     size_t spec2_area_len;
@@ -1274,7 +1271,6 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     spec1 += 2;
     spec2 += 2;
     bspec1 = spec1;
-    bspec2 = spec2;
 
     /* File attribute bits... */
     if (c1.rbitmap & (1U << FILPBIT_ATTR)) {
@@ -1362,12 +1358,6 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         if (len == (size_t)(-1)) {
             return AFPERR_PARAM;
         }
-
-#if 0
-        /* FIXME: do we need it ? It's always null ! */
-        memcpy(c2.lname, bspec2 + spec2[1] + 1, (bspec2 + spec2[1])[0]);
-        c2.lname[(bspec2 + spec2[1])[0]] = 0;
-#endif
     }
 
     /* UTF8 Name */

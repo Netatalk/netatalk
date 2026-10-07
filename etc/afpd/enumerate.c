@@ -114,19 +114,6 @@ char *check_dirent(const struct vol *vol, char *name)
         return NULL;
     }
 
-#if 0
-    char *m_name = NULL;
-
-    if (NULL == (m_name = utompath(vol, name, 0, utf8_encoding()))) {
-        return NULL;
-    }
-
-    /* now check against too big a file */
-    if (strlen(m_name) > vol->max_filename) {
-        return NULL;
-    }
-
-#endif
     return name;
 }
 
@@ -220,13 +207,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     dbitmap = ntohs(dbitmap);
     ibuf += sizeof(dbitmap);
 
-    /* check for proper bitmaps -- the stuff in comments is for
-     * variable directory ids. */
+    /* At least one result bitmap must be nonzero. */
     if (!(fbitmap || dbitmap)) {
-#if 0
-        || (fbitmap & (1 << FILPBIT_PDID)) ||
-        (dbitmap & (1 << DIRPBIT_PDID))
-#endif
         *rbuflen = 0;
         return AFPERR_BITMAP;
     }

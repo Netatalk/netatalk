@@ -797,21 +797,6 @@ int getmetadata(const AFPObj *obj,
                 ashort |= htons(ATTRBIT_NOWRITE);
             }
 
-#if 0
-            /* FIXME do we want a visual clue if the file is read only
-             */
-            struct maccess	ma;
-            accessmode(vol, ".", &ma, dir, NULL);
-
-            if ((ma.ma_user & AR_UWRITE)) {
-                accessmode(vol, upath, &ma, dir, st);
-
-                if (!(ma.ma_user & AR_UWRITE)) {
-                    ashort |= htons(ATTRBIT_NOWRITE);
-                }
-            }
-
-#endif
             memcpy(data, &ashort, sizeof(ashort));
             data += sizeof(ashort);
             LOG(log_debug, logtype_afpd, "metadata('%s'): AFP Attributes: %04x",
