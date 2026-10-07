@@ -998,15 +998,6 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
         return send_reply(obj, AFPERR_PARAM);
     }
 
-#if 0
-
-    if (len != 0) {
-        LOG(log_error, logtype_afpd, "login_ext: directory service path not null!");
-        return send_reply(obj, AFPERR_PARAM);
-    }
-
-#endif
-
     if (ibuflen < len) {
         LOG(log_error, logtype_afpd,
             "login_ext: Login failed. Invalid directory service name!");
