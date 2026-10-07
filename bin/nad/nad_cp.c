@@ -91,7 +91,6 @@ PATH_T to = { to.p_path, emptystring, "" };
 enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
 
 int fflag, iflag, nflag, pflag, vflag;
-mode_t mask;
 
 cnid_t ppdid, pdid, did; /* current dir CNID and parent did*/
 
@@ -218,10 +217,6 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
     struct stat to_stat, tmp_stat;
     int r, ch, have_trailing_slash;
     char *target;
-#if 0
-    afpvol_t srcvol;
-    afpvol_t dstvol;
-#endif
     ppdid = pdid = htonl(1);
     did = htonl(2);
 
@@ -362,17 +357,6 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
         type = FILE_TO_DIR;
     }
 
-    /*
-     * Keep an inverted copy of the umask, for use in correcting
-     * permissions on created directories when not using -p.
-     */
-    mask = ~umask(0777); //NOSONAR: Read caller umask and immediately restore it.
-    umask(~mask);
-#if 0
-    /* Inhereting perms in ad_mkdir etc requires this */
-    ad_setfuid(0);
-#endif
-
     /* Load .volinfo file for destination*/
     if (openvol_optional(obj, to.p_path, &dvolume) != 0) {
         return 1;
@@ -469,9 +453,8 @@ static int copy(const char *path,
          * Paths ending in ".." are changed to ".".  This is
          * tricky, but seems the easiest way to fix the problem.
          *
-         * XXX
-         * Since the first level MUST be FTS_ROOTLEVEL, base
-         * is always initialized.
+         * nftw() visits the source root at level zero, initializing
+         * base before processing its descendants.
          */
         if (ftw->level == 0) {
             if (type != DIR_TO_DNE) {
@@ -796,9 +779,6 @@ static int copy(const char *path,
     return 0;
 }
 
-/*! Memory strategy threshold, in pages: if physmem is larger then this, use a large buffer */
-#define PHYSPAGES_THRESHOLD (32*1024)
-
 /*! Maximum buffer size in bytes - do not allow it to grow larger than this */
 #define BUFSIZE_MAX (2*1024*1024)
 
@@ -817,7 +797,6 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     static size_t bufsize;
     ssize_t wcount;
     size_t wresid;
-    off_t wtotal;
     int ch, checkch, from_fd = 0, rcount, to_fd = 0;
     const char *bufp;
     char *p;
@@ -901,8 +880,6 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             sp->st_size <= 8 * 1024 * 1024 &&
             (p = mmap(NULL, (size_t)sp->st_size, PROT_READ,
                       MAP_SHARED, from_fd, (off_t)0)) != MAP_FAILED) {
-        wtotal = 0;
-
         for (bufp = p, wresid = sp->st_size; ;
                 bufp += wcount, wresid -= (size_t)wcount) {
             wcount = write(to_fd, bufp, wresid);
@@ -910,8 +887,6 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             if (wcount <= 0) {
                 break;
             }
-
-            wtotal += wcount;
 
             if (wcount >= (ssize_t)wresid) {
                 break;
@@ -970,8 +945,6 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             }
         }
 
-        wtotal = 0;
-
         while ((rcount = (int) read(from_fd, buf, bufsize)) > 0) {
             for (bufp = buf, wresid = rcount; ;
                     bufp += wcount, wresid -= wcount) {
@@ -980,8 +953,6 @@ static int ftw_copy_file(const struct FTW *entp _U_,
                 if (wcount <= 0) {
                     break;
                 }
-
-                wtotal += wcount;
 
                 if (wcount >= (ssize_t)wresid) {
                     break;

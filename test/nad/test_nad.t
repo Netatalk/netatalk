@@ -11,6 +11,7 @@
 use strict;
 use warnings;
 
+use Digest::SHA qw(sha256_hex);
 use File::Path qw(make_path);
 use FindBin;
 use lib $FindBin::Bin;
@@ -296,6 +297,97 @@ sub file_contents { return $fixture->file_contents(@_); }
         'cp preserves resource fork length');
     is(substr($binary, $offset, length($resource)), $resource,
         'cp preserves resource fork bytes');
+}
+
+{
+    note('copy permissions under caller umasks');
+    my $source = "$volume/copy_modes_source";
+    make_path("$source/nested");
+    $fixture->write_file("$source/nested/child", "masked copy\n");
+    chmod(0777, $source, "$source/nested") == 2
+        or BAIL_OUT("Cannot chmod copy source directories: $!");
+    chmod 0666, "$source/nested/child"
+        or BAIL_OUT("Cannot chmod copy source file: $!");
+
+    for my $mask (0022, 0077) {
+        my $label = sprintf('%04o', $mask);
+        my $dest = "$volume/copy_modes_$label";
+        my $plain = "$volume/copy_plain_$label";
+        my $preserved = "$volume/copy_preserved_$label";
+        my $previous = umask $mask;
+        succeeds("cp -R succeeds with umask $label", 'cp', '-R', $source, $dest);
+        succeeds("cp succeeds with umask $label",
+            'cp', "$source/nested/child", $plain);
+        succeeds("cp -p succeeds with umask $label",
+            'cp', '-p', "$source/nested/child", $preserved);
+        umask $previous;
+
+        for my $dir ($dest, "$dest/nested") {
+            is((stat($dir))[2] & 0777, 0777 & ~$mask,
+                "cp -R respects umask $label on $dir");
+        }
+        for my $file ("$dest/nested/child", $plain) {
+            is((stat($file))[2] & 0777, 0666 & ~$mask,
+                "cp respects umask $label on $file");
+            is(file_contents($file), "masked copy\n",
+                "copy under umask $label retains file contents");
+        }
+        is((stat($preserved))[2] & 0777, 0666,
+            "cp -p preserves source mode despite umask $label");
+    }
+}
+
+{
+    note('recursive copy root initialization');
+    my $roots = "$volume/copy_roots";
+    make_path("$roots/long/path/first/nested", "$roots/second/nested",
+        "$volume/copy_existing_roots");
+    $fixture->write_file("$roots/long/path/first/nested/first_leaf", "first root\n");
+    $fixture->write_file("$roots/second/nested/second_leaf", "second root\n");
+
+    $fixture->succeeds_at('cp -R copies relative roots at different path depths',
+        $volume, 'cp', '-R', 'copy_roots/long/path/first', 'copy_roots/second',
+        'copy_existing_roots');
+    $fixture->succeeds_at('cp -R copies a relative root to a new directory',
+        $volume, 'cp', '-R', 'copy_roots/long/path/first', 'copy_new_root');
+
+    my @copies = (
+        ['copy_existing_roots/first/nested/first_leaf', "first root\n"],
+        ['copy_existing_roots/second/nested/second_leaf', "second root\n"],
+        ['copy_new_root/nested/first_leaf', "first root\n"],
+    );
+    for my $copy (@copies) {
+        is(file_contents("$volume/$copy->[0]"), $copy->[1],
+            "recursive copy constructs $copy->[0]");
+    }
+    ok(!-e "$volume/copy_new_root/first",
+        'new destination omits the source root basename');
+    for my $name ('first_leaf', 'second_leaf') {
+        my $found = succeeds("find locates recursive copies of $name",
+            'find', '-v', $volume, $name);
+        for my $copy (grep { $_->[0] =~ m{/$name\z} } @copies) {
+            my $path = "$volume/$copy->[0]";
+            like($found->{out}, qr/^\Q$path\E$/m,
+                "recursive copy registers $copy->[0] in CNID");
+        }
+    }
+}
+
+{
+    note('copy data at the mmap size boundary');
+    my $pattern = pack('C*', 0 .. 255);
+    for my $size (0, 8 * 1024 * 1024, 8 * 1024 * 1024 + 137) {
+        my $source = "$volume/copy_bytes_source_$size";
+        my $dest = "$volume/copy_bytes_dest_$size";
+        my $payload = substr($pattern x int(($size + 255) / 256), 0, $size);
+        $fixture->write_file($source, $payload);
+        succeeds("cp copies a $size-byte file", 'cp', $source, $dest);
+        ok(-f $dest, "$size-byte copy creates a regular file");
+        my $copied = file_contents($dest) // '';
+        is(length($copied), $size, "$size-byte copy retains the complete length");
+        is(sha256_hex($copied), sha256_hex($payload),
+            "$size-byte copy retains every data byte");
+    }
 }
 
 {
