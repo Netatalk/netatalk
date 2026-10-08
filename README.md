@@ -18,22 +18,21 @@ Supply Chain Security:
 
 Netatalk is a Free and Open Source file server suite for Unix-like operating systems that implements
 the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) over TCP/IP and AppleTalk.
-AFP is the native file sharing protocol on Apple II, Classic Mac OS, early Mac OS X,
-as well as one of several natively supported protocols on macOS.
-Netatalk is also compatible with many 3rd party AFP clients, including [GNOME Files (Nautilus)](https://apps.gnome.org/Nautilus/),
-[afpfs-ng](https://github.com/Netatalk/afpfs-ng) and [afp-perl](https://github.com/demonfoo/afp-perl).
+AFP is the native file sharing protocol on Apple II and Mac OS / Mac OS X / macOS up until macOS 26 Tahoe.
+On other Unix-like systems you can use the cross-platform [Netatalk Client](https://github.com/Netatalk/netatalk-client)
+to connect to a Netatalk file server.
 
 ## Why Should I Use Netatalk?
 
 A Netatalk AFP file server is highly performant, feature rich, and interoperable with AFP clients by Apple and 3rd parties.
-While the technology originated with the Apple ecosystem, it can serve as a general purpose file sharing solution
-for any Unix-like environment.
+While the technology originated with the Apple ecosystem, it can serve as a powerful file sharing solution
+in any Unix-like environment.
 
 A Netatalk AFP server allows you to share, collaborate on, and back up files remotely.
-The latest macOS at the time of writing (macOS 26 Tahoe) comes with a built-in AFP client,
-so Netatalk can act as a seamless bridge between new and old Macs, and 3rd party AFP clients.
+All versions of Mac OS up until macOS 26 Tahoe comes with a built-in AFP client,
+so Netatalk can act as a seamless bridge between new and old Macs.
 
-Compared to common file transfer protocols like NFS and FTP, Netatalk delivers a Mac-like user experience,
+Compared to other file transfer protocols like NFS and FTP, Netatalk delivers a Mac-like user experience,
 with seamless integration of Mac filesystem metadata, such as the resource forks that were common before Mac OS X.
 Modern macOS features such as Zeroconf (Bonjour) service discovery, Time Machine backups,
 and Spotlight (Finder search) are also supported.
@@ -63,7 +62,7 @@ Additionally, each Netatalk program and configuration file also has a man page
 which can be accessed on the command line, f.e. `man afpd`.
 
 The living [Netatalk knowledge base](https://netatalk.io/docs) containts getting started guides, troubleshooting guides,
-FAQs and other helpful technical documentation..
+FAQs and other helpful technical documentation.
 
 ## Community
 
@@ -89,7 +88,7 @@ the [Installation Quick Start](https://netatalk.io/install) is a good starting p
 
 ## Container deployments
 
-Netatalk is distributed as a container image
+Netatalk is distributed as a container image on [Docker Hub](https://hub.docker.com/repository/docker/netatalk/netatalk)
 and can be deployed with containerization engines such as Docker or Podman.
 
 Read the [container readme](https://netatalk.io/docker) for more information.
@@ -110,8 +109,7 @@ Bug reports and feature requests should be filed as [GitHub issue tickets](https
 Before contributing code to the project, please read the [Contributing guidelines](https://netatalk.io/contributing)
 for the coding and collaboration conventions used by this project.
 
-PRs are automatically picked up by GitHub CI, which runs the builds, integration tests,
-as well as static analysis scan on SonarCloud (the latter only for PRs created by project members.)
+We're looking forward to your contribution!
 
 ## Security
 
