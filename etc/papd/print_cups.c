@@ -713,7 +713,7 @@ cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
 
 /*!
  * @brief Mangles the printer name if two CUPS printer provide the same Chooser Name
- * @note Append '#nn' to the chooser name, if it is longer than 28 char we overwrite the last three chars
+ * @note Append `#nn` to the chooser name, if it is longer than 28 char we overwrite the last three chars
  * @returns 0 on Success, 2 on Error
  */
 
