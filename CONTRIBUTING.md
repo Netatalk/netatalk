@@ -245,6 +245,7 @@ Ex.
 ```
 
 - Code documentation
+  - Building developer documentation requires Doxygen 1.17.0 or later for native Mermaid diagram support
   - We use a Doxygen based documentation system for code documentation, with:
     - *QDoc* style `/*! ... */` markers
     - Use `/*!< ... */` to for trailing comments

@@ -268,6 +268,12 @@ endif
 
 if 'developer' in docs_options
     if doxygen.found()
+        doxygen_version = run_command(doxygen, '--version', check: true).stdout().strip()
+        if not doxygen_version.version_compare('>=1.17.0')
+            error(
+                'doxygen >=1.17.0 is required to build developer documentation',
+            )
+        endif
         build_dev_docs = true
     else
         warning('doxygen is required to build developer documentation')

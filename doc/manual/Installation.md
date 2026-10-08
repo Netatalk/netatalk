@@ -124,6 +124,13 @@ functionality.
     The CrackLib dictionary, which is sometimes distributed separately in
     a runtime package, is also a requirement both at compile and run time.
 
+- Doxygen
+
+    Doxygen is a code documentation generator that we use to generate
+    the developer documentation from source code comments and Markdown
+    pages. Version 1.17.0 or later is required because we embed Mermaid
+    diagrams in the documentation.
+
 - iconv
 
     iconv provides conversion routines for many character encodings.
