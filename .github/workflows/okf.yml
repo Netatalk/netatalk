@@ -1,0 +1,155 @@
+name: OKF Knowledge Bundle
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'bin/**'
+      - 'etc/**'
+      - 'include/**'
+      - 'libatalk/**'
+      - 'sys/**'
+      - 'doc/Doxyfile.in'
+      - 'doc/developer/okf-knowledge-graph.md'
+      - '.github/scripts/okf_from_doxygen.pl'
+      - '.github/workflows/okf.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'doc/Doxyfile.in'
+      - 'doc/developer/okf-knowledge-graph.md'
+      - '.github/scripts/okf_from_doxygen.pl'
+      - '.github/workflows/okf.yml'
+  workflow_dispatch:
+
+# The bundle job only reads the tree; the publish job raises its own permission.
+permissions:
+  contents: read
+
+# Pull request runs are grouped per PR and cancel their own predecessor. Publish
+# runs share one group and queue instead, so a publish that has started is never
+# cancelled by a later merge or by a pull request run.
+concurrency:
+  group: okf-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'gh-pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  bundle:
+    name: OKF bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Doxygen and XML::LibXML
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends doxygen libxml-libxml-perl
+      - name: Fetch the published bundle
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          # Read-only clone of the public branch: unchanged concepts keep the
+          # generated timestamp of the published copy.
+          git clone --depth 1 --branch gh-pages "https://github.com/${GITHUB_REPOSITORY}.git" gh-pages
+      - name: Generate bundle
+        run: |
+          previous=()
+          if [ -d gh-pages/okf ]; then
+            previous=(--previous gh-pages/okf)
+          fi
+          perl .github/scripts/okf_from_doxygen.pl \
+            --source . \
+            --out out/okf \
+            --commit "${GITHUB_SHA}" \
+            --commit-date "$(git show -s --format=%cI HEAD)" \
+            "${previous[@]}"
+      - name: Upload bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: okf-bundle
+          path: out/okf
+
+  publish:
+    name: Publish to gh-pages
+    needs: bundle
+    # Only a bundle built from main is published, so a manual run on another
+    # branch stops after the artifact.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Pushes the bundle to the gh-pages branch. The job checks out nothing and
+    # runs no code from the tree, only git and cp over the downloaded artifact.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: okf-bundle
+          path: out/okf
+      - name: Publish bundle to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # The dashboard jobs push gh-pages from pull_request runs and may land
+          # between the clone and this push. The bundle depends only on the
+          # main checkout and its paths are disjoint from theirs, so a rejected
+          # push is retried by resetting to the fresh remote head and copying
+          # the same bundle again.
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          commit_date() {
+            sed -n 's/^\* Commit: .*, committed //p' "$1" 2>/dev/null || true
+          }
+          # Returns 0 with a commit to push, 1 when the bundle is unchanged, 2 when
+          # the branch already holds the bundle of a newer commit: a re-run of an
+          # older main run keeps its original GITHUB_SHA and must not replace it.
+          publish() {
+            published=$(commit_date okf/build.md)
+            built=$(commit_date ../out/okf/build.md)
+            if [ -n "$published" ] && [ -n "$built" ] &&
+               [ "$(date -d "$built" +%s)" -lt "$(date -d "$published" +%s)" ]; then
+              echo "gh-pages holds the bundle of a newer commit (${published}); keeping it"
+              return 2
+            fi
+            rm -rf okf
+            cp -R ../out/okf okf
+            git add -A okf
+            if git diff --cached --quiet; then
+              echo "No bundle change to commit"
+              return 1
+            fi
+            git commit -m "okf: knowledge bundle for ${GITHUB_SHA::12}"
+          }
+          if ! publish; then
+            exit 0
+          fi
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin gh-pages; then
+              pushed=1
+              break
+            fi
+            echo "gh-pages push rejected (attempt ${attempt}); regenerating on fresh head..."
+            sleep $((attempt * 3))
+            if ! git fetch origin gh-pages; then
+              echo "fetch failed (attempt ${attempt}); retrying push..."
+              continue
+            fi
+            git reset --hard origin/gh-pages
+            if ! publish; then
+              pushed=1
+              break
+            fi
+          done
+          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
