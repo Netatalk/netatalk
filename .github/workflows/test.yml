@@ -46,8 +46,8 @@ jobs:
       - name: Build astyle from source
         run: |
           curl --proto '=https' --location --fail -o /tmp/astyle.tar.gz \
-            https://gitlab.com/saalen/astyle/-/archive/3.6.18/astyle-3.6.18.tar.gz
-          echo '3cf671a726e9b14e75fd9ad862dc6b5500f948a12700bc842e9bd4bc3a9a9915  /tmp/astyle.tar.gz' \
+            https://gitlab.com/saalen/astyle/-/archive/3.6.19/astyle-3.6.19.tar.gz
+          echo '7bb1fa11ce24fb94db139bb49e73fd05604b28cd7fb75c0dcbf6661e52d3e43e  /tmp/astyle.tar.gz' \
             | sha256sum -c -
           mkdir -p /tmp/astyle
           tar -xzf /tmp/astyle.tar.gz -C /tmp/astyle --strip-components=1
