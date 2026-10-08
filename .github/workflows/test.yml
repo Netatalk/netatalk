@@ -104,7 +104,7 @@ jobs:
     name: Build Doxygen Docs
     runs-on: ubuntu-latest
     container:
-      image: alpine:3.23.2
+      image: alpine:3.24
     timeout-minutes: 12
     steps:
       - name: Install dependencies

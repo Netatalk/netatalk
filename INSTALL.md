@@ -67,6 +67,7 @@ required at the bare minimum.
 | avahi **OR** mDNSresponder | Zeroconf support |
 | cmark **OR** cmark-gfm **OR** pandoc | generating documentation |
 | cracklib and cracklib dictionary | password strength check in afppasswd |
+| Doxygen                    | v1.17.0 or later; generating developer documentation |
 | Kerberos V                 | krbV UAM support |
 | libacl                     | ACL support |
 | libldap                    | LDAP support |

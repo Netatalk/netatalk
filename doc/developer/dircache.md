@@ -44,9 +44,9 @@ graph TB
     FS --> ARC
     ARC --> DISK
     
-    style PC fill:\#ffcccc
-    style DC fill:\#ccffcc
-    style ARC fill:\#ffcccc
+    style PC fill:#ffcccc
+    style DC fill:#ccffcc
+    style ARC fill:#ffcccc
 ```
 
 Each cache layer uses an **LRU (Least Recently Used)** algorithm to decide what to keep in memory
@@ -233,9 +233,9 @@ flowchart TD
     Add_Cache --> Return[Return to client]
     Use_Cached --> Return
     
-    style DC_Check fill:\#e6f3ff
-    style CNID_Query fill:\#ffe6e6
-    style FS_Check fill:\#ffffe6
+    style DC_Check fill:#e6f3ff
+    style CNID_Query fill:#ffe6e6
+    style FS_Check fill:#ffffe6
 ```
 
 ### The Precedence Hierarchy
