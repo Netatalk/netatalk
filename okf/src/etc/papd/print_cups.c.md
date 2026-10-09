@@ -5,7 +5,7 @@ description: "12 functions, includes 8 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/print_cups.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:52:52+11:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -132,7 +132,7 @@ Defined at lines 720 to 754.
 
 Mangles the printer name if two CUPS printer provide the same Chooser Name.
 
-Note: Append '[nn](../../bin/pap/pap.c.md)' to the chooser name, if it is longer than 28 char we overwrite the last three chars
+Note: Append `#nn` to the chooser name, if it is longer than 28 char we overwrite the last three chars
 
 Returns: 0 on Success, 2 on Error
 
