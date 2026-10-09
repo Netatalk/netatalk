@@ -26,6 +26,8 @@ DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address,
     dsi->attn_quantum = DSI_DEFQUANT;
     dsi->server_quantum = obj->options.server_quantum;
     dsi->dsireadbuf = obj->options.dsireadbuf;
+    dsi->splice_pipe[0] = dsi->splice_pipe[1] = -1;
+    dsi->splice_size = obj->options.splice_size;
 
     /* currently the only transport protocol that exists for dsi */
     if (dsi_tcp_init(dsi, hostname, address, port) != 0) {

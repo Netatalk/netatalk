@@ -499,7 +499,7 @@ print &ui_table_row(
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'splice size', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_splice_size'},
-                    "<input name='p_splice size' type='number' value='"
+                    "<input name='p_splice size' type='number' min='4096' max='8388608' value='"
                     . $values[0] . "'>" . " "
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );

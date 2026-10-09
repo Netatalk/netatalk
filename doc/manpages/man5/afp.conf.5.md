@@ -474,11 +474,20 @@ sending file data to clients.
 
 recvfile = *BOOLEAN* (default: *no*) **(G)**
 
-> Whether to use splice() on Linux for receiving data.
+> Whether to use splice() on Linux for receiving data. On a platform without
+splice() the option is ignored with a warning.
 
-splice size = *number* (default: *64k*) **(G)**
+splice size = *number* (default: *1048576*) **(G)**
 
-> Maximum number of bytes spliced.
+> Maximum number of bytes one splice() call moves when **recvfile** is
+enabled. The range is 4096 to 8388608 (8 MiB), and values outside it fall
+back to the default. A value that is not a power of two is rounded up to the
+next one. The kernel may grant a smaller pipe: `fs.pipe-max-size` limits it
+to 1 MiB by default.
+>
+> ***NOTE:*** Each afpd child process keeps one pipe of this size, and all of
+them count against the kernel's pipe limit for the user afpd runs as
+(`fs.pipe-user-pages-soft`).
 
 ## CNID Database Backend Options
 

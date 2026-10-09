@@ -548,7 +548,6 @@ check_functions = [
     'pwrite',
     'rresvport',
     'sigaltstack',
-    'splice',
     'strlcat',
     'strlcpy',
     'strnlen',
@@ -2049,9 +2048,10 @@ endif
 # Check for recvfile
 #
 
-if host_os == 'linux' and cc.has_function('splice')
+have_recvfile = host_os == 'linux' and cc.has_function('splice')
+
+if have_recvfile
     cdata.set('WITH_RECVFILE', 1)
-    cdata.set('HAVE_SPLICE', 1)
 endif
 
 #
@@ -2594,6 +2594,7 @@ if have_quota
     }
 endif
 summary_info += {
+    '  Recvfile splice': have_recvfile,
     '  Sendfile syscall': have_sendfile,
     '  Spotlight search': have_spotlight,
 }

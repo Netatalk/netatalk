@@ -1051,18 +1051,16 @@ reread:
         EC_FAIL;
     }
 
-    if (ad_getentryoff(&adosx, ADEID_RFORK) == 0
-            || ad_getentryoff(&adosx, ADEID_RFORK) > sizeof(ad->ad_data)
-            || ad_getentryoff(&adosx, ADEID_RFORK) > header_len
-       ) {
+    /* the offset ad_read(), ad_write() and the rebuilt header use */
+    if (ad_getentryoff(&adosx, ADEID_RFORK) != ADEDOFF_RFORK_OSX) {
         LOG(log_error, logtype_ad,
             "ad_header_read_osx: problem with rfork entry offset.");
         errno = EIO;
         return -1;
     }
 
-    ad_setentryoff(ad, ADEID_RFORK, ad_getentryoff(&adosx, ADEID_RFORK));
-    ad->ad_rlen = hst->st_size - ad_getentryoff(ad, ADEID_RFORK);
+    ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
+    ad->ad_rlen = hst->st_size - ADEDOFF_RFORK_OSX;
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -2273,6 +2271,25 @@ off_t ad_getentryoff(const struct adouble *ad, int eid)
 
     /* deadc0de */
     AFP_PANIC("What am I doing here?");
+}
+
+/*!
+ * @brief The descriptor that holds fork eid
+ *
+ * @param[in]     ad   adouble holding the fork
+ * @param[in]     eid  ADEID_DFORK or ADEID_RFORK
+ * @param[in,out] off  fork offset, returned as the offset in that descriptor
+ *
+ * @returns the data fork or resource fork descriptor
+ */
+int ad_fork_fileno(const struct adouble *ad, int eid, off_t *off)
+{
+    if (eid == ADEID_DFORK) {
+        return ad_data_fileno(ad);
+    }
+
+    *off += ad_getentryoff(ad, eid);
+    return ad_reso_fileno(ad);
 }
 
 const char *ad_path_ea(const char *path, int adflags _U_)

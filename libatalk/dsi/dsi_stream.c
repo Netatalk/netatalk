@@ -291,6 +291,7 @@ int dsi_disconnect(DSI *dsi)
 {
     LOG(log_note, logtype_dsi, "dsi_disconnect: entering disconnected state");
     dsi->proto_close(dsi);          /* 1 */
+    dsi_close_pipe(dsi);
     dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP); /* 2 */
     dsi->flags |= DSI_DISCONNECTED;
 

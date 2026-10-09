@@ -464,6 +464,7 @@ int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     } else {
         /* sleep request */
         dsi->flags |= DSI_SLEEPING;
+        dsi_close_pipe(dsi);
 
         if (data & AFPZZZ_EXT_SLEEP) {
             LOG(log_note, logtype_afpd, "afp_zzzzz: entering extended sleep");

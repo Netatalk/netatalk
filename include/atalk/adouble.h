@@ -185,6 +185,7 @@ struct ad_fd {
 #define AD_INITED  0xad494e54  /*!< ad"INT" */
 #define AD_CLOSED  0xadc10ced
 
+struct DSI;
 struct adouble;
 
 struct adouble_fops {
@@ -225,6 +226,7 @@ struct adouble {
     char *ad_name; /*!< mac name (maccharset or UTF8-MAC) */
     struct adouble_fops *ad_ops;
     uint16_t ad_open_forks; /*!< open forks (by others) */
+    bool ad_nosplice; /*!< the fork's file cannot take splice() */
     size_t valid_data_len; /*!< Bytes read into ad_data */
     char ad_data[AD_DATASZ_MAX];
 };
@@ -470,6 +472,7 @@ extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off,
 extern void *ad_entry(const struct adouble *ad, int eid);
 extern bool ad_entry_fits(const struct adouble *ad, int eid, uint32_t len);
 extern off_t ad_getentryoff(const struct adouble *ad, int eid);
+extern int ad_fork_fileno(const struct adouble *ad, int eid, off_t *off);
 extern const char *adflags2logstr(int adflags);
 extern int ad_setfuid(const uid_t);
 extern uid_t ad_getfuid(void);
@@ -531,13 +534,9 @@ extern int       ad_setid(struct adouble *, dev_t dev, ino_t ino, uint32_t,
 extern uint32_t  ad_getid(struct adouble *, dev_t, ino_t, cnid_t, const void *);
 extern uint32_t  ad_forcegetid(struct adouble *adp);
 
-#ifdef WITH_SENDFILE
-extern int ad_readfile_init(const struct adouble *ad, int eid, off_t *off,
-                            int end);
-#endif
 #ifdef WITH_RECVFILE
-extern ssize_t ad_recvfile(struct adouble *ad, int eid,  int sock, off_t off,
-                           size_t len, int);
+extern ssize_t ad_recvfile(struct adouble *ad, int eid, struct DSI *dsi,
+                           off_t *off);
 #endif
 
 #endif /* _ATALK_ADOUBLE_H */

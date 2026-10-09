@@ -83,24 +83,4 @@ ssize_t sys_sendfile(int out_fd, int in_fd, off_t *_offset, size_t count)
 }
 #endif
 
-/* ------------------------------- */
-int ad_readfile_init(const struct adouble *ad,
-                     const int eid, off_t *off,
-                     const int end)
-{
-    int fd;
-
-    if (end) {
-        *off = ad_size(ad, eid) - *off;
-    }
-
-    if (eid == ADEID_DFORK) {
-        fd = ad_data_fileno(ad);
-    } else {
-        *off += ad_getentryoff(ad, eid);
-        fd = ad_reso_fileno(ad);
-    }
-
-    return fd;
-}
 #endif

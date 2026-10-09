@@ -289,9 +289,6 @@
 /* Whether Solaris ACLs are available */
 #mesondefine HAVE_SOLARIS_ACLS
 
-/* Define to 1 if you have the `splice' function. */
-#mesondefine HAVE_SPLICE
-
 /* Define to 1 if you have the `strlcat' function. */
 #mesondefine HAVE_STRLCAT
 

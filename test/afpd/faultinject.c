@@ -23,7 +23,7 @@
  *    the operation under test and disarms it right after.
  *
  *  - Built as libfaultinject.so (-DFAULTINJECT_PRELOAD) and loaded via
- *    LD_PRELOAD: interposes open/close/fcntl/fchdir/dirfd at dynamic-symbol
+ *    LD_PRELOAD: interposes the libc calls defined below at dynamic-symbol
  *    resolution, so calls made INSIDE libatalk.so (ad_open/ad_close/ad_lock/…)
  *    are intercepted — which a link-time --wrap on the executable cannot reach,
  *    because libatalk is a shared library.  The interposer references the `fi`
@@ -105,6 +105,7 @@ int faultinject_open_works(const char *scratch_path)
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -253,41 +254,16 @@ int close(int fd)
     return real_close(fd);
 }
 
-/* fcntl()'s third argument is command-dependent: absent (F_GETFD/F_GETFL), an
- * int (F_SETFD/F_SETFL/F_DUPFD), or a pointer (F_SETLK/F_GETLK).  The vararg
- * MUST be read and forwarded with the type the caller passed: reading an int
- * arg as void* (or vice versa) is undefined behaviour, and on LP64 reads a
- * 64-bit slot for a 32-bit value.  Since interposition is global we forward
- * every fcntl() correctly, dispatching on the command's arg class -- not just
- * the lock commands we arm. */
+/* fcntl()'s third argument is absent, an int or a pointer by command; it is
+ * read and forwarded as one pointer-sized slot, as libc's own fcntl() reads
+ * it, so every command keeps its argument. */
 int fcntl(int fd, int cmd, ...)
 {
-    int int_arg = 0;
-    void *ptr_arg = NULL;
-    /* Commands taking a pointer third arg (struct flock *). */
-    int has_ptr = (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK
-#ifdef F_OFD_SETLK
-                   || cmd == F_OFD_SETLK || cmd == F_OFD_SETLKW
-                   || cmd == F_OFD_GETLK
-#endif
-                  );
-    /* Commands taking an int third arg. */
-    int has_int = (cmd == F_SETFD || cmd == F_SETFL || cmd == F_DUPFD
-#ifdef F_DUPFD_CLOEXEC
-                   || cmd == F_DUPFD_CLOEXEC
-#endif
-                  );
     va_list ap;
-
-    if (has_ptr) {
-        va_start(ap, cmd);
-        ptr_arg = va_arg(ap, void *);
-        va_end(ap);
-    } else if (has_int) {
-        va_start(ap, cmd);
-        int_arg = va_arg(ap, int);
-        va_end(ap);
-    }
+    void *arg;
+    va_start(ap, cmd);
+    arg = va_arg(ap, void *);
+    va_end(ap);
 
     if (!real_fcntl) {
         real_fcntl = (fcntl_fn)dlsym(RTLD_NEXT, "fcntl");
@@ -296,9 +272,9 @@ int fcntl(int fd, int cmd, ...)
     /* Record lock-fcntl calls so a test can assert HOW a probe locked (count,
      * range, type) — e.g. that a range probe never issues l_len == 0 (which would
      * sweep the share-mode band).  Only while watching, to stay inert otherwise. */
-    if (fi.fcntl_watch && has_ptr && ptr_arg != NULL
+    if (fi.fcntl_watch && arg != NULL
             && (cmd == F_GETLK || cmd == F_SETLK || cmd == F_SETLKW)) {
-        const struct flock *flk = ptr_arg;
+        const struct flock *flk = arg;
 
         if (cmd == F_GETLK) {
             fi.getlk_calls++;
@@ -315,15 +291,17 @@ int fcntl(int fd, int cmd, ...)
         return -1;
     }
 
-    if (has_ptr) {
-        return real_fcntl(fd, cmd, ptr_arg);
+#ifdef F_SETPIPE_SZ
+
+    /* the kernel's refusal above fs.pipe-max-size */
+    if (cmd == F_SETPIPE_SZ && fi.pipe_size_limit > 0
+            && (int)(intptr_t)arg > fi.pipe_size_limit) {
+        errno = EPERM;
+        return -1;
     }
 
-    if (has_int) {
-        return real_fcntl(fd, cmd, int_arg);
-    }
-
-    return real_fcntl(fd, cmd);
+#endif
+    return real_fcntl(fd, cmd, arg);
 }
 
 int fchdir(int fd)
@@ -366,5 +344,38 @@ int dirfd(DIR *dirp)
     return fd;
 }
 #endif
+
+#ifdef __linux__
+typedef ssize_t (*splice_fn)(int, loff_t *, int, loff_t *, size_t,
+                             unsigned int);
+static splice_fn real_splice;
+
+/*!
+ * @brief splice() interposer: fails armed calls
+ */
+ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out,
+               size_t len, unsigned int flags)
+{
+    if (!real_splice) {
+        real_splice = (splice_fn)dlsym(RTLD_NEXT, "splice");
+    }
+
+    if (off_out != NULL) {
+        if (fault_should_fire(fi.splice_file_armed, &fi.splice_file_fail_after,
+                              fi.splice_file_errno)) {
+            return -1;
+        }
+
+        return real_splice(fd_in, off_in, fd_out, off_out, len, flags);
+    }
+
+    if (fault_should_fire(fi.splice_sock_armed, &fi.splice_sock_fail_after,
+                          fi.splice_sock_errno)) {
+        return -1;
+    }
+
+    return real_splice(fd_in, off_in, fd_out, off_out, len, flags);
+}
+#endif /* __linux__ */
 
 #endif /* FAULTINJECT_PRELOAD */

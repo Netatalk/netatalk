@@ -26,6 +26,7 @@
 
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
+#include <atalk/dsi.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/queue.h>
@@ -51,5 +52,14 @@ extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int enumerate(AFPObj *obj, uint16_t vid, cnid_t did);
 extern uint16_t openvol(AFPObj *obj, const char *name);
+extern void dsi_test_header(uint8_t *block, uint8_t command,
+                            uint16_t request_id, uint32_t code_or_doff,
+                            uint32_t len);
+extern int dsi_test_open(DSI *dsi, uint32_t quantum, int *peer);
+extern void dsi_test_cleanup(DSI *dsi);
+extern int dsi_test_connect_tcp(DSI *dsi, int *peer);
+extern int openfork(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                    uint8_t fork, uint16_t access, uint16_t *refnum);
+extern int closefork(AFPObj *obj, uint16_t refnum);
 
 #endif  /* AFPFUNC_HELPERS */

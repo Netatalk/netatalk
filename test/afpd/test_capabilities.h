@@ -20,6 +20,7 @@
 enum test_capability {
     TEST_CAP_FAULT_INJECT,   /* LD_PRELOAD libc interposition reaches libatalk */
     TEST_CAP_EA_SYS,         /* the test filesystem supports user xattrs (ea=sys) */
+    TEST_CAP_SOCKET_SPLICE,  /* splice() from an AF_UNIX socket into a pipe */
 };
 
 int test_capability(enum test_capability cap, const struct vol *vol);

@@ -61,6 +61,7 @@
 #include "subtests_conf.h"
 #include "subtests_lock.h"
 #include "subtests_pfd.h"
+#include "subtests_recvfile.h"
 #include "subtests_veto.h"
 #ifndef NO_DDP
 #include "subtests_atp.h"
@@ -448,83 +449,38 @@ cleanup:
 }
 #endif
 
-static void dsi_test_header(uint8_t *block, uint8_t command,
-                            uint16_t request_id,
-                            uint32_t code_or_doff, uint32_t len)
-{
-    uint16_t request_id_be;
-    uint32_t code_or_doff_be;
-    uint32_t len_be;
-    uint32_t reserved_be;
-    memset(block, 0, DSI_BLOCKSIZ);
-    block[0] = DSIFL_REQUEST;
-    block[1] = command;
-    request_id_be = htons(request_id);
-    code_or_doff_be = htonl(code_or_doff);
-    len_be = htonl(len);
-    reserved_be = 0;
-    memcpy(block + 2, &request_id_be, sizeof(request_id_be));
-    memcpy(block + 4, &code_or_doff_be, sizeof(code_or_doff_be));
-    memcpy(block + 8, &len_be, sizeof(len_be));
-    memcpy(block + 12, &reserved_be, sizeof(reserved_be));
-}
-
+/*! @brief Receive one request with this header and payload on a new session */
 static int dsi_test_receive(uint8_t command, uint32_t code_or_doff,
                             uint32_t len, const uint8_t *payload,
                             size_t payload_len, uint32_t quantum, DSI *dsi)
 {
     uint8_t block[DSI_BLOCKSIZ];
-    int fds[2];
+    int peer;
     ssize_t written;
-    memset(dsi, 0, sizeof(*dsi));
-    dsi->socket = -1;
 
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
+    if (dsi_test_open(dsi, quantum, &peer) != 0) {
         return -1;
     }
 
-    dsi->socket = fds[1];
-    dsi->server_quantum = quantum;
-    dsi->commands = calloc(1, quantum);
-    dsi->buffer = calloc(1, quantum);
-
-    if (dsi->commands == NULL || dsi->buffer == NULL) {
-        close(fds[0]);
-        return -1;
-    }
-
-    dsi->start = dsi->buffer;
-    dsi->eof = dsi->buffer;
-    dsi->end = dsi->buffer + quantum;
     dsi_test_header(block, command, 0x1234, code_or_doff, len);
-    written = write(fds[0], block, sizeof(block));
+    written = write(peer, block, sizeof(block));
 
     if (written != sizeof(block)) {
-        close(fds[0]);
+        close(peer);
         return -1;
     }
 
     if (payload_len > 0) {
-        written = write(fds[0], payload, payload_len);
+        written = write(peer, payload, payload_len);
 
         if (written != (ssize_t)payload_len) {
-            close(fds[0]);
+            close(peer);
             return -1;
         }
     }
 
-    close(fds[0]);
+    close(peer);
     return dsi_stream_receive(dsi);
-}
-
-static void dsi_test_cleanup(DSI *dsi)
-{
-    if (dsi->socket != -1) {
-        close(dsi->socket);
-    }
-
-    free(dsi->commands);
-    free(dsi->buffer);
 }
 
 /* dsi_len = quantum + doff is spec-legal: the quantum bounds write data,
@@ -975,6 +931,8 @@ int main(int argc, char *argv[])
                      "stock config gets the single-accessor posture (freq 100)");
     TEST_int_or_skip(utest_conf_dircache_validation_freq_range(), 0,
                      "dircache validation freq is bounded at parse, unusable values not explicit");
+    TEST_int_or_skip(utest_conf_splice_size_bounds(), 0,
+                     "splice size: 4096 to 8 MiB, power of two, 1 MiB default");
     TEST_int_or_skip(utest_conf_multiproto_reverts_unusable_freq(), 0,
                      "multi protocol still defaults an unusable explicit freq to 1");
     TEST_int_or_skip(utest_conf_ea_samba_no_defaults(), 0,
@@ -1233,6 +1191,44 @@ int main(int argc, char *argv[])
              "of_alloc: refnum==slot, never 0, of_find round-trip, FIFO reuse window");
     TEST_int(utest_of_breakdown(vol), 0,
              "of_breakdown: live forks counted by fork and access mode");
+    TEST_int_or_skip(utest_recvfile_write_lands_intact(&obj, vol), 0,
+                     "recvfile: a write lands intact, the next request parses");
+    TEST_int_or_skip(utest_recvfile_dfull_drains_request(&obj, vol), 0,
+                     "recvfile: a disk-full write drains its request");
+    TEST_int_or_skip(utest_recvfile_error_drains_request(&obj, vol), 0,
+                     "recvfile: a failed write drains its request");
+    TEST_int_or_skip(utest_recvfile_error_leaves_no_residue(&obj, vol), 0,
+                     "recvfile: a failed write leaves nothing for the next");
+    TEST_int_or_skip(utest_recvfile_peer_close_ends_write(&obj, vol), 0,
+                     "recvfile: a client closing mid-write ends the write");
+    TEST_int_or_skip(utest_write_fork_eof_fails_request(&obj, vol), 0,
+                     "write_fork: a payload cut by EOF fails the request");
+    TEST_int_or_skip(utest_recvfile_urgent_byte_finishes_write(&obj, vol), 0,
+                     "recvfile: a write past an urgent byte finishes in step");
+    TEST_int_or_skip(utest_recvfile_urgent_byte_at_eof(&obj, vol), 0,
+                     "recvfile: an urgent byte before EOF finishes the write");
+    TEST_int_or_skip(utest_recvfile_symlink_refused(&obj, vol), 0,
+                     "recvfile: a write to a symlink is refused and drained");
+    TEST_int_or_skip(utest_recvfile_rfork_length(&obj, vol), 0,
+                     "recvfile: a resource fork write extends its length");
+    TEST_int_or_skip(utest_recvfile_rfork_failure_keeps_length(&obj, vol), 0,
+                     "recvfile: a failed resource fork write keeps its length");
+    TEST_int_or_skip(utest_recvfile_high_fd_waits(&obj, vol), 0,
+                     "recvfile: a socket above FD_SETSIZE waits for its data");
+    TEST_int_or_skip(utest_recvfile_unsplicable_fs_falls_back(&obj, vol), 0,
+                     "recvfile: unsplicable files take the userspace path");
+    TEST_int_or_skip(utest_recvfile_bad_offset_keeps_splice(&obj, vol), 0,
+                     "recvfile: a refused offset leaves the file splicing");
+    TEST_int_or_skip(utest_recvfile_no_socket_splice_falls_back(&obj, vol), 0,
+                     "recvfile: a refused socket splice falls back");
+    TEST_int_or_skip(utest_recvfile_pipe_takes_splice_size(&obj, vol), 0,
+                     "recvfile: the pipe takes the size splice size asks for");
+    TEST_int_or_skip(utest_recvfile_pipe_never_shrinks(&obj, vol), 0,
+                     "recvfile: a small splice size leaves the pipe alone");
+    TEST_int_or_skip(utest_recvfile_pipe_steps_down(&obj, vol), 0,
+                     "recvfile: a refused pipe size is halved until granted");
+    TEST_int_or_skip(utest_write_fork_short_write_fails_request(&obj, vol), 0,
+                     "write_fork: a short fork write fails the request");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

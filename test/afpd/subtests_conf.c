@@ -1478,6 +1478,63 @@ cleanup:
     return failed;
 }
 
+/* utest_conf_splice_size_bounds: a value below 4096, above 8 MiB or
+ * unparsable warns and falls back to the default; a value in range is
+ * rounded up to a power of two */
+int utest_conf_splice_size_bounds(void)
+{
+    static const struct {
+        const char *body;
+        int size;
+        int warned;
+    } cases[] = {
+        {"", 1048576, 0},
+        {"splice size = 4096\n", 4096, 0},
+        {"splice size = 262144\n", 262144, 0},
+        {"splice size = 100000\n", 131072, 0},
+        {"splice size = 8388608\n", 8388608, 0},
+        {"splice size = 0\n", 1048576, 1},
+        {"splice size = 4095\n", 1048576, 1},
+        {"splice size = 8388609\n", 1048576, 1},
+        {"splice size = 64k\n", 1048576, 1},
+    };
+    AFPObj obj;
+    char logpath[64];
+    int failed = -1;
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        conf_log_truncate(logpath);
+
+        if (conf_parse_fixture(&obj, cases[i].body, logpath) != 0) {
+            goto cleanup;
+        }
+
+        int warned = conf_log_contains(logpath, "splice size value");
+
+        if (obj.options.splice_size != cases[i].size
+                || warned != cases[i].warned) {
+            fprintf(test_stream(),
+                    "# utest_conf_splice_size_bounds: case %zu: "
+                    "size %d/%d warned %d/%d\n", i,
+                    obj.options.splice_size, cases[i].size,
+                    warned, cases[i].warned);
+            conf_teardown(&obj, NULL);
+            goto cleanup;
+        }
+
+        conf_teardown(&obj, NULL);
+    }
+
+    failed = 0;
+cleanup:
+    unlink(logpath);
+    return failed;
+}
+
 /* utest_conf_multiproto_reverts_unusable_freq: an unusable explicit freq
  * is not an operator instruction, so multi protocol still defaults it to
  * 1 and logs the note rather than the weakens-coherency warning. */

@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include <atalk/ea.h>
@@ -47,6 +48,7 @@
 static int cap_cache[] = {
     [TEST_CAP_FAULT_INJECT] = -1,
     [TEST_CAP_EA_SYS]       = -1,
+    [TEST_CAP_SOCKET_SPLICE] = -1,
 };
 
 /*! @brief Short capability name for skip/log messages. */
@@ -58,6 +60,9 @@ const char *test_capability_name(enum test_capability cap)
 
     case TEST_CAP_EA_SYS:
         return "user extended attributes (ea=sys)";
+
+    case TEST_CAP_SOCKET_SPLICE:
+        return "splice() from an AF_UNIX stream socket";
 
     default:
         return "unknown";
@@ -125,6 +130,41 @@ static int probe_fault_inject(const struct vol *vol)
 }
 
 /*!
+ * @brief Can splice() read from an AF_UNIX stream socket (Linux 4.2 on)
+ *        into a pipe of the default splice size?
+ *
+ * A real uid past its pipe budget gets two-page pipes that cannot grow, and
+ * afpd declines every recvfile write.
+ */
+static int probe_socket_splice(void)
+{
+#ifdef WITH_RECVFILE
+    int s[2];
+    int p[2];
+    int ok = 0;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, s) != 0) {
+        return 0;
+    }
+
+    if (pipe(p) == 0) {
+        ok = fcntl(p[1], F_SETPIPE_SZ, DEFAULT_SPLICE_SIZE)
+             == DEFAULT_SPLICE_SIZE
+             && write(s[0], "x", 1) == 1
+             && splice(s[1], NULL, p[1], NULL, 1, SPLICE_F_NONBLOCK) == 1;
+        close(p[0]);
+        close(p[1]);
+    }
+
+    close(s[0]);
+    close(s[1]);
+    return ok;
+#else
+    return 0;
+#endif
+}
+
+/*!
  * @brief Probe a capability; the result is cached for the run.
  *
  * @param cap  the capability to probe
@@ -150,6 +190,10 @@ int test_capability(enum test_capability cap, const struct vol *vol)
 
     case TEST_CAP_EA_SYS:
         cap_cache[cap] = probe_ea_sys(vol);
+        break;
+
+    case TEST_CAP_SOCKET_SPLICE:
+        cap_cache[cap] = probe_socket_splice();
         break;
 
     default:
