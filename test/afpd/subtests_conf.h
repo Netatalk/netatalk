@@ -28,6 +28,7 @@ extern int utest_conf_multiproto_explicit_wins(void);
 extern int utest_conf_no_multiproto_regression(void);
 extern int utest_conf_stock_defaults(void);
 extern int utest_conf_dircache_validation_freq_range(void);
+extern int utest_conf_splice_size_bounds(void);
 extern int utest_conf_multiproto_reverts_unusable_freq(void);
 extern int utest_conf_ea_samba_no_defaults(void);
 extern int utest_conf_multiproto_ea_recommendation(void);

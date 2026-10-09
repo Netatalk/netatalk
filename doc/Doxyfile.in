@@ -2545,7 +2545,6 @@ PREDEFINED             = HAVE_ACLS=1 \
                          HAVE_MDNS=1 \
                          HAVE_NFSV4_ACLS=1 \
                          HAVE_POSIX_ACLS=1 \
-                         HAVE_SPLICE=1 \
                          HAVE_USABLE_ICONV=1 \
                          TCPWRAP=1 \
                          USE_CRACKLIB=1 \

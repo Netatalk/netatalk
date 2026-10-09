@@ -107,6 +107,7 @@ if build_tests
         'subtests_conf.c',
         'subtests_lock.c',
         'subtests_pfd.c',
+        'subtests_recvfile.c',
         'subtests_veto.c',
         afpd_test_extra_sources,
         include_directories: test_includes,
@@ -124,7 +125,7 @@ if build_tests
         install: false,
     )
 
-    # LD_PRELOAD interposer: replaces open/close/fcntl/fchdir at dynamic-link
+    # LD_PRELOAD interposer: replaces the libc calls it defines at dynamic-link
     # resolution, so calls made INSIDE libatalk.so (ad_open/ad_close/…) are
     # intercepted — which a link-time --wrap on afpdtest cannot reach.  Reads the
     # `fi` control block exported by afpdtest; forwards to the real libc symbol

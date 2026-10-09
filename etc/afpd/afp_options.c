@@ -156,6 +156,12 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
+    printf("           recvfile support:\t");
+#ifdef WITH_RECVFILE
+    puts("Yes");
+#else
+    puts("No");
+#endif
 }
 
 /*!

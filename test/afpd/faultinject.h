@@ -59,6 +59,14 @@ struct fault_inject {
     int dirfd_errno;
     int dirfd_calls;
     int dirfd_failed_fd;  /*!< descriptor from the injected call */
+    /* splice() with an output offset is file side, without one socket side */
+    int splice_sock_armed;
+    int splice_sock_fail_after;
+    int splice_sock_errno;
+    int splice_file_armed;
+    int splice_file_fail_after;
+    int splice_file_errno;
+    int pipe_size_limit;    /*!< F_SETPIPE_SZ above this fails with EPERM */
 };
 
 extern struct fault_inject fi;

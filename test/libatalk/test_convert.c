@@ -2,6 +2,7 @@
  * Regression tests for the OS X AppleDouble sidecar conversion bounds
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -959,6 +960,19 @@ int main(void)
     expect_declared_len_wins();
     /* 12. ad_refresh() reaches conversion without a pathname. */
     expect_null_path_refresh();
+    /* 13. A canonical 32-byte FinderInfo needs no conversion, and the
+     *     resource fork is recorded inside it, where no reader or writer
+     *     looks for it. */
+    {
+        const struct adent ents[] = {
+            { ADEID_RFORK,   ADEDOFF_FINDERI_OSX + 20, 100 },
+            { ADEID_FINDERI, ADEDOFF_FINDERI_OSX, ADEDLEN_FINDERI },
+        };
+        memset(tail8k, 'F', sizeof(tail8k));
+        expect_reject("reject rfork offset inside a canonical FinderInfo",
+                      REASON_ROFF_LOW, ents, 2, (char *)tail8k,
+                      ADEDLEN_FINDERI + 100);
+    }
     unlink(dfpath);
     unlink(scpath);
     unlink(bakpath);

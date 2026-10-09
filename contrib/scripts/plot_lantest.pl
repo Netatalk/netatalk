@@ -143,6 +143,9 @@ sub build_info_lines {
     push @lines, "AFP: $meta->{afp}"               if $meta->{afp};
     push @lines, "CNID: $meta->{cnid}"             if $meta->{cnid};
     push @lines, "Quantum: $meta->{quantum_kb} KB" if $meta->{quantum_kb};
+    push @lines,
+      "Recvfile: $meta->{recvfile}" . ($meta->{splice_kb} ? ", splice $meta->{splice_kb} KiB" : '')
+      if $meta->{recvfile};
     my @dc;
     push @dc, uc $meta->{dircache_mode}     if $meta->{dircache_mode};
     push @dc, "size $meta->{dircache_size}" if $meta->{dircache_size};

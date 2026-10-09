@@ -3336,6 +3336,23 @@ static int user_state_paths(AFPObj *obj, bool singleuser)
     return 0;
 }
 
+/*! @brief Round size up to a power of two, as the kernel sizes a pipe */
+static int splice_size_round(int size)
+{
+    int pow2 = SPLICE_SIZE_MIN;
+
+    while (pow2 < size) {
+        pow2 *= 2;
+    }
+
+    if (pow2 != size) {
+        LOG(log_note, logtype_afpd, "splice size %d rounded up to %d", size,
+            pow2);
+    }
+
+    return pow2;
+}
+
 #define MAXVAL 1024
 /*!
  * Initialize an AFPObj and options from ini config file
@@ -3404,7 +3421,12 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
     if (getoption_bool(config, INISEC_GLOBAL, "recvfile", NULL, 0)) {
+#ifdef WITH_RECVFILE
         options->flags |= OPTION_RECVFILE;
+#else
+        LOG(log_warning, logtype_afpd,
+            "recvfile: splice() is not available, ignoring it");
+#endif
     }
 
     if (getoption_bool(config, INISEC_GLOBAL, "solaris share reservations", NULL,
@@ -3707,8 +3729,11 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                             NULL, 10);
     options->disconnected   = getoption_int(config, INISEC_GLOBAL,
                                             "disconnect time", NULL, 24);
-    options->splice_size    = getoption_int(config, INISEC_GLOBAL, "splice size",
-                                            NULL, 64 * 1024);
+    options->splice_size =
+        safe_atoi(INIPARSER_GETSTR(config, INISEC_GLOBAL, "splice size", NULL),
+                  "splice size", SPLICE_SIZE_MIN, SPLICE_SIZE_MAX,
+                  DEFAULT_SPLICE_SIZE);
+    options->splice_size = splice_size_round(options->splice_size);
     /* "spotlight results limit" (canonical) with "sparql results limit" as
      * deprecated alias.  Only the key actually in force is parsed:
      * evaluating both would report a stale alias as invalid even when the

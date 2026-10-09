@@ -35,6 +35,11 @@ Changes in 4.7.0
   and 'with-bdb-version' options are gone, GitHub #3351
 * FIX: testsuite: afp_lantest CSV summary rows carry one field per header
   column, GitHub #3351
+* FIX: afpd: harden fork writes against errors, disconnects, and full disks,
+  with or without recvfile, GitHub #3378
+* FIX: libatalk: reject AppleDouble sidecars that place the resource fork
+  anywhere but offset 82, GitHub #3378
+* UPD: afpd: raise the default 'splice size' to 1 MiB, GitHub #3378
 
 Changes in 4.6.1
 ----------------

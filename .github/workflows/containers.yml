@@ -392,6 +392,7 @@ jobs:
               -e AFP_DIRCACHE_RFORK_MAXSIZE=1024 \
               -e AFP_CNID_BACKEND=sqlite \
               -e AFP_CNID_TMPFS=1 \
+              -e AFP_RECVFILE=yes \
               -e TESTSUITE=spec \
             -v "$RUNNER_TEMP:/reports" \
             -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
@@ -956,6 +957,50 @@ jobs:
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
             -e AFP_STRICT_LOCKING="yes" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+      - name: Checkout repository for test report
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (${{ github.job }})
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
+  afp-spectest-recvfile-afp34:
+    name: AFP spec test (recvfile, ea:ad) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e TESTSUITE="spec" \
+            -v "$RUNNER_TEMP:/reports" \
+            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
+            -e VERBOSE="1" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
+            -e AFP_RECVFILE="yes" \
+            -e AFP_SPLICE_SIZE="1048576" \
+            -e AFP_ADOUBLE="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
       - name: Checkout repository for test report
@@ -2015,9 +2060,11 @@ jobs:
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
+      # also the recvfile splice size
       AFP_SERVER_QUANTUM: 1048576
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024
+      AFP_RECVFILE: "yes"
     outputs:
       metrics: ${{ steps.lantest-summary.outputs.METRICS }}
     steps:
@@ -2046,6 +2093,8 @@ jobs:
             -e AFP_DIRCACHE_RFORK_BUDGET="${{ env.AFP_DIRCACHE_RFORK_BUDGET }}" \
             -e AFP_DIRCACHE_RFORK_MAXSIZE="${{ env.AFP_DIRCACHE_RFORK_MAXSIZE }}" \
             -e AFP_TEST_ITERATIONS="${{ env.AFP_TEST_ITERATIONS }}" \
+            -e AFP_RECVFILE="${{ env.AFP_RECVFILE }}" \
+            -e AFP_SPLICE_SIZE="${{ env.AFP_SERVER_QUANTUM }}" \
             -e TEST_FLAGS="-c" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-perf:${{ github.sha }} \
             > lantest.csv 2> lantest.log
@@ -2113,6 +2162,8 @@ jobs:
             --meta dircache_mode=${{ env.AFP_DIRCACHE_MODE }} \
             --meta dircache_size=${{ env.AFP_DIRCACHESIZE }} \
             --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
+            --meta recvfile=${{ env.AFP_RECVFILE }} \
+            --meta splice_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
             --meta rfork_budget_kb=${{ env.AFP_DIRCACHE_RFORK_BUDGET }}
           echo "PNG size: $(du -h lantest.png | cut -f1)"
       - name: Extract metrics for PR comment
@@ -2196,9 +2247,11 @@ jobs:
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
+      # also the recvfile splice size
       AFP_SERVER_QUANTUM: 1048576
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024
+      AFP_RECVFILE: "yes"
     outputs:
       metrics: ${{ steps.speedtest-summary.outputs.METRICS }}
     steps:
@@ -2228,6 +2281,8 @@ jobs:
             -e AFP_DIRCACHE_RFORK_BUDGET="${{ env.AFP_DIRCACHE_RFORK_BUDGET }}" \
             -e AFP_DIRCACHE_RFORK_MAXSIZE="${{ env.AFP_DIRCACHE_RFORK_MAXSIZE }}" \
             -e AFP_TEST_ITERATIONS="${{ env.AFP_TEST_ITERATIONS }}" \
+            -e AFP_RECVFILE="${{ env.AFP_RECVFILE }}" \
+            -e AFP_SPLICE_SIZE="${{ env.AFP_SERVER_QUANTUM }}" \
             -e TEST_FLAGS="-c -z 0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.25,0.5,1,2,4,8,16,32,64,128,256" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-perf:${{ github.sha }} \
             > speedtest.csv 2> speedtest.log
@@ -2266,6 +2321,8 @@ jobs:
             --meta dircache_mode=${{ env.AFP_DIRCACHE_MODE }} \
             --meta dircache_size=${{ env.AFP_DIRCACHESIZE }} \
             --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
+            --meta recvfile=${{ env.AFP_RECVFILE }} \
+            --meta splice_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
             --meta warmup=1
           echo "PNG size: $(du -h speedtest.png | cut -f1)"
       - name: Extract metrics for PR comment
