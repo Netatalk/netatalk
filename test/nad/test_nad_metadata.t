@@ -13,8 +13,8 @@ use FindBin;
 use lib $FindBin::Bin;
 use NadTest;
 
-my $nad = shift @ARGV;
-my $helper = shift @ARGV;
+my $nad     = shift @ARGV;
+my $helper  = shift @ARGV;
 my $fixture = NadTest->new($nad);
 system($helper, $fixture->volume, $fixture->work . '/afp.conf', $nad);
 exit(($? & 127) ? 1 : $? >> 8);
