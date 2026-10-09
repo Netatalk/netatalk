@@ -1,5 +1,5 @@
 {
-"commit": "a85f817eca9ae10711de37c424c37d3fd28edfcf",
+"commit": "d77a5b9df560b113b00cb478c47ef6d2d3259af1",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -16375,11 +16375,6 @@
 "from": "etc/afpd/file.c#check_delete_inhibit",
 "kind": "call",
 "to": "etc/afpd/ofork.c#of_findnameat"
-},
-{
-"from": "etc/afpd/enumerate.c#check_dirent",
-"kind": "call",
-"to": "etc/afpd/desktop.c#utompath"
 },
 {
 "from": "etc/afpd/enumerate.c#check_dirent",
@@ -44842,7 +44837,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#adl_lkup",
 "kind": "function",
-"line": 352,
+"line": 349,
 "static": true
 },
 {
@@ -44978,7 +44973,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#afp_catsearch",
 "kind": "function",
-"line": 1436,
+"line": 1426,
 "static": false
 },
 {
@@ -44986,7 +44981,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#afp_catsearch_ext",
 "kind": "function",
-"line": 1443,
+"line": 1433,
 "static": false
 },
 {
@@ -44994,7 +44989,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_changepw",
 "kind": "function",
-"line": 1097,
+"line": 1088,
 "static": false
 },
 {
@@ -45050,7 +45045,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_copyfile",
 "kind": "function",
-"line": 2071,
+"line": 2056,
 "static": false
 },
 {
@@ -45066,7 +45061,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_createfile",
 "kind": "function",
-"line": 1157,
+"line": 1142,
 "static": false
 },
 {
@@ -45074,7 +45069,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_createid",
 "kind": "function",
-"line": 2585,
+"line": 2570,
 "static": false
 },
 {
@@ -45090,7 +45085,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_deleteid",
 "kind": "function",
-"line": 2885,
+"line": 2870,
 "static": false
 },
 {
@@ -45194,7 +45189,7 @@
 "file": "etc/afpd/enumerate.c",
 "id": "etc/afpd/enumerate.c#afp_enumerate",
 "kind": "function",
-"line": 658,
+"line": 640,
 "static": false
 },
 {
@@ -45202,7 +45197,7 @@
 "file": "etc/afpd/enumerate.c",
 "id": "etc/afpd/enumerate.c#afp_enumerate_ext",
 "kind": "function",
-"line": 665,
+"line": 647,
 "static": false
 },
 {
@@ -45210,7 +45205,7 @@
 "file": "etc/afpd/enumerate.c",
 "id": "etc/afpd/enumerate.c#afp_enumerate_ext2",
 "kind": "function",
-"line": 672,
+"line": 654,
 "static": false
 },
 {
@@ -45226,7 +45221,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_exchangefiles",
 "kind": "function",
-"line": 3059,
+"line": 3044,
 "static": false
 },
 {
@@ -45354,7 +45349,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_getuserinfo",
 "kind": "function",
-"line": 1181,
+"line": 1172,
 "static": false
 },
 {
@@ -45402,7 +45397,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_logincont",
 "kind": "function",
-"line": 1046,
+"line": 1037,
 "static": false
 },
 {
@@ -45410,7 +45405,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_logout",
 "kind": "function",
-"line": 1071,
+"line": 1062,
 "static": false
 },
 {
@@ -45562,7 +45557,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_resolveid",
 "kind": "function",
-"line": 2741,
+"line": 2726,
 "static": false
 },
 {
@@ -45618,7 +45613,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#afp_setfilparams",
 "kind": "function",
-"line": 1352,
+"line": 1337,
 "static": false
 },
 {
@@ -46538,7 +46533,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_load",
 "kind": "function",
-"line": 1299,
+"line": 1290,
 "static": false
 },
 {
@@ -46554,7 +46549,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_register",
 "kind": "function",
-"line": 1282,
+"line": 1273,
 "static": false
 },
 {
@@ -46570,7 +46565,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_uamfind",
 "kind": "function",
-"line": 1263,
+"line": 1254,
 "static": false
 },
 {
@@ -46586,7 +46581,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_unload",
 "kind": "function",
-"line": 1346,
+"line": 1337,
 "static": false
 },
 {
@@ -46842,7 +46837,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch",
 "kind": "function",
-"line": 721,
+"line": 718,
 "static": true
 },
 {
@@ -46850,7 +46845,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_afp",
 "kind": "function",
-"line": 1144,
+"line": 1141,
 "static": true
 },
 {
@@ -46858,7 +46853,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#catsearch_db",
 "kind": "function",
-"line": 979,
+"line": 976,
 "static": true
 },
 {
@@ -48402,7 +48397,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copy_path_name",
 "kind": "function",
-"line": 2006,
+"line": 1991,
 "static": false
 },
 {
@@ -48442,7 +48437,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#copyfile",
 "kind": "function",
-"line": 2263,
+"line": 2248,
 "static": false
 },
 {
@@ -48674,7 +48669,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#crit_check",
 "kind": "function",
-"line": 434,
+"line": 431,
 "static": true
 },
 {
@@ -49098,7 +49093,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#deletefile",
 "kind": "function",
-"line": 2473,
+"line": 2458,
 "static": false
 },
 {
@@ -50186,7 +50181,7 @@
 "file": "etc/afpd/enumerate.c",
 "id": "etc/afpd/enumerate.c#enumerate",
 "kind": "function",
-"line": 173,
+"line": 160,
 "static": true
 },
 {
@@ -50362,7 +50357,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#find_adouble",
 "kind": "function",
-"line": 3004,
+"line": 2989,
 "static": true
 },
 {
@@ -50410,7 +50405,7 @@
 "file": "etc/afpd/enumerate.c",
 "id": "etc/afpd/enumerate.c#for_each_dirent",
 "kind": "function",
-"line": 135,
+"line": 122,
 "static": false
 },
 {
@@ -50826,7 +50821,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#getfilparams",
 "kind": "function",
-"line": 1087,
+"line": 1072,
 "static": false
 },
 {
@@ -53402,7 +53397,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#mtoUTF8",
 "kind": "function",
-"line": 1992,
+"line": 1977,
 "static": false
 },
 {
@@ -55522,7 +55517,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_id",
 "kind": "function",
-"line": 2708,
+"line": 2693,
 "static": true
 },
 {
@@ -55530,7 +55525,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#reenumerate_loop",
 "kind": "function",
-"line": 2673,
+"line": 2658,
 "static": true
 },
 {
@@ -55634,7 +55629,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#renamefile",
 "kind": "function",
-"line": 1907,
+"line": 1892,
 "static": false
 },
 {
@@ -55834,7 +55829,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#rslt_add",
 "kind": "function",
-"line": 651,
+"line": 648,
 "static": true
 },
 {
@@ -56410,7 +56405,7 @@
 "file": "etc/afpd/file.c",
 "id": "etc/afpd/file.c#setfilparams",
 "kind": "function",
-"line": 1435,
+"line": 1420,
 "static": false
 },
 {
@@ -59010,7 +59005,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#unpack_buffer",
 "kind": "function",
-"line": 398,
+"line": 395,
 "static": true
 },
 {
@@ -59026,7 +59021,7 @@
 "file": "etc/afpd/catsearch.c",
 "id": "etc/afpd/catsearch.c#unpack_finderinfo",
 "kind": "function",
-"line": 413,
+"line": 410,
 "static": true
 },
 {

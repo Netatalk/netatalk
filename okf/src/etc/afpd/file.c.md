@@ -5,7 +5,7 @@ description: "28 functions, 1 type, includes 23 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/file.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -202,7 +202,7 @@ Mentioned in the documentation of: [cnid_sqlite_set_errno](../../libatalk/cnid/s
 int getmetadata(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path, struct dir *dir, char *buf, size_t *buflen, struct adouble *adp)
 ```
 
-Defined at lines 554 to 1084.
+Defined at lines 554 to 1069.
 
 Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [accessmode](unix.c.md#accessmode), [ad_forcegetid](../../libatalk/adouble/ad_attr.c.md#ad_forcegetid), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [dir_remove](directory.c.md#dir_remove), [dircache_add](dircache.c.md#dircache_add), [fullpath_join](directory.c.md#fullpath_join), [get_finderinfo](file.c.md#get_finderinfo), [get_id](file.c.md#get_id), [ostat](../../libatalk/util/unix.c.md#ostat), [path_cached_file](../../include/atalk/directory.h.md#path_cached_file), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](desktop.c.md#utompath)
 
@@ -216,7 +216,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct path *path, struct dir *dir, char *buf, size_t *buflen, int skip_fork_check)
 ```
 
-Defined at lines 1087 to 1154.
+Defined at lines 1072 to 1139.
 
 Calls: [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [getmetadata](file.c.md#getmetadata), [of_ad](ofork.c.md#of_ad), [path_resolve_cached_file](file.c.md#path_resolve_cached_file)
 
@@ -228,7 +228,7 @@ Called by: [afp_getappl](appl.c.md#afp_getappl), [afp_getfildirparams](filedir.c
 int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1157 to 1350.
+Defined at lines 1142 to 1335.
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cname](directory.c.md#cname), [dir_event_path](directory.c.md#dir_event_path), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [dircache_add](dircache.c.md#dircache_add), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [fullpath_join](directory.c.md#fullpath_join), [get_afp_errno](directory.c.md#get_afp_errno), [get_id](file.c.md#get_id), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [netatalk_unlink](../../libatalk/vfs/unix.c.md#netatalk_unlink), [of_findname](ofork.c.md#of_findname), [setvoltime](volume.c.md#setvoltime), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
@@ -242,7 +242,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1352 to 1427.
+Defined at lines 1337 to 1412.
 
 Calls: [cname](directory.c.md#cname), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [setfilparams](file.c.md#setfilparams), [setvoltime](volume.c.md#setvoltime), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
@@ -256,7 +256,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int setfilparams(const AFPObj *obj, struct vol *vol, struct path *path, uint16_t f_bitmap, char *buf)
 ```
 
-Defined at lines 1435 to 1889.
+Defined at lines 1420 to 1874.
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setattr](../../libatalk/adouble/ad_attr.c.md#ad_setattr), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [check_access](directory.c.md#check_access), [check_delete_inhibit](file.c.md#check_delete_inhibit), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [default_type](file.c.md#default_type), [dir_modify](directory.c.md#dir_modify), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [get_id](file.c.md#get_id), [getdefextmap](../../libatalk/util/netatalk_conf.c.md#getdefextmap), [getextmap](../../libatalk/util/netatalk_conf.c.md#getextmap), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_ad](ofork.c.md#of_ad), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat), [replace_with_symlink](file.c.md#replace_with_symlink), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdirparams](directory.c.md#setdirparams), [setfilowner](unix.c.md#setfilowner), [setfilunixmode](unix.c.md#setfilunixmode), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [symlink_target_safe](file.c.md#symlink_target_safe)
 
@@ -270,7 +270,7 @@ Uses file-scope variables: `Cur_Path` in [etc/afpd/directory.c](directory.c.md),
 int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src, char *dst, char *newname, struct adouble *adp)
 ```
 
-Defined at lines 1907 to 1987.
+Defined at lines 1892 to 1972.
 
 Rename a file, including its resource fork and mac name.
 
@@ -297,7 +297,7 @@ Calls through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vf
 size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen, char *dest, size_t destlen)
 ```
 
-Defined at lines 1992 to 2003.
+Defined at lines 1977 to 1988.
 
 convert a Mac long name to an utf8 name
 
@@ -311,7 +311,7 @@ Called by: [cname_mtouname](directory.c.md#cname_mtouname), [copy_path_name](fil
 int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 ```
 
-Defined at lines 2006 to 2067.
+Defined at lines 1991 to 2052.
 
 Calls: [mtoUTF8](file.c.md#mtoutf8)
 
@@ -323,7 +323,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c
 int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2071 to 2256.
+Defined at lines 2056 to 2241.
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_testlock](../../libatalk/adouble/ad_lock.c.md#ad_testlock), [cname](directory.c.md#cname), [copy_path_name](file.c.md#copy_path_name), [copyfile](file.c.md#copyfile), [ctoupath](filedir.c.md#ctoupath), [dir_event_path](directory.c.md#dir_event_path), [dirlookup](directory.c.md#dirlookup), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [mtoupath](desktop.c.md#mtoupath), [of_ad](ofork.c.md#of_ad), [of_findname](ofork.c.md#of_findname), [path_error](directory.c.md#path_error), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [setvoltime](volume.c.md#setvoltime), [sl_index_event](spotlight.c.md#sl_index_event), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
@@ -337,7 +337,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int copyfile(struct vol *s_vol, struct vol *d_vol, struct dir *d_dir, int sfd, char *src, char *dst, char *newname, struct adouble *adp, int held)
 ```
 
-Defined at lines 2263 to 2451.
+Defined at lines 2248 to 2436.
 
 Note: if newname is NULL (from [directory.c](directory.c.md)) we don't want to copy the resource fork. because we are doing it elsewhere. currently if newname is NULL then adp is NULL.
 
@@ -353,7 +353,7 @@ Calls through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_
 int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib, cnid_t *idp)
 ```
 
-Defined at lines 2473 to 2582.
+Defined at lines 2458 to 2567.
 
 Note: dirfd can be used for unlinkat semantics
 
@@ -373,7 +373,7 @@ Mentioned in the documentation of: [of_delete_blocked](ofork.c.md#of_delete_bloc
 int afp_createid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2585 to 2665.
+Defined at lines 2570 to 2650.
 
 Returns: a file id
 
@@ -389,7 +389,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int reenumerate_loop(struct dirent *de, char *mname, void *data)
 ```
 
-Defined at lines 2673 to 2701.
+Defined at lines 2658 to 2686.
 
 Calls: [cnid_add](../../libatalk/cnid/cnid.c.md#cnid_add), [cnid_volume_reset](volume.c.md#cnid_volume_reset), [ostat](../../libatalk/util/unix.c.md#ostat)
 
@@ -401,7 +401,7 @@ Called by: [reenumerate_id](file.c.md#reenumerate_id)
 static int reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 ```
 
-Defined at lines 2708 to 2737.
+Defined at lines 2693 to 2722.
 
 Calls: [dirreenumerate](directory.c.md#dirreenumerate), [for_each_dirent](enumerate.c.md#for_each_dirent), [ostat](../../libatalk/util/unix.c.md#ostat), [reenumerate_loop](file.c.md#reenumerate_loop), [setdiroffcnt](directory.c.md#setdiroffcnt)
 
@@ -415,7 +415,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2741 to 2882.
+Defined at lines 2726 to 2867.
 
 resolve a file id
 
@@ -431,7 +431,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_deleteid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2885 to 3001.
+Defined at lines 2870 to 2986.
 
 Calls: [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [movecwd](directory.c.md#movecwd), [ostat](../../libatalk/util/unix.c.md#ostat)
 
@@ -445,7 +445,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static struct adouble * find_adouble(const AFPObj *obj, struct vol *vol, struct path *path, struct ofork **of, struct adouble *adp)
 ```
 
-Defined at lines 3004 to 3055.
+Defined at lines 2989 to 3040.
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [file_access](directory.c.md#file_access), [of_findname](ofork.c.md#of_findname)
 
@@ -459,7 +459,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3059 to 3512.
+Defined at lines 3044 to 3497.
 
 Calls: [absupath](filedir.c.md#absupath), [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_copy_header](../../libatalk/adouble/ad_flush.c.md#ad_copy_header), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_init_offsets](../../libatalk/adouble/ad_open.c.md#ad_init_offsets), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [become_root](../../libatalk/util/unix.c.md#become_root), [cname](directory.c.md#cname), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [find_adouble](file.c.md#find_adouble), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_rename](ofork.c.md#of_rename), [ostat](../../libatalk/util/unix.c.md#ostat), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [renamefile](file.c.md#renamefile), [setfilowner](unix.c.md#setfilowner), [setfilunixmode](unix.c.md#setfilunixmode), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [unbecome_root](../../libatalk/util/unix.c.md#unbecome_root)
 
@@ -471,7 +471,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
 ### struct reenum
 
-Defined at line 2668.
+Defined at line 2653.
 * `struct vol * vol`
 * `cnid_t did`
 

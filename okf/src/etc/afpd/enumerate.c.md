@@ -5,7 +5,7 @@ description: "7 functions, 1 type, includes 16 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/enumerate.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -50,7 +50,7 @@ Called by: [enumerate](enumerate.c.md#enumerate)
 char * check_dirent(const struct vol *vol, char *name)
 ```
 
-Defined at lines 102 to 131.
+Defined at lines 102 to 118.
 
 Bug: Doesn't work with dangling symlink i.e.: * Move a folder with a dangling symlink in the trash
 * empty the trash
@@ -59,7 +59,7 @@ afp_enumerate return an empty listing but offspring count != 0 in afp_getdirpara
 
 See also: https://sourceforge.net/p/netatalk/bugs/97/
 
-Calls: [utompath](desktop.c.md#utompath), [veto_file](filedir.c.md#veto_file)
+Calls: [veto_file](filedir.c.md#veto_file)
 
 Called by: [catsearch](catsearch.c.md#catsearch), [for_each_dirent](enumerate.c.md#for_each_dirent)
 
@@ -71,7 +71,7 @@ Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vf
 int for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 ```
 
-Defined at lines 135 to 163.
+Defined at lines 122 to 150.
 
 Calls: [check_dirent](enumerate.c.md#check_dirent)
 
@@ -83,7 +83,7 @@ Called by: [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#
 static int enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 173 to 655.
+Defined at lines 160 to 637.
 
 Calls: [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [cname](directory.c.md#cname), [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [dir_add](directory.c.md#dir_add), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [enumerate_loop](enumerate.c.md#enumerate_loop), [for_each_dirent](enumerate.c.md#for_each_dirent), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [get_afp_errno](directory.c.md#get_afp_errno), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [getdirparams](directory.c.md#getdirparams), [getfilparams](file.c.md#getfilparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat), [path_error](directory.c.md#path_error), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [setdiroffcnt](directory.c.md#setdiroffcnt), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled), [virtual_icon_getfilparams](virtual_icon.c.md#virtual_icon_getfilparams)
 
@@ -97,7 +97,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 658 to 662.
+Defined at lines 640 to 644.
 
 Calls: [enumerate](enumerate.c.md#enumerate)
 
@@ -109,7 +109,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 665 to 669.
+Defined at lines 647 to 651.
 
 Calls: [enumerate](enumerate.c.md#enumerate)
 
@@ -121,7 +121,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 672 to 676.
+Defined at lines 654 to 658.
 
 Calls: [enumerate](enumerate.c.md#enumerate)
 

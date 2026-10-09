@@ -5,7 +5,7 @@ description: "Manage the AppleDesktop folder and its contents."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/desktop.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -202,7 +202,7 @@ Defined at lines 900 to 935. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md)
 
 Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [mangle](mangle.c.md#mangle)
 
-Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.md#catsearch_db), [check_dirent](enumerate.c.md#check_dirent), [cname_mtouname](directory.c.md#cname_mtouname), [crit_check](catsearch.c.md#crit_check), [dir_add](directory.c.md#dir_add), [dirlookup_internal](directory.c.md#dirlookup_internal), [getmetadata](file.c.md#getmetadata), [nad_header_read](../../bin/nad/nad_adouble.c.md#nad_header_read), [private_demangle](mangle.c.md#private_demangle), [set_name](file.c.md#set_name)
+Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.md#catsearch_db), [cname_mtouname](directory.c.md#cname_mtouname), [crit_check](catsearch.c.md#crit_check), [dir_add](directory.c.md#dir_add), [dirlookup_internal](directory.c.md#dirlookup_internal), [getmetadata](file.c.md#getmetadata), [nad_header_read](../../bin/nad/nad_adouble.c.md#nad_header_read), [private_demangle](mangle.c.md#private_demangle), [set_name](file.c.md#set_name)
 
 ### ad_addcomment
 

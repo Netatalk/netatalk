@@ -5,7 +5,7 @@ description: "26 functions, includes 19 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/auth.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -253,7 +253,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 875 to 1043.
+Defined at lines 875 to 1034.
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind), [create_session_key](auth.c.md#create_session_key), [get_version](auth.c.md#get_version), [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
 
@@ -269,7 +269,7 @@ Dispatched via: [preauth_switch](switch.c.md#preauth_switch)
 int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1046 to 1068.
+Defined at lines 1037 to 1059.
 
 Calls: [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
 
@@ -285,7 +285,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_logout(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1071 to 1089.
+Defined at lines 1062 to 1080.
 
 Calls: [close_all_vol](volume.c.md#close_all_vol), [fce_register](fce_api.c.md#fce_register), [of_close_all_forks](ofork.c.md#of_close_all_forks)
 
@@ -299,7 +299,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1097 to 1177.
+Defined at lines 1088 to 1168.
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind), [set_auth_switch](auth.c.md#set_auth_switch), [uam_getname](uam.c.md#uam_getname)
 
@@ -315,7 +315,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_getuserinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1181 to 1255.
+Defined at lines 1172 to 1246.
 
 Calls: [getuuidfromname](../../libatalk/acl/uuid.c.md#getuuidfromname), [uuid_bin2string](../../libatalk/acl/uuid.c.md#uuid_bin2string)
 
@@ -329,7 +329,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 struct uam_obj * auth_uamfind(const int type, const char *name, const int len)
 ```
 
-Defined at lines 1263 to 1280.
+Defined at lines 1254 to 1271.
 
 Calls: [strndiacasecmp](../../libatalk/util/strdicasecmp.c.md#strndiacasecmp)
 
@@ -341,7 +341,7 @@ Called by: [afp_changepw](auth.c.md#afp_changepw), [afp_login](auth.c.md#afp_log
 int auth_register(const int type, struct uam_obj *uam)
 ```
 
-Defined at lines 1282 to 1296.
+Defined at lines 1273 to 1287.
 
 Called by: [uam_register](uam.c.md#uam_register)
 
@@ -351,7 +351,7 @@ Called by: [uam_register](uam.c.md#uam_register)
 int auth_load(AFPObj *obj, const char *path, const char *list)
 ```
 
-Defined at lines 1299 to 1343.
+Defined at lines 1290 to 1334.
 
 load all of the modules
 
@@ -369,7 +369,7 @@ Mentioned in the documentation of: [srp_is_the_only_uam](../netatalk/netatalk.c.
 void auth_unload(void)
 ```
 
-Defined at lines 1346 to 1356.
+Defined at lines 1337 to 1347.
 
 get rid of all of the uams
 

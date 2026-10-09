@@ -5,7 +5,7 @@ description: "FPCatSearch implementation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/catsearch.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -98,7 +98,7 @@ Uses file-scope variables: `dsidx`, `dssize`, `dstack`
 static int reducestack(void)
 ```
 
-Defined at lines 324 to 346.
+Defined at lines 324 to 343.
 
 Removes checked items from top of directory stack.
 
@@ -114,7 +114,7 @@ Uses file-scope variables: `dsidx`, `dstack`, `save_cidx`
 static struct adouble * adl_lkup(struct vol *vol, struct path *path, struct adouble *adp)
 ```
 
-Defined at lines 352 to 395.
+Defined at lines 349 to 392.
 
 Looks up for an opened adouble structure, opens resource fork of selected file.
 
@@ -130,7 +130,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 static struct finderinfo * unpack_buffer(struct finderinfo *finfo, char *buffer)
 ```
 
-Defined at lines 398 to 409.
+Defined at lines 395 to 406.
 
 Called by: [catsearch_afp](catsearch.c.md#catsearch_afp), [unpack_finderinfo](catsearch.c.md#unpack_finderinfo)
 
@@ -140,7 +140,7 @@ Called by: [catsearch_afp](catsearch.c.md#catsearch_afp), [unpack_finderinfo](ca
 static struct finderinfo * unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, struct finderinfo *finfo, int islnk)
 ```
 
-Defined at lines 413 to 421.
+Defined at lines 410 to 418.
 
 Calls: [adl_lkup](catsearch.c.md#adl_lkup), [get_finderinfo](file.c.md#get_finderinfo), [unpack_buffer](catsearch.c.md#unpack_buffer)
 
@@ -152,7 +152,7 @@ Called by: [crit_check](catsearch.c.md#crit_check)
 static int crit_check(struct vol *vol, struct path *path)
 ```
 
-Defined at lines 434 to 648.
+Defined at lines 431 to 645.
 
 Criteria checker.
 
@@ -173,7 +173,7 @@ Uses file-scope variables: `c2`
 static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path, char **buf, int ext)
 ```
 
-Defined at lines 651 to 700.
+Defined at lines 648 to 697.
 
 Calls: [getdirparams](directory.c.md#getdirparams), [getfilparams](file.c.md#getfilparams)
 
@@ -185,7 +185,7 @@ Called by: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#
 static int catsearch(const AFPObj *obj, struct vol *vol, struct dir *dir, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 721 to 961.
+Defined at lines 718 to 958.
 
 This function performs a filesystem search.
 
@@ -214,7 +214,7 @@ Uses file-scope variables: `dstack`, `save_cidx`
 static int catsearch_db(const AFPObj *obj, struct vol *vol, const char *uname, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 979 to 1141.
+Defined at lines 976 to 1138.
 
 This function performs a CNID db search.
 
@@ -241,7 +241,7 @@ Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 static int catsearch_afp(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 1144 to 1433.
+Defined at lines 1141 to 1423.
 
 Calls: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [catsearch_validate_spec](catsearch.c.md#catsearch_validate_spec), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [mtoupath](desktop.c.md#mtoupath), [unpack_buffer](catsearch.c.md#unpack_buffer)
 
@@ -255,7 +255,7 @@ Uses file-scope variables: `c2`
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1436 to 1440.
+Defined at lines 1426 to 1430.
 
 Calls: [catsearch_afp](catsearch.c.md#catsearch_afp)
 
@@ -267,7 +267,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1443 to 1447.
+Defined at lines 1433 to 1437.
 
 Calls: [catsearch_afp](catsearch.c.md#catsearch_afp)
 

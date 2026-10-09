@@ -5,7 +5,7 @@ description: "3 functions, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/messages.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -64,7 +64,7 @@ Uses file-scope variables: `servermesg`
 int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 110 to 196.
+Defined at lines 110 to 193.
 
 Calls: [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [strlcat](../../libatalk/compat/strlcpy.c.md#strlcat)
 
