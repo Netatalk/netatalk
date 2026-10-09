@@ -5,7 +5,7 @@ description: "11 files, 114 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/adouble"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
 ---
 
 # Files
@@ -36,7 +36,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 # Called from
 
 * [etc/afpd](../etc/afpd.md): 188 calls
-* [bin/nad](../bin/nad.md): 64 calls
+* [bin/nad](../bin/nad.md): 63 calls
 * [bin/dbd](../bin/dbd.md): 19 calls
 * [libatalk/vfs](vfs.md): 17 calls
 * [libatalk/dsi](dsi.md): 1 calls

@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_open.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -627,7 +627,7 @@ int ad_setfuid(const uid_t id)
 
 Defined at lines 2449 to 2453.
 
-Called by: [login](../../etc/afpd/auth.c.md#login), [main](../../bin/dbd/cmd_dbd.c.md#main), [nad_cp](../../bin/nad/nad_cp.c.md#nad_cp)
+Called by: [login](../../etc/afpd/auth.c.md#login), [main](../../bin/dbd/cmd_dbd.c.md#main)
 
 Uses file-scope variables: `default_uid`
 

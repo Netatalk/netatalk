@@ -5,7 +5,7 @@ description: "24 files, 182 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/nad"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
 ---
 
 # Files
@@ -42,7 +42,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 
 # Calls into
 
-* [libatalk/adouble](../libatalk/adouble.md): 64 calls
+* [libatalk/adouble](../libatalk/adouble.md): 63 calls
 * [libatalk/compat](../libatalk/compat.md): 30 calls
 * [libatalk/cnid](../libatalk/cnid.md): 24 calls
 * [libatalk/util](../libatalk/util.md): 18 calls

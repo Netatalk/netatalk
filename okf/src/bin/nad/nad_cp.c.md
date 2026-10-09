@@ -5,7 +5,7 @@ description: "AFP-aware copying of files and directory trees for nad."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_cp.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void upfunc(void)
 ```
 
-Defined at lines 114 to 118.
+Defined at lines 113 to 117.
 
 Called by: [nad_cp](nad_cp.c.md#nad_cp)
 
@@ -45,7 +45,7 @@ Mentioned in the documentation of: [nad_cp](nad_cp.c.md#nad_cp)
 static void usage_cp(void)
 ```
 
-Defined at lines 120 to 153.
+Defined at lines 119 to 152.
 
 Called by: [nad_cp](nad_cp.c.md#nad_cp)
 
@@ -55,7 +55,7 @@ Called by: [nad_cp](nad_cp.c.md#nad_cp)
 static int copy_source_header(struct adouble *, const char *, int)
 ```
 
-Defined at lines 156 to 201.
+Defined at lines 155 to 200.
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_copy_header](../../libatalk/adouble/ad_flush.c.md#ad_copy_header), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open)
 
@@ -69,7 +69,7 @@ Uses file-scope variables: `svolume`
 int nad_cp(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 216 to 403. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 215 to 387. Declared in [bin/nad/nad.h](nad.h.md).
 
 execute the nad cp command
 
@@ -77,11 +77,11 @@ Parses options and initializes the destination base in to, distinguishing a sing
 
 Uses the custom [nftw()](ftw.h.md#nftw) implementation to traverse each source separately, with [copy()](nad_cp.c.md#copy) processing entries and [upfunc()](nad_cp.c.md#upfunc) tracking directory CNID state. Traversal runs without FTW_CHDIR, so source and destination paths may be absolute or relative to the caller's working directory.
 
-Calls: [ad_setfuid](../../libatalk/adouble/ad_open.c.md#ad_setfuid), [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [copy](nad_cp.c.md#copy), [nftw](ftw.h.md#nftw), [openvol_optional](nad_util.c.md#openvol_optional), [set_signal](nad_util.c.md#set_signal), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [upfunc](nad_cp.c.md#upfunc), [usage_cp](nad_cp.c.md#usage_cp)
+Calls: [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [copy](nad_cp.c.md#copy), [nftw](ftw.h.md#nftw), [openvol_optional](nad_util.c.md#openvol_optional), [set_signal](nad_util.c.md#set_signal), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [upfunc](nad_cp.c.md#upfunc), [usage_cp](nad_cp.c.md#usage_cp)
 
 Called by: [copy](nad_mv.c.md#copy), [main](nad.c.md#main)
 
-Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badcp`, `did`, `dvolume`, `fflag`, `ftw_options`, `iflag`, `mask`, `nflag`, `pdid`, `pflag`, `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag`
+Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badcp`, `did`, `dvolume`, `fflag`, `ftw_options`, `iflag`, `nflag`, `pdid`, `pflag`, `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag`
 
 ### copy
 
@@ -89,7 +89,7 @@ Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_
 static int copy(const char *path, const struct stat *statp, int tflag, struct FTW *ftw)
 ```
 
-Defined at lines 417 to 797.
+Defined at lines 401 to 780.
 
 process a source entry during the [nftw()](ftw.h.md#nftw) traversal
 
@@ -115,7 +115,7 @@ Mentioned in the documentation of: [nad_cp](nad_cp.c.md#nad_cp)
 static int ftw_copy_file(const struct FTW *, const char *, const struct stat *, int)
 ```
 
-Defined at lines 811 to 1022.
+Defined at lines 791 to 993.
 
 Calls: [setfile](nad_cp.c.md#setfile)
 
@@ -131,7 +131,7 @@ Uses file-scope variables: `dvolume`, `fflag`, `iflag`, `nflag`, `pflag`, `to`, 
 static int ftw_copy_link(const struct FTW *, const char *, const struct stat *, int)
 ```
 
-Defined at lines 1024 to 1055.
+Defined at lines 995 to 1026.
 
 Calls: [setfile](nad_cp.c.md#setfile)
 
@@ -145,7 +145,7 @@ Uses file-scope variables: `pflag`, `to`
 static int setfile(const struct stat *, int)
 ```
 
-Defined at lines 1057 to 1136.
+Defined at lines 1028 to 1107.
 
 Calls: [atalk_stat_atime_timespec](../../include/atalk/compat.h.md#atalk_stat_atime_timespec), [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [atalk_timespec_to_timeval](../../include/atalk/compat.h.md#atalk_timespec_to_timeval)
 
@@ -159,8 +159,8 @@ Uses file-scope variables: `to`
 
 # Macros
 
-* Undocumented: `BUFSIZE_MAX`, `BUFSIZE_SMALL`, `MAXPHYS`, `PHYSPAGES_THRESHOLD`, `STRIP_TRAILING_SLASH`, `YESNO`
+* Undocumented: `BUFSIZE_MAX`, `BUFSIZE_SMALL`, `MAXPHYS`, `STRIP_TRAILING_SLASH`, `YESNO`
 
 # File-scope variables
 
-`Rflag`, `badcp`, `did`, `dvolume`, `emptystring`, `fflag`, `ftw_options`, `iflag`, `mask`, `nflag`, `pdid`, `pflag`, `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag`
+`Rflag`, `badcp`, `did`, `dvolume`, `emptystring`, `fflag`, `ftw_options`, `iflag`, `nflag`, `pdid`, `pflag`, `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag`

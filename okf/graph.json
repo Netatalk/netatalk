@@ -1,5 +1,5 @@
 {
-"commit": "45ab26bc560d691ad8429f1c1f1e16095e0ded03",
+"commit": "a85f817eca9ae10711de37c424c37d3fd28edfcf",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -29753,11 +29753,6 @@
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
 "kind": "call",
-"to": "libatalk/adouble/ad_open.c#ad_setfuid"
-},
-{
-"from": "bin/nad/nad_cp.c#nad_cp",
-"kind": "call",
 "to": "bin/nad/nad_util.c#closevol"
 },
 {
@@ -29839,11 +29834,6 @@
 "from": "bin/nad/nad_cp.c#nad_cp",
 "kind": "use",
 "to": "bin/nad/nad_cp.c#iflag"
-},
-{
-"from": "bin/nad/nad_cp.c#nad_cp",
-"kind": "use",
-"to": "bin/nad/nad_cp.c#mask"
 },
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
@@ -48356,7 +48346,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#copy",
 "kind": "function",
-"line": 417,
+"line": 401,
 "static": true
 },
 {
@@ -48420,7 +48410,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#copy_source_header",
 "kind": "function",
-"line": 156,
+"line": 155,
 "static": true
 },
 {
@@ -50540,7 +50530,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#ftw_copy_file",
 "kind": "function",
-"line": 811,
+"line": 791,
 "static": true
 },
 {
@@ -50548,7 +50538,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#ftw_copy_link",
 "kind": "function",
-"line": 1024,
+"line": 995,
 "static": true
 },
 {
@@ -53516,7 +53506,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#nad_cp",
 "kind": "function",
-"line": 216,
+"line": 215,
 "static": false
 },
 {
@@ -56396,7 +56386,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#setfile",
 "kind": "function",
-"line": 1057,
+"line": 1028,
 "static": true
 },
 {
@@ -59108,7 +59098,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#upfunc",
 "kind": "function",
-"line": 114,
+"line": 113,
 "static": true
 },
 {
@@ -59212,7 +59202,7 @@
 "file": "bin/nad/nad_cp.c",
 "id": "bin/nad/nad_cp.c#usage_cp",
 "kind": "function",
-"line": 120,
+"line": 119,
 "static": true
 },
 {
