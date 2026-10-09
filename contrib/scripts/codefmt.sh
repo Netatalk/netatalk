@@ -104,14 +104,14 @@ if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v perltidy > /dev/null 2>&1; then
         if [ "$VERBOSE" -eq 1 ]; then
             echo "Formatting Perl sources..."
-            find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec sh -c '
+            find . -type f \( -name "*.pl" -o -name "*.cgi" -o -name "*.t" \) -exec sh -c '
                 for file in "$@"; do
                     echo "Processing: $file"
                     perltidy --backup-file-extension="/" "$file"
                 done
             ' sh {} +
         else
-            find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec perltidy --backup-file-extension='/' {} +
+            find . -type f \( -name "*.pl" -o -name "*.cgi" -o -name "*.t" \) -exec perltidy --backup-file-extension='/' {} +
         fi
     else
         echo "Error: perltidy not found in PATH" >&2
