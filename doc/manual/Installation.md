@@ -169,9 +169,9 @@ functionality.
 
 - Perl
 
-    Netatalk's administrative utility scripts rely on the Perl runtime,
-    version 5.8 or later. The required Perl modules include
-    *IO::Socket::IP* (asip-status) and *IO::Socket::UNIX* (afpstats).
+    Several of Netatalk's utility programs as well as the build system rely on
+    a Perl runtime, version 5.14 or later. The required Perl modules include
+    *IO::Socket::IP* (**asip-status**) and *IO::Socket::UNIX* (**afpstats**).
 
 - po4a
 
