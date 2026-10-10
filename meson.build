@@ -276,7 +276,7 @@ if 'developer' in docs_options
         endif
         build_dev_docs = true
     else
-        warning('doxygen is required to build developer documentation')
+        error('doxygen is required to build developer documentation')
     endif
 endif
 
