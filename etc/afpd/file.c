@@ -1950,13 +1950,13 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
 
             case EPERM:
             case EACCES :
-                return AFPERR_ACCESS ;
+                return AFPERR_ACCESS;
 
             case EROFS:
                 return AFPERR_VLOCK;
 
             default :
-                return AFPERR_PARAM ;
+                return AFPERR_PARAM;
             }
         }
     }
@@ -3108,7 +3108,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     if (!p) {
         /* pathname too long */
-        return AFPERR_PARAM ;
+        return AFPERR_PARAM;
     }
 
     ad_init(&ads, vol);

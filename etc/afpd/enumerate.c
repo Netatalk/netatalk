@@ -229,7 +229,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     if (!sindex) {
         *rbuflen = 0;
-        return AFPERR_PARAM ;
+        return AFPERR_PARAM;
     }
 
     if (ext == 2) {

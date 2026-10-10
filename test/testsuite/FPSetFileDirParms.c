@@ -747,7 +747,7 @@ STATIC void test348()
         FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     }
 
-    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
+    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR;
     FAIL(FPSetFilDirParam(Conn, vol, dir, "", bitmap, &filedir))
 
     if (FPCreateFile(Conn, vol, 0, dir, name)) {
@@ -825,7 +825,7 @@ STATIC void test349()
         FAIL(FPDelete(Conn, vol, dir, name))
     }
 
-    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
+    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR;
     FAIL(FPSetFilDirParam(Conn, vol, dir1, "", bitmap, &filedir))
 
     if (FPCreateFile(Conn, vol, 0, dir1, name)) {
@@ -898,7 +898,7 @@ STATIC void test350()
         FAIL(FPSetFilDirParam(Conn, vol, DIRDID_ROOT, "", bitmap, &filedir))
     }
 
-    filedir.unix_priv = S_IRUSR | S_IXUSR ;
+    filedir.unix_priv = S_IRUSR | S_IXUSR;
     FAIL(FPSetFilDirParam(Conn, vol, DIRDID_ROOT, "", bitmap, &filedir))
 
     if (!FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
@@ -1042,7 +1042,7 @@ STATIC void test359()
 
     filedir.isdir = 0;
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     FAIL(FPSetFileParams(Conn, vol, dir,  name, (1 << FILPBIT_ATTR), &filedir))
     FAIL(ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol, dir, name))
     filedir.isdir = 0;
@@ -1152,7 +1152,7 @@ STATIC void test361()
 
     filedir.isdir = 0;
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     FAIL(FPSetFileParams(Conn, vol, dir,  name, (1 << FILPBIT_ATTR), &filedir))
     FAIL(ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol, dir, name))
     filedir.isdir = 0;

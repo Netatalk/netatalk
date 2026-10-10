@@ -201,7 +201,7 @@ const char *AfpNum2name(int num)
         return "AFP_ENUMERATE_EXT2";   /*  68 */
 
     case AFP_ZZZZZ  :
-        return "AFP_ZZZZZ"      ;      /* 122 */
+        return "AFP_ZZZZZ";            /* 122 */
 
     /* version 3.2 */
     case AFP_GETEXTATTR         :

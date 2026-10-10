@@ -206,7 +206,7 @@ STATIC void test94()
     }
 
     sleep(5);
-    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR;
     bitmap = (1 << DIRPBIT_ATTR);
 
     if (FPSetDirParms(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) {

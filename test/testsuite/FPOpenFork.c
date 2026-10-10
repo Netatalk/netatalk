@@ -636,7 +636,7 @@ STATIC void test116()
 
     filedir.isdir = 0;
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
-    filedir.attr = ATTRBIT_NOWRITE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NOWRITE | ATTRBIT_SETCLR;
     bitmap = (1 << DIRPBIT_ATTR);
 
     if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) {

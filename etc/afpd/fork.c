@@ -1035,7 +1035,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     }
 
     if (ibuflen < 2 + sizeof(ofrefnum) + sizeof(bitmap) + is64 + 4) {
-        return AFPERR_PARAM ;
+        return AFPERR_PARAM;
     }
 
     size = get_off_t(&ibuf, is64);

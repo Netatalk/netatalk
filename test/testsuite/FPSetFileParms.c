@@ -93,7 +93,7 @@ STATIC void test96()
     }
 
     sleep(5);
-    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR;
     bitmap = (1 << DIRPBIT_ATTR);
     FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
     bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_MDATE);
@@ -150,7 +150,7 @@ STATIC void test118()
     } else {
         filedir.isdir = 0;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
-        filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+        filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
         FAIL(ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol, DIRDID_ROOT, name))
         filedir.attr = ATTRBIT_NODELETE;

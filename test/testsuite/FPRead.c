@@ -676,7 +676,7 @@ void test328()
             goto fin1;
         }
 
-        for (i = 0; i <= numread ; i++) {
+        for (i = 0; i <= numread; i++) {
             if (FPWrite(Conn, fork, i * size, size, data, 0)) {
                 test_nottested();
                 nowrite = 1;
@@ -743,7 +743,7 @@ void test328()
                 goto fin1;
             }
 
-            for (i = 0; i <= numread ; i++) {
+            for (i = 0; i <= numread; i++) {
                 if (FPRead(Conn, fork, i * size, size, data)) {
                     test_failed();
                     goto fin1;

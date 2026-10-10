@@ -699,7 +699,7 @@ static int create_trash(CONN *conn, uint16_t vol)
         return 0;
     }
 
-    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR;
 
     if (FPSetDirParms(conn, vol, DIRDID_ROOT, trash, (1 << DIRPBIT_ATTR),
                       &filedir)) {
@@ -728,7 +728,7 @@ static int create_map(CONN *conn, uint16_t vol, int dir, char *name)
 
     filedir.isdir = 0;
     afp_filedir_unpack(conn, &filedir, dsi->data + ofs, 0x73f, 0);
-    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR;
 
     if (FPSetFilDirParam(conn, vol, dir, name, (1 << DIRPBIT_ATTR), &filedir)) {
         return 0;
@@ -764,7 +764,7 @@ static int set_perm(CONN *conn, uint16_t vol, int dir)
         return 0;
     }
 
-    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR;
 
     if (FPSetDirParms(conn, vol, dir, "", (1 << DIRPBIT_ATTR), &filedir)) {
         return 0;

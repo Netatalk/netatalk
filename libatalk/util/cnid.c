@@ -191,7 +191,7 @@ cnid_t cnid_for_path(struct _cnid_db *cdb,
     EC_ZERO(bcatcstr(statpath, "/"));
     l = bsplit(rpath, '/');
 
-    for (int i = 0; i < l->qty ; i++) {
+    for (int i = 0; i < l->qty; i++) {
         *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));
         EC_ZERO(lstat(cfrombstr(statpath), &st));
