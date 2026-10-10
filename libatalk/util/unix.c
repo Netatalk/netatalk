@@ -746,7 +746,7 @@ void randombytes(void *buf, int n)
         gettimeofday(&tv, NULL);
         srandom((unsigned int)tv.tv_usec);
 
-        for (i = 0 ; i < n ; i++) {
+        for (i = 0; i < n; i++) {
             p[i] = random() & 0xFF;
         }
     }

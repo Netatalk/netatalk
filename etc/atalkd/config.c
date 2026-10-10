@@ -854,7 +854,7 @@ int plumb(void)
         strcpy(device, "/dev/");
         strcat(device, iface->i_name);
 
-        for (t = device; *t != '\0' ; ++t) {
+        for (t = device; *t != '\0'; ++t) {
             if (isdigit(*t) == 0) {
                 p = t + 1;
             } else {

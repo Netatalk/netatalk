@@ -793,7 +793,7 @@ int cq_end(struct papfile *in, struct papfile *out _U_,
     in->pf_state |= PF_QUERY;
     compop();
     CONSUME(in, linelength + crlflength);
-    return CH_DONE ;
+    return CH_DONE;
 }
 
 /*!

@@ -14,7 +14,7 @@ STATIC void test82()
     uint16_t bitmap = (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) |
                       (1 << DIRPBIT_MDATE)
                       | (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_UID) |
-                      (1 << DIRPBIT_GID) ;
+                      (1 << DIRPBIT_GID);
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -83,7 +83,7 @@ STATIC void test84()
     } else {
         filedir.isdir = 1;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
-        filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+        filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
         FAIL(FPSetDirParms(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
 
         if (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol, DIRDID_ROOT, name)) {
@@ -158,7 +158,7 @@ STATIC void test88()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         bitmap = (1 << DIRPBIT_ATTR);
-        filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
+        filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR;
         ret = FPSetDirParms(Conn, vol, DIRDID_ROOT, rodir, bitmap, &filedir);
 
         if (not_valid(ret, AFPERR_ACCESS, 0)) {
@@ -206,9 +206,9 @@ STATIC void test107()
     uint16_t bitmap = (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) |
                       (1 << DIRPBIT_MDATE)
                       | (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_UID) |
-                      (1 << DIRPBIT_GID) ;
+                      (1 << DIRPBIT_GID);
     uint16_t bitmap2 = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_UID) |
-                       (1 << DIRPBIT_GID) ;
+                       (1 << DIRPBIT_GID);
     int uid;
     int ret;
     uint16_t vol = VolID;
@@ -662,7 +662,7 @@ STATIC void test354()
         FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     }
 
-    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
+    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR;
     FAIL(FPSetDirParms(Conn, vol, dir, "", bitmap, &filedir))
 
     if (FPCreateFile(Conn, vol, 0, dir, name)) {
@@ -740,7 +740,7 @@ STATIC void test355()
         FAIL(FPDelete(Conn, vol, dir, name))
     }
 
-    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR ;
+    filedir.unix_priv = S_IRUSR | S_IWUSR | S_IXUSR;
     FAIL(FPSetDirParms(Conn, vol, dir1, "", bitmap, &filedir))
 
     if (FPCreateFile(Conn, vol, 0, dir1, name)) {
@@ -813,7 +813,7 @@ STATIC void test356()
         FAIL(FPSetDirParms(Conn, vol, DIRDID_ROOT, "", bitmap, &filedir))
     }
 
-    filedir.unix_priv = S_IRUSR | S_IXUSR ;
+    filedir.unix_priv = S_IRUSR | S_IXUSR;
     FAIL(FPSetDirParms(Conn, vol, DIRDID_ROOT, "", bitmap, &filedir))
 
     if (!FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {

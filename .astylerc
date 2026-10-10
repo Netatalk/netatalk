@@ -21,4 +21,5 @@
 --pad-comma
 --pad-header
 --pad-oper
+--pad-semicolon=none
 --unpad-paren

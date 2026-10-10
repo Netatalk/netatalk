@@ -788,7 +788,7 @@ server_signature_random:
     if (fp) {
         fprintf(fp, "\"%s\"\t", server_tmp);
 
-        for (i = 0 ; i < 16 ; i++) {
+        for (i = 0; i < 16; i++) {
             fprintf(fp, "%02X", (options->signature)[i]);
         }
 

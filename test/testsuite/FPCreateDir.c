@@ -377,7 +377,7 @@ STATIC void test357()
 
     filedir.isdir = 1;
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     FAIL(FPSetDirParms(Conn2, vol2, DIRDID_ROOT, name, bitmap, &filedir))
 
     if (ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol, DIRDID_ROOT, name)) {
