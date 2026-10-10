@@ -1,5 +1,3 @@
-perl = find_program('perl', required: false)
-
 if perl.found()
     metadata_helper = executable(
         'nad_metadata_helper',
@@ -63,5 +61,5 @@ if perl.found()
         endif
     endforeach
 else
-    warning('The nad CLI tests require Perl')
+    warning('The nad CLI tests require Perl 5.14 or newer')
 endif
