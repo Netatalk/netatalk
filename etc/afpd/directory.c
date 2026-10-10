@@ -2596,7 +2596,7 @@ int path_error(struct path *path, int error)
         return error;
     }
 
-    return AFPERR_BADTYPE ;
+    return AFPERR_BADTYPE;
 }
 
 /* ----------------------------- */

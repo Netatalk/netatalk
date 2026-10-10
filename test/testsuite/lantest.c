@@ -1126,7 +1126,7 @@ void run_test(const int32_t dir)
 #endif
         starttimer();
 
-        for (int32_t i = 0; i < numrw ; i++) {
+        for (int32_t i = 0; i < numrw; i++) {
             if (FPRead_ext_async(Conn, fork, i * dsi->server_quantum,
                                  dsi->server_quantum, data)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);

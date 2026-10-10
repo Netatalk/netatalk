@@ -130,7 +130,7 @@ static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
                 goto ilseq;    /* 80-BF */
             }
 
-            uc = (ucs2_t)(((c[0] & 0x1f) << 6) | GETUCVAL(c[1], 0)) ;
+            uc = (ucs2_t)(((c[0] & 0x1f) << 6) | GETUCVAL(c[1], 0));
             len = 2;
         } else if ((c[0] & 0xf0) == 0xe0) {
             /* 1110 zzzz */ /* 3 bytes */
@@ -150,7 +150,7 @@ static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
                 goto ilseq;    /* 80-BF */
             }
 
-            uc = (ucs2_t)(((c[0] & 0x0f) << 12) | GETUCVAL(c[1], 6) | GETUCVAL(c[2], 0)) ;
+            uc = (ucs2_t)(((c[0] & 0x0f) << 12) | GETUCVAL(c[1], 6) | GETUCVAL(c[2], 0));
             len = 3;
         } else if ((c[0] & 0xf8) == 0xf0) {
             /* 1111 0uuu */ /* 4 bytes */

@@ -1300,7 +1300,7 @@ static int ad_error(struct adouble *ad, int adflags)
         err = errno;
     }
 
-    return -1 ;
+    return -1;
 }
 
 /*!
@@ -2352,7 +2352,7 @@ const char *ad_path(const char *path, int adflags)
 {
     static char pathbuf[MAXPATHLEN + 1];
     const char *slash;
-    size_t  l ;
+    size_t  l;
 
     if (adflags & ADFLAGS_DIR) {
         l = strlcpy(pathbuf, path, sizeof(pathbuf));

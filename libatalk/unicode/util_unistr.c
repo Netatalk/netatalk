@@ -110,7 +110,7 @@ size_t strlen_w(const ucs2_t *src)
 {
     size_t len;
 
-    for (len = 0; *src++; len++) ;
+    for (len = 0; *src++; len++);
 
     return len;
 }
@@ -126,7 +126,7 @@ size_t strnlen_w(const ucs2_t *src, size_t max)
 {
     size_t len;
 
-    for (len = 0; *src++ && (len < max); len++) ;
+    for (len = 0; *src++ && (len < max); len++);
 
     return len;
 }
@@ -574,7 +574,7 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
         result = 0;
 
         /* Non-Combination Character */
-        if (comb < 0x300) ;
+        if (comb < 0x300);
         /* Unicode Standard Annex #15 A10.3 Hangul Composition */
         /* Step 1: leading consonant, vowel */
         else if ((VBASE <= comb) && (comb <= VBASE + VCOUNT)) {
@@ -606,7 +606,7 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
                         i += 4;
                         in += 2;
                     }
-                } while ((i + 6 <= inplen) && result_sp) ;
+                } while ((i + 6 <= inplen) && result_sp);
 
                 *out = base_sp >> 16;
                 out++;
@@ -675,7 +675,7 @@ size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
         comblen = 0;
 
         /* check ASCII first. this is frequent. */
-        if (base <= 0x007f) ;
+        if (base <= 0x007f);
         /* Unicode Standard Annex #15 A10.2 Hangul Decomposition */
         else if ((SBASE <= base) && (base < SBASE + SCOUNT)) {
             sindex = base - SBASE;

@@ -215,7 +215,7 @@ static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name,
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
                   ) < 0) {
-            return  -1 ;
+            return  -1;
         }
     }
 
@@ -272,7 +272,7 @@ static int RF_setdirmode_adouble(const struct vol *vol, const char *name,
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
                   ) < 0) {
-            return  -1 ;
+            return  -1;
         }
     }
 

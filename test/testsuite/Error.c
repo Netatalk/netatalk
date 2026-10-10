@@ -563,7 +563,7 @@ STATIC void test35()
 
     vol_attrs = get_vol_attrib(VolID);
 
-    for (unsigned int i = 0 ;
+    for (unsigned int i = 0;
             i < sizeof(afp_cmd_with_vol) / sizeof(afp_cmd_with_vol[0]);
             i++) {
         if (!t35_cmd_supported(&afp_cmd_with_vol[i], vol_attrs)) {
@@ -589,7 +589,7 @@ STATIC void test35()
         }
     }
 
-    for (unsigned int i = 0 ;
+    for (unsigned int i = 0;
             i < sizeof(afp_cmd_with_dt) / sizeof(afp_cmd_with_dt[0]);
             i++) {
         if (!t35_cmd_supported(&afp_cmd_with_dt[i], vol_attrs)) {
@@ -664,7 +664,7 @@ STATIC void test36()
         goto test_exit;
     }
 
-    for (i = 0 ; i < sizeof(afp_cmd_with_vol_did); i++) {
+    for (i = 0; i < sizeof(afp_cmd_with_vol_did); i++) {
         memset(dsi->commands, 0, DSI_CMDSIZ);
         dsi->header.dsi_flags = DSIFL_REQUEST;
         dsi->header.dsi_command = DSIFUNC_CMD;
@@ -735,7 +735,7 @@ STATIC void test37()
 
     did  = dir + 1;
 
-    for (unsigned int i = 0 ; i < sizeof(afp_cmd_with_vol_did1); i++) {
+    for (unsigned int i = 0; i < sizeof(afp_cmd_with_vol_did1); i++) {
         memset(dsi->commands, 0, DSI_CMDSIZ);
         dsi->header.dsi_flags = DSIFL_REQUEST;
         dsi->header.dsi_command = DSIFUNC_CMD;
@@ -1021,7 +1021,7 @@ STATIC void test100()
     FAIL(ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, DIRDID_ROOT, name1))
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     FAIL(ntohl(AFPERR_NOOBJ) != FPSetDirParms(Conn, vol, DIRDID_ROOT, name1, bitmap,
                                               &filedir))
 
@@ -1120,7 +1120,7 @@ STATIC void test101()
     FAIL(ntohl(AFPERR_ACCESS) != FPRemoveComment(Conn, vol, DIRDID_ROOT, name1))
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     FAIL(ntohl(AFPERR_ACCESS) != FPSetDirParms(Conn, vol, DIRDID_ROOT, name1,
                                                bitmap, &filedir))
 
@@ -1234,7 +1234,7 @@ STATIC void test102()
 
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     FAIL(ntohl(AFPERR_ACCESS) != FPSetDirParms(Conn, vol, DIRDID_ROOT, name1,
                                                bitmap, &filedir))
 
@@ -1375,7 +1375,7 @@ STATIC void test103()
 
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     bitmap = (1 << DIRPBIT_ATTR);
     ret = FPSetDirParms(Conn, vol, dir, "", bitmap, &filedir);
 
@@ -1539,7 +1539,7 @@ STATIC void test105()
     FAIL(err != FPRemoveComment(Conn, vol, dir, name1))
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
-    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
+    filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR;
     FAIL(err != FPSetDirParms(Conn, vol, dir, name1, bitmap, &filedir))
 
     if ((dir = FPCreateDir(Conn, vol, dir, name1))) {

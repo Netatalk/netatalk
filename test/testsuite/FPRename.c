@@ -69,7 +69,7 @@ STATIC void test72()
     } else {
         filedir.isdir = 1;
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
-        filedir.attr = ATTRBIT_NORENAME | ATTRBIT_SETCLR ;
+        filedir.attr = ATTRBIT_NORENAME | ATTRBIT_SETCLR;
         FAIL(FPSetDirParms(Conn, vol, dir1, "", bitmap, &filedir))
         ret = FPRename(Conn, vol, DIRDID_ROOT, ndel, "volume");
 

@@ -65,7 +65,7 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
 
     if (!dir_rx_set(mode)) {
         /* want to remove read and search access to owner it will screw the volume */
-        return -1 ;
+        return -1;
     }
 
     if (getcwd(wd, MAXPATHLEN) == NULL) {

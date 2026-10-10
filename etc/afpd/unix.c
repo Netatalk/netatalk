@@ -217,7 +217,7 @@ int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
     }
 
     if (vol->vfs->vfs_setdirunixmode(vol, name, mode, NULL) < 0) {
-        return  -1 ;
+        return  -1;
     }
 
     if (!dir_rx_set(mode)) {

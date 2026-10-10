@@ -52,7 +52,7 @@ void uuidcache_dump(void)
     char timestr[200];
     struct tm *tmp = NULL;
 
-    for (i = 0 ; i < 256; i++) {
+    for (i = 0; i < 256; i++) {
         if ((entry = namecache[i]) != NULL) {
             do {
                 tmp = localtime(&entry->creationtime);

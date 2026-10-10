@@ -816,7 +816,7 @@ static int convert_to_mac_name(const char *encoding, char *inptr,
 
     soptr = outptr;
 
-    for (i = 0; i < name_len && i < outlen - 1 ; i++) {
+    for (i = 0; i < name_len && i < outlen - 1; i++) {
         if (outbuf[i] == '_') {
             /* Replace '_' with a space (just for the looks) */
             *soptr = ' ';
