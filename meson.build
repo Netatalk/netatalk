@@ -155,9 +155,9 @@ endif
 perl_path = get_option('with-perl-path')
 
 if perl_path == ''
-    perl = find_program('perl', required: false)
+    perl = find_program('perl', required: false, version: '>=5.14')
 else
-    perl = find_program(perl_path / 'perl', required: false)
+    perl = find_program(perl_path / 'perl', required: false, version: '>=5.14')
 endif
 
 grep = find_program('grep', required: false)

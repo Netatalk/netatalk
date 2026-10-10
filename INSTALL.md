@@ -75,7 +75,7 @@ required at the bare minimum.
 | libtirpc **OR** libquota   | Quota support |
 | libunwind                  | symbolized backtraces when a daemon crashes |
 | mysql-client **OR** mariadb-client | mysql CNID backend |
-| Perl                       | admin scripts |
+| Perl                       | v5.14 or later; utility programs and build system support scripts |
 | po4a                       | localization of documentation |
 | stuffit-ffi                | StuffIt support in `nad` |
 | talloc                     | Spotlight support |
