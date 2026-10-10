@@ -1,8 +1,6 @@
-DSI over TCP Implementation Notes
-=================================
+# DSI over TCP Transport Layer
 
-Signals and Writes to Client
-----------------------------
+## Signals and Writes to Client
 
 Because AFP/TCP uses a streaming protocol, we need to make sure that writes to the client are atomic.
 Notably, signal handlers which write data can't interrupt data currently being written.
@@ -21,8 +19,7 @@ Signals that send data to the client (afp_dsi.c):
 
 Functions which need their own buffers: dsi_attention(), dsi_tickle()
 
-Performance Tweaking
---------------------
+## Performance Tweaking
 
 Sending complete packets or the header and a partial packet to the client is handled by dsi_stream_send()
 in dsi_stream.c.
@@ -41,8 +38,7 @@ To reduce the amount of tickles generated on a slow link,
 SIGALRM is turned off for the duration of a "known" large file transfer
 (i.e., dsi_read/write).
 
-Read-Ahead Buffering
---------------------
+## Read-Ahead Buffering
 
 DSI implements a read-ahead buffer to reduce the number of small reads.
 The buffer size is controlled by the dsireadbuf option (default 12, meaning 12 × server quantum).

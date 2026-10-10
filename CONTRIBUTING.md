@@ -113,8 +113,12 @@ integration tests.
 
 Novel test failures should be fixed before submitting a PR.
 It is strongly recommended to run the relevant tests locally before submitting.
-For more details, see the
+See [test/README.md](https://github.com/Netatalk/netatalk/blob/main/test/README.md)
+for test placement and execution instructions, and the
 [Testing wiki page](https://github.com/Netatalk/netatalk/wiki/Testing).
+
+When changing behavior or configuration options, update the relevant user and
+developer documentation, including manual pages.
 
 ### Alternative patch submission
 
@@ -134,7 +138,7 @@ As of version 4.0.0, autotools macros were completely removed, and Meson is now 
 See the [INSTALL](https://github.com/Netatalk/netatalk/blob/main/INSTALL.md) file in the netatalk code tree
 for more details on how to use the Meson build system.
 
-# Copyright and license
+## Copyright and license
 
 The Netatalk project as a whole is distributed under the GNU GPL v2.
 Code covered by other, compatible, FLOSS licenses are also included in the package.
@@ -142,7 +146,7 @@ Code covered by other, compatible, FLOSS licenses are also included in the packa
 It is strongly recommended that new code contributed to this project is also licensed under the GNU GPL v2 license.
 This is an example copyright header that you can put in the top of new source files, formatted as a C code comment.
 
-```C
+```c
 /*
  * Copyright (C) Firstname Lastname 20XX
  * All Rights Reserved.  See COPYING.
@@ -156,7 +160,7 @@ This is an example copyright header that you can put in the top of new source fi
 
 For other languages, use the appropriate code comment syntax.
 
-# Coding Standards
+## C Coding Standards
 
 The baseline C language standard revision for the netatalk codebase is C11.
 
@@ -164,45 +168,100 @@ Note that since the netatalk code was originally written in the early 90s,
 there are still parts of the codebase that is archaic.
 Contributors are welcome and encouraged to modernize the code and use recent C language conveniences compliant with C11.
 
-The use of memory safe standard library BSD-isms such as `strnlen()`, `strlcpy()`, and `strlcat()` is also encouraged.
-In fact, `include/atalkd/compat.h` contains wrappers for these three functions for standard C libraries
-that don't support them natively.
+The use of bounded string functions such as `strnlen()`, `strlcpy()`, and `strlcat()` is encouraged.
+[include/atalk/compat.h](https://netatalk.io/developer/compat_8h) declares compatibility implementations
+for standard C libraries that don't support them natively.
 
-## C static analysis
+### Error handling and logging
+
+Check operations that can fail and preserve the function's documented return
+contract, including AFP error codes where applicable. Initialize resources before
+any path that can reach cleanup, and release them on both success and failure.
+Use a shared cleanup path when several resources need to be released.
+
+Use Netatalk's logging system for daemon diagnostics, choosing an appropriate
+severity and subsystem. Keep messages concise and useful for diagnosing the
+failure, and avoid logging credentials or other secrets. See
+[Error checking and logging](https://netatalk.io/developer/md_developer_2logging) for logging usage and the
+error checking macros in `<atalk/errchk.h>`.
+
+### Memory and string handling
+
+Check allocation results before using the allocated memory. Make ownership clear:
+which function releases a resource, whether an argument is borrowed, and whether
+a returned pointer transfers ownership. Free owned resources exactly once and
+avoid using pointers after their resources have been released.
+
+Bounded string operations still require valid source buffers and checks for
+truncation when it would change behavior. Reserve space for the terminating NUL
+when building C strings. Check `snprintf()` for both a negative return value and
+a result that does not fit in the destination buffer.
+
+### Input validation and privileges
+
+Validate client-supplied lengths, offsets, counts, and values before reading,
+copying, allocating, or performing filesystem operations. Check arithmetic for
+overflow before calculating buffer sizes or ranges. Treat protocol fields as
+length-delimited data until their termination and encoding have been validated.
+
+Use the existing path resolution and access checks when handling filenames;
+substring checks alone do not establish that a path stays within a volume.
+Preserve the authentication, supplementary-group, and effective-user/group
+transitions used by the affected code. Check failures when changing privileges.
+
+### Portability and byte order
+
+Prefer Meson feature checks and generated configuration macros to platform-name
+checks when testing whether an API is available. Use the compatibility helpers
+in `include/atalk/compat.h` and `libatalk/compat/` where appropriate.
+Platform-specific APIs may have different signatures or semantics even when
+they share a name; retain the appropriate fallback paths.
+
+Respect the byte order specified by each protocol field and keep wire values
+distinct from host-order values. Use suitable conversion functions or existing
+serialization helpers, and avoid unaligned typed accesses to packet buffers.
+
+### Performance
+
+Measure before optimizing, and describe the workload and results when proposing
+a performance change. See [Flamegraph Profiling](https://netatalk.io/developer/md_developer_2profiling) for
+the existing profiling workflow.
+
+### Static analysis
 
 Certain coding conventions and best practices are enforced through static analysis provided by SonarQube.
 
-This project uses a [custom Quality Profile](https://sonarcloud.io/organizations/netatalk/quality_profiles/show?name=Netatalk+way&language=c),
+This project uses the [Netatalk Quality Profile for C](https://sonarcloud.io/organizations/netatalk/quality_profiles/show?name=Netatalk+way&language=c),
 so you can refer to this for the current list of active static analysis rules.
 
 New code must not introduce any Security, Reliability, or Maintainability bugs.
-Changed code must not contain any Security or Reliability bugs, but Maintainability bugs are tolerated.
+Changed code must not contain any Security or Reliability bugs, while trivial Maintainability bugs are tolerated.
 
 Note that project members will get immediate feedback by the CI workflow,
 while external contributors' code will only get scanned after being merged for technical reasons.
 
-## C code style
+### Coding style
 
 This project has adopted a C coding style guide applied across the entire codebase.
-The intended outcome is to make the code more readable, and to make collaboration and maintenance easier.
+The intended outcome is to make the code more readable and maintainable, while enabling seamless collaboration.
 With automated enforcement of the style guide, the manual overhead of fiddling with layout is eliminated.
-
-### Automatic formatting
 
 The style guide is automatically enforced with [astyle](https://gitlab.com/saalen/astyle) v3.6.19 or later.
 and an `.astylerc` options file.
 Before submitting new code, run `astyle --project --recursive '*.h' '*.c' '*.cc'` in the root of the netatalk source tree.
-You can also use the `./contrib/scripts/codefmt.sh` convenience script to the same effect.
+You can also run `./contrib/scripts/codefmt.sh -s c` from the netatalk repository root to the same effect.
 
-### Rules
+#### General rules
 
-- General rules
-  - Four space indentation
-  - Max 80 char line lengths
-  - Variable and function names should be in snake_case
-  - Lists of symbols, files etc. should be sorted in alphabetic order, unless a constraint dictates otherwise
-  - One variable declaration and definition per line
-  - Alphanumeric symbols in optarg should be in alphabetical order, with unary options first and parameter options second
+- Four space indentation
+- Max 80 char line lengths (except for trailing comments, which can be longer)
+- Variable and function names should be in snake_case
+- Macro constants should use uppercase names with underscores
+- Lists of symbols, files etc. should be sorted in alphabetic order,
+  unless a constraint dictates otherwise
+- One variable declaration and definition per line
+- Alphanumeric symbols in optarg or optstring should be in alphabetical order,
+  with unary options first and parameter options second
 
 Ex.
 
@@ -210,15 +269,17 @@ Ex.
 getopt(ac, av, "flsA:D:m:r:")
 ```
 
-- Headers
-  - Cluster headers in this order: First system libraries, second 3rd party libraries, third libatalk headers,
-    fourth local headers
-  - Within each cluster: Sort header include directives in alphabetical order, unless a particular sequence is required
+#### Headers
 
-- Braces
-  - Starting braces are broken from function definitions, but attached for all other block types
-  - When on the same line, one space padding between condition and starting brace
-  - Always use braces on single-line blocks
+- Cluster headers in this order: First system libraries, second 3rd party libraries, third libatalk headers,
+fourth local headers
+- Within each cluster: Sort header include directives in alphabetical order, unless a particular sequence is required
+
+#### Braces
+
+- Starting braces are broken from function definitions, but attached for all other block types
+- When on the same line, one space padding between condition and starting brace
+- Always use braces on single-line blocks
 
 Ex.
 
@@ -231,10 +292,12 @@ int return_zero(int i)
 }
 ```
 
-- Code comments
-  - C style `/* comments */`, not C++ style `// comments`
-  - Trailing code comments should be used where appropriate, such as structure member definitions
-  - Multi line comments use vertically aligned `*` prefixes
+#### Code comments
+
+- C style `/* comments */` are mandatory
+  - The only exception is for `//NOSONAR` comments to suppress SonarQube static analysis warnings
+- Trailing code comments should be used where appropriate, such as structure member definitions
+- Multi line comments use vertically aligned `*` prefixes
 
 Ex.
 
@@ -244,16 +307,19 @@ Ex.
  */
 ```
 
-- Code documentation
-  - Building developer documentation requires Doxygen 1.17.0 or later for native Mermaid diagram support
-  - We use a Doxygen based documentation system for code documentation, with:
-    - *QDoc* style `/*! ... */` markers
-    - Use `/*!< ... */` to for trailing comments
-    - *JavaDoc* style `@` prefixed [commanded tags](https://www.doxygen.nl/manual/commands.html)
-  - Most comment blocks should include `@brief`, `@param` and `@returns`
-  - Indicate input/output status for `@param` with \[in\],\[out\], and \[in,out\] tags
-  - Surround code blocks with `@code ... @endcode` for proper formatting
-  - Use CommonMark markdown for rich formatting, for instance for numbered and bulleted lists
+#### Code documentation
+
+- Building developer documentation requires Doxygen 1.17.0 or later for native Mermaid diagram support
+- We use a Doxygen based documentation system for code documentation, with:
+  - *QDoc* style `/*! ... */` markers
+  - Use `/*!< ... */` for trailing comments
+  - *JavaDoc* style `@` prefixed [commanded tags](https://www.doxygen.nl/manual/commands.html)
+- Most comment blocks should include at least `@brief`, `@param` and `@returns`
+- Indicate input/output status for `@param` with \[in\],\[out\], and \[in,out\] tags
+- Document parameter constraints, resource ownership, and return values
+- Describe side effects and concurrency requirements where relevant
+- Surround code blocks with `@code ... @endcode` for proper formatting
+- Use CommonMark markdown for rich formatting, for instance for numbered and bulleted lists
 
 Ex.
 
@@ -280,20 +346,22 @@ static int hint_write_batch(int fd, const char *buf, int len, int has_reset,
 }
 ```
 
-- Padding and alignment
-  - Pointer and reference operators (*, &, or ^) should be aligned to the variable name
-  - One space padding after comma
-  - One space padding after paren headers ('if', 'for', etc.)
-  - One space padding before and after operators ('+', '-', etc.)
-  - No padding for unary operators ('i++')
-  - No padding inside parentheses or brackets ('if (1 == 0)')
+#### Padding and alignment
 
-- Empty lines and trailing spaces
-  - No trailing spaces
-  - Max one empty line in sequence
-  - Empty line padding before and after unrelated blocks, labels, etc.
+- Pointer and reference operators (*, &, or ^) should be aligned to the variable name
+- One space padding after comma
+- One space padding after paren headers ('if', 'for', etc.)
+- One space padding before and after operators ('+', '-', etc.)
+- No padding for unary operators ('i++')
+- No padding inside parentheses or brackets ('if (1 == 0)')
 
-## Meson code style
+#### Whitespace and newlines
+
+- No trailing spaces
+- Max one empty line in sequence
+- Empty line padding before and after unrelated blocks, labels, etc.
+
+## Meson coding standards
 
 We use [Muon](https://github.com/annacrombie/muon)'s opinionated formatter - `muon fmt` -
 to format all the meson.build files as it applies the meson syntax recommendations to all files.
@@ -345,27 +413,38 @@ cd netatalk
 muonfmt
 ```
 
-You can also use the `./contrib/scripts/codefmt.sh` convenience script to the same effect.
+You can also run `./contrib/scripts/codefmt.sh -s meson` from the netatalk repository root to the same effect.
 
 *Note:* In Debian and derived distros, the muon package and binary are called `muon-meson`.
 
-## Perl code style
+## Perl coding standards
+
+The *strict* and *warnings* pragmas are required for all Perl code.
+
+```perl
+use strict;
+use warnings;
+```
 
 Perl code distributed with netatalk should follow the common style guide,
 enforced by `perltidy` and the `.perltidyrc` config file.
 
-For example, it should use four space indentation with a max 120 char line length.
+You can also run `./contrib/scripts/codefmt.sh -s perl` from the netatalk repository root to the same effect.
+
+We mandate a four space indentation with max 120 char line length.
 
 Brace, square bracket, and parentheses tightness should be max, meaning no inner space padding.
 The exception is block braces, which should have a one space padding.
 Opening braces should always be trailing at the right of the condition or method definition,
 with a cuddled else statement.
 
-## Shell script code style
+## Shell script coding standards
 
 First off, we expect all shell scripts distributed with netatalk to be POSIX compliant and run in the `sh` interpreter.
 
-As with the other code styles, we expect four space indentation, including for switch statements.
+As with the other code style guides, we expect four space indentation, including for switch statements.
 We also like to see a one space padding between all operators.
 
 The coding style is enforced through an `.editorconfig` file in the repo root, together with the `shfmt` beautifier.
+
+You can also run `./contrib/scripts/codefmt.sh -s shell` from the netatalk repository root to the same effect.
