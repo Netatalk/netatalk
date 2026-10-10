@@ -5,7 +5,7 @@ description: "7 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_write.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,6 +42,8 @@ Defined at lines 53 to 116.
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff), [adf_pwrite](ad_write.c.md#adf_pwrite)
 
 Called by: [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [nad_write](../../bin/nad/nad_adouble.c.md#nad_write), [write_file](../../etc/afpd/fork.c.md#write_file)
+
+Mentioned in the documentation of: [ad_recvfile](ad_recvfile.c.md#ad_recvfile)
 
 ### sys_ftruncate
 

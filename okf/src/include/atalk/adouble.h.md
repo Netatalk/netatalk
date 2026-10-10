@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -84,7 +84,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int ad_data_open(const struct adouble *ad)
 ```
 
-Defined at lines 403 to 406.
+Defined at lines 405 to 408.
 
 Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 
@@ -94,7 +94,7 @@ Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork]
 static int ad_meta_open(const struct adouble *ad)
 ```
 
-Defined at lines 408 to 411.
+Defined at lines 410 to 413.
 
 Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf), [ad_open_rf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_rf_v2), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_getforkparams](../../etc/afpd/fork.c.md#afp_getforkparams), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [copyfile](../../etc/afpd/file.c.md#copyfile), [getforkparams](../../etc/afpd/fork.c.md#getforkparams)
 
@@ -106,7 +106,7 @@ Mentioned in the documentation of: [ad_meta_loaded](adouble.h.md#ad_meta_loaded)
 static int ad_rsrc_open(const struct adouble *ad)
 ```
 
-Defined at lines 413 to 416.
+Defined at lines 415 to 418.
 
 Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd)
 
@@ -116,7 +116,7 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](
 static int ad_meta_loaded(const struct adouble *ad)
 ```
 
-Defined at lines 423 to 428.
+Defined at lines 425 to 430.
 
 Metadata header read into ad; unlike [ad_meta_open()](adouble.h.md#ad_meta_open), true also for ea RDONLY opens, which read the EA by path and hold no fd. Symlinks short-circuit the metadata open with the refcount already taken and the header never read — both fds must be checked, as ea marks the meta fd and v2 the data fd.
 
@@ -128,7 +128,7 @@ Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr]
 int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
 ```
 
-Declared at include/atalk/adouble.h line 452; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 454; no definition in the scanned sources.
 
 ### ad_pread
 
@@ -136,7 +136,7 @@ Declared at include/atalk/adouble.h line 452; no definition in the scanned sourc
 ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t)
 ```
 
-Declared at include/atalk/adouble.h line 507; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 510; no definition in the scanned sources.
 
 # Types
 
@@ -173,7 +173,7 @@ Defined at line 170.
 
 ### struct adouble
 
-Defined at line 198.
+Defined at line 199.
 * `uint32_t ad_magic`
 * `uint32_t ad_version`
 * `char ad_filler`
@@ -194,12 +194,13 @@ Defined at line 198.
 * `char * ad_name`
 * `struct adouble_fops * ad_ops`
 * `uint16_t ad_open_forks`
+* `bool ad_nosplice`
 * `size_t valid_data_len`
 * `char ad_data`
 
 ### struct adouble_fops
 
-Defined at line 190.
+Defined at line 191.
 * `const char *(* ad_path`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_rf_ea), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork).
 * `int(* ad_mkrf`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2).
 * `int(* ad_rebuild_header`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf).

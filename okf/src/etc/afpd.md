@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "65 files, 592 functions."
+description: "65 files, 594 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 # Files
@@ -43,7 +43,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [etc/afpd/file.h](afpd/file.h.md): includes 4 project headers.
 * [etc/afpd/filedir.c](afpd/filedir.c.md): 13 functions, includes 24 project headers.
 * [etc/afpd/filedir.h](afpd/filedir.h.md): includes 2 project headers.
-* [etc/afpd/fork.c](afpd/fork.c.md): 29 functions, includes 17 project headers.
+* [etc/afpd/fork.c](afpd/fork.c.md): 31 functions, includes 17 project headers.
 * [etc/afpd/fork.h](afpd/fork.h.md): 1 function, 2 types, includes 3 project headers.
 * [etc/afpd/hash.c](afpd/hash.c.md): 29 functions, includes 1 project header.
 * [etc/afpd/hash.h](afpd/hash.h.md): 7 functions, includes 1 project header.
@@ -93,8 +93,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [libatalk/compat](../libatalk/compat.md): 59 calls
 * [include/atalk](../include/atalk.md): 45 calls
 * [libatalk/cnid](../libatalk/cnid.md): 39 calls
+* [libatalk/dsi](../libatalk/dsi.md): 37 calls
 * [libatalk/unicode](../libatalk/unicode.md): 37 calls
-* [libatalk/dsi](../libatalk/dsi.md): 36 calls
 * [libatalk/vfs](../libatalk/vfs.md): 18 calls
 * [libatalk/acl](../libatalk/acl.md): 17 calls
 * [libatalk/asp](../libatalk/asp.md): 16 calls

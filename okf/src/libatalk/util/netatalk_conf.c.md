@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/netatalk_conf.c"
-description: "51 functions, includes 13 project headers."
+description: "52 functions, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/netatalk_conf.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -945,17 +945,29 @@ Calls: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [getop
 
 Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 
+### splice_size_round
+
+```c
+static int splice_size_round(int size)
+```
+
+Defined at lines 3340 to 3354.
+
+Round size up to a power of two, as the kernel sizes a pipe.
+
+Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
+
 ### afp_config_parse
 
 ```c
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 ```
 
-Defined at lines 3343 to 4029.
+Defined at lines 3360 to 4054.
 
 Initialize an [AFPObj](../../include/atalk/globals.h.md#struct-afpobj) and options from ini config file
 
-Calls: [atalk_aton](atalk_addr.c.md#atalk_aton), [become_root](unix.c.md#become_root), [conf_int_key_usable](netatalk_conf.c.md#conf_int_key_usable), [conf_key_present](netatalk_conf.c.md#conf_key_present), [conf_parse_bool](netatalk_conf.c.md#conf_parse_bool), [getoption_bool](netatalk_conf.c.md#getoption_bool), [getoption_int](netatalk_conf.c.md#getoption_int), [getoption_str](netatalk_conf.c.md#getoption_str), [getoption_strdup](netatalk_conf.c.md#getoption_strdup), [getoption_strdup_alias](netatalk_conf.c.md#getoption_strdup_alias), [getoption_uint32_strict](netatalk_conf.c.md#getoption_uint32_strict), [netatalk_readbuf_clamp](netatalk_conf.c.md#netatalk_readbuf_clamp), [readextmap](netatalk_conf.c.md#readextmap), [safe_atoi](netatalk_conf.c.md#safe_atoi), [set_charset_name](../unicode/charcnv.c.md#set_charset_name), [set_processname](logger.c.md#set_processname), [setuplog](logger.c.md#setuplog), [strip_trailing_slashes](netatalk_conf.c.md#strip_trailing_slashes), [unbecome_root](unix.c.md#unbecome_root), [user_state_paths](netatalk_conf.c.md#user_state_paths)
+Calls: [atalk_aton](atalk_addr.c.md#atalk_aton), [become_root](unix.c.md#become_root), [conf_int_key_usable](netatalk_conf.c.md#conf_int_key_usable), [conf_key_present](netatalk_conf.c.md#conf_key_present), [conf_parse_bool](netatalk_conf.c.md#conf_parse_bool), [getoption_bool](netatalk_conf.c.md#getoption_bool), [getoption_int](netatalk_conf.c.md#getoption_int), [getoption_str](netatalk_conf.c.md#getoption_str), [getoption_strdup](netatalk_conf.c.md#getoption_strdup), [getoption_strdup_alias](netatalk_conf.c.md#getoption_strdup_alias), [getoption_uint32_strict](netatalk_conf.c.md#getoption_uint32_strict), [netatalk_readbuf_clamp](netatalk_conf.c.md#netatalk_readbuf_clamp), [readextmap](netatalk_conf.c.md#readextmap), [safe_atoi](netatalk_conf.c.md#safe_atoi), [set_charset_name](../unicode/charcnv.c.md#set_charset_name), [set_processname](logger.c.md#set_processname), [setuplog](logger.c.md#setuplog), [splice_size_round](netatalk_conf.c.md#splice_size_round), [strip_trailing_slashes](netatalk_conf.c.md#strip_trailing_slashes), [unbecome_root](unix.c.md#unbecome_root), [user_state_paths](netatalk_conf.c.md#user_state_paths)
 
 Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/nad/nad.c.md#main), [main](../../etc/afpd/main.c.md#main), [main](../../etc/netatalk/netatalk.c.md#main)
 
@@ -965,7 +977,7 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/nad/nad.c.m
 void afp_config_free(AFPObj *obj)
 ```
 
-Defined at lines 4032 to 4176.
+Defined at lines 4057 to 4201.
 
 get rid of any allocated afp_option buffers.
 

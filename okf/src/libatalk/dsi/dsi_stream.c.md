@@ -5,7 +5,7 @@ description: "13 functions, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_stream.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -121,7 +121,7 @@ Called by: [dsi_stream_send](dsi_stream.c.md#dsi_stream_send)
 int dsi_disconnect(DSI *dsi)
 ```
 
-Defined at lines 290 to 302. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 290 to 303. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Communication error with the client, enter disconnected state.
 
@@ -131,6 +131,8 @@ Communication error with the client, enter disconnected state.
 Returns: 0 if successfully entered disconnected state
 
 Returns: -1 if ppid is 1 which means afpd master died, or the session has not logged in: [login()](../../etc/afpd/auth.c.md#login) refuses uid 0 and sets AFPobj->uid on success, so a zero uid is no login (the UAM's logout hook is no mark, most UAMs register none)
+
+Calls: [dsi_close_pipe](dsi_write.c.md#dsi_close_pipe)
 
 Called by: [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [handle_alarm](../../etc/afpd/afp_dsi.c.md#handle_alarm)
 
@@ -142,7 +144,7 @@ Calls through [`DSI::proto_close`](../../include/atalk/dsi.h.md#struct-dsi): no 
 ssize_t dsi_stream_write(DSI *, void *, const size_t, const int mode)
 ```
 
-Defined at lines 312 to 374. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 313 to 375. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 write raw [DSI](../../include/atalk/dsi.h.md#struct-dsi) data
 
@@ -160,7 +162,7 @@ Called by: [dsi_attention](dsi_attn.c.md#dsi_attention), [dsi_read](dsi_read.c.m
 ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len, const int err)
 ```
 
-Defined at lines 379 to 530. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 380 to 531. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Calls: [dsi_header_pack_reply](dsi_stream.c.md#dsi_header_pack_reply), [dsi_peek](dsi_stream.c.md#dsi_peek), [dsi_stream_write](dsi_stream.c.md#dsi_stream_write), [sys_sendfile](../adouble/ad_sendfile.c.md#sys_sendfile)
 
@@ -172,7 +174,7 @@ Called by: [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [read_fork](.
 size_t dsi_stream_read(DSI *, void *, const size_t)
 ```
 
-Defined at lines 542 to 581. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 543 to 582. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Read data from [DSI](../../include/atalk/dsi.h.md#struct-dsi) buffer.
 
@@ -190,7 +192,7 @@ Called by: [dsi_buffered_stream_read](dsi_stream.c.md#dsi_buffered_stream_read),
 int dsi_stream_send(DSI *, void *, size_t)
 ```
 
-Defined at lines 589 to 660. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 590 to 661. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 write data.
 
@@ -208,7 +210,7 @@ Called by: [dsi_cmdreply](dsi_cmdreply.c.md#dsi_cmdreply), [dsi_readinit](dsi_re
 int dsi_stream_receive(DSI *)
 ```
 
-Defined at lines 670 to 770. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 671 to 771. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Read [DSI](../../include/atalk/dsi.h.md#struct-dsi) command and data.
 

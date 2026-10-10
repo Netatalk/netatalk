@@ -7,7 +7,7 @@
 * [ad_lock.c](ad_lock.c.md) - 21 functions, includes 5 project headers.
 * [ad_open.c](ad_open.c.md) - Part of Netatalk's AppleDouble implementatation.
 * [ad_read.c](ad_read.c.md) - 2 functions, includes 4 project headers.
-* [ad_recvfile.c](ad_recvfile.c.md) - 5 functions, includes 3 project headers.
-* [ad_sendfile.c](ad_sendfile.c.md) - 2 functions, includes 2 project headers.
+* [ad_recvfile.c](ad_recvfile.c.md) - 1 function, includes 2 project headers.
+* [ad_sendfile.c](ad_sendfile.c.md) - 1 function, includes 2 project headers.
 * [ad_size.c](ad_size.c.md) - 1 function, includes 2 project headers.
 * [ad_write.c](ad_write.c.md) - 7 functions, includes 5 project headers.

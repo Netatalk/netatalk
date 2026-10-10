@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/util"
-description: "20 files, 189 functions."
+description: "20 files, 190 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 # Files
@@ -20,7 +20,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [libatalk/util/gettok.c](util/gettok.c.md): 2 functions, includes 1 project header.
 * [libatalk/util/locking.c](util/locking.c.md): Netatalk utility functions: locking.
 * [libatalk/util/logger.c](util/logger.c.md): 19 functions, includes 4 project headers.
-* [libatalk/util/netatalk_conf.c](util/netatalk_conf.c.md): 51 functions, includes 13 project headers.
+* [libatalk/util/netatalk_conf.c](util/netatalk_conf.c.md): 52 functions, includes 13 project headers.
 * [libatalk/util/pathconv.c](util/pathconv.c.md): 1 function, includes 4 project headers.
 * [libatalk/util/queue.c](util/queue.c.md): 9 functions, includes 1 project header.
 * [libatalk/util/server_child.c](util/server_child.c.md): functions to handle child processes

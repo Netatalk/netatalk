@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_open.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -248,7 +248,7 @@ Called by: [ad_header_read_osx](ad_open.c.md#ad_header_read_osx)
 static int ad_header_read_osx(const char *path, struct adouble *ad, struct stat *hst)
 ```
 
-Defined at lines 965 to 1068.
+Defined at lines 965 to 1066.
 
 Read an ._ file, only uses the resofork, finderinfo is taken from EA
 
@@ -262,7 +262,7 @@ Called by: [ad_open_rf_ea](ad_open.c.md#ad_open_rf_ea), [ad_refresh](ad_open.c.m
 static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst)
 ```
 
-Defined at lines 1070 to 1171.
+Defined at lines 1068 to 1169.
 
 Calls: [become_root](../util/unix.c.md#become_root), [fullpathname](../util/unix.c.md#fullpathname), [parse_entries](ad_open.c.md#parse_entries), [sys_fgetxattr](../vfs/extattr.c.md#sys_fgetxattr), [sys_getxattr](../vfs/extattr.c.md#sys_getxattr), [sys_removexattr](../vfs/extattr.c.md#sys_removexattr), [unbecome_root](../util/unix.c.md#unbecome_root)
 
@@ -276,7 +276,7 @@ Dispatched via: [ad_adouble_ea](ad_open.c.md#ad_adouble_ea)
 static int ad_mkrf(const char *path)
 ```
 
-Defined at lines 1181 to 1201.
+Defined at lines 1179 to 1199.
 
 Takes a path to an AppleDouble file and creates the parent .AppleDouble directory.
 
@@ -296,7 +296,7 @@ Dispatched via: [ad_adouble](ad_open.c.md#ad_adouble)
 static int ad_mkrf_osx(const char *path)
 ```
 
-Defined at lines 1211 to 1214.
+Defined at lines 1209 to 1212.
 
 Called through [`adouble_fops::ad_mkrf`](../../include/atalk/adouble.h.md#struct-adouble_fops) by: [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2)
 
@@ -308,7 +308,7 @@ Dispatched via: [ad_adouble_ea](ad_open.c.md#ad_adouble_ea)
 static int ad_chown(const char *path, struct stat *stbuf)
 ```
 
-Defined at lines 1226 to 1240.
+Defined at lines 1224 to 1238.
 
 if we are root change path user/ group
 
@@ -330,7 +330,7 @@ Uses file-scope variables: `default_uid`
 static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf)
 ```
 
-Defined at lines 1247 to 1260.
+Defined at lines 1245 to 1258.
 
 return access right and inode of path parent directory
 
@@ -344,7 +344,7 @@ Called by: [ad_mkdir](ad_open.c.md#ad_mkdir), [ad_mode](ad_open.c.md#ad_mode), [
 static int ad_header_upgrade(struct adouble *ad, const char *name)
 ```
 
-Defined at lines 1263 to 1266.
+Defined at lines 1261 to 1264.
 
 Dispatched via: [ad_adouble](ad_open.c.md#ad_adouble)
 
@@ -354,7 +354,7 @@ Dispatched via: [ad_adouble](ad_open.c.md#ad_adouble)
 static int ad_header_upgrade_ea(struct adouble *ad, const char *name)
 ```
 
-Defined at lines 1268 to 1272.
+Defined at lines 1266 to 1270.
 
 Dispatched via: [ad_adouble_ea](ad_open.c.md#ad_adouble_ea)
 
@@ -364,7 +364,7 @@ Dispatched via: [ad_adouble_ea](ad_open.c.md#ad_adouble_ea)
 static int ad_error(struct adouble *ad, int adflags)
 ```
 
-Defined at lines 1283 to 1306.
+Defined at lines 1281 to 1304.
 
 Error handling for adouble header(=metadata) file open error.
 
@@ -384,7 +384,7 @@ Called by: [ad_open_hf](ad_open.c.md#ad_open_hf)
 static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
 ```
 
-Defined at lines 1316 to 1368.
+Defined at lines 1314 to 1366.
 
 Map ADFLAGS to open() flags.
 
@@ -403,7 +403,7 @@ Called by: [ad_open_df](ad_open.c.md#ad_open_df), [ad_open_hf_ea](ad_open.c.md#a
 static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble *ad)
 ```
 
-Defined at lines 1393 to 1513.
+Defined at lines 1391 to 1511.
 
 Calls: [ad2openflags](ad_open.c.md#ad2openflags), [ad_chown](ad_open.c.md#ad_chown), [ad_mode_st](ad_open.c.md#ad_mode_st), [adf_lock_init](ad_lock.c.md#adf_lock_init), [adflags2logstr](ad_open.c.md#adflags2logstr), [fullpathname](../util/unix.c.md#fullpathname)
 
@@ -415,7 +415,7 @@ Called by: [ad_open](ad_open.c.md#ad_open)
 static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adouble *ad)
 ```
 
-Defined at lines 1515 to 1674.
+Defined at lines 1513 to 1672.
 
 Calls: [ad2openflags](ad_open.c.md#ad2openflags), [ad_chown](ad_open.c.md#ad_chown), [ad_flush](ad_flush.c.md#ad_flush), [ad_hf_mode](ad_open.c.md#ad_hf_mode), [ad_mode_st](ad_open.c.md#ad_mode_st), [ad_refresh](ad_open.c.md#ad_refresh), [adf_lock_init](ad_lock.c.md#adf_lock_init), [adflags2logstr](ad_open.c.md#adflags2logstr), [fullpathname](../util/unix.c.md#fullpathname), [new_ad_header](ad_open.c.md#new_ad_header), [openflags2logstr](ad_open.c.md#openflags2logstr)
 
@@ -433,7 +433,7 @@ Calls through [`adouble_fops::ad_path`](../../include/atalk/adouble.h.md#struct-
 static int ad_open_hf_ea(const char *path, int adflags, int mode, struct adouble *ad)
 ```
 
-Defined at lines 1676 to 1801.
+Defined at lines 1674 to 1799.
 
 Calls: [ad2openflags](ad_open.c.md#ad2openflags), [ad_flush](ad_flush.c.md#ad_flush), [ad_reso_size](ad_open.c.md#ad_reso_size), [adflags2logstr](ad_open.c.md#adflags2logstr), [fullpathname](../util/unix.c.md#fullpathname), [new_ad_header](ad_open.c.md#new_ad_header)
 
@@ -447,7 +447,7 @@ Calls through [`adouble_fops::ad_header_read`](../../include/atalk/adouble.h.md#
 static int ad_open_hf(const char *path, int adflags, int mode, struct adouble *ad)
 ```
 
-Defined at lines 1803 to 1829.
+Defined at lines 1801 to 1827.
 
 Calls: [ad_error](ad_open.c.md#ad_error), [ad_open_hf_ea](ad_open.c.md#ad_open_hf_ea), [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2)
 
@@ -459,7 +459,7 @@ Called by: [ad_open](ad_open.c.md#ad_open)
 off_t ad_reso_size(const char *path, int adflags, struct adouble *ad)
 ```
 
-Defined at lines 1834 to 1877.
+Defined at lines 1832 to 1875.
 
 Get resofork length for adouble:ea, parameter 'ad' may be NULL
 
@@ -473,7 +473,7 @@ Called by: [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached)
 static int ad_open_rf_v2(const char *path, int adflags, int mode, struct adouble *ad)
 ```
 
-Defined at lines 1879 to 1901.
+Defined at lines 1877 to 1899.
 
 Calls: [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [fullpathname](../util/unix.c.md#fullpathname)
 
@@ -485,7 +485,7 @@ Called by: [ad_open_rf](ad_open.c.md#ad_open_rf)
 static int ad_open_rf_ea(const char *path, int adflags, int mode, struct adouble *ad)
 ```
 
-Defined at lines 1903 to 2087.
+Defined at lines 1901 to 2085.
 
 Calls: [ad2openflags](ad_open.c.md#ad2openflags), [ad_close](ad_flush.c.md#ad_close), [ad_flush](ad_flush.c.md#ad_flush), [ad_header_read_osx](ad_open.c.md#ad_header_read_osx), [ad_reso_size](ad_open.c.md#ad_reso_size), [fullpathname](../util/unix.c.md#fullpathname), [new_ad_header](ad_open.c.md#new_ad_header), [sys_getxattrfd](../vfs/extattr.c.md#sys_getxattrfd)
 
@@ -499,7 +499,7 @@ Calls through [`adouble_fops::ad_path`](../../include/atalk/adouble.h.md#struct-
 static int ad_open_rf(const char *path, int adflags, int mode, struct adouble *ad)
 ```
 
-Defined at lines 2092 to 2112.
+Defined at lines 2090 to 2110.
 
 Open resource fork.
 
@@ -513,7 +513,7 @@ Called by: [ad_open](ad_open.c.md#ad_open)
 static bool ad_entry_check_size(uint32_t eid, size_t bufsize, uint32_t off, uint32_t got_len)
 ```
 
-Defined at lines 2126 to 2223.
+Defined at lines 2124 to 2221.
 
 Called by: [ad_entry_fits](ad_open.c.md#ad_entry_fits)
 
@@ -523,7 +523,7 @@ Called by: [ad_entry_fits](ad_open.c.md#ad_entry_fits)
 bool ad_entry_fits(const struct adouble *ad, int eid, uint32_t len)
 ```
 
-Defined at lines 2231 to 2236.
+Defined at lines 2229 to 2234.
 
 Whether an entry of `len` bytes fits at eid's offset in ad.
 
@@ -539,7 +539,7 @@ Called by: [ad_copy_header](ad_flush.c.md#ad_copy_header), [ad_entry](ad_open.c.
 void * ad_entry(const struct adouble *ad, int eid)
 ```
 
-Defined at lines 2238 to 2251.
+Defined at lines 2236 to 2249.
 
 Calls: [ad_entry_fits](ad_open.c.md#ad_entry_fits), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
@@ -549,11 +549,32 @@ Calls: [ad_entry_fits](ad_open.c.md#ad_entry_fits), [ad_getentryoff](ad_open.c.m
 off_t ad_getentryoff(const struct adouble *ad, int eid)
 ```
 
-Defined at lines 2253 to 2276.
+Defined at lines 2251 to 2274.
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_copy_header](ad_flush.c.md#ad_copy_header), [ad_entry](ad_open.c.md#ad_entry), [ad_entry_fits](ad_open.c.md#ad_entry_fits), [ad_flush_hf](ad_flush.c.md#ad_flush_hf), [ad_flush_rf](ad_flush.c.md#ad_flush_rf), [ad_getattr](ad_attr.c.md#ad_getattr), [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_getdate](ad_date.c.md#ad_getdate), [ad_header_read](ad_open.c.md#ad_header_read), [ad_header_read_osx](ad_open.c.md#ad_header_read_osx), [ad_lock](ad_lock.c.md#ad_lock), [ad_read](ad_read.c.md#ad_read), [ad_readfile_init](ad_sendfile.c.md#ad_readfile_init), [ad_rebuild_adouble_header_v2](ad_flush.c.md#ad_rebuild_adouble_header_v2), [ad_recvfile_init](ad_recvfile.c.md#ad_recvfile_init), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [ad_setattr](ad_attr.c.md#ad_setattr), [ad_setdate](ad_date.c.md#ad_setdate), [ad_setname](ad_attr.c.md#ad_setname), [ad_testlock_range](ad_lock.c.md#ad_testlock_range), [ad_tmplock](ad_lock.c.md#ad_tmplock), [ad_write](ad_write.c.md#ad_write), [copy_fork](ad_write.c.md#copy_fork), [getvolparams](../../etc/afpd/volume.c.md#getvolparams)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_copy_header](ad_flush.c.md#ad_copy_header), [ad_entry](ad_open.c.md#ad_entry), [ad_entry_fits](ad_open.c.md#ad_entry_fits), [ad_flush_hf](ad_flush.c.md#ad_flush_hf), [ad_flush_rf](ad_flush.c.md#ad_flush_rf), [ad_fork_fileno](ad_open.c.md#ad_fork_fileno), [ad_getattr](ad_attr.c.md#ad_getattr), [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_getdate](ad_date.c.md#ad_getdate), [ad_header_read](ad_open.c.md#ad_header_read), [ad_header_read_osx](ad_open.c.md#ad_header_read_osx), [ad_lock](ad_lock.c.md#ad_lock), [ad_read](ad_read.c.md#ad_read), [ad_rebuild_adouble_header_v2](ad_flush.c.md#ad_rebuild_adouble_header_v2), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [ad_setattr](ad_attr.c.md#ad_setattr), [ad_setdate](ad_date.c.md#ad_setdate), [ad_setname](ad_attr.c.md#ad_setname), [ad_testlock_range](ad_lock.c.md#ad_testlock_range), [ad_tmplock](ad_lock.c.md#ad_tmplock), [ad_write](ad_write.c.md#ad_write), [copy_fork](ad_write.c.md#copy_fork), [getvolparams](../../etc/afpd/volume.c.md#getvolparams)
 
 Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_range)
+
+### ad_fork_fileno
+
+```c
+int ad_fork_fileno(const struct adouble *ad, int eid, off_t *off)
+```
+
+Defined at lines 2285 to 2293.
+
+The descriptor that holds fork eid.
+
+Parameters:
+* `ad`: adouble holding the fork
+* `eid`: ADEID_DFORK or ADEID_RFORK
+* `off`: fork offset, returned as the offset in that descriptor
+
+Returns: the data fork or resource fork descriptor
+
+Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+
+Called by: [ad_recvfile](ad_recvfile.c.md#ad_recvfile), [read_fork](../../etc/afpd/fork.c.md#read_fork)
 
 ### ad_path_ea
 
@@ -561,7 +582,7 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 const char * ad_path_ea(const char *path, int adflags)
 ```
 
-Defined at lines 2278 to 2281.
+Defined at lines 2295 to 2298.
 
 Called by: [init_null_vol](../../bin/nad/nad_util.c.md#init_null_vol), [initvol_vfs](../vfs/vfs.c.md#initvol_vfs), [set_fallback_volume](../../bin/nad/megatron.c.md#set_fallback_volume)
 
@@ -571,7 +592,7 @@ Called by: [init_null_vol](../../bin/nad/nad_util.c.md#init_null_vol), [initvol_
 const char * ad_path_osx(const char *path, int adflags)
 ```
 
-Defined at lines 2283 to 2323.
+Defined at lines 2300 to 2340.
 
 Calls: [strlcat](../compat/strlcpy.c.md#strlcat), [strlcpy](../compat/strlcpy.c.md#strlcpy), [strnlen](../compat/misc.c.md#strnlen)
 
@@ -587,7 +608,7 @@ Dispatched via: [ad_adouble_ea](ad_open.c.md#ad_adouble_ea)
 const char * ad_path(const char *path, int adflags)
 ```
 
-Defined at lines 2334 to 2384.
+Defined at lines 2351 to 2401.
 
 Put the .AppleDouble where it needs to be:
 
@@ -613,7 +634,7 @@ Dispatched via: [ad_adouble](ad_open.c.md#ad_adouble)
 char * ad_dir(const char *path)
 ```
 
-Defined at lines 2391 to 2447.
+Defined at lines 2408 to 2464.
 
 Support inherited protection modes for AppleDouble files. The supplied mode is ANDed with the parent directory's mask value in lieu of "umask", and that value is returned.
 
@@ -625,7 +646,7 @@ Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_s
 int ad_setfuid(const uid_t id)
 ```
 
-Defined at lines 2449 to 2453.
+Defined at lines 2466 to 2470.
 
 Called by: [login](../../etc/afpd/auth.c.md#login), [main](../../bin/dbd/cmd_dbd.c.md#main)
 
@@ -637,7 +658,7 @@ Uses file-scope variables: `default_uid`
 uid_t ad_getfuid(void)
 ```
 
-Defined at lines 2456 to 2459.
+Defined at lines 2473 to 2476.
 
 Uses file-scope variables: `default_uid`
 
@@ -647,7 +668,7 @@ Uses file-scope variables: `default_uid`
 int ad_stat(const char *path, struct stat *stbuf)
 ```
 
-Defined at lines 2464 to 2474.
+Defined at lines 2481 to 2491.
 
 stat path parent directory
 
@@ -661,7 +682,7 @@ Called by: [ad_mode_st](ad_open.c.md#ad_mode_st)
 int ad_mode(const char *path, mode_t mode)
 ```
 
-Defined at lines 2479 to 2484.
+Defined at lines 2496 to 2501.
 
 return access right of path parent directory
 
@@ -677,7 +698,7 @@ Mentioned in the documentation of: [ad_mkdir](ad_open.c.md#ad_mkdir)
 int ad_mkdir(const char *path, mode_t mode)
 ```
 
-Defined at lines 2489 to 2505.
+Defined at lines 2506 to 2522.
 
 Use mkdir() with mode bits taken from [ad_mode()](ad_open.c.md#ad_mode).
 
@@ -693,7 +714,7 @@ Mentioned in the documentation of: [ad_mkrf](ad_open.c.md#ad_mkrf)
 static void ad_init_func(struct adouble *ad)
 ```
 
-Defined at lines 2507 to 2532.
+Defined at lines 2524 to 2549.
 
 Called by: [ad_init](ad_open.c.md#ad_init), [ad_init_old](ad_open.c.md#ad_init_old)
 
@@ -705,7 +726,7 @@ Uses file-scope variables: `ad_adouble`, `ad_adouble_ea`
 void ad_init_old(struct adouble *ad, int flags, int options)
 ```
 
-Defined at lines 2534 to 2540.
+Defined at lines 2551 to 2557.
 
 Calls: [ad_init_func](ad_open.c.md#ad_init_func)
 
@@ -717,7 +738,7 @@ Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf]
 void ad_init(struct adouble *ad, const struct vol *vol)
 ```
 
-Defined at lines 2542 to 2553.
+Defined at lines 2559 to 2570.
 
 Calls: [ad_init_func](ad_open.c.md#ad_init_func), [ad_init_offsets](ad_open.c.md#ad_init_offsets)
 
@@ -731,7 +752,7 @@ Mentioned in the documentation of: [ad_open](ad_open.c.md#ad_open), [ad_rebuild_
 int ad_open(struct adouble *ad, const char *path, int adflags,...)
 ```
 
-Defined at lines 2608 to 2699.
+Defined at lines 2625 to 2716.
 
 Open data-, metadata(header)- or resource fork.
 
@@ -797,7 +818,7 @@ Mentioned in the documentation of: [ad_convert_osx](ad_open.c.md#ad_convert_osx)
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 ```
 
-Defined at lines 2712 to 2728.
+Defined at lines 2729 to 2745.
 
 open metadata, possibly as root
 
@@ -820,7 +841,7 @@ Mentioned in the documentation of: [ad_rlen_meta_absent](../../include/atalk/dir
 int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
 ```
 
-Defined at lines 2733 to 2797.
+Defined at lines 2750 to 2814.
 
 openat like wrapper for ad_metadata
 
@@ -834,7 +855,7 @@ Called by: [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit)
 int ad_refresh(const char *path, struct adouble *ad)
 ```
 
-Defined at lines 2799 to 2859.
+Defined at lines 2816 to 2876.
 
 Calls: [ad_header_read_osx](ad_open.c.md#ad_header_read_osx), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open)
 
@@ -848,7 +869,7 @@ Calls through [`adouble_fops::ad_header_read`](../../include/atalk/adouble.h.md#
 int ad_openat(struct adouble *ad, int dirfd, const char *path, int adflags,...)
 ```
 
-Defined at lines 2861 to 2940.
+Defined at lines 2878 to 2957.
 
 Calls: [ad_open](ad_open.c.md#ad_open)
 
@@ -860,7 +881,7 @@ Called by: [copyfile](../../etc/afpd/file.c.md#copyfile), [nad_open](../../bin/n
 mode_t ad_hf_mode(mode_t mode)
 ```
 
-Defined at lines 2946 to 2977.
+Defined at lines 2963 to 2994.
 
 build a resource fork mode from the data fork mode: remove X mode and extend header to RW if R or W (W if R for locking),
 

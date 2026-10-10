@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/logger.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -111,7 +111,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/adouble/ad_lock.c](../../libatalk/adouble/ad_lock.c.md)
 * [libatalk/adouble/ad_open.c](../../libatalk/adouble/ad_open.c.md)
 * [libatalk/adouble/ad_read.c](../../libatalk/adouble/ad_read.c.md)
-* [libatalk/adouble/ad_recvfile.c](../../libatalk/adouble/ad_recvfile.c.md)
 * [libatalk/adouble/ad_sendfile.c](../../libatalk/adouble/ad_sendfile.c.md)
 * [libatalk/adouble/ad_size.c](../../libatalk/adouble/ad_size.c.md)
 * [libatalk/adouble/ad_write.c](../../libatalk/adouble/ad_write.c.md)

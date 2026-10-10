@@ -12,7 +12,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 
 # Build
 
-* [Build record](build.md) - Netatalk commit f9826e27d33e rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8.
+* [Build record](build.md) - Netatalk commit d63155e132b2 rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8.
 
 # Subsystems
 
@@ -25,7 +25,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [bin/nbp](src/bin/nbp.md) - 5 files, 7 functions.
 * [bin/pap](src/bin/pap.md) - 2 files, 12 functions.
 * [bin/rtmpqry](src/bin/rtmpqry.md) - 1 file, 7 functions.
-* [etc/afpd](src/etc/afpd.md) - 65 files, 592 functions.
+* [etc/afpd](src/etc/afpd.md) - 65 files, 594 functions.
 * [etc/atalkd](src/etc/atalkd.md) - 18 files, 50 functions.
 * [etc/netatalk](src/etc/netatalk.md) - 7 files, 43 functions.
 * [etc/papd](src/etc/papd.md) - 22 files, 125 functions.
@@ -33,17 +33,17 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [etc/uams](src/etc/uams.md) - 10 files, 116 functions.
 * [include/atalk](src/include/atalk.md) - 46 files, 32 functions.
 * [libatalk/acl](src/libatalk/acl.md) - 7 files, 26 functions.
-* [libatalk/adouble](src/libatalk/adouble.md) - 11 files, 114 functions.
+* [libatalk/adouble](src/libatalk/adouble.md) - 11 files, 110 functions.
 * [libatalk/asp](src/libatalk/asp.md) - 10 files, 14 functions.
 * [libatalk/atp](src/libatalk/atp.md) - 10 files, 20 functions.
 * [libatalk/cnid](src/libatalk/cnid.md) - 4 files, 76 functions.
 * [libatalk/compat](src/libatalk/compat.md) - 4 files, 6 functions.
 * [libatalk/dalloc](src/libatalk/dalloc.md) - 1 file, 5 functions.
-* [libatalk/dsi](src/libatalk/dsi.md) - 12 files, 42 functions.
+* [libatalk/dsi](src/libatalk/dsi.md) - 12 files, 47 functions.
 * [libatalk/nbp](src/libatalk/nbp.md) - 5 files, 7 functions.
 * [libatalk/netddp](src/libatalk/netddp.md) - 1 file, 1 function.
 * [libatalk/unicode](src/libatalk/unicode.md) - 31 files, 108 functions.
-* [libatalk/util](src/libatalk/util.md) - 20 files, 189 functions.
+* [libatalk/util](src/libatalk/util.md) - 20 files, 190 functions.
 * [libatalk/vfs](src/libatalk/vfs.md) - 6 files, 114 functions.
 * [sys/netatalk](src/sys/netatalk.md) - 13 files, 35 functions.
 

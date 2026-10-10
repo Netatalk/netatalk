@@ -33,7 +33,7 @@
 * [file.h](file.h.md) - includes 4 project headers.
 * [filedir.c](filedir.c.md) - 13 functions, includes 24 project headers.
 * [filedir.h](filedir.h.md) - includes 2 project headers.
-* [fork.c](fork.c.md) - 29 functions, includes 17 project headers.
+* [fork.c](fork.c.md) - 31 functions, includes 17 project headers.
 * [fork.h](fork.h.md) - 1 function, 2 types, includes 3 project headers.
 * [hash.c](hash.c.md) - 29 functions, includes 1 project header.
 * [hash.h](hash.h.md) - 7 functions, includes 1 project header.

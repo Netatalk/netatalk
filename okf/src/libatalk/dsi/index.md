@@ -11,4 +11,4 @@
 * [dsi_stream.c](dsi_stream.c.md) - 13 functions, includes 3 project headers.
 * [dsi_tcp.c](dsi_tcp.c.md) - 10 functions, includes 6 project headers.
 * [dsi_tickle.c](dsi_tickle.c.md) - 1 function, includes 1 project header.
-* [dsi_write.c](dsi_write.c.md) - 3 functions, includes 3 project headers.
+* [dsi_write.c](dsi_write.c.md) - 8 functions, includes 3 project headers.

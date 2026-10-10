@@ -5,7 +5,7 @@ description: "1 function, 3 types, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/globals.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -91,13 +91,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void afp_options_init(struct afp_options *)
 ```
 
-Declared at include/atalk/globals.h line 241; no definition in the scanned sources.
+Declared at include/atalk/globals.h line 246; no definition in the scanned sources.
 
 # Types
 
 ### struct AFPObj
 
-Defined at line 183.
+Defined at line 188.
 * `char * cmdlineconfigfile`
 * `int cmdlineflags`
 * `int proto`
@@ -136,7 +136,7 @@ Defined at line 183.
 
 ### struct afp_options
 
-Defined at line 113.
+Defined at line 118.
 * `int connections`
 * `int tickleval`
 * `int timeout`
@@ -217,7 +217,7 @@ Defined at line 113.
 
 ### struct afp_volume_name
 
-Defined at line 92.
+Defined at line 97.
 * `time_t mtime`
 * `int loaded`
 
@@ -228,7 +228,7 @@ Defined at line 92.
 
 # Macros
 
-* Undocumented: `AFPOBJ_TMPSIZ`, `CNID_MAX_PATH_LEN`, `CNID_PATH_OVERHEAD`, `DEFAULT_DIRCACHE_SIZE`, `DEFAULT_DIRCACHE_VALIDATION_FREQ`, `DIRCACHE_VALIDATION_FREQ_MAX`, `DIRCACHE_VALIDATION_FREQ_MIN`, `IS_AFP_SESSION`, `MACFILELEN`, `MAXOPTLEN`, `MAXUSERLEN`, `OPTION_ACL2MACCESS`, `OPTION_ACL2MODE`, `OPTION_AFPSTATS`, `OPTION_ANNOUNCESSH`, `OPTION_CLOSEVOL`, `OPTION_DDP`, `OPTION_DEBUG`, `OPTION_NOSENDFILE`, `OPTION_NOZEROCONF`, `OPTION_RECVFILE`, `OPTION_SERVERNOTIF`, `OPTION_SHARE_RESERV`, `OPTION_SINGLEUSER`, `OPTION_SPOTLIGHT`, `OPTION_SPOTLIGHT_EXPR`, `OPTION_SPOTLIGHT_VOL`, `OPTION_STRICT_LOCKING`, `OPTION_UUID`, `OPTION_VALID_SHELLCHECK`, `OPTION_VETOMSG`, `PASSWD_ALL`, `PASSWD_NONE`, `PASSWD_NOSAVE`, `PASSWD_SET`, `RFORK_BUDGET_MAX_KB`, `RFORK_ENTRY_MAX_KB`, `SPOTLIGHT_RESULTS_LIMIT_DEFAULT`, `SPOTLIGHT_RESULTS_LIMIT_MAX`, `SPOTLIGHT_RESULTS_LIMIT_MIN`, `UTF8FILELEN_EARLY`
+* Undocumented: `AFPOBJ_TMPSIZ`, `CNID_MAX_PATH_LEN`, `CNID_PATH_OVERHEAD`, `DEFAULT_DIRCACHE_SIZE`, `DEFAULT_DIRCACHE_VALIDATION_FREQ`, `DEFAULT_SPLICE_SIZE`, `DIRCACHE_VALIDATION_FREQ_MAX`, `DIRCACHE_VALIDATION_FREQ_MIN`, `IS_AFP_SESSION`, `MACFILELEN`, `MAXOPTLEN`, `MAXUSERLEN`, `OPTION_ACL2MACCESS`, `OPTION_ACL2MODE`, `OPTION_AFPSTATS`, `OPTION_ANNOUNCESSH`, `OPTION_CLOSEVOL`, `OPTION_DDP`, `OPTION_DEBUG`, `OPTION_NOSENDFILE`, `OPTION_NOZEROCONF`, `OPTION_RECVFILE`, `OPTION_SERVERNOTIF`, `OPTION_SHARE_RESERV`, `OPTION_SINGLEUSER`, `OPTION_SPOTLIGHT`, `OPTION_SPOTLIGHT_EXPR`, `OPTION_SPOTLIGHT_VOL`, `OPTION_STRICT_LOCKING`, `OPTION_UUID`, `OPTION_VALID_SHELLCHECK`, `OPTION_VETOMSG`, `PASSWD_ALL`, `PASSWD_NONE`, `PASSWD_NOSAVE`, `PASSWD_SET`, `RFORK_BUDGET_MAX_KB`, `RFORK_ENTRY_MAX_KB`, `SPLICE_SIZE_MAX`, `SPLICE_SIZE_MIN`, `SPOTLIGHT_RESULTS_LIMIT_DEFAULT`, `SPOTLIGHT_RESULTS_LIMIT_MAX`, `SPOTLIGHT_RESULTS_LIMIT_MIN`, `UTF8FILELEN_EARLY`
 
 # File-scope variables
 

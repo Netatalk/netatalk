@@ -5,7 +5,7 @@ description: "26 functions, includes 19 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/auth.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -161,9 +161,9 @@ Mentioned in the documentation of: [dsi_disconnect](../../libatalk/dsi/dsi_strea
 int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 435 to 494.
+Defined at lines 435 to 495.
 
-Calls: [ipc_child_state](../../libatalk/util/server_ipc.c.md#ipc_child_state)
+Calls: [dsi_close_pipe](../../libatalk/dsi/dsi_write.c.md#dsi_close_pipe), [ipc_child_state](../../libatalk/util/server_ipc.c.md#ipc_child_state)
 
 Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
@@ -175,7 +175,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 static int create_session_token(AFPObj *obj)
 ```
 
-Defined at lines 497 to 512.
+Defined at lines 498 to 513.
 
 Calls: [uam_random_string](uam.c.md#uam_random_string)
 
@@ -187,7 +187,7 @@ Called by: [afp_getsession](auth.c.md#afp_getsession)
 static int create_session_key(AFPObj *obj)
 ```
 
-Defined at lines 514 to 532.
+Defined at lines 515 to 533.
 
 Calls: [uam_random_string](uam.c.md#uam_random_string)
 
@@ -199,7 +199,7 @@ Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login
 int afp_getsession(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 536 to 658.
+Defined at lines 537 to 659.
 
 Calls: [create_session_token](auth.c.md#create_session_token), [ipc_child_write](../../libatalk/util/server_ipc.c.md#ipc_child_write)
 
@@ -211,7 +211,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 661 to 767.
+Defined at lines 662 to 768.
 
 Calls: [ipc_child_write](../../libatalk/util/server_ipc.c.md#ipc_child_write), [send_fd](../../libatalk/util/socket.c.md#send_fd), [writet](../../libatalk/util/socket.c.md#writet)
 
@@ -225,7 +225,7 @@ Uses file-scope variables: `die_pending` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
 ```
 
-Defined at lines 770 to 800.
+Defined at lines 771 to 801.
 
 Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login_ext)
 
@@ -237,7 +237,7 @@ Uses file-scope variables: `afp_version_index`
 int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 803 to 872.
+Defined at lines 804 to 873.
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind), [create_session_key](auth.c.md#create_session_key), [get_version](auth.c.md#get_version), [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
 
@@ -253,7 +253,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 875 to 1034.
+Defined at lines 876 to 1035.
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind), [create_session_key](auth.c.md#create_session_key), [get_version](auth.c.md#get_version), [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
 
@@ -269,7 +269,7 @@ Dispatched via: [preauth_switch](switch.c.md#preauth_switch)
 int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1037 to 1059.
+Defined at lines 1038 to 1060.
 
 Calls: [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
 
@@ -285,7 +285,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_logout(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1062 to 1080.
+Defined at lines 1063 to 1081.
 
 Calls: [close_all_vol](volume.c.md#close_all_vol), [fce_register](fce_api.c.md#fce_register), [of_close_all_forks](ofork.c.md#of_close_all_forks)
 
@@ -299,7 +299,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1088 to 1168.
+Defined at lines 1089 to 1169.
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind), [set_auth_switch](auth.c.md#set_auth_switch), [uam_getname](uam.c.md#uam_getname)
 
@@ -315,7 +315,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_getuserinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1172 to 1246.
+Defined at lines 1173 to 1247.
 
 Calls: [getuuidfromname](../../libatalk/acl/uuid.c.md#getuuidfromname), [uuid_bin2string](../../libatalk/acl/uuid.c.md#uuid_bin2string)
 
@@ -329,7 +329,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 struct uam_obj * auth_uamfind(const int type, const char *name, const int len)
 ```
 
-Defined at lines 1254 to 1271.
+Defined at lines 1255 to 1272.
 
 Calls: [strndiacasecmp](../../libatalk/util/strdicasecmp.c.md#strndiacasecmp)
 
@@ -341,7 +341,7 @@ Called by: [afp_changepw](auth.c.md#afp_changepw), [afp_login](auth.c.md#afp_log
 int auth_register(const int type, struct uam_obj *uam)
 ```
 
-Defined at lines 1273 to 1287.
+Defined at lines 1274 to 1288.
 
 Called by: [uam_register](uam.c.md#uam_register)
 
@@ -351,7 +351,7 @@ Called by: [uam_register](uam.c.md#uam_register)
 int auth_load(AFPObj *obj, const char *path, const char *list)
 ```
 
-Defined at lines 1290 to 1334.
+Defined at lines 1291 to 1335.
 
 load all of the modules
 
@@ -369,7 +369,7 @@ Mentioned in the documentation of: [srp_is_the_only_uam](../netatalk/netatalk.c.
 void auth_unload(void)
 ```
 
-Defined at lines 1337 to 1347.
+Defined at lines 1338 to 1348.
 
 get rid of all of the uams
 

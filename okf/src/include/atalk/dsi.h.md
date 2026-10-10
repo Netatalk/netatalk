@@ -5,7 +5,7 @@ description: "DSI (Data Stream Interface) protocol definitions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/dsi.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -38,6 +38,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/netatalk/netatalk.c](../../etc/netatalk/netatalk.c.md)
 * [etc/papd/uam.c](../../etc/papd/uam.c.md)
 * [libatalk/adouble/ad_conv.c](../../libatalk/adouble/ad_conv.c.md)
+* [libatalk/adouble/ad_recvfile.c](../../libatalk/adouble/ad_recvfile.c.md)
 * [libatalk/asp/asp_getsess.c](../../libatalk/asp/asp_getsess.c.md)
 * [libatalk/dsi/dsi_attn.c](../../libatalk/dsi/dsi_attn.c.md)
 * [libatalk/dsi/dsi_close.c](../../libatalk/dsi/dsi_close.c.md)
@@ -62,7 +63,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void dsi_setstatus(DSI *, char *, const size_t)
 ```
 
-Declared at include/atalk/dsi.h line 167; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 169; no definition in the scanned sources.
 
 ### dsi_kill
 
@@ -70,7 +71,7 @@ Declared at include/atalk/dsi.h line 167; no definition in the scanned sources.
 void dsi_kill(int)
 ```
 
-Declared at include/atalk/dsi.h line 178; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 180; no definition in the scanned sources.
 
 # Types
 
@@ -103,6 +104,8 @@ Defined at line 58.
 * `uint32_t flags`
 * `int socket`
 * `int serversock`
+* `int splice_pipe`
+* `int splice_size`
 * `size_t dsireadbuf`
 * `char * buffer`
 * `char * start`

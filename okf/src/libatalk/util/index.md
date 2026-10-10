@@ -10,7 +10,7 @@
 * [gettok.c](gettok.c.md) - 2 functions, includes 1 project header.
 * [locking.c](locking.c.md) - Netatalk utility functions: locking.
 * [logger.c](logger.c.md) - 19 functions, includes 4 project headers.
-* [netatalk_conf.c](netatalk_conf.c.md) - 51 functions, includes 13 project headers.
+* [netatalk_conf.c](netatalk_conf.c.md) - 52 functions, includes 13 project headers.
 * [pathconv.c](pathconv.c.md) - 1 function, includes 4 project headers.
 * [queue.c](queue.c.md) - 9 functions, includes 1 project header.
 * [server_child.c](server_child.c.md) - functions to handle child processes
