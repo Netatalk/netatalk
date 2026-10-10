@@ -182,8 +182,8 @@ dirty so a later query can repair it with reconciliation.
 Spotlight attribute support depends on the selected backend. There are two
 different kinds of support:
 
-* query support: attributes that can be used in a Spotlight search predicate;
-* result metadata support: attributes that Netatalk can return for a matched
+- query support: attributes that can be used in a Spotlight search predicate;
+- result metadata support: attributes that Netatalk can return for a matched
   filesystem object.
 
 ### Searchable attributes
@@ -243,12 +243,12 @@ Requested result attributes outside this list are returned as nil.
 
 ## Limitations and notes
 
-* CNID backend
+- CNID backend
 
     The CNID backend depends on CNID database consistency and is intended
     for simple filename search rather than full Spotlight metadata search.
 
-* LocalSearch backend
+- LocalSearch backend
 
     The LocalSearch backend depends on LocalSearch/Tracker, TinySPARQL,
     GLib, D-Bus, and the host indexer's filesystem monitoring behavior.
@@ -267,7 +267,7 @@ Requested result attributes outside this list are returned as nil.
     may not get indexed by LocalSearch/Tracker. As a workaround, keep the
     shared volumes you want to have indexed elsewhere on the host filesystem.
 
-* Xapian backend
+- Xapian backend
 
     The Xapian backend is managed by Netatalk itself. Its index is local to
     the Netatalk state directory and is refreshed by a full reconciliation

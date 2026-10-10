@@ -1,5 +1,4 @@
-Flamegraph Profiling
-====================
+# Flamegraph Profiling
 
 Netatalk provides a containerized profiling workflow that generates
 interactive SVG flamegraphs of the **afpd** daemon while running
@@ -11,14 +10,12 @@ The profiling infrastructure uses Linux **perf** for sampling and
 Brendan Gregg's [FlameGraph](https://github.com/brendangregg/FlameGraph)
 tools to produce the visualization.
 
-Prerequisites
--------------
+## Prerequisites
 
 - Docker (or Podman) with the ability to run `--privileged` containers
 - A clone of the Netatalk source tree
 
-Quick Start
------------
+## Quick Start
 
 Build the debug profiling container:
 
@@ -52,8 +49,7 @@ Open `flamegraph.svg` in a web browser. The interactive SVG allows
 clicking to zoom into specific call stacks and hovering to see
 sample counts.
 
-How It Works
-------------
+## How It Works
 
 The debug Dockerfile builds Netatalk with:
 
@@ -76,11 +72,9 @@ The fd-redirect approach (`stdout=SVG`, `stderr=logs`) means you
 capture the SVG cleanly with shell redirection while still seeing
 test progress on the terminal.
 
-Profiling Modes
----------------
+## Profiling Modes
 
-On-CPU (default)
-----------------
+### On-CPU (default)
 
 Samples the CPU at a fixed frequency to show where afpd spends
 its **processing time**. Best for workloads that exercise complex
@@ -92,8 +86,7 @@ server-side logic.
 
 Recommended test suites: **spectest**, **lantest**
 
-Off-CPU
--------
+### Off-CPU
 
 Traces kernel scheduler context switches to show where afpd
 spends time **sleeping or blocked** (I/O waits, poll, locks).
@@ -107,8 +100,7 @@ distinguish it from on-CPU flamegraphs.
 
 Recommended test suites: **speedtest** and other I/O-bound workloads
 
-Environment Variables
----------------------
+## Environment Variables
 
 The following environment variables control the profiling behavior.
 They are used in addition to the standard container environment
@@ -120,11 +112,9 @@ variables documented in `CONTAINERS.md`.
 | FLAMEGRAPH\_OFFCPU  | Set to any value to use off-CPU mode               |
 | PERF\_FREQ          | On-CPU sampling frequency in Hz (default: 999)     |
 
-Test Suite Recommendations
---------------------------
+## Test Suite Recommendations
 
-spectest
---------
+### spectest
 
 Produces the richest flamegraphs. The spectest exercises hundreds
 of distinct AFP protocol operations including directory traversal,
@@ -132,16 +122,14 @@ file creation, metadata manipulation, authentication, volume
 enumeration, and resource fork handling. The resulting flamegraph
 shows a broad cross-section of afpd code paths.
 
-lantest
--------
+### lantest
 
 Exercises read/write/copy operations with protocol-level
 verification. Produces good flamegraphs at the default 999 Hz
 sampling rate showing the AFP command dispatch, DSI framing,
 and file I/O paths.
 
-speedtest
----------
+### speedtest
 
 Over loopback, the speedtest is I/O-bound — afpd spends most of
 its wall time sleeping in `poll()` waiting for the next request.
@@ -150,16 +138,14 @@ processes each request in microseconds. Use **off-CPU mode**
 (`FLAMEGRAPH_OFFCPU=1`) to see where afpd blocks, or run against
 a remote host with real network latency for meaningful on-CPU data.
 
-Files
------
+## Files
 
 | File                                          | Purpose                           |
 |-----------------------------------------------|-----------------------------------|
 | distrib/docker/debug\_alp.Dockerfile          | Alpine debug build with perf      |
 | distrib/docker/debug\_entrypoint\_netatalk.sh | Entrypoint with profiling support |
 
-Interpreting Flamegraphs
-------------------------
+## Interpreting Flamegraphs
 
 - The **x-axis** represents the proportion of samples (wider = more time)
 - The **y-axis** represents the call stack depth (bottom = entry point)

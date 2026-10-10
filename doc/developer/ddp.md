@@ -1,5 +1,4 @@
-AppleTalk Protocol Family
-=========================
+# AppleTalk Protocol Family
 
 AppleTalk is a network protocol family for Macintosh and Apple II computers,
 created by Apple in 1985 at a time when TCP/IP was not yet widely adopted.
@@ -18,16 +17,15 @@ provide other services to very old Mac and Apple II clients.
 It supports EtherTalk Phase I and II, RTMP, NBP, ZIP, AEP, ATP,
 PAP, and ASP, while expecting the host OS kernel to supply DDP.
 
-* DDP is a socket to socket protocol that all other AppleTalk protocols
+- DDP is a socket to socket protocol that all other AppleTalk protocols
   are built on top of.
-* ATP, ASP, and NBP are implemented as statically linked libraries
+- ATP, ASP, and NBP are implemented as statically linked libraries
   in Netatalk's *libatalk* shared library.
-* The **atalkd** daemon implements RTMP, ZIP, and AEP.
-* The **papd** daemon implements PAP, allowing Mac clients to spool
+- The **atalkd** daemon implements RTMP, ZIP, and AEP.
+- The **papd** daemon implements PAP, allowing Mac clients to spool
   to a Unix print spooler or CUPS on the netatalk host computer.
 
-Addressing
-----------
+## Addressing
 
 AppleTalk addresses are three byte quantities, stored in network byte
 order. The include file <netatalk/at.h\> defines the AppleTalk
@@ -53,8 +51,7 @@ one socket for each network interface. The port of a socket and either
 the primary address or ATADDR_LATENET are returned with
 **getsockname**.
 
-AppleTalk address parsing
--------------------------
+## AppleTalk address parsing
 
 The **atalk_aton()** routine converts an ASCII representation of an
 AppleTalk address to a format appropriate for system calls. Acceptable
@@ -64,8 +61,7 @@ doubles. For instance, the address \`0x1f6b.77' has a network part of
 \`8043.119', \`31.107.119', or \`0x1f.6b.77'. If the address is in hex
 and the first digit is one of \`A-F', a leading \`0x' is redundant.
 
-NBP name parsing
-----------------
+## NBP name parsing
 
 **nbp_name()** parses user supplied names into their component object,
 type, and zone. *obj*, *type*, and *zone* should be passed by reference,
@@ -75,21 +71,19 @@ object:type\@zone, where each of *object*, *:type*, and *\@zone*
 replace *obj*, *type*, and *zone*, respectively. *type* must be
 proceeded by \`:', and *zone* must be preceded by \`\@'.
 
-DDP Implementations
-===================
+## DDP Implementations
 
-Linux
------
+### Linux
 
-The Linux kernel has had DDP support since version 1.3.0, released in June 1995.
+The Linux kernel introduced DDP support in version 1.3, released in June 1995.
 See the [Linux 1.3.0 Changes file](https://www.kernel.org/pub/linux/kernel/v1.3/).
 
-The source code for the *appletalk* driver lives under
-[net/appletalk](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/net/appletalk)
-in the Linux kernel source tree.
+As of version 7.2 of the Linux kernel, the *appletalk* module was moved from the kernel source tree
+to the [orphaned modules](https://github.com/linux-netdev/mod-orphan/tree/main/net/appletalk) repository.
+If you're using a Linux kernel version 7.2 or later,
+you will need to build and install the *appletalk* module from that repository.
 
-NetBSD
-------
+### NetBSD
 
 Kernel support for DDP appeared in NetBSD 1.3 in April 1997.
 See the [NetBSD 1.3 release notes](http://www.netbsd.org/changes/changes-1.3.html)
@@ -97,8 +91,7 @@ See the [NetBSD 1.3 release notes](http://www.netbsd.org/changes/changes-1.3.htm
 The NetBSD kernel module is confusingly named *netatalk* and is located under
 [sys/netatalk](https://cvsweb.netbsd.org/bsdweb.cgi/src/sys/netatalk/) in the NetBSD source tree.
 
-Solaris
--------
+### Solaris
 
 Historical versions of Netatalk (until v2.3) distributed code for a Solaris STREAMS module that implements DDP.
 
@@ -107,8 +100,7 @@ The source code is located under
 in the netatalk source tree.
 It is written for the SPARC architecture.
 
-Generic
--------
+### Generic
 
 If you would like DDP support on another operating system,
 you will need either need a kernel module for your operating system,
