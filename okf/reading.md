@@ -4,11 +4,10 @@ title: "OKF Knowledge Graph"
 description: "Where the graph is, how to navigate it, the rules for reading it (trust an edge that exists, never the absence of one) and recipes over graph.json."
 tags: ["guide"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T02:20:26+11:00 }
 ---
 
-OKF Knowledge Graph
-===================
+# OKF Knowledge Graph
 
 The knowledge graph is a map of the Netatalk sources drawn by Doxygen and
 published as an [Open Knowledge Format](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)
@@ -21,8 +20,7 @@ the `gh-pages` branch. Every concept is machine-generated and carries
 throughout. This page is shipped inside the bundle as `reading.md`; its
 source is `doc/developer/okf-knowledge-graph.md`.
 
-Where the graph is
-------------------
+## Where the graph is
 
 - Browse: `https://github.com/Netatalk/netatalk/tree/gh-pages/okf`
 - Read raw markdown over HTTPS: `https://netatalk.github.io/netatalk/okf/index.md`
@@ -44,8 +42,7 @@ trusting any line number:
 git merge-base --is-ancestor <build commit> HEAD && echo "checkout is at or after the build"
 ```
 
-What is in it
--------------
+## What is in it
 
 | Path | Content |
 |---|---|
@@ -62,8 +59,7 @@ address of a function. A section carries the signature, the defining lines,
 the Doxygen text where there is one, and its edges: calls, called by, calls
 through, called through by, uses, dispatched via, mentioned in.
 
-How to navigate
----------------
+## How to navigate
 
 - Start at `index.md`, open a subsystem concept, then a file concept, then a
   function section. Each index line carries the concept's description, so a
@@ -75,8 +71,7 @@ How to navigate
 - For anything transitive, query `graph.json` rather than following links;
   the recipes below cover the common questions.
 
-Rules for reading it
---------------------
+## Rules for reading it
 
 1. **Trust an edge that exists; never trust the absence of one.** An include,
    call, table, dispatch, use or doc edge was observed in the source at the
@@ -154,8 +149,7 @@ Rules for reading it
     the documentation audit and to the generator. Tell the maintainers rather
     than working around it silently.
 
-Recipes
--------
+## Recipes
 
 The recipes read `okf/graph.json` from the current directory; adjust the path
 to where the bundle is checked out or downloaded.
@@ -201,8 +195,7 @@ The twenty most called functions:
 python3 -c 'import collections, json; g = json.load(open("okf/graph.json")); c = collections.Counter(e["to"] for e in g["edges"] if e["kind"] == "call"); print("\n".join("%5d %s" % (n, f) for f, n in c.most_common(20)))'
 ```
 
-Pointing an agent at the graph
-------------------------------
+## Pointing an agent at the graph
 
 An agent instruction file (`CLAUDE.md`, `AGENTS.md` or similar) needs no more
 than this:
