@@ -19,8 +19,19 @@
 #include <atalk/asp.h>
 #include <atalk/afp.h>
 
-/* attentions can get sent at any time. as a consequence, we don't
- * want to touch anything that might be used elsewhere. */
+/*!
+ * @brief Send an ASP attention with an attention code to the workstation of a
+ * session
+ *
+ * The request goes to the session socket of the workstation, with 5 tries 2
+ * seconds apart, and the call waits for the reply. An attention can go out at
+ * any time, so the call keeps its packets in local buffers and leaves the
+ * session buffers alone.
+ *
+ * @param[in] asp    session
+ * @param[in] flags  attention code
+ * @returns 1, or 0 when the request or the reply fails
+ */
 int asp_attention(ASP asp, AFPUserBytes flags)
 {
     char cmds[ASP_HDRSIZ], data[ASP_HDRSIZ];

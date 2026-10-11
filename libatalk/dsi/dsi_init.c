@@ -14,6 +14,20 @@
 
 #include <atalk/dsi.h>
 
+/*!
+ * @brief Allocate a DSI listener and bind it to the TCP transport
+ *
+ * The attention quantum starts at DSI_DEFQUANT, and the server quantum,
+ * read-ahead buffer size, and recvfile pipe size come from the AFPObj options.
+ * The recvfile pipe stays closed until first use. dsi_tcp_init creates the
+ * listening socket, and its failure frees the structure again.
+ *
+ * @param[in] obj       server object supplying the options
+ * @param[in] hostname  server host name
+ * @param[in] address   address to listen on, or NULL for the wildcard address
+ * @param[in] port      TCP port to listen on
+ * @returns the listener, or NULL when allocation or the transport setup failed
+ */
 DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address,
               const char *port)
 {

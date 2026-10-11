@@ -16,7 +16,18 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-/*! OpenSession. set up the connection */
+/*!
+ * @brief Answer a DSIOpenSession request and record the client options
+ *
+ * The socket becomes nonblocking first, and a failure there aborts the
+ * process. The option list in the command buffer may carry DSIOPT_ATTNQUANT,
+ * and that sets the attention quantum. Other options pass unread, and a
+ * malformed option length ends the process with EXITERR_CLNT. The reply
+ * announces the server quantum and the replay cache size as DSIOPT_SERVQUANT
+ * and DSIOPT_REPLCSIZE options.
+ *
+ * @param[in,out] dsi  DSI session with the request in its command buffer
+ */
 void dsi_opensession(DSI *dsi)
 {
     size_t i = 0;

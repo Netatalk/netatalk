@@ -35,6 +35,9 @@
 
 #include "nad.h"
 
+/*!
+ * @brief Print the usage of nad mkdir and exit with EXIT_FAILURE
+ */
 static void usage_mkdir(void)
 {
     printf(
@@ -218,6 +221,18 @@ static int do_mkdir(const char *path, afpvol_t *vol)
     return 0;
 }
 
+/*!
+ * @brief Run the nad mkdir command, which creates directories with CNIDs and
+ * AppleDouble metadata
+ *
+ * The -p option creates missing parents, and -v prints each new directory.
+ * Each path gets a fresh volume state, and a signal stops the run.
+ *
+ * @param[in] argc  argument count, from the mkdir command on
+ * @param[in] argv  argument vector, from the mkdir command on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or 1 when a directory fails, while usage errors exit
+ */
 int nad_mkdir(int argc, char *argv[], AFPObj *obj)
 {
     int ch;

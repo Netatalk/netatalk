@@ -32,10 +32,15 @@ static DNSServiceRef   *svc_refs = NULL;
 static int             svc_ref_count = 0;
 static pthread_t       poller;
 
-/*
- * Its easier to use asprintf to set the TXT record values
+/*!
+ * @brief Set a TXT record entry to a value formatted with vasprintf
+ *
+ * @param[in,out] rec  TXT record
+ * @param[in]     key  entry name
+ * @param[in]     fmt  printf format of the value
+ * @param[in]     ...  format arguments
+ * @returns 0, or -1 when the format or TXTRecordSetValue fails
  */
-
 int TXTRecordPrintf(TXTRecordRef *rec, const char *key, const char *fmt, ...)
 {
     int ret = 0;
@@ -58,6 +63,19 @@ int TXTRecordPrintf(TXTRecordRef *rec, const char *key, const char *fmt, ...)
     return ret;
 }
 
+/*!
+ * @brief Set a TXT record entry, named with an int, to a value formatted with
+ * vasprintf
+ *
+ * The adisk record uses it for the dk0, dk1, and later entries of the volumes.
+ *
+ * @param[in,out] rec      TXT record
+ * @param[in]     key_fmt  printf format of the entry name, with one int
+ * @param[in]     key_var  int for key_fmt
+ * @param[in]     fmt      printf format of the value
+ * @param[in]     ...      format arguments
+ * @returns 0, or -1 when a format or TXTRecordSetValue fails
+ */
 int TXTRecordKeyPrintf(TXTRecordRef *rec, const char *key_fmt, int key_var,
                        const char *fmt, ...)
 {
@@ -100,7 +118,13 @@ exit:
 static struct pollfd *fds;
 
 /*!
- * This is the thread that polls the filehandles
+ * @brief Poll the sockets of the registered services and run their callbacks
+ *
+ * The thread watches every service socket for input and runs
+ * DNSServiceProcessResult on it. It ends when poll fails, EINTR included.
+ *
+ * @param[in] arg  unused
+ * @returns NULL
  */
 static void *polling_thread(void *arg _U_)
 {
@@ -129,9 +153,17 @@ static void *polling_thread(void *arg _U_)
 }
 
 /*!
- * @brief This is the callback for the service register function
- * @note actually there isn't a lot we can do if we get problems,
- * so we don't really need to do anything other than report the issue.
+ * @brief Log a failed registration, as the DNSServiceRegister callback
+ *
+ * A failure leaves nothing to retry, so the call only logs it.
+ *
+ * @param[in] sdRef      service reference, unused
+ * @param[in] flags      flags, unused
+ * @param[in] errorCode  result of the registration
+ * @param[in] name       service name
+ * @param[in] regtype    service type
+ * @param[in] domain     domain
+ * @param[in] context    unused
  */
 static void RegisterReply(DNSServiceRef sdRef _U_, DNSServiceFlags flags _U_,
                           DNSServiceErrorType errorCode,
@@ -170,8 +202,16 @@ static void unregister_stuff(void)
 }
 
 /*!
- * This function tries to register the AFP DNS
- * SRV service type.
+ * @brief Register the AFP service, the Time Machine volumes, and the device
+ * model with mDNSResponder
+ *
+ * An earlier registration goes first. The AFP service goes out under the
+ * server name, or the host name without one. Time Machine volumes go into
+ * the TXT record of an adisk service, each with its volume UUID when it has
+ * one. The mimic model adds a device-info service on port 9. A thread then
+ * polls the service sockets.
+ *
+ * @param[in] obj  AFP object with the options
  */
 static void register_stuff(const AFPObj *obj)
 {
@@ -382,8 +422,10 @@ fail:
  ************************************************************************/
 
 /*!
- * Tries to setup the Zeroconf thread and any
- * neccessary config setting.
+ * @brief Register the AFP services with mDNSResponder and start the polling
+ * thread
+ *
+ * @param[in] obj  AFP object with the options
  */
 void md_zeroconf_register(const AFPObj *obj)
 {
@@ -393,8 +435,11 @@ void md_zeroconf_register(const AFPObj *obj)
 }
 
 /*!
- * @brief Tries to shutdown this loop impl.
- * @note Call this function from inside this thread.
+ * @brief Cancel the polling thread and withdraw the mDNS services
+ *
+ * The call cancels the polling thread, so the caller has to run outside it.
+ *
+ * @returns 0
  */
 int md_zeroconf_unregister(void)
 {

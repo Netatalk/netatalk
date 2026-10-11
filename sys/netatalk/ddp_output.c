@@ -29,6 +29,18 @@
 unsigned short	at_cksum();
 int	ddp_cksum = 1;
 
+/*!
+ * @brief Send a packet from a DDP socket to its connected address
+ *
+ * The call prepends a long DDP header with 0 hops. The header names the
+ * foreign address of the socket as the destination and the local address as
+ * the source. With ddp_cksum set the header carries a checksum. Then
+ * ddp_route sends the packet along the route of the socket.
+ *
+ * @param[in] ddp  DDP socket control block
+ * @param[in] m    data
+ * @returns 0, ENOBUFS, or the ddp_route error
+ */
 ddp_output(ddp, m)
 struct ddpcb	*ddp;
 struct mbuf		*m;
@@ -92,6 +104,16 @@ struct mbuf		*m;
     return ddp_route(m, &ddp->ddp_route);
 }
 
+/*!
+ * @brief Compute the DDP checksum of an mbuf chain, skipping its first bytes
+ *
+ * Each byte adds to the sum, which then rotates left by one bit within 16
+ * bits. A result of 0 becomes 0xffff, since 0 means no checksum in DDP.
+ *
+ * @param[in] m     first mbuf of the chain
+ * @param[in] skip  leading bytes to leave out, the length field of the header
+ * @returns the 16-bit checksum, never 0
+ */
 unsigned short
 at_cksum(m, skip)
 struct mbuf	*m;
@@ -125,6 +147,20 @@ int		skip;
     return (unsigned short)cksum;
 }
 
+/*!
+ * @brief Send a DDP packet out of the interface of a route
+ *
+ * The route needs an interface with an AppleTalk address whose range holds
+ * the gateway net. A phase 2 interface pulls up to MLEN bytes of the packet
+ * into its first mbuf, so the header starts on a word boundary. A phase 1
+ * interface puts an LLAP header in front, with the destination
+ * node on a local net and the gateway node otherwise. The link layer address
+ * is the destination on a local net, or the gateway.
+ *
+ * @param[in]     m   packet with its DDP header, freed on an error
+ * @param[in,out] ro  route, its use count raised
+ * @returns the if_output result, EINVAL without a usable route, or ENOBUFS
+ */
 ddp_route(m, ro)
 struct mbuf		*m;
 struct route	*ro;

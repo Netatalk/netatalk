@@ -29,6 +29,20 @@
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
+/*!
+ * @brief Remove an NBP name from atalkd
+ *
+ * The NBPOP_UNRGSTR request goes to the NBP port at addr, and the call waits
+ * 2 seconds for the first reply.
+ *
+ * @param[in] obj   object name of up to NBPSTRLEN bytes, or NULL for an empty
+ *                  one
+ * @param[in] type  type name of up to NBPSTRLEN bytes, or NULL for an empty one
+ * @param[in] zone  zone name of up to NBPSTRLEN bytes, or NULL for an empty one
+ * @param[in] addr  node that holds the name, or NULL
+ * @returns 0 when atalkd answers NBPOP_OK, or -1 for a name that is too long,
+ *          no reply with ETIMEDOUT, or another answer
+ */
 int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
                 const struct at_addr *addr)
 {

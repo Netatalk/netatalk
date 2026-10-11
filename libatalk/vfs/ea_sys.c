@@ -41,6 +41,14 @@
  * EA VFS funcs for storing EAs in nativa filesystem EAs
  **********************************************************************************/
 
+/*!
+ * @brief Reject a missing EA name with a log line that names the calling
+ * function
+ *
+ * @param[in] func       name of the calling function, for the log line
+ * @param[in] attruname  EA name to test
+ * @returns 1 when attruname is NULL, 0 otherwise
+ */
 static int sys_ea_attrname_invalid(const char *func, const char *attruname)
 {
     if (attruname == NULL) {

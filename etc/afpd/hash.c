@@ -106,7 +106,10 @@ static void compute_bits(void)
 }
 
 /*!
- * Verify whether the given argument is a power of two.
+ * @brief Test whether a value is a power of two
+ *
+ * @param[in] arg  value to test
+ * @returns 1 for a power of two, 0 otherwise, including for 0
  */
 static int is_power_of_two(hash_val_t arg)
 {
@@ -122,7 +125,9 @@ static int is_power_of_two(hash_val_t arg)
 }
 
 /*!
- * Initialize the table of pointers to null.
+ * @brief Set every chain head of a hash table to NULL
+ *
+ * @param[in,out] hash  hash table
  */
 static void clear_table(hash_t *hash)
 {
@@ -134,34 +139,25 @@ static void clear_table(hash_t *hash)
 }
 
 /*!
- * @brief Double the size of a dynamic table.
+ * @brief Double the number of chains of a dynamic hash table
  *
- * This works as follows. Each chain splits into two adjacent chains.
- * The shift amount increases by one, exposing an additional bit of each hashed key.
- * For each node in the original chain, the value of this newly exposed bit
- * will decide which of the two new chains will receive the node:
- * if the bit is 1, the chain with the higher index will have the node,
- * otherwise the lower chain will receive the node.
- * In this manner, the hash table will continue to function exactly as before
- * without having to rehash any of the keys.
+ * Each chain splits into itself and a sister chain in the upper half. The
+ * mask widens by 1 bit. That bit of the stored hash value then picks the
+ * chain of each node, so no node needs a new hash. A failed realloc leaves
+ * the table as it was.
  *
- * @note
- * 1.  Overflow check.
- * 2.  The new number of chains is twice the old number of chains.
- * 3.  The new mask is one bit wider than the previous, revealing a
- *     new bit in all hashed keys.
- * 4.  Allocate a new table of chain pointers that is twice as large as the
- *     previous one.
- * 5.  If the reallocation was successful, we perform the rest of the growth
- *     algorithm, otherwise we do nothing.
- * 6.  The exposed_bit variable holds a mask with which each hashed key can be
- *     AND-ed to test the value of its newly exposed bit.
- * 7.  Now loop over each chain in the table and sort its nodes into two
- *     chains based on the value of each node's newly exposed hash bit.
- * 8.  The low chain replaces the current chain.  The high chain goes
- *     into the corresponding sister chain in the upper half of the table.
- * 9.  We have finished dealing with the chains and nodes. We now update
- *     the various bookeeping fields of the hash structure.
+ * 1. Assert that doubling the chain count does not overflow.
+ * 2. The new chain count is twice the old one.
+ * 3. The new mask is 1 bit wider and exposes 1 more bit of each hash value.
+ * 4. Reallocate the chain table at twice its size.
+ * 5. A failed realloc changes nothing.
+ * 6. The exposed_bit mask selects the new bit of each hash value.
+ * 7. Sort the nodes of each chain by that bit.
+ * 8. Nodes with the bit clear stay in the chain, and the others form the
+ *    sister chain.
+ * 9. Update the mask, the chain count, and the marks.
+ *
+ * @param[in,out] hash  dynamic hash table
  */
 static void grow_table(hash_t *hash)
 {
@@ -212,36 +208,22 @@ static void grow_table(hash_t *hash)
 }
 
 /*!
- * @brief Cut a table size in half.
+ * @brief Halve the number of chains of a dynamic hash table
  *
- * This is done by folding together adjacent chains and populating
- * the lower half of the table with these chains.
- * The chains are simply spliced together.
- * Once this is done, the whole table is reallocated to a smaller object.
+ * Each chain of the second half joins the end of its sister in the first
+ * half. The chain table then shrinks to its first half.
  *
- * @note
- * 1.  It is illegal to have a hash table with one slot. This would mean that
- *     hash->shift is equal to hash_val_t_bit, an illegal shift value.
- *     Also, other things could go wrong, such as hash->lowmark becoming zero.
- * 2.  Looping over each pair of sister chains, the low_chain is set to
- *     point to the head node of the chain in the lower half of the table,
- *     and high_chain points to the head node of the sister in the upper half.
- * 3.  The intent here is to compute a pointer to the last node of the
- *     lower chain into the low_tail variable. If this chain is empty,
- *     low_tail ends up with a null value.
- * 4.  If the lower chain is not empty, we simply tack the upper chain onto it.
- *     If the upper chain is a null pointer, nothing happens.
- * 5.  Otherwise if the lower chain is empty but the upper one is not,
- *     If the low chain is empty, but the high chain is not, then the
- *     high chain is simply transferred to the lower half of the table.
- * 6.  Otherwise if both chains are empty, there is nothing to do.
- * 7.  All the chain pointers are in the lower half of the table now, so
- *     we reallocate it to a smaller object. This, of course, invalidates
- *     all pointer-to-pointers which reference into the table from the
- *     first node of each chain.
- * 8.  Though it's unlikely, the reallocation may fail. In this case we
- *     pretend that the table _was_ reallocated to a smaller object.
- * 9.  Finally, update the various table parameters to reflect the new size.
+ * 1. Assert at least 2 chains, so the low mark stays above 0.
+ * 2. Take the head of each chain of the first half and of its sister.
+ * 3. Find the tail of the first chain, NULL for an empty one.
+ * 4. Append the sister chain to a first chain that has nodes.
+ * 5. Move the sister chain into an empty slot.
+ * 6. Two empty chains need nothing.
+ * 7. Reallocate the chain table at half its size.
+ * 8. A failed realloc keeps the old allocation, which still works.
+ * 9. Update the mask, the chain count, and the marks.
+ *
+ * @param[in,out] hash  dynamic hash table with at least 2 chains
  */
 static void shrink_table(hash_t *hash)
 {
@@ -292,34 +274,25 @@ static void shrink_table(hash_t *hash)
 
 
 /*!
- * @brief Create a dynamic hash table.
+ * @brief Create a dynamic hash table
  *
- * Both the hash table structure and the table itself are dynamically allocated.
- * Furthermore, the table is extendible in that it will automatically grow
- * as its load factor increases beyond a certain threshold.
+ * The table starts with INIT_SIZE chains and doubles when the node count
+ * reaches twice the chain count. A deletion halves it at half the chain
+ * count, but never while the node count is at or below INIT_SIZE.
  *
- * @note
- * 1. If the number of bits in the hash_val_t type has not been computed yet,
- *    we do so here, because this is likely to be the first function that the
- *    user calls.
- * 2. Allocate a hash table control structure.
- * 3. If a hash table control structure is successfully allocated, we
- *    proceed to initialize it. Otherwise we return a null pointer.
- * 4. We try to allocate the table of hash chains.
- * 5. If we were able to allocate the hash chain table, we can finish
- *    initializing the hash structure and the table. Otherwise, we must
- *    backtrack by freeing the hash structure.
- * 6. INIT_SIZE should be a power of two. The high and low marks are always set
- *    to be twice the table size and half the table size respectively. When the
- *    number of nodes in the table grows beyond the high size (beyond load
- *    factor 2), it will double in size to cut the load factor down to about
- *    about 1. If the table shrinks down to or beneath load factor 0.5,
- *    it will shrink, bringing the load up to about 1. However, the table
- *    will never shrink beneath INIT_SIZE even if it's emptied.
- * 7. This indicates that the table is dynamically allocated and dynamically
- *    resized on the fly. A table that has this value set to zero is
- *    assumed to be statically allocated and will not be resized.
- * 8. The table of chains must be properly reset to all null pointers.
+ * 1. Count the bits of hash_val_t on the first call.
+ * 2. Allocate the control structure.
+ * 3. Return NULL when that allocation fails.
+ * 4. Allocate the chain table.
+ * 5. Free the control structure when the chain allocation fails.
+ * 6. Set the marks to twice and half the chain count.
+ * 7. Mark the table dynamic, so it resizes.
+ * 8. Clear the chain heads.
+ *
+ * @param[in] maxcount  maximum number of nodes
+ * @param[in] compfun   compare function, or NULL for strcmp
+ * @param[in] hashfun   hash function, or NULL for the default string hash
+ * @returns the table, or NULL when an allocation fails
  */
 hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
                     hash_fun_t hashfun)
@@ -368,7 +341,14 @@ hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
 }
 
 /*!
- * Select a different set of node allocator routines.
+ * @brief Replace the node allocator of an empty hash table
+ *
+ * Both functions must be set, or both NULL for the defaults.
+ *
+ * @param[in,out] hash     empty hash table
+ * @param[in]     al       node allocator, or NULL
+ * @param[in]     fr       node release function, or NULL
+ * @param[in]     context  value passed to both functions
  */
 void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
                         hnode_free_t fr, void *context)
@@ -381,8 +361,11 @@ void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
 }
 
 /*!
- * Free every node in the hash using the hash->freenode() function pointer, and
- * cause the hash to become empty.
+ * @brief Free every node of a hash table through its freenode function
+ *
+ * The table stays allocated and empty.
+ *
+ * @param[in,out] hash  hash table
  */
 void hash_free_nodes(hash_t *hash)
 {
@@ -400,7 +383,9 @@ void hash_free_nodes(hash_t *hash)
 }
 
 /*!
- * Free a dynamic hash table structure.
+ * @brief Free an empty dynamic hash table and its chain table
+ *
+ * @param[in] hash  hash table without nodes
  */
 void hash_destroy(hash_t *hash)
 {
@@ -411,17 +396,15 @@ void hash_destroy(hash_t *hash)
 }
 
 /*!
- * @brief Initialize a hash scanner.
+ * @brief Start a scan of a hash table at its first node
  *
- * Reset the hash scanner so that the next element retrieved by
- * hash_scan_next() shall be the first element on the first non-empty chain.
+ * 1. Find the first chain with a node.
+ * 2. Point the scan at the head of that chain.
+ * 3. An empty table leaves the scan with no next node, so hash_scan_next
+ *    returns NULL.
  *
- * @note
- * 1. Locate the first non empty chain.
- * 2. If an empty chain is found, remember which one it is and set the next
- *    pointer to refer to its first element.
- * 3. Otherwise if a chain is not found, set the next pointer to NULL
- *    so that hash_scan_next() shall indicate failure.
+ * @param[out] scan  scanner to start
+ * @param[in]  hash  hash table
  */
 void hash_scan_begin(hscan_t *scan, hash_t *hash)
 {
@@ -444,29 +427,20 @@ void hash_scan_begin(hscan_t *scan, hash_t *hash)
 }
 
 /*!
- * @brief Retrieve the next node from the hash table, and update the pointer
- * for the next invocation of hash_scan_next().
+ * @brief Return the next node of a scan and advance the scan past it
  *
- * @note
- * 1. Remember the next pointer in a temporary value so that it can be
- *    returned.
- * 2. This assertion essentially checks whether the module has been properly
- *    initialized. The first point of interaction with the module should be
- *    either hash_create() or hash_init(), both of which set hash_val_t_bit to
- *    a non zero value.
- * 3. If the next pointer we are returning is not NULL, then the user is
- *    allowed to call hash_scan_next() again. We prepare the new next pointer
- *    for that call right now. That way the user is allowed to delete the node
- *    we are about to return, since we will no longer be needing it to locate
- *    the next node.
- * 4. If there is a next node in the chain (next->next), then that becomes the
- *    new next node, otherwise ...
- * 5. We have exhausted the current chain, and must locate the next subsequent
- *    non-empty chain in the table.
- * 6. If a non-empty chain is found, the first element of that chain becomes
- *    the new next node. Otherwise there is no new next node and we set the
- *    pointer to NULL so that the next time hash_scan_next() is called, a null
- *    pointer shall be immediately returned.
+ * The scan moves on before the node returns, so the caller may unlink the
+ * node with hash_scan_delete.
+ *
+ * 1. Keep the node to return.
+ * 2. Assert that a table creation counted the bits of hash_val_t.
+ * 3. Advance only past a real node.
+ * 4. Take the next node of the same chain when there is one.
+ * 5. Otherwise look for the next chain with a node.
+ * 6. Take the head of that chain, or end the scan with NULL.
+ *
+ * @param[in,out] scan  scanner from hash_scan_begin
+ * @returns the next node, or NULL at the end of the table
  */
 hnode_t *hash_scan_next(hscan_t *scan)
 {
@@ -512,17 +486,16 @@ hnode_t *hash_scan_next(hscan_t *scan)
 }
 
 /*!
- * @brief Insert a node into the hash table.
+ * @brief Insert a node under a new @p key, ahead of the rest of its chain
  *
- * @note
- * 1. It's illegal to insert more than the maximum number of nodes. The client
- *    should verify that the hash table is not full before attempting an
- *    insertion.
- * 2. The same key may not be inserted into a table twice.
- * 3. If the table is dynamic and the load factor is already at >= 2,
- *    grow the table.
- * 4. We take the bottom N bits of the hash value to derive the chain index,
- *    where N is the base 2 logarithm of the size of the hash table.
+ * 1. Assert that the table has room under maxcount.
+ * 2. Assert that @p key is not in the table yet.
+ * 3. Grow a dynamic table whose node count reached highmark.
+ * 4. The low bits of the hash value under the mask pick the chain.
+ *
+ * @param[in,out] hash  hash table
+ * @param[in,out] node  node with no chain link
+ * @param[in]     key   value to find the node by, kept by pointer
  */
 void hash_insert(hash_t *hash, hnode_t *node, const void *key)
 {
@@ -552,18 +525,16 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
 }
 
 /*!
- * @brief Find a node in the hash table and return a pointer to it.
+ * @brief Find the node of @p key in a hash table
  *
- * @note
- * 1. We hash the key and keep the entire hash value. As an optimization, when
- *    we descend down the chain, we can compare hash values first and only if
- *    hash values match do we perform a full key comparison.
- * 2. To locate the chain from among 2^N chains, we look at the lower N bits of
- *    the hash value by anding them with the current mask.
- * 3. Looping through the chain, we compare the stored hash value inside each
- *    node against our computed hash. If they match, then we do a full
- *    comparison between the unhashed keys. If these match, we have located the
- *    entry.
+ * 1. Hash @p key once and keep the full value.
+ * 2. The low bits of the hash value under the mask pick the chain.
+ * 3. Compare the stored hash values first, and call the compare function only
+ *    on a match.
+ *
+ * @param[in] hash  hash table
+ * @param[in] key   value to find
+ * @returns the node, or NULL when no node matches
  */
 inline hnode_t *hash_lookup(hash_t *hash, const void *key)
 {
@@ -585,22 +556,22 @@ inline hnode_t *hash_lookup(hash_t *hash, const void *key)
 }
 
 /*!
- * @brief Delete the given node from the hash table.
- * Since the chains are singly linked,
- * we must locate the start of the node's chain and traverse.
+ * @brief Unlink a node from a hash table
  *
- * @note
- * 1. The node must belong to this hash table, and its key must not have
- *    been tampered with.
- * 2. If this deletion will take the node count below the low mark, we
- *    shrink the table now.
- * 3. Determine which chain the node belongs to, and fetch the pointer
- *    to the first node in this chain.
- * 4. If the node being deleted is the first node in the chain, then
- *    simply update the chain head pointer.
- * 5. Otherwise advance to the node's predecessor, and splice out
- *    by updating the predecessor's next pointer.
- * 6. Indicate that the node is no longer in a hash table.
+ * The chains link one way, so the call walks the chain of the node to find
+ * its predecessor. A dynamic table halves first when the node count is at or
+ * below the low mark and above INIT_SIZE.
+ *
+ * 1. Assert that hash_lookup still finds the node.
+ * 2. Shrink the table before the unlink.
+ * 3. Find the chain of the node from its stored hash value.
+ * 4. Replace the chain head when the node is the head.
+ * 5. Otherwise unlink the node from its predecessor.
+ * 6. Clear the link of the node, so it belongs to no table.
+ *
+ * @param[in,out] hash  hash table
+ * @param[in,out] node  node in the table
+ * @returns node
  */
 hnode_t *hash_delete(hash_t *hash, hnode_t *node)
 {
@@ -641,14 +612,28 @@ hnode_t *hash_delete(hash_t *hash, hnode_t *node)
     return node;
 }
 
+/*!
+ * @brief Allocate a node for @p data and insert it under @p key
+ *
+ * @param[in,out] hash  hash table
+ * @param[in]     key   value to find the node by, kept by pointer
+ * @param[in]     data  value of the node
+ * @returns 1, or 0 when the node allocation fails
+ */
 int hash_alloc_insert(hash_t *hash, const void *key, void *data)
 {
     return hash_alloc_insert_node(hash, key, data) != NULL;
 }
 
 /*!
- * Like hash_alloc_insert, but hands back the inserted node, so a caller that
- * keeps it can delete without a lookup.
+ * @brief Allocate a node for @p data, insert it under @p key, and return it
+ *
+ * A caller that keeps the node can unlink it later without a lookup.
+ *
+ * @param[in,out] hash  hash table
+ * @param[in]     key   value to find the node by, kept by pointer
+ * @param[in]     data  value of the node
+ * @returns the node, or NULL when the allocation fails
  */
 hnode_t *hash_alloc_insert_node(hash_t *hash, const void *key, void *data)
 {
@@ -662,6 +647,13 @@ hnode_t *hash_alloc_insert_node(hash_t *hash, const void *key, void *data)
     return node;
 }
 
+/*!
+ * @brief Unlink a node through hash_delete and free it through the freenode
+ * function
+ *
+ * @param[in,out] hash  hash table
+ * @param[in]     node  node in the table
+ */
 void hash_delete_free(hash_t *hash, hnode_t *node)
 {
     hash_delete(hash, node);
@@ -669,8 +661,14 @@ void hash_delete_free(hash_t *hash, hnode_t *node)
 }
 
 /*!
- *  Exactly like hash_delete, except does not trigger table shrinkage. This is to be
- *  used from within a hash table scan operation. See notes for hash_delete.
+ * @brief Unlink a node like hash_delete, but never shrink the table
+ *
+ * A scan may unlink the node that hash_scan_next just returned, because the
+ * chain table keeps its size.
+ *
+ * @param[in,out] hash  hash table
+ * @param[in,out] node  node in the table
+ * @returns node
  */
 hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
 {
@@ -698,7 +696,11 @@ hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
 }
 
 /*!
- * Like hash_delete_free but based on hash_scan_delete.
+ * @brief Unlink a node through hash_scan_delete and free it through the
+ * freenode function
+ *
+ * @param[in,out] hash  hash table
+ * @param[in]     node  node in the table
  */
 void hash_scan_delfree(hash_t *hash, hnode_t *node)
 {
@@ -707,13 +709,16 @@ void hash_scan_delfree(hash_t *hash, hnode_t *node)
 }
 
 /*!
- * @brief Verify whether the given object is a valid hash table.
+ * @brief Check the invariants of a hash table
  *
- * @note
- * 1. If the hash table is dynamic, verify whether the high and
- *    low expansion/shrinkage thresholds are powers of two.
- * 2. Count all nodes in the table, and test each hash value
- *    to see whether it is correct for the node's chain.
+ * Debug builds assert it after each change of a table.
+ *
+ * 1. A dynamic table needs lowmark under highmark, both powers of two.
+ * 2. Each node must sit in the chain that its stored hash value picks, and
+ *    the node count must match.
+ *
+ * @param[in] hash  hash table
+ * @returns 1 for a valid table, 0 otherwise
  */
 int hash_verify(hash_t *hash)
 {
@@ -753,18 +758,34 @@ int hash_verify(hash_t *hash)
     return 1;
 }
 
+/*!
+ * @brief Allocate a node with malloc, the default node allocator
+ *
+ * @param[in] context  unused
+ * @returns the node, or NULL when malloc fails
+ */
 static hnode_t *hnode_alloc(void *context _U_)
 {
     return malloc(sizeof(*hnode_alloc(NULL)));
 }
 
+/*!
+ * @brief Free a node with free, the default node release function
+ *
+ * @param[in] node     node to free
+ * @param[in] context  unused
+ */
 static void hnode_free(hnode_t *node, void *context _U_)
 {
     free(node);
 }
 
 /*!
- * Initialize a client-supplied node
+ * @brief Set up a node that the caller allocated
+ *
+ * @param[out] hnode  node to set up
+ * @param[in]  data   value of the node
+ * @returns hnode, with data stored and no chain link
  */
 hnode_t *hnode_init(hnode_t *hnode, void *data)
 {
@@ -774,29 +795,62 @@ hnode_t *hnode_init(hnode_t *hnode, void *data)
 }
 
 #undef hnode_get
+/*!
+ * @brief Return the value of a node
+ *
+ * @param[in] node  hash node
+ * @returns the data pointer of the node
+ */
 void *hnode_get(hnode_t *node)
 {
     return node->data;
 }
 
 #undef hnode_getkey
+/*!
+ * @brief Return the lookup value that hash_insert stored in a node
+ *
+ * @param[in] node  hash node
+ * @returns the hash_key pointer of the node
+ */
 const void *hnode_getkey(hnode_t *node)
 {
     return node->key;
 }
 
 #undef hash_count
+/*!
+ * @brief Return the number of nodes in a hash table
+ *
+ * @param[in] hash  hash table
+ * @returns the node count
+ */
 hashcount_t hash_count(hash_t *hash)
 {
     return hash->nodecount;
 }
 
 #undef hash_size
+/*!
+ * @brief Return the number of chains of a hash table
+ *
+ * @param[in] hash  hash table
+ * @returns the chain count
+ */
 hashcount_t hash_size(hash_t *hash)
 {
     return hash->nchains;
 }
 
+/*!
+ * @brief Hash a NUL-terminated string, the default hash function
+ *
+ * Each byte mixes in 2 entries of a 16-entry random table, and the
+ * accumulator rotates after each entry and stays within 32 bits.
+ *
+ * @param[in] key  string to hash
+ * @returns the 32-bit hash value
+ */
 static hash_val_t hash_fun_default(const void *key)
 {
     static unsigned long randbox[] = {
@@ -829,6 +883,13 @@ static hash_val_t hash_fun_default(const void *key)
                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
+/*!
+ * @brief Compare two strings with strcmp, the default compare function
+ *
+ * @param[in] key1  first string
+ * @param[in] key2  second string
+ * @returns the strcmp result, 0 for equal strings
+ */
 static int hash_comp_default(const void *key1, const void *key2)
 {
     return strcmp(key1, key2);

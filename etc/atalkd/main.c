@@ -101,8 +101,16 @@ int writeconf(char *);
 
 static void consistency(void);
 
-/* this is the messiest of the bunch as atalkd can exit pretty much
- * everywhere. we delete interfaces here instead of in as_down. */
+/*!
+ * @brief Delete the AppleTalk addresses of the interfaces and the pid file,
+ * then exit
+ *
+ * The error paths and as_down exit through here. On Linux a failed
+ * SIOCDIFADDR falls back to SIOCATALKDIFADDR, and systems without
+ * SIOCDIFADDR keep the addresses.
+ *
+ * @param[in] i  exit status
+ */
 static void atalkd_exit(const int i)
 {
 #ifdef SIOCDIFADDR
@@ -128,10 +136,22 @@ static void atalkd_exit(const int i)
     exit(i);
 }
 
-/* XXX need better error handling for gone interfaces, delete routes and so on
- * moreover there's no way to put an interface back short of restarting atalkd
- * thus after the first time, silently fail
-*/
+/*!
+ * @brief Send a packet out of an interface, and log only the first failure of a
+ * run
+ *
+ * IFACE_ERROR marks an interface whose last send failed and keeps the log
+ * quiet until a send succeeds. An interface that has gone away stays in the
+ * list until atalkd restarts.
+ *
+ * @param[in,out] iface      interface to send on, its IFACE_ERROR flag follows
+ *                           the result
+ * @param[in]     sockfd     socket of the port
+ * @param[in]     buf        packet
+ * @param[in]     len        packet length
+ * @param[in]     dest_addr  destination address
+ * @returns the sendto() result
+ */
 static ssize_t sendto_iface(struct interface *iface, int sockfd,
                             const void *buf, size_t len,
                             const struct sockaddr_at *dest_addr)
@@ -156,6 +176,39 @@ static ssize_t sendto_iface(struct interface *iface, int sockfd,
     return ret;
 }
 
+/*!
+ * @brief Run the routing work of atalkd on each SIGALRM, every 10 seconds
+ *
+ * An interface with an address but no configuration sends an RTMP request
+ * in phase 1, or a ZIP GetNetInfo in phase 2, for 3 ticks. After that it
+ * counts as having no router. A router interface without seed information
+ * starts over and waits for a router. A seed router takes its configured
+ * zones. Any other interface runs without a router, in phase 2 on the startup
+ * net range. In both of those cases the next interface boots.
+ *
+ * Each tick ages the gateways and their routes. A gateway that reaches
+ * RTMPTAB_BAD goes down, and the call frees or poisons its routes. When the
+ * last gateway of a non-seed interface goes down, the interface drops its
+ * zones and returns to the no-router state. In phase 2 its net range becomes
+ * 0-fffe.
+ *
+ * Each gateway gets a ZIP query that asks for the interface zone and for each
+ * route in use that lacks zones. After 3 queries for a net, the call logs
+ * that the zone is unknown. With ziptimeout set, it stops asking.
+ *
+ * A router interface announces its net range in RTMP data. The same packets
+ * carry the routes of the configured router interfaces with known zones.
+ * Split horizon leaves out the routes learned on the interface, unless it
+ * has -router.
+ *
+ * At STABLE with no new RTMP data and no ZIP queries, atalkd is stable and
+ * writes its configuration with writeconf. At STABLEANYWAY it stops waiting
+ * without writing. The first time atalkd is stable outside debug mode, it
+ * stops itself with SIGSTOP. The parent waits for that stop, continues the
+ * child with SIGCONT, and exits, so the start returns once AppleTalk is up.
+ *
+ * @param[in] sig  signal number, unused
+ */
 static void as_timer(int sig _U_)
 {
     struct sockaddr_at	sat;
@@ -686,9 +739,14 @@ static void as_timer(int sig _U_)
     }
 }
 
-/*
-* Consistency check...
-*/
+/*!
+ * @brief Check the zone table against the routes in debug mode, and exit on a
+ * mismatch
+ *
+ * Each route of a zone has to be in use or have no gateway, and its zone
+ * list has to hold that zone. A mismatch logs the route and calls
+ * atalkd_exit(1).
+ */
 static void consistency()
 {
     struct rtmptab	*rtmp;
@@ -723,6 +781,19 @@ static void consistency()
     }
 }
 
+/*!
+ * @brief Dump the interfaces, gateways, and routes to a debug file on SIGUSR1
+ *
+ * The file is atalkd.PID.debug in tmpdir(). It lists each interface with its
+ * address, flags, net range, and zones, then each gateway with its state and
+ * routes. The flag letters are:
+ * - 1, 2: phase 1, phase 2
+ * - R, S, D: -router, -seed, -dontroute
+ * - A, C, N, L: address set, configured, no router, loopback route
+ * - q, z, x, i on routes: ZIP query pending, zones known, extended, in use
+ *
+ * @param[in] sig  signal number, unused
+ */
 static void
 as_debug(int sig _U_)
 {
@@ -851,8 +922,14 @@ as_debug(int sig _U_)
     }
 }
 
-/*
- * Called when SIGTERM is recieved.  Remove all routes and then exit.
+/*!
+ * @brief Delete the routes of atalkd and exit on SIGTERM
+ *
+ * The call deletes the kernel route of each route in use and the loopback
+ * route of each interface. Then atalkd_exit(0) deletes the interface
+ * addresses and the pid file.
+ *
+ * @param[in] sig  signal number, unused
  */
 static void
 as_down(int sig _U_)
@@ -889,6 +966,32 @@ as_down(int sig _U_)
     atalkd_exit(0);
 }
 
+/*!
+ * @brief Start atalkd: read the configuration, set up the interfaces, and serve
+ * AppleTalk
+ *
+ * The options are -1 or -2 for the default phase, -d for debug mode, -f for
+ * the configuration file, and -P for the pid file. The -t option turns on
+ * phase 1 transition mode, and -v or -V prints the version. The loopback
+ * interface comes first, then the interfaces of readconf, or of getifconf
+ * when readconf fails.
+ *
+ * Before the fork, main applies the default phase, marks the router
+ * interfaces, and fills in default net ranges. It also deletes the old
+ * interface addresses. A single seed interface needs -router, and a list
+ * without a real interface exits. The parent waits until the child stops
+ * itself once AppleTalk is stable, continues it with SIGCONT, and exits 0.
+ * Debug mode stays in the foreground.
+ *
+ * The child boots the first interface and installs as_down for SIGTERM,
+ * as_debug for SIGUSR1, and as_timer for a 10-second SIGALRM. It then reads
+ * packets from every port and passes them to the handler of the port, with
+ * SIGALRM and SIGUSR1 blocked.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns does not return, and a startup failure exits with 1
+ */
 int main(int ac, char **av)
 {
     struct sockaddr_at	sat;
@@ -1278,10 +1381,19 @@ int main(int ac, char **av)
     }
 }
 
-/*
- * This code is called (from main(), as_timer(), zip_packet(),
- * and rtmp_packet()) to set the initial "bootstrapping" address
- * on an interface.
+/*!
+ * @brief Give an interface its startup address and ask the network for its
+ * configuration
+ *
+ * A phase 1 interface takes net 0, or its configured net on NetBSD, and sends
+ * an RTMP request. A phase 2 interface takes its configured address and net
+ * range and sends a ZIP GetNetInfo. The loopback interface counts as
+ * configured at once and passes the boot on to the next interface.
+ *
+ * The call marks the interface as addressed and sets stabletimer to UNSTABLE.
+ * Booting an interface that already has an address exits atalkd.
+ *
+ * @param[in,out] iface  interface to boot, or NULL to do nothing
  */
 void bootaddr(struct interface *iface)
 {
@@ -1341,9 +1453,26 @@ void bootaddr(struct interface *iface)
 }
 
 
-/*
- * Change setaddr()
- * to manage the i_ports field and the fds for select().
+/*!
+ * @brief Set the AppleTalk address and net range of an interface and reopen its
+ * ports
+ *
+ * The first call creates the RTMP, NBP, echo, and ZIP ports of the interface,
+ * with the port numbers of the ddp services where those exist. Later calls
+ * close the open ports first. The kernel gets the address through
+ * SIOCSIFADDR and reports the final one through SIOCGIFADDR. Each port then
+ * gets a DDP socket bound to that address with SO_BROADCAST set, and the
+ * select set starts over.
+ *
+ * Any failure exits atalkd. A failed bind removes the addresses of every
+ * interface first.
+ *
+ * @param[in,out] iface  interface, receives the address and the open ports
+ * @param[in]     phase  IFACE_PHASE1 or IFACE_PHASE2
+ * @param[in]     net    network number in network byte order
+ * @param[in]     node   node number to ask for
+ * @param[in]     first  first net of the range in network byte order
+ * @param[in]     last   last net of the range in network byte order
  */
 void setaddr(struct interface *iface,
              uint8_t  phase, uint16_t net, uint8_t node,
@@ -1466,6 +1595,19 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
     nfds++;
 }
 
+/*!
+ * @brief Run an interface ioctl with an AppleTalk address
+ *
+ * The call opens an AppleTalk socket for the request. For SIOCGIFADDR it
+ * stores the address of the interface in sa.
+ *
+ * @param[in]     iname  interface name
+ * @param[in]     cmd    ioctl request, such as SIOCSIFADDR, SIOCGIFADDR,
+ *                       SIOCDIFADDR, or SIOCADDMULTI
+ * @param[in,out] sa     address for the request, receives the address for
+ *                       SIOCGIFADDR
+ * @returns 0, or 1 when the socket or the ioctl fails
+ */
 int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa)
 {
     struct ifreq	ifr;
@@ -1492,6 +1634,15 @@ int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa)
     return 0;
 }
 
+/*!
+ * @brief Print the configuration of an interface as an atalkd.conf line in
+ * debug mode
+ *
+ * The line adds the configured address as -caddr, which readconf does not
+ * accept, and leaves zone names unquoted.
+ *
+ * @param[in] iface  interface to print
+ */
 void dumpconfig(struct interface *iface)
 {
     struct list		*l;

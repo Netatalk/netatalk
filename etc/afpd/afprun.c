@@ -50,7 +50,12 @@
 #include <atalk/util.h>
 
 /*!
- * This is a utility function of afprun().
+ * @brief Create an unlinked temporary file for the output of an afprun command
+ *
+ * The file lives in tmpdir and has no name after the call, so it disappears
+ * with its last descriptor.
+ *
+ * @returns the descriptor, or -1 when mkstemp fails
  */
 static int setup_out_fd(void)
 {
@@ -95,8 +100,16 @@ static void gain_root_group_privilege(void)
 }
 
 /*!
- * @brief Become the specified uid and gid - permanently !
- * @note there should be no way back if possible
+ * @brief Switch the real, effective, and saved IDs to a user and group
+ * permanently
+ *
+ * The call takes root first, so the final set calls succeed, and clears the
+ * supplementary groups. Linux uses setresgid and setresuid. Other systems use
+ * setegid, setgid, seteuid, and setuid.
+ *
+ * @param[in] uid  user to become
+ * @param[in] gid  group to become
+ * @returns 0, or -1 when a set call fails
  */
 static int become_user_permanently(uid_t uid, gid_t gid)
 {
@@ -262,11 +275,21 @@ static int become_user_permanently(uid_t uid, gid_t gid)
 }
 
 /*!
- * @brief run a command
- * @note being careful about uid/gid handling and putting the output in
- * outfd (or discard it if outfd is NULL).
+ * @brief Run a shell command as the euid of the caller and wait for its exit
+ * status
+ *
+ * The child runs the command through /bin/sh from the root directory, with
+ * root dropped permanently and descriptors 3 to 255 closed. SIGCHLD keeps its
+ * default action until the wait ends, because the session handler would reap
+ * the child first. A child that fails before the command runs uses an exit
+ * status between 80 and 83.
+ *
+ * @param[in]  cmd    shell command line
+ * @param[out] outfd  receives a rewound temporary file with the command output,
+ *                    or NULL to keep the standard output of afpd
+ * @returns the exit status, the raw wait status of a killed command, the errno
+ *          of a failed fork, or -1 when setup_out_fd or waitpid fails
  */
-
 int afprun(char *cmd, int *outfd)
 {
     pid_t pid;
@@ -400,8 +423,14 @@ int afprun(char *cmd, int *outfd)
 }
 
 /*!
- * @brief Run a command in the background without waiting
- * @note being careful about uid/gid handling
+ * @brief Start a shell command as the euid of the caller without waiting for it
+ *
+ * The child runs the command like afprun but keeps the standard output of
+ * afpd. It closes the descriptors from 3 to the open file limit. The SIGCHLD
+ * handler of the session reaps it.
+ *
+ * @param[in] cmd  shell command line
+ * @returns 0 after the fork, or the errno of a failed fork
  */
 int afprun_bg(char *cmd)
 {

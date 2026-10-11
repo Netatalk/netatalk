@@ -87,11 +87,16 @@ static void (*CatchSignal(int signum, void (*handler)(int)))(int)
 }
 
 /*!
- * Log a backtrace of the calling thread
+ * @brief Log a backtrace of the calling thread, up to BACKTRACE_STACK_SIZE
+ * frames
  *
- * libunwind names frames on musl, which ships no execinfo; the execinfo path
- * stays for platforms that do. Deep runs of one frame are the signature of
- * runaway recursion, so log enough of them to see it.
+ * The libunwind path names frames on musl, which ships no execinfo. With a
+ * signal context it starts at the faulting frame, because musl leaves the
+ * signal trampoline without unwind data. The execinfo path always starts at
+ * the caller. Runaway recursion shows as one frame repeated, and the frame
+ * limit leaves room to see it.
+ *
+ * @param[in] uctx  signal context of a fault, or NULL to start at the caller
  */
 static void log_backtrace(void *uctx _U_)
 {
@@ -161,7 +166,10 @@ static void log_backtrace(void *uctx _U_)
 }
 
 /*!
- * Something really nasty happened - panic !
+ * @brief Log a panic reason and a backtrace
+ *
+ * @param[in] why   reason for the panic
+ * @param[in] uctx  signal context of a fault, or NULL to start at the caller
  */
 static void panic_report(const char *why, void *uctx)
 {
@@ -169,6 +177,13 @@ static void panic_report(const char *why, void *uctx)
     log_backtrace(uctx);
 }
 
+/*!
+ * @brief Log a panic reason and a backtrace of the caller
+ *
+ * The call returns, and the AFP_PANIC macro aborts after it.
+ *
+ * @param[in] why  reason for the panic
+ */
 void netatalk_panic(const char *why)
 {
     panic_report(why, NULL);
@@ -176,7 +191,17 @@ void netatalk_panic(const char *why)
 
 
 /*!
- * report a fault
+ * @brief Log a fault signal with its address and a backtrace, then end the
+ * process
+ *
+ * A second fault in any thread aborts at once. With a continuation from
+ * fault_setup, the call runs it and restores the default action of SIGSEGV
+ * and SIGBUS. It then returns, so the faulting instruction runs again and
+ * dumps core. Without a continuation it aborts.
+ *
+ * @param[in] sig   signal number
+ * @param[in] info  signal information with the faulting address, or NULL
+ * @param[in] uctx  signal context of the fault
  */
 static void fault_report(int sig, siginfo_t *info, void *uctx)
 {
@@ -218,7 +243,12 @@ static void fault_report(int sig, siginfo_t *info, void *uctx)
 }
 
 /*!
- * catch serious errors
+ * @brief Pass a fault signal to fault_report, as the SA_SIGINFO handler that
+ * catch_fault_signal installs
+ *
+ * @param[in] sig   signal number
+ * @param[in] info  signal information
+ * @param[in] ctx   signal context of the fault
  */
 static void sig_fault(int sig, siginfo_t *info, void *ctx)
 {
@@ -226,11 +256,13 @@ static void sig_fault(int sig, siginfo_t *info, void *ctx)
 }
 
 /*!
- * Install sig_fault for a fault signal, on the alternate stack
+ * @brief Install sig_fault for a fault signal, on the alternate stack
  *
- * SA_ONSTACK is required to report stack exhaustion: the
- * guard page leaves no room for a signal frame, so without it the kernel
- * cannot run the handler and kills the process with no diagnostic.
+ * At stack exhaustion the guard page leaves no room for a signal frame.
+ * Without SA_ONSTACK the kernel cannot run the handler and kills the process
+ * without a report.
+ *
+ * @param[in] signum  signal number
  */
 static void catch_fault_signal(int signum)
 {
@@ -244,6 +276,14 @@ static void catch_fault_signal(int signum)
 }
 
 #ifdef HAVE_SIGALTSTACK
+/*!
+ * @brief Make a buffer the alternate signal stack of the calling thread
+ *
+ * A failure only logs an error.
+ *
+ * @param[in] base  stack memory
+ * @param[in] size  size of base
+ */
 static void install_altstack(char *base, size_t size)
 {
     stack_t ss;
@@ -272,7 +312,13 @@ void fault_setup_thread(void)
 }
 
 /*!
- * setup our fault handlers
+ * @brief Install the SIGSEGV and SIGBUS handlers with an alternate signal stack
+ *
+ * The stack covers the calling thread and survives fork. A thread from
+ * pthread_create calls fault_setup_thread for a stack.
+ *
+ * @param[in] fn  continuation that fault_report runs before a core dump, or
+ *                NULL to abort
  */
 void fault_setup(void (*fn)(void *))
 {

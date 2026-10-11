@@ -188,6 +188,15 @@ DATE_ISO OBRACE WORD CBRACE    {$$ = isodate2unix($3);}
 
 %%
 
+/*!
+ * @brief Convert an ISO 8601 date of the form YYYY-MM-DDTHH:MM:SSZ to a time_t
+ *
+ * The call reads the date with strptime and converts it with mktime. The
+ * conversion treats the time as local time despite the Z.
+ *
+ * @param[in] s  date string
+ * @returns the time, or -1 for a string in another form
+ */
 static time_t isodate2unix(const char *s)
 {
     struct tm tm;
@@ -200,7 +209,15 @@ static time_t isodate2unix(const char *s)
 }
 
 /*!
- * Lowercase ASCII letters in-place in a talloc'd copy of `s`.
+ * @brief Return a lowercase duplicate of the first len bytes of s
+ *
+ * The call lowers each byte with tolower, so in the C locale only ASCII
+ * letters change.
+ *
+ * @param[in] ctx  talloc context for the duplicate
+ * @param[in] s    string
+ * @param[in] len  byte limit
+ * @returns the duplicate, or NULL when talloc fails
  */
 static char *ascii_lower_dup(TALLOC_CTX *ctx, const char *s, size_t len)
 {
@@ -217,6 +234,18 @@ static char *ascii_lower_dup(TALLOC_CTX *ctx, const char *s, size_t len)
     return out;
 }
 
+/*!
+ * @brief Map an InRange date test on a Spotlight attribute to a SPARQL FILTER
+ *
+ * Both dates go out in the form YYYY-MM-DDTHH:MM:SSZ from localtime. Unlike
+ * map_expr, the call skips the ssm_enabled check of the attribute.
+ *
+ * @param[in] dateattr  Spotlight date attribute
+ * @param[in] date1     start of the range, excluded
+ * @param[in] date2     end of the range, excluded
+ * @returns the SPARQL pattern, or NULL for an unknown attribute or a failed
+ *          localtime
+ */
 static const char *map_daterange(const char *dateattr, time_t date1,
                                  time_t date2)
 {
@@ -254,6 +283,16 @@ EC_CLEANUP:
     return result;
 }
 
+/*!
+ * @brief Map a content type value to an rdf:type or nie:mimeType pattern
+ * through MDTypeMap
+ *
+ * @param[in] attr  Spotlight attribute, unused
+ * @param[in] op    comparison operator, unused
+ * @param[in] val   content type, such as public.image
+ * @returns the SPARQL pattern, or NULL for a type that MDTypeMap lacks or does
+ *          not support
+ */
 static char *map_type_search(const char *attr, char op, const char *val)
 {
     char *result = NULL;
@@ -285,6 +324,23 @@ static char *map_type_search(const char *attr, char op, const char *val)
     return result;
 }
 
+/*!
+ * @brief Map one comparison on a Spotlight attribute of the SPARQL map to a
+ * SPARQL pattern
+ *
+ * The attribute type picks the form. A number or a date gets a FILTER with the
+ * operator, and a string gets an anchored regex in which a star matches any
+ * text. A file name with no star, 1 star at an end, or a star at each end
+ * gets a lowercase test. The test is an equality, a prefix, a suffix, or a
+ * substring match. Any other star pattern in a file name becomes a
+ * case-insensitive regex. Content types go through map_type_search.
+ *
+ * @param[in] attr  Spotlight attribute
+ * @param[in] op    comparison operator: '=', '<', '>', or `!` for unequal
+ * @param[in] val   value of the comparison
+ * @returns the SPARQL pattern, or NULL for an unknown attribute, one that
+ *          ssm_enabled leaves off, or an error
+ */
 static const char *map_expr(const char *attr, char op, const char *val)
 {
     EC_INIT;
@@ -465,6 +521,11 @@ EC_CLEANUP:
     return result;
 }
 
+/*!
+ * @brief Log a SPARQL parser error
+ *
+ * @param[in] str  error message
+ */
 void yyerror(const char *str)
 {
 #ifdef MAIN
@@ -474,6 +535,11 @@ void yyerror(const char *str)
 #endif
 }
 
+/*!
+ * @brief Tell the lexer that no input follows the query string
+ *
+ * @returns 1
+ */
 int yywrap()
 {
     return 1;

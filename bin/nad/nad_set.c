@@ -59,6 +59,10 @@ static char *new_creator;
 static char *new_flags;
 static char *new_attributes;
 
+/*!
+ * @brief Print the usage of nad set and the meaning of its flag letters to
+ * stdout
+ */
 static void usage_set(void)
 {
     printf(
@@ -92,6 +96,17 @@ static void usage_set(void)
     );
 }
 
+/*!
+ * @brief Store a new file type in the Finder info of the metadata
+ *
+ * The call takes the first 4 bytes of @p p_new_type.
+ *
+ * @param[in]     path        entry path, unused
+ * @param[in]     vol         volume of the entry, unused
+ * @param[in]     st          stat result of the entry, unused
+ * @param[in,out] ad          open metadata
+ * @param[in]     p_new_type  type code of 4 characters
+ */
 static void change_type(char *path _U_, afpvol_t *vol _U_,
                         const struct stat *st _U_, struct adouble *ad, char *p_new_type)
 {
@@ -102,6 +117,17 @@ static void change_type(char *path _U_, afpvol_t *vol _U_,
     }
 }
 
+/*!
+ * @brief Store a new creator in the Finder info of the metadata
+ *
+ * The call takes the first 4 bytes of @p p_new_creator.
+ *
+ * @param[in]     path           entry path, unused
+ * @param[in]     vol            volume of the entry, unused
+ * @param[in]     st             stat result of the entry, unused
+ * @param[in,out] ad             open metadata
+ * @param[in]     p_new_creator  creator code of 4 characters
+ */
 static void change_creator(char *path _U_, afpvol_t *vol _U_,
                            const struct stat *st _U_, struct adouble *ad, char *p_new_creator)
 {
@@ -112,6 +138,18 @@ static void change_creator(char *path _U_, afpvol_t *vol _U_,
     }
 }
 
+/*!
+ * @brief Set the color label in the Finder flags of the metadata
+ *
+ * The label is one of `none`, `grey`, `green`, `violet`, `blue`, `yellow`,
+ * `red`, and `orange`, in any case, and another name changes nothing.
+ *
+ * @param[in]     path         entry path, unused
+ * @param[in]     vol          volume of the entry, unused
+ * @param[in]     st           stat result of the entry, unused
+ * @param[in,out] ad           open metadata
+ * @param[in]     p_new_label  label name
+ */
 static void change_label(char *path _U_, afpvol_t *vol _U_,
                          const struct stat *st _U_, struct adouble *ad, char *p_new_label)
 {
@@ -143,6 +181,19 @@ static void change_label(char *path _U_, afpvol_t *vol _U_,
     }
 }
 
+/*!
+ * @brief Set or clear AFP attributes from a string of letters
+ *
+ * An uppercase letter sets an attribute, and a lowercase one clears it. Y,
+ * P, R, and L stand for system, needs backup, no rename, and no delete.
+ * Regular files also take W for no write and O for the ATTRBIT_NOCOPY bit.
+ *
+ * @param[in]     path              entry path, unused
+ * @param[in]     vol               volume of the entry, unused
+ * @param[in]     st                stat result of the entry
+ * @param[in,out] ad                open metadata
+ * @param[in]     p_new_attributes  attribute letters
+ */
 static void change_attributes(char *path _U_, afpvol_t *vol _U_,
                               const struct stat *st, struct adouble *ad, char *p_new_attributes)
 {
@@ -204,6 +255,20 @@ static void change_attributes(char *path _U_, afpvol_t *vol _U_,
     ad_setattr(ad, AFPattributes);
 }
 
+/*!
+ * @brief Set or clear Finder flags from a string of letters
+ *
+ * An uppercase letter sets a flag, and a lowercase one clears it. D, E, I,
+ * C, S, B, V, and A stand for on desktop, hidden extension, inited, custom
+ * icon, name locked, bundle, invisible, and alias. Regular files also take M
+ * for shared, N for no INIT resources, and T for stationery.
+ *
+ * @param[in]     path         entry path, unused
+ * @param[in]     vol          volume of the entry, unused
+ * @param[in]     st           stat result of the entry
+ * @param[in,out] ad           open metadata
+ * @param[in]     p_new_flags  flag letters
+ */
 static void change_flags(char *path _U_, afpvol_t *vol _U_,
                          const struct stat *st, struct adouble *ad, char *p_new_flags)
 {
@@ -311,6 +376,19 @@ static void change_flags(char *path _U_, afpvol_t *vol _U_,
     memcpy(FinderInfo + 8, &FinderFlags, 2);
 }
 
+/*!
+ * @brief Run the nad set command, which changes the Mac metadata of one entry
+ *
+ * The -t and -c options set the type and the creator, -l the color label,
+ * -f the Finder flags, and -a the AFP attributes. The call creates missing
+ * metadata. Metadata that does not open leaves the entry unchanged, and the
+ * call still returns 0. A missing path or a failed stat exits with 1.
+ *
+ * @param[in] argc  argument count, from the set command on
+ * @param[in] argv  argument vector, from the set command on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, 1 when the volume does not open, or -1 for an unknown option
+ */
 int nad_set(int argc, char **argv, AFPObj *obj)
 {
     int c;

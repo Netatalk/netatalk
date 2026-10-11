@@ -30,7 +30,16 @@
 /* allocation size for interface list. */
 #define IFACE_NUM 5
 
-/*! we leave all of the ioctl's to the application */
+/*!
+ * @brief Append an interface name to a NULL-terminated list
+ *
+ * The list needs room for the name and the NULL after it.
+ *
+ * @param[in,out] list  name list
+ * @param[in,out] i     number of names in list, incremented on success
+ * @param[in]     name  interface name
+ * @returns 0, or -1 when strdup fails
+ */
 static int addname(char **list, int *i, const char *name)
 {
     /* if we've run out of room, allocate some more. just return
@@ -45,6 +54,17 @@ static int addname(char **list, int *i, const char *name)
 }
 
 
+/*!
+ * @brief Build a NULL-terminated list of the interface names of the system
+ *
+ * The call reads the names from if_nameindex, or from SIOCGIFCONF on sockfd
+ * where if_nameindex is missing. A failed strdup ends the list early.
+ *
+ * @param[in]  sockfd  socket for SIOCGIFCONF, unused with if_nameindex
+ * @param[out] list    receives the list, and with a return of 0 it holds no
+ *                     names and needs only free
+ * @returns the number of names, 0 without names or after a failure
+ */
 static int getifaces(const int sockfd, char ***list)
 {
 #ifdef HAVE_IFNAMEINDEX
@@ -130,8 +150,11 @@ static int getifaces(const int sockfd, char ***list)
 
 
 /*!
- * @brief Get interfaces from the kernel.
- * @note we keep an extra null entry to signify the end of the interface list.
+ * @brief Return the names of the network interfaces of the system
+ *
+ * The list ends with a NULL entry, and freeifacelist releases it.
+ *
+ * @returns the list, or NULL without a socket or without any names
  */
 char **getifacelist(void)
 {
@@ -153,7 +176,11 @@ char **getifacelist(void)
 }
 
 
-/*! go through and free the interface list */
+/*!
+ * @brief Free a list from getifacelist and its names
+ *
+ * @param[in] ifacelist  list, or NULL
+ */
 void freeifacelist(char **ifacelist)
 {
     char *value, **list = ifacelist;

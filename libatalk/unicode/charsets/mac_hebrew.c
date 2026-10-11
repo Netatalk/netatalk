@@ -54,7 +54,11 @@ struct charset_functions charset_mac_hebrew = {
 
 
 /*!
- * from unicode to mac hebrew code page
+ * @brief Map one UCS2 character to a MAC_HEBREW byte
+ *
+ * @param[out] r   receives the byte
+ * @param[in]  wc  UCS2 character
+ * @returns 1, or 0 when the charset has no byte for @p wc
  */
 static int
 char_ucs2_to_mac_hebrew(unsigned char *r, ucs2_t wc)
@@ -84,6 +88,23 @@ char_ucs2_to_mac_hebrew(unsigned char *r, ucs2_t wc)
     return 0;
 }
 
+/*!
+ * @brief Convert UCS2 to MAC_HEBREW, with the three Apple sequences that map to
+ * one byte
+ *
+ * U+05B8 gives 0xcb, or 0xde with a following U+F87F. U+05F2 U+05B7 gives
+ * 0x81, and U+F86A U+05DC U+05B9 gives 0xc0. Other characters go through
+ * the table. The call leaves @p outbuf at its start, as mb_generic_push
+ * does.
+ *
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[out]    outbuf        output position, which the call writes at but
+ *                              does not advance
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of bytes written, or `(size_t)-1` with EILSEQ or E2BIG
+ */
 static size_t mac_hebrew_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
                               char **outbuf, size_t *outbytesleft)
 {
@@ -138,7 +159,16 @@ static size_t mac_hebrew_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
     return len;
 }
 
-/* ------------------------ */
+/*!
+ * @brief Map one MAC_HEBREW byte to UCS2 or to a sequence marker
+ *
+ * The table values 1, 2, and 3 mark the bytes that stand for a sequence of
+ * UCS2 characters. The value 0xfffd marks a byte without a character.
+ *
+ * @param[out] pwc  receives the UCS2 character or the marker
+ * @param[in]  s    byte to map
+ * @returns 1, or 0 for a byte without a character
+ */
 static int
 char_mac_hebrew_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 {
@@ -159,6 +189,21 @@ char_mac_hebrew_to_ucs2(ucs2_t *pwc, const unsigned char *s)
     return 0;
 }
 
+/*!
+ * @brief Convert MAC_HEBREW to UCS2 and expand the three bytes that stand for
+ * sequences
+ *
+ * The byte 0x81 becomes U+05F2 U+05B7, 0xc0 becomes U+F86A U+05DC U+05B9,
+ * and 0xde becomes U+05B8 U+F87F. Other bytes map to one character each.
+ *
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of characters written, or `(size_t)-1` with EILSEQ or
+ *          E2BIG
+ */
 static size_t mac_hebrew_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
                               char **outbuf, size_t *outbytesleft)
 {

@@ -48,6 +48,21 @@ struct charset_functions charset_mac_japanese = {
     NULL
 };
 
+/*!
+ * @brief Map one UCS2 character, or an Apple sequence, to MAC_JAPANESE bytes
+ *
+ * ASCII passes as is, except that a backslash becomes 0x80. Private-use
+ * characters up to U+E98B map to the user-defined lead bytes from 0xf0.
+ * An Apple sequence that starts with U+F860 to U+F867 composes first. So
+ * does a pair with a hint from U+F870 to U+F87F or with U+20DD.
+ * Characters without a table entry return 0 for the SHIFT_JIS fallback.
+ *
+ * @param[out]    out   receives one or two bytes
+ * @param[in]     in    UCS2 input
+ * @param[in,out] size  characters available, which receives the characters used
+ * @returns the number of bytes, 0 for the iconv fallback, or `(size_t)-1` with
+ *          errno
+ */
 static size_t mac_japanese_char_push(uint8_t *out, const ucs2_t *in,
                                      size_t *size)
 {
@@ -98,6 +113,16 @@ static size_t mac_japanese_char_push(uint8_t *out, const ucs2_t *in,
                                     mac_japanese_uni2_charset), out);
 }
 
+/*!
+ * @brief Convert UCS2 to MAC_JAPANESE through cjk_generic_push
+ *
+ * @param[in]     cd            SHIFT_JIS iconv descriptor for the fallback
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with errno
+ */
 static size_t mac_japanese_push(void *cd, char **inbuf, size_t *inbytesleft,
                                 char **outbuf, size_t *outbytesleft)
 {
@@ -105,6 +130,20 @@ static size_t mac_japanese_push(void *cd, char **inbuf, size_t *inbytesleft,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
+/*!
+ * @brief Map one MAC_JAPANESE character of one or two bytes to UCS2
+ *
+ * ASCII passes as is, except that 0x5c becomes U+00A5. A lead byte in 0x81
+ * to 0x9f or 0xe0 to 0xfc needs a trail byte in 0x40 to 0x7e or 0x80 to
+ * 0xfc. Lead bytes from 0xf0 map to the private-use range from U+E000.
+ * Other values expand through the table and the composition table.
+ *
+ * @param[out]    out   receives the UCS2 characters
+ * @param[in]     in    input bytes
+ * @param[in,out] size  bytes available, which receives the bytes used
+ * @returns the number of characters, 0 for the iconv fallback, or `(size_t)-1`
+ *          with EILSEQ or EINVAL
+ */
 static size_t mac_japanese_char_pull(ucs2_t *out, const uint8_t *in,
                                      size_t *size)
 {
@@ -144,6 +183,16 @@ static size_t mac_japanese_char_pull(ucs2_t *out, const uint8_t *in,
                          out, mac_japanese_compose);
 }
 
+/*!
+ * @brief Convert MAC_JAPANESE to UCS2 through cjk_generic_pull
+ *
+ * @param[in]     cd            SHIFT_JIS iconv descriptor for the fallback
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with errno
+ */
 static size_t mac_japanese_pull(void *cd, char **inbuf, size_t *inbytesleft,
                                 char **outbuf, size_t *outbytesleft)
 {

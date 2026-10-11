@@ -50,6 +50,11 @@ static const struct archive_mode archive_modes[] = {
     { "hex", NAD2HEX },
 };
 
+/*!
+ * @brief Print the usage of the nad archive commands bin, hex, unbin, and unhex
+ *
+ * @param[in] out  stream for the text
+ */
 static void usage_archive(FILE *out)
 {
     fprintf(out,
@@ -71,6 +76,12 @@ static void usage_archive(FILE *out)
     fprintf(out, "  -h, --help       show this help\n");
 }
 
+/*!
+ * @brief Map an archive command name to its conversion mode
+ *
+ * @param[in] name  `bin`, `hex`, `unbin`, or `unhex`
+ * @returns NAD2BIN, NAD2HEX, BIN2NAD, or HEX2NAD, or -1 for another name
+ */
 static int parse_archive_mode(const char *name)
 {
     for (size_t i = 0; i < sizeof(archive_modes) / sizeof(archive_modes[0]); i++) {
@@ -82,16 +93,39 @@ static int parse_archive_mode(const char *name)
     return -1;
 }
 
+/*!
+ * @brief Tell whether a mode decodes an archive into a file with Mac metadata
+ *
+ * @param[in] module  conversion mode
+ * @returns nonzero for BIN2NAD and HEX2NAD
+ */
 static int mode_writes_metadata(int module)
 {
     return module == HEX2NAD || module == BIN2NAD;
 }
 
+/*!
+ * @brief Tell whether a mode encodes a file and its Mac metadata into an
+ * archive
+ *
+ * @param[in] module  conversion mode
+ * @returns nonzero for NAD2BIN and NAD2HEX
+ */
 static int mode_reads_metadata(int module)
 {
     return module == NAD2BIN || module == NAD2HEX;
 }
 
+/*!
+ * @brief Tell whether a conversion creates a file in the current directory
+ *
+ * Decoding always creates one. Encoding creates the archive file unless
+ * --stdout writes the archive to stdout, and --header creates nothing.
+ *
+ * @param[in] module  conversion mode
+ * @param[in] flags   OPTION_* flags
+ * @returns nonzero when the conversion creates a file
+ */
 static int mode_creates_volume_file(int module, int flags)
 {
     if (flags & OPTION_HEADERONLY) {
@@ -105,6 +139,18 @@ static int mode_creates_volume_file(int module, int flags)
     return mode_reads_metadata(module) && !(flags & OPTION_STDOUT);
 }
 
+/*!
+ * @brief Open the input of a conversion and read its header
+ *
+ * Decoding reads a BinHex or a MacBinary archive, and encoding reads a file
+ * and its metadata through nad_open.
+ *
+ * @param[in]  un     conversion mode
+ * @param[in]  file   input path, or `-` for stdin
+ * @param[out] fh     receives the file header
+ * @param[in]  flags  OPTION_* flags
+ * @returns 0, or -1 for an error
+ */
 static int from_open(int un, char *file, struct FHeader *fh, int flags)
 {
     switch (un) {
@@ -123,6 +169,16 @@ static int from_open(int un, char *file, struct FHeader *fh, int flags)
     }
 }
 
+/*!
+ * @brief Read the next bytes of a fork from the conversion input
+ *
+ * @param[in]  un    conversion mode
+ * @param[in]  fork  DATA or RESOURCE
+ * @param[out] buf   destination buffer
+ * @param[in]  len   size of @p buf
+ * @returns the number of bytes read, 0 at the end of the fork, or -1 for an
+ *          error
+ */
 static ssize_t from_read(int un, int fork, char *buf, size_t len)
 {
     switch (un) {
@@ -141,6 +197,12 @@ static ssize_t from_read(int un, int fork, char *buf, size_t len)
     }
 }
 
+/*!
+ * @brief Close the input of a conversion
+ *
+ * @param[in] un  conversion mode
+ * @returns 0, or -1 for an error
+ */
 static int from_close(int un)
 {
     switch (un) {
@@ -159,6 +221,19 @@ static int from_close(int un)
     }
 }
 
+/*!
+ * @brief Create the output of a conversion from a file header
+ *
+ * Decoding creates a file with its metadata through nad_open, and encoding
+ * creates a MacBinary or a BinHex archive. The output takes its name from
+ * the header and must not exist yet.
+ *
+ * @param[in] to     conversion mode
+ * @param[in] file   input path, unused by the writers
+ * @param[in] fh     file header of the input
+ * @param[in] flags  OPTION_* flags
+ * @returns 0, or -1 for an error
+ */
 static int to_open(int to, char *file, struct FHeader *fh, int flags)
 {
     switch (to) {
@@ -177,6 +252,14 @@ static int to_open(int to, char *file, struct FHeader *fh, int flags)
     }
 }
 
+/*!
+ * @brief Write the next bytes of a fork from the fork buffer to the output
+ *
+ * @param[in] to    conversion mode
+ * @param[in] fork  DATA or RESOURCE
+ * @param[in] bufc  number of bytes in the fork buffer
+ * @returns the number of bytes written, or -1 for an error
+ */
 static ssize_t to_write(int to, int fork, size_t bufc)
 {
     switch (to) {
@@ -195,6 +278,13 @@ static ssize_t to_write(int to, int fork, size_t bufc)
     }
 }
 
+/*!
+ * @brief Close the output of a conversion and keep or delete it
+ *
+ * @param[in] to        conversion mode
+ * @param[in] keepflag  KEEP or TRASH
+ * @returns 0, or -1 for an error
+ */
 static int to_close(int to, int keepflag)
 {
     switch (to) {
@@ -213,6 +303,13 @@ static int to_close(int to, int keepflag)
     }
 }
 
+/*!
+ * @brief Return the path of the archive that an encoding created
+ *
+ * @param[in] module  conversion mode
+ * @returns the archive path for NAD2BIN and NAD2HEX, or NULL for the decoding
+ *          modes
+ */
 static const char *created_file_path(int module)
 {
     switch (module) {
@@ -227,6 +324,19 @@ static const char *created_file_path(int module)
     }
 }
 
+/*!
+ * @brief Give a new archive file in a volume its CNID and store the CNID in its
+ * metadata
+ *
+ * Stdout, the stand-in volume of --force, and a volume without CNIDs need
+ * nothing. The call resolves the CNID of the path in the database. It then
+ * writes the CNID, the parent ID, and the database stamp into the
+ * AppleDouble metadata of the file.
+ *
+ * @param[in] volume  volume state of the conversion
+ * @param[in] path    archive path, `-` for stdout, or NULL
+ * @returns 0, or -1 with errno for an error
+ */
 static int update_created_file_cnid(const struct nad_volume *volume,
                                     const char *path)
 {
@@ -301,6 +411,17 @@ done:
     return rv;
 }
 
+/*!
+ * @brief Print one labeled header date in local time
+ *
+ * A date that the format does not carry prints as `(not available)`. The
+ * AD_DATE_START date prints as `(not set)`, and a date that does not convert
+ * as `(invalid)`.
+ *
+ * @param[in] label      label of the line
+ * @param[in] ad_date    AppleDouble date in network byte order
+ * @param[in] available  nonzero when the header carries the date
+ */
 static void print_header_date(const char *label, uint32_t ad_date,
                               int available)
 {
@@ -329,6 +450,14 @@ static void print_header_date(const char *label, uint32_t ad_date,
     printf("%-20s%s\n", label, buf);
 }
 
+/*!
+ * @brief Print the file header of the input for --header
+ *
+ * The output lists the name, the comment, the creator, the type, both fork
+ * lengths, and the creation, modification, and backup dates.
+ *
+ * @param[in] fh  file header
+ */
 static void print_header(const struct FHeader *fh)
 {
     char buf[5] = "";
@@ -351,6 +480,23 @@ static void print_header(const struct FHeader *fh)
                       fh->date_flags & FH_DATE_BACKUP);
 }
 
+/*!
+ * @brief Convert one file between an archive and a file with Mac metadata
+ *
+ * A directory gets a message and passes. Under --header the call only prints
+ * the input header. Otherwise it creates the output, moves each fork through
+ * a buffer of 8 KiB, and checks the length of each fork against the header.
+ * A failed fork deletes the partial output. An encoding without --stdout
+ * then gives the new archive its CNID.
+ *
+ * @param[in] path     input path, or `-` for stdin
+ * @param[in] module   conversion mode
+ * @param[in] newname  name for the output header, or an empty string to keep
+ *                     the input name
+ * @param[in] flags    OPTION_* flags
+ * @param[in] volume   volume state of the conversion
+ * @returns 0, or -1 for an error
+ */
 static int nad_archive_convert(char *path, int module, const char *newname,
                                int flags, const struct nad_volume *volume)
 {
@@ -438,6 +584,13 @@ static int nad_archive_convert(char *path, int module, const char *newname,
 
 static void close_metadata_volume(struct nad_volume *volume);
 
+/*!
+ * @brief Refuse a volume whose AppleDouble format nad does not support
+ *
+ * @param[in] volpath  path for the message
+ * @param[in] vol      volume to check
+ * @returns 0 for adouble:v2 and adouble:ea, or -1
+ */
 static int validate_volume_metadata(const char *volpath, const struct vol *vol)
 {
     if (vol->v_adouble != AD_VERSION2 && vol->v_adouble != AD_VERSION_EA) {
@@ -451,6 +604,15 @@ static int validate_volume_metadata(const char *volpath, const struct vol *vol)
 
 static struct vol fallback_volume;
 
+/*!
+ * @brief Set up the stand-in volume that --force uses outside an AFP volume
+ *
+ * The stand-in volume is the current directory with adouble:ea metadata, or
+ * with adouble:v2 under --adouble, and it has no CNIDs.
+ *
+ * @param[out] volume  receives the stand-in volume
+ * @param[in]  flags   OPTION_* flags
+ */
 static void set_fallback_volume(struct nad_volume *volume, int flags)
 {
     memset(&fallback_volume, 0, sizeof(fallback_volume));
@@ -474,6 +636,26 @@ static void set_fallback_volume(struct nad_volume *volume, int flags)
     volume->skip_cnid = true;
 }
 
+/*!
+ * @brief Find the AFP volume that holds the metadata of a conversion and open
+ * its CNID database
+ *
+ * Decoding and stdin input use the volume of the current directory, and
+ * encoding uses the volume of the input file. Outside a volume the call
+ * fails, unless --force picks the stand-in volume.
+ *
+ * When the conversion creates a file, the call also opens the CNID database
+ * of the current directory and reads its stamp. Under --force a current
+ * directory outside a volume skips the CNIDs. A CNID backend that this build
+ * lacks fails.
+ *
+ * @param[in]  obj     AFP configuration with the volumes
+ * @param[in]  module  conversion mode
+ * @param[in]  path    input path, or `-` for stdin
+ * @param[in]  flags   OPTION_* flags
+ * @param[out] volume  receives the volume state
+ * @returns 0, or -1 for an error
+ */
 static int resolve_metadata_volume(AFPObj *obj, int module,
                                    const char *path, int flags,
                                    struct nad_volume *volume)
@@ -572,6 +754,12 @@ static int resolve_metadata_volume(AFPObj *obj, int module,
     return 0;
 }
 
+/*!
+ * @brief Close the CNID database that resolve_metadata_volume opened and clear
+ * the volume state
+ *
+ * @param[in,out] volume  volume state
+ */
 static void close_metadata_volume(struct nad_volume *volume)
 {
     if (volume->cnid_vol && volume->owns_cdb && volume->cnid_vol->v_cdb) {
@@ -582,11 +770,23 @@ static void close_metadata_volume(struct nad_volume *volume)
     memset(volume, 0, sizeof(*volume));
 }
 
+/*!
+ * @brief Tell whether an archive argument is an option that takes a value
+ *
+ * @param[in] arg  command-line argument
+ * @returns nonzero for --filename
+ */
 static int arg_is_option_with_value(const char *arg)
 {
     return strcmp(arg, "--filename") == 0;
 }
 
+/*!
+ * @brief Tell whether an archive argument is an option without a value
+ *
+ * @param[in] arg  command-line argument
+ * @returns nonzero for --header, --stdout, --adouble, and --verbose
+ */
 static int arg_is_flag_option(const char *arg)
 {
     return strcmp(arg, "--header") == 0
@@ -595,6 +795,14 @@ static int arg_is_flag_option(const char *arg)
            || strcmp(arg, "--verbose") == 0;
 }
 
+/*!
+ * @brief Store the --filename name for the next conversion
+ *
+ * @param[out] newname      buffer for the name
+ * @param[in]  newname_len  size of @p newname
+ * @param[in]  name         name from the command line
+ * @returns 0, or -1 for a name that does not fit
+ */
 static int set_newname(char *newname, size_t newname_len, const char *name)
 {
     if (strlcpy(newname, name, newname_len) >= newname_len) {
@@ -605,6 +813,12 @@ static int set_newname(char *newname, size_t newname_len, const char *name)
     return 0;
 }
 
+/*!
+ * @brief Report an option that follows a file argument
+ *
+ * @param[in] arg  option that came after a file
+ * @returns 1, the exit status for the error
+ */
 static int option_after_file(const char *arg)
 {
     fprintf(stderr, "nad: option '%s' appears after a FILE argument\n", arg);
@@ -612,6 +826,20 @@ static int option_after_file(const char *arg)
     return 1;
 }
 
+/*!
+ * @brief Run the nad archive commands bin, hex, unbin, and unhex
+ *
+ * The -h and --help options print the usage and return 0. The first pass
+ * checks the arguments, and every option has to come before the first file.
+ * The second pass converts each file with a fresh volume state. A --filename
+ * name applies to the first file, or to stdin without a file. Without a file
+ * the decoding commands read stdin, and the encoding commands fail.
+ *
+ * @param[in] argc  argument count, from the command name on
+ * @param[in] argv  argument vector, from the command name on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or 1 when a file fails or the arguments do not parse
+ */
 int nad_archive(int argc, char **argv, AFPObj *obj)
 {
     int rc;

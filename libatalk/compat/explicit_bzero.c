@@ -16,18 +16,14 @@
 
 #if !defined(HAVE_EXPLICIT_BZERO) && !defined(HAVE_MEMSET_EXPLICIT)
 
-/*
- * Secure memory clearing function that won't be optimized by the compiler.
+/*!
+ * @brief Clear memory in a way the compiler cannot drop as a dead store
  *
- * This uses a volatile function pointer technique which prevents the compiler
- * from optimizing away the memset call.
+ * A volatile function pointer to memset keeps the call. The data can remain
+ * in registers, caches, swap, or core dumps.
  *
- * Note: Even with this protection, sensitive data may remain in:
- * - CPU registers
- * - Cache lines
- * - Swap space
- * - Core dumps
- * Complete protection requires additional OS-level support.
+ * @param[out] s  memory to clear
+ * @param[in]  n  number of bytes
  */
 void explicit_bzero(void *s, size_t n)
 {

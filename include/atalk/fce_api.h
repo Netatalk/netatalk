@@ -140,7 +140,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
 /*! IP or IP:Port */
 int fce_add_udp_socket(const char *target);
 /*! all|delete|create */
-int fce_set_coalesce(const char *coalesce_opt);
+int fce_set_coalesce(const char *opt);
 /*! fmod,fdel,ddel,fcre,dcre */
 int fce_set_events(const char *events);
 

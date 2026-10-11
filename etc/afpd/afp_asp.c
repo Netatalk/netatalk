@@ -38,6 +38,17 @@
 
 static AFPObj *child;
 
+/*!
+ * @brief End an ASP session by closing the volumes, logging out, and closing
+ * the ASP connection
+ *
+ * An error path that exits after become_root leaves the euid at 0. The call
+ * switches back to obj->uid first, because the volume close scripts run as
+ * the login user.
+ * Only a failed switch ends the process at once.
+ *
+ * @param[in,out] obj  session object
+ */
 static void afp_asp_close(AFPObj *obj)
 {
     ASP asp = obj->handle;
@@ -95,6 +106,14 @@ static volatile sig_atomic_t asp_getmesg_pending = 0;
 */
 static void afp_asp_die_handler(int sig);
 
+/*!
+ * @brief Shut the ASP session down and exit
+ *
+ * The client gets a shutdown attention first. SIGTERM and SIGALRM exit with
+ * status 0, and any other value exits with sig itself.
+ *
+ * @param[in] sig  signal that ended the session, or an EXITERR_* status
+ */
 static void afp_asp_die_now(const int sig)
 {
     ASP asp = child->handle;
@@ -113,8 +132,12 @@ static void afp_asp_die_now(const int sig)
     }
 }
 
-/* -----------------------------
- * SIGUSR1
+/*!
+ * @brief Announce a shutdown in 5 minutes to the ASP client and arm the exit
+ * timer
+ *
+ * The attention tells the client not to reconnect. SIGALRM after 300 seconds
+ * then ends the session, and the session ignores further SIGUSR1 signals.
  */
 static void afp_asp_timedown_now(void)
 {
@@ -162,6 +185,11 @@ static void afp_asp_timedown_now(void)
 */
 extern volatile sig_atomic_t reload_request;
 
+/*!
+ * @brief SIGHUP handler that requests a reload of the volume configuration
+ *
+ * @param[in] sig  unused
+ */
 static void afp_asp_reload(int sig _U_)
 {
     reload_request = 1;
@@ -170,6 +198,10 @@ static void afp_asp_reload(int sig _U_)
 
 /* ---------------------- */
 #ifdef SERVERTEXT
+/*!
+ * @brief Read the pending server message and send the ASP client a message
+ * attention
+ */
 static void afp_asp_getmesg_now(void)
 {
     readmessage(child);
@@ -185,12 +217,26 @@ static void afp_asp_getmesg_now(void)
  * asp_cmdreply() < 0, which the loop treats as a dead client, so a reload would
  * terminate healthy sessions. The self-pipe is what makes the wake-up reliable,
  * and it is sufficient because the loop only ever blocks in poll(). */
+
+/*!
+ * @brief SIGTERM and SIGALRM handler that records the request to end the
+ * session
+ *
+ * A signal value of 0 counts as SIGTERM.
+ *
+ * @param[in] sig  received signal
+ */
 static void afp_asp_die_handler(int sig)
 {
     asp_die_pending = (sig == 0) ? SIGTERM : sig;
     atalk_sigpipe_notify();
 }
 
+/*!
+ * @brief SIGUSR1 handler that records the request for a shutdown in 5 minutes
+ *
+ * @param[in] sig  unused
+ */
 static void afp_asp_timedown(int sig _U_)
 {
     asp_timedown_pending = 1;
@@ -198,6 +244,11 @@ static void afp_asp_timedown(int sig _U_)
 }
 
 #ifdef SERVERTEXT
+/*!
+ * @brief SIGUSR2 handler that records a pending server message
+ *
+ * @param[in] sig  unused
+ */
 static void afp_asp_getmesg(int sig _U_)
 {
     asp_getmesg_pending = 1;
@@ -206,7 +257,13 @@ static void afp_asp_getmesg(int sig _U_)
 #endif /* SERVERTEXT */
 
 /*!
- * @brief Act on signals recorded while the loop was busy or waiting
+ * @brief Act on the signals that the handlers recorded while the loop was busy
+ * or waiting
+ *
+ * A pending exit runs first and does not return. A shutdown notice, a
+ * configuration reload, and a server message follow.
+ *
+ * @param[in,out] obj  session object
  */
 static void asp_process_deferred_signals(AFPObj *obj)
 {
@@ -236,7 +293,21 @@ static void asp_process_deferred_signals(AFPObj *obj)
 #endif /* SERVERTEXT */
 }
 
-/* ---------------------- */
+/*!
+ * @brief Run an AFP session over ASP until the client closes it
+ *
+ * The session adopts the connection counters, the IPC socket, and the hint
+ * pipe that asp_getsess prepared before the fork. Signal handlers only record
+ * their event and wake poll through the self-pipe. The resource fork cache
+ * stays off for ASP sessions.
+ *
+ * Each loop pass acts on the recorded signals, applies the dircache hints,
+ * and serves one request per readable datagram. Commands and writes dispatch
+ * through afp_switch. ASP_MAX_READ_ERRORS read errors in a row end the
+ * session, and stray packets only log.
+ *
+ * @param[in,out] obj  session object holding the ASP session
+ */
 void afp_over_asp(AFPObj *obj)
 {
     ASP asp;

@@ -52,10 +52,15 @@
 #include "dircache.h"
 
 /*!
- * @brief Free and cleanup config and DSI
+ * @brief Release the configuration and the DSI listeners
  *
- * "dsi" can be NULL in which case all DSI objects and the config object is freed,
- * otherwise its an afpd session child and only any unneeded DSI objects are freed
+ * An ASP session only drops its ASP resources. With dsi NULL the master afpd
+ * reloads its configuration, so the UAMs and every DSI listener go. A session
+ * child passes its session DSI, and that DSI stays as the only one of obj.
+ * Both cases unload the volumes.
+ *
+ * @param[in,out] obj  server or session object
+ * @param[in]     dsi  DSI of a session child, or NULL in the master
  */
 void configfree(AFPObj *obj, DSI *dsi)
 {
@@ -112,7 +117,17 @@ void configfree(AFPObj *obj, DSI *dsi)
 
 
 /*!
- * @brief Get everything running
+ * @brief Set up the UAMs, the listeners, and the server-wide settings at
+ * startup or reload
+ *
+ * When the options carry OPTION_DDP, the ASP server registers its NBP name
+ * first. DSI listeners come from the afp listen addresses, from the afp
+ * interfaces, or from the host name when neither yields one. The FCE settings
+ * and the other global options of afp.conf follow.
+ *
+ * @param[in,out] dsi_obj  server object for AFP over TCP
+ * @param[in,out] asp_obj  server object for AFP over AppleTalk
+ * @returns 0, or -1 when no listener could start or a setting failed
  */
 int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
 {

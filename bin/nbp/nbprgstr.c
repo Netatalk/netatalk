@@ -21,6 +21,11 @@
 
 #define MACCHARSET "MAC_ROMAN"
 
+/*!
+ * @brief Print the usage of nbprgstr to stderr and exit with 1
+ *
+ * @param[in] av0  program path, whose base name the usage line shows
+ */
 static void Usage(char *av0)
 {
     char	*p;
@@ -36,6 +41,19 @@ static void Usage(char *av0)
     exit(1);
 }
 
+/*!
+ * @brief Register an NBP name for a DDP socket with the local atalkd
+ *
+ * The tool opens a DDP socket to learn the node address, from the -A address
+ * when given. The name registers for that socket, or for the -p port, and the
+ * socket closes before the tool exits. The -m option names the Mac charset
+ * of the name, which needs an object and a type.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns 0, or -1 for a socket error, while a failed registration exits with
+ *          1
+ */
 int main(int ac, char **av)
 {
     struct sockaddr_at	addr;

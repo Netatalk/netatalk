@@ -37,6 +37,9 @@
 
 #include "nad.h"
 
+/*!
+ * @brief Print the usage of nad rmdir and exit with EXIT_FAILURE
+ */
 static void usage_rmdir(void)
 {
     printf(
@@ -55,9 +58,14 @@ static void usage_rmdir(void)
 }
 
 /*!
- * @brief Check if path is the volume root or its parent
+ * @brief Tell whether a path is the volume root or a directory above it
  *
- * @returns 1 if path is a protected directory, 0 otherwise
+ * The call compares the resolved path with the volume path and logs a
+ * refusal. A path that does not resolve, or a missing volume, gives 0.
+ *
+ * @param[in] path  directory path
+ * @param[in] vol   volume of the path
+ * @returns 1 for a protected directory, or 0
  */
 static int is_protected_dir(const char *path, const afpvol_t *vol)
 {
@@ -221,6 +229,19 @@ static int do_rmdir(const char *path, afpvol_t *vol)
     return 0;
 }
 
+/*!
+ * @brief Run the nad rmdir command, which deletes empty directories with their
+ * CNIDs and metadata
+ *
+ * The -p option also deletes the empty parents, and -v prints each deleted
+ * directory. The volume root and the directories above it stay. A signal
+ * stops the run.
+ *
+ * @param[in] argc  argument count, from the rmdir command on
+ * @param[in] argv  argument vector, from the rmdir command on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or 1 when a directory fails, while usage errors exit
+ */
 int nad_rmdir(int argc, char *argv[], AFPObj *obj)
 {
     int ch;

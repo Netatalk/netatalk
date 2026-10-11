@@ -26,13 +26,31 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
-/* ------------------------- */
+/*!
+ * @brief Whether mode grants the owner read and search permission
+ *
+ * @param[in] mode  directory mode
+ * @returns 1 when mode carries both S_IRUSR and S_IXUSR, 0 otherwise
+ */
 int dir_rx_set(mode_t mode)
 {
     return (mode & (S_IXUSR | S_IRUSR)) == (S_IXUSR | S_IRUSR);
 }
 
-/* --------------------- */
+/*!
+ * @brief Set the permission bits of name and keep its other mode bits
+ *
+ * The volume umask clears bits from the new mode, and st supplies the file
+ * type and special bits. The ochmod call skips a symlink unless the volume
+ * follows symlinks. The volume options decide whether it preserves ACLs or
+ * skips the change. EPERM counts as success.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  file to change
+ * @param[in] mode  new permission bits
+ * @param[in] st    stat whose non-permission bits to keep, or NULL to stat name
+ * @returns 0, or -1 with errno set
+ */
 int setfilmode(const struct vol *vol, const char *name, mode_t mode,
                struct stat *st)
 {
@@ -63,9 +81,15 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode,
 }
 
 /*!
- * @brief system rmdir with afp error code.
+ * @brief Delete an empty directory and map the error to an AFP result code
  *
- * @note Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
+ * Unlike netatalk_rmdir, a missing directory fails with AFPERR_NOOBJ.
+ *
+ * @param[in] dirfd  directory that name is relative to, or -1 for the working
+ *                   directory
+ * @param[in] name   directory to delete
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_DIRNEMPT, AFPERR_ACCESS, AFPERR_VLOCK,
+ *          or AFPERR_PARAM
  */
 int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 {
@@ -102,9 +126,16 @@ int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 }
 
 /*!
- * @brief System rmdir with afp error code, but ENOENT is not an error.
+ * @brief Delete an empty directory and treat a missing one as success
  *
- * @note Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
+ * The errors map as in netatalk_rmdir_all_errors, except that AFPERR_NOOBJ
+ * becomes AFP_OK.
+ *
+ * @param[in] dirfd  directory that name is relative to, or -1 for the working
+ *                   directory
+ * @param[in] name   directory to delete
+ * @returns AFP_OK, AFPERR_DIRNEMPT, AFPERR_ACCESS, AFPERR_VLOCK, or
+ *          AFPERR_PARAM
  */
 int netatalk_rmdir(int dirfd, const char *name)
 {
@@ -118,9 +149,14 @@ int netatalk_rmdir(int dirfd, const char *name)
 }
 
 /*!
- * @brief system unlink with afp error code.
- * @note ENOENT is not an error.
-*/
+ * @brief Delete a file and map the error to an AFP result code
+ *
+ * A missing file counts as success.
+ *
+ * @param[in] name  file to delete, relative to the working directory
+ * @returns AFP_OK, AFPERR_VLOCK on a read-only file system, AFPERR_ACCESS, or
+ *          AFPERR_PARAM
+ */
 int netatalk_unlink(const char *name)
 {
     if (unlink(name) < 0) {
@@ -147,7 +183,16 @@ int netatalk_unlink(const char *name)
  * *at semnatics support functions (like openat, renameat standard funcs)
  **************************************************************************/
 
-/*! Copy all file data from one file fd to another */
+/*!
+ * @brief Transfer all remaining data from one descriptor to another
+ *
+ * The loop reads and writes in NETATALK_DIOSZ_STACK chunks and retries after
+ * EINTR.
+ *
+ * @param[in] sfd  source descriptor, read from its current position
+ * @param[in] dfd  destination descriptor, written at its current position
+ * @returns 0, or -1 when a read or write failed
+ */
 int copy_file_fd(int sfd, int dfd)
 {
     EC_INIT;
@@ -186,7 +231,18 @@ EC_CLEANUP:
 }
 
 /*!
- * Supports *at semantics, pass dirfd=-1 to ignore this
+ * @brief Duplicate the data of file src into dst
+ *
+ * The open creates dst or truncates an existing one. A missing source logs
+ * only at debug level, because callers probe AppleDouble sidecars that plain
+ * files lack and ignore ENOENT.
+ *
+ * @param[in] dirfd  directory that src is relative to, or -1 for the working
+ *                   directory
+ * @param[in] src    source file
+ * @param[in] dst    destination file, relative to the working directory
+ * @param[in] mode   creation mode of dst
+ * @returns 0, or -1 with errno set
  */
 int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
 {
@@ -240,9 +296,17 @@ exit:
 }
 
 /*!
- * @brief Copy an EA from one file to another
+ * @brief Transfer one EA from src to an existing dst
  *
- * @note Supports *at semantics, pass dirfd=-1 to ignore this
+ * A zero-length EA leaves dst unchanged.
+ *
+ * @param[in] ea     EA name
+ * @param[in] dirfd  directory that src is relative to, or -1 for the working
+ *                   directory
+ * @param[in] src    source file
+ * @param[in] dst    destination file, relative to the working directory
+ * @param[in] mode   unused, because the open of dst does not create it
+ * @returns 0, or -1 when an open, the EA read, or the EA write failed
  */
 int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst,
             mode_t mode)
@@ -281,7 +345,16 @@ EC_CLEANUP:
 }
 
 /*!
- * at wrapper for netatalk_unlink
+ * @brief Delete a file relative to a directory descriptor and map the error to
+ * an AFP result code
+ *
+ * A missing file counts as success.
+ *
+ * @param[in] dirfd  directory that name is relative to, or -1 for the working
+ *                   directory
+ * @param[in] name   file to delete
+ * @returns AFP_OK, AFPERR_VLOCK on a read-only file system, AFPERR_ACCESS, or
+ *          AFPERR_PARAM
  */
 int netatalk_unlinkat(int dirfd _U_, const char *name)
 {
@@ -310,14 +383,15 @@ int netatalk_unlinkat(int dirfd _U_, const char *name)
 }
 
 /*!
- * @brief This is equivalent of unix rename()
+ * @brief Rename oldpath to newpath through renameat
  *
- * unix_rename mulitplexes rename and renameat.
- *
- * @param[in] sfd        -1 gives AT_FDCWD
- * @param[in] oldpath    guess what
- * @param[in] dfd        same as sfd
- * @param[in] newpath    guess what
+ * @param[in] sfd      directory that oldpath is relative to, or -1 for the
+ *                     working directory
+ * @param[in] oldpath  current name
+ * @param[in] dfd      directory that newpath is relative to, or -1 for the
+ *                     working directory
+ * @param[in] newpath  new name
+ * @returns 0, or -1 with errno set
  */
 int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 {
@@ -337,13 +411,13 @@ int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 }
 
 /*!
- * @brief stat/fsstatat multiplexer
+ * @brief Stat path relative to a directory descriptor, following symlinks
  *
- * statat mulitplexes stat and fstatat.
- *
- * @param[in] dirfd   -1 gives AT_FDCWD
- * @param[in] path    pathname
- * @param[in,out] st  pointer to struct stat
+ * @param[in]  dirfd  directory that path is relative to, or -1 for the working
+ *                    directory
+ * @param[in]  path   file or directory
+ * @param[out] st     receives the stat
+ * @returns 0, or -1 with errno set
  */
 int statat(int dirfd, const char *path, struct stat *st)
 {
@@ -355,12 +429,16 @@ int statat(int dirfd, const char *path, struct stat *st)
 }
 
 /*!
- * @brief opendir wrapper for *at semantics support
+ * @brief Open a directory stream relative to a directory descriptor
  *
- * opendirat chdirs to dirfd if dirfd != -1 before calling opendir on path.
+ * With a dirfd other than -1 the call changes into that directory for the
+ * opendir and back afterwards. A failed return ends the process with
+ * EXITERR_SYS.
  *
- * @param[in] dirfd   if != -1, chdir(dirfd) before opendir(path)
- * @param[in] path    pathname
+ * @param[in] dirfd  directory that path is relative to, or -1 for the working
+ *                   directory
+ * @param[in] path   directory to open
+ * @returns the directory stream, or NULL with errno set
  */
 DIR *opendirat(int dirfd, const char *path)
 {

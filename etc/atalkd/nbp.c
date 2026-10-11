@@ -39,6 +39,16 @@ extern int  transition;
 
 struct nbptab   *nbptab = NULL;
 
+/*!
+ * @brief Send an NBP reply that carries only an op and a request ID
+ *
+ * A failed send only logs.
+ *
+ * @param[in] fd     socket of the NBP port
+ * @param[in] nh_op  NBPOP_OK or NBPOP_ERROR
+ * @param[in] nh_id  NBP ID of the request
+ * @param[in] to     requester address
+ */
 static
 void nbp_ack(int fd, int nh_op, int nh_id, struct sockaddr_at *to)
 {
@@ -58,6 +68,43 @@ void nbp_ack(int fd, int nh_op, int nh_id, struct sockaddr_at *to)
     }
 }
 
+/*!
+ * @brief Process an NBP packet from the NBP port of an interface
+ *
+ * The packet has to carry one tuple whose object, type, and zone fit in 32
+ * bytes each, with nothing after the zone. An empty zone or `*` stands for
+ * the default zone, the first zone of the first interface. The ops work as
+ * follows:
+ * - NBPOP_RGSTR adds the name and the interface of the port to nbptab. The
+ *   first name in a zone adds the zone multicast address to the phase 2
+ *   interfaces of the zone.
+ * - NBPOP_UNRGSTR removes the first entry with the same object, type, and
+ *   zone. The multicast address of the zone stays.
+ * - NBPOP_BRRQ sends a lookup to each net of the zone. Every node of a local
+ *   net gets an NBPOP_LKUP, and a router on a remote net gets an NBPOP_FWD.
+ *   When atalkd knows no zone, the NBPOP_LKUP goes to the local net.
+ * - With -t, every node of a nonextended net gets an NBPOP_LKUP instead.
+ * - On a router interface, NBPOP_FWD turns into an NBPOP_LKUP to every node
+ *   of the local net.
+ * - NBPOP_LKUP answers from nbptab, with `=` matching any object or type, in
+ *   NBPOP_LKUPREPLY packets of up to 15 tuples. The replies go to the address
+ *   in the request tuple.
+ *
+ * A BRRQ that covers a local net, and a FWD, also answer from nbptab. Entries
+ * of an interface that does not route answer only on that interface, and
+ * loopback never answers. RGSTR and UNRGSTR answer NBPOP_OK, or NBPOP_ERROR
+ * when the zone is unknown or not local, or the entry is missing. A BRRQ for
+ * an unknown zone gets NBPOP_ERROR as well.
+ *
+ * @param[in]     ap    NBP port of the receiving interface
+ * @param[in,out] from  sender, which an NBPOP_FWD replaces with net 0 and the
+ *                      node ATADDR_BCAST
+ * @param[in,out] data  packet from the DDP type byte on, its NBP op rewritten
+ *                      for forwarding
+ * @param[in]     len   length of data
+ * @returns 0, 1 for a malformed packet or an unknown op, or -1 for a failure
+ *          that stops atalkd
+ */
 int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 {
     struct nbphdr   nh;

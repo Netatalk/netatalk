@@ -39,6 +39,20 @@
 #include <atalk/adouble.h>
 #include <atalk/logger.h>
 
+/*!
+ * @brief Send file bytes to a socket through the sendfile call that the
+ * platform offers
+ *
+ * Linux and Solaris pass the arguments straight through. FreeBSD reorders them
+ * and advances offset in the wrapper. A platform without a sendfile flavor
+ * fails with ENOSYS.
+ *
+ * @param[in]     tofd    socket to write to
+ * @param[in]     fromfd  file to read from
+ * @param[in,out] offset  file offset to start at, advanced by the bytes sent
+ * @param[in]     count   bytes to send
+ * @returns bytes sent, or -1 with errno set
+ */
 #if defined(SENDFILE_FLAVOR_LINUX)
 #include <sys/sendfile.h>
 
@@ -75,7 +89,7 @@ ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 
 #else
 
-ssize_t sys_sendfile(int out_fd, int in_fd, off_t *_offset, size_t count)
+ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 {
     /* No sendfile syscall. */
     errno = ENOSYS;

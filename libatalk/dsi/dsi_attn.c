@@ -18,9 +18,18 @@
 #include <atalk/util.h>
 
 /*!
- * @brief send an attention.
- * @note this may get called at any time, so we can't use  DSI buffers to send one.
- * @returns 0 on error
+ * @brief Send a DSIAttention request carrying flags to the client
+ *
+ * The attention is a separate 16-byte header plus the user bytes, limited by
+ * the attention quantum. The block lives on the stack, because a signal
+ * handler may trigger it while the DSI buffers are in use. A sleeping session
+ * skips the send. A session in the middle of a reply refuses it, because the
+ * handler must not interleave with that write.
+ *
+ * @param[in,out] dsi    DSI session
+ * @param[in]     flags  AFP attention user bytes, in host order
+ * @returns bytes sent, 1 for a sleeping session, or -1 when a reply is in
+ *          progress or the send failed
  */
 int dsi_attention(DSI *dsi, AFPUserBytes flags)
 {

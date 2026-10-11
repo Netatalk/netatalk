@@ -73,6 +73,13 @@ static struct slq_state_names slq_state_names[] = {
 static int cnid_comp_fn(const void *p1, const void *p2);
 static bool create_result_handle(slq_t *slq);
 
+/*!
+ * @brief Read a big-endian 32-bit value at any offset of a buffer
+ *
+ * @param[in] buf     buffer
+ * @param[in] offset  byte offset, no alignment needed
+ * @returns the value in host order
+ */
 static uint32_t spotlight_get_be32(const char *buf, size_t offset)
 {
     uint32_t val;
@@ -80,6 +87,13 @@ static uint32_t spotlight_get_be32(const char *buf, size_t offset)
     return ntohl(val);
 }
 
+/*!
+ * @brief Write a 32-bit value in big-endian order at any offset of a buffer
+ *
+ * @param[out] buf     buffer
+ * @param[in]  offset  byte offset, no alignment needed
+ * @param[in]  val     value in host order
+ */
 static void spotlight_put_be32(char *buf, size_t offset, uint32_t val)
 {
     val = htonl(val);
@@ -90,6 +104,13 @@ static void spotlight_put_be32(char *buf, size_t offset, uint32_t val)
  * Misc utility functions
  ************************************************/
 
+/*!
+ * @brief Build a string of tab characters for the indentation of a dump
+ *
+ * @param[in] mem_ctx  talloc parent
+ * @param[in] level    number of tabs
+ * @returns the string, allocated on mem_ctx
+ */
 static char *tab_level(TALLOC_CTX *mem_ctx, int level)
 {
     int i;
@@ -103,6 +124,19 @@ static char *tab_level(TALLOC_CTX *mem_ctx, int level)
     return string;
 }
 
+/*!
+ * @brief Pass a file change to the Spotlight backend of a volume for its index
+ *
+ * A volume without Spotlight, or a backend without an index hook, ignores the
+ * event.
+ *
+ * @param[in] obj      session object
+ * @param[in] vol      volume of the change, or NULL
+ * @param[in] event    change type
+ * @param[in] path     path of the changed object
+ * @param[in] oldpath  source path of a move, or NULL
+ * @returns the result of the backend hook, or 0 without a hook
+ */
 int sl_index_event(const AFPObj *obj,
                    const struct vol *vol,
                    sl_index_event_t event,
@@ -118,6 +152,16 @@ int sl_index_event(const AFPObj *obj,
     return vol->v_sl_backend->sbo_index_event(obj, vol, event, path, oldpath);
 }
 
+/*!
+ * @brief Render a Spotlight dalloc tree as indented text for the log
+ *
+ * Arrays, dictionaries, and file metadata nest 1 tab deeper, and CNID lists 2
+ * tabs. Each scalar shows its type and value.
+ *
+ * @param[in] dd            tree to render, also the talloc parent of the text
+ * @param[in] nestinglevel  indentation of the outermost line
+ * @returns the text, or NULL when an allocation fails
+ */
 static char *dd_dump(DALLOC_CTX *dd, int nestinglevel)
 {
     const char *type;
@@ -281,6 +325,13 @@ static char *dd_dump(DALLOC_CTX *dd, int nestinglevel)
     return logstring;
 }
 
+/*!
+ * @brief Compare two 64-bit CNIDs for qsort and bsearch
+ *
+ * @param[in] p1  first CNID
+ * @param[in] p2  second CNID
+ * @returns -1, 0, or 1 for ascending order
+ */
 static int cnid_comp_fn(const void *p1, const void *p2)
 {
     const uint64_t *cnid1 = p1, *cnid2 = p2;
@@ -296,6 +347,17 @@ static int cnid_comp_fn(const void *p1, const void *p2)
     return 1;
 }
 
+/*!
+ * @brief Store the CNID filter of a query as a sorted array
+ *
+ * Every element of p must be a uint64_t. The backends look each result up in
+ * the sorted array through bsearch. An empty list stores no filter.
+ *
+ * @param[in,out] slq  query that receives slq_cnids and slq_cnids_num
+ * @param[in]     p    CNID list from the client
+ * @returns 0, or -1 for a NULL argument, an invalid element, or a failed
+ *          allocation
+ */
 int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p)
 {
     EC_INIT;
@@ -344,6 +406,13 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Tell whether a list of requested attribute names holds a name
+ *
+ * @param[in] reqinfo  attribute names
+ * @param[in] attr     name to find
+ * @returns true when the list holds attr
+ */
 static bool sl_reqinfo_contains(sl_array_t *reqinfo, const char *attr)
 {
     for (int i = 0; i < talloc_array_length(reqinfo->dd_talloc_array); i++) {
@@ -355,6 +424,16 @@ static bool sl_reqinfo_contains(sl_array_t *reqinfo, const char *attr)
     return false;
 }
 
+/*!
+ * @brief Rebuild the requested attribute list of a query without duplicates
+ *
+ * The result keeps the first MAX_SL_REQINFO_ATTRS distinct names. An element
+ * that is not a string rejects the list.
+ *
+ * @param[in] mem_ctx  talloc parent of the result
+ * @param[in] reqinfo  attribute names from the client
+ * @returns the new list, or NULL for an invalid element or a failed allocation
+ */
 static sl_array_t *sl_sanitize_reqinfo(TALLOC_CTX *mem_ctx,
                                        const sl_array_t *reqinfo)
 {
@@ -398,9 +477,14 @@ static sl_array_t *sl_sanitize_reqinfo(TALLOC_CTX *mem_ctx,
 }
 
 /*!
- * True when `path` equals `scope` or lies underneath it. Component
- * boundary aware: '/srv/afp2' does not match '/srv/afp22/x'. An
- * empty or "/" scope matches everything.
+ * @brief Tell whether a path equals a scope or lies under it
+ *
+ * The test respects component boundaries, so /srv/afp2 does not cover
+ * /srv/afp22/x. An empty or "/" scope covers every path.
+ *
+ * @param[in] path   path to test
+ * @param[in] scope  scope path
+ * @returns true when path is inside scope, false for a NULL argument
  */
 bool sl_path_in_scope(const char *path, const char *scope)
 {
@@ -425,7 +509,10 @@ bool sl_path_in_scope(const char *path, const char *scope)
 }
 
 /*!
- * True when any component of `path` is "..".
+ * @brief Tell whether any component of a path is ".."
+ *
+ * @param[in] path  path to test
+ * @returns true when a component is ".."
  */
 static bool sl_path_has_dotdot(const char *path)
 {
@@ -441,12 +528,14 @@ static bool sl_path_has_dotdot(const char *path)
 }
 
 /*!
- * Read the first CNID of an unpacked CNIDs element.
+ * @brief Read the first CNID of an unpacked CNIDs element
  *
- * The element is client-supplied and may legitimately carry no
- * entries, in which case ca_cnids holds no array at all.
+ * The client builds the element, and an element without entries has no
+ * ca_cnids array.
  *
- * @returns false when the element carries no CNID
+ * @param[in]  cnids  CNIDs element, or NULL
+ * @param[out] cnid   receives the first CNID
+ * @returns true, or false when the element carries no CNID
  */
 static bool sl_cnids_get_first(const sl_cnids_t *cnids, uint64_t *cnid)
 {
@@ -460,12 +549,20 @@ static bool sl_cnids_get_first(const sl_cnids_t *cnids, uint64_t *cnid)
 }
 
 /*!
- * @brief Add requested metadata for a query result element
+ * @brief Add the requested metadata of one query result to a result array
  *
- * This could be rewritten to something more sophisticated like
- * querying metadata from Tracker.
+ * The values follow the order of reqinfo. The call knows the names,
+ * kMDItemPath, the sizes, the owner IDs, and the modification, access, and
+ * birth times. Names and paths go out in NFD, because macOS expects
+ * decomposed names. Unknown attributes, and kMDItemContentCreationDate
+ * without birth times, get nil. Without requested attributes, a path, or a
+ * stat, the call adds a single nil.
  *
- * If path or sp is NULL, simply add nil values for all attributes.
+ * @param[in]     reqinfo   requested attribute names
+ * @param[in,out] fm_array  file metadata array of the reply
+ * @param[in]     path      path of the result, or NULL
+ * @param[in]     sp        stat of the result, or NULL
+ * @returns true
  */
 bool add_filemeta(sl_array_t *reqinfo,
                   sl_array_t *fm_array,
@@ -557,8 +654,14 @@ bool add_filemeta(sl_array_t *reqinfo,
 }
 
 /*!
- * Allocate result handle used in the async search backend result
- * handler for storing results
+ * @brief Allocate the result buffers that the backend fills for a query
+ *
+ * The CNID list carries the query context. The file metadata array starts
+ * with the nil entry that every result list carries first.
+ *
+ * @param[in,out] slq  query without result buffers
+ * @returns true, or false when the query has buffers already or an allocation
+ *          fails
  */
 static bool create_result_handle(slq_t *slq)
 {
@@ -600,6 +703,19 @@ static bool create_result_handle(slq_t *slq)
     return true;
 }
 
+/*!
+ * @brief Move the gathered results of a query into a reply and start new result
+ * buffers
+ *
+ * The status is 35 while the query runs, so the client polls again, and 0
+ * from SLQ_STATE_DONE on. The reply then takes the CNID list and the file
+ * metadata, and the sent results go with the reply.
+ *
+ * @param[in,out] array  reply array
+ * @param[in,out] slq    query with results
+ * @returns true, or false when create_result_handle fails, which sets
+ *          SLQ_STATE_ERROR
+ */
 static bool add_results(sl_array_t *array, slq_t *slq)
 {
     sl_filemeta_t *fm;
@@ -657,7 +773,9 @@ static ATALK_LIST_HEAD(sl_queries);
 static ATALK_LIST_HEAD(sl_cancelled_queries);
 
 /*!
- * Add a query to the list of active queries
+ * @brief Add a query to the list of active queries
+ *
+ * @param[in,out] slq  query to add
  */
 static void slq_add(slq_t *slq)
 {
@@ -665,7 +783,9 @@ static void slq_add(slq_t *slq)
 }
 
 /*!
- * Add a query to the list of cancelled queries
+ * @brief Add a query to the list of cancelled queries
+ *
+ * @param[in,out] slq  query to add
  */
 static void slq_cancelled_add(slq_t *slq)
 {
@@ -673,12 +793,13 @@ static void slq_cancelled_add(slq_t *slq)
 }
 
 /*!
- * Remove a query from the active list
+ * @brief Remove a query from the active list
  *
- * Uses pointer identity rather than ctx-value comparison so that a query
- * that was never enqueued (e.g. openQuery failure before slq_add()) cannot
- * accidentally remove an unrelated active query whose ctx IDs happen to
- * match the zero-initialized or partially-parsed values.
+ * The match uses the pointer, not the context IDs. A query that never joined
+ * the list, after a failed openQuery, then cannot remove an active query with
+ * the same IDs.
+ *
+ * @param[in,out] slq  query to remove
  */
 static void slq_remove(slq_t *slq)
 {
@@ -695,6 +816,13 @@ static void slq_remove(slq_t *slq)
     return;
 }
 
+/*!
+ * @brief Find the active query with a pair of context IDs
+ *
+ * @param[in] ctx1  first context ID
+ * @param[in] ctx2  second context ID
+ * @returns the query, or NULL when no active query matches
+ */
 static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
 {
     slq_t *q = NULL;
@@ -712,7 +840,10 @@ static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
 }
 
 /*!
- * Invoke the backend close_query hook then free the slq
+ * @brief Close a query in its backend, remove it from the active list, and free
+ * it
+ *
+ * @param[in] slq  query, or NULL
  */
 static void slq_destroy(slq_t *slq)
 {
@@ -730,7 +861,12 @@ static void slq_destroy(slq_t *slq)
 }
 
 /*!
- * Cancel a query (move to cancelled list; backend cleanup deferred)
+ * @brief Cancel a query by moving it to the cancelled list
+ *
+ * The state becomes SLQ_STATE_CANCEL_PENDING, and the backend cleanup waits
+ * for a later pass.
+ *
+ * @param[in,out] slq  active query
  */
 static void slq_cancel(slq_t *slq)
 {
@@ -835,6 +971,9 @@ static void slq_idle_cleanup(void)
     } while (found);
 }
 
+/*!
+ * @brief Log the context IDs and the state of every active query at debug level
+ */
 static void slq_dump(void)
 {
     struct list_head *p;
@@ -851,7 +990,11 @@ static void slq_dump(void)
 }
 
 /*!
- * Return true if any currently-open volume uses the localsearch backend
+ * @brief Tell whether a volume that the session opened uses the localsearch
+ * backend
+ *
+ * @param[in] obj  session object, unused
+ * @returns true when a volume has the localsearch backend
  */
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
 static bool localsearch_backend_active(const AFPObj *obj)
@@ -873,6 +1016,21 @@ static bool localsearch_backend_active(const AFPObj *obj)
  * Spotlight RPC functions
  ******************************************************************************/
 
+/*!
+ * @brief Spotlight RPC fetchPropertiesForContext: describe the search store of
+ * a volume
+ *
+ * The reply dictionary names the query scopes, the volume path as the only
+ * path scope, and the volume UUID as store and volume UUID. It also states a
+ * persistent UUID, VolFS support, and the backup flag of a Time Machine
+ * volume.
+ *
+ * @param[in]  obj    session object, unused
+ * @param[in]  query  unpacked request, unused
+ * @param[out] reply  reply that receives the dictionary
+ * @param[in]  v      volume of the request
+ * @returns 0, or -1 for a volume without UUID
+ */
 static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj _U_,
                                             const DALLOC_CTX *query _U_,
                                             DALLOC_CTX *reply,
@@ -945,6 +1103,27 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Spotlight RPC openQueryWithParams:forContext: start a search on a
+ * volume
+ *
+ * The request carries the 2 context IDs, the query string, the requested
+ * attributes, the scope, and an optional CNID filter. The query string
+ * converts from UTF8-MAC to the volume charset. A nested scope array, as
+ * macOS Tahoe sends, unwraps one level. A scope outside the volume root, or
+ * one with a ".." component, falls back to the volume root.
+ *
+ * The backend gets the query after its result buffers exist, so a
+ * synchronous backend can fill them at once. The query then joins the active
+ * list.
+ *
+ * @param[in]  obj    session object
+ * @param[in]  query  unpacked request
+ * @param[out] reply  reply that receives status 0, or UINT64_MAX after a
+ *                    failure
+ * @param[in]  v      volume of the request
+ * @returns 0, also after a failure, which the reply status reports
+ */
 static int sl_rpc_openQuery(AFPObj *obj,
                             const DALLOC_CTX *query,
                             DALLOC_CTX *reply,
@@ -1251,6 +1430,20 @@ EC_CLEANUP: {
     EC_EXIT;
 }
 
+/*!
+ * @brief Spotlight RPC fetchQueryResultsForContext: return the results that a
+ * query gathered
+ *
+ * The call finds the query by its context IDs, resets its idle timer, and
+ * lets the backend gather more results. A query in the error state, or any
+ * failure, destroys the query.
+ *
+ * @param[in]  obj    session object, unused
+ * @param[in]  query  unpacked request
+ * @param[out] reply  reply that receives the status and the results
+ * @param[in]  v      volume, unused
+ * @returns 0, or -1 after a failure
+ */
 static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj _U_,
                                               const DALLOC_CTX *query,
                                               DALLOC_CTX *reply,
@@ -1339,6 +1532,21 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Spotlight RPC storeAttributes:forOIDArray:context: set the dates of an
+ * object
+ *
+ * Only the first CNID of the request counts. kMDItemFSContentChangeDate sets
+ * the access and modification times, and kMDItemLastUsedDate sets the access
+ * time alone. The volume root has CNID 2, and every other CNID under
+ * CNID_START fails.
+ *
+ * @param[in]  obj    session object, unused
+ * @param[in]  query  unpacked request
+ * @param[out] reply  reply that receives status 0
+ * @param[in]  vol    volume of the object
+ * @returns 0, or -1 when the CNID does not resolve
+ */
 static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj _U_,
                                              const DALLOC_CTX *query,
                                              DALLOC_CTX *reply,
@@ -1399,6 +1607,20 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Spotlight RPC fetchAttributeNamesForOIDArray:context: list the
+ * attributes of an object
+ *
+ * The call answers for the first CNID of the request with a constant list.
+ * It names the name, the display name, the size, the owner IDs, and the
+ * content change date.
+ *
+ * @param[in]  obj    session object, unused
+ * @param[in]  query  unpacked request
+ * @param[out] reply  reply that receives status 0, the CNID, and the names
+ * @param[in]  vol    volume, unused
+ * @returns 0, or -1 for a request without a CNID
+ */
 static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj _U_,
                                                  const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol _U_)
 {
@@ -1445,6 +1667,20 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Spotlight RPC fetchAttributes:forOIDArray:context: return the metadata
+ * of an object
+ *
+ * The call also serves fetchAllAttributes. It resolves the first CNID of the
+ * request to a path and stats it, and add_filemeta fills the requested
+ * attributes. A failure puts status UINT64_MAX in the reply and returns -1.
+ *
+ * @param[in]  obj    session object, unused
+ * @param[in]  query  unpacked request
+ * @param[out] reply  reply that receives the status, the CNID, and the metadata
+ * @param[in]  vol    volume of the object
+ * @returns 0, or -1 after a failure
+ */
 static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj _U_,
                                              const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 {
@@ -1520,6 +1756,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Spotlight RPC closeQueryForContext: end a query
+ *
+ * A finished query goes away at once. A running one moves to the cancelled
+ * list until its backend stops.
+ *
+ * @param[in]  obj    session object, unused
+ * @param[in]  query  unpacked request
+ * @param[out] reply  reply that receives status 0 or UINT64_MAX
+ * @param[in]  v      volume, unused
+ * @returns 0, or -1 for an unknown context or an unexpected state
+ */
 static int sl_rpc_closeQueryForContext(const AFPObj *obj _U_,
                                        const DALLOC_CTX *query,
                                        DALLOC_CTX *reply,
@@ -1591,6 +1839,23 @@ EC_CLEANUP:
  * AFP functions
  ******************************************************************************/
 
+/*!
+ * @brief FPSpotlightRPC: answer the Spotlight commands of a client
+ *
+ * Each call first runs pending localsearch events and cleans up cancelled and
+ * idle queries. The request names a volume and a command in big-endian
+ * fields. The open command answers with the volume path, and the flags
+ * command with a fixed value. The RPC command unpacks a Spotlight request,
+ * runs the named RPC, and packs the reply.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, AFPERR_NOOP without Spotlight, AFPERR_PARAM for a request
+ *          under 2 bytes, or AFPERR_MISC for every later failure
+ */
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
                       char *rbuf, size_t *rbuflen)
 {

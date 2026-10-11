@@ -44,6 +44,16 @@
 
 #include "atp_internals.h"
 
+/*!
+ * @brief Open an ATP endpoint on a new DDP socket
+ *
+ * The endpoint comes from the ATP buffer pool. Its first transaction ID mixes
+ * the time with the process ID.
+ *
+ * @param[in] port   DDP port, or ATADDR_ANYPORT for any free one
+ * @param[in] saddr  local address to bind, or NULL for any
+ * @returns the endpoint, or NULL when the socket or the allocation fails
+ */
 ATP atp_open(uint8_t port, const struct at_addr *saddr)
 {
     struct sockaddr_at  addr;

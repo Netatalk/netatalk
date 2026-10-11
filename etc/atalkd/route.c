@@ -20,6 +20,16 @@
 #include "route.h"
 
 #ifndef BSD4_4
+/*!
+ * @brief Add or delete a kernel route with an ioctl on the route socket rtfd
+ *
+ * @param[in] message  RTMP_ADD or RTMP_DEL, which are SIOCADDRT and SIOCDELRT
+ *                     here
+ * @param[in] dst      destination address
+ * @param[in] gate     gateway address
+ * @param[in] flags    route flags, RTF_UP with RTF_GATEWAY or RTF_HOST
+ * @returns the ioctl result, 0 or -1
+ */
 int route(int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
 {
     struct rtentry	rtent;
@@ -47,6 +57,19 @@ struct rt_msg_at {
     struct sockaddr_m	rtma_mask;
 } rtma;
 
+/*!
+ * @brief Add or delete a kernel route with a message on the routing socket rtfd
+ *
+ * A host route goes without a netmask, and a net route carries the mask
+ * 0xffff for the net number.
+ *
+ * @param[in] message  RTMP_ADD or RTMP_DEL, which are RTM_ADD and RTM_DELETE
+ *                     here
+ * @param[in] dst      destination address
+ * @param[in] gate     gateway address
+ * @param[in] flags    route flags, RTF_UP with RTF_GATEWAY or RTF_HOST
+ * @returns 0, or -1 for a short write
+ */
 int route(int message, struct sockaddr_at *dst, struct sockaddr_at *gate,
           int flags)
 {

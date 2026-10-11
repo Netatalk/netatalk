@@ -34,16 +34,23 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-/*
- * One attempt only: ASP_NOREQUEST means a datagram was consumed but no request
- * came of it, and the caller should wait for the socket to be readable again
- * rather than block here. Callers driving other descriptors in the same loop
- * depend on that, so the wait stays in one place.
+/*!
+ * @brief Read one ASP request from the session socket without blocking
  *
- * cmdbuf is char, which is signed on the usual ABIs, so every byte read out of
- * it for comparison or return needs the unsigned cast: without it a session id
- * of 0x80 or above never matches asp_sid, and a function byte of 0xFF/0xFE/0xFD
- * would be returned as one of the negative result codes.
+ * The call reads no more than one datagram. ASP_NOREQUEST means that a datagram
+ * went by without a usable request, and the caller waits for the socket to
+ * turn readable again. A request shorter than the ASP header, or a command or
+ * write without a payload, counts as no request. Every function except
+ * ASPFUNC_CLOSE has to carry the next sequence number.
+ *
+ * The session ID and the function byte compare as unsigned bytes. A session ID
+ * of 0x80 or above therefore matches, and a function byte from 0xFD to 0xFF
+ * never reads as an error code.
+ *
+ * @param[in,out] asp  session, receives the request in cmdbuf and its payload
+ *                     length in cmdlen
+ * @returns the ASP function byte, ASP_NOREQUEST, ASP_ERR_READ, ASP_ERR_SEQ for
+ *          a wrong sequence number, or ASP_ERR_SID for another session
  */
 int asp_getrequest(ASP asp)
 {

@@ -81,6 +81,11 @@ static int 	cups_mangle_printer_name(struct printer *pr,
 static void     cups_free_printer(struct printer *pr);
 
 
+/*!
+ * @brief Return the name of the charset of the default CUPS language
+ *
+ * @returns the encoding name that CUPS reports, for add_charset
+ */
 const char *cups_get_language(void)
 {
 #if CUPS_VERSION_MAJOR < 3 /* CUPS 2.x and older */
@@ -96,10 +101,15 @@ const char *cups_get_language(void)
 }
 
 /*!
- * @brief The CUPS password callback...
- * @note O - Password or NULL
- * @note I - Prompt
- * @returns NULL (not implemented)
+ * @brief Refuse every CUPS password prompt, so a CUPS request never waits for a
+ * password
+ *
+ * @param[in] prompt     prompt text, unused
+ * @param[in] http       connection, unused
+ * @param[in] method     HTTP method, unused
+ * @param[in] resource   resource path, unused
+ * @param[in] user_data  callback data, unused
+ * @returns NULL, no password
  */
 static const char *cups_passwd_cb(const char *prompt _U_,
                                   http_t *http _U_,
@@ -115,11 +125,12 @@ static const char *cups_passwd_cb(const char *prompt _U_,
 
 
 /*!
- * @brief Verify supplied printer name is a valid cups printer
- * @note O - 1 if printer name OK
- * @note I - Name of printer
+ * @brief Check that a CUPS destination with this name exists and accepts a
+ * connection
+ *
+ * @param[in] name  CUPS printer name
+ * @returns 1 for a usable printer, or 0
  */
-
 int cups_printername_ok(char *name)
 {
     /* HTTP connection to server */
@@ -158,6 +169,17 @@ int cups_printername_ok(char *name)
     return 1;
 }
 
+/*!
+ * @brief Write a PPD file for a CUPS printer from its IPP attributes
+ *
+ * The file holds fixed PostScript level 3 defaults plus the make, model, and
+ * color support of the printer. A printer that CUPS only knows from DNS-SD
+ * gets the query directly, through its device URI.
+ *
+ * @param[in] name  CUPS printer name
+ * @returns the path of the temporary PPD file in a static buffer, or NULL on
+ *          failure
+ */
 const char *cups_get_printer_ppd(char *name)
 {
     /* Connection to destination */
@@ -355,6 +377,17 @@ const char *cups_get_printer_ppd(char *name)
     return buffer;
 }
 
+/*!
+ * @brief Ask CUPS for the state of a printer and store a PAP status line for it
+ *
+ * The line in p_status reads like `status: idle; info: "name" is ready`. A
+ * printer that does not answer the query counts as busy but keeps taking
+ * jobs, since the CUPS scheduler queues them.
+ *
+ * @param[in,out] pr  printer, receives the status line
+ * @returns 0 when the printer rejects jobs or is unreachable, 1 when stopped or
+ *          not answering, 2 when ready, or 3 when printing
+ */
 int
 cups_get_printer_status(struct printer *pr)
 {
@@ -523,8 +556,16 @@ cups_get_printer_status(struct printer *pr)
 
 /*------------------------------------------------------------------------*/
 
-/*! pass the job to cups */
-
+/*!
+ * @brief Submit a spooled data file to CUPS as a job
+ *
+ * The call sends the data file @p filename of the spool directory to the CUPS
+ * printer @p name as the job @p job. The job carries @p username as the
+ * originating user and the CUPS options of the co entry, when they are not
+ * NULL. CUPS picks the document format, and a failed send only logs.
+ *
+ * @returns the CUPS job ID, or 0 for an unknown printer or a missing data file
+ */
 int cups_print_job(char *name, const char *filename, char *job, char *username,
                    char *cupsoptions)
 {
@@ -631,6 +672,19 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
 
 /*------------------------------------------------------------------------*/
 
+/*!
+ * @brief Add a printer entry for every CUPS destination, for the cupsautoadd
+ * entry of papd.conf
+ *
+ * Each entry takes the settings of the cupsautoadd entry and a PPD file from
+ * cups_get_printer_ppd. Its NBP name comes from convert_to_mac_name. A name
+ * that clashes with another added printer gets a `#nn` suffix, and one that
+ * clashes with a printer of papd.conf goes unused.
+ *
+ * @param[in] defprinter  cupsautoadd entry that supplies the settings
+ * @param[in] printers    printer list
+ * @returns the printer list with the added printers in front
+ */
 struct printer	*
 cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
 {
@@ -712,11 +766,16 @@ cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
 /*------------------------------------------------------------------------*/
 
 /*!
- * @brief Mangles the printer name if two CUPS printer provide the same Chooser Name
- * @note Append `#nn` to the chooser name, if it is longer than 28 char we overwrite the last three chars
- * @returns 0 on Success, 2 on Error
+ * @brief Give an added printer a free NBP name by appending `#01` to `#99`
+ *
+ * The name keeps at most 28 bytes before the suffix, so it stays within the
+ * 31 bytes of a Chooser name.
+ *
+ * @param[in,out] pr        added printer, receives the new name
+ * @param[in]     printers  printer list
+ * @returns 0 for a free name, or 2 when every suffix clashes or the allocation
+ *          fails
  */
-
 static int cups_mangle_printer_name(struct printer *pr,
                                     struct printer *printers)
 {
@@ -755,8 +814,16 @@ static int cups_mangle_printer_name(struct printer *pr,
 
 /*------------------------------------------------------------------------*/
 
-/*! fallback ASCII conversion */
-
+/*!
+ * @brief Make an ASCII version of a name by turning every byte above 0x7f into
+ * `_`
+ *
+ * A failed allocation exits papd.
+ *
+ * @param[in]  inptr   NUL-terminated name
+ * @param[out] outptr  receives the new name, to free
+ * @returns the length of the new name
+ */
 static size_t
 to_ascii(char  *inptr, char **outptr)
 {
@@ -788,13 +855,18 @@ to_ascii(char  *inptr, char **outptr)
 /*------------------------------------------------------------------------*/
 
 /*!
- * @brief Convert to Mac printer name
- * @note 1) Convert from encoding to MacRoman
- * @note 2) Shorten to MAXCHOOSERLEN (31)
- * @note 3) Replace @ and _ as they are illegal
- * @returns -1 on failure, length of name on success; outpr contains name in MacRoman
+ * @brief Turn a CUPS printer name into a Chooser name in Mac Roman
+ *
+ * The name goes from the CUPS charset to Mac Roman, or through to_ascii when
+ * that fails. The call cuts it to outlen - 1 bytes, turns `_` into a space,
+ * and turns `@` and `:` into `_`, since NBP names cannot hold them.
+ *
+ * @param[in]  encoding  charset of the CUPS name
+ * @param[in]  inptr     CUPS name
+ * @param[out] outptr    receives the Chooser name
+ * @param[in]  outlen    size of outptr
+ * @returns the length of the Chooser name
  */
-
 static int convert_to_mac_name(const char *encoding, char *inptr,
                                char *outptr, size_t outlen)
 {
@@ -839,12 +911,20 @@ static int convert_to_mac_name(const char *encoding, char *inptr,
 /*------------------------------------------------------------------------*/
 
 /*!
- * @brief check if a printer with this name already exists.
- * @note if yes, and replace = 1 the existing printer is replaced with
- * the new one. This allows to overwrite printer settings
- * @note created by cupsautoadd. It also used by cups_mangle_printer.
+ * @brief Check whether the printer list holds a printer with the same name,
+ * ignoring case
+ *
+ * For an added printer, a clash with another added printer returns -1 and a
+ * clash with a printer of papd.conf returns 1. Otherwise, with replace set,
+ * the new printer takes the place of the old one in the list. The call frees
+ * the old one, so a papd.conf entry overrides an added printer.
+ *
+ * @param[in]     pr        new printer
+ * @param[in,out] printers  printer list
+ * @param[in]     replace   nonzero to replace a printer of the same name
+ * @returns 0 without a clash, 1 for a clash, or -1 for a clash between added
+ *          printers
  */
-
 int cups_check_printer(struct printer *pr, struct printer *printers,
                        int replace)
 {
@@ -894,6 +974,14 @@ int cups_check_printer(struct printer *pr, struct printer *printers,
 /*------------------------------------------------------------------------*/
 
 
+/*!
+ * @brief Free a printer entry and its strings
+ *
+ * An added printer shares its other strings with the cupsautoadd entry, so the
+ * call frees only its name, printer, and PPD file.
+ *
+ * @param[in] pr  printer entry
+ */
 void
 cups_free_printer(struct printer *pr)
 {

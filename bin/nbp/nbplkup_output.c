@@ -27,6 +27,19 @@
 
 #include "nbplkup_output.h"
 
+/*!
+ * @brief Convert an NBP name field from the Mac charset to the host charset for
+ * printing
+ *
+ * A field that does not convert keeps its raw bytes in a new string.
+ *
+ * @param[in]  from     Mac charset of the field
+ * @param[in]  src      field bytes, not NUL-terminated
+ * @param[in]  src_len  number of bytes
+ * @param[out] dest     receives the new string, which the caller frees
+ * @returns the length of the new string, or `(size_t)-1` with errno for an
+ *          error
+ */
 size_t nbplkup_convert_field(charset_t from, const char *src, size_t src_len,
                              char **dest)
 {

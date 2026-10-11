@@ -38,6 +38,14 @@
 
 extern int debug;
 
+/*!
+ * @brief Drop the zone list of a route and the route from each of its zones
+ *
+ * When the route was the last one of a zone, the zone leaves the zone table
+ * and the call frees it. The caller clears RTMPTAB_HASZONES.
+ *
+ * @param[in,out] rtmp  route, its zone list ends up empty
+ */
 void rtmp_delzonemap(struct rtmptab *rtmp)
 {
     struct list		*lz;
@@ -100,7 +108,18 @@ void rtmp_delzonemap(struct rtmptab *rtmp)
 
 
 /*!
- * Complete configuration for phase 1 interface using RTMP information.
+ * @brief Complete the configuration of a phase 1 interface from the RTMP packet
+ * of a router
+ *
+ * A phase 2 interface ignores the data. When the router reports another net,
+ * the interface moves to it, but a seed interface refuses a net other than
+ * its configured one. The call then adds the loopback route, marks the
+ * interface configured, and boots the next interface.
+ *
+ * @param[in]     rh     RTMP header of the router packet
+ * @param[in,out] iface  interface to configure
+ * @returns 0, 1 for a net that conflicts with the seed, or -1 when the loopback
+ *          route fails
  */
 static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
 {
@@ -163,8 +182,13 @@ static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
 }
 
 /*!
- * Delete rtmp from the per-interface in-use table, remove all
- * zone references, and remove the route from the kernel.
+ * @brief Take a gateway route out of use
+ *
+ * The call unlinks the route from the in-use list of its interface, drops
+ * its zone map, and deletes its kernel route. A route without a gateway or
+ * interface only logs.
+ *
+ * @param[in,out] rtmp  route in use
  */
 static void rtmp_delinuse(struct rtmptab *rtmp)
 {
@@ -219,8 +243,13 @@ static void rtmp_delinuse(struct rtmptab *rtmp)
 }
 
 /*!
- * @brief Add rtmp to the per-interface in-use table.
- * @note No verification is done...
+ * @brief Put a gateway route in use
+ *
+ * The call adds the kernel route and links the route at the head of the
+ * in-use list of its interface. It does not check whether the route is in use
+ * already, and a route without a gateway or interface only logs.
+ *
+ * @param[in,out] rtmp  route to use
  */
 static void rtmp_addinuse(struct rtmptab *rtmp)
 {
@@ -264,13 +293,16 @@ static void rtmp_addinuse(struct rtmptab *rtmp)
 
 
 /*!
- * @brief Change the zone mapping to replace "from" with "to".
+ * @brief Move the zone list of a route to its replacement
  *
- * @note This code assumes the consistency of
- * both the route -> zone map and the zone -> route map.
- * This is probably a bad idea.  How can we insure that the data is good
- * at this point?  What do we do if we get several copies of a route in
- * an RTMP packet?
+ * The zones and RTMPTAB_HASZONES pass from one route to the other, and each
+ * zone then points at the new route. The call trusts the route to zone map
+ * and the zone to route map to agree. A zone without a reference back to the
+ * old route stops it midway with -1.
+ *
+ * @param[in,out] to    route that receives the zones
+ * @param[in,out] from  route that gives them up
+ * @returns 0, or -1 for a NULL route or a zone without the back reference
  */
 static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from)
 {
@@ -322,8 +354,12 @@ static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from)
 
 
 /*!
- * Remove rtmp from the in-use table and the per-gate table.
- * Free any associated space.
+ * @brief Take a gateway route out of use, unlink it from its gateway, and free
+ * it
+ *
+ * For a route in use, the call first drops its zone map and its kernel route.
+ *
+ * @param[in] rtmp  route to free
  */
 void rtmp_free(struct rtmptab *rtmp)
 {
@@ -360,10 +396,18 @@ void rtmp_free(struct rtmptab *rtmp)
 
 
 /*!
- * @brief Find a replacement for the structure pointed to by "replace_ptr".
- * @return If we can't find a replacement, return 1.
- * @return If we do find a replacement, return 0.
- * @return If we encounter an error, return -1.
+ * @brief Pick the route with the fewest hops for the net range of a route in
+ * use
+ *
+ * The call searches the gateways on the interface of the route and on each
+ * router interface for routes with the same net range. The first one with the
+ * fewest hops goes in use, and when that is another route, it takes over the
+ * zones. The call frees the old route when its state is RTMPTAB_BAD. When the
+ * route itself stays in use with RTMPHOPS_POISON hops, the call deletes its
+ * kernel route.
+ *
+ * @param[in,out] replace_ptr  route in use, set to NULL when the call frees it
+ * @returns 0 after a switch, 1 when the route stays, or -1 for an error
  */
 int rtmp_replace(struct rtmptab **replace_ptr)
 {
@@ -438,6 +482,19 @@ int rtmp_replace(struct rtmptab **replace_ptr)
 }
 
 
+/*!
+ * @brief Decide whether a new gateway route goes in use
+ *
+ * The call sets newrtmpdata, then looks for a route in use that overlaps the
+ * range, on the receiving interface or a router interface. Without one, the
+ * new route goes in use. A route in use with another range, or with fewer
+ * hops, keeps its place. Otherwise the new route takes over its zones and
+ * replaces it.
+ *
+ * @param[in,out] rtmp  candidate route of a gateway
+ * @returns 0 when the route goes in use, 1 when it does not, or -1 when the
+ *          zone move fails
+ */
 static int rtmp_new(struct rtmptab *rtmp)
 {
     struct interface	*i;
@@ -505,6 +562,35 @@ static int rtmp_new(struct rtmptab *rtmp)
 }
 
 
+/*!
+ * @brief Process an RTMP packet from the RTMP port of an interface
+ *
+ * Linux 2.6 hands packets for every node to one socket, so the call picks the
+ * interface whose net range holds the sender. It skips packets from the
+ * address of that interface. RTMP data from a router depends on the
+ * interface state:
+ * - With an address but no configuration, the data ends the no-router state.
+ *   The configuration goes on with rtmp_config in phase 1 or a ZIP GetNetInfo
+ *   in phase 2.
+ * - Without an address and configuration, the data goes unused.
+ * - On a configured interface, the data refreshes the gateway, created on
+ *   first contact, and merges each tuple into the routes of the gateway.
+ *
+ * A known route gets a fresh state and its new number of hops. A route in use
+ * that got longer looks for a replacement with rtmp_replace. A new route goes
+ * to rtmp_new, unless it is more than RTMPHOPS_MAX hops away. A first tuple
+ * that does not match the interface, or a range conflict, ends the call with 1.
+ *
+ * A configured router interface with zones answers an RTMP request with its
+ * address and, in phase 2, its net range. Route data requests only log.
+ *
+ * @param[in] ap    RTMP port of the receiving interface
+ * @param[in] from  sender of the packet
+ * @param[in] data  packet from the DDP type byte on
+ * @param[in] len   length of data
+ * @returns 0, 1 for a malformed or conflicting packet, or -1 for a failure that
+ *          stops atalkd
+ */
 int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
                 int len)
 {
@@ -958,6 +1044,15 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
     return 0;
 }
 
+/*!
+ * @brief Send an RTMP request from an interface to all nodes of its net
+ *
+ * The request leaves the RTMP port of the interface for node ATADDR_BCAST on
+ * the current net of the interface.
+ *
+ * @param[in] iface  interface to ask on
+ * @returns 0, or -1 without an RTMP port or when the send fails
+ */
 int rtmp_request(struct interface *iface)
 {
     struct sockaddr_at	sat;
@@ -1001,6 +1096,17 @@ int rtmp_request(struct interface *iface)
 }
 
 
+/*!
+ * @brief Add or delete the loopback host route for the address of an interface
+ *
+ * The route sends packets for the interface address through the loopback
+ * interface. IFACE_LOOP tracks whether the route exists.
+ *
+ * @param[in,out] iface  interface, its IFACE_LOOP flag follows the route
+ * @param[in]     cmd    RTMP_ADD or RTMP_DEL
+ * @returns 0, -1 when the route already exists or is missing, or 1 when route()
+ *          fails
+ */
 int looproute(struct interface *iface, unsigned int cmd)
 {
     struct sockaddr_at	dst, loop;
@@ -1060,6 +1166,20 @@ int looproute(struct interface *iface, unsigned int cmd)
     return 0;
 }
 
+/*!
+ * @brief Add or delete the kernel routes for the net range of a gateway route
+ *
+ * The kernel gets one route per net of the range through the gateway. A
+ * gateway that reports net 0 gets the first net of the range instead.
+ * RTMPTAB_ROUTE tracks whether the routes exist, and a net whose route()
+ * call fails only logs.
+ *
+ * @param[in]     command  RTMP_ADD or RTMP_DEL
+ * @param[in,out] rtmp     gateway route, its RTMPTAB_ROUTE flag follows the
+ *                         routes
+ * @returns 0, or -1 for a NULL route or gateway, or when the routes already
+ *          exist or are missing
+ */
 int gateroute(unsigned int command, struct rtmptab *rtmp)
 {
     struct sockaddr_at	dst, gate;
@@ -1148,6 +1268,12 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
     return 0;
 }
 
+/*!
+ * @brief Allocate a zeroed route entry for an interface
+ *
+ * @param[in] iface  interface the route belongs to
+ * @returns the route, or NULL when calloc fails
+ */
 struct rtmptab *
 newrt(const struct interface *iface)
 {

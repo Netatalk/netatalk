@@ -39,8 +39,14 @@ static void publish_reply(AvahiEntryGroup *g,
                           void *userdata);
 
 /*!
- * This function tries to register the AFP DNS
- * SRV service type.
+ * @brief Register the AFP service, the Time Machine volumes, and the device
+ * model with Avahi
+ *
+ * The call fills an empty entry group only. The AFP service goes out under
+ * the server name, or the host name without one. Time Machine volumes go
+ * into the TXT records of an adisk service on the discard port, each with
+ * its volume UUID when it has one. The mimic model adds a device-info
+ * service. A failure logs and leaves the group as it is.
  */
 static void register_stuff(void)
 {
@@ -186,7 +192,14 @@ fail:
 #endif
 }
 
-/*! Called when publishing of service data completes */
+/*!
+ * @brief Log the state of the entry group, and stop the Avahi thread on a name
+ * collision or a failure
+ *
+ * @param[in] g         entry group
+ * @param[in] state     new state of the group
+ * @param[in] userdata  unused
+ */
 static void publish_reply(AvahiEntryGroup *g,
                           AvahiEntryGroupState state,
                           AVAHI_GCC_UNUSED void *userdata)
@@ -220,6 +233,18 @@ static void publish_reply(AvahiEntryGroup *g,
     }
 }
 
+/*!
+ * @brief Track the state of the Avahi client, and register the services once
+ * the daemon runs
+ *
+ * A host name collision resets the entry group. A disconnect from the daemon
+ * frees the client and connects again. Any other failure stops the Avahi
+ * thread.
+ *
+ * @param[in] client    Avahi client
+ * @param[in] state     new state of the client
+ * @param[in] userdata  unused
+ */
 static void client_callback(AvahiClient *client,
                             AvahiClientState state,
                             void *userdata)
@@ -284,8 +309,12 @@ static void client_callback(AvahiClient *client,
  ************************************************************************/
 
 /*!
- * Tries to setup the Zeroconf thread and any
- * neccessary config setting.
+ * @brief Start the Avahi thread, which registers the AFP services with Zeroconf
+ *
+ * A second call resets the entry group and starts a new thread and client.
+ * A failure tears the setup down through av_zeroconf_unregister.
+ *
+ * @param[in] obj  AFP object with the options
  */
 void av_zeroconf_register(const AFPObj *obj)
 {
@@ -334,8 +363,12 @@ fail:
 }
 
 /*!
- * @brief Tries to shutdown this loop impl.
- * @note Call this function from inside this thread.
+ * @brief Stop the Avahi thread and free the Zeroconf state
+ *
+ * The call stops the thread with avahi_threaded_poll_stop, so the caller has
+ * to run outside the Avahi thread.
+ *
+ * @returns 0
  */
 int av_zeroconf_unregister()
 {

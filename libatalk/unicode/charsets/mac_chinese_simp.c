@@ -49,6 +49,21 @@ struct charset_functions charset_mac_chinese_simp = {
     NULL
 };
 
+/*!
+ * @brief Map one UCS2 character, or a pair with an Apple hint character, to
+ * MAC_CHINESE_SIMP bytes
+ *
+ * ASCII passes as is. When a hint character in the range 0xf870 to 0xf87f
+ * follows, the composition table first combines the pair. Private-use
+ * characters and characters without a table entry return 0, so the caller
+ * converts them through EUC-CN.
+ *
+ * @param[out]    out   receives one or two bytes
+ * @param[in]     in    UCS2 input
+ * @param[in,out] size  characters available, which receives the characters used
+ * @returns the number of bytes, 0 for the iconv fallback, or `(size_t)-1` with
+ *          EILSEQ
+ */
 static size_t mac_chinese_simp_char_push(uint8_t *out, const ucs2_t *in,
                                          size_t *size)
 {
@@ -79,6 +94,16 @@ static size_t mac_chinese_simp_char_push(uint8_t *out, const ucs2_t *in,
                                     mac_chinese_simp_uni2_charset), out);
 }
 
+/*!
+ * @brief Convert UCS2 to MAC_CHINESE_SIMP through cjk_generic_push
+ *
+ * @param[in]     cd            EUC-CN iconv descriptor for the fallback
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with errno
+ */
 static size_t mac_chinese_simp_push(void *cd, char **inbuf, size_t *inbytesleft,
                                     char **outbuf, size_t *outbytesleft)
 {
@@ -86,6 +111,19 @@ static size_t mac_chinese_simp_push(void *cd, char **inbuf, size_t *inbytesleft,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
+/*!
+ * @brief Map one MAC_CHINESE_SIMP character of one or two bytes to UCS2
+ *
+ * ASCII passes as is. A lead byte from 0xa1 to 0xfc needs a trail byte from
+ * 0xa1 to 0xfe, and other bytes stand alone. The table value expands
+ * through the composition table into up to CJK_PULL_BUFFER characters.
+ *
+ * @param[out]    out   receives the UCS2 characters
+ * @param[in]     in    input bytes
+ * @param[in,out] size  bytes available, which receives the bytes used
+ * @returns the number of characters, 0 for the iconv fallback, or `(size_t)-1`
+ *          with EILSEQ or EINVAL
+ */
 static size_t mac_chinese_simp_char_pull(ucs2_t *out, const uint8_t *in,
                                          size_t *size)
 {
@@ -119,6 +157,16 @@ static size_t mac_chinese_simp_char_pull(ucs2_t *out, const uint8_t *in,
                          out, mac_chinese_simp_compose);
 }
 
+/*!
+ * @brief Convert MAC_CHINESE_SIMP to UCS2 through cjk_generic_pull
+ *
+ * @param[in]     cd            EUC-CN iconv descriptor for the fallback
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with errno
+ */
 static size_t mac_chinese_simp_pull(void *cd, char **inbuf, size_t *inbytesleft,
                                     char **outbuf, size_t *outbytesleft)
 {

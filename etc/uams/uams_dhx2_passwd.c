@@ -57,6 +57,11 @@ enum dhx2_state {
 
 static enum dhx2_state dhx2_state = DHX2_STATE_IDLE;
 
+/*!
+ * @brief Release a libgcrypt number and set its pointer to NULL
+ *
+ * @param[in,out] mpi  number to release, or a pointer to NULL
+ */
 static void dhx2_release_mpi(gcry_mpi_t *mpi)
 {
     if (mpi != NULL && *mpi != NULL) {
@@ -65,6 +70,12 @@ static void dhx2_release_mpi(gcry_mpi_t *mpi)
     }
 }
 
+/*!
+ * @brief Drop the state of a DHX2 exchange, so the next step has to start over
+ *
+ * The call releases p, Ra, and the server nonce, frees the session key,
+ * clears the session ID, and returns to DHX2_STATE_IDLE.
+ */
 static void dhx2_clear_session(void)
 {
     dhx2_release_mpi(&p);
@@ -92,12 +103,18 @@ static struct passwd *dhxpwd;
  *********************************************************/
 
 /*!
- * @brief Generate a new pair of prime and generator for use in
- * the Diffie-Hellman key exchange.
+ * @brief Generate a prime p and a generator g for one Diffie-Hellman exchange
  *
- * The bits value should be one of 768, 1024, 2048, 3072 or 4096.
+ * The algorithm follows gnutls_dh_primes.c, since libgcrypt has no direct
+ * call for it. The call generates up to 10 primes until one passes
+ * gcry_prime_check. The bits value should be 768, 1024, 2048, 3072, or 4096.
+ *
+ * @param[out] ret_p  receives p, or NULL to drop it
+ * @param[out] ret_g  receives g, or NULL to drop it
+ * @param[in]  bits   size of p in bits
+ * @returns 0, or AFPERR_MISC for a libgcrypt version mismatch or a failed
+ *          generation
  */
-
 static int
 dh_params_generate(gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits)
 {
@@ -182,6 +199,23 @@ error:
     return result;
 }
 
+/*!
+ * @brief Start a DHX2 exchange with a new Diffie-Hellman group and the public
+ * key of the server
+ *
+ * The user needs a password hash, from the shadow file in a build that uses
+ * one. Each exchange generates a new group of PRIMEBITS bits, so every login
+ * attempt pays for a prime search. The reply holds the session ID, g in
+ * 4 bytes, the length of p, p, and Ma = g^Ra mod p.
+ *
+ * @param[in]  obj      session object, which also seeds the session ID
+ * @param[in]  ibuf     UAM data of the request, unused
+ * @param[in]  ibuflen  length of ibuf, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return, 0 on failure
+ * @returns AFPERR_AUTHCONT, AFPERR_NOTAUTH without a password hash, or
+ *          AFPERR_MISC
+ */
 static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
                       char *rbuf, size_t *rbuflen)
 {
@@ -311,7 +345,21 @@ error:              /* We exit here anyway */
     return ret;
 }
 
-/* -------------------------------- */
+/*!
+ * @brief Look up the user of a DHX2 login and start the Diffie-Hellman exchange
+ *
+ * @param[in]     obj       session object
+ * @param[in,out] username  user name from the request, receives the account
+ *                          name of a match
+ * @param[in]     ulen      size of the username buffer
+ * @param[out]    uam_pwd   unused
+ * @param[in]     ibuf      UAM data of the request
+ * @param[in]     ibuflen   length of ibuf
+ * @param[out]    rbuf      reply block
+ * @param[out]    rbuflen   reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_NOTAUTH for an unknown user or one without a
+ *          password hash, or AFPERR_MISC
+ */
 static int login(void *obj, char *username, int ulen,
                  struct passwd **uam_pwd _U_,
                  char *ibuf, size_t ibuflen,
@@ -326,11 +374,20 @@ static int login(void *obj, char *username, int ulen,
     return dhx2_setup(obj, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* -------------------------------- */
 /*!
- * @brief dhx login
- * @note things are done in a slightly bizarre order to avoid
- * having to clean things up if there's an error.
+ * @brief Read the user name of an FPLogin request and start a DHX2 login
+ *
+ * The request holds the name as a Pascal string, padded to an even address.
+ * The checks run before any state exists, so a refusal needs no cleanup.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  unused until the second continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_PARAM for a name longer than the buffer,
+ *          AFPERR_NOTAUTH, or AFPERR_MISC
  */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
@@ -369,7 +426,22 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* ----------------------------- */
+/*!
+ * @brief Read the user name of an FPLoginExt request and start a DHX2 login
+ *
+ * The name comes as an AFP name of type 3, a UTF-8 string with a 2-byte
+ * length.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request
+ * @param[out] uam_pwd  unused until the second continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_PARAM for another name type or a bad length,
+ *          AFPERR_NOTAUTH, or AFPERR_MISC
+ */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
@@ -407,8 +479,25 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* -------------------------------- */
-
+/*!
+ * @brief Derive the session key from the public key of the client and answer
+ * its nonce
+ *
+ * The request holds the session ID, Mb, and the client nonce under CAST5-CBC.
+ * The CAST5 secret is the MD5 hash of K = Mb^Ra mod p, with the fixed IV of
+ * Apple for each direction. The reply holds the session ID plus 1 and,
+ * encrypted, the client nonce plus 1 and a new server nonce. A success
+ * releases p and Ra, and the next step is the second continuation.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[out]    uam_pwd  unused
+ * @param[in,out] ibuf     UAM data of the request, decrypted in place
+ * @param[in]     ibuflen  length of ibuf, which must be 2 + PRIMEBITS / 8 + 16
+ * @param[out]    rbuf     reply block
+ * @param[out]    rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_PARAM out of sequence or for a bad length,
+ *          or AFPERR_MISC
+ */
 static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
                       char *ibuf, size_t ibuflen,
                       char *rbuf, size_t *rbuflen)
@@ -574,6 +663,24 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Check the server nonce and the password of a DHX2 login against the
+ * password hash
+ *
+ * The request holds the session ID and, under CAST5-CBC, the server nonce
+ * plus 1 and a 256-byte password buffer. Some clients add 10 more bytes. The
+ * password goes to crypt_checkpass, or to crypt and a comparison. With shadow
+ * passwords an expired password gives AFPERR_PWDEXPR, and that check runs
+ * after a wrong password too. The call wipes the password.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[out]    uam_pwd  receives the user entry after a matching password
+ * @param[in,out] ibuf     UAM data of the request, decrypted in place
+ * @param[in]     ibuflen  length of ibuf, which must be 274 or 284
+ * @param[out]    rbuf     reply block, unused
+ * @param[out]    rbuflen  0 on return
+ * @returns AFP_OK, AFPERR_NOTAUTH, AFPERR_PWDEXPR, AFPERR_PARAM, or AFPERR_MISC
+ */
 static int logincont2(void *obj _U_, struct passwd **uam_pwd,
                       char *ibuf, size_t ibuflen,
                       char *rbuf _U_, size_t *rbuflen)
@@ -714,6 +821,21 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Route an FPLoginCont request to the step that the session ID and the
+ * state expect
+ *
+ * The session ID goes to logincont1, and the ID plus 1 to logincont2. Any
+ * other ID or step clears the exchange.
+ *
+ * @param[in]     obj      session object
+ * @param[out]    uam_pwd  receives the user entry after a successful login
+ * @param[in,out] ibuf     UAM data of the request
+ * @param[in]     ibuflen  length of ibuf
+ * @param[out]    rbuf     reply block
+ * @param[out]    rbuflen  reply length on return
+ * @returns the result of the step, or AFPERR_PARAM for an unexpected request
+ */
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
@@ -738,6 +860,15 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     return ret;
 }
 
+/*!
+ * @brief Register the DHX2 login of the passwd module
+ *
+ * The module has no logout and no password change.
+ *
+ * @param[in] obj   AFP object, unused
+ * @param[in] path  path of the module
+ * @returns 0, or -1 when the registration fails
+ */
 static int uam_setup(void *obj, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHX2", passwd_login,
@@ -748,6 +879,9 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Unregister the DHX2 login of the passwd module
+ */
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "DHX2");

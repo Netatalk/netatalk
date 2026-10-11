@@ -81,6 +81,16 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
 ****************************************************************************/
 static char attr_name[256 + 5] = "user.";
 
+/*!
+ * @brief Platform EA name for uname in the user namespace
+ *
+ * Solaris and macOS use uname unchanged. Every other platform gets "user." in
+ * front, in a static buffer that the next call overwrites, and the buffer
+ * truncates names longer than 255 bytes.
+ *
+ * @param[in] uname  EA name without a namespace
+ * @returns the platform EA name
+ */
 static const char *prefix(const char *uname)
 {
 #if defined(SOLARIS) || defined(__APPLE__)
@@ -91,6 +101,18 @@ static const char *prefix(const char *uname)
 #endif
 }
 
+/*!
+ * @brief On Solaris, open EA uname of fd as a file descriptor
+ *
+ * O_CREAT takes the mode from the variable arguments. Every other platform
+ * fails with ENOSYS.
+ *
+ * @param[in] fd     open file
+ * @param[in] uname  EA name
+ * @param[in] oflag  open flags, O_XATTR added
+ * @param[in] ...    creation mode under O_CREAT
+ * @returns the EA descriptor, or -1 with errno set
+ */
 int sys_getxattrfd(int fd _U_, const char *uname _U_, int oflag _U_, ...)
 {
 #if defined(SOLARIS)
@@ -117,6 +139,20 @@ int sys_getxattrfd(int fd _U_, const char *uname _U_, int oflag _U_, ...)
 #endif
 }
 
+/*!
+ * @brief Read EA uname of path, following symlinks
+ *
+ * A zero size returns the EA length without reading it. The BSD extattr
+ * interface truncates without an error, so that branch measures the EA first
+ * and fails with ERANGE when value is too small. A platform without EA support
+ * fails with ENOSYS.
+ *
+ * @param[in]  path   file
+ * @param[in]  uname  EA name without a namespace
+ * @param[out] value  receives the EA bytes
+ * @param[in]  size   capacity of value, or 0 to query the length
+ * @returns the EA length, or -1 with errno set
+ */
 ssize_t sys_getxattr(const char *path, const char *uname, void *value,
                      size_t size)
 {
@@ -184,6 +220,19 @@ ssize_t sys_getxattr(const char *path, const char *uname, void *value,
 #endif
 }
 
+/*!
+ * @brief Read EA uname of the file that filedes refers to
+ *
+ * A zero size returns the EA length without reading it. The BSD extattr
+ * branch measures the EA first and fails with ERANGE when value is too small.
+ * A platform without EA support fails with ENOSYS.
+ *
+ * @param[in]  filedes  open file
+ * @param[in]  uname    EA name without a namespace
+ * @param[out] value    receives the EA bytes
+ * @param[in]  size     capacity of value, or 0 to query the length
+ * @returns the EA length, or -1 with errno set
+ */
 ssize_t sys_fgetxattr(int filedes, const char *uname, void *value, size_t size)
 {
     const char *name = prefix(uname);
@@ -247,6 +296,19 @@ ssize_t sys_fgetxattr(int filedes, const char *uname, void *value, size_t size)
 #endif
 }
 
+/*!
+ * @brief Read EA uname of path without following a symlink
+ *
+ * A zero size returns the EA length without reading it. The BSD extattr
+ * branch measures the EA first and fails with ERANGE when value is too small.
+ * A platform without EA support fails with ENOSYS.
+ *
+ * @param[in]  path   file or symlink
+ * @param[in]  uname  EA name without a namespace
+ * @param[out] value  receives the EA bytes
+ * @param[in]  size   capacity of value, or 0 to query the length
+ * @returns the EA length, or -1 with errno set
+ */
 ssize_t sys_lgetxattr(const char *path, const char *uname, void *value,
                       size_t size)
 {
@@ -395,6 +457,18 @@ static ssize_t bsd_attr_list(int type, extattr_arg arg, char *list, size_t size)
 #endif
 
 #if defined(HAVE_LISTXATTR)
+/*!
+ * @brief Strip the "user." prefix from a listxattr result in place
+ *
+ * Names outside the user namespace drop out of the list. A failed call or a
+ * length query passes through unchanged. macOS lists EAs without a namespace,
+ * so the list stays unchanged there.
+ *
+ * @param[in]     ret   listxattr result, the list length or -1
+ * @param[in,out] list  NUL-separated EA names
+ * @param[in]     size  capacity of list, 0 for a length query
+ * @returns the new list length, or ret unchanged
+ */
 static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 {
     size_t len;
@@ -432,6 +506,18 @@ static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 }
 #endif
 
+/*!
+ * @brief List the EA names of path, following symlinks
+ *
+ * The names come NUL-separated and without a namespace prefix. A zero size
+ * returns the length the list needs. A platform without EA support fails with
+ * ENOSYS.
+ *
+ * @param[in]  path  file
+ * @param[out] list  receives the names
+ * @param[in]  size  capacity of list, or 0 to query the length
+ * @returns the list length, or -1 with errno set
+ */
 ssize_t sys_listxattr(const char *path, char *list, size_t size)
 {
 #if defined(HAVE_LISTXATTR)
@@ -465,6 +551,19 @@ ssize_t sys_listxattr(const char *path, char *list, size_t size)
 #endif
 }
 
+/*!
+ * @brief List the EA names of a file
+ *
+ * Solaris lists through filedes. Every other platform lists through path and
+ * follows symlinks. The names come NUL-separated and without a namespace
+ * prefix. A zero size returns the length the list needs.
+ *
+ * @param[in]  filedes  open file, used only on Solaris
+ * @param[in]  path     the same file, used on every other platform
+ * @param[out] list     receives the names
+ * @param[in]  size     capacity of list, or 0 to query the length
+ * @returns the list length, or -1 with errno set
+ */
 ssize_t sys_flistxattr(int filedes _U_, const char *path, char *list,
                        size_t size)
 {
@@ -499,6 +598,18 @@ ssize_t sys_flistxattr(int filedes _U_, const char *path, char *list,
 #endif
 }
 
+/*!
+ * @brief List the EA names of path without following a symlink
+ *
+ * The names come NUL-separated and without a namespace prefix. A zero size
+ * returns the length the list needs. A platform without EA support fails with
+ * ENOSYS.
+ *
+ * @param[in]  path  file or symlink
+ * @param[out] list  receives the names
+ * @param[in]  size  capacity of list, or 0 to query the length
+ * @returns the list length, or -1 with errno set
+ */
 ssize_t sys_llistxattr(const char *path, char *list, size_t size)
 {
 #if defined(HAVE_LLISTXATTR)
@@ -532,6 +643,15 @@ ssize_t sys_llistxattr(const char *path, char *list, size_t size)
 #endif
 }
 
+/*!
+ * @brief Delete EA uname of path, following symlinks
+ *
+ * A platform without EA support fails with ENOSYS.
+ *
+ * @param[in] path   file
+ * @param[in] uname  EA name without a namespace
+ * @returns 0, or -1 with errno set
+ */
 int sys_removexattr(const char *path, const char *uname)
 {
     const char *name = prefix(uname);
@@ -562,6 +682,17 @@ int sys_removexattr(const char *path, const char *uname)
 #endif
 }
 
+/*!
+ * @brief Delete EA uname of a file
+ *
+ * Solaris deletes through filedes. Every other platform deletes through path
+ * and follows symlinks.
+ *
+ * @param[in] filedes  open file, used only on Solaris
+ * @param[in] path     the same file, used on every other platform
+ * @param[in] uname    EA name without a namespace
+ * @returns 0, or -1 with errno set
+ */
 int sys_fremovexattr(int filedes _U_, const char *path, const char *uname)
 {
     const char *name = prefix(uname);
@@ -592,6 +723,15 @@ int sys_fremovexattr(int filedes _U_, const char *path, const char *uname)
 #endif
 }
 
+/*!
+ * @brief Delete EA uname of path without following a symlink
+ *
+ * A platform without EA support fails with ENOSYS.
+ *
+ * @param[in] path   file or symlink
+ * @param[in] uname  EA name without a namespace
+ * @returns 0, or -1 with errno set
+ */
 int sys_lremovexattr(const char *path, const char *uname)
 {
     const char *name = prefix(uname);
@@ -620,6 +760,22 @@ int sys_lremovexattr(const char *path, const char *uname)
 #endif
 }
 
+/*!
+ * @brief Write EA uname of path, following symlinks
+ *
+ * XATTR_CREATE fails with EEXIST when the EA exists, and XATTR_REPLACE fails
+ * with ENOATTR when it does not. The BSD extattr branch emulates both flags
+ * with an existence test first. Solaris turns XATTR_CREATE into O_EXCL and
+ * creates the attribute file unless the caller passes XATTR_REPLACE. A
+ * platform without EA support fails with ENOSYS.
+ *
+ * @param[in] path   file
+ * @param[in] uname  EA name without a namespace
+ * @param[in] value  EA bytes
+ * @param[in] size   bytes in value
+ * @param[in] flags  0, XATTR_CREATE, or XATTR_REPLACE
+ * @returns 0, or -1 with errno set
+ */
 int sys_setxattr(const char *path, const char *uname, const void *value,
                  size_t size, int flags _U_)
 {
@@ -685,6 +841,22 @@ int sys_setxattr(const char *path, const char *uname, const void *value,
 #endif
 }
 
+/*!
+ * @brief Write EA uname of the file that filedes refers to
+ *
+ * XATTR_CREATE fails with EEXIST when the EA exists, and XATTR_REPLACE fails
+ * with ENOATTR when it does not. The BSD extattr branch emulates both flags
+ * with an existence test first. Solaris turns XATTR_CREATE into O_EXCL and
+ * creates the attribute file unless the caller passes XATTR_REPLACE. A
+ * platform without EA support fails with ENOSYS.
+ *
+ * @param[in] filedes  open file
+ * @param[in] uname    EA name without a namespace
+ * @param[in] value    EA bytes
+ * @param[in] size     bytes in value
+ * @param[in] flags    0, XATTR_CREATE, or XATTR_REPLACE
+ * @returns 0, or -1 with errno set
+ */
 int sys_fsetxattr(int filedes, const char *uname, const void *value,
                   size_t size, int flags _U_)
 {
@@ -753,6 +925,22 @@ int sys_fsetxattr(int filedes, const char *uname, const void *value,
 #endif
 }
 
+/*!
+ * @brief Write EA uname of path without following a symlink
+ *
+ * XATTR_CREATE fails with EEXIST when the EA exists, and XATTR_REPLACE fails
+ * with ENOATTR when it does not. The BSD extattr branch emulates both flags
+ * with an existence test first. Solaris turns XATTR_CREATE into O_EXCL and
+ * creates the attribute file unless the caller passes XATTR_REPLACE. A
+ * platform without EA support fails with ENOSYS.
+ *
+ * @param[in] path   file or symlink
+ * @param[in] uname  EA name without a namespace
+ * @param[in] value  EA bytes
+ * @param[in] size   bytes in value
+ * @param[in] flags  0, XATTR_CREATE, or XATTR_REPLACE
+ * @returns 0, or -1 with errno set
+ */
 int sys_lsetxattr(const char *path, const char *uname, const void *value,
                   size_t size, int flags _U_)
 {

@@ -59,7 +59,24 @@
 
 #include "unix.h"
 
-/* lifted (with modifications) from the bsd quota program */
+/*!
+ * @brief Call an RPC procedure on the NFS server of a volume
+ *
+ * The first call creates a UDP client for the host in v_gvs, with Unix
+ * credentials and a 6-second retry timeout, and keeps it in v_nfsclient. Each
+ * call waits up to 10 seconds for the answer. The code comes from the BSD
+ * quota program.
+ *
+ * @param[in,out] vol      volume with the NFS host name in v_gvs
+ * @param[in]     prognum  RPC program number
+ * @param[in]     versnum  program version
+ * @param[in]     procnum  procedure number
+ * @param[in]     inproc   XDR encoder of the arguments
+ * @param[in]     in       arguments
+ * @param[in]     outproc  XDR decoder of the result
+ * @param[out]    out      result
+ * @returns RPC_SUCCESS, RPC_UNKNOWNHOST, or another clnt_stat code
+ */
 static int
 callaurpc(struct vol *vol,
           u_long prognum, u_long versnum, u_long procnum,
@@ -105,6 +122,21 @@ callaurpc(struct vol *vol,
 #define GQR_STATUS status
 #define GQR_RQUOTA getquota_rslt_u.gqr_rquota
 
+/*!
+ * @brief Fetch a user's quota on an NFS volume from its rquotad
+ *
+ * The v_gvs field holds host:/path. The block counts become bsize units,
+ * scaled by the integer ratio of the server block size and bsize. The time
+ * limit becomes an absolute time.
+ *
+ * @param[in,out] vol    volume of an NFS mount, v_gvs restored on return
+ * @param[in]     uid    user to query
+ * @param[in]     bsize  block size of the result
+ * @param[out]    dqp    receives the hard and soft block limits, the usage, and
+ *                       the time limit
+ * @returns AFP_OK, or AFPERR_PARAM for a bad v_gvs, a failed call, no quota, or
+ *          a permission error
+ */
 int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
                 struct dqblk *dqp)
 {

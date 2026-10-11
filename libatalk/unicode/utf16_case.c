@@ -12,9 +12,14 @@
 #include <atalk/unicode.h>
 #include "utf16_casetable.h"
 
-/*******************************************************************
- Convert a wide character to upper case.
-*******************************************************************/
+/*!
+ * @brief Convert a UCS2 character to upper case
+ *
+ * A character without a mapping comes back unchanged.
+ *
+ * @param[in] val  UCS2 character
+ * @returns the upper case character
+ */
 ucs2_t toupper_w(ucs2_t val)
 {
     if (val <= 0x02BF) {
@@ -76,9 +81,15 @@ ucs2_t toupper_w(ucs2_t val)
     return val;
 }
 
-/*******************************************************************
- Convert a surrogate pair to upper case.
-*******************************************************************/
+/*!
+ * @brief Convert a surrogate pair to upper case
+ *
+ * The pair sits in one 32-bit value, with the high surrogate in bits 31 to
+ * 16. A pair without a mapping comes back unchanged.
+ *
+ * @param[in] val  surrogate pair
+ * @returns the upper case surrogate pair
+ */
 uint32_t toupper_sp(uint32_t val)
 {
     if (val >= 0xD801DC00 && val <= 0xD801DC7F) {
@@ -124,9 +135,14 @@ uint32_t toupper_sp(uint32_t val)
     return val;
 }
 
-/*******************************************************************
- Convert a wide character to lower case.
-*******************************************************************/
+/*!
+ * @brief Convert a UCS2 character to lower case
+ *
+ * A character without a mapping comes back unchanged.
+ *
+ * @param[in] val  UCS2 character
+ * @returns the lower case character
+ */
 ucs2_t tolower_w(ucs2_t val)
 {
     if (val <= 0x007F) {
@@ -184,9 +200,15 @@ ucs2_t tolower_w(ucs2_t val)
     return val;
 }
 
-/*******************************************************************
- Convert a surrogate pair to lower case.
-*******************************************************************/
+/*!
+ * @brief Convert a surrogate pair to lower case
+ *
+ * The pair sits in one 32-bit value, with the high surrogate in bits 31 to
+ * 16. A pair without a mapping comes back unchanged.
+ *
+ * @param[in] val  surrogate pair
+ * @returns the lower case surrogate pair
+ */
 uint32_t tolower_sp(uint32_t val)
 {
     if (val >= 0xD801DC00 && val <= 0xD801DC3F) {

@@ -42,9 +42,22 @@ static struct iovec	niov[PAP_MAXQUANTUM] = {
 };
 
 /*!
- * Accept files until the client closes the connection.
- * Read lines of a file, until the client sends eof, after
- * which we'll send eof also.
+ * @brief Serve one PAP connection: read the print or query jobs and send the
+ * replies
+ *
+ * The call asks the client for data with PAP_READ requests and feeds each
+ * response to ps, the job loop. Replies go out while the client has a read
+ * pending, in up to quantum packets of PAP_MAXDATA bytes. A font list reply
+ * goes out a line per packet. Each silent minute brings a tickle, and the
+ * fourth cancels the job.
+ *
+ * PAP_CLOSE prints the job when its data ended, or cancels it otherwise, and
+ * answers with PAP_CLOSEREPLY.
+ *
+ * @param[in] atp  ATP socket of the connection
+ * @param[in] sat  address of the client
+ * @returns 0 after a close, or -1 after a timeout, a parse error, or a
+ *          transport error
  */
 int session(ATP atp, struct sockaddr_at *sat)
 {

@@ -125,6 +125,22 @@ static const unsigned int num_loglevel_strings =
    Internal function definitions
  */
 
+/*!
+ * @brief Format a log file line around a message
+ *
+ * The line reads "time process[pid] {file:line} (level:type): message" and
+ * ends with a newline. The source file and line come from the static
+ * position that make_log_entry sets.
+ *
+ * @param[out] message_details_buffer  receives the line, which the caller
+ *                                     frees, or "" on failure
+ * @param[in]  user_message            message text
+ * @param[in]  display_options         unused
+ * @param[in]  loglevel                level of the message
+ * @param[in]  logtype                 type of the message
+ * @param[in]  log_us_timestamp        add microseconds to the time
+ * @returns the line length, or -1 when asprintf fails
+ */
 static int generate_message(char **message_details_buffer,
                             char *user_message,
                             int display_options _U_,
@@ -182,6 +198,15 @@ static int generate_message(char **message_details_buffer,
     return len;
 }
 
+/*!
+ * @brief Map a netatalk log level to a syslog priority
+ *
+ * Both log_severe and log_error map to LOG_ERR. Every debug level maps to
+ * LOG_DEBUG.
+ *
+ * @param[in] loglevel  netatalk level
+ * @returns the syslog priority
+ */
 static int get_syslog_equivalent(enum loglevels loglevel)
 {
     switch (loglevel) {
@@ -213,7 +238,15 @@ static int get_syslog_equivalent(enum loglevels loglevel)
     }
 }
 
-/*! Called by the LOG macro for syslog messages */
+/*!
+ * @brief Send a message to syslog, opening the connection on first use
+ *
+ * The make_log_entry call sends the messages of syslog types here.
+ *
+ * @param[in] loglevel  level of the message
+ * @param[in] logtype   unused
+ * @param[in] message   message text
+ */
 static void make_syslog_entry(enum loglevels loglevel,
                               enum logtypes logtype _U_, char *message)
 {
@@ -227,6 +260,11 @@ static void make_syslog_entry(enum loglevels loglevel,
     syslog(get_syslog_equivalent(loglevel), "%s", message);
 }
 
+/*!
+ * @brief Send every log type to syslog at log_info
+ *
+ * The make_log_entry call runs it when the process logs before any setup.
+ */
 static void log_init(void)
 {
     syslog_setup(log_info,
@@ -238,6 +276,9 @@ static void log_init(void)
 /*!
  * @brief Open a log file for appending, as root and close-on-exec
  *
+ * A new file gets mode 0640, because logs can hold user names and paths.
+ *
+ * @param[in] filename  path of the log file
  * @returns the descriptor, or -1 with errno set
  */
 static int log_open_file(const char *filename)
@@ -265,7 +306,14 @@ static pid_t log_lost_pid[logtype_end_of_list_marker];
 static bool log_file_midline[logtype_end_of_list_marker];
 
 /*!
- * @brief Remember which file a type's new descriptor was opened on
+ * @brief Record the device and inode of the file behind the new descriptor of a
+ * type
+ *
+ * They let log_file_reopen tell the file from another one under the same
+ * name or number. A failed fstat records 0 for both. The call also clears
+ * the mid-line mark of the type.
+ *
+ * @param[in] logtype  type with the new descriptor
  */
 static void log_file_opened(enum logtypes logtype)
 {
@@ -281,9 +329,12 @@ static void log_file_opened(enum logtypes logtype)
 }
 
 /*!
- * @brief The name to reopen filename by once the process may have chdir()ed
+ * @brief Return the absolute name that reopens a log file after a chdir
  *
- * @returns an allocated absolute path, or NULL
+ * A relative name joins the current directory.
+ *
+ * @param[in] filename  log file name
+ * @returns the new absolute path, or NULL on failure
  */
 static char *log_absolute_name(const char *filename)
 {
@@ -302,6 +353,25 @@ static char *log_absolute_name(const char *filename)
     return abs;
 }
 
+/*!
+ * @brief Point a log type at a file, or turn the type off with a level of 0
+ *
+ * A level of 0 closes the file of a set type. For the default type it also
+ * turns off every type that has no setup. Any other level drops the old
+ * setup of the type and opens the new file. "/dev/tty" means stdout, and a
+ * name that ends in XXXXXX goes through mkstemp. Any other name opens as
+ * root. A file without an absolute name to reopen it by stays closed, and
+ * the type stays unset.
+ *
+ * The default type passes its level and timestamp setting to every type
+ * that has no setup, so the LOG macro reads one level per type.
+ *
+ * @param[in] filename          log file, "/dev/tty", or a mkstemp template
+ * @param[in] loglevel          level, 0 to turn the type off
+ * @param[in] logtype           type to set up
+ * @param[in] log_us_timestamp  add microseconds to the time, passed on by the
+ *                              default type
+ */
 static void log_setup(const char *filename, enum loglevels loglevel,
                       enum logtypes logtype, const bool log_us_timestamp)
 {
@@ -499,7 +569,18 @@ void log_reopen(void)
     }
 }
 
-/*! Setup syslog logging */
+/*!
+ * @brief Send a log type to syslog at a level
+ *
+ * The display options and the facility apply to every type. For the default
+ * type, every type that has no setup takes the level and syslog. An open log
+ * file of the type stays open, unused.
+ *
+ * @param[in] loglevel         level
+ * @param[in] logtype          type to set up
+ * @param[in] display_options  openlog options
+ * @param[in] facility         syslog facility
+ */
 void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
                   int facility)
 {
@@ -535,16 +616,17 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
 }
 
 /*!
- * @brief If filename == NULL its for syslog logging, otherwise its for file-logging.
+ * @brief Set up one log type from its type and level names
  *
- * "unsetuplog" calls with loglevel == NULL.
- * loglevel == NULL means:
- * @code
- *    if logtype == default
- *       disable logging
- *    else
- *       set to default logging
- * @endcode
+ * Both names match without regard to case, and an unknown name leaves the
+ * setup unchanged. A NULL level turns the type off. A NULL filename sends
+ * the type to syslog through syslog_setup, and any other name goes to
+ * log_setup.
+ *
+ * @param[in] loglevel          level name, or NULL
+ * @param[in] logtype           type name
+ * @param[in] filename          log file, or NULL for syslog
+ * @param[in] log_us_timestamp  add microseconds to the time
  */
 static void setuplog_internal(const char *loglevel, const char *logtype,
                               const char *filename, const bool log_us_timestamp)
@@ -648,13 +730,19 @@ static bool log_file_reopen(enum logtypes owner, int fd, int err)
 }
 
 /*!
- * @brief Write a formatted line to a type's log file, reopening it once if needed
+ * @brief Write a formatted line to the log file of a type, retrying once on a
+ * reopened file
  *
- * A short write continues with the rest of the line; a reopened file gets
- * the whole line.  A line whose rest never made it leaves the file mid-line,
- * and the next line written there starts with a newline.
+ * A short write goes on with the rest of the line. After a reopen the new
+ * file gets the line from its start. A line that stops partway leaves the
+ * file mid-line, and the next line there starts with a newline. EINTR
+ * repeats the write.
  *
- * @returns 0, or the errno of the write that failed
+ * @param[in] owner  type whose slot holds the descriptor
+ * @param[in] line   formatted line
+ * @param[in] len    length of line
+ * @returns 0, or the errno of the failed write, where a write of 0 bytes counts
+ *          as EIO
  */
 static int log_file_write(enum logtypes owner, const char *line, size_t len)
 {
@@ -697,9 +785,15 @@ static int log_file_write(enum logtypes owner, const char *line, size_t len)
 }
 
 /*!
- * @brief Give a type whose slot is empty its file back, once it can be opened
+ * @brief Give a type with an empty slot its file back, once the file opens
+ * again
  *
- * @returns true when the slot holds a descriptor
+ * A failed reopen empties the slot, and make_log_entry calls this for every
+ * line until the open works.
+ *
+ * @param[in] owner  type whose slot holds the descriptor
+ * @returns true when the slot holds a descriptor, false after a failed open or
+ *          for a type without a file name
  */
 static bool log_file_recover(enum logtypes owner)
 {
@@ -722,7 +816,15 @@ static bool log_file_recover(enum logtypes owner)
 }
 
 /*!
- * @brief Note in a type's log file how many lines it lost, before the next one
+ * @brief Write the count of unwritten lines and the first error to the log file
+ * of a type
+ *
+ * The make_log_entry call writes this note before the next message. The note
+ * carries the source position of this file, and the call restores the
+ * position of the caller afterwards. A written note resets the count.
+ *
+ * @param[in] owner             type whose lines failed to reach its file
+ * @param[in] log_us_timestamp  add microseconds to the time
  */
 static void log_file_note_lost(enum logtypes owner, bool log_us_timestamp)
 {
@@ -755,7 +857,11 @@ static void log_file_note_lost(enum logtypes owner, bool log_us_timestamp)
    Global function definitions
  */
 
-/*! This function sets up the processname */
+/*!
+ * @brief Set the process name of log lines and syslog, cut to 15 characters
+ *
+ * @param[in] processname  name of the process
+ */
 void set_processname(const char *processname)
 {
     strncpy(log_config.processname, processname, 15);
@@ -763,9 +869,25 @@ void set_processname(const char *processname)
 }
 
 /*!
- * @bug make_log_entry has 1 main flaw:
- * The message in its entirety, must fit into the tempbuffer.
- * So it must be shorter than MAXLOGSIZE
+ * @brief Write a log message to syslog or to the log file of its type, the
+ * worker of the LOG macro
+ *
+ * A call from a signal handler during another call returns at once. The call
+ * leaves errno unchanged. A process without any setup logs to syslog at
+ * log_info. A type without a setup writes through the file of the default
+ * type.
+ *
+ * A line that cannot reach its file adds to a count of unwritten lines. The
+ * next line that reaches the file follows a note with the count and the
+ * first error. A forked child drops the count of its parent.
+ *
+ * @param[in] loglevel          level of the message
+ * @param[in] logtype           type of the message
+ * @param[in] file              source file of the LOG call
+ * @param[in] log_us_timestamp  add microseconds to the time
+ * @param[in] line              source line of the LOG call
+ * @param[in] message           printf format
+ * @param[in] ...               format arguments
  */
 void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
                     const char *file, const bool log_us_timestamp, int line, char *message, ...)
@@ -884,6 +1006,18 @@ exit:
     errno = saved_errno;
 }
 
+/*!
+ * @brief Set up logging from a list of type:level pairs
+ *
+ * Commas or spaces separate the pairs, as in "default:note afpdaemon:debug".
+ * Type and level names match without regard to case, and the call skips a
+ * pair with an unknown name.
+ *
+ * @param[in] logstr            list of type:level pairs
+ * @param[in] logfile           log file, "/dev/tty", a mkstemp template, or
+ *                              NULL for syslog
+ * @param[in] log_us_timestamp  add microseconds to the time
+ */
 void setuplog(const char *logstr, const char *logfile,
               const bool log_us_timestamp)
 {

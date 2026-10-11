@@ -57,6 +57,19 @@ struct sl_xapian_query {
 
 static struct sl_xapian_seeded *seeded_volumes;
 
+/*!
+ * @brief Create a state directory, or check an existing one, so that it carries
+ * every bit of mode
+ *
+ * An existing directory that lacks a bit of mode gets mode through chmod, and
+ * extra bits stay. A path that is not a directory fails.
+ *
+ * @param[in]  path    directory
+ * @param[in]  mode    mode bits the directory must carry
+ * @param[out] errbuf  receives the error text
+ * @param[in]  errlen  size of errbuf
+ * @returns 0, or -1 with the reason in errbuf
+ */
 static int sl_xapian_mkdir_state(const char *path, mode_t mode, char *errbuf,
                                  size_t errlen)
 {
@@ -85,6 +98,17 @@ static int sl_xapian_mkdir_state(const char *path, mode_t mode, char *errbuf,
     return 0;
 }
 
+/*!
+ * @brief Create the Spotlight state directories as root, spotlight with mode
+ * 0755 and spotlight/xapian with mode 01777
+ *
+ * The sticky, world-writable xapian directory lets sessions under any user
+ * create their entries there.
+ *
+ * @param[out] errbuf  receives the error text
+ * @param[in]  errlen  size of errbuf
+ * @returns 0, or -1 with the reason in errbuf
+ */
 static int sl_xapian_ensure_state_root(char *errbuf, size_t errlen)
 {
     int ret = 0;
@@ -101,6 +125,13 @@ static int sl_xapian_ensure_state_root(char *errbuf, size_t errlen)
     return ret;
 }
 
+/*!
+ * @brief Order two 64-bit host-order CNIDs, for bsearch over the client filter
+ *
+ * @param[in] p1  first CNID
+ * @param[in] p2  second CNID
+ * @returns -1, 0, or 1
+ */
 static int cnid_comp_fn(const void *p1, const void *p2)
 {
     const uint64_t *c1 = p1, *c2 = p2;
@@ -112,6 +143,12 @@ static int cnid_comp_fn(const void *p1, const void *p2)
     return (*c1 < *c2) ? -1 : 1;
 }
 
+/*!
+ * @brief Tell whether this process has the Xapian index of a volume ready
+ *
+ * @param[in] vol  volume
+ * @returns true when the volume path is in the seeded list
+ */
 static bool sl_xapian_seeded(const struct vol *vol)
 {
     for (struct sl_xapian_seeded *p = seeded_volumes; p != NULL; p = p->next) {
@@ -123,6 +160,13 @@ static bool sl_xapian_seeded(const struct vol *vol)
     return false;
 }
 
+/*!
+ * @brief Add a volume to the seeded list, which holds the volumes whose Xapian
+ * index is ready
+ *
+ * @param[in] vol  volume
+ * @returns 0, or -1 when an allocation fails
+ */
 static int sl_xapian_mark_seeded(const struct vol *vol)
 {
     struct sl_xapian_seeded *p;
@@ -144,6 +188,11 @@ static int sl_xapian_mark_seeded(const struct vol *vol)
     return 0;
 }
 
+/*!
+ * @brief Remove a volume from the seeded list
+ *
+ * @param[in] vol  volume, or NULL
+ */
 static void sl_xapian_unmark_seeded(const struct vol *vol)
 {
     struct sl_xapian_seeded **pp = &seeded_volumes;
@@ -166,6 +215,12 @@ static void sl_xapian_unmark_seeded(const struct vol *vol)
     }
 }
 
+/*!
+ * @brief Tell whether a byte may appear in a Xapian database ID
+ *
+ * @param[in] c  byte
+ * @returns true for an ASCII letter, a digit, '-', '_', or '.'
+ */
 static bool sl_xapian_db_id_char_safe(unsigned char c)
 {
     return (c >= 'A' && c <= 'Z')
@@ -174,6 +229,13 @@ static bool sl_xapian_db_id_char_safe(unsigned char c)
            || c == '-' || c == '_' || c == '.';
 }
 
+/*!
+ * @brief Fold the bytes of a string into a 64-bit FNV-1a hash
+ *
+ * @param[in] hash  running hash
+ * @param[in] s     string, or NULL to add nothing
+ * @returns the updated hash
+ */
 static uint64_t sl_xapian_fnv1a_update(uint64_t hash, const char *s)
 {
     while (s != NULL && *s != '\0') {
@@ -184,6 +246,15 @@ static uint64_t sl_xapian_fnv1a_update(uint64_t hash, const char *s)
     return hash;
 }
 
+/*!
+ * @brief Tell whether an ID can name a Xapian database directory as it is
+ *
+ * The ID needs 1 to SL_XAPIAN_DB_ID_MAX bytes that sl_xapian_db_id_char_safe
+ * accepts, and "." and ".." fail.
+ *
+ * @param[in] id  candidate ID, or NULL
+ * @returns true for a safe ID
+ */
 static bool sl_xapian_db_id_safe(const char *id)
 {
     size_t len;
@@ -211,6 +282,15 @@ static bool sl_xapian_db_id_safe(const char *id)
     return true;
 }
 
+/*!
+ * @brief Hash an unsafe ID and the volume path into a 64-bit FNV-1a value
+ *
+ * A 0xff byte separates the ID from the path.
+ *
+ * @param[in] vol  volume, or NULL
+ * @param[in] id   ID
+ * @returns the hash
+ */
 static uint64_t sl_xapian_db_id_hash(const struct vol *vol, const char *id)
 {
     uint64_t hash = 1469598103934665603ULL;
@@ -219,6 +299,18 @@ static uint64_t sl_xapian_db_id_hash(const struct vol *vol, const char *id)
     return sl_xapian_fnv1a_update(hash, vol ? vol->v_path : NULL);
 }
 
+/*!
+ * @brief Return the path of the Xapian database of a volume under the Spotlight
+ * state directory
+ *
+ * The directory takes the volume UUID as its name, or the local name without
+ * one, or "unknown" without either. A name that sl_xapian_db_id_safe refuses
+ * becomes unsafe- and the hex of sl_xapian_db_id_hash.
+ *
+ * @param[in] mem_ctx  talloc context for the path
+ * @param[in] vol      volume
+ * @returns the path, or NULL when talloc fails
+ */
 static char *sl_xapian_db_path(TALLOC_CTX *mem_ctx, const struct vol *vol)
 {
     const char *uuid = vol->v_uuid && vol->v_uuid[0] != '\0'
@@ -243,6 +335,13 @@ static char *sl_xapian_db_path(TALLOC_CTX *mem_ctx, const struct vol *vol)
     return talloc_asprintf(mem_ctx, _PATH_STATEDIR "spotlight/xapian/%s", db_id);
 }
 
+/*!
+ * @brief Return the volume UUID that the index metadata records, or the local
+ * name without one
+ *
+ * @param[in] vol  volume, or NULL
+ * @returns the UUID, the local name, or ""
+ */
 static const char *sl_xapian_volume_uuid(const struct vol *vol)
 {
     if (vol == NULL) {
@@ -260,6 +359,20 @@ static const char *sl_xapian_volume_uuid(const struct vol *vol)
     return "";
 }
 
+/*!
+ * @brief Make sure the Xapian index of the query volume is ready, once per
+ * process
+ *
+ * The call prepares the state directories and checks the index metadata
+ * against the volume path and UUID. An index that is not ready, or whose
+ * check fails, goes through sl_xapian_reconcile. Either way the volume then
+ * joins the seeded list.
+ *
+ * @param[in] slq      query with the volume
+ * @param[in] db_path  path of the Xapian database
+ * @returns 0, or -1 when the state directories, the reconcile, or an allocation
+ *          fails
+ */
 static int sl_xapian_ensure_seeded(slq_t *slq, const char *db_path)
 {
     char errbuf[512] = {0};
@@ -315,6 +428,18 @@ static int sl_xapian_ensure_seeded(slq_t *slq, const char *db_path)
     return 0;
 }
 
+/*!
+ * @brief Add up to SL_XAPIAN_PAGE_SIZE results from the candidate paths to the
+ * result page
+ *
+ * The call skips a path out of scope, a stale or unreadable file, a file
+ * without a CNID, and a CNID outside the client filter. A CNID reset during a
+ * lookup marks the volume reset and fails the query. Candidates left after a
+ * full page set SLQ_STATE_FULL, and none left set SLQ_STATE_DONE.
+ *
+ * @param[in,out] slq  query with the result page and the candidate paths
+ * @returns 0, or -1 on error
+ */
 static int sl_xapian_fill_results(slq_t *slq)
 {
     EC_INIT;
@@ -407,6 +532,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Start the Xapian backend, which only logs once per process
+ *
+ * @param[in] obj  AFP object, unused
+ * @returns 0
+ */
 static int sl_xapian_init(AFPObj *obj _U_)
 {
     static bool initialized;
@@ -420,6 +551,11 @@ static int sl_xapian_init(AFPObj *obj _U_)
     return 0;
 }
 
+/*!
+ * @brief Stop the Xapian backend and empty the seeded list
+ *
+ * @param[in] obj  AFP object, unused
+ */
 static void sl_xapian_close(AFPObj *obj _U_)
 {
     struct sl_xapian_seeded *p = seeded_volumes;
@@ -434,6 +570,16 @@ static void sl_xapian_close(AFPObj *obj _U_)
     seeded_volumes = NULL;
 }
 
+/*!
+ * @brief Run a Spotlight query on the Xapian index of the volume
+ *
+ * The call seeds the index first when this process has not. The search
+ * returns candidate paths up to the result limit, and a truncated result logs
+ * a hint to raise the spotlight results limit. The first page fills at once.
+ *
+ * @param[in,out] slq  query
+ * @returns 0, or -1 on error
+ */
 static int sl_xapian_open_query(slq_t *slq)
 {
     EC_INIT;
@@ -486,6 +632,15 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Fill the next result page of a Xapian query
+ *
+ * A page that holds results already goes out first, since open_query fills
+ * the first one. A finished query adds nothing.
+ *
+ * @param[in,out] slq  query
+ * @returns 0, or -1 without a result set or when the fill fails
+ */
 static int sl_xapian_fetch_results(slq_t *slq)
 {
     if (slq->query_results == NULL) {
@@ -501,6 +656,11 @@ static int sl_xapian_fetch_results(slq_t *slq)
     return sl_xapian_fill_results(slq);
 }
 
+/*!
+ * @brief Free the candidate paths and the backend state of a Xapian query
+ *
+ * @param[in,out] slq  query
+ */
 static void sl_xapian_close_query(slq_t *slq)
 {
     struct sl_xapian_query *xsq = slq->slq_backend_private;
@@ -514,6 +674,22 @@ static void sl_xapian_close_query(slq_t *slq)
     }
 }
 
+/*!
+ * @brief Apply a file system change of a volume to its Xapian index
+ *
+ * Creates and modifications upsert the path, and a file delete drops it. A
+ * directory delete drops every path under it. A file move drops the old path
+ * and upserts the new one, and a directory move reindexes the subtree. A
+ * failed update marks the index dirty and drops the volume from the seeded
+ * list, so the next query reconciles the index.
+ *
+ * @param[in] obj      AFP object, unused
+ * @param[in] vol      volume
+ * @param[in] event    SL_INDEX_* change
+ * @param[in] path     new path
+ * @param[in] oldpath  old path of a move, or NULL
+ * @returns 0, or -1 when the update fails
+ */
 static int sl_xapian_index_event(const AFPObj *obj _U_,
                                  const struct vol *vol,
                                  sl_index_event_t event,

@@ -19,8 +19,14 @@
 #endif
 
 
-/*
- * Functions (actually they are just facades)
+/*!
+ * @brief Register the AFP services with mDNSResponder or Avahi, whichever the
+ * build has
+ *
+ * The facade prefers mDNSResponder when the build has both. Without either
+ * the call does nothing.
+ *
+ * @param[in] configs  AFP object with the options
  */
 void zeroconf_register(const AFPObj *configs _U_)
 {
@@ -34,6 +40,10 @@ void zeroconf_register(const AFPObj *configs _U_)
 #endif
 }
 
+/*!
+ * @brief Withdraw the AFP services from mDNSResponder or Avahi, whichever the
+ * build has
+ */
 void zeroconf_deregister(void)
 {
 #if defined (HAVE_MDNS)

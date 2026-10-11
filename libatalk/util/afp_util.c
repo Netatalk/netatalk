@@ -12,6 +12,13 @@
 #include <atalk/afp.h>
 #include <atalk/afp_util.h>
 
+/*!
+ * @brief Return the name of an AFP command code for log messages and DTrace
+ * probes
+ *
+ * @param[in] num  AFP command code
+ * @returns the constant name, or "not yet defined" for an unlisted code
+ */
 const char *AfpNum2name(int num)
 {
     switch (num) {
@@ -241,6 +248,12 @@ const char *AfpNum2name(int num)
 
 #define AFPERR2NAME(err) case err : return #err
 
+/*!
+ * @brief Return the name of an AFP result code for log messages
+ *
+ * @param[in] err  AFP result code
+ * @returns the constant name, or "not yet defined" for an unlisted code
+ */
 const char *AfpErr2name(int err)
 {
     switch (err) {

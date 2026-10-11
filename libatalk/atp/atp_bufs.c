@@ -61,9 +61,15 @@ static size_t		chunkcap = 0;
 static int		numbufs = 0;
 #endif /* EBUG */
 
-/* only call this when the free_list is empty...
- * N_MORE_BUFS must be >= one
-*/
+/*!
+ * @brief Fill the empty free list with N_MORE_BUFS new ATP buffers
+ *
+ * One malloc call provides all of them, and the chunk table records its base
+ * for the final free. The call replaces free_list, so it runs only while the
+ * list is empty.
+ *
+ * @returns 0, or -1 with ENOBUFS when an allocation fails
+ */
 static int more_bufs(void)
 {
     int			i;
@@ -149,6 +155,12 @@ void atp_print_bufuse(ATP ah, char *s)
 #endif /* EBUG */
 
 
+/*!
+ * @brief Take an ATP buffer from the free list, refilling the list with
+ * more_bufs when it is empty
+ *
+ * @returns the buffer, or NULL with ENOBUFS
+ */
 struct atpbuf *atp_alloc_buf(void)
 {
     struct atpbuf *bp;
@@ -166,10 +178,11 @@ struct atpbuf *atp_alloc_buf(void)
 }
 
 
-/*
- * Release every chunk the pool has taken. Only valid once no buffer is still
- * in use anywhere, since it frees the memory the handed-out buffers live in;
- * a session process simply exits instead of calling this.
+/*!
+ * @brief Free every chunk of the ATP buffer pool and empty the free list
+ *
+ * The call frees the memory that handed-out buffers live in, so it runs only
+ * when no buffer is in use. A session process exits without it.
  */
 void atp_bufs_release(void)
 {
@@ -183,6 +196,12 @@ void atp_bufs_release(void)
     free_list = NULL;
 }
 
+/*!
+ * @brief Return an ATP buffer to the free list
+ *
+ * @param[in] bp  buffer from atp_alloc_buf
+ * @returns 0, or -1 for NULL
+ */
 int atp_free_buf(struct atpbuf *bp)
 {
     if (bp == NULL) {

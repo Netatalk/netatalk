@@ -40,6 +40,20 @@
 
 static server_child_t *childs;
 
+/*!
+ * @brief Open the Unix socket that answers afpstats queries about the sessions
+ *
+ * Only one afpd passes the netatalk PID file check, so the call unlinks a
+ * socket file left at the path by an earlier run. The socket gets mode 0660
+ * and, with set_group, the group gid. The call keeps childs_in for the
+ * answers.
+ *
+ * @param[in] childs_in  session table of the master afpd
+ * @param[in] sock_path  socket path
+ * @param[in] set_group  true to give the socket the group gid
+ * @param[in] gid        group of the socket when set_group is true
+ * @returns the listening descriptor, or -1 on error
+ */
 int afpstats_init(server_child_t *childs_in, const char *sock_path,
                   bool set_group, gid_t gid)
 {
@@ -122,6 +136,12 @@ int afpstats_init(server_child_t *childs_in, const char *sock_path,
     return fd;
 }
 
+/*!
+ * @brief Name the state of a session for the afpstats output
+ *
+ * @param[in] state  afpch_state of the session, a single state flag
+ * @returns "active", "sleeping", "disconnected", or "unknown"
+ */
 static const char *state_name(int16_t state)
 {
     switch (state) {
@@ -141,6 +161,15 @@ static const char *state_name(int16_t state)
     }
 }
 
+/*!
+ * @brief Name the transport of a session from its state flags
+ *
+ * The session table records no transport, so the state flags decide. An ASP
+ * session reports "unknown" between its login and its first state report.
+ *
+ * @param[in] state  afpch_state of the session
+ * @returns "AppleTalk", "TCP/IP", or "unknown"
+ */
 static const char *protocol_name(int16_t state)
 {
     /*
@@ -160,6 +189,14 @@ static const char *protocol_name(int16_t state)
     return "unknown";
 }
 
+/*!
+ * @brief Name a user for the afpstats output
+ *
+ * @param[in]  uid     user ID
+ * @param[out] buf     receives uid= and the number when getpwuid finds no user
+ * @param[in]  buflen  size of buf
+ * @returns the user name from getpwuid, or buf
+ */
 static const char *user_name(uid_t uid, char *buf, size_t buflen)
 {
     const struct passwd *pw;
@@ -173,6 +210,17 @@ static const char *user_name(uid_t uid, char *buf, size_t buflen)
     return buf;
 }
 
+/*!
+ * @brief Answer one afpstats client with a line per session and close the
+ * connection
+ *
+ * Each line names the user, the pid, the login time, the state, the
+ * protocol, the volumes, and the client host. A send timeout of 1 second
+ * keeps a stuck client from stalling the master afpd. A failed write ends the
+ * answer early.
+ *
+ * @param[in] listen_fd  socket from afpstats_init
+ */
 void afpstats_handle_accept(int listen_fd)
 {
     int client_fd;

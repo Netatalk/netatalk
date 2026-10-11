@@ -15,6 +15,18 @@
 
 #define CRC16_XMODEM_POLY 0x1021u
 
+/*!
+ * @brief Add bytes to a running CRC-16/XMODEM value
+ *
+ * The CRC uses the polynomial 0x1021 with the high bit first and no final
+ * XOR. BinHex and MacBinary start it at 0, and a run over more than one
+ * buffer passes each result to the next call.
+ *
+ * @param[in] crc  CRC so far, 0 at the start
+ * @param[in] buf  bytes to add
+ * @param[in] len  number of bytes
+ * @returns the CRC after the bytes
+ */
 uint16_t crc16_xmodem_update(uint16_t crc, const void *buf, size_t len)
 {
     const uint8_t *ptr = buf;

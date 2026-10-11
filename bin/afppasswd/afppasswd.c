@@ -78,6 +78,12 @@
 
 #define AFPPASSWD_OPTSTRING "cd:fmnra:p:u:w:"
 
+/*!
+ * @brief Return the value of a hex digit, without checking that it is one
+ *
+ * @param[in] x  hex digit
+ * @returns 0 to 15 for a hex digit
+ */
 static int unhex(unsigned char x)
 {
     return isdigit(x) ? x - '0' : toupper(x) + 10 - 'A';
@@ -86,10 +92,15 @@ static int unhex(unsigned char x)
 static char buf[MAXPATHLEN + 1];
 static const unsigned char hextable[] = "0123456789ABCDEF";
 
-/*
- * Libgcrypt requires gcry_check_version() before any other API call.  Keep
- * this separate so the standalone unit test, which exercises the internal
- * SRP helpers without entering this program's main(), can initialize it too.
+/*!
+ * @brief Initialize libgcrypt with the system random number generator and check
+ * its version
+ *
+ * Libgcrypt needs gcry_check_version() before any other call. The unit test
+ * of the SRP helpers calls this as well, since it does not run main.
+ *
+ * @returns 0, or -1 after a message for a libgcrypt older than
+ *          UAM_NEED_LIBGCRYPT_VERSION
  */
 static int initialize_libgcrypt(void)
 {
@@ -104,6 +115,16 @@ static int initialize_libgcrypt(void)
     return 0;
 }
 
+/*!
+ * @brief Parse the decimal minimum UID of the -u option
+ *
+ * The value has to be a plain decimal number that fits uid_t, without a sign,
+ * leading space, or trailing characters.
+ *
+ * @param[in]  value  option value
+ * @param[out] uid    receives the UID
+ * @returns 0, or -1 for a value that does not parse
+ */
 static int parse_minimum_uid(const char *value, uid_t *uid)
 {
     char *end;
@@ -126,6 +147,16 @@ static int parse_minimum_uid(const char *value, uid_t *uid)
     return 0;
 }
 
+/*!
+ * @brief Check that an open credential file is private to the administrator
+ *
+ * The file has to be a regular file with exactly one hard link, owned by the
+ * effective UID, and without group or other permissions.
+ *
+ * @param[in] fd    open file
+ * @param[in] path  file path for the messages
+ * @returns 0, or -1 after a message
+ */
 static int validate_opened_file(int fd, const char *path)
 {
     struct stat st;
@@ -163,6 +194,14 @@ static int validate_opened_file(int fd, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Open an existing credential file without following a symbolic link and
+ * check it with validate_opened_file
+ *
+ * @param[in] path         file path
+ * @param[in] access_mode  O_RDONLY or O_RDWR
+ * @returns the descriptor, or -1 after a message
+ */
 static int open_credential_file(const char *path, int access_mode)
 {
     int fd;
@@ -182,6 +221,18 @@ static int open_credential_file(const char *path, int access_mode)
     return fd;
 }
 
+/*!
+ * @brief Find the offset where a new record can go at the end of a credential
+ * file
+ *
+ * The file has to be empty or end with a newline, so an incomplete last
+ * record fails.
+ *
+ * @param[in]  fp    open file
+ * @param[in]  path  file path for the messages
+ * @param[out] pos   receives the end offset
+ * @returns 0, or -1 after a message
+ */
 static int find_append_position(FILE *fp, const char *path, off_t *pos)
 {
     int last;
@@ -213,6 +264,16 @@ static int find_append_position(FILE *fp, const char *path, off_t *pos)
     return 0;
 }
 
+/*!
+ * @brief Open or create a credential file for new content, and leave it empty
+ * with mode 0600
+ *
+ * The call does not follow a symbolic link, and an existing file has to pass
+ * validate_opened_file before it gets truncated.
+ *
+ * @param[in] path  file path
+ * @returns the descriptor, or -1 after a message
+ */
 static int open_credential_for_replacement(const char *path)
 {
     int fd = open(path, O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0600);
@@ -238,6 +299,14 @@ static int open_credential_for_replacement(const char *path)
     return fd;
 }
 
+/*!
+ * @brief Build the path of the `.key` file next to a RandNum password file
+ *
+ * @param[in]  path          RandNum password file
+ * @param[out] keypath       receives the path with `.key` appended
+ * @param[in]  keypath_size  size of keypath
+ * @returns 0, or -1 after a message for a path that is too long
+ */
 static int randnum_make_keypath(const char *path, char *keypath,
                                 size_t keypath_size)
 {
@@ -254,6 +323,17 @@ static int randnum_make_keypath(const char *path, char *keypath,
     return 0;
 }
 
+/*!
+ * @brief Read the DES secret of a RandNum `.key` file from its start
+ *
+ * The file has to hold 16 hex digits, with an optional newline after them.
+ * The call wipes the text it read.
+ *
+ * @param[in]  keyfd    open `.key` file
+ * @param[out] key      receives the 8-byte DES secret
+ * @param[in]  keypath  path for the messages, or NULL
+ * @returns 0, or -1 after a message for a read error or a malformed file
+ */
 static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
                               const char *keypath)
 {
@@ -303,6 +383,15 @@ static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
     return 0;
 }
 
+/*!
+ * @brief Open the `.key` file of a RandNum password file and check that it
+ * holds a valid DES secret
+ *
+ * @param[in]  path       RandNum password file
+ * @param[out] keyfd_out  receives the open `.key` file
+ * @returns 0, or -1 after a message when the file is missing, not private, or
+ *          malformed
+ */
 static int randnum_open_keyfile(const char *path, int *keyfd_out)
 {
     char keypath[MAXPATHLEN + 1];
@@ -331,6 +420,15 @@ static int randnum_open_keyfile(const char *path, int *keyfd_out)
     return 0;
 }
 
+/*!
+ * @brief Write a new random DES secret to a RandNum `.key` file
+ *
+ * The secret comes from GCRY_STRONG_RANDOM and goes out as 16 hex digits and
+ * a newline, in a file that open_credential_for_replacement empties first.
+ *
+ * @param[in] keypath  path of the `.key` file
+ * @returns 0, or -1 after a message
+ */
 static int randnum_write_keyfile(const char *keypath)
 {
     uint8_t key[DES_KEY_SZ];
@@ -367,6 +465,16 @@ static int randnum_write_keyfile(const char *keypath)
     return 0;
 }
 
+/*!
+ * @brief Make sure that a RandNum password file has a valid `.key` file
+ *
+ * A missing `.key` file gets a new secret. An existing file has to be private,
+ * and an invalid secret gets replaced only with -f.
+ *
+ * @param[in] path   RandNum password file
+ * @param[in] flags  option flags, OPT_FORCE to replace an invalid secret
+ * @returns 0, or -1 after a message
+ */
 static int randnum_ensure_keyfile(const char *path, int flags)
 {
     char keypath[MAXPATHLEN + 1];
@@ -413,8 +521,20 @@ static int randnum_ensure_keyfile(const char *path, int flags)
     return randnum_write_keyfile(keypath);
 }
 
-/* if newpwd is null, convert passwd_buf from hex to binary. if newpwd isn't
- * null, convert newpwd to hex and save it in passwd_buf. */
+/*!
+ * @brief Encrypt a new RandNum password into hex, or decrypt a stored hex
+ * password, with the DES secret
+ *
+ * Without newpwd, the call turns the 16 hex digits of passwd_buf into 8 bytes
+ * and decrypts them in place. With newpwd, it encrypts the 8 bytes of newpwd
+ * in place and writes their hex form to passwd_buf. The secret comes from the
+ * `.key` file in DES ECB mode.
+ *
+ * @param[in,out] passwd_buf  hex password field of at least 16 bytes
+ * @param[in,out] newpwd      new 8-byte password, encrypted on return, or NULL
+ * @param[in]     keyfd       open `.key` file
+ * @returns 0, or -1 when the secret or a cipher call fails
+ */
 static int convert_passwd(char *passwd_buf, char *newpwd, const int keyfd)
 {
     uint8_t key[DES_KEY_SZ];
@@ -486,9 +606,18 @@ static int convert_passwd(char *passwd_buf, char *newpwd, const int keyfd)
 
 /* -------------------- SRP verifier functions -------------------- */
 
-/*
- * Compute SRP verifier: x = SHA1(salt | SHA1(username | ":" | password)),
- * then v = g^x mod N.
+/*!
+ * @brief Compute the SRP verifier of a user name and password with a salt
+ *
+ * The call computes `x = SHA1(salt | SHA1(username | ":" | password))` and
+ * `v = g^x mod N`, with the group of srp.h. The verifier goes out as
+ * SRP_NBYTES big-endian bytes with leading zeros.
+ *
+ * @param[in]  username  user name of up to SRP_USERNAME_MAX_LEN bytes
+ * @param[in]  password  password of up to 255 bytes
+ * @param[in]  salt      SRP_SALT_LEN bytes of salt
+ * @param[out] v_out     receives the SRP_NBYTES verifier
+ * @returns 0, or -1 for a name or password that is too long, or a failed hash
  */
 static int srp_compute_verifier(const char *username, const char *password,
                                 const unsigned char *salt,
@@ -557,9 +686,16 @@ static int srp_compute_verifier(const char *username, const char *password,
     return 0;
 }
 
-/*
- * Write hex-encoded salt and verifier to a buffer.
- * out_hex must have room for SRP_HEX_SALT_LEN + 1 + SRP_HEX_V_LEN bytes.
+/*!
+ * @brief Write the salt and the verifier as upper-case hex, separated by a
+ * colon
+ *
+ * The call writes no NUL, so out_hex needs SRP_HEX_SALT_LEN + 1 +
+ * SRP_HEX_V_LEN bytes.
+ *
+ * @param[out] out_hex   receives the text
+ * @param[in]  salt      SRP_SALT_LEN bytes of salt
+ * @param[in]  verifier  SRP_NBYTES verifier
  */
 static void srp_encode_hex(char *out_hex, const unsigned char *salt,
                            const unsigned char *verifier)
@@ -579,6 +715,17 @@ static void srp_encode_hex(char *out_hex, const unsigned char *salt,
     }
 }
 
+/*!
+ * @brief Open the SRP verifier directory and check its owner and mode
+ *
+ * The directory has to be owned by root, or by the calling user when that
+ * user is not root and runs a private server. It must not be writable by
+ * group or other. A regular file at the path is a legacy flat verifier file,
+ * and the message points to afppasswd -m.
+ *
+ * @param[in] path  directory path
+ * @returns the directory descriptor, or -1 after a message
+ */
 static int open_srp_verifier_directory(const char *path)
 {
     struct stat st;
@@ -621,12 +768,34 @@ static int open_srp_verifier_directory(const char *path)
     return fd;
 }
 
+/*!
+ * @brief Write the decimal UID that names the verifier file of a user
+ *
+ * @param[in]  uid   user ID
+ * @param[out] name  receives the file name
+ * @param[in]  size  size of name
+ * @returns 0, or -1 when the name does not fit
+ */
 static int srp_uid_filename(uid_t uid, char *name, size_t size)
 {
     int len = snprintf(name, size, "%ju", (uintmax_t)uid);
     return len < 0 || (size_t)len >= size ? -1 : 0;
 }
 
+/*!
+ * @brief Check the type, owner, link count, and mode of an open verifier file
+ *
+ * The file has to be a regular file with one link, owned by uid. An
+ * administrative caller also accepts root as the owner and skips the mode
+ * check, since it sets the mode afterwards. Any other caller needs a mode that
+ * srp_verifier_mode_is_safe accepts.
+ *
+ * @param[in] fd              open verifier file
+ * @param[in] uid             expected owner
+ * @param[in] path            verifier directory for the message
+ * @param[in] administrative  nonzero for root's add, disable, or initialization
+ * @returns 0, or -1 after a message
+ */
 static int validate_srp_verifier_file(int fd, uid_t uid, const char *path,
                                       int administrative)
 {
@@ -646,6 +815,21 @@ static int validate_srp_verifier_file(int fd, uid_t uid, const char *path,
     return 0;
 }
 
+/*!
+ * @brief Open the verifier file of a user in the verifier directory, or create
+ * it for an administrative caller
+ *
+ * The file name is the decimal UID, and the call does not follow a symbolic
+ * link. With create, a new file starts root-owned, and every file gets mode
+ * 0600 after the checks. Without create, a file that the user cannot open is a
+ * root-owned placeholder, and the message sends the user to the administrator.
+ *
+ * @param[in] dirfd   open verifier directory
+ * @param[in] path    verifier directory for the messages
+ * @param[in] uid     user ID
+ * @param[in] create  nonzero for root's add, disable, or initialization
+ * @returns the descriptor, or -1 after a message
+ */
 static int open_srp_verifier(int dirfd, const char *path, uid_t uid,
                              int create)
 {
@@ -855,6 +1039,25 @@ static int srp_write_record(int fd, const char *path, const char *name,
     return err;
 }
 
+/*!
+ * @brief Set the SRP password of a user, through root's -a or through the user
+ *
+ * The verifier file holds one record for the user. Root's -a also accepts an
+ * empty file, or the record of an earlier user of the UID. A user has to give
+ * the old password, which the call checks against the stored verifier in
+ * constant time. A disabled record stops a user.
+ *
+ * The new password goes through collect_new_password and gets a fresh random
+ * salt. Then srp_write_record replaces the record, and root's write hands the
+ * file to the user, which enrolls the account.
+ *
+ * @param[in] path   verifier directory
+ * @param[in] name   user name
+ * @param[in] uid    UID of the user
+ * @param[in] flags  option flags: OPT_ISROOT, OPT_ADDUSER, OPT_NOCRACK
+ * @param[in] pass   -w value, or "" to prompt
+ * @returns 0, or -1 after a message
+ */
 static int update_srp_passwd(const char *path, const char *name, uid_t uid,
                              int flags, const char *pass)
 {
@@ -1057,7 +1260,19 @@ done:
     return err;
 }
 
-/* Disable an SRP account by installing a root-owned placeholder. */
+/*!
+ * @brief Disable the SRP account of a user with a root-owned placeholder record
+ *
+ * The call creates the verifier file when needed and takes a write lock
+ * without waiting. It revokes the enrollment first: the file becomes
+ * root-owned with mode 0600 before the placeholder replaces the record. The
+ * file and the directory reach the disk before the call returns.
+ *
+ * @param[in] path  verifier directory
+ * @param[in] name  user name
+ * @param[in] uid   UID of the user
+ * @returns 0, or -1 after a message
+ */
 static int disable_srp_verifier(const char *path, const char *name, uid_t uid)
 {
     char line[SRP_USERNAME_MAX_LEN + SRP_FORMAT_LEN + 1];
@@ -1141,6 +1356,18 @@ done:
     return err;
 }
 
+/*!
+ * @brief Create the SRP verifier directory with a disabled placeholder record
+ * for each account
+ *
+ * The directory gets mode 0755 and has to be new. Every account from minuid up
+ * with a valid user name gets a root-owned placeholder file named after its
+ * UID, which revokes any enrollment. The first failed file ends the run.
+ *
+ * @param[in] path    directory path
+ * @param[in] minuid  lowest UID that gets a placeholder
+ * @returns 0, or -1 after a message
+ */
 static int create_srp_directory(const char *path, uid_t minuid)
 {
     struct passwd *pwd;
@@ -1222,7 +1449,12 @@ static int create_srp_directory(const char *path, uid_t minuid)
 }
 
 /*!
- * @brief Whether a stat result is the caller's own mode-0700 directory
+ * @brief Tell whether a stat result is a directory of the caller without group
+ * or other permissions
+ *
+ * @param[in] st   stat result
+ * @param[in] uid  UID of the caller
+ * @returns nonzero for such a directory, or 0
  */
 static int private_store_is_callers(const struct stat *st, uid_t uid)
 {
@@ -1425,6 +1657,13 @@ done:
 
 /* -------------------- RandNum (legacy) functions -------------------- */
 
+/*!
+ * @brief Check that a RandNum record field holds only hex digits or only `*`
+ *
+ * @param[in] field  field text
+ * @param[in] len    field length
+ * @returns 1 for a valid field, or 0
+ */
 static int valid_hex_or_disabled(const char *field, size_t len)
 {
     int disabled = 1;
@@ -1446,6 +1685,15 @@ static int valid_hex_or_disabled(const char *field, size_t len)
     return 1;
 }
 
+/*!
+ * @brief Check the fields of a RandNum record after the user name
+ *
+ * The record needs two fields of 16 characters and one of 8, separated by
+ * colons and ended by a newline. Each field holds hex digits or `*` only.
+ *
+ * @param[in] fields  record text after the user name and its colon
+ * @returns nonzero for a valid record, or 0
+ */
 static int valid_randnum_record(const char *fields)
 {
     size_t fields_len = FORMAT_LEN - 1;
@@ -1457,7 +1705,25 @@ static int valid_randnum_record(const char *fields)
            valid_hex_or_disabled(fields + HEXPASSWDLEN * 2 + 2, 8);
 }
 
-/* this matches the code in uam_randnum.c */
+/*!
+ * @brief Set the RandNum password of a user in the RandNum password file, for
+ * root
+ *
+ * The file has to be private, and its `.key` file has to hold a valid DES
+ * secret. The record of the user has to exist, except with -a, which appends
+ * a new record to a file that ends with a newline. The new password comes from
+ * -w or from two prompts and has up to 8 characters. Unless -n turns it off,
+ * cracklib checks the password.
+ *
+ * The call encrypts the password with convert_passwd, as the RandNum UAM
+ * expects, and writes the record under a write lock.
+ *
+ * @param[in] path   RandNum password file
+ * @param[in] name   user name
+ * @param[in] flags  option flags: OPT_ISROOT, OPT_ADDUSER, OPT_NOCRACK
+ * @param[in] pass   -w value, or "" to prompt
+ * @returns 0, or -1 after a message
+ */
 static int update_passwd(const char *path, const char *name, int flags,
                          const char *pass)
 {
@@ -1690,7 +1956,17 @@ update_done:
 }
 
 
-/* creates a file with all the password entries */
+/*!
+ * @brief Create the RandNum password file with a disabled record for each
+ * account
+ *
+ * The call empties the file and sets mode 0600. Every account from minuid up
+ * with a valid user name gets a record of `*` fields.
+ *
+ * @param[in] path    RandNum password file
+ * @param[in] minuid  lowest UID that gets a record
+ * @returns 0, or -1 after a message
+ */
 static int create_file(const char *path, uid_t minuid)
 {
     struct passwd *pwd;
@@ -1733,6 +2009,9 @@ static int create_file(const char *path, uid_t minuid)
 }
 
 
+/*!
+ * @brief Print the usage of afppasswd for root and for users to stderr
+ */
 static void print_usage(void)
 {
     fprintf(stderr, "afppasswd (Netatalk %s)\n", VERSION);
@@ -1763,6 +2042,20 @@ static void print_usage(void)
     fprintf(stderr, "  -w string use string as password\n");
 }
 
+/*!
+ * @brief Manage the SRP verifiers and RandNum passwords of afpd
+ *
+ * A user can change the SRP password of the calling account, or create the
+ * private verifier directory of a single-user server with -c -p. Root can add
+ * or reset a user with -a and disable one with -d. Root can also create a
+ * credential store with -c and migrate a flat verifier file with -m. The -r
+ * option switches to RandNum. An inherited setuid-root installation drops its
+ * privileges before any option parses.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns 0, or -1 after a message
+ */
 int main(int argc, char **argv)
 {
     struct stat st;

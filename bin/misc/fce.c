@@ -24,6 +24,11 @@
 
 static volatile sig_atomic_t stop_requested = 0;
 
+/*!
+ * @brief Note SIGINT or SIGTERM, so the listener loop stops
+ *
+ * @param[in] signo  signal number, unused
+ */
 static void sig_handler(int signo)
 {
     (void)signo;
@@ -43,6 +48,19 @@ static char *fce_ev_names[] = {
     "FCE_LOGOUT"
 };
 
+/*!
+ * @brief Decode an FCE datagram into a packet structure
+ *
+ * A version above 1 adds an options byte, a padding byte, and 8 reserved
+ * bytes. The options pick the optional PID, user, and source path fields.
+ * Each field has to fit the datagram, and each string has to fit its buffer
+ * with room for the NUL. The call leaves the magic check to its caller.
+ *
+ * @param[in]  buf     datagram
+ * @param[in]  buflen  datagram length
+ * @param[out] packet  receives the fields
+ * @returns 0, or -1 for a short datagram or a field that is too long
+ */
 static int unpack_fce_packet(unsigned char *buf, size_t buflen,
                              struct fce_packet *packet)
 {
@@ -193,6 +211,19 @@ static int unpack_fce_packet(unsigned char *buf, size_t buflen,
     return 0;
 }
 
+/*!
+ * @brief Listen for FCE datagrams from afpd and print each event
+ *
+ * The listener binds a UDP socket to the -h host and the -p port. The
+ * defaults are localhost and the FCE default port. It prints one line per
+ * event and stops on SIGINT or SIGTERM. A datagram that does not decode gets
+ * a line on stderr, and the call ignores datagrams with another magic.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns 0 after SIGINT or SIGTERM, 2 when no socket binds, or 1 for another
+ *          error
+ */
 int main(int argc, char **argv)
 {
     int sockfd;

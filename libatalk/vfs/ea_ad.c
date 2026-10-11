@@ -50,7 +50,13 @@
  */
 
 /*!
- * Build mode for EA header from file mode
+ * @brief Mode of the EA header file derived from the file mode
+ *
+ * Execute bits go away, and the owner always keeps read and write, so a
+ * chmod from 0000 still opens and write-locks the header.
+ *
+ * @param[in] mode  file mode
+ * @returns the header file mode
  */
 static inline mode_t ea_header_mode(mode_t mode)
 {
@@ -62,7 +68,12 @@ static inline mode_t ea_header_mode(mode_t mode)
 }
 
 /*!
- * Build mode for EA file from file mode
+ * @brief Mode of an EA data file derived from the file mode
+ *
+ * Execute bits go away.
+ *
+ * @param[in] mode  file mode
+ * @returns the EA file mode
  */
 static inline mode_t ea_mode(mode_t mode)
 {
@@ -71,9 +82,17 @@ static inline mode_t ea_mode(mode_t mode)
     return mode;
 }
 
-/*
-  Taken form afpd/desktop.c
-*/
+/*!
+ * @brief Convert a Mac name to the volume encoding with hex escapes
+ *
+ * The result lives in a static buffer that the next call overwrites. An empty
+ * name yields ".". It mirrors the desktop.c helper of the same name.
+ *
+ * @param[in] vol    volume supplying the character sets
+ * @param[in] mpath  name in CH_UTF8_MAC, or NULL
+ * @returns the converted name in a static buffer, "." for an empty name, or
+ *          NULL on failure
+ */
 static char *mtoupath(const struct vol *vol, const char *mpath)
 {
     /* for convert_charset dest_len parameter +2 */
@@ -107,6 +126,14 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
     return upath;
 }
 
+/*!
+ * @brief Reject a missing EA name with a log line that names the calling
+ * function
+ *
+ * @param[in] func       name of the calling function, for the log line
+ * @param[in] attruname  EA name to test
+ * @returns 1 when attruname is NULL, 0 otherwise
+ */
 static int ea_attrname_invalid(const char *func, const char *attruname)
 {
     if (attruname == NULL) {
@@ -1345,6 +1372,21 @@ exit:
  * EA VFS funcs that deal with file/dir cp/mv/rm
  ******************************************************************************************/
 
+/*!
+ * @brief Delete every EA of a file together with the EA header file
+ *
+ * A file without an EA header needs nothing and succeeds. With a dirfd the
+ * call changes into that directory for the deletions and back afterwards, and
+ * a failed return ends the process with EXITERR_SYS. A failed EA file delete
+ * turns the result into AFPERR_MISC. ea_close deletes the header file because
+ * every entry name ends up NULL.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] dirfd  directory that file is relative to, or -1 for the working
+ *                   directory
+ * @param[in] file   file whose EAs to delete
+ * @returns AFP_OK, or AFPERR_MISC when the header open or a delete failed
+ */
 int ea_deletefile(const struct vol *vol, int dirfd, const char *file)
 {
     unsigned int count = 0;
@@ -1405,6 +1447,25 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Move every AppleDouble EA of src to dst
+ *
+ * src is relative to dirfd, and dst is relative to the working directory. A
+ * source without an EA header needs nothing and succeeds. When the destination
+ * header fails to open with ENOENT, ad_open creates the metadata file and its
+ * .AppleDouble directory, and the open runs again. Each EA enters the
+ * destination header and leaves the source header, and unix_rename then moves
+ * the EA file. Closing the source with every entry cleared deletes the source
+ * header.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] dirfd  directory that src is relative to, or -1 for the working
+ *                   directory
+ * @param[in] src    current file name
+ * @param[in] dst    new file name
+ * @returns AFP_OK, or AFPERR_MISC when an open, an entry update, or a rename
+ *          failed
+ */
 int ea_renamefile(const struct vol *vol, int dirfd, const char *src,
                   const char *dst)
 {
@@ -1619,6 +1680,19 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Give the EA header file and every EA file of path a new owner
+ *
+ * A file without an EA header needs nothing and succeeds. ochown follows
+ * symlinks only when the volume sets AFPVOL_FOLLOWSYM.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] path  file whose EA files to change
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @returns AFP_OK, AFPERR_ACCESS on EPERM or EACCES, or AFPERR_MISC on any
+ *          other failure
+ */
 int ea_chown(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
 {
     unsigned int count = 0;
@@ -1684,6 +1758,20 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Apply a new file mode to the EA header file and every EA file
+ *
+ * The header gets ea_header_mode, so the owner keeps read and write access.
+ * Each EA file gets ea_mode. setfilmode applies the volume umask. A file
+ * without an EA header needs nothing and succeeds.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  file whose EA files to change
+ * @param[in] mode  new file mode
+ * @param[in] st    unused
+ * @returns AFP_OK, AFPERR_ACCESS on EPERM or EACCES, or AFPERR_MISC on any
+ *          other failure
+ */
 int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
                   struct stat *st _U_)
 {
@@ -1758,6 +1846,21 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Apply a new directory mode to the EA header file and every EA file
+ *
+ * The call runs as root throughout, because the .AppleDouble directory may
+ * already deny the user access. The header gets ea_header_mode, and each EA
+ * file gets ea_mode. A directory without an EA header needs nothing and
+ * succeeds.
+ *
+ * @param[in] vol   volume holding the directory
+ * @param[in] name  directory whose EA files to change
+ * @param[in] mode  new directory mode
+ * @param[in] st    unused
+ * @returns AFP_OK, AFPERR_ACCESS on EPERM or EACCES, or AFPERR_MISC on any
+ *          other failure
+ */
 int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
                  struct stat *st _U_)
 {

@@ -25,6 +25,12 @@
 
 #include <atalk/queue.h>
 
+/*!
+ * @brief Allocate a queue node that holds an element, with its links unset
+ *
+ * @param[in] data  element of the node
+ * @returns the node, or NULL when malloc fails
+ */
 static qnode_t *alloc_init_node(void *data)
 {
     qnode_t *node;
@@ -41,6 +47,11 @@ static qnode_t *alloc_init_node(void *data)
  * Interface
  *******************************************************************************/
 
+/*!
+ * @brief Create an empty queue, a sentinel node that links to itself
+ *
+ * @returns the queue, or NULL when malloc fails
+ */
 q_t *queue_init(void)
 {
     q_t *queue;
@@ -53,7 +64,13 @@ q_t *queue_init(void)
     return queue;
 }
 
-/*! Insert at tail */
+/*!
+ * @brief Append an element at the tail of a queue
+ *
+ * @param[in,out] q     queue
+ * @param[in]     data  element
+ * @returns the new node, or NULL when malloc fails
+ */
 qnode_t *enqueue(q_t *q, void *data)
 {
     qnode_t *node;
@@ -142,7 +159,13 @@ qnode_t *queue_move_to_tail(q_t *q, qnode_t *node)
     return node;
 }
 
-/*! Insert at head */
+/*!
+ * @brief Insert an element at the head of a queue
+ *
+ * @param[in,out] q     queue
+ * @param[in]     data  element
+ * @returns the new node, or NULL when malloc fails
+ */
 qnode_t *prequeue(q_t *q, void *data)
 {
     qnode_t *node;
@@ -159,7 +182,12 @@ qnode_t *prequeue(q_t *q, void *data)
     return node;
 }
 
-/*! Unlink a node from whichever queue holds it and free it */
+/*!
+ * @brief Unlink a node from the queue that holds it and free the node
+ *
+ * @param[in] node  node, or NULL
+ * @returns the element of the node, or NULL for a NULL node
+ */
 void *queue_remove(qnode_t *node)
 {
     void *data;
@@ -175,7 +203,14 @@ void *queue_remove(qnode_t *node)
     return data;
 }
 
-/*! Take from head */
+/*!
+ * @brief Remove the element at the head of a queue
+ *
+ * A NULL element also returns NULL.
+ *
+ * @param[in,out] q  queue, or NULL
+ * @returns the element, or NULL for an empty or NULL queue
+ */
 void *dequeue(q_t *q)
 {
     qnode_t *node;
@@ -194,6 +229,14 @@ void *dequeue(q_t *q)
     return data;
 }
 
+/*!
+ * @brief Free a queue and its nodes, passing each element to a callback
+ *
+ * A NULL element ends the walk early, so the nodes after it leak.
+ *
+ * @param[in] q         queue
+ * @param[in] callback  function that receives each element, or NULL
+ */
 void queue_destroy(q_t *q, void (*callback)(void *))
 {
     void *p;

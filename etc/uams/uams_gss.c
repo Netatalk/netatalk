@@ -44,6 +44,13 @@
 #define LOG_LOGINCONT(log_level, ...) \
     LOG_UAMS(log_level, "FPLoginCont: " __VA_ARGS__)
 
+/*!
+ * @brief Log the GSS-API major and minor status messages of a failed call
+ *
+ * @param[in] s             name of the failed call, as the prefix of each line
+ * @param[in] major_status  GSS major status
+ * @param[in] minor_status  mechanism minor status
+ */
 static void log_status(char *s,
                        OM_uint32 major_status,
                        OM_uint32 minor_status)
@@ -79,6 +86,11 @@ static void log_status(char *s,
     }
 }
 
+/*!
+ * @brief Log each flag of an accepted GSS context at debug level
+ *
+ * @param[in] flags  context flags from gss_accept_sec_context
+ */
 static void log_ctx_flags(OM_uint32 flags)
 {
     if (flags & GSS_C_DELEG_FLAG) {
@@ -106,6 +118,11 @@ static void log_ctx_flags(OM_uint32 flags)
     }
 }
 
+/*!
+ * @brief Log the service principal of an accepted GSS context at debug level
+ *
+ * @param[in] context  accepted context
+ */
 static void log_service_name(gss_ctx_id_t context)
 {
     OM_uint32 major_status = 0, minor_status = 0;
@@ -143,6 +160,18 @@ static void log_service_name(gss_ctx_id_t context)
     gss_release_name(&minor_status, &service_name);
 }
 
+/*!
+ * @brief Write the user part of the client principal into the username buffer
+ * of afpd
+ *
+ * The call cuts the principal at its first @ and its first /, so neither the
+ * realm nor an instance reaches the local name.
+ *
+ * @param[out] username     receives the user name
+ * @param[in]  ulen         size of username
+ * @param[in]  client_name  client principal of the context
+ * @returns 0, or 1 when the name does not display or does not fit
+ */
 static int get_client_username(char *username,
                                int ulen,
                                gss_name_t *client_name)
@@ -203,7 +232,19 @@ static int get_client_username(char *username,
     return ret;
 }
 
-/*! wrap afpd's sessionkey */
+/*!
+ * @brief Encrypt the sessionkey of afpd with gss_wrap into the cryptedkey field
+ * of the session info
+ *
+ * Mac OS X 10.3 clients fetch the result with FPGetSessionToken type 8,
+ * kGetKerberosSessionKey. The call asks gss_wrap for confidentiality and
+ * integrity.
+ *
+ * @param[in]     context  established GSS context
+ * @param[in,out] sinfo    session info with the sessionkey, receives the
+ *                         cryptedkey
+ * @returns 0, or 1 when gss_wrap or malloc fails
+ */
 static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
 {
     OM_uint32 major_status = 0, minor_status = 0;
@@ -249,6 +290,19 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
     return ret;
 }
 
+/*!
+ * @brief Accept the GSS context that the ticket of the client starts, in one
+ * step
+ *
+ * The call uses the default acceptor credential and needs GSS_S_COMPLETE, so
+ * a mechanism that asks for another round fails.
+ *
+ * @param[in,out] context             receives the context
+ * @param[in]     ticket_buffer       ticket from the request
+ * @param[out]    client_name         receives the client principal
+ * @param[out]    authenticator_buff  receives the token for the client
+ * @returns 0, or 1 when the context does not complete
+ */
 static int accept_sec_context(gss_ctx_id_t *context,
                               gss_buffer_desc *ticket_buffer,
                               gss_name_t *client_name,
@@ -287,7 +341,16 @@ static int accept_sec_context(gss_ctx_id_t *context,
     return 0;
 }
 
-/* Encode the authenticator only if the entire reply fits. */
+/*!
+ * @brief Encode the authenticator with its 2-byte length, when the reply fits
+ * in rbuf
+ *
+ * @param[out] rbuf           reply block
+ * @param[in]  rbufsize       capacity of rbuf
+ * @param[out] rbuflen        reply length on return, 0 on failure
+ * @param[in]  authenticator  token for the client
+ * @returns 0, or 1 when the authenticator does not fit
+ */
 static int build_gss_reply(char *rbuf, size_t rbufsize, size_t *rbuflen,
                            const gss_buffer_desc *authenticator)
 {
@@ -313,6 +376,21 @@ static int build_gss_reply(char *rbuf, size_t rbufsize, size_t *rbuflen,
     return 0;
 }
 
+/*!
+ * @brief Accept the ticket of the client, take its user name, encrypt the
+ * sessionkey, and build the reply
+ *
+ * @param[in]     obj       session object, unused
+ * @param[in]     ibuf      ticket
+ * @param[in]     ibuflen   length of the ticket
+ * @param[out]    rbuf      reply block
+ * @param[in]     rbufsize  capacity of rbuf
+ * @param[out]    rbuflen   reply length on return
+ * @param[out]    username  receives the user part of the client principal
+ * @param[in]     ulen      size of username
+ * @param[in,out] sinfo     session info, receives the cryptedkey
+ * @returns 0, or nonzero when a step fails
+ */
 static int do_gss_auth(void *obj _U_,
                        char *ibuf, size_t ibuflen,
                        char *rbuf, size_t rbufsize, size_t *rbuflen,
@@ -365,10 +443,19 @@ cleanup_client_name:
 
 /* -------------------------- */
 
-/*
- * For the gss uam, this function only needs to return a two-byte
- * login-session id. None of the data provided by the client up to this
- * point is trustworthy as we'll have a signed ticket to parse in logincont.
+/*!
+ * @brief Answer a Kerberos login with the 2-byte login ID 1
+ *
+ * Nothing that the client sent so far is trustworthy, since the signed ticket
+ * comes with FPLoginCont. Apple returns 1 as well.
+ *
+ * @param[in]  obj      session object, unused
+ * @param[out] uam_pwd  unused
+ * @param[in]  ibuf     UAM data of the request, unused
+ * @param[in]  ibuflen  length of ibuf, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT
  */
 static int gss_login(void *obj _U_,
                      struct passwd **uam_pwd _U_,
@@ -385,6 +472,26 @@ static int gss_login(void *obj _U_,
     return AFPERR_AUTHCONT;
 }
 
+/*!
+ * @brief Authenticate a Kerberos login with the ticket of FPLoginCont
+ *
+ * The request holds a byte that is always 0, the login ID, and a
+ * NUL-terminated user name that the call ignores. Padding to an even length
+ * and the ticket with its 2-byte length follow. The user of the session
+ * comes from the client principal, without its realm and instance, through
+ * uam_getname. That user has to pass uam_checkuser. The reply holds the
+ * authenticator for the client.
+ *
+ * @param[in]     obj      session object
+ * @param[out]    uam_pwd  receives the user entry after a successful login
+ * @param[in]     ibuf     UAM data of the request
+ * @param[in]     ibuflen  length of ibuf
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_PARAM for a malformed request, AFPERR_NOTAUTH for an
+ *          unknown or refused user, or AFPERR_MISC when the ticket fails
+ */
 static int gss_logincont(void *obj,
                          struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
@@ -524,11 +631,25 @@ static int gss_logincont(void *obj,
     return AFP_OK;
 }
 
-/* logout */
+/*!
+ * @brief End a Kerberos login, which keeps no state
+ */
 static void gss_logout(void)
 {
 }
 
+/*!
+ * @brief Answer a Kerberos FPLoginExt as gss_login does, ignoring the user name
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request, unused
+ * @param[out] uam_pwd  unused
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT
+ */
 static int gss_login_ext(void *obj,
                          char *uname _U_,
                          struct passwd **uam_pwd,
@@ -538,6 +659,17 @@ static int gss_login_ext(void *obj,
     return gss_login(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
+/*!
+ * @brief Store the service principal for the directory names of FPGetSrvrInfo
+ *
+ * The buffer holds 1 principal: a count byte of 1, a length byte, and the
+ * name without a NUL.
+ *
+ * @param[in,out] obj        AFP object, receives k5principal and
+ *                           k5principal_buflen
+ * @param[in]     principal  principal name, up to 255 bytes
+ * @returns 0, or -1 for a longer name or a failed malloc
+ */
 static int set_principal(AFPObj *obj, char *principal)
 {
     size_t len = strlen(principal);
@@ -563,6 +695,18 @@ static int set_principal(AFPObj *obj, char *principal)
     return 0;
 }
 
+/*!
+ * @brief Pick the service principal of the Kerberos UAM and store it in the AFP
+ * options
+ *
+ * With Kerberos and all 3 of k5 service, fqdn, and k5 realm in afp.conf, the
+ * principal comes from them. It has to be in the default keytab. Without them
+ * the first keytab entry serves. A build without the Kerberos library composes
+ * `service/fqdn@realm` from the 3 options, which it then needs.
+ *
+ * @param[in,out] obj  AFP object with the options
+ * @returns 0, or -1 without a usable principal
+ */
 static int gss_create_principal(AFPObj *obj)
 {
     int rv = -1;
@@ -683,6 +827,13 @@ exit:
     return rv;
 }
 
+/*!
+ * @brief Pick the service principal and register the Client Krb v2 login
+ *
+ * @param[in] handle  AFP object
+ * @param[in] path    path of the module
+ * @returns 0, or -1 without a principal or when the registration fails
+ */
 static int uam_setup(void *handle, const char *path)
 {
     AFPObj *obj = (AFPObj *)handle;
@@ -695,6 +846,9 @@ static int uam_setup(void *handle, const char *path)
                         gss_login, gss_logincont, gss_logout, gss_login_ext);
 }
 
+/*!
+ * @brief Unregister the Client Krb v2 login
+ */
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN_EXT, "Client Krb v2");

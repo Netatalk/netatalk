@@ -38,9 +38,14 @@
 #ifdef HAVE_NFSV4_ACLS
 
 /*!
- * @brief Get ACL.
- * @note Allocates storage as needed. Caller must free.
- * @returns no of ACEs or -1 on error.
+ * @brief Read the NFSv4 ACL of a file or directory
+ *
+ * Symlinks and special files report 0 entries. The caller frees the returned
+ * array.
+ *
+ * @param[in]  name     path of the object
+ * @param[out] retAces  receives a newly allocated array of the entries, or NULL
+ * @returns the number of entries, or -1 on error
  */
 int get_nfsv4_acl(const char *name, ace_t **retAces)
 {
@@ -101,7 +106,13 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
 }
 
 /*!
- * Concatenate ACEs
+ * @brief Join two ACE arrays into a newly allocated array
+ *
+ * @param[in] aces1      first array
+ * @param[in] ace1count  number of entries in aces1
+ * @param[in] aces2      second array, appended after aces1
+ * @param[in] ace2count  number of entries in aces2
+ * @returns the joined array, or NULL when malloc fails
  */
 ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 {
@@ -133,8 +144,13 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 }
 
 /*!
- * @brief Remove any trivial ACE "in-place".
- * @returns no of non-trivial ACEs
+ * @brief Drop the owner@, group@, and everyone@ entries from an ACE array
+ *
+ * The call frees the old array and stores a new one in saces.
+ *
+ * @param[in,out] saces      ACE array, replaced by the remaining entries
+ * @param[in]     sacecount  number of entries
+ * @returns the number of remaining entries, or -1 when malloc fails
  */
 int strip_trivial_aces(ace_t **saces, int sacecount)
 {
@@ -180,8 +196,13 @@ int strip_trivial_aces(ace_t **saces, int sacecount)
 }
 
 /*!
- * @brief Remove non-trivial ACEs "in-place".
- * @returns no of trivial ACEs.
+ * @brief Keep only the owner@, group@, and everyone@ entries of an ACE array
+ *
+ * The call frees the old array and stores a new one in saces.
+ *
+ * @param[in,out] saces      ACE array, replaced by the remaining entries
+ * @param[in]     sacecount  number of entries
+ * @returns the number of remaining entries, or -1 when malloc fails
  */
 int strip_nontrivial_aces(ace_t **saces, int sacecount)
 {
@@ -225,19 +246,23 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
 }
 
 /*!
- * @brief Change mode of file preserving existing explicit ACEs
+ * @brief Change the mode of a file and keep its explicit NFSv4 ACEs
  *
- * nfsv4_chmod
- * 1. reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on e.g. UFS fs
- * 2. removes all trivial ACEs from the ACL by calling strip_trivial_aces(), possibly
- *    leaving 0 ACEs in the ACL if there were only trivial ACEs as mapped from the mode
- * 3. calls chmod() with mode, we're done if step (1) returned 0 for noaces
- * 4. reads the changed ACL (acl2) which
- *    a. might still contain explicit ACEs (up to onnv132)
- *    b. will have any explicit ACE removed (starting with onnv145/Openindiana)
- * 5. strip any explicit ACE from acl2 using strip_nontrivial_aces()
- * 6. merge acl2 and acl2
- * 7. set the ACL merged ACL on the object
+ * The call works in 7 steps:
+ *
+ * 1. Read the ACL. Without entries, a plain chmod finishes the call.
+ * 2. Drop the owner@, group@, and everyone@ entries, which the mode replaces.
+ * 3. Run chmod with the new mode.
+ * 4. Read the ACL again, as root after EACCES. Solaris up to onnv132 keeps the
+ *    explicit entries here, and onnv145 and OpenIndiana drop them.
+ * 5. Keep only the owner@, group@, and everyone@ entries of the new ACL.
+ * 6. Join the explicit entries of the old ACL with the mode entries of the new
+ *    one.
+ * 7. Set the joined ACL, as root after EACCES.
+ *
+ * @param[in] name  path of the object
+ * @param[in] mode  new mode
+ * @returns 0, or -1 with errno set
  */
 int nfsv4_chmod(char *name, mode_t mode)
 {
@@ -326,17 +351,18 @@ exit:
 #define SEARCH_MASK 0x02
 
 /*!
- * @brief POSIX ACL chmod
+ * @brief Change the mode of a file and keep its POSIX ACL group entry in step
  *
- * This is a workaround for chmod() on filestystems supporting Posix 1003.1e draft 17
- * compliant ACLs. For objects with extended ACLs, e.g. objects with an ACL_MASK entry,
- * chmod() manipulates ACL_MASK instead of ACL_GROUP_OBJ. As OS X isn't aware of
- * this behavior calling FPSetFileDirParms may lead to unpredictable results. For
- * more information see section 23.1.2 of Posix 1003.1e draft 17.
+ * On an object with an extended ACL, chmod changes ACL_MASK instead of
+ * ACL_GROUP_OBJ, as POSIX 1003.1e draft 17 section 23.1.2 defines. macOS
+ * clients do not expect that. After chmod the call therefore sets
+ * ACL_GROUP_OBJ from the group bits of mode and recalculates ACL_MASK. BSD
+ * systems drop the bits above 0777 first, because ZFS on FreeBSD refuses the
+ * setgid bit there.
  *
- * @note accepts the same arguments as chmod()
- *
- * @returns 0 in case of success or -1 in case something went wrong.
+ * @param[in] name  path of the object
+ * @param[in] mode  new mode
+ * @returns 0, or -1 on error
  */
 int posix_chmod(const char *name, mode_t mode)
 {
@@ -461,10 +487,14 @@ done:
 }
 
 /*!
- * @brief POSIX ACL fchmod
+ * @brief Change the mode of an open file and keep its POSIX ACL group entry in
+ * step
  *
- * @note accepts the same arguments as fchmod()
- * @returns 0 in case of success or -1 in case something went wrong.
+ * The call works like posix_chmod on a descriptor, without the BSD bit mask.
+ *
+ * @param[in] fd    descriptor of the object
+ * @param[in] mode  new mode
+ * @returns 0, or -1 on error
  */
 int posix_fchmod(int fd, mode_t mode)
 {

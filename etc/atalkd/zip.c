@@ -40,6 +40,17 @@
 
 struct ziptab	*ziptab = NULL, *ziplast = NULL;
 
+/*!
+ * @brief Check the zones a seed interface learned from the network against its
+ * configured zones
+ *
+ * Each configured zone has to be in the zone list of the route, and the two
+ * lists have to be the same length. Interfaces without -seed always pass.
+ *
+ * @param[in] rtmp   route of the interface with the learned zones
+ * @param[in] iface  interface with the configured zones
+ * @returns 0 when the zones agree, or -1 after a log line for a mismatch
+ */
 static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 {
     struct list		*l;
@@ -82,6 +93,38 @@ static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 }
 
 
+/*!
+ * @brief Process a ZIP packet, or a ZIP request over ATP, from the ZIP port of
+ * an interface
+ *
+ * ZIP packets carry these ops:
+ * - ZIPOP_QUERY answers with the zones of each requested net that has a
+ *   route in use. A zone list that does not fit in one packet goes out in
+ *   ZIPOP_EREPLY packets.
+ * - ZIPOP_REPLY and ZIPOP_EREPLY from a known gateway add the zones to the
+ *   route with a pending query. The zones of the interface route go through
+ *   zonecheck, and a mismatch on a seed interface stops atalkd.
+ * - ZIPOP_GNI, on a configured router interface with zones, answers with the
+ *   net range and the zone multicast address. A requested zone that is not
+ *   valid gets the default zone in the reply.
+ * - ZIPOP_GNIREPLY completes the configuration of a booting phase 2
+ *   interface. The interface takes the default zone and the net range, and a
+ *   seed interface stops atalkd on a mismatch.
+ * - ZIPOP_NOTIFY only logs.
+ *
+ * Over ATP the call answers GetMyZone, GetZoneList, and GetLocalZones with
+ * the zones that fit in one response. A GetMyZone or GetLocalZones request
+ * from outside the net range of the interface gets no answer, and requests on
+ * loopback take the first interface.
+ *
+ * @param[in]     ap    ZIP port of the receiving interface
+ * @param[in,out] from  sender, which a ZIPOP_GNI from outside the net range
+ *                      turns into net 0 and ATADDR_BCAST
+ * @param[in]     data  packet from the DDP type byte on
+ * @param[in]     len   length of data
+ * @returns 0, 1 for a malformed or unexpected packet, or -1 for a failure that
+ *          stops atalkd
+ */
 int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 {
     struct ziphdr	zh;
@@ -971,6 +1014,17 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     return 0;
 }
 
+/*!
+ * @brief Send a ZIP GetNetInfo for the net range and default zone of an
+ * interface
+ *
+ * The request leaves the ZIP port of the interface for net 0 and node
+ * ATADDR_BCAST. Its net range is 0-0 and its zone name empty, so the reply
+ * carries the default zone.
+ *
+ * @param[in] iface  interface to ask on
+ * @returns 0, or -1 without a ZIP port or when the send fails
+ */
 int zip_getnetinfo(struct interface *iface)
 {
     struct atport	*ap;
@@ -1025,6 +1079,16 @@ int zip_getnetinfo(struct interface *iface)
     return 0;
 }
 
+/*!
+ * @brief Allocate a zone entry that holds its name in a new buffer
+ *
+ * The name keeps its length in zt_len and has no NUL terminator.
+ *
+ * @param[in] len   name length, 1 to MAX_ZONE_LENGTH
+ * @param[in] name  zone name, not NUL-terminated
+ * @returns the zone, or NULL after a failed allocation or with errno EINVAL for
+ *          a bad length or name
+ */
 struct ziptab *newzt(const int len, const char *name)
 {
     struct ziptab	*zt;
@@ -1050,9 +1114,13 @@ struct ziptab *newzt(const int len, const char *name)
 }
 
 
-/*
- * Insert at the end.  Return 1 if a mapping already exists, 0 otherwise.
- * -1 on error.
+/*!
+ * @brief Append a pointer to a list unless the list holds it already
+ *
+ * @param[in,out] head  list head
+ * @param[in]     data  pointer to store
+ * @returns 0 after an append, 1 when the list holds the pointer, or -1 when
+ *          malloc fails
  */
 static int add_list(struct list **head, void *data)
 {
@@ -1087,6 +1155,21 @@ static int add_list(struct list **head, void *data)
     return 0;
 }
 
+/*!
+ * @brief Map a route and a zone to each other, adding the zone to the zone
+ * table when new
+ *
+ * The zone name matches without regard to case, through the Mac Roman upper
+ * case map. The route joins the route list of the zone, and the zone joins
+ * the zone list of the route. A mapping that exists on one side only means
+ * the tables disagree, and the call fails.
+ *
+ * @param[in,out] rt    route
+ * @param[in]     len   zone name length, 1 to MAX_ZONE_LENGTH
+ * @param[in]     zone  zone name, not NUL-terminated
+ * @returns 0, also when both mappings exist, or -1 for a bad name, a failed
+ *          allocation, or a one-sided mapping
+ */
 int addzone(struct rtmptab *rt, int len, char *zone)
 {
     struct ziptab	*zt;

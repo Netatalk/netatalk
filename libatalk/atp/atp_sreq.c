@@ -47,11 +47,24 @@
 #endif /* EBUG */
 
 /*!
- * @brief Send ATP transaction service request
- * @param ah         open atp handle
- * @param atpb       parameter block
- * @param respcount  buffers available for response
- * @param flags      ATP_XO, ATP_TREL
+ * @brief Send an ATP request and set up the wait for its response
+ *
+ * The request carries the next transaction ID of the endpoint and a bitmap
+ * for respcount response packets. In atpb, atp_saddr names the destination,
+ * and the request data has 4 to ATP_MAXDATA bytes. The atp_sreqto timeout in
+ * seconds and the atp_sreqtries count, or ATP_TRIES_INFINITE, set the
+ * retries, and atp_bitmap receives the bitmap.
+ *
+ * With a timeout, the endpoint keeps the request for atp_rsel to send again,
+ * with one try used up. Without one, the call sets up no wait for a response.
+ *
+ * @param[in]     ah         ATP endpoint
+ * @param[in,out] atpb       parameter block
+ * @param[in]     respcount  response packets to expect, 0 to 8
+ * @param[in]     flags      ATP_XO for an exactly once request, with an
+ *                           ATP_TREL release time code
+ * @returns 0, or -1 with EINVAL for a bad parameter, or for a failed allocation
+ *          or send
  */
 int atp_sreq(ATP ah, struct atp_block *atpb, int respcount, uint8_t flags)
 {

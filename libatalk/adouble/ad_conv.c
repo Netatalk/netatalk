@@ -53,6 +53,21 @@ static char emptydirad[32] = {0, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0
                              };
 
+/*!
+ * @brief Convert the metadata of a version 2 AppleDouble file to the EA form
+ *
+ * Regular files and directories only. ad_conv_v22ea_hf opens and locks the
+ * version 2 file and reads its header. A header with nothing beyond the
+ * defaults needs no EA. The defaults are no comment, an empty FinderInfo, dates
+ * equal to the file's mtime, and no AFP file info. Otherwise it creates the
+ * metadata EA, on macOS also the native FinderInfo EA, and transfers the
+ * header.
+ *
+ * @param[in] path  file or directory to convert
+ * @param[in] sp    stat of path
+ * @param[in] vol   volume the file belongs to
+ * @returns 0 on success or when nothing needs converting, -1 on error
+ */
 static int ad_conv_v22ea_hf(const char *path, const struct stat *sp,
                             const struct vol *vol)
 {
@@ -147,6 +162,19 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Convert the resource fork of a version 2 AppleDouble file to the EA
+ * form
+ *
+ * Regular files only. When the version 2 resource fork holds data,
+ * ad_conv_v22ea_rf locks it and creates the EA resource fork. It transfers the
+ * data and gives the new fork the mode and ownership of the data file.
+ *
+ * @param[in] path  file to convert
+ * @param[in] sp    stat of path
+ * @param[in] vol   volume the file belongs to
+ * @returns 0 on success or when nothing needs converting, -1 on error
+ */
 static int ad_conv_v22ea_rf(const char *path, const struct stat *sp,
                             const struct vol *vol)
 {
@@ -204,6 +232,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Convert a file's version 2 AppleDouble data to the EA form and delete
+ * the version 2 file
+ *
+ * Runs as root. ad_conv_v22ea deletes the version 2 file even when a conversion
+ * failed. A missing file counts as success.
+ *
+ * @param[in] path  file or directory to convert
+ * @param[in] sp    stat of path
+ * @param[in] vol   volume the file belongs to
+ * @returns 0, or -1 when the AppleDouble path cannot be built
+ */
 static int ad_conv_v22ea(const char *path, const struct stat *sp,
                          const struct vol *vol)
 {
@@ -237,7 +277,18 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Remove hexencoded dots and slashes (":2e" and ":2f")
+ * @brief Rename a path whose name carries CAP hex escapes for dot and slash to
+ * the decoded name
+ *
+ * ad_conv_dehex renames only names with ":2e" or ":2f", and for a regular file
+ * renames the AppleDouble file first, both as root.
+ *
+ * @param[in]  path      path to check
+ * @param[in]  sp        stat of path
+ * @param[in]  vol       volume the file belongs to
+ * @param[out] newpathp  receives the decoded path in a static buffer, or NULL
+ *                       when nothing changed
+ * @returns 0, or -1 when memory or the AppleDouble path cannot be obtained
  */
 static int ad_conv_dehex(const char *path, const struct stat *sp,
                          const struct vol *vol, const char **newpathp)

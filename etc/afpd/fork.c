@@ -42,13 +42,16 @@
 #include "volume.h"
 
 /*!
- * @brief Materialize a virtual Icon fork into a real file on disk
+ * @brief Turn the virtual Icon file into a real file before a client changes it
  *
- * Creates the physical Icon file, seeds its resource fork with the
- * virtual icon data, sets FinderInfo, and re-opens the fork through
- * ad_open so the ofork has real file descriptors for writing.
+ * The write path and FPSetForkParms call it. It creates the Icon file in the
+ * volume root and seeds its resource fork with the virtual icon data. The
+ * Finder info marks the file invisible. The call then reopens the fork through
+ * ad_open, so the open fork holds real descriptors, and drops its virtual
+ * state.
  *
- * @return AFP_OK on success, or an AFP error code
+ * @param[in,out] ofork  open fork on the virtual Icon file
+ * @returns AFP_OK, or AFPERR_MISC when a create or open failed
  */
 static int materialize_virtual_icon(struct ofork *ofork)
 {
@@ -151,6 +154,23 @@ static int materialize_virtual_icon(struct ofork *ofork)
     return AFP_OK;
 }
 
+/*!
+ * @brief Pack the file parameters of an open fork
+ *
+ * Length bits must match the fork. A data length request on a resource fork
+ * fails with AFPERR_BITMAP, and a resource length request on a data fork
+ * fails too. Virtual forks report synthesized parameters. The stat comes from
+ * the fork descriptor when there is one, so a fork that outlived its path
+ * still reports the held object.
+ *
+ * @param[in]  obj     session object
+ * @param[in]  ofork   open fork
+ * @param[in]  bitmap  AFP file bitmap, FILPBIT_* bits
+ * @param[out] buf     reply buffer receiving the parameters
+ * @param[out] buflen  receives the bytes written
+ * @returns AFP_OK, AFPERR_BITMAP, AFPERR_NOOBJ, AFPERR_MISC, or the result of
+ *          getmetadata
+ */
 static int getforkparams(const AFPObj *obj, struct ofork *ofork,
                          uint16_t bitmap, char *buf, size_t *buflen)
 {
@@ -243,6 +263,16 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork,
     return getmetadata(obj, vol, bitmap, &path, dir, buf, buflen, adp);
 }
 
+/*!
+ * @brief Read a fork offset or length from a request
+ *
+ * A 64-bit field takes 8 bytes in network order. A 32-bit field takes 4
+ * bytes, and the call sign-extends it.
+ *
+ * @param[in,out] ibuf  request cursor, advanced past the field
+ * @param[in]     is64  nonzero for the 64-bit field of the Ext commands
+ * @returns the value
+ */
 static off_t get_off_t(char **ibuf, int is64)
 {
     uint32_t             temp;
@@ -263,6 +293,15 @@ static off_t get_off_t(char **ibuf, int is64)
     return ret;
 }
 
+/*!
+ * @brief Write a fork offset or length into a reply in network order
+ *
+ * @param[in]  offset  value to write
+ * @param[out] rbuf    reply position
+ * @param[in]  is64    nonzero for the 8-byte field of the Ext commands, 0 for 4
+ *                     bytes
+ * @returns the number of bytes written, 8 for the 64-bit field and 4 otherwise
+ */
 static int set_off_t(off_t offset, char *rbuf, int is64)
 {
     uint32_t  temp;
@@ -283,6 +322,17 @@ static int set_off_t(off_t offset, char *rbuf, int is64)
     return ret;
 }
 
+/*!
+ * @brief Whether an offset or length is negative in the field width of the
+ * request
+ *
+ * With a 64-bit off_t, a 32-bit request also counts a value with bit 31 set
+ * as negative.
+ *
+ * @param[in] is64  nonzero for the 64-bit field of the Ext commands
+ * @param[in] val   offset or length
+ * @returns 1 when the value is negative, 0 otherwise
+ */
 static int is_neg(int is64, off_t val)
 {
     if (val < 0 || (sizeof(off_t) == 8 && !is64 && (val & 0x80000000U))) {
@@ -292,6 +342,15 @@ static int is_neg(int is64, off_t val)
     return 0;
 }
 
+/*!
+ * @brief Whether offset plus reqcount is negative in the field width of the
+ * request
+ *
+ * @param[in] is64      nonzero for the 64-bit field of the Ext commands
+ * @param[in] offset    start offset
+ * @param[in] reqcount  byte count
+ * @returns 1 when the sum is negative, 0 otherwise
+ */
 static int sum_neg(int is64, off_t offset, off_t reqcount)
 {
     if (is_neg(is64, offset + reqcount)) {
@@ -301,16 +360,41 @@ static int sum_neg(int is64, off_t offset, off_t reqcount)
     return 0;
 }
 
-/* f_deny reservation bits for an FPOpenFork access mode.  Each deny bit is set
- * independently and ORed; the parenthesised ternaries stop `|` from swallowing the
- * left side as a condition.  Parameterised on the constants so
- * utest_fork_setmode_fdeny can exercise it without <sys/fcntl.h> / fshare_t. */
+/*!
+ * @brief F_SHARE deny bits for an FPOpenFork access mode
+ *
+ * Each deny bit maps separately, and the results combine with a bitwise or.
+ * The constants come in as parameters, so a unit test can exercise the
+ * mapping without fshare_t.
+ *
+ * @param[in] access   OPENACC_* access mode
+ * @param[in] f_rddny  value for a read deny, F_RDDNY where fshare_t exists
+ * @param[in] f_wrdny  value for a write deny, F_WRDNY where fshare_t exists
+ * @param[in] f_nodny  value for no deny, F_NODNY where fshare_t exists
+ * @returns the combined f_deny value
+ */
 int fork_setmode_deny(int access, int f_rddny, int f_wrdny, int f_nodny)
 {
     return (access & OPENACC_DRD ? f_rddny : f_nodny)
            | (access & OPENACC_DWR ? f_wrdny : f_nodny);
 }
 
+/*!
+ * @brief Apply the access and deny modes of an FPOpenFork through band locks
+ *
+ * Each requested access fails with EACCES when another fork denies it, and
+ * each requested deny fails when another fork already holds that access. The
+ * call then takes a band lock for every access and deny bit, or the OPEN_NONE
+ * band lock when the mode names none. With HAVE_FSHARE_T an F_SHARE
+ * reservation adds kernel enforcement.
+ *
+ * @param[in]     obj       session object, unused
+ * @param[in,out] adp       AppleDouble of the fork
+ * @param[in]     eid       ADEID_DFORK or ADEID_RFORK
+ * @param[in]     access    OPENACC_* access and deny bits
+ * @param[in]     ofrefnum  reference number of the opening fork
+ * @returns 0, or -1 with errno set, EACCES for a mode conflict
+ */
 static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
                         int access, int ofrefnum)
 {
@@ -440,7 +524,31 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
     return 0;
 }
 
-/* ----------------------- */
+/*!
+ * @brief FPOpenFork: open the data or resource fork of a file with access and
+ * deny modes
+ *
+ * OPENFORK_RSCS, bit 7 of the fork byte, selects the resource fork. A write
+ * open on a read-only volume fails with AFPERR_VLOCK, and a directory with
+ * AFPERR_BADTYPE. The virtual Icon file of the volume root opens without a
+ * descriptor. A real fork opens through ad_open with share modes, and the
+ * metadata opens too, created for a write open.
+ *
+ * The write-inhibit attribute refuses a write open with AFPERR_OLOCK, and a
+ * deny mode conflict fails with AFPERR_DENYCONF. The reply carries the
+ * bitmap, the fork reference number, and the fork parameters. Running out of
+ * descriptors fails with AFPERR_NFILE.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_DENYCONF, AFPERR_OLOCK, AFPERR_ACCESS, AFPERR_LOCK,
+ *          AFPERR_NFILE, AFPERR_VLOCK, AFPERR_BADTYPE, AFPERR_NOOBJ, or
+ *          AFPERR_PARAM
+ */
 int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                  size_t *rbuflen)
 {
@@ -883,10 +991,15 @@ openfork_err:
 }
 
 /*!
- * @brief Invalidate cached rfork data for a file identified by its open fork.
+ * @brief Invalidate the cached resource fork data of the file behind an open
+ * fork
  *
- * Looks up the file's dircache entry via parent DID + name, and invalidates
- * the AD cache (Tier 1 + Tier 2). Used after rfork writes and truncations.
+ * The dircache entry comes from the parent DID and the name of the fork.
+ * Resource fork writes and truncations call it, and it clears both tiers of
+ * the AppleDouble cache.
+ *
+ * @param[in] vol    volume of the fork
+ * @param[in] ofork  open fork whose file changed
  */
 static void rfork_invalidate_for_ofork(const struct vol *vol,
                                        struct ofork *ofork)
@@ -946,6 +1059,23 @@ static int fork_error(const struct ofork *ofork, const char *call)
     return err;
 }
 
+/*!
+ * @brief FPSetForkParms: change the length of an open fork
+ *
+ * The bitmap must name exactly the length of the open fork type, and the
+ * 64-bit form needs AFP 3.0. A negative length fails. Shrinking takes a
+ * temporary write lock on the cut range, so a conflicting byte lock fails the
+ * call with AFPERR_LOCK. The virtual Icon file becomes a real file first. A
+ * resource fork change invalidates the cached resource fork data.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_BITMAP, AFPERR_LOCK, AFPERR_ACCESS, AFPERR_VLOCK,
+ *          AFPERR_PARAM, or the AFPERR_* code of fork_error
+ */
 int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
                       size_t *rbuflen)
 {
@@ -1134,7 +1264,24 @@ afp_setfork_err:
 #define UNLOCKBIT(a) ((a) & 0x01)
 
 
-/* ---------------------- */
+/*!
+ * @brief Shared body of FPByteRangeLock and FPByteRangeLockExt
+ *
+ * The flag byte chooses between taking and releasing the lock, and whether the
+ * offset counts from the end of the fork. A length of -1 extends the range to
+ * BYTELOCK_MAX, below the share mode band. Locks on virtual forks succeed
+ * without effect. The reply carries the start offset of the range.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, receives the range start
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @param[in]     is64     nonzero for FPByteRangeLockExt
+ * @returns AFP_OK, AFPERR_LOCK, AFPERR_NORANGE, AFPERR_NLOCK, AFPERR_RANGEOVR,
+ *          or AFPERR_PARAM
+ */
 static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen, int is64)
 {
@@ -1225,14 +1372,36 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFP_OK;
 }
 
-/* --------------------------- */
+/*!
+ * @brief FPByteRangeLock: take or release a byte range lock on an open fork
+ * with 32-bit fields
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block, receives the range start
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of byte_lock
+ */
 int afp_bytelock(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                  size_t *rbuflen)
 {
     return byte_lock(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
-/* --------------------------- */
+/*!
+ * @brief FPByteRangeLockExt: take or release a byte range lock on an open fork
+ * with 64-bit fields
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block, receives the range start
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of byte_lock
+ */
 int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                      size_t *rbuflen)
 {
@@ -1371,6 +1540,26 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
     return 0;
 }
 
+/*!
+ * @brief Shared body of FPRead and FPReadExt
+ *
+ * The call reads reqcount bytes from offset, clamped at the fork size with
+ * AFPERR_EOF. It ignores the newline mask and character of the request.
+ * Strict locking takes a temporary read lock on the range. Virtual forks
+ * serve their in-memory data, and resource fork reads can come from the
+ * resource fork cache. Data goes out through sendfile when available,
+ * otherwise in dsi_read chunks. A failure in the middle of the reply ends the
+ * session.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @param[in]     is64     nonzero for FPReadExt
+ * @returns AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, or AFPERR_PARAM
+ */
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                      char *rbuf _U_, size_t *rbuflen, int is64)
 {
@@ -1726,21 +1915,52 @@ afp_read_err:
     return (int)err;
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPRead: read from an open fork with 32-bit offset and count
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of read_fork
+ */
 int afp_read(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
              size_t *rbuflen)
 {
     return read_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPReadExt: read from an open fork with 64-bit offset and count
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of read_fork
+ */
 int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                  size_t *rbuflen)
 {
     return read_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPFlush: flush every open fork of a volume to stable storage
+ *
+ * Failures of single forks only log, and the reply still reports success.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, or AFPERR_PARAM for an unknown volume
+ */
 int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
               size_t *rbuflen)
 {
@@ -1758,6 +1978,18 @@ int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPFlushFork: flush an open fork to stable storage
+ *
+ * A flush failure only logs, and the reply still reports success.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, or AFPERR_PARAM for an unknown fork reference
+ */
 int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                   char *rbuf _U_, size_t *rbuflen)
 {
@@ -1787,11 +2019,20 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 }
 
 /*!
-  @bug
-  There is a lot to tell about fsync, fdatasync, F_FULLFSYNC.
-  fsync(2) on OSX is implemented differently than on other platforms.
-  @sa http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf
-*/
+ * @brief FPSyncFork: flush an open fork to stable storage
+ *
+ * @bug fsync, fdatasync, and F_FULLFSYNC differ in what they guarantee, and the
+ * macOS fsync behaves unlike the fsync of other platforms.
+ * @sa http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_PARAM for an unknown fork reference, or AFPERR_MISC
+ *          when the flush fails
+ */
 int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
 {
@@ -1822,7 +2063,17 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFP_OK;
 }
 
-/* this is very similar to closefork */
+/*!
+ * @brief Flush the descriptors of an open fork to stable storage
+ *
+ * The data fork gets an fsync. For a resource fork the call rereads the
+ * resource fork length and stamps the modification date of a dirty fork. It
+ * then writes the header and syncs the metadata file. Virtual forks need
+ * nothing.
+ *
+ * @param[in,out] ofork  open fork
+ * @returns 0, or -1 when an fsync or the header write failed
+ */
 int flushfork(struct ofork *ofork)
 {
     struct timeval tv;
@@ -1869,6 +2120,20 @@ int flushfork(struct ofork *ofork)
     return err;
 }
 
+/*!
+ * @brief FPCloseFork: close an open fork
+ *
+ * An unknown reference number logs a warning, because a fork it targeted
+ * would stay open for the rest of the session.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_PARAM for an unknown fork reference, or AFPERR_MISC
+ *          when of_closefork failed
+ */
 int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                   size_t *rbuflen)
 {
@@ -1904,10 +2169,17 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
 
 /*!
- * @brief Write rbuflen bytes into the fork at *offset, advanced past every
- *        byte written, also when the write fails
+ * @brief Write rbuflen bytes into the fork at offset
  *
- * @returns AFP_OK, or the AFPERR_* reply for the failed write
+ * The offset advances past every byte written, also when a later write
+ * fails. A short write repeats, so the retry reports why pwrite stopped.
+ *
+ * @param[in,out] ofork    open fork
+ * @param[in]     eid      ADEID_DFORK or ADEID_RFORK
+ * @param[in,out] offset   fork offset, advanced by the bytes written
+ * @param[in]     rbuf     bytes to write
+ * @param[in]     rbuflen  bytes in rbuf
+ * @returns AFP_OK, or the AFPERR_* code of fork_error for the failed write
  */
 static int write_file(struct ofork *ofork, int eid, off_t *offset,
                       char *rbuf, size_t rbuflen)
@@ -1936,7 +2208,18 @@ static int write_file(struct ofork *ofork, int eid, off_t *offset,
     return AFP_OK;
 }
 
-/*! @brief Flag a fork that a write reached */
+/*!
+ * @brief Flag a fork that a write reached
+ *
+ * A fork with open metadata turns dirty, so the next flush or close stamps
+ * its modification date. A resource fork write also invalidates the resource
+ * fork cache when dircache_rfork_budget is nonzero. AFPFORK_MODIFIED stays
+ * until the fork closes.
+ *
+ * @param[in]     obj    session object
+ * @param[in,out] ofork  open fork
+ * @param[in]     eid    ADEID_DFORK or ADEID_RFORK
+ */
 static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
 {
     if (ad_meta_fileno(ofork->of_ad) != -1) {
@@ -1952,10 +2235,26 @@ static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
 }
 
 
-/*
- * FPWrite. A failure before the payload is read leaves through
- * afp_write_err, which drains the whole request; once it is being read,
- * through afp_write_done, which drains what is left of it.
+/*!
+ * @brief Shared body of FPWrite and FPWriteExt
+ *
+ * The end flag makes offset count from the end of the fork. A virtual Icon
+ * fork becomes a real file first. A sum beyond the field width fails with
+ * AFPERR_DFULL, and strict locking takes a temporary write lock. The payload
+ * arrives through recvfile where available, otherwise in dsi_write chunks
+ * through write_file. A failure before afpd reads the payload drains the
+ * entire request, and a later failure drains the rest of it. The reply
+ * carries the offset after the last byte written.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, receives the new offset
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @param[in]     is64     nonzero for FPWriteExt
+ * @returns AFP_OK, AFPERR_ACCESS, AFPERR_PARAM, AFPERR_DFULL, AFPERR_LOCK, or
+ *          the AFPERR_* code of fork_error
  */
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                       size_t *rbuflen, int is64)
@@ -2175,15 +2474,36 @@ afp_write_err:
     return err;
 }
 
-/* ---------------------------- */
+/*!
+ * @brief FPWrite: write to an open fork with 32-bit offset and count
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block, receives the new offset
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of write_fork
+ */
 int afp_write(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
               size_t *rbuflen)
 {
     return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
-/* ----------------------------
- * FIXME need to deal with SIGXFSZ signal
+/*!
+ * @brief FPWriteExt: write to an open fork with 64-bit offset and count
+ *
+ * afpd ignores SIGXFSZ, so a write past the file size limit fails with EFBIG
+ * and replies AFPERR_DFULL.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block, receives the new offset
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of write_fork
  */
 int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                   size_t *rbuflen)
@@ -2191,7 +2511,22 @@ int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     return write_fork(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }
 
-/* ---------------------------- */
+/*!
+ * @brief FPGetForkParms: return the parameters of an open fork
+ *
+ * Open metadata gets a reread first, so the reply reflects changes of other
+ * processes. The reply carries the bitmap and the parameters of
+ * getforkparams.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_PARAM for an unknown fork reference or a failed
+ *          reread, or the error of getforkparams
+ */
 int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                       size_t *rbuflen)
 {

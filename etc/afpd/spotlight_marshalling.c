@@ -89,6 +89,15 @@ static int sl_unpack_r(DALLOC_CTX *query, const char *buf, size_t buf_len,
  * Wrapper functions for the *VAL macros with bound checking
  **************************************************************************************************/
 
+/*!
+ * @brief Write a 32-bit value in little-endian order at an offset
+ *
+ * The caller checks the bounds.
+ *
+ * @param[out] buf  buffer
+ * @param[in]  off  byte offset
+ * @param[in]  val  value in host order
+ */
 static void sl_put_le32(char *buf, off_t off, uint32_t val)
 {
     uint8_t *p = (uint8_t *)buf + off;
@@ -98,12 +107,28 @@ static void sl_put_le32(char *buf, off_t off, uint32_t val)
     p[3] = (uint8_t)(val >> 24);
 }
 
+/*!
+ * @brief Write a 64-bit value in little-endian order at an offset
+ *
+ * The caller checks the bounds.
+ *
+ * @param[out] buf  buffer
+ * @param[in]  off  byte offset
+ * @param[in]  val  value in host order
+ */
 static void sl_put_le64(char *buf, off_t off, uint64_t val)
 {
     sl_put_le32(buf, off, (uint32_t)val);
     sl_put_le32(buf, off + 4, (uint32_t)(val >> 32));
 }
 
+/*!
+ * @brief Read a little-endian 64-bit value at an offset
+ *
+ * @param[in] buf     buffer
+ * @param[in] offset  byte offset
+ * @returns the value in host order
+ */
 static uint64_t sl_get_le64(const char *buf, int offset)
 {
     const uint8_t *p = (const uint8_t *)buf + offset;
@@ -117,6 +142,13 @@ static uint64_t sl_get_le64(const char *buf, int offset)
            | ((uint64_t)p[7] << 56);
 }
 
+/*!
+ * @brief Read a big-endian 64-bit value at an offset
+ *
+ * @param[in] buf     buffer
+ * @param[in] offset  byte offset
+ * @returns the value in host order
+ */
 static uint64_t sl_get_be64(const char *buf, int offset)
 {
     const uint8_t *p = (const uint8_t *)buf + offset;
@@ -130,6 +162,18 @@ static uint64_t sl_get_be64(const char *buf, int offset)
            | ((uint64_t)p[0] << 56);
 }
 
+/*!
+ * @brief Write a 32-bit value in little-endian order after a bounds check
+ *
+ * The packed Spotlight payload, variant 432130dm, carries its numbers in
+ * little-endian order on every host.
+ *
+ * @param[out] buf     buffer
+ * @param[in]  off     byte offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @param[in]  val     value in host order
+ * @returns 0, or -1 when the value would cross maxoff
+ */
 static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
 {
     if (off < 0 || maxoff < 0 || off > maxoff - (off_t)sizeof(val)) {
@@ -147,6 +191,15 @@ static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
     return 0;
 }
 
+/*!
+ * @brief Write a 64-bit value in little-endian order after a bounds check
+ *
+ * @param[out] buf     buffer
+ * @param[in]  off     byte offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @param[in]  val     value in host order
+ * @returns 0, or -1 when the value would cross maxoff
+ */
 static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
 {
     if (off < 0 || maxoff < 0 || off > maxoff - (off_t)sizeof(val)) {
@@ -159,8 +212,17 @@ static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
 }
 
 /*!
- * @brief Returns the UTF-16 string encoding, by checking the 2-byte byte order mark.
- * @returns If there is no byte order mark, -1 is returned.
+ * @brief Read the UTF-16 encoding of a string from its byte order mark
+ *
+ * A string without a byte order mark counts as little-endian, without the
+ * SL_ENC_UTF_16 flag.
+ *
+ * @param[in] buf           packed request
+ * @param[in] offset        offset of the string
+ * @param[in] query_length  length of the string in bytes
+ * @param[in] encoding      encoding of the request, unused
+ * @returns SL_ENC_UTF_16 with the byte order of the mark, or
+ *          SL_ENC_LITTLE_ENDIAN alone
  */
 static uint spotlight_get_utf16_string_encoding(const char *buf, int offset,
                                                 int query_length, uint encoding)
@@ -189,12 +251,30 @@ static uint spotlight_get_utf16_string_encoding(const char *buf, int offset,
 
 #define SL_OFFSET_DELTA 16
 
+/*!
+ * @brief Build the 8-byte tag of a packed element
+ *
+ * @param[in] type           element type, in bits 16 to 31
+ * @param[in] size_or_count  size in 8-byte units or element count, in bits 0 to
+ *                           15
+ * @param[in] val            value, in bits 32 to 63
+ * @returns the tag
+ */
 static uint64_t sl_pack_tag(uint16_t type, uint16_t size_or_count, uint32_t val)
 {
     uint64_t tag = ((uint64_t)val << 32) | ((uint64_t)type << 16) | size_or_count;
     return tag;
 }
 
+/*!
+ * @brief Pack a double as a float element, a tag and the IEEE 754 bits
+ *
+ * @param[in]  d       value
+ * @param[out] buf     buffer
+ * @param[in]  offset  write offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_float(double d, char *buf, int offset, off_t maxoff)
 {
     EC_INIT;
@@ -214,6 +294,15 @@ EC_CLEANUP:
     return offset + 2 * sizeof(uint64_t);
 }
 
+/*!
+ * @brief Pack a 64-bit integer element, a tag and the value
+ *
+ * @param[in]  u       value
+ * @param[out] buf     buffer
+ * @param[in]  offset  write offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_uint64(uint64_t u, char *buf, int offset, off_t maxoff)
 {
     EC_INIT;
@@ -228,6 +317,15 @@ EC_CLEANUP:
     return offset + 2 * sizeof(uint64_t);
 }
 
+/*!
+ * @brief Pack a boolean element, whose value sits in its tag
+ *
+ * @param[in]  bl      value
+ * @param[out] buf     buffer
+ * @param[in]  offset  write offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_bool(sl_bool_t bl, char *buf, int offset, off_t maxoff)
 {
     EC_INIT;
@@ -242,6 +340,14 @@ EC_CLEANUP:
     return offset + sizeof(uint64_t);
 }
 
+/*!
+ * @brief Pack a nil element, a lone tag
+ *
+ * @param[out] buf     buffer
+ * @param[in]  offset  write offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_nil(char *buf, int offset, off_t maxoff)
 {
     EC_INIT;
@@ -255,6 +361,16 @@ EC_CLEANUP:
     return offset + sizeof(uint64_t);
 }
 
+/*!
+ * @brief Pack a time as a date element, a double of seconds since 2001-01-01
+ * UTC
+ *
+ * @param[in]  t       time with microseconds
+ * @param[out] buf     buffer
+ * @param[in]  offset  write offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_date(sl_time_t t, char *buf, int offset, off_t maxoff)
 {
     EC_INIT;
@@ -277,6 +393,15 @@ EC_CLEANUP:
     return offset + 2 * sizeof(uint64_t);
 }
 
+/*!
+ * @brief Pack a UUID element, a tag and the 16 bytes
+ *
+ * @param[in]  uuid    UUID
+ * @param[out] buf     buffer
+ * @param[in]  offset  write offset
+ * @param[in]  maxoff  end of the usable buffer
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_uuid(sl_uuid_t *uuid, char *buf, int offset, off_t maxoff)
 {
     EC_INIT;
@@ -296,6 +421,20 @@ EC_CLEANUP:
     return offset + sizeof(uint64_t) + 16;
 }
 
+/*!
+ * @brief Pack a CNID list as a complex element with its table of contents entry
+ *
+ * The data holds a CNIDs tag. A nonempty list adds a header with the count
+ * and the context, then the CNIDs.
+ *
+ * @param[in]     cnids    CNID list
+ * @param[out]    buf      buffer
+ * @param[in]     offset   write offset
+ * @param[in]     maxoff   end of the usable buffer
+ * @param[out]    toc_buf  table of contents
+ * @param[in,out] toc_idx  next free table of contents slot
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, off_t maxoff,
                         char *toc_buf, int *toc_idx)
 {
@@ -340,6 +479,17 @@ EC_CLEANUP:
     return offset;
 }
 
+/*!
+ * @brief Pack an array as an SQ_TYPE_COMPLEX element, then pack its members
+ *
+ * @param[in]     array    array to pack
+ * @param[out]    buf      buffer
+ * @param[in]     offset   write offset
+ * @param[in]     maxoff   end of the usable buffer
+ * @param[out]    toc_buf  table of contents
+ * @param[in,out] toc_idx  next free table of contents slot
+ * @returns the offset after the members, or -1 when one does not fit
+ */
 static int sl_pack_array(sl_array_t *array, char *buf, int offset, off_t maxoff,
                          char *toc_buf, int *toc_idx)
 {
@@ -362,6 +512,20 @@ EC_CLEANUP:
     return offset;
 }
 
+/*!
+ * @brief Pack a dictionary as an SQ_TYPE_COMPLEX element, then pack its keys
+ * and values
+ *
+ * Keys and values alternate in the dalloc array.
+ *
+ * @param[in]     dict     dictionary to pack
+ * @param[out]    buf      buffer
+ * @param[in]     offset   write offset
+ * @param[in]     maxoff   end of the usable buffer
+ * @param[out]    toc_buf  table of contents
+ * @param[in,out] toc_idx  next free table of contents slot
+ * @returns the offset after the members, or -1 when one does not fit
+ */
 static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, off_t maxoff,
                         char *toc_buf, int *toc_idx)
 {
@@ -386,6 +550,22 @@ EC_CLEANUP:
     return offset;
 }
 
+/*!
+ * @brief Pack file metadata as an SQ_TYPE_COMPLEX element that holds a nested
+ * packed payload
+ *
+ * The metadata packs as a separate complete payload behind a data tag. A
+ * payload of 40 bytes or less carries only its header, so the element then
+ * keeps no data.
+ *
+ * @param[in]     fm       file metadata to pack
+ * @param[out]    buf      buffer
+ * @param[in]     offset   write offset
+ * @param[in]     maxoff   end of the usable buffer
+ * @param[out]    toc_buf  table of contents
+ * @param[in,out] toc_idx  next free table of contents slot
+ * @returns the offset after the element, or -1 when it does not fit
+ */
 static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset,
                             off_t maxoff, char *toc_buf, int *toc_idx)
 {
@@ -425,6 +605,21 @@ EC_CLEANUP:
     return offset;
 }
 
+/*!
+ * @brief Pack a string as a complex element padded to 8-byte units
+ *
+ * The talloc size of s bounds the string, which must end in a NUL inside it.
+ * The table of contents entry records how many bytes the last unit uses.
+ *
+ * @param[in]     s        NUL-terminated talloc string
+ * @param[out]    buf      buffer
+ * @param[in]     offset   write offset
+ * @param[out]    toc_buf  table of contents
+ * @param[in,out] toc_idx  next free table of contents slot
+ * @param[in]     maxoff   end of the usable buffer
+ * @returns the offset after the element, or -1 for an unterminated string or
+ *          when it does not fit
+ */
 static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf,
                           int *toc_idx, off_t maxoff)
 {
@@ -466,6 +661,19 @@ EC_CLEANUP:
     return offset;
 }
 
+/*!
+ * @brief Pack every element of a dalloc array by its talloc type name
+ *
+ * An element of an unknown type drops out without notice.
+ *
+ * @param[in]     query    array to pack
+ * @param[out]    buf      buffer
+ * @param[in]     offset   write offset
+ * @param[in]     maxoff   end of the usable buffer
+ * @param[out]    toc_buf  table of contents
+ * @param[in,out] toc_idx  next free table of contents slot
+ * @returns the offset after the elements, or -1 when one does not fit
+ */
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, off_t maxoff,
                         char *toc_buf, int *toc_idx)
 {
@@ -526,6 +734,15 @@ EC_CLEANUP:
  * unmarshalling functions
  **************************************************************************************************/
 
+/*!
+ * @brief Tell whether a range lies inside a buffer, without overflow
+ *
+ * @param[in] buf_len  buffer length
+ * @param[in] offset   range start
+ * @param[in] length   range length
+ * @returns true when offset is not negative and the range ends inside the
+ *          buffer
+ */
 static bool sl_unpack_range_valid(size_t buf_len, int offset, size_t length)
 {
     return offset >= 0
@@ -533,6 +750,14 @@ static bool sl_unpack_range_valid(size_t buf_len, int offset, size_t length)
            && length <= buf_len - (size_t)offset;
 }
 
+/*!
+ * @brief Read a 64-bit value in the byte order of the request
+ *
+ * @param[in] buf       packed request
+ * @param[in] offset    byte offset, checked by the caller
+ * @param[in] encoding  SL_ENC_LITTLE_ENDIAN, or any other value for big-endian
+ * @returns the value in host order
+ */
 static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
 {
     if (encoding == SL_ENC_LITTLE_ENDIAN) {
@@ -542,6 +767,17 @@ static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
     }
 }
 
+/*!
+ * @brief Read a 64-bit value in the byte order of the request after a bounds
+ * check
+ *
+ * @param[in]  buf       packed request
+ * @param[in]  buf_len   length of buf
+ * @param[in]  offset    byte offset
+ * @param[in]  encoding  byte order of the request
+ * @param[out] value     receives the value
+ * @returns 0, or -1 when the value lies outside buf
+ */
 static int sl_unpack_uint64_checked(const char *buf, size_t buf_len, int offset,
                                     uint encoding, uint64_t *value)
 {
@@ -553,6 +789,17 @@ static int sl_unpack_uint64_checked(const char *buf, size_t buf_len, int offset,
     return 0;
 }
 
+/*!
+ * @brief Take the value count of an element from the upper 32 bits of its tag
+ *
+ * The count must fit in an int and in the bytes that follow the tag.
+ *
+ * @param[in]  query_data64  element tag
+ * @param[in]  query_length  element length in bytes, tag included
+ * @param[in]  element_size  size of one value
+ * @param[out] count         receives the count
+ * @returns 0, or -1 when the values would overrun the element
+ */
 static int sl_unpack_count(uint64_t query_data64, int query_length,
                            size_t element_size, int *count)
 {
@@ -578,6 +825,17 @@ static int sl_unpack_count(uint64_t query_data64, int query_length,
     return 0;
 }
 
+/*!
+ * @brief Unpack the 64-bit integers of an int64 element into a dalloc array
+ *
+ * @param[in,out] query         array that receives the values
+ * @param[in]     buf           packed request
+ * @param[in]     offset        offset of the element tag
+ * @param[in]     query_length  element length in bytes
+ * @param[in]     buf_len       length of buf
+ * @param[in]     encoding      byte order of the request
+ * @returns the number of values, or -1 for an invalid element
+ */
 static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset,
                           int query_length, size_t buf_len, uint encoding)
 {
@@ -607,6 +865,19 @@ static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset,
     return count;
 }
 
+/*!
+ * @brief Unpack the dates of a date element into sl_time_t values
+ *
+ * Each date is a double of seconds since 2001-01-01 UTC.
+ *
+ * @param[in,out] query         array that receives the times
+ * @param[in]     buf           packed request
+ * @param[in]     offset        offset of the element tag
+ * @param[in]     query_length  element length in bytes
+ * @param[in]     buf_len       length of buf
+ * @param[in]     encoding      byte order of the request
+ * @returns the number of dates, or -1 for an invalid element
+ */
 static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
                           int query_length, size_t buf_len, uint encoding)
 {
@@ -648,6 +919,17 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
     return count;
 }
 
+/*!
+ * @brief Unpack the 16-byte UUIDs of a UUID element into a dalloc array
+ *
+ * @param[in,out] query         array that receives the UUIDs
+ * @param[in]     buf           packed request
+ * @param[in]     offset        offset of the element tag
+ * @param[in]     query_length  element length in bytes
+ * @param[in]     buf_len       length of buf
+ * @param[in]     encoding      byte order of the request
+ * @returns the number of UUIDs, or -1 for an invalid element
+ */
 static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset,
                           int query_length, size_t buf_len, uint encoding)
 {
@@ -678,6 +960,17 @@ static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset,
     return count;
 }
 
+/*!
+ * @brief Unpack the doubles of a float element into a dalloc array
+ *
+ * @param[in,out] query         array that receives the values
+ * @param[in]     buf           packed request
+ * @param[in]     offset        offset of the element tag
+ * @param[in]     query_length  element length in bytes
+ * @param[in]     buf_len       length of buf
+ * @param[in]     encoding      byte order of the request
+ * @returns the number of values, or -1 for an invalid element
+ */
 static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
                             int query_length, size_t buf_len, uint encoding)
 {
@@ -711,6 +1004,21 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
     return count;
 }
 
+/*!
+ * @brief Unpack a CNIDs element into an sl_cnids_t
+ *
+ * An element of 16 bytes or less is an empty list, which a reply without
+ * results carries. A nonempty element needs a count of 1 or more that fits
+ * the element length.
+ *
+ * @param[in,out] query     array that receives the list
+ * @param[in]     buf       packed request
+ * @param[in]     offset    offset of the CNID header
+ * @param[in]     length    element length in bytes
+ * @param[in]     buf_len   length of buf
+ * @param[in]     encoding  byte order of the request
+ * @returns 0, or -1 for an invalid element or a failed allocation
+ */
 static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset,
                           int length, size_t buf_len, uint encoding)
 {
@@ -760,6 +1068,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Name a packed element type for the log
+ *
+ * @param[in] query_type  element type
+ * @returns the name, or "unknown"
+ */
 static const char *spotlight_get_qtype_string(uint64_t query_type)
 {
     switch (query_type) {
@@ -789,6 +1103,12 @@ static const char *spotlight_get_qtype_string(uint64_t query_type)
     }
 }
 
+/*!
+ * @brief Name an SQ_TYPE_COMPLEX element subtype for the log
+ *
+ * @param[in] cpx_query_type  subtype from the table of contents
+ * @returns the name, or "unknown"
+ */
 static const char *spotlight_get_cpx_qtype_string(uint64_t cpx_query_type)
 {
     switch (cpx_query_type) {
@@ -815,6 +1135,27 @@ static const char *spotlight_get_cpx_qtype_string(uint64_t cpx_query_type)
     }
 }
 
+/*!
+ * @brief Unpack an SQ_TYPE_COMPLEX element, its subtype taken from the table of
+ * contents
+ *
+ * Arrays and dictionaries unpack their members recursively, down to
+ * SUBQ_SAFETY_LIM levels. Strings must end before the table of contents.
+ * UTF-16 strings must be little-endian and convert to UTF-8. File metadata
+ * holds a nested payload, and a header-only element of 8 bytes is empty.
+ *
+ * @param[in,out] query            array that receives the element
+ * @param[in]     buf              packed data region
+ * @param[in]     offset           offset after the element tag
+ * @param[in]     cpx_query_type   subtype from the table of contents
+ * @param[in]     cpx_query_count  member count of an array or dictionary
+ * @param[in]     buf_len          length of buf
+ * @param[in]     toc_offset       offset of the first table of contents entry
+ * @param[in]     toc_count        number of table of contents entries
+ * @param[in]     encoding         byte order of the request
+ * @param[in]     depth            nesting depth
+ * @returns the offset after the element, or -1 for an invalid element
+ */
 static int sl_unpack_cpx(DALLOC_CTX *query,
                          const char *buf,
                          const int offset,
@@ -963,6 +1304,25 @@ EC_CLEANUP:
     return roffset;
 }
 
+/*!
+ * @brief Unpack count elements into a dalloc array
+ *
+ * The loop stops at the table of contents. A null element stands for up to
+ * 64 nils. Integer, UUID, float, and date elements hold 1 or more values
+ * each, and every value counts toward count.
+ *
+ * @param[in,out] query       array that receives the elements
+ * @param[in]     buf         packed data region
+ * @param[in]     offset      offset of the first element tag
+ * @param[in]     count       number of values to unpack
+ * @param[in]     buf_len     length of buf
+ * @param[in]     toc_offset  offset of the first table of contents entry
+ * @param[in]     toc_count   number of table of contents entries
+ * @param[in]     encoding    byte order of the request
+ * @param[in]     depth       nesting depth
+ * @returns the offset after the elements, or -1 for an invalid element or a
+ *          depth of SUBQ_SAFETY_LIM
+ */
 static int sl_unpack_loop(DALLOC_CTX *query,
                           const char *buf,
                           int offset,
@@ -1136,6 +1496,18 @@ EC_CLEANUP:
  * Global functions for packing und unpacking
  **************************************************************************************************/
 
+/*!
+ * @brief Pack a dalloc tree into the Spotlight wire format
+ *
+ * The payload starts with the magic 432130dm and 2 32-bit lengths in 8-byte
+ * units, of the full payload and of the data. The packed elements follow,
+ * then the table of contents with its SQ_TYPE_TOC tag.
+ *
+ * @param[in]  query   tree to pack
+ * @param[out] buf     buffer
+ * @param[in]  maxoff  size of buf
+ * @returns the packed length, or -1 when the payload does not fit
+ */
 static int sl_pack_len(DALLOC_CTX *query, char *buf, off_t maxoff)
 {
     EC_INIT;
@@ -1172,11 +1544,32 @@ EC_CLEANUP:
     return len;
 }
 
+/*!
+ * @brief Pack a dalloc tree into a buffer of MAX_SLQ_DAT bytes
+ *
+ * @param[in]  query  tree to pack
+ * @param[out] buf    buffer of MAX_SLQ_DAT bytes
+ * @returns the packed length, or -1 when the payload does not fit
+ */
 int sl_pack(DALLOC_CTX *query, char *buf)
 {
     return sl_pack_len(query, buf, MAX_SLQ_DAT);
 }
 
+/*!
+ * @brief Unpack a Spotlight payload into a dalloc tree
+ *
+ * The magic md031234 marks a big-endian payload, and any other value a
+ * little-endian one. The header gives the table of contents offset, which
+ * must point at an SQ_TYPE_TOC tag inside the data. The data then unpacks as
+ * 1 element.
+ *
+ * @param[in,out] query    tree that receives the elements
+ * @param[in]     buf      packed payload
+ * @param[in]     buf_len  length of buf
+ * @param[in]     depth    nesting depth of a nested payload
+ * @returns 0, or -1 for an invalid payload
+ */
 static int sl_unpack_r(DALLOC_CTX *query, const char *buf, size_t buf_len,
                        int depth)
 {
@@ -1248,11 +1641,26 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Unpack a Spotlight payload from a buffer of MAX_SLQ_DAT bytes
+ *
+ * @param[in,out] query  tree that receives the elements
+ * @param[in]     buf    packed payload with MAX_SLQ_DAT readable bytes
+ * @returns 0, or -1 for an invalid payload
+ */
 int sl_unpack(DALLOC_CTX *query, const char *buf)
 {
     return sl_unpack_r(query, buf, MAX_SLQ_DAT, 0);
 }
 
+/*!
+ * @brief Unpack a Spotlight payload of a known length
+ *
+ * @param[in,out] query    tree that receives the elements
+ * @param[in]     buf      packed payload
+ * @param[in]     buf_len  length of buf
+ * @returns 0, or -1 for an invalid payload
+ */
 int sl_unpack_len(DALLOC_CTX *query, const char *buf, size_t buf_len)
 {
     return sl_unpack_r(query, buf, buf_len, 0);

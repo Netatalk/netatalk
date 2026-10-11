@@ -39,6 +39,9 @@
 
 
 
+/*!
+ * @brief Print the usage of nad find to stdout
+ */
 static void usage_find(void)
 {
     printf(
@@ -51,6 +54,19 @@ static void usage_find(void)
     );
 }
 
+/*!
+ * @brief Search a directory tree outside a volume for names that contain a
+ * string
+ *
+ * The call prints each path whose last component contains @p needle, and it
+ * descends into directories without following symbolic links. The match is
+ * case-sensitive.
+ *
+ * @param[in]  path    path to search from
+ * @param[in]  needle  string to look for
+ * @param[out] found   receives 1 after a match
+ * @returns 0, or -1 for an error, which ends the search
+ */
 static int filesystem_find(const char *path, const char *needle, int *found)
 {
     struct stat st;
@@ -107,7 +123,11 @@ static int filesystem_find(const char *path, const char *needle, int *found)
 }
 
 /*!
- * @brief Push a bstring to the end of a list
+ * @brief Append a bstring to a list and grow the list when it is full
+ *
+ * @param[in,out] sl  list
+ * @param[in]     bs  string, which the list takes over
+ * @returns BSTR_OK, or BSTR_ERR when the list does not grow
  */
 int bstr_list_push(struct bstrList *sl, bstring bs)
 {
@@ -121,7 +141,10 @@ int bstr_list_push(struct bstrList *sl, bstring bs)
 }
 
 /*!
- * @brief Create an empty list with preallocated storage for at least 'min' members
+ * @brief Create an empty list with room for at least @p min entries
+ *
+ * @param[in] min  number of entries to allocate
+ * @returns the list, or NULL when memory runs out
  */
 struct bstrList *bstr_list_create_min(int min)
 {
@@ -140,7 +163,16 @@ struct bstrList *bstr_list_create_min(int min)
 }
 
 /*!
- * @brief Inverse bjoin
+ * @brief Join the strings of a list in reverse order, with an optional
+ * separator between them
+ *
+ * The nad find command collects the path components from the entry up to the
+ * volume root. The reverse order then gives the path from the root.
+ *
+ * @param[in] bl   list of strings
+ * @param[in] sep  separator, or NULL for none
+ * @returns the joined string, or NULL for an invalid list or when memory runs
+ *          out
  */
 bstring bjoin_inv(const struct bstrList *bl, const bstring sep)
 {
@@ -206,6 +238,19 @@ bstring bjoin_inv(const struct bstrList *bl, const bstring sep)
     return b;
 }
 
+/*!
+ * @brief Run the nad find command, which searches a volume for entries by name
+ *
+ * The -v option names the volume, and the current directory is the default.
+ * In a volume the call lowercases the name, asks the CNID database for
+ * matches, and prints the full path of each. Outside a volume it searches
+ * the directory tree for names that contain the string.
+ *
+ * @param[in] argc  argument count, starting one word before find
+ * @param[in] argv  argument vector, starting one word before find
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0 when a match turns up, or 1, while usage errors exit with 1
+ */
 int nad_find(int argc, char **argv, AFPObj *obj)
 {
     int c, ret;

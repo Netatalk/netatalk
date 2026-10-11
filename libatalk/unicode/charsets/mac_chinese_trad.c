@@ -49,6 +49,22 @@ struct charset_functions charset_mac_chinese_trad = {
     NULL
 };
 
+/*!
+ * @brief Map one UCS2 character, or a pair with an Apple hint character, to
+ * MAC_CHINESE_TRAD bytes
+ *
+ * ASCII passes as is, except that a backslash followed by 0xf87f becomes
+ * 0x80. When a hint character in the range 0xf870 to 0xf87f follows, the
+ * composition table first combines the pair. Private-use characters and
+ * characters without a table entry return 0, so the caller converts them
+ * through BIG-5.
+ *
+ * @param[out]    out   receives one or two bytes
+ * @param[in]     in    UCS2 input
+ * @param[in,out] size  characters available, which receives the characters used
+ * @returns the number of bytes, 0 for the iconv fallback, or `(size_t)-1` with
+ *          EILSEQ
+ */
 static size_t mac_chinese_trad_char_push(uint8_t *out, const ucs2_t *in,
                                          size_t *size)
 {
@@ -85,6 +101,16 @@ static size_t mac_chinese_trad_char_push(uint8_t *out, const ucs2_t *in,
                                     mac_chinese_trad_uni2_charset), out);
 }
 
+/*!
+ * @brief Convert UCS2 to MAC_CHINESE_TRAD through cjk_generic_push
+ *
+ * @param[in]     cd            BIG-5 iconv descriptor for the fallback
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with errno
+ */
 static size_t mac_chinese_trad_push(void *cd, char **inbuf, size_t *inbytesleft,
                                     char **outbuf, size_t *outbytesleft)
 {
@@ -92,6 +118,20 @@ static size_t mac_chinese_trad_push(void *cd, char **inbuf, size_t *inbytesleft,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
+/*!
+ * @brief Map one MAC_CHINESE_TRAD character of one or two bytes to UCS2
+ *
+ * ASCII passes as is, and bytes outside the lead byte range stand alone. A
+ * lead byte from 0xa1 to 0xfc needs a trail byte in 0x40 to 0x7e or in 0xa1
+ * to 0xfe. The table value expands through the composition table into up to
+ * CJK_PULL_BUFFER characters.
+ *
+ * @param[out]    out   receives the UCS2 characters
+ * @param[in]     in    input bytes
+ * @param[in,out] size  bytes available, which receives the bytes used
+ * @returns the number of characters, 0 for the iconv fallback, or `(size_t)-1`
+ *          with EILSEQ or EINVAL
+ */
 static size_t mac_chinese_trad_char_pull(ucs2_t *out, const uint8_t *in,
                                          size_t *size)
 {
@@ -125,6 +165,16 @@ static size_t mac_chinese_trad_char_pull(ucs2_t *out, const uint8_t *in,
                          out, mac_chinese_trad_compose);
 }
 
+/*!
+ * @brief Convert MAC_CHINESE_TRAD to UCS2 through cjk_generic_pull
+ *
+ * @param[in]     cd            BIG-5 iconv descriptor for the fallback
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with errno
+ */
 static size_t mac_chinese_trad_pull(void *cd, char **inbuf, size_t *inbytesleft,
                                     char **outbuf, size_t *outbytesleft)
 {

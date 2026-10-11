@@ -48,7 +48,11 @@
 #include <atalk/util.h>
 #include <atalk/vfs.h>
 
-/*! close all FDs >= a specified value */
+/*!
+ * @brief Close every descriptor from fd up to the _SC_OPEN_MAX limit
+ *
+ * @param[in] fd  lowest descriptor to close
+ */
 static void closeall(int fd)
 {
     int fdlimit = sysconf(_SC_OPEN_MAX);
@@ -349,6 +353,13 @@ void become_root(void)
     }
 }
 
+/*!
+ * @brief Drop the root privileges of the matching become_root call
+ *
+ * Only the outermost unbecome_root restores the saved euid. The call does
+ * nothing in a process whose real uid is not root. An unmatched call or a
+ * failed seteuid panics.
+ */
 void unbecome_root(void)
 {
     if (getuid() == 0) {
@@ -386,9 +397,13 @@ const char *getcwdpath(void)
 }
 
 /*!
- * @brief Request absolute path
+ * @brief Return the absolute path of a name
  *
- * @returns Absolute filesystem path to object
+ * A relative name joins the current directory in a static buffer, which the
+ * next call overwrites. A failed getcwd leaves the name relative.
+ *
+ * @param[in] name  file name
+ * @returns name itself when it is absolute, or the static buffer
  */
 const char *fullpathname(const char *name)
 {
@@ -437,11 +452,15 @@ char *stripped_slashes_basename(char *p)
 }
 
 /*!
- * @brief Find a suitable temporary directory for Netatalk.
+ * @brief Return a private temporary directory for the process, netatalk-PID
+ * under TMPDIR or /tmp
  *
- * Creates a subdirectory for current gid if it doesn't exist.
- * The result should be copied immediately
- * as it may be overwritten by a subsequent call.
+ * The call creates the directory with mode 0700. It sets the mode of an
+ * existing one back to 0700, and that one has to be a directory that the
+ * real uid owns. Any failure returns the system directory instead. The
+ * result lives in a static buffer, which the next call overwrites.
+ *
+ * @returns the directory path
  */
 const char *tmpdir(void)
 {
@@ -547,6 +566,14 @@ const char *tmpdir(void)
  * called which does special ACL handling depending on the filesytem
  *********************************************************************************/
 
+/*!
+ * @brief Run lstat with O_NOFOLLOW in options, stat otherwise
+ *
+ * @param[in]  path     path
+ * @param[out] buf      receives the stat data
+ * @param[in]  options  O_NOFOLLOW or 0
+ * @returns the result of lstat or stat
+ */
 int ostat(const char *path, struct stat *buf, int options)
 {
     if (options & O_NOFOLLOW) {
@@ -556,6 +583,15 @@ int ostat(const char *path, struct stat *buf, int options)
     }
 }
 
+/*!
+ * @brief Run lchown with O_NOFOLLOW in options, chown otherwise
+ *
+ * @param[in] path     path
+ * @param[in] owner    new owner
+ * @param[in] group    new group
+ * @param[in] options  O_NOFOLLOW or 0
+ * @returns the result of lchown or chown
+ */
 int ochown(const char *path, uid_t owner, gid_t group, int options)
 {
     if (options & O_NOFOLLOW) {
@@ -566,18 +602,18 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
 }
 
 /*!
- * @brief chmod() wrapper for symlink and ACL handling
+ * @brief Change the mode of a path, with options for symlinks and ACLs
  *
- * @param[in] path       path
- * @param[in] mode       requested mode
- * @param[in] st         stat() of path or NULL
- * @param[in] options    O_NOFOLLOW | O_NETATALK_ACL
+ * O_IGNORE skips the change. With O_NOFOLLOW the call leaves a symlink alone.
+ * O_NETATALK_ACL runs chmod_acl instead of chmod. Without st the call runs
+ * lstat itself.
  *
- * Option descriptions:
- *
- * - O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
- * - O_NETATALK_ACL: call chmod_acl() instead of chmod()
- * - O_IGNORE: ignore chmod() request, directly return 0
+ * @param[in] path     path
+ * @param[in] mode     requested mode
+ * @param[in] st       lstat data of path, or NULL
+ * @param[in] options  O_NOFOLLOW, O_NETATALK_ACL, and O_IGNORE bits
+ * @returns 0 for a skipped change, or the result of chmod_acl, chmod, or a
+ *          failed lstat
  */
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 {
@@ -608,14 +644,14 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 }
 
 /*!
- * @brief ostat/fsstatat multiplexer
+ * @brief Run fstatat relative to a directory descriptor, without following a
+ * final symlink for O_NOFOLLOW
  *
- * ostatat mulitplexes ostat and fstatat.
- *
- * @param[in] dirfd    -1 gives AT_FDCWD
- * @param[in] path     pathname
- * @param[in,out] st   pointer to struct stat
- * @param[in] options  file options
+ * @param[in]  dirfd    directory descriptor, or -1 for the current directory
+ * @param[in]  path     path
+ * @param[out] st       receives the stat data
+ * @param[in]  options  O_NOFOLLOW or 0
+ * @returns the result of fstatat
  */
 int ostatat(int dirfd, const char *path, struct stat *st, int options)
 {
@@ -628,12 +664,19 @@ int ostatat(int dirfd, const char *path, struct stat *st, int options)
 }
 
 /*!
- * @brief symlink safe chdir replacement
+ * @brief Change the current directory and report a symlink on the way for
+ * O_NOFOLLOW
  *
- * Only chdirs to dir if it doesn't contain symlinks or if symlink checking
- * is disabled
+ * Without O_NOFOLLOW the call is a plain chdir. With it, dir has to be a
+ * canonical path, and a trailing slash is fine. The call changes directory
+ * first and then compares getcwd with the requested path. On a return of 1
+ * the process is already in the symlink target.
  *
- * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
+ * @param[in] dir      absolute directory, or one relative to the current
+ *                     directory
+ * @param[in] options  O_NOFOLLOW or 0
+ * @returns 0, 1 when the path held a symlink or getcwd failed after the change,
+ *          or -1 when chdir or the first getcwd fails
  */
 int ochdir(const char *dir, int options)
 {
@@ -723,7 +766,13 @@ int ochdir(const char *dir, int options)
 }
 
 /*!
- * Store n random bytes an buf
+ * @brief Fill a buffer with random bytes from /dev/urandom
+ *
+ * Without /dev/urandom, or after a short read, the call falls back to random
+ * seeded with the microseconds of the current time.
+ *
+ * @param[out] buf  buffer
+ * @param[in]  n    number of bytes
  */
 void randombytes(void *buf, int n)
 {
@@ -754,6 +803,14 @@ void randombytes(void *buf, int n)
     return;
 }
 
+/*!
+ * @brief Tell whether a group ID is in a group list
+ *
+ * @param[in] gid      group ID
+ * @param[in] ngroups  number of entries in groups
+ * @param[in] groups   group list
+ * @returns 1 when the list holds gid, 0 otherwise
+ */
 int gmem(gid_t gid, int ngroups, gid_t *groups)
 {
     int		i;
@@ -768,7 +825,12 @@ int gmem(gid_t gid, int ngroups, gid_t *groups)
 }
 
 /*!
- * realpath() replacement that always allocates storage for returned path
+ * @brief Resolve a path with realpath into a new buffer
+ *
+ * A path that does not resolve logs a warning.
+ *
+ * @param[in] path  path to resolve
+ * @returns the resolved path, which the caller frees, or NULL on failure
  */
 char *realpath_safe(const char *path)
 {
@@ -808,8 +870,13 @@ char *realpath_safe(const char *path)
 }
 
 /*!
- * @brief safe basename() replacement
- * @returns pointer to static buffer with basename of path
+ * @brief Return the basename of a path without changing the path
+ *
+ * The call runs basename on the path in a static buffer, which the next call
+ * overwrites.
+ *
+ * @param[in] path  path
+ * @returns the basename, within the static buffer or from basename itself
  */
 const char *basename_safe(const char *path)
 {
@@ -819,9 +886,16 @@ const char *basename_safe(const char *path)
 }
 
 /*!
- * @brief extended strtok allows the quoted strings
+ * @brief Split a string like strtok, with tokens in double quotes kept whole
  *
- * modified strtok.c in glibc 2.0.6
+ * A token that starts with a double quote runs to the next double quote,
+ * delimiters included, and drops both quotes. An unclosed quote runs to the
+ * end of the string. The position lives in a static variable, so one string
+ * splits at a time. The code derives from strtok.c of glibc 2.0.6.
+ *
+ * @param[in,out] s      string to split, or NULL to go on with the last one
+ * @param[in]     delim  delimiter characters
+ * @returns the next token, or NULL at the end
  */
 char *strtok_quote(char *s, const char *delim)
 {
@@ -867,6 +941,16 @@ char *strtok_quote(char *s, const char *delim)
     return token;
 }
 
+/*!
+ * @brief Load the supplementary groups of a user into the process and into obj
+ *
+ * Only root runs initgroups, and a failed initgroups only logs an error. The
+ * call then reads the group list of the process with getgroups.
+ *
+ * @param[in,out] obj  AFP object, receives the group list
+ * @param[in]     pwd  user entry
+ * @returns 0, or -1 when getgroups or calloc fails
+ */
 int set_groups(AFPObj *obj, struct passwd *pwd)
 {
     /* only root may set the group list; a server started by its user
@@ -901,6 +985,16 @@ int set_groups(AFPObj *obj, struct passwd *pwd)
 }
 
 #define GROUPSTR_BUFSIZE 1024
+/*!
+ * @brief Format a group list for a log message
+ *
+ * Each group ID follows a space, in a static buffer of GROUPSTR_BUFSIZE
+ * bytes, which the next call overwrites.
+ *
+ * @param[in] ngroups  number of entries in groups
+ * @param[in] groups   group list
+ * @returns the list, or "-" for an empty one
+ */
 const char *print_groups(int ngroups, gid_t *groups)
 {
     static char groupsstr[GROUPSTR_BUFSIZE];

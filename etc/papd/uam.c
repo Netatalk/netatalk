@@ -27,7 +27,19 @@
 
 /* --- server uam functions -- */
 
-/* uam_load. uams must have a uam_setup function. */
+/*!
+ * @brief Load a UAM module for papd and run its setup
+ *
+ * The module has to export a server UAM under its file name without the
+ * extension, such as uams_pam for uams_pam.so. Its uam_setup runs without a
+ * server object, since papd has none. Each failure except a missing UAM
+ * symbol logs.
+ *
+ * @param[in] path  module path
+ * @param[in] name  module file name
+ * @returns the module record, or NULL when the module does not open, lacks the
+ *          UAM, or fails its setup
+ */
 struct uam_mod *uam_load(const char *path, const char *name)
 {
     char buf[MAXPATHLEN + 1], *p;
@@ -82,10 +94,7 @@ uam_load_fail:
 }
 
 /*!
- * @brief unload the module.
- *
- * we check for a cleanup function, but we don't die if one doesn't exist.
- * however, things are likely to leak without one.
+ * @brief Run the cleanup function of a UAM module, close it, and free its entry
  */
 void uam_unload(struct uam_mod *mod)
 {
@@ -99,7 +108,12 @@ void uam_unload(struct uam_mod *mod)
 
 /* -- client-side uam functions -- */
 
-/*! set up stuff for this uam. */
+/*!
+ * @brief Register a UAM of a module under a name and type
+ *
+ * In papd UAM_SERVER_PRINTAUTH passes one handler, the uam_printer function,
+ * and a UAM_SERVER_LOGIN_EXT registration returns 1.
+ */
 int uam_register(const int type, const char *path, const char *name, ...)
 {
     va_list ap;
@@ -167,6 +181,9 @@ int uam_register(const int type, const char *path, const char *name, ...)
     return ret;
 }
 
+/*!
+ * @brief Drop a registration of a UAM and free the UAM after its last one
+ */
 void uam_unregister(const int type, const char *name)
 {
     struct uam_obj *uam;
@@ -186,7 +203,13 @@ void uam_unregister(const int type, const char *name)
     free(uam);
 }
 
-/*! Crap to support uams which call this afpd function */
+/*!
+ * @brief Answer a UAM request for a server or session value with nothing, for
+ * UAMs loaded by papd
+ *
+ * In papd the call is a stub that sets nothing and returns 0 for every code,
+ * since papd keeps no session values.
+ */
 int uam_afpserver_option(void *private _U_, const int what _U_,
                          void *option _U_, size_t *len _U_)
 {
@@ -195,6 +218,13 @@ int uam_afpserver_option(void *private _U_, const int what _U_,
 
 /* --- helper functions for plugin uams --- */
 
+/*!
+ * @brief Find the password entry of a login name for a UAM
+ *
+ * In papd the call skips the domain forms of afpd. After getpwnam fails, it
+ * lowers the case of name in place. It then compares the name with the login
+ * name and the first gecos field of every account.
+ */
 struct passwd *uam_getname(void *private _U_, char *name, const int len)
 {
     struct passwd *pwent;
@@ -232,9 +262,12 @@ struct passwd *uam_getname(void *private _U_, char *name, const int len)
     return pwent ? getpwnam(name) : NULL;
 }
 
-/* FIXME: the ability to disable valid shellcheck at papd runtime
- * which will first require implementation in papd.conf
- * and then propagation of the option flag here */
+/*!
+ * @brief Check that a user may log in through a UAM
+ *
+ * In papd the shell check always runs, since papd.conf has no option to turn
+ * it off, and an empty shell fails as well.
+ */
 int uam_checkuser(void *private _U_, const struct passwd *pwd)
 {
     char *p;

@@ -21,14 +21,10 @@
  * Prototype Definitions
  */
 
-/*!
- * registers service with a particular Zeroconf implemenation.
- */
-void zeroconf_register(const AFPObj *obj);
+/*! Register the AFP services with the Zeroconf backend */
+void zeroconf_register(const AFPObj *configs);
 
-/*!
- * de-registers the ntpd service with a particular Zeroconf implemenation.
- */
+/*! Withdraw the AFP services from the Zeroconf backend */
 void zeroconf_deregister(void);
 
 #endif /* AFPD_ZEROCONF_H */

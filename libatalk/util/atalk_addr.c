@@ -11,11 +11,15 @@
 #include <ctype.h>
 
 /*!
- * @brief Check whether "cp" is a valid ascii representation
- * of an AppleTalk address and convert to a binary address.
+ * @brief Parse the text form of an AppleTalk address
  *
- * Examples of accepted forms are (in decimal, net of 4321,
- * node of 65):
+ * The net.node form takes a net up to 65535 and a node up to 255. In the
+ * three-part form the first two parts hold the net, a byte each. A leading
+ * 0x, or a first digit from A to F, makes every part hexadecimal. AppleTalk
+ * addresses can carry leading zeros, so the call has no octal form. A failed
+ * parse can leave part of the address in addr.
+ *
+ * Accepted forms for net 4321 and node 65:
  * @code
  *	4321.65
  *	0x10E1.41
@@ -23,11 +27,10 @@
  *	0x10.E1.41
  * @endcode
  *
- * If hex is used, and the first digit is one of A-F, the leading
- * 0x is redundant. Returns 1 if the address is valid, 0 if not.
- *
- * Unlike Internet addresses, AppleTalk addresses can have leading
- * 0's. This means that we can't support octal addressing.
+ * @param[in]  cp    address text
+ * @param[out] addr  receives the address with the net in network order, or NULL
+ *                   to check only the syntax, which skips the range checks
+ * @returns 1 for a valid address, 0 otherwise
  */
 int atalk_aton(char *cp, struct at_addr *addr)
 {

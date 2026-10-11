@@ -14,15 +14,16 @@
 #include <atalk/constant_time.h>
 
 /*!
- * @brief Constant-time memory equality check.
+ * @brief Compare two buffers for equality in a time that depends only on their
+ * length
  *
- * Compares exactly @p n bytes and returns 0 if the buffers are equal,
- * non-zero if they differ.
+ * The call reads all n bytes of both buffers, whatever they hold. Unlike
+ * memcmp, the result gives no order, so it cannot sort.
  *
- * @note Unlike memcmp(), this function does not provide
- * lexicographic ordering and must not be used for sorting.
- *
- * @returns 0 if the buffers are equal, non-zero if they differ.
+ * @param[in] a  first buffer
+ * @param[in] b  second buffer
+ * @param[in] n  number of bytes
+ * @returns 0 for equal buffers, 1 otherwise
  */
 int atalk_ct_memcmp(const void *a, const void *b, size_t n)
 {

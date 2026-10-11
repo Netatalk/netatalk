@@ -51,7 +51,13 @@ struct charset_functions charset_mac_greek = {
     NULL
 };
 
-/* ------------------------ */
+/*!
+ * @brief Map one UCS2 character to a MAC_GREEK byte
+ *
+ * @param[out] r   receives the byte
+ * @param[in]  wc  UCS2 character
+ * @returns 1, or 0 when the charset has no byte for @p wc
+ */
 static int
 char_ucs2_to_mac_greek(unsigned char *r, ucs2_t wc)
 {
@@ -82,6 +88,17 @@ char_ucs2_to_mac_greek(unsigned char *r, ucs2_t wc)
     return 0;
 }
 
+/*!
+ * @brief Convert UCS2 to MAC_GREEK through mb_generic_push
+ *
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[out]    outbuf        output position, which mb_generic_push does not
+ *                              advance
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of characters converted, or `(size_t)-1` with errno
+ */
 static size_t mac_greek_push(void *cd, char **inbuf, size_t *inbytesleft,
                              char **outbuf, size_t *outbytesleft)
 {
@@ -90,7 +107,15 @@ static size_t mac_greek_push(void *cd, char **inbuf, size_t *inbytesleft,
                                     outbuf, outbytesleft);
 }
 
-/* ------------------------ */
+/*!
+ * @brief Map one MAC_GREEK byte to UCS2
+ *
+ * A byte whose table entry is 0xfffd has no character.
+ *
+ * @param[out] pwc  receives the UCS2 character
+ * @param[in]  s    byte to map
+ * @returns 1, or 0 for a byte without a character
+ */
 static int
 char_mac_greek_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 {
@@ -111,6 +136,16 @@ char_mac_greek_to_ucs2(ucs2_t *pwc, const unsigned char *s)
     return 0;
 }
 
+/*!
+ * @brief Convert MAC_GREEK to UCS2 through mb_generic_pull
+ *
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of characters converted, or `(size_t)-1` with errno
+ */
 static size_t mac_greek_pull(void *cd, char **inbuf, size_t *inbytesleft,
                              char **outbuf, size_t *outbytesleft)
 {

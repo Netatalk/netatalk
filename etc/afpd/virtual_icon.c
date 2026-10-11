@@ -49,7 +49,10 @@
 #define ICON_RES_ID   (-16455)  /* 0xBFB9 - Finder volume custom icon resource ID */
 
 /*!
- * Write a big-endian uint32_t to buf
+ * @brief Write a 32-bit value in big-endian order
+ *
+ * @param[out] buf  4-byte destination
+ * @param[in]  val  value
  */
 static void put_u32(unsigned char *buf, uint32_t val)
 {
@@ -60,7 +63,10 @@ static void put_u32(unsigned char *buf, uint32_t val)
 }
 
 /*!
- * Write a big-endian uint16_t to buf
+ * @brief Write a 16-bit value in big-endian order
+ *
+ * @param[out] buf  2-byte destination
+ * @param[in]  val  value
  */
 static void put_u16(unsigned char *buf, uint16_t val)
 {
@@ -69,11 +75,19 @@ static void put_u16(unsigned char *buf, uint16_t val)
 }
 
 /*!
- * @brief Build the Macintosh resource fork binary data containing ICN#, icl4, and icl8
+ * @brief Build the resource fork of the virtual volume icon file from 3 icon
+ * resources
  *
- * icn_hash: 256-byte ICN# resource (icon bitmap + mask)
- * icl4:     512-byte icl4 resource (32x32 4-bit color icon)
- * icl8:     1024-byte icl8 resource (32x32 8-bit color icon)
+ * The fork holds a 256-byte header, the data of ICN#, icl4, and icl8 with
+ * 4-byte length prefixes, and a resource map. All 3 resources use ID -16455,
+ * the custom icon ID of the Finder. A failed allocation leaves the volume
+ * without a virtual icon.
+ *
+ * @param[in,out] vol       volume that receives v_icon_rfork and
+ *                          v_icon_rfork_len
+ * @param[in]     icn_hash  256-byte ICN# resource with bitmap and mask
+ * @param[in]     icl4      512-byte icl4 resource, 4-bit color
+ * @param[in]     icl8      1024-byte icl8 resource, 8-bit color
  */
 static void build_resource_fork(struct vol *vol,
                                 const unsigned char *icn_hash,
@@ -217,11 +231,25 @@ static void build_resource_fork(struct vol *vol,
 
 /* ---- Public API ---- */
 
+/*!
+ * @brief Tell whether a volume serves a virtual icon file
+ *
+ * @param[in] vol  volume
+ * @returns nonzero when the volume has a built icon resource fork
+ */
 int virtual_icon_enabled(const struct vol *vol)
 {
     return (vol->v_icon_rfork != NULL);
 }
 
+/*!
+ * @brief Tell whether the volume root holds a real icon file
+ *
+ * A real file takes precedence over the virtual one.
+ *
+ * @param[in] vol  volume
+ * @returns nonzero when lstat finds VIRTUAL_ICON_NAME in the volume root
+ */
 int real_icon_exists(const struct vol *vol)
 {
     char path[MAXPATHLEN + 1];
@@ -230,11 +258,25 @@ int real_icon_exists(const struct vol *vol)
     return (lstat(path, &st) == 0);
 }
 
+/*!
+ * @brief Tell whether a name is the name of the virtual icon file
+ *
+ * @param[in] name  file name
+ * @returns nonzero for VIRTUAL_ICON_NAME
+ */
 int is_virtual_icon_name(const char *name)
 {
     return (strcmp(name, VIRTUAL_ICON_NAME) == 0);
 }
 
+/*!
+ * @brief Build the virtual icon of a volume from its legacy icon option
+ *
+ * The option names one of the built-in icons. An empty option builds nothing,
+ * and an unknown name logs a warning. A volume with a built icon keeps it.
+ *
+ * @param[in,out] vol  volume
+ */
 void virtual_icon_init(struct vol *vol)
 {
     const unsigned char *icon;
@@ -292,6 +334,13 @@ void virtual_icon_init(struct vol *vol)
     build_resource_fork(vol, icon, icon_icl4, icon_icl8);
 }
 
+/*!
+ * @brief Return the resource fork of the virtual icon file
+ *
+ * @param[in]  vol     volume
+ * @param[out] outlen  receives the fork length, 0 without a virtual icon
+ * @returns the fork, or NULL without a virtual icon
+ */
 const unsigned char *virtual_icon_get_rfork(const struct vol *vol,
                                             size_t *outlen)
 {
@@ -305,10 +354,20 @@ const unsigned char *virtual_icon_get_rfork(const struct vol *vol,
 }
 
 /*!
- * @brief Synthesize AFP file parameters for the virtual Icon\\r file
+ * @brief Build the AFP file parameters of the virtual icon file
  *
- * This fills the reply buffer with parameters matching the requested bitmap,
- * just as getmetadata/getfilparams would for a real file.
+ * The file is invisible, sits in the volume root with CNID VIRTUAL_ICON_CNID,
+ * and has an empty data fork. The resource fork length is the length of the
+ * built fork. The dates are AD_DATE_START, and the UNIX privileges show a
+ * read-only file of uid and gid 0.
+ *
+ * @param[in]  obj     session object
+ * @param[in]  vol     volume
+ * @param[in]  bitmap  file bitmap of the request
+ * @param[out] buf     reply buffer
+ * @param[out] buflen  length of the parameters on return
+ * @returns AFP_OK, AFPERR_MISC without a virtual icon, or AFPERR_BITMAP for an
+ *          unknown bit
  */
 int virtual_icon_getfilparams(const AFPObj *obj,
                               struct vol *vol,

@@ -51,11 +51,27 @@ static uint8_t         randbuf[8];
 #define PASSWD_ILLEGAL '*'
 #define HEXPASSWDLEN (DES_KEY_SZ * 2)
 
+/*!
+ * @brief Return the value of a hex digit, in either case
+ *
+ * The call does not check its input, so any other byte gives a meaningless
+ * value.
+ *
+ * @param[in] x  hex digit
+ * @returns 0 to 15 for a hex digit
+ */
 static int unhex(unsigned char x)
 {
     return isdigit(x) ? x - '0' : toupper(x) + 10 - 'A';
 }
 
+/*!
+ * @brief Log a failed libgcrypt call of the RandNum UAM
+ *
+ * @param[in] op   name of the call
+ * @param[in] err  its error code
+ * @returns 0 for no error, -1 after logging one
+ */
 static int randnum_cipher_check(const char *op, gcry_error_t err)
 {
     if (!err) {
@@ -67,6 +83,17 @@ static int randnum_cipher_check(const char *op, gcry_error_t err)
     return -1;
 }
 
+/*!
+ * @brief Open the companion file of an afppasswd file, its path plus `.key`
+ *
+ * A missing `.key` file logs a warning, since the passwords of the file
+ * depend on it.
+ *
+ * @param[in] path     path of the afppasswd file
+ * @param[in] pathlen  length of path
+ * @returns the descriptor, or -1 for a path too long for the suffix or a failed
+ *          open
+ */
 static int afppasswd_open_keyfile(const char *path, const int pathlen)
 {
     char keypath[MAXPATHLEN + 1];
@@ -94,6 +121,16 @@ static int afppasswd_open_keyfile(const char *path, const int pathlen)
     return keyfd;
 }
 
+/*!
+ * @brief Read the DES secret from the `.key` file of an afppasswd file
+ *
+ * The file holds 16 hex digits, with an optional newline. The call wipes its
+ * read buffer.
+ *
+ * @param[in]  keyfd  descriptor of the `.key` file
+ * @param[out] key    receives the 8-byte DES secret
+ * @returns 0, or -1 for a read error, another length, or a byte that is not hex
+ */
 static int afppasswd_read_keyfile(int keyfd, uint8_t key[DES_KEY_SZ])
 {
     uint8_t encoded[HEXPASSWDLEN + 2];
@@ -137,6 +174,15 @@ static int afppasswd_read_keyfile(int keyfd, uint8_t key[DES_KEY_SZ])
     return 0;
 }
 
+/*!
+ * @brief Warn at setup when the afppasswd file or its `.key` file cannot serve
+ * RandNum logins
+ *
+ * The UAM registers anyway, and its logins fail until the files are in place.
+ * A home password file cannot carry a `.key` file, so it always warns.
+ *
+ * @param[in] obj  AFP object with the passwd file option
+ */
 static void randnum_warn_passwdfile_key(void *obj)
 {
     char *passwdfile = NULL;
@@ -182,27 +228,29 @@ static void randnum_warn_passwdfile_key(void *obj)
 }
 
 /*!
- * @brief handle /path/afppasswd with a required key file.
- * we're a lot more trusting of this file.
- * @note we use our own password entry writing bits
- * as we want to avoid tromping over global variables.
- * in addition, we require a key file and fail if it is not available.
+ * @brief Read or write the DES-encrypted password of a user in an afppasswd
+ * file
  *
- * here are the formats:
+ * The password field holds the hex of the encrypted password. The DES secret
+ * comes from the `.key` file, and a star in the field disables the entry.
+ * Reading decrypts the password into passwd. Writing encrypts passwd and
+ * writes its hex back under a write lock on the line. The call writes the
+ * entry itself, without the passwd functions of libc and their static state.
  *
- * password file
- * -------------
+ * Formats:
  * @code
- * username:password:last login date:failedcount
+ * password file:  username:password:last login date:failedcount
+ * key file:       key (in hex)
  * @endcode
  *
- * password is just the hex equivalent of the DES encrypted password.
- *
- * key file
- * --------
- * @code
- * key (in hex)
- * @endcode
+ * @param[in]     pwd      user entry
+ * @param[in]     path     afppasswd file
+ * @param[in]     pathlen  length of path
+ * @param[in,out] passwd   receives the password, or holds the new one to write
+ * @param[in]     len      size of passwd
+ * @param[in]     set      nonzero to write, 0 to read
+ * @returns 0, AFPERR_PARAM for a user without an entry, AFPERR_ACCESS for a
+ *          disabled entry or a missing or bad file, or AFPERR_MISC
  */
 static int afppasswd(const struct passwd *pwd,
                      const char *path, const int pathlen,
@@ -364,8 +412,17 @@ afppasswd_done:
 
 
 /*!
- * @brief this sets the uid.
- * @note the afppasswd file must be read and updated as root.
+ * @brief Read or write an afppasswd entry as root
+ *
+ * The call raises the euid to root around afppasswd and drops it again.
+ *
+ * @param[in]     pwd     user entry
+ * @param[in]     file    afppasswd file
+ * @param[in,out] passwd  password buffer for afppasswd
+ * @param[in]     len     size of passwd
+ * @param[in]     set     nonzero to write, 0 to read
+ * @returns the result of afppasswd, AFPERR_PARAM for a path over MAXPATHLEN, or
+ *          AFPERR_MISC when seteuid fails
  */
 static int randpass(const struct passwd *pwd, const char *file,
                     unsigned char *passwd, const int len, const int set)
@@ -396,8 +453,23 @@ static int randpass(const struct passwd *pwd, const char *file,
 }
 
 /*!
- * randnum sends an 8-byte number and uses the user's password to
- * check against the encrypted reply.
+ * @brief Start a RandNum login with an 8-byte challenge
+ *
+ * The user has to pass uam_checkuser, and the call reads the password of the
+ * user, the DES secret, from the afppasswd file. The reply holds the session
+ * ID and the challenge, which the client encrypts with its password.
+ *
+ * @param[in]     obj       session object
+ * @param[in,out] username  user name from the request, receives the account
+ *                          name of a match
+ * @param[in]     ulen      size of the username buffer
+ * @param[out]    uam_pwd   unused
+ * @param[in]     ibuf      UAM data of the request, unused
+ * @param[in]     ibuflen   length of ibuf, unused
+ * @param[out]    rbuf      reply block
+ * @param[out]    rbuflen   reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_NOTAUTH for an unknown or refused user, an
+ *          afppasswd error, or AFPERR_PARAM
  */
 static int rand_login(void *obj, char *username, int ulen,
                       struct passwd **uam_pwd _U_,
@@ -453,9 +525,21 @@ static int rand_login(void *obj, char *username, int ulen,
 
 
 /*!
- * @brief check encrypted reply.
- * @note we actually setup the encryption stuff here
- * as the first part of randnum and rand2num are identical.
+ * @brief Check the encrypted challenge of a RandNum login
+ *
+ * The call encrypts the challenge with the password of the user as the DES
+ * secret and compares it with the client reply in constant time. The 2-way
+ * variant starts the same way.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  receives the user entry after a match
+ * @param[in]  ibuf     UAM data of the request, the session ID and the
+ *                      encrypted challenge
+ * @param[in]  ibuflen  length of ibuf, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK, AFPERR_NOTAUTH for a wrong answer, or AFPERR_PARAM for
+ *          another session ID
  */
 static int randnum_logincont(void *obj, struct passwd **uam_pwd,
                              char *ibuf, size_t ibuflen _U_,
@@ -492,10 +576,24 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 }
 
 
-/*! differences from randnum:
- * 1. each byte of the key is shifted left one bit
- * 2. client sends the server a 64-bit number. the server encrypts it
- *    and sends it back as part of the reply.
+/*!
+ * @brief Check the encrypted challenge of a 2-Way RandNum login and answer the
+ * challenge of the client
+ *
+ * Unlike RandNum, each byte of the DES secret shifts left 1 bit first. After a
+ * match the call encrypts the 8-byte challenge of the client and sends it
+ * back.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  receives the user entry after a match
+ * @param[in]  ibuf     UAM data of the request, the session ID, the encrypted
+ *                      challenge, and the challenge of the client
+ * @param[in]  ibuflen  length of ibuf, unused
+ * @param[out] rbuf     reply block, receives the encrypted challenge of the
+ *                      client
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, AFPERR_NOTAUTH for a wrong answer, or AFPERR_PARAM for
+ *          another session ID
  */
 static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
                               char *ibuf, size_t ibuflen _U_,
@@ -545,9 +643,23 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
 }
 
 /*!
- * @brief change password
- * @note an FPLogin must already have completed successfully for this
- *       to work.
+ * @brief Change the RandNum password of a logged-in user in the afppasswd file
+ *
+ * The request holds the old password under DES with the new one as the
+ * secret, and the new password under DES with the old one. The call reads the
+ * old password from the file, checks both in constant time, and writes the
+ * new password. With cracklib a weak new password fails with AFPERR_PWDPOLCY.
+ *
+ * @param[in]     obj       session object
+ * @param[in]     username  user name, unused
+ * @param[in]     pwd       user entry
+ * @param[in,out] ibuf      the 2 encrypted passwords, decrypted in place and
+ *                          wiped
+ * @param[in]     ibuflen   length of ibuf, unused
+ * @param[out]    rbuf      reply block, unused
+ * @param[out]    rbuflen   unused
+ * @returns AFP_OK, AFPERR_NOTAUTH for a wrong old password, AFPERR_PWDSAME,
+ *          AFPERR_PWDPOLCY, AFPERR_ACCESS, or an afppasswd error
  */
 static int randnum_changepw(void *obj, const char *username _U_,
                             struct passwd *pwd, char *ibuf,
@@ -626,7 +738,20 @@ static int randnum_changepw(void *obj, const char *username _U_,
     return AFP_OK;
 }
 
-/*! randnum login */
+/*!
+ * @brief Read the user name of an FPLogin request and start a RandNum login
+ *
+ * The request holds the name as a Pascal string, padded to an even address.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  unused until the continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the result of rand_login, AFPERR_PARAM for an empty or oversized
+ *          name, or AFPERR_MISC
+ */
 static int randnum_login(void *obj, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen)
@@ -664,7 +789,22 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
     return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/*! randnum login ext */
+/*!
+ * @brief Read the user name of an FPLoginExt request and start a RandNum login
+ *
+ * The name comes as an AFP name of type 3, a UTF-8 string with a 2-byte
+ * length.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request
+ * @param[out] uam_pwd  unused until the continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the result of rand_login, AFPERR_PARAM for another name type or a
+ *          bad length, or AFPERR_MISC
+ */
 static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                              char *ibuf, size_t ibuflen,
                              char *rbuf, size_t *rbuflen)
@@ -696,6 +836,17 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
+/*!
+ * @brief Register the 2 RandNum logins and the RandNum password change
+ *
+ * The call first checks the afppasswd file and its `.key` file through
+ * randnum_warn_passwdfile_key. A failed registration removes the earlier
+ * ones.
+ *
+ * @param[in] obj   AFP object with the passwd file option
+ * @param[in] path  path of the module
+ * @returns 0, or -1 when a registration fails
+ */
 static int uam_setup(void *obj, const char *path)
 {
     randnum_warn_passwdfile_key(obj);
@@ -724,6 +875,9 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Unregister the 2 RandNum logins and the RandNum password change
+ */
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "Randnum exchange");

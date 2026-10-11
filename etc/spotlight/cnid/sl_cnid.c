@@ -39,6 +39,13 @@
 #include "etc/afpd/volume.h"
 #include "etc/spotlight/spotlight_private.h"
 
+/*!
+ * @brief Order two 64-bit host-order CNIDs, for bsearch over the client filter
+ *
+ * @param[in] p1  first CNID
+ * @param[in] p2  second CNID
+ * @returns -1, 0, or 1
+ */
 static int cnid_comp_fn(const void *p1, const void *p2)
 {
     const uint64_t *c1 = p1, *c2 = p2;
@@ -50,10 +57,17 @@ static int cnid_comp_fn(const void *p1, const void *p2)
     return (*c1 < *c2) ? -1 : 1;
 }
 
-/*
- * qsort comparator for the 32-bit network-byte-order CNIDs in the
- * result buffer (cnid_comp_fn above compares the 64-bit host-order
- * values used for the client filter).
+/*!
+ * @brief Order two 32-bit CNIDs in network byte order, for qsort over the
+ * result buffer
+ *
+ * The order serves deduplication only, so the call compares the raw
+ * network-order values. The cnid_comp_fn call compares the 64-bit host-order
+ * values of the client filter.
+ *
+ * @param[in] p1  first CNID
+ * @param[in] p2  second CNID
+ * @returns -1, 0, or 1
  */
 static int cnid32_comp_fn(const void *p1, const void *p2)
 {
@@ -260,9 +274,14 @@ static char *sl_cnid_quoted_value(TALLOC_CTX *mem_ctx, const char *p,
 }
 
 /*!
- * Append `term` to `terms` unless already present.
+ * @brief Append a term to the term list unless the list holds it already
  *
- * @returns true when the term was appended
+ * The caller keeps count below the size of the list.
+ *
+ * @param[in,out] terms  term list
+ * @param[in,out] count  number of terms, incremented on an append
+ * @param[in]     term   term to append
+ * @returns true after an append, false for a term that the list holds
  */
 static bool sl_cnid_add_term(char **terms, int *count, char *term)
 {
@@ -277,21 +296,27 @@ static bool sl_cnid_add_term(char **terms, int *count, char *term)
 }
 
 /*!
- * @brief Extract all filename search terms from a Spotlight query
+ * @brief Extract the filename search terms from a Spotlight query string
  *
- * Handles the common macOS patterns:
- *   kMDItemFSName = "foo*"cd       → "foo"
- *   kMDItemDisplayName = "*foo*"cd → "foo"
- *   _kMDItemFileName = "foo*"cd    → "foo"
- *   *=="foo*"cdw                   → "foo"
+ * The named attributes kMDItemFSName, kMDItemDisplayName, and
+ * _kMDItemFileName come first, each with "=" after the name. Only when none
+ * matches does the call read the any-attribute form *==. Finder splits a
+ * multi-word search into one predicate per word joined with ||, so every term
+ * adds to the results. A repeated term counts once.
  *
- * Finder splits a multi-word search into one predicate per word
- * joined with ||, so every extracted term contributes to the
- * result set. Named filename attributes take precedence; the *==
- * "any attribute" form is scanned only when no named attribute
- * matched. Duplicate terms are collapsed.
+ * Patterns and their terms:
+ * @code
+ *   kMDItemFSName = "foo*"cd       -> "foo"
+ *   kMDItemDisplayName = "*foo*"cd -> "foo"
+ *   _kMDItemFileName = "foo*"cd    -> "foo"
+ *   *=="foo*"cdw                   -> "foo"
+ * @endcode
  *
- * @returns the number of talloc'd terms stored in `terms`
+ * @param[in]  mem_ctx    talloc context for the terms
+ * @param[in]  qstring    query string, or NULL
+ * @param[out] terms      receives the terms
+ * @param[in]  max_terms  size of terms
+ * @returns the number of terms
  */
 static int sl_cnid_extract_terms(TALLOC_CTX *mem_ctx, const char *qstring,
                                  char **terms, int max_terms)
@@ -392,6 +417,13 @@ static int sl_cnid_extract_terms(TALLOC_CTX *mem_ctx, const char *qstring,
  * CNID → filesystem path reconstruction
  ****************************************************************************/
 
+/*!
+ * @brief Return the memoized path of a directory in the query cache
+ *
+ * @param[in] csq  query state
+ * @param[in] did  directory CNID
+ * @returns the path, or NULL without an entry
+ */
 static const char *sl_dcache_get(struct sl_cnid_query *csq, cnid_t did)
 {
     for (int i = 0; i < csq->dcache_n; i++) {
@@ -403,6 +435,16 @@ static const char *sl_dcache_get(struct sl_cnid_query *csq, cnid_t did)
     return NULL;
 }
 
+/*!
+ * @brief Memoize a directory path for the rest of the query
+ *
+ * The cache allocates its SL_CNID_DCACHE_MAX entries on first use. A full
+ * cache or a failed allocation skips the entry.
+ *
+ * @param[in,out] csq   query state
+ * @param[in]     did   directory CNID
+ * @param[in]     path  full path of the directory
+ */
 static void sl_dcache_put(struct sl_cnid_query *csq, cnid_t did,
                           const char *path)
 {
@@ -503,31 +545,41 @@ static char *sl_cnid_to_path(TALLOC_CTX *mem_ctx,
  * Backend vtable implementation
  ****************************************************************************/
 
+/*!
+ * @brief Start the CNID backend, which keeps no global state
+ *
+ * @param[in] obj  AFP object, unused
+ * @returns 0
+ */
 static int sl_cnid_init(AFPObj *obj _U_)
 {
     /* No global state needed for the CNID backend */
     return 0;
 }
 
+/*!
+ * @brief Stop the CNID backend, which has nothing to release
+ *
+ * @param[in] obj  AFP object, unused
+ */
 static void sl_cnid_close(AFPObj *obj _U_)
 {
     /* Nothing to do */
 }
 
 /*!
- * @brief Emit up to SL_CNID_PAGE_SIZE results from the private CNID buffer.
+ * @brief Add up to SL_CNID_PAGE_SIZE results from the CNID buffer to the result
+ * page
  *
- * Iterates over the remaining entries in csq->cnids[csq->pos..csq->count-1],
- * resolving each CNID to a filesystem path and adding it to query_results.
- * Stops after SL_CNID_PAGE_SIZE accepted results or when the buffer is
- * exhausted, whichever comes first.
+ * The call resolves each remaining CNID to a path. It skips a CNID outside
+ * the client filter and a path that does not resolve or lies out of scope.
+ * It also skips a file that fails stat or a read access check. A full page
+ * with CNIDs left sets SLQ_STATE_FULL, so the client polls for the next page.
+ * With no CNIDs left the call sets SLQ_STATE_DONE, and a failed add_filemeta
+ * sets SLQ_STATE_ERROR.
  *
- * Sets slq_state to:
- *   SLQ_STATE_FULL  — page is full, more results remain; client must poll
- *   SLQ_STATE_DONE  — all results have been delivered
- *   SLQ_STATE_ERROR — add_filemeta() failed
- *
- * @return 0 on success, -1 on error
+ * @param[in,out] slq  query with the result page and the backend state
+ * @returns 0, or -1 on error
  */
 static int sl_cnid_fill_results(slq_t *slq)
 {
@@ -640,11 +692,16 @@ EC_CLEANUP:
 }
 
 /*!
- * Candidate capacity for `want` results across `nterms` search terms.
+ * @brief Size the candidate buffer for the wanted results and the search terms
  *
- * Every term needs CNID_FIND_MIN_RESULTS entries of room or
- * cnid_find() refuses the call, so a small limit still allocates enough
- * for all the terms; the surplus is trimmed from the results afterwards.
+ * Every term needs CNID_FIND_MIN_RESULTS entries of room, or cnid_find
+ * refuses the call. So a small limit still gets room for all the terms, and
+ * the caller trims the surplus results afterwards. The capacity stops at
+ * SL_CNID_MAX_CAP.
+ *
+ * @param[in] want    number of results wanted
+ * @param[in] nterms  number of search terms
+ * @returns the capacity in entries
  */
 static int sl_cnid_cap_for(uint64_t want, int nterms)
 {
@@ -662,16 +719,22 @@ static int sl_cnid_cap_for(uint64_t want, int nterms)
 }
 
 /*!
- * @brief Search every term into the candidate buffer and deduplicate
+ * @brief Search every term into the candidate buffer, then drop the duplicates
  *
  * Finder joins one predicate per typed word with ||, so the terms are
- * alternatives: one cnid_find() per term into the shared buffer, then a
- * sort and unique pass because a name can match more than one term.
+ * alternatives. The call runs one cnid_find_scoped per term into the shared
+ * buffer, and it holds back CNID_FIND_MIN_RESULTS entries for each term still
+ * to come. A sort and a unique pass follow, since a name can match more than
+ * one term. The call resets the count and the truncation flag on entry, so
+ * the caller can run it again on a grown buffer.
  *
- * Restartable: count and the truncation flag are reset on entry so the
- * caller can re-run against a grown buffer.
- *
- * @return 0 on success, -1 when a backend search failed
+ * @param[in]     slq        query with the volume
+ * @param[in,out] csq        backend state with the candidate buffer
+ * @param[in]     terms      search terms
+ * @param[in]     nterms     number of terms
+ * @param[in]     scope_did  CNID of the scope directory, or CNID_INVALID
+ *                           without a scope
+ * @returns 0, or -1 when a search fails
  */
 static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq,
                            char **terms, int nterms, cnid_t scope_did)
@@ -743,8 +806,12 @@ static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq,
 }
 
 /*!
- * True when `scope` names the volume root (ignoring trailing
- * slashes).
+ * @brief Tell whether a search scope names the volume root, trailing slashes
+ * aside
+ *
+ * @param[in] scope     scope path of the query
+ * @param[in] vol_path  path of the volume
+ * @returns true when both paths match without their trailing slashes
  */
 static bool sl_cnid_scope_is_vol_root(const char *scope,
                                       const char *vol_path)
@@ -763,6 +830,22 @@ static bool sl_cnid_scope_is_vol_root(const char *scope,
     return sl == vl && strncmp(scope, vol_path, sl) == 0;
 }
 
+/*!
+ * @brief Run a filename search in the CNID database for a Spotlight query
+ *
+ * A query without a filename term, or with a scope that does not resolve,
+ * returns no results. A scope below the volume root restricts the search to
+ * its subtree inside the database. A query without a result limit starts with
+ * SL_CNID_START_RESULTS entries. While the database reports further matches,
+ * the search reruns on a buffer of SL_CNID_GROWTH times the size. A bounded
+ * query keeps up to its limit of results. The first page fills at once.
+ *
+ * A scope lookup that trips a CNID reset marks the volume reset and fails the
+ * query.
+ *
+ * @param[in,out] slq  query
+ * @returns 0, or -1 on error
+ */
 static int sl_cnid_open_query(slq_t *slq)
 {
     EC_INIT;
@@ -903,6 +986,15 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Fill the next result page of a CNID query
+ *
+ * A page that holds results already goes out first, since open_query fills
+ * the first one. A finished query adds nothing.
+ *
+ * @param[in,out] slq  query
+ * @returns 0, or -1 without a result set or when the fill fails
+ */
 static int sl_cnid_fetch_results(slq_t *slq)
 {
     if (slq->query_results == NULL) {
@@ -922,6 +1014,11 @@ static int sl_cnid_fetch_results(slq_t *slq)
     return sl_cnid_fill_results(slq);
 }
 
+/*!
+ * @brief Free the backend state of a CNID query
+ *
+ * @param[in,out] slq  query
+ */
 static void sl_cnid_close_query(slq_t *slq)
 {
     if (slq->slq_backend_private) {

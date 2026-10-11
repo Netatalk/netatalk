@@ -20,6 +20,15 @@
 #include <stdio.h>
 #endif /* EBUG */
 
+/*!
+ * @brief Close an ATP endpoint, freeing its queued and saved packets, and close
+ * its DDP socket
+ *
+ * The endpoint itself is an ATP buffer and goes back to the free list.
+ *
+ * @param[in] ah  ATP endpoint, invalid on return
+ * @returns 0, or -1 when closing the socket fails
+ */
 int atp_close(ATP ah)
 {
     struct atpbuf	*cq;

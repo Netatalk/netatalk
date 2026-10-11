@@ -49,6 +49,17 @@ struct charset_functions charset_mac_turkish = {
     NULL
 };
 
+/*!
+ * @brief Convert UCS2 to MAC_TURKISH through mb_generic_push
+ *
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[out]    outbuf        output position, which mb_generic_push does not
+ *                              advance
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of characters converted, or `(size_t)-1` with errno
+ */
 static size_t mac_turkish_push(void *cd, char **inbuf, size_t *inbytesleft,
                                char **outbuf, size_t *outbytesleft)
 {
@@ -56,8 +67,16 @@ static size_t mac_turkish_push(void *cd, char **inbuf, size_t *inbytesleft,
                                     inbytesleft, outbuf, outbytesleft);
 }
 
-/* ------------------------ */
-
+/*!
+ * @brief Convert MAC_TURKISH to UCS2 through mb_generic_pull
+ *
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of characters converted, or `(size_t)-1` with errno
+ */
 static size_t mac_turkish_pull(void *cd, char **inbuf, size_t *inbytesleft,
                                char **outbuf, size_t *outbytesleft)
 {

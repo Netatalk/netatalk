@@ -291,7 +291,14 @@ static const unsigned char	ethermultitab[253][6] = {
 };
 
 
-/*! configure multicast for a given named interface */
+/*!
+ * @brief Add an AppleTalk multicast address to an interface
+ *
+ * @param[in] name  interface name
+ * @param[in] data  6-byte Ethernet multicast address, or NULL for
+ *                  09:00:07:ff:ff:ff, which reaches every AppleTalk node
+ * @returns 0, or -1 when SIOCADDMULTI fails
+ */
 int addmulti(const char *name, const unsigned char *data)
 {
     struct sockaddr sa;
@@ -305,6 +312,16 @@ int addmulti(const char *name, const unsigned char *data)
     return 0;
 }
 
+/*!
+ * @brief Compute the DDP checksum of a buffer, which hashes zone names here
+ *
+ * Each byte adds to the sum, which then rotates left by one bit within 16
+ * bits. A result of 0 becomes 0xffff, since 0 means no checksum in DDP.
+ *
+ * @param[in] data  bytes to sum
+ * @param[in] len   number of bytes
+ * @returns the 16-bit checksum, never 0
+ */
 static uint16_t
 atalk_cksum(unsigned char *data, int len)
 {
@@ -329,12 +346,15 @@ atalk_cksum(unsigned char *data, int len)
 }
 
 /*!
- * @brief Fill in multicast for zone.
+ * @brief Compute and store the Ethernet multicast address of a zone
  *
- * @note There is a general issue here:
- * how can we tell the type of interface we're configuring for?
- * E.g. Is it ethernet, tokenring, or FDDI?
- * (Of course, FDDI and Ethernet look just alike.)
+ * The DDP checksum of the zone name in upper case, modulo 253, picks one of
+ * the 253 AppleTalk zone multicast addresses. The table holds Ethernet
+ * addresses, which FDDI shares, and the call knows no other link type such as
+ * Token Ring.
+ *
+ * @param[in,out] zt  zone, receives the address in zt_bcast
+ * @returns 0, or -1 for an invalid zone or a failed allocation
  */
 int
 zone_bcast(struct ziptab *zt)

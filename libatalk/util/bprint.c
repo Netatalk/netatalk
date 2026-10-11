@@ -14,6 +14,15 @@ static const char	hexdig[] = "0123456789ABCDEF";
 #define BPXLEN	50
 #define BPALEN	18
 
+/*!
+ * @brief Print a hex dump of a buffer to stdout, 16 bytes a line
+ *
+ * Each line holds the hex bytes and then the printable characters, with a dot
+ * for any other byte. A final "(end)" line closes the dump.
+ *
+ * @param[in] data  bytes to print
+ * @param[in] len   number of bytes
+ */
 void bprint(char *data, int len)
 {
     char	xout[BPXLEN], aout[BPALEN];

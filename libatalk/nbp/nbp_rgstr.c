@@ -29,6 +29,22 @@
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
+/*!
+ * @brief Register an NBP name for a socket with the local atalkd
+ *
+ * A name that a lookup already finds fails with EADDRINUSE. The NBPOP_RGSTR
+ * request goes to the NBP port of the local node, and the call waits 2
+ * seconds for the first reply. No reply sets ETIMEDOUT.
+ *
+ * @param[in] sat   socket address to register
+ * @param[in] obj   object name of up to NBPSTRLEN bytes, or NULL for an empty
+ *                  one
+ * @param[in] type  type name of up to NBPSTRLEN bytes, or NULL for an empty one
+ * @param[in] zone  zone name of up to NBPSTRLEN bytes, or NULL for the default
+ *                  zone `*`
+ * @returns 0 when atalkd answers NBPOP_OK, or -1 for a name in use or too long,
+ *          no reply, or another answer
+ */
 int nbp_rgstr(struct sockaddr_at *sat, const char *obj, const char *type,
               const char *zone)
 {

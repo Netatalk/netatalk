@@ -19,6 +19,18 @@
 #include <netatalk/at.h>
 #include <atalk/netddp.h>
 
+/*!
+ * @brief Open an AppleTalk datagram socket and bind it to an address when the
+ * caller passes one
+ *
+ * The caller fills in the address, and the call reads back the address that
+ * the kernel bound. A build with NO_DDP has no sockets.
+ *
+ * @param[in,out] addr    address to bind, receives the bound address, or NULL
+ *                        for no bind
+ * @param[in]     bridge  unused
+ * @returns the socket, or -1 for an error
+ */
 int netddp_open(struct sockaddr_at *addr, struct sockaddr_at *bridge)
 {
 #ifdef NO_DDP

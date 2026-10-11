@@ -72,8 +72,14 @@ static struct passwd *srppwd;
 /* -------------------- Crypto helpers -------------------- */
 
 /*!
- * @brief Strip leading zero bytes from a big-endian integer buffer.
- * @returns pointer to the first non-zero byte (or last byte if all zeros).
+ * @brief Skip the leading zero bytes of a big-endian integer
+ *
+ * The last byte stays, so a zero value keeps 1 byte.
+ *
+ * @param[in]  buf      integer bytes
+ * @param[in]  len      length of buf
+ * @param[out] out_len  receives the length without the leading zeros
+ * @returns the first byte that is not 0, or the last byte of an all-zero buffer
  */
 static const unsigned char *strip_leading_zeros(const unsigned char *buf,
                                                 size_t len, size_t *out_len)
@@ -457,13 +463,22 @@ static void srp_session_free(void)
 }
 
 /*!
- * @brief SRP Round 1 setup.
+ * @brief Answer round 1 of an SRP login with the group, the salt, and the
+ * public ephemeral B of the server
  *
- * Looks up the user's verifier from the verifier directory, generates the
- * server ephemeral key pair (b, B), and builds the FPLoginExt response
- * containing the SRP group parameters, salt, and server public ephemeral B.
+ * The call reads the verifier and the salt of the user from the verifier
+ * directory. It then picks a random b until B = k*v + g^b mod N is not 0. The
+ * reply of 413 bytes holds the context, the group index, N, g, the salt, and
+ * B. Like an Apple server, the call answers a user without a usable verifier
+ * with AFPERR_NOTAUTH and the 2-byte init marker.
  *
- * @returns AFPERR_AUTHCONT on success, AFPERR_NOTAUTH if user not found.
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     UAM data of the request, unused
+ * @param[in]  ibuflen  length of ibuf, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_NOTAUTH without a usable verifier, or
+ *          AFPERR_MISC without a verifier path or on a failure
  */
 static int srp_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen)
@@ -625,10 +640,19 @@ error:
 }
 
 /*!
- * @brief FPLogin handler for SRP UAM.
+ * @brief Read the user name of an FPLogin request and start an SRP login
  *
- * Parses the username from the non-extended login request, validates
- * the user, and delegates to srp_setup() for Round 1.
+ * The request holds the name as a Pascal string, padded to an even address.
+ * The user has to pass uam_checkuser before srp_setup runs.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  unused until the continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the result of srp_setup, AFPERR_NOTAUTH for an unknown or refused
+ *          user, or AFPERR_PARAM
  */
 static int srp_login(void *obj, struct passwd **uam_pwd _U_,
                      char *ibuf, size_t ibuflen,
@@ -679,10 +703,20 @@ static int srp_login(void *obj, struct passwd **uam_pwd _U_,
 }
 
 /*!
- * @brief FPLoginExt handler for SRP UAM.
+ * @brief Read the user name of an FPLoginExt request and start an SRP login
  *
- * Parses the UTF-8 username from the extended login request, validates
- * the user, and delegates to srp_setup() for Round 1.
+ * The name comes as an AFP name of type 3, a UTF-8 string with a 2-byte
+ * length. The user has to pass uam_checkuser before srp_setup runs.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request
+ * @param[out] uam_pwd  unused until the continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the result of srp_setup, AFPERR_NOTAUTH for an unknown or refused
+ *          user, or AFPERR_PARAM
  */
 static int srp_login_ext(void *obj, char *uname, struct passwd **uam_pwd _U_,
                          char *ibuf, size_t ibuflen,
@@ -730,13 +764,23 @@ static int srp_login_ext(void *obj, char *uname, struct passwd **uam_pwd _U_,
 }
 
 /*!
- * @brief SRP Round 2: FPLoginCont handler.
+ * @brief Check the proof of round 2 of an SRP login and answer with the proof
+ * of the server
  *
- * Parses the client's public ephemeral A and proof M1, computes the
- * server-side shared secret S and session key K, verifies M1, and
- * responds with server proof M2 to complete mutual authentication.
+ * The request holds the AFP ID, the step marker, the public ephemeral A, and
+ * the proof M1. The call refuses A mod N = 0 and u = 0. It computes
+ * S = (A * v^u)^b mod N and derives the 40-byte session secret K from S with
+ * MGF1-SHA1. M1 has to match in constant time, and the reply holds the step
+ * marker and M2. Every exit frees the session state.
  *
- * @returns AFP_OK on success, AFPERR_NOTAUTH on proof mismatch.
+ * @param[in]  obj      session object, unused
+ * @param[out] uam_pwd  receives the user entry after a matching proof
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, SRP_AUTH_FAILURE for a wrong proof, AFPERR_NOTAUTH for a
+ *          malformed request, AFPERR_PARAM without round 1, or AFPERR_MISC
  */
 static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
@@ -993,6 +1037,13 @@ fail:
 
 /* -------------------- UAM module interface -------------------- */
 
+/*!
+ * @brief Initialize libgcrypt and register the SRP login
+ *
+ * @param[in] obj   AFP object, unused
+ * @param[in] path  path of the module
+ * @returns 0, or -1 for a libgcrypt version mismatch or a failed registration
+ */
 static int uam_setup(void *obj _U_, const char *path)
 {
     /* Libgcrypt must be initialized before the SRP login handlers use it. */
@@ -1010,6 +1061,9 @@ static int uam_setup(void *obj _U_, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Unregister the SRP login
+ */
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "SRP");

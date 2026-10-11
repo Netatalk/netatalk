@@ -77,9 +77,18 @@ static const uint8_t old_ufinderi[] = {
     'T', 'E', 'X', 'T', 'U', 'N', 'I', 'X'
 };
 
-/* Resolve a file path's dircache entry once per request: consult the
- * memoized d_cached first (strnlen and hash walk skipped on a hit), fall
- * back to the by-name search, and memoize the result for later consumers. */
+/*!
+ * @brief Dircache entry of a file path, looked up once per request
+ *
+ * A hit in path->d_cached skips the name length scan and the hash walk.
+ * Otherwise dircache_search_by_name runs, and its result lands in d_cached
+ * for later consumers of the same request.
+ *
+ * @param[in]     vol   volume of the file
+ * @param[in]     dir   directory that holds the file
+ * @param[in,out] path  path of the file, its d_cached memo updated
+ * @returns the dircache entry, or NULL when the file has none
+ */
 static struct dir *path_resolve_cached_file(const struct vol *vol,
                                             const struct dir *dir, struct path *path)
 {
@@ -95,6 +104,12 @@ static struct dir *path_resolve_cached_file(const struct vol *vol,
     return cached;
 }
 
+/*!
+ * @brief Whether a path contains a .. component
+ *
+ * @param[in] path  slash-separated path
+ * @returns 1 when one component is exactly "..", 0 otherwise
+ */
 static int has_dotdot_component(const char *path)
 {
     const char *p = path;
@@ -118,6 +133,16 @@ static int has_dotdot_component(const char *path)
     return 0;
 }
 
+/*!
+ * @brief Whether an absolute path lies at or below the volume path
+ *
+ * The prefix must end at a slash or at the end of path, so "/vol2" does not
+ * count as inside "/vol". A volume at "/" contains every absolute path.
+ *
+ * @param[in] vol   volume
+ * @param[in] path  resolved absolute path
+ * @returns 1 when path lies inside the volume, 0 otherwise
+ */
 static int path_is_inside_volume(const struct vol *vol, const char *path)
 {
     size_t volpath_len = strlen(vol->v_path);
@@ -133,6 +158,19 @@ static int path_is_inside_volume(const struct vol *vol, const char *path)
     return path[volpath_len] == '\0' || path[volpath_len] == '/';
 }
 
+/*!
+ * @brief Whether a client-supplied symlink target stays inside the volume
+ *
+ * The setfilparams call asks it before it turns a file into a symlink.
+ * Absolute targets and targets with a .. component fail at once. The target
+ * counts from the directory of link_path. It must resolve through realpath to
+ * a path inside the volume, on the device of the volume root.
+ *
+ * @param[in] vol        volume of the link
+ * @param[in] link_path  path of the file that becomes the symlink
+ * @param[in] target     requested link target
+ * @returns 1 when the target is safe, 0 otherwise
+ */
 static int symlink_target_safe(const struct vol *vol,
                                const char *link_path,
                                const char *target)
@@ -291,8 +329,13 @@ static int replace_with_symlink(const char *path, const char *target)
     return -1;
 }
 
-/* ----------------------
-*/
+/*!
+ * @brief Whether Finder info carries no real type and creator
+ *
+ * @param[in] finder  Finder info
+ * @returns 1 when type and creator are all zero or the old TEXTUNIX default, 0
+ *          otherwise
+ */
 static int default_type(void *finder)
 {
     if (!memcmp(finder, ufinderi, 8) || !memcmp(finder, old_ufinderi, 8)) {
@@ -302,7 +345,23 @@ static int default_type(void *finder)
     return 0;
 }
 
-/* FIXME path : unix or mac name ? (for now it's unix name ) */
+/*!
+ * @brief Fill data with the Finder info of a file
+ *
+ * The AppleDouble FinderInfo entry serves first. Without one, data starts as
+ * the default Finder info, and a dot file on a volume with AFPVOL_INV_DOTS
+ * gets the invisible flag. On macOS an ea volume then consults the native
+ * Finder info EA. When the caller passes islink and the volume follows
+ * symlinks, the info marks an alias of type slnk and creator rhap. When the
+ * type stays the default, the extension map supplies type and creator.
+ *
+ * @param[in]  vol     volume of the file
+ * @param[in]  upath   Unix name of the file
+ * @param[in]  adp     AppleDouble with metadata, or NULL
+ * @param[out] data    receives ADEDLEN_FINDERI bytes
+ * @param[in]  islink  nonzero when the file is a symlink
+ * @returns data
+ */
 void *get_finderinfo(const struct vol *vol, const char *upath,
                      struct adouble *adp, void *data, int islink)
 {
@@ -368,8 +427,22 @@ void *get_finderinfo(const struct vol *vol, const char *upath,
     return data;
 }
 
-/* ---------------------
-*/
+/*!
+ * @brief Append a name in AFP wire format to data
+ *
+ * A Mac name is a Pascal string of up to 31 bytes, the MACFILELEN limit. A
+ * Mac name request on a session with UTF-8 names converts the name to the
+ * Mac charset through its Unix name first. A UTF-8 name carries the text
+ * encoding hint of the volume and a two-byte length, limited to 255 bytes.
+ *
+ * @param[in]  vol   volume of the name
+ * @param[out] data  buffer position to append at
+ * @param[in]  pid   parent DID, for the name conversion
+ * @param[in]  name  name to append
+ * @param[in]  id    CNID, for the name conversion
+ * @param[in]  utf8  true for the UTF-8 format, false for a Mac name
+ * @returns the buffer position after the name
+ */
 char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
                cnid_t id, bool utf8)
 {
@@ -444,18 +517,23 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
 				  (1 << FILPBIT_UNIXPR)))
 
 /*!
- * @brief Get CNID for did/upath args both from database and adouble file
+ * @brief CNID of a file or directory, from the CNID database and the
+ * AppleDouble header
  *
- * 1. Get the objects CNID as stored in its adouble file
- * 2. Get the objects CNID from the database
- * 3. Store resource fork data
+ * The AppleDouble header supplies the CNID it remembers, and cnid_add looks up
+ * or creates the database record with that hint. When the two differ, the
+ * header gets the database CNID. A failed cnid_add sets afp_errno, and a table
+ * reset also triggers cnid_volume_reset. A broken database connection ends the
+ * process.
  *
- * @param[in,out] vol    volume
- * @param[in,out] adp    adouble struct of object upath, might be NULL
- * @param[in] st         stat of upath, must NOT be NULL
- * @param[in] did        parent CNID of upath
- * @param[in] upath      name of object
- * @param[in] len        strlen of upath
+ * @param[in,out] vol    volume of the object
+ * @param[in,out] adp    AppleDouble of the object, or NULL
+ * @param[in]     st     stat of the object
+ * @param[in]     did    parent DID
+ * @param[in]     upath  Unix name of the object
+ * @param[in]     len    length of upath
+ * @returns the CNID in network byte order, or CNID_INVALID without a CNID
+ *          database or on failure
  */
 uint32_t get_id(struct vol *vol,
                 struct adouble *adp,
@@ -550,7 +628,32 @@ uint32_t get_id(struct vol *vol,
     return dbcnid;
 }
 
-/* -------------------------- */
+/*!
+ * @brief Pack the file parameters that bitmap selects into buf
+ *
+ * The parameters follow the bit order of the AFP file bitmap. A request for
+ * the file number or a name first settles the CNID. A dircache entry whose
+ * inode matches provides it. Otherwise get_id assigns one, and a new dircache
+ * entry records the file. With a stat from an open fork, the identity follows
+ * the held object, even when its name now holds another file.
+ *
+ * Attributes, dates, Finder info, and the resource fork length come from adp
+ * when the caller passes one. Before AFP 2.0 the no-rename and no-delete
+ * attributes also set the no-write attribute. A request with FILPBIT_PDINFO
+ * before AFP 3.0 comes from a ProDOS client and gets dates in local time.
+ *
+ * @param[in]     obj     session object
+ * @param[in]     vol     volume of the file
+ * @param[in]     bitmap  AFP file bitmap, FILPBIT_* bits
+ * @param[in,out] path    path of the file with its stat, its id and d_cached
+ *                        updated
+ * @param[in]     dir     directory that holds the file
+ * @param[out]    buf     reply buffer receiving the parameters
+ * @param[out]    buflen  receives the bytes written
+ * @param[in]     adp     AppleDouble with the metadata of the file, or NULL
+ * @returns AFP_OK, AFPERR_BITMAP for an unknown bit, AFPERR_NOOBJ, AFPERR_MISC,
+ *          or the afp_errno of get_id
+ */
 int getmetadata(const AFPObj *obj,
                 struct vol *vol,
                 uint16_t bitmap,
@@ -1068,7 +1171,29 @@ int getmetadata(const AFPObj *obj,
     return AFP_OK;
 }
 
-/* ----------------------- */
+/*!
+ * @brief Pack the file parameters that bitmap selects and open the metadata
+ * they need
+ *
+ * Bits that need the AppleDouble use the metadata of an open fork when there
+ * is one, and the dircache-backed ad_metadata_cached otherwise. Attribute
+ * requests also look for open forks of other processes, unless
+ * skip_fork_check spares those syscalls during an enumeration. A metadata
+ * EACCES fails the call, and any other metadata error leaves the file without
+ * AppleDouble data. The getmetadata call then packs the parameters.
+ *
+ * @param[in]     obj              session object
+ * @param[in]     vol              volume of the file
+ * @param[in]     bitmap           AFP file bitmap, FILPBIT_* bits
+ * @param[in,out] path             path of the file with its stat
+ * @param[in]     dir              directory that holds the file
+ * @param[out]    buf              reply buffer receiving the parameters
+ * @param[out]    buflen           receives the bytes written
+ * @param[in]     skip_fork_check  nonzero to skip the open fork test, as
+ *                                 enumerate does
+ * @returns AFP_OK, AFPERR_ACCESS when the metadata is unreadable, or the result
+ *          of getmetadata
+ */
 int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
                  struct path *path,
                  struct dir *dir, char *buf, size_t *buflen, int skip_fork_check)
@@ -1138,7 +1263,25 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
     return rc;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief FPCreateFile: create a file with its AppleDouble metadata
+ *
+ * A hard create, any nonzero flag byte, truncates an existing file. A soft
+ * create fails with AFPERR_EXIST when the name exists. A file that this
+ * session holds open fails with AFPERR_BUSY for a hard create and AFPERR_EXIST
+ * for a soft one. The call writes the Mac name and the CNID into the metadata
+ * and records the file in the dircache. FCE and Spotlight learn about the new
+ * file, and sibling afpd processes get a refresh hint for the parent.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_EXIST, AFPERR_BUSY, AFPERR_VLOCK, AFPERR_ACCESS,
+ *          AFPERR_DFULL, AFPERR_BADTYPE for a directory path, or another
+ *          AFPERR_* code
+ */
 int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                    size_t *rbuflen)
 {
@@ -1334,6 +1477,23 @@ createfile_iderr:
     return retvalue;
 }
 
+/*!
+ * @brief FPSetFileParms: set the parameters of a file
+ *
+ * A directory path fails with AFPERR_BADTYPE and a missing file with
+ * AFPERR_NOOBJ. A dircache entry whose inode no longer matches means that
+ * something outside this afpd replaced the file. The call then drops the
+ * entry and fails with AFPERR_NOOBJ. The parameters start at the next even
+ * offset of the request, and success updates the volume modification time.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_VLOCK for a read-only volume, or another AFPERR_*
+ *          code
+ */
 int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                      char *rbuf _U_, size_t *rbuflen)
 {
@@ -1417,6 +1577,29 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 */
 extern struct path Cur_Path;
 
+/*!
+ * @brief Apply the file parameters that f_bitmap selects from buf
+ *
+ * Without UNIX privileges the user needs write access to the parent
+ * directory. A first pass applies the UNIX privileges and owner and converts
+ * a file into a symlink, all without the AppleDouble. A second pass with the
+ * metadata open sets attributes, dates, Finder info, and ProDOS info.
+ *
+ * On a volume that does not follow symlinks, Finder info of type slnk and
+ * creator rhap turns a regular file into a symlink. The link target is the
+ * path that the file contains, and symlink_target_safe guards it. Date and
+ * Finder info changes update the file modification time. Privilege changes
+ * and a changed invisible attribute also update the parent. Sibling afpd
+ * processes get a refresh hint.
+ *
+ * @param[in]     obj       session object
+ * @param[in]     vol       volume of the file
+ * @param[in,out] path      file, restated after a symlink conversion
+ * @param[in]     f_bitmap  AFP file bitmap, FILPBIT_* bits
+ * @param[in]     buf       parameter block in bitmap order
+ * @returns AFP_OK, AFPERR_ACCESS, AFPERR_BITMAP, AFPERR_MISC, or another
+ *          AFPERR_* code
+ */
 int setfilparams(const AFPObj *obj, struct vol *vol,
                  struct path *path, uint16_t f_bitmap, char *buf)
 {
@@ -1874,20 +2057,25 @@ setfilparam_done:
 }
 
 /*!
- * @brief Rename a file, including its resource fork and mac name.
+ * @brief Rename a file together with its metadata and Mac name
  *
- * renamefile and copyfile take the old and new unix pathnames
- * and the new mac name.
+ * The caller cleans the cache. EXDEV makes the call duplicate the file with
+ * copyfile and delete the source. A file with open forks refuses that path
+ * with AFPERR_OLOCK. When the VFS modules fail to follow the rename, the data
+ * fork rename goes back. The metadata then gets the new Mac name, and a
+ * metadata file that fails to open needs nothing.
  *
- * @param vol         volume structure
- * @param ddir        dest dir structure
- * @param sdir_fd     source dir fd to which src path is relative (for openat et al semantics)
- *                    passing -1 means this is not used, src path is a full path
- * @param src         the source path
- * @param dst         the dest filename in current dir
- * @param newname     the dest mac name
- * @param adp         adouble struct of src file, if open, or & zeroed one
- *
+ * @param[in]     vol      volume of the file
+ * @param[in]     ddir     destination directory
+ * @param[in]     sdir_fd  directory that src is relative to, or -1 when src is
+ *                         a full path
+ * @param[in]     src      current Unix path
+ * @param[in]     dst      new Unix name in the working directory
+ * @param[in]     newname  new Mac name
+ * @param[in,out] adp      AppleDouble of the source from its open fork, or a
+ *                         zeroed one
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_ACCESS, AFPERR_VLOCK, AFPERR_OLOCK,
+ *          AFPERR_PARAM, or the error of copyfile or deletefile
  */
 int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
                char *dst, char *newname, struct adouble *adp)
@@ -1972,8 +2160,18 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
 }
 
 /*!
-   convert a Mac long name to an utf8 name
-*/
+ * @brief Convert a Mac charset name to decomposed UTF-8
+ *
+ * The Mac charset is the one that the volume configures.
+ *
+ * @param[in]  vol      volume supplying the Mac charset
+ * @param[in]  src      name in the Mac charset
+ * @param[in]  srclen   bytes in src
+ * @param[out] dest     receives the UTF-8 name
+ * @param[in]  destlen  capacity of dest
+ * @returns the length of the UTF-8 name, or (size_t)-1 when the conversion
+ *          failed
+ */
 size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
                char *dest, size_t destlen)
 {
@@ -1987,7 +2185,18 @@ size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
     return outlen;
 }
 
-/* ---------------- */
+/*!
+ * @brief Extract a new file name from an AFP path field
+ *
+ * Type 2 carries a Pascal string in the Mac charset, converted to UTF-8 from
+ * AFP 3.0 on. Type 3 carries a hint and a UTF-8 name and needs AFP 3.0. A name
+ * with an embedded NUL is a path, not a file name, and fails.
+ *
+ * @param[in]  vol      volume of the request
+ * @param[out] newname  receives the name, with room for AFPOBJ_TMPSIZ bytes
+ * @param[in]  ibuf     request cursor at the path type byte
+ * @returns the name length, 0 for an empty name, or -1 on failure
+ */
 int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 {
     char        type = *ibuf;
@@ -2051,8 +2260,24 @@ int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
     return plen;
 }
 
-/* -----------------------------------
-*/
+/*!
+ * @brief FPCopyFile: duplicate a file, possibly onto another volume
+ *
+ * The request names the source by volume, DID, and path, then the destination
+ * directory by volume, DID, and path, and the new name. A source open with a
+ * deny-read mode, or one this session cannot open read-only with share modes,
+ * fails with AFPERR_DENYCONF. A source fork that this session holds keeps its
+ * descriptors, so its locks survive. The copyfile call creates the new file.
+ * FCE, Spotlight, and sibling afpd processes then learn about it.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_DENYCONF, AFPERR_VLOCK for a read-only destination
+ *          volume, AFPERR_PARAM, or another AFPERR_* code
+ */
 int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                  size_t *rbuflen)
 {
@@ -2241,9 +2466,24 @@ copy_exit:
 }
 
 /*!
- * @note if newname is NULL (from directory.c) we don't want to copy the resource fork.
- * because we are doing it elsewhere.
- * currently if newname is NULL then adp is NULL.
+ * @brief Duplicate a file with its metadata and resource fork at a new path
+ *
+ * The AppleDouble layer transfers the data fork. The destination volume's VFS
+ * transfers the resource fork and the extended attributes. With newname NULL,
+ * as called from directory.c, the caller transfers the resource fork and adp is
+ * NULL.
+ *
+ * @param[in] s_vol    source volume
+ * @param[in] d_vol    destination volume
+ * @param[in] d_dir    destination directory
+ * @param[in] sfd      directory descriptor src is relative to, or -1
+ * @param[in] src      source path
+ * @param[in] dst      destination path
+ * @param[in] newname  Mac name of the new file, or NULL to leave the resource
+ *                     fork alone
+ * @param[in] adp      open AppleDouble of the source, or NULL to open it here
+ * @param[in] held     adp belongs to an open fork and must stay open afterwards
+ * @returns AFP_OK, AFPERR_EXIST when dst exists, or another AFPERR_* code
  */
 int copyfile(struct vol *s_vol,
              struct vol *d_vol,
@@ -2453,7 +2693,21 @@ done:
 */
 
 /*!
- * @note dirfd can be used for unlinkat semantics
+ * @brief Delete a file and its AppleDouble metadata
+ *
+ * Refuses while another process holds a deny mode or a byte-range lock on the
+ * file. With checkAttrib set, deletefile honors the delete-inhibit attribute
+ * and deletes the CNID and the directory cache entry of the file afterwards.
+ *
+ * @param[in]     vol          volume the file belongs to
+ * @param[in]     dirfd        directory descriptor file is relative to, or -1
+ * @param[in]     file         file name
+ * @param[in]     checkAttrib  honor kFPDeleteInhibitBit and delete the CNID, as
+ *                             afp_delete does
+ * @param[in,out] idp          known CNID of the file or CNID_INVALID, receives
+ *                             the CNID deleted, may be NULL
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_BUSY, AFPERR_ACCESS, or another
+ *          AFPERR_* code
  */
 int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib,
                cnid_t *idp)
@@ -2566,7 +2820,18 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib,
     return err;
 }
 
-/*! @returns a file id */
+/*!
+ * @brief FPCreateID: return a file's CNID as its file ID
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, receives the file ID
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK with the new file ID in rbuf, AFPERR_EXISTID with the
+ *          existing ID in rbuf, or another AFPERR_* code
+ */
 int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                  size_t *rbuflen)
 {
@@ -2655,6 +2920,18 @@ struct reenum {
     cnid_t     did;
 };
 
+/*!
+ * @brief Register one directory entry with the CNID database
+ *
+ * Errors of cnid_add pass silently, except a table reset. A reset invalidates
+ * every CNID of the session, so the call triggers cnid_volume_reset and stops
+ * the walk.
+ *
+ * @param[in] de     directory entry
+ * @param[in] mname  unused
+ * @param[in] data   struct reenum with the volume and the directory DID
+ * @returns 0, or -1 after a table reset
+ */
 static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
 {
     struct path   path;
@@ -2685,9 +2962,20 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
     return 0;
 }
 
-/* --------------------
- * Ok the db is out of synch with the dir.
- * but if it's a deleted file we don't want to do it again and again.
+/*!
+ * @brief Register every entry of a directory with the CNID database after a
+ * stale lookup
+ *
+ * The afp_resolveid handler runs it when a CNID resolves to a name that no
+ * longer exists. A directory whose ctime still matches the last reenumeration
+ * needs no second pass. That keeps a deleted file from triggering the walk
+ * again and again.
+ *
+ * @param[in]     vol   volume of the directory
+ * @param[in]     name  directory path, "." for the working directory
+ * @param[in,out] dir   dircache entry of the directory
+ * @returns the number of entries, or -1 without a CNID database or after a
+ *          failure
  */
 static int
 reenumerate_id(struct vol *vol, char *name, struct dir *dir)
@@ -2722,7 +3010,25 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 }
 
 /*!
-   resolve a file id */
+ * @brief FPResolveID: return the parameters of the file that a file ID names
+ *
+ * The volume needs a persistent CNID database, otherwise the call fails with
+ * AFPERR_NOOP. ID 0 fails at once with AFPERR_NOID, because Mac OS sends such
+ * requests in bulk after a catalog search. When the resolved name no longer
+ * exists, reenumerate_id refreshes the directory once and the lookup runs
+ * again. A directory fails with AFPERR_NOID from AFP 3.0 on and with
+ * AFPERR_BADTYPE before. The reply carries the bitmap and the file
+ * parameters.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOID, AFPERR_NOOP, AFPERR_ACCESS, AFPERR_MISC when
+ *          the CNID backend failed, or AFPERR_PARAM
+ */
 int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                   size_t *rbuflen)
 {
@@ -2866,7 +3172,23 @@ retry:
     return AFP_OK;
 }
 
-/* ------------------------------ */
+/*!
+ * @brief FPDeleteID: delete the CNID record that a file ID names
+ *
+ * The volume needs a persistent CNID database, and a read-only volume fails
+ * with AFPERR_VLOCK. The call also deletes the record of a file ID whose
+ * object no longer exists, and then replies AFPERR_NOOBJ. A directory fails
+ * with AFPERR_BADTYPE.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_NOOBJ when only the record remained, AFPERR_NOID,
+ *          AFPERR_NOOP, AFPERR_VLOCK, AFPERR_BADTYPE, AFPERR_MISC when the CNID
+ *          backend failed, or AFPERR_PARAM
+ */
 int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
 {
@@ -2985,7 +3307,23 @@ delete:
     return err;
 }
 
-/* ------------------------------ */
+/*!
+ * @brief AppleDouble of an FPExchangeFiles operand after the access tests
+ *
+ * A failed stat maps to AFPERR_NOID, AFPERR_ACCESS, or AFPERR_PARAM in
+ * afp_errno. The user needs write access to the file. A file that this
+ * session holds open lends the AppleDouble of its fork, so its locks survive.
+ * Otherwise the call opens the metadata read-write. A resource fork without
+ * write access fails, because the AFP specification demands read and write
+ * privileges on both files.
+ *
+ * @param[in]  obj   session object
+ * @param[in]  vol   volume of the file
+ * @param[in]  path  file with its stat
+ * @param[out] of    receives the open fork of the file, or NULL
+ * @param[in]  adp   AppleDouble to open when no fork holds the file
+ * @returns the AppleDouble to use, or NULL with afp_errno set
+ */
 static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
                                     struct path *path, struct ofork **of, struct adouble *adp)
 {
@@ -3041,6 +3379,24 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
 
 #define APPLETEMP ".AppleTempXXXXXX"
 
+/*!
+ * @brief FPExchangeFiles: swap the contents of two files while each name keeps
+ * its file ID
+ *
+ * Both files must be distinct regular files on the same device that the user
+ * may write. Three renames through a .AppleTemp file in the destination
+ * directory swap the data and metadata. The CNID records, the AppleDouble IDs,
+ * and the permissions then swap back, so each name keeps its file ID and
+ * permissions. A failure undoes the renames.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_SAMEOBJ, AFPERR_BADTYPE, AFPERR_NOOBJ, AFPERR_ACCESS,
+ *          AFPERR_VLOCK, AFPERR_MISC across devices, or another AFPERR_* code
+ */
 int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                       char *rbuf _U_, size_t *rbuflen)
 {

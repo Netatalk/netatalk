@@ -63,8 +63,11 @@ static char           *special_dirs[] = {
 static jmp_buf jmp;
 
 /*!
- * @brief Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
- * @returns pointer to name or NULL.
+ * @brief Tell whether a name is one of the netatalk folders .AppleDB and
+ * .AppleDesktop
+ *
+ * @param[in] name  directory entry name
+ * @returns the matching table entry, or NULL
  */
 static const char *check_netatalk_dirs(const char *name)
 {
@@ -80,8 +83,11 @@ static const char *check_netatalk_dirs(const char *name)
 }
 
 /*!
- * @brief Check for special names
- * @returns pointer to name or NULL.
+ * @brief Tell whether a name is a special directory that the scan leaves out,
+ * such as .zfs
+ *
+ * @param[in] name  directory entry name
+ * @returns the matching table entry, or NULL
  */
 static const char *check_special_dirs(const char *name)
 {
@@ -97,7 +103,16 @@ static const char *check_special_dirs(const char *name)
 }
 
 /*!
- * We unCAPed a name, update CNID db
+ * @brief Move the CNID of a renamed entry from its old name to its new name
+ *
+ * The scan calls it after it decodes a CAP-encoded name. An entry that the
+ * database does not know needs no update.
+ *
+ * @param[in] did      parent directory ID
+ * @param[in] sp       stat result of the entry
+ * @param[in] oldname  name before the rename
+ * @param[in] newname  name after the rename
+ * @returns 0, or -1 when the update fails
  */
 static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
                        const char *newname)
@@ -122,7 +137,20 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
 }
 
 /*!
- * Check for .AppleDouble file, create if missing
+ * @brief Check the AppleDouble file of an entry, or convert it to extended
+ * attributes with -c
+ *
+ * On an adouble:ea volume the call converts the adouble:v2 data with -c and
+ * otherwise does nothing. On an adouble:v2 volume a missing AppleDouble file
+ * gets a log line. Outside -s, the call creates it with the Mac name and the
+ * owner of the entry. An existing file has to open.
+ *
+ * @param[in]  fname    entry name in the current directory
+ * @param[in]  st       stat result of the entry
+ * @param[out] newname  receives the new name when the conversion renames the
+ *                      entry, or NULL
+ * @returns 0, or -1 for an access error, a missing file during -s, or a file
+ *          that fails to open or create
  */
 static int check_adfile(const char *fname, const struct stat *st,
                         const char **newname)
@@ -213,7 +241,14 @@ static int check_adfile(const char *fname, const struct stat *st,
 }
 
 /*!
- * Remove all files with file::EA* from adouble dir
+ * @brief Delete the extended attribute files of an entry from the .AppleDouble
+ * directory
+ *
+ * The call deletes every file in .AppleDouble whose name contains
+ * `name::EA`.
+ *
+ * @param[in] name  entry name
+ * @param[in] ea    EA state of the entry, unused
  */
 static void remove_eafiles(const char *name, struct ea *ea _U_)
 {
@@ -270,7 +305,15 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
 }
 
 /*!
- * Check Extended Attributes files
+ * @brief Check the extended attribute files of an entry against its EA header
+ *
+ * An EA whose file is missing, or whose size differs from the header, drops
+ * out of the header. The call also deletes a file of the wrong size. Both
+ * changes happen even under -s. When the EA header does not open for another
+ * reason than a missing file, the call deletes the EA files, except under -s.
+ *
+ * @param[in] fname  entry name
+ * @returns 0, or -1 when the EA header does not open
  */
 static int check_eafiles(const char *fname)
 {
@@ -332,9 +375,14 @@ static int check_eafiles(const char *fname)
 }
 
 /*!
- * @brief Whether a non-directory holds the AppleDouble dir name
+ * @brief Tell whether an open error means that a non-directory holds the
+ * .AppleDouble name
  *
- * A regular file gives ENOTDIR, a symlink the platform's O_NOFOLLOW errno.
+ * A regular file gives ENOTDIR, and a symbolic link gives the O_NOFOLLOW
+ * error of the platform.
+ *
+ * @param[in] err  errno of the failed open
+ * @returns true for such an error
  */
 static bool adouble_dir_unusable(int err)
 {
@@ -342,7 +390,18 @@ static bool adouble_dir_unusable(int err)
 }
 
 /*!
- * Check for .AppleDouble folder and .Parent, create if missing
+ * @brief Check the .AppleDouble directory and its .Parent file in the current
+ * directory, and create them when missing
+ *
+ * An adouble:ea volume needs neither. A non-directory under the .AppleDouble
+ * name, which a non-AFP client may leave, skips the AppleDouble checks of the
+ * directory. Under -s a missing directory fails and a missing .Parent passes.
+ * Otherwise the call creates both with the Mac name of the directory and its
+ * owner.
+ *
+ * @param[in] volroot  nonzero in the volume root, unused
+ * @returns 0, 1 to skip the AppleDouble checks of the directory, or -1 for an
+ *          error
  */
 static int check_addir(int volroot _U_)
 {
@@ -501,10 +560,18 @@ static int check_addir(int volroot _U_)
 }
 
 /*!
- * @brief Check if file cotains "::EA" and if it does check if its correspondig data fork exists.
- * @returns 0 = name is not an EA file
- * @returns 1 = name is an EA file and no problem was found
- * @returns -1 = name is an EA file and data fork is gone
+ * @brief Check whether a .AppleDouble entry is an EA file and whether its data
+ * file still exists
+ *
+ * Only a volume with `ea = ad` has EA files, and on others the call returns
+ * 0. An EA file whose data file is gone gets a log line and goes away, except
+ * under -s.
+ *
+ * @param[in] parent_fd  open current directory
+ * @param[in] addir_fd   open .AppleDouble directory
+ * @param[in] name       entry name in .AppleDouble
+ * @returns 0 for a name without `::EA`, 1 for an EA file with its data file, or
+ *          -1 for an orphan or an access error
  */
 static int check_eafile_in_adouble(int parent_fd, int addir_fd,
                                    const char *name)
@@ -566,9 +633,15 @@ ea_check_done:
 }
 
 /*!
- * @brief Check files and dirs inside .AppleDouble folder
- * @note remove orphaned files
- * @note bail on dirs
+ * @brief Check the entries of the .AppleDouble directory of the current
+ * directory
+ *
+ * Directories inside .AppleDouble only log, and EA files go to
+ * check_eafile_in_adouble. An AppleDouble file whose data file is gone goes
+ * away, except under -s. On an adouble:ea volume a missing or unusable
+ * .AppleDouble passes.
+ *
+ * @returns 0, or -1 when a directory does not open
  */
 static int read_addir(void)
 {
@@ -686,8 +759,20 @@ static int read_addir(void)
 }
 
 /*!
- * @brief Check CNID for a file/dir, both from db and from ad-file.
- * @returns Correct CNID of object or CNID_INVALID (ie 0) on error
+ * @brief Make sure that an entry has a CNID in the database and that its
+ * AppleDouble file agrees
+ *
+ * The call reads the CNID hint of the AppleDouble file, unless -i ignores it.
+ * It then adds or looks up the entry in the database with that hint. A mismatch
+ * rewrites the AppleDouble file with the database CNID, except under -s. An
+ * emptied CNID table ends the scan through longjmp, since the rest of the
+ * volume would get new IDs.
+ *
+ * @param[in] name       entry name
+ * @param[in] did        CNID of the parent directory
+ * @param[in] st         stat result of the entry
+ * @param[in] adfile_ok  0 when the AppleDouble file of the entry is usable
+ * @returns the CNID of the entry, or CNID_INVALID for an error
  */
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
                          int adfile_ok)
@@ -785,6 +870,14 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
     return db_cnid;
 }
 
+/*!
+ * @brief Delete a `._name` file whose `name` no longer exists
+ *
+ * The call deletes the file even under -s.
+ *
+ * @param[in] name  name that starts with `._`
+ * @returns 1 for an orphaned file, or 0
+ */
 static int check_orphaned(const char *name)
 {
     int rc;
@@ -806,11 +899,22 @@ static int check_orphaned(const char *name)
 }
 
 /*!
-  This is called recursively for all dirs.
-  volroot=1 means we're in the volume root dir, 0 means we aren't.
-  We use this when checking for netatalk private folders like .AppleDB.
-  did is our parent's CNID.
-*/
+ * @brief Scan the current directory, check each entry, and descend into the
+ * subdirectories
+ *
+ * The call checks the .AppleDouble directory first, then every entry. It
+ * skips the netatalk folders, .zfs in the volume root, and names that the
+ * volume does not accept. Types other than files, directories, and symbolic
+ * links go away, except under -s. The call checks the AppleDouble file of
+ * each entry, and for entries other than symbolic links the CNID and the EA
+ * files. It descends into each directory that has a CNID.
+ *
+ * A signal ends the scan through longjmp.
+ *
+ * @param[in] volroot  nonzero in the volume root
+ * @param[in] did      CNID of the current directory
+ * @returns 0, or -1 for an error that stops the scan
+ */
 static int dbd_readdir(int volroot, cnid_t did)
 {
     int cwd, ret = 0, adfile_ok, addir_ok;
@@ -1017,7 +1121,17 @@ static int dbd_readdir(int volroot, cnid_t did)
 }
 
 /*!
- * Main func called from cmd_dbd.c
+ * @brief Scan a whole volume from its root
+ *
+ * Only Unicode volumes qualify. The scan reads the stamp of the CNID database,
+ * and with -c it converts the AppleDouble data of the root. It then runs
+ * dbd_readdir from the root with CNID 2. The umask stays 0 during the scan, so
+ * repaired AppleDouble files take their permissions from the files they belong
+ * to. A signal ends the scan with 0.
+ *
+ * @param[in] vol_in  volume
+ * @param[in] flags   DBD_FLAGS_* options
+ * @returns 0, or -1 for a failed scan or an emptied CNID table
  */
 int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
 {

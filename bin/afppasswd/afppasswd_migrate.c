@@ -45,6 +45,13 @@ struct migrate_record {
     uid_t uid;
 };
 
+/*!
+ * @brief Look up the UID of a local user name
+ *
+ * @param[in]  name  user name
+ * @param[out] uid   receives the UID
+ * @returns 0, or -1 for an unknown user
+ */
 static int lookup_uid(const char *name, uid_t *uid)
 {
     const struct passwd *pwd;
@@ -59,6 +66,18 @@ static int lookup_uid(const char *name, uid_t *uid)
     return 0;
 }
 
+/*!
+ * @brief Split the path of the legacy verifier file into its directory and its
+ * file name
+ *
+ * A path without a slash lives in `.`, and a file at the root lives in `/`.
+ * An empty or too long path, a trailing slash, `.`, or `..` fails.
+ *
+ * @param[in]  path      file path
+ * @param[out] parent    receives the directory
+ * @param[out] basename  receives the file name
+ * @returns 0, or -1 after a message
+ */
 static int split_path(const char *path, char parent[MAXPATHLEN + 1],
                       char basename[MAXPATHLEN + 1])
 {
@@ -102,6 +121,15 @@ static int split_path(const char *path, char parent[MAXPATHLEN + 1],
     return 0;
 }
 
+/*!
+ * @brief Check that the directory of the legacy verifier file belongs to the
+ * administrator and is not writable by group or other
+ *
+ * @param[in] fd                 open directory
+ * @param[in] path               file path for the message
+ * @param[in] administrator_uid  expected owner
+ * @returns 0, or -1 after a message
+ */
 static int validate_parent(int fd, const char *path, uid_t administrator_uid)
 {
     struct stat st;
@@ -118,6 +146,16 @@ static int validate_parent(int fd, const char *path, uid_t administrator_uid)
     return 0;
 }
 
+/*!
+ * @brief Check that the legacy verifier file is a private single-link regular
+ * file of the administrator
+ *
+ * @param[in]  fd                 open file
+ * @param[in]  path               file path for the messages
+ * @param[in]  administrator_uid  expected owner
+ * @param[out] st                 receives the stat result
+ * @returns 0, or -1 after a message
+ */
 static int validate_source(int fd, const char *path, uid_t administrator_uid,
                            struct stat *st)
 {
@@ -138,6 +176,12 @@ static int validate_source(int fd, const char *path, uid_t administrator_uid,
     return 0;
 }
 
+/*!
+ * @brief Free the migration records and their array
+ *
+ * @param[in] records  record array
+ * @param[in] count    number of records
+ */
 static void free_records(struct migrate_record *records, size_t count)
 {
     for (size_t i = 0; i < count; i++) {
@@ -148,6 +192,23 @@ static void free_records(struct migrate_record *records, size_t count)
     free(records);
 }
 
+/*!
+ * @brief Parse one line of the legacy verifier file into a migration record
+ *
+ * The line has to hold a valid user name, a colon, and valid SRP fields,
+ * without a NUL. The user has to exist on the system, and no two records may
+ * share a user name or a UID. The array grows by doubling from 16 entries.
+ *
+ * @param[in,out] records        record array, grown as needed
+ * @param[in,out] count          number of records
+ * @param[in,out] capacity       allocated entries
+ * @param[in]     line           line with its newline
+ * @param[in]     length         length of line
+ * @param[in]     source_length  length of the line in the file, without an
+ *                               added newline
+ * @param[in]     line_number    line number for the messages
+ * @returns 0, or -1 after a message
+ */
 static int add_record(struct migrate_record **records, size_t *count,
                       size_t *capacity, const char *line, size_t length,
                       size_t source_length, size_t line_number)
@@ -247,6 +308,18 @@ malformed:
     return -1;
 }
 
+/*!
+ * @brief Read every record of the legacy verifier file
+ *
+ * The call rewinds a dup of the descriptor and reads the file from its start.
+ * A line over SRP_USERNAME_MAX_LEN + SRP_FORMAT_LEN bytes fails as malformed,
+ * and a last line without a newline gets one.
+ *
+ * @param[in]     source_fd  open legacy file
+ * @param[in,out] records    receives the record array
+ * @param[in,out] count      receives the number of records
+ * @returns 0, or -1 after a message
+ */
 static int read_records(int source_fd, struct migrate_record **records,
                         size_t *count)
 {
@@ -313,6 +386,16 @@ done:
     return result;
 }
 
+/*!
+ * @brief Read the legacy verifier file again and compare it byte for byte with
+ * the records read before
+ *
+ * @param[in] source_fd  open legacy file
+ * @param[in] records    records from read_records
+ * @param[in] count      number of records
+ * @returns 1 when the file still holds the same bytes, or 0 for a change or a
+ *          read error
+ */
 static int source_unchanged(int source_fd,
                             const struct migrate_record *records,
                             size_t count)
@@ -342,6 +425,16 @@ static int source_unchanged(int source_fd,
     return length == 0 && record == count && offset == 0;
 }
 
+/*!
+ * @brief Write every byte of a buffer, looping over short writes
+ *
+ * A write that returns 0 counts as EIO.
+ *
+ * @param[in] fd      file
+ * @param[in] data    bytes to write
+ * @param[in] length  number of bytes
+ * @returns 0, or -1 with errno set
+ */
 static int write_all(int fd, const char *data, size_t length)
 {
     while (length > 0) {
@@ -363,12 +456,35 @@ static int write_all(int fd, const char *data, size_t length)
     return 0;
 }
 
+/*!
+ * @brief Write the decimal UID that names a migrated verifier file
+ *
+ * @param[in]  uid   user ID
+ * @param[out] name  receives the file name
+ * @param[in]  size  size of name
+ * @returns 0, or -1 when the name does not fit
+ */
 static int uid_filename(uid_t uid, char *name, size_t size)
 {
     int length = snprintf(name, size, "%ju", (uintmax_t)uid);
     return length < 0 || (size_t)length >= size ? -1 : 0;
 }
 
+/*!
+ * @brief Create a verifier file for each record in the staging directory
+ *
+ * Each file gets the decimal UID as its name, mode 0600, and the record as its
+ * content. An active record goes to its user as the owner, and a disabled
+ * record stays with the administrator. The call checks the result of each
+ * file on the disk.
+ *
+ * @param[in] directory_fd       open staging directory
+ * @param[in] path               legacy file path for the messages
+ * @param[in] records            records to write
+ * @param[in] count              number of records
+ * @param[in] administrator_uid  owner of disabled records
+ * @returns 0, or -1 after a message
+ */
 static int create_verifiers(int directory_fd, const char *path,
                             const struct migrate_record *records, size_t count,
                             uid_t administrator_uid)
@@ -429,6 +545,15 @@ static int create_verifiers(int directory_fd, const char *path,
     return 0;
 }
 
+/*!
+ * @brief Remove the verifier files of the records and then the staging
+ * directory
+ *
+ * @param[in] parent_fd       open directory of the legacy file
+ * @param[in] temporary_name  name of the staging directory
+ * @param[in] records         records whose files to remove
+ * @param[in] count           number of records
+ */
 static void remove_staging(int parent_fd, const char *temporary_name,
                            const struct migrate_record *records, size_t count)
 {
@@ -450,6 +575,19 @@ static void remove_staging(int parent_fd, const char *temporary_name,
     unlinkat(parent_fd, temporary_name, AT_REMOVEDIR);
 }
 
+/*!
+ * @brief Create the staging directory `.name.migrate.PID` next to the legacy
+ * file
+ *
+ * The directory gets mode 0700 and the administrator as its owner. A failure
+ * removes it again.
+ *
+ * @param[in]  parent_fd          open directory of the legacy file
+ * @param[in]  basename           name of the legacy file
+ * @param[in]  administrator_uid  owner of the directory
+ * @param[out] temporary_name     receives the name of the directory
+ * @returns the open directory, or -1 after a message
+ */
 static int create_staging_directory(int parent_fd, const char *basename,
                                     uid_t administrator_uid,
                                     char temporary_name[MAXPATHLEN + 1])
@@ -491,6 +629,15 @@ static int create_staging_directory(int parent_fd, const char *basename,
     return fd;
 }
 
+/*!
+ * @brief Tell whether the path of the legacy file still names the same
+ * single-link file
+ *
+ * @param[in] parent_fd  open directory of the legacy file
+ * @param[in] basename   name of the legacy file
+ * @param[in] source_st  stat result of the file that the migration read
+ * @returns nonzero when the device, inode, and link count still match, or 0
+ */
 static int source_still_at_path(int parent_fd, const char *basename,
                                 const struct stat *source_st)
 {
@@ -500,6 +647,17 @@ static int source_still_at_path(int parent_fd, const char *basename,
            st.st_nlink == 1;
 }
 
+/*!
+ * @brief Refuse a migration while a staging directory of an earlier run exists
+ *
+ * Any entry of the directory that starts with `.name.migrate.` stops the
+ * migration, so the administrator can inspect it first.
+ *
+ * @param[in] parent_fd  open directory of the legacy file
+ * @param[in] basename   name of the legacy file
+ * @param[in] path       legacy file path for the messages
+ * @returns 0, or -1 after a message
+ */
 static int reject_stale_staging(int parent_fd, const char *basename,
                                 const char *path)
 {
@@ -556,6 +714,17 @@ static int reject_stale_staging(int parent_fd, const char *basename,
     return 0;
 }
 
+/*!
+ * @brief Keep the legacy file under a backup name through a hard link
+ *
+ * The call takes the first free name among `name.legacy`, `name.legacy.1`,
+ * and onward, within MIGRATE_ATTEMPTS tries.
+ *
+ * @param[in]  parent_fd    open directory of the legacy file
+ * @param[in]  basename     name of the legacy file
+ * @param[out] backup_name  receives the backup name
+ * @returns 0, or -1 after a message
+ */
 static int link_backup(int parent_fd, const char *basename,
                        char backup_name[MAXPATHLEN + 1])
 {
@@ -597,6 +766,16 @@ enum restore_result {
     RESTORE_COMPLETE
 };
 
+/*!
+ * @brief Put the legacy file back under its name from the backup and remove the
+ * backup
+ *
+ * @param[in] parent_fd    open directory of the legacy file
+ * @param[in] basename     name of the legacy file
+ * @param[in] backup_name  backup name from link_backup
+ * @returns RESTORE_COMPLETE, RESTORE_CLEANUP_INCOMPLETE when the backup stays,
+ *          or RESTORE_FAILED when the original remains under the backup name
+ */
 static enum restore_result restore_source(int parent_fd, const char *basename,
                                           const char *backup_name)
 {
@@ -625,6 +804,24 @@ static enum restore_result restore_source(int parent_fd, const char *basename,
     return RESTORE_COMPLETE;
 }
 
+/*!
+ * @brief Replace a legacy flat SRP verifier file with a verifier directory at
+ * the same path
+ *
+ * The file and its directory have to be private to the administrator, and a
+ * shared lock on the file fails while afpd holds it. Every record has to
+ * parse and name a local user. The new directory takes shape in a staging
+ * sibling. Once the file proves unchanged and a hard link keeps it as
+ * `name.legacy`, a rename puts the directory in place.
+ *
+ * Any failure after the original name goes away rolls back to the backup. The
+ * messages name the backup when that fails as well.
+ *
+ * @param[in] path               legacy verifier file
+ * @param[in] administrator_uid  owner of the file, the directory, and disabled
+ *                               records
+ * @returns 0, or -1 after a message
+ */
 int afppasswd_migrate_srp(const char *path, uid_t administrator_uid)
 {
     struct migrate_record *records = NULL;

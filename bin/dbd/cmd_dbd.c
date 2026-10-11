@@ -47,8 +47,9 @@ static dbd_flags_t flags;
  ***************************************************************************/
 
 /*!
- * @brief SIGNAL handling
- * @note catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
+ * @brief Note SIGINT or SIGTERM in alarmed, so the scan stops cleanly
+ *
+ * @param[in] signo  signal number, unused
  */
 static void sig_handler(int signo _U_)
 {
@@ -56,6 +57,12 @@ static void sig_handler(int signo _U_)
     return;
 }
 
+/*!
+ * @brief Route SIGTERM and SIGINT to sig_handler and ignore SIGABRT, SIGHUP,
+ * and SIGQUIT
+ *
+ * A failed sigaction exits dbd.
+ */
 static void set_signal(void)
 {
     struct sigaction sv;
@@ -93,6 +100,9 @@ static void set_signal(void)
     }
 }
 
+/*!
+ * @brief Print the usage and the options of dbd to stdout
+ */
 static void usage(void)
 {
     printf("Usage: dbd [-cfFistuvV] <path to netatalk volume>\n\n"
@@ -117,6 +127,15 @@ static void usage(void)
  * Global functions
  ***************************************************************************/
 
+/*!
+ * @brief Print a formatted message line to stdout, a LOGDEBUG one only with -v
+ *
+ * The message goes through a static buffer of 1024 bytes.
+ *
+ * @param[in] lt   LOGSTD or LOGDEBUG
+ * @param[in] fmt  printf format
+ * @param[in] ...  format arguments
+ */
 void dbd_log(enum logtype lt, const char *fmt, ...)
 {
     static char logbuffer[1024];
@@ -130,6 +149,23 @@ void dbd_log(enum logtype lt, const char *fmt, ...)
     }
 }
 
+/*!
+ * @brief Scan an AFP volume and repair its CNID database and AppleDouble files
+ *
+ * The tool runs as root on the root path of a volume from afp.conf. The -s
+ * option only reports, -f wipes and rebuilds the CNID database, and -c turns
+ * adouble:v2 data into adouble:ea on an adouble:ea volume. The -i option
+ * invalidates the CNID hints in AppleDouble files, and -t prints statistics.
+ * The -u option names the user for volumes that use $u, and -F names the
+ * afp.conf file.
+ *
+ * A volume whose CNID backend this build lacks, or with an unknown AppleDouble
+ * or extended attribute setting, fails.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns does not return, and exits with EXIT_SUCCESS or EXIT_FAILURE
+ */
 int main(int argc, char **argv)
 {
     EC_INIT;

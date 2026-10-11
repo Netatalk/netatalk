@@ -51,7 +51,22 @@ struct perm {
 typedef int (*rf_loop)(const struct vol *, struct dirent *, char *, void *,
                        int);
 
-/* ----------------------------- */
+/*!
+ * @brief Call fn for every entry of directory name except . and ..
+ *
+ * fn receives the entry and its path below name, and the walk stops at the
+ * first nonzero result. A directory that fails to open yields 0 under a
+ * nonzero flag. Otherwise the call logs an error that names from and fails.
+ *
+ * @param[in] from  caller name, for the log line
+ * @param[in] name  directory to walk
+ * @param[in] fn    callback, or NULL to walk without one
+ * @param[in] vol   volume, passed to fn
+ * @param[in] data  callback data, passed to fn
+ * @param[in] flag  nonzero to tolerate an opendir failure, passed to fn
+ * @returns 0, the first nonzero fn result, or -1 when opendir failed and flag
+ *          is 0
+ */
 static int
 for_each_adouble(const char *from, const char *name, rf_loop fn,
                  const struct vol *vol, void *data, int flag)
@@ -96,6 +111,12 @@ for_each_adouble(const char *from, const char *name, rf_loop fn,
     return ret;
 }
 
+/*!
+ * @brief Whether name differs from the netatalk database directory names
+ *
+ * @param[in] name  directory entry name
+ * @returns 1 for any name except .AppleDB and .AppleDesktop, 0 for those two
+ */
 static int netatalk_name(const char *name)
 {
     return strcmp(name, ".AppleDB") && strcmp(name, ".AppleDesktop");
@@ -105,6 +126,17 @@ static int netatalk_name(const char *name)
  * classic adouble format
  *******************************************************************************/
 
+/*!
+ * @brief Whether clients may see name on a version 2 AppleDouble volume
+ *
+ * Names without a leading dot always pass. The netatalk directories
+ * .AppleDB, .AppleDesktop, and .AppleDouble stay hidden, and so does .Parent
+ * in any letter case.
+ *
+ * @param[in] vol   unused
+ * @param[in] name  directory entry name
+ * @returns 1 when clients may see name, 0 otherwise
+ */
 static int validupath_adouble(const struct vol *vol _U_, const char *name)
 {
     if (name[0] != '.') {
@@ -115,7 +147,17 @@ static int validupath_adouble(const struct vol *vol _U_, const char *name)
            && strcasecmp(name, ".Parent");
 }
 
-/* ----------------- */
+/*!
+ * @brief Give the version 2 metadata file of path a new owner
+ *
+ * chown follows symlinks, and a missing metadata file counts as success.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] path  file whose metadata file to change
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @returns 0, or -1 with errno set
+ */
 static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid,
                             gid_t gid)
 {
@@ -133,7 +175,16 @@ static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid,
     return 0;
 }
 
-/* ----------------- */
+/*!
+ * @brief Rename nothing, because the .AppleDouble directory moves with the
+ * directory
+ *
+ * @param[in] vol      unused
+ * @param[in] dirfd    unused
+ * @param[in] oldpath  unused
+ * @param[in] newpath  unused
+ * @returns 0
+ */
 static int RF_renamedir_adouble(const struct vol *vol _U_, int dirfd _U_,
                                 const char *oldpath _U_,
                                 const char *newpath _U_)
@@ -141,7 +192,22 @@ static int RF_renamedir_adouble(const struct vol *vol _U_, int dirfd _U_,
     return 0;
 }
 
-/* ----------------- */
+/*!
+ * @brief Delete one .AppleDouble entry whose file no longer exists in the
+ * working directory
+ *
+ * A file of the same name in the working directory means the directory still
+ * has content, and the walk stops with AFPERR_DIRNEMPT. lstat also sees a
+ * dangling symlink. Any other entry, the .Parent file among them, goes through
+ * netatalk_unlink.
+ *
+ * @param[in] vol   unused
+ * @param[in] de    .AppleDouble entry
+ * @param[in] name  path of the entry
+ * @param[in] data  unused
+ * @param[in] flag  unused
+ * @returns AFP_OK, AFPERR_DIRNEMPT, or the netatalk_unlink error
+ */
 static int deletecurdir_adouble_loop(const struct vol *vol _U_,
                                      struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
@@ -162,6 +228,17 @@ static int deletecurdir_adouble_loop(const struct vol *vol _U_,
     return 0;
 }
 
+/*!
+ * @brief Delete the .AppleDouble directory of the working directory
+ *
+ * The walk first deletes every metadata file whose file no longer exists, the
+ * .Parent file among them. A metadata file that still has its file stops the
+ * call with AFPERR_DIRNEMPT. A missing .AppleDouble directory counts as
+ * success.
+ *
+ * @param[in] vol  volume holding the directory
+ * @returns AFP_OK, or the AFP error of the first failure
+ */
 static int RF_deletecurdir_adouble(const struct vol *vol)
 {
     int err;
@@ -176,20 +253,53 @@ static int RF_deletecurdir_adouble(const struct vol *vol)
     return netatalk_rmdir(-1, ".AppleDouble");
 }
 
-/* ----------------- */
+/*!
+ * @brief Derive a metadata file mode with ad_hf_mode and apply it to name
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  metadata file
+ * @param[in] mode  data file mode
+ * @param[in] st    stat whose non-permission bits to keep, or NULL
+ * @returns 0, or -1 with errno set
+ */
 static int adouble_setfilmode(const struct vol *vol, const char *name,
                               mode_t mode, struct stat *st)
 {
     return setfilmode(vol, name, ad_hf_mode(mode), st);
 }
 
+/*!
+ * @brief Apply the mode of a data file to its version 2 metadata file
+ *
+ * ad_hf_mode derives the metadata mode, so read access also grants write
+ * access for fcntl locks.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  data file
+ * @param[in] mode  new data file mode
+ * @param[in] st    stat of the data file, or NULL
+ * @returns 0, or -1 with errno set
+ */
 static int RF_setfilmode_adouble(const struct vol *vol, const char *name,
                                  mode_t mode, struct stat *st)
 {
     return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
 }
 
-/* ----------------- */
+/*!
+ * @brief Apply a directory mode to its .AppleDouble directory and .Parent file
+ *
+ * The .AppleDouble directory gets DIRBITS plus mode, minus the volume umask,
+ * and .Parent gets the ad_hf_mode result. A mode that grants the owner read
+ * and search access changes the directory first, otherwise last. That ordering
+ * keeps .Parent reachable while it changes.
+ *
+ * @param[in] vol   volume holding the directory
+ * @param[in] name  directory
+ * @param[in] mode  new directory mode
+ * @param[in] st    stat of name, or NULL
+ * @returns 0, or -1 with errno set
+ */
 static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name,
                                      mode_t mode, struct stat *st)
 {
@@ -222,7 +332,20 @@ static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name,
     return 0;
 }
 
-/* ----------------- */
+/*!
+ * @brief Apply the metadata mode in data to one .AppleDouble entry
+ *
+ * Subdirectories keep their mode. A failed stat logs an error unless flag is
+ * nonzero, and a failed mode change passes without notice, so the walk always
+ * continues.
+ *
+ * @param[in] vol   volume holding the directory
+ * @param[in] de    unused
+ * @param[in] name  path of the entry
+ * @param[in] data  pointer to the metadata mode
+ * @param[in] flag  nonzero to stay silent about a failed stat
+ * @returns 0
+ */
 static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
                                    char *name, void *data, int flag)
 {
@@ -244,6 +367,21 @@ static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
     return 0;
 }
 
+/*!
+ * @brief Apply a directory mode to its .AppleDouble directory and the metadata
+ * files there
+ *
+ * The .AppleDouble directory gets DIRBITS plus mode, minus the volume umask.
+ * Each metadata file gets the ad_hf_mode result. A mode that grants the owner
+ * read and search access changes the directory first, otherwise last, so the
+ * metadata files stay reachable while they change.
+ *
+ * @param[in] vol   volume holding the directory
+ * @param[in] name  directory
+ * @param[in] mode  new directory mode
+ * @param[in] st    stat of name, or NULL
+ * @returns 0, or -1 when a chmod or the directory walk failed
+ */
 static int RF_setdirmode_adouble(const struct vol *vol, const char *name,
                                  mode_t mode, struct stat *st)
 {
@@ -279,6 +417,18 @@ static int RF_setdirmode_adouble(const struct vol *vol, const char *name,
     return 0;
 }
 
+/*!
+ * @brief Give the .AppleDouble directory of the working directory a new owner
+ *
+ * The call ignores name and acts on the working directory. EPERM passes
+ * without notice, and other failures only log at debug level.
+ *
+ * @param[in] vol   unused
+ * @param[in] name  unused
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @returns 0
+ */
 static int RF_setdirowner_adouble(const struct vol *vol _U_,
                                   const char *name _U_,
                                   uid_t uid, gid_t gid)
@@ -291,14 +441,40 @@ static int RF_setdirowner_adouble(const struct vol *vol _U_,
     return 0;
 }
 
-/* ----------------- */
+/*!
+ * @brief Delete the version 2 metadata file of file
+ *
+ * A missing metadata file counts as success.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] dirfd  directory that file is relative to, or -1 for the working
+ *                   directory
+ * @param[in] file   data file
+ * @returns AFP_OK, AFPERR_VLOCK on a read-only file system, AFPERR_ACCESS, or
+ *          AFPERR_PARAM
+ */
 static int RF_deletefile_adouble(const struct vol *vol, int dirfd,
                                  const char *file)
 {
     return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 }
 
-/* ----------------- */
+/*!
+ * @brief Rename the version 2 metadata file of src to match dst
+ *
+ * src is relative to dirfd, and dst is relative to the working directory. A
+ * source without a metadata file needs nothing and succeeds. When the rename
+ * fails with ENOENT for an existing source, the destination .AppleDouble
+ * directory is missing. ad_open then creates it through a separate AppleDouble,
+ * and the rename runs again.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] dirfd  directory that src is relative to, or -1 for the working
+ *                   directory
+ * @param[in] src    current file name
+ * @param[in] dst    new file name
+ * @returns 0, or -1 with errno set
+ */
 static int RF_renamefile_adouble(const struct vol *vol, int dirfd,
                                  const char *src, const char *dst)
 {
@@ -350,6 +526,21 @@ static int RF_renamefile_adouble(const struct vol *vol, int dirfd,
     return 0;
 }
 
+/*!
+ * @brief Clone the version 2 metadata file of src for dst
+ *
+ * The call stats dst first and fails when it does not exist. A directory pair
+ * uses the .Parent files, and a file pair uses the files in the .AppleDouble
+ * directory beside each. A source without a metadata file needs nothing and
+ * succeeds.
+ *
+ * @param[in] vol  unused
+ * @param[in] sfd  directory that src is relative to, or -1 for the working
+ *                 directory
+ * @param[in] src  source file or directory
+ * @param[in] dst  existing destination file or directory
+ * @returns 0, or -1 with errno set
+ */
 static int RF_copyfile_adouble(const struct vol *vol _U_, int sfd,
                                const char *src, const char *dst)
 {
@@ -405,6 +596,19 @@ EC_CLEANUP:
 }
 
 #ifdef HAVE_NFSV4_ACLS
+/*!
+ * @brief Apply an NFSv4 ACL change to the AppleDouble file of path
+ *
+ * A missing path and a directory need nothing and succeed. For a file, acl
+ * runs cmd on the metadata path that vol->ad_path returns.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] path   file or directory
+ * @param[in] cmd    acl command, ACE_SETACL from the callers
+ * @param[in] count  number of entries in aces
+ * @param[in] aces   NFSv4 access control entries
+ * @returns AFP_OK, or AFPERR_MISC when the stat or the acl call failed
+ */
 static int RF_solaris_acl(const struct vol *vol, const char *path, int cmd,
                           int count, void *aces)
 {
@@ -430,6 +634,18 @@ static int RF_solaris_acl(const struct vol *vol, const char *path, int cmd,
     return AFP_OK;
 }
 
+/*!
+ * @brief Keep only the owner@, group@, and everyone@ entries in the NFSv4 ACL
+ * of an AppleDouble file
+ *
+ * The AppleDouble file is the one that vol->ad_path returns for path.
+ * Directories need nothing, and a missing AppleDouble file counts as success.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] path  file or directory
+ * @param[in] dir   nonzero when path is a directory
+ * @returns AFP_OK, or the AFP error from remove_nfsv4_acl_vfs
+ */
 static int RF_solaris_remove_acl(const struct vol *vol, const char *path,
                                  int dir)
 {
@@ -455,6 +671,21 @@ static int RF_solaris_remove_acl(const struct vol *vol, const char *path,
 #endif
 
 #ifdef HAVE_POSIX_ACLS
+/*!
+ * @brief Apply a POSIX ACL to the AppleDouble file of path
+ *
+ * A directory needs nothing. For a file, acl_set_file sets acl of type on the
+ * metadata path that vol->ad_path returns. ENOENT from either the stat or the
+ * ACL call counts as success.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] path   file or directory
+ * @param[in] type   ACL_TYPE_ACCESS or ACL_TYPE_DEFAULT
+ * @param[in] count  unused
+ * @param[in] acl    POSIX ACL to set
+ * @returns AFP_OK, AFPERR_MISC when acl_set_file failed, or -1 when the stat
+ *          failed
+ */
 static int RF_posix_acl(const struct vol *vol, const char *path,
                         acl_type_t type, int count _U_, acl_t acl)
 {
@@ -480,6 +711,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Drop the ACL_USER, ACL_GROUP, ACL_MASK, and default entries from an
+ * AppleDouble file
+ *
+ * The AppleDouble file is the one that vol->ad_path returns for path.
+ * Directories need nothing, and a missing AppleDouble file counts as success.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] path  file or directory
+ * @param[in] dir   nonzero when path is a directory
+ * @returns AFP_OK, or AFPERR_MISC when remove_posix_acl_vfs failed
+ */
 static int RF_posix_remove_acl(const struct vol *vol, const char *path, int dir)
 {
     EC_INIT;
@@ -503,6 +746,17 @@ EC_CLEANUP:
 /*************************************************************************
  * EA adouble format
  ************************************************************************/
+/*!
+ * @brief Whether clients may see name on an ea AppleDouble volume
+ *
+ * Names without a leading dot always pass. Of the dot names, .AppleDB and
+ * .AppleDesktop stay hidden. Without HAVE_EAFD a ._ file stays hidden when it
+ * carries a netatalk AppleDouble header, because it is a resource fork sidecar.
+ *
+ * @param[in] vol   unused
+ * @param[in] name  directory entry name
+ * @returns 1 when clients may see name, 0 otherwise
+ */
 static int validupath_ea(const struct vol *vol _U_, const char *name)
 {
     if (name[0] != '.') {
@@ -519,7 +773,18 @@ static int validupath_ea(const struct vol *vol _U_, const char *name)
     return netatalk_name(name);
 }
 
-/* ----------------- */
+/*!
+ * @brief Give the ._ resource fork sidecar of path a new owner
+ *
+ * Without HAVE_EAFD chown follows symlinks, and a missing sidecar fails with
+ * ENOENT. With HAVE_EAFD the resource fork lives in an EA, so nothing changes.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] path  file whose sidecar to change
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @returns 0, or -1 with errno set
+ */
 static int RF_chown_ea(const struct vol *vol, const char *path, uid_t uid,
                        gid_t gid)
 {
@@ -534,14 +799,32 @@ static int RF_chown_ea(const struct vol *vol, const char *path, uid_t uid,
 #endif
 }
 
-/* ---------------- */
+/*!
+ * @brief Rename nothing, because the ._ sidecars inside the directory move with
+ * it
+ *
+ * @param[in] vol      unused
+ * @param[in] dirfd    unused
+ * @param[in] oldpath  unused
+ * @param[in] newpath  unused
+ * @returns 0
+ */
 static int RF_renamedir_ea(const struct vol *vol _U_, int dirfd _U_,
                            const char *oldpath _U_, const char *newpath _U_)
 {
     return 0;
 }
 
-/* Returns 1 if the entry is NOT an ._ file */
+/*!
+ * @brief Report a directory entry whose name has no leading dot
+ *
+ * @param[in] vol   unused
+ * @param[in] de    directory entry
+ * @param[in] name  unused
+ * @param[in] data  unused
+ * @param[in] flag  unused
+ * @returns 1 when the name lacks a leading dot, 0 for every dot name
+ */
 static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol,
                                                struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
@@ -552,6 +835,17 @@ static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol,
     return 0;
 }
 
+/*!
+ * @brief Delete name when the path starts with ._ and names a regular file
+ *
+ * @param[in] vol   unused
+ * @param[in] de    unused
+ * @param[in] name  path of the entry, including the prefix of the walked
+ *                  directory
+ * @param[in] data  unused
+ * @param[in] flag  unused
+ * @returns 0, -1 when lstat failed, or the netatalk_unlink error
+ */
 static int deletecurdir_ea_osx_loop(const struct vol *vol _U_,
                                     struct dirent *de _U_, char *name, void *data _U_, int flag _U_)
 {
@@ -572,7 +866,17 @@ static int deletecurdir_ea_osx_loop(const struct vol *vol _U_,
     return 0;
 }
 
-/* ---------------- */
+/*!
+ * @brief Run deletecurdir_ea_osx_loop over the working directory before afpd
+ * deletes it
+ *
+ * Without HAVE_EAFD the walk hands every entry path to deletecurdir_ea_osx_loop
+ * and stops at the first error. With HAVE_EAFD the resource forks live in EAs,
+ * so the call does nothing.
+ *
+ * @param[in] vol  volume holding the directory
+ * @returns 0, or the first error of the walk
+ */
 static int RF_deletecurdir_ea(const struct vol *vol)
 {
 #ifndef HAVE_EAFD
@@ -589,7 +893,16 @@ static int RF_deletecurdir_ea(const struct vol *vol)
     return 0;
 }
 
-/* ---------------- */
+/*!
+ * @brief Change nothing, because the ea layout keeps directory metadata in an
+ * EA of the directory
+ *
+ * @param[in] vol   unused
+ * @param[in] name  unused
+ * @param[in] mode  unused
+ * @param[in] st    unused
+ * @returns 0
+ */
 static int RF_setdirunixmode_ea(const struct vol *vol _U_,
                                 const char *name _U_, mode_t mode _U_,
                                 struct stat *st _U_)
@@ -599,6 +912,18 @@ static int RF_setdirunixmode_ea(const struct vol *vol _U_,
     return 0;
 }
 
+/*!
+ * @brief Apply the mode of a data file to its ._ resource fork sidecar
+ *
+ * ad_hf_mode derives the sidecar mode. With HAVE_EAFD the resource fork lives
+ * in an EA, so nothing changes.
+ *
+ * @param[in] vol   volume holding the file
+ * @param[in] name  data file
+ * @param[in] mode  new data file mode
+ * @param[in] st    stat of the data file, or NULL
+ * @returns 0, or -1 with errno set
+ */
 static int RF_setfilmode_ea(const struct vol *vol, const char *name,
                             mode_t mode, struct stat *st)
 {
@@ -613,7 +938,16 @@ static int RF_setfilmode_ea(const struct vol *vol, const char *name,
 #endif
 }
 
-/* ---------------- */
+/*!
+ * @brief Change nothing, because the ea layout keeps directory metadata in an
+ * EA of the directory
+ *
+ * @param[in] vol   unused
+ * @param[in] name  unused
+ * @param[in] mode  unused
+ * @param[in] st    unused
+ * @returns 0
+ */
 static int RF_setdirmode_ea(const struct vol *vol _U_, const char *name _U_,
                             mode_t mode _U_, struct stat *st _U_)
 {
@@ -622,7 +956,16 @@ static int RF_setdirmode_ea(const struct vol *vol _U_, const char *name _U_,
     return 0;
 }
 
-/* ---------------- */
+/*!
+ * @brief Change nothing, because the ea layout keeps directory metadata in an
+ * EA of the directory
+ *
+ * @param[in] vol   unused
+ * @param[in] name  unused
+ * @param[in] uid   unused
+ * @param[in] gid   unused
+ * @returns 0
+ */
 static int RF_setdirowner_ea(const struct vol *vol _U_, const char *name _U_,
                              uid_t uid _U_, gid_t gid _U_)
 {
@@ -631,6 +974,19 @@ static int RF_setdirowner_ea(const struct vol *vol _U_, const char *name _U_,
     return 0;
 }
 
+/*!
+ * @brief Delete the ._ resource fork sidecar of file
+ *
+ * A missing sidecar counts as success. With HAVE_EAFD the resource fork lives
+ * in an EA, so nothing needs deleting.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] dirfd  directory that file is relative to, or -1 for the working
+ *                   directory
+ * @param[in] file   data file
+ * @returns AFP_OK, AFPERR_VLOCK on a read-only file system, AFPERR_ACCESS, or
+ *          AFPERR_PARAM
+ */
 static int RF_deletefile_ea(const struct vol *vol, int dirfd, const char *file)
 {
 #ifndef HAVE_EAFD
@@ -642,6 +998,20 @@ static int RF_deletefile_ea(const struct vol *vol, int dirfd, const char *file)
     return 0;
 #endif
 }
+/*!
+ * @brief Clone the resource fork sidecar of src for dst
+ *
+ * The sidecar is ._name beside the file, or name/..namedfork/rsrc on macOS. A
+ * source without a sidecar needs nothing and succeeds. On Solaris with
+ * HAVE_EAFD the EA module transfers the resource fork, so nothing happens here.
+ *
+ * @param[in] vol  unused
+ * @param[in] sfd  directory that src is relative to, or -1 for the working
+ *                 directory
+ * @param[in] src  source file
+ * @param[in] dst  destination file
+ * @returns 0, or -1 with errno set
+ */
 static int RF_copyfile_ea(const struct vol *vol _U_, int sfd, const char *src,
                           const char *dst)
 {
@@ -706,7 +1076,20 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/* ---------------- */
+/*!
+ * @brief Rename the ._ resource fork sidecar of src to match dst
+ *
+ * src is relative to dirfd, and dst is relative to the working directory. A
+ * source without a sidecar needs nothing and succeeds. With HAVE_EAFD the
+ * resource fork lives in an EA and moves with the file.
+ *
+ * @param[in] vol    volume holding the file
+ * @param[in] dirfd  directory that src is relative to, or -1 for the working
+ *                   directory
+ * @param[in] src    current file name
+ * @param[in] dst    new file name
+ * @returns 0, or -1 with errno set
+ */
 static int RF_renamefile_ea(const struct vol *vol, int dirfd, const char *src,
                             const char *dst)
 {
@@ -757,6 +1140,18 @@ static int RF_renamefile_ea(const struct vol *vol, int dirfd, const char *src,
  * call the func from the first module.
  */
 
+/*!
+ * @brief Run the vfs_chown hook of every VFS module of vol
+ *
+ * The modules run in order: AppleDouble layout, EA backend, and ACL support.
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol   volume
+ * @param[in] path  file whose metadata to change
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_chown(const struct vol *vol, const char *path, uid_t uid,
                      gid_t gid)
 {
@@ -775,6 +1170,18 @@ static int vfs_chown(const struct vol *vol, const char *path, uid_t uid,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_renamedir hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol      volume
+ * @param[in] dirfd    directory that oldpath is relative to, or -1 for the
+ *                     working directory
+ * @param[in] oldpath  current directory name
+ * @param[in] newpath  new directory name
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_renamedir(const struct vol *vol, int dirfd, const char *oldpath,
                          const char *newpath)
 {
@@ -793,6 +1200,14 @@ static int vfs_renamedir(const struct vol *vol, int dirfd, const char *oldpath,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_deletecurdir hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol  volume whose working directory afpd is about to delete
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_deletecurdir(const struct vol *vol)
 {
     int ret = AFP_OK;
@@ -810,6 +1225,17 @@ static int vfs_deletecurdir(const struct vol *vol)
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_setfilmode hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol   volume
+ * @param[in] name  data file
+ * @param[in] mode  new data file mode
+ * @param[in] st    stat of the data file, or NULL
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_setfilmode(const struct vol *vol, const char *name, mode_t mode,
                           struct stat *st)
 {
@@ -828,6 +1254,17 @@ static int vfs_setfilmode(const struct vol *vol, const char *name, mode_t mode,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_setdirmode hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol   volume
+ * @param[in] name  directory
+ * @param[in] mode  new directory mode
+ * @param[in] st    stat of the directory, or NULL
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_setdirmode(const struct vol *vol, const char *name, mode_t mode,
                           struct stat *st)
 {
@@ -846,6 +1283,17 @@ static int vfs_setdirmode(const struct vol *vol, const char *name, mode_t mode,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_setdirunixmode hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol   volume
+ * @param[in] name  directory
+ * @param[in] mode  new directory mode
+ * @param[in] st    stat of the directory, or NULL
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_setdirunixmode(const struct vol *vol, const char *name,
                               mode_t mode, struct stat *st)
 {
@@ -864,6 +1312,17 @@ static int vfs_setdirunixmode(const struct vol *vol, const char *name,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_setdirowner hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol   volume
+ * @param[in] name  directory
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_setdirowner(const struct vol *vol, const char *name, uid_t uid,
                            gid_t gid)
 {
@@ -882,6 +1341,17 @@ static int vfs_setdirowner(const struct vol *vol, const char *name, uid_t uid,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_deletefile hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol    volume
+ * @param[in] dirfd  directory that file is relative to, or -1 for the working
+ *                   directory
+ * @param[in] file   data file whose metadata to delete
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_deletefile(const struct vol *vol, int dirfd, const char *file)
 {
     int ret = AFP_OK;
@@ -899,6 +1369,18 @@ static int vfs_deletefile(const struct vol *vol, int dirfd, const char *file)
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_renamefile hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol    volume
+ * @param[in] dirfd  directory that src is relative to, or -1 for the working
+ *                   directory
+ * @param[in] src    current file name
+ * @param[in] dst    new file name, relative to the working directory
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_renamefile(const struct vol *vol, int dirfd, const char *src,
                           const char *dst)
 {
@@ -917,6 +1399,18 @@ static int vfs_renamefile(const struct vol *vol, int dirfd, const char *src,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_copyfile hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol  volume
+ * @param[in] sfd  directory that src is relative to, or -1 for the working
+ *                 directory
+ * @param[in] src  source file
+ * @param[in] dst  destination file
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_copyfile(const struct vol *vol, int sfd, const char *src,
                         const char *dst)
 {
@@ -937,6 +1431,18 @@ static int vfs_copyfile(const struct vol *vol, int sfd, const char *src,
 
 #ifdef HAVE_ACLS
 #ifdef HAVE_NFSV4_ACLS
+/*!
+ * @brief Run the vfs_solaris_acl hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol    volume
+ * @param[in] path   file or directory
+ * @param[in] cmd    acl command
+ * @param[in] count  number of entries in aces
+ * @param[in] aces   NFSv4 access control entries
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_solaris_acl(const struct vol *vol, const char *path, int cmd,
                            int count, void *aces)
 {
@@ -957,6 +1463,18 @@ static int vfs_solaris_acl(const struct vol *vol, const char *path, int cmd,
 }
 #endif /* HAVE_NFSV4_ACLS */
 #ifdef HAVE_POSIX_ACLS
+/*!
+ * @brief Run the vfs_posix_acl hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol    volume
+ * @param[in] path   file or directory
+ * @param[in] type   ACL_TYPE_ACCESS or ACL_TYPE_DEFAULT
+ * @param[in] count  number of entries in acl
+ * @param[in] acl    POSIX ACL to set
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_posix_acl(const struct vol *vol, const char *path,
                          acl_type_t type, int count, acl_t acl)
 {
@@ -976,6 +1494,16 @@ static int vfs_posix_acl(const struct vol *vol, const char *path,
 }
 #endif /* HAVE_POSIX_ACLS */
 
+/*!
+ * @brief Run the vfs_remove_acl hook of every VFS module of vol
+ *
+ * Every module runs even after a failure.
+ *
+ * @param[in] vol   volume
+ * @param[in] path  file or directory
+ * @param[in] dir   nonzero when path is a directory
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_remove_acl(const struct vol *vol, const char *path, int dir)
 {
     int ret = AFP_OK;
@@ -994,6 +1522,14 @@ static int vfs_remove_acl(const struct vol *vol, const char *path, int dir)
 }
 #endif /* HAVE_ACLS */
 
+/*!
+ * @brief Reject a missing EA name with a log line that names the calling
+ * function
+ *
+ * @param[in] func       name of the calling function, for the log line
+ * @param[in] attruname  EA name to test
+ * @returns 1 when attruname is NULL, 0 otherwise
+ */
 static int vfs_ea_attrname_invalid(const char *func, const char *attruname)
 {
     if (attruname == NULL) {
@@ -1004,6 +1540,22 @@ static int vfs_ea_attrname_invalid(const char *func, const char *attruname)
     return 0;
 }
 
+/*!
+ * @brief Run the vfs_ea_getsize hook of every VFS module of vol
+ *
+ * A missing EA name fails before any module runs. Only the EA backend module
+ * implements the hook, and it appends the EA size to rbuf.
+ *
+ * @param[in]     vol        volume
+ * @param[out]    rbuf       reply buffer receiving the size
+ * @param[in,out] rbuflen    reply length, advanced by the bytes appended
+ * @param[in]     uname      file name
+ * @param[in]     oflag      O_NOFOLLOW to act on a symlink itself
+ * @param[in]     attruname  EA name
+ * @param[in]     fd         open descriptor of the file, or -1 to use uname
+ * @returns AFP_OK, AFPERR_PARAM for a missing EA name, or the result of the
+ *          last module that failed
+ */
 static int vfs_ea_getsize(const struct vol *vol, char *rbuf,
                           size_t *rbuflen, const char *uname, int oflag,
                           const char *attruname, int fd)
@@ -1028,6 +1580,23 @@ static int vfs_ea_getsize(const struct vol *vol, char *rbuf,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_ea_getcontent hook of every VFS module of vol
+ *
+ * A missing EA name fails before any module runs. Only the EA backend module
+ * implements the hook, and it appends the EA content to rbuf.
+ *
+ * @param[in]     vol        volume
+ * @param[out]    rbuf       reply buffer receiving the content
+ * @param[in,out] rbuflen    reply length, advanced by the bytes appended
+ * @param[in]     uname      file name
+ * @param[in]     oflag      O_NOFOLLOW to act on a symlink itself
+ * @param[in]     attruname  EA name
+ * @param[in]     maxreply   reply size limit for the EA content
+ * @param[in]     fd         open descriptor of the file, or -1 to use uname
+ * @returns AFP_OK, AFPERR_PARAM for a missing EA name, or the result of the
+ *          last module that failed
+ */
 static int vfs_ea_getcontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                              const char *uname, int oflag, const char *attruname,
                              int maxreply, int fd)
@@ -1052,6 +1621,21 @@ static int vfs_ea_getcontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_ea_list hook of every VFS module of vol
+ *
+ * Only the EA backend module implements the hook, and it appends the EA names
+ * as consecutive C strings.
+ *
+ * @param[in]     vol          volume
+ * @param[out]    attrnamebuf  buffer receiving the names
+ * @param[in,out] buflen       bytes in attrnamebuf, advanced by the names
+ *                             appended
+ * @param[in]     uname        file name
+ * @param[in]     oflag        O_NOFOLLOW to act on a symlink itself
+ * @param[in]     fd           open descriptor of the file, or -1 to use uname
+ * @returns AFP_OK, or the result of the last module that failed
+ */
 static int vfs_ea_list(const struct vol *vol,
                        char *attrnamebuf, size_t *buflen, const char *uname,
                        int oflag, int fd)
@@ -1072,6 +1656,23 @@ static int vfs_ea_list(const struct vol *vol,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_ea_set hook of every VFS module of vol
+ *
+ * A missing EA name fails before any module runs. Only the EA backend module
+ * implements the hook.
+ *
+ * @param[in] vol        volume
+ * @param[in] uname      file name
+ * @param[in] attruname  EA name
+ * @param[in] ibuf       EA content
+ * @param[in] attrsize   bytes in ibuf
+ * @param[in] oflag      O_CREAT to refuse an existing EA, O_TRUNC to require
+ *                       one, O_NOFOLLOW to act on a symlink itself
+ * @param[in] fd         open descriptor of the file, or -1 to use uname
+ * @returns AFP_OK, AFPERR_PARAM for a missing EA name, or the result of the
+ *          last module that failed
+ */
 static int vfs_ea_set(const struct vol *vol, const char *uname,
                       const char *attruname, const char *ibuf, size_t attrsize,
                       int oflag, int fd)
@@ -1096,6 +1697,20 @@ static int vfs_ea_set(const struct vol *vol, const char *uname,
     return ret;
 }
 
+/*!
+ * @brief Run the vfs_ea_remove hook of every VFS module of vol
+ *
+ * A missing EA name fails before any module runs. Only the EA backend module
+ * implements the hook.
+ *
+ * @param[in] vol        volume
+ * @param[in] uname      file name
+ * @param[in] attruname  EA name
+ * @param[in] oflag      O_NOFOLLOW to act on a symlink itself
+ * @param[in] fd         open descriptor of the file, or -1 to use uname
+ * @returns AFP_OK, AFPERR_PARAM for a missing EA name, or the result of the
+ *          last module that failed
+ */
 static int vfs_ea_remove(const struct vol *vol, const char *uname,
                          const char *attruname, int oflag, int fd)
 {
@@ -1119,6 +1734,16 @@ static int vfs_ea_remove(const struct vol *vol, const char *uname,
     return ret;
 }
 
+/*!
+ * @brief Whether clients may see name, as the AppleDouble layout module decides
+ *
+ * Only the first module answers, because the layout alone knows which names
+ * hold its metadata.
+ *
+ * @param[in] vol   volume
+ * @param[in] name  directory entry name
+ * @returns nonzero when clients may see name, 0 otherwise
+ */
 static int vfs_validupath(const struct vol *vol, const char *name)
 {
     return vol->vfs_modules[0]->vfs_validupath(vol, name);
@@ -1325,7 +1950,16 @@ static struct vfs_ops netatalk_posix_acl_adouble = {
 };
 #endif
 
-/* ---------------- */
+/*!
+ * @brief Install the VFS dispatchers and modules of a volume
+ *
+ * Module 0 is the AppleDouble layout, version 2 or ea, together with its
+ * ad_path function. The EA backend that v_vfs_ea selects, native EAs or
+ * AppleDouble EA files, fills slot 1 and leaves it empty without EA support.
+ * A build with NFSv4 or POSIX ACLs puts its ACL module in slot 2.
+ *
+ * @param[in,out] vol  volume to set up
+ */
 void initvol_vfs(struct vol *vol)
 {
     vol->vfs = &vfs_master_funcs;

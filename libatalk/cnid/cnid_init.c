@@ -38,6 +38,12 @@ extern struct _cnid_module cnid_mysql_module;
 
 extern struct _cnid_module cnid_sqlite_module;
 
+/*!
+ * @brief Register the CNID backends built into the server
+ *
+ * The sqlite backend always registers, and MySQL does in a build with
+ * CNID_BACKEND_MYSQL.
+ */
 void cnid_init(void)
 {
 #ifdef CNID_BACKEND_MYSQL

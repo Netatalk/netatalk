@@ -51,6 +51,9 @@ static cnid_t did, pdid;
 static int copy(const char *, const char *);
 static int do_move(const char *, const char *);
 
+/*!
+ * @brief Print the usage and the options of nad mv, then exit with EXIT_FAILURE
+ */
 static void usage_mv(void)
 {
     printf(
@@ -76,6 +79,19 @@ static void usage_mv(void)
     exit(EXIT_FAILURE);
 }
 
+/*!
+ * @brief Run the nad mv command, which moves entries with their metadata
+ *
+ * The options are -f, -i, -n, and -v. With two arguments and a target that
+ * is not a directory, the call moves the source to the target. Otherwise
+ * the last argument names a directory, and each source moves into it under
+ * its base name. Within one volume an entry keeps its CNID.
+ *
+ * @param[in] argc  argument count, starting one word before mv
+ * @param[in] argv  argument vector, starting one word before mv
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or 1 when a source fails, while usage errors exit
+ */
 int nad_mv(int argc, char *argv[], AFPObj *obj)
 {
     size_t baselen;
@@ -219,6 +235,23 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
     return rval;
 }
 
+/*!
+ * @brief Move one source to a target path
+ *
+ * Without -f an existing target stays under -n, and -i asks before the move.
+ * A target without write access asks too, and an answer other than yes
+ * keeps the target.
+ *
+ * Outside AFP volumes the call renames the entry. Within one volume it also
+ * moves the AppleDouble file of a regular file. It then updates the CNID
+ * record with the new parent and name and stores the CNID in the target
+ * metadata. Across volumes or devices it runs nad cp -R -p and then deletes
+ * the source.
+ *
+ * @param[in] from  source path
+ * @param[in] to    target path
+ * @returns 0, or 1 or -1 for an error
+ */
 static int do_move(const char *from, const char *to)
 {
     struct stat sb;
@@ -454,6 +487,15 @@ docopy:
     return -1;
 }
 
+/*!
+ * @brief Delete a path outside a volume, and for a directory everything below
+ * it
+ *
+ * The call does not follow symbolic links. The first failure ends it.
+ *
+ * @param[in] path  path to delete
+ * @returns 0, or -1 with errno for an error
+ */
 static int remove_path(const char *path)
 {
     struct stat sb;
@@ -493,6 +535,18 @@ static int remove_path(const char *path)
     return unlink(path);
 }
 
+/*!
+ * @brief Move an entry across volumes or devices by running nad cp and then
+ * deleting the source
+ *
+ * The call first deletes an existing target, which works only for a file or
+ * an empty directory. It then runs nad cp -R -p, with -v under -v. Inside a
+ * volume nad rm -R deletes the source, and outside one remove_path does.
+ *
+ * @param[in] from  source path
+ * @param[in] to    target path
+ * @returns 0, or 1 for an error
+ */
 static int copy(const char *from, const char *to)
 {
     struct stat sb;

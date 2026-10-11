@@ -62,6 +62,15 @@ typedef enum {
     CMD_VERSION
 } nad_command_t;
 
+/*!
+ * @brief Map a nad subcommand name to its command code
+ *
+ * The names sit and unsit exist only with StuffIt support, and -v and
+ * --version map to CMD_VERSION.
+ *
+ * @param[in] cmd  subcommand name
+ * @returns the command code, or CMD_UNKNOWN
+ */
 static nad_command_t get_command(const char *cmd)
 {
     if (STRCMP(cmd, ==, "ls")) {
@@ -131,6 +140,9 @@ static nad_command_t get_command(const char *cmd)
     return CMD_UNKNOWN;
 }
 
+/*!
+ * @brief Print the usage of nad and its subcommands to stdout
+ */
 static void usage_main(void)
 {
 #ifdef HAVE_STUFFIT
@@ -141,11 +153,27 @@ static void usage_main(void)
     printf("       nad -v|--version\n");
 }
 
+/*!
+ * @brief Print the netatalk version of nad to stdout
+ */
 static void show_version(void)
 {
     printf("nad (Netatalk %s)\n", VERSION);
 }
 
+/*!
+ * @brief Parse the global options of nad, load afp.conf, and run a subcommand
+ *
+ * The -F option names the afp.conf file, and --force lets the commands work
+ * outside AFP volumes. The tool runs with the real user ID and its groups
+ * and logs as afp.conf sets. It loads the volumes and then passes the
+ * remaining arguments to the subcommand.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns the exit status of the subcommand, or 1 for a usage or configuration
+ *          error
+ */
 int main(int argc, char **argv)
 {
     AFPObj obj = { 0 };

@@ -17,6 +17,14 @@
 static char	*l_curr;
 static char	*l_end;
 
+/*!
+ * @brief Set the line that parseline reads its tokens from
+ *
+ * The position lives in static variables, so one line parses at a time.
+ *
+ * @param[in] len   length of line
+ * @param[in] line  NUL-terminated line, kept until the last parseline call
+ */
 void initline(int len, char *line)
 {
     l_curr = line;
@@ -27,6 +35,20 @@ void initline(int len, char *line)
 #define ST_WORD		1
 #define ST_BEGIN	2
 
+/*!
+ * @brief Read the next token from the line that initline set
+ *
+ * Space, tab, newline, and NUL separate tokens. A double quote toggles
+ * quoting, which keeps separators in the token and drops the quote itself.
+ * The call reads through the byte at the line length, the NUL of a line
+ * from fgets. A token can take len + 1 characters, so token needs len + 2
+ * bytes.
+ *
+ * @param[in]  len    token limit
+ * @param[out] token  receives the token, or an empty string on a return of -1
+ * @returns the token length, or -1 at the end of the line, after an unclosed
+ *          quote, or for a longer token
+ */
 int
 parseline(int len, char *token)
 {

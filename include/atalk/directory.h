@@ -63,7 +63,7 @@
 #define AD_RLEN_RFORK_ONLY ((off_t) -3)  /*!< no AD metadata; rfork present,
                                           * size not cached */
 
-/*! AD metadata confirmed absent — ad_metadata() would fail ENOENT. */
+/*! @brief Tell whether a cached rlen records absent AppleDouble metadata */
 static inline int ad_rlen_meta_absent(off_t rlen)
 {
     return rlen == AD_RLEN_NO_AD || rlen == AD_RLEN_RFORK_ONLY;
@@ -154,8 +154,7 @@ struct path {
     struct dir  *d_cached;
 };
 
-/*! d_cached accessor enforcing the staleness rule: an entry invalidated
- * mid-request (dir_remove sets d_did = CNID_INVALID) reads as absent. */
+/*! @brief Return the dircache entry of a file path, or NULL after dir_remove */
 static inline struct dir *path_cached_file(const struct path *path)
 {
     if (path->d_cached && path->d_cached->d_did != CNID_INVALID) {
@@ -165,14 +164,12 @@ static inline struct dir *path_cached_file(const struct path *path)
     return NULL;
 }
 
-/*! Absolute path of a child of parent for FCE/Spotlight event strings,
- * built from the cached d_fullpath — no getcwd. Falls back to
- * fullpathname() when the parent or its path is unavailable. Returns
- * buf, or fullpathname()'s static buffer on the fallback path. */
+/*! Absolute path of a child of parent, for FCE and Spotlight event strings */
 extern const char *dir_event_path(char *buf, size_t buflen,
                                   const struct dir *parent,
                                   const char *name);
 
+/*! @brief Tell whether a path resolved to a directory */
 static inline int path_isadir(struct path *o_path)
 {
     return o_path->d_dir != NULL;

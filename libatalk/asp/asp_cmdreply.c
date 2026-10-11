@@ -33,6 +33,19 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
+/*!
+ * @brief Send the reply to an ASP command or write, with its result code and
+ * the reply data
+ *
+ * The reply data in asp->data goes out in ATP packets of up to ASP_CMDSIZ
+ * bytes. Each packet gets a 4-byte header in front, and the first header
+ * carries the result. The call moves the data in place to make room for the
+ * headers, counts the bytes, and steps the sequence number after a send.
+ *
+ * @param[in,out] asp     session, its data rewritten with the headers
+ * @param[in]     result  AFP result code
+ * @returns 0, or -1 when the send fails
+ */
 int asp_cmdreply(ASP asp, int result)
 {
     struct iovec	iov[ASP_MAXPACKETS];

@@ -87,6 +87,9 @@ static int pfd_initialized;
 
 static struct pfd_stats pfd_stat;
 
+/*!
+ * @brief Mark every slot of the parent descriptor cache empty on first use
+ */
 static void pfd_init_once(void)
 {
     if (!pfd_initialized) {
@@ -98,6 +101,11 @@ static void pfd_init_once(void)
     }
 }
 
+/*!
+ * @brief Close the descriptor of a cache slot and mark the slot empty
+ *
+ * @param[in,out] s  slot to retire
+ */
 static void slot_retire(struct pfd_slot *s)
 {
     if (s->fd >= 0) {
@@ -110,8 +118,19 @@ static void slot_retire(struct pfd_slot *s)
     s->uses = 0;
 }
 
-/* Open parent's path, record the opened object's identity. -1 on failure
- * (slot left empty). */
+/*!
+ * @brief Open the directory of a dircache entry into a cache slot and record
+ * its identity
+ *
+ * The slot remembers the device and inode of the opened directory. It also
+ * keeps the dcache_ino of the entry at fill time, so later lookups can tell
+ * which side learned of a replacement.
+ *
+ * @param[out] s       slot to fill
+ * @param[in]  vol     volume of the directory
+ * @param[in]  parent  dircache entry of the directory
+ * @returns the descriptor, or -1 with the slot left empty
+ */
 static int slot_fill(struct pfd_slot *s, const struct vol *vol,
                      const struct dir *parent)
 {
@@ -138,6 +157,11 @@ static int slot_fill(struct pfd_slot *s, const struct vol *vol,
     return fd;
 }
 
+/*!
+ * @brief Move slot i to position 0, the front of the use order
+ *
+ * @param[in] i  slot index
+ */
 static void slot_move_to_front(int i)
 {
     if (i > 0) {
@@ -147,8 +171,21 @@ static void slot_move_to_front(int i)
     }
 }
 
-/* Resolve parent to a directory fd. -1 = no usable fd (caller falls back).
- * Main thread only. */
+/*!
+ * @brief Directory descriptor of a dircache entry from the slot cache
+ *
+ * A hit first tests whether the dcache_ino of the entry changed since the
+ * fill. An unchanged value serves the slot. A value that matches the slot
+ * inode only re-baselines, and any other value refills the slot. Every 256
+ * hits, the PFD_REGROUND_INTERVAL, a full-path stat catches an external
+ * rename-away and recreate of the directory. A miss fills an empty slot or
+ * evicts the slot at the end of the use order. Only the main thread calls it.
+ *
+ * @param[in] vol     volume of the directory
+ * @param[in] parent  dircache entry of the directory
+ * @returns the descriptor, or -1 when the open failed and the caller falls back
+ *          to the full path
+ */
 static int pfd_get(const struct vol *vol, const struct dir *parent)
 {
     pfd_init_once();
@@ -230,18 +267,20 @@ static int pfd_get(const struct vol *vol, const struct dir *parent)
     return pfd_slots[0].fd;
 }
 
-/* The relative stat just proved (parent fd, basename) names the live
- * object, so entry's true path is parent's path + '/' + basename. An
- * internal rename re-paths the parent in place and defers the children:
- * until the worker runs, a child's d_fullpath still names the old
- * location. A relative stat cannot see that, so the serving side must
- * keep the string true itself: verify the parent-prefix invariant on
- * every success and rebuild d_fullpath in place on mismatch — same
- * object, no expunge.
+/*!
+ * @brief Rebuild the full path of a dircache entry from its parent after a
+ * relative stat
  *
- * Cost when the path is intact (every non-rename call): one integer
- * length compare, one byte load, one short memcmp — noise next to the
- * fstatat it rides on. */
+ * The relative stat proved that the parent descriptor and the name reach the
+ * live object. An internal rename re-paths the parent at once but defers its
+ * children, so a child can still carry the old path. When the stored path
+ * does not equal the parent path plus the name, the call replaces it. The
+ * intact case costs one length compare, one byte load, and one short memcmp.
+ * When the allocation fails, the stale path stays for the next validation.
+ *
+ * @param[in,out] entry   dircache entry whose path to check
+ * @param[in]     parent  dircache entry of its parent
+ */
 static void pfd_repair_path(struct dir *entry, const struct dir *parent)
 {
     int plen = blength(parent->d_fullpath);
@@ -274,16 +313,20 @@ static void pfd_repair_path(struct dir *entry, const struct dir *parent)
 }
 
 /*!
- * @brief ostat(cfrombstr(entry->d_fullpath), st, options), accelerated.
+ * @brief Stat the full path of a dircache entry through the cached parent
+ * descriptor
  *
- * Resolves entry's parent to a cached dir fd and fstatat()s the leaf name;
- * any impediment (no parent entry, ghost parent, open failure) falls back
- * to the full-path ostat internally. Callers cannot observe which path ran:
- * return value and errno are exactly what ostat would produce.
+ * The result and errno match ostat on the full path. The call stats the name
+ * relative to the cached descriptor of the parent. It falls back to the full
+ * path when the parent has no usable entry or the open fails. A successful
+ * relative stat also repairs the stored path of the entry through
+ * pfd_repair_path.
  *
- * On success the entry's d_fullpath is additionally repaired against the
- * parent's — the relative stat can outlive a rename the path string hasn't
- * caught up with (see pfd_repair_path).
+ * @param[in]     vol      volume of the entry
+ * @param[in,out] entry    dircache entry to stat
+ * @param[out]    st       receives the stat
+ * @param[in]     options  ostat options, O_NOFOLLOW to stat a symlink itself
+ * @returns 0, or -1 with errno set
  */
 int pfd_ostat(const struct vol *vol, struct dir *entry,
               struct stat *st, int options)
@@ -323,10 +366,16 @@ int pfd_ostat(const struct vol *vol, struct dir *entry,
     return ostat(cfrombstr(entry->d_fullpath), st, options);
 }
 
-/* Retire the slot for (vid, did) if present. Keyed on the raw vid so the
- * unpublish choke point (dircache_remove) can purge from the entry's own
- * d_vid — several of its callers pass vol == NULL. Runs on the main thread
- * AND on the idle worker (deferred chains) under temporal separation. */
+/*!
+ * @brief Retire the cache slot of a directory
+ *
+ * The lookup uses the raw volume ID, because dircache_remove purges from the
+ * d_vid of the entry and its callers can pass no volume. Both the main thread
+ * and the idle worker call it, never at the same time.
+ *
+ * @param[in] vid  volume ID, as stored in struct dir
+ * @param[in] did  directory ID
+ */
 void pfd_purge(uint16_t vid, cnid_t did)
 {
     if (!pfd_initialized) {
@@ -343,6 +392,11 @@ void pfd_purge(uint16_t vid, cnid_t did)
     }
 }
 
+/*!
+ * @brief Retire every cache slot of a volume, as the volume closes
+ *
+ * @param[in] vid  volume ID, as stored in struct dir
+ */
 void pfd_purge_vol(uint16_t vid)
 {
     if (!pfd_initialized) {
@@ -357,6 +411,9 @@ void pfd_purge_vol(uint16_t vid)
     }
 }
 
+/*!
+ * @brief Close every cached descriptor when the session ends
+ */
 void pfd_shutdown(void)
 {
     if (!pfd_initialized) {
@@ -368,11 +425,22 @@ void pfd_shutdown(void)
     }
 }
 
+/*!
+ * @brief Snapshot of the cache counters, for the unit tests
+ *
+ * @param[out] out  receives the counters
+ */
 void pfd_stats_get(struct pfd_stats *out)
 {
     *out = pfd_stat;
 }
 
+/*!
+ * @brief Log the cache counters at the end of the session
+ *
+ * Refresh counters that approach the hit count mean that the slots rebuild on
+ * every call.
+ */
 void pfd_log_stats(void)
 {
     /* Healthy shape: hits >> opens, refresh counters near zero. Either

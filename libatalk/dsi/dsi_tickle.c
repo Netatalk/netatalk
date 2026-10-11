@@ -14,8 +14,15 @@
 
 #include <atalk/dsi.h>
 
-/*! server generated tickles. as this is only called by the tickle handler,
- * we don't need to block signals. */
+/*!
+ * @brief Send a DSITickle request to the client
+ *
+ * Its callers run in the main loop, so it blocks no signals. A sleeping
+ * session or one in the middle of a reply skips the tickle and yields 1.
+ * Otherwise the result is that of dsi_stream_write, the bytes sent or -1.
+ *
+ * @param[in,out] dsi  DSI session
+ */
 int dsi_tickle(DSI *dsi)
 {
     char block[DSI_BLOCKSIZ];

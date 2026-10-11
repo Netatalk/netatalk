@@ -15,6 +15,17 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
+/*!
+ * @brief Ask the workstation to close a session with an ASP CloseSession
+ * request
+ *
+ * The request goes to the session socket of the workstation as an exactly
+ * once transaction, with 5 tries 2 seconds apart. The call waits for the
+ * reply.
+ *
+ * @param[in,out] asp  session, its command buffer reused for the request
+ * @returns 0, or -1 when the request or the reply fails
+ */
 int asp_shutdown(ASP asp)
 {
     struct atp_block	atpb;

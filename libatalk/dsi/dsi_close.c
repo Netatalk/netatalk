@@ -13,6 +13,15 @@
 
 #include <atalk/dsi.h>
 
+/*!
+ * @brief Send a DSICloseSession request, close the transport, and free the DSI
+ * session
+ *
+ * A sleeping or disconnected session gets neither the request nor the
+ * transport close. The call frees the structure in every case.
+ *
+ * @param[in,out] dsi  DSI session to end, invalid afterwards
+ */
 void dsi_close(DSI *dsi)
 {
     /* server generated. need to set all the fields. */

@@ -401,27 +401,25 @@ typedef enum {
 #define ad_reso_fileno(ad)  ((ad)->ad_rfp->adf_fd)
 #define ad_meta_fileno(ad)  ((ad)->ad_mdp->adf_fd)
 
-/* fd states: -1 = not open, AD_SYMLINK (-2) = it's a symlink */
+/*! @brief Tell whether the data fork holds a reference and a descriptor >= 0 */
 static inline int ad_data_open(const struct adouble *ad)
 {
     return ad->ad_data_refcount && ad_data_fileno(ad) >= 0;
 }
 
+/*! @brief Tell whether the metadata holds a reference and an open descriptor */
 static inline int ad_meta_open(const struct adouble *ad)
 {
     return ad->ad_meta_refcount && ad_meta_fileno(ad) >= 0;
 }
 
+/*! @brief Tell whether the resource fork holds a reference and a descriptor */
 static inline int ad_rsrc_open(const struct adouble *ad)
 {
     return ad->ad_reso_refcount && ad_reso_fileno(ad) >= 0;
 }
 
-/*! Metadata header read into ad; unlike ad_meta_open(), true also for
- * ea RDONLY opens, which read the EA by path and hold no fd. Symlinks
- * short-circuit the metadata open with the refcount already taken and
- * the header never read — both fds must be checked, as ea marks the
- * meta fd and v2 the data fd. */
+/*! @brief Tell whether the header got read: a reference and no symlink */
 static inline int ad_meta_loaded(const struct adouble *ad)
 {
     return ad->ad_meta_refcount > 0

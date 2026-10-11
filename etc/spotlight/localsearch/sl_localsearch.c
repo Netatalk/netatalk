@@ -49,6 +49,13 @@
 
 #define MAX_SL_RESULTS 20
 
+/*!
+ * @brief Order two 64-bit host-order CNIDs, for bsearch over the client filter
+ *
+ * @param[in] p1  first CNID
+ * @param[in] p2  second CNID
+ * @returns -1, 0, or 1
+ */
 static int cnid_comp_fn(const void *p1, const void *p2)
 {
     const uint64_t *cnid1 = p1, *cnid2 = p2;
@@ -82,6 +89,13 @@ struct sl_localsearch_query {
  * Static helpers
  ******************************************************************************/
 
+/*!
+ * @brief Convert a file URI from the indexer into a local path
+ *
+ * @param[in] mem_ctx  talloc context for the path
+ * @param[in] uri      file URI
+ * @returns the path, or NULL for a URI without a local path
+ */
 static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
 {
     GFile *f;
@@ -109,6 +123,20 @@ static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
  * Tracker async callbacks
  ******************************************************************************/
 
+/*!
+ * @brief Take one row of the indexer cursor into the result page, then ask for
+ * the next row
+ *
+ * A cancel request ends the query as cancelled, and a cursor error or a URI
+ * without a local path as an error. The call skips a file that fails stat or
+ * a read access check, has no CNID, or lies outside the client filter. A CNID
+ * reset during the lookup marks the volume reset and fails the query. After
+ * MAX_SL_RESULTS results the call marks the page full.
+ *
+ * @param[in] object     cursor, unused
+ * @param[in] res        result of the cursor step
+ * @param[in] user_data  query
+ */
 static void tracker_cursor_cb(GObject      *object,
                               GAsyncResult *res,
                               gpointer      user_data)
@@ -253,6 +281,16 @@ exit:
     }
 }
 
+/*!
+ * @brief Finish the SPARQL query of the indexer and start reading its cursor
+ *
+ * A cancel request ends the query as cancelled, and a query error as an
+ * error.
+ *
+ * @param[in] object     indexer connection
+ * @param[in] res        result of the query
+ * @param[in] user_data  query
+ */
 static void tracker_query_cb(GObject      *object,
                              GAsyncResult *res,
                              gpointer      user_data)
@@ -288,6 +326,18 @@ static void tracker_query_cb(GObject      *object,
  * Backend vtable implementation
  ******************************************************************************/
 
+/*!
+ * @brief Connect the process to the localsearch indexer over the Spotlight
+ * D-Bus session
+ *
+ * Until a connect succeeds, each call sets up a context in obj and applies
+ * the spotlight attributes option. It also points the D-Bus and XDG
+ * environment at the netatalk state directory. After a success, later calls
+ * return at once.
+ *
+ * @param[in,out] obj  AFP object, receives the backend context
+ * @returns 0, or -1 when the indexer connection fails
+ */
 static int sl_localsearch_init(AFPObj *obj)
 {
     static bool initialized = false;
@@ -336,11 +386,27 @@ static int sl_localsearch_init(AFPObj *obj)
     return 0;
 }
 
+/*!
+ * @brief Stop the localsearch backend, whose indexer connection lives as long
+ * as the process
+ *
+ * @param[in] obj  AFP object, unused
+ */
 static void sl_localsearch_close(AFPObj *obj)
 {
     /* nothing to do — Tracker connection is process-scoped */
 }
 
+/*!
+ * @brief Translate a Spotlight query to SPARQL and start it on the indexer
+ *
+ * The mapping sees the scope percent-encoded as a URI path, and slq keeps the
+ * raw scope. The query runs asynchronously, and tracker_query_cb picks up its
+ * cursor.
+ *
+ * @param[in,out] slq  query
+ * @returns 0, or -1 without an indexer connection or when the mapping fails
+ */
 static int sl_localsearch_open_query(slq_t *slq)
 {
     EC_INIT;
@@ -398,6 +464,17 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Resume the indexer cursor after a full page, and run the GLib
+ * callbacks that are ready
+ *
+ * A client can poll right after the query starts, before the first cursor
+ * callback ran. The call then runs the ready callbacks without blocking. The
+ * first page, or the end of an empty result set, can then go out at once.
+ *
+ * @param[in,out] slq  query
+ * @returns 0
+ */
 static int sl_localsearch_fetch_results(slq_t *slq)
 {
     struct sl_localsearch_query *lsq = slq->slq_backend_private;
@@ -431,6 +508,13 @@ static int sl_localsearch_fetch_results(slq_t *slq)
     return 0;
 }
 
+/*!
+ * @brief Release the indexer cursor of a query
+ *
+ * The query state is a talloc child of slq and goes with it.
+ *
+ * @param[in,out] slq  query
+ */
 static void sl_localsearch_close_query(slq_t *slq)
 {
     struct sl_localsearch_query *lsq = slq->slq_backend_private;

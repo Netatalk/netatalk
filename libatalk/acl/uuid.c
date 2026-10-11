@@ -51,6 +51,17 @@ static unsigned char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
                                           0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa
                                          };
 
+/*!
+ * @brief Build a local UUID for a user or group without a directory service
+ * UUID
+ *
+ * A fixed 12-byte prefix for users or for groups precedes the ID in network
+ * order.
+ *
+ * @param[out] buf   16-byte destination
+ * @param[in]  type  UUID_GROUP for a group, any other type for a user
+ * @param[in]  id    uid or gid
+ */
 void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
 {
     uint32_t tmp;
@@ -72,8 +83,13 @@ void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
 }
 
 /*!
- * @brief convert ascii string that can include dashes to binary uuid.
- * @note caller must provide a buffer.
+ * @brief Convert a hex UUID string, dashes allowed, into 16 bytes
+ *
+ * The call skips dashes and stops after 16 bytes. It does not validate the
+ * digits.
+ *
+ * @param[in]  uuidstring  hex string
+ * @param[out] uuid        16-byte destination
  */
 void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
 {
@@ -107,10 +123,14 @@ void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
 }
 
 /*!
- * @brief Convert 16 byte binary uuid to neat ascii represantation including dashes
+ * @brief Format a 16-byte UUID as uppercase hex with dashes
  *
- * Use defined or default ascii mask for dash placement
- * @returns pointer to static buffer
+ * The ldap uuid string option can set the dash layout as a mask of x and -
+ * characters. A mask without exactly 32 x characters falls back to the
+ * standard 8-4-4-4-12 layout.
+ *
+ * @param[in] uuid  binary UUID
+ * @returns the string in a static buffer
  */
 const char *uuid_bin2string(const unsigned char *uuid)
 {
@@ -165,10 +185,16 @@ const char *uuid_bin2string(const unsigned char *uuid)
  ********************************************************/
 
 /*!
- * @param name give me his name
- * @param type and type (UUID_USER or UUID_GROUP)
- * @param uuid pointer to uuid_t storage that the caller must provide
- * @returns 0 on success !=0 on errror
+ * @brief Resolve a user or group name to its UUID
+ *
+ * Looks in the UUID cache, then in LDAP when built with it, and finally builds
+ * a local UUID from the Unix uid or gid. A miss enters the cache as a negative
+ * entry.
+ *
+ * @param[in]  name  user or group name
+ * @param[in]  type  UUID_USER or UUID_GROUP
+ * @param[out] uuid  storage of 16 bytes the caller provides
+ * @returns 0 on success, -1 when the name is NULL or unknown
  */
 int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
 {
@@ -297,12 +323,16 @@ int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
 
 
 /*!
- * @param uuidp pointer to a uuid
- * @param name returns allocated buffer from ldap_getnamefromuuid
- * @param type returns USER, GROUP or LOCAL
- * @returns 0 on success !=0 on errror
+ * @brief Resolve a UUID to a user or group name and its type
  *
- * @note Caller must free name appropriately.
+ * Looks in the UUID cache, then recognizes the server's local user and group
+ * UUIDs, and finally asks LDAP when built with it. A miss enters the cache as a
+ * negative entry.
+ *
+ * @param[in]  uuidp  UUID to resolve
+ * @param[out] name   receives a newly allocated name that the caller frees
+ * @param[out] type   receives UUID_USER or UUID_GROUP
+ * @returns 0 on success, -1 when the UUID is unknown
  */
 int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type)
 {

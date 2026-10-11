@@ -91,6 +91,17 @@ static int	first_flag;
 static const unsigned char hqxchars[] =
     "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
 
+/*!
+ * @brief Write a whole buffer to the BinHex output
+ *
+ * The output is the file or the stdout that hqx_open picked. A short write
+ * continues where it stopped. A write that fails or writes nothing ends the
+ * call, and EINTR counts as a failure.
+ *
+ * @param[in] buf  bytes to write
+ * @param[in] len  number of bytes
+ * @returns 0, or -1 for a failed write
+ */
 static int hqx_write_all(const void *buf, size_t len)
 {
     const char *p = buf;
@@ -109,6 +120,15 @@ static int hqx_write_all(const void *buf, size_t len)
     return 0;
 }
 
+/*!
+ * @brief Write one BinHex character to the output and start a new line after 63
+ * characters
+ *
+ * A newline goes in before the character once the line holds 63 characters.
+ *
+ * @param[in] c  character to write
+ * @returns 0, or -1 for a failed write
+ */
 static int hqx_put_char(unsigned char c)
 {
     if (hqx.linecol >= 63) {
@@ -127,6 +147,15 @@ static int hqx_put_char(unsigned char c)
     return 0;
 }
 
+/*!
+ * @brief Add one byte to the 6-bit encoder of the BinHex output
+ *
+ * The encoder collects three bytes and then writes them as four characters
+ * of the BinHex alphabet.
+ *
+ * @param[in] b  byte to encode
+ * @returns 0, or -1 for a failed write
+ */
 static int hqx_emit_6bit(unsigned char b)
 {
     hqx.outbuf[hqx.outcnt++] = b;
@@ -150,6 +179,15 @@ static int hqx_emit_6bit(unsigned char b)
     return 0;
 }
 
+/*!
+ * @brief Encode one data byte and escape the 0x90 run marker
+ *
+ * A literal 0x90 becomes 0x90 followed by 0, which BinHex decoders read as
+ * the byte itself. The encoder writes no compressed runs.
+ *
+ * @param[in] b  data byte
+ * @returns 0, or -1 for a failed write
+ */
 static int hqx_emit_byte(unsigned char b)
 {
     if (hqx_emit_6bit(b) < 0) {
@@ -163,6 +201,13 @@ static int hqx_emit_byte(unsigned char b)
     return 0;
 }
 
+/*!
+ * @brief Encode a buffer of data bytes with hqx_emit_byte
+ *
+ * @param[in] buf  data bytes
+ * @param[in] len  number of bytes
+ * @returns 0, or -1 for a failed write
+ */
 static int hqx_emit_data(const void *buf, size_t len)
 {
     const unsigned char *p = buf;
@@ -176,6 +221,14 @@ static int hqx_emit_data(const void *buf, size_t len)
     return 0;
 }
 
+/*!
+ * @brief Write the one or two bytes that the encoder still holds
+ *
+ * The call fills the missing bits with zeros and writes two characters for
+ * one byte or three characters for two bytes.
+ *
+ * @returns 0, or -1 for a failed write
+ */
 static int hqx_flush_6bit(void)
 {
     unsigned char out[3];
@@ -202,6 +255,15 @@ static int hqx_flush_6bit(void)
     return 0;
 }
 
+/*!
+ * @brief Write the CRC of a fork after its last declared byte
+ *
+ * A finished fork needs nothing, and a fork with bytes left fails. The CRC
+ * goes through the encoder in network byte order.
+ *
+ * @param[in] fork  DATA or RESOURCE
+ * @returns 0, or -1 for missing bytes or a failed write
+ */
 static int hqx_finish_fork(int fork)
 {
     uint16_t crc;
@@ -370,6 +432,14 @@ int hqx_close(int keepflag)
     }
 }
 
+/*!
+ * @brief Return the path of the BinHex output that hqx_open created
+ *
+ * The path is `-` for stdout. The archive commands use it to register the
+ * new file in the CNID database of its volume.
+ *
+ * @returns the output path
+ */
 const char *hqx_path(void)
 {
     return hqx.path;
@@ -635,6 +705,18 @@ int hqx_header_write(struct FHeader *fh)
     return 0;
 }
 
+/*!
+ * @brief Encode fork data into the BinHex output
+ *
+ * The data fork comes first, so the first resource bytes finish the data
+ * fork. A write past the declared length of a fork, or to a finished fork,
+ * fails. The last declared byte of a fork finishes it with its CRC.
+ *
+ * @param[in] fork    DATA or RESOURCE
+ * @param[in] buffer  fork bytes
+ * @param[in] length  number of bytes
+ * @returns @p length, or -1 for an error
+ */
 ssize_t hqx_write(int fork, char *buffer, size_t length)
 {
     if (fork < 0 || fork >= NUMFORKS) {

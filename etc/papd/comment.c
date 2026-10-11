@@ -20,6 +20,11 @@ struct comstate	*comstate;
 
 char	*comcont = "%%+";
 
+/*!
+ * @brief Pop the top state off the comment stack and free it
+ *
+ * The stack must not be empty.
+ */
 void compop(void)
 {
     struct comstate	*cs;
@@ -28,6 +33,13 @@ void compop(void)
     free(cs);
 }
 
+/*!
+ * @brief Push a new state for a DSC comment onto the comment stack
+ *
+ * The state starts with no flags. A failed allocation exits papd.
+ *
+ * @param[in] comment  comment table entry whose handler takes over
+ */
 void compush(struct papd_comment *comment)
 {
     struct comstate	*cs;
@@ -44,6 +56,17 @@ void compush(struct papd_comment *comment)
     comstate = cs;
 }
 
+/*!
+ * @brief Replace the top state of the comment stack with the table entry that
+ * has a given handler
+ *
+ * The last matching entry of the table counts, and the new state starts with
+ * no flags.
+ *
+ * @param[in] comments  comment table, ended by an entry without c_begin
+ * @param[in] handler   handler to look for
+ * @returns 0, or -1 when no entry has the handler
+ */
 int comswitch(struct papd_comment *comments, int (*handler)())
 {
     struct papd_comment	*c, *comment = NULL;
@@ -64,6 +87,18 @@ int comswitch(struct papd_comment *comments, int (*handler)())
     return 0;
 }
 
+/*!
+ * @brief Match a comment line against a keyword
+ *
+ * With C_FULL in how, the line has to equal str. Otherwise str has to be a
+ * prefix of the line.
+ *
+ * @param[in] start  first byte of the line
+ * @param[in] stop   end of the line, not included
+ * @param[in] str    keyword, such as `%%Title:`
+ * @param[in] how    comment flags, C_FULL for a full match
+ * @returns 0 on a match, or 1
+ */
 int comcmp(char *start, char *stop, char *str, int how)
 {
     int		cc, len;
@@ -83,6 +118,16 @@ int comcmp(char *start, char *stop, char *str, int how)
     return 1;
 }
 
+/*!
+ * @brief Find the first table entry whose keyword matches a comment line
+ *
+ * Each entry goes through comcmp with the c_flags that it carries.
+ *
+ * @param[in] start     first byte of the line
+ * @param[in] stop      end of the line, not included
+ * @param[in] comments  comment table, ended by an entry without c_begin
+ * @returns the entry, or NULL without a match
+ */
 struct papd_comment *commatch(char *start, char *stop,
                               struct papd_comment comments[])
 {

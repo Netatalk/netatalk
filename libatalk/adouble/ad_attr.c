@@ -21,11 +21,18 @@
 #define AFPFILEIOFF_ATTR 2
 
 /*!
-   @note
-   the "shared" and "invisible" attributes are opaque and stored and
-   retrieved from the FinderFlags. This fixes Bug #2802236:
-
-   @sa https://sourceforge.net/p/netatalk/bugs/350/
+ * @brief Read the AFP attribute word of an AppleDouble entry
+ *
+ * The shared and invisible attributes are opaque and live in the Finder flags,
+ * so they come from there, as bug #2802236 required. For directories
+ * ATTRBIT_EXPFLDR occupies the shared bit and stays untouched. The adouble's
+ * open-fork bits are also present in the result.
+ *
+ * @sa https://sourceforge.net/p/netatalk/bugs/350/
+ *
+ * @param[in]  ad    AppleDouble with its metadata loaded
+ * @param[out] attr  receives the attribute word in network byte order
+ * @returns 0
  */
 int ad_getattr(const struct adouble *ad, uint16_t *attr)
 {
@@ -69,7 +76,19 @@ int ad_getattr(const struct adouble *ad, uint16_t *attr)
     return 0;
 }
 
-/* ----------------- */
+/*!
+ * @brief Store the AFP attribute word in an AppleDouble entry
+ *
+ * ad_setattr never stores the open-fork bits. For directories it drops the bits
+ * that only files carry (ATTRBIT_MULTIUSER, ATTRBIT_NOWRITE, ATTRBIT_NOCOPY),
+ * because Mac OS X 10.4 tries to set ATTRBIT_MULTIUSER on folders. It also
+ * writes the invisible bit, and for files the shared bit, into the Finder
+ * flags.
+ *
+ * @param[in] ad         AppleDouble with its metadata loaded
+ * @param[in] attribute  attribute word in network byte order
+ * @returns 0
+ */
 int ad_setattr(const struct adouble *ad, const uint16_t attribute)
 {
     uint16_t fflags;
@@ -113,9 +132,23 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
 }
 
 /*!
- * @brief save file/folder ID in AppleDoubleV2 netatalk private parameters
- * @returns 1 if resource fork has been modified
- * @returns -1 on error.
+ * @brief Store the CNID, the file identity, and the database stamp in the
+ * private AppleDouble entries
+ *
+ * PRIVDEV and PRIVINO hold 8 bytes each, so the native dev_t and ino_t widen to
+ * 64 bits in host byte order. ADVOL_NODEV zeroes the device. The CNID goes out
+ * in network order for the EA form. The parent DID only exists in version 2.
+ * When an entry cannot be addressed, ad_setid restores the lengths it changed
+ * and reports nothing written.
+ *
+ * @param[in,out] adp    AppleDouble with its metadata loaded
+ * @param[in]     dev    device of the file
+ * @param[in]     ino    inode of the file
+ * @param[in]     id     CNID to store
+ * @param[in]     did    CNID of the parent directory, stored for version 2 only
+ * @param[in]     stamp  CNID database stamp of ADEDLEN_PRIVSYN bytes
+ * @returns 1 after writing the entries, so the header needs a flush, or 0 when
+ *          an entry cannot be addressed
  */
 int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino,
              const uint32_t id, const cnid_t did, const void *stamp)
@@ -232,8 +265,20 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Retrieve stored file / folder.
- * @note Callers should treat a return of CNID_INVALID (0) as an invalid value.
+ * @brief Read the CNID stored in an AppleDouble entry when it matches the file
+ *
+ * The stored device and inode must equal the file's, unless the volume runs
+ * with ADVOL_NODEV. The stored parent must equal did when both are non-zero.
+ * Version 2 entries hold the CNID in host order, EA entries in network order.
+ * Callers treat a return of CNID_INVALID (0) as an invalid value.
+ *
+ * @param[in] adp     AppleDouble with its metadata loaded, or NULL
+ * @param[in] st_dev  device of the file from stat
+ * @param[in] st_ino  inode of the file from stat
+ * @param[in] did     CNID of the parent directory, or 0 to skip that check
+ * @param[in] stamp   unused
+ * @returns the stored CNID, or CNID_INVALID when the entry is absent or the
+ *          identity differs
  */
 uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino,
                   const cnid_t did, const void *stamp _U_)
@@ -310,7 +355,14 @@ uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino,
     return CNID_INVALID;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief Read the CNID stored in an AppleDouble entry without checking the
+ * file's identity
+ *
+ * @param[in] adp  AppleDouble with its metadata loaded, or NULL
+ * @returns the stored CNID, or CNID_INVALID when adp is NULL or has no PRIVID
+ *          entry
+ */
 uint32_t ad_forcegetid(struct adouble *adp)
 {
     uint32_t aint = 0;
@@ -336,7 +388,14 @@ uint32_t ad_forcegetid(struct adouble *adp)
 }
 
 /*!
- * set resource fork filename attribute.
+ * @brief Store a file name in the AppleDouble name entry
+ *
+ * ad_setname cuts the name at ADEDLEN_NAME bytes.
+ *
+ * @param[in,out] ad    AppleDouble with its metadata loaded
+ * @param[in]     path  name to store
+ * @returns 1 after storing the name, 0 when the entry does not exist, -1 when
+ *          it cannot be addressed
  */
 int ad_setname(struct adouble *ad, const char *path)
 {

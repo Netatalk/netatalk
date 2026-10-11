@@ -106,6 +106,16 @@ struct MDTypeMap MDTypeMap[] = {
     {NULL,                      kMDTypeMapNotSup,   NULL}
 };
 
+/*!
+ * @brief Turn on only the Spotlight attributes that the spotlight attributes
+ * option lists
+ *
+ * The option is a comma-separated list, matched exactly against the attribute
+ * names of the SPARQL map, without trimming spaces. Every other attribute of
+ * the map turns off.
+ *
+ * @param[in] attributes_in  comma-separated attribute names
+ */
 void configure_spotlight_attributes(const char *attributes_in)
 {
     char *attr, *attributes;

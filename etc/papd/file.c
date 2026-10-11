@@ -15,6 +15,20 @@
 
 #include "file.h"
 
+/*!
+ * @brief Find the next line in the input buffer of a print job
+ *
+ * The line runs up to the first CR or LF. Every CR and LF that follows counts
+ * as its line end, so a blank line never comes back as a separate line. At
+ * the end of the job the call appends a newline to a last line that has none.
+ *
+ * @param[in,out] pf          input buffer of the job
+ * @param[out]    start       receives the first byte of the line
+ * @param[out]    linelength  receives the line length without the line end
+ * @param[out]    crlflength  receives the length of the line end
+ * @returns 1 for a line, 0 at the end of the job, or -1 while the line is
+ *          incomplete
+ */
 int markline(struct papfile *pf, char **start, int *linelength, int *crlflength)
 {
     char		*p;
@@ -63,6 +77,17 @@ int markline(struct papfile *pf, char **start, int *linelength, int *crlflength)
     return 1;
 }
 
+/*!
+ * @brief Append data to a papfile buffer, after moving the data to the buffer
+ * start and growing the buffer as needed
+ *
+ * The buffer grows in steps of PF_MORESPACE bytes. A failed allocation exits
+ * papd.
+ *
+ * @param[in,out] pf    papfile buffer
+ * @param[in]     data  bytes to append
+ * @param[in]     len   number of bytes
+ */
 void morespace(struct papfile *pf, const char *data, int len)
 {
     char		*nbuf;
@@ -97,6 +122,11 @@ void morespace(struct papfile *pf, const char *data, int len)
 }
 
 
+/*!
+ * @brief Append data to a papfile buffer
+ *
+ * Data that does not fit after the current data goes through morespace.
+ */
 void append(struct papfile *pf, const char *data, int len)
 {
     if ((pf->pf_data + pf->pf_datalen + len) >
@@ -109,6 +139,13 @@ void append(struct papfile *pf, const char *data, int len)
 }
 
 
+/*!
+ * @brief Append a PostScript status message for the client,
+ * `%%[ status: str ]%%`
+ *
+ * @param[in,out] out  output buffer to the client
+ * @param[in]     str  message, or NULL for the default `Spooler error.` text
+ */
 void spoolreply(struct papfile *out, char *str)
 {
     char	*pserr1 = "%%[ status: ";
@@ -123,6 +160,12 @@ void spoolreply(struct papfile *out, char *str)
     append(out, pserr2, strlen(pserr2));
 }
 
+/*!
+ * @brief Append a PostScript error message for the client, `%%[ Error: str ]%%`
+ *
+ * @param[in,out] out  output buffer to the client
+ * @param[in]     str  message, or NULL for the default `Spooler error.` text
+ */
 void spoolerror(struct papfile *out, char *str)
 {
     char	*pserr1 = "%%[ Error: ";

@@ -64,7 +64,13 @@ static char hexdig[] = "0123456789abcdef";
 
 
 /*!
- * Return the name of a charset to give to iconv().
+ * @brief Return the iconv name of a charset
+ *
+ * UCS2, UTF8, and UTF8-MAC use fixed names, and the others come from the
+ * name table.
+ *
+ * @param[in] ch  charset
+ * @returns the name, or NULL for an unnamed table slot
  */
 static const char *charset_name(charset_t ch)
 {
@@ -83,6 +89,15 @@ static const char *charset_name(charset_t ch)
     return ret;
 }
 
+/*!
+ * @brief Set the name of a fixed charset slot in the name table
+ *
+ * The call stores a strdup of the name and does not free an earlier one.
+ *
+ * @param[in] ch    charset below NUM_CHARSETS
+ * @param[in] name  charset name
+ * @returns 0, or -1 for a charset outside the fixed slots
+ */
 int set_charset_name(charset_t ch, const char *name)
 {
     if (ch >= NUM_CHARSETS) {
@@ -93,6 +108,9 @@ int set_charset_name(charset_t ch, const char *name)
     return 0;
 }
 
+/*!
+ * @brief Free every name in the charset name table
+ */
 void free_charset_names(void)
 {
     for (int ch = 0; ch < MAX_CHARSETS; ch++) {
@@ -103,6 +121,13 @@ void free_charset_names(void)
     }
 }
 
+/*!
+ * @brief Return the built-in conversion functions of a charset, which the call
+ * looks up once by name
+ *
+ * @param[in] ch  charset
+ * @returns the functions, or NULL for a charset that only iconv knows
+ */
 static struct charset_functions *get_charset_functions(charset_t ch)
 {
     if (charsets[ch] != NULL) {
@@ -114,6 +139,9 @@ static struct charset_functions *get_charset_functions(charset_t ch)
 }
 
 
+/*!
+ * @brief Run init_iconv once, on the first conversion or charset lookup
+ */
 static void lazy_initialize_conv(void)
 {
     static int initialized = 0;
@@ -124,6 +152,16 @@ static void lazy_initialize_conv(void)
     }
 }
 
+/*!
+ * @brief Find a charset by name, or register it and open its iconv descriptors
+ * to and from UCS2
+ *
+ * The name match ignores case. Up to MAX_CHARSETS charsets fit, and a name
+ * that iconv cannot convert fails.
+ *
+ * @param[in] name  charset name
+ * @returns the charset, or `(charset_t)-1` for an error
+ */
 charset_t add_charset(const char *name)
 {
     static charset_t max_charset_t = NUM_CHARSETS - 1;
@@ -213,6 +251,15 @@ void init_iconv(void)
     }
 }
 
+/*!
+ * @brief Terminate a converted string with one NUL byte, or two for UCS2
+ *
+ * @param[in]     to         target charset
+ * @param[in,out] buf        output buffer
+ * @param[in]     bytesleft  free bytes after the string
+ * @param[in]     len        length of the string
+ * @returns @p len, or `(size_t)-1` with E2BIG when the NUL does not fit
+ */
 static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
 {
     /* Terminate the string */
@@ -299,6 +346,24 @@ static size_t convert_string_internal(charset_t from, charset_t to,
 }
 
 
+/*!
+ * @brief Convert a string between two charsets through UCS2, with Unicode
+ * composition
+ *
+ * A decomposed target charset gets decomposed text. Otherwise text from a
+ * decomposed source, or from a charset without built-in functions, gets
+ * precomposed. The intermediate buffers hold MAXPATHLEN UCS2 characters,
+ * and the output ends with a NUL.
+ *
+ * @param[in]  from     source charset
+ * @param[in]  to       target charset
+ * @param[in]  src      source string
+ * @param[in]  srclen   source length in bytes, or `(size_t)-1` for the string
+ *                      length
+ * @param[out] dest     output buffer
+ * @param[in]  destlen  size of @p dest
+ * @returns the output length without the NUL, or `(size_t)-1` for an error
+ */
 size_t convert_string(charset_t from, charset_t to,
                       void const *src, size_t srclen,
                       void *dest, size_t destlen)
@@ -455,6 +520,21 @@ convert:
 }
 
 
+/*!
+ * @brief Convert a string between two charsets through UCS2 into a buffer from
+ * malloc
+ *
+ * The composition rules match convert_string, and the buffer ends with a
+ * NUL.
+ *
+ * @param[in]  from    source charset
+ * @param[in]  to      target charset
+ * @param[in]  src     source string
+ * @param[in]  srclen  source length in bytes, or `(size_t)-1` for the string
+ *                     length
+ * @param[out] dest    receives the buffer for the caller to free, or NULL
+ * @returns the output length without the NUL, or `(size_t)-1` for an error
+ */
 size_t convert_string_allocate(charset_t from, charset_t to,
                                void const *src, size_t srclen,
                                char **dest)
@@ -500,6 +580,19 @@ size_t convert_string_allocate(charset_t from, charset_t to,
     return o_len;
 }
 
+/*!
+ * @brief Uppercase a string through UCS2 and keep its charset
+ *
+ * An in-place call that changes nothing returns @p srclen and leaves the
+ * buffer as it is.
+ *
+ * @param[in]  ch       charset of the string
+ * @param[in]  src      source string
+ * @param[in]  srclen   source length in bytes
+ * @param[out] dest     output buffer, which may be @p src
+ * @param[in]  destlen  size of @p dest
+ * @returns the output length, or `(size_t)-1` for an error
+ */
 size_t charset_strupper(charset_t ch, const char *src, size_t srclen,
                         char *dest, size_t destlen)
 {
@@ -523,6 +616,19 @@ size_t charset_strupper(charset_t ch, const char *src, size_t srclen,
     return size;
 }
 
+/*!
+ * @brief Lowercase a string through UCS2 and keep its charset
+ *
+ * An in-place call that changes nothing returns @p srclen and leaves the
+ * buffer as it is.
+ *
+ * @param[in]  ch       charset of the string
+ * @param[in]  src      source string
+ * @param[in]  srclen   source length in bytes
+ * @param[out] dest     output buffer, which may be @p src
+ * @param[in]  destlen  size of @p dest
+ * @returns the output length, or `(size_t)-1` for an error
+ */
 size_t charset_strlower(charset_t ch, const char *src, size_t srclen,
                         char *dest, size_t destlen)
 {
@@ -564,7 +670,15 @@ size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest,
     return convert_string(CH_UCS2, ch, src, src_len, dest, destlen);
 }
 
-/* --------------------------------- */
+/*!
+ * @brief Convert a NUL-terminated UCS2 string to a charset, into a buffer from
+ * malloc
+ *
+ * @param[in]  ch    target charset
+ * @param[out] dest  receives the buffer for the caller to free, or NULL
+ * @param[in]  src   UCS2 string
+ * @returns the output length, or `(size_t)-1` for an error
+ */
 size_t ucs2_to_charset_allocate(charset_t ch, char **dest, const ucs2_t *src)
 {
     size_t src_len = (strlen_w(src)) * sizeof(ucs2_t);
@@ -572,6 +686,16 @@ size_t ucs2_to_charset_allocate(charset_t ch, char **dest, const ucs2_t *src)
     return convert_string_allocate(CH_UCS2, ch, src, src_len, dest);
 }
 
+/*!
+ * @brief Precompose a string through UCS2 and keep its charset
+ *
+ * @param[in]  ch      charset of the string
+ * @param[in]  src     source string
+ * @param[in]  inlen   source length in bytes
+ * @param[out] dst     output buffer
+ * @param[in]  outlen  size of @p dst
+ * @returns the output length, or `(size_t)-1` for an error
+ */
 size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst,
                           size_t outlen)
 {
@@ -602,6 +726,16 @@ size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst,
     return len;
 }
 
+/*!
+ * @brief Decompose a string through UCS2 and keep its charset
+ *
+ * @param[in]  ch      charset of the string
+ * @param[in]  src     source string
+ * @param[in]  inlen   source length in bytes
+ * @param[out] dst     output buffer
+ * @param[in]  outlen  size of @p dst
+ * @returns the output length, or `(size_t)-1` for an error
+ */
 size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
                          size_t outlen)
 {
@@ -633,19 +767,35 @@ size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
 }
 
 /*!
- * @brief Convert from MB to UCS2 charset
+ * @brief Convert a multibyte string to UCS2 and map the `:` and `/` characters
+ * by the flags
  *
- * Flags:
- *  - CONV_UNESCAPEHEX:    ':XX' will be converted to an UCS2 character
- *  - CONV_IGNORE:         return the first convertable characters.
- *  - CONV_FORCE:  force convertion
+ * The call converts the text between `:` and `/` characters with iconv and
+ * then treats each such character by the flags. CONV_UNESCAPEHEX decodes
+ * `:xx` escapes through the CAP charset, and CONV_ESCAPEHEX writes `:3a` for
+ * `:` and `:2f` for `/`. Without them a `:` becomes `/` for a Mac target, and
+ * a `/` from a Mac source becomes `:`. CONV_ESCAPEDOTS writes a leading dot
+ * as `:2e` and sets CONV_REQESCAPE.
  *
- * @bug
- *      This will *not* work if the destination charset is not multibyte, i.e. UCS2->UCS2 will fail
- *      The (un)escape scheme is not compatible to the old cap style escape. This is bad, we need it
- *      for e.g. HFS cdroms.
+ * An unconvertible sequence stops the call with EILSEQ. CONV_IGNORE then
+ * returns the converted part and sets CONV_REQMANGLE, and CONV__EILSEQ writes
+ * IGNORE_CHAR in its place. CONV_FORCE returns the converted part after any
+ * error. The scan for `:` and `/` works on bytes, so a UCS2 source does not
+ * work.
+ *
+ * @param[in]     from_set  source charset
+ * @param[in]     to_set    final target charset, which picks the `:` and `/`
+ *                          mapping
+ * @param[in]     cap_set   charset of the bytes in `:xx` escapes
+ * @param[in]     src       source string
+ * @param[in]     srclen    source length, or `(size_t)-1` for the string length
+ *                          with its NUL
+ * @param[out]    dest      UCS2 output
+ * @param[in]     destlen   size of @p dest in bytes
+ * @param[in,out] flags     CONV_* options, which can receive CONV_REQESCAPE and
+ *                          CONV_REQMANGLE
+ * @returns the number of bytes written, or `(size_t)-1` with errno
  */
-
 static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                                  charset_t cap_set, const char *src, size_t srclen, char *dest, size_t destlen,
                                  uint16_t *flags)
@@ -874,22 +1024,25 @@ end:
 }
 
 /*!
- * @brief Convert from UCS2 to MB charset
+ * @brief Convert a UCS2 string to a multibyte charset and escape what does not
+ * convert, by the flags
  *
- * Flags:
- *     - CONV_ESCAPEDOTS: escape leading dots
- *     - CONV_ESCAPEHEX:  unconvertable characters and '/' will be escaped to :XX
- *     - CONV_IGNORE:     return the first convertable characters.
- *     - CONV__EILSEQ:    unconvertable characters will be replaced with '_'
- *     - CONV_FORCE:      force convertion
- * @bug
- *      CONV_IGNORE and CONV_ESCAPEHEX can't work together. Should we check this ?
- *      This will *not* work if the destination charset is not multibyte, i.e. UCS2->UCS2 will fail
- *      The escape scheme is not compatible to the old cap style escape. This is bad, we need it
- *      for e.g. HFS cdroms.
+ * An unconvertible character stops the call with EILSEQ. CONV_IGNORE then
+ * returns the converted part and sets CONV_REQMANGLE. CONV_ESCAPEHEX instead
+ * writes the character in the CAP charset as `:xx` escapes and sets
+ * CONV_REQESCAPE. CONV_FORCE returns the converted part after any error, and
+ * a trailing odd byte fails with EINVAL.
+ *
+ * @param[in]     to_set   target charset
+ * @param[in]     cap_set  charset of the bytes in `:xx` escapes
+ * @param[in]     src      UCS2 string
+ * @param[in]     srclen   source length in bytes
+ * @param[out]    dest     output buffer
+ * @param[in]     destlen  size of @p dest
+ * @param[in,out] flags    CONV_* options, which can receive CONV_REQESCAPE and
+ *                         CONV_REQMANGLE
+ * @returns the number of bytes written, or `(size_t)-1` with errno
  */
-
-
 static size_t push_charset_flags(charset_t to_set, charset_t cap_set, char *src,
                                  size_t srclen, char *dest, size_t destlen, uint16_t *flags)
 {
@@ -982,8 +1135,27 @@ end:
 }
 
 /*!
- * @bug the size is a mess we really need a malloc/free logic
- * @note dest_len must include space for the two-byte terminator
+ * @brief Convert a string between character sets, with case, composition, and
+ * escaping chosen by flags
+ *
+ * convert_charset pulls the source into UCS-2 and precomposes or decomposes it
+ * as the flags and the target charset require. It then folds case for
+ * CONV_TOUPPER or CONV_TOLOWER and pushes the result into the target charset.
+ *
+ * @bug Buffer sizing is fragile and wants malloc/free logic.
+ * @note dest_len must include room for the two-byte terminator.
+ *
+ * @param[in]     from_set     charset of src
+ * @param[in]     to_set       charset of dest
+ * @param[in]     cap_charset  charset used for the :XX hex escaping of
+ *                             unmappable characters
+ * @param[in]     src          source string
+ * @param[in]     src_len      length of src in bytes
+ * @param[out]    dest         destination buffer
+ * @param[in]     dest_len     size of dest in bytes, terminator included
+ * @param[in,out] flags        CONV_* options on entry, conversion results on
+ *                             return
+ * @returns the length of dest in bytes, or (size_t)-1 with errno set
  */
 size_t convert_charset(charset_t from_set, charset_t to_set,
                        charset_t cap_charset, const char *src, size_t src_len, char *dest,

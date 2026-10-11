@@ -29,6 +29,17 @@ char		nbp_recv[1024];
 unsigned char		nbp_port = 0;
 unsigned char   nbp_id = 0;
 
+/*!
+ * @brief Parse one NBP tuple and its object, type, and zone into an entity
+ *
+ * Each name carries a length byte and has to fit in NBPSTRLEN bytes and in
+ * the data left.
+ *
+ * @param[in]  data  tuple data
+ * @param[out] nn    receives the address and the names
+ * @param[in]  len   bytes of data
+ * @returns the bytes left after the tuple, or -1 for a short or malformed tuple
+ */
 int nbp_parse(char *data, struct nbpnve *nn, int len)
 {
     struct nbptuple	nt;
@@ -98,6 +109,17 @@ int nbp_parse(char *data, struct nbpnve *nn, int len)
 #define NBPM_TYPE	(1<<2)
 #define NBPM_ZONE	(1<<3)
 
+/*!
+ * @brief Compare two NBP entities without regard to case
+ *
+ * An object or type of `=` in n1 matches anything, unless flags has
+ * NBPMATCH_NOGLOB. NBPMATCH_NOZONE leaves the zones out.
+ *
+ * @param[in] n1     entity that may hold wildcards
+ * @param[in] n2     entity to test
+ * @param[in] flags  NBPMATCH_NOGLOB, NBPMATCH_NOZONE, or 0
+ * @returns 1 for a match, or 0
+ */
 int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags)
 {
     int			match = 0;
@@ -143,6 +165,19 @@ int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags)
     return 1;
 }
 
+/*!
+ * @brief Split an NBP name of the form `object:type@zone` into its parts
+ *
+ * The split happens at the last `@` and at the last `:` in a static buffer,
+ * which the next call overwrites. A pointer changes only for a part that the
+ * name holds, so the caller sets the defaults first.
+ *
+ * @param[in]     name   NBP name, or NULL to keep every default
+ * @param[in,out] objp   default object, receives the object part
+ * @param[in,out] typep  default type, receives the type part
+ * @param[in,out] zonep  default zone, receives the zone part
+ * @returns 0, or -1 for a name over 98 bytes
+ */
 int nbp_name(const char  *name, char **objp, char **typep, char **zonep)
 {
     static char	buf[32 + 1 + 32 + 1 + 32 + 1];

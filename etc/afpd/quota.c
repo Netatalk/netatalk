@@ -39,7 +39,23 @@
 #ifdef HAVE_LIBQUOTA
 #include <quota.h>
 
-
+/*!
+ * @brief Read the free and total space that a user or group quota leaves on a
+ * volume
+ *
+ * The quota opens through libquota as root. Usage at the hard limit, or at
+ * the soft limit past its grace time, leaves no free space and a total equal
+ * to the usage. Otherwise the hard limit sets the total.
+ *
+ * @param[in]  obj     session object, unused
+ * @param[in]  vol     volume to check
+ * @param[out] bfree   free bytes under the quota
+ * @param[out] btotal  total bytes under the quota
+ * @param[in]  id      user or group ID
+ * @param[in]  idtype  QUOTA_IDTYPE_USER or QUOTA_IDTYPE_GROUP
+ * @returns 1 with a quota, 0 without quota support or a quota for id, or -1 on
+ *          error
+ */
 static int
 getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
              VolSpace *btotal, id_t id, int idtype)
@@ -110,6 +126,19 @@ getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
     return 1;
 }
 
+/*!
+ * @brief Read the space that the user and group quotas leave on a volume
+ *
+ * The call checks the quota of the user and of the first group of the
+ * session. With both, the call takes the minimum of the 2 free spaces.
+ *
+ * @param[in]  obj     session object
+ * @param[in]  vol     volume to check
+ * @param[out] bfree   free bytes under the quotas
+ * @param[out] btotal  total bytes under the quotas
+ * @param[in]  bsize   block size, unused
+ * @returns AFP_OK, or AFPERR_PARAM when neither quota exists
+ */
 int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
                        VolSpace *btotal, const uint32_t bsize)
 {

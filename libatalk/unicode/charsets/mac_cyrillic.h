@@ -50,6 +50,7 @@ static const unsigned short mac_cyrillic_2uni[128] = {
     0x0448, 0x0449, 0x044a, 0x044b, 0x044c, 0x044d, 0x044e, 0x20ac,
 };
 
+/*! @brief Map a MAC_CYRILLIC byte to UCS2, through the table above 0x7f */
 static int
 char_mac_cyrillic_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 {
@@ -110,6 +111,7 @@ static const unsigned char mac_cyrillic_page22[104] = {
     0xad, 0x00, 0x00, 0x00, 0xb2, 0xb3, 0x00, 0x00, /* 0x60-0x67 */
 };
 
+/*! @brief Map a UCS2 character to a MAC_CYRILLIC byte, or return 0 */
 static int
 char_ucs2_to_mac_cyrillic(unsigned char *r, ucs2_t wc)
 {

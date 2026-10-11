@@ -108,6 +108,18 @@ static pid_t session_master = 0;
 /* The self-pipe that wakes poll() from a signal handler lives in
  * libatalk/util/sigpipe.c and is shared with the ASP transport. */
 
+/*!
+ * @brief End a DSI session and close its connection
+ *
+ * The call stops the idle worker, closes the volumes, and logs out. An error
+ * path that exits after become_root leaves the euid at 0, so the call
+ * switches back to obj->uid first. The volume close scripts run as the login
+ * user. Signals stay blocked during the logout, so a signal from PAM cannot
+ * interrupt it. The session statistics, the cache counters, and the TCP buffer
+ * sizes go to the log.
+ *
+ * @param[in,out] obj  session object
+ */
 static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->dsi;
@@ -245,7 +257,11 @@ static void afp_dsi_die(int sig)
     }
 }
 
-/*! SIGURG handler (primary reconnect) — async-signal-safe */
+/*!
+ * @brief SIGURG handler that records a primary reconnect for the main loop
+ *
+ * @param[in] sig  unused
+ */
 static void afp_dsi_transfer_handler(int sig _U_)
 {
     transfer_pending = 1;
@@ -253,9 +269,15 @@ static void afp_dsi_transfer_handler(int sig _U_)
 }
 
 /*!
- * @brief Process deferred SIGURG: primary reconnect.
+ * @brief Take over the connection of a reconnecting client after SIGURG
  *
- * Called from the main event loop where non-signal-safe functions are permitted.
+ * The master afpd sends the DSI request ID and the new socket over the IPC
+ * socket. The session swaps its socket, resets the read-ahead buffer, and
+ * answers the FPDisconnectOldSession that the transfer interrupted. Any
+ * failure ends the session. The SIGURG handler only records the event, and
+ * the main loop runs this function.
+ *
+ * @param[in,out] obj  session object
  */
 static void handle_transfer_session(AFPObj *obj)
 {
@@ -308,7 +330,11 @@ static void handle_transfer_session(AFPObj *obj)
 /* Forward declaration — defined after alarm_handler */
 static void afp_dsi_die_handler(int sig, siginfo_t *si, void *uc);
 
-/*! SIGUSR1 handler — async-signal-safe */
+/*!
+ * @brief SIGUSR1 handler that records a shutdown notice for the main loop
+ *
+ * @param[in] sig  unused
+ */
 static void afp_dsi_timedown_handler(int sig _U_)
 {
     timedown_pending = 1;
@@ -316,9 +342,14 @@ static void afp_dsi_timedown_handler(int sig _U_)
 }
 
 /*!
- * @brief Process deferred SIGUSR1: server going down in 5 minutes.
+ * @brief Announce a shutdown in 5 minutes to the DSI client after SIGUSR1
  *
- * Called from the main event loop.
+ * The client gets a maintenance message and an attention that forbids a
+ * reconnect. An attention that cannot go out now waits as down_request.
+ * SIGALRM after 300 seconds then ends the session, and the session ignores
+ * further SIGUSR1 signals.
+ *
+ * @param[in,out] obj  session object
  */
 static void handle_timedown(AFPObj *obj)
 {
@@ -373,6 +404,11 @@ static void handle_timedown(AFPObj *obj)
  */
 volatile sig_atomic_t reload_request = 0;
 
+/*!
+ * @brief SIGHUP handler that requests a reload of the volume configuration
+ *
+ * @param[in] sig  unused
+ */
 static void afp_dsi_reload(int sig _U_)
 {
     reload_request = 1;
@@ -384,13 +420,26 @@ static void afp_dsi_reload(int sig _U_)
  */
 static volatile sig_atomic_t debug_request = 0;
 
+/*!
+ * @brief SIGINT handler that requests a debug dump and a switch of the log
+ * level
+ *
+ * The main loop then dumps the dircache and the UUID cache and toggles
+ * maxdebug logging into a temporary file.
+ *
+ * @param[in] sig  unused
+ */
 static void afp_dsi_debug(int sig _U_)
 {
     debug_request = 1;
     atalk_sigpipe_notify();
 }
 
-/*! SIGUSR2 handler — async-signal-safe */
+/*!
+ * @brief SIGUSR2 handler that records a server message for the main loop
+ *
+ * @param[in] sig  unused
+ */
 static void afp_dsi_getmesg_handler(int sig _U_)
 {
     getmesg_pending = 1;
@@ -398,9 +447,14 @@ static void afp_dsi_getmesg_handler(int sig _U_)
 }
 
 /*!
- * @brief Process deferred SIGUSR2: server message.
+ * @brief Announce a server message to the DSI client after SIGUSR2
  *
- * Called from the main event loop.
+ * The session sends a message attention and sets msg_request, so
+ * pending_request loads the message from its file after the next request. A
+ * refused attention leaves msg_request at 2, and pending_request sends it
+ * again.
+ *
+ * @param[in,out] obj  session object
  */
 static void handle_getmesg(AFPObj *obj)
 {
@@ -412,7 +466,17 @@ static void handle_getmesg(AFPObj *obj)
     }
 }
 
-/*! SIGTERM/SIGQUIT handler, records the sending process — async-signal-safe */
+/*!
+ * @brief SIGTERM and SIGQUIT handler that records the signal and its sender for
+ * the main loop
+ *
+ * The sender pid counts only for a signal from kill or sigqueue. macOS
+ * reports kill with si_code 0. Any other source leaves the sender at 0.
+ *
+ * @param[in] sig  signal number
+ * @param[in] si   signal information, or NULL
+ * @param[in] uc   unused
+ */
 static void afp_dsi_die_handler(int sig, siginfo_t *si, void *uc _U_)
 {
     /* kill() arrives as SI_USER, sigqueue() as SI_QUEUE, and on macOS kill()
@@ -425,10 +489,13 @@ static void afp_dsi_die_handler(int sig, siginfo_t *si, void *uc _U_)
 }
 
 /*!
- * @brief SIGALRM handler — async-signal-safe.
+ * @brief SIGALRM handler that rearms the tickle timer and records the tick for
+ * the main loop
  *
- * Only restarts the timer (setitimer is async-signal-safe) and sets a flag.
- * All tickle/timeout logic is deferred to handle_alarm().
+ * A library call to alarm can replace the interval timer, so each tick sets
+ * it again from dsi->timer. The main loop runs handle_alarm for the tick.
+ *
+ * @param[in] sig  unused
  */
 static void alarm_handler(int sig _U_)
 {
@@ -440,9 +507,21 @@ static void alarm_handler(int sig _U_)
 }
 
 /*!
- * @brief Process deferred SIGALRM: tickle/timeout management.
+ * @brief Run one tick of the session timers after SIGALRM
  *
- * Called from the main event loop where LOG/malloc/syslog are safe.
+ * A tick after client traffic only clears DSI_DATA. Any other tick adds 1 to
+ * the tickle count, and the session state picks the next step:
+ *
+ * - A sleeping session ends once the count passes the sleep option.
+ * - A disconnected session without a login ends at once. Any other ends once
+ *   the count passes the disconnected option.
+ * - A running session disconnects once the count reaches the timeout option.
+ * - Otherwise pollvoltime runs, and a tickle goes out unless it sent a
+ *   volume change attention. A failed send disconnects the session.
+ *
+ * A session without a login ends wherever a session with one disconnects.
+ *
+ * @param[in,out] obj  session object
  */
 static void handle_alarm(AFPObj *obj)
 {
@@ -531,18 +610,28 @@ static void handle_alarm(AFPObj *obj)
     }
 }
 
+/*!
+ * @brief SIGCHLD handler that reaps one exited child
+ *
+ * @param[in] sig  unused
+ */
 static void child_handler(int sig _U_)
 {
     wait(NULL);
 }
 
 /*!
- * @brief Process all pending deferred signals.
+ * @brief Run the work of every signal that arrived since the last call
  *
- * @returns 1 if the caller should restart the outer event loop
- *          (primary reconnect), 0 otherwise.
+ * Only the main loop calls it, never a signal handler. A termination signal
+ * goes first and ends the session. The afp_dsi_die call returns only during
+ * a failed reconnect handoff, so the session then closes and exits here. A
+ * primary reconnect comes next and returns at once. The shutdown notice, the
+ * server message, and the timer tick follow in that order.
  *
- * @note Must be called from the main event loop, never from signal context.
+ * @param[in,out] obj  session object
+ * @returns 1 after a primary reconnect, so the caller restarts its outer loop,
+ *          0 otherwise
  */
 static int process_deferred_signals(AFPObj *obj)
 {
@@ -591,10 +680,17 @@ static int process_deferred_signals(AFPObj *obj)
     return 0;
 }
 
-/* -----------------
-   if dsi->in_write is set attention, tickle (and close?) msg
-   aren't sent. We don't care about tickle
-*/
+/*!
+ * @brief Send the attentions that signal work left pending and load a pending
+ * server message
+ *
+ * The main loop calls it after each request. An attention fails while a reply
+ * write is in progress, so handle_getmesg and handle_timedown leave
+ * msg_request at 2 or down_request at 1 for this call. The call also loads a
+ * pending message from its file through readmessage.
+ *
+ * @param[in,out] dsi  DSI session
+ */
 static void pending_request(DSI *dsi)
 {
     /* send pending attention */
@@ -649,6 +745,24 @@ static void afp_dsi_log_disconnect(const AFPObj *obj, int rx_errno,
     of_log_usage(log_note, "disconnect");
 }
 
+/*!
+ * @brief Install the signal handlers and start the tickle timer of a DSI
+ * session
+ *
+ * Each handler runs with every signal blocked and only records its signal for
+ * the main loop. The login code calls it again, because a PAM module may reset
+ * the handlers or the timer. A failed install ends the session.
+ *
+ * - SIGHUP reloads the volumes.
+ * - SIGURG takes over a reconnecting client.
+ * - SIGTERM and SIGQUIT end the session.
+ * - SIGUSR1 announces a shutdown, and SIGUSR2 a server message.
+ * - SIGINT toggles the debug log.
+ * - SIGALRM drives the tickle timer, except in DEBUGGING builds.
+ * - SIGCHLD reaps children, with SA_NOCLDWAIT where the system has it.
+ *
+ * @param[in] obj  session object
+ */
 void afp_over_dsi_sighandlers(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->dsi;
@@ -738,9 +852,27 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 }
 
-/* -------------------------------------------
- afp over dsi. this never returns.
-*/
+/*!
+ * @brief Serve the AFP requests of a DSI session until the session ends
+ *
+ * The call never returns. Setup installs the signal handlers, creates the
+ * dircache, and starts the idle worker. It then sets the TCP buffer sizes and
+ * TCP_NODELAY and opens the signal pipe. Each pass of the loop runs 4 stages:
+ *
+ * 1. Run the deferred signal work, then wait in poll for the client socket,
+ *    the cache hint pipe, or the signal pipe. Buffered input and the
+ *    disconnected and dying states skip the wait.
+ * 2. Receive a request and apply a pending volume reload or debug toggle. A
+ *    failed receive enters the disconnected state and pauses until a primary
+ *    reconnect or the disconnect timer ends it.
+ * 3. Run the request. A repeated DSI request ID with the same AFP command
+ *    gets the stored result of the replay cache instead of a second run.
+ *    DSICloseSession ends the session.
+ * 4. Send the attentions that waited, load a pending server message, and send
+ *    the queued FCE events.
+ *
+ * @param[in,out] obj  session object
+ */
 void afp_over_dsi(AFPObj *obj)
 {
     DSI *dsi = (DSI *) obj->dsi;

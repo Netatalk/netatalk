@@ -48,6 +48,18 @@
 #include "status.h"
 #include "switch.h"
 
+/*!
+ * @brief Answer an AFP command that the session does not offer with AFPERR_NOOP
+ *
+ * The call logs the command number.
+ *
+ * @param[in]  obj      session object, unused
+ * @param[in]  ibuf     request block, the command number first
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFPERR_NOOP
+ */
 static int afp_null(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                     char *rbuf _U_,  size_t *rbuflen)
 {
@@ -199,8 +211,17 @@ AFPCmd postauth_switch[] = {
 };
 
 
-/* add a new function if it's specified. return the old function in
- * "old" if there's a pointer there. */
+/*!
+ * @brief Replace a command handler in the preauth or postauth table
+ *
+ * UAMs and the login code use it to add or override AFP commands.
+ *
+ * @param[in]  id         AFP command number
+ * @param[in]  which      UAM_AFPSERVER_PREAUTH or UAM_AFPSERVER_POSTAUTH
+ * @param[in]  new_table  new handler, or NULL to keep the current one
+ * @param[out] old        receives the previous handler, or NULL
+ * @returns 0, or -1 for an unknown table
+ */
 int uam_afpserver_action(const int id, const int which,
                          AFPCmd new_table, AFPCmd *old)
 {
