@@ -292,15 +292,6 @@ static int is_neg(int is64, off_t val)
     return 0;
 }
 
-static int sum_neg(int is64, off_t offset, off_t reqcount)
-{
-    if (is_neg(is64, offset + reqcount)) {
-        return 1;
-    }
-
-    return 0;
-}
-
 /* f_deny reservation bits for an FPOpenFork access mode.  Each deny bit is set
  * independently and ORed; the parenthesised ternaries stop `|` from swallowing the
  * left side as a condition.  Parameterised on the constants so
@@ -888,21 +879,15 @@ openfork_err:
  * Looks up the file's dircache entry via parent DID + name, and invalidates
  * the AD cache (Tier 1 + Tier 2). Used after rfork writes and truncations.
  */
-static void rfork_invalidate_for_ofork(const struct vol *vol,
-                                       struct ofork *ofork)
+static void rfork_invalidate_for_ofork(const AFPObj *obj,
+                                       const struct ofork *ofork)
 {
-    const struct dir *parentdir = dirlookup(vol, ofork->of_did);
+    struct dir *cached = of_dircache_entry(obj, ofork);
 
-    if (parentdir) {
-        char *name = of_name(ofork);
-        struct dir *cached = dircache_search_by_name(vol, parentdir,
-                                                     name, strnlen(name, MAXPATHLEN));
-
-        if (cached) {
-            dir_modify(vol, cached, &(struct dir_modify_args) {
-                .flags = DCMOD_AD_INV,
-            });
-        }
+    if (cached) {
+        dir_modify(ofork->of_vol, cached, &(struct dir_modify_args) {
+            .flags = DCMOD_AD_INV,
+        });
     }
 }
 
@@ -916,8 +901,6 @@ static void rfork_invalidate_for_ofork(const struct vol *vol,
  */
 static int fork_error(const struct ofork *ofork, const char *call)
 {
-    int err;
-
     switch (errno) {
     case EDQUOT:
     case EFBIG:
@@ -925,25 +908,32 @@ static int fork_error(const struct ofork *ofork, const char *call)
         LOG(log_error, logtype_afpd, "%s(%s): DISK FULL", call, of_name(ofork));
         return AFPERR_DFULL;
 
+    case EROFS:
+        return AFPERR_VLOCK;
+
+    case EPERM:
     case EACCES:
         return AFPERR_ACCESS;
 
-    case EROFS:
-        err = AFPERR_VLOCK;
-        break;
-
-    case EPERM:
-        err = AFPERR_ACCESS;
-        break;
-
     default:
-        err = AFPERR_PARAM;
-        break;
+        LOG(log_error, logtype_afpd, "%s(%s): %s", call, of_name(ofork),
+            strerror(errno));
+        return AFPERR_PARAM;
     }
+}
 
-    LOG(log_error, logtype_afpd, "%s(%s): %s", call, of_name(ofork),
-        strerror(errno));
-    return err;
+/*!
+ * @brief Mark an open fork and its volume changed; the fork's first change
+ *        sends sibling sessions a refresh hint, of_closefork() the last
+ */
+static void fork_modified(AFPObj *obj, struct ofork *ofork)
+{
+    setvoltime(obj, ofork->of_vol);
+
+    if (!(ofork->of_flags & AFPFORK_MODIFIED)) {
+        ofork->of_flags |= AFPFORK_MODIFIED;
+        of_hint_siblings(obj, ofork, of_dircache_entry(obj, ofork));
+    }
 }
 
 int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
@@ -1099,9 +1089,10 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
              * truncated on disk. Invalidate cached rfork data so the next
              * access re-reads from disk (self-healing). */
             if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
-                rfork_invalidate_for_ofork(vol, ofork);
+                rfork_invalidate_for_ofork(obj, ofork);
             }
 
+            fork_modified(obj, ofork);
             return AFPERR_PARAM;
         }
     } else {
@@ -1111,9 +1102,10 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     /* Invalidate cached rfork data after truncate/extend.
      * Only resource fork truncation (ADEID_RFORK) affects the rfork cache. */
     if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
-        rfork_invalidate_for_ofork(vol, ofork);
+        rfork_invalidate_for_ofork(obj, ofork);
     }
 
+    fork_modified(obj, ofork);
     return AFP_OK;
 afp_setfork_err:
 
@@ -1283,25 +1275,21 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset,
  * @brief Serve resource fork data from Tier 2 cache via DSI framing
  *
  * Shared helper for cache-hit and just-populated cache paths in read_fork().
- * Handles dsi_readinit/dsi_read/dsi_readdone loop and LRU promotion.
+ * Sends the reply from the cache buffer in one dsi_readinit() and promotes
+ * the entry in the rfork LRU.
  *
  * @param[in]  dsi           DSI connection
  * @param[in]  cached_entry  dir entry with populated dcache_rfork_buf
- * @param[in]  ibuf          DSI write buffer (repurposed from command buffer)
  * @param[in]  offset        Starting byte offset in the rfork
  * @param[in]  reqcount      Requested byte count
  * @param[in]  err           AFP error code (AFPERR_EOF or AFP_OK)
- * @param[out] rbuflen       Output: bytes remaining (set by dsi_read)
  *
- * @returns 0 on success (goto afp_read_done), -1 on DSI error (goto afp_read_exit)
+ * @returns 0 on success (goto afp_read_done), -1 on DSI error
+ *          (goto afp_read_exit)
  */
 static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
-                                      char *ibuf, off_t offset,
-                                      off_t reqcount, int err,
-                                      size_t *rbuflen)
+                                      off_t offset, off_t reqcount, int err)
 {
-    ssize_t cc;
-
     if (cached_entry->dcache_rfork_buf == NULL) {
         LOG(log_error, logtype_afpd,
             "rfork_cache_serve_from_buf: NULL buffer (did:%u)",
@@ -1309,7 +1297,7 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
         return -1;
     }
 
-    /* Defense-in-depth: validate bounds before any memcpy from rfork buffer.
+    /* Defense-in-depth: validate bounds before sending from the rfork buffer.
      * Use subtraction-based validation: offset + reqcount may overflow for a
      * malicious FPReadExt count before it can be compared with dcache_rlen. */
     if (!fork_range_within(offset, reqcount, cached_entry->dcache_rlen)) {
@@ -1328,37 +1316,10 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
         (long long)offset, (long long)reqcount,
         (long long)cached_entry->dcache_rlen,
         ntohl(cached_entry->d_did));
-    *rbuflen = MIN(reqcount, dsi->server_quantum);
-    memcpy(ibuf, (char *)cached_entry->dcache_rfork_buf + offset, *rbuflen);
-    offset += *rbuflen;
 
-    if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0) {
+    if (dsi_readinit(dsi, (char *)cached_entry->dcache_rfork_buf + offset,
+                     (size_t)reqcount, (size_t)reqcount, err) < 0) {
         return -1;
-    }
-
-    *rbuflen = cc;
-
-    while (*rbuflen > 0) {
-        if (offset >= cached_entry->dcache_rlen) {
-            break;
-        }
-
-        size_t avail = (size_t)(cached_entry->dcache_rlen - offset);
-
-        if (avail == 0) {
-            break;    /* Safety: should not happen, all data sent */
-        }
-
-        size_t tocopy = MIN((size_t) * rbuflen, avail);
-        memcpy(ibuf, (char *)cached_entry->dcache_rfork_buf + offset, tocopy);
-        offset += tocopy;
-        cc = dsi_read(dsi, ibuf, tocopy);
-
-        if (cc < 0) {
-            return -1;
-        }
-
-        *rbuflen = cc;
     }
 
     dsi_readdone(dsi);
@@ -1487,28 +1448,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     AFP_READ_START((long)reqcount);
-    /* Tier 2 rfork cache: resolve dircache entry for resource fork reads.
-     * Both lookups are O(1) hash operations — no syscalls, no CNID DB queries.
-     * Guarded by budget > 0 so disabled (default) incurs zero overhead. */
     struct dir *cached_entry = NULL;
-
-    if (eid == ADEID_RFORK
-            && !(ofork->of_flags & AFPFORK_ACCWR)
-            && (!(ofork->of_vol->v_flags & AFPVOL_MULTIPROTO)
-                || obj->options.dircache_rfork_budget_explicit)
-            && obj->options.dircache_rfork_budget > 0) {
-        const struct dir *parentdir = dirlookup(ofork->of_vol, ofork->of_did);
-
-        if (parentdir) {
-            char *fname = of_name(ofork);
-            cached_entry = dircache_search_by_name(ofork->of_vol, parentdir,
-                                                   fname, strnlen(fname, MAXPATHLEN));
-
-            if (cached_entry) {
-                rfork_stat_lookups++;
-            }
-        }
-    }
 
     switch (obj->proto) {
 #ifndef NO_DDP
@@ -1549,6 +1489,11 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_err;
         }
 
+        /* the largest reply the DSI header's 32-bit length field frames */
+        if (reqcount > UINT32_MAX) {
+            reqcount = UINT32_MAX;
+        }
+
         /* Subtract only after offset has been checked against size.  Adding a
          * client-controlled FPReadExt count here can overflow signed off_t and
          * leave reqcount unbounded on the resource-fork cache path. */
@@ -1573,14 +1518,23 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             }
         }
 
+        /* Tier 2 rfork cache: looked up where a read can use the entry */
+        if (eid == ADEID_RFORK
+                && !(ofork->of_flags & AFPFORK_ACCWR)
+                && (!(ofork->of_vol->v_flags & AFPVOL_MULTIPROTO)
+                    || obj->options.dircache_rfork_budget_explicit)
+                && obj->options.dircache_rfork_budget > 0
+                && (cached_entry = of_dircache_entry(obj, ofork)) != NULL) {
+            rfork_stat_lookups++;
+        }
+
         /* === Tier 2 rfork cache check — before sendfile === */
         if (cached_entry && cached_entry->dcache_rfork_buf
                 && cached_entry->dcache_rlen > 0
                 && cached_entry->dcache_rlen == size) {
             /* Serve entire request from Tier 2 cache — zero I/O. */
-            if (rfork_cache_serve_from_buf(dsi, cached_entry, ibuf,
-                                           offset, reqcount, (int)err,
-                                           rbuflen) < 0) {
+            if (rfork_cache_serve_from_buf(dsi, cached_entry, offset,
+                                           reqcount, (int)err) < 0) {
                 goto afp_read_exit;
             }
 
@@ -1588,37 +1542,35 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_done;
         }
 
-        /* Size mismatch: cache stale — invalidate rfork buffer + Tier 1 AD */
-        if (cached_entry && cached_entry->dcache_rfork_buf
-                && cached_entry->dcache_rlen > 0
+        /* Size mismatch: the cached AD is stale, buffer included */
+        if (cached_entry && cached_entry->dcache_rlen >= 0
                 && cached_entry->dcache_rlen != size) {
             LOG(log_debug, logtype_afpd,
                 "rfork_cache: size mismatch (cached:%lld vs live:%lld), "
                 "invalidating (did:%u)",
                 (long long)cached_entry->dcache_rlen, (long long)size,
                 ntohl(cached_entry->d_did));
-            rfork_cache_free(cached_entry);
-            rfork_stat_invalidated++;
+            dir_modify(ofork->of_vol, cached_entry, &(struct dir_modify_args) {
+                .flags = DCMOD_AD_INV | DCMOD_NO_PROMOTE,
+            });
             rfork_stat_misses++;     /* Size mismatch counts as a miss */
-            cached_entry->dcache_rlen = AD_RLEN_UNKNOWN;
-            memset(cached_entry->dcache_finderinfo, 0, 32);
-            memset(cached_entry->dcache_filedatesi, 0, 16);
-            memset(cached_entry->dcache_afpfilei, 0, 4);
             cached_entry = NULL;
         }
 
-        /* Cache miss: upgrade to full-fork ad_read if cacheable */
+        /* Cache miss: upgrade to full-fork ad_read if cacheable, unless
+         * another session has the fork open for writing */
         if (cached_entry && cached_entry->dcache_rlen > 0
                 && (size_t)cached_entry->dcache_rlen <= rfork_max_entry_size
                 && !cached_entry->dcache_rfork_buf
+                && ad_testlock_range(ofork->of_ad, ADEID_DFORK,
+                                     AD_FILELOCK_RSRC_OPEN_WR, 1) == 0
                 && rfork_cache_store_from_fd(cached_entry, ofork->of_ad,
                                              ADEID_RFORK) == 0) {
             rfork_stat_added++;
 
             /* Serve from newly-populated cache */
-            if (rfork_cache_serve_from_buf(dsi, cached_entry, ibuf,
-                                           offset, reqcount, (int)err,
-                                           rbuflen) < 0) {
+            if (rfork_cache_serve_from_buf(dsi, cached_entry, offset,
+                                           reqcount, (int)err) < 0) {
                 goto afp_read_exit;
             }
 
@@ -1649,12 +1601,20 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         }
 
 #endif
+        /* request block parsed: the whole command buffer stages the reply */
+        ibuf = (char *)dsi->commands;
         *rbuflen = MIN((size_t)reqcount, (size_t)dsi->server_quantum);
         cc = read_file(ofork, eid, offset, ibuf, rbuflen);
 
         if (cc < 0) {
             err = cc;
-            goto afp_read_done;
+
+            if (*rbuflen == 0) {
+                goto afp_read_done;
+            }
+
+            /* the fork ends before reqcount: the bytes read are the reply */
+            reqcount = *rbuflen;
         }
 
         LOG(log_maxdebug, logtype_afpd,
@@ -1701,14 +1661,15 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 afp_read_exit:
         LOG(log_error, logtype_afpd, "afp_read(%s): %s", of_name(ofork),
             strerror(errno));
-        dsi_readdone(dsi);
 
         if (obj->options.flags & OPTION_STRICT_LOCKING) {
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,
                        ofork->of_refnum);
         }
 
+        /* in_write stays raised: nothing may follow an unfinished reply */
         obj->exit(EXITERR_CLNT);
+        dsi_readdone(dsi);
         break;
     } /* switch */
 
@@ -1741,7 +1702,7 @@ int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 }
 
 /* ---------------------- */
-int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
+int afp_flush(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
               size_t *rbuflen)
 {
     struct vol *vol;
@@ -1754,11 +1715,11 @@ int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         return AFPERR_PARAM;
     }
 
-    of_flush(vol);
+    of_flush(obj, vol);
     return AFP_OK;
 }
 
-int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_flushfork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                   char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork    *ofork;
@@ -1778,7 +1739,7 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     LOG(log_debug, logtype_afpd, "afp_flushfork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
-    if (flushfork(ofork) < 0) {
+    if (flushfork(obj, ofork) < 0) {
         LOG(log_error, logtype_afpd, "afp_flushfork(%s): %s", of_name(ofork),
             strerror(errno));
     }
@@ -1792,7 +1753,7 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
   fsync(2) on OSX is implemented differently than on other platforms.
   @sa http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf
 */
-int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_syncfork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork        *ofork;
@@ -1813,7 +1774,7 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     LOG(log_debug, logtype_afpd, "afp_syncfork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
-    if (flushfork(ofork) < 0) {
+    if (flushfork(obj, ofork) < 0) {
         LOG(log_error, logtype_afpd, "flushfork(%s): %s", of_name(ofork),
             strerror(errno));
         return AFPERR_MISC;
@@ -1823,7 +1784,7 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 }
 
 /* this is very similar to closefork */
-int flushfork(struct ofork *ofork)
+int flushfork(AFPObj *obj, struct ofork *ofork)
 {
     struct timeval tv;
     int err = 0, doflush = 0;
@@ -1853,8 +1814,12 @@ int flushfork(struct ofork *ofork)
         }
 
         /* flush the header */
-        if (doflush && ad_flush(ofork->of_ad) < 0) {
-            err = -1;
+        if (doflush) {
+            if (ad_flush(ofork->of_ad) < 0) {
+                err = -1;
+            } else {
+                setvoltime(obj, ofork->of_vol);
+            }
         }
 
         if (fsync(ad_reso_fileno(ofork->of_ad)) < 0) {
@@ -1873,7 +1838,9 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                   size_t *rbuflen)
 {
     struct ofork    *ofork;
+    struct vol      *vol;
     uint16_t       ofrefnum;
+    int dated;
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
@@ -1892,6 +1859,9 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     LOG(log_debug, logtype_afpd, "afp_closefork(fork: %" PRIu16 " [%s])",
         ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "rsrc");
+    vol = ofork->of_vol;
+    dated = (ofork->of_flags & AFPFORK_RSRC)
+            && (ofork->of_flags & AFPFORK_DIRTY);
 
     if (of_closefork(obj, ofork) < 0) {
         LOG(log_error, logtype_afpd, "afp_closefork: of_closefork: %s",
@@ -1899,26 +1869,33 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         return AFPERR_MISC;
     }
 
+    /* the close stamped a written resource fork's modification date */
+    if (dated) {
+        setvoltime(obj, vol);
+    }
+
     return AFP_OK;
 }
 
 
 /*!
- * @brief Write rbuflen bytes into the fork at *offset, advanced past every
- *        byte written, also when the write fails
+ * @brief Write rbuflen bytes at offset into the fork
  *
- * @returns AFP_OK, or the AFPERR_* reply for the failed write
+ * @returns rbuflen, or the AFPERR_* reply for the failed write
  */
-static int write_file(struct ofork *ofork, int eid, off_t *offset,
-                      char *rbuf, size_t rbuflen)
+static ssize_t write_file(struct ofork *ofork, int eid,
+                          off_t offset, char *rbuf,
+                          size_t rbuflen)
 {
+    size_t done = 0;
     ssize_t cc;
     LOG(log_maxdebug, logtype_afpd, "write_file(off: %ju, size: %zu)",
-        (uintmax_t)*offset, rbuflen);
+        (uintmax_t)offset, rbuflen);
 
     /* pwrite() stops short at a size limit; the retry reports why */
-    while (rbuflen > 0) {
-        cc = ad_write(ofork->of_ad, eid, *offset, 0, rbuf, rbuflen);
+    while (done < rbuflen) {
+        cc = ad_write(ofork->of_ad, eid, offset + done, 0, rbuf + done,
+                      rbuflen - done);
 
         if (cc <= 0) {
             if (cc == 0) {
@@ -1928,34 +1905,31 @@ static int write_file(struct ofork *ofork, int eid, off_t *offset,
             return fork_error(ofork, "ad_write");
         }
 
-        *offset += cc;
-        rbuf += cc;
-        rbuflen -= (size_t)cc;
+        done += (size_t)cc;
     }
 
-    return AFP_OK;
+    return (ssize_t)done;
 }
 
 /*! @brief Flag a fork that a write reached */
-static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
+static void write_mark(AFPObj *obj, struct ofork *ofork, int eid)
 {
     if (ad_meta_fileno(ofork->of_ad) != -1) {
         ofork->of_flags |= AFPFORK_DIRTY;
     }
 
     if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
-        rfork_invalidate_for_ofork(ofork->of_vol, ofork);
+        rfork_invalidate_for_ofork(obj, ofork);
     }
 
-    /* remembered until close_fork */
-    ofork->of_flags |= AFPFORK_MODIFIED;
+    fork_modified(obj, ofork);
 }
 
 
 /*
- * FPWrite. A failure before the payload is read leaves through
- * afp_write_err, which drains the whole request; once it is being read,
- * through afp_write_done, which drains what is left of it.
+ * FPWrite. NOTE: on an error, we always use afp_write_err as
+ * the client may have sent us a bunch of data that's not reflected
+ * in reqcount et al.
  */
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                       size_t *rbuflen, int is64)
@@ -1965,7 +1939,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     off_t           saveoff;
     off_t           reqcount;
     off_t           oldsize;
-    off_t           newsize;
     int             endflag;
     int             eid;
     int             err = AFP_OK;
@@ -1973,7 +1946,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     DSI *dsi = obj->dsi;
     char *rcvbuf = NULL;
     size_t          rcvbuflen = 0;
-    int             cc = AFP_OK;
+    ssize_t         cc;
 
     if (dsi) {
         rcvbuf = (char *)dsi->commands;
@@ -2030,7 +2003,10 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         goto afp_write_err;
     }
 
-    oldsize = ad_size(ofork->of_ad, eid);
+    /* an fstat() for the data fork; only an EOF-relative write and the
+     * volume size limit use it */
+    oldsize = (endflag || ofork->of_vol->v_limitsize)
+              ? ad_size(ofork->of_ad, eid) : 0;
 
     if (endflag) {
         offset += oldsize;
@@ -2042,11 +2018,9 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         goto afp_write_err;
     }
 
-    newsize = ((offset + reqcount) > oldsize) ? (offset + reqcount) : oldsize;
-
-    /* offset can overflow on 64-bit capable filesystems.
-     * report disk full if that's going to happen. */
-    if (sum_neg(is64, offset, reqcount)) {
+    /* a write ending past the largest offset the request can carry is a
+     * full disk */
+    if (!fork_range_within(offset, reqcount, is64 ? INT64_MAX : INT32_MAX)) {
         LOG(log_error, logtype_afpd, "write_fork: DISK FULL");
         err = AFPERR_DFULL;
         goto afp_write_err;
@@ -2084,7 +2058,18 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
             bprint(rbuf, *rbuflen);
         }
 
-        cc = write_file(ofork, eid, &offset, rbuf, *rbuflen);
+        if ((cc = write_file(ofork, eid, offset, rbuf, *rbuflen)) < 0) {
+            *rbuflen = 0;
+
+            if (obj->options.flags & OPTION_STRICT_LOCKING) {
+                ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,
+                           ofork->of_refnum);
+            }
+
+            return cc;
+        }
+
+        offset += cc;
         break;
 #endif /* no afp/asp */
 
@@ -2096,12 +2081,13 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         /* find out what we have already */
         char *wbuf = NULL;
-        size_t len = dsi_writeinit(dsi, &wbuf);
 
-        if (len > 0 && (cc = write_file(ofork, eid, &offset, wbuf, len)) < 0) {
-            goto afp_write_done;
+        if ((cc = dsi_writeinit(dsi, &wbuf)) > 0
+                && (cc = write_file(ofork, eid, offset, wbuf, cc)) < 0) {
+            goto afp_write_fail;
         }
 
+        offset += cc;
 #ifdef WITH_RECVFILE
 
         if (obj->options.flags & OPTION_RECVFILE) {
@@ -2110,36 +2096,38 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset,
                 dsi->datasize);
 
-            if (ad_recvfile(ofork->of_ad, eid, dsi, &offset) < 0) {
+            if ((cc = ad_recvfile(ofork->of_ad, eid, dsi, offset,
+                                  obj->options.splice_size)) < 0) {
                 cc = fork_error(ofork, "ad_recvfile");
-                goto afp_write_done;
+                goto afp_write_fail;
             }
+
+            /* dsi_write() receives the rest */
+            offset += cc;
         }
 
 #endif
 
-        while ((len = dsi_write(dsi, rcvbuf, rcvbuflen)) > 0) {
-            if ((cc = write_file(ofork, eid, &offset, rcvbuf, len)) < 0) {
-                goto afp_write_done;
+        /* loop until everything gets written. currently
+         * dsi_write handles the end case by itself. */
+        while ((cc = dsi_write(dsi, rcvbuf, rcvbuflen))) {
+            if ((cc = write_file(ofork, eid, offset, rcvbuf, cc)) < 0) {
+                goto afp_write_fail;
             }
 
-            LOG(log_maxdebug, logtype_afpd,
-                "afp_write: wrote: %zu, offset: %jd", len, (intmax_t)offset);
+            LOG(log_maxdebug, logtype_afpd, "afp_write: wrote: %jd, offset: %jd",
+                (intmax_t)cc, (intmax_t)offset);
+            offset += cc;
         }
 
         /* dsi_write() reads 0 at EOF as well as at the end of the payload */
         if (dsi->datasize > 0) {
             errno = ECONNRESET;
             cc = fork_error(ofork, "dsi_write");
+            goto afp_write_fail;
         }
     }
     break;
-    }
-
-afp_write_done:
-
-    if (cc < 0 && obj->proto == AFPPROTO_DSI) {
-        dsi_writeflush(dsi);
     }
 
     if (obj->options.flags & OPTION_STRICT_LOCKING) {
@@ -2147,20 +2135,27 @@ afp_write_done:
                    ofork->of_refnum);
     }
 
-    if (offset > saveoff) {
-        write_mark(obj, ofork, eid);
+    write_mark(obj, ofork, eid);
+
+    /* bytes appended, for the volume size limit */
+    if (ofork->of_vol->v_limitsize && saveoff + reqcount > oldsize) {
+        ofork->of_vol->v_appended += saveoff + reqcount - oldsize;
     }
 
-    if (cc < 0) {
-        *rbuflen = 0;
-        return cc;
-    }
-
-    /* update write count */
-    ofork->of_vol->v_appended += (newsize > oldsize) ? (newsize - oldsize) : 0;
     *rbuflen = set_off_t (offset, rbuf, is64);
     AFP_WRITE_DONE();
     return AFP_OK;
+afp_write_fail:
+    dsi_writeflush(dsi);
+    *rbuflen = 0;
+
+    if (obj->options.flags & OPTION_STRICT_LOCKING) {
+        ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, reqcount,
+                   ofork->of_refnum);
+    }
+
+    write_mark(obj, ofork, eid);
+    return cc;
 afp_write_err:
 
     if (obj->proto == AFPPROTO_DSI) {

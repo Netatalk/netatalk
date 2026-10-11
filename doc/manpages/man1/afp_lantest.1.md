@@ -61,7 +61,7 @@ features.
 : Server hostname or IP address (default: localhost)
 
 **-K**
-: Run cache-focused tests only (tests 14-17)
+: Run cache-focused tests only (tests 14-18)
 
 **-n** *iterations*
 : Number of test iterations to run (default: 2). For iterations > 5 outliers will be removed
@@ -198,9 +198,17 @@ FPDelete cleanup.
 lookups [4 x 500 = 2,000 AFP ops]. Untimed: FPCreateFile setup, FPDelete
 cleanup.
 
+**(18) Folder item counts after listing each folder [CACHE]**
+: Tests the folder item counts Finder asks for when a folder is selected in
+column view: each of 20 folders of 50 files is listed, then their parent is
+listed with Finder's directory bitmap, for 20 rounds. Timed: FPEnumerate of
+the folder + FPEnumerate of the parent per folder per round
+[2 x 20 x 20 = 800 AFP ops]. Untimed: FPCreateDir/FPCreateFile setup, a
+two-second wait, FPDelete cleanup.
+
 ## Cache-Focused Tests
 
-Tests 14-17 are specifically designed to highlight directory cache performance improvements in
+Tests 14-18 are specifically designed to highlight directory cache performance improvements in
 netatalk. These tests benefit significantly from optimized cache validation and probabilistic
 validation features. Use the **-K** option to run only these cache-focused tests.
 
@@ -237,80 +245,90 @@ For example, to run as root;
     afp_lantest -n 2 -7 -h 127.0.0.1 -p 548 -u test -w test -s 'File Sharing'
     Connecting to host 127.0.0.1:548
     IO monitoring: /proc_io is available
-    Found privilege-dropped afpd process for user 'test': PID 41
-    IO monitoring enabled (afpd: 41)
+    Found privilege-dropped afpd process for user 'test': PID 67
+    IO monitoring enabled (afpd: 67)
 
-    Run 1 => Writing one large file [103 AFP ops]                                   42 ms for 100 MB (avg. 2496 MB/s)
-             IO Operations; afpd: 101 READs, 301 WRITEs
-    Run 1 => Reading one large file [102 AFP ops]                                   19 ms for 100 MB (avg. 5518 MB/s)
-             IO Operations; afpd: 277 READs, 176 WRITEs
-    Run 1 => Creating 2000 files [4,000 AFP ops]                                   444 ms
-             IO Operations; afpd: 4000 READs, 6000 WRITEs
-    Run 1 => Create 2000 dirs tree (20×9×10) [2,000 AFP ops]                       398 ms
-             IO Operations; afpd: 2000 READs, 6000 WRITEs
-    Run 1 => Open, write 1024 bytes, close 2000 files [6,000 AFP ops]              267 ms
+    Run 1 => Writing one large file [103 AFP ops]                                   61 ms for 100 MiB (avg. 1718 MB/s)
+             IO Operations; afpd: 98 READs, 292 WRITEs
+    Run 1 => Reading one large file [102 AFP ops]                                   24 ms for 100 MiB (avg. 4369 MB/s)
+             IO Operations; afpd: 287 READs, 189 WRITEs
+    Run 1 => Creating 2000 files [4,000 AFP ops]                                   557 ms
+             IO Operations; afpd: 4120 READs, 21202 WRITEs
+    Run 1 => Create 2000 dirs tree (20×9×10) [2,000 AFP ops]                     372 ms
+             IO Operations; afpd: 2128 READs, 20886 WRITEs
+    Run 1 => Open, write 1024 bytes, close 2000 files [6,000 AFP ops]              637 ms
              IO Operations; afpd: 6000 READs, 8000 WRITEs
-    Run 1 => Open, read 1024 bytes, close 2000 files [6,000 AFP ops]               258 ms
+    Run 1 => Open, read 1024 bytes, close 2000 files [6,000 AFP ops]               612 ms
              IO Operations; afpd: 8000 READs, 4000 WRITEs
-    Run 1 => Copying 1000 files client-side (R+W) [7,000 AFP ops]                  363 ms
-             IO Operations; afpd: 8000 READs, 8000 WRITEs
-    Run 1 => Copying 2000 files server-side [2,000 AFP ops]                        503 ms
-             IO Operations; afpd: 6000 READs, 8000 WRITEs
-    Run 1 => Stat (lookup+getparams) 2000 files [4,000 AFP ops]                    155 ms
+    Run 1 => Copying 1000 files client-side (R+W) [7,000 AFP ops]                  824 ms
+             IO Operations; afpd: 8066 READs, 15484 WRITEs
+    Run 1 => Copying 2000 files server-side [2,000 AFP ops]                        378 ms
+             IO Operations; afpd: 6137 READs, 21325 WRITEs
+    Run 1 => Stat (lookup+getparams) 2000 files [4,000 AFP ops]                    391 ms
              IO Operations; afpd: 4000 READs, 4000 WRITEs
-    Run 1 => Enumerate dir with 2000 files [~51 AFP ops]                             3 ms
+    Run 1 => Enumerate dir with 2000 files [~51 AFP ops]                             8 ms
              IO Operations; afpd: 49 READs, 49 WRITEs
-    Run 1 => Lock then unlock 2000 open forks [4,000 AFP ops]                      155 ms
+    Run 1 => Lock then unlock 2000 open forks [4,000 AFP ops]                      314 ms
              IO Operations; afpd: 4000 READs, 4000 WRITEs
-    Run 1 => Deleting 2000 files [2,000 AFP ops]                                   440 ms
-             IO Operations; afpd: 2000 READs, 8000 WRITEs
-    Run 1 => Byte-range lock/unlock 2000 ranges in one fork [4,000 AFP ops]        157 ms
+    Run 1 => Deleting 2000 files [2,000 AFP ops]                                   372 ms
+             IO Operations; afpd: 2112 READs, 16554 WRITEs
+    Run 1 => Byte-range lock/unlock 2000 ranges in one fork [4,000 AFP ops]        425 ms
              IO Operations; afpd: 4000 READs, 4000 WRITEs
-    Run 1 => Directory cache hits (20 dirs x 100 files) [2,020 AFP ops]             70 ms
+    Run 1 => Directory cache hits (20 dirs x 100 files) [2,020 AFP ops]            184 ms
              IO Operations; afpd: 2020 READs, 2020 WRITEs
-    Run 1 => Mixed cache operations (create/stat/enum/delete) on 500 files [2,     191 ms
-             IO Operations; afpd: 2050 READs, 4050 WRITEs
-    Run 1 => Deep path traversal (20 levels x 100 walks) [2,000 AFP ops]            72 ms
+    Run 1 => Mixed cache operations (create/stat/enum/delete) on 500 files [2,0    256 ms
+             IO Operations; afpd: 2062 READs, 9575 WRITEs
+    Run 1 => Deep path traversal (20 levels x 100 walks) [2,000 AFP ops]           168 ms
              IO Operations; afpd: 2000 READs, 2000 WRITEs
-    Run 1 => Cache validation (500 files x 4 lookups) [2,000 AFP ops]               77 ms
+    Run 1 => Cache validation (500 files x 4 lookups) [2,000 AFP ops]              162 ms
              IO Operations; afpd: 2000 READs, 2000 WRITEs
-    Successfully deleted test directory 'LanTest-40'
+    Run 1 => Folder item counts after listing each folder (20 x 50 files) [800      77 ms
+             IO Operations; afpd: 800 READs, 800 WRITEs
+    Successfully deleted test directory 'LanTest-66'
 
     Netatalk Lantest Results (Averages and standard deviations (±) for all tests, across 2 iterations (default))
     ============================================================================================================
 
     Test                                                                Time_ms  Time± AFPD_R AFPD_R± AFPD_W AFPD_W±   MB/s
     ------------------------------------------------------------------ -------- ------ ------ ------- ------ ------- ------
-    Writing one large file [103 AFP ops]                                     40    2.2    101     0.0    300     1.0   2500
-    Reading one large file [102 AFP ops]                                     17    2.2    273     5.0    172     5.0   5882
-    Creating 2000 files [4,000 AFP ops]                                     407   51.6   4000     0.0   6000     0.0      0
-    Create 2000 dirs tree (20×9×10) [2,000 AFP ops]                         375   38.2   2000     0.0   6000     0.0      0
-    Open, write 1024 bytes, close 2000 files [6,000 AFP ops]                261    7.8   6000     0.0   8000     0.0      0
-    Open, read 1024 bytes, close 2000 files [6,000 AFP ops]                 260    2.8   8000     0.0   4000     0.0      0
-    Copying 1000 files client-side (R+W) [7,000 AFP ops]                    337   37.5   8000     0.0   8000     0.0      0
-    Copying 2000 files server-side [2,000 AFP ops]                          448   77.8   6000     0.0   8000     0.0      0
-    Stat (lookup+getparams) 2000 files [4,000 AFP ops]                      155    1.0   4000     0.0   4000     0.0      0
-    Enumerate dir with 2000 files [~51 AFP ops]                               3    1.0     49     0.0     49     0.0      0
-    Lock then unlock 2000 open forks [4,000 AFP ops]                        153    2.2   4000     0.0   4000     0.0      0
-    Deleting 2000 files [2,000 AFP ops]                                     416   33.2   2000     0.0   8000     0.0      0
-    Byte-range lock/unlock 2000 ranges in one fork [4,000 AFP ops]          155    2.2   4000     0.0   4000     0.0      0
-    Directory cache hits (20 dirs x 100 files) [2,020 AFP ops]               70    1.0   2020     0.0   2020     0.0      0
-    Mixed cache operations (create/stat/enum/delete) on 500 files [2,050 AFP ops]      190    1.4   2050     0.0   4050     0.0      0
-    Deep path traversal (20 levels x 100 walks) [2,000 AFP ops]              72    0.0   2000     0.0   2000     0.0      0
-    Cache validation (500 files x 4 lookups) [2,000 AFP ops]                 77    2.8   2000     0.0   2000     0.0      0
+    Writing one large file [103 AFP ops]                                     71   14.9     98     0.0    292     0.0   1408
+    Reading one large file [102 AFP ops]                                     24    0.0    287     0.0    189     0.0   4166
+    Creating 2000 files [4,000 AFP ops]                                     551    7.8   4127     9.9  21257    78.5      0
+    Create 2000 dirs tree (20×9×10) [2,000 AFP ops]                       394   31.1   2132     6.4  20914    40.3      0
+    Open, write 1024 bytes, close 2000 files [6,000 AFP ops]                525  158.4   6000     0.0   8000     0.0      0
+    Open, read 1024 bytes, close 2000 files [6,000 AFP ops]                 489  173.2   8000     0.0   4000     0.0      0
+    Copying 1000 files client-side (R+W) [7,000 AFP ops]                    696  181.0   8074    11.3  15493    13.5      0
+    Copying 2000 files server-side [2,000 AFP ops]                          321   80.6   6137     1.0  21329     6.4      0
+    Stat (lookup+getparams) 2000 files [4,000 AFP ops]                      332   82.7   4000     0.0   4000     0.0      0
+    Enumerate dir with 2000 files [~51 AFP ops]                               6    2.8     49     0.0     49     0.0      0
+    Lock then unlock 2000 open forks [4,000 AFP ops]                        296   25.5   4000     0.0   4000     0.0      0
+    Deleting 2000 files [2,000 AFP ops]                                     314   82.0   2122    14.9  16565    15.6      0
+    Byte-range lock/unlock 2000 ranges in one fork [4,000 AFP ops]          314  156.3   4000     0.0   4000     0.0      0
+    Directory cache hits (20 dirs x 100 files) [2,020 AFP ops]              177    9.2   2020     0.0   2020     0.0      0
+    Mixed cache operations (create/stat/enum/delete) on 500 files [2,050 AFP ops]      237   26.9   2062     0.0   9570     7.1      0
+    Deep path traversal (20 levels x 100 walks) [2,000 AFP ops]             159   12.0   2000     0.0   2000     0.0      0
+    Cache validation (500 files x 4 lookups) [2,000 AFP ops]                145   24.0   2000     0.0   2000     0.0      0
+    Folder item counts after listing each folder (20 x 50 files) [800 AFP ops]       79    3.6    800     0.0    800     0.0      0
     ------------------------------------------------------------------ -------- ------ ------ ------- ------ ------- ------
-    Sum of all AFP OPs = 49326                                             3436         56493          70591               
+    Sum of all AFP OPs = 50126                                             5130         57908         136478               
 
     Aggregates Summary:
     ------------------------------------------------------------------
-    Average Time per AFP OP: 63 µs (from per-test medians)
-    Average AFPD Reads per AFP OP: 1.129
-    Average AFPD Writes per AFP OP: 1.354
+    Average Time per AFP OP: 102 µs (from per-test medians)
+    Average AFPD Reads per AFP OP: 1.155
+    Average AFPD Writes per AFP OP: 2.723
     See afp_lantest manpage for more information: https://netatalk.io/manual/en/afp_lantest.1
 
     Dircache Statistics (/var/log/afpd.log):
     ------------------------------------------------------------------
-    Jul 12 06:42:28.768144 afpd[41] {dircache.c:2074} (info:AFPDaemon): dircache statistics (ARC): (user: test) entries: 0, ghost_entries: 0, max_entries: 4001 (750 KB), config_max: 65536, lookups: 310256, hits: 281770 (90.8%), ghost_hits: 0 (0.0%), total_hits: (90.8%), misses: 28486 (9.2%), validations: 2819 (1.0%), added: 20305, removed: 20305, expunged: 181, invalid_on_use: 181, evicted: 0, validation_freq: 100
+    Oct 07 10:13:42.536463 afpd[67] {dircache.c:2437} (info:AFPDaemon): dircache statistics (ARC): (user: test) entries: 0, ghost_entries: 0, max_entries: 4001 (812 KB), config_max_entries: 65536, lookups: 292268, hits: 265961 (91.0%), ghost_hits: 0 (0.0%), total_hits: (91.0%), misses: 26307 (9.0%), validations: 2661 (1.0%), added: 18167, removed: 18167, expunged: 140, invalid_on_use: 140, evicted: 0, covered_cancelled: 4068, validation_freq: 100
+    Oct 07 10:13:42.536467 afpd[67] {dircache.c:2467} (info:AFPDaemon): ARC ghost performance: (user: test) ghost_hits: 0 (0.0%), ghost_hits(B1=0, B2=0), learning_benefit: (0.0%)
+    Oct 07 10:13:42.536471 afpd[67] {dircache.c:2476} (info:AFPDaemon): ARC table state: (user: test) T1=0 (recent/cached), T2=0 (frequent/cached), B1=0 (recent/ghost), B2=0 (frequent/ghost), total_cached=0/65536, total_ghosts=0, freq_bias: (0.0%)
+    Oct 07 10:13:42.536475 afpd[67] {dircache.c:2486} (info:AFPDaemon): ARC adaptation: (user: test) p=0/65536 (0.0% target for T1), p_range=[65536,0], adaptations=0 (increases=0, decreases=0)
+    Oct 07 10:13:42.536478 afpd[67] {dircache.c:2497} (info:AFPDaemon): ARC operations: (user: test) hits(T1=18167, T2=254159), promotions(T1→T2=18167), evictions(T1=0, T2=0)
+    Oct 07 10:13:42.536482 afpd[67] {dircache.c:2537} (info:AFPDaemon): dircache statistics (hints): (user: test) sent: 68522, dropped: 0, received: 0, acted_on: 0, no_match: 0
+    Oct 07 10:13:42.536486 afpd[67] {dircache.c:2554} (info:AFPDaemon): dircache statistics (AD): (user: test) hits: 76770, misses: 4265, no_ad: 0, hit_ratio: 94.7%
+    Oct 07 10:13:42.536490 afpd[67] {dircache.c:2560} (info:AFPDaemon): dircache statistics (offcnt): (user: test) requests: 16000, cached: 15959, walked: 41 (first: 38, older: 0, confirmed: 3, changed: 0), failed: 0, entries: 2091
 
 ## IO Monitoring Result Columns
 
@@ -360,7 +378,7 @@ For more information see [Testing Wiki](https://netatalk.io/docs/Testing)
 - Tests that involve large file operations (tests 1 and 2) will create temporary files in the
   test volume
 - The **-g** and **-G** options significantly increase test file sizes and test duration
-- Cache-focused tests (14-17) provide the most insight into netatalk's directory cache performance
+- Cache-focused tests (14-18) provide the most insight into netatalk's directory cache performance
 - Multiple iterations (**-n**) are recommended for consistent performance measurements
 - The tool requires write access to the specified AFP volume
 

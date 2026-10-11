@@ -66,7 +66,35 @@ struct fault_inject {
     int splice_file_armed;
     int splice_file_fail_after;
     int splice_file_errno;
+    int splice_watch;       /*!< record the pipe capacity below */
+    int splice_pipe_size;   /*!< capacity of the pipe the last call filled */
     int pipe_size_limit;    /*!< F_SETPIPE_SZ above this fails with EPERM */
+    int send_armed;
+    int send_fail_after;
+    int send_errno;
+    int sendfile_armed;
+    int sendfile_fail_after;
+    int sendfile_errno;
+    int sendfile_calls;     /*!< count of armed sendfile() calls seen */
+    /* fstat() calls on fstat_fd seen while fstat_watch is set */
+    int fstat_watch;
+    int fstat_fd;
+    int fstat_calls;
+    /* time() calls seen while time_watch is set */
+    int time_watch;
+    int time_calls;
+    int statvfs_rdonly;
+    int access_armed;
+    int access_fail_after;
+    int access_errno;
+    int utime_watch;
+    int utime_calls;
+    int acl_get_file_watch;
+    int acl_get_file_calls;
+    int unlink_watch;
+    int unlink_calls;
+    int getcwd_watch;
+    int getcwd_calls;
 };
 
 extern struct fault_inject fi;

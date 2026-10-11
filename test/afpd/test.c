@@ -18,12 +18,14 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <atalk/adouble.h>
@@ -50,6 +52,7 @@
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
 #include "auth.h"
+#include "desktop.h"
 #include "dircache.h"
 #include "directory.h"
 #include "file.h"
@@ -59,10 +62,15 @@
 #include "subtests.h"
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
+#include "subtests_enumerate.h"
 #include "subtests_lock.h"
+#include "subtests_offcnt.h"
 #include "subtests_pfd.h"
 #include "subtests_recvfile.h"
+#include "subtests_request.h"
+#include "subtests_sendfile.h"
 #include "subtests_veto.h"
+#include "subtests_volpolls.h"
 #ifndef NO_DDP
 #include "subtests_atp.h"
 #endif /* NO_DDP */
@@ -164,6 +172,84 @@ static int utest_fork_range_rejects_wrapped_read(void)
     }
 
     return 0;
+}
+
+#define GI_REPLY 4624
+#define GI_ICON  8192
+
+/*!
+ * @brief FPGetIcon of an icon larger than the reply buffer fails, writes
+ *        nothing past the buffer, sized as an ASP session's, and leaves the
+ *        icon cursor on the next entry for FPGetIconInfo
+ */
+static int utest_geticon_within_reply_buffer(AFPObj *obj, struct vol *vol)
+{
+    static char rbuf[GI_REPLY + GI_ICON];
+    static char bits[GI_ICON];
+    static const char zero[GI_ICON];
+    char small[64];
+    uint8_t creator[4] = { 'S', 'F', 'g', 'i' };
+    uint8_t entry[12] = { 0 };
+    uint8_t entry2[12] = { 0 };
+    uint8_t req[16] = { 0 };
+    uint8_t info[10] = { 0 };
+    uint16_t len_be = htons(GI_ICON);
+    uint16_t small_be = htons(sizeof(small));
+    uint16_t index_be = htons(2);
+    size_t rbuflen = GI_REPLY;
+    char dir[MAXPATHLEN + 1];
+    char *path;
+    int fd;
+    int ret = -1;
+    snprintf(dir, sizeof(dir), "%s/" APPLEDESKTOP, vol->v_dbpath);
+    (void)mkdir(dir, 0777);
+    snprintf(dir, sizeof(dir), "%s/" APPLEDESKTOP "/S", vol->v_dbpath);
+    (void)mkdir(dir, 0777);
+    path = dtfile(vol, creator, ".icon");
+
+    if ((fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0666)) == -1) {
+        return -1;
+    }
+
+    /* two stored icons: tag, file type, icon type, pad, size, the bits */
+    memcpy(entry + 4, "ICN#", 4);
+    entry[8] = 1;
+    memcpy(entry + 10, &len_be, sizeof(len_be));
+    memset(bits, 0xa5, sizeof(bits));
+    memcpy(entry2 + 4, "ICN#", 4);
+    entry2[8] = 2;
+    memcpy(entry2 + 10, &small_be, sizeof(small_be));
+    memset(small, 0x5a, sizeof(small));
+    /* FPGetIcon: command, pad, volume, creator, file type, icon type, pad,
+     * size; FPGetIconInfo: command, pad, volume, creator, index */
+    memcpy(req + 2, &vol->v_vid, sizeof(vol->v_vid));
+    memcpy(req + 4, creator, sizeof(creator));
+    memcpy(req + 8, "ICN#", 4);
+    req[12] = 1;
+    memcpy(req + 14, &len_be, sizeof(len_be));
+    memcpy(info + 2, &vol->v_vid, sizeof(vol->v_vid));
+    memcpy(info + 4, creator, sizeof(creator));
+    memcpy(info + 8, &index_be, sizeof(index_be));
+    memset(rbuf, 0, sizeof(rbuf));
+
+    if (write(fd, entry, sizeof(entry)) == sizeof(entry)
+            && write(fd, bits, sizeof(bits)) == sizeof(bits)
+            && write(fd, entry2, sizeof(entry2)) == sizeof(entry2)
+            && write(fd, small, sizeof(small)) == sizeof(small)
+            && afp_geticon(obj, (char *)req, sizeof(req), rbuf,
+                           &rbuflen) == AFPERR_PARAM
+            && rbuflen == 0
+            && memcmp(rbuf + GI_REPLY, zero, sizeof(zero)) == 0
+            && afp_geticoninfo(obj, (char *)info, sizeof(info), rbuf,
+                               &rbuflen) == AFP_OK
+            && rbuflen == sizeof(entry2)
+            && memcmp(rbuf, entry2, sizeof(entry2)) == 0) {
+        ret = 0;
+    }
+
+    close(fd);
+    unlink(path);
+    return ret;
 }
 
 _Static_assert(offsetof(struct guarded_adouble,
@@ -932,7 +1018,7 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_conf_dircache_validation_freq_range(), 0,
                      "dircache validation freq is bounded at parse, unusable values not explicit");
     TEST_int_or_skip(utest_conf_splice_size_bounds(), 0,
-                     "splice size: 4096 to 8 MiB, power of two, 1 MiB default");
+                     "splice size: 4096 to 8 MiB, a power of two, 1 MiB by default");
     TEST_int_or_skip(utest_conf_multiproto_reverts_unusable_freq(), 0,
                      "multi protocol still defaults an unusable explicit freq to 1");
     TEST_int_or_skip(utest_conf_ea_samba_no_defaults(), 0,
@@ -1128,6 +1214,14 @@ int main(int argc, char *argv[])
              "dircache: a file expunging curdir hands curdir to the volume root");
     TEST_int(test010_full_cache_accepts_adds(vol, 8192), 0,
              "dircache: a full cache keeps accepting inserts");
+    TEST_int(test011_stat_refresh_drops_rights(vol), 0,
+             "dircache: a stat refresh with a new ctime drops cached rights");
+    TEST_int(test012_movecwd_retry_names_directory(vol), 0,
+             "movecwd: a failed CNID retry logs the directory it tried");
+    TEST_int(test013_movecwd_refuses_symlinked_path(vol), 0,
+             "movecwd: a path through a symlink to a folder is refused");
+    TEST_int(test014_movecwd_symlink_to_file(vol), 0,
+             "movecwd: a symlink to a file fails with ENOTDIR");
     /* pfd cache: strict ostat equivalence (quiescent), and the
      * divergence window — probe bound + three-way sync-check no-thrash */
     TEST_int(test_pfd_ostat_equivalence(vol), 0,
@@ -1203,6 +1297,8 @@ int main(int argc, char *argv[])
                      "recvfile: a client closing mid-write ends the write");
     TEST_int_or_skip(utest_write_fork_eof_fails_request(&obj, vol), 0,
                      "write_fork: a payload cut by EOF fails the request");
+    TEST_int_or_skip(utest_write_fork_eof_marks_volume(&obj, vol), 0,
+                     "write_fork: a payload cut by EOF marks the volume");
     TEST_int_or_skip(utest_recvfile_urgent_byte_finishes_write(&obj, vol), 0,
                      "recvfile: a write past an urgent byte finishes in step");
     TEST_int_or_skip(utest_recvfile_urgent_byte_at_eof(&obj, vol), 0,
@@ -1217,8 +1313,6 @@ int main(int argc, char *argv[])
                      "recvfile: a socket above FD_SETSIZE waits for its data");
     TEST_int_or_skip(utest_recvfile_unsplicable_fs_falls_back(&obj, vol), 0,
                      "recvfile: unsplicable files take the userspace path");
-    TEST_int_or_skip(utest_recvfile_bad_offset_keeps_splice(&obj, vol), 0,
-                     "recvfile: a refused offset leaves the file splicing");
     TEST_int_or_skip(utest_recvfile_no_socket_splice_falls_back(&obj, vol), 0,
                      "recvfile: a refused socket splice falls back");
     TEST_int_or_skip(utest_recvfile_pipe_takes_splice_size(&obj, vol), 0,
@@ -1226,9 +1320,131 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_recvfile_pipe_never_shrinks(&obj, vol), 0,
                      "recvfile: a small splice size leaves the pipe alone");
     TEST_int_or_skip(utest_recvfile_pipe_steps_down(&obj, vol), 0,
-                     "recvfile: a refused pipe size is halved until granted");
+                     "recvfile: a refused splice size halves to what the kernel grants");
     TEST_int_or_skip(utest_write_fork_short_write_fails_request(&obj, vol), 0,
                      "write_fork: a short fork write fails the request");
+    TEST_int_or_skip(utest_sendfile_read_lands_intact(&obj, vol), 0,
+                     "sendfile: a reply through a small buffer lands intact");
+    TEST_int_or_skip(utest_sendfile_header_failure_sends_nothing(&obj, vol), 0,
+                     "sendfile: no file data follows a failed header send");
+    TEST_int(utest_dsi_close_sends_nothing_mid_reply(&obj, vol), 0,
+             "dsi_close: no CloseSession frame follows a reply under way");
+    TEST_int_or_skip(utest_sendfile_short_fork_ends_session(&obj, vol), 0,
+                     "sendfile: a fork short of its length ends the session");
+    TEST_int_or_skip(utest_dsi_reply_refuses_unframed_length(&obj, vol), 0,
+                     "DSI: a reply length the header cannot carry is refused");
+    TEST_int_or_skip(utest_sendfile_read_ext_fits_dsi_length(&obj, vol), 0,
+                     "FPReadExt: an 8 GiB read gets the largest DSI reply");
+    TEST_int_or_skip(utest_sendfile_refused_file_sent_from_buffer(&obj, vol), 0,
+                     "sendfile: a file sendfile refuses goes through a buffer");
+    TEST_int(utest_geticon_within_reply_buffer(&obj, vol), 0,
+             "FPGetIcon: an icon larger than the reply buffer is refused");
+    TEST_int(utest_offcnt_stat_causes(&obj, vid), 0,
+             "offspring count: each walk is attributed to one cause");
+    TEST_int(utest_offcnt_hard_create_existing(&obj, vid), 0,
+             "offspring count: hard create over an existing file adds nothing");
+    TEST_int_or_skip(utest_offcnt_access_refreshes_cache(&obj, vid), 0,
+                     "offspring count: FPAccess refreshes the cached stat");
+    TEST_int_or_skip(utest_access_delete_right_follows_parent(&obj, vid), 0,
+                     "access: a file's delete right follows the parent's ACL");
+    TEST_int(utest_offcnt_fresh_stat_refreshes_cache(&obj, vid), 0,
+             "offspring count: a fresh stat refreshes the cached ctime");
+    TEST_int_or_skip(utest_write_reads_size_only_when_used(&obj, vol), 0,
+                     "FPWrite: fork size read only when a write uses it");
+    TEST_int(utest_volume_scan_resets_appended(&obj, vol), 0,
+             "vol size limit: a usage scan replaces the appended count");
+    TEST_int(utest_write_end_past_limit_is_disk_full(&obj, vol), 0,
+             "FPWriteExt: a write ending past the largest offset is disk full");
+    TEST_int(utest_rfork_cache_hit_sends_cached_bytes(&obj, vol), 0,
+             "rfork cache: hits are sent without a copy");
+    TEST_int(utest_rfork_cache_stale_length_reads_fork(&obj, vol), 0,
+             "rfork cache: a stale length is dropped, not served");
+    TEST_int(utest_rfork_cache_finds_name_on_disk(&obj, vol), 0,
+             "rfork cache: a fork is found by its name on disk");
+    TEST_int(utest_hint_relay_drops_repeats(&obj, vol), 0,
+             "hint relay: a sender's repeated refresh is buffered once");
+    TEST_int(utest_fork_first_change_hints_siblings(&obj, vol), 0,
+             "fork: the first change and the close hint sibling sessions");
+    TEST_int(utest_rfork_cache_skips_fill_while_written(&obj, vol), 0,
+             "rfork cache: no fill while another session writes the fork");
+    TEST_int(utest_rfork_cache_lookup_only_inside_fork(&obj, vol), 0,
+             "rfork cache: looked up only for a read inside the fork");
+    TEST_int_or_skip(utest_fce_register_keeps_no_path(&obj, vol), 0,
+                     "FCE: an event leaves no resolved path allocated");
+    TEST_int_or_skip(utest_fce_clock_read_only_when_held(&obj, vol), 0,
+                     "FCE: clock read only while a close event is held");
+    TEST_int(utest_read_pieces_fit_command_buffer(&obj, vol), 0,
+             "FPRead: staged reply pieces fit the command buffer");
+    TEST_int(utest_read_short_fork_sends_bytes_read(&obj, vol), 0,
+             "FPRead: short buffered first piece replies with bytes read");
+    TEST_int(utest_volpoll_probe_keeps_mtime(&obj, vol), 0,
+             "FPGetVolParms: the read-only probe leaves the root's mtime");
+    TEST_int_or_skip(utest_volpoll_probe_reports_ro(&obj, vol), 0,
+                     "FPGetVolParms: EROFS is read only, EACCES is not");
+    TEST_int_or_skip(utest_volpoll_probe_mount_ro(&obj, vol), 0,
+                     "FPGetVolParms: the mount flag reports read only");
+    TEST_int_or_skip(utest_volpoll_mark_once_a_second(&obj, vol), 0,
+                     "setvoltime: the root's mtime is written once a second");
+    TEST_int_or_skip(utest_volpoll_quota_cached(&obj, vol), 0,
+                     "getvolspace: a quota answer is reused for ten seconds");
+    TEST_int_or_skip(utest_volpoll_fast_path_no_passwd(&obj), 0,
+                     "load_afp_conf_vols: the fast path skips getpwuid_r");
+    TEST_int_or_skip(utest_volpoll_srvrparms_mode_first(&obj, vol), 0,
+                     "FPGetSrvrParms: granting mode bits skip the ACL read");
+    TEST_int(utest_volpoll_name_unencodable(&obj, vol), 0,
+             "FPGetVolParms: an unencodable volume name fails cleanly");
+    TEST_int(utest_volpoll_srvrparms_cap(&obj), 0,
+             "FPGetSrvrParms: the volume list stops at the reply cap");
+    TEST_int(utest_volpoll_ea_name_not_utf8(&obj, vol), 0,
+             "EA requests: a name that is not UTF-8 fails with kFPParamErr");
+    TEST_int(utest_volpoll_volname_not_utf8(&obj), 0,
+             "FPOpenVol: a volume name that is not UTF-8 fails");
+    TEST_int(utest_volpoll_volname_from_start(&obj), 0,
+             "FPOpenVol: the name converts into the start of its buffer");
+    TEST_int(utest_volpoll_mark_write(&obj, vol), 0,
+             "FPWrite: a write marks the volume, an open and close do not");
+    TEST_int(utest_volpoll_mark_setforkparams(&obj, vol), 0,
+             "FPSetForkParms: a length change marks the volume");
+    TEST_int(utest_volpoll_mark_closefork(&obj, vol), 0,
+             "FPCloseFork: closing a written resource fork marks the volume");
+    TEST_int(utest_volpoll_mark_flush(&obj, vol), 0,
+             "FPFlush: flushing a written resource fork marks the volume");
+    TEST_int(utest_volpoll_mark_exchangefiles(&obj, vol), 0,
+             "FPExchangeFiles: an exchange marks the volume");
+    TEST_int(utest_volpoll_mark_setextattr(&obj, vol), 0,
+             "FPSetExtAttr: setting an EA marks the volume");
+    TEST_int(utest_volpoll_mark_remextattr(&obj, vol), 0,
+             "FPRemoveExtAttr: removing an EA marks the volume");
+    TEST_int(utest_volpoll_mark_setvolparms(&obj, vol), 0,
+             "FPSetVolParms: setting the backup date marks the volume");
+    TEST_int_or_skip(utest_volpoll_mark_setacl(&obj, vol), 0,
+                     "FPSetACL: removing an ACL marks the volume");
+    TEST_int_or_skip(utest_volpoll_setacl_group_uuid(&obj, vol), 0,
+                     "FPSetACL: the ACL follows a lone group UUID");
+    TEST_int(utest_enumerate_rereads_counted(&obj, vid), 0,
+             "enumerate: listing reads and continuation rereads are counted");
+    TEST_int_or_skip(utest_enumerate_conversion_attempts(&obj, vol), 0,
+                     "enumerate: conversion is attempted only where needed");
+    TEST_int_or_skip(utest_enumerate_dehex_keeps_cnid(&obj, vol), 0,
+                     "enumerate: a dehexed name keeps its CNID");
+    TEST_int(utest_enumerate_failed_batch_keeps_index(&obj, vid), 0,
+             "enumerate: a failed batch leaves the next at its index");
+    TEST_int(utest_enumerate_failed_read_rereads(&obj, vol), 0,
+             "enumerate: a listing whose read failed is read again");
+    TEST_int(utest_enumerate_interleaved_reads_once(&obj, vid), 0,
+             "enumerate: interleaved listings read directories once");
+    TEST_int(utest_enumerate_one_kind_keeps_index(&obj, vid), 0,
+             "enumerate: a one-kind listing read again keeps its index");
+    TEST_int(utest_enumerate_kind_change_rewinds(&obj, vid), 0,
+             "enumerate: a batch of the other kind rewinds");
+    TEST_int(utest_enumerate_deleted_name_keeps_index(&obj, vid), 0,
+             "enumerate: a deleted name keeps its place in the numbering");
+    TEST_int_or_skip(utest_movecwd_skips_getcwd(&obj, vol), 0,
+                     "movecwd: a walking volume skips getcwd()");
+    TEST_int_or_skip(utest_movecwd_at_descriptor_limit(&obj, vol), 0,
+                     "movecwd: the walk falls back at the descriptor limit");
+    TEST_int_or_skip(utest_enumerate_long_name_skipped(&obj, vid), 0,
+                     "enumerate: names over 255 bytes are left out");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

@@ -540,6 +540,34 @@ const char *tmpdir(void)
     return netatalk_tmpdir;
 }
 
+#if defined(CLOCK_REALTIME_COARSE)
+#define COARSE_CLOCK CLOCK_REALTIME_COARSE
+#elif defined(CLOCK_REALTIME_FAST)
+#define COARSE_CLOCK CLOCK_REALTIME_FAST
+#else
+#define COARSE_CLOCK CLOCK_REALTIME
+#endif
+
+/*!
+ * @brief The current second, from the cheapest clock the platform has
+ *
+ * The coarse or fast realtime clock, where the platform names one, comes
+ * from memory the kernel shares; CLOCK_REALTIME otherwise costs no more
+ * than time(), and on illumos avoids the system call time() makes.
+ *
+ * @returns seconds since the epoch
+ */
+time_t coarse_time(void)
+{
+    struct timespec ts;
+
+    if (clock_gettime(COARSE_CLOCK, &ts) != 0) {
+        return time(NULL);
+    }
+
+    return ts.tv_sec;
+}
+
 /*********************************************************************************
  * chdir(), chmod(), chown(), stat() wrappers taking an additional option.
  * Currently the only used options are O_NOFOLLOW, used to switch between symlink
@@ -628,20 +656,17 @@ int ostatat(int dirfd, const char *path, struct stat *st, int options)
 }
 
 /*!
- * @brief symlink safe chdir replacement
- *
- * Only chdirs to dir if it doesn't contain symlinks or if symlink checking
- * is disabled
+ * @brief chdir() to dir unless its path holds a symlink, which a getcwd()
+ *        that differs from dir shows
  *
  * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
  */
-static int ochdir_getcwd(const char *dir)
+static int chdir_getcwd(const char *dir)
 {
     char buf[MAXPATHLEN + 1];
     char cwd[MAXPATHLEN + 1];
     char *test;
     int  i;
-
     /*
      dir is a canonical path (without "../" "./" "//" )
      but may end with a /
@@ -718,135 +743,66 @@ static int ochdir_getcwd(const char *dir)
     return 0;
 }
 
-/*
- * Walk timing experiment (scratch branch walk-timing, never merged).
+/* where getcwd() rebuilds the path from the filesystem: not Linux, whose
+ * getcwd() follows the dentry chain, nor NetBSD, whose O_SEARCH opens for
+ * reading; FreeBSD for the case-insensitive datasets _PC_CASE_INSENSITIVE
+ * reports */
+#if defined(O_SEARCH) && !defined(__linux__) && !defined(__NetBSD__) \
+    && (!defined(__FreeBSD__) || defined(_PC_CASE_INSENSITIVE))
+#define OCHDIR_WALK 1
+
+/*!
+ * @brief Open rel, below the folder rootfd is open on, for search following
+ *        no symlink
  *
- * With /tmp/netatalk-ochdir-timing present (or NETATALK_OCHDIR_TIMING set)
- * every no-follow ochdir() runs four ways of entering the directory, in an
- * order that rotates per call, times each with CLOCK_MONOTONIC and keeps
- * mode A's result, so afpd behaves as the base does:
- *   A  chdir() + getcwd() + compare (the base)
- *   B  openat(O_SEARCH|O_DIRECTORY|O_NOFOLLOW) per component from "/" + fchdir()
- *   C  as B, from a descriptor held for the volume root
- *   D  chdir() + stat(".") compared with the dircache entry's inode
- *   O  (Linux) openat2(RESOLVE_NO_SYMLINKS) of the path below the held
- *      volume root + fchdir()
- * ochdir_log_timing() logs one line per mode at session close.
+ * Each component opens from the one before it with O_NOFOLLOW, so the kernel
+ * checks search permission at every step; macOS opens rel at once with
+ * O_NOFOLLOW_ANY.
+ *
+ * @returns the descriptor, or -1 with errno set, ELOOP when a component is a
+ *          symlink
  */
-#ifndef O_SEARCH
-#ifdef O_PATH
-#define O_SEARCH O_PATH
+static int open_below(int rootfd, const char *rel)
+{
+#ifdef O_NOFOLLOW_ANY
+    return openat(rootfd, rel,
+                  O_SEARCH | O_DIRECTORY | O_NOFOLLOW_ANY | O_CLOEXEC);
 #else
-#define O_SEARCH O_RDONLY
-#endif
-#endif
-
-#ifdef __linux__
-#include <sys/syscall.h>
-#ifndef SYS_openat2
-#define SYS_openat2 437
-#endif
-#define OCHDIR_RESOLVE_NO_SYMLINKS 0x04
-struct ochdir_open_how {
-    uint64_t flags;
-    uint64_t mode;
-    uint64_t resolve;
-};
-#define OCHDIR_MODES 5
-#else
-#define OCHDIR_MODES 4
-#endif
-static const char ochdir_name[] = "ABCDO";
-#define OCHDIR_BUCKETS 40
-/* components below the volume root: 0 is the root, the last bucket holds
- * deeper paths and paths outside the root */
-#define OCHDIR_DEPTHS 16
-
-struct ochdir_timing {
-    unsigned long long calls;
-    unsigned long long total_ns;
-    unsigned long long max_ns;
-    unsigned long long mismatches;
-    unsigned long long fallbacks;
-    unsigned long long hist[OCHDIR_BUCKETS];
-    unsigned long long depth_calls[OCHDIR_DEPTHS];
-    unsigned long long depth_ns[OCHDIR_DEPTHS];
-};
-
-static struct ochdir_timing ochdir_t[OCHDIR_MODES];
-static int ochdir_timing_on = -1;
-static unsigned long long ochdir_rot;
-static char ochdir_root[MAXPATHLEN + 1];
-static size_t ochdir_root_len;
-static int ochdir_root_fd = -1;
-static ino_t ochdir_expect_ino;
-
-void ochdir_hint(const char *root, ino_t ino)
-{
-    size_t len = strlen(root);
-
-    if (len != ochdir_root_len || memcmp(root, ochdir_root, len) != 0) {
-        if (ochdir_root_fd >= 0) {
-            close(ochdir_root_fd);
-            ochdir_root_fd = -1;
-        }
-
-        ochdir_root_len = 0;
-
-        if (len < sizeof(ochdir_root)) {
-            memcpy(ochdir_root, root, len + 1);
-            ochdir_root_len = len;
-        }
-    }
-
-    ochdir_expect_ino = ino;
-}
-
-static unsigned long long ochdir_now(void)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (unsigned long long)ts.tv_sec * 1000000000ULL
-           + (unsigned long long)ts.tv_nsec;
-}
-
-/* open the directory dir names below start (AT_FDCWD: dir is absolute or
- * relative to the cwd) refusing symlinks; start itself is never closed */
-static int ochdir_walk_open(int start, const char *dir)
-{
     char path[MAXPATHLEN + 1];
-    char *rest;
     char *name;
+    char *end;
     struct stat st;
-    int fd = start;
+    int fd = rootfd;
     int next;
     int err;
 
-    if (strlcpy(path, dir, sizeof(path)) >= sizeof(path)) {
+    if (strlcpy(path, rel, sizeof(path)) >= sizeof(path)) {
         errno = ENAMETOOLONG;
         return -1;
     }
 
-    rest = path + strspn(path, "/");
+    for (name = path; *name != '\0'; name = end) {
+        end = name + strcspn(name, "/");
 
-    while ((name = strsep(&rest, "/")) != NULL) {
+        if (*end == '/') {
+            *end++ = '\0';
+        }
+
         if (*name == '\0') {
             continue;
         }
 
-        if (fd == AT_FDCWD && name != path) {
-            name--;
-        }
-
-        next = openat(fd, name, O_SEARCH | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        next = openat(fd, name,
+                      O_SEARCH | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         err = errno;
 
+        /* FreeBSD's O_NOFOLLOW reports a symlink as EMLINK */
         if (next < 0 && fstatat(fd, name, &st, AT_SYMLINK_NOFOLLOW) == 0
                 && S_ISLNK(st.st_mode)) {
             err = ELOOP;
         }
 
-        if (fd != start) {
+        if (fd != rootfd) {
             close(fd);
         }
 
@@ -858,30 +814,39 @@ static int ochdir_walk_open(int start, const char *dir)
         fd = next;
     }
 
-    if (fd == start) {
-        return start == AT_FDCWD ? open(dir, O_SEARCH | O_DIRECTORY | O_CLOEXEC)
-               : dup(start);
-    }
-
-    return fd;
+    return fd == rootfd ? dup(rootfd) : fd;
+#endif
 }
 
-/* rel is the part of full below start; a symlink on the way re-opens full
- * following it, to fail where chdir() would, else 1 */
-static int ochdir_walk(int start, const char *rel, const char *full)
+/*!
+ * @brief chdir() to dir, rel below the folder rootfd is open on, unless a
+ *        component of rel is a symlink
+ *
+ * @returns 0, -1 with errno set as chdir() sets it, or 1 when rel reaches a
+ *          folder through a symlink
+ */
+static int chdir_below(int rootfd, const char *rel, const char *dir)
 {
-    int fd = ochdir_walk_open(start, rel);
+    int fd;
     int ret;
     int err;
 
-    if (fd < 0) {
-        if (errno != ELOOP
-                || (fd = open(full, O_SEARCH | O_DIRECTORY | O_CLOEXEC)) < 0) {
+    if (*rel == '\0') {
+        return fchdir(rootfd);
+    }
+
+    if ((fd = open_below(rootfd, rel)) < 0) {
+        /* the walk holds two descriptors at its widest */
+        if (errno == EMFILE || errno == ENFILE) {
+            return chdir_getcwd(dir);
+        }
+
+        if (errno != ELOOP) {
             return -1;
         }
 
-        close(fd);
-        return 1;
+        /* through a symlink: fail where chdir() fails, else 1 */
+        return chdir(dir) == 0 ? 1 : -1;
     }
 
     ret = fchdir(fd);
@@ -890,233 +855,61 @@ static int ochdir_walk(int start, const char *rel, const char *full)
     errno = err;
     return ret;
 }
+#endif /* OCHDIR_WALK */
 
-static int ochdir_mode(int mode, const char *dir)
+/*!
+ * @brief symlink safe chdir replacement
+ *
+ * Only chdirs to dir if it doesn't contain symlinks or if symlink checking
+ * is disabled. Given rootfd from ochdir_root(root), a dir below root is
+ * entered by a walk from rootfd that refuses symlinks, without getcwd().
+ *
+ * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
+ */
+int ochdir(const char *dir, int options, int rootfd, const char *root)
 {
-    struct stat st;
-
-    switch (mode) {
-    case 0:
-        return ochdir_getcwd(dir);
-
-    case 1:
-        return ochdir_walk(AT_FDCWD, dir, dir);
-
-    case 2:
-        if (ochdir_root_len == 0
-                || strncmp(dir, ochdir_root, ochdir_root_len) != 0
-                || (dir[ochdir_root_len] != '/' && dir[ochdir_root_len] != '\0')) {
-            ochdir_t[2].fallbacks++;
-            return ochdir_walk(AT_FDCWD, dir, dir);
-        }
-
-        if (ochdir_root_fd < 0) {
-            ochdir_root_fd = open(ochdir_root, O_SEARCH | O_DIRECTORY | O_CLOEXEC);
-
-            if (ochdir_root_fd < 0) {
-                return -1;
-            }
-        }
-
-        return ochdir_walk(ochdir_root_fd, dir + ochdir_root_len, dir);
-
-#ifdef __linux__
-    case 4: {
-        struct ochdir_open_how how = {
-            O_PATH | O_DIRECTORY | O_CLOEXEC, 0, OCHDIR_RESOLVE_NO_SYMLINKS
-        };
-        const char *rel;
-        int fd;
-        int ret;
-        int err;
-
-        if (ochdir_root_len == 0
-                || strncmp(dir, ochdir_root, ochdir_root_len) != 0
-                || (dir[ochdir_root_len] != '/' && dir[ochdir_root_len] != '\0')) {
-            ochdir_t[4].fallbacks++;
-            return ochdir_getcwd(dir);
-        }
-
-        if (ochdir_root_fd < 0) {
-            ochdir_root_fd = open(ochdir_root, O_SEARCH | O_DIRECTORY | O_CLOEXEC);
-
-            if (ochdir_root_fd < 0) {
-                return -1;
-            }
-        }
-
-        rel = dir + ochdir_root_len;
-        rel += strspn(rel, "/");
-
-        if (*rel == '\0') {
-            return fchdir(ochdir_root_fd);
-        }
-
-        fd = (int)syscall(SYS_openat2, ochdir_root_fd, rel, &how, sizeof(how));
-
-        if (fd < 0) {
-            if (errno != ELOOP) {
-                return -1;
-            }
-
-            return chdir(dir) == 0 ? 1 : -1;
-        }
-
-        ret = fchdir(fd);
-        err = errno;
-        close(fd);
-        errno = err;
-        return ret;
-    }
-#endif
-
-    case 3:
-        if (ochdir_expect_ino == 0) {
-            ochdir_t[3].fallbacks++;
-            return ochdir_getcwd(dir);
-        }
-
-        if (chdir(dir) != 0 || stat(".", &st) != 0) {
-            return -1;
-        }
-
-        return st.st_ino == ochdir_expect_ino ? 0 : 1;
-    }
-
-    return -1;
-}
-
-static int ochdir_depth(const char *dir)
-{
-    int depth = 0;
-
-    if (ochdir_root_len == 0
-            || strncmp(dir, ochdir_root, ochdir_root_len) != 0
-            || (dir[ochdir_root_len] != '/' && dir[ochdir_root_len] != '\0')) {
-        return OCHDIR_DEPTHS - 1;
-    }
-
-    for (const char *p = dir + ochdir_root_len; *p; p++) {
-        if (*p == '/' && p[1] != '/' && p[1] != '\0') {
-            depth++;
-        }
-    }
-
-    return depth < OCHDIR_DEPTHS - 1 ? depth : OCHDIR_DEPTHS - 1;
-}
-
-int ochdir(const char *dir, int options)
-{
-    int res[OCHDIR_MODES];
-    int errs[OCHDIR_MODES];
-    int first;
-    int last = 0;
-    int depth;
-
     if (!(options & O_NOFOLLOW)) {
         return chdir(dir);
     }
 
-    if (ochdir_timing_on < 0) {
-        ochdir_timing_on = access("/tmp/netatalk-ochdir-timing", F_OK) == 0
-                           || getenv("NETATALK_OCHDIR_TIMING") != NULL;
+#ifdef OCHDIR_WALK
+    size_t len = rootfd >= 0 ? strlen(root) : 0;
+
+    if (rootfd >= 0 && strncmp(dir, root, len) == 0
+            && (dir[len] == '/' || dir[len] == '\0')) {
+        return chdir_below(rootfd, dir + len + strspn(dir + len, "/"), dir);
     }
 
-    if (!ochdir_timing_on) {
-        return ochdir_getcwd(dir);
-    }
-
-    depth = ochdir_depth(dir);
-    first = (int)(ochdir_rot++ % OCHDIR_MODES);
-
-    for (int k = 0; k < OCHDIR_MODES; k++) {
-        int m = (first + k) % OCHDIR_MODES;
-        unsigned long long t0 = ochdir_now();
-        unsigned long long dt;
-        int b = 0;
-        res[m] = ochdir_mode(m, dir);
-        errs[m] = errno;
-        dt = ochdir_now() - t0;
-        ochdir_t[m].calls++;
-        ochdir_t[m].total_ns += dt;
-        ochdir_t[m].depth_calls[depth]++;
-        ochdir_t[m].depth_ns[depth] += dt;
-
-        if (dt > ochdir_t[m].max_ns) {
-            ochdir_t[m].max_ns = dt;
-        }
-
-        while (b < OCHDIR_BUCKETS - 1 && (dt >> (b + 1)) != 0) {
-            b++;
-        }
-
-        ochdir_t[m].hist[b]++;
-        last = m;
-    }
-
-    for (int m = 1; m < OCHDIR_MODES; m++) {
-        if (res[m] != res[0]) {
-            ochdir_t[m].mismatches++;
-            LOG(log_note, logtype_default,
-                "ochdir timing: mode %c returned %d, mode A %d, for \"%s\"",
-                ochdir_name[m], res[m], res[0], dir);
-        }
-    }
-
-    if (res[0] == 0 && res[last] != 0) {
-        (void)ochdir_getcwd(dir);
-    }
-
-    errno = errs[0];
-    return res[0];
+#else
+    (void)rootfd;
+    (void)root;
+#endif
+    return chdir_getcwd(dir);
 }
 
-void ochdir_log_timing(void)
+/*!
+ * @brief The descriptor ochdir() walks from below a volume root
+ *
+ * @returns root open for search where ochdir() enters the folders below it
+ *          without getcwd(), else -1
+ */
+int ochdir_root(const char *root)
 {
-    char hist[OCHDIR_BUCKETS * 21 + 1];
+#ifdef OCHDIR_WALK
+#ifdef __FreeBSD__
 
-    if (ochdir_timing_on <= 0) {
-        return;
+    /* the namecache answers getcwd() but on a case-insensitive ZFS
+     * dataset, which keeps its names out of it */
+    if (pathconf(root, _PC_CASE_INSENSITIVE) != 1) {
+        return -1;
     }
 
-    for (int m = 0; m < OCHDIR_MODES; m++) {
-        size_t off = 0;
-
-        for (int b = 0; b < OCHDIR_BUCKETS; b++) {
-            int n = snprintf(hist + off, sizeof(hist) - off, "%s%llu",
-                             b ? "," : "", ochdir_t[m].hist[b]);
-
-            if (n < 0 || (size_t)n >= sizeof(hist) - off) {
-                break;
-            }
-
-            off += (size_t)n;
-        }
-
-        LOG(log_note, logtype_default,
-            "ochdir timing: mode %c calls %llu total_ns %llu max_ns %llu "
-            "mismatches %llu fallbacks %llu hist %s",
-            ochdir_name[m], ochdir_t[m].calls, ochdir_t[m].total_ns,
-            ochdir_t[m].max_ns, ochdir_t[m].mismatches,
-            ochdir_t[m].fallbacks, hist);
-        off = 0;
-
-        for (int d = 0; d < OCHDIR_DEPTHS; d++) {
-            int n = snprintf(hist + off, sizeof(hist) - off, "%s%llu/%llu",
-                             d ? "," : "", ochdir_t[m].depth_calls[d],
-                             ochdir_t[m].depth_ns[d]);
-
-            if (n < 0 || (size_t)n >= sizeof(hist) - off) {
-                break;
-            }
-
-            off += (size_t)n;
-        }
-
-        LOG(log_note, logtype_default,
-            "ochdir timing depth: mode %c calls/ns by depth %s", ochdir_name[m],
-            hist);
-    }
+#endif
+    return open(root, O_SEARCH | O_DIRECTORY | O_CLOEXEC);
+#else
+    (void)root;
+    return -1;
+#endif
 }
 
 /*!

@@ -62,6 +62,11 @@ byteorder_test = executable(
     'byteorder_test',
     'test_byteorder.c',
     include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    c_args: cc.has_multi_arguments(
+        '-fsanitize=shift',
+        '-fsanitize-undefined-trap-on-error',
+    ) ? ['-fsanitize=shift', '-fsanitize-undefined-trap-on-error'] : [],
     install: false,
 )
 

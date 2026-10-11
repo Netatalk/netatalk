@@ -470,7 +470,9 @@ restrictions on the applications ability to set this value.
 use sendfile = *BOOLEAN* (default: *yes*) **(G)**
 
 > Whether to use sendfile syscall for
-sending file data to clients.
+sending file data to clients. Builds for Linux, FreeBSD, Solaris and
+illumos have it. A file whose filesystem refuses sendfile is sent through a
+buffer.
 
 recvfile = *BOOLEAN* (default: *no*) **(G)**
 
@@ -479,15 +481,18 @@ splice() the option is ignored with a warning.
 
 splice size = *number* (default: *1048576*) **(G)**
 
-> Maximum number of bytes one splice() call moves when **recvfile** is
-enabled. The range is 4096 to 8388608 (8 MiB), and values outside it fall
-back to the default. A value that is not a power of two is rounded up to the
-next one. The kernel may grant a smaller pipe: `fs.pipe-max-size` limits it
-to 1 MiB by default.
->
-> ***NOTE:*** Each afpd child process keeps one pipe of this size, and all of
-them count against the kernel's pipe limit for the user afpd runs as
-(`fs.pipe-user-pages-soft`).
+> Maximum number of bytes one splice() call moves, from 4096 to 8388608; a
+value outside that range is rejected with a warning and the default applies,
+and a value that is not a power of two is rounded up to one. With
+**recvfile** enabled each session opens one pipe on its first write and
+grows it to hold this many bytes, halving a size the kernel refuses, and
+logs once when its pipe ends smaller. The kernel refuses a process without
+CAP_SYS_RESOURCE a pipe past `fs.pipe-max-size` (1 MiB by default), and the
+pipes of all sessions count against one pipe budget,
+`fs.pipe-user-pages-soft` (16384 pages by default) of the user the server
+runs as, root for a system service; with 4 KiB pages, 64 sessions at 1 MiB
+fill it. Once the budget is spent, new pipes hold two pages and afpd
+receives through the userspace path until the budget frees.
 
 ## CNID Database Backend Options
 
@@ -1497,6 +1502,10 @@ read only = *BOOLEAN* (default: *no*) **(V)**
 
 > Specifies the share as being read only for all users.
 Forces **ea = sys**.
+>
+> A share on a read-only filesystem is reported read only without this
+option; a share whose filesystem refuses writes but is not mounted
+read-only, such as an NFS export that the server makes read-only, needs it.
 
 stat vol = *BOOLEAN* (default: *yes*) **(V)**
 

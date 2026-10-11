@@ -72,16 +72,11 @@
 #define hton64(x)       (x)
 #else
 #define hton64(x)       ((uint64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
-                         (uint64_t) ((htonl(x) & 0xffffffffLL) << 32))
+                         ((uint64_t) htonl((x) & 0xffffffffLL) << 32))
 #endif
 
 #ifndef SAFE_FREE
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)
-#endif
-
-#ifdef WITH_SENDFILE
-extern ssize_t sys_sendfile(int __out_fd, int __in_fd, off_t *__offset,
-                            size_t __count);
 #endif
 
 extern const int _diacasemap[], _dialowermap[];
@@ -219,12 +214,12 @@ extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
 extern char *strtok_quote(char *s, const char *delim);
 extern const char *tmpdir(void);
+extern time_t coarse_time(void);
 extern int safe_atoi(const char *str, const char *param_name,
                      int min_val, int max_val, int default_val);
 
-extern int ochdir(const char *dir, int options);
-extern void ochdir_hint(const char *root, ino_t ino);
-extern void ochdir_log_timing(void);
+extern int ochdir(const char *dir, int options, int rootfd, const char *root);
+extern int ochdir_root(const char *root);
 extern int ostat(const char *path, struct stat *buf, int options);
 extern int ostatat(int dirfd, const char *path, struct stat *st, int options);
 extern int ochown(const char *path, uid_t owner, gid_t group, int options);

@@ -654,11 +654,10 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 }
 
 
-int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+int afp_geticon(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {
     struct vol	*vol;
-    off_t       offset;
     ssize_t	rc, buflen;
     uint8_t	fcreator[4], ftype[4], itype, ih[12];
     uint16_t	vid, bsize, rsize;
@@ -694,11 +693,9 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     si.sdt_index = 1;
-    offset = 0;
 
     while ((rc = read(si.sdt_fd, ih, sizeof(ih))) > 0) {
         si.sdt_index++;
-        offset += sizeof(ih);
 
         if (memcmp(ih + sizeof(int), ftype, sizeof(ftype)) == 0 &&
                 *(ih + sizeof(int) + sizeof(ftype)) == itype) {
@@ -713,8 +710,6 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                     fcreator), strerror(errno));
             return AFPERR_PARAM;
         }
-
-        offset += rsize;
     }
 
     if (rc < 0) {
@@ -732,77 +727,17 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 #define min(a,b)	((a)<(b)?(a):(b))
     rc = min(bsize, rsize);
 
-    if ((obj->proto == AFPPROTO_DSI) && buflen < rc) {
-        DSI *dsi = obj->dsi;
-        struct stat st;
-        off_t size;
-        size = (fstat(si.sdt_fd, &st) < 0) ? 0 : st.st_size;
-
-        if (size < rc + offset) {
-            return AFPERR_PARAM;
-        }
-
-#ifndef WITH_SENDFILE
-
-        if ((buflen = dsi_readinit(dsi, rbuf, buflen, rc, AFP_OK)) < 0) {
-            goto geticon_exit;
-        }
-
-#endif
-        *rbuflen = buflen;
-
-        /* do to the streaming nature, we have to exit if we encounter
-         * a problem. much confusion results otherwise. */
-        while (*rbuflen > 0) {
-#ifdef WITH_SENDFILE
-
-            if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize, AFP_OK) < 0) {
-                switch (errno) {
-                case ENOSYS:
-                case EINVAL:  /* there's no guarantee that all fs support sendfile */
-                    break;
-
-                default:
-                    goto geticon_exit;
-                }
-            } else {
-                dsi_readdone(dsi);
-                return AFP_OK;
-            }
-
-#endif
-            buflen = read(si.sdt_fd, rbuf, *rbuflen);
-
-            if (buflen < 0) {
-                goto geticon_exit;
-            }
-
-            /* dsi_read() also returns buffer size of next allocation */
-            buflen = dsi_read(dsi, rbuf, buflen); /* send it off */
-
-            if (buflen < 0) {
-                goto geticon_exit;
-            }
-
-            *rbuflen = buflen;
-        }
-
-        dsi_readdone(dsi);
-        return AFP_OK;
-geticon_exit:
-        LOG(log_error, logtype_afpd, "afp_geticon(%s): %s", icon_dtfile(vol, fcreator),
-            strerror(errno));
-        dsi_readdone(dsi);
-        obj->exit(EXITERR_SYS);
-        return AFP_OK;
-    } else {
-        if (read(si.sdt_fd, rbuf, rc) < rc) {
-            return AFPERR_PARAM;
-        }
-
-        *rbuflen = rc;
+    if (rc > buflen) {
+        /* the bits stay unread: step over them for FPGetIconInfo */
+        (void)lseek(si.sdt_fd, (off_t)rsize, SEEK_CUR);
+        return AFPERR_PARAM;
     }
 
+    if (read(si.sdt_fd, rbuf, rc) < rc) {
+        return AFPERR_PARAM;
+    }
+
+    *rbuflen = rc;
     return AFP_OK;
 }
 

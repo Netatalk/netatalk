@@ -78,6 +78,10 @@ struct vol {
     time_t          v_tm_cachetime; /*!< time at which v_tm_used
                                      * was calculated last */
     VolSpace        v_appended; /*!< amount of data appended to files */
+    time_t          v_root_marked; /*!< the second setvoltime() marked */
+    VolSpace        v_qfree;       /*!< the user's quota, bytes free */
+    VolSpace        v_qtotal;      /*!< the user's quota, bytes in all */
+    time_t          v_qtime;       /*!< when the quota was fetched */
 
     /* only when opening/closing volumes or in error */
     int             v_casefold;
@@ -115,6 +119,7 @@ struct vol {
     char            *v_uuid;    /*!< For TimeMachine zeroconf record */
     int             v_qfd;
     uint32_t        v_ignattr;  /*!< AFP attributes that shall be ignored */
+    int             v_rootfd;   /*!< ochdir() walks from it, or -1 */
 };
 
 /*! load_afp_conf_vols() flags */

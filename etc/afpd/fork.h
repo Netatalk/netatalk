@@ -47,7 +47,7 @@ struct ofork {
 #define AFPFORK_ACCRD   (1<<4)
 #define AFPFORK_ACCWR   (1<<5)
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
-#define AFPFORK_MODIFIED (1<<6) /*!< used in FCE for modified files */
+#define AFPFORK_MODIFIED (1<<6) /*!< written or its length set since open */
 #define AFPFORK_ERROR   (1<<7)  /*!< used to indicate an error in opening the fork */
 #define AFPFORK_VIRTUAL (1<<8)  /*!< virtual file fork */
 
@@ -73,7 +73,7 @@ extern int          of_rename(const struct vol *,
                               struct ofork *,
                               struct dir *, const char *,
                               struct dir *, const char *);
-extern int          of_flush(const struct vol *);
+extern int          of_flush(AFPObj *, const struct vol *);
 extern void         of_pforkdesc(FILE *);
 extern void         of_log_usage(int level, const char *event);
 extern void         of_log_nfile(const char *name, int err);
@@ -82,6 +82,11 @@ extern const char   *of_breakdown(char *buf, size_t len);
 extern int          of_stat(const struct vol *vol, struct path *);
 extern int          of_statdir(struct vol *vol, struct path *);
 extern int          of_closefork(const AFPObj *obj, struct ofork *ofork);
+extern struct dir   *of_dircache_entry(const AFPObj *obj,
+                                       const struct ofork *ofork);
+extern void         of_hint_siblings(const AFPObj *obj,
+                                     const struct ofork *ofork,
+                                     const struct dir *cached);
 extern void         of_closevol(const AFPObj *obj, const struct vol *vol);
 extern void         of_close_all_forks(const AFPObj *obj);
 extern struct adouble *of_ad(const struct vol *, struct path *,
@@ -103,7 +108,7 @@ extern int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
 
 
 /* in fork.c */
-extern int          flushfork(struct ofork *);
+extern int          flushfork(AFPObj *, struct ofork *);
 extern int          fork_setmode_deny(int access, int f_rddny, int f_wrdny,
                                       int f_nodny);
 

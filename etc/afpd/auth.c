@@ -464,7 +464,6 @@ int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     } else {
         /* sleep request */
         dsi->flags |= DSI_SLEEPING;
-        dsi_close_pipe(dsi);
 
         if (data & AFPZZZ_EXT_SLEEP) {
             LOG(log_note, logtype_afpd, "afp_zzzzz: entering extended sleep");
@@ -998,6 +997,15 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     default:
         return send_reply(obj, AFPERR_PARAM);
     }
+
+#if 0
+
+    if (len != 0) {
+        LOG(log_error, logtype_afpd, "login_ext: directory service path not null!");
+        return send_reply(obj, AFPERR_PARAM);
+    }
+
+#endif
 
     if (ibuflen < len) {
         LOG(log_error, logtype_afpd,

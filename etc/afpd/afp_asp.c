@@ -360,7 +360,6 @@ void afp_over_asp(AFPObj *obj)
          */
         while (1) {
             /* [A0] Process deferred signals before any blocking I/O */
-            atalk_sigpipe_drain();
             asp_process_deferred_signals(obj);
             /* [A1] Release what the hints pruned. DSI does this after each
              * command; ASP does it here so an idle session still sheds other
@@ -401,7 +400,7 @@ void afp_over_asp(AFPObj *obj)
                 return;
             }
 
-            /* [E1] Signal pipe — drain and act, as [A0] would. Nothing can
+            /* [E1] Signal pipe — drain it and act on the signals. Nothing can
              * clear a bad one: a POLLHUP/POLLNVAL/POLLERR that no read
              * consumes makes poll() return immediately for the rest of the
              * session, and no deferred signal could ever wake the loop. */

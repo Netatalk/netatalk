@@ -255,7 +255,7 @@ void of_pforkdesc(FILE *f)
     }
 }
 
-int of_flush(const struct vol *vol)
+int of_flush(AFPObj *obj, const struct vol *vol)
 {
     int refnum;
 
@@ -265,7 +265,7 @@ int of_flush(const struct vol *vol)
 
     for (refnum = 0; refnum < nforks; refnum++) {
         if (oforks[refnum] != NULL && (oforks[refnum]->of_vol == vol) &&
-                flushfork(oforks[refnum]) < 0) {
+                flushfork(obj, oforks[refnum]) < 0) {
             LOG(log_error, logtype_afpd, "of_flush: %s", strerror(errno));
         }
     }
@@ -1109,6 +1109,50 @@ void of_note_open(int newfd)
     }
 }
 
+/*!
+ * @brief The dircache entry of an open fork's file, or NULL
+ *
+ * The name index holds names on disk; of_name() is the client's name.
+ */
+struct dir *of_dircache_entry(const AFPObj *obj, const struct ofork *ofork)
+{
+    const struct dir *parent = dirlookup(ofork->of_vol, ofork->of_did);
+    char *uname;
+
+    if (parent == NULL
+            || (uname = mtoupath(ofork->of_vol, of_name(ofork), ofork->of_did,
+                                 utf8_encoding(obj))) == NULL) {
+        return NULL;
+    }
+
+    return dircache_search_by_name(ofork->of_vol, parent, uname,
+                                   strlen(uname));
+}
+
+/*!
+ * @brief Tell sibling sessions that an open fork's file has changed
+ *
+ * The file's id is that of cached, the fork's dircache entry, when there is
+ * one, else the CNID database's.
+ */
+void of_hint_siblings(const AFPObj *obj, const struct ofork *ofork,
+                      const struct dir *cached)
+{
+    const struct vol *vol = ofork->of_vol;
+    cnid_t id = cached ? cached->d_did : CNID_INVALID;
+    char *uname;
+
+    if (id == CNID_INVALID
+            && (uname = mtoupath(vol, of_name(ofork), ofork->of_did,
+                                 utf8_encoding(obj))) != NULL) {
+        id = cnid_get(vol->v_cdb, ofork->of_did, uname, strlen(uname));
+    }
+
+    if (id != CNID_INVALID) {
+        ipc_send_cache_hint(obj, vol->v_vid, id, CACHE_HINT_REFRESH);
+    }
+}
+
 /* --------------------------- */
 int of_closefork(const AFPObj *obj, struct ofork *ofork)
 {
@@ -1178,7 +1222,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
 #ifdef WITH_FCE
 
-    /* Someone has used write_fork, assume the file changed and register an FCE */
+    /* the fork was written or its length set: register an FCE */
     if ((ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
         fce_register(obj, FCE_FILE_MODIFY, bdata(forkpath), NULL);
     }
@@ -1283,7 +1327,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
             }
 
             /* Remove from dircache and queue the entry for deallocation;
-             * skip cache refresh and hint lookup below */
+             * skip the cache refresh below */
             if (cached) {
                 (void)dir_remove(ofork->of_vol, cached, 0);
                 cached = NULL;
@@ -1300,8 +1344,9 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         if (ostat(bdata(forkpath), &post_st, 0) == 0) {
             int dflags = DCMOD_STAT;
 
-            /* If resource fork was dirty, AD header was modified too */
-            if ((ofork->of_flags & AFPFORK_RSRC) && (ofork->of_flags & AFPFORK_DIRTY)) {
+            /* a changed resource fork changed its AD header too */
+            if ((ofork->of_flags & AFPFORK_RSRC)
+                    && (ofork->of_flags & AFPFORK_MODIFIED)) {
                 dflags |= DCMOD_AD;
             }
 
@@ -1313,25 +1358,10 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         }
     }
 
-    /* Send hint to afpd siblings — only if fork was actually modified.
-     * Uses the already-resolved cached->d_did when available to avoid
-     * cnid_get() DB lookups. Falls back to cnid_get() when the file
-     * was modified but not in the local dircache (rare). */
+    /* Send hint to afpd siblings — only if fork was actually modified */
     if ((ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED))
             && ofork->of_vol) {
-        cnid_t hint_cnid = (cached && cached->d_did != CNID_INVALID)
-                           ? cached->d_did : CNID_INVALID;
-
-        if (hint_cnid == CNID_INVALID && forkname) {
-            size_t ulen = blength(forkname);
-            hint_cnid = cnid_get(ofork->of_vol->v_cdb, ofork->of_did,
-                                 bdata(forkname), ulen);
-        }
-
-        if (hint_cnid != CNID_INVALID) {
-            ipc_send_cache_hint(obj, ofork->of_vol->v_vid, hint_cnid,
-                                CACHE_HINT_REFRESH);
-        }
+        of_hint_siblings(obj, ofork, cached);
     }
 
     if (ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0) {

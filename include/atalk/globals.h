@@ -57,10 +57,10 @@
 #define DIRCACHE_VALIDATION_FREQ_MIN        1     /*!< Validate on every access */
 #define DIRCACHE_VALIDATION_FREQ_MAX        100   /*!< Validate every 100th access */
 
-/* 'splice size' bounds and default, in bytes */
-#define DEFAULT_SPLICE_SIZE (1024 * 1024)
-#define SPLICE_SIZE_MIN     4096
-#define SPLICE_SIZE_MAX     (8 * 1024 * 1024)
+/* splice size settings */
+#define DEFAULT_SPLICE_SIZE (1024 * 1024)     /*!< default 'splice size' (bytes) */
+#define SPLICE_SIZE_MIN     4096              /*!< smallest 'splice size' (bytes) */
+#define SPLICE_SIZE_MAX     (8 * 1024 * 1024) /*!< largest 'splice size' (bytes) */
 
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_CLOSEVOL      (1 << 1)

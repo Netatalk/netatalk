@@ -1,5 +1,5 @@
 #!/bin/sh
-# Walk timing experiment (scratch branch walk-timing, never merged): the
+# PR F verification (scratch branch walk-timing, never merged): the
 # environment of vm_spectest.sh, then afp_lantest instead of afp_spectest.
 set -e
 

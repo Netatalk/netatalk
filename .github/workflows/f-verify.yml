@@ -1,0 +1,67 @@
+name: F verify (scratch)
+
+# PR F verification (scratch branch walk-timing, never merged): the afpd unit
+# tests, the spectest and lantest on CI's FreeBSD VM with the volumes on a
+# case-insensitive ZFS dataset, where ochdir() walks below the held volume
+# root, and on case-sensitive ones, where it keeps chdir() and getcwd().
+
+on:
+  push:
+    branches:
+      - walk-timing
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  f-verify-freebsd:
+    name: F verify - FreeBSD (case-insensitive and case-sensitive ZFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build and test on VM
+        uses: vmactions/freebsd-vm@4469451fe39bee80be4066836c5170362e9349f3 # v1.5.7
+        with:
+          copyback: true
+          sync: sshfs
+          prepare: |
+            set -e
+            pkg install -y \
+              avahi \
+              bison \
+              cmark \
+              curl \
+              dconf \
+              flex \
+              git \
+              gmake \
+              iniparser \
+              libev \
+              file \
+              libgcrypt \
+              libsunacl \
+              localsearch \
+              meson \
+              mysql97-client \
+              openldap26-client \
+              perl5 \
+              pkgconf \
+              sqlite3 \
+              talloc \
+              xapian-core
+          run: |
+            set -e
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig
+            sh ./.github/scripts/f_verify_freebsd.sh
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: f-results
+          path: f-results

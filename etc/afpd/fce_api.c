@@ -618,7 +618,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
 {
     static bool first_event = true;
     const char *bname;
-    const char *dirname;
+    char *dirname;
 
     if (!(fce_ev_enabled & (1 << event))) {
         return AFP_OK;
@@ -651,7 +651,6 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
 
     /* handle files or dirs which should not cause events (.DS_Store etc. ) */
     bname = basename_safe(path);
-    dirname = realpath_safe(path);
 
     if (bname && skip_files != NULL) {
         for (int i = 0; skip_files[i] != NULL; i++) {
@@ -663,14 +662,17 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
         }
     }
 
-    if (dirname && skip_directories != NULL) {
+    if (skip_directories != NULL && (dirname = realpath_safe(path)) != NULL) {
         for (int i = 0; skip_directories[i] != NULL; i++) {
             if (strstr(dirname, skip_directories[i]) == dirname) {
                 LOG(log_debug, logtype_fce, "Skip file change event for directory <%s>",
                     skip_directories[i]);
+                free(dirname);
                 return AFP_OK;
             }
         }
+
+        free(dirname);
     }
 
     /* Can we ignore this event based on type or history? */
@@ -699,11 +701,9 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
 
 static void check_saved_close_events(const AFPObj *obj)
 {
-    time_t now = time(NULL);
-
     /* check if configured holdclose time has passed */
     if (last_close_event.time
-            && ((last_close_event.time + obj->options.fce_fmodwait) < now)) {
+            && last_close_event.time + obj->options.fce_fmodwait < time(NULL)) {
         LOG(log_debug, logtype_fce, "check_saved_close_events: sending event: %s",
             last_close_event.path);
         /* yes, send event */

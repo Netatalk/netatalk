@@ -1,25 +1,12 @@
 /*
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
- * Copyright (c) 2007 Jeremy Allison
+ * Copyright (C) Jeremy Allison 2007
  * Copyright (c) 2013 Ralph Boehme <sloowfranklin@gmail.com>
  * Copyright (c) 2026 Andy Lemin (andylemin)
  * All rights reserved. See COPYRIGHT.
  *
  * dsi_write_file() derives from Samba's sys_recvfile()
- * (source3/lib/recvfile.c):
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * (source3/lib/recvfile.c).
  *
  * 7 Oct 1997 added checks for 0 data.
  */
@@ -34,7 +21,6 @@
 #include <poll.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -123,26 +109,17 @@ void dsi_writeflush(DSI *dsi)
     }
 }
 
-/*! @brief Close the session's recvfile pipe; the next write opens another */
-void dsi_close_pipe(DSI *dsi)
-{
-    if (dsi->splice_pipe[0] != -1) {
-        close(dsi->splice_pipe[0]);
-        close(dsi->splice_pipe[1]);
-        dsi->splice_pipe[0] = dsi->splice_pipe[1] = -1;
-    }
-}
-
 #ifdef WITH_RECVFILE
 /*!
- * @brief Wait up to timeout ms for socket data
+ * @brief Wait up to timeout ms for socket data, or for a TCP urgent byte
+ *        splice() stops at
  *
- * @returns 1 at a TCP urgent mark, 0 when not, -1 with errno set
+ * @returns 1 when a TCP urgent byte is pending, 0 when not, -1 with errno
+ *          set
  */
 static int waitfordata(int socket, int timeout)
 {
     struct pollfd pfd = { .fd = socket, .events = POLLIN | POLLPRI };
-    int atmark = 0;
 
     while (poll(&pfd, 1, timeout) == -1) {
         if (errno != EINTR) {
@@ -152,43 +129,45 @@ static int waitfordata(int socket, int timeout)
         }
     }
 
-    /* splice() stops at the mark even before the urgent byte arrives, which
-     * POLLPRI waits for; recv() steps over it */
-    return ioctl(socket, SIOCATMARK, &atmark) == 0 && atmark;
+    /* recv() steps over the urgent byte that splice() cannot pass */
+    return (pfd.revents & POLLPRI) ? 1 : 0;
+}
+
+/*! @brief Close the session's recvfile pipe */
+static void close_pipe(DSI *dsi)
+{
+    close(dsi->splice_pipe[0]);
+    close(dsi->splice_pipe[1]);
+    dsi->splice_pipe[0] = dsi->splice_pipe[1] = -1;
 }
 
 /*!
  * @brief Open the session's recvfile pipe, grown to the largest size up to
- *        dsi->splice_size the kernel grants, which the session keeps
+ *        splice_size that the kernel grants the session
  *
  * @returns 0, or -1 when this write takes the userspace path
  */
-static int open_pipe(DSI *dsi)
+static int open_pipe(DSI *dsi, int splice_size)
 {
     static bool pipe_logged;
-    static bool budget_logged;
     static bool size_logged;
     int refused;
     int have;
     int size;
-    int fd;
 
     if (pipe2(dsi->splice_pipe, O_CLOEXEC) == -1) {
         /* out of descriptors: this write takes the userspace path */
         if (!pipe_logged) {
             pipe_logged = true;
-            LOG(log_warning, logtype_dsi, "recvfile: pipe2: %s",
-                strerror(errno));
+            LOG(log_warning, logtype_dsi, "recvfile: pipe2: %s", strerror(errno));
         }
 
         return -1;
     }
 
-    fd = dsi->splice_pipe[1];
-
     /* splice() takes at most splice_size a round, so a bigger pipe stays */
-    if ((have = fcntl(fd, F_GETPIPE_SZ)) >= dsi->splice_size
-            || fcntl(fd, F_SETPIPE_SZ, dsi->splice_size) != -1) {
+    if ((have = fcntl(dsi->splice_pipe[1], F_GETPIPE_SZ)) >= splice_size
+            || fcntl(dsi->splice_pipe[1], F_SETPIPE_SZ, splice_size) != -1) {
         return 0;
     }
 
@@ -196,19 +175,20 @@ static int open_pipe(DSI *dsi)
 
     /* over the pipe budget the kernel grants two pages: slower than recv() */
     if (have <= 2 * (int)sysconf(_SC_PAGESIZE)) {
-        if (!budget_logged) {
-            budget_logged = true;
+        if (!size_logged) {
+            size_logged = true;
             LOG(log_warning, logtype_dsi,
-                "recvfile: pipe size %d refused (%s), pipe budget spent",
-                dsi->splice_size, strerror(refused));
+                "recvfile: pipe size %d refused (%s), the pipe budget is spent",
+                splice_size, strerror(refused));
         }
 
-        dsi_close_pipe(dsi);
+        close_pipe(dsi);
         return -1;
     }
 
-    for (size = dsi->splice_size / 2; size > have; size /= 2) {
-        if (fcntl(fd, F_SETPIPE_SZ, size) != -1) {
+    /* fs.pipe-max-size or the budget: the session keeps the size granted */
+    for (size = splice_size / 2; size > have; size /= 2) {
+        if (fcntl(dsi->splice_pipe[1], F_SETPIPE_SZ, size) != -1) {
             break;
         }
     }
@@ -217,10 +197,9 @@ static int open_pipe(DSI *dsi)
         size_logged = true;
         LOG(log_warning, logtype_dsi,
             "recvfile: pipe size %d refused (%s), splice size reduced to %d",
-            dsi->splice_size, strerror(refused), MAX(size, have));
+            splice_size, strerror(refused), MAX(size, have));
     }
 
-    dsi->splice_size = MAX(size, have);
     return 0;
 }
 
@@ -260,23 +239,25 @@ static ssize_t pipe_to_file(DSI *dsi, int tofd, loff_t *offset, size_t len)
  * dsi->datasize falls as the socket is read, so dsi_write() and
  * dsi_writeflush() continue where this stops.
  *
- * @param[in,out] dsi       session; its datasize is the payload left to read
- * @param[in]     tofd      destination file
- * @param[in,out] offset    file offset of the first byte, advanced past every
- *                          byte written, also when the call fails
- * @param[in,out] nosplice  set when tofd's filesystem cannot splice, once the
- *                          round in the pipe is written through dsi->data
+ * @param[in,out] dsi          session; its datasize is the payload left to read
+ * @param[in]     tofd         destination file
+ * @param[in,out] offset       file offset of the first byte, advanced past
+ *                             every byte written, also when the call fails
+ * @param[in]     splice_size  most bytes per splice() round
+ * @param[in,out] nosplice     set when tofd's filesystem cannot splice; the
+ *                             round in the pipe is then written through
+ *                             dsi->data
  *
  * @returns the bytes written: all of datasize, fewer when the caller is to
  *          finish from the socket, 0 when nothing was read; -1 with errno set
  */
-ssize_t dsi_write_file(DSI *dsi, int tofd, off_t *offset, bool *nosplice)
+ssize_t dsi_write_file(DSI *dsi, int tofd, off_t *offset, int splice_size,
+                       bool *nosplice)
 {
     static bool copy_logged;
     static bool socket_logged;
     loff_t splice_offset = *offset;
     size_t written = 0;
-    bool copy = false;
     LOG(log_maxdebug, logtype_dsi, "dsi_write_file(off: %jd, len: %u)",
         (intmax_t)*offset, dsi->datasize);
 
@@ -284,13 +265,13 @@ ssize_t dsi_write_file(DSI *dsi, int tofd, off_t *offset, bool *nosplice)
         return 0;
     }
 
-    if (dsi->splice_pipe[0] == -1 && open_pipe(dsi) == -1) {
+    if (dsi->splice_pipe[0] == -1 && open_pipe(dsi, splice_size) == -1) {
         return 0;
     }
 
-    while (dsi->datasize > 0 && !copy) {
+    while (dsi->datasize > 0) {
         ssize_t nread = splice(dsi->socket, NULL, dsi->splice_pipe[1], NULL,
-                               MIN(dsi->datasize, (size_t)dsi->splice_size),
+                               MIN((size_t)dsi->datasize, (size_t)splice_size),
                                SPLICE_F_NONBLOCK);
 
         if (nread == -1) {
@@ -314,7 +295,7 @@ ssize_t dsi_write_file(DSI *dsi, int tofd, off_t *offset, bool *nosplice)
 
             /* nothing consumed: the userspace path takes the whole write */
             if (written == 0) {
-                /* a refused splice() is logged once; recv() reports the rest */
+                /* a refused splice is logged once; recv() reports socket errors */
                 if (!socket_logged && (errno == EINVAL || errno == ENOSYS
                                        || errno == EPERM || errno == EBADF)) {
                     socket_logged = true;
@@ -343,7 +324,7 @@ ssize_t dsi_write_file(DSI *dsi, int tofd, off_t *offset, bool *nosplice)
         dsi->read_count += nread;
 
         for (size_t to_write = (size_t)nread; to_write > 0;) {
-            ssize_t thistime = copy
+            ssize_t thistime = *nosplice
                                ? pipe_to_file(dsi, tofd, &splice_offset,
                                               to_write)
                                : splice(dsi->splice_pipe[0], NULL, tofd,
@@ -353,26 +334,25 @@ ssize_t dsi_write_file(DSI *dsi, int tofd, off_t *offset, bool *nosplice)
             if (thistime > 0) {
                 to_write -= thistime;
                 written += thistime;
-            } else if (thistime == -1 && errno == EINVAL && !copy) {
-                copy = true;
+            } else if (thistime == -1 && errno == EINVAL && !*nosplice) {
+                *nosplice = true;
+
+                if (!copy_logged) {
+                    copy_logged = true;
+                    LOG(log_warning, logtype_dsi,
+                        "dsi_write_file: cannot splice into the file, copying");
+                }
             } else if (thistime == 0 || errno != EINTR) {
                 int saved_errno = thistime == 0 ? EIO : errno;
                 /* the next write must not start with this round's bytes */
-                dsi_close_pipe(dsi);
+                close_pipe(dsi);
                 errno = saved_errno;
                 return -1;
             }
         }
-    }
 
-    /* the copied round shows the file, not the offset, refuses splice() */
-    if (copy) {
-        *nosplice = true;
-
-        if (!copy_logged) {
-            copy_logged = true;
-            LOG(log_warning, logtype_dsi,
-                "dsi_write_file: cannot splice into the file, copying");
+        if (*nosplice) {
+            break;
         }
     }
 

@@ -166,8 +166,8 @@ static void afp_dsi_close(AFPObj *obj)
         dsi->read_count / 1024.0, dsi->write_count / 1024.0);
     of_log_usage(log_info, "session close");
     log_dircache_stat();
+    enumerate_log_stats();
     pfd_log_stats();
-    ochdir_log_timing();
     pfd_shutdown();
     dircache_rfork_shutdown();
     dsi_close(dsi);
@@ -818,8 +818,6 @@ void afp_over_dsi(AFPObj *obj)
     while (1) {
         while (1) {
             /* [A0] Process deferred signals before any blocking I/O */
-            atalk_sigpipe_drain();
-
             if (process_deferred_signals(obj)) {
                 goto restart_outer;
             }

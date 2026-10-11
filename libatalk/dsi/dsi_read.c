@@ -7,7 +7,9 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
@@ -37,6 +39,11 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
     dsi->header.dsi_len = htonl(size);
     dsi->header.dsi_data.dsi_code = htonl(err);
     dsi->in_write++;
+
+    if ((uint64_t)size > UINT32_MAX) {
+        errno = EMSGSIZE;
+        return -1;
+    }
 
     if (dsi_stream_send(dsi, buf, buflen)) {
         dsi->datasize = size - buflen;

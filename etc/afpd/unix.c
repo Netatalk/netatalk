@@ -149,6 +149,33 @@ void accessmode(const AFPObj *obj, const struct vol *vol, char *path,
 #endif
 }
 
+/*!
+ * @brief Does the session user have read and search rights on a directory?
+ *
+ * afpd's ACL mappings only add to the user's rights, so the ACL is read
+ * only when the mode bits leave out read or search.
+ *
+ * @param[in]     obj   session
+ * @param[in]     vol   volume
+ * @param[in]     path  directory
+ * @param[in,out] st    stat of path
+ *
+ * @returns true when the user may read and search path
+ */
+bool accessmode_rx(const AFPObj *obj, const struct vol *vol, char *path,
+                   struct stat *st)
+{
+    const uint8_t rx = AR_UREAD | AR_USEARCH;
+    struct maccess ma;
+    utommode(obj, st, &ma);
+
+    if ((ma.ma_user & rx) != rx) {
+        accessmode(obj, vol, path, &ma, NULL, st);
+    }
+
+    return (ma.ma_user & rx) == rx;
+}
+
 static mode_t mtoubits(uint8_t bits)
 {
     mode_t	mode;

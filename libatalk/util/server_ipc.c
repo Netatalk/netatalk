@@ -68,7 +68,8 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
  * processes — single-threaded, no locks needed
  ***********************************************************************************/
 
-#define HINT_RATE_LIMIT        1000  /* Max hints/second per child (attack guard) */
+/* Max hints/second per child (attack guard) */
+#define HINT_RATE_LIMIT        4000
 
 /* Resets skip the drop paths, so they need their own ceiling. A child raises
  * SIGTERM right after resetting, so it sends at most one. */
@@ -471,6 +472,19 @@ static int ipc_relay_cache_hint(struct ipc_header *ipc,
          * children reporting one volume disagree on it. */
         if (reset_already_broadcast(hint.cnid)) {
             return 0;
+        }
+    }
+
+    /* siblings stat the file when the batch arrives, so a sender's second
+     * refresh of it in the same batch adds nothing */
+    if (hint.event == CACHE_HINT_REFRESH) {
+        for (int i = 0; i < hint_buf.count; i++) {
+            if (hint_buf.entries[i].event == CACHE_HINT_REFRESH
+                    && hint_buf.entries[i].source_pid == ipc->child_pid
+                    && hint_buf.entries[i].vid == hint.vid
+                    && hint_buf.entries[i].cnid == hint.cnid) {
+                return 0;
+            }
         }
     }
 

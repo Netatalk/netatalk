@@ -77,12 +77,13 @@
 #define TEST_MIXED_CACHE_OPS 14
 #define TEST_DEEP_TRAVERSAL 15
 #define TEST_CACHE_VALIDATION 16
-#define LASTTEST TEST_CACHE_VALIDATION
+#define TEST_FOLDER_COUNTS 17
+#define LASTTEST TEST_FOLDER_COUNTS
 #define NUMTESTS (LASTTEST+1)
 /* Timed AFP requests issued by one full pass over every test; recomputed
  * whenever a test's timed loop changes. See the per-test "[N AFP ops]"
  * annotations in test_names[] — this is their sum. */
-#define TOTAL_AFP_OPS 49326
+#define TOTAL_AFP_OPS 50126
 
 /* Global Error Constants */
 #define ERROR_MEMORY_ALLOCATION  2
@@ -160,6 +161,10 @@ static int32_t deep_traversals = 100;  /* path walks: 20 levels x 100 = 2000 */
 static int32_t validation_files = 500;  /* validation file count: 4 lookups
                                          * each = 2000 actions, hot-cache
                                          * biased */
+static int32_t count_folders = 20;  /* folders listed with item counts */
+static int32_t count_files = 50;  /* files per counted folder */
+static int32_t count_rounds = 20;  /* folder listing + parent listing per
+                                    * folder: 20 x 20 x 2 = 800 requests */
 
 /* Forward declarations */
 void clean_exit(int exit_code);
@@ -198,7 +203,8 @@ static const char *test_names[NUMTESTS] = {
     "Directory cache hits (20 dirs x 100 files) [2,020 AFP ops]",  /*!< TEST_CACHE_HITS */
     "Mixed cache operations (create/stat/enum/delete) on 500 files [2,050 AFP ops]",  /*!< TEST_MIXED_CACHE_OPS */
     "Deep path traversal (20 levels x 100 walks) [2,000 AFP ops]",  /*!< TEST_DEEP_TRAVERSAL */
-    "Cache validation (500 files x 4 lookups) [2,000 AFP ops]"  /*!< TEST_CACHE_VALIDATION */
+    "Cache validation (500 files x 4 lookups) [2,000 AFP ops]",  /*!< TEST_CACHE_VALIDATION */
+    "Folder item counts after listing each folder (20 x 50 files) [800 AFP ops]"  /*!< TEST_FOLDER_COUNTS */
 };
 
 static void starttimer(void)
@@ -989,6 +995,57 @@ exit:
     return NULL;
 }
 
+/* Finder browses with FPEnumerateExt2 from AFP 3.1, asking for UTF-8 names
+ * (PDINFO), 64-bit fork lengths (EXTDFLEN/EXTRFLEN) and UNIX privileges;
+ * EXTRFLEN on every file entry drives the per-entry rfork path in
+ * getmetadata. The server registers the verb from 3.1; pre-3.1 sessions
+ * keep the legacy enumerate and the long-name set. */
+static uint16_t finder_file_bitmap(void)
+{
+    if (Version >= 31) {
+        return (1 << FILPBIT_ATTR) | (1 << FILPBIT_PDID) |
+               (1 << FILPBIT_CDATE) | (1 << FILPBIT_MDATE) |
+               (1 << FILPBIT_BDATE) | (1 << FILPBIT_FINFO) |
+               (1 << FILPBIT_FNUM) | (1 << FILPBIT_EXTDFLEN) |
+               (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTRFLEN) |
+               (1 << FILPBIT_UNIXPR);
+    }
+
+    return (1 << FILPBIT_ATTR) | (1 << FILPBIT_PDID) | (1 << FILPBIT_CDATE) |
+           (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE) | (1 << FILPBIT_FINFO) |
+           (1 << FILPBIT_FNUM) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_LNAME) |
+           (1 << FILPBIT_RFLEN);
+}
+
+static uint16_t finder_dir_bitmap(void)
+{
+    if (Version >= 31) {
+        return (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_PDID) |
+               (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_MDATE) |
+               (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_FINFO) |
+               (1 << DIRPBIT_DID) | (1 << DIRPBIT_OFFCNT) |
+               (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_PDINFO) |
+               (1 << DIRPBIT_UNIXPR);
+    }
+
+    return (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_CDATE) |
+           (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_FINFO) |
+           (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_ACCESS);
+}
+
+static unsigned int finder_enumerate(int32_t did, uint16_t fbitmap,
+                                     uint16_t dbitmap, uint32_t sindex,
+                                     uint16_t reqcnt)
+{
+    if (Version >= 31) {
+        return FPEnumerateExt2Full(Conn, vol, did, "", fbitmap, dbitmap,
+                                   sindex, reqcnt);
+    }
+
+    return FPEnumerateFull(Conn, vol, (uint16_t)sindex, reqcnt, DSI_DATASIZ,
+                           did, "", fbitmap, dbitmap);
+}
+
 /* ------------------------- */
 void run_test(const int32_t dir)
 {
@@ -1427,62 +1484,25 @@ void run_test(const int32_t dir)
 
     /* -------- */
     if (teststorun[TEST_ENUM2000FILES]) {
-        /* Finder browses with FPEnumerateExt2 (AFP 3.1+): UTF-8 names
-         * (PDINFO), 64-bit fork lengths (EXTDFLEN/EXTRFLEN), and UNIX
-         * privileges — EXTRFLEN on every file entry is what drives the
-         * per-entry rfork path in getmetadata. The server registers the
-         * verb from 3.1; pre-3.1 sessions keep the legacy enumerate. */
-        const bool use_ext2 = Version >= 31;
-        const uint16_t finder_f_bitmap = use_ext2 ?
-                                         (1 << FILPBIT_ATTR) | (1 << FILPBIT_PDID) | (1 << FILPBIT_CDATE) |
-                                         (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE) | (1 << FILPBIT_FINFO) |
-                                         (1 << FILPBIT_FNUM) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_PDINFO) |
-                                         (1 << FILPBIT_EXTRFLEN) | (1 << FILPBIT_UNIXPR)
-                                         :
-                                         (1 << FILPBIT_ATTR) | (1 << FILPBIT_PDID) | (1 << FILPBIT_CDATE) |
-                                         (1 << FILPBIT_MDATE) | (1 << FILPBIT_BDATE) | (1 << FILPBIT_FINFO) |
-                                         (1 << FILPBIT_FNUM) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_LNAME) |
-                                         (1 << FILPBIT_RFLEN);
-        const uint16_t finder_d_bitmap = use_ext2 ?
-                                         (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_CDATE) |
-                                         (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_FINFO) |
-                                         (1 << DIRPBIT_DID) | (1 << DIRPBIT_OFFCNT) | (1 << DIRPBIT_ACCESS) |
-                                         (1 << DIRPBIT_PDINFO) | (1 << DIRPBIT_UNIXPR)
-                                         :
-                                         (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_CDATE) |
-                                         (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_FINFO) |
-                                         (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_ACCESS);
+        const uint16_t finder_f_bitmap = finder_file_bitmap();
+        const uint16_t finder_d_bitmap = finder_dir_bitmap();
 #ifdef __linux__
         capture_io_values(TEST_START);
 #endif
         starttimer();
 
-        if (use_ext2
-                ? FPEnumerateExt2Full(Conn, vol, dir, "",
-                                      finder_f_bitmap, finder_d_bitmap, 1, 40)
-                : FPEnumerateFull(Conn, vol, 1, 40, DSI_DATASIZ, dir, "",
-                                  finder_f_bitmap, finder_d_bitmap)) {
+        if (finder_enumerate(dir, finder_f_bitmap, finder_d_bitmap, 1, 40)) {
             clean_exit(ERROR_NETWORK_PROTOCOL);
         }
 
         for (int32_t i = 41; (i + 40) < create_enum_files; i += 80) {
-            if (use_ext2
-                    ? FPEnumerateExt2Full(Conn, vol, dir, "",
-                                          finder_f_bitmap, finder_d_bitmap,
-                                          (uint32_t)(i + 40), 40)
-                    : FPEnumerateFull(Conn, vol, (uint16_t)(i + 40), 40,
-                                      DSI_DATASIZ, dir, "",
-                                      finder_f_bitmap, finder_d_bitmap)) {
+            if (finder_enumerate(dir, finder_f_bitmap, finder_d_bitmap,
+                                 (uint32_t)(i + 40), 40)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
 
-            if (use_ext2
-                    ? FPEnumerateExt2Full(Conn, vol, dir, "",
-                                          finder_f_bitmap, finder_d_bitmap,
-                                          (uint32_t)i, 40)
-                    : FPEnumerateFull(Conn, vol, (uint16_t)i, 40,
-                                      DSI_DATASIZ, dir, "",
-                                      finder_f_bitmap, finder_d_bitmap)) {
+            if (finder_enumerate(dir, finder_f_bitmap, finder_d_bitmap,
+                                 (uint32_t)i, 40)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
         }
@@ -1980,6 +2000,72 @@ void run_test(const int32_t dir)
         }
     }
 
+    /* -------- */
+    /* Folder item counts: a folder is listed, then its parent asks for the
+     * item counts, as column view does when a folder is selected; the row
+     * asks for the counts whatever the session's Finder set carries */
+    if (teststorun[TEST_FOLDER_COUNTS]) {
+        const uint16_t count_f_bitmap = finder_file_bitmap();
+        const uint16_t count_d_bitmap = finder_dir_bitmap()
+                                        | (1 << DIRPBIT_OFFCNT);
+        const uint16_t cnid_only = 1 << FILPBIT_FNUM;
+        int32_t parent;
+        int32_t folders[count_folders];
+
+        if (!(parent = FPCreateDir(Conn, vol, dir, "count_parent"))) {
+            clean_exit(ERROR_FILE_DIRECTORY_OPS);
+        }
+
+        for (int32_t i = 0; i < count_folders; i++) {
+            snprintf(temp, sizeof(temp), "count_folder_%d", i);
+
+            if (!(folders[i] = FPCreateDir(Conn, vol, parent, temp))) {
+                clean_exit(ERROR_FILE_DIRECTORY_OPS);
+            }
+
+            for (int32_t j = 0; j < count_files; j++) {
+                snprintf(temp, sizeof(temp), "count_file_%d", j);
+
+                if (FPCreateFile(Conn, vol, 0, folders[i], temp)) {
+                    clean_exit(ERROR_FILE_DIRECTORY_OPS);
+                }
+            }
+        }
+
+        /* one more file per folder in a later second, so each folder's
+         * dircache entry trails the disk */
+        sleep(2);
+
+        for (int32_t i = 0; i < count_folders; i++) {
+            if (FPCreateFile(Conn, vol, 0, folders[i], "count_new")) {
+                clean_exit(ERROR_FILE_DIRECTORY_OPS);
+            }
+        }
+
+#ifdef __linux__
+        capture_io_values(TEST_START);
+#endif
+        starttimer();
+
+        for (int32_t r = 0; r < count_rounds; r++) {
+            for (int32_t i = 0; i < count_folders; i++) {
+                if (finder_enumerate(folders[i], cnid_only, 0, 1,
+                                     (uint16_t)(count_files + 1))) {
+                    clean_exit(ERROR_NETWORK_PROTOCOL);
+                }
+
+                if (finder_enumerate(parent, count_f_bitmap, count_d_bitmap, 1,
+                                     (uint16_t)count_folders)) {
+                    clean_exit(ERROR_NETWORK_PROTOCOL);
+                }
+            }
+        }
+
+        stoptimer();
+        addresult(TEST_FOLDER_COUNTS, iteration_counter);
+        delete_directory_tree(Conn, vol, dir, "count_parent");
+    }
+
 fin1:
     return;
 }
@@ -2004,7 +2090,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-7\tAFP 3.4 version (default)\n");
     fprintf(stdout, "\t-b\tdebug mode\n");
     fprintf(stdout, "\t-c\toutput results in CSV format (default: tabular)\n");
-    fprintf(stdout, "\t-K\trun cache-focused tests only (tests 14-17)\n");
+    fprintf(stdout, "\t-K\trun cache-focused tests only (tests 14-18)\n");
     fprintf(stdout, "\t-f\ttests to run, eg 134 for tests 1, 3 and 4\n");
     fprintf(stdout,
             "\t-F\tuse this file located in the volume root for the read test (size must match -g and -G options)\n");
@@ -2027,7 +2113,7 @@ void usage(char *av0)
         fprintf(stdout, "\n");
     }
 
-    fprintf(stdout, "\n\tCache-focused tests (14-17) are designed to highlight\n");
+    fprintf(stdout, "\n\tCache-focused tests (14-18) are designed to highlight\n");
     fprintf(stdout, "\tdirectory cache performance improvements in netatalk.\n");
     fprintf(stdout, "\tThese tests benefit significantly from optimized cache\n");
     fprintf(stdout, "\tvalidation and probabilistic validation features.\n");
@@ -2088,6 +2174,7 @@ int main(int32_t ac, char **av)
             teststorun[TEST_MIXED_CACHE_OPS] = 1;
             teststorun[TEST_DEEP_TRAVERSAL] = 1;
             teststorun[TEST_CACHE_VALIDATION] = 1;
+            teststorun[TEST_FOLDER_COUNTS] = 1;
             Test = strdup("K");  /* Mark as cache-only mode */
 
             if (!Test) {

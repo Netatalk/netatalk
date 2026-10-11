@@ -10,6 +10,7 @@ extern int utest_recvfile_error_drains_request(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_error_leaves_no_residue(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_peer_close_ends_write(AFPObj *obj, struct vol *vol);
 extern int utest_write_fork_eof_fails_request(AFPObj *obj, struct vol *vol);
+extern int utest_write_fork_eof_marks_volume(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_urgent_byte_finishes_write(AFPObj *obj,
                                                      struct vol *vol);
 extern int utest_recvfile_urgent_byte_at_eof(AFPObj *obj, struct vol *vol);
@@ -20,8 +21,6 @@ extern int utest_recvfile_rfork_failure_keeps_length(AFPObj *obj,
 extern int utest_recvfile_high_fd_waits(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_unsplicable_fs_falls_back(AFPObj *obj,
                                                     struct vol *vol);
-extern int utest_recvfile_bad_offset_keeps_splice(AFPObj *obj,
-                                                  struct vol *vol);
 extern int utest_recvfile_no_socket_splice_falls_back(AFPObj *obj,
                                                       struct vol *vol);
 extern int utest_recvfile_pipe_takes_splice_size(AFPObj *obj,

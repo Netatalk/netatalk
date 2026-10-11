@@ -7,7 +7,6 @@ adouble_sources = [
     'ad_open.c',
     'ad_read.c',
     'ad_recvfile.c',
-    'ad_sendfile.c',
     'ad_size.c',
     'ad_write.c',
 ]

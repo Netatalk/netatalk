@@ -797,6 +797,21 @@ int getmetadata(const AFPObj *obj,
                 ashort |= htons(ATTRBIT_NOWRITE);
             }
 
+#if 0
+            /* FIXME do we want a visual clue if the file is read only
+             */
+            struct maccess	ma;
+            accessmode(vol, ".", &ma, dir, NULL);
+
+            if ((ma.ma_user & AR_UWRITE)) {
+                accessmode(vol, upath, &ma, dir, st);
+
+                if (!(ma.ma_user & AR_UWRITE)) {
+                    ashort |= htons(ATTRBIT_NOWRITE);
+                }
+            }
+
+#endif
             memcpy(data, &ashort, sizeof(ashort));
             data += sizeof(ashort);
             LOG(log_debug, logtype_afpd, "metadata('%s'): AFP Attributes: %04x",
@@ -1196,6 +1211,9 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         }
     }
 
+    /* a hard create over an existing file adds no entry to the folder */
+    const int existed = s_path->st_errno == 0;
+
     if (creatf) {
         openf = ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_TRUNC;
     } else
@@ -1328,8 +1346,11 @@ createfile_iderr:
     }
 
     /* Send hint to afpd siblings — parent dir ctime changed due to new file creation */
-    ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
-    curdir->d_offcnt++;
+    if (!existed) {
+        ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
+        curdir->d_offcnt++;
+    }
+
     setvoltime(obj, vol);
     return retvalue;
 }
@@ -2714,7 +2735,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
     data.did = dir->d_did;
 
     if ((ret = for_each_dirent(vol, name, reenumerate_loop, (void *)&data)) >= 0) {
-        setdiroffcnt(curdir, &st,  ret);
+        setdiroffcnt(vol, curdir, &st, ret);
         dir->d_flags |= DIRF_CNID;
     }
 
@@ -3454,6 +3475,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     setfilunixmode(vol, path, srcst.st_mode);
     setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
     unbecome_root();
+    setvoltime(obj, vol);
     err = AFP_OK;
     goto err_exchangefile;
     /* all this stuff is so that we can unwind a failed operation

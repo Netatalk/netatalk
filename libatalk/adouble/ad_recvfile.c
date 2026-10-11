@@ -29,20 +29,21 @@
 /*!
  * @brief Receive the rest of a DSIWrite payload into a fork
  *
- * @param[in] ad       adouble holding the fork
- * @param[in] eid      ADEID_DFORK or ADEID_RFORK
- * @param[in,out] dsi  session; its datasize is the payload left to read
- * @param[in,out] off  fork offset of the first byte, advanced past every
- *                     byte written, also when the call fails
+ * @param[in] ad           adouble holding the fork
+ * @param[in] eid          ADEID_DFORK or ADEID_RFORK
+ * @param[in,out] dsi      session; its datasize is the payload left to read
+ * @param[in] off          fork offset of the first byte
+ * @param[in] splice_size  most bytes per splice() round
  *
  * @returns the bytes written, 0 when the write is left to dsi_write() and
  *          ad_write(), or -1 with errno set
  */
-ssize_t ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t *off)
+ssize_t ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t off,
+                    int splice_size)
 {
     ssize_t cc;
     int fd;
-    off_t pos = *off;
+    off_t pos = off;
     off_t start;
 
     /* ad_write() refuses the symlink */
@@ -52,12 +53,12 @@ ssize_t ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t *off)
 
     fd = ad_fork_fileno(ad, eid, &pos);
     start = pos;
-    cc = dsi_write_file(dsi, fd, &pos, &ad->ad_nosplice);
-    *off += pos - start;
+    cc = dsi_write_file(dsi, fd, &pos, splice_size, &ad->ad_nosplice);
 
     /* every byte written counts, also before a failure, as with ad_write() */
-    if (eid == ADEID_RFORK && pos > start && ad->ad_rlen < *off) {
-        ad->ad_rlen = *off;
+    if (eid == ADEID_RFORK && pos > start
+            && ad->ad_rlen < off + (pos - start)) {
+        ad->ad_rlen = off + (pos - start);
     }
 
     return cc;

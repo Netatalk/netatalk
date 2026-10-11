@@ -1,6 +1,6 @@
 #!/bin/sh
 
-AFPTESTVOLUME=$(mktemp -d /tmp/AFPtestvolume-XXXXXX)
+AFPTESTVOLUME=$(mktemp -d "${AFPTEST_DIR:-/tmp}/AFPtestvolume-XXXXXX")
 if [ $? -ne 0 ]; then
     echo Error creating AFP test volume >&2
     exit 1
@@ -12,7 +12,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-AFPTESTVOLUMESYS=$(mktemp -d /tmp/AFPtestvolumeSys-XXXXXX)
+AFPTESTVOLUMESYS=$(mktemp -d "${AFPTEST_DIR:-/tmp}/AFPtestvolumeSys-XXXXXX")
 if [ $? -ne 0 ]; then
     echo Error creating ea=sys AFP test volume >&2
     exit 1

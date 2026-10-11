@@ -33,15 +33,18 @@
 
 /*!
  * @file
- * @brief AFP-aware copying of files and directory trees for nad
+ * @brief Cp copies source files to target files.
  *
- * Implements the nad cp command, combining filesystem copying with
- * Netatalk volume services. When AFP volume information is available,
- * copying also handles volume-specific filename encoding, AppleDouble
- * metadata, and destination CNID registration.
+ * The global PATH_T structure "to" always contains the path to the
+ * current target file.  Since fts(3) does not change directories,
+ * this path can be either absolute or dot-relative.
  *
- * Source and destination volume contexts are managed independently,
- * allowing copying between paths with different volume settings.
+ * The basic algorithm is to initialize "to" and use fts(3) to traverse
+ * the file hierarchy rooted in the argument list.  A trivial case is the
+ * case of 'cp file1 file2'.  The more interesting case is the case of
+ * 'cp file1 file2 ... fileN dir' where the hierarchy is traversed and the
+ * path (relative to the root of the traversal) is appended to dir (stored
+ * in "to") to form the final target path.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -80,17 +83,11 @@
 
 static char emptystring[] = "";
 
-/*!
- * @brief Shared destination-path state for the copy operation.
- *
- * Initially holds the destination base, then the current target file or
- * directory path during copying. The target_end member marks the end of
- * the base used to construct subsequent target paths.
- */
 PATH_T to = { to.p_path, emptystring, "" };
 enum op { FILE_TO_FILE, FILE_TO_DIR, DIR_TO_DNE };
 
 int fflag, iflag, nflag, pflag, vflag;
+mode_t mask;
 
 cnid_t ppdid, pdid, did; /* current dir CNID and parent did*/
 
@@ -199,24 +196,15 @@ static int copy_source_header(struct adouble *dest, const char *path, int flags)
     return ret == 0 ? 1 : -1;
 }
 
-/*!
- * @brief execute the nad cp command
- *
- * Parses options and initializes the destination base in to, distinguishing
- * a single destination file, an existing destination directory, and a new
- * destination directory for a recursive copy. Multiple sources require an
- * existing destination directory.
- *
- * Uses the custom nftw() implementation to traverse each source separately,
- * with copy() processing entries and upfunc() tracking directory CNID state.
- * Traversal runs without FTW_CHDIR, so source and destination paths may be
- * absolute or relative to the caller's working directory.
- */
 int nad_cp(int argc, char *argv[], AFPObj *obj)
 {
     struct stat to_stat, tmp_stat;
     int r, ch, have_trailing_slash;
     char *target;
+#if 0
+    afpvol_t srcvol;
+    afpvol_t dstvol;
+#endif
     ppdid = pdid = htonl(1);
     did = htonl(2);
 
@@ -357,6 +345,17 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
         type = FILE_TO_DIR;
     }
 
+    /*
+     * Keep an inverted copy of the umask, for use in correcting
+     * permissions on created directories when not using -p.
+     */
+    mask = ~umask(0777); //NOSONAR: Read caller umask and immediately restore it.
+    umask(~mask);
+#if 0
+    /* Inhereting perms in ad_mkdir etc requires this */
+    ad_setfuid(0);
+#endif
+
     /* Load .volinfo file for destination*/
     if (openvol_optional(obj, to.p_path, &dvolume) != 0) {
         return 1;
@@ -386,18 +385,6 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
     return rval;
 }
 
-/*!
- * @brief process a source entry during the nftw() traversal
- *
- * Constructs the current destination path in to. For an existing destination
- * directory, appends the source basename and any descendant path to the
- * destination base. When copying a directory to a new destination directory,
- * omits the source directory's basename and appends only the descendant path.
- * For a file-to-file copy, uses the destination path directly.
- *
- * Dispatches copying by entry type and handles destination volume metadata
- * and CNID registration where applicable.
- */
 static int copy(const char *path,
                 const struct stat *statp,
                 int tflag _U_,
@@ -453,8 +440,9 @@ static int copy(const char *path,
          * Paths ending in ".." are changed to ".".  This is
          * tricky, but seems the easiest way to fix the problem.
          *
-         * nftw() visits the source root at level zero, initializing
-         * base before processing its descendants.
+         * XXX
+         * Since the first level MUST be FTS_ROOTLEVEL, base
+         * is always initialized.
          */
         if (ftw->level == 0) {
             if (type != DIR_TO_DNE) {
@@ -779,6 +767,9 @@ static int copy(const char *path,
     return 0;
 }
 
+/*! Memory strategy threshold, in pages: if physmem is larger then this, use a large buffer */
+#define PHYSPAGES_THRESHOLD (32*1024)
+
 /*! Maximum buffer size in bytes - do not allow it to grow larger than this */
 #define BUFSIZE_MAX (2*1024*1024)
 
@@ -797,6 +788,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     static size_t bufsize;
     ssize_t wcount;
     size_t wresid;
+    off_t wtotal;
     int ch, checkch, from_fd = 0, rcount, to_fd = 0;
     const char *bufp;
     char *p;
@@ -880,6 +872,8 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             sp->st_size <= 8 * 1024 * 1024 &&
             (p = mmap(NULL, (size_t)sp->st_size, PROT_READ,
                       MAP_SHARED, from_fd, (off_t)0)) != MAP_FAILED) {
+        wtotal = 0;
+
         for (bufp = p, wresid = sp->st_size; ;
                 bufp += wcount, wresid -= (size_t)wcount) {
             wcount = write(to_fd, bufp, wresid);
@@ -887,6 +881,8 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             if (wcount <= 0) {
                 break;
             }
+
+            wtotal += wcount;
 
             if (wcount >= (ssize_t)wresid) {
                 break;
@@ -945,6 +941,8 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             }
         }
 
+        wtotal = 0;
+
         while ((rcount = (int) read(from_fd, buf, bufsize)) > 0) {
             for (bufp = buf, wresid = rcount; ;
                     bufp += wcount, wresid -= wcount) {
@@ -953,6 +951,8 @@ static int ftw_copy_file(const struct FTW *entp _U_,
                 if (wcount <= 0) {
                     break;
                 }
+
+                wtotal += wcount;
 
                 if (wcount >= (ssize_t)wresid) {
                     break;

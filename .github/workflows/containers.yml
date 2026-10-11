@@ -2060,7 +2060,7 @@ jobs:
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
-      # also the recvfile splice size
+      # also the recvfile splice size: a full write is one splice round
       AFP_SERVER_QUANTUM: 1048576
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024
@@ -2247,7 +2247,7 @@ jobs:
       AFP_DIRCACHE_MODE: arc
       AFP_DIRCACHESIZE: 65536
       AFP_DIRCACHE_VALIDATION_FREQ: 100
-      # also the recvfile splice size
+      # also the recvfile splice size: a full write is one splice round
       AFP_SERVER_QUANTUM: 1048576
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024

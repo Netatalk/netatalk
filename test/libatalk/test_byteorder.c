@@ -38,6 +38,7 @@
 #endif
 
 #include <atalk/byteorder.h>
+#include <atalk/util.h>
 
 static int failures = 0;
 
@@ -238,6 +239,19 @@ static void test_reverse_roundtrip(void)
     }
 }
 
+/*
+ * 7. hton64() of 3000, whose byte-swapped low word has bit 31 set on a
+ *    little-endian host; volatile keeps the shift out of constant folding.
+ */
+static void test_hton64(void)
+{
+    static const unsigned char want[8] = { 0, 0, 0, 0, 0, 0, 0x0b, 0xb8 };
+    volatile uint64_t v = 3000;
+    uint64_t be = hton64(v);
+    CHECK("hton64(3000) is big-endian 3000",
+          memcmp(&be, want, sizeof(want)), 0);
+}
+
 int main(void)
 {
 #ifdef WORDS_BIGENDIAN
@@ -251,6 +265,7 @@ int main(void)
     test_signed();
     test_byte_layout();
     test_reverse_roundtrip();
+    test_hton64();
 
     if (failures == 0) {
         printf("All tests passed.\n");

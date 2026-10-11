@@ -536,7 +536,7 @@ extern uint32_t  ad_forcegetid(struct adouble *adp);
 
 #ifdef WITH_RECVFILE
 extern ssize_t ad_recvfile(struct adouble *ad, int eid, struct DSI *dsi,
-                           off_t *off);
+                           off_t off, int splice_size);
 #endif
 
 #endif /* _ATALK_ADOUBLE_H */

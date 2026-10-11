@@ -107,6 +107,17 @@ struct maccess {
 #define	AR_UWRITE	(1<<2)
 #define	AR_UOWN		(1<<7)
 
+struct offcnt_stats {
+    unsigned long long requests;  /*!< DIRPBIT_OFFCNT answered */
+    unsigned long long cached;    /*!< served from the entry */
+    unsigned long long first;     /*!< walked: never counted */
+    unsigned long long older;     /*!< walked: stat ctime behind the count's */
+    unsigned long long confirmed; /*!< walked: the count held stood */
+    unsigned long long changed;   /*!< walked: the count held was wrong */
+    unsigned long long failed;    /*!< walk refused: unreadable folder */
+    unsigned long long entries;   /*!< entries read by the walks */
+};
+
 extern q_t *invalid_dircache_entries;
 
 extern void        dir_remove_and_free(const struct vol *, struct dir *);
@@ -125,6 +136,8 @@ extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *,
                             int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir,
                               const struct dir_modify_args *args);
+extern void        dir_stat_refresh(const struct vol *vol, struct dir *dir,
+                                    struct stat *st);
 extern int         dir_remove(const struct vol *vol, struct dir *dir,
                               int report_invalid);
 extern struct dir  *dirlookup(const struct vol *, cnid_t);
@@ -144,9 +157,10 @@ extern int         setdirparams(struct vol *, struct path *, uint16_t, char *);
 extern int         renamedir(struct vol *, int, char *, char *, struct dir *,
                              char *);
 extern int         path_error(struct path *, int error);
-extern void        setdiroffcnt(struct dir *dir, struct stat *st,
-                                uint32_t count);
+extern void        setdiroffcnt(const struct vol *vol, struct dir *dir,
+                                struct stat *st, uint32_t count);
 extern int         dirreenumerate(struct dir *dir, struct stat *st);
+extern void        offcnt_stats_get(struct offcnt_stats *out);
 extern int         for_each_dirent(const struct vol *, char *, dir_loop,
                                    void *);
 extern int         check_access(const AFPObj *obj, struct vol *, char *name,
@@ -157,6 +171,16 @@ extern int         netatalk_unlink(const char *name);
 
 /* from enumerate.c */
 extern char        *check_dirent(const struct vol *, char *);
+
+/*! directory listing reads by cause, logged at session close */
+struct enumerate_stats {
+    unsigned long long reads;
+    /* continuation batches that found no saved listing */
+    unsigned long long rereads;
+    unsigned long long names;
+};
+extern void        enumerate_stats_get(struct enumerate_stats *out);
+extern void        enumerate_log_stats(void);
 
 /* FP functions */
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

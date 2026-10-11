@@ -482,20 +482,21 @@ STATIC void test218()
                                                 bitmap, bitmap))
     FAIL(htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 5, 1, 800,  bdir, "",
                                                 bitmap, bitmap))
+    /* a one-kind listing counts its own kind: one file, two folders */
+    FAIL(htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 3, 1, 800,  bdir, "",
+                                                bitmap, 0))
+    FAIL(htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 3, 1, 800,  bdir, "",
+                                                0, bitmap))
     /* get the third */
-    isdir = 0;
-    ret = FPEnumerateFull(Conn, VolID, 3, 1, 800,  bdir, "", bitmap, 0);
-
-    if (htonl(AFPERR_NOOBJ) == ret) {
-        isdir = 1;
-        ret = FPEnumerateFull(Conn, VolID, 3, 1, 800,  bdir, "", 0, bitmap);
-    }
+    ret = FPEnumerateFull(Conn, VolID, 3, 1, 800,  bdir, "", bitmap, bitmap);
 
     if (ret) {
         test_failed();
         goto fin;
     }
 
+    /* the entry's file/directory flag precedes its parameters */
+    isdir = !!(dsi->data[ofs - 1] & FILDIRBIT_ISDIR);
     filedir.isdir = isdir;
 
     if (isdir) {

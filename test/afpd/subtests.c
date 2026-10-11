@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <atalk/adouble.h>
@@ -782,6 +783,52 @@ out:
 }
 
 /*!
+ * @brief A stat refresh that moves the ctime drops the cached access rights
+ *
+ * check_acl_access() serves d_rights_cache while dcache_ctime matches the
+ * disk; a refresh that brings dcache_ctime forward must not carry rights
+ * computed under the old stat.
+ *
+ * @param[in] vol  volume whose root holds the planted entry
+ * @returns 0, else the number of the step that disagreed
+ */
+int test011_stat_refresh_drops_rights(struct vol *vol)
+{
+    struct dir *entry;
+    struct stat st;
+    struct dir_modify_args args = { .flags = DCMOD_STAT, .st = &st };
+    int ret;
+
+    if (stat(vol->v_path, &st) != 0) {
+        return -1;
+    }
+
+    entry = plant_root_entry(vol, "t011_dir", htonl(30011), &st);
+
+    if (entry == NULL) {
+        return 1;
+    }
+
+    entry->d_rights_cache = 1;
+    st.st_ctime++;
+
+    if (dir_modify(vol, entry, &args) != 0) {
+        ret = 2;
+    } else if (entry->d_rights_cache != 0xffffffff) {
+        ret = 3;
+    } else {
+        /* the same stat again: nothing moved, so cached rights stay */
+        entry->d_rights_cache = 1;
+        ret = dir_modify(vol, entry, &args) == 0
+              && entry->d_rights_cache == 1 ? 0 : 4;
+    }
+
+    dir_remove(vol, entry, 0);
+    dir_free_invalid_q();
+    return ret;
+}
+
+/*!
  * @brief curdir survives its entry being expunged by a file
  *
  * A file colliding on the (vid, did) key retires the cached directory — a
@@ -1133,4 +1180,242 @@ out:
 #else
     return 0;
 #endif
+}
+
+/*!
+ * @brief A failed CNID retry in movecwd() logs the directory it tried
+ *
+ * The directory is replaced by a dangling symlink: the cached path fails
+ * with ENOENT, and the CNID rebuild lstat()s the same path, so the retry
+ * reaches its chdir and fails as well.
+ */
+int test012_movecwd_retry_names_directory(struct vol *vol)
+{
+    static char dname[] = "t012_dir";
+    char dpath[MAXPATHLEN + 1];
+    char logpath[MAXPATHLEN + 1];
+    char needle[64];
+    struct dir *saved_curdir = curdir;
+    struct dir *dir = NULL;
+    struct dir *now;
+    struct stat st;
+    cnid_t did = CNID_INVALID;
+    int cwd_fd = open(".", O_RDONLY);
+    int logfd = -1;
+    int ret = -1;
+    int rc;
+    snprintf(dpath, sizeof(dpath), "%s/%s", vol->v_path, dname);
+    /* absolute: movecwd() changes the working directory */
+    snprintf(logpath, sizeof(logpath), "%s/t012_log_XXXXXX", vol->v_path);
+
+    if (cwd_fd < 0 || mkdir(dpath, 0700) != 0 || stat(dpath, &st) != 0
+            || (did = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, dname,
+                               strlen(dname), 0)) == CNID_INVALID
+            || (dir = dirlookup(vol, did)) == NULL
+            || rmdir(dpath) != 0 || symlink("t012_nowhere", dpath) != 0
+            || (logfd = mkstemp(logpath)) < 0) {
+        goto out;
+    }
+
+    setuplog("default:info", logpath, true);
+    rc = movecwd(vol, dir);
+    setuplog("default:note", "/dev/stderr", true);
+    snprintf(needle, sizeof(needle), "/%s\" (did:%u) failed:", dname,
+             ntohl(did));
+
+    if (rc == -1 && file_contains(logpath, needle)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "t012: movecwd %d, log lacks: %s\n", rc, needle);
+        ret = 1;
+    }
+
+out:
+
+    if (logfd >= 0) {
+        close(logfd);
+        unlink(logpath);
+    }
+
+    /* the symlink, or the directory when the swap did not happen */
+    if (unlink(dpath) != 0) {
+        rmdir(dpath);
+    }
+
+    if ((now = dircache_search_by_name(vol, vol->v_root, dname,
+                                       strlen(dname))) != NULL) {
+        dir_remove(vol, now, 0);
+    }
+
+    if (did != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, did);
+    }
+
+    dir_free_invalid_q();
+
+    if (cwd_fd >= 0) {
+        if (fchdir(cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(cwd_fd);
+    }
+
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief movecwd() refuses a folder whose cached path goes through a
+ *        symlink to another folder
+ *
+ * t013_a/t013_b is cached, then t013_a moves to t013_a2 and a symlink takes
+ * its place, so the cached path of t013_b goes through the symlink.
+ */
+int test013_movecwd_refuses_symlinked_path(struct vol *vol)
+{
+    static char aname[] = "t013_a";
+    static char bname[] = "t013_b";
+    char apath[MAXPATHLEN + 1];
+    char a2path[MAXPATHLEN + 1];
+    char bpath[MAXPATHLEN + 1];
+    struct dir *saved_curdir = curdir;
+    struct dir *b = NULL;
+    struct dir *now;
+    struct stat st;
+    cnid_t adid = CNID_INVALID;
+    cnid_t bdid = CNID_INVALID;
+    int cwd_fd = open(".", O_RDONLY);
+    int ret = -1;
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, aname);
+    snprintf(a2path, sizeof(a2path), "%s2", apath);
+    snprintf(bpath, sizeof(bpath), "%s/%s", apath, bname);
+
+    if (cwd_fd < 0 || mkdir(apath, 0700) != 0 || mkdir(bpath, 0700) != 0
+            || stat(apath, &st) != 0
+            || (adid = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, aname,
+                                strlen(aname), 0)) == CNID_INVALID
+            || stat(bpath, &st) != 0
+            || (bdid = cnid_add(vol->v_cdb, &st, adid, bname,
+                                strlen(bname), 0)) == CNID_INVALID
+            || (b = dirlookup(vol, bdid)) == NULL
+            || rename(apath, a2path) != 0 || symlink("t013_a2", apath) != 0) {
+        goto out;
+    }
+
+    if (movecwd(vol, b) == -1 && afp_errno == AFPERR_BADTYPE) {
+        ret = 0;
+    }
+
+out:
+
+    /* the symlink, then the folders back in place */
+    if (unlink(apath) == 0) {
+        rename(a2path, apath);
+    }
+
+    rmdir(bpath);
+    rmdir(apath);
+
+    if (b != NULL) {
+        dir_remove(vol, b, 0);
+    }
+
+    if ((now = dircache_search_by_name(vol, vol->v_root, aname,
+                                       strlen(aname))) != NULL) {
+        dir_remove(vol, now, 0);
+    }
+
+    if (bdid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, bdid);
+    }
+
+    if (adid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, adid);
+    }
+
+    dir_free_invalid_q();
+
+    if (cwd_fd >= 0) {
+        if (fchdir(cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(cwd_fd);
+    }
+
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief movecwd() fails with ENOTDIR on a cached folder that became a
+ *        symlink to a file
+ */
+int test014_movecwd_symlink_to_file(struct vol *vol)
+{
+    static char dname[] = "t014_dir";
+    char dpath[MAXPATHLEN + 1];
+    char fpath[MAXPATHLEN + 1];
+    struct dir *saved_curdir = curdir;
+    struct dir *dir = NULL;
+    struct dir *now;
+    struct stat st;
+    cnid_t did = CNID_INVALID;
+    int cwd_fd = open(".", O_RDONLY);
+    int fd = -1;
+    int ret = -1;
+    snprintf(dpath, sizeof(dpath), "%s/%s", vol->v_path, dname);
+    snprintf(fpath, sizeof(fpath), "%s_file", dpath);
+
+    if (cwd_fd < 0 || mkdir(dpath, 0700) != 0 || stat(dpath, &st) != 0
+            || (did = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, dname,
+                               strlen(dname), 0)) == CNID_INVALID
+            || (dir = dirlookup(vol, did)) == NULL
+            || rmdir(dpath) != 0
+            || (fd = open(fpath, O_WRONLY | O_CREAT, 0600)) < 0
+            || symlink("t014_dir_file", dpath) != 0) {
+        goto out;
+    }
+
+    errno = 0;
+
+    if (movecwd(vol, dir) == -1 && errno == ENOTDIR) {
+        ret = 0;
+    }
+
+out:
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    unlink(fpath);
+
+    /* the symlink, or the folder when the swap did not happen */
+    if (unlink(dpath) != 0) {
+        rmdir(dpath);
+    }
+
+    if ((now = dircache_search_by_name(vol, vol->v_root, dname,
+                                       strlen(dname))) != NULL) {
+        dir_remove(vol, now, 0);
+    }
+
+    if (did != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, did);
+    }
+
+    dir_free_invalid_q();
+
+    if (cwd_fd >= 0) {
+        if (fchdir(cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(cwd_fd);
+    }
+
+    curdir = saved_curdir;
+    return ret;
 }

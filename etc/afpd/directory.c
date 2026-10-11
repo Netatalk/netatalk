@@ -1244,6 +1244,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
 
             /* Different inode = different file. AD is always stale. */
             dir->dcache_rlen = AD_RLEN_UNKNOWN;
+            dir->d_flags &= ~DIRF_CONVERTED;
             /* Refresh CNID from database */
             cnid_t new_cnid = CNID_INVALID;
             AFP_CNID_START("cnid_lookup");
@@ -1334,6 +1335,11 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                 ntohl(dir->d_did),
                 (long)dir->dcache_ctime, (long)args->st->st_ctime);
             dir->dcache_rlen = AD_RLEN_UNKNOWN;
+        }
+
+        if (ino_changed || ctime_changed) {
+            /* the cached rights were computed under the stat being replaced */
+            dir->d_rights_cache = 0xffffffff;
         }
 
         dir->dcache_ctime = args->st->st_ctime;
@@ -2082,7 +2088,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 static int ochdir_vol(const char *dir, const struct vol *vol)
 {
     struct stat st;
-    int ret = ochdir(dir, vol_syml_opt(vol));
+    int ret = ochdir(dir, vol_syml_opt(vol), vol->v_rootfd, vol->v_path);
 
     if (ret != 0) {
         return ret;
@@ -2139,8 +2145,6 @@ int movecwd(const struct vol *vol, struct dir *dir)
     LOG(log_debug, logtype_afpd, "movecwd(to: did: %u, \"%s\")",
         ntohl(dir->d_did), dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
 
-    ochdir_hint(vol->v_path, dir->dcache_ino);
-
     if ((ret = ochdir_vol(cfrombstr(dir->d_fullpath), vol)) != 0) {
         /* The CNID lookups and chdirs in the self-heal below overwrite errno,
          * while the reply must reflect why this chdir failed */
@@ -2170,7 +2174,6 @@ int movecwd(const struct vol *vol, struct dir *dir)
                 LOG(log_debug, logtype_afpd,
                     "movecwd: dirlookup_strict returned validated path \"%s\", attempting chdir",
                     dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
-                ochdir_hint(vol->v_path, dir->dcache_ino);
                 ret = ochdir_vol(cfrombstr(dir->d_fullpath), vol);
 
                 if (ret == 0) {
@@ -2182,7 +2185,9 @@ int movecwd(const struct vol *vol, struct dir *dir)
 
                 chdir_errno = errno;
                 LOG(log_info, logtype_afpd,
-                    "movecwd: CNID retry chdir failed: %s", strerror(errno));
+                    "movecwd: CNID retry chdir to \"%s\" (did:%u) failed: %s",
+                    dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)",
+                    ntohl(saved_did), strerror(chdir_errno));
             } else {
                 /* dirlookup_strict sets AFPERR_MISC when the backend could not
                  * answer; the errno switch below must not overrule it */
@@ -2195,9 +2200,6 @@ int movecwd(const struct vol *vol, struct dir *dir)
 
             /* Special movecwd requirement: sync process CWD with curdir pointer.
              * If curdir is at fallback, attempt to sync process CWD. */
-            if (curdir && curdir->d_fullpath && curdir != &rootParent)
-                ochdir_hint(vol->v_path, curdir->dcache_ino);
-
             if (curdir && curdir->d_fullpath && curdir != &rootParent &&
                     ochdir_vol(cfrombstr(curdir->d_fullpath), vol) == 0) {
                 LOG(log_debug, logtype_afpd,
@@ -2293,12 +2295,91 @@ int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
     return 0;
 }
 
-/* --------------------- */
-void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
+static struct offcnt_stats offcnt_stat;
+
+/*!
+ * @brief Copy the session's offspring count statistics
+ *
+ * @param[out] out  receives the counters as they stand
+ */
+void offcnt_stats_get(struct offcnt_stats *out)
 {
+    *out = offcnt_stat;
+}
+
+/*!
+ * @brief Bring a dircache entry's stat up to a stat taken from disk
+ *
+ * A ctime change on the same inode only: an inode change may make
+ * dir_modify() re-key or drop the entry, and the callers here go on serving
+ * from it; validation handles the inode.
+ *
+ * @param[in]     vol  the volume
+ * @param[in,out] dir  the entry
+ * @param[in]     st   the stat taken from disk for the entry's object
+ */
+void dir_stat_refresh(const struct vol *vol, struct dir *dir, struct stat *st)
+{
+    if (dir->dcache_ino != st->st_ino || dir->dcache_ctime == st->st_ctime) {
+        return;
+    }
+
+    dir_modify(vol, dir, &(struct dir_modify_args) {
+        .flags = DCMOD_STAT,
+        .st = st
+    });
+}
+
+/* --------------------- */
+void setdiroffcnt(const struct vol *vol, struct dir *dir, struct stat *st,
+                  uint32_t count)
+{
+    dir_stat_refresh(vol, dir, st);
     dir->d_offcnt = count;
     dir->d_ctime = st->st_ctime;
     dir->d_flags &= ~DIRF_CNID;
+}
+
+/*!
+ * @brief Serve a folder's offspring count, walking the folder when the
+ *        cached count is not current and recording why
+ *
+ * @param[in]     vol    the volume
+ * @param[in,out] dir    the folder's dircache entry, holding the count
+ * @param[in]     st     the stat the request holds for the folder
+ * @param[in]     upath  the folder's path relative to the working directory
+ * @returns the count capped at 0xffff, or 0 when the folder cannot be read
+ */
+static uint16_t offcnt_serve(const struct vol *vol, struct dir *dir,
+                             struct stat *st, char *upath)
+{
+    offcnt_stat.requests++;
+
+    if (diroffcnt(dir, st)) {
+        offcnt_stat.cached++;
+    } else {
+        int count = for_each_dirent(vol, upath, NULL, NULL);
+
+        if (count < 0) {
+            offcnt_stat.failed++;
+            return 0;
+        }
+
+        if (dir->d_ctime == 0) {
+            offcnt_stat.first++;
+        } else if (st->st_ctime < dir->d_ctime) {
+            offcnt_stat.older++;
+        } else if (dir->d_offcnt == (uint32_t)count) {
+            offcnt_stat.confirmed++;
+        } else {
+            offcnt_stat.changed++;
+        }
+
+        offcnt_stat.entries += count;
+        setdiroffcnt(vol, dir, st, count);
+    }
+
+    return (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
 }
 
 
@@ -2328,7 +2409,6 @@ int getdirparams(const AFPObj *obj,
     int         bit = 0, ad_available = 0;
     uint32_t           aint;
     uint16_t       ashort;
-    int                 ret;
     cnid_t              pdid;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
@@ -2470,15 +2550,8 @@ int getdirparams(const AFPObj *obj,
             break;
 
         case DIRPBIT_OFFCNT :
-            ashort = 0;
-
             /* this needs to handle current directory access rights */
-            if (diroffcnt(dir, st)) {
-                ashort = (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
-            } else if ((ret = for_each_dirent(vol, upath, NULL, NULL)) >= 0) {
-                setdiroffcnt(dir, st,  ret);
-                ashort = (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
-            }
+            ashort = offcnt_serve(vol, dir, st, upath);
 
             /* Account for virtual Icon\r file in volume root offspring count */
             if (dir->d_did == DIRDID_ROOT && virtual_icon_enabled(vol)
@@ -2981,7 +3054,9 @@ setdirparam_done:
             ad_setdate(&ad, AD_DATE_MODIFY, newdate);
         }
 
-        if (upath) {
+        /* the root's mtime is the volume's change mark: no client date
+         * reaches it */
+        if (upath && (dir == NULL || dir->d_did != DIRDID_ROOT)) {
             ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
             utime(upath, &ut);
         }

@@ -271,7 +271,7 @@ Set this environment variable to a specific value or string.
 | AFP_TICKLEVAL                   | Server tickle interval in seconds (`tickleval`, default: 30)           |
 | AFP_TIMEOUT                     | Idle timeout in tickle intervals (`timeout`, default: 4)               |
 | AFP_RECVFILE                    | Receive FPWrite data with splice() on Linux (`recvfile`, default: no)  |
-| AFP_SPLICE_SIZE                 | Bytes per splice() call (`splice size`, default: 1048576)              |
+| AFP_SPLICE_SIZE                 | Bytes per splice() call (`splice size`, 4096 to 8388608, default: 1048576) |
 | AFP_MIMIC_MODEL                 | Use a custom macOS (OSX) AFP icon; examples: *Tower*, *RackMount*      |
 | AFP_LEGACY_ICON                 | Use a custom Classic Mac OS AFP icon; examples: *daemon*, *sdcard*     |
 | AFP_LOGIN_MESSAGE               | A message to display when a user logs in (Classic Mac OS only)         |

@@ -1669,6 +1669,7 @@ static int check_acl_access(const AFPObj *obj,
         if (vol && dir && (requested_rights & DARWIN_ACE_DELETE)) {
             int i;
             uint32_t parent_rights = 0;
+            struct stat parent_st;
 
             if (curdir->d_did == DIRDID_ROOT_PARENT) {
                 /* use volume path */
@@ -1683,13 +1684,14 @@ static int check_acl_access(const AFPObj *obj,
             }
 
             LOG(log_debug, logtype_afpd, "parent: %s", cfrombstr(parent));
-            EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
+            EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &parent_st), AFPERR_MISC);
 #ifdef HAVE_NFSV4_ACLS
-            EC_ZERO_LOG(solaris_acl_rights(obj, cfrombstr(parent), &st, NULL,
-                                           &parent_rights));
+            EC_ZERO_LOG(solaris_acl_rights(obj, cfrombstr(parent), &parent_st,
+                                           NULL, &parent_rights));
 #endif
 #ifdef HAVE_POSIX_ACLS
-            EC_ZERO_LOG(posix_acl_rights(obj, path, &st, &parent_rights));
+            EC_ZERO_LOG(posix_acl_rights(obj, cfrombstr(parent), &parent_st,
+                                         &parent_rights));
 #endif
 
             if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD)) {
@@ -1705,11 +1707,10 @@ static int check_acl_access(const AFPObj *obj,
                 allowed_rights |= DARWIN_ACE_DELETE;
             }
 
-            /* Cache the calculated rights along with the filesystem ctime.
-             * This allows us to detect external permission changes by comparing
-             * cached ctime with filesystem ctime on subsequent accesses. */
+            /* the rights are served while dcache_ctime equals the disk ctime;
+             * the refresh keys the entry to st, the stat the rights hold for */
+            dir_stat_refresh(vol, curdir, &st);
             curdir->d_rights_cache = allowed_rights;
-            curdir->dcache_ctime = st.st_ctime;
             LOG(log_debug, logtype_afpd,
                 "check_acl_access: cached rights 0x%08x with ctime %ld",
                 allowed_rights, (long)st.st_ctime);
@@ -1988,7 +1989,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     /* Change group: certain changes might be allowed, so try it. FIXME: not implemented yet. */
-    if (bitmap & kFileSec_UUID) {
+    if (bitmap & kFileSec_GRPUUID) {
         LOG(log_debug, logtype_afpd,
             "afp_setacl(\"%s\"): ignoring change group request",
             fullpathname(s_path->u_name));
@@ -2004,6 +2005,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                               S_ISDIR(s_path->st.st_mode))) != AFP_OK) {
             LOG(log_error, logtype_afpd, "afp_setacl: error from remove_acl");
         } else {
+            setvoltime(obj, vol);
             /* Refresh stat cache after ACL removal */
             struct stat fresh_st;
 
@@ -2063,6 +2065,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
         if (ret == 0) {
             ret = AFP_OK;
+            setvoltime(obj, vol);
             /* Refresh stat cache after ACL modification */
             struct stat fresh_st;
 

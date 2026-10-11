@@ -20,7 +20,9 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
+#include <sys/statvfs.h>
 #include <time.h>
+#include <unistd.h>
 #include <utime.h>
 
 #include <bstrlib.h>
@@ -75,6 +77,7 @@
 
 /*! Time Machine cache for 60 seconds */
 #define TM_USED_CACHETIME 60
+#define QUOTA_CACHETIME 10
 #define VOLPASSLEN  8
 
 extern int afprun(char *cmd, int *outfd);
@@ -192,7 +195,7 @@ static int get_tm_used(struct vol *vol)
     const struct dirent *entry;
     const char *p;
     long int links;
-    time_t now = time(NULL);
+    time_t now = coarse_time();
 
     if (vol->v_tm_cachetime
             && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
@@ -240,6 +243,8 @@ static int get_tm_used(struct vol *vol)
     }
 
     vol->v_tm_used = used;
+    /* the scan counts what was appended before it */
+    vol->v_appended = 0;
 EC_CLEANUP:
 
     if (infoplist) {
@@ -259,6 +264,37 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+#ifndef NO_QUOTA_SUPPORT
+/*!
+ * @brief Fetch the user's quota into vol->v_qfree and vol->v_qtotal
+ *
+ * Reuses an answer that arrived within the last QUOTA_CACHETIME seconds.
+ *
+ * @param[in]     obj    session
+ * @param[in,out] vol    volume
+ * @param[in]     bsize  filesystem block size
+ *
+ * @returns AFP_OK, or the error of the fetch
+ */
+static int getvolquota(const AFPObj *obj, struct vol *vol, uint32_t bsize)
+{
+    time_t age = coarse_time() - vol->v_qtime;
+    int ret;
+
+    if (age >= 0 && age < QUOTA_CACHETIME) {
+        return AFP_OK;
+    }
+
+    ret = uquota_getvolspace(obj, vol, &vol->v_qfree, &vol->v_qtotal, bsize);
+
+    if (ret == AFP_OK) {
+        vol->v_qtime = coarse_time();
+    }
+
+    return ret;
+}
+#endif /* NO_QUOTA_SUPPORT */
+
 static int getvolspace(const AFPObj *obj, struct vol *vol,
                        uint32_t *bfree, uint32_t *btotal,
                        VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
@@ -266,7 +302,6 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
     int         rc;
     uint32_t   maxsize;
 #ifndef NO_QUOTA_SUPPORT
-    VolSpace    qfree, qtotal;
     int         spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 #endif
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
@@ -281,10 +316,10 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
 #ifndef NO_QUOTA_SUPPORT
 
     if (spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_UQUOTA) {
-        if (uquota_getvolspace(obj, vol, &qfree, &qtotal, *bsize) == AFP_OK) {
+        if (getvolquota(obj, vol, *bsize) == AFP_OK) {
             vol->v_flags = (~AFPVOL_GVSMASK & vol->v_flags) | AFPVOL_UQUOTA;
-            *xbfree = MIN(*xbfree, qfree);
-            *xbtotal = MIN(*xbtotal, qtotal);
+            *xbfree = MIN(*xbfree, vol->v_qfree);
+            *xbtotal = MIN(*xbtotal, vol->v_qtotal);
             goto getvolspace_done;
         }
     }
@@ -334,6 +369,29 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
     ad_setdate(adp, AD_DATE_CREATE | AD_DATE_UNIX, date);
 }
 
+/*!
+ * @brief Is the volume root on a read-only mount or subvolume?
+ *
+ * Writes nothing: the root's mtime is the volume's change mark. access()
+ * can fail the caller's rights before it sees a read-only mount, so
+ * statvfs() answers for a caller without them.
+ *
+ * @param[in] vol  volume
+ *
+ * @returns true for a read-only mount or subvolume
+ */
+static bool root_readonly(const struct vol *vol)
+{
+    struct statvfs sv;
+
+    if (access(vol->v_path, W_OK) == 0) {
+        return false;
+    }
+
+    return errno == EROFS
+           || (statvfs(vol->v_path, &sv) == 0 && (sv.f_flag & ST_RDONLY));
+}
+
 /* ----------------------- */
 static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
                         struct stat *st, char *buf, size_t *buflen)
@@ -341,6 +399,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     struct adouble  ad;
     int bit = 0, isad = 1;
     uint32_t aint;
+    size_t namelen;
     uint16_t ashort;
     uint32_t bfree = 0, btotal = 0, bsize = 0;
     /* extended bytes */
@@ -421,8 +480,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
              * NOTE: we don't actually set the read-only flag unless
              *       it's passed in that way as it's possible to mount
              *       a read-write filesystem under a read-only one. */
-            if ((vol->v_flags & AFPVOL_RO) ||
-                    ((utime(vol->v_path, NULL) < 0) && (errno == EROFS))) {
+            if ((vol->v_flags & AFPVOL_RO) || root_readonly(vol)) {
                 ashort |= VOLPBIT_ATTR_RO;
             }
 
@@ -564,16 +622,20 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
         ashort = htons(data - buf);
         memcpy(nameoff, &ashort, sizeof(ashort));
         /* name is always in mac charset */
-        aint = ucs2_to_charset(vol->v_maccharset, vol->v_macname, data + 1,
-                               AFPVOL_MACNAMELEN + 1);
+        namelen = ucs2_to_charset(obj->options.maccharset, vol->v_macname,
+                                  data + 1, AFPVOL_MACNAMELEN + 1);
 
-        if (aint <= 0) {
+        if (namelen == 0 || namelen == (size_t) -1) {
+            if (isad) {
+                ad_close(&ad, ADFLAGS_HF);
+            }
+
             *buflen = 0;
             return AFPERR_MISC;
         }
 
-        *data++ = aint;
-        data += aint;
+        *data++ = namelen;
+        data += namelen;
     }
 
     if (isad) {
@@ -621,7 +683,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
     struct stat     st;
     struct vol      *volume;
     char    *data;
-    char        *namebuf;
+    char        name[AFPVOL_U8MNAMELEN + 1];
     int         vcnt;
     size_t      len;
     uint32_t    aint;
@@ -631,8 +693,6 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
     for (vcnt = 0, volume = getvolumes(); volume
             && vcnt < 255; volume = volume->v_next) {
         if (!(volume->v_flags & AFPVOL_NOSTAT)) {
-            struct maccess ma;
-
             if (stat(volume->v_path, &st) < 0) {
                 LOG(log_info, logtype_afpd, "afp_getsrvrparms(%s): stat: %s",
                     volume->v_path, strerror(errno));
@@ -645,19 +705,18 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
                 continue;
             }
 
-            accessmode(obj, volume, volume->v_path, &ma, NULL, &st);
-
-            if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
+            if (!accessmode_rx(obj, volume, volume->v_path, &st)) {
                 /* no r-x access */
                 continue;
             }
         }
 
         if (utf8_encoding(obj)) {
-            len = ucs2_to_charset_allocate(CH_UTF8_MAC, &namebuf, volume->v_u8mname);
+            len = ucs2_to_charset(CH_UTF8_MAC, volume->v_u8mname, name,
+                                  sizeof(name));
         } else {
-            len = ucs2_to_charset_allocate(obj->options.maccharset, &namebuf,
-                                           volume->v_macname);
+            len = ucs2_to_charset(obj->options.maccharset, volume->v_macname,
+                                  name, sizeof(name));
         }
 
         if (len == (size_t) -1) {
@@ -685,9 +744,8 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
         /* UNIX PRIVS BIT ..., OSX doesn't seem to use it, so we don't either */
         *data++ |= 0;
         *data++ = len;
-        memcpy(data, namebuf, len);
+        memcpy(data, name, len);
         data += len;
-        free(namebuf);
         vcnt++;
     }
 
@@ -818,7 +876,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     uint16_t   bitmap;
     char        *vol_uname;
     char        *vol_mname = NULL;
-    char        *volname_tmp;
     ibuf += 2;
     memcpy(&bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs(bitmap);
@@ -832,10 +889,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     len = (unsigned char) * ibuf++;
     volname = obj->oldtmp;
 
-    if ((volname_tmp = strchr(volname, '+')) != NULL) {
-        volname = volname_tmp + 1;
-    }
-
     if (utf8_encoding(obj)) {
         namelen = convert_string(CH_UTF8_MAC, CH_UCS2, ibuf, len, volname,
                                  sizeof(obj->oldtmp));
@@ -844,7 +897,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                                  sizeof(obj->oldtmp));
     }
 
-    if (namelen <= 0) {
+    if (namelen == 0 || namelen == (size_t) -1) {
         return AFPERR_PARAM;
     }
 
@@ -945,6 +998,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     volume->v_root = dir;
     curdir = dir;
+    volume->v_rootfd = vol_syml_opt(volume) ? ochdir_root(volume->v_path) : -1;
 
     if (volume_openDB(obj, volume) < 0) {
         LOG(log_error, logtype_afpd,
@@ -1062,6 +1116,11 @@ openvol_err:
         volume->v_root = NULL;
     }
 
+    if (volume->v_rootfd >= 0) {
+        close(volume->v_rootfd);
+        volume->v_rootfd = -1;
+    }
+
     volume->v_flags &= ~AFPVOL_OPEN;
 
     if (volume->v_cdb != NULL) {
@@ -1155,6 +1214,11 @@ void closevol(const AFPObj *obj, struct vol *vol)
     dircache_purge_vol(vol);
     dir_free(vol->v_root);
     vol->v_root = NULL;
+
+    if (vol->v_rootfd >= 0) {
+        close(vol->v_rootfd);
+        vol->v_rootfd = -1;
+    }
 
     if (vol->v_cdb != NULL) {
         cnid_close(vol->v_cdb);
@@ -1258,27 +1322,28 @@ int  pollvoltime(AFPObj *obj)
 /* ------------------------- */
 void setvoltime(AFPObj *obj, struct vol *vol)
 {
-    struct timeval  tv;
+    time_t now = coarse_time();
 
     if (obj->proto == AFPPROTO_DSI) {
         obj->handle = obj->dsi;
     }
 
-    if (gettimeofday(&tv, NULL) < 0) {
-        LOG(log_error, logtype_afpd, "setvoltime(%s): gettimeofday: %s", vol->v_path,
-            strerror(errno));
-        return;
-    }
+    /* Once the root's mtime holds this second, pollvoltime() cannot tell
+     * later changes in it apart; a stamp that trails now keeps the write
+     * due, one that leads it (another clock's) does not */
+    if (vol->v_root_marked != now) {
+        struct stat st;
+        vol->v_root_marked = now;
 
-    if (utime(vol->v_path, NULL) < 0) {
-        /* write of time failed ... probably a read only filesys,
-         * where no other users can interfere, so there's no issue here
-         */
+        if (utime(vol->v_path, NULL) == 0 && stat(vol->v_path, &st) == 0
+                && st.st_mtime < now) {
+            vol->v_root_marked = st.st_mtime;
+        }
     }
 
     /* a little granularity */
-    if (vol->v_mtime < tv.tv_sec) {
-        vol->v_mtime = tv.tv_sec;
+    if (vol->v_mtime < now) {
+        vol->v_mtime = now;
 
         /* or finder doesn't update free space
          * AFP 3.2 and above clients seem to be ok without so many notification
@@ -1310,7 +1375,7 @@ int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 }
 
 /* ------------------------- */
-int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_setvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                      char *rbuf _U_,  size_t *rbuflen)
 {
     struct adouble ad;
@@ -1350,7 +1415,11 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     memcpy(&aint, ibuf, sizeof(aint));
     ad_setdate(&ad, AD_DATE_BACKUP, aint);
-    ad_flush(&ad);
+
+    if (ad_flush(&ad) == 0) {
+        setvoltime(obj, vol);
+    }
+
     ad_close(&ad, ADFLAGS_HF);
     return AFP_OK;
 }

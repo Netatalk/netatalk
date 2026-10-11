@@ -268,12 +268,6 @@ endif
 
 if 'developer' in docs_options
     if doxygen.found()
-        doxygen_version = run_command(doxygen, '--version', check: true).stdout().strip()
-        if not doxygen_version.version_compare('>=1.17.0')
-            error(
-                'doxygen >=1.17.0 is required to build developer documentation',
-            )
-        endif
         build_dev_docs = true
     else
         warning('doxygen is required to build developer documentation')
@@ -2028,12 +2022,12 @@ if enable_sendfile
         endif
     elif host_os == 'sunos'
         cdata.set('SENDFILE_FLAVOR_SOLARIS', 1)
-        have_sendfile = cc.has_function('sendfile', dependencies: sendfile_deps)
+        have_sendfile = cc.has_function(
+            'sendfilev',
+            dependencies: sendfile_deps,
+        )
         if have_sendfile
             cdata.set('WITH_SENDFILE', 1)
-        endif
-        if cc.has_function('sendfilev', dependencies: sendfile_deps)
-            cdata.set('HAVE_SENDFILEV', 1)
         endif
     elif host_os == 'freebsd'
         cdata.set('SENDFILE_FLAVOR_FREEBSD', 1)
@@ -2048,9 +2042,7 @@ endif
 # Check for recvfile
 #
 
-have_recvfile = host_os == 'linux' and cc.has_function('splice')
-
-if have_recvfile
+if host_os == 'linux' and cc.has_function('splice')
     cdata.set('WITH_RECVFILE', 1)
 endif
 
@@ -2594,7 +2586,6 @@ if have_quota
     }
 endif
 summary_info += {
-    '  Recvfile splice': have_recvfile,
     '  Sendfile syscall': have_sendfile,
     '  Spotlight search': have_spotlight,
 }

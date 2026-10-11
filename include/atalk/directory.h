@@ -54,6 +54,8 @@
 #define DIRF_CNID	   (1<<5) /*!< renumerate id */
 #define DIRF_ARC_GHOST (1<<6) /*!< ARC ghost entry (in B1/B2) */
 #define DIRF_INDEXED   (1<<7) /*!< linked in the dircache hash index */
+/*! convert appledouble: no further conversion attempt for this folder */
+#define DIRF_CONVERTED (1<<8)
 
 /* dcache_rlen states. AD_RLEN_NO_RFORK is the floor of the positive
  * range, not a sentinel: test >= 0 for "metadata cached". */

@@ -2555,6 +2555,16 @@ void log_dircache_stat(void)
         "dircache statistics (AD): (user: %s) hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
         username, ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
         ad_hit_ratio);
+    struct offcnt_stats offcnt;
+    offcnt_stats_get(&offcnt);
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (offcnt): (user: %s) requests: %llu, "
+        "cached: %llu, walked: %llu (first: %llu, older: %llu, "
+        "confirmed: %llu, changed: %llu), failed: %llu, entries: %llu",
+        username, offcnt.requests, offcnt.cached,
+        offcnt.first + offcnt.older + offcnt.confirmed + offcnt.changed,
+        offcnt.first, offcnt.older, offcnt.confirmed, offcnt.changed,
+        offcnt.failed, offcnt.entries);
 
     /* Tier 2: Resource Fork data cache statistics — only when enabled */
     if (rfork_cache_budget > 0) {

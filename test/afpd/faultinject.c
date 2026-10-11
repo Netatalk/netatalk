@@ -100,14 +100,27 @@ int faultinject_open_works(const char *scratch_path)
 
 /* ---- Role 2: LD_PRELOAD interposer (libfaultinject.so) ---- */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <dlfcn.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
-#include <stdint.h>
+#include <sys/socket.h>
+#include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#ifdef __linux__
+#include <sys/sendfile.h>
+#endif
+
+#ifdef HAVE_POSIX_ACLS
+#include <sys/acl.h>
+#endif /* HAVE_POSIX_ACLS */
 
 /* `fi` is defined in the afpdtest executable and exported dynamically; this is
  * the same object the test code arms.  A weak fallback keeps the preload
@@ -254,16 +267,48 @@ int close(int fd)
     return real_close(fd);
 }
 
-/* fcntl()'s third argument is absent, an int or a pointer by command; it is
- * read and forwarded as one pointer-sized slot, as libc's own fcntl() reads
- * it, so every command keeps its argument. */
+/* fcntl()'s third argument is command-dependent: absent (F_GETFD/F_GETFL), an
+ * int (F_SETFD/F_SETFL/F_DUPFD), or a pointer (F_SETLK/F_GETLK).  The vararg
+ * MUST be read and forwarded with the type the caller passed: reading an int
+ * arg as void* (or vice versa) is undefined behaviour, and on LP64 reads a
+ * 64-bit slot for a 32-bit value.  Since interposition is global we forward
+ * every fcntl() correctly, dispatching on the command's arg class -- not just
+ * the lock commands we arm. */
 int fcntl(int fd, int cmd, ...)
 {
+    int int_arg = 0;
+    void *ptr_arg = NULL;
+    /* Commands taking a pointer third arg: struct flock *, or the fshare_t *
+     * of a Solaris share reservation. */
+    int has_ptr = (cmd == F_SETLK || cmd == F_SETLKW || cmd == F_GETLK
+#ifdef F_OFD_SETLK
+                   || cmd == F_OFD_SETLK || cmd == F_OFD_SETLKW
+                   || cmd == F_OFD_GETLK
+#endif
+#ifdef F_SHARE
+                   || cmd == F_SHARE || cmd == F_UNSHARE
+#endif
+                  );
+    /* Commands taking an int third arg. */
+    int has_int = (cmd == F_SETFD || cmd == F_SETFL || cmd == F_DUPFD
+#ifdef F_DUPFD_CLOEXEC
+                   || cmd == F_DUPFD_CLOEXEC
+#endif
+#ifdef F_SETPIPE_SZ
+                   || cmd == F_SETPIPE_SZ
+#endif
+                  );
     va_list ap;
-    void *arg;
-    va_start(ap, cmd);
-    arg = va_arg(ap, void *);
-    va_end(ap);
+
+    if (has_ptr) {
+        va_start(ap, cmd);
+        ptr_arg = va_arg(ap, void *);
+        va_end(ap);
+    } else if (has_int) {
+        va_start(ap, cmd);
+        int_arg = va_arg(ap, int);
+        va_end(ap);
+    }
 
     if (!real_fcntl) {
         real_fcntl = (fcntl_fn)dlsym(RTLD_NEXT, "fcntl");
@@ -272,9 +317,9 @@ int fcntl(int fd, int cmd, ...)
     /* Record lock-fcntl calls so a test can assert HOW a probe locked (count,
      * range, type) — e.g. that a range probe never issues l_len == 0 (which would
      * sweep the share-mode band).  Only while watching, to stay inert otherwise. */
-    if (fi.fcntl_watch && arg != NULL
+    if (fi.fcntl_watch && has_ptr && ptr_arg != NULL
             && (cmd == F_GETLK || cmd == F_SETLK || cmd == F_SETLKW)) {
-        const struct flock *flk = arg;
+        const struct flock *flk = ptr_arg;
 
         if (cmd == F_GETLK) {
             fi.getlk_calls++;
@@ -295,13 +340,22 @@ int fcntl(int fd, int cmd, ...)
 
     /* the kernel's refusal above fs.pipe-max-size */
     if (cmd == F_SETPIPE_SZ && fi.pipe_size_limit > 0
-            && (int)(intptr_t)arg > fi.pipe_size_limit) {
+            && int_arg > fi.pipe_size_limit) {
         errno = EPERM;
         return -1;
     }
 
 #endif
-    return real_fcntl(fd, cmd, arg);
+
+    if (has_ptr) {
+        return real_fcntl(fd, cmd, ptr_arg);
+    }
+
+    if (has_int) {
+        return real_fcntl(fd, cmd, int_arg);
+    }
+
+    return real_fcntl(fd, cmd);
 }
 
 int fchdir(int fd)
@@ -351,11 +405,14 @@ typedef ssize_t (*splice_fn)(int, loff_t *, int, loff_t *, size_t,
 static splice_fn real_splice;
 
 /*!
- * @brief splice() interposer: fails armed calls
+ * @brief splice() interposer: fails armed calls; while watching, records the
+ *        capacity of the pipe a socket-side call filled
  */
 ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out,
                size_t len, unsigned int flags)
 {
+    ssize_t ret;
+
     if (!real_splice) {
         real_splice = (splice_fn)dlsym(RTLD_NEXT, "splice");
     }
@@ -374,8 +431,290 @@ ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out,
         return -1;
     }
 
-    return real_splice(fd_in, off_in, fd_out, off_out, len, flags);
+    ret = real_splice(fd_in, off_in, fd_out, off_out, len, flags);
+
+    if (fi.splice_watch) {
+        int saved_errno = errno;
+        fi.splice_pipe_size = fcntl(fd_out, F_GETPIPE_SZ);
+        errno = saved_errno;
+    }
+
+    return ret;
 }
 #endif /* __linux__ */
+
+#if defined(__linux__) || defined(__FreeBSD__)
+#ifdef __linux__
+typedef ssize_t (*sendfile_fn)(int, int, off_t *, size_t);
+#else
+typedef int (*sendfile_fn)(int, int, off_t, size_t, struct sf_hdtr *, off_t *,
+                           int);
+#endif
+static sendfile_fn real_sendfile;
+
+/*!
+ * @brief Count an armed sendfile() call; does it fail?
+ *
+ * Under 64-bit offsets glibc names the definition below sendfile64, and its
+ * plain sendfile takes a 32-bit offset on a 32-bit build, so the real call
+ * is looked up as sendfile64 first.
+ */
+static int sendfile_should_fire(void)
+{
+    if (!real_sendfile) {
+        real_sendfile = (sendfile_fn)dlsym(RTLD_NEXT, "sendfile64");
+    }
+
+    if (!real_sendfile) {
+        real_sendfile = (sendfile_fn)dlsym(RTLD_NEXT, "sendfile");
+    }
+
+    if (fi.sendfile_armed) {
+        fi.sendfile_calls++;
+    }
+
+    return fault_should_fire(fi.sendfile_armed, &fi.sendfile_fail_after,
+                             fi.sendfile_errno);
+}
+#endif
+
+#ifdef __linux__
+typedef ssize_t (*send_fn)(int, const void *, size_t, int);
+static send_fn real_send;
+
+/*! @brief send() interposer: fails armed calls */
+ssize_t send(int fd, const void *buf, size_t len, int flags)
+{
+    if (!real_send) {
+        real_send = (send_fn)dlsym(RTLD_NEXT, "send");
+    }
+
+    if (fault_should_fire(fi.send_armed, &fi.send_fail_after, fi.send_errno)) {
+        return -1;
+    }
+
+    return real_send(fd, buf, len, flags);
+}
+
+/*! @brief sendfile() interposer: counts and fails armed calls */
+ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count)
+{
+    if (sendfile_should_fire()) {
+        return -1;
+    }
+
+    return real_sendfile(out_fd, in_fd, offset, count);
+}
+#elif defined(__FreeBSD__)
+/*! @brief sendfile() interposer: counts and fails armed calls, sending none */
+int sendfile(int fd, int s, off_t offset, size_t nbytes, struct sf_hdtr *hdtr,
+             off_t *sbytes, int flags)
+{
+    if (sendfile_should_fire()) {
+        if (sbytes != NULL) {
+            *sbytes = 0;
+        }
+
+        return -1;
+    }
+
+    return real_sendfile(fd, s, offset, nbytes, hdtr, sbytes, flags);
+}
+#endif
+
+typedef int (*fstat_fn)(int, void *);
+static fstat_fn real_fstat;
+static fstat_fn real_fstat64;
+
+/* a large-file glibc build calls fstat64, other builds fstat; each forwards
+ * to its own name, so the caller's struct stat layout is kept */
+int fi_fstat(int fd, void *st) __asm__("fstat");
+int fi_fstat64(int fd, void *st) __asm__("fstat64");
+
+/*! @brief Count an fstat() of the watched descriptor */
+static void fstat_watched(int fd)
+{
+    if (fi.fstat_watch && fd == fi.fstat_fd) {
+        fi.fstat_calls++;
+    }
+}
+
+/*! @brief fstat() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat(int fd, void *st)
+{
+    if (!real_fstat) {
+        real_fstat = (fstat_fn)dlsym(RTLD_NEXT, "fstat");
+    }
+
+    fstat_watched(fd);
+    return real_fstat(fd, st);
+}
+
+/*! @brief fstat64() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat64(int fd, void *st)
+{
+    if (!real_fstat64) {
+        real_fstat64 = (fstat_fn)dlsym(RTLD_NEXT, "fstat64");
+    }
+
+    fstat_watched(fd);
+    return real_fstat64(fd, st);
+}
+
+typedef time_t (*time_fn)(time_t *);
+static time_fn real_time;
+
+/* pinned to the libc name: a header that renames time() (NetBSD's
+ * __time50) must not rename the definition */
+time_t fi_time(time_t *t) __asm__("time");
+
+/*! @brief time() interposer: counts calls while fi.time_watch is set */
+time_t fi_time(time_t *t)
+{
+    if (!real_time) {
+        real_time = (time_fn)dlsym(RTLD_NEXT, "time");
+    }
+
+    if (fi.time_watch) {
+        fi.time_calls++;
+    }
+
+    return real_time(t);
+}
+
+typedef int (*statvfs_fn)(const char *, struct statvfs *);
+static statvfs_fn real_statvfs;
+
+/*!
+ * @brief statvfs() interposer: reports the filesystem read-only while armed
+ *
+ * The header renames this definition where libc versions the call (glibc
+ * statvfs64, NetBSD __statvfs90); the real function with the same struct
+ * carries that name too.
+ */
+int statvfs(const char *path, struct statvfs *buf)
+{
+    int ret;
+
+    if (!real_statvfs) {
+        Dl_info self;
+        const char *name = "statvfs";
+
+        if (dladdr((void *)statvfs, &self) && self.dli_sname) {
+            name = self.dli_sname;
+        }
+
+        real_statvfs = (statvfs_fn)dlsym(RTLD_NEXT, name);
+    }
+
+    ret = real_statvfs(path, buf);
+
+    if (ret == 0 && fi.statvfs_rdonly) {
+        buf->f_flag |= ST_RDONLY;
+    }
+
+    return ret;
+}
+
+typedef int (*access_fn)(const char *, int);
+static access_fn real_access;
+
+/*!
+ * @brief access() interposer: fails an armed call with the armed errno
+ */
+int access(const char *path, int mode)
+{
+    if (!real_access) {
+        real_access = (access_fn)dlsym(RTLD_NEXT, "access");
+    }
+
+    if (fault_should_fire(fi.access_armed, &fi.access_fail_after,
+                          fi.access_errno)) {
+        return -1;
+    }
+
+    return real_access(path, mode);
+}
+
+/* No <utime.h>: NetBSD renames utime() there, and a renamed definition
+ * would take the 64-bit call yet forward it to the old one */
+struct utimbuf;
+typedef int (*utime_fn)(const char *, const struct utimbuf *);
+static utime_fn real_utime;
+
+/*!
+ * @brief utime() interposer: counts watched calls
+ */
+int utime(const char *path, const struct utimbuf *times)
+{
+    if (!real_utime) {
+        real_utime = (utime_fn)dlsym(RTLD_NEXT, "utime");
+    }
+
+    if (fi.utime_watch) {
+        fi.utime_calls++;
+    }
+
+    return real_utime(path, times);
+}
+
+#ifdef HAVE_POSIX_ACLS
+typedef acl_t (*acl_get_file_fn)(const char *, acl_type_t);
+static acl_get_file_fn real_acl_get_file;
+
+/*!
+ * @brief acl_get_file() interposer: counts watched calls
+ */
+acl_t acl_get_file(const char *path, acl_type_t type)
+{
+    if (!real_acl_get_file) {
+        real_acl_get_file = (acl_get_file_fn)dlsym(RTLD_NEXT, "acl_get_file");
+    }
+
+    if (fi.acl_get_file_watch) {
+        fi.acl_get_file_calls++;
+    }
+
+    return real_acl_get_file(path, type);
+}
+#endif /* HAVE_POSIX_ACLS */
+
+typedef int (*unlink_fn)(const char *);
+static unlink_fn real_unlink;
+
+/*!
+ * @brief unlink() interposer: counts watched calls
+ */
+int unlink(const char *path)
+{
+    if (!real_unlink) {
+        real_unlink = (unlink_fn)dlsym(RTLD_NEXT, "unlink");
+    }
+
+    if (fi.unlink_watch) {
+        fi.unlink_calls++;
+    }
+
+    return real_unlink(path);
+}
+
+typedef char *(*getcwd_fn)(char *, size_t);
+static getcwd_fn real_getcwd;
+
+/*!
+ * @brief getcwd() interposer: counts watched calls
+ */
+char *getcwd(char *buf, size_t size)
+{
+    if (!real_getcwd) {
+        real_getcwd = (getcwd_fn)dlsym(RTLD_NEXT, "getcwd");
+    }
+
+    if (fi.getcwd_watch) {
+        fi.getcwd_calls++;
+    }
+
+    return real_getcwd(buf, size);
+}
 
 #endif /* FAULTINJECT_PRELOAD */

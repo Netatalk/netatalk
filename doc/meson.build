@@ -88,11 +88,7 @@ endif
 
 if build_dev_docs and doxygen.found()
     doxyfile_conf = configuration_data()
-    project_name = meson.project_name()
-    doxyfile_conf.set(
-        'PACKAGE',
-        project_name.substring(0, 1).to_upper() + project_name.substring(1),
-    )
+    doxyfile_conf.set('PACKAGE', meson.project_name())
     doxyfile_conf.set('VERSION', meson.project_version())
     doxyfile_conf.set('ABS_TOP_SRCDIR', meson.project_source_root())
     doxyfile_conf.set('OUTPUT_DIR', meson.current_build_dir())

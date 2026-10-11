@@ -205,6 +205,13 @@ void dsi_free(DSI *dsi)
 {
     close(dsi->serversock);
     dsi->serversock = -1;
+
+    if (dsi->splice_pipe[0] != -1) {
+        close(dsi->splice_pipe[0]);
+        close(dsi->splice_pipe[1]);
+        dsi->splice_pipe[0] = dsi->splice_pipe[1] = -1;
+    }
+
     free(dsi->commands);
     dsi->commands = NULL;
     free(dsi->buffer);

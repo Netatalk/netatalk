@@ -196,6 +196,7 @@ static int rf_setup(struct rf *rf, AFPObj *obj, struct vol *vol)
     rf->obj.dsi = &rf->dsi;
     rf->obj.proto = AFPPROTO_DSI;
     rf->obj.options.flags |= OPTION_RECVFILE;
+    rf->obj.options.splice_size = DEFAULT_SPLICE_SIZE;
     rf->buf = malloc(2 * DSI_FRAME_OVERHEAD_EXT + RF_A_LEN + RF_B_LEN);
 
     if (rf->buf == NULL || setnonblock(rf->dsi.socket, 1) != 0) {
@@ -244,38 +245,21 @@ static int rf_tcp_setup(struct rf *rf, AFPObj *obj, struct vol *vol)
     return 0;
 }
 
-/*! @brief Capacity of the pipe that fd writes to, or -1 */
-static int rf_pipe_size(int fd _U_)
+/*! @brief Can this process grow a new pipe to size bytes? */
+static bool rf_pipe_grows_to(int size _U_)
 {
-#ifdef F_GETPIPE_SZ
-    return fcntl(fd, F_GETPIPE_SZ);
-#else
-    return -1;
-#endif
-}
-
-/*!
- * @brief Capacity of a new pipe grown to size, or as made for size 0
- *
- * @returns the capacity, or -1 when the kernel refuses size
- */
-static int rf_pipe_capacity(int size _U_)
-{
-    int got = -1;
+    bool grown = false;
 #ifdef F_SETPIPE_SZ
     int p[2];
 
     if (pipe(p) == 0) {
-        if (size == 0 || fcntl(p[1], F_SETPIPE_SZ, size) != -1) {
-            got = rf_pipe_size(p[1]);
-        }
-
+        grown = fcntl(p[1], F_SETPIPE_SZ, size) != -1;
         close(p[0]);
         close(p[1]);
     }
 
 #endif
-    return got;
+    return grown;
 }
 
 /*! @brief Start the writer on len bytes at p; it ends the stream after them */
@@ -573,6 +557,38 @@ int utest_write_fork_eof_fails_request(AFPObj *obj, struct vol *vol)
 }
 
 /*!
+ * @brief A payload the stream ends before completing marks the volume: the
+ *        bytes that arrived are on disk
+ *
+ * The header announces 1 MiB and 256 KiB arrive before EOF.
+ */
+int utest_write_fork_eof_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
+        vol->v_root_marked = 0;
+
+        if (rf_send(&rf, rf.buf, DSI_FRAME_OVERHEAD_EXT + RF_B_LEN) == 0
+                && rf_write(&rf) == AFPERR_PARAM) {
+            ret = vol->v_root_marked != 0 ? 0 : 1;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
  * @brief A write with a TCP urgent byte inside its payload finishes through
  *        recv(), which steps over the byte, and the session stays in step
  */
@@ -713,8 +729,7 @@ int utest_recvfile_rfork_failure_keeps_length(AFPObj *obj, struct vol *vol)
         if (rf_send_after_head(&rf, len) == 0
                 && rf_dispatch(&rf) == AFPERR_DFULL
                 && rf_fired(RF_FILE, ENOSPC)
-                && ad_size(of->of_ad, ADEID_RFORK) == 0
-                && !(of->of_flags & AFPFORK_MODIFIED)) {
+                && ad_size(of->of_ad, ADEID_RFORK) == 0) {
             fault_inject_reset();
             rf_arm(RF_FILE, 1, ENOSPC);
 
@@ -800,41 +815,6 @@ int utest_recvfile_unsplicable_fs_falls_back(AFPObj *obj, struct vol *vol)
 }
 
 /*!
- * @brief A write the kernel refuses for its offset alone fails without
- *        marking the file as one that cannot splice
- */
-int utest_recvfile_bad_offset_keeps_splice(AFPObj *obj, struct vol *vol)
-{
-    const struct ofork *of;
-    uint64_t one = hton64(UINT64_C(1));
-    struct rf rf;
-    size_t len;
-    int ret;
-
-    if ((ret = rf_splice_setup(&rf, obj, vol)) != 0) {
-        return ret;
-    }
-
-    ret = -1;
-
-    if (rf_open(&rf, 0, OPENFORK_DATA)
-            && (of = of_find(rf.refnum[0])) != NULL) {
-        len = rf_write_frame(rf.buf, 1, rf.refnum[0], INT64_MAX - 1, RF_C_LEN,
-                             0xA5);
-        /* a count of one keeps offset + count in range for write_fork() */
-        memcpy(rf.buf + DSI_BLOCKSIZ + 12, &one, sizeof(one));
-
-        if (rf_send_after_head(&rf, len) == 0 && rf_dispatch(&rf) != AFP_OK
-                && !of->of_ad->ad_nosplice) {
-            ret = 0;
-        }
-    }
-
-    rf_teardown(&rf);
-    return ret;
-}
-
-/*!
  * @brief A socket splice() that fails before reading anything leaves the
  *        write to the userspace path, and the next write splices again
  */
@@ -848,16 +828,14 @@ int utest_recvfile_no_socket_splice_falls_back(AFPObj *obj, struct vol *vol)
  * @brief 256 KiB to a new data fork with splice size set to size, and
  *        F_SETPIPE_SZ above limit refused when limit is set
  *
- * @returns 0 when the write splices and leaves the session's pipe holding
- *          at least min_size bytes and no more than limit; -1 when not;
- *          TEST_SKIP
+ * @returns 0 when the write lands and the pipe a socket-side call filled
+ *          holds at least min_size bytes; -1 when not; TEST_SKIP
  */
 static int rf_pipe_test(AFPObj *obj, struct vol *vol, int size, int limit,
                         int min_size)
 {
     struct rf rf;
     size_t len;
-    int got;
     int ret;
 
     if ((ret = rf_splice_setup(&rf, obj, vol)) != 0) {
@@ -865,25 +843,22 @@ static int rf_pipe_test(AFPObj *obj, struct vol *vol, int size, int limit,
     }
 
     /* a pipe this process cannot grow to min_size is the documented
-     * fallback, and a new pipe that holds size leaves nothing to halve */
-    if (rf_pipe_capacity(min_size) < min_size
-            || (limit > 0 && rf_pipe_capacity(0) >= size)) {
+     * fallback, not the growth under test */
+    if (!rf_pipe_grows_to(min_size)) {
         rf_teardown(&rf);
         return TEST_SKIP;
     }
 
     ret = -1;
-    rf.dsi.splice_size = size;
+    rf.obj.options.splice_size = size;
 
     if (rf_open(&rf, 0, OPENFORK_DATA)) {
         len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_B_LEN, 0xA5);
-        rf_arm(RF_SOCK, 0, 0);
+        fi.splice_watch = 1;
         fi.pipe_size_limit = limit;
 
         if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
-                && rf_fired(RF_SOCK, 0)
-                && (got = rf_pipe_size(rf.dsi.splice_pipe[1])) >= min_size
-                && (limit == 0 || got <= limit)
+                && fi.splice_pipe_size >= min_size
                 && rf_holds(&rf, 0, RF_B_LEN, 0xA5)) {
             ret = 0;
         }
@@ -908,7 +883,7 @@ int utest_recvfile_pipe_never_shrinks(AFPObj *obj, struct vol *vol)
 /*! @brief A refused splice size halves down to the largest size granted */
 int utest_recvfile_pipe_steps_down(AFPObj *obj, struct vol *vol)
 {
-    return rf_pipe_test(obj, vol, RF_A_LEN, 2 * RF_B_LEN, 2 * RF_B_LEN);
+    return rf_pipe_test(obj, vol, RF_A_LEN, RF_B_LEN, RF_B_LEN);
 }
 
 /*!

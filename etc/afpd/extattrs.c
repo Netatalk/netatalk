@@ -265,6 +265,26 @@ static char *to_stringz(char *ibuf, uint16_t len)
     return attrmname;
 }
 
+/*!
+ * @brief Convert a request's EA name from UTF-8 to the unix charset
+ *
+ * @param[in]  obj    session
+ * @param[in]  name   the name as sent, not terminated
+ * @param[in]  len    its length
+ * @param[out] uname  the converted name
+ * @param[in]  size   bytes available at uname
+ *
+ * @returns AFP_OK, or AFPERR_PARAM for a name that is empty or does not
+ *          convert
+ */
+static int ea_uname(const AFPObj *obj, const char *name, uint16_t len,
+                    char *uname, size_t size)
+{
+    size_t ulen = convert_string(CH_UTF8_MAC, obj->options.unixcharset, name,
+                                 len, uname, size);
+    return ulen == 0 || ulen == (size_t) -1 ? AFPERR_PARAM : AFP_OK;
+}
+
 int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                    size_t *rbuflen)
 {
@@ -330,10 +350,9 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name,
         to_stringz(ibuf, attrnamelen));
 
-    /* Convert EA name in utf8 to unix charset */
-    if (0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf,
-                            attrnamelen, attruname, 256)) {
-        return AFPERR_MISC;
+    if ((ret = ea_uname(obj, ibuf, attrnamelen, attruname,
+                        sizeof(attruname))) != AFP_OK) {
+        return ret;
     }
 
     /* write bitmap now */
@@ -454,10 +473,9 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     attrmname = ibuf;
 
-    /* Convert EA name in utf8 to unix charset */
-    if (0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, attrmname,
-                            attrnamelen, attruname, 256)) {
-        return AFPERR_MISC;
+    if ((ret = ea_uname(obj, attrmname, attrnamelen, attruname,
+                        sizeof(attruname))) != AFP_OK) {
+        return ret;
     }
 
     ibuf += attrnamelen;
@@ -478,6 +496,7 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                                oflag, fd);
 
     if (ret == AFP_OK) {
+        setvoltime(obj, vol);
         /* EA set changes ctime — refresh stat cache */
         struct stat post_st;
         struct dir *cached = NULL;
@@ -584,10 +603,9 @@ int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         return AFPERR_PARAM;
     }
 
-    /* Convert EA name in utf8 to unix charset */
-    if (0 >= (convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf,
-                             attrnamelen, attruname, 256))) {
-        return AFPERR_MISC;
+    if ((ret = ea_uname(obj, ibuf, attrnamelen, attruname,
+                        sizeof(attruname))) != AFP_OK) {
+        return ret;
     }
 
     LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name,
@@ -595,6 +613,7 @@ int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag, fd);
 
     if (ret == AFP_OK) {
+        setvoltime(obj, vol);
         /* EA remove changes ctime — refresh stat cache */
         struct stat post_st;
         struct dir *cached = NULL;
