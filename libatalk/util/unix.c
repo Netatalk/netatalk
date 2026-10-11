@@ -737,6 +737,9 @@ static int ochdir_getcwd(const char *dir)
 
 #define OCHDIR_MODES 4
 #define OCHDIR_BUCKETS 40
+/* components below the volume root: 0 is the root, the last bucket holds
+ * deeper paths and paths outside the root */
+#define OCHDIR_DEPTHS 16
 
 struct ochdir_timing {
     unsigned long long calls;
@@ -745,6 +748,8 @@ struct ochdir_timing {
     unsigned long long mismatches;
     unsigned long long fallbacks;
     unsigned long long hist[OCHDIR_BUCKETS];
+    unsigned long long depth_calls[OCHDIR_DEPTHS];
+    unsigned long long depth_ns[OCHDIR_DEPTHS];
 };
 
 static struct ochdir_timing ochdir_t[OCHDIR_MODES];
@@ -908,12 +913,32 @@ static int ochdir_mode(int mode, const char *dir)
     }
 }
 
+static int ochdir_depth(const char *dir)
+{
+    int depth = 0;
+
+    if (ochdir_root_len == 0
+            || strncmp(dir, ochdir_root, ochdir_root_len) != 0
+            || (dir[ochdir_root_len] != '/' && dir[ochdir_root_len] != '\0')) {
+        return OCHDIR_DEPTHS - 1;
+    }
+
+    for (const char *p = dir + ochdir_root_len; *p; p++) {
+        if (*p == '/' && p[1] != '/' && p[1] != '\0') {
+            depth++;
+        }
+    }
+
+    return depth < OCHDIR_DEPTHS - 1 ? depth : OCHDIR_DEPTHS - 1;
+}
+
 int ochdir(const char *dir, int options)
 {
     int res[OCHDIR_MODES];
     int errs[OCHDIR_MODES];
     int first;
     int last = 0;
+    int depth;
 
     if (!(options & O_NOFOLLOW)) {
         return chdir(dir);
@@ -928,6 +953,7 @@ int ochdir(const char *dir, int options)
         return ochdir_getcwd(dir);
     }
 
+    depth = ochdir_depth(dir);
     first = (int)(ochdir_rot++ % OCHDIR_MODES);
 
     for (int k = 0; k < OCHDIR_MODES; k++) {
@@ -940,6 +966,8 @@ int ochdir(const char *dir, int options)
         dt = ochdir_now() - t0;
         ochdir_t[m].calls++;
         ochdir_t[m].total_ns += dt;
+        ochdir_t[m].depth_calls[depth]++;
+        ochdir_t[m].depth_ns[depth] += dt;
 
         if (dt > ochdir_t[m].max_ns) {
             ochdir_t[m].max_ns = dt;
@@ -998,6 +1026,22 @@ void ochdir_log_timing(void)
             'A' + m, ochdir_t[m].calls, ochdir_t[m].total_ns,
             ochdir_t[m].max_ns, ochdir_t[m].mismatches,
             ochdir_t[m].fallbacks, hist);
+        off = 0;
+
+        for (int d = 0; d < OCHDIR_DEPTHS; d++) {
+            int n = snprintf(hist + off, sizeof(hist) - off, "%s%llu/%llu",
+                             d ? "," : "", ochdir_t[m].depth_calls[d],
+                             ochdir_t[m].depth_ns[d]);
+
+            if (n < 0 || (size_t)n >= sizeof(hist) - off) {
+                break;
+            }
+
+            off += (size_t)n;
+        }
+
+        LOG(log_note, logtype_default,
+            "ochdir timing depth: mode %c calls/ns by depth %s", 'A' + m, hist);
     }
 }
 
