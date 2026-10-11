@@ -2139,6 +2139,8 @@ int movecwd(const struct vol *vol, struct dir *dir)
     LOG(log_debug, logtype_afpd, "movecwd(to: did: %u, \"%s\")",
         ntohl(dir->d_did), dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
 
+    ochdir_hint(vol->v_path, dir->dcache_ino);
+
     if ((ret = ochdir_vol(cfrombstr(dir->d_fullpath), vol)) != 0) {
         /* The CNID lookups and chdirs in the self-heal below overwrite errno,
          * while the reply must reflect why this chdir failed */
@@ -2168,6 +2170,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
                 LOG(log_debug, logtype_afpd,
                     "movecwd: dirlookup_strict returned validated path \"%s\", attempting chdir",
                     dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
+                ochdir_hint(vol->v_path, dir->dcache_ino);
                 ret = ochdir_vol(cfrombstr(dir->d_fullpath), vol);
 
                 if (ret == 0) {
@@ -2192,6 +2195,9 @@ int movecwd(const struct vol *vol, struct dir *dir)
 
             /* Special movecwd requirement: sync process CWD with curdir pointer.
              * If curdir is at fallback, attempt to sync process CWD. */
+            if (curdir && curdir->d_fullpath && curdir != &rootParent)
+                ochdir_hint(vol->v_path, curdir->dcache_ino);
+
             if (curdir && curdir->d_fullpath && curdir != &rootParent &&
                     ochdir_vol(cfrombstr(curdir->d_fullpath), vol) == 0) {
                 LOG(log_debug, logtype_afpd,

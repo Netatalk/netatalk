@@ -167,6 +167,7 @@ static void afp_dsi_close(AFPObj *obj)
     of_log_usage(log_info, "session close");
     log_dircache_stat();
     pfd_log_stats();
+    ochdir_log_timing();
     pfd_shutdown();
     dircache_rfork_shutdown();
     dsi_close(dsi);

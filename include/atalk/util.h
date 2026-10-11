@@ -223,6 +223,8 @@ extern int safe_atoi(const char *str, const char *param_name,
                      int min_val, int max_val, int default_val);
 
 extern int ochdir(const char *dir, int options);
+extern void ochdir_hint(const char *root, ino_t ino);
+extern void ochdir_log_timing(void);
 extern int ostat(const char *path, struct stat *buf, int options);
 extern int ostatat(int dirfd, const char *path, struct stat *st, int options);
 extern int ochown(const char *path, uid_t owner, gid_t group, int options);

@@ -635,16 +635,12 @@ int ostatat(int dirfd, const char *path, struct stat *st, int options)
  *
  * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
  */
-int ochdir(const char *dir, int options)
+static int ochdir_getcwd(const char *dir)
 {
     char buf[MAXPATHLEN + 1];
     char cwd[MAXPATHLEN + 1];
     char *test;
     int  i;
-
-    if (!(options & O_NOFOLLOW)) {
-        return chdir(dir);
-    }
 
     /*
      dir is a canonical path (without "../" "./" "//" )
@@ -720,6 +716,289 @@ int ochdir(const char *dir, int options)
     }
 
     return 0;
+}
+
+/*
+ * Walk timing experiment (scratch branch walk-timing, never merged).
+ *
+ * With /tmp/netatalk-ochdir-timing present (or NETATALK_OCHDIR_TIMING set)
+ * every no-follow ochdir() runs four ways of entering the directory, in an
+ * order that rotates per call, times each with CLOCK_MONOTONIC and keeps
+ * mode A's result, so afpd behaves as the base does:
+ *   A  chdir() + getcwd() + compare (the base)
+ *   B  openat(O_SEARCH|O_DIRECTORY|O_NOFOLLOW) per component from "/" + fchdir()
+ *   C  as B, from a descriptor held for the volume root
+ *   D  chdir() + stat(".") compared with the dircache entry's inode
+ * ochdir_log_timing() logs one line per mode at session close.
+ */
+#ifndef O_SEARCH
+#define O_SEARCH O_RDONLY
+#endif
+
+#define OCHDIR_MODES 4
+#define OCHDIR_BUCKETS 40
+
+struct ochdir_timing {
+    unsigned long long calls;
+    unsigned long long total_ns;
+    unsigned long long max_ns;
+    unsigned long long mismatches;
+    unsigned long long fallbacks;
+    unsigned long long hist[OCHDIR_BUCKETS];
+};
+
+static struct ochdir_timing ochdir_t[OCHDIR_MODES];
+static int ochdir_timing_on = -1;
+static unsigned long long ochdir_rot;
+static char ochdir_root[MAXPATHLEN + 1];
+static size_t ochdir_root_len;
+static int ochdir_root_fd = -1;
+static ino_t ochdir_expect_ino;
+
+void ochdir_hint(const char *root, ino_t ino)
+{
+    size_t len = strlen(root);
+
+    if (len != ochdir_root_len || memcmp(root, ochdir_root, len) != 0) {
+        if (ochdir_root_fd >= 0) {
+            close(ochdir_root_fd);
+            ochdir_root_fd = -1;
+        }
+
+        ochdir_root_len = 0;
+
+        if (len < sizeof(ochdir_root)) {
+            memcpy(ochdir_root, root, len + 1);
+            ochdir_root_len = len;
+        }
+    }
+
+    ochdir_expect_ino = ino;
+}
+
+static unsigned long long ochdir_now(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (unsigned long long)ts.tv_sec * 1000000000ULL
+           + (unsigned long long)ts.tv_nsec;
+}
+
+/* open the directory dir names below start (AT_FDCWD: dir is absolute or
+ * relative to the cwd) refusing symlinks; start itself is never closed */
+static int ochdir_walk_open(int start, const char *dir)
+{
+    char path[MAXPATHLEN + 1];
+    char *rest;
+    char *name;
+    struct stat st;
+    int fd = start;
+    int next;
+    int err;
+
+    if (strlcpy(path, dir, sizeof(path)) >= sizeof(path)) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+
+    rest = path + strspn(path, "/");
+
+    while ((name = strsep(&rest, "/")) != NULL) {
+        if (*name == '\0') {
+            continue;
+        }
+
+        if (fd == AT_FDCWD && name != path) {
+            name--;
+        }
+
+        next = openat(fd, name, O_SEARCH | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        err = errno;
+
+        if (next < 0 && fstatat(fd, name, &st, AT_SYMLINK_NOFOLLOW) == 0
+                && S_ISLNK(st.st_mode)) {
+            err = ELOOP;
+        }
+
+        if (fd != start) {
+            close(fd);
+        }
+
+        if (next < 0) {
+            errno = err;
+            return -1;
+        }
+
+        fd = next;
+    }
+
+    if (fd == start) {
+        return start == AT_FDCWD ? open(dir, O_SEARCH | O_DIRECTORY | O_CLOEXEC)
+               : dup(start);
+    }
+
+    return fd;
+}
+
+/* rel is the part of full below start; a symlink on the way re-opens full
+ * following it, to fail where chdir() would, else 1 */
+static int ochdir_walk(int start, const char *rel, const char *full)
+{
+    int fd = ochdir_walk_open(start, rel);
+    int ret;
+    int err;
+
+    if (fd < 0) {
+        if (errno != ELOOP
+                || (fd = open(full, O_SEARCH | O_DIRECTORY | O_CLOEXEC)) < 0) {
+            return -1;
+        }
+
+        close(fd);
+        return 1;
+    }
+
+    ret = fchdir(fd);
+    err = errno;
+    close(fd);
+    errno = err;
+    return ret;
+}
+
+static int ochdir_mode(int mode, const char *dir)
+{
+    struct stat st;
+
+    switch (mode) {
+    case 0:
+        return ochdir_getcwd(dir);
+
+    case 1:
+        return ochdir_walk(AT_FDCWD, dir, dir);
+
+    case 2:
+        if (ochdir_root_len == 0
+                || strncmp(dir, ochdir_root, ochdir_root_len) != 0
+                || (dir[ochdir_root_len] != '/' && dir[ochdir_root_len] != '\0')) {
+            ochdir_t[2].fallbacks++;
+            return ochdir_walk(AT_FDCWD, dir, dir);
+        }
+
+        if (ochdir_root_fd < 0) {
+            ochdir_root_fd = open(ochdir_root, O_SEARCH | O_DIRECTORY | O_CLOEXEC);
+
+            if (ochdir_root_fd < 0) {
+                return -1;
+            }
+        }
+
+        return ochdir_walk(ochdir_root_fd, dir + ochdir_root_len, dir);
+
+    default:
+        if (ochdir_expect_ino == 0) {
+            ochdir_t[3].fallbacks++;
+            return ochdir_getcwd(dir);
+        }
+
+        if (chdir(dir) != 0 || stat(".", &st) != 0) {
+            return -1;
+        }
+
+        return st.st_ino == ochdir_expect_ino ? 0 : 1;
+    }
+}
+
+int ochdir(const char *dir, int options)
+{
+    int res[OCHDIR_MODES];
+    int errs[OCHDIR_MODES];
+    int first;
+    int last = 0;
+
+    if (!(options & O_NOFOLLOW)) {
+        return chdir(dir);
+    }
+
+    if (ochdir_timing_on < 0) {
+        ochdir_timing_on = access("/tmp/netatalk-ochdir-timing", F_OK) == 0
+                           || getenv("NETATALK_OCHDIR_TIMING") != NULL;
+    }
+
+    if (!ochdir_timing_on) {
+        return ochdir_getcwd(dir);
+    }
+
+    first = (int)(ochdir_rot++ % OCHDIR_MODES);
+
+    for (int k = 0; k < OCHDIR_MODES; k++) {
+        int m = (first + k) % OCHDIR_MODES;
+        unsigned long long t0 = ochdir_now();
+        unsigned long long dt;
+        int b = 0;
+        res[m] = ochdir_mode(m, dir);
+        errs[m] = errno;
+        dt = ochdir_now() - t0;
+        ochdir_t[m].calls++;
+        ochdir_t[m].total_ns += dt;
+
+        if (dt > ochdir_t[m].max_ns) {
+            ochdir_t[m].max_ns = dt;
+        }
+
+        while (b < OCHDIR_BUCKETS - 1 && (dt >> (b + 1)) != 0) {
+            b++;
+        }
+
+        ochdir_t[m].hist[b]++;
+        last = m;
+    }
+
+    for (int m = 1; m < OCHDIR_MODES; m++) {
+        if (res[m] != res[0]) {
+            ochdir_t[m].mismatches++;
+            LOG(log_note, logtype_default,
+                "ochdir timing: mode %c returned %d, mode A %d, for \"%s\"",
+                'A' + m, res[m], res[0], dir);
+        }
+    }
+
+    if (res[0] == 0 && res[last] != 0) {
+        (void)ochdir_getcwd(dir);
+    }
+
+    errno = errs[0];
+    return res[0];
+}
+
+void ochdir_log_timing(void)
+{
+    char hist[OCHDIR_BUCKETS * 21 + 1];
+
+    if (ochdir_timing_on <= 0) {
+        return;
+    }
+
+    for (int m = 0; m < OCHDIR_MODES; m++) {
+        size_t off = 0;
+
+        for (int b = 0; b < OCHDIR_BUCKETS; b++) {
+            int n = snprintf(hist + off, sizeof(hist) - off, "%s%llu",
+                             b ? "," : "", ochdir_t[m].hist[b]);
+
+            if (n < 0 || (size_t)n >= sizeof(hist) - off) {
+                break;
+            }
+
+            off += (size_t)n;
+        }
+
+        LOG(log_note, logtype_default,
+            "ochdir timing: mode %c calls %llu total_ns %llu max_ns %llu "
+            "mismatches %llu fallbacks %llu hist %s",
+            'A' + m, ochdir_t[m].calls, ochdir_t[m].total_ns,
+            ochdir_t[m].max_ns, ochdir_t[m].mismatches,
+            ochdir_t[m].fallbacks, hist);
+    }
 }
 
 /*!
