@@ -5,7 +5,7 @@ description: "10 files, 20 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/atp"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -34,8 +34,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 
 # Called from
 
-* [libatalk/asp](asp.md): 15 calls
 * [bin/pap](../bin/pap.md): 12 calls
+* [libatalk/asp](asp.md): 12 calls
 * [etc/papd](../etc/papd.md): 10 calls
 * [bin/getzones](../bin/getzones.md): 4 calls
 * [etc/afpd](../etc/afpd.md): 3 calls
@@ -45,12 +45,12 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 * [atp_sreq](atp/atp_sreq.c.md#atp_sreq): 9 callers
 * [atp_free_buf](atp/atp_bufs.c.md#atp_free_buf): 8 callers
 * [atp_rresp](atp/atp_rresp.c.md#atp_rresp): 8 callers
-* [atp_close](atp/atp_close.c.md#atp_close): 7 callers
 * [atp_print_bufuse](atp/atp_internals.h.md#atp_print_bufuse): 7 callers
 * [atp_alloc_buf](atp/atp_bufs.c.md#atp_alloc_buf): 6 callers
-* [atp_open](atp/atp_open.c.md#atp_open): 6 callers
-* [atp_sresp](atp/atp_sresp.c.md#atp_sresp): 6 callers
+* [atp_close](atp/atp_close.c.md#atp_close): 6 callers
+* [atp_open](atp/atp_open.c.md#atp_open): 5 callers
 * [atp_rsel](atp/atp_rsel.c.md#atp_rsel): 5 callers
+* [atp_sresp](atp/atp_sresp.c.md#atp_sresp): 5 callers
 * [atp_rreq](atp/atp_rreq.c.md#atp_rreq): 4 callers
 
 # Functions without a static caller

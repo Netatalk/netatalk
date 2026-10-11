@@ -5,7 +5,7 @@ description: "14 functions, includes 11 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/dbd/cmd_dbd_scanvol.c"
 tags: ["bin/dbd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -215,7 +215,9 @@ Defined at lines 576 to 633.
 
 Check whether a .AppleDouble entry is an EA file and whether its data file still exists.
 
-Only a volume with `ea = ad` has EA files, and on others the call returns 0. An EA file whose data file is gone gets a log line and goes away, except under -s.
+Only a volume with `ea = ad` has EA files, and on others the call returns
+
+1. An EA file whose data file is gone gets a log line and goes away, except under -s.
 
 Parameters:
 * `parent_fd`: open current directory

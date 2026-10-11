@@ -5,7 +5,7 @@ description: "Directory Cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -131,7 +131,7 @@ static void arc_verify_invariants(void)
 
 Defined at lines 469 to 493.
 
-Verify ARC invariants (debug mode)
+Verify ARC invariants (debug mode).
 
 Checks that ARC list sizes satisfy all constraints from the paper. Called after each operation in debug builds.
 
@@ -289,7 +289,7 @@ static int arc_replace(int in_b2)
 
 Defined at lines 779 to 834.
 
-ARC REPLACE subroutine (from paper Figure 1)
+ARC REPLACE subroutine (from paper Figure 1).
 
 Evicts one entry from T1 or T2 and moves it to the corresponding ghost list (B1 or B2). Decision based on:
 
@@ -901,11 +901,11 @@ Log dircache statistics.
 
 Includes hit ratio percentage for monitoring cache effectiveness, validation-specific metrics to monitor performance impact of the optimization changes, and username for tracking per-user stats. Shows both expunged (caught by validation) and invalid_on_use (missed by validation).
 
-Calls: [ipc_get_hints_dropped](../../libatalk/util/server_ipc.c.md#ipc_get_hints_dropped), [ipc_get_hints_sent](../../libatalk/util/server_ipc.c.md#ipc_get_hints_sent), [validation_freq](dircache.c.md#validation_freq)
+Calls: [validation_freq](dircache.c.md#validation_freq)
 
 Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close)
 
-Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `ad_cache_hits` in [etc/afpd/ad_cache.c](ad_cache.c.md), `ad_cache_misses` in [etc/afpd/ad_cache.c](ad_cache.c.md), `ad_cache_no_ad` in [etc/afpd/ad_cache.c](ad_cache.c.md), `arc_cache`, `cache_hint_stat`, `dircache_maxsize`, `queue_count`, `queue_count_max`, `rfork_cache_budget`, `rfork_lru_count`, `rfork_stat_added`, `rfork_stat_evicted`, `rfork_stat_hits`, `rfork_stat_invalidated`, `rfork_stat_lookups`, `rfork_stat_misses`, `rfork_stat_used_max`, `validation_counter`
+Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `arc_cache`, `queue_count_max`
 
 Mentioned in the documentation of: [dircache_rfork_shutdown](dircache.c.md#dircache_rfork_shutdown)
 
@@ -1311,9 +1311,9 @@ Defined at line 151.
 
 Defined at line 215.
 * `unsigned long long lookups`
-* `unsigned long long hits`: Hits in T1/T2 (cached data, instant return)
-* `unsigned long long ghost_hits`: Hits in B1/B2 (ghost entries, instant return in our impl)
-* `unsigned long long misses`: True misses (not in any ARC list)
+* `unsigned long long hits`: Hits in T1/T2 (cached data, instant return).
+* `unsigned long long ghost_hits`: Hits in B1/B2 (ghost entries, instant return in our impl).
+* `unsigned long long misses`: True misses (not in any ARC list).
 * `unsigned long long added`
 * `unsigned long long removed`
 * `unsigned long long expunged`

@@ -5,7 +5,7 @@ description: "6 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/pap/papstatus.c"
 tags: ["bin/pap"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/pap](../pap.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,8 +35,6 @@ Parameters:
 * `signo`: signal number, unused
 
 Called by: [main](papstatus.c.md#main)
-
-Uses file-scope variables: `stop_requested`
 
 ### usage
 
@@ -108,8 +106,6 @@ Returns: 0, while errors exit with 1
 
 Calls: [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [atp_close](../../libatalk/atp/atp_close.c.md#atp_close), [atp_open](../../libatalk/atp/atp_open.c.md#atp_open), [getstatus](papstatus.c.md#getstatus), [nbp_lookup](../../libatalk/nbp/nbp_lkup.c.md#nbp_lookup), [nbp_name](../../libatalk/nbp/nbp_util.c.md#nbp_name), [paprc](papstatus.c.md#paprc), [sig_handler](papstatus.c.md#sig_handler), [usage](papstatus.c.md#usage)
 
-Uses file-scope variables: `nn`, `stop_requested`
-
 ### getstatus
 
 ```c
@@ -130,8 +126,6 @@ Parameters:
 Calls: [atp_rresp](../../libatalk/atp/atp_rresp.c.md#atp_rresp), [atp_sreq](../../libatalk/atp/atp_sreq.c.md#atp_sreq), [print_status](papstatus.c.md#print_status)
 
 Called by: [main](papstatus.c.md#main)
-
-Uses file-scope variables: `cbuf`
 
 # Macros
 

@@ -5,7 +5,7 @@ description: "3 functions, 2 types, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -104,7 +104,7 @@ Defined at line 72.
 * `uint8_t arc_list`: Which ARC list: 0=NONE, 1=T1, 2=T2, 3=B1, 4=B2.
 * `uint8_t dcache_afpfilei`: ADEID_AFPFILEI: AFP attributes.
 * `uint8_t dcache_finderinfo`: ADEID_FINDERI: Finder info.
-* `uint8_t dcache_filedatesi`: ADEID_FILEDATESI: create/modify/backup dates (SERVED values)
+* `uint8_t dcache_filedatesi`: ADEID_FILEDATESI: create/modify/backup dates (SERVED values).
 
 ### struct path
 
@@ -128,7 +128,7 @@ Defined at line 140.
 * `AD_RLEN_UNKNOWN`: not yet loaded
 * `DIRDID_ROOT`: root directory
 * `DIRDID_ROOT_PARENT`: parent directory of root
-* `DIRF_ARC_GHOST`: ARC ghost entry (in B1/B2)
+* `DIRF_ARC_GHOST`: ARC ghost entry (in B1/B2).
 * `DIRF_CNID`: renumerate id
 * `DIRF_INDEXED`: linked in the dircache hash index
 * `DIRF_ISFILE`: it's cached file, not a directory

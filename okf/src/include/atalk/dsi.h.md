@@ -5,7 +5,7 @@ description: "DSI (Data Stream Interface) protocol definitions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/dsi.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -141,7 +141,7 @@ Defined at line 42.
 * `DSIFUNC_TICKLE`: DSITickle.
 * `DSIFUNC_WRITE`: DSIWrite.
 * `DSIOPT_ATTNQUANT`: attention quantum
-* `DSIOPT_REPLCSIZE`: AFP replaycache size supported by the server (that's us)
+* `DSIOPT_REPLCSIZE`: AFP replaycache size supported by the server (that's us).
 * `DSIOPT_SERVQUANT`: server request quantum
 * `DSI_AFPOVERTCP_PORT`: default port number
 * `DSI_AFP_LOGGED_OUT`: client called afp_logout, quit on next EOF from socket

@@ -5,7 +5,7 @@ description: "46 files, 32 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -109,7 +109,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 * [etc/papd](../etc/papd.md): 4 calls
 * [bin/nad](../bin/nad.md): 3 calls
 * [etc/uams](../etc/uams.md): 3 calls
-* [bin/aecho](../bin/aecho.md): 2 calls
+* [bin/aecho](../bin/aecho.md): 1 calls
 * [bin/nbp](../bin/nbp.md): 1 calls
 * [etc/netatalk](../etc/netatalk.md): 1 calls
 
@@ -118,8 +118,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 * [path_isadir](atalk/directory.h.md#path_isadir): 18 callers
 * [netddp_sendto](atalk/netddp.h.md#netddp_sendto): 12 callers
 * [ad_meta_open](atalk/adouble.h.md#ad_meta_open): 10 callers
-* [netddp_recvfrom](atalk/netddp.h.md#netddp_recvfrom): 9 callers
 * [ad_rsrc_open](atalk/adouble.h.md#ad_rsrc_open): 8 callers
+* [netddp_recvfrom](atalk/netddp.h.md#netddp_recvfrom): 8 callers
 * [srp_valid_username](atalk/srp.h.md#srp_valid_username): 8 callers
 * [netddp_close](atalk/netddp.h.md#netddp_close): 6 callers
 * [srp_verifier_mode_is_safe](atalk/srp.h.md#srp_verifier_mode_is_safe): 5 callers

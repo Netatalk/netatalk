@@ -5,7 +5,7 @@ description: "7 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx_passwd.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -48,8 +48,6 @@ Release the session key K of a DHCAST128 exchange.
 
 Called by: [passwd_logincont](uams_dhx_passwd.c.md#passwd_logincont), [pwd_login](uams_dhx_passwd.c.md#pwd_login), [uam_cleanup](uams_dhx_passwd.c.md#uam_cleanup)
 
-Uses file-scope variables: `K`
-
 ### pwd_login
 
 ```c
@@ -77,8 +75,6 @@ Returns: AFPERR_AUTHCONT, AFPERR_NOTAUTH for an unknown or refused user, AFPERR_
 Calls: [dhx_release_key](uams_dhx_passwd.c.md#dhx_release_key), [uam_afpserver_option](../afpd/uam.c.md#uam_afpserver_option), [uam_checkuser](../afpd/uam.c.md#uam_checkuser), [uam_getname](../afpd/uam.c.md#uam_getname)
 
 Called by: [passwd_login](uams_dhx_passwd.c.md#passwd_login), [passwd_login_ext](uams_dhx_passwd.c.md#passwd_login_ext)
-
-Uses file-scope variables: `K`, `dhxpwd`, `randbuf`
 
 ### passwd_login
 
@@ -164,8 +160,6 @@ Returns: AFP_OK, AFPERR_PWDEXPR, AFPERR_NOTAUTH, or AFPERR_PARAM
 Calls: [dhx_release_key](uams_dhx_passwd.c.md#dhx_release_key), [explicit_bzero](../../libatalk/compat/explicit_bzero.c.md#explicit_bzero)
 
 Called by: [uam_setup](uams_dhx_passwd.c.md#uam_setup)
-
-Uses file-scope variables: `K`, `dhxpwd`, `randbuf`
 
 ### uam_setup
 

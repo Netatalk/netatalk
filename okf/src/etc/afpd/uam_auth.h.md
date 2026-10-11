@@ -5,7 +5,7 @@ description: "interface between uam.c and auth.c"
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/uam_auth.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -40,17 +40,17 @@ Defined at line 25.
 * `const char * uam_name`: authentication method
 * `char * uam_path`: where it's located
 * `int uam_count`
-* `int(* login`: Called through by [afp_login](auth.c.md#afp_login).
-* `int(* logincont`: Called through by [afp_logincont](auth.c.md#afp_logincont).
+* `int(* login`
+* `int(* logincont`
 * `void(* logout`
-* `int(* login_ext`: Called through by [afp_login_ext](auth.c.md#afp_login_ext).
+* `int(* login_ext`
 * `struct uam_obj uam_login`
 * `int(* uam_changepw`: Called through by [afp_changepw](auth.c.md#afp_changepw).
 * `union uam_obj u`
 * `struct uam_obj * uam_prev`
 * `struct uam_obj * uam_next`
 * `struct uam_obj uam_login`
-* `int(* uam_printer`: Called through by [cq_rbilogin](../papd/queries.c.md#cq_rbilogin).
+* `int(* uam_printer`
 * `union uam_obj u`
 
 # Macros

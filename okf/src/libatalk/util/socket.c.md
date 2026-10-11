@@ -5,7 +5,7 @@ description: "Netatalk utility functions: socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/socket.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,7 @@ Parameters:
 
 Returns: 0 on success, -1 on failure
 
-Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [atalk_sigpipe_init](sigpipe.c.md#atalk_sigpipe_init), [dsi_getsession](../dsi/dsi_getsess.c.md#dsi_getsession), [dsi_opensession](../dsi/dsi_opensess.c.md#dsi_opensession), [readt](socket.c.md#readt), [writet](socket.c.md#writet)
+Called by: [atalk_sigpipe_init](sigpipe.c.md#atalk_sigpipe_init), [dsi_getsession](../dsi/dsi_getsess.c.md#dsi_getsession), [dsi_opensession](../dsi/dsi_opensess.c.md#dsi_opensession), [readt](socket.c.md#readt), [writet](socket.c.md#writet)
 
 ### readt
 
@@ -276,7 +276,9 @@ Defined at lines 776 to 822.
 
 Pass a descriptor over a Unix socket with SCM_RIGHTS.
 
-The descriptor needs data to travel with, so the message carries an int of 0. The call repeats sendmsg after EINTR.
+The descriptor needs data to travel with, so the message carries an int of
+
+1. The call repeats sendmsg after EINTR.
 
 Parameters:
 * `socket`: PF_UNIX socket

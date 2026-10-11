@@ -5,7 +5,7 @@ description: "13 functions, 1 type, includes 11 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/config.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -88,8 +88,6 @@ Returns: 0, or -1 when the file lacks the owner write bit or an open, write, or 
 
 Calls: [at_parseline](config.c.md#at_parseline), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [freeline](config.c.md#freeline)
 
-Called by: [as_timer](main.c.md#as_timer)
-
 Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md)
 
 ### readconf
@@ -126,8 +124,6 @@ Returns: 0 with at least IFBASE interfaces, loopback included, or -1 for a missi
 Calls: [addmulti](multicast.c.md#addmulti), [at_parseline](config.c.md#at_parseline), [newiface](config.c.md#newiface), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Called by: [main](main.c.md#main)
-
-Calls through [`param::p_func`](config.c.md#struct-param): no table assigns this field
 
 Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md), `params`
 
@@ -271,6 +267,8 @@ Calls: [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_str
 
 Dispatched via: [params](config.c.md#params)
 
+Mentioned in the documentation of: [main](../../bin/nbp/nbplkup.c.md#main), [nbp_name](../../libatalk/nbp/nbp_util.c.md#nbp_name)
+
 ### getifconf
 
 ```c
@@ -316,7 +314,7 @@ Called by: [getifconf](config.c.md#getifconf), [main](main.c.md#main), [readconf
 
 Defined at line 57.
 * `char * p_name`
-* `int(* p_func`: Called through by [readconf](config.c.md#readconf).
+* `int(* p_func`
 
 # Macros
 

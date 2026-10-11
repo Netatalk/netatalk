@@ -5,7 +5,7 @@ description: "18 files, 50 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/atalkd"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -43,12 +43,18 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 # Most called functions
 
 * [atalkd_exit](atalkd/main.c.md#atalkd_exit): 6 callers
-* [gateroute](atalkd/rtmp.c.md#gateroute): 5 callers
-* [looproute](atalkd/rtmp.c.md#looproute): 5 callers
 * [bootaddr](atalkd/main.c.md#bootaddr): 4 callers
+* [gateroute](atalkd/rtmp.c.md#gateroute): 4 callers
 * [ifconfig](atalkd/main.c.md#ifconfig): 4 callers
-* [newrt](atalkd/rtmp.c.md#newrt): 4 callers
+* [looproute](atalkd/rtmp.c.md#looproute): 4 callers
 * [setaddr](atalkd/main.c.md#setaddr): 4 callers
 * [addmulti](atalkd/multicast.c.md#addmulti): 3 callers
 * [newiface](atalkd/config.c.md#newiface): 3 callers
+* [newrt](atalkd/rtmp.c.md#newrt): 3 callers
 * [rtmp_delinuse](atalkd/rtmp.c.md#rtmp_delinuse): 3 callers
+
+# Functions without a static caller
+
+No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
+
+[rtmp_config](atalkd/rtmp.c.md#rtmp_config), [rtmp_new](atalkd/rtmp.c.md#rtmp_new), [writeconf](atalkd/config.c.md#writeconf)

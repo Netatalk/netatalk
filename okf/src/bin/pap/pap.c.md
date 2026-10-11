@@ -5,7 +5,7 @@ description: "6 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/pap/pap.c"
 tags: ["bin/pap"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/pap](../pap.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,8 +42,6 @@ Parameters:
 Returns: 0, or -1 for a malformed reply
 
 Called by: [main](pap.c.md#main), [send_file](pap.c.md#send_file)
-
-Uses file-scope variables: `data`
 
 ### usage
 
@@ -126,7 +124,7 @@ Calls: [atp_rreq](../../libatalk/atp/atp_rreq.c.md#atp_rreq), [atp_rresp](../../
 
 Called by: [main](pap.c.md#main)
 
-Uses file-scope variables: `cbuf`, `connid`, `data`, `debug`, `nn`, `noeof`, `oquantum`, `port`, `quantum`, `rfiov`, `rniov`, `sat`, `satp`, `seq`, `sfiov`, `sniov`, `waitforprinter`
+Uses file-scope variables: `cbuf`, `connid`, `debug`, `nn`, `noeof`, `oquantum`, `port`, `quantum`, `rfiov`, `rniov`, `sat`, `satp`, `seq`, `sfiov`, `sniov`, `waitforprinter`
 
 ### updatestatus
 
@@ -136,7 +134,7 @@ static void updatestatus(char *s, int len)
 
 Defined at lines 1055 to 1085.
 
-Write a printer status line as `%%[ status ]%%`
+Write a printer status line as `%%[ status ]%%`.
 
 The line goes to the -s status file, which the call truncates first, or to stderr. A status file that does not open switches all later lines to stderr.
 

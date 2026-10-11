@@ -5,7 +5,7 @@ description: "FPCatSearch implementation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/catsearch.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -71,6 +71,8 @@ Parameters:
 Returns: 0, AFPERR_BITMAP for an offspring count with both bitmaps, or AFPERR_PARAM on overflow
 
 Calls: [catsearch_spec_addlen](catsearch.c.md#catsearch_spec_addlen)
+
+Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 
 ### catsearch_validate_spec
 
@@ -351,7 +353,7 @@ Parameters:
 
 Returns: the search result, AFPERR_BITMAP, or AFPERR_PARAM
 
-Calls: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [catsearch_validate_spec](catsearch.c.md#catsearch_validate_spec), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [mtoupath](desktop.c.md#mtoupath), [unpack_buffer](catsearch.c.md#unpack_buffer)
+Calls: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [catsearch_spec_layout](catsearch.c.md#catsearch_spec_layout), [catsearch_validate_spec](catsearch.c.md#catsearch_validate_spec), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [mtoupath](desktop.c.md#mtoupath), [unpack_buffer](catsearch.c.md#unpack_buffer)
 
 Called by: [afp_catsearch](catsearch.c.md#afp_catsearch), [afp_catsearch_ext](catsearch.c.md#afp_catsearch_ext)
 
@@ -419,7 +421,7 @@ Defined at line 125.
 Directory tree search is recursive by its nature.
 
 Defined at line 112.
-* `cnid_t ds_did`: CNID of this directory
+* `cnid_t ds_did`: CNID of this directory.
 * `uint32_t ds_checked`: Have we checked this directory ?
 
 ### struct finderinfo
@@ -427,9 +429,9 @@ Defined at line 112.
 Defined at line 61.
 * `uint32_t f_type`
 * `uint32_t creator`
-* `uint16_t attrs`: File attributes (high 8 bits)
-* `uint16_t label`: Label (low 8 bits )
-* `char reserved`: Unknown (at least for now...)
+* `uint16_t attrs`: File attributes (high 8 bits).
+* `uint16_t label`: Label (low 8 bits ).
+* `char reserved`: Unknown (at least for now...).
 
 ### struct scrit
 

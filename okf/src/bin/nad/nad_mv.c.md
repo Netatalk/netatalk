@@ -5,7 +5,7 @@ description: "5 functions, includes 8 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_mv.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -59,7 +59,7 @@ Calls: [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_
 
 Called by: [main](nad.c.md#main)
 
-Uses file-scope variables: `afp_obj`, `did`, `dvolume`, `fflg`, `iflg`, `nflg`, `pdid`, `svolume`, `vflg`
+Uses file-scope variables: `afp_obj`, `fflg`, `iflg`, `nflg`, `vflg`
 
 ### do_move
 
@@ -85,9 +85,7 @@ Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../
 
 Called by: [nad_mv](nad_mv.c.md#nad_mv)
 
-Calls through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_renamefile_adouble](../../libatalk/vfs/vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](../../libatalk/vfs/vfs.c.md#rf_renamefile_ea), [ea_renamefile](../../libatalk/vfs/ea_ad.c.md#ea_renamefile), [vfs_renamefile](../../libatalk/vfs/vfs.c.md#vfs_renamefile)
-
-Uses file-scope variables: `did`, `dvolume`, `fflg`, `iflg`, `nflg`, `svolume`, `vflg`
+Uses file-scope variables: `fflg`, `iflg`, `nflg`, `vflg`
 
 ### remove_path
 
@@ -130,7 +128,7 @@ Calls: [nad_cp](nad_cp.c.md#nad_cp), [nad_rm](nad_rm.c.md#nad_rm), [remove_path]
 
 Called by: [do_move](nad_mv.c.md#do_move)
 
-Uses file-scope variables: `afp_obj`, `svolume`, `vflg`
+Uses file-scope variables: `afp_obj`, `vflg`
 
 # Macros
 

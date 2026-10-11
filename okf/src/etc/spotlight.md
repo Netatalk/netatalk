@@ -5,7 +5,7 @@ description: "10 files, 68 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/spotlight"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -54,4 +54,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[isodate2unix](spotlight/localsearch/sparql_parser.y.md#isodate2unix), [map_daterange](spotlight/localsearch/sparql_parser.y.md#map_daterange), [map_expr](spotlight/localsearch/sparql_parser.y.md#map_expr), [sl_xapian_seeded](spotlight/xapian/sl_xapian.c.md#sl_xapian_seeded), [yylex](spotlight/localsearch/spotlight_rawquery_lexer.l.md#yylex), [yywrap](spotlight/localsearch/sparql_parser.y.md#yywrap)
+[isodate2unix](spotlight/localsearch/sparql_parser.y.md#isodate2unix), [map_daterange](spotlight/localsearch/sparql_parser.y.md#map_daterange), [map_expr](spotlight/localsearch/sparql_parser.y.md#map_expr), [yylex](spotlight/localsearch/spotlight_rawquery_lexer.l.md#yylex), [yywrap](spotlight/localsearch/sparql_parser.y.md#yywrap)

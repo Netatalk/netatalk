@@ -5,7 +5,7 @@ description: "2 types, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/volume.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -84,7 +84,7 @@ Defined at line 33.
 * `char * v_veto`
 * `int v_adouble`: adouble format: v1, v2
 * `int v_ad_options`: ADVOL_* option bits, such as NODEV and NOCACHE.
-* `const char *(* ad_path`: Called through by [RF_chown_adouble](../../libatalk/vfs/vfs.c.md#rf_chown_adouble), [RF_chown_ea](../../libatalk/vfs/vfs.c.md#rf_chown_ea), [RF_deletefile_adouble](../../libatalk/vfs/vfs.c.md#rf_deletefile_adouble), [RF_deletefile_ea](../../libatalk/vfs/vfs.c.md#rf_deletefile_ea), [RF_posix_acl](../../libatalk/vfs/vfs.c.md#rf_posix_acl), [RF_posix_remove_acl](../../libatalk/vfs/vfs.c.md#rf_posix_remove_acl), [RF_renamefile_adouble](../../libatalk/vfs/vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](../../libatalk/vfs/vfs.c.md#rf_renamefile_ea), [RF_setdirmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setdirmode_adouble), [RF_setdirunixmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setdirunixmode_adouble), [RF_setfilmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setfilmode_adouble), [RF_setfilmode_ea](../../libatalk/vfs/vfs.c.md#rf_setfilmode_ea), [RF_solaris_acl](../../libatalk/vfs/vfs.c.md#rf_solaris_acl), [RF_solaris_remove_acl](../../libatalk/vfs/vfs.c.md#rf_solaris_remove_acl), [ad_conv_dehex](../../libatalk/adouble/ad_conv.c.md#ad_conv_dehex), [afp_syncdir](../../etc/afpd/directory.c.md#afp_syncdir), [check_addir](../../bin/dbd/cmd_dbd_scanvol.c.md#check_addir), [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [ea_path](../../libatalk/vfs/ea_ad.c.md#ea_path), [nad_open](../../bin/nad/nad_adouble.c.md#nad_open), [rmdir_with_cnid](../../bin/nad/nad_rmdir.c.md#rmdir_with_cnid).
+* `const char *(* ad_path`: Called through by [RF_chown_adouble](../../libatalk/vfs/vfs.c.md#rf_chown_adouble), [RF_chown_ea](../../libatalk/vfs/vfs.c.md#rf_chown_ea), [RF_deletefile_adouble](../../libatalk/vfs/vfs.c.md#rf_deletefile_adouble), [RF_deletefile_ea](../../libatalk/vfs/vfs.c.md#rf_deletefile_ea), [RF_posix_acl](../../libatalk/vfs/vfs.c.md#rf_posix_acl), [RF_posix_remove_acl](../../libatalk/vfs/vfs.c.md#rf_posix_remove_acl), [RF_renamefile_adouble](../../libatalk/vfs/vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](../../libatalk/vfs/vfs.c.md#rf_renamefile_ea), [RF_setdirmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setdirmode_adouble), [RF_setdirunixmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setdirunixmode_adouble), [RF_setfilmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setfilmode_adouble), [RF_setfilmode_ea](../../libatalk/vfs/vfs.c.md#rf_setfilmode_ea), [RF_solaris_acl](../../libatalk/vfs/vfs.c.md#rf_solaris_acl), [RF_solaris_remove_acl](../../libatalk/vfs/vfs.c.md#rf_solaris_remove_acl), [ad_conv_dehex](../../libatalk/adouble/ad_conv.c.md#ad_conv_dehex), [afp_syncdir](../../etc/afpd/directory.c.md#afp_syncdir), [check_addir](../../bin/dbd/cmd_dbd_scanvol.c.md#check_addir), [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [ea_path](../../libatalk/vfs/ea_ad.c.md#ea_path), [rmdir_with_cnid](../../bin/nad/nad_rmdir.c.md#rmdir_with_cnid).
 * `struct _cnid_db * v_cdb`
 * `char v_stamp`
 * `VolSpace v_limitsize`: Size limit, if any, in MiB.
@@ -144,7 +144,7 @@ Defined at line 33.
 * `AFPVOL_EA_AD`: Store them in adouble files.
 * `AFPVOL_EA_AUTO`: try sys, fallback to ad (default)
 * `AFPVOL_EA_NONE`: No EAs.
-* `AFPVOL_EA_SAMBA`: Store Samba compatible xattrs (append 0 byte)
+* `AFPVOL_EA_SAMBA`: Store Samba compatible xattrs (append 0 byte).
 * `AFPVOL_EA_SYS`: Store them in native EAs.
 * `AFPVOL_EILSEQ`: encode illegal sequence 'asis' UCS2, ex "\217-", which is not a valid SHIFT-JIS char, is encoded as U\217 -
 * `AFPVOL_FOLLOWSYM`: follow symlinks on the server, default is not to

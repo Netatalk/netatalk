@@ -5,7 +5,7 @@ description: "13 functions, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_stream.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -235,7 +235,9 @@ Defined at lines 607 to 646. Declared in [include/atalk/dsi.h](../../include/ata
 
 Read length bytes from the read-ahead buffer and the socket.
 
-buf_read supplies the bytes, and the loop continues after EINTR and EAGAIN until length bytes arrived. End of file or a read error ends the call with 0. A disconnected session also yields 0.
+buf_read supplies the bytes, and the loop continues after EINTR and EAGAIN until length bytes arrived. End of file or a read error ends the call with
+
+1. A disconnected session also yields 0.
 
 Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session

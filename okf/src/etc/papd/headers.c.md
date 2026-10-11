@@ -5,7 +5,7 @@ description: "9 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/headers.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -143,7 +143,7 @@ int ch_endcomm(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 
 Defined at lines 270 to 295.
 
-End the header comments of a job at `%EndComments`
+End the header comments of a job at `%EndComments`.
 
 The call sets PF_STW, so the job loop opens the spool file. It writes the line to the job with PF_TRANSLATE set, pops the comment state, and consumes the line.
 
@@ -166,7 +166,7 @@ int ch_starttranslate(struct papfile *in, struct papfile *out, struct sockaddr_a
 
 Defined at lines 311 to 334.
 
-Start a translated section at `%BeginFeature` or `%BeginPageSetup`
+Start a translated section at `%BeginFeature` or `%BeginPageSetup`.
 
 The call sets PF_TRANSLATE and leaves it set until the matching end comment. PF_TRANSLATE makes lp_write turn CR line ends into LF for printers with P_FOOMATIC_HACK. The call writes the line, pops the comment state, and consumes the line.
 
@@ -189,7 +189,7 @@ int ch_endtranslate(struct papfile *in, struct papfile *out, struct sockaddr_at 
 
 Defined at lines 348 to 371.
 
-End a translated section at `%EndFeature` or `%EndPageSetup`
+End a translated section at `%EndFeature` or `%EndPageSetup`.
 
 The call writes the line while PF_TRANSLATE is still set, then clears it. It pops the comment state and consumes the line.
 

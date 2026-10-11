@@ -5,7 +5,7 @@ description: "5 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_input.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -99,8 +99,6 @@ Print a hex dump of a buffer with the kernel printf, 15 bytes a line, then an en
 Print a hex dump of a buffer to stdout, 16 bytes a line.
 
 Called by: [m_printm](ddp_input.c.md#m_printm)
-
-Uses file-scope variables: `hexdig`
 
 # Macros
 

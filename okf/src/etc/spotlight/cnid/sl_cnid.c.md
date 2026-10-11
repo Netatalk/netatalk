@@ -5,7 +5,7 @@ description: "17 functions, 2 types, includes 10 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/cnid/sl_cnid.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -84,7 +84,7 @@ static char * sl_cnid_quoted_value(TALLOC_CTX *mem_ctx, const char *p, const cha
 
 Defined at lines 182 to 274.
 
-Extract the quoted value starting at or after `p`
+Extract the quoted value starting at or after `p`.
 
 Scans to the first unescaped closing quote, strips unescaped leading/trailing '*' wildcards, drops one wrapping escaped-quote pair (Finder's exact-phrase delimiters; the substring search preserves adjacency by construction) and removes the remaining backslash escapes.
 

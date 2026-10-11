@@ -5,7 +5,7 @@ description: "12 functions, includes 8 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/print_cups.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -170,7 +170,7 @@ static int cups_mangle_printer_name(struct printer *pr, struct printer *printers
 
 Defined at lines 779 to 813.
 
-Give an added printer a free NBP name by appending `#01` to `#99`
+Give an added printer a free NBP name by appending `#01` to `#99`.
 
 The name keeps at most 28 bytes before the suffix, so it stays within the 31 bytes of a Chooser name.
 
@@ -192,7 +192,7 @@ static size_t to_ascii(char *inptr, char **outptr)
 
 Defined at lines 828 to 852.
 
-Make an ASCII version of a name by turning every byte above 0x7f into `_`
+Make an ASCII version of a name by turning every byte above 0x7f into `_`.
 
 A failed allocation exits papd.
 

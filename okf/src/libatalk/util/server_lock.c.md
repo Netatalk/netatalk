@@ -5,7 +5,7 @@ description: "3 functions, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_lock.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -38,8 +38,6 @@ Parameters:
 Returns: the pid of the child in the parent, 0 in the child or with debug, or -1 on error
 
 Called by: [main](../../etc/atalkd/main.c.md#main), [main](../../etc/papd/main.c.md#main)
-
-Uses file-scope variables: `itimer`
 
 ### check_lockfile
 

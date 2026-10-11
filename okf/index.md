@@ -12,7 +12,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 
 # Build
 
-* [Build record](build.md) - Netatalk commit 9b5f7c886bc5 rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8.
+* [Build record](build.md) - Netatalk commit 9aa4f172b1ab rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
 
 # Subsystems
 

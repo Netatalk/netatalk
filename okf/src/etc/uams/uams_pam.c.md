@@ -5,7 +5,7 @@ description: "10 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_pam.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -62,7 +62,7 @@ Parameters:
 
 Returns: PAM_SUCCESS, or PAM_CONV_ERR
 
-Uses file-scope variables: `PAM_chauthtok_count`, `PAM_chauthtok_mode`, `PAM_oldpassword`, `PAM_password`, `PAM_username`
+Uses file-scope variables: `PAM_chauthtok_count`, `PAM_chauthtok_mode`, `PAM_oldpassword`
 
 Dispatched via: [PAM_conversation](uams_pam.c.md#pam_conversation)
 
@@ -74,7 +74,7 @@ static void clrtxt_log_pam_error(enum loglevels level, pam_handle_t *ph, const c
 
 Defined at lines 172 to 179.
 
-Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure)
+Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure).
 
 errno is read before pam_strerror(), whose message lookup can change it. A failed pam_start(), and a failed account or session step of a printer login, are errors; the other steps are informational.
 
@@ -116,8 +116,6 @@ Returns: AFP_OK, AFPERR_PWDEXPR, AFPERR_NOTAUTH, or AFPERR_PARAM
 Calls: [clrtxt_log_pam_error](uams_pam.c.md#clrtxt_log_pam_error), [uam_afpserver_option](../afpd/uam.c.md#uam_afpserver_option), [uam_checkuser](../afpd/uam.c.md#uam_checkuser), [uam_getname](../afpd/uam.c.md#uam_getname)
 
 Called by: [pam_login](uams_pam.c.md#pam_login), [pam_login_ext](uams_pam.c.md#pam_login_ext)
-
-Uses file-scope variables: `PAM_conversation`, `PAM_password`, `PAM_username`, `hostname`, `pamh`
 
 ### pam_login
 
@@ -184,8 +182,6 @@ Close the PAM session of the login and call pam_end.
 
 Called by: [uam_setup](uams_pam.c.md#uam_setup)
 
-Uses file-scope variables: `pamh`
-
 ### pam_changepw
 
 ```c
@@ -213,7 +209,7 @@ Calls: [atalk_ct_memcmp](../../libatalk/util/constant_time.c.md#atalk_ct_memcmp)
 
 Called by: [uam_setup](uams_pam.c.md#uam_setup)
 
-Uses file-scope variables: `PAM_chauthtok_count`, `PAM_chauthtok_mode`, `PAM_conversation`, `PAM_oldpassword`, `PAM_password`, `PAM_username`, `hostname`
+Uses file-scope variables: `PAM_chauthtok_count`, `PAM_chauthtok_mode`, `PAM_oldpassword`
 
 ### pam_printer
 
@@ -238,8 +234,6 @@ Returns: 0, or -1 for a malformed string, a refused user, or a failed PAM step
 Calls: [append](../afpd/uam.c.md#append), [clrtxt_log_pam_error](uams_pam.c.md#clrtxt_log_pam_error), [explicit_bzero](../../libatalk/compat/explicit_bzero.c.md#explicit_bzero), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [uam_checkuser](../afpd/uam.c.md#uam_checkuser), [uam_getname](../afpd/uam.c.md#uam_getname)
 
 Called by: [uam_setup](uams_pam.c.md#uam_setup)
-
-Uses file-scope variables: `PAM_conversation`, `PAM_password`, `PAM_username`, `hostname`, `pamh`
 
 ### uam_setup
 

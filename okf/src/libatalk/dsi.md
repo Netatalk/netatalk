@@ -5,7 +5,7 @@ description: "12 files, 47 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/dsi"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -37,7 +37,6 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 
 * [etc/afpd](../etc/afpd.md): 37 calls
 * [libatalk/adouble](adouble.md): 1 calls
-* [libatalk/asp](asp.md): 1 calls
 
 # Most called functions
 
@@ -45,9 +44,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 * [dsi_stream_read](dsi/dsi_stream.c.md#dsi_stream_read): 5 callers
 * [dsi_stream_write](dsi/dsi_stream.c.md#dsi_stream_write): 5 callers
 * [dsi_close_pipe](dsi/dsi_write.c.md#dsi_close_pipe): 4 callers
-* [dsi_close_spare_fd](dsi/dsi_getsess.c.md#dsi_close_spare_fd): 3 callers
 * [dsi_peek](dsi/dsi_stream.c.md#dsi_peek): 3 callers
 * [dsi_read](dsi/dsi_read.c.md#dsi_read): 3 callers
 * [dsi_readdone](dsi/dsi_read.c.md#dsi_readdone): 3 callers
 * [dsi_readinit](dsi/dsi_read.c.md#dsi_readinit): 3 callers
 * [dsi_writeflush](dsi/dsi_write.c.md#dsi_writeflush): 3 callers
+* [dsi_writeinit](dsi/dsi_write.c.md#dsi_writeinit): 3 callers

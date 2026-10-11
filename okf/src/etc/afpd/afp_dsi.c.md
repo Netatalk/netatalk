@@ -5,7 +5,7 @@ description: "20 functions, 1 type, includes 18 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_dsi.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -52,8 +52,6 @@ Parameters:
 Calls: [close_all_vol](volume.c.md#close_all_vol), [dircache_rfork_shutdown](dircache.c.md#dircache_rfork_shutdown), [dsi_close](../../libatalk/dsi/dsi_close.c.md#dsi_close), [iw_log_stats](idle_worker.c.md#iw_log_stats), [iw_revoke_signal_safe](idle_worker.c.md#iw_revoke_signal_safe), [log_dircache_stat](dircache.c.md#log_dircache_stat), [of_log_usage](ofork.c.md#of_log_usage), [pfd_log_stats](pfd_cache.c.md#pfd_log_stats), [pfd_shutdown](pfd_cache.c.md#pfd_shutdown)
 
 Called by: [afp_dsi_die](afp_dsi.c.md#afp_dsi_die), [afp_over_dsi](afp_dsi.c.md#afp_over_dsi), [handle_transfer_session](afp_dsi.c.md#handle_transfer_session), [process_deferred_signals](afp_dsi.c.md#process_deferred_signals)
-
-Calls through [`AFPObj::logout`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
 
 Mentioned in the documentation of: [afp_dsi_die](afp_dsi.c.md#afp_dsi_die)
 

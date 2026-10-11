@@ -5,7 +5,7 @@ description: "10 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/aarp.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -36,8 +36,6 @@ A complete entry lives for AARPT_KILLC minutes without use and an incomplete one
 Calls: [aarptfree](aarp.c.md#aarptfree)
 
 Called by: [aarp_clean](aarp.c.md#aarp_clean), [aarptnew](aarp.c.md#aarptnew)
-
-Uses file-scope variables: `aarptab`
 
 ### at_ifawithnet
 

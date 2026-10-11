@@ -5,7 +5,7 @@ description: "1 file, 1 function."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/netddp"
 tags: ["libatalk/netddp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -21,11 +21,10 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 
 * [libatalk/nbp](nbp.md): 3 calls
 * [bin/getzones](../bin/getzones.md): 2 calls
-* [bin/aecho](../bin/aecho.md): 1 calls
 * [bin/nbp](../bin/nbp.md): 1 calls
 * [bin/rtmpqry](../bin/rtmpqry.md): 1 calls
 * [libatalk/atp](atp.md): 1 calls
 
 # Most called functions
 
-* [netddp_open](netddp/netddp_open.c.md#netddp_open): 9 callers
+* [netddp_open](netddp/netddp_open.c.md#netddp_open): 8 callers

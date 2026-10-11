@@ -5,7 +5,7 @@ description: "10 functions, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_asp.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -47,8 +47,6 @@ Parameters:
 Calls: [asp_close](../../libatalk/asp/asp_close.c.md#asp_close), [close_all_vol](volume.c.md#close_all_vol)
 
 Called by: [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_over_asp](afp_asp.c.md#afp_over_asp)
-
-Calls through [`AFPObj::logout`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
 
 ### afp_asp_die_now
 

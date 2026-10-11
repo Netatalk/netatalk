@@ -5,7 +5,7 @@ description: "5 files, 7 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/nbp"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -33,11 +33,11 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [bin/pap](../bin/pap.md): 4 calls
 * [etc/afpd](../etc/afpd.md): 3 calls
 * [etc/papd](../etc/papd.md): 3 calls
-* [bin/aecho](../bin/aecho.md): 2 calls
+* [bin/aecho](../bin/aecho.md): 1 calls
 
 # Most called functions
 
-* [nbp_name](nbp/nbp_util.c.md#nbp_name): 7 callers
+* [nbp_name](nbp/nbp_util.c.md#nbp_name): 6 callers
 * [nbp_lookup](nbp/nbp_lkup.c.md#nbp_lookup): 4 callers
 * [nbp_unrgstr](nbp/nbp_unrgstr.c.md#nbp_unrgstr): 4 callers
 * [nbp_rgstr](nbp/nbp_rgstr.c.md#nbp_rgstr): 3 callers

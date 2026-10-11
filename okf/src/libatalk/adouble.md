@@ -5,7 +5,7 @@ description: "11 files, 110 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/adouble"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -36,8 +36,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 188 calls
-* [bin/nad](../bin/nad.md): 63 calls
+* [etc/afpd](../etc/afpd.md): 200 calls
+* [bin/nad](../bin/nad.md): 71 calls
 * [bin/dbd](../bin/dbd.md): 19 calls
 * [libatalk/vfs](vfs.md): 17 calls
 * [libatalk/dsi](dsi.md): 1 calls
@@ -46,6 +46,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 
 * [ad_close](adouble/ad_flush.c.md#ad_close): 44 callers
 * [ad_init](adouble/ad_open.c.md#ad_init): 41 callers
+* [ad_entry](adouble/ad_open.c.md#ad_entry): 37 callers
 * [ad_open](adouble/ad_open.c.md#ad_open): 36 callers
 * [ad_flush](adouble/ad_flush.c.md#ad_flush): 35 callers
 * [ad_getentryoff](adouble/ad_open.c.md#ad_getentryoff): 26 callers
@@ -53,10 +54,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 * [ad_setname](adouble/ad_attr.c.md#ad_setname): 13 callers
 * [ad_getattr](adouble/ad_attr.c.md#ad_getattr): 11 callers
 * [ad_setdate](adouble/ad_date.c.md#ad_setdate): 10 callers
-* [adflags2logstr](adouble/ad_open.c.md#adflags2logstr): 8 callers
 
 # Functions without a static caller
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[ad_entry](adouble/ad_open.c.md#ad_entry), [ad_getfuid](adouble/ad_open.c.md#ad_getfuid)
+[ad_getfuid](adouble/ad_open.c.md#ad_getfuid)

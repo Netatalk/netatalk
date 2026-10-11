@@ -5,7 +5,7 @@ description: "28 functions, 1 type, includes 23 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/file.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -209,7 +209,7 @@ Parameters:
 
 Returns: data
 
-Calls: [default_type](file.c.md#default_type), [getextmap](../../libatalk/util/netatalk_conf.c.md#getextmap)
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [default_type](file.c.md#default_type), [getextmap](../../libatalk/util/netatalk_conf.c.md#getextmap)
 
 Called by: [getmetadata](file.c.md#getmetadata), [unpack_finderinfo](catsearch.c.md#unpack_finderinfo)
 
@@ -295,7 +295,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_BITMAP for an unknown bit, AFPERR_NOOBJ, AFPERR_MISC, or the afp_errno of get_id
 
-Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [accessmode](unix.c.md#accessmode), [ad_forcegetid](../../libatalk/adouble/ad_attr.c.md#ad_forcegetid), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [dir_remove](directory.c.md#dir_remove), [dircache_add](dircache.c.md#dircache_add), [fullpath_join](directory.c.md#fullpath_join), [get_finderinfo](file.c.md#get_finderinfo), [get_id](file.c.md#get_id), [ostat](../../libatalk/util/unix.c.md#ostat), [path_cached_file](../../include/atalk/directory.h.md#path_cached_file), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](desktop.c.md#utompath)
+Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [accessmode](unix.c.md#accessmode), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_forcegetid](../../libatalk/adouble/ad_attr.c.md#ad_forcegetid), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [dir_remove](directory.c.md#dir_remove), [dircache_add](dircache.c.md#dircache_add), [fullpath_join](directory.c.md#fullpath_join), [get_finderinfo](file.c.md#get_finderinfo), [get_id](file.c.md#get_id), [ostat](../../libatalk/util/unix.c.md#ostat), [path_cached_file](../../include/atalk/directory.h.md#path_cached_file), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](desktop.c.md#utompath)
 
 Called by: [getfilparams](file.c.md#getfilparams), [getforkparams](fork.c.md#getforkparams)
 
@@ -406,7 +406,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_ACCESS, AFPERR_BITMAP, AFPERR_MISC, or another AFPERR_* code
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setattr](../../libatalk/adouble/ad_attr.c.md#ad_setattr), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [check_access](directory.c.md#check_access), [check_delete_inhibit](file.c.md#check_delete_inhibit), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [default_type](file.c.md#default_type), [dir_modify](directory.c.md#dir_modify), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [get_id](file.c.md#get_id), [getdefextmap](../../libatalk/util/netatalk_conf.c.md#getdefextmap), [getextmap](../../libatalk/util/netatalk_conf.c.md#getextmap), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_ad](ofork.c.md#of_ad), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat), [replace_with_symlink](file.c.md#replace_with_symlink), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdirparams](directory.c.md#setdirparams), [setfilowner](unix.c.md#setfilowner), [setfilunixmode](unix.c.md#setfilunixmode), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [symlink_target_safe](file.c.md#symlink_target_safe)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setattr](../../libatalk/adouble/ad_attr.c.md#ad_setattr), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [check_access](directory.c.md#check_access), [check_delete_inhibit](file.c.md#check_delete_inhibit), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [default_type](file.c.md#default_type), [dir_modify](directory.c.md#dir_modify), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [get_id](file.c.md#get_id), [getdefextmap](../../libatalk/util/netatalk_conf.c.md#getdefextmap), [getextmap](../../libatalk/util/netatalk_conf.c.md#getextmap), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_ad](ofork.c.md#of_ad), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat), [replace_with_symlink](file.c.md#replace_with_symlink), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdirparams](directory.c.md#setdirparams), [setfilowner](unix.c.md#setfilowner), [setfilunixmode](unix.c.md#setfilunixmode), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [symlink_target_safe](file.c.md#symlink_target_safe)
 
 Called by: [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [afp_setfilparams](file.c.md#afp_setfilparams)
 

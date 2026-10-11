@@ -5,7 +5,7 @@ description: "20 functions, 2 types, includes 11 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/xapian/sl_xapian.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -116,6 +116,8 @@ Parameters:
 * `vol`: volume
 
 Returns: true when the volume path is in the seeded list
+
+Called by: [sl_xapian_ensure_seeded](sl_xapian.c.md#sl_xapian_ensure_seeded)
 
 Uses file-scope variables: `seeded_volumes`
 
@@ -290,7 +292,7 @@ Parameters:
 
 Returns: 0, or -1 when the state directories, the reconcile, or an allocation fails
 
-Calls: [sl_xapian_ensure_state_root](sl_xapian.c.md#sl_xapian_ensure_state_root), [sl_xapian_index_ready](sl_xapian.h.md#sl_xapian_index_ready), [sl_xapian_mark_seeded](sl_xapian.c.md#sl_xapian_mark_seeded), [sl_xapian_reconcile](sl_xapian.h.md#sl_xapian_reconcile), [sl_xapian_volume_uuid](sl_xapian.c.md#sl_xapian_volume_uuid)
+Calls: [sl_xapian_ensure_state_root](sl_xapian.c.md#sl_xapian_ensure_state_root), [sl_xapian_index_ready](sl_xapian.h.md#sl_xapian_index_ready), [sl_xapian_mark_seeded](sl_xapian.c.md#sl_xapian_mark_seeded), [sl_xapian_reconcile](sl_xapian.h.md#sl_xapian_reconcile), [sl_xapian_seeded](sl_xapian.c.md#sl_xapian_seeded), [sl_xapian_volume_uuid](sl_xapian.c.md#sl_xapian_volume_uuid)
 
 Called by: [sl_xapian_open_query](sl_xapian.c.md#sl_xapian_open_query)
 
@@ -368,7 +370,7 @@ Parameters:
 
 Returns: 0, or -1 on error
 
-Calls: [sl_xapian_db_path](sl_xapian.c.md#sl_xapian_db_path), [sl_xapian_ensure_seeded](sl_xapian.c.md#sl_xapian_ensure_seeded), [sl_xapian_fill_results](sl_xapian.c.md#sl_xapian_fill_results)
+Calls: [sl_xapian_db_path](sl_xapian.c.md#sl_xapian_db_path), [sl_xapian_ensure_seeded](sl_xapian.c.md#sl_xapian_ensure_seeded), [sl_xapian_fill_results](sl_xapian.c.md#sl_xapian_fill_results), [sl_xapian_query](sl_xapian.h.md#sl_xapian_query)
 
 Called through [`sl_backend_ops::sbo_open_query`](../../../include/atalk/spotlight.h.md#struct-sl_backend_ops) by: [sl_rpc_openQuery](../../afpd/spotlight.c.md#sl_rpc_openquery)
 

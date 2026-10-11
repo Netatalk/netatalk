@@ -5,7 +5,7 @@ description: "12 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx2_passwd.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -67,8 +67,6 @@ Calls: [dhx2_release_mpi](uams_dhx2_passwd.c.md#dhx2_release_mpi)
 
 Called by: [dhx2_setup](uams_dhx2_passwd.c.md#dhx2_setup), [logincont1](uams_dhx2_passwd.c.md#logincont1), [logincont2](uams_dhx2_passwd.c.md#logincont2), [passwd_logincont](uams_dhx2_passwd.c.md#passwd_logincont)
 
-Uses file-scope variables: `ID`, `K_MD5hash`, `K_hash_len`, `Ra`, `p`, `serverNonce`
-
 ### dh_params_generate
 
 ```c
@@ -115,8 +113,6 @@ Calls: [dh_params_generate](uams_dhx2_passwd.c.md#dh_params_generate), [dhx2_cle
 
 Called by: [login](uams_dhx2_passwd.c.md#login)
 
-Uses file-scope variables: `ID`, `Ra`, `dhxpwd`, `p`
-
 ### login
 
 ```c
@@ -142,8 +138,6 @@ Returns: AFPERR_AUTHCONT, AFPERR_NOTAUTH for an unknown user or one without a pa
 Calls: [dhx2_setup](uams_dhx2_passwd.c.md#dhx2_setup), [uam_getname](../afpd/uam.c.md#uam_getname)
 
 Called by: [passwd_login](uams_dhx2_passwd.c.md#passwd_login), [passwd_login_ext](uams_dhx2_passwd.c.md#passwd_login_ext)
-
-Uses file-scope variables: `dhxpwd`
 
 ### passwd_login
 
@@ -224,8 +218,6 @@ Calls: [dhx2_clear_session](uams_dhx2_passwd.c.md#dhx2_clear_session), [dhx2_rel
 
 Called by: [passwd_logincont](uams_dhx2_passwd.c.md#passwd_logincont)
 
-Uses file-scope variables: `ID`, `K_MD5hash`, `K_hash_len`, `Ra`, `dhx_c2siv`, `dhx_s2civ`, `p`, `serverNonce`
-
 ### logincont2
 
 ```c
@@ -252,8 +244,6 @@ Calls: [dhx2_clear_session](uams_dhx2_passwd.c.md#dhx2_clear_session), [explicit
 
 Called by: [passwd_logincont](uams_dhx2_passwd.c.md#passwd_logincont)
 
-Uses file-scope variables: `K_MD5hash`, `K_hash_len`, `dhx_c2siv`, `dhxpwd`, `p`, `serverNonce`
-
 ### passwd_logincont
 
 ```c
@@ -279,8 +269,6 @@ Returns: the result of the step, or AFPERR_PARAM for an unexpected request
 Calls: [dhx2_clear_session](uams_dhx2_passwd.c.md#dhx2_clear_session), [logincont1](uams_dhx2_passwd.c.md#logincont1), [logincont2](uams_dhx2_passwd.c.md#logincont2)
 
 Called by: [uam_setup](uams_dhx2_passwd.c.md#uam_setup)
-
-Uses file-scope variables: `ID`
 
 ### uam_setup
 

@@ -5,7 +5,7 @@ description: "9 functions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/xapian/sl_xapian.h"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -47,6 +47,8 @@ int sl_xapian_query(const char *db_path, const char *scope, const char *qstring,
 ```
 
 Declared at etc/spotlight/xapian/sl_xapian.h line 27; no definition in the scanned sources.
+
+Called by: [sl_xapian_open_query](sl_xapian.c.md#sl_xapian_open_query)
 
 ### sl_xapian_upsert_path
 

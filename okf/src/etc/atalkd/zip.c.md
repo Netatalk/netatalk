@@ -5,7 +5,7 @@ description: "6 functions, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/zip.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -83,7 +83,7 @@ Calls: [addzone](zip.c.md#addzone), [bootaddr](main.c.md#bootaddr), [looproute](
 
 Called by: [as_timer](main.c.md#as_timer), [zip_getnetinfo](zip.c.md#zip_getnetinfo)
 
-Uses file-scope variables: `ciface` in [etc/atalkd/main.c](main.c.md), `interfaces` in [etc/atalkd/main.c](main.c.md), `stabletimer` in [etc/atalkd/main.c](main.c.md)
+Uses file-scope variables: `ciface` in [etc/atalkd/main.c](main.c.md), `stabletimer` in [etc/atalkd/main.c](main.c.md)
 
 Dispatched via: [atserv](main.c.md#atserv)
 

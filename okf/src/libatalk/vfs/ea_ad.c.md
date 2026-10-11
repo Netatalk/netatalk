@@ -5,7 +5,7 @@ description: "Store Extended Attributes inside .AppleDouble folders as follows:"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/ea_ad.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -498,7 +498,7 @@ Returns: AFP_OK, or AFPERR_MISC when the header open or a delete failed
 
 Calls: [delete_ea_file](ea_ad.c.md#delete_ea_file), [ea_close](ea_ad.c.md#ea_close), [ea_openat](ea_ad.c.md#ea_openat)
 
-Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile), [ftw_copy_file](../../bin/nad/nad_cp.c.md#ftw_copy_file), [rm](../../bin/nad/nad_rm.c.md#rm), [vfs_deletefile](vfs.c.md#vfs_deletefile)
+Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile), [vfs_deletefile](vfs.c.md#vfs_deletefile)
 
 Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 
@@ -524,7 +524,7 @@ Returns: AFP_OK, or AFPERR_MISC when an open, an entry update, or a rename faile
 
 Calls: [ad_close](../adouble/ad_flush.c.md#ad_close), [ad_init](../adouble/ad_open.c.md#ad_init), [ad_open](../adouble/ad_open.c.md#ad_open), [ea_addentry](ea_ad.c.md#ea_addentry), [ea_close](ea_ad.c.md#ea_close), [ea_delentry](ea_ad.c.md#ea_delentry), [ea_open](ea_ad.c.md#ea_open), [ea_openat](ea_ad.c.md#ea_openat), [ea_path](ea_ad.c.md#ea_path), [unix_rename](unix.c.md#unix_rename)
 
-Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [do_move](../../bin/nad/nad_mv.c.md#do_move), [renamefile](../../etc/afpd/file.c.md#renamefile), [vfs_renamefile](vfs.c.md#vfs_renamefile)
+Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [renamefile](../../etc/afpd/file.c.md#renamefile), [vfs_renamefile](vfs.c.md#vfs_renamefile)
 
 Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 
@@ -550,7 +550,7 @@ Note: Copies EAs from source file to dest file.
 
 Calls: [ad_close](../adouble/ad_flush.c.md#ad_close), [ad_init](../adouble/ad_open.c.md#ad_init), [ad_open](../adouble/ad_open.c.md#ad_open), [copy_file](unix.c.md#copy_file), [ea_addentry](ea_ad.c.md#ea_addentry), [ea_close](ea_ad.c.md#ea_close), [ea_open](ea_ad.c.md#ea_open), [ea_openat](ea_ad.c.md#ea_openat), [ea_path](ea_ad.c.md#ea_path)
 
-Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
+Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
 
 Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 

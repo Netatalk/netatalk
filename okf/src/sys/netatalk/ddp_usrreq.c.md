@@ -5,7 +5,7 @@ description: "10 functions, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_usrreq.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -135,8 +135,6 @@ Parameters:
 Returns: 0
 
 Called by: [ddp_usrreq](ddp_usrreq.c.md#ddp_usrreq)
-
-Uses file-scope variables: `ddpcb`
 
 ### at_pcbdetach
 

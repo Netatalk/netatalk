@@ -5,7 +5,7 @@ description: "7 functions, 1 type, includes 16 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/enumerate.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -222,5 +222,5 @@ Defined at line 43.
 
 # Macros
 
-* `REPLY_PARAM_MAXLEN`: This is the maximal length of a single entry for a file/dir in the reply block if all bits in the file/dir bitmap are set: header(4) + [params(104)](../atalkd/config.c.md#params) + macnamelength(1) + macname(31) + utf8(4) + utf8namelen(2) + utf8name(255) + oddpadding(1)
+* `REPLY_PARAM_MAXLEN`: This is the maximal length of a single entry for a file/dir in the reply block if all bits in the file/dir bitmap are set: header(4) + [params(104)](../atalkd/config.c.md#params) + macnamelength(1) + macname(31) + utf8(4) + utf8namelen(2) + utf8name(255) + oddpadding(1).
 * Undocumented: `SDBUFBRK`, `min`

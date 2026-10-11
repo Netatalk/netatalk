@@ -5,7 +5,7 @@ description: "Character-set conversion routines based on samba iconv wrappers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charcnv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -474,7 +474,7 @@ Calls: [atalk_iconv](iconv.c.md#atalk_iconv)
 
 Called by: [convert_charset](charcnv.c.md#convert_charset)
 
-Uses file-scope variables: `conv_handles`, `hexdig`
+Uses file-scope variables: `conv_handles`
 
 ### convert_charset
 

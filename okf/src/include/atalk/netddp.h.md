@@ -5,7 +5,7 @@ description: "this provides a generic interface to the ddp layer."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/netddp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -68,4 +68,4 @@ Defined at lines 40 to 45.
 
 Receive a DDP datagram through recvfrom.
 
-Called by: [atp_recv_atp](../../libatalk/atp/atp_packet.c.md#atp_recv_atp), [do_getnetinfo](../../bin/getzones/getzones.c.md#do_getnetinfo), [do_query](../../bin/getzones/getzones.c.md#do_query), [do_rtmp_rdr](../../bin/rtmpqry/rtmpqry.c.md#do_rtmp_rdr), [do_rtmp_request](../../bin/rtmpqry/rtmpqry.c.md#do_rtmp_request), [main](../../bin/aecho/aecho.c.md#main), [nbp_do_lookup_op](../../libatalk/nbp/nbp_lkup.c.md#nbp_do_lookup_op), [nbp_rgstr](../../libatalk/nbp/nbp_rgstr.c.md#nbp_rgstr), [nbp_unrgstr](../../libatalk/nbp/nbp_unrgstr.c.md#nbp_unrgstr)
+Called by: [atp_recv_atp](../../libatalk/atp/atp_packet.c.md#atp_recv_atp), [do_getnetinfo](../../bin/getzones/getzones.c.md#do_getnetinfo), [do_query](../../bin/getzones/getzones.c.md#do_query), [do_rtmp_rdr](../../bin/rtmpqry/rtmpqry.c.md#do_rtmp_rdr), [do_rtmp_request](../../bin/rtmpqry/rtmpqry.c.md#do_rtmp_request), [nbp_do_lookup_op](../../libatalk/nbp/nbp_lkup.c.md#nbp_do_lookup_op), [nbp_rgstr](../../libatalk/nbp/nbp_rgstr.c.md#nbp_rgstr), [nbp_unrgstr](../../libatalk/nbp/nbp_unrgstr.c.md#nbp_unrgstr)

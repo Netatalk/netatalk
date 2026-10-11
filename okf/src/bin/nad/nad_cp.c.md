@@ -5,7 +5,7 @@ description: "AFP-aware copying of files and directory trees for nad."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_cp.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -34,8 +34,6 @@ static void upfunc(void)
 Defined at lines 117 to 121.
 
 Step the directory IDs of the walk back to the parent after nftw leaves a directory.
-
-Called by: [nad_cp](nad_cp.c.md#nad_cp)
 
 Uses file-scope variables: `did`, `pdid`, `ppdid`
 
@@ -70,7 +68,7 @@ Parameters:
 
 Returns: 1 after the transfer, 0 when the source has no metadata, or -1 for a read error
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_copy_header](../../libatalk/adouble/ad_flush.c.md#ad_copy_header), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_copy_header](../../libatalk/adouble/ad_flush.c.md#ad_copy_header), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open)
 
 Called by: [copy](nad_cp.c.md#copy)
 
@@ -97,11 +95,11 @@ Parameters:
 
 Returns: 0, or 1 when a source fails, while usage and fatal errors exit
 
-Calls: [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [copy](nad_cp.c.md#copy), [nftw](ftw.c.md#nftw), [openvol_optional](nad_util.c.md#openvol_optional), [set_signal](nad_util.c.md#set_signal), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [upfunc](nad_cp.c.md#upfunc), [usage_cp](nad_cp.c.md#usage_cp)
+Calls: [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [copy](nad_cp.c.md#copy), [nftw](ftw.c.md#nftw), [openvol_optional](nad_util.c.md#openvol_optional), [set_signal](nad_util.c.md#set_signal), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [usage_cp](nad_cp.c.md#usage_cp)
 
 Called by: [copy](nad_mv.c.md#copy), [main](nad.c.md#main)
 
-Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badcp`, `did`, `dvolume`, `fflag`, `ftw_options`, `iflag`, `nflag`, `pdid`, `pflag`, `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag`
+Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badcp`, `did`, `dvolume`, `fflag`, `ftw_options`, `iflag` in [bin/nad/nad.h](nad.h.md), `nflag` in [bin/nad/nad.h](nad.h.md), `pdid`, `pflag` in [bin/nad/nad.h](nad.h.md), `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag` in [bin/nad/nad.h](nad.h.md)
 
 ### copy
 
@@ -129,11 +127,7 @@ Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../
 
 Called by: [nad_cp](nad_cp.c.md#nad_cp)
 
-Calls through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_copyfile_adouble](../../libatalk/vfs/vfs.c.md#rf_copyfile_adouble), [RF_copyfile_ea](../../libatalk/vfs/vfs.c.md#rf_copyfile_ea), [ea_copyfile](../../libatalk/vfs/ea_ad.c.md#ea_copyfile), [sys_ea_copyfile](../../libatalk/vfs/ea_sys.c.md#sys_ea_copyfile), [vfs_copyfile](../../libatalk/vfs/vfs.c.md#vfs_copyfile)
-
-Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops): [validupath_adouble](../../libatalk/vfs/vfs.c.md#validupath_adouble), [validupath_ea](../../libatalk/vfs/vfs.c.md#validupath_ea), [vfs_validupath](../../libatalk/vfs/vfs.c.md#vfs_validupath)
-
-Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badcp`, `did`, `dvolume`, `nflag`, `pdid`, `pflag`, `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag`
+Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badcp`, `did`, `dvolume`, `nflag` in [bin/nad/nad.h](nad.h.md), `pdid`, `pflag` in [bin/nad/nad.h](nad.h.md), `ppdid`, `rval`, `svolume`, `to`, `type`, `vflag` in [bin/nad/nad.h](nad.h.md)
 
 ### ftw_copy_file
 
@@ -161,9 +155,7 @@ Calls: [setfile](nad_cp.c.md#setfile)
 
 Called by: [copy](nad_cp.c.md#copy)
 
-Calls through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_deletefile_adouble](../../libatalk/vfs/vfs.c.md#rf_deletefile_adouble), [RF_deletefile_ea](../../libatalk/vfs/vfs.c.md#rf_deletefile_ea), [ea_deletefile](../../libatalk/vfs/ea_ad.c.md#ea_deletefile), [vfs_deletefile](../../libatalk/vfs/vfs.c.md#vfs_deletefile)
-
-Uses file-scope variables: `dvolume`, `fflag`, `iflag`, `nflag`, `pflag`, `to`, `vflag`
+Uses file-scope variables: `dvolume`, `fflag`, `iflag` in [bin/nad/nad.h](nad.h.md), `nflag` in [bin/nad/nad.h](nad.h.md), `pflag` in [bin/nad/nad.h](nad.h.md), `to`, `vflag` in [bin/nad/nad.h](nad.h.md)
 
 ### ftw_copy_link
 
@@ -189,7 +181,7 @@ Calls: [setfile](nad_cp.c.md#setfile)
 
 Called by: [copy](nad_cp.c.md#copy)
 
-Uses file-scope variables: `pflag`, `to`
+Uses file-scope variables: `pflag` in [bin/nad/nad.h](nad.h.md), `to`
 
 ### setfile
 

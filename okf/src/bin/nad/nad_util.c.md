@@ -5,7 +5,7 @@ description: "10 functions, includes 10 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_util.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Parameters:
 
 Called by: [set_signal](nad_util.c.md#set_signal)
 
-Uses file-scope variables: `alarmed`
+Uses file-scope variables: `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md)
 
 ### set_signal
 
@@ -173,7 +173,7 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
 
 Defined at lines 310 to 346. Declared in [bin/nad/nad.h](nad.h.md).
 
-Convert dot encoding of basename *in place*
+Convert dot encoding of basename *in place*.
 
 path arg can be "[/][dir/ | ...]filename". It will be converted in place possible encoding ".file" as ":2efile" which means the result will be longer then the original which means provide a big enough buffer.
 

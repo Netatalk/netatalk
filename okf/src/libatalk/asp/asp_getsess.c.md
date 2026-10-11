@@ -5,7 +5,7 @@ description: "5 functions, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_getsess.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -101,7 +101,7 @@ Parameters:
 
 Returns: the session in the child, the server object in the parent, or NULL for a failed read or setup
 
-Calls: [atp_close](../atp/atp_close.c.md#atp_close), [atp_open](../atp/atp_open.c.md#atp_open), [atp_rreq](../atp/atp_rreq.c.md#atp_rreq), [atp_sresp](../atp/atp_sresp.c.md#atp_sresp), [dsi_close_spare_fd](../dsi/dsi_getsess.c.md#dsi_close_spare_fd), [server_child_add](../util/server_child.c.md#server_child_add), [server_child_free](../util/server_child.c.md#server_child_free), [server_child_remove](../util/server_child.c.md#server_child_remove), [server_reset_signal](../util/server_child.c.md#server_reset_signal), [set_asp_ac](asp_getsess.c.md#set_asp_ac), [setnonblock](../util/socket.c.md#setnonblock), [tickle_handler](asp_getsess.c.md#tickle_handler)
+Calls: [atp_rreq](../atp/atp_rreq.c.md#atp_rreq), [tickle_handler](asp_getsess.c.md#tickle_handler)
 
 Called by: [asp_start](../../etc/afpd/main.c.md#asp_start)
 
@@ -122,8 +122,6 @@ The store sits in a separate function, defined after its use, to keep the compil
 Parameters:
 * `sid`: session slot
 * `tmp`: filled child record
-
-Called by: [asp_getsession](asp_getsess.c.md#asp_getsession)
 
 Uses file-scope variables: `asp_ac`
 

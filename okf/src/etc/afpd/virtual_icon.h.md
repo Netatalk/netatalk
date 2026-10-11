@@ -5,7 +5,7 @@ description: "includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/virtual_icon.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,5 +29,5 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 * `RFORK_DATA_LEN_OFF`: Offset within the resource fork header of the data-length field.
 * `RFORK_HEADER_SIZE`: Size of the classic Mac resource fork header (data offset, map offset, data length, map length — four big-endian uint32s).
-* `VIRTUAL_ICON_CNID`: Reserved CNID for the virtual Icon file (below CNID_START=17)
-* `VIRTUAL_ICON_NAME`: The Mac filename: "Icon" followed by carriage return (0x0D)
+* `VIRTUAL_ICON_CNID`: Reserved CNID for the virtual Icon file (below CNID_START=17).
+* `VIRTUAL_ICON_NAME`: The Mac filename: "Icon" followed by carriage return (0x0D).

@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -186,7 +186,7 @@ Defined at line 199.
 * `struct ad_fd ad_resource_fork`: adouble:v2 -> the adouble file adouble:ea -> the EA fd
 * `struct ad_fd * ad_rfp`: adouble:v2 -> ad_resource_fork adouble:ea -> ad_resource_fork
 * `struct ad_fd * ad_mdp`: adouble:v2 -> ad_resource_fork adouble:ea -> ad_data_fork
-* `int ad_vers`: Our adouble version info (AD_VERSION*)
+* `int ad_vers`: Our adouble version info (AD_VERSION*).
 * `int ad_adflags`: ad_open flags adflags like ADFLAGS_DIR
 * `uint32_t ad_inited`
 * `int ad_options`

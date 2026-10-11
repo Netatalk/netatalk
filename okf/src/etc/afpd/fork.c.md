@@ -5,7 +5,7 @@ description: "31 functions, includes 17 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -50,7 +50,7 @@ Parameters:
 
 Returns: AFP_OK, or AFPERR_MISC when a create or open failed
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_write](../../libatalk/adouble/ad_write.c.md#ad_write), [ostat](../../libatalk/util/unix.c.md#ostat), [virtual_icon_get_rfork](virtual_icon.c.md#virtual_icon_get_rfork)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_write](../../libatalk/adouble/ad_write.c.md#ad_write), [ostat](../../libatalk/util/unix.c.md#ostat), [virtual_icon_get_rfork](virtual_icon.c.md#virtual_icon_get_rfork)
 
 Called by: [afp_setforkparams](fork.c.md#afp_setforkparams), [write_fork](fork.c.md#write_fork)
 
@@ -449,8 +449,6 @@ Returns: AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, or AFPERR_PARAM
 Calls: [ad_fork_fileno](../../libatalk/adouble/ad_open.c.md#ad_fork_fileno), [ad_size](../../libatalk/adouble/ad_size.c.md#ad_size), [ad_tmplock](../../libatalk/adouble/ad_lock.c.md#ad_tmplock), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [dsi_read](../../libatalk/dsi/dsi_read.c.md#dsi_read), [dsi_readdone](../../libatalk/dsi/dsi_read.c.md#dsi_readdone), [dsi_readinit](../../libatalk/dsi/dsi_read.c.md#dsi_readinit), [dsi_stream_read_file](../../libatalk/dsi/dsi_stream.c.md#dsi_stream_read_file), [fork_range_within](fork.h.md#fork_range_within), [get_off_t](fork.c.md#get_off_t), [of_find](ofork.c.md#of_find), [read_file](fork.c.md#read_file), [rfork_cache_free](ad_cache.c.md#rfork_cache_free), [rfork_cache_serve_from_buf](fork.c.md#rfork_cache_serve_from_buf), [rfork_cache_store_from_fd](ad_cache.c.md#rfork_cache_store_from_fd), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [afp_read](fork.c.md#afp_read), [afp_read_ext](fork.c.md#afp_read_ext)
-
-Calls through [`AFPObj::exit`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
 
 Uses file-scope variables: `rfork_max_entry_size` in [etc/afpd/dircache.c](dircache.c.md), `rfork_stat_added` in [etc/afpd/dircache.c](dircache.c.md), `rfork_stat_hits` in [etc/afpd/dircache.c](dircache.c.md), `rfork_stat_invalidated` in [etc/afpd/dircache.c](dircache.c.md), `rfork_stat_lookups` in [etc/afpd/dircache.c](dircache.c.md), `rfork_stat_misses` in [etc/afpd/dircache.c](dircache.c.md)
 

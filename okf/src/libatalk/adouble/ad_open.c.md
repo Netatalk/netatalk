@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_open.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -146,7 +146,7 @@ Parameters:
 
 Returns: 0, or -1 when the version is unknown, FinderInfo cannot be addressed, or the stat fails
 
-Calls: [ad_init_offsets](ad_open.c.md#ad_init_offsets), [ad_setattr](ad_attr.c.md#ad_setattr), [ad_setdate](ad_date.c.md#ad_setdate)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_init_offsets](ad_open.c.md#ad_init_offsets), [ad_setattr](ad_attr.c.md#ad_setattr), [ad_setdate](ad_date.c.md#ad_setdate)
 
 Called by: [ad_open_hf_ea](ad_open.c.md#ad_open_hf_ea), [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](ad_open.c.md#ad_open_rf_ea)
 
@@ -310,7 +310,7 @@ Parameters:
 
 Returns: -1 on error, 0 when nothing needed converting, 1 after converting
 
-Calls: [ad_close](ad_flush.c.md#ad_close), [ad_convert_move_rfork](ad_open.c.md#ad_convert_move_rfork), [ad_convert_pwrite_full](ad_open.c.md#ad_convert_pwrite_full), [ad_flush](ad_flush.c.md#ad_flush), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_init_offsets](ad_open.c.md#ad_init_offsets), [ad_init_old](ad_open.c.md#ad_init_old), [ad_open](ad_open.c.md#ad_open), [ad_rebuild_adouble_header_osx](ad_flush.c.md#ad_rebuild_adouble_header_osx), [fullpathname](../util/unix.c.md#fullpathname)
+Calls: [ad_close](ad_flush.c.md#ad_close), [ad_convert_move_rfork](ad_open.c.md#ad_convert_move_rfork), [ad_convert_pwrite_full](ad_open.c.md#ad_convert_pwrite_full), [ad_entry](ad_open.c.md#ad_entry), [ad_flush](ad_flush.c.md#ad_flush), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_init_offsets](ad_open.c.md#ad_init_offsets), [ad_init_old](ad_open.c.md#ad_init_old), [ad_open](ad_open.c.md#ad_open), [ad_rebuild_adouble_header_osx](ad_flush.c.md#ad_rebuild_adouble_header_osx), [fullpathname](../util/unix.c.md#fullpathname)
 
 Called by: [ad_header_read_osx](ad_open.c.md#ad_header_read_osx)
 
@@ -358,7 +358,7 @@ Parameters:
 
 Returns: 0, or -1 with errno set
 
-Calls: [become_root](../util/unix.c.md#become_root), [fullpathname](../util/unix.c.md#fullpathname), [parse_entries](ad_open.c.md#parse_entries), [sys_fgetxattr](../vfs/extattr.c.md#sys_fgetxattr), [sys_getxattr](../vfs/extattr.c.md#sys_getxattr), [sys_removexattr](../vfs/extattr.c.md#sys_removexattr), [unbecome_root](../util/unix.c.md#unbecome_root)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [become_root](../util/unix.c.md#become_root), [fullpathname](../util/unix.c.md#fullpathname), [parse_entries](ad_open.c.md#parse_entries), [sys_fgetxattr](../vfs/extattr.c.md#sys_fgetxattr), [sys_getxattr](../vfs/extattr.c.md#sys_getxattr), [sys_removexattr](../vfs/extattr.c.md#sys_removexattr), [unbecome_root](../util/unix.c.md#unbecome_root)
 
 Called through [`adouble_fops::ad_header_read`](../../include/atalk/adouble.h.md#struct-adouble_fops) by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_open_hf_ea](ad_open.c.md#ad_open_hf_ea), [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2), [ad_refresh](ad_open.c.md#ad_refresh)
 
@@ -604,7 +604,7 @@ Parameters:
 
 Returns: 0, or -1 with errno set
 
-Calls: [ad2openflags](ad_open.c.md#ad2openflags), [ad_flush](ad_flush.c.md#ad_flush), [ad_reso_size](ad_open.c.md#ad_reso_size), [adflags2logstr](ad_open.c.md#adflags2logstr), [fullpathname](../util/unix.c.md#fullpathname), [new_ad_header](ad_open.c.md#new_ad_header)
+Calls: [ad2openflags](ad_open.c.md#ad2openflags), [ad_entry](ad_open.c.md#ad_entry), [ad_flush](ad_flush.c.md#ad_flush), [ad_reso_size](ad_open.c.md#ad_reso_size), [adflags2logstr](ad_open.c.md#adflags2logstr), [fullpathname](../util/unix.c.md#fullpathname), [new_ad_header](ad_open.c.md#new_ad_header)
 
 Called by: [ad_open_hf](ad_open.c.md#ad_open_hf)
 
@@ -793,6 +793,8 @@ Parameters:
 Returns: the entry start, or NULL when the entry is absent or does not fit the buffer
 
 Calls: [ad_entry_fits](ad_open.c.md#ad_entry_fits), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_copy_header](ad_flush.c.md#ad_copy_header), [ad_copy_header_entry](ad_flush.c.md#ad_copy_header_entry), [ad_flush_hf](ad_flush.c.md#ad_flush_hf), [ad_forcegetid](ad_attr.c.md#ad_forcegetid), [ad_getattr](ad_attr.c.md#ad_getattr), [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_getdate](ad_date.c.md#ad_getdate), [ad_getid](ad_attr.c.md#ad_getid), [ad_header_read_ea](ad_open.c.md#ad_header_read_ea), [ad_open_hf_ea](ad_open.c.md#ad_open_hf_ea), [ad_rebuild_adouble_header_osx](ad_flush.c.md#ad_rebuild_adouble_header_osx), [ad_setattr](ad_attr.c.md#ad_setattr), [ad_setdate](ad_date.c.md#ad_setdate), [ad_setid](ad_attr.c.md#ad_setid), [ad_setname](ad_attr.c.md#ad_setname), [ad_store_to_cache](../../etc/afpd/ad_cache.c.md#ad_store_to_cache), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [change_creator](../../bin/nad/nad_set.c.md#change_creator), [change_flags](../../bin/nad/nad_set.c.md#change_flags), [change_label](../../bin/nad/nad_set.c.md#change_label), [change_type](../../bin/nad/nad_set.c.md#change_type), [copy_source_header](../../bin/nad/nad_cp.c.md#copy_source_header), [get_finderinfo](../../etc/afpd/file.c.md#get_finderinfo), [getdirparams](../../etc/afpd/directory.c.md#getdirparams), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [nad_header_read](../../bin/nad/nad_adouble.c.md#nad_header_read), [nad_header_write](../../bin/nad/nad_adouble.c.md#nad_header_write), [new_ad_header](ad_open.c.md#new_ad_header), [print_flags](../../bin/nad/nad_ls.c.md#print_flags), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
 ### ad_getentryoff
 

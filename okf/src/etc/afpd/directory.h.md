@@ -5,7 +5,7 @@ description: "1 function, 2 types, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -68,12 +68,12 @@ Parameters for [dir_modify()](directory.c.md#dir_modify) selective field updates
 
 Defined at line 61.
 * `unsigned int flags`: DCMOD_* bitmask.
-* `cnid_t new_pdid`: New parent DID (DCMOD_PATH)
-* `const char * new_mname`: New mac name, NULL = use new_uname (DCMOD_PATH)
-* `const char * new_uname`: New unix name (DCMOD_PATH)
-* `bstring new_pdir_path`: New parent directory fullpath (DCMOD_PATH)
-* `struct stat * st`: Fresh stat result (DCMOD_STAT)
-* `struct adouble * adp`: AD data to store (DCMOD_AD, Phase 2)
+* `cnid_t new_pdid`: New parent DID (DCMOD_PATH).
+* `const char * new_mname`: New mac name, NULL = use new_uname (DCMOD_PATH).
+* `const char * new_uname`: New unix name (DCMOD_PATH).
+* `bstring new_pdir_path`: New parent directory fullpath (DCMOD_PATH).
+* `struct stat * st`: Fresh stat result (DCMOD_STAT).
+* `struct adouble * adp`: AD data to store (DCMOD_AD, Phase 2).
 
 ### struct maccess
 
@@ -89,8 +89,8 @@ Defined at line 98.
 
 # Macros
 
-* `DCMOD_AD`: AD cache: finderinfo/filedatesi/afpfilei/rlen (Phase 2)
-* `DCMOD_AD_INV`: AD invalidate: zero AD fields, set rlen = -1 (Phase 2)
+* `DCMOD_AD`: AD cache: finderinfo/filedatesi/afpfilei/rlen (Phase 2).
+* `DCMOD_AD_INV`: AD invalidate: zero AD fields, set rlen = -1 (Phase 2).
 * `DCMOD_PATH`: Identity/navigation: d_pdid, names, d_fullpath.
 * `DCMOD_STAT`: Stat cache: dcache_ctime/ino/mode/mtime/uid/gid/size.
 * `DIRPBIT_PDINFO`: ProDOS Info.

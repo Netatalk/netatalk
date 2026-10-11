@@ -5,7 +5,7 @@ description: "1 function, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/session.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -47,7 +47,7 @@ Calls: [append](file.c.md#append), [atp_rreq](../../libatalk/atp/atp_rreq.c.md#a
 
 Called by: [main](main.c.md#main)
 
-Uses file-scope variables: `connid` in [etc/papd/main.c](main.c.md), `niov`, `oquantum`, `quantum`
+Uses file-scope variables: `niov`
 
 # File-scope variables
 

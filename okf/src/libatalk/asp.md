@@ -5,7 +5,7 @@ description: "10 files, 14 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/asp"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -28,9 +28,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 
 # Calls into
 
-* [libatalk/atp](atp.md): 15 calls
-* [libatalk/util](util.md): 6 calls
-* [libatalk/dsi](dsi.md): 1 calls
+* [libatalk/atp](atp.md): 12 calls
+* [libatalk/util](util.md): 1 calls
 
 # Called from
 
@@ -48,3 +47,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 * [asp_init](asp/asp_init.c.md#asp_init): 1 callers
 * [asp_setstatus](asp/asp_init.c.md#asp_setstatus): 1 callers
 * [asp_shutdown](asp/asp_shutdown.c.md#asp_shutdown): 1 callers
+
+# Functions without a static caller
+
+No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
+
+[set_asp_ac](asp/asp_getsess.c.md#set_asp_ac)

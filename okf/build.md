@@ -1,18 +1,18 @@
 ---
 type: Build Record
 title: "Build record"
-description: "Netatalk commit 9b5f7c886bc5 rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8."
-resource: "https://github.com/Netatalk/netatalk/commit/9b5f7c886bc51cc7c16ec5c610e09356b38cb859"
+description: "Netatalk commit 9aa4f172b1ab rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0."
+resource: "https://github.com/Netatalk/netatalk/commit/9aa4f172b1ab976761da9cabb8123f3ff43128de"
 tags: ["build"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Source
 
-* Commit: [9b5f7c886bc51cc7c16ec5c610e09356b38cb859](https://github.com/Netatalk/netatalk/commit/9b5f7c886bc51cc7c16ec5c610e09356b38cb859), committed 2026-10-11T16:42:54+02:00
+* Commit: [9aa4f172b1ab976761da9cabb8123f3ff43128de](https://github.com/Netatalk/netatalk/commit/9aa4f172b1ab976761da9cabb8123f3ff43128de), committed 2026-10-11T16:44:05+02:00
 * Scanned directories: `bin`, `etc`, `include`, `libatalk`, `sys`
-* Doxygen: 1.9.8, configured from `doc/Doxyfile.in` with XML output and reference relations
+* Doxygen: 1.15.0, configured from `doc/Doxyfile.in` with XML output and reference relations
 
 # Preprocessor view
 
@@ -28,13 +28,13 @@ Conditional code is included as if these macros were defined, so the graph refle
 * Documented functions: 2038
 * Types: 160
 * Function tables: 55
-* Call edges: 4480
-* Variable-use edges: 1729
+* Call edges: 4497
+* Variable-use edges: 1574
 * Table edges: 248
-* Dispatch edges: 206
-* Fields called through: 60
-* Documented-reference edges: 88
-* Graph edges: 8271
+* Dispatch edges: 186
+* Fields called through: 51
+* Documented-reference edges: 90
+* Graph edges: 8115
 
 # Edge kinds
 

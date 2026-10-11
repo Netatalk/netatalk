@@ -5,7 +5,7 @@ description: "6 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_getsess.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -47,7 +47,7 @@ Defined at lines 56 to 62. Declared in [include/atalk/dsi.h](../../include/atalk
 
 Release the spare descriptor, in a session child or before a refusal.
 
-Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [dsi_getsession](dsi_getsess.c.md#dsi_getsession), [dsi_refuse_starved](dsi_getsess.c.md#dsi_refuse_starved)
+Called by: [dsi_getsession](dsi_getsess.c.md#dsi_getsession), [dsi_refuse_starved](dsi_getsess.c.md#dsi_refuse_starved)
 
 Uses file-scope variables: `dsi_spare_fd`
 

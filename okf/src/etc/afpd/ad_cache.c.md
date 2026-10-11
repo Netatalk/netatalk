@@ -5,7 +5,7 @@ description: "6 functions, includes 11 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ad_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,6 +42,8 @@ Every ad_metadata disk read with a dircache entry at hand ends here. The entry k
 Parameters:
 * `adp`: AppleDouble with its metadata loaded
 * `cached`: dircache entry of the object
+
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry)
 
 Called by: [ad_getcomment](desktop.c.md#ad_getcomment), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [adl_lkup](catsearch.c.md#adl_lkup), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_listextattr](extattrs.c.md#afp_listextattr), [dir_modify](directory.c.md#dir_modify), [getfilparams](file.c.md#getfilparams), [getmetadata](file.c.md#getmetadata), [moveandrename](filedir.c.md#moveandrename)
 

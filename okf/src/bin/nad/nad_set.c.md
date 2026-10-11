@@ -5,7 +5,7 @@ description: "7 functions, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_set.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -50,6 +50,8 @@ Parameters:
 * `ad`: open metadata
 * `p_new_type`: type code of 4 characters
 
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry)
+
 Called by: [nad_set](nad_set.c.md#nad_set)
 
 ### change_creator
@@ -70,6 +72,8 @@ Parameters:
 * `st`: stat result of the entry, unused
 * `ad`: open metadata
 * `p_new_creator`: creator code of 4 characters
+
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry)
 
 Called by: [nad_set](nad_set.c.md#nad_set)
 
@@ -92,9 +96,9 @@ Parameters:
 * `ad`: open metadata
 * `p_new_label`: label name
 
-Called by: [nad_set](nad_set.c.md#nad_set)
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry)
 
-Uses file-scope variables: `labels`
+Called by: [nad_set](nad_set.c.md#nad_set)
 
 ### change_attributes
 
@@ -139,6 +143,8 @@ Parameters:
 * `st`: stat result of the entry
 * `ad`: open metadata
 * `p_new_flags`: flag letters
+
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry)
 
 Called by: [nad_set](nad_set.c.md#nad_set)
 

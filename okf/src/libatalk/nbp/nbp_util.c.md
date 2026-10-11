@@ -5,7 +5,7 @@ description: "3 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/nbp/nbp_util.c"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -84,7 +84,7 @@ Parameters:
 
 Returns: 0, or -1 for a name over 98 bytes
 
-Called by: [getprinters](../../etc/papd/main.c.md#getprinters), [main](../../bin/aecho/aecho.c.md#main), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../bin/pap/pap.c.md#main), [main](../../bin/pap/papstatus.c.md#main)
+Called by: [getprinters](../../etc/papd/main.c.md#getprinters), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../bin/pap/pap.c.md#main), [main](../../bin/pap/papstatus.c.md#main)
 
 # Macros
 

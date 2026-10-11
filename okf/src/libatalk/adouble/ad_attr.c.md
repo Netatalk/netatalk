@@ -5,7 +5,7 @@ description: "6 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_attr.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -40,7 +40,7 @@ Parameters:
 
 Returns: 0
 
-Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [change_attributes](../../bin/nad/nad_set.c.md#change_attributes), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [getdirparams](../../etc/afpd/directory.c.md#getdirparams), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [print_flags](../../bin/nad/nad_ls.c.md#print_flags), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
@@ -62,7 +62,7 @@ Parameters:
 
 Returns: 0
 
-Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [change_attributes](../../bin/nad/nad_set.c.md#change_attributes), [new_ad_header](ad_open.c.md#new_ad_header), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
@@ -88,6 +88,8 @@ Parameters:
 
 Returns: 1 after writing the entries, so the header needs a flush, or 0 when an entry cannot be addressed
 
+Calls: [ad_entry](ad_open.c.md#ad_entry)
+
 Called by: [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [do_move](../../bin/nad/nad_mv.c.md#do_move), [get_id](../../etc/afpd/file.c.md#get_id), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [nad_update_cnid](../../bin/nad/nad_adouble.c.md#nad_update_cnid), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [update_created_file_cnid](../../bin/nad/megatron.c.md#update_created_file_cnid)
 
 ### ad_getid
@@ -111,6 +113,8 @@ Parameters:
 
 Returns: the stored CNID, or CNID_INVALID when the entry is absent or the identity differs
 
+Calls: [ad_entry](ad_open.c.md#ad_entry)
+
 Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [get_id](../../etc/afpd/file.c.md#get_id), [getmetadata](../../etc/afpd/file.c.md#getmetadata)
 
 ### ad_forcegetid
@@ -127,6 +131,8 @@ Parameters:
 * `adp`: AppleDouble with its metadata loaded, or NULL
 
 Returns: the stored CNID, or CNID_INVALID when adp is NULL or has no PRIVID entry
+
+Calls: [ad_entry](ad_open.c.md#ad_entry)
 
 Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [print_flags](../../bin/nad/nad_ls.c.md#print_flags)
 
@@ -148,7 +154,7 @@ Parameters:
 
 Returns: 1 after storing the name, 0 when the entry does not exist, -1 when it cannot be addressed
 
-Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [check_addir](../../bin/dbd/cmd_dbd_scanvol.c.md#check_addir), [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [renamedir](../../etc/afpd/directory.c.md#renamedir), [renamefile](../../etc/afpd/file.c.md#renamefile), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 

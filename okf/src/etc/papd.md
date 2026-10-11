@@ -5,7 +5,7 @@ description: "22 files, 119 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/papd"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -64,4 +64,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[lp_host](papd/lp.c.md#lp_host), [pdecode](papd/printcap.c.md#pdecode), [pnamatch](papd/printcap.c.md#pnamatch), [ppd_feature](papd/ppd.c.md#ppd_feature), [ppd_font](papd/ppd.c.md#ppd_font), [pskip](papd/printcap.c.md#pskip), [rresvport](papd/lp.c.md#rresvport), [uam_afpserver_option](papd/uam.c.md#uam_afpserver_option), [uam_checkuser](papd/uam.c.md#uam_checkuser), [uam_getname](papd/uam.c.md#uam_getname), [uam_register](papd/uam.c.md#uam_register), [uam_unregister](papd/uam.c.md#uam_unregister)
+[lp_host](papd/lp.c.md#lp_host), [pdecode](papd/printcap.c.md#pdecode), [pnamatch](papd/printcap.c.md#pnamatch), [pskip](papd/printcap.c.md#pskip), [rresvport](papd/lp.c.md#rresvport), [uam_afpserver_option](papd/uam.c.md#uam_afpserver_option), [uam_checkuser](papd/uam.c.md#uam_checkuser), [uam_getname](papd/uam.c.md#uam_getname), [uam_register](papd/uam.c.md#uam_register), [uam_unregister](papd/uam.c.md#uam_unregister)

@@ -5,7 +5,7 @@ description: "6 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/magics.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,8 +41,6 @@ Parameters:
 * `signo`: signal number, unused
 
 Called by: [ps](magics.c.md#ps)
-
-Uses file-scope variables: `stop_requested`
 
 ### parser_error
 
@@ -90,7 +88,7 @@ Called by: [session](session.c.md#session)
 
 Calls through [`papd_comment::c_handler`](comment.h.md#struct-papd_comment): no table assigns this field
 
-Uses file-scope variables: `magics`, `state`, `stop_requested`
+Uses file-scope variables: `magics`, `state`
 
 ### cm_psquery
 
@@ -100,7 +98,7 @@ int cm_psquery(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 
 Defined at lines 177 to 217.
 
-Serve a query job that starts with `%!PS-Adobe-3.0 Query`
+Serve a query job that starts with `%!PS-Adobe-3.0 Query`.
 
 The call skips the magic line, pushes the handler of each query comment it finds, and drops other lines. The end of the input, or PF_QUERY at the end of a query, pops the state.
 
@@ -127,7 +125,7 @@ int cm_psadobe(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 
 Defined at lines 231 to 265.
 
-Serve a print job that starts with `%!PS-Adobe-3.0`
+Serve a print job that starts with `%!PS-Adobe-3.0`.
 
 The call writes the magic line and every other line to the job, and pushes the handler of each header comment it finds. The end of the input pops the state.
 

@@ -1,5 +1,5 @@
 {
-"commit": "9b5f7c886bc51cc7c16ec5c610e09356b38cb859",
+"commit": "9aa4f172b1ab976761da9cabb8123f3ff43128de",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -7612,16 +7612,6 @@
 "to": "etc/uams/uams_dhx2_pam.c#PAM_username"
 },
 {
-"from": "etc/uams/uams_dhx_pam.c#PAM_conv",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_password"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#PAM_conv",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_username"
-},
-{
 "from": "etc/uams/uams_pam.c#PAM_conv",
 "kind": "use",
 "to": "etc/uams/uams_pam.c#PAM_chauthtok_count"
@@ -7635,16 +7625,6 @@
 "from": "etc/uams/uams_pam.c#PAM_conv",
 "kind": "use",
 "to": "etc/uams/uams_pam.c#PAM_oldpassword"
-},
-{
-"from": "etc/uams/uams_pam.c#PAM_conv",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_password"
-},
-{
-"from": "etc/uams/uams_pam.c#PAM_conv",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_username"
 },
 {
 "from": "libatalk/vfs/vfs.c#RF_copyfile_adouble",
@@ -7892,11 +7872,6 @@
 "to": "sys/netatalk/aarp.c#aarptfree"
 },
 {
-"from": "sys/netatalk/aarp.c#aarptimer",
-"kind": "use",
-"to": "sys/netatalk/aarp.c#aarptab"
-},
-{
 "from": "sys/netatalk/aarp.c#aarptnew",
 "kind": "call",
 "to": "sys/netatalk/aarp.c#aarptfree"
@@ -8010,6 +7985,11 @@
 "from": "etc/afpd/desktop.c#ad_addcomment",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
+},
+{
+"from": "etc/afpd/desktop.c#ad_addcomment",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/desktop.c#ad_addcomment",
@@ -8169,6 +8149,11 @@
 {
 "from": "libatalk/adouble/ad_conv.c#ad_conv_v22ea_hf",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "libatalk/adouble/ad_conv.c#ad_conv_v22ea_hf",
+"kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_flush"
 },
 {
@@ -8321,6 +8306,11 @@
 {
 "from": "libatalk/adouble/ad_open.c#ad_convert_osx",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "libatalk/adouble/ad_open.c#ad_convert_osx",
+"kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_flush"
 },
 {
@@ -8376,12 +8366,22 @@
 {
 "from": "libatalk/adouble/ad_flush.c#ad_copy_header",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "libatalk/adouble/ad_flush.c#ad_copy_header",
+"kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_entry_fits"
 },
 {
 "from": "libatalk/adouble/ad_flush.c#ad_copy_header",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_getentryoff"
+},
+{
+"from": "libatalk/adouble/ad_flush.c#ad_copy_header_entry",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_write.c#ad_dtruncate",
@@ -8437,6 +8437,11 @@
 "from": "libatalk/adouble/ad_flush.c#ad_flush",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#adflags2logstr"
+},
+{
+"from": "libatalk/adouble/ad_flush.c#ad_flush_hf",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_flush.c#ad_flush_hf",
@@ -8506,9 +8511,19 @@
 "to": "libatalk/adouble/ad_open.c#adflags2logstr"
 },
 {
+"from": "libatalk/adouble/ad_attr.c#ad_forcegetid",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
 "from": "libatalk/adouble/ad_open.c#ad_fork_fileno",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_getentryoff"
+},
+{
+"from": "libatalk/adouble/ad_attr.c#ad_getattr",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_attr.c#ad_getattr",
@@ -8519,6 +8534,11 @@
 "from": "etc/afpd/desktop.c#ad_getcomment",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
+},
+{
+"from": "etc/afpd/desktop.c#ad_getcomment",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/desktop.c#ad_getcomment",
@@ -8573,6 +8593,11 @@
 {
 "from": "libatalk/adouble/ad_date.c#ad_getdate",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "libatalk/adouble/ad_date.c#ad_getdate",
+"kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_getentryoff"
 },
 {
@@ -8584,6 +8609,11 @@
 "from": "libatalk/adouble/ad_open.c#ad_getfuid",
 "kind": "use",
 "to": "libatalk/adouble/ad_open.c#default_uid"
+},
+{
+"from": "libatalk/adouble/ad_attr.c#ad_getid",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_open.c#ad_header_read",
@@ -8604,6 +8634,11 @@
 "from": "libatalk/adouble/ad_open.c#ad_header_read",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#parse_entries"
+},
+{
+"from": "libatalk/adouble/ad_open.c#ad_header_read_ea",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_open.c#ad_header_read_ea",
@@ -9028,6 +9063,11 @@
 {
 "from": "libatalk/adouble/ad_open.c#ad_open_hf_ea",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "libatalk/adouble/ad_open.c#ad_open_hf_ea",
+"kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_flush"
 },
 {
@@ -9321,6 +9361,11 @@
 "to": "libatalk/adouble/ad_read.c#adf_pread"
 },
 {
+"from": "libatalk/adouble/ad_flush.c#ad_rebuild_adouble_header_osx",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
 "from": "libatalk/adouble/ad_flush.c#ad_rebuild_adouble_header_v2",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_getentryoff"
@@ -9470,7 +9515,17 @@
 {
 "from": "libatalk/adouble/ad_attr.c#ad_setattr",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "libatalk/adouble/ad_attr.c#ad_setattr",
+"kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_getentryoff"
+},
+{
+"from": "libatalk/adouble/ad_date.c#ad_setdate",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_date.c#ad_setdate",
@@ -9483,6 +9538,16 @@
 "to": "libatalk/adouble/ad_open.c#default_uid"
 },
 {
+"from": "libatalk/adouble/ad_attr.c#ad_setid",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "libatalk/adouble/ad_attr.c#ad_setname",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
 "from": "libatalk/adouble/ad_attr.c#ad_setname",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_getentryoff"
@@ -9491,6 +9556,11 @@
 "from": "libatalk/adouble/ad_open.c#ad_stat",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_dir"
+},
+{
+"from": "etc/afpd/ad_cache.c#ad_store_to_cache",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_lock.c#ad_testlock",
@@ -11911,6 +11981,11 @@
 {
 "from": "etc/afpd/extattrs.c#afp_listextattr",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "etc/afpd/extattrs.c#afp_listextattr",
+"kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_init"
 },
 {
@@ -12459,6 +12534,11 @@
 "from": "etc/afpd/volume.c#afp_openvol",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
+},
+{
+"from": "etc/afpd/volume.c#afp_openvol",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/volume.c#afp_openvol",
@@ -14369,11 +14449,6 @@
 {
 "from": "etc/atalkd/main.c#as_timer",
 "kind": "call",
-"to": "etc/atalkd/main.c#consistency"
-},
-{
-"from": "etc/atalkd/main.c#as_timer",
-"kind": "call",
 "to": "etc/atalkd/rtmp.c#looproute"
 },
 {
@@ -14414,11 +14489,6 @@
 {
 "from": "etc/atalkd/main.c#as_timer",
 "kind": "call",
-"to": "etc/atalkd/config.c#writeconf"
-},
-{
-"from": "etc/atalkd/main.c#as_timer",
-"kind": "call",
 "to": "etc/atalkd/zip.c#zip_getnetinfo"
 },
 {
@@ -14434,37 +14504,12 @@
 {
 "from": "etc/atalkd/main.c#as_timer",
 "kind": "use",
-"to": "etc/atalkd/main.c#configfile"
-},
-{
-"from": "etc/atalkd/main.c#as_timer",
-"kind": "use",
-"to": "etc/atalkd/main.c#debug"
-},
-{
-"from": "etc/atalkd/main.c#as_timer",
-"kind": "use",
 "to": "etc/atalkd/main.c#interfaces"
 },
 {
 "from": "etc/atalkd/main.c#as_timer",
 "kind": "use",
 "to": "etc/atalkd/main.c#newrtmpdata"
-},
-{
-"from": "etc/atalkd/main.c#as_timer",
-"kind": "use",
-"to": "etc/atalkd/main.c#noparent"
-},
-{
-"from": "etc/atalkd/main.c#as_timer",
-"kind": "use",
-"to": "etc/atalkd/main.c#stable"
-},
-{
-"from": "etc/atalkd/main.c#as_timer",
-"kind": "use",
-"to": "etc/atalkd/main.c#stabletimer"
 },
 {
 "from": "etc/atalkd/main.c#as_timer",
@@ -14514,57 +14559,7 @@
 {
 "from": "libatalk/asp/asp_getsess.c#asp_getsession",
 "kind": "call",
-"to": "libatalk/atp/atp_close.c#atp_close"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/atp/atp_open.c#atp_open"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
 "to": "libatalk/atp/atp_rreq.c#atp_rreq"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/atp/atp_sresp.c#atp_sresp"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/dsi/dsi_getsess.c#dsi_close_spare_fd"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/util/server_child.c#server_child_add"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/util/server_child.c#server_child_free"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/util/server_child.c#server_child_remove"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/util/server_child.c#server_reset_signal"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/asp/asp_getsess.c#set_asp_ac"
-},
-{
-"from": "libatalk/asp/asp_getsess.c#asp_getsession",
-"kind": "call",
-"to": "libatalk/util/socket.c#setnonblock"
 },
 {
 "from": "libatalk/asp/asp_getsess.c#asp_getsession",
@@ -14727,11 +14722,6 @@
 "to": "sys/netatalk/at_control.c#time"
 },
 {
-"from": "sys/netatalk/ddp_usrreq.c#at_pcballoc",
-"kind": "use",
-"to": "sys/netatalk/ddp_usrreq.c#ddpcb"
-},
-{
 "from": "sys/netatalk/ddp_usrreq.c#at_pcbconnect",
 "kind": "call",
 "to": "sys/netatalk/ddp_usrreq.c#at_pcbsetaddr"
@@ -14757,19 +14747,9 @@
 "to": "libatalk/unicode/iconv.c#sys_iconv"
 },
 {
-"from": "libatalk/unicode/iconv.c#atalk_iconv_open",
-"kind": "use",
-"to": "libatalk/unicode/iconv.c#charsets"
-},
-{
 "from": "libatalk/unicode/iconv.c#atalk_register_charset",
 "kind": "call",
 "to": "libatalk/unicode/iconv.c#find_charset_functions"
-},
-{
-"from": "libatalk/unicode/iconv.c#atalk_register_charset",
-"kind": "use",
-"to": "libatalk/unicode/iconv.c#charsets"
 },
 {
 "from": "libatalk/util/sigpipe.c#atalk_sigpipe_drain",
@@ -15352,16 +15332,6 @@
 "to": "etc/atalkd/main.c#stabletimer"
 },
 {
-"from": "libatalk/util/bprint.c#bprint",
-"kind": "use",
-"to": "libatalk/util/bprint.c#hexdig"
-},
-{
-"from": "sys/netatalk/ddp_input.c#bprint",
-"kind": "use",
-"to": "sys/netatalk/ddp_input.c#hexdig"
-},
-{
 "from": "libatalk/dsi/dsi_stream.c#buf_read",
 "kind": "call",
 "to": "libatalk/dsi/dsi_stream.c#from_buf"
@@ -15520,6 +15490,11 @@
 "from": "etc/afpd/catsearch.c#catsearch_afp",
 "kind": "call",
 "to": "etc/afpd/catsearch.c#catsearch_db"
+},
+{
+"from": "etc/afpd/catsearch.c#catsearch_afp",
+"kind": "call",
+"to": "etc/afpd/catsearch.c#catsearch_spec_layout"
 },
 {
 "from": "etc/afpd/catsearch.c#catsearch_afp",
@@ -15767,14 +15742,29 @@
 "to": "bin/nad/nad_set.c#new_attributes"
 },
 {
+"from": "bin/nad/nad_set.c#change_creator",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "bin/nad/nad_set.c#change_flags",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
 "from": "bin/nad/nad_set.c#change_flags",
 "kind": "use",
 "to": "bin/nad/nad_set.c#new_flags"
 },
 {
 "from": "bin/nad/nad_set.c#change_label",
-"kind": "use",
-"to": "bin/nad/nad_set.c#labels"
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "bin/nad/nad_set.c#change_type",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/uams/uams_dhx2_pam.c#changepw_1",
@@ -16137,6 +16127,11 @@
 "to": "etc/afpd/directory.c#curdir"
 },
 {
+"from": "etc/afpd/acls.c#check_acl_access",
+"kind": "use",
+"to": "etc/afpd/auth.h#uuid"
+},
+{
 "from": "bin/dbd/cmd_dbd_scanvol.c#check_addir",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
@@ -16456,16 +16451,6 @@
 "from": "bin/dbd/cmd_dbd_scanvol.c#check_netatalk_dirs",
 "kind": "use",
 "to": "bin/dbd/cmd_dbd_scanvol.c#netatalk_dirs"
-},
-{
-"from": "bin/nad/nad_ls.c#check_netatalk_dirs",
-"kind": "use",
-"to": "bin/nad/nad_ls.c#netatalk_dirs"
-},
-{
-"from": "bin/nad/nad_rm.c#check_netatalk_dirs",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#netatalk_dirs"
 },
 {
 "from": "bin/dbd/cmd_dbd_scanvol.c#check_orphaned",
@@ -17940,16 +17925,6 @@
 "to": "libatalk/util/socket.c#getip_string"
 },
 {
-"from": "etc/papd/comment.c#compop",
-"kind": "use",
-"to": "etc/papd/comment.c#comstate"
-},
-{
-"from": "etc/papd/comment.c#compush",
-"kind": "use",
-"to": "etc/papd/comment.c#comstate"
-},
-{
 "from": "etc/afpd/hash.c#compute_bits",
 "kind": "use",
 "to": "etc/afpd/hash.c#hash_val_t_bit"
@@ -18412,7 +18387,7 @@
 {
 "from": "bin/nad/nad_cp.c#copy",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#nflag"
+"to": "bin/nad/nad.h#nflag"
 },
 {
 "from": "bin/nad/nad_cp.c#copy",
@@ -18422,7 +18397,7 @@
 {
 "from": "bin/nad/nad_cp.c#copy",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#pflag"
+"to": "bin/nad/nad.h#pflag"
 },
 {
 "from": "bin/nad/nad_cp.c#copy",
@@ -18452,55 +18427,7 @@
 {
 "from": "bin/nad/nad_cp.c#copy",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#vflag"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_copyfile_adouble",
-"via": "vfs_ops::vfs_copyfile"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_copyfile_ea",
-"via": "vfs_ops::vfs_copyfile"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/ea_ad.c#ea_copyfile",
-"via": "vfs_ops::vfs_copyfile"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/ea_sys.c#sys_ea_copyfile",
-"via": "vfs_ops::vfs_copyfile"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#validupath_adouble",
-"via": "vfs_ops::vfs_validupath"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#validupath_ea",
-"via": "vfs_ops::vfs_validupath"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#vfs_copyfile",
-"via": "vfs_ops::vfs_copyfile"
-},
-{
-"from": "bin/nad/nad_cp.c#copy",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#vfs_validupath",
-"via": "vfs_ops::vfs_validupath"
+"to": "bin/nad/nad.h#vflag"
 },
 {
 "from": "bin/nad/nad_mv.c#copy",
@@ -18521,11 +18448,6 @@
 "from": "bin/nad/nad_mv.c#copy",
 "kind": "use",
 "to": "bin/nad/nad_mv.c#afp_obj"
-},
-{
-"from": "bin/nad/nad_mv.c#copy",
-"kind": "use",
-"to": "bin/nad/nad_mv.c#svolume"
 },
 {
 "from": "bin/nad/nad_mv.c#copy",
@@ -18580,6 +18502,11 @@
 {
 "from": "bin/nad/nad_cp.c#copy_source_header",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "bin/nad/nad_cp.c#copy_source_header",
+"kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_init"
 },
 {
@@ -18591,11 +18518,6 @@
 "from": "bin/nad/nad_cp.c#copy_source_header",
 "kind": "use",
 "to": "bin/nad/nad_cp.c#svolume"
-},
-{
-"from": "bin/pap/pap.c#copy_status",
-"kind": "use",
-"to": "bin/pap/pap.c#data"
 },
 {
 "from": "etc/afpd/appl.c#copyapplfile",
@@ -18784,6 +18706,11 @@
 },
 {
 "from": "etc/papd/queries.c#cq_feature",
+"kind": "call",
+"to": "etc/papd/ppd.c#ppd_feature"
+},
+{
+"from": "etc/papd/queries.c#cq_feature",
 "kind": "use",
 "to": "etc/papd/queries.c#queries"
 },
@@ -18821,6 +18748,11 @@
 "from": "etc/papd/queries.c#cq_font_answer",
 "kind": "call",
 "to": "etc/papd/file.c#append"
+},
+{
+"from": "etc/papd/queries.c#cq_font_answer",
+"kind": "call",
+"to": "etc/papd/ppd.c#ppd_font"
 },
 {
 "from": "etc/papd/queries.c#cq_fontlist",
@@ -18871,6 +18803,11 @@
 "from": "etc/papd/queries.c#cq_printer",
 "kind": "call",
 "to": "etc/papd/file.c#markline"
+},
+{
+"from": "etc/papd/queries.c#cq_printer",
+"kind": "call",
+"to": "etc/papd/ppd.c#ppd_feature"
 },
 {
 "from": "etc/papd/queries.c#cq_printer",
@@ -20233,11 +20170,6 @@
 "to": "etc/uams/uams_dhx2_pam.c#g"
 },
 {
-"from": "etc/uams/uams_dhx2_pam.c#dh_params_generate",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_pam.c#p"
-},
-{
 "from": "etc/uams/uams_dhx2_pam.c#dhx2_changepw",
 "kind": "call",
 "to": "etc/uams/uams_dhx2_pam.c#changepw_1"
@@ -20288,36 +20220,6 @@
 "to": "etc/uams/uams_dhx2_passwd.c#dhx2_release_mpi"
 },
 {
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_clear_session",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#ID"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_clear_session",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#K_MD5hash"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_clear_session",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#K_hash_len"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_clear_session",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#Ra"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_clear_session",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#p"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_clear_session",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#serverNonce"
-},
-{
 "from": "etc/uams/uams_dhx2_pam.c#dhx2_log_pam_error",
 "kind": "call",
 "to": "libatalk/util/unix.c#uam_log_pam_failure"
@@ -20348,11 +20250,6 @@
 "to": "etc/uams/uams_dhx2_pam.c#g"
 },
 {
-"from": "etc/uams/uams_dhx2_pam.c#dhx2_setup",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_pam.c#p"
-},
-{
 "from": "etc/uams/uams_dhx2_passwd.c#dhx2_setup",
 "kind": "call",
 "to": "etc/uams/uams_dhx2_passwd.c#dh_params_generate"
@@ -20363,26 +20260,6 @@
 "to": "etc/uams/uams_dhx2_passwd.c#dhx2_clear_session"
 },
 {
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_setup",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#ID"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_setup",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#Ra"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_setup",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#dhxpwd"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#dhx2_setup",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#p"
-},
-{
 "from": "etc/uams/uams_dhx_pam.c#dhx_log_pam_error",
 "kind": "call",
 "to": "libatalk/util/unix.c#uam_log_pam_failure"
@@ -20391,11 +20268,6 @@
 "from": "etc/uams/uams_dhx_pam.c#dhx_release_key",
 "kind": "use",
 "to": "etc/uams/uams_dhx_pam.c#K"
-},
-{
-"from": "etc/uams/uams_dhx_passwd.c#dhx_release_key",
-"kind": "use",
-"to": "etc/uams/uams_dhx_passwd.c#K"
 },
 {
 "from": "etc/uams/uams_dhx_pam.c#dhx_setup",
@@ -22045,16 +21917,6 @@
 {
 "from": "bin/nad/nad_mv.c#do_move",
 "kind": "use",
-"to": "bin/nad/nad_mv.c#did"
-},
-{
-"from": "bin/nad/nad_mv.c#do_move",
-"kind": "use",
-"to": "bin/nad/nad_mv.c#dvolume"
-},
-{
-"from": "bin/nad/nad_mv.c#do_move",
-"kind": "use",
 "to": "bin/nad/nad_mv.c#fflg"
 },
 {
@@ -22070,36 +21932,7 @@
 {
 "from": "bin/nad/nad_mv.c#do_move",
 "kind": "use",
-"to": "bin/nad/nad_mv.c#svolume"
-},
-{
-"from": "bin/nad/nad_mv.c#do_move",
-"kind": "use",
 "to": "bin/nad/nad_mv.c#vflg"
-},
-{
-"from": "bin/nad/nad_mv.c#do_move",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_renamefile_adouble",
-"via": "vfs_ops::vfs_renamefile"
-},
-{
-"from": "bin/nad/nad_mv.c#do_move",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_renamefile_ea",
-"via": "vfs_ops::vfs_renamefile"
-},
-{
-"from": "bin/nad/nad_mv.c#do_move",
-"kind": "dispatch",
-"to": "libatalk/vfs/ea_ad.c#ea_renamefile",
-"via": "vfs_ops::vfs_renamefile"
-},
-{
-"from": "bin/nad/nad_mv.c#do_move",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#vfs_renamefile",
-"via": "vfs_ops::vfs_renamefile"
 },
 {
 "from": "libatalk/unicode/util_unistr.c#do_precomposition",
@@ -22625,11 +22458,6 @@
 "from": "etc/afpd/desktop.c#dtfile",
 "kind": "call",
 "to": "libatalk/compat/strlcpy.c#strlcat"
-},
-{
-"from": "etc/afpd/desktop.c#dtfile",
-"kind": "use",
-"to": "etc/afpd/desktop.c#hexdig"
 },
 {
 "from": "libatalk/vfs/ea_ad.c#ea_addentry",
@@ -23302,11 +23130,6 @@
 "to": "etc/afpd/directory.c#afp_errno"
 },
 {
-"from": "libatalk/unicode/iconv.c#find_charset_functions",
-"kind": "use",
-"to": "libatalk/unicode/iconv.c#charsets"
-},
-{
 "from": "bin/nad/ftw.c#find_object",
 "kind": "call",
 "to": "bin/nad/ftw.c#object_compare"
@@ -23449,17 +23272,17 @@
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_file",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#iflag"
+"to": "bin/nad/nad.h#iflag"
 },
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_file",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#nflag"
+"to": "bin/nad/nad.h#nflag"
 },
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_file",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#pflag"
+"to": "bin/nad/nad.h#pflag"
 },
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_file",
@@ -23469,31 +23292,7 @@
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_file",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#vflag"
-},
-{
-"from": "bin/nad/nad_cp.c#ftw_copy_file",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_deletefile_adouble",
-"via": "vfs_ops::vfs_deletefile"
-},
-{
-"from": "bin/nad/nad_cp.c#ftw_copy_file",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_deletefile_ea",
-"via": "vfs_ops::vfs_deletefile"
-},
-{
-"from": "bin/nad/nad_cp.c#ftw_copy_file",
-"kind": "dispatch",
-"to": "libatalk/vfs/ea_ad.c#ea_deletefile",
-"via": "vfs_ops::vfs_deletefile"
-},
-{
-"from": "bin/nad/nad_cp.c#ftw_copy_file",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#vfs_deletefile",
-"via": "vfs_ops::vfs_deletefile"
+"to": "bin/nad/nad.h#vflag"
 },
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_link",
@@ -23503,7 +23302,7 @@
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_link",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#pflag"
+"to": "bin/nad/nad.h#pflag"
 },
 {
 "from": "bin/nad/nad_cp.c#ftw_copy_link",
@@ -23703,6 +23502,11 @@
 {
 "from": "etc/afpd/file.c#get_finderinfo",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "etc/afpd/file.c#get_finderinfo",
+"kind": "call",
 "to": "etc/afpd/file.c#default_type"
 },
 {
@@ -23799,6 +23603,11 @@
 "from": "etc/afpd/directory.c#getdirparams",
 "kind": "call",
 "to": "etc/afpd/unix.c#accessmode"
+},
+{
+"from": "etc/afpd/directory.c#getdirparams",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/directory.c#getdirparams",
@@ -24014,6 +23823,11 @@
 "from": "etc/afpd/file.c#getmetadata",
 "kind": "call",
 "to": "etc/afpd/unix.c#accessmode"
+},
+{
+"from": "etc/afpd/file.c#getmetadata",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/file.c#getmetadata",
@@ -24296,11 +24110,6 @@
 "to": "bin/pap/papstatus.c#print_status"
 },
 {
-"from": "bin/pap/papstatus.c#getstatus",
-"kind": "use",
-"to": "bin/pap/papstatus.c#cbuf"
-},
-{
 "from": "etc/papd/main.c#getstatus",
 "kind": "call",
 "to": "etc/papd/print_cups.c#cups_get_printer_status"
@@ -24438,6 +24247,11 @@
 {
 "from": "etc/afpd/volume.c#getvolparams",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "etc/afpd/volume.c#getvolparams",
+"kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_flush"
 },
 {
@@ -24514,6 +24328,11 @@
 "from": "etc/papd/queries.c#gq_product",
 "kind": "call",
 "to": "etc/papd/file.c#append"
+},
+{
+"from": "etc/papd/queries.c#gq_product",
+"kind": "call",
+"to": "etc/papd/ppd.c#ppd_feature"
 },
 {
 "from": "etc/papd/queries.c#gq_rbispoolerid",
@@ -26373,16 +26192,6 @@
 {
 "from": "etc/afpd/dircache.c#log_dircache_stat",
 "kind": "call",
-"to": "libatalk/util/server_ipc.c#ipc_get_hints_dropped"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "call",
-"to": "libatalk/util/server_ipc.c#ipc_get_hints_sent"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "call",
 "to": "etc/afpd/dircache.c#validation_freq"
 },
 {
@@ -26393,92 +26202,12 @@
 {
 "from": "etc/afpd/dircache.c#log_dircache_stat",
 "kind": "use",
-"to": "etc/afpd/ad_cache.c#ad_cache_hits"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/ad_cache.c#ad_cache_misses"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/ad_cache.c#ad_cache_no_ad"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
 "to": "etc/afpd/dircache.c#arc_cache"
 },
 {
 "from": "etc/afpd/dircache.c#log_dircache_stat",
 "kind": "use",
-"to": "etc/afpd/dircache.c#cache_hint_stat"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#dircache_maxsize"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#queue_count"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
 "to": "etc/afpd/dircache.c#queue_count_max"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_cache_budget"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_lru_count"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_stat_added"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_stat_evicted"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_stat_hits"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_stat_invalidated"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_stat_lookups"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_stat_misses"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#rfork_stat_used_max"
-},
-{
-"from": "etc/afpd/dircache.c#log_dircache_stat",
-"kind": "use",
-"to": "etc/afpd/dircache.c#validation_counter"
 },
 {
 "from": "etc/afpd/dircache.c#dircache_rfork_shutdown",
@@ -26776,11 +26505,6 @@
 "to": "etc/afpd/uam.c#uam_getname"
 },
 {
-"from": "etc/uams/uams_dhx2_passwd.c#login",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#dhxpwd"
-},
-{
 "from": "etc/uams/uams_dhx_pam.c#login",
 "kind": "call",
 "to": "etc/uams/uams_dhx_pam.c#dhx_setup"
@@ -26789,16 +26513,6 @@
 "from": "etc/uams/uams_dhx_pam.c#login",
 "kind": "call",
 "to": "etc/afpd/uam.c#uam_getname"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#login",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_username"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#login",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#dhxpwd"
 },
 {
 "from": "etc/uams/uams_pam.c#login",
@@ -26819,31 +26533,6 @@
 "from": "etc/uams/uams_pam.c#login",
 "kind": "call",
 "to": "etc/afpd/uam.c#uam_getname"
-},
-{
-"from": "etc/uams/uams_pam.c#login",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_conversation"
-},
-{
-"from": "etc/uams/uams_pam.c#login",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_password"
-},
-{
-"from": "etc/uams/uams_pam.c#login",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_username"
-},
-{
-"from": "etc/uams/uams_pam.c#login",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#hostname"
-},
-{
-"from": "etc/uams/uams_pam.c#login",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#pamh"
 },
 {
 "from": "etc/uams/uams_dhx2_pam.c#logincont1",
@@ -26888,11 +26577,6 @@
 {
 "from": "etc/uams/uams_dhx2_pam.c#logincont1",
 "kind": "use",
-"to": "etc/uams/uams_dhx2_pam.c#p"
-},
-{
-"from": "etc/uams/uams_dhx2_pam.c#logincont1",
-"kind": "use",
 "to": "etc/uams/uams_dhx2_pam.c#serverNonce"
 },
 {
@@ -26904,46 +26588,6 @@
 "from": "etc/uams/uams_dhx2_passwd.c#logincont1",
 "kind": "call",
 "to": "etc/uams/uams_dhx2_passwd.c#dhx2_release_mpi"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#ID"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#K_MD5hash"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#K_hash_len"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#Ra"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#dhx_c2siv"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#dhx_s2civ"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#p"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont1",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#serverNonce"
 },
 {
 "from": "etc/uams/uams_dhx2_pam.c#logincont2",
@@ -27026,36 +26670,6 @@
 "to": "libatalk/compat/explicit_bzero.c#explicit_bzero"
 },
 {
-"from": "etc/uams/uams_dhx2_passwd.c#logincont2",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#K_MD5hash"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont2",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#K_hash_len"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont2",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#dhx_c2siv"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont2",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#dhxpwd"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont2",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#p"
-},
-{
-"from": "etc/uams/uams_dhx2_passwd.c#logincont2",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#serverNonce"
-},
-{
 "from": "etc/atalkd/rtmp.c#looproute",
 "kind": "call",
 "to": "etc/atalkd/route.c#route"
@@ -27091,11 +26705,6 @@
 "to": "etc/papd/lp.c#hostname"
 },
 {
-"from": "etc/papd/lp.c#lp_init",
-"kind": "use",
-"to": "etc/papd/lp.c#sat"
-},
-{
 "from": "etc/papd/lp.c#lp_open",
 "kind": "call",
 "to": "etc/papd/lp.c#lp_init"
@@ -27119,11 +26728,6 @@
 "from": "etc/papd/lp.c#lp_open",
 "kind": "use",
 "to": "etc/papd/lp.c#hostname"
-},
-{
-"from": "etc/papd/lp.c#lp_open",
-"kind": "use",
-"to": "etc/papd/lp.c#sat"
 },
 {
 "from": "etc/papd/lp.c#lp_print",
@@ -27648,17 +27252,7 @@
 {
 "from": "bin/aecho/aecho.c#main",
 "kind": "call",
-"to": "bin/aecho/aecho.c#aep_send"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "call",
 "to": "libatalk/util/atalk_addr.c#atalk_aton"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "call",
-"to": "bin/aecho/aecho.c#done"
 },
 {
 "from": "bin/aecho/aecho.c#main",
@@ -27668,37 +27262,7 @@
 {
 "from": "bin/aecho/aecho.c#main",
 "kind": "call",
-"to": "libatalk/nbp/nbp_util.c#nbp_name"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "call",
-"to": "libatalk/netddp/netddp_open.c#netddp_open"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "call",
-"to": "include/atalk/netddp.h#netddp_recvfrom"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "call",
 "to": "bin/aecho/aecho.c#usage"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "use",
-"to": "bin/aecho/aecho.c#maxms"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "use",
-"to": "bin/aecho/aecho.c#minms"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "use",
-"to": "bin/aecho/aecho.c#nrecv"
 },
 {
 "from": "bin/aecho/aecho.c#main",
@@ -27708,17 +27272,7 @@
 {
 "from": "bin/aecho/aecho.c#main",
 "kind": "use",
-"to": "bin/aecho/aecho.c#sock"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "use",
 "to": "bin/aecho/aecho.c#target"
-},
-{
-"from": "bin/aecho/aecho.c#main",
-"kind": "use",
-"to": "bin/aecho/aecho.c#totalms"
 },
 {
 "from": "bin/afppasswd/afppasswd.c#main",
@@ -28376,16 +27930,6 @@
 "to": "bin/pap/papstatus.c#usage"
 },
 {
-"from": "bin/pap/papstatus.c#main",
-"kind": "use",
-"to": "bin/pap/papstatus.c#nn"
-},
-{
-"from": "bin/pap/papstatus.c#main",
-"kind": "use",
-"to": "bin/pap/papstatus.c#stop_requested"
-},
-{
 "from": "bin/rtmpqry/rtmpqry.c#main",
 "kind": "call",
 "to": "libatalk/util/atalk_addr.c#atalk_aton"
@@ -28679,11 +28223,6 @@
 "from": "etc/atalkd/main.c#main",
 "kind": "use",
 "to": "etc/atalkd/main.c#configfile"
-},
-{
-"from": "etc/atalkd/main.c#main",
-"kind": "use",
-"to": "etc/atalkd/main.c#debug"
 },
 {
 "from": "etc/atalkd/main.c#main",
@@ -29038,17 +28577,7 @@
 {
 "from": "etc/papd/main.c#main",
 "kind": "use",
-"to": "etc/papd/main.c#connid"
-},
-{
-"from": "etc/papd/main.c#main",
-"kind": "use",
 "to": "etc/papd/main.c#defprinter"
-},
-{
-"from": "etc/papd/main.c#main",
-"kind": "use",
-"to": "etc/papd/main.c#oquantum"
 },
 {
 "from": "etc/papd/main.c#main",
@@ -29063,22 +28592,7 @@
 {
 "from": "etc/papd/main.c#main",
 "kind": "use",
-"to": "etc/papd/main.c#quantum"
-},
-{
-"from": "etc/papd/main.c#main",
-"kind": "use",
 "to": "etc/papd/main.c#r_buf"
-},
-{
-"from": "etc/papd/main.c#main",
-"kind": "use",
-"to": "etc/papd/main.c#sock"
-},
-{
-"from": "etc/papd/main.c#main",
-"kind": "use",
-"to": "etc/papd/main.c#stop_requested"
 },
 {
 "from": "etc/papd/main.c#main",
@@ -29389,6 +28903,11 @@
 "from": "etc/afpd/fork.c#materialize_virtual_icon",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
+},
+{
+"from": "etc/afpd/fork.c#materialize_virtual_icon",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/fork.c#materialize_virtual_icon",
@@ -29943,11 +29462,6 @@
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
 "kind": "call",
-"to": "bin/nad/nad_cp.c#upfunc"
-},
-{
-"from": "bin/nad/nad_cp.c#nad_cp",
-"kind": "call",
 "to": "bin/nad/nad_cp.c#usage_cp"
 },
 {
@@ -29988,12 +29502,12 @@
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#iflag"
+"to": "bin/nad/nad.h#iflag"
 },
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#nflag"
+"to": "bin/nad/nad.h#nflag"
 },
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
@@ -30003,7 +29517,7 @@
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#pflag"
+"to": "bin/nad/nad.h#pflag"
 },
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
@@ -30033,7 +29547,7 @@
 {
 "from": "bin/nad/nad_cp.c#nad_cp",
 "kind": "use",
-"to": "bin/nad/nad_cp.c#vflag"
+"to": "bin/nad/nad.h#vflag"
 },
 {
 "from": "bin/nad/nad_find.c#nad_find",
@@ -30103,6 +29617,11 @@
 {
 "from": "bin/nad/nad_adouble.c#nad_header_read",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
+},
+{
+"from": "bin/nad/nad_adouble.c#nad_header_read",
+"kind": "call",
 "to": "libatalk/adouble/ad_date.c#ad_getdate"
 },
 {
@@ -30129,6 +29648,11 @@
 "from": "bin/nad/nad_adouble.c#nad_header_read",
 "kind": "use",
 "to": "bin/nad/nad_adouble.c#nad"
+},
+{
+"from": "bin/nad/nad_adouble.c#nad_header_write",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "bin/nad/nad_adouble.c#nad_header_write",
@@ -30313,16 +29837,6 @@
 {
 "from": "bin/nad/nad_mv.c#nad_mv",
 "kind": "use",
-"to": "bin/nad/nad_mv.c#did"
-},
-{
-"from": "bin/nad/nad_mv.c#nad_mv",
-"kind": "use",
-"to": "bin/nad/nad_mv.c#dvolume"
-},
-{
-"from": "bin/nad/nad_mv.c#nad_mv",
-"kind": "use",
 "to": "bin/nad/nad_mv.c#fflg"
 },
 {
@@ -30334,16 +29848,6 @@
 "from": "bin/nad/nad_mv.c#nad_mv",
 "kind": "use",
 "to": "bin/nad/nad_mv.c#nflg"
-},
-{
-"from": "bin/nad/nad_mv.c#nad_mv",
-"kind": "use",
-"to": "bin/nad/nad_mv.c#pdid"
-},
-{
-"from": "bin/nad/nad_mv.c#nad_mv",
-"kind": "use",
-"to": "bin/nad/nad_mv.c#svolume"
 },
 {
 "from": "bin/nad/nad_mv.c#nad_mv",
@@ -30463,17 +29967,7 @@
 {
 "from": "bin/nad/nad_rm.c#nad_rm",
 "kind": "call",
-"to": "bin/nad/nad_rm.c#upfunc"
-},
-{
-"from": "bin/nad/nad_rm.c#nad_rm",
-"kind": "call",
 "to": "bin/nad/nad_rm.c#usage_rm"
-},
-{
-"from": "bin/nad/nad_rm.c#nad_rm",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#Rflag"
 },
 {
 "from": "bin/nad/nad_rm.c#nad_rm",
@@ -30484,21 +29978,6 @@
 "from": "bin/nad/nad_rm.c#nad_rm",
 "kind": "use",
 "to": "bin/nad/nad_rm.c#badrm"
-},
-{
-"from": "bin/nad/nad_rm.c#nad_rm",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#did"
-},
-{
-"from": "bin/nad/nad_rm.c#nad_rm",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#pdid"
-},
-{
-"from": "bin/nad/nad_rm.c#nad_rm",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#rval"
 },
 {
 "from": "bin/nad/nad_rm.c#nad_rm",
@@ -30803,11 +30282,6 @@
 {
 "from": "etc/atalkd/nbp.c#nbp_packet",
 "kind": "use",
-"to": "etc/atalkd/nbp.c#nbptab"
-},
-{
-"from": "etc/atalkd/nbp.c#nbp_packet",
-"kind": "use",
 "to": "etc/atalkd/main.c#transition"
 },
 {
@@ -30924,6 +30398,11 @@
 "from": "libatalk/vfs/unix.c#netatalk_rmdir",
 "kind": "call",
 "to": "libatalk/vfs/unix.c#netatalk_rmdir_all_errors"
+},
+{
+"from": "libatalk/adouble/ad_open.c#new_ad_header",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "libatalk/adouble/ad_open.c#new_ad_header",
@@ -31790,21 +31269,6 @@
 {
 "from": "etc/uams/uams_dhx_pam.c#pam_changepw",
 "kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_conversation"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_changepw",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_password"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_changepw",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_username"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_changepw",
-"kind": "use",
 "to": "etc/uams/uams_dhx_pam.c#msg3_iv"
 },
 {
@@ -31840,27 +31304,7 @@
 {
 "from": "etc/uams/uams_pam.c#pam_changepw",
 "kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_conversation"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_changepw",
-"kind": "use",
 "to": "etc/uams/uams_pam.c#PAM_oldpassword"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_changepw",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_password"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_changepw",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_username"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_changepw",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#hostname"
 },
 {
 "from": "etc/uams/uams_dhx2_pam.c#pam_login",
@@ -31970,32 +31414,7 @@
 {
 "from": "etc/uams/uams_dhx_pam.c#pam_logincont",
 "kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_conversation"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_password"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#PAM_username"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#dhxpwd"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_logincont",
-"kind": "use",
 "to": "etc/uams/uams_dhx_pam.c#msg3_iv"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#pamh"
 },
 {
 "from": "etc/uams/uams_dhx_pam.c#pam_logincont",
@@ -32006,16 +31425,6 @@
 "from": "etc/uams/uams_dhx2_pam.c#pam_logout",
 "kind": "use",
 "to": "etc/uams/uams_dhx2_pam.c#pamh"
-},
-{
-"from": "etc/uams/uams_dhx_pam.c#pam_logout",
-"kind": "use",
-"to": "etc/uams/uams_dhx_pam.c#pamh"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_logout",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#pamh"
 },
 {
 "from": "etc/uams/uams_pam.c#pam_printer",
@@ -32046,31 +31455,6 @@
 "from": "etc/uams/uams_pam.c#pam_printer",
 "kind": "call",
 "to": "etc/afpd/uam.c#uam_getname"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_printer",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_conversation"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_printer",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_password"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_printer",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#PAM_username"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_printer",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#hostname"
-},
-{
-"from": "etc/uams/uams_pam.c#pam_printer",
-"kind": "use",
-"to": "etc/uams/uams_pam.c#pamh"
 },
 {
 "from": "libatalk/util/fault.c#panic_report",
@@ -32228,11 +31612,6 @@
 "to": "etc/uams/uams_dhx2_passwd.c#logincont2"
 },
 {
-"from": "etc/uams/uams_dhx2_passwd.c#passwd_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_passwd.c#ID"
-},
-{
 "from": "etc/uams/uams_dhx_passwd.c#passwd_logincont",
 "kind": "call",
 "to": "etc/uams/uams_dhx_passwd.c#dhx_release_key"
@@ -32241,21 +31620,6 @@
 "from": "etc/uams/uams_dhx_passwd.c#passwd_logincont",
 "kind": "call",
 "to": "libatalk/compat/explicit_bzero.c#explicit_bzero"
-},
-{
-"from": "etc/uams/uams_dhx_passwd.c#passwd_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx_passwd.c#K"
-},
-{
-"from": "etc/uams/uams_dhx_passwd.c#passwd_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx_passwd.c#dhxpwd"
-},
-{
-"from": "etc/uams/uams_dhx_passwd.c#passwd_logincont",
-"kind": "use",
-"to": "etc/uams/uams_dhx_passwd.c#randbuf"
 },
 {
 "from": "etc/uams/uams_passwd.c#passwd_printer",
@@ -32540,11 +31904,6 @@
 {
 "from": "etc/netatalk/afp_mdns.c#polling_thread",
 "kind": "use",
-"to": "etc/netatalk/afp_mdns.c#fds"
-},
-{
-"from": "etc/netatalk/afp_mdns.c#polling_thread",
-"kind": "use",
 "to": "etc/netatalk/afp_mdns.c#svc_ref_count"
 },
 {
@@ -32701,6 +32060,11 @@
 "from": "bin/nad/nad_ls.c#print_flags",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
+},
+{
+"from": "bin/nad/nad_ls.c#print_flags",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "bin/nad/nad_ls.c#print_flags",
@@ -32973,11 +32337,6 @@
 "to": "etc/papd/magics.c#state"
 },
 {
-"from": "etc/papd/magics.c#ps",
-"kind": "use",
-"to": "etc/papd/magics.c#stop_requested"
-},
-{
 "from": "etc/netatalk/afp_avahi.c#publish_reply",
 "kind": "use",
 "to": "etc/netatalk/afp_avahi.c#ctx"
@@ -33003,11 +32362,6 @@
 "to": "libatalk/unicode/charcnv.c#conv_handles"
 },
 {
-"from": "libatalk/unicode/charcnv.c#push_charset_flags",
-"kind": "use",
-"to": "libatalk/unicode/charcnv.c#hexdig"
-},
-{
 "from": "etc/uams/uams_dhx_passwd.c#pwd_login",
 "kind": "call",
 "to": "etc/uams/uams_dhx_passwd.c#dhx_release_key"
@@ -33026,21 +32380,6 @@
 "from": "etc/uams/uams_dhx_passwd.c#pwd_login",
 "kind": "call",
 "to": "etc/afpd/uam.c#uam_getname"
-},
-{
-"from": "etc/uams/uams_dhx_passwd.c#pwd_login",
-"kind": "use",
-"to": "etc/uams/uams_dhx_passwd.c#K"
-},
-{
-"from": "etc/uams/uams_dhx_passwd.c#pwd_login",
-"kind": "use",
-"to": "etc/uams/uams_dhx_passwd.c#dhxpwd"
-},
-{
-"from": "etc/uams/uams_dhx_passwd.c#pwd_login",
-"kind": "use",
-"to": "etc/uams/uams_dhx_passwd.c#randbuf"
 },
 {
 "from": "etc/uams/uams_passwd.c#pwd_login",
@@ -33090,11 +32429,6 @@
 {
 "from": "etc/uams/uams_randnum.c#rand2num_logincont",
 "kind": "use",
-"to": "etc/uams/uams_randnum.c#randbuf"
-},
-{
-"from": "etc/uams/uams_randnum.c#rand2num_logincont",
-"kind": "use",
 "to": "etc/uams/uams_randnum.c#randpwd"
 },
 {
@@ -33121,11 +32455,6 @@
 "from": "etc/uams/uams_randnum.c#rand_login",
 "kind": "call",
 "to": "etc/afpd/uam.c#uam_getname"
-},
-{
-"from": "etc/uams/uams_randnum.c#rand_login",
-"kind": "use",
-"to": "etc/uams/uams_randnum.c#randbuf"
 },
 {
 "from": "etc/uams/uams_randnum.c#rand_login",
@@ -33221,11 +32550,6 @@
 "from": "etc/uams/uams_randnum.c#randnum_logincont",
 "kind": "call",
 "to": "libatalk/compat/explicit_bzero.c#explicit_bzero"
-},
-{
-"from": "etc/uams/uams_randnum.c#randnum_logincont",
-"kind": "use",
-"to": "etc/uams/uams_randnum.c#randbuf"
 },
 {
 "from": "etc/uams/uams_randnum.c#randnum_logincont",
@@ -34240,11 +33564,6 @@
 {
 "from": "bin/nad/nad_rm.c#rm",
 "kind": "use",
-"to": "bin/nad/nad_rm.c#Rflag"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "use",
 "to": "bin/dbd/cmd_dbd.c#alarmed"
 },
 {
@@ -34255,51 +33574,12 @@
 {
 "from": "bin/nad/nad_rm.c#rm",
 "kind": "use",
-"to": "bin/nad/nad_rm.c#did"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#pdid"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#rval"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "use",
 "to": "bin/nad/nad.h#vflag"
 },
 {
 "from": "bin/nad/nad_rm.c#rm",
 "kind": "use",
 "to": "bin/nad/nad_rm.c#volume"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_deletefile_adouble",
-"via": "vfs_ops::vfs_deletefile"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#RF_deletefile_ea",
-"via": "vfs_ops::vfs_deletefile"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "dispatch",
-"to": "libatalk/vfs/ea_ad.c#ea_deletefile",
-"via": "vfs_ops::vfs_deletefile"
-},
-{
-"from": "bin/nad/nad_rm.c#rm",
-"kind": "dispatch",
-"to": "libatalk/vfs/vfs.c#vfs_deletefile",
-"via": "vfs_ops::vfs_deletefile"
 },
 {
 "from": "bin/nad/nad_rmdir.c#rmdir_with_cnid",
@@ -34450,36 +33730,6 @@
 "from": "etc/atalkd/rtmp.c#rtmp_new",
 "kind": "use",
 "to": "etc/atalkd/main.c#interfaces"
-},
-{
-"from": "etc/atalkd/rtmp.c#rtmp_packet",
-"kind": "call",
-"to": "etc/atalkd/rtmp.c#gateroute"
-},
-{
-"from": "etc/atalkd/rtmp.c#rtmp_packet",
-"kind": "call",
-"to": "etc/atalkd/rtmp.c#looproute"
-},
-{
-"from": "etc/atalkd/rtmp.c#rtmp_packet",
-"kind": "call",
-"to": "etc/atalkd/rtmp.c#newrt"
-},
-{
-"from": "etc/atalkd/rtmp.c#rtmp_packet",
-"kind": "call",
-"to": "etc/atalkd/rtmp.c#rtmp_config"
-},
-{
-"from": "etc/atalkd/rtmp.c#rtmp_packet",
-"kind": "call",
-"to": "etc/atalkd/rtmp.c#rtmp_new"
-},
-{
-"from": "etc/atalkd/rtmp.c#rtmp_packet",
-"kind": "call",
-"to": "etc/atalkd/rtmp.c#rtmp_replace"
 },
 {
 "from": "etc/atalkd/rtmp.c#rtmp_packet",
@@ -34664,11 +33914,6 @@
 {
 "from": "bin/pap/pap.c#send_file",
 "kind": "use",
-"to": "bin/pap/pap.c#data"
-},
-{
-"from": "bin/pap/pap.c#send_file",
-"kind": "use",
 "to": "bin/pap/pap.c#debug"
 },
 {
@@ -34807,11 +34052,6 @@
 "to": "libatalk/util/server_ipc.c#ipc_child_write"
 },
 {
-"from": "libatalk/util/server_lock.c#server_lock",
-"kind": "use",
-"to": "libatalk/util/server_lock.c#itimer"
-},
-{
 "from": "etc/papd/session.c#session",
 "kind": "call",
 "to": "etc/papd/file.c#append"
@@ -34864,22 +34104,7 @@
 {
 "from": "etc/papd/session.c#session",
 "kind": "use",
-"to": "etc/papd/main.c#connid"
-},
-{
-"from": "etc/papd/session.c#session",
-"kind": "use",
 "to": "etc/papd/session.c#niov"
-},
-{
-"from": "etc/papd/session.c#session",
-"kind": "use",
-"to": "etc/papd/session.c#oquantum"
-},
-{
-"from": "etc/papd/session.c#session",
-"kind": "use",
-"to": "etc/papd/session.c#quantum"
 },
 {
 "from": "etc/afpd/acls.c#set_acl",
@@ -35179,21 +34404,6 @@
 "to": "etc/atalkd/main.c#atservNATSERV"
 },
 {
-"from": "etc/atalkd/main.c#setaddr",
-"kind": "use",
-"to": "etc/atalkd/main.c#fds"
-},
-{
-"from": "etc/atalkd/main.c#setaddr",
-"kind": "use",
-"to": "etc/atalkd/main.c#interfaces"
-},
-{
-"from": "etc/atalkd/main.c#setaddr",
-"kind": "use",
-"to": "etc/atalkd/main.c#nfds"
-},
-{
 "from": "etc/afpd/desktop.c#setdeskmode",
 "kind": "call",
 "to": "libatalk/vfs/unix.c#dir_rx_set"
@@ -35260,6 +34470,11 @@
 "from": "etc/afpd/directory.c#setdirparams",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
+},
+{
+"from": "etc/afpd/directory.c#setdirparams",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/directory.c#setdirparams",
@@ -35493,6 +34708,11 @@
 "from": "etc/afpd/file.c#setfilparams",
 "kind": "call",
 "to": "libatalk/adouble/ad_flush.c#ad_close"
+},
+{
+"from": "etc/afpd/file.c#setfilparams",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_entry"
 },
 {
 "from": "etc/afpd/file.c#setfilparams",
@@ -35776,22 +34996,7 @@
 {
 "from": "bin/nad/nad_util.c#sig_handler",
 "kind": "use",
-"to": "bin/nad/nad_util.c#alarmed"
-},
-{
-"from": "bin/pap/papstatus.c#sig_handler",
-"kind": "use",
-"to": "bin/pap/papstatus.c#stop_requested"
-},
-{
-"from": "etc/papd/magics.c#sig_handler",
-"kind": "use",
-"to": "etc/papd/magics.c#stop_requested"
-},
-{
-"from": "etc/papd/main.c#sig_handler",
-"kind": "use",
-"to": "etc/papd/main.c#stop_requested"
+"to": "bin/dbd/cmd_dbd.c#alarmed"
 },
 {
 "from": "etc/netatalk/netatalk.c#sigchld_cb",
@@ -36821,6 +36026,11 @@
 {
 "from": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_ensure_seeded",
 "kind": "call",
+"to": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_seeded"
+},
+{
+"from": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_ensure_seeded",
+"kind": "call",
 "to": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_volume_uuid"
 },
 {
@@ -36927,6 +36137,11 @@
 "from": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_open_query",
 "kind": "call",
 "to": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_fill_results"
+},
+{
+"from": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_open_query",
+"kind": "call",
+"to": "etc/spotlight/xapian/sl_xapian.h#sl_xapian_query"
 },
 {
 "from": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_seeded",
@@ -38395,11 +37610,6 @@
 "to": "etc/uams/uams_dhx2_pam.c#g"
 },
 {
-"from": "etc/uams/uams_dhx2_pam.c#uam_cleanup",
-"kind": "use",
-"to": "etc/uams/uams_dhx2_pam.c#p"
-},
-{
 "from": "etc/uams/uams_dhx2_passwd.c#uam_cleanup",
 "kind": "call",
 "to": "etc/afpd/uam.c#uam_unregister"
@@ -39172,11 +38382,6 @@
 {
 "from": "etc/netatalk/afp_mdns.c#unregister_stuff",
 "kind": "use",
-"to": "etc/netatalk/afp_mdns.c#fds"
-},
-{
-"from": "etc/netatalk/afp_mdns.c#unregister_stuff",
-"kind": "use",
 "to": "etc/netatalk/afp_mdns.c#poller"
 },
 {
@@ -39398,16 +38603,6 @@
 "from": "bin/nad/nad_cp.c#upfunc",
 "kind": "use",
 "to": "bin/nad/nad_cp.c#ppdid"
-},
-{
-"from": "bin/nad/nad_rm.c#upfunc",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#did"
-},
-{
-"from": "bin/nad/nad_rm.c#upfunc",
-"kind": "use",
-"to": "bin/nad/nad_rm.c#pdid"
 },
 {
 "from": "etc/afpd/quota.c#uquota_getvolspace",
@@ -40285,11 +39480,6 @@
 {
 "from": "etc/atalkd/zip.c#zip_packet",
 "kind": "use",
-"to": "etc/atalkd/main.c#interfaces"
-},
-{
-"from": "etc/atalkd/zip.c#zip_packet",
-"kind": "use",
 "to": "etc/atalkd/main.c#stabletimer"
 },
 {
@@ -40301,6 +39491,16 @@
 "from": "etc/atalkd/config.c#zone",
 "kind": "call",
 "to": "etc/atalkd/zip.c#newzt"
+},
+{
+"from": "bin/nbp/nbplkup.c#main",
+"kind": "doc",
+"to": "etc/atalkd/config.c#zone"
+},
+{
+"from": "libatalk/nbp/nbp_util.c#nbp_name",
+"kind": "doc",
+"to": "etc/atalkd/config.c#zone"
 },
 {
 "from": "etc/atalkd/multicast.c#zone_bcast",

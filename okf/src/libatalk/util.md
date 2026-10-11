@@ -5,7 +5,7 @@ description: "20 files, 191 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -46,7 +46,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 257 calls
+* [etc/afpd](../etc/afpd.md): 255 calls
 * [libatalk/adouble](adouble.md): 28 calls
 * [bin/nad](../bin/nad.md): 18 calls
 * [libatalk/dsi](dsi.md): 18 calls
@@ -56,7 +56,6 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 * [etc/uams](../etc/uams.md): 9 calls
 * [bin/dbd](../bin/dbd.md): 8 calls
 * [etc/papd](../etc/papd.md): 6 calls
-* [libatalk/asp](asp.md): 6 calls
 * [libatalk/atp](atp.md): 6 calls
 * [libatalk/cnid](cnid.md): 6 calls
 * [etc/spotlight](../etc/spotlight.md): 5 calls
@@ -68,6 +67,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 * [bin/afppasswd](../bin/afppasswd.md): 1 calls
 * [bin/getzones](../bin/getzones.md): 1 calls
 * [bin/rtmpqry](../bin/rtmpqry.md): 1 calls
+* [libatalk/asp](asp.md): 1 calls
 * [libatalk/nbp](nbp.md): 1 calls
 
 # Most called functions
@@ -87,4 +87,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[conf_testutil_set_lastvid](util/netatalk_conf.c.md#conf_testutil_set_lastvid), [getvolbyname](util/netatalk_conf.c.md#getvolbyname), [lock_reg](util/locking.c.md#lock_reg), [make_log_entry](util/logger.c.md#make_log_entry), [netatalk_panic](util/fault.c.md#netatalk_panic), [prequeue](util/queue.c.md#prequeue), [volume_unlink](util/netatalk_conf.c.md#volume_unlink)
+[conf_testutil_set_lastvid](util/netatalk_conf.c.md#conf_testutil_set_lastvid), [getvolbyname](util/netatalk_conf.c.md#getvolbyname), [ipc_get_hints_dropped](util/server_ipc.c.md#ipc_get_hints_dropped), [ipc_get_hints_sent](util/server_ipc.c.md#ipc_get_hints_sent), [lock_reg](util/locking.c.md#lock_reg), [make_log_entry](util/logger.c.md#make_log_entry), [netatalk_panic](util/fault.c.md#netatalk_panic), [prequeue](util/queue.c.md#prequeue), [volume_unlink](util/netatalk_conf.c.md#volume_unlink)

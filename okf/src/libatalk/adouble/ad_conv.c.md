@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_conv.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -44,7 +44,7 @@ Parameters:
 
 Returns: 0 on success or when nothing needs converting, -1 on error
 
-Calls: [ad_close](ad_flush.c.md#ad_close), [ad_copy_header](ad_flush.c.md#ad_copy_header), [ad_flush](ad_flush.c.md#ad_flush), [ad_getdate](ad_date.c.md#ad_getdate), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_init](ad_open.c.md#ad_init), [ad_init_old](ad_open.c.md#ad_init_old), [ad_open](ad_open.c.md#ad_open), [ad_refresh](ad_open.c.md#ad_refresh), [ad_tmplock](ad_lock.c.md#ad_tmplock), [fullpathname](../util/unix.c.md#fullpathname), [sys_setxattr](../vfs/extattr.c.md#sys_setxattr)
+Calls: [ad_close](ad_flush.c.md#ad_close), [ad_copy_header](ad_flush.c.md#ad_copy_header), [ad_entry](ad_open.c.md#ad_entry), [ad_flush](ad_flush.c.md#ad_flush), [ad_getdate](ad_date.c.md#ad_getdate), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_init](ad_open.c.md#ad_init), [ad_init_old](ad_open.c.md#ad_init_old), [ad_open](ad_open.c.md#ad_open), [ad_refresh](ad_open.c.md#ad_refresh), [ad_tmplock](ad_lock.c.md#ad_tmplock), [fullpathname](../util/unix.c.md#fullpathname), [sys_setxattr](../vfs/extattr.c.md#sys_setxattr)
 
 Called by: [ad_conv_v22ea](ad_conv.c.md#ad_conv_v22ea)
 

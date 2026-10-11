@@ -5,7 +5,7 @@ description: "7 functions, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/ea_sys.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -206,6 +206,6 @@ Note: Copies EAs from source file to dest file.
 
 Calls: [sys_getxattr](extattr.c.md#sys_getxattr), [sys_listxattr](extattr.c.md#sys_listxattr), [sys_setxattr](extattr.c.md#sys_setxattr)
 
-Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
+Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
 
 Dispatched via: [netatalk_ea_sys](vfs.c.md#netatalk_ea_sys)

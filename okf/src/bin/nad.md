@@ -5,7 +5,7 @@ description: "24 files, 181 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/nad"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 # Files
@@ -42,7 +42,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 
 # Calls into
 
-* [libatalk/adouble](../libatalk/adouble.md): 63 calls
+* [libatalk/adouble](../libatalk/adouble.md): 71 calls
 * [libatalk/compat](../libatalk/compat.md): 30 calls
 * [libatalk/cnid](../libatalk/cnid.md): 24 calls
 * [libatalk/util](../libatalk/util.md): 18 calls
@@ -67,4 +67,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[mtoupathcap](nad/nad_adouble.c.md#mtoupathcap), [openvol](nad/nad_util.c.md#openvol), [parse_archive_mode](nad/megatron.c.md#parse_archive_mode), [utompathcap](nad/nad_adouble.c.md#utompathcap), [xgetcwd](nad/ftw.c.md#xgetcwd)
+[mtoupathcap](nad/nad_adouble.c.md#mtoupathcap), [openvol](nad/nad_util.c.md#openvol), [parse_archive_mode](nad/megatron.c.md#parse_archive_mode), [upfunc](nad/nad_cp.c.md#upfunc), [upfunc](nad/nad_rm.c.md#upfunc), [utompathcap](nad/nad_adouble.c.md#utompathcap), [xgetcwd](nad/ftw.c.md#xgetcwd)

@@ -5,7 +5,7 @@ description: "1 function, 3 types, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/globals.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -128,10 +128,10 @@ Defined at line 188.
 * `int cnx_cnt`
 * `int cnx_max`
 * `int vols_skipped`: volume sections the last [load_afp_conf_vols()](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols) could not turn into volumes
-* `void(* logout`: Called through by [afp_asp_close](../../etc/afpd/afp_asp.c.md#afp_asp_close), [afp_dsi_close](../../etc/afpd/afp_dsi.c.md#afp_dsi_close).
-* `void(* exit`: Called through by [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [read_fork](../../etc/afpd/fork.c.md#read_fork), [send_reply](../../etc/afpd/auth.c.md#send_reply).
-* `int(* reply`: Called through by [send_reply](../../etc/afpd/auth.c.md#send_reply).
-* `int(* attention`: Called through by [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [setvoltime](../../etc/afpd/volume.c.md#setvoltime).
+* `void(* logout`
+* `void(* exit`
+* `int(* reply`
+* `int(* attention`
 * `void * sl_ctx`: opaque handle for the active search backend
 
 ### struct afp_options
@@ -143,14 +143,14 @@ Defined at line 118.
 * `int flags`
 * `int dircachesize`
 * `int dircache_mode`: Directory cache mode: 0=LRU, 1=ARC.
-* `int dircache_validation_freq`: Validate every Nth access (default 100)
-* `int dircache_rfork_budget`: Total rfork cache memory budget (KB, 0=disabled)
-* `int dircache_rfork_maxentry`: Max rfork size to cache per entry (KB)
+* `int dircache_validation_freq`: Validate every Nth access (default 100).
+* `int dircache_rfork_budget`: Total rfork cache memory budget (KB, 0=disabled).
+* `int dircache_rfork_maxentry`: Max rfork size to cache per entry (KB).
 * `int strict_locking_explicit`: operator set strict locking (multi protocol changes defaults only)
 * `int dircache_validation_freq_explicit`: operator set dircache validation freq
 * `int dircache_rfork_budget_explicit`: operator set dircache rfork budget
-* `int sleep`: Maximum time allowed to sleep (in tickles)
-* `int disconnected`: Maximum time in disconnected state (in tickles)
+* `int sleep`: Maximum time allowed to sleep (in tickles).
+* `int disconnected`: Maximum time in disconnected state (in tickles).
 * `unsigned int tcp_sndbuf`
 * `unsigned int tcp_rcvbuf`
 * `unsigned char passwdbits`
@@ -245,7 +245,7 @@ Defined at line 97.
 * `OPTION_VETOMSG`: whether to send an AFP message for veto file access
 * `RFORK_BUDGET_MAX_KB`: Hard cap: 10 GB in KB.
 * `RFORK_ENTRY_MAX_KB`: Hard cap: 10 MB in KB.
-* `UTF8FILELEN_EARLY`: Type3, early Mac OS X 10.0-10.4.
+* `UTF8FILELEN_EARLY`: Type3, early Mac OS X 10.0-10.4.?
 * Undocumented: `AFPOBJ_TMPSIZ`, `CNID_MAX_PATH_LEN`, `CNID_PATH_OVERHEAD`, `DEFAULT_SPLICE_SIZE`, `IS_AFP_SESSION`, `MAXOPTLEN`, `MAXUSERLEN`, `OPTION_ACL2MACCESS`, `OPTION_ACL2MODE`, `OPTION_ANNOUNCESSH`, `OPTION_CLOSEVOL`, `OPTION_DEBUG`, `OPTION_NOSENDFILE`, `OPTION_NOZEROCONF`, `OPTION_RECVFILE`, `OPTION_SERVERNOTIF`, `OPTION_UUID`, `PASSWD_ALL`, `PASSWD_NONE`, `PASSWD_NOSAVE`, `PASSWD_SET`, `SPLICE_SIZE_MAX`, `SPLICE_SIZE_MIN`, `SPOTLIGHT_RESULTS_LIMIT_DEFAULT`, `SPOTLIGHT_RESULTS_LIMIT_MAX`, `SPOTLIGHT_RESULTS_LIMIT_MIN`
 
 # File-scope variables

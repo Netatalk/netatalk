@@ -5,7 +5,7 @@ description: "2 functions, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/nbp.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -80,7 +80,7 @@ Returns: 0, 1 for a malformed packet or an unknown op, or -1 for a failure that 
 
 Calls: [addmulti](multicast.c.md#addmulti), [nbp_ack](nbp.c.md#nbp_ack), [strndiacasecmp](../../libatalk/util/strdicasecmp.c.md#strndiacasecmp), [zone_bcast](multicast.c.md#zone_bcast)
 
-Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md), `nbptab`, `transition` in [etc/atalkd/main.c](main.c.md)
+Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md), `transition` in [etc/atalkd/main.c](main.c.md)
 
 Dispatched via: [atserv](main.c.md#atserv)
 

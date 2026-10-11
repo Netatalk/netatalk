@@ -5,7 +5,7 @@ description: "5 functions, includes 8 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_rm.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,8 +41,6 @@ Returns: the matching table entry, or NULL
 
 Called by: [rm](nad_rm.c.md#rm)
 
-Uses file-scope variables: `netatalk_dirs`
-
 ### upfunc
 
 ```c
@@ -52,10 +50,6 @@ static void upfunc(void)
 Defined at lines 86 to 89.
 
 Step the directory ID of the walk back to the parent after nftw leaves a directory.
-
-Called by: [nad_rm](nad_rm.c.md#nad_rm)
-
-Uses file-scope variables: `did`, `pdid`
 
 ### usage_rm
 
@@ -88,11 +82,11 @@ Parameters:
 
 Returns: 0, or 1 when an entry fails, while usage errors exit
 
-Calls: [ad_valid_header_osx](../../libatalk/adouble/ad_open.c.md#ad_valid_header_osx), [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [nftw](ftw.c.md#nftw), [openvol_optional](nad_util.c.md#openvol_optional), [rm](nad_rm.c.md#rm), [set_signal](nad_util.c.md#set_signal), [upfunc](nad_rm.c.md#upfunc), [usage_rm](nad_rm.c.md#usage_rm)
+Calls: [ad_valid_header_osx](../../libatalk/adouble/ad_open.c.md#ad_valid_header_osx), [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [nftw](ftw.c.md#nftw), [openvol_optional](nad_util.c.md#openvol_optional), [rm](nad_rm.c.md#rm), [set_signal](nad_util.c.md#set_signal), [usage_rm](nad_rm.c.md#usage_rm)
 
 Called by: [copy](nad_mv.c.md#copy), [main](nad.c.md#main)
 
-Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badrm`, `did`, `pdid`, `rval`, `vflag` in [bin/nad/nad.h](nad.h.md), `volume`
+Uses file-scope variables: `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badrm`, `vflag` in [bin/nad/nad.h](nad.h.md), `volume`
 
 ### rm
 
@@ -120,9 +114,7 @@ Calls: [ad_valid_header_osx](../../libatalk/adouble/ad_open.c.md#ad_valid_header
 
 Called by: [nad_rm](nad_rm.c.md#nad_rm)
 
-Calls through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_deletefile_adouble](../../libatalk/vfs/vfs.c.md#rf_deletefile_adouble), [RF_deletefile_ea](../../libatalk/vfs/vfs.c.md#rf_deletefile_ea), [ea_deletefile](../../libatalk/vfs/ea_ad.c.md#ea_deletefile), [vfs_deletefile](../../libatalk/vfs/vfs.c.md#vfs_deletefile)
-
-Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badrm`, `did`, `pdid`, `rval`, `vflag` in [bin/nad/nad.h](nad.h.md), `volume`
+Uses file-scope variables: `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md), `badrm`, `vflag` in [bin/nad/nad.h](nad.h.md), `volume`
 
 # Macros
 

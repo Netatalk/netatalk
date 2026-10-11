@@ -5,7 +5,7 @@ description: "25 functions, 1 type, includes 11 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/megatron.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -542,6 +542,7 @@ Uses file-scope variables: `nad_log_verbose` in [bin/nad/nad_util.c](nad_util.c.
 
 Defined at line 41.
 * `const char * name`
+* `int module`
 
 # File-scope variables
 

@@ -5,7 +5,7 @@ description: "Definitions for ACL mapping code."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acls.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 ### struct darwin_ace_t
 
-Access Control List Entry (ACE)
+Access Control List Entry (ACE).
 
 Defined at line 105.
 * `atalk_uuid_t darwin_ace_uuid`

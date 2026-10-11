@@ -5,7 +5,7 @@ description: "5 functions, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/comment.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,8 +32,6 @@ The stack must not be empty.
 
 Called by: [ch_creator](headers.c.md#ch_creator), [ch_endcomm](headers.c.md#ch_endcomm), [ch_endtranslate](headers.c.md#ch_endtranslate), [ch_for](headers.c.md#ch_for), [ch_starttranslate](headers.c.md#ch_starttranslate), [ch_title](headers.c.md#ch_title), [ch_translateone](headers.c.md#ch_translateone), [cm_psadobe](magics.c.md#cm_psadobe), [cm_psquery](magics.c.md#cm_psquery), [cm_psswitch](magics.c.md#cm_psswitch), [comswitch](comment.c.md#comswitch), [cq_default](queries.c.md#cq_default), [cq_end](queries.c.md#cq_end), [cq_feature](queries.c.md#cq_feature), [cq_font](queries.c.md#cq_font), [cq_fontlist](queries.c.md#cq_fontlist), [cq_printer](queries.c.md#cq_printer), [cq_query](queries.c.md#cq_query), [cq_rbilogin](queries.c.md#cq_rbilogin)
 
-Uses file-scope variables: `comstate`
-
 ### compush
 
 ```c
@@ -50,8 +48,6 @@ Parameters:
 * `comment`: comment table entry whose handler takes over
 
 Called by: [cm_psadobe](magics.c.md#cm_psadobe), [cm_psquery](magics.c.md#cm_psquery), [comswitch](comment.c.md#comswitch), [ps](magics.c.md#ps)
-
-Uses file-scope variables: `comstate`
 
 ### comswitch
 

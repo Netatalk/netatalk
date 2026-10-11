@@ -5,7 +5,7 @@ description: "6 functions, 1 type, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/ppd.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -122,6 +122,8 @@ Returns: the font entry, or NULL for a font the PPD file does not list
 
 Calls: [ppd_init](ppd.c.md#ppd_init)
 
+Called by: [cq_font_answer](queries.c.md#cq_font_answer)
+
 Uses file-scope variables: `ppd_fonts`, `ppd_inited`
 
 ### ppd_feature
@@ -143,6 +145,8 @@ Parameters:
 Returns: the feature, or NULL for an unknown keyword or one without a value
 
 Calls: [ppd_init](ppd.c.md#ppd_init)
+
+Called by: [cq_feature](queries.c.md#cq_feature), [cq_printer](queries.c.md#cq_printer), [gq_product](queries.c.md#gq_product)
 
 Uses file-scope variables: `ppd_features`, `ppd_inited`
 

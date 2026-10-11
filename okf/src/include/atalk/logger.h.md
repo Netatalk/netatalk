@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/logger.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -168,7 +168,7 @@ Defined at line 77.
 ### struct logtype_conf_t
 
 Defined at line 87.
-* `bool set`: set individually ? yes: changing default doesnt change it.
+* `bool set`: set individually ?
 * `bool syslog`: This type logs to syslog.
 * `int fd`: logfiles fd
 * `enum loglevels level`: Log Level to put in this file.

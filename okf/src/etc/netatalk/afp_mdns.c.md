@@ -5,7 +5,7 @@ description: "mDNS based Zeroconf support"
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/netatalk/afp_mdns.c"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -88,7 +88,7 @@ Returns: NULL
 
 Called by: [register_stuff](afp_mdns.c.md#register_stuff)
 
-Uses file-scope variables: `fds`, `svc_ref_count`, `svc_refs`
+Uses file-scope variables: `svc_ref_count`, `svc_refs`
 
 ### RegisterReply
 
@@ -125,7 +125,7 @@ This function unregisters anything we have already registered and frees associat
 
 Called by: [md_zeroconf_unregister](afp_mdns.c.md#md_zeroconf_unregister), [register_stuff](afp_mdns.c.md#register_stuff)
 
-Uses file-scope variables: `fds`, `poller`, `svc_ref_count`, `svc_refs`
+Uses file-scope variables: `poller`, `svc_ref_count`, `svc_refs`
 
 ### register_stuff
 

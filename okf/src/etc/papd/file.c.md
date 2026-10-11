@@ -5,7 +5,7 @@ description: "5 functions, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/file.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -87,7 +87,7 @@ void spoolreply(struct papfile *out, char *str)
 
 Defined at lines 149 to 161.
 
-Append a PostScript status message for the client, `%%[ status: str ]%%`
+Append a PostScript status message for the client, `%%[ status: str ]%%`.
 
 Parameters:
 * `out`: output buffer to the client
@@ -105,7 +105,7 @@ void spoolerror(struct papfile *out, char *str)
 
 Defined at lines 169 to 181.
 
-Append a PostScript error message for the client, `%%[ Error: str ]%%`
+Append a PostScript error message for the client, `%%[ Error: str ]%%`.
 
 Parameters:
 * `out`: output buffer to the client

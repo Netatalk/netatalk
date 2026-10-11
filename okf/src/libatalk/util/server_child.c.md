@@ -5,7 +5,7 @@ description: "functions to handle child processes"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_child.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -110,7 +110,7 @@ Returns: the child, or NULL at the session limit, for a missing process, or when
 
 Calls: [hash_child](server_child.c.md#hash_child), [server_child_resolve](server_child.c.md#server_child_resolve)
 
-Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [dsi_getsession](../dsi/dsi_getsess.c.md#dsi_getsession)
+Called by: [dsi_getsession](../dsi/dsi_getsess.c.md#dsi_getsession)
 
 ### server_child_remove
 
@@ -132,7 +132,7 @@ Returns: the closed IPC descriptor, or -1 for an unknown pid
 
 Calls: [explicit_bzero](../compat/explicit_bzero.c.md#explicit_bzero), [server_child_resolve](server_child.c.md#server_child_resolve), [unhash_child](server_child.c.md#unhash_child)
 
-Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [child_handler](../../etc/afpd/main.c.md#child_handler)
+Called by: [child_handler](../../etc/afpd/main.c.md#child_handler)
 
 ### server_child_free
 
@@ -151,7 +151,7 @@ Parameters:
 
 Calls: [explicit_bzero](../compat/explicit_bzero.c.md#explicit_bzero)
 
-Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [dsi_getsession](../dsi/dsi_getsess.c.md#dsi_getsession)
+Called by: [dsi_getsession](../dsi/dsi_getsess.c.md#dsi_getsession)
 
 ### server_child_kill
 
@@ -289,7 +289,7 @@ Defined at lines 589 to 609.
 
 reset children signals
 
-Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [dsi_tcp_open](../dsi/dsi_tcp.c.md#dsi_tcp_open)
+Called by: [dsi_tcp_open](../dsi/dsi_tcp.c.md#dsi_tcp_open)
 
 # Macros
 

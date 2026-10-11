@@ -5,7 +5,7 @@ description: "5 types, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/spotlight.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -43,7 +43,7 @@ Internal query data structure.
 
 Defined at line 95.
 * `struct list_head slq_list`: queries are stored in a list
-* `slq_state_t slq_state`: State
+* `slq_state_t slq_state`: State.
 * `AFPObj * slq_obj`: global [AFPObj](globals.h.md#struct-afpobj) handle
 * `const struct vol * slq_vol`: volume handle
 * `char * slq_scope`: search scope
@@ -52,10 +52,10 @@ Defined at line 95.
 * `uint64_t slq_ctx2`: client context 2
 * `sl_array_t * slq_reqinfo`: array with requested metadata
 * `const char * slq_qstring`: the Spotlight query string
-* `uint64_t * slq_cnids`: Pointer to array with CNIDs
-* `size_t slq_cnids_num`: Size of slq_cnids array
+* `uint64_t * slq_cnids`: Pointer to array with CNIDs.
+* `size_t slq_cnids_num`: Size of slq_cnids array.
 * `void * slq_backend_private`: backend-private query state
-* `bool slq_allow_expr`: Whether to allow expressions
+* `bool slq_allow_expr`: Whether to allow expressions.
 * `uint64_t slq_result_limit`: max results, 0 = unlimited
 * `struct sl_rslts * query_results`: query results
 

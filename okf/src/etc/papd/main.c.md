@@ -5,7 +5,7 @@ description: "10 functions, 1 type, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/main.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -43,8 +43,6 @@ Parameters:
 * `signo`: signal number, unused
 
 Called by: [main](main.c.md#main)
-
-Uses file-scope variables: `stop_requested`
 
 ### papd_exit
 
@@ -142,7 +140,7 @@ Returns: 0 after a shutdown signal, and a startup failure exits with 1
 
 Calls: [atp_close](../../libatalk/atp/atp_close.c.md#atp_close), [atp_open](../../libatalk/atp/atp_open.c.md#atp_open), [atp_rreq](../../libatalk/atp/atp_rreq.c.md#atp_rreq), [atp_rsel](../../libatalk/atp/atp_rsel.c.md#atp_rsel), [atp_sresp](../../libatalk/atp/atp_sresp.c.md#atp_sresp), [auth_load](auth.c.md#auth_load), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [cups_get_printer_status](print_cups.c.md#cups_get_printer_status), [die](main.c.md#die), [fault_setup](../../libatalk/util/fault.c.md#fault_setup), [getprinters](main.c.md#getprinters), [getstatus](main.c.md#getstatus), [nbp_rgstr](../../libatalk/nbp/nbp_rgstr.c.md#nbp_rgstr), [papd_cleanup](main.c.md#papd_cleanup), [papd_exit](main.c.md#papd_exit), [reap](main.c.md#reap), [rprintcap](main.c.md#rprintcap), [server_lock](../../libatalk/util/server_lock.c.md#server_lock), [session](session.c.md#session), [set_charset_name](../../libatalk/unicode/charcnv.c.md#set_charset_name), [set_processname](../../libatalk/util/logger.c.md#set_processname), [sig_handler](main.c.md#sig_handler), [syslog_setup](../../libatalk/util/logger.c.md#syslog_setup)
 
-Uses file-scope variables: `conffile`, `connid`, `defprinter`, `oquantum`, `printcap`, `printers`, `quantum`, `r_buf`, `sock`, `stop_requested`, `uamlist`, `uampath`
+Uses file-scope variables: `conffile`, `defprinter`, `printcap`, `printers`, `r_buf`, `uamlist`, `uampath`
 
 ### getstatus
 

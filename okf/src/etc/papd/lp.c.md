@@ -5,7 +5,7 @@ description: "Interface to lpr system."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/lp.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,7 @@ int rresvport(int *alport)
 
 Defined at lines 119 to 172.
 
-Open a TCP socket bound to a reserved port, for systems without [rresvport()](lp.c.md#rresvport)
+Open a TCP socket bound to a reserved port, for systems without [rresvport()](lp.c.md#rresvport).
 
 The search starts at *alport, clamped to 512 to 1023, and counts down. Below 512 it goes on at 1023. It ends at the first port that binds or after a full circle. A bind error other than EADDRINUSE ends it early.
 
@@ -240,7 +240,7 @@ Calls: [cups_get_printer_status](print_cups.c.md#cups_get_printer_status), [lp_p
 
 Called by: [lp_open](lp.c.md#lp_open)
 
-Uses file-scope variables: `hostname`, `sat`
+Uses file-scope variables: `hostname`
 
 ### lp_open
 
@@ -266,7 +266,7 @@ Calls: [lp_init](lp.c.md#lp_init), [lp_print](lp.c.md#lp_print), [lp_setup_comme
 
 Called by: [ps](magics.c.md#ps)
 
-Uses file-scope variables: `hostname`, `sat`
+Uses file-scope variables: `hostname`
 
 ### lp_close
 

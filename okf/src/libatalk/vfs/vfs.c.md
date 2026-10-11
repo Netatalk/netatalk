@@ -5,7 +5,7 @@ description: "54 functions, 1 type, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/vfs.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -195,7 +195,7 @@ Returns: 1 when clients may see name, 0 otherwise
 
 Calls: [netatalk_name](vfs.c.md#netatalk_name)
 
-Called through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [check_dirent](../../etc/afpd/enumerate.c.md#check_dirent), [check_name](../../etc/afpd/filedir.c.md#check_name), [copy](../../bin/nad/nad_cp.c.md#copy), [dbd_readdir](../../bin/dbd/cmd_dbd_scanvol.c.md#dbd_readdir), [vfs_validupath](vfs.c.md#vfs_validupath)
+Called through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [check_dirent](../../etc/afpd/enumerate.c.md#check_dirent), [check_name](../../etc/afpd/filedir.c.md#check_name), [dbd_readdir](../../bin/dbd/cmd_dbd_scanvol.c.md#dbd_readdir), [vfs_validupath](vfs.c.md#vfs_validupath)
 
 Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 
@@ -475,7 +475,7 @@ Calls: [netatalk_unlinkat](unix.c.md#netatalk_unlinkat)
 
 Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
 
-Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile), [ftw_copy_file](../../bin/nad/nad_cp.c.md#ftw_copy_file), [rm](../../bin/nad/nad_rm.c.md#rm), [vfs_deletefile](vfs.c.md#vfs_deletefile)
+Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile), [vfs_deletefile](vfs.c.md#vfs_deletefile)
 
 Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 
@@ -503,7 +503,7 @@ Calls: [ad_close](../adouble/ad_flush.c.md#ad_close), [ad_init](../adouble/ad_op
 
 Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
 
-Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [do_move](../../bin/nad/nad_mv.c.md#do_move), [renamefile](../../etc/afpd/file.c.md#renamefile), [vfs_renamefile](vfs.c.md#vfs_renamefile)
+Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [renamefile](../../etc/afpd/file.c.md#renamefile), [vfs_renamefile](vfs.c.md#vfs_renamefile)
 
 Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 
@@ -529,7 +529,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [copy_file](unix.c.md#copy_file), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
-Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
+Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
 
 Dispatched via: [netatalk_adouble_v2](vfs.c.md#netatalk_adouble_v2)
 
@@ -661,7 +661,7 @@ Returns: 1 when clients may see name, 0 otherwise
 
 Calls: [ad_valid_header_osx](../adouble/ad_open.c.md#ad_valid_header_osx), [netatalk_name](vfs.c.md#netatalk_name)
 
-Called through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [check_dirent](../../etc/afpd/enumerate.c.md#check_dirent), [check_name](../../etc/afpd/filedir.c.md#check_name), [copy](../../bin/nad/nad_cp.c.md#copy), [dbd_readdir](../../bin/dbd/cmd_dbd_scanvol.c.md#dbd_readdir), [vfs_validupath](vfs.c.md#vfs_validupath)
+Called through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [check_dirent](../../etc/afpd/enumerate.c.md#check_dirent), [check_name](../../etc/afpd/filedir.c.md#check_name), [dbd_readdir](../../bin/dbd/cmd_dbd_scanvol.c.md#dbd_readdir), [vfs_validupath](vfs.c.md#vfs_validupath)
 
 Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 
@@ -895,7 +895,7 @@ Calls: [netatalk_unlinkat](unix.c.md#netatalk_unlinkat)
 
 Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
 
-Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile), [ftw_copy_file](../../bin/nad/nad_cp.c.md#ftw_copy_file), [rm](../../bin/nad/nad_rm.c.md#rm), [vfs_deletefile](vfs.c.md#vfs_deletefile)
+Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile), [vfs_deletefile](vfs.c.md#vfs_deletefile)
 
 Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 
@@ -921,7 +921,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [copy_file](unix.c.md#copy_file), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
-Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
+Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copyfile](../../etc/afpd/file.c.md#copyfile), [vfs_copyfile](vfs.c.md#vfs_copyfile)
 
 Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 
@@ -949,7 +949,7 @@ Calls: [ostatat](../util/unix.c.md#ostatat), [unix_rename](unix.c.md#unix_rename
 
 Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
 
-Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [do_move](../../bin/nad/nad_mv.c.md#do_move), [renamefile](../../etc/afpd/file.c.md#renamefile), [vfs_renamefile](vfs.c.md#vfs_renamefile)
+Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [renamefile](../../etc/afpd/file.c.md#renamefile), [vfs_renamefile](vfs.c.md#vfs_renamefile)
 
 Dispatched via: [netatalk_adouble_ea](vfs.c.md#netatalk_adouble_ea)
 
@@ -1151,7 +1151,7 @@ Returns: AFP_OK, or the result of the last module that failed
 
 Calls through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_deletefile_adouble](vfs.c.md#rf_deletefile_adouble), [RF_deletefile_ea](vfs.c.md#rf_deletefile_ea), [ea_deletefile](ea_ad.c.md#ea_deletefile)
 
-Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile), [ftw_copy_file](../../bin/nad/nad_cp.c.md#ftw_copy_file), [rm](../../bin/nad/nad_rm.c.md#rm)
+Called through [`vfs_ops::vfs_deletefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [deletefile](../../etc/afpd/file.c.md#deletefile)
 
 Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 
@@ -1177,7 +1177,7 @@ Returns: AFP_OK, or the result of the last module that failed
 
 Calls through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_renamefile_adouble](vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](vfs.c.md#rf_renamefile_ea), [ea_renamefile](ea_ad.c.md#ea_renamefile)
 
-Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [do_move](../../bin/nad/nad_mv.c.md#do_move), [renamefile](../../etc/afpd/file.c.md#renamefile)
+Called through [`vfs_ops::vfs_renamefile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [renamefile](../../etc/afpd/file.c.md#renamefile)
 
 Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 
@@ -1203,7 +1203,7 @@ Returns: AFP_OK, or the result of the last module that failed
 
 Calls through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_copyfile_adouble](vfs.c.md#rf_copyfile_adouble), [RF_copyfile_ea](vfs.c.md#rf_copyfile_ea), [ea_copyfile](ea_ad.c.md#ea_copyfile), [sys_ea_copyfile](ea_sys.c.md#sys_ea_copyfile)
 
-Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile)
+Called through [`vfs_ops::vfs_copyfile`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [copyfile](../../etc/afpd/file.c.md#copyfile)
 
 Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 
@@ -1473,7 +1473,7 @@ Returns: nonzero when clients may see name, 0 otherwise
 
 Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops): [validupath_adouble](vfs.c.md#validupath_adouble), [validupath_ea](vfs.c.md#validupath_ea)
 
-Called through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [check_dirent](../../etc/afpd/enumerate.c.md#check_dirent), [check_name](../../etc/afpd/filedir.c.md#check_name), [copy](../../bin/nad/nad_cp.c.md#copy), [dbd_readdir](../../bin/dbd/cmd_dbd_scanvol.c.md#dbd_readdir)
+Called through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops) by: [check_dirent](../../etc/afpd/enumerate.c.md#check_dirent), [check_name](../../etc/afpd/filedir.c.md#check_name), [dbd_readdir](../../bin/dbd/cmd_dbd_scanvol.c.md#dbd_readdir)
 
 Dispatched via: [vfs_master_funcs](vfs.c.md#vfs_master_funcs)
 

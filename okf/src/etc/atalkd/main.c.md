@@ -5,7 +5,7 @@ description: "11 functions, includes 16 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/main.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -105,11 +105,11 @@ At STABLE with no new RTMP data and no ZIP queries, atalkd is stable and writes 
 Parameters:
 * `sig`: signal number, unused
 
-Calls: [addzone](zip.c.md#addzone), [atalkd_exit](main.c.md#atalkd_exit), [bootaddr](main.c.md#bootaddr), [consistency](main.c.md#consistency), [looproute](rtmp.c.md#looproute), [rtmp_delzonemap](rtmp.c.md#rtmp_delzonemap), [rtmp_free](rtmp.c.md#rtmp_free), [rtmp_packet](rtmp.c.md#rtmp_packet), [rtmp_replace](rtmp.c.md#rtmp_replace), [rtmp_request](rtmp.c.md#rtmp_request), [sendto_iface](main.c.md#sendto_iface), [setaddr](main.c.md#setaddr), [writeconf](config.c.md#writeconf), [zip_getnetinfo](zip.c.md#zip_getnetinfo), [zip_packet](zip.c.md#zip_packet)
+Calls: [addzone](zip.c.md#addzone), [atalkd_exit](main.c.md#atalkd_exit), [bootaddr](main.c.md#bootaddr), [looproute](rtmp.c.md#looproute), [rtmp_delzonemap](rtmp.c.md#rtmp_delzonemap), [rtmp_free](rtmp.c.md#rtmp_free), [rtmp_packet](rtmp.c.md#rtmp_packet), [rtmp_replace](rtmp.c.md#rtmp_replace), [rtmp_request](rtmp.c.md#rtmp_request), [sendto_iface](main.c.md#sendto_iface), [setaddr](main.c.md#setaddr), [zip_getnetinfo](zip.c.md#zip_getnetinfo), [zip_packet](zip.c.md#zip_packet)
 
 Called by: [main](main.c.md#main)
 
-Uses file-scope variables: `ciface`, `configfile`, `debug`, `interfaces`, `newrtmpdata`, `noparent`, `stable`, `stabletimer`, `ziptimeout`
+Uses file-scope variables: `ciface`, `interfaces`, `newrtmpdata`, `ziptimeout`
 
 ### consistency
 
@@ -125,7 +125,7 @@ Each route of a zone has to be in use or have no gateway, and its zone list has 
 
 Calls: [atalkd_exit](main.c.md#atalkd_exit)
 
-Called by: [as_timer](main.c.md#as_timer), [main](main.c.md#main)
+Called by: [main](main.c.md#main)
 
 ### as_debug
 
@@ -200,7 +200,7 @@ Calls: [as_debug](main.c.md#as_debug), [as_down](main.c.md#as_down), [as_timer](
 
 Calls through [`atport::ap_packet`](atserv.h.md#struct-atport): no table assigns this field
 
-Uses file-scope variables: `Packet`, `ciface`, `configfile`, `debug`, `defphase`, `fds`, `interfaces`, `nfds`, `ninterfaces`, `pidfile`, `rtfd`, `transition`, `version`
+Uses file-scope variables: `Packet`, `ciface`, `configfile`, `defphase`, `fds`, `interfaces`, `nfds`, `ninterfaces`, `pidfile`, `rtfd`, `transition`, `version`
 
 ### bootaddr
 
@@ -251,7 +251,7 @@ Calls: [atalkd_exit](main.c.md#atalkd_exit), [ifconfig](main.c.md#ifconfig)
 
 Called by: [as_timer](main.c.md#as_timer), [bootaddr](main.c.md#bootaddr), [rtmp_config](rtmp.c.md#rtmp_config), [zip_packet](zip.c.md#zip_packet)
 
-Uses file-scope variables: `atservNATSERV`, `fds`, `interfaces`, `nfds`
+Uses file-scope variables: `atservNATSERV`
 
 ### ifconfig
 

@@ -5,7 +5,7 @@ description: "16 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_ls.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -54,8 +54,6 @@ Parameters:
 Returns: the matching table entry, or NULL
 
 Called by: [ad_ls_r](nad_ls.c.md#ad_ls_r)
-
-Uses file-scope variables: `netatalk_dirs`
 
 ### usage_ls
 
@@ -165,7 +163,7 @@ Parameters:
 * `vol`: volume of the entry
 * `st`: stat result of the entry
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_forcegetid](../../libatalk/adouble/ad_attr.c.md#ad_forcegetid), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_forcegetid](../../libatalk/adouble/ad_attr.c.md#ad_forcegetid), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata)
 
 Called by: [ad_print](nad_ls.c.md#ad_print)
 

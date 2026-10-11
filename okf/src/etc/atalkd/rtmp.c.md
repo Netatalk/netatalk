@@ -5,7 +5,7 @@ description: "13 functions, includes 12 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/rtmp.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -64,8 +64,6 @@ Parameters:
 Returns: 0, 1 for a net that conflicts with the seed, or -1 when the loopback route fails
 
 Calls: [bootaddr](main.c.md#bootaddr), [looproute](rtmp.c.md#looproute), [setaddr](main.c.md#setaddr)
-
-Called by: [rtmp_packet](rtmp.c.md#rtmp_packet)
 
 Uses file-scope variables: `ciface` in [etc/atalkd/main.c](main.c.md), `stabletimer` in [etc/atalkd/main.c](main.c.md)
 
@@ -165,7 +163,7 @@ Returns: 0 after a switch, 1 when the route stays, or -1 for an error
 
 Calls: [gateroute](rtmp.c.md#gateroute), [rtmp_addinuse](rtmp.c.md#rtmp_addinuse), [rtmp_copyzones](rtmp.c.md#rtmp_copyzones), [rtmp_delinuse](rtmp.c.md#rtmp_delinuse), [rtmp_free](rtmp.c.md#rtmp_free)
 
-Called by: [as_timer](main.c.md#as_timer), [rtmp_packet](rtmp.c.md#rtmp_packet)
+Called by: [as_timer](main.c.md#as_timer)
 
 Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md)
 
@@ -187,8 +185,6 @@ Parameters:
 Returns: 0 when the route goes in use, 1 when it does not, or -1 when the zone move fails
 
 Calls: [rtmp_addinuse](rtmp.c.md#rtmp_addinuse), [rtmp_copyzones](rtmp.c.md#rtmp_copyzones), [rtmp_delinuse](rtmp.c.md#rtmp_delinuse)
-
-Called by: [rtmp_packet](rtmp.c.md#rtmp_packet)
 
 Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md)
 
@@ -220,7 +216,7 @@ Parameters:
 
 Returns: 0, 1 for a malformed or conflicting packet, or -1 for a failure that stops atalkd
 
-Calls: [gateroute](rtmp.c.md#gateroute), [looproute](rtmp.c.md#looproute), [newrt](rtmp.c.md#newrt), [rtmp_config](rtmp.c.md#rtmp_config), [rtmp_new](rtmp.c.md#rtmp_new), [rtmp_replace](rtmp.c.md#rtmp_replace), [zip_getnetinfo](zip.c.md#zip_getnetinfo)
+Calls: [zip_getnetinfo](zip.c.md#zip_getnetinfo)
 
 Called by: [as_timer](main.c.md#as_timer), [rtmp_request](rtmp.c.md#rtmp_request)
 
@@ -269,7 +265,7 @@ Returns: 0, -1 when the route already exists or is missing, or 1 when [route()](
 
 Calls: [route](route.c.md#route)
 
-Called by: [as_down](main.c.md#as_down), [as_timer](main.c.md#as_timer), [rtmp_config](rtmp.c.md#rtmp_config), [rtmp_packet](rtmp.c.md#rtmp_packet), [zip_packet](zip.c.md#zip_packet)
+Called by: [as_down](main.c.md#as_down), [as_timer](main.c.md#as_timer), [rtmp_config](rtmp.c.md#rtmp_config), [zip_packet](zip.c.md#zip_packet)
 
 ### gateroute
 
@@ -291,7 +287,7 @@ Returns: 0, or -1 for a NULL route or gateway, or when the routes already exist 
 
 Calls: [route](route.c.md#route)
 
-Called by: [as_down](main.c.md#as_down), [rtmp_addinuse](rtmp.c.md#rtmp_addinuse), [rtmp_delinuse](rtmp.c.md#rtmp_delinuse), [rtmp_packet](rtmp.c.md#rtmp_packet), [rtmp_replace](rtmp.c.md#rtmp_replace)
+Called by: [as_down](main.c.md#as_down), [rtmp_addinuse](rtmp.c.md#rtmp_addinuse), [rtmp_delinuse](rtmp.c.md#rtmp_delinuse), [rtmp_replace](rtmp.c.md#rtmp_replace)
 
 ### newrt
 
@@ -308,4 +304,4 @@ Parameters:
 
 Returns: the route, or NULL when calloc fails
 
-Called by: [addr](config.c.md#addr), [main](main.c.md#main), [net](config.c.md#net), [rtmp_packet](rtmp.c.md#rtmp_packet)
+Called by: [addr](config.c.md#addr), [main](main.c.md#main), [net](config.c.md#net)

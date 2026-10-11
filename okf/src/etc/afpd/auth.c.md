@@ -5,7 +5,7 @@ description: "26 functions, includes 19 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/auth.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -131,10 +131,6 @@ Parameters:
 Returns: err for AFP_OK and AFPERR_AUTHCONT, or AFP_OK when obj->exit returns
 
 Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login_ext), [afp_logincont](auth.c.md#afp_logincont)
-
-Calls through [`AFPObj::exit`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
-
-Calls through [`AFPObj::reply`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
 
 ### afp_errpwdexpired
 
@@ -429,8 +425,6 @@ Returns: AFP_OK or AFPERR_AUTHCONT, and after a failure AFP_OK when the session 
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind), [create_session_key](auth.c.md#create_session_key), [get_version](auth.c.md#get_version), [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
 
-Calls through [`uam_obj::login`](uam_auth.h.md#struct-uam_obj): no table assigns this field
-
 Uses file-scope variables: `afp_uam`, `nologin` in [etc/afpd/main.c](main.c.md)
 
 Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch](switch.c.md#preauth_switch)
@@ -458,8 +452,6 @@ Returns: AFP_OK or AFPERR_AUTHCONT, and after a failure AFP_OK when the session 
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind), [create_session_key](auth.c.md#create_session_key), [get_version](auth.c.md#get_version), [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
 
-Calls through [`uam_obj::login_ext`](uam_auth.h.md#struct-uam_obj): no table assigns this field
-
 Uses file-scope variables: `afp_uam`, `nologin` in [etc/afpd/main.c](main.c.md)
 
 Dispatched via: [preauth_switch](switch.c.md#preauth_switch)
@@ -486,8 +478,6 @@ Parameters:
 Returns: AFP_OK or AFPERR_AUTHCONT, and after a failure AFP_OK when the session exit returns
 
 Calls: [login](auth.c.md#login), [send_reply](auth.c.md#send_reply)
-
-Calls through [`uam_obj::logincont`](uam_auth.h.md#struct-uam_obj): no table assigns this field
 
 Uses file-scope variables: `afp_uam`
 

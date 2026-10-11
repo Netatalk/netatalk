@@ -5,7 +5,7 @@ description: "IPC over socketpair between parent and children."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_ipc.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -448,8 +448,6 @@ Return the number of dircache hints that this session sent to the master.
 
 Returns: the count since the session started
 
-Called by: [log_dircache_stat](../../etc/afpd/dircache.c.md#log_dircache_stat)
-
 Uses file-scope variables: `hints_sent`
 
 ### ipc_get_hints_dropped
@@ -463,8 +461,6 @@ Defined at lines 1006 to 1009.
 Return the number of dircache hints that this session dropped on a full IPC socket.
 
 Returns: the count since the session started
-
-Called by: [log_dircache_stat](../../etc/afpd/dircache.c.md#log_dircache_stat)
 
 Uses file-scope variables: `hints_dropped`
 

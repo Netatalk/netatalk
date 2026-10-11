@@ -5,7 +5,7 @@ description: "19 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/logger.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -201,7 +201,7 @@ void log_close_all(void)
 
 Defined at lines 523 to 537.
 
-Close the syslog connection and every log file before a [closeall()](unix.c.md#closeall)
+Close the syslog connection and every log file before a [closeall()](unix.c.md#closeall).
 
 Called while the descriptors are still ours: closelog() on a closed and reused number would close the newcomer, and a stale file number kept in type_configs would be closed by [log_reopen()](logger.c.md#log_reopen) after another type had already been given it. The next syslog message opens a new connection; [log_reopen()](logger.c.md#log_reopen) reopens the files.
 

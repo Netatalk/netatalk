@@ -5,7 +5,7 @@ description: "42 functions, includes 29 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -788,7 +788,7 @@ Parameters:
 
 Returns: AFP_OK, or AFPERR_BITMAP for an unknown bit
 
-Calls: [accessmode](unix.c.md#accessmode), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [diroffcnt](directory.c.md#diroffcnt), [for_each_dirent](enumerate.c.md#for_each_dirent), [invisible_dots](directory.c.md#invisible_dots), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdiroffcnt](directory.c.md#setdiroffcnt), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [accessmode](unix.c.md#accessmode), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [diroffcnt](directory.c.md#diroffcnt), [for_each_dirent](enumerate.c.md#for_each_dirent), [invisible_dots](directory.c.md#invisible_dots), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdiroffcnt](directory.c.md#setdiroffcnt), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
 
 Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [enumerate](enumerate.c.md#enumerate), [rslt_add](catsearch.c.md#rslt_add)
 
@@ -863,7 +863,7 @@ Parameters:
 
 Returns: AFP_OK, or the AFPERR_* code of the parameter that failed
 
-Calls: [accessmode](unix.c.md#accessmode), [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setattr](../../libatalk/adouble/ad_attr.c.md#ad_setattr), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [dir_modify](directory.c.md#dir_modify), [dir_rx_set](../../libatalk/vfs/unix.c.md#dir_rx_set), [dirlookup](directory.c.md#dirlookup), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [movecwd](directory.c.md#movecwd), [mtoumode](unix.c.md#mtoumode), [ostat](../../libatalk/util/unix.c.md#ostat), [set_dir_errors](directory.c.md#set_dir_errors), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdeskmode](desktop.c.md#setdeskmode), [setdeskowner](desktop.c.md#setdeskowner), [setdirowner](unix.c.md#setdirowner), [setdirunixmode](unix.c.md#setdirunixmode)
+Calls: [accessmode](unix.c.md#accessmode), [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setattr](../../libatalk/adouble/ad_attr.c.md#ad_setattr), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [dir_modify](directory.c.md#dir_modify), [dir_rx_set](../../libatalk/vfs/unix.c.md#dir_rx_set), [dirlookup](directory.c.md#dirlookup), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [movecwd](directory.c.md#movecwd), [mtoumode](unix.c.md#mtoumode), [ostat](../../libatalk/util/unix.c.md#ostat), [set_dir_errors](directory.c.md#set_dir_errors), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [setdeskmode](desktop.c.md#setdeskmode), [setdeskowner](desktop.c.md#setdeskowner), [setdirowner](unix.c.md#setdirowner), [setdirunixmode](unix.c.md#setdirunixmode)
 
 Called by: [afp_setdirparams](directory.c.md#afp_setdirparams), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [setfilparams](file.c.md#setfilparams)
 

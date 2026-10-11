@@ -5,7 +5,7 @@ description: "18 functions, 1 type, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/queries.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -161,7 +161,7 @@ int gq_rbiuamlist(struct papfile *out)
 
 Defined at lines 210 to 226.
 
-Answer RBIUAMListQuery with the print UAMs, one per line, ending with `*`
+Answer RBIUAMListQuery with the print UAMs, one per line, ending with `*`.
 
 A printer without print UAM authentication answers `*` alone.
 
@@ -191,7 +191,7 @@ Parameters:
 
 Returns: 0
 
-Calls: [append](file.c.md#append)
+Calls: [append](file.c.md#append), [ppd_feature](ppd.c.md#ppd_feature)
 
 Dispatched via: [genqueries](queries.c.md#genqueries)
 
@@ -230,7 +230,7 @@ void cq_font_answer(char *start, char *stop, struct papfile *out)
 
 Defined at lines 357 to 398.
 
-Answer each font name of a font query with `/Name:Yes` or `/Name:No`
+Answer each font name of a font query with `/Name:Yes` or `/Name:No`.
 
 The answer says whether the PPD file lists the font. Names of 256 bytes or more get no answer.
 
@@ -239,7 +239,7 @@ Parameters:
 * `stop`: end of the font names
 * `out`: reply data
 
-Calls: [append](file.c.md#append)
+Calls: [append](file.c.md#append), [ppd_font](ppd.c.md#ppd_font)
 
 Called by: [cq_font](queries.c.md#cq_font)
 
@@ -310,7 +310,7 @@ Parameters:
 
 Returns: CH_DONE, 0 at the end of the input, or CH_MORE while a line is incomplete
 
-Calls: [append](file.c.md#append), [comcmp](comment.c.md#comcmp), [compop](comment.c.md#compop), [comswitch](comment.c.md#comswitch), [cq_default](queries.c.md#cq_default), [markline](file.c.md#markline)
+Calls: [append](file.c.md#append), [comcmp](comment.c.md#comcmp), [compop](comment.c.md#compop), [comswitch](comment.c.md#comswitch), [cq_default](queries.c.md#cq_default), [markline](file.c.md#markline), [ppd_feature](ppd.c.md#ppd_feature)
 
 Uses file-scope variables: `queries`
 
@@ -335,7 +335,7 @@ Parameters:
 
 Returns: CH_DONE, 0 at the end of the input, or CH_MORE while a line is incomplete
 
-Calls: [append](file.c.md#append), [comcmp](comment.c.md#comcmp), [compop](comment.c.md#compop), [comswitch](comment.c.md#comswitch), [cq_default](queries.c.md#cq_default), [markline](file.c.md#markline)
+Calls: [append](file.c.md#append), [comcmp](comment.c.md#comcmp), [compop](comment.c.md#compop), [comswitch](comment.c.md#comswitch), [cq_default](queries.c.md#cq_default), [markline](file.c.md#markline), [ppd_feature](ppd.c.md#ppd_feature)
 
 Uses file-scope variables: `prod`, `psver`, `queries`
 
@@ -362,8 +362,6 @@ Returns: CH_DONE, 0 at the end of the input, or CH_MORE while a line is incomple
 
 Calls: [append](file.c.md#append), [auth_uamfind](auth.c.md#auth_uamfind), [comcmp](comment.c.md#comcmp), [compop](comment.c.md#compop), [lp_person](lp.c.md#lp_person), [markline](file.c.md#markline)
 
-Calls through [`uam_obj::uam_printer`](../afpd/uam_auth.h.md#struct-uam_obj): no table assigns this field
-
 Uses file-scope variables: `papd_uam`, `rbiloginbad`, `rbiloginerrstr`, `rbiloginok`
 
 Dispatched via: [queries](queries.c.md#queries)
@@ -376,7 +374,7 @@ int cq_end(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 
 Defined at lines 920 to 941.
 
-End a query job at `%EOF`
+End a query job at `%EOF`.
 
 The call sets PF_QUERY on the input, so cm_psquery ends the job. It pops the comment state and consumes the line.
 

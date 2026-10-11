@@ -5,7 +5,7 @@ description: "1 function, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_close.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,4 +39,4 @@ Returns: 0, or -1 when closing the socket fails
 
 Calls: [atp_free_buf](atp_bufs.c.md#atp_free_buf), [atp_print_bufuse](atp_internals.h.md#atp_print_bufuse), [netddp_close](../../include/atalk/netddp.h.md#netddp_close)
 
-Called by: [asp_close](../asp/asp_close.c.md#asp_close), [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [configfree](../../etc/afpd/afp_config.c.md#configfree), [configinit](../../etc/afpd/afp_config.c.md#configinit), [do_atp_lookup](../../bin/getzones/getzones.c.md#do_atp_lookup), [main](../../bin/pap/papstatus.c.md#main), [main](../../etc/papd/main.c.md#main)
+Called by: [asp_close](../asp/asp_close.c.md#asp_close), [configfree](../../etc/afpd/afp_config.c.md#configfree), [configinit](../../etc/afpd/afp_config.c.md#configinit), [do_atp_lookup](../../bin/getzones/getzones.c.md#do_atp_lookup), [main](../../bin/pap/papstatus.c.md#main), [main](../../etc/papd/main.c.md#main)

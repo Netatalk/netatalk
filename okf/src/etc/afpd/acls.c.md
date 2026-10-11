@@ -5,7 +5,7 @@ description: "21 functions, includes 22 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acls.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -440,7 +440,7 @@ Calls: [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [ostat](../../lib
 
 Called by: [afp_access](acls.c.md#afp_access)
 
-Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
+Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `uuid` in [etc/afpd/auth.h](auth.h.md)
 
 ### afp_access
 

@@ -5,7 +5,7 @@ description: "21 functions, includes 28 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/volume.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -179,7 +179,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_BITMAP for an unknown bit, AFPERR_PARAM when the space lookup failed, or AFPERR_MISC
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getentryoff](../../libatalk/adouble/ad_open.c.md#ad_getentryoff), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [getvolspace](volume.c.md#getvolspace), [ucs2_to_charset](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset), [vol_setdate](volume.c.md#vol_setdate)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getentryoff](../../libatalk/adouble/ad_open.c.md#ad_getentryoff), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [getvolspace](volume.c.md#getvolspace), [ucs2_to_charset](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset), [vol_setdate](volume.c.md#vol_setdate)
 
 Called by: [stat_vol](volume.c.md#stat_vol)
 
@@ -319,7 +319,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_BITMAP, AFPERR_NOOBJ for an unknown name, AFPERR_ACCESS for a wrong password, AFPERR_PARAM, or AFPERR_MISC
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata), [afprun](afprun.c.md#afprun), [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [server_ipc_volumes](volume.c.md#server_ipc_volumes), [setmessage](messages.c.md#setmessage), [stat_vol](volume.c.md#stat_vol), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [virtual_icon_init](virtual_icon.c.md#virtual_icon_init), [volume_codepage](volume.c.md#volume_codepage), [volume_openDB](volume.c.md#volume_opendb)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata), [afprun](afprun.c.md#afprun), [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [server_ipc_volumes](volume.c.md#server_ipc_volumes), [setmessage](messages.c.md#setmessage), [stat_vol](volume.c.md#stat_vol), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [virtual_icon_init](virtual_icon.c.md#virtual_icon_init), [volume_codepage](volume.c.md#volume_codepage), [volume_openDB](volume.c.md#volume_opendb)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `sl_localsearch_ops` in [etc/spotlight/localsearch/sl_localsearch.c](../spotlight/localsearch/sl_localsearch.c.md)
 
@@ -454,8 +454,6 @@ Calls: [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes)
 
 Called by: [handle_alarm](afp_dsi.c.md#handle_alarm)
 
-Calls through [`AFPObj::attention`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
-
 ### setvoltime
 
 ```c
@@ -473,8 +471,6 @@ Parameters:
 * `vol`: volume that changed
 
 Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename), [afp_setdirparams](directory.c.md#afp_setdirparams), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [afp_setfilparams](file.c.md#afp_setfilparams)
-
-Calls through [`AFPObj::attention`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
 
 ### afp_getvolparams
 

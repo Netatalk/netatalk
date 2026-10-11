@@ -5,7 +5,7 @@ description: "AFP user password utility."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/afppasswd/afppasswd.c"
 tags: ["bin/afppasswd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/afppasswd](../afppasswd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -598,7 +598,7 @@ static int valid_hex_or_disabled(const char *field, size_t len)
 
 Defined at lines 1667 to 1686.
 
-Check that a RandNum record field holds only hex digits or only `*`
+Check that a RandNum record field holds only hex digits or only `*`.
 
 Parameters:
 * `field`: field text

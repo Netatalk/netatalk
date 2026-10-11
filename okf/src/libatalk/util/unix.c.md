@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -88,7 +88,7 @@ static int count_fds_polled(int max)
 
 Defined at lines 160 to 191.
 
-Count open descriptors below `max`, FD_POLL_CHUNK per poll(2)
+Count open descriptors below `max`, FD_POLL_CHUNK per poll(2).
 
 poll() marks a closed descriptor POLLNVAL without using a descriptor of its own. macOS poll() rejects device descriptors and DragonFly's kqueue-based poll() miscounts them, so both probe instead.
 

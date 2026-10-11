@@ -5,7 +5,7 @@ description: "12 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx_pam.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -74,8 +74,6 @@ Parameters:
 
 Returns: PAM_SUCCESS, or PAM_CONV_ERR
 
-Uses file-scope variables: `PAM_password`, `PAM_username`
-
 Dispatched via: [PAM_conversation](uams_dhx_pam.c.md#pam_conversation)
 
 ### dhx_setup
@@ -130,8 +128,6 @@ Returns: AFPERR_AUTHCONT, AFPERR_NOTAUTH for an unknown user, AFPERR_PARAM, or A
 Calls: [dhx_setup](uams_dhx_pam.c.md#dhx_setup), [uam_getname](../afpd/uam.c.md#uam_getname)
 
 Called by: [pam_login](uams_dhx_pam.c.md#pam_login), [pam_login_ext](uams_dhx_pam.c.md#pam_login_ext)
-
-Uses file-scope variables: `PAM_username`, `dhxpwd`
 
 ### pam_login
 
@@ -194,7 +190,7 @@ static void dhx_log_pam_error(pam_handle_t *ph, const char *user, const char *st
 
 Defined at lines 520 to 526.
 
-Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure)
+Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure).
 
 errno is read before pam_strerror(), whose message lookup can change it.
 
@@ -234,7 +230,7 @@ Calls: [dhx_log_pam_error](uams_dhx_pam.c.md#dhx_log_pam_error), [dhx_release_ke
 
 Called by: [uam_setup](uams_dhx_pam.c.md#uam_setup)
 
-Uses file-scope variables: `K`, `PAM_conversation`, `PAM_password`, `PAM_username`, `dhxpwd`, `msg3_iv`, `pamh`, `randbuf`
+Uses file-scope variables: `K`, `msg3_iv`, `randbuf`
 
 ### pam_logout
 
@@ -247,8 +243,6 @@ Defined at lines 783 to 788.
 Close the PAM session of the login and call pam_end.
 
 Called by: [uam_setup](uams_dhx_pam.c.md#uam_setup)
-
-Uses file-scope variables: `pamh`
 
 ### pam_changepw
 
@@ -277,7 +271,7 @@ Calls: [dhx_log_pam_error](uams_dhx_pam.c.md#dhx_log_pam_error), [dhx_release_ke
 
 Called by: [uam_setup](uams_dhx_pam.c.md#uam_setup)
 
-Uses file-scope variables: `K`, `PAM_conversation`, `PAM_password`, `PAM_username`, `msg3_iv`, `randbuf`
+Uses file-scope variables: `K`, `msg3_iv`, `randbuf`
 
 ### uam_setup
 

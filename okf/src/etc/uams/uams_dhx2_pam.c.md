@@ -5,7 +5,7 @@ description: "19 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx2_pam.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -94,7 +94,7 @@ Returns: 0, or AFPERR_MISC for a libgcrypt version mismatch or a failed generati
 
 Called by: [uam_setup](uams_dhx2_pam.c.md#uam_setup)
 
-Uses file-scope variables: `g`, `p`
+Uses file-scope variables: `g`
 
 ### PAM_conv
 
@@ -145,7 +145,7 @@ Calls: [dhx2_clear_session](uams_dhx2_pam.c.md#dhx2_clear_session)
 
 Called by: [changepw_1](uams_dhx2_pam.c.md#changepw_1), [login](uams_dhx2_pam.c.md#login)
 
-Uses file-scope variables: `ID`, `Ra`, `g`, `p`
+Uses file-scope variables: `ID`, `Ra`, `g`
 
 ### login
 
@@ -253,7 +253,7 @@ Calls: [dhx2_clear_session](uams_dhx2_pam.c.md#dhx2_clear_session), [dhx2_releas
 
 Called by: [changepw_2](uams_dhx2_pam.c.md#changepw_2), [pam_logincont](uams_dhx2_pam.c.md#pam_logincont)
 
-Uses file-scope variables: `ID`, `K_MD5hash`, `K_hash_len`, `Ra`, `dhx_c2siv`, `dhx_s2civ`, `p`, `serverNonce`
+Uses file-scope variables: `ID`, `K_MD5hash`, `K_hash_len`, `Ra`, `dhx_c2siv`, `dhx_s2civ`, `serverNonce`
 
 ### dhx2_log_pam_error
 
@@ -263,7 +263,7 @@ static void dhx2_log_pam_error(pam_handle_t *ph, const char *step, int pam_err)
 
 Defined at lines 748 to 753.
 
-Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure)
+Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure).
 
 errno is read before pam_strerror(), whose message lookup can change it.
 
@@ -489,7 +489,7 @@ Calls: [uam_unregister](../afpd/uam.c.md#uam_unregister)
 
 Called through [`uam_export::uam_cleanup`](../../include/atalk/uam.h.md#struct-uam_export) by: [uam_unload](../afpd/uam.c.md#uam_unload), [uam_unload](../papd/uam.c.md#uam_unload)
 
-Uses file-scope variables: `g`, `p`
+Uses file-scope variables: `g`
 
 Dispatched via: [uams_dhx2](uams_dhx2_pam.c.md#uams_dhx2), [uams_dhx2_pam](uams_dhx2_pam.c.md#uams_dhx2_pam)
 

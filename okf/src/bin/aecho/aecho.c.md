@@ -5,7 +5,7 @@ description: "AppleTalk Echo Protocol Client."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/aecho/aecho.c"
 tags: ["bin/aecho"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/aecho](../aecho.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -37,7 +37,7 @@ The statistics give the packets sent and received, the loss, and the minimum, av
 Parameters:
 * `sig`: signal number, unused
 
-Called by: [aep_send](aecho.c.md#aep_send), [main](aecho.c.md#main)
+Called by: [aep_send](aecho.c.md#aep_send)
 
 Uses file-scope variables: `maxms`, `minms`, `nrecv`, `nsent`, `target`, `totalms`
 
@@ -57,8 +57,6 @@ Parameters:
 * `sig`: signal number, unused
 
 Calls: [done](aecho.c.md#done), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto)
-
-Called by: [main](aecho.c.md#main)
 
 Uses file-scope variables: `nsent`, `pings`, `sock`, `target`
 
@@ -80,9 +78,9 @@ Parameters:
 
 Returns: does not return, and a failure exits with 1
 
-Calls: [aep_send](aecho.c.md#aep_send), [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [done](aecho.c.md#done), [nbp_lookup](../../libatalk/nbp/nbp_lkup.c.md#nbp_lookup), [nbp_name](../../libatalk/nbp/nbp_util.c.md#nbp_name), [netddp_open](../../libatalk/netddp/netddp_open.c.md#netddp_open), [netddp_recvfrom](../../include/atalk/netddp.h.md#netddp_recvfrom), [usage](aecho.c.md#usage)
+Calls: [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [nbp_lookup](../../libatalk/nbp/nbp_lkup.c.md#nbp_lookup), [usage](aecho.c.md#usage)
 
-Uses file-scope variables: `maxms`, `minms`, `nrecv`, `pings`, `sock`, `target`, `totalms`
+Uses file-scope variables: `pings`, `target`
 
 ### usage
 

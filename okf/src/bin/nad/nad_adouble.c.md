@@ -5,7 +5,7 @@ description: "16 functions, 1 type, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_adouble.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -235,8 +235,6 @@ Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_hf_mode](.
 
 Called by: [add_file_to_writer](nad_stuffit.c.md#add_file_to_writer), [extract_file_entry](nad_stuffit.c.md#extract_file_entry), [from_open](megatron.c.md#from_open), [to_open](megatron.c.md#to_open)
 
-Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no table assigns this field
-
 Uses file-scope variables: `nad`
 
 ### nad_header_read
@@ -256,7 +254,7 @@ Parameters:
 
 Returns: 0, or -1 for an error
 
-Calls: [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_size](../../libatalk/adouble/ad_size.c.md#ad_size), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](../../etc/afpd/desktop.c.md#utompath)
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_size](../../libatalk/adouble/ad_size.c.md#ad_size), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](../../etc/afpd/desktop.c.md#utompath)
 
 Called by: [nad_open](nad_adouble.c.md#nad_open)
 
@@ -279,7 +277,7 @@ Parameters:
 
 Returns: 0, or -1 for a name or a comment that is too long
 
-Calls: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [nad_open](nad_adouble.c.md#nad_open)
 

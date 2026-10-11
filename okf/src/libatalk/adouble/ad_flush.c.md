@@ -5,7 +5,7 @@ description: "10 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_flush.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -86,6 +86,8 @@ Parameters:
 
 Returns: AD_DATASZ_OSX, the length of the header to write
 
+Calls: [ad_entry](ad_open.c.md#ad_entry)
+
 Called by: [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_flush_rf](ad_flush.c.md#ad_flush_rf)
 
 ### ad_copy_header_entry
@@ -107,6 +109,8 @@ Parameters:
 * `len`: receives the source entry length
 
 Returns: the source entry, or NULL to skip it
+
+Calls: [ad_entry](ad_open.c.md#ad_entry)
 
 Called by: [ad_copy_header](ad_flush.c.md#ad_copy_header)
 
@@ -130,7 +134,7 @@ Parameters:
 
 Returns: 0, or -1 when an entry does not fit (errno EIO) or the destination has no valid data
 
-Calls: [ad_copy_header_entry](ad_flush.c.md#ad_copy_header_entry), [ad_entry_fits](ad_open.c.md#ad_entry_fits), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+Calls: [ad_copy_header_entry](ad_flush.c.md#ad_copy_header_entry), [ad_entry](ad_open.c.md#ad_entry), [ad_entry_fits](ad_open.c.md#ad_entry_fits), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [copy_source_header](../../bin/nad/nad_cp.c.md#copy_source_header), [copyfile](../../etc/afpd/file.c.md#copyfile)
 
@@ -151,7 +155,7 @@ Parameters:
 
 Returns: 0, or -1 with errno set
 
-Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [adf_pwrite](ad_write.c.md#adf_pwrite), [adflags2logstr](ad_open.c.md#adflags2logstr), [become_root](../util/unix.c.md#become_root), [sys_fsetxattr](../vfs/extattr.c.md#sys_fsetxattr), [unbecome_root](../util/unix.c.md#unbecome_root)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [adf_pwrite](ad_write.c.md#adf_pwrite), [adflags2logstr](ad_open.c.md#adflags2logstr), [become_root](../util/unix.c.md#become_root), [sys_fsetxattr](../vfs/extattr.c.md#sys_fsetxattr), [unbecome_root](../util/unix.c.md#unbecome_root)
 
 Called by: [ad_flush](ad_flush.c.md#ad_flush)
 

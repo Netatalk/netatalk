@@ -5,7 +5,7 @@ description: "15 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_randnum.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -75,7 +75,7 @@ static int afppasswd_open_keyfile(const char *path, const int pathlen)
 
 Defined at lines 97 to 122.
 
-Open the companion file of an afppasswd file, its path plus `.key`
+Open the companion file of an afppasswd file, its path plus `.key`.
 
 A missing `.key` file logs a warning, since the passwords of the file depend on it.
 
@@ -216,7 +216,7 @@ Calls: [randpass](uams_randnum.c.md#randpass), [uam_afpserver_option](../afpd/ua
 
 Called by: [randnum_login](uams_randnum.c.md#randnum_login), [randnum_login_ext](uams_randnum.c.md#randnum_login_ext)
 
-Uses file-scope variables: `randbuf`, `randpwd`, `seskey`
+Uses file-scope variables: `randpwd`, `seskey`
 
 ### randnum_logincont
 
@@ -244,7 +244,7 @@ Calls: [atalk_ct_memcmp](../../libatalk/util/constant_time.c.md#atalk_ct_memcmp)
 
 Called by: [uam_setup](uams_randnum.c.md#uam_setup)
 
-Uses file-scope variables: `randbuf`, `randpwd`, `seskey`
+Uses file-scope variables: `randpwd`, `seskey`
 
 ### rand2num_logincont
 
@@ -272,7 +272,7 @@ Calls: [atalk_ct_memcmp](../../libatalk/util/constant_time.c.md#atalk_ct_memcmp)
 
 Called by: [uam_setup](uams_randnum.c.md#uam_setup)
 
-Uses file-scope variables: `randbuf`, `randpwd`, `seskey`
+Uses file-scope variables: `randpwd`, `seskey`
 
 ### randnum_changepw
 

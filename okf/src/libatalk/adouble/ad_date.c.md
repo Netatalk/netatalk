@@ -5,7 +5,7 @@ description: "3 functions, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_date.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -55,7 +55,7 @@ Parameters:
 
 Returns: 0, or -1 when the entry is missing or dateoff is out of range
 
-Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [copy](../../bin/nad/nad_cp.c.md#copy), [flushfork](../../etc/afpd/fork.c.md#flushfork), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [nad_header_write](../../bin/nad/nad_adouble.c.md#nad_header_write), [new_ad_header](ad_open.c.md#new_ad_header), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [vol_setdate](../../etc/afpd/volume.c.md#vol_setdate)
 
@@ -76,6 +76,6 @@ Parameters:
 
 Returns: 0, or -1 when the entry is missing or dateoff is out of range
 
-Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [getdirparams](../../etc/afpd/directory.c.md#getdirparams), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [nad_header_read](../../bin/nad/nad_adouble.c.md#nad_header_read), [nad_header_write](../../bin/nad/nad_adouble.c.md#nad_header_write)

@@ -5,7 +5,7 @@ description: "wrapper/stub for iconv character set conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/iconv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -43,8 +43,6 @@ Returns: the functions, or NULL for a charset without them
 
 Called by: [atalk_iconv_open](iconv.c.md#atalk_iconv_open), [atalk_register_charset](iconv.c.md#atalk_register_charset), [get_charset_functions](charcnv.c.md#get_charset_functions), [volume_codepage](../../etc/afpd/volume.c.md#volume_codepage)
 
-Uses file-scope variables: `charsets`
-
 ### atalk_register_charset
 
 ```c
@@ -63,8 +61,6 @@ Returns: 0, -1 for NULL, or -2 for a name already in the list
 Calls: [find_charset_functions](iconv.c.md#find_charset_functions)
 
 Called by: [lazy_initialize_iconv](iconv.c.md#lazy_initialize_iconv)
-
-Uses file-scope variables: `charsets`
 
 ### lazy_initialize_iconv
 
@@ -157,8 +153,6 @@ Returns: the descriptor, or `(atalk_iconv_t)-1` with ENOMEM or EINVAL
 Calls: [find_charset_functions](iconv.c.md#find_charset_functions), [iconv_copy](iconv.c.md#iconv_copy), [lazy_initialize_iconv](iconv.c.md#lazy_initialize_iconv), [sys_iconv](iconv.c.md#sys_iconv)
 
 Called by: [add_charset](charcnv.c.md#add_charset), [init_iconv](charcnv.c.md#init_iconv)
-
-Uses file-scope variables: `charsets`
 
 ### atalk_iconv_close
 

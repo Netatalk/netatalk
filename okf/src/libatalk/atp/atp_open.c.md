@@ -5,7 +5,7 @@ description: "1 function, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_open.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -40,4 +40,4 @@ Returns: the endpoint, or NULL when the socket or the allocation fails
 
 Calls: [atp_alloc_buf](atp_bufs.c.md#atp_alloc_buf), [netddp_close](../../include/atalk/netddp.h.md#netddp_close), [netddp_open](../netddp/netddp_open.c.md#netddp_open)
 
-Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [configinit](../../etc/afpd/afp_config.c.md#configinit), [do_atp_lookup](../../bin/getzones/getzones.c.md#do_atp_lookup), [main](../../bin/pap/pap.c.md#main), [main](../../bin/pap/papstatus.c.md#main), [main](../../etc/papd/main.c.md#main)
+Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit), [do_atp_lookup](../../bin/getzones/getzones.c.md#do_atp_lookup), [main](../../bin/pap/pap.c.md#main), [main](../../bin/pap/papstatus.c.md#main), [main](../../etc/papd/main.c.md#main)
