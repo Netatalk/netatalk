@@ -5,7 +5,7 @@ description: "mangle, demangle (filename)"
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/mangle.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:33:24+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -55,7 +55,7 @@ Defined at lines 79 to 174.
 
 Decide whether a mangled name from the client stands for a name on disk.
 
-A name with a valid [ID](../uams/uams_dhx2_pam.c.md) can also be a real name, so the extensions must match first. The name on disk must have needed mangling, because it was too long or held unconvertible characters. Its converted form must then match the prefix that the client sent. Mac OS X may cut a decomposed character in the prefix, and a name that converts to nothing appears as "???".
+A name with a valid `#ID` can also be a real name, so the extensions must match first. The name on disk must have needed mangling, because it was too long or held unconvertible characters. Its converted form must then match the prefix that the client sent. Mac OS X may cut a decomposed character in the prefix, and a name that converts to nothing appears as "???".
 
 Parameters:
 * `vol`: volume of the name
