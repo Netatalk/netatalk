@@ -28,6 +28,21 @@ test(
     protocol: 'tap',
 )
 
+logger_test = executable(
+    'logger_test',
+    'test_logger.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk logger filtering and routing',
+    logger_test,
+    protocol: 'tap',
+)
+
 logger_failure_test = executable(
     'logger_failure_test',
     'test_logger_failure.c',
