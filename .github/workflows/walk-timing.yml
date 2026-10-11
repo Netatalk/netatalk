@@ -73,3 +73,28 @@ jobs:
         with:
           name: walk-results
           path: walk-results
+
+  walk-timing-linux:
+    name: Walk timing - Linux (ext4, XFS, Btrfs, tmpfs, ZFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install filesystem tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            btrfs-progs xfsprogs zfsutils-linux
+      - name: Build the testsuite image
+        run: docker build -t netatalk-walk -f distrib/docker/testsuite_alp.Dockerfile .
+      - name: Time
+        run: sudo sh ./.github/scripts/walk_timing_linux.sh
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: walk-results-linux
+          path: walk-results

@@ -9,6 +9,8 @@
  *   B  openat(O_SEARCH|O_DIRECTORY|O_NOFOLLOW) per component from "/" + fchdir()
  *   C  as B, from a descriptor held for BASE/vol
  *   D  chdir() + stat(".") compared with the leaf's inode
+ *   O  (Linux) openat2(RESOLVE_NO_SYMLINKS) below the held descriptor +
+ *      fchdir()
  *   E  chdir() alone (lower bound, no symlink check)
  * Prints the median and minimum ns per entry over five rounds.
  */
@@ -16,6 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +27,26 @@
 #include <unistd.h>
 
 #ifndef O_SEARCH
+#ifdef O_PATH
+#define O_SEARCH O_PATH
+#else
 #define O_SEARCH O_RDONLY
+#endif
+#endif
+
+#ifdef __linux__
+#include <sys/syscall.h>
+#ifndef SYS_openat2
+#define SYS_openat2 437
+#endif
+struct bench_open_how {
+    uint64_t flags;
+    uint64_t mode;
+    uint64_t resolve;
+};
+#define MODES "ABCDOE"
+#else
+#define MODES "ABCDE"
 #endif
 
 #define ROUNDS 5
@@ -126,6 +148,25 @@ static int enter(int mode, int which)
 
         return st.st_ino == leaf_ino[which] ? 0 : 1;
 
+#ifdef __linux__
+    case 'O': {
+        /* RESOLVE_NO_SYMLINKS */
+        struct bench_open_how how = {
+            O_PATH | O_DIRECTORY | O_CLOEXEC, 0, 0x04
+        };
+        fd = (int)syscall(SYS_openat2, root_fd, dir + root_len + 1, &how,
+                          sizeof(how));
+
+        if (fd < 0) {
+            return -1;
+        }
+
+        ret = fchdir(fd);
+        close(fd);
+        return ret;
+    }
+#endif
+
     default:
         return chdir(dir);
     }
@@ -203,7 +244,7 @@ static int cmp_double(const void *a, const void *b)
 
 int main(int argc, char **argv)
 {
-    const char modes[] = "ABCDE";
+    const char modes[] = MODES;
     int depth;
     int siblings;
     long iterations;

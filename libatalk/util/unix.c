@@ -729,13 +729,34 @@ static int ochdir_getcwd(const char *dir)
  *   B  openat(O_SEARCH|O_DIRECTORY|O_NOFOLLOW) per component from "/" + fchdir()
  *   C  as B, from a descriptor held for the volume root
  *   D  chdir() + stat(".") compared with the dircache entry's inode
+ *   O  (Linux) openat2(RESOLVE_NO_SYMLINKS) of the path below the held
+ *      volume root + fchdir()
  * ochdir_log_timing() logs one line per mode at session close.
  */
 #ifndef O_SEARCH
+#ifdef O_PATH
+#define O_SEARCH O_PATH
+#else
 #define O_SEARCH O_RDONLY
 #endif
+#endif
 
+#ifdef __linux__
+#include <sys/syscall.h>
+#ifndef SYS_openat2
+#define SYS_openat2 437
+#endif
+#define OCHDIR_RESOLVE_NO_SYMLINKS 0x04
+struct ochdir_open_how {
+    uint64_t flags;
+    uint64_t mode;
+    uint64_t resolve;
+};
+#define OCHDIR_MODES 5
+#else
 #define OCHDIR_MODES 4
+#endif
+static const char ochdir_name[] = "ABCDO";
 #define OCHDIR_BUCKETS 40
 /* components below the volume root: 0 is the root, the last bucket holds
  * deeper paths and paths outside the root */
@@ -899,7 +920,57 @@ static int ochdir_mode(int mode, const char *dir)
 
         return ochdir_walk(ochdir_root_fd, dir + ochdir_root_len, dir);
 
-    default:
+#ifdef __linux__
+    case 4: {
+        struct ochdir_open_how how = {
+            O_PATH | O_DIRECTORY | O_CLOEXEC, 0, OCHDIR_RESOLVE_NO_SYMLINKS
+        };
+        const char *rel;
+        int fd;
+        int ret;
+        int err;
+
+        if (ochdir_root_len == 0
+                || strncmp(dir, ochdir_root, ochdir_root_len) != 0
+                || (dir[ochdir_root_len] != '/' && dir[ochdir_root_len] != '\0')) {
+            ochdir_t[4].fallbacks++;
+            return ochdir_getcwd(dir);
+        }
+
+        if (ochdir_root_fd < 0) {
+            ochdir_root_fd = open(ochdir_root, O_SEARCH | O_DIRECTORY | O_CLOEXEC);
+
+            if (ochdir_root_fd < 0) {
+                return -1;
+            }
+        }
+
+        rel = dir + ochdir_root_len;
+        rel += strspn(rel, "/");
+
+        if (*rel == '\0') {
+            return fchdir(ochdir_root_fd);
+        }
+
+        fd = (int)syscall(SYS_openat2, ochdir_root_fd, rel, &how, sizeof(how));
+
+        if (fd < 0) {
+            if (errno != ELOOP) {
+                return -1;
+            }
+
+            return chdir(dir) == 0 ? 1 : -1;
+        }
+
+        ret = fchdir(fd);
+        err = errno;
+        close(fd);
+        errno = err;
+        return ret;
+    }
+#endif
+
+    case 3:
         if (ochdir_expect_ino == 0) {
             ochdir_t[3].fallbacks++;
             return ochdir_getcwd(dir);
@@ -911,6 +982,8 @@ static int ochdir_mode(int mode, const char *dir)
 
         return st.st_ino == ochdir_expect_ino ? 0 : 1;
     }
+
+    return -1;
 }
 
 static int ochdir_depth(const char *dir)
@@ -986,7 +1059,7 @@ int ochdir(const char *dir, int options)
             ochdir_t[m].mismatches++;
             LOG(log_note, logtype_default,
                 "ochdir timing: mode %c returned %d, mode A %d, for \"%s\"",
-                'A' + m, res[m], res[0], dir);
+                ochdir_name[m], res[m], res[0], dir);
         }
     }
 
@@ -1023,7 +1096,7 @@ void ochdir_log_timing(void)
         LOG(log_note, logtype_default,
             "ochdir timing: mode %c calls %llu total_ns %llu max_ns %llu "
             "mismatches %llu fallbacks %llu hist %s",
-            'A' + m, ochdir_t[m].calls, ochdir_t[m].total_ns,
+            ochdir_name[m], ochdir_t[m].calls, ochdir_t[m].total_ns,
             ochdir_t[m].max_ns, ochdir_t[m].mismatches,
             ochdir_t[m].fallbacks, hist);
         off = 0;
@@ -1041,7 +1114,8 @@ void ochdir_log_timing(void)
         }
 
         LOG(log_note, logtype_default,
-            "ochdir timing depth: mode %c calls/ns by depth %s", 'A' + m, hist);
+            "ochdir timing depth: mode %c calls/ns by depth %s", ochdir_name[m],
+            hist);
     }
 }
 
