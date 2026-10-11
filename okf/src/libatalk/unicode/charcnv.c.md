@@ -5,7 +5,7 @@ description: "Character-set conversion routines based on samba iconv wrappers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charcnv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:26:57+11:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -425,7 +425,7 @@ Defined at lines 799 to 1024.
 
 Convert a multibyte string to UCS2 and map the `:` and `/` characters by the flags.
 
-The call converts the text between `:` and `/` characters with iconv and then treats each such character by the flags. CONV_UNESCAPEHEX decodes `:xx` escapes through the CAP charset, and CONV_ESCAPEHEX writes `:3a` for `:` and `:2f` for `/`. Without them a `:` becomes `/` for a Mac target, and a `/` from a Mac source becomes `:`. CONV_ESCAPEDOTS writes a leading dot as `:2e` and sets CONV_REQESCAPE.
+The call converts the text between `:` and `/` characters with iconv and then treats each such character by the flags. CONV_UNESCAPEHEX decodes `:xx` escapes through the CAP charset, and CONV_ESCAPEHEX writes `:3a` for `:` and `:2f` for `/`. Without them a `:` becomes `/` for a Mac target, and a `/` from a Mac source becomes `:` for a non-Mac target. CONV_ESCAPEDOTS writes a leading dot as `:2e` and sets CONV_REQESCAPE.
 
 An unconvertible sequence stops the call with EILSEQ. CONV_IGNORE then returns the converted part and sets CONV_REQMANGLE, and CONV__EILSEQ writes IGNORE_CHAR in its place. CONV_FORCE returns the converted part after any error. The scan for `:` and `/` works on bytes, so a UCS2 source does not work.
 
@@ -482,7 +482,7 @@ Uses file-scope variables: `conv_handles`
 size_t convert_charset(charset_t from_set, charset_t to_set, charset_t cap_charset, const char *src, size_t src_len, char *dest, size_t dest_len, uint16_t *flags)
 ```
 
-Defined at lines 1160 to 1243.
+Defined at lines 1160 to 1245.
 
 Convert a string between character sets, with case, composition, and escaping chosen by flags.
 
