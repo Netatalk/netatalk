@@ -9,6 +9,10 @@ if build_tests
     subdir('nad')
     subdir('uams')
 
+    if have_iconv
+        subdir('netacnv')
+    endif
+
     if enable_appletalk
         subdir('macipgw')
         subdir('nbp')

@@ -21,6 +21,12 @@ AFP server or C test helper.
 Each run removes its temporary files. Set `NAD_TEST_KEEP_DIR=1` to retain them
 for debugging; the TAP output reports the path.
 
+## netacnv
+
+`netacnv/` contains Perl TAP tests for the built character conversion tool.
+They check argument validation, charset errors, normalization diagnostics,
+returned conversion flags, binary output, and input/output bounds.
+
 ## afpd
 
 `afpd/` contains the server-side integration tests.  Its `afpdtest` harness

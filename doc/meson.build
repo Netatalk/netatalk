@@ -7,6 +7,7 @@ manpage_user_commands = [
     'dbd',
     'fce_listen',
     'nad',
+    'netacnv',
 ]
 
 manpage_configuration_files = [
