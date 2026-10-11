@@ -774,8 +774,8 @@ size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
  * then treats each such character by the flags. CONV_UNESCAPEHEX decodes
  * `:xx` escapes through the CAP charset, and CONV_ESCAPEHEX writes `:3a` for
  * `:` and `:2f` for `/`. Without them a `:` becomes `/` for a Mac target, and
- * a `/` from a Mac source becomes `:`. CONV_ESCAPEDOTS writes a leading dot
- * as `:2e` and sets CONV_REQESCAPE.
+ * a `/` from a Mac source becomes `:` for a non-Mac target. CONV_ESCAPEDOTS
+ * writes a leading dot as `:2e` and sets CONV_REQESCAPE.
  *
  * An unconvertible sequence stops the call with EILSEQ. CONV_IGNORE then
  * returns the converted part and sets CONV_REQMANGLE, and CONV__EILSEQ writes
@@ -987,7 +987,7 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                     inbuf++;
                     i_len--;
                 } else if ((from_set == CH_UTF8_MAC || from_set == CH_MAC)
-                           && (to_set != CH_UTF8_MAC  || to_set != CH_MAC)) {
+                           && (to_set != CH_UTF8_MAC && to_set != CH_MAC)) {
                     /* convert to ':' */
                     if (o_len < 2) {
                         errno = E2BIG;
@@ -1180,7 +1180,14 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
         return (size_t) -1;
     }
 
+    if (dest_len < 2) {
+        errno = E2BIG;
+        return (size_t) -1;
+    }
+
     if (o_len == 0) {
+        dest[0] = 0;
+        dest[1] = 0;
         return o_len;
     }
 
@@ -1219,11 +1226,6 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
         strupper_w(u);
     } else if (CHECK_FLAGS(flags, CONV_TOLOWER)) {
         strlower_w(u);
-    }
-
-    if (dest_len < 2) {
-        errno = E2BIG;
-        return (size_t) -1;
     }
 
     dest_capacity = dest_len - 2;
