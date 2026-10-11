@@ -56,6 +56,12 @@
 
 static volatile sig_atomic_t stop_requested = 0;
 
+/*!
+ * @brief Note SIGINT or SIGTERM, so the status loop stops after the current
+ * poll
+ *
+ * @param[in] signo  signal number, unused
+ */
 static void sig_handler(int signo)
 {
     (void)signo;
@@ -65,6 +71,11 @@ static void sig_handler(int signo)
 /* Forward Declaration */
 static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter);
 
+/*!
+ * @brief Print the usage of papstatus to stderr and exit with 1
+ *
+ * @param[in] path  program path, whose base name the usage line shows
+ */
 static void usage(char *path)
 {
     char	*p;
@@ -80,6 +91,14 @@ static void usage(char *path)
     exit(1);
 }
 
+/*!
+ * @brief Read the printer name from the first line of ./.paprc that is not a
+ * comment
+ *
+ * Any open error gives NULL. The name lives in a static buffer of 98 bytes.
+ *
+ * @returns the printer name, or NULL
+ */
 static char *
 paprc(void)
 {
@@ -111,6 +130,14 @@ static char			*printer = NULL;
 static char			cbuf[8];
 static struct nbpnve		nn;
 
+/*!
+ * @brief Print a label and True or False for one bit of an ImageWriter status
+ * byte
+ *
+ * @param[in] status   status byte
+ * @param[in] mask     bit to test
+ * @param[in] message  label before the value
+ */
 static void print_status(char status, char mask, char *message)
 {
     printf("%s", message);
@@ -122,6 +149,19 @@ static void print_status(char status, char mask, char *message)
     }
 }
 
+/*!
+ * @brief Print the status of a PAP printer once, or at a fixed interval
+ *
+ * The printer comes from -p or from ./.paprc as an NBP name, with the type
+ * LaserWriter and the zone `*` by default. Without an argument the tool
+ * prints the status once. A number argument sets the seconds between polls,
+ * and the query then repeats until SIGINT or SIGTERM. The -A option sets
+ * the local address.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns 0, while errors exit with 1
+ */
 int main(int ac, char **av)
 {
     ATP			atp;
@@ -235,6 +275,17 @@ int main(int ac, char **av)
     return 0;
 }
 
+/*!
+ * @brief Ask a PAP printer for its status and print the status text
+ *
+ * For an ImageWriter the call first prints each bit of the status byte. A
+ * reply shorter than 8 bytes, or of another type, prints a message and
+ * nothing else. An ATP error exits with 1.
+ *
+ * @param[in] atp             ATP endpoint
+ * @param[in] sat             printer address
+ * @param[in] is_imagewriter  nonzero for an ImageWriter
+ */
 static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter)
 {
     struct iovec	iov;

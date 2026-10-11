@@ -35,6 +35,15 @@
 		    (a)->sat_addr.s_net == (b)->sat_addr.s_net && \
 		    (a)->sat_addr.s_node == (b)->sat_addr.s_node )
 #else /* BSD4_4 */
+/*!
+ * @brief Compute the route hashes of an AppleTalk address
+ *
+ * The net hash is the net, and the host hash is the net shifted by 8 bits
+ * plus the node.
+ *
+ * @param[in]  sat  AppleTalk address
+ * @param[out] hp   receives the hashes
+ */
 void atalk_hash(struct sockaddr_at *sat, struct afhash *hp)
 {
     hp->afh_nethash = sat->sat_addr.s_net;
@@ -43,8 +52,15 @@ void atalk_hash(struct sockaddr_at *sat, struct afhash *hp)
 }
 
 /*!
- * Note the magic to get ifa_ifwithnet() to work without adding an
- * ifaddr entry for each net in our local range.
+ * @brief Match the net of an address against the net or net range of another
+ *
+ * When sat1 is the address of a local interface, any net in the range of that
+ * interface matches. That way ifa_ifwithnet() works without an address entry
+ * for each net of the range.
+ *
+ * @param[in] sat1  address, possibly of a local interface
+ * @param[in] sat2  address to test
+ * @returns nonzero for a match, or 0
  */
 int atalk_netmatch(struct sockaddr_at *sat1, struct sockaddr_at *sat2)
 {
@@ -65,6 +81,25 @@ int atalk_netmatch(struct sockaddr_at *sat1, struct sockaddr_at *sat2)
 }
 #endif /* BSD4_4 */
 
+/*!
+ * @brief Run an AppleTalk interface ioctl: set or read the address of a phase
+ *
+ * SIOCSIFADDR, for the super-user only, takes the phase from the net range in
+ * the address. It creates the AppleTalk address of that phase on the
+ * interface, or deletes the routes of the existing one, then runs at_ifinit. A
+ * new address joins at_ifaddr behind the first entry, unless the first entry
+ * is loopback, so the first address stays a real interface.
+ *
+ * SIOCGIFADDR returns the address of the phase. BSD 4.4 systems also add and
+ * delete addresses with SIOCAIFADDR and SIOCDIFADDR. Any other request goes to
+ * the ioctl of the interface.
+ *
+ * @param[in]     cmd   ioctl request
+ * @param[in,out] data  struct ifreq with the address
+ * @param[in]     ifp   interface
+ * @returns 0, or an errno value such as EPERM, ENOBUFS, EADDRNOTAVAIL, or
+ *          EOPNOTSUPP
+ */
 at_control(cmd, data, ifp)
 int			cmd;
 caddr_t		data;
@@ -306,6 +341,16 @@ struct ifnet	*ifp;
     return 0;
 }
 
+/*!
+ * @brief Delete the routes of an AppleTalk interface address
+ *
+ * Loopback has a host route. A net range of 0 to fffe uses the default route,
+ * and any other range has one route per net.
+ *
+ * @param[in]     ifp  interface
+ * @param[in,out] aa   interface address, without AFA_ROUTE afterwards
+ * @returns 0, or the rtinit error on BSD 4.4 systems
+ */
 at_scrub(ifp, aa)
 struct ifnet	*ifp;
 struct at_ifaddr	*aa;
@@ -362,6 +407,27 @@ struct at_ifaddr	*aa;
 
 extern struct timeval	time;
 
+/*!
+ * @brief Give an AppleTalk interface address its net range and a free address,
+ * then add its routes
+ *
+ * The net range comes from the netrange in the address. Loopback takes the
+ * address as given. Any other interface probes with AARP, from the requested
+ * net and node or from a choice based on the time. Each try runs a series of
+ * 10 probes 200 ms apart. A conflict moves on to the next node, then to the
+ * next net of the range.
+ *
+ * After the ioctl of the interface accepts the address, loopback gets a host
+ * route. Phase 1 gets the net route, and phase 2 the default route for the
+ * range 0 to fffe or a route per net. Any failure restores the old address
+ * and range, and an interrupted probe returns EINTR.
+ *
+ * @param[in]     ifp  interface
+ * @param[in,out] aa   interface address
+ * @param[in]     sat  requested address, with the net range in its sat_zero
+ * @returns 0, or EINVAL for a net outside the range, EINTR, EADDRINUSE without
+ *          a free address, or an ioctl or route error
+ */
 at_ifinit(ifp, aa, sat)
 struct ifnet	*ifp;
 struct at_ifaddr	*aa;
@@ -568,6 +634,15 @@ struct sockaddr_at	*sat;
     return 0;
 }
 
+/*!
+ * @brief Tell whether an AppleTalk address reaches every node of a local net
+ *
+ * The node has to be ATADDR_BCAST. Net 0 always counts. Any other net has to
+ * fall within the net range that an interface with IFF_BROADCAST holds.
+ *
+ * @param[in] sat  AppleTalk address
+ * @returns 1 for such an address, or 0
+ */
 at_broadcast(sat)
 struct sockaddr_at	*sat;
 {
@@ -592,6 +667,12 @@ struct sockaddr_at	*sat;
     return 0;
 }
 
+/*!
+ * @brief Delete the routes of every AppleTalk interface address and unlink each
+ * address
+ *
+ * An address missing from the address list of its interface panics.
+ */
 aa_clean()
 {
     struct at_ifaddr	*aa;

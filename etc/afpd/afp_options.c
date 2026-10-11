@@ -188,6 +188,19 @@ static void show_usage(void)
     fprintf(stderr, "\tafpd -h|-v|-V\n");
 }
 
+/*!
+ * @brief Parse the afpd command line into the command line fields of a server
+ * object
+ *
+ * The -d option sets OPTION_DEBUG, -u sets OPTION_SINGLEUSER, and -F stores
+ * the configuration file path. The -v, -V, and -h options print and exit 0.
+ * An unknown option or an extra argument prints the usage and exits with
+ * status 2. Resetting optind lets each server object parse the arguments.
+ *
+ * @param[in,out] obj  server object
+ * @param[in]     ac   argument count
+ * @param[in]     av   argument vector
+ */
 void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
 {
     int c, err = 0;

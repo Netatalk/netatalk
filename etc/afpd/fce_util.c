@@ -61,18 +61,13 @@
 static uint32_t coalesce = 0;
 static struct fce_history fce_history_list[FCE_HISTORY_LEN];
 
-/****
-* With coalesce we try to reduce the events over UDP, the eventlistener would throw these
-* events away anyway.
-* This works only, if the connected listener uses the events on a "per directory" base
-* It is a very simple aproach, but saves a lot of events sent to listeners.
-* Every "child element" event is ignored as long as its parent event is not older
-* than MAX_COALESCE_TIME_MS ms. If large directory trees or large files are created or deleted,
-* this probably will not work recursive, because the time to copy data will exceed this
-* event timeout.
-*
-****/
-
+/*!
+ * @brief Return the milliseconds from one time to a later one
+ *
+ * @param[in] tv1  earlier time
+ * @param[in] tv2  later time
+ * @returns tv2 minus tv1 in milliseconds, with the microseconds truncated
+ */
 static long get_ms_difftime(struct timeval *tv1, struct timeval *tv2)
 {
     unsigned long s = tv2->tv_sec - tv1->tv_sec;
@@ -84,6 +79,9 @@ static long get_ms_difftime(struct timeval *tv1, struct timeval *tv2)
  * Public functions follow
  ******************************************************************************/
 
+/*!
+ * @brief Clear the event history that coalescing compares against
+ */
 void fce_initialize_history(void)
 {
     for (int i = 0; i < FCE_HISTORY_LEN; i++) {
@@ -91,6 +89,23 @@ void fce_initialize_history(void)
     }
 }
 
+/*!
+ * @brief Decide whether the fce coalesce option drops an event
+ *
+ * Coalescing assumes a listener that tracks events per directory, and it
+ * spares that listener the events of objects inside a reported directory.
+ * The history keeps the last FCE_HISTORY_LEN events that passed, each for
+ * MAX_COALESCE_TIME_MS ms. A large tree or file can take longer than that.
+ *
+ * Create coalescing drops every file create, since a file modify follows it.
+ * It also drops every event under a directory created within the window.
+ * Delete coalescing drops a delete under any path in the history. Both tests
+ * compare path prefixes as strings. An event that passes enters the history.
+ *
+ * @param[in] event  event code
+ * @param[in] path   path of the event
+ * @returns true when the event drops out
+ */
 bool fce_handle_coalescation(int event, const char *path)
 {
     /* These two are used to eval our next index in history */
@@ -165,10 +180,14 @@ bool fce_handle_coalescation(int event, const char *path)
 }
 
 /*!
- * @brief Set event coalescation to reduce number of events sent over UDP
- * @note supports event types all|delete|create
+ * @brief Set event coalescing from the fce coalesce option
+ *
+ * The option lists all, delete, or create, separated by commas. The last
+ * known name in the list decides, so delete and create together need all.
+ *
+ * @param[in] opt  option value
+ * @returns AFP_OK, or AFPERR_PARAM for NULL
  */
-
 int fce_set_coalesce(const char *opt)
 {
     char *e;

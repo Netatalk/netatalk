@@ -35,6 +35,10 @@
 #include <atalk/ldapconfig.h>
 #include <atalk/logger.h>
 
+/*!
+ * @brief Free the string LDAP preferences and restore the default validity of
+ * every preference
+ */
 void acl_ldap_freeconfig(void)
 {
     int i = 0;
@@ -49,6 +53,16 @@ void acl_ldap_freeconfig(void)
     }
 }
 
+/*!
+ * @brief Read the LDAP preferences from the global section of afp.conf
+ *
+ * Each preference takes a string, an integer, or one of its mapped names. The
+ * LDAP setup counts as valid only with every required preference set and an
+ * authentication method of LDAP_AUTH_NONE or LDAP_AUTH_SIMPLE.
+ *
+ * @param[in] iniconfig  parsed afp.conf
+ * @returns 0, with ldap_config_valid set when the setup is usable
+ */
 int acl_ldap_readconfig(dictionary *iniconfig)
 {
     int i, j;

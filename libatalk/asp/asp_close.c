@@ -36,6 +36,13 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
+/*!
+ * @brief Answer the pending close request of a session, close its ATP socket,
+ * and free it
+ *
+ * @param[in] asp  session, freed on return
+ * @returns 0, or -1 when the reply or the close fails
+ */
 int asp_close(ASP asp)
 {
     struct atp_block	atpb;

@@ -45,10 +45,18 @@
 #include <atalk/util.h>
 
 /*!
- * Begin a DSI write transfer: set datasize and hand back, by reference, any
- * payload already in the read-ahead buffer.  *bufp is valid only until the
- * next dsi_* call; consume it immediately.  A NULL bufp discards the
- * buffered payload, for callers that only drain the transfer.
+ * @brief Begin a DSIWrite transfer and hand back any payload the read-ahead
+ * buffer already holds
+ *
+ * datasize becomes the payload length from the request header, and the bytes
+ * already buffered leave it again. The buffer reference stays valid only until
+ * the next dsi call, so the caller consumes it at once. A NULL bufp discards
+ * the buffered payload, for callers that only drain the transfer.
+ *
+ * @param[in,out] dsi   DSI session with the DSIWrite request header parsed
+ * @param[out]    bufp  receives a pointer to the buffered payload, or NULL
+ * @returns buffered payload bytes, 0 when none, or when the header length falls
+ *          below the data offset
  */
 size_t dsi_writeinit(DSI *dsi, char **bufp)
 {
@@ -86,9 +94,17 @@ size_t dsi_writeinit(DSI *dsi, char **bufp)
 }
 
 
-/*! fill up buf and then return. this should be called repeatedly
- * until all the data has been read. i block alarm processing
- * during the transfer to avoid sending unnecessary tickles. */
+/*!
+ * @brief Receive the next part of a DSIWrite payload into buf
+ *
+ * Each call reads min(buflen, datasize) bytes. Callers repeat it until
+ * datasize reaches 0.
+ *
+ * @param[in,out] dsi     DSI session after dsi_writeinit
+ * @param[out]    buf     receives the bytes
+ * @param[in]     buflen  capacity of buf
+ * @returns bytes received, or 0 when nothing remains or the read failed
+ */
 size_t dsi_write(DSI *dsi, void *buf, const size_t buflen)
 {
     size_t length;
@@ -106,7 +122,14 @@ size_t dsi_write(DSI *dsi, void *buf, const size_t buflen)
     return 0;
 }
 
-/*! flush any unread buffers. */
+/*!
+ * @brief Drain the unread remainder of a DSIWrite payload
+ *
+ * The call reads the bytes into the reply buffer and drops them. A handler
+ * that rejected the write thus leaves the stream at the next request boundary.
+ *
+ * @param[in,out] dsi  DSI session with a DSIWrite in progress
+ */
 void dsi_writeflush(DSI *dsi)
 {
     size_t length;
@@ -123,7 +146,11 @@ void dsi_writeflush(DSI *dsi)
     }
 }
 
-/*! @brief Close the session's recvfile pipe; the next write opens another */
+/*!
+ * @brief Close the recvfile pipe of the session, the next write opens another
+ *
+ * @param[in,out] dsi  DSI session
+ */
 void dsi_close_pipe(DSI *dsi)
 {
     if (dsi->splice_pipe[0] != -1) {
@@ -135,9 +162,16 @@ void dsi_close_pipe(DSI *dsi)
 
 #ifdef WITH_RECVFILE
 /*!
- * @brief Wait up to timeout ms for socket data
+ * @brief Wait up to timeout milliseconds for socket data and report a TCP
+ * urgent mark
  *
- * @returns 1 at a TCP urgent mark, 0 when not, -1 with errno set
+ * The splice call stops at the urgent mark even before the urgent byte
+ * arrives, and POLLPRI waits for that byte. The recv call steps over the mark.
+ *
+ * @param[in] socket   session socket
+ * @param[in] timeout  poll timeout in milliseconds, -1 to wait without limit
+ * @returns 1 at a TCP urgent mark, 0 otherwise, or -1 with errno set when poll
+ *          failed
  */
 static int waitfordata(int socket, int timeout)
 {
@@ -158,9 +192,16 @@ static int waitfordata(int socket, int timeout)
 }
 
 /*!
- * @brief Open the session's recvfile pipe, grown to the largest size up to
- *        dsi->splice_size the kernel grants, which the session keeps
+ * @brief Open the recvfile pipe of the session at the largest size the kernel
+ * grants
  *
+ * The goal is splice_size, and the session keeps the pipe across writes. When
+ * the kernel refuses that size, the request halves until it succeeds or
+ * reaches the current size, and splice_size shrinks to the result. A pipe
+ * that stays at 2 pages or less marks a spent pipe budget. Such a pipe is
+ * slower than recv, so the call closes it. Each warning logs once per process.
+ *
+ * @param[in,out] dsi  DSI session
  * @returns 0, or -1 when this write takes the userspace path
  */
 static int open_pipe(DSI *dsi)
@@ -225,10 +266,17 @@ static int open_pipe(DSI *dsi)
 }
 
 /*!
- * @brief splice() from the pipe into a file through dsi->data, for a file
- *        whose filesystem cannot splice
+ * @brief Move bytes from the recvfile pipe into a file through the reply buffer
  *
- * Same contract as splice() with an output offset.
+ * It serves files on filesystems that cannot splice. One read takes up to len
+ * bytes, limited by the reply buffer, and the loop writes them all with
+ * pwrite. The contract matches splice with an output offset.
+ *
+ * @param[in,out] dsi     DSI session whose pipe and reply buffer to use
+ * @param[in]     tofd    destination file
+ * @param[in,out] offset  file offset, advanced by the bytes written
+ * @param[in]     len     limit for the bytes to move
+ * @returns bytes moved, 0 at end of input, or -1 with errno set
  */
 static ssize_t pipe_to_file(DSI *dsi, int tofd, loff_t *offset, size_t len)
 {

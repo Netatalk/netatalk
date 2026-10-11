@@ -42,16 +42,16 @@ unsigned long long ad_cache_misses;
 unsigned long long ad_cache_no_ad;
 
 /*!
- * @brief Store AD metadata results into struct dir cache fields
+ * @brief Store the AppleDouble metadata of an object in its dircache entry
  *
- * Called after every ad_metadata() disk read when a cached entry is available.
- * Pre-computes the served FILPBIT_MDATE value as max(ad_mdate, dcache_mtime).
+ * Every ad_metadata disk read with a dircache entry at hand ends here. The
+ * entry keeps the Finder info, the dates, the AFP file info, and the resource
+ * fork length. The stored modification date is the later of the AppleDouble
+ * date and the stat mtime, as FILPBIT_MDATE serves it. An entry that the
+ * AppleDouble version lacks stays zero, a valid default.
  *
- * ad_entry() returns NULL if the entry doesn't exist in this AD version.
- * This is fine — zero-initialized cache fields are valid defaults:
- *   zero FinderInfo = no custom attributes
- *   zero FileDatesI = overridden by stat mtime fallback
- *   zero AFPFileI = no attributes
+ * @param[in]     adp     AppleDouble with its metadata loaded
+ * @param[in,out] cached  dircache entry of the object
  */
 void ad_store_to_cache(struct adouble *adp, struct dir *cached)
 {
@@ -87,14 +87,15 @@ void ad_store_to_cache(struct adouble *adp, struct dir *cached)
 }
 
 /*!
- * @brief Populate struct adouble from struct dir cache fields
+ * @brief Fill an AppleDouble from the metadata cached in a dircache entry
  *
- * Sets up the entry directory in adp so that ad_getattr(), ad_getdate(),
- * ad_entry() all work normally — downstream code is completely unchanged.
+ * The cached Finder info, dates, and AFP file info land at the entry offsets
+ * of adp. The ad_getattr, ad_getdate, and ad_entry calls then work as after a
+ * disk read. The ad_init call sets up those offsets, so the caller runs it
+ * first.
  *
- * @pre ad_init() must have been called on adp to set up
- * ad_eid[] offsets and valid_data_len via ad_init_offsets().
- * As of E-006, ad_init() now calls ad_init_offsets() internally.
+ * @param[in,out] adp     AppleDouble initialized with ad_init
+ * @param[in]     cached  dircache entry with cached metadata
  */
 void ad_rebuild_from_cache(struct adouble *adp, const struct dir *cached)
 {
@@ -131,14 +132,24 @@ void ad_rebuild_from_cache(struct adouble *adp, const struct dir *cached)
 }
 
 /*!
- * @brief Unified AD metadata access with integrated cache management
+ * @brief Read the AppleDouble metadata of an object through the dircache
  *
- * Read-only metadata accessor with internal ad_close(). Callers needing a
- * writable fd (e.g., for ad_setid/ad_flush) must call ad_open() separately.
+ * The call closes the metadata before it returns, so callers that write open
+ * it separately. Without strict the cache serves first, as enumeration and
+ * FPGetFileDirParms need. With strict the ctime and inode must match before
+ * the cache serves, as rename and delete need. A mismatch refreshes the entry
+ * through dir_modify and reads from disk. A cached absence of metadata
+ * answers ENOENT without a disk read.
  *
- * strict=false: cache-first (enumerate, FPGetFileDirParms).
- * strict=true: validate ctime/inode before serving (moveandrename, deletecurdir).
- * recent_st: optional stat to avoid duplicate ostat() in strict path.
+ * @param[in]     name       file or directory
+ * @param[in]     flags      ADFLAGS_DIR and ADFLAGS_CHECK_OF, as for
+ *                           ad_metadata
+ * @param[in,out] adp        initialized AppleDouble receiving the metadata
+ * @param[in]     vol        volume of the object
+ * @param[in,out] dir        dircache entry of the object, or NULL
+ * @param[in]     strict     true to test ctime and inode before a cache hit
+ * @param[in]     recent_st  fresh stat of the object, or NULL
+ * @returns 0, or -1 with errno set, ENOENT when the object has no metadata
  */
 int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
                        const struct vol *vol, struct dir *dir,
@@ -283,16 +294,15 @@ disk_read:
  ******************************************************************************/
 
 /*!
- * @brief Free a single entry's rfork buffer, remove from rfork LRU, update counter
+ * @brief Free the cached resource fork data of a dircache entry
  *
- * Uses dcache_rlen for the buffer size.
- * INVARIANT: dcache_rlen >= 0 when dcache_rfork_buf != NULL.
- * Uses production-safe fallback: if dcache_rlen < 0 (invariant violation),
- * logs error, frees buffer, but does NOT touch budget counter (unknown size).
- * Handles rfork_lru_node == NULL gracefully (orphaned buffer from
- * enqueue failure — budget is still decremented correctly).
- * Decrements rfork_lru_count when removing from LRU.
- * Does NOT reset dcache_rlen — the AD metadata remains valid.
+ * The buffer leaves the resource fork LRU list, and its size, dcache_rlen,
+ * comes off the budget counter. A negative dcache_rlen with a buffer breaks
+ * the invariant, so the call logs an error and frees the buffer without
+ * touching the counter. A buffer without an LRU node still frees correctly.
+ * The AppleDouble metadata of the entry stays valid.
+ *
+ * @param[in,out] entry  dircache entry with a cached resource fork
  */
 void rfork_cache_free(struct dir *entry)
 {
@@ -352,12 +362,14 @@ void rfork_cache_free(struct dir *entry)
 }
 
 /*!
- * @brief Evict rfork buffers from rfork LRU head (oldest/LRU) until under budget
+ * @brief Free cached resource forks from the oldest end of the LRU list until
+ * needed bytes fit
  *
- * Queue convention: sentinel->next = head = LRU (oldest),
- *                   sentinel->prev = tail = MRU (newest).
- * Called by rfork_cache_store_from_fd() when budget would be exceeded.
- * O(k) where k = entries evicted.
+ * The head of the list holds the oldest buffer and the tail the newest. The
+ * rfork_cache_store_from_fd call runs it before it caches a new fork, and the
+ * cost grows with the number of evicted buffers only.
+ *
+ * @param[in] needed  bytes about to join the cache
  */
 void rfork_cache_evict_to_budget(size_t needed)
 {
@@ -376,17 +388,20 @@ void rfork_cache_evict_to_budget(size_t needed)
 }
 
 /*!
- * @brief Store resource fork data by reading directly from the ad fd
+ * @brief Cache the entire resource fork of a file by reading it from the open
+ * fork
  *
- * Allocates dcache_rlen bytes and does ad_read(adp, eid, 0, buf, dcache_rlen).
- * ad_read() handles all storage formats (EA, macOS xattr, AD v2 sidecar).
- * Guards: returns -1 if !ad_rsrc_open(adp) (fd not open), dcache_rlen <= 0,
- * or rlen > rfork_max_entry_size.
- * Validates that ad_read returns exactly dcache_rlen bytes — if not, the fork
- * size changed since Tier 1 metadata was cached: invalidates ALL cached AD
- * metadata (Tier 1) and returns -1 (self-healing).
+ * The ad_read call covers every storage format, so the call reads dcache_rlen
+ * bytes through it. It refuses a closed resource fork, an empty or unknown
+ * length, and a fork above rfork_max_entry_size. It also refuses while the
+ * cache holds over 2 times its budget. Older buffers leave first when the
+ * budget lacks room. A short read means the fork changed since its metadata
+ * entered the cache, so the call invalidates the cached metadata as well.
  *
- * @returns 0 on success, -1 if not cacheable, short read, or ad_read failed.
+ * @param[in,out] entry  dircache entry of the file
+ * @param[in,out] adp    AppleDouble with the resource fork open
+ * @param[in]     eid    ADEID_RFORK
+ * @returns 0, or -1 when the fork is not cacheable or the read fell short
  */
 int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
 {

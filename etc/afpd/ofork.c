@@ -174,12 +174,24 @@ static const char *of_usage_str(char *buf, size_t len)
     return buf;
 }
 
-/* OR some of each character for the hash */
+/*!
+ * @brief Bucket of the open fork hash table for a file
+ *
+ * The bucket is the inode masked to the 64 buckets of OFORK_HASHSIZE.
+ *
+ * @param[in] key  device and inode of the file
+ * @returns the bucket index
+ */
 static unsigned long hashfn(const struct file_key *key)
 {
     return key->inode & (OFORK_HASHSIZE - 1);
 }
 
+/*!
+ * @brief Insert an open fork at the head of its hash bucket
+ *
+ * @param[in,out] of  open fork with its device and inode filled in
+ */
 static void of_hash(struct ofork *of)
 {
     struct ofork **table;
@@ -193,6 +205,13 @@ static void of_hash(struct ofork *of)
     of->prevp = table;
 }
 
+/*!
+ * @brief Take an open fork out of its hash bucket
+ *
+ * A second call does nothing, because the first one clears the links.
+ *
+ * @param[in,out] of  open fork
+ */
 static void of_unhash(struct ofork *of)
 {
     if (of->prevp) {
@@ -207,11 +226,24 @@ static void of_unhash(struct ofork *of)
     }
 }
 
+/*!
+ * @brief Whether the free slot queue holds no slot
+ *
+ * @returns true when no fork slot is free
+ */
 static inline bool of_freeq_empty(void)
 {
     return of_freeq_head == of_freeq_tail;
 }
 
+/*!
+ * @brief Return a fork slot to the tail of the free slot queue
+ *
+ * The queue holds nforks plus one entries, so it cannot overflow, and an
+ * assertion guards that.
+ *
+ * @param[in] slot  slot to free, 1 to nforks minus 1
+ */
 static inline void of_freeq_push(uint16_t slot)
 {
     of_freeq[of_freeq_tail] = slot;
@@ -225,6 +257,11 @@ static inline void of_freeq_push(uint16_t slot)
     AFP_ASSERT(!of_freeq_empty());
 }
 
+/*!
+ * @brief Take the oldest free fork slot from the head of the queue
+ *
+ * @returns the slot, or -1 when no slot is free
+ */
 static inline int of_freeq_pop(void)   /* slot, or -1 if empty */
 {
     if (of_freeq_empty()) {
@@ -240,6 +277,11 @@ static inline int of_freeq_pop(void)   /* slot, or -1 if empty */
     return slot;
 }
 
+/*!
+ * @brief Print the reference number and name of every open fork
+ *
+ * @param[in] f  stream to print to
+ */
 void of_pforkdesc(FILE *f)
 {
     int ofrefnum;
@@ -255,6 +297,14 @@ void of_pforkdesc(FILE *f)
     }
 }
 
+/*!
+ * @brief Flush every open fork of a volume through flushfork
+ *
+ * Failures only log.
+ *
+ * @param[in] vol  volume whose forks to flush
+ * @returns 0
+ */
 int of_flush(const struct vol *vol)
 {
     int refnum;
@@ -273,6 +323,21 @@ int of_flush(const struct vol *vol)
     return 0;
 }
 
+/*!
+ * @brief Point the open forks of a renamed file at its new name and directory
+ *
+ * Every fork with the volume, parent directory, device, and inode of s_of
+ * follows. The name in the shared AppleDouble changes once, and each fork
+ * moves to newdir.
+ *
+ * @param[in]     vol      volume of the file
+ * @param[in,out] s_of     one open fork of the file, or NULL when none is open
+ * @param[in]     olddir   previous parent directory
+ * @param[in]     oldpath  unused
+ * @param[in]     newdir   new parent directory
+ * @param[in]     newpath  new name
+ * @returns AFP_OK, or AFPERR_MISC when strdup fails
+ */
 int of_rename(const struct vol *vol,
               struct ofork *s_of,
               struct dir *olddir, const char *oldpath _U_,
@@ -313,6 +378,25 @@ int of_rename(const struct vol *vol,
     return AFP_OK;
 }
 
+/*!
+ * @brief Allocate an open fork slot and its reference number
+ *
+ * The first call sizes the table to half the descriptor limit, capped at
+ * 65535 slots, because a fork can hold two descriptors. Slot 0 stays reserved,
+ * and the reference number equals the slot. A shared AppleDouble gains a
+ * reference, otherwise the fork gets a new one named path. The fork enters the
+ * hash table under the device and inode of st.
+ *
+ * @param[in]  vol       volume of the file
+ * @param[in]  dir       parent directory
+ * @param[in]  path      file name, for a new AppleDouble
+ * @param[out] ofrefnum  receives the reference number
+ * @param[in]  eid       ADEID_DFORK or ADEID_RFORK
+ * @param[in]  ad        AppleDouble of another fork of the file, or NULL
+ * @param[in]  st        stat of the file
+ * @returns the open fork, or NULL when the table is full or an allocation
+ *          failed
+ */
 struct ofork *
 of_alloc(struct vol *vol,
          struct dir    *dir,
@@ -447,6 +531,15 @@ of_alloc(struct vol *vol,
     return of;
 }
 
+/*!
+ * @brief Open fork with a reference number
+ *
+ * A slot that now holds a different fork means the requested fork already
+ * closed, and the call logs that and fails.
+ *
+ * @param[in] ofrefnum  reference number from the request
+ * @returns the open fork, or NULL
+ */
 struct ofork *of_find(const uint16_t ofrefnum)
 {
     struct ofork *of;
@@ -470,7 +563,17 @@ struct ofork *of_find(const uint16_t ofrefnum)
     return of;
 }
 
-/* -------------------------- */
+/*!
+ * @brief Stat path->u_name in the working directory and record the outcome in
+ * path
+ *
+ * The stat follows symlinks only when the volume does. The st_errno field
+ * receives the errno of a failure, and st_valid becomes 1 either way.
+ *
+ * @param[in]     vol   volume of the path
+ * @param[in,out] path  path whose stat to fill
+ * @returns 0, or -1 when the stat failed
+ */
 int of_stat(const struct vol *vol, struct path *path)
 {
     int ret;
@@ -486,6 +589,14 @@ int of_stat(const struct vol *vol, struct path *path)
     return ret;
 }
 
+/*!
+ * @brief Stat path->u_name relative to dirfd without following a symlink
+ *
+ * @param[in]     dirfd  directory descriptor that fstatat takes as is, AT_FDCWD
+ *                       for the working directory
+ * @param[in,out] path   path whose stat to fill, with st_errno and st_valid set
+ * @returns 0, or -1 when the stat failed
+ */
 int of_fstatat(int dirfd, struct path *path)
 {
     int ret;
@@ -500,10 +611,18 @@ int of_fstatat(int dirfd, struct path *path)
 }
 
 /*!
-   @brief stat the current directory.
-   @note stat(".") works even if "." is deleted thus
-   we have to stat ../name because we want to know if it's there
-*/
+ * @brief Stat the directory that path names, also when it is the working
+ * directory
+ *
+ * A path with a name defers to of_stat. For the working directory the call
+ * stats ../name instead of ".", because stat(".") succeeds even after the
+ * directory went away. EACCES on that stat moves up to the parent and stats
+ * the name from there.
+ *
+ * @param[in]     vol   volume of the directory
+ * @param[in,out] path  path whose stat to fill, with st_errno and st_valid set
+ * @returns 0, or -1 when the stat or the change of directory failed
+ */
 int of_statdir(struct vol *vol, struct path *path)
 {
     static char pathname[MAXPATHLEN + 1] = "../";
@@ -551,7 +670,16 @@ int of_statdir(struct vol *vol, struct path *path)
     return ret;
 }
 
-/* -------------------------- */
+/*!
+ * @brief Open fork of the file that path names, matched by device and inode
+ *
+ * A path without a valid stat gets one through of_stat first.
+ *
+ * @param[in]     vol   volume of the path
+ * @param[in,out] path  path of the file, its stat filled when missing
+ * @returns an open fork of the file, or NULL when none is open or the stat
+ *          failed
+ */
 struct ofork *of_findname(const struct vol *vol, struct path *path)
 {
     struct ofork *of;
@@ -578,13 +706,15 @@ struct ofork *of_findname(const struct vol *vol, struct path *path)
 }
 
 /*!
- * @brief Search for open fork by dirfd/name
+ * @brief Open fork of the file that path names relative to dirfd, matched by
+ * device and inode
  *
- * Function call of_fstatat with dirfd and path and uses dev and ino
- * to search the open fork table.
+ * A path without a valid stat gets one through of_fstatat first.
  *
- * @param[in] dirfd         directory fd
- * @param[in,out] path      pointer to struct path
+ * @param[in]     dirfd  directory descriptor that fstatat takes as is
+ * @param[in,out] path   path of the file, its stat filled when missing
+ * @returns an open fork of the file, or NULL when none is open or the stat
+ *          failed
  */
 struct ofork *of_findnameat(int dirfd, struct path *path)
 {
@@ -1015,6 +1145,15 @@ done:
     return rc;
 }
 
+/*!
+ * @brief Free an open fork and return its slot to the free slot queue
+ *
+ * The fork leaves the hash table, and its AppleDouble drops one reference.
+ * The last reference frees the AppleDouble. A reference count that already
+ * reached zero logs an error and asserts.
+ *
+ * @param[in] of  open fork, invalid afterwards
+ */
 void of_dealloc(struct ofork *of)
 {
     if (!oforks) {
@@ -1109,7 +1248,20 @@ void of_note_open(int newfd)
     }
 }
 
-/* --------------------------- */
+/*!
+ * @brief Close an open fork and free it
+ *
+ * A closed resource fork gets its length refreshed and, when dirty, its
+ * modification date stamped. A modified fork reports FCE and Spotlight
+ * events, refreshes its dircache entry, and sends a refresh hint to sibling
+ * afpd processes. Without HAVE_EAFD the call deletes an empty ._ resource
+ * fork that no other fork holds. It also deletes the file and CNID of an Icon
+ * file at the volume root whose resource fork holds no data.
+ *
+ * @param[in]     obj    session object
+ * @param[in,out] ofork  open fork, invalid afterwards
+ * @returns 0, or -1 with errno set when ad_close failed
+ */
 int of_closefork(const AFPObj *obj, struct ofork *ofork)
 {
     struct timeval      tv;
@@ -1381,6 +1533,16 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     return ret;
 }
 
+/*!
+ * @brief AppleDouble to use for a file, shared with an open fork when there is
+ * one
+ *
+ * @param[in]     vol   volume of the file
+ * @param[in,out] path  path of the file, its stat filled when missing
+ * @param[out]    ad    caller AppleDouble to initialize when no fork holds the
+ *                      file
+ * @returns the AppleDouble of the open fork, or ad after ad_init
+ */
 struct adouble *of_ad(const struct vol *vol, struct path *path,
                       struct adouble *ad)
 {
@@ -1446,16 +1608,21 @@ static void of_close_sweep(const AFPObj *obj, const struct vol *vol,
 }
 
 /*!
-   close all forks for a volume
-*/
+ * @brief Close every open fork of a volume
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume whose forks to close
+ */
 void of_closevol(const AFPObj *obj, const struct vol *vol)
 {
     of_close_sweep(obj, vol, "of_closevol");
 }
 
 /*!
-   close all forks
-*/
+ * @brief Close every open fork of the session
+ *
+ * @param[in] obj  session object
+ */
 void of_close_all_forks(const AFPObj *obj)
 {
     of_close_sweep(obj, NULL, "of_close_all_forks");

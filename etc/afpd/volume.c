@@ -259,6 +259,24 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Free and total space of a volume in 32-bit and 64-bit form
+ *
+ * The values come from statfs, limited by the user quota when one applies,
+ * and by the Time Machine size limit of the volume. The 32-bit values cap at
+ * 0xffffffff, at 0x7fffffff before AFP 2.2 or with AFPVOL_LIMITSIZE, and at
+ * 0x01fffe00 for a ProDOS volume.
+ *
+ * @param[in]     obj      session object
+ * @param[in,out] vol      volume, its space source flag updated
+ * @param[out]    bfree    receives the free bytes, capped to 32 bits
+ * @param[out]    btotal   receives the total bytes, capped to 32 bits
+ * @param[out]    xbfree   receives the free bytes
+ * @param[out]    xbtotal  receives the total bytes
+ * @param[out]    bsize    receives the block size
+ * @returns AFP_OK, AFPERR_PARAM when statfs failed, or AFPERR_MISC when the
+ *          Time Machine usage is unknown
+ */
 static int getvolspace(const AFPObj *obj, struct vol *vol,
                        uint32_t *bfree, uint32_t *btotal,
                        VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
@@ -311,9 +329,15 @@ getvolspace_done:
     return AFP_OK;
 }
 
-/*! -----------------------
- * @brief set volume creation date
- * @note avoid duplicate, well at least it tries
+/*!
+ * @brief Set the creation date of a volume, unique among the configured volumes
+ *
+ * While another volume carries the same creation date, the date moves on by
+ * one second and the search starts over.
+ *
+ * @param[in]     id    volume ID
+ * @param[in,out] adp   AppleDouble of the volume root
+ * @param[in]     date  creation date as a Unix time
  */
 static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 {
@@ -334,7 +358,25 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
     ad_setdate(adp, AD_DATE_CREATE | AD_DATE_UNIX, date);
 }
 
-/* ----------------------- */
+/*!
+ * @brief Pack the volume parameters that bitmap selects into buf
+ *
+ * The call first converts version 2 AppleDouble data of the volume root to
+ * the ea layout unless the volume disables that. It then opens or creates the
+ * root metadata, and a new root metadata file gets a unique creation date. The
+ * attribute word reports read-only state, file IDs, catalog search, UTF-8
+ * names, UNIX privileges, Time Machine, extended attributes, ACLs, and case
+ * sensitivity. The name always uses the Mac charset.
+ *
+ * @param[in]  obj     session object
+ * @param[in]  bitmap  AFP volume bitmap, VOLPBIT_* bits
+ * @param[in]  vol     volume
+ * @param[in]  st      stat of the volume root
+ * @param[out] buf     reply buffer receiving the parameters
+ * @param[out] buflen  receives the bytes written
+ * @returns AFP_OK, AFPERR_BITMAP for an unknown bit, AFPERR_PARAM when the
+ *          space lookup failed, or AFPERR_MISC
+ */
 static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
                         struct stat *st, char *buf, size_t *buflen)
 {
@@ -584,7 +626,20 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     return AFP_OK;
 }
 
-/* ------------------------- */
+/*!
+ * @brief Reply with the bitmap and the volume parameters it selects
+ *
+ * The stat of the volume root also records the device number of the volume.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     bitmap   AFP volume bitmap
+ * @param[in,out] vol      volume
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_PARAM when the stat failed, or the error of
+ *          getvolparams
+ */
 static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
                     char *rbuf, size_t *rbuflen)
 {
@@ -613,7 +668,24 @@ static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     return AFP_OK;
 }
 
-/* ------------------------------- */
+/*!
+ * @brief FPGetSrvrParms: list the volumes that the user may see, with the
+ * server time
+ *
+ * The call reloads the volume configuration first. A volume appears when its
+ * root is a directory that the user may read and search, unless the volume
+ * skips that test with AFPVOL_NOSTAT. Each entry carries the password and
+ * Apple II flags and the name. The list stops at 255 volumes or 4600 bytes,
+ * the reply size at which clients disconnect.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block, unused
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or AFPERR_PARAM when the server time is unavailable
+ */
 int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen)
 {
@@ -708,7 +780,17 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
     return AFP_OK;
 }
 
-/* ------------------------- */
+/*!
+ * @brief Load the volume charset and the Mac charset of a volume
+ *
+ * The volume charset defaults to UTF8 and the Mac charset to the server
+ * setting. A volume charset that only iconv provides logs a warning. A Mac
+ * charset that is not a client charset fails.
+ *
+ * @param[in]     obj     session object
+ * @param[in,out] volume  volume whose charsets to set
+ * @returns 0, or -1 when a charset failed to load
+ */
 static int volume_codepage(AFPObj *obj, struct vol *volume)
 {
     struct charset_functions *charset;
@@ -754,7 +836,15 @@ static int volume_codepage(AFPObj *obj, struct vol *volume)
     return 0;
 }
 
-/* ------------------------- */
+/*!
+ * @brief Open the CNID backend of a volume
+ *
+ * A volume with AFPVOL_NODEV opens it with CNID_FLAG_NODEV.
+ *
+ * @param[in]     obj     session object, unused
+ * @param[in,out] volume  volume receiving the CNID database
+ * @returns 0, or -1 when cnid_open failed
+ */
 static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
 {
     int flags = 0;
@@ -775,7 +865,11 @@ static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
 }
 
 /*!
- * Send list of open volumes to afpd master via IPC
+ * @brief Send the names of the open volumes to the master afpd
+ *
+ * The IPC_VOLUMES message carries the names separated by a comma and a space.
+ *
+ * @param[in] obj  session object
  */
 static void server_ipc_volumes(AFPObj *obj)
 {
@@ -803,8 +897,24 @@ static void server_ipc_volumes(AFPObj *obj)
     bdestroy(openvolnames);
 }
 
-/* -------------------------
- * we are the user here
+/*!
+ * @brief FPOpenVol: open a volume and return its parameters
+ *
+ * The bitmap must include VOLPBIT_VID. The volume name comes in UTF-8 or the
+ * Mac charset, and a volume password must match. An open volume only returns
+ * its parameters. Otherwise the call runs the preexec command, loads the
+ * charsets, creates the dircache entry of the root, and opens the CNID and
+ * Spotlight backends. A failure closes the volume again. The session runs as
+ * the user here.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_BITMAP, AFPERR_NOOBJ for an unknown name,
+ *          AFPERR_ACCESS for a wrong password, AFPERR_PARAM, or AFPERR_MISC
  */
 int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
@@ -1075,12 +1185,15 @@ openvol_err:
 }
 
 /*!
- * @brief Stable cross-process identifier for a volume's CNID table
+ * @brief Identifier of the CNID table of a volume that every afpd process
+ * shares
  *
- * v_vid is per-process, so the same vid names different volumes in different
- * children. v_uuid is what every child agrees on.
+ * The v_vid field differs between processes, so the same value names
+ * different volumes in different children. Every child agrees on v_uuid. The
+ * tag is the FNV-1a hash of v_uuid, and 0 stays reserved for no tag.
  *
- * @returns FNV-1a of v_uuid, or 0 if the volume has no UUID
+ * @param[in] vol  volume, or NULL
+ * @returns the tag, never 0 for a volume with a UUID, or 0 without one
  */
 uint32_t cnid_volume_tag(const struct vol *vol)
 {
@@ -1102,10 +1215,13 @@ uint32_t cnid_volume_tag(const struct vol *vol)
 /*!
  * @brief Announce a CNID table reset and end this session
  *
- * Only the session that reset the table sends the hint; a responder that
- * re-broadcast would loop between children. No AFP attention exists for "the
- * ID space was recycled" — the protocol guarantees IDs are never reused — so
- * the disconnect is the signal.
+ * Only the session that reset the table sends the hint, because a responder
+ * that sent it on would loop between children. AFP has no attention for a
+ * recycled ID space, since the protocol promises that IDs stay unique, so the
+ * disconnect is the signal. The SIGTERM takes effect between requests, and
+ * the request in flight still gets its reply.
+ *
+ * @param[in] vol  volume whose CNID table the session reset, or NULL
  */
 void cnid_volume_reset(const struct vol *vol)
 {
@@ -1138,6 +1254,17 @@ void cnid_volume_reset(const struct vol *vol)
     raise(SIGTERM);
 }
 
+/*!
+ * @brief Close a volume and release everything it holds
+ *
+ * The call closes the forks of the volume and retires its parent descriptor
+ * slots, which would otherwise pin directories and match after a reopen. It
+ * then purges the dircache entries, frees the root entry, closes the CNID
+ * database, and runs the postexec command.
+ *
+ * @param[in]     obj  session object
+ * @param[in,out] vol  volume to close, or NULL
+ */
 void closevol(const AFPObj *obj, struct vol *vol)
 {
     if (!vol) {
@@ -1166,7 +1293,11 @@ void closevol(const AFPObj *obj, struct vol *vol)
     }
 }
 
-/* ------------------------- */
+/*!
+ * @brief Close every open volume of the session
+ *
+ * @param[in] obj  session object
+ */
 void close_all_vol(const AFPObj *obj)
 {
     struct vol  *ovol;
@@ -1180,7 +1311,20 @@ void close_all_vol(const AFPObj *obj)
     }
 }
 
-/* ------------------------- */
+/*!
+ * @brief FPCloseVol: close a volume
+ *
+ * The call moves to the root directory, finishes the deferred child scans of
+ * the volume, and closes it. The master afpd then gets the new list of open
+ * volumes.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, or AFPERR_PARAM for an unknown volume or a failed chdir
+ */
 int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                  size_t *rbuflen)
 {
@@ -1255,7 +1399,16 @@ int  pollvoltime(AFPObj *obj)
     return 0;
 }
 
-/* ------------------------- */
+/*!
+ * @brief Record a change on a volume in its modification time
+ *
+ * The call touches the volume root and raises v_mtime when the second
+ * advanced. Before AFP 3.2, with server notifications on, that also sends a
+ * volume-changed attention, so the Finder refreshes the free space.
+ *
+ * @param[in]     obj  session object
+ * @param[in,out] vol  volume that changed
+ */
 void setvoltime(AFPObj *obj, struct vol *vol)
 {
     struct timeval  tv;
@@ -1289,7 +1442,17 @@ void setvoltime(AFPObj *obj, struct vol *vol)
     }
 }
 
-/* ------------------------- */
+/*!
+ * @brief FPGetVolParms: return the parameters of an open volume
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_PARAM for an unknown volume, or the error of stat_vol
+ */
 int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                      size_t *rbuflen)
 {
@@ -1309,7 +1472,21 @@ int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return stat_vol(obj, bitmap, vol, rbuf, rbuflen);
 }
 
-/* ------------------------- */
+/*!
+ * @brief FPSetVolParms: set the backup date of a volume
+ *
+ * The backup date is the only parameter that a client may set, and any other
+ * bitmap fails with AFPERR_BITMAP. The date lands in the AppleDouble metadata
+ * of the volume root.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_BITMAP, AFPERR_VLOCK for a read-only volume,
+ *          AFPERR_ACCESS, or AFPERR_PARAM
+ */
 int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                      char *rbuf _U_,  size_t *rbuflen)
 {

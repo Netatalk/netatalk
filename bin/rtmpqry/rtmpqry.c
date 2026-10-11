@@ -38,6 +38,11 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
 void print_rtmp_data_packet(const uint8_t *buf, size_t len);
 void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote);
 
+/*!
+ * @brief Print the usage of rtmpqry to stderr and exit with 1
+ *
+ * @param[in] s  program name
+ */
 static void usage(char *s)
 {
     fprintf(stderr, "usage:\t%s [-a | -r] [ -A local_address ] [remote_address]\n",
@@ -45,6 +50,19 @@ static void usage(char *s)
     exit(1);
 }
 
+/*!
+ * @brief Query an AppleTalk router with RTMP and print its answer
+ *
+ * By default the tool sends a Route Data Request and prints the routing
+ * tuples of the replies for about 3 seconds. The -a option asks for all
+ * routes without split horizon. The -r option sends an RTMP Request, which
+ * asks for the network of the router, and it excludes -a. The -A option sets
+ * the local address, and the remote address defaults to the local node.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns 0, while errors exit with 1
+ */
 int main(int argc, char **argv)
 {
     int c;
@@ -130,11 +148,17 @@ int main(int argc, char **argv)
 }
 
 /*!
- * @brief Set up a DDP socket ready for sending RTMP packets.
+ * @brief Open a DDP socket for the RTMP queries
  *
- * The remote_addr is a pointer to a pointer so that if it's null
- * we can fill it in with the address the kernel provides,
- * as we do in libatalk/nbp/nbp_lkup.c for example. */
+ * Without a remote address the call fills in the address that the kernel
+ * bound the socket to, so the query goes to the local node. A socket error
+ * exits with 1.
+ *
+ * @param[in]     local_addr   local address to bind, all zeros for any
+ * @param[in,out] remote_addr  remote address, which the call fills in when it
+ *                             is NULL
+ * @returns the socket
+ */
 int setup_ddp_socket(const struct at_addr *local_addr,
                      struct at_addr **remote_addr)
 {
@@ -159,11 +183,16 @@ int setup_ddp_socket(const struct at_addr *local_addr,
 }
 
 /*!
- * @brief Send an RTMP Request and wait for a reply.
+ * @brief Send an RTMP Request and print the router and the networks from its
+ * reply
  *
- * An RTMP request just requests details of the network this node is connected to;
- * in general, these aren't used on extended networks
- * (instead, a ZIP GetNetInfo is used) but they should be supported anyway. */
+ * A reply from an extended network carries the network range. The call
+ * waits without a timeout and skips other datagrams. A wrong marker byte or
+ * RTMP version exits with 1.
+ *
+ * @param[in] sockfd     DDP socket
+ * @param[in] sa_remote  RTMP socket of the router
+ */
 void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
 {
     /* See Inside Appletalk 2nd ed p. 5-18 for packet layout for both request and
@@ -257,12 +286,19 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
 }
 
 /*!
- * @brief Send an RTMP Route Data Request (RDR) and wait for a reply.
+ * @brief Send an RTMP Route Data Request and print the routing data of each
+ * reply
  *
- * An RTMP RDR solicits RTMP data packets - generally, these are sent out broadcast on a timer,
- * but one can specifically ask for them to be sent to a non-standard socket by means of an RDR.
- * An RDR can also specify whether or not for the router to do split horizon
- * processing (or whether to return all routes). */
+ * Routers send RTMP data packets to every node on a timer, and the request
+ * asks for them at this socket. The request asks for split horizon unless
+ * @p get_all asks for all routes. The call prints each data packet that
+ * arrives within @p secs_timeout plus up to 1 more second.
+ *
+ * @param[in] sockfd        DDP socket
+ * @param[in] sa_remote     RTMP socket of the router
+ * @param[in] get_all       true to ask for all routes without split horizon
+ * @param[in] secs_timeout  minimum seconds to collect replies
+ */
 void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
                  int secs_timeout)
 {
@@ -345,9 +381,18 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
 }
 
 /*!
- * @brief Print an RTMP tuple pointed to by 'cursor' within the buffer 'buf' with length 'len'.
+ * @brief Print one routing tuple of an RTMP data packet
  *
- * @returns the next value of 'cursor' or NULL if no more tuples exist. */
+ * An extended tuple carries a network range and an RTMP version. The call
+ * skips a tuple with another version and prints a message.
+ *
+ * @param[in] buf          packet
+ * @param[in] cursor       start of the tuple in @p buf
+ * @param[in] len          packet length
+ * @param[in] router_net   network of the sending router
+ * @param[in] router_node  node of the sending router
+ * @returns the start of the next tuple, or NULL when no tuple fits
+ */
 const uint8_t *print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor,
                                 size_t len, uint16_t router_net,
                                 uint8_t router_node)
@@ -395,6 +440,16 @@ const uint8_t *print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor,
     return cursor;
 }
 
+/*!
+ * @brief Print the routing tuples of an RTMP data packet
+ *
+ * The call skips other datagrams and packets with a node ID length other
+ * than 8 bits. On a nonextended network a version marker comes before the
+ * tuples.
+ *
+ * @param[in] buf  datagram
+ * @param[in] len  datagram length
+ */
 void print_rtmp_data_packet(const uint8_t *buf, size_t len)
 {
     const uint8_t *cursor = buf;

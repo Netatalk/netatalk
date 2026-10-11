@@ -82,6 +82,11 @@ char		*uampath = _PATH_PAPDUAMPATH;
 
 static volatile sig_atomic_t stop_requested = 0;
 
+/*!
+ * @brief Note SIGINT or SIGTERM, so the accept loop of the server stops
+ *
+ * @param[in] signo  signal number, unused
+ */
 static void sig_handler(int signo)
 {
     (void)signo;
@@ -94,7 +99,14 @@ int rprintcap(struct printer *pr);
 static void getprinters(char *cf);
 
 
-/* this only needs to be used by the server process */
+/*!
+ * @brief Remove the pid file, unload the UAMs, and exit the server process
+ *
+ * Print job children exit through exit() instead, since the pid file belongs
+ * to the server.
+ *
+ * @param[in] i  exit status
+ */
 static void papd_exit(const int i)
 {
     server_unlock(pidfile);
@@ -102,6 +114,14 @@ static void papd_exit(const int i)
     exit(i);
 }
 
+/*!
+ * @brief Unregister the NBP names of the printers and delete the PPD files
+ * fetched from CUPS
+ *
+ * A failed NBP removal exits papd with status n + 1.
+ *
+ * @param[in] n  status that a failed NBP removal exits with, plus 1
+ */
 static void papd_cleanup(int n)
 {
     struct printer	*pr;
@@ -132,12 +152,22 @@ static void papd_cleanup(int n)
     }
 }
 
+/*!
+ * @brief Clean up the printer registrations and exit the server process
+ *
+ * @param[in] n  exit status
+ */
 static void die(int n)
 {
     papd_cleanup(n);
     papd_exit(n);
 }
 
+/*!
+ * @brief Collect exited print job children on SIGCHLD and log how each ended
+ *
+ * @param[in] sig  signal number, unused
+ */
 static void
 reap(int sig _U_)
 {
@@ -165,6 +195,27 @@ reap(int sig _U_)
     return;
 }
 
+/*!
+ * @brief Start papd: read the printers, register them with NBP, and serve PAP
+ * connections
+ *
+ * The options are -d for debug mode, -f for papd.conf, -p for the printcap
+ * file, and -P for the pid file. The -v or -V option prints the version, and
+ * papd accepts -a and ignores it. When papd.conf cannot open, papd serves one
+ * default printer named after the host.
+ *
+ * Each printer gets an ATP socket and an NBP name. A PAP open request checks
+ * the printer and answers with a new ATP socket, the flow quantum, and the
+ * status. A forked child then runs the session. A printer that fails the
+ * check, or a lack of sockets, gets a busy reply. A status request gets the
+ * status alone.
+ *
+ * SIGTERM or SIGINT unregisters the names and exits.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns 0 after a shutdown signal, and a startup failure exits with 1
+ */
 int main(int ac, char **av)
 {
     extern char         *optarg;
@@ -606,10 +657,17 @@ int main(int ac, char **av)
     return 0;
 }
 
-/*
- * We assume buf is big enough for 255 bytes of data and a length byte.
+/*!
+ * @brief Fill a PAP status reply with the status of a printer
+ *
+ * A pipe printer reports a fixed status. With CUPS a spooling printer reports
+ * the CUPS status, and without CUPS the status file in its spool directory.
+ * The status is a Pascal string of up to 255 bytes in buf.
+ *
+ * @param[in]  pr   printer
+ * @param[out] buf  reply buffer, receives the length byte and the status
+ * @returns the number of bytes of the status, length byte included
  */
-
 int getstatus(struct printer *pr, rbuf_t *buf)
 {
 #ifdef HAVE_CUPS
@@ -661,6 +719,12 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 #endif /* HAVE_CUPS */
 }
 
+/*!
+ * @brief Free the strings of a printer entry that do not belong to the default
+ * printer
+ *
+ * @param[in,out] pr  printer entry, whose structure the caller frees
+ */
 static void free_printer_fields(struct printer *pr)
 {
     if (pr->p_name != NULL && pr->p_name != defprinter.p_name) {
@@ -702,6 +766,27 @@ static void free_printer_fields(struct printer *pr)
 
 #define PF_CONFBUFFER	1024
 
+/*!
+ * @brief Read the printer entries of papd.conf into the printer list
+ *
+ * Each entry starts with an NBP name, and the defaults fill in the host name,
+ * LaserWriter, and the zone `*`. The options are:
+ * - `pd`: the PPD file
+ * - `pr`: the lpd or CUPS printer, or a command after a leading `|`
+ * - `ca`: the directory for CAP style authentication
+ * - `sp`: print UAM authentication
+ * - `am`: the UAM list, shared by every printer
+ * - `op`: the operator of a spooling printer
+ * - `pa`: the AppleTalk address
+ * - `co`: CUPS options
+ * - `fo`: the foomatic line end conversion
+ *
+ * An entry named cupsautoadd adds every CUPS printer. An entry that does not
+ * parse only logs, and a missing file leaves the default printer as the only
+ * one.
+ *
+ * @param[in] cf  path of papd.conf
+ */
 static void getprinters(char *cf)
 {
     char		buf[PF_CONFBUFFER], area[PF_CONFBUFFER], *a, *p, *name, *type, *zone;
@@ -906,6 +991,18 @@ bad_entry:
     }
 }
 
+/*!
+ * @brief Check the print system entry of a spooling printer and complete the
+ * printer from it
+ *
+ * With CUPS the printer has to exist in CUPS, unless cupsautoadd added it, and
+ * a printer without a PPD file takes the PPD of CUPS. Without CUPS the
+ * printcap entry supplies the spool directory, accounting, page cost, and
+ * lock file.
+ *
+ * @param[in,out] pr  printer
+ * @returns 0, or -1 for an unknown printer or a failed allocation
+ */
 int rprintcap(struct printer *pr)
 {
 #ifdef HAVE_CUPS

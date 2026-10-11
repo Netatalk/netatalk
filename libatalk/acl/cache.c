@@ -45,6 +45,12 @@ static cacheduser_t *uuidcache[256];   /*!< indexed by hash of uuid */
  * helper function
  ********************************************************/
 
+/*!
+ * @brief Log every entry of the name and UUID caches at debug level
+ *
+ * Each line shows the name, the UUID, the type, a negative marker, and the
+ * time the entry entered the cache.
+ */
 void uuidcache_dump(void)
 {
     int i;
@@ -103,7 +109,14 @@ void uuidcache_dump(void)
     }
 }
 
-/*! hash string it into unsigned char using FNV-1a algorithm */
+/*!
+ * @brief Hash a string into a cache bucket with 32-bit FNV-1a
+ *
+ * The low byte of the hash, XORed with its second byte, picks the bucket.
+ *
+ * @param[in] str  NUL-terminated string
+ * @returns the bucket, 0 to 255
+ */
 static unsigned char hashstring(unsigned char *str)
 {
     /* FNV-1a constants */
@@ -120,7 +133,12 @@ static unsigned char hashstring(unsigned char *str)
     return ((hash >> 8) ^ hash) & 0xff;
 }
 
-/*! hash atalk_uuid_t into unsigned char */
+/*!
+ * @brief Hash a 16-byte UUID into a cache bucket
+ *
+ * @param[in] uuid  binary UUID
+ * @returns the bucket, 0 to 255
+ */
 static unsigned char hashuuid(uuidp_t uuid)
 {
     unsigned char index = 83;
@@ -138,6 +156,19 @@ static unsigned char hashuuid(uuidp_t uuid)
  * Interface
  ********************************************************/
 
+/*!
+ * @brief Add a name to UUID mapping at the head of its name cache bucket
+ *
+ * The call duplicates the name and the UUID and records the current time. A
+ * lookup drops an entry after CACHESECONDS seconds.
+ *
+ * @param[in] inname  user or group name
+ * @param[in] inuuid  UUID of the name
+ * @param[in] type    UUID_USER or UUID_GROUP, with UUID_ENOENT for a negative
+ *                    entry
+ * @param[in] uid     unused
+ * @returns 0, or -1 for a NULL argument or a failed allocation
+ */
 int add_cachebyname(const char *inname, const uuidp_t inuuid,
                     const uuidtype_t type, const unsigned long uid _U_)
 {
@@ -290,7 +321,16 @@ int search_cachebyname(const char *name, uuidtype_t *type, unsigned char *uuid)
 }
 
 /*!
- * Caller must free allocated name
+ * @brief Look up a UUID in the UUID cache
+ *
+ * An entry older than CACHESECONDS seconds leaves the cache, and the lookup
+ * fails. The caller frees the returned name.
+ *
+ * @param[in]  uuidp  binary UUID
+ * @param[out] name   receives a newly allocated name
+ * @param[out] type   receives the type of the entry, with UUID_ENOENT for a
+ *                    negative one
+ * @returns 0, or -1 when the UUID has no current entry
  */
 int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)
 {
@@ -350,6 +390,19 @@ int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)
     return -1;
 }
 
+/*!
+ * @brief Add a UUID to name mapping at the head of its UUID cache bucket
+ *
+ * The call duplicates the name and the UUID and records the current time. A
+ * lookup drops an entry after CACHESECONDS seconds.
+ *
+ * @param[in] inuuid  binary UUID
+ * @param[in] inname  user or group name of the UUID
+ * @param[in] type    UUID_USER or UUID_GROUP, with UUID_ENOENT for a negative
+ *                    entry
+ * @param[in] uid     unused
+ * @returns 0, or -1 when an allocation fails
+ */
 int add_cachebyuuid(uuidp_t inuuid, const char *inname, uuidtype_t type,
                     const unsigned long uid _U_)
 {

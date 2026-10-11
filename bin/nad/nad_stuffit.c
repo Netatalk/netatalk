@@ -39,6 +39,11 @@
 
 #define SIT_DEFAULT_METHOD 13
 
+/*!
+ * @brief Print the usage of the nad sit and unsit commands
+ *
+ * @param[in] out  stream for the text
+ */
 static void usage_stuffit(FILE *out)
 {
     fprintf(out,
@@ -57,6 +62,18 @@ static void usage_stuffit(FILE *out)
     fprintf(out, "  -h, --help         show this help\n");
 }
 
+/*!
+ * @brief Open the volume of a path and select it for the nad_adouble calls
+ *
+ * Outside a volume the state marks the volume as a stand-in. A volume
+ * without an open CNID database skips the CNIDs.
+ *
+ * @param[in]  obj     AFP configuration with the volumes
+ * @param[in]  path    path inside the volume
+ * @param[out] afpvol  receives the opened volume
+ * @param[out] volume  receives the volume state for nad_set_volume
+ * @returns 0, or -1 when the volume does not open
+ */
 static int set_nad_volume_from_path(AFPObj *obj, const char *path,
                                     afpvol_t *afpvol,
                                     struct nad_volume *volume)
@@ -80,6 +97,15 @@ static int set_nad_volume_from_path(AFPObj *obj, const char *path,
     return 0;
 }
 
+/*!
+ * @brief Tell whether an archive entry name stays inside the extraction
+ * directory
+ *
+ * The name has to be relative and free of empty, `.`, and `..` components.
+ *
+ * @param[in] name  entry name from the archive
+ * @returns 1 for a safe name, or 0
+ */
 static int entry_name_is_safe(const char *name)
 {
     const char *p = name;
@@ -113,6 +139,14 @@ static int entry_name_is_safe(const char *name)
     }
 }
 
+/*!
+ * @brief Create the missing parent directories of a relative path
+ *
+ * Each new directory gets mode 0777 less the umask, and existing ones pass.
+ *
+ * @param[in] path  relative file path
+ * @returns 0, or -1 for a path that is too long or a failed mkdir
+ */
 static int make_parent_dirs(const char *path)
 {
     char buf[MAXPATHLEN + 1];
@@ -137,6 +171,14 @@ static int make_parent_dirs(const char *path)
     return 0;
 }
 
+/*!
+ * @brief Create a directory path with every component
+ *
+ * Each new directory gets mode 0777 less the umask, and existing ones pass.
+ *
+ * @param[in] path  directory path
+ * @returns 0, or -1 for a path that is too long or a failed mkdir
+ */
 static int make_dir_path(const char *path)
 {
     char buf[MAXPATHLEN + 1];
@@ -170,12 +212,32 @@ static int make_dir_path(const char *path)
     return 0;
 }
 
+/*!
+ * @brief Return the part of a path after its last slash
+ *
+ * A path that ends in a slash gives an empty name.
+ *
+ * @param[in] path  path
+ * @returns the base name inside @p path
+ */
 static const char *path_basename(const char *path)
 {
     const char *base = strrchr(path, '/');
     return base == NULL ? path : base + 1;
 }
 
+/*!
+ * @brief Split a path into its parent directory and its base name
+ *
+ * A path without a slash, or with only a leading one, gives `.` as parent.
+ *
+ * @param[in]  path        path to split
+ * @param[out] parent      receives the parent directory
+ * @param[in]  parent_len  size of @p parent
+ * @param[out] base        receives the base name
+ * @param[in]  base_len    size of @p base
+ * @returns 0, or -1 for a part that does not fit
+ */
 static int split_parent_base(const char *path, char *parent, size_t parent_len,
                              char *base, size_t base_len)
 {
@@ -207,6 +269,18 @@ static int split_parent_base(const char *path, char *parent, size_t parent_len,
     return 0;
 }
 
+/*!
+ * @brief Build a file header from a StuffIt entry
+ *
+ * The header takes the base name, both fork lengths, the type, the creator,
+ * and the Finder flags of the entry. The Mac creation and modification dates
+ * turn into AppleDouble dates without a time zone conversion, and a zero
+ * date becomes the current time.
+ *
+ * @param[in]  info  StuffIt entry
+ * @param[out] fh    file header to fill
+ * @returns 0, or -1 for a name that is too long
+ */
 static int fill_header_from_entry(const StuffitEntryInfo *info,
                                   struct FHeader *fh)
 {
@@ -244,6 +318,15 @@ static int fill_header_from_entry(const StuffitEntryInfo *info,
     return 0;
 }
 
+/*!
+ * @brief Check the decoded forks of a StuffIt entry against its lengths and the
+ * 32-bit limit
+ *
+ * @param[in] info  StuffIt entry
+ * @param[in] data  decoded data fork
+ * @param[in] rsrc  decoded resource fork
+ * @returns 0, or -1 for a mismatch or a fork of 4 GiB or more
+ */
 static int validate_entry_fork_lengths(const StuffitEntryInfo *info,
                                        const StuffitBytes *data,
                                        const StuffitBytes *rsrc)
@@ -271,6 +354,14 @@ static int validate_entry_fork_lengths(const StuffitEntryInfo *info,
     return 0;
 }
 
+/*!
+ * @brief Write a whole fork with nad_write, at most 8 KiB per call
+ *
+ * @param[in] fork  DATA or RESOURCE
+ * @param[in] ptr   fork bytes
+ * @param[in] len   number of bytes
+ * @returns 0, or -1 for a failed write
+ */
 static int write_fork_bytes(int fork, const uint8_t *ptr, size_t len)
 {
     size_t written = 0;
@@ -292,6 +383,20 @@ static int write_fork_bytes(int fork, const uint8_t *ptr, size_t len)
     return 0;
 }
 
+/*!
+ * @brief Extract one StuffIt file entry with its forks and Mac metadata
+ *
+ * The call creates the parent directories, changes into the parent, and
+ * creates the file through nad_open, which refuses an existing file. It
+ * writes both forks and sets the modification time of the file. An error
+ * deletes the partial file, and the call always returns to the starting
+ * directory.
+ *
+ * @param[in] info  StuffIt entry
+ * @param[in] data  decoded data fork
+ * @param[in] rsrc  decoded resource fork
+ * @returns 0, or -1 for an error
+ */
 static int extract_file_entry(const StuffitEntryInfo *info,
                               const StuffitBytes *data,
                               const StuffitBytes *rsrc)
@@ -373,6 +478,17 @@ done:
     return rc;
 }
 
+/*!
+ * @brief Extract every entry of a StuffIt archive into the current directory
+ *
+ * The metadata goes to the volume of the current directory. An unsafe entry
+ * name, a fork length mismatch, or any other error stops the extraction at
+ * that entry.
+ *
+ * @param[in] path  archive path
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or -1 for an error
+ */
 static int unsit_archive(const char *path, AFPObj *obj)
 {
     StuffitArchive *archive;
@@ -442,6 +558,16 @@ static int unsit_archive(const char *path, AFPObj *obj)
     return rv;
 }
 
+/*!
+ * @brief Read a whole fork of the open file into a buffer from malloc
+ *
+ * An empty fork gives NULL, and a short read fails.
+ *
+ * @param[in]  fork  DATA or RESOURCE
+ * @param[in]  len   fork length
+ * @param[out] out   receives the buffer, which the caller frees
+ * @returns 0, or -1 for an error
+ */
 static int read_fork_bytes(int fork, size_t len, uint8_t **out)
 {
     uint8_t *buf;
@@ -482,6 +608,19 @@ static int read_fork_bytes(int fork, size_t len, uint8_t **out)
     return 0;
 }
 
+/*!
+ * @brief Add a file with its forks and Mac metadata to a StuffIt writer
+ *
+ * The call selects the volume of the path, opens the file through nad_open,
+ * and reads both forks into memory. The entry takes the dates, the type, the
+ * creator, and the Finder flags of the file.
+ *
+ * @param[in,out] writer      StuffIt writer
+ * @param[in]     path        file path
+ * @param[in]     entry_name  name of the entry in the archive
+ * @param[in]     obj         AFP configuration with the volumes
+ * @returns 0, or -1 for an error
+ */
 static int add_file_to_writer(StuffitWriter *writer, const char *path,
                               const char *entry_name, AFPObj *obj)
 {
@@ -538,6 +677,13 @@ done:
     return rv;
 }
 
+/*!
+ * @brief Add a folder entry to a StuffIt writer
+ *
+ * @param[in,out] writer      StuffIt writer
+ * @param[in]     entry_name  name of the folder in the archive
+ * @returns 0, or -1 for an error
+ */
 static int add_folder_to_writer(StuffitWriter *writer, const char *entry_name)
 {
     StuffitNewEntry entry;
@@ -553,6 +699,15 @@ static int add_folder_to_writer(StuffitWriter *writer, const char *entry_name)
     return 0;
 }
 
+/*!
+ * @brief Join a directory and a name with a slash
+ *
+ * @param[out] out      buffer for the result
+ * @param[in]  out_len  size of @p out
+ * @param[in]  dir      directory
+ * @param[in]  name     name
+ * @returns 0, or -1 for a result that does not fit
+ */
 static int join_path(char *out, size_t out_len, const char *dir,
                      const char *name)
 {
@@ -564,6 +719,15 @@ static int join_path(char *out, size_t out_len, const char *dir,
     return 0;
 }
 
+/*!
+ * @brief Tell whether a directory entry holds netatalk or AppleDouble metadata
+ *
+ * The metadata names are `._` files and the .AppleDouble, .AppleDB, and
+ * .AppleDesktop folders.
+ *
+ * @param[in] name  entry name
+ * @returns nonzero for a metadata name
+ */
 static int is_ad_metadata_entry(const char *name)
 {
     return strncmp(name, "._", 2) == 0
@@ -572,6 +736,19 @@ static int is_ad_metadata_entry(const char *name)
            || strcmp(name, ".AppleDesktop") == 0;
 }
 
+/*!
+ * @brief Add a file or a directory tree to a StuffIt writer
+ *
+ * A directory adds a folder entry and then each child, apart from the
+ * metadata names. Any type other than a regular file or a directory fails,
+ * symbolic links included.
+ *
+ * @param[in,out] writer      StuffIt writer
+ * @param[in]     path        path to add
+ * @param[in]     entry_name  name of the entry in the archive
+ * @param[in]     obj         AFP configuration with the volumes
+ * @returns 0, or -1 for an error
+ */
 static int add_path_to_writer(StuffitWriter *writer, const char *path,
                               const char *entry_name, AFPObj *obj)
 {
@@ -627,6 +804,13 @@ static int add_path_to_writer(StuffitWriter *writer, const char *path,
     return add_file_to_writer(writer, path, entry_name, obj);
 }
 
+/*!
+ * @brief Return the default archive path, the input path with `.sit` appended
+ *
+ * @param[in] path  input path
+ * @returns the archive path for the caller to free, or NULL when memory runs
+ *          out
+ */
 static char *default_sit_output(const char *path)
 {
     size_t len = strlen(path) + 5;
@@ -641,6 +825,14 @@ static char *default_sit_output(const char *path)
     return out;
 }
 
+/*!
+ * @brief Write the bytes of a finished archive to a file and replace any
+ * existing file
+ *
+ * @param[in] path   output path
+ * @param[in] bytes  archive bytes
+ * @returns 0, or -1 for an error
+ */
 static int write_owned_bytes(const char *path, StuffitOwnedBytes *bytes)
 {
     FILE *out = fopen(path, "wb");
@@ -664,6 +856,19 @@ static int write_owned_bytes(const char *path, StuffitOwnedBytes *bytes)
     return 0;
 }
 
+/*!
+ * @brief Build a StuffIt archive from files and directory trees and write it
+ *
+ * Each argument becomes an entry under its base name. Without -o the call
+ * needs a single input and writes `input.sit`.
+ *
+ * @param[in] argc    number of inputs
+ * @param[in] argv    input paths
+ * @param[in] obj     AFP configuration with the volumes
+ * @param[in] output  archive path from -o, or NULL
+ * @param[in] method  StuffIt compression method
+ * @returns 0, or -1 for an error
+ */
 static int sit_paths(int argc, char **argv, AFPObj *obj, const char *output,
                      uint8_t method)
 {
@@ -723,6 +928,19 @@ done:
     return rv;
 }
 
+/*!
+ * @brief Run the nad sit and unsit commands
+ *
+ * The -h and --help options print the usage, and --verbose works for both
+ * commands. The sit command also takes -o or --output for the archive path
+ * and --method for the compression method, 13 by default. The unsit command
+ * extracts each archive into the current directory.
+ *
+ * @param[in] argc  argument count, from the command name on
+ * @param[in] argv  argument vector, from the command name on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or 1 for an error
+ */
 int nad_stuffit(int argc, char **argv, AFPObj *obj)
 {
     int rv = 0;

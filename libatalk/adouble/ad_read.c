@@ -36,33 +36,58 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-ssize_t adf_pread(struct ad_fd *ad_fd, void *buf, size_t count, off_t offset)
+/*!
+ * @brief Read count bytes that start at offset in an AppleDouble fork
+ *
+ * The read goes through pread and leaves the file position alone.
+ *
+ * @param[in]  adf     fork descriptor
+ * @param[out] buf     receives the bytes
+ * @param[in]  count   bytes to read
+ * @param[in]  offset  file offset
+ * @returns bytes read, or -1 with errno set
+ */
+ssize_t adf_pread(struct ad_fd *adf, void *buf, size_t count, off_t offset)
 {
     ssize_t     cc;
 #ifndef  HAVE_PREAD
 
-    if (ad_fd->adf_off != offset) {
-        if (lseek(ad_fd->adf_fd, offset, SEEK_SET) < 0) {
+    if (adf->adf_off != offset) {
+        if (lseek(adf->adf_fd, offset, SEEK_SET) < 0) {
             return -1;
         }
 
-        ad_fd->adf_off = offset;
+        adf->adf_off = offset;
     }
 
-    if ((cc = read(ad_fd->adf_fd, buf, count)) < 0) {
+    if ((cc = read(adf->adf_fd, buf, count)) < 0) {
         return -1;
     }
 
-    ad_fd->adf_off += cc;
+    adf->adf_off += cc;
 #else
-    cc = pread(ad_fd->adf_fd, buf, count, offset);
+    cc = pread(adf->adf_fd, buf, count, offset);
 #endif
     return cc;
 }
 
-/* XXX: locks have to be checked before each stream of consecutive
- *      ad_reads to prevent a denial in the middle from causing
- *      problems. */
+/*!
+ * @brief Read from the data or resource fork of an AppleDouble
+ *
+ * The data fork of a symlink yields the link target, and fails when buflen
+ * cannot hold it. Any other eid reads the resource fork, and a closed resource
+ * fork yields 0. The ea layout stores the fork at offset 0 of its EA, or
+ * behind the sidecar header without HAVE_EAFD. Version 2 adds the entry offset
+ * from the header. The function checks no byte-range locks.
+ *
+ * @param[in,out] ad      AppleDouble with the fork open
+ * @param[in]     eid     ADEID_DFORK, or any other entry for the resource fork
+ * @param[in]     off     offset within the fork
+ * @param[out]    buf     receives the bytes
+ * @param[in]     buflen  bytes to read
+ * @returns bytes read, 0 at the end of the fork or for a closed resource fork,
+ *          or -1 on failure
+ */
 ssize_t ad_read(struct adouble *ad, const uint32_t eid, off_t off, char *buf,
                 const size_t buflen)
 {

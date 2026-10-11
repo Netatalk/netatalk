@@ -38,6 +38,12 @@ static const unsigned char hexdig[] = "0123456789abcdef";
 
 static char mtou_buf[MAXPATHLEN + 1], utom_buf[MAXPATHLEN + 1];
 
+/*!
+ * @brief Return the value of a lowercase hex digit of a CAP escape
+ *
+ * @param[in] c  character to decode
+ * @returns 0 to 15, or -1 for another character
+ */
 static int cap_hexval(unsigned char c)
 {
     if (c >= '0' && c <= '9') {
@@ -51,6 +57,13 @@ static int cap_hexval(unsigned char c)
     return -1;
 }
 
+/*!
+ * @brief Decode the two hex digits after the colon of a CAP escape
+ *
+ * @param[in]  in   two characters
+ * @param[out] out  receives the byte
+ * @returns 1 for a valid pair, or 0
+ */
 static int cap_decode_byte(const unsigned char *in, unsigned char *out)
 {
     int hi, lo;
@@ -65,6 +78,12 @@ static int cap_decode_byte(const unsigned char *in, unsigned char *out)
     return 1;
 }
 
+/*!
+ * @brief Write a byte as a CAP escape, a colon and two lowercase hex digits
+ *
+ * @param[in]     c    byte to escape
+ * @param[in,out] out  write position, advanced by three characters
+ */
 static void cap_escape_byte(unsigned char c, unsigned char **out)
 {
     *(*out)++ = ':';
@@ -79,6 +98,16 @@ static unsigned char lower_byte(unsigned char c)
 }
 #endif /* DOWNCASE */
 
+/*!
+ * @brief Encode a Mac file name as a CAP-style host name
+ *
+ * Bytes that do not print, slashes, and a leading dot become `:xx` escapes.
+ * The result lives in a static buffer that the next call overwrites, and a
+ * name that does not fit ends early.
+ *
+ * @param[in] mpath  Mac name
+ * @returns the host name in the static buffer
+ */
 static char *mtoupathcap(char *mpath)
 {
     const unsigned char	*m;
@@ -108,6 +137,16 @@ static char *mtoupathcap(char *mpath)
 }
 
 
+/*!
+ * @brief Decode a CAP-style host name into a Mac file name
+ *
+ * Each `:xx` escape with lowercase hex digits becomes its byte, and every
+ * other character stays. The result lives in a static buffer that the next
+ * call overwrites.
+ *
+ * @param[in] upath  host name
+ * @returns the Mac name in the static buffer
+ */
 static char *utompathcap(char *upath)
 {
     unsigned char	*m, *u;
@@ -151,12 +190,25 @@ static struct nad_file_data {
     struct adouble	ad;
 } nad;
 
+/*!
+ * @brief Select the volume state for the following nad_open calls
+ *
+ * @param[in] volume  volume state, or NULL for none
+ */
 void nad_set_volume(const struct nad_volume *volume)
 {
     nad.volume = volume;
     nad.vol = volume ? volume->vol : NULL;
 }
 
+/*!
+ * @brief Derive the directory part of the AppleDouble header path of the open
+ * file
+ *
+ * @param[out] dir     receives the directory, .AppleDouble for adouble:v2
+ * @param[in]  dirlen  size of @p dir
+ * @returns 0, or -1 with ENAMETOOLONG or EINVAL
+ */
 static int nad_adouble_dir(char *dir, size_t dirlen)
 {
     char *slash;
@@ -177,6 +229,22 @@ static int nad_adouble_dir(char *dir, size_t dirlen)
     return 0;
 }
 
+/*!
+ * @brief Open the .AppleDouble directory of a new file and create it when
+ * missing
+ *
+ * A new directory starts with owner rights added, so the following ad_open
+ * can create the header in it. Later, nad_set_created_modes sets the
+ * inherited mode.
+ *
+ * @param[in]  parentfd  descriptor of the current directory
+ * @param[out] dir       receives the directory path
+ * @param[in]  dirlen    size of @p dir
+ * @param[in]  mode      mode of the current directory
+ * @param[out] st        receives the stat result of the directory
+ * @param[out] created   receives 1 when the call created the directory, or 0
+ * @returns the directory descriptor, or -1 with errno
+ */
 static int nad_prepare_adouble_dir(int parentfd, char *dir, size_t dirlen,
                                    mode_t mode, struct stat *st, int *created)
 {
@@ -218,6 +286,21 @@ static int nad_prepare_adouble_dir(int parentfd, char *dir, size_t dirlen,
     return dirfd;
 }
 
+/*!
+ * @brief Set the inherited modes on the new data file, header, and .AppleDouble
+ * directory
+ *
+ * The data file always gets @p data_mode. The header and the directory get
+ * their modes only when this conversion created them.
+ *
+ * @param[in] data_mode       mode of the data file
+ * @param[in] header_mode     mode of a new header
+ * @param[in] dirfd           descriptor of the .AppleDouble directory
+ * @param[in] dir_mode        mode of a new directory
+ * @param[in] created_dir     nonzero when the conversion created the directory
+ * @param[in] created_header  nonzero when the conversion created the header
+ * @returns 0, or -1 for a failed fchmod
+ */
 static int nad_set_created_modes(mode_t data_mode, mode_t header_mode,
                                  int dirfd, mode_t dir_mode,
                                  int created_dir, int created_header)
@@ -239,6 +322,25 @@ static int nad_set_created_modes(mode_t data_mode, mode_t header_mode,
     return 0;
 }
 
+/*!
+ * @brief Open a file and its Mac metadata as the input or the output of a
+ * conversion
+ *
+ * For reading, the call opens @p path with its forks and its metadata and
+ * fills @p fh through nad_header_read. For writing, it creates the file that
+ * the Mac name of @p fh names in the current directory, and an existing
+ * file fails. The new files take the mode of the current directory without
+ * its execute bits. On adouble:v2 the call also prepares the .AppleDouble
+ * directory. It then writes the header with nad_header_write.
+ *
+ * @param[in]     path       input path for reading, unused for writing
+ * @param[in]     openflags  O_RDONLY for reading, or the create flags for
+ *                           writing
+ * @param[in,out] fh         file header to fill or to write
+ * @param[in]     options    OPTION_* flags, where OPTION_NORF leaves out the
+ *                           resource fork
+ * @returns 0, or -1 for an error
+ */
 int nad_open(char *path, int openflags, struct FHeader *fh, int options _U_)
 {
     struct stat		st;
@@ -429,6 +531,17 @@ int nad_open(char *path, int openflags, struct FHeader *fh, int options _U_)
     }
 }
 
+/*!
+ * @brief Fill a file header from the open file and its metadata
+ *
+ * The name comes from the AppleDouble name entry, or from the decoded host
+ * name when the entry is empty. Each fork length has to fit in 32 bits. The
+ * call reads the three dates and the Finder info, and a missing Finder info
+ * gives zeros. The comment stays empty.
+ *
+ * @param[out] fh  file header to fill
+ * @returns 0, or -1 for an error
+ */
 int nad_header_read(struct FHeader *fh)
 {
     uint32_t		temptime;
@@ -569,6 +682,16 @@ int nad_header_read(struct FHeader *fh)
     return 0;
 }
 
+/*!
+ * @brief Write a file header into the metadata of the new file
+ *
+ * The call stores the Mac name on adouble:v2, the comment, the resource fork
+ * length, and the Finder info. It also sets the creation and the
+ * modification dates and then flushes the metadata.
+ *
+ * @param[in] fh  file header
+ * @returns 0, or -1 for a name or a comment that is too long
+ */
 int nad_header_write(struct FHeader *fh)
 {
     uint32_t		temptime;
@@ -660,6 +783,15 @@ int nad_header_write(struct FHeader *fh)
 
 static int		forkeid[] = { ADEID_DFORK, ADEID_RFORK };
 
+/*!
+ * @brief Read the next bytes of a fork of the open file
+ *
+ * @param[in]  fork     DATA or RESOURCE
+ * @param[out] forkbuf  destination buffer
+ * @param[in]  bufc     size of @p forkbuf
+ * @returns the number of bytes read, 0 at the end of the fork, or -1 for an
+ *          error
+ */
 ssize_t nad_read(int fork, char *forkbuf, size_t bufc)
 {
     ssize_t		cc = 0;
@@ -680,6 +812,17 @@ ssize_t nad_read(int fork, char *forkbuf, size_t bufc)
     return cc;
 }
 
+/*!
+ * @brief Write bytes to a fork of the new file at its tracked offset
+ *
+ * The call writes until all bytes are out, and a write of zero bytes fails
+ * as a short write.
+ *
+ * @param[in] fork     DATA or RESOURCE
+ * @param[in] forkbuf  bytes to write
+ * @param[in] bufc     number of bytes
+ * @returns @p bufc, or a negative value for an error
+ */
 ssize_t nad_write(int fork, char *forkbuf, size_t bufc)
 {
     const char		*buf_ptr;
@@ -717,6 +860,16 @@ ssize_t nad_write(int fork, char *forkbuf, size_t bufc)
     return bufc;
 }
 
+/*!
+ * @brief Give a new file its CNID and store the CNID in its metadata
+ *
+ * A file open for reading, the stand-in volume of --force, and a volume
+ * without CNIDs need nothing. The call resolves the CNID of the data file
+ * path and writes it into the metadata with the parent ID and the database
+ * stamp.
+ *
+ * @returns 0, or -1 with errno for an error
+ */
 static int nad_update_cnid(void)
 {
     struct stat st;
@@ -763,6 +916,16 @@ static int nad_update_cnid(void)
     return 0;
 }
 
+/*!
+ * @brief Close the open file and keep or delete it
+ *
+ * KEEP flushes the metadata, gives a new file its CNID, and closes the
+ * forks. TRASH closes the forks and deletes the data file and its header
+ * file.
+ *
+ * @param[in] status  KEEP or TRASH
+ * @returns 0, or -1 for an error or another status
+ */
 int nad_close(int status)
 {
     int			rv;

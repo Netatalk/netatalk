@@ -69,6 +69,17 @@ static const struct param {
 
 #define ARGV_CHUNK_SIZE 128
 #define MAXLINELEN 2048
+/*!
+ * @brief Split an atalkd.conf line into words
+ *
+ * White space separates the words, and a word in double quotes keeps its
+ * spaces. The array ends with NULL, and the slot after it holds the line
+ * buffer for freeline.
+ *
+ * @param[in] line  configuration line
+ * @returns the word array, or NULL for a blank line, a comment, or a failed
+ *          allocation
+ */
 static char **at_parseline(const char *line)
 {
     const char	 *p;
@@ -157,6 +168,12 @@ static char **at_parseline(const char *line)
     return argv;
 }
 
+/*!
+ * @brief Free a word array from at_parseline and the line buffer stored after
+ * its NULL
+ *
+ * @param[in] argv  word array, or NULL
+ */
 static void freeline(char **argv)
 {
     char **tmp = argv;
@@ -171,6 +188,22 @@ static void freeline(char **argv)
     }
 }
 
+/*!
+ * @brief Rewrite atalkd.conf with the configuration that atalkd settled on
+ *
+ * The call keeps blank lines and comments, and replaces each configuration
+ * line with the state of the next interface. That state holds the name, the
+ * routing options, the phase, the net range, the address, and the zones.
+ * Lines beyond the last interface go away. Without an old file at the default
+ * path, each interface gets a line.
+ *
+ * The call writes a temporary file beside the old one and renames it into
+ * place. The temporary file gets the mode of the old file, or 0644 without one.
+ *
+ * @param[in] cf  configuration file, or NULL for _PATH_ATALKDCONF
+ * @returns 0, or -1 when the file lacks the owner write bit or an open, write,
+ *          or rename fails
+ */
 int writeconf(char *cf)
 {
     struct stat		st;
@@ -305,27 +338,37 @@ int writeconf(char *cf)
     return 0;
 }
 
-/*
- * Read our config file. If it's not there, return -1. If it is there,
- * but has syntax errors, exit. Format of the file is as follows:
+/*!
+ * @brief Read the interfaces of atalkd.conf into the interface list
  *
- *	interface [ -seed ] [ -phase number ] [ -net net-range ]
- *	[ -addr net.node ] [ -zone zonename ]...
- * e.g.
- *	le0 -phase 1 -net 7938 -zone Argus
- * or
- *	le0 -phase 2 -net 8043-8044 -zone Argus -zone "Research Systems"
- *	le0 -phase 1 -net 7938 -zone Argus
+ * Each line names an interface and its options. The second example sets up
+ * both phases on one interface.
+ * @code
+ * interface [ -router ] [ -dontroute ] [ -seed ] [ -phase number ]
+ *     [ -net net-range ] [ -addr net.node ] [ -zone zonename ]...
  *
- * Pretty much everything is optional. Anything that is unspecified is
- * searched for on the network.  If -seed is not specified, the
- * configuration is assumed to be soft, i.e. it can be overridden by
- * another router. If -seed is specified, atalkd will exit if another
- * router disagrees.  If the phase is unspecified, it defaults to phase
- * 2 (the default can be overridden on the command line).  -addr can
- * replace -net, if the network in question isn't a range.  The default
- * zone for an interface is the first zone encountered for that
- * interface.
+ * le0 -phase 1 -net 7938 -zone Argus
+ *
+ * le0 -phase 2 -net 8043-8044 -zone Argus -zone "Research Systems"
+ * le0 -phase 1 -net 7938 -zone Argus
+ * @endcode
+ *
+ * The network supplies the net range, address, and zones that a line leaves
+ * out. Without -seed another router can override the configuration. With
+ * -seed, atalkd exits when a phase 2 router reports another net range or
+ * default zone. The phase defaults to 2 or to the -1 or -2 option of atalkd.
+ * The -addr option can stand in for a -net that is not a range, and the first
+ * zone of an interface is its default zone.
+ *
+ * Each interface has to support AppleTalk and take the AppleTalk multicast
+ * address. The call refuses loopback, point-to-point, and slave interfaces,
+ * and an interface whose name and phase repeat. An error returns -1 after a
+ * message on stderr. Main then calls getifconf, which adds the other kernel
+ * interfaces to the ones read so far.
+ *
+ * @param[in] cf  configuration file, or NULL for _PATH_ATALKDCONF
+ * @returns 0 with at least IFBASE interfaces, loopback included, or -1 for a
+ *          missing file, an error, or fewer interfaces
  */
 int readconf(char *cf)
 {
@@ -485,6 +528,16 @@ read_conf_err:
 }
 
 /*ARGSUSED*/
+/*!
+ * @brief Apply the -router option, which also makes the interface a seed
+ *
+ * The option has to come before -zone, and it excludes -dontroute.
+ *
+ * @param[in,out] iface  interface of the line
+ * @param[in]     av     words after the option, unused
+ * @returns 1, the number of words used, or -1 when -dontroute or -zone came
+ *          first
+ */
 int router(struct interface *iface, char **av _U_)
 {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
@@ -507,6 +560,13 @@ int router(struct interface *iface, char **av _U_)
 }
 
 /*ARGSUSED*/
+/*!
+ * @brief Apply the -dontroute option, which excludes -router
+ *
+ * @param[in,out] iface  interface of the line
+ * @param[in]     av     words after the option, unused
+ * @returns 1, the number of words used, or -1 when -router came first
+ */
 int dontroute(struct interface *iface, char **av _U_)
 {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
@@ -520,6 +580,13 @@ int dontroute(struct interface *iface, char **av _U_)
 }
 
 /*ARGSUSED*/
+/*!
+ * @brief Apply the -seed option, which has to come before -zone
+ *
+ * @param[in,out] iface  interface of the line
+ * @param[in]     av     words after the option, unused
+ * @returns 1, the number of words used, or -1 after a -zone
+ */
 int seed(struct interface *iface, char **av _U_)
 {
     /*
@@ -536,6 +603,13 @@ int seed(struct interface *iface, char **av _U_)
     return 1;
 }
 
+/*!
+ * @brief Apply the -phase option, AppleTalk phase 1 or 2
+ *
+ * @param[in,out] iface  interface of the line
+ * @param[in]     av     words after the option, the phase first
+ * @returns 2, the number of words used, or -1 for a missing or unknown phase
+ */
 int phase(struct interface *iface, char **av)
 {
     int			n;
@@ -563,6 +637,18 @@ int phase(struct interface *iface, char **av)
     return 2;
 }
 
+/*!
+ * @brief Apply the -net option, a network number or, in phase 2, a range like
+ * 8043-8044
+ *
+ * The phase has to come first, and the range has to hold a configured
+ * address. A range marks the route of the interface as extended.
+ *
+ * @param[in,out] iface  interface of the line, receives its route entry
+ * @param[in]     av     words after the option, the network first
+ * @returns 2, the number of words used, or -1 for a bad network, a range in
+ *          phase 1, a missing phase, or a failed allocation
+ */
 int net(struct interface *iface, char **av)
 {
     char		*nrange;
@@ -641,6 +727,17 @@ int net(struct interface *iface, char **av)
     return 2;
 }
 
+/*!
+ * @brief Apply the -addr option, a net.node address of the interface
+ *
+ * When -net came first, the address has to lie in its range. Otherwise the
+ * route of the interface becomes the single net of the address.
+ *
+ * @param[in,out] iface  interface of the line, receives the address
+ * @param[in]     av     words after the option, the address first
+ * @returns 2, the number of words used, or -1 for a missing or bad address, one
+ *          outside the range, or a failed allocation
+ */
 int addr(struct interface *iface, char **av)
 {
     if (av[0] == NULL) {
@@ -677,6 +774,18 @@ int addr(struct interface *iface, char **av)
     return 2;
 }
 
+/*!
+ * @brief Apply the -zone option, which counts only on a seed interface
+ *
+ * The zone name goes from the Unix charset to the Mac charset. The net range
+ * has to come first. The first zone stays the default, and each later one
+ * goes right after it.
+ *
+ * @param[in,out] iface  interface of the line, receives the zone
+ * @param[in]     av     words after the option, the zone name first
+ * @returns 2, the number of words used, or -1 for a missing name, a missing net
+ *          range, or a failed allocation
+ */
 int zone(struct interface *iface, char **av)
 {
     struct ziptab	*zt;
@@ -723,9 +832,15 @@ int zone(struct interface *iface, char **av)
     return 2;
 }
 
-/*
- * Get the configuration from the kernel. Only called if there's no
- * configuration.
+/*!
+ * @brief Add the AppleTalk interfaces of the kernel that the interface list
+ * lacks
+ *
+ * Main calls it when readconf fails. An interface joins the list when it is
+ * up and supports AppleTalk, and is not loopback, point-to-point, or slave. It
+ * also has to take the AppleTalk multicast address and be new to the list.
+ *
+ * @returns 0, or -1 when the socket or an allocation fails
  */
 int getifconf(void)
 {
@@ -814,11 +929,13 @@ int getifconf(void)
     return 0;
 }
 
-/*
- * Allocate a new interface structure.  Centralized here so we can change
- * the interface structure and have it updated nicely.
+/*!
+ * @brief Allocate a zeroed interface structure with its name and the AppleTalk
+ * family on both addresses
+ *
+ * @param[in] name  interface name, cut to fit
+ * @returns the interface, or NULL when calloc fails
  */
-
 struct interface *newiface(const char *name)
 {
     struct interface	*niface;

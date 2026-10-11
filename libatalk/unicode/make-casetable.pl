@@ -218,9 +218,14 @@ sub make_array {
 
     # array for BMP --------------------------------------------------
 
-    print(CSOURCE "\/*******************************************************************\n");
-    printf(CSOURCE " Convert a wide character to %s case.\n", $_[0]);
-    print(CSOURCE "*******************************************************************\/\n");
+    print(CSOURCE "\/*!\n");
+    printf(CSOURCE " * \@brief Convert a UCS2 character to %s case\n", $_[0]);
+    print(CSOURCE " *\n");
+    print(CSOURCE " * A character without a mapping comes back unchanged.\n");
+    print(CSOURCE " *\n");
+    print(CSOURCE " * \@param[in] val  UCS2 character\n");
+    printf(CSOURCE " * \@returns the %s case character\n", $_[0]);
+    print(CSOURCE " *\/\n");
     printf(CSOURCE "ucs2\_t to%s\_w\(ucs2\_t val\)\n", $_[0]);
     print(CSOURCE "{\n");
 
@@ -283,9 +288,15 @@ sub make_array {
 
     # array for Surrogate Pair ---------------------------------------
 
-    print(CSOURCE "\/*******************************************************************\n");
-    printf(CSOURCE " Convert a surrogate pair to %s case.\n", $_[0]);
-    print(CSOURCE "*******************************************************************\/\n");
+    print(CSOURCE "\/*!\n");
+    printf(CSOURCE " * \@brief Convert a surrogate pair to %s case\n", $_[0]);
+    print(CSOURCE " *\n");
+    print(CSOURCE " * The pair sits in one 32-bit value, with the high surrogate in bits 31 to\n");
+    print(CSOURCE " * 16. A pair without a mapping comes back unchanged.\n");
+    print(CSOURCE " *\n");
+    print(CSOURCE " * \@param[in] val  surrogate pair\n");
+    printf(CSOURCE " * \@returns the %s case surrogate pair\n", $_[0]);
+    print(CSOURCE " *\/\n");
     printf(CSOURCE "uint32\_t to%s\_sp\(uint32\_t val\)\n", $_[0]);
     print(CSOURCE "{\n");
 

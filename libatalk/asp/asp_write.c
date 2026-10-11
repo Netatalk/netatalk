@@ -33,6 +33,21 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
+/*!
+ * @brief Fetch the data of an ASP write from the workstation with a
+ * WriteContinue request
+ *
+ * The request names the buffer size. It goes to the session socket of the
+ * workstation as an exactly once transaction, with 5 tries 2 seconds apart.
+ * Up to ASP_MAXPACKETS reply packets land in buf, and the call strips their
+ * 4-byte headers in place.
+ *
+ * @param[in,out] asp     session
+ * @param[out]    buf     buffer of ASP_DATAMAXSIZ bytes that receives the data
+ * @param[in,out] buflen  buffer size on entry, data length on return
+ * @returns 0, or -1 when the request or the reply fails, or with EMSGSIZE for a
+ *          packet shorter than its header
+ */
 int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
 {
     struct iovec	iov[ASP_MAXPACKETS];

@@ -110,12 +110,19 @@ static int ftw_copy_link(const struct FTW *, const char *, const struct stat *,
 static int setfile(const struct stat *, int);
 static int copy_source_header(struct adouble *, const char *, int);
 
+/*!
+ * @brief Step the directory IDs of the walk back to the parent after nftw
+ * leaves a directory
+ */
 static void upfunc(void)
 {
     did = pdid;
     pdid = ppdid;
 }
 
+/*!
+ * @brief Print the usage and the options of nad cp, then exit with EXIT_FAILURE
+ */
 static void usage_cp(void)
 {
     printf(
@@ -151,7 +158,19 @@ static void usage_cp(void)
     exit(EXIT_FAILURE);
 }
 
-/* Return 1 when metadata was copied, 0 when absent, and -1 on a read error. */
+/*!
+ * @brief Transfer the AppleDouble header and the Finder comment of a source to
+ * a new entry
+ *
+ * The call reads the source metadata when the source volume uses adouble:v2
+ * or adouble:ea. It adds the comment, which ad_copy_header leaves out.
+ *
+ * @param[in,out] dest   open metadata of the new entry
+ * @param[in]     path   source path
+ * @param[in]     flags  ADFLAGS_DIR for a directory, or 0
+ * @returns 1 after the transfer, 0 when the source has no metadata, or -1 for a
+ *          read error
+ */
 static int copy_source_header(struct adouble *dest, const char *path, int flags)
 {
     struct adouble source;
@@ -200,17 +219,22 @@ static int copy_source_header(struct adouble *dest, const char *path, int flags)
 }
 
 /*!
- * @brief execute the nad cp command
+ * @brief Run the nad cp command on files and directory trees with their Mac
+ * metadata and CNIDs
  *
- * Parses options and initializes the destination base in to, distinguishing
- * a single destination file, an existing destination directory, and a new
- * destination directory for a recursive copy. Multiple sources require an
- * existing destination directory.
+ * The options follow cp: -a, -f, -i, -n, -p, -R, -v, and -x. The last
+ * argument names the target. A single source goes to a target file, to a new
+ * target directory under -R, or into an existing directory. More than one
+ * source needs an existing directory.
  *
- * Uses the custom nftw() implementation to traverse each source separately,
- * with copy() processing entries and upfunc() tracking directory CNID state.
- * Traversal runs without FTW_CHDIR, so source and destination paths may be
- * absolute or relative to the caller's working directory.
+ * The call walks each source with the nftw of nad, without FTW_CHDIR, so both
+ * paths can be relative. Each source and the target get separate volume
+ * states.
+ *
+ * @param[in] argc  argument count, from the cp command on
+ * @param[in] argv  argument vector, from the cp command on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or 1 when a source fails, while usage and fatal errors exit
  */
 int nad_cp(int argc, char *argv[], AFPObj *obj)
 {
@@ -387,16 +411,26 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
 }
 
 /*!
- * @brief process a source entry during the nftw() traversal
+ * @brief Recreate one source entry at the target during the nftw walk
  *
- * Constructs the current destination path in to. For an existing destination
- * directory, appends the source basename and any descendant path to the
- * destination base. When copying a directory to a new destination directory,
- * omits the source directory's basename and appends only the descendant path.
- * For a file-to-file copy, uses the destination path directly.
+ * The call builds the target path from the target base and the part of the
+ * source path below the walk root. A new target directory under -R drops
+ * the name of the source root. A name that the target volume does not accept
+ * skips its subtree. Regular files and symbolic links get their data or their
+ * link text, and directories get created. Devices, sockets, and FIFOs only
+ * log.
  *
- * Dispatches copying by entry type and handles destination volume metadata
- * and CNID registration where applicable.
+ * On a target volume with AppleDouble metadata the call also transfers the
+ * metadata and registers the new entry with the CNID database. The metadata
+ * then holds the CNID and, on adouble:v2, the Mac name. When the source has
+ * no metadata, the dates come from the modification time of the target.
+ *
+ * @param[in] path   source path
+ * @param[in] statp  lstat result of the source
+ * @param[in] tflag  nftw type flag, unused
+ * @param[in] ftw    walk position with the base and the level
+ * @returns 0 to go on, FTW_SKIP_SUBTREE to skip a directory, or -1 to stop the
+ *          walk
  */
 static int copy(const char *path,
                 const struct stat *statp,
@@ -788,6 +822,24 @@ static int copy(const char *path,
 #endif
 #define BUFSIZE_SMALL (MAXPHYS)
 
+/*!
+ * @brief Write the data of a source file to the target path
+ *
+ * Under -n an existing target stays, and under -i it needs a yes. Under -f
+ * the call deletes it and its metadata and creates it anew. A new target
+ * takes the mode of the source without the setuid and setgid bits. An error
+ * leaves the target in place.
+ *
+ * Files up to 8 MiB go through mmap when it works. Other files go through a
+ * buffer of MAXPHYS bytes, or up to 2 MiB on hosts with more than 32 GiB of
+ * memory. Under -p the call then applies setfile.
+ *
+ * @param[in] entp   walk position, unused
+ * @param[in] spath  source path
+ * @param[in] sp     stat result of the source
+ * @param[in] dne    nonzero when the target does not exist
+ * @returns 0, or 1 for an error or a declined overwrite
+ */
 static int ftw_copy_file(const struct FTW *entp _U_,
                          const char *spath,
                          const struct stat *sp,
@@ -992,6 +1044,18 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     return result;
 }
 
+/*!
+ * @brief Recreate a symbolic link at the target path
+ *
+ * The call reads the link text of the source, deletes an existing target,
+ * and creates the new link. Under -p it applies setfile.
+ *
+ * @param[in] p       walk position, unused
+ * @param[in] spath   source path
+ * @param[in] sstp    lstat result of the source
+ * @param[in] exists  nonzero when the target exists
+ * @returns 0, or 1 for an error
+ */
 static int ftw_copy_link(const struct FTW *p _U_,
                          const char *spath,
                          const struct stat *sstp,
@@ -1025,6 +1089,19 @@ static int ftw_copy_link(const struct FTW *p _U_,
     return (pflag ? setfile(sstp, -1) : 0);
 }
 
+/*!
+ * @brief Give the target the times, the owner, and the mode of the source under
+ * -p
+ *
+ * The times go through utimes, which follows a symbolic link. A differing
+ * owner drops the setuid and setgid bits from the mode, and a chown that
+ * fails with EPERM passes quietly. The file flags branch depends on
+ * HAVE_ST_FLAGS, which no build defines.
+ *
+ * @param[in] fs  stat result of the source
+ * @param[in] fd  open target, or -1 to work by path
+ * @returns 0, or 1 for an error
+ */
 static int setfile(const struct stat *fs, int fd)
 {
     static struct timeval tv[2];

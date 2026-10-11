@@ -18,10 +18,18 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-/* XXX: locking has to be checked before each stream of consecutive
- *      ad_writes to prevent a lock in the middle from causing problems.
+/*!
+ * @brief Write count bytes that start at offset in an AppleDouble fork
+ *
+ * The write goes through pwrite and leaves the file position alone. The
+ * function checks no byte-range locks.
+ *
+ * @param[in] ad_fd   fork descriptor
+ * @param[in] buf     bytes to write
+ * @param[in] count   bytes to write
+ * @param[in] offset  file offset
+ * @returns bytes written, or -1 with errno set
  */
-
 ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count,
                    off_t offset)
 {
@@ -49,7 +57,24 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count,
     return cc;
 }
 
-/* end is always 0 */
+/*!
+ * @brief Write to the data or resource fork of an AppleDouble
+ *
+ * A symlink data fork fails with EACCES. With a nonzero end, off counts back
+ * from the end of the fork. The ea layout stores the resource fork at offset 0
+ * of its EA, or behind the sidecar header without HAVE_EAFD. Version 2 adds
+ * the entry offset from the header, and a resource fork write that reaches
+ * past ad_rlen extends it. The function checks no byte-range locks.
+ *
+ * @param[in,out] ad      AppleDouble with the fork open
+ * @param[in]     eid     ADEID_DFORK or ADEID_RFORK
+ * @param[in]     off     offset within the fork
+ * @param[in]     end     0, or nonzero to count off back from the end of the
+ *                        fork
+ * @param[in]     buf     bytes to write
+ * @param[in]     buflen  bytes to write
+ * @returns bytes written, or -1 on failure or for any other eid
+ */
 ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end,
                  const char *buf, size_t buflen)
 {
@@ -115,9 +140,19 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end,
     return cc;
 }
 
-/*
- * the caller set the locks
- * ftruncate is undefined when the file length is smaller than 'size'
+/*!
+ * @brief Truncate or extend an open file to length
+ *
+ * ftruncate does the work. When it fails on a file shorter than length, the
+ * function writes one zero byte at length minus one instead. That covers
+ * platforms whose ftruncate cannot extend a file. Without HAVE_PWRITE it also
+ * restores the file position afterwards. The caller holds any locks the
+ * region needs.
+ *
+ * @param[in] fd      open file
+ * @param[in] length  new length in bytes
+ * @returns 0, or -1 with the ftruncate errno, or the write errno when the
+ *          extension failed
  */
 int sys_ftruncate(int fd, off_t length)
 {
@@ -175,7 +210,19 @@ int sys_ftruncate(int fd, off_t length)
     return 0;
 }
 
-/* ------------------------ */
+/*!
+ * @brief Truncate the resource fork of an AppleDouble to size
+ *
+ * The truncation point is size plus the resource fork entry offset, so the
+ * header ahead of the fork survives. ad_rlen follows. A zero size keeps the
+ * fork file, because an open fork may still reference it and ad_flush would
+ * recreate it. of_closefork deletes empty resource forks.
+ *
+ * @param[in,out] ad     AppleDouble with the resource fork open
+ * @param[in]     uname  file name, for logging only
+ * @param[in]     size   new fork length in bytes
+ * @returns 0, or -1 with errno set
+ */
 int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size)
 {
     EC_INIT;
@@ -200,6 +247,13 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Truncate the data fork of an AppleDouble to size
+ *
+ * @param[in,out] ad    AppleDouble with the data fork open
+ * @param[in]     size  new fork length in bytes
+ * @returns 0, or -1 with errno set
+ */
 int ad_dtruncate(struct adouble *ad, const off_t size)
 {
     if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
@@ -211,7 +265,14 @@ int ad_dtruncate(struct adouble *ad, const off_t size)
     return 0;
 }
 
-/* ----------------------- */
+/*!
+ * @brief Write buflen bytes of buf to dfd, retrying after EINTR
+ *
+ * @param[in] dfd     destination descriptor
+ * @param[in] buf     bytes to write
+ * @param[in] buflen  bytes to write
+ * @returns 0, or -1 with errno set
+ */
 static int copy_all(const int dfd, const void *buf,
                     size_t buflen)
 {
@@ -235,8 +296,19 @@ static int copy_all(const int dfd, const void *buf,
 }
 
 /*!
- * copy only the fork data stream
-*/
+ * @brief Transfer one fork from the AppleDouble ads into the AppleDouble add
+ *
+ * Both forks must be open. The read loop starts at the entry offset of each
+ * side and runs until the source returns end of file. A caller buffer serves
+ * only when it is larger than the 8 KiB stack buffer.
+ *
+ * @param[in]     eid     ADEID_DFORK, or any other entry for the resource fork
+ * @param[in,out] add     destination AppleDouble
+ * @param[in]     ads     source AppleDouble
+ * @param[in]     buf     optional transfer buffer, or NULL
+ * @param[in]     buflen  size of buf in bytes
+ * @returns 0, or -1 with errno set
+ */
 int copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf,
               size_t buflen)
 {

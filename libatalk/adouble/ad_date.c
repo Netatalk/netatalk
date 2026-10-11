@@ -18,9 +18,15 @@
 #include <atalk/logger.h>
 
 /*!
- * @brief Convert an AFP date-time value between local time and UTC.
- * @param aint_p AFP date-time to be converted.
- * @param offset_dir Which direction we want to convert the timestamp.
+ * @brief Convert an AFP date-time value between local time and UTC
+ *
+ * AD_DATE_START, the earliest AFP date, passes through unchanged. The
+ * conversion to UTC can be an hour off during the transition to or from
+ * daylight saving time.
+ *
+ * @param[in,out] aint_p      AFP date-time to convert, replaced by the result
+ * @param[in]     offset_dir  TO_LOCALTIME or TO_UTC
+ * @returns 0 on success, -1 when the time conversion fails
  */
 int set_utc_offset(uint32_t *aint_p, ad_time_offset_dir_t offset_dir)
 {
@@ -64,6 +70,17 @@ int set_utc_offset(uint32_t *aint_p, ad_time_offset_dir_t offset_dir)
     return 0;
 }
 
+/*!
+ * @brief Store a date in the AppleDouble file dates entry
+ *
+ * @param[in,out] ad       AppleDouble with its metadata loaded
+ * @param[in]     dateoff  AD_DATE_CREATE, AD_DATE_MODIFY, AD_DATE_BACKUP, or
+ *                         AD_DATE_ACCESS, plus AD_DATE_UNIX when date is a Unix
+ *                         time
+ * @param[in]     date     date to store, a Unix time when dateoff carries
+ *                         AD_DATE_UNIX
+ * @returns 0, or -1 when the entry is missing or dateoff is out of range
+ */
 int ad_setdate(struct adouble *ad,
                unsigned int dateoff, uint32_t date)
 {
@@ -93,6 +110,15 @@ int ad_setdate(struct adouble *ad,
     return 0;
 }
 
+/*!
+ * @brief Read a date from the AppleDouble file dates entry
+ *
+ * @param[in]  ad       AppleDouble with its metadata loaded
+ * @param[in]  dateoff  AD_DATE_CREATE, AD_DATE_MODIFY, AD_DATE_BACKUP, or
+ *                      AD_DATE_ACCESS, plus AD_DATE_UNIX to receive a Unix time
+ * @param[out] date     receives the date
+ * @returns 0, or -1 when the entry is missing or dateoff is out of range
+ */
 int ad_getdate(const struct adouble *ad,
                unsigned int dateoff, uint32_t *date)
 {

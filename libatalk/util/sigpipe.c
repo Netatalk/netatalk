@@ -37,6 +37,15 @@
 
 static int sigpipe_fd[2] = { -1, -1 };
 
+/*!
+ * @brief Create the self-pipe that wakes a poll loop from a signal handler
+ *
+ * A second call keeps the existing pipe. Both ends are non-blocking and
+ * close-on-exec. A failed setup closes both ends, so no half-configured pipe
+ * stays.
+ *
+ * @returns 0, or -1 with errno set
+ */
 int atalk_sigpipe_init(void)
 {
     if (sigpipe_fd[0] >= 0) {
@@ -68,12 +77,22 @@ int atalk_sigpipe_init(void)
     return 0;
 }
 
+/*!
+ * @brief Return the read end of the self-pipe for the poll set
+ *
+ * @returns the descriptor, or -1 before atalk_sigpipe_init
+ */
 int atalk_sigpipe_readfd(void)
 {
     return sigpipe_fd[0];
 }
 
-/* async-signal-safe: write() only, errno preserved */
+/*!
+ * @brief Wake the poll loop from a signal handler with 1 byte on the self-pipe
+ *
+ * The call uses only write and restores errno, so a signal handler can call
+ * it. A full pipe drops the byte, since a wake-up is pending already.
+ */
 void atalk_sigpipe_notify(void)
 {
     int saved_errno = errno;
@@ -82,6 +101,9 @@ void atalk_sigpipe_notify(void)
     errno = saved_errno;
 }
 
+/*!
+ * @brief Read every pending byte from the self-pipe
+ */
 void atalk_sigpipe_drain(void)
 {
     char buf[64];

@@ -31,11 +31,36 @@
 
 static struct savedt	sa = { { 0, 0, 0, 0 }, -1, 0, 0};
 
+/*!
+ * @brief Compare two APPL paths of explicit lengths
+ *
+ * @param[in] p     first path
+ * @param[in] plen  length of p
+ * @param[in] q     second path
+ * @param[in] qlen  length of q
+ * @returns 0 when both paths hold the same bytes, 1 otherwise
+ */
 static int pathcmp(char *p, int plen, char *q, int qlen)
 {
     return ((plen == qlen && memcmp(p, q, plen) == 0) ? 0 : 1);
 }
 
+/*!
+ * @brief Open the APPL file of a creator in the desktop database
+ *
+ * One descriptor serves the APPL file of the last creator and volume. A
+ * read-only open of the same file reuses it and keeps its read position, so
+ * FPGetAPPL can walk the entries in order. Any other open closes it first.
+ * With O_CREAT, a missing file also gets its two parent directories in the
+ * desktop database.
+ *
+ * @param[in] vol      volume of the desktop database
+ * @param[in] creator  creator code of the application
+ * @param[in] flags    open flags
+ * @param[in] mode     creation mode, masked with the parent directory
+ *                     permissions
+ * @returns AFP_OK, or AFPERR_PARAM when open fails
+ */
 static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 {
     char	*dtf, *adt, *adts;
@@ -86,7 +111,18 @@ static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 }
 
 /*!
- * copy appls to new file, deleting any matching (old) appl entries
+ * @brief Write the APPL entries of one file to another, except the entries of
+ * one path
+ *
+ * Each entry holds a 4-byte APPL tag, a 2-byte path length, and the path. The
+ * call drops every entry whose path equals mpath. A short read or a path
+ * length past the buffer ends the call with -1.
+ *
+ * @param[in] sfd    APPL file, read from its current position
+ * @param[in] dfd    file that receives the kept entries
+ * @param[in] mpath  path to drop
+ * @param[in] mplen  length of mpath
+ * @returns 0 at the end of sfd, or -1 on a read, length, or write error
  */
 static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
 {
@@ -164,17 +200,22 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
 }
 
 /*!
- * @brief build mac. path (backwards) by traversing the directory tree
+ * @brief Build the volume path of a file backwards at the end of a buffer
  *
- * The old way: dir and path refer to an app, path is a mac format
- * pathname.  makemacpath() builds something that looks like a cname,
- * but uses upaths instead of mac format paths.
+ * The result holds the long names of the directories below the volume root
+ * and of the file. NUL bytes separate the names and no NUL ends them, the
+ * form that cname reads. The first 6 bytes of mpath stay free for the APPL
+ * tag and the entry length.
  *
- * The new way: dir and path refer to an app, path is a mac format
- * pathname.  makemacpath() builds a cname. (zero is a path separator
- * and it's not \0 terminated).
+ * @param[in]  vol       volume of the file
+ * @param[out] mpath     buffer that receives the path at its end
+ * @param[in]  mpathlen  size of mpath
+ * @param[in]  dir       directory of the file
+ * @param[in]  path      long name of the file
+ * @returns the start of the path in mpath, or NULL when it does not fit or a
+ *          parent lookup fails
  *
- * @sa afp_getappl() for the backward compatiblity code.
+ * @sa afp_getappl() for the decoding of older entries.
  */
 static char *
 makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir,
@@ -212,7 +253,22 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir,
     return p;
 }
 
-
+/*!
+ * @brief FPAddAPPL: add an application to the APPL file of its creator
+ *
+ * The request carries the volume, the directory, the creator, the APPL tag,
+ * and the path. The new entry goes first, so index 1 of FPGetAPPL names the
+ * application added last. The call drops an older entry for the same path. It
+ * writes the entries to a temporary file and renames that over the APPL file.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK, AFPERR_BADTYPE for a directory, AFPERR_PARAM, or the error
+ *          of the directory or path lookup
+ */
 int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 size_t *rbuflen)
 {
@@ -354,6 +410,22 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPRemoveAPPL: remove an application from the APPL file of its creator
+ *
+ * The request carries the volume, the directory, the creator, and the path.
+ * The call writes every other entry to a temporary file and renames that over
+ * the APPL file. A path without an entry still gets AFP_OK.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK, AFPERR_NOOBJ without an APPL file, AFPERR_BADTYPE for a
+ *          directory, AFPERR_PARAM, or the error of the directory or path
+ *          lookup
+ */
 int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 size_t *rbuflen)
 {
@@ -463,6 +535,27 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPGetAPPL: return the file parameters of an application from the APPL
+ * file of its creator
+ *
+ * The request carries the volume, the creator, a 1-based index, and the file
+ * bitmap. Index 0 counts as 1. The open APPL file keeps its position between
+ * calls, so a walk with rising indexes reads each entry once.
+ *
+ * The call decodes the colon hex escapes of older entries and resolves the
+ * path from the volume root. The reply holds the bitmap, the APPL tag, and
+ * the file parameters.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOITEM when no entry or file matches, AFPERR_BITMAP,
+ *          or AFPERR_PARAM
+ */
 int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {

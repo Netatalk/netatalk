@@ -34,7 +34,15 @@
 #include "volume.h"
 
 /*!
- * Get the free space on a partition.
+ * @brief Free and total space of the file system that holds the volume
+ *
+ * The values come from statfs in bytes, saturated at UINT64_MAX.
+ *
+ * @param[in]  vol     volume
+ * @param[out] bfree   receives the bytes available to the user
+ * @param[out] btotal  receives the total bytes
+ * @param[out] bsize   receives the fragment size
+ * @returns AFP_OK, or AFPERR_PARAM when statfs failed
  */
 int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree,
                         VolSpace *btotal, uint32_t *bsize)
@@ -69,6 +77,12 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree,
     return AFP_OK;
 }
 
+/*!
+ * @brief Map the three permission bits of one Unix class to AFP access rights
+ *
+ * @param[in] bits  mode, shifted so that the class sits in the low three bits
+ * @returns AR_UREAD, AR_UWRITE, and AR_USEARCH as the bits allow
+ */
 static int utombits(mode_t bits)
 {
     int		mbits;
@@ -80,9 +94,19 @@ static int utombits(mode_t bits)
     return mbits;
 }
 
-/* --------------------------------
-    cf AFP 3.0 page 63
-*/
+/*!
+ * @brief Derive the AFP access rights of owner, group, world, and user from a
+ * stat
+ *
+ * Root gets every right. The owner gets the owner bits and AR_UOWN, a group
+ * member gets the group bits, and anyone else gets the world bits. A file
+ * that root owns also grants AR_UOWN to the user. The mapping follows page 63
+ * of the AFP 3.0 specification.
+ *
+ * @param[in]  obj   session object with the user and group IDs
+ * @param[in]  stat  stat of the file or directory
+ * @param[out] ma    receives the access rights
+ */
 static void utommode(const AFPObj *obj, const struct stat *stat,
                      struct maccess *ma)
 {
@@ -123,11 +147,18 @@ static void utommode(const AFPObj *obj, const struct stat *stat,
 }
 
 /*!
- * @brief Calculate the mode for a directory using a stat() call to
- * estimate permission.
+ * @brief AFP access rights of a file or directory from its stat and ACLs
  *
- * @note the previous method, using access(), does not work correctly
- * over NFS.
+ * The rights come from the Unix mode through utommode, and with ACL support
+ * acltoownermode refines them. The access call gives wrong answers over NFS,
+ * so the rights come from a stat. A failed stat leaves every right at zero.
+ *
+ * @param[in]  obj   session object
+ * @param[in]  vol   volume of the path
+ * @param[in]  path  file or directory
+ * @param[out] ma    receives the access rights
+ * @param[in]  dir   unused
+ * @param[in]  st    stat of path, or NULL to stat it here
  */
 void accessmode(const AFPObj *obj, const struct vol *vol, char *path,
                 struct maccess *ma, struct dir *dir _U_, struct stat *st)
@@ -149,6 +180,15 @@ void accessmode(const AFPObj *obj, const struct vol *vol, char *path,
 #endif
 }
 
+/*!
+ * @brief Map AFP access rights to the three permission bits of one Unix class
+ *
+ * Read and write each also grant search, because a Mac client cannot set the
+ * search right separately.
+ *
+ * @param[in] bits  AR_UREAD and AR_UWRITE rights
+ * @returns the mode bits in the low three positions
+ */
 static mode_t mtoubits(uint8_t bits)
 {
     mode_t	mode;
@@ -160,11 +200,17 @@ static mode_t mtoubits(uint8_t bits)
     return mode;
 }
 
-/* ----------------------------------
-   from the finder's share windows (menu--> File--> sharing...)
-   and from AFP 3.0 spec page 63
-   the mac mode should be save somewhere
-*/
+/*!
+ * @brief Build a Unix mode from AFP access rights
+ *
+ * The owner bits get the owner and world rights, the group bits the group and
+ * world rights, and the other bits the world rights. Read and write each
+ * also grant search. The mapping follows the Finder sharing window and page
+ * 63 of the AFP 3.0 specification.
+ *
+ * @param[in] ma  AFP access rights
+ * @returns the permission bits of the mode
+ */
 mode_t mtoumode(struct maccess *ma)
 {
     mode_t		mode;
@@ -177,7 +223,18 @@ mode_t mtoumode(struct maccess *ma)
     return mode;
 }
 
-/* --------------------- */
+/*!
+ * @brief Apply a Unix mode to a file and to its AppleDouble metadata
+ *
+ * The mode gains the volume file permissions. The vfs_setfilmode hooks then
+ * derive the metadata mode, which needs write access wherever read access
+ * exists.
+ *
+ * @param[in]     vol   volume of the file
+ * @param[in,out] path  file, its stat filled when missing
+ * @param[in]     mode  new mode
+ * @returns 0, or -1 when the stat or a mode change failed
+ */
 int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 {
     if (!path->st_valid) {
@@ -199,7 +256,19 @@ int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 }
 
 
-/* --------------------- */
+/*!
+ * @brief Apply a Unix mode to a directory and to its AppleDouble metadata
+ *
+ * The mode gains the volume directory permissions and DIRBITS, minus the
+ * volume umask. A mode that grants the owner read and search access changes
+ * the directory before the vfs_setdirunixmode hooks. Any other mode changes
+ * it after them, so the metadata stays reachable.
+ *
+ * @param[in] vol   volume of the directory
+ * @param[in] name  directory
+ * @param[in] mode  new mode
+ * @returns 0, or -1 when a mode change failed
+ */
 int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 {
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
@@ -231,7 +300,17 @@ int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
     return 0;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief Give a file and its AppleDouble metadata a new owner and group
+ *
+ * EPERM counts as success for both changes.
+ *
+ * @param[in] vol   volume of the file
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @param[in] path  file
+ * @returns 0, or -1 when a change failed with another error
+ */
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid,
                 struct path *path)
 {
@@ -250,11 +329,19 @@ int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid,
     return 0;
 }
 
-/* ---------------------------------
- * uid/gid == 0 need to be handled as special cases. they really mean
- * that user/group should inherit from other, but that doesn't fit
- * into the unix permission scheme. we can get around this by
- * co-opting some bits. */
+/*!
+ * @brief Give a directory and its AppleDouble metadata a new owner and group
+ *
+ * A failed change of the directory itself only logs. The vfs_setdirowner
+ * hooks then update the metadata. A uid or gid of 0 gets no special
+ * treatment.
+ *
+ * @param[in] vol   volume of the directory
+ * @param[in] name  directory
+ * @param[in] uid   new owner
+ * @param[in] gid   new group
+ * @returns 0, or -1 when a hook failed
+ */
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid,
                 const gid_t gid)
 {

@@ -47,7 +47,7 @@ struct vol {
     size_t          max_filename;
     char            *v_veto;
     int             v_adouble;    /*!< adouble format: v1, v2 */
-    int             v_ad_options; /*!< adouble option NODEV, NOCACHE, etc.. */
+    int             v_ad_options; /*!< ADVOL_* option bits, such as NODEV and NOCACHE */
     const char      *(*ad_path)(const char *, int);
     struct _cnid_db *v_cdb;
     char            v_stamp[ADEDLEN_PRIVSYN];

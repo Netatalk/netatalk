@@ -105,6 +105,19 @@ void conf_testutil_set_lastvid(uint16_t vid)
     lastvid = vid;
 }
 
+/*!
+ * @brief Rewrite the volume UUID file from the volume chain, which drops the
+ * deleted volumes
+ *
+ * The call truncates the file and writes the header and one line per volume.
+ * It takes the write lock without waiting, so a lock that another process
+ * holds fails the call. A file that cannot open is no failure when every
+ * volume has a UUID.
+ *
+ * @param[in] obj      AFP object with the UUID file path
+ * @param[in] Volumes  volume chain
+ * @returns 0, or -1 when the open, the lock, the truncate, or the seek fails
+ */
 static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
 {
     int result;
@@ -176,11 +189,17 @@ static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
 }
 
 /*!
- * @brief Get a volume's UUID from the config file.
+ * @brief Return the UUID of a volume from the volume UUID file, adding one when
+ * the file has none
  *
- * If there is none, it is generated and stored there.
+ * Each line holds the volume name and then the UUID, and the name can stand in
+ * double quotes. The call returns the UUID in upper case. A volume without a
+ * line gets 16 random bytes as its UUID, appended under a write lock. Neither
+ * lock waits, so a lock that another process holds fails the call.
  *
- * @returns pointer to allocated storage on success, NULL on error.
+ * @param[in] obj      AFP object with the UUID file path
+ * @param[in] volname  local name of the volume
+ * @returns the UUID string, which the caller frees, or NULL on error
  */
 static char *get_vol_uuid(const AFPObj *obj, const char *volname)
 {
@@ -332,11 +351,16 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
 
 #define EABUFSZ 4
 /*!
- * @brief Check if the underlying filesystem supports EAs.
+ * @brief Tell whether the filesystem of a volume supports extended attributes
  *
- * If not, switch to ea=ad.
- * As we can't check (requires write access) on ro-volumes, we assume ea=sys.
-*/
+ * The marker attribute org.netatalk.has-Extended-Attributes on the volume
+ * root answers at once. A read-only volume cannot take a test write, so the
+ * call assumes support. Otherwise it sets the marker as root, and a failure
+ * means no support.
+ *
+ * @param[in] vol  volume
+ * @returns 1 with support, 0 without
+ */
 static int do_check_ea_support(const struct vol *vol)
 {
     int haseas;
@@ -371,6 +395,15 @@ static int do_check_ea_support(const struct vol *vol)
     return haseas;
 }
 
+/*!
+ * @brief Pick the EA backend and the AppleDouble version of a volume by its EA
+ * support
+ *
+ * With ea = auto the volume gets sys or ad. With AppleDouble in extended
+ * attributes and no support, the volume falls back to AppleDouble v2 files.
+ *
+ * @param[in,out] vol  volume
+ */
 static void check_ea_support(struct vol *vol)
 {
     int haseas;
@@ -439,34 +472,43 @@ static int check_vol_acl_support(const struct vol *vol)
 }
 
 /*!
- * @brief Handle variable substitutions.
+ * @brief Expand the variables of an afp.conf value
  *
- * here's what we understand:
+ * The variables are:
  * @code
- * $b   -> basename of path
- * $c   -> client ip/appletalk address
- * $d   -> volume pathname on server
- * $f   -> full name (whatever's in the gecos field)
- * $g   -> group
- * $h   -> hostname
- * $i   -> client ip/appletalk address without port
- * $s   -> server name (hostname if it doesn't exist)
- * $u   -> username (guest is usually nobody)
- * $v   -> volume name or basename if null
- * $$   -> $
+ * $b   basename of path
+ * $c   client address with port, or net.node over AppleTalk
+ * $d   volume path on the server
+ * $f   full name, the gecos field up to its first comma
+ * $g   primary group of the user
+ * $h   host name
+ * $i   client address without port, or the network number over AppleTalk
+ * $s   server name, or the host name without one
+ * $u   user name, after the NT domain separator when one is set
+ * $v   volume name, or the basename of path without one
+ * $$   a dollar sign
  * @endcode
  *
- * This get's called from readvolfile with
- * @code
- * path = NULL, volname = NULL for xlating the volumes path
- * path = path, volname = NULL for xlating the volumes name
- * ... and from volumes options parsing code when xlating e.g. dbpath with
- * path = path, volname = volname
- * @endcode
+ * A volume path expands with a NULL path and volname, and a volume name
+ * with the path. Only $c checks for an AFP session, and outside one it
+ * expands to nothing. The $f and $g variables stay as typed without a user
+ * entry, and $u stays as typed without a login. A variable that lacks its
+ * value, such as $b without a path, expands to nothing. An unknown variable
+ * stays as typed.
  *
- * Using this information we can reject xlation of any variable depeninding on a login
- * context which is not given in the afp master, where we must evaluate this whole stuff
- * too for the Zeroconf announcements.
+ * The $f variable cuts the gecos field of pwd at its first comma, in place.
+ * The result stops at destlen bytes.
+ *
+ * @param[in]     obj      AFP object with the session, the user, and the
+ *                         options
+ * @param[out]    dest     buffer of destlen + 1 bytes, or NULL to allocate one
+ * @param[in]     destlen  length limit of the result
+ * @param[in]     src      value with variables
+ * @param[in]     pwd      user entry, or NULL
+ * @param[in]     path     volume path, or NULL
+ * @param[in]     volname  volume name, or NULL
+ * @returns dest or the new buffer, which the caller frees, or NULL for a NULL
+ *          src or a failed calloc
  */
 static char *volxlate(const AFPObj *obj,
                       char *dest,
@@ -796,12 +838,18 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
 }
 
 /*!
- * Bound dsireadbuf so dsireadbuf * quantum never exceeds limit.  The limit
- * always wins: on a constrained platform the result may drop below the usual
- * dsireadbuf floor of 6, but never below 1.  The quantum is never reduced
- * here: frame acceptance must not change as a side effect of read-ahead
- * sizing.  A zero quantum cannot occur in the config path and is treated as
- * "no limit".
+ * @brief Cap dsireadbuf so that dsireadbuf times quantum stays within limit
+ *
+ * The limit overrides the dsireadbuf floor of 6. The cap stays at 1 or more,
+ * so a quantum above the limit still gets 1. The call never
+ * shrinks the quantum, so read-ahead sizing leaves the frame size that the
+ * server accepts as it is. A quantum of 0 means no limit, and the config
+ * path never passes one.
+ *
+ * @param[in] readbuf  number of quanta to read ahead
+ * @param[in] quantum  server quantum in bytes
+ * @param[in] limit    byte limit of the read-ahead buffer
+ * @returns readbuf, or the cap when readbuf exceeds it
  */
 int netatalk_readbuf_clamp(int readbuf, uint32_t quantum, uint64_t limit)
 {
@@ -2179,7 +2227,14 @@ EC_CLEANUP:
     return volume;
 }
 
-/* ----------------------
+/*!
+ * @brief Tell whether afp.conf changed since the last check, by its mtime
+ *
+ * A newer mtime becomes the stored one. A failed stat also counts as a
+ * change, so the reload that follows fails as well.
+ *
+ * @param[in,out] obj  AFP object with the config file path and the stored mtime
+ * @returns 1 for a change or a failed stat, 0 otherwise
  */
 static int volfile_changed(AFPObj *obj)
 {
@@ -2206,6 +2261,12 @@ static int volfile_changed(AFPObj *obj)
     return 0;
 }
 
+/*!
+ * @brief Tell whether an afp.conf section defines a volume
+ *
+ * @param[in] sec  section name
+ * @returns 0 for the Global section, 1 for any other
+ */
 static int vol_section(const char *sec)
 {
     if (STRCMP(sec, ==, INISEC_GLOBAL)) {
@@ -2217,11 +2278,23 @@ static int vol_section(const char *sec)
 
 #define MAXPRESETLEN 100
 /*!
- * @brief Read volumes from iniconfig and add the volumes contained within to
- * the global volume list
+ * @brief Create the volumes of the afp.conf sections and add them to the volume
+ * list
  *
- * This gets called from the forked afpd childs.
- * The master now reads this too for Zeroconf announcements.
+ * Every section other than Global names a volume with a path and a volume
+ * name. Its preset falls back to the vol preset of Global. The call expands
+ * the variables of the path and then of the name. The [Homes] section gives
+ * the home of the user in an AFP session. It needs a user other than the
+ * guest, with a home that matches the basedir regex. The regex compiles once
+ * per process.
+ *
+ * Every section that fails, apart from a skipped [Homes], adds 1 to
+ * vols_skipped of obj. The master reads the volumes too, for the Zeroconf
+ * announcements.
+ *
+ * @param[in,out] obj    AFP object with the parsed afp.conf
+ * @param[in]     pwent  user entry of the session, or NULL
+ * @returns 0
  */
 static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 {
@@ -2372,6 +2445,19 @@ EC_CLEANUP:
 static struct extmap    *Extmap = NULL, *Defextmap = NULL;
 static int              Extmap_cnt;
 
+/*!
+ * @brief Add an extension mapping to the unsorted extension map
+ *
+ * The call skips the leading dot of ext. A repeated extension keeps its
+ * first mapping, compared by strdiacasecmp without regard to case. The call
+ * stores the first 4 bytes of type and of creator, or 4 zeros for an empty
+ * one.
+ *
+ * @param[in] ext      extension with its leading dot
+ * @param[in] type     file type, up to 4 characters
+ * @param[in] creator  creator code, up to 4 characters
+ * @returns 0, or -1 when an allocation fails
+ */
 static int setextmap(char *ext, char *type, char *creator)
 {
     EC_INIT;
@@ -2410,7 +2496,13 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/* -------------------------- */
+/*!
+ * @brief Order two extension map entries by extension, for qsort
+ *
+ * @param[in] map1  first entry
+ * @param[in] map2  second entry
+ * @returns the strdiacasecmp result of the two extensions
+ */
 static int extmap_cmp(const void *map1, const void *map2)
 {
     const struct extmap *em1 = map1;
@@ -2418,6 +2510,12 @@ static int extmap_cmp(const void *map1, const void *map2)
     return strdiacasecmp(em1->em_ext, em2->em_ext);
 }
 
+/*!
+ * @brief Count and sort the extension map, and make its "." line the default
+ * mapping
+ *
+ * The empty extension of a "." line sorts first.
+ */
 static void sortextmap(void)
 {
     struct extmap   *em;
@@ -2444,6 +2542,9 @@ static void sortextmap(void)
     }
 }
 
+/*!
+ * @brief Free the extension map and clear the default mapping
+ */
 static void free_extmap(void)
 {
     struct extmap   *em;
@@ -2460,6 +2561,13 @@ static void free_extmap(void)
     }
 }
 
+/*!
+ * @brief Compare an extension with an extension map entry, for bsearch
+ *
+ * @param[in] key  extension without its dot
+ * @param[in] obj  map entry
+ * @returns the strdiacasecmp result of @p key and the entry extension
+ */
 static int ext_cmp_key(const void *key, const void *obj)
 {
     const char          *p = key;
@@ -2467,6 +2575,17 @@ static int ext_cmp_key(const void *key, const void *obj)
     return strdiacasecmp(p, em->em_ext);
 }
 
+/*!
+ * @brief Return the extension mapping for a file name
+ *
+ * The extension follows the last dot and matches by strdiacasecmp without
+ * regard to case. A name without an extension, or one that the map lacks,
+ * gets the default mapping.
+ *
+ * @param[in] path  file name
+ * @returns the mapping, or the default mapping, which is NULL without a "."
+ *          line
+ */
 struct extmap *getextmap(const char *path)
 {
     char      *p;
@@ -2491,11 +2610,27 @@ struct extmap *getextmap(const char *path)
     }
 }
 
+/*!
+ * @brief Return the default extension mapping, the "." line of the extension
+ * map
+ *
+ * @returns the mapping, or NULL without a "." line
+ */
 struct extmap *getdefextmap(void)
 {
     return Defextmap;
 }
 
+/*!
+ * @brief Read an extension map file and sort the map
+ *
+ * Each line whose first token starts with a dot maps that extension to a
+ * type and a creator, and the call ignores every other line. The "." line
+ * sets the default mapping.
+ *
+ * @param[in] file  path of the extension map file
+ * @returns 0, or -1 when the file cannot open or close
+ */
 static int readextmap(const char *file)
 {
     EC_INIT;
@@ -2534,7 +2669,12 @@ EC_CLEANUP:
  **************************************************************/
 
 /*!
- * Remove a volume from the linked list of volumes
+ * @brief Remove a volume from the volume list
+ *
+ * Removing the first volume empties the list, which drops the other volumes
+ * too.
+ *
+ * @param[in] volume  volume to remove
  */
 void volume_unlink(struct vol *volume)
 {
@@ -2558,10 +2698,12 @@ void volume_unlink(struct vol *volume)
 }
 
 /*!
- * @brief Free all resources allocated in a struct vol in load_afp_conf_vols()
+ * @brief Free a volume and the strings that loading it allocated
  *
- * Actually opening a volume (afp_openvol()) will allocate additional
- * resources which are freed in closevol()
+ * Opening a volume with afp_openvol allocates more, and closevol frees
+ * those.
+ *
+ * @param[in] vol  volume to free
  */
 void volume_free(struct vol *vol)
 {
@@ -2587,7 +2729,10 @@ void volume_free(struct vol *vol)
 }
 
 /*!
- * Load charsets for a volume
+ * @brief Load the Mac and volume charsets of a volume
+ *
+ * @param[in,out] vol  volume with the codepage names, receives the two charsets
+ * @returns 0, or -1 when a charset fails to load
  */
 int load_charset(struct vol *vol)
 {
@@ -2607,13 +2752,22 @@ int load_charset(struct vol *vol)
 }
 
 /*!
- * @brief Initialize volumes and load ini configfile
+ * @brief Load the volumes of afp.conf, or reload them after a change
  *
- * @param[in] obj      handle
- * @param[in] flags    flags controlling volume load behaviour:
- *                     - LV_DEFAULT: load shares in a user/session context, this honors authorization
- *                     - LV_ALL: load shares that are available in the config file
- *                     - LV_FORCE: reload file even though the timestamp wasn't changed
+ * An unchanged mtime returns at once unless flags holds LV_FORCE. The call
+ * reads afp.conf as root under a read lock, with 1 retry after a second. A
+ * failed open or lock leaves the reload state untouched. A reload marks every
+ * volume deleted, creates the volumes again, and frees the marked volumes
+ * that are not open.
+ *
+ * Without LV_ALL the volumes follow the session user, and a reload for a user
+ * other than root refreshes the groups of the user. With LV_ALL in an AFP
+ * session the call also rewrites the volume UUID file.
+ *
+ * @param[in,out] obj    AFP object with the options and the session user
+ * @param[in]     flags  LV_ALL to skip the user lookup and the access checks,
+ *                       LV_FORCE to reload an unchanged file, or LV_DEFAULT
+ * @returns 0, or -1 on error
  */
 int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
 {
@@ -2789,6 +2943,14 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Free every volume and reset the load state, so the next load reads
+ * afp.conf again
+ *
+ * The volume ID counter restarts at 0.
+ *
+ * @param[in,out] obj  AFP object whose stored afp.conf mtime resets
+ */
 void unload_volumes(AFPObj *obj)
 {
     struct vol *vol, *p;
@@ -2808,11 +2970,23 @@ void unload_volumes(AFPObj *obj)
     LOG(log_debug, logtype_afpd, "unload_volumes: END");
 }
 
+/*!
+ * @brief Return the head of the volume list, which holds open and closed
+ * volumes
+ *
+ * @returns the first volume, or NULL without volumes
+ */
 struct vol *getvolumes(void)
 {
     return Volumes;
 }
 
+/*!
+ * @brief Find an open volume by its volume ID
+ *
+ * @param[in] vid  volume ID
+ * @returns the volume, or NULL for an unknown ID or a volume that is not open
+ */
 struct vol *getvolbyvid(const uint16_t vid)
 {
     struct vol  *vol;
@@ -2889,28 +3063,33 @@ EC_CLEANUP:
     return pwd->pw_name;
 }
 /*!
- * @brief Search volume by path, creating user home vols as necessary
+ * @brief Find the volume that holds a path, or create the home volume for it
  *
- * Path may be absolute or relative. Ordinary volume structs are created when
- * the ini config is initially parsed (load_afp_conf_vols()), but user volumes are
- * as load_afp_conf_vols() only can create the user volume of the logged in user
- * in an AFP session in afpd, but not when called from e.g. dbd. dbd thus
- * needs a way to lookup and create struct vols for user home by path. This
- * is what this func does as well.
+ * Only the user of an AFP session gets a [Homes] volume from
+ * load_afp_conf_vols. The dbd and nad tools find or create one here, by its
+ * path. A relative path starts at the current directory. The call strips
+ * trailing slashes, and the first volume in list order whose path holds the
+ * path matches.
  *
- * 1. Search "normal" volume list
- * 2. Check if theres a [Homes] section, load_afp_conf_vols() remembers this for us
- * 3. If there is, match "path" with "basedir regex" to get the user home parent dir
- * 4. Built user home path by appending the basedir matched in (3) and appending the username
- * 5. The next path element then is the username
- *    - getvolbypath() assumes that the user home directory has the same name as the username.
- *      If that is not true, getuserbypath() is called and tries to retrieve the username
- *      from the directory owner, checking its validity
- * 6. Append [Homes]->path subdirectory if defined
- * 7. Create volume
+ * The steps follow the numbered code comments:
+ * 1. Search the volume list.
+ * 2. Require a [Homes] section, which load_afp_conf_vols records.
+ * 3. Match the path against the basedir regex.
+ * 4. Take the matched part as the base of the home path.
+ * 5. Take the next path element as the user name, or the owner of that
+ *    directory through getuserbypath for an unknown name.
+ * 6. Append the path option of [Homes].
+ * 7. Create the volume.
  *
- * @param[in,out] obj   handle
- * @param[in] path      path, may be relative or absolute
+ * Step 5 reads the user name at the match length, counted from the path
+ * start, so the regex has to match at the start. The call sets the user name
+ * of obj and the groups of the process to the home user. The regex compiles
+ * once per process.
+ *
+ * @param[in,out] obj   AFP object with the parsed afp.conf, receives the user
+ *                      name
+ * @param[in]     path  absolute or relative path
+ * @returns the volume, or NULL on error
  */
 struct vol *getvolbypath(AFPObj *obj, const char *path)
 {
@@ -3133,6 +3312,15 @@ EC_CLEANUP:
     return vol;
 }
 
+/*!
+ * @brief Find the first volume whose section name is a prefix of name
+ *
+ * The comparison stops at the length of the section name, so a section named
+ * "Data" also matches "Data2".
+ *
+ * @param[in] name  section name to look for
+ * @returns the volume, or NULL without a match
+ */
 struct vol *getvolbyname(const char *name)
 {
     struct vol *vol = NULL;
@@ -3149,8 +3337,12 @@ struct vol *getvolbyname(const char *name)
 }
 
 /*!
- * @brief Drop trailing slashes, which make lstat() and an O_NOFOLLOW open
- *        follow a final symbolic link
+ * @brief Drop trailing slashes, which make lstat and an O_NOFOLLOW open follow
+ * a final symbolic link
+ *
+ * A lone "/" stays.
+ *
+ * @param[in,out] path  path to trim
  */
 static void strip_trailing_slashes(char *path)
 {
@@ -3162,10 +3354,17 @@ static void strip_trailing_slashes(char *path)
 }
 
 /*!
- * @brief Whether a directory is the path of a volume the configuration names
+ * @brief Tell whether a directory is the path of a volume that afp.conf names
  *
  * A single-user server makes its [Global] vol dbpath owner-only, which would
- * close such a share to everyone else; logged when it is one.
+ * close such a share to everyone else. The call logs an error when the
+ * directory is a volume path. The [Homes] section and volume paths that do
+ * not exist do not count.
+ *
+ * @param[in] obj     AFP object with the parsed afp.conf
+ * @param[in] dbpath  directory to check
+ * @param[in] pwd     user entry for the variables in the volume paths
+ * @returns true when the directory is the path of a volume
  */
 static bool dbpath_is_volume_root(AFPObj *obj, const char *dbpath,
                                   const struct passwd *pwd)
@@ -3336,7 +3535,14 @@ static int user_state_paths(AFPObj *obj, bool singleuser)
     return 0;
 }
 
-/*! @brief Round size up to a power of two, as the kernel sizes a pipe */
+/*!
+ * @brief Round size up to a power of two, as the kernel sizes a pipe
+ *
+ * The result is at least SPLICE_SIZE_MIN, and a rounded size logs a note.
+ *
+ * @param[in] size  splice size from afp.conf
+ * @returns the rounded size
+ */
 static int splice_size_round(int size)
 {
     int pow2 = SPLICE_SIZE_MIN;
@@ -3355,7 +3561,18 @@ static int splice_size_round(int size)
 
 #define MAXVAL 1024
 /*!
- * Initialize an AFPObj and options from ini config file
+ * @brief Read afp.conf into the options of an AFP object
+ *
+ * The call loads afp.conf as root from the command line path or the default
+ * path, and keeps the parsed file in iniconfig of the object. It sets up
+ * logging first, then reads the Global options, the charsets, and the
+ * extension map. Last it bounds the timing and buffer values.
+ *
+ * @param[in,out] AFPObj       AFP object to configure
+ * @param[in]     processname  name for log lines, or NULL to keep the current
+ *                             one
+ * @returns 0, or -1 when afp.conf cannot load, a single-user server has no
+ *          usable vol dbpath, an allocation fails, or gethostname fails
  */
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 {
@@ -4053,7 +4270,14 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*! get rid of any allocated afp_option buffers. */
+/*!
+ * @brief Free the options that afp_config_parse allocated, with the extension
+ * map and the parsed afp.conf
+ *
+ * The call also clears the option flags and the charset names.
+ *
+ * @param[in,out] obj  AFP object to clear
+ */
 void afp_config_free(AFPObj *obj)
 {
     if (obj->options.configfile) {

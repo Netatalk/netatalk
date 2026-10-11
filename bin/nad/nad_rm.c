@@ -59,10 +59,13 @@ static char           *netatalk_dirs[] = {
 static int rm(const char *fpath, const struct stat *sb, int tflag,
               struct FTW *ftwbuf);
 
-/*
-  Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
-  Returns pointer to name or NULL.
-*/
+/*!
+ * @brief Tell whether a name is one of the netatalk folders .AppleDB and
+ * .AppleDesktop
+ *
+ * @param[in] name  entry name
+ * @returns the matching table entry, or NULL
+ */
 static const char *check_netatalk_dirs(const char *name)
 {
     const int max_dirs = 2;
@@ -76,11 +79,18 @@ static const char *check_netatalk_dirs(const char *name)
     return NULL;
 }
 
+/*!
+ * @brief Step the directory ID of the walk back to the parent after nftw leaves
+ * a directory
+ */
 static void upfunc(void)
 {
     did = pdid;
 }
 
+/*!
+ * @brief Print the usage of nad rm and exit with EXIT_FAILURE
+ */
 static void usage_rm(void)
 {
     printf(
@@ -95,6 +105,20 @@ static void usage_rm(void)
     exit(EXIT_FAILURE);
 }
 
+/*!
+ * @brief Run the nad rm command, which deletes entries with their CNIDs and
+ * AppleDouble data
+ *
+ * The -R option deletes directory trees, and -v prints each deleted entry.
+ * Each argument gets a fresh volume state and a depth-first walk. A shell
+ * glob can name a data file and its `._` file on adouble:ea, so a `._`
+ * argument that vanished with its data file passes quietly.
+ *
+ * @param[in] argc  argument count, from the rm command on
+ * @param[in] argv  argument vector, from the rm command on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, or 1 when an entry fails, while usage errors exit
+ */
 int nad_rm(int argc, char *argv[], AFPObj *obj)
 {
     int ch;
@@ -183,6 +207,24 @@ int nad_rm(int argc, char *argv[], AFPObj *obj)
     return rval;
 }
 
+/*!
+ * @brief Delete one entry during the depth-first nftw walk of nad rm
+ *
+ * Inside a volume the call deletes the CNID of the entry before it unlinks
+ * the entry. For a file it also deletes the AppleDouble data. Entries
+ * inside .AppleDouble on adouble:v2 skip the CNID step. A `._` file with a
+ * valid header on adouble:ea goes away as plain metadata. A directory needs
+ * -R, and devices, sockets, and FIFOs stay as errors.
+ *
+ * For .AppleDB and .AppleDesktop the call returns FTW_SKIP_SUBTREE. Since
+ * nad rm walks without FTW_ACTIONRETVAL, that value ends the walk.
+ *
+ * @param[in] path   entry path
+ * @param[in] statp  lstat result of the entry
+ * @param[in] tflag  nftw type flag
+ * @param[in] ftw    walk position, unused
+ * @returns 0 to go on, or a nonzero value that ends the walk
+ */
 static int rm(const char *path,
               const struct stat *statp,
               int tflag,

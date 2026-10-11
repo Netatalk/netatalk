@@ -61,15 +61,27 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
 static afp_child_t *asp_start(AFPObj *obj, server_child_t *server_children);
 static void asp_cleanup(const AFPObj *obj);
 
+/*!
+ * @brief Exit the master afpd
+ *
+ * @param[in] ret  exit status
+ */
 static void afp_exit(int ret)
 {
     exit(ret);
 }
 
-
-/* ------------------
-   initialize fd set we are waiting for.
-*/
+/*!
+ * @brief Allocate the event set of the master afpd and add the listening
+ * sockets
+ *
+ * The set has room for the connection limit, every DSI listener, and
+ * ASEV_THRESHHOLD more descriptors. Each call allocates a new set.
+ *
+ * @param[in] dsiconfig  server object with the DSI listeners
+ * @param[in] aspconfig  server object with the ASP socket
+ * @returns true, or false when the allocation or an add fails
+ */
 static bool init_listening_sockets(const AFPObj *dsiconfig,
                                    const AFPObj *aspconfig)
 {
@@ -103,6 +115,16 @@ static bool init_listening_sockets(const AFPObj *dsiconfig,
     return true;
 }
 
+/*!
+ * @brief Remove the listening sockets from the event set of the master afpd
+ *
+ * A configuration reload calls it before the listeners close. The ASP socket
+ * leaves only when aspconfig has one.
+ *
+ * @param[in] dsiconfig  server object with the DSI listeners
+ * @param[in] aspconfig  server object with the ASP socket
+ * @returns true, or false when a removal fails
+ */
 static bool reset_listening_sockets(const AFPObj *dsiconfig,
                                     const AFPObj *aspconfig)
 {
@@ -149,7 +171,16 @@ static void afp_end_sessions(void)
     }
 }
 
-/* ------------------ */
+/*!
+ * @brief Signal handler of the master afpd
+ *
+ * With AppleTalk the signal also goes to the ASP sessions. SIGTERM and SIGQUIT
+ * end every session and exit. SIGUSR1 refuses new logins, unloads the UAMs,
+ * and passes the shutdown notice to the sessions. SIGHUP and SIGCHLD only set
+ * flags for the main loop.
+ *
+ * @param[in] sig  signal number
+ */
 static void afp_goaway(int sig)
 {
 #ifndef NO_DDP
@@ -191,6 +222,12 @@ static void afp_goaway(int sig)
     return;
 }
 
+/*!
+ * @brief Reap every exited session child of the master afpd
+ *
+ * The call logs the exit status or the signal of each child. It removes the
+ * child from the session table and drops its IPC socket from the event set.
+ */
 static void child_handler(void)
 {
     int fd;
@@ -301,6 +338,14 @@ static int raise_nofile_to(const char *who, rlim_t target, rlim_t *out)
     return 0;
 }
 
+/*!
+ * @brief Raise the descriptor limit of the master afpd toward RLIM_MAX
+ *
+ * An unlimited soft limit, or one at RLIM_MAX already, stays. A result under
+ * RLIM_MAX logs a warning, because the fork table then holds half the limit.
+ *
+ * @returns 0, or -1 when getrlimit fails
+ */
 static int setlimits(void)
 {
     struct rlimit rlim;
@@ -335,6 +380,28 @@ static int setlimits(void)
     return 0;
 }
 
+/*!
+ * @brief Run the master afpd: read the configuration, open the listeners, and
+ * start a session per connection
+ *
+ * Startup parses the command line and afp.conf, daemonizes without -d, and
+ * ignores SIGPIPE and SIGXFSZ. The afp_goaway handler takes SIGCHLD, SIGUSR1,
+ * SIGHUP, SIGTERM, and SIGQUIT. The master then opens the listeners and the
+ * afpstats socket and raises the descriptor limit. Each loop pass runs 5
+ * steps:
+ *
+ * 1. Reap exited children after SIGCHLD.
+ * 2. Retry poll after EINTR, and leave the loop on another poll error.
+ * 3. Reload the configuration after SIGHUP and pass SIGHUP to the sessions.
+ * 4. Fork a session for each new connection, read the IPC messages of the
+ *    sessions, and answer afpstats clients.
+ * 5. Pass buffered cache hints to the sessions once 50 ms passed or the
+ *    buffer filled.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns 0 after a poll error other than EINTR
+ */
 int main(int ac, char **av)
 {
     struct sigaction	sv;
@@ -751,6 +818,19 @@ static void master_out_of_fds(const server_child_t *children)
     afp_exit(EXITERR_SYS);
 }
 
+/*!
+ * @brief Accept a DSI connection and fork its session
+ *
+ * The child keeps only its DSI from the master configuration and runs
+ * afp_over_dsi, which never returns. In the master, a failure for lack of
+ * descriptors counts toward the restart in master_out_of_fds, and a started
+ * session ends that count.
+ *
+ * @param[in,out] obj              server object
+ * @param[in]     dsi              listener with the pending connection
+ * @param[in,out] server_children  session table
+ * @returns the new session entry, or NULL when no session started
+ */
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
                               server_child_t *server_children)
 {
@@ -778,6 +858,16 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
     return child;
 }
 #ifndef NO_DDP
+/*!
+ * @brief Accept an ASP connection and fork its session
+ *
+ * The child runs afp_over_asp and exits. A failed asp_getsession exits the
+ * master afpd with EXITERR_CLNT.
+ *
+ * @param[in,out] obj              server object with the ASP listener
+ * @param[in,out] active_children  session table
+ * @returns the session entry from asp_getsession
+ */
 static afp_child_t *asp_start(AFPObj *obj, server_child_t *active_children)
 {
     ASP asp;
@@ -796,6 +886,12 @@ static afp_child_t *asp_start(AFPObj *obj, server_child_t *active_children)
 
     return child;
 }
+
+/*!
+ * @brief Stop the ASP tickle timer and unregister the NBP name of the server
+ *
+ * @param[in] obj  server object with the registered name
+ */
 static void asp_cleanup(const AFPObj *obj)
 {
     /* we need to stop tickle handler */

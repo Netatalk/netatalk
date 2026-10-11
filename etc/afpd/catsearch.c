@@ -130,6 +130,13 @@ struct catsearch_spec_layout {
     int has_pdinfo;
 };
 
+/*!
+ * @brief Add to a specification length without wrapping around
+ *
+ * @param[in,out] len  length so far
+ * @param[in]     add  bytes to add
+ * @returns 0, or AFPERR_PARAM when the sum would overflow size_t
+ */
 static int catsearch_spec_addlen(size_t *len, size_t add)
 {
     if (*len > (size_t) -1 - add) {
@@ -140,6 +147,23 @@ static int catsearch_spec_addlen(size_t *len, size_t add)
     return 0;
 }
 
+/*!
+ * @brief Compute the fixed part of an FPCatSearch specification from the
+ * request bitmap
+ *
+ * Each criterion bit of rbitmap adds the size of its field. The long name and
+ * the UTF-8 name add their offset fields and record where those sit. The
+ * offspring count bit adds a field only for a search of directories alone.
+ * For files alone it means the resource fork length, which adds nothing. With
+ * both bitmaps it is an error.
+ *
+ * @param[in]  fbitmap  file bitmap of the request
+ * @param[in]  dbitmap  directory bitmap of the request
+ * @param[in]  rbitmap  request bitmap of the criteria
+ * @param[out] layout   fixed length and name field offsets
+ * @returns 0, AFPERR_BITMAP for an offspring count with both bitmaps, or
+ *          AFPERR_PARAM on overflow
+ */
 static int catsearch_spec_layout(uint16_t fbitmap, uint16_t dbitmap,
                                  uint32_t rbitmap,
                                  struct catsearch_spec_layout *layout)
@@ -230,6 +254,20 @@ static int catsearch_spec_layout(uint16_t fbitmap, uint16_t dbitmap,
     return 0;
 }
 
+/*!
+ * @brief Check that a specification record holds its fixed part and the names
+ * it points to
+ *
+ * The long name offset must point at a length byte whose name fits in the
+ * record. The UTF-8 name offset must leave room for the 4-byte encoding hint,
+ * the 2-byte length, and the name. A UTF-8 name length above
+ * UTF8FILELEN_EARLY counts as UTF8FILELEN_EARLY.
+ *
+ * @param[in] spec      specification record, past its length field
+ * @param[in] spec_len  length of the record
+ * @param[in] layout    layout from catsearch_spec_layout
+ * @returns 0, or AFPERR_PARAM when a field lies outside the record
+ */
 static int catsearch_validate_spec(const unsigned char *spec, size_t spec_len,
                                    const struct catsearch_spec_layout *layout)
 {
@@ -290,7 +328,17 @@ static void clearstack(void)
     }
 }
 
-/*! Puts new item onto directory stack. */
+/*!
+ * @brief Push a directory onto the search stack
+ *
+ * The stack grows in steps of DS_BSIZE entries. A failed growth clears the
+ * stack and frees its memory.
+ *
+ * @param[in] uname  unused
+ * @param[in] dir    directory to search later
+ * @param[in] pidx   unused
+ * @returns 0, or -1 when realloc fails
+ */
 static int addstack(char *uname _U_, struct dir *dir, int pidx _U_)
 {
     struct dsitem *ds;
@@ -343,9 +391,19 @@ static int reducestack(void)
 }
 
 /*!
- * Looks up for an opened adouble structure,
- * opens resource fork of selected file.
-*/
+ * @brief Get the AppleDouble metadata of a search candidate once
+ *
+ * A non-NULL adp means an earlier criterion loaded the metadata already. An
+ * open fork of the file supplies its adouble, which also fills a dircache
+ * entry without metadata. Any other candidate reads through
+ * ad_metadata_cached into a static adouble.
+ *
+ * @param[in] vol   volume of the search
+ * @param[in] path  candidate with its stat result
+ * @param[in] adp   metadata from an earlier call, or NULL
+ * @returns adp, the adouble of an open fork, the static adouble, or NULL
+ *          without metadata
+ */
 static struct adouble *adl_lkup(struct vol *vol, struct path *path,
                                 struct adouble *adp)
 {
@@ -391,7 +449,18 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
     return adp;
 }
 
-/* -------------------- */
+/*!
+ * @brief Split packed Finder info into the type, creator, flags, and label that
+ * FPCatSearch compares
+ *
+ * The Finder flags word lands in both attrs and label, attrs masked with
+ * 0xff00 and label with 0xff. The search criteria pass through the same
+ * split. All fields keep their byte order.
+ *
+ * @param[out] finfo   unpacked fields
+ * @param[in]  buffer  32-byte Finder info
+ * @returns finfo
+ */
 static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
 {
     memcpy(&finfo->f_type,  buffer + FINDERINFO_FRTYPEOFF, sizeof(finfo->f_type));
@@ -405,7 +474,17 @@ static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
     return finfo;
 }
 
-/* -------------------- */
+/*!
+ * @brief Unpack the Finder info of a search candidate, loading its metadata on
+ * first use
+ *
+ * @param[in]     vol    volume of the search
+ * @param[in]     path   candidate
+ * @param[in,out] adp    metadata of the candidate, loaded through adl_lkup
+ * @param[out]    finfo  unpacked fields
+ * @param[in]     islnk  nonzero for a symlink, passed to get_finderinfo
+ * @returns finfo
+ */
 static struct finderinfo *
 unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp,
                   struct finderinfo *finfo, int islnk)
@@ -420,13 +499,21 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp,
 /* -------------------- */
 #define CATPBIT_PARTIAL 31
 /*!
- * @brief Criteria checker.
- * @returns a 2-bit value.
- * - bit 0 means if checked file meets given criteria.
- * - bit 1 means if it is a directory and we should descent into it.
- *   - uname - UNIX name
- *   - fname - our fname (translated to UNIX)
- *   - cidx - index in directory stack
+ * @brief Test a search candidate against the FPCatSearch criteria
+ *
+ * A directory needs a directory bitmap and a file a file bitmap. A file gets
+ * its Mac name first, through a CNID lookup when the name needs one. The
+ * cheap tests run first: the names, then the modification date. The tests
+ * that need the AppleDouble metadata follow: the creation and backup dates,
+ * the attributes, and the Finder info fields.
+ *
+ * Each range test uses c1 as the lower bound and c2 as the upper one. Each
+ * mask test applies the bits of c2 and expects the value in c1.
+ *
+ * @param[in]     vol   volume of the search
+ * @param[in,out] path  candidate, receives its Mac name and CNID
+ * @returns 1 for a match, 0 otherwise, or -1 when a CNID database reset makes
+ *          the search fail
  */
 static int crit_check(struct vol *vol, struct path *path)
 {
@@ -644,7 +731,21 @@ crit_check_ret:
     return result;
 }
 
-/* ------------------------------ */
+/*!
+ * @brief Append one FPCatSearch result record to the reply
+ *
+ * A record holds its length, the file or directory flag, a filler byte for
+ * FPCatSearchExt, and the parameters of the request bitmap. FPCatSearchExt
+ * uses a 2-byte length and FPCatSearch a 1-byte one. An odd parameter length
+ * counts 1 more byte to stay even.
+ *
+ * @param[in]     obj   session object
+ * @param[in]     vol   volume of the search
+ * @param[in]     path  matched file or directory
+ * @param[in,out] buf   reply cursor, advanced past the record
+ * @param[in]     ext   nonzero for FPCatSearchExt
+ * @returns 1 for an added record, or 0 when getfilparams or getdirparams fails
+ */
 static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
                     char **buf, int ext)
 {
@@ -701,19 +802,30 @@ static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
 #define NUM_ROUNDS 200
 
 /*!
- * @brief This function performs a filesystem search
+ * @brief Search the directory tree of a volume for FPCatSearch, resuming at a
+ * saved position
  *
- * Uses globals c1, c2, the search criteria
+ * The criteria come from the globals c1 and c2. A stack of directory IDs
+ * replaces recursion, and the open directory and its position survive
+ * between calls. A position of 0 starts a new search from dir. Any other
+ * position must equal the one that the last call returned.
  *
- * @param[in] obj       AFP connection object
- * @param[in] vol       volume we are searching on ...
- * @param[in,out] dir   directory we are starting from ...
- * @param[in] rmatches  maximum number of matches we can return
- * @param[in] pos       position we've stopped recently
- * @param[out] rbuf     output buffer
- * @param[out] nrecs    number of matches
- * @param[out] rsize    length of data written to output buffer
- * @param[in] ext       extended search flag
+ * A call pauses after rmatches matches or 448 bytes of results. Every 200
+ * entries it also pauses once the clock moved past its start second, because
+ * Mac OS 9 clients time out on slow commands. Unreadable directories drop out
+ * of the search.
+ *
+ * @param[in]     obj       session object
+ * @param[in]     vol       volume to search
+ * @param[in,out] dir       directory to start from
+ * @param[in]     rmatches  maximum number of matches to return
+ * @param[in,out] pos       catalog position, 0 for a new search
+ * @param[out]    rbuf      result records
+ * @param[in,out] nrecs     match count, raised for each record added
+ * @param[out]    rsize     length of the result records
+ * @param[in]     ext       nonzero for FPCatSearchExt
+ * @returns AFP_OK after a pause, AFPERR_EOF at the end of the tree,
+ *          AFPERR_CATCHNG for a stale position, AFPERR_NFILE, or AFPERR_MISC
  */
 static int catsearch(const AFPObj *obj,
                      struct vol *vol,
@@ -958,20 +1070,25 @@ catsearch_end:
 } /* catsearch() */
 
 /*!
- * @brief This function performs a CNID db search
+ * @brief Search the CNID database by name for an FPCatSearch request
  *
- * Uses globals c1, c2, the search criteria
- * Always searches the whole volume, not a subtree
+ * A new search looks up the CNIDs of the lowercased uname through cnid_find.
+ * Each call then resolves, stats, and tests the next CNIDs against the
+ * criteria in c1 and c2. The search always covers all of the volume. A call
+ * pauses after rmatches matches or 448 bytes of results. A CNID that no
+ * longer resolves drops out, but a missing file fails the search.
  *
- * @param[in] obj       AFP connection object
- * @param[in] vol       volume we are searching on ...
- * @param[in] uname     UNIX name of object to search
- * @param[in] rmatches  maximum number of matches we can return
- * @param[in] pos       position we've stopped recently
- * @param[out] rbuf     output buffer
- * @param[out] nrecs    number of matches
- * @param[out] rsize    length of data written to output buffer
- * @param[in] ext       extended search flag
+ * @param[in]     obj       session object
+ * @param[in]     vol       volume to search
+ * @param[in]     uname     name on disk to look up
+ * @param[in]     rmatches  maximum number of matches to return
+ * @param[in,out] pos       catalog position, 0 for a new search
+ * @param[out]    rbuf      result records
+ * @param[in,out] nrecs     match count, raised for each record added
+ * @param[out]    rsize     length of the result records
+ * @param[in]     ext       nonzero for FPCatSearchExt
+ * @returns AFP_OK after a pause, AFPERR_EOF after the last CNID, AFPERR_CATCHNG
+ *          for a stale position, or AFPERR_MISC
  */
 static int catsearch_db(const AFPObj *obj,
                         struct vol *vol,
@@ -1137,7 +1254,25 @@ catsearch_end:
     return result;
 }
 
-/* -------------------------- */
+/*!
+ * @brief Parse an FPCatSearch or FPCatSearchExt request and run the search
+ *
+ * The request carries the volume, the match limit, the catalog position, the
+ * file and directory bitmaps, the request bitmap, and 2 specification records.
+ * The first record holds the values and range minimums, the second the range
+ * maximums and masks. FPCatSearch returns only the name and the parent ID. A
+ * full UTF-8 name search on a volume with AFPVOL_SEARCHDB uses the CNID
+ * database, and every other search walks the tree. The reply starts with the
+ * new catalog position, the bitmaps, and the match count.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @param[in]  ext      nonzero for FPCatSearchExt
+ * @returns the search result, AFPERR_BITMAP, or AFPERR_PARAM
+ */
 static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen, int ext)
 {
@@ -1422,14 +1557,34 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     return ret;
 } /* catsearch_afp */
 
-/* -------------------------- */
+/*!
+ * @brief FPCatSearch: search a volume for files and directories that match the
+ * criteria
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the result of catsearch_afp
+ */
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen,
                   char *rbuf, size_t *rbuflen)
 {
     return catsearch_afp(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
-
+/*!
+ * @brief FPCatSearchExt: search a volume for matching files and directories,
+ * with the full result bitmaps
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the result of catsearch_afp
+ */
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen,
                       char *rbuf, size_t *rbuflen)
 {

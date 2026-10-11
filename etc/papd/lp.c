@@ -104,6 +104,17 @@
 #endif
 
 #ifndef HAVE_RRESVPORT
+/*!
+ * @brief Open a TCP socket bound to a reserved port, for systems without
+ * rresvport()
+ *
+ * The search starts at *alport, clamped to 512 to 1023, and counts down.
+ * Below 512 it goes on at 1023. It ends at the first port that binds or after
+ * a full circle. A bind error other than EADDRINUSE ends it early.
+ *
+ * @param[in,out] alport  port to start at, receives the bound port
+ * @returns the socket, or -1 with errno set
+ */
 int
 rresvport(int *alport)
 {
@@ -190,12 +201,27 @@ static struct lp {
 #define LP_QUEUE	(1<<4)
 #define LP_JOBPENDING	(1<<5)
 
+/*!
+ * @brief Record the driver that made the job, as guess_creator reports it
+ *
+ * @param[in] origin  1 for an Apple LaserWriter driver, 2 for cgpdftops, or 0
+ */
 void lp_origin(int origin)
 {
     lp.lp_origin = origin;
 }
 
-/* the converted string should always be shorter, but ... FIXME! */
+/*!
+ * @brief Decode the backslash escapes of a DSC comment value in place
+ *
+ * With a source charset, a `\ddd` octal escape becomes its byte, and one of 0
+ * or of 0xff and above becomes a period. Every other escape, a backslash and
+ * the next character, becomes a period, as does every escape without a source
+ * charset. The result is never longer than the input.
+ *
+ * @param[in,out] string  NUL-terminated value
+ * @param[in]     dest    source charset of the value, or 0 when unknown
+ */
 static void convert_octal(char *string, charset_t dest)
 {
     unsigned char *p, *q;
@@ -238,6 +264,17 @@ static void convert_octal(char *string, charset_t dest)
 }
 
 
+/*!
+ * @brief Decode the escapes of a DSC comment value and convert it to another
+ * charset
+ *
+ * Without a source charset the value keeps its bytes after convert_octal. A
+ * failed conversion keeps the decoded value.
+ *
+ * @param[in]     from    charset of the value, or 0 when unknown
+ * @param[in]     dest    target charset
+ * @param[in,out] option  value, replaced by the converted allocation
+ */
 static void translate(charset_t from, charset_t dest, char **option)
 {
     char *translated;
@@ -256,6 +293,15 @@ static void translate(charset_t from, charset_t dest, char **option)
 }
 
 
+/*!
+ * @brief Convert the job name, the user name the job is for, and the person to
+ * a charset
+ *
+ * The source charset comes from lp_origin: Mac Roman for 1 and decomposed
+ * UTF-8 for 2. With any other origin only the escapes change.
+ *
+ * @param[in] dest  target charset
+ */
 static void lp_setup_comments(charset_t dest)
 {
     charset_t from = 0;
@@ -395,6 +441,14 @@ static char *pipexlate(char *src)
 }
 #endif
 
+/*!
+ * @brief Record the authenticated user of the job
+ *
+ * The name sets the user of the printer command, the owner of the spool file,
+ * and the user of the lpd or CUPS job. A failed allocation exits papd.
+ *
+ * @param[in] person  user name
+ */
 void lp_person(char *person)
 {
     if (lp.lp_person != NULL) {
@@ -428,6 +482,14 @@ int lp_pagecost(void)
 }
 #endif /* ABS_PRINT */
 
+/*!
+ * @brief Record a host name for the job, a value that only the log line reads
+ *
+ * No caller sets it, and lp_print writes the server host name instead. A
+ * failed allocation exits papd.
+ *
+ * @param[in] host  host name
+ */
 void lp_host(char *host)
 {
     if (lp.lp_host != NULL) {
@@ -443,11 +505,14 @@ void lp_host(char *host)
     LOG(log_debug, logtype_papd, "host: %s", lp.lp_host);
 }
 
-/* Currently lp_job and lp_for will not handle the
- * conversion of macroman chars > 0x7f correctly
- * This should be added.
+/*!
+ * @brief Record the job name from the `%%Title:` header comment
+ *
+ * Pipe and CUPS jobs convert the name with lp_setup_comments, and lpd jobs
+ * write it unchanged.
+ *
+ * @param[in] job  job name
  */
-
 void lp_job(char *job)
 {
     if (lp.lp_job != NULL) {
@@ -458,6 +523,13 @@ void lp_job(char *job)
     LOG(log_debug9, logtype_papd, "job: %s", lp.lp_job);
 }
 
+/*!
+ * @brief Record the user name the job is for, from the `%%For:` header comment
+ *
+ * A CUPS job without an authenticated user goes out under this name.
+ *
+ * @param[in] lpfor  user name
+ */
 void lp_for(char *lpfor)
 {
     if (lp.lp_created_for != NULL) {
@@ -468,6 +540,24 @@ void lp_for(char *lpfor)
 }
 
 
+/*!
+ * @brief Prepare the job state when the spool file first opens
+ *
+ * A printer with authentication needs an authenticated user. CAP style
+ * authentication reads the user name from a file whose name holds the net and
+ * node of the client. The file lives in the directory of the ca option. Print
+ * UAM authentication counts when lp_person holds a name. A second call aborts
+ * papd.
+ *
+ * An lpd printer refuses jobs while the mode of its lock file has the 010
+ * bit. Its job number comes from the .seq file, which counts modulo 1000. A
+ * CUPS printer refuses jobs when cups_get_printer_status reports queuing as
+ * off, and like a pipe printer it uses the process ID as the job number.
+ *
+ * @param[in,out] out  reply buffer, receives the error for the client
+ * @param[in]     sat  client address
+ * @returns 0, or -1 after an error for the client
+ */
 static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 {
     int		authenticated = 0;
@@ -659,6 +749,19 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
     return 0;
 }
 
+/*!
+ * @brief Open the spool file of a job, or the pipe to the printer command
+ *
+ * A pending job prints first, and the first call runs lp_init. A pipe printer
+ * switches the process to the authenticated user for good and converts the
+ * header values to the Unix charset. It then starts the printer command with
+ * popen. A spooling printer creates the next data file, such as
+ * `dfA042hostname`, owned by the user or the printer operator.
+ *
+ * @param[in,out] out  reply buffer, receives the error for the client
+ * @param[in]     sat  client address
+ * @returns 0, or -1 when the job cannot open or is open already
+ */
 int lp_open(struct papfile *out, struct sockaddr_at *sat)
 {
     char	name[MAXPATHLEN];
@@ -776,6 +879,14 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
     return 0;
 }
 
+/*!
+ * @brief Close the spool file or the pipe of the job and mark the job pending
+ *
+ * The next lp_print, lp_open, or lp_write sends the pending job to the
+ * printer.
+ *
+ * @returns 0
+ */
 int lp_close(void)
 {
     if ((lp.lp_flags & LP_INIT) == 0 || (lp.lp_flags & LP_OPEN) == 0) {
@@ -791,6 +902,20 @@ int lp_close(void)
 
 
 
+/*!
+ * @brief Write job data to the spool file or the printer pipe
+ *
+ * A pending job prints first. Until the spool file opens, the data waits in a
+ * 32 KiB buffer. Past half of it the call sets PF_STW, so the job loop opens
+ * the file. With P_FOOMATIC_HACK, header lines that carry PF_TRANSLATE
+ * get an LF line end in place of a CR. A full buffer or a failed write aborts
+ * papd.
+ *
+ * @param[in,out] in   input buffer of the job, receives PF_STW
+ * @param[in]     buf  data
+ * @param[in]     len  length of data
+ * @returns 0
+ */
 int lp_write(struct papfile *in, char *buf, size_t len)
 {
 #define BUFSIZE 32768
@@ -875,6 +1000,14 @@ int lp_write(struct papfile *in, char *buf, size_t len)
     return 0;
 }
 
+/*!
+ * @brief Cancel the job of the session by closing and deleting its spool data
+ * files
+ *
+ * A pipe printer has no data files, so the call returns at once.
+ *
+ * @returns 0, or -1 when a file name is too long
+ */
 int lp_cancel(void)
 {
     char	name[MAXPATHLEN];
@@ -907,10 +1040,20 @@ int lp_cancel(void)
 }
 
 /*!
- * @brief Create printcap control file, signal printer.
- * @note Errors here should remove queue files.
+ * @brief Hand the spooled job to the print system
  *
- * XXX piped?
+ * The call closes the spool file first. For lpd it writes a control file with
+ * the host, the user, the job name, and the data files. It links the file into
+ * place as cfA and tells lpd through its Unix socket to start the queue.
+ *
+ * For CUPS it converts the header values to the CUPS charset and submits the
+ * data file. The job runs as the authenticated user, the user the job is for,
+ * or the operator, in that order. The call deletes the data file afterwards.
+ * A pipe printer needs nothing here.
+ *
+ * Errors only log, and the spool and control files stay.
+ *
+ * @returns 0
  */
 int lp_print(void)
 {

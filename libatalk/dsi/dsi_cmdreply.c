@@ -13,9 +13,17 @@
 #include <atalk/dsi.h>
 #include <atalk/logger.h>
 
-/* this assumes that the reply follows right after the command, saving
- * on a couple assignments. specifically, command, requestID, and
- * reserved field are assumed to already be set. */
+/*!
+ * @brief Send the reply to the current DSICommand with result code err
+ *
+ * The reply reuses the request header, so command, request ID, and reserved
+ * field stay as the request left them. The payload is the datalen bytes of
+ * the data buffer.
+ *
+ * @param[in,out] dsi  DSI session with the reply payload in its data buffer
+ * @param[in]     err  AFP result code
+ * @returns 1, or 0 when the send failed
+ */
 int dsi_cmdreply(DSI *dsi, const int err)
 {
     int ret;

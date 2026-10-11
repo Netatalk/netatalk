@@ -58,6 +58,12 @@
 /* hash/child functions: hash OR's pid */
 #define HASH(i) ((((i) >> 8) ^ (i)) & (CHILD_HASHSIZE - 1))
 
+/*!
+ * @brief Link a child at the head of its hash chain, keyed by pid
+ *
+ * @param[in,out] htable  hash table of the children
+ * @param[in,out] child   child to link
+ */
 static inline void hash_child(afp_child_t **htable, afp_child_t *child)
 {
     afp_child_t **table;
@@ -71,6 +77,11 @@ static inline void hash_child(afp_child_t **htable, afp_child_t *child)
     child->afpch_prevp = table;
 }
 
+/*!
+ * @brief Unlink a child from its hash chain, when it is in one
+ *
+ * @param[in,out] child  child to unlink
+ */
 static inline void unhash_child(afp_child_t *child)
 {
     if (child->afpch_prevp) {
@@ -82,6 +93,13 @@ static inline void unhash_child(afp_child_t *child)
     }
 }
 
+/*!
+ * @brief Find the child entry of a session process by pid
+ *
+ * @param[in] childs  child table
+ * @param[in] pid     process ID of the session
+ * @returns the child, or NULL for an unknown pid
+ */
 afp_child_t *server_child_resolve(server_child_t *childs, id_t pid)
 {
     afp_child_t *child;
@@ -96,7 +114,12 @@ afp_child_t *server_child_resolve(server_child_t *childs, id_t pid)
     return child;
 }
 
-/*! initialize server_child structure */
+/*!
+ * @brief Allocate an empty child table with a session limit
+ *
+ * @param[in] connections  maximum number of sessions
+ * @returns the table, or NULL when calloc fails
+ */
 server_child_t *server_child_alloc(int connections)
 {
     server_child_t *children;
@@ -110,8 +133,18 @@ server_child_t *server_child_alloc(int connections)
 }
 
 /*!
- * @brief add a child
- * @returns pointer to struct server_child_data on success, NULL on error
+ * @brief Add a session process to the child table
+ *
+ * The call refuses a new child at the session limit and a process that
+ * already exited. A pid already in the table returns its entry, which keeps
+ * its descriptors.
+ *
+ * @param[in,out] children  child table
+ * @param[in]     pid       process ID of the session
+ * @param[in]     ipc_fd    IPC socket of the session
+ * @param[in]     hint_fd   write end of the hint pipe of the session, or -1
+ * @returns the child, or NULL at the session limit, for a missing process, or
+ *          when calloc fails
  */
 afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd,
                               int hint_fd)
@@ -153,7 +186,16 @@ exit:
     return child;
 }
 
-/*! remove a child and free it */
+/*!
+ * @brief Remove a session process from the child table and free its entry
+ *
+ * The call closes the IPC socket and the hint pipe of the session. It returns
+ * the closed IPC descriptor, so child_handler can drop it from the poll set.
+ *
+ * @param[in,out] children  child table
+ * @param[in]     pid       process ID of the session
+ * @returns the closed IPC descriptor, or -1 for an unknown pid
+ */
 int server_child_remove(server_child_t *children, pid_t pid)
 {
     int fd;
@@ -199,10 +241,11 @@ int server_child_remove(server_child_t *children, pid_t pid)
 }
 
 /*!
- * @brief free everything
+ * @brief Free the child table with its entries, and close their descriptors
  *
- * by using a hash table, this increases the cost of
- * this part over a linked list by the size of the hash table
+ * The walk visits all CHILD_HASHSIZE slots of the hash table.
+ *
+ * @param[in] children  child table
  */
 void server_child_free(server_child_t *children)
 {
@@ -246,7 +289,12 @@ void server_child_free(server_child_t *children)
     free(children);
 }
 
-/*! send signal to all child processes */
+/*!
+ * @brief Send a signal to every session process in the child table
+ *
+ * @param[in] children  child table
+ * @param[in] sig       signal number
+ */
 void server_child_kill(server_child_t *children, int sig)
 {
     afp_child_t *child, *tmp;
@@ -263,7 +311,13 @@ void server_child_kill(server_child_t *children, int sig)
     }
 }
 
-/*! send kill to a child processes */
+/*!
+ * @brief Send SIGTERM to a session process, or SIGKILL when an earlier call
+ * sent SIGTERM
+ *
+ * @param[in,out] child  child entry, marked after the SIGTERM
+ * @returns 1
+ */
 static int kill_child(afp_child_t *child)
 {
     if (!child->afpch_killed) {
@@ -281,8 +335,18 @@ static int kill_child(afp_child_t *child)
 }
 
 /*!
- * @brief Store an opaque reconnect token for a child session
- * @returns 0 on success, -1 on error
+ * @brief Store the reconnect token of a session in a new buffer
+ *
+ * The token replaces an older one, which the call wipes first. The call
+ * refuses a token whose uid differs from the uid of the session.
+ *
+ * @param[in,out] children   child table
+ * @param[in]     pid        process ID of the session
+ * @param[in]     uid        user ID that the session reports
+ * @param[in]     token      opaque token
+ * @param[in]     token_len  length of token
+ * @returns 0, or -1 for an empty token, an unknown pid, another user, or a
+ *          failed malloc
  */
 int server_child_set_session_token(server_child_t *children, pid_t pid,
                                    uid_t uid, const void *token,
@@ -334,9 +398,21 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Try to find an old session and pass socket
- * @returns -1 on error, 0 if no matching session was found,
- *          1 if session was found and socket passed
+ * @brief Pass the socket of a reconnecting client to the session that holds its
+ * token
+ *
+ * Each token comparison runs in constant time. The old session has to be
+ * logged in as the same user. The call sends the DSI request ID and the
+ * socket over the IPC socket of that session, and then SIGURG.
+ *
+ * @param[in] children       child table
+ * @param[in] uid            user ID of the new session
+ * @param[in] token          reconnect token from the client
+ * @param[in] token_len      length of token
+ * @param[in] afp_socket     client socket to pass
+ * @param[in] DSI_requestID  request ID of the reconnect request
+ * @returns 1 after a transfer, 0 without a usable session, or -1 when the
+ *          transfer fails
  */
 int server_child_transfer_session(server_child_t *children,
                                   uid_t uid,
@@ -399,9 +475,20 @@ EC_CLEANUP:
 
 
 /*!
- * @brief see if there is a process for the same mac
+ * @brief Record the client ID of a session, and end the sessions of the same
+ * client from before a reboot
  *
- * if the times don't match mac has been rebooted
+ * Another session with the same client ID and another boot time belongs to a
+ * client that rebooted. The call ends it through kill_child when it has the
+ * same user. The entry of pid takes ownership of id and records the boot
+ * time and the user.
+ *
+ * @param[in,out] children  child table
+ * @param[in]     pid       process ID of the session
+ * @param[in]     uid       user ID of the session
+ * @param[in]     idlen     length of id
+ * @param[in]     id        client ID, owned by the table afterwards
+ * @param[in]     boottime  boot time that the client reports
  */
 void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
                                  uid_t uid, uint32_t idlen, char *id, uint32_t boottime)
@@ -455,6 +542,15 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
     }
 }
 
+/*!
+ * @brief Mark the entry of a session as logged in, with its user and client
+ * address
+ *
+ * @param[in,out] children        child table
+ * @param[in]     pid             process ID of the session
+ * @param[in]     uid             user ID of the session
+ * @param[in]     client_address  client address, or NULL
+ */
 void server_child_login_done(server_child_t *children, pid_t pid,
                              uid_t uid, const char *client_address)
 {

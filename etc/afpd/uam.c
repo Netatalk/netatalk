@@ -41,7 +41,17 @@
 
 /* --- server uam functions -- */
 
-/* uam_load. uams must have a uam_setup function. */
+/*!
+ * @brief Load a UAM module and run its setup function
+ *
+ * The module must export a server module structure named after the file name
+ * without its extension, and that structure must carry a uam_setup function.
+ *
+ * @param[in] obj   server object passed to uam_setup
+ * @param[in] path  path of the module file
+ * @param[in] name  file name of the module
+ * @returns the loaded module, or NULL when loading or setup fails
+ */
 struct uam_mod *uam_load(AFPObj *obj, const char *path, const char *name)
 {
     char buf[MAXPATHLEN + 1], *p;
@@ -96,8 +106,12 @@ uam_load_fail:
     return NULL;
 }
 
-/* unload the module. we check for a cleanup function, but we don't
- * die if one doesn't exist. however, things are likely to leak without one.
+/*!
+ * @brief Run the cleanup function of a UAM module, close it, and free its entry
+ *
+ * A module without a cleanup function still closes, but it may leak.
+ *
+ * @param[in] mod  loaded module
  */
 void uam_unload(struct uam_mod *mod)
 {
@@ -110,7 +124,21 @@ void uam_unload(struct uam_mod *mod)
 }
 
 /* -- client-side uam functions -- */
-/* set up stuff for this uam. */
+/*!
+ * @brief Register a UAM of a module under a name and type
+ *
+ * The variadic arguments carry the handlers of the type: login, logincont,
+ * and logout for UAM_SERVER_LOGIN, plus login_ext for UAM_SERVER_LOGIN_EXT,
+ * or the change function for UAM_SERVER_CHANGEPW. A second registration from
+ * the same module only raises its count.
+ *
+ * @param[in] type  UAM type
+ * @param[in] path  path of the module that registers
+ * @param[in] name  UAM name, kept by pointer
+ * @param[in] ...   handlers of the type
+ * @returns 0, -1 when another module holds the name or an allocation fails, or
+ *          1 for an unknown type
+ */
 int uam_register(const int type, const char *path, const char *name, ...)
 {
     va_list ap;
@@ -191,6 +219,12 @@ int uam_register(const int type, const char *path, const char *name, ...)
     return ret;
 }
 
+/*!
+ * @brief Drop a registration of a UAM and free the UAM after its last one
+ *
+ * @param[in] type  UAM type
+ * @param[in] name  UAM name
+ */
 void uam_unregister(const int type, const char *name)
 {
     struct uam_obj *uam;
@@ -211,10 +245,18 @@ void uam_unregister(const int type, const char *name)
 }
 
 /*!
- * @brief helper functions for plugin uams
- * @param private pointer to AFPObj
- * @param name    user name
- * @param len     size of name buffer.
+ * @brief Find the password entry of a login name for a UAM
+ *
+ * The call tries getpwnam first, then the name with the AD domain or the NT
+ * domain prefix. A last pass compares the name, without case, against the
+ * login name and the first gecos field of every account. A match writes the
+ * login name back into name.
+ *
+ * @param[in]     private  session object
+ * @param[in,out] name     login name from the client, receives the account name
+ *                         of a match
+ * @param[in]     len      size of the name buffer
+ * @returns the password entry, or NULL without a match
  */
 struct passwd *uam_getname(void *private, char *name, const int len)
 {
@@ -313,6 +355,15 @@ struct passwd *uam_getname(void *private, char *name, const int len)
     return pwent ? getpwnam(name) : NULL;
 }
 
+/*!
+ * @brief Check that a user may log in through a UAM
+ *
+ * With OPTION_VALID_SHELLCHECK the user needs a shell that /etc/shells lists.
+ *
+ * @param[in] private  session object, or NULL
+ * @param[in] pwd      password entry of the user
+ * @returns 0, or -1 for a NULL entry or a shell that is missing or not listed
+ */
 int uam_checkuser(void *private, const struct passwd *pwd)
 {
     const AFPObj *obj = private;
@@ -398,7 +449,30 @@ int uam_random_string(AFPObj *obj _U_, char *buf, int len)
     return 0;
 }
 
-/* afp-specific functions */
+/*!
+ * @brief Answer a UAM request for a server or session value
+ *
+ * The what code selects the value:
+ *
+ * - UAM_OPTION_USERNAME and UAM_OPTION_GUEST name the session user and the
+ *   guest account.
+ * - UAM_OPTION_PASSWDOPT returns the password option that len selects.
+ * - UAM_OPTION_SIGNATURE, UAM_OPTION_HOSTNAME, UAM_OPTION_FQDN, and the
+ *   Kerberos codes return server values.
+ * - UAM_OPTION_RANDNUM fills option with random bytes.
+ * - The other codes return the protocol, the client name, the cookie, the
+ *   charsets, or the session information.
+ *
+ * String values come back as pointers in option, with their length in len
+ * when the caller passes one.
+ *
+ * @param[in]     private  session object
+ * @param[in]     what     UAM_OPTION_* code
+ * @param[out]    option   receives the value or a pointer to it
+ * @param[in,out] len      length on return, or the password option code for
+ *                         UAM_OPTION_PASSWDOPT
+ * @returns 0, or in afpd -1 for an unknown code or a missing argument
+ */
 int uam_afpserver_option(void *private, const int what, void *option,
                          size_t *len)
 {
@@ -593,6 +667,14 @@ int uam_afpserver_option(void *private, const int what, void *option,
 /* --- papd-specific functions (just placeholders) --- */
 struct papfile;
 
+/*!
+ * @brief Stub of the papd append call for the UAM modules that afpd loads,
+ * which ignores its arguments
+ *
+ * @param[in] pf    papfile buffer in papd, unused in afpd
+ * @param[in] data  bytes to append in papd, unused in afpd
+ * @param[in] len   number of bytes in papd, unused in afpd
+ */
 UAM_MODULE_EXPORT void append(struct papfile *pf  _U_, const char *data _U_,
                               int len _U_)
 {

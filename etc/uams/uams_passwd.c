@@ -38,6 +38,25 @@
 struct papfile;
 extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
+/*!
+ * @brief Check a cleartext password of up to 8 bytes against the password hash
+ *
+ * The user has to pass uam_checkuser. With shadow passwords an expired
+ * password answers AFPERR_PWDEXPR before the password check. The password
+ * goes to crypt_checkpass, or to crypt and a comparison, and a match wipes
+ * it from the request.
+ *
+ * @param[in]     obj       session object
+ * @param[in,out] username  user name from the request, receives the account
+ *                          name of a match
+ * @param[in]     ulen      size of the username buffer
+ * @param[out]    uam_pwd   receives the user entry before the password check
+ * @param[in,out] ibuf      password field of the request, cut after 8 bytes
+ * @param[in]     ibuflen   length of ibuf, at least 8
+ * @param[out]    rbuf      reply block, unused
+ * @param[out]    rbuflen   unused
+ * @returns AFP_OK, AFPERR_PWDEXPR, AFPERR_NOTAUTH, or AFPERR_PARAM
+ */
 static int pwd_login(void *obj, char *username, int ulen,
                      struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
@@ -107,7 +126,22 @@ static int pwd_login(void *obj, char *username, int ulen,
     return AFPERR_NOTAUTH;
 }
 
-/*! cleartxt login */
+/*!
+ * @brief Read the user name of a cleartext FPLogin request and check its
+ * password against the hash
+ *
+ * The request holds the name as a Pascal string, padded to an even address,
+ * and then the password.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  receives the user entry
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the result of pwd_login, AFPERR_PARAM for an empty or oversized
+ *          name, or AFPERR_MISC
+ */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
                         char *rbuf, size_t *rbuflen)
@@ -146,15 +180,26 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 }
 
 /*!
- * @brief cleartxt login ext
+ * @brief Read the user name of a cleartext FPLoginExt request and check its
+ * password against the hash
  *
- * uname format :
+ * The user name field has this form:
  * @code
  *   byte      3
  *   2 bytes   len (network order)
  *   len bytes unicode name
  * @endcode
-*/
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request
+ * @param[out] uam_pwd  receives the user entry
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf, at least 2
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the result of pwd_login, AFPERR_PARAM for another name type or a bad
+ *          length, or AFPERR_MISC
+ */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
@@ -186,7 +231,20 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/*! Printer ClearTxtUAM login */
+/*!
+ * @brief Check a ClearTxtUAM printer login against the password hash
+ *
+ * The login string has the form `(username) (password)`, and the password
+ * keeps up to 8 bytes. The user has to pass uam_checkuser, and an expired
+ * shadow password fails. A match writes the "0" answer to out.
+ *
+ * @param[in]  start     start of the login string
+ * @param[in]  stop      end of the login string
+ * @param[out] username  receives the user name, up to UAM_USERNAMELEN bytes
+ *                       without a NUL
+ * @param[out] out       PAP reply, receives the answer
+ * @returns 0, or -1 for a malformed string, a refused user, or a wrong password
+ */
 static int passwd_printer(char	*start, char *stop, char *username,
                           struct papfile *out)
 {
@@ -307,6 +365,16 @@ static int passwd_printer(char	*start, char *stop, char *username,
     return 0;
 }
 
+/*!
+ * @brief Register the Cleartxt Passwrd login and the ClearTxtUAM printer login
+ * of the passwd module
+ *
+ * The module has no logout and no password change.
+ *
+ * @param[in] obj   AFP object, unused
+ * @param[in] path  path of the module
+ * @returns 0, or -1 when a registration fails
+ */
 static int uam_setup(void *obj, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
@@ -322,6 +390,10 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Unregister the Cleartxt Passwrd login and the ClearTxtUAM printer
+ * login of the passwd module
+ */
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");

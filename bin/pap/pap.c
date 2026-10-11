@@ -36,6 +36,19 @@ static int copy_status(const struct iovec *response, char *status_buf,
 static void updatestatus(char *s, int len);
 static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter);
 
+/*!
+ * @brief Extract the status string of a PAP Status reply into a buffer
+ *
+ * The string length sits in byte 8 of the reply, and the text follows. A
+ * reply shorter than its header, or a string that does not fit the reply or
+ * the buffer, fails.
+ *
+ * @param[in]  response         reply data
+ * @param[out] status_buf       receives the NUL-terminated string
+ * @param[in]  status_buf_size  size of @p status_buf
+ * @param[out] status_len       receives the string length
+ * @returns 0, or -1 for a malformed reply
+ */
 static int copy_status(const struct iovec *response, char *status_buf,
                        size_t status_buf_size, size_t *status_len)
 {
@@ -59,6 +72,11 @@ static int copy_status(const struct iovec *response, char *status_buf,
     return 0;
 }
 
+/*!
+ * @brief Print the usage and the options of pap to stderr and exit with 2
+ *
+ * @param[in] path  program path, whose base name the usage line shows
+ */
 static void usage(char *path)
 {
     char	*p;
@@ -86,6 +104,15 @@ static void usage(char *path)
     exit(2);
 }
 
+/*!
+ * @brief Read the printer name from the first line of ./.paprc that is not a
+ * comment
+ *
+ * A missing file gives NULL, and another open error exits with 2. The name
+ * lives in a static buffer of 98 bytes.
+ *
+ * @returns the printer name, or NULL
+ */
 static char *
 paprc(void)
 {
@@ -177,6 +204,26 @@ static struct iovec	sfiov[PAP_MAXQUANTUM] = {
 
 static int debug;
 
+/*!
+ * @brief Print files on a PAP printer
+ *
+ * The printer comes from -p or from ./.paprc as an NBP name, with the type
+ * LaserWriter and the zone `*` by default. The tool looks the printer up,
+ * opens a PAP connection, sends each file, or stdin without files, and
+ * closes the connection.
+ *
+ * The -W option waits for an idle status first, and -w waits for a waiting
+ * status before the data. The -c option claims the longest wait time in the
+ * open request, which moves the job ahead in the printer queue. The -E option
+ * skips the wait for the printer EOF after the last file, and -s writes each
+ * status to a file. The -A option sets the local address, -d prints the
+ * protocol steps, and -e sends stdout to stderr.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns does not return, and exits with 0, 1 for a protocol error, or 2 for
+ *          a usage or system error
+ */
 int main(int ac, char	**av)
 {
     ATP			atp;
@@ -534,6 +581,25 @@ static int		data = 0;
 static unsigned char	port;
 static uint16_t	seq = 0;
 
+/*!
+ * @brief Send one file over the open PAP connection and pass the printer output
+ * to stdout
+ *
+ * The call asks the printer for its output with PAP Read requests. Each Read
+ * request that the printer sends gets up to quantum packets of file data in
+ * reply. The call sends a tickle every 60 seconds and exits after four
+ * select timeouts in a row without a valid request. While no data can go
+ * out, the call asks for the printer status. A Close request from the
+ * printer exits with 1.
+ *
+ * @param[in] fd              open file, 0 for stdin
+ * @param[in] atp             ATP endpoint of the connection
+ * @param[in] lastfile        nonzero for the last file of the job
+ * @param[in] is_imagewriter  nonzero for an ImageWriter, whose status replies
+ *                            skip the header checks
+ * @returns 0 after the EOF of the printer, or after the last file under -E,
+ *          while errors exit
+ */
 static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
 {
     struct timeval	stv, tv;
@@ -976,6 +1042,16 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
     }
 }
 
+/*!
+ * @brief Write a printer status line as `%%[ status ]%%`
+ *
+ * The line goes to the -s status file, which the call truncates first, or
+ * to stderr. A status file that does not open switches all later lines to
+ * stderr.
+ *
+ * @param[in] s    status text
+ * @param[in] len  length of @p s
+ */
 static void updatestatus(char *s, int len)
 {
     int			fd = -1;

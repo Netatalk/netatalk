@@ -27,9 +27,21 @@
 
 static struct itimerval itimer;
 
-/*! this creates an open lock file which hangs around until the program
- * dies. it returns the pid. due to problems w/ solaris, this has
- * been changed to do the kill() thing. */
+/*!
+ * @brief Check the pid file of a daemon, then fork it into the background and
+ * record the pid of the child
+ *
+ * A pid file that names a live process stops the start, and a pid that a
+ * new process reused does too. The child closes stdin, stdout, and stderr,
+ * opens /dev/null in their place, and leaves its controlling terminal. With
+ * debug the call skips all of this. On Solaris the call returns 0 at once.
+ *
+ * @param[in] program  daemon name for the error messages
+ * @param[in] pidfile  path of the pid file
+ * @param[in] debug    nonzero to stay in the foreground without a pid file
+ * @returns the pid of the child in the parent, 0 in the child or with debug, or
+ *          -1 on error
+ */
 pid_t server_lock(char *program, char *pidfile, int debug)
 {
 #ifndef SOLARIS
@@ -109,7 +121,14 @@ pid_t server_lock(char *program, char *pidfile, int debug)
 }
 
 /*!
- * Check lockfile
+ * @brief Refuse to start while the pid file names a live process
+ *
+ * A reused pid in a stale pid file also counts as live. The message goes to
+ * stderr. On Solaris the call always passes.
+ *
+ * @param[in] program  daemon name for the error message
+ * @param[in] pidfile  path of the pid file
+ * @returns 0, or -1 when the pid file names a live process
  */
 int check_lockfile(const char *program, const char *pidfile)
 {
@@ -136,7 +155,13 @@ int check_lockfile(const char *program, const char *pidfile)
 }
 
 /*!
- * Check and create lockfile
+ * @brief Check the pid file, then write the pid of the calling process into it
+ *
+ * A new file gets mode 0644 through a umask of 022.
+ *
+ * @param[in] program  daemon name for the error messages
+ * @param[in] pidfile  path of the pid file
+ * @returns 0, or -1 when the pid file names a live process or cannot open
  */
 int create_lockfile(const char *program, const char *pidfile)
 {

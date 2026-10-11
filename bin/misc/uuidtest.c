@@ -40,11 +40,23 @@
 
 #define STRNCMP(a, R, b, l) (strncmp(a,b,l) R 0)
 
+/*!
+ * @brief Print the usage of afpldaptest to stdout
+ */
 static void usage(void)
 {
     printf("Usage: afpldaptest -u <user> | -g <group> | -i <UUID>\n");
 }
 
+/*!
+ * @brief Read the LDAP settings of afp.conf on the first call and report
+ * whether they are valid
+ *
+ * The call loads afp.conf from the configuration directory and passes it to
+ * acl_ldap_readconfig. It prints whether the settings are valid and which
+ * bind they use, and an unsupported authentication method exits with
+ * EXIT_FAILURE. A build without LDAP only prints a notice.
+ */
 static void parse_ldapconf(void)
 {
     static int inited = 0;
@@ -79,6 +91,20 @@ static void parse_ldapconf(void)
     }
 }
 
+/*!
+ * @brief Map user and group names to UUIDs and back through the netatalk UUID
+ * layer
+ *
+ * The options run in order. The -u and -g options print the UUID of a user
+ * or a group, and -i prints the name and the type behind a UUID. The first
+ * lookup reads the LDAP settings of afp.conf. The lookups log to /dev/tty at
+ * the info level, or at maxdebug after -v.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns 0, also when a lookup fails, while an unknown option or a missing
+ *          argument exits with EXIT_FAILURE
+ */
 int main(int argc, char **argv)
 {
     int ret, c;

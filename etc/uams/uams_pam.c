@@ -49,9 +49,18 @@ struct papfile;
 extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
 /*!
- * @brief PAM conversation function
- * @note Here we assume (for now, at least) that echo on means login name,
- * and echo off means password.
+ * @brief Answer PAM prompts with the user name and the password of the login
+ *
+ * An echo-on prompt gets PAM_username and an echo-off prompt PAM_password.
+ * During a password change without root, the first echo-off prompt gets the
+ * old password instead. Info and binary prompts get no answer, and an error
+ * message or an unknown style fails the conversation.
+ *
+ * @param[in]  num_msg      number of messages
+ * @param[in]  msg          PAM messages
+ * @param[out] resp         receives the responses
+ * @param[in]  appdata_ptr  unused
+ * @returns PAM_SUCCESS, or PAM_CONV_ERR
  */
 static int PAM_conv(int num_msg,
 #ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
@@ -169,6 +178,25 @@ static void clrtxt_log_pam_error(enum loglevels level, pam_handle_t *ph,
                         pam_strerror(ph, pam_err), pam_err, saved_errno);
 }
 
+/*!
+ * @brief Check a cleartext password of up to 8 bytes with PAM
+ *
+ * The user has to pass uam_checkuser. PAM then runs authenticate, acct_mgmt,
+ * setcred, and open_session, with SIGCHLD at its default action during the
+ * checks. A password that acct_mgmt reports as expired still opens the
+ * session and answers AFPERR_PWDEXPR, so the client can change it.
+ *
+ * @param[in]     obj       session object
+ * @param[in,out] username  user name from the request, receives the account
+ *                          name of a match
+ * @param[in]     ulen      size of the username buffer
+ * @param[out]    uam_pwd   receives the user entry after a successful login
+ * @param[in,out] ibuf      password field of the request, cut after 8 bytes
+ * @param[in]     ibuflen   length of the request data, which must exceed 8
+ * @param[out]    rbuf      reply block, unused
+ * @param[out]    rbuflen   unused
+ * @returns AFP_OK, AFPERR_PWDEXPR, AFPERR_NOTAUTH, or AFPERR_PARAM
+ */
 static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
                  char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen _U_)
@@ -315,8 +343,21 @@ login_err:
 }
 
 /*!
- * cleartxt login
-*/
+ * @brief Read the user name of a cleartext FPLogin request and check its
+ * password with PAM
+ *
+ * The request holds the name as a Pascal string, padded to an even address,
+ * and then the password.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  receives the user entry after a successful login
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the result of login, AFPERR_PARAM for a name longer than the buffer,
+ *          or AFPERR_MISC
+ */
 static int pam_login(void *obj, struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
                      char *rbuf, size_t *rbuflen)
@@ -347,7 +388,23 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* ----------------------------- */
+/*!
+ * @brief Read the user name of a cleartext FPLoginExt request and check its
+ * password with PAM
+ *
+ * The name comes as an AFP name of type 3, a UTF-8 string with a 2-byte
+ * length.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request
+ * @param[out] uam_pwd  receives the user entry after a successful login
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the result of login, AFPERR_PARAM for another name type or a bad
+ *          length, or AFPERR_MISC
+ */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen)
@@ -379,7 +436,9 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* logout */
+/*!
+ * @brief Close the PAM session of the login and call pam_end
+ */
 static void pam_logout(void)
 {
     pam_close_session(pamh, 0);
@@ -387,7 +446,25 @@ static void pam_logout(void)
     pamh = NULL;
 }
 
-/*! change passwd */
+/*!
+ * @brief Change a cleartext password with PAM
+ *
+ * The request holds the old and the new password, 8 bytes each, and the call
+ * clears them from the request at once. Equal passwords fail with
+ * AFPERR_PWDSAME. PAM authenticates the old password and runs acct_mgmt and
+ * chauthtok, as root when seteuid allows it. Without root, the first echo-off
+ * prompt of chauthtok gets the old password.
+ *
+ * @param[in]     obj       session object, unused
+ * @param[in]     username  user name
+ * @param[in]     pwd       user entry, unused
+ * @param[in,out] ibuf      UAM data of the request, cleared on return
+ * @param[in]     ibuflen   length of ibuf, unused
+ * @param[out]    rbuf      reply block, unused
+ * @param[out]    rbuflen   unused
+ * @returns AFP_OK, AFPERR_PWDSAME, AFPERR_NOTAUTH, AFPERR_ACCESS when chauthtok
+ *          fails, or AFPERR_PARAM
+ */
 static int pam_changepw(void *obj _U_, char *username,
                         struct passwd *pwd _U_, char *ibuf, size_t ibuflen _U_,
                         char *rbuf _U_, size_t *rbuflen _U_)
@@ -511,7 +588,23 @@ changepw_done:
 }
 
 
-/*! Printer ClearTxtUAM login */
+/*!
+ * @brief Check a ClearTxtUAM printer login with PAM and close its session at
+ * once
+ *
+ * The login string has the form `(username) (password)`, and the password
+ * keeps up to 8 bytes. The user has to pass uam_checkuser, and PAM runs
+ * authenticate, acct_mgmt, and open_session. A success writes the "0" answer
+ * to out and closes the session right away.
+ *
+ * @param[in]  start     start of the login string
+ * @param[in]  stop      end of the login string
+ * @param[out] username  receives the user name, up to UAM_USERNAMELEN bytes
+ *                       without a NUL
+ * @param[out] out       PAP reply, receives the answer
+ * @returns 0, or -1 for a malformed string, a refused user, or a failed PAM
+ *          step
+ */
 static int pam_printer(char *start, char *stop, char *username,
                        struct papfile *out)
 {
@@ -670,6 +763,16 @@ static int pam_printer(char *start, char *stop, char *username,
 }
 
 
+/*!
+ * @brief Register the Cleartxt Passwrd login and password change and the
+ * ClearTxtUAM printer login
+ *
+ * A failed password change registration removes the login again.
+ *
+ * @param[in] obj   AFP object, unused
+ * @param[in] path  path of the module
+ * @returns 0, or -1 when a registration fails
+ */
 static int uam_setup(void *obj _U_, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
@@ -691,6 +794,10 @@ static int uam_setup(void *obj _U_, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Unregister the Cleartxt Passwrd login and password change and the
+ * ClearTxtUAM printer login
+ */
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");

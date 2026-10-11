@@ -24,12 +24,26 @@ static int state = 0;
 
 static volatile sig_atomic_t stop_requested = 0;
 
+/*!
+ * @brief Note SIGINT or SIGTERM, so the job loop ends the job with a shutdown
+ * message
+ *
+ * @param[in] signo  signal number, unused
+ */
 static void sig_handler(int signo)
 {
     (void)signo;
     stop_requested = 1;
 }
 
+/*!
+ * @brief Refuse a job whose DSC comments do not parse
+ *
+ * The client gets a "Comments error, Ignoring job." error, the output ends,
+ * and the spool file closes.
+ *
+ * @param[in,out] outfile  reply buffer to the client
+ */
 static void parser_error(struct papfile *outfile)
 {
     spoolerror(outfile, "Comments error, Ignoring job.");
@@ -37,6 +51,24 @@ static void parser_error(struct papfile *outfile)
     lp_close();
 }
 
+/*!
+ * @brief Run the PostScript job loop over the data a PAP client sent
+ *
+ * The first call routes SIGINT and SIGTERM to sig_handler, after which the
+ * loop answers "Server shutting down." and ends the job. At the start of a
+ * job the loop drops lines until a `%!PS-Adobe-` magic line pushes its
+ * handler. After that, the handler at the top of the comment stack takes each
+ * line, and lines outside any comment go to lp_write.
+ *
+ * PF_STW opens the spool file, and the client gets "Ignoring job." once when
+ * lp_open fails.
+ *
+ * @param[in,out] infile   data from the client
+ * @param[in,out] outfile  reply data for the client
+ * @param[in]     sat      client address
+ * @returns CH_MORE when a handler needs more data, CH_ERROR on shutdown, or 0
+ *          otherwise
+ */
 int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
 {
     char			*start;
@@ -130,6 +162,18 @@ int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
     }
 }
 
+/*!
+ * @brief Serve a query job that starts with `%!PS-Adobe-3.0 Query`
+ *
+ * The call skips the magic line, pushes the handler of each query comment it
+ * finds, and drops other lines. The end of the input, or PF_QUERY at the end
+ * of a query, pops the state.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data, receives a status while a line is incomplete
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, or CH_MORE while a line is incomplete
+ */
 int cm_psquery(struct papfile *in, struct papfile *out,
                struct sockaddr_at *sat _U_)
 {
@@ -172,6 +216,18 @@ int cm_psquery(struct papfile *in, struct papfile *out,
     }
 }
 
+/*!
+ * @brief Serve a print job that starts with `%!PS-Adobe-3.0`
+ *
+ * The call writes the magic line and every other line to the job, and pushes
+ * the handler of each header comment it finds. The end of the input pops the
+ * state.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data, receives PF_EOF at the end of the input
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, or CH_MORE while a line is incomplete
+ */
 int cm_psadobe(struct papfile *in, struct papfile *out,
                struct sockaddr_at *sat _U_)
 {
@@ -210,6 +266,19 @@ int cm_psadobe(struct papfile *in, struct papfile *out,
 
 char	*Query = "Query";
 
+/*!
+ * @brief Pick the handler for a job with another `%!PS-Adobe-` version
+ *
+ * When the word after the version starts with Query, the job becomes a query
+ * job, and any other job goes to cm_psadobe. The line stays in the input for
+ * the new handler, and a missing handler in the magics table exits papd.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data, receives PF_EOF at the end of the input
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the input, or CH_MORE while the line is
+ *          incomplete
+ */
 int cm_psswitch(struct papfile *in, struct papfile *out,
                 struct sockaddr_at *sat _U_)
 {

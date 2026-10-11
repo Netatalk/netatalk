@@ -26,6 +26,16 @@ U4      [\xf0-\xf4]
 UANY    {ASC}|{U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 UONLY   {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 
+/*!
+ * @brief Split a Spotlight raw query string into tokens for the SPARQL parser
+ *
+ * A word is a run of ASCII letters, digits, and the characters _ * : - .,
+ * or of UTF-8 multibyte sequences. Quotes, braces, the comparison and logic
+ * operators, InRange, and $time.iso are separate tokens. Spaces, tabs, and
+ * newlines separate tokens.
+ *
+ * @returns the next token, or 0 at the end of the string
+ */
 %%
 InRange                               return FUNC_INRANGE;
 \$time\.iso                           return DATE_ISO;

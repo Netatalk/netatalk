@@ -35,7 +35,10 @@
 static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
 
 /*!
- * @brief Registered backend module named @p name, or NULL
+ * @brief Find a registered CNID backend by name, ignoring case
+ *
+ * @param[in] name  backend name
+ * @returns the backend module, or NULL
  */
 static const cnid_module *cnid_module_named(const char *name)
 {
@@ -48,14 +51,25 @@ static const cnid_module *cnid_module_named(const char *name)
     return NULL;
 }
 
+/*!
+ * @brief Tell whether cnid_register added a CNID backend of a name
+ *
+ * @param[in] name  backend name, compared without case
+ * @returns true when cnid_module_named finds it
+ */
 bool cnid_scheme_registered(const char *name)
 {
     return cnid_module_named(name) != NULL;
 }
 
-/* Registers new CNID backend module. */
-
-/*! Once module has been registered, it cannot be unregistered. */
+/*!
+ * @brief Add a CNID backend to the list of registered backends
+ *
+ * A second backend with the same name, compared without case, only logs an
+ * error. A backend cannot leave the list again.
+ *
+ * @param[in] module  backend to add, kept by pointer
+ */
 void cnid_register(struct _cnid_module *module)
 {
     if (cnid_module_named(module->name) != NULL) {
@@ -68,7 +82,19 @@ void cnid_register(struct _cnid_module *module)
     list_add_tail(&module->db_list, &modules);
 }
 
-/*! Opens CNID database using particular back-end */
+/*!
+ * @brief Open the CNID database of a volume with the backend that a scheme
+ * names
+ *
+ * An unknown scheme falls back to DEFAULT_CNID_SCHEME with a warning. A build
+ * without MySQL refuses the mysql scheme instead. CNID_FLAG_NODEV in flags
+ * also lands in the database flags.
+ *
+ * @param[in] vol    volume of the database
+ * @param[in] type   CNID scheme name
+ * @param[in] flags  CNID_FLAG_* open flags
+ * @returns the database, or NULL when no backend fits or the open fails
+ */
 struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 {
     struct _cnid_db *db;
@@ -118,14 +144,17 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 }
 
 /*!
-  protect against bogus value from the DB.
-  adddir really doesn't like 2
-
-  Every CNID_INVALID returned from this file carries its own errno: callers read
-  the CNID_ERR_* values to choose between a permanent reply and a retryable one,
-  and CNID_ERR_DB ends the session. No syscall overwrites those values and the
-  logger preserves errno, so one persists until deliberately replaced.
-*/
+ * @brief Reject a CNID from a backend that falls in the reserved range
+ *
+ * An ID under CNID_START means a corrupted database. The first such ID logs
+ * an error, and each one sets errno to CNID_ERR_CORRUPT. CNID_INVALID passes
+ * with the errno of the backend. Callers read the CNID_ERR_* value to choose
+ * between a permanent reply and a retry, and CNID_ERR_DB ends the session.
+ * The logger keeps errno, so the value stays until a later call replaces it.
+ *
+ * @param[in] id  CNID in network order
+ * @returns id, or CNID_INVALID
+ */
 static cnid_t valide(cnid_t id)
 {
     if (id == CNID_INVALID) {
@@ -150,7 +179,11 @@ static cnid_t valide(cnid_t id)
     return id;
 }
 
-/*! Closes CNID database. Currently it's just a wrapper around db->cnid_close(). */
+/*!
+ * @brief Close a CNID database through its backend
+ *
+ * @param[in] db  database, and a NULL one logs an error
+ */
 void cnid_close(struct _cnid_db *db)
 {
     if (NULL == db) {
@@ -161,7 +194,21 @@ void cnid_close(struct _cnid_db *db)
     db->cnid_close(db);
 }
 
-/* --------------- */
+/*!
+ * @brief Add an object to the CNID database or find its existing CNID
+ *
+ * The call clears errno, so errno reports the classification of this call
+ * only. The result passes through valide.
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] st    stat of the object, for the device and inode
+ * @param[in] did   CNID of the parent directory
+ * @param[in] name  name on disk
+ * @param[in] len   length of name, where 0 fails with CNID_ERR_PARAM
+ * @param[in] hint  CNID that the metadata of the object carries, or
+ *                  CNID_INVALID
+ * @returns the CNID, or CNID_INVALID with errno set to a CNID_ERR_* value or 0
+ */
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
                 const char *name, const size_t len, cnid_t hint)
 {
@@ -179,7 +226,13 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
     return ret;
 }
 
-/* --------------- */
+/*!
+ * @brief Remove a CNID from the database
+ *
+ * @param[in] cdb  CNID database
+ * @param[in] id   CNID to remove
+ * @returns the backend result, 0 on success
+ */
 int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 {
     int ret;
@@ -189,7 +242,15 @@ int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 }
 
 
-/* --------------- */
+/*!
+ * @brief Look up the CNID of a name in a directory
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] did   CNID of the directory
+ * @param[in] name  name on disk
+ * @param[in] len   length of name
+ * @returns the CNID after valide, or CNID_INVALID
+ */
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,
                 const size_t len)
 {
@@ -199,7 +260,18 @@ cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,
     return ret;
 }
 
-/* --------------- */
+/*!
+ * @brief Read the stamp of a CNID database
+ *
+ * A backend without stamps gets the current time instead, which makes every
+ * cached CNID stale.
+ *
+ * @param[in]  cdb     CNID database
+ * @param[out] buffer  receives the stamp
+ * @param[in]  len     size of buffer
+ * @returns the backend result, or for a backend without stamps 0, or -1 when
+ *          buffer cannot hold a time_t
+ */
 int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len)
 {
     cnid_t ret;
@@ -223,7 +295,17 @@ int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len)
     return ret;
 }
 
-/* --------------- */
+/*!
+ * @brief Look up the CNID of an object by name and parent or by device and
+ * inode
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] st    stat of the object
+ * @param[in] did   CNID of the parent directory
+ * @param[in] name  name on disk
+ * @param[in] len   length of name
+ * @returns the CNID after valide, or CNID_INVALID
+ */
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
                    const cnid_t did,
                    char *name, const size_t len)
@@ -324,7 +406,19 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
     return ret;
 }
 
-/* --------------- */
+/*!
+ * @brief Resolve a CNID to its name and parent directory
+ *
+ * A stored name of ".." means a corrupted database, and the call then fails
+ * with CNID_ERR_CORRUPT.
+ *
+ * @param[in]     cdb     CNID database
+ * @param[in,out] id      CNID to resolve, receives the parent CNID or
+ *                        CNID_INVALID
+ * @param[out]    buffer  work buffer for the name
+ * @param[in]     len     size of buffer
+ * @returns the name inside buffer, or NULL
+ */
 char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 {
     char *ret;
@@ -343,7 +437,17 @@ char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
     return ret;
 }
 
-/* --------------- */
+/*!
+ * @brief Update the name, parent, and stat of a CNID entry
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] id    CNID to update
+ * @param[in] st    new stat of the object
+ * @param[in] did   new parent CNID
+ * @param[in] name  new name on disk
+ * @param[in] len   length of name
+ * @returns the backend result, 0 on success
+ */
 int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
                 const cnid_t did, char *name, const size_t len)
 {
@@ -353,7 +457,15 @@ int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
     return ret;
 }
 
-/* --------------- */
+/*!
+ * @brief Empty a CNID database
+ *
+ * A backend without a wipe function leaves the database unchanged and
+ * reports success.
+ *
+ * @param[in] cdb  CNID database
+ * @returns the backend result, 0 on success
+ */
 int cnid_wipe(struct _cnid_db *cdb)
 {
     int ret = 0;

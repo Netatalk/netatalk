@@ -90,11 +90,15 @@ static char               resolve_result_name[MAXPATHLEN];
 static unsigned long      resolve_result_name_len;
 
 /*!
- * @brief Whether a CNID hint from AppleDouble/EA metadata is safe to bind
+ * @brief Tell whether a CNID hint from AppleDouble or EA metadata is safe to
+ * bind
  *
- * Rejects the reserved range below CNID_START and anything above
- * CNID_MYSQL_MAX_HINT, which as an explicit Id would raise the
- * AUTO_INCREMENT high-water mark towards the depletion reset.
+ * The call rejects the reserved range under CNID_START. It also rejects any
+ * value above CNID_MYSQL_MAX_HINT, which as an explicit Id would push the
+ * AUTO_INCREMENT high-water mark toward the depletion reset.
+ *
+ * @param[in] hint  CNID in network order
+ * @returns true when CNID_START <= hint <= CNID_MYSQL_MAX_HINT in host order
  */
 static bool cnid_mysql_hint_usable(cnid_t hint)
 {
@@ -102,6 +106,15 @@ static bool cnid_mysql_hint_usable(cnid_t hint)
     return id >= CNID_START && id <= CNID_MYSQL_MAX_HINT;
 }
 
+/*!
+ * @brief Prepare the lookup statement of a MySQL CNID table
+ *
+ * The statement selects the rows that match the name and parent, or the
+ * device and inode, of an object.
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
 static int init_prepared_stmt_lookup(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -151,6 +164,13 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Prepare the insert statement for a new entry, numbered by
+ * AUTO_INCREMENT
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
 static int init_prepared_stmt_add(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -183,6 +203,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Prepare the insert statement for an entry with an explicit CNID
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
 static int init_prepared_stmt_put(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -218,6 +244,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Prepare the statement that finds the CNID of a name in a directory
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
 static int init_prepared_stmt_get(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -246,6 +278,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Prepare the statement that removes an entry by CNID
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
 static int init_prepared_stmt_delete(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -267,6 +305,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Prepare the statement that finds the parent and the name of a CNID
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
 static int init_prepared_stmt_resolve(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -295,6 +339,15 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Prepare the statement that removes every entry clashing with an update
+ *
+ * The statement removes the rows that match the CNID, the name and parent, or
+ * the device and inode.
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
 static int init_prepared_stmt_purge(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -331,6 +384,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Prepare all 7 statements of a MySQL CNID table
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when one fails
+ */
 static int init_prepared_stmt(CNID_mysql_private *db)
 {
     EC_INIT;
@@ -346,9 +405,13 @@ EC_CLEANUP:
 }
 
 /*!
- * NULL-safe and NULLs each handle: a failed recovery leaves a mix of
- * closed and live handles, and a later close or re-init must neither
- * double-close nor leak the survivors.
+ * @brief Close and clear the backend's prepared MySQL statements
+ *
+ * NULL-safe, and NULLs each statement after closing it. A failed recovery
+ * leaves a mix of closed and live statements, and a later close or re-init must
+ * neither double-close nor leak the survivors.
+ *
+ * @param[in,out] db  backend private data holding the statement pointers
  */
 static void close_prepared_stmt(CNID_mysql_private *db)
 {
@@ -366,12 +429,17 @@ static void close_prepared_stmt(CNID_mysql_private *db)
     }
 }
 
-/* Distinguish a contended database from a broken one: afpd ends the session on
- * CNID_ERR_DB, which is right for a backend that has gone away and wrong for a
- * lock that will free. InnoDB reports a deadlock immediately rather than
- * waiting, and concurrent sessions inserting into one volume's CNID table hit
- * both codes routinely, so misclassifying them disconnects clients for ordinary
- * contention. */
+/*!
+ * @brief Classify a MySQL error code as a CNID_ERR_* errno
+ *
+ * Lock wait timeouts and deadlocks become CNID_ERR_BUSY, because the lock
+ * frees again. InnoDB reports a deadlock at once, and concurrent sessions that
+ * insert into one CNID table hit both codes routinely. Crashed tables become
+ * CNID_ERR_CORRUPT. Any other code becomes CNID_ERR_DB, which ends the session.
+ *
+ * @param[in] mysql_error_code  MySQL error number, or 0 for a failure without
+ *                              one
+ */
 static void cnid_mysql_set_errno(unsigned int mysql_error_code)
 {
     switch (mysql_error_code) {
@@ -394,12 +462,12 @@ static void cnid_mysql_set_errno(unsigned int mysql_error_code)
 /*!
  * @brief Drain the remaining results of a multi-statement batch
  *
- * cnid_mysql_execute() reports only the batch's first statement.
- * mysql_next_result() returns >0 when a later one failed, which a plain
- * "== 0" loop reads as the end of the batch — so a wipe whose TRUNCATE or
- * ALTER failed would be taken for a completed one.
+ * The cnid_mysql_execute call reports only the first statement of a batch. A
+ * positive mysql_next_result means a later statement failed, so a wipe whose
+ * TRUNCATE or ALTER failed still fails here.
  *
- * @returns 0 when every statement succeeded, -1 otherwise
+ * @param[in] con  MySQL connection
+ * @returns 0 when every statement succeeded, -1 with errno classified otherwise
  */
 static int cnid_mysql_drain_results(MYSQL *con)
 {
@@ -424,10 +492,17 @@ static int cnid_mysql_drain_results(MYSQL *con)
 }
 
 /*!
- * stmtp must point at the handle field in CNID_mysql_private:
- * CR_SERVER_LOST recovery reallocates every handle, and the retry
- * must execute the fresh one. Recovery also invalidates any other
- * statement's in-flight stored result.
+ * @brief Execute a prepared statement and reprepare after CR_SERVER_LOST
+ *
+ * The stmtp argument must point at the field in db, because a reprepare
+ * replaces every statement and the retry runs the new one. A reprepare also
+ * drops the stored result of any other statement. CR_SERVER_LOST on
+ * CNID_MYSQL_RECONNECT_ATTEMPTS executes in a row ends the retries. A NULL
+ * statement from an earlier failed reprepare gets prepared first.
+ *
+ * @param[in,out] db     MySQL backend state
+ * @param[in,out] stmtp  address of the statement field in db
+ * @returns 0, or -1 with errno classified
  */
 static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
 {
@@ -480,8 +555,16 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/* Returns -1, not mysql_query()'s non-zero, so that the EC_NEG1() call sites
- * detect a failure; the callers that test truthiness are unaffected. */
+/*!
+ * @brief Run an SQL statement or batch on a connection
+ *
+ * The call returns -1 for any failure of mysql_query, so EC_NEG1 call sites
+ * see it.
+ *
+ * @param[in] con  MySQL connection
+ * @param[in] sql  SQL text
+ * @returns 0, or -1 with errno classified
+ */
 static int cnid_mysql_execute(MYSQL *con, const char *sql)
 {
     LOG(log_maxdebug, logtype_cnid, "SQL: %s", sql);
@@ -496,6 +579,13 @@ static int cnid_mysql_execute(MYSQL *con, const char *sql)
     return 0;
 }
 
+/*!
+ * @brief Remove a CNID from the MySQL table
+ *
+ * @param[in] cdb  CNID database
+ * @param[in] id   CNID in network order, not 0
+ * @returns 0, or -1 with errno classified
+ */
 int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
 {
     EC_INIT;
@@ -516,6 +606,11 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Close the MySQL connection of a CNID database and free the database
+ *
+ * @param[in] cdb  CNID database, and a NULL one logs an error
+ */
 void cnid_mysql_close(struct _cnid_db *cdb)
 {
     CNID_mysql_private *db;
@@ -542,6 +637,23 @@ void cnid_mysql_close(struct _cnid_db *cdb)
     return;
 }
 
+/*!
+ * @brief Rewrite the entry of a CNID with a new name, parent, and stat
+ *
+ * The call removes every row that clashes on the CNID, the name and parent,
+ * or the device and inode. It then inserts the entry with its CNID.
+ * ER_DUP_ENTRY or CR_SERVER_LOST repeats both steps, up to
+ * CNID_MYSQL_ADD_ATTEMPTS times.
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] id    CNID to keep
+ * @param[in] st    stat of the object
+ * @param[in] did   new parent CNID
+ * @param[in] name  new name on disk
+ * @param[in] len   length of name, up to MAXPATHLEN
+ * @returns 0, or -1 with errno classified, CNID_ERR_CORRUPT after the last
+ *          attempt
+ */
 int cnid_mysql_update(struct _cnid_db *cdb,
                       cnid_t id,
                       const struct stat *st,
@@ -622,6 +734,26 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Find the CNID of an object by name and parent or by device and inode
+ *
+ * A single matching row is the answer. Two rows, one per index, are stale,
+ * and the call removes both.
+ *
+ * A row with another name or parent means a server-side move or a reused
+ * inode. When its CNID equals the hint of the current add, the row takes the
+ * new name and parent. Otherwise, and for a row with another device or inode,
+ * the call removes the row. Each removal reports CNID_ERR_NOTFOUND, so
+ * cnid_mysql_add inserts a new entry.
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] st    stat of the object
+ * @param[in] did   CNID of the parent directory
+ * @param[in] name  name on disk
+ * @param[in] len   length of name, up to MAXPATHLEN
+ * @returns the CNID, or CNID_INVALID with errno classified, CNID_ERR_NOTFOUND
+ *          for a missing entry
+ */
 cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
                          const struct stat *st,
                          cnid_t did,
@@ -820,6 +952,26 @@ EC_CLEANUP: {
     return id;
 }
 
+/*!
+ * @brief Find the CNID of an object or add a new entry for it
+ *
+ * A failed lookup leads to an insert only on CNID_ERR_NOTFOUND. A usable hint
+ * goes in as an explicit Id, unless a depletion emptied the table before.
+ * ER_DUP_ENTRY from a racing session repeats the lookup, up to
+ * CNID_MYSQL_ADD_ATTEMPTS times.
+ *
+ * Near CNID_MYSQL_MAX_HINT the call warns once. Past UINT32_MAX it empties
+ * the table, marks the volume depleted, and fails with CNID_ERR_RESET, so the
+ * session ends.
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] st    stat of the object
+ * @param[in] did   CNID of the parent directory
+ * @param[in] name  name on disk
+ * @param[in] len   length of name, up to MAXPATHLEN
+ * @param[in] hint  CNID from the metadata of the object, or CNID_INVALID
+ * @returns the CNID, or CNID_INVALID with errno classified
+ */
 cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                       const struct stat *st,
                       cnid_t did,
@@ -1026,6 +1178,19 @@ EC_CLEANUP: {
     return id;
 }
 
+/*!
+ * @brief Look up the CNID that a directory holds under a name
+ *
+ * A contended database reports a classified errno, not a missing name, which
+ * the caller would turn into a permanent AFPERR_NOOBJ.
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] did   CNID of the directory
+ * @param[in] name  name on disk
+ * @param[in] len   length of name, up to MAXPATHLEN
+ * @returns the CNID, or CNID_INVALID with errno CNID_ERR_NOTFOUND for a missing
+ *          name
+ */
 cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name,
                       size_t len)
 {
@@ -1095,6 +1260,19 @@ EC_CLEANUP:
     return id;
 }
 
+/*!
+ * @brief Resolve a CNID to its parent and name in the MySQL table
+ *
+ * A contended database reports a classified errno, not a missing CNID, which
+ * afp_resolveid would turn into a permanent AFPERR_NOID.
+ *
+ * @param[in]     cdb     CNID database
+ * @param[in,out] id      CNID to resolve, receives the parent CNID or
+ *                        CNID_INVALID
+ * @param[out]    buffer  receives the name
+ * @param[in]     len     size of buffer
+ * @returns buffer, or NULL with errno classified
+ */
 char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
                          size_t len)
 {
@@ -1162,7 +1340,14 @@ EC_CLEANUP:
 }
 
 /*!
- * Caller passes buffer where we will store the db stamp
+ * @brief Read the stamp of a volume from the volumes table
+ *
+ * The stamp is the time the volume first entered the table.
+ *
+ * @param[in]  cdb     CNID database
+ * @param[out] buffer  receives len bytes of the stamp
+ * @param[in]  len     bytes to read
+ * @returns 0, or -1 on error
  */
 int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 {
@@ -1228,17 +1413,23 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Backend implementation of cnid_find() for the mysql backend
+ * @brief Find the CNIDs whose name contains a substring, for cnid_find
  *
- * Parameters are pre-validated by the libatalk/cnid/cnid.c wrapper, so
- * cdb, name, namelen and buflen are all sane on entry. Detects truncation
- * by building "LIMIT max_results + 1" into the SQL and observing whether
- * the extra row was produced; reports it via @p more_available.
+ * The cnid_find wrapper validates the arguments. The query asks for 1 row
+ * more than buffer holds, and that extra row sets more_available. The name
+ * pattern binds as a statement parameter, never as SQL text. A scoped search
+ * walks the subtree with a recursive CTE. A server without CTE support falls
+ * back to an unscoped search.
  *
- * The Name LIKE parameter is bound via mysql_stmt_bind_param, never inlined
- * into the SQL string, to prevent a filename SQL-injection vector. The
- * LIMIT literal is not user-controlled (derived from caller's buflen) and
- * is safely interpolated into the SQL string.
+ * @param[in]  cdb             CNID database
+ * @param[in]  name            UTF-8 substring
+ * @param[in]  namelen         length of name
+ * @param[in]  scope_did       CNID of the scope directory, or CNID_INVALID for
+ *                             all of the volume
+ * @param[out] buffer          receives the CNIDs in network order
+ * @param[in]  buflen          size of buffer
+ * @param[out] more_available  receives true when more matches exist, or NULL
+ * @returns the number of CNIDs, or -1 on error
  */
 int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
                     cnid_t scope_did,
@@ -1460,6 +1651,15 @@ EC_CLEANUP:
     return count;
 }
 
+/*!
+ * @brief Empty the MySQL table of a volume and restart its CNIDs at 17
+ *
+ * The call also clears the depletion marks of the volume and of the
+ * connection. A dbd rebuild then restores the CNIDs from the metadata again.
+ *
+ * @param[in] cdb  CNID database
+ * @returns 0, or -1 with errno classified
+ */
 int cnid_mysql_wipe(struct _cnid_db *cdb)
 {
     EC_INIT;
@@ -1503,6 +1703,12 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Allocate a CNID database object with the MySQL function table
+ *
+ * @param[in] vol  volume of the database
+ * @returns the object, or NULL when calloc fails
+ */
 static struct _cnid_db *cnid_mysql_new(struct vol *vol)
 {
     struct _cnid_db *cdb;
@@ -1526,7 +1732,19 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     return cdb;
 }
 
-/* ---------------------- */
+/*!
+ * @brief Open the MySQL CNID backend for a volume
+ *
+ * The call creates the state directory of the volume as root, connects to the
+ * server, and creates the database when missing. It then creates the volumes
+ * table and the CNID table of the volume, named by the volume UUID. It drops
+ * the tables and rows of the same path under another UUID. The volume row
+ * gets its stamp on first use, and a depleted flag carries into the
+ * connection.
+ *
+ * @param[in] args  open arguments with the volume and the flags
+ * @returns the database, or NULL on error
+ */
 struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 {
     EC_INIT;

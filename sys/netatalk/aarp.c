@@ -69,6 +69,13 @@ unsigned char	aarp_org_code[3] = {
     0x00, 0x00, 0x00,
 };
 
+/*!
+ * @brief Age the AARP table once a minute and free the entries that ran out
+ *
+ * A complete entry lives for AARPT_KILLC minutes without use and an
+ * incomplete one for AARPT_KILLI minutes. Permanent entries stay. The call
+ * schedules itself again.
+ */
 void aarptimer(void)
 {
     struct aarptab	*aat;
@@ -92,6 +99,16 @@ void aarptimer(void)
     }
 }
 
+/*!
+ * @brief Find the AppleTalk address of an interface whose net range holds the
+ * net of an address
+ *
+ * On BSD 4.4 systems the net has to equal the net of the interface address.
+ *
+ * @param[in] sat  address to place
+ * @param[in] ifa  first entry of the address list of the interface
+ * @returns the interface address, or NULL
+ */
 struct ifaddr *at_ifawithnet(struct sockaddr_at *sat, struct ifaddr *ifa)
 {
     struct at_ifaddr	*aa;
@@ -127,6 +144,18 @@ struct ifaddr *at_ifawithnet(struct sockaddr_at *sat, struct ifaddr *ifa)
     return ifa;
 }
 
+/*!
+ * @brief Send an AARP request for an AppleTalk address out of an Ethernet
+ * interface
+ *
+ * A phase 2 net gets the request at the AppleTalk multicast address, behind
+ * an 802.2 SNAP header and with full net.node addresses. A phase 1 net gets
+ * it at ff:ff:ff:ff:ff:ff with node numbers only. Without an
+ * address of the interface on that net, nothing goes out.
+ *
+ * @param[in] ac   Ethernet interface
+ * @param[in] sat  address to resolve
+ */
 void aarpwhohas(struct arpcom *ac, struct sockaddr_at *sat)
 {
     struct mbuf		*m;
@@ -214,6 +243,24 @@ void aarpwhohas(struct arpcom *ac, struct sockaddr_at *sat)
     (*ac->ac_if.if_output)(&ac->ac_if, m, &sa);
 }
 
+/*!
+ * @brief Find the Ethernet address of an AppleTalk destination for an outgoing
+ * packet
+ *
+ * A destination that at_broadcast accepts maps to the AppleTalk multicast
+ * address in phase 2 and to ff:ff:ff:ff:ff:ff in phase 1. A complete AARP entry
+ * gives its Ethernet address. Otherwise the entry holds the packet, in place
+ * of one held before, and an AARP request goes out. A bucket without a free
+ * entry panics.
+ *
+ * @param[in]  ac       Ethernet interface
+ * @param[in]  m        packet to send, which the entry holds or the call frees
+ *                      when it returns 0
+ * @param[in]  destsat  AppleTalk destination
+ * @param[out] desten   receives the Ethernet address
+ * @returns 1 with desten filled in, or 0 when the packet waits for the reply or
+ *          goes away
+ */
 int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat,
                 unsigned char *desten)
 {
@@ -279,6 +326,16 @@ int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat,
     return 0;
 }
 
+/*!
+ * @brief Check an incoming AARP packet and pass an AppleTalk one to
+ * at_aarpinput
+ *
+ * An interface with IFF_NOARP, another hardware type, or a short packet drops
+ * the packet.
+ *
+ * @param[in] ac  Ethernet interface
+ * @param[in] m   packet, which the call frees or passes on
+ */
 void aarpinput(struct arpcom *ac, struct mbuf *m)
 {
     struct arphdr	*ar;
@@ -320,6 +377,22 @@ out:
 }
 
 
+/*!
+ * @brief Process an AppleTalk AARP packet: learn the sender, defend the local
+ * address, and answer
+ *
+ * Packets from the local hardware address or from ff:ff:ff:ff:ff:ff go away.
+ * A packet that claims the local address wakes a probe in progress, so
+ * it picks another address, and otherwise logs a duplicate address. The sender
+ * gets a complete cache entry, and a held packet for it goes out. A probe for
+ * the address of the sender frees its entry.
+ *
+ * A request or probe for the local address gets a response, except while the
+ * interface probes.
+ *
+ * @param[in] ac  Ethernet interface
+ * @param[in] m   packet, reused for the response or freed
+ */
 void at_aarpinput(struct arpcom *ac, struct mbuf *m)
 {
     struct mbuf		*m0;
@@ -523,6 +596,11 @@ void at_aarpinput(struct arpcom *ac, struct mbuf *m)
     return;
 }
 
+/*!
+ * @brief Free the held packet of an AARP entry and clear the entry
+ *
+ * @param[in,out] aat  AARP entry
+ */
 void aarptfree(struct aarptab *aat)
 {
     if (aat->aat_hold) {
@@ -535,6 +613,16 @@ void aarptfree(struct aarptab *aat)
     aat->aat_ataddr.s_node = 0;
 }
 
+/*!
+ * @brief Take an AARP entry for an address from its hash bucket
+ *
+ * A free entry comes first, and otherwise the oldest entry that is not
+ * permanent gives way. The first call starts aarptimer.
+ *
+ * @param[in] addr  AppleTalk address
+ * @returns the entry, in use, or NULL when the bucket holds only permanent
+ *          entries
+ */
 struct aarptab *aarptnew(struct at_addr *addr)
 {
     int			n;
@@ -576,6 +664,15 @@ out:
     return aat;
 }
 
+/*!
+ * @brief Send the next AARP probe for the address that an interface probes for
+ *
+ * Each call sends one probe and schedules the next one 200 ms later, until
+ * aa_probcnt runs out. The call then clears AFA_PROBING and wakes the waiting
+ * caller.
+ *
+ * @param[in] ac  Ethernet interface
+ */
 void aarpprobe(struct arpcom *ac)
 {
     struct mbuf		*m;
@@ -678,6 +775,9 @@ void aarpprobe(struct arpcom *ac)
     aa->aa_probcnt--;
 }
 
+/*!
+ * @brief Stop aarptimer and free the packets that AARP entries hold
+ */
 void aarp_clean(void)
 {
     struct aarptab	*aat;

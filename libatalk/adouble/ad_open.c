@@ -179,6 +179,12 @@ static const struct entry entry_order_ea[ADEID_NUM_EA + 1] = {
 };
 
 #define ADFLAGS2LOGSTRBUFSIZ 128
+/*!
+ * @brief Render an ADFLAGS_* mask as text, for log output
+ *
+ * @param[in] adflags  AppleDouble open flags
+ * @returns a static buffer with the names of the set flags joined by "|"
+ */
 const char *adflags2logstr(int adflags)
 {
     int first = 1;
@@ -302,6 +308,14 @@ const char *adflags2logstr(int adflags)
 }
 
 #define OPENFLAGS2LOGSTRBUFSIZ 128
+/*!
+ * @brief Render open(2) flags as text, for log output
+ *
+ * Covers O_RDONLY, O_RDWR, O_CREAT, O_TRUNC, and O_EXCL.
+ *
+ * @param[in] oflags  open flags
+ * @returns a static buffer with the names of the set flags joined by "|"
+ */
 const char *openflags2logstr(int oflags)
 {
     int first = 1;
@@ -352,6 +366,16 @@ const char *openflags2logstr(int oflags)
     return buf;
 }
 
+/*!
+ * @brief Map an on-disk entry ID to the in-memory entry index
+ *
+ * IDs up to 15 are the standard AppleDouble entries and pass through. The
+ * netatalk private IDs AD_DEV, AD_INO, AD_SYN, and AD_ID map to ADEID_PRIVDEV,
+ * ADEID_PRIVINO, ADEID_PRIVSYN, and ADEID_PRIVID.
+ *
+ * @param[in] eid  entry ID as stored on disk
+ * @returns the entry index, or 0 for an unknown ID
+ */
 static uint32_t get_eid(uint32_t eid)
 {
     if (eid <= 15) {
@@ -379,7 +403,15 @@ static uint32_t get_eid(uint32_t eid)
 
 
 /*!
- * Initialize offset pointers
+ * @brief Initialize the entry table of an AppleDouble for its version
+ *
+ * ad_init_offsets leaves a header that already carries AD_MAGIC alone.
+ * Otherwise it sets the magic, the version, and the valid data length. The
+ * entries then take the offsets and lengths of the version 2 or EA layout.
+ * Without HAVE_EAFD the EA form also gets the macOS resource fork offset.
+ *
+ * @param[in,out] ad  AppleDouble with ad_vers set
+ * @returns 0, or -1 for a version other than AD_VERSION2 or AD_VERSION_EA
  */
 int ad_init_offsets(struct adouble *ad)
 {
@@ -427,7 +459,20 @@ int ad_init_offsets(struct adouble *ad)
     return 0;
 }
 
-/* ----------------------------------- */
+/*!
+ * @brief Fill a fresh AppleDouble header for a path
+ *
+ * Initializes the entry table and marks a dot file invisible when the volume
+ * sets ADVOL_INVDOTS, the directory itself excepted. The create, modify, and
+ * access dates take the file's mtime, the backup date AD_DATE_START.
+ *
+ * @param[in,out] ad       AppleDouble with ad_vers and ad_options set
+ * @param[in]     path     path of the file, for the dot check and for lstat
+ * @param[in]     stp      stat of the file, or NULL to lstat path here
+ * @param[in]     adflags  ADFLAGS_DIR when path is a directory
+ * @returns 0, or -1 when the version is unknown, FinderInfo cannot be
+ *          addressed, or the stat fails
+ */
 static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
                          int adflags)
 {
@@ -481,8 +526,15 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
 }
 
 /*!
- * @brief Read an AppleDouble buffer
- * @returns 0 on success, -1 if an entry was malformatted
+ * @brief Parse the entry descriptors of an AppleDouble header into the entry
+ * table
+ *
+ * Every entry except the resource fork must lie inside valid_data_len.
+ *
+ * @param[in,out] ad              AppleDouble whose ad_data holds the header
+ * @param[in]     nentries        number of entry descriptors in the header
+ * @param[in]     valid_data_len  bytes of header data present in ad_data
+ * @returns 0, or -1 for a malformed entry
  */
 static int parse_entries(struct adouble *ad, uint16_t nentries,
                          size_t valid_data_len)
@@ -520,13 +572,20 @@ static int parse_entries(struct adouble *ad, uint16_t nentries,
     return 0;
 }
 
-/* this reads enough of the header so that we can figure out all of
- * the entry lengths and offsets. once that's done, we just read/mmap
- * the rest of the header in.
+/*!
+ * @brief Read and check the header of a version 2 AppleDouble file
  *
- * NOTE: we're assuming that the resource fork is kept at the end of
- *       the file. also, mmapping won't work for the hfs fs until it
- *       understands how to mmap header files. */
+ * Reads up to AD_DATASZ2 bytes from the metadata file and checks the magic, the
+ * version, and the entry count. It then parses the entries and requires a
+ * resource fork entry whose offset lies inside the buffer. The resource fork
+ * sits at the end of the file: its length is the file size minus its offset.
+ *
+ * @param[in]     path  path of the data file, for log messages
+ * @param[in,out] ad    AppleDouble whose metadata descriptor is open
+ * @param[in]     hst   stat of the metadata file, or NULL to fstat it here
+ * @returns 0 on success, -1 with errno EIO for a malformed header, or 1 when
+ *          the stat fails
+ */
 static int ad_header_read(const char *path, struct adouble *ad,
                           const struct stat *hst)
 {
@@ -604,7 +663,17 @@ static int ad_header_read(const char *path, struct adouble *ad,
     return 0;
 }
 
-/* error here means it's not ad ._ adouble:osx file and thus we return 1 */
+/*!
+ * @brief Check whether a ._ file carries a netatalk-written AppleDouble header
+ *
+ * Reads the header, checks the magic and the version, and requires the netatalk
+ * filler string. A ._ file that macOS itself wrote fails the check: it is not
+ * one of ours, so enumeration and access treat it as plain data.
+ *
+ * @param[in] path  path of the ._ file
+ * @returns 0 for a netatalk header, 1 otherwise, including when the file cannot
+ *          be read
+ */
 int ad_valid_header_osx(const char *path)
 {
     EC_INIT;
@@ -775,17 +844,19 @@ static int ad_convert_move_rfork(struct ad_fd *adf, off_t src, off_t dst,
 }
 
 /*!
- * @brief Convert from Apple's ._ file to Netatalk
+ * @brief Convert a macOS ._ AppleDouble file to the netatalk layout
  *
- * Apple's AppleDouble may contain a FinderInfo entry longer then 32 bytes
- * containing packed xattrs. Netatalk can't deal with that, so we
- * simply discard the packed xattrs.
+ * A macOS FinderInfo entry longer than 32 bytes carries packed xattrs, which
+ * netatalk cannot use. The conversion discards them and moves the resource fork
+ * to its canonical offset. Entry offsets and lengths come from the file, so
+ * ad_convert_osx validates them and refuses a malformed sidecar instead of
+ * rewriting it. ad_open() runs during the conversion and could recurse, so a
+ * static flag makes a nested call a no-op.
  *
- * As we call ad_open() which might result in a recursion, just to be sure
- * use static variable in_conversion to check for that.
- *
- * @returns -1 in case an error occured, 0 if no conversion was done,
- * 1 otherwise
+ * @param[in]     path  path of the ._ file, for log messages
+ * @param[in,out] ad    AppleDouble whose entries describe the file as read
+ * @param[in]     hst   stat of the open sidecar the header came from
+ * @returns -1 on error, 0 when nothing needed converting, 1 after converting
  */
 static int ad_convert_osx(const char *path, struct adouble *ad,
                           const struct stat *hst)
@@ -961,7 +1032,20 @@ EC_CLEANUP:
     return 1;
 }
 
-/*! Read an ._ file, only uses the resofork, finderinfo is taken from EA */
+/*!
+ * @brief Read the header of a macOS ._ file and take its resource fork
+ *
+ * Only the resource fork comes from the ._ file. The FinderInfo lives in the
+ * file's extended attribute. A FinderInfo entry of the wrong length means a
+ * macOS-written file, which ad_convert_osx() rewrites once before a second
+ * read. The resource fork entry must sit at ADEDOFF_RFORK_OSX.
+ *
+ * @param[in]     path  path of the data file, for log messages
+ * @param[in,out] ad    AppleDouble whose resource fork descriptor is open
+ * @param[in]     hst   stat of the ._ file, or NULL to fstat it here
+ * @returns 0 on success, -1 with errno EIO for a malformed or unconvertible
+ *          header, or the errno of fstat or pread
+ */
 static int ad_header_read_osx(const char *path, struct adouble *ad,
                               struct stat *hst)
 {
@@ -1065,6 +1149,22 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Read and check the metadata EA of an AppleDouble ea file
+ *
+ * The EA comes from the metadata descriptor when one is open, otherwise from
+ * path. The header must hold AD_DATASZ_EA bytes, the version 2 magic and
+ * version, ADEID_NUM_EA entries, and every entry the ea layout defines.
+ * Without HAVE_EAFD the function forces the resource fork offset to
+ * ADEDOFF_RFORK_OSX. A malformed EA fails with EINVAL. When ad carries
+ * ADFLAGS_CREATE the function deletes the malformed EA as root and fails with
+ * ENOENT instead, so the caller creates a fresh one.
+ *
+ * @param[in]     path  file whose metadata EA to read
+ * @param[in,out] ad    AppleDouble receiving the parsed header
+ * @param[in]     hst   unused
+ * @returns 0, or -1 with errno set
+ */
 static int ad_header_read_ea(const char *path, struct adouble *ad,
                              const struct stat *hst _U_)
 {
@@ -1169,12 +1269,14 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Takes a path to an AppleDouble file and creates the parent .AppleDouble directory
+ * @brief Create the .AppleDouble directory that holds a version 2 metadata file
  *
- * Example:
+ * The directory is the parent of path. For "/dir/.AppleDouble/file" the call
+ * creates "/dir/.AppleDouble" through ad_mkdir.
  *
- * path: "/path/.AppleDouble/file"
- * => mkdir("/path/.AppleDouble/") (in ad_mkdir())
+ * @param[in,out] path  metadata file path, truncated at its last slash during
+ *                      the mkdir and restored only on success
+ * @returns 0, or -1 when path has no slash or ad_mkdir failed
  */
 static int ad_mkrf(const char *path)
 {
@@ -1206,6 +1308,13 @@ static int ad_mkrf_ea(const char *path _U_)
 }
 #endif
 
+/*!
+ * @brief Create nothing, because the ea layout stores forks without a parent
+ * directory
+ *
+ * @param[in] path  unused
+ * @returns 0
+ */
 static int ad_mkrf_osx(const char *path _U_)
 {
     return 0;
@@ -1214,13 +1323,17 @@ static int ad_mkrf_osx(const char *path _U_)
 #define EMULATE_SUIDDIR
 
 /*!
-   @brief if we are root change path user/ group
-   @note It can be a native function for BSD cf. FAQ.Q10
-   @param path   pathname to chown
-   @param stbuf  parent directory inode
-
-   use fstat and fchown or lchown with linux?
-*/
+ * @brief Give a freshly created AppleDouble file the owner that the parent
+ * directory implies
+ *
+ * Only a root afpd changes ownership, and it signals that through ad_setfuid.
+ * The new owner is the configured default user, or the parent directory owner
+ * when the default is zero. The group always follows the parent directory.
+ *
+ * @param[in] path   file to chown
+ * @param[in] stbuf  stat of the parent directory
+ * @returns 0, or -1 when lchown failed
+ */
 static int ad_chown(const char *path, struct stat *stbuf)
 {
     int ret = 0;
@@ -1240,8 +1353,14 @@ static int ad_chown(const char *path, struct stat *stbuf)
 #define DEFMASK 07700   /*!< be conservative */
 
 /*!
-   return access right and inode of path parent directory
-*/
+ * @brief Restrict a creation mode to the permissions of the parent directory
+ *
+ * @param[in]     path   file whose parent directory supplies the permissions
+ * @param[in,out] mode   requested mode, masked with the parent directory mode,
+ *                       or with DEFMASK when the stat failed
+ * @param[out]    stbuf  receives the parent directory stat
+ * @returns 0, or -1 when mode is zero or the parent directory stat failed
+ */
 static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf)
 {
     if (*mode == 0) {
@@ -1257,12 +1376,26 @@ static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf)
     return 0;
 }
 
-/* --------------------------- */
+/*!
+ * @brief Upgrade nothing, because the version 2 layout has a single header
+ * format
+ *
+ * @param[in] ad    unused
+ * @param[in] name  unused
+ * @returns 0
+ */
 static int ad_header_upgrade(struct adouble *ad _U_, const char *name _U_)
 {
     return 0;
 }
 
+/*!
+ * @brief Abort, because the ea layout never upgrades a header
+ *
+ * @param[in] ad    unused
+ * @param[in] name  unused
+ * @returns 0, though AFP_PANIC ends the process first
+ */
 static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
 {
     AFP_PANIC("ad_header_upgrade_ea: don't use");
@@ -1270,13 +1403,18 @@ static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
 }
 
 /*!
- * @brief Error handling for adouble header(=metadata) file open error
+ * @brief Decide whether a failed metadata open fails the entire ad_open
  *
- * We're called because opening ADFLAGS_HF caused an error.
- * 1. In case ad_open is called with ADFLAGS_NOHF the error is suppressed.
- * 2. Open non-existent resource fork, this will just result in first read return EOF
- * 3. If ad_open was called with ADFLAGS_DF we may have opened the datafork and thus
- *    ought to close it before returning with an error condition.
+ * A missing header is no error under ADFLAGS_NOHF, and a read-only
+ * ADFLAGS_RF open tolerates ENOENT. Only ENOENT and ENOATTR count as missing,
+ * so an unreadable header still fails. Any other failure also closes a data
+ * fork that this ad_open opened under ADFLAGS_DF, ADFLAGS_SETSHRMD, or
+ * ADFLAGS_CHECK_OF.
+ *
+ * @param[in,out] ad       AppleDouble whose metadata open failed, errno still
+ *                         set
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @returns 0 when the flags tolerate the failure, -1 otherwise
  */
 static int ad_error(struct adouble *ad, int adflags)
 {
@@ -1388,6 +1526,23 @@ int ad_open_native_finderinfo(const char *path, char *ret)
 }
 #endif
 
+/*!
+ * @brief Open the data fork of an AppleDouble
+ *
+ * An already open fork gains a reference. A new open maps adflags through
+ * ad2openflags and, under ADFLAGS_CREATE, restricts mode to the parent
+ * directory permissions unless ADVOL_UNIXPRIV keeps it. When O_NOFOLLOW hits a
+ * symlink the fork stores the link target instead of a descriptor and marks it
+ * AD_SYMLINK. EACCES, EPERM, or EROFS on a read-only ADFLAGS_SETSHRMD open
+ * retries read-only without O_CREAT, O_EXCL, or O_TRUNC. Under ADFLAGS_CREATE,
+ * ad_chown then sets the owner of the opened file.
+ *
+ * @param[in]     path     data file
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @param[in]     mode     creation mode under ADFLAGS_CREATE
+ * @param[in,out] ad       AppleDouble receiving the data fork descriptor
+ * @returns 0, or -1 with errno set
+ */
 static int ad_open_df(const char *path, int adflags, mode_t mode,
                       struct adouble *ad)
 {
@@ -1510,6 +1665,27 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Open or create the version 2 metadata file of an AppleDouble
+ *
+ * A symlink data fork short-circuits with nothing opened. An already open
+ * metadata file gains a reference after ad_refresh. Otherwise the call opens
+ * the ad_path file without O_CREAT or O_EXCL. EACCES, EPERM, or EROFS on a
+ * read-only ADFLAGS_SETSHRMD open retries read-only without O_TRUNC.
+ *
+ * ENOENT under ADFLAGS_CREATE creates the .AppleDouble directory when needed,
+ * retries with O_CREAT and a mode from ad_hf_mode, and lets ad_chown set the
+ * owner. A new or empty file receives a fresh header through new_ad_header
+ * and ad_flush. Any other file goes through ad_header_read. A failure after
+ * the open closes the descriptor again.
+ *
+ * @param[in]     path     data file whose metadata file to open
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @param[in]     mode     creation mode for a new metadata file
+ * @param[in,out] ad       AppleDouble receiving the metadata descriptor and
+ *                         header
+ * @returns 0, or -1 with errno set
+ */
 static int ad_open_hf_v2(const char *path, int adflags, mode_t mode,
                          struct adouble *ad)
 {
@@ -1671,6 +1847,28 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Open or create the metadata EA of an AppleDouble ea file
+ *
+ * A symlink short-circuits with nothing opened. An already open metadata
+ * descriptor gains a reference. A write request on a closed descriptor opens
+ * the file itself, read-only for a directory so that fchdir still works. A
+ * read-only request reads the EA by path and opens nothing.
+ *
+ * A missing EA fails with ENOENT unless ADFLAGS_CREATE allows creating one.
+ * Creation on an ADVOL_RO volume fails with EROFS. new_ad_header and ad_flush
+ * write the fresh header, and the descriptor flags gain O_CREAT. On macOS the
+ * native FinderInfo EA overwrites the FinderInfo entry. ad_rlen receives the
+ * resource fork size, and a failure after the open closes the descriptor
+ * again.
+ *
+ * @param[in]     path     file whose metadata EA to open
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @param[in]     mode     unused
+ * @param[in,out] ad       AppleDouble receiving the metadata descriptor and
+ *                         header
+ * @returns 0, or -1 with errno set
+ */
 static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
                          struct adouble *ad)
 {
@@ -1798,6 +1996,19 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Open AppleDouble metadata with the layout that ad_vers selects
+ *
+ * The metadata reference count rises before the layout-specific open runs and
+ * falls again when that open fails. ad_error then decides whether the failure
+ * is tolerable.
+ *
+ * @param[in]     path     data file whose metadata to open
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @param[in]     mode     creation mode for new metadata
+ * @param[in,out] ad       AppleDouble receiving the metadata
+ * @returns 0, or -1 with errno set
+ */
 static int ad_open_hf(const char *path, int adflags, int mode,
                       struct adouble *ad)
 {
@@ -1827,7 +2038,17 @@ static int ad_open_hf(const char *path, int adflags, int mode,
 }
 
 /*!
- * Get resofork length for adouble:ea, parameter 'ad' may be NULL
+ * @brief Size of the resource fork of an AppleDouble ea file
+ *
+ * With HAVE_EAFD the size comes from the open resource fork descriptor. Failing
+ * that, it comes from the resource fork EA of the metadata descriptor or of
+ * path. Without HAVE_EAFD it is the size of the ad_path_osx file beyond its
+ * header.
+ *
+ * @param[in] path     file whose resource fork to measure
+ * @param[in] adflags  ADFLAGS_* bits, ADFLAGS_DIR yields 0
+ * @param[in] ad       AppleDouble with possibly open descriptors, or NULL
+ * @returns the size in bytes, or 0 for a directory or when the lookup fails
  */
 off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_)
 {
@@ -1874,6 +2095,20 @@ EC_CLEANUP:
     return rlen;
 }
 
+/*!
+ * @brief Take a resource fork reference on a version 2 AppleDouble
+ *
+ * The version 2 resource fork lives in the metadata file, so ad_open_hf_v2
+ * already opened it. A closed metadata file fails the call unless ADFLAGS_NORF
+ * or ADFLAGS_RDONLY tolerates it, and then the count stays unchanged.
+ *
+ * @param[in]     path     data file, for logging only
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @param[in]     mode     unused
+ * @param[in,out] ad       AppleDouble whose resource fork count rises
+ * @returns 0, or -1 when the metadata file did not open and the flags require
+ *          it
+ */
 static int ad_open_rf_v2(const char *path, int adflags, int mode _U_,
                          struct adouble *ad)
 {
@@ -1898,6 +2133,28 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Open or create the resource fork of an AppleDouble ea file
+ *
+ * An already open resource fork gains a reference and refreshes ad_rlen. A new
+ * open uses sys_getxattrfd on the metadata descriptor on Solaris, and open on
+ * the ad_path file elsewhere, both without O_CREAT. EACCES, EPERM, or EROFS on
+ * a read-only open retries read-only without O_TRUNC. ENOENT without
+ * ADFLAGS_CREATE returns 0 with no fork open. ADFLAGS_CREATE adds O_CREAT and
+ * creates the fork with mode.
+ *
+ * Without HAVE_EAFD a created fork receives a header through new_ad_header
+ * and ad_flush, and an existing one goes through ad_header_read_osx. ad_rlen
+ * receives the fork size. A failure closes a descriptor this call opened, and
+ * ENOENT or ENOATTR under ADFLAGS_NORF then counts as success. Any other
+ * failure also closes the data and metadata forks that adflags name.
+ *
+ * @param[in]     path     data file whose resource fork to open
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @param[in]     mode     creation mode under ADFLAGS_CREATE
+ * @param[in,out] ad       AppleDouble receiving the resource fork descriptor
+ * @returns 0, or -1 with errno set
+ */
 static int ad_open_rf_ea(const char *path, int adflags, int mode,
                          struct adouble *ad)
 {
@@ -2085,7 +2342,14 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Open resource fork
+ * @brief Open the resource fork of an AppleDouble with the layout that ad_vers
+ * selects
+ *
+ * @param[in]     path     data file whose resource fork to open
+ * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
+ * @param[in]     mode     creation mode under ADFLAGS_CREATE
+ * @param[in,out] ad       AppleDouble receiving the resource fork
+ * @returns 0, or -1 on failure or an unknown ad_vers
  */
 static int ad_open_rf(const char *path, int adflags, int mode,
                       struct adouble *ad)
@@ -2113,13 +2377,22 @@ static int ad_open_rf(const char *path, int adflags, int mode,
  * API functions
  ********************************************************************************* */
 
-/*
- * All entries besides FinderInfo and resource fork must fit into the
- * buffer. FinderInfo is special as it may be larger then the default 32 bytes
- * if it contains marshalled xattrs, which we will fixup that in
- * ad_convert(). The first 32 bytes however must also be part of the buffer.
+/*!
+ * @brief Check that entry eid with got_len bytes at off fits the ad_data buffer
  *
- * The resource fork is never accessed directly by the ad_data buf.
+ * An empty entry always passes. Fixed-size entries must have exactly their
+ * defined length. FinderInfo must hold at least ADEDLEN_FINDERI bytes, because
+ * a macOS sidecar packs xattrs behind the canonical 32, and ad_convert_osx
+ * discards them later. Other variable entries must not exceed their defined
+ * length, and the buffer must have room for that maximum. The data and
+ * resource forks never live in the buffer, so they always pass.
+ *
+ * @param[in] eid      entry id, ADEID_*
+ * @param[in] bufsize  valid bytes in the ad_data buffer
+ * @param[in] off      entry offset in the buffer
+ * @param[in] got_len  entry length from the header
+ * @returns true when the entry fits, false when it does not or eid is out of
+ *          range
  */
 static bool ad_entry_check_size(uint32_t eid,
                                 size_t bufsize,
@@ -2221,10 +2494,15 @@ static bool ad_entry_check_size(uint32_t eid,
 }
 
 /*!
- * @brief Whether an entry of @p len bytes fits at eid's offset in ad
+ * @brief Whether entry eid in ad has room for len bytes at its offset
  *
- * ad_entry()'s bounds check against a caller-supplied length, so a
- * destination can be checked before its length is committed.
+ * This is the bounds check of ad_entry against a caller-supplied length, so a
+ * caller can test a destination before it commits the length.
+ *
+ * @param[in] ad   AppleDouble with its metadata loaded
+ * @param[in] eid  entry id, ADEID_*
+ * @param[in] len  length to test
+ * @returns true when the entry has an offset and the length fits
  */
 bool ad_entry_fits(const struct adouble *ad, int eid, uint32_t len)
 {
@@ -2233,6 +2511,14 @@ bool ad_entry_fits(const struct adouble *ad, int eid, uint32_t len)
            && ad_entry_check_size(eid, ad->valid_data_len, (uint32_t) off, len);
 }
 
+/*!
+ * @brief Pointer to entry eid inside the ad_data buffer of ad
+ *
+ * @param[in] ad   AppleDouble with its metadata loaded
+ * @param[in] eid  entry id, ADEID_*
+ * @returns the entry start, or NULL when the entry is absent or does not fit
+ *          the buffer
+ */
 void *ad_entry(const struct adouble *ad, int eid)
 {
     off_t off = ad_getentryoff(ad, eid);
@@ -2248,6 +2534,18 @@ void *ad_entry(const struct adouble *ad, int eid)
     return ((struct adouble *)ad)->ad_data + off;
 }
 
+/*!
+ * @brief Offset of entry eid in the layout of ad
+ *
+ * Version 2 returns the header offset. The ea layout returns 0 for the data
+ * fork and, with HAVE_EAFD, for the resource fork, because those forks live
+ * outside the metadata EA.
+ *
+ * @param[in] ad   AppleDouble with its metadata loaded
+ * @param[in] eid  entry id, ADEID_*
+ * @returns the entry offset, 0 for a fork kept outside the buffer or an absent
+ *          entry
+ */
 off_t ad_getentryoff(const struct adouble *ad, int eid)
 {
     if (ad->ad_vers == AD_VERSION2) {
@@ -2292,11 +2590,31 @@ int ad_fork_fileno(const struct adouble *ad, int eid, off_t *off)
     return ad_reso_fileno(ad);
 }
 
+/*!
+ * @brief Return path unchanged, because the Solaris ea layout keeps every fork
+ * in EAs of the file
+ *
+ * @param[in] path     file or directory
+ * @param[in] adflags  unused
+ * @returns path
+ */
 const char *ad_path_ea(const char *path, int adflags _U_)
 {
     return path;
 }
 
+/*!
+ * @brief Sidecar path of the resource fork in the ea layout
+ *
+ * The result is "._name" beside the file, or "name/..namedfork/rsrc" on macOS
+ * where the kernel exposes the native resource fork as a file. A path of "."
+ * names the current directory and getcwd resolves it first. The result lives
+ * in a static buffer that the next call overwrites.
+ *
+ * @param[in] path     file whose resource fork sidecar to name
+ * @param[in] adflags  unused
+ * @returns the sidecar path in a static buffer
+ */
 const char *ad_path_osx(const char *path, int adflags _U_)
 {
     static char pathbuf[MAXPATHLEN + 1];
@@ -2340,13 +2658,16 @@ const char *ad_path_osx(const char *path, int adflags _U_)
 }
 
 /*!
- * @brief Put the .AppleDouble where it needs to be:
- * @code
- *      /   a/.AppleDouble/b
- *  a/b
- *      \   b/.AppleDouble/.Parent
- * @endcode
- * @bug should do something for pathname > MAXPATHLEN
+ * @brief Metadata file path of the version 2 layout
+ *
+ * A file "a/b" maps to "a/.AppleDouble/b". A directory "a/b" maps to
+ * "a/b/.AppleDouble/.Parent". The result lives in a static buffer that the
+ * next call overwrites.
+ *
+ * @param[in] path     file or directory
+ * @param[in] adflags  ADFLAGS_DIR marks path as a directory
+ * @returns the metadata path in a static buffer, or NULL when it would exceed
+ *          MAXPATHLEN
  */
 const char *ad_path(const char *path, int adflags)
 {
@@ -2401,9 +2722,14 @@ const char *ad_path(const char *path, int adflags)
 }
 
 /*!
- * @brief Support inherited protection modes for AppleDouble files.
- * The supplied mode is ANDed with the parent directory's mask value in lieu of "umask",
- * and that value is returned.
+ * @brief Parent directory of path, for permission inheritance
+ *
+ * The result drops the last component and any trailing slashes, and a bare
+ * file name yields ".". It lives in a static buffer that the next call
+ * overwrites.
+ *
+ * @param[in] path  file or directory
+ * @returns the parent directory in a static buffer, or NULL with ENAMETOOLONG
  */
 char *ad_dir(const char *path)
 {
@@ -2463,21 +2789,36 @@ use_cur:
     return modebuf;
 }
 
+/*!
+ * @brief Register the user that ad_chown gives to new AppleDouble files
+ *
+ * @param[in] id  default owner, 0 to inherit from the parent directory, or -1
+ *                to disable
+ * @returns 0
+ */
 int ad_setfuid(const uid_t id)
 {
     default_uid = id;
     return 0;
 }
 
-/* ---------------- */
+/*!
+ * @brief The user that ad_setfuid registered
+ *
+ * @returns the default owner, -1 before any ad_setfuid call
+ */
 uid_t ad_getfuid(void)
 {
     return default_uid;
 }
 
 /*!
-   stat path parent directory
-*/
+ * @brief Stat the parent directory of path
+ *
+ * @param[in]  path   file or directory
+ * @param[out] stbuf  receives the parent directory stat
+ * @returns 0, or -1 when ad_dir or stat failed
+ */
 int ad_stat(const char *path, struct stat *stbuf)
 {
     char *p;
@@ -2491,8 +2832,13 @@ int ad_stat(const char *path, struct stat *stbuf)
 }
 
 /*!
-   return access right of path parent directory
-*/
+ * @brief Mask a creation mode with the parent directory permissions of path
+ *
+ * @param[in] path  file whose parent directory supplies the permissions
+ * @param[in] mode  requested mode
+ * @returns the masked mode, limited to DEFMASK when the parent directory stat
+ *          failed
+ */
 int ad_mode(const char *path, mode_t mode)
 {
     struct stat     stbuf;
@@ -2501,7 +2847,14 @@ int ad_mode(const char *path, mode_t mode)
 }
 
 /*!
- * Use mkdir() with mode bits taken from ad_mode().
+ * @brief Create a directory with a mode inherited from its parent
+ *
+ * ad_mode_st restricts mode to the parent permissions, and ad_chown then
+ * gives the new directory the owner that the parent implies.
+ *
+ * @param[in] path  directory to create
+ * @param[in] mode  requested mode
+ * @returns 0, or -1 with errno from mkdir
  */
 int ad_mkdir(const char *path, mode_t mode)
 {
@@ -2521,6 +2874,16 @@ int ad_mkdir(const char *path, mode_t mode)
     return ret;
 }
 
+/*!
+ * @brief Select the fork layout of ad from ad_vers
+ *
+ * Version 2 shares the metadata descriptor with the resource fork, and the ea
+ * layout shares it with the data fork. Every descriptor starts closed, the
+ * reference count at 1, and the resource fork length at 0. An unknown version
+ * aborts.
+ *
+ * @param[in,out] ad  AppleDouble with ad_vers set
+ */
 static void ad_init_func(struct adouble *ad)
 {
     switch (ad->ad_vers) {
@@ -2548,6 +2911,16 @@ static void ad_init_func(struct adouble *ad)
     return;
 }
 
+/*!
+ * @brief Initialize an AppleDouble from explicit version and option values
+ *
+ * ad_init takes the same values from a volume. Unlike ad_init this function
+ * leaves the entry offset table empty until a header read fills it.
+ *
+ * @param[out] ad       AppleDouble to initialize
+ * @param[in]  flags    AD_VERSION2 or AD_VERSION_EA
+ * @param[in]  options  ADVOL_* option bits
+ */
 void ad_init_old(struct adouble *ad, int flags, int options)
 {
     memset(ad, 0, sizeof(struct adouble));
@@ -2556,6 +2929,17 @@ void ad_init_old(struct adouble *ad, int flags, int options)
     ad_init_func(ad);
 }
 
+/*!
+ * @brief Initialize an AppleDouble for the layout and options of a volume
+ *
+ * ad_init_offsets fills the entry offset table at once, so ad_entry,
+ * ad_getattr, and ad_getdate work on a cache hit that never reads a header.
+ * ad_init_offsets ignores a header that already carries AD_MAGIC, so a later
+ * header read can call it again.
+ *
+ * @param[out] ad   AppleDouble to initialize
+ * @param[in]  vol  volume supplying v_adouble and v_ad_options
+ */
 void ad_init(struct adouble *ad, const struct vol *vol)
 {
     memset(ad, 0, sizeof(struct adouble));
@@ -2716,15 +3100,17 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief open metadata, possibly as root
+ * @brief Open only the metadata of a file or directory read-only, as root when
+ * needed
  *
- * Return only metadata but try very hard i.e. at first try as user, then try as root.
+ * The call keeps ADFLAGS_DIR and ADFLAGS_CHECK_OF from flags, adds ADFLAGS_HF
+ * and ADFLAGS_RDONLY, and retries as root after EACCES.
  *
- * @param name  name of file/dir
- * @param flags ADFLAGS_DIR: name is a directory \n
- *              ADFLAGS_CHECK_OF: test if name is open by us or another afpd process
- *
- * @param adp   pointer to struct adouble
+ * @param[in]     name   file or directory
+ * @param[in]     flags  ADFLAGS_DIR when name is a directory, ADFLAGS_CHECK_OF
+ *                       to look for open forks of this or another afpd
+ * @param[in,out] adp    initialized AppleDouble receiving the metadata
+ * @returns 0, or -1 with errno set
  */
 int ad_metadata(const char *name, int flags, struct adouble *adp)
 {
@@ -2745,7 +3131,19 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
 }
 
 /*!
- * openat like wrapper for ad_metadata
+ * @brief ad_metadata relative to a directory descriptor
+ *
+ * With a dirfd other than -1 the call changes into that directory around
+ * ad_metadata and restores the previous working directory afterwards. When
+ * the restore fails it anchors the process at "/" and reports the restore
+ * error only when ad_metadata itself succeeded.
+ *
+ * @param[in]     dirfd  directory that name is relative to, or -1 for the
+ *                       working directory
+ * @param[in]     name   file or directory
+ * @param[in]     flags  ADFLAGS_DIR and ADFLAGS_CHECK_OF, as for ad_metadata
+ * @param[in,out] adp    initialized AppleDouble receiving the metadata
+ * @returns 0, or -1 with errno set
  */
 int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
 {
@@ -2813,6 +3211,18 @@ int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
     return ret;
 }
 
+/*!
+ * @brief Reread the metadata of an open AppleDouble
+ *
+ * Version 2 rereads the header from the open metadata descriptor. The ea
+ * layout refreshes the resource fork length from the open resource fork, and
+ * without HAVE_EAFD rereads the sidecar header first. It then rereads the
+ * metadata EA.
+ *
+ * @param[in]     path  file, unused for version 2
+ * @param[in,out] ad    AppleDouble with the forks to refresh open
+ * @returns 0, or -1 when a descriptor it needs stays closed or a read failed
+ */
 int ad_refresh(const char *path, struct adouble *ad)
 {
     switch (ad->ad_vers) {
@@ -2875,6 +3285,23 @@ int ad_refresh(const char *path, struct adouble *ad)
     }
 }
 
+/*!
+ * @brief ad_open relative to a directory descriptor
+ *
+ * With a dirfd other than -1 the call changes into that directory around
+ * ad_open and restores the previous working directory afterwards. When the
+ * restore fails it anchors the process at "/" and reports the restore error
+ * only when ad_open itself succeeded. ADFLAGS_CREATE takes the creation mode
+ * from the variable arguments, as ad_open does.
+ *
+ * @param[in,out] ad       initialized AppleDouble
+ * @param[in]     dirfd    directory that path is relative to, or -1 for the
+ *                         working directory
+ * @param[in]     path     file or directory
+ * @param[in]     adflags  ADFLAGS_* bits, as for ad_open
+ * @param[in]     ...      creation mode under ADFLAGS_CREATE
+ * @returns 0, or -1 with errno set
+ */
 int ad_openat(struct adouble  *ad,
               int dirfd,  /* dir fd openat like */
               const char *path,
@@ -2957,8 +3384,13 @@ EC_CLEANUP:
 }
 
 /*!
- * build a resource fork mode from the data fork mode:
- * remove X mode and extend header to RW if R or W (W if R for locking),
+ * @brief Derive the metadata file mode from a data fork mode
+ *
+ * Execute bits go away. Any read permission also grants write, because fcntl
+ * locks need write access, and any write permission also grants read.
+ *
+ * @param[in] mode  data fork mode
+ * @returns the metadata file mode
  */
 mode_t ad_hf_mode(mode_t mode)
 {

@@ -31,6 +31,17 @@
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
+/*!
+ * @brief Look up NBP names through the local atalkd with an NBPOP_BRRQ request
+ *
+ * @param[in]  obj     object name, or NULL for `=`
+ * @param[in]  type    type name, or NULL for `=`
+ * @param[in]  zone    zone name, or NULL for the default zone `*`
+ * @param[out] nn      array that receives the matches
+ * @param[in]  nncnt   size of nn
+ * @param[in]  ataddr  local address to send from, or NULL
+ * @returns the number of matches, or -1 for an error
+ */
 int nbp_lookup(const char *obj, const char *type, const char *zone,
                struct nbpnve *nn,
                int nncnt, const struct at_addr *ataddr)
@@ -38,6 +49,26 @@ int nbp_lookup(const char *obj, const char *type, const char *zone,
     return nbp_do_lookup_op(obj, type, zone, nn, nncnt, ataddr, NULL, NBPOP_BRRQ);
 }
 
+/*!
+ * @brief Send an NBP lookup operation and collect the distinct replies
+ *
+ * The request goes to the NBP port of dstaddr, or of the local address when
+ * dstaddr is NULL, which reaches the local atalkd. The call sends it 3 times
+ * and waits 2 seconds for replies after each send. It stops early once nn
+ * is full. Two replies that match without regard to zone and wildcards count
+ * once. Success sets errno to 0, and a bad array sets EINVAL.
+ *
+ * @param[in]  obj      object name of up to NBPSTRLEN bytes, or NULL for `=`
+ * @param[in]  type     type name of up to NBPSTRLEN bytes, or NULL for `=`
+ * @param[in]  zone     zone name of up to NBPSTRLEN bytes, or NULL for `*`
+ * @param[out] nn       array that receives the matches
+ * @param[in]  nncnt    size of nn
+ * @param[in]  srcaddr  local address to send from, or NULL
+ * @param[in]  dstaddr  node to ask, or NULL for the local atalkd
+ * @param[in]  op       NBP operation, such as NBPOP_BRRQ or NBPOP_LKUP
+ * @returns the number of matches, or -1 for a bad array, a name that is too
+ *          long, or a socket error
+ */
 int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
                      struct nbpnve *nn, int nncnt, const struct at_addr *srcaddr,
                      const struct at_addr *dstaddr, uint8_t op)

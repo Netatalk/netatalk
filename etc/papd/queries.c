@@ -49,6 +49,19 @@ int cq_rbilogin(struct papfile *, struct papfile *, struct sockaddr_at *);
 int cq_end(struct papfile *, struct papfile *, struct sockaddr_at *);
 
 
+/*!
+ * @brief Answer an unknown query with the default from its end comment
+ *
+ * The call drops the lines of the query up to its end comment, such as
+ * `%%?EndFeatureQuery: Unknown`, and replies with the text after the colon.
+ * A query without an end keyword only pops.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while a line is
+ *          incomplete
+ */
 int cq_default(struct papfile *in, struct papfile *out,
                struct sockaddr_at *sat _U_)
 {
@@ -106,6 +119,13 @@ int cq_default(struct papfile *in, struct papfile *out,
     }
 }
 
+/*!
+ * @brief Answer true for a spooling printer
+ *
+ * @param[in,out] out  reply data
+ * @returns 0, or -1 for a printer that does not spool, which falls back to the
+ *          default
+ */
 int gq_true(struct papfile *out)
 {
     if (printer->p_flags & P_SPOOLED) {
@@ -116,6 +136,14 @@ int gq_true(struct papfile *out)
     }
 }
 
+/*!
+ * @brief Answer UMICHCostPerPage with the page cost message or, with
+ * accounting, the page cost
+ *
+ * @param[in,out] out  reply data
+ * @returns 0, or -1 without a message or accounting, which falls back to the
+ *          default
+ */
 int gq_pagecost(struct papfile *out)
 {
     char		cost[60];
@@ -157,7 +185,10 @@ int gq_balance(struct papfile *out)
 static const char *spoolerid = "(PAPD Spooler) 1.0 (" VERSION ")\n";
 
 /*!
- * Handler for RBISpoolerID
+ * @brief Answer RBISpoolerID with the name and version of the papd spooler
+ *
+ * @param[in,out] out  reply data
+ * @returns 0
  */
 int gq_rbispoolerid(struct papfile *out)
 {
@@ -168,7 +199,13 @@ int gq_rbispoolerid(struct papfile *out)
 static const char *nouams = "*\n";
 
 /*!
- * Handler for RBIUAMListQuery
+ * @brief Answer RBIUAMListQuery with the print UAMs, one per line, ending with
+ * `*`
+ *
+ * A printer without print UAM authentication answers `*` alone.
+ *
+ * @param[in,out] out  reply data
+ * @returns 0
  */
 int gq_rbiuamlist(struct papfile *out)
 {
@@ -188,6 +225,12 @@ int gq_rbiuamlist(struct papfile *out)
     }
 }
 
+/*!
+ * @brief Answer the Product query with the `*Product` value of the PPD file
+ *
+ * @param[in,out] out  reply data
+ * @returns 0
+ */
 int gq_product(struct papfile *out)
 {
     struct ppd_feature	*pdprod;
@@ -215,6 +258,21 @@ struct genquery {
     { NULL, NULL },
 };
 
+/*!
+ * @brief Answer a `%%?BeginQuery` general query
+ *
+ * The keyword after the colon picks a handler from the genqueries table:
+ * UMICHCostPerPage, RBISpoolerID, RBIUAMListQuery, Product, ADOIsBinaryOK?,
+ * UMICHListQueue, or UMICHDeleteJob. An unknown keyword, or a handler that
+ * returns -1, passes the query to cq_default. The call then drops the lines
+ * up to the end comment.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while a line is
+ *          incomplete
+ */
 int cq_query(struct papfile *in, struct papfile *out,
              struct sockaddr_at *sat _U_)
 {
@@ -286,6 +344,16 @@ int cq_query(struct papfile *in, struct papfile *out,
     }
 }
 
+/*!
+ * @brief Answer each font name of a font query with `/Name:Yes` or `/Name:No`
+ *
+ * The answer says whether the PPD file lists the font. Names of 256 bytes or
+ * more get no answer.
+ *
+ * @param[in]     start  first byte of the font names
+ * @param[in]     stop   end of the font names
+ * @param[in,out] out    reply data
+ */
 void cq_font_answer(char *start, char *stop, struct papfile *out)
 {
     char		*p, *font, buf[256];
@@ -329,6 +397,18 @@ void cq_font_answer(char *start, char *stop, struct papfile *out)
     return;
 }
 
+/*!
+ * @brief Answer a `%%?BeginFontListQuery` with the 35 standard PostScript fonts
+ *
+ * The list ends with `*`, and PF_FONT_QUERY makes session send it a line per
+ * packet. The call then drops the lines up to the end comment.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data, receives PF_FONT_QUERY
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while a line is
+ *          incomplete
+ */
 int cq_fontlist(struct papfile *in, struct papfile *out,
                 struct sockaddr_at *sat _U_)
 {
@@ -401,6 +481,19 @@ int cq_fontlist(struct papfile *in, struct papfile *out,
 }
 
 
+/*!
+ * @brief Answer a `%%?BeginFontQuery` for the fonts on the query line and on
+ * its `%%+` continuations
+ *
+ * Each font gets its answer from cq_font_answer, and the end comment adds a
+ * final `*`.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while a line is
+ *          incomplete
+ */
 int cq_font(struct papfile *in, struct papfile *out,
             struct sockaddr_at *sat _U_)
 {
@@ -467,6 +560,19 @@ int cq_font(struct papfile *in, struct papfile *out,
     }
 }
 
+/*!
+ * @brief Answer a `%%?BeginFeatureQuery` with the PPD value of the feature
+ *
+ * The keyword after the colon names the feature, and the LaserWriter 8 form
+ * `*?Resolution` counts as `*Resolution`. A feature without a value passes the
+ * query to cq_default.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while a line is
+ *          incomplete
+ */
 int cq_feature(struct papfile *in, struct papfile *out,
                struct sockaddr_at *sat _U_)
 {
@@ -539,6 +645,20 @@ int cq_feature(struct papfile *in, struct papfile *out,
 static const char	*psver = "*PSVersion\n";
 static const char	*prod = "*Product\n";
 
+/*!
+ * @brief Answer a `%%?BeginPrinterQuery` with the PostScript revision, version,
+ * and product
+ *
+ * The values come from `*PSVersion`, such as `(3010.000) 0`, and `*Product`
+ * of the PPD file. A missing value, or a `*PSVersion` without a space, passes
+ * the query to cq_default.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while a line is
+ *          incomplete
+ */
 int cq_printer(struct papfile *in, struct papfile *out,
                struct sockaddr_at *sat _U_)
 {
@@ -705,7 +825,19 @@ disabled ]%%\r%%[Flushing: rest of job (to end-of-file) will be \
 ignored ]%%\r";
 
 /*!
- * Handler for RBILogin
+ * @brief Log a user in for printing with the `%%?BeginQuery: RBILogin` query
+ *
+ * The word after RBILogin names the print UAM, and the rest of the line goes
+ * to the uam_printer call of that UAM. A successful login makes the user the
+ * authenticated user of the job through lp_person and answers `0`. A failure
+ * answers `-1` with a PostScript security error that asks the client to drop
+ * the rest of the job.
+ *
+ * @param[in,out] in   data from the client
+ * @param[in,out] out  reply data
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while a line is
+ *          incomplete
  */
 int cq_rbilogin(struct papfile *in, struct papfile *out,
                 struct sockaddr_at *sat _U_)
@@ -773,6 +905,18 @@ int cq_rbilogin(struct papfile *in, struct papfile *out,
     }
 }
 
+/*!
+ * @brief End a query job at `%%EOF`
+ *
+ * The call sets PF_QUERY on the input, so cm_psquery ends the job. It pops the
+ * comment state and consumes the line.
+ *
+ * @param[in,out] in   data from the client, receives PF_QUERY
+ * @param[in]     out  reply data, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, 0 at the end of the input, or CH_MORE while the line is
+ *          incomplete
+ */
 int cq_end(struct papfile *in, struct papfile *out _U_,
            struct sockaddr_at *sat _U_)
 {

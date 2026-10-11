@@ -23,17 +23,20 @@
 
 extern int netddp_open(struct sockaddr_at *, struct sockaddr_at *);
 
+/*! @brief Close a DDP socket */
 static inline int netddp_close(int filedes)
 {
     return close(filedes);
 }
 
+/*! @brief Send a DDP datagram through sendto */
 static inline ssize_t netddp_sendto(int s, const void *msg, size_t len,
                                     int flags, const struct sockaddr *to, socklen_t tolen)
 {
     return sendto(s, msg, len, flags, to, tolen);
 }
 
+/*! @brief Receive a DDP datagram through recvfrom */
 static inline ssize_t netddp_recvfrom(int s, void *buf, size_t len,
                                       int flags, struct sockaddr *from,
                                       socklen_t *fromlen)

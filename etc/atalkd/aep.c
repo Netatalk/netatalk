@@ -19,6 +19,19 @@
 
 #include "atserv.h"
 
+/*!
+ * @brief Answer an AppleTalk Echo Protocol request by sending it back as a
+ * reply
+ *
+ * The call turns the AEPOP_REQUEST byte into AEPOP_REPLY in place and sends
+ * the packet back to its sender.
+ *
+ * @param[in]     ap    AEP port of the interface
+ * @param[in]     from  sender of the request
+ * @param[in,out] data  DDP payload, rewritten to the reply
+ * @param[in]     len   length of data
+ * @returns 0, or 1 for a malformed packet or a failed send
+ */
 int aep_packet(
     struct atport	*ap,
     struct sockaddr_at	*from,

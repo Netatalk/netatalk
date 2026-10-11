@@ -50,6 +50,17 @@ struct savedir {
 };
 #define SDBUFBRK	2048
 
+/*!
+ * @brief Append a directory entry name to the enumeration name buffer
+ *
+ * Each record is a length byte, the name, and a NUL. The buffer grows in
+ * SDBUFBRK steps when the record does not fit.
+ *
+ * @param[in]     de     directory entry
+ * @param[in]     mname  unused
+ * @param[in,out] data   struct savedir that holds the buffer
+ * @returns 0, or -1 with ENOMEM when the buffer cannot grow
+ */
 static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 {
     struct savedir *sd = data;
@@ -87,18 +98,21 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 }
 
 /*!
- * @bug
- * Doesn't work with dangling symlink
- * i.e.:
- * - Move a folder with a dangling symlink in the trash
- * - empty the trash
+ * @brief Filter a directory entry for enumeration
  *
- * afp_enumerate return an empty listing but offspring count != 0 in afp_getdirparams
- * and the client doesn't try to call afp_delete!
+ * Drops ".", "..", the names the volume's VFS modules reserve for their
+ * metadata, and vetoed names.
  *
+ * @bug A dangling symlink defeats the filter. Move a folder that holds one into
+ * the trash and empty the trash. afp_enumerate then returns an empty listing
+ * while afp_getdirparams still reports offspring, so the client never calls
+ * afp_delete.
  * @sa https://sourceforge.net/p/netatalk/bugs/97/
  *
-*/
+ * @param[in] vol   volume the entry belongs to
+ * @param[in] name  entry name as read from the directory
+ * @returns name when the client may see the entry, NULL otherwise
+ */
 char *check_dirent(const struct vol *vol, char *name)
 {
     if (!strcmp(name, "..") || !strcmp(name, ".")) {
@@ -117,7 +131,18 @@ char *check_dirent(const struct vol *vol, char *name)
     return name;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief Call fn for every entry of directory name that clients may see
+ *
+ * The check_dirent call filters the entries and supplies the Mac name. The
+ * count covers every visible entry, so a NULL fn only counts.
+ *
+ * @param[in] vol   volume of the directory
+ * @param[in] name  directory to walk
+ * @param[in] fn    callback, or NULL to count only
+ * @param[in] data  callback data
+ * @returns the number of visible entries, or -1 when opendir or fn failed
+ */
 int
 for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 {
@@ -156,7 +181,33 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 
 #define REPLY_PARAM_MAXLEN (4 + 104 + 1 + MACFILELEN + 4 + 2 + UTF8FILELEN_EARLY + 1)
 
-/* ----------------------------- */
+/*!
+ * @brief Shared body of FPEnumerate, FPEnumerateExt, and FPEnumerateExt2
+ *
+ * The request names a directory, a file bitmap, a directory bitmap, the
+ * requested count, a start index from 1, and the reply size limit.
+ * FPEnumerateExt2 widens the start index and the limit to 32 bits. The first
+ * request for a directory reads every visible name into a static buffer, and
+ * later requests for the same directory continue from it. Entries in the
+ * dircache skip the stat.
+ *
+ * Each entry carries its length, a file or directory flag, and the parameters
+ * of getfilparams or getdirparams, padded to an even length. An entry type
+ * with a zero bitmap stays out of the reply. The volume root ends with the
+ * virtual Icon file when the volume provides one. An index past the last entry
+ * fails with AFPERR_NOOBJ.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @param[in]     ext      0 for FPEnumerate, 1 for FPEnumerateExt, 2 for
+ *                         FPEnumerateExt2
+ * @returns AFP_OK, AFPERR_NOOBJ at the end of the directory, AFPERR_NODIR,
+ *          AFPERR_BITMAP, AFPERR_PARAM, or another AFPERR_* code
+ */
 static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen, int ext)
 {
@@ -636,21 +687,52 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFP_OK;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief FPEnumerate: list directory entries with one-byte entry lengths
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of enumerate
+ */
 int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen,
                   char *rbuf, size_t *rbuflen)
 {
     return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
-/* ----------------------------- */
+/*!
+ * @brief FPEnumerateExt: list directory entries with two-byte entry lengths
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of enumerate
+ */
 int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen,
                       char *rbuf, size_t *rbuflen)
 {
     return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }
 
-/* ----------------------------- */
+/*!
+ * @brief FPEnumerateExt2: list directory entries with a 32-bit start index and
+ * reply size limit
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or the AFPERR_* code of enumerate
+ */
 int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen,
                        char *rbuf, size_t *rbuflen)
 {

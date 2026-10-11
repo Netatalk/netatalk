@@ -24,7 +24,19 @@
 struct papfile;
 extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
-/*! login and login_ext are almost the same */
+/*!
+ * @brief Log in as the guest account of afp.conf without a password
+ *
+ * The call writes the guest name into the session user name, unbounded.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  receives the user entry of the guest account
+ * @param[in]  ibuf     UAM data of the request, unused
+ * @param[in]  ibuflen  length of ibuf, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK, AFPERR_BADUAM for a missing guest account, or AFPERR_MISC
+ */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf _U_, size_t ibuflen _U_,
                         char *rbuf _U_, size_t *rbuflen)
@@ -56,6 +68,19 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
     return AFP_OK;
 }
 
+/*!
+ * @brief Log in an FPLoginExt request as the guest account, ignoring the user
+ * name
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request, unused
+ * @param[out] uam_pwd  receives the user entry of the guest account
+ * @param[in]  ibuf     UAM data of the request, unused
+ * @param[in]  ibuflen  length of ibuf, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the result of noauth_login
+ */
 static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
@@ -64,7 +89,20 @@ static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
 }
 
 
-/*! Printer NoAuthUAM Login */
+/*!
+ * @brief Accept a NoAuthUAM printer login for any existing user name, without a
+ * password
+ *
+ * The login string carries the name in parentheses, and the name ends at the
+ * first closing parenthesis. The call stores up to UAM_USERNAMELEN bytes of it
+ * in username without adding a NUL. A known user gets the "0" answer in out.
+ *
+ * @param[in]  start     start of the login string
+ * @param[in]  stop      end of the login string
+ * @param[out] username  receives the user name
+ * @param[out] out       PAP reply, receives the answer
+ * @returns 0, or -1 for a malformed string, an unknown user, or a failed malloc
+ */
 static int noauth_printer(char *start, char *stop, char *username,
                           struct papfile *out)
 {
@@ -118,6 +156,13 @@ static int noauth_printer(char *start, char *stop, char *username,
 }
 
 
+/*!
+ * @brief Register the No User Authent login and the NoAuthUAM printer login
+ *
+ * @param[in] handle  AFP object, unused
+ * @param[in] path    path of the module
+ * @returns 0, or -1 when a registration fails
+ */
 static int uam_setup(void *handle, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "No User Authent",
@@ -133,6 +178,9 @@ static int uam_setup(void *handle, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Unregister the No User Authent login and the NoAuthUAM printer login
+ */
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "No User Authent");

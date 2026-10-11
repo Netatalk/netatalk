@@ -31,8 +31,17 @@
 #include <atalk/util.h>
 
 #ifndef HAVE_STRLCPY
-/*! like strncpy but does not 0 fill the buffer and always null
-   terminates. bufsize is the size of the destination buffer */
+/*!
+ * @brief Write a string into a buffer with truncation and a terminating NUL,
+ * for systems without strlcpy
+ *
+ * Unlike strncpy, the call leaves the rest of the buffer untouched.
+ *
+ * @param[out] d        destination buffer
+ * @param[in]  s        source string
+ * @param[in]  bufsize  size of d
+ * @returns the length of s, or 0 for a bufsize of 0
+ */
 size_t strlcpy(char *d, const char *s, size_t bufsize)
 {
     size_t len = strlen(s);
@@ -53,9 +62,16 @@ size_t strlcpy(char *d, const char *s, size_t bufsize)
 #endif
 
 #ifndef HAVE_STRLCAT
-/*! like strncat but does not 0 fill the buffer and always null
-   terminates. bufsize is the length of the buffer, which should
-   be one more than the maximum resulting string length */
+/*!
+ * @brief Append a string to a buffer with truncation and a terminating NUL, for
+ * systems without strlcat
+ *
+ * @param[in,out] d        NUL-terminated buffer
+ * @param[in]     s        string to append
+ * @param[in]     bufsize  size of d
+ * @returns the length that the joined string needs, or 0 when d holds no NUL
+ *          within bufsize
+ */
 size_t strlcat(char *d, const char *s, size_t bufsize)
 {
     size_t len1 = strlen(d);

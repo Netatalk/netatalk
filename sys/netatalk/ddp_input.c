@@ -26,8 +26,13 @@ int		ddp_firewall = 0;
 extern int	ddp_cksum;
 extern unsigned short	at_cksum();
 
-/*
- * Could probably merge these two code segments a little better...
+/*!
+ * @brief Drain the AppleTalk input queues and pass each packet to ddp_input
+ *
+ * The phase 2 queue comes first, for interfaces with a phase 2 address. On
+ * the phase 1 queue, an interface needs a phase 1 address, and the call strips
+ * the 3-byte LLAP header. An extended DDP type then takes the long header
+ * path, and any other type the short one.
  */
 atintr()
 {
@@ -122,6 +127,27 @@ atintr()
 
 struct route	forwro;
 
+/*!
+ * @brief Deliver an incoming DDP packet to its socket, or forward it
+ *
+ * A short header, which comes with an LLAP header in phase 1, takes the
+ * nodes from the LLAP header. A long header carries full addresses and an
+ * optional checksum. The packet goes to a local address that matches the
+ * destination net and node, or ATADDR_BCAST on that net. The startup range
+ * 0xff00 to 0xfffe counts as local as well. The call trims link padding and
+ * drops packets shorter than their DDP length.
+ *
+ * Without a local address, and with ddp_forward set, the packet goes out
+ * through ddp_route with one more hop. It does not when it reached
+ * DDP_MAXHOPS or the firewall refuses its route. A local packet whose checksum
+ * does not match goes away, and the rest lands in the receive buffer of the
+ * socket that ddp_search finds.
+ *
+ * @param[in] m      packet
+ * @param[in] ifp    receiving interface
+ * @param[in] elh    LLAP header of a short header packet, or NULL
+ * @param[in] phase  1 or 2
+ */
 ddp_input(m, ifp, elh, phase)
 struct mbuf		*m;
 struct ifnet	*ifp;
@@ -366,6 +392,11 @@ int			phase;
     sorwakeup(ddp->ddp_socket);
 }
 
+/*!
+ * @brief Print an mbuf chain as a hex dump, one bprint call per mbuf
+ *
+ * @param[in] m  first mbuf of the chain
+ */
 m_printm(m)
 struct mbuf	*m;
 {
@@ -379,6 +410,10 @@ struct mbuf	*m;
 #include <ctype.h>
 char	hexdig[] = "0123456789ABCDEF";
 
+/*!
+ * @brief Print a hex dump of a buffer with the kernel printf, 15 bytes a line,
+ * then an end line
+ */
 bprint(data, len)
 char	*data;
 int		len;

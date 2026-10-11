@@ -19,13 +19,21 @@
 #include <atalk/util.h>
 
 /*!
- * @brief streaming i/o for afp_read.
+ * @brief Start a streamed FPRead reply of size bytes and send its first buflen
+ * bytes
  *
- * this is all from the perspective of the client.
- * it basically does the reverse of dsi_write. on first entry,
- * it will send off the header plus whatever is in its command
- * buffer. it returns the amount of stuff still to be read
- * (constrained by the buffer size). */
+ * The reply header carries the full size and the result code err. DSI_NOREPLY
+ * tells the command loop that the handler sends the reply itself, and in_write
+ * blocks attentions until dsi_readdone. The remaining size minus buflen bytes
+ * follow through dsi_read or dsi_stream_read_file.
+ *
+ * @param[in,out] dsi     DSI session
+ * @param[in]     buf     first part of the reply payload
+ * @param[in]     buflen  bytes in buf
+ * @param[in]     size    total reply payload length
+ * @param[in]     err     AFP result code
+ * @returns bytes to send next, at most buflen, or -1 when the send failed
+ */
 ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
                      const size_t size, const int err)
 {
@@ -48,12 +56,24 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
     return -1; /* error */
 }
 
+/*!
+ * @brief End a streamed FPRead reply that dsi_readinit started
+ *
+ * @param[in,out] dsi  DSI session whose in_write count drops
+ */
 void dsi_readdone(DSI *dsi)
 {
     dsi->in_write--;
 }
 
-/*! send off the data */
+/*!
+ * @brief Send the next buflen bytes of a streamed FPRead reply
+ *
+ * @param[in,out] dsi     DSI session after dsi_readinit
+ * @param[in]     buf     payload bytes
+ * @param[in]     buflen  bytes in buf
+ * @returns bytes to send next, at most buflen, or -1 when the send failed
+ */
 ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
 {
     size_t len;

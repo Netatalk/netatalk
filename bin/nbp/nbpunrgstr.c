@@ -38,6 +38,11 @@
 
 #define MACCHARSET "MAC_ROMAN"
 
+/*!
+ * @brief Print the usage of nbpunrgstr to stderr and exit with 1
+ *
+ * @param[in] av0  program path, whose base name the usage line shows
+ */
 static void Usage(char *av0)
 {
     char	*p;
@@ -53,6 +58,16 @@ static void Usage(char *av0)
     exit(1);
 }
 
+/*!
+ * @brief Remove an NBP name from atalkd
+ *
+ * The -A option names the node that holds the name, and -m the Mac charset
+ * of the name. The name needs an object and a type.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns 0, while errors exit with 1
+ */
 int main(int ac, char **av)
 {
     char		*Obj = NULL, *Type = NULL, *Zone = NULL;

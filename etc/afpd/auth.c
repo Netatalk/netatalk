@@ -70,6 +70,14 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 
 static struct uam_obj *afp_uam = NULL;
 
+/*!
+ * @brief Return the size of the socket address structure for the family of an
+ * address
+ *
+ * @param[in] sa  socket address
+ * @returns the size of sockaddr_in or sockaddr_in6, or of sockaddr_storage for
+ *          another family
+ */
 static socklen_t sockaddr_len(const struct sockaddr *sa)
 {
     switch (sa->sa_family) {
@@ -84,6 +92,15 @@ static socklen_t sockaddr_len(const struct sockaddr *sa)
     }
 }
 
+/*!
+ * @brief Name the client of a session for the login report to the master afpd
+ *
+ * A DSI client gets its DNS name, or its numeric address when the reverse
+ * lookup fails. An ASP client gets its AppleTalk network and node numbers.
+ *
+ * @param[in] obj  session object
+ * @returns the name in a static buffer, or "-" for an unknown transport
+ */
 static const char *client_address(AFPObj *obj)
 {
     static char host[NI_MAXHOST];
@@ -113,7 +130,19 @@ static const char *client_address(AFPObj *obj)
     return "-";
 }
 
-
+/*!
+ * @brief Write the AFP version list of the FPGetSrvrInfo reply into a status
+ * block
+ *
+ * The list starts at the offset stored at AFPSTATUS_VERSOFF. Versions up to
+ * 2.1 need an ASP listener, and versions after 2.2 need a DSI listener, so
+ * both transports list 2.2. The call stores the end of the list as the UAM
+ * list offset.
+ *
+ * @param[in,out] data  status block
+ * @param[in]     asp   ASP listener, or NULL for the DSI status
+ * @param[in]     dsi   DSI listener, or NULL for the ASP status
+ */
 void status_versions(char *data,
 #ifndef NO_DDP
                      const ASP asp,
@@ -168,6 +197,16 @@ void status_versions(char *data,
     memcpy(start + AFPSTATUS_UAMSOFF, &status, sizeof(status));
 }
 
+/*!
+ * @brief Write the UAM name list of the FPGetSrvrInfo reply into a status block
+ *
+ * The list holds every loaded UAM whose module path appears in authlist, and
+ * the call logs each as available. The list starts at the offset stored at
+ * AFPSTATUS_UAMSOFF, and the call stores its end as the icon offset.
+ *
+ * @param[in,out] data      status block
+ * @param[in]     authlist  uam list option of afp.conf
+ */
 void status_uams(char *data, const char *authlist)
 {
     char                *start = data;
@@ -201,8 +240,17 @@ void status_uams(char *data, const char *authlist)
     memcpy(start + AFPSTATUS_ICONOFF, &status, sizeof(status));
 }
 
-/* handle errors by closing the connection. this is only needed
- * by the afp_* functions. */
+/*!
+ * @brief Pass a login result on, or answer a failed login and end the session
+ *
+ * AFP_OK and AFPERR_AUTHCONT go back to the caller unchanged. Any other code
+ * goes to the client as the reply, and the session then exits through
+ * obj->exit.
+ *
+ * @param[in] obj  session object
+ * @param[in] err  result of the login step
+ * @returns err for AFP_OK and AFPERR_AUTHCONT, or AFP_OK when obj->exit returns
+ */
 static int send_reply(const AFPObj *obj, const int err)
 {
     if ((err == AFP_OK) || (err == AFPERR_AUTHCONT)) {
@@ -219,6 +267,16 @@ static int send_reply(const AFPObj *obj, const int err)
     return AFP_OK;
 }
 
+/*!
+ * @brief Answer a command with AFPERR_PWDEXPR while a password change is due
+ *
+ * @param[in]  obj      session object, unused
+ * @param[in]  ibuf     request block, unused
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFPERR_PWDEXPR
+ */
 static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_,
                              size_t ibuflen _U_,
                              char *rbuf _U_, size_t *rbuflen)
@@ -227,6 +285,16 @@ static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_,
     return AFPERR_PWDEXPR;
 }
 
+/*!
+ * @brief Answer a command with AFPERR_NOOP and no log line
+ *
+ * @param[in]  obj      session object, unused
+ * @param[in]  ibuf     request block, unused
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFPERR_NOOP
+ */
 static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
                           char *rbuf _U_, size_t *rbuflen)
 {
@@ -234,6 +302,27 @@ static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
     return AFPERR_NOOP;
 }
 
+/*!
+ * @brief Install the command table of a logged-in session
+ *
+ * A valid login switches to the postauth table and adds the commands of the
+ * negotiated AFP version. Each version also gets the commands of the versions
+ * below it:
+ *
+ * - 2.2 adds FPZzzzz.
+ * - 3.0 adds FPEnumerateExt, FPByteRangeLockExt, FPCatSearchExt, FPReadExt,
+ *   FPWriteExt, FPGetSessionToken, and FPDisconnectOldSession.
+ * - 3.1 adds FPSyncDir, FPSyncFork, FPEnumerateExt2, and the Spotlight command.
+ * - 3.2 adds the extended attribute commands and, with ACL support, the ACL
+ *   commands.
+ *
+ * An expired password keeps the preauth table. Every command then answers
+ * AFPERR_PWDEXPR, except FPLogout and FPChangePassword.
+ *
+ * @param[in] obj      session object
+ * @param[in] expired  nonzero when the UAM reported an expired password
+ * @returns AFP_OK
+ */
 static int set_auth_switch(const AFPObj *obj, int expired)
 {
     int i;
@@ -315,16 +404,39 @@ static int set_auth_switch(const AFPObj *obj, int expired)
 }
 
 /*!
- * @brief Whether this server may serve uid
+ * @brief Tell whether the server may serve a user
  *
- * A single-user server has no authority to adopt another account, so only the
- * uid that started it logs in; a root service serves anyone login() admits.
+ * A single-user server cannot switch to another account, so only the uid that
+ * started it may log in. A server without OPTION_SINGLEUSER serves every user
+ * that login admits.
+ *
+ * @param[in] obj  session object
+ * @param[in] uid  uid of the user who logs in
+ * @returns true when the server may serve uid
  */
 bool singleuser_admits_uid(const AFPObj *obj, uid_t uid)
 {
     return !(obj->options.flags & OPTION_SINGLEUSER) || uid == getuid();
 }
 
+/*!
+ * @brief Finish a login after the UAM accepted the user
+ *
+ * The call refuses root, a user that a single-user server may not serve, and
+ * a login past the connection limit. It sets the groups and switches the euid
+ * and egid to the user. A member of the admin group keeps the root euid
+ * instead. The force user and force group options then override the switch.
+ *
+ * Next the call installs the command table and reports the login with the
+ * client address to the master afpd. It resets the umask, because PAM may
+ * change it. A DSI session also installs its signal handlers again.
+ *
+ * @param[in,out] obj      session object
+ * @param[in]     pwd      password entry of the user
+ * @param[in]     logout   logout hook of the UAM, or NULL
+ * @param[in]     expired  nonzero when the password expired
+ * @returns AFP_OK, AFPERR_NOTAUTH, AFPERR_MAXSESS, or AFPERR_BADUAM
+ */
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
                  int expired)
 {
@@ -431,7 +543,23 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     return AFP_OK;
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPZzzzz: put the DSI session to sleep or wake it from extended sleep
+ *
+ * A sleep request sets DSI_SLEEPING and closes the recvfile pipe, and the
+ * extended sleep flag adds DSI_EXTSLEEP. The extended wakeup flag ends an
+ * extended sleep. Each change of state goes to the master afpd.
+ *
+ * The reply holds the sleep option divided by 120, at least 1. That gives the
+ * hours a sleeping session lasts at the default tickleval of 30 seconds.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, or AFPERR_MISC for a request under 6 bytes
+ */
 int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
               size_t *rbuflen)
 {
@@ -494,7 +622,12 @@ int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     return AFP_OK;
 }
 
-/* ---------------------- */
+/*!
+ * @brief Allocate the session token and fill it with random bytes
+ *
+ * @param[in,out] obj  session object that receives the token
+ * @returns 0, or AFPERR_MISC when the allocation or the random source fails
+ */
 static int create_session_token(AFPObj *obj)
 {
     if (NULL == (obj->sinfo.sessiontoken = malloc(SESSIONTOKEN_LEN))) {
@@ -512,6 +645,16 @@ static int create_session_token(AFPObj *obj)
     return 0;
 }
 
+/*!
+ * @brief Allocate sinfo.sessionkey once and fill it with random bytes
+ *
+ * The GSS UAM encrypts it with gss_wrap for its login reply. A session that
+ * has one keeps it.
+ *
+ * @param[in,out] obj  session object that receives sessionkey
+ * @returns AFP_OK, or AFPERR_MISC when the allocation or the random source
+ *          fails
+ */
 static int create_session_key(AFPObj *obj)
 {
     /* create session key */
@@ -533,7 +676,27 @@ static int create_session_key(AFPObj *obj)
 }
 
 
-/* ---------------------- */
+/*!
+ * @brief FPGetSessionToken: return a token that a reconnecting client can
+ * present
+ *
+ * The session creates its random token on the first call and hands it to the
+ * master afpd. Types 0 to 2 return the token. Type 8 returns the encrypted
+ * Kerberos session key instead.
+ *
+ * Types 3 and 4 also carry a client ID and a boot time, which go to the
+ * master as well. The master then ends an older session of the same client
+ * and user whose boot time differs, because that client rebooted. The reply
+ * holds a 4-byte length and the token.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, AFPERR_NOOP for an unknown type, AFPERR_PARAM for a short
+ *          request, or AFPERR_MISC
+ */
 int afp_getsession(
     AFPObj *obj,
     char   *ibuf, size_t ibuflen,
@@ -658,7 +821,27 @@ int afp_getsession(
     return AFP_OK;
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPDisconnectOldSession: hand the connection to the disconnected
+ * session that owns a token
+ *
+ * A client sends it on a new connection to resume a disconnected session.
+ * The call stops the tickle timer and sends the token, the DSI request ID,
+ * and the client socket to the master afpd. The master passes them to the old
+ * session, which answers the request, and sends SIGTERM to this one. A
+ * SIGTERM within the 5-second wait marks success, and the process exits.
+ *
+ * A failed handoff restarts the timer and leaves DSI_RECONINPROG set, so the
+ * next connection error ends this session.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFPERR_MISC when the token length is wrong or the handoff fails, or
+ *          AFPERR_PARAM for a short request
+ */
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
                    size_t *rbuflen)
 {
@@ -767,7 +950,20 @@ exit:
     return AFPERR_MISC;
 }
 
-/* ---------------------- */
+/*!
+ * @brief Select the AFP version that a login request names
+ *
+ * The call compares the first len bytes of the request with each known
+ * version string, so a prefix of one also matches. A version from 3.0 on
+ * needs a 64-bit off_t.
+ *
+ * @param[in,out] obj      session object that receives afp_version
+ * @param[in]     ibuf     version string of the request
+ * @param[in]     ibuflen  bytes left in the request
+ * @param[in]     len      length of the version string
+ * @returns 0, or AFPERR_BADVERS for an empty, oversized, unknown, or
+ *          unsupported version
+ */
 static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
 {
     int num, i;
@@ -800,7 +996,24 @@ static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
     return 0;
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPLogin: select the AFP version and the UAM, and run the first login
+ * step
+ *
+ * The request holds the version string and the UAM name as Pascal strings,
+ * then the data of the UAM. A UAM that needs another round trip answers
+ * AFPERR_AUTHCONT, and FPLoginCont continues. An accepted user goes through
+ * login. Every other failure answers the client and ends the session. After
+ * the master announced a shutdown, the failure is AFPERR_SHUTDOWN.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK or AFPERR_AUTHCONT, and after a failure AFP_OK when the
+ *          session exit returns
+ */
 int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
               size_t *rbuflen)
 {
@@ -872,7 +1085,22 @@ int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                                  ((i == AFPERR_PWDEXPR) ? 1 : 0)));
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPLoginExt: select the AFP version and the UAM, and run the first
+ * login step with a UTF-8 user name
+ *
+ * The request adds flags, a user name of type 3, and a directory service name
+ * to the fields of FPLogin. The UAM must offer login_ext, and it gets the user
+ * name with its type byte. The results match those of afp_login.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK or AFPERR_AUTHCONT, and after a failure AFP_OK when the
+ *          session exit returns
+ */
 int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                   size_t *rbuflen)
 {
@@ -1034,7 +1262,20 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                                  ((i == AFPERR_PWDEXPR) ? 1 : 0)));
 }
 
-/* ---------------------- */
+/*!
+ * @brief FPLoginCont: pass the next login step to the UAM that FPLogin selected
+ *
+ * Without a selected UAM or a logincont hook, the call answers AFPERR_NOTAUTH
+ * and ends the session. An accepted user goes through login.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK or AFPERR_AUTHCONT, and after a failure AFP_OK when the
+ *          session exit returns
+ */
 int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                   size_t *rbuflen)
 {
@@ -1059,7 +1300,20 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                                  ((err == AFPERR_PWDEXPR) ? 1 : 0)));
 }
 
-
+/*!
+ * @brief FPLogout: close every fork and volume of the session
+ *
+ * A DSI session sets DSI_AFP_LOGGED_OUT, so the session ends at the next
+ * failed receive, such as the client closing the connection. With FCE the
+ * call also sends a logout event.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block, unused
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK
+ */
 int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
                char *rbuf  _U_, size_t *rbuflen)
 {
@@ -1081,10 +1335,22 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
 }
 
 
-/* change password  --
- * NOTE: an FPLogin must already have completed successfully for this
- *       to work. this also does a little pre-processing before it hands
- *       it off to the uam.
+/*!
+ * @brief FPChangePassword: pass a password change to the UAM that the request
+ * names
+ *
+ * The set password option must be on. Before AFP 3.0 the request carries the
+ * user name. Later versions send an empty name, and the call uses the login
+ * name. A successful change installs the full command table, which ends the
+ * expired-password mode.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the UAM result, AFPERR_NOOP when the option is off, AFPERR_BADUAM,
+ *          or AFPERR_PARAM
  */
 int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                  size_t *rbuflen)
@@ -1169,7 +1435,23 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 }
 
 
-/* FPGetUserInfo */
+/*!
+ * @brief FPGetUserInfo: return the user ID, the group ID, or the UUID of the
+ * session user
+ *
+ * Only the session user can be asked about, so a request without the
+ * this-user flag gets AFPERR_PARAM. The user ID is the euid at login, and the
+ * group ID is the current egid. Without OPTION_UUID the reply drops the UUID
+ * bit from its bitmap.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, AFPERR_PARAM, AFPERR_BITMAP for unknown bits, or
+ *          AFPERR_NOITEM when the UUID lookup fails
+ */
 int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                     size_t *rbuflen)
 {
@@ -1250,8 +1532,20 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                         (((type) == UAM_SERVER_CHANGEPW) ?              \
                          &uam_changepw : NULL))
 
-/* just do a linked list search. this could be sped up with a hashed
- * list, but i doubt anyone's going to have enough uams to matter. */
+/*!
+ * @brief Find a registered UAM by name
+ *
+ * In afpd the login types share one list, and the password change type has a
+ * second. The comparison runs strndiacasecmp over len bytes, which ignores
+ * case, so a prefix of a UAM name also matches.
+ *
+ * @param[in] type  UAM type: in afpd UAM_SERVER_LOGIN, UAM_SERVER_LOGIN_EXT, or
+ *                  UAM_SERVER_CHANGEPW, and in papd UAM_SERVER_LOGIN,
+ *                  UAM_SERVER_CHANGEPW, or UAM_SERVER_PRINTAUTH
+ * @param[in] name  UAM name, not NUL-terminated
+ * @param[in] len   length of name
+ * @returns the UAM, or NULL for an unknown type or name
+ */
 struct uam_obj *auth_uamfind(const int type, const char *name,
                              const int len)
 {
@@ -1271,6 +1565,16 @@ struct uam_obj *auth_uamfind(const int type, const char *name,
     return NULL;
 }
 
+/*!
+ * @brief Add a UAM to the list of its type
+ *
+ * @param[in] type  UAM type: in afpd UAM_SERVER_LOGIN, UAM_SERVER_LOGIN_EXT, or
+ *                  UAM_SERVER_CHANGEPW, and in papd UAM_SERVER_LOGIN,
+ *                  UAM_SERVER_CHANGEPW, or UAM_SERVER_PRINTAUTH
+ * @param[in] uam   UAM with a nonempty name
+ * @returns 0, -1 for a UAM without a name, or 1 for an unknown type, after
+ *          which the caller frees uam
+ */
 int auth_register(const int type, struct uam_obj *uam)
 {
     struct uam_obj *start;
@@ -1287,7 +1591,17 @@ int auth_register(const int type, struct uam_obj *uam)
     return 0;
 }
 
-/*! load all of the modules */
+/*!
+ * @brief Load the UAM modules that the uam list option names
+ *
+ * Each name in list, separated by commas or spaces, loads from the UAM
+ * directory. A module that is missing or fails to load only gets a log line.
+ *
+ * @param[in] obj   server object
+ * @param[in] path  UAM directory
+ * @param[in] list  uam list option of afp.conf
+ * @returns 0, or -1 for an empty path or list or a path that is too long
+ */
 int auth_load(AFPObj *obj, const char *path, const char *list)
 {
     char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p, *last;

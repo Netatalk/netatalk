@@ -40,7 +40,14 @@
 #define MSG_DONTWAIT 0x40
 #endif
 
-/*! Pack a DSI header in wire format */
+/*!
+ * @brief Write the session DSI header into buf in wire format
+ *
+ * The fields already hold network byte order, so the call only lays them out.
+ *
+ * @param[in]  dsi  DSI session whose header to write
+ * @param[out] buf  receives DSI_BLOCKSIZ bytes
+ */
 static void dsi_header_pack_reply(const DSI *dsi, char *buf)
 {
     buf[0] = dsi->header.dsi_flags;
@@ -53,14 +60,17 @@ static void dsi_header_pack_reply(const DSI *dsi, char *buf)
 }
 
 /*!
- * @brief Check if we can write to the DSI socket
+ * @brief Wait until the socket accepts writes, reading pending input meanwhile
  *
- * afpd is sleeping too much while trying to send something.
- * May be there's no reader or the reader is also sleeping in write,
- * look if there's some data for us to read, hopefully it will wake up
- * the reader so we can write again.
+ * A blocked send can mean the client itself blocks while it sends to afpd.
+ * The call therefore selects for both directions and reads into the
+ * read-ahead buffer. Reading may unblock the client. A full read-ahead buffer
+ * logs a note once and leaves only the write test. End of file, a select
+ * failure, a read error, or a socket at FD_SETSIZE or above ends the wait.
  *
- * @returns 0 when is possible to send again, -1 on error
+ * @param[in,out] dsi  DSI session
+ * @returns 0 when the socket accepts writes again, -1 on failure or a closed
+ *          socket
  */
 static int dsi_peek(DSI *dsi)
 {
@@ -154,8 +164,15 @@ static int dsi_peek(DSI *dsi)
 }
 
 /*!
- * Return all bytes up to count from dsi->buffer
- * if there are any buffered there
+ * @brief Take up to count bytes from the read-ahead buffer
+ *
+ * An emptied buffer rewinds to its start. The master afpd has no read-ahead
+ * buffer, so it gets 0.
+ *
+ * @param[in,out] dsi    DSI session
+ * @param[out]    buf    receives the bytes
+ * @param[in]     count  capacity of buf
+ * @returns bytes taken, 0 when the buffer is empty
  */
 static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
 {
@@ -187,12 +204,16 @@ static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
 }
 
 /*!
- * @brief Get bytes from buffer dsi->buffer or read from socket
+ * @brief Read bytes from the read-ahead buffer, or from the socket when it is
+ * empty
  *
- * 1. Check if there are bytes in the the dsi->buffer buffer.
- * 2. Return bytes from (1) if yes.
- *    Note: this may return fewer bytes then requested in count !!
- * 3. If the buffer was empty, read from the socket.
+ * A non-empty buffer returns only the bytes it holds, up to count. Only an
+ * empty buffer leads to a socket read through readt.
+ *
+ * @param[in,out] dsi    DSI session
+ * @param[out]    buf    receives the bytes
+ * @param[in]     count  capacity of buf
+ * @returns bytes read, 0 for a zero count or end of file, or -1 with errno set
  */
 static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
 {
@@ -215,10 +236,16 @@ static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
 }
 
 /*!
- * @brief Get "length" bytes from buffer and/or socket
+ * @brief Read length bytes and refill the read-ahead buffer in 8192-byte chunks
  *
- * In order to avoid frequent small reads this tries to read
- * larger chunks (8192 bytes) into a buffer.
+ * The call first drains the read-ahead buffer. When that leaves a gap, one
+ * recv tops the buffer up by at most 8192 bytes, so later small requests come
+ * from memory. The dsi_stream_read call then supplies the rest.
+ *
+ * @param[in,out] dsi     DSI session
+ * @param[out]    data    receives the bytes
+ * @param[in]     length  bytes to read
+ * @returns length, or 0 when the read failed
  */
 static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data,
                                        const size_t length)
@@ -257,15 +284,22 @@ static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data,
     return len;
 }
 
-/* ---------------------------------------
-*/
+/*!
+ * @brief Mark the start of a multi-packet write, so signal handlers leave the
+ * socket alone
+ *
+ * @param[in,out] dsi  DSI session
+ */
 static void block_sig(DSI *dsi)
 {
     dsi->in_write++;
 }
 
-/* ---------------------------------------
-*/
+/*!
+ * @brief Mark the end of a multi-packet write that block_sig started
+ *
+ * @param[in,out] dsi  DSI session
+ */
 static void unblock_sig(DSI *dsi)
 {
     dsi->in_write--;
@@ -276,16 +310,17 @@ static void unblock_sig(DSI *dsi)
  *********************************************************************************/
 
 /*!
- * @brief Communication error with the client, enter disconnected state
+ * @brief Enter the disconnected state after a communication error with the
+ * client
  *
- * 1. close the socket
- * 2. set the DSI_DISCONNECTED flag, remove possible sleep flags
+ * The call closes the transport and the recvfile pipe, clears the sleep flags,
+ * and sets DSI_DISCONNECTED. A session that never logged in reports failure.
+ * login refuses uid 0 and stores the uid on success, so a zero uid means no
+ * login. The UAM logout hook is no usable mark, because a UAM may register
+ * none.
  *
- * @returns  0 if successfully entered disconnected state
- * @returns -1 if ppid is 1 which means afpd master died,
- *             or the session has not logged in: login() refuses uid 0 and
- *             sets AFPobj->uid on success, so a zero uid is no login (the
- *             UAM's logout hook is no mark, most UAMs register none)
+ * @param[in,out] dsi  DSI session
+ * @returns 0, or -1 when no user logged in to the session
  */
 int dsi_disconnect(DSI *dsi)
 {
@@ -303,12 +338,20 @@ int dsi_disconnect(DSI *dsi)
 }
 
 /*!
- * @brief write raw DSI data
+ * @brief Send length raw bytes to the client socket
  *
- * Checks against EINTR aren't necessary if all of the signals have SA_RESTART
- * specified.
+ * The loop retries after EINTR. On EAGAIN it reads pending input through
+ * dsi_peek and then writes again. That keeps a client that itself blocks on
+ * sending from deadlocking the session. DSI_NOWAIT gives up at once when
+ * nothing went out yet, so an attention or a tickle never waits on a full
+ * socket. in_write rises for the duration of the call.
  *
- * @returns actual bytes written, -1 on error
+ * @param[in,out] dsi     DSI session
+ * @param[in]     data    bytes to send
+ * @param[in]     length  bytes to send
+ * @param[in]     mode    0, DSI_NOWAIT, or DSI_MSG_MORE to hint at a following
+ *                        send
+ * @returns bytes sent, or -1 for a disconnected session or a failed send
  */
 ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 {
@@ -374,9 +417,26 @@ exit:
     return written;
 }
 
-/* ---------------------------------
-*/
 #ifdef WITH_SENDFILE
+/*!
+ * @brief Send a streamed FPRead reply whose payload comes from a file through
+ * sendfile
+ *
+ * The reply header carries length and the result code err. Solaris sends the
+ * header and the file in one sendfilev call, and FreeBSD passes the header to
+ * sendfile. Other platforms write the header first with MSG_MORE. The loop
+ * retries after EINTR and EAGAIN, reads pending input through dsi_peek
+ * meanwhile, and treats a zero-length result as a failure. DSI_NOREPLY marks
+ * the reply as sent, and in_write rises for the duration of the call.
+ *
+ * @param[in,out] dsi     DSI session
+ * @param[in]     fromfd  file to send from
+ * @param[in]     offset  file offset to start at
+ * @param[in]     length  payload bytes to send
+ * @param[in]     err     AFP result code
+ * @returns payload bytes sent, or -1 for a disconnected session or a failed
+ *          transfer
+ */
 ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset,
                              const size_t length, const int err)
 {
@@ -533,12 +593,16 @@ exit:
 
 
 /*!
- * @brief Read data from DSI buffer
+ * @brief Read length bytes from the read-ahead buffer and the socket
  *
- * Essentially a loop around buf_read() to ensure "length" bytes are read
- * from dsi->buffer and/or the socket.
+ * buf_read supplies the bytes, and the loop continues after EINTR and EAGAIN
+ * until length bytes arrived. End of file or a read error ends the call with
+ * 0. A disconnected session also yields 0.
  *
- * @returns length on success, some value smaller than length indicates an error
+ * @param[in,out] dsi     DSI session
+ * @param[out]    data    receives the bytes
+ * @param[in]     length  bytes to read
+ * @returns length, or 0 on end of file or a read error
  */
 size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
@@ -582,10 +646,17 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 }
 
 /*!
- * @brief write data.
- * @returns 0 on failure.
- * @note this assumes that dsi_len will never
- * cause an overflow in the data buffer.
+ * @brief Send the reply header and length payload bytes as one DSI message
+ *
+ * The header comes from the session header fields. A zero length sends the
+ * header alone. Otherwise writev sends header and payload together, retries
+ * after EINTR, and reads pending input through dsi_peek on EAGAIN. block_sig
+ * holds attentions off for the duration.
+ *
+ * @param[in,out] dsi     DSI session with the header fields set
+ * @param[in]     buf     payload bytes
+ * @param[in]     length  payload bytes to send, matching dsi_len in the header
+ * @returns 1, or 0 for a disconnected session or a failed send
  */
 int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 {

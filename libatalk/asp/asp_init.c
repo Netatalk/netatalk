@@ -36,6 +36,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*!
+ * @brief Allocate the ASP server object on an ATP socket
+ *
+ * The object starts as a session listening socket with a wildcard peer
+ * address, no status, and no IPC descriptors.
+ *
+ * @param[in] atp  ATP socket of the server
+ * @returns the server object, or NULL when calloc fails
+ */
 ASP asp_init(ATP atp)
 {
     ASP		asp;
@@ -64,6 +73,15 @@ ASP asp_init(ATP atp)
     return asp;
 }
 
+/*!
+ * @brief Set the status block that status requests get
+ *
+ * The object keeps the pointer, so the block has to outlive it.
+ *
+ * @param[in,out] asp     server object
+ * @param[in]     status  status block
+ * @param[in]     slen    length of status
+ */
 void asp_setstatus(ASP asp, char *status, const int slen)
 {
     asp->asp_status = status;

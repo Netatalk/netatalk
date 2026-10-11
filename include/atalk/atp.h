@@ -193,8 +193,8 @@ extern int		atp_sreq(ATP, struct atp_block *, int, uint8_t);
 extern int		atp_rresp(ATP, struct atp_block *);
 extern int		atp_rsel(ATP, struct sockaddr_at *, int);
 extern int		atp_rreq(ATP, struct atp_block *);
-extern int		atp_rreq_try(ATP,
-                          struct atp_block *);	/*!< 1 got, 0 none yet, -1 error */
+/*! 1 got, 0 none yet, -1 error */
+extern int		atp_rreq_try(ATP, struct atp_block *);
 extern int		atp_sresp(ATP, struct atp_block *);
 
 #endif  /* NO_DDP */

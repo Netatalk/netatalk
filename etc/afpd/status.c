@@ -44,6 +44,11 @@
 
 static   size_t maxstatuslen = 0;
 
+/*!
+ * @brief Tell whether afpd loaded the Kerberos UAM, Client Krb v2
+ *
+ * @returns nonzero when auth_uamfind finds the UAM
+ */
 static int uam_gss_enabled(void)
 {
     /* XXX: must be a better way to find out if uam_gss is active */
@@ -52,6 +57,22 @@ static int uam_gss_enabled(void)
                         sizeof("Client Krb v2")) != NULL;
 }
 
+/*!
+ * @brief Write the flags word of the FPGetSrvrInfo reply into a status block
+ *
+ * Every server sets AFPSRVRINFO_COPY, AFPSRVRINFO_SRVSIGNATURE,
+ * AFPSRVRINFO_SRVMSGS, AFPSRVRINFO_FASTBOZO, AFPSRVRINFO_SRVUTF8, and
+ * AFPSRVRINFO_EXTSLEEP. The arguments decide the password, TCP/IP, server
+ * notification, directory service, and UUID bits.
+ *
+ * @param[in,out] data        status block
+ * @param[in]     notif       nonzero for server notifications
+ * @param[in]     ipok        nonzero when the server has a usable IP address or
+ *                            a DNS name
+ * @param[in]     passwdbits  PASSWD_SET and PASSWD_NOSAVE bits
+ * @param[in]     dirsrvcs    nonzero to announce directory services
+ * @param[in]     flags       server options, for OPTION_UUID
+ */
 static void status_flags(char *data,
                          const int notif,
                          const int ipok,
@@ -98,6 +119,19 @@ static void status_flags(char *data,
     memcpy(data + AFPSTATUS_FLAGOFF, &status, sizeof(status));
 }
 
+/*!
+ * @brief Write the server name of the FPGetSrvrInfo reply into a status block
+ *
+ * The name converts to the Mac charset in a 32-byte buffer, and its length
+ * rounds up to even. Room for the signature, network address, directory
+ * names, and UTF-8 name offsets follows. The call stores the machine type
+ * offset.
+ *
+ * @param[in,out] data     status block
+ * @param[in]     server   server name
+ * @param[in]     options  server options, for the charsets
+ * @returns the offset of the signature offset field
+ */
 static int status_server(char *data, const char *server,
                          const struct afp_options *options)
 {
@@ -148,6 +182,14 @@ static int status_server(char *data, const char *server,
     return len; /* return the offset to beginning of signature offset */
 }
 
+/*!
+ * @brief Write the machine type of the FPGetSrvrInfo reply into a status block
+ *
+ * The machine type is Netatalk and the version, cut to AFPSTATUS_MACHLEN
+ * bytes. The call stores the AFP version list offset after it.
+ *
+ * @param[in,out] data  status block with the machine type offset set
+ */
 static void status_machine(char *data)
 {
     char                *start = data;
@@ -179,7 +221,18 @@ static void status_machine(char *data)
     memcpy(start + AFPSTATUS_VERSOFF, &status, sizeof(status));
 }
 
-/* server signature is a 16-byte quantity */
+/*!
+ * @brief Write the 16-byte server signature of the FPGetSrvrInfo reply into a
+ * status block
+ *
+ * The call stores the network address offset after the signature.
+ *
+ * @param[in,out] data        status block
+ * @param[in,out] servoffset  offset of the signature offset field, advanced to
+ *                            the network address offset field
+ * @param[in]     options     server options with the signature
+ * @returns the offset of the signature
+ */
 static uint16_t status_signature(char *data, int *servoffset,
                                  const struct afp_options *options)
 {
@@ -201,6 +254,23 @@ static uint16_t status_signature(char *data, int *servoffset,
     return sigoff;
 }
 
+/*!
+ * @brief Write the network address list of the FPGetSrvrInfo reply into a
+ * status block
+ *
+ * A DSI listener adds its IPv4 or IPv6 address, with the port when it is not
+ * 548. A DNS name adds an FQDN entry, and with OPTION_ANNOUNCESSH an SSH
+ * tunnel entry, while room remains. An ASP listener adds its DDP address. The
+ * call stores the directory names offset after the list.
+ *
+ * @param[in,out] data        status block
+ * @param[in,out] servoffset  offset of the network address offset field,
+ *                            advanced to the next offset field
+ * @param[in]     asp         ASP listener, or NULL
+ * @param[in]     dsi         DSI listener, or NULL
+ * @param[in]     options     server options with the DNS name
+ * @returns the length of the status block so far
+ */
 static size_t status_netaddress(char *data, int *servoffset,
 #ifndef NO_DDP
                                 const ASP asp,
@@ -339,6 +409,16 @@ static size_t status_netaddress(char *data, int *servoffset,
  * DirectoryNamesCount: uint8_t
  * DirectoryNames: list of UTF-8 Pascal strings (uint8_t + char[1,255])
  * @endcode
+ *
+ * With the Kerberos UAM and a k5 principal, the list holds the principal.
+ * Otherwise the count is 0.
+ *
+ * @param[in,out] data       status block
+ * @param[in,out] diroffset  offset of the directory names offset field,
+ *                           advanced to the UTF-8 name offset field
+ * @param[in]     dsi        DSI listener, unused
+ * @param[in]     options    server options with the Kerberos principal
+ * @returns the length of the status block so far
  */
 static size_t status_directorynames(char *data,
                                     int *diroffset,
@@ -367,6 +447,20 @@ static size_t status_directorynames(char *data,
     return data - begin;
 }
 
+/*!
+ * @brief Write the UTF-8 server name of the FPGetSrvrInfo reply into a status
+ * block
+ *
+ * The name, the server name option or the host name, converts to UTF8-MAC
+ * behind a 2-byte length. An ASP status, or a failed conversion, sets the
+ * offset to 0.
+ *
+ * @param[in,out] data        status block
+ * @param[in]     nameoffset  offset of the UTF-8 name offset field
+ * @param[in]     dsi         DSI listener, or NULL for the ASP status
+ * @param[in]     options     server options with the names and charsets
+ * @returns the length of the status block
+ */
 static size_t status_utf8servername(char *data, int *nameoffset,
                                     const DSI *dsi _U_,
                                     const struct afp_options *options)
@@ -411,7 +505,19 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     return data - begin;
 }
 
-/* returns actual offset to signature */
+/*!
+ * @brief Write the volume icon of the FPGetSrvrInfo reply into a status block
+ * and place the signature after it
+ *
+ * Without icon data the icon offset becomes 0, and the signature takes the
+ * place of the icon.
+ *
+ * @param[in,out] data       status block
+ * @param[in]     icondata   icon and mask, or NULL
+ * @param[in]     iconlen    length of icondata
+ * @param[in]     sigoffset  offset of the signature offset field, or 0 to skip
+ *                           it
+ */
 static void status_icon(char *data, const unsigned char *icondata,
                         const size_t iconlen, const int sigoffset)
 {
@@ -436,7 +542,19 @@ static void status_icon(char *data, const unsigned char *icondata,
     }
 }
 
-/* ---------------------
+/*!
+ * @brief Build the FPGetSrvrInfo replies of a DSI listener and of the ASP
+ * server
+ *
+ * The parts go in a fixed order, because each one stores the offset of the
+ * next. The flags announce TCP/IP only with a DNS name or a usable listener
+ * address. The legacy icon option picks the volume icon. The ASP reply skips
+ * the default icon to save room.
+ *
+ * @param[in]     dsi_obj  server object for AFP over TCP
+ * @param[in,out] asp_obj  server object for AFP over AppleTalk, which receives
+ *                         the ASP status
+ * @param[in,out] dsi      listener that receives the DSI status
  */
 void status_init(AFPObj *dsi_obj, AFPObj *asp_obj, DSI *dsi)
 {
@@ -606,15 +724,17 @@ void status_init(AFPObj *dsi_obj, AFPObj *asp_obj, DSI *dsi)
 }
 
 /*!
- * @brief Set the server signature
+ * @brief Set the 16-byte server signature
  *
- * - If found in conf file, use it.
- * - If not found in conf file, genarate and append in conf file.
- * - If conf file don't exist, create and genarate.
- * - If cannot open conf file, use one-time signature.
- * - If signature = xxxxx, use it.
+ * The signature option gives up to 16 bytes directly. Otherwise
+ * afp_signature.conf holds a line per host name with 32 hex digits. A host
+ * without a line gets 16 random bytes, which the call appends. When afpd
+ * cannot read, write, or create the file, the random signature lasts for this
+ * run only.
+ *
+ * @param[in,out] options  server options with the signature option, the host
+ *                         name, and the file path
  */
-
 void set_signature(struct afp_options *options)
 {
     int fd, i;
@@ -811,7 +931,18 @@ server_signature_done:
     return;
 }
 
-/* this is the same as asp/dsi_getstatus */
+/*!
+ * @brief FPGetSrvrInfo: return the status block of the session transport
+ *
+ * The reply matches DSIGetStatus and ASPGetStatus.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block, unused
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK
+ */
 int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf,
                     size_t *rbuflen)
 {

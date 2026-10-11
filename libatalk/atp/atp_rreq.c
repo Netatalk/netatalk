@@ -43,14 +43,23 @@
 #endif /* EBUG */
 
 
-/*
- * atp_rreq() waits for a request, consuming as many datagrams as it takes.
- * atp_rreq_try() makes exactly one attempt, so a caller that has already
- * established the socket is readable never blocks in it, and stays in charge of
- * its own wait. That matters for a caller driving other descriptors in the same
- * loop: a readable socket does not promise a request, because the datagram may
- * belong to another transaction or another node, and the waiting caller would
- * otherwise be parked here with those descriptors unwatched.
+/*!
+ * @brief Read one datagram and take it as an ATP request when it is one
+ *
+ * A caller that saw the socket turn readable never blocks here and keeps
+ * control of its wait. A readable socket does not promise a request, since
+ * the datagram may belong to another transaction or another node. The
+ * waiting form, atp_rreq, loops over this call.
+ *
+ * The endpoint records the transaction ID of a request and, for an exactly
+ * once request, its release time. In atpb, atp_saddr names the address to
+ * accept and receives the sender. The atp_rreqdata buffer and its size in
+ * atp_rreqdlen receive the data and its length, and atp_bitmap the bitmap.
+ *
+ * @param[in]     ah    ATP endpoint
+ * @param[in,out] atpb  parameter block
+ * @returns 1 for a request, 0 for a datagram without a new request, or -1 for
+ *          an error, EMSGSIZE when the data does not fit
  */
 int atp_rreq_try(ATP ah, struct atp_block *atpb)
 {
@@ -120,9 +129,11 @@ int atp_rreq_try(ATP ah, struct atp_block *atpb)
 }
 
 /*!
- * @brief wait for a transaction service request
- * @param ah open atp handle
- * @param atpb parameter block
+ * @brief Wait for an ATP request, reading datagrams until one arrives
+ *
+ * @param[in]     ah    ATP endpoint
+ * @param[in,out] atpb  parameter block, filled as by atp_rreq_try
+ * @returns 0 for a request, or -1 for an error
  */
 int atp_rreq(ATP ah, struct atp_block *atpb)
 {

@@ -13,8 +13,14 @@
 
 #include <atalk/dsi.h>
 
-/* return the status and then delete the connection. most of the
- * fields are already set. */
+/*!
+ * @brief Reply to a DSIGetStatus request with the cached server status block
+ *
+ * The reply reuses the request header and sends the statuslen bytes of status
+ * through the command buffer.
+ *
+ * @param[in,out] dsi  DSI session holding the status block
+ */
 void dsi_getstatus(DSI *dsi)
 {
     dsi->header.dsi_flags = DSIFL_REPLY;

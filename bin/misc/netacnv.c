@@ -34,6 +34,10 @@ struct flag_map flag_map[] = {
 
 char buffer[MAXPATHLEN + 2];
 
+/*!
+ * @brief Print the usage of netacnv, its defaults, and the names of its
+ * conversion options to stdout
+ */
 static void usage(void)
 {
     printf("Usage: netacnv [-o <conversion option> [...]] [-f <from charset>] [-t <to charset>] [-m legacy Mac charset] <string>\n");
@@ -45,6 +49,21 @@ static void usage(void)
     }
 }
 
+/*!
+ * @brief Convert a string between two charsets with convert_charset and print
+ * both forms
+ *
+ * The -f and -t options name the source and the target charsets. Their
+ * defaults are UTF8-MAC and UTF8. The -m option names the legacy Mac
+ * charset, MAC_ROMAN by default. Each -o option adds a CONV_* flag by its
+ * name, and the call ignores unknown names. The result has room for
+ * MAXPATHLEN bytes.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns 0, 1 for a usage or conversion error, or -1 when a charset does not
+ *          load
+ */
 int main(int argc, char **argv)
 {
     int opt;

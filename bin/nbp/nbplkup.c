@@ -47,6 +47,11 @@ static char *Obj = "=";
 static char *Type = "=";
 static char *Zone = "*";
 
+/*!
+ * @brief Print the usage of nbplkup and exit with 1
+ *
+ * @param[in] av0  program path, whose base name the usage line shows
+ */
 static void Usage(char *av0)
 {
     char *p = strrchr(av0, '/');
@@ -62,6 +67,22 @@ static void Usage(char *av0)
     exit(1);
 }
 
+/*!
+ * @brief Look up NBP names and print each match with its address
+ *
+ * The pattern `obj:type@zone` defaults to `=:=@*`. The NBPLKUP environment
+ * variable and then the argument override its parts. The default operation
+ * is NBPOP_BRRQ, -f picks NBPOP_FWD, and -l picks NBPOP_LKUP.
+ *
+ * The -A option sets the local address, -D the node to ask, -r the number of
+ * replies, 1000 by default, and -m the Mac charset. The -s option prints one
+ * line per match for scripts.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns 0, while errors exit with 1 and a failed lookup exits with status
+ *          255
+ */
 int main(int ac, char **av)
 {
     uint8_t nbp_op = NBPOP_BRRQ;

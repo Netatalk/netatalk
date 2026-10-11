@@ -63,6 +63,14 @@ static unsigned int     	pings = 0;
 
 static void usage(char *);
 
+/*!
+ * @brief Print the echo statistics and exit, on SIGINT or after the last reply
+ *
+ * The statistics give the packets sent and received, the loss, and the
+ * minimum, average, and maximum round trip in milliseconds.
+ *
+ * @param[in] sig  signal number, unused
+ */
 static void done(int sig _U_)
 {
     if (nsent) {
@@ -80,6 +88,14 @@ static void done(int sig _U_)
     exit(0);
 }
 
+/*!
+ * @brief Send the next AEP request on each SIGALRM, with a sequence number and
+ * the send time
+ *
+ * After the request count of -c, the call ends the run with done.
+ *
+ * @param[in] sig  signal number, unused
+ */
 static void aep_send(int sig _U_)
 {
     struct timeval	tv;
@@ -113,6 +129,18 @@ static void aep_send(int sig _U_)
     }
 }
 
+/*!
+ * @brief Send AppleTalk echo requests to a node once a second and print the
+ * round trip of each reply
+ *
+ * The target is a net.node address or an NBP name, with Workstation as the
+ * default type and `*` as the default zone. The -A option sets the source
+ * address, and -c stops after a count of requests.
+ *
+ * @param[in] ac  argument count
+ * @param[in] av  argument vector
+ * @returns does not return, and a failure exits with 1
+ */
 int main(int ac, char **av)
 {
     struct servent	*se;
@@ -279,6 +307,11 @@ int main(int ac, char **av)
     }
 }
 
+/*!
+ * @brief Print the usage of aecho and exit with 1
+ *
+ * @param[in] av0  program name
+ */
 static void usage(char *av0)
 {
     fprintf(stderr,

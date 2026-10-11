@@ -215,7 +215,7 @@ SHORT_NAMES            = NO
 # explicit @brief command for a brief description.)
 # The default value is: NO.
 
-JAVADOC_AUTOBRIEF      = NO
+JAVADOC_AUTOBRIEF      = YES
 
 # If the JAVADOC_BANNER tag is set to YES then Doxygen will interpret a line
 # such as
@@ -234,7 +234,7 @@ JAVADOC_BANNER         = NO
 # a brief description.)
 # The default value is: NO.
 
-QT_AUTOBRIEF           = NO
+QT_AUTOBRIEF           = YES
 
 # The MULTILINE_CPP_IS_BRIEF tag can be set to YES to make Doxygen treat a
 # multi-line C++ special comment block (i.e. a block of //! or /// comments) as
@@ -2537,18 +2537,25 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = HAVE_ACLS=1 \
+PREDEFINED             = ATOMIC_INT_LOCK_FREE=2 \
+                         AVAHI_GCC_UNUSED= \
+                         HAVE_ACLS=1 \
                          HAVE_AVAHI=1 \
                          HAVE_CUPS=1 \
                          HAVE_LDAP=1 \
                          HAVE_LIBQUOTA=1 \
+                         HAVE_LISTXATTR=1 \
                          HAVE_MDNS=1 \
                          HAVE_NFSV4_ACLS=1 \
                          HAVE_POSIX_ACLS=1 \
+                         HAVE_SIGALTSTACK=1 \
                          HAVE_USABLE_ICONV=1 \
+                         SERVERTEXT=1 \
+                         SPOTLIGHT_BACKEND_LOCALSEARCH=1 \
                          TCPWRAP=1 \
                          USE_CRACKLIB=1 \
                          WITH_DTRACE=1 \
+                         WITH_LIBEV=1 \
                          WITH_RECVFILE=1 \
                          WITH_SENDFILE=1 \
                          WITH_SPOTLIGHT=1 \
@@ -2562,7 +2569,15 @@ PREDEFINED             = HAVE_ACLS=1 \
 # definition found in the source code.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_AS_DEFINED      =
+EXPAND_AS_DEFINED      = tgetent \
+                         tskip \
+                         tgetstr \
+                         tdecode \
+                         tgetnum \
+                         tgetflag \
+                         tnchktc \
+                         tnamatch \
+                         NFTW_NAME
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then Doxygen's preprocessor will
 # remove all references to function-like macros that are alone on a line, have

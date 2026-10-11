@@ -524,6 +524,19 @@ const int	_dialowermap[] = {
     255	/* 255	caron*/,
 };
 
+/*!
+ * @brief Compare two strings without regard to case, through the Mac Roman
+ * upper case map
+ *
+ * Each byte maps through _diacasemap, which folds accented Mac Roman letters
+ * to upper case and keeps their diacritics. A byte above 127 maps as the Mac
+ * Roman character with that code, whatever the encoding of the string.
+ *
+ * @param[in] s1  first string
+ * @param[in] s2  second string
+ * @returns 0 for equal strings, else the difference of the first mapped bytes
+ *          that differ
+ */
 int strdiacasecmp(const char *s1, const char *s2)
 {
     while (_diacasemap[(unsigned char) *s1] ==
@@ -537,6 +550,18 @@ int strdiacasecmp(const char *s1, const char *s2)
            _diacasemap[(unsigned char) * --s2];
 }
 
+/*!
+ * @brief Compare up to n bytes of two strings without regard to case, through
+ * the Mac Roman upper case map
+ *
+ * The map is the one of strdiacasecmp.
+ *
+ * @param[in] s1  first string
+ * @param[in] s2  second string
+ * @param[in] n   byte limit
+ * @returns 0 when the first n bytes match, else the difference of the first
+ *          mapped bytes that differ
+ */
 int strndiacasecmp(const char *s1, const char *s2, size_t n)
 {
     while (n > 0 &&

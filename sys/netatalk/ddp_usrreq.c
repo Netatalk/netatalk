@@ -29,6 +29,22 @@ uint32_t		ddp_sendspace = DDP_MAXSZ; /*!< Max ddp size + 1 (ddp_type) */
 uint32_t		ddp_recvspace = 10 * (587 + sizeof(struct sockaddr_at));
 
 /*ARGSUSED*/
+/*!
+ * @brief Serve the socket requests of the DDP protocol
+ *
+ * PRU_CONTROL goes to at_control. Attach, detach, bind, and the socket address
+ * map to the control block functions. Connect and disconnect set and clear
+ * the foreign address. A send with an address connects for that packet alone.
+ * Requests that DDP lacks, such as listen and accept, return EOPNOTSUPP.
+ *
+ * @param[in] so      socket
+ * @param[in] req     PRU_* request
+ * @param[in] m       data, or the ioctl command for PRU_CONTROL
+ * @param[in] addr    address, or the ioctl data for PRU_CONTROL
+ * @param[in] rights  access rights, which DDP refuses, or the interface for
+ *                    PRU_CONTROL
+ * @returns 0, or an errno value
+ */
 ddp_usrreq(so, req, m, addr, rights)
 struct socket	*so;
 int			req;
@@ -183,6 +199,12 @@ release:
     return error;
 }
 
+/*!
+ * @brief Return the local address of a DDP socket in an mbuf
+ *
+ * @param[in]  ddp   DDP socket control block
+ * @param[out] addr  mbuf that receives the address
+ */
 at_sockaddr(ddp, addr)
 struct ddpcb	*ddp;
 struct mbuf		*addr;
@@ -193,6 +215,19 @@ struct mbuf		*addr;
     *sat = ddp->ddp_lsat;
 }
 
+/*!
+ * @brief Bind a DDP socket to a local address and port
+ *
+ * A given address has to belong to a local interface, and ports below
+ * ATPORT_RESERVED need the super-user. Without an address the socket takes
+ * the first interface address. Without a port the socket gets the first free
+ * port from ATPORT_RESERVED up. A port and address that another socket holds
+ * fail with EADDRINUSE.
+ *
+ * @param[in,out] ddp   DDP socket control block, not bound yet
+ * @param[in]     addr  mbuf with the address, or NULL
+ * @returns 0, or EINVAL, EAFNOSUPPORT, EADDRNOTAVAIL, EACCES, or EADDRINUSE
+ */
 at_pcbsetaddr(ddp, addr)
 struct ddpcb	*ddp;
 struct mbuf		*addr;
@@ -311,6 +346,19 @@ struct mbuf		*addr;
     return 0;
 }
 
+/*!
+ * @brief Set the foreign address of a DDP socket after checking its route
+ *
+ * Net 0 means the net the socket is bound to, so it needs a bound socket. A
+ * cached route that no longer fits the destination gives way to a new
+ * lookup. The route has to lead out of an AppleTalk interface. An unbound
+ * socket gets bound to a local address.
+ *
+ * @param[in,out] ddp   DDP socket control block
+ * @param[in]     addr  mbuf with the destination
+ * @returns 0, or EINVAL, EAFNOSUPPORT, EADDRNOTAVAIL, ENETUNREACH, or a bind
+ *          error
+ */
 at_pcbconnect(ddp, addr)
 struct ddpcb	*ddp;
 struct mbuf		*addr;
@@ -423,6 +471,11 @@ struct mbuf		*addr;
     return 0;
 }
 
+/*!
+ * @brief Clear the foreign address of a DDP socket
+ *
+ * @param[in,out] ddp  DDP socket control block
+ */
 at_pcbdisconnect(ddp)
 struct ddpcb	*ddp;
 {
@@ -431,6 +484,13 @@ struct ddpcb	*ddp;
     ddp->ddp_fsat.sat_port = ATADDR_ANYPORT;
 }
 
+/*!
+ * @brief Allocate a DDP control block for a socket and link it into the list of
+ * control blocks
+ *
+ * @param[in,out] so  socket, receives the control block
+ * @returns 0
+ */
 at_pcballoc(so)
 struct socket	*so;
 {
@@ -454,6 +514,15 @@ struct socket	*so;
     return 0;
 }
 
+/*!
+ * @brief Detach and free the DDP control block of a socket
+ *
+ * The call frees the socket, unlinks the block from its port and from the
+ * control block list, and releases its route.
+ *
+ * @param[in,out] so   socket
+ * @param[in]     ddp  control block, freed on return
+ */
 at_pcbdetach(so, ddp)
 struct socket	*so;
 struct ddpcb	*ddp;
@@ -493,11 +562,19 @@ struct ddpcb	*ddp;
     (void) m_free(dtom(ddp));
 }
 
-/*
- * For the moment, this just find the pcb with the correct local address.
- * In the future, this will actually do some real searching, so we can use
- * the sender's address to do de-multiplexing on a single port to many
- * sockets (pcbs).
+/*!
+ * @brief Find the DDP socket that an incoming packet belongs to
+ *
+ * The call looks only at the destination, among the sockets bound to its
+ * port, and takes the first socket that fits one of these cases:
+ * - the socket has the destination address
+ * - for ATADDR_BCAST, the socket sits on the net of the receiving interface
+ * - for net.0, the net of the socket falls within the range of the interface
+ *
+ * @param[in] from  source address, unused
+ * @param[in] to    destination address
+ * @param[in] aa    receiving interface address
+ * @returns the control block, or NULL
  */
 struct ddpcb *
 ddp_search(from, to, aa)
@@ -547,12 +624,20 @@ struct at_ifaddr	*aa;
     return ddp;
 }
 
+/*!
+ * @brief Set the length limit of both AppleTalk input queues
+ *
+ * @returns no defined value, since the K&R definition has no return statement
+ */
 ddp_init()
 {
     atintrq1.ifq_maxlen = IFQ_MAXLEN;
     atintrq2.ifq_maxlen = IFQ_MAXLEN;
 }
 
+/*!
+ * @brief Detach every DDP socket
+ */
 ddp_clean()
 {
     struct ddpcb	*ddp;

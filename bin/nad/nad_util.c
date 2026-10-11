@@ -76,6 +76,13 @@ int nad_log_verbose;         /*!< Logging flag */
 int forceflag;               /*!< Allow operations outside AFP volumes */
 volatile sig_atomic_t alarmed; /*!< Signal flag for clean exit */
 
+/*!
+ * @brief Report that a path is outside every AFP volume
+ *
+ * @param[in] out         stream for the message
+ * @param[in] path        path in question
+ * @param[in] force_hint  nonzero to add a hint about --force
+ */
 void nad_not_inside_volume(FILE *out, const char *path, int force_hint)
 {
     fprintf(out, "\"%s\" is not inside an AFP volume", path);
@@ -87,12 +94,23 @@ void nad_not_inside_volume(FILE *out, const char *path, int force_hint)
     fputc('\n', out);
 }
 
+/*!
+ * @brief Note SIGINT or SIGTERM in alarmed, so the running command stops
+ *
+ * @param[in] signo  signal number, unused
+ */
 static void sig_handler(int signo _U_)
 {
     alarmed = 1;
     return;
 }
 
+/*!
+ * @brief Route SIGTERM and SIGINT to sig_handler and ignore SIGABRT, SIGHUP,
+ * and SIGQUIT
+ *
+ * A failed sigaction ends nad through NAD_FATAL.
+ */
 void set_signal(void)
 {
     struct sigaction sv;
@@ -128,6 +146,12 @@ void set_signal(void)
 /*! Static stub volume for paths outside any AFP volume */
 static struct vol null_vol;
 
+/*!
+ * @brief Reset the stub volume for paths outside every AFP volume
+ *
+ * The stub uses adouble:ea metadata with system extended attributes, and it
+ * has no path and no CNID database.
+ */
 static void init_null_vol(void)
 {
     memset(&null_vol, 0, sizeof(struct vol));
@@ -250,6 +274,15 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     return 0;
 }
 
+/*!
+ * @brief Close the CNID database that openvol_optional opened and clear the
+ * volume
+ *
+ * A database that another afpvol_t opened, and the stub volume, stay as
+ * they are.
+ *
+ * @param[in,out] vol  volume to close
+ */
 void closevol(afpvol_t *vol)
 {
     if (vol->vol && vol->vol != &null_vol

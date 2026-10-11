@@ -97,6 +97,12 @@ static const char *lockfile_path = PATH_NETATALK_LOCK;
  * Misc stuff
  ******************************************************************/
 
+/*!
+ * @brief Tell whether a service slot holds the pid of a running child
+ *
+ * @param[in] pid  pid slot, or NETATALK_SRV_NEEDED or NETATALK_SRV_OPTIONAL
+ * @returns true for a pid, false for either marker
+ */
 static bool service_running(pid_t pid)
 {
     if ((pid != NETATALK_SRV_NEEDED) && (pid != NETATALK_SRV_OPTIONAL)) {
@@ -107,9 +113,13 @@ static bool service_running(pid_t pid)
 }
 
 /*!
- * @brief Whether uamlist names uams_srp.so and nothing else
+ * @brief Tell whether uamlist names uams_srp.so and nothing else
  *
- * Split the way auth_load() splits it, on commas and spaces.
+ * The call splits the list on commas and spaces, as auth_load does.
+ *
+ * @param[in] uamlist  uam list of afp.conf, or NULL
+ * @returns true for a list of only uams_srp.so, false otherwise or for a list
+ *          of MAXPATHLEN bytes or more
  */
 static bool srp_is_the_only_uam(const char *uamlist)
 {
@@ -127,12 +137,15 @@ static bool srp_is_the_only_uam(const char *uamlist)
 }
 
 /*!
- * @brief Copy the parent directory of path into dst
+ * @brief Write the parent directory of path into dst
  *
- * dirname(3) semantics: trailing slashes are ignored, a path with no slash
- * yields ".", and a child of the root yields "/".
+ * The result follows dirname(3). Trailing slashes do not count, a path
+ * without a slash gives ".", and a child of the root gives "/".
  *
- * @returns 0 on success, -1 when path is NULL or does not fit dst
+ * @param[out] dst     receives the parent directory
+ * @param[in]  dstlen  size of dst
+ * @param[in]  path    path, or NULL
+ * @returns 0, or -1 when path is NULL or does not fit dst
  */
 static int path_parent(char *dst, size_t dstlen, const char *path)
 {
@@ -162,10 +175,15 @@ static int path_parent(char *dst, size_t dstlen, const char *path)
 }
 
 /*!
- * @brief A mode-0700 directory owned by the caller, not reached through a symlink
+ * @brief Tell whether path is a directory of the caller without group or other
+ * permission bits
  *
- * Trailing slashes are dropped first: with one, lstat() follows a final
- * symbolic link.
+ * The last component must not be a symbolic link. The call drops trailing
+ * slashes first, since lstat follows a final symbolic link through one.
+ *
+ * @param[in] path  directory
+ * @returns true when the real uid owns the directory and its mode has no group
+ *          or other bits
  */
 static bool owned_private_dir(const char *path)
 {
@@ -186,7 +204,11 @@ static bool owned_private_dir(const char *path)
 }
 
 /*!
- * @brief The directory holding path is private to the caller
+ * @brief Tell whether the parent directory of path is private to the caller, by
+ * owned_private_dir
+ *
+ * @param[in] path  file or directory
+ * @returns true when the parent passes owned_private_dir
  */
 static bool parent_is_private(const char *path)
 {
@@ -223,11 +245,16 @@ static bool dir_is_private(const char *path, mode_t file_mask,
 }
 
 /*!
- * @brief The CNID directory is the caller's own and writable, or creatable
+ * @brief Tell whether a CNID directory belongs to the caller and is writable,
+ * or can be created
  *
- * A symbolic link does not pass. Trailing slashes are dropped first: a
- * [Global] vol dbpath gets the volume name and one appended, and a trailing
- * slash makes lstat() follow a link.
+ * A symbolic link does not pass. The call drops trailing slashes first. A
+ * [Global] vol dbpath gets the volume name and a slash appended, and a
+ * trailing slash makes lstat follow a link. A missing directory passes when
+ * its parent is writable and searchable.
+ *
+ * @param[in] path  CNID directory of a volume
+ * @returns true for a usable or creatable directory
  */
 static bool dbpath_is_creatable(const char *path)
 {
@@ -254,11 +281,17 @@ static bool dbpath_is_creatable(const char *path)
 }
 
 /*!
- * @brief The verifier store is the calling user's own, holding their verifier
+ * @brief Tell whether the SRP verifier store is private to the calling user and
+ * holds the verifier of that user
  *
- * The store of a single-user server is the calling user's private directory
- * holding that user's own verifier, named by numeric uid like the SRP UAM
- * expects. Symbolic links are refused, as the UAM refuses them.
+ * The store has to pass owned_private_dir. The verifier file has the numeric
+ * uid as its name, as the SRP UAM expects. It has to be a regular file with
+ * 1 link that the user owns and can read, with a mode that
+ * srp_verifier_mode_is_safe accepts. Symbolic links fail, as the UAM refuses
+ * them.
+ *
+ * @param[in] path  verifier store, or NULL for _PATH_AFPSRPVERIFIERPATH
+ * @returns true when the store and the verifier pass
  */
 static bool srp_verifier_store_is_private(const char *path)
 {
@@ -289,12 +322,22 @@ static bool srp_verifier_store_is_private(const char *path)
 }
 
 /*!
- * @brief Refuse a single-user configuration the mode cannot serve
+ * @brief Refuse a single-user configuration that the mode cannot serve
  *
- * Runs after the volumes are loaded and before daemonize(), so every message
- * reaches the operator's terminal.
+ * The call runs after the volumes load and before daemonize, so every message
+ * reaches the terminal of the operator. It refuses AppleTalk, afpstats,
+ * forced identities, an admin group, and a uam list other than uams_srp.so. The
+ * config file and the SRP verifier store must be private to the user, and
+ * [Homes] is out.
  *
- * @returns 0 when every clause passes, -1 after printing the first failure
+ * Every configured volume must load and use the sqlite CNID backend, and a
+ * Spotlight volume no backend other than cnid. The user must reach each
+ * volume, and its CNID directory must be another directory that the user owns
+ * or can create. A port below 1024 only warns.
+ *
+ * @param[in] volumes_loaded  result of the volume load
+ * @returns 0 when every clause passes, -1 after the message of the first
+ *          failure
  */
 static int validate_singleuser_config(bool volumes_loaded)
 {
@@ -425,7 +468,17 @@ static int validate_singleuser_config(bool volumes_loaded)
 }
 
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
-/*! Create directory and all missing parent directories (like mkdir -p) */
+/*!
+ * @brief Create a directory and its missing parents, as mkdir -p does
+ *
+ * Every new component gets mode under the umask, and an existing one stays as
+ * it is.
+ *
+ * @param[in] path  directory to create
+ * @param[in] mode  mode of the new directories
+ * @returns 0, or -1 with errno set, ENAMETOOLONG for a path of PATH_MAX bytes
+ *          or more
+ */
 static int makedirs(const char *path, mode_t mode)
 {
     char tmp[PATH_MAX];
@@ -455,7 +508,14 @@ static int makedirs(const char *path, mode_t mode)
     return 0;
 }
 
-/*! Open a dconf input file with permissions independent of the process umask */
+/*!
+ * @brief Open a dconf input file for writing with mode 0644, whatever the umask
+ *
+ * The call truncates the file, and it sets the mode of an existing file too.
+ *
+ * @param[in] path  file to open
+ * @returns the stream, or NULL with errno set
+ */
 static FILE *open_dconf_file(const char *path)
 {
     int fd, saved_errno;
@@ -483,7 +543,18 @@ static FILE *open_dconf_file(const char *path)
     return fp;
 }
 
-/*! Set indexers to index all our volumes via a dconf keyfile */
+/*!
+ * @brief Point the localsearch indexer at the Spotlight volumes through a dconf
+ * database
+ *
+ * The keyfile lists the path of every Spotlight volume as a recursive index
+ * directory, and the locks file pins both index settings. A path with a
+ * single quote stays out with a warning, since it would end the quoted
+ * string. The call then runs dconf compile and waits for it.
+ *
+ * @returns 0, or -1 without volumes or when a write, the fork, or dconf compile
+ *          fails
+ */
 static int set_sl_volumes(void)
 {
     EC_INIT;
@@ -645,7 +716,11 @@ EC_CLEANUP:
 
 #ifdef WITH_LIBEV
 
-/*! libev syserr callback */
+/*!
+ * @brief Log a fatal libev error and end the service controller
+ *
+ * @param[in] msg  error text from libev
+ */
 static void libev_syserr_cb(const char *msg) EV_NOEXCEPT {
     LOG(log_error, logtype_default, "libev fatal: %s", msg);
     netatalk_exit(EXITERR_SYS);
@@ -727,7 +802,14 @@ static void sighup_impl(void)
     kill_childs(SIGHUP, &afpd_pid, NULL);
 }
 
-/*! SIGCHLD implementation, returns true if all services have exited during shutdown */
+/*!
+ * @brief Reap the exited children and mark their services for a restart
+ *
+ * An exited afpd or dbus gets NETATALK_SRV_ERROR, and the timer restarts it
+ * outside a shutdown.
+ *
+ * @returns true during a shutdown once neither service runs
+ */
 static bool sigchld_impl(void)
 {
     int status;
@@ -801,13 +883,31 @@ static void timer_impl(void)
 
 #ifdef WITH_LIBEV
 
-/*! kill timer callback for graceful shutdown timeout */
+/*!
+ * @brief End the event loop when the shutdown grace time runs out
+ *
+ * @param[in] ev_loop  event loop, unused
+ * @param[in] w        grace timer, unused
+ * @param[in] revents  events, unused
+ */
 static void kill_timer_cb(struct ev_loop *ev_loop _U_, ev_timer *w _U_,
                           int revents _U_)
 {
     ev_break(loop, EVBREAK_ALL);
 }
 
+/*!
+ * @brief Start the shutdown on SIGTERM, with KILL_GRACETIME seconds for the
+ * children to exit
+ *
+ * The call sends SIGTERM to afpd and dbus. It stops the SIGTERM, SIGQUIT,
+ * and SIGHUP watchers and the restart timer, so only SIGCHLD and the grace
+ * timer remain. A SIGTERM during a shutdown does nothing.
+ *
+ * @param[in] ev_loop  event loop, unused
+ * @param[in] w        signal watcher, unused
+ * @param[in] revents  events, unused
+ */
 static void sigterm_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
                        int revents _U_)
 {
@@ -825,18 +925,43 @@ static void sigterm_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
     ev_timer_stop(loop, &timer_ev);
 }
 
+/*!
+ * @brief Pass SIGQUIT on to afpd and dbus
+ *
+ * @param[in] ev_loop  event loop, unused
+ * @param[in] w        signal watcher, unused
+ * @param[in] revents  events, unused
+ */
 static void sigquit_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
                        int revents _U_)
 {
     sigquit_impl();
 }
 
+/*!
+ * @brief Reload the volumes on SIGHUP, register them with Zeroconf again, and
+ * pass the signal on to afpd
+ *
+ * A single-user server ignores SIGHUP.
+ *
+ * @param[in] ev_loop  event loop, unused
+ * @param[in] w        signal watcher, unused
+ * @param[in] revents  events, unused
+ */
 static void sighup_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
                       int revents _U_)
 {
     sighup_impl();
 }
 
+/*!
+ * @brief Reap the children on SIGCHLD, and end the event loop once a shutdown
+ * has no service left
+ *
+ * @param[in] ev_loop  event loop, unused
+ * @param[in] w        signal watcher, unused
+ * @param[in] revents  events, unused
+ */
 static void sigchld_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
                        int revents _U_)
 {
@@ -845,6 +970,15 @@ static void sigchld_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
     }
 }
 
+/*!
+ * @brief Restart afpd and dbus when they need it, on the 1-second timer
+ *
+ * The timer does nothing during a shutdown.
+ *
+ * @param[in] ev_loop  event loop, unused
+ * @param[in] w        restart timer, unused
+ * @param[in] revents  events, unused
+ */
 static void timer_cb(struct ev_loop *ev_loop _U_, ev_timer *w _U_,
                      int revents _U_)
 {
@@ -900,7 +1034,15 @@ static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
  * helper functions
  ******************************************************************/
 
-/*! kill processes passed as varargs of type "pid_t *", terminate list with NULL */
+/*!
+ * @brief Send a signal to the services whose pid slots follow, up to a NULL
+ *
+ * A slot that holds NETATALK_SRV_ERROR or NETATALK_SRV_OPTIONAL gets no
+ * signal.
+ *
+ * @param[in] sig  signal number
+ * @param[in] ...  pid_t pointers, then NULL
+ */
 static void kill_childs(int sig, ...)
 {
     va_list args;
@@ -918,14 +1060,27 @@ static void kill_childs(int sig, ...)
     va_end(args);
 }
 
-/*! this get called when error conditions are met that require us to exit gracefully */
+/*!
+ * @brief Remove the lock file and exit with a status
+ *
+ * @param[in] ret  exit status
+ */
 static void netatalk_exit(int ret)
 {
     server_unlock(lockfile_path);
     exit(ret);
 }
 
-/*! this forks() and exec() "path" with varags as argc[] */
+/*!
+ * @brief Fork and run a program with a NULL-terminated list of arguments
+ *
+ * The path also serves as argv[0]. A failed exec logs and exits the child
+ * with 1.
+ *
+ * @param[in] path  program to run
+ * @param[in] ...   char pointer arguments, then NULL
+ * @returns the pid of the child, or -1 when fork fails
+ */
 static pid_t run_process(const char *path, ...)
 {
     int i = 0;
@@ -976,6 +1131,10 @@ static pid_t run_afpd(void)
     return run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL);
 }
 
+/*!
+ * @brief Print the version, the license note, and the Zeroconf and Spotlight
+ * backends of the build
+ */
 static void show_netatalk_version(void)
 {
     int num _U_, i _U_;
@@ -1002,6 +1161,13 @@ static void show_netatalk_version(void)
 #endif
 }
 
+/*!
+ * @brief Print the paths of afp.conf, afpd, the dbus daemon and its
+ * configuration, and the lock file
+ *
+ * The dbus lines need the localsearch backend, and Solaris builds have no
+ * lock file line.
+ */
 static void show_netatalk_paths(void)
 {
     printf("                  afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
@@ -1015,6 +1181,9 @@ static void show_netatalk_paths(void)
 #endif
 }
 
+/*!
+ * @brief Print the command line forms of netatalk
+ */
 static void usage(void)
 {
     printf("usage: netatalk [-d] [-F configfile] \n");
@@ -1024,6 +1193,11 @@ static void usage(void)
 }
 
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
+/*!
+ * @brief Tell whether a Spotlight volume names the localsearch backend
+ *
+ * @returns true when one volume does, false otherwise
+ */
 static bool any_volume_uses_localsearch(void)
 {
     const struct vol *vol;
@@ -1040,6 +1214,25 @@ static bool any_volume_uses_localsearch(void)
 }
 #endif /* SPOTLIGHT_BACKEND_LOCALSEARCH */
 
+/*!
+ * @brief Run the netatalk service controller, which starts afpd and the
+ * Spotlight dbus daemon and restarts them
+ *
+ * As root the controller serves every user. With --single-user it runs as one
+ * user other than root, and it needs -P with a pid file in a private
+ * directory. It validates the configuration before it daemonizes.
+ *
+ * The controller loads the volumes, daemonizes without -d, writes the lock
+ * file, and starts afpd. A localsearch volume also starts dbus and writes the
+ * indexer configuration. The controller registers with Zeroconf and runs the
+ * event loop until a SIGTERM shutdown ends. Any service left after the grace
+ * time gets SIGKILL.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns no value, since netatalk_exit ends the process with the status of
+ *          the event loop
+ */
 int main(int argc, char **argv)
 {
     static const struct option long_options[] = {

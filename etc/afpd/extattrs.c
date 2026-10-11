@@ -50,10 +50,21 @@ static const char *ea_resourcefork = "com.apple.ResourceFork";
  ****************************************/
 
 /*!
-  @note we're being called twice. Firstly the client only want the size of all
-  EA names, secondly it wants these names. In order to avoid scanning EAs twice
-  we cache them in a static buffer.
-*/
+ * @brief FPListExtAttrs: list the extended attribute names of a file or
+ * directory
+ *
+ * The client calls twice, first for the size of all names and then for the
+ * names themselves. A static buffer keeps the names between the two calls, so
+ * one scan of the extended attributes serves both.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, or an AFPERR_* code
+ */
 int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                     size_t *rbuflen)
 {
@@ -250,6 +261,14 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Terminate a counted extended attribute name in a static buffer for log
+ * lines
+ *
+ * @param[in] ibuf  name from the request
+ * @param[in] len   length of the name, capped at 255
+ * @returns the static buffer
+ */
 static char *to_stringz(char *ibuf, uint16_t len)
 {
     static char attrmname[256];
@@ -265,6 +284,23 @@ static char *to_stringz(char *ibuf, uint16_t len)
     return attrmname;
 }
 
+/*!
+ * @brief FPGetExtAttr: return the size or the content of an extended attribute
+ *
+ * A MaxReplySize of 0 asks for the size only. The name arrives in UTF-8 and
+ * converts to the unix charset. An open fork of the file lends its metadata
+ * descriptor to the VFS call. kXAttrNoFollow keeps the call off symlink
+ * targets.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the VFS result, AFPERR_PARAM for an unknown volume, AFPERR_MISC for
+ *          an empty converted name, or the error of the directory or path
+ *          lookup
+ */
 int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                    size_t *rbuflen)
 {
@@ -370,6 +406,22 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return ret;
 }
 
+/*!
+ * @brief FPSetExtAttr: create or replace an extended attribute
+ *
+ * kXAttrCreate and kXAttrReplace map to O_CREAT and O_TRUNC for the VFS call.
+ * A name over 255 bytes or a value over MAX_EA_SIZE gets AFPERR_PARAM. After a
+ * write the dircache entry takes the new stat, and the other sessions get a
+ * refresh hint.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the VFS result, AFPERR_PARAM, AFPERR_MISC for an empty converted
+ *          name, or the error of the directory or path lookup
+ */
 int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                    char *rbuf _U_, size_t *rbuflen)
 {
@@ -512,6 +564,20 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     return ret;
 }
 
+/*!
+ * @brief FPRemoveExtAttr: remove an extended attribute
+ *
+ * A name over 255 bytes gets AFPERR_PARAM. After a removal the dircache entry
+ * takes the new stat, and the other sessions get a refresh hint.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the VFS result, AFPERR_PARAM, AFPERR_MISC for an empty converted
+ *          name, or the error of the directory or path lookup
+ */
 int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                    char *rbuf _U_, size_t *rbuflen)
 {

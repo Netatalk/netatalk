@@ -198,6 +198,16 @@ typedef struct node_t {
     unsigned int red: 1;
 } *node;
 
+/*!
+ * @brief Free a tsearch subtree and pass each item to a free function
+ *
+ * The call frees both subtrees first, then the item and the node. It assumes
+ * that a tsearch node of the C library starts with the item pointer, the left
+ * link, and the right link.
+ *
+ * @param[in] root     root of the subtree, not NULL
+ * @param[in] freefct  function that frees an item
+ */
 static void tdestroy_recurse(node root, __free_fn_t freefct)
 {
     if (root->left != NULL) {
@@ -213,6 +223,14 @@ static void tdestroy_recurse(node root, __free_fn_t freefct)
     free(root);
 }
 
+/*!
+ * @brief Free a whole tsearch tree, as the GNU tdestroy does
+ *
+ * An empty tree needs nothing.
+ *
+ * @param[in] vroot    root of the tree, or NULL
+ * @param[in] freefct  function that frees an item
+ */
 static void mytdestroy(void *vroot, __free_fn_t freefct)
 {
     node root = (node) vroot;
@@ -222,6 +240,20 @@ static void mytdestroy(void *vroot, __free_fn_t freefct)
     }
 }
 
+/*!
+ * @brief Store a string in a sized buffer and return the end of the stored
+ * string, like stpcpy
+ *
+ * When the string fits, the call returns a pointer to its NUL. A string that
+ * does not fit ends cut at the buffer size, and the call then returns
+ * `dest + dest_size - 2`, one byte before the NUL. A buffer of size 0 stays
+ * untouched.
+ *
+ * @param[out] dest       destination buffer
+ * @param[in]  src        string to store
+ * @param[in]  dest_size  size of @p dest
+ * @returns the end of the stored string in @p dest
+ */
 static char *mystpcpy(char *dest, const char *src, size_t dest_size)
 {
     size_t src_len = strlen(src);
@@ -239,6 +271,16 @@ static char *mystpcpy(char *dest, const char *src, size_t dest_size)
     }
 }
 
+/*!
+ * @brief Return the current directory in a buffer from malloc
+ *
+ * The buffer starts at PATH_MAX plus 2 bytes and grows by 512 bytes while
+ * getcwd fails with ERANGE. The `__getcwd` macro of the walk maps to this
+ * call.
+ *
+ * @returns the path for the caller to free, or NULL with the errno of the
+ *          failure
+ */
 static char *xgetcwd(void)
 {
     char *cwd;
@@ -281,6 +323,16 @@ static char *xgetcwd(void)
     return cwd;
 }
 
+/*!
+ * @brief Order two known objects by inode and then by device, for tsearch
+ *
+ * The walk only needs equality. The call compares field by field, so the
+ * padding of the structure plays no part.
+ *
+ * @param[in] p1  first known_object
+ * @param[in] p2  second known_object
+ * @returns a negative value, 0, or a positive value
+ */
 static int
 object_compare(const void *p1, const void *p2)
 {
@@ -299,6 +351,14 @@ object_compare(const void *p1, const void *p2)
 }
 
 
+/*!
+ * @brief Remember the device and the inode of a directory, so the walk enters
+ * it once
+ *
+ * @param[in,out] data  walk state with the tree of known objects
+ * @param[in]     st    stat result of the directory
+ * @returns 0, or -1 when memory runs out
+ */
 static int
 add_object(struct ftw_data *data, struct STAT *st)
 {
@@ -314,6 +374,13 @@ add_object(struct ftw_data *data, struct STAT *st)
 }
 
 
+/*!
+ * @brief Tell whether the walk entered a directory before
+ *
+ * @param[in] data  walk state with the tree of known objects
+ * @param[in] st    stat result of the directory
+ * @returns nonzero for a known directory, or 0
+ */
 static inline int
 find_object(struct ftw_data *data, struct STAT *st)
 {
@@ -324,6 +391,24 @@ find_object(struct ftw_data *data, struct STAT *st)
 }
 
 
+/*!
+ * @brief Open the directory that the walk buffer names and give its stream the
+ * next slot
+ *
+ * The walk keeps up to maxdir streams open in a ring. When the next slot
+ * holds a stream, the call reads the remaining names of that directory into
+ * a list of NUL-terminated names and closes it. The list keeps up to 1 MiB of
+ * names and cuts each name at 255 bytes, and further names drop out.
+ *
+ * The new stream opens relative to the parent stream while that one is open.
+ * Otherwise it opens by base name under FTW_CHDIR, or by full path.
+ *
+ * @param[in]     dfdp  descriptor of the parent stream, or NULL for the start
+ *                      directory
+ * @param[in,out] data  walk state
+ * @param[out]    dirp  receives the new stream
+ * @returns 0, or -1 with errno for a failure
+ */
 static inline int
 open_dir_stream(int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 {
@@ -469,6 +554,26 @@ open_dir_stream(int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 }
 
 
+/*!
+ * @brief Visit one directory entry and report it to the callback or descend
+ * into it
+ *
+ * The call skips `.` and `..` and appends the name to the walk buffer. It
+ * classifies the entry with stat, or with lstat under FTW_PHYS. Without
+ * FTW_PHYS a dangling symbolic link gives FTW_SLN. A stat failure with
+ * EACCES or ENOENT gives FTW_NS, and other stat failures end the walk.
+ *
+ * Under FTW_MOUNT the call skips entries on another file system than the
+ * start. Without FTW_PHYS the call enters each directory once, which stops
+ * symbolic link cycles. Under FTW_ACTIONRETVAL a FTW_SKIP_SUBTREE result
+ * becomes 0.
+ *
+ * @param[in,out] data    walk state
+ * @param[in]     dir     directory that holds the entry
+ * @param[in]     name    entry name
+ * @param[in]     namlen  length of @p name
+ * @returns 0 to go on, -1 for an error, or the nonzero value of the callback
+ */
 static int
 process_entry(struct ftw_data *data, struct dir_data *dir, const char *name,
               size_t namlen)
@@ -568,6 +673,24 @@ process_entry(struct ftw_data *data, struct dir_data *dir, const char *name,
 }
 
 
+/*!
+ * @brief Walk one directory, report it, visit its entries, and return to its
+ * parent
+ *
+ * A directory that does not open for EACCES goes to the callback as
+ * FTW_DNR, and other open errors end the walk. The callback sees the
+ * directory with FTW_D before its entries, or with FTW_DP after them under
+ * FTW_DEPTH. Under FTW_CHDIR the call changes into the directory and back to
+ * the parent afterwards.
+ *
+ * After the entries the call runs the up function of nftw, which nad uses to
+ * step its directory IDs back to the parent.
+ *
+ * @param[in,out] data     walk state
+ * @param[in]     st       stat result of the directory
+ * @param[in]     old_dir  parent directory, or NULL for the start directory
+ * @returns 0 to go on, -1 for an error, or the nonzero value of the callback
+ */
 static int
 ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 {
@@ -722,6 +845,26 @@ cleanup:
 }
 
 
+/*!
+ * @brief Set up a walk from a start path, run it, and restore the current
+ * directory
+ *
+ * An empty path fails with ENOENT. The walk keeps up to @p descriptors
+ * directory streams open, and at least one. The walk buffer drops the
+ * trailing slashes of the path. Under FTW_CHDIR the call changes into the
+ * directory that holds the start and returns to the current directory at the
+ * end. A start directory goes to ftw_dir, and any other start goes straight
+ * to the callback.
+ *
+ * @param[in] dir          start path, not empty
+ * @param[in] is_nftw      nonzero for the flag values of nftw, 0 for those of
+ *                         ftw
+ * @param[in] func         callback for each object
+ * @param[in] up           function to run after each directory, or NULL
+ * @param[in] descriptors  limit of open directory streams
+ * @param[in] flags        FTW_* flags of nftw
+ * @returns 0, -1 for an error, or the nonzero value of the callback
+ */
 static int ftw_startup(const char *dir,
                        int is_nftw,
                        nftw_func_t func,
@@ -917,7 +1060,20 @@ out_fail:
 
 
 
-/* Entry points.  */
+/*!
+ * @brief Walk a file tree like the POSIX nftw, with a function to run after
+ * each directory
+ *
+ * The call runs ftw_startup with the nftw flag values. The @p up function
+ * runs after the entries of each directory, before its FTW_DP report.
+ *
+ * @param[in] path         start path
+ * @param[in] func         callback for each object
+ * @param[in] up           function to run after each directory, or NULL
+ * @param[in] descriptors  limit of open directory streams
+ * @param[in] flags        FTW_* flags
+ * @returns 0, -1 for an error, or the nonzero value of the callback
+ */
 int NFTW_NAME(const char *path,
               nftw_func_t func,
               dir_notification_func_t up,

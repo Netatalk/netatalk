@@ -56,6 +56,13 @@ static int ls_u;
 static int first = 1;
 static int recursion;
 
+/*!
+ * @brief Order two directory entries by name with strcmp, for scandir
+ *
+ * @param[in] a  first entry
+ * @param[in] b  second entry
+ * @returns a negative value, 0, or a positive value
+ */
 static int compare_names(const struct dirent **a, const struct dirent **b)
 {
     return strcmp((*a)->d_name, (*b)->d_name);
@@ -80,9 +87,12 @@ static char *labels[] = {
 };
 
 /*!
-  @brief Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
-  @returns pointer to name or NULL.
-*/
+ * @brief Tell whether a name is one of the netatalk folders .AppleDouble,
+ * .AppleDB, and .AppleDesktop
+ *
+ * @param[in] name  directory entry name
+ * @returns the matching table entry, or NULL
+ */
 static const char *check_netatalk_dirs(const char *name)
 {
     for (int c = 0; netatalk_dirs[c]; c++) {
@@ -95,6 +105,10 @@ static const char *check_netatalk_dirs(const char *name)
 }
 
 
+/*!
+ * @brief Print the usage of nad ls and the meaning of its flag letters to
+ * stdout
+ */
 static void usage_ls(void)
 {
     printf(
@@ -130,11 +144,21 @@ static void usage_ls(void)
     );
 }
 
+/*!
+ * @brief Print the link count of an entry, five characters wide
+ *
+ * @param[in] statp  stat result of the entry
+ */
 static void print_numlinks(const struct stat *statp)
 {
     printf("%5ld", (long)statp->st_nlink);
 }
 
+/*!
+ * @brief Print the owner name of an entry, or the UID when the name is unknown
+ *
+ * @param[in] statp  stat result of the entry
+ */
 static void print_owner(const struct stat *statp)
 {
     struct passwd *pwd = getpwuid(statp->st_uid);
@@ -146,6 +170,11 @@ static void print_owner(const struct stat *statp)
     }
 }
 
+/*!
+ * @brief Print the group name of an entry, or the GID when the name is unknown
+ *
+ * @param[in] statp  stat result of the entry
+ */
 static void print_group(const struct stat *statp)
 {
     struct group *grp = getgrgid(statp->st_gid);
@@ -157,6 +186,13 @@ static void print_group(const struct stat *statp)
     }
 }
 
+/*!
+ * @brief Print the size of an entry, or the major and minor numbers of a device
+ *
+ * The device numbers come from bits 15 to 8 and bits 7 to 0 of st_rdev.
+ *
+ * @param[in] statp  stat result of the entry
+ */
 static void print_size(const struct stat *statp)
 {
     switch (statp->st_mode & S_IFMT) {
@@ -171,6 +207,14 @@ static void print_size(const struct stat *statp)
     }
 }
 
+/*!
+ * @brief Print the modification time of an entry as ls shows it
+ *
+ * Times within the last half year show the hour and the minute, and older or
+ * future times show the year.
+ *
+ * @param[in] statp  stat result of the entry
+ */
 static void print_date(const struct stat *statp)
 {
     time_t now;
@@ -195,6 +239,20 @@ static void print_date(const struct stat *statp)
     printf(" %s", buf);
 }
 
+/*!
+ * @brief Print the Mac metadata columns of an entry for nad ls -l
+ *
+ * The columns hold the Finder flags, the AFP attributes, the color label,
+ * the type, the creator, and the CNID from the AppleDouble metadata. A
+ * lowercase letter marks a set flag, and an uppercase one a flag that a
+ * directory should not carry. Without metadata the columns hold dashes.
+ * Outside a volume the CNID column shows `!NO-CNID`, and a missing CNID
+ * shows `!ADVOL_CACHE`.
+ *
+ * @param[in] path  entry path
+ * @param[in] vol   volume of the entry
+ * @param[in] st    stat result of the entry
+ */
 static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
 {
     int adflags = 0;
@@ -419,6 +477,12 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
 #define TYPE(b) ((st->st_mode & (S_IFMT)) == (b))
 #define MODE(b) ((st->st_mode & (b)) == (b))
 
+/*!
+ * @brief Print the type letter and the permission bits of an entry as ls shows
+ * them
+ *
+ * @param[in] st  stat result of the entry
+ */
 static void print_mode(const struct stat *st)
 {
     if (TYPE(S_IFBLK)) {
@@ -487,6 +551,14 @@ static void print_mode(const struct stat *st)
 #undef TYPE
 #undef MODE
 
+/*!
+ * @brief Return the width of the terminal for column output
+ *
+ * The width comes from the window size of stdout, then from COLUMNS, and
+ * the default is 80.
+ *
+ * @returns the width in characters
+ */
 static int get_terminal_width(void)
 {
     struct winsize ws;
@@ -508,9 +580,12 @@ static int get_terminal_width(void)
 }
 
 /*!
-  @brief Print a filename with non-printable characters replaced by '?'
-  @returns the number of characters printed
-*/
+ * @brief Print a file name with a question mark for each character that does
+ * not print
+ *
+ * @param[in] name  file name
+ * @returns the number of characters printed
+ */
 static unsigned int print_name_sanitized(const char *name)
 {
     unsigned int len = 0;
@@ -528,6 +603,15 @@ static unsigned int print_name_sanitized(const char *name)
     return len;
 }
 
+/*!
+ * @brief Print names in columns that fit the terminal width, filling each
+ * column first
+ *
+ * Each column is two characters wider than the longest name.
+ *
+ * @param[in] names  names to print
+ * @param[in] count  number of names
+ */
 static void print_columns(char **names, unsigned int count)
 {
     if (count == 0) {
@@ -578,6 +662,17 @@ static void print_columns(char **names, unsigned int count)
     }
 }
 
+/*!
+ * @brief Print one entry, as a plain name or as a long line under -l
+ *
+ * The long line starts with the Unix columns under -u, followed by the Mac
+ * metadata columns and the name.
+ *
+ * @param[in] path  entry path
+ * @param[in] st    stat result of the entry
+ * @param[in] vol   volume of the entry
+ * @returns 0
+ */
 static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
 {
     if (! ls_l) {
@@ -602,6 +697,19 @@ static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
     return 0;
 }
 
+/*!
+ * @brief List a file, or the entries of a directory, and descend under -R
+ *
+ * For a regular file, or under -d, the call prints the entry itself. It
+ * lists a directory from inside, sorted by name, in columns or long lines.
+ * Dot files need -a, and the netatalk folders of a volume never show. Under
+ * -R the call descends into each subdirectory with a header line, and at the
+ * end it returns to the starting directory.
+ *
+ * @param[in] path  entry path
+ * @param[in] vol   volume of the entry
+ * @returns 0, or -1 for an error or a signal
+ */
 static int ad_ls_r(char *path, afpvol_t *vol)
 {
     int ret = 0, cwd, dirprinted = 0, dirempty;
@@ -808,6 +916,19 @@ exit:
     return ret;
 }
 
+/*!
+ * @brief Run the nad ls command
+ *
+ * The options are -a, -d, -l, -R, and -u. Without a path the call lists the
+ * current directory. Otherwise it lists the file arguments first and then
+ * each directory with a header. The call skips paths that do not stat
+ * without a message, and listing errors leave the exit status at 0.
+ *
+ * @param[in] argc  argument count, from the ls command on
+ * @param[in] argv  argument vector, from the ls command on
+ * @param[in] obj   AFP configuration with the volumes
+ * @returns 0, 1 when a volume does not open, or -1 for an unknown option
+ */
 int nad_ls(int argc, char **argv, AFPObj *obj)
 {
     int c, firstarg;

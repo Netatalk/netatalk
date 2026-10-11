@@ -33,6 +33,11 @@ static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
                                           charset_t charset);
 void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset);
 
+/*!
+ * @brief Print the usage of getzones to stderr and exit with 1
+ *
+ * @param[in] s  program name
+ */
 static void usage(char *s)
 {
     fprintf(stderr,
@@ -41,6 +46,24 @@ static void usage(char *s)
     exit(1);
 }
 
+/*!
+ * @brief Ask an AppleTalk router for zone information through ZIP and print it
+ *
+ * Without an option the tool prints every zone of the AppleTalk network. The
+ * -l option prints the zones of the local network, and -m prints the zone of
+ * the asking node. The -g option prints the GetNetInfo reply of the current
+ * network, and -z asks GetNetInfo whether one zone is valid. The -q option
+ * prints the zones of one network. These five options exclude each other.
+ *
+ * The -c option sets the Mac charset of the zone names, MAC_ROMAN by default.
+ * The optional address names the router to ask, and without it the tool asks
+ * the local atalkd.
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  argument vector
+ * @returns 0, while a failure exits with 1 and a GetNetInfo reply that marks
+ *          the requested zone invalid exits with 2
+ */
 int main(int argc, char *argv[])
 {
     struct sockaddr_at saddr;
@@ -196,6 +219,19 @@ int main(int argc, char *argv[])
     }
 }
 
+/*!
+ * @brief Run a ZIP request over ATP, print the zones of each reply, and exit
+ *
+ * GetZoneList and GetLocalZones ask page by page, from index 1 on, until a
+ * reply carries the last flag. GetMyZone asks once with index 0. Each request
+ * has a timeout of 2 seconds and 5 tries. The call exits with 0 after the
+ * last page, or with 1 for an ATP error.
+ *
+ * @param[in] saddr        router to ask
+ * @param[in] lookup_type  ZIPOP_GETZONELIST, ZIPOP_GETLOCALZONES, or
+ *                         ZIPOP_GETMYZONE
+ * @param[in] charset      Mac charset of the zone names
+ */
 void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type,
                    charset_t charset)
 {
@@ -315,6 +351,18 @@ static void print_zones(short n, const char *buf, charset_t charset)
     }
 }
 
+/*!
+ * @brief Send a ZIP GetNetInfo request, wait for its reply, and print it
+ *
+ * The zone name goes into the request as given, without a charset
+ * conversion. The call waits without a timeout and skips datagrams that are
+ * not GetNetInfo replies. A socket or send error exits with 1.
+ *
+ * @param[in] dest             router to ask
+ * @param[in] zone_to_confirm  zone to ask about, cut at 32 bytes, or NULL for
+ *                             none
+ * @param[in] charset          Mac charset of the zone names in the reply
+ */
 void do_getnetinfo(struct sockaddr_at *dest, const char *zone_to_confirm,
                    charset_t charset)
 {
@@ -382,6 +430,18 @@ void do_getnetinfo(struct sockaddr_at *dest, const char *zone_to_confirm,
     print_gnireply(ret, buf, charset);
 }
 
+/*!
+ * @brief Print the fields of a ZIP GetNetInfo reply
+ *
+ * The output lists the network range, the flags, the requested zone, the
+ * multicast address, and the default zone when the reply has one. A short or
+ * malformed reply exits with 1, and a reply that marks the requested zone
+ * invalid exits with 2.
+ *
+ * @param[in] len      reply length
+ * @param[in] buf      reply, from the DDP type byte on
+ * @param[in] charset  Mac charset of the zone names
+ */
 static void print_gnireply(ssize_t len, uint8_t *buf, charset_t charset)
 {
     ssize_t ret;
@@ -497,6 +557,18 @@ static void print_gnireply(ssize_t len, uint8_t *buf, charset_t charset)
     }
 }
 
+/*!
+ * @brief Send a ZIP query for one network and print the zones of the replies
+ *
+ * The call waits without a timeout and skips datagrams that are not ZIP
+ * replies. A ZIPOP_REPLY carries every zone. Extended replies can span
+ * datagrams, so the call reads on until the printed zones reach the count
+ * that the first one names. A socket or send error exits with 1.
+ *
+ * @param[in] dest     router to ask
+ * @param[in] network  network number
+ * @param[in] charset  Mac charset of the zone names
+ */
 void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
 {
     uint8_t buf[600];
@@ -578,6 +650,18 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
     }
 }
 
+/*!
+ * @brief Print the network number and the zone name of each tuple in a ZIP
+ * reply
+ *
+ * The call stops at the first tuple that does not fit the buffer. A zone name
+ * that does not convert exits with 1.
+ *
+ * @param[in] buf      tuples after the reply header
+ * @param[in] len      length of the tuples
+ * @param[in] charset  Mac charset of the zone names
+ * @returns the number of tuples printed
+ */
 static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
                                           charset_t charset)
 {

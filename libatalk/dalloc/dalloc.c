@@ -164,7 +164,20 @@
 #include <atalk/logger.h>
 #include <atalk/dalloc.h>
 
-/*! Use dalloc_add_copy() macro, not this function */
+/*!
+ * @brief Append an element to a dalloc array, the worker of dalloc_add and
+ * dalloc_add_copy
+ *
+ * With a talloc chunk the call stores the bytes of obj in that chunk, as
+ * dalloc_add_copy needs. Without one it stores obj itself, as dalloc_add
+ * needs. The dalloc_add and dalloc_add_copy macros call it.
+ *
+ * @param[in,out] dd            dalloc array
+ * @param[in]     talloc_chunk  chunk that receives the bytes of obj, or NULL
+ * @param[in]     obj           object to store
+ * @param[in]     size          size of obj
+ * @returns 0
+ */
 int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj,
                             size_t size)
 {
@@ -190,11 +203,17 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj,
 }
 
 /*!
- * @brief Get pointer to value from a DALLOC object
+ * @brief Return an element of a dalloc tree by a path of indexes and a type
+ * name
  *
- * Returns pointer to object from a DALLOC object. Nested object interation
- * is supported by using the type string "DALLOC_CTX". Any other type string
- * designates the requested objects type.
+ * Each "DALLOC_CTX" argument with an index steps into a nested array. The
+ * last type name and index select the element, which must carry that talloc
+ * name.
+ *
+ * @param[in] d    dalloc tree
+ * @param[in] ...  "DALLOC_CTX" and index pairs, then the type name and the
+ *                 index of the element
+ * @returns the element, or NULL for an index out of range or a type mismatch
  */
 void *dalloc_get(const DALLOC_CTX *d, ...)
 {
@@ -242,6 +261,20 @@ EC_CLEANUP:
     return p;
 }
 
+/*!
+ * @brief Return the value for a name in a dalloc dictionary, reached by a path
+ * of indexes
+ *
+ * Each "DALLOC_CTX" argument with an index steps into a nested array. The
+ * dictionary alternates string names and values, and the value must carry
+ * the final type name.
+ *
+ * @param[in] d    dalloc tree
+ * @param[in] ...  "DALLOC_CTX" and index pairs, then the name and the type name
+ *                 of the value
+ * @returns the value, or NULL for a missing name, a name that is not a string,
+ *          or a type mismatch
+ */
 void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
 {
     EC_INIT;
@@ -292,6 +325,15 @@ EC_CLEANUP:
     return p;
 }
 
+/*!
+ * @brief Duplicate a string in talloc memory under the "char *" type name
+ *
+ * The type name lets dalloc_get and dalloc_value_for_key return the string.
+ *
+ * @param[in] ctx     talloc parent
+ * @param[in] string  NUL-terminated string
+ * @returns the new string, or NULL when talloc fails
+ */
 char *dalloc_strdup(const void *ctx, const char *string)
 {
     EC_INIT;
@@ -311,6 +353,17 @@ EC_CLEANUP:
     return p;
 }
 
+/*!
+ * @brief Duplicate up to n bytes of a string in talloc memory under the
+ * "char *" type name
+ *
+ * The result always ends with a NUL.
+ *
+ * @param[in] ctx     talloc parent
+ * @param[in] string  string
+ * @param[in] n       byte limit, without the NUL
+ * @returns the new string, or NULL when talloc fails
+ */
 char *dalloc_strndup(const void *ctx, const char *string, size_t n)
 {
     EC_INIT;

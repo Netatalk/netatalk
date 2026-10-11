@@ -41,8 +41,24 @@
 
 
 
-/* ------------------------ */
-
+/*!
+ * @brief Convert UCS2 to a single-byte charset with a per-character table
+ * function
+ *
+ * Each UCS2 character becomes one byte. A character that the table function
+ * does not map fails with EILSEQ, and input that does not fit the output
+ * fails with E2BIG. The call leaves @p outbuf at its start, so callers
+ * measure the output by @p outbytesleft.
+ *
+ * @param[in]     char_func     table function of the charset
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[out]    outbuf        output position, which the call writes at but
+ *                              does not advance
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of characters converted, or `(size_t)-1` with errno
+ */
 size_t mb_generic_push(int (*char_func)(unsigned char *, ucs2_t), void *cd _U_,
                        char **inbuf,
                        size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
@@ -74,8 +90,22 @@ size_t mb_generic_push(int (*char_func)(unsigned char *, ucs2_t), void *cd _U_,
     return len;
 }
 
-/* ------------------------ */
-
+/*!
+ * @brief Convert a single-byte charset to UCS2 with a per-character table
+ * function
+ *
+ * Each byte becomes one UCS2 character. A byte that the table function does
+ * not map fails with EILSEQ, and input that does not fit the output fails
+ * with E2BIG.
+ *
+ * @param[in]     char_func     table function of the charset
+ * @param[in]     cd            iconv descriptor, unused
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns the number of characters converted, or `(size_t)-1` with errno
+ */
 size_t mb_generic_pull(int (*char_func)(ucs2_t *, const unsigned char *),
                        void *cd _U_,
                        char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)

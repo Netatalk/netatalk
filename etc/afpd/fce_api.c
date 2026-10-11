@@ -166,6 +166,11 @@ void fce_init_udp(void)
     udp_initialized = true;
 }
 
+/*!
+ * @brief Close the sockets of every FCE listener
+ *
+ * A later event reopens each socket and sends FCE_CONN_BROKEN first.
+ */
 void fce_cleanup(void)
 {
     if (udp_initialized == false) {
@@ -186,7 +191,23 @@ void fce_cleanup(void)
 }
 
 /*!
- * Construct a UDP packet for our listeners and return packet size
+ * @brief Build the UDP packet of one FCE event in a buffer
+ *
+ * The packet starts with the 8-byte magic and the protocol version. Version 2
+ * adds an info flags byte, a filler byte, and 8 reserved bytes around the
+ * event code. The 4-byte event ID follows, then the pid and the user name
+ * when the flags ask for them. The path and the source path of a move end the
+ * packet, each with a 2-byte length. All numbers go in network order.
+ *
+ * @param[in]  obj       session object with the FCE protocol version
+ * @param[out] iobuf     buffer of MAXIOBUF bytes
+ * @param[in]  event     event code
+ * @param[in]  path      path of the event, capped at MAXPATHLEN - 1 bytes
+ * @param[in]  oldpath   source path of a move, or NULL
+ * @param[in]  pid       session pid
+ * @param[in]  user      login name
+ * @param[in]  event_id  event counter
+ * @returns the packet length, or -1 when the packet does not fit
  */
 static ssize_t build_fce_packet(const AFPObj *obj,
                                 unsigned char *iobuf,
@@ -367,8 +388,20 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 }
 
 /*!
- * @brief Send the fce information to all (connected) listeners
- * @note We don't give return code because all errors are handled internally (I hope..)
+ * @brief Send one FCE event to every listener and to the notify script
+ *
+ * The first event records the user, opens the sockets, and sends
+ * FCE_CONN_START. The notify script runs in the background with the event as
+ * quoted options. The fce sendwait option delays every event by its value,
+ * from 1 to 999 ms. A failed socket reopens after FCE_SOCKET_RETRY_DELAY_S
+ * seconds and first sends FCE_CONN_BROKEN. A short send closes the socket
+ * until then. The event ID rises by 1 per event, and 0xFFFFFFFF rolls over to
+ * 0.
+ *
+ * @param[in] obj      session object
+ * @param[in] event    event code
+ * @param[in] path     path of the event
+ * @param[in] oldpath  source path of a move, or NULL
  */
 static void send_fce_event(const AFPObj *obj, int event, const char *path,
                            const char *oldpath)
@@ -529,6 +562,14 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
     event_id++;
 }
 
+/*!
+ * @brief Add an FCE listener to the table
+ *
+ * @param[in] target_ip    host name or address
+ * @param[in] target_port  port, or NULL for FCE_DEFAULT_PORT_STRING
+ * @returns AFP_OK, or AFPERR_PARAM when the table holds FCE_MAX_UDP_SOCKS
+ *          listeners
+ */
 static int add_udp_socket(const char *target_ip, const char *target_port)
 {
     if (target_port == NULL) {
@@ -552,6 +593,15 @@ static int add_udp_socket(const char *target_ip, const char *target_port)
     return AFP_OK;
 }
 
+/*!
+ * @brief Hold back a file modify event for the fce fmodwait delay
+ *
+ * A held event for another path goes out first. A repeat for the same path
+ * only restarts the delay.
+ *
+ * @param[in] obj   session object
+ * @param[in] path  path of the modified file
+ */
 static void save_close_event(const AFPObj *obj, const char *path)
 {
     time_t now = time(NULL);
@@ -568,6 +618,14 @@ static void save_close_event(const AFPObj *obj, const char *path)
     strncpy(last_close_event.path, path, MAXPATHLEN);
 }
 
+/*!
+ * @brief Split a comma-separated ignore option into a NULL-terminated array
+ *
+ * @param[in]  ignores       fce ignore names or fce ignore directories option
+ * @param[out] dest_array    receives the allocated array
+ * @param[in]  is_directory  true for directory paths, copied up to MAXPATHLEN
+ *                           bytes
+ */
 static void fce_init_ign_paths(const char *ignores,
                                const char ***dest_array,
                                bool is_directory)
@@ -611,7 +669,20 @@ static void fce_init_ign_paths(const char *ignores,
 
 
 /*!
- * Dispatcher for all incoming file change events
+ * @brief Send a file change event unless the options filter it out
+ *
+ * An event passes when the fce events option lists it and a listener or a
+ * notify script exists. A base name in fce ignore names drops out, and so
+ * does a real path that starts with an fce ignore directories entry. Events
+ * that fce coalesce merges drop out too. With fce fmodwait set, an
+ * FCE_FILE_MODIFY event waits fce fmodwait seconds, and repeats for the same
+ * file merge.
+ *
+ * @param[in] obj      session object
+ * @param[in] event    event code
+ * @param[in] path     path of the changed object
+ * @param[in] oldpath  source path of a move, or NULL
+ * @returns AFP_OK
  */
 int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
                  const char *oldpath)
@@ -697,6 +768,11 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
     return AFP_OK;
 }
 
+/*!
+ * @brief Send the held file modify event once the fce fmodwait delay passed
+ *
+ * @param[in] obj  session object
+ */
 static void check_saved_close_events(const AFPObj *obj)
 {
     time_t now = time(NULL);
@@ -716,7 +792,12 @@ static void check_saved_close_events(const AFPObj *obj)
 /******************** External calls start here **************************/
 
 /*!
- * API-Calls for file change api, called from outside (file.c directory.c ofork.c filedir.c)
+ * @brief Send a held file modify event whose delay passed
+ *
+ * The session loop calls it after each request. Without a listener or a
+ * notify script it does nothing.
+ *
+ * @param[in] obj  session object
  */
 void fce_pending_events(const AFPObj *obj)
 {
@@ -728,8 +809,14 @@ void fce_pending_events(const AFPObj *obj)
 }
 
 /*!
- * @brief Extern connect to afpd parameter
- * @note can be called multiple times for multiple listeners (up to MAX_UDP_SOCKS times)
+ * @brief Add an FCE listener from the fce listener option
+ *
+ * The target is a host with an optional port after the first colon, which
+ * IPv6 addresses also contain. The port defaults to FCE_DEFAULT_PORT_STRING.
+ *
+ * @param[in] target  host or host:port, at most 255 bytes
+ * @returns AFP_OK, or AFPERR_PARAM when the table holds FCE_MAX_UDP_SOCKS
+ *          listeners
  */
 int fce_add_udp_socket(const char *target)
 {
@@ -746,6 +833,16 @@ int fce_add_udp_socket(const char *target)
     return add_udp_socket(target_ip, port);
 }
 
+/*!
+ * @brief Set the FCE event types to send from the fce events option
+ *
+ * The option lists fmod, fdel, ddel, fcre, dcre, fmov, dmov, login, and
+ * logout, separated by commas or spaces. The list replaces the default set,
+ * and unknown names drop out.
+ *
+ * @param[in] events  option value
+ * @returns AFP_OK, or AFPERR_PARAM for NULL
+ */
 int fce_set_events(const char *events)
 {
     char *e;

@@ -86,7 +86,10 @@ struct charset_functions charset_utf8_mac = {
 
 
 /*!
- * @brief Convert from UTF-8 to UTF-16
+ * @brief Convert UTF-8 to UTF-16 and reject sequences outside the valid byte
+ * ranges
+ *
+ * Characters above U+FFFF become surrogate pairs. The valid ranges follow.
  * @code
  * Code Points         First   Second  Third   Fourth
  * U+0000..U+007F      00..7F
@@ -99,6 +102,14 @@ struct charset_functions charset_utf8_mac = {
  * U+40000..U+FFFFF    F1..F3  80..BF  80..BF  80..BF
  * U+100000..U+10FFFF  F4      80..8F  80..BF  80..BF
  * @endcode
+ *
+ * @param[in]     cd            descriptor, unused
+ * @param[in,out] inbuf         UTF-8 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UTF-16 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with EILSEQ for a malformed sequence, EINVAL for
+ *          a cut sequence, or E2BIG
  */
 static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
@@ -223,7 +234,22 @@ inval:
     return -1;
 }
 
-/*! Convert from UTF-16 to UTF-8 */
+/*!
+ * @brief Convert UTF-16 to UTF-8 and drop the bidirectional formatting
+ * characters
+ *
+ * A surrogate pair becomes one 4-byte sequence, and a lone or malformed
+ * surrogate fails with EINVAL. The characters U+202A to U+202E produce no
+ * output.
+ *
+ * @param[in]     cd            descriptor, unused
+ * @param[in,out] inbuf         UTF-16 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UTF-8 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with EINVAL for a malformed surrogate or a
+ *          trailing odd byte, or E2BIG
+ */
 static size_t utf8_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
 {

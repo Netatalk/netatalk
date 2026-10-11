@@ -52,6 +52,9 @@ struct ppdent {
 #ifndef SHOWPPD
 static int ppd_inited;
 
+/*!
+ * @brief Read the PPD file of the printer of this process, once
+ */
 static void ppd_init(void)
 {
     if (ppd_inited) {
@@ -67,8 +70,17 @@ static void ppd_init(void)
 #endif /* SHOWPPD */
 
 
-/* quick and ugly hack to be able to read
-   ppd files with Mac line ending */
+/*!
+ * @brief Read a line that ends with CR or LF, for PPD files with Mac line ends
+ *
+ * A CR line end becomes LF. A line longer than the buffer spans calls, and
+ * only the call that reaches its end returns a line end.
+ *
+ * @param[out] buf      line buffer, NUL-terminated on return
+ * @param[in]  bufsize  size of buf
+ * @param[in]  stream   PPD file
+ * @returns buf, or NULL at the end of the file
+ */
 static char *my_fgets(char *buf, size_t bufsize, FILE *stream)
 {
     int p = 0;
@@ -96,6 +108,17 @@ static char *my_fgets(char *buf, size_t bufsize, FILE *stream)
     return buf;
 }
 
+/*!
+ * @brief Read the next main keyword entry of a PPD file
+ *
+ * An entry has the form `*Main Option/Translation: Value`, and the option,
+ * translation, and value are optional. The call skips comments, queries,
+ * lines that do not start with `*`, and lines over 1023 bytes.
+ *
+ * @param[in] stream  PPD file
+ * @returns the entry in a static buffer that the next call overwrites, or NULL
+ *          at the end of the file
+ */
 static struct ppdent *getppdent(FILE *stream)
 {
     static char buf[1024];
@@ -197,6 +220,17 @@ static struct ppdent *getppdent(FILE *stream)
     return NULL;
 }
 
+/*!
+ * @brief Read the fonts and the known features of a PPD file
+ *
+ * Each `*Font` entry adds its name to ppd_fonts once, and an entry for a
+ * feature of the ppd_features table stores its value. An `*Include` entry
+ * reads the named file, up to 20 levels deep.
+ *
+ * @param[in] file  PPD file path
+ * @param[in] fcnt  include depth, 0 for the top file
+ * @returns 0, or -1 when the file does not open or the includes go too deep
+ */
 int read_ppd(char *file, int fcnt)
 {
     FILE		*ppdfile;
@@ -274,6 +308,14 @@ int read_ppd(char *file, int fcnt)
     return 0;
 }
 
+/*!
+ * @brief Look up a font of the PPD file by name
+ *
+ * The first lookup reads the PPD file.
+ *
+ * @param[in] font  font name
+ * @returns the font entry, or NULL for a font the PPD file does not list
+ */
 struct ppd_font *ppd_font(char *font)
 {
     struct ppd_font	*pfo;
@@ -294,6 +336,17 @@ struct ppd_font *ppd_font(char *font)
     return NULL;
 }
 
+/*!
+ * @brief Look up a feature of the PPD file by its main keyword
+ *
+ * The keyword runs up to the CR or LF that has to follow within len + 1
+ * bytes, and len cannot exceed 255. Only a feature with a value matches. The
+ * first lookup reads the PPD file.
+ *
+ * @param[in] feature  keyword such as `*PSVersion`, followed by a line end
+ * @param[in] len      length of the keyword
+ * @returns the feature, or NULL for an unknown keyword or one without a value
+ */
 struct ppd_feature *ppd_feature(const char *feature, int len)
 {
     struct ppd_feature	*pfe;

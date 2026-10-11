@@ -49,7 +49,14 @@ static const uint32_t set_eid[] = {
 #define EID_DISK(a) (set_eid[a])
 
 /*!
- * Prepare ad->ad_data buffer from struct adouble for writing on disk
+ * @brief Serialize the header of a version 2 AppleDouble into ad->ad_data
+ *
+ * Writes the magic, the version, the filler, and one entry descriptor for every
+ * entry with an offset, in on-disk byte order.
+ *
+ * @param[in,out] ad  AppleDouble whose in-memory entries are current
+ * @returns the offset of the resource fork entry, the length of the header to
+ *          write
  */
 int ad_rebuild_adouble_header_v2(struct adouble *ad)
 {
@@ -91,6 +98,15 @@ int ad_rebuild_adouble_header_v2(struct adouble *ad)
     return ad_getentryoff(ad, ADEID_RFORK);
 }
 
+/*!
+ * @brief Serialize the header of an EA AppleDouble into ad->ad_data
+ *
+ * Like ad_rebuild_adouble_header_v2() without the resource fork entry, which
+ * the EA form keeps in a separate extended attribute.
+ *
+ * @param[in,out] ad  AppleDouble whose in-memory entries are current
+ * @returns AD_DATASZ_EA, the length of the header to write
+ */
 int ad_rebuild_adouble_header_ea(struct adouble *ad)
 {
     uint32_t       eid;
@@ -132,7 +148,14 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
 }
 
 /*!
- * Prepare adbuf buffer from struct adouble for writing on disk
+ * @brief Serialize the header of a macOS native AppleDouble into adbuf
+ *
+ * The macOS form carries the FinderInfo entry, the resource fork entry, and the
+ * netatalk filler string. The FinderInfo bytes come from ad.
+ *
+ * @param[in]  ad     AppleDouble whose in-memory entries are current
+ * @param[out] adbuf  buffer of at least AD_DATASZ_OSX bytes
+ * @returns AD_DATASZ_OSX, the length of the header to write
  */
 int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
 {
@@ -186,10 +209,16 @@ int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
 }
 
 /*!
- * @brief The source entry to copy for eid, or NULL to skip it
+ * @brief Source entry to transfer for eid, or NULL to skip it
  *
- * Forks and the comment are never copied; anything else must be present on
- * both sides and valid in the source. @p len receives its source length.
+ * Forks and the comment never transfer. Any other entry must exist on both
+ * sides with a positive source length and pass the bounds test of ad_entry.
+ *
+ * @param[in]  add  destination AppleDouble
+ * @param[in]  ads  source AppleDouble
+ * @param[in]  eid  entry id, ADEID_*
+ * @param[out] len  receives the source entry length
+ * @returns the source entry, or NULL to skip it
  */
 static char *ad_copy_header_entry(const struct adouble *add,
                                   const struct adouble *ads,
@@ -228,13 +257,21 @@ static char *ad_copy_header_entry(const struct adouble *add,
     return src;
 }
 
-/* -------------------
- * XXX copy only header with same size or comment
- * doesn't work well for adouble with different version.
+/*!
+ * @brief Transfer the header entries of one AppleDouble into another
  *
- * Every destination entry is checked against the length to be copied before
- * anything is written: exchangefiles runs this on live open forks, so a
- * failure must leave the header untouched.
+ * ad_copy_header checks every destination entry against the source length
+ * before writing anything. exchangefiles runs this on live open forks, so a
+ * failure must leave the header untouched. Between the version 2 and EA forms
+ * the PRIVID entry changes byte order.
+ *
+ * @bug Only entries of the same size, or the comment, transfer cleanly. Pairs
+ * of other AppleDouble versions do not work well.
+ *
+ * @param[in,out] add  destination AppleDouble with valid data
+ * @param[in]     ads  source AppleDouble
+ * @returns 0, or -1 when an entry does not fit (errno EIO) or the destination
+ *          has no valid data
  */
 int ad_copy_header(struct adouble *add, struct adouble *ads)
 {
@@ -294,6 +331,20 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     return 0;
 }
 
+/*!
+ * @brief Write the header of an AppleDouble to its metadata store
+ *
+ * The store must be open for writing, else nothing happens. The resource fork
+ * entry takes the current fork length, capped at 4 GiB minus one byte. Version
+ * 2 writes ad_data to the metadata file. The EA form stores it in the
+ * AD_EA_META extended attribute of the file, or of the directory through a
+ * temporary chdir. On macOS it also refreshes the native FinderInfo EA of an
+ * existing file. A sticky directory that refuses the EA with EPERM is an error
+ * unless the volume sets ADVOL_FORCE_STICKY_XATTR.
+ *
+ * @param[in,out] ad  AppleDouble whose header entries are current
+ * @returns 0, or -1 with errno set
+ */
 static int ad_flush_hf(struct adouble *ad)
 {
     EC_INIT;
@@ -441,8 +492,16 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Flush resofork adouble file if any
- * @note currently adouble:ea and \#ifndef HAVE_EAFD e.g. Linux
+ * @brief Rewrite the ._ sidecar header of an ea AppleDouble with an open
+ * resource fork
+ *
+ * Only the ea layout without HAVE_EAFD keeps a sidecar header, so every other
+ * case returns at once. A writable resource fork gets its length entry from
+ * ad_rlen, capped at 0xffffffff. The ad_rebuild_adouble_header_osx call then
+ * builds the header, and the call writes it at offset 0.
+ *
+ * @param[in,out] ad  AppleDouble whose sidecar header to write
+ * @returns 0, or -1 when the write fell short, with EIO when errno was 0
  */
 static int ad_flush_rf(struct adouble *ad)
 {
@@ -481,6 +540,16 @@ static int ad_flush_rf(struct adouble *ad)
     return 0;
 }
 
+/*!
+ * @brief Write the header and the resource fork metadata of an AppleDouble to
+ * disk
+ *
+ * The header goes out when the metadata store is open, the resource fork when
+ * it is open.
+ *
+ * @param[in,out] ad  AppleDouble to flush
+ * @returns 0, or -1 with errno set
+ */
 int ad_flush(struct adouble *ad)
 {
     EC_INIT;
@@ -498,6 +567,13 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Close the data fork descriptor of an AppleDouble, or drop the symlink
+ * target it stands for
+ *
+ * @param[in,out] ad  AppleDouble whose data fork is open
+ * @returns 0, or -1 when close fails
+ */
 static int ad_data_closefd(struct adouble *ad)
 {
     int ret = 0;
@@ -516,7 +592,19 @@ static int ad_data_closefd(struct adouble *ad)
 }
 
 /*!
- * Close a struct adouble freeing all resources
+ * @brief Close the forks of an AppleDouble that adflags names and release their
+ * resources
+ *
+ * Each fork carries a reference count, and its descriptor closes when the count
+ * reaches zero. ADFLAGS_SETSHRMD and ADFLAGS_CHECK_OF also close the data fork,
+ * because the share-mode locks live there. For version 2 closing the resource
+ * fork also closes the metadata file, because opening the resource fork opens
+ * it. ad_close logs and asserts a count that is already zero.
+ *
+ * @param[in,out] ad       AppleDouble to close, or NULL
+ * @param[in]     adflags  ADFLAGS_DF, ADFLAGS_HF, ADFLAGS_RF, and the modifiers
+ *                         above
+ * @returns 0, or -1 when a close failed
  */
 int ad_close(struct adouble *ad, int adflags)
 {

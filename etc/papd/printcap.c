@@ -89,11 +89,20 @@ static	char *tbuf;
 static	int hopcount;		/*!< detect infinite loops in termcap, init 0 */
 
 /*!
- * @brief Similar to tgetent except it returns the next entry instead of
- * doing a lookup.
+ * @brief Read the next entry of papd.conf or a printcap file into a buffer
  *
- * @note Added a "cap" parameter, so we can use these calls for printcap
- * and papd.conf.
+ * The first call opens the file, and the end of the file closes it again. A
+ * backslash before a newline joins lines, and lines that start with `#` are
+ * comments. The call drops spaces and tabs at the start of an entry. An entry
+ * that fills the buffer ends there with a log line, and the call closes the
+ * file.
+ *
+ * @param[in]  cap      file path
+ * @param[out] bp       buffer that receives the entry, which tbuf then points
+ *                      at
+ * @param[in]  bufsize  size of bp
+ * @returns 1 for an entry, 0 at the end of the file, or -1 when the file does
+ *          not open
  */
 int getprent(char *cap, char *bp, int bufsize)
 {
@@ -167,6 +176,9 @@ int getprent(char *cap, char *bp, int bufsize)
     }
 }
 
+/*!
+ * @brief Close the file that getprent reads
+ */
 void endprent(void)
 {
     if (pfp != NULL) {
@@ -175,13 +187,19 @@ void endprent(void)
 }
 
 /*!
- * @brief Get an entry for terminal name in buffer bp,
- * from the termcap file.
- * @note Parse is very rudimentary;
- * we just notice escaped newlines.
+ * @brief Find the entry with a given name in a printcap-style file
  *
- * Added a "cap" parameter, so we can use these calls for printcap
- * and papd.conf.
+ * The call reads the file entry by entry into bp, joining lines that end with
+ * a backslash and skipping `#` comments, until pnamatch accepts name. The name
+ * check of pnamatch and the capability readers use tbuf, which only getprent
+ * sets. A tc= capability at the end of the entry pulls in the named entry
+ * through pnchktc.
+ *
+ * @param[in]  cap   file path
+ * @param[out] bp    buffer of BUFSIZ bytes that receives the entry
+ * @param[in]  name  entry name to look for
+ * @returns 1 for a match, 0 when the name is missing or a tc= reference fails,
+ *          or -1 when the file does not open
  */
 int tgetent(char *cap, char *bp, const char *name)
 {
@@ -291,15 +309,17 @@ int tgetent(char *cap, char *bp, const char *name)
 }
 
 /*!
- * @brief check the last entry, see if it's tc=xxx.
+ * @brief Resolve a tc= capability that ends the entry in tbuf
  *
- * If so, recursively find xxx and append that entry (minus the names)
- * to take the place of the tc=xxx entry. This allows termcap
- * entries to say "like an HP2621 but doesn't turn on the labels".
- * Note that this works because of the left to right scan.
+ * When the last field is tc=name, the call looks the named entry up with
+ * pgetent. Its fields, without its names, then take the place of the tc=
+ * field. A field of the entry comes before an included field of the same
+ * name, since lookups scan from the left. More than MAXHOP references fail,
+ * counted over the life of the process.
  *
- * Added a "cap" parameter, so we can use these calls for printcap
- * and papd.conf.
+ * @param[in] cap  file path for the lookup
+ * @returns 1 when the entry is complete, or 0 for a bad entry, too many
+ *          references, or a missing entry
  */
 int tnchktc(char *cap)
 {
@@ -370,11 +390,13 @@ int tnchktc(char *cap)
 }
 
 /*!
- * @brief deals with name matching.
+ * @brief Check whether the entry in tbuf lists a name among its names
  *
- * The first field of the termcap entry is a sequence of names separated by |'s,
- * so we compare against each such name.
- * The normal : terminator after the last name (before the first field) stops us.
+ * The first field of an entry lists its names, separated by `|`, and the
+ * first `:` ends the list. An entry that starts with `#` matches nothing.
+ *
+ * @param[in] np  name to look for
+ * @returns 1 for a match, or 0
  */
 int tnamatch(const char *np)
 {
@@ -408,9 +430,13 @@ int tnamatch(const char *np)
 }
 
 /*!
- * @brief Skip to the next field.
- * Notice that this is very dumb, not knowing about \\: escapes or any such.
- * If necessary, :'s can be put into the termcap file in octal.
+ * @brief Skip to the next field of an entry
+ *
+ * The call moves past the next run of `:` and does not know about escaped
+ * colons, so a value spells a colon as `\072`.
+ *
+ * @param[in] bp  position in the entry
+ * @returns the start of the next field, or the end of the entry
  */
 static char *tskip(char *bp)
 {
@@ -426,15 +452,13 @@ static char *tskip(char *bp)
 }
 
 /*!
- * @brief Return the (numeric) option id.
+ * @brief Return the value of a numeric capability of the entry in tbuf
  *
- * Numeric options look like
- * @code
- *	li#80
- * @endcode
- * i.e. the option string is separated from the numeric value by
- * a # character.  If the option is not found we return -1.
- * Note that we handle octal numbers beginning with 0.
+ * A numeric capability looks like `pc#200`, and a value with a leading 0 is
+ * octal. A capability written as `pc@` counts as missing.
+ *
+ * @param[in] id  two-letter capability name
+ * @returns the value, or -1 when the entry lacks the capability
  */
 int tgetnum(char *id)
 {
@@ -479,11 +503,12 @@ int tgetnum(char *id)
 }
 
 /*!
- * @brief Handle a flag option.
+ * @brief Check a flag capability of the entry in tbuf
  *
- * Flag options are given "naked", i.e. followed by a : or the end
- * of the buffer.
- * @returns 1 if we find the option, or 0 if it is not given.
+ * A flag stands alone between colons, as in `:sp:`, and `sp@` turns it off.
+ *
+ * @param[in] id  two-letter capability name
+ * @returns 1 when the entry has the flag, or 0
  */
 int tgetflag(char *id)
 {
@@ -507,8 +532,16 @@ int tgetflag(char *id)
 }
 
 /*!
- * Tdecode does the grunt work to decode the
- * string capability escapes.
+ * @brief Decode the value of a string capability into an area and advance the
+ * area
+ *
+ * The value runs to the next `:`. `^X` becomes a control character, and a
+ * backslash introduces `\E`, `\^`, `\\`, `\:`, `\n`, `\r`, `\t`, `\b`, `\f`,
+ * or up to three octal digits. The call does not check the area for room.
+ *
+ * @param[in]     str   start of the value
+ * @param[in,out] area  output area, advanced past the decoded string
+ * @returns the decoded string
  */
 static char *
 tdecode(char *str, char **area)
@@ -562,15 +595,15 @@ nextc:
 }
 
 /*!
- * @brief Get a string valued option.
+ * @brief Return the value of a string capability of the entry in tbuf
  *
- * These are given as
- * @code
- *	cl=^Z
- * @endcode
- * Much decoding is done on the strings, and the strings are
- * placed in area, which is a ref parameter which is updated.
- * No checking on area overflow.
+ * A string capability looks like `pr=lp`, and pdecode turns its escapes into
+ * bytes in area. A capability written as `pr@` counts as missing. The call
+ * does not check the area for room.
+ *
+ * @param[in]     id    two-letter capability name
+ * @param[in,out] area  output area, advanced past the value
+ * @returns the decoded value, or NULL when the entry lacks the capability
  */
 char *
 tgetstr(char *id, char **area)
@@ -601,6 +634,17 @@ tgetstr(char *id, char **area)
     }
 }
 
+/*!
+ * @brief Decode the first name of an entry into an area and advance the area
+ *
+ * The name runs to the first `:` or `|`, takes at most bufsize - 1 bytes, and
+ * uses the escapes of pdecode.
+ *
+ * @param[in]     str      start of the entry
+ * @param[in,out] area     output area, advanced past the decoded name
+ * @param[in]     bufsize  room in the area
+ * @returns the decoded name
+ */
 static char *
 decodename(char *str, char **area, int bufsize)
 {
@@ -652,6 +696,14 @@ nextc:
     return str;
 }
 
+/*!
+ * @brief Return the first name of the entry in tbuf, the printer name of a
+ * papd.conf entry
+ *
+ * @param[in,out] area     output area, advanced past the name
+ * @param[in]     bufsize  room in the area
+ * @returns the decoded name
+ */
 char *
 getpname(char **area, int bufsize)
 {

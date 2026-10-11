@@ -68,12 +68,27 @@ static struct bin_file_data {
 extern char	*forkname[];
 static unsigned char	head_buf[HEADBUFSIZ];
 
+/*!
+ * @brief Combine two bytes into a 16-bit value in host byte order
+ *
+ * @param[in] high  bits 15 to 8
+ * @param[in] low   bits 7 to 0
+ * @returns the combined value
+ */
 static uint16_t macbin_u16_from_bytes(unsigned char high, unsigned char low)
 {
     unsigned int value = ((unsigned int)high << 8) | (unsigned int)low;
     return (uint16_t)value;
 }
 
+/*!
+ * @brief Read a big-endian 32-bit field of the MacBinary header in host byte
+ * order
+ *
+ * @param[in] header  128-byte MacBinary header
+ * @param[in] offset  offset of the field
+ * @returns the field value
+ */
 static uint32_t macbin_u32_from_header(const unsigned char *header,
                                        size_t offset)
 {
@@ -83,6 +98,17 @@ static uint32_t macbin_u32_from_header(const unsigned char *header,
            | (uint32_t)header[offset + 3];
 }
 
+/*!
+ * @brief Read the Finder flags of a MacBinary header in network byte order
+ *
+ * Byte 73 holds bits 15 to 8. MacBinary II and III keep bits 7 to 0 at byte
+ * 101. A zero there falls back to byte 74, where some writers put them.
+ * MacBinary I has only byte 73.
+ *
+ * @param[in] header    128-byte MacBinary header
+ * @param[in] revision  MacBinary revision of the header, 1 to 3
+ * @returns the Finder flags
+ */
 static uint16_t macbin_fdflags_from_header(const unsigned char *header,
                                            int revision)
 {
@@ -103,6 +129,14 @@ static uint16_t macbin_fdflags_from_header(const unsigned char *header,
     return htons(macbin_u16_from_bytes(header[73], flags_low));
 }
 
+/*!
+ * @brief Store Finder flags in a MacBinary header
+ *
+ * Bits 15 to 8 go to byte 73, and bits 7 to 0 go to bytes 101 and 74.
+ *
+ * @param[out] header   128-byte MacBinary header
+ * @param[in]  fdflags  Finder flags in network byte order
+ */
 static void macbin_fdflags_to_header(unsigned char *header, uint16_t fdflags)
 {
     uint16_t flags = ntohs(fdflags);
@@ -113,12 +147,32 @@ static void macbin_fdflags_to_header(unsigned char *header, uint16_t fdflags)
     header[101] = (unsigned char)(flags & 0xff);
 }
 
+/*!
+ * @brief Turn a MacBinary date into an AppleDouble date
+ *
+ * A MacBinary date counts local seconds from 1904, and an AppleDouble date
+ * counts UTC seconds from 2000. Both stay in network byte order.
+ *
+ * @param[in]  mac_date  MacBinary date
+ * @param[out] ad_date   receives the AppleDouble date
+ * @returns 0, or -1 when the time conversion fails
+ */
 static int macbin_ad_date_from_header(uint32_t mac_date, uint32_t *ad_date)
 {
     *ad_date = AD_DATE_FROM_MAC(mac_date);
     return set_utc_offset(ad_date, TO_UTC);
 }
 
+/*!
+ * @brief Turn an AppleDouble date into a MacBinary date
+ *
+ * The call converts UTC seconds from 2000 into local seconds from 1904, both
+ * in network byte order.
+ *
+ * @param[in]  ad_date   AppleDouble date
+ * @param[out] mac_date  receives the MacBinary date
+ * @returns 0, or -1 when the time conversion fails
+ */
 static int macbin_ad_date_to_header(uint32_t ad_date, uint32_t *mac_date)
 {
     if (set_utc_offset(&ad_date, TO_LOCALTIME) != 0) {
@@ -129,6 +183,15 @@ static int macbin_ad_date_to_header(uint32_t ad_date, uint32_t *mac_date)
     return 0;
 }
 
+/*!
+ * @brief Read and drop bytes from the MacBinary input
+ *
+ * Each read takes up to 128 bytes, and the call advances the tracked file
+ * position.
+ *
+ * @param[in] length  number of bytes to drop
+ * @returns 0, or -1 for a read error or an early end of file
+ */
 static int macbin_discard_bytes(size_t length)
 {
     unsigned char discard[HEADBUFSIZ];
@@ -155,6 +218,16 @@ static int macbin_discard_bytes(size_t length)
     return 0;
 }
 
+/*!
+ * @brief Write one byte value @p length times to the MacBinary output
+ *
+ * Each write takes up to 128 bytes, and the call advances the tracked file
+ * position.
+ *
+ * @param[in] value   byte to write
+ * @param[in] length  number of bytes
+ * @returns 0, or -1 for a failed write
+ */
 static int macbin_write_repeat(unsigned char value, size_t length)
 {
     unsigned char buffer[HEADBUFSIZ];
@@ -181,6 +254,15 @@ static int macbin_write_repeat(unsigned char value, size_t length)
     return 0;
 }
 
+/*!
+ * @brief Skip the input padding after the data fork up to the next 128-byte
+ * boundary
+ *
+ * A seekable input moves with lseek. On a pipe the call tracks the position
+ * itself and reads past the padding.
+ *
+ * @returns 0, or -1 for a read error or an early end of file
+ */
 static int macbin_skip_padding(void)
 {
     off_t pos = lseek(bin.filed, 0, SEEK_CUR);
@@ -227,6 +309,15 @@ static int macbin_skip_padding(void)
     return 0;
 }
 
+/*!
+ * @brief Fill the MacBinary output with 0x7f bytes up to the next 128-byte
+ * boundary
+ *
+ * The value 0x7f matches other converters. On a pipe the call tracks the
+ * position itself.
+ *
+ * @returns 0, or -1 for a failed write
+ */
 static int macbin_write_padding(void)
 {
     unsigned char padchar = 0x7f;
@@ -403,6 +494,14 @@ int bin_close(int keepflag)
     }
 }
 
+/*!
+ * @brief Return the path of the MacBinary output that bin_open created
+ *
+ * The path is `-` for stdout. The archive commands use it to register the
+ * new file in the CNID database of its volume.
+ *
+ * @returns the output path
+ */
 const char *bin_path(void)
 {
     return bin.path;

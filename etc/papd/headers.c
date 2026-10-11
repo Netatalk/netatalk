@@ -22,6 +22,19 @@
 int ch_title(struct papfile *, struct papfile *, struct sockaddr_at *);
 int ch_for(struct papfile *, struct papfile *, struct sockaddr_at *);
 
+/*!
+ * @brief Extract the value of a DSC comment line, the text after the colon
+ *
+ * The call skips spaces and tabs after the colon. A value in parentheses
+ * yields the text inside, with nested parentheses kept and without escape
+ * handling. Any other value yields the rest of the line, and a line without a
+ * colon yields an empty string.
+ *
+ * @param[in] start       first byte of the line
+ * @param[in] linelength  line length without the line end
+ * @returns a NUL-terminated string to free, or NULL for a line over 1023 bytes
+ *          or a failed allocation
+ */
 static char *get_text(char *start, int linelength)
 {
     char *p, *q;
@@ -83,6 +96,18 @@ static char *get_text(char *start, int linelength)
     return ret;
 }
 
+/*!
+ * @brief Take the user name the job is for from a `%%For:` header comment
+ *
+ * The call passes the value to lp_for and writes the line to the job with
+ * PF_TRANSLATE set. It then pops the comment state and consumes the line.
+ *
+ * @param[in,out] in   input buffer of the job
+ * @param[in]     out  reply buffer, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the job, or CH_MORE while the line is
+ *          incomplete
+ */
 int ch_for(struct papfile *in, struct papfile *out _U_,
            struct sockaddr_at *sat _U_)
 {
@@ -115,6 +140,18 @@ int ch_for(struct papfile *in, struct papfile *out _U_,
     return CH_DONE;
 }
 
+/*!
+ * @brief Take the job name from a `%%Title:` header comment
+ *
+ * The call passes the value to lp_job and writes the line to the job with
+ * PF_TRANSLATE set. It then pops the comment state and consumes the line.
+ *
+ * @param[in,out] in   input buffer of the job
+ * @param[in]     out  reply buffer, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the job, or CH_MORE while the line is
+ *          incomplete
+ */
 int ch_title(struct papfile *in, struct papfile *out _U_,
              struct sockaddr_at *sat _U_)
 {
@@ -148,6 +185,15 @@ int ch_title(struct papfile *in, struct papfile *out _U_,
     return CH_DONE;
 }
 
+/*!
+ * @brief Tell the driver that made a job from its `%%Creator:` value
+ *
+ * The result picks the charset of the job name and user name: Mac Roman for
+ * 1 and decomposed UTF-8 for 2.
+ *
+ * @param[in] creator  value of the comment
+ * @returns 1 for an Apple LaserWriter driver, 2 for cgpdftops, or 0
+ */
 static int guess_creator(char *creator)
 {
     if (strstr(creator, "LaserWriter")) {
@@ -162,6 +208,19 @@ static int guess_creator(char *creator)
 }
 
 
+/*!
+ * @brief Record the driver that made the job from a `%%Creator:` header comment
+ *
+ * The call stores the guess_creator result in the input buffer, passes it to
+ * lp_origin, and writes the line to the job with PF_TRANSLATE set. It then
+ * pops the comment state and consumes the line.
+ *
+ * @param[in,out] in   input buffer of the job, receives the origin
+ * @param[in]     out  reply buffer, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the job, or CH_MORE while the line is
+ *          incomplete
+ */
 int ch_creator(struct papfile *in, struct papfile *out _U_,
                struct sockaddr_at *sat _U_)
 {
@@ -195,6 +254,19 @@ int ch_creator(struct papfile *in, struct papfile *out _U_,
     return CH_DONE;
 }
 
+/*!
+ * @brief End the header comments of a job at `%%EndComments`
+ *
+ * The call sets PF_STW, so the job loop opens the spool file. It writes the
+ * line to the job with PF_TRANSLATE set, pops the comment state, and consumes
+ * the line.
+ *
+ * @param[in,out] in   input buffer of the job, receives PF_STW
+ * @param[in]     out  reply buffer, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the job, or CH_MORE while the line is
+ *          incomplete
+ */
 int ch_endcomm(struct papfile *in, struct papfile *out _U_,
                struct sockaddr_at *sat _U_)
 {
@@ -222,6 +294,20 @@ int ch_endcomm(struct papfile *in, struct papfile *out _U_,
     return CH_DONE;
 }
 
+/*!
+ * @brief Start a translated section at `%%BeginFeature` or `%%BeginPageSetup`
+ *
+ * The call sets PF_TRANSLATE and leaves it set until the matching end
+ * comment. PF_TRANSLATE makes lp_write turn CR line ends into LF for printers
+ * with P_FOOMATIC_HACK. The call writes the line, pops the comment state, and
+ * consumes the line.
+ *
+ * @param[in,out] in   input buffer of the job, receives PF_TRANSLATE
+ * @param[in]     out  reply buffer, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the job, or CH_MORE while the line is
+ *          incomplete
+ */
 int ch_starttranslate(struct papfile *in, struct papfile *out _U_,
                       struct sockaddr_at *sat _U_)
 {
@@ -247,6 +333,18 @@ int ch_starttranslate(struct papfile *in, struct papfile *out _U_,
     return CH_DONE;
 }
 
+/*!
+ * @brief End a translated section at `%%EndFeature` or `%%EndPageSetup`
+ *
+ * The call writes the line while PF_TRANSLATE is still set, then clears it.
+ * It pops the comment state and consumes the line.
+ *
+ * @param[in,out] in   input buffer of the job, without PF_TRANSLATE afterwards
+ * @param[in]     out  reply buffer, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the job, or CH_MORE while the line is
+ *          incomplete
+ */
 int ch_endtranslate(struct papfile *in, struct papfile *out _U_,
                     struct sockaddr_at *sat _U_)
 {
@@ -272,6 +370,18 @@ int ch_endtranslate(struct papfile *in, struct papfile *out _U_,
     return CH_DONE;
 }
 
+/*!
+ * @brief Write any other `%%` header comment with PF_TRANSLATE set for that
+ * line only
+ *
+ * The call pops the comment state and consumes the line.
+ *
+ * @param[in,out] in   input buffer of the job
+ * @param[in]     out  reply buffer, unused
+ * @param[in]     sat  client address, unused
+ * @returns CH_DONE, also at the end of the job, or CH_MORE while the line is
+ *          incomplete
+ */
 int ch_translateone(struct papfile *in, struct papfile *out _U_,
                     struct sockaddr_at *sat _U_)
 {

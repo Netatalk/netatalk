@@ -120,7 +120,7 @@ void set_processname(const char *processname);
 void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
                   int facility);
 
-/*! LOG macro func no.1: log the message to file */
+/*! LOG macro worker: log the message to syslog or to a file */
 UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel,
                                        enum logtypes logtype, const char *file, const bool log_us_timestamp, int line,
                                        char *message, ...);

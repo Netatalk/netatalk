@@ -27,9 +27,12 @@
 #include "precompose.h"
 
 /*!
- * @brief Convert a string to lower case.
- * @returns True if any char is converted
- * @note surrogate pair support
+ * @brief Lowercase a NUL-terminated UTF-16 string in place
+ *
+ * A surrogate pair changes as one character.
+ *
+ * @param[in,out] s  UTF-16 string
+ * @returns 1 when a character changed, or 0
  */
 int strlower_w(ucs2_t *s)
 {
@@ -64,9 +67,12 @@ int strlower_w(ucs2_t *s)
 }
 
 /*!
- * @brief Convert a string to upper case.
- * @returns True if any char is converted
- * @note surrogate pair support
+ * @brief Uppercase a NUL-terminated UTF-16 string in place
+ *
+ * A surrogate pair changes as one character.
+ *
+ * @param[in,out] s  UTF-16 string
+ * @returns 1 when a character changed, or 0
  */
 int strupper_w(ucs2_t *s)
 {
@@ -101,10 +107,12 @@ int strupper_w(ucs2_t *s)
 }
 
 /*!
- * @brief wide strlen()
+ * @brief Count the UTF-16 units of a NUL-terminated string, as strlen does
  *
- * Count the number of characters in a UTF-16 string.
- * @note one surrogate pair is two characters.
+ * A surrogate pair counts as two units.
+ *
+ * @param[in] src  UTF-16 string
+ * @returns the number of units before the NUL
  */
 size_t strlen_w(const ucs2_t *src)
 {
@@ -116,12 +124,15 @@ size_t strlen_w(const ucs2_t *src)
 }
 
 /*!
- * @brief wide strnlen()
+ * @brief Count the UTF-16 units of a string up to a limit, as strnlen does
  *
- * Count up to max number of characters in a UTF-16 string.
- * @note one surrogate pair is two characters.
+ * A surrogate pair counts as two units. Without an earlier NUL the call
+ * reads the unit at index @p max before it stops.
+ *
+ * @param[in] src  UTF-16 string
+ * @param[in] max  limit
+ * @returns the number of units before the NUL, capped at @p max
  */
-
 size_t strnlen_w(const ucs2_t *src, size_t max)
 {
     size_t len;
@@ -132,8 +143,14 @@ size_t strnlen_w(const ucs2_t *src, size_t max)
 }
 
 /*!
- * @brief wide strchr()
- * @note hi and lo of surrogate pair are separately processed.
+ * @brief Find a UTF-16 unit in a NUL-terminated string, as strchr does
+ *
+ * The search treats the two halves of a surrogate pair as separate units,
+ * and a NUL @p c finds the terminator.
+ *
+ * @param[in] s  UTF-16 string
+ * @param[in] c  unit to find
+ * @returns the first match, or NULL
  */
 ucs2_t *strchr_w(const ucs2_t *s, ucs2_t c)
 {
@@ -153,8 +170,14 @@ ucs2_t *strchr_w(const ucs2_t *s, ucs2_t c)
 }
 
 /*!
- * @brief wide strcasechr()
- * @note separately process BMP and surrogate pair
+ * @brief Find a UTF-16 unit in a string, ignoring case
+ *
+ * The search compares single units only, and strcasechr_sp covers surrogate
+ * pairs.
+ *
+ * @param[in] s  UTF-16 string
+ * @param[in] c  unit to find
+ * @returns the first match, or NULL
  */
 ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
 {
@@ -174,8 +197,13 @@ ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
 }
 
 /*!
- * @brief sp strcasechr()
- * @note separately process BMP and surrogate pair
+ * @brief Find a surrogate pair in a UTF-16 string, ignoring case
+ *
+ * The search compares the pair with each pair of neighboring units.
+ *
+ * @param[in] s     UTF-16 string
+ * @param[in] c_sp  pair to find, with the high surrogate in bits 31 to 16
+ * @returns the first match, or NULL
  */
 ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
 {
@@ -195,8 +223,12 @@ ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
 }
 
 /*!
- * @brief wide strcmp()
- * @note no problem of surrogate pair
+ * @brief Compare two NUL-terminated UTF-16 strings by unit value, as strcmp
+ * does
+ *
+ * @param[in] a  first string
+ * @param[in] b  second string
+ * @returns the difference of the first differing units, or 0
  */
 int strcmp_w(const ucs2_t *a, const ucs2_t *b)
 {
@@ -212,8 +244,12 @@ int strcmp_w(const ucs2_t *a, const ucs2_t *b)
 }
 
 /*!
- * @brief wide strncmp()
- * @note no problem of surrogate pair
+ * @brief Compare up to @p len units of two UTF-16 strings, as strncmp does
+ *
+ * @param[in] a    first string
+ * @param[in] b    second string
+ * @param[in] len  limit in units
+ * @returns the difference of the first differing units, or 0
  */
 int strncmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 {
@@ -229,8 +265,11 @@ int strncmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 }
 
 /*!
- * @brief wide strstr()
- * @note no problem of surrogate pair
+ * @brief Find a UTF-16 substring, as strstr does
+ *
+ * @param[in] s    UTF-16 string
+ * @param[in] ins  substring to find
+ * @returns the first match, or NULL for no match or an empty or NULL argument
  */
 ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
 {
@@ -256,8 +295,14 @@ ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
 }
 
 /*!
- * @brief wide strcasestr()
- * @note surrogate pair support
+ * @brief Find a UTF-16 substring, ignoring case, with surrogate pair support
+ *
+ * A substring that starts with a lone surrogate from 0xd800 to 0xdbff
+ * matches nothing.
+ *
+ * @param[in] s    UTF-16 string
+ * @param[in] ins  substring to find
+ * @returns the first match, or NULL for no match or an empty or NULL argument
  */
 ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 {
@@ -299,10 +344,12 @@ ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 }
 
 /*!
- * @brief wide strcasecmp()
+ * @brief Compare two NUL-terminated UTF-16 strings, ignoring case, with
+ * surrogate pair support
  *
- * case insensitive string comparison
- * @note surrogate pair support
+ * @param[in] a  first string
+ * @param[in] b  second string
+ * @returns the difference of the first differing lowercase forms, or 0
  */
 int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
 {
@@ -335,10 +382,15 @@ int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
 }
 
 /*!
- * @brief wide strncasecmp()
+ * @brief Compare up to @p len units of two UTF-16 strings, ignoring case
  *
- * case insensitive string comparison, length limited
- * @note compare up to 'len+1' if 'len' isolate surrogate pair
+ * A surrogate pair counts as two units. When @p len ends inside a pair,
+ * the comparison covers both of its units.
+ *
+ * @param[in] a    first string
+ * @param[in] b    second string
+ * @param[in] len  limit in units
+ * @returns the difference of the first differing lowercase forms, or 0
  */
 int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 {
@@ -374,11 +426,15 @@ int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 }
 
 /*!
- * @brief wide strndup()
+ * @brief Duplicate the first @p len units of a UTF-16 string into a buffer from
+ * malloc
  *
- * duplicate string
- * @note not check isolation of surrogate pair
- * @note if len == 0 then duplicate the whole string
+ * A @p len of 0 takes the full string. The call does not stop at an
+ * earlier NUL and does not check for a split surrogate pair.
+ *
+ * @param[in] src  UTF-16 string
+ * @param[in] len  number of units, or 0 for the full string
+ * @returns the new string, or NULL when memory runs out
  */
 ucs2_t *strndup_w(const ucs2_t *src, size_t len)
 {
@@ -401,10 +457,10 @@ ucs2_t *strndup_w(const ucs2_t *src, size_t len)
 }
 
 /*!
- * @brief wide strdup()
+ * @brief Duplicate a NUL-terminated UTF-16 string into a buffer from malloc
  *
- * duplicate string
- * @note no problem of surrogate pair
+ * @param[in] src  UTF-16 string
+ * @returns the new string, or NULL when memory runs out
  */
 ucs2_t *strdup_w(const ucs2_t *src)
 {
@@ -412,7 +468,14 @@ ucs2_t *strdup_w(const ucs2_t *src)
 }
 
 /*!
- * binary search for pre|decomposition
+ * @brief Look up the precomposed BMP character for a base and a combining
+ * character
+ *
+ * The call searches the sorted precomposition table.
+ *
+ * @param[in] base  base character
+ * @param[in] comb  combining character
+ * @returns the precomposed character, or 0 for no entry
  */
 static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 {
@@ -439,7 +502,17 @@ static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
     return 0;
 }
 
-/* ------------------------ */
+/*!
+ * @brief Look up the precomposed surrogate pair for a base pair and a combining
+ * pair
+ *
+ * Each pair sits in one 32-bit value, with the high surrogate in bits 31 to
+ * 16.
+ *
+ * @param[in] base_sp  base pair
+ * @param[in] comb_sp  combining pair
+ * @returns the precomposed pair, or 0 for no entry
+ */
 static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
 {
     int min = 0;
@@ -466,7 +539,14 @@ static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
     return 0;
 }
 
-/* -------------------------- */
+/*!
+ * @brief Look up the base and the combining character of a precomposed BMP
+ * character
+ *
+ * @param[in] base  precomposed character
+ * @returns the base in bits 31 to 16 and the combining character in bits 15 to
+ *          0, or 0 for no entry
+ */
 static uint32_t do_decomposition(ucs2_t base)
 {
     int min = 0;
@@ -494,7 +574,15 @@ static uint32_t do_decomposition(ucs2_t base)
     return 0;
 }
 
-/* -------------------------- */
+/*!
+ * @brief Look up the base pair and the combining pair of a precomposed
+ * surrogate pair
+ *
+ * @param[in] base_sp  precomposed pair, with the high surrogate in bits 31 to
+ *                     16
+ * @returns the base pair in bits 63 to 32 and the combining pair in bits 31 to
+ *          0, or 0 for no entry
+ */
 static uint64_t do_decomposition_sp(unsigned int base_sp)
 {
     int min = 0;
@@ -525,18 +613,23 @@ static uint64_t do_decomposition_sp(unsigned int base_sp)
 }
 
 /*!
- * @brief pre|decomposition
+ * @brief Precompose a UTF-16 string by the netatalk tables
  *
- *  we can't use static, this stuff needs to be reentrant
- *  static char comp[MAXPATHLEN +1];
+ * The call combines each base with the combining characters after it,
+ * Hangul syllables included, and surrogate pairs through a separate table.
+ * It does no singleton mapping or canonical ordering. It ignores the
+ * composition exclusions, which would break round trips.
  *
- *  We don't implement Singleton and Canonical Ordering.
- *  We ignore CompositionExclusions.txt
- *  because they cause the problem of the roundtrip
- *  such as Dancing Icon.
+ * The tables leave out U+2000 to U+2FFF, U+FE30 to U+FE4F, and U+2F800 to
+ * U+2FA1F, as the AFP 3.x specification asks. The output ends with a NUL,
+ * which the returned length leaves out.
  *
- *  exclude U2000-U2FFF, UFE30-UFE4F and U2F800-U2FA1F ranges
- *  in precompose.h from composition according to AFP 3.x spec
+ * @param[in]     name    UTF-16 input
+ * @param[in]     inplen  input length in bytes, an even number above 0
+ * @param[out]    comp    output buffer
+ * @param[in,out] outlen  output space in bytes, which receives the space left
+ * @returns the output length in bytes, or `(size_t)-1` for an odd, empty, or
+ *          oversized input or with E2BIG
  */
 size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 {
@@ -649,7 +742,21 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
     return (size_t) -1;
 }
 
-/* --------------- */
+/*!
+ * @brief Decompose a UTF-16 string by the netatalk tables
+ *
+ * The call splits each precomposed character into its base and its
+ * combining characters, Hangul syllables included, and surrogate pairs
+ * through a separate table. ASCII stays as is. The output ends with a NUL,
+ * which the returned length leaves out.
+ *
+ * @param[in]     name    UTF-16 input
+ * @param[in]     inplen  input length in bytes, an even number above 0
+ * @param[out]    comp    output buffer
+ * @param[in,out] outlen  output space in bytes, which receives the space left
+ * @returns the output length in bytes, or `(size_t)-1` for an odd or empty
+ *          input or with E2BIG
+ */
 size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 {
     size_t i;

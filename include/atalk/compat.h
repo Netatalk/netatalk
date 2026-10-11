@@ -52,6 +52,7 @@ extern void explicit_bzero(void *s, size_t n);
 #define explicit_bzero(s, n) memset_explicit((s), 0, (n))
 #endif
 
+/*! @brief Return the stat mtime as a timespec, with tv_nsec 0 if unavailable */
 static inline struct timespec atalk_stat_mtime_timespec(const struct stat *st)
 {
     struct timespec ts;
@@ -66,6 +67,7 @@ static inline struct timespec atalk_stat_mtime_timespec(const struct stat *st)
     return ts;
 }
 
+/*! @brief Return the stat atime as a timespec, with tv_nsec 0 if unavailable */
 static inline struct timespec atalk_stat_atime_timespec(const struct stat *st)
 {
     struct timespec ts;
@@ -80,6 +82,7 @@ static inline struct timespec atalk_stat_atime_timespec(const struct stat *st)
     return ts;
 }
 
+/*! @brief Store a timespec in a timeval, truncated to microseconds */
 static inline void atalk_timespec_to_timeval(struct timeval *tv,
                                              const struct timespec *ts)
 {

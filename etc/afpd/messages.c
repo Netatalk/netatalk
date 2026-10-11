@@ -45,6 +45,16 @@ int setmessage(const char *message)
     return 0;
 }
 
+/*!
+ * @brief Load the server message for a session from its message file
+ *
+ * The file SERVERTEXT/message.pid of the session comes first, then the shared
+ * SERVERTEXT/message. The call turns line breaks into spaces, stops at the
+ * message size limit of the transport, and deletes the file as root. A build
+ * without SERVERTEXT does nothing.
+ *
+ * @param[in] obj  session object
+ */
 void readmessage(AFPObj *obj)
 {
     /* Read server message from file defined as SERVERTEXT */
@@ -107,6 +117,22 @@ void readmessage(AFPObj *obj)
 #endif /* SERVERTEXT */
 }
 
+/*!
+ * @brief FPGetSrvrMsg: return the login or the server message
+ *
+ * A login message request also appends the login message option to the
+ * server message. Mac OS X 10.4 drops a server message attention that comes
+ * before it asks for the login message, and the merged text covers that. The
+ * bitmap selects a UTF-8 reply with a 2-byte length or a Mac charset reply
+ * with a 1-byte length.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, or AFPERR_BITMAP for an unknown message type
+ */
 int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                     size_t *rbuflen)
 {

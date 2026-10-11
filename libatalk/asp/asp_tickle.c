@@ -16,7 +16,15 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-/*! send off a tickle */
+/*!
+ * @brief Send one ASP tickle for a session, with a single try and no wait for a
+ * reply
+ *
+ * @param[in] asp  server object whose ATP socket sends the tickle
+ * @param[in] sid  session ID
+ * @param[in] sat  address of the workstation
+ * @returns 1, or 0 when the send fails
+ */
 int asp_tickle(ASP asp, const uint8_t sid, struct sockaddr_at *sat)
 {
     struct atp_block atpb;

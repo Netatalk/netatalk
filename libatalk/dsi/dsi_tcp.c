@@ -61,6 +61,11 @@ int deny_severity = log_warning;
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
+/*!
+ * @brief Close the session socket, the TCP proto_close hook
+ *
+ * @param[in,out] dsi  DSI session, its socket becomes -1
+ */
 static void dsi_tcp_close(DSI *dsi)
 {
     if (dsi->socket == -1) {
@@ -71,7 +76,15 @@ static void dsi_tcp_close(DSI *dsi)
     dsi->socket = -1;
 }
 
-/*! alarm handler for tcp_open */
+/*!
+ * @brief End a new session process that missed the deadline for its first DSI
+ * request
+ *
+ * The SIGALRM timer of dsi_tcp_open runs it after 120 seconds, the
+ * DSI_TCPTIMEOUT limit.
+ *
+ * @param[in] sig  unused
+ */
 static void timeout_handler(int sig _U_)
 {
     LOG(log_error, logtype_dsi, "dsi_tcp_open: connection timed out");
@@ -79,7 +92,12 @@ static void timeout_handler(int sig _U_)
 }
 
 /*!
- * Allocate DSI read buffer and read-ahead buffer
+ * @brief Allocate the command buffer and the read-ahead buffer of a session
+ *
+ * The command buffer holds one server quantum, and the read-ahead buffer
+ * holds dsireadbuf quanta. When malloc fails, the process aborts.
+ *
+ * @param[in,out] dsi  DSI session with its quantum and dsireadbuf settled
  */
 static void dsi_init_buffer(DSI *dsi)
 {
@@ -100,10 +118,14 @@ static void dsi_init_buffer(DSI *dsi)
 }
 
 /*!
- * Effective TCP segment payload for this session's socket, or 0 when it
- * cannot be determined.  Live values (TCP_INFO / TCP_CONNECTION_INFO)
- * already account for active TCP options; TCP_MAXSEG is the negotiated
- * fallback.
+ * @brief Effective TCP segment payload of the session socket
+ *
+ * Live values from TCP_INFO or TCP_CONNECTION_INFO already account for the
+ * active TCP options. TCP_MAXSEG, the negotiated value, is the fallback.
+ *
+ * @param[in] dsi  DSI session with a connected socket
+ * @returns the segment payload in bytes, or 0 when it is unavailable or outside
+ *          512 to 65536
  */
 uint32_t dsi_effective_mss(const DSI *dsi)
 {
@@ -151,12 +173,21 @@ uint32_t dsi_effective_mss(const DSI *dsi)
 }
 
 /*!
- * Smallest 4 KiB multiple at or above the configured quantum whose
- * FPWriteExt frame (data + 36 bytes) ends in a TCP segment at least
- * 7/8 full.  Growth is capped at DSI_QUANTUM_GROWTH_MAX and
- * DSI_SERVQUANT_MAX; best fill wins when the threshold is
- * unreachable.  Never returns less than the configured value, which
- * is itself capped at DSI_SERVQUANT_MAX.
+ * @brief Round the configured server quantum up so FPWriteExt frames fill their
+ * last TCP segment
+ *
+ * The result is the smallest 4 KiB multiple at or above configured that fills
+ * the last TCP segment well. An FPWriteExt frame is the data plus 36 bytes. A
+ * last segment at least 7/8 full counts as filled. Growth stops at
+ * DSI_QUANTUM_GROWTH_MAX above configured and at DSI_SERVQUANT_MAX, and the
+ * call returns the best fill when no candidate reaches the threshold. Without
+ * a usable mss, or when the quantum fits in four segments, the result only
+ * rounds up to a page.
+ *
+ * @param[in] configured  quantum from the configuration, capped at
+ *                        DSI_SERVQUANT_MAX
+ * @param[in] mss         TCP segment payload from dsi_effective_mss, or 0
+ * @returns the rounded quantum, never below the capped configured value
  */
 uint32_t dsi_align_quantum(uint32_t configured, uint32_t mss)
 {
@@ -198,8 +229,10 @@ uint32_t dsi_align_quantum(uint32_t configured, uint32_t mss)
 }
 
 /*!
- * Free any allocated resources of the master afpd DSI objects
- * and close server socket
+ * @brief Release the listener resources of the master afpd and close the server
+ * socket
+ *
+ * @param[in,out] dsi  DSI listener, its socket and buffers become invalid
  */
 void dsi_free(DSI *dsi)
 {
@@ -216,7 +249,21 @@ void dsi_free(DSI *dsi)
 }
 
 static struct itimerval itimer;
-/*! accept the socket and do a little sanity checking */
+/*!
+ * @brief Accept a client connection and fork its session process, the TCP
+ * proto_open hook
+ *
+ * TCP wrappers can refuse the peer with ECONNREFUSED. The child resets the
+ * signal handlers and gives the client 120 seconds, the DSI_TCPTIMEOUT limit,
+ * for its first request. It derives the session quantum from the TCP segment
+ * size, sizes the read-ahead buffer, and reads the first DSI header and
+ * payload. A malformed header or a payload beyond the server quantum ends the
+ * child.
+ *
+ * @param[in,out] dsi  DSI listener, which the child keeps as its session
+ * @returns the child pid in the parent, 0 in the child, or -1 when accept or
+ *          fork failed
+ */
 static pid_t dsi_tcp_open(DSI *dsi)
 {
     pid_t pid;
@@ -376,6 +423,19 @@ static pid_t dsi_tcp_open(DSI *dsi)
 #define IFF_SLAVE 0
 #endif
 
+/*!
+ * @brief Advertise the address of the first usable network interface
+ *
+ * The call runs when hostname resolves to nothing or only to a loopback
+ * address. It walks the interface list, skips loopback, point-to-point,
+ * bonding slave, and down interfaces, and takes the first remaining one.
+ * dsi->server receives that IPv4 address with port. Without a match it logs a
+ * message naming hostname.
+ *
+ * @param[in,out] dsi       DSI listener whose server address to set
+ * @param[in]     hostname  server host name, for the log message
+ * @param[in]     port      TCP port as a decimal string
+ */
 static void guess_interface(DSI *dsi, const char *hostname, const char *port)
 {
     int fd;
@@ -429,6 +489,24 @@ iflist_done:
     freeifacelist(start);
 }
 
+/*!
+ * @brief Create the listening socket for address and port
+ *
+ * getaddrinfo supplies the candidates, and the call keeps the first one that
+ * binds and listens. Each socket gets SO_REUSEADDR and TCP_NODELAY, and an IPv6
+ * socket also accepts IPv4 except on OpenBSD. The listen backlog is
+ * DSI_TCPMAXPEND. When every AF_INET6 socket call fails with EAFNOSUPPORT,
+ * the caller learns that the host has no IPv6 and retries with AF_UNSPEC.
+ *
+ * @param[in]     address               address to bind, or NULL for the
+ *                                      wildcard address
+ * @param[in]     port                  TCP port as a decimal string
+ * @param[in]     hints                 getaddrinfo hints
+ * @param[in,out] dsi                   DSI listener receiving the socket and
+ *                                      the bound address
+ * @param[out]    psocket_err_afnotsup  receives true when IPv6 is unavailable
+ * @returns 0, or -1 when no candidate accepted a bind and listen
+ */
 static int dsi_tcp_listen(const char *address,
                           const char *port,
                           struct addrinfo *hints,

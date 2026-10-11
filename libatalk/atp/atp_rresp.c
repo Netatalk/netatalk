@@ -44,9 +44,19 @@
 #include "atp_internals.h"
 
 /*!
- * @brief Receives ATP response packets
- * @param ah open atp handle
- * @param atpb parameter block
+ * @brief Wait for the complete response to the pending ATP request and hand out
+ * its packets
+ *
+ * The data of each response packet, without its ATP header, goes into the
+ * response vector entry of its sequence number. In atpb, atp_saddr names the
+ * address to accept. The vector atp_rresiov holds 1 to 8 entries with their
+ * sizes and receives the data and the lengths, and atp_rresiovcnt receives the
+ * packet count.
+ *
+ * @param[in]     ah    ATP endpoint
+ * @param[in,out] atpb  parameter block
+ * @returns 0, the atp_rsel result other than ATP_TRESP, or -1 with EINVAL or
+ *          EMSGSIZE
  */
 int atp_rresp(ATP ah, struct atp_block *atpb)
 {

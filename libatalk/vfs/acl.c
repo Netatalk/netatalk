@@ -32,8 +32,12 @@
 #ifdef HAVE_NFSV4_ACLS
 
 /*!
- * @brief Removes all non-trivial ACLs from object
- * @returns full AFPERR code
+ * @brief Keep only the owner@, group@, and everyone@ entries in the NFSv4 ACL
+ * of name
+ *
+ * @param[in] name  file or directory
+ * @returns AFP_OK, AFPERR_ACCESS, AFPERR_NOITEM for a missing name, or
+ *          AFPERR_MISC
  */
 int remove_nfsv4_acl_vfs(const char *name)
 {

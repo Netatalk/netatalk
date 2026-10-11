@@ -54,6 +54,18 @@
 
 #define EXEC_MODE (S_IXGRP | S_IXUSR | S_IXOTH)
 
+/*!
+ * @brief Apply a volume root mode change to the desktop database folder
+ *
+ * The call changes .AppleDesktop, its one- and two-character subdirectories,
+ * and their entries. Directories get DIRBITS and mode, files mode without the
+ * execute bits. The call refuses a mode that takes read or search access from
+ * the owner. It ignores EPERM, and other chmod failures only log.
+ *
+ * @param[in] vol   volume of the desktop database
+ * @param[in] mode  new mode of the volume root
+ * @returns 0, or -1 for a refused mode or when getcwd, chdir, or opendir fails
+ */
 int setdeskmode(const struct vol *vol, const mode_t mode)
 {
     EC_INIT;
@@ -163,6 +175,17 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Apply a volume root owner change to the desktop database folder
+ *
+ * The call walks .AppleDesktop like setdeskmode and changes the owner and
+ * group of every entry. It ignores EPERM, and other chown failures only log.
+ *
+ * @param[in] vol  volume of the desktop database
+ * @param[in] uid  new owner, or -1 to keep it
+ * @param[in] gid  new group, or -1 to keep it
+ * @returns 0, or -1 when getcwd, chdir, or opendir fails
+ */
 int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
 {
     EC_INIT;
@@ -239,6 +262,15 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Make sure the desktop database folder of a volume exists
+ *
+ * When the database path lacks .AppleDesktop, the call moves the folder from
+ * the volume root as root. Without either folder, or when the move fails, it
+ * creates a new one with mode 0777 under the umask.
+ *
+ * @param[in] vol  volume of the desktop database
+ */
 static void create_appledesktop_folder(const struct vol *vol)
 {
     bstring olddtpath = NULL, dtpath = NULL;
@@ -272,6 +304,19 @@ static void create_appledesktop_folder(const struct vol *vol)
     bdestroy(olddtpath);
 }
 
+/*!
+ * @brief FPOpenDT: open the desktop database of a volume
+ *
+ * The call creates the desktop folder when needed and answers with the volume
+ * ID as the desktop reference.
+ *
+ * @param[in]  obj      session object, unused
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, or AFPERR_PARAM for an unknown volume
+ */
 int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                size_t *rbuflen)
 {
@@ -291,6 +336,18 @@ int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPCloseDT: close the desktop database of a volume
+ *
+ * The desktop reference is the volume ID, and the call only checks it.
+ *
+ * @param[in]  obj      session object, unused
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK, or AFPERR_PARAM for an unknown reference
+ */
 int afp_closedt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 char *rbuf _U_, size_t *rbuflen)
 {
@@ -308,11 +365,32 @@ int afp_closedt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
 static struct savedt	si = { { 0, 0, 0, 0 }, -1, 0, 0 };
 
+/*!
+ * @brief Return the path of the icon file of a creator in the desktop database
+ *
+ * @param[in] vol      volume of the desktop database
+ * @param[in] creator  creator code
+ * @returns the path in the static buffer of dtfile, or NULL
+ */
 static char *icon_dtfile(struct vol *vol, uint8_t creator[4])
 {
     return dtfile(vol, creator, ".icon");
 }
 
+/*!
+ * @brief Open the icon file of a creator in the desktop database
+ *
+ * One descriptor serves the icon file of the last creator and volume, and an
+ * open of the same file reuses it with its position. Any other open closes it
+ * first. With O_CREAT, a missing file also gets its two parent directories.
+ *
+ * @param[in] vol      volume of the desktop database
+ * @param[in] creator  creator code
+ * @param[in] flags    open flags
+ * @param[in] mode     creation mode, masked with the parent directory
+ *                     permissions
+ * @returns 0, or -1 when open fails
+ */
 static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 {
     char	*dtf, *adt, *adts;
@@ -362,6 +440,25 @@ static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
     return 0;
 }
 
+/*!
+ * @brief FPAddIcon: store an icon bitmap in the icon file of a creator
+ *
+ * Each record of the icon file holds a 12-byte header and the bitmap. The
+ * header carries the tag, the file type, the icon type, and the bitmap size.
+ * A record with the same tag, file type, and icon type gets the new bitmap in
+ * place, and a new icon goes at the end. The bitmap arrives as the write data
+ * of the request.
+ *
+ * Over DSI an error drains that data first, so the session stays in step.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     receive buffer for the bitmap
+ * @param[in,out] rbuflen  buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_NOITEM when iconopen fails, AFPERR_ITYPE for a size
+ *          change, or AFPERR_PARAM
+ */
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {
@@ -575,7 +672,22 @@ static const uint8_t	ucreator[] = { 0, 0, 0, 0 };
 static const uint8_t	utype[] = { 0, 0, 0, 0 };
 static const short	usize = 256;
 
-
+/*!
+ * @brief FPGetIconInfo: look up an icon of a creator by index and return its
+ * record header
+ *
+ * The index counts from 1, and the open icon file keeps its position between
+ * calls. A creator of 4 zero bytes gets one fixed entry with icon type 1. The
+ * reply holds the 12-byte record header.
+ *
+ * @param[in]  obj      session object, unused
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, AFPERR_NOITEM past the last icon or without an icon file, or
+ *          AFPERR_PARAM
+ */
 int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                     size_t *rbuflen)
 {
@@ -653,7 +765,23 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 }
 
-
+/*!
+ * @brief FPGetIcon: return the bitmap of an icon from the icon file of a
+ * creator
+ *
+ * The call looks for the first record with the requested file type and icon
+ * type and returns up to the requested size of its bitmap. Over DSI a bitmap
+ * larger than the reply buffer streams through dsi_read, or through sendfile
+ * in a WITH_SENDFILE build. A failure during streaming ends the session.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOITEM without a matching icon, or AFPERR_PARAM
+ */
 int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {
@@ -806,8 +934,21 @@ geticon_exit:
     return AFP_OK;
 }
 
-/* ---------------------- */
 static const char		hexdig[] = "0123456789abcdef";
+
+/*!
+ * @brief Build the path of a desktop database file for a creator
+ *
+ * The path is v_dbpath/.AppleDesktop, then a directory named by the first
+ * creator byte, then the 4 creator bytes and ext. A byte that is not
+ * printable, or a slash, becomes 2 hex digits.
+ *
+ * @param[in] vol      volume of the desktop database
+ * @param[in] creator  4-byte creator code
+ * @param[in] ext      file name suffix, such as ".appl" or ".icon"
+ * @returns the path in a static buffer, or NULL without a database path or for
+ *          a path that is too long
+ */
 char *dtfile(const struct vol *vol, uint8_t creator[], char *ext)
 {
     static char	path[MAXPATHLEN + 1];
@@ -851,11 +992,19 @@ char *dtfile(const struct vol *vol, uint8_t creator[], char *ext)
     return path;
 }
 
-/* ---------------------------
- * mpath is only a filename
- * did filename parent directory ID.
-*/
-
+/*!
+ * @brief Convert an AFP name into the name on disk
+ *
+ * An empty name becomes ".". A mangled name resolves through demangle and the
+ * CNID database. Any other name converts from UTF8-MAC or the Mac charset to
+ * the volume charset.
+ *
+ * @param[in] vol    volume of the name
+ * @param[in] mpath  AFP name of one path element
+ * @param[in] did    CNID of the parent directory
+ * @param[in] utf8   nonzero for a UTF8-MAC name of AFP 3
+ * @returns the name in a static buffer, or NULL when the conversion fails
+ */
 char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 {
     /* for convert_charset dest_len parameter +2 */
@@ -894,9 +1043,21 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     return upath;
 }
 
-/* ---------------
- * id filename ID
-*/
+/*!
+ * @brief Convert a name on disk into the AFP name a client sees
+ *
+ * The name converts from the volume charset to UTF8-MAC or the Mac charset. A
+ * name too long for the client, or with characters it cannot map, goes
+ * through mangle, which needs the CNID. A failed conversion mangles "???"
+ * instead.
+ *
+ * @param[in] vol    volume of the name
+ * @param[in] upath  name on disk of one path element
+ * @param[in] id     CNID of the file, or 0
+ * @param[in] utf8   nonzero for a UTF8-MAC name of AFP 3
+ * @returns the name in a static buffer, or NULL when the name needs mangling
+ *          and id is 0
+ */
 char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 {
     /* for convert_charset dest_len parameter +2 */
@@ -934,7 +1095,22 @@ utompath_error:
     return m;
 }
 
-/* ------------------------- */
+/*!
+ * @brief Store a Finder comment in the AppleDouble metadata of a file or
+ * directory
+ *
+ * The comment keeps at most 199 bytes and needs write access. An open fork
+ * lends its adouble. Any other object opens its metadata and creates it when
+ * missing. Metadata without a comment entry stores nothing. After the write
+ * the dircache entry takes the new stat and metadata, and the other sessions
+ * get a refresh hint.
+ *
+ * @param[in] obj   session object
+ * @param[in] vol   volume of the object
+ * @param[in] path  resolved object
+ * @param[in] ibuf  comment as a Pascal string
+ * @returns AFP_OK, or AFPERR_ACCESS without write access or metadata
+ */
 static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
                          char *ibuf)
 {
@@ -1015,7 +1191,20 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
     return AFP_OK;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief FPAddComment: store a Finder comment for a file or directory
+ *
+ * The request carries the volume, the directory, the path, and the comment as
+ * a Pascal string at an even offset. The comment goes to ad_addcomment.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the result of ad_addcomment, AFPERR_PARAM for an unknown volume, or
+ *          the error of the directory or path lookup
+ */
 int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                    size_t *rbuflen)
 {
@@ -1051,7 +1240,22 @@ int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return ad_addcomment(obj, vol, path, ibuf);
 }
 
-/* -------------------- */
+/*!
+ * @brief Read the Finder comment of a file or directory from its AppleDouble
+ * metadata
+ *
+ * With no open fork, a dircache entry that recorded no metadata, with a
+ * matching ctime and inode, answers AFPERR_NOITEM without a disk read. A read
+ * also fills a dircache entry that held no metadata. A stored comment of 0 or
+ * over 199 bytes counts as missing. The reply holds at most 128 bytes,
+ * because macOS uses 128 and longer comments break Adobe CS2.
+ *
+ * @param[in]  vol      volume of the object
+ * @param[in]  path     resolved object
+ * @param[out] rbuf     receives the comment as a Pascal string
+ * @param[out] rbuflen  reply length on return
+ * @returns AFP_OK, or AFPERR_NOITEM without metadata or comment
+ */
 static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
                          size_t *rbuflen)
 {
@@ -1118,7 +1322,17 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
     return AFP_OK;
 }
 
-/* -------------------- */
+/*!
+ * @brief FPGetComment: return the Finder comment of a file or directory
+ *
+ * @param[in]  obj      session object, unused
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns the result of ad_getcomment, AFPERR_PARAM for an unknown volume, or
+ *          the error of the directory or path lookup
+ */
 int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                    size_t *rbuflen)
 {
@@ -1150,7 +1364,20 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return ad_getcomment(vol, s_path, rbuf, rbuflen);
 }
 
-/* ----------------------- */
+/*!
+ * @brief Remove the Finder comment from the AppleDouble metadata of a file or
+ * directory
+ *
+ * The call needs write access and never creates metadata. It sets the comment
+ * length to 0, then refreshes the dircache entry and sends the other sessions
+ * a refresh hint.
+ *
+ * @param[in] obj   session object
+ * @param[in] vol   volume of the object
+ * @param[in] path  resolved object
+ * @returns AFP_OK, AFPERR_ACCESS, AFPERR_NOITEM without metadata, or
+ *          AFPERR_PARAM
+ */
 static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 {
     struct adouble	ad, *adp;
@@ -1224,7 +1451,17 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
     return AFP_OK;
 }
 
-/* ----------------------- */
+/*!
+ * @brief FPRemoveComment: remove the Finder comment of a file or directory
+ *
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     reply block, unused
+ * @param[out] rbuflen  0 on return
+ * @returns the result of ad_rmvcomment, AFPERR_PARAM for an unknown volume, or
+ *          the error of the directory or path lookup
+ */
 int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                    char *rbuf _U_, size_t *rbuflen)
 {

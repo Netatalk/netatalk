@@ -99,6 +99,15 @@ void atp_print_addr(char *s, struct sockaddr_at *saddr)
 #endif /* EBUG */
 
 
+/*!
+ * @brief Build an ATP request packet: the DDP type, the ATP header, and the
+ * request data
+ *
+ * @param[out] pktbuf  buffer that receives the packet and its length
+ * @param[in]  tid     transaction ID
+ * @param[in]  ctrl    control information, ATP_TREQ with its flags
+ * @param[in]  atpb    parameter block with the bitmap and the request data
+ */
 void atp_build_req_packet(struct atpbuf *pktbuf,
                           uint16_t tid,
                           uint8_t ctrl,
@@ -119,6 +128,17 @@ void atp_build_req_packet(struct atpbuf *pktbuf,
     pktbuf->atpbuf_dlen = ATP_HDRSIZE + (size_t) atpb->atp_sreqdlen;
 }
 
+/*!
+ * @brief Build one ATP response packet from the response vector entry with a
+ * sequence number
+ *
+ * @param[out] pktbuf  buffer that receives the packet and its length
+ * @param[in]  tid     transaction ID of the request
+ * @param[in]  ctrl    control information, ATP_TRESP with ATP_EOM on the last
+ *                     packet
+ * @param[in]  atpb    parameter block with the response vector
+ * @param[in]  seqnum  sequence number, the index into the response vector
+ */
 void atp_build_resp_packet(struct atpbuf *pktbuf,
                            uint16_t tid,
                            uint8_t ctrl,
@@ -143,17 +163,18 @@ void atp_build_resp_packet(struct atpbuf *pktbuf,
 }
 
 
-/*
- * Push a packet onto the unmatched-receive queue, evicting the oldest entry
- * once the queue is full.
+/*!
+ * @brief Push a packet onto the queue of unmatched received packets, dropping
+ * the oldest one when the queue is full
  *
- * Nothing ages this queue: an entry is removed only by a receive that matches
- * it, or by atp_close(). A stale response to a timed-out transaction or another
- * node's traffic can therefore sit here indefinitely, so the queue is bounded
- * and the oldest entry is evicted, which a datagram protocol is free to do.
- * Every push goes through here so that both callers agree on which packet is
- * sacrificed: never the one just received, which is the only one a caller may
- * still be waiting for.
+ * Only a matching receive or atp_close removes an entry, so a stale response
+ * or traffic for another node can stay in the queue. The queue therefore
+ * holds no more than ATP_MAXQUEUE packets and drops the oldest one. It never
+ * drops the packet just received, which a caller may still wait for. Both
+ * callers push through this call, so they agree on the packet to drop.
+ *
+ * @param[in,out] ah   ATP endpoint
+ * @param[in]     buf  received packet, owned by the queue afterwards
  */
 void atp_queue_push(ATP ah, struct atpbuf *buf)
 {
@@ -184,6 +205,26 @@ void atp_queue_push(ATP ah, struct atpbuf *buf)
 }
 
 
+/*!
+ * @brief Receive an ATP packet of a function and transaction ID from an
+ * address, from the queue or the socket
+ *
+ * The queue of unmatched packets comes first. On the socket, a packet without
+ * function bits goes away, and a TREL frees the saved response of its
+ * transaction. Any other packet that does not match joins the queue. A
+ * wildcard address, ATP_TIDANY, or more than one function bit widens the
+ * match.
+ *
+ * @param[in]     ah        ATP endpoint
+ * @param[in,out] fromaddr  address to accept, receives the sender
+ * @param[in,out] func      function bits to accept, receives the function of
+ *                          the packet
+ * @param[in]     tid       transaction ID, or ATP_TIDANY
+ * @param[out]    rbuf      buffer of ATP_BUFSIZ bytes that receives the packet
+ * @param[in]     wait      nonzero to read until a packet matches
+ * @returns the packet length, 0 without a match when not waiting, or -1 when a
+ *          read or an allocation fails
+ */
 int
 atp_recv_atp(ATP ah,
              struct sockaddr_at *fromaddr,
@@ -368,6 +409,15 @@ atp_recv_atp(ATP ah,
 }
 
 
+/*!
+ * @brief Compare two AppleTalk addresses, with wildcards in the first
+ *
+ * ATADDR_ANYPORT, ATADDR_ANYNET, and ATADDR_ANYNODE in paddr match any value.
+ *
+ * @param[in] paddr  address with possible wildcards
+ * @param[in] saddr  address to test
+ * @returns nonzero when they match, or 0
+ */
 int at_addr_eq(
     struct sockaddr_at	*paddr,		/* primary address */
     struct sockaddr_at	*saddr)		/* secondary address */

@@ -120,6 +120,13 @@ static struct charset_functions builtin_functions[] = {
 
 static struct charset_functions *charsets = NULL;
 
+/*!
+ * @brief Find the registered conversion functions of a charset by name,
+ * ignoring case
+ *
+ * @param[in] name  charset name
+ * @returns the functions, or NULL for a charset without them
+ */
 struct charset_functions *find_charset_functions(const char *name)
 {
     struct charset_functions *c = charsets;
@@ -135,6 +142,12 @@ struct charset_functions *find_charset_functions(const char *name)
     return NULL;
 }
 
+/*!
+ * @brief Add a charset to the list of registered conversion functions
+ *
+ * @param[in,out] funcs  conversion functions, which the list links in
+ * @returns 0, -1 for NULL, or -2 for a name already in the list
+ */
 int atalk_register_charset(struct charset_functions *funcs)
 {
     if (!funcs) {
@@ -153,6 +166,12 @@ int atalk_register_charset(struct charset_functions *funcs)
     return 0;
 }
 
+/*!
+ * @brief Register the built-in charsets once: UCS-2, ASCII, UTF8, UTF8-MAC, and
+ * the Mac charsets
+ *
+ * The CJK Mac charsets need a usable iconv.
+ */
 static void lazy_initialize_iconv(void)
 {
     static int initialized = 0;
@@ -183,9 +202,21 @@ static void lazy_initialize_iconv(void)
     }
 }
 
-/* if there was an error then reset the internal state,
-   this ensures that we don't have a shift state remaining for
-   character sets like SJIS */
+/*!
+ * @brief Convert through the system iconv and reset the shift state after an
+ * error
+ *
+ * The reset keeps the shift state of a charset such as SJIS from leaking
+ * into the next conversion. Without a usable iconv the call fails with
+ * EINVAL.
+ *
+ * @param[in]     cd            system iconv descriptor
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        output position
+ * @param[in,out] outbytesleft  output space
+ * @returns the result of iconv, or `(size_t)-1` with errno
+ */
 static size_t sys_iconv(void *cd,
                         char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
@@ -207,10 +238,19 @@ static size_t sys_iconv(void *cd,
 }
 
 /*!
- * @brief This is a simple portable iconv() implementaion
+ * @brief Convert through an atalk_iconv descriptor, with the iconv calling
+ * convention
  *
- * It only knows about a very small number of character sets - just
- * enough that netatalk works on systems that don't have iconv.
+ * A descriptor with a direct function converts in one call. Otherwise the
+ * call pulls up to 2048 bytes of UCS2 at a time and pushes each chunk to the
+ * output.
+ *
+ * @param[in]     cd            descriptor from atalk_iconv_open
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0 or the result of the direct function, or `(size_t)-1` with errno
  */
 size_t atalk_iconv(atalk_iconv_t cd,
                    const char **inbuf, size_t *inbytesleft,
@@ -251,7 +291,16 @@ size_t atalk_iconv(atalk_iconv_t cd,
 
 
 /*!
-  simple iconv_open() wrapper
+ * @brief Open a conversion between two charsets through UCS2
+ *
+ * The descriptor uses the built-in functions of each charset, and the system
+ * iconv for a charset without them or with CHARSET_ICONV. Equal names give a
+ * direct byte transfer, and a UCS-2 side gives a direct single-step
+ * conversion.
+ *
+ * @param[in] tocode    target charset name
+ * @param[in] fromcode  source charset name
+ * @returns the descriptor, or `(atalk_iconv_t)-1` with ENOMEM or EINVAL
  */
 atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 {
@@ -351,8 +400,12 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 }
 
 /*!
-  simple iconv_close() wrapper
-*/
+ * @brief Close an atalk_iconv descriptor together with its system iconv
+ * descriptors
+ *
+ * @param[in] cd  descriptor to close
+ * @returns 0
+ */
 int atalk_iconv_close(atalk_iconv_t cd)
 {
 #ifdef HAVE_USABLE_ICONV
@@ -382,6 +435,16 @@ int atalk_iconv_close(atalk_iconv_t cd)
  the following functions implement the builtin character sets in Netatalk
 *************************************************************************/
 
+/*!
+ * @brief Convert ASCII to UCS2, where any byte from 0x80 fails with EILSEQ
+ *
+ * @param[in]     cd            descriptor, unused
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        UCS2 output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with EILSEQ or E2BIG
+ */
 static size_t ascii_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
                          char **outbuf, size_t *outbytesleft)
 {
@@ -410,6 +473,19 @@ static size_t ascii_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
     return 0;
 }
 
+/*!
+ * @brief Convert UCS2 to ASCII, where any character from U+0080 fails with
+ * EILSEQ
+ *
+ * A trailing odd byte fails with EINVAL.
+ *
+ * @param[in]     cd            descriptor, unused
+ * @param[in,out] inbuf         UCS2 input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with EILSEQ, EINVAL, or E2BIG
+ */
 static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
                          char **outbuf, size_t *outbytesleft)
 {
@@ -446,6 +522,19 @@ static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 }
 
 
+/*!
+ * @brief Pass bytes through unchanged, for a conversion between equal charsets
+ *
+ * The call moves as many bytes as fit, and input that stays fails with
+ * E2BIG.
+ *
+ * @param[in]     cd            descriptor, unused
+ * @param[in,out] inbuf         input position
+ * @param[in,out] inbytesleft   input bytes left
+ * @param[in,out] outbuf        output position
+ * @param[in,out] outbytesleft  output space
+ * @returns 0, or `(size_t)-1` with E2BIG
+ */
 static size_t iconv_copy(void *cd _U_, char **inbuf, size_t *inbytesleft,
                          char **outbuf, size_t *outbytesleft)
 {

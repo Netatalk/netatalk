@@ -225,7 +225,14 @@ EC_CLEANUP: {
     return cnid;
 }
 
-/*! Return allocated UUID string with dashes stripped */
+/*!
+ * @brief Return a UUID string without its dashes, for the CNID table names
+ *
+ * The result keeps at most 32 characters, and the caller frees it.
+ *
+ * @param[in] uuid  UUID string, or NULL
+ * @returns the new string, or NULL for a NULL uuid or a failed malloc
+ */
 char *uuid_strip_dashes(const char *uuid)
 {
     char stripped[33];

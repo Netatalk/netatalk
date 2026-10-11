@@ -16,6 +16,14 @@ int dirfd(DIR *dir)
 #endif
 
 #ifndef HAVE_STRNLEN
+/*!
+ * @brief Return the length of a string, capped at max
+ *
+ * @param[in] s    string
+ * @param[in] max  byte limit
+ * @returns the number of bytes before the NUL, or max without a NUL in the
+ *          first max bytes
+ */
 size_t strnlen(const char *s, size_t max)
 {
     size_t len;
@@ -31,6 +39,17 @@ size_t strnlen(const char *s, size_t max)
 #endif
 
 #ifndef HAVE_VASPRINTF
+/*!
+ * @brief Format into a newly allocated string, for systems without vasprintf
+ *
+ * The buffer starts at 64 bytes and grows until vsnprintf fits.
+ *
+ * @param[out] ret  receives the string, or NULL after a failed realloc
+ * @param[in]  fmt  printf format
+ * @param[in]  ap   arguments
+ * @returns the string length, -1 after a failed realloc, or 0 without a string
+ *          when the first malloc fails
+ */
 int vasprintf(char **ret, const char *fmt, va_list ap)
 {
     int n, size = 64;
@@ -73,6 +92,14 @@ int vasprintf(char **ret, const char *fmt, va_list ap)
 #endif
 
 #ifndef HAVE_ASPRINTF
+/*!
+ * @brief Format into a newly allocated string, for systems without asprintf
+ *
+ * @param[out] strp  receives the string
+ * @param[in]  fmt   printf format
+ * @param[in]  ...   arguments
+ * @returns the result of vasprintf
+ */
 int asprintf(char **strp, const char *fmt, ...)
 {
     va_list ap;

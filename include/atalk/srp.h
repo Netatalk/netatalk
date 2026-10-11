@@ -54,7 +54,7 @@ static const unsigned char srp_N_bytes[SRP_NBYTES] = {
 
 static const unsigned char srp_g_byte = 0x02;
 
-/* Validate a NUL-terminated username for a verifier record. */
+/*! @brief Accept 1 to SRP_USERNAME_MAX_LEN bytes without a colon, CR, or LF */
 static inline int srp_valid_username(const char *name)
 {
     size_t length = strnlen(name, SRP_USERNAME_MAX_LEN + 1);
@@ -63,10 +63,7 @@ static inline int srp_valid_username(const char *name)
            strchr(name, '\r') == NULL;
 }
 
-/*
- * Validate NUL-terminated salt:verifier\n fields, including fully disabled
- * records. Authentication must reject disabled records separately.
- */
+/*! @brief Tell whether a `salt:verifier` line is valid or fully disabled */
 static inline int srp_valid_fields(const char *fields)
 {
     int salt_disabled = 1, verifier_disabled = 1;
@@ -104,7 +101,7 @@ static inline int srp_valid_fields(const char *fields)
     return 1;
 }
 
-/* Owner permissions may vary; group and other must have no access. */
+/*! @brief Tell whether a verifier file mode gives group and others no access */
 static inline int srp_verifier_mode_is_safe(mode_t mode)
 {
     return (mode & (S_IRWXG | S_IRWXO)) == 0;

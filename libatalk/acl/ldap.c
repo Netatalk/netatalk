@@ -358,7 +358,16 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
  * Interface
  ********************************************************/
 
-/* Escape a string for use in an LDAP filter per RFC 4515. */
+/*!
+ * @brief Escape a string for an LDAP search filter as RFC 4515 requires
+ *
+ * The characters *, (, ), and backslash become a backslash and 2 hex digits.
+ *
+ * @param[in]  src     string to escape
+ * @param[out] dst     receives the escaped string
+ * @param[in]  dstlen  size of dst
+ * @returns 0, or -1 when the escaped string and its NUL do not fit in dst
+ */
 static int ldap_escape_filter_value(const char *src, char *dst, size_t dstlen)
 {
     size_t out = 0;

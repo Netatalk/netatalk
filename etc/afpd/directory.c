@@ -115,9 +115,17 @@ q_t *invalid_dircache_entries;
  ******************************************************************************************/
 
 
-/* -------------------------
-   appledouble mkdir afp error code.
-*/
+/*!
+ * @brief Create a directory and map the mkdir error to an AFP result code
+ *
+ * With AFPVOL_UNIX_PRIV the mode is 0777 minus the volume umask. Otherwise
+ * ad_mkdir derives the mode from the parent directory and sets the owner.
+ *
+ * @param[in] vol   volume of the directory
+ * @param[in] name  directory to create, relative to the working directory
+ * @returns AFP_OK, AFPERR_MISC, AFPERR_NOOBJ, AFPERR_VLOCK, AFPERR_ACCESS,
+ *          AFPERR_EXIST, AFPERR_DFULL, or AFPERR_PARAM
+ */
 static int netatalk_mkdir(const struct vol *vol, const char *name)
 {
     int ret;
@@ -164,7 +172,21 @@ static int netatalk_mkdir(const struct vol *vol, const char *name)
     return AFP_OK;
 }
 
-/* ------------------- */
+/*!
+ * @brief Delete directory dir and everything below it
+ *
+ * The cross-device rename path uses it after copydir, and to undo a failed
+ * copydir. The walk deletes files with netatalk_unlinkat, recurses into
+ * subdirectories, and stops at the first error. It skips entries whose stat
+ * fails, and a directory that fails to open counts as already gone.
+ *
+ * @param[in] vol    volume of the directory
+ * @param[in] dirfd  directory that dir is relative to, or -1 for the working
+ *                   directory
+ * @param[in] dir    directory to delete
+ * @returns AFP_OK, AFPERR_PARAM for a path beyond MAXPATHLEN, or the AFP error
+ *          of the first failed delete
+ */
 static int deletedir(const struct vol *vol, int dirfd, char *dir)
 {
     char path[MAXPATHLEN + 1];
@@ -223,7 +245,23 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
     return err;
 }
 
-/*! do a recursive copy. */
+/*!
+ * @brief Duplicate the directory tree src as dst for a cross-device rename
+ *
+ * The netatalk_mkdir call creates dst. Subdirectories recurse, files go
+ * through copyfile, and each new file and directory keeps the modification
+ * time of its source. The walk skips entries whose stat fails and stops at the
+ * first error.
+ *
+ * @param[in] vol    volume of both trees
+ * @param[in] ddir   destination parent directory, passed to copyfile
+ * @param[in] dirfd  directory that src is relative to, or -1 for the working
+ *                   directory
+ * @param[in] src    source directory
+ * @param[in] dst    destination directory, relative to the working directory
+ * @returns AFP_OK, AFPERR_PARAM for a missing source or a path beyond
+ *          MAXPATHLEN, or the AFP error of the first failure
+ */
 static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src,
                    char *dst)
 {
@@ -306,21 +344,43 @@ copydir_done:
 }
 
 /*!
- * is our cached offspring count valid?
+ * @brief Whether the cached offspring count of dir is still valid
+ *
+ * @param[in] dir  directory with a cached offspring count
+ * @param[in] st   fresh stat of the directory
+ * @returns 1 when the ctime matches the cached one, 0 otherwise
  */
 static int diroffcnt(struct dir *dir, struct stat *st)
 {
     return st->st_ctime == dir->d_ctime;
 }
 
-/* --------------------- */
+/*!
+ * @brief Whether name is a dot file that the volume flags as invisible to the
+ * Finder
+ *
+ * @param[in] vol   volume
+ * @param[in] name  directory entry name
+ * @returns 1 for a dot name other than . and .. on a volume with
+ *          AFPVOL_INV_DOTS, 0 otherwise
+ */
 static int invisible_dots(const struct vol *vol, const char *name)
 {
     return vol_inv_dots(vol) && *name  == '.' && strcmp(name, ".")
            && strcmp(name, "..");
 }
 
-/* ------------------ */
+/*!
+ * @brief Map an errno from a directory parameter change to an AFP result code
+ *
+ * EPERM and EACCES map to AFPERR_ACCESS, and EROFS maps to AFPERR_VLOCK. Any
+ * other error logs the failing step and maps to AFPERR_PARAM.
+ *
+ * @param[in] path   directory whose parameters changed
+ * @param[in] where  name of the failing step, for the log line
+ * @param[in] err    errno value
+ * @returns AFPERR_ACCESS, AFPERR_VLOCK, or AFPERR_PARAM
+ */
 static int set_dir_errors(struct path *path, const char *where, int err)
 {
     switch (err) {
@@ -338,14 +398,20 @@ static int set_dir_errors(struct path *path, const char *where, int err)
 }
 
 /*!
- * @brief Convert name in client encoding to server encoding
+ * @brief Convert the client name in ret->m_name to the server name in
+ * ret->u_name
  *
- * Convert ret->m_name to ret->u_name from client encoding to server encoding.
- * This only gets called from cname().
+ * Only cname calls it. From AFP 3.0 on, a type 2 path name converts to UTF-8
+ * first. Below DID 1 a match with the legacy volume name becomes the UTF-8
+ * volume name. A name that demangle_osx recognizes as mangled resolves to the
+ * real name, and m_name receives the client view of it. Any other name goes
+ * through mtoupath.
  *
- * @returns 0 on success, -1 on error
- *
- * @note If the passed ret->m_name is mangled, we'll demangle it
+ * @param[in]     vol     volume of the name
+ * @param[in]     dir     directory that holds the name
+ * @param[in,out] ret     path whose m_name to convert and whose u_name to set
+ * @param[in]     toUTF8  nonzero for a type 2 path on AFP 3.0 or later
+ * @returns 0, or -1 with afp_errno set
  */
 static int cname_mtouname(const struct vol *vol, struct dir *dir,
                           struct path *ret, int toUTF8)
@@ -418,16 +484,20 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
 }
 
 /*!
- * @brief Build struct path from struct dir
+ * @brief Build a path result from a dircache entry after cname failed to change
+ * into it
  *
- * The final movecwd in cname failed, possibly with EPERM or ENOENT. We:
- * 1. move cwd into parent dir (we're often already there, but not always)
- * 2. set struct path to the dirname
- * 3. in case of
- *    AFPERR_ACCESS: the dir is there, we just can't chdir into it
- *    AFPERR_NOOBJ: the dir was there when we stated it in cname, so we have a race
- *                  4. indicate there's no dir for this path
- *                  5. remove the dir
+ * The call changes into the parent of dir and fills ret with the names of dir.
+ * With AFPERR_ACCESS the directory exists but denies entry, and ret keeps dir.
+ * With AFPERR_NOOBJ the directory vanished after cname looked at it, so ret
+ * gets no directory and the call removes dir from the cache. The volume root
+ * and its parent get no result.
+ *
+ * @param[in]     vol  volume of dir
+ * @param[in,out] dir  directory that cname could not enter
+ * @param[out]    ret  path result to fill
+ * @returns ret, or NULL for the volume root or its parent, for any other
+ *          afp_errno, or when the parent change failed
  */
 static struct path *path_from_dir(struct vol *vol, struct dir *dir,
                                   struct path *ret)
@@ -491,6 +561,13 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir,
  * Interface
  ********************************************************************************************/
 
+/*!
+ * @brief AFP error that the last path resolution left, with AFPERR_DID1
+ * replaced by param
+ *
+ * @param[in] param  AFP error to report when the resolution ended at DID 1
+ * @returns afp_errno, or param when afp_errno is AFPERR_DID1
+ */
 int get_afp_errno(const int param)
 {
     if (afp_errno != AFPERR_DID1) {
@@ -1572,17 +1649,19 @@ void dir_free_invalid_q(void)
 }
 
 /*!
- * @brief Remove a cache entry and free it immediately.
+ * @brief Remove a dircache entry and free it at once
  *
- * Unlike dir_remove(), this function:
- * - Does NOT enqueue into invalid_dircache_entries (frees immediately)
- * - Does NOT check or modify curdir (caller must ensure entry != curdir)
- * - Does NOT attempt curdir recovery via dirlookup()
+ * Unlike dir_remove the call frees the entry immediately instead of deferring
+ * the free. It never touches curdir or recovers it through dirlookup, and the
+ * caller guarantees that dir is not curdir. DIRCACHE_NOSHRINK keeps the hash
+ * tables at their size while a scan runs.
  *
- * DIRCACHE_NOSHRINK prevents hash table shrink during worker iteration.
+ * The idle worker uses it, and so does dircache_flush_deferred_for_vol while a
+ * volume closes. The volume root, its parent, and entries that are already
+ * invalid stay untouched.
  *
- * Used by idle worker during temporal separation AND by
- * dircache_flush_deferred_for_vol() during synchronous volume close.
+ * @param[in] vol  volume of the entry
+ * @param[in] dir  entry to free, invalid afterwards
  */
 void dir_remove_and_free(const struct vol *vol, struct dir *dir)
 {
@@ -1727,30 +1806,46 @@ int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
 }
 
 /*!
- * @brief Resolve a catalog node name path
+ * @brief Resolve an AFP path relative to a directory and change into the
+ * directory that holds it
  *
- * 1. Evaluate path type
- * 2. Move to start dir, if we can't, it might be e.g. because of EACCES, build
- *    path from dirname, so e.g. getdirparams has sth it can chew on. curdir
- *    is dir parent then. All this is done in path_from_dir().
- * 3. Parse next cnode name in path, cases:
- * 4.   single "\0" -> do nothing
- * 5.   two or more consecutive "\0" -> chdir("..") one or more times
- * 6.   cnode name -> copy it to path.m_name
- * 7. Get unix name from mac name
- * 8. Special handling of request with did 1
- * 9. stat the cnode name
- * 10. If it's not there, it's probably an afp_createfile|dir,
- *     return with curdir = dir parent, struct path = dirname
- * 11. If it's there and it's a file, it must should be the last element of the requested
- *     path. Return with curdir = cnode name parent dir, struct path = filename
- * 12. Treat symlinks like files, don't follow them
- * 13. If it's a dir:
- * 14. Search the dircache for it
- * 15. If it's not in the cache, create a struct dir for it and add it to the cache
- * 16. chdir into the dir and
- * 17. set m_name to the mac equivalent of "."
- * 18. goto 3
+ * The path is a type byte followed by a length and the names. Type 2 carries
+ * a Pascal string in the client encoding. Type 3 carries a hint and a UTF-8
+ * name and needs AFP 3.0 or later. The numbered steps match the markers in the
+ * body.
+ *
+ * 1. Read the path type and length.
+ * 2. Change into dir. When that fails for an empty path, path_from_dir builds
+ *    the result from the name of dir, so callers such as getdirparams still
+ *    get a path.
+ * 3. Walk the path one name at a time.
+ * 4. A single NUL separator does nothing.
+ * 5. Each further NUL moves up to the parent directory, never above the
+ *    volume root.
+ * 6. Collect the next name, at most 255 bytes, into the static path buffer.
+ * 7. Convert the client name to the server name with cname_mtouname.
+ * 8. Below DID 1 the only valid name is the volume name.
+ * 9. Stat the name.
+ * 10. A missing name must be the last element, as in a create request. The
+ *     result then names it in the working directory.
+ * 11. A file must be the last element. The result names it in its parent.
+ * 12. A symlink counts as a file and stays unresolved.
+ * 13. A directory continues the walk.
+ * 14. Look the directory up in the dircache.
+ * 15. Add a dircache entry when the lookup misses.
+ * 16. Change into the directory.
+ * 17. Clear m_name, so the end of the walk knows that the last element was a
+ *     directory.
+ *
+ * A path that ends in a directory yields "." in that directory, and a walk
+ * that ends at DID 1 fails with AFPERR_DID1. Names that check_name rejects,
+ * such as .AppleDouble, fail with AFPERR_PARAM and can send a veto message to
+ * the client.
+ *
+ * @param[in]     vol    volume of the path
+ * @param[in]     dir    directory that the path starts from
+ * @param[in,out] cpath  request cursor at the path, advanced past it
+ * @returns the static path result, or NULL with afp_errno set
  */
 struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 {
@@ -2237,9 +2332,18 @@ int movecwd(const struct vol *vol, struct dir *dir)
 }
 
 /*!
- * We can't use unix file's perm to support Apple's inherited protection modes.
- * If we aren't the file's owner we can't change its perms when moving it and smb
- * nfs,... don't even try.
+ * @brief Whether the user may read or write in the parent directory of path
+ *
+ * The test uses the AFP access rights of the parent directory instead of the
+ * file permissions. Unix permissions cannot express the inherited protection
+ * modes of AFP, and a user other than the owner cannot change them while
+ * moving the file.
+ *
+ * @param[in] obj   session object
+ * @param[in] vol   volume of path
+ * @param[in] path  file whose parent directory to test
+ * @param[in] mode  OPENACC_RD, OPENACC_WR, or both
+ * @returns 0 when the rights allow mode, -1 otherwise
  */
 int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 {
@@ -2264,7 +2368,15 @@ int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
     return 0;
 }
 
-/* --------------------- */
+/*!
+ * @brief Whether the user may read or write path, from its AFP access rights
+ *
+ * @param[in] obj   session object
+ * @param[in] vol   volume of path
+ * @param[in] path  file with its stat filled in
+ * @param[in] mode  OPENACC_RD, OPENACC_WR, or both
+ * @returns 0 when the rights allow mode, -1 otherwise
+ */
 int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 {
     struct maccess ma;
@@ -2287,7 +2399,17 @@ int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
     return 0;
 }
 
-/* --------------------- */
+/*!
+ * @brief Cache the offspring count of a directory together with its ctime
+ *
+ * The cached count stays valid while the directory ctime matches. The call
+ * also clears DIRF_CNID, because a plain count does not prove that the CNID
+ * database holds every entry.
+ *
+ * @param[in,out] dir    directory to update
+ * @param[in]     st     fresh stat of the directory
+ * @param[in]     count  number of visible entries
+ */
 void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
 {
     dir->d_offcnt = count;
@@ -2296,19 +2418,46 @@ void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
 }
 
 
-/* ---------------------
- * is our cached also for reenumerate id?
+/*!
+ * @brief Whether the last CNID reenumeration of dir is still current
+ *
+ * The file ID resolver registers every entry of a directory with the CNID
+ * database and then sets DIRF_CNID. That work stays current while the
+ * directory ctime matches.
+ *
+ * @param[in] dir  directory with a cached offspring count
+ * @param[in] st   fresh stat of the directory
+ * @returns nonzero when the ctime matches and dir carries DIRF_CNID, 0
+ *          otherwise
  */
 int dirreenumerate(struct dir *dir, struct stat *st)
 {
     return st->st_ctime == dir->d_ctime && (dir->d_flags & DIRF_CNID);
 }
 
-/* ------------------------------
-   (".", curdir)
-   (name, dir) with curdir:name == dir, from afp_enumerate
-*/
-
+/*!
+ * @brief Pack the directory parameters that bitmap selects into buf
+ *
+ * Callers pass "." with curdir, or, from enumerate, the name of dir inside
+ * curdir. The parameters follow the bit order of the AFP directory bitmap.
+ * Attributes, dates, and Finder info come from the AppleDouble metadata when
+ * it opens. Dot files can get the invisible flag, and the volume root can get
+ * the custom icon flag of the virtual icon.
+ *
+ * The offspring count reuses the cached value while the ctime matches and
+ * scans the directory otherwise. Name fields carry offsets, and the names
+ * follow the fixed fields. A request with DIRPBIT_PDINFO before AFP 3.0 comes
+ * from a ProDOS client and gets dates in local time.
+ *
+ * @param[in]  obj     session object
+ * @param[in]  vol     volume of the directory
+ * @param[in]  bitmap  AFP directory bitmap, DIRPBIT_* bits
+ * @param[in]  s_path  path of the directory, with its stat
+ * @param[in]  dir     dircache entry of the directory
+ * @param[out] buf     reply buffer receiving the parameters
+ * @param[out] buflen  receives the bytes written
+ * @returns AFP_OK, or AFPERR_BITMAP for an unknown bit
+ */
 int getdirparams(const AFPObj *obj,
                  const struct vol *vol,
                  uint16_t bitmap, struct path *s_path,
@@ -2581,7 +2730,18 @@ int getdirparams(const AFPObj *obj,
     return AFP_OK;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief AFP error for a path that cname could not resolve to the expected
+ * directory
+ *
+ * A directory yields afp_errno, the reason cname could not enter it. A path
+ * whose stat failed yields error. A path that names a file yields
+ * AFPERR_BADTYPE.
+ *
+ * @param[in] path   path result from cname
+ * @param[in] error  AFP error for a missing object
+ * @returns afp_errno, error, or AFPERR_BADTYPE
+ */
 int path_error(struct path *path, int error)
 {
     /* - a dir with access error
@@ -2599,7 +2759,23 @@ int path_error(struct path *path, int error)
     return AFPERR_BADTYPE;
 }
 
-/* ----------------------------- */
+/*!
+ * @brief FPSetDirParms: set the parameters of a directory
+ *
+ * A path that cname could not enter fails with the path_error result. Only
+ * AFPERR_ACCESS lets the call proceed, so a client can restore the permissions
+ * of a directory it cannot enter. The parameters start at the next even offset
+ * of the request. The setdirparams call applies them, and success updates the
+ * volume modification time.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_VLOCK for a read-only volume, AFPERR_PARAM, or
+ *          another AFPERR_* code
+ */
 int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                      char *rbuf _U_, size_t *rbuflen)
 {
@@ -2661,7 +2837,16 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 }
 
 /*!
- * @note assume path == '\0' e.g. it's a directory in canonical form
+ * @brief Set a directory's parameters from an FPSetDirParms bitmap and buffer
+ *
+ * The directory arrives in canonical form: path->u_name is empty and
+ * path->d_dir names it.
+ *
+ * @param[in] vol       volume the directory belongs to
+ * @param[in] path      directory in canonical form
+ * @param[in] d_bitmap  FPSetDirParms bitmap of the parameters present in buf
+ * @param[in] buf       parameter values, in bitmap order
+ * @returns AFP_OK, or the AFPERR_* code of the parameter that failed
  */
 int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
                  char *buf)
@@ -3110,6 +3295,22 @@ setprivdone:
     return err;
 }
 
+/*!
+ * @brief FPSyncDir: flush a directory and its AppleDouble metadata to stable
+ * storage
+ *
+ * The volume root, DID 2, triggers a full sync, because clients send the
+ * command to flush an entire volume. Any other directory gets an fsync of
+ * itself where dirfd exists, and of the metadata file that vol->ad_path names
+ * for it. A missing metadata file fails with AFPERR_NOOBJ.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_ACCESS, or AFPERR_PARAM
+ */
 int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 size_t *rbuflen)
 {
@@ -3210,6 +3411,25 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPCreateDir: create a directory and return its DID
+ *
+ * The request names the new directory relative to a parent DID. The call
+ * creates it with netatalk_mkdir, adds it to the dircache, and writes its
+ * AppleDouble metadata with the Mac name and the CNID. FCE and Spotlight learn
+ * about the new directory, and sibling afpd processes get a refresh hint for
+ * the parent.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, receives the new DID
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_EXIST, AFPERR_VLOCK for a read-only volume,
+ *          AFPERR_ACCESS when the metadata cannot open, or another AFPERR_*
+ *          code
+ */
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                   size_t *rbuflen)
 {
@@ -3317,13 +3537,25 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 }
 
 /*!
- * @brief Rename a directory
- * @param vol       volume
- * @param dirfd     -1 means ignore dirfd (or use AT_FDCWD), otherwise src is relative to dirfd
- * @param src       old unix filename (not a pathname)
- * @param dst       new unix filename (not a pathname)
- * @param newparent curdir
- * @param newname   new mac name
+ * @brief Rename a directory, or transfer its tree when the rename crosses
+ * devices
+ *
+ * The caller validates the source and cleans the cache. EXDEV makes the call
+ * duplicate the tree with copydir and delete the source with deletedir. The
+ * VFS modules then follow the rename, and the AppleDouble metadata gets the
+ * new Mac name.
+ *
+ * @param[in] vol        volume of the directory
+ * @param[in] dirfd      directory that src is relative to, or -1 for the
+ *                       working directory
+ * @param[in] src        current Unix name, not a path
+ * @param[in] dst        new Unix name, not a path, relative to the working
+ *                       directory
+ * @param[in] newparent  destination parent directory, the working directory
+ * @param[in] newname    new Mac name
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_ACCESS, AFPERR_VLOCK, AFPERR_CANTMOVE
+ *          for a move into a subdirectory of itself, AFPERR_PARAM, or the error
+ *          of copydir or deletedir
  */
 int renamedir(struct vol *vol,
               int dirfd,
@@ -3386,6 +3618,19 @@ int renamedir(struct vol *vol,
     return AFP_OK;
 }
 
+/*!
+ * @brief Full path of name inside parent, for FCE and Spotlight events
+ *
+ * The path comes from the cached full path of parent. Without one, or when
+ * the result would not fit buf, fullpathname builds the path from the working
+ * directory, so an event path never ends clipped.
+ *
+ * @param[out] buf     buffer for the path
+ * @param[in]  buflen  size of buf
+ * @param[in]  parent  directory that holds name, or NULL
+ * @param[in]  name    entry name
+ * @returns buf, or the static buffer of fullpathname
+ */
 const char *dir_event_path(char *buf, size_t buflen,
                            const struct dir *parent,
                            const char *name)
@@ -3407,7 +3652,21 @@ const char *dir_event_path(char *buf, size_t buflen,
     return buf;
 }
 
-/*! delete an empty directory */
+/*!
+ * @brief Delete the working directory, which must be empty
+ *
+ * The AppleDouble NODELETE attribute blocks the delete unless the volume
+ * ignores it. The VFS modules first delete their metadata, and then the call
+ * moves up to the parent and deletes the directory. A directory that holds
+ * only vetoed files goes through delete_vetoed_files, and one that is already
+ * gone counts as deleted. The call then deletes the CNID, drops the dircache
+ * entries of the directory and its children, and tells the sibling afpd
+ * processes.
+ *
+ * @param[in] vol  volume of the working directory
+ * @returns AFP_OK, AFPERR_OLOCK for a NODELETE directory, AFPERR_ACCESS,
+ *          AFPERR_DIRNEMPT, or another AFP error
+ */
 int deletecurdir(struct vol *vol)
 {
     struct dir  *fdir, *pdir;
@@ -3490,6 +3749,24 @@ delete_done:
     return err;
 }
 
+/*!
+ * @brief FPMapID: map a user ID, group ID, or UUID to a name
+ *
+ * Subfunctions 1 and 2 map a user or group ID to a name in the Mac charset.
+ * Subfunctions 3 and 4 map them to a UTF-8 name and need AFP 3.0. ID 0 maps to
+ * an empty name. Subfunctions 5 and 6 map a UUID to a user or group name and
+ * need AFP 3.2 and the OPTION_UUID server option. Their reply carries the UUID
+ * type and the Unix ID ahead of the name.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, receives the name
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOITEM for an unknown ID, AFPERR_PARAM, or
+ *          AFPERR_MISC
+ */
 int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
               size_t *rbuflen)
 {
@@ -3634,6 +3911,22 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPMapName: map a user or group name to a Unix ID or a UUID
+ *
+ * Subfunctions 1 and 2 take a UTF-8 user or group name and need AFP 3.0.
+ * Subfunctions 3 and 4 take a user or group name as a Pascal string. All four
+ * return the Unix ID. Subfunctions 5 and 6 return the UUID of a user or group
+ * and need AFP 3.2 and the OPTION_UUID server option.
+ *
+ * @param[in]     obj      session object
+ * @param[in,out] ibuf     request block, receives a NUL after the name
+ * @param[in]     ibuflen  request block length
+ * @param[out]    rbuf     reply block, receives the ID or UUID
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOITEM for an unknown name, or AFPERR_PARAM
+ */
 int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {
@@ -3743,9 +4036,19 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return AFP_OK;
 }
 
-/*
-   variable DID support
-*/
+/*!
+ * @brief FPCloseDir: accept the close of a variable DID directory
+ *
+ * DIDs stay fixed for the life of the process, so the call only looks up the
+ * volume.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, or AFPERR_PARAM for an unknown volume
+ */
 int afp_closedir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
 {
@@ -3762,8 +4065,22 @@ int afp_closedir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFP_OK;
 }
 
-/* did creation gets done automatically
- * there's a pb again with case but move it to cname
+/*!
+ * @brief FPOpenDir: return the DID of a directory
+ *
+ * DIDs never change, so opening only resolves the path. The cname call creates
+ * the dircache entry and its DID on the way, and the reply carries the DID of
+ * the directory that cname entered. A path that names a file or a missing
+ * object fails.
+ *
+ * @param[in]     obj      session object, unused
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, receives the DID
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, or another AFPERR_* code from
+ *          the path lookup
  */
 int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf,
                 size_t *rbuflen)

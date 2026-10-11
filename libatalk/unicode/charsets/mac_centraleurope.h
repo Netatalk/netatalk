@@ -49,6 +49,7 @@ static const unsigned short mac_centraleurope_2uni[128] = {
     0x00dd, 0x00fd, 0x0137, 0x017b, 0x0141, 0x017c, 0x0122, 0x02c7,
 };
 
+/*! @brief Map a MAC_CENTRALEUROPE byte to UCS2, through the table above 0x7f */
 static int
 char_mac_centraleurope_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 {
@@ -112,6 +113,7 @@ static const unsigned char mac_centraleurope_page22_1[8] = {
     0xad, 0x00, 0x00, 0x00, 0xb2, 0xb3, 0x00, 0x00, /* 0x60-0x67 */
 };
 
+/*! @brief Map a UCS2 character to a MAC_CENTRALEUROPE byte, or return 0 */
 static int
 char_ucs2_to_mac_centraleurope(unsigned char *r, ucs2_t wc)
 {

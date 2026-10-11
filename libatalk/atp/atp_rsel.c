@@ -33,6 +33,16 @@ static int	release_count = 0;
 #endif /* DROP_ATPTREL */
 
 
+/*!
+ * @brief Send the pending ATP request again, with a bitmap of the responses
+ * still missing
+ *
+ * The call stamps the send time and uses up one try unless the tries are
+ * infinite.
+ *
+ * @param[in,out] ah  ATP endpoint with a pending request
+ * @returns 0, or -1 for a failed send
+ */
 static int
 resend_request(ATP ah)
 {
@@ -70,13 +80,16 @@ resend_request(ATP ah)
     return 0;
 }
 
-/*
- * A response arrived that does not complete the transaction. Report "keep
- * waiting" only while retries remain: every caller loops while this returns 0,
- * and once resend_request() has spent the last retry `requesting` goes false,
- * which drops the select() timeout and leaves the next receive blocking with
- * nothing to break it. An exhausted transaction must therefore fail rather than
- * ask the caller to wait again.
+/*!
+ * @brief Report a response that leaves the transaction incomplete
+ *
+ * The callers loop while this returns 0, so the call returns 0 only while
+ * retries remain. After the last retry atp_rsel waits without a timeout, and
+ * a further wait could block with nothing to end it. The call fails with
+ * ETIMEDOUT instead.
+ *
+ * @param[in] ah  ATP endpoint
+ * @returns 0 while retries remain, or -1 with ETIMEDOUT
  */
 static int atp_resp_incomplete(ATP ah)
 {
@@ -89,10 +102,21 @@ static int atp_resp_incomplete(ATP ah)
 }
 
 /*!
- * @brief Receive ATP packets
- * @param ah open atp handle
- * @param faddr address to receive from
- * @param func which function(s) to wait for; 0 means request or response
+ * @brief Read ATP packets until a new request arrives or the pending response
+ * is complete
+ *
+ * While a request is pending, the call resends it after each timeout until
+ * the tries run out. A new request joins the queue for atp_rreq, and a
+ * duplicate of an answered exactly once request gets the saved response
+ * again. A response packet of the pending transaction fills its slot. ATP_EOM
+ * ends the response early, and ATP_STS sends the request again with the
+ * remaining bitmap. A complete exactly once response gets a TREL.
+ *
+ * @param[in]     ah     ATP endpoint
+ * @param[in,out] faddr  address to accept, receives the sender
+ * @param[in]     func   ATP_TREQ, ATP_TRESP, or 0 for both
+ * @returns ATP_TREQ, ATP_TRESP, 0 for a packet that completes nothing, or -1
+ *          for an error, ETIMEDOUT after the last try
  */
 int atp_rsel(ATP ah, struct sockaddr_at *faddr, int func)
 {

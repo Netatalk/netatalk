@@ -44,6 +44,21 @@
 #include "virtual_icon.h"
 #include "volume.h"
 
+/*!
+ * @brief Reply to FPGetFileDirParms for the virtual Icon file of the volume
+ * root
+ *
+ * The reply carries both bitmaps, the file flag, and the synthesized file
+ * parameters of virtual_icon_getfilparams.
+ *
+ * @param[in]  obj      session object
+ * @param[in]  vol      volume with the virtual icon
+ * @param[in]  fbitmap  AFP file bitmap
+ * @param[in]  dbitmap  AFP directory bitmap, echoed only
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  receives the reply length
+ * @returns AFP_OK, or the error of virtual_icon_getfilparams
+ */
 static int virtual_icon_reply(const AFPObj *obj, struct vol *vol,
                               uint16_t fbitmap, uint16_t dbitmap,
                               char *rbuf, size_t *rbuflen)
@@ -69,6 +84,24 @@ static int virtual_icon_reply(const AFPObj *obj, struct vol *vol,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPGetFileDirParms: return the parameters of a file or directory
+ *
+ * The reply carries the file and directory bitmaps, a flag that tells files
+ * from directories, and the parameters of getfilparams or getdirparams. The
+ * virtual Icon file of the volume root answers through virtual_icon_reply,
+ * by its CNID and by its name. A directory that the user cannot enter still
+ * reports its parameters.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM for an unknown volume, or another
+ *          AFPERR_* code
+ */
 int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                         char *rbuf, size_t *rbuflen)
 {
@@ -194,6 +227,23 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPSetFileDirParms: set the parameters of a file or directory
+ *
+ * The call dispatches to setdirparams or setfilparams by the type of the
+ * object. The virtual Icon file of the volume root refuses changes with
+ * AFPERR_OLOCK. A directory that the user cannot enter still accepts changes.
+ * The parameters start at the next even offset of the request, and success
+ * updates the volume modification time.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_VLOCK for a read-only volume, AFPERR_OLOCK,
+ *          AFPERR_NOOBJ, or another AFPERR_* code
+ */
 int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                         char *rbuf _U_, size_t *rbuflen)
 {
@@ -275,8 +325,13 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 }
 
 /*!
-  Factorise some checks on a pathname
-*/
+ * @brief Reject a name that the AppleDouble layout reserves or that the volume
+ * vetoes
+ *
+ * @param[in] vol   volume
+ * @param[in] name  Unix name of a file or directory
+ * @returns 0 for an acceptable name, AFPERR_EXIST otherwise
+ */
 int check_name(const struct vol *vol, char *name)
 {
     if (!vol->vfs->vfs_validupath(vol, name)) {
@@ -293,9 +348,32 @@ int check_name(const struct vol *vol, char *name)
 }
 
 /*!
-  @brief move and rename sdir:oldname to curdir:newname in volume vol
-  @note special care is needed for lock
-*/
+ * @brief Move and rename sdir/oldname to newname in the working directory
+ *
+ * A file takes its CNID from the database, and a directory passes itself as
+ * sdir and supplies the DID. The rename-inhibit attribute blocks the call
+ * unless the volume ignores it, and check_name screens the new name. An
+ * unchanged name succeeds at once. Inside one directory a name that another
+ * file holds fails with AFPERR_EXIST, and across directories any existing
+ * destination fails. So does a destination that this session holds open.
+ *
+ * After renamefile or renamedir succeeds, the dircache entry and its children
+ * follow. FCE and Spotlight get a move event. The AppleDouble metadata and the
+ * CNID record get the new parent and name, and sibling afpd processes get
+ * hints for the object and both parents.
+ *
+ * @param[in] obj      session object
+ * @param[in] vol      volume of both directories
+ * @param[in] sdir     source directory, or the directory itself when isdir is
+ *                     nonzero
+ * @param[in] sdir_fd  descriptor of the source directory, or -1 for the working
+ *                     directory
+ * @param[in] oldname  current Mac name
+ * @param[in] newname  new Mac name
+ * @param[in] isdir    nonzero when the object is a directory
+ * @returns AFP_OK, AFPERR_OLOCK, AFPERR_EXIST, AFPERR_PARAM, AFPERR_MISC, or
+ *          the error of renamefile or renamedir
+ */
 static int moveandrename(const AFPObj *obj,
                          struct vol *vol,
                          struct dir *sdir,
@@ -627,7 +705,22 @@ exit:
     return rc;
 }
 
-/* -------------------------------------------- */
+/*!
+ * @brief FPRename: rename a file or directory inside its parent directory
+ *
+ * The volume root fails with AFPERR_NORENAME, and the virtual Icon file of
+ * the volume root with AFPERR_OLOCK. An empty new name succeeds without work.
+ * The moveandrename call does the rest, and success updates the volume
+ * modification time.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_NORENAME, AFPERR_OLOCK, AFPERR_VLOCK, AFPERR_PARAM,
+ *          or the error of moveandrename
+ */
 int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                size_t *rbuflen)
 {
@@ -831,6 +924,19 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Delete the vetoed files in directory upath and then the directory
+ * itself
+ *
+ * Only a volume with AFPVOL_DELVETO allows it. The work happens in
+ * delete_vetoed_files_at, relative to the working directory. A directory that
+ * still holds files outside the veto list survives.
+ *
+ * @param[in] vol         volume of the directory
+ * @param[in] upath       directory name, relative to the working directory
+ * @param[in] in_vetodir  true when upath itself lies inside a vetoed directory
+ * @returns 0 when the directory went away, a negative value otherwise
+ */
 int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
 {
     int parent_fd;
@@ -851,7 +957,28 @@ int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
     return ret;
 }
 
-/* ------------------------------- */
+/*!
+ * @brief FPDelete: delete a file or an empty directory
+ *
+ * Deleting the virtual Icon file of the volume root fails with AFPERR_OLOCK,
+ * and the volume root itself fails with AFPERR_ACCESS. A directory that cname
+ * entered goes through deletecurdir. A directory that the user cannot enter
+ * goes through a direct rmdir, except on version 2 AppleDouble volumes. A
+ * file that this session holds open fails with AFPERR_BUSY. A file whose
+ * dircache inode no longer matches fails with AFPERR_NOOBJ.
+ *
+ * On a volume with AFPVOL_DELVETO a directory that holds only vetoed files
+ * still goes away. Success sends FCE and Spotlight events and tells sibling
+ * afpd processes.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_BUSY, AFPERR_DIRNEMPT, AFPERR_ACCESS, AFPERR_OLOCK,
+ *          AFPERR_NOOBJ, AFPERR_VLOCK, or another AFPERR_* code
+ */
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                size_t *rbuflen)
 {
@@ -1136,7 +1263,17 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return rc;
 }
 
-/* ------------------------ */
+/*!
+ * @brief Full path of the Unix name u inside dir
+ *
+ * The result lives in a static buffer that the next call overwrites.
+ *
+ * @param[in] vol  volume
+ * @param[in] dir  directory that holds u
+ * @param[in] u    Unix name
+ * @returns the full path, or NULL for a NULL argument or a path beyond
+ *          MAXPATHLEN
+ */
 char *absupath(const struct vol *vol, struct dir *dir, char *u)
 {
     static char pathbuf[MAXPATHLEN + 1];
@@ -1161,6 +1298,14 @@ char *absupath(const struct vol *vol, struct dir *dir, char *u)
     return pathbuf;
 }
 
+/*!
+ * @brief Full Unix path of a Mac name inside dir
+ *
+ * @param[in] vol   volume
+ * @param[in] dir   directory that holds the name
+ * @param[in] name  Mac name
+ * @returns the full path in the static buffer of absupath, or NULL on failure
+ */
 char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
 {
     if (vol == NULL || dir == NULL || name == NULL) {
@@ -1171,7 +1316,24 @@ char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
                                        utf8_encoding(vol->v_obj)));
 }
 
-/* ------------------------- */
+/*!
+ * @brief FPMoveAndRename: move a file or directory into another directory, with
+ * a new name if given
+ *
+ * The request names the source by DID and path and the destination directory
+ * by DID and path, followed by the new name. An empty new name keeps the old
+ * one. The virtual Icon file of the volume root cannot move. Without UNIX
+ * privileges a moved file takes the mode that its new directory implies, plus
+ * the volume file permissions. Success updates the volume modification time.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_OLOCK, AFPERR_VLOCK, AFPERR_NOOBJ, AFPERR_PARAM, or
+ *          the error of moveandrename
+ */
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                       char *rbuf _U_, size_t *rbuflen)
 {
@@ -1304,10 +1466,14 @@ exit:
 }
 
 /*!
- * @brief given a veto_str like "abc/zxc/" and path "abc", return 1
- * @note veto_str should be '/' delimited
- * @returns if path matches any one of the veto_str elements exactly, then 1 is returned
- * otherwise, 0 is returned.
+ * @brief Whether path matches one entry of a slash-separated veto list
+ *
+ * The list has the form "abc/zxc/", and an entry must equal path exactly,
+ * byte for byte.
+ *
+ * @param[in] veto_str  veto list with a slash after every entry, or NULL
+ * @param[in] path      name to test, or NULL
+ * @returns 1 for a match, 0 otherwise
  */
 int veto_file(const char *veto_str, const char *path)
 {

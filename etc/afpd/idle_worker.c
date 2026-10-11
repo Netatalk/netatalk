@@ -135,11 +135,14 @@ void iw_log_stats(void) { }
 #else /* ATOMIC_INT_LOCK_FREE == 2 */
 
 /*!
- * @brief Work-pending predicate.
+ * @brief Tell whether work for the idle worker is still in its queues
  *
- * Only valid on the worker thread while iw_is_working==1: inside that
- * window main is either blocked in poll() or waiting in iw_wait_release(),
- * so the non-atomic queue reads cannot race with producer writes.
+ * Only the worker thread calls it, while iw_is_working is 1. The main thread
+ * then blocks in poll or waits in iw_wait_release, so the plain queue reads
+ * cannot race with a producer.
+ *
+ * @returns nonzero while invalid dircache entries or deferred chain scans
+ *          remain
  */
 static int iw_work_pending(void)
 {
@@ -149,16 +152,24 @@ static int iw_work_pending(void)
 }
 
 /*!
- * @brief Worker thread main loop.
+ * @brief Run the idle worker thread
  *
- * Single tier: sleep IW_WAKE_MS, then act only on a granted window.
- * iw_can_work==1 implies work exists (main grants only with iw_has_work
- * set), so no discovery pass is needed.
+ * The thread blocks the asynchronous signals, which belong to the main
+ * thread, and keeps SIGSEGV and SIGBUS deliverable for the fault handler. It
+ * wakes every IW_WAKE_MS ms and works only inside a granted window. A grant
+ * implies queued work, so the thread needs no discovery pass.
  *
- * Dekker start: iw_is_working is published BEFORE the re-check of
- * iw_can_work. Either this thread sees the revoke and aborts before
- * touching shared data, or main sees iw_is_working==1 and waits in
- * iw_wait_release() — seq_cst guarantees at least one of the two.
+ * The start follows Dekker: the thread publishes iw_is_working before it
+ * checks iw_can_work again. Either it sees a revoke and aborts before it
+ * touches shared data, or the main thread sees iw_is_working and waits in
+ * iw_wait_release. Sequential consistency guarantees one of the two.
+ *
+ * The thread frees the invalid dircache entries first and then runs the
+ * deferred chain scans, checking iw_can_work before each unit. Only a full
+ * drain clears iw_has_work.
+ *
+ * @param[in] arg  unused
+ * @returns NULL once iw_shutdown sets the shutdown flag
  */
 static void *iw_main(void *arg)
 {
@@ -279,13 +290,13 @@ static void iw_wait_release(void)
 }
 
 /*!
- * @brief Initialize the idle worker thread.
+ * @brief Start the idle worker thread of a session
  *
- * Must be called once during session init, after dircache_init().
- * Must be called in the afpd child session process (post-fork).
- * The child process does not fork again.
+ * The session child calls it once after dircache_init and never forks again.
+ * A failed start leaves the synchronous fallback paths in use. A build
+ * without lock-free int atomics has no worker and always returns -1.
  *
- * Returns -1 (triggering synchronous fallback) if pthread_create() fails.
+ * @returns 0, or -1 when pthread_create fails
  */
 int iw_init(void)
 {
@@ -417,8 +428,11 @@ void iw_shutdown(void)
 }
 
 /*!
- * @brief Revoke-check accessor for worker-side drain code outside this file
- *        (dircache_process_deferred_chain per-removal check).
+ * @brief Tell worker-side code outside this file whether the grant still holds
+ *
+ * The deferred chain scan of the dircache checks it before each removal.
+ *
+ * @returns nonzero while the main thread grants the window
  */
 int iw_grant_active(void)
 {
@@ -426,8 +440,11 @@ int iw_grant_active(void)
 }
 
 /*!
- * @brief True when the worker thread is running (synchronous fallbacks
- *        apply when it is not).
+ * @brief Tell whether the idle worker thread runs
+ *
+ * Without the thread the callers take their synchronous fallback paths.
+ *
+ * @returns nonzero after a successful iw_init and before iw_shutdown ends
  */
 int iw_is_active(void)
 {

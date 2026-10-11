@@ -234,11 +234,18 @@ EC_CLEANUP:
 }
 
 /*!
-  @brief Maps ACE array from Solaris to Darwin.
-  @returns number of mapped ACEs or -1 on error.
-  @note Darwin ACEs are stored in network byte order.
-  @note All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
-*/
+ * @brief Map NFSv4 ACEs to Darwin ACEs
+ *
+ * The owner@, group@, and everyone@ entries drop out, and so do entries of
+ * types other than allow and deny. User and group IDs become UUIDs, and
+ * flags and rights map through the translation tables. Darwin ACEs use network
+ * byte order. A failed name or UUID lookup fails the entire mapping.
+ *
+ * @param[in]  aces         NFSv4 ACEs
+ * @param[out] darwin_aces  receives the Darwin ACEs
+ * @param[in]  ace_count    number of entries in aces
+ * @returns the number of mapped ACEs, or -1 on failure
+ */
 static int map_aces_solaris_to_darwin(const ace_t *aces,
                                       darwin_ace_t *darwin_aces,
                                       int ace_count)
@@ -316,11 +323,18 @@ EC_CLEANUP:
 }
 
 /*!
-  @brief Maps ACE array from Darwin to Solaris.
-  @returns number of mapped ACEs or -1 on error.
-  @note Darwin ACEs are expected in network byte order.
-  @note All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
-*/
+ * @brief Map Darwin ACEs to NFSv4 ACEs
+ *
+ * UUIDs become user or group IDs. The allow and deny types, the flags, and the
+ * rights map through the translation tables, and entries of other types drop
+ * out. Darwin ACEs come in network byte order. A failed name or UUID lookup
+ * fails the entire mapping.
+ *
+ * @param[in]  darwin_aces  Darwin ACEs from the client
+ * @param[out] nfsv4_aces   receives the NFSv4 ACEs
+ * @param[in]  ace_count    number of entries in darwin_aces
+ * @returns the number of mapped ACEs, or -1 on failure
+ */
 static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
                                       ace_t *nfsv4_aces,
                                       int ace_count)
@@ -419,6 +433,18 @@ EC_CLEANUP:
 
 #ifdef HAVE_POSIX_ACLS
 
+/*!
+ * @brief Darwin rights that the permission set of a POSIX ACL entry grants
+ *
+ * Read grants the read data, attribute, extended attribute, and security
+ * rights. Write grants the write data, append, attribute, and extended
+ * attribute rights, plus delete child on a directory. Execute grants the
+ * execute right.
+ *
+ * @param[in] e       POSIX ACL entry
+ * @param[in] is_dir  nonzero for a directory
+ * @returns the Darwin rights, 0 when the permission set is unreadable
+ */
 static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
 {
     EC_INIT;
@@ -1008,9 +1034,17 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Map ACEs from POSIX to Darwin.
- * @returns number of mapped ACES, -1 on error.
- * @note type is either POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN, cf. acl_get_file.
+ * @brief Map the named user and group entries of a POSIX ACL to Darwin ACEs
+ *
+ * Every mapped entry allows its rights, and the mask entry limits them all.
+ * Entries of a default ACL also carry the file inherit, directory inherit, and
+ * inherit-only flags. Owner, owning group, and other entries drop out.
+ *
+ * @param[in]  type         POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN,
+ *                          plus IS_DIR
+ * @param[in]  acl          POSIX ACL from acl_get_file
+ * @param[out] darwin_aces  receives the Darwin ACEs in network byte order
+ * @returns the number of mapped ACEs, or -1 on failure
  */
 static int map_acl_posix_to_darwin(int type, const acl_t acl,
                                    darwin_ace_t *darwin_aces)
@@ -1107,15 +1141,21 @@ EC_CLEANUP:
 #endif
 
 /*!
- * @brief Multiplex ACL mapping (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
+ * @brief Dispatch an ACL mapping between Darwin and the ACL model of the
+ * platform
  *
- * Reads from 'aces' buffer, writes to 'rbuf' buffer.
- * Caller must provide buffer.
- * Darwin ACEs are read and written in network byte order.
- * Needs to know how many ACEs are in the ACL (ace_count) for Solaris ACLs.
- * Ignores trivial ACEs.
+ * Darwin ACEs use network byte order in both directions, and entries that
+ * mirror the mode bits drop out. The DARWIN_2_POSIX types map nothing here,
+ * because set_acl maps those itself.
  *
- * @returns no of mapped ACEs or -1 on error.
+ * @param[in]     type       SOLARIS_2_DARWIN, DARWIN_2_SOLARIS,
+ *                           POSIX_DEFAULT_2_DARWIN, or POSIX_ACCESS_2_DARWIN,
+ *                           plus IS_DIR
+ * @param[in,out] acl        platform ACL to read, or NFSv4 ACE buffer to fill
+ * @param[in,out] buf        Darwin ACE buffer to fill, or Darwin ACEs to read
+ * @param[in]     ace_count  number of ACEs in the source, for the NFSv4 types
+ * @returns the number of mapped ACEs, 0 for the DARWIN_2_POSIX types, or -1 on
+ *          failure
  */
 static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 {
@@ -1160,11 +1200,17 @@ static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 }
 
 /*!
-   @brief Get ACL from object omitting trivial ACEs.
-
-   Map to Darwin ACL style and store Darwin ACL at rbuf.
-   Add length of ACL written to rbuf to *rbuflen.
-   @returns 0 on success, -1 on error. */
+ * @brief Convert the ACL of name to Darwin form and write it to rbuf
+ *
+ * Entries that mirror the mode bits stay out. The Darwin ACL header carries
+ * the entry count and zero flags. A directory on a POSIX system lists its
+ * default ACL entries ahead of the access ACL entries.
+ *
+ * @param[in]     name     file or directory
+ * @param[out]    rbuf     reply position receiving the Darwin ACL
+ * @param[in,out] rbuflen  reply length, advanced by the bytes written
+ * @returns 0, or -1 on failure
+ */
 static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 {
     EC_INIT;
@@ -1241,8 +1287,17 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Removes all non-trivial ACLs from object.
- * @returns full AFPERR code. */
+ * @brief Reduce the ACLs of an object and its AppleDouble file to the entries
+ * that mirror the mode bits
+ *
+ * The vfs_remove_acl hooks cover the AppleDouble file first, and the object
+ * itself follows.
+ *
+ * @param[in] vol   volume of the object
+ * @param[in] path  file or directory
+ * @param[in] dir   nonzero when path is a directory
+ * @returns AFP_OK, or the AFPERR_* code of the first failure
+ */
 static int remove_acl(const struct vol *vol, const char *path, int dir)
 {
     int ret = AFP_OK;
@@ -1265,16 +1320,21 @@ static int remove_acl(const struct vol *vol, const char *path, int dir)
 }
 
 /*!
-  @brief Set ACL.
-
-  @note Subtleties:
-  - the client sends a complete list of ACEs, not only new ones. So we don't need to do
-  any combination business (one exception being 'kFileSec_Inherit': see next)
-  - client might request that we add inherited ACEs via 'kFileSec_Inherit'.
-  We will store inherited ACEs first, which is Darwins canonical order.
-
-  @returns AFPerror code
-*/
+ * @brief Replace the NFSv4 ACL of a file or directory with the ACEs of a client
+ *
+ * The client sends the complete list, so nothing merges. When inherit is
+ * nonzero, the new ACL starts with the local inherited entries, in the
+ * canonical Darwin order. The client entries follow, then the existing
+ * owner@, group@, and everyone@ entries. The AppleDouble file gets the same
+ * ACL first.
+ *
+ * @param[in] vol        volume of the object
+ * @param[in] name       file or directory
+ * @param[in] inherit    nonzero to keep the inherited entries of the object
+ * @param[in] daces      client ACEs in network byte order
+ * @param[in] ace_count  number of entries in daces
+ * @returns AFP_OK, AFPERR_ACCESS, AFPERR_NOITEM, AFPERR_PARAM, or AFPERR_MISC
+ */
 #ifdef HAVE_NFSV4_ACLS
 static int set_acl(const struct vol *vol,
                    char *name,
@@ -1410,6 +1470,13 @@ EC_CLEANUP:
 
 #ifdef HAVE_POSIX_ACLS
 #ifndef HAVE_ACL_FROM_MODE
+/*!
+ * @brief Build a minimal POSIX ACL with owner, group, and other entries from a
+ * mode
+ *
+ * @param[in] mode  Unix mode whose permission bits to use
+ * @returns the new ACL, or NULL when an ACL call failed
+ */
 static acl_t acl_from_mode(mode_t mode)
 {
     acl_t acl;
@@ -1492,6 +1559,22 @@ error:
 }
 #endif
 
+/*!
+ * @brief Replace the extended POSIX ACL entries of a file or directory with the
+ * ACEs of a client
+ *
+ * The call deletes the extended entries of the access ACL and maps the client
+ * ACEs into the access and default ACLs. It then recomputes the masks and
+ * validates both ACLs. A directory with a default ACL keeps it in step. The
+ * AppleDouble file gets the same ACLs through the vfs_posix_acl hooks.
+ *
+ * @param[in] vol        volume of the object
+ * @param[in] name       file or directory
+ * @param[in] inherit    unused
+ * @param[in] daces      client ACEs in network byte order
+ * @param[in] ace_count  number of entries in daces
+ * @returns AFP_OK, AFPERR_NOOBJ, or AFPERR_MISC
+ */
 static int set_acl(const struct vol *vol,
                    const char *name,
                    int inherit _U_,
@@ -1746,6 +1829,21 @@ EC_CLEANUP:
  * Interface
  ********************************************************/
 
+/*!
+ * @brief FPAccess: test whether the user that a UUID names holds the requested
+ * rights on an object
+ *
+ * The request carries the UUID, the Darwin rights to test, and the path. The
+ * check_acl_access call evaluates the ACL of the object.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK when the rights hold, AFPERR_ACCESS when they do not,
+ *          AFPERR_NOOBJ, or AFPERR_PARAM
+ */
 int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                size_t *rbuflen)
 {
@@ -1803,6 +1901,22 @@ int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return ret;
 }
 
+/*!
+ * @brief FPGetACL: return the owner UUID, the group UUID, and the ACL of an
+ * object
+ *
+ * The bitmap selects the parts, and the reply echoes it first. An owner or
+ * group without a name maps to a local UUID built from the ID. The ACL omits
+ * the entries that mirror the mode bits.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block
+ * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
+ *                         return
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, or AFPERR_MISC
+ */
 int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                size_t *rbuflen)
 {
@@ -1921,6 +2035,23 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return AFP_OK;
 }
 
+/*!
+ * @brief FPSetACL: remove or replace the ACL of an object
+ *
+ * Owner and group UUID changes succeed without effect. kFileSec_REMOVEACL
+ * reduces the ACL to the entries that mirror the mode bits, and kFileSec_ACL
+ * replaces it with the client ACEs. kFileSec_Inherit keeps the inherited
+ * entries. Both changes refresh the dircache entry and tell the sibling afpd
+ * processes.
+ *
+ * @param[in]     obj      session object
+ * @param[in]     ibuf     request block
+ * @param[in]     ibuflen  request block length, unused
+ * @param[out]    rbuf     reply block, unused
+ * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, AFPERR_MISC, or the error of
+ *          remove_acl
+ */
 int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                size_t *rbuflen)
 {
@@ -2112,10 +2243,18 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  ********************************************************************/
 
 /*!
- * @brief map ACL to user maccess
+ * @brief Fold the ACL of path into the AFP access rights of the session user
  *
- * This is the magic function that makes ACLs usable by calculating
- * the access granted by ACEs to the logged in user.
+ * Only OPTION_ACL2MACCESS or OPTION_ACL2MODE turns it on. On NFSv4 systems
+ * solaris_acl_rights computes the rights that the ACEs grant the user, and on
+ * POSIX systems posix_acls_to_uaperms does.
+ *
+ * @param[in]     obj   session object
+ * @param[in]     vol   volume of the path
+ * @param[in]     path  file or directory
+ * @param[in]     st    stat of path
+ * @param[in,out] ma    access rights to refine
+ * @returns 0, or -1 when reading the ACL failed
  */
 int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path,
                    struct stat *st, struct maccess *ma)

@@ -21,6 +21,21 @@
 
 #include <atalk/logger.h>
 
+/*!
+ * @brief Write test messages through the netatalk logger to syslog and to
+ * test.log
+ *
+ * Each message names its level and its type and states whether it should
+ * appear, so a reader checks the output by eye. The first part logs to
+ * syslog under the default:severe and the default:info settings. The second
+ * part logs to test.log in the current directory under default:severe,
+ * dsi:maxdebug, and default:debug. The last part logs runs of repeated
+ * messages.
+ *
+ * @param[in] argc  argument count, unused
+ * @param[in] argv  argument vector, unused
+ * @returns 0
+ */
 int main(int argc _U_, char *argv[] _U_)
 {
     set_processname("logger_Test");

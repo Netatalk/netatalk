@@ -324,15 +324,13 @@ exit:
 }
 
 /*!
- * @brief convert an IPv4 or IPv6 address to a static string using inet_ntop
+ * @brief Convert an IPv4 or IPv6 address to a static string with inet_ntop
  *
- * IPv6 mapped IPv4 addresses are returned as IPv4 addreses e.g.
- * ::ffff:10.0.0.0 is returned as "10.0.0.0".
+ * An IPv6-mapped IPv4 address comes back as the IPv4 address: `::ffff:10.0.0.0`
+ * becomes "10.0.0.0".
  *
- * @param[in]  sa        pointer to an struct sockaddr
- *
- * @returns pointer to a static string cotaining the converted address as string.
- * @returns On error pointers to "0.0.0.0" or "::0" are returned.
+ * @param[in] sa  pointer to a struct sockaddr
+ * @returns a static string with the address, or "0.0.0.0" or "::0" on error
  */
 const char *getip_string(const struct sockaddr *sa)
 {
@@ -569,7 +567,10 @@ EC_CLEANUP:
 }
 
 /*!
- * Allocate and initialize atalk socket event struct
+ * @brief Allocate an empty poll set with room for max descriptors
+ *
+ * @param[in] max  capacity of the poll and data arrays
+ * @returns the set, or NULL when an allocation fails
  */
 struct asev *asev_init(int max)
 {
@@ -596,10 +597,18 @@ struct asev *asev_init(int max)
 }
 
 /*!
- * @brief Add a fd to a dynamic pollfd array and associated data array
+ * @brief Append a descriptor to a poll set, watched for POLLIN
  *
- * This uses an additional array of struct polldata which stores type
- * information (enum fdtype) and a pointer to anciliary user data.
+ * A second array holds the type, the private data, and the protocol of each
+ * entry, at the same index as its pollfd.
+ *
+ * @param[in,out] asev      poll set
+ * @param[in]     fd        descriptor
+ * @param[in]     fdtype    type that the poll loop dispatches on
+ * @param[in]     private   data of the entry, such as a child or a DSI
+ * @param[in]     protocol  AFPPROTO_DSI or AFPPROTO_ASP for a listener, 0
+ *                          otherwise
+ * @returns true, or false for a NULL or full set
  */
 bool asev_add_fd(struct asev *asev,
                  int fd,
@@ -625,9 +634,13 @@ bool asev_add_fd(struct asev *asev,
 }
 
 /*!
- * @brief Remove fd from asev
+ * @brief Remove a descriptor from a poll set, keeping the order of the others
  *
- * @returns true if the fd was deleted, otherwise false
+ * The entries after it move down by one.
+ *
+ * @param[in,out] asev  poll set
+ * @param[in]     fd    descriptor
+ * @returns true when the set held fd, false otherwise
  */
 bool asev_del_fd(struct asev *asev, int fd)
 {
@@ -751,7 +764,14 @@ int recv_fd(int fd, int nonblocking)
 }
 
 /*!
- * Send a fd across a suitable socket
+ * @brief Pass a descriptor over a Unix socket with SCM_RIGHTS
+ *
+ * The descriptor needs data to travel with, so the message carries an int of
+ * 0. The call repeats sendmsg after EINTR.
+ *
+ * @param[in] socket  PF_UNIX socket
+ * @param[in] fd      descriptor to pass
+ * @returns 0, or -1 when malloc or sendmsg fails
  */
 int send_fd(int socket, int fd)
 {

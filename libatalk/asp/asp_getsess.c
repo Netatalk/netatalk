@@ -45,15 +45,15 @@ static server_child_t *children = NULL;
 static struct asp_child    **asp_ac = NULL;
 
 /*!
- * @brief send tickles and check tickle status of connections
+ * @brief Age each session on SIGALRM, tickle the live ones, and end the silent
+ * ones
  *
- * thoughts on using a hashed list:
- * - + child_cleanup, finding slots
- * - - tickle_handler, freeing, tickles
+ * Each tick raises the state of every live session slot, and a tickle from
+ * the workstation sets it back to ACSTATE_OK. A session that reaches
+ * ACSTATE_BAD, six ticks without a tickle, gets SIGTERM and the dead state.
+ * Every other live session gets a tickle from the server.
  *
- * if setup for a large number of connections:
- * - + space: if actual connections < potential
- * - - space: actual connections ~ potential
+ * @param[in] sig  signal number, unused
  */
 static void tickle_handler(int sig _U_)
 {
@@ -80,7 +80,11 @@ static void tickle_handler(int sig _U_)
     }
 }
 
-/*! kill children */
+/*!
+ * @brief Send a signal to every ASP session child of the server
+ *
+ * @param[in] sig  signal to send
+ */
 void asp_kill(int sig)
 {
     if (children) {
@@ -88,6 +92,10 @@ void asp_kill(int sig)
     }
 }
 
+/*!
+ * @brief Stop the tickle timer of the ASP server, once asp_getsession has set
+ * it up
+ */
 void asp_stop_tickle(void)
 {
     if (server_asp && server_asp->inited) {
@@ -99,10 +107,26 @@ void asp_stop_tickle(void)
 static void set_asp_ac(int sid, struct asp_child *tmp);
 
 /*!
- * @brief This call handles open, tickle, and getstatus requests.
- * @note On a successful open, it forks a child process.
- * @returns an ASP to the child and parent and NULL if there is
- * an error.
+ * @brief Serve one request on the ASP server socket: a session open, a tickle,
+ * or a status request
+ *
+ * The first call sets up the session slot table and a SIGALRM timer that runs
+ * tickle_handler every tickleval seconds. A status request gets the server
+ * status, cut to the packets the requester asks for. A tickle refreshes the
+ * slot of its session.
+ *
+ * An open request with a free slot gets a new ATP socket, an IPC socket pair,
+ * and a hint pipe, then a fork. The child returns the session, with
+ * asp->child set. The parent records the child, answers with the session
+ * socket and the session ID, or ASPERR_SERVBUSY on any failure, and returns
+ * the server object.
+ *
+ * @param[in,out] asp              server object
+ * @param[in]     server_children  child table of the server
+ * @param[in]     tickleval        seconds between tickles, 0 for none
+ * @param[out]    childp           receives the new child in the parent, or NULL
+ * @returns the session in the child, the server object in the parent, or NULL
+ *          for a failed read or setup
  */
 ASP asp_getsession(ASP asp, server_child_t *server_children,
                    const int tickleval, afp_child_t **childp)
@@ -418,7 +442,16 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
     return asp;
 }
 
-/* with fn defined after use, assume it's not optimized by the compiler */
+/*!
+ * @brief Store a child record in the session slot table
+ *
+ * The store sits in a separate function, defined after its use, to keep the
+ * compiler from moving it ahead of the record setup. The SIGALRM handler
+ * tickle_handler reads the table at any time.
+ *
+ * @param[in] sid  session slot
+ * @param[in] tmp  filled child record
+ */
 static void set_asp_ac(int sid, struct asp_child *tmp)
 {
     asp_ac[sid] = tmp;

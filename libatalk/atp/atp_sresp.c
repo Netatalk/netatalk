@@ -46,9 +46,18 @@
 #endif /* EBUG */
 
 /*!
- * @brief send a transaction response
- * @param ah         open atp handle
- * @param atpb       parameter block
+ * @brief Send the response to the last received ATP request
+ *
+ * Each response vector entry becomes a packet with its sequence number, and
+ * the last one carries ATP_EOM. For an exactly once request the endpoint
+ * keeps the packets until a TREL or the release time, so a duplicate request
+ * gets them again.
+ *
+ * @param[in] ah    ATP endpoint
+ * @param[in] atpb  parameter block: the destination and the response vector of
+ *                  1 to 8 entries of up to ATP_MAXDATA bytes
+ * @returns 0, or -1 with EINVAL for a bad vector, or for a failed allocation or
+ *          send
  */
 int atp_sresp(ATP ah, struct atp_block *atpb)
 {

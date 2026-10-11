@@ -128,8 +128,15 @@ static unsigned int dircache_maxsize;
  * so closing a volume with nothing cached costs one read, not a table scan */
 static uint32_t     vid_entry_count[UINT16_MAX + 1];
 
-/* Accessor for chain-level iteration — used by dircache_process_deferred_chain()
- * and dircache_flush_deferred_for_vol() */
+/*!
+ * @brief First node of one chain of a hash table
+ *
+ * The deferred child scans walk the dircache one chain at a time with it.
+ *
+ * @param[in] hash   hash table
+ * @param[in] chain  chain index
+ * @returns the first node, or NULL for an empty chain or an index out of range
+ */
 static inline hnode_t *hash_chain_head(hash_t *hash, hashcount_t chain)
 {
     return (chain < hash->hash_nchains) ? hash->hash_table[chain] : NULL;
@@ -337,7 +344,12 @@ static struct {
 /* Ghost mid-promotion: arc_replace() can trim the very list it is leaving */
 static const struct dir *arc_promoting_ghost = NULL;
 
-/* FNV 1a - inline for performance */
+/*!
+ * @brief FNV-1a hash of the volume ID and directory ID of a dircache entry
+ *
+ * @param[in] key  struct dir whose d_vid and d_did to hash
+ * @returns the hash value
+ */
 static inline hash_val_t hash_vid_did(const void *key)
 {
     const struct dir *k = (const struct dir *)key;
@@ -357,6 +369,13 @@ static inline hash_val_t hash_vid_did(const void *key)
     return hash;
 }
 
+/*!
+ * @brief Compare two dircache keys by volume ID and directory ID
+ *
+ * @param[in] key1  first struct dir
+ * @param[in] key2  second struct dir
+ * @returns 0 when both keys carry the same d_vid and d_did, 1 otherwise
+ */
 static inline int hash_comp_vid_did(const void *key1, const void *key2)
 {
     const struct dir *k1 = key1;
@@ -533,15 +552,18 @@ void dircache_purge_vol(const struct vol *vol)
 }
 
 /*!
- * @brief Hash-removed entry: defer its free to end-of-request.
+ * @brief Queue a dircache entry that left every index for a later free
  *
- * Caller must have removed the entry from both hash indexes and every
- * ARC/LRU queue. Deferring keeps pointers handed out earlier in this
- * request valid (consumers gate on d_did != CNID_INVALID) — ARC ghost
- * eviction can reach entries that WERE returned this request, so an
- * inline free here could dangle a held pointer. On qnode OOM (effectively
- * unreachable: the kernel OOM killer fires first) leak the entry instead;
- * dir_remove makes the same choice.
+ * The caller first removes the entry from both hash indexes and every ARC and
+ * LRU queue. The entry gets CNID_INVALID as its DID, so pointers that this
+ * request handed out earlier stay valid and their holders see the entry as
+ * stale. ARC ghost eviction can reach entries returned during the same
+ * request, so an immediate free could leave a dangling pointer.
+ * dir_free_invalid_q frees the queue at the end of every AFP request, and the
+ * idle worker drains it while afpd waits in poll. When enqueue cannot allocate
+ * a queue node, the entry leaks, as in dir_remove.
+ *
+ * @param[in,out] dir  entry to retire
  */
 static void dircache_defer_free(struct dir *dir)
 {
@@ -1154,6 +1176,15 @@ static hash_t *index_didname;
                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
+/*!
+ * @brief Hash of the volume ID, parent DID, and name of a dircache entry
+ *
+ * The didname index uses it. The mixing follows the SuperFastHash algorithm
+ * by Paul Hsieh over the bytes of d_u_name, seeded with d_pdid plus d_vid.
+ *
+ * @param[in] p  struct dir whose d_vid, d_pdid, and d_u_name to hash
+ * @returns the hash value
+ */
 static inline hash_val_t hash_didname(const void *p)
 {
     const struct dir *key = (const struct dir *)p;
@@ -1204,6 +1235,13 @@ static inline hash_val_t hash_didname(const void *p)
     return hash;
 }
 
+/*!
+ * @brief Compare two dircache entries by volume ID, parent DID, and name
+ *
+ * @param[in] k1  first struct dir
+ * @param[in] k2  second struct dir
+ * @returns 0 when volume ID, parent DID, and name all match, 1 otherwise
+ */
 static inline int hash_comp_didname(const void *k1, const void *k2)
 {
     const struct dir *key1 = (const struct dir *)k1;
@@ -1305,9 +1343,18 @@ static void dircache_evict(void)
  * Interface
  ********************************************************/
 
-/* The file-vs-directory gone-event mapping is a sender invariant the hint
- * receiver keys on (CACHE_HINT_DELETE is treated as file-only when
- * deciding whether a pfd slot may exist) — one definition only. */
+/*!
+ * @brief Cache hint event to send when dir disappears
+ *
+ * Files map to CACHE_HINT_DELETE and directories to
+ * CACHE_HINT_DELETE_CHILDREN. Receivers treat CACHE_HINT_DELETE as file-only
+ * when they decide whether a pfd slot may exist. The mapping therefore has a
+ * single definition.
+ *
+ * @param[in] dir  dircache entry that disappeared
+ * @returns CACHE_HINT_DELETE for a file, CACHE_HINT_DELETE_CHILDREN for a
+ *          directory
+ */
 static uint8_t gone_event_for(const struct dir *dir)
 {
     return (dir->d_flags & DIRF_ISFILE)
@@ -1316,11 +1363,16 @@ static uint8_t gone_event_for(const struct dir *dir)
 }
 
 /*!
- * @brief Validation discovered the entry gone: expunge + hint siblings.
+ * @brief Expunge an entry that validation found gone and tell the sibling afpd
+ * processes
  *
- * One pipe message replaces each sibling re-discovering the change by its
- * own full-path stat. The hint reports evidence (gone); a same-named
- * recreate is harmless — hints only invalidate, receivers rebuild.
+ * One hint message saves every sibling afpd a separate full-path stat. The
+ * hint reports the evidence. A recreated object of the same name does no
+ * harm, because hints only invalidate and receivers rebuild. The call counts
+ * the expunge as a cache miss.
+ *
+ * @param[in]     vol   volume of the entry
+ * @param[in,out] cdir  entry to expunge, invalid afterwards
  */
 static void validation_expunge_and_hint(const struct vol *vol,
                                         struct dir *cdir)
@@ -1335,17 +1387,24 @@ static void validation_expunge_and_hint(const struct vol *vol,
 }
 
 /*!
- * @brief Validation saw an ino/ctime change: refresh in-place + hint.
+ * @brief Refresh an entry whose inode or ctime changed and tell the sibling
+ * afpd processes
  *
- * Hints: an inode change (object replaced) broadcasts REFRESH under the
- * entry's current DID and, when dir_modify re-keyed it, under the old DID
- * too — siblings cache the object under the old key. A ctime-only change
- * sends nothing: fork writes advance ctime on every flush, and
- * broadcasting those would rebuild sibling AD/rfork caches per write;
- * pure metadata changes propagate via each sibling's own validation.
+ * An inode change means another object replaced the entry. The call then
+ * sends CACHE_HINT_REFRESH under the current DID. When dir_modify gave
+ * the entry a new DID, a second hint goes out under the old DID that siblings
+ * still cache. When dir_modify evicted the entry instead, the gone event of
+ * the entry goes out under the old DID.
  *
- * @returns 0 if the entry survived (refreshed in-place), -1 if dir_modify
- *          evicted it (inode change + CNID miss) — hint sent either way.
+ * A ctime-only change sends nothing. Fork writes advance ctime on every
+ * flush, and a hint per write would rebuild the sibling AppleDouble and
+ * resource fork caches. Each sibling picks up pure metadata changes when it
+ * validates the entry itself.
+ *
+ * @param[in]     vol   volume of the entry
+ * @param[in,out] cdir  entry to refresh
+ * @param[in]     st    fresh stat of the entry
+ * @returns 0 when the entry survived, -1 when dir_modify evicted it
  */
 static int validation_refresh_and_hint(const struct vol *vol,
                                        struct dir *cdir, struct stat *st)
@@ -1383,12 +1442,16 @@ static int validation_refresh_and_hint(const struct vol *vol,
 }
 
 /*!
- * @brief Plain index probe for pfd_cache parent resolution.
+ * @brief Look up a directory entry by DID for pfd_cache parent resolution
  *
- * Never validates, never mutates, never promotes. Filters ARC ghosts
- * (their identity fields are frozen and unvalidated — treating one as a
- * live parent would let the pfd sync-check pass against stale identity)
- * and file entries (a parent must be a directory).
+ * The probe never validates, changes, or promotes the entry. It skips ARC
+ * ghosts. A ghost keeps frozen, unvalidated identity fields, so accepting one
+ * as a live parent would let the pfd sync test pass against stale identity.
+ * It also skips file entries, because a parent is a directory.
+ *
+ * @param[in] vol  volume of the entry
+ * @param[in] did  directory ID
+ * @returns the entry, or NULL for an invalid DID, a miss, a ghost, or a file
  */
 struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did)
 {
@@ -1873,11 +1936,17 @@ int dircache_add(const struct vol *vol,
 }
 
 /*!
- * @brief A stored index node does not name its entry: unrecoverable
+ * @brief Abort afpd because an index node names an entry other than its owner
  *
- * Every node is created with its entry as data and freed only through the
- * entry's own removal, so a mismatch means memory corruption or a foreign
- * delete. Freeing what a table still points at cannot be survived.
+ * Every node starts with its entry as data and goes away only when that entry
+ * leaves the index. A mismatch therefore means memory corruption or a foreign
+ * delete. Freeing an entry that a table still references would corrupt the
+ * cache, so the call logs both entries, dumps the dircache, and panics.
+ *
+ * @param[in] index_name  name of the index, for the log line
+ * @param[in] dir         entry that dircache_remove works on
+ * @param[in] node        node that the entry stores, or NULL
+ * @param[in] found       entry that the node names, or NULL
  */
 static void dircache_mismatch_panic(const char *index_name,
                                     const struct dir *dir, const void *node,
@@ -1896,16 +1965,21 @@ static void dircache_mismatch_panic(const char *index_name,
 }
 
 /*!
-  * @brief Remove an entry from the dircache
-  *
-  * Deletes the entry's own stored nodes, so removal can never cost another
-  * entry its node. A NULL node means the entry is not in that index and it
-  * is skipped; a node naming a different entry panics before anything is
-  * mutated or followed.
-  *
-  * Callers outside of dircache.c should call this with
-  * flags = QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE.
-  */
+ * @brief Remove an entry from the dircache indexes and queues that flags name
+ *
+ * The call removes only the nodes that the entry stores, so it never costs
+ * another entry its node. An index that holds no node for the entry stays
+ * untouched. A node that names a different entry panics before anything
+ * changes, and so does a DIRF_INDEXED entry without a dircache node.
+ * Removing a directory from the dircache also purges its pfd slot. Callers
+ * outside dircache.c pass QUEUE_INDEX, DIDNAME_INDEX, and DIRCACHE.
+ *
+ * @param[in]     vol    unused
+ * @param[in,out] dir    entry to remove
+ * @param[in]     flags  QUEUE_INDEX, DIDNAME_INDEX, DIRCACHE, and
+ *                       DIRCACHE_NOSHRINK to remove hash nodes without
+ *                       shrinking the tables during a scan
+ */
 void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 {
     AFP_ASSERT(dir);
@@ -2847,17 +2921,26 @@ void dircache_reset_validation_counter(void)
     (IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload)))
 
 /*!
- * @brief Process cross-process dircache invalidation hints
+ * @brief Apply the dircache invalidation hints that sibling afpd processes sent
  *
- * Called from the DSI command loop after each AFP command completes.
- * Uses direct hash_lookup() on the CNID hash table to support BOTH
- * files (DIRF_ISFILE) and directories — dircache_search_by_did() is
- * unsuitable because it actively removes file entries.
+ * The DSI command loop calls it after every AFP command. Each call reads the
+ * hint pipe without blocking and applies up to 32 hints, the
+ * MAX_HINTS_PER_CYCLE limit. A partial message waits for the next call. End
+ * of file means the parent afpd closed the pipe, so the call closes its end
+ * and later calls return at once.
  *
- * Dispatches on hint type:
- * - CACHE_HINT_REFRESH: ostat() + dir_modify() — stat refresh, AD invalidation
- * - CACHE_HINT_DELETE: direct dir_remove() — no ostat needed
- * - CACHE_HINT_DELETE_CHILDREN: dircache_remove_children() + parent cleanup
+ * The lookup uses hash_lookup on the DID index, because
+ * dircache_search_by_did drops file entries and hints cover files too.
+ * CACHE_HINT_REFRESH stats the entry and refreshes it with dir_modify, or
+ * removes it when the stat fails. CACHE_HINT_DELETE removes the entry.
+ * CACHE_HINT_DELETE_CHILDREN defers removing the children and then refreshes
+ * or removes the entry itself. A miss still purges a pfd slot for the
+ * directory events.
+ *
+ * CACHE_HINT_VOLUME_RESET matches an open volume by its CNID tag and ends the
+ * session with SIGTERM, so the client reconnects to the rebuilt CNID table.
+ *
+ * @param[in,out] obj  session object holding the hint pipe
  */
 void process_cache_hints(AFPObj *obj)
 {
@@ -3077,11 +3160,17 @@ void dircache_report_invalid_entry(struct dir *dir)
  ********************************************************/
 
 /*!
- * @brief Enqueue a deferred dircache_remove_children operation.
+ * @brief Queue a deferred dircache_remove_children scan for dir
  *
- * O(1) enqueue — the idle worker performs the actual hash scan during
- * poll() idle periods. Falls back to synchronous removal if the worker
- * is not active or the queue is full.
+ * The enqueue costs constant time, and the idle worker runs the hash scan
+ * while afpd waits in poll. The job stores the full path of dir byte for
+ * byte, with its volume, depth, and enqueue sequence number. Without an active
+ * idle worker, with a full queue, or when malloc fails, the call runs
+ * dircache_remove_children at once instead. A NULL dir or one without a full
+ * path needs nothing.
+ *
+ * @param[in] vol  volume of dir
+ * @param[in] dir  directory whose children leave the cache, or NULL
  */
 void dircache_remove_children_defer(const struct vol *vol, struct dir *dir)
 {
@@ -3161,11 +3250,16 @@ static void deferred_job_kill(int idx);
 static void deferred_compact_head(void);
 
 /*!
- * @brief Process deferred cleanup entries for a closing volume synchronously.
+ * @brief Finish every deferred child scan of a closing volume at once
  *
- * @pre: Worker is dormant (called during AFP command processing).
- * Called from afp_closevol() before volume structures are freed.
- * Drops the preselected active-job cursor if it points at this volume.
+ * The afp_closevol handler calls it before the volume structures go away,
+ * while the idle worker is dormant. The call drops the active job cursor and
+ * the covering memo when they belong to the volume. It also drops any batch in
+ * progress, because the jobs it retires invalidate the batch member index. It
+ * then scans the dircache for each job of the volume and frees the entries
+ * below the job path, except curdir.
+ *
+ * @param[in] vid  v_vid of the closing volume
  */
 void dircache_flush_deferred_for_vol(uint16_t vid)
 {
@@ -3232,14 +3326,26 @@ void dircache_flush_deferred_for_vol(uint16_t vid)
      * every close path (afp_closevol, logout's close_all_vol) runs. */
 }
 
-/* Called by idle worker — returns true if deferred work exists */
+/*!
+ * @brief Whether deferred child scans wait in the queue
+ *
+ * The idle worker calls it to decide whether it has work.
+ *
+ * @returns nonzero when the queue holds jobs, 0 otherwise
+ */
 int dircache_has_deferred_work(void)
 {
     return deferred_count > 0;
 }
 
 /*!
- * @brief Free a job slot without completing it (volume gone / covered).
+ * @brief Retire a deferred job slot without running its scan
+ *
+ * The callers retire jobs of a closing volume and jobs that a finished scan
+ * already covers. The slot keeps its place in the ring until the head moves
+ * past it.
+ *
+ * @param[in] idx  slot index in the deferred queue
  */
 static void deferred_job_kill(int idx)
 {
@@ -3262,11 +3368,16 @@ static void deferred_compact_head(void)
 }
 
 /*!
- * @brief Test path strictly below parent: byte-prefix at a '/' boundary.
+ * @brief Whether path lies strictly below parent_path
  *
- * The boundary byte check rejects sibling prefixes ("/A/BC" under "/A/B").
+ * The test compares bytes and requires a slash right after the parent prefix,
+ * so "/A/BC" does not count as a child of "/A/B".
  *
- * @returns 1 if path is a strict descendant of parent_path, else 0
+ * @param[in] path         candidate path, or NULL
+ * @param[in] len          bytes in path
+ * @param[in] parent_path  parent path
+ * @param[in] parent_len   bytes in parent_path
+ * @returns 1 for a strict descendant, 0 otherwise
  */
 static int path_is_strict_child(const char *path, size_t len,
                                 const char *parent_path, size_t parent_len)
@@ -3277,7 +3388,14 @@ static int path_is_strict_child(const char *path, size_t len,
 }
 
 /*!
- * @brief Remember a completed scan as the covering memo.
+ * @brief Remember a finished scan as the covering memo
+ *
+ * Jobs popped afterwards for the same path or a path below it need no
+ * separate scan when they entered the queue before the scan started. When
+ * malloc fails, no memo remains.
+ *
+ * @param[in] done      job whose scan finished
+ * @param[in] scan_seq  enqueue sequence number at the start of the scan
  */
 static void deferred_cover_set(const struct deferred_cleanup *done,
                                unsigned int scan_seq)
@@ -3298,15 +3416,16 @@ static void deferred_cover_set(const struct deferred_cleanup *done,
 }
 
 /*!
- * @brief Test whether a popped job is covered by the memoized scan.
+ * @brief Whether the covering memo makes a popped job redundant
  *
- * Covered iff enqueued before that scan started (serial-number compare:
- * the unsigned seq difference exceeds half the counter space iff the job
- * predates the scan, fully defined across wraparound), same volume, and
- * its byte path equals or sits strictly below the memoized path at a '/'
- * boundary.
+ * The job must belong to the memo volume, carry the memo path or a path
+ * strictly below it, and predate the memo scan. The sequence test counts an
+ * unsigned difference of 0x80000000 or more as earlier, so the test stays
+ * defined across wraparound.
  *
- * @returns 1 if the job's entries were already purged, else 0
+ * @param[in] j  popped job
+ * @returns 1 when the memo scan already purged the entries of the job, 0
+ *          otherwise
  */
 static int deferred_cover_drops(const struct deferred_cleanup *j)
 {
@@ -3349,7 +3468,13 @@ static void deferred_compact_tail(void)
 }
 
 /*!
- * @brief qsort comparator for batch members: vid, then path bytes.
+ * @brief Order two batch members by volume ID, then by path bytes
+ *
+ * A shorter path that is a prefix of the other sorts first.
+ *
+ * @param[in] a  pointer to the deferred queue index of the first member
+ * @param[in] b  pointer to the deferred queue index of the second member
+ * @returns a negative value, 0, or a positive value, as qsort expects
  */
 static int deferred_batch_cmp(const void *a, const void *b)
 {
@@ -3373,13 +3498,17 @@ static int deferred_batch_cmp(const void *a, const void *b)
 }
 
 /*!
- * @brief Test whether an entry path is covered by a batch member.
+ * @brief Find the batch member that covers an entry path
  *
- * The candidate ancestor is unique at uniform depth: the entry path
- * truncated at its (batch_depth+1)-th slash. Binary search over the
- * sorted member index; byte comparisons only.
+ * Every batch member sits at the same depth, so the only candidate ancestor is
+ * the entry path truncated at slash number deferred_batch_depth + 1. A binary
+ * search over the sorted member index compares bytes only. A path at or above
+ * the member depth matches nothing.
  *
- * @returns member index-array position, or -1
+ * @param[in] vid   volume of the entry
+ * @param[in] ep    entry path
+ * @param[in] elen  bytes in ep
+ * @returns the position in the member index, or -1 without a match
  */
 static int deferred_batch_match(uint16_t vid, const char *ep, size_t elen)
 {

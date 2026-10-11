@@ -45,6 +45,9 @@
 /*! the secret key */
 gcry_mpi_t K;
 
+/*!
+ * @brief Release the session key K of a DHCAST128 exchange
+ */
 static void dhx_release_key(void)
 {
     if (K != NULL) {
@@ -56,7 +59,28 @@ static void dhx_release_key(void)
 static struct passwd *dhxpwd;
 static uint8_t randbuf[16];
 
-/*! dhx passwd */
+/*!
+ * @brief Look up the user of a DHCAST128 login and answer the public key of the
+ * client with Mb and a challenge
+ *
+ * The user has to pass uam_checkuser and needs a password hash, from the
+ * shadow file in a build that uses one. The group is the fixed 128-bit prime
+ * of the protocol with generator 7. The reply holds the session ID, Mb, and
+ * under CAST5-CBC a 16-byte random challenge and 16 zero bytes in the place
+ * of the server signature.
+ *
+ * @param[in]     obj       session object, which also seeds the session ID
+ * @param[in,out] username  user name from the request, receives the account
+ *                          name of a match
+ * @param[in]     ulen      size of the username buffer
+ * @param[out]    uam_pwd   unused
+ * @param[in]     ibuf      Ma of the client, 16 bytes
+ * @param[in]     ibuflen   length of ibuf, unused
+ * @param[out]    rbuf      reply block
+ * @param[out]    rbuflen   reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_NOTAUTH for an unknown or refused user,
+ *          AFPERR_PARAM when a step fails, or AFPERR_MISC
+ */
 static int pwd_login(void *obj, char *username, int ulen,
                      struct passwd **uam_pwd _U_,
                      char *ibuf, size_t ibuflen _U_,
@@ -225,7 +249,20 @@ passwd_fail:
     return AFPERR_PARAM;
 }
 
-/*! cleartxt login */
+/*!
+ * @brief Read the user name of an FPLogin request and start a DHCAST128 login
+ *
+ * The request holds the name as a Pascal string, padded to an even address.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  unused until the continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_PARAM for an empty or oversized name,
+ *          AFPERR_NOTAUTH, or AFPERR_MISC
+ */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
                         char *rbuf, size_t *rbuflen)
@@ -264,15 +301,26 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 }
 
 /*!
- * @brief cleartxt login ext
+ * @brief Read the user name of an FPLoginExt request and start a DHCAST128
+ * login
  *
- * uname format :
+ * The user name field has this form:
  * @code
  *   byte      3
  *   2 bytes   len (network order)
  *   len bytes utf8 name
  * @endcode
-*/
+ *
+ * @param[in]  obj      session object
+ * @param[in]  uname    user name field of the request
+ * @param[out] uam_pwd  unused until the continuation
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf
+ * @param[out] rbuf     reply block
+ * @param[out] rbuflen  reply length on return
+ * @returns AFPERR_AUTHCONT, AFPERR_PARAM for another name type or a bad length,
+ *          AFPERR_NOTAUTH, or AFPERR_MISC
+ */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
@@ -304,6 +352,25 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
+/*!
+ * @brief Check the challenge answer and the password of a DHCAST128 login
+ * against the password hash
+ *
+ * The request holds the session ID and, under CAST5-CBC, the challenge plus 1
+ * and a 64-byte password field. The password goes to crypt_checkpass, or to
+ * crypt and a comparison. With shadow passwords an expired password gives
+ * AFPERR_PWDEXPR, and that check runs after a wrong password too. The call
+ * wipes the challenge and the password.
+ *
+ * @param[in]  obj      session object
+ * @param[out] uam_pwd  receives the user entry after a matching password
+ * @param[in]  ibuf     UAM data of the request
+ * @param[in]  ibuflen  length of ibuf, at least 2 + CRYPT2BUFLEN
+ * @param[out] rbuf     reply block, which the call uses as a work buffer and
+ *                      clears
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK, AFPERR_PWDEXPR, AFPERR_NOTAUTH, or AFPERR_PARAM
+ */
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
@@ -452,6 +519,15 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 }
 
 
+/*!
+ * @brief Register the DHCAST128 login of the passwd module
+ *
+ * The module has no logout and no password change.
+ *
+ * @param[in] obj   AFP object, unused
+ * @param[in] path  path of the module
+ * @returns 0, or -1 when the registration fails
+ */
 static int uam_setup(void *obj, const char *path)
 {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHCAST128",
@@ -465,6 +541,10 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
+/*!
+ * @brief Release the session key and unregister the DHCAST128 login of the
+ * passwd module
+ */
 static void uam_cleanup(void)
 {
     dhx_release_key();
