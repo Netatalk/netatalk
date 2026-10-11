@@ -1803,11 +1803,15 @@ else
         )
     else
         pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
+        if not pam.found()
+            # Let the linker find system libraries, including macOS SDK stubs.
+            pam = cc.find_library('pam', required: false)
+        endif
     endif
 
     pam_header_dirs = include_directories(header_dir)
 
-    have_pam = (
+    have_pam = pam.found() and (
         cc.has_header('security/pam_appl.h', include_directories: pam_header_dirs)
         or cc.has_header('pam/pam_appl.h', include_directories: pam_header_dirs)
         or cc.has_function('pam_set_item', dependencies: pam)
