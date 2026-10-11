@@ -63,7 +63,7 @@ static size_t mangle_extension(const struct vol *vol, const char *uname,
  * @brief Decide whether a mangled name from the client stands for a name on
  * disk
  *
- * A name with a valid #ID can also be a real name, so the extensions must
+ * A name with a valid `#ID` can also be a real name, so the extensions must
  * match first. The name on disk must have needed mangling, because it was too
  * long or held unconvertible characters. Its converted form must then match
  * the prefix that the client sent. Mac OS X may cut a decomposed character in
