@@ -1,5 +1,5 @@
 {
-"commit": "9aa4f172b1ab976761da9cabb8123f3ff43128de",
+"commit": "12c804b1ec71afd7e684dcf0f1c178b9f9f895ab",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -200,11 +200,6 @@
 "from": "bin/misc/fce.c",
 "kind": "include",
 "to": "include/atalk/util.h"
-},
-{
-"from": "bin/misc/logger_test.c",
-"kind": "include",
-"to": "include/atalk/logger.h"
 },
 {
 "from": "bin/misc/netacnv.c",
@@ -27480,16 +27475,6 @@
 "to": "bin/misc/fce.c#stop_requested"
 },
 {
-"from": "bin/misc/logger_test.c#main",
-"kind": "call",
-"to": "libatalk/util/logger.c#set_processname"
-},
-{
-"from": "bin/misc/logger_test.c#main",
-"kind": "call",
-"to": "libatalk/util/logger.c#setuplog"
-},
-{
 "from": "bin/misc/netacnv.c#main",
 "kind": "call",
 "to": "libatalk/unicode/charcnv.c#add_charset"
@@ -40956,11 +40941,6 @@
 "subsystem": "bin/misc"
 },
 {
-"id": "bin/misc/logger_test.c",
-"kind": "file",
-"subsystem": "bin/misc"
-},
-{
 "id": "bin/misc/netacnv.c",
 "kind": "file",
 "subsystem": "bin/misc"
@@ -52389,14 +52369,6 @@
 "id": "bin/misc/fce.c#main",
 "kind": "function",
 "line": 227,
-"static": false
-},
-{
-"documented": true,
-"file": "bin/misc/logger_test.c",
-"id": "bin/misc/logger_test.c#main",
-"kind": "function",
-"line": 39,
 "static": false
 },
 {

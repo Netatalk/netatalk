@@ -1,16 +1,16 @@
 ---
 type: Build Record
 title: "Build record"
-description: "Netatalk commit 9aa4f172b1ab rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0."
-resource: "https://github.com/Netatalk/netatalk/commit/9aa4f172b1ab976761da9cabb8123f3ff43128de"
+description: "Netatalk commit 12c804b1ec71 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0."
+resource: "https://github.com/Netatalk/netatalk/commit/12c804b1ec71afd7e684dcf0f1c178b9f9f895ab"
 tags: ["build"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
 ---
 
 # Source
 
-* Commit: [9aa4f172b1ab976761da9cabb8123f3ff43128de](https://github.com/Netatalk/netatalk/commit/9aa4f172b1ab976761da9cabb8123f3ff43128de), committed 2026-10-11T16:44:05+02:00
+* Commit: [12c804b1ec71afd7e684dcf0f1c178b9f9f895ab](https://github.com/Netatalk/netatalk/commit/12c804b1ec71afd7e684dcf0f1c178b9f9f895ab), committed 2026-10-12T10:16:19+11:00
 * Scanned directories: `bin`, `etc`, `include`, `libatalk`, `sys`
 * Doxygen: 1.15.0, configured from `doc/Doxyfile.in` with XML output and reference relations
 
@@ -22,19 +22,19 @@ Conditional code is included as if these macros were defined, so the graph refle
 
 # Counts
 
-* Files: 357
+* Files: 356
 * Subsystems: 30
-* Functions: 2091
-* Documented functions: 2038
+* Functions: 2090
+* Documented functions: 2037
 * Types: 160
 * Function tables: 55
-* Call edges: 4497
+* Call edges: 4495
 * Variable-use edges: 1574
 * Table edges: 248
 * Dispatch edges: 186
 * Fields called through: 51
 * Documented-reference edges: 90
-* Graph edges: 8115
+* Graph edges: 8112
 
 # Edge kinds
 

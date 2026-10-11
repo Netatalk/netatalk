@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/logger.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -17,7 +17,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 # Included by
 
 * [bin/dbd/cmd_dbd.c](../../bin/dbd/cmd_dbd.c.md)
-* [bin/misc/logger_test.c](../../bin/misc/logger_test.c.md)
 * [bin/misc/uuidtest.c](../../bin/misc/uuidtest.c.md)
 * [bin/nad/nad.c](../../bin/nad/nad.c.md)
 * [bin/nad/nad_util.c](../../bin/nad/nad_util.c.md)

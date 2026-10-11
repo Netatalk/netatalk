@@ -5,7 +5,7 @@ description: "19 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/logger.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -387,7 +387,7 @@ Set the process name of log lines and syslog, cut to 15 characters.
 Parameters:
 * `processname`: name of the process
 
-Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [main](../../bin/misc/logger_test.c.md#main), [main](../../etc/atalkd/main.c.md#main), [main](../../etc/papd/main.c.md#main)
+Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [main](../../etc/atalkd/main.c.md#main), [main](../../etc/papd/main.c.md#main)
 
 Uses file-scope variables: `log_config`
 
@@ -439,7 +439,7 @@ Parameters:
 
 Calls: [setuplog_internal](logger.c.md#setuplog_internal)
 
-Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/misc/logger_test.c.md#main), [main](../../bin/misc/uuidtest.c.md#main), [main](../../bin/nad/nad.c.md#main)
+Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/misc/uuidtest.c.md#main), [main](../../bin/nad/nad.c.md#main)
 
 Mentioned in the documentation of: [log_reopen](logger.c.md#log_reopen)
 
