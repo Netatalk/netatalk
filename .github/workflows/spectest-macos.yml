@@ -22,19 +22,21 @@ env:
   AFP_USER2: atalk2
   AFP_GROUP: afpusers
   STUFFIT_RS_TARBALL_URL: https://github.com/benletchford/stuffit-rs/archive/refs/tags/v0.2.1.tar.gz
-  DYLD_LIBRARY_PATH: /opt/homebrew/lib
   PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig
 
 jobs:
   spectest-macos:
-    name: AFP Spectest - macOS (ea:sys)
-    runs-on: macos-latest
+    name: AFP Spectest - macOS 26 / Homebrew (Apple Silicon)
+    runs-on: macos-26
     timeout-minutes: 24
     env:
+      DYLD_LIBRARY_PATH: /opt/homebrew/lib
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         run: |
@@ -265,4 +267,253 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-spectest-macos
+          path: build/meson-logs
+
+  spectest-macos-intel:
+    name: AFP Spectest - macOS 15 / MacPorts (Intel)
+    runs-on: macos-15-intel
+    timeout-minutes: 24
+    env:
+      PKG_CONFIG_PATH: /opt/local/lib/pkgconfig:/opt/local/share/pkgconfig:/opt/local/lib/mariadb-11.4/pkgconfig
+      CFLAGS: -I/opt/local/include
+      LDFLAGS: -L/opt/local/lib
+      AR: /usr/bin/ar
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install MacPorts
+        run: |
+          curl --proto '=https' --location --fail \
+            -o "$RUNNER_TEMP/MacPorts.pkg" \
+            https://distfiles.macports.org/MacPorts/MacPorts-2.12.6-15-Sequoia.pkg
+          echo "2d6d58ff3ff60e70f8dc05cb2df9df3137e3d7c0c6d6f6236d68c8ba03343e34  $RUNNER_TEMP/MacPorts.pkg" | shasum -a 256 -c -
+          sudo installer -pkg "$RUNNER_TEMP/MacPorts.pkg" -target /
+          echo "/opt/local/bin" >> "$GITHUB_PATH"
+          echo "/opt/local/sbin" >> "$GITHUB_PATH"
+          sudo /opt/local/bin/port -N selfupdate
+
+      - name: Install dependencies
+        run: |
+          # not installing mysql/mariadb or rust/stuffit-rs here, because the combination of
+          # MacPorts and GitHub macOS 15 Intel runner is causing flakiness in the job
+          sudo /opt/local/bin/port -N install \
+            bstring \
+            cmark-gfm \
+            iniparser \
+            libevent \
+            libgcrypt \
+            libiconv \
+            meson \
+            ninja \
+            openldap \
+            pkgconfig \
+            sqlite3 \
+            talloc
+
+      - name: Configure
+        run: |
+          meson setup build \
+            --prefix=/opt/local \
+            -Dbuildtype=debugoptimized \
+            -Dwith-ldap-path=/opt/local \
+            -Dwith-libiconv-path=/opt/local \
+            -Dwith-tests=true \
+            -Dwith-testsuite=true
+
+      - name: Build
+        run: meson compile -C build
+
+      - name: Test
+        run: meson test -C build
+
+      - name: Install
+        run: sudo /opt/local/bin/meson install -C build
+
+      - name: Generate test credentials
+        run: echo "AFP_PASS=$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-8)" >> $GITHUB_ENV
+
+      - name: Create test users and group
+        run: |
+          # Create AFP group
+          sudo dscl . -create /Groups/$AFP_GROUP
+          sudo dscl . -create /Groups/$AFP_GROUP PrimaryGroupID 599
+
+          # Create primary test user
+          sudo dscl . -create /Users/$AFP_USER
+          sudo dscl . -create /Users/$AFP_USER UserShell /usr/bin/false
+          sudo dscl . -create /Users/$AFP_USER UniqueID 5001
+          sudo dscl . -create /Users/$AFP_USER PrimaryGroupID 599
+          sudo dscl . -create /Users/$AFP_USER NFSHomeDirectory /var/empty
+          sudo dscl . -passwd /Users/$AFP_USER "$AFP_PASS"
+          sudo dscl . -append /Groups/$AFP_GROUP GroupMembership $AFP_USER
+
+          # Create secondary test user
+          sudo dscl . -create /Users/$AFP_USER2
+          sudo dscl . -create /Users/$AFP_USER2 UserShell /usr/bin/false
+          sudo dscl . -create /Users/$AFP_USER2 UniqueID 5002
+          sudo dscl . -create /Users/$AFP_USER2 PrimaryGroupID 599
+          sudo dscl . -create /Users/$AFP_USER2 NFSHomeDirectory /var/empty
+          sudo dscl . -passwd /Users/$AFP_USER2 "$AFP_PASS"
+          sudo dscl . -append /Groups/$AFP_GROUP GroupMembership $AFP_USER2
+
+          # Initialize AFP password database for RandNum UAM
+          CONFDIR="/opt/local/etc"
+          sudo rm -f "$CONFDIR/afppasswd"
+          sudo /opt/local/bin/afppasswd -c -r
+          sudo /opt/local/bin/afppasswd -a $AFP_USER -r -w "$AFP_PASS"
+          sudo /opt/local/bin/afppasswd -a $AFP_USER2 -r -w "$AFP_PASS"
+
+          # Initialize AFP password database for SRP UAM
+          CONFDIR="/opt/local/etc"
+          sudo rm -rf "$CONFDIR/afppasswd.srp"
+          sudo /opt/local/bin/afppasswd -c
+          sudo /opt/local/bin/afppasswd -a $AFP_USER -w "$AFP_PASS"
+          sudo /opt/local/bin/afppasswd -a $AFP_USER2 -w "$AFP_PASS"
+
+      - name: Create PAM service file for netatalk
+        run: |
+          sudo tee /etc/pam.d/netatalk > /dev/null << 'PAMEOF'
+          auth       required       pam_opendirectory.so
+          account    required       pam_permit.so
+          password   required       pam_deny.so
+          session    required       pam_permit.so
+          PAMEOF
+          sudo sed -i '' 's/^          //' /etc/pam.d/netatalk
+
+      - name: Create share directories
+        run: |
+          sudo mkdir -p /private/tmp/afptest/test1 /private/tmp/afptest/test2
+          sudo chown $AFP_USER:$AFP_GROUP /private/tmp/afptest/test1 /private/tmp/afptest/test2
+          sudo chmod 2777 /private/tmp/afptest/test1 /private/tmp/afptest/test2
+
+      - name: Validate symlink support
+        run: |
+          echo "=== Testing symlink creation as runner ==="
+          ln -s /etc/hosts /private/tmp/test_symlink && echo "runner symlink OK" && rm /private/tmp/test_symlink
+          echo "=== Testing symlink creation as atalk1 in share dir ==="
+          sudo -u $AFP_USER ln -s /etc/hosts /private/tmp/afptest/test1/test_symlink && echo "atalk1 symlink OK" || echo "atalk1 symlink FAILED"
+          ls -la /private/tmp/afptest/test1/test_symlink 2>/dev/null && sudo -u $AFP_USER rm /private/tmp/afptest/test1/test_symlink || true
+          echo "=== Testing symlink creation as atalk2 in share dir ==="
+          sudo -u $AFP_USER2 ln -s /etc/hosts /private/tmp/afptest/test1/test_symlink2 && echo "atalk2 symlink OK" || echo "atalk2 symlink FAILED"
+          ls -la /private/tmp/afptest/test1/test_symlink2 2>/dev/null && sudo -u $AFP_USER2 rm /private/tmp/afptest/test1/test_symlink2 || true
+          echo "=== macOS version ==="
+          sw_vers
+
+      - name: Write afp.conf
+        run: |
+          CONFDIR="/opt/local/etc"
+          sudo tee "$CONFDIR/afp.conf" > /dev/null <<'AFPCONF'
+          [Global]
+          server name = Netatalk
+          uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so uams_guest.so
+          log level = default:info
+          log file = /tmp/afpd.log
+          mac charset = MAC_ROMAN
+          unix charset = UTF8
+          vol charset = UTF8
+          dircache size = 1024
+          dircache validation freq = 100
+          afp listen = 0.0.0.0:5548
+          cnid scheme = sqlite
+
+          [test1]
+          ea = sys
+          path = /private/tmp/afptest/test1
+          valid users = atalk1 atalk2
+          rwlist = atalk1 atalk2
+          volume name = test1
+          convert appledouble = yes
+
+          [test2]
+          ea = sys
+          path = /private/tmp/afptest/test2
+          time machine = no
+          valid users = atalk1 atalk2
+          rwlist = atalk1 atalk2
+          volume name = test2
+          convert appledouble = yes
+          AFPCONF
+          # Strip leading whitespace from heredoc (YAML indentation artifact)
+          sudo sed -i '' 's/^          //' "$CONFDIR/afp.conf"
+
+      - name: Verify setup
+        run: |
+          CONFDIR="/opt/local/etc"
+          echo "=== Compile-time paths (afpd -V) ==="
+          afpd -V 2>&1 || true
+          echo "=== Our afp.conf at $CONFDIR ==="
+          cat "$CONFDIR/afp.conf"
+          echo "=== UAM libraries ==="
+          ls -la "/opt/local/lib/netatalk/" 2>/dev/null || echo "UAM dir at MacPorts prefix MISSING"
+          find /opt /usr/local -name "uams_clrtxt.so" 2>/dev/null || echo "uams_clrtxt.so NOT FOUND anywhere"
+
+      - name: Enable extmap entries
+        run: |
+          CONFDIR="/opt/local/etc"
+          if [ ! -f "$CONFDIR/extmap.conf" ]; then
+            sudo cp config/extmap.conf "$CONFDIR/extmap.conf"
+          fi
+          sudo sed -i '' 's/^#\./\./' "$CONFDIR/extmap.conf"
+
+      - name: Start netatalk
+        run: |
+          sudo /opt/local/bin/netatalkd start || true
+          sleep 3
+          asip-status localhost:5548 || true
+
+      - name: Show netatalk log before test
+        if: always()
+        run: |
+          cat /tmp/afpd.log 2>/dev/null | tail -200 || echo "No log file"
+
+      - name: Run AFP spec test (AFP 3.4)
+        run: |
+          REPORT_PATH="$RUNNER_TEMP/afp-spectest.junit.xml"
+          set +e
+          sudo /opt/local/bin/afp_spectest \
+            -7 \
+            -h localhost \
+            -p 5548 \
+            -u $AFP_USER \
+            -d $AFP_USER2 \
+            -w "$AFP_PASS" \
+            -s test1 \
+            -S test2 \
+            -c /private/tmp/afptest/test1 \
+            -j "$REPORT_PATH"
+          TEST_STATUS=$?
+          sudo chown "$(id -u):$(id -g)" "$REPORT_PATH"
+          exit "$TEST_STATUS"
+
+      - name: Publish AFP spec test results
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        with:
+          name: AFP Spectest (macOS Intel)
+          path: ${{ runner.temp }}/afp-spectest.junit.xml
+          reporter: java-junit
+
+      - name: Show netatalk log after test
+        if: always()
+        run: |
+          cat /tmp/afpd.log 2>/dev/null | tail -200 || echo "No log file"
+
+      - name: Stop netatalk
+        if: always()
+        run: sudo /opt/local/bin/netatalkd stop || sudo killall netatalk afpd 2>/dev/null || true
+
+      - name: Cleanup test users
+        if: always()
+        run: |
+          sudo dscl . -delete /Users/$AFP_USER 2>/dev/null || true
+          sudo dscl . -delete /Users/$AFP_USER2 2>/dev/null || true
+          sudo dscl . -delete /Groups/$AFP_GROUP 2>/dev/null || true
+
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-spectest-macos-intel
           path: build/meson-logs
