@@ -12,15 +12,6 @@ if have_iconv
     )
 endif
 
-executable(
-    'logger_test',
-    ['logger_test.c'],
-    include_directories: root_includes,
-    link_with: libatalk,
-    dependencies: [misc_deps],
-    install: false,
-)
-
 if enable_fce
     executable(
         'fce_listen',
