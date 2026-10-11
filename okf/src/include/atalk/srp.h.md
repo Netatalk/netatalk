@@ -5,7 +5,7 @@ description: "3 functions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/srp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,6 +31,8 @@ static int srp_valid_username(const char *name)
 
 Defined at lines 58 to 64.
 
+Accept 1 to SRP_USERNAME_MAX_LEN bytes without a colon, CR, or LF.
+
 Calls: [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [add_record](../../bin/afppasswd/afppasswd_migrate.c.md#add_record), [create_file](../../bin/afppasswd/afppasswd.c.md#create_file), [create_private_srp_verifier](../../bin/afppasswd/afppasswd.c.md#create_private_srp_verifier), [create_srp_directory](../../bin/afppasswd/afppasswd.c.md#create_srp_directory), [disable_srp_verifier](../../bin/afppasswd/afppasswd.c.md#disable_srp_verifier), [srp_lookup_verifier](../../etc/uams/uams_srp.c.md#srp_lookup_verifier), [update_passwd](../../bin/afppasswd/afppasswd.c.md#update_passwd), [update_srp_passwd](../../bin/afppasswd/afppasswd.c.md#update_srp_passwd)
@@ -41,7 +43,9 @@ Called by: [add_record](../../bin/afppasswd/afppasswd_migrate.c.md#add_record), 
 static int srp_valid_fields(const char *fields)
 ```
 
-Defined at lines 70 to 105.
+Defined at lines 67 to 102.
+
+Tell whether a `salt:verifier` line is valid or fully disabled.
 
 Called by: [add_record](../../bin/afppasswd/afppasswd_migrate.c.md#add_record), [srp_lookup_verifier](../../etc/uams/uams_srp.c.md#srp_lookup_verifier), [update_srp_passwd](../../bin/afppasswd/afppasswd.c.md#update_srp_passwd)
 
@@ -51,7 +55,9 @@ Called by: [add_record](../../bin/afppasswd/afppasswd_migrate.c.md#add_record), 
 static int srp_verifier_mode_is_safe(mode_t mode)
 ```
 
-Defined at lines 108 to 111.
+Defined at lines 105 to 108.
+
+Tell whether a verifier file mode gives group and others no access.
 
 Called by: [create_verifiers](../../bin/afppasswd/afppasswd_migrate.c.md#create_verifiers), [srp_lookup_verifier](../../etc/uams/uams_srp.c.md#srp_lookup_verifier), [srp_verifier_store_is_private](../../etc/netatalk/netatalk.c.md#srp_verifier_store_is_private), [validate_source](../../bin/afppasswd/afppasswd_migrate.c.md#validate_source), [validate_srp_verifier_file](../../bin/afppasswd/afppasswd.c.md#validate_srp_verifier_file)
 

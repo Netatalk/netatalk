@@ -5,7 +5,7 @@ description: "1 function, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/aep.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,6 +26,18 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 int aep_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 ```
 
-Defined at lines 22 to 46.
+Defined at lines 35 to 59.
+
+Answer an AppleTalk Echo Protocol request by sending it back as a reply.
+
+The call turns the AEPOP_REQUEST byte into AEPOP_REPLY in place and sends the packet back to its sender.
+
+Parameters:
+* `ap`: AEP port of the interface
+* `from`: sender of the request
+* `data`: DDP payload, rewritten to the reply
+* `len`: length of data
+
+Returns: 0, or 1 for a malformed packet or a failed send
 
 Dispatched via: [atserv](main.c.md#atserv)

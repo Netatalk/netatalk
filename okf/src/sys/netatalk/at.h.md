@@ -5,7 +5,7 @@ description: "3 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/at.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -99,4 +99,8 @@ Defined at line 88.
 
 # Macros
 
-* Undocumented: `ATADDR_ANYNET`, `ATADDR_ANYNODE`, `ATADDR_ANYPORT`, `ATADDR_BCAST`, `ATPORT_FIRST`, `ATPORT_LAST`, `ATPORT_RESERVED`, `ATPROTO_AARP`, `ATPROTO_DDP`, `DDP_MAXSZ`, `ETHERTYPE_AARP`, `ETHERTYPE_AT`
+* `ATADDR_BCAST`: There is no BCAST for NET.
+* `ATPORT_LAST`: 254 is reserved on ether/tokentalk networks
+* `ETHERTYPE_AARP`: AppleTalk ARP.
+* `ETHERTYPE_AT`: AppleTalk protocol.
+* Undocumented: `ATADDR_ANYNET`, `ATADDR_ANYNODE`, `ATADDR_ANYPORT`, `ATPORT_FIRST`, `ATPORT_RESERVED`, `ATPROTO_AARP`, `ATPROTO_DDP`, `DDP_MAXSZ`

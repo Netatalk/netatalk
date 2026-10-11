@@ -5,12 +5,12 @@ description: "1 file, 4 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/aecho"
 tags: ["bin/aecho"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
 
-* [bin/aecho/aecho.c](aecho/aecho.c.md): 4 functions, includes 6 project headers.
+* [bin/aecho/aecho.c](aecho/aecho.c.md): AppleTalk Echo Protocol Client.
 
 # Includes headers from
 

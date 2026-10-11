@@ -5,14 +5,14 @@ description: "4 functions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/rpc.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
 
 # Includes
 
-* System headers: `atalk/lockrpc.gen.h`, `event2/event.h`, `event2/http.h`, `event2/rpc.h`, `inttypes.h`, `sys/types.h`
+* System headers: `inttypes.h`, `sys/types.h`
 
 # Functions
 

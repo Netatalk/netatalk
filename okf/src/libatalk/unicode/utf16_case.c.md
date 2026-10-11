@@ -5,7 +5,7 @@ description: "4 functions, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/utf16_case.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,16 @@ Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit r
 ucs2_t toupper_w(ucs2_t)
 ```
 
-Defined at lines 18 to 77. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 23 to 82. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+
+Convert a UCS2 character to upper case.
+
+A character without a mapping comes back unchanged.
+
+Parameters:
+* `val`: UCS2 character
+
+Returns: the upper case character
 
 Called by: [strupper_w](util_unistr.c.md#strupper_w)
 
@@ -36,7 +45,18 @@ Uses file-scope variables: `upper_table_1` in [libatalk/unicode/utf16_casetable.
 uint32_t toupper_sp(uint32_t)
 ```
 
-Defined at lines 82 to 125. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 93 to 136. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+
+Convert a surrogate pair to upper case.
+
+The pair sits in one 32-bit value, with the high surrogate in bits 31 to
+
+1. A pair without a mapping comes back unchanged.
+
+Parameters:
+* `val`: surrogate pair
+
+Returns: the upper case surrogate pair
 
 Called by: [strupper_w](util_unistr.c.md#strupper_w)
 
@@ -48,7 +68,16 @@ Uses file-scope variables: `upper_table_sp_1` in [libatalk/unicode/utf16_casetab
 ucs2_t tolower_w(ucs2_t)
 ```
 
-Defined at lines 130 to 185. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 146 to 201. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+
+Convert a UCS2 character to lower case.
+
+A character without a mapping comes back unchanged.
+
+Parameters:
+* `val`: UCS2 character
+
+Returns: the lower case character
 
 Called by: [strcasechr_w](util_unistr.c.md#strcasechr_w), [strcasecmp_w](util_unistr.c.md#strcasecmp_w), [strlower_w](util_unistr.c.md#strlower_w), [strncasecmp_w](util_unistr.c.md#strncasecmp_w)
 
@@ -60,7 +89,18 @@ Uses file-scope variables: `lower_table_1` in [libatalk/unicode/utf16_casetable.
 uint32_t tolower_sp(uint32_t)
 ```
 
-Defined at lines 190 to 233. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 212 to 255. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+
+Convert a surrogate pair to lower case.
+
+The pair sits in one 32-bit value, with the high surrogate in bits 31 to
+
+1. A pair without a mapping comes back unchanged.
+
+Parameters:
+* `val`: surrogate pair
+
+Returns: the lower case surrogate pair
 
 Called by: [strcasechr_sp](util_unistr.c.md#strcasechr_sp), [strcasecmp_w](util_unistr.c.md#strcasecmp_w), [strlower_w](util_unistr.c.md#strlower_w), [strncasecmp_w](util_unistr.c.md#strncasecmp_w)
 

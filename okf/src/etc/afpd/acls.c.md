@@ -5,7 +5,7 @@ description: "21 functions, includes 22 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acls.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -69,15 +69,18 @@ Called by: [acltoownermode](acls.c.md#acltoownermode), [check_acl_access](acls.c
 static int map_aces_solaris_to_darwin(const ace_t *aces, darwin_ace_t *darwin_aces, int ace_count)
 ```
 
-Defined at lines 242 to 316.
+Defined at lines 249 to 323.
 
-Maps ACE array from Solaris to Darwin.
+Map NFSv4 ACEs to Darwin ACEs.
 
-Returns: number of mapped ACEs or -1 on error.
+The owner@, group@, and everyone@ entries drop out, and so do entries of types other than allow and deny. User and group IDs become UUIDs, and flags and rights map through the translation tables. Darwin ACEs use network byte order. A failed name or UUID lookup fails the entire mapping.
 
-Note: Darwin ACEs are stored in network byte order.
+Parameters:
+* `aces`: NFSv4 ACEs
+* `darwin_aces`: receives the Darwin ACEs
+* `ace_count`: number of entries in aces
 
-Note: All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
+Returns: the number of mapped ACEs, or -1 on failure
 
 Calls: [getuuidfromname](../../libatalk/acl/uuid.c.md#getuuidfromname)
 
@@ -89,15 +92,18 @@ Called by: [map_acl](acls.c.md#map_acl)
 static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int ace_count)
 ```
 
-Defined at lines 324 to 413.
+Defined at lines 338 to 427.
 
-Maps ACE array from Darwin to Solaris.
+Map Darwin ACEs to NFSv4 ACEs.
 
-Returns: number of mapped ACEs or -1 on error.
+UUIDs become user or group IDs. The allow and deny types, the flags, and the rights map through the translation tables, and entries of other types drop out. Darwin ACEs come in network byte order. A failed name or UUID lookup fails the entire mapping.
 
-Note: Darwin ACEs are expected in network byte order.
+Parameters:
+* `darwin_aces`: Darwin ACEs from the client
+* `nfsv4_aces`: receives the NFSv4 ACEs
+* `ace_count`: number of entries in darwin_aces
 
-Note: All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
+Returns: the number of mapped ACEs, or -1 on failure
 
 Calls: [getnamefromuuid](../../libatalk/acl/uuid.c.md#getnamefromuuid)
 
@@ -111,7 +117,17 @@ Uses file-scope variables: `uuidtype` in [libatalk/acl/uuid.c](../../libatalk/ac
 static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
 ```
 
-Defined at lines 422 to 467.
+Defined at lines 448 to 493.
+
+Darwin rights that the permission set of a POSIX ACL entry grants.
+
+Read grants the read data, attribute, extended attribute, and security rights. Write grants the write data, append, attribute, and extended attribute rights, plus delete child on a directory. Execute grants the execute right.
+
+Parameters:
+* `e`: POSIX ACL entry
+* `is_dir`: nonzero for a directory
+
+Returns: the Darwin rights, 0 when the permission set is unreadable
 
 Called by: [map_acl_posix_to_darwin](acls.c.md#map_acl_posix_to_darwin), [posix_acl_rights](acls.c.md#posix_acl_rights)
 
@@ -121,7 +137,7 @@ Called by: [map_acl_posix_to_darwin](acls.c.md#map_acl_posix_to_darwin), [posix_
 static int posix_acl_rights(const AFPObj *obj, const char *path, const struct stat *sb, uint32_t *result)
 ```
 
-Defined at lines 484 to 586.
+Defined at lines 510 to 612.
 
 Compile access rights for a user to one file-system object.
 
@@ -145,7 +161,7 @@ Called by: [check_acl_access](acls.c.md#check_acl_access)
 static uint8_t acl_permset_to_uarights(acl_entry_t entry)
 ```
 
-Defined at lines 598 to 632.
+Defined at lines 624 to 658.
 
 Convert Posix ACL permissions into access rights.
 
@@ -164,7 +180,7 @@ Called by: [posix_acls_to_uaperms](acls.c.md#posix_acls_to_uaperms)
 static int posix_acls_to_uaperms(const AFPObj *obj, const char *path, struct stat *sb, struct maccess *ma)
 ```
 
-Defined at lines 652 to 752.
+Defined at lines 678 to 778.
 
 Update FPUnixPrivs for a file-system object on a volume supporting ACLs.
 
@@ -190,7 +206,7 @@ Mentioned in the documentation of: [acl_permset_to_uarights](acls.c.md#acl_perms
 static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights, int is_dir)
 ```
 
-Defined at lines 768 to 787.
+Defined at lines 794 to 813.
 
 Map Darwin ACE rights to POSIX 1e perm.
 
@@ -215,7 +231,7 @@ Called by: [map_aces_darwin_to_posix](acls.c.md#map_aces_darwin_to_posix)
 static int posix_acl_add_perm(acl_t *aclp, acl_tag_t type, uid_t id, acl_perm_t perm)
 ```
 
-Defined at lines 805 to 855.
+Defined at lines 831 to 881.
 
 Add a ACL_USER or ACL_GROUP permission to an ACL, extending existing ACEs.
 
@@ -237,7 +253,7 @@ Called by: [map_aces_darwin_to_posix](acls.c.md#map_aces_darwin_to_posix)
 static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces, acl_t *def_aclp, acl_t *acc_aclp, int ace_count, uint32_t *default_acl_flags)
 ```
 
-Defined at lines 879 to 1008.
+Defined at lines 905 to 1034.
 
 Map Darwin ACL to POSIX ACL.
 
@@ -267,13 +283,18 @@ Uses file-scope variables: `uuidtype` in [libatalk/acl/uuid.c](../../libatalk/ac
 static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darwin_aces)
 ```
 
-Defined at lines 1015 to 1106.
+Defined at lines 1049 to 1140.
 
-Map ACEs from POSIX to Darwin.
+Map the named user and group entries of a POSIX ACL to Darwin ACEs.
 
-Returns: number of mapped ACES, -1 on error.
+Every mapped entry allows its rights, and the mask entry limits them all. Entries of a default ACL also carry the file inherit, directory inherit, and inherit-only flags. Owner, owning group, and other entries drop out.
 
-Note: type is either POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN, cf. acl_get_file.
+Parameters:
+* `type`: POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN, plus IS_DIR
+* `acl`: POSIX ACL from acl_get_file
+* `darwin_aces`: receives the Darwin ACEs in network byte order
+
+Returns: the number of mapped ACEs, or -1 on failure
 
 Calls: [getuuidfromname](../../libatalk/acl/uuid.c.md#getuuidfromname), [posix_permset_to_darwin_rights](acls.c.md#posix_permset_to_darwin_rights)
 
@@ -285,13 +306,19 @@ Called by: [map_acl](acls.c.md#map_acl)
 static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 ```
 
-Defined at lines 1120 to 1160.
+Defined at lines 1160 to 1200.
 
-Multiplex ACL mapping (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
+Dispatch an ACL mapping between Darwin and the ACL model of the platform.
 
-Reads from 'aces' buffer, writes to 'rbuf' buffer. Caller must provide buffer. Darwin ACEs are read and written in network byte order. Needs to know how many ACEs are in the ACL (ace_count) for Solaris ACLs. Ignores trivial ACEs.
+Darwin ACEs use network byte order in both directions, and entries that mirror the mode bits drop out. The DARWIN_2_POSIX types map nothing here, because set_acl maps those itself.
 
-Returns: no of mapped ACEs or -1 on error.
+Parameters:
+* `type`: SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_DEFAULT_2_DARWIN, or POSIX_ACCESS_2_DARWIN, plus IS_DIR
+* `acl`: platform ACL to read, or NFSv4 ACE buffer to fill
+* `buf`: Darwin ACE buffer to fill, or Darwin ACEs to read
+* `ace_count`: number of ACEs in the source, for the NFSv4 types
+
+Returns: the number of mapped ACEs, 0 for the DARWIN_2_POSIX types, or -1 on failure
 
 Calls: [map_aces_darwin_to_solaris](acls.c.md#map_aces_darwin_to_solaris), [map_aces_solaris_to_darwin](acls.c.md#map_aces_solaris_to_darwin), [map_acl_posix_to_darwin](acls.c.md#map_acl_posix_to_darwin)
 
@@ -303,13 +330,18 @@ Called by: [get_and_map_acl](acls.c.md#get_and_map_acl), [set_acl](acls.c.md#set
 static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1168 to 1241.
+Defined at lines 1214 to 1287.
 
-Get ACL from object omitting trivial ACEs.
+Convert the ACL of name to Darwin form and write it to rbuf.
 
-Map to Darwin ACL style and store Darwin ACL at rbuf. Add length of ACL written to rbuf to *rbuflen.
+Entries that mirror the mode bits stay out. The Darwin ACL header carries the entry count and zero flags. A directory on a POSIX system lists its default ACL entries ahead of the access ACL entries.
 
-Returns: 0 on success, -1 on error.
+Parameters:
+* `name`: file or directory
+* `rbuf`: reply position receiving the Darwin ACL
+* `rbuflen`: reply length, advanced by the bytes written
+
+Returns: 0, or -1 on failure
 
 Calls: [get_nfsv4_acl](../../libatalk/acl/unix.c.md#get_nfsv4_acl), [map_acl](acls.c.md#map_acl)
 
@@ -321,11 +353,18 @@ Called by: [afp_getacl](acls.c.md#afp_getacl)
 static int remove_acl(const struct vol *vol, const char *path, int dir)
 ```
 
-Defined at lines 1246 to 1265.
+Defined at lines 1301 to 1320.
 
-Removes all non-trivial ACLs from object.
+Reduce the ACLs of an object and its AppleDouble file to the entries that mirror the mode bits.
 
-Returns: full AFPERR code.
+The vfs_remove_acl hooks cover the AppleDouble file first, and the object itself follows.
+
+Parameters:
+* `vol`: volume of the object
+* `path`: file or directory
+* `dir`: nonzero when path is a directory
+
+Returns: AFP_OK, or the AFPERR_* code of the first failure
 
 Calls: [remove_nfsv4_acl_vfs](../../libatalk/vfs/acl.c.md#remove_nfsv4_acl_vfs), [remove_posix_acl_vfs](../../libatalk/vfs/acl.c.md#remove_posix_acl_vfs)
 
@@ -339,14 +378,20 @@ Calls through [`vfs_ops::vfs_remove_acl`](../../include/atalk/vfs.h.md#struct-vf
 static int set_acl(const struct vol *vol, char *name, int inherit, darwin_ace_t *daces, uint32_t ace_count)
 ```
 
-Defined at lines 1279 to 1408. Defined 2 times under conditional compilation.
+Defined at lines 1339 to 1468. Defined 2 times under conditional compilation.
 
-Set ACL.
+Replace the NFSv4 ACL of a file or directory with the ACEs of a client.
 
-Note: Subtleties: * the client sends a complete list of ACEs, not only new ones. So we don't need to do any combination business (one exception being 'kFileSec_Inherit': see next)
-* client might request that we add inherited ACEs via 'kFileSec_Inherit'. We will store inherited ACEs first, which is Darwins canonical order.
+The client sends the complete list, so nothing merges. When inherit is nonzero, the new ACL starts with the local inherited entries, in the canonical Darwin order. The client entries follow, then the existing owner@, group@, and everyone@ entries. The AppleDouble file gets the same ACL first.
 
-Returns: AFPerror code
+Parameters:
+* `vol`: volume of the object
+* `name`: file or directory
+* `inherit`: nonzero to keep the inherited entries of the object
+* `daces`: client ACEs in network byte order
+* `ace_count`: number of entries in daces
+
+Returns: AFP_OK, AFPERR_ACCESS, AFPERR_NOITEM, AFPERR_PARAM, or AFPERR_MISC
 
 Calls: [get_nfsv4_acl](../../libatalk/acl/unix.c.md#get_nfsv4_acl), [map_aces_darwin_to_posix](acls.c.md#map_aces_darwin_to_posix), [map_acl](acls.c.md#map_acl)
 
@@ -360,7 +405,14 @@ Calls through [`vfs_ops::vfs_solaris_acl`](../../include/atalk/vfs.h.md#struct-v
 static acl_t acl_from_mode(mode_t mode)
 ```
 
-Defined at lines 1413 to 1492.
+Defined at lines 1480 to 1559.
+
+Build a minimal POSIX ACL with owner, group, and other entries from a mode.
+
+Parameters:
+* `mode`: Unix mode whose permission bits to use
+
+Returns: the new ACL, or NULL when an ACL call failed
 
 ### check_acl_access
 
@@ -368,7 +420,7 @@ Defined at lines 1413 to 1492.
 static int check_acl_access(const AFPObj *obj, const struct vol *vol, struct dir *dir, const char *path, const uuidp_t uuid, uint32_t requested_rights)
 ```
 
-Defined at lines 1612 to 1743.
+Defined at lines 1695 to 1826.
 
 Checks if a given UUID has requested_rights (type darwin_ace_rights) for path.
 
@@ -396,7 +448,20 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1749 to 1804.
+Defined at lines 1847 to 1902.
+
+FPAccess: test whether the user that a UUID names holds the requested rights on an object.
+
+The request carries the UUID, the Darwin rights to test, and the path. The check_acl_access call evaluates the ACL of the object.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block, unused
+* `rbuflen`: reply buffer capacity on entry, 0 on return
+
+Returns: AFP_OK when the rights hold, AFPERR_ACCESS when they do not, AFPERR_NOOBJ, or AFPERR_PARAM
 
 Calls: [check_acl_access](acls.c.md#check_acl_access), [cname](directory.c.md#cname), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [of_statdir](ofork.c.md#of_statdir)
 
@@ -410,7 +475,20 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1806 to 1922.
+Defined at lines 1920 to 2036.
+
+FPGetACL: return the owner UUID, the group UUID, and the ACL of an object.
+
+The bitmap selects the parts, and the reply echoes it first. An owner or group without a name maps to a local UUID built from the ID. The ACL omits the entries that mirror the mode bits.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block
+* `rbuflen`: reply buffer capacity on entry, reply length on return
+
+Returns: AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, or AFPERR_MISC
 
 Calls: [cname](directory.c.md#cname), [dirlookup](directory.c.md#dirlookup), [get_and_map_acl](acls.c.md#get_and_map_acl), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [getuuidfromname](../../libatalk/acl/uuid.c.md#getuuidfromname), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [localuuid_from_id](../../libatalk/acl/uuid.c.md#localuuid_from_id), [of_statdir](ofork.c.md#of_statdir)
 
@@ -424,7 +502,20 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1924 to 2108.
+Defined at lines 2055 to 2239.
+
+FPSetACL: remove or replace the ACL of an object.
+
+Owner and group UUID changes succeed without effect. kFileSec_REMOVEACL reduces the ACL to the entries that mirror the mode bits, and kFileSec_ACL replaces it with the client ACEs. kFileSec_Inherit keeps the inherited entries. Both changes refresh the dircache entry and tell the sibling afpd processes.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block, unused
+* `rbuflen`: reply buffer capacity on entry, 0 on return
+
+Returns: AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, AFPERR_MISC, or the error of remove_acl
 
 Calls: [cname](directory.c.md#cname), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_modify](directory.c.md#dir_modify), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_statdir](ofork.c.md#of_statdir), [ostat](../../libatalk/util/unix.c.md#ostat), [remove_acl](acls.c.md#remove_acl), [set_acl](acls.c.md#set_acl), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
@@ -438,11 +529,20 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
 ```
 
-Defined at lines 2120 to 2147.
+Defined at lines 2259 to 2286.
 
-map ACL to user maccess
+Fold the ACL of path into the AFP access rights of the session user.
 
-This is the magic function that makes ACLs usable by calculating the access granted by ACEs to the logged in user.
+Only OPTION_ACL2MACCESS or OPTION_ACL2MODE turns it on. On NFSv4 systems solaris_acl_rights computes the rights that the ACEs grant the user, and on POSIX systems posix_acls_to_uaperms does.
+
+Parameters:
+* `obj`: session object
+* `vol`: volume of the path
+* `path`: file or directory
+* `st`: stat of path
+* `ma`: access rights to refine
+
+Returns: 0, or -1 when reading the ACL failed
 
 Calls: [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [posix_acls_to_uaperms](acls.c.md#posix_acls_to_uaperms), [solaris_acl_rights](acls.c.md#solaris_acl_rights)
 

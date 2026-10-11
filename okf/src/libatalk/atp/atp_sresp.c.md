@@ -5,7 +5,7 @@ description: "1 function, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_sresp.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,13 +27,17 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_sresp(ATP, struct atp_block *)
 ```
 
-Defined at lines 53 to 176. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 62 to 185. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
-send a transaction response
+Send the response to the last received ATP request.
+
+Each response vector entry becomes a packet with its sequence number, and the last one carries ATP_EOM. For an exactly once request the endpoint keeps the packets until a TREL or the release time, so a duplicate request gets them again.
 
 Parameters:
-* `ah`: open atp handle
-* `atpb`: parameter block
+* `ah`: ATP endpoint
+* `atpb`: parameter block: the destination and the response vector of 1 to 8 entries of up to ATP_MAXDATA bytes
+
+Returns: 0, or -1 with EINVAL for a bad vector, or for a failed allocation or send
 
 Calls: [atp_alloc_buf](atp_bufs.c.md#atp_alloc_buf), [atp_build_resp_packet](atp_packet.c.md#atp_build_resp_packet), [atp_free_buf](atp_bufs.c.md#atp_free_buf), [atp_print_bufuse](atp_internals.h.md#atp_print_bufuse), [bprint](../util/bprint.c.md#bprint), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto)
 

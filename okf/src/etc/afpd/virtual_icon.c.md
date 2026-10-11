@@ -5,7 +5,7 @@ description: "9 functions, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/virtual_icon.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,9 +31,13 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void put_u32(unsigned char *buf, uint32_t val)
 ```
 
-Defined at lines 54 to 60.
+Defined at lines 57 to 63.
 
-Write a big-endian uint32_t to buf
+Write a 32-bit value in big-endian order.
+
+Parameters:
+* `buf`: 4-byte destination
+* `val`: value
 
 Called by: [build_resource_fork](virtual_icon.c.md#build_resource_fork)
 
@@ -43,9 +47,13 @@ Called by: [build_resource_fork](virtual_icon.c.md#build_resource_fork)
 static void put_u16(unsigned char *buf, uint16_t val)
 ```
 
-Defined at lines 65 to 69.
+Defined at lines 71 to 75.
 
-Write a big-endian uint16_t to buf
+Write a 16-bit value in big-endian order.
+
+Parameters:
+* `buf`: 2-byte destination
+* `val`: value
 
 Called by: [build_resource_fork](virtual_icon.c.md#build_resource_fork)
 
@@ -55,11 +63,17 @@ Called by: [build_resource_fork](virtual_icon.c.md#build_resource_fork)
 static void build_resource_fork(struct vol *vol, const unsigned char *icn_hash, const unsigned char *icl4, const unsigned char *icl8)
 ```
 
-Defined at lines 78 to 216.
+Defined at lines 92 to 230.
 
-Build the Macintosh resource fork binary data containing ICN#, icl4, and icl8.
+Build the resource fork of the virtual volume icon file from 3 icon resources.
 
-icn_hash: 256-byte ICN# resource (icon bitmap + mask) icl4: 512-byte icl4 resource (32x32 4-bit color icon) icl8: 1024-byte icl8 resource (32x32 8-bit color icon)
+The fork holds a 256-byte header, the data of ICN#, icl4, and icl8 with 4-byte length prefixes, and a resource map. All 3 resources use ID -16455, the custom icon ID of the Finder. A failed allocation leaves the volume without a virtual icon.
+
+Parameters:
+* `vol`: volume that receives v_icon_rfork and v_icon_rfork_len
+* `icn_hash`: 256-byte ICN# resource with bitmap and mask
+* `icl4`: 512-byte icl4 resource, 4-bit color
+* `icl8`: 1024-byte icl8 resource, 8-bit color
 
 Calls: [put_u16](virtual_icon.c.md#put_u16), [put_u32](virtual_icon.c.md#put_u32)
 
@@ -71,7 +85,14 @@ Called by: [virtual_icon_init](virtual_icon.c.md#virtual_icon_init)
 int virtual_icon_enabled(const struct vol *vol)
 ```
 
-Defined at lines 220 to 223.
+Defined at lines 240 to 243.
+
+Tell whether a volume serves a virtual icon file.
+
+Parameters:
+* `vol`: volume
+
+Returns: nonzero when the volume has a built icon resource fork
 
 Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_openfork](fork.c.md#afp_openfork), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams), [of_closefork](ofork.c.md#of_closefork)
 
@@ -81,7 +102,16 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.
 int real_icon_exists(const struct vol *vol)
 ```
 
-Defined at lines 225 to 231.
+Defined at lines 253 to 259.
+
+Tell whether the volume root holds a real icon file.
+
+A real file takes precedence over the virtual one.
+
+Parameters:
+* `vol`: volume
+
+Returns: nonzero when lstat finds VIRTUAL_ICON_NAME in the volume root
 
 Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams)
 
@@ -91,7 +121,14 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.
 int is_virtual_icon_name(const char *name)
 ```
 
-Defined at lines 233 to 236.
+Defined at lines 267 to 270.
+
+Tell whether a name is the name of the virtual icon file.
+
+Parameters:
+* `name`: file name
+
+Returns: nonzero for VIRTUAL_ICON_NAME
 
 Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_openfork](fork.c.md#afp_openfork), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [of_closefork](ofork.c.md#of_closefork)
 
@@ -101,7 +138,14 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.
 void virtual_icon_init(struct vol *vol)
 ```
 
-Defined at lines 238 to 293.
+Defined at lines 280 to 335.
+
+Build the virtual icon of a volume from its legacy icon option.
+
+The option names one of the built-in icons. An empty option builds nothing, and an unknown name logs a warning. A volume with a built icon keeps it.
+
+Parameters:
+* `vol`: volume
 
 Calls: [build_resource_fork](virtual_icon.c.md#build_resource_fork)
 
@@ -115,7 +159,15 @@ Uses file-scope variables: `daemon_icon` in [etc/afpd/icon.c](icon.c.md), `daemo
 const unsigned char * virtual_icon_get_rfork(const struct vol *vol, size_t *outlen)
 ```
 
-Defined at lines 295 to 305.
+Defined at lines 344 to 354.
+
+Return the resource fork of the virtual icon file.
+
+Parameters:
+* `vol`: volume
+* `outlen`: receives the fork length, 0 without a virtual icon
+
+Returns: the fork, or NULL without a virtual icon
 
 Called by: [afp_openfork](fork.c.md#afp_openfork), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon)
 
@@ -125,11 +177,20 @@ Called by: [afp_openfork](fork.c.md#afp_openfork), [materialize_virtual_icon](fo
 int virtual_icon_getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, char *buf, size_t *buflen)
 ```
 
-Defined at lines 313 to 463.
+Defined at lines 372 to 522.
 
-Synthesize AFP file parameters for the virtual Icon\r file.
+Build the AFP file parameters of the virtual icon file.
 
-This fills the reply buffer with parameters matching the requested bitmap, just as getmetadata/getfilparams would for a real file.
+The file is invisible, sits in the volume root with CNID VIRTUAL_ICON_CNID, and has an empty data fork. The resource fork length is the length of the built fork. The dates are AD_DATE_START, and the UNIX privileges show a read-only file of uid and gid 0.
+
+Parameters:
+* `obj`: session object
+* `vol`: volume
+* `bitmap`: file bitmap of the request
+* `buf`: reply buffer
+* `buflen`: length of the parameters on return
+
+Returns: AFP_OK, AFPERR_MISC without a virtual icon, or AFPERR_BITMAP for an unknown bit
 
 Calls: [set_name](file.c.md#set_name)
 

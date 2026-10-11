@@ -5,7 +5,7 @@ description: "1 type, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid_mysql_private.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -44,4 +44,6 @@ Defined at line 12.
 
 # Macros
 
-* Undocumented: `CNID_MYSQL_FLAG_DEPLETED`, `CNID_MYSQL_FLAG_HINT_RANGE_LOGGED`, `CNID_MYSQL_FLAG_NEAR_DEPLETION`
+* `CNID_MYSQL_FLAG_DEPLETED`: CNID set overflowed.
+* `CNID_MYSQL_FLAG_HINT_RANGE_LOGGED`: out-of-range hint warned once
+* `CNID_MYSQL_FLAG_NEAR_DEPLETION`: approaching-ceiling warned once

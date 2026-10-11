@@ -5,7 +5,7 @@ description: "1 type, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/pfd_cache.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,14 +29,14 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 ### struct pfd_stats
 
 Defined at line 17.
-* `unsigned long long hits`
-* `unsigned long long opens`
-* `unsigned long long sync_refreshes`
-* `unsigned long long probe_refreshes`
-* `unsigned long long regrounds`
-* `unsigned long long fallbacks`
-* `unsigned long long purges`
-* `unsigned long long path_repairs`
+* `unsigned long long hits`: fd served
+* `unsigned long long opens`: slot fills (full path resolutions)
+* `unsigned long long sync_refreshes`: dircache-learned mismatches, refilled
+* `unsigned long long probe_refreshes`: re-ground probe mismatches, refilled
+* `unsigned long long regrounds`: absolute-path probes issued
+* `unsigned long long fallbacks`: fell back to full-path ostat
+* `unsigned long long purges`: slots retired by purge hooks
+* `unsigned long long path_repairs`: stale d_fullpath rebuilt from parent
 
 # Macros
 

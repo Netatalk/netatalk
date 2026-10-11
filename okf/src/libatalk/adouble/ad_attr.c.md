@@ -5,7 +5,7 @@ description: "6 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_attr.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,17 +26,23 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 int ad_getattr(const struct adouble *ad, uint16_t *attr)
 ```
 
-Defined at lines 30 to 70.
+Defined at lines 37 to 77.
 
-Note: the "shared" and "invisible" attributes are opaque and stored and retrieved from the FinderFlags. This fixes Bug #2802236:
+Read the AFP attribute word of an AppleDouble entry.
+
+The shared and invisible attributes are opaque and live in the Finder flags, so they come from there, as bug #2802236 required. For directories ATTRBIT_EXPFLDR occupies the shared bit and stays untouched. The adouble's open-fork bits are also present in the result.
 
 See also: https://sourceforge.net/p/netatalk/bugs/350/
+
+Parameters:
+* `ad`: AppleDouble with its metadata loaded
+* `attr`: receives the attribute word in network byte order
+
+Returns: 0
 
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [change_attributes](../../bin/nad/nad_set.c.md#change_attributes), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [getdirparams](../../etc/afpd/directory.c.md#getdirparams), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [print_flags](../../bin/nad/nad_ls.c.md#print_flags), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
-
-Mentioned in the documentation of: [ad_rebuild_from_cache](../../etc/afpd/ad_cache.c.md#ad_rebuild_from_cache)
 
 ### ad_setattr
 
@@ -44,7 +50,17 @@ Mentioned in the documentation of: [ad_rebuild_from_cache](../../etc/afpd/ad_cac
 int ad_setattr(const struct adouble *ad, const uint16_t attribute)
 ```
 
-Defined at lines 73 to 113.
+Defined at lines 92 to 132.
+
+Store the AFP attribute word in an AppleDouble entry.
+
+ad_setattr never stores the open-fork bits. For directories it drops the bits that only files carry (ATTRBIT_MULTIUSER, ATTRBIT_NOWRITE, ATTRBIT_NOCOPY), because Mac OS X 10.4 tries to set ATTRBIT_MULTIUSER on folders. It also writes the invisible bit, and for files the shared bit, into the Finder flags.
+
+Parameters:
+* `ad`: AppleDouble with its metadata loaded
+* `attribute`: attribute word in network byte order
+
+Returns: 0
 
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
@@ -56,13 +72,21 @@ Called by: [change_attributes](../../bin/nad/nad_set.c.md#change_attributes), [n
 int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino, const uint32_t id, const cnid_t did, const void *stamp)
 ```
 
-Defined at lines 120 to 232.
+Defined at lines 153 to 265.
 
-save file/folder ID in AppleDoubleV2 netatalk private parameters
+Store the CNID, the file identity, and the database stamp in the private AppleDouble entries.
 
-Returns: 1 if resource fork has been modified
+PRIVDEV and PRIVINO hold 8 bytes each, so the native dev_t and ino_t widen to 64 bits in host byte order. ADVOL_NODEV zeroes the device. The CNID goes out in network order for the EA form. The parent DID only exists in version 2. When an entry cannot be addressed, ad_setid restores the lengths it changed and reports nothing written.
 
-Returns: -1 on error.
+Parameters:
+* `adp`: AppleDouble with its metadata loaded
+* `dev`: device of the file
+* `ino`: inode of the file
+* `id`: CNID to store
+* `did`: CNID of the parent directory, stored for version 2 only
+* `stamp`: CNID database stamp of ADEDLEN_PRIVSYN bytes
+
+Returns: 1 after writing the entries, so the header needs a flush, or 0 when an entry cannot be addressed
 
 Called by: [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [do_move](../../bin/nad/nad_mv.c.md#do_move), [get_id](../../etc/afpd/file.c.md#get_id), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [nad_update_cnid](../../bin/nad/nad_adouble.c.md#nad_update_cnid), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [update_created_file_cnid](../../bin/nad/megatron.c.md#update_created_file_cnid)
 
@@ -72,11 +96,20 @@ Called by: [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_cr
 uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino, const cnid_t did, const void *stamp)
 ```
 
-Defined at lines 238 to 311.
+Defined at lines 283 to 356.
 
-Retrieve stored file / folder.
+Read the CNID stored in an AppleDouble entry when it matches the file.
 
-Note: Callers should treat a return of CNID_INVALID (0) as an invalid value.
+The stored device and inode must equal the file's, unless the volume runs with ADVOL_NODEV. The stored parent must equal did when both are non-zero. Version 2 entries hold the CNID in host order, EA entries in network order. Callers treat a return of CNID_INVALID (0) as an invalid value.
+
+Parameters:
+* `adp`: AppleDouble with its metadata loaded, or NULL
+* `st_dev`: device of the file from stat
+* `st_ino`: inode of the file from stat
+* `did`: CNID of the parent directory, or 0 to skip that check
+* `stamp`: unused
+
+Returns: the stored CNID, or CNID_INVALID when the entry is absent or the identity differs
 
 Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [get_id](../../etc/afpd/file.c.md#get_id), [getmetadata](../../etc/afpd/file.c.md#getmetadata)
 
@@ -86,7 +119,14 @@ Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [get_id]
 uint32_t ad_forcegetid(struct adouble *adp)
 ```
 
-Defined at lines 314 to 336.
+Defined at lines 366 to 388.
+
+Read the CNID stored in an AppleDouble entry without checking the file's identity.
+
+Parameters:
+* `adp`: AppleDouble with its metadata loaded, or NULL
+
+Returns: the stored CNID, or CNID_INVALID when adp is NULL or has no PRIVID entry
 
 Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [print_flags](../../bin/nad/nad_ls.c.md#print_flags)
 
@@ -96,9 +136,17 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [print_flags](..
 int ad_setname(struct adouble *ad, const char *path)
 ```
 
-Defined at lines 341 to 363.
+Defined at lines 400 to 422.
 
-set resource fork filename attribute.
+Store a file name in the AppleDouble name entry.
+
+ad_setname cuts the name at ADEDLEN_NAME bytes.
+
+Parameters:
+* `ad`: AppleDouble with its metadata loaded
+* `path`: name to store
+
+Returns: 1 after storing the name, 0 when the entry does not exist, -1 when it cannot be addressed
 
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 

@@ -5,7 +5,7 @@ description: "3 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_output.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -37,7 +37,17 @@ Called by: [ddp_output](ddp_output.c.md#ddp_output)
 ddp_output(struct ddpcb *ddp, struct mbuf *m)
 ```
 
-Defined at lines 32 to 93. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
+Defined at lines 44 to 105. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
+
+Send a packet from a DDP socket to its connected address.
+
+The call prepends a long DDP header with 0 hops. The header names the foreign address of the socket as the destination and the local address as the source. With ddp_cksum set the header carries a checksum. Then ddp_route sends the packet along the route of the socket.
+
+Parameters:
+* `ddp`: DDP socket control block
+* `m`: data
+
+Returns: 0, ENOBUFS, or the ddp_route error
 
 Calls: [at_cksum](ddp_output.c.md#at_cksum), [ddp_route](ddp_output.c.md#ddp_route)
 
@@ -53,7 +63,17 @@ Dispatched via: [atalksw](at_proto.c.md#atalksw)
 ddp_route(struct mbuf *m, struct route *ro)
 ```
 
-Defined at lines 128 to 233.
+Defined at lines 164 to 269.
+
+Send a DDP packet out of the interface of a route.
+
+The route needs an interface with an AppleTalk address whose range holds the gateway net. A phase 2 interface pulls up to MLEN bytes of the packet into its first mbuf, so the header starts on a word boundary. A phase 1 interface puts an LLAP header in front, with the destination node on a local net and the gateway node otherwise. The link layer address is the destination on a local net, or the gateway.
+
+Parameters:
+* `m`: packet with its DDP header, freed on an error
+* `ro`: route, its use count raised
+
+Returns: the if_output result, EINVAL without a usable route, or ENOBUFS
 
 Called by: [ddp_input](ddp_input.c.md#ddp_input), [ddp_output](ddp_output.c.md#ddp_output)
 

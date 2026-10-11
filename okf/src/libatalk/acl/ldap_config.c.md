@@ -5,7 +5,7 @@ description: "2 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/ldap_config.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,9 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 void acl_ldap_freeconfig(void)
 ```
 
-Defined at lines 38 to 50.
+Defined at lines 42 to 54.
+
+Free the string LDAP preferences and restore the default validity of every preference.
 
 Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit)
 
@@ -38,7 +40,16 @@ Uses file-scope variables: `ldap_prefs` in [libatalk/acl/ldap.c](ldap.c.md)
 int acl_ldap_readconfig(dictionary *iniconfig)
 ```
 
-Defined at lines 52 to 121.
+Defined at lines 66 to 135.
+
+Read the LDAP preferences from the global section of afp.conf.
+
+Each preference takes a string, an integer, or one of its mapped names. The LDAP setup counts as valid only with every required preference set and an authentication method of LDAP_AUTH_NONE or LDAP_AUTH_SIMPLE.
+
+Parameters:
+* `iniconfig`: parsed afp.conf
+
+Returns: 0, with ldap_config_valid set when the setup is usable
 
 Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit), [parse_ldapconf](../../bin/misc/uuidtest.c.md#parse_ldapconf)
 

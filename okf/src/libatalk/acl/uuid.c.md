@@ -5,7 +5,7 @@ description: "5 functions, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/uuid.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,16 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
 ```
 
-Defined at lines 54 to 72.
+Defined at lines 65 to 83.
+
+Build a local UUID for a user or group without a directory service UUID.
+
+A fixed 12-byte prefix for users or for groups precedes the ID in network order.
+
+Parameters:
+* `buf`: 16-byte destination
+* `type`: UUID_GROUP for a group, any other type for a user
+* `id`: uid or gid
 
 Called by: [afp_getacl](../../etc/afpd/acls.c.md#afp_getacl), [getuuidfromname](uuid.c.md#getuuidfromname)
 
@@ -41,11 +50,15 @@ Uses file-scope variables: `local_group_uuid`, `local_user_uuid`
 void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
 ```
 
-Defined at lines 78 to 107.
+Defined at lines 94 to 123.
 
-convert ascii string that can include dashes to binary uuid.
+Convert a hex UUID string, dashes allowed, into 16 bytes.
 
-Note: caller must provide a buffer.
+The call skips dashes and stops after 16 bytes. It does not validate the digits.
+
+Parameters:
+* `uuidstring`: hex string
+* `uuid`: 16-byte destination
 
 Called by: [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/misc/uuidtest.c.md#main)
 
@@ -55,13 +68,16 @@ Called by: [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/misc/u
 const char * uuid_bin2string(const unsigned char *uuid)
 ```
 
-Defined at lines 115 to 161.
+Defined at lines 135 to 181.
 
-Convert 16 byte binary uuid to neat ascii represantation including dashes.
+Format a 16-byte UUID as uppercase hex with dashes.
 
-Use defined or default ascii mask for dash placement
+The ldap uuid string option can set the dash layout as a mask of x and - characters. A mask without exactly 32 x characters falls back to the standard 8-4-4-4-12 layout.
 
-Returns: pointer to static buffer
+Parameters:
+* `uuid`: binary UUID
+
+Returns: the string in a static buffer
 
 Called by: [afp_getuserinfo](../../etc/afpd/auth.c.md#afp_getuserinfo), [get_vol_uuid](../util/netatalk_conf.c.md#get_vol_uuid), [getnamefromuuid](uuid.c.md#getnamefromuuid), [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/misc/uuidtest.c.md#main), [map_aces_darwin_to_posix](../../etc/afpd/acls.c.md#map_aces_darwin_to_posix), [uuidcache_dump](cache.c.md#uuidcache_dump)
 
@@ -73,14 +89,18 @@ Uses file-scope variables: `ldap_uuid_string` in [libatalk/acl/ldap.c](ldap.c.md
 int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
 ```
 
-Defined at lines 173 to 296.
+Defined at lines 199 to 322.
+
+Resolve a user or group name to its UUID.
+
+Looks in the UUID cache, then in LDAP when built with it, and finally builds a local UUID from the Unix uid or gid. A miss enters the cache as a negative entry.
 
 Parameters:
-* `name`: give me his name
-* `type`: and type (UUID_USER or UUID_GROUP)
-* `uuid`: pointer to uuid_t storage that the caller must provide
+* `name`: user or group name
+* `type`: UUID_USER or UUID_GROUP
+* `uuid`: storage of 16 bytes the caller provides
 
-Returns: 0 on success !=0 on errror
+Returns: 0 on success, -1 when the name is NULL or unknown
 
 Calls: [add_cachebyname](cache.c.md#add_cachebyname), [ldap_getuuidfromname](ldap.c.md#ldap_getuuidfromname), [localuuid_from_id](uuid.c.md#localuuid_from_id), [search_cachebyname](cache.c.md#search_cachebyname), [uuid_bin2string](uuid.c.md#uuid_bin2string), [uuid_string2bin](uuid.c.md#uuid_string2bin)
 
@@ -94,16 +114,18 @@ Uses file-scope variables: `uuidtype`
 int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type)
 ```
 
-Defined at lines 307 to 392.
+Defined at lines 337 to 422.
+
+Resolve a UUID to a user or group name and its type.
+
+Looks in the UUID cache, then recognizes the server's local user and group UUIDs, and finally asks LDAP when built with it. A miss enters the cache as a negative entry.
 
 Parameters:
-* `uuidp`: pointer to a uuid
-* `name`: returns allocated buffer from ldap_getnamefromuuid
-* `type`: returns USER, GROUP or LOCAL
+* `uuidp`: UUID to resolve
+* `name`: receives a newly allocated name that the caller frees
+* `type`: receives UUID_USER or UUID_GROUP
 
-Returns: 0 on success !=0 on errror
-
-Note: Caller must free name appropriately.
+Returns: 0 on success, -1 when the UUID is unknown
 
 Calls: [add_cachebyuuid](cache.c.md#add_cachebyuuid), [ldap_getnamefromuuid](ldap.c.md#ldap_getnamefromuuid), [search_cachebyuuid](cache.c.md#search_cachebyuuid), [uuid_bin2string](uuid.c.md#uuid_bin2string)
 

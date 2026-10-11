@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "bin/nad"
-description: "24 files, 182 functions."
+description: "24 files, 181 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/nad"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
@@ -13,7 +13,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
 * [bin/nad/crc16.c](nad/crc16.c.md): 1 function, includes 1 project header.
 * [bin/nad/crc16.h](nad/crc16.h.md): No functions or types.
 * [bin/nad/ftw.c](nad/ftw.c.md): 12 functions, 4 types, includes 3 project headers.
-* [bin/nad/ftw.h](nad/ftw.h.md): 1 function, 1 type.
+* [bin/nad/ftw.h](nad/ftw.h.md): 1 type.
 * [bin/nad/hqx.c](nad/hqx.c.md): 17 functions, 1 type, includes 7 project headers.
 * [bin/nad/hqx.h](nad/hqx.h.md): No functions or types.
 * [bin/nad/macbin.c](nad/macbin.c.md): 18 functions, 1 type, includes 7 project headers.
@@ -67,4 +67,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:01+11:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[NFTW_NAME](nad/ftw.c.md#nftw_name), [mtoupathcap](nad/nad_adouble.c.md#mtoupathcap), [openvol](nad/nad_util.c.md#openvol), [parse_archive_mode](nad/megatron.c.md#parse_archive_mode), [utompathcap](nad/nad_adouble.c.md#utompathcap), [xgetcwd](nad/ftw.c.md#xgetcwd)
+[mtoupathcap](nad/nad_adouble.c.md#mtoupathcap), [openvol](nad/nad_util.c.md#openvol), [parse_archive_mode](nad/megatron.c.md#parse_archive_mode), [utompathcap](nad/nad_adouble.c.md#utompathcap), [xgetcwd](nad/ftw.c.md#xgetcwd)

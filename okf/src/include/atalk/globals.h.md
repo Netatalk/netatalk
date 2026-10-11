@@ -5,7 +5,7 @@ description: "1 function, 3 types, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/globals.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -115,48 +115,48 @@ Defined at line 188.
 * `char username`
 * `char oldtmp`
 * `char newtmp`
-* `void * uam_cookie`
+* `void * uam_cookie`: cookie for uams
 * `struct session_info sinfo`
-* `uid_t uid`
-* `uid_t euid`
-* `pid_t pid`
-* `int ipc_fd`
-* `int hint_fd`
+* `uid_t uid`: client login user id
+* `uid_t euid`: client effective process user id
+* `pid_t pid`: client process id
+* `int ipc_fd`: anonymous PF_UNIX socket for IPC with afpd parent
+* `int hint_fd`: pipe read/child end for receiving cache hints from parent
 * `gid_t * groups`
 * `int ngroups`
 * `int afp_version`
 * `int cnx_cnt`
 * `int cnx_max`
-* `int vols_skipped`
+* `int vols_skipped`: volume sections the last [load_afp_conf_vols()](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols) could not turn into volumes
 * `void(* logout`: Called through by [afp_asp_close](../../etc/afpd/afp_asp.c.md#afp_asp_close), [afp_dsi_close](../../etc/afpd/afp_dsi.c.md#afp_dsi_close).
 * `void(* exit`: Called through by [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [read_fork](../../etc/afpd/fork.c.md#read_fork), [send_reply](../../etc/afpd/auth.c.md#send_reply).
 * `int(* reply`: Called through by [send_reply](../../etc/afpd/auth.c.md#send_reply).
 * `int(* attention`: Called through by [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [setvoltime](../../etc/afpd/volume.c.md#setvoltime).
-* `void * sl_ctx`
+* `void * sl_ctx`: opaque handle for the active search backend
 
 ### struct afp_options
 
 Defined at line 118.
-* `int connections`
+* `int connections`: Maximum number of possible AFP connections.
 * `int tickleval`
 * `int timeout`
 * `int flags`
 * `int dircachesize`
-* `int dircache_mode`
-* `int dircache_validation_freq`
-* `int dircache_rfork_budget`
-* `int dircache_rfork_maxentry`
-* `int strict_locking_explicit`
-* `int dircache_validation_freq_explicit`
-* `int dircache_rfork_budget_explicit`
-* `int sleep`
-* `int disconnected`
+* `int dircache_mode`: Directory cache mode: 0=LRU, 1=ARC.
+* `int dircache_validation_freq`: Validate every Nth access (default 100)
+* `int dircache_rfork_budget`: Total rfork cache memory budget (KB, 0=disabled)
+* `int dircache_rfork_maxentry`: Max rfork size to cache per entry (KB)
+* `int strict_locking_explicit`: operator set strict locking (multi protocol changes defaults only)
+* `int dircache_validation_freq_explicit`: operator set dircache validation freq
+* `int dircache_rfork_budget_explicit`: operator set dircache rfork budget
+* `int sleep`: Maximum time allowed to sleep (in tickles)
+* `int disconnected`: Maximum time in disconnected state (in tickles)
 * `unsigned int tcp_sndbuf`
 * `unsigned int tcp_rcvbuf`
 * `unsigned char passwdbits`
 * `unsigned char passwdminlen`
 * `uint32_t server_quantum`
-* `int dsireadbuf`
+* `int dsireadbuf`: scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf
 * `char * hostname`
 * `char * zone`
 * `struct at_addr ddpaddr`
@@ -228,7 +228,25 @@ Defined at line 97.
 
 # Macros
 
-* Undocumented: `AFPOBJ_TMPSIZ`, `CNID_MAX_PATH_LEN`, `CNID_PATH_OVERHEAD`, `DEFAULT_DIRCACHE_SIZE`, `DEFAULT_DIRCACHE_VALIDATION_FREQ`, `DEFAULT_SPLICE_SIZE`, `DIRCACHE_VALIDATION_FREQ_MAX`, `DIRCACHE_VALIDATION_FREQ_MIN`, `IS_AFP_SESSION`, `MACFILELEN`, `MAXOPTLEN`, `MAXUSERLEN`, `OPTION_ACL2MACCESS`, `OPTION_ACL2MODE`, `OPTION_AFPSTATS`, `OPTION_ANNOUNCESSH`, `OPTION_CLOSEVOL`, `OPTION_DDP`, `OPTION_DEBUG`, `OPTION_NOSENDFILE`, `OPTION_NOZEROCONF`, `OPTION_RECVFILE`, `OPTION_SERVERNOTIF`, `OPTION_SHARE_RESERV`, `OPTION_SINGLEUSER`, `OPTION_SPOTLIGHT`, `OPTION_SPOTLIGHT_EXPR`, `OPTION_SPOTLIGHT_VOL`, `OPTION_STRICT_LOCKING`, `OPTION_UUID`, `OPTION_VALID_SHELLCHECK`, `OPTION_VETOMSG`, `PASSWD_ALL`, `PASSWD_NONE`, `PASSWD_NOSAVE`, `PASSWD_SET`, `RFORK_BUDGET_MAX_KB`, `RFORK_ENTRY_MAX_KB`, `SPLICE_SIZE_MAX`, `SPLICE_SIZE_MIN`, `SPOTLIGHT_RESULTS_LIMIT_DEFAULT`, `SPOTLIGHT_RESULTS_LIMIT_MAX`, `SPOTLIGHT_RESULTS_LIMIT_MIN`, `UTF8FILELEN_EARLY`
+* `DEFAULT_DIRCACHE_SIZE`: default 'dircache size' (entries)
+* `DEFAULT_DIRCACHE_VALIDATION_FREQ`: Validate every Nth access; multi protocol defaults this to 1.
+* `DIRCACHE_VALIDATION_FREQ_MAX`: Validate every 100th access.
+* `DIRCACHE_VALIDATION_FREQ_MIN`: Validate on every access.
+* `MACFILELEN`: Type2, HFS-compat.
+* `OPTION_AFPSTATS`: whether to expose afpstats Unix socket
+* `OPTION_DDP`: whether to allow connections via appletalk/ddp
+* `OPTION_SHARE_RESERV`: whether to use Solaris fcntl F_SHARE locks
+* `OPTION_SINGLEUSER`: single-user server without root privileges
+* `OPTION_SPOTLIGHT`: whether to initialize Spotlight support
+* `OPTION_SPOTLIGHT_EXPR`: whether to allow Spotlight logic expressions
+* `OPTION_SPOTLIGHT_VOL`: whether spotlight shall be enabled by default for volumes
+* `OPTION_STRICT_LOCKING`: per-IO POSIX byte-range data locks on FPRead/FPWrite (default: no)
+* `OPTION_VALID_SHELLCHECK`: whether to check for valid login shell
+* `OPTION_VETOMSG`: whether to send an AFP message for veto file access
+* `RFORK_BUDGET_MAX_KB`: Hard cap: 10 GB in KB.
+* `RFORK_ENTRY_MAX_KB`: Hard cap: 10 MB in KB.
+* `UTF8FILELEN_EARLY`: Type3, early Mac OS X 10.0-10.4.
+* Undocumented: `AFPOBJ_TMPSIZ`, `CNID_MAX_PATH_LEN`, `CNID_PATH_OVERHEAD`, `DEFAULT_SPLICE_SIZE`, `IS_AFP_SESSION`, `MAXOPTLEN`, `MAXUSERLEN`, `OPTION_ACL2MACCESS`, `OPTION_ACL2MODE`, `OPTION_ANNOUNCESSH`, `OPTION_CLOSEVOL`, `OPTION_DEBUG`, `OPTION_NOSENDFILE`, `OPTION_NOZEROCONF`, `OPTION_RECVFILE`, `OPTION_SERVERNOTIF`, `OPTION_UUID`, `PASSWD_ALL`, `PASSWD_NONE`, `PASSWD_NOSAVE`, `PASSWD_SET`, `SPLICE_SIZE_MAX`, `SPLICE_SIZE_MIN`, `SPOTLIGHT_RESULTS_LIMIT_DEFAULT`, `SPOTLIGHT_RESULTS_LIMIT_MAX`, `SPOTLIGHT_RESULTS_LIMIT_MIN`
 
 # File-scope variables
 

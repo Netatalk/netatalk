@@ -5,7 +5,7 @@ description: "5 functions, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_options.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -61,7 +61,7 @@ static void show_paths(void)
 
 Defined at lines 170 to 180.
 
-Display compiled-in default paths
+Display compiled-in default paths.
 
 Called by: [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdline)
 
@@ -83,7 +83,16 @@ Called by: [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdlin
 void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
 ```
 
-Defined at lines 191 to 240.
+Defined at lines 204 to 253.
+
+Parse the afpd command line into the command line fields of a server object.
+
+The -d option sets OPTION_DEBUG, -u sets OPTION_SINGLEUSER, and -F stores the configuration file path. The -v, -V, and -h options print and exit 0. An unknown option or an extra argument prints the usage and exits with status 2. Resetting optind lets each server object parse the arguments.
+
+Parameters:
+* `obj`: server object
+* `ac`: argument count
+* `av`: argument vector
 
 Calls: [show_paths](afp_options.c.md#show_paths), [show_usage](afp_options.c.md#show_usage), [show_version](afp_options.c.md#show_version), [show_version_extended](afp_options.c.md#show_version_extended)
 

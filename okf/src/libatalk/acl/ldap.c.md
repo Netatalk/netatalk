@@ -5,7 +5,7 @@ description: "5 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/ldap.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -77,7 +77,18 @@ Uses file-scope variables: `ldap_uuid_attr`, `ldap_uuid_encoding`
 static int ldap_escape_filter_value(const char *src, char *dst, size_t dstlen)
 ```
 
-Defined at lines 362 to 387.
+Defined at lines 371 to 396.
+
+Escape a string for an LDAP search filter as RFC 4515 requires.
+
+The characters *, (, ), and backslash become a backslash and 2 hex digits.
+
+Parameters:
+* `src`: string to escape
+* `dst`: receives the escaped string
+* `dstlen`: size of dst
+
+Returns: 0, or -1 when the escaped string and its NUL do not fit in dst
 
 Called by: [ldap_getuuidfromname](ldap.c.md#ldap_getuuidfromname)
 
@@ -87,7 +98,7 @@ Called by: [ldap_getuuidfromname](ldap.c.md#ldap_getuuidfromname)
 int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
 ```
 
-Defined at lines 400 to 477. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
+Defined at lines 409 to 486. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
 
 Search UUID for name in LDAP.
 
@@ -112,7 +123,7 @@ Uses file-scope variables: `ldap_config_valid`, `ldap_group_attr`, `ldap_groupba
 int ldap_getnamefromuuid(const char *uuidstr, char **name, uuidtype_t *type)
 ```
 
-Defined at lines 490 to 538. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
+Defined at lines 499 to 547. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
 
 LDAP search wrapper.
 

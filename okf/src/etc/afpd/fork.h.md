@@ -5,7 +5,7 @@ description: "1 function, 2 types, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -47,7 +47,9 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int fork_range_within(off_t offset, off_t length, off_t size)
 ```
 
-Defined at lines 58 to 62.
+Defined at lines 57 to 61.
+
+Check that [offset, offset + length) fits in size without overflow.
 
 Called by: [read_fork](fork.c.md#read_fork), [rfork_cache_serve_from_buf](fork.c.md#rfork_cache_serve_from_buf)
 
@@ -79,4 +81,10 @@ Defined at line 22.
 
 # Macros
 
-* Undocumented: `AFPFORK_ACCMASK`, `AFPFORK_ACCRD`, `AFPFORK_ACCWR`, `AFPFORK_DATA`, `AFPFORK_DIRTY`, `AFPFORK_ERROR`, `AFPFORK_META`, `AFPFORK_MODIFIED`, `AFPFORK_RSRC`, `AFPFORK_VIRTUAL`, `OPENACC_DRD`, `OPENACC_DWR`, `OPENACC_RD`, `OPENACC_WR`, `OPENFORK_DATA`, `OPENFORK_RSCS`, `of_name`
+* `AFPFORK_DATA`: open datafork
+* `AFPFORK_ERROR`: used to indicate an error in opening the fork
+* `AFPFORK_META`: open metadata
+* `AFPFORK_MODIFIED`: used in FCE for modified files
+* `AFPFORK_RSRC`: open rsrcfork
+* `AFPFORK_VIRTUAL`: virtual file fork
+* Undocumented: `AFPFORK_ACCMASK`, `AFPFORK_ACCRD`, `AFPFORK_ACCWR`, `AFPFORK_DIRTY`, `OPENACC_DRD`, `OPENACC_DWR`, `OPENACC_RD`, `OPENACC_WR`, `OPENFORK_DATA`, `OPENFORK_RSCS`, `of_name`

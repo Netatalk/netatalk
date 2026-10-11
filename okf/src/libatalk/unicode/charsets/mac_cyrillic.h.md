@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "libatalk/unicode/charsets/mac_cyrillic.h"
-description: "2 functions."
+description: "MacCyrillic."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_cyrillic.h"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -22,7 +22,9 @@ Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commi
 static int char_mac_cyrillic_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 ```
 
-Defined at lines 54 to 65.
+Defined at lines 55 to 66.
+
+Map a MAC_CYRILLIC byte to UCS2, through the table above 0x7f.
 
 Called by: [mac_cyrillic_pull](mac_cyrillic.c.md#mac_cyrillic_pull)
 
@@ -34,7 +36,9 @@ Uses file-scope variables: `mac_cyrillic_2uni`
 static int char_ucs2_to_mac_cyrillic(unsigned char *r, ucs2_t wc)
 ```
 
-Defined at lines 114 to 149.
+Defined at lines 116 to 151.
+
+Map a UCS2 character to a MAC_CYRILLIC byte, or return 0.
 
 Called by: [mac_cyrillic_push](mac_cyrillic.c.md#mac_cyrillic_push)
 

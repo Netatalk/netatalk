@@ -5,7 +5,7 @@ description: "1 function, 2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/comment.h"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -50,4 +50,6 @@ Defined at line 14.
 
 # Macros
 
-* Undocumented: `CH_DONE`, `CH_ERROR`, `CH_MORE`, `CM_NOPRINT`, `C_CONTINUE`, `C_FULL`, `comgetflags`, `compeek`, `comsetflags`
+* `CM_NOPRINT`: or print
+* `C_FULL`: or prefix
+* Undocumented: `CH_DONE`, `CH_ERROR`, `CH_MORE`, `C_CONTINUE`, `comgetflags`, `compeek`, `comsetflags`

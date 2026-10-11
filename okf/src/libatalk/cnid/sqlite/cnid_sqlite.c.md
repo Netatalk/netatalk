@@ -5,7 +5,7 @@ description: "33 functions, includes 8 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/sqlite/cnid_sqlite.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/cnid](../../cnid.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -38,7 +38,18 @@ Initialized at line 39 as `struct _cnid_module`. Assigns:
 static int cnid_sqlite_fchmod_regular(const char *path, mode_t mode, bool missing_ok)
 ```
 
-Defined at lines 84 to 131.
+Defined at lines 89 to 136.
+
+Change the mode of a SQLite file without following a symlink.
+
+Local users share the database directory, so afpd never passes a path to chmod while privileged. The call opens the file with O_NOFOLLOW. It refuses a file that is not regular or has more than 1 link, because a hard link could point outside the CNID directory.
+
+Parameters:
+* `path`: file to change
+* `mode`: new permission bits
+* `missing_ok`: true to accept a missing file
+
+Returns: 0, or -1 with errno set, EMLINK for a file with more than 1 link
 
 Called by: [cnid_sqlite_fchmod_companions](cnid_sqlite.c.md#cnid_sqlite_fchmod_companions), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
@@ -48,7 +59,17 @@ Called by: [cnid_sqlite_fchmod_companions](cnid_sqlite.c.md#cnid_sqlite_fchmod_c
 static int cnid_sqlite_fchmod_companions(const char *dbpath, mode_t mode)
 ```
 
-Defined at lines 135 to 156.
+Defined at lines 148 to 169.
+
+Check and set the mode of the -wal and -shm files of a SQLite database.
+
+The call runs before SQLite opens them, to reject unsafe files, and again after SQLite creates them, to set their mode.
+
+Parameters:
+* `dbpath`: path of the database file
+* `mode`: permission bits
+
+Returns: 0, or -1 for an unsafe companion or a path that is too long
 
 Calls: [cnid_sqlite_fchmod_regular](cnid_sqlite.c.md#cnid_sqlite_fchmod_regular)
 
@@ -60,15 +81,19 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static int init_prepared_stmt_one(CNID_sqlite_private *db, sqlite3_stmt **stmt, const char *tag, const char *sql_fmt)
 ```
 
-Defined at lines 166 to 199.
+Defined at lines 184 to 217.
 
-Prepare one per-volume statement, replacing any previous handle.
+Prepare one statement of the volume, finalizing the previous one.
+
+Preparing loads the schema, so a corrupt or read-only database fails here, and errno gets the same classification as a failed step.
 
 Parameters:
-* `db`: backend private data
-* `stmt`: statement handle to finalize and re-prepare
-* `tag`: statement name, for the debug log only
-* `sql_fmt`: SQL with one s for the volume's table name, or none
+* `db`: SQLite backend state
+* `stmt`: statement to finalize and prepare again
+* `tag`: statement name for the log
+* `sql_fmt`: SQL with s for the table name of the volume, or without one
+
+Returns: 0, or -1 with errno classified
 
 Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno)
 
@@ -80,11 +105,16 @@ Called by: [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
 static int init_prepared_stmt(CNID_sqlite_private *db)
 ```
 
-Defined at lines 207 to 251.
+Defined at lines 229 to 273.
 
-(Re-)prepare every per-volume statement, at open and after a wipe
+Prepare all 12 statements of the volume, at open and after a wipe.
 
-A failure leaves the handles past that point NULL; [cnid_sqlite_stmt_ready()](cnid_sqlite.c.md#cnid_sqlite_stmt_ready) rejects those.
+A failure leaves the later statements NULL, which cnid_sqlite_stmt_ready then refuses. The scoped find walks the subtree with a recursive CTE, which needs SQLite 3.8.3 or later.
+
+Parameters:
+* `db`: SQLite backend state
+
+Returns: 0, or -1 with errno classified
 
 Calls: [init_prepared_stmt_one](cnid_sqlite.c.md#init_prepared_stmt_one)
 
@@ -96,9 +126,12 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_w
 static void close_prepared_stmt(CNID_sqlite_private *db)
 ```
 
-Defined at lines 256 to 282.
+Defined at lines 280 to 306.
 
-Finalize every prepared statement and clear the handles.
+Finalize every prepared statement and clear the pointers.
+
+Parameters:
+* `db`: SQLite backend state
 
 Called by: [cnid_sqlite_close](cnid_sqlite.c.md#cnid_sqlite_close), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
@@ -108,11 +141,16 @@ Called by: [cnid_sqlite_close](cnid_sqlite.c.md#cnid_sqlite_close), [cnid_sqlite
 static bool cnid_sqlite_hint_usable(cnid_t hint)
 ```
 
-Defined at lines 291 to 295.
+Defined at lines 319 to 323.
 
-Whether a CNID hint from AppleDouble/EA metadata is safe to bind.
+Tell whether a CNID hint from AppleDouble or EA metadata is safe to bind.
 
-Rejects the reserved range below CNID_START and anything above CNID_SQLITE_MAX_HINT, which as an explicit rowid would raise the AUTOINCREMENT high-water mark towards the depletion reset.
+The call rejects the reserved range under CNID_START. It also rejects any value above CNID_SQLITE_MAX_HINT, which as an explicit rowid would push the AUTOINCREMENT high-water mark toward the depletion reset.
+
+Parameters:
+* `hint`: CNID in network order
+
+Returns: true when CNID_START <= hint <= CNID_SQLITE_MAX_HINT in host order
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add)
 
@@ -122,11 +160,16 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add)
 static bool cnid_sqlite_rowid_ok(uint64_t rowid)
 ```
 
-Defined at lines 304 to 307.
+Defined at lines 335 to 338.
 
-Whether a rowid read from the database still fits a CNID.
+Tell whether a rowid from the database still fits a CNID.
 
-The Id column is a 64-bit sqlite integer while a CNID is 32 bits. Narrowing one that does not fit would produce the id of an unrelated live row, which the caller would then hand to a client, or delete.
+The Id column holds 64-bit integers, and a CNID has 32 bits. A narrowed rowid would name an unrelated live row, which the caller could then hand to a client or remove.
+
+Parameters:
+* `rowid`: rowid from the database
+
+Returns: true when 1 <= rowid <= UINT32_MAX
 
 Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve)
 
@@ -136,11 +179,16 @@ Called by: [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_g
 static bool cnid_sqlite_uuid_usable(const char *uuid)
 ```
 
-Defined at lines 317 to 332.
+Defined at lines 352 to 367.
 
-Whether a volume UUID is safe to interpolate as a table name.
+Tell whether a volume UUID is safe to place in SQL text as a table name.
 
-A table name cannot be a bound parameter, so it is built into the SQL text. [uuid_strip_dashes()](../../util/cnid.c.md#uuid_strip_dashes) yields exactly 32 hex digits; the UUIDs read back out of the volumes table are only as trustworthy as the world-writable database file, so anything else is refused rather than quoted and hoped for.
+A table name cannot bind as a parameter. The uuid_strip_dashes call yields 32 hex digits. UUIDs read back from the volumes table are only as trustworthy as the database file, which local users can write. The call refuses any other value instead of quoting it.
+
+Parameters:
+* `uuid`: UUID string, or NULL
+
+Returns: true for exactly 32 hex digits
 
 Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
@@ -150,17 +198,18 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static void cnid_sqlite_set_errno(int sqlite_return)
 ```
 
-Defined at lines 348 to 382.
+Defined at lines 384 to 418.
 
-Map a sqlite3 result code onto the CNID error contract in errno.
+Map a SQLite result code onto the CNID_ERR_* contract in errno.
 
-CNID_ERR_BUSY covers what clears on its own: contention, disk full, I/O error, out of memory, and SQLITE_PROTOCOL, which is WAL's bounded locking handshake giving up. SQLITE_LOCKED is not in that set — it reports a same-connection or shared-cache conflict the busy handler never waits on, so the state survives a retry.
+CNID_ERR_BUSY covers states that clear by themselves: contention, a full disk, I/O errors, out of memory, SQLITE_PROTOCOL, and the READONLY recovery states. SQLITE_READONLY maps to EROFS, which afp_deleteid answers with AFPERR_VLOCK. SQLITE_LOCKED stays out of the busy set, because a retry meets the same conflict.
 
-CNID_ERR_DB, which [get_id()](../../../etc/afpd/file.c.md#get_id) in [etc/afpd/file.c](../../../etc/afpd/file.c.md) answers by ending the session, means the backend itself is unreachable. A local database file has no such state: the connection outlives whatever one statement returns, so an unrecognised code fails the single operation as CNID_ERR_CORRUPT.
+Every other code fails the single operation as CNID_ERR_CORRUPT. CNID_ERR_DB, which ends the session, means an unreachable backend, and a local database file has no such state.
+
+Parameters:
+* `sqlite_return`: extended SQLite result code
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_delete_by_uuid](cnid_sqlite.c.md#cnid_sqlite_delete_by_uuid), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [init_prepared_stmt_one](cnid_sqlite.c.md#init_prepared_stmt_one)
-
-Mentioned in the documentation of: [cnid_sqlite_delete_by_uuid](cnid_sqlite.c.md#cnid_sqlite_delete_by_uuid), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute)
 
 ### cnid_sqlite_execute
 
@@ -168,11 +217,15 @@ Mentioned in the documentation of: [cnid_sqlite_delete_by_uuid](cnid_sqlite.c.md
 static int cnid_sqlite_execute(sqlite3 *con, const char *sql)
 ```
 
-Defined at lines 389 to 403.
+Defined at lines 427 to 441.
 
-Run one SQL statement, classifying a failure into errno.
+Run one SQL statement and classify a failure into errno.
 
-Returns: 0 on success, -1 with errno set by [cnid_sqlite_set_errno()](cnid_sqlite.c.md#cnid_sqlite_set_errno)
+Parameters:
+* `con`: SQLite connection
+* `sql`: SQL text
+
+Returns: 0, or -1 with errno set by cnid_sqlite_set_errno
 
 Calls: [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno)
 
@@ -184,13 +237,18 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_beg
 static int cnid_sqlite_delete_by_uuid(sqlite3 *con, const char *sql, const char *uuid)
 ```
 
-Defined at lines 415 to 443.
+Defined at lines 455 to 483.
 
-Delete one row identified by a UUID, through a bound parameter.
+Remove a row by UUID through a bound parameter.
 
-The UUID is data here, not an identifier, so it never enters the SQL text: the stale entries this removes are read back out of the world-writable database file, where a value chosen to break out of a quoted string would otherwise run as SQL under the [become_root()](../../util/unix.c.md#become_root) the cleanup holds.
+The UUID comes from the database file, which local users can write, so it never enters the SQL text. A crafted value would otherwise run as SQL under the root privileges of the cleanup.
 
-Returns: 0 on success, -1 with errno set by [cnid_sqlite_set_errno()](cnid_sqlite.c.md#cnid_sqlite_set_errno)
+Parameters:
+* `con`: SQLite connection
+* `sql`: SQL statement with 1 placeholder
+* `uuid`: UUID of the row
+
+Returns: 0, or -1 with errno set by cnid_sqlite_set_errno
 
 Calls: [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno)
 
@@ -202,9 +260,15 @@ Called by: [cnid_sqlite_delete_sequence_row](cnid_sqlite.c.md#cnid_sqlite_delete
 static int cnid_sqlite_delete_volumes_row(sqlite3 *con, const char *uuid)
 ```
 
-Defined at lines 448 to 452.
+Defined at lines 492 to 496.
 
-Remove a stale volume's row from the volumes table.
+Remove the row of a stale volume from the volumes table.
+
+Parameters:
+* `con`: SQLite connection
+* `uuid`: UUID of the stale volume
+
+Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_delete_by_uuid](cnid_sqlite.c.md#cnid_sqlite_delete_by_uuid)
 
@@ -216,9 +280,15 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static int cnid_sqlite_delete_sequence_row(sqlite3 *con, const char *uuid)
 ```
 
-Defined at lines 457 to 461.
+Defined at lines 505 to 509.
 
-Remove a stale volume's AUTOINCREMENT high-water mark.
+Remove the AUTOINCREMENT high-water mark of a stale volume.
+
+Parameters:
+* `con`: SQLite connection
+* `uuid`: UUID of the stale volume
+
+Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_delete_by_uuid](cnid_sqlite.c.md#cnid_sqlite_delete_by_uuid)
 
@@ -230,11 +300,14 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static void cnid_sqlite_stmt_reset(sqlite3_stmt *stmt)
 ```
 
-Defined at lines 470 to 475.
+Defined at lines 520 to 525.
 
-Reset a prepared statement without disturbing the classification.
+Reset a prepared statement and keep errno.
 
-sqlite3_reset() enters the VFS and can leave errno set by a speculative syscall. It runs in every cleanup path after errno has been classified, and that classification is the caller's only signal for what failed.
+The sqlite3_reset call enters the VFS and can leave errno from a speculative syscall. Cleanup paths run it after errno holds the classification, the only failure signal of the caller.
+
+Parameters:
+* `stmt`: prepared statement
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update)
 
@@ -244,15 +317,19 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_del
 static bool cnid_sqlite_stmt_ready(sqlite3_stmt *stmt, const char *caller)
 ```
 
-Defined at lines 484 to 495.
+Defined at lines 538 to 549.
 
-Whether a prepared statement is available to bind and step.
+Tell whether a prepared statement is available to bind and step.
 
-The handles are NULL when [cnid_sqlite_wipe()](cnid_sqlite.c.md#cnid_sqlite_wipe)'s re-preparation stopped partway. sqlite3_bind_*() tolerates a NULL statement; sqlite3_step() on one is undefined, so every entry point checks the handles it uses.
+The statements stay NULL when the reprepare of cnid_sqlite_wipe stopped partway. Binding tolerates a NULL statement, but sqlite3_step on one invokes undefined behavior, so every entry point checks the statements it uses.
+
+Parameters:
+* `stmt`: prepared statement
+* `caller`: function name for the log
+
+Returns: true, or false with errno CNID_ERR_CLOSE
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update)
-
-Mentioned in the documentation of: [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
 
 ### cnid_sqlite_begin
 
@@ -260,11 +337,17 @@ Mentioned in the documentation of: [init_prepared_stmt](cnid_sqlite.c.md#init_pr
 static int cnid_sqlite_begin(sqlite3 *con, int *owned)
 ```
 
-Defined at lines 504 to 512.
+Defined at lines 562 to 570.
 
-Open a transaction and mark it owned by the calling function.
+Open a transaction and mark it as owned by the calling function.
 
-An exec'd COMMIT can fail and error-jump to cleanup, leaving the connection inside a transaction. Ownership is tracked so a cleanup handler can only abandon a transaction its own function started, never a caller's.
+A failed COMMIT can leave the connection inside a transaction. The owner flag lets a cleanup path roll back only a transaction that its function opened, never one of a caller.
+
+Parameters:
+* `con`: SQLite connection
+* `owned`: set to 1 once the transaction opens
+
+Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute)
 
@@ -276,9 +359,17 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_ope
 static int cnid_sqlite_commit(sqlite3 *con, int *owned)
 ```
 
-Defined at lines 517 to 529.
+Defined at lines 582 to 594.
 
-Commit the owned transaction, releasing ownership only on success.
+Commit the owned transaction and release ownership on success only.
+
+SQLITE_BUSY on COMMIT leaves the transaction open, and only the cleanup rollback can close it, so ownership survives a failed COMMIT.
+
+Parameters:
+* `con`: SQLite connection
+* `owned`: cleared after a successful COMMIT
+
+Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute)
 
@@ -290,11 +381,15 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_ope
 static void cnid_sqlite_rollback(sqlite3 *con, int *owned)
 ```
 
-Defined at lines 537 to 550.
+Defined at lines 605 to 618.
 
-Abandon an owned transaction without disturbing the classification.
+Roll back an owned transaction and keep errno.
 
-Runs from cleanup paths after errno has been classified; the ROLLBACK enters the VFS and could leave errno set by a speculative syscall.
+Cleanup paths call it after errno holds the classification, and the ROLLBACK enters the VFS, which could change errno.
+
+Parameters:
+* `con`: SQLite connection, or NULL
+* `owned`: owner flag, cleared by the call
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
@@ -304,11 +399,16 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_ope
 static int cnid_sqlite_seed_sequence(CNID_sqlite_private *db)
 ```
 
-Defined at lines 559 to 583.
+Defined at lines 631 to 655.
 
-Reseed the volume's AUTOINCREMENT sequence to the reserved floor.
+Reset the AUTOINCREMENT sequence of the volume to CNID_START - 1.
 
-UPDATE first, then INSERT only where the UPDATE changed no row: sqlite_sequence has no UNIQUE constraint to upsert against. Runs inside the caller's transaction; on failure the caller owns the rollback.
+The call updates the sequence row and inserts it only when the UPDATE changed no row, because sqlite_sequence has no UNIQUE constraint for an upsert. It runs inside the transaction of the caller, which also owns the rollback.
+
+Parameters:
+* `db`: SQLite backend state
+
+Returns: 0, or -1 with errno classified
 
 Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute)
 
@@ -320,7 +420,15 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_ope
 int cnid_sqlite_delete(struct _cnid_db *cdb, const cnid_t id)
 ```
 
-Defined at lines 585 to 626.
+Defined at lines 664 to 705.
+
+Remove a CNID from the SQLite table.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID in network order, not 0
+
+Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
@@ -332,7 +440,14 @@ Called by: [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqli
 void cnid_sqlite_close(struct _cnid_db *cdb)
 ```
 
-Defined at lines 628 to 664.
+Defined at lines 716 to 752.
+
+Close the SQLite connection of a CNID database and free the database.
+
+The call first folds the WAL back into the database with a TRUNCATE checkpoint and no busy timeout. Readers in other sessions can make the checkpoint skip, and the next close tries again.
+
+Parameters:
+* `cdb`: CNID database, and a NULL one logs an error
 
 Calls: [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt)
 
@@ -344,7 +459,21 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 int cnid_sqlite_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 666 to 825.
+Defined at lines 769 to 928.
+
+Rewrite the entry of a CNID with a new name, parent, and stat.
+
+An UPDATE that matches no row inserts the entry with its CNID. A SQLITE_CONSTRAINT collision retries once inside a transaction, after the call removes the rows that hold the name and parent or the device and inode.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID to keep
+* `st`: stat of the object
+* `did`: new parent CNID
+* `name`: new name on disk
+* `len`: length of name, up to MAXPATHLEN
+
+Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
@@ -356,7 +485,22 @@ Called by: [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqli
 cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 827 to 1074.
+Defined at lines 950 to 1197.
+
+Find the CNID of an object by name and parent or by device and inode.
+
+Extra matching rows are stale, and the call removes them and reports CNID_ERR_NOTFOUND. A row with an ID or parent outside the CNID range means a corrupted database.
+
+A row with another name or parent means a server-side move or a reused inode. When its CNID equals the hint of the current add, the row takes the new name and parent. Otherwise, and for a row with another device or inode, the call removes the row and reports CNID_ERR_NOTFOUND, so cnid_sqlite_add inserts a new entry.
+
+Parameters:
+* `cdb`: CNID database
+* `st`: stat of the object
+* `did`: CNID of the parent directory, at least 2
+* `name`: name on disk
+* `len`: length of name, up to MAXPATHLEN
+
+Returns: the CNID, or CNID_INVALID with errno classified
 
 Calls: [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [strlcpy](../../compat/strlcpy.c.md#strlcpy)
 
@@ -368,7 +512,23 @@ Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_new
 cnid_t cnid_sqlite_add(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len, cnid_t hint)
 ```
 
-Defined at lines 1076 to 1350.
+Defined at lines 1220 to 1494.
+
+Find the CNID of an object or add a new entry for it.
+
+A failed lookup leads to an insert only on CNID_ERR_NOTFOUND. The call refuses an empty name, a parent of 0, or an inode of 0. A usable hint goes in as an explicit rowid, unless a depletion emptied the table before. SQLITE_CONSTRAINT from a racing session drops the hint and repeats the lookup, up to CNID_SQLITE_ADD_ATTEMPTS times.
+
+Near CNID_SQLITE_MAX_HINT the call warns once. At UINT32_MAX it empties the table, reseeds the sequence, marks the volume depleted, and fails with CNID_ERR_RESET, so the session ends.
+
+Parameters:
+* `cdb`: CNID database
+* `st`: stat of the object
+* `did`: CNID of the parent directory
+* `name`: name on disk
+* `len`: length of name, up to MAXPATHLEN
+* `hint`: CNID from the metadata of the object, or CNID_INVALID
+
+Returns: the CNID, or CNID_INVALID with errno classified
 
 Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_hint_usable](cnid_sqlite.c.md#cnid_sqlite_hint_usable), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
@@ -380,7 +540,19 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 cnid_t cnid_sqlite_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 1352 to 1438.
+Defined at lines 1508 to 1594.
+
+Look up the CNID that a directory holds under a name.
+
+A rowid outside the CNID range means a corrupted database.
+
+Parameters:
+* `cdb`: CNID database
+* `did`: CNID of the directory
+* `name`: name on disk
+* `len`: length of name, up to MAXPATHLEN
+
+Returns: the CNID, or CNID_INVALID with errno CNID_ERR_NOTFOUND for a missing name or another classified value
 
 Calls: [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
@@ -392,7 +564,19 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 char * cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 ```
 
-Defined at lines 1440 to 1538.
+Defined at lines 1610 to 1708.
+
+Resolve a CNID to its parent and name in the SQLite table.
+
+Only a missing row reports CNID_ERR_NOTFOUND, which afp_resolveid answers with the permanent AFPERR_NOID. A parent outside the CNID range or a NULL name means a corrupted database.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID to resolve, receives the parent CNID or CNID_INVALID
+* `buffer`: receives the name, always NUL-terminated
+* `len`: size of buffer, not 0
+
+Returns: buffer, or NULL with errno classified
 
 Calls: [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [strlcpy](../../compat/strlcpy.c.md#strlcpy)
 
@@ -404,9 +588,18 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 int cnid_sqlite_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 1543 to 1627.
+Defined at lines 1721 to 1805.
 
-Caller passes buffer where we will store the db stamp
+Read the stamp of a volume from the volumes table.
+
+A missing row or a NULL stamp means unusable data, not a failing backend, so both report CNID_ERR_CORRUPT and the session survives.
+
+Parameters:
+* `cdb`: CNID database
+* `buffer`: receives the stamp, written as a string
+* `len`: size of buffer
+
+Returns: 0, or -1 with errno classified
 
 Calls: [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [strlcpy](../../compat/strlcpy.c.md#strlcpy)
 
@@ -418,15 +611,22 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 1645 to 1783.
+Defined at lines 1825 to 1963.
 
-Backend implementation of [cnid_find()](../cnid.c.md#cnid_find) for the sqlite backend.
+Find the CNIDs whose name contains a substring, for cnid_find.
 
-Parameters are pre-validated by the [libatalk/cnid/cnid.c](../cnid.c.md) wrapper, so cdb, name, namelen and buflen are all sane on entry. Detects truncation by binding LIMIT max_results+1 and observing whether the extra row was produced; reports it via `more_available`.
+The cnid_find wrapper validates the arguments. The query asks for 1 row more than buffer holds, and that extra row sets more_available. A row with an ID outside the CNID range drops out. A scope directory selects the statement that walks its subtree with a recursive CTE.
 
-`namelen` is unused: the SQLite backend builds the LIKE pattern via asprintf("%%%s%%", name), which already requires a NUL-terminated `name`. The parameter is kept to satisfy the cnid_db function-pointer signature shared with the mysql backend.
+Parameters:
+* `cdb`: CNID database
+* `name`: NUL-terminated UTF-8 substring
+* `namelen`: unused, kept for the shared backend signature
+* `scope_did`: CNID of the scope directory, or CNID_INVALID for an unscoped search
+* `buffer`: receives the CNIDs in network order
+* `buflen`: size of buffer
+* `more_available`: receives true when more matches exist, or NULL
 
-`scope_did` selects the statement: CNID_INVALID searches the whole volume, anything else only the subtree rooted at that directory.
+Returns: the number of CNIDs, or -1 with errno classified
 
 Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
@@ -438,13 +638,20 @@ Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 int cnid_sqlite_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 1785 to 1861.
+Defined at lines 1978 to 2054.
+
+Empty the SQLite table of a volume and restart its CNIDs at CNID_START.
+
+One transaction clears the depletion mark, removes every row, and reseeds the sequence. The call then clears the depletion flags of the connection, so a dbd rebuild restores the CNIDs from the metadata, and prepares the statements again. A failed reprepare leaves every statement closed until the database reopens.
+
+Parameters:
+* `cdb`: CNID database
+
+Returns: 0, or -1 with errno classified, CNID_ERR_CLOSE after a failed reprepare
 
 Calls: [asprintf](../../compat/misc.c.md#asprintf), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
 
 Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
-
-Mentioned in the documentation of: [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready)
 
 ### cnid_sqlite_new
 
@@ -452,7 +659,14 @@ Mentioned in the documentation of: [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cni
 static struct _cnid_db * cnid_sqlite_new(struct vol *vol)
 ```
 
-Defined at lines 1863 to 1884.
+Defined at lines 2062 to 2083.
+
+Allocate a CNID database object with the SQLite function table.
+
+Parameters:
+* `vol`: volume of the database
+
+Returns: the object, or NULL when calloc fails
 
 Calls: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_close](cnid_sqlite.c.md#cnid_sqlite_close), [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_find](cnid_sqlite.c.md#cnid_sqlite_find), [cnid_sqlite_get](cnid_sqlite.c.md#cnid_sqlite_get), [cnid_sqlite_getstamp](cnid_sqlite.c.md#cnid_sqlite_getstamp), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_resolve](cnid_sqlite.c.md#cnid_sqlite_resolve), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
@@ -464,9 +678,16 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static bool cnid_sqlite_dir_owner_only(const char *path)
 ```
 
-Defined at lines 1889 to 1907.
+Defined at lines 2094 to 2112.
 
-Whether a CNID directory is the opener's own owner-only directory.
+Tell whether a CNID directory is an owner-only directory of the opener.
+
+The call strips trailing slashes first, so lstat cannot follow a symlink.
+
+Parameters:
+* `path`: directory path
+
+Returns: true for a directory that the real uid owns with no group or other permission bits
 
 Calls: [strlcpy](../../compat/strlcpy.c.md#strlcpy)
 
@@ -478,11 +699,15 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static void cnid_sqlite_report_orphan(const struct vol *vol, const char *dbdir)
 ```
 
-Defined at lines 1917 to 1951.
+Defined at lines 2125 to 2159.
 
-Log a database named after the volume in its share root, unused unless the share root is the database directory.
+Log an unused CNID database named after the volume in its share root.
 
-Only a regular file with the SQLite header counts, opened without following a link or blocking.
+The call looks for the v_localname file with the .sqlite suffix in the share root, unless the share root is the database directory. Only a regular file with the SQLite header counts, opened without following a link or blocking.
+
+Parameters:
+* `vol`: volume
+* `dbdir`: database directory in use
 
 Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
@@ -492,7 +717,18 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 struct _cnid_db * cnid_sqlite_open(struct cnid_open_args *args)
 ```
 
-Defined at lines 1953 to 2579.
+Defined at lines 2179 to 2805.
+
+Open the SQLite CNID backend for a volume.
+
+The database stays private, with mode 0600 in a 0700 directory, for a single-user server or an opener that owns its CNID directory. Every other opener shares it, with mode 0666 in a 01777 directory. The call creates or checks the directory as root without following links. It opens the database with SQLITE_OPEN_NOFOLLOW and checks the -wal and -shm files before and after it turns on WAL.
+
+The volumes table maps each volume path to its UUID, stamp, and depletion mark. A UUID that differs only in case takes the spelling on disk, and the call drops the tables of the same path under another UUID. A new CNID table starts its sequence at CNID_START.
+
+Parameters:
+* `args`: open arguments with the volume and the flags
+
+Returns: the database, or NULL on error
 
 Calls: [asprintf](../../compat/misc.c.md#asprintf), [become_root](../../util/unix.c.md#become_root), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_delete_sequence_row](cnid_sqlite.c.md#cnid_sqlite_delete_sequence_row), [cnid_sqlite_delete_volumes_row](cnid_sqlite.c.md#cnid_sqlite_delete_volumes_row), [cnid_sqlite_dir_owner_only](cnid_sqlite.c.md#cnid_sqlite_dir_owner_only), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_fchmod_companions](cnid_sqlite.c.md#cnid_sqlite_fchmod_companions), [cnid_sqlite_fchmod_regular](cnid_sqlite.c.md#cnid_sqlite_fchmod_regular), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new), [cnid_sqlite_report_orphan](cnid_sqlite.c.md#cnid_sqlite_report_orphan), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_uuid_usable](cnid_sqlite.c.md#cnid_sqlite_uuid_usable), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt), [unbecome_root](../../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../../util/cnid.c.md#uuid_strip_dashes)
 

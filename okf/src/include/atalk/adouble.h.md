@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -86,6 +86,8 @@ static int ad_data_open(const struct adouble *ad)
 
 Defined at lines 405 to 408.
 
+Tell whether the data fork holds a reference and a descriptor >= 0.
+
 Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 
 ### ad_meta_open
@@ -94,11 +96,11 @@ Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork]
 static int ad_meta_open(const struct adouble *ad)
 ```
 
-Defined at lines 410 to 413.
+Defined at lines 411 to 414.
+
+Tell whether the metadata holds a reference and an open descriptor.
 
 Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf), [ad_open_rf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_rf_v2), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_getforkparams](../../etc/afpd/fork.c.md#afp_getforkparams), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [copyfile](../../etc/afpd/file.c.md#copyfile), [getforkparams](../../etc/afpd/fork.c.md#getforkparams)
-
-Mentioned in the documentation of: [ad_meta_loaded](adouble.h.md#ad_meta_loaded)
 
 ### ad_rsrc_open
 
@@ -106,7 +108,9 @@ Mentioned in the documentation of: [ad_meta_loaded](adouble.h.md#ad_meta_loaded)
 static int ad_rsrc_open(const struct adouble *ad)
 ```
 
-Defined at lines 415 to 418.
+Defined at lines 417 to 420.
+
+Tell whether the resource fork holds a reference and a descriptor.
 
 Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd)
 
@@ -116,9 +120,9 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](
 static int ad_meta_loaded(const struct adouble *ad)
 ```
 
-Defined at lines 425 to 430.
+Defined at lines 423 to 428.
 
-Metadata header read into ad; unlike [ad_meta_open()](adouble.h.md#ad_meta_open), true also for ea RDONLY opens, which read the EA by path and hold no fd. Symlinks short-circuit the metadata open with the refcount already taken and the header never read — both fds must be checked, as ea marks the meta fd and v2 the data fd.
+Tell whether the header got read: a reference and no symlink.
 
 Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [getfilparams](../../etc/afpd/file.c.md#getfilparams)
 
@@ -128,7 +132,7 @@ Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr]
 int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
 ```
 
-Declared at include/atalk/adouble.h line 454; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 452; no definition in the scanned sources.
 
 ### ad_pread
 
@@ -136,7 +140,7 @@ Declared at include/atalk/adouble.h line 454; no definition in the scanned sourc
 ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t)
 ```
 
-Declared at include/atalk/adouble.h line 510; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 508; no definition in the scanned sources.
 
 # Types
 
@@ -149,7 +153,7 @@ Defined at line 159.
 ### struct ad_fd
 
 Defined at line 176.
-* `int adf_fd`
+* `int adf_fd`: -1: invalid, AD_SYMLINK: symlink
 * `char * adf_syml`
 * `int adf_flags`
 * `adf_lock_t * adf_lock`
@@ -174,28 +178,28 @@ Defined at line 170.
 ### struct adouble
 
 Defined at line 199.
-* `uint32_t ad_magic`
-* `uint32_t ad_version`
+* `uint32_t ad_magic`: Official adouble magic.
+* `uint32_t ad_version`: Official adouble version number.
 * `char ad_filler`
 * `struct ad_entry ad_eid`
-* `struct ad_fd ad_data_fork`
-* `struct ad_fd ad_resource_fork`
-* `struct ad_fd * ad_rfp`
-* `struct ad_fd * ad_mdp`
-* `int ad_vers`
-* `int ad_adflags`
+* `struct ad_fd ad_data_fork`: the data fork
+* `struct ad_fd ad_resource_fork`: adouble:v2 -> the adouble file adouble:ea -> the EA fd
+* `struct ad_fd * ad_rfp`: adouble:v2 -> ad_resource_fork adouble:ea -> ad_resource_fork
+* `struct ad_fd * ad_mdp`: adouble:v2 -> ad_resource_fork adouble:ea -> ad_data_fork
+* `int ad_vers`: Our adouble version info (AD_VERSION*)
+* `int ad_adflags`: ad_open flags adflags like ADFLAGS_DIR
 * `uint32_t ad_inited`
 * `int ad_options`
-* `int ad_refcount`
+* `int ad_refcount`: multiple forks may open one adouble
 * `int ad_data_refcount`
 * `int ad_meta_refcount`
 * `int ad_reso_refcount`
-* `off_t ad_rlen`
-* `char * ad_name`
+* `off_t ad_rlen`: resource fork len with AFP 3.0 the header parameter size is too small.
+* `char * ad_name`: mac name (maccharset or UTF8-MAC)
 * `struct adouble_fops * ad_ops`
-* `uint16_t ad_open_forks`
-* `bool ad_nosplice`
-* `size_t valid_data_len`
+* `uint16_t ad_open_forks`: open forks (by others)
+* `bool ad_nosplice`: the fork's file cannot take splice()
+* `size_t valid_data_len`: Bytes read into ad_data.
 * `char ad_data`
 
 ### struct adouble_fops
@@ -216,4 +220,54 @@ Defined at line 191.
 
 # Macros
 
-* Undocumented: `ADEDLEN_AFPFILEI`, `ADEDLEN_COMMENT`, `ADEDLEN_DID`, `ADEDLEN_FILEDATESI`, `ADEDLEN_FILEI`, `ADEDLEN_FILLER`, `ADEDLEN_FINDERI`, `ADEDLEN_ICONBW`, `ADEDLEN_ICONCOL`, `ADEDLEN_MACFILEI`, `ADEDLEN_MAGIC`, `ADEDLEN_MSDOSFILEI`, `ADEDLEN_NAME`, `ADEDLEN_NENTRIES`, `ADEDLEN_PRIVDEV`, `ADEDLEN_PRIVID`, `ADEDLEN_PRIVINO`, `ADEDLEN_PRIVSYN`, `ADEDLEN_PRODOSFILEI`, `ADEDLEN_SHORTNAME`, `ADEDLEN_VERSION`, `ADEDOFF_FINDERI_OSX`, `ADEDOFF_RFORK_OSX`, `ADEID_AFPFILEI`, `ADEID_COMMENT`, `ADEID_DFORK`, `ADEID_DID`, `ADEID_FILEDATESI`, `ADEID_FILEI`, `ADEID_FINDERI`, `ADEID_ICONBW`, `ADEID_ICONCOL`, `ADEID_MACFILEI`, `ADEID_MAX`, `ADEID_MSDOSFILEI`, `ADEID_NAME`, `ADEID_NUM_EA`, `ADEID_NUM_OSX`, `ADEID_NUM_V2`, `ADEID_PRIVDEV`, `ADEID_PRIVID`, `ADEID_PRIVINO`, `ADEID_PRIVSYN`, `ADEID_PRODOSFILEI`, `ADEID_RFORK`, `ADEID_SHORTNAME`, `ADFLAGS_CHECK_OF`, `ADFLAGS_CREATE`, `ADFLAGS_DF`, `ADFLAGS_DIR`, `ADFLAGS_EXCL`, `ADFLAGS_HF`, `ADFLAGS_NOHF`, `ADFLAGS_NORF`, `ADFLAGS_RDONLY`, `ADFLAGS_RDWR`, `ADFLAGS_RF`, `ADFLAGS_SETSHRMD`, `ADFLAGS_TRUNC`, `ADLOCK_CLR`, `ADLOCK_FILELOCK`, `ADLOCK_MASK`, `ADLOCK_RD`, `ADLOCK_UPGRADE`, `ADLOCK_WR`, `ADVOL_FOLLO_SYML`, `ADVOL_FORCE_STICKY_XATTR`, `ADVOL_INVDOTS`, `ADVOL_NODEV`, `ADVOL_RO`, `ADVOL_UNIXPRIV`, `AD_AFPFILEI_BLANKACCESS`, `AD_AFPFILEI_GROUP`, `AD_AFPFILEI_OWNER`, `AD_APPLEDOUBLE_MAGIC`, `AD_APPLESINGLE_MAGIC`, `AD_CLOSED`, `AD_DATASZ`, `AD_DATASZ2`, `AD_DATASZ_EA`, `AD_DATASZ_MAX`, `AD_DATASZ_OSX`, `AD_DATE_ACCESS`, `AD_DATE_BACKUP`, `AD_DATE_CREATE`, `AD_DATE_DELTA`, `AD_DATE_FROM_MAC`, `AD_DATE_FROM_UNIX`, `AD_DATE_MAC_DELTA`, `AD_DATE_MASK`, `AD_DATE_MODIFY`, `AD_DATE_START`, `AD_DATE_TO_MAC`, `AD_DATE_TO_UNIX`, `AD_DATE_UNIX`, `AD_DEV`, `AD_ENTRY_LEN`, `AD_FILELOCK_BAND_BITS`, `AD_FILELOCK_BASE`, `AD_FILELOCK_DENY_RD`, `AD_FILELOCK_DENY_WR`, `AD_FILELOCK_OPEN_NONE`, `AD_FILELOCK_OPEN_RD`, `AD_FILELOCK_OPEN_WR`, `AD_FILELOCK_RSRC_DENY_RD`, `AD_FILELOCK_RSRC_DENY_WR`, `AD_FILELOCK_RSRC_OPEN_NONE`, `AD_FILELOCK_RSRC_OPEN_RD`, `AD_FILELOCK_RSRC_OPEN_WR`, `AD_FILLER_NETATALK`, `AD_FILLER_OSX`, `AD_HEADER_LEN`, `AD_ID`, `AD_INITED`, `AD_INO`, `AD_MAGIC`, `AD_SYMLINK`, `AD_SYN`, `AD_VERSION`, `AD_VERSION2`, `AD_VERSION_EA`, `ALL_BAND_BITS`, `ATTRBIT_BACKUP`, `ATTRBIT_DOPEN`, `ATTRBIT_EXPFLDR`, `ATTRBIT_INVISIBLE`, `ATTRBIT_MOUNTED`, `ATTRBIT_MULTIUSER`, `ATTRBIT_NOCOPY`, `ATTRBIT_NODELETE`, `ATTRBIT_NORENAME`, `ATTRBIT_NOWRITE`, `ATTRBIT_ROPEN`, `ATTRBIT_SETCLR`, `ATTRBIT_SHARED`, `ATTRBIT_SYSTEM`, `BYTELOCK_MAX`, `DELETE_BLOCKING_BAND_BITS`, `DENY_RD_BIT`, `DENY_WR_BIT`, `FINDERINFO_CLOSEDVIEW`, `FINDERINFO_COLOR`, `FINDERINFO_CUSTOMICON`, `FINDERINFO_FRCREATOFF`, `FINDERINFO_FRFLAGOFF`, `FINDERINFO_FRTYPEOFF`, `FINDERINFO_FRVIEWOFF`, `FINDERINFO_HASBEENINITED`, `FINDERINFO_HASBUNDLE`, `FINDERINFO_HASCUSTOMICON`, `FINDERINFO_HASNOINITS`, `FINDERINFO_HIDEEXT`, `FINDERINFO_INVISIBLE`, `FINDERINFO_ISALIAS`, `FINDERINFO_ISHARED`, `FINDERINFO_ISONDESK`, `FINDERINFO_ISSTATIONNERY`, `FINDERINFO_NAMELOCKED`, `OPEN_BITS`, `OPEN_NONE_BIT`, `OPEN_RD_BIT`, `OPEN_WR_BIT`, `RSRC_DENY_RD_BIT`, `RSRC_DENY_WR_BIT`, `RSRC_OPEN_NONE_BIT`, `RSRC_OPEN_RD_BIT`, `RSRC_OPEN_WR_BIT`, `ad_data_fileno`, `ad_get_MD_flags`, `ad_get_RF_flags`, `ad_get_syml_opt`, `ad_getentrylen`, `ad_getversion`, `ad_meta_fileno`, `ad_ref`, `ad_reso_fileno`, `ad_setentrylen`, `ad_setentryoff`, `ad_unref`
+* `ADEDLEN_SHORTNAME`: length up to 8.3
+* `ADEID_AFPFILEI`: where the rest of the FILEI info goes
+* `ADEID_FILEI`: v1, replaced by ADEID_FILEDATESI
+* `ADEID_MACFILEI`: we don't use this
+* `ADEID_MSDOSFILEI`: we don't use this
+* `ADEID_PRIVSYN`: in synch with database
+* `ADEID_PRODOSFILEI`: we store prodos info here
+* `ADFLAGS_CHECK_OF`: check for open forks from us and other afpd's
+* `ADFLAGS_CREATE`: create file, open called with O_CREAT
+* `ADFLAGS_EXCL`: exclusive open, open called with O_EXCL
+* `ADFLAGS_NOHF`: not an error if no metadata fork
+* `ADFLAGS_NORF`: not an error if no resource fork
+* `ADFLAGS_RDONLY`: open read only
+* `ADFLAGS_RDWR`: open read/write
+* `ADFLAGS_SETSHRMD`: setting share mode must be done with excl fcnt lock, which implies that the file must be opened rw.
+* `ADFLAGS_TRUNC`: truncate, open called with O_TRUNC
+* `ADVOL_INVDOTS`: dot files (.DS_Store) are invisible)
+* `ADVOL_UNIXPRIV`: adouble unix priv
+* `AD_AFPFILEI_BLANKACCESS`: blank access permissions
+* `AD_AFPFILEI_GROUP`: ignore group
+* `AD_AFPFILEI_OWNER`: any owner
+* `AD_ENTRY_LEN`: size of a single entry header
+* `AD_HEADER_LEN`: 26
+* `AD_INITED`: ad"INT"
+* `AD_SYMLINK`: special fd value used to indicate an open fork file is a (not open) symlink
+* `ATTRBIT_BACKUP`: "p", fd
+* `ATTRBIT_DOPEN`: data fork already open.
+* `ATTRBIT_EXPFLDR`: Folder is a sharepoint.
+* `ATTRBIT_INVISIBLE`: opaque from FinderInfo
+* `ATTRBIT_MOUNTED`: Directory is mounted by a user.
+* `ATTRBIT_MULTIUSER`: file: opaque, dir: see below
+* `ATTRBIT_NOCOPY`: "o", f
+* `ATTRBIT_NODELETE`: "l", fd
+* `ATTRBIT_NORENAME`: "r", fd
+* `ATTRBIT_NOWRITE`: "w", f, write inhibit(v2)/read-only(v1) bit
+* `ATTRBIT_ROPEN`: resource fork already open.
+* `ATTRBIT_SETCLR`: set/clear bit (d)
+* `ATTRBIT_SHARED`: Shared area, called IsExpFolder in spec.
+* `ATTRBIT_SYSTEM`: "y", fd
+* `FINDERINFO_HASBEENINITED`: "i", fd
+* `FINDERINFO_HASBUNDLE`: "b", fd
+* `FINDERINFO_HASCUSTOMICON`: "c", fd
+* `FINDERINFO_HASNOINITS`: "n", f
+* `FINDERINFO_HIDEEXT`: "e", fd
+* `FINDERINFO_INVISIBLE`: "v", fd
+* `FINDERINFO_ISALIAS`: "a", fd
+* `FINDERINFO_ISHARED`: "m", f
+* `FINDERINFO_ISONDESK`: "d", fd
+* `FINDERINFO_ISSTATIONNERY`: "t", f
+* `FINDERINFO_NAMELOCKED`: "s", fd
+* Undocumented: `ADEDLEN_AFPFILEI`, `ADEDLEN_COMMENT`, `ADEDLEN_DID`, `ADEDLEN_FILEDATESI`, `ADEDLEN_FILEI`, `ADEDLEN_FILLER`, `ADEDLEN_FINDERI`, `ADEDLEN_ICONBW`, `ADEDLEN_ICONCOL`, `ADEDLEN_MACFILEI`, `ADEDLEN_MAGIC`, `ADEDLEN_MSDOSFILEI`, `ADEDLEN_NAME`, `ADEDLEN_NENTRIES`, `ADEDLEN_PRIVDEV`, `ADEDLEN_PRIVID`, `ADEDLEN_PRIVINO`, `ADEDLEN_PRIVSYN`, `ADEDLEN_PRODOSFILEI`, `ADEDLEN_VERSION`, `ADEDOFF_FINDERI_OSX`, `ADEDOFF_RFORK_OSX`, `ADEID_COMMENT`, `ADEID_DFORK`, `ADEID_DID`, `ADEID_FILEDATESI`, `ADEID_FINDERI`, `ADEID_ICONBW`, `ADEID_ICONCOL`, `ADEID_MAX`, `ADEID_NAME`, `ADEID_NUM_EA`, `ADEID_NUM_OSX`, `ADEID_NUM_V2`, `ADEID_PRIVDEV`, `ADEID_PRIVID`, `ADEID_PRIVINO`, `ADEID_RFORK`, `ADEID_SHORTNAME`, `ADFLAGS_DF`, `ADFLAGS_DIR`, `ADFLAGS_HF`, `ADFLAGS_RF`, `ADLOCK_CLR`, `ADLOCK_FILELOCK`, `ADLOCK_MASK`, `ADLOCK_RD`, `ADLOCK_UPGRADE`, `ADLOCK_WR`, `ADVOL_FOLLO_SYML`, `ADVOL_FORCE_STICKY_XATTR`, `ADVOL_NODEV`, `ADVOL_RO`, `AD_APPLEDOUBLE_MAGIC`, `AD_APPLESINGLE_MAGIC`, `AD_CLOSED`, `AD_DATASZ`, `AD_DATASZ2`, `AD_DATASZ_EA`, `AD_DATASZ_MAX`, `AD_DATASZ_OSX`, `AD_DATE_ACCESS`, `AD_DATE_BACKUP`, `AD_DATE_CREATE`, `AD_DATE_DELTA`, `AD_DATE_FROM_MAC`, `AD_DATE_FROM_UNIX`, `AD_DATE_MAC_DELTA`, `AD_DATE_MASK`, `AD_DATE_MODIFY`, `AD_DATE_START`, `AD_DATE_TO_MAC`, `AD_DATE_TO_UNIX`, `AD_DATE_UNIX`, `AD_DEV`, `AD_FILELOCK_BAND_BITS`, `AD_FILELOCK_BASE`, `AD_FILELOCK_DENY_RD`, `AD_FILELOCK_DENY_WR`, `AD_FILELOCK_OPEN_NONE`, `AD_FILELOCK_OPEN_RD`, `AD_FILELOCK_OPEN_WR`, `AD_FILELOCK_RSRC_DENY_RD`, `AD_FILELOCK_RSRC_DENY_WR`, `AD_FILELOCK_RSRC_OPEN_NONE`, `AD_FILELOCK_RSRC_OPEN_RD`, `AD_FILELOCK_RSRC_OPEN_WR`, `AD_FILLER_NETATALK`, `AD_FILLER_OSX`, `AD_ID`, `AD_INO`, `AD_MAGIC`, `AD_SYN`, `AD_VERSION`, `AD_VERSION2`, `AD_VERSION_EA`, `ALL_BAND_BITS`, `BYTELOCK_MAX`, `DELETE_BLOCKING_BAND_BITS`, `DENY_RD_BIT`, `DENY_WR_BIT`, `FINDERINFO_CLOSEDVIEW`, `FINDERINFO_COLOR`, `FINDERINFO_CUSTOMICON`, `FINDERINFO_FRCREATOFF`, `FINDERINFO_FRFLAGOFF`, `FINDERINFO_FRTYPEOFF`, `FINDERINFO_FRVIEWOFF`, `OPEN_BITS`, `OPEN_NONE_BIT`, `OPEN_RD_BIT`, `OPEN_WR_BIT`, `RSRC_DENY_RD_BIT`, `RSRC_DENY_WR_BIT`, `RSRC_OPEN_NONE_BIT`, `RSRC_OPEN_RD_BIT`, `RSRC_OPEN_WR_BIT`, `ad_data_fileno`, `ad_get_MD_flags`, `ad_get_RF_flags`, `ad_get_syml_opt`, `ad_getentrylen`, `ad_getversion`, `ad_meta_fileno`, `ad_ref`, `ad_reso_fileno`, `ad_setentrylen`, `ad_setentryoff`, `ad_unref`

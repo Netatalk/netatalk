@@ -5,7 +5,7 @@ description: "1 function, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_attn.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,13 +25,17 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 int dsi_attention(DSI *, AFPUserBytes)
 ```
 
-Defined at lines 25 to 56. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 34 to 65. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-send an attention.
+Send a DSIAttention request carrying flags to the client.
 
-Note: this may get called at any time, so we can't use [DSI](../../include/atalk/dsi.h.md#struct-dsi) buffers to send one.
+The attention is a separate 16-byte header plus the user bytes, limited by the attention quantum. The block lives on the stack, because a signal handler may trigger it while the [DSI](../../include/atalk/dsi.h.md#struct-dsi) buffers are in use. A sleeping session skips the send. A session in the middle of a reply refuses it, because the handler must not interleave with that write.
 
-Returns: 0 on error
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
+* `flags`: AFP attention user bytes, in host order
+
+Returns: bytes sent, 1 for a sleeping session, or -1 when a reply is in progress or the send failed
 
 Calls: [dsi_stream_write](dsi_stream.c.md#dsi_stream_write)
 

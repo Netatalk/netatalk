@@ -5,7 +5,7 @@ description: "1 type, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/asp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -75,4 +75,8 @@ Defined at line 49.
 
 # Macros
 
-* Undocumented: `ASPERR_BADVERS`, `ASPERR_BUFSMALL`, `ASPERR_NOACK`, `ASPERR_NOSERV`, `ASPERR_NOSESS`, `ASPERR_OK`, `ASPERR_PARM`, `ASPERR_SERVBUSY`, `ASPERR_SESSCLOS`, `ASPERR_SIZERR`, `ASPERR_TOOMANY`, `ASPFL_SLS`, `ASPFL_SSS`, `ASPFUNC_ATTN`, `ASPFUNC_CLOSE`, `ASPFUNC_CMD`, `ASPFUNC_OPEN`, `ASPFUNC_STAT`, `ASPFUNC_TICKLE`, `ASPFUNC_WRITE`, `ASPFUNC_WRTCONT`, `ASP_CMDMAXSIZ`, `ASP_CMDSIZ`, `ASP_DATAMAXSIZ`, `ASP_DATASIZ`, `ASP_ERR_READ`, `ASP_ERR_SEQ`, `ASP_ERR_SID`, `ASP_HDRSIZ`, `ASP_MAXPACKETS`, `ASP_NOREQUEST`, `asp_seq`, `asp_slen`, `asp_status`, `asp_wrtreply`
+* `ASP_ERR_READ`: read failed, errno set
+* `ASP_ERR_SEQ`: sequence number mismatch
+* `ASP_ERR_SID`: session id mismatch
+* `ASP_NOREQUEST`: nothing complete yet, wait again
+* Undocumented: `ASPERR_BADVERS`, `ASPERR_BUFSMALL`, `ASPERR_NOACK`, `ASPERR_NOSERV`, `ASPERR_NOSESS`, `ASPERR_OK`, `ASPERR_PARM`, `ASPERR_SERVBUSY`, `ASPERR_SESSCLOS`, `ASPERR_SIZERR`, `ASPERR_TOOMANY`, `ASPFL_SLS`, `ASPFL_SSS`, `ASPFUNC_ATTN`, `ASPFUNC_CLOSE`, `ASPFUNC_CMD`, `ASPFUNC_OPEN`, `ASPFUNC_STAT`, `ASPFUNC_TICKLE`, `ASPFUNC_WRITE`, `ASPFUNC_WRTCONT`, `ASP_CMDMAXSIZ`, `ASP_CMDSIZ`, `ASP_DATAMAXSIZ`, `ASP_DATASIZ`, `ASP_HDRSIZ`, `ASP_MAXPACKETS`, `asp_seq`, `asp_slen`, `asp_status`, `asp_wrtreply`

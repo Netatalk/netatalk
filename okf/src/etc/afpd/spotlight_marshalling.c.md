@@ -5,7 +5,7 @@ description: "38 functions, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/spotlight_marshalling.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,16 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void sl_put_le32(char *buf, off_t off, uint32_t val)
 ```
 
-Defined at lines 92 to 99.
+Defined at lines 101 to 108.
+
+Write a 32-bit value in little-endian order at an offset.
+
+The caller checks the bounds.
+
+Parameters:
+* `buf`: buffer
+* `off`: byte offset
+* `val`: value in host order
 
 Called by: [sivalc](spotlight_marshalling.c.md#sivalc), [sl_put_le64](spotlight_marshalling.c.md#sl_put_le64)
 
@@ -41,7 +50,16 @@ Called by: [sivalc](spotlight_marshalling.c.md#sivalc), [sl_put_le64](spotlight_
 static void sl_put_le64(char *buf, off_t off, uint64_t val)
 ```
 
-Defined at lines 101 to 105.
+Defined at lines 119 to 123.
+
+Write a 64-bit value in little-endian order at an offset.
+
+The caller checks the bounds.
+
+Parameters:
+* `buf`: buffer
+* `off`: byte offset
+* `val`: value in host order
 
 Calls: [sl_put_le32](spotlight_marshalling.c.md#sl_put_le32)
 
@@ -53,7 +71,15 @@ Called by: [slvalc](spotlight_marshalling.c.md#slvalc)
 static uint64_t sl_get_le64(const char *buf, int offset)
 ```
 
-Defined at lines 107 to 118.
+Defined at lines 132 to 143.
+
+Read a little-endian 64-bit value at an offset.
+
+Parameters:
+* `buf`: buffer
+* `offset`: byte offset
+
+Returns: the value in host order
 
 Called by: [sl_unpack_uint64](spotlight_marshalling.c.md#sl_unpack_uint64)
 
@@ -63,7 +89,15 @@ Called by: [sl_unpack_uint64](spotlight_marshalling.c.md#sl_unpack_uint64)
 static uint64_t sl_get_be64(const char *buf, int offset)
 ```
 
-Defined at lines 120 to 131.
+Defined at lines 152 to 163.
+
+Read a big-endian 64-bit value at an offset.
+
+Parameters:
+* `buf`: buffer
+* `offset`: byte offset
+
+Returns: the value in host order
 
 Called by: [sl_unpack_uint64](spotlight_marshalling.c.md#sl_unpack_uint64)
 
@@ -73,7 +107,19 @@ Called by: [sl_unpack_uint64](spotlight_marshalling.c.md#sl_unpack_uint64)
 static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
 ```
 
-Defined at lines 133 to 148.
+Defined at lines 177 to 192.
+
+Write a 32-bit value in little-endian order after a bounds check.
+
+The packed Spotlight payload, variant 432130dm, carries its numbers in little-endian order on every host.
+
+Parameters:
+* `buf`: buffer
+* `off`: byte offset
+* `maxoff`: end of the usable buffer
+* `val`: value in host order
+
+Returns: 0, or -1 when the value would cross maxoff
 
 Calls: [sl_put_le32](spotlight_marshalling.c.md#sl_put_le32)
 
@@ -85,7 +131,17 @@ Called by: [sl_pack_len](spotlight_marshalling.c.md#sl_pack_len)
 static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
 ```
 
-Defined at lines 150 to 159.
+Defined at lines 203 to 212.
+
+Write a 64-bit value in little-endian order after a bounds check.
+
+Parameters:
+* `buf`: buffer
+* `off`: byte offset
+* `maxoff`: end of the usable buffer
+* `val`: value in host order
+
+Returns: 0, or -1 when the value would cross maxoff
 
 Calls: [sl_put_le64](spotlight_marshalling.c.md#sl_put_le64)
 
@@ -97,11 +153,19 @@ Called by: [sl_pack_CNID](spotlight_marshalling.c.md#sl_pack_cnid), [sl_pack_arr
 static uint spotlight_get_utf16_string_encoding(const char *buf, int offset, int query_length, uint encoding)
 ```
 
-Defined at lines 165 to 184.
+Defined at lines 227 to 246.
 
-Returns the UTF-16 string encoding, by checking the 2-byte byte order mark.
+Read the UTF-16 encoding of a string from its byte order mark.
 
-Returns: If there is no byte order mark, -1 is returned.
+A string without a byte order mark counts as little-endian, without the SL_ENC_UTF_16 flag.
+
+Parameters:
+* `buf`: packed request
+* `offset`: offset of the string
+* `query_length`: length of the string in bytes
+* `encoding`: encoding of the request, unused
+
+Returns: SL_ENC_UTF_16 with the byte order of the mark, or SL_ENC_LITTLE_ENDIAN alone
 
 Called by: [sl_unpack_cpx](spotlight_marshalling.c.md#sl_unpack_cpx)
 
@@ -111,7 +175,16 @@ Called by: [sl_unpack_cpx](spotlight_marshalling.c.md#sl_unpack_cpx)
 static uint64_t sl_pack_tag(uint16_t type, uint16_t size_or_count, uint32_t val)
 ```
 
-Defined at lines 192 to 196.
+Defined at lines 263 to 267.
+
+Build the 8-byte tag of a packed element.
+
+Parameters:
+* `type`: element type, in bits 16 to 31
+* `size_or_count`: size in 8-byte units or element count, in bits 0 to 15
+* `val`: value, in bits 32 to 63
+
+Returns: the tag
 
 Called by: [sl_pack_CNID](spotlight_marshalling.c.md#sl_pack_cnid), [sl_pack_array](spotlight_marshalling.c.md#sl_pack_array), [sl_pack_bool](spotlight_marshalling.c.md#sl_pack_bool), [sl_pack_date](spotlight_marshalling.c.md#sl_pack_date), [sl_pack_dict](spotlight_marshalling.c.md#sl_pack_dict), [sl_pack_filemeta](spotlight_marshalling.c.md#sl_pack_filemeta), [sl_pack_float](spotlight_marshalling.c.md#sl_pack_float), [sl_pack_len](spotlight_marshalling.c.md#sl_pack_len), [sl_pack_nil](spotlight_marshalling.c.md#sl_pack_nil), [sl_pack_string](spotlight_marshalling.c.md#sl_pack_string), [sl_pack_uint64](spotlight_marshalling.c.md#sl_pack_uint64), [sl_pack_uuid](spotlight_marshalling.c.md#sl_pack_uuid)
 
@@ -121,7 +194,17 @@ Called by: [sl_pack_CNID](spotlight_marshalling.c.md#sl_pack_cnid), [sl_pack_arr
 static int sl_pack_float(double d, char *buf, int offset, off_t maxoff)
 ```
 
-Defined at lines 198 to 215.
+Defined at lines 278 to 295.
+
+Pack a double as a float element, a tag and the IEEE 754 bits.
+
+Parameters:
+* `d`: value
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -133,7 +216,17 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_uint64(uint64_t u, char *buf, int offset, off_t maxoff)
 ```
 
-Defined at lines 217 to 229.
+Defined at lines 306 to 318.
+
+Pack a 64-bit integer element, a tag and the value.
+
+Parameters:
+* `u`: value
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -145,7 +238,17 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_bool(sl_bool_t bl, char *buf, int offset, off_t maxoff)
 ```
 
-Defined at lines 231 to 243.
+Defined at lines 329 to 341.
+
+Pack a boolean element, whose value sits in its tag.
+
+Parameters:
+* `bl`: value
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -157,7 +260,16 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_nil(char *buf, int offset, off_t maxoff)
 ```
 
-Defined at lines 245 to 256.
+Defined at lines 351 to 362.
+
+Pack a nil element, a lone tag.
+
+Parameters:
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -169,7 +281,17 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_date(sl_time_t t, char *buf, int offset, off_t maxoff)
 ```
 
-Defined at lines 258 to 278.
+Defined at lines 374 to 394.
+
+Pack a time as a date element, a double of seconds since 2001-01-01 UTC.
+
+Parameters:
+* `t`: time with microseconds
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -181,7 +303,17 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_uuid(sl_uuid_t *uuid, char *buf, int offset, off_t maxoff)
 ```
 
-Defined at lines 280 to 297.
+Defined at lines 405 to 422.
+
+Pack a UUID element, a tag and the 16 bytes.
+
+Parameters:
+* `uuid`: UUID
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -193,7 +325,21 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, off_t maxoff, char *toc_buf, int *toc_idx)
 ```
 
-Defined at lines 299 to 341.
+Defined at lines 438 to 480.
+
+Pack a CNID list as a complex element with its table of contents entry.
+
+The data holds a CNIDs tag. A nonempty list adds a header with the count and the context, then the CNIDs.
+
+Parameters:
+* `cnids`: CNID list
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+* `toc_buf`: table of contents
+* `toc_idx`: next free table of contents slot
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -205,7 +351,19 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_array(sl_array_t *array, char *buf, int offset, off_t maxoff, char *toc_buf, int *toc_idx)
 ```
 
-Defined at lines 343 to 363.
+Defined at lines 493 to 513.
+
+Pack an array as an SQ_TYPE_COMPLEX element, then pack its members.
+
+Parameters:
+* `array`: array to pack
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+* `toc_buf`: table of contents
+* `toc_idx`: next free table of contents slot
+
+Returns: the offset after the members, or -1 when one does not fit
 
 Calls: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop), [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -217,7 +375,21 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, off_t maxoff, char *toc_buf, int *toc_idx)
 ```
 
-Defined at lines 365 to 387.
+Defined at lines 529 to 551.
+
+Pack a dictionary as an SQ_TYPE_COMPLEX element, then pack its keys and values.
+
+Keys and values alternate in the dalloc array.
+
+Parameters:
+* `dict`: dictionary to pack
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+* `toc_buf`: table of contents
+* `toc_idx`: next free table of contents slot
+
+Returns: the offset after the members, or -1 when one does not fit
 
 Calls: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop), [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -229,7 +401,21 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset, off_t maxoff, char *toc_buf, int *toc_idx)
 ```
 
-Defined at lines 389 to 426.
+Defined at lines 569 to 606.
+
+Pack file metadata as an SQ_TYPE_COMPLEX element that holds a nested packed payload.
+
+The metadata packs as a separate complete payload behind a data tag. A payload of 40 bytes or less carries only its header, so the element then keeps no data.
+
+Parameters:
+* `fm`: file metadata to pack
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+* `toc_buf`: table of contents
+* `toc_idx`: next free table of contents slot
+
+Returns: the offset after the element, or -1 when it does not fit
 
 Calls: [sl_pack_len](spotlight_marshalling.c.md#sl_pack_len), [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -241,7 +427,21 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf, int *toc_idx, off_t maxoff)
 ```
 
-Defined at lines 428 to 467.
+Defined at lines 623 to 662.
+
+Pack a string as a complex element padded to 8-byte units.
+
+The talloc size of s bounds the string, which must end in a NUL inside it. The table of contents entry records how many bytes the last unit uses.
+
+Parameters:
+* `s`: NUL-terminated talloc string
+* `buf`: buffer
+* `offset`: write offset
+* `toc_buf`: table of contents
+* `toc_idx`: next free table of contents slot
+* `maxoff`: end of the usable buffer
+
+Returns: the offset after the element, or -1 for an unterminated string or when it does not fit
 
 Calls: [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
@@ -253,7 +453,21 @@ Called by: [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop)
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, off_t maxoff, char *toc_buf, int *toc_idx)
 ```
 
-Defined at lines 469 to 523.
+Defined at lines 677 to 731.
+
+Pack every element of a dalloc array by its talloc type name.
+
+An element of an unknown type drops out without notice.
+
+Parameters:
+* `query`: array to pack
+* `buf`: buffer
+* `offset`: write offset
+* `maxoff`: end of the usable buffer
+* `toc_buf`: table of contents
+* `toc_idx`: next free table of contents slot
+
+Returns: the offset after the elements, or -1 when one does not fit
 
 Calls: [sl_pack_CNID](spotlight_marshalling.c.md#sl_pack_cnid), [sl_pack_array](spotlight_marshalling.c.md#sl_pack_array), [sl_pack_bool](spotlight_marshalling.c.md#sl_pack_bool), [sl_pack_date](spotlight_marshalling.c.md#sl_pack_date), [sl_pack_dict](spotlight_marshalling.c.md#sl_pack_dict), [sl_pack_filemeta](spotlight_marshalling.c.md#sl_pack_filemeta), [sl_pack_float](spotlight_marshalling.c.md#sl_pack_float), [sl_pack_nil](spotlight_marshalling.c.md#sl_pack_nil), [sl_pack_string](spotlight_marshalling.c.md#sl_pack_string), [sl_pack_uint64](spotlight_marshalling.c.md#sl_pack_uint64), [sl_pack_uuid](spotlight_marshalling.c.md#sl_pack_uuid)
 
@@ -265,7 +479,16 @@ Called by: [sl_pack_array](spotlight_marshalling.c.md#sl_pack_array), [sl_pack_d
 static bool sl_unpack_range_valid(size_t buf_len, int offset, size_t length)
 ```
 
-Defined at lines 529 to 534.
+Defined at lines 746 to 751.
+
+Tell whether a range lies inside a buffer, without overflow.
+
+Parameters:
+* `buf_len`: buffer length
+* `offset`: range start
+* `length`: range length
+
+Returns: true when offset is not negative and the range ends inside the buffer
 
 Called by: [sl_unpack_CNID](spotlight_marshalling.c.md#sl_unpack_cnid), [sl_unpack_cpx](spotlight_marshalling.c.md#sl_unpack_cpx), [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop), [sl_unpack_r](spotlight_marshalling.c.md#sl_unpack_r), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked), [sl_unpack_uuid](spotlight_marshalling.c.md#sl_unpack_uuid)
 
@@ -275,7 +498,16 @@ Called by: [sl_unpack_CNID](spotlight_marshalling.c.md#sl_unpack_cnid), [sl_unpa
 static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
 ```
 
-Defined at lines 536 to 543.
+Defined at lines 761 to 768.
+
+Read a 64-bit value in the byte order of the request.
+
+Parameters:
+* `buf`: packed request
+* `offset`: byte offset, checked by the caller
+* `encoding`: SL_ENC_LITTLE_ENDIAN, or any other value for big-endian
+
+Returns: the value in host order
 
 Calls: [sl_get_be64](spotlight_marshalling.c.md#sl_get_be64), [sl_get_le64](spotlight_marshalling.c.md#sl_get_le64)
 
@@ -287,7 +519,18 @@ Called by: [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop), [sl_unpa
 static int sl_unpack_uint64_checked(const char *buf, size_t buf_len, int offset, uint encoding, uint64_t *value)
 ```
 
-Defined at lines 545 to 554.
+Defined at lines 781 to 790.
+
+Read a 64-bit value in the byte order of the request after a bounds check.
+
+Parameters:
+* `buf`: packed request
+* `buf_len`: length of buf
+* `offset`: byte offset
+* `encoding`: byte order of the request
+* `value`: receives the value
+
+Returns: 0, or -1 when the value lies outside buf
 
 Calls: [sl_unpack_range_valid](spotlight_marshalling.c.md#sl_unpack_range_valid), [sl_unpack_uint64](spotlight_marshalling.c.md#sl_unpack_uint64)
 
@@ -299,7 +542,19 @@ Called by: [sl_unpack_CNID](spotlight_marshalling.c.md#sl_unpack_cnid), [sl_unpa
 static int sl_unpack_count(uint64_t query_data64, int query_length, size_t element_size, int *count)
 ```
 
-Defined at lines 556 to 579.
+Defined at lines 803 to 826.
+
+Take the value count of an element from the upper 32 bits of its tag.
+
+The count must fit in an int and in the bytes that follow the tag.
+
+Parameters:
+* `query_data64`: element tag
+* `query_length`: element length in bytes, tag included
+* `element_size`: size of one value
+* `count`: receives the count
+
+Returns: 0, or -1 when the values would overrun the element
 
 Called by: [sl_unpack_date](spotlight_marshalling.c.md#sl_unpack_date), [sl_unpack_floats](spotlight_marshalling.c.md#sl_unpack_floats), [sl_unpack_ints](spotlight_marshalling.c.md#sl_unpack_ints), [sl_unpack_uuid](spotlight_marshalling.c.md#sl_unpack_uuid)
 
@@ -309,7 +564,19 @@ Called by: [sl_unpack_date](spotlight_marshalling.c.md#sl_unpack_date), [sl_unpa
 static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset, int query_length, size_t buf_len, uint encoding)
 ```
 
-Defined at lines 581 to 608.
+Defined at lines 839 to 866.
+
+Unpack the 64-bit integers of an int64 element into a dalloc array.
+
+Parameters:
+* `query`: array that receives the values
+* `buf`: packed request
+* `offset`: offset of the element tag
+* `query_length`: element length in bytes
+* `buf_len`: length of buf
+* `encoding`: byte order of the request
+
+Returns: the number of values, or -1 for an invalid element
 
 Calls: [sl_unpack_count](spotlight_marshalling.c.md#sl_unpack_count), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked)
 
@@ -321,7 +588,21 @@ Called by: [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop)
 static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset, int query_length, size_t buf_len, uint encoding)
 ```
 
-Defined at lines 610 to 649.
+Defined at lines 881 to 920.
+
+Unpack the dates of a date element into sl_time_t values.
+
+Each date is a double of seconds since 2001-01-01 UTC.
+
+Parameters:
+* `query`: array that receives the times
+* `buf`: packed request
+* `offset`: offset of the element tag
+* `query_length`: element length in bytes
+* `buf_len`: length of buf
+* `encoding`: byte order of the request
+
+Returns: the number of dates, or -1 for an invalid element
 
 Calls: [sl_unpack_count](spotlight_marshalling.c.md#sl_unpack_count), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked)
 
@@ -333,7 +614,19 @@ Called by: [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop)
 static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset, int query_length, size_t buf_len, uint encoding)
 ```
 
-Defined at lines 651 to 679.
+Defined at lines 933 to 961.
+
+Unpack the 16-byte UUIDs of a UUID element into a dalloc array.
+
+Parameters:
+* `query`: array that receives the UUIDs
+* `buf`: packed request
+* `offset`: offset of the element tag
+* `query_length`: element length in bytes
+* `buf_len`: length of buf
+* `encoding`: byte order of the request
+
+Returns: the number of UUIDs, or -1 for an invalid element
 
 Calls: [sl_unpack_count](spotlight_marshalling.c.md#sl_unpack_count), [sl_unpack_range_valid](spotlight_marshalling.c.md#sl_unpack_range_valid), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked)
 
@@ -345,7 +638,19 @@ Called by: [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop)
 static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset, int query_length, size_t buf_len, uint encoding)
 ```
 
-Defined at lines 681 to 712.
+Defined at lines 974 to 1005.
+
+Unpack the doubles of a float element into a dalloc array.
+
+Parameters:
+* `query`: array that receives the values
+* `buf`: packed request
+* `offset`: offset of the element tag
+* `query_length`: element length in bytes
+* `buf_len`: length of buf
+* `encoding`: byte order of the request
+
+Returns: the number of values, or -1 for an invalid element
 
 Calls: [sl_unpack_count](spotlight_marshalling.c.md#sl_unpack_count), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked)
 
@@ -357,7 +662,21 @@ Called by: [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop)
 static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset, int length, size_t buf_len, uint encoding)
 ```
 
-Defined at lines 714 to 761.
+Defined at lines 1022 to 1069.
+
+Unpack a CNIDs element into an [sl_cnids_t](../../include/atalk/spotlight.h.md#struct-sl_cnids_t).
+
+An element of 16 bytes or less is an empty list, which a reply without results carries. A nonempty element needs a count of 1 or more that fits the element length.
+
+Parameters:
+* `query`: array that receives the list
+* `buf`: packed request
+* `offset`: offset of the CNID header
+* `length`: element length in bytes
+* `buf_len`: length of buf
+* `encoding`: byte order of the request
+
+Returns: 0, or -1 for an invalid element or a failed allocation
 
 Calls: [sl_unpack_range_valid](spotlight_marshalling.c.md#sl_unpack_range_valid), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked)
 
@@ -369,7 +688,14 @@ Called by: [sl_unpack_cpx](spotlight_marshalling.c.md#sl_unpack_cpx)
 static const char * spotlight_get_qtype_string(uint64_t query_type)
 ```
 
-Defined at lines 763 to 790.
+Defined at lines 1077 to 1104.
+
+Name a packed element type for the log.
+
+Parameters:
+* `query_type`: element type
+
+Returns: the name, or "unknown"
 
 ### spotlight_get_cpx_qtype_string
 
@@ -377,7 +703,14 @@ Defined at lines 763 to 790.
 static const char * spotlight_get_cpx_qtype_string(uint64_t cpx_query_type)
 ```
 
-Defined at lines 792 to 816.
+Defined at lines 1112 to 1136.
+
+Name an SQ_TYPE_COMPLEX element subtype for the log.
+
+Parameters:
+* `cpx_query_type`: subtype from the table of contents
+
+Returns: the name, or "unknown"
 
 ### sl_unpack_cpx
 
@@ -385,7 +718,25 @@ Defined at lines 792 to 816.
 static int sl_unpack_cpx(DALLOC_CTX *query, const char *buf, const int offset, uint cpx_query_type, uint cpx_query_count, size_t buf_len, const uint toc_offset, uint toc_count, const uint encoding, int depth)
 ```
 
-Defined at lines 818 to 964.
+Defined at lines 1159 to 1305.
+
+Unpack an SQ_TYPE_COMPLEX element, its subtype taken from the table of contents.
+
+Arrays and dictionaries unpack their members recursively, down to SUBQ_SAFETY_LIM levels. Strings must end before the table of contents. UTF-16 strings must be little-endian and convert to UTF-8. File metadata holds a nested payload, and a header-only element of 8 bytes is empty.
+
+Parameters:
+* `query`: array that receives the element
+* `buf`: packed data region
+* `offset`: offset after the element tag
+* `cpx_query_type`: subtype from the table of contents
+* `cpx_query_count`: member count of an array or dictionary
+* `buf_len`: length of buf
+* `toc_offset`: offset of the first table of contents entry
+* `toc_count`: number of table of contents entries
+* `encoding`: byte order of the request
+* `depth`: nesting depth
+
+Returns: the offset after the element, or -1 for an invalid element
 
 Calls: [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dalloc_strndup](../../libatalk/dalloc/dalloc.c.md#dalloc_strndup), [sl_unpack_CNID](spotlight_marshalling.c.md#sl_unpack_cnid), [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop), [sl_unpack_r](spotlight_marshalling.c.md#sl_unpack_r), [sl_unpack_range_valid](spotlight_marshalling.c.md#sl_unpack_range_valid), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked), [spotlight_get_utf16_string_encoding](spotlight_marshalling.c.md#spotlight_get_utf16_string_encoding)
 
@@ -397,7 +748,24 @@ Called by: [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop)
 static int sl_unpack_loop(DALLOC_CTX *query, const char *buf, int offset, uint count, size_t buf_len, const uint toc_offset, uint toc_count, const uint encoding, int depth)
 ```
 
-Defined at lines 966 to 1133.
+Defined at lines 1326 to 1493.
+
+Unpack count elements into a dalloc array.
+
+The loop stops at the table of contents. A null element stands for up to 64 nils. Integer, UUID, float, and date elements hold 1 or more values each, and every value counts toward count.
+
+Parameters:
+* `query`: array that receives the elements
+* `buf`: packed data region
+* `offset`: offset of the first element tag
+* `count`: number of values to unpack
+* `buf_len`: length of buf
+* `toc_offset`: offset of the first table of contents entry
+* `toc_count`: number of table of contents entries
+* `encoding`: byte order of the request
+* `depth`: nesting depth
+
+Returns: the offset after the elements, or -1 for an invalid element or a depth of SUBQ_SAFETY_LIM
 
 Calls: [sl_unpack_cpx](spotlight_marshalling.c.md#sl_unpack_cpx), [sl_unpack_date](spotlight_marshalling.c.md#sl_unpack_date), [sl_unpack_floats](spotlight_marshalling.c.md#sl_unpack_floats), [sl_unpack_ints](spotlight_marshalling.c.md#sl_unpack_ints), [sl_unpack_range_valid](spotlight_marshalling.c.md#sl_unpack_range_valid), [sl_unpack_uint64](spotlight_marshalling.c.md#sl_unpack_uint64), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked), [sl_unpack_uuid](spotlight_marshalling.c.md#sl_unpack_uuid)
 
@@ -409,7 +777,18 @@ Called by: [sl_unpack_cpx](spotlight_marshalling.c.md#sl_unpack_cpx), [sl_unpack
 static int sl_pack_len(DALLOC_CTX *query, char *buf, off_t maxoff)
 ```
 
-Defined at lines 1139 to 1173.
+Defined at lines 1511 to 1545.
+
+Pack a dalloc tree into the Spotlight wire format.
+
+The payload starts with the magic 432130dm and 2 32-bit lengths in 8-byte units, of the full payload and of the data. The packed elements follow, then the table of contents with its SQ_TYPE_TOC tag.
+
+Parameters:
+* `query`: tree to pack
+* `buf`: buffer
+* `maxoff`: size of buf
+
+Returns: the packed length, or -1 when the payload does not fit
 
 Calls: [sivalc](spotlight_marshalling.c.md#sivalc), [sl_pack_loop](spotlight_marshalling.c.md#sl_pack_loop), [sl_pack_tag](spotlight_marshalling.c.md#sl_pack_tag), [slvalc](spotlight_marshalling.c.md#slvalc)
 
@@ -421,7 +800,15 @@ Called by: [sl_pack](spotlight_marshalling.c.md#sl_pack), [sl_pack_filemeta](spo
 int sl_pack(DALLOC_CTX *query, char *buf)
 ```
 
-Defined at lines 1175 to 1178. Declared in [include/atalk/spotlight.h](../../include/atalk/spotlight.h.md).
+Defined at lines 1554 to 1557. Declared in [include/atalk/spotlight.h](../../include/atalk/spotlight.h.md).
+
+Pack a dalloc tree into a buffer of MAX_SLQ_DAT bytes.
+
+Parameters:
+* `query`: tree to pack
+* `buf`: buffer of MAX_SLQ_DAT bytes
+
+Returns: the packed length, or -1 when the payload does not fit
 
 Calls: [sl_pack_len](spotlight_marshalling.c.md#sl_pack_len)
 
@@ -433,7 +820,19 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_unpack_r(DALLOC_CTX *query, const char *buf, size_t buf_len, int depth)
 ```
 
-Defined at lines 1180 to 1249.
+Defined at lines 1573 to 1642.
+
+Unpack a Spotlight payload into a dalloc tree.
+
+The magic md031234 marks a big-endian payload, and any other value a little-endian one. The header gives the table of contents offset, which must point at an SQ_TYPE_TOC tag inside the data. The data then unpacks as 1 element.
+
+Parameters:
+* `query`: tree that receives the elements
+* `buf`: packed payload
+* `buf_len`: length of buf
+* `depth`: nesting depth of a nested payload
+
+Returns: 0, or -1 for an invalid payload
 
 Calls: [sl_unpack_loop](spotlight_marshalling.c.md#sl_unpack_loop), [sl_unpack_range_valid](spotlight_marshalling.c.md#sl_unpack_range_valid), [sl_unpack_uint64_checked](spotlight_marshalling.c.md#sl_unpack_uint64_checked)
 
@@ -445,7 +844,15 @@ Called by: [sl_unpack](spotlight_marshalling.c.md#sl_unpack), [sl_unpack_cpx](sp
 int sl_unpack(DALLOC_CTX *query, const char *buf)
 ```
 
-Defined at lines 1251 to 1254. Declared in [include/atalk/spotlight.h](../../include/atalk/spotlight.h.md).
+Defined at lines 1651 to 1654. Declared in [include/atalk/spotlight.h](../../include/atalk/spotlight.h.md).
+
+Unpack a Spotlight payload from a buffer of MAX_SLQ_DAT bytes.
+
+Parameters:
+* `query`: tree that receives the elements
+* `buf`: packed payload with MAX_SLQ_DAT readable bytes
+
+Returns: 0, or -1 for an invalid payload
 
 Calls: [sl_unpack_r](spotlight_marshalling.c.md#sl_unpack_r)
 
@@ -455,7 +862,16 @@ Calls: [sl_unpack_r](spotlight_marshalling.c.md#sl_unpack_r)
 int sl_unpack_len(DALLOC_CTX *query, const char *buf, size_t buf_len)
 ```
 
-Defined at lines 1256 to 1259. Declared in [include/atalk/spotlight.h](../../include/atalk/spotlight.h.md).
+Defined at lines 1664 to 1667. Declared in [include/atalk/spotlight.h](../../include/atalk/spotlight.h.md).
+
+Unpack a Spotlight payload of a known length.
+
+Parameters:
+* `query`: tree that receives the elements
+* `buf`: packed payload
+* `buf_len`: length of buf
+
+Returns: 0, or -1 for an invalid payload
 
 Calls: [sl_unpack_r](spotlight_marshalling.c.md#sl_unpack_r)
 

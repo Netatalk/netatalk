@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "sys/netatalk/phase2.h"
-description: "1 type."
+description: "IEEE 802.2 Link Level Control headers, for use in conjunction with 802."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/phase2.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,4 +42,6 @@ Defined at line 30.
 
 # Macros
 
-* Undocumented: `LLC_ISO_LSAP`, `LLC_SNAP_LSAP`, `LLC_TEST`, `LLC_TEST_P`, `LLC_UI`, `LLC_UI_P`, `LLC_XID`, `LLC_XID_P`, `SIOCPHASE1`, `SIOCPHASE2`, `llc_class`, `llc_control`, `llc_ether_type`, `llc_fid`, `llc_org_code`, `llc_window`
+* `SIOCPHASE1`: AppleTalk phase 1.
+* `SIOCPHASE2`: AppleTalk phase 2.
+* Undocumented: `LLC_ISO_LSAP`, `LLC_SNAP_LSAP`, `LLC_TEST`, `LLC_TEST_P`, `LLC_UI`, `LLC_UI_P`, `LLC_XID`, `LLC_XID_P`, `llc_class`, `llc_control`, `llc_ether_type`, `llc_fid`, `llc_org_code`, `llc_window`

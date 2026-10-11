@@ -5,7 +5,7 @@ description: "2 functions, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/utf8.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,9 +41,11 @@ Initialized at line 92 as `struct charset_functions`. Assigns:
 static size_t utf8_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 103 to 224.
+Defined at lines 114 to 235.
 
-Convert from UTF-8 to UTF-16.
+Convert UTF-8 to UTF-16 and reject sequences outside the valid byte ranges.
+
+Characters above U+FFFF become surrogate pairs. The valid ranges follow.
 
 ```
 Code Points         First   Second  Third   Fourth
@@ -58,20 +60,41 @@ U+40000..U+FFFFF    F1..F3  80..BF  80..BF  80..BF
 U+100000..U+10FFFF  F4      80..8F  80..BF  80..BF
 ```
 
+Parameters:
+* `cd`: descriptor, unused
+* `inbuf`: UTF-8 input position
+* `inbytesleft`: input bytes left
+* `outbuf`: UTF-16 output position
+* `outbytesleft`: output space
+
+Returns: 0, or `(size_t)-1` with EILSEQ for a malformed sequence, EINVAL for a cut sequence, or E2BIG
+
 Dispatched via: [charset_utf8](utf8.c.md#charset_utf8), [charset_utf8_mac](utf8.c.md#charset_utf8_mac)
 
 ### utf8_push
 
 ```c
-static size_t utf8_push(void *, char **, size_t *, char **, size_t *)
+static size_t utf8_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 227 to 328.
+Defined at lines 253 to 354.
 
-Convert from UTF-16 to UTF-8
+Convert UTF-16 to UTF-8 and drop the bidirectional formatting characters.
+
+A surrogate pair becomes one 4-byte sequence, and a lone or malformed surrogate fails with EINVAL. The characters U+202A to U+202E produce no output.
+
+Parameters:
+* `cd`: descriptor, unused
+* `inbuf`: UTF-16 input position
+* `inbytesleft`: input bytes left
+* `outbuf`: UTF-8 output position
+* `outbytesleft`: output space
+
+Returns: 0, or `(size_t)-1` with EINVAL for a malformed surrogate or a trailing odd byte, or E2BIG
 
 Dispatched via: [charset_utf8](utf8.c.md#charset_utf8), [charset_utf8_mac](utf8.c.md#charset_utf8_mac)
 
 # Macros
 
-* Undocumented: `GETUCVAL`, `GETUTF8TRAILBYTE`
+* `GETUCVAL`: Given a trailing UTF-8 byte, get the contribution from it to the Unicode scalar value for a particular bit shift amount.
+* `GETUTF8TRAILBYTE`: Given a unicode scalar, get a trail UTF-8 byte for a particular bit shift amount.

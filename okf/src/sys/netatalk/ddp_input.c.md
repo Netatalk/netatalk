@@ -5,7 +5,7 @@ description: "5 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_input.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -37,7 +37,11 @@ Called by: [ddp_input](ddp_input.c.md#ddp_input)
 atintr()
 ```
 
-Defined at lines 32 to 121.
+Defined at lines 37 to 126.
+
+Drain the AppleTalk input queues and pass each packet to ddp_input.
+
+The phase 2 queue comes first, for interfaces with a phase 2 address. On the phase 1 queue, an interface needs a phase 1 address, and the call strips the 3-byte LLAP header. An extended DDP type then takes the long header path, and any other type the short one.
 
 Calls: [ddp_input](ddp_input.c.md#ddp_input)
 
@@ -47,7 +51,19 @@ Calls: [ddp_input](ddp_input.c.md#ddp_input)
 ddp_input(struct mbuf *m, struct ifnet *ifp, struct elaphdr *elh, int phase)
 ```
 
-Defined at lines 125 to 367.
+Defined at lines 151 to 393.
+
+Deliver an incoming DDP packet to its socket, or forward it.
+
+A short header, which comes with an LLAP header in phase 1, takes the nodes from the LLAP header. A long header carries full addresses and an optional checksum. The packet goes to a local address that matches the destination net and node, or ATADDR_BCAST on that net. The startup range 0xff00 to 0xfffe counts as local as well. The call trims link padding and drops packets shorter than their DDP length.
+
+Without a local address, and with ddp_forward set, the packet goes out through ddp_route with one more hop. It does not when it reached DDP_MAXHOPS or the firewall refuses its route. A local packet whose checksum does not match goes away, and the rest lands in the receive buffer of the socket that ddp_search finds.
+
+Parameters:
+* `m`: packet
+* `ifp`: receiving interface
+* `elh`: LLAP header of a short header packet, or NULL
+* `phase`: 1 or 2
 
 Calls: [at_cksum](ddp_input.c.md#at_cksum), [ddp_route](ddp_output.c.md#ddp_route), [ddp_search](ddp_usrreq.c.md#ddp_search)
 
@@ -61,7 +77,12 @@ Uses file-scope variables: `ddp_cksum` in [sys/netatalk/ddp_output.c](ddp_output
 m_printm(struct mbuf *m)
 ```
 
-Defined at lines 369 to 375.
+Defined at lines 400 to 406.
+
+Print an mbuf chain as a hex dump, one bprint call per mbuf.
+
+Parameters:
+* `m`: first mbuf of the chain
 
 Calls: [bprint](ddp_input.c.md#bprint)
 
@@ -71,7 +92,11 @@ Calls: [bprint](ddp_input.c.md#bprint)
 bprint(char *data, int len)
 ```
 
-Defined at lines 382 to 423.
+Defined at lines 417 to 458.
+
+Print a hex dump of a buffer with the kernel printf, 15 bytes a line, then an end line.
+
+Print a hex dump of a buffer to stdout, 16 bytes a line.
 
 Called by: [m_printm](ddp_input.c.md#m_printm)
 

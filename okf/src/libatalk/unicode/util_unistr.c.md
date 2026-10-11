@@ -5,7 +5,7 @@ description: "21 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/util_unistr.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,13 +26,16 @@ Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit r
 int strlower_w(ucs2_t *)
 ```
 
-Defined at lines 34 to 64. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 37 to 67. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-Convert a string to lower case.
+Lowercase a NUL-terminated UTF-16 string in place.
 
-Returns: True if any char is converted
+A surrogate pair changes as one character.
 
-Note: surrogate pair support
+Parameters:
+* `s`: UTF-16 string
+
+Returns: 1 when a character changed, or 0
 
 Calls: [tolower_sp](utf16_case.c.md#tolower_sp), [tolower_w](utf16_case.c.md#tolower_w)
 
@@ -44,13 +47,16 @@ Called by: [charset_strlower](charcnv.c.md#charset_strlower), [convert_charset](
 int strupper_w(ucs2_t *)
 ```
 
-Defined at lines 71 to 101. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 77 to 107. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-Convert a string to upper case.
+Uppercase a NUL-terminated UTF-16 string in place.
 
-Returns: True if any char is converted
+A surrogate pair changes as one character.
 
-Note: surrogate pair support
+Parameters:
+* `s`: UTF-16 string
+
+Returns: 1 when a character changed, or 0
 
 Calls: [toupper_sp](utf16_case.c.md#toupper_sp), [toupper_w](utf16_case.c.md#toupper_w)
 
@@ -62,13 +68,16 @@ Called by: [charset_strupper](charcnv.c.md#charset_strupper), [convert_charset](
 size_t strlen_w(const ucs2_t *)
 ```
 
-Defined at lines 109 to 116. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 117 to 124. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strlen()
+Count the UTF-16 units of a NUL-terminated string, as strlen does.
 
-Count the number of characters in a UTF-16 string.
+A surrogate pair counts as two units.
 
-Note: one surrogate pair is two characters.
+Parameters:
+* `src`: UTF-16 string
+
+Returns: the number of units before the NUL
 
 Called by: [convert_string_internal](charcnv.c.md#convert_string_internal), [strcasestr_w](util_unistr.c.md#strcasestr_w), [strndup_w](util_unistr.c.md#strndup_w), [strstr_w](util_unistr.c.md#strstr_w), [ucs2_to_charset](charcnv.c.md#ucs2_to_charset), [ucs2_to_charset_allocate](charcnv.c.md#ucs2_to_charset_allocate)
 
@@ -78,13 +87,17 @@ Called by: [convert_string_internal](charcnv.c.md#convert_string_internal), [str
 size_t strnlen_w(const ucs2_t *, size_t)
 ```
 
-Defined at lines 125 to 132. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 136 to 143. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide [strnlen()](../compat/misc.c.md#strnlen)
+Count the UTF-16 units of a string up to a limit, as strnlen does.
 
-Count up to max number of characters in a UTF-16 string.
+A surrogate pair counts as two units. Without an earlier NUL the call reads the unit at index `max` before it stops.
 
-Note: one surrogate pair is two characters.
+Parameters:
+* `src`: UTF-16 string
+* `max`: limit
+
+Returns: the number of units before the NUL, capped at `max`
 
 ### strchr_w
 
@@ -92,11 +105,17 @@ Note: one surrogate pair is two characters.
 ucs2_t * strchr_w(const ucs2_t *, ucs2_t)
 ```
 
-Defined at lines 138 to 153. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 155 to 170. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strchr()
+Find a UTF-16 unit in a NUL-terminated string, as strchr does.
 
-Note: hi and lo of surrogate pair are separately processed.
+The search treats the two halves of a surrogate pair as separate units, and a NUL `c` finds the terminator.
+
+Parameters:
+* `s`: UTF-16 string
+* `c`: unit to find
+
+Returns: the first match, or NULL
 
 Called by: [strstr_w](util_unistr.c.md#strstr_w)
 
@@ -106,11 +125,17 @@ Called by: [strstr_w](util_unistr.c.md#strstr_w)
 ucs2_t * strcasechr_w(const ucs2_t *s, ucs2_t c)
 ```
 
-Defined at lines 159 to 174. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 182 to 197. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strcasechr()
+Find a UTF-16 unit in a string, ignoring case.
 
-Note: separately process BMP and surrogate pair
+The search compares single units only, and strcasechr_sp covers surrogate pairs.
+
+Parameters:
+* `s`: UTF-16 string
+* `c`: unit to find
+
+Returns: the first match, or NULL
 
 Calls: [tolower_w](utf16_case.c.md#tolower_w)
 
@@ -122,11 +147,17 @@ Called by: [strcasestr_w](util_unistr.c.md#strcasestr_w)
 ucs2_t * strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
 ```
 
-Defined at lines 180 to 195.
+Defined at lines 208 to 223.
 
-sp strcasechr()
+Find a surrogate pair in a UTF-16 string, ignoring case.
 
-Note: separately process BMP and surrogate pair
+The search compares the pair with each pair of neighboring units.
+
+Parameters:
+* `s`: UTF-16 string
+* `c_sp`: pair to find, with the high surrogate in bits 31 to 16
+
+Returns: the first match, or NULL
 
 Calls: [tolower_sp](utf16_case.c.md#tolower_sp)
 
@@ -138,11 +169,15 @@ Called by: [strcasestr_w](util_unistr.c.md#strcasestr_w)
 int strcmp_w(const ucs2_t *, const ucs2_t *)
 ```
 
-Defined at lines 201 to 212. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 233 to 244. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strcmp()
+Compare two NUL-terminated UTF-16 strings by unit value, as strcmp does.
 
-Note: no problem of surrogate pair
+Parameters:
+* `a`: first string
+* `b`: second string
+
+Returns: the difference of the first differing units, or 0
 
 ### strncmp_w
 
@@ -150,11 +185,16 @@ Note: no problem of surrogate pair
 int strncmp_w(const ucs2_t *, const ucs2_t *, size_t)
 ```
 
-Defined at lines 218 to 229. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 254 to 265. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strncmp()
+Compare up to `len` units of two UTF-16 strings, as strncmp does.
 
-Note: no problem of surrogate pair
+Parameters:
+* `a`: first string
+* `b`: second string
+* `len`: limit in units
+
+Returns: the difference of the first differing units, or 0
 
 Called by: [strstr_w](util_unistr.c.md#strstr_w)
 
@@ -164,11 +204,15 @@ Called by: [strstr_w](util_unistr.c.md#strstr_w)
 ucs2_t * strstr_w(const ucs2_t *s, const ucs2_t *ins)
 ```
 
-Defined at lines 235 to 256. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 274 to 295. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strstr()
+Find a UTF-16 substring, as strstr does.
 
-Note: no problem of surrogate pair
+Parameters:
+* `s`: UTF-16 string
+* `ins`: substring to find
+
+Returns: the first match, or NULL for no match or an empty or NULL argument
 
 Calls: [strchr_w](util_unistr.c.md#strchr_w), [strlen_w](util_unistr.c.md#strlen_w), [strncmp_w](util_unistr.c.md#strncmp_w)
 
@@ -178,11 +222,17 @@ Calls: [strchr_w](util_unistr.c.md#strchr_w), [strlen_w](util_unistr.c.md#strlen
 ucs2_t * strcasestr_w(const ucs2_t *, const ucs2_t *)
 ```
 
-Defined at lines 262 to 299. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 307 to 344. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strcasestr()
+Find a UTF-16 substring, ignoring case, with surrogate pair support.
 
-Note: surrogate pair support
+A substring that starts with a lone surrogate from 0xd800 to 0xdbff matches nothing.
+
+Parameters:
+* `s`: UTF-16 string
+* `ins`: substring to find
+
+Returns: the first match, or NULL for no match or an empty or NULL argument
 
 Calls: [strcasechr_sp](util_unistr.c.md#strcasechr_sp), [strcasechr_w](util_unistr.c.md#strcasechr_w), [strlen_w](util_unistr.c.md#strlen_w), [strncasecmp_w](util_unistr.c.md#strncasecmp_w)
 
@@ -194,13 +244,15 @@ Called by: [crit_check](../../etc/afpd/catsearch.c.md#crit_check)
 int strcasecmp_w(const ucs2_t *, const ucs2_t *)
 ```
 
-Defined at lines 307 to 335. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 354 to 382. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strcasecmp()
+Compare two NUL-terminated UTF-16 strings, ignoring case, with surrogate pair support.
 
-case insensitive string comparison
+Parameters:
+* `a`: first string
+* `b`: second string
 
-Note: surrogate pair support
+Returns: the difference of the first differing lowercase forms, or 0
 
 Calls: [tolower_sp](utf16_case.c.md#tolower_sp), [tolower_w](utf16_case.c.md#tolower_w)
 
@@ -212,13 +264,18 @@ Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [crit_check](.
 int strncasecmp_w(const ucs2_t *, const ucs2_t *, size_t)
 ```
 
-Defined at lines 343 to 374. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 395 to 426. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strncasecmp()
+Compare up to `len` units of two UTF-16 strings, ignoring case.
 
-case insensitive string comparison, length limited
+A surrogate pair counts as two units. When `len` ends inside a pair, the comparison covers both of its units.
 
-Note: compare up to 'len+1' if 'len' isolate surrogate pair
+Parameters:
+* `a`: first string
+* `b`: second string
+* `len`: limit in units
+
+Returns: the difference of the first differing lowercase forms, or 0
 
 Calls: [tolower_sp](utf16_case.c.md#tolower_sp), [tolower_w](utf16_case.c.md#tolower_w)
 
@@ -230,15 +287,17 @@ Called by: [strcasestr_w](util_unistr.c.md#strcasestr_w), [uam_getname](../../et
 ucs2_t * strndup_w(const ucs2_t *, size_t)
 ```
 
-Defined at lines 383 to 401. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 439 to 457. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strndup()
+Duplicate the first `len` units of a UTF-16 string into a buffer from malloc.
 
-duplicate string
+A `len` of 0 takes the full string. The call does not stop at an earlier NUL and does not check for a split surrogate pair.
 
-Note: not check isolation of surrogate pair
+Parameters:
+* `src`: UTF-16 string
+* `len`: number of units, or 0 for the full string
 
-Note: if len == 0 then duplicate the whole string
+Returns: the new string, or NULL when memory runs out
 
 Calls: [strlen_w](util_unistr.c.md#strlen_w)
 
@@ -250,13 +309,14 @@ Called by: [strdup_w](util_unistr.c.md#strdup_w)
 ucs2_t * strdup_w(const ucs2_t *)
 ```
 
-Defined at lines 409 to 412. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 465 to 468. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-wide strdup()
+Duplicate a NUL-terminated UTF-16 string into a buffer from malloc.
 
-duplicate string
+Parameters:
+* `src`: UTF-16 string
 
-Note: no problem of surrogate pair
+Returns: the new string, or NULL when memory runs out
 
 Calls: [strndup_w](util_unistr.c.md#strndup_w)
 
@@ -268,13 +328,21 @@ Called by: [creatvol](../util/netatalk_conf.c.md#creatvol)
 static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 ```
 
-Defined at lines 417 to 440.
+Defined at lines 480 to 503.
 
-binary search for pre|decomposition
+Look up the precomposed BMP character for a base and a combining character.
+
+The call searches the sorted precomposition table.
+
+Parameters:
+* `base`: base character
+* `comb`: combining character
+
+Returns: the precomposed character, or 0 for no entry
 
 Called by: [precompose_w](util_unistr.c.md#precompose_w)
 
-Uses file-scope variables: `comb` in [libatalk/unicode/precompose.h](precompose.h.md), `precompositions` in [libatalk/unicode/precompose.h](precompose.h.md)
+Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md), `precompositions` in [libatalk/unicode/precompose.h](precompose.h.md)
 
 ### do_precomposition_sp
 
@@ -282,7 +350,17 @@ Uses file-scope variables: `comb` in [libatalk/unicode/precompose.h](precompose.
 static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
 ```
 
-Defined at lines 443 to 467.
+Defined at lines 516 to 540.
+
+Look up the precomposed surrogate pair for a base pair and a combining pair.
+
+Each pair sits in one 32-bit value, with the high surrogate in bits 31 to 16.
+
+Parameters:
+* `base_sp`: base pair
+* `comb_sp`: combining pair
+
+Returns: the precomposed pair, or 0 for no entry
 
 Called by: [precompose_w](util_unistr.c.md#precompose_w)
 
@@ -294,11 +372,18 @@ Uses file-scope variables: `base_sp` in [libatalk/unicode/precompose.h](precompo
 static uint32_t do_decomposition(ucs2_t base)
 ```
 
-Defined at lines 470 to 495.
+Defined at lines 550 to 575.
+
+Look up the base and the combining character of a precomposed BMP character.
+
+Parameters:
+* `base`: precomposed character
+
+Returns: the base in bits 31 to 16 and the combining character in bits 15 to 0, or 0 for no entry
 
 Called by: [decompose_w](util_unistr.c.md#decompose_w)
 
-Uses file-scope variables: `comb` in [libatalk/unicode/precompose.h](precompose.h.md), `decompositions` in [libatalk/unicode/precompose.h](precompose.h.md)
+Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md), `decompositions` in [libatalk/unicode/precompose.h](precompose.h.md)
 
 ### do_decomposition_sp
 
@@ -306,7 +391,14 @@ Uses file-scope variables: `comb` in [libatalk/unicode/precompose.h](precompose.
 static uint64_t do_decomposition_sp(unsigned int base_sp)
 ```
 
-Defined at lines 498 to 525.
+Defined at lines 586 to 613.
+
+Look up the base pair and the combining pair of a precomposed surrogate pair.
+
+Parameters:
+* `base_sp`: precomposed pair, with the high surrogate in bits 31 to 16
+
+Returns: the base pair in bits 63 to 32 and the combining pair in bits 31 to 0, or 0 for no entry
 
 Called by: [decompose_w](util_unistr.c.md#decompose_w)
 
@@ -318,21 +410,27 @@ Uses file-scope variables: `base_sp` in [libatalk/unicode/precompose.h](precompo
 size_t precompose_w(ucs2_t *, size_t, ucs2_t *, size_t *)
 ```
 
-Defined at lines 541 to 650. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 634 to 743. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
-pre|decomposition
+Precompose a UTF-16 string by the netatalk tables.
 
-we can't use static, this stuff needs to be reentrant static char comp[MAXPATHLEN +1];
+The call combines each base with the combining characters after it, Hangul syllables included, and surrogate pairs through a separate table. It does no singleton mapping or canonical ordering. It ignores the composition exclusions, which would break round trips.
 
-We don't implement Singleton and Canonical Ordering. We ignore CompositionExclusions.txt because they cause the problem of the roundtrip such as Dancing Icon.
+The tables leave out U+2000 to U+2FFF, U+FE30 to U+FE4F, and U+2F800 to U+2FA1F, as the AFP 3.x specification asks. The output ends with a NUL, which the returned length leaves out.
 
-exclude U2000-U2FFF, UFE30-UFE4F and U2F800-U2FA1F ranges in [precompose.h](precompose.h.md) from composition according to AFP 3.x spec
+Parameters:
+* `name`: UTF-16 input
+* `inplen`: input length in bytes, an even number above 0
+* `comp`: output buffer
+* `outlen`: output space in bytes, which receives the space left
+
+Returns: the output length in bytes, or `(size_t)-1` for an odd, empty, or oversized input or with E2BIG
 
 Calls: [do_precomposition](util_unistr.c.md#do_precomposition), [do_precomposition_sp](util_unistr.c.md#do_precomposition_sp)
 
 Called by: [charset_precompose](charcnv.c.md#charset_precompose), [convert_charset](charcnv.c.md#convert_charset), [convert_string](charcnv.c.md#convert_string), [convert_string_allocate](charcnv.c.md#convert_string_allocate)
 
-Uses file-scope variables: `base_sp` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md), `comb_sp` in [libatalk/unicode/precompose.h](precompose.h.md)
+Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.h.md), `base_sp` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md), `comb_sp` in [libatalk/unicode/precompose.h](precompose.h.md)
 
 ### decompose_w
 
@@ -340,10 +438,22 @@ Uses file-scope variables: `base_sp` in [libatalk/unicode/precompose.h](precompo
 size_t decompose_w(ucs2_t *, size_t, ucs2_t *, size_t *)
 ```
 
-Defined at lines 653 to 762. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 760 to 869. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+
+Decompose a UTF-16 string by the netatalk tables.
+
+The call splits each precomposed character into its base and its combining characters, Hangul syllables included, and surrogate pairs through a separate table. ASCII stays as is. The output ends with a NUL, which the returned length leaves out.
+
+Parameters:
+* `name`: UTF-16 input
+* `inplen`: input length in bytes, an even number above 0
+* `comp`: output buffer
+* `outlen`: output space in bytes, which receives the space left
+
+Returns: the output length in bytes, or `(size_t)-1` for an odd or empty input or with E2BIG
 
 Calls: [do_decomposition](util_unistr.c.md#do_decomposition), [do_decomposition_sp](util_unistr.c.md#do_decomposition_sp)
 
 Called by: [charset_decompose](charcnv.c.md#charset_decompose), [convert_charset](charcnv.c.md#convert_charset), [convert_string](charcnv.c.md#convert_string), [convert_string_allocate](charcnv.c.md#convert_string_allocate)
 
-Uses file-scope variables: `base_sp` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md)
+Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.h.md), `base_sp` in [libatalk/unicode/precompose.h](precompose.h.md), `comb` in [libatalk/unicode/precompose.h](precompose.h.md)

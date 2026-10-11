@@ -1,11 +1,11 @@
 # src/etc/afpd
 
-* [acl_mappings.h](acl_mappings.h.md) - 1 type, includes 1 project header.
+* [acl_mappings.h](acl_mappings.h.md) - Stuff for mapping between ACL implementations.
 * [acls.c](acls.c.md) - 21 functions, includes 22 project headers.
 * [acls.h](acls.h.md) - Definitions for ACL mapping code.
 * [ad_cache.c](ad_cache.c.md) - 6 functions, includes 11 project headers.
 * [ad_cache.h](ad_cache.h.md) - includes 3 project headers.
-* [afp_asp.c](afp_asp.c.md) - 8 functions, includes 13 project headers.
+* [afp_asp.c](afp_asp.c.md) - 10 functions, includes 13 project headers.
 * [afp_config.c](afp_config.c.md) - 2 functions, includes 21 project headers.
 * [afp_config.h](afp_config.h.md) - includes 3 project headers.
 * [afp_dsi.c](afp_dsi.c.md) - 20 functions, 1 type, includes 18 project headers.
@@ -39,7 +39,7 @@
 * [hash.h](hash.h.md) - 7 functions, includes 1 project header.
 * [icon.c](icon.c.md) - includes 1 project header.
 * [icon.h](icon.h.md) - No functions or types.
-* [idle_worker.c](idle_worker.c.md) - 9 functions, includes 6 project headers.
+* [idle_worker.c](idle_worker.c.md) - 12 functions, includes 6 project headers.
 * [idle_worker.h](idle_worker.h.md) - No functions or types.
 * [main.c](main.c.md) - 13 functions, includes 20 project headers.
 * [mangle.c](mangle.c.md) - mangle, demangle (filename)
@@ -51,14 +51,14 @@
 * [pfd_cache.c](pfd_cache.c.md) - 12 functions, 1 type, includes 7 project headers.
 * [pfd_cache.h](pfd_cache.h.md) - 1 type, includes 2 project headers.
 * [quota.c](quota.c.md) - 2 functions, includes 9 project headers.
-* [spotlight.c](spotlight.c.md) - 33 functions, 1 type, includes 13 project headers.
+* [spotlight.c](spotlight.c.md) - 34 functions, 1 type, includes 13 project headers.
 * [spotlight_marshalling.c](spotlight_marshalling.c.md) - 38 functions, includes 9 project headers.
 * [status.c](status.c.md) - 12 functions, includes 11 project headers.
 * [status.h](status.h.md) - includes 4 project headers.
 * [switch.c](switch.c.md) - 2 functions, includes 14 project headers.
 * [switch.h](switch.h.md) - No functions or types.
 * [uam.c](uam.c.md) - 9 functions, includes 9 project headers.
-* [uam_auth.h](uam_auth.h.md) - 2 types, includes 2 project headers.
+* [uam_auth.h](uam_auth.h.md) - interface between uam.c and auth.c
 * [unix.c](unix.c.md) - 10 functions, includes 13 project headers.
 * [unix.h](unix.h.md) - 1 function, includes 1 project header.
 * [virtual_icon.c](virtual_icon.c.md) - 9 functions, includes 9 project headers.

@@ -5,7 +5,7 @@ description: "10 functions, includes 10 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_util.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,14 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 void nad_not_inside_volume(FILE *out, const char *path, int force_hint)
 ```
 
-Defined at lines 79 to 88. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 86 to 95. Declared in [bin/nad/nad.h](nad.h.md).
+
+Report that a path is outside every AFP volume.
+
+Parameters:
+* `out`: stream for the message
+* `path`: path in question
+* `force_hint`: nonzero to add a hint about force
 
 Called by: [openvol](nad_util.c.md#openvol), [openvol_optional](nad_util.c.md#openvol_optional), [resolve_metadata_volume](megatron.c.md#resolve_metadata_volume)
 
@@ -42,7 +49,12 @@ Called by: [openvol](nad_util.c.md#openvol), [openvol_optional](nad_util.c.md#op
 static void sig_handler(int signo)
 ```
 
-Defined at lines 90 to 94.
+Defined at lines 102 to 106.
+
+Note SIGINT or SIGTERM in alarmed, so the running command stops.
+
+Parameters:
+* `signo`: signal number, unused
 
 Called by: [set_signal](nad_util.c.md#set_signal)
 
@@ -54,7 +66,11 @@ Uses file-scope variables: `alarmed`
 void set_signal(void)
 ```
 
-Defined at lines 96 to 126. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 114 to 144. Declared in [bin/nad/nad.h](nad.h.md).
+
+Route SIGTERM and SIGINT to sig_handler and ignore SIGABRT, SIGHUP, and SIGQUIT.
+
+A failed sigaction ends nad through NAD_FATAL.
 
 Calls: [sig_handler](nad_util.c.md#sig_handler)
 
@@ -66,7 +82,11 @@ Called by: [nad_cp](nad_cp.c.md#nad_cp), [nad_find](nad_find.c.md#nad_find), [na
 static void init_null_vol(void)
 ```
 
-Defined at lines 131 to 142.
+Defined at lines 155 to 166.
+
+Reset the stub volume for paths outside every AFP volume.
+
+The stub uses adouble:ea metadata with system extended attributes, and it has no path and no CNID database.
 
 Calls: [ad_path_ea](../../libatalk/adouble/ad_open.c.md#ad_path_ea), [ad_path_osx](../../libatalk/adouble/ad_open.c.md#ad_path_osx)
 
@@ -80,7 +100,7 @@ Uses file-scope variables: `null_vol`
 int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 161 to 225. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 185 to 249. Declared in [bin/nad/nad.h](nad.h.md).
 
 Open an AFP volume, or return a stub for non-AFP paths.
 
@@ -107,7 +127,7 @@ Uses file-scope variables: `forceflag`, `null_vol`
 int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 238 to 251. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 262 to 275. Declared in [bin/nad/nad.h](nad.h.md).
 
 Load volinfo and initialize struct vol.
 
@@ -128,7 +148,14 @@ Calls: [nad_not_inside_volume](nad_util.c.md#nad_not_inside_volume), [openvol_op
 void closevol(afpvol_t *vol)
 ```
 
-Defined at lines 253 to 262. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 286 to 295. Declared in [bin/nad/nad.h](nad.h.md).
+
+Close the CNID database that openvol_optional opened and clear the volume.
+
+A database that another [afpvol_t](nad.h.md#struct-afpvol_t) opened, and the stub volume, stay as they are.
+
+Parameters:
+* `vol`: volume to close
 
 Calls: [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close)
 
@@ -136,7 +163,7 @@ Called by: [add_file_to_writer](nad_stuffit.c.md#add_file_to_writer), [nad_cp](n
 
 Uses file-scope variables: `null_vol`
 
-Mentioned in the documentation of: [dircache_purge_vol](../../etc/afpd/dircache.c.md#dircache_purge_vol), [volume_free](../../libatalk/util/netatalk_conf.c.md#volume_free)
+Mentioned in the documentation of: [dircache_purge_vol](../../etc/afpd/dircache.c.md#dircache_purge_vol)
 
 ### convert_dots_encoding
 
@@ -144,7 +171,7 @@ Mentioned in the documentation of: [dircache_purge_vol](../../etc/afpd/dircache.
 int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path)
 ```
 
-Defined at lines 277 to 313. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 310 to 346. Declared in [bin/nad/nad.h](nad.h.md).
 
 Convert dot encoding of basename *in place*
 
@@ -167,7 +194,7 @@ Called by: [copy](nad_cp.c.md#copy)
 void nad_report_cnid_reset(const char *volpath)
 ```
 
-Defined at lines 323 to 331. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 356 to 364. Declared in [bin/nad/nad.h](nad.h.md).
 
 Report a CNID table reset behind a failed resolve.
 
@@ -184,7 +211,7 @@ Called by: [cnid_for_paths_parent](nad_util.c.md#cnid_for_paths_parent), [copy](
 cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path, cnid_t *did)
 ```
 
-Defined at lines 351 to 405. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 384 to 438. Declared in [bin/nad/nad.h](nad.h.md).
 
 Resolves CNID of a given paths parent directory.
 

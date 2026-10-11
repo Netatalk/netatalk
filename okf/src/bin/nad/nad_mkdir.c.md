@@ -5,7 +5,7 @@ description: "4 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_mkdir.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,9 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_mkdir(void)
 ```
 
-Defined at lines 38 to 51.
+Defined at lines 41 to 54.
+
+Print the usage of nad mkdir and exit with EXIT_FAILURE.
 
 Called by: [nad_mkdir](nad_mkdir.c.md#nad_mkdir)
 
@@ -38,7 +40,7 @@ Called by: [nad_mkdir](nad_mkdir.c.md#nad_mkdir)
 static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
 ```
 
-Defined at lines 62 to 133.
+Defined at lines 65 to 136.
 
 Create a single directory with CNID and AppleDouble metadata.
 
@@ -59,7 +61,7 @@ Called by: [do_mkdir](nad_mkdir.c.md#do_mkdir)
 static int do_mkdir(const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 146 to 219.
+Defined at lines 149 to 222.
 
 Create directory and optionally intermediate parents.
 
@@ -83,7 +85,18 @@ Uses file-scope variables: `pflag` in [bin/nad/nad.h](nad.h.md), `vflag` in [bin
 int nad_mkdir(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 221 to 272. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 236 to 287. Declared in [bin/nad/nad.h](nad.h.md).
+
+Run the nad mkdir command, which creates directories with CNIDs and AppleDouble metadata.
+
+The -p option creates missing parents, and -v prints each new directory. Each path gets a fresh volume state, and a signal stops the run.
+
+Parameters:
+* `argc`: argument count, from the mkdir command on
+* `argv`: argument vector, from the mkdir command on
+* `obj`: AFP configuration with the volumes
+
+Returns: 0, or 1 when a directory fails, while usage errors exit
 
 Calls: [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [do_mkdir](nad_mkdir.c.md#do_mkdir), [openvol_optional](nad_util.c.md#openvol_optional), [set_signal](nad_util.c.md#set_signal), [usage_mkdir](nad_mkdir.c.md#usage_mkdir)
 

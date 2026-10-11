@@ -5,7 +5,7 @@ description: "2 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nbp/nbplkup.c"
 tags: ["bin/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,12 @@ Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [b
 static void Usage(char *av0)
 ```
 
-Defined at lines 50 to 63.
+Defined at lines 55 to 68.
+
+Print the usage of nbplkup and exit with 1.
+
+Parameters:
+* `av0`: program path, whose base name the usage line shows
 
 Called by: [main](nbplkup.c.md#main)
 
@@ -37,7 +42,19 @@ Called by: [main](nbplkup.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 65 to 272.
+Defined at lines 86 to 293.
+
+Look up NBP names and print each match with its address.
+
+The pattern `obj:type@zone` defaults to `=:=@*`. The NBPLKUP environment variable and then the argument override its parts. The default operation is NBPOP_BRRQ, -f picks NBPOP_FWD, and -l picks NBPOP_LKUP.
+
+The -A option sets the local address, -D the node to ask, -r the number of replies, 1000 by default, and -m the Mac charset. The -s option prints one line per match for scripts.
+
+Parameters:
+* `ac`: argument count
+* `av`: argument vector
+
+Returns: 0, while errors exit with 1 and a failed lookup exits with status 255
 
 Calls: [Usage](nbplkup.c.md#usage), [add_charset](../../libatalk/unicode/charcnv.c.md#add_charset), [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [nbp_do_lookup_op](../../libatalk/nbp/nbp_lkup.c.md#nbp_do_lookup_op), [nbp_name](../../libatalk/nbp/nbp_util.c.md#nbp_name), [nbplkup_convert_field](nbplkup_output.c.md#nbplkup_convert_field), [set_charset_name](../../libatalk/unicode/charcnv.c.md#set_charset_name)
 

@@ -5,7 +5,7 @@ description: "initialization stuff for CNID backends."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid_init.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,11 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 void cnid_init(void)
 ```
 
-Defined at lines 41 to 47. Declared in [include/atalk/cnid.h](../../include/atalk/cnid.h.md).
+Defined at lines 47 to 53. Declared in [include/atalk/cnid.h](../../include/atalk/cnid.h.md).
+
+Register the CNID backends built into the server.
+
+The sqlite backend always registers, and MySQL does in a build with CNID_BACKEND_MYSQL.
 
 Calls: [cnid_register](cnid.c.md#cnid_register)
 

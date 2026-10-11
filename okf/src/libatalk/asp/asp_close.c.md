@@ -5,7 +5,7 @@ description: "1 function, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_close.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,14 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_close(ASP)
 ```
 
-Defined at lines 39 to 61. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 46 to 68. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+
+Answer the pending close request of a session, close its ATP socket, and free it.
+
+Parameters:
+* `asp`: session, freed on return
+
+Returns: 0, or -1 when the reply or the close fails
 
 Calls: [atp_close](../atp/atp_close.c.md#atp_close), [atp_sresp](../atp/atp_sresp.c.md#atp_sresp)
 

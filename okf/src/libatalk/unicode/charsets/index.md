@@ -11,9 +11,9 @@
 * [mac_chinese_trad.c](mac_chinese_trad.c.md) - 4 functions, includes 2 project headers.
 * [mac_chinese_trad.h](mac_chinese_trad.h.md) - No functions or types.
 * [mac_cyrillic.c](mac_cyrillic.c.md) - 2 functions, includes 3 project headers.
-* [mac_cyrillic.h](mac_cyrillic.h.md) - 2 functions.
+* [mac_cyrillic.h](mac_cyrillic.h.md) - MacCyrillic.
 * [mac_greek.c](mac_greek.c.md) - 4 functions, includes 3 project headers.
-* [mac_greek.h](mac_greek.h.md) - No functions or types.
+* [mac_greek.h](mac_greek.h.md) - MacGreek.
 * [mac_hebrew.c](mac_hebrew.c.md) - 4 functions, includes 4 project headers.
 * [mac_hebrew.h](mac_hebrew.h.md) - MacHebrew.
 * [mac_japanese.c](mac_japanese.c.md) - 4 functions, includes 2 project headers.
@@ -23,4 +23,4 @@
 * [mac_roman.c](mac_roman.c.md) - 4 functions, includes 3 project headers.
 * [mac_roman.h](mac_roman.h.md) - No functions or types.
 * [mac_turkish.c](mac_turkish.c.md) - 2 functions, includes 3 project headers.
-* [mac_turkish.h](mac_turkish.h.md) - 2 functions.
+* [mac_turkish.h](mac_turkish.h.md) - MacTurkish.

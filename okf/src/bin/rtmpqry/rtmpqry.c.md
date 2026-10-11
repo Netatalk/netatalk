@@ -5,7 +5,7 @@ description: "7 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/rtmpqry/rtmpqry.c"
 tags: ["bin/rtmpqry"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/rtmpqry](../rtmpqry.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,12 @@ Part of the [bin/rtmpqry](../rtmpqry.md) subsystem. Built from the commit record
 static void usage(char *s)
 ```
 
-Defined at lines 41 to 46.
+Defined at lines 46 to 51.
+
+Print the usage of rtmpqry to stderr and exit with 1.
+
+Parameters:
+* `s`: program name
 
 Called by: [main](rtmpqry.c.md#main)
 
@@ -36,7 +41,17 @@ Called by: [main](rtmpqry.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 48 to 130.
+Defined at lines 66 to 148.
+
+Query an AppleTalk router with RTMP and print its answer.
+
+By default the tool sends a Route Data Request and prints the routing tuples of the replies for about 3 seconds. The -a option asks for all routes without split horizon. The -r option sends an RTMP Request, which asks for the network of the router, and it excludes -a. The -A option sets the local address, and the remote address defaults to the local node.
+
+Parameters:
+* `argc`: argument count
+* `argv`: argument vector
+
+Returns: 0, while errors exit with 1
 
 Calls: [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [do_rtmp_rdr](rtmpqry.c.md#do_rtmp_rdr), [do_rtmp_request](rtmpqry.c.md#do_rtmp_request), [setup_ddp_socket](rtmpqry.c.md#setup_ddp_socket), [usage](rtmpqry.c.md#usage)
 
@@ -46,11 +61,17 @@ Calls: [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [do_rtmp_rd
 int setup_ddp_socket(const struct at_addr *local_addr, struct at_addr **remote_addr)
 ```
 
-Defined at lines 138 to 159.
+Defined at lines 162 to 183.
 
-Set up a DDP socket ready for sending RTMP packets.
+Open a DDP socket for the RTMP queries.
 
-The remote_addr is a pointer to a pointer so that if it's null we can fill it in with the address the kernel provides, as we do in [libatalk/nbp/nbp_lkup.c](../../libatalk/nbp/nbp_lkup.c.md) for example.
+Without a remote address the call fills in the address that the kernel bound the socket to, so the query goes to the local node. A socket error exits with 1.
+
+Parameters:
+* `local_addr`: local address to bind, all zeros for any
+* `remote_addr`: remote address, which the call fills in when it is NULL
+
+Returns: the socket
 
 Calls: [netddp_open](../../libatalk/netddp/netddp_open.c.md#netddp_open)
 
@@ -62,11 +83,15 @@ Called by: [main](rtmpqry.c.md#main)
 void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
 ```
 
-Defined at lines 167 to 257.
+Defined at lines 196 to 286.
 
-Send an RTMP Request and wait for a reply.
+Send an RTMP Request and print the router and the networks from its reply.
 
-An RTMP request just requests details of the network this node is connected to; in general, these aren't used on extended networks (instead, a ZIP GetNetInfo is used) but they should be supported anyway.
+A reply from an extended network carries the network range. The call waits without a timeout and skips other datagrams. A wrong marker byte or RTMP version exits with 1.
+
+Parameters:
+* `sockfd`: DDP socket
+* `sa_remote`: RTMP socket of the router
 
 Calls: [netddp_recvfrom](../../include/atalk/netddp.h.md#netddp_recvfrom), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto)
 
@@ -78,11 +103,17 @@ Called by: [main](rtmpqry.c.md#main)
 void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all, int secs_timeout)
 ```
 
-Defined at lines 266 to 345.
+Defined at lines 302 to 381.
 
-Send an RTMP Route Data Request (RDR) and wait for a reply.
+Send an RTMP Route Data Request and print the routing data of each reply.
 
-An RTMP RDR solicits RTMP data packets - generally, these are sent out broadcast on a timer, but one can specifically ask for them to be sent to a non-standard socket by means of an RDR. An RDR can also specify whether or not for the router to do split horizon processing (or whether to return all routes).
+Routers send RTMP data packets to every node on a timer, and the request asks for them at this socket. The request asks for split horizon unless `get_all` asks for all routes. The call prints each data packet that arrives within `secs_timeout` plus up to 1 more second.
+
+Parameters:
+* `sockfd`: DDP socket
+* `sa_remote`: RTMP socket of the router
+* `get_all`: true to ask for all routes without split horizon
+* `secs_timeout`: minimum seconds to collect replies
 
 Calls: [netddp_recvfrom](../../include/atalk/netddp.h.md#netddp_recvfrom), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto), [print_rtmp_data_packet](rtmpqry.c.md#print_rtmp_data_packet)
 
@@ -94,11 +125,20 @@ Called by: [main](rtmpqry.c.md#main)
 const uint8_t * print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor, size_t len, uint16_t router_net, uint8_t router_node)
 ```
 
-Defined at lines 351 to 396.
+Defined at lines 396 to 441.
 
-Print an RTMP tuple pointed to by 'cursor' within the buffer 'buf' with length 'len'.
+Print one routing tuple of an RTMP data packet.
 
-Returns: the next value of 'cursor' or NULL if no more tuples exist.
+An extended tuple carries a network range and an RTMP version. The call skips a tuple with another version and prints a message.
+
+Parameters:
+* `buf`: packet
+* `cursor`: start of the tuple in `buf`
+* `len`: packet length
+* `router_net`: network of the sending router
+* `router_node`: node of the sending router
+
+Returns: the start of the next tuple, or NULL when no tuple fits
 
 Called by: [print_rtmp_data_packet](rtmpqry.c.md#print_rtmp_data_packet)
 
@@ -108,7 +148,15 @@ Called by: [print_rtmp_data_packet](rtmpqry.c.md#print_rtmp_data_packet)
 void print_rtmp_data_packet(const uint8_t *buf, size_t len)
 ```
 
-Defined at lines 398 to 462.
+Defined at lines 453 to 517.
+
+Print the routing tuples of an RTMP data packet.
+
+The call skips other datagrams and packets with a node ID length other than 8 bits. On a nonextended network a version marker comes before the tuples.
+
+Parameters:
+* `buf`: datagram
+* `len`: datagram length
 
 Calls: [print_rtmp_tuple](rtmpqry.c.md#print_rtmp_tuple)
 

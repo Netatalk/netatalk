@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/uam_auth.h"
-description: "2 types, includes 2 project headers."
+description: "interface between uam.c and auth.c"
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/uam_auth.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -37,8 +37,8 @@ Defined at line 19.
 ### struct uam_obj
 
 Defined at line 25.
-* `const char * uam_name`
-* `char * uam_path`
+* `const char * uam_name`: authentication method
+* `char * uam_path`: where it's located
 * `int uam_count`
 * `int(* login`: Called through by [afp_login](auth.c.md#afp_login).
 * `int(* logincont`: Called through by [afp_logincont](auth.c.md#afp_logincont).

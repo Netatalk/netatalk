@@ -5,7 +5,7 @@ description: "includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/mangle.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,4 +29,6 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 # Macros
 
-* Undocumented: `MANGLE_CHAR`, `MANGLE_LENGTH`, `MAX_EXT_LENGTH`, `MAX_LENGTH`, `MAX_MANGLE_SUFFIX_LENGTH`
+* `MANGLE_LENGTH`: #ffffffff This really can't be changed.
+* `MAX_EXT_LENGTH`: XXX This cannot be greater than 27.
+* Undocumented: `MANGLE_CHAR`, `MAX_LENGTH`, `MAX_MANGLE_SUFFIX_LENGTH`

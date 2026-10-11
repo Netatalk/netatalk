@@ -5,7 +5,7 @@ description: "1 function, 2 types, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/uam.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -49,13 +49,13 @@ Declared at include/atalk/uam.h line 99; no definition in the scanned sources.
 ### struct session_info
 
 Defined at line 72.
-* `void * sessionkey`
+* `void * sessionkey`: random session key
 * `size_t sessionkey_len`
-* `void * cryptedkey`
+* `void * cryptedkey`: kerberos/gssapi crypted key
 * `size_t cryptedkey_len`
-* `void * sessiontoken`
+* `void * sessiontoken`: session token sent to the client on FPGetSessionToken
 * `size_t sessiontoken_len`
-* `void * clientid`
+* `void * clientid`: whole buffer cotaining e.g.
 * `size_t clientid_len`
 
 ### struct uam_export
@@ -68,4 +68,20 @@ Defined at line 63.
 
 # Macros
 
-* Undocumented: `SESSIONKEY_LEN`, `SESSIONTOKEN_LEN`, `UAM_MODULE_CLIENT`, `UAM_MODULE_EXPORT`, `UAM_MODULE_SERVER`, `UAM_MODULE_VERSION`, `UAM_NEED_LIBGCRYPT_VERSION`, `UAM_OPTION_CLIENTNAME`, `UAM_OPTION_COOKIE`, `UAM_OPTION_FQDN`, `UAM_OPTION_GUEST`, `UAM_OPTION_HOSTNAME`, `UAM_OPTION_KRB5REALM`, `UAM_OPTION_KRB5SERVICE`, `UAM_OPTION_MACCHARSET`, `UAM_OPTION_PASSWDOPT`, `UAM_OPTION_PROTOCOL`, `UAM_OPTION_RANDNUM`, `UAM_OPTION_SESSIONINFO`, `UAM_OPTION_SIGNATURE`, `UAM_OPTION_UNIXCHARSET`, `UAM_OPTION_USERNAME`, `UAM_PASSWD_EXPIRETIME`, `UAM_PASSWD_FILENAME`, `UAM_PASSWD_MINLENGTH`, `UAM_PASSWD_SRP_VERIFIER_PATH`, `UAM_SERVER_CHANGEPW`, `UAM_SERVER_LOGIN`, `UAM_SERVER_LOGIN_EXT`, `UAM_SERVER_PRINTAUTH`, `UAM_USERNAMELEN`
+* `UAM_OPTION_CLIENTNAME`: get client IP address
+* `UAM_OPTION_COOKIE`: cookie handle
+* `UAM_OPTION_FQDN`: fully qualified name
+* `UAM_OPTION_GUEST`: get guest user
+* `UAM_OPTION_HOSTNAME`: get host name
+* `UAM_OPTION_KRB5REALM`: krb realm
+* `UAM_OPTION_KRB5SERVICE`: service name for krb5 principal
+* `UAM_OPTION_MACCHARSET`: mac charset handle
+* `UAM_OPTION_PASSWDOPT`: get the password file
+* `UAM_OPTION_PROTOCOL`: [DSI](dsi.h.md#struct-dsi) or [ASP](asp.h.md#struct-asp).
+* `UAM_OPTION_RANDNUM`: request a random number
+* `UAM_OPTION_SESSIONINFO`: unix charset handle
+* `UAM_OPTION_SIGNATURE`: get server signature
+* `UAM_OPTION_UNIXCHARSET`: unix charset handle
+* `UAM_OPTION_USERNAME`: get space for username
+* `UAM_PASSWD_EXPIRETIME`: not implemented yet.
+* Undocumented: `SESSIONKEY_LEN`, `SESSIONTOKEN_LEN`, `UAM_MODULE_CLIENT`, `UAM_MODULE_EXPORT`, `UAM_MODULE_SERVER`, `UAM_MODULE_VERSION`, `UAM_NEED_LIBGCRYPT_VERSION`, `UAM_PASSWD_FILENAME`, `UAM_PASSWD_MINLENGTH`, `UAM_PASSWD_SRP_VERIFIER_PATH`, `UAM_SERVER_CHANGEPW`, `UAM_SERVER_LOGIN`, `UAM_SERVER_LOGIN_EXT`, `UAM_SERVER_PRINTAUTH`, `UAM_USERNAMELEN`

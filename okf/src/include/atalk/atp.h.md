@@ -5,7 +5,7 @@ description: "ATP packet format."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/atp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -62,49 +62,49 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 ### struct atp_block
 
 Defined at line 151.
-* `struct sockaddr_at * atp_saddr`
+* `struct sockaddr_at * atp_saddr`: from/to address
 * `struct sreq_st sreqdata`
 * `struct rres_st rresdata`
 * `struct rreq_st rreqdata`
 * `struct sres_st sresdata`
 * `union atp_block atp_data`
-* `uint8_t atp_bitmap`
+* `uint8_t atp_bitmap`: response buffer bitmap
 
 ### struct atp_handle
 
 Defined at line 106.
-* `int atph_socket`
-* `struct sockaddr_at atph_saddr`
-* `uint16_t atph_tid`
-* `uint16_t atph_rtid`
-* `uint8_t atph_rxo`
-* `int atph_rreltime`
-* `struct atpbuf * atph_sent`
-* `struct atpbuf * atph_queue`
-* `int atph_reqtries`
-* `int atph_reqto`
-* `int atph_rrespcount`
-* `uint8_t atph_rbitmap`
-* `struct atpbuf * atph_reqpkt`
-* `struct timeval atph_reqtv`
-* `struct atpbuf * atph_resppkt`
+* `int atph_socket`: ddp socket
+* `struct sockaddr_at atph_saddr`: address
+* `uint16_t atph_tid`: last tid used
+* `uint16_t atph_rtid`: last received (rreq)
+* `uint8_t atph_rxo`: XO flag from last rreq.
+* `int atph_rreltime`: release time (secs)
+* `struct atpbuf * atph_sent`: packets we send (XO)
+* `struct atpbuf * atph_queue`: queue of pending packets
+* `int atph_reqtries`: retry count for request
+* `int atph_reqto`: retry timeout for request
+* `int atph_rrespcount`: expected # of responses
+* `uint8_t atph_rbitmap`: bitmap for request
+* `struct atpbuf * atph_reqpkt`: last request packet
+* `struct timeval atph_reqtv`: when we last sent request
+* `struct atpbuf * atph_resppkt`: response to request
 
 ### struct atpbuf
 
 Defined at line 96.
-* `struct atpbuf * atpbuf_next`
-* `size_t atpbuf_dlen`
-* `struct sockaddr_at atpbuf_addr`
-* `char atpbuf_data`
-* `struct atpxobuf atpbuf_xo`
+* `struct atpbuf * atpbuf_next`: next buffer in chain
+* `size_t atpbuf_dlen`: data length <= ATP_BUFSIZ
+* `struct sockaddr_at atpbuf_addr`: net address sent/recvd
+* `char atpbuf_data`: the data
+* `struct atpxobuf atpbuf_xo`: for XO requests
 * `union atpbuf atpbuf_info`
 
 ### struct atphdr
 
 Defined at line 63.
-* `uint8_t atphd_ctrlinfo`
-* `uint8_t atphd_bitmap`
-* `uint16_t atphd_tid`
+* `uint8_t atphd_ctrlinfo`: control information
+* `uint8_t atphd_bitmap`: bitmap or sequence number
+* `uint16_t atphd_tid`: transaction id.
 
 ### struct atpxobuf
 
@@ -117,27 +117,27 @@ Defined at line 89.
 ### struct rreq_st
 
 Defined at line 141.
-* `char * atpd_data`
+* `char * atpd_data`: request data
 * `int atpd_dlen`
 
 ### struct rres_st
 
 Defined at line 136.
-* `struct iovec * atpd_iov`
+* `struct iovec * atpd_iov`: for response
 * `int atpd_iovcnt`
 
 ### struct sreq_st
 
 Defined at line 129.
-* `char * atpd_data`
+* `char * atpd_data`: request data
 * `int atpd_dlen`
-* `int atpd_tries`
-* `int atpd_to`
+* `int atpd_tries`: max.
+* `int atpd_to`: retry interval
 
 ### struct sres_st
 
 Defined at line 146.
-* `struct iovec * atpd_iov`
+* `struct iovec * atpd_iov`: for response
 * `int atpd_iovcnt`
 
 # Typedefs and enums
@@ -146,4 +146,23 @@ Defined at line 146.
 
 # Macros
 
-* Undocumented: `ATP_BUFSIZ`, `ATP_EOM`, `ATP_FUNCMASK`, `ATP_HDRSIZE`, `ATP_MAXDATA`, `ATP_MAXQUEUE`, `ATP_MAXRESP`, `ATP_RELTIME`, `ATP_STS`, `ATP_TREL`, `ATP_TREL1M`, `ATP_TREL2M`, `ATP_TREL30`, `ATP_TREL4M`, `ATP_TREL8M`, `ATP_TRELMASK`, `ATP_TREQ`, `ATP_TRESP`, `ATP_TRIES_INFINITE`, `ATP_XO`, `atp_fileno`, `atp_rreqdata`, `atp_rreqdlen`, `atp_rresiov`, `atp_rresiovcnt`, `atp_sockaddr`, `atp_sreqdata`, `atp_sreqdlen`, `atp_sreqto`, `atp_sreqtries`, `atp_sresiov`, `atp_sresiovcnt`
+* `ATP_BUFSIZ`: maximum packet size
+* `ATP_EOM`: End Of Message.
+* `ATP_FUNCMASK`: mask all but function
+* `ATP_HDRSIZE`: includes DDP type field
+* `ATP_MAXDATA`: maximum ATP data size
+* `ATP_MAXQUEUE`: bound on unmatched incoming packets
+* `ATP_MAXRESP`: response packets per transaction
+* `ATP_RELTIME`: base release timer (in secs)
+* `ATP_STS`: Send Transaction Status.
+* `ATP_TREL`: Trans.
+* `ATP_TREL1M`: these are passed in flags of
+* `ATP_TREL2M`: atp_sreq call, and set in the
+* `ATP_TREL30`: release time codes
+* `ATP_TREL4M`: packet control info.
+* `ATP_TRELMASK`: mask all but TREL
+* `ATP_TREQ`: Trans.
+* `ATP_TRESP`: Trans.
+* `ATP_TRIES_INFINITE`: for atp_sreq, etc
+* `ATP_XO`: eXactly Once mode
+* Undocumented: `ATP_TREL8M`, `atp_fileno`, `atp_rreqdata`, `atp_rreqdlen`, `atp_rresiov`, `atp_rresiovcnt`, `atp_sockaddr`, `atp_sreqdata`, `atp_sreqdlen`, `atp_sreqto`, `atp_sreqtries`, `atp_sresiov`, `atp_sresiovcnt`

@@ -1,19 +1,19 @@
 ---
 type: Subsystem
 title: "libatalk/vfs"
-description: "6 files, 114 functions."
+description: "6 files, 115 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/vfs"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
 
 * [libatalk/vfs/acl.c](vfs/acl.c.md): 2 functions, includes 5 project headers.
-* [libatalk/vfs/ea_ad.c](vfs/ea_ad.c.md): 25 functions, includes 9 project headers.
+* [libatalk/vfs/ea_ad.c](vfs/ea_ad.c.md): Store Extended Attributes inside .AppleDouble folders as follows:
 * [libatalk/vfs/ea_sys.c](vfs/ea_sys.c.md): 7 functions, includes 9 project headers.
-* [libatalk/vfs/extattr.c](vfs/extattr.c.md): 14 functions, includes 6 project headers.
+* [libatalk/vfs/extattr.c](vfs/extattr.c.md): 15 functions, includes 6 project headers.
 * [libatalk/vfs/unix.c](vfs/unix.c.md): 12 functions, includes 10 project headers.
 * [libatalk/vfs/vfs.c](vfs/vfs.c.md): 54 functions, 1 type, includes 13 project headers.
 

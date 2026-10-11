@@ -5,7 +5,7 @@ description: "data structures and utility functions for child processes"
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/server_child.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -45,30 +45,30 @@ Declared at include/atalk/server_child.h line 70; no definition in the scanned s
 ### struct afp_child
 
 Defined at line 26.
-* `pid_t afpch_pid`
-* `uid_t afpch_uid`
-* `int afpch_valid`
-* `int afpch_killed`
-* `uint32_t afpch_boottime`
-* `time_t afpch_logintime`
-* `uint32_t afpch_idlen`
-* `char * afpch_clientid`
-* `size_t afpch_sessiontoken_len`
-* `char * afpch_sessiontoken`
-* `int afpch_ipc_fd`
-* `int afpch_hint_fd`
-* `char * afpch_hostname`
-* `int16_t afpch_state`
-* `char * afpch_volumes`
+* `pid_t afpch_pid`: afpd worker process pid (from the worker afpd process )
+* `uid_t afpch_uid`: user id of connected client (from the worker afpd process)
+* `int afpch_valid`: 1 if we have a clientid
+* `int afpch_killed`: 1 if we already tried to kill the client
+* `uint32_t afpch_boottime`: client boot time (from the mac client)
+* `time_t afpch_logintime`: time the child was added
+* `uint32_t afpch_idlen`: clientid len (from the Mac client)
+* `char * afpch_clientid`: clientid (from the Mac client)
+* `size_t afpch_sessiontoken_len`: reconnect token length
+* `char * afpch_sessiontoken`: opaque reconnect token
+* `int afpch_ipc_fd`: socket for IPC bw afpd parent and childs
+* `int afpch_hint_fd`: pipe write/parent end for sending cache hints to child
+* `char * afpch_hostname`: hostname or address of the connected client
+* `int16_t afpch_state`: state of AFP session (eg active, sleeping, disconnected)
+* `char * afpch_volumes`: mounted volumes
 * `struct afp_child ** afpch_prevp`
 * `struct afp_child * afpch_next`
 
 ### struct server_child_t
 
 Defined at line 47.
-* `int servch_count`
-* `int servch_nsessions`
-* `afp_child_t * servch_table`
+* `int servch_count`: Current count of active AFP sessions.
+* `int servch_nsessions`: Number of allowed AFP sessions.
+* `afp_child_t * servch_table`: Hashtable with data of AFP sesssions.
 
 # Typedefs and enums
 

@@ -5,7 +5,7 @@ description: "Zeroconf facade, that abstracts access to a particular Zeroconf im
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/netatalk/afp_zeroconf.c"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,9 +23,16 @@ Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit reco
 void zeroconf_register(const AFPObj *configs)
 ```
 
-Defined at lines 25 to 35.
+Defined at lines 31 to 41.
 
-registers service with a particular Zeroconf implemenation.
+Register the AFP services with mDNSResponder or Avahi, whichever the build has.
+
+Register the AFP services with the Zeroconf backend.
+
+The facade prefers mDNSResponder when the build has both. Without either the call does nothing.
+
+Parameters:
+* `configs`: AFP object with the options
 
 Calls: [av_zeroconf_register](afp_avahi.c.md#av_zeroconf_register), [md_zeroconf_register](afp_mdns.c.md#md_zeroconf_register)
 
@@ -37,9 +44,11 @@ Called by: [main](netatalk.c.md#main), [sighup_impl](netatalk.c.md#sighup_impl)
 void zeroconf_deregister(void)
 ```
 
-Defined at lines 37 to 47.
+Defined at lines 47 to 57.
 
-de-registers the ntpd service with a particular Zeroconf implemenation.
+Withdraw the AFP services from mDNSResponder or Avahi, whichever the build has.
+
+Withdraw the AFP services from the Zeroconf backend.
 
 Calls: [av_zeroconf_unregister](afp_avahi.c.md#av_zeroconf_unregister), [md_zeroconf_unregister](afp_mdns.c.md#md_zeroconf_unregister)
 

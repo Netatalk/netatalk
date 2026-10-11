@@ -5,7 +5,7 @@ description: "2 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/acl.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,11 +27,14 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 int remove_nfsv4_acl_vfs(const char *name)
 ```
 
-Defined at lines 38 to 94.
+Defined at lines 42 to 98.
 
-Removes all non-trivial ACLs from object.
+Keep only the owner@, group@, and everyone@ entries in the NFSv4 ACL of name.
 
-Returns: full AFPERR code
+Parameters:
+* `name`: file or directory
+
+Returns: AFP_OK, AFPERR_ACCESS, AFPERR_NOITEM for a missing name, or AFPERR_MISC
 
 Calls: [get_nfsv4_acl](../acl/unix.c.md#get_nfsv4_acl)
 
@@ -43,7 +46,7 @@ Called by: [RF_solaris_remove_acl](vfs.c.md#rf_solaris_remove_acl), [remove_acl]
 int remove_posix_acl_vfs(const char *name)
 ```
 
-Defined at lines 107 to 151.
+Defined at lines 111 to 155.
 
 Remove any ACL_USER, ACL_GROUP, ACL_MASK or ACL_TYPE_DEFAULT ACEs from an object.
 

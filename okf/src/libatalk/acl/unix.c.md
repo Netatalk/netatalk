@@ -5,7 +5,7 @@ description: "7 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/unix.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,13 +27,17 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 int get_nfsv4_acl(const char *name, ace_t **retAces)
 ```
 
-Defined at lines 45 to 101. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 50 to 106. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
-Get ACL.
+Read the NFSv4 ACL of a file or directory.
 
-Note: Allocates storage as needed. Caller must free.
+Symlinks and special files report 0 entries. The caller frees the returned array.
 
-Returns: no of ACEs or -1 on error.
+Parameters:
+* `name`: path of the object
+* `retAces`: receives a newly allocated array of the entries, or NULL
+
+Returns: the number of entries, or -1 on error
 
 Calls: [getcwdpath](../util/unix.c.md#getcwdpath)
 
@@ -45,9 +49,17 @@ Called by: [check_vol_acl_support](../util/netatalk_conf.c.md#check_vol_acl_supp
 ace_t * concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 ```
 
-Defined at lines 106 to 133. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 117 to 144. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
-Concatenate ACEs
+Join two ACE arrays into a newly allocated array.
+
+Parameters:
+* `aces1`: first array
+* `ace1count`: number of entries in aces1
+* `aces2`: second array, appended after aces1
+* `ace2count`: number of entries in aces2
+
+Returns: the joined array, or NULL when malloc fails
 
 Called by: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 
@@ -57,15 +69,19 @@ Called by: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 int strip_trivial_aces(ace_t **saces, int sacecount)
 ```
 
-Defined at lines 139 to 180. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 155 to 196. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
-Remove any trivial ACE "in-place".
+Drop the owner@, group@, and everyone@ entries from an ACE array.
 
-Returns: no of non-trivial ACEs
+The call frees the old array and stores a new one in saces.
+
+Parameters:
+* `saces`: ACE array, replaced by the remaining entries
+* `sacecount`: number of entries
+
+Returns: the number of remaining entries, or -1 when malloc fails
 
 Called by: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
-
-Mentioned in the documentation of: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 
 ### strip_nontrivial_aces
 
@@ -73,15 +89,19 @@ Mentioned in the documentation of: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 int strip_nontrivial_aces(ace_t **saces, int sacecount)
 ```
 
-Defined at lines 186 to 225. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 207 to 246. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
-Remove non-trivial ACEs "in-place".
+Keep only the owner@, group@, and everyone@ entries of an ACE array.
 
-Returns: no of trivial ACEs.
+The call frees the old array and stores a new one in saces.
+
+Parameters:
+* `saces`: ACE array, replaced by the remaining entries
+* `sacecount`: number of entries
+
+Returns: the number of remaining entries, or -1 when malloc fails
 
 Called by: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
-
-Mentioned in the documentation of: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 
 ### nfsv4_chmod
 
@@ -89,19 +109,25 @@ Mentioned in the documentation of: [nfsv4_chmod](unix.c.md#nfsv4_chmod)
 int nfsv4_chmod(char *name, mode_t mode)
 ```
 
-Defined at lines 242 to 319. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 267 to 344. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
-Change mode of file preserving existing explicit ACEs.
+Change the mode of a file and keep its explicit NFSv4 ACEs.
 
-nfsv4_chmod
+The call works in 7 steps:
 
-1. reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on e.g. UFS fs
-1. removes all trivial ACEs from the ACL by calling [strip_trivial_aces()](unix.c.md#strip_trivial_aces), possibly leaving 0 ACEs in the ACL if there were only trivial ACEs as mapped from the mode
-1. calls chmod() with mode, we're done if step (1) returned 0 for noaces
-1. reads the changed ACL (acl2) which a. might still contain explicit ACEs (up to onnv132) b. will have any explicit ACE removed (starting with onnv145/Openindiana)
-1. strip any explicit ACE from acl2 using [strip_nontrivial_aces()](unix.c.md#strip_nontrivial_aces)
-1. merge acl2 and acl2
-1. set the ACL merged ACL on the object
+1. Read the ACL. Without entries, a plain chmod finishes the call.
+1. Drop the owner@, group@, and everyone@ entries, which the mode replaces.
+1. Run chmod with the new mode.
+1. Read the ACL again, as root after EACCES. Solaris up to onnv132 keeps the explicit entries here, and onnv145 and OpenIndiana drop them.
+1. Keep only the owner@, group@, and everyone@ entries of the new ACL.
+1. Join the explicit entries of the old ACL with the mode entries of the new one.
+1. Set the joined ACL, as root after EACCES.
+
+Parameters:
+* `name`: path of the object
+* `mode`: new mode
+
+Returns: 0, or -1 with errno set
 
 Calls: [become_root](../util/unix.c.md#become_root), [concat_aces](unix.c.md#concat_aces), [get_nfsv4_acl](unix.c.md#get_nfsv4_acl), [getcwdpath](../util/unix.c.md#getcwdpath), [strip_nontrivial_aces](unix.c.md#strip_nontrivial_aces), [strip_trivial_aces](unix.c.md#strip_trivial_aces), [unbecome_root](../util/unix.c.md#unbecome_root)
 
@@ -111,15 +137,17 @@ Calls: [become_root](../util/unix.c.md#become_root), [concat_aces](unix.c.md#con
 int posix_chmod(const char *name, mode_t mode)
 ```
 
-Defined at lines 341 to 461. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 367 to 487. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
-POSIX ACL chmod.
+Change the mode of a file and keep its POSIX ACL group entry in step.
 
-This is a workaround for chmod() on filestystems supporting Posix 1003.1e draft 17 compliant ACLs. For objects with extended ACLs, e.g. objects with an ACL_MASK entry, chmod() manipulates ACL_MASK instead of ACL_GROUP_OBJ. As OS X isn't aware of this behavior calling FPSetFileDirParms may lead to unpredictable results. For more information see section 23.1.2 of Posix 1003.1e draft 17.
+On an object with an extended ACL, chmod changes ACL_MASK instead of ACL_GROUP_OBJ, as POSIX 1003.1e draft 17 section 23.1.2 defines. macOS clients do not expect that. After chmod the call therefore sets ACL_GROUP_OBJ from the group bits of mode and recalculates ACL_MASK. BSD systems drop the bits above 0777 first, because ZFS on FreeBSD refuses the setgid bit there.
 
-Note: accepts the same arguments as chmod()
+Parameters:
+* `name`: path of the object
+* `mode`: new mode
 
-Returns: 0 in case of success or -1 in case something went wrong.
+Returns: 0, or -1 on error
 
 Calls: [fullpathname](../util/unix.c.md#fullpathname)
 
@@ -129,13 +157,17 @@ Calls: [fullpathname](../util/unix.c.md#fullpathname)
 int posix_fchmod(int fd, mode_t mode)
 ```
 
-Defined at lines 469 to 577. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
+Defined at lines 499 to 607. Declared in [include/atalk/acl.h](../../include/atalk/acl.h.md).
 
-POSIX ACL fchmod.
+Change the mode of an open file and keep its POSIX ACL group entry in step.
 
-Note: accepts the same arguments as fchmod()
+The call works like posix_chmod on a descriptor, without the BSD bit mask.
 
-Returns: 0 in case of success or -1 in case something went wrong.
+Parameters:
+* `fd`: descriptor of the object
+* `mode`: new mode
+
+Returns: 0, or -1 on error
 
 # Macros
 

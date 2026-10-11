@@ -5,12 +5,12 @@ description: "31 files, 108 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/unicode"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
 
-* [libatalk/unicode/charcnv.c](unicode/charcnv.c.md): 21 functions, includes 5 project headers.
+* [libatalk/unicode/charcnv.c](unicode/charcnv.c.md): Character-set conversion routines based on samba iconv wrappers.
 * [libatalk/unicode/charsets/generic_cjk.c](unicode/charsets/generic_cjk.c.md): 8 functions, includes 1 project header.
 * [libatalk/unicode/charsets/generic_cjk.h](unicode/charsets/generic_cjk.h.md): 1 type, includes 2 project headers.
 * [libatalk/unicode/charsets/generic_mb.c](unicode/charsets/generic_mb.c.md): 2 functions, includes 4 project headers.
@@ -22,9 +22,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [libatalk/unicode/charsets/mac_chinese_trad.c](unicode/charsets/mac_chinese_trad.c.md): 4 functions, includes 2 project headers.
 * [libatalk/unicode/charsets/mac_chinese_trad.h](unicode/charsets/mac_chinese_trad.h.md): No functions or types.
 * [libatalk/unicode/charsets/mac_cyrillic.c](unicode/charsets/mac_cyrillic.c.md): 2 functions, includes 3 project headers.
-* [libatalk/unicode/charsets/mac_cyrillic.h](unicode/charsets/mac_cyrillic.h.md): 2 functions.
+* [libatalk/unicode/charsets/mac_cyrillic.h](unicode/charsets/mac_cyrillic.h.md): MacCyrillic.
 * [libatalk/unicode/charsets/mac_greek.c](unicode/charsets/mac_greek.c.md): 4 functions, includes 3 project headers.
-* [libatalk/unicode/charsets/mac_greek.h](unicode/charsets/mac_greek.h.md): No functions or types.
+* [libatalk/unicode/charsets/mac_greek.h](unicode/charsets/mac_greek.h.md): MacGreek.
 * [libatalk/unicode/charsets/mac_hebrew.c](unicode/charsets/mac_hebrew.c.md): 4 functions, includes 4 project headers.
 * [libatalk/unicode/charsets/mac_hebrew.h](unicode/charsets/mac_hebrew.h.md): MacHebrew.
 * [libatalk/unicode/charsets/mac_japanese.c](unicode/charsets/mac_japanese.c.md): 4 functions, includes 2 project headers.
@@ -34,7 +34,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [libatalk/unicode/charsets/mac_roman.c](unicode/charsets/mac_roman.c.md): 4 functions, includes 3 project headers.
 * [libatalk/unicode/charsets/mac_roman.h](unicode/charsets/mac_roman.h.md): No functions or types.
 * [libatalk/unicode/charsets/mac_turkish.c](unicode/charsets/mac_turkish.c.md): 2 functions, includes 3 project headers.
-* [libatalk/unicode/charsets/mac_turkish.h](unicode/charsets/mac_turkish.h.md): 2 functions.
+* [libatalk/unicode/charsets/mac_turkish.h](unicode/charsets/mac_turkish.h.md): MacTurkish.
 * [libatalk/unicode/iconv.c](unicode/iconv.c.md): wrapper/stub for iconv character set conversion.
 * [libatalk/unicode/precompose.h](unicode/precompose.h.md): No functions or types.
 * [libatalk/unicode/utf16_case.c](unicode/utf16_case.c.md): 4 functions, includes 2 project headers.

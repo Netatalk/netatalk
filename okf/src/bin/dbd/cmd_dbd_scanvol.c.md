@@ -5,7 +5,7 @@ description: "14 functions, includes 11 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/dbd/cmd_dbd_scanvol.c"
 tags: ["bin/dbd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,11 +33,14 @@ Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [b
 static const char * check_netatalk_dirs(const char *name)
 ```
 
-Defined at lines 69 to 80.
+Defined at lines 72 to 83.
 
-Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop".
+Tell whether a name is one of the netatalk folders .AppleDB and .AppleDesktop.
 
-Returns: pointer to name or NULL.
+Parameters:
+* `name`: directory entry name
+
+Returns: the matching table entry, or NULL
 
 Called by: [dbd_readdir](cmd_dbd_scanvol.c.md#dbd_readdir)
 
@@ -49,11 +52,14 @@ Uses file-scope variables: `netatalk_dirs`
 static const char * check_special_dirs(const char *name)
 ```
 
-Defined at lines 86 to 97.
+Defined at lines 92 to 103.
 
-Check for special names.
+Tell whether a name is a special directory that the scan leaves out, such as .zfs.
 
-Returns: pointer to name or NULL.
+Parameters:
+* `name`: directory entry name
+
+Returns: the matching table entry, or NULL
 
 Called by: [dbd_readdir](cmd_dbd_scanvol.c.md#dbd_readdir)
 
@@ -65,9 +71,19 @@ Uses file-scope variables: `special_dirs`
 static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname, const char *newname)
 ```
 
-Defined at lines 102 to 122.
+Defined at lines 117 to 137.
 
-We unCAPed a name, update CNID db
+Move the CNID of a renamed entry from its old name to its new name.
+
+The scan calls it after it decodes a CAP-encoded name. An entry that the database does not know needs no update.
+
+Parameters:
+* `did`: parent directory ID
+* `sp`: stat result of the entry
+* `oldname`: name before the rename
+* `newname`: name after the rename
+
+Returns: 0, or -1 when the update fails
 
 Calls: [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update)
 
@@ -79,9 +95,18 @@ Called by: [dbd_readdir](cmd_dbd_scanvol.c.md#dbd_readdir)
 static int check_adfile(const char *fname, const struct stat *st, const char **newname)
 ```
 
-Defined at lines 127 to 213.
+Defined at lines 155 to 241.
 
-Check for .AppleDouble file, create if missing
+Check the AppleDouble file of an entry, or convert it to extended attributes with -c.
+
+On an adouble:ea volume the call converts the adouble:v2 data with -c and otherwise does nothing. On an adouble:v2 volume a missing AppleDouble file gets a log line. Outside -s, the call creates it with the Mac name and the owner of the entry. An existing file has to open.
+
+Parameters:
+* `fname`: entry name in the current directory
+* `st`: stat result of the entry
+* `newname`: receives the new name when the conversion renames the entry, or NULL
+
+Returns: 0, or -1 for an access error, a missing file during -s, or a file that fails to open or create
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [convert_utf8_to_mac](../../libatalk/util/pathconv.c.md#convert_utf8_to_mac), [dbd_log](cmd_dbd.c.md#dbd_log)
 
@@ -97,9 +122,15 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static void remove_eafiles(const char *name, struct ea *ea)
 ```
 
-Defined at lines 218 to 270.
+Defined at lines 253 to 305.
 
-Remove all files with file::EA* from adouble dir
+Delete the extended attribute files of an entry from the .AppleDouble directory.
+
+The call deletes every file in .AppleDouble whose name contains `name::EA`.
+
+Parameters:
+* `name`: entry name
+* `ea`: EA state of the entry, unused
 
 Calls: [dbd_log](cmd_dbd.c.md#dbd_log), [strlcat](../../libatalk/compat/strlcpy.c.md#strlcat), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
@@ -113,9 +144,16 @@ Uses file-scope variables: `cwdbuf`
 static int check_eafiles(const char *fname)
 ```
 
-Defined at lines 275 to 332.
+Defined at lines 318 to 375.
 
-Check Extended Attributes files
+Check the extended attribute files of an entry against its EA header.
+
+An EA whose file is missing, or whose size differs from the header, drops out of the header. The call also deletes a file of the wrong size. Both changes happen even under -s. When the EA header does not open for another reason than a missing file, the call deletes the EA files, except under -s.
+
+Parameters:
+* `fname`: entry name
+
+Returns: 0, or -1 when the EA header does not open
 
 Calls: [dbd_log](cmd_dbd.c.md#dbd_log), [ea_close](../../libatalk/vfs/ea_ad.c.md#ea_close), [ea_open](../../libatalk/vfs/ea_ad.c.md#ea_open), [ea_path](../../libatalk/vfs/ea_ad.c.md#ea_path), [remove_eafiles](cmd_dbd_scanvol.c.md#remove_eafiles)
 
@@ -129,11 +167,16 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static bool adouble_dir_unusable(int err)
 ```
 
-Defined at lines 339 to 342.
+Defined at lines 387 to 390.
 
-Whether a non-directory holds the AppleDouble dir name.
+Tell whether an open error means that a non-directory holds the .AppleDouble name.
 
-A regular file gives ENOTDIR, a symlink the platform's O_NOFOLLOW errno.
+A regular file gives ENOTDIR, and a symbolic link gives the O_NOFOLLOW error of the platform.
+
+Parameters:
+* `err`: errno of the failed open
+
+Returns: true for such an error
 
 Called by: [check_addir](cmd_dbd_scanvol.c.md#check_addir)
 
@@ -143,9 +186,16 @@ Called by: [check_addir](cmd_dbd_scanvol.c.md#check_addir)
 static int check_addir(int volroot)
 ```
 
-Defined at lines 347 to 501.
+Defined at lines 406 to 560.
 
-Check for .AppleDouble folder and .Parent, create if missing
+Check the .AppleDouble directory and its .Parent file in the current directory, and create them when missing.
+
+An adouble:ea volume needs neither. A non-directory under the .AppleDouble name, which a non-AFP client may leave, skips the AppleDouble checks of the directory. Under -s a missing directory fails and a missing .Parent passes. Otherwise the call creates both with the Mac name of the directory and its owner.
+
+Parameters:
+* `volroot`: nonzero in the volume root, unused
+
+Returns: 0, 1 to skip the AppleDouble checks of the directory, or -1 for an error
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [adouble_dir_unusable](cmd_dbd_scanvol.c.md#adouble_dir_unusable), [convert_utf8_to_mac](../../libatalk/util/pathconv.c.md#convert_utf8_to_mac), [dbd_log](cmd_dbd.c.md#dbd_log)
 
@@ -161,15 +211,18 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static int check_eafile_in_adouble(int parent_fd, int addir_fd, const char *name)
 ```
 
-Defined at lines 509 to 566.
+Defined at lines 576 to 633.
 
-Check if file cotains "::EA" and if it does check if its correspondig data fork exists.
+Check whether a .AppleDouble entry is an EA file and whether its data file still exists.
 
-Returns: 0 = name is not an EA file
+Only a volume with `ea = ad` has EA files, and on others the call returns 0. An EA file whose data file is gone gets a log line and goes away, except under -s.
 
-Returns: 1 = name is an EA file and no problem was found
+Parameters:
+* `parent_fd`: open current directory
+* `addir_fd`: open .AppleDouble directory
+* `name`: entry name in .AppleDouble
 
-Returns: -1 = name is an EA file and data fork is gone
+Returns: 0 for a name without `::EA`, 1 for an EA file with its data file, or -1 for an orphan or an access error
 
 Calls: [dbd_log](cmd_dbd.c.md#dbd_log)
 
@@ -183,13 +236,13 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static int read_addir(void)
 ```
 
-Defined at lines 573 to 686.
+Defined at lines 646 to 759.
 
-Check files and dirs inside .AppleDouble folder.
+Check the entries of the .AppleDouble directory of the current directory.
 
-Note: remove orphaned files
+Directories inside .AppleDouble only log, and EA files go to check_eafile_in_adouble. An AppleDouble file whose data file is gone goes away, except under -s. On an adouble:ea volume a missing or unusable .AppleDouble passes.
 
-Note: bail on dirs
+Returns: 0, or -1 when a directory does not open
 
 Calls: [check_eafile_in_adouble](cmd_dbd_scanvol.c.md#check_eafile_in_adouble), [dbd_log](cmd_dbd.c.md#dbd_log)
 
@@ -203,11 +256,19 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok)
 ```
 
-Defined at lines 692 to 786.
+Defined at lines 777 to 871.
 
-Check CNID for a file/dir, both from db and from ad-file.
+Make sure that an entry has a CNID in the database and that its AppleDouble file agrees.
 
-Returns: Correct CNID of object or CNID_INVALID (ie 0) on error
+The call reads the CNID hint of the AppleDouble file, unless -i ignores it. It then adds or looks up the entry in the database with that hint. A mismatch rewrites the AppleDouble file with the database CNID, except under -s. An emptied CNID table ends the scan through longjmp, since the rest of the volume would get new IDs.
+
+Parameters:
+* `name`: entry name
+* `did`: CNID of the parent directory
+* `st`: stat result of the entry
+* `adfile_ok`: 0 when the AppleDouble file of the entry is usable
+
+Returns: the CNID of the entry, or CNID_INVALID for an error
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [cnid_add](../../libatalk/cnid/cnid.c.md#cnid_add), [dbd_log](cmd_dbd.c.md#dbd_log)
 
@@ -221,7 +282,16 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`, `jmp`, `stamp`
 static int check_orphaned(const char *name)
 ```
 
-Defined at lines 788 to 806.
+Defined at lines 881 to 899.
+
+Delete a `._name` file whose `name` no longer exists.
+
+The call deletes the file even under -s.
+
+Parameters:
+* `name`: name that starts with `._`
+
+Returns: 1 for an orphaned file, or 0
 
 Calls: [dbd_log](cmd_dbd.c.md#dbd_log)
 
@@ -235,9 +305,19 @@ Uses file-scope variables: `cwdbuf`
 static int dbd_readdir(int volroot, cnid_t did)
 ```
 
-Defined at lines 814 to 1017.
+Defined at lines 918 to 1121.
 
-This is called recursively for all dirs. volroot=1 means we're in the volume root dir, 0 means we aren't. We use this when checking for netatalk private folders like .AppleDB. did is our parent's CNID.
+Scan the current directory, check each entry, and descend into the subdirectories.
+
+The call checks the .AppleDouble directory first, then every entry. It skips the netatalk folders, .zfs in the volume root, and names that the volume does not accept. Types other than files, directories, and symbolic links go away, except under -s. The call checks the AppleDouble file of each entry, and for entries other than symbolic links the CNID and the EA files. It descends into each directory that has a CNID.
+
+A signal ends the scan through longjmp.
+
+Parameters:
+* `volroot`: nonzero in the volume root
+* `did`: CNID of the current directory
+
+Returns: 0, or -1 for an error that stops the scan
 
 Calls: [check_addir](cmd_dbd_scanvol.c.md#check_addir), [check_adfile](cmd_dbd_scanvol.c.md#check_adfile), [check_cnid](cmd_dbd_scanvol.c.md#check_cnid), [check_eafiles](cmd_dbd_scanvol.c.md#check_eafiles), [check_netatalk_dirs](cmd_dbd_scanvol.c.md#check_netatalk_dirs), [check_orphaned](cmd_dbd_scanvol.c.md#check_orphaned), [check_special_dirs](cmd_dbd_scanvol.c.md#check_special_dirs), [dbd_log](cmd_dbd.c.md#dbd_log), [read_addir](cmd_dbd_scanvol.c.md#read_addir), [strlcat](../../libatalk/compat/strlcpy.c.md#strlcat), [update_cnid](cmd_dbd_scanvol.c.md#update_cnid)
 
@@ -253,9 +333,17 @@ Uses file-scope variables: `alarmed` in [bin/dbd/cmd_dbd.c](cmd_dbd.c.md), `cwdb
 int cmd_dbd_scanvol(struct vol *vol, dbd_flags_t flags)
 ```
 
-Defined at lines 1022 to 1087. Declared in [bin/dbd/cmd_dbd.h](cmd_dbd.h.md).
+Defined at lines 1136 to 1201. Declared in [bin/dbd/cmd_dbd.h](cmd_dbd.h.md).
 
-Main func called from [cmd_dbd.c](cmd_dbd.c.md)
+Scan a whole volume from its root.
+
+Only Unicode volumes qualify. The scan reads the stamp of the CNID database, and with -c it converts the AppleDouble data of the root. It then runs dbd_readdir from the root with CNID 2. The umask stays 0 during the scan, so repaired AppleDouble files take their permissions from the files they belong to. A signal ends the scan with 0.
+
+Parameters:
+* `vol_in`: volume
+* `flags`: DBD_FLAGS_* options
+
+Returns: 0, or -1 for a failed scan or an emptied CNID table
 
 Calls: [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [dbd_log](cmd_dbd.c.md#dbd_log), [dbd_readdir](cmd_dbd_scanvol.c.md#dbd_readdir), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 

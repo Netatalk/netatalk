@@ -8,8 +8,8 @@
 * [asp.h](asp.h.md) - 1 type, includes 4 project headers.
 * [atp.h](atp.h.md) - ATP packet format.
 * [bstrlib_compat.h](bstrlib_compat.h.md) - No functions or types.
-* [byteorder.h](byteorder.h.md) - No functions or types.
-* [cnid.h](cnid.h.md) - 3 types, includes 3 project headers.
+* [byteorder.h](byteorder.h.md) - Macros for machine independent short and int manipulation.
+* [cnid.h](cnid.h.md) - This file contains all generic CNID related stuff declarations.
 * [cnid_mysql_private.h](cnid_mysql_private.h.md) - 1 type, includes 1 project header.
 * [cnid_sqlite_private.h](cnid_sqlite_private.h.md) - 1 type, includes 1 project header.
 * [compat.h](compat.h.md) - 4 functions.
@@ -29,7 +29,7 @@
 * [logger.h](logger.h.md) - 2 types.
 * [nbp.h](nbp.h.md) - 3 types, includes 2 project headers.
 * [netatalk_conf.h](netatalk_conf.h.md) - includes 2 project headers.
-* [netddp.h](netddp.h.md) - 3 functions, includes 1 project header.
+* [netddp.h](netddp.h.md) - this provides a generic interface to the ddp layer.
 * [pap.h](pap.h.md) - No functions or types.
 * [queue.h](queue.h.md) - 1 type.
 * [rpc.h](rpc.h.md) - 4 functions.
@@ -43,6 +43,6 @@
 * [unix.h](unix.h.md) - includes 1 project header.
 * [util.h](util.h.md) - Netatalk utility functions.
 * [uuid.h](uuid.h.md) - No functions or types.
-* [vfs.h](vfs.h.md) - 1 type, includes 3 project headers.
+* [vfs.h](vfs.h.md) - vfs layer for afp
 * [volume.h](volume.h.md) - 2 types, includes 5 project headers.
 * [zip.h](zip.h.md) - 2 types.

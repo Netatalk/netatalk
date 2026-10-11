@@ -5,7 +5,7 @@ description: "17 functions, 1 type, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/hqx.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,17 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static int hqx_write_all(const void *buf, size_t len)
 ```
 
-Defined at lines 94 to 110.
+Defined at lines 105 to 121.
+
+Write a whole buffer to the BinHex output.
+
+The output is the file or the stdout that hqx_open picked. A short write continues where it stopped. A write that fails or writes nothing ends the call, and EINTR counts as a failure.
+
+Parameters:
+* `buf`: bytes to write
+* `len`: number of bytes
+
+Returns: 0, or -1 for a failed write
 
 Called by: [hqx_close](hqx.c.md#hqx_close), [hqx_open](hqx.c.md#hqx_open), [hqx_put_char](hqx.c.md#hqx_put_char)
 
@@ -41,7 +51,16 @@ Uses file-scope variables: `hqx`
 static int hqx_put_char(unsigned char c)
 ```
 
-Defined at lines 112 to 128.
+Defined at lines 132 to 148.
+
+Write one BinHex character to the output and start a new line after 63 characters.
+
+A newline goes in before the character once the line holds 63 characters.
+
+Parameters:
+* `c`: character to write
+
+Returns: 0, or -1 for a failed write
 
 Calls: [hqx_write_all](hqx.c.md#hqx_write_all)
 
@@ -55,7 +74,16 @@ Uses file-scope variables: `hqx`
 static int hqx_emit_6bit(unsigned char b)
 ```
 
-Defined at lines 130 to 151.
+Defined at lines 159 to 180.
+
+Add one byte to the 6-bit encoder of the BinHex output.
+
+The encoder collects three bytes and then writes them as four characters of the BinHex alphabet.
+
+Parameters:
+* `b`: byte to encode
+
+Returns: 0, or -1 for a failed write
 
 Calls: [hqx_put_char](hqx.c.md#hqx_put_char)
 
@@ -69,7 +97,16 @@ Uses file-scope variables: `hqx`, `hqxchars`
 static int hqx_emit_byte(unsigned char b)
 ```
 
-Defined at lines 153 to 164.
+Defined at lines 191 to 202.
+
+Encode one data byte and escape the 0x90 run marker.
+
+A literal 0x90 becomes 0x90 followed by 0, which BinHex decoders read as the byte itself. The encoder writes no compressed runs.
+
+Parameters:
+* `b`: data byte
+
+Returns: 0, or -1 for a failed write
 
 Calls: [hqx_emit_6bit](hqx.c.md#hqx_emit_6bit)
 
@@ -81,7 +118,15 @@ Called by: [hqx_emit_data](hqx.c.md#hqx_emit_data)
 static int hqx_emit_data(const void *buf, size_t len)
 ```
 
-Defined at lines 166 to 177.
+Defined at lines 211 to 222.
+
+Encode a buffer of data bytes with hqx_emit_byte.
+
+Parameters:
+* `buf`: data bytes
+* `len`: number of bytes
+
+Returns: 0, or -1 for a failed write
 
 Calls: [hqx_emit_byte](hqx.c.md#hqx_emit_byte)
 
@@ -93,7 +138,13 @@ Called by: [hqx_finish_fork](hqx.c.md#hqx_finish_fork), [hqx_header_write](hqx.c
 static int hqx_flush_6bit(void)
 ```
 
-Defined at lines 179 to 203.
+Defined at lines 232 to 256.
+
+Write the one or two bytes that the encoder still holds.
+
+The call fills the missing bits with zeros and writes two characters for one byte or three characters for two bytes.
+
+Returns: 0, or -1 for a failed write
 
 Calls: [hqx_put_char](hqx.c.md#hqx_put_char)
 
@@ -107,7 +158,16 @@ Uses file-scope variables: `hqx`, `hqxchars`
 static int hqx_finish_fork(int fork)
 ```
 
-Defined at lines 205 to 225.
+Defined at lines 267 to 287.
+
+Write the CRC of a fork after its last declared byte.
+
+A finished fork needs nothing, and a fork with bytes left fails. The CRC goes through the encoder in network byte order.
+
+Parameters:
+* `fork`: DATA or RESOURCE
+
+Returns: 0, or -1 for missing bytes or a failed write
 
 Calls: [hqx_emit_data](hqx.c.md#hqx_emit_data)
 
@@ -121,7 +181,7 @@ Uses file-scope variables: `hqx`
 int hqx_open(char *hqxfile, int flags, struct FHeader *fh, int options)
 ```
 
-Defined at lines 242 to 321.
+Defined at lines 304 to 383.
 
 Open a BinHex file for reading or writing.
 
@@ -149,7 +209,7 @@ Mentioned in the documentation of: [hqx_close](hqx.c.md#hqx_close), [hqx_header_
 int hqx_close(int keepflag)
 ```
 
-Defined at lines 335 to 371.
+Defined at lines 397 to 433.
 
 Close the active BinHex file.
 
@@ -172,7 +232,13 @@ Uses file-scope variables: `hqx`
 const char * hqx_path(void)
 ```
 
-Defined at lines 373 to 376.
+Defined at lines 443 to 446.
+
+Return the path of the BinHex output that hqx_open created.
+
+The path is `-` for stdout. The archive commands use it to register the new file in the CNID database of its volume.
+
+Returns: the output path
 
 Called by: [created_file_path](megatron.c.md#created_file_path)
 
@@ -184,7 +250,7 @@ Uses file-scope variables: `hqx`
 ssize_t hqx_read(int fork, char *buffer, size_t length)
 ```
 
-Defined at lines 394 to 458.
+Defined at lines 464 to 528.
 
 Read decoded data from a BinHex fork.
 
@@ -213,7 +279,7 @@ Mentioned in the documentation of: [hqx_7tobin](hqx.c.md#hqx_7tobin)
 int hqx_header_read(struct FHeader *fh)
 ```
 
-Defined at lines 471 to 589.
+Defined at lines 541 to 659.
 
 Read and validate a BinHex header.
 
@@ -238,7 +304,7 @@ Mentioned in the documentation of: [hqx_7tobin](hqx.c.md#hqx_7tobin)
 int hqx_header_write(struct FHeader *fh)
 ```
 
-Defined at lines 598 to 636.
+Defined at lines 668 to 706.
 
 Encode and write a BinHex header.
 
@@ -257,7 +323,18 @@ Called by: [hqx_open](hqx.c.md#hqx_open)
 ssize_t hqx_write(int fork, char *buffer, size_t length)
 ```
 
-Defined at lines 638 to 666.
+Defined at lines 720 to 748.
+
+Encode fork data into the BinHex output.
+
+The data fork comes first, so the first resource bytes finish the data fork. A write past the declared length of a fork, or to a finished fork, fails. The last declared byte of a fork finishes it with its CRC.
+
+Parameters:
+* `fork`: DATA or RESOURCE
+* `buffer`: fork bytes
+* `length`: number of bytes
+
+Returns: `length`, or -1 for an error
 
 Calls: [crc16_xmodem_update](crc16.c.md#crc16_xmodem_update), [hqx_emit_data](hqx.c.md#hqx_emit_data), [hqx_finish_fork](hqx.c.md#hqx_finish_fork)
 
@@ -271,7 +348,7 @@ Uses file-scope variables: `hqx`
 ssize_t hqx7_fill(unsigned char *hqx7_ptr)
 ```
 
-Defined at lines 679 to 699.
+Defined at lines 761 to 781.
 
 Fill the BinHex text input buffer.
 
@@ -292,7 +369,7 @@ Uses file-scope variables: `hqx`, `hqx7_buf`, `hqx7_first`, `hqx7_last`
 int skip_junk(int line)
 ```
 
-Defined at lines 756 to 853.
+Defined at lines 838 to 935.
 
 Skip non-BinHex text until encoded data is found.
 
@@ -317,7 +394,7 @@ Mentioned in the documentation of: [hqx7_fill](hqx.c.md#hqx7_fill)
 size_t hqx_7tobin(char *outbuf, size_t datalen)
 ```
 
-Defined at lines 867 to 996.
+Defined at lines 949 to 1078.
 
 Decode BinHex text data to binary.
 

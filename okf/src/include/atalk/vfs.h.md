@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/vfs.h"
-description: "1 type, includes 3 project headers."
+description: "vfs layer for afp"
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/vfs.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -89,4 +89,4 @@ Defined at line 98.
 
 # Macros
 
-* Undocumented: `VFS_MODULES_MAX`
+* `VFS_MODULES_MAX`: Maximum number of VFS modules that can be chained.

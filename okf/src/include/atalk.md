@@ -5,7 +5,7 @@ description: "46 files, 32 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
@@ -18,8 +18,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 * [include/atalk/asp.h](atalk/asp.h.md): 1 type, includes 4 project headers.
 * [include/atalk/atp.h](atalk/atp.h.md): ATP packet format.
 * [include/atalk/bstrlib_compat.h](atalk/bstrlib_compat.h.md): No functions or types.
-* [include/atalk/byteorder.h](atalk/byteorder.h.md): No functions or types.
-* [include/atalk/cnid.h](atalk/cnid.h.md): 3 types, includes 3 project headers.
+* [include/atalk/byteorder.h](atalk/byteorder.h.md): Macros for machine independent short and int manipulation.
+* [include/atalk/cnid.h](atalk/cnid.h.md): This file contains all generic CNID related stuff declarations.
 * [include/atalk/cnid_mysql_private.h](atalk/cnid_mysql_private.h.md): 1 type, includes 1 project header.
 * [include/atalk/cnid_sqlite_private.h](atalk/cnid_sqlite_private.h.md): 1 type, includes 1 project header.
 * [include/atalk/compat.h](atalk/compat.h.md): 4 functions.
@@ -39,7 +39,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 * [include/atalk/logger.h](atalk/logger.h.md): 2 types.
 * [include/atalk/nbp.h](atalk/nbp.h.md): 3 types, includes 2 project headers.
 * [include/atalk/netatalk_conf.h](atalk/netatalk_conf.h.md): includes 2 project headers.
-* [include/atalk/netddp.h](atalk/netddp.h.md): 3 functions, includes 1 project header.
+* [include/atalk/netddp.h](atalk/netddp.h.md): this provides a generic interface to the ddp layer.
 * [include/atalk/pap.h](atalk/pap.h.md): No functions or types.
 * [include/atalk/queue.h](atalk/queue.h.md): 1 type.
 * [include/atalk/rpc.h](atalk/rpc.h.md): 4 functions.
@@ -53,7 +53,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
 * [include/atalk/unix.h](atalk/unix.h.md): includes 1 project header.
 * [include/atalk/util.h](atalk/util.h.md): Netatalk utility functions.
 * [include/atalk/uuid.h](atalk/uuid.h.md): No functions or types.
-* [include/atalk/vfs.h](atalk/vfs.h.md): 1 type, includes 3 project headers.
+* [include/atalk/vfs.h](atalk/vfs.h.md): vfs layer for afp
 * [include/atalk/volume.h](atalk/volume.h.md): 2 types, includes 5 project headers.
 * [include/atalk/zip.h](atalk/zip.h.md): 2 types.
 

@@ -5,7 +5,7 @@ description: "10 files, 14 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/asp"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
@@ -34,11 +34,11 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 16 calls
+* [etc/afpd](../etc/afpd.md): 17 calls
 
 # Most called functions
 
-* [asp_attention](asp/asp_attn.c.md#asp_attention): 3 callers
+* [asp_attention](asp/asp_attn.c.md#asp_attention): 4 callers
 * [asp_close](asp/asp_close.c.md#asp_close): 2 callers
 * [asp_kill](asp/asp_getsess.c.md#asp_kill): 2 callers
 * [asp_wrtcont](asp/asp_write.c.md#asp_wrtcont): 2 callers

@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_conv.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,18 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struct vol *vol)
 ```
 
-Defined at lines 56 to 148.
+Defined at lines 71 to 163.
+
+Convert the metadata of a version 2 AppleDouble file to the EA form.
+
+Regular files and directories only. ad_conv_v22ea_hf opens and locks the version 2 file and reads its header. A header with nothing beyond the defaults needs no EA. The defaults are no comment, an empty FinderInfo, dates equal to the file's mtime, and no AFP file info. Otherwise it creates the metadata EA, on macOS also the native FinderInfo EA, and transfers the header.
+
+Parameters:
+* `path`: file or directory to convert
+* `sp`: stat of path
+* `vol`: volume the file belongs to
+
+Returns: 0 on success or when nothing needs converting, -1 on error
 
 Calls: [ad_close](ad_flush.c.md#ad_close), [ad_copy_header](ad_flush.c.md#ad_copy_header), [ad_flush](ad_flush.c.md#ad_flush), [ad_getdate](ad_date.c.md#ad_getdate), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_init](ad_open.c.md#ad_init), [ad_init_old](ad_open.c.md#ad_init_old), [ad_open](ad_open.c.md#ad_open), [ad_refresh](ad_open.c.md#ad_refresh), [ad_tmplock](ad_lock.c.md#ad_tmplock), [fullpathname](../util/unix.c.md#fullpathname), [sys_setxattr](../vfs/extattr.c.md#sys_setxattr)
 
@@ -47,7 +58,18 @@ Uses file-scope variables: `emptydirad`, `emptyfilad`
 static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struct vol *vol)
 ```
 
-Defined at lines 150 to 205.
+Defined at lines 178 to 233.
+
+Convert the resource fork of a version 2 AppleDouble file to the EA form.
+
+Regular files only. When the version 2 resource fork holds data, ad_conv_v22ea_rf locks it and creates the EA resource fork. It transfers the data and gives the new fork the mode and ownership of the data file.
+
+Parameters:
+* `path`: file to convert
+* `sp`: stat of path
+* `vol`: volume the file belongs to
+
+Returns: 0 on success or when nothing needs converting, -1 on error
 
 Calls: [ad_close](ad_flush.c.md#ad_close), [ad_flush](ad_flush.c.md#ad_flush), [ad_init](ad_open.c.md#ad_init), [ad_init_old](ad_open.c.md#ad_init_old), [ad_open](ad_open.c.md#ad_open), [ad_tmplock](ad_lock.c.md#ad_tmplock), [copy_fork](ad_write.c.md#copy_fork), [fullpathname](../util/unix.c.md#fullpathname)
 
@@ -59,7 +81,18 @@ Called by: [ad_conv_v22ea](ad_conv.c.md#ad_conv_v22ea)
 static int ad_conv_v22ea(const char *path, const struct stat *sp, const struct vol *vol)
 ```
 
-Defined at lines 207 to 237.
+Defined at lines 247 to 277.
+
+Convert a file's version 2 AppleDouble data to the EA form and delete the version 2 file.
+
+Runs as root. ad_conv_v22ea deletes the version 2 file even when a conversion failed. A missing file counts as success.
+
+Parameters:
+* `path`: file or directory to convert
+* `sp`: stat of path
+* `vol`: volume the file belongs to
+
+Returns: 0, or -1 when the AppleDouble path cannot be built
 
 Calls: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [ad_path](ad_open.c.md#ad_path), [become_root](../util/unix.c.md#become_root), [fullpathname](../util/unix.c.md#fullpathname), [unbecome_root](../util/unix.c.md#unbecome_root)
 
@@ -71,9 +104,19 @@ Called by: [ad_convert](ad_conv.c.md#ad_convert)
 static int ad_conv_dehex(const char *path, const struct stat *sp, const struct vol *vol, const char **newpathp)
 ```
 
-Defined at lines 242 to 306.
+Defined at lines 293 to 357.
 
-Remove hexencoded dots and slashes (":2e" and ":2f")
+Rename a path whose name carries CAP hex escapes for dot and slash to the decoded name.
+
+ad_conv_dehex renames only names with ":2e" or ":2f", and for a regular file renames the AppleDouble file first, both as root.
+
+Parameters:
+* `path`: path to check
+* `sp`: stat of path
+* `vol`: volume the file belongs to
+* `newpathp`: receives the decoded path in a static buffer, or NULL when nothing changed
+
+Returns: 0, or -1 when memory or the AppleDouble path cannot be obtained
 
 Calls: [become_root](../util/unix.c.md#become_root), [fullpathname](../util/unix.c.md#fullpathname), [strlcpy](../compat/strlcpy.c.md#strlcpy), [unbecome_root](../util/unix.c.md#unbecome_root)
 
@@ -87,7 +130,7 @@ Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no t
 int ad_convert(const char *path, const struct stat *sp, const struct vol *vol, const char **newpath)
 ```
 
-Defined at lines 319 to 351.
+Defined at lines 370 to 402.
 
 AppleDouble and encoding conversion on the fly.
 

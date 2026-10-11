@@ -1,16 +1,16 @@
 ---
 type: Build Record
 title: "Build record"
-description: "Netatalk commit 991544a6eee1 rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8."
-resource: "https://github.com/Netatalk/netatalk/commit/991544a6eee13494b33cd187008b718d25e5b34b"
+description: "Netatalk commit 9b5f7c886bc5 rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8."
+resource: "https://github.com/Netatalk/netatalk/commit/9b5f7c886bc51cc7c16ec5c610e09356b38cb859"
 tags: ["build"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T06:43:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Source
 
-* Commit: [991544a6eee13494b33cd187008b718d25e5b34b](https://github.com/Netatalk/netatalk/commit/991544a6eee13494b33cd187008b718d25e5b34b), committed 2026-10-11T06:43:38+02:00
+* Commit: [9b5f7c886bc51cc7c16ec5c610e09356b38cb859](https://github.com/Netatalk/netatalk/commit/9b5f7c886bc51cc7c16ec5c610e09356b38cb859), committed 2026-10-11T16:42:54+02:00
 * Scanned directories: `bin`, `etc`, `include`, `libatalk`, `sys`
 * Doxygen: 1.9.8, configured from `doc/Doxyfile.in` with XML output and reference relations
 
@@ -18,23 +18,23 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T06:43:38+02:00 }
 
 Conditional code is included as if these macros were defined, so the graph reflects a maximal feature build rather than any one platform:
 
-`HAVE_ACLS=1`, `HAVE_AVAHI=1`, `HAVE_CUPS=1`, `HAVE_LDAP=1`, `HAVE_LIBQUOTA=1`, `HAVE_MDNS=1`, `HAVE_NFSV4_ACLS=1`, `HAVE_POSIX_ACLS=1`, `HAVE_USABLE_ICONV=1`, `TCPWRAP=1`, `USE_CRACKLIB=1`, `WITH_DTRACE=1`, `WITH_RECVFILE=1`, `WITH_SENDFILE=1`, `WITH_SPOTLIGHT=1`, `__attribute__(x)=`, `_U_=`
+`ATOMIC_INT_LOCK_FREE=2`, `AVAHI_GCC_UNUSED=`, `HAVE_ACLS=1`, `HAVE_AVAHI=1`, `HAVE_CUPS=1`, `HAVE_LDAP=1`, `HAVE_LIBQUOTA=1`, `HAVE_LISTXATTR=1`, `HAVE_MDNS=1`, `HAVE_NFSV4_ACLS=1`, `HAVE_POSIX_ACLS=1`, `HAVE_SIGALTSTACK=1`, `HAVE_USABLE_ICONV=1`, `SERVERTEXT=1`, `SPOTLIGHT_BACKEND_LOCALSEARCH=1`, `TCPWRAP=1`, `USE_CRACKLIB=1`, `WITH_DTRACE=1`, `WITH_LIBEV=1`, `WITH_RECVFILE=1`, `WITH_SENDFILE=1`, `WITH_SPOTLIGHT=1`, `__attribute__(x)=`, `_U_=`
 
 # Counts
 
 * Files: 357
 * Subsystems: 30
-* Functions: 2085
-* Documented functions: 544
+* Functions: 2091
+* Documented functions: 2038
 * Types: 160
 * Function tables: 55
-* Call edges: 4456
-* Variable-use edges: 1683
+* Call edges: 4480
+* Variable-use edges: 1729
 * Table edges: 248
 * Dispatch edges: 206
 * Fields called through: 60
-* Documented-reference edges: 143
-* Graph edges: 8256
+* Documented-reference edges: 88
+* Graph edges: 8271
 
 # Edge kinds
 

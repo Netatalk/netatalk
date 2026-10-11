@@ -5,7 +5,7 @@ description: "4 functions, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_korean.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -33,7 +33,18 @@ Initialized at line 96 as `struct charset_functions`. Assigns:
 static size_t mac_korean_char_push(uint8_t *out, const ucs2_t *in, size_t *size)
 ```
 
-Defined at lines 51 to 100.
+Defined at lines 67 to 116.
+
+Map one UCS2 character, with the combining characters after it, to MAC_KOREAN bytes.
+
+An Apple sequence that starts with U+F860 to U+F867 composes first. Otherwise the call keeps composing while a hint from U+F870 to U+F87F or a combining mark follows and the composition table has the pair. Private-use characters and characters without a table entry return 0 for the EUC-KR fallback.
+
+Parameters:
+* `out`: receives one or two bytes
+* `in`: UCS2 input
+* `size`: characters available, which receives the characters used
+
+Returns: the number of bytes, 0 for the iconv fallback, or `(size_t)-1` with errno
 
 Calls: [cjk_char_push](generic_cjk.c.md#cjk_char_push), [cjk_compose](generic_cjk.c.md#cjk_compose), [cjk_compose_seq](generic_cjk.c.md#cjk_compose_seq), [cjk_lookup](generic_cjk.c.md#cjk_lookup)
 
@@ -44,10 +55,21 @@ Uses file-scope variables: `mac_korean_compose` in [libatalk/unicode/charsets/ma
 ### mac_korean_push
 
 ```c
-static size_t mac_korean_push(void *, char **, size_t *, char **, size_t *)
+static size_t mac_korean_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 102 to 107.
+Defined at lines 128 to 133.
+
+Convert UCS2 to MAC_KOREAN through cjk_generic_push.
+
+Parameters:
+* `cd`: EUC-KR iconv descriptor for the fallback
+* `inbuf`: UCS2 input position
+* `inbytesleft`: input bytes left
+* `outbuf`: output position
+* `outbytesleft`: output space
+
+Returns: 0, or `(size_t)-1` with errno
 
 Calls: [cjk_generic_push](generic_cjk.c.md#cjk_generic_push), [mac_korean_char_push](mac_korean.c.md#mac_korean_char_push)
 
@@ -59,7 +81,18 @@ Dispatched via: [charset_mac_korean](mac_korean.c.md#charset_mac_korean)
 static size_t mac_korean_char_pull(ucs2_t *out, const uint8_t *in, size_t *size)
 ```
 
-Defined at lines 109 to 139.
+Defined at lines 149 to 179.
+
+Map one MAC_KOREAN character of one or two bytes to UCS2.
+
+ASCII passes as is, and bytes outside the lead byte range stand alone. A lead byte from 0xa1 to 0xfe needs a trail byte in 0x41 to 0x7d or in 0x81 to 0xfe. The table value expands through the composition table into up to CJK_PULL_BUFFER characters.
+
+Parameters:
+* `out`: receives the UCS2 characters
+* `in`: input bytes
+* `size`: bytes available, which receives the bytes used
+
+Returns: the number of characters, 0 for the iconv fallback, or `(size_t)-1` with EILSEQ or EINVAL
 
 Calls: [cjk_char_pull](generic_cjk.c.md#cjk_char_pull), [cjk_lookup](generic_cjk.c.md#cjk_lookup)
 
@@ -70,10 +103,21 @@ Uses file-scope variables: `mac_korean_2uni_charset` in [libatalk/unicode/charse
 ### mac_korean_pull
 
 ```c
-static size_t mac_korean_pull(void *, char **, size_t *, char **, size_t *)
+static size_t mac_korean_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 141 to 146.
+Defined at lines 191 to 196.
+
+Convert MAC_KOREAN to UCS2 through cjk_generic_pull.
+
+Parameters:
+* `cd`: EUC-KR iconv descriptor for the fallback
+* `inbuf`: input position
+* `inbytesleft`: input bytes left
+* `outbuf`: UCS2 output position
+* `outbytesleft`: output space
+
+Returns: 0, or `(size_t)-1` with errno
 
 Calls: [cjk_generic_pull](generic_cjk.c.md#cjk_generic_pull), [mac_korean_char_pull](mac_korean.c.md#mac_korean_char_pull)
 

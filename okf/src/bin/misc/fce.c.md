@@ -5,7 +5,7 @@ description: "3 functions, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/misc/fce.c"
 tags: ["bin/misc"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,12 @@ Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in 
 static void sig_handler(int signo)
 ```
 
-Defined at lines 27 to 31.
+Defined at lines 32 to 36.
+
+Note SIGINT or SIGTERM, so the listener loop stops.
+
+Parameters:
+* `signo`: signal number, unused
 
 Called by: [main](fce.c.md#main)
 
@@ -36,7 +41,18 @@ Uses file-scope variables: `stop_requested`
 static int unpack_fce_packet(unsigned char *buf, size_t buflen, struct fce_packet *packet)
 ```
 
-Defined at lines 46 to 194.
+Defined at lines 64 to 212.
+
+Decode an FCE datagram into a packet structure.
+
+A version above 1 adds an options byte, a padding byte, and 8 reserved bytes. The options pick the optional PID, user, and source path fields. Each field has to fit the datagram, and each string has to fit its buffer with room for the NUL. The call leaves the magic check to its caller.
+
+Parameters:
+* `buf`: datagram
+* `buflen`: datagram length
+* `packet`: receives the fields
+
+Returns: 0, or -1 for a short datagram or a field that is too long
 
 Called by: [main](fce.c.md#main)
 
@@ -46,7 +62,17 @@ Called by: [main](fce.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 196 to 362.
+Defined at lines 227 to 393.
+
+Listen for FCE datagrams from afpd and print each event.
+
+The listener binds a UDP socket to the -h host and the -p port. The defaults are localhost and the FCE default port. It prints one line per event and stops on SIGINT or SIGTERM. A datagram that does not decode gets a line on stderr, and the call ignores datagrams with another magic.
+
+Parameters:
+* `argc`: argument count
+* `argv`: argument vector
+
+Returns: 0 after SIGINT or SIGTERM, 2 when no socket binds, or 1 for another error
 
 Calls: [sig_handler](fce.c.md#sig_handler), [unpack_fce_packet](fce.c.md#unpack_fce_packet)
 

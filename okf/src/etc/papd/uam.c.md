@@ -5,7 +5,7 @@ description: "7 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/uam.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,17 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 struct uam_mod * uam_load(const char *path, const char *name)
 ```
 
-Defined at lines 31 to 82.
+Defined at lines 43 to 94.
+
+Load a UAM module for papd and run its setup.
+
+The module has to export a server UAM under its file name without the extension, such as uams_pam for uams_pam.so. Its uam_setup runs without a server object, since papd has none. Each failure except a missing UAM symbol logs.
+
+Parameters:
+* `path`: module path
+* `name`: module file name
+
+Returns: the module record, or NULL when the module does not open, lacks the UAM, or fails its setup
 
 Calls: [mod_close](../../include/atalk/util.h.md#mod_close), [mod_open](../../include/atalk/util.h.md#mod_open), [mod_symbol](../../include/atalk/util.h.md#mod_symbol), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
@@ -42,11 +52,14 @@ Calls through [`uam_export::uam_setup`](../../include/atalk/uam.h.md#struct-uam_
 void uam_unload(struct uam_mod *mod)
 ```
 
-Defined at lines 90 to 98.
+Defined at lines 99 to 107.
 
-unload the module.
+Run the cleanup function of a UAM module, close it, and free its entry.
 
-we check for a cleanup function, but we don't die if one doesn't exist. however, things are likely to leak without one.
+A module without a cleanup function still closes, but it may leak.
+
+Parameters:
+* `mod`: loaded module
 
 Calls: [mod_close](../../include/atalk/util.h.md#mod_close)
 
@@ -60,9 +73,11 @@ Calls through [`uam_export::uam_cleanup`](../../include/atalk/uam.h.md#struct-ua
 int uam_register(const int type, const char *path, const char *name,...)
 ```
 
-Defined at lines 103 to 168.
+Defined at lines 117 to 182.
 
-set up stuff for this uam.
+Register a UAM of a module under a name and type.
+
+In papd UAM_SERVER_PRINTAUTH passes one handler, the uam_printer function, and a UAM_SERVER_LOGIN_EXT registration returns 1.
 
 Calls: [auth_register](auth.c.md#auth_register), [auth_uamfind](auth.c.md#auth_uamfind)
 
@@ -72,7 +87,13 @@ Calls: [auth_register](auth.c.md#auth_register), [auth_uamfind](auth.c.md#auth_u
 void uam_unregister(const int type, const char *name)
 ```
 
-Defined at lines 170 to 187.
+Defined at lines 187 to 204.
+
+Drop a registration of a UAM and free the UAM after its last one.
+
+Parameters:
+* `type`: UAM type
+* `name`: UAM name
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind)
 
@@ -82,9 +103,13 @@ Calls: [auth_uamfind](auth.c.md#auth_uamfind)
 int uam_afpserver_option(void *private, const int what, void *option, size_t *len)
 ```
 
-Defined at lines 190 to 194.
+Defined at lines 213 to 217.
 
-Crap to support uams which call this afpd function
+Answer a UAM request for a server or session value with nothing, for UAMs loaded by papd.
+
+Answer a UAM request for a server or session value.
+
+In papd the call is a stub that sets nothing and returns 0 for every code, since papd keeps no session values.
 
 ### uam_getname
 
@@ -92,14 +117,11 @@ Crap to support uams which call this afpd function
 struct passwd * uam_getname(void *private, char *name, const int len)
 ```
 
-Defined at lines 198 to 233.
+Defined at lines 228 to 263.
 
-helper functions for plugin uams
+Find the password entry of a login name for a UAM.
 
-Parameters:
-* `private`: pointer to [AFPObj](../../include/atalk/globals.h.md#struct-afpobj)
-* `name`: user name
-* `len`: size of name buffer.
+In papd the call skips the domain forms of afpd. After getpwnam fails, it lowers the case of name in place. It then compares the name with the login name and the first gecos field of every account.
 
 ### uam_checkuser
 
@@ -107,4 +129,8 @@ Parameters:
 int uam_checkuser(void *private, const struct passwd *pwd)
 ```
 
-Defined at lines 238 to 261.
+Defined at lines 271 to 294.
+
+Check that a user may log in through a UAM.
+
+In papd the shell check always runs, since papd.conf has no option to turn it off, and an empty shell fails as well.

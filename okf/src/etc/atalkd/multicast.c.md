@@ -5,7 +5,7 @@ description: "3 functions, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/multicast.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,9 +29,15 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 int addmulti(const char *name, const unsigned char *data)
 ```
 
-Defined at lines 295 to 306.
+Defined at lines 302 to 313.
 
-configure multicast for a given named interface
+Add an AppleTalk multicast address to an interface.
+
+Parameters:
+* `name`: interface name
+* `data`: 6-byte Ethernet multicast address, or NULL for 09:00:07:ff:ff:ff, which reaches every AppleTalk node
+
+Returns: 0, or -1 when SIOCADDMULTI fails
 
 Calls: [ifconfig](main.c.md#ifconfig)
 
@@ -45,7 +51,17 @@ Uses file-scope variables: `ethermulti`
 static uint16_t atalk_cksum(unsigned char *data, int len)
 ```
 
-Defined at lines 309 to 329.
+Defined at lines 326 to 346.
+
+Compute the DDP checksum of a buffer, which hashes zone names here.
+
+Each byte adds to the sum, which then rotates left by one bit within 16 bits. A result of 0 becomes 0xffff, since 0 means no checksum in DDP.
+
+Parameters:
+* `data`: bytes to sum
+* `len`: number of bytes
+
+Returns: the 16-bit checksum, never 0
 
 Called by: [zone_bcast](multicast.c.md#zone_bcast)
 
@@ -55,11 +71,16 @@ Called by: [zone_bcast](multicast.c.md#zone_bcast)
 int zone_bcast(struct ziptab *zt)
 ```
 
-Defined at lines 340 to 368.
+Defined at lines 360 to 388.
 
-Fill in multicast for zone.
+Compute and store the Ethernet multicast address of a zone.
 
-Note: There is a general issue here: how can we tell the type of interface we're configuring for? E.g. Is it ethernet, tokenring, or FDDI? (Of course, FDDI and Ethernet look just alike.)
+The DDP checksum of the zone name in upper case, modulo 253, picks one of the 253 AppleTalk zone multicast addresses. The table holds Ethernet addresses, which FDDI shares, and the call knows no other link type such as Token Ring.
+
+Parameters:
+* `zt`: zone, receives the address in zt_bcast
+
+Returns: 0, or -1 for an invalid zone or a failed allocation
 
 Calls: [atalk_cksum](multicast.c.md#atalk_cksum)
 

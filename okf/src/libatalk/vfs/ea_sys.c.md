@@ -5,7 +5,7 @@ description: "7 functions, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/ea_sys.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,15 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 static int sys_ea_attrname_invalid(const char *func, const char *attruname)
 ```
 
-Defined at lines 44 to 52.
+Defined at lines 52 to 60.
+
+Reject a missing EA name with a log line that names the calling function.
+
+Parameters:
+* `func`: name of the calling function, for the log line
+* `attruname`: EA name to test
+
+Returns: 1 when attruname is NULL, 0 otherwise
 
 Called by: [sys_get_eacontent](ea_sys.c.md#sys_get_eacontent), [sys_get_easize](ea_sys.c.md#sys_get_easize), [sys_remove_ea](ea_sys.c.md#sys_remove_ea), [sys_set_ea](ea_sys.c.md#sys_set_ea)
 
@@ -41,7 +49,7 @@ Called by: [sys_get_eacontent](ea_sys.c.md#sys_get_eacontent), [sys_get_easize](
 int sys_get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int fd)
 ```
 
-Defined at lines 69 to 151. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 77 to 159. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 get size of a native EA
 
@@ -70,7 +78,7 @@ Dispatched via: [netatalk_ea_sys](vfs.c.md#netatalk_ea_sys)
 int sys_get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int maxreply, int fd)
 ```
 
-Defined at lines 168 to 288. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 176 to 296. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy native EA into rbuf
 
@@ -100,7 +108,7 @@ Dispatched via: [netatalk_ea_sys](vfs.c.md#netatalk_ea_sys)
 int sys_list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen, const char *uname, int oflag, int fd)
 ```
 
-Defined at lines 307 to 388. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 315 to 396. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy names of native EAs into attrnamebuf
 
@@ -128,7 +136,7 @@ Dispatched via: [netatalk_ea_sys](vfs.c.md#netatalk_ea_sys)
 int sys_set_ea(const struct vol *vol, const char *uname, const char *attruname, const char *ibuf, size_t attrsize, int oflag, int fd)
 ```
 
-Defined at lines 403 to 508. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 411 to 516. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 set a native EA
 
@@ -155,7 +163,7 @@ Dispatched via: [netatalk_ea_sys](vfs.c.md#netatalk_ea_sys)
 int sys_remove_ea(const struct vol *vol, const char *uname, const char *attruname, int oflag, int fd)
 ```
 
-Defined at lines 523 to 582. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 531 to 590. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 remove a native EA
 
@@ -182,7 +190,7 @@ Dispatched via: [netatalk_ea_sys](vfs.c.md#netatalk_ea_sys)
 int sys_ea_copyfile(const struct vol *vol, int sfd, const char *src, const char *dst)
 ```
 
-Defined at lines 596 to 778. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 604 to 786. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy EAs
 

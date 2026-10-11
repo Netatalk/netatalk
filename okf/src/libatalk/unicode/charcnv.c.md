@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charcnv.c"
-description: "21 functions, includes 5 project headers."
+description: "Character-set conversion routines based on samba iconv wrappers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charcnv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,9 +27,16 @@ Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit r
 static const char * charset_name(charset_t ch)
 ```
 
-Defined at lines 69 to 84.
+Defined at lines 75 to 90.
 
-Return the name of a charset to give to iconv().
+Return the iconv name of a charset.
+
+UCS2, UTF8, and UTF8-MAC use fixed names, and the others come from the name table.
+
+Parameters:
+* `ch`: charset
+
+Returns: the name, or NULL for an unnamed table slot
 
 Called by: [add_charset](charcnv.c.md#add_charset), [convert_charset](charcnv.c.md#convert_charset), [convert_string](charcnv.c.md#convert_string), [convert_string_allocate](charcnv.c.md#convert_string_allocate), [get_charset_functions](charcnv.c.md#get_charset_functions), [init_iconv](charcnv.c.md#init_iconv)
 
@@ -41,7 +48,17 @@ Uses file-scope variables: `charset_names`
 int set_charset_name(charset_t ch, const char *name)
 ```
 
-Defined at lines 86 to 94.
+Defined at lines 101 to 109.
+
+Set the name of a fixed charset slot in the name table.
+
+The call stores a strdup of the name and does not free an earlier one.
+
+Parameters:
+* `ch`: charset below NUM_CHARSETS
+* `name`: charset name
+
+Returns: 0, or -1 for a charset outside the fixed slots
 
 Called by: [afp_config_parse](../util/netatalk_conf.c.md#afp_config_parse), [main](../../bin/getzones/getzones.c.md#main), [main](../../bin/misc/netacnv.c.md#main), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../etc/atalkd/main.c.md#main), [main](../../etc/papd/main.c.md#main)
 
@@ -53,7 +70,9 @@ Uses file-scope variables: `charset_names`
 void free_charset_names(void)
 ```
 
-Defined at lines 96 to 104.
+Defined at lines 114 to 122.
+
+Free every name in the charset name table.
 
 Called by: [afp_config_free](../util/netatalk_conf.c.md#afp_config_free)
 
@@ -65,7 +84,14 @@ Uses file-scope variables: `charset_names`
 static struct charset_functions * get_charset_functions(charset_t ch)
 ```
 
-Defined at lines 106 to 114.
+Defined at lines 131 to 139.
+
+Return the built-in conversion functions of a charset, which the call looks up once by name.
+
+Parameters:
+* `ch`: charset
+
+Returns: the functions, or NULL for a charset that only iconv knows
 
 Calls: [charset_name](charcnv.c.md#charset_name), [find_charset_functions](iconv.c.md#find_charset_functions)
 
@@ -79,7 +105,9 @@ Uses file-scope variables: `charsets`
 static void lazy_initialize_conv(void)
 ```
 
-Defined at lines 117 to 125.
+Defined at lines 145 to 153.
+
+Run init_iconv once, on the first conversion or charset lookup.
 
 Calls: [init_iconv](charcnv.c.md#init_iconv)
 
@@ -91,7 +119,16 @@ Called by: [add_charset](charcnv.c.md#add_charset), [convert_charset](charcnv.c.
 charset_t add_charset(const char *name)
 ```
 
-Defined at lines 127 to 177.
+Defined at lines 165 to 215.
+
+Find a charset by name, or register it and open its iconv descriptors to and from UCS2.
+
+The name match ignores case. Up to MAX_CHARSETS charsets fit, and a name that iconv cannot convert fails.
+
+Parameters:
+* `name`: charset name
+
+Returns: the charset, or `(charset_t)-1` for an error
 
 Calls: [atalk_iconv_open](iconv.c.md#atalk_iconv_open), [charset_name](charcnv.c.md#charset_name), [get_charset_functions](charcnv.c.md#get_charset_functions), [lazy_initialize_conv](charcnv.c.md#lazy_initialize_conv)
 
@@ -105,7 +142,7 @@ Uses file-scope variables: `charset_names`, `charsets`, `conv_handles`
 void init_iconv(void)
 ```
 
-Defined at lines 186 to 214.
+Defined at lines 224 to 252.
 
 Initialize iconv conversion descriptors.
 
@@ -123,7 +160,17 @@ Uses file-scope variables: `charsets`, `conv_handles`
 static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
 ```
 
-Defined at lines 216 to 230.
+Defined at lines 263 to 277.
+
+Terminate a converted string with one NUL byte, or two for UCS2.
+
+Parameters:
+* `to`: target charset
+* `buf`: output buffer
+* `bytesleft`: free bytes after the string
+* `len`: length of the string
+
+Returns: `len`, or `(size_t)-1` with E2BIG when the NUL does not fit
 
 Called by: [convert_string_internal](charcnv.c.md#convert_string_internal)
 
@@ -133,7 +180,7 @@ Called by: [convert_string_internal](charcnv.c.md#convert_string_internal)
 static size_t convert_string_internal(charset_t from, charset_t to, void const *src, size_t srclen, void *dest, size_t destlen)
 ```
 
-Defined at lines 245 to 299.
+Defined at lines 292 to 346.
 
 Convert string from one encoding to another, making error checking etc.
 
@@ -159,7 +206,21 @@ Uses file-scope variables: `conv_handles`
 size_t convert_string(charset_t from, charset_t to, void const *src, size_t srclen, void *dest, size_t destlen)
 ```
 
-Defined at lines 302 to 345.
+Defined at lines 367 to 410.
+
+Convert a string between two charsets through UCS2, with Unicode composition.
+
+A decomposed target charset gets decomposed text. Otherwise text from a decomposed source, or from a charset without built-in functions, gets precomposed. The intermediate buffers hold MAXPATHLEN UCS2 characters, and the output ends with a NUL.
+
+Parameters:
+* `from`: source charset
+* `to`: target charset
+* `src`: source string
+* `srclen`: source length in bytes, or `(size_t)-1` for the string length
+* `dest`: output buffer
+* `destlen`: size of `dest`
+
+Returns: the output length without the NUL, or `(size_t)-1` for an error
 
 Calls: [charset_name](charcnv.c.md#charset_name), [convert_string_internal](charcnv.c.md#convert_string_internal), [decompose_w](util_unistr.c.md#decompose_w), [precompose_w](util_unistr.c.md#precompose_w)
 
@@ -173,7 +234,7 @@ Uses file-scope variables: `charsets`
 static size_t convert_string_allocate_internal(charset_t from, charset_t to, void const *src, size_t srclen, char **dest)
 ```
 
-Defined at lines 363 to 455.
+Defined at lines 428 to 520.
 
 Convert between character sets, allocating a new buffer for the result.
 
@@ -200,7 +261,20 @@ Uses file-scope variables: `conv_handles`
 size_t convert_string_allocate(charset_t from, charset_t to, void const *src, size_t srclen, char **dest)
 ```
 
-Defined at lines 458 to 501.
+Defined at lines 538 to 581.
+
+Convert a string between two charsets through UCS2 into a buffer from malloc.
+
+The composition rules match convert_string, and the buffer ends with a NUL.
+
+Parameters:
+* `from`: source charset
+* `to`: target charset
+* `src`: source string
+* `srclen`: source length in bytes, or `(size_t)-1` for the string length
+* `dest`: receives the buffer for the caller to free, or NULL
+
+Returns: the output length without the NUL, or `(size_t)-1` for an error
 
 Calls: [charset_name](charcnv.c.md#charset_name), [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [decompose_w](util_unistr.c.md#decompose_w), [precompose_w](util_unistr.c.md#precompose_w)
 
@@ -214,7 +288,20 @@ Uses file-scope variables: `charsets`
 size_t charset_strupper(charset_t ch, const char *src, size_t srclen, char *dest, size_t destlen)
 ```
 
-Defined at lines 503 to 524.
+Defined at lines 596 to 617.
+
+Uppercase a string through UCS2 and keep its charset.
+
+An in-place call that changes nothing returns `srclen` and leaves the buffer as it is.
+
+Parameters:
+* `ch`: charset of the string
+* `src`: source string
+* `srclen`: source length in bytes
+* `dest`: output buffer, which may be `src`
+* `destlen`: size of `dest`
+
+Returns: the output length, or `(size_t)-1` for an error
 
 Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [strupper_w](util_unistr.c.md#strupper_w)
 
@@ -224,7 +311,20 @@ Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_i
 size_t charset_strlower(charset_t ch, const char *src, size_t srclen, char *dest, size_t destlen)
 ```
 
-Defined at lines 526 to 547.
+Defined at lines 632 to 653.
+
+Lowercase a string through UCS2 and keep its charset.
+
+An in-place call that changes nothing returns `srclen` and leaves the buffer as it is.
+
+Parameters:
+* `ch`: charset of the string
+* `src`: source string
+* `srclen`: source length in bytes
+* `dest`: output buffer, which may be `src`
+* `destlen`: size of `dest`
+
+Returns: the output length, or `(size_t)-1` for an error
 
 Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [strlower_w](util_unistr.c.md#strlower_w)
 
@@ -234,7 +334,7 @@ Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_i
 size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest, size_t destlen)
 ```
 
-Defined at lines 560 to 565.
+Defined at lines 666 to 671.
 
 Copy a string from a UCS2 src to a unix char * destination, allocating a buffer.
 
@@ -256,7 +356,16 @@ Called by: [cname_mtouname](../../etc/afpd/directory.c.md#cname_mtouname), [getv
 size_t ucs2_to_charset_allocate(charset_t ch, char **dest, const ucs2_t *src)
 ```
 
-Defined at lines 568 to 573.
+Defined at lines 682 to 687.
+
+Convert a NUL-terminated UCS2 string to a charset, into a buffer from malloc.
+
+Parameters:
+* `ch`: target charset
+* `dest`: receives the buffer for the caller to free, or NULL
+* `src`: UCS2 string
+
+Returns: the output length, or `(size_t)-1` for an error
 
 Calls: [convert_string_allocate](charcnv.c.md#convert_string_allocate), [strlen_w](util_unistr.c.md#strlen_w)
 
@@ -268,7 +377,18 @@ Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms)
 size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst, size_t outlen)
 ```
 
-Defined at lines 575 to 603.
+Defined at lines 699 to 727.
+
+Precompose a string through UCS2 and keep its charset.
+
+Parameters:
+* `ch`: charset of the string
+* `src`: source string
+* `inlen`: source length in bytes
+* `dst`: output buffer
+* `outlen`: size of `dst`
+
+Returns: the output length, or `(size_t)-1` for an error
 
 Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [precompose_w](util_unistr.c.md#precompose_w)
 
@@ -278,7 +398,18 @@ Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_i
 size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst, size_t outlen)
 ```
 
-Defined at lines 605 to 633.
+Defined at lines 739 to 767.
+
+Decompose a string through UCS2 and keep its charset.
+
+Parameters:
+* `ch`: charset of the string
+* `src`: source string
+* `inlen`: source length in bytes
+* `dst`: output buffer
+* `outlen`: size of `dst`
+
+Returns: the output length, or `(size_t)-1` for an error
 
 Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [decompose_w](util_unistr.c.md#decompose_w)
 
@@ -290,17 +421,25 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta)
 static size_t pull_charset_flags(charset_t from_set, charset_t to_set, charset_t cap_set, const char *src, size_t srclen, char *dest, size_t destlen, uint16_t *flags)
 ```
 
-Defined at lines 649 to 874.
+Defined at lines 799 to 1024.
 
-Convert from MB to UCS2 charset.
+Convert a multibyte string to UCS2 and map the `:` and `/` characters by the flags.
 
-Flags:
+The call converts the text between `:` and `/` characters with iconv and then treats each such character by the flags. CONV_UNESCAPEHEX decodes `:xx` escapes through the CAP charset, and CONV_ESCAPEHEX writes `:3a` for `:` and `:2f` for `/`. Without them a `:` becomes `/` for a Mac target, and a `/` from a Mac source becomes `:`. CONV_ESCAPEDOTS writes a leading dot as `:2e` and sets CONV_REQESCAPE.
 
-* CONV_UNESCAPEHEX: ':XX' will be converted to an UCS2 character
-* CONV_IGNORE: return the first convertable characters.
-* CONV_FORCE: force convertion
+An unconvertible sequence stops the call with EILSEQ. CONV_IGNORE then returns the converted part and sets CONV_REQMANGLE, and CONV__EILSEQ writes IGNORE_CHAR in its place. CONV_FORCE returns the converted part after any error. The scan for `:` and `/` works on bytes, so a UCS2 source does not work.
 
-Bug: This will *not* work if the destination charset is not multibyte, i.e. UCS2->UCS2 will fail The (un)escape scheme is not compatible to the old cap style escape. This is bad, we need it for e.g. HFS cdroms.
+Parameters:
+* `from_set`: source charset
+* `to_set`: final target charset, which picks the `:` and `/` mapping
+* `cap_set`: charset of the bytes in `:xx` escapes
+* `src`: source string
+* `srclen`: source length, or `(size_t)-1` for the string length with its NUL
+* `dest`: UCS2 output
+* `destlen`: size of `dest` in bytes
+* `flags`: CONV_* options, which can receive CONV_REQESCAPE and CONV_REQMANGLE
+
+Returns: the number of bytes written, or `(size_t)-1` with errno
 
 Calls: [atalk_iconv](iconv.c.md#atalk_iconv)
 
@@ -314,17 +453,22 @@ Uses file-scope variables: `conv_handles`
 static size_t push_charset_flags(charset_t to_set, charset_t cap_set, char *src, size_t srclen, char *dest, size_t destlen, uint16_t *flags)
 ```
 
-Defined at lines 893 to 982.
+Defined at lines 1046 to 1135.
 
-Convert from UCS2 to MB charset.
+Convert a UCS2 string to a multibyte charset and escape what does not convert, by the flags.
 
-Flags:
+An unconvertible character stops the call with EILSEQ. CONV_IGNORE then returns the converted part and sets CONV_REQMANGLE. CONV_ESCAPEHEX instead writes the character in the CAP charset as `:xx` escapes and sets CONV_REQESCAPE. CONV_FORCE returns the converted part after any error, and a trailing odd byte fails with EINVAL.
 
-* CONV_ESCAPEDOTS: escape leading dots
-* CONV_ESCAPEHEX: unconvertable characters and '/' will be escaped to :XX
-* CONV_IGNORE: return the first convertable characters.
-* CONV__EILSEQ: unconvertable characters will be replaced with '_'
-* CONV_FORCE: force convertion Bug: CONV_IGNORE and CONV_ESCAPEHEX can't work together. Should we check this ? This will *not* work if the destination charset is not multibyte, i.e. UCS2->UCS2 will fail The escape scheme is not compatible to the old cap style escape. This is bad, we need it for e.g. HFS cdroms.
+Parameters:
+* `to_set`: target charset
+* `cap_set`: charset of the bytes in `:xx` escapes
+* `src`: UCS2 string
+* `srclen`: source length in bytes
+* `dest`: output buffer
+* `destlen`: size of `dest`
+* `flags`: CONV_* options, which can receive CONV_REQESCAPE and CONV_REQMANGLE
+
+Returns: the number of bytes written, or `(size_t)-1` with errno
 
 Calls: [atalk_iconv](iconv.c.md#atalk_iconv)
 
@@ -338,11 +482,27 @@ Uses file-scope variables: `conv_handles`, `hexdig`
 size_t convert_charset(charset_t from_set, charset_t to_set, charset_t cap_charset, const char *src, size_t src_len, char *dest, size_t dest_len, uint16_t *flags)
 ```
 
-Defined at lines 988 to 1071.
+Defined at lines 1160 to 1243.
 
-Bug: the size is a mess we really need a malloc/free logic
+Convert a string between character sets, with case, composition, and escaping chosen by flags.
 
-Note: dest_len must include space for the two-byte terminator
+convert_charset pulls the source into UCS-2 and precomposes or decomposes it as the flags and the target charset require. It then folds case for CONV_TOUPPER or CONV_TOLOWER and pushes the result into the target charset.
+
+Bug: Buffer sizing is fragile and wants malloc/free logic.
+
+Note: dest_len must include room for the two-byte terminator.
+
+Parameters:
+* `from_set`: charset of src
+* `to_set`: charset of dest
+* `cap_charset`: charset used for the :XX hex escaping of unmappable characters
+* `src`: source string
+* `src_len`: length of src in bytes
+* `dest`: destination buffer
+* `dest_len`: size of dest in bytes, terminator included
+* `flags`: CONV_* options on entry, conversion results on return
+
+Returns: the length of dest in bytes, or (size_t)-1 with errno set
 
 Calls: [charset_name](charcnv.c.md#charset_name), [decompose_w](util_unistr.c.md#decompose_w), [lazy_initialize_conv](charcnv.c.md#lazy_initialize_conv), [precompose_w](util_unistr.c.md#precompose_w), [pull_charset_flags](charcnv.c.md#pull_charset_flags), [push_charset_flags](charcnv.c.md#push_charset_flags), [strlower_w](util_unistr.c.md#strlower_w), [strupper_w](util_unistr.c.md#strupper_w)
 

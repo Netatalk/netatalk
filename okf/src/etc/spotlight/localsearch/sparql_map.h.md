@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sparql_map.h"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -20,9 +20,9 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 ### struct MDTypeMap
 
 Defined at line 45.
-* `const char * mdtm_value`
-* `enum kMDTypeMap mdtm_type`
-* `const char * mdtm_sparql`
+* `const char * mdtm_value`: MD query value of attributes '_kMDItemGroupId' and 'kMDItemContentTypeTree'.
+* `enum kMDTypeMap mdtm_type`: whether SPARQL query must search attribute rdf:type or nie:mime_Type
+* `const char * mdtm_sparql`: the SPARQL query match string
 
 ### struct spotlight_sparql_map
 

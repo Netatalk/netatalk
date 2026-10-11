@@ -1,6 +1,6 @@
 # src/libatalk/atp
 
-* [atp_bufs.c](atp_bufs.c.md) - 4 functions, includes 3 project headers.
+* [atp_bufs.c](atp_bufs.c.md) - Our own memory maintenance for atp.
 * [atp_close.c](atp_close.c.md) - 1 function, includes 4 project headers.
 * [atp_internals.h](atp_internals.h.md) - 1 function, includes 2 project headers.
 * [atp_open.c](atp_open.c.md) - 1 function, includes 4 project headers.

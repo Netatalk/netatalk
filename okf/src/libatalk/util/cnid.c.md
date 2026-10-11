@@ -5,7 +5,7 @@ description: "3 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/cnid.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -84,10 +84,15 @@ Called by: [copy](../../bin/nad/nad_cp.c.md#copy), [do_move](../../bin/nad/nad_m
 char * uuid_strip_dashes(const char *uuid)
 ```
 
-Defined at lines 229 to 255.
+Defined at lines 236 to 262.
 
-Return allocated UUID string with dashes stripped
+Return a UUID string without its dashes, for the CNID table names.
+
+The result keeps at most 32 characters, and the caller frees it.
+
+Parameters:
+* `uuid`: UUID string, or NULL
+
+Returns: the new string, or NULL for a NULL uuid or a failed malloc
 
 Called by: [cnid_mysql_open](../cnid/mysql/cnid_mysql.c.md#cnid_mysql_open), [cnid_sqlite_open](../cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_open)
-
-Mentioned in the documentation of: [cnid_sqlite_uuid_usable](../cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_uuid_usable)

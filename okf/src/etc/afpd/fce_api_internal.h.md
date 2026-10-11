@@ -5,7 +5,7 @@ description: "Internal definitions for File Change Events API."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fce_api_internal.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -43,8 +43,12 @@ Defined at line 23.
 * `char * port`
 * `struct addrinfo addrinfo`
 * `struct sockaddr_storage sockaddr`
-* `time_t next_try_on_error`
+* `time_t next_try_on_error`: In case of error set next timestamp to retry.
 
 # Macros
 
-* Undocumented: `FCE_COALESCE_ALL`, `FCE_COALESCE_CREATE`, `FCE_COALESCE_DELETE`, `FCE_HISTORY_LEN`, `FCE_MAX_UDP_SOCKS`, `FCE_SOCKET_RETRY_DELAY_S`, `MAX_COALESCE_TIME_MS`, `PACKET_HDR_LEN`
+* `FCE_HISTORY_LEN`: This is used to coalesce events.
+* `FCE_MAX_UDP_SOCKS`: Allow a maximum of udp listeners for file change events.
+* `FCE_SOCKET_RETRY_DELAY_S`: Pause this time in s after socket was broken.
+* `MAX_COALESCE_TIME_MS`: Events older than this are not coalesced.
+* Undocumented: `FCE_COALESCE_ALL`, `FCE_COALESCE_CREATE`, `FCE_COALESCE_DELETE`, `PACKET_HDR_LEN`

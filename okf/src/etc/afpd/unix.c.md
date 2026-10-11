@@ -5,7 +5,7 @@ description: "10 functions, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/unix.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,9 +35,19 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, uint32_t *bsize)
 ```
 
-Defined at lines 39 to 70.
+Defined at lines 47 to 78.
 
-Get the free space on a partition.
+Free and total space of the file system that holds the volume.
+
+The values come from statfs in bytes, saturated at UINT64_MAX.
+
+Parameters:
+* `vol`: volume
+* `bfree`: receives the bytes available to the user
+* `btotal`: receives the total bytes
+* `bsize`: receives the fragment size
+
+Returns: AFP_OK, or AFPERR_PARAM when statfs failed
 
 Called by: [getvolspace](volume.c.md#getvolspace)
 
@@ -47,7 +57,14 @@ Called by: [getvolspace](volume.c.md#getvolspace)
 static int utombits(mode_t bits)
 ```
 
-Defined at lines 72 to 81.
+Defined at lines 86 to 95.
+
+Map the three permission bits of one Unix class to AFP access rights.
+
+Parameters:
+* `bits`: mode, shifted so that the class sits in the low three bits
+
+Returns: AR_UREAD, AR_UWRITE, and AR_USEARCH as the bits allow
 
 Called by: [utommode](unix.c.md#utommode)
 
@@ -57,7 +74,16 @@ Called by: [utommode](unix.c.md#utommode)
 static void utommode(const AFPObj *obj, const struct stat *stat, struct maccess *ma)
 ```
 
-Defined at lines 86 to 123.
+Defined at lines 110 to 147.
+
+Derive the AFP access rights of owner, group, world, and user from a stat.
+
+Root gets every right. The owner gets the owner bits and AR_UOWN, a group member gets the group bits, and anyone else gets the world bits. A file that root owns also grants AR_UOWN to the user. The mapping follows page 63 of the AFP 3.0 specification.
+
+Parameters:
+* `obj`: session object with the user and group IDs
+* `stat`: stat of the file or directory
+* `ma`: receives the access rights
 
 Calls: [gmem](../../libatalk/util/unix.c.md#gmem), [utombits](unix.c.md#utombits)
 
@@ -69,11 +95,19 @@ Called by: [accessmode](unix.c.md#accessmode)
 void accessmode(const AFPObj *obj, const struct vol *vol, char *path, struct maccess *ma, struct dir *dir, struct stat *st)
 ```
 
-Defined at lines 132 to 150.
+Defined at lines 163 to 181.
 
-Calculate the mode for a directory using a stat() call to estimate permission.
+AFP access rights of a file or directory from its stat and ACLs.
 
-Note: the previous method, using access(), does not work correctly over NFS.
+The rights come from the Unix mode through utommode, and with ACL support acltoownermode refines them. The access call gives wrong answers over NFS, so the rights come from a stat. A failed stat leaves every right at zero.
+
+Parameters:
+* `obj`: session object
+* `vol`: volume of the path
+* `path`: file or directory
+* `ma`: receives the access rights
+* `dir`: unused
+* `st`: stat of path, or NULL to stat it here
 
 Calls: [acltoownermode](acls.c.md#acltoownermode), [ostat](../../libatalk/util/unix.c.md#ostat), [utommode](unix.c.md#utommode)
 
@@ -85,7 +119,16 @@ Called by: [afp_getsrvrparms](volume.c.md#afp_getsrvrparms), [check_access](dire
 static mode_t mtoubits(uint8_t bits)
 ```
 
-Defined at lines 152 to 161.
+Defined at lines 192 to 201.
+
+Map AFP access rights to the three permission bits of one Unix class.
+
+Read and write each also grant search, because a Mac client cannot set the search right separately.
+
+Parameters:
+* `bits`: AR_UREAD and AR_UWRITE rights
+
+Returns: the mode bits in the low three positions
 
 Called by: [mtoumode](unix.c.md#mtoumode)
 
@@ -95,7 +138,16 @@ Called by: [mtoumode](unix.c.md#mtoumode)
 mode_t mtoumode(struct maccess *)
 ```
 
-Defined at lines 168 to 178. Declared in [etc/afpd/directory.h](directory.h.md).
+Defined at lines 214 to 224. Declared in [etc/afpd/directory.h](directory.h.md).
+
+Build a Unix mode from AFP access rights.
+
+The owner bits get the owner and world rights, the group bits the group and world rights, and the other bits the world rights. Read and write each also grant search. The mapping follows the Finder sharing window and page 63 of the AFP 3.0 specification.
+
+Parameters:
+* `ma`: AFP access rights
+
+Returns: the permission bits of the mode
 
 Calls: [mtoubits](unix.c.md#mtoubits)
 
@@ -107,7 +159,18 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 ```
 
-Defined at lines 181 to 199.
+Defined at lines 238 to 256.
+
+Apply a Unix mode to a file and to its AppleDouble metadata.
+
+The mode gains the volume file permissions. The vfs_setfilmode hooks then derive the metadata mode, which needs write access wherever read access exists.
+
+Parameters:
+* `vol`: volume of the file
+* `path`: file, its stat filled when missing
+* `mode`: new mode
+
+Returns: 0, or -1 when the stat or a mode change failed
 
 Calls: [of_stat](ofork.c.md#of_stat), [setfilmode](../../libatalk/vfs/unix.c.md#setfilmode)
 
@@ -121,7 +184,18 @@ Calls through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vf
 int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 ```
 
-Defined at lines 203 to 232.
+Defined at lines 272 to 301.
+
+Apply a Unix mode to a directory and to its AppleDouble metadata.
+
+The mode gains the volume directory permissions and DIRBITS, minus the volume umask. A mode that grants the owner read and search access changes the directory before the vfs_setdirunixmode hooks. Any other mode changes it after them, so the metadata stays reachable.
+
+Parameters:
+* `vol`: volume of the directory
+* `name`: directory
+* `mode`: new mode
+
+Returns: 0, or -1 when a mode change failed
 
 Calls: [dir_rx_set](../../libatalk/vfs/unix.c.md#dir_rx_set), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [ochmod](../../libatalk/util/unix.c.md#ochmod)
 
@@ -135,7 +209,19 @@ Calls through [`vfs_ops::vfs_setdirunixmode`](../../include/atalk/vfs.h.md#struc
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path *path)
 ```
 
-Defined at lines 235 to 251.
+Defined at lines 314 to 330.
+
+Give a file and its AppleDouble metadata a new owner and group.
+
+EPERM counts as success for both changes.
+
+Parameters:
+* `vol`: volume of the file
+* `uid`: new owner
+* `gid`: new group
+* `path`: file
+
+Returns: 0, or -1 when a change failed with another error
 
 Calls: [ochown](../../libatalk/util/unix.c.md#ochown)
 
@@ -149,7 +235,19 @@ Calls through [`vfs_ops::vfs_chown`](../../include/atalk/vfs.h.md#struct-vfs_ops
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 ```
 
-Defined at lines 258 to 271.
+Defined at lines 345 to 358.
+
+Give a directory and its AppleDouble metadata a new owner and group.
+
+A failed change of the directory itself only logs. The vfs_setdirowner hooks then update the metadata. A uid or gid of 0 gets no special treatment.
+
+Parameters:
+* `vol`: volume of the directory
+* `name`: directory
+* `uid`: new owner
+* `gid`: new group
+
+Returns: 0, or -1 when a hook failed
 
 Calls: [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [ochown](../../libatalk/util/unix.c.md#ochown)
 

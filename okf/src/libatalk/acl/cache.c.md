@@ -5,7 +5,7 @@ description: "7 functions, 1 type, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/cache.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,11 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 void uuidcache_dump(void)
 ```
 
-Defined at lines 48 to 104.
+Defined at lines 54 to 110.
+
+Log every entry of the name and UUID caches at debug level.
+
+Each line shows the name, the UUID, the type, a negative marker, and the time the entry entered the cache.
 
 Calls: [uuid_bin2string](uuid.c.md#uuid_bin2string)
 
@@ -40,9 +44,16 @@ Uses file-scope variables: `namecache`, `uuidcache`, `uuidtype` in [libatalk/acl
 static unsigned char hashstring(unsigned char *str)
 ```
 
-Defined at lines 107 to 121.
+Defined at lines 120 to 134.
 
-hash string it into unsigned char using FNV-1a algorithm
+Hash a string into a cache bucket with 32-bit FNV-1a.
+
+The low byte of the hash, XORed with its second byte, picks the bucket.
+
+Parameters:
+* `str`: NUL-terminated string
+
+Returns: the bucket, 0 to 255
 
 Called by: [add_cachebyname](cache.c.md#add_cachebyname), [search_cachebyname](cache.c.md#search_cachebyname)
 
@@ -52,9 +63,14 @@ Called by: [add_cachebyname](cache.c.md#add_cachebyname), [search_cachebyname](c
 static unsigned char hashuuid(uuidp_t uuid)
 ```
 
-Defined at lines 124 to 135.
+Defined at lines 142 to 153.
 
-hash atalk_uuid_t into unsigned char
+Hash a 16-byte UUID into a cache bucket.
+
+Parameters:
+* `uuid`: binary UUID
+
+Returns: the bucket, 0 to 255
 
 Called by: [add_cachebyuuid](cache.c.md#add_cachebyuuid), [search_cachebyuuid](cache.c.md#search_cachebyuuid)
 
@@ -64,7 +80,19 @@ Called by: [add_cachebyuuid](cache.c.md#add_cachebyuuid), [search_cachebyuuid](c
 int add_cachebyname(const char *inname, const uuidp_t inuuid, const uuidtype_t type, const unsigned long uid)
 ```
 
-Defined at lines 141 to 221.
+Defined at lines 172 to 252.
+
+Add a name to UUID mapping at the head of its name cache bucket.
+
+The call duplicates the name and the UUID and records the current time. A lookup drops an entry after CACHESECONDS seconds.
+
+Parameters:
+* `inname`: user or group name
+* `inuuid`: UUID of the name
+* `type`: UUID_USER or UUID_GROUP, with UUID_ENOENT for a negative entry
+* `uid`: unused
+
+Returns: 0, or -1 for a NULL argument or a failed allocation
 
 Calls: [hashstring](cache.c.md#hashstring)
 
@@ -78,7 +106,7 @@ Uses file-scope variables: `namecache`
 int search_cachebyname(const char *name, uuidtype_t *type, unsigned char *uuid)
 ```
 
-Defined at lines 233 to 290.
+Defined at lines 264 to 321.
 
 Search cache by name and uuid type.
 
@@ -101,9 +129,18 @@ Uses file-scope variables: `namecache`
 int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)
 ```
 
-Defined at lines 295 to 351.
+Defined at lines 335 to 391.
 
-Caller must free allocated name
+Look up a UUID in the UUID cache.
+
+An entry older than CACHESECONDS seconds leaves the cache, and the lookup fails. The caller frees the returned name.
+
+Parameters:
+* `uuidp`: binary UUID
+* `name`: receives a newly allocated name
+* `type`: receives the type of the entry, with UUID_ENOENT for a negative one
+
+Returns: 0, or -1 when the UUID has no current entry
 
 Calls: [hashuuid](cache.c.md#hashuuid)
 
@@ -117,7 +154,19 @@ Uses file-scope variables: `uuidcache`
 int add_cachebyuuid(uuidp_t inuuid, const char *inname, uuidtype_t type, const unsigned long uid)
 ```
 
-Defined at lines 353 to 425.
+Defined at lines 406 to 478.
+
+Add a UUID to name mapping at the head of its UUID cache bucket.
+
+The call duplicates the name and the UUID and records the current time. A lookup drops an entry after CACHESECONDS seconds.
+
+Parameters:
+* `inuuid`: binary UUID
+* `inname`: user or group name of the UUID
+* `type`: UUID_USER or UUID_GROUP, with UUID_ENOENT for a negative entry
+* `uid`: unused
+
+Returns: 0, or -1 when an allocation fails
 
 Calls: [hashuuid](cache.c.md#hashuuid)
 
@@ -130,7 +179,7 @@ Uses file-scope variables: `uuidcache`
 ### struct cacheduser
 
 Defined at line 31.
-* `unsigned long uid`
+* `unsigned long uid`: for future use
 * `uuidtype_t type`
 * `unsigned char * uuid`
 * `char * name`

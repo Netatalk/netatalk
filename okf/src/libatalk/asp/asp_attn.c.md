@@ -5,7 +5,7 @@ description: "1 function, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_attn.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,8 +26,18 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_attention(ASP, AFPUserBytes)
 ```
 
-Defined at lines 24 to 58. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 35 to 69. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+
+Send an [ASP](../../include/atalk/asp.h.md#struct-asp) attention with an attention code to the workstation of a session.
+
+The request goes to the session socket of the workstation, with 5 tries 2 seconds apart, and the call waits for the reply. An attention can go out at any time, so the call keeps its packets in local buffers and leaves the session buffers alone.
+
+Parameters:
+* `asp`: session
+* `flags`: attention code
+
+Returns: 1, or 0 when the request or the reply fails
 
 Calls: [atp_rresp](../atp/atp_rresp.c.md#atp_rresp), [atp_sreq](../atp/atp_sreq.c.md#atp_sreq)
 
-Called by: [afp_asp_die_now](../../etc/afpd/afp_asp.c.md#afp_asp_die_now), [afp_asp_timedown_now](../../etc/afpd/afp_asp.c.md#afp_asp_timedown_now), [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp)
+Called by: [afp_asp_die_now](../../etc/afpd/afp_asp.c.md#afp_asp_die_now), [afp_asp_getmesg_now](../../etc/afpd/afp_asp.c.md#afp_asp_getmesg_now), [afp_asp_timedown_now](../../etc/afpd/afp_asp.c.md#afp_asp_timedown_now), [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp)

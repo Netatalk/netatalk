@@ -5,7 +5,7 @@ description: "16 functions, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,9 +26,14 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 static const cnid_module * cnid_module_named(const char *name)
 ```
 
-Defined at lines 40 to 49.
+Defined at lines 43 to 52.
 
-Registered backend module named `name`, or NULL.
+Find a registered CNID backend by name, ignoring case.
+
+Parameters:
+* `name`: backend name
+
+Returns: the backend module, or NULL
 
 Called by: [cnid_open](cnid.c.md#cnid_open), [cnid_register](cnid.c.md#cnid_register), [cnid_scheme_registered](cnid.c.md#cnid_scheme_registered)
 
@@ -40,7 +45,14 @@ Uses file-scope variables: `modules`
 bool cnid_scheme_registered(const char *name)
 ```
 
-Defined at lines 51 to 54.
+Defined at lines 60 to 63.
+
+Tell whether cnid_register added a CNID backend of a name.
+
+Parameters:
+* `name`: backend name, compared without case
+
+Returns: true when cnid_module_named finds it
 
 Calls: [cnid_module_named](cnid.c.md#cnid_module_named)
 
@@ -52,9 +64,14 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [openvol_optional](../../bin
 void cnid_register(struct _cnid_module *module)
 ```
 
-Defined at lines 59 to 69.
+Defined at lines 73 to 83.
 
-Once module has been registered, it cannot be unregistered.
+Add a CNID backend to the list of registered backends.
+
+A second backend with the same name, compared without case, only logs an error. A backend cannot leave the list again.
+
+Parameters:
+* `module`: backend to add, kept by pointer
 
 Calls: [cnid_module_named](cnid.c.md#cnid_module_named)
 
@@ -68,9 +85,18 @@ Uses file-scope variables: `modules`
 struct _cnid_db * cnid_open(struct vol *vol, char *type, int flags)
 ```
 
-Defined at lines 72 to 118.
+Defined at lines 98 to 144.
 
-Opens CNID database using particular back-end
+Open the CNID database of a volume with the backend that a scheme names.
+
+An unknown scheme falls back to DEFAULT_CNID_SCHEME with a warning. A build without MySQL refuses the mysql scheme instead. CNID_FLAG_NODEV in flags also lands in the database flags.
+
+Parameters:
+* `vol`: volume of the database
+* `type`: CNID scheme name
+* `flags`: CNID_FLAG_* open flags
+
+Returns: the database, or NULL when no backend fits or the open fails
 
 Calls: [cnid_module_named](cnid.c.md#cnid_module_named)
 
@@ -84,11 +110,16 @@ Calls through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_
 static cnid_t valide(cnid_t id)
 ```
 
-Defined at lines 129 to 151.
+Defined at lines 158 to 180.
 
-protect against bogus value from the DB. adddir really doesn't like 2
+Reject a CNID from a backend that falls in the reserved range.
 
-Every CNID_INVALID returned from this file carries its own errno: callers read the CNID_ERR_* values to choose between a permanent reply and a retryable one, and CNID_ERR_DB ends the session. No syscall overwrites those values and the logger preserves errno, so one persists until deliberately replaced.
+An ID under CNID_START means a corrupted database. The first such ID logs an error, and each one sets errno to CNID_ERR_CORRUPT. CNID_INVALID passes with the errno of the backend. Callers read the CNID_ERR_* value to choose between a permanent reply and a retry, and CNID_ERR_DB ends the session. The logger keeps errno, so the value stays until a later call replaces it.
+
+Parameters:
+* `id`: CNID in network order
+
+Returns: id, or CNID_INVALID
 
 Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_get](cnid.c.md#cnid_get), [cnid_lookup](cnid.c.md#cnid_lookup)
 
@@ -98,9 +129,12 @@ Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_get](cnid.c.md#cnid_get), [cnid
 void cnid_close(struct _cnid_db *db)
 ```
 
-Defined at lines 154 to 162.
+Defined at lines 187 to 195.
 
-Closes CNID database. Currently it's just a wrapper around db->[cnid_close()](cnid.c.md#cnid_close).
+Close a CNID database through its backend.
+
+Parameters:
+* `db`: database, and a NULL one logs an error
 
 Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [close_metadata_volume](../../bin/nad/megatron.c.md#close_metadata_volume), [closevol](../../bin/nad/nad_util.c.md#closevol), [closevol](../../etc/afpd/volume.c.md#closevol), [main](../../bin/dbd/cmd_dbd.c.md#main)
 
@@ -112,7 +146,21 @@ Calls through [`_cnid_db::cnid_close`](../../include/atalk/cnid.h.md#struct-_cni
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, const char *name, const size_t len, cnid_t hint)
 ```
 
-Defined at lines 165 to 180.
+Defined at lines 212 to 227.
+
+Add an object to the CNID database or find its existing CNID.
+
+The call clears errno, so errno reports the classification of this call only. The result passes through valide.
+
+Parameters:
+* `cdb`: CNID database
+* `st`: stat of the object, for the device and inode
+* `did`: CNID of the parent directory
+* `name`: name on disk
+* `len`: length of name, where 0 fails with CNID_ERR_PARAM
+* `hint`: CNID that the metadata of the object carries, or CNID_INVALID
+
+Returns: the CNID, or CNID_INVALID with errno set to a CNID_ERR_* value or 0
 
 Calls: [valide](cnid.c.md#valide)
 
@@ -128,7 +176,15 @@ Mentioned in the documentation of: [cnid_for_path](../util/cnid.c.md#cnid_for_pa
 int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 ```
 
-Defined at lines 183 to 189.
+Defined at lines 236 to 242.
+
+Remove a CNID from the database.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID to remove
+
+Returns: the backend result, 0 on success
 
 Called by: [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [deletefile](../../etc/afpd/file.c.md#deletefile), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [rm](../../bin/nad/nad_rm.c.md#rm), [rmdir_with_cnid](../../bin/nad/nad_rmdir.c.md#rmdir_with_cnid)
 
@@ -140,7 +196,17 @@ Calls through [`_cnid_db::cnid_delete`](../../include/atalk/cnid.h.md#struct-_cn
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 193 to 200.
+Defined at lines 254 to 261.
+
+Look up the CNID of a name in a directory.
+
+Parameters:
+* `cdb`: CNID database
+* `did`: CNID of the directory
+* `name`: name on disk
+* `len`: length of name
+
+Returns: the CNID after valide, or CNID_INVALID
 
 Calls: [valide](cnid.c.md#valide)
 
@@ -154,7 +220,18 @@ Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_
 int cnid_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 203 to 224.
+Defined at lines 275 to 296.
+
+Read the stamp of a CNID database.
+
+A backend without stamps gets the current time instead, which makes every cached CNID stale.
+
+Parameters:
+* `cdb`: CNID database
+* `buffer`: receives the stamp
+* `len`: size of buffer
+
+Returns: the backend result, or for a backend without stamps 0, or -1 when buffer cannot hold a time_t
 
 Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [cmd_dbd_scanvol](../../bin/dbd/cmd_dbd_scanvol.c.md#cmd_dbd_scanvol), [openvol_optional](../../bin/nad/nad_util.c.md#openvol_optional), [resolve_metadata_volume](../../bin/nad/megatron.c.md#resolve_metadata_volume)
 
@@ -166,7 +243,18 @@ Calls through [`_cnid_db::cnid_getstamp`](../../include/atalk/cnid.h.md#struct-_
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 227 to 235.
+Defined at lines 309 to 317.
+
+Look up the CNID of an object by name and parent or by device and inode.
+
+Parameters:
+* `cdb`: CNID database
+* `st`: stat of the object
+* `did`: CNID of the parent directory
+* `name`: name on disk
+* `len`: length of name
+
+Returns: the CNID after valide, or CNID_INVALID
 
 Calls: [valide](cnid.c.md#valide)
 
@@ -180,7 +268,7 @@ Calls through [`_cnid_db::cnid_lookup`](../../include/atalk/cnid.h.md#struct-_cn
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 260 to 265.
+Defined at lines 342 to 347.
 
 Search the CNID database for entries whose name contains a substring.
 
@@ -202,7 +290,7 @@ Calls: [cnid_find_scoped](cnid.c.md#cnid_find_scoped)
 
 Called by: [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [nad_find](../../bin/nad/nad_find.c.md#nad_find)
 
-Mentioned in the documentation of: [cnid_find_scoped](cnid.c.md#cnid_find_scoped), [cnid_mysql_find](mysql/cnid_mysql.c.md#cnid_mysql_find), [cnid_sqlite_find](sqlite/cnid_sqlite.c.md#cnid_sqlite_find), [sl_cnid_cap_for](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_cap_for), [sl_cnid_collect](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_collect)
+Mentioned in the documentation of: [cnid_find_scoped](cnid.c.md#cnid_find_scoped)
 
 ### cnid_find_scoped
 
@@ -210,7 +298,7 @@ Mentioned in the documentation of: [cnid_find_scoped](cnid.c.md#cnid_find_scoped
 int cnid_find_scoped(struct _cnid_db *cdb, const char *name, size_t namelen, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 287 to 325.
+Defined at lines 369 to 407.
 
 [cnid_find()](cnid.c.md#cnid_find) restricted to the subtree of a directory
 
@@ -237,7 +325,19 @@ Calls through [`_cnid_db::cnid_find`](../../include/atalk/cnid.h.md#struct-_cnid
 char * cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 ```
 
-Defined at lines 328 to 344.
+Defined at lines 422 to 438.
+
+Resolve a CNID to its name and parent directory.
+
+A stored name of ".." means a corrupted database, and the call then fails with CNID_ERR_CORRUPT.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID to resolve, receives the parent CNID or CNID_INVALID
+* `buffer`: work buffer for the name
+* `len`: size of buffer
+
+Returns: the name inside buffer, or NULL
 
 Called by: [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [nad_find](../../bin/nad/nad_find.c.md#nad_find), [private_demangle](../../etc/afpd/mangle.c.md#private_demangle), [sl_cnid_to_path](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_to_path), [sl_rpc_fetchAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_storeAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_storeattributesforoidarray)
 
@@ -251,7 +351,19 @@ Mentioned in the documentation of: [sl_cnid_to_path](../../etc/spotlight/cnid/sl
 int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 347 to 354.
+Defined at lines 451 to 458.
+
+Update the name, parent, and stat of a CNID entry.
+
+Parameters:
+* `cdb`: CNID database
+* `id`: CNID to update
+* `st`: new stat of the object
+* `did`: new parent CNID
+* `name`: new name on disk
+* `len`: length of name
+
+Returns: the backend result, 0 on success
 
 Called by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [do_move](../../bin/nad/nad_mv.c.md#do_move), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [update_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#update_cnid)
 
@@ -263,7 +375,16 @@ Calls through [`_cnid_db::cnid_update`](../../include/atalk/cnid.h.md#struct-_cn
 int cnid_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 357 to 367.
+Defined at lines 469 to 479.
+
+Empty a CNID database.
+
+A backend without a wipe function leaves the database unchanged and reports success.
+
+Parameters:
+* `cdb`: CNID database
+
+Returns: the backend result, 0 on success
 
 Called by: [main](../../bin/dbd/cmd_dbd.c.md#main)
 

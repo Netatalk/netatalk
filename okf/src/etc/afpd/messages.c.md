@@ -5,7 +5,7 @@ description: "3 functions, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/messages.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-09T22:45:51+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -50,11 +50,18 @@ Uses file-scope variables: `servermesg`
 void readmessage(AFPObj *)
 ```
 
-Defined at lines 48 to 108. Declared in [include/atalk/globals.h](../../include/atalk/globals.h.md).
+Defined at lines 58 to 118. Declared in [include/atalk/globals.h](../../include/atalk/globals.h.md).
+
+Load the server message for a session from its message file.
+
+The file SERVERTEXT/message.pid of the session comes first, then the shared SERVERTEXT/message. The call turns line breaks into spaces, stops at the message size limit of the transport, and deletes the file as root. A build without SERVERTEXT does nothing.
+
+Parameters:
+* `obj`: session object
 
 Calls: [become_root](../../libatalk/util/unix.c.md#become_root), [unbecome_root](../../libatalk/util/unix.c.md#unbecome_root)
 
-Called by: [pending_request](afp_dsi.c.md#pending_request)
+Called by: [afp_asp_getmesg_now](afp_asp.c.md#afp_asp_getmesg_now), [pending_request](afp_dsi.c.md#pending_request)
 
 Uses file-scope variables: `servermesg`
 
@@ -64,7 +71,20 @@ Uses file-scope variables: `servermesg`
 int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 110 to 193.
+Defined at lines 136 to 219.
+
+FPGetSrvrMsg: return the login or the server message.
+
+A login message request also appends the login message option to the server message. Mac OS X 10.4 drops a server message attention that comes before it asks for the login message, and the merged text covers that. The bitmap selects a UTF-8 reply with a 2-byte length or a Mac charset reply with a 1-byte length.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block
+* `rbuflen`: reply length on return
+
+Returns: AFP_OK, or AFPERR_BITMAP for an unknown message type
 
 Calls: [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [strlcat](../../libatalk/compat/strlcpy.c.md#strlcat)
 

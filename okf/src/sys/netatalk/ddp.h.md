@@ -5,7 +5,7 @@ description: "3 types, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,6 +23,8 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 # Types
 
 ### struct ddpehdr
+
+Extended DDP header.
 
 Defined at line 63.
 * `unsigned dub_pad`

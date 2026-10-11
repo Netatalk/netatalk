@@ -5,7 +5,7 @@ description: "1 function, includes 2 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sparql_map.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -24,7 +24,14 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 void configure_spotlight_attributes(const char *attributes_in)
 ```
 
-Defined at lines 109 to 136.
+Defined at lines 119 to 146.
+
+Turn on only the Spotlight attributes that the spotlight attributes option lists.
+
+The option is a comma-separated list, matched exactly against the attribute names of the SPARQL map, without trimming spaces. Every other attribute of the map turns off.
+
+Parameters:
+* `attributes_in`: comma-separated attribute names
 
 Called by: [sl_localsearch_init](sl_localsearch.c.md#sl_localsearch_init)
 

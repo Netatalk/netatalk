@@ -5,7 +5,7 @@ description: "2 functions, 1 type, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/misc/netacnv.c"
 tags: ["bin/misc"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,9 @@ Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in 
 static void usage(void)
 ```
 
-Defined at lines 37 to 46.
+Defined at lines 41 to 50.
+
+Print the usage of netacnv, its defaults, and the names of its conversion options to stdout.
 
 Called by: [main](netacnv.c.md#main)
 
@@ -33,7 +35,17 @@ Called by: [main](netacnv.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 48 to 154.
+Defined at lines 67 to 173.
+
+Convert a string between two charsets with convert_charset and print both forms.
+
+The -f and -t options name the source and the target charsets. Their defaults are UTF8-MAC and UTF8. The -m option names the legacy Mac charset, MAC_ROMAN by default. Each -o option adds a CONV_* flag by its name, and the call ignores unknown names. The result has room for MAXPATHLEN bytes.
+
+Parameters:
+* `argc`: argument count
+* `argv`: argument vector
+
+Returns: 0, 1 for a usage or conversion error, or -1 when a charset does not load
 
 Calls: [add_charset](../../libatalk/unicode/charcnv.c.md#add_charset), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [set_charset_name](../../libatalk/unicode/charcnv.c.md#set_charset_name), [usage](netacnv.c.md#usage)
 

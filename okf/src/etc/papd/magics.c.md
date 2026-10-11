@@ -5,7 +5,7 @@ description: "6 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/magics.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,7 +33,12 @@ Initialized at line 34. Dispatches to: [cm_psadobe](magics.c.md#cm_psadobe), [cm
 static void sig_handler(int signo)
 ```
 
-Defined at lines 27 to 31.
+Defined at lines 33 to 37.
+
+Note SIGINT or SIGTERM, so the job loop ends the job with a shutdown message.
+
+Parameters:
+* `signo`: signal number, unused
 
 Called by: [ps](magics.c.md#ps)
 
@@ -45,7 +50,14 @@ Uses file-scope variables: `stop_requested`
 static void parser_error(struct papfile *outfile)
 ```
 
-Defined at lines 33 to 38.
+Defined at lines 47 to 52.
+
+Refuse a job whose DSC comments do not parse.
+
+The client gets a "Comments error, Ignoring job." error, the output ends, and the spool file closes.
+
+Parameters:
+* `outfile`: reply buffer to the client
 
 Calls: [lp_close](lp.c.md#lp_close), [spoolerror](file.c.md#spoolerror)
 
@@ -57,7 +69,20 @@ Called by: [ps](magics.c.md#ps)
 int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
 ```
 
-Defined at lines 40 to 131.
+Defined at lines 72 to 163.
+
+Run the PostScript job loop over the data a PAP client sent.
+
+The first call routes SIGINT and SIGTERM to sig_handler, after which the loop answers "Server shutting down." and ends the job. At the start of a job the loop drops lines until a `%!PS-Adobe-` magic line pushes its handler. After that, the handler at the top of the comment stack takes each line, and lines outside any comment go to lp_write.
+
+PF_STW opens the spool file, and the client gets "Ignoring job." once when lp_open fails.
+
+Parameters:
+* `infile`: data from the client
+* `outfile`: reply data for the client
+* `sat`: client address
+
+Returns: CH_MORE when a handler needs more data, CH_ERROR on shutdown, or 0 otherwise
 
 Calls: [commatch](comment.c.md#commatch), [compush](comment.c.md#compush), [lp_close](lp.c.md#lp_close), [lp_open](lp.c.md#lp_open), [lp_write](lp.c.md#lp_write), [markline](file.c.md#markline), [parser_error](magics.c.md#parser_error), [sig_handler](magics.c.md#sig_handler), [spoolerror](file.c.md#spoolerror), [spoolreply](file.c.md#spoolreply)
 
@@ -73,7 +98,18 @@ Uses file-scope variables: `magics`, `state`, `stop_requested`
 int cm_psquery(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 133 to 173.
+Defined at lines 177 to 217.
+
+Serve a query job that starts with `%!PS-Adobe-3.0 Query`
+
+The call skips the magic line, pushes the handler of each query comment it finds, and drops other lines. The end of the input, or PF_QUERY at the end of a query, pops the state.
+
+Parameters:
+* `in`: data from the client
+* `out`: reply data, receives a status while a line is incomplete
+* `sat`: client address, unused
+
+Returns: CH_DONE, or CH_MORE while a line is incomplete
 
 Calls: [commatch](comment.c.md#commatch), [compop](comment.c.md#compop), [compush](comment.c.md#compush), [markline](file.c.md#markline), [spoolreply](file.c.md#spoolreply)
 
@@ -89,7 +125,18 @@ Dispatched via: [magics](magics.c.md#magics)
 int cm_psadobe(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 175 to 209.
+Defined at lines 231 to 265.
+
+Serve a print job that starts with `%!PS-Adobe-3.0`
+
+The call writes the magic line and every other line to the job, and pushes the handler of each header comment it finds. The end of the input pops the state.
+
+Parameters:
+* `in`: data from the client
+* `out`: reply data, receives PF_EOF at the end of the input
+* `sat`: client address, unused
+
+Returns: CH_DONE, or CH_MORE while a line is incomplete
 
 Calls: [commatch](comment.c.md#commatch), [compop](comment.c.md#compop), [compush](comment.c.md#compush), [lp_write](lp.c.md#lp_write), [markline](file.c.md#markline)
 
@@ -105,7 +152,18 @@ Dispatched via: [magics](magics.c.md#magics)
 int cm_psswitch(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 213 to 266.
+Defined at lines 282 to 335.
+
+Pick the handler for a job with another `%!PS-Adobe-` version.
+
+When the word after the version starts with Query, the job becomes a query job, and any other job goes to cm_psadobe. The line stays in the input for the new handler, and a missing handler in the magics table exits papd.
+
+Parameters:
+* `in`: data from the client
+* `out`: reply data, receives PF_EOF at the end of the input
+* `sat`: client address, unused
+
+Returns: CH_DONE, also at the end of the input, or CH_MORE while the line is incomplete
 
 Calls: [cm_psadobe](magics.c.md#cm_psadobe), [cm_psquery](magics.c.md#cm_psquery), [compop](comment.c.md#compop), [comswitch](comment.c.md#comswitch), [markline](file.c.md#markline)
 

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/cnid.h"
-description: "3 types, includes 3 project headers."
+description: "This file contains all generic CNID related stuff declarations."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -57,6 +57,8 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct _cnid_db
 
+This is instance of CNID database object.
+
 Defined at line 76.
 * `uint32_t cnid_db_flags`
 * `struct vol * cnid_db_vol`
@@ -93,4 +95,13 @@ Defined at line 106.
 # Macros
 
 * `CNID_ERRNO_IS_BACKEND_FAILURE`: Whether errno says the backend could not answer at all.
-* Undocumented: `CNID_ERRNO`, `CNID_ERR_BUSY`, `CNID_ERR_CLOSE`, `CNID_ERR_CORRUPT`, `CNID_ERR_DB`, `CNID_ERR_MAX`, `CNID_ERR_NOTFOUND`, `CNID_ERR_PARAM`, `CNID_ERR_PATH`, `CNID_ERR_RESET`, `CNID_FIND_MIN_BUFLEN`, `CNID_FIND_MIN_RESULTS`, `CNID_FLAG_NODEV`, `CNID_FLAG_PERSISTENT`, `CNID_INVALID`, `CNID_START`
+* `CNID_ERR_BUSY`: contended or transient, retryable
+* `CNID_ERR_CLOSE`: the db was not open
+* `CNID_ERR_CORRUPT`: unusable data returned for a CNID
+* `CNID_ERR_DB`: the backend itself is gone
+* `CNID_ERR_NOTFOUND`: no row for the query
+* `CNID_ERR_RESET`: CNID table was reset, all CNIDs stale.
+* `CNID_FLAG_NODEV`: don't use device number only inode
+* `CNID_FLAG_PERSISTENT`: This backend implements DID persistence.
+* `CNID_START`: first valid ID
+* Undocumented: `CNID_ERRNO`, `CNID_ERR_MAX`, `CNID_ERR_PARAM`, `CNID_ERR_PATH`, `CNID_FIND_MIN_BUFLEN`, `CNID_FIND_MIN_RESULTS`, `CNID_INVALID`

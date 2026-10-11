@@ -5,7 +5,7 @@ description: "7 functions, includes 10 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/appl.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,17 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int pathcmp(char *p, int plen, char *q, int qlen)
 ```
 
-Defined at lines 34 to 37.
+Defined at lines 43 to 46.
+
+Compare two APPL paths of explicit lengths.
+
+Parameters:
+* `p`: first path
+* `plen`: length of p
+* `q`: second path
+* `qlen`: length of q
+
+Returns: 0 when both paths hold the same bytes, 1 otherwise
 
 Called by: [copyapplfile](appl.c.md#copyapplfile)
 
@@ -42,7 +52,19 @@ Called by: [copyapplfile](appl.c.md#copyapplfile)
 static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 ```
 
-Defined at lines 39 to 86.
+Defined at lines 64 to 111.
+
+Open the APPL file of a creator in the desktop database.
+
+One descriptor serves the APPL file of the last creator and volume. A read-only open of the same file reuses it and keeps its read position, so FPGetAPPL can walk the entries in order. Any other open closes it first. With O_CREAT, a missing file also gets its two parent directories in the desktop database.
+
+Parameters:
+* `vol`: volume of the desktop database
+* `creator`: creator code of the application
+* `flags`: open flags
+* `mode`: creation mode, masked with the parent directory permissions
+
+Returns: AFP_OK, or AFPERR_PARAM when open fails
 
 Calls: [ad_mkdir](../../libatalk/adouble/ad_open.c.md#ad_mkdir), [ad_mode](../../libatalk/adouble/ad_open.c.md#ad_mode), [dtfile](desktop.c.md#dtfile)
 
@@ -56,9 +78,19 @@ Uses file-scope variables: `sa`
 static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
 ```
 
-Defined at lines 91 to 164.
+Defined at lines 127 to 200.
 
-copy appls to new file, deleting any matching (old) appl entries
+Write the APPL entries of one file to another, except the entries of one path.
+
+Each entry holds a 4-byte APPL tag, a 2-byte path length, and the path. The call drops every entry whose path equals mpath. A short read or a path length past the buffer ends the call with -1.
+
+Parameters:
+* `sfd`: APPL file, read from its current position
+* `dfd`: file that receives the kept entries
+* `mpath`: path to drop
+* `mplen`: length of mpath
+
+Returns: 0 at the end of sfd, or -1 on a read, length, or write error
 
 Calls: [pathcmp](appl.c.md#pathcmp)
 
@@ -70,15 +102,22 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 static char * makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, char *path)
 ```
 
-Defined at lines 180 to 213.
+Defined at lines 221 to 254.
 
-build mac. path (backwards) by traversing the directory tree
+Build the volume path of a file backwards at the end of a buffer.
 
-The old way: dir and path refer to an app, path is a mac format pathname. [makemacpath()](appl.c.md#makemacpath) builds something that looks like a cname, but uses upaths instead of mac format paths.
+The result holds the long names of the directories below the volume root and of the file. NUL bytes separate the names and no NUL ends them, the form that cname reads. The first 6 bytes of mpath stay free for the APPL tag and the entry length.
 
-The new way: dir and path refer to an app, path is a mac format pathname. [makemacpath()](appl.c.md#makemacpath) builds a cname. (zero is a path separator and it's not \0 terminated).
+Parameters:
+* `vol`: volume of the file
+* `mpath`: buffer that receives the path at its end
+* `mpathlen`: size of mpath
+* `dir`: directory of the file
+* `path`: long name of the file
 
-See also: [afp_getappl()](appl.c.md#afp_getappl) for the backward compatiblity code.
+Returns: the start of the path in mpath, or NULL when it does not fit or a parent lookup fails
+
+See also: [afp_getappl()](appl.c.md#afp_getappl) for the decoding of older [entries](../../libatalk/util/server_ipc.c.md).
 
 Calls: [dirlookup](directory.c.md#dirlookup)
 
@@ -90,7 +129,20 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 216 to 355.
+Defined at lines 272 to 411.
+
+FPAddAPPL: add an application to the APPL file of its creator.
+
+The request carries the volume, the directory, the creator, the APPL tag, and the path. The new entry goes first, so index 1 of FPGetAPPL names the application added last. The call drops an older entry for the same path. It writes the entries to a temporary file and renames that over the APPL file.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block, unused
+* `rbuflen`: 0 on return
+
+Returns: AFP_OK, AFPERR_BADTYPE for a directory, AFPERR_PARAM, or the error of the directory or path lookup
 
 Calls: [ad_mode](../../libatalk/adouble/ad_open.c.md#ad_mode), [applopen](appl.c.md#applopen), [cname](directory.c.md#cname), [copyapplfile](appl.c.md#copyapplfile), [dirlookup](directory.c.md#dirlookup), [dtfile](desktop.c.md#dtfile), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [makemacpath](appl.c.md#makemacpath), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
@@ -104,7 +156,20 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 357 to 464.
+Defined at lines 429 to 536.
+
+FPRemoveAPPL: remove an application from the APPL file of its creator.
+
+The request carries the volume, the directory, the creator, and the path. The call writes every other entry to a temporary file and renames that over the APPL file. A path without an entry still gets AFP_OK.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block, unused
+* `rbuflen`: 0 on return
+
+Returns: AFP_OK, AFPERR_NOOBJ without an APPL file, AFPERR_BADTYPE for a directory, AFPERR_PARAM, or the error of the directory or path lookup
 
 Calls: [ad_mode](../../libatalk/adouble/ad_open.c.md#ad_mode), [applopen](appl.c.md#applopen), [cname](directory.c.md#cname), [copyapplfile](appl.c.md#copyapplfile), [dirlookup](directory.c.md#dirlookup), [dtfile](desktop.c.md#dtfile), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [makemacpath](appl.c.md#makemacpath), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
@@ -118,7 +183,22 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 466 to 620.
+Defined at lines 559 to 713.
+
+FPGetAPPL: return the file parameters of an application from the APPL file of its creator.
+
+The request carries the volume, the creator, a 1-based index, and the file bitmap. Index 0 counts as 1. The open APPL file keeps its position between calls, so a walk with rising indexes reads each entry once.
+
+The call decodes the colon hex escapes of older entries and resolves the path from the volume root. The reply holds the bitmap, the APPL tag, and the file parameters.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block
+* `rbuflen`: reply buffer capacity on entry, reply length on return
+
+Returns: AFP_OK, AFPERR_NOITEM when no entry or file matches, AFPERR_BITMAP, or AFPERR_PARAM
 
 Calls: [applopen](appl.c.md#applopen), [cname](directory.c.md#cname), [getfilparams](file.c.md#getfilparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [path_isadir](../../include/atalk/directory.h.md#path_isadir)
 

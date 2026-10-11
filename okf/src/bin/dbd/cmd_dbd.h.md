@@ -5,7 +5,7 @@ description: "includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/dbd/cmd_dbd.h"
 tags: ["bin/dbd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,4 +27,6 @@ Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [b
 
 # Macros
 
-* Undocumented: `ADv2_DIRNAME`, `DBD_FLAGS_FORCE`, `DBD_FLAGS_SCAN`, `DBD_FLAGS_STATS`, `DBD_FLAGS_STRIP_AD`, `DBD_FLAGS_V2TOEA`, `DBD_FLAGS_VERBOSE`, `DIR_DOT_OR_DOTDOT`
+* `DBD_FLAGS_STRIP_AD`: Invalidate AppleDouble CNID hints.
+* `DBD_FLAGS_V2TOEA`: Convert adouble:v2 to adouble:ea.
+* Undocumented: `ADv2_DIRNAME`, `DBD_FLAGS_FORCE`, `DBD_FLAGS_SCAN`, `DBD_FLAGS_STATS`, `DBD_FLAGS_VERBOSE`, `DIR_DOT_OR_DOTDOT`

@@ -5,7 +5,7 @@ description: "1 type."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/interface.h"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Defined at line 11.
 * `char i_name`
 * `int i_flags`
 * `int i_time`
-* `int i_group`
+* `int i_group`: for isolated appletalk domains
 * `struct sockaddr_at i_addr`
 * `struct sockaddr_at i_caddr`
 * `struct ziptab * i_czt`
@@ -41,4 +41,15 @@ Defined at line 11.
 
 # Macros
 
-* Undocumented: `IFACE_ADDR`, `IFACE_CONFIG`, `IFACE_DONTROUTE`, `IFACE_ERROR`, `IFACE_ISROUTER`, `IFACE_LOOP`, `IFACE_LOOPBACK`, `IFACE_NOROUTER`, `IFACE_PHASE1`, `IFACE_PHASE2`, `IFACE_RSEED`, `IFACE_SEED`, `IFBASE`, `LOOPIFACE`, `STABLE`, `STABLEANYWAY`, `UNSTABLE`
+* `IFACE_ADDR`: has an address set
+* `IFACE_CONFIG`: has been configured
+* `IFACE_DONTROUTE`: don't route this interface
+* `IFACE_ERROR`: sendto returned an error
+* `IFACE_ISROUTER`: act as a router.
+* `IFACE_LOOP`: has a loopback route
+* `IFACE_LOOPBACK`: is the loopback interface
+* `IFACE_NOROUTER`: no router on interface
+* `IFACE_RSEED`: almost the same as seed.
+* `IFACE_SEED`: act as seed
+* `IFBASE`: base number of interfaces
+* Undocumented: `IFACE_PHASE1`, `IFACE_PHASE2`, `LOOPIFACE`, `STABLE`, `STABLEANYWAY`, `UNSTABLE`

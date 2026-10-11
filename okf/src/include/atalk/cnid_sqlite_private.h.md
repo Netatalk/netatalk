@@ -5,7 +5,7 @@ description: "1 type, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid_sqlite_private.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -47,4 +47,6 @@ Defined at line 10.
 
 # Macros
 
-* Undocumented: `CNID_SQLITE_FLAG_DEPLETED`, `CNID_SQLITE_FLAG_HINT_RANGE_LOGGED`, `CNID_SQLITE_FLAG_NEAR_DEPLETION`
+* `CNID_SQLITE_FLAG_DEPLETED`: CNID set overflowed.
+* `CNID_SQLITE_FLAG_HINT_RANGE_LOGGED`: hint range warning logged
+* `CNID_SQLITE_FLAG_NEAR_DEPLETION`: depletion warning logged

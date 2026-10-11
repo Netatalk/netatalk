@@ -5,7 +5,7 @@ description: "10 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_tcp.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,12 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 static void dsi_tcp_close(DSI *dsi)
 ```
 
-Defined at lines 64 to 72.
+Defined at lines 69 to 77.
+
+Close the session socket, the TCP proto_close hook.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session, its socket becomes -1
 
 Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 
@@ -38,9 +43,14 @@ Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 static void timeout_handler(int sig)
 ```
 
-Defined at lines 75 to 79.
+Defined at lines 88 to 92.
 
-alarm handler for tcp_open
+End a new session process that missed the deadline for its first [DSI](../../include/atalk/dsi.h.md#struct-dsi) request.
+
+The SIGALRM timer of dsi_tcp_open runs it after 120 seconds, the DSI_TCPTIMEOUT limit.
+
+Parameters:
+* `sig`: unused
 
 Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 
@@ -50,9 +60,14 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 static void dsi_init_buffer(DSI *dsi)
 ```
 
-Defined at lines 84 to 100.
+Defined at lines 102 to 118.
 
-Allocate [DSI](../../include/atalk/dsi.h.md#struct-dsi) read buffer and read-ahead buffer
+Allocate the command buffer and the read-ahead buffer of a session.
+
+The command buffer holds one server quantum, and the read-ahead buffer holds dsireadbuf quanta. When malloc fails, the process aborts.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session with its quantum and dsireadbuf settled
 
 Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 
@@ -62,9 +77,16 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 uint32_t dsi_effective_mss(const DSI *)
 ```
 
-Defined at lines 108 to 151. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 130 to 173. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-Effective TCP segment payload for this session's socket, or 0 when it cannot be determined. Live values (TCP_INFO / TCP_CONNECTION_INFO) already account for active TCP options; TCP_MAXSEG is the negotiated fallback.
+Effective TCP segment payload of the session socket.
+
+Live values from TCP_INFO or TCP_CONNECTION_INFO already account for the active TCP options. TCP_MAXSEG, the negotiated value, is the fallback.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session with a connected socket
+
+Returns: the segment payload in bytes, or 0 when it is unavailable or outside 512 to 65536
 
 Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 
@@ -74,9 +96,17 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 uint32_t dsi_align_quantum(uint32_t configured, uint32_t mss)
 ```
 
-Defined at lines 161 to 198. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 192 to 229. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-Smallest 4 KiB multiple at or above the configured quantum whose FPWriteExt frame (data + 36 bytes) ends in a TCP segment at least 7/8 full. Growth is capped at DSI_QUANTUM_GROWTH_MAX and DSI_SERVQUANT_MAX; best fill wins when the threshold is unreachable. Never returns less than the configured value, which is itself capped at DSI_SERVQUANT_MAX.
+Round the configured server quantum up so FPWriteExt frames fill their last TCP segment.
+
+The result is the smallest 4 KiB multiple at or above configured that fills the last TCP segment well. An FPWriteExt frame is the data plus 36 bytes. A last segment at least 7/8 full counts as filled. Growth stops at DSI_QUANTUM_GROWTH_MAX above configured and at DSI_SERVQUANT_MAX, and the call returns the best fill when no candidate reaches the threshold. Without a usable mss, or when the quantum fits in four segments, the result only rounds up to a page.
+
+Parameters:
+* `configured`: quantum from the configuration, capped at DSI_SERVQUANT_MAX
+* `mss`: TCP segment payload from dsi_effective_mss, or 0
+
+Returns: the rounded quantum, never below the capped configured value
 
 Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 
@@ -86,9 +116,12 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 void dsi_free(DSI *dsi)
 ```
 
-Defined at lines 204 to 216. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 237 to 249. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-Free any allocated resources of the master afpd [DSI](../../include/atalk/dsi.h.md#struct-dsi) objects and close server socket
+Release the listener resources of the master afpd and close the server socket.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener, its socket and buffers become invalid
 
 Called by: [configfree](../../etc/afpd/afp_config.c.md#configfree)
 
@@ -98,9 +131,16 @@ Called by: [configfree](../../etc/afpd/afp_config.c.md#configfree)
 static pid_t dsi_tcp_open(DSI *dsi)
 ```
 
-Defined at lines 220 to 372.
+Defined at lines 267 to 419.
 
-accept the socket and do a little sanity checking
+Accept a client connection and fork its session process, the TCP proto_open hook.
+
+TCP wrappers can refuse the peer with ECONNREFUSED. The child resets the signal handlers and gives the client 120 seconds, the DSI_TCPTIMEOUT limit, for its first request. It derives the session quantum from the TCP segment size, sizes the read-ahead buffer, and reads the first [DSI](../../include/atalk/dsi.h.md#struct-dsi) header and payload. A malformed header or a payload beyond the server quantum ends the child.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener, which the child keeps as its session
+
+Returns: the child pid in the parent, 0 in the child, or -1 when accept or fork failed
 
 Calls: [dsi_align_quantum](dsi_tcp.c.md#dsi_align_quantum), [dsi_effective_mss](dsi_tcp.c.md#dsi_effective_mss), [dsi_init_buffer](dsi_tcp.c.md#dsi_init_buffer), [dsi_stream_read](dsi_stream.c.md#dsi_stream_read), [getip_port](../util/socket.c.md#getip_port), [getip_string](../util/socket.c.md#getip_string), [netatalk_readbuf_clamp](../util/netatalk_conf.c.md#netatalk_readbuf_clamp), [server_reset_signal](../util/server_child.c.md#server_reset_signal), [timeout_handler](dsi_tcp.c.md#timeout_handler)
 
@@ -114,7 +154,16 @@ Uses file-scope variables: `deny_severity`, `itimer`
 static void guess_interface(DSI *dsi, const char *hostname, const char *port)
 ```
 
-Defined at lines 379 to 430.
+Defined at lines 439 to 490.
+
+Advertise the address of the first usable network interface.
+
+The call runs when hostname resolves to nothing or only to a loopback address. It walks the interface list, skips loopback, point-to-point, bonding slave, and down interfaces, and takes the first remaining one. dsi->server receives that IPv4 address with port. Without a match it logs a message naming hostname.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener whose server address to set
+* `hostname`: server host name, for the log message
+* `port`: TCP port as a decimal string
 
 Calls: [freeifacelist](../util/getiface.c.md#freeifacelist), [getifacelist](../util/getiface.c.md#getifacelist), [getip_string](../util/socket.c.md#getip_string), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
@@ -126,7 +175,20 @@ Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 static int dsi_tcp_listen(const char *address, const char *port, struct addrinfo *hints, DSI *dsi, bool *psocket_err_afnotsup)
 ```
 
-Defined at lines 432 to 539.
+Defined at lines 510 to 617.
+
+Create the listening socket for address and port.
+
+getaddrinfo supplies the candidates, and the call keeps the first one that binds and listens. Each socket gets SO_REUSEADDR and TCP_NODELAY, and an IPv6 socket also accepts IPv4 except on OpenBSD. The listen backlog is DSI_TCPMAXPEND. When every AF_INET6 socket call fails with EAFNOSUPPORT, the caller learns that the host has no IPv6 and retries with AF_UNSPEC.
+
+Parameters:
+* `address`: address to bind, or NULL for the wildcard address
+* `port`: TCP port as a decimal string
+* `hints`: getaddrinfo hints
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener receiving the socket and the bound address
+* `psocket_err_afnotsup`: receives true when IPv6 is unavailable
+
+Returns: 0, or -1 when no candidate accepted a bind and listen
 
 Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 
@@ -136,7 +198,7 @@ Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address, const char *port)
 ```
 
-Defined at lines 567 to 691. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 645 to 769. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Initialize [DSI](../../include/atalk/dsi.h.md#struct-dsi) over TCP.
 
@@ -162,7 +224,9 @@ Called by: [dsi_init](dsi_init.c.md#dsi_init)
 
 # Macros
 
-* Undocumented: `AI_NUMERICSERV`, `DSI_TCPMAXPEND`, `DSI_TCPTIMEOUT`, `IFF_SLAVE`, `SOCKLEN_T`, `SOL_TCP`, `min`
+* `DSI_TCPMAXPEND`: max # of pending connections
+* `DSI_TCPTIMEOUT`: timeout in seconds for connections
+* Undocumented: `AI_NUMERICSERV`, `IFF_SLAVE`, `SOCKLEN_T`, `SOL_TCP`, `min`
 
 # File-scope variables
 

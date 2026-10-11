@@ -5,7 +5,7 @@ description: "13 files, 35 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/sys/netatalk"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
@@ -22,7 +22,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [sys/netatalk/ddp_usrreq.c](netatalk/ddp_usrreq.c.md): 10 functions, includes 3 project headers.
 * [sys/netatalk/ddp_var.h](netatalk/ddp_var.h.md): 2 types.
 * [sys/netatalk/endian.h](netatalk/endian.h.md): No functions or types.
-* [sys/netatalk/phase2.h](netatalk/phase2.h.md): 1 type.
+* [sys/netatalk/phase2.h](netatalk/phase2.h.md): IEEE 802.2 Link Level Control headers, for use in conjunction with 802.
 
 # Includes headers from
 

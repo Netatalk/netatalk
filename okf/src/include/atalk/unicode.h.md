@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/unicode.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,6 +58,8 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct atalk_iconv_t
 
+generic iconv conversion structure
+
 Defined at line 17.
 * `size_t(* direct`: Called through by [atalk_iconv](../../libatalk/unicode/iconv.c.md#atalk_iconv).
 * `size_t(* pull`: Called through by [atalk_iconv](../../libatalk/unicode/iconv.c.md#atalk_iconv).
@@ -86,4 +88,16 @@ Defined at line 66.
 
 # Macros
 
-* Undocumented: `CHARSET_CLIENT`, `CHARSET_DECOMPOSED`, `CHARSET_ICONV`, `CHARSET_MULTIBYTE`, `CHARSET_PRECOMPOSED`, `CHARSET_VOLUME`, `CHARSET_WIDECHAR`, `CONV_DECOMPOSE`, `CONV_ESCAPEDOTS`, `CONV_ESCAPEHEX`, `CONV_FORCE`, `CONV_IGNORE`, `CONV_PRECOMPOSE`, `CONV_REQESCAPE`, `CONV_REQMANGLE`, `CONV_TOLOWER`, `CONV_TOUPPER`, `CONV_UNESCAPEHEX`, `CONV__EILSEQ`, `EILSEQ`, `IGNORE_CHAR`, `NUM_CHARSETS`, `SAFE_FREE`, `ucs2_t`
+* `CONV_DECOMPOSE`: decompose
+* `CONV_ESCAPEDOTS`: escape leading dots with :2600
+* `CONV_ESCAPEHEX`: escape unconvertable chars with :[UCS2HEX], also escape '/'.
+* `CONV_FORCE`: force convertion
+* `CONV_IGNORE`: return the first convertable characters.
+* `CONV_PRECOMPOSE`: precompose
+* `CONV_REQESCAPE`: espace unconvertable chars with :[UCS2HEX]
+* `CONV_REQMANGLE`: mangling of returned name is required
+* `CONV_TOLOWER`: convert to lowercase
+* `CONV_TOUPPER`: convert to UPPERcase
+* `CONV__EILSEQ`: ignore EILSEQ, replace with IGNORE_CHAR (try USC2)
+* `EILSEQ`: Illegal byte sequence.
+* Undocumented: `CHARSET_CLIENT`, `CHARSET_DECOMPOSED`, `CHARSET_ICONV`, `CHARSET_MULTIBYTE`, `CHARSET_PRECOMPOSED`, `CHARSET_VOLUME`, `CHARSET_WIDECHAR`, `CONV_UNESCAPEHEX`, `IGNORE_CHAR`, `NUM_CHARSETS`, `SAFE_FREE`, `ucs2_t`

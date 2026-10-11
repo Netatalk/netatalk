@@ -5,7 +5,7 @@ description: "4 files, 6 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/compat"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
@@ -27,8 +27,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [etc/uams](../etc/uams.md): 30 calls
 * [libatalk/cnid](cnid.md): 22 calls
 * [libatalk/util](util.md): 18 calls
+* [etc/netatalk](../etc/netatalk.md): 8 calls
 * [libatalk/adouble](adouble.md): 8 calls
-* [etc/netatalk](../etc/netatalk.md): 7 calls
 * [etc/papd](../etc/papd.md): 7 calls
 * [libatalk/vfs](vfs.md): 7 calls
 * [bin/dbd](../bin/dbd.md): 5 calls
@@ -40,7 +40,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 
 # Most called functions
 
-* [strlcpy](compat/strlcpy.c.md#strlcpy): 87 callers
+* [strlcpy](compat/strlcpy.c.md#strlcpy): 88 callers
 * [strnlen](compat/misc.c.md#strnlen): 64 callers
 * [explicit_bzero](compat/explicit_bzero.c.md#explicit_bzero): 35 callers
 * [strlcat](compat/strlcpy.c.md#strlcat): 24 callers

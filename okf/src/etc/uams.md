@@ -5,7 +5,7 @@ description: "10 files, 116 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/uams"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
@@ -19,7 +19,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
 * [etc/uams/uams_pam.c](uams/uams_pam.c.md): 10 functions, includes 6 project headers.
 * [etc/uams/uams_passwd.c](uams/uams_passwd.c.md): 6 functions, includes 5 project headers.
 * [etc/uams/uams_randnum.c](uams/uams_randnum.c.md): 15 functions, includes 5 project headers.
-* [etc/uams/uams_srp.c](uams/uams_srp.c.md): 14 functions, includes 6 project headers.
+* [etc/uams/uams_srp.c](uams/uams_srp.c.md): SRP (Secure Remote Password) User Authentication Method for AFP.
 
 # Includes headers from
 

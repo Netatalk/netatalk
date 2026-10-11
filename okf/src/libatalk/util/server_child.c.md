@@ -5,7 +5,7 @@ description: "functions to handle child processes"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_child.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,13 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static void hash_child(afp_child_t **htable, afp_child_t *child)
 ```
 
-Defined at lines 61 to 72.
+Defined at lines 67 to 78.
+
+Link a child at the head of its hash chain, keyed by pid.
+
+Parameters:
+* `htable`: hash table of the children
+* `child`: child to link
 
 Called by: [server_child_add](server_child.c.md#server_child_add)
 
@@ -38,7 +44,12 @@ Called by: [server_child_add](server_child.c.md#server_child_add)
 static void unhash_child(afp_child_t *child)
 ```
 
-Defined at lines 74 to 83.
+Defined at lines 85 to 94.
+
+Unlink a child from its hash chain, when it is in one.
+
+Parameters:
+* `child`: child to unlink
 
 Called by: [server_child_remove](server_child.c.md#server_child_remove)
 
@@ -48,7 +59,15 @@ Called by: [server_child_remove](server_child.c.md#server_child_remove)
 afp_child_t * server_child_resolve(server_child_t *childs, id_t pid)
 ```
 
-Defined at lines 85 to 97.
+Defined at lines 103 to 115.
+
+Find the child entry of a session process by pid.
+
+Parameters:
+* `childs`: child table
+* `pid`: process ID of the session
+
+Returns: the child, or NULL for an unknown pid
 
 Called by: [ipc_set_state](server_ipc.c.md#ipc_set_state), [ipc_set_volumes](server_ipc.c.md#ipc_set_volumes), [server_child_add](server_child.c.md#server_child_add), [server_child_remove](server_child.c.md#server_child_remove), [server_child_set_session_token](server_child.c.md#server_child_set_session_token)
 
@@ -58,9 +77,14 @@ Called by: [ipc_set_state](server_ipc.c.md#ipc_set_state), [ipc_set_volumes](ser
 server_child_t * server_child_alloc(int connections)
 ```
 
-Defined at lines 100 to 110.
+Defined at lines 123 to 133.
 
-initialize server_child structure
+Allocate an empty child table with a session limit.
+
+Parameters:
+* `connections`: maximum number of sessions
+
+Returns: the table, or NULL when calloc fails
 
 Called by: [main](../../etc/afpd/main.c.md#main)
 
@@ -70,11 +94,19 @@ Called by: [main](../../etc/afpd/main.c.md#main)
 afp_child_t * server_child_add(server_child_t *children, pid_t pid, int ipc_fd, int hint_fd)
 ```
 
-Defined at lines 116 to 154.
+Defined at lines 149 to 187.
 
-add a child
+Add a session process to the child table.
 
-Returns: pointer to struct server_child_data on success, NULL on error
+The call refuses a new child at the session limit and a process that already exited. A pid already in the table returns its entry, which keeps its descriptors.
+
+Parameters:
+* `children`: child table
+* `pid`: process ID of the session
+* `ipc_fd`: IPC socket of the session
+* `hint_fd`: write end of the hint pipe of the session, or -1
+
+Returns: the child, or NULL at the session limit, for a missing process, or when calloc fails
 
 Calls: [hash_child](server_child.c.md#hash_child), [server_child_resolve](server_child.c.md#server_child_resolve)
 
@@ -86,9 +118,17 @@ Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [dsi_getses
 int server_child_remove(server_child_t *children, pid_t pid)
 ```
 
-Defined at lines 157 to 199.
+Defined at lines 199 to 241.
 
-remove a child and free it
+Remove a session process from the child table and free its entry.
+
+The call closes the IPC socket and the hint pipe of the session. It returns the closed IPC descriptor, so child_handler can drop it from the poll set.
+
+Parameters:
+* `children`: child table
+* `pid`: process ID of the session
+
+Returns: the closed IPC descriptor, or -1 for an unknown pid
 
 Calls: [explicit_bzero](../compat/explicit_bzero.c.md#explicit_bzero), [server_child_resolve](server_child.c.md#server_child_resolve), [unhash_child](server_child.c.md#unhash_child)
 
@@ -100,11 +140,14 @@ Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [child_hand
 void server_child_free(server_child_t *children)
 ```
 
-Defined at lines 207 to 247.
+Defined at lines 250 to 290.
 
-free everything
+Free the child table with its entries, and close their descriptors.
 
-by using a hash table, this increases the cost of this part over a linked list by the size of the hash table
+The walk visits all CHILD_HASHSIZE slots of the hash table.
+
+Parameters:
+* `children`: child table
 
 Calls: [explicit_bzero](../compat/explicit_bzero.c.md#explicit_bzero)
 
@@ -116,9 +159,13 @@ Called by: [asp_getsession](../asp/asp_getsess.c.md#asp_getsession), [dsi_getses
 void server_child_kill(server_child_t *children, int sig)
 ```
 
-Defined at lines 250 to 264.
+Defined at lines 298 to 312.
 
-send signal to all child processes
+Send a signal to every session process in the child table.
+
+Parameters:
+* `children`: child table
+* `sig`: signal number
 
 Called by: [afp_end_sessions](../../etc/afpd/main.c.md#afp_end_sessions), [afp_goaway](../../etc/afpd/main.c.md#afp_goaway), [asp_kill](../asp/asp_getsess.c.md#asp_kill), [main](../../etc/afpd/main.c.md#main)
 
@@ -128,9 +175,14 @@ Called by: [afp_end_sessions](../../etc/afpd/main.c.md#afp_end_sessions), [afp_g
 static int kill_child(afp_child_t *child)
 ```
 
-Defined at lines 267 to 281.
+Defined at lines 321 to 335.
 
-send kill to a child processes
+Send SIGTERM to a session process, or SIGKILL when an earlier call sent SIGTERM.
+
+Parameters:
+* `child`: child entry, marked after the SIGTERM
+
+Returns: 1
 
 Called by: [server_child_kill_one_by_id](server_child.c.md#server_child_kill_one_by_id)
 
@@ -140,11 +192,20 @@ Called by: [server_child_kill_one_by_id](server_child.c.md#server_child_kill_one
 int server_child_set_session_token(server_child_t *children, pid_t pid, uid_t uid, const void *token, size_t token_len)
 ```
 
-Defined at lines 287 to 334.
+Defined at lines 351 to 398.
 
-Store an opaque reconnect token for a child session.
+Store the reconnect token of a session in a new buffer.
 
-Returns: 0 on success, -1 on error
+The token replaces an older one, which the call wipes first. The call refuses a token whose uid differs from the uid of the session.
+
+Parameters:
+* `children`: child table
+* `pid`: process ID of the session
+* `uid`: user ID that the session reports
+* `token`: opaque token
+* `token_len`: length of token
+
+Returns: 0, or -1 for an empty token, an unknown pid, another user, or a failed malloc
 
 Calls: [explicit_bzero](../compat/explicit_bzero.c.md#explicit_bzero), [server_child_resolve](server_child.c.md#server_child_resolve)
 
@@ -156,11 +217,21 @@ Called by: [ipc_set_session_token](server_ipc.c.md#ipc_set_session_token)
 int server_child_transfer_session(server_child_t *children, uid_t uid, const void *token, size_t token_len, int afp_socket, uint16_t DSI_requestID)
 ```
 
-Defined at lines 341 to 398.
+Defined at lines 417 to 474.
 
-Try to find an old session and pass socket.
+Pass the socket of a reconnecting client to the session that holds its token.
 
-Returns: -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
+Each token comparison runs in constant time. The old session has to be logged in as the same user. The call sends the [DSI](../../include/atalk/dsi.h.md#struct-dsi) request ID and the socket over the IPC socket of that session, and then SIGURG.
+
+Parameters:
+* `children`: child table
+* `uid`: user ID of the new session
+* `token`: reconnect token from the client
+* `token_len`: length of token
+* `afp_socket`: client socket to pass
+* `DSI_requestID`: request ID of the reconnect request
+
+Returns: 1 after a transfer, 0 without a usable session, or -1 when the transfer fails
 
 Calls: [atalk_ct_memcmp](constant_time.c.md#atalk_ct_memcmp), [send_fd](socket.c.md#send_fd), [writet](socket.c.md#writet)
 
@@ -172,11 +243,19 @@ Called by: [ipc_kill_token](server_ipc.c.md#ipc_kill_token)
 void server_child_kill_one_by_id(server_child_t *children, pid_t pid, uid_t uid, uint32_t idlen, char *id, uint32_t boottime)
 ```
 
-Defined at lines 406 to 456.
+Defined at lines 493 to 543.
 
-see if there is a process for the same mac
+Record the client ID of a session, and end the sessions of the same client from before a reboot.
 
-if the times don't match mac has been rebooted
+Another session with the same client ID and another boot time belongs to a client that rebooted. The call ends it through kill_child when it has the same user. The entry of pid takes ownership of id and records the boot time and the user.
+
+Parameters:
+* `children`: child table
+* `pid`: process ID of the session
+* `uid`: user ID of the session
+* `idlen`: length of id
+* `id`: client ID, owned by the table afterwards
+* `boottime`: boot time that the client reports
 
 Calls: [kill_child](server_child.c.md#kill_child)
 
@@ -188,7 +267,15 @@ Called by: [ipc_get_session](server_ipc.c.md#ipc_get_session)
 void server_child_login_done(server_child_t *children, pid_t pid, uid_t uid, const char *client_address)
 ```
 
-Defined at lines 458 to 488.
+Defined at lines 554 to 584.
+
+Mark the entry of a session as logged in, with its user and client address.
+
+Parameters:
+* `children`: child table
+* `pid`: process ID of the session
+* `uid`: user ID of the session
+* `client_address`: client address, or NULL
 
 Called by: [ipc_login_done](server_ipc.c.md#ipc_login_done)
 
@@ -198,7 +285,7 @@ Called by: [ipc_login_done](server_ipc.c.md#ipc_login_done)
 void server_reset_signal(void)
 ```
 
-Defined at lines 493 to 513.
+Defined at lines 589 to 609.
 
 reset children signals
 

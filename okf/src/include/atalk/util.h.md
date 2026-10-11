@@ -5,7 +5,7 @@ description: "Netatalk utility functions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/util.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -186,8 +186,8 @@ Called by: [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/pa
 atalk socket event
 
 Defined at line 194.
-* `struct pollfd * fdset`
-* `struct asev_data * data`
+* `struct pollfd * fdset`: struct pollfd array for poll()
+* `struct asev_data * data`: associated array of data
 * `int max`
 * `int used`
 
@@ -196,9 +196,9 @@ Defined at line 194.
 atalk socket event data
 
 Defined at line 184.
-* `enum asev_fdtype fdtype`
-* `void * private`
-* `int protocol`
+* `enum asev_fdtype fdtype`: IPC fd or listening socket fd.
+* `void * private`: pointer to AFPconfig for listening socket and pointer to afp_child_t for IPC fd
+* `int protocol`: protocol type [ASP](asp.h.md#struct-asp) or [DSI](dsi.h.md#struct-dsi)
 
 # Typedefs and enums
 
@@ -206,10 +206,17 @@ Defined at line 184.
 
 # Macros
 
+* `AFP_ASSERT`: LOG assert errors.
+* `AFP_PANIC`: Print a SBT and exit.
+* `BSTRING_STRIP_SLASH`: strip slashes from end of a bstring
+* `EXITERR_CLNT`: client related error
+* `EXITERR_CLOSED`: connection was immediately closed after TCP handshake
+* `EXITERR_CONF`: error in config files/cmd line parameters
+* `EXITERR_SYS`: local system error
 * `read_lock`: place read lock on file
 * `unlock`: unlock a file
 * `write_lock`: place write lock on file
-* Undocumented: `AFP_ASSERT`, `AFP_PANIC`, `BSTRING_STRIP_SLASH`, `EXITERR_CLNT`, `EXITERR_CLOSED`, `EXITERR_CONF`, `EXITERR_SYS`, `MAX`, `MIN`, `RLIM_MAX`, `SAFE_FREE`, `STRCMP`, `ZERO_STRUCT`, `ZERO_STRUCTP`, `cfrombstr`, `diatolower`, `diatoupper`, `hton64`, `mod_error`, `server_unlock`, `strequal`
+* Undocumented: `MAX`, `MIN`, `RLIM_MAX`, `SAFE_FREE`, `STRCMP`, `ZERO_STRUCT`, `ZERO_STRUCTP`, `cfrombstr`, `diatolower`, `diatoupper`, `hton64`, `mod_error`, `server_unlock`, `strequal`
 
 # File-scope variables
 

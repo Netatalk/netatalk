@@ -5,12 +5,12 @@ description: "10 files, 20 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/atp"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 # Files
 
-* [libatalk/atp/atp_bufs.c](atp/atp_bufs.c.md): 4 functions, includes 3 project headers.
+* [libatalk/atp/atp_bufs.c](atp/atp_bufs.c.md): Our own memory maintenance for atp.
 * [libatalk/atp/atp_close.c](atp/atp_close.c.md): 1 function, includes 4 project headers.
 * [libatalk/atp/atp_internals.h](atp/atp_internals.h.md): 1 function, includes 2 project headers.
 * [libatalk/atp/atp_open.c](atp/atp_open.c.md): 1 function, includes 4 project headers.

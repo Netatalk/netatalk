@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/server_ipc.c"
-description: "23 functions, 2 types, includes 7 project headers."
+description: "IPC over socketpair between parent and children."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_ipc.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,16 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static int rate_slot(pid_t child_pid)
 ```
 
-Defined at lines 125 to 138.
+Defined at lines 133 to 146.
+
+Find the rate slot of a child for the current second.
+
+The slot index is the pid modulo RATE_TRACK_SIZE. A slot that holds another pid or an older second restarts both counts. Only the main thread calls it.
+
+Parameters:
+* `child_pid`: pid of the child
+
+Returns: the slot index
 
 Called by: [check_and_increment_rate](server_ipc.c.md#check_and_increment_rate), [check_and_increment_reset_rate](server_ipc.c.md#check_and_increment_reset_rate)
 
@@ -41,7 +50,14 @@ Uses file-scope variables: `pid`, `rate_track`, `window_start`
 static int check_and_increment_rate(pid_t child_pid)
 ```
 
-Defined at lines 141 to 144.
+Defined at lines 154 to 157.
+
+Count a hint of a child in the current 1-second window.
+
+Parameters:
+* `child_pid`: pid of the child
+
+Returns: the hint count of the window, this hint included
 
 Calls: [rate_slot](server_ipc.c.md#rate_slot)
 
@@ -55,7 +71,16 @@ Uses file-scope variables: `rate_track`
 static int check_and_increment_reset_rate(pid_t child_pid)
 ```
 
-Defined at lines 146 to 149.
+Defined at lines 167 to 170.
+
+Count a volume reset of a child in the current 1-second window.
+
+Resets count apart from the other hints.
+
+Parameters:
+* `child_pid`: pid of the child
+
+Returns: the reset count of the window, this reset included
 
 Calls: [rate_slot](server_ipc.c.md#rate_slot)
 
@@ -69,14 +94,16 @@ Uses file-scope variables: `rate_track`
 static int reset_already_broadcast(uint32_t tag)
 ```
 
-Defined at lines 166 to 184.
+Defined at lines 188 to 206.
 
-Whether this volume's reset has just been broadcast.
+Tell whether the reset of a volume went out in the current second.
 
-One notification per volume is all a sibling needs, and each one costs a forced flush to every session, so a repeat inside the same second is dropped. Records the tag when it is new.
+Every sibling needs one notification per volume, and each costs a forced flush to every session. A repeat inside the same second returns 1, so the caller drops it. A new tag takes the oldest slot.
 
 Parameters:
-* `tag`: [cnid_volume_tag()](../../etc/afpd/volume.c.md#cnid_volume_tag) of the reset volume, network byte order
+* `tag`: cnid_volume_tag of the reset volume, in network byte order
+
+Returns: 1 for a repeat, 0 for a new tag
 
 Called by: [ipc_relay_cache_hint](server_ipc.c.md#ipc_relay_cache_hint)
 
@@ -88,7 +115,7 @@ Uses file-scope variables: `reset_seen`, `tag`, `when`
 static void reset_broadcast_forget(uint32_t tag)
 ```
 
-Defined at lines 194 to 202.
+Defined at lines 216 to 224.
 
 Make a volume's reset broadcastable again.
 
@@ -107,7 +134,7 @@ Uses file-scope variables: `reset_seen`, `tag`
 static int hint_write_batch(int fd, const char *buf, int len, int has_reset, int *waits_left)
 ```
 
-Defined at lines 219 to 260.
+Defined at lines 241 to 282.
 
 Write a sibling's hint batch, waiting once if it carries a reset.
 
@@ -130,7 +157,7 @@ Called by: [hint_flush_pending](server_ipc.c.md#hint_flush_pending)
 static int serialize_hint(char *buf, const struct hint_entry *e)
 ```
 
-Defined at lines 273 to 296.
+Defined at lines 295 to 318.
 
 Serialize a [hint_entry](server_ipc.c.md#struct-hint_entry) to IPC wire format.
 
@@ -150,11 +177,15 @@ Called by: [hint_flush_pending](server_ipc.c.md#hint_flush_pending)
 static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 304 to 316.
+Defined at lines 331 to 343.
 
-Pass afp_socket to old disconnected session if one has a matching token.
+Pass the socket of a new session to the disconnected session with the same reconnect token.
 
-Returns: -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
+Parameters:
+* `ipc`: IPC_DISCOLDSESSION message with the token, the socket, and the [DSI](../../include/atalk/dsi.h.md#struct-dsi) request ID
+* `children`: child table
+
+Returns: 1 after a transfer, 0 without a matching session, or -1 for an empty token or a failed transfer
 
 Calls: [server_child_transfer_session](server_child.c.md#server_child_transfer_session)
 
@@ -166,7 +197,17 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 319 to 354.
+Defined at lines 356 to 391.
+
+Record the client ID and boot time of a session, and end older sessions of a rebooted client.
+
+The message holds the ID length in network order, the boot time, and the ID. The entry of the sender takes ownership of the copied ID.
+
+Parameters:
+* `ipc`: IPC_GETSESSION message
+* `children`: child table
+
+Returns: 0, or -1 for a short message or a failed malloc
 
 Calls: [server_child_kill_one_by_id](server_child.c.md#server_child_kill_one_by_id)
 
@@ -178,7 +219,15 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_login_done(const struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 357 to 367.
+Defined at lines 400 to 410.
+
+Mark a session as logged in, with its user and client address.
+
+Parameters:
+* `ipc`: IPC_LOGINDONE message with the client address
+* `children`: child table
+
+Returns: 0
 
 Calls: [server_child_login_done](server_child.c.md#server_child_login_done)
 
@@ -190,7 +239,15 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_set_session_token(const struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 369 to 379.
+Defined at lines 419 to 429.
+
+Store the reconnect token that a session sent.
+
+Parameters:
+* `ipc`: IPC_SESSIONTOKEN message with the token
+* `children`: child table
+
+Returns: 0, or -1 when server_child_set_session_token refuses the token
 
 Calls: [server_child_set_session_token](server_child.c.md#server_child_set_session_token)
 
@@ -202,7 +259,15 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 381 to 393.
+Defined at lines 438 to 450.
+
+Store the session state that a child reports, for afpstats.
+
+Parameters:
+* `ipc`: IPC_STATE message with the state in 2 bytes
+* `children`: child table
+
+Returns: 0, or -1 for an unknown child
 
 Calls: [server_child_resolve](server_child.c.md#server_child_resolve)
 
@@ -214,7 +279,17 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 395 to 415.
+Defined at lines 461 to 481.
+
+Store the list of mounted volumes that a child reports, for afpstats.
+
+An empty message clears the list.
+
+Parameters:
+* `ipc`: IPC_VOLUMES message with the volume names
+* `children`: child table
+
+Returns: 0, or -1 for an unknown child
 
 Calls: [server_child_resolve](server_child.c.md#server_child_resolve)
 
@@ -226,11 +301,19 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_relay_cache_hint(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 423 to 519.
+Defined at lines 501 to 597.
 
-Buffer a dircache hint for batched relay to siblings.
+Buffer a dircache hint from a child for the batched relay to its siblings.
 
-Appends to hint_buf array. Single-threaded — no lock needed. If buffer is full, the hint is dropped (caller should flush first).
+Only the main thread appends to hint_buf, so the buffer needs no lock. A short payload, a server with one session, or an unknown event drops the hint. Any other hint counts against HINT_RATE_LIMIT per second and child, and a full buffer drops it.
+
+A volume reset counts against HINT_RESET_RATE_LIMIT instead. Its cnid field carries the volume tag, and a repeat of a tag in the same second drops. A reset in a full buffer takes the slot of the last hint, and the call then flushes the buffer at once.
+
+Parameters:
+* `ipc`: IPC_CACHE_HINT message with the hint payload
+* `children`: child table
+
+Returns: 0
 
 Calls: [check_and_increment_rate](server_ipc.c.md#check_and_increment_rate), [check_and_increment_reset_rate](server_ipc.c.md#check_and_increment_reset_rate), [hint_flush_pending](server_ipc.c.md#hint_flush_pending), [reset_already_broadcast](server_ipc.c.md#reset_already_broadcast)
 
@@ -244,7 +327,7 @@ Uses file-scope variables: `hint_buf`, `hints_rate_dropped`, `rate_track`
 int ipc_server_read(server_child_t *children, int fd)
 ```
 
-Defined at lines 543 to 676.
+Defined at lines 621 to 754.
 
 Read a IPC message from a child.
 
@@ -268,7 +351,19 @@ Uses file-scope variables: `ipc_cmd_str`
 int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
 ```
 
-Defined at lines 679 to 719.
+Defined at lines 768 to 808.
+
+Send an IPC message from a session to the master.
+
+The header carries the command, the pid, the euid, and the length. The write waits up to 1 second for socket space.
+
+Parameters:
+* `obj`: AFP object with the IPC socket
+* `command`: IPC command
+* `len`: length of msg
+* `msg`: message body
+
+Returns: 0, or -1 for a message over IPC_MAXMSGSIZE or a failed write
 
 Calls: [writet](socket.c.md#writet)
 
@@ -284,7 +379,15 @@ Mentioned in the documentation of: [ipc_send_cache_hint](server_ipc.c.md#ipc_sen
 int ipc_child_state(AFPObj *obj, uint16_t state)
 ```
 
-Defined at lines 721 to 724.
+Defined at lines 817 to 820.
+
+Report the session state to the master, for afpstats.
+
+Parameters:
+* `obj`: AFP object with the IPC socket
+* `state`: session state flags
+
+Returns: the result of ipc_child_write
 
 Calls: [ipc_child_write](server_ipc.c.md#ipc_child_write)
 
@@ -296,14 +399,13 @@ Called by: [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [afp_zzzzz]
 int hint_buf_count(void)
 ```
 
-Defined at lines 737 to 740.
+Defined at lines 834 to 837.
 
-Return current number of buffered hints.
+Return the number of buffered hints.
 
-Used by main event loop to decide poll timeout:
+The afpd main loop polls with a timeout of HINT_FLUSH_INTERVAL_MS while hints wait, and without a timeout otherwise.
 
-* count > 0: use HINT_FLUSH_INTERVAL_MS timeout
-* count == 0: use -1 (infinite, block until event)
+Returns: the number of hints in the buffer
 
 Called by: [main](../../etc/afpd/main.c.md#main)
 
@@ -315,24 +417,18 @@ Uses file-scope variables: `hint_buf`
 void hint_flush_pending(server_child_t *children)
 ```
 
-Defined at lines 760 to 881.
+Defined at lines 858 to 979.
 
-Flush all buffered hints to sibling children.
+Flush the buffered hints to the sibling sessions.
 
-Called from the parent main event loop when:
+The afpd main loop calls it after a poll timeout with buffered hints and when the buffer is full. The ipc_relay_cache_hint call flushes for every volume reset. The master blocks signals while it runs, and no other thread touches the child table, so the walk needs no lock.
 
-1. The 50ms poll timeout expires and hint_buf.count > 0
-1. hint_buf.count reaches HINT_BUF_SIZE after ipc_server_read
+The hints go out in priority order: volume resets first, then REFRESH, DELETE, and DELETE_CHILDREN. Each sibling gets every hint except the ones it sent. No chunk exceeds PIPE_BUF bytes, so each write stays atomic. A failed chunk skips the rest for that sibling.
 
-Iterates the child table directly:
+A chunk with a reset can wait for pipe space, within HINT_RESET_WAIT_BUDGET waits per second. When a reset misses a sibling, the call forgets its tag, so a repeat of that reset goes out again.
 
-* Signals are blocked (no SIGCHLD can modify table)
-* SIGCHLD already processed before flush (dead children removed)
-* No other thread modifies the table
-
-Performs priority sorting, PIPE_BUF-safe chunked writes.
-
-While this function writes to child pipes, new IPC messages from children accumulate in the kernel socket buffer and are read on the next poll() iteration.
+Parameters:
+* `children`: child table
 
 Calls: [hint_write_batch](server_ipc.c.md#hint_write_batch), [reset_broadcast_forget](server_ipc.c.md#reset_broadcast_forget), [serialize_hint](server_ipc.c.md#serialize_hint)
 
@@ -346,7 +442,11 @@ Uses file-scope variables: `flush_count`, `hint_buf`, `hints_batched`
 unsigned long long ipc_get_hints_sent(void)
 ```
 
-Defined at lines 891 to 894.
+Defined at lines 995 to 998.
+
+Return the number of dircache hints that this session sent to the master.
+
+Returns: the count since the session started
 
 Called by: [log_dircache_stat](../../etc/afpd/dircache.c.md#log_dircache_stat)
 
@@ -358,7 +458,11 @@ Uses file-scope variables: `hints_sent`
 unsigned long long ipc_get_hints_dropped(void)
 ```
 
-Defined at lines 896 to 899.
+Defined at lines 1006 to 1009.
+
+Return the number of dircache hints that this session dropped on a full IPC socket.
+
+Returns: the count since the session started
 
 Called by: [log_dircache_stat](../../etc/afpd/dircache.c.md#log_dircache_stat)
 
@@ -370,7 +474,14 @@ Uses file-scope variables: `hints_dropped`
 static const char * cache_hint_name(uint8_t event)
 ```
 
-Defined at lines 901 to 919.
+Defined at lines 1017 to 1035.
+
+Return the name of a cache hint event for log messages.
+
+Parameters:
+* `event`: CACHE_HINT_* value
+
+Returns: the name, or "?" for an unknown event
 
 Called by: [ipc_send_cache_hint](server_ipc.c.md#ipc_send_cache_hint)
 
@@ -380,7 +491,7 @@ Called by: [ipc_send_cache_hint](server_ipc.c.md#ipc_send_cache_hint)
 int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid, uint8_t event)
 ```
 
-Defined at lines 949 to 1032.
+Defined at lines 1065 to 1148.
 
 Send a dircache invalidation hint from child to parent.
 

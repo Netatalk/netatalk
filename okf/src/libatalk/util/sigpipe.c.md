@@ -5,7 +5,7 @@ description: "4 functions, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/sigpipe.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,13 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 int atalk_sigpipe_init(void)
 ```
 
-Defined at lines 40 to 69.
+Defined at lines 49 to 78.
+
+Create the self-pipe that wakes a poll loop from a signal handler.
+
+A second call keeps the existing pipe. Both ends are non-blocking and close-on-exec. A failed setup closes both ends, so no half-configured pipe stays.
+
+Returns: 0, or -1 with errno set
 
 Calls: [setnonblock](socket.c.md#setnonblock)
 
@@ -37,7 +43,11 @@ Uses file-scope variables: `sigpipe_fd`
 int atalk_sigpipe_readfd(void)
 ```
 
-Defined at lines 71 to 74.
+Defined at lines 85 to 88.
+
+Return the read end of the self-pipe for the poll set.
+
+Returns: the descriptor, or -1 before atalk_sigpipe_init
 
 Called by: [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi)
 
@@ -49,9 +59,13 @@ Uses file-scope variables: `sigpipe_fd`
 void atalk_sigpipe_notify(void)
 ```
 
-Defined at lines 77 to 83.
+Defined at lines 96 to 102.
 
-Called by: [afp_asp_die_handler](../../etc/afpd/afp_asp.c.md#afp_asp_die_handler), [afp_asp_reload](../../etc/afpd/afp_asp.c.md#afp_asp_reload), [afp_asp_timedown](../../etc/afpd/afp_asp.c.md#afp_asp_timedown), [afp_dsi_debug](../../etc/afpd/afp_dsi.c.md#afp_dsi_debug), [afp_dsi_die_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_die_handler), [afp_dsi_getmesg_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_getmesg_handler), [afp_dsi_reload](../../etc/afpd/afp_dsi.c.md#afp_dsi_reload), [afp_dsi_timedown_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_timedown_handler), [afp_dsi_transfer_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_transfer_handler), [alarm_handler](../../etc/afpd/afp_dsi.c.md#alarm_handler)
+Wake the poll loop from a signal handler with 1 byte on the self-pipe.
+
+The call uses only write and restores errno, so a signal handler can call it. A full pipe drops the byte, since a wake-up is pending already.
+
+Called by: [afp_asp_die_handler](../../etc/afpd/afp_asp.c.md#afp_asp_die_handler), [afp_asp_getmesg](../../etc/afpd/afp_asp.c.md#afp_asp_getmesg), [afp_asp_reload](../../etc/afpd/afp_asp.c.md#afp_asp_reload), [afp_asp_timedown](../../etc/afpd/afp_asp.c.md#afp_asp_timedown), [afp_dsi_debug](../../etc/afpd/afp_dsi.c.md#afp_dsi_debug), [afp_dsi_die_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_die_handler), [afp_dsi_getmesg_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_getmesg_handler), [afp_dsi_reload](../../etc/afpd/afp_dsi.c.md#afp_dsi_reload), [afp_dsi_timedown_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_timedown_handler), [afp_dsi_transfer_handler](../../etc/afpd/afp_dsi.c.md#afp_dsi_transfer_handler), [alarm_handler](../../etc/afpd/afp_dsi.c.md#alarm_handler)
 
 Uses file-scope variables: `sigpipe_fd`
 
@@ -61,7 +75,9 @@ Uses file-scope variables: `sigpipe_fd`
 void atalk_sigpipe_drain(void)
 ```
 
-Defined at lines 85 to 92.
+Defined at lines 107 to 114.
+
+Read every pending byte from the self-pipe.
 
 Called by: [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi)
 

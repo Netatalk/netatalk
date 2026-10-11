@@ -3,7 +3,7 @@
 * [crc16.c](crc16.c.md) - 1 function, includes 1 project header.
 * [crc16.h](crc16.h.md) - No functions or types.
 * [ftw.c](ftw.c.md) - 12 functions, 4 types, includes 3 project headers.
-* [ftw.h](ftw.h.md) - 1 function, 1 type.
+* [ftw.h](ftw.h.md) - 1 type.
 * [hqx.c](hqx.c.md) - 17 functions, 1 type, includes 7 project headers.
 * [hqx.h](hqx.h.md) - No functions or types.
 * [macbin.c](macbin.c.md) - 18 functions, 1 type, includes 7 project headers.

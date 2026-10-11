@@ -5,7 +5,7 @@ description: "6 functions, includes 11 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ad_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,11 +35,13 @@ void ad_store_to_cache(struct adouble *adp, struct dir *cached)
 
 Defined at lines 56 to 87.
 
-Store AD metadata results into struct dir cache fields.
+Store the AppleDouble metadata of an object in its dircache entry.
 
-Called after every [ad_metadata()](../../libatalk/adouble/ad_open.c.md#ad_metadata) disk read when a cached entry is available. Pre-computes the served FILPBIT_MDATE value as max(ad_mdate, dcache_mtime).
+Every ad_metadata disk read with a dircache entry at hand ends here. The entry keeps the Finder info, the dates, the AFP file info, and the resource fork length. The stored modification date is the later of the AppleDouble date and the stat mtime, as FILPBIT_MDATE serves it. An entry that the AppleDouble version lacks stays zero, a valid default.
 
-[ad_entry()](../../include/atalk/adouble.h.md#struct-ad_entry) returns NULL if the entry doesn't exist in this AD version. This is fine — zero-initialized cache fields are valid defaults: zero FinderInfo = no custom attributes zero FileDatesI = overridden by stat mtime fallback zero AFPFileI = no attributes
+Parameters:
+* `adp`: AppleDouble with its metadata loaded
+* `cached`: dircache entry of the object
 
 Called by: [ad_getcomment](desktop.c.md#ad_getcomment), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [adl_lkup](catsearch.c.md#adl_lkup), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_listextattr](extattrs.c.md#afp_listextattr), [dir_modify](directory.c.md#dir_modify), [getfilparams](file.c.md#getfilparams), [getmetadata](file.c.md#getmetadata), [moveandrename](filedir.c.md#moveandrename)
 
@@ -49,13 +51,15 @@ Called by: [ad_getcomment](desktop.c.md#ad_getcomment), [ad_metadata_cached](ad_
 void ad_rebuild_from_cache(struct adouble *adp, const struct dir *cached)
 ```
 
-Defined at lines 99 to 131.
+Defined at lines 100 to 132.
 
-Populate struct adouble from struct dir cache fields.
+Fill an AppleDouble from the metadata cached in a dircache entry.
 
-Sets up the entry directory in adp so that [ad_getattr()](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate()](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_entry()](../../include/atalk/adouble.h.md#struct-ad_entry) all work normally — downstream code is completely unchanged.
+The cached Finder info, dates, and AFP file info land at the entry offsets of adp. The ad_getattr, ad_getdate, and [ad_entry](../../include/atalk/adouble.h.md#struct-ad_entry) calls then work as after a disk read. The ad_init call sets up those offsets, so the caller runs it first.
 
-Precondition: [ad_init()](../../libatalk/adouble/ad_open.c.md#ad_init) must have been called on adp to set up ad_eid[] offsets and valid_data_len via [ad_init_offsets()](../../libatalk/adouble/ad_open.c.md#ad_init_offsets). As of E-006, [ad_init()](../../libatalk/adouble/ad_open.c.md#ad_init) now calls [ad_init_offsets()](../../libatalk/adouble/ad_open.c.md#ad_init_offsets) internally.
+Parameters:
+* `adp`: AppleDouble initialized with ad_init
+* `cached`: dircache entry with cached metadata
 
 Called by: [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached)
 
@@ -65,13 +69,22 @@ Called by: [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached)
 int ad_metadata_cached(const char *name, int flags, struct adouble *adp, const struct vol *vol, struct dir *dir, bool strict, struct stat *recent_st)
 ```
 
-Defined at lines 143 to 276.
+Defined at lines 154 to 287.
 
-Unified AD metadata access with integrated cache management.
+Read the AppleDouble metadata of an object through the dircache.
 
-Read-only metadata accessor with internal [ad_close()](../../libatalk/adouble/ad_flush.c.md#ad_close). Callers needing a writable fd (e.g., for ad_setid/ad_flush) must call [ad_open()](../../libatalk/adouble/ad_open.c.md#ad_open) separately.
+The call closes the metadata before it returns, so callers that write open it separately. Without strict the cache serves first, as enumeration and FPGetFileDirParms need. With strict the ctime and inode must match before the cache serves, as rename and delete need. A mismatch refreshes the entry through dir_modify and reads from disk. A cached absence of metadata answers ENOENT without a disk read.
 
-strict=false: cache-first (enumerate, FPGetFileDirParms). strict=true: validate ctime/inode before serving (moveandrename, deletecurdir). recent_st: optional stat to avoid duplicate [ostat()](../../libatalk/util/unix.c.md#ostat) in strict path.
+Parameters:
+* `name`: file or directory
+* `flags`: ADFLAGS_DIR and ADFLAGS_CHECK_OF, as for ad_metadata
+* `adp`: initialized AppleDouble receiving the metadata
+* `vol`: volume of the object
+* `dir`: dircache entry of the object, or NULL
+* `strict`: true to test ctime and inode before a cache hit
+* `recent_st`: fresh stat of the object, or NULL
+
+Returns: 0, or -1 with errno set, ENOENT when the object has no metadata
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata), [ad_rebuild_from_cache](ad_cache.c.md#ad_rebuild_from_cache), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [ad_rlen_meta_absent](../../include/atalk/directory.h.md#ad_rlen_meta_absent), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [dir_modify](directory.c.md#dir_modify), [ostat](../../libatalk/util/unix.c.md#ostat), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
 
@@ -85,11 +98,14 @@ Uses file-scope variables: `ad_cache_hits`, `ad_cache_misses`, `ad_cache_no_ad`,
 void rfork_cache_free(struct dir *entry)
 ```
 
-Defined at lines 297 to 352.
+Defined at lines 307 to 362.
 
-Free a single entry's rfork buffer, remove from rfork LRU, update counter.
+Free the cached resource fork data of a dircache entry.
 
-Uses dcache_rlen for the buffer size. INVARIANT: dcache_rlen >= 0 when dcache_rfork_buf != NULL. Uses production-safe fallback: if dcache_rlen < 0 (invariant violation), logs error, frees buffer, but does NOT touch budget counter (unknown size). Handles rfork_lru_node == NULL gracefully (orphaned buffer from enqueue failure — budget is still decremented correctly). Decrements rfork_lru_count when removing from LRU. Does NOT reset dcache_rlen — the AD metadata remains valid.
+The buffer leaves the resource fork LRU list, and its size, dcache_rlen, comes off the budget counter. A negative dcache_rlen with a buffer breaks the invariant, so the call logs an error and frees the buffer without touching the counter. A buffer without an LRU node still frees correctly. The AppleDouble metadata of the entry stays valid.
+
+Parameters:
+* `entry`: dircache entry with a cached resource fork
 
 Called by: [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [dir_free](directory.c.md#dir_free), [dir_modify](directory.c.md#dir_modify), [read_fork](fork.c.md#read_fork), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_store_from_fd](ad_cache.c.md#rfork_cache_store_from_fd)
 
@@ -101,11 +117,14 @@ Uses file-scope variables: `rfork_cache_used` in [etc/afpd/dircache.c](dircache.
 void rfork_cache_evict_to_budget(size_t needed)
 ```
 
-Defined at lines 362 to 376.
+Defined at lines 374 to 388.
 
-Evict rfork buffers from rfork LRU head (oldest/LRU) until under budget.
+Free cached resource forks from the oldest end of the LRU list until needed bytes fit.
 
-Queue convention: sentinel->next = head = LRU (oldest), sentinel->prev = tail = MRU (newest). Called by [rfork_cache_store_from_fd()](ad_cache.c.md#rfork_cache_store_from_fd) when budget would be exceeded. O(k) where k = entries evicted.
+The head of the list holds the oldest buffer and the tail the newest. The rfork_cache_store_from_fd call runs it before it caches a new fork, and the cost grows with the number of evicted buffers only.
+
+Parameters:
+* `needed`: bytes about to join the cache
 
 Calls: [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
 
@@ -119,21 +138,24 @@ Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircach
 int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
 ```
 
-Defined at lines 391 to 489.
+Defined at lines 406 to 504.
 
-Store resource fork data by reading directly from the ad fd.
+Cache the entire resource fork of a file by reading it from the open fork.
 
-Allocates dcache_rlen bytes and does ad_read(adp, eid, 0, buf, dcache_rlen). [ad_read()](../../libatalk/adouble/ad_read.c.md#ad_read) handles all storage formats (EA, macOS xattr, AD v2 sidecar). Guards: returns -1 if !ad_rsrc_open(adp) (fd not open), dcache_rlen <= 0, or rlen > rfork_max_entry_size. Validates that ad_read returns exactly dcache_rlen bytes — if not, the fork size changed since Tier 1 metadata was cached: invalidates ALL cached AD metadata (Tier 1) and returns -1 (self-healing).
+The ad_read call covers every storage format, so the call reads dcache_rlen bytes through it. It refuses a closed resource fork, an empty or unknown length, and a fork above rfork_max_entry_size. It also refuses while the cache holds over 2 times its budget. Older buffers leave first when the budget lacks room. A short read means the fork changed since its metadata entered the cache, so the call invalidates the cached metadata as well.
 
-Returns: 0 on success, -1 if not cacheable, short read, or ad_read failed.
+Parameters:
+* `entry`: dircache entry of the file
+* `adp`: AppleDouble with the resource fork open
+* `eid`: ADEID_RFORK
+
+Returns: 0, or -1 when the fork is not cacheable or the read fell short
 
 Calls: [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [enqueue](../../libatalk/util/queue.c.md#enqueue), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
 
 Called by: [read_fork](fork.c.md#read_fork)
 
 Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircache.c.md), `rfork_cache_used` in [etc/afpd/dircache.c](dircache.c.md), `rfork_lru` in [etc/afpd/dircache.c](dircache.c.md), `rfork_lru_count` in [etc/afpd/dircache.c](dircache.c.md), `rfork_max_entry_size` in [etc/afpd/dircache.c](dircache.c.md), `rfork_stat_used_max` in [etc/afpd/dircache.c](dircache.c.md)
-
-Mentioned in the documentation of: [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget)
 
 # File-scope variables
 

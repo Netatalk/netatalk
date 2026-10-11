@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/queue.c"
-description: "9 functions, includes 1 project header."
+description: "Netatalk utility functions: queue."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/queue.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,14 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static qnode_t * alloc_init_node(void *data)
 ```
 
-Defined at lines 28 to 38.
+Defined at lines 34 to 44.
+
+Allocate a queue node that holds an element, with its links unset.
+
+Parameters:
+* `data`: element of the node
+
+Returns: the node, or NULL when malloc fails
 
 Called by: [enqueue](queue.c.md#enqueue), [prequeue](queue.c.md#prequeue), [queue_init](queue.c.md#queue_init)
 
@@ -33,7 +40,11 @@ Called by: [enqueue](queue.c.md#enqueue), [prequeue](queue.c.md#prequeue), [queu
 q_t * queue_init(void)
 ```
 
-Defined at lines 44 to 54.
+Defined at lines 55 to 65.
+
+Create an empty queue, a sentinel node that links to itself.
+
+Returns: the queue, or NULL when malloc fails
 
 Calls: [alloc_init_node](queue.c.md#alloc_init_node)
 
@@ -45,9 +56,15 @@ Called by: [arc_init](../../etc/afpd/dircache.c.md#arc_init), [dircache_init](..
 qnode_t * enqueue(q_t *q, void *data)
 ```
 
-Defined at lines 57 to 71.
+Defined at lines 74 to 88.
 
-Insert at tail
+Append an element at the tail of a queue.
+
+Parameters:
+* `q`: queue
+* `data`: element
+
+Returns: the new node, or NULL when malloc fails
 
 Calls: [alloc_init_node](queue.c.md#alloc_init_node)
 
@@ -59,7 +76,7 @@ Called by: [arc_case_iv_insert](../../etc/afpd/dircache.c.md#arc_case_iv_insert)
 qnode_t * queue_move_to_tail_of(q_t *from_q, q_t *to_q, qnode_t *node)
 ```
 
-Defined at lines 86 to 106.
+Defined at lines 103 to 123.
 
 Move node from one queue to another without memory reallocation.
 
@@ -82,7 +99,7 @@ Mentioned in the documentation of: [arc_case_ii_adapt_and_replace](../../etc/afp
 qnode_t * queue_move_to_tail(q_t *q, qnode_t *node)
 ```
 
-Defined at lines 123 to 143.
+Defined at lines 140 to 160.
 
 Move existing node to tail (MRU) without reallocation.
 
@@ -108,9 +125,15 @@ Called by: [arc_case_i](../../etc/afpd/dircache.c.md#arc_case_i), [dircache_prom
 qnode_t * prequeue(q_t *q, void *data)
 ```
 
-Defined at lines 146 to 160.
+Defined at lines 169 to 183.
 
-Insert at head
+Insert an element at the head of a queue.
+
+Parameters:
+* `q`: queue
+* `data`: element
+
+Returns: the new node, or NULL when malloc fails
 
 Calls: [alloc_init_node](queue.c.md#alloc_init_node)
 
@@ -120,9 +143,14 @@ Calls: [alloc_init_node](queue.c.md#alloc_init_node)
 void * queue_remove(qnode_t *node)
 ```
 
-Defined at lines 163 to 176.
+Defined at lines 191 to 204.
 
-Unlink a node from whichever queue holds it and free it
+Unlink a node from the queue that holds it and free the node.
+
+Parameters:
+* `node`: node, or NULL
+
+Returns: the element of the node, or NULL for a NULL node
 
 Called by: [arc_case_iv_make_room](../../etc/afpd/dircache.c.md#arc_case_iv_make_room), [arc_ensure_ghost_capacity](../../etc/afpd/dircache.c.md#arc_ensure_ghost_capacity), [dircache_remove](../../etc/afpd/dircache.c.md#dircache_remove)
 
@@ -132,11 +160,18 @@ Called by: [arc_case_iv_make_room](../../etc/afpd/dircache.c.md#arc_case_iv_make
 void * dequeue(q_t *q)
 ```
 
-Defined at lines 179 to 195.
+Defined at lines 214 to 230.
 
-Take from head
+Remove the element at the head of a queue.
 
-Called by: [arc_case_iv_make_room](../../etc/afpd/dircache.c.md#arc_case_iv_make_room), [dir_free_invalid_q](../../etc/afpd/directory.c.md#dir_free_invalid_q), [dircache_evict](../../etc/afpd/dircache.c.md#dircache_evict), [queue_destroy](queue.c.md#queue_destroy)
+A NULL element also returns NULL.
+
+Parameters:
+* `q`: queue, or NULL
+
+Returns: the element, or NULL for an empty or NULL queue
+
+Called by: [arc_case_iv_make_room](../../etc/afpd/dircache.c.md#arc_case_iv_make_room), [dir_free_invalid_q](../../etc/afpd/directory.c.md#dir_free_invalid_q), [dircache_evict](../../etc/afpd/dircache.c.md#dircache_evict), [iw_main](../../etc/afpd/idle_worker.c.md#iw_main), [queue_destroy](queue.c.md#queue_destroy)
 
 ### queue_destroy
 
@@ -144,7 +179,15 @@ Called by: [arc_case_iv_make_room](../../etc/afpd/dircache.c.md#arc_case_iv_make
 void queue_destroy(q_t *q, void(*callback)(void *))
 ```
 
-Defined at lines 197 to 209.
+Defined at lines 240 to 252.
+
+Free a queue and its nodes, passing each element to a callback.
+
+A NULL element ends the walk early, so the nodes after it leak.
+
+Parameters:
+* `q`: queue
+* `callback`: function that receives each element, or NULL
 
 Calls: [dequeue](queue.c.md#dequeue)
 

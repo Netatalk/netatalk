@@ -5,7 +5,7 @@ description: "1 function, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_sreq.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,15 +27,21 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_sreq(ATP, struct atp_block *, int, uint8_t)
 ```
 
-Defined at lines 56 to 148. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 69 to 161. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
-Send ATP transaction service request.
+Send an ATP request and set up the wait for its response.
+
+The request carries the next transaction ID of the endpoint and a bitmap for respcount response packets. In atpb, atp_saddr names the destination, and the request data has 4 to ATP_MAXDATA bytes. The atp_sreqto timeout in seconds and the atp_sreqtries count, or ATP_TRIES_INFINITE, set the retries, and atp_bitmap receives the bitmap.
+
+With a timeout, the endpoint keeps the request for atp_rsel to send again, with one try used up. Without one, the call sets up no wait for a response.
 
 Parameters:
-* `ah`: open atp handle
+* `ah`: ATP endpoint
 * `atpb`: parameter block
-* `respcount`: buffers available for response
-* `flags`: ATP_XO, ATP_TREL
+* `respcount`: response packets to expect, 0 to 8
+* `flags`: ATP_XO for an exactly once request, with an ATP_TREL release time code
+
+Returns: 0, or -1 with EINVAL for a bad parameter, or for a failed allocation or send
 
 Calls: [atp_alloc_buf](atp_bufs.c.md#atp_alloc_buf), [atp_build_req_packet](atp_packet.c.md#atp_build_req_packet), [atp_free_buf](atp_bufs.c.md#atp_free_buf), [atp_print_bufuse](atp_internals.h.md#atp_print_bufuse), [bprint](../util/bprint.c.md#bprint), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto)
 

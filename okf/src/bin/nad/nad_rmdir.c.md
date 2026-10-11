@@ -5,7 +5,7 @@ description: "5 functions, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_rmdir.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,9 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_rmdir(void)
 ```
 
-Defined at lines 40 to 55.
+Defined at lines 43 to 58.
+
+Print the usage of nad rmdir and exit with EXIT_FAILURE.
 
 Called by: [nad_rmdir](nad_rmdir.c.md#nad_rmdir)
 
@@ -39,11 +41,17 @@ Called by: [nad_rmdir](nad_rmdir.c.md#nad_rmdir)
 static int is_protected_dir(const char *path, const afpvol_t *vol)
 ```
 
-Defined at lines 62 to 94.
+Defined at lines 70 to 102.
 
-Check if path is the volume root or its parent.
+Tell whether a path is the volume root or a directory above it.
 
-Returns: 1 if path is a protected directory, 0 otherwise
+The call compares the resolved path with the volume path and logs a refusal. A path that does not resolve, or a missing volume, gives 0.
+
+Parameters:
+* `path`: directory path
+* `vol`: volume of the path
+
+Returns: 1 for a protected directory, or 0
 
 Called by: [do_rmdir](nad_rmdir.c.md#do_rmdir), [rmdir_with_cnid](nad_rmdir.c.md#rmdir_with_cnid)
 
@@ -53,7 +61,7 @@ Called by: [do_rmdir](nad_rmdir.c.md#do_rmdir), [rmdir_with_cnid](nad_rmdir.c.md
 static int rmdir_with_cnid(const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 104 to 155.
+Defined at lines 112 to 163.
 
 Remove a single empty directory with CNID and AppleDouble cleanup.
 
@@ -75,7 +83,7 @@ Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no t
 static int do_rmdir(const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 168 to 222.
+Defined at lines 176 to 230.
 
 Remove directory and optionally empty parent directories.
 
@@ -99,7 +107,18 @@ Uses file-scope variables: `pflag` in [bin/nad/nad.h](nad.h.md), `vflag` in [bin
 int nad_rmdir(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 224 to 275. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 245 to 296. Declared in [bin/nad/nad.h](nad.h.md).
+
+Run the nad rmdir command, which deletes empty directories with their CNIDs and metadata.
+
+The -p option also deletes the empty parents, and -v prints each deleted directory. The volume root and the directories above it stay. A signal stops the run.
+
+Parameters:
+* `argc`: argument count, from the rmdir command on
+* `argv`: argument vector, from the rmdir command on
+* `obj`: AFP configuration with the volumes
+
+Returns: 0, or 1 when a directory fails, while usage errors exit
 
 Calls: [closevol](nad_util.c.md#closevol), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [do_rmdir](nad_rmdir.c.md#do_rmdir), [openvol_optional](nad_util.c.md#openvol_optional), [set_signal](nad_util.c.md#set_signal), [usage_rmdir](nad_rmdir.c.md#usage_rmdir)
 

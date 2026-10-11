@@ -5,7 +5,7 @@ description: "5 functions, includes 5 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/auth.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,9 +27,17 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 int getuamnames(const int type, char *uamnames)
 ```
 
-Defined at lines 43 to 60.
+Defined at lines 52 to 69.
 
-Return a list of names for loaded uams
+Write the names of the UAMs of a type into a buffer, one per line.
+
+The names come in reverse order of registration, and a final line with `*` ends the list. The call appends to uamnames with strcat and has no bound, so the buffer has to hold every name.
+
+Parameters:
+* `type`: UAM_SERVER_LOGIN, UAM_SERVER_CHANGEPW, or UAM_SERVER_PRINTAUTH
+* `uamnames`: NUL-terminated buffer that receives the names
+
+Returns: 0, or -1 for an unknown type
 
 Called by: [gq_rbiuamlist](queries.c.md#gq_rbiuamlist)
 
@@ -39,9 +47,11 @@ Called by: [gq_rbiuamlist](queries.c.md#gq_rbiuamlist)
 struct uam_obj * auth_uamfind(const int type, const char *name, const int len)
 ```
 
-Defined at lines 65 to 82.
+Defined at lines 77 to 94.
 
-just do a linked list search. this could be sped up with a hashed list, but i doubt anyone's going to have enough uams to matter.
+Find a registered UAM by name.
+
+In papd each UAM type, UAM_SERVER_PRINTAUTH included, has a separate list.
 
 Calls: [strndiacasecmp](../../libatalk/util/strdicasecmp.c.md#strndiacasecmp)
 
@@ -53,7 +63,11 @@ Called by: [cq_rbilogin](queries.c.md#cq_rbilogin), [uam_register](uam.c.md#uam_
 int auth_register(const int type, struct uam_obj *uam)
 ```
 
-Defined at lines 84 to 98.
+Defined at lines 101 to 115.
+
+Add a UAM to the list of its type.
+
+In papd UAM_SERVER_PRINTAUTH has a list as well.
 
 Called by: [uam_register](uam.c.md#uam_register)
 
@@ -63,9 +77,17 @@ Called by: [uam_register](uam.c.md#uam_register)
 int auth_load(const char *path, const char *list)
 ```
 
-Defined at lines 101 to 137.
+Defined at lines 131 to 167.
 
-load all of the modules
+Load the UAM modules that the am option of papd.conf names.
+
+Each name in list, separated by commas, loads from the UAM directory. The call skips a missing module without a log line. A module that fails to open, is no server module, or fails its setup gets a log line from uam_load.
+
+Parameters:
+* `path`: UAM directory
+* `list`: comma-separated module names, or NULL when no printer sets am
+
+Returns: 0, or -1 for a NULL path or list, a path that is too long, or a list without names
 
 Calls: [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [uam_load](uam.c.md#uam_load)
 
@@ -77,7 +99,7 @@ Called by: [main](main.c.md#main)
 void auth_unload(void)
 ```
 
-Defined at lines 140 to 150.
+Defined at lines 170 to 180.
 
 get rid of all of the uams
 

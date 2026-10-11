@@ -5,7 +5,7 @@ description: "1 type, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/server_ipc.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -46,4 +46,13 @@ Defined at line 33.
 
 # Macros
 
-* Undocumented: `CACHE_HINT_COUNT`, `CACHE_HINT_DELETE`, `CACHE_HINT_DELETE_CHILDREN`, `CACHE_HINT_REFRESH`, `CACHE_HINT_VOLUME_RESET`, `HINT_BUF_SIZE`, `HINT_FLUSH_INTERVAL_MS`, `IPC_CACHE_HINT`, `IPC_DISCOLDSESSION`, `IPC_GETSESSION`, `IPC_HEADERLEN`, `IPC_LOGINDONE`, `IPC_MAXMSGSIZE`, `IPC_SESSIONTOKEN`, `IPC_STATE`, `IPC_VOLUMES`
+* `CACHE_HINT_COUNT`: number of CACHE_HINT_* event types
+* `CACHE_HINT_DELETE`: direct [dir_remove()](../../etc/afpd/directory.c.md#dir_remove) by CNID
+* `CACHE_HINT_DELETE_CHILDREN`: [dircache_remove_children()](../../etc/afpd/dircache.c.md#dircache_remove_children) + remove/refresh parent
+* `CACHE_HINT_REFRESH`: ostat + dir_modify(DCMOD_STAT)
+* `CACHE_HINT_VOLUME_RESET`: volume CNID table reset; cnid carries [cnid_volume_tag()](../../etc/afpd/volume.c.md#cnid_volume_tag)
+* `IPC_CACHE_HINT`: Cross-process dircache invalidation hint.
+* `IPC_SESSIONTOKEN`: pass opaque reconnect token
+* `IPC_STATE`: pass AFP session state
+* `IPC_VOLUMES`: pass list of open volumes
+* Undocumented: `HINT_BUF_SIZE`, `HINT_FLUSH_INTERVAL_MS`, `IPC_DISCOLDSESSION`, `IPC_GETSESSION`, `IPC_HEADERLEN`, `IPC_LOGINDONE`, `IPC_MAXMSGSIZE`

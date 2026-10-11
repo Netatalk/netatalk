@@ -5,7 +5,7 @@ description: "8 functions, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_write.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,9 +25,17 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 size_t dsi_writeinit(DSI *, char **)
 ```
 
-Defined at lines 53 to 86. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 61 to 94. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-Begin a [DSI](../../include/atalk/dsi.h.md#struct-dsi) write transfer: set datasize and hand back, by reference, any payload already in the read-ahead buffer. *bufp is valid only until the next dsi_* call; consume it immediately. A NULL bufp discards the buffered payload, for callers that only drain the transfer.
+Begin a DSIWrite transfer and hand back any payload the read-ahead buffer already holds.
+
+datasize becomes the payload length from the request header, and the bytes already buffered leave it again. The buffer reference stays valid only until the next dsi call, so the caller consumes it at once. A NULL bufp discards the buffered payload, for callers that only drain the transfer.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session with the DSIWrite request header parsed
+* `bufp`: receives a pointer to the buffered payload, or NULL
+
+Returns: buffered payload bytes, 0 when none, or when the header length falls below the data offset
 
 Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [write_fork](../../etc/afpd/fork.c.md#write_fork)
 
@@ -37,9 +45,18 @@ Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_over_dsi
 size_t dsi_write(DSI *, void *, const size_t)
 ```
 
-Defined at lines 92 to 107. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 108 to 123. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-fill up buf and then return. this should be called repeatedly until all the data has been read. i block alarm processing during the transfer to avoid sending unnecessary tickles.
+Receive the next part of a DSIWrite payload into buf.
+
+Each call reads min(buflen, datasize) bytes. Callers repeat it until datasize reaches 0.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session after dsi_writeinit
+* `buf`: receives the bytes
+* `buflen`: capacity of buf
+
+Returns: bytes received, or 0 when nothing remains or the read failed
 
 Calls: [dsi_stream_read](dsi_stream.c.md#dsi_stream_read)
 
@@ -53,9 +70,14 @@ Mentioned in the documentation of: [ad_recvfile](../adouble/ad_recvfile.c.md#ad_
 void dsi_writeflush(DSI *)
 ```
 
-Defined at lines 110 to 124. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 133 to 147. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-flush any unread buffers.
+Drain the unread remainder of a DSIWrite payload.
+
+The call reads the bytes into the reply buffer and drops them. A handler that rejected the write thus leaves the stream at the next request boundary.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session with a DSIWrite in progress
 
 Calls: [dsi_stream_read](dsi_stream.c.md#dsi_stream_read)
 
@@ -69,9 +91,12 @@ Mentioned in the documentation of: [dsi_write_file](dsi_write.c.md#dsi_write_fil
 void dsi_close_pipe(DSI *)
 ```
 
-Defined at lines 127 to 134. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 154 to 161. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
-Close the session's recvfile pipe; the next write opens another.
+Close the recvfile pipe of the session, the next write opens another.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
 
 Called by: [afp_zzzzz](../../etc/afpd/auth.c.md#afp_zzzzz), [dsi_disconnect](dsi_stream.c.md#dsi_disconnect), [dsi_write_file](dsi_write.c.md#dsi_write_file), [open_pipe](dsi_write.c.md#open_pipe)
 
@@ -81,11 +106,17 @@ Called by: [afp_zzzzz](../../etc/afpd/auth.c.md#afp_zzzzz), [dsi_disconnect](dsi
 static int waitfordata(int socket, int timeout)
 ```
 
-Defined at lines 142 to 158.
+Defined at lines 176 to 192.
 
-Wait up to timeout ms for socket data.
+Wait up to timeout milliseconds for socket data and report a TCP urgent mark.
 
-Returns: 1 at a TCP urgent mark, 0 when not, -1 with errno set
+The splice call stops at the urgent mark even before the urgent byte arrives, and POLLPRI waits for that byte. The recv call steps over the mark.
+
+Parameters:
+* `socket`: session socket
+* `timeout`: poll timeout in milliseconds, -1 to wait without limit
+
+Returns: 1 at a TCP urgent mark, 0 otherwise, or -1 with errno set when poll failed
 
 Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 
@@ -95,9 +126,14 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 static int open_pipe(DSI *dsi)
 ```
 
-Defined at lines 166 to 225.
+Defined at lines 207 to 266.
 
-Open the session's recvfile pipe, grown to the largest size up to dsi->splice_size the kernel grants, which the session keeps.
+Open the recvfile pipe of the session at the largest size the kernel grants.
+
+The goal is splice_size, and the session keeps the pipe across writes. When the kernel refuses that size, the request halves until it succeeds or reaches the current size, and splice_size shrinks to the result. A pipe that stays at 2 pages or less marks a spent pipe budget. Such a pipe is slower than recv, so the call closes it. Each warning logs once per process.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
 
 Returns: 0, or -1 when this write takes the userspace path
 
@@ -111,11 +147,19 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 static ssize_t pipe_to_file(DSI *dsi, int tofd, loff_t *offset, size_t len)
 ```
 
-Defined at lines 233 to 255.
+Defined at lines 281 to 303.
 
-splice() from the pipe into a file through dsi->data, for a file whose filesystem cannot splice
+Move bytes from the recvfile pipe into a file through the reply buffer.
 
-Same contract as splice() with an output offset.
+It serves files on filesystems that cannot splice. One read takes up to len bytes, limited by the reply buffer, and the loop writes them all with pwrite. The contract matches splice with an output offset.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session whose pipe and reply buffer to use
+* `tofd`: destination file
+* `offset`: file offset, advanced by the bytes written
+* `len`: limit for the bytes to move
+
+Returns: bytes moved, 0 at end of input, or -1 with errno set
 
 Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 
@@ -125,7 +169,7 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 ssize_t dsi_write_file(DSI *, int tofd, off_t *offset, bool *nosplice)
 ```
 
-Defined at lines 273 to 381. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 321 to 429. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Receive the rest of a DSIWrite payload straight into a file.
 

@@ -5,7 +5,7 @@ description: "9 functions, includes 9 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/uam.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,18 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 struct uam_mod * uam_load(AFPObj *obj, const char *path, const char *name)
 ```
 
-Defined at lines 45 to 97.
+Defined at lines 55 to 107.
+
+Load a UAM module and run its setup function.
+
+The module must export a server module structure named after the file name without its extension, and that structure must carry a uam_setup function.
+
+Parameters:
+* `obj`: server object passed to uam_setup
+* `path`: path of the module file
+* `name`: file name of the module
+
+Returns: the loaded module, or NULL when loading or setup fails
 
 Calls: [mod_close](../../include/atalk/util.h.md#mod_close), [mod_open](../../include/atalk/util.h.md#mod_open), [mod_symbol](../../include/atalk/util.h.md#mod_symbol), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
@@ -45,7 +56,14 @@ Calls through [`uam_export::uam_setup`](../../include/atalk/uam.h.md#struct-uam_
 void uam_unload(struct uam_mod *mod)
 ```
 
-Defined at lines 102 to 110.
+Defined at lines 116 to 124.
+
+Run the cleanup function of a UAM module, close it, and free its entry.
+
+A module without a cleanup function still closes, but it may leak.
+
+Parameters:
+* `mod`: loaded module
 
 Calls: [mod_close](../../include/atalk/util.h.md#mod_close)
 
@@ -59,7 +77,19 @@ Calls through [`uam_export::uam_cleanup`](../../include/atalk/uam.h.md#struct-ua
 int uam_register(const int type, const char *path, const char *name,...)
 ```
 
-Defined at lines 114 to 192.
+Defined at lines 142 to 220.
+
+Register a UAM of a module under a name and type.
+
+The variadic arguments carry the handlers of the type: login, logincont, and logout for UAM_SERVER_LOGIN, plus login_ext for UAM_SERVER_LOGIN_EXT, or the change function for UAM_SERVER_CHANGEPW. A second registration from the same module only raises its count.
+
+Parameters:
+* `type`: UAM type
+* `path`: path of the module that registers
+* `name`: UAM name, kept by pointer
+* `...`: handlers of the type
+
+Returns: 0, -1 when another module holds the name or an allocation fails, or 1 for an unknown type
 
 Calls: [auth_register](auth.c.md#auth_register), [auth_uamfind](auth.c.md#auth_uamfind)
 
@@ -71,7 +101,13 @@ Called by: [uam_setup](../uams/uams_dhx2_pam.c.md#uam_setup), [uam_setup](../uam
 void uam_unregister(const int type, const char *name)
 ```
 
-Defined at lines 194 to 211.
+Defined at lines 228 to 245.
+
+Drop a registration of a UAM and free the UAM after its last one.
+
+Parameters:
+* `type`: UAM type
+* `name`: UAM name
 
 Calls: [auth_uamfind](auth.c.md#auth_uamfind)
 
@@ -83,14 +119,18 @@ Called by: [uam_cleanup](../uams/uams_dhx2_pam.c.md#uam_cleanup), [uam_cleanup](
 struct passwd * uam_getname(void *private, char *name, const int len)
 ```
 
-Defined at lines 219 to 314.
+Defined at lines 261 to 356.
 
-helper functions for plugin uams
+Find the password entry of a login name for a UAM.
+
+The call tries getpwnam first, then the name with the AD domain or the NT domain prefix. A last pass compares the name, without case, against the login name and the first gecos field of every account. A match writes the login name back into name.
 
 Parameters:
-* `private`: pointer to [AFPObj](../../include/atalk/globals.h.md#struct-afpobj)
-* `name`: user name
-* `len`: size of name buffer.
+* `private`: session object
+* `name`: login name from the client, receives the account name of a match
+* `len`: size of the name buffer
+
+Returns: the password entry, or NULL without a match
 
 Calls: [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [strncasecmp_w](../../libatalk/unicode/util_unistr.c.md#strncasecmp_w)
 
@@ -102,7 +142,17 @@ Called by: [afp_changepw](auth.c.md#afp_changepw), [gss_logincont](../uams/uams_
 int uam_checkuser(void *private, const struct passwd *pwd)
 ```
 
-Defined at lines 316 to 348.
+Defined at lines 367 to 399.
+
+Check that a user may log in through a UAM.
+
+With OPTION_VALID_SHELLCHECK the user needs a shell that /etc/shells lists.
+
+Parameters:
+* `private`: session object, or NULL
+* `pwd`: password entry of the user
+
+Returns: 0, or -1 for a NULL entry or a shell that is missing or not listed
 
 Called by: [gss_logincont](../uams/uams_gss.c.md#gss_logincont), [login](../uams/uams_pam.c.md#login), [pam_printer](../uams/uams_pam.c.md#pam_printer), [passwd_printer](../uams/uams_passwd.c.md#passwd_printer), [pwd_login](../uams/uams_dhx_passwd.c.md#pwd_login), [pwd_login](../uams/uams_passwd.c.md#pwd_login), [rand_login](../uams/uams_randnum.c.md#rand_login), [randnum_changepw](../uams/uams_randnum.c.md#randnum_changepw), [srp_login](../uams/uams_srp.c.md#srp_login), [srp_login_ext](../uams/uams_srp.c.md#srp_login_ext)
 
@@ -112,7 +162,7 @@ Called by: [gss_logincont](../uams/uams_gss.c.md#gss_logincont), [login](../uams
 int uam_random_string(AFPObj *obj, char *buf, int len)
 ```
 
-Defined at lines 362 to 399.
+Defined at lines 413 to 450.
 
 Fill a buffer with cryptographically secure random bytes.
 
@@ -133,7 +183,27 @@ Called by: [create_session_key](auth.c.md#create_session_key), [create_session_t
 int uam_afpserver_option(void *private, const int what, void *option, size_t *len)
 ```
 
-Defined at lines 402 to 591.
+Defined at lines 476 to 665.
+
+Answer a UAM request for a server or session value.
+
+The what code selects the value:
+
+* UAM_OPTION_USERNAME and UAM_OPTION_GUEST name the session user and the guest account.
+* UAM_OPTION_PASSWDOPT returns the password option that len selects.
+* UAM_OPTION_SIGNATURE, UAM_OPTION_HOSTNAME, UAM_OPTION_FQDN, and the Kerberos codes return server values.
+* UAM_OPTION_RANDNUM fills option with random bytes.
+* The other codes return the protocol, the client name, the cookie, the charsets, or the session information.
+
+String values come back as pointers in option, with their length in len when the caller passes one.
+
+Parameters:
+* `private`: session object
+* `what`: UAM_OPTION_* code
+* `option`: receives the value or a pointer to it
+* `len`: length on return, or the password option code for UAM_OPTION_PASSWDOPT
+
+Returns: 0, or in afpd -1 for an unknown code or a missing argument
 
 Calls: [getip_string](../../libatalk/util/socket.c.md#getip_string), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [uam_random_string](uam.c.md#uam_random_string)
 
@@ -145,6 +215,13 @@ Called by: [changepw_3](../uams/uams_dhx2_pam.c.md#changepw_3), [dhx_setup](../u
 UAM_MODULE_EXPORT void append(struct papfile *pf, const char *data, int len)
 ```
 
-Defined at lines 596 to 600.
+Defined at lines 678 to 682.
+
+Stub of the papd append call for the UAM modules that afpd loads, which ignores its arguments.
+
+Parameters:
+* `pf`: papfile buffer in papd, unused in afpd
+* `data`: bytes to append in papd, unused in afpd
+* `len`: number of bytes in papd, unused in afpd
 
 Called by: [noauth_printer](../uams/uams_guest.c.md#noauth_printer), [pam_printer](../uams/uams_pam.c.md#pam_printer), [passwd_printer](../uams/uams_passwd.c.md#passwd_printer)

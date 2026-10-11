@@ -12,7 +12,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 
 # Build
 
-* [Build record](build.md) - Netatalk commit 991544a6eee1 rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8.
+* [Build record](build.md) - Netatalk commit 9b5f7c886bc5 rendered by process:okf-from-doxygen/1 from Doxygen 1.9.8.
 
 # Subsystems
 
@@ -21,14 +21,14 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [bin/dbd](src/bin/dbd.md) - 3 files, 19 functions.
 * [bin/getzones](src/bin/getzones.md) - 1 file, 8 functions.
 * [bin/misc](src/bin/misc.md) - 4 files, 9 functions.
-* [bin/nad](src/bin/nad.md) - 24 files, 182 functions.
+* [bin/nad](src/bin/nad.md) - 24 files, 181 functions.
 * [bin/nbp](src/bin/nbp.md) - 5 files, 7 functions.
 * [bin/pap](src/bin/pap.md) - 2 files, 12 functions.
 * [bin/rtmpqry](src/bin/rtmpqry.md) - 1 file, 7 functions.
-* [etc/afpd](src/etc/afpd.md) - 65 files, 594 functions.
+* [etc/afpd](src/etc/afpd.md) - 65 files, 600 functions.
 * [etc/atalkd](src/etc/atalkd.md) - 18 files, 50 functions.
-* [etc/netatalk](src/etc/netatalk.md) - 7 files, 43 functions.
-* [etc/papd](src/etc/papd.md) - 22 files, 125 functions.
+* [etc/netatalk](src/etc/netatalk.md) - 7 files, 48 functions.
+* [etc/papd](src/etc/papd.md) - 22 files, 119 functions.
 * [etc/spotlight](src/etc/spotlight.md) - 10 files, 68 functions.
 * [etc/uams](src/etc/uams.md) - 10 files, 116 functions.
 * [include/atalk](src/include/atalk.md) - 46 files, 32 functions.
@@ -43,8 +43,8 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [libatalk/nbp](src/libatalk/nbp.md) - 5 files, 7 functions.
 * [libatalk/netddp](src/libatalk/netddp.md) - 1 file, 1 function.
 * [libatalk/unicode](src/libatalk/unicode.md) - 31 files, 108 functions.
-* [libatalk/util](src/libatalk/util.md) - 20 files, 190 functions.
-* [libatalk/vfs](src/libatalk/vfs.md) - 6 files, 114 functions.
+* [libatalk/util](src/libatalk/util.md) - 20 files, 191 functions.
+* [libatalk/vfs](src/libatalk/vfs.md) - 6 files, 115 functions.
 * [sys/netatalk](src/sys/netatalk.md) - 13 files, 35 functions.
 
 # Sources

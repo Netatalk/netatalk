@@ -12,4 +12,4 @@
 * [ddp_usrreq.c](ddp_usrreq.c.md) - 10 functions, includes 3 project headers.
 * [ddp_var.h](ddp_var.h.md) - 2 types.
 * [endian.h](endian.h.md) - No functions or types.
-* [phase2.h](phase2.h.md) - 1 type.
+* [phase2.h](phase2.h.md) - IEEE 802.2 Link Level Control headers, for use in conjunction with 802.

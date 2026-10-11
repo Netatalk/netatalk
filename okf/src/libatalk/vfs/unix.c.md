@@ -5,7 +5,7 @@ description: "12 functions, includes 10 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/unix.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,14 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 int dir_rx_set(mode_t mode)
 ```
 
-Defined at lines 30 to 33. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 35 to 38. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+
+Whether mode grants the owner read and search permission.
+
+Parameters:
+* `mode`: directory mode
+
+Returns: 1 when mode carries both S_IRUSR and S_IXUSR, 0 otherwise
 
 Called by: [RF_setdirmode_adouble](vfs.c.md#rf_setdirmode_adouble), [RF_setdirunixmode_adouble](vfs.c.md#rf_setdirunixmode_adouble), [setdeskmode](../../etc/afpd/desktop.c.md#setdeskmode), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setdirunixmode](../../etc/afpd/unix.c.md#setdirunixmode)
 
@@ -42,7 +49,19 @@ Called by: [RF_setdirmode_adouble](vfs.c.md#rf_setdirmode_adouble), [RF_setdirun
 int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 36 to 63. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 54 to 81. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+
+Set the permission bits of name and keep its other mode bits.
+
+The volume umask clears bits from the new mode, and st supplies the file type and special bits. The ochmod call skips a symlink unless the volume follows symlinks. The volume options decide whether it preserves ACLs or skips the change. EPERM counts as success.
+
+Parameters:
+* `vol`: volume holding the file
+* `name`: file to change
+* `mode`: new permission bits
+* `st`: stat whose non-permission bits to keep, or NULL to stat name
+
+Returns: 0, or -1 with errno set
 
 Calls: [ochmod](../util/unix.c.md#ochmod)
 
@@ -54,11 +73,17 @@ Called by: [adouble_setfilmode](vfs.c.md#adouble_setfilmode), [afp_moveandrename
 int netatalk_rmdir_all_errors(int dirfd, const char *name)
 ```
 
-Defined at lines 70 to 102. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 94 to 126. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-system rmdir with afp error code.
+Delete an empty directory and map the error to an AFP result code.
 
-Note: Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
+Unlike netatalk_rmdir, a missing directory fails with AFPERR_NOOBJ.
+
+Parameters:
+* `dirfd`: directory that name is relative to, or -1 for the working directory
+* `name`: directory to delete
+
+Returns: AFP_OK, AFPERR_NOOBJ, AFPERR_DIRNEMPT, AFPERR_ACCESS, AFPERR_VLOCK, or AFPERR_PARAM
 
 Called by: [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [netatalk_rmdir](unix.c.md#netatalk_rmdir)
 
@@ -68,11 +93,17 @@ Called by: [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [netatalk
 int netatalk_rmdir(int dirfd, const char *name)
 ```
 
-Defined at lines 109 to 118. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 140 to 149. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-System rmdir with afp error code, but ENOENT is not an error.
+Delete an empty directory and treat a missing one as success.
 
-Note: Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
+The errors map as in netatalk_rmdir_all_errors, except that AFPERR_NOOBJ becomes AFP_OK.
+
+Parameters:
+* `dirfd`: directory that name is relative to, or -1 for the working directory
+* `name`: directory to delete
+
+Returns: AFP_OK, AFPERR_DIRNEMPT, AFPERR_ACCESS, AFPERR_VLOCK, or AFPERR_PARAM
 
 Calls: [netatalk_rmdir_all_errors](unix.c.md#netatalk_rmdir_all_errors)
 
@@ -84,11 +115,16 @@ Called by: [RF_deletecurdir_adouble](vfs.c.md#rf_deletecurdir_adouble), [deleted
 int netatalk_unlink(const char *name)
 ```
 
-Defined at lines 124 to 144. Declared in [etc/afpd/directory.h](../../etc/afpd/directory.h.md).
+Defined at lines 160 to 180. Declared in [etc/afpd/directory.h](../../etc/afpd/directory.h.md).
 
-system unlink with afp error code.
+Delete a file and map the error to an AFP result code.
 
-Note: ENOENT is not an error.
+A missing file counts as success.
+
+Parameters:
+* `name`: file to delete, relative to the working directory
+
+Returns: AFP_OK, AFPERR_VLOCK on a read-only file system, AFPERR_ACCESS, or AFPERR_PARAM
 
 Called by: [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [deletecurdir_adouble_loop](vfs.c.md#deletecurdir_adouble_loop), [deletecurdir_ea_osx_loop](vfs.c.md#deletecurdir_ea_osx_loop), [replace_with_symlink](../../etc/afpd/file.c.md#replace_with_symlink)
 
@@ -98,9 +134,17 @@ Called by: [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [deletecur
 int copy_file_fd(int sfd, int dfd)
 ```
 
-Defined at lines 151 to 186. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 196 to 231. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-Copy all file data from one file fd to another
+Transfer all remaining data from one descriptor to another.
+
+The loop reads and writes in NETATALK_DIOSZ_STACK chunks and retries after EINTR.
+
+Parameters:
+* `sfd`: source descriptor, read from its current position
+* `dfd`: destination descriptor, written at its current position
+
+Returns: 0, or -1 when a read or write failed
 
 Called by: [copy_file](unix.c.md#copy_file)
 
@@ -110,9 +154,19 @@ Called by: [copy_file](unix.c.md#copy_file)
 int copy_file(int sfd, const char *src, const char *dst, mode_t mode)
 ```
 
-Defined at lines 191 to 240. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 247 to 296. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-Supports *at semantics, pass dirfd=-1 to ignore this
+Duplicate the data of file src into dst.
+
+The open creates dst or truncates an existing one. A missing source logs only at debug level, because callers probe AppleDouble sidecars that plain files lack and ignore ENOENT.
+
+Parameters:
+* `dirfd`: directory that src is relative to, or -1 for the working directory
+* `src`: source file
+* `dst`: destination file, relative to the working directory
+* `mode`: creation mode of dst
+
+Returns: 0, or -1 with errno set
 
 Calls: [copy_file_fd](unix.c.md#copy_file_fd)
 
@@ -124,11 +178,20 @@ Called by: [RF_copyfile_adouble](vfs.c.md#rf_copyfile_adouble), [RF_copyfile_ea]
 int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mode_t mode)
 ```
 
-Defined at lines 247 to 281. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 311 to 345. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-Copy an EA from one file to another.
+Transfer one EA from src to an existing dst.
 
-Note: Supports *at semantics, pass dirfd=-1 to ignore this
+A zero-length EA leaves dst unchanged.
+
+Parameters:
+* `ea`: EA name
+* `dirfd`: directory that src is relative to, or -1 for the working directory
+* `src`: source file
+* `dst`: destination file, relative to the working directory
+* `mode`: unused, because the open of dst does not create it
+
+Returns: 0, or -1 when an open, the EA read, or the EA write failed
 
 Calls: [sys_fgetxattr](extattr.c.md#sys_fgetxattr), [sys_fsetxattr](extattr.c.md#sys_fsetxattr)
 
@@ -138,9 +201,17 @@ Calls: [sys_fgetxattr](extattr.c.md#sys_fgetxattr), [sys_fsetxattr](extattr.c.md
 int netatalk_unlinkat(int dirfd, const char *name)
 ```
 
-Defined at lines 286 to 310. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 359 to 383. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-at wrapper for netatalk_unlink
+Delete a file relative to a directory descriptor and map the error to an AFP result code.
+
+A missing file counts as success.
+
+Parameters:
+* `dirfd`: directory that name is relative to, or -1 for the working directory
+* `name`: file to delete
+
+Returns: AFP_OK, AFPERR_VLOCK on a read-only file system, AFPERR_ACCESS, or AFPERR_PARAM
 
 Called by: [RF_deletefile_adouble](vfs.c.md#rf_deletefile_adouble), [RF_deletefile_ea](vfs.c.md#rf_deletefile_ea), [delete_vetoed_files_at](../../etc/afpd/filedir.c.md#delete_vetoed_files_at), [deletedir](../../etc/afpd/directory.c.md#deletedir), [deletefile](../../etc/afpd/file.c.md#deletefile), [ea_close](ea_ad.c.md#ea_close)
 
@@ -150,17 +221,17 @@ Called by: [RF_deletefile_adouble](vfs.c.md#rf_deletefile_adouble), [RF_deletefi
 int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 ```
 
-Defined at lines 322 to 337. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 396 to 411. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-This is equivalent of unix rename()
-
-unix_rename mulitplexes rename and renameat.
+Rename oldpath to newpath through renameat.
 
 Parameters:
-* `sfd`: -1 gives AT_FDCWD
-* `oldpath`: guess what
-* `dfd`: same as sfd
-* `newpath`: guess what
+* `sfd`: directory that oldpath is relative to, or -1 for the working directory
+* `oldpath`: current name
+* `dfd`: directory that newpath is relative to, or -1 for the working directory
+* `newpath`: new name
+
+Returns: 0, or -1 with errno set
 
 Called by: [RF_renamefile_adouble](vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](vfs.c.md#rf_renamefile_ea), [ea_renamefile](ea_ad.c.md#ea_renamefile), [renamedir](../../etc/afpd/directory.c.md#renamedir), [renamefile](../../etc/afpd/file.c.md#renamefile)
 
@@ -170,16 +241,16 @@ Called by: [RF_renamefile_adouble](vfs.c.md#rf_renamefile_adouble), [RF_renamefi
 int statat(int dirfd, const char *path, struct stat *st)
 ```
 
-Defined at lines 348 to 355. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 422 to 429. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-stat/fsstatat multiplexer
-
-statat mulitplexes stat and fstatat.
+Stat path relative to a directory descriptor, following symlinks.
 
 Parameters:
-* `dirfd`: -1 gives AT_FDCWD
-* `path`: pathname
-* `st`: pointer to struct stat
+* `dirfd`: directory that path is relative to, or -1 for the working directory
+* `path`: file or directory
+* `st`: receives the stat
+
+Returns: 0, or -1 with errno set
 
 Called by: [ea_close](ea_ad.c.md#ea_close)
 
@@ -189,14 +260,16 @@ Called by: [ea_close](ea_ad.c.md#ea_close)
 DIR * opendirat(int dirfd, const char *path)
 ```
 
-Defined at lines 365 to 391. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 443 to 469. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
-opendir wrapper for *at semantics support
+Open a directory stream relative to a directory descriptor.
 
-opendirat chdirs to dirfd if dirfd != -1 before calling opendir on path.
+With a dirfd other than -1 the call changes into that directory for the opendir and back afterwards. A failed return ends the process with EXITERR_SYS.
 
 Parameters:
-* `dirfd`: if != -1, chdir(dirfd) before opendir(path)
-* `path`: pathname
+* `dirfd`: directory that path is relative to, or -1 for the working directory
+* `path`: directory to open
+
+Returns: the directory stream, or NULL with errno set
 
 Called by: [copydir](../../etc/afpd/directory.c.md#copydir), [deletedir](../../etc/afpd/directory.c.md#deletedir)

@@ -5,7 +5,7 @@ description: "3 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/hash.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,20 +24,22 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct hash_t
 
+This is the hash table control structure.
+
 Defined at line 139.
-* `struct hnode_t ** hash_table`
-* `hashcount_t hash_nchains`
-* `hashcount_t hash_nodecount`
-* `hashcount_t hash_maxcount`
-* `hashcount_t hash_highmark`
-* `hashcount_t hash_lowmark`
-* `hash_comp_t hash_compare`
-* `hash_fun_t hash_function`
+* `struct hnode_t ** hash_table`: 1
+* `hashcount_t hash_nchains`: 2
+* `hashcount_t hash_nodecount`: 3
+* `hashcount_t hash_maxcount`: 4
+* `hashcount_t hash_highmark`: 5
+* `hashcount_t hash_lowmark`: 6
+* `hash_comp_t hash_compare`: 7
+* `hash_fun_t hash_function`: 8
 * `hnode_alloc_t hash_allocnode`
 * `hnode_free_t hash_freenode`
 * `void * hash_context`
-* `hash_val_t hash_mask`
-* `int hash_dynamic`
+* `hash_val_t hash_mask`: 9
+* `int hash_dynamic`: 10
 
 ### struct hnode_t
 
@@ -50,6 +52,8 @@ Defined at line 63.
 * `hash_val_t hash_hkey`
 
 ### struct hscan_t
+
+Hash scanner structure, used for traversals of the data structure.
 
 Defined at line 169.
 * `hash_t * hash_table`

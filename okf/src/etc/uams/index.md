@@ -9,4 +9,4 @@
 * [uams_pam.c](uams_pam.c.md) - 10 functions, includes 6 project headers.
 * [uams_passwd.c](uams_passwd.c.md) - 6 functions, includes 5 project headers.
 * [uams_randnum.c](uams_randnum.c.md) - 15 functions, includes 5 project headers.
-* [uams_srp.c](uams_srp.c.md) - 14 functions, includes 6 project headers.
+* [uams_srp.c](uams_srp.c.md) - SRP (Secure Remote Password) User Authentication Method for AFP.

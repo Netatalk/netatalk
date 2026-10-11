@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/aecho/aecho.c"
-description: "4 functions, includes 6 project headers."
+description: "AppleTalk Echo Protocol Client."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/aecho/aecho.c"
 tags: ["bin/aecho"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/aecho](../aecho.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,14 @@ Part of the [bin/aecho](../aecho.md) subsystem. Built from the commit recorded i
 static void done(int sig)
 ```
 
-Defined at lines 66 to 81.
+Defined at lines 74 to 89.
+
+Print the echo statistics and exit, on SIGINT or after the last reply.
+
+The statistics give the packets sent and received, the loss, and the minimum, average, and maximum round trip in milliseconds.
+
+Parameters:
+* `sig`: signal number, unused
 
 Called by: [aep_send](aecho.c.md#aep_send), [main](aecho.c.md#main)
 
@@ -40,7 +47,14 @@ Uses file-scope variables: `maxms`, `minms`, `nrecv`, `nsent`, `target`, `totalm
 static void aep_send(int sig)
 ```
 
-Defined at lines 83 to 114.
+Defined at lines 99 to 130.
+
+Send the next AEP request on each SIGALRM, with a sequence number and the send time.
+
+After the request count of -c, the call ends the run with done.
+
+Parameters:
+* `sig`: signal number, unused
 
 Calls: [done](aecho.c.md#done), [netddp_sendto](../../include/atalk/netddp.h.md#netddp_sendto)
 
@@ -54,7 +68,17 @@ Uses file-scope variables: `nsent`, `pings`, `sock`, `target`
 int main(int ac, char **av)
 ```
 
-Defined at lines 116 to 280.
+Defined at lines 144 to 308.
+
+Send AppleTalk echo requests to a node once a second and print the round trip of each reply.
+
+The target is a net.node address or an NBP name, with Workstation as the default type and `*` as the default zone. The -A option sets the source address, and -c stops after a count of requests.
+
+Parameters:
+* `ac`: argument count
+* `av`: argument vector
+
+Returns: does not return, and a failure exits with 1
 
 Calls: [aep_send](aecho.c.md#aep_send), [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [done](aecho.c.md#done), [nbp_lookup](../../libatalk/nbp/nbp_lkup.c.md#nbp_lookup), [nbp_name](../../libatalk/nbp/nbp_util.c.md#nbp_name), [netddp_open](../../libatalk/netddp/netddp_open.c.md#netddp_open), [netddp_recvfrom](../../include/atalk/netddp.h.md#netddp_recvfrom), [usage](aecho.c.md#usage)
 
@@ -63,10 +87,15 @@ Uses file-scope variables: `maxms`, `minms`, `nrecv`, `pings`, `sock`, `target`,
 ### usage
 
 ```c
-static void usage(char *)
+static void usage(char *av0)
 ```
 
-Defined at lines 282 to 287.
+Defined at lines 315 to 320.
+
+Print the usage of aecho and exit with 1.
+
+Parameters:
+* `av0`: program name
 
 Called by: [main](aecho.c.md#main)
 

@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_var.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,16 +33,16 @@ Defined at line 9.
 ### struct ddpstat
 
 Defined at line 19.
-* `uint32_t ddps_short`
-* `uint32_t ddps_long`
-* `uint32_t ddps_nosum`
-* `uint32_t ddps_badsum`
-* `uint32_t ddps_tooshort`
-* `uint32_t ddps_toosmall`
-* `uint32_t ddps_forward`
-* `uint32_t ddps_encap`
-* `uint32_t ddps_cantforward`
-* `uint32_t ddps_nosockspace`
+* `uint32_t ddps_short`: short header packets received
+* `uint32_t ddps_long`: long header packets received
+* `uint32_t ddps_nosum`: no checksum
+* `uint32_t ddps_badsum`: bad checksum
+* `uint32_t ddps_tooshort`: packet too short
+* `uint32_t ddps_toosmall`: not enough data
+* `uint32_t ddps_forward`: packets forwarded
+* `uint32_t ddps_encap`: packets encapsulated
+* `uint32_t ddps_cantforward`: packets rcvd for unreachable dest
+* `uint32_t ddps_nosockspace`: no space in sockbuf for packet
 
 # Macros
 

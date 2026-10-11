@@ -5,7 +5,7 @@ description: "1 function, includes 7 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/session.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,9 +29,19 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 int session(ATP atp, struct sockaddr_at *sat)
 ```
 
-Defined at lines 49 to 408.
+Defined at lines 62 to 421.
 
-Accept files until the client closes the connection. Read lines of a file, until the client sends eof, after which we'll send eof also.
+Serve one PAP connection: read the print or query jobs and send the replies.
+
+The call asks the client for data with PAP_READ requests and feeds each response to ps, the job loop. Replies go out while the client has a read pending, in up to quantum packets of PAP_MAXDATA bytes. A font list reply goes out a line per packet. Each silent minute brings a tickle, and the fourth cancels the job.
+
+PAP_CLOSE prints the job when its data ended, or cancels it otherwise, and answers with PAP_CLOSEREPLY.
+
+Parameters:
+* `atp`: ATP socket of the connection
+* `sat`: address of the client
+
+Returns: 0 after a close, or -1 after a timeout, a parse error, or a transport error
 
 Calls: [append](file.c.md#append), [atp_rreq](../../libatalk/atp/atp_rreq.c.md#atp_rreq), [atp_rresp](../../libatalk/atp/atp_rresp.c.md#atp_rresp), [atp_rsel](../../libatalk/atp/atp_rsel.c.md#atp_rsel), [atp_sreq](../../libatalk/atp/atp_sreq.c.md#atp_sreq), [atp_sresp](../../libatalk/atp/atp_sresp.c.md#atp_sresp), [lp_cancel](lp.c.md#lp_cancel), [lp_print](lp.c.md#lp_print), [markline](file.c.md#markline), [ps](magics.c.md#ps)
 

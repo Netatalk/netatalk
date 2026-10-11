@@ -5,7 +5,7 @@ description: "4 functions, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/getiface.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,9 +23,18 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static int addname(char **list, int *i, const char *name)
 ```
 
-Defined at lines 34 to 45.
+Defined at lines 43 to 54.
 
-we leave all of the ioctl's to the application
+Append an interface name to a NULL-terminated list.
+
+The list needs room for the name and the NULL after it.
+
+Parameters:
+* `list`: name list
+* `i`: number of names in list, incremented on success
+* `name`: interface name
+
+Returns: 0, or -1 when strdup fails
 
 Called by: [getifaces](getiface.c.md#getifaces)
 
@@ -35,7 +44,17 @@ Called by: [getifaces](getiface.c.md#getifaces)
 static int getifaces(const int sockfd, char ***list)
 ```
 
-Defined at lines 48 to 129.
+Defined at lines 68 to 149.
+
+Build a NULL-terminated list of the interface names of the system.
+
+The call reads the names from if_nameindex, or from SIOCGIFCONF on sockfd where if_nameindex is missing. A failed strdup ends the list early.
+
+Parameters:
+* `sockfd`: socket for SIOCGIFCONF, unused with if_nameindex
+* `list`: receives the list, and with a return of 0 it holds no names and needs only free
+
+Returns: the number of names, 0 without names or after a failure
 
 Calls: [addname](getiface.c.md#addname)
 
@@ -47,11 +66,13 @@ Called by: [getifacelist](getiface.c.md#getifacelist)
 char ** getifacelist(void)
 ```
 
-Defined at lines 136 to 153.
+Defined at lines 159 to 176.
 
-Get interfaces from the kernel.
+Return the names of the network interfaces of the system.
 
-Note: we keep an extra null entry to signify the end of the interface list.
+The list ends with a NULL entry, and freeifacelist releases it.
+
+Returns: the list, or NULL without a socket or without any names
 
 Calls: [getifaces](getiface.c.md#getifaces)
 
@@ -63,9 +84,12 @@ Called by: [getifconf](../../etc/atalkd/config.c.md#getifconf), [guess_interface
 void freeifacelist(char **ifacelist)
 ```
 
-Defined at lines 157 to 170.
+Defined at lines 184 to 197.
 
-go through and free the interface list
+Free a list from getifacelist and its names.
+
+Parameters:
+* `ifacelist`: list, or NULL
 
 Called by: [getifconf](../../etc/atalkd/config.c.md#getifconf), [guess_interface](../dsi/dsi_tcp.c.md#guess_interface)
 

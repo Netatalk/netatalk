@@ -5,7 +5,7 @@ description: "2 types, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad.h"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,16 +41,16 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 ### struct PATH_T
 
 Defined at line 89.
-* `char * p_end`
-* `char * target_end`
-* `char p_path`
+* `char * p_end`: pointer to NULL at end of path
+* `char * target_end`: pointer to end of target base
+* `char p_path`: pointer to the start of a path
 
 ### struct afpvol_t
 
 Defined at line 53.
 * `struct vol * vol`
 * `char db_stamp`
-* `bool owns_cdb`
+* `bool owns_cdb`: true if this wrapper opened v_cdb
 
 # Macros
 

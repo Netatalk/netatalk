@@ -5,7 +5,7 @@ description: "1 function, includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_rresp.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,13 +26,17 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_rresp(ATP, struct atp_block *)
 ```
 
-Defined at lines 51 to 108. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 61 to 118. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
-Receives ATP response packets.
+Wait for the complete response to the pending ATP request and hand out its packets.
+
+The data of each response packet, without its ATP header, goes into the response vector entry of its sequence number. In atpb, atp_saddr names the address to accept. The vector atp_rresiov holds 1 to 8 entries with their sizes and receives the data and the lengths, and atp_rresiovcnt receives the packet count.
 
 Parameters:
-* `ah`: open atp handle
+* `ah`: ATP endpoint
 * `atpb`: parameter block
+
+Returns: 0, the atp_rsel result other than ATP_TRESP, or -1 with EINVAL or EMSGSIZE
 
 Calls: [atp_free_buf](atp_bufs.c.md#atp_free_buf), [atp_print_bufuse](atp_internals.h.md#atp_print_bufuse), [atp_rsel](atp_rsel.c.md#atp_rsel), [bprint](../util/bprint.c.md#bprint)
 

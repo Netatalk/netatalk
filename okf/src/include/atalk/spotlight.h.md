@@ -5,7 +5,7 @@ description: "5 types, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/spotlight.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,23 +39,25 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct _slq_t
 
+Internal query data structure.
+
 Defined at line 95.
-* `struct list_head slq_list`
-* `slq_state_t slq_state`
-* `AFPObj * slq_obj`
-* `const struct vol * slq_vol`
-* `char * slq_scope`
-* `time_t slq_time`
-* `uint64_t slq_ctx1`
-* `uint64_t slq_ctx2`
-* `sl_array_t * slq_reqinfo`
-* `const char * slq_qstring`
-* `uint64_t * slq_cnids`
-* `size_t slq_cnids_num`
-* `void * slq_backend_private`
-* `bool slq_allow_expr`
-* `uint64_t slq_result_limit`
-* `struct sl_rslts * query_results`
+* `struct list_head slq_list`: queries are stored in a list
+* `slq_state_t slq_state`: State
+* `AFPObj * slq_obj`: global [AFPObj](globals.h.md#struct-afpobj) handle
+* `const struct vol * slq_vol`: volume handle
+* `char * slq_scope`: search scope
+* `time_t slq_time`: last client activity timestamp
+* `uint64_t slq_ctx1`: client context 1
+* `uint64_t slq_ctx2`: client context 2
+* `sl_array_t * slq_reqinfo`: array with requested metadata
+* `const char * slq_qstring`: the Spotlight query string
+* `uint64_t * slq_cnids`: Pointer to array with CNIDs
+* `size_t slq_cnids_num`: Size of slq_cnids array
+* `void * slq_backend_private`: backend-private query state
+* `bool slq_allow_expr`: Whether to allow expressions
+* `uint64_t slq_result_limit`: max results, 0 = unlimited
+* `struct sl_rslts * query_results`: query results
 
 ### struct sl_backend_ops
 
@@ -76,6 +78,8 @@ Defined at line 54.
 * `DALLOC_CTX * ca_cnids`
 
 ### struct sl_rslts
+
+Handle for query results.
 
 Defined at line 88.
 * `int num_results`

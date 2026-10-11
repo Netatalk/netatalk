@@ -5,7 +5,7 @@ description: "Error checking macros."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/errchk.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -54,4 +54,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 # Macros
 
-* Undocumented: `EC_CLEANUP`, `EC_EXIT`, `EC_EXIT_STATUS`, `EC_FAIL`, `EC_FAIL_LOG`, `EC_INIT`, `EC_NEG1`, `EC_NEG1_LOG`, `EC_NEG1_LOGSTR`, `EC_NEG1_LOG_ERR`, `EC_NULL`, `EC_NULL_LOG`, `EC_NULL_LOGSTR`, `EC_NULL_LOG_ERR`, `EC_STATUS`, `EC_ZERO`, `EC_ZERO_ERR`, `EC_ZERO_LOG`, `EC_ZERO_LOGSTR`, `EC_ZERO_LOG_ERR`
+* `EC_NEG1_LOG`: check for return val 0 which is ok, every other is an error, prints errno
+* `EC_NULL_LOG`: check for return val != NULL, prints errno
+* `EC_ZERO_LOG`: check for return val 0 which is ok, every other is an error, prints errno
+* Undocumented: `EC_CLEANUP`, `EC_EXIT`, `EC_EXIT_STATUS`, `EC_FAIL`, `EC_FAIL_LOG`, `EC_INIT`, `EC_NEG1`, `EC_NEG1_LOGSTR`, `EC_NEG1_LOG_ERR`, `EC_NULL`, `EC_NULL_LOGSTR`, `EC_NULL_LOG_ERR`, `EC_STATUS`, `EC_ZERO`, `EC_ZERO_ERR`, `EC_ZERO_LOGSTR`, `EC_ZERO_LOG_ERR`

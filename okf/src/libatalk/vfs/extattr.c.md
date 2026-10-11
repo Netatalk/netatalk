@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/vfs/extattr.c"
-description: "14 functions, includes 6 project headers."
+description: "15 functions, includes 6 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/extattr.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,16 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 static const char * prefix(const char *uname)
 ```
 
-Defined at lines 84 to 92.
+Defined at lines 94 to 102.
+
+Platform EA name for uname in the user namespace.
+
+Solaris and macOS use uname unchanged. Every other platform gets "user." in front, in a static buffer that the next call overwrites, and the buffer truncates names longer than 255 bytes.
+
+Parameters:
+* `uname`: EA name without a namespace
+
+Returns: the platform EA name
 
 Calls: [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
@@ -42,7 +51,19 @@ Uses file-scope variables: `attr_name`
 int sys_getxattrfd(int fd, const char *uname, int oflag,...)
 ```
 
-Defined at lines 94 to 118. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 116 to 140. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+On Solaris, open EA uname of fd as a file descriptor.
+
+O_CREAT takes the mode from the variable arguments. Every other platform fails with ENOSYS.
+
+Parameters:
+* `fd`: open file
+* `uname`: EA name
+* `oflag`: open flags, O_XATTR added
+* `...`: creation mode under O_CREAT
+
+Returns: the EA descriptor, or -1 with errno set
 
 Called by: [ad_open_rf_ea](../adouble/ad_open.c.md#ad_open_rf_ea)
 
@@ -52,7 +73,19 @@ Called by: [ad_open_rf_ea](../adouble/ad_open.c.md#ad_open_rf_ea)
 ssize_t sys_getxattr(const char *path, const char *name, void *value, size_t size)
 ```
 
-Defined at lines 120 to 185. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 156 to 221. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Read EA uname of path, following symlinks.
+
+A zero size returns the EA length without reading it. The BSD extattr interface truncates without an error, so that branch measures the EA first and fails with ERANGE when value is too small. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file
+* `uname`: EA name without a namespace
+* `value`: receives the EA bytes
+* `size`: capacity of value, or 0 to query the length
+
+Returns: the EA length, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
@@ -64,7 +97,19 @@ Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [sys_
 ssize_t sys_fgetxattr(int filedes, const char *name, void *value, size_t size)
 ```
 
-Defined at lines 187 to 248. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 236 to 297. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Read EA uname of the file that filedes refers to.
+
+A zero size returns the EA length without reading it. The BSD extattr branch measures the EA first and fails with ERANGE when value is too small. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `filedes`: open file
+* `uname`: EA name without a namespace
+* `value`: receives the EA bytes
+* `size`: capacity of value, or 0 to query the length
+
+Returns: the EA length, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
@@ -76,11 +121,44 @@ Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [ad_r
 ssize_t sys_lgetxattr(const char *path, const char *name, void *value, size_t size)
 ```
 
-Defined at lines 250 to 305. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 312 to 367. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Read EA uname of path without following a symlink.
+
+A zero size returns the EA length without reading it. The BSD extattr branch measures the EA first and fails with ERANGE when value is too small. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file or symlink
+* `uname`: EA name without a namespace
+* `value`: receives the EA bytes
+* `size`: capacity of value, or 0 to query the length
+
+Returns: the EA length, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
 Called by: [ad_reso_size](../adouble/ad_open.c.md#ad_reso_size), [do_check_ea_support](../util/netatalk_conf.c.md#do_check_ea_support), [sys_get_eacontent](ea_sys.c.md#sys_get_eacontent), [sys_get_easize](ea_sys.c.md#sys_get_easize)
+
+### remove_user
+
+```c
+static ssize_t remove_user(ssize_t ret, char *list, size_t size)
+```
+
+Defined at lines 472 to 506.
+
+Strip the "user." prefix from a listxattr result in place.
+
+Names outside the user namespace drop out of the list. A failed call or a length query passes through unchanged. macOS lists EAs without a namespace, so the list stays unchanged there.
+
+Parameters:
+* `ret`: listxattr result, the list length or -1
+* `list`: NUL-separated EA names
+* `size`: capacity of list, 0 for a length query
+
+Returns: the new list length, or ret unchanged
+
+Called by: [sys_flistxattr](extattr.c.md#sys_flistxattr), [sys_listxattr](extattr.c.md#sys_listxattr), [sys_llistxattr](extattr.c.md#sys_llistxattr)
 
 ### sys_listxattr
 
@@ -88,7 +166,20 @@ Called by: [ad_reso_size](../adouble/ad_open.c.md#ad_reso_size), [do_check_ea_su
 ssize_t sys_listxattr(const char *path, char *list, size_t size)
 ```
 
-Defined at lines 435 to 466. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 521 to 552. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+List the EA names of path, following symlinks.
+
+The names come NUL-separated and without a namespace prefix. A zero size returns the length the list needs. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file
+* `list`: receives the names
+* `size`: capacity of list, or 0 to query the length
+
+Returns: the list length, or -1 with errno set
+
+Calls: [remove_user](extattr.c.md#remove_user)
 
 Called by: [sys_ea_copyfile](ea_sys.c.md#sys_ea_copyfile), [sys_list_eas](ea_sys.c.md#sys_list_eas)
 
@@ -98,7 +189,21 @@ Called by: [sys_ea_copyfile](ea_sys.c.md#sys_ea_copyfile), [sys_list_eas](ea_sys
 ssize_t sys_flistxattr(int filedes, const char *path, char *list, size_t size)
 ```
 
-Defined at lines 468 to 500. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 567 to 599. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+List the EA names of a file.
+
+Solaris lists through filedes. Every other platform lists through path and follows symlinks. The names come NUL-separated and without a namespace prefix. A zero size returns the length the list needs.
+
+Parameters:
+* `filedes`: open file, used only on Solaris
+* `path`: the same file, used on every other platform
+* `list`: receives the names
+* `size`: capacity of list, or 0 to query the length
+
+Returns: the list length, or -1 with errno set
+
+Calls: [remove_user](extattr.c.md#remove_user)
 
 Called by: [sys_list_eas](ea_sys.c.md#sys_list_eas)
 
@@ -108,7 +213,20 @@ Called by: [sys_list_eas](ea_sys.c.md#sys_list_eas)
 ssize_t sys_llistxattr(const char *path, char *list, size_t size)
 ```
 
-Defined at lines 502 to 533. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 613 to 644. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+List the EA names of path without following a symlink.
+
+The names come NUL-separated and without a namespace prefix. A zero size returns the length the list needs. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file or symlink
+* `list`: receives the names
+* `size`: capacity of list, or 0 to query the length
+
+Returns: the list length, or -1 with errno set
+
+Calls: [remove_user](extattr.c.md#remove_user)
 
 Called by: [sys_list_eas](ea_sys.c.md#sys_list_eas)
 
@@ -118,7 +236,17 @@ Called by: [sys_list_eas](ea_sys.c.md#sys_list_eas)
 int sys_removexattr(const char *path, const char *name)
 ```
 
-Defined at lines 535 to 563. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 655 to 683. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Delete EA uname of path, following symlinks.
+
+A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file
+* `uname`: EA name without a namespace
+
+Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
@@ -130,7 +258,18 @@ Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [sys_
 int sys_fremovexattr(int filedes, const char *path, const char *name)
 ```
 
-Defined at lines 565 to 593. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 696 to 724. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Delete EA uname of a file.
+
+Solaris deletes through filedes. Every other platform deletes through path and follows symlinks.
+
+Parameters:
+* `filedes`: open file, used only on Solaris
+* `path`: the same file, used on every other platform
+* `uname`: EA name without a namespace
+
+Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
@@ -142,7 +281,17 @@ Called by: [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
 int sys_lremovexattr(const char *path, const char *name)
 ```
 
-Defined at lines 595 to 621. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 735 to 761. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Delete EA uname of path without following a symlink.
+
+A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file or symlink
+* `uname`: EA name without a namespace
+
+Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
@@ -154,7 +303,20 @@ Called by: [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
 int sys_setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
 ```
 
-Defined at lines 623 to 686. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 779 to 842. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Write EA uname of path, following symlinks.
+
+XATTR_CREATE fails with EEXIST when the EA exists, and XATTR_REPLACE fails with ENOATTR when it does not. The BSD extattr branch emulates both flags with an existence test first. Solaris turns XATTR_CREATE into O_EXCL and creates the attribute file unless the caller passes XATTR_REPLACE. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file
+* `uname`: EA name without a namespace
+* `value`: EA bytes
+* `size`: bytes in value
+* `flags`: 0, XATTR_CREATE, or XATTR_REPLACE
+
+Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
@@ -166,7 +328,20 @@ Called by: [ad_conv_v22ea_hf](../adouble/ad_conv.c.md#ad_conv_v22ea_hf), [do_che
 int sys_fsetxattr(int filedes, const char *name, const void *value, size_t size, int flags)
 ```
 
-Defined at lines 688 to 754. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 860 to 926. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Write EA uname of the file that filedes refers to.
+
+XATTR_CREATE fails with EEXIST when the EA exists, and XATTR_REPLACE fails with ENOATTR when it does not. The BSD extattr branch emulates both flags with an existence test first. Solaris turns XATTR_CREATE into O_EXCL and creates the attribute file unless the caller passes XATTR_REPLACE. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `filedes`: open file
+* `uname`: EA name without a namespace
+* `value`: EA bytes
+* `size`: bytes in value
+* `flags`: 0, XATTR_CREATE, or XATTR_REPLACE
+
+Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
@@ -178,7 +353,20 @@ Called by: [ad_flush_hf](../adouble/ad_flush.c.md#ad_flush_hf), [copy_ea](unix.c
 int sys_lsetxattr(const char *path, const char *name, const void *value, size_t size, int flags)
 ```
 
-Defined at lines 756 to 818. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 944 to 1006. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+
+Write EA uname of path without following a symlink.
+
+XATTR_CREATE fails with EEXIST when the EA exists, and XATTR_REPLACE fails with ENOATTR when it does not. The BSD extattr branch emulates both flags with an existence test first. Solaris turns XATTR_CREATE into O_EXCL and creates the attribute file unless the caller passes XATTR_REPLACE. A platform without EA support fails with ENOSYS.
+
+Parameters:
+* `path`: file or symlink
+* `uname`: EA name without a namespace
+* `value`: EA bytes
+* `size`: bytes in value
+* `flags`: 0, XATTR_CREATE, or XATTR_REPLACE
+
+Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 

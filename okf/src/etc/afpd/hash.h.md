@@ -5,7 +5,7 @@ description: "7 functions, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/hash.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,8 +39,6 @@ hash_t * hash_init(hash_t *, hashcount_t, hash_comp_t, hash_fun_t, hnode_t **, h
 ```
 
 Declared at etc/afpd/hash.h line 32; no definition in the scanned sources.
-
-Mentioned in the documentation of: [hash_scan_next](hash.c.md#hash_scan_next)
 
 ### hnode_put
 

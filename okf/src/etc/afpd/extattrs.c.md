@@ -5,7 +5,7 @@ description: "5 functions, includes 17 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/extattrs.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,9 +39,20 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 57 to 251.
+Defined at lines 68 to 262.
 
-Note: we're being called twice. Firstly the client only want the size of all EA names, secondly it wants these names. In order to avoid scanning EAs twice we cache them in a static buffer.
+FPListExtAttrs: list the extended attribute names of a file or directory.
+
+The client calls twice, first for the size of all names and then for the names themselves. A static buffer keeps the names between the two calls, so one scan of the extended attributes serves both.
+
+Parameters:
+* `obj`: session object, unused
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block
+* `rbuflen`: reply buffer capacity on entry, reply length on return
+
+Returns: AFP_OK, or an AFPERR_* code
 
 Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cname](directory.c.md#cname), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [of_findname](ofork.c.md#of_findname), [of_statdir](ofork.c.md#of_statdir), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
@@ -57,7 +68,15 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 static char * to_stringz(char *ibuf, uint16_t len)
 ```
 
-Defined at lines 253 to 266.
+Defined at lines 272 to 285.
+
+Terminate a counted extended attribute name in a static buffer for log lines.
+
+Parameters:
+* `ibuf`: name from the request
+* `len`: length of the name, capped at 255
+
+Returns: the static buffer
 
 Calls: [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
@@ -69,7 +88,20 @@ Called by: [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_remextattr](exta
 int afp_getextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 268 to 371.
+Defined at lines 304 to 407.
+
+FPGetExtAttr: return the size or the content of an extended attribute.
+
+A MaxReplySize of 0 asks for the size only. The name arrives in UTF-8 and converts to the unix charset. An open fork of the file lends its metadata descriptor to the VFS call. kXAttrNoFollow keeps the call off symlink targets.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block
+* `rbuflen`: reply length on return
+
+Returns: the VFS result, AFPERR_PARAM for an unknown volume, AFPERR_MISC for an empty converted name, or the error of the directory or path lookup
 
 Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [cname](directory.c.md#cname), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [of_findname](ofork.c.md#of_findname), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [to_stringz](extattrs.c.md#to_stringz)
 
@@ -87,7 +119,20 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 373 to 513.
+Defined at lines 425 to 565.
+
+FPSetExtAttr: create or replace an extended attribute.
+
+kXAttrCreate and kXAttrReplace map to O_CREAT and O_TRUNC for the VFS call. A name over 255 bytes or a value over MAX_EA_SIZE gets AFPERR_PARAM. After a write the dircache entry takes the new stat, and the other sessions get a refresh hint.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block, unused
+* `rbuflen`: 0 on return
+
+Returns: the VFS result, AFPERR_PARAM, AFPERR_MISC for an empty converted name, or the error of the directory or path lookup
 
 Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [cname](directory.c.md#cname), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [dir_modify](directory.c.md#dir_modify), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_findname](ofork.c.md#of_findname), [ostat](../../libatalk/util/unix.c.md#ostat), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [to_stringz](extattrs.c.md#to_stringz)
 
@@ -103,7 +148,20 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 515 to 630.
+Defined at lines 581 to 696.
+
+FPRemoveExtAttr: remove an extended attribute.
+
+A name over 255 bytes gets AFPERR_PARAM. After a removal the dircache entry takes the new stat, and the other sessions get a refresh hint.
+
+Parameters:
+* `obj`: session object
+* `ibuf`: request block
+* `ibuflen`: request block length, unused
+* `rbuf`: reply block, unused
+* `rbuflen`: 0 on return
+
+Returns: the VFS result, AFPERR_PARAM, AFPERR_MISC for an empty converted name, or the error of the directory or path lookup
 
 Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [cname](directory.c.md#cname), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [dir_modify](directory.c.md#dir_modify), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_findname](ofork.c.md#of_findname), [ostat](../../libatalk/util/unix.c.md#ostat), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [to_stringz](extattrs.c.md#to_stringz)
 

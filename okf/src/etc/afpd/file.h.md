@@ -5,7 +5,7 @@ description: "includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/file.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,4 +39,5 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 # Macros
 
-* Undocumented: `FILPBIT_ATTR`, `FILPBIT_BDATE`, `FILPBIT_CDATE`, `FILPBIT_DFLEN`, `FILPBIT_EXTDFLEN`, `FILPBIT_EXTRFLEN`, `FILPBIT_FINFO`, `FILPBIT_FNUM`, `FILPBIT_LNAME`, `FILPBIT_MDATE`, `FILPBIT_PDID`, `FILPBIT_PDINFO`, `FILPBIT_RFLEN`, `FILPBIT_SNAME`, `FILPBIT_UNIXPR`, `kTextEncodingUTF8`
+* `FILPBIT_PDINFO`: ProDOS Info/ UTF8 name.
+* Undocumented: `FILPBIT_ATTR`, `FILPBIT_BDATE`, `FILPBIT_CDATE`, `FILPBIT_DFLEN`, `FILPBIT_EXTDFLEN`, `FILPBIT_EXTRFLEN`, `FILPBIT_FINFO`, `FILPBIT_FNUM`, `FILPBIT_LNAME`, `FILPBIT_MDATE`, `FILPBIT_PDID`, `FILPBIT_RFLEN`, `FILPBIT_SNAME`, `FILPBIT_UNIXPR`, `kTextEncodingUTF8`

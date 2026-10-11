@@ -5,7 +5,7 @@ description: "52 functions, includes 13 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/netatalk_conf.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -52,7 +52,17 @@ Uses file-scope variables: `lastvid`
 static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
 ```
 
-Defined at lines 108 to 176.
+Defined at lines 121 to 189.
+
+Rewrite the volume UUID file from the volume chain, which drops the deleted volumes.
+
+The call truncates the file and writes the header and one line per volume. It takes the write lock without waiting, so a lock that another process holds fails the call. A file that cannot open is no failure when every volume has a UUID.
+
+Parameters:
+* `obj`: AFP object with the UUID file path
+* `Volumes`: volume chain
+
+Returns: 0, or -1 when the open, the lock, the truncate, or the seek fails
 
 Called by: [load_afp_conf_vols](netatalk_conf.c.md#load_afp_conf_vols)
 
@@ -64,13 +74,17 @@ Uses file-scope variables: `UUID_FILE_HEADER`, `Volumes`
 static char * get_vol_uuid(const AFPObj *obj, const char *volname)
 ```
 
-Defined at lines 185 to 331.
+Defined at lines 204 to 350.
 
-Get a volume's UUID from the config file.
+Return the UUID of a volume from the volume UUID file, adding one when the file has none.
 
-If there is none, it is generated and stored there.
+Each line holds the volume name and then the UUID, and the name can stand in double quotes. The call returns the UUID in upper case. A volume without a line gets 16 random bytes as its UUID, appended under a write lock. Neither lock waits, so a lock that another process holds fails the call.
 
-Returns: pointer to allocated storage on success, NULL on error.
+Parameters:
+* `obj`: AFP object with the UUID file path
+* `volname`: local name of the volume
+
+Returns: the UUID string, which the caller frees, or NULL on error
 
 Calls: [randombytes](unix.c.md#randombytes), [uuid_bin2string](../acl/uuid.c.md#uuid_bin2string)
 
@@ -84,11 +98,16 @@ Uses file-scope variables: `UUID_FILE_HEADER`
 static int do_check_ea_support(const struct vol *vol)
 ```
 
-Defined at lines 340 to 372.
+Defined at lines 364 to 396.
 
-Check if the underlying filesystem supports EAs.
+Tell whether the filesystem of a volume supports extended attributes.
 
-If not, switch to ea=ad. As we can't check (requires write access) on ro-volumes, we assume ea=sys.
+The marker attribute org.netatalk.has-Extended-Attributes on the volume root answers at once. A read-only volume cannot take a test write, so the call assumes support. Otherwise it sets the marker as root, and a failure means no support.
+
+Parameters:
+* `vol`: volume
+
+Returns: 1 with support, 0 without
 
 Calls: [become_root](unix.c.md#become_root), [sys_lgetxattr](../vfs/extattr.c.md#sys_lgetxattr), [sys_setxattr](../vfs/extattr.c.md#sys_setxattr), [unbecome_root](unix.c.md#unbecome_root)
 
@@ -100,7 +119,14 @@ Called by: [check_ea_support](netatalk_conf.c.md#check_ea_support)
 static void check_ea_support(struct vol *vol)
 ```
 
-Defined at lines 374 to 392.
+Defined at lines 407 to 425.
+
+Pick the EA backend and the AppleDouble version of a volume by its EA support.
+
+With ea = auto the volume gets sys or ad. With AppleDouble in extended attributes and no support, the volume falls back to AppleDouble v2 files.
+
+Parameters:
+* `vol`: volume
 
 Calls: [do_check_ea_support](netatalk_conf.c.md#do_check_ea_support)
 
@@ -112,7 +138,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static int check_vol_acl_support(const struct vol *vol)
 ```
 
-Defined at lines 401 to 439.
+Defined at lines 434 to 472.
 
 Check whether a volume supports ACLs.
 
@@ -131,36 +157,40 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static char * volxlate(const AFPObj *obj, char *dest, size_t destlen, const char *src, const struct passwd *pwd, const char *path, const char *volname)
 ```
 
-Defined at lines 471 to 654.
+Defined at lines 513 to 696.
 
-Handle variable substitutions.
+Expand the variables of an afp.conf value.
 
-here's what we understand:
-
-```
-$b   -> basename of path
-$c   -> client ip/appletalk address
-$d   -> volume pathname on server
-$f   -> full name (whatever's in the gecos field)
-$g   -> group
-$h   -> hostname
-$i   -> client ip/appletalk address without port
-$s   -> server name (hostname if it doesn't exist)
-$u   -> username (guest is usually nobody)
-$v   -> volume name or basename if null
-$$   -> $
-```
-
-This get's called from readvolfile with
+The variables are:
 
 ```
-path = NULL, volname = NULL for xlating the volumes path
-path = path, volname = NULL for xlating the volumes name
-... and from volumes options parsing code when xlating e.g. dbpath with
-path = path, volname = volname
+$b   basename of path
+$c   client address with port, or net.node over AppleTalk
+$d   volume path on the server
+$f   full name, the gecos field up to its first comma
+$g   primary group of the user
+$h   host name
+$i   client address without port, or the network number over AppleTalk
+$s   server name, or the host name without one
+$u   user name, after the NT domain separator when one is set
+$v   volume name, or the basename of path without one
+$$   a dollar sign
 ```
 
-Using this information we can reject xlation of any variable depeninding on a login context which is not given in the afp master, where we must evaluate this whole stuff too for the Zeroconf announcements.
+A volume path expands with a NULL path and volname, and a volume name with the path. Only $c checks for an AFP session, and outside one it expands to nothing. The $f and $g variables stay as typed without a user entry, and $u stays as typed without a login. A variable that lacks its value, such as $b without a path, expands to nothing. An unknown variable stays as typed.
+
+The $f variable cuts the gecos field of pwd at its first comma, in place. The result stops at destlen bytes.
+
+Parameters:
+* `obj`: AFP object with the session, the user, and the options
+* `dest`: buffer of destlen + 1 bytes, or NULL to allocate one
+* `destlen`: length limit of the result
+* `src`: value with variables
+* `pwd`: user entry, or NULL
+* `path`: volume path, or NULL
+* `volname`: volume name, or NULL
+
+Returns: dest or the new buffer, which the caller frees, or NULL for a NULL src or a failed calloc
 
 Calls: [getip_port](socket.c.md#getip_port), [getip_string](socket.c.md#getip_string), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
@@ -172,7 +202,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol), [dbpath_is_volume_root](neta
 static int accessvol(const AFPObj *obj, const char *args, const char *name)
 ```
 
-Defined at lines 676 to 714.
+Defined at lines 718 to 756.
 
 check user access list for volume
 
@@ -205,7 +235,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static int hostaccessvol(const AFPObj *obj, const char *volname, const char *args)
 ```
 
-Defined at lines 730 to 796.
+Defined at lines 772 to 838.
 
 check host access list for volume
 
@@ -232,9 +262,18 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 int netatalk_readbuf_clamp(int readbuf, uint32_t quantum, uint64_t limit)
 ```
 
-Defined at lines 806 to 825.
+Defined at lines 854 to 873.
 
-Bound dsireadbuf so dsireadbuf * quantum never exceeds limit. The limit always wins: on a constrained platform the result may drop below the usual dsireadbuf floor of 6, but never below 1. The quantum is never reduced here: frame acceptance must not change as a side effect of read-ahead sizing. A zero quantum cannot occur in the config path and is treated as "no limit".
+Cap dsireadbuf so that dsireadbuf times quantum stays within limit.
+
+The limit overrides the dsireadbuf floor of 6. The cap stays at 1 or more, so a quantum above the limit still gets 1. The call never shrinks the quantum, so read-ahead sizing leaves the frame size that the server accepts as it is. A quantum of 0 means no limit, and the config path never passes one.
+
+Parameters:
+* `readbuf`: number of quanta to read ahead
+* `quantum`: server quantum in bytes
+* `limit`: byte limit of the read-ahead buffer
+
+Returns: readbuf, or the cap when readbuf exceeds it
 
 Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [dsi_tcp_open](../dsi/dsi_tcp.c.md#dsi_tcp_open)
 
@@ -244,7 +283,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [dsi_tcp_ope
 static const char * getoption_str(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *defsec, const char *defval)
 ```
 
-Defined at lines 838 to 855.
+Defined at lines 886 to 903.
 
 Get option string from config, use default value if not set.
 
@@ -265,7 +304,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [creatvol](n
 static char * getoption_strdup(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *defsec, const char *defval)
 ```
 
-Defined at lines 870 to 891.
+Defined at lines 918 to 939.
 
 Get option string from config, use default value if not set.
 
@@ -288,7 +327,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static char * getoption_strdup_alias(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *alias, const char *defsec, const char *defval, const char *alias_warn, bool *alias_used)
 ```
 
-Defined at lines 912 to 941.
+Defined at lines 960 to 989.
 
 Get a string option with a deprecated alias.
 
@@ -316,7 +355,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static int conf_parse_bool(const char *opt, const char *val)
 ```
 
-Defined at lines 955 to 980.
+Defined at lines 1003 to 1028.
 
 Parse one boolean config value strictly.
 
@@ -338,7 +377,7 @@ Mentioned in the documentation of: [conf_key_present](netatalk_conf.c.md#conf_ke
 static int conf_key_present(INIPARSER_DICTIONARY *conf, const char *opt)
 ```
 
-Defined at lines 999 to 1003.
+Defined at lines 1047 to 1051.
 
 Whether a [Global] key is present with a non-empty value.
 
@@ -358,7 +397,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static int conf_int_key_usable(INIPARSER_DICTIONARY *conf, const char *opt, int min, int max)
 ```
 
-Defined at lines 1019 to 1033.
+Defined at lines 1067 to 1081.
 
 Whether a [Global] int key holds a value within bounds.
 
@@ -380,7 +419,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static int getoption_bool(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *defsec, int defval)
 ```
 
-Defined at lines 1046 to 1064.
+Defined at lines 1094 to 1112.
 
 Get boolean option from config, use default value if not set.
 
@@ -403,7 +442,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [creatvol](n
 int safe_atoi(const char *str, const char *param_name, int min_val, int max_val, int default_val)
 ```
 
-Defined at lines 1077 to 1112.
+Defined at lines 1125 to 1160.
 
 Safe string to integer conversion with bounds checking.
 
@@ -426,7 +465,7 @@ Mentioned in the documentation of: [conf_key_present](netatalk_conf.c.md#conf_ke
 static int getoption_int(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *defsec, int defval)
 ```
 
-Defined at lines 1128 to 1146.
+Defined at lines 1176 to 1194.
 
 Get integer option from config, use default value if not set.
 
@@ -451,7 +490,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static uint32_t getoption_uint32_strict(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *defsec, uint32_t minval, uint32_t maxval, uint32_t defval)
 ```
 
-Defined at lines 1161 to 1212.
+Defined at lines 1209 to 1260.
 
 Get uint32 option from config, use default value if unset or invalid.
 
@@ -476,7 +515,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static int vdgoption_bool(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *defsec, int defval)
 ```
 
-Defined at lines 1230 to 1253.
+Defined at lines 1278 to 1301.
 
 Get boolean option from volume, default section or global - use default value if not set.
 
@@ -503,7 +542,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static const char * vdgoption_str(INIPARSER_DICTIONARY *conf, const char *vol, const char *opt, const char *defsec, const char *defval)
 ```
 
-Defined at lines 1271 to 1291.
+Defined at lines 1319 to 1339.
 
 Get string option from volume, default section or global - use default value if not set.
 
@@ -528,7 +567,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static void apply_multiprotocol_defaults(AFPObj *obj, const char *volname)
 ```
 
-Defined at lines 1306 to 1371.
+Defined at lines 1354 to 1419.
 
 Apply the multi protocol coherency defaults to the process options.
 
@@ -546,7 +585,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static void log_ea_format_advice(const struct vol *volume, const char *ea_setting)
 ```
 
-Defined at lines 1386 to 1409.
+Defined at lines 1434 to 1457.
 
 Log the storage-format implications of the coherency posture.
 
@@ -564,7 +603,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static struct vol * creatvol(AFPObj *obj, const struct passwd *pwd, const char *section, const char *name, const char *path_in, const char *preset)
 ```
 
-Defined at lines 1422 to 2180.
+Defined at lines 1470 to 2228.
 
 Create volume struct.
 
@@ -592,7 +631,16 @@ Mentioned in the documentation of: [conf_testutil_set_lastvid](netatalk_conf.c.m
 static int volfile_changed(AFPObj *obj)
 ```
 
-Defined at lines 2184 to 2207.
+Defined at lines 2239 to 2262.
+
+Tell whether afp.conf changed since the last check, by its mtime.
+
+A newer mtime becomes the stored one. A failed stat also counts as a change, so the reload that follows fails as well.
+
+Parameters:
+* `obj`: AFP object with the config file path and the stored mtime
+
+Returns: 1 for a change or a failed stat, 0 otherwise
 
 Called by: [load_afp_conf_vols](netatalk_conf.c.md#load_afp_conf_vols)
 
@@ -602,7 +650,14 @@ Called by: [load_afp_conf_vols](netatalk_conf.c.md#load_afp_conf_vols)
 static int vol_section(const char *sec)
 ```
 
-Defined at lines 2209 to 2216.
+Defined at lines 2270 to 2277.
+
+Tell whether an afp.conf section defines a volume.
+
+Parameters:
+* `sec`: section name
+
+Returns: 0 for the Global section, 1 for any other
 
 Called by: [readvolfile](netatalk_conf.c.md#readvolfile)
 
@@ -612,11 +667,19 @@ Called by: [readvolfile](netatalk_conf.c.md#readvolfile)
 static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 ```
 
-Defined at lines 2226 to 2370.
+Defined at lines 2299 to 2443.
 
-Read volumes from iniconfig and add the volumes contained within to the global volume list.
+Create the volumes of the afp.conf sections and add them to the volume list.
 
-This gets called from the forked afpd childs. The master now reads this too for Zeroconf announcements.
+Every section other than Global names a volume with a path and a volume name. Its preset falls back to the vol preset of Global. The call expands the variables of the path and then of the name. The [Homes] section gives the home of the user in an AFP session. It needs a user other than the guest, with a home that matches the basedir regex. The regex compiles once per process.
+
+Every section that fails, apart from a skipped [Homes], adds 1 to vols_skipped of obj. The master reads the volumes too, for the Zeroconf announcements.
+
+Parameters:
+* `obj`: AFP object with the parsed afp.conf
+* `pwent`: user entry of the session, or NULL
+
+Returns: 0
 
 Calls: [creatvol](netatalk_conf.c.md#creatvol), [getoption_str](netatalk_conf.c.md#getoption_str), [realpath_safe](unix.c.md#realpath_safe), [strlcat](../compat/strlcpy.c.md#strlcat), [strlcpy](../compat/strlcpy.c.md#strlcpy), [vol_section](netatalk_conf.c.md#vol_section), [volxlate](netatalk_conf.c.md#volxlate)
 
@@ -630,7 +693,18 @@ Uses file-scope variables: `have_uservol`
 static int setextmap(char *ext, char *type, char *creator)
 ```
 
-Defined at lines 2375 to 2411.
+Defined at lines 2461 to 2497.
+
+Add an extension mapping to the unsorted extension map.
+
+The call skips the leading dot of ext. A repeated extension keeps its first mapping, compared by strdiacasecmp without regard to case. The call stores the first 4 bytes of type and of creator, or 4 zeros for an empty one.
+
+Parameters:
+* `ext`: extension with its leading dot
+* `type`: file type, up to 4 characters
+* `creator`: creator code, up to 4 characters
+
+Returns: 0, or -1 when an allocation fails
 
 Calls: [strdiacasecmp](strdicasecmp.c.md#strdiacasecmp)
 
@@ -644,7 +718,15 @@ Uses file-scope variables: `Extmap`
 static int extmap_cmp(const void *map1, const void *map2)
 ```
 
-Defined at lines 2414 to 2419.
+Defined at lines 2506 to 2511.
+
+Order two extension map entries by extension, for qsort.
+
+Parameters:
+* `map1`: first entry
+* `map2`: second entry
+
+Returns: the strdiacasecmp result of the two extensions
 
 Calls: [strdiacasecmp](strdicasecmp.c.md#strdiacasecmp)
 
@@ -656,7 +738,11 @@ Called by: [sortextmap](netatalk_conf.c.md#sortextmap)
 static void sortextmap(void)
 ```
 
-Defined at lines 2421 to 2445.
+Defined at lines 2519 to 2543.
+
+Count and sort the extension map, and make its "." line the default mapping.
+
+The empty extension of a "." line sorts first.
 
 Calls: [extmap_cmp](netatalk_conf.c.md#extmap_cmp)
 
@@ -670,7 +756,9 @@ Uses file-scope variables: `Defextmap`, `Extmap`, `Extmap_cnt`
 static void free_extmap(void)
 ```
 
-Defined at lines 2447 to 2461.
+Defined at lines 2548 to 2562.
+
+Free the extension map and clear the default mapping.
 
 Called by: [afp_config_free](netatalk_conf.c.md#afp_config_free)
 
@@ -682,7 +770,15 @@ Uses file-scope variables: `Defextmap`, `Extmap`, `Extmap_cnt`
 static int ext_cmp_key(const void *key, const void *obj)
 ```
 
-Defined at lines 2463 to 2468.
+Defined at lines 2571 to 2576.
+
+Compare an extension with an extension map entry, for bsearch.
+
+Parameters:
+* `key`: extension without its dot
+* `obj`: map entry
+
+Returns: the strdiacasecmp result of `key` and the entry extension
 
 Calls: [strdiacasecmp](strdicasecmp.c.md#strdiacasecmp)
 
@@ -694,7 +790,16 @@ Called by: [getextmap](netatalk_conf.c.md#getextmap)
 struct extmap * getextmap(const char *)
 ```
 
-Defined at lines 2470 to 2492. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
+Defined at lines 2589 to 2611. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
+
+Return the extension mapping for a file name.
+
+The extension follows the last dot and matches by strdiacasecmp without regard to case. A name without an extension, or one that the map lacks, gets the default mapping.
+
+Parameters:
+* `path`: file name
+
+Returns: the mapping, or the default mapping, which is NULL without a "." line
 
 Calls: [ext_cmp_key](netatalk_conf.c.md#ext_cmp_key)
 
@@ -708,7 +813,11 @@ Uses file-scope variables: `Defextmap`, `Extmap`, `Extmap_cnt`
 struct extmap * getdefextmap(void)
 ```
 
-Defined at lines 2494 to 2497. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
+Defined at lines 2619 to 2622. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
+
+Return the default extension mapping, the "." line of the extension map.
+
+Returns: the mapping, or NULL without a "." line
 
 Called by: [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
@@ -720,7 +829,16 @@ Uses file-scope variables: `Defextmap`
 static int readextmap(const char *file)
 ```
 
-Defined at lines 2499 to 2530.
+Defined at lines 2634 to 2665.
+
+Read an extension map file and sort the map.
+
+Each line whose first token starts with a dot maps that extension to a type and a creator, and the call ignores every other line. The "." line sets the default mapping.
+
+Parameters:
+* `file`: path of the extension map file
+
+Returns: 0, or -1 when the file cannot open or close
 
 Calls: [initline](gettok.c.md#initline), [parseline](gettok.c.md#parseline), [setextmap](netatalk_conf.c.md#setextmap), [sortextmap](netatalk_conf.c.md#sortextmap)
 
@@ -732,9 +850,14 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 void volume_unlink(struct vol *volume)
 ```
 
-Defined at lines 2539 to 2558.
+Defined at lines 2679 to 2698.
 
-Remove a volume from the linked list of volumes
+Remove a volume from the volume list.
+
+Removing the first volume empties the list, which drops the other volumes too.
+
+Parameters:
+* `volume`: volume to remove
 
 Uses file-scope variables: `Volumes`
 
@@ -744,11 +867,14 @@ Uses file-scope variables: `Volumes`
 void volume_free(struct vol *vol)
 ```
 
-Defined at lines 2566 to 2587.
+Defined at lines 2708 to 2729.
 
-Free all resources allocated in a struct vol in [load_afp_conf_vols()](netatalk_conf.c.md#load_afp_conf_vols)
+Free a volume and the strings that loading it allocated.
 
-Actually opening a volume ([afp_openvol()](../../etc/afpd/volume.c.md#afp_openvol)) will allocate additional resources which are freed in [closevol()](../../bin/nad/nad_util.c.md#closevol)
+Opening a volume with afp_openvol allocates more, and closevol frees those.
+
+Parameters:
+* `vol`: volume to free
 
 Called by: [creatvol](netatalk_conf.c.md#creatvol), [load_afp_conf_vols](netatalk_conf.c.md#load_afp_conf_vols), [unload_volumes](netatalk_conf.c.md#unload_volumes)
 
@@ -758,9 +884,14 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol), [load_afp_conf_vols](netatal
 int load_charset(struct vol *vol)
 ```
 
-Defined at lines 2592 to 2607.
+Defined at lines 2737 to 2752.
 
-Load charsets for a volume
+Load the Mac and volume charsets of a volume.
+
+Parameters:
+* `vol`: volume with the codepage names, receives the two charsets
+
+Returns: 0, or -1 when a charset fails to load
 
 Calls: [add_charset](../unicode/charcnv.c.md#add_charset)
 
@@ -772,15 +903,19 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [openvol_optional](../../bin
 int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
 ```
 
-Defined at lines 2618 to 2790.
+Defined at lines 2772 to 2944.
 
-Initialize volumes and load ini configfile.
+Load the volumes of afp.conf, or reload them after a change.
+
+An unchanged mtime returns at once unless flags holds LV_FORCE. The call reads afp.conf as root under a read lock, with 1 retry after a second. A failed open or lock leaves the reload state untouched. A reload marks every volume deleted, creates the volumes again, and frees the marked volumes that are not open.
+
+Without LV_ALL the volumes follow the session user, and a reload for a user other than root refreshes the groups of the user. With LV_ALL in an AFP session the call also rewrites the volume UUID file.
 
 Parameters:
-* `obj`: handle
-* `flags`: flags controlling volume load behaviour: * LV_DEFAULT: load shares in a user/session context, this honors authorization
-* LV_ALL: load shares that are available in the config file
-* LV_FORCE: reload file even though the timestamp wasn't changed
+* `obj`: AFP object with the options and the session user
+* `flags`: LV_ALL to skip the user lookup and the access checks, LV_FORCE to reload an unchanged file, or LV_DEFAULT
+
+Returns: 0, or -1 on error
 
 Calls: [become_root](unix.c.md#become_root), [readvolfile](netatalk_conf.c.md#readvolfile), [rewrite_vol_uuid_conf](netatalk_conf.c.md#rewrite_vol_uuid_conf), [set_groups](unix.c.md#set_groups), [unbecome_root](unix.c.md#unbecome_root), [volfile_changed](netatalk_conf.c.md#volfile_changed), [volume_free](netatalk_conf.c.md#volume_free)
 
@@ -788,15 +923,20 @@ Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [afp
 
 Uses file-scope variables: `Volumes`, `have_uservol`
 
-Mentioned in the documentation of: [getvolbypath](netatalk_conf.c.md#getvolbypath), [volume_free](netatalk_conf.c.md#volume_free)
-
 ### unload_volumes
 
 ```c
 void unload_volumes(AFPObj *obj)
 ```
 
-Defined at lines 2792 to 2809.
+Defined at lines 2954 to 2971.
+
+Free every volume and reset the load state, so the next load reads afp.conf again.
+
+The volume ID counter restarts at 0.
+
+Parameters:
+* `obj`: AFP object whose stored afp.conf mtime resets
 
 Calls: [volume_free](netatalk_conf.c.md#volume_free)
 
@@ -812,9 +952,13 @@ Mentioned in the documentation of: [conf_testutil_set_lastvid](netatalk_conf.c.m
 struct vol * getvolumes(void)
 ```
 
-Defined at lines 2811 to 2814.
+Defined at lines 2979 to 2982.
 
-Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [close_all_vol](../../etc/afpd/volume.c.md#close_all_vol), [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [register_stuff](../../etc/netatalk/afp_avahi.c.md#register_stuff), [register_stuff](../../etc/netatalk/afp_mdns.c.md#register_stuff), [server_ipc_volumes](../../etc/afpd/volume.c.md#server_ipc_volumes), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config), [vol_setdate](../../etc/afpd/volume.c.md#vol_setdate)
+Return the head of the volume list, which holds open and closed volumes.
+
+Returns: the first volume, or NULL without volumes
+
+Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [any_volume_uses_localsearch](../../etc/netatalk/netatalk.c.md#any_volume_uses_localsearch), [close_all_vol](../../etc/afpd/volume.c.md#close_all_vol), [localsearch_backend_active](../../etc/afpd/spotlight.c.md#localsearch_backend_active), [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [register_stuff](../../etc/netatalk/afp_avahi.c.md#register_stuff), [register_stuff](../../etc/netatalk/afp_mdns.c.md#register_stuff), [server_ipc_volumes](../../etc/afpd/volume.c.md#server_ipc_volumes), [set_sl_volumes](../../etc/netatalk/netatalk.c.md#set_sl_volumes), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config), [vol_setdate](../../etc/afpd/volume.c.md#vol_setdate)
 
 Uses file-scope variables: `Volumes`
 
@@ -824,7 +968,14 @@ Uses file-scope variables: `Volumes`
 struct vol * getvolbyvid(const uint16_t vid)
 ```
 
-Defined at lines 2816 to 2831.
+Defined at lines 2990 to 3005.
+
+Find an open volume by its volume ID.
+
+Parameters:
+* `vid`: volume ID
+
+Returns: the volume, or NULL for an unknown ID or a volume that is not open
 
 Called by: [afp_access](../../etc/afpd/acls.c.md#afp_access), [afp_addappl](../../etc/afpd/appl.c.md#afp_addappl), [afp_addcomment](../../etc/afpd/desktop.c.md#afp_addcomment), [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_closedir](../../etc/afpd/directory.c.md#afp_closedir), [afp_closedt](../../etc/afpd/desktop.c.md#afp_closedt), [afp_closevol](../../etc/afpd/volume.c.md#afp_closevol), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_flush](../../etc/afpd/fork.c.md#afp_flush), [afp_getacl](../../etc/afpd/acls.c.md#afp_getacl), [afp_getappl](../../etc/afpd/appl.c.md#afp_getappl), [afp_getcomment](../../etc/afpd/desktop.c.md#afp_getcomment), [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_getfildirparams](../../etc/afpd/filedir.c.md#afp_getfildirparams), [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [afp_geticoninfo](../../etc/afpd/desktop.c.md#afp_geticoninfo), [afp_getvolparams](../../etc/afpd/volume.c.md#afp_getvolparams), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [afp_opendir](../../etc/afpd/directory.c.md#afp_opendir), [afp_opendt](../../etc/afpd/desktop.c.md#afp_opendt), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_rename](../../etc/afpd/filedir.c.md#afp_rename), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [afp_rmvappl](../../etc/afpd/appl.c.md#afp_rmvappl), [afp_rmvcomment](../../etc/afpd/desktop.c.md#afp_rmvcomment), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setdirparams](../../etc/afpd/directory.c.md#afp_setdirparams), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [afp_setfildirparams](../../etc/afpd/filedir.c.md#afp_setfildirparams), [afp_setfilparams](../../etc/afpd/file.c.md#afp_setfilparams), [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [afp_spotlight_rpc](../../etc/afpd/spotlight.c.md#afp_spotlight_rpc), [afp_syncdir](../../etc/afpd/directory.c.md#afp_syncdir), [catsearch_afp](../../etc/afpd/catsearch.c.md#catsearch_afp), [deferred_batch_chain](../../etc/afpd/dircache.c.md#deferred_batch_chain), [dircache_flush_deferred_for_vol](../../etc/afpd/dircache.c.md#dircache_flush_deferred_for_vol), [dircache_process_deferred_chain](../../etc/afpd/dircache.c.md#dircache_process_deferred_chain), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints)
 
@@ -836,7 +987,7 @@ Uses file-scope variables: `Volumes`
 static char * getuserbypath(const char *path)
 ```
 
-Defined at lines 2843 to 2890.
+Defined at lines 3017 to 3064.
 
 get username by path
 
@@ -851,31 +1002,35 @@ Calls: [realpath_safe](unix.c.md#realpath_safe)
 
 Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath)
 
-Mentioned in the documentation of: [getvolbypath](netatalk_conf.c.md#getvolbypath)
-
 ### getvolbypath
 
 ```c
 struct vol * getvolbypath(AFPObj *obj, const char *path)
 ```
 
-Defined at lines 2915 to 3134.
+Defined at lines 3094 to 3313.
 
-Search volume by path, creating user home vols as necessary.
+Find the volume that holds a path, or create the home volume for it.
 
-Path may be absolute or relative. Ordinary volume structs are created when the ini config is initially parsed ([load_afp_conf_vols()](netatalk_conf.c.md#load_afp_conf_vols)), but user volumes are as [load_afp_conf_vols()](netatalk_conf.c.md#load_afp_conf_vols) only can create the user volume of the logged in user in an AFP session in afpd, but not when called from e.g. dbd. dbd thus needs a way to lookup and create struct vols for user home by path. This is what this func does as well.
+Only the user of an AFP session gets a [Homes] volume from load_afp_conf_vols. The dbd and nad tools find or create one here, by its path. A relative path starts at the current directory. The call strips trailing slashes, and the first volume in list order whose path holds the path matches.
 
-1. Search "normal" volume list
-1. Check if theres a [Homes] section, [load_afp_conf_vols()](netatalk_conf.c.md#load_afp_conf_vols) remembers this for us
-1. If there is, match "path" with "basedir regex" to get the user home parent dir
-1. Built user home path by appending the basedir matched in (3) and appending the username
-1. The next path element then is the username * [getvolbypath()](netatalk_conf.c.md#getvolbypath) assumes that the user home directory has the same name as the username. If that is not true, [getuserbypath()](netatalk_conf.c.md#getuserbypath) is called and tries to retrieve the username from the directory owner, checking its validity
-1. Append [Homes]->path subdirectory if defined
-1. Create volume
+The steps follow the numbered code comments:
+
+1. Search the volume list.
+1. Require a [Homes] section, which load_afp_conf_vols records.
+1. Match the path against the basedir regex.
+1. Take the matched part as the base of the home path.
+1. Take the next path element as the user name, or the owner of that directory through getuserbypath for an unknown name.
+1. Append the path option of [Homes].
+1. Create the volume.
+
+Step 5 reads the user name at the match length, counted from the path start, so the regex has to match at the start. The call sets the user name of obj and the groups of the process to the home user. The regex compiles once per process.
 
 Parameters:
-* `obj`: handle
-* `path`: path, may be relative or absolute
+* `obj`: AFP object with the parsed afp.conf, receives the user name
+* `path`: absolute or relative path
+
+Returns: the volume, or NULL on error
 
 Calls: [become_root](unix.c.md#become_root), [creatvol](netatalk_conf.c.md#creatvol), [getoption_str](netatalk_conf.c.md#getoption_str), [getuserbypath](netatalk_conf.c.md#getuserbypath), [realpath_safe](unix.c.md#realpath_safe), [set_groups](unix.c.md#set_groups), [strlcat](../compat/strlcpy.c.md#strlcat), [strlcpy](../compat/strlcpy.c.md#strlcpy), [unbecome_root](unix.c.md#unbecome_root), [volxlate](netatalk_conf.c.md#volxlate)
 
@@ -891,7 +1046,16 @@ Mentioned in the documentation of: [getuserbypath](netatalk_conf.c.md#getuserbyp
 struct vol * getvolbyname(const char *name)
 ```
 
-Defined at lines 3136 to 3149.
+Defined at lines 3324 to 3337.
+
+Find the first volume whose section name is a prefix of name.
+
+The comparison stops at the length of the section name, so a section named "Data" also matches "Data2".
+
+Parameters:
+* `name`: section name to look for
+
+Returns: the volume, or NULL without a match
 
 Uses file-scope variables: `Volumes`
 
@@ -901,9 +1065,14 @@ Uses file-scope variables: `Volumes`
 static void strip_trailing_slashes(char *path)
 ```
 
-Defined at lines 3155 to 3162.
+Defined at lines 3347 to 3354.
 
-Drop trailing slashes, which make lstat() and an O_NOFOLLOW open follow a final symbolic link.
+Drop trailing slashes, which make lstat and an O_NOFOLLOW open follow a final symbolic link.
+
+A lone "/" stays.
+
+Parameters:
+* `path`: path to trim
 
 Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [user_state_paths](netatalk_conf.c.md#user_state_paths)
 
@@ -913,11 +1082,18 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [user_state_
 static bool dbpath_is_volume_root(AFPObj *obj, const char *dbpath, const struct passwd *pwd)
 ```
 
-Defined at lines 3170 to 3209.
+Defined at lines 3369 to 3408.
 
-Whether a directory is the path of a volume the configuration names.
+Tell whether a directory is the path of a volume that afp.conf names.
 
-A single-user server makes its [Global] vol dbpath owner-only, which would close such a share to everyone else; logged when it is one.
+A single-user server makes its [Global] vol dbpath owner-only, which would close such a share to everyone else. The call logs an error when the directory is a volume path. The [Homes] section and volume paths that do not exist do not count.
+
+Parameters:
+* `obj`: AFP object with the parsed afp.conf
+* `dbpath`: directory to check
+* `pwd`: user entry for the variables in the volume paths
+
+Returns: true when the directory is the path of a volume
 
 Calls: [getoption_str](netatalk_conf.c.md#getoption_str), [realpath_safe](unix.c.md#realpath_safe), [volxlate](netatalk_conf.c.md#volxlate)
 
@@ -929,7 +1105,7 @@ Called by: [user_state_paths](netatalk_conf.c.md#user_state_paths)
 static int user_state_paths(AFPObj *obj, bool singleuser)
 ```
 
-Defined at lines 3233 to 3337.
+Defined at lines 3432 to 3536.
 
 Keep the signature and volume uuid files in the user's state.
 
@@ -951,9 +1127,16 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static int splice_size_round(int size)
 ```
 
-Defined at lines 3340 to 3354.
+Defined at lines 3546 to 3560.
 
 Round size up to a power of two, as the kernel sizes a pipe.
+
+The result is at least SPLICE_SIZE_MIN, and a rounded size logs a note.
+
+Parameters:
+* `size`: splice size from afp.conf
+
+Returns: the rounded size
 
 Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 
@@ -963,9 +1146,17 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 ```
 
-Defined at lines 3360 to 4054.
+Defined at lines 3577 to 4271.
 
-Initialize an [AFPObj](../../include/atalk/globals.h.md#struct-afpobj) and options from ini config file
+Read afp.conf into the options of an AFP object.
+
+The call loads afp.conf as root from the command line path or the default path, and keeps the parsed file in iniconfig of the object. It sets up logging first, then reads the Global options, the charsets, and the extension map. Last it bounds the timing and buffer values.
+
+Parameters:
+* ``: AFP object to configure
+* `processname`: name for log lines, or NULL to keep the current one
+
+Returns: 0, or -1 when afp.conf cannot load, a single-user server has no usable vol dbpath, an allocation fails, or gethostname fails
 
 Calls: [atalk_aton](atalk_addr.c.md#atalk_aton), [become_root](unix.c.md#become_root), [conf_int_key_usable](netatalk_conf.c.md#conf_int_key_usable), [conf_key_present](netatalk_conf.c.md#conf_key_present), [conf_parse_bool](netatalk_conf.c.md#conf_parse_bool), [getoption_bool](netatalk_conf.c.md#getoption_bool), [getoption_int](netatalk_conf.c.md#getoption_int), [getoption_str](netatalk_conf.c.md#getoption_str), [getoption_strdup](netatalk_conf.c.md#getoption_strdup), [getoption_strdup_alias](netatalk_conf.c.md#getoption_strdup_alias), [getoption_uint32_strict](netatalk_conf.c.md#getoption_uint32_strict), [netatalk_readbuf_clamp](netatalk_conf.c.md#netatalk_readbuf_clamp), [readextmap](netatalk_conf.c.md#readextmap), [safe_atoi](netatalk_conf.c.md#safe_atoi), [set_charset_name](../unicode/charcnv.c.md#set_charset_name), [set_processname](logger.c.md#set_processname), [setuplog](logger.c.md#setuplog), [splice_size_round](netatalk_conf.c.md#splice_size_round), [strip_trailing_slashes](netatalk_conf.c.md#strip_trailing_slashes), [unbecome_root](unix.c.md#unbecome_root), [user_state_paths](netatalk_conf.c.md#user_state_paths)
 
@@ -977,9 +1168,14 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/nad/nad.c.m
 void afp_config_free(AFPObj *obj)
 ```
 
-Defined at lines 4057 to 4201.
+Defined at lines 4281 to 4425.
 
-get rid of any allocated afp_option buffers.
+Free the options that afp_config_parse allocated, with the extension map and the parsed afp.conf.
+
+The call also clears the option flags and the charset names.
+
+Parameters:
+* `obj`: AFP object to clear
 
 Calls: [atalk_aton](atalk_addr.c.md#atalk_aton), [free_charset_names](../unicode/charcnv.c.md#free_charset_names), [free_extmap](netatalk_conf.c.md#free_extmap)
 

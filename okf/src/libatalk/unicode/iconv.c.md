@@ -5,7 +5,7 @@ description: "wrapper/stub for iconv character set conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/iconv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,14 @@ Initialized at line 101. Dispatches to: [ascii_pull](iconv.c.md#ascii_pull), [as
 struct charset_functions * find_charset_functions(const char *name)
 ```
 
-Defined at lines 123 to 136.
+Defined at lines 130 to 143.
+
+Find the registered conversion functions of a charset by name, ignoring case.
+
+Parameters:
+* `name`: charset name
+
+Returns: the functions, or NULL for a charset without them
 
 Called by: [atalk_iconv_open](iconv.c.md#atalk_iconv_open), [atalk_register_charset](iconv.c.md#atalk_register_charset), [get_charset_functions](charcnv.c.md#get_charset_functions), [volume_codepage](../../etc/afpd/volume.c.md#volume_codepage)
 
@@ -44,7 +51,14 @@ Uses file-scope variables: `charsets`
 int atalk_register_charset(struct charset_functions *funcs)
 ```
 
-Defined at lines 138 to 154.
+Defined at lines 151 to 167.
+
+Add a charset to the list of registered conversion functions.
+
+Parameters:
+* `funcs`: conversion functions, which the list links in
+
+Returns: 0, -1 for NULL, or -2 for a name already in the list
 
 Calls: [find_charset_functions](iconv.c.md#find_charset_functions)
 
@@ -58,7 +72,11 @@ Uses file-scope variables: `charsets`
 static void lazy_initialize_iconv(void)
 ```
 
-Defined at lines 156 to 184.
+Defined at lines 175 to 203.
+
+Register the built-in charsets once: UCS-2, ASCII, UTF8, UTF8-MAC, and the Mac charsets.
+
+The CJK Mac charsets need a usable iconv.
 
 Calls: [atalk_register_charset](iconv.c.md#atalk_register_charset)
 
@@ -72,7 +90,20 @@ Uses file-scope variables: `builtin_functions`, `charset_mac_centraleurope` in [
 static size_t sys_iconv(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 189 to 207.
+Defined at lines 220 to 238.
+
+Convert through the system iconv and reset the shift state after an error.
+
+The reset keeps the shift state of a charset such as SJIS from leaking into the next conversion. Without a usable iconv the call fails with EINVAL.
+
+Parameters:
+* `cd`: system iconv descriptor
+* `inbuf`: input position
+* `inbytesleft`: input bytes left
+* `outbuf`: output position
+* `outbytesleft`: output space
+
+Returns: the result of iconv, or `(size_t)-1` with errno
 
 Called by: [atalk_iconv_open](iconv.c.md#atalk_iconv_open)
 
@@ -82,11 +113,20 @@ Called by: [atalk_iconv_open](iconv.c.md#atalk_iconv_open)
 size_t atalk_iconv(atalk_iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 215 to 250.
+Defined at lines 255 to 290.
 
-This is a simple portable iconv() implementaion.
+Convert through an atalk_iconv descriptor, with the iconv calling convention.
 
-It only knows about a very small number of character sets - just enough that netatalk works on systems that don't have iconv.
+A descriptor with a direct function converts in one call. Otherwise the call pulls up to 2048 bytes of UCS2 at a time and pushes each chunk to the output.
+
+Parameters:
+* `cd`: descriptor from atalk_iconv_open
+* `inbuf`: input position
+* `inbytesleft`: input bytes left
+* `outbuf`: output position
+* `outbytesleft`: output space
+
+Returns: 0 or the result of the direct function, or `(size_t)-1` with errno
 
 Called by: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [pull_charset_flags](charcnv.c.md#pull_charset_flags), [push_charset_flags](charcnv.c.md#push_charset_flags)
 
@@ -102,9 +142,17 @@ Calls through [`atalk_iconv_t::push`](../../include/atalk/unicode.h.md#struct-at
 atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 ```
 
-Defined at lines 256 to 351.
+Defined at lines 305 to 400.
 
-simple iconv_open() wrapper
+Open a conversion between two charsets through UCS2.
+
+The descriptor uses the built-in functions of each charset, and the system iconv for a charset without them or with CHARSET_ICONV. Equal names give a direct byte transfer, and a UCS-2 side gives a direct single-step conversion.
+
+Parameters:
+* `tocode`: target charset name
+* `fromcode`: source charset name
+
+Returns: the descriptor, or `(atalk_iconv_t)-1` with ENOMEM or EINVAL
 
 Calls: [find_charset_functions](iconv.c.md#find_charset_functions), [iconv_copy](iconv.c.md#iconv_copy), [lazy_initialize_iconv](iconv.c.md#lazy_initialize_iconv), [sys_iconv](iconv.c.md#sys_iconv)
 
@@ -118,37 +166,79 @@ Uses file-scope variables: `charsets`
 int atalk_iconv_close(atalk_iconv_t cd)
 ```
 
-Defined at lines 356 to 378.
+Defined at lines 409 to 431.
 
-simple iconv_close() wrapper
+Close an atalk_iconv descriptor together with its system iconv descriptors.
+
+Parameters:
+* `cd`: descriptor to close
+
+Returns: 0
 
 ### ascii_pull
 
 ```c
-static size_t ascii_pull(void *, char **, size_t *, char **, size_t *)
+static size_t ascii_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 385 to 411.
+Defined at lines 448 to 474.
+
+Convert ASCII to UCS2, where any byte from 0x80 fails with EILSEQ.
+
+Parameters:
+* `cd`: descriptor, unused
+* `inbuf`: input position
+* `inbytesleft`: input bytes left
+* `outbuf`: UCS2 output position
+* `outbytesleft`: output space
+
+Returns: 0, or `(size_t)-1` with EILSEQ or E2BIG
 
 Dispatched via: [builtin_functions](iconv.c.md#builtin_functions)
 
 ### ascii_push
 
 ```c
-static size_t ascii_push(void *, char **, size_t *, char **, size_t *)
+static size_t ascii_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 413 to 446.
+Defined at lines 489 to 522.
+
+Convert UCS2 to ASCII, where any character from U+0080 fails with EILSEQ.
+
+A trailing odd byte fails with EINVAL.
+
+Parameters:
+* `cd`: descriptor, unused
+* `inbuf`: UCS2 input position
+* `inbytesleft`: input bytes left
+* `outbuf`: output position
+* `outbytesleft`: output space
+
+Returns: 0, or `(size_t)-1` with EILSEQ, EINVAL, or E2BIG
 
 Dispatched via: [builtin_functions](iconv.c.md#builtin_functions)
 
 ### iconv_copy
 
 ```c
-static size_t iconv_copy(void *, char **, size_t *, char **, size_t *)
+static size_t iconv_copy(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 449 to 466.
+Defined at lines 538 to 555.
+
+Pass bytes through unchanged, for a conversion between equal charsets.
+
+The call moves as many bytes as fit, and input that stays fails with E2BIG.
+
+Parameters:
+* `cd`: descriptor, unused
+* `inbuf`: input position
+* `inbytesleft`: input bytes left
+* `outbuf`: output position
+* `outbytesleft`: output space
+
+Returns: 0, or `(size_t)-1` with E2BIG
 
 Called by: [atalk_iconv_open](iconv.c.md#atalk_iconv_open)
 

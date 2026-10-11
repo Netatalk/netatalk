@@ -5,7 +5,7 @@ description: "29 functions, includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/hash.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,9 +42,14 @@ Uses file-scope variables: `hash_val_t_bit`
 static int is_power_of_two(hash_val_t arg)
 ```
 
-Defined at lines 111 to 122.
+Defined at lines 114 to 125.
 
-Verify whether the given argument is a power of two.
+Test whether a value is a power of two.
+
+Parameters:
+* `arg`: value to test
+
+Returns: 1 for a power of two, 0 otherwise, including for 0
 
 Called by: [hash_verify](hash.c.md#hash_verify)
 
@@ -54,9 +59,12 @@ Called by: [hash_verify](hash.c.md#hash_verify)
 static void clear_table(hash_t *hash)
 ```
 
-Defined at lines 127 to 134.
+Defined at lines 132 to 139.
 
-Initialize the table of pointers to null.
+Set every chain head of a hash table to NULL.
+
+Parameters:
+* `hash`: hash table
 
 Called by: [hash_create](hash.c.md#hash_create), [hash_free_nodes](hash.c.md#hash_free_nodes)
 
@@ -66,21 +74,24 @@ Called by: [hash_create](hash.c.md#hash_create), [hash_free_nodes](hash.c.md#has
 static void grow_table(hash_t *hash)
 ```
 
-Defined at lines 166 to 212.
+Defined at lines 162 to 208.
 
-Double the size of a dynamic table.
+Double the number of chains of a dynamic hash table.
 
-This works as follows. Each chain splits into two adjacent chains. The shift amount increases by one, exposing an additional bit of each hashed key. For each node in the original chain, the value of this newly exposed bit will decide which of the two new chains will receive the node: if the bit is 1, the chain with the higher index will have the node, otherwise the lower chain will receive the node. In this manner, the hash table will continue to function exactly as before without having to rehash any of the keys.
+Each chain splits into itself and a sister chain in the upper half. The mask widens by 1 bit. That bit of the stored hash value then picks the chain of each node, so no node needs a new hash. A failed realloc leaves the table as it was.
 
-Note: 1. Overflow check.
-1. The new number of chains is twice the old number of chains.
-1. The new mask is one bit wider than the previous, revealing a new bit in all hashed keys.
-1. Allocate a new table of chain pointers that is twice as large as the previous one.
-1. If the reallocation was successful, we perform the rest of the growth algorithm, otherwise we do nothing.
-1. The exposed_bit variable holds a mask with which each hashed key can be AND-ed to test the value of its newly exposed bit.
-1. Now loop over each chain in the table and sort its nodes into two chains based on the value of each node's newly exposed hash bit.
-1. The low chain replaces the current chain. The high chain goes into the corresponding sister chain in the upper half of the table.
-1. We have finished dealing with the chains and nodes. We now update the various bookeeping fields of the hash structure.
+1. Assert that doubling the chain count does not overflow.
+1. The new chain count is twice the old one.
+1. The new mask is 1 bit wider and exposes 1 more bit of each hash value.
+1. Reallocate the chain table at twice its size.
+1. A failed realloc changes nothing.
+1. The exposed_bit mask selects the new bit of each hash value.
+1. Sort the nodes of each chain by that bit.
+1. Nodes with the bit clear stay in the chain, and the others form the sister chain.
+1. Update the mask, the chain count, and the marks.
+
+Parameters:
+* `hash`: dynamic hash table
 
 Called by: [hash_insert](hash.c.md#hash_insert)
 
@@ -90,21 +101,24 @@ Called by: [hash_insert](hash.c.md#hash_insert)
 static void shrink_table(hash_t *hash)
 ```
 
-Defined at lines 246 to 291.
+Defined at lines 228 to 273.
 
-Cut a table size in half.
+Halve the number of chains of a dynamic hash table.
 
-This is done by folding together adjacent chains and populating the lower half of the table with these chains. The chains are simply spliced together. Once this is done, the whole table is reallocated to a smaller object.
+Each chain of the second half joins the end of its sister in the first half. The chain table then shrinks to its first half.
 
-Note: 1. It is illegal to have a hash table with one slot. This would mean that hash->shift is equal to hash_val_t_bit, an illegal shift value. Also, other things could go wrong, such as hash->lowmark becoming zero.
-1. Looping over each pair of sister chains, the low_chain is set to point to the head node of the chain in the lower half of the table, and high_chain points to the head node of the sister in the upper half.
-1. The intent here is to compute a pointer to the last node of the lower chain into the low_tail variable. If this chain is empty, low_tail ends up with a null value.
-1. If the lower chain is not empty, we simply tack the upper chain onto it. If the upper chain is a null pointer, nothing happens.
-1. Otherwise if the lower chain is empty but the upper one is not, If the low chain is empty, but the high chain is not, then the high chain is simply transferred to the lower half of the table.
-1. Otherwise if both chains are empty, there is nothing to do.
-1. All the chain pointers are in the lower half of the table now, so we reallocate it to a smaller object. This, of course, invalidates all pointer-to-pointers which reference into the table from the first node of each chain.
-1. Though it's unlikely, the reallocation may fail. In this case we pretend that the table *was* reallocated to a smaller object.
-1. Finally, update the various table parameters to reflect the new size.
+1. Assert at least 2 chains, so the low mark stays above 0.
+1. Take the head of each chain of the first half and of its sister.
+1. Find the tail of the first chain, NULL for an empty one.
+1. Append the sister chain to a first chain that has nodes.
+1. Move the sister chain into an empty slot.
+1. Two empty chains need nothing.
+1. Reallocate the chain table at half its size.
+1. A failed realloc keeps the old allocation, which still works.
+1. Update the mask, the chain count, and the marks.
+
+Parameters:
+* `hash`: dynamic hash table with at least 2 chains
 
 Called by: [hash_delete](hash.c.md#hash_delete)
 
@@ -114,20 +128,27 @@ Called by: [hash_delete](hash.c.md#hash_delete)
 hash_t * hash_create(hashcount_t, hash_comp_t, hash_fun_t)
 ```
 
-Defined at lines 324 to 368. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 297 to 341. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Create a dynamic hash table.
 
-Both the hash table structure and the table itself are dynamically allocated. Furthermore, the table is extendible in that it will automatically grow as its load factor increases beyond a certain threshold.
+The table starts with INIT_SIZE chains and doubles when the node count reaches twice the chain count. A deletion halves it at half the chain count, but never while the node count is at or below INIT_SIZE.
 
-Note: 1. If the number of bits in the hash_val_t type has not been computed yet, we do so here, because this is likely to be the first function that the user calls.
-1. Allocate a hash table control structure.
-1. If a hash table control structure is successfully allocated, we proceed to initialize it. Otherwise we return a null pointer.
-1. We try to allocate the table of hash chains.
-1. If we were able to allocate the hash chain table, we can finish initializing the hash structure and the table. Otherwise, we must backtrack by freeing the hash structure.
-1. INIT_SIZE should be a power of two. The high and low marks are always set to be twice the table size and half the table size respectively. When the number of nodes in the table grows beyond the high size (beyond load factor 2), it will double in size to cut the load factor down to about about 1. If the table shrinks down to or beneath load factor 0.5, it will shrink, bringing the load up to about 1. However, the table will never shrink beneath INIT_SIZE even if it's emptied.
-1. This indicates that the table is dynamically allocated and dynamically resized on the fly. A table that has this value set to zero is assumed to be statically allocated and will not be resized.
-1. The table of chains must be properly reset to all null pointers.
+1. Count the bits of hash_val_t on the first call.
+1. Allocate the control structure.
+1. Return NULL when that allocation fails.
+1. Allocate the chain table.
+1. Free the control structure when the chain allocation fails.
+1. Set the marks to twice and half the chain count.
+1. Mark the table dynamic, so it resizes.
+1. Clear the chain heads.
+
+Parameters:
+* `maxcount`: maximum number of nodes
+* `compfun`: compare function, or NULL for strcmp
+* `hashfun`: hash function, or NULL for the default string hash
+
+Returns: the table, or NULL when an allocation fails
 
 Calls: [clear_table](hash.c.md#clear_table), [compute_bits](hash.c.md#compute_bits), [hash_comp_default](hash.c.md#hash_comp_default), [hash_fun_default](hash.c.md#hash_fun_default), [hnode_alloc](hash.c.md#hnode_alloc), [hnode_free](hash.c.md#hnode_free)
 
@@ -135,17 +156,23 @@ Called by: [dircache_init](dircache.c.md#dircache_init)
 
 Uses file-scope variables: `hash_val_t_bit`
 
-Mentioned in the documentation of: [hash_scan_next](hash.c.md#hash_scan_next)
-
 ### hash_set_allocator
 
 ```c
 void hash_set_allocator(hash_t *, hnode_alloc_t, hnode_free_t, void *)
 ```
 
-Defined at lines 373 to 381. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 353 to 361. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Select a different set of node allocator routines.
+Replace the node allocator of an empty hash table.
+
+Both functions must be set, or both NULL for the defaults.
+
+Parameters:
+* `hash`: empty hash table
+* `al`: node allocator, or NULL
+* `fr`: node release function, or NULL
+* `context`: value passed to both functions
 
 Calls: [hash_count](hash.c.md#hash_count), [hnode_alloc](hash.c.md#hnode_alloc), [hnode_free](hash.c.md#hnode_free)
 
@@ -155,9 +182,14 @@ Calls: [hash_count](hash.c.md#hash_count), [hnode_alloc](hash.c.md#hnode_alloc),
 void hash_free_nodes(hash_t *)
 ```
 
-Defined at lines 387 to 400. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 370 to 383. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Free every node in the hash using the hash->freenode() function pointer, and cause the hash to become empty.
+Free every node of a hash table through its freenode function.
+
+The table stays allocated and empty.
+
+Parameters:
+* `hash`: hash table
 
 Calls: [clear_table](hash.c.md#clear_table), [hash_scan_begin](hash.c.md#hash_scan_begin), [hash_scan_delete](hash.c.md#hash_scan_delete), [hash_scan_next](hash.c.md#hash_scan_next)
 
@@ -167,9 +199,12 @@ Calls: [clear_table](hash.c.md#clear_table), [hash_scan_begin](hash.c.md#hash_sc
 void hash_destroy(hash_t *)
 ```
 
-Defined at lines 405 to 411. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 390 to 396. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Free a dynamic hash table structure.
+Free an empty dynamic hash table and its chain table.
+
+Parameters:
+* `hash`: hash table without nodes
 
 Calls: [hash_isempty](hash.h.md#hash_isempty)
 
@@ -181,15 +216,17 @@ Uses file-scope variables: `hash_val_t_bit`
 void hash_scan_begin(hscan_t *, hash_t *)
 ```
 
-Defined at lines 426 to 444. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 409 to 427. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Initialize a hash scanner.
+Start a scan of a hash table at its first node.
 
-Reset the hash scanner so that the next element retrieved by [hash_scan_next()](hash.c.md#hash_scan_next) shall be the first element on the first non-empty chain.
+1. Find the first chain with a node.
+1. Point the scan at the head of that chain.
+1. An empty table leaves the scan with no next node, so hash_scan_next returns NULL.
 
-Note: 1. Locate the first non empty chain.
-1. If an empty chain is found, remember which one it is and set the next pointer to refer to its first element.
-1. Otherwise if a chain is not found, set the next pointer to NULL so that [hash_scan_next()](hash.c.md#hash_scan_next) shall indicate failure.
+Parameters:
+* `scan`: scanner to start
+* `hash`: hash table
 
 Called by: [dircache_dump](dircache.c.md#dircache_dump), [dircache_flush_deferred_for_vol](dircache.c.md#dircache_flush_deferred_for_vol), [dircache_purge_vol](dircache.c.md#dircache_purge_vol), [dircache_remove_children](dircache.c.md#dircache_remove_children), [hash_free_nodes](hash.c.md#hash_free_nodes)
 
@@ -199,22 +236,27 @@ Called by: [dircache_dump](dircache.c.md#dircache_dump), [dircache_flush_deferre
 hnode_t * hash_scan_next(hscan_t *)
 ```
 
-Defined at lines 471 to 512. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 445 to 486. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Retrieve the next node from the hash table, and update the pointer for the next invocation of [hash_scan_next()](hash.c.md#hash_scan_next).
+Return the next node of a scan and advance the scan past it.
 
-Note: 1. Remember the next pointer in a temporary value so that it can be returned.
-1. This assertion essentially checks whether the module has been properly initialized. The first point of interaction with the module should be either [hash_create()](hash.c.md#hash_create) or [hash_init()](hash.h.md#hash_init), both of which set hash_val_t_bit to a non zero value.
-1. If the next pointer we are returning is not NULL, then the user is allowed to call [hash_scan_next()](hash.c.md#hash_scan_next) again. We prepare the new next pointer for that call right now. That way the user is allowed to delete the node we are about to return, since we will no longer be needing it to locate the next node.
-1. If there is a next node in the chain (next->next), then that becomes the new next node, otherwise ...
-1. We have exhausted the current chain, and must locate the next subsequent non-empty chain in the table.
-1. If a non-empty chain is found, the first element of that chain becomes the new next node. Otherwise there is no new next node and we set the pointer to NULL so that the next time [hash_scan_next()](hash.c.md#hash_scan_next) is called, a null pointer shall be immediately returned.
+The scan moves on before the node returns, so the caller may unlink the node with hash_scan_delete.
+
+1. Keep the node to return.
+1. Assert that a table creation counted the bits of hash_val_t.
+1. Advance only past a real node.
+1. Take the next node of the same chain when there is one.
+1. Otherwise look for the next chain with a node.
+1. Take the head of that chain, or end the scan with NULL.
+
+Parameters:
+* `scan`: scanner from hash_scan_begin
+
+Returns: the next node, or NULL at the end of the table
 
 Called by: [dircache_dump](dircache.c.md#dircache_dump), [dircache_flush_deferred_for_vol](dircache.c.md#dircache_flush_deferred_for_vol), [dircache_purge_vol](dircache.c.md#dircache_purge_vol), [dircache_remove_children](dircache.c.md#dircache_remove_children), [hash_free_nodes](hash.c.md#hash_free_nodes)
 
 Uses file-scope variables: `hash_val_t_bit`
-
-Mentioned in the documentation of: [hash_scan_begin](hash.c.md#hash_scan_begin)
 
 ### hash_insert
 
@@ -222,14 +264,19 @@ Mentioned in the documentation of: [hash_scan_begin](hash.c.md#hash_scan_begin)
 void hash_insert(hash_t *, hnode_t *, const void *)
 ```
 
-Defined at lines 527 to 552. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 500 to 525. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Insert a node into the hash table.
+Insert a node under a new `key`, ahead of the rest of its chain.
 
-Note: 1. It's illegal to insert more than the maximum number of nodes. The client should verify that the hash table is not full before attempting an insertion.
-1. The same key may not be inserted into a table twice.
-1. If the table is dynamic and the load factor is already at >= 2, grow the table.
-1. We take the bottom N bits of the hash value to derive the chain index, where N is the base 2 logarithm of the size of the hash table.
+1. Assert that the table has room under maxcount.
+1. Assert that `key` is not in the table yet.
+1. Grow a dynamic table whose node count reached highmark.
+1. The low bits of the hash value under the mask pick the chain.
+
+Parameters:
+* `hash`: hash table
+* `node`: node with no chain link
+* `key`: value to find the node by, kept by pointer
 
 Calls: [grow_table](hash.c.md#grow_table), [hash_lookup](hash.c.md#hash_lookup)
 
@@ -245,17 +292,21 @@ Mentioned in the documentation of: [arc_case_iv_make_room](dircache.c.md#arc_cas
 hnode_t * hash_lookup(hash_t *, const void *)
 ```
 
-Defined at lines 568 to 585. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 539 to 556. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Find a node in the hash table and return a pointer to it.
+Find the node of `key` in a hash table.
 
-Note: 1. We hash the key and keep the entire hash value. As an optimization, when we descend down the chain, we can compare hash values first and only if hash values match do we perform a full key comparison.
-1. To locate the chain from among 2^N chains, we look at the lower N bits of the hash value by anding them with the current mask.
-1. Looping through the chain, we compare the stored hash value inside each node against our computed hash. If they match, then we do a full comparison between the unhashed keys. If these match, we have located the entry.
+1. Hash `key` once and keep the full value.
+1. The low bits of the hash value under the mask pick the chain.
+1. Compare the stored hash values first, and call the compare function only on a match.
+
+Parameters:
+* `hash`: hash table
+* `key`: value to find
+
+Returns: the node, or NULL when no node matches
 
 Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_lookup_parent](dircache.c.md#dircache_lookup_parent), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [hash_delete](hash.c.md#hash_delete), [hash_insert](hash.c.md#hash_insert), [hash_scan_delete](hash.c.md#hash_scan_delete), [process_cache_hints](dircache.c.md#process_cache_hints)
-
-Mentioned in the documentation of: [process_cache_hints](dircache.c.md#process_cache_hints)
 
 ### hash_delete
 
@@ -263,16 +314,24 @@ Mentioned in the documentation of: [process_cache_hints](dircache.c.md#process_c
 hnode_t * hash_delete(hash_t *, hnode_t *)
 ```
 
-Defined at lines 605 to 642. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 576 to 613. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Delete the given node from the hash table. Since the chains are singly linked, we must locate the start of the node's chain and traverse.
+Unlink a node from a hash table.
 
-Note: 1. The node must belong to this hash table, and its key must not have been tampered with.
-1. If this deletion will take the node count below the low mark, we shrink the table now.
-1. Determine which chain the node belongs to, and fetch the pointer to the first node in this chain.
-1. If the node being deleted is the first node in the chain, then simply update the chain head pointer.
-1. Otherwise advance to the node's predecessor, and splice out by updating the predecessor's next pointer.
-1. Indicate that the node is no longer in a hash table.
+The chains link one way, so the call walks the chain of the node to find its predecessor. A dynamic table halves first when the node count is at or below the low mark and above INIT_SIZE.
+
+1. Assert that hash_lookup still finds the node.
+1. Shrink the table before the unlink.
+1. Find the chain of the node from its stored hash value.
+1. Replace the chain head when the node is the head.
+1. Otherwise unlink the node from its predecessor.
+1. Clear the link of the node, so it belongs to no table.
+
+Parameters:
+* `hash`: hash table
+* `node`: node in the table
+
+Returns: node
 
 Calls: [hash_lookup](hash.c.md#hash_lookup), [shrink_table](hash.c.md#shrink_table)
 
@@ -286,7 +345,16 @@ Uses file-scope variables: `hash_val_t_bit`
 int hash_alloc_insert(hash_t *, const void *, void *)
 ```
 
-Defined at lines 644 to 647. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 623 to 626. Declared in [etc/afpd/hash.h](hash.h.md).
+
+Allocate a node for `data` and insert it under `key`.
+
+Parameters:
+* `hash`: hash table
+* `key`: value to find the node by, kept by pointer
+* `data`: value of the node
+
+Returns: 1, or 0 when the node allocation fails
 
 Calls: [hash_alloc_insert_node](hash.c.md#hash_alloc_insert_node)
 
@@ -296,9 +364,18 @@ Calls: [hash_alloc_insert_node](hash.c.md#hash_alloc_insert_node)
 hnode_t * hash_alloc_insert_node(hash_t *, const void *, void *)
 ```
 
-Defined at lines 653 to 663. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 638 to 648. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Like hash_alloc_insert, but hands back the inserted node, so a caller that keeps it can delete without a lookup.
+Allocate a node for `data`, insert it under `key`, and return it.
+
+A caller that keeps the node can unlink it later without a lookup.
+
+Parameters:
+* `hash`: hash table
+* `key`: value to find the node by, kept by pointer
+* `data`: value of the node
+
+Returns: the node, or NULL when the allocation fails
 
 Calls: [hash_insert](hash.c.md#hash_insert), [hnode_init](hash.c.md#hnode_init)
 
@@ -310,7 +387,13 @@ Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_reindex_didname
 void hash_delete_free(hash_t *, hnode_t *)
 ```
 
-Defined at lines 665 to 669. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 657 to 661. Declared in [etc/afpd/hash.h](hash.h.md).
+
+Unlink a node through hash_delete and free it through the freenode function.
+
+Parameters:
+* `hash`: hash table
+* `node`: node in the table
 
 Calls: [hash_delete](hash.c.md#hash_delete)
 
@@ -322,9 +405,17 @@ Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_remove](dircach
 hnode_t * hash_scan_delete(hash_t *, hnode_t *)
 ```
 
-Defined at lines 675 to 698. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 673 to 696. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Exactly like hash_delete, except does not trigger table shrinkage. This is to be used from within a hash table scan operation. See notes for hash_delete.
+Unlink a node like hash_delete, but never shrink the table.
+
+A scan may unlink the node that hash_scan_next just returned, because the chain table keeps its size.
+
+Parameters:
+* `hash`: hash table
+* `node`: node in the table
+
+Returns: node
 
 Calls: [hash_lookup](hash.c.md#hash_lookup)
 
@@ -338,9 +429,13 @@ Uses file-scope variables: `hash_val_t_bit`
 void hash_scan_delfree(hash_t *, hnode_t *)
 ```
 
-Defined at lines 703 to 707. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 705 to 709. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Like hash_delete_free but based on hash_scan_delete.
+Unlink a node through hash_scan_delete and free it through the freenode function.
+
+Parameters:
+* `hash`: hash table
+* `node`: node in the table
 
 Calls: [hash_scan_delete](hash.c.md#hash_scan_delete)
 
@@ -352,12 +447,19 @@ Called by: [dircache_remove](dircache.c.md#dircache_remove)
 int hash_verify(hash_t *)
 ```
 
-Defined at lines 718 to 754. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 723 to 759. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Verify whether the given object is a valid hash table.
+Check the invariants of a hash table.
 
-Note: 1. If the hash table is dynamic, verify whether the high and low expansion/shrinkage thresholds are powers of two.
-1. Count all nodes in the table, and test each hash value to see whether it is correct for the node's chain.
+Debug builds assert it after each change of a table.
+
+1. A dynamic table needs lowmark under highmark, both powers of two.
+1. Each node must sit in the chain that its stored hash value picks, and the node count must match.
+
+Parameters:
+* `hash`: hash table
+
+Returns: 1 for a valid table, 0 otherwise
 
 Calls: [is_power_of_two](hash.c.md#is_power_of_two)
 
@@ -367,7 +469,14 @@ Calls: [is_power_of_two](hash.c.md#is_power_of_two)
 static hnode_t * hnode_alloc(void *context)
 ```
 
-Defined at lines 756 to 759.
+Defined at lines 767 to 770.
+
+Allocate a node with malloc, the default node allocator.
+
+Parameters:
+* `context`: unused
+
+Returns: the node, or NULL when malloc fails
 
 Called by: [hash_create](hash.c.md#hash_create), [hash_set_allocator](hash.c.md#hash_set_allocator)
 
@@ -377,7 +486,13 @@ Called by: [hash_create](hash.c.md#hash_create), [hash_set_allocator](hash.c.md#
 static void hnode_free(hnode_t *node, void *context)
 ```
 
-Defined at lines 761 to 764.
+Defined at lines 778 to 781.
+
+Free a node with free, the default node release function.
+
+Parameters:
+* `node`: node to free
+* `context`: unused
 
 Called by: [hash_create](hash.c.md#hash_create), [hash_set_allocator](hash.c.md#hash_set_allocator)
 
@@ -387,9 +502,15 @@ Called by: [hash_create](hash.c.md#hash_create), [hash_set_allocator](hash.c.md#
 hnode_t * hnode_init(hnode_t *, void *)
 ```
 
-Defined at lines 769 to 774. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 790 to 795. Declared in [etc/afpd/hash.h](hash.h.md).
 
-Initialize a client-supplied node
+Set up a node that the caller allocated.
+
+Parameters:
+* `hnode`: node to set up
+* `data`: value of the node
+
+Returns: hnode, with data stored and no chain link
 
 Called by: [hash_alloc_insert_node](hash.c.md#hash_alloc_insert_node)
 
@@ -399,7 +520,14 @@ Called by: [hash_alloc_insert_node](hash.c.md#hash_alloc_insert_node)
 void * hnode_get(hnode_t *)
 ```
 
-Defined at lines 777 to 780. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 804 to 807. Declared in [etc/afpd/hash.h](hash.h.md).
+
+Return the value of a node.
+
+Parameters:
+* `node`: hash node
+
+Returns: the data pointer of the node
 
 Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache_add](dircache.c.md#dircache_add), [dircache_dump](dircache.c.md#dircache_dump), [dircache_flush_deferred_for_vol](dircache.c.md#dircache_flush_deferred_for_vol), [dircache_lookup_parent](dircache.c.md#dircache_lookup_parent), [dircache_process_deferred_chain](dircache.c.md#dircache_process_deferred_chain), [dircache_purge_vol](dircache.c.md#dircache_purge_vol), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_remove](dircache.c.md#dircache_remove), [dircache_remove_children](dircache.c.md#dircache_remove_children), [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [process_cache_hints](dircache.c.md#process_cache_hints)
 
@@ -409,7 +537,14 @@ Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache
 const void * hnode_getkey(hnode_t *)
 ```
 
-Defined at lines 783 to 786. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 816 to 819. Declared in [etc/afpd/hash.h](hash.h.md).
+
+Return the lookup value that hash_insert stored in a node.
+
+Parameters:
+* `node`: hash node
+
+Returns: the hash_key pointer of the node
 
 ### hash_count
 
@@ -417,7 +552,14 @@ Defined at lines 783 to 786. Declared in [etc/afpd/hash.h](hash.h.md).
 hashcount_t hash_count(hash_t *)
 ```
 
-Defined at lines 789 to 792. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 828 to 831. Declared in [etc/afpd/hash.h](hash.h.md).
+
+Return the number of nodes in a hash table.
+
+Parameters:
+* `hash`: hash table
+
+Returns: the node count
 
 Called by: [hash_set_allocator](hash.c.md#hash_set_allocator)
 
@@ -427,7 +569,14 @@ Called by: [hash_set_allocator](hash.c.md#hash_set_allocator)
 hashcount_t hash_size(hash_t *)
 ```
 
-Defined at lines 795 to 798. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 840 to 843. Declared in [etc/afpd/hash.h](hash.h.md).
+
+Return the number of chains of a hash table.
+
+Parameters:
+* `hash`: hash table
+
+Returns: the chain count
 
 Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache_init](dircache.c.md#dircache_init), [dircache_process_deferred_chain](dircache.c.md#dircache_process_deferred_chain)
 
@@ -437,7 +586,16 @@ Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache
 static hash_val_t hash_fun_default(const void *key)
 ```
 
-Defined at lines 800 to 821.
+Defined at lines 854 to 875.
+
+Hash a NUL-terminated string, the default hash function.
+
+Each byte mixes in 2 entries of a 16-entry random table, and the accumulator rotates after each entry and stays within 32 bits.
+
+Parameters:
+* `key`: string to hash
+
+Returns: the 32-bit hash value
 
 Called by: [hash_create](hash.c.md#hash_create)
 
@@ -447,7 +605,15 @@ Called by: [hash_create](hash.c.md#hash_create)
 static int hash_comp_default(const void *key1, const void *key2)
 ```
 
-Defined at lines 832 to 835.
+Defined at lines 893 to 896.
+
+Compare two strings with strcmp, the default compare function.
+
+Parameters:
+* `key1`: first string
+* `key2`: second string
+
+Returns: the strcmp result, 0 for equal strings
 
 Called by: [hash_create](hash.c.md#hash_create)
 

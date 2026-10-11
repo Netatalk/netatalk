@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/socket.c"
-description: "13 functions, includes 3 project headers."
+description: "Netatalk utility functions: socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/socket.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -89,18 +89,16 @@ Called by: [afp_disconnect](../../etc/afpd/auth.c.md#afp_disconnect), [ipc_child
 const char * getip_string(const struct sockaddr *sa)
 ```
 
-Defined at lines 337 to 374.
+Defined at lines 335 to 372.
 
-convert an IPv4 or IPv6 address to a static string using inet_ntop
+Convert an IPv4 or IPv6 address to a static string with inet_ntop.
 
-IPv6 mapped IPv4 addresses are returned as IPv4 addreses e.g. ::ffff:10.0.0.0 is returned as "10.0.0.0".
+An IPv6-mapped IPv4 address comes back as the IPv4 address: `::ffff:10.0.0.0` becomes "10.0.0.0".
 
 Parameters:
-* `sa`: pointer to an struct sockaddr
+* `sa`: pointer to a struct sockaddr
 
-Returns: pointer to a static string cotaining the converted address as string.
-
-Returns: On error pointers to "0.0.0.0" or "::0" are returned.
+Returns: a static string with the address, or "0.0.0.0" or "::0" on error
 
 Called by: [client_address](../../etc/afpd/auth.c.md#client_address), [compare_ip](socket.c.md#compare_ip), [configinit](../../etc/afpd/afp_config.c.md#configinit), [dsi_tcp_open](../dsi/dsi_tcp.c.md#dsi_tcp_open), [guess_interface](../dsi/dsi_tcp.c.md#guess_interface), [uam_afpserver_option](../../etc/afpd/uam.c.md#uam_afpserver_option), [volxlate](netatalk_conf.c.md#volxlate)
 
@@ -112,7 +110,7 @@ Uses file-scope variables: `ipv4mapprefix`
 unsigned int getip_port(const struct sockaddr *sa)
 ```
 
-Defined at lines 383 to 394.
+Defined at lines 381 to 392.
 
 return port number from struct sockaddr
 
@@ -129,7 +127,7 @@ Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit), [dsi_tcp_ope
 void apply_ip_mask(struct sockaddr *sa, int mask)
 ```
 
-Defined at lines 407 to 457.
+Defined at lines 405 to 455.
 
 apply netmask to IP (v4 or v6)
 
@@ -149,7 +147,7 @@ Uses file-scope variables: `ipv4mapprefix`
 int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
 ```
 
-Defined at lines 470 to 480.
+Defined at lines 468 to 478.
 
 compare IP addresses for equality
 
@@ -171,7 +169,7 @@ Called by: [hostaccessvol](netatalk_conf.c.md#hostaccessvol)
 int tokenize_ip_port(const char *ipurl, char **address, char **port)
 ```
 
-Defined at lines 502 to 569.
+Defined at lines 500 to 567.
 
 Tokenize IP(4/6) addresses with an optional port into address and port.
 
@@ -196,9 +194,14 @@ Called by: [dsi_tcp_init](../dsi/dsi_tcp.c.md#dsi_tcp_init)
 struct asev * asev_init(int max)
 ```
 
-Defined at lines 574 to 596.
+Defined at lines 575 to 597.
 
-Allocate and initialize atalk socket event struct
+Allocate an empty poll set with room for max descriptors.
+
+Parameters:
+* `max`: capacity of the poll and data arrays
+
+Returns: the set, or NULL when an allocation fails
 
 Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sockets)
 
@@ -208,11 +211,20 @@ Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sock
 bool asev_add_fd(struct asev *asev, int fd, enum asev_fdtype fdtype, void *private, int protocol)
 ```
 
-Defined at lines 604 to 625.
+Defined at lines 613 to 634.
 
-Add a fd to a dynamic pollfd array and associated data array.
+Append a descriptor to a poll set, watched for POLLIN.
 
-This uses an additional array of struct polldata which stores type information (enum fdtype) and a pointer to anciliary user data.
+A second array holds the type, the private data, and the protocol of each entry, at the same index as its pollfd.
+
+Parameters:
+* `asev`: poll set
+* `fd`: descriptor
+* `fdtype`: type that the poll loop dispatches on
+* `private`: data of the entry, such as a child or a [DSI](../../include/atalk/dsi.h.md#struct-dsi)
+* `protocol`: AFPPROTO_DSI or AFPPROTO_ASP for a listener, 0 otherwise
+
+Returns: true, or false for a NULL or full set
 
 Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sockets), [main](../../etc/afpd/main.c.md#main)
 
@@ -222,11 +234,17 @@ Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sock
 bool asev_del_fd(struct asev *asev, int fd)
 ```
 
-Defined at lines 632 to 679.
+Defined at lines 645 to 692.
 
-Remove fd from asev.
+Remove a descriptor from a poll set, keeping the order of the others.
 
-Returns: true if the fd was deleted, otherwise false
+The entries after it move down by one.
+
+Parameters:
+* `asev`: poll set
+* `fd`: descriptor
+
+Returns: true when the set held fd, false otherwise
 
 Called by: [child_handler](../../etc/afpd/main.c.md#child_handler), [main](../../etc/afpd/main.c.md#main), [reset_listening_sockets](../../etc/afpd/main.c.md#reset_listening_sockets)
 
@@ -236,7 +254,7 @@ Called by: [child_handler](../../etc/afpd/main.c.md#child_handler), [main](../..
 int recv_fd(int fd, int nonblocking)
 ```
 
-Defined at lines 692 to 751.
+Defined at lines 705 to 764.
 
 Receive a fd on a suitable socket.
 
@@ -254,15 +272,23 @@ Called by: [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer
 int send_fd(int socket, int fd)
 ```
 
-Defined at lines 756 to 802.
+Defined at lines 776 to 822.
 
-Send a fd across a suitable socket
+Pass a descriptor over a Unix socket with SCM_RIGHTS.
+
+The descriptor needs data to travel with, so the message carries an int of 0. The call repeats sendmsg after EINTR.
+
+Parameters:
+* `socket`: PF_UNIX socket
+* `fd`: descriptor to pass
+
+Returns: 0, or -1 when malloc or sendmsg fails
 
 Called by: [afp_disconnect](../../etc/afpd/auth.c.md#afp_disconnect), [server_child_transfer_session](server_child.c.md#server_child_transfer_session)
 
 # Macros
 
-* Undocumented: `CMSG_SPACE`
+* `CMSG_SPACE`: Length of the space taken up by a padded control message of length len.
 
 # File-scope variables
 

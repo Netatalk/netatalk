@@ -5,7 +5,7 @@ description: "includes 4 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/status.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,4 +28,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 # Macros
 
-* Undocumented: `AFPSTATUS_FLAGOFF`, `AFPSTATUS_ICONOFF`, `AFPSTATUS_LEN`, `AFPSTATUS_MACHLEN`, `AFPSTATUS_MACHOFF`, `AFPSTATUS_POSTLEN`, `AFPSTATUS_PRELEN`, `AFPSTATUS_UAMSOFF`, `AFPSTATUS_VERSOFF`
+* `AFPSTATUS_MACHLEN`: The number of characters for the MachineType.
+* `AFPSTATUS_POSTLEN`: The number of bytes for offset records after the ServerName field.
+* `AFPSTATUS_PRELEN`: The number of bytes for status data prior to the ServerName field.
+* Undocumented: `AFPSTATUS_FLAGOFF`, `AFPSTATUS_ICONOFF`, `AFPSTATUS_LEN`, `AFPSTATUS_MACHOFF`, `AFPSTATUS_UAMSOFF`, `AFPSTATUS_VERSOFF`
