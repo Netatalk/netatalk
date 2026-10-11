@@ -107,33 +107,44 @@ jobs:
   build-doxygen-docs:
     name: Build Doxygen Docs
     runs-on: ubuntu-26.04
-    container:
-      image: alpine:3.24
     timeout-minutes: 12
     steps:
       - name: Install dependencies
         run: |
-          apk add --no-cache \
-            build-base \
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends \
             ca-certificates \
-            doxygen \
-            gcc \
-            git \
-            iniparser-dev \
-            libevent-dev \
-            libgcrypt-dev \
+            curl \
             meson \
-            pkgconf \
-            sqlite-dev
+            ninja-build
+      - name: Install Doxygen
+        run: |
+          curl --proto '=https' --location --fail -o /tmp/doxygen.tar.gz \
+            https://www.doxygen.nl/files/doxygen-1.18.0.linux.bin.tar.gz
+          echo '14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90  /tmp/doxygen.tar.gz' \
+            | sha256sum -c -
+          mkdir -p /tmp/doxygen
+          tar -xzf /tmp/doxygen.tar.gz -C /tmp/doxygen --strip-components=2 \
+            doxygen-1.18.0/bin/doxygen
+          sudo install /tmp/doxygen/doxygen /usr/local/bin/doxygen
+          doxygen_version=$(doxygen --version)
+          echo "$doxygen_version"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Configure
         run: |
           meson setup build \
-            -Dbuildtype=debug \
+            -Dbuildtype=release \
             -Dwith-docs=developer \
+            -Dwith-docs-only=true \
             -Dwith-doxygen-strict=true
+      - name: Upload Doxygen docs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: doxygen-docs
+          path: build/doc/developer
+          if-no-files-found: error
       - name: Upload Meson log on failure
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
