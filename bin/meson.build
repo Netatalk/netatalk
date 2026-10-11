@@ -1,7 +1,18 @@
 subdir('afppasswd')
 subdir('dbd')
-subdir('misc')
 subdir('nad')
+
+if enable_fce
+    subdir('fce')
+endif
+
+if have_iconv
+    subdir('netacnv')
+endif
+
+if have_ldap
+    subdir('afpldaptest')
+endif
 
 if enable_appletalk
     subdir('aecho')

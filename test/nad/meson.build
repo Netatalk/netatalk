@@ -19,7 +19,7 @@ if perl.found()
         depends: [nad, metadata_helper],
         env: {'NAD_TEST_EA': 'sys'},
         protocol: 'tap',
-        suite: 'nad',
+        suite: 'perl',
         timeout: 120,
     )
 
@@ -32,7 +32,7 @@ if perl.found()
             depends: nad,
             env: {'NAD_TEST_EA': ea},
             protocol: 'tap',
-            suite: 'nad',
+            suite: 'perl',
             timeout: 120,
         )
 
@@ -43,7 +43,7 @@ if perl.found()
             depends: nad,
             env: {'NAD_TEST_EA': ea},
             protocol: 'tap',
-            suite: 'nad',
+            suite: 'perl',
             timeout: 120,
         )
 
@@ -55,7 +55,7 @@ if perl.found()
                 depends: nad,
                 env: {'NAD_TEST_EA': ea},
                 protocol: 'tap',
-                suite: 'nad',
+                suite: 'perl',
                 timeout: 120,
             )
         endif
