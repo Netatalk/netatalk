@@ -96,6 +96,21 @@ uuid_format_test = executable(
 
 test('libatalk UUID formatting bounds', uuid_format_test)
 
+unicode_test = executable(
+    'unicode_test',
+    'test_unicode.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk Unicode and filename conversion',
+    unicode_test,
+    protocol: 'tap',
+)
+
 adouble_convert_c_args = []
 adouble_convert_env = {}
 adouble_convert_depends = []
