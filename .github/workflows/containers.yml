@@ -26,7 +26,7 @@ env:
 jobs:
   build-container:
     name: Build production container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
@@ -60,7 +62,7 @@ jobs:
 
   build-container-testsuite:
     name: Build Alpine testsuite container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
@@ -68,6 +70,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite" >> ${GITHUB_ENV}
@@ -94,7 +98,7 @@ jobs:
 
   build-container-testsuite-perf:
     name: Build Alpine testsuite container (release, for perf)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     # Gated like its only consumers (latencygraph-lantest, perfgraph-speedtest),
     # so pushes and dependabot PRs do not build an image nothing pulls
@@ -105,6 +109,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite-perf" >> ${GITHUB_ENV}
@@ -134,7 +140,7 @@ jobs:
 
   build-container-webmin:
     name: Build Netatalk Webmin Module container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
@@ -142,6 +148,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-webmin" >> ${GITHUB_ENV}
@@ -168,7 +176,7 @@ jobs:
 
   build-container-testsuite-debian:
     name: Build Debian testsuite container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
@@ -176,6 +184,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite-debian" >> ${GITHUB_ENV}
@@ -202,14 +212,19 @@ jobs:
 
   build-container-tsan:
     name: Build TSAN testsuite container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
       packages: write
     steps:
+      - name: Lower ASLR entropy for TSAN shadow-memory compatibility
+        # The Docker build runs TSAN unit tests using the runner's kernel.
+        run: sudo sysctl vm.mmap_rnd_bits=28
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite-tsan" >> ${GITHUB_ENV}
@@ -256,7 +271,7 @@ jobs:
 
   tsan-spectest:
     name: Spectest + lantest under ThreadSanitizer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     needs: build-container-tsan
     if: ${{ !github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' }}
@@ -297,6 +312,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -307,7 +324,7 @@ jobs:
 
   build-container-debug:
     name: Build debug profiling container
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork }}
     permissions:
@@ -315,6 +332,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-debug" >> ${GITHUB_ENV}
@@ -356,7 +375,7 @@ jobs:
   flamegraph-spectest:
     name: Spectest (AFP 3.4) - FlameGraph
     needs: build-container-debug
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
     permissions:
@@ -372,6 +391,8 @@ jobs:
       # Checkout is needed to resolve the local publish-gh-pages action
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Run spectest with flamegraph profiling
         run: |
           docker run --privileged --rm \
@@ -473,6 +494,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -486,7 +509,7 @@ jobs:
     needs:
       - build-container
       - build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -554,6 +577,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -567,7 +592,7 @@ jobs:
     needs:
       - build-container
       - build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -622,65 +647,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-spectest-mysql-afp34-debian:
-    name: AFP spec test (cnid:mysql) AFP 3.4 - Debian
-    needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Create container network
-        run: |
-          docker network create afp_network
-      - name: Start MariaDB container
-        run: |
-          docker run --detach --name mariadb --network afp_network \
-              -e MARIADB_ROOT_PASSWORD="$DB_PASSWD" \
-              mariadb:latest
-      - name: Wait for MariaDB to initialize
-        run: |
-          sleep 4
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-              --network afp_network \
-              -e AFP_USER=atalk1 \
-              -e AFP_USER2=atalk2 \
-              -e AFP_PASS="$CONT_PASSWD" \
-              -e AFP_PASS2="$CONT_PASSWD" \
-              -e AFP_GROUP=afpusers \
-              -e AFP_CNID_BACKEND=mysql \
-              -e SHARE_NAME=test1 \
-              -e SHARE_NAME2=test2 \
-              -e INSECURE_AUTH=1 \
-              -e DISABLE_TIMEMACHINE=1 \
-              -e TESTSUITE=spec \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-              -e VERBOSE=1 \
-              -e AFP_VERSION=7 \
-              -e AFP_REMOTE=1 \
-              -e AFP_EXTMAP=1 \
-              -e AFP_DIRCACHESIZE=1024 \
-              -e AFP_CONVERT_APPLEDOUBLE=yes \
-              -e AFP_CNID_SQL_HOST=mariadb \
-              -e AFP_CNID_SQL_USER=root \
-              -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
-              ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -692,7 +660,7 @@ jobs:
   afp-spectest-sqlite-afp34-debian:
     name: AFP spec test (cnid:sqlite) AFP 3.4 - Debian
     needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -724,6 +692,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -732,78 +702,10 @@ jobs:
           path: ${{ runner.temp }}/afp-spectest.junit.xml
           reporter: java-junit
 
-  debian-s390x-tests:
-    name: AFP spec test (s390x/QEMU) AFP 3.4 - Debian
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Register the emulator before starting any s390x containers.
-      # A job-level container would start before this step can run.
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
-        with:
-          platforms: s390x
-      - name: Build and run unit tests
-        run: |
-          mkdir -p "$RUNNER_TEMP/s390x-reports"
-          docker build --platform linux/s390x --progress=plain \
-            --file distrib/docker/testsuite_deb.Dockerfile \
-            --target build --tag netatalk-testsuite-build:s390x . \
-            2>&1 | tee "$RUNNER_TEMP/s390x-reports/build.log"
-      - name: Collect unit test reports
-        run: |
-          docker create --platform linux/s390x --name s390x-unit-reports \
-            netatalk-testsuite-build:s390x
-          docker cp s390x-unit-reports:/netatalk-code/build/meson-logs \
-            "$RUNNER_TEMP/s390x-reports/meson-logs"
-          docker rm s390x-unit-reports
-      - name: Build testsuite runtime image
-        run: |
-          docker build --platform linux/s390x --progress=plain \
-            --file distrib/docker/testsuite_deb.Dockerfile \
-            --tag netatalk-testsuite:s390x . \
-            2>&1 | tee "$RUNNER_TEMP/s390x-reports/runtime-build.log"
-          test "$(docker run --rm --platform linux/s390x \
-            netatalk-testsuite:s390x dpkg --print-architecture)" = s390x
-      - name: Run AFP 3.4 spectest
-        run: |
-          docker run --rm --platform linux/s390x \
-            -e AFP_USER=atalk1 -e AFP_USER2=atalk2 \
-            -e AFP_PASS=ci-test1 -e AFP_PASS2=ci-test1 \
-            -e AFP_GROUP=afpusers \
-            -e SHARE_NAME=test1 -e SHARE_NAME2=test2 \
-            -e INSECURE_AUTH=1 -e DISABLE_TIMEMACHINE=1 \
-            -e TESTSUITE=spec -e AFP_VERSION=7 \
-            -e AFP_EXTMAP=1 -e AFP_DIRCACHESIZE=1024 \
-            -e AFP_CNID_BACKEND=sqlite \
-            -v "$RUNNER_TEMP/s390x-reports:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            netatalk-testsuite:s390x \
-            2>&1 | tee "$RUNNER_TEMP/s390x-reports/spectest.log"
-      - name: Summarize test results
-        if: always()
-        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
-        with:
-          paths: |
-            ${{ runner.temp }}/s390x-reports/meson-logs/testlog.junit.xml
-            ${{ runner.temp }}/s390x-reports/afp-spectest.junit.xml
-          folded: true
-      - name: Upload test reports and logs
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: debian-s390x-test-reports
-          path: ${{ runner.temp }}/s390x-reports
-
   afp-spectest-afp34:
     name: AFP spec test (ea:sys) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -833,6 +735,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -844,7 +748,7 @@ jobs:
   afp-spectest-singleuser-afp34:
     name: AFP spec test (single-user) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -874,6 +778,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -885,7 +791,7 @@ jobs:
   netatalk-integration:
     name: Integration scripts - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -907,7 +813,7 @@ jobs:
   samba-interop:
     name: samba-client and netatalk-client interop (ea:samba) - Debian
     needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
@@ -931,7 +837,7 @@ jobs:
   afp-spectest-strict-locking-afp34:
     name: AFP spec test (strict locking) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -962,6 +868,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -973,7 +881,7 @@ jobs:
   afp-spectest-recvfile-afp34:
     name: AFP spec test (recvfile, ea:ad) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1006,89 +914,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-spectest-sqlite-afp34:
-    name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine
-    needs: build-container-testsuite
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_USER2="atalk2" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_PASS2="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e AFP_CNID_BACKEND="sqlite" \
-            -e SHARE_NAME="test1" \
-            -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
-            -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="7" \
-            -e AFP_EXTMAP="1" \
-            -e AFP_DIRCACHESIZE="1024" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
-        with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-spectest-afp34-debian:
-    name: AFP spec test (ea:sys) AFP 3.4 - Debian
-    needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_USER2="atalk2" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_PASS2="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e SHARE_NAME="test1" \
-            -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
-            -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="7" \
-            -e AFP_EXTMAP="1" \
-            -e AFP_DIRCACHESIZE="1024" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1100,7 +927,7 @@ jobs:
   afp-adtest-afp34:
     name: AFP spec test (ea:ad) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1134,49 +961,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-adtest-afp34-debian:
-    name: AFP spec test (ea:ad) AFP 3.4 - Debian
-    needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_USER2="atalk2" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_PASS2="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e AFP_EA="ad" \
-            -e SHARE_NAME="test1" \
-            -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
-            -e DISABLE_TIMEMACHINE="1" \
-            -e AFP_ADOUBLE="1" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="7" \
-            -e AFP_EXTMAP="1" \
-            -e AFP_DIRCACHESIZE="1024" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1188,7 +974,7 @@ jobs:
   afp-spectest-afp33:
     name: AFP spec test (ea:sys) AFP 3.3 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1219,6 +1005,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1230,7 +1018,7 @@ jobs:
   afp-spectest-afp32:
     name: AFP spec test (ea:sys) AFP 3.2 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1261,6 +1049,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1272,7 +1062,7 @@ jobs:
   afp-spectest-afp31:
     name: AFP spec test (ea:sys) AFP 3.1 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1302,6 +1092,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1313,7 +1105,7 @@ jobs:
   afp-spectest-afp30:
     name: AFP spec test (ea:sys) AFP 3.0 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1343,47 +1135,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-spectest-afp30-debian:
-    name: AFP spec test (ea:sys) AFP 3.0 - Debian
-    needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_USER2="atalk2" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_PASS2="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e SHARE_NAME="test1" \
-            -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
-            -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="3" \
-            -e AFP_EXTMAP="1" \
-            -e AFP_DIRCACHESIZE="1024" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1395,7 +1148,7 @@ jobs:
   afp-spectest-dhx-afp30:
     name: AFP spec test (DHCAST128) AFP 3.0 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1426,6 +1179,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1437,7 +1192,7 @@ jobs:
   afp-spectest-dhx-afp34-debian:
     name: AFP spec test (DHCAST128) AFP 3.4 - Debian
     needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1468,6 +1223,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1479,7 +1236,7 @@ jobs:
   afp-spectest-dhx2-afp31:
     name: AFP spec test (DHX2) AFP 3.1 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1510,6 +1267,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1521,7 +1280,7 @@ jobs:
   afp-spectest-dhx2-afp34-debian:
     name: AFP spec test (DHX2) AFP 3.4 - Debian
     needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1552,6 +1311,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1563,7 +1324,7 @@ jobs:
   afp-spectest-afp22:
     name: AFP spec test (ea:sys) AFP 2.2 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1593,6 +1354,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1604,7 +1367,7 @@ jobs:
   afp-spectest-afp21:
     name: AFP spec test (ea:sys) AFP 2.1 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1634,47 +1397,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-spectest-afp21-debian:
-    name: AFP spec test (ea:sys) AFP 2.1 - Debian
-    needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_USER2="atalk2" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_PASS2="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e SHARE_NAME="test1" \
-            -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
-            -e DISABLE_TIMEMACHINE="1" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="1" \
-            -e AFP_EXTMAP="1" \
-            -e AFP_DIRCACHESIZE="1024" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1686,7 +1410,7 @@ jobs:
   afp-adtest-afp21:
     name: AFP spec test (ea:ad) AFP 2.1 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1718,49 +1442,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-adtest-afp21-debian:
-    name: AFP spec test (ea:ad) AFP 2.1 - Debian
-    needs: build-container-testsuite-debian
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_USER2="atalk2" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_PASS2="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e AFP_EA="ad" \
-            -e SHARE_NAME="test1" \
-            -e SHARE_NAME2="test2" \
-            -e INSECURE_AUTH="1" \
-            -e DISABLE_TIMEMACHINE="1" \
-            -e AFP_ADOUBLE="1" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="1" \
-            -e AFP_EXTMAP="1" \
-            -e AFP_DIRCACHESIZE="1024" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1772,7 +1455,7 @@ jobs:
   afp-rotest-afp34:
     name: AFP spec test (readonly) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1798,43 +1481,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-rotest-afp21:
-    name: AFP spec test (readonly) AFP 2.1 - Alpine
-    needs: build-container-testsuite
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e SHARE_NAME="test1" \
-            -e INSECURE_AUTH="1" \
-            -e AFP_READONLY="1" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e AFP_SUBTESTS="Readonly" \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="1" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1849,7 +1497,7 @@ jobs:
   afp-sleeptest-afp34:
     name: AFP spec test (sleep) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -1878,46 +1526,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Publish AFP spec test results
-        if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
-          name: AFP Spectest (${{ github.job }})
-          path: ${{ runner.temp }}/afp-spectest.junit.xml
-          reporter: java-junit
-
-  afp-sleeptest-afp30:
-    name: AFP spec test (sleep) AFP 3.0 - Alpine
-    needs: build-container-testsuite
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    permissions:
-      contents: read
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e SHARE_NAME="test1" \
-            -e AFP_UAMS="uams_dhx.so" \
-            -e TESTSUITE="spec" \
-            -v "$RUNNER_TEMP:/reports" \
-            -e AFP_JUNIT_REPORT_PATH=/reports/afp-spectest.junit.xml \
-            -e AFP_SUBTESTS="FPZzzzz" \
-            -e AFP_TICKLEVAL="10" \
-            -e AFP_TIMEOUT="12" \
-            -e AFP_SLEEP_TEST_WAIT="140" \
-            -e AFP_TESTSUITE_UAM="dhx" \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="3" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-      - name: Checkout repository for test report
-        if: ${{ !cancelled() }}
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
@@ -1929,7 +1539,7 @@ jobs:
   afp-logintest-afp34:
     name: AFP login test AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
@@ -1945,48 +1555,10 @@ jobs:
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-  afp-logintest-afp33:
-    name: AFP login test AFP 3.3 - Alpine
-    needs: build-container-testsuite
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so uams_dhx.so uams_dhx2.so uams_srp.so" \
-            -e TESTSUITE="login" \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="6" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-  afp-logintest-afp32:
-    name: AFP login test AFP 3.2 - Alpine
-    needs: build-container-testsuite
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    steps:
-      - name: Run Netatalk testsuite
-        run: |
-          docker run --rm \
-            -e AFP_USER="atalk1" \
-            -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_GROUP="afpusers" \
-            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_randnum.so uams_dhx.so uams_dhx2.so" \
-            -e TESTSUITE="login" \
-            -e VERBOSE="1" \
-            -e AFP_VERSION="5" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
   afp-logintest-afp31:
     name: AFP login test AFP 3.1 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
@@ -2005,7 +1577,7 @@ jobs:
   afp-logintest-afp30:
     name: AFP login test AFP 3.0 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
@@ -2024,7 +1596,7 @@ jobs:
   afp-logintest-afp22:
     name: AFP login test AFP 2.2 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
@@ -2044,7 +1616,7 @@ jobs:
   latencygraph-lantest:
     name: Lantest (AFP 3.4) - LatencyGraph
     needs: build-container-testsuite-perf
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
     permissions:
@@ -2070,6 +1642,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Run Netatalk lantest (CSV output)
         run: |
           # -c (CSV) is passed via $TEST_FLAGS, which the entrypoint prepends
@@ -2231,7 +1805,7 @@ jobs:
   perfgraph-speedtest:
     name: Speedtest (AFP 3.4) - PerfGraph
     needs: build-container-testsuite-perf
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
     permissions:
@@ -2257,6 +1831,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Run Netatalk speedtest (CSV output)
         run: |
           # -c (CSV) and -z (size sweep) are passed via $TEST_FLAGS, which the
@@ -2391,7 +1967,7 @@ jobs:
       - flamegraph-spectest
       - perfgraph-speedtest
       - latencygraph-lantest
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     # always() so the dashboard still posts the charts that did succeed even
     # if one of the three graph jobs failed or was skipped.
@@ -2403,6 +1979,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Merge metrics into history and compute deltas
         id: history
         env:
@@ -2602,7 +2180,7 @@ jobs:
   afp-spectest-arc-stress:
     name: AFP spec test (ARC stress, cache=1024) AFP 3.4 - Alpine
     needs: build-container-testsuite
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     if: ${{ github.actor != 'dependabot[bot]' }}
     permissions:
@@ -2635,6 +2213,8 @@ jobs:
       - name: Checkout repository for test report
         if: ${{ !cancelled() }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0

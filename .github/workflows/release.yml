@@ -19,13 +19,14 @@ env:
 jobs:
   create-source-release:
     name: Create Source Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
       - name: Get version
@@ -130,13 +131,14 @@ jobs:
 
   ghcr-publish:
     name: Publish Netatalk Container Image to GitHub Container Registry
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       packages: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ env.RELEASE_TAG }}
       - name: Get version
         id: get_version
@@ -197,13 +199,14 @@ jobs:
 
   ghcr-publish-webmin:
     name: Publish Netatalk Webmin Module Container Image to GitHub Container Registry
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       packages: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ env.RELEASE_TAG }}
       - name: Get version
         id: get_version
@@ -259,11 +262,12 @@ jobs:
 
   docker-hub:
     name: Publish Netatalk Container Image to Docker Hub
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ env.RELEASE_TAG }}
       - name: Get version
         id: get_version
@@ -324,11 +328,12 @@ jobs:
 
   docker-hub-webmin:
     name: Publish Netatalk Webmin Module Container Image to Docker Hub
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           ref: ${{ env.RELEASE_TAG }}
       - name: Get version
         id: get_version

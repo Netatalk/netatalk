@@ -20,7 +20,7 @@ permissions:
 jobs:
   formatting:
     name: Code Formatting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container:
       image: alpine:3.24.1
     steps:
@@ -60,16 +60,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Check formatting
         run: ./contrib/scripts/codefmt.sh -v
 
   markdown-linting:
     name: Markdown Linting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
         with:
@@ -77,10 +79,12 @@ jobs:
 
   distribution-tests:
     name: Distribution Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -102,7 +106,7 @@ jobs:
 
   build-doxygen-docs:
     name: Build Doxygen Docs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container:
       image: alpine:3.24
     timeout-minutes: 12
@@ -122,6 +126,8 @@ jobs:
             pkgconf \
             sqlite-dev
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Configure
         run: |
           meson setup build \

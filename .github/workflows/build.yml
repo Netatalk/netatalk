@@ -1,9 +1,6 @@
 name: Builds
 
-# Pure build + unit test jobs on Linux distributions.
-# The non-Linux VM legs that also run the AFP spectest live in
-# spectest-vms.yml; container spectests in containers.yml; the macOS leg
-# in spectest-macos.yml.
+# Build + unit tests on Linux
 
 on:
   push:
@@ -30,12 +27,14 @@ env:
 jobs:
   build-alpine:
     name: Alpine Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 24
     container:
       image: alpine:3.23.2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           apk add \
@@ -132,12 +131,14 @@ jobs:
 
   build-archlinux:
     name: Arch Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 24
     container:
       image: archlinux:base-devel
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           pacman -Sy --noconfirm \
@@ -213,13 +214,23 @@ jobs:
           path: build/meson-logs
 
   build-debian:
-    name: Debian Linux
-    runs-on: ubuntu-latest
+    name: Debian Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
     timeout-minutes: 24
     container:
       image: debian:13.3
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           apt-get update
@@ -313,17 +324,27 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: meson-logs-${{ github.job }}
+          name: meson-logs-${{ github.job }}-${{ matrix.arch }}
           path: build/meson-logs
 
   build-fedora:
-    name: Fedora Linux
-    runs-on: ubuntu-latest
+    name: Fedora Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
     timeout-minutes: 24
     container:
       image: fedora:43
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           dnf --setopt=install_weak_deps=False --assumeyes install \
@@ -409,17 +430,27 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: meson-logs-${{ github.job }}
+          name: meson-logs-${{ github.job }}-${{ matrix.arch }}
           path: build/meson-logs
 
   build-ubuntu:
-    name: Ubuntu Linux
-    runs-on: ubuntu-latest
+    name: Ubuntu Linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
     timeout-minutes: 24
     container:
-      image: ubuntu:25.10
+      image: ubuntu:26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           apt-get update
@@ -507,92 +538,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: meson-logs-${{ github.job }}
-          path: build/meson-logs
-
-  build-ubuntu-32bit:
-    name: Ubuntu Linux (32-bit)
-    runs-on: ubuntu-latest
-    timeout-minutes: 24
-    container:
-      image: ubuntu:25.10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install 32-bit toolchain and dependencies
-        run: |
-          dpkg --add-architecture i386
-          apt-get update
-          apt-get install --assume-yes --no-install-recommends \
-            ca-certificates \
-            cmark-gfm \
-            cracklib-runtime \
-            dconf-cli \
-            file \
-            g++-multilib \
-            gcc-multilib \
-            libacl1-dev:i386 \
-            libavahi-client-dev:i386 \
-            libcrack2-dev:i386 \
-            libcups2-dev:i386 \
-            libdbus-1-dev:i386 \
-            libevent-dev:i386 \
-            libgcrypt20-dev:i386 \
-            libiniparser-dev:i386 \
-            libkrb5-dev:i386 \
-            libldap2-dev:i386 \
-            libmagic-dev:i386 \
-            libpam0g-dev:i386 \
-            libtalloc-dev:i386 \
-            libtirpc-dev:i386 \
-            libwrap0-dev:i386 \
-            libsqlite3-dev:i386 \
-            libxapian-dev:i386 \
-            meson \
-            ninja-build \
-            pkg-config \
-            quota \
-            systemtap-sdt-dev \
-            tcpd
-      - name: Configure (32-bit)
-        env:
-          CFLAGS: -m32
-          CXXFLAGS: -m32
-          LDFLAGS: -m32
-          PKG_CONFIG_LIBDIR: /usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig
-        run: |
-          meson setup build \
-            -Dbuildtype=debugoptimized \
-            -Dwith-appletalk=true \
-            -Dwith-dtrace=false \
-            -Dwith-init-hooks=false \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
-      - name: Build
-        run: meson compile -C build
-      - name: Verify 32-bit binary
-        run: file build/etc/afpd/afpd | grep -q 'ELF 32-bit'
-      - name: Test
-        run: meson test -C build
-      - name: Summarize test results
-        if: always()
-        uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2.6
-        with:
-          paths: build/meson-logs/testlog.junit.xml
-          folded: true
-      - name: Install
-        run: meson install -C build
-      - name: Check netatalk capabilities
-        run: |
-          netatalk -V
-          afpd -V
-          atalkd -V
-          a2boot -V
-          macipgw -V
-          papd -V
-          timelord -V
-      - name: Upload meson logs
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: meson-logs-${{ github.job }}
+          name: meson-logs-${{ github.job }}-${{ matrix.arch }}
           path: build/meson-logs

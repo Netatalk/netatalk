@@ -24,13 +24,13 @@ defaults:
 jobs:
   static_analysis:
     name: SonarQube Static Analysis
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: >
       (github.event_name == 'push' && github.actor != 'dependabot[bot]' && github.actor != 'dependabot') || (github.event_name
       == 'pull_request' && !github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' && github.actor
       != 'dependabot')
     container:
-      image: ubuntu:25.10
+      image: ubuntu:26.04
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
       CC: gcc
@@ -52,6 +52,7 @@ jobs:
               libacl1-dev \
               libavahi-client-dev \
               libcrack2-dev \
+              libcrypt-dev \
               libcups2-dev \
               libdbus-1-dev \
               libevent-dev \
@@ -76,6 +77,7 @@ jobs:
               unzip
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Install Build Wrapper
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
@@ -115,7 +117,7 @@ jobs:
 
   code-coverage:
     name: Code Coverage
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -126,6 +128,8 @@ jobs:
       CXX: g++
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -135,6 +139,7 @@ jobs:
             gcc \
             gcovr \
             libacl1-dev \
+            libcrypt-dev \
             libevent-dev \
             libgcrypt20-dev \
             libiniparser-dev \

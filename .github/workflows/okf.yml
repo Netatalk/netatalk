@@ -42,7 +42,7 @@ defaults:
 jobs:
   bundle:
     name: OKF bundle
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -82,7 +82,7 @@ jobs:
     # Only a bundle built from main is published, so a manual run on another
     # branch stops after the artifact.
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     # Pushes the bundle to the gh-pages branch. The job checks out nothing and
     # runs no code from the tree, only git and cp over the downloaded artifact.

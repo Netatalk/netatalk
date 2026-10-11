@@ -177,10 +177,7 @@ foreach my $input_file (@input_files) {
 
     my %rendered_jobs;
     foreach my $key (keys %{$workflow->{jobs}}) {
-        my $job = $workflow->{jobs}->{$key};
-
-        next if $job->{name} =~ /\(32-bit\)$/;
-
+        my $job      = $workflow->{jobs}->{$key};
         my $job_name = format_job_name($job->{name});
         my @steps    = grep { wanted_step($_) } @{$job->{steps}};
         next unless @steps;
