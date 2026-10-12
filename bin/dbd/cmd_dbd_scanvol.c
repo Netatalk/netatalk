@@ -402,7 +402,7 @@ static bool adouble_dir_unusable(int err)
  * name, which a non-AFP client may leave, skips the AppleDouble checks of the
  * directory. Under -s a missing directory fails and a missing .Parent passes.
  * Otherwise the call creates both with the Mac name of the directory and its
- * owner.
+ * owner. A directory that the call created but cannot open again is an error.
  *
  * @param[in] volroot  nonzero in the volume root, unused
  * @returns 0, 1 to skip the AppleDouble checks of the directory, or -1 for an
@@ -530,16 +530,21 @@ static int check_addir(int volroot _U_)
             addir_fd = open(ADv2_DIRNAME,
                             O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
-            if (addir_fd >= 0) {
-                if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
-                    dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
-                }
-            } else {
-                dbd_log(LOGSTD, "Couldn't open newly created directory \"%s\"", ADv2_DIRNAME);
+            if (addir_fd < 0) {
+                /* parent_fd is still -1: .Parent opens only through an open
+                 * .AppleDouble */
+                dbd_log(LOGSTD,
+                        "Couldn't open newly created directory \"%s\": %s",
+                        ADv2_DIRNAME, strerror(errno));
+                return -1;
+            }
+
+            if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
+                dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
             }
         }
 
-        if (parent_fd < 0 && addir_fd >= 0) {
+        if (parent_fd < 0) {
             parent_fd = openat(addir_fd, ".Parent",
                                O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
 

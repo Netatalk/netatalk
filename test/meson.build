@@ -4,6 +4,7 @@ endif
 
 if build_tests
     subdir('afppasswd')
+    subdir('dbd')
     subdir('libatalk')
     subdir('nad')
     subdir('uams')

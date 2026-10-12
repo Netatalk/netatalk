@@ -159,15 +159,22 @@ static dirfd_fn  real_dirfd;
 #endif
 
 /* Record then decide, shared by every open-family interposer.  Record before
- * the decision so count/flags reflect the attempt; only while armed.  Returns 1
- * when the caller should inject the failure (errno already set). */
+ * the decision so count/flags reflect the attempt; only while armed.  An open
+ * without the flags of open_fail_flags is neither recorded nor failed.  Returns
+ * 1 when the caller should inject the failure (errno already set). */
 static int open_armed_should_fire(int flags)
 {
-    if (fi.open_armed) {
-        fi.open_calls++;
-        fi.open_last_flags = flags;
+    if (!fi.open_armed) {
+        return 0;
     }
 
+    if (fi.open_fail_flags
+            && (flags & fi.open_fail_flags) != fi.open_fail_flags) {
+        return 0;
+    }
+
+    fi.open_calls++;
+    fi.open_last_flags = flags;
     return fault_should_fire(fi.open_armed, &fi.open_fail_after, fi.open_errno);
 }
 
