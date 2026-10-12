@@ -28,6 +28,7 @@
  *   fault_inject_reset();
  *
  * fail_after = N: the next N armed calls succeed, call N+1 fails once.
+ * open_fail_flags = F: only opens whose flags include F count and can fail.
  */
 
 struct fault_inject {
@@ -36,6 +37,7 @@ struct fault_inject {
     int open_errno;
     int open_calls;         /*!< count of armed open() calls seen */
     int open_last_flags;    /*!< flags arg of the most recent armed open() */
+    int open_fail_flags;    /*!< opens without these flags pass through */
     int close_armed;
     int close_fail_after;
     int close_errno;
