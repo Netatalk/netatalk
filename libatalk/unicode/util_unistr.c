@@ -8,6 +8,11 @@
   There might still be latent bugs...
  */
 
+/*!
+ * @file
+ * @brief UTF-16 string functions, with Unicode precomposition and decomposition
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

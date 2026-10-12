@@ -12,6 +12,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Reducing ACLs to the entries that mirror the mode bits, in the VFS
+ * layer
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -8,6 +8,11 @@
  * The University of Melbourne.
  */
 
+/*!
+ * @file
+ * @brief XDR routines of the rquota protocol, from the Linux quota tools
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

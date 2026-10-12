@@ -6,6 +6,12 @@
  * Macintosh file format transformer based on megatron by Charles Clark.
  */
 
+/*!
+ * @file
+ * @brief Conversion driver of the nad archive commands bin, hex, unbin, and
+ * unhex
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -12,6 +12,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief Spotlight CNID backend: file name searches in the CNID database
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

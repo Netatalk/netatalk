@@ -164,7 +164,7 @@ static inline struct dir *path_cached_file(const struct path *path)
     return NULL;
 }
 
-/*! Absolute path of a child of parent, for FCE and Spotlight event strings */
+/* Absolute path of a child of parent, for FCE and Spotlight event strings */
 extern const char *dir_event_path(char *buf, size_t buflen,
                                   const struct dir *parent,
                                   const char *name);

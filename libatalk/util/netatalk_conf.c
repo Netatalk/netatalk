@@ -13,6 +13,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Reading afp.conf and extmap.conf: server options, volume definitions,
+ * and the extension map
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

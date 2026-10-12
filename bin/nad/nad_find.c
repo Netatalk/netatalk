@@ -12,6 +12,11 @@
    GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief The nad find command: search a volume for entries by name
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

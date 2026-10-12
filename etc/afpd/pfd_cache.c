@@ -31,6 +31,12 @@
  * state shared outside that discipline.
  */
 
+/*!
+ * @file
+ * @brief Cache of parent directory descriptors for the stat calls that check
+ * directory cache entries
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

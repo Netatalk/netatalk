@@ -6,6 +6,12 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Fork commands: FPOpenFork, FPRead, FPWrite, FPCloseFork, byte range
+ * locks, and the flush commands
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -22,6 +22,11 @@
    strlcpy strlcat functions.
 */
 
+/*!
+ * @file
+ * @brief strlcpy and strlcat for systems without them
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

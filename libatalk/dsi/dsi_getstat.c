@@ -3,6 +3,11 @@
  * All rights reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief DSIGetStatus replies with the cached server status block
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief The fce_listen command: receive and print FCE events from afpd
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

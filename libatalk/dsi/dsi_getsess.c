@@ -3,6 +3,12 @@
  * All rights reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief The DSI listener: accepting sessions, and refusing them at the session
+ * limit or out of descriptors
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

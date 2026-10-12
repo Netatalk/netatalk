@@ -12,6 +12,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief AppleDouble metadata and resource fork caching in the directory cache
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

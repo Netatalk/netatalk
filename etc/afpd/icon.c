@@ -4,6 +4,12 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Default server icons for the FPGetSrvrInfo reply and the virtual Icon
+ * file
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

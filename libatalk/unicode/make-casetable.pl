@@ -106,6 +106,12 @@ print(CSOURCE "    https\:\/\/www.unicode.org\/Public\/UNIDATA\/UnicodeData.txt\
 print(CSOURCE "\*\/\n");
 print(CSOURCE "\n");
 
+print(CSOURCE "\/\*\!\n");
+print(CSOURCE " \* \@file\n");
+print(CSOURCE " \* \@brief UTF-16 case mapping tables generated from the Unicode data\n");
+print(CSOURCE " \*\/\n");
+print(CSOURCE "\n");
+
 print(CSOURCE "\#include \<stdint.h\>\n");
 print(CSOURCE "\#include \<atalk\/unicode.h\>\n");
 printf(CSOURCE "\#include \"%s\"\n", $ARGV[1]);

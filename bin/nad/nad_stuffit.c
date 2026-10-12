@@ -7,6 +7,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief The nad sit and unsit commands: create and extract StuffIt archives
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

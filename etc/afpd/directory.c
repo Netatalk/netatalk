@@ -6,6 +6,12 @@
  * You may also use it under the terms of the General Public License (GPL). See COPYING.
  */
 
+/*!
+ * @file
+ * @brief Directory resolution by CNID and path, the AFP directory commands,
+ * FPMapID, and FPMapName
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

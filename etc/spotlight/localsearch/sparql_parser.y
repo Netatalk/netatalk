@@ -1,4 +1,9 @@
 %{
+/*!
+ * @file
+ * @brief Grammar that maps Spotlight raw queries to SPARQL
+ */
+
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdbool.h>

@@ -9,6 +9,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief Spotlight Xapian backend: index state, queries, and results
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

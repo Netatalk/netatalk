@@ -17,6 +17,11 @@
 #define SLQ_VAR ssp_slq
 %}
 
+/*!
+ * @file
+ * @brief Lexer of the Spotlight raw query language
+ */
+
 ASC     [a-zA-Z0-9_\*\:\-\.]
 U       [\x80-\xbf]
 U2      [\xc2-\xdf]

@@ -3,6 +3,11 @@
  * All rights reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Closing a DSI session with a DSICloseSession request to the client
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

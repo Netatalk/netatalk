@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Parsing of AppleTalk addresses in text form
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

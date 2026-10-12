@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief The nbplkup command: look up NBP names
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

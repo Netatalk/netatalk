@@ -116,11 +116,11 @@ void log_close_all(void);
 void log_reopen(void);
 void set_processname(const char *processname);
 
-/*! Setup the level and type of log that will be logged to syslog. */
+/* Send a log type to syslog at a level */
 void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
                   int facility);
 
-/*! LOG macro worker: log the message to syslog or to a file */
+/* LOG macro worker: log the message to syslog or to a file */
 UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel,
                                        enum logtypes logtype, const char *file, const bool log_us_timestamp, int line,
                                        char *message, ...);

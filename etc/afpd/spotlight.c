@@ -12,6 +12,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief FPSpotlightRPC: Spotlight queries and attribute requests over the
+ * search backends
+ */
+
 #define USE_LIST
 
 #ifdef HAVE_CONFIG_H

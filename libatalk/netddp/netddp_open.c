@@ -7,6 +7,11 @@
  * various address info if requested as well.
  */
 
+/*!
+ * @file
+ * @brief Opening AppleTalk datagram sockets
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

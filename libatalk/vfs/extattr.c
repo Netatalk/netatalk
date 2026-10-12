@@ -27,6 +27,11 @@
    Samba 3.0.28, modified for netatalk.
 */
 
+/*!
+ * @file
+ * @brief Platform wrappers for extended attribute system calls, from Samba
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

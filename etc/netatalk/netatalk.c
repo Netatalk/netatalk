@@ -12,6 +12,13 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 */
+
+/*!
+ * @file
+ * @brief The netatalk service controller that starts and supervises afpd and
+ * the Spotlight dbus daemon
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

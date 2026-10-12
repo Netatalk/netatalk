@@ -21,10 +21,10 @@
  * Prototype Definitions
  */
 
-/*! Register the AFP services with the Zeroconf backend */
+/* Register the AFP services with the Zeroconf backend */
 void zeroconf_register(const AFPObj *configs);
 
-/*! Withdraw the AFP services from the Zeroconf backend */
+/* Withdraw the AFP services from the Zeroconf backend */
 void zeroconf_deregister(void);
 
 #endif /* AFPD_ZEROCONF_H */

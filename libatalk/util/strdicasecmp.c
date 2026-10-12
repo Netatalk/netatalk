@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Case-insensitive string comparison through the Mac Roman uppercase map
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

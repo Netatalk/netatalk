@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief DDP output and routing in the BSD kernel stack
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

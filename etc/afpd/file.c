@@ -4,6 +4,12 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief File parameters and the AFP file commands: FPCreateFile, FPCopyFile,
+ * FPExchangeFiles, and the file ID commands
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -13,6 +13,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief The AFP extended attribute commands: FPListExtAttrs, FPGetExtAttr,
+ * FPSetExtAttr, and FPRemoveExtAttr
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -19,6 +19,7 @@
 
 /*!
  * @file
+ * @brief MAC_CHINESE_TRAD charset conversion
  * @sa Reference
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */

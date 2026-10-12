@@ -20,6 +20,12 @@
    modified for netatalk dgautheron@magic.fr
 */
 
+/*!
+ * @file
+ * @brief Shell command execution as the session user for preexec, postexec, and
+ * the FCE notify script
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -4,6 +4,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Lists of the network interface names of the system
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

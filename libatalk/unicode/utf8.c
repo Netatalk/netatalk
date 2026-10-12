@@ -73,6 +73,7 @@ struct charset_functions charset_utf8_mac = {
 
 /*!
  * @file
+ * @brief UTF-8 charset conversion
  * @sa The Unicode Standard Version 6.2 – Core Specification
  * http://www.unicode.org/versions/Unicode6.2.0/ch03.pdf
  * @code

@@ -8,6 +8,12 @@
  * modified from main.c. this handles afp over tcp.
  */
 
+/*!
+ * @file
+ * @brief AFP sessions over DSI: signal handling, session reconnects, and the
+ * request loop
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

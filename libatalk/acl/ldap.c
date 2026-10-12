@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief LDAP lookups of UUIDs and names for ACLs
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

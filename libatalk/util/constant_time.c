@@ -7,6 +7,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief Constant-time memory comparison
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

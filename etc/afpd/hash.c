@@ -16,6 +16,12 @@
  *
  * $Name:  $
  */
+
+/*!
+ * @file
+ * @brief Chained hash table for the directory cache
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

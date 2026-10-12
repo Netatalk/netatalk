@@ -12,6 +12,11 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief The nad mv command: move entries with their CNIDs and metadata
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

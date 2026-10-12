@@ -12,6 +12,12 @@
  * GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Idle worker thread that runs deferred directory cache work between
+ * requests
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

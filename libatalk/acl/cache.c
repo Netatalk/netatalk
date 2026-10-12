@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Name and UUID caches of the ACL UUID lookups
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

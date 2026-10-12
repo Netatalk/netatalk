@@ -5,6 +5,11 @@
  * if we could depend upon inline functions, this would be one.
  */
 
+/*!
+ * @file
+ * @brief Fork lengths of an AppleDouble
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -15,6 +15,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief SQLite CNID backend
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
