@@ -3,6 +3,12 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Unix file operations of the VFS layer: modes, duplication, deletion,
+ * and renaming
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

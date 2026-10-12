@@ -28,6 +28,11 @@
  * SUCH DAMAGE.
  */
 
+/*!
+ * @file
+ * @brief Volume, signal, and CNID helpers shared by the nad commands
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

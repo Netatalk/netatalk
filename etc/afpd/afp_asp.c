@@ -6,6 +6,11 @@
  * modified from main.c. this handles afp over asp.
  */
 
+/*!
+ * @file
+ * @brief AFP sessions over ASP: signal handling and the request loop
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

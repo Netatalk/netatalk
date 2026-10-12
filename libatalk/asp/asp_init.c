@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief ASP server object creation and status block setup
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

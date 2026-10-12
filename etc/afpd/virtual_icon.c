@@ -12,6 +12,11 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief The virtual Icon file of a volume root
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Unix modes, owners, and AFP access rights of files and directories
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

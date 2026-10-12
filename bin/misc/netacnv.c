@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief The netacnv command: convert a string between two charsets
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

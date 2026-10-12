@@ -13,6 +13,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief chmod wrappers that keep explicit NFSv4 ACEs and set the POSIX ACL
+ * group entry from the mode
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

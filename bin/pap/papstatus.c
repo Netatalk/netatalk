@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief The papstatus command: show the status of a PAP printer
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

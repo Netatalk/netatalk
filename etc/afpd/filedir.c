@@ -4,6 +4,12 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AFP commands for both files and directories: FPGetFileDirParms,
+ * FPSetFileDirParms, FPRename, FPDelete, and FPMoveAndRename
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

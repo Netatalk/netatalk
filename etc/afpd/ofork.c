@@ -4,6 +4,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Open fork table of a session
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -7,6 +7,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief CRC-16/XMODEM for BinHex and MacBinary archives
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

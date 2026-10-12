@@ -5,6 +5,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief RandNum and 2-Way RandNum UAMs with the afppasswd file
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

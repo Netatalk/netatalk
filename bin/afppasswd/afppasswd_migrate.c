@@ -12,6 +12,12 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Migration of the legacy flat SRP verifier file into one verifier file
+ * per user
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

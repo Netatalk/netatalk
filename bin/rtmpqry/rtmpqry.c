@@ -8,6 +8,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief The rtmpqry command: query an AppleTalk router with RTMP
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

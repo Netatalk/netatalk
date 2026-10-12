@@ -12,6 +12,11 @@
   (at your option) any later version.
 */
 
+/*!
+ * @file
+ * @brief Spotlight LocalSearch backend: SPARQL queries to the indexer
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

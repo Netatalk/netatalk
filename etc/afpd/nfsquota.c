@@ -33,6 +33,11 @@
  * Technische Universitaet Braunschweig, FRG
  */
 
+/*!
+ * @file
+ * @brief User quota of an NFS volume through rquotad
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

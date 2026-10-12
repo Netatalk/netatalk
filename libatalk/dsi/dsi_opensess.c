@@ -3,6 +3,11 @@
  * All rights reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Answering DSIOpenSession and recording the client options
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

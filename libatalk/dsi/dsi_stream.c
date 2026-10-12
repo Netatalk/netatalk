@@ -11,6 +11,11 @@
  * dsi_stream_receive:  read a DSI header + data.
  */
 
+/*!
+ * @file
+ * @brief DSI stream input and output on the session socket
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

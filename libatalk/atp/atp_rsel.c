@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Waiting for an ATP request or response, with retransmission
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

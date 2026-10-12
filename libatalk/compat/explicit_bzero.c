@@ -8,6 +8,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief explicit_bzero for systems without it
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

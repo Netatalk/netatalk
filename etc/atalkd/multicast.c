@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Zone multicast addresses of AppleTalk interfaces
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -25,6 +25,11 @@
  * blocks in a read the pipe is not part of will not be woken.
  */
 
+/*!
+ * @file
+ * @brief Self-pipe that wakes a poll loop from signal handlers
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

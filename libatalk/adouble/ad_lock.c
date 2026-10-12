@@ -12,6 +12,11 @@
  *       sorted.
  */
 
+/*!
+ * @file
+ * @brief Byte range and share mode locks on AppleDouble forks
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

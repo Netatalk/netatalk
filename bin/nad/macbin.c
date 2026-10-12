@@ -6,6 +6,11 @@
  * Macintosh file format transformer based on megatron by Charles Clark.
  */
 
+/*!
+ * @file
+ * @brief MacBinary encoding and decoding for the nad archive commands
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

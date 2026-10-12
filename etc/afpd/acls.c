@@ -13,6 +13,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief ACL support of afpd: FPAccess, FPGetACL, FPSetACL, and the Darwin ACE
+ * mapping
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

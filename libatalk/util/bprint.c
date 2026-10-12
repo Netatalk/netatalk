@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Hex dump of a buffer to stdout
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

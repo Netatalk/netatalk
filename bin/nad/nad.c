@@ -12,6 +12,11 @@
    GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief The nad command: entry point and subcommand dispatch
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

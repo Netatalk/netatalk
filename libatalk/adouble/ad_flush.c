@@ -23,6 +23,11 @@
  *  netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Writing AppleDouble headers to disk and closing the forks
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

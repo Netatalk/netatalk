@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief strnlen, vasprintf, and asprintf for systems without them
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

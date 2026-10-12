@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Packing and unpacking of Spotlight RPC requests and replies
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

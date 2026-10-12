@@ -137,11 +137,11 @@ struct ofork;
 void fce_pending_events(const AFPObj *obj);
 int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
                  const char *oldpath);
-/*! IP or IP:Port */
+/* IP address or host name, with an optional :port */
 int fce_add_udp_socket(const char *target);
-/*! all|delete|create */
+/* all|delete|create */
 int fce_set_coalesce(const char *opt);
-/*! fmod,fdel,ddel,fcre,dcre */
+/* fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout */
 int fce_set_events(const char *events);
 
 #define FCE_DEFAULT_PORT 12250

@@ -21,6 +21,12 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Closing an ASP session in reply to the CloseSession request of the
+ * workstation
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

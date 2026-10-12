@@ -6,6 +6,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Pid files and daemonizing of the netatalk servers
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

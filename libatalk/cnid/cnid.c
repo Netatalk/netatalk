@@ -12,6 +12,12 @@
  * https://github.com/Netatalk/netatalk/issues/1193
  *
  */
+
+/*!
+ * @file
+ * @brief The CNID database front end and backend registry
+ */
+
 #define USE_LIST
 
 #ifdef HAVE_CONFIG_H

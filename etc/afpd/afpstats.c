@@ -13,6 +13,11 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief The afpstats socket: session statistics for the afpstats command
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

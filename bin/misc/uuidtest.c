@@ -12,6 +12,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief The afpldaptest command: map names to UUIDs and back through LDAP,
+ * with a local fallback
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

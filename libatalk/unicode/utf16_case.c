@@ -8,6 +8,11 @@
     https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 */
 
+/*!
+ * @file
+ * @brief UTF-16 case mapping tables generated from the Unicode data
+ */
+
 #include <stdint.h>
 #include <atalk/unicode.h>
 #include "utf16_casetable.h"

@@ -4,6 +4,11 @@
  * All rights reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AFP attributes, CNID, and name entries of an AppleDouble
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

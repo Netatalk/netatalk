@@ -9,6 +9,11 @@ Copyright (c) 2026 Andy Lemin (andylemin)
 
  */
 
+/*!
+ * @file
+ * @brief The netatalk logging system: log types, levels, files, and syslog
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

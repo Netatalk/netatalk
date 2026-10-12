@@ -7,6 +7,11 @@
  * modified from main.c. this handles afp options.
  */
 
+/*!
+ * @file
+ * @brief Command line parsing and version output of afpd
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

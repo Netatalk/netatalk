@@ -3,6 +3,11 @@
  * All Rights Reserved.
  */
 
+/*!
+ * @file
+ * @brief AppleTalk interface ioctls and address setup in the BSD kernel stack
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

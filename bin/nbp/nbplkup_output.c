@@ -14,6 +14,11 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Output formatting of nbplkup: NBP name fields in the host charset
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

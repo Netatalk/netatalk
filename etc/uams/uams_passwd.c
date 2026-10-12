@@ -4,6 +4,12 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Cleartext UAM with Unix password authentication and the ClearTxtUAM
+ * printer login
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

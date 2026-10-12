@@ -5,6 +5,12 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Reading and writing atalkd.conf, with the kernel interface list as the
+ * fallback
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

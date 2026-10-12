@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief AFP command dispatch tables of the session
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

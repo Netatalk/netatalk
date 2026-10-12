@@ -3,6 +3,12 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Configuration setup of afpd at startup and reload: UAMs, listeners,
+ * and server-wide settings
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

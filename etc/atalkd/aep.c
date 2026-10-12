@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AppleTalk Echo Protocol replies of atalkd
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
