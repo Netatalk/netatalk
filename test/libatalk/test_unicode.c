@@ -149,6 +149,12 @@ static const struct conversion_case filename_cases[] = {
     "UTF8", "UTF8", "a\xffz", "a", CONV_FORCE, 0),
     SUCCESS("replace invalid source byte with underscore",
     "UTF8", "UTF8", "a\xffz", "a_z", CONV__EILSEQ, 0),
+    SUCCESS("ignored invalid suffix still escapes leading dot",
+    "UTF8", "UTF8", ".\xff", ":2e", CONV_IGNORE | CONV_ESCAPEDOTS,
+    CONV_REQMANGLE | CONV_REQESCAPE),
+    SUCCESS("forced invalid suffix still escapes leading dot",
+    "UTF8", "UTF8", ".\xff", ":2e", CONV_FORCE | CONV_ESCAPEDOTS,
+    CONV_REQESCAPE),
     FAILURE("invalid UTF8 source fails",
     "UTF8", "UTF8", "a\xffz", 0, 64, EILSEQ),
     FAILURE("truncated UTF8 source fails",
@@ -348,6 +354,124 @@ static void test_string_apis(void)
 }
 
 /*!
+ * @brief Exercise decoded filename syntax and error policies through libatalk
+ */
+static void test_wide_filename_cases(void)
+{
+    static const ucs2_t native[] = {'.', ':', '/', 0x012e, 0x012f, 0x013a};
+    struct conversion_case tc = {
+        "native UCS2 source scans characters rather than bytes", "UCS-2", "UTF8",
+        (const char *)native, sizeof(native), ".:/\xc4\xae\xc4\xaf\xc4\xba", 9,
+        0, 0, 64, 0
+    };
+    test_filename_case(&tc);
+    tc.name = "native UCS2 source accepts an unaligned buffer";
+    char unaligned[sizeof(native) + 1];
+    memcpy(unaligned + 1, native, sizeof(native));
+    tc.input = unaligned + 1;
+    test_filename_case(&tc);
+    tc.name = "native UCS2 truncated source fails";
+    tc.input_len--;
+    tc.expected_errno = EILSEQ;
+    test_filename_case(&tc);
+    tc.name = "native UCS2 truncated source can be replaced";
+    tc.expected_errno = 0;
+    tc.options = CONV__EILSEQ;
+    tc.expected_flags = CONV__EILSEQ;
+    tc.expected = ".:/\xc4\xae\xc4\xaf_";
+    tc.expected_len = 8;
+    test_filename_case(&tc);
+#ifdef HAVE_USABLE_ICONV
+    static const struct conversion_case cases[] = {
+        SUCCESS("UTF16LE punctuation bytes inside other characters",
+        "UTF-16LE", "UTF8", "\x2e\x01\x2f\x01\x3a\x01",
+        "\xc4\xae\xc4\xaf\xc4\xba", CONV_ESCAPEHEX | CONV_ESCAPEDOTS, 0),
+        SUCCESS("UTF16BE punctuation bytes inside other characters",
+        "UTF-16BE", "UTF8", "\x01\x2e\x01\x2f\x01\x3a",
+        "\xc4\xae\xc4\xaf\xc4\xba", 0, 0),
+        SUCCESS("UTF32LE source with punctuation",
+        "UTF-32LE", "UTF8", "A\0\0\0:\0\0\0/\0\0\0", "A:/", 0, 0),
+        SUCCESS("UTF16LE source escapes actual punctuation",
+        "UTF-16LE", "UTF8", ":\0/\0", ":3a:2f", CONV_ESCAPEHEX, 0),
+        SUCCESS("UTF16LE source escapes leading dot",
+        "UTF-16LE", "UTF8", ".\0a\0", ":2ea", CONV_ESCAPEDOTS, CONV_REQESCAPE),
+        SUCCESS("UTF16LE source unescapes hex digits",
+        "UTF-16LE", "UTF8", ":\0" "8\0e\0", "\xc3\xa9", CONV_UNESCAPEHEX, 0),
+        SUCCESS("UTF16LE source maps colon for a Mac target",
+        "UTF-16LE", "MAC_ROMAN", "a\0:\0b\0", "a/b", 0, 0),
+        SUCCESS("UTF16LE source retains slash for a Unix target",
+        "UTF-16LE", "UTF8", "a\0/\0b\0", "a/b", 0, 0),
+        SUCCESS("UTF16LE source precomposes decoded characters",
+        "UTF-16LE", "UTF8", "e\0\x01\x03", "\xc3\xa9", 0, 0),
+        SUCCESS("UTF16LE source uppercases decoded characters",
+        "UTF-16LE", "UTF8", "a\0", "A", CONV_TOUPPER, 0),
+        SUCCESS("UTF16LE source preserves embedded Unicode NUL",
+        "UTF-16LE", "UTF8", "a\0\0\0b\0", "a\0b", 0, 0),
+        FAILURE("UTF16LE malformed source fails",
+        "UTF-16LE", "UTF8", "A\0\0\xd8" "B\0", 0, 64, EILSEQ),
+        SUCCESS("UTF16LE malformed source IGNORE keeps prefix",
+        "UTF-16LE", "UTF8", "A\0\0\xd8" "B\0", "A", CONV_IGNORE, CONV_REQMANGLE),
+        SUCCESS("UTF16LE malformed source FORCE keeps prefix",
+        "UTF-16LE", "UTF8", "A\0\0\xd8" "B\0", "A", CONV_FORCE, 0),
+        SUCCESS("UTF16LE malformed source replacement preserves alignment",
+        "UTF-16LE", "UTF8", "A\0\0\xd8" "B\0", "A_B", CONV__EILSEQ, 0),
+        SUCCESS("UTF32LE truncated source replacement",
+        "UTF-32LE", "UTF8", "A\0\0\0B\0\0", "A_", CONV__EILSEQ, 0),
+        SUCCESS("UTF16 BOM byte order survives replacement",
+        "UTF-16", "UTF8", "\xff\xfe" "A\0\0\xd8" "B\0", "A_B", CONV__EILSEQ, 0),
+        SUCCESS("UTF16 big-endian BOM after little-endian conversion",
+        "UTF-16", "UTF8", "\xfe\xff\0B", "B", 0, 0),
+        SUCCESS("UTF16 little-endian BOM after big-endian conversion",
+        "UTF-16", "UTF8", "\xff\xfe" "A\0", "A", 0, 0),
+        SUCCESS("UTF16 big-endian BOM byte order survives replacement",
+        "UTF-16", "UTF8", "\xfe\xff\0A\xd8\0\0B", "A_B", CONV__EILSEQ, 0),
+        SUCCESS("UTF32 little-endian BOM source",
+        "UTF-32", "UTF8", "\xff\xfe\0\0A\0\0\0", "A", 0, 0),
+        SUCCESS("UTF32 big-endian BOM after little-endian conversion",
+        "UTF-32", "UTF8", "\0\0\xfe\xff\0\0\0B", "B", 0, 0),
+        SUCCESS("UTF32 little-endian BOM after big-endian conversion",
+        "UTF-32", "UTF8", "\xff\xfe\0\0A\0\0\0", "A", 0, 0),
+        SUCCESS("UTF32 BOM truncated code unit replacement",
+        "UTF-32", "UTF8", "\0\0\xfe\xff\0\0\0A\0\0\0", "A_",
+        CONV__EILSEQ, 0),
+        SUCCESS("UTF32 little-endian BOM truncated code unit replacement",
+        "UTF-32", "UTF8", "\xff\xfe\0\0A\0\0\0B\0\0", "A_",
+        CONV__EILSEQ, 0),
+        FAILURE("UTF16LE source truncation fails",
+        "UTF-16LE", "UTF8", "A\0B", 0, 64, EILSEQ),
+        SUCCESS("UTF16LE source truncation replacement",
+        "UTF-16LE", "UTF8", "A\0B", "A_", CONV__EILSEQ, 0),
+        FAILURE("UTF16LE source malformed hex escape fails",
+        "UTF-16LE", "UTF8", ":\0z\0z\0", CONV_UNESCAPEHEX, 64, EILSEQ),
+        SUCCESS("UTF16LE source malformed hex escape IGNORE keeps prefix",
+        "UTF-16LE", "UTF8", "A\0:\0z\0z\0", "A",
+        CONV_UNESCAPEHEX | CONV_IGNORE, CONV_REQMANGLE),
+        SUCCESS("ISO2022 encoded slash is not filename punctuation",
+        "ISO-2022-JP", "UTF8", "\x1b$B1/\x1b(B", "\xe4\xb8\x91", CONV_ESCAPEHEX, 0),
+        SUCCESS("ISO2022 source can finish in a shifted state",
+        "ISO-2022-JP", "UTF8", "\x1b$B1/", "\xe4\xb8\x91", 0, 0),
+        SUCCESS("ISO2022 shift state is reset before the next filename",
+        "ISO-2022-JP", "UTF8", "plain", "plain", 0, 0),
+        SUCCESS("system UTF8 malformed source replacement resumes decoding",
+        "UTF-8", "UTF8", "A\xff" "B", "A_B", CONV__EILSEQ, 0),
+    };
+
+    for (size_t i = 0; i < ARRAY_SIZE(cases); i++) {
+        atalk_iconv_t descriptor = atalk_iconv_open("UCS-2", cases[i].from);
+
+        if (descriptor == (atalk_iconv_t) -1) {
+            printf("ok %d - %s # SKIP charset unavailable\n", ++tests_run, cases[i].name);
+            continue;
+        }
+
+        atalk_iconv_close(descriptor);
+        test_filename_case(&cases[i]);
+    }
+
+#endif
+}
+
+/*!
  * @brief Cover the fixed decomposition terminator regression from afpdtest
  *
  * A destination holding only the payload is too small. Both the recursive
@@ -417,6 +541,20 @@ static void test_path_length_boundaries(void)
     memset(input, 'a', sizeof(input));
     input[sizeof(input) - 1] = 0;
     test_filename_case(&tc);
+    char escaped[3 * (MAXPATHLEN - 2)];
+
+    for (size_t i = 0; i < sizeof(escaped); i += 3) {
+        memcpy(escaped + i, ":61", 3);
+    }
+
+    struct conversion_case escaped_tc = tc;
+
+    escaped_tc.name = "long escaped input fits after unescaping";
+    escaped_tc.input = escaped;
+    escaped_tc.input_len = sizeof(escaped);
+    escaped_tc.options = CONV_UNESCAPEHEX;
+    escaped_tc.expected_flags = CONV_UNESCAPEHEX;
+    test_filename_case(&escaped_tc);
     tc.name = "filename output payload one byte too large";
     tc.input_len++;
     tc.expected_errno = E2BIG;
@@ -447,6 +585,7 @@ int main(void)
     }
 
     test_string_apis();
+    test_wide_filename_cases();
     test_decomposition_bounds();
     test_composition_bounds();
     test_path_length_boundaries();

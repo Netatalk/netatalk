@@ -26,7 +26,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <arpa/inet.h>
-#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,8 +57,8 @@
 static atalk_iconv_t conv_handles[MAX_CHARSETS][MAX_CHARSETS];
 static char *charset_names[MAX_CHARSETS];
 static struct charset_functions *charsets[MAX_CHARSETS];
+static size_t source_unit_sizes[MAX_CHARSETS];
 static char hexdig[] = "0123456789abcdef";
-#define hextoint(c) (isdigit(c) ? (c) - '0' : tolower(c) + 10 - 'a')
 #define MAX_CONVERT_SIZE (1 << 20)
 
 
@@ -105,6 +104,7 @@ int set_charset_name(charset_t ch, const char *name)
     }
 
     charset_names[ch] = strdup(name);
+    source_unit_sizes[ch] = 0;
     return 0;
 }
 
@@ -114,6 +114,8 @@ int set_charset_name(charset_t ch, const char *name)
 void free_charset_names(void)
 {
     for (int ch = 0; ch < MAX_CHARSETS; ch++) {
+        source_unit_sizes[ch] = 0;
+
         if (charset_names[ch]) {
             free(charset_names[ch]);
             charset_names[ch] = NULL;
@@ -767,260 +769,402 @@ size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
 }
 
 /*!
- * @brief Convert a multibyte string to UCS2 and map the `:` and `/` characters
- * by the flags
+ * @brief Return an ASCII hex digit's value, or -1 for another Unicode character
  *
- * The call converts the text between `:` and `/` characters with iconv and
- * then treats each such character by the flags. CONV_UNESCAPEHEX decodes
- * `:xx` escapes through the CAP charset, and CONV_ESCAPEHEX writes `:3a` for
- * `:` and `:2f` for `/`. Without them a `:` becomes `/` for a Mac target, and
- * a `/` from a Mac source becomes `:` for a non-Mac target. CONV_ESCAPEDOTS
- * writes a leading dot as `:2e` and sets CONV_REQESCAPE.
- *
- * An unconvertible sequence stops the call with EILSEQ. CONV_IGNORE then
- * returns the converted part and sets CONV_REQMANGLE, and CONV__EILSEQ writes
- * IGNORE_CHAR in its place. CONV_FORCE returns the converted part after any
- * error. The scan for `:` and `/` works on bytes, so a UCS2 source does not
- * work.
- *
- * @param[in]     from_set  source charset
- * @param[in]     to_set    final target charset, which picks the `:` and `/`
- *                          mapping
- * @param[in]     cap_set   charset of the bytes in `:xx` escapes
- * @param[in]     src       source string
- * @param[in]     srclen    source length, or `(size_t)-1` for the string length
- *                          with its NUL
- * @param[out]    dest      UCS2 output
- * @param[in]     destlen   size of @p dest in bytes
- * @param[in,out] flags     CONV_* options, which can receive CONV_REQESCAPE and
- *                          CONV_REQMANGLE
- * @returns the number of bytes written, or `(size_t)-1` with errno
+ * @param[in] c  decoded character
+ * @returns 0 to 15 for an ASCII hex digit, or -1
  */
-static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
-                                 charset_t cap_set, const char *src, size_t srclen, char *dest, size_t destlen,
-                                 uint16_t *flags)
+static int filename_hex_value(ucs2_t c)
 {
-    const uint16_t option = (flags ? *flags : 0);
-    size_t i_len, o_len;
-    size_t j = 0;
-    const char *inbuf = (const char *)src;
-    char *outbuf = dest;
-    atalk_iconv_t descriptor;
-    atalk_iconv_t descriptor_cap;
-    char escch = 0;
-
-    if (srclen == (size_t) -1) {
-        srclen = strlen(src) + 1;
+    if (c >= '0' && c <= '9') {
+        return c - '0';
     }
 
-    descriptor = conv_handles[from_set][CH_UCS2];
-    descriptor_cap = conv_handles[cap_set][CH_UCS2];
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
 
-    if (descriptor == (atalk_iconv_t) -1 || descriptor == (atalk_iconv_t) 0) {
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+
+    return -1;
+}
+
+/*!
+ * @brief Find the source code-unit size for replacement after a decoding error
+ *
+ * A Unicode NUL occupies two bytes in UTF16 and four in UTF32. Encode one
+ * NUL, then append another using the same descriptor. The output-length
+ * difference measures one code unit without including the initial BOM.
+ * Probe the converter instead of matching encoding names, so aliases keep
+ * the same recovery alignment. Other encodings retain the existing
+ * one-byte replacement policy. Cache the result until the charset name changes.
+ *
+ * @param[in] from_set  source charset
+ * @returns the code-unit size in bytes, or 1 if the probe fails
+ */
+static size_t source_code_unit_size(charset_t from_set)
+{
+    if (source_unit_sizes[from_set] != 0) {
+        return source_unit_sizes[from_set];
+    }
+
+    ucs2_t nul = 0;
+    char encoded[16];
+    const char *inbuf = (const char *)&nul;
+    char *outbuf = encoded;
+    size_t inleft = sizeof(nul);
+    size_t outleft = sizeof(encoded);
+    size_t unit = 1;
+    atalk_iconv_t descriptor = atalk_iconv_open(charset_name(from_set), "UCS-2");
+
+    if (descriptor == (atalk_iconv_t) -1) {
+        return source_unit_sizes[from_set] = 1;
+    }
+
+    size_t result = atalk_iconv(descriptor, &inbuf, &inleft, &outbuf, &outleft);
+
+    if (result != (size_t) -1 && inleft == 0) {
+        size_t first_len = sizeof(encoded) - outleft;
+        inbuf = (const char *)&nul;
+        inleft = sizeof(nul);
+        result = atalk_iconv(descriptor, &inbuf, &inleft, &outbuf, &outleft);
+
+        if (result != (size_t) -1 && inleft == 0) {
+            unit = sizeof(encoded) - outleft - first_len;
+        }
+    }
+
+    atalk_iconv_close(descriptor);
+    source_unit_sizes[from_set] = unit == 2 || unit == 4 ? unit : 1;
+    return source_unit_sizes[from_set];
+}
+
+/*!
+ * @brief Restore a BOM-selected byte order after the iconv error reset
+ *
+ * Test whether the first code unit is consumed without output. If so, replay
+ * that BOM on the reset descriptor before continuing after a replacement.
+ *
+ * @param[in] descriptor  source decoding descriptor after an error reset
+ * @param[in] from_set    source charset
+ * @param[in] src         original source bytes
+ * @param[in] srclen      original source length in bytes
+ * @param[in] unit        source code-unit size in bytes
+ * @returns 0 on success, or -1 with errno if a converter fails
+ */
+static int restore_source_bom(atalk_iconv_t descriptor, charset_t from_set,
+                              const char *src, size_t srclen, size_t unit)
+{
+    if (unit == 1 || srclen < unit) {
+        return 0;
+    }
+
+    atalk_iconv_t probe = atalk_iconv_open("UCS-2", charset_name(from_set));
+
+    if (probe == (atalk_iconv_t) -1) {
+        return -1;
+    }
+
+    ucs2_t output[2];
+    const char *inbuf = src;
+    char *outbuf = (char *)output;
+    size_t inleft = unit;
+    size_t outleft = sizeof(output);
+    size_t result = atalk_iconv(probe, &inbuf, &inleft, &outbuf, &outleft);
+    atalk_iconv_close(probe);
+
+    if (result != (size_t) -1 && inleft == 0 && outleft == sizeof(output)) {
+        inbuf = src;
+        inleft = unit;
+        return atalk_iconv(descriptor, &inbuf, &inleft, &outbuf, &outleft)
+               == (size_t) -1 ? -1 : 0;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Decode source bytes to UCS2 with the source-error recovery flags
+ *
+ * CONV_IGNORE returns the decoded prefix and sets CONV_REQMANGLE.
+ * CONV__EILSEQ replaces invalid source code units with IGNORE_CHAR.
+ * CONV_FORCE accepts a partial result after a decoding error.
+ *
+ * @param[in]     from_set        source charset
+ * @param[in]     src             source bytes
+ * @param[in]     srclen          source length in bytes; (size_t)-1 infers length
+ * @param[out]    decoded         UCS2 output buffer
+ * @param[in]     decoded_len     size of decoded in bytes
+ * @param[out]    remaining_input source bytes left after decoding succeeds
+ * @param[in,out] flags           CONV_* options and result flags
+ * @returns decoded UCS2 code-unit count, or (size_t)-1 with errno
+ */
+static size_t decode_source_ucs2(charset_t from_set, const char *src,
+                                 size_t srclen, ucs2_t *decoded, size_t decoded_len,
+                                 size_t *remaining_input, uint16_t *flags)
+{
+    const uint16_t option = (flags ? *flags : 0);
+    const char *input = src;
+    char *decoded_end = (char *)decoded;
+    size_t input_left = srclen;
+    size_t decoded_left = decoded_len;
+    atalk_iconv_t descriptor = conv_handles[from_set][CH_UCS2];
+
+    if (descriptor == (atalk_iconv_t) -1 || descriptor == NULL) {
         errno = EINVAL;
         return (size_t) -1;
     }
 
-    i_len = srclen;
-    o_len = destlen;
+    const size_t source_unit = source_code_unit_size(from_set);
+#ifdef HAVE_USABLE_ICONV
 
-    if ((option & CONV_ESCAPEDOTS) && i_len >= 2 && inbuf[0] == '.') {
-        if (o_len < 6) {
+    if (descriptor->cd_direct || descriptor->cd_pull) {
+        /* Reopen for each filename: a reset can retain BOM byte-order state
+         * in glibc, and musl's NULL-input reset leaves shift state intact. */
+        atalk_iconv_t fresh = atalk_iconv_open("UCS-2", charset_name(from_set));
+
+        if (fresh == (atalk_iconv_t) -1) {
+            return (size_t) -1;
+        }
+
+        atalk_iconv_close(descriptor);
+        descriptor = conv_handles[from_set][CH_UCS2] = fresh;
+    }
+
+#endif
+
+    if (srclen == (size_t) -1) {
+        /* Native UCS2 can infer its length; other wide sources need byte lengths. */
+        if (from_set == CH_UCS2) {
+            ucs2_t c;
+            input_left = 0;
+
+            do {
+                memcpy(&c, src + input_left, sizeof(c));
+                input_left += sizeof(c);
+            } while (c != 0);
+        } else {
+            input_left = strlen(src) + 1;
+        }
+    }
+
+    size_t source_len = input_left;
+
+    while (input_left > 0) {
+        /* The native UCS2 converter is a byte copy; exclude a trailing byte. */
+        size_t chunk_left = from_set == CH_UCS2 ? input_left & ~(size_t)1
+                            : input_left;
+        size_t trailing = input_left - chunk_left;
+        size_t result = atalk_iconv(descriptor, &input, &chunk_left,
+                                    &decoded_end, &decoded_left);
+        input_left = chunk_left + trailing;
+
+        if (result != (size_t) -1 && input_left == 0) {
+            break;
+        }
+
+        if (result != (size_t) -1 || errno == EINVAL || errno == EILSEQ) {
+            errno = EILSEQ;
+
+            if (option & CONV_IGNORE) {
+                *flags |= CONV_REQMANGLE;
+                break;
+            }
+
+            if (option & CONV__EILSEQ) {
+                if (decoded_left < sizeof(ucs2_t)) {
+                    errno = E2BIG;
+                } else {
+                    ucs2_t replacement = IGNORE_CHAR;
+                    memcpy(decoded_end, &replacement, sizeof(replacement));
+                    decoded_end += sizeof(replacement);
+                    decoded_left -= sizeof(replacement);
+                    size_t skip = input_left < source_unit ? input_left : source_unit;
+                    input += skip;
+                    input_left -= skip;
+
+                    if (input_left > 0 && restore_source_bom(descriptor, from_set,
+                                                             src, source_len, source_unit) != 0) {
+                        if (!(option & CONV_FORCE)) {
+                            return (size_t) -1;
+                        }
+
+                        break;
+                    }
+
+                    continue;
+                }
+            }
+        }
+
+        if (!(option & CONV_FORCE)) {
+            return (size_t) -1;
+        }
+
+        break;
+    }
+
+    *remaining_input = input_left;
+    return (decoded_end - (char *)decoded) / sizeof(ucs2_t);
+}
+
+/*!
+ * @brief Emit decoded UCS2 characters with filename punctuation and escapes
+ *
+ * @param[in]     from_set   source charset, which picks slash mapping
+ * @param[in]     to_set     target charset, which picks colon mapping
+ * @param[in]     cap_set    charset of the bytes in :xx escapes
+ * @param[in]     decoded    decoded UCS2 characters
+ * @param[in]     count      decoded UCS2 code-unit count
+ * @param[in]     input_left undecoded source bytes, for leading-dot escaping
+ * @param[out]    dest       UCS2 output buffer
+ * @param[in]     destlen    size of dest in bytes
+ * @param[in,out] flags      CONV_* options and result flags
+ * @returns bytes written, or (size_t)-1 with errno
+ */
+static size_t emit_filename_chars(charset_t from_set, charset_t to_set,
+                                  charset_t cap_set, const ucs2_t *decoded,
+                                  size_t count, size_t input_left, char *dest,
+                                  size_t destlen, uint16_t *flags)
+{
+    const uint16_t option = (flags ? *flags : 0);
+    char *outbuf = dest;
+    size_t outleft = destlen;
+    /* Source decoding may have replaced a descriptor shared with CAP. */
+    atalk_iconv_t descriptor_cap = conv_handles[cap_set][CH_UCS2];
+    size_t pos = 0;
+
+    while (pos < count) {
+        ucs2_t output[3];
+        size_t output_count = 1;
+        ucs2_t c = decoded[pos];
+
+        if (pos == 0 && (count >= 2 || input_left > 0)
+                && c == '.' && (option & CONV_ESCAPEDOTS)) {
+            output[0] = ':';
+            output[1] = '2';
+            output[2] = 'e';
+            output_count = 3;
+            *flags |= CONV_REQESCAPE;
+        } else if (c == ':' && (option & CONV_UNESCAPEHEX)) {
+            char hex[MAXPATHLEN];
+            size_t hexlen = 0;
+
+            while (pos + 2 < count && decoded[pos] == ':'
+                    && filename_hex_value(decoded[pos + 1]) >= 0
+                    && filename_hex_value(decoded[pos + 2]) >= 0) {
+                if (hexlen == sizeof(hex)) {
+                    errno = E2BIG;
+                    goto end;
+                }
+
+                memset(&hex[hexlen++],
+                       (filename_hex_value(decoded[pos + 1]) << 4)
+                       | filename_hex_value(decoded[pos + 2]), 1);
+                pos += 3;
+            }
+
+            if (hexlen == 0 || descriptor_cap == NULL
+                    || descriptor_cap == (atalk_iconv_t) -1) {
+                errno = hexlen == 0 ? EILSEQ : EINVAL;
+                goto escape_error;
+            }
+
+            const char *hexbuf = hex;
+
+            if (atalk_iconv(descriptor_cap, &hexbuf, &hexlen, &outbuf,
+                            &outleft) == (size_t) -1) {
+                goto escape_error;
+            }
+
+            continue;
+        } else if ((c == ':' || c == '/') && (option & CONV_ESCAPEHEX)) {
+            output[0] = ':';
+            output[1] = c == ':' ? '3' : '2';
+            output[2] = c == ':' ? 'a' : 'f';
+            output_count = 3;
+        } else if (c == ':' && (to_set == CH_UTF8_MAC || to_set == CH_MAC)) {
+            output[0] = '/';
+        } else if (c == '/' && (from_set == CH_UTF8_MAC || from_set == CH_MAC)
+                   && to_set != CH_UTF8_MAC && to_set != CH_MAC) {
+            output[0] = ':';
+        } else {
+            output[0] = c;
+        }
+
+        if (outleft < output_count * sizeof(ucs2_t)) {
             errno = E2BIG;
             goto end;
         }
 
-        ucs2_t ucs2 = ':';
-        memcpy(outbuf, &ucs2, sizeof(ucs2_t));
-        ucs2 = '2';
-        memcpy(outbuf + sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
-        ucs2 = 'e';
-        memcpy(outbuf + 2 * sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
-        outbuf += 6;
-        o_len -= 6;
-        inbuf++;
-        i_len--;
-        *flags |= CONV_REQESCAPE;
+        memcpy(outbuf, output, output_count * sizeof(ucs2_t));
+        outbuf += output_count * sizeof(ucs2_t);
+        outleft -= output_count * sizeof(ucs2_t);
+        pos++;
     }
 
-    while (i_len > 0) {
-        for (j = 0; j < i_len; ++j)
-            if (inbuf[j] == ':' || inbuf[j] == '/') {
-                escch = inbuf[j];
-                break;
-            }
+    return destlen - outleft;
+escape_error:
 
-        j = i_len - j;
-        i_len -= j;
-
-        if (i_len > 0 &&
-                atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t) -1) {
-            if (errno == EILSEQ || errno == EINVAL) {
-                errno = EILSEQ;
-
-                if (option & CONV_IGNORE) {
-                    *flags |= CONV_REQMANGLE;
-                    return destlen - o_len;
-                }
-
-                if (option & CONV__EILSEQ) {
-                    if (o_len < 2) {
-                        errno = E2BIG;
-                        goto end;
-                    }
-
-                    *((ucs2_t *)outbuf) = (ucs2_t) IGNORE_CHAR; /* inbuf */
-                    inbuf++;
-                    i_len--;
-                    outbuf += 2;
-                    o_len -= 2;
-                    /* FIXME reset stat ? */
-                    continue;
-                }
-            }
-
-            goto end;
-        }
-
-        if (j) {
-            /* we have a ':' or '/' */
-            i_len = j, j = 0;
-
-            if (escch == ':') {
-                if (option & CONV_UNESCAPEHEX) {
-                    /* treat it as a CAP hex encoded char */
-                    char h[MAXPATHLEN];
-                    size_t hlen = 0;
-
-                    while (i_len >= 3 && inbuf[0] == ':' &&
-                            isxdigit(inbuf[1]) && isxdigit(inbuf[2])) {
-                        h[hlen++] = (hextoint(inbuf[1]) << 4) | hextoint(inbuf[2]);
-                        inbuf += 3;
-                        i_len -= 3;
-                    }
-
-                    if (hlen) {
-                        const char *h_buf = h;
-
-                        if (atalk_iconv(descriptor_cap, &h_buf, &hlen, &outbuf,
-                                        &o_len) == (size_t) -1) {
-                            i_len += hlen * 3;
-                            inbuf -= hlen * 3;
-
-                            if (errno == EILSEQ && (option & CONV_IGNORE)) {
-                                *flags |= CONV_REQMANGLE;
-                                return destlen - o_len;
-                            }
-
-                            goto end;
-                        }
-                    } else {
-                        /* We have an invalid :xx sequence */
-                        errno = EILSEQ;
-
-                        if (option & CONV_IGNORE) {
-                            *flags |= CONV_REQMANGLE;
-                            return destlen - o_len;
-                        }
-
-                        goto end;
-                    }
-                } else if (option & CONV_ESCAPEHEX) {
-                    if (o_len < 6) {
-                        errno = E2BIG;
-                        goto end;
-                    }
-
-                    ucs2_t ucs2 = ':';
-                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
-                    ucs2 = '3';
-                    memcpy(outbuf + sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
-                    ucs2 = 'a';
-                    memcpy(outbuf + 2 * sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
-                    outbuf += 6;
-                    o_len -= 6;
-                    inbuf++;
-                    i_len--;
-                } else if (to_set == CH_UTF8_MAC || to_set == CH_MAC) {
-                    /* convert to a '/' */
-                    if (o_len < 2) {
-                        errno = E2BIG;
-                        goto end;
-                    }
-
-                    ucs2_t slash = 0x002f;
-                    memcpy(outbuf, &slash, sizeof(ucs2_t));
-                    outbuf += 2;
-                    o_len -= 2;
-                    inbuf++;
-                    i_len--;
-                } else {
-                    /* keep as ':' */
-                    if (o_len < 2) {
-                        errno = E2BIG;
-                        goto end;
-                    }
-
-                    ucs2_t ucs2 = 0x003a;
-                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
-                    outbuf += 2;
-                    o_len -= 2;
-                    inbuf++;
-                    i_len--;
-                }
-            } else {
-                /* '/' */
-                if (option & CONV_ESCAPEHEX) {
-                    if (o_len < 6) {
-                        errno = E2BIG;
-                        goto end;
-                    }
-
-                    ucs2_t ucs2 = ':';
-                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
-                    ucs2 = '2';
-                    memcpy(outbuf + sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
-                    ucs2 = 'f';
-                    memcpy(outbuf + 2 * sizeof(ucs2_t), &ucs2, sizeof(ucs2_t));
-                    outbuf += 6;
-                    o_len -= 6;
-                    inbuf++;
-                    i_len--;
-                } else if ((from_set == CH_UTF8_MAC || from_set == CH_MAC)
-                           && (to_set != CH_UTF8_MAC && to_set != CH_MAC)) {
-                    /* convert to ':' */
-                    if (o_len < 2) {
-                        errno = E2BIG;
-                        goto end;
-                    }
-
-                    ucs2_t ucs2 = 0x003a;
-                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
-                    outbuf += 2;
-                    o_len -= 2;
-                    inbuf++;
-                    i_len--;
-                } else {
-                    /* keep as '/' */
-                    if (o_len < 2) {
-                        errno = E2BIG;
-                        goto end;
-                    }
-
-                    ucs2_t ucs2 = 0x002f;
-                    memcpy(outbuf, &ucs2, sizeof(ucs2_t));
-                    outbuf += 2;
-                    o_len -= 2;
-                    inbuf++;
-                    i_len--;
-                }
-            }
-        }
+    if (errno == EILSEQ && (option & CONV_IGNORE)) {
+        *flags |= CONV_REQMANGLE;
+        return destlen - outleft;
     }
 
 end:
-    return (i_len + j == 0
-            || (option & CONV_FORCE)) ? destlen - o_len : (size_t) -1;
+    return option & CONV_FORCE ? destlen - outleft : (size_t) -1;
+}
+
+/*!
+ * @brief Decode a source string to UCS2, then apply filename punctuation flags
+ *
+ * Punctuation is scanned as Unicode characters, so wide and multibyte source
+ * encodings cannot mistake part of an encoded character for filename syntax.
+ * CONV_UNESCAPEHEX decodes :xx bytes through the CAP charset. CONV_ESCAPEHEX
+ * writes :3a for a colon and :2f for a slash. Without these options, a colon
+ * becomes a slash for a Mac target, and a slash from a Mac source becomes a
+ * colon for a non-Mac target. CONV_ESCAPEDOTS escapes a leading dot as :2e.
+ *
+ * Invalid or incomplete source sequences fail with EILSEQ. CONV_IGNORE
+ * returns the decoded prefix and sets CONV_REQMANGLE. CONV__EILSEQ replaces
+ * invalid source code units with IGNORE_CHAR. CONV_FORCE accepts a partial
+ * result after a decoding or filename-processing error.
+ *
+ * @param[in]     from_set  source charset
+ * @param[in]     to_set    final target charset, which picks punctuation mapping
+ * @param[in]     cap_set   charset of the bytes in :xx escapes
+ * @param[in]     src       source string
+ * @param[in]     srclen    source length in bytes; (size_t)-1 uses strlen plus NUL
+ * @param[out]    dest      UCS2 output
+ * @param[in]     destlen   size of dest in bytes
+ * @param[in,out] flags     CONV_* options and result flags
+ * @returns bytes written, or (size_t)-1 with errno
+ */
+static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
+                                 charset_t cap_set, const char *src, size_t srclen,
+                                 char *dest, size_t destlen, uint16_t *flags)
+{
+    const uint16_t option = (flags ? *flags : 0);
+    /* :xx escapes can shrink three decoded characters to one output character. */
+    ucs2_t decoded[3 * (MAXPATHLEN + 1)];
+    size_t decoded_len = (MAXPATHLEN + 1) * sizeof(ucs2_t);
+    size_t input_left;
+
+    if (option & CONV_UNESCAPEHEX) {
+        decoded_len *= 3;
+    }
+
+    size_t count = decode_source_ucs2(from_set, src, srclen, decoded, decoded_len,
+                                      &input_left, flags);
+
+    if (count == (size_t) -1) {
+        return (size_t) -1;
+    }
+
+    return emit_filename_chars(from_set, to_set, cap_set, decoded, count,
+                               input_left, dest, destlen, flags);
 }
 
 /*!
@@ -1175,8 +1319,8 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
                                                     src, src_len,
                                                     (char *) buffer, sizeof(buffer) - 2, flags))) {
         LOG(log_error, logtype_default,
-            "Conversion failed ( %s to CH_UCS2 ), errno %i, %s", charset_name(from_set),
-            errno, src);
+            "Conversion failed ( %s to CH_UCS2 ), errno %i, %.*s", charset_name(from_set),
+            errno, src_len > MAXPATHLEN ? MAXPATHLEN : (int)src_len, src);
         return (size_t) -1;
     }
 
