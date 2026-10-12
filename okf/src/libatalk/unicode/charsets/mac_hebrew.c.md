@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_hebrew.c"
-description: "4 functions, includes 4 project headers."
+description: "MAC_HEBREW charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_hebrew.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -35,7 +35,7 @@ Initialized at line 86 as `struct charset_functions`. Assigns:
 static int char_ucs2_to_mac_hebrew(unsigned char *r, ucs2_t wc)
 ```
 
-Defined at lines 64 to 89.
+Defined at lines 69 to 94.
 
 Map one UCS2 character to a MAC_HEBREW byte.
 
@@ -55,7 +55,7 @@ Uses file-scope variables: `mac_hebrew_page00` in [libatalk/unicode/charsets/mac
 static size_t mac_hebrew_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 108 to 160.
+Defined at lines 113 to 165.
 
 Convert UCS2 to MAC_HEBREW, with the three Apple sequences that map to one byte.
 
@@ -80,7 +80,7 @@ Dispatched via: [charset_mac_hebrew](mac_hebrew.c.md#charset_mac_hebrew)
 static int char_mac_hebrew_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 ```
 
-Defined at lines 173 to 190.
+Defined at lines 178 to 195.
 
 Map one MAC_HEBREW byte to UCS2 or to a sequence marker.
 
@@ -102,7 +102,7 @@ Uses file-scope variables: `mac_hebrew_2uni` in [libatalk/unicode/charsets/mac_h
 static size_t mac_hebrew_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 207 to 273.
+Defined at lines 212 to 278.
 
 Convert MAC_HEBREW to UCS2 and expand the three bytes that stand for sequences.
 

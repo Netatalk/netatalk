@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "sys/netatalk/aarp.c"
-description: "10 functions, includes 5 project headers."
+description: "AARP: AppleTalk address resolution in the BSD kernel stack."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/aarp.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 void aarptimer(void)
 ```
 
-Defined at lines 79 to 100.
+Defined at lines 84 to 105.
 
 Age the AARP table once a minute and free the entries that ran out.
 
@@ -43,7 +43,7 @@ Called by: [aarp_clean](aarp.c.md#aarp_clean), [aarptnew](aarp.c.md#aarptnew)
 struct ifaddr * at_ifawithnet(struct sockaddr_at *sat, struct ifaddr *ifa)
 ```
 
-Defined at lines 112 to 145.
+Defined at lines 117 to 150.
 
 Find the AppleTalk address of an interface whose net range holds the net of an address.
 
@@ -63,7 +63,7 @@ Called by: [aarpresolve](aarp.c.md#aarpresolve), [aarpwhohas](aarp.c.md#aarpwhoh
 void aarpwhohas(struct arpcom *ac, struct sockaddr_at *sat)
 ```
 
-Defined at lines 159 to 244.
+Defined at lines 164 to 249.
 
 Send an AARP request for an AppleTalk address out of an Ethernet interface.
 
@@ -85,7 +85,7 @@ Uses file-scope variables: `aarp_org_code`, `atmulticastaddr`, `etherbroadcastad
 int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, unsigned char *desten)
 ```
 
-Defined at lines 264 to 327.
+Defined at lines 269 to 332.
 
 Find the Ethernet address of an AppleTalk destination for an outgoing packet.
 
@@ -109,7 +109,7 @@ Uses file-scope variables: `atmulticastaddr`, `etherbroadcastaddr`
 void aarpinput(struct arpcom *ac, struct mbuf *m)
 ```
 
-Defined at lines 339 to 377.
+Defined at lines 344 to 382.
 
 Check an incoming AARP packet and pass an AppleTalk one to at_aarpinput.
 
@@ -127,7 +127,7 @@ Calls: [at_aarpinput](aarp.c.md#at_aarpinput)
 void at_aarpinput(struct arpcom *ac, struct mbuf *m)
 ```
 
-Defined at lines 396 to 597.
+Defined at lines 401 to 602.
 
 Process an AppleTalk AARP packet: learn the sender, defend the local address, and answer.
 
@@ -151,7 +151,7 @@ Uses file-scope variables: `aarp_org_code`, `etherbroadcastaddr`
 void aarptfree(struct aarptab *aat)
 ```
 
-Defined at lines 604 to 614.
+Defined at lines 609 to 619.
 
 Free the held packet of an AARP entry and clear the entry.
 
@@ -166,7 +166,7 @@ Called by: [aarptimer](aarp.c.md#aarptimer), [aarptnew](aarp.c.md#aarptnew), [at
 struct aarptab * aarptnew(struct at_addr *addr)
 ```
 
-Defined at lines 626 to 665.
+Defined at lines 631 to 670.
 
 Take an AARP entry for an address from its hash bucket.
 
@@ -187,7 +187,7 @@ Called by: [aarpresolve](aarp.c.md#aarpresolve), [at_aarpinput](aarp.c.md#at_aar
 void aarpprobe(struct arpcom *ac)
 ```
 
-Defined at lines 676 to 776.
+Defined at lines 681 to 781.
 
 Send the next AARP probe for the address that an interface probes for.
 
@@ -206,7 +206,7 @@ Uses file-scope variables: `aarp_org_code`, `atmulticastaddr`, `etherbroadcastad
 void aarp_clean(void)
 ```
 
-Defined at lines 781 to 792.
+Defined at lines 786 to 797.
 
 Stop aarptimer and free the packets that AARP entries hold.
 

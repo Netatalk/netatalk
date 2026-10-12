@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/spotlight/localsearch/sparql_parser.y"
-description: "11 functions, includes 4 project headers."
+description: "Grammar that maps Spotlight raw queries to SPARQL."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sparql_parser.y"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -28,7 +28,7 @@ Line numbers refer to the view produced by the Doxygen input filter for this fil
 void * yyterminate(void)
 ```
 
-Declared at etc/spotlight/localsearch/sparql_parser.y line 22; no definition in the scanned sources.
+Declared at etc/spotlight/localsearch/sparql_parser.y line 27; no definition in the scanned sources.
 
 ### yy_scan_string
 
@@ -36,7 +36,7 @@ Declared at etc/spotlight/localsearch/sparql_parser.y line 22; no definition in 
 YY_BUFFER_STATE yy_scan_string(const char *str)
 ```
 
-Declared at etc/spotlight/localsearch/sparql_parser.y line 23; no definition in the scanned sources.
+Declared at etc/spotlight/localsearch/sparql_parser.y line 28; no definition in the scanned sources.
 
 Called by: [map_spotlight_to_sparql_query](sparql_parser.y.md#map_spotlight_to_sparql_query)
 
@@ -46,7 +46,7 @@ Called by: [map_spotlight_to_sparql_query](sparql_parser.y.md#map_spotlight_to_s
 void yy_delete_buffer(YY_BUFFER_STATE buffer)
 ```
 
-Declared at etc/spotlight/localsearch/sparql_parser.y line 24; no definition in the scanned sources.
+Declared at etc/spotlight/localsearch/sparql_parser.y line 29; no definition in the scanned sources.
 
 Called by: [map_spotlight_to_sparql_query](sparql_parser.y.md#map_spotlight_to_sparql_query)
 
@@ -56,7 +56,7 @@ Called by: [map_spotlight_to_sparql_query](sparql_parser.y.md#map_spotlight_to_s
 static time_t isodate2unix(const char *s)
 ```
 
-Defined at lines 53 to 62.
+Defined at lines 58 to 67.
 
 Convert an ISO 8601 date of the form YYYY-MM-DDTHH:MM:SSZ to a time_t.
 
@@ -73,7 +73,7 @@ Returns: the time, or -1 for a string in another form
 static char * ascii_lower_dup(TALLOC_CTX *ctx, const char *s, size_t len)
 ```
 
-Defined at lines 75 to 88.
+Defined at lines 80 to 93.
 
 Return a lowercase duplicate of the first len bytes of s.
 
@@ -94,7 +94,7 @@ Called by: [map_expr](sparql_parser.y.md#map_expr)
 static const char * map_daterange(const char *dateattr, time_t date1, time_t date2)
 ```
 
-Defined at lines 102 to 137.
+Defined at lines 107 to 142.
 
 Map an InRange date test on a Spotlight attribute to a SPARQL FILTER.
 
@@ -115,7 +115,7 @@ Uses file-scope variables: `sparqlvar`, `ssp_slq`
 static char * map_type_search(const char *attr, char op, const char *val)
 ```
 
-Defined at lines 149 to 178.
+Defined at lines 154 to 183.
 
 Map a content type value to an rdf:type or nie:mimeType pattern through [MDTypeMap](sparql_map.h.md#struct-mdtypemap).
 
@@ -136,7 +136,7 @@ Uses file-scope variables: `ssp_slq`
 static const char * map_expr(const char *attr, char op, const char *val)
 ```
 
-Defined at lines 197 to 375.
+Defined at lines 202 to 380.
 
 Map one comparison on a Spotlight attribute of the SPARQL map to a SPARQL pattern.
 
@@ -159,7 +159,7 @@ Uses file-scope variables: `sparqlvar`, `ssp_slq`
 void yyerror(const char *str)
 ```
 
-Defined at lines 382 to 389.
+Defined at lines 387 to 394.
 
 Log a SPARQL parser error.
 
@@ -174,7 +174,7 @@ Called by: [map_expr](sparql_parser.y.md#map_expr)
 int yywrap()
 ```
 
-Defined at lines 396 to 399.
+Defined at lines 401 to 404.
 
 Tell the lexer that no input follows the query string.
 
@@ -186,7 +186,7 @@ Returns: 1
 int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
 ```
 
-Defined at lines 409 to 431.
+Defined at lines 414 to 436.
 
 Map a Spotlight RAW query string to a SPARQL query string.
 

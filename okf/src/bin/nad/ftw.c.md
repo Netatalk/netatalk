@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/ftw.c"
-description: "12 functions, 4 types, includes 3 project headers."
+description: "File tree walker from the GNU C Library for the nad commands."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/ftw.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void tdestroy_recurse(node root, __free_fn_t freefct)
 ```
 
-Defined at lines 211 to 224.
+Defined at lines 216 to 229.
 
 Free a tsearch subtree and pass each item to a free function.
 
@@ -43,7 +43,7 @@ Called by: [mytdestroy](ftw.c.md#mytdestroy)
 static void mytdestroy(void *vroot, __free_fn_t freefct)
 ```
 
-Defined at lines 234 to 241.
+Defined at lines 239 to 246.
 
 Free a whole tsearch tree, as the GNU tdestroy does.
 
@@ -63,7 +63,7 @@ Called by: [ftw_startup](ftw.c.md#ftw_startup)
 static char * mystpcpy(char *dest, const char *src, size_t dest_size)
 ```
 
-Defined at lines 257 to 272.
+Defined at lines 262 to 277.
 
 Store a string in a sized buffer and return the end of the stored string, like stpcpy.
 
@@ -86,7 +86,7 @@ Called by: [ftw_startup](ftw.c.md#ftw_startup)
 static char * xgetcwd(void)
 ```
 
-Defined at lines 284 to 324.
+Defined at lines 289 to 329.
 
 Return the current directory in a buffer from malloc.
 
@@ -100,7 +100,7 @@ Returns: the path for the caller to free, or NULL with the errno of the failure
 static int object_compare(const void *p1, const void *p2)
 ```
 
-Defined at lines 337 to 351.
+Defined at lines 342 to 356.
 
 Order two known objects by inode and then by device, for tsearch.
 
@@ -120,7 +120,7 @@ Called by: [add_object](ftw.c.md#add_object), [find_object](ftw.c.md#find_object
 static int add_object(struct ftw_data *data, struct STAT *st)
 ```
 
-Defined at lines 363 to 374.
+Defined at lines 368 to 379.
 
 Remember the device and the inode of a directory, so the walk enters it once.
 
@@ -140,7 +140,7 @@ Called by: [ftw_startup](ftw.c.md#ftw_startup), [process_entry](ftw.c.md#process
 static int find_object(struct ftw_data *data, struct STAT *st)
 ```
 
-Defined at lines 385 to 391.
+Defined at lines 390 to 396.
 
 Tell whether the walk entered a directory before.
 
@@ -160,7 +160,7 @@ Called by: [process_entry](ftw.c.md#process_entry)
 static int open_dir_stream(int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 ```
 
-Defined at lines 413 to 554.
+Defined at lines 418 to 559.
 
 Open the directory that the walk buffer names and give its stream the next slot.
 
@@ -183,7 +183,7 @@ Called by: [ftw_dir](ftw.c.md#ftw_dir)
 static int process_entry(struct ftw_data *data, struct dir_data *dir, const char *name, size_t namlen)
 ```
 
-Defined at lines 578 to 673.
+Defined at lines 583 to 678.
 
 Visit one directory entry and report it to the callback or descend into it.
 
@@ -209,7 +209,7 @@ Called by: [ftw_dir](ftw.c.md#ftw_dir)
 static int ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 ```
 
-Defined at lines 695 to 845.
+Defined at lines 700 to 850.
 
 Walk one directory, report it, visit its entries, and return to its parent.
 
@@ -236,7 +236,7 @@ Uses file-scope variables: `upfunc`
 static int ftw_startup(const char *dir, int is_nftw, nftw_func_t func, dir_notification_func_t up, int descriptors, int flags)
 ```
 
-Defined at lines 868 to 1059.
+Defined at lines 873 to 1064.
 
 Set up a walk from a start path, run it, and restore the current directory.
 
@@ -264,7 +264,7 @@ Uses file-scope variables: `ftw_arr`, `nftw_arr`, `upfunc`
 int nftw(const char *path, nftw_func_t func, dir_notification_func_t up, int descriptors, int flags)
 ```
 
-Defined at lines 1077 to 1084.
+Defined at lines 1082 to 1089.
 
 Walk a file tree like the POSIX nftw, with a function to run after each directory.
 
@@ -287,14 +287,14 @@ Called by: [nad_cp](nad_cp.c.md#nad_cp), [nad_rm](nad_rm.c.md#nad_rm)
 
 ### struct dir_data
 
-Defined at line 131.
+Defined at line 136.
 * `DIR * stream`
 * `int streamfd`
 * `char * content`
 
 ### struct ftw_data
 
-Defined at line 142.
+Defined at line 147.
 * `struct dir_data ** dirstreams`
 * `size_t actdir`
 * `size_t maxdir`
@@ -309,13 +309,13 @@ Defined at line 142.
 
 ### struct known_object
 
-Defined at line 137.
+Defined at line 142.
 * `dev_t dev`
 * `ino_t ino`
 
 ### struct node_t
 
-Defined at line 194.
+Defined at line 199.
 * `void * key`
 * `struct node_t * left`
 * `struct node_t * right`

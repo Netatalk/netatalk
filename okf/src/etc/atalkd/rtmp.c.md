@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/rtmp.c"
-description: "13 functions, includes 12 project headers."
+description: "RTMP routing table maintenance of atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/rtmp.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -34,7 +34,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 void rtmp_delzonemap(struct rtmptab *)
 ```
 
-Defined at lines 49 to 107. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 54 to 112. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Drop the zone list of a route and the route from each of its zones.
 
@@ -51,7 +51,7 @@ Called by: [as_timer](main.c.md#as_timer), [rtmp_delinuse](rtmp.c.md#rtmp_delinu
 static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
 ```
 
-Defined at lines 124 to 182.
+Defined at lines 129 to 187.
 
 Complete the configuration of a phase 1 interface from the RTMP packet of a router.
 
@@ -73,7 +73,7 @@ Uses file-scope variables: `ciface` in [etc/atalkd/main.c](main.c.md), `stableti
 static void rtmp_delinuse(struct rtmptab *rtmp)
 ```
 
-Defined at lines 193 to 243.
+Defined at lines 198 to 248.
 
 Take a gateway route out of use.
 
@@ -92,7 +92,7 @@ Called by: [rtmp_free](rtmp.c.md#rtmp_free), [rtmp_new](rtmp.c.md#rtmp_new), [rt
 static void rtmp_addinuse(struct rtmptab *rtmp)
 ```
 
-Defined at lines 254 to 292.
+Defined at lines 259 to 297.
 
 Put a gateway route in use.
 
@@ -111,7 +111,7 @@ Called by: [rtmp_new](rtmp.c.md#rtmp_new), [rtmp_replace](rtmp.c.md#rtmp_replace
 static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from)
 ```
 
-Defined at lines 307 to 353.
+Defined at lines 312 to 358.
 
 Move the zone list of a route to its replacement.
 
@@ -131,7 +131,7 @@ Called by: [rtmp_new](rtmp.c.md#rtmp_new), [rtmp_replace](rtmp.c.md#rtmp_replace
 void rtmp_free(struct rtmptab *)
 ```
 
-Defined at lines 364 to 395. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 369 to 400. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Take a gateway route out of use, unlink it from its gateway, and free it.
 
@@ -150,7 +150,7 @@ Called by: [as_timer](main.c.md#as_timer), [rtmp_replace](rtmp.c.md#rtmp_replace
 int rtmp_replace(struct rtmptab **)
 ```
 
-Defined at lines 412 to 482. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 417 to 487. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Pick the route with the fewest hops for the net range of a route in use.
 
@@ -173,7 +173,7 @@ Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md)
 static int rtmp_new(struct rtmptab *rtmp)
 ```
 
-Defined at lines 498 to 562.
+Defined at lines 503 to 567.
 
 Decide whether a new gateway route goes in use.
 
@@ -194,7 +194,7 @@ Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md)
 int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 ```
 
-Defined at lines 594 to 1045. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 599 to 1050. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Process an RTMP packet from the RTMP port of an interface.
 
@@ -230,7 +230,7 @@ Dispatched via: [atserv](main.c.md#atserv)
 int rtmp_request(struct interface *)
 ```
 
-Defined at lines 1056 to 1096. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 1061 to 1101. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Send an RTMP request from an interface to all nodes of its net.
 
@@ -251,7 +251,7 @@ Called by: [as_timer](main.c.md#as_timer), [bootaddr](main.c.md#bootaddr)
 int looproute(struct interface *, unsigned int)
 ```
 
-Defined at lines 1110 to 1167. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 1115 to 1172. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Add or delete the loopback host route for the address of an interface.
 
@@ -273,7 +273,7 @@ Called by: [as_down](main.c.md#as_down), [as_timer](main.c.md#as_timer), [rtmp_c
 int gateroute(unsigned int, struct rtmptab *)
 ```
 
-Defined at lines 1183 to 1269. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 1188 to 1274. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Add or delete the kernel routes for the net range of a gateway route.
 
@@ -295,7 +295,7 @@ Called by: [as_down](main.c.md#as_down), [rtmp_addinuse](rtmp.c.md#rtmp_addinuse
 struct rtmptab * newrt(const struct interface *)
 ```
 
-Defined at lines 1278 to 1288. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
+Defined at lines 1283 to 1293. Declared in [etc/atalkd/rtmp.h](rtmp.h.md).
 
 Allocate a zeroed route entry for an interface.
 

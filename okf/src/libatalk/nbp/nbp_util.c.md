@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/nbp/nbp_util.c"
-description: "3 functions, includes 4 project headers."
+description: "NBP tuple parsing, matching, and name splitting."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/nbp/nbp_util.c"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded 
 int nbp_parse(char *, struct nbpnve *, int)
 ```
 
-Defined at lines 43 to 106. Declared in [libatalk/nbp/nbp_conf.h](nbp_conf.h.md).
+Defined at lines 48 to 111. Declared in [libatalk/nbp/nbp_conf.h](nbp_conf.h.md).
 
 Parse one NBP tuple and its object, type, and zone into an entity.
 
@@ -47,7 +47,7 @@ Called by: [nbp_do_lookup_op](nbp_lkup.c.md#nbp_do_lookup_op)
 int nbp_match(struct nbpnve *, struct nbpnve *, int)
 ```
 
-Defined at lines 123 to 166. Declared in [libatalk/nbp/nbp_conf.h](nbp_conf.h.md).
+Defined at lines 128 to 171. Declared in [libatalk/nbp/nbp_conf.h](nbp_conf.h.md).
 
 Compare two NBP entities without regard to case.
 
@@ -70,7 +70,7 @@ Called by: [nbp_do_lookup_op](nbp_lkup.c.md#nbp_do_lookup_op)
 int nbp_name(const char *, char **, char **, char **)
 ```
 
-Defined at lines 181 to 209. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
+Defined at lines 186 to 214. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
 
 Split an NBP name of the form `object:type@zone` into its parts.
 

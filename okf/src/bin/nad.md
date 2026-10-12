@@ -5,35 +5,35 @@ description: "24 files, 181 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/nad"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [bin/nad/crc16.c](nad/crc16.c.md): 1 function, includes 1 project header.
+* [bin/nad/crc16.c](nad/crc16.c.md): CRC-16/XMODEM for BinHex and MacBinary archives.
 * [bin/nad/crc16.h](nad/crc16.h.md): No functions or types.
-* [bin/nad/ftw.c](nad/ftw.c.md): 12 functions, 4 types, includes 3 project headers.
+* [bin/nad/ftw.c](nad/ftw.c.md): File tree walker from the GNU C Library for the nad commands.
 * [bin/nad/ftw.h](nad/ftw.h.md): 1 type.
-* [bin/nad/hqx.c](nad/hqx.c.md): 17 functions, 1 type, includes 7 project headers.
+* [bin/nad/hqx.c](nad/hqx.c.md): BinHex 4.0 encoding and decoding for the nad archive commands.
 * [bin/nad/hqx.h](nad/hqx.h.md): No functions or types.
-* [bin/nad/macbin.c](nad/macbin.c.md): 18 functions, 1 type, includes 7 project headers.
+* [bin/nad/macbin.c](nad/macbin.c.md): MacBinary encoding and decoding for the nad archive commands.
 * [bin/nad/macbin.h](nad/macbin.h.md): No functions or types.
-* [bin/nad/megatron.c](nad/megatron.c.md): 25 functions, 1 type, includes 11 project headers.
+* [bin/nad/megatron.c](nad/megatron.c.md): Conversion driver of the nad archive commands bin, hex, unbin, and unhex.
 * [bin/nad/megatron.h](nad/megatron.h.md): 4 types, includes 2 project headers.
-* [bin/nad/nad.c](nad/nad.c.md): 4 functions, includes 5 project headers.
+* [bin/nad/nad.c](nad/nad.c.md): The nad command: entry point and subcommand dispatch.
 * [bin/nad/nad.h](nad/nad.h.md): 2 types, includes 4 project headers.
-* [bin/nad/nad_adouble.c](nad/nad_adouble.c.md): 16 functions, 1 type, includes 7 project headers.
+* [bin/nad/nad_adouble.c](nad/nad_adouble.c.md): AppleDouble metadata and CAP name encoding for the nad archive and StuffIt commands.
 * [bin/nad/nad_adouble.h](nad/nad_adouble.h.md): No functions or types.
 * [bin/nad/nad_cp.c](nad/nad_cp.c.md): AFP-aware copying of files and directory trees for nad.
-* [bin/nad/nad_find.c](nad/nad_find.c.md): 6 functions, includes 6 project headers.
-* [bin/nad/nad_ls.c](nad/nad_ls.c.md): 16 functions, includes 4 project headers.
-* [bin/nad/nad_mkdir.c](nad/nad_mkdir.c.md): 4 functions, includes 6 project headers.
-* [bin/nad/nad_mv.c](nad/nad_mv.c.md): 5 functions, includes 8 project headers.
-* [bin/nad/nad_rm.c](nad/nad_rm.c.md): 5 functions, includes 8 project headers.
-* [bin/nad/nad_rmdir.c](nad/nad_rmdir.c.md): 5 functions, includes 7 project headers.
-* [bin/nad/nad_set.c](nad/nad_set.c.md): 7 functions, includes 3 project headers.
-* [bin/nad/nad_stuffit.c](nad/nad_stuffit.c.md): 22 functions, includes 6 project headers.
-* [bin/nad/nad_util.c](nad/nad_util.c.md): 10 functions, includes 10 project headers.
+* [bin/nad/nad_find.c](nad/nad_find.c.md): The nad find command: search a volume for entries by name.
+* [bin/nad/nad_ls.c](nad/nad_ls.c.md): The nad ls command: list entries with their Mac metadata.
+* [bin/nad/nad_mkdir.c](nad/nad_mkdir.c.md): The nad mkdir command: create directories with CNIDs and metadata.
+* [bin/nad/nad_mv.c](nad/nad_mv.c.md): The nad mv command: move entries with their CNIDs and metadata.
+* [bin/nad/nad_rm.c](nad/nad_rm.c.md): The nad rm command: delete entries with their CNIDs and metadata.
+* [bin/nad/nad_rmdir.c](nad/nad_rmdir.c.md): The nad rmdir command: delete empty directories with their CNIDs and metadata.
+* [bin/nad/nad_set.c](nad/nad_set.c.md): The nad set command: change the Mac metadata of an entry.
+* [bin/nad/nad_stuffit.c](nad/nad_stuffit.c.md): The nad sit and unsit commands: create and extract StuffIt archives.
+* [bin/nad/nad_util.c](nad/nad_util.c.md): Volume, signal, and CNID helpers shared by the nad commands.
 
 # Includes headers from
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_dhx2_passwd.c"
-description: "12 functions, includes 4 project headers."
+description: "DHX2 UAM with Unix password authentication."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx2_passwd.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,14 +22,14 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### uams_dhx2
 
-Initialized at line 891 as `struct uam_export`. Assigns:
+Initialized at line 896 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx2_passwd.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx2_passwd.c.md#uam_setup)
 
 ### uams_dhx2_passwd
 
-Initialized at line 898 as `struct uam_export`. Assigns:
+Initialized at line 903 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx2_passwd.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx2_passwd.c.md#uam_setup)
@@ -42,7 +42,7 @@ Initialized at line 898 as `struct uam_export`. Assigns:
 static void dhx2_release_mpi(gcry_mpi_t *mpi)
 ```
 
-Defined at lines 65 to 71.
+Defined at lines 70 to 76.
 
 Release a libgcrypt number and set its pointer to NULL.
 
@@ -57,7 +57,7 @@ Called by: [dhx2_clear_session](uams_dhx2_passwd.c.md#dhx2_clear_session), [logi
 static void dhx2_clear_session(void)
 ```
 
-Defined at lines 79 to 89.
+Defined at lines 84 to 94.
 
 Drop the state of a DHX2 exchange, so the next step has to start over.
 
@@ -73,7 +73,7 @@ Called by: [dhx2_setup](uams_dhx2_passwd.c.md#dhx2_setup), [logincont1](uams_dhx
 static int dh_params_generate(gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits)
 ```
 
-Defined at lines 119 to 200.
+Defined at lines 124 to 205.
 
 Generate a prime p and a generator g for one Diffie-Hellman exchange.
 
@@ -94,7 +94,7 @@ Called by: [dhx2_setup](uams_dhx2_passwd.c.md#dhx2_setup)
 static int dhx2_setup(void *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 219 to 346.
+Defined at lines 224 to 351.
 
 Start a DHX2 exchange with a new Diffie-Hellman group and the public key of the server.
 
@@ -119,7 +119,7 @@ Called by: [login](uams_dhx2_passwd.c.md#login)
 static int login(void *obj, char *username, int ulen, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 363 to 375.
+Defined at lines 368 to 380.
 
 Look up the user of a DHX2 login and start the Diffie-Hellman exchange.
 
@@ -145,7 +145,7 @@ Called by: [passwd_login](uams_dhx2_passwd.c.md#passwd_login), [passwd_login_ext
 static int passwd_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 392 to 427.
+Defined at lines 397 to 432.
 
 Read the user name of an FPLogin request and start a DHX2 login.
 
@@ -171,7 +171,7 @@ Called by: [uam_setup](uams_dhx2_passwd.c.md#uam_setup)
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 445 to 480.
+Defined at lines 450 to 485.
 
 Read the user name of an FPLoginExt request and start a DHX2 login.
 
@@ -198,7 +198,7 @@ Called by: [uam_setup](uams_dhx2_passwd.c.md#uam_setup)
 static int logincont1(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 501 to 664.
+Defined at lines 506 to 669.
 
 Derive the session key from the public key of the client and answer its nonce.
 
@@ -224,7 +224,7 @@ Called by: [passwd_logincont](uams_dhx2_passwd.c.md#passwd_logincont)
 static int logincont2(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 684 to 822.
+Defined at lines 689 to 827.
 
 Check the server nonce and the password of a DHX2 login against the password hash.
 
@@ -250,7 +250,7 @@ Called by: [passwd_logincont](uams_dhx2_passwd.c.md#passwd_logincont)
 static int passwd_logincont(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 839 to 861.
+Defined at lines 844 to 866.
 
 Route an FPLoginCont request to the step that the session ID and the state expect.
 
@@ -276,7 +276,7 @@ Called by: [uam_setup](uams_dhx2_passwd.c.md#uam_setup)
 static int uam_setup(void *obj, const char *path)
 ```
 
-Defined at lines 872 to 880.
+Defined at lines 877 to 885.
 
 Register the DHX2 login of the passwd module.
 
@@ -300,7 +300,7 @@ Dispatched via: [uams_dhx2](uams_dhx2_passwd.c.md#uams_dhx2), [uams_dhx2_passwd]
 static void uam_cleanup(void)
 ```
 
-Defined at lines 885 to 888.
+Defined at lines 890 to 893.
 
 Unregister the DHX2 login of the passwd module.
 

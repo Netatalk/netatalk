@@ -5,7 +5,7 @@ description: "7 files, 48 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/netatalk"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
@@ -16,7 +16,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
 * [etc/netatalk/afp_mdns.h](netatalk/afp_mdns.h.md): mDNS based Zeroconf support
 * [etc/netatalk/afp_zeroconf.c](netatalk/afp_zeroconf.c.md): Zeroconf facade, that abstracts access to a particular Zeroconf implementation.
 * [etc/netatalk/afp_zeroconf.h](netatalk/afp_zeroconf.h.md): Zeroconf facade, that abstracts access to a particular Zeroconf implementation.
-* [etc/netatalk/netatalk.c](netatalk/netatalk.c.md): 33 functions, includes 14 project headers.
+* [etc/netatalk/netatalk.c](netatalk/netatalk.c.md): The netatalk service controller that starts and supervises afpd and the Spotlight dbus daemon.
 
 # Includes headers from
 

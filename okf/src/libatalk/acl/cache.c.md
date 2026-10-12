@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/acl/cache.c"
-description: "7 functions, 1 type, includes 4 project headers."
+description: "Name and UUID caches of the ACL UUID lookups."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/cache.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 void uuidcache_dump(void)
 ```
 
-Defined at lines 54 to 110.
+Defined at lines 59 to 115.
 
 Log every entry of the name and UUID caches at debug level.
 
@@ -44,7 +44,7 @@ Uses file-scope variables: `namecache`, `uuidcache`, `uuidtype` in [libatalk/acl
 static unsigned char hashstring(unsigned char *str)
 ```
 
-Defined at lines 120 to 134.
+Defined at lines 125 to 139.
 
 Hash a string into a cache bucket with 32-bit FNV-1a.
 
@@ -63,7 +63,7 @@ Called by: [add_cachebyname](cache.c.md#add_cachebyname), [search_cachebyname](c
 static unsigned char hashuuid(uuidp_t uuid)
 ```
 
-Defined at lines 142 to 153.
+Defined at lines 147 to 158.
 
 Hash a 16-byte UUID into a cache bucket.
 
@@ -80,7 +80,7 @@ Called by: [add_cachebyuuid](cache.c.md#add_cachebyuuid), [search_cachebyuuid](c
 int add_cachebyname(const char *inname, const uuidp_t inuuid, const uuidtype_t type, const unsigned long uid)
 ```
 
-Defined at lines 172 to 252.
+Defined at lines 177 to 257.
 
 Add a name to UUID mapping at the head of its name cache bucket.
 
@@ -106,7 +106,7 @@ Uses file-scope variables: `namecache`
 int search_cachebyname(const char *name, uuidtype_t *type, unsigned char *uuid)
 ```
 
-Defined at lines 264 to 321.
+Defined at lines 269 to 326.
 
 Search cache by name and uuid type.
 
@@ -129,7 +129,7 @@ Uses file-scope variables: `namecache`
 int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)
 ```
 
-Defined at lines 335 to 391.
+Defined at lines 340 to 396.
 
 Look up a UUID in the UUID cache.
 
@@ -154,7 +154,7 @@ Uses file-scope variables: `uuidcache`
 int add_cachebyuuid(uuidp_t inuuid, const char *inname, uuidtype_t type, const unsigned long uid)
 ```
 
-Defined at lines 406 to 478.
+Defined at lines 411 to 483.
 
 Add a UUID to name mapping at the head of its UUID cache bucket.
 
@@ -178,7 +178,7 @@ Uses file-scope variables: `uuidcache`
 
 ### struct cacheduser
 
-Defined at line 31.
+Defined at line 36.
 * `unsigned long uid`: for future use
 * `uuidtype_t type`
 * `unsigned char * uuid`

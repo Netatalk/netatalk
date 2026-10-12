@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/extattrs.c"
-description: "5 functions, includes 17 project headers."
+description: "The AFP extended attribute commands: FPListExtAttrs, FPGetExtAttr, FPSetExtAttr, and FPRemoveExtAttr."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/extattrs.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,7 +39,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 68 to 262.
+Defined at lines 74 to 268.
 
 FPListExtAttrs: list the extended attribute names of a file or directory.
 
@@ -68,7 +68,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 static char * to_stringz(char *ibuf, uint16_t len)
 ```
 
-Defined at lines 272 to 285.
+Defined at lines 278 to 291.
 
 Terminate a counted extended attribute name in a static buffer for log lines.
 
@@ -88,7 +88,7 @@ Called by: [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_remextattr](exta
 int afp_getextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 304 to 407.
+Defined at lines 310 to 413.
 
 FPGetExtAttr: return the size or the content of an extended attribute.
 
@@ -119,7 +119,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 425 to 565.
+Defined at lines 431 to 571.
 
 FPSetExtAttr: create or replace an extended attribute.
 
@@ -148,7 +148,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 581 to 696.
+Defined at lines 587 to 702.
 
 FPRemoveExtAttr: remove an extended attribute.
 

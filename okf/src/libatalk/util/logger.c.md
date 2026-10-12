@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/logger.c"
-description: "19 functions, includes 4 project headers."
+description: "The netatalk logging system: log types, levels, files, and syslog."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/logger.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static int generate_message(char **message_details_buffer, char *user_message, int display_options, enum loglevels loglevel, enum logtypes logtype, bool log_us_timestamp)
 ```
 
-Defined at lines 144 to 199.
+Defined at lines 149 to 204.
 
 Format a log file line around a message.
 
@@ -54,7 +54,7 @@ Uses file-scope variables: `arr_loglevel_strings`, `arr_logtype_strings`, `log_c
 static int get_syslog_equivalent(enum loglevels loglevel)
 ```
 
-Defined at lines 210 to 239.
+Defined at lines 215 to 244.
 
 Map a netatalk log level to a syslog priority.
 
@@ -73,7 +73,7 @@ Called by: [make_syslog_entry](logger.c.md#make_syslog_entry)
 static void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype, char *message)
 ```
 
-Defined at lines 250 to 261.
+Defined at lines 255 to 266.
 
 Send a message to syslog, opening the connection on first use.
 
@@ -96,7 +96,7 @@ Uses file-scope variables: `log_config`
 static void log_init(void)
 ```
 
-Defined at lines 268 to 274.
+Defined at lines 273 to 279.
 
 Send every log type to syslog at log_info.
 
@@ -112,7 +112,7 @@ Called by: [make_log_entry](logger.c.md#make_log_entry)
 static int log_open_file(const char *filename)
 ```
 
-Defined at lines 284 to 293.
+Defined at lines 289 to 298.
 
 Open a log file for appending, as root and close-on-exec.
 
@@ -133,7 +133,7 @@ Called by: [log_file_recover](logger.c.md#log_file_recover), [log_file_reopen](l
 static void log_file_opened(enum logtypes logtype)
 ```
 
-Defined at lines 318 to 329.
+Defined at lines 323 to 334.
 
 Record the device and inode of the file behind the new descriptor of a type.
 
@@ -152,7 +152,7 @@ Uses file-scope variables: `log_file_dev`, `log_file_ino`, `log_file_midline`, `
 static char * log_absolute_name(const char *filename)
 ```
 
-Defined at lines 339 to 354.
+Defined at lines 344 to 359.
 
 Return the absolute name that reopens a log file after a chdir.
 
@@ -173,7 +173,7 @@ Called by: [log_setup](logger.c.md#log_setup)
 static void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype, const bool log_us_timestamp)
 ```
 
-Defined at lines 375 to 512.
+Defined at lines 380 to 517.
 
 Point a log type at a file, or turn the type off with a level of 0.
 
@@ -199,7 +199,7 @@ Uses file-scope variables: `arr_loglevel_strings`, `arr_logtype_strings`, `log_c
 void log_close_all(void)
 ```
 
-Defined at lines 523 to 537.
+Defined at lines 528 to 542.
 
 Close the syslog connection and every log file before a [closeall()](unix.c.md#closeall).
 
@@ -217,7 +217,7 @@ Mentioned in the documentation of: [log_reopen](logger.c.md#log_reopen)
 void log_reopen(void)
 ```
 
-Defined at lines 550 to 570.
+Defined at lines 555 to 575.
 
 Reopen the log files a previous [setuplog()](logger.c.md#setuplog) opened.
 
@@ -237,11 +237,9 @@ Mentioned in the documentation of: [log_close_all](logger.c.md#log_close_all)
 void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
 ```
 
-Defined at lines 584 to 616.
+Defined at lines 589 to 621.
 
 Send a log type to syslog at a level.
-
-Setup the level and type of log that will be logged to syslog.
 
 The display options and the facility apply to every type. For the default type, every type that has no setup takes the level and syslog. An open log file of the type stays open, unused.
 
@@ -261,7 +259,7 @@ Uses file-scope variables: `arr_loglevel_strings`, `log_config`, `type_configs`
 static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename, const bool log_us_timestamp)
 ```
 
-Defined at lines 631 to 675.
+Defined at lines 636 to 680.
 
 Set up one log type from its type and level names.
 
@@ -285,7 +283,7 @@ Uses file-scope variables: `arr_loglevel_strings`, `arr_logtype_strings`, `num_l
 static bool log_file_reopen(enum logtypes owner, int fd, int err)
 ```
 
-Defined at lines 692 to 730.
+Defined at lines 697 to 735.
 
 Reopen a log file by name after a failed write, where that can help.
 
@@ -310,7 +308,7 @@ Uses file-scope variables: `log_file_dev`, `log_file_ino`, `type_configs`
 static int log_file_write(enum logtypes owner, const char *line, size_t len)
 ```
 
-Defined at lines 747 to 785.
+Defined at lines 752 to 790.
 
 Write a formatted line to the log file of a type, retrying once on a reopened file.
 
@@ -335,7 +333,7 @@ Uses file-scope variables: `log_file_midline`, `type_configs`
 static bool log_file_recover(enum logtypes owner)
 ```
 
-Defined at lines 798 to 816.
+Defined at lines 803 to 821.
 
 Give a type with an empty slot its file back, once the file opens again.
 
@@ -358,7 +356,7 @@ Uses file-scope variables: `type_configs`
 static void log_file_note_lost(enum logtypes owner, bool log_us_timestamp)
 ```
 
-Defined at lines 829 to 854.
+Defined at lines 834 to 859.
 
 Write the count of unwritten lines and the first error to the log file of a type.
 
@@ -380,7 +378,7 @@ Uses file-scope variables: `log_lost`, `log_lost_errno`, `log_src_filename`, `lo
 void set_processname(const char *processname)
 ```
 
-Defined at lines 865 to 869.
+Defined at lines 870 to 874.
 
 Set the process name of log lines and syslog, cut to 15 characters.
 
@@ -397,11 +395,9 @@ Uses file-scope variables: `log_config`
 void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, const bool log_us_timestamp, int line, char *message,...)
 ```
 
-Defined at lines 892 to 1007.
+Defined at lines 897 to 1012.
 
 Write a log message to syslog or to the log file of its type, the worker of the LOG macro.
-
-LOG macro worker: log the message to syslog or to a file.
 
 A call from a signal handler during another call returns at once. The call leaves errno unchanged. A process without any setup logs to syslog at log_info. A type without a setup writes through the file of the default type.
 
@@ -426,7 +422,7 @@ Uses file-scope variables: `log_config`, `log_lost`, `log_lost_errno`, `log_lost
 void setuplog(const char *logstr, const char *logfile, const bool log_us_timestamp)
 ```
 
-Defined at lines 1021 to 1061.
+Defined at lines 1026 to 1066.
 
 Set up logging from a list of type:level pairs.
 

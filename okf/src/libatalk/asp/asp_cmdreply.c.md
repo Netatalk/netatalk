@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_cmdreply.c"
-description: "1 function, includes 2 project headers."
+description: "ASP command and write replies."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_cmdreply.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_cmdreply(ASP, int)
 ```
 
-Defined at lines 49 to 95. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 54 to 100. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Send the reply to an [ASP](../../include/atalk/asp.h.md#struct-asp) command or write, with its result code and the reply data.
 

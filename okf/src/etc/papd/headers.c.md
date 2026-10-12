@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/headers.c"
-description: "9 functions, includes 5 project headers."
+description: "DSC header comment handlers of papd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/headers.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,7 +33,7 @@ Initialized at line 36. Dispatches to: [ch_creator](headers.c.md#ch_creator), [c
 static char * get_text(char *start, int linelength)
 ```
 
-Defined at lines 38 to 97.
+Defined at lines 43 to 102.
 
 Extract the value of a DSC comment line, the text after the colon.
 
@@ -53,7 +53,7 @@ Called by: [ch_creator](headers.c.md#ch_creator), [ch_for](headers.c.md#ch_for),
 int ch_for(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 111 to 141.
+Defined at lines 116 to 146.
 
 Take the user name the job is for from a `%For:` header comment.
 
@@ -76,7 +76,7 @@ Dispatched via: [headers](headers.c.md#headers)
 int ch_title(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 155 to 186.
+Defined at lines 160 to 191.
 
 Take the job name from a `%Title:` header comment.
 
@@ -99,7 +99,7 @@ Dispatched via: [headers](headers.c.md#headers)
 static int guess_creator(char *creator)
 ```
 
-Defined at lines 197 to 208.
+Defined at lines 202 to 213.
 
 Tell the driver that made a job from its `%Creator:` value.
 
@@ -118,7 +118,7 @@ Called by: [ch_creator](headers.c.md#ch_creator)
 int ch_creator(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 224 to 255.
+Defined at lines 229 to 260.
 
 Record the driver that made the job from a `%Creator:` header comment.
 
@@ -141,7 +141,7 @@ Dispatched via: [headers](headers.c.md#headers)
 int ch_endcomm(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 270 to 295.
+Defined at lines 275 to 300.
 
 End the header comments of a job at `%EndComments`.
 
@@ -164,7 +164,7 @@ Dispatched via: [headers](headers.c.md#headers)
 int ch_starttranslate(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 311 to 334.
+Defined at lines 316 to 339.
 
 Start a translated section at `%BeginFeature` or `%BeginPageSetup`.
 
@@ -187,7 +187,7 @@ Dispatched via: [headers](headers.c.md#headers)
 int ch_endtranslate(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 348 to 371.
+Defined at lines 353 to 376.
 
 End a translated section at `%EndFeature` or `%EndPageSetup`.
 
@@ -210,7 +210,7 @@ Dispatched via: [headers](headers.c.md#headers)
 int ch_translateone(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 385 to 409.
+Defined at lines 390 to 414.
 
 Write any other `%%` header comment with PF_TRANSLATE set for that line only.
 

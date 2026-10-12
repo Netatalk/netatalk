@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/vfs/unix.c"
-description: "12 functions, includes 10 project headers."
+description: "Unix file operations of the VFS layer: modes, duplication, deletion, and renaming."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/unix.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,7 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 int dir_rx_set(mode_t mode)
 ```
 
-Defined at lines 35 to 38. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 41 to 44. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Whether mode grants the owner read and search permission.
 
@@ -49,7 +49,7 @@ Called by: [RF_setdirmode_adouble](vfs.c.md#rf_setdirmode_adouble), [RF_setdirun
 int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 54 to 81. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 60 to 87. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Set the permission bits of name and keep its other mode bits.
 
@@ -73,7 +73,7 @@ Called by: [adouble_setfilmode](vfs.c.md#adouble_setfilmode), [afp_moveandrename
 int netatalk_rmdir_all_errors(int dirfd, const char *name)
 ```
 
-Defined at lines 94 to 126. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 100 to 132. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Delete an empty directory and map the error to an AFP result code.
 
@@ -93,7 +93,7 @@ Called by: [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [netatalk
 int netatalk_rmdir(int dirfd, const char *name)
 ```
 
-Defined at lines 140 to 149. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 146 to 155. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Delete an empty directory and treat a missing one as success.
 
@@ -115,7 +115,7 @@ Called by: [RF_deletecurdir_adouble](vfs.c.md#rf_deletecurdir_adouble), [deleted
 int netatalk_unlink(const char *name)
 ```
 
-Defined at lines 160 to 180. Declared in [etc/afpd/directory.h](../../etc/afpd/directory.h.md).
+Defined at lines 166 to 186. Declared in [etc/afpd/directory.h](../../etc/afpd/directory.h.md).
 
 Delete a file and map the error to an AFP result code.
 
@@ -134,7 +134,7 @@ Called by: [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [deletecur
 int copy_file_fd(int sfd, int dfd)
 ```
 
-Defined at lines 196 to 231. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 202 to 237. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Transfer all remaining data from one descriptor to another.
 
@@ -154,7 +154,7 @@ Called by: [copy_file](unix.c.md#copy_file)
 int copy_file(int sfd, const char *src, const char *dst, mode_t mode)
 ```
 
-Defined at lines 247 to 296. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 253 to 302. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Duplicate the data of file src into dst.
 
@@ -178,7 +178,7 @@ Called by: [RF_copyfile_adouble](vfs.c.md#rf_copyfile_adouble), [RF_copyfile_ea]
 int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mode_t mode)
 ```
 
-Defined at lines 311 to 345. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 317 to 351. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Transfer one EA from src to an existing dst.
 
@@ -201,7 +201,7 @@ Calls: [sys_fgetxattr](extattr.c.md#sys_fgetxattr), [sys_fsetxattr](extattr.c.md
 int netatalk_unlinkat(int dirfd, const char *name)
 ```
 
-Defined at lines 359 to 383. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 365 to 389. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Delete a file relative to a directory descriptor and map the error to an AFP result code.
 
@@ -221,7 +221,7 @@ Called by: [RF_deletefile_adouble](vfs.c.md#rf_deletefile_adouble), [RF_deletefi
 int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 ```
 
-Defined at lines 396 to 411. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 402 to 417. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Rename oldpath to newpath through renameat.
 
@@ -241,7 +241,7 @@ Called by: [RF_renamefile_adouble](vfs.c.md#rf_renamefile_adouble), [RF_renamefi
 int statat(int dirfd, const char *path, struct stat *st)
 ```
 
-Defined at lines 422 to 429. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 428 to 435. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Stat path relative to a directory descriptor, following symlinks.
 
@@ -260,7 +260,7 @@ Called by: [ea_close](ea_ad.c.md#ea_close)
 DIR * opendirat(int dirfd, const char *path)
 ```
 
-Defined at lines 443 to 469. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 449 to 475. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Open a directory stream relative to a directory descriptor.
 

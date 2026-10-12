@@ -5,7 +5,7 @@ description: "Directory Cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -192,8 +192,6 @@ qnode_t * arc_ghost_trim_candidate(q_t *q, const struct dir *skip)
 Defined at lines 593 to 610.
 
 Pick the ghost to release from a list at capacity.
-
-Non-static so the unit tests can drive selection directly.
 
 LRU first, skipping the excluded entry; a single-node list is both MRU and LRU, so MRU ordering alone cannot exclude it.
 

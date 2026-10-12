@@ -5,12 +5,12 @@ description: "1 file, 1 function."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/netddp"
 tags: ["libatalk/netddp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [libatalk/netddp/netddp_open.c](netddp/netddp_open.c.md): 1 function, includes 2 project headers.
+* [libatalk/netddp/netddp_open.c](netddp/netddp_open.c.md): Opening AppleTalk datagram sockets.
 
 # Includes headers from
 

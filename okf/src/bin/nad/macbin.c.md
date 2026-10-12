@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/macbin.c"
-description: "18 functions, 1 type, includes 7 project headers."
+description: "MacBinary encoding and decoding for the nad archive commands."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/macbin.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static uint16_t macbin_u16_from_bytes(unsigned char high, unsigned char low)
 ```
 
-Defined at lines 78 to 82.
+Defined at lines 83 to 87.
 
 Combine two bytes into a 16-bit value in host byte order.
 
@@ -47,7 +47,7 @@ Called by: [macbin_fdflags_from_header](macbin.c.md#macbin_fdflags_from_header)
 static uint32_t macbin_u32_from_header(const unsigned char *header, size_t offset)
 ```
 
-Defined at lines 92 to 99.
+Defined at lines 97 to 104.
 
 Read a big-endian 32-bit field of the MacBinary header in host byte order.
 
@@ -65,7 +65,7 @@ Called by: [test_header](macbin.c.md#test_header)
 static uint16_t macbin_fdflags_from_header(const unsigned char *header, int revision)
 ```
 
-Defined at lines 112 to 130.
+Defined at lines 117 to 135.
 
 Read the Finder flags of a MacBinary header in network byte order.
 
@@ -89,7 +89,7 @@ Called by: [bin_header_read](macbin.c.md#bin_header_read)
 static void macbin_fdflags_to_header(unsigned char *header, uint16_t fdflags)
 ```
 
-Defined at lines 140 to 148.
+Defined at lines 145 to 153.
 
 Store Finder flags in a MacBinary header.
 
@@ -107,7 +107,7 @@ Called by: [bin_header_write](macbin.c.md#bin_header_write)
 static int macbin_ad_date_from_header(uint32_t mac_date, uint32_t *ad_date)
 ```
 
-Defined at lines 160 to 164.
+Defined at lines 165 to 169.
 
 Turn a MacBinary date into an AppleDouble date.
 
@@ -129,7 +129,7 @@ Called by: [bin_header_read](macbin.c.md#bin_header_read)
 static int macbin_ad_date_to_header(uint32_t ad_date, uint32_t *mac_date)
 ```
 
-Defined at lines 176 to 184.
+Defined at lines 181 to 189.
 
 Turn an AppleDouble date into a MacBinary date.
 
@@ -151,7 +151,7 @@ Called by: [bin_header_write](macbin.c.md#bin_header_write)
 static int macbin_discard_bytes(size_t length)
 ```
 
-Defined at lines 195 to 219.
+Defined at lines 200 to 224.
 
 Read and drop bytes from the MacBinary input.
 
@@ -172,7 +172,7 @@ Uses file-scope variables: `bin`
 static int macbin_write_repeat(unsigned char value, size_t length)
 ```
 
-Defined at lines 231 to 255.
+Defined at lines 236 to 260.
 
 Write one byte value `length` times to the MacBinary output.
 
@@ -194,7 +194,7 @@ Uses file-scope variables: `bin`
 static int macbin_skip_padding(void)
 ```
 
-Defined at lines 266 to 310.
+Defined at lines 271 to 315.
 
 Skip the input padding after the data fork up to the next 128-byte boundary.
 
@@ -214,7 +214,7 @@ Uses file-scope variables: `bin`
 static int macbin_write_padding(void)
 ```
 
-Defined at lines 321 to 354.
+Defined at lines 326 to 359.
 
 Fill the MacBinary output with 0x7f bytes up to the next 128-byte boundary.
 
@@ -234,7 +234,7 @@ Uses file-scope variables: `bin`
 int bin_open(char *binfile, int flags, struct FHeader *fh, int options)
 ```
 
-Defined at lines 370 to 449.
+Defined at lines 375 to 454.
 
 Open a MacBinary file for reading or writing.
 
@@ -262,7 +262,7 @@ Mentioned in the documentation of: [bin_close](macbin.c.md#bin_close), [bin_head
 int bin_close(int keepflag)
 ```
 
-Defined at lines 462 to 495.
+Defined at lines 467 to 500.
 
 Close the active MacBinary file.
 
@@ -283,7 +283,7 @@ Uses file-scope variables: `bin`
 const char * bin_path(void)
 ```
 
-Defined at lines 505 to 508.
+Defined at lines 510 to 513.
 
 Return the path of the MacBinary output that bin_open created.
 
@@ -301,7 +301,7 @@ Uses file-scope variables: `bin`
 ssize_t bin_read(int fork, char *buffer, size_t length)
 ```
 
-Defined at lines 525 to 582.
+Defined at lines 530 to 587.
 
 Read data from a MacBinary fork.
 
@@ -328,7 +328,7 @@ Uses file-scope variables: `bin`, `forkname` in [bin/nad/megatron.c](megatron.c.
 ssize_t bin_write(int fork, char *buffer, size_t length)
 ```
 
-Defined at lines 597 to 661.
+Defined at lines 602 to 666.
 
 Write data to a MacBinary fork.
 
@@ -353,7 +353,7 @@ Uses file-scope variables: `bin`, `forkname` in [bin/nad/megatron.c](megatron.c.
 int bin_header_read(struct FHeader *fh, int revision)
 ```
 
-Defined at lines 675 to 758.
+Defined at lines 680 to 763.
 
 Read a MacBinary header into a file header.
 
@@ -377,7 +377,7 @@ Uses file-scope variables: `bin`, `head_buf`
 int bin_header_write(struct FHeader *fh)
 ```
 
-Defined at lines 771 to 865.
+Defined at lines 776 to 870.
 
 Write a file header as a MacBinary header.
 
@@ -400,7 +400,7 @@ Uses file-scope variables: `bin`, `head_buf`
 int test_header(void)
 ```
 
-Defined at lines 879 to 967.
+Defined at lines 884 to 972.
 
 Test the input header for a supported MacBinary revision.
 
@@ -422,7 +422,7 @@ Mentioned in the documentation of: [bin_header_read](macbin.c.md#bin_header_read
 
 ### struct bin_file_data
 
-Defined at line 59.
+Defined at line 64.
 * `uint32_t forklen`
 * `char path`
 * `int filed`

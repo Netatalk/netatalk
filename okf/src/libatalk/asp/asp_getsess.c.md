@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_getsess.c"
-description: "5 functions, includes 9 project headers."
+description: "The ASP session listener: accepting sessions and tickling them."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_getsess.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 static void tickle_handler(int sig)
 ```
 
-Defined at lines 58 to 81.
+Defined at lines 63 to 86.
 
 Age each session on SIGALRM, tickle the live ones, and end the silent ones.
 
@@ -52,7 +52,7 @@ Uses file-scope variables: `asp_ac`, `children`, `server_asp`
 void asp_kill(int)
 ```
 
-Defined at lines 88 to 93. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 93 to 98. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Send a signal to every [ASP](../../include/atalk/asp.h.md#struct-asp) session child of the server.
 
@@ -71,7 +71,7 @@ Uses file-scope variables: `children`
 void asp_stop_tickle(void)
 ```
 
-Defined at lines 99 to 105. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 104 to 110. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Stop the tickle timer of the [ASP](../../include/atalk/asp.h.md#struct-asp) server, once asp_getsession has set it up.
 
@@ -85,7 +85,7 @@ Uses file-scope variables: `server_asp`
 ASP asp_getsession(ASP, server_child_t *, const int, afp_child_t **)
 ```
 
-Defined at lines 131 to 443. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 136 to 448. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Serve one request on the [ASP](../../include/atalk/asp.h.md#struct-asp) server socket: a session open, a tickle, or a status request.
 
@@ -113,7 +113,7 @@ Uses file-scope variables: `asp_ac`, `children`, `server_asp`
 static void set_asp_ac(int sid, struct asp_child *tmp)
 ```
 
-Defined at lines 455 to 458.
+Defined at lines 460 to 463.
 
 Store a child record in the session slot table.
 

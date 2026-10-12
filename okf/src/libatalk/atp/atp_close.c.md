@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/atp/atp_close.c"
-description: "1 function, includes 4 project headers."
+description: "Closing an ATP endpoint."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_close.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_close(ATP)
 ```
 
-Defined at lines 32 to 84. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 37 to 89. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Close an ATP endpoint, freeing its queued and saved packets, and close its DDP socket.
 

@@ -5,7 +5,7 @@ description: "Interface to lpr system."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/lp.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -252,8 +252,6 @@ Defined at lines 765 to 880.
 
 Open the spool file of a job, or the pipe to the printer command.
 
-Open the spool file or the printer pipe of a job.
-
 A pending job prints first, and the first call runs lp_init. A pipe printer switches the process to the authenticated user for good and converts the header values to the Unix charset. It then starts the printer command with popen. A spooling printer creates the next data file, such as `dfA042hostname`, owned by the user or the printer operator.
 
 Parameters:
@@ -277,8 +275,6 @@ int lp_close(void)
 Defined at lines 890 to 901.
 
 Close the spool file or the pipe of the job and mark the job pending.
-
-Close the spool file or the printer pipe of the job.
 
 The next lp_print, lp_open, or lp_write sends the pending job to the printer.
 
@@ -318,8 +314,6 @@ int lp_cancel(void)
 Defined at lines 1011 to 1040.
 
 Cancel the job of the session by closing and deleting its spool data files.
-
-Cancel the job of the session.
 
 A pipe printer has no data files, so the call returns at once.
 

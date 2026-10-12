@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nbp/nbprgstr.c"
-description: "2 functions, includes 5 project headers."
+description: "The nbprgstr command: register an NBP name with atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nbp/nbprgstr.c"
 tags: ["bin/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [b
 static void Usage(char *av0)
 ```
 
-Defined at lines 29 to 42.
+Defined at lines 34 to 47.
 
 Print the usage of nbprgstr to stderr and exit with 1.
 
@@ -42,7 +42,7 @@ Called by: [main](nbprgstr.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 57 to 135.
+Defined at lines 62 to 140.
 
 Register an NBP name for a DDP socket with the local atalkd.
 

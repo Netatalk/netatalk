@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_write.c"
-description: "7 functions, includes 5 project headers."
+description: "Writing and truncating the forks of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_write.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count, off_t offset)
 ```
 
-Defined at lines 33 to 58.
+Defined at lines 38 to 63.
 
 Write count bytes that start at offset in an AppleDouble fork.
 
@@ -49,7 +49,7 @@ Called by: [ad_convert_pwrite_full](ad_open.c.md#ad_convert_pwrite_full), [ad_fl
 ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const char *buf, size_t buflen)
 ```
 
-Defined at lines 78 to 141.
+Defined at lines 83 to 146.
 
 Write to the data or resource fork of an AppleDouble.
 
@@ -77,7 +77,7 @@ Mentioned in the documentation of: [ad_recvfile](ad_recvfile.c.md#ad_recvfile)
 int sys_ftruncate(int fd, off_t length)
 ```
 
-Defined at lines 157 to 211.
+Defined at lines 162 to 216.
 
 Truncate or extend an open file to length.
 
@@ -97,7 +97,7 @@ Called by: [ad_dtruncate](ad_write.c.md#ad_dtruncate), [ad_rtruncate](ad_write.c
 int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size)
 ```
 
-Defined at lines 226 to 248.
+Defined at lines 231 to 253.
 
 Truncate the resource fork of an AppleDouble to size.
 
@@ -120,7 +120,7 @@ Called by: [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams)
 int ad_dtruncate(struct adouble *ad, const off_t size)
 ```
 
-Defined at lines 257 to 266.
+Defined at lines 262 to 271.
 
 Truncate the data fork of an AppleDouble to size.
 
@@ -140,7 +140,7 @@ Called by: [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams)
 static int copy_all(const int dfd, const void *buf, size_t buflen)
 ```
 
-Defined at lines 276 to 296.
+Defined at lines 281 to 301.
 
 Write buflen bytes of buf to dfd, retrying after EINTR.
 
@@ -159,7 +159,7 @@ Called by: [copy_fork](ad_write.c.md#copy_fork)
 int copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf, size_t buflen)
 ```
 
-Defined at lines 312 to 392.
+Defined at lines 317 to 397.
 
 Transfer one fork from the AppleDouble ads into the AppleDouble add.
 

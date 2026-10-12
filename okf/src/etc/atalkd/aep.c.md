@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/aep.c"
-description: "1 function, includes 4 project headers."
+description: "AppleTalk Echo Protocol replies of atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/aep.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 int aep_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 ```
 
-Defined at lines 35 to 59.
+Defined at lines 40 to 64.
 
 Answer an AppleTalk Echo Protocol request by sending it back as a reply.
 

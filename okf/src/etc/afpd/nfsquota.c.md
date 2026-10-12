@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/nfsquota.c"
-description: "2 functions, includes 3 project headers."
+description: "User quota of an NFS volume through rquotad."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/nfsquota.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int callaurpc(struct vol *vol, u_long prognum, u_long versnum, u_long procnum, xdrproc_t inproc, char *in, xdrproc_t outproc, char *out)
 ```
 
-Defined at lines 81 to 119.
+Defined at lines 86 to 124.
 
 Call an RPC procedure on the NFS server of a volume.
 
@@ -51,7 +51,7 @@ Called by: [getnfsquota](nfsquota.c.md#getnfsquota)
 int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize, struct dqblk *dqp)
 ```
 
-Defined at lines 140 to 210.
+Defined at lines 145 to 215.
 
 Fetch a user's quota on an NFS volume from its rquotad.
 

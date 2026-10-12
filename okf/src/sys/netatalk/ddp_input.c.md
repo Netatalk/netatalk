@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "sys/netatalk/ddp_input.c"
-description: "5 functions, includes 5 project headers."
+description: "DDP input: packet delivery and forwarding in the BSD kernel stack."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_input.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 unsigned short at_cksum()
 ```
 
-Declared at sys/netatalk/ddp_input.c line 27; no definition in the scanned sources.
+Declared at sys/netatalk/ddp_input.c line 32; no definition in the scanned sources.
 
 Called by: [ddp_input](ddp_input.c.md#ddp_input)
 
@@ -37,7 +37,7 @@ Called by: [ddp_input](ddp_input.c.md#ddp_input)
 atintr()
 ```
 
-Defined at lines 37 to 126.
+Defined at lines 42 to 131.
 
 Drain the AppleTalk input queues and pass each packet to ddp_input.
 
@@ -51,7 +51,7 @@ Calls: [ddp_input](ddp_input.c.md#ddp_input)
 ddp_input(struct mbuf *m, struct ifnet *ifp, struct elaphdr *elh, int phase)
 ```
 
-Defined at lines 151 to 393.
+Defined at lines 156 to 398.
 
 Deliver an incoming DDP packet to its socket, or forward it.
 
@@ -77,7 +77,7 @@ Uses file-scope variables: `ddp_cksum` in [sys/netatalk/ddp_output.c](ddp_output
 m_printm(struct mbuf *m)
 ```
 
-Defined at lines 400 to 406.
+Defined at lines 405 to 411.
 
 Print an mbuf chain as a hex dump, one bprint call per mbuf.
 
@@ -92,7 +92,7 @@ Calls: [bprint](ddp_input.c.md#bprint)
 bprint(char *data, int len)
 ```
 
-Defined at lines 417 to 458.
+Defined at lines 422 to 463.
 
 Print a hex dump of a buffer with the kernel printf, 15 bytes a line, then an end line.
 

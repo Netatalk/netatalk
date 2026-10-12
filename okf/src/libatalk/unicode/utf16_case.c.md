@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/utf16_case.c"
-description: "4 functions, includes 2 project headers."
+description: "UTF-16 case mapping tables generated from the Unicode data."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/utf16_case.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit r
 ucs2_t toupper_w(ucs2_t)
 ```
 
-Defined at lines 23 to 82. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 28 to 87. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Convert a UCS2 character to upper case.
 
@@ -45,7 +45,7 @@ Uses file-scope variables: `upper_table_1` in [libatalk/unicode/utf16_casetable.
 uint32_t toupper_sp(uint32_t)
 ```
 
-Defined at lines 93 to 136. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 98 to 141. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Convert a surrogate pair to upper case.
 
@@ -68,7 +68,7 @@ Uses file-scope variables: `upper_table_sp_1` in [libatalk/unicode/utf16_casetab
 ucs2_t tolower_w(ucs2_t)
 ```
 
-Defined at lines 146 to 201. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 151 to 206. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Convert a UCS2 character to lower case.
 
@@ -89,7 +89,7 @@ Uses file-scope variables: `lower_table_1` in [libatalk/unicode/utf16_casetable.
 uint32_t tolower_sp(uint32_t)
 ```
 
-Defined at lines 212 to 255. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 217 to 260. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Convert a surrogate pair to lower case.
 

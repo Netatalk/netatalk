@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nbp/nbpunrgstr.c"
-description: "2 functions, includes 4 project headers."
+description: "The nbpunrgstr command: unregister an NBP name with atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nbp/nbpunrgstr.c"
 tags: ["bin/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [b
 static void Usage(char *av0)
 ```
 
-Defined at lines 46 to 59.
+Defined at lines 51 to 64.
 
 Print the usage of nbpunrgstr to stderr and exit with 1.
 
@@ -41,7 +41,7 @@ Called by: [main](nbpunrgstr.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 71 to 132.
+Defined at lines 76 to 137.
 
 Remove an NBP name from atalkd.
 

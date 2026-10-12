@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_roman.c"
-description: "4 functions, includes 3 project headers."
+description: "MAC_ROMAN charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_roman.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -34,7 +34,7 @@ Initialized at line 85 as `struct charset_functions`. Assigns:
 static int char_ucs2_to_mac_roman(unsigned char *r, ucs2_t wc)
 ```
 
-Defined at lines 63 to 98.
+Defined at lines 68 to 103.
 
 Map one UCS2 character to a MAC_ROMAN byte.
 
@@ -56,7 +56,7 @@ Uses file-scope variables: `mac_roman_page00` in [libatalk/unicode/charsets/mac_
 static size_t mac_roman_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 111 to 117.
+Defined at lines 116 to 122.
 
 Convert UCS2 to MAC_ROMAN through mb_generic_push.
 
@@ -79,7 +79,7 @@ Dispatched via: [charset_mac_roman](mac_roman.c.md#charset_mac_roman)
 static int char_mac_roman_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 ```
 
-Defined at lines 127 to 139.
+Defined at lines 132 to 144.
 
 Map one MAC_ROMAN byte to UCS2, where every byte has a character.
 
@@ -99,7 +99,7 @@ Uses file-scope variables: `mac_roman_2uni` in [libatalk/unicode/charsets/mac_ro
 static size_t mac_roman_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 151 to 156.
+Defined at lines 156 to 161.
 
 Convert MAC_ROMAN to UCS2 through mb_generic_pull.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/queries.c"
-description: "18 functions, 1 type, includes 9 project headers."
+description: "PostScript query answers of papd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/queries.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 
 ### genqueries
 
-Initialized at line 259. Dispatches to: [gq_pagecost](queries.c.md#gq_pagecost), [gq_product](queries.c.md#gq_product), [gq_rbispoolerid](queries.c.md#gq_rbispoolerid), [gq_rbiuamlist](queries.c.md#gq_rbiuamlist), [gq_true](queries.c.md#gq_true)
+Initialized at line 264. Dispatches to: [gq_pagecost](queries.c.md#gq_pagecost), [gq_product](queries.c.md#gq_product), [gq_rbispoolerid](queries.c.md#gq_rbispoolerid), [gq_rbiuamlist](queries.c.md#gq_rbiuamlist), [gq_true](queries.c.md#gq_true)
 
 ### queries
 
@@ -43,7 +43,7 @@ Initialized at line 35. Dispatches to: [cq_default](queries.c.md#cq_default), [c
 int cq_k4login(struct papfile *, struct papfile *, struct sockaddr_at *)
 ```
 
-Declared at etc/papd/queries.c line 28; no definition in the scanned sources.
+Declared at etc/papd/queries.c line 33; no definition in the scanned sources.
 
 ### cq_uameth
 
@@ -51,7 +51,7 @@ Declared at etc/papd/queries.c line 28; no definition in the scanned sources.
 int cq_uameth(struct papfile *, struct papfile *, struct sockaddr_at *)
 ```
 
-Declared at etc/papd/queries.c line 29; no definition in the scanned sources.
+Declared at etc/papd/queries.c line 34; no definition in the scanned sources.
 
 ### gq_balance
 
@@ -59,7 +59,7 @@ Declared at etc/papd/queries.c line 29; no definition in the scanned sources.
 int gq_balance(struct papfile *)
 ```
 
-Declared at etc/papd/queries.c line 31; no definition in the scanned sources.
+Declared at etc/papd/queries.c line 36; no definition in the scanned sources.
 
 ### cq_rmjob
 
@@ -67,7 +67,7 @@ Declared at etc/papd/queries.c line 31; no definition in the scanned sources.
 int cq_rmjob(struct papfile *, struct papfile *, struct sockaddr_at *)
 ```
 
-Declared at etc/papd/queries.c line 44; no definition in the scanned sources.
+Declared at etc/papd/queries.c line 49; no definition in the scanned sources.
 
 ### cq_default
 
@@ -75,7 +75,7 @@ Declared at etc/papd/queries.c line 44; no definition in the scanned sources.
 int cq_default(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 65 to 120.
+Defined at lines 70 to 125.
 
 Answer an unknown query with the default from its end comment.
 
@@ -100,7 +100,7 @@ Dispatched via: [queries](queries.c.md#queries)
 int gq_true(struct papfile *out)
 ```
 
-Defined at lines 129 to 137.
+Defined at lines 134 to 142.
 
 Answer true for a spooling printer.
 
@@ -119,7 +119,7 @@ Dispatched via: [genqueries](queries.c.md#genqueries)
 int gq_pagecost(struct papfile *out)
 ```
 
-Defined at lines 147 to 168.
+Defined at lines 152 to 173.
 
 Answer UMICHCostPerPage with the page cost message or, with accounting, the page cost.
 
@@ -138,7 +138,7 @@ Dispatched via: [genqueries](queries.c.md#genqueries)
 int gq_rbispoolerid(struct papfile *out)
 ```
 
-Defined at lines 193 to 197.
+Defined at lines 198 to 202.
 
 Answer RBISpoolerID with the name and version of the papd spooler.
 
@@ -159,7 +159,7 @@ Dispatched via: [genqueries](queries.c.md#genqueries)
 int gq_rbiuamlist(struct papfile *out)
 ```
 
-Defined at lines 210 to 226.
+Defined at lines 215 to 231.
 
 Answer RBIUAMListQuery with the print UAMs, one per line, ending with `*`.
 
@@ -182,7 +182,7 @@ Dispatched via: [genqueries](queries.c.md#genqueries)
 int gq_product(struct papfile *out)
 ```
 
-Defined at lines 234 to 241.
+Defined at lines 239 to 246.
 
 Answer the Product query with the `*Product` value of the PPD file.
 
@@ -201,7 +201,7 @@ Dispatched via: [genqueries](queries.c.md#genqueries)
 int cq_query(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 276 to 345.
+Defined at lines 281 to 350.
 
 Answer a `%%?BeginQuery` general query.
 
@@ -228,7 +228,7 @@ Dispatched via: [queries](queries.c.md#queries)
 void cq_font_answer(char *start, char *stop, struct papfile *out)
 ```
 
-Defined at lines 357 to 398.
+Defined at lines 362 to 403.
 
 Answer each font name of a font query with `/Name:Yes` or `/Name:No`.
 
@@ -249,7 +249,7 @@ Called by: [cq_font](queries.c.md#cq_font)
 int cq_fontlist(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 412 to 481.
+Defined at lines 417 to 486.
 
 Answer a `%%?BeginFontListQuery` with the 35 standard PostScript fonts.
 
@@ -272,7 +272,7 @@ Dispatched via: [queries](queries.c.md#queries)
 int cq_font(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 497 to 561.
+Defined at lines 502 to 566.
 
 Answer a `%%?BeginFontQuery` for the fonts on the query line and on its `%%+` continuations.
 
@@ -297,7 +297,7 @@ Dispatched via: [queries](queries.c.md#queries)
 int cq_feature(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 576 to 643.
+Defined at lines 581 to 648.
 
 Answer a `%%?BeginFeatureQuery` with the PPD value of the feature.
 
@@ -322,7 +322,7 @@ Dispatched via: [queries](queries.c.md#queries)
 int cq_printer(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 662 to 739.
+Defined at lines 667 to 744.
 
 Answer a `%%?BeginPrinterQuery` with the PostScript revision, version, and product.
 
@@ -347,7 +347,7 @@ Dispatched via: [queries](queries.c.md#queries)
 int cq_rbilogin(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 842 to 906.
+Defined at lines 847 to 911.
 
 Log a user in for printing with the `%%?BeginQuery: RBILogin` query.
 
@@ -372,7 +372,7 @@ Dispatched via: [queries](queries.c.md#queries)
 int cq_end(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 920 to 941.
+Defined at lines 925 to 946.
 
 End a query job at `%EOF`.
 
@@ -393,7 +393,7 @@ Dispatched via: [queries](queries.c.md#queries)
 
 ### struct genquery
 
-Defined at line 244.
+Defined at line 249.
 * `char * gq_name`
 * `int(* gq_handler`: Called through by [cq_query](queries.c.md#cq_query).
 

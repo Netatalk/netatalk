@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/appl.c"
-description: "7 functions, includes 10 project headers."
+description: "The APPL desktop database: FPAddAPPL, FPRemoveAPPL, and FPGetAPPL."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/appl.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int pathcmp(char *p, int plen, char *q, int qlen)
 ```
 
-Defined at lines 43 to 46.
+Defined at lines 48 to 51.
 
 Compare two APPL paths of explicit lengths.
 
@@ -52,7 +52,7 @@ Called by: [copyapplfile](appl.c.md#copyapplfile)
 static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 ```
 
-Defined at lines 64 to 111.
+Defined at lines 69 to 116.
 
 Open the APPL file of a creator in the desktop database.
 
@@ -78,7 +78,7 @@ Uses file-scope variables: `sa`
 static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
 ```
 
-Defined at lines 127 to 200.
+Defined at lines 132 to 205.
 
 Write the APPL entries of one file to another, except the entries of one path.
 
@@ -102,7 +102,7 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 static char * makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, char *path)
 ```
 
-Defined at lines 221 to 254.
+Defined at lines 226 to 259.
 
 Build the volume path of a file backwards at the end of a buffer.
 
@@ -129,7 +129,7 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 272 to 411.
+Defined at lines 277 to 416.
 
 FPAddAPPL: add an application to the APPL file of its creator.
 
@@ -156,7 +156,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 429 to 536.
+Defined at lines 434 to 541.
 
 FPRemoveAPPL: remove an application from the APPL file of its creator.
 
@@ -183,7 +183,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 559 to 713.
+Defined at lines 564 to 718.
 
 FPGetAPPL: return the file parameters of an application from the APPL file of its creator.
 

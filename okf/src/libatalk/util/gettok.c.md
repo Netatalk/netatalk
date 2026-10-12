@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/gettok.c"
-description: "2 functions, includes 1 project header."
+description: "Line tokenizer for configuration files, used by the extmap.conf reader."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/gettok.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 void initline(int len, char *line)
 ```
 
-Defined at lines 28 to 32.
+Defined at lines 33 to 37.
 
 Set the line that parseline reads its tokens from.
 
@@ -43,7 +43,7 @@ Uses file-scope variables: `l_curr`, `l_end`
 int parseline(int len, char *token)
 ```
 
-Defined at lines 53 to 108.
+Defined at lines 58 to 113.
 
 Read the next token from the line that initline set.
 

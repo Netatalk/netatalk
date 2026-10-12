@@ -5,20 +5,20 @@ description: "10 files, 116 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/uams"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [etc/uams/uams_dhx2_pam.c](uams/uams_dhx2_pam.c.md): 19 functions, includes 6 project headers.
-* [etc/uams/uams_dhx2_passwd.c](uams/uams_dhx2_passwd.c.md): 12 functions, includes 4 project headers.
-* [etc/uams/uams_dhx_pam.c](uams/uams_dhx_pam.c.md): 12 functions, includes 4 project headers.
-* [etc/uams/uams_dhx_passwd.c](uams/uams_dhx_passwd.c.md): 7 functions, includes 4 project headers.
-* [etc/uams/uams_gss.c](uams/uams_gss.c.md): 16 functions, includes 6 project headers.
-* [etc/uams/uams_guest.c](uams/uams_guest.c.md): 5 functions, includes 5 project headers.
-* [etc/uams/uams_pam.c](uams/uams_pam.c.md): 10 functions, includes 6 project headers.
-* [etc/uams/uams_passwd.c](uams/uams_passwd.c.md): 6 functions, includes 5 project headers.
-* [etc/uams/uams_randnum.c](uams/uams_randnum.c.md): 15 functions, includes 5 project headers.
+* [etc/uams/uams_dhx2_pam.c](uams/uams_dhx2_pam.c.md): DHX2 UAM with PAM authentication.
+* [etc/uams/uams_dhx2_passwd.c](uams/uams_dhx2_passwd.c.md): DHX2 UAM with Unix password authentication.
+* [etc/uams/uams_dhx_pam.c](uams/uams_dhx_pam.c.md): DHCAST128 UAM with PAM authentication.
+* [etc/uams/uams_dhx_passwd.c](uams/uams_dhx_passwd.c.md): DHCAST128 UAM with Unix password authentication.
+* [etc/uams/uams_gss.c](uams/uams_gss.c.md): Kerberos UAM, Client Krb v2, through the GSS-API.
+* [etc/uams/uams_guest.c](uams/uams_guest.c.md): Guest UAM: No User Authent and the NoAuthUAM printer login.
+* [etc/uams/uams_pam.c](uams/uams_pam.c.md): Cleartext UAM with PAM authentication and the ClearTxtUAM printer login.
+* [etc/uams/uams_passwd.c](uams/uams_passwd.c.md): Cleartext UAM with Unix password authentication and the ClearTxtUAM printer login.
+* [etc/uams/uams_randnum.c](uams/uams_randnum.c.md): RandNum and 2-Way RandNum UAMs with the afppasswd file.
 * [etc/uams/uams_srp.c](uams/uams_srp.c.md): SRP (Secure Remote Password) User Authentication Method for AFP.
 
 # Includes headers from

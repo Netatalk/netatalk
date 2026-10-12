@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_korean.c"
-description: "4 functions, includes 2 project headers."
+description: "MAC_KOREAN charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_korean.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -33,7 +33,7 @@ Initialized at line 96 as `struct charset_functions`. Assigns:
 static size_t mac_korean_char_push(uint8_t *out, const ucs2_t *in, size_t *size)
 ```
 
-Defined at lines 67 to 116.
+Defined at lines 68 to 117.
 
 Map one UCS2 character, with the combining characters after it, to MAC_KOREAN bytes.
 
@@ -58,7 +58,7 @@ Uses file-scope variables: `mac_korean_compose` in [libatalk/unicode/charsets/ma
 static size_t mac_korean_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 128 to 133.
+Defined at lines 129 to 134.
 
 Convert UCS2 to MAC_KOREAN through cjk_generic_push.
 
@@ -81,7 +81,7 @@ Dispatched via: [charset_mac_korean](mac_korean.c.md#charset_mac_korean)
 static size_t mac_korean_char_pull(ucs2_t *out, const uint8_t *in, size_t *size)
 ```
 
-Defined at lines 149 to 179.
+Defined at lines 150 to 180.
 
 Map one MAC_KOREAN character of one or two bytes to UCS2.
 
@@ -106,7 +106,7 @@ Uses file-scope variables: `mac_korean_2uni_charset` in [libatalk/unicode/charse
 static size_t mac_korean_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 191 to 196.
+Defined at lines 192 to 197.
 
 Convert MAC_KOREAN to UCS2 through cjk_generic_pull.
 

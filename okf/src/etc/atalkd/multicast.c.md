@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/multicast.c"
-description: "3 functions, includes 7 project headers."
+description: "Zone multicast addresses of AppleTalk interfaces."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/multicast.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 int addmulti(const char *name, const unsigned char *data)
 ```
 
-Defined at lines 302 to 313.
+Defined at lines 307 to 318.
 
 Add an AppleTalk multicast address to an interface.
 
@@ -51,7 +51,7 @@ Uses file-scope variables: `ethermulti`
 static uint16_t atalk_cksum(unsigned char *data, int len)
 ```
 
-Defined at lines 326 to 346.
+Defined at lines 331 to 351.
 
 Compute the DDP checksum of a buffer, which hashes zone names here.
 
@@ -71,7 +71,7 @@ Called by: [zone_bcast](multicast.c.md#zone_bcast)
 int zone_bcast(struct ziptab *zt)
 ```
 
-Defined at lines 360 to 388.
+Defined at lines 365 to 393.
 
 Compute and store the Ethernet multicast address of a zone.
 

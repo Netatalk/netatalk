@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/compat/explicit_bzero.c"
-description: "1 function."
+description: "explicit_bzero for systems without it"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/compat/explicit_bzero.c"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/compat](../compat.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,7 +22,7 @@ Part of the [libatalk/compat](../compat.md) subsystem. Built from the commit rec
 void explicit_bzero(void *s, size_t n)
 ```
 
-Defined at lines 28 to 33. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
+Defined at lines 33 to 38. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
 
 Clear memory in a way the compiler cannot drop as a dead store.
 

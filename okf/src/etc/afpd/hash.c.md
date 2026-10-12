@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/hash.c"
-description: "29 functions, includes 1 project header."
+description: "Chained hash table for the directory cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/hash.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void compute_bits(void)
 ```
 
-Defined at lines 93 to 106.
+Defined at lines 99 to 112.
 
 Compute the number of bits in the hash_val_t type.
 
@@ -42,7 +42,7 @@ Uses file-scope variables: `hash_val_t_bit`
 static int is_power_of_two(hash_val_t arg)
 ```
 
-Defined at lines 114 to 125.
+Defined at lines 120 to 131.
 
 Test whether a value is a power of two.
 
@@ -59,7 +59,7 @@ Called by: [hash_verify](hash.c.md#hash_verify)
 static void clear_table(hash_t *hash)
 ```
 
-Defined at lines 132 to 139.
+Defined at lines 138 to 145.
 
 Set every chain head of a hash table to NULL.
 
@@ -74,7 +74,7 @@ Called by: [hash_create](hash.c.md#hash_create), [hash_free_nodes](hash.c.md#has
 static void grow_table(hash_t *hash)
 ```
 
-Defined at lines 162 to 208.
+Defined at lines 168 to 214.
 
 Double the number of chains of a dynamic hash table.
 
@@ -101,7 +101,7 @@ Called by: [hash_insert](hash.c.md#hash_insert)
 static void shrink_table(hash_t *hash)
 ```
 
-Defined at lines 228 to 273.
+Defined at lines 234 to 279.
 
 Halve the number of chains of a dynamic hash table.
 
@@ -128,7 +128,7 @@ Called by: [hash_delete](hash.c.md#hash_delete)
 hash_t * hash_create(hashcount_t, hash_comp_t, hash_fun_t)
 ```
 
-Defined at lines 297 to 341. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 303 to 347. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Create a dynamic hash table.
 
@@ -162,7 +162,7 @@ Uses file-scope variables: `hash_val_t_bit`
 void hash_set_allocator(hash_t *, hnode_alloc_t, hnode_free_t, void *)
 ```
 
-Defined at lines 353 to 361. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 359 to 367. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Replace the node allocator of an empty hash table.
 
@@ -182,7 +182,7 @@ Calls: [hash_count](hash.c.md#hash_count), [hnode_alloc](hash.c.md#hnode_alloc),
 void hash_free_nodes(hash_t *)
 ```
 
-Defined at lines 370 to 383. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 376 to 389. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Free every node of a hash table through its freenode function.
 
@@ -199,7 +199,7 @@ Calls: [clear_table](hash.c.md#clear_table), [hash_scan_begin](hash.c.md#hash_sc
 void hash_destroy(hash_t *)
 ```
 
-Defined at lines 390 to 396. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 396 to 402. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Free an empty dynamic hash table and its chain table.
 
@@ -216,7 +216,7 @@ Uses file-scope variables: `hash_val_t_bit`
 void hash_scan_begin(hscan_t *, hash_t *)
 ```
 
-Defined at lines 409 to 427. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 415 to 433. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Start a scan of a hash table at its first node.
 
@@ -236,7 +236,7 @@ Called by: [dircache_dump](dircache.c.md#dircache_dump), [dircache_flush_deferre
 hnode_t * hash_scan_next(hscan_t *)
 ```
 
-Defined at lines 445 to 486. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 451 to 492. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Return the next node of a scan and advance the scan past it.
 
@@ -264,7 +264,7 @@ Uses file-scope variables: `hash_val_t_bit`
 void hash_insert(hash_t *, hnode_t *, const void *)
 ```
 
-Defined at lines 500 to 525. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 506 to 531. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Insert a node under a new `key`, ahead of the rest of its chain.
 
@@ -292,7 +292,7 @@ Mentioned in the documentation of: [arc_case_iv_make_room](dircache.c.md#arc_cas
 hnode_t * hash_lookup(hash_t *, const void *)
 ```
 
-Defined at lines 539 to 556. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 545 to 562. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Find the node of `key` in a hash table.
 
@@ -314,7 +314,7 @@ Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_lookup_parent](
 hnode_t * hash_delete(hash_t *, hnode_t *)
 ```
 
-Defined at lines 576 to 613. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 582 to 619. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Unlink a node from a hash table.
 
@@ -345,7 +345,7 @@ Uses file-scope variables: `hash_val_t_bit`
 int hash_alloc_insert(hash_t *, const void *, void *)
 ```
 
-Defined at lines 623 to 626. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 629 to 632. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Allocate a node for `data` and insert it under `key`.
 
@@ -364,7 +364,7 @@ Calls: [hash_alloc_insert_node](hash.c.md#hash_alloc_insert_node)
 hnode_t * hash_alloc_insert_node(hash_t *, const void *, void *)
 ```
 
-Defined at lines 638 to 648. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 644 to 654. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Allocate a node for `data`, insert it under `key`, and return it.
 
@@ -387,7 +387,7 @@ Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_reindex_didname
 void hash_delete_free(hash_t *, hnode_t *)
 ```
 
-Defined at lines 657 to 661. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 663 to 667. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Unlink a node through hash_delete and free it through the freenode function.
 
@@ -405,7 +405,7 @@ Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_remove](dircach
 hnode_t * hash_scan_delete(hash_t *, hnode_t *)
 ```
 
-Defined at lines 673 to 696. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 679 to 702. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Unlink a node like hash_delete, but never shrink the table.
 
@@ -429,7 +429,7 @@ Uses file-scope variables: `hash_val_t_bit`
 void hash_scan_delfree(hash_t *, hnode_t *)
 ```
 
-Defined at lines 705 to 709. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 711 to 715. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Unlink a node through hash_scan_delete and free it through the freenode function.
 
@@ -447,7 +447,7 @@ Called by: [dircache_remove](dircache.c.md#dircache_remove)
 int hash_verify(hash_t *)
 ```
 
-Defined at lines 723 to 759. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 729 to 765. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Check the invariants of a hash table.
 
@@ -469,7 +469,7 @@ Calls: [is_power_of_two](hash.c.md#is_power_of_two)
 static hnode_t * hnode_alloc(void *context)
 ```
 
-Defined at lines 767 to 770.
+Defined at lines 773 to 776.
 
 Allocate a node with malloc, the default node allocator.
 
@@ -486,7 +486,7 @@ Called by: [hash_create](hash.c.md#hash_create), [hash_set_allocator](hash.c.md#
 static void hnode_free(hnode_t *node, void *context)
 ```
 
-Defined at lines 778 to 781.
+Defined at lines 784 to 787.
 
 Free a node with free, the default node release function.
 
@@ -502,7 +502,7 @@ Called by: [hash_create](hash.c.md#hash_create), [hash_set_allocator](hash.c.md#
 hnode_t * hnode_init(hnode_t *, void *)
 ```
 
-Defined at lines 790 to 795. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 796 to 801. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Set up a node that the caller allocated.
 
@@ -520,7 +520,7 @@ Called by: [hash_alloc_insert_node](hash.c.md#hash_alloc_insert_node)
 void * hnode_get(hnode_t *)
 ```
 
-Defined at lines 804 to 807. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 810 to 813. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Return the value of a node.
 
@@ -537,7 +537,7 @@ Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache
 const void * hnode_getkey(hnode_t *)
 ```
 
-Defined at lines 816 to 819. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 822 to 825. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Return the lookup value that hash_insert stored in a node.
 
@@ -552,7 +552,7 @@ Returns: the hash_key pointer of the node
 hashcount_t hash_count(hash_t *)
 ```
 
-Defined at lines 828 to 831. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 834 to 837. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Return the number of nodes in a hash table.
 
@@ -569,7 +569,7 @@ Called by: [hash_set_allocator](hash.c.md#hash_set_allocator)
 hashcount_t hash_size(hash_t *)
 ```
 
-Defined at lines 840 to 843. Declared in [etc/afpd/hash.h](hash.h.md).
+Defined at lines 846 to 849. Declared in [etc/afpd/hash.h](hash.h.md).
 
 Return the number of chains of a hash table.
 
@@ -586,7 +586,7 @@ Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache
 static hash_val_t hash_fun_default(const void *key)
 ```
 
-Defined at lines 854 to 875.
+Defined at lines 860 to 881.
 
 Hash a NUL-terminated string, the default hash function.
 
@@ -605,7 +605,7 @@ Called by: [hash_create](hash.c.md#hash_create)
 static int hash_comp_default(const void *key1, const void *key2)
 ```
 
-Defined at lines 893 to 896.
+Defined at lines 899 to 902.
 
 Compare two strings with strcmp, the default compare function.
 

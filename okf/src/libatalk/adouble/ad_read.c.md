@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_read.c"
-description: "2 functions, includes 4 project headers."
+description: "Reading the forks of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_read.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 ssize_t adf_pread(struct ad_fd *adf, void *buf, size_t count, off_t offset)
 ```
 
-Defined at lines 50 to 72.
+Defined at lines 55 to 77.
 
 Read count bytes that start at offset in an AppleDouble fork.
 
@@ -48,7 +48,7 @@ Called by: [ad_convert_pread_full](ad_open.c.md#ad_convert_pread_full), [ad_head
 ssize_t ad_read(struct adouble *ad, const uint32_t eid, off_t off, char *buf, const size_t buflen)
 ```
 
-Defined at lines 91 to 137.
+Defined at lines 96 to 142.
 
 Read from the data or resource fork of an AppleDouble.
 

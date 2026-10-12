@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_attr.c"
-description: "6 functions, includes 4 project headers."
+description: "AFP attributes, CNID, and name entries of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_attr.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 int ad_getattr(const struct adouble *ad, uint16_t *attr)
 ```
 
-Defined at lines 37 to 77.
+Defined at lines 42 to 82.
 
 Read the AFP attribute word of an AppleDouble entry.
 
@@ -50,7 +50,7 @@ Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [change_attrib
 int ad_setattr(const struct adouble *ad, const uint16_t attribute)
 ```
 
-Defined at lines 92 to 132.
+Defined at lines 97 to 137.
 
 Store the AFP attribute word in an AppleDouble entry.
 
@@ -72,7 +72,7 @@ Called by: [change_attributes](../../bin/nad/nad_set.c.md#change_attributes), [n
 int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino, const uint32_t id, const cnid_t did, const void *stamp)
 ```
 
-Defined at lines 153 to 265.
+Defined at lines 158 to 270.
 
 Store the CNID, the file identity, and the database stamp in the private AppleDouble entries.
 
@@ -98,7 +98,7 @@ Called by: [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_cr
 uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino, const cnid_t did, const void *stamp)
 ```
 
-Defined at lines 283 to 356.
+Defined at lines 288 to 361.
 
 Read the CNID stored in an AppleDouble entry when it matches the file.
 
@@ -123,7 +123,7 @@ Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [get_id]
 uint32_t ad_forcegetid(struct adouble *adp)
 ```
 
-Defined at lines 366 to 388.
+Defined at lines 371 to 393.
 
 Read the CNID stored in an AppleDouble entry without checking the file's identity.
 
@@ -142,7 +142,7 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [print_flags](..
 int ad_setname(struct adouble *ad, const char *path)
 ```
 
-Defined at lines 400 to 422.
+Defined at lines 405 to 427.
 
 Store a file name in the AppleDouble name entry.
 

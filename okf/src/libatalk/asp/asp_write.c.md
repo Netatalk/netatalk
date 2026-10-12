@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_write.c"
-description: "1 function, includes 3 project headers."
+description: "ASP WriteContinue requests."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_write.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_wrtcont(ASP, char *, size_t *)
 ```
 
-Defined at lines 51 to 116. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 56 to 121. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Fetch the data of an [ASP](../../include/atalk/asp.h.md#struct-asp) write from the workstation with a WriteContinue request.
 

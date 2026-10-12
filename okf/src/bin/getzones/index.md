@@ -1,3 +1,3 @@
 # src/bin/getzones
 
-* [getzones.c](getzones.c.md) - 8 functions, includes 6 project headers.
+* [getzones.c](getzones.c.md) - The getzones command: list AppleTalk zones through ZIP.

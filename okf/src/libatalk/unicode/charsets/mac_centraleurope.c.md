@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_centraleurope.c"
-description: "2 functions, includes 3 project headers."
+description: "MAC_CENTRALEUROPE charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_centraleurope.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -34,7 +34,7 @@ Initialized at line 87 as `struct charset_functions`. Assigns:
 static size_t mac_centraleurope_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 66 to 72.
+Defined at lines 71 to 77.
 
 Convert UCS2 to MAC_CENTRALEUROPE through mb_generic_push.
 
@@ -57,7 +57,7 @@ Dispatched via: [charset_mac_centraleurope](mac_centraleurope.c.md#charset_mac_c
 static size_t mac_centraleurope_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 84 to 90.
+Defined at lines 89 to 95.
 
 Convert MAC_CENTRALEUROPE to UCS2 through mb_generic_pull.
 

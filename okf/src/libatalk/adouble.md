@@ -5,22 +5,22 @@ description: "11 files, 110 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/adouble"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [libatalk/adouble/ad_attr.c](adouble/ad_attr.c.md): 6 functions, includes 4 project headers.
+* [libatalk/adouble/ad_attr.c](adouble/ad_attr.c.md): AFP attributes, CNID, and name entries of an AppleDouble.
 * [libatalk/adouble/ad_conv.c](adouble/ad_conv.c.md): Part of Netatalk's AppleDouble implementatation.
-* [libatalk/adouble/ad_date.c](adouble/ad_date.c.md): 3 functions, includes 2 project headers.
-* [libatalk/adouble/ad_flush.c](adouble/ad_flush.c.md): 10 functions, includes 6 project headers.
-* [libatalk/adouble/ad_lock.c](adouble/ad_lock.c.md): 21 functions, includes 5 project headers.
+* [libatalk/adouble/ad_date.c](adouble/ad_date.c.md): Date entries of an AppleDouble.
+* [libatalk/adouble/ad_flush.c](adouble/ad_flush.c.md): Writing AppleDouble headers to disk and closing the forks.
+* [libatalk/adouble/ad_lock.c](adouble/ad_lock.c.md): Byte range and share mode locks on AppleDouble forks.
 * [libatalk/adouble/ad_open.c](adouble/ad_open.c.md): Part of Netatalk's AppleDouble implementatation.
-* [libatalk/adouble/ad_read.c](adouble/ad_read.c.md): 2 functions, includes 4 project headers.
-* [libatalk/adouble/ad_recvfile.c](adouble/ad_recvfile.c.md): 1 function, includes 2 project headers.
-* [libatalk/adouble/ad_sendfile.c](adouble/ad_sendfile.c.md): 1 function, includes 2 project headers.
-* [libatalk/adouble/ad_size.c](adouble/ad_size.c.md): 1 function, includes 2 project headers.
-* [libatalk/adouble/ad_write.c](adouble/ad_write.c.md): 7 functions, includes 5 project headers.
+* [libatalk/adouble/ad_read.c](adouble/ad_read.c.md): Reading the forks of an AppleDouble.
+* [libatalk/adouble/ad_recvfile.c](adouble/ad_recvfile.c.md): Receiving a DSIWrite payload straight into an AppleDouble fork.
+* [libatalk/adouble/ad_sendfile.c](adouble/ad_sendfile.c.md): sys_sendfile: one interface over the sendfile calls of Linux, Solaris, and FreeBSD
+* [libatalk/adouble/ad_size.c](adouble/ad_size.c.md): Fork lengths of an AppleDouble.
+* [libatalk/adouble/ad_write.c](adouble/ad_write.c.md): Writing and truncating the forks of an AppleDouble.
 
 # Includes headers from
 

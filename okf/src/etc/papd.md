@@ -5,32 +5,32 @@ description: "22 files, 119 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/papd"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [etc/papd/auth.c](papd/auth.c.md): 5 functions, includes 5 project headers.
-* [etc/papd/comment.c](papd/comment.c.md): 5 functions, includes 2 project headers.
+* [etc/papd/auth.c](papd/auth.c.md): UAM registration and loading for papd printer authentication.
+* [etc/papd/comment.c](papd/comment.c.md): DSC comment state stack of the papd PostScript parser.
 * [etc/papd/comment.h](papd/comment.h.md): 1 function, 2 types.
-* [etc/papd/file.c](papd/file.c.md): 5 functions, includes 2 project headers.
+* [etc/papd/file.c](papd/file.c.md): Print job buffers of papd: lines, appended data, and status replies.
 * [etc/papd/file.h](papd/file.h.md): 1 type.
-* [etc/papd/headers.c](papd/headers.c.md): 9 functions, includes 5 project headers.
+* [etc/papd/headers.c](papd/headers.c.md): DSC header comment handlers of papd.
 * [etc/papd/lp.c](papd/lp.c.md): Interface to lpr system.
 * [etc/papd/lp.h](papd/lp.h.md): 3 functions, includes 1 project header.
-* [etc/papd/magics.c](papd/magics.c.md): 6 functions, includes 5 project headers.
-* [etc/papd/main.c](papd/main.c.md): 10 functions, 1 type, includes 13 project headers.
-* [etc/papd/ppd.c](papd/ppd.c.md): 6 functions, 1 type, includes 5 project headers.
+* [etc/papd/magics.c](papd/magics.c.md): PostScript job type detection and the papd job loop.
+* [etc/papd/main.c](papd/main.c.md): The papd daemon: printers, NBP registration, and the accept loop.
+* [etc/papd/ppd.c](papd/ppd.c.md): PPD file reading for the printer of a papd job.
 * [etc/papd/ppd.h](papd/ppd.h.md): 2 types.
-* [etc/papd/print_cups.c](papd/print_cups.c.md): 12 functions, includes 8 project headers.
+* [etc/papd/print_cups.c](papd/print_cups.c.md): CUPS printing backend of papd.
 * [etc/papd/print_cups.h](papd/print_cups.h.md): 1 type.
 * [etc/papd/printcap.c](papd/printcap.c.md): routines for dealing with the terminal capability data base based on termcap
 * [etc/papd/printcap.h](papd/printcap.h.md): No functions or types.
 * [etc/papd/printer.h](papd/printer.h.md): 1 type.
-* [etc/papd/queries.c](papd/queries.c.md): 18 functions, 1 type, includes 9 project headers.
-* [etc/papd/session.c](papd/session.c.md): 1 function, includes 7 project headers.
+* [etc/papd/queries.c](papd/queries.c.md): PostScript query answers of papd.
+* [etc/papd/session.c](papd/session.c.md): One PAP connection of papd: reading jobs and sending replies.
 * [etc/papd/session.h](papd/session.h.md): includes 1 project header.
-* [etc/papd/uam.c](papd/uam.c.md): 7 functions, includes 6 project headers.
+* [etc/papd/uam.c](papd/uam.c.md): UAM module loading and the server services that papd offers UAMs.
 * [etc/papd/uam_auth.h](papd/uam_auth.h.md): interface between uam.c and auth.c
 
 # Includes headers from

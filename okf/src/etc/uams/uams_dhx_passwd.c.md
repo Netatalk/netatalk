@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_dhx_passwd.c"
-description: "7 functions, includes 4 project headers."
+description: "DHCAST128 UAM with Unix password authentication."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx_passwd.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,14 +22,14 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### uams_dhx
 
-Initialized at line 557 as `struct uam_export`. Assigns:
+Initialized at line 562 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx_passwd.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx_passwd.c.md#uam_setup)
 
 ### uams_dhx_passwd
 
-Initialized at line 563 as `struct uam_export`. Assigns:
+Initialized at line 568 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx_passwd.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx_passwd.c.md#uam_setup)
@@ -42,7 +42,7 @@ Initialized at line 563 as `struct uam_export`. Assigns:
 static void dhx_release_key(void)
 ```
 
-Defined at lines 51 to 57.
+Defined at lines 56 to 62.
 
 Release the session key K of a DHCAST128 exchange.
 
@@ -54,7 +54,7 @@ Called by: [passwd_logincont](uams_dhx_passwd.c.md#passwd_logincont), [pwd_login
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 84 to 250.
+Defined at lines 89 to 255.
 
 Look up the user of a DHCAST128 login and answer the public key of the client with Mb and a challenge.
 
@@ -82,7 +82,7 @@ Called by: [passwd_login](uams_dhx_passwd.c.md#passwd_login), [passwd_login_ext]
 static int passwd_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 266 to 301.
+Defined at lines 271 to 306.
 
 Read the user name of an FPLogin request and start a DHCAST128 login.
 
@@ -108,7 +108,7 @@ Called by: [uam_setup](uams_dhx_passwd.c.md#uam_setup)
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 324 to 353.
+Defined at lines 329 to 358.
 
 Read the user name of an FPLoginExt request and start a DHCAST128 login.
 
@@ -141,7 +141,7 @@ Called by: [uam_setup](uams_dhx_passwd.c.md#uam_setup)
 static int passwd_logincont(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 374 to 519.
+Defined at lines 379 to 524.
 
 Check the challenge answer and the password of a DHCAST128 login against the password hash.
 
@@ -167,7 +167,7 @@ Called by: [uam_setup](uams_dhx_passwd.c.md#uam_setup)
 static int uam_setup(void *obj, const char *path)
 ```
 
-Defined at lines 531 to 542.
+Defined at lines 536 to 547.
 
 Register the DHCAST128 login of the passwd module.
 
@@ -191,7 +191,7 @@ Dispatched via: [uams_dhx](uams_dhx_passwd.c.md#uams_dhx), [uams_dhx_passwd](uam
 static void uam_cleanup(void)
 ```
 
-Defined at lines 548 to 555.
+Defined at lines 553 to 560.
 
 Release the session key and unregister the DHCAST128 login of the passwd module.
 

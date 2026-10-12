@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_dhx_pam.c"
-description: "12 functions, includes 4 project headers."
+description: "DHCAST128 UAM with PAM authentication."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx_pam.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,18 +22,18 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### PAM_conversation
 
-Initialized at line 200. Dispatches to: [PAM_conv](uams_dhx_pam.c.md#pam_conv)
+Initialized at line 205. Dispatches to: [PAM_conv](uams_dhx_pam.c.md#pam_conv)
 
 ### uams_dhx
 
-Initialized at line 1066 as `struct uam_export`. Assigns:
+Initialized at line 1071 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx_pam.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx_pam.c.md#uam_setup)
 
 ### uams_dhx_pam
 
-Initialized at line 1072 as `struct uam_export`. Assigns:
+Initialized at line 1077 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx_pam.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx_pam.c.md#uam_setup)
@@ -46,7 +46,7 @@ Initialized at line 1072 as `struct uam_export`. Assigns:
 static void dhx_release_key(void)
 ```
 
-Defined at lines 50 to 56.
+Defined at lines 55 to 61.
 
 Release the session key K of a DHCAST128 exchange.
 
@@ -60,7 +60,7 @@ Uses file-scope variables: `K`
 static int PAM_conv(int num_msg, struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
 ```
 
-Defined at lines 90 to 198.
+Defined at lines 95 to 203.
 
 Answer PAM prompts with the user name and the password of the login.
 
@@ -82,7 +82,7 @@ Dispatched via: [PAM_conversation](uams_dhx_pam.c.md#pam_conversation)
 static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 224 to 369.
+Defined at lines 229 to 374.
 
 Answer the public key of the client in a DHCAST128 exchange with Mb and a challenge.
 
@@ -109,7 +109,7 @@ Uses file-scope variables: `K`, `g_binary`, `msg2_iv`, `p_binary`, `randbuf`
 static int login(void *obj, unsigned char *username, int ulen, struct passwd **uam_pwd, const unsigned char *ibuf, size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 387 to 399.
+Defined at lines 392 to 404.
 
 Look up the user of a DHCAST128 login and start the Diffie-Hellman exchange.
 
@@ -135,7 +135,7 @@ Called by: [pam_login](uams_dhx_pam.c.md#pam_login), [pam_login_ext](uams_dhx_pa
 static int pam_login(void *obj, struct passwd **uam_pwd, unsigned char *ibuf, size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 416 to 452.
+Defined at lines 421 to 457.
 
 Read the user name of an FPLogin request and start a DHCAST128 login.
 
@@ -161,7 +161,7 @@ Called by: [uam_setup](uams_dhx_pam.c.md#uam_setup)
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd, const unsigned char *ibuf, size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 471 to 508.
+Defined at lines 476 to 513.
 
 Read the user name of an FPLoginExt request and start a DHCAST128 login.
 
@@ -188,7 +188,7 @@ Called by: [uam_setup](uams_dhx_pam.c.md#uam_setup)
 static void dhx_log_pam_error(pam_handle_t *ph, const char *user, const char *step, int pam_err)
 ```
 
-Defined at lines 520 to 526.
+Defined at lines 525 to 531.
 
 Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure).
 
@@ -210,7 +210,7 @@ Called by: [pam_changepw](uams_dhx_pam.c.md#pam_changepw), [pam_logincont](uams_
 static int pam_logincont(void *obj, struct passwd **uam_pwd, const unsigned char *ibuf, size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 547 to 778.
+Defined at lines 552 to 783.
 
 Check the challenge answer and the password of a DHCAST128 login with PAM.
 
@@ -238,7 +238,7 @@ Uses file-scope variables: `K`, `msg3_iv`, `randbuf`
 static void pam_logout(void)
 ```
 
-Defined at lines 783 to 788.
+Defined at lines 788 to 793.
 
 Close the PAM session of the login and call pam_end.
 
@@ -250,7 +250,7 @@ Called by: [uam_setup](uams_dhx_pam.c.md#uam_setup)
 static int pam_changepw(void *obj, unsigned char *username, const struct passwd *pwd, unsigned char *ibuf, size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 811 to 1021.
+Defined at lines 816 to 1026.
 
 Change the password of a DHCAST128 user in two requests.
 
@@ -279,7 +279,7 @@ Uses file-scope variables: `K`, `msg3_iv`, `randbuf`
 static int uam_setup(void *obj, const char *path)
 ```
 
-Defined at lines 1033 to 1050.
+Defined at lines 1038 to 1055.
 
 Register the DHCAST128 login and password change of the PAM module.
 
@@ -303,7 +303,7 @@ Dispatched via: [uams_dhx](uams_dhx_pam.c.md#uams_dhx), [uams_dhx_pam](uams_dhx_
 static void uam_cleanup(void)
 ```
 
-Defined at lines 1056 to 1064.
+Defined at lines 1061 to 1069.
 
 Release the session key and unregister the DHCAST128 login and password change.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/unix.c"
-description: "10 functions, includes 13 project headers."
+description: "Unix modes, owners, and AFP access rights of files and directories."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/unix.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal, uint32_t *bsize)
 ```
 
-Defined at lines 47 to 78.
+Defined at lines 52 to 83.
 
 Free and total space of the file system that holds the volume.
 
@@ -57,7 +57,7 @@ Called by: [getvolspace](volume.c.md#getvolspace)
 static int utombits(mode_t bits)
 ```
 
-Defined at lines 86 to 95.
+Defined at lines 91 to 100.
 
 Map the three permission bits of one Unix class to AFP access rights.
 
@@ -74,7 +74,7 @@ Called by: [utommode](unix.c.md#utommode)
 static void utommode(const AFPObj *obj, const struct stat *stat, struct maccess *ma)
 ```
 
-Defined at lines 110 to 147.
+Defined at lines 115 to 152.
 
 Derive the AFP access rights of owner, group, world, and user from a stat.
 
@@ -95,7 +95,7 @@ Called by: [accessmode](unix.c.md#accessmode)
 void accessmode(const AFPObj *obj, const struct vol *vol, char *path, struct maccess *ma, struct dir *dir, struct stat *st)
 ```
 
-Defined at lines 163 to 181.
+Defined at lines 168 to 186.
 
 AFP access rights of a file or directory from its stat and ACLs.
 
@@ -119,7 +119,7 @@ Called by: [afp_getsrvrparms](volume.c.md#afp_getsrvrparms), [check_access](dire
 static mode_t mtoubits(uint8_t bits)
 ```
 
-Defined at lines 192 to 201.
+Defined at lines 197 to 206.
 
 Map AFP access rights to the three permission bits of one Unix class.
 
@@ -138,7 +138,7 @@ Called by: [mtoumode](unix.c.md#mtoumode)
 mode_t mtoumode(struct maccess *)
 ```
 
-Defined at lines 214 to 224. Declared in [etc/afpd/directory.h](directory.h.md).
+Defined at lines 219 to 229. Declared in [etc/afpd/directory.h](directory.h.md).
 
 Build a Unix mode from AFP access rights.
 
@@ -159,7 +159,7 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 ```
 
-Defined at lines 238 to 256.
+Defined at lines 243 to 261.
 
 Apply a Unix mode to a file and to its AppleDouble metadata.
 
@@ -184,7 +184,7 @@ Calls through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vf
 int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 ```
 
-Defined at lines 272 to 301.
+Defined at lines 277 to 306.
 
 Apply a Unix mode to a directory and to its AppleDouble metadata.
 
@@ -209,7 +209,7 @@ Calls through [`vfs_ops::vfs_setdirunixmode`](../../include/atalk/vfs.h.md#struc
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path *path)
 ```
 
-Defined at lines 314 to 330.
+Defined at lines 319 to 335.
 
 Give a file and its AppleDouble metadata a new owner and group.
 
@@ -235,7 +235,7 @@ Calls through [`vfs_ops::vfs_chown`](../../include/atalk/vfs.h.md#struct-vfs_ops
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 ```
 
-Defined at lines 345 to 358.
+Defined at lines 350 to 363.
 
 Give a directory and its AppleDouble metadata a new owner and group.
 

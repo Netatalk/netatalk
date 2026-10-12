@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_getreq.c"
-description: "1 function, includes 3 project headers."
+description: "Reading an ASP request from the session socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_getreq.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_getrequest(ASP)
 ```
 
-Defined at lines 55 to 107. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 60 to 112. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Read one [ASP](../../include/atalk/asp.h.md#struct-asp) request from the session socket without blocking.
 

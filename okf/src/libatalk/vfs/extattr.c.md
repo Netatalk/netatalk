@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/vfs/extattr.c"
-description: "15 functions, includes 6 project headers."
+description: "Platform wrappers for extended attribute system calls, from Samba."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/extattr.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 static const char * prefix(const char *uname)
 ```
 
-Defined at lines 94 to 102.
+Defined at lines 99 to 107.
 
 Platform EA name for uname in the user namespace.
 
@@ -51,7 +51,7 @@ Uses file-scope variables: `attr_name`
 int sys_getxattrfd(int fd, const char *uname, int oflag,...)
 ```
 
-Defined at lines 116 to 140. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 121 to 145. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 On Solaris, open EA uname of fd as a file descriptor.
 
@@ -73,7 +73,7 @@ Called by: [ad_open_rf_ea](../adouble/ad_open.c.md#ad_open_rf_ea)
 ssize_t sys_getxattr(const char *path, const char *name, void *value, size_t size)
 ```
 
-Defined at lines 156 to 221. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 161 to 226. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Read EA uname of path, following symlinks.
 
@@ -97,7 +97,7 @@ Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [sys_
 ssize_t sys_fgetxattr(int filedes, const char *name, void *value, size_t size)
 ```
 
-Defined at lines 236 to 297. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 241 to 302. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Read EA uname of the file that filedes refers to.
 
@@ -121,7 +121,7 @@ Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [ad_r
 ssize_t sys_lgetxattr(const char *path, const char *name, void *value, size_t size)
 ```
 
-Defined at lines 312 to 367. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 317 to 372. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Read EA uname of path without following a symlink.
 
@@ -145,7 +145,7 @@ Called by: [ad_reso_size](../adouble/ad_open.c.md#ad_reso_size), [do_check_ea_su
 static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 ```
 
-Defined at lines 472 to 506.
+Defined at lines 477 to 511.
 
 Strip the "user." prefix from a listxattr result in place.
 
@@ -166,7 +166,7 @@ Called by: [sys_flistxattr](extattr.c.md#sys_flistxattr), [sys_listxattr](extatt
 ssize_t sys_listxattr(const char *path, char *list, size_t size)
 ```
 
-Defined at lines 521 to 552. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 526 to 557. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 List the EA names of path, following symlinks.
 
@@ -189,7 +189,7 @@ Called by: [sys_ea_copyfile](ea_sys.c.md#sys_ea_copyfile), [sys_list_eas](ea_sys
 ssize_t sys_flistxattr(int filedes, const char *path, char *list, size_t size)
 ```
 
-Defined at lines 567 to 599. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 572 to 604. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 List the EA names of a file.
 
@@ -213,7 +213,7 @@ Called by: [sys_list_eas](ea_sys.c.md#sys_list_eas)
 ssize_t sys_llistxattr(const char *path, char *list, size_t size)
 ```
 
-Defined at lines 613 to 644. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 618 to 649. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 List the EA names of path without following a symlink.
 
@@ -236,7 +236,7 @@ Called by: [sys_list_eas](ea_sys.c.md#sys_list_eas)
 int sys_removexattr(const char *path, const char *name)
 ```
 
-Defined at lines 655 to 683. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 660 to 688. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Delete EA uname of path, following symlinks.
 
@@ -258,7 +258,7 @@ Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [sys_
 int sys_fremovexattr(int filedes, const char *path, const char *name)
 ```
 
-Defined at lines 696 to 724. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 701 to 729. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Delete EA uname of a file.
 
@@ -281,7 +281,7 @@ Called by: [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
 int sys_lremovexattr(const char *path, const char *name)
 ```
 
-Defined at lines 735 to 761. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 740 to 766. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Delete EA uname of path without following a symlink.
 
@@ -303,7 +303,7 @@ Called by: [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
 int sys_setxattr(const char *path, const char *name, const void *value, size_t size, int flags)
 ```
 
-Defined at lines 779 to 842. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 784 to 847. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Write EA uname of path, following symlinks.
 
@@ -328,7 +328,7 @@ Called by: [ad_conv_v22ea_hf](../adouble/ad_conv.c.md#ad_conv_v22ea_hf), [do_che
 int sys_fsetxattr(int filedes, const char *name, const void *value, size_t size, int flags)
 ```
 
-Defined at lines 860 to 926. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 865 to 931. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Write EA uname of the file that filedes refers to.
 
@@ -353,7 +353,7 @@ Called by: [ad_flush_hf](../adouble/ad_flush.c.md#ad_flush_hf), [copy_ea](unix.c
 int sys_lsetxattr(const char *path, const char *name, const void *value, size_t size, int flags)
 ```
 
-Defined at lines 944 to 1006. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 949 to 1011. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Write EA uname of path without following a symlink.
 

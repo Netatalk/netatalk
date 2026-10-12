@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/utf8.c"
-description: "2 functions, includes 3 project headers."
+description: "UTF-8 charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/utf8.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,7 +41,7 @@ Initialized at line 92 as `struct charset_functions`. Assigns:
 static size_t utf8_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 114 to 235.
+Defined at lines 115 to 236.
 
 Convert UTF-8 to UTF-16 and reject sequences outside the valid byte ranges.
 
@@ -77,7 +77,7 @@ Dispatched via: [charset_utf8](utf8.c.md#charset_utf8), [charset_utf8_mac](utf8.
 static size_t utf8_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 253 to 354.
+Defined at lines 254 to 355.
 
 Convert UTF-16 to UTF-8 and drop the bidirectional formatting characters.
 

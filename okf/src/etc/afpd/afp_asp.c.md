@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/afp_asp.c"
-description: "10 functions, includes 13 project headers."
+description: "AFP sessions over ASP: signal handling and the request loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_asp.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void afp_asp_close(AFPObj *obj)
 ```
 
-Defined at lines 52 to 77.
+Defined at lines 57 to 82.
 
 End an [ASP](../../include/atalk/asp.h.md#struct-asp) session by closing the volumes, logging out, and closing the [ASP](../../include/atalk/asp.h.md#struct-asp) connection.
 
@@ -54,7 +54,7 @@ Called by: [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_over_asp](afp_a
 static void afp_asp_die_now(const int sig)
 ```
 
-Defined at lines 117 to 133.
+Defined at lines 122 to 138.
 
 Shut the [ASP](../../include/atalk/asp.h.md#struct-asp) session down and exit.
 
@@ -75,7 +75,7 @@ Uses file-scope variables: `child`
 static void afp_asp_timedown_now(void)
 ```
 
-Defined at lines 142 to 181.
+Defined at lines 147 to 186.
 
 Announce a shutdown in 5 minutes to the [ASP](../../include/atalk/asp.h.md#struct-asp) client and arm the exit timer.
 
@@ -93,7 +93,7 @@ Uses file-scope variables: `child`
 static void afp_asp_reload(int sig)
 ```
 
-Defined at lines 193 to 197.
+Defined at lines 198 to 202.
 
 SIGHUP handler that requests a reload of the volume configuration.
 
@@ -112,7 +112,7 @@ Uses file-scope variables: `reload_request` in [etc/afpd/afp_dsi.c](afp_dsi.c.md
 static void afp_asp_getmesg_now(void)
 ```
 
-Defined at lines 205 to 209.
+Defined at lines 210 to 214.
 
 Read the pending server message and send the [ASP](../../include/atalk/asp.h.md#struct-asp) client a message attention.
 
@@ -128,7 +128,7 @@ Uses file-scope variables: `child`
 static void afp_asp_die_handler(int sig)
 ```
 
-Defined at lines 229 to 233.
+Defined at lines 234 to 238.
 
 SIGTERM and SIGALRM handler that records the request to end the session.
 
@@ -149,7 +149,7 @@ Uses file-scope variables: `asp_die_pending`
 static void afp_asp_timedown(int sig)
 ```
 
-Defined at lines 240 to 244.
+Defined at lines 245 to 249.
 
 SIGUSR1 handler that records the request for a shutdown in 5 minutes.
 
@@ -168,7 +168,7 @@ Uses file-scope variables: `asp_timedown_pending`
 static void afp_asp_getmesg(int sig)
 ```
 
-Defined at lines 252 to 256.
+Defined at lines 257 to 261.
 
 SIGUSR2 handler that records a pending server message.
 
@@ -187,7 +187,7 @@ Uses file-scope variables: `asp_getmesg_pending`
 static void asp_process_deferred_signals(AFPObj *obj)
 ```
 
-Defined at lines 268 to 294.
+Defined at lines 273 to 299.
 
 Act on the signals that the handlers recorded while the loop was busy or waiting.
 
@@ -208,7 +208,7 @@ Uses file-scope variables: `asp_die_pending`, `asp_getmesg_pending`, `asp_timedo
 void afp_over_asp(AFPObj *obj)
 ```
 
-Defined at lines 311 to 661.
+Defined at lines 316 to 666.
 
 Run an AFP session over [ASP](../../include/atalk/asp.h.md#struct-asp) until the client closes it.
 

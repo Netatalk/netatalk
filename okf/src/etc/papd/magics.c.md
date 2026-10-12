@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/magics.c"
-description: "6 functions, includes 5 project headers."
+description: "PostScript job type detection and the papd job loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/magics.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,7 +33,7 @@ Initialized at line 34. Dispatches to: [cm_psadobe](magics.c.md#cm_psadobe), [cm
 static void sig_handler(int signo)
 ```
 
-Defined at lines 33 to 37.
+Defined at lines 38 to 42.
 
 Note SIGINT or SIGTERM, so the job loop ends the job with a shutdown message.
 
@@ -48,7 +48,7 @@ Called by: [ps](magics.c.md#ps)
 static void parser_error(struct papfile *outfile)
 ```
 
-Defined at lines 47 to 52.
+Defined at lines 52 to 57.
 
 Refuse a job whose DSC comments do not parse.
 
@@ -67,7 +67,7 @@ Called by: [ps](magics.c.md#ps)
 int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
 ```
 
-Defined at lines 72 to 163.
+Defined at lines 77 to 168.
 
 Run the PostScript job loop over the data a PAP client sent.
 
@@ -96,7 +96,7 @@ Uses file-scope variables: `magics`, `state`
 int cm_psquery(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 177 to 217.
+Defined at lines 182 to 222.
 
 Serve a query job that starts with `%!PS-Adobe-3.0 Query`.
 
@@ -123,7 +123,7 @@ Dispatched via: [magics](magics.c.md#magics)
 int cm_psadobe(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 231 to 265.
+Defined at lines 236 to 270.
 
 Serve a print job that starts with `%!PS-Adobe-3.0`.
 
@@ -150,7 +150,7 @@ Dispatched via: [magics](magics.c.md#magics)
 int cm_psswitch(struct papfile *in, struct papfile *out, struct sockaddr_at *sat)
 ```
 
-Defined at lines 282 to 335.
+Defined at lines 287 to 340.
 
 Pick the handler for a job with another `%!PS-Adobe-` version.
 

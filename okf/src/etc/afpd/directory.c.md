@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/directory.c"
-description: "42 functions, includes 29 project headers."
+description: "Directory resolution by CNID and path, the AFP directory commands, FPMapID, and FPMapName."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -51,7 +51,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int netatalk_mkdir(const struct vol *vol, const char *name)
 ```
 
-Defined at lines 129 to 173.
+Defined at lines 135 to 179.
 
 Create a directory and map the mkdir error to an AFP result code.
 
@@ -73,7 +73,7 @@ Called by: [afp_createdir](directory.c.md#afp_createdir), [copydir](directory.c.
 static int deletedir(const struct vol *vol, int dirfd, char *dir)
 ```
 
-Defined at lines 190 to 246.
+Defined at lines 196 to 252.
 
 Delete directory dir and everything below it.
 
@@ -96,7 +96,7 @@ Called by: [renamedir](directory.c.md#renamedir)
 static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src, char *dst)
 ```
 
-Defined at lines 265 to 344.
+Defined at lines 271 to 350.
 
 Duplicate the directory tree src as dst for a cross-device rename.
 
@@ -121,7 +121,7 @@ Called by: [renamedir](directory.c.md#renamedir)
 static int diroffcnt(struct dir *dir, struct stat *st)
 ```
 
-Defined at lines 353 to 356.
+Defined at lines 359 to 362.
 
 Whether the cached offspring count of dir is still valid.
 
@@ -139,7 +139,7 @@ Called by: [getdirparams](directory.c.md#getdirparams)
 static int invisible_dots(const struct vol *vol, const char *name)
 ```
 
-Defined at lines 367 to 371.
+Defined at lines 373 to 377.
 
 Whether name is a dot file that the volume flags as invisible to the Finder.
 
@@ -157,7 +157,7 @@ Called by: [getdirparams](directory.c.md#getdirparams)
 static int set_dir_errors(struct path *path, const char *where, int err)
 ```
 
-Defined at lines 384 to 398.
+Defined at lines 390 to 404.
 
 Map an errno from a directory parameter change to an AFP result code.
 
@@ -180,7 +180,7 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *ret, int toUTF8)
 ```
 
-Defined at lines 416 to 484.
+Defined at lines 422 to 490.
 
 Convert the client name in ret->m_name to the server name in ret->u_name.
 
@@ -206,7 +206,7 @@ Uses file-scope variables: `afp_errno`, `curdir`
 static struct path * path_from_dir(struct vol *vol, struct dir *dir, struct path *ret)
 ```
 
-Defined at lines 502 to 557.
+Defined at lines 508 to 563.
 
 Build a path result from a dircache entry after cname failed to change into it.
 
@@ -231,7 +231,7 @@ Uses file-scope variables: `afp_errno`, `curdir`
 int get_afp_errno(const int param)
 ```
 
-Defined at lines 571 to 578.
+Defined at lines 577 to 584.
 
 AFP error that the last path resolution left, with AFPERR_DID1 replaced by param.
 
@@ -250,7 +250,7 @@ Uses file-scope variables: `afp_errno`
 static struct dir * dirlookup_internal_retry(const struct vol *vol, cnid_t did, int strict, bstring *fullpath_ptr, char **upath_ptr)
 ```
 
-Defined at lines 599 to 638.
+Defined at lines 605 to 644.
 
 Retry helper for dirlookup_internal on ENOENT.
 
@@ -275,7 +275,7 @@ Called by: [dirlookup_internal](directory.c.md#dirlookup_internal)
 static struct dir * dirlookup_internal(const struct vol *vol, cnid_t did, int retry, int strict)
 ```
 
-Defined at lines 667 to 865.
+Defined at lines 673 to 871.
 
 Internal CNID (Directory ID) resolution with retry control.
 
@@ -317,7 +317,7 @@ Uses file-scope variables: `afp_errno`, `rootParent`
 struct dir * dirlookup(const struct vol *vol, cnid_t did)
 ```
 
-Defined at lines 880 to 887.
+Defined at lines 886 to 893.
 
 Optimistic CNID resolution for read/safe code paths.
 
@@ -341,7 +341,7 @@ Mentioned in the documentation of: [dircache_expunge_duplicate](dircache.c.md#di
 struct dir * dirlookup_strict(const struct vol *vol, cnid_t did)
 ```
 
-Defined at lines 902 to 955.
+Defined at lines 908 to 961.
 
 Validated DID resolution for write/change code paths.
 
@@ -363,7 +363,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.m
 struct dir * dir_new(const char *m_name, const char *u_name, const struct vol *vol, cnid_t pdid, cnid_t did, bstring path, struct stat *st)
 ```
 
-Defined at lines 974 to 1039.
+Defined at lines 980 to 1045.
 
 Construct struct dir.
 
@@ -392,7 +392,7 @@ Called by: [afp_createfile](file.c.md#afp_createfile), [afp_openvol](volume.c.md
 bstring fullpath_join_blk(const bstring parent, const char *name, int nlen)
 ```
 
-Defined at lines 1055 to 1068.
+Defined at lines 1061 to 1074.
 
 Build "parent/name" as a new bstring from a length-known leaf.
 
@@ -413,7 +413,7 @@ Called by: [fullpath_join](directory.c.md#fullpath_join), [pfd_repair_path](pfd_
 bstring fullpath_join(const bstring parent, const char *name)
 ```
 
-Defined at lines 1079 to 1082.
+Defined at lines 1085 to 1088.
 
 Build "parent/name" as a new bstring.
 
@@ -433,7 +433,7 @@ Called by: [absupath](filedir.c.md#absupath), [afp_createfile](file.c.md#afp_cre
 void dir_free(struct dir *dir)
 ```
 
-Defined at lines 1089 to 1121.
+Defined at lines 1095 to 1127.
 
 Free a struct dir and all its members.
 
@@ -450,7 +450,7 @@ Called by: [afp_createfile](file.c.md#afp_createfile), [afp_openvol](volume.c.md
 int dir_modify(const struct vol *vol, struct dir *dir, const struct dir_modify_args *args)
 ```
 
-Defined at lines 1148 to 1499.
+Defined at lines 1154 to 1505.
 
 Update a cached entry in-place with selective field updates.
 
@@ -483,7 +483,7 @@ Mentioned in the documentation of: [dircache_reindex_didname](dircache.c.md#dirc
 struct dir * dir_add(struct vol *vol, const struct dir *dir, struct path *path, int len)
 ```
 
-Defined at lines 1520 to 1635.
+Defined at lines 1526 to 1641.
 
 Create struct dir from struct path.
 
@@ -514,7 +514,7 @@ Called by: [afp_createdir](directory.c.md#afp_createdir), [catsearch](catsearch.
 void dir_free_invalid_q(void)
 ```
 
-Defined at lines 1642 to 1649.
+Defined at lines 1648 to 1655.
 
 Free the queue with invalid struct dirs.
 
@@ -532,7 +532,7 @@ Uses file-scope variables: `invalid_dircache_entries`
 void dir_remove_and_free(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 1666 to 1682.
+Defined at lines 1672 to 1688.
 
 Remove a dircache entry and free it at once.
 
@@ -556,7 +556,7 @@ Uses file-scope variables: `curdir`
 int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
 ```
 
-Defined at lines 1706 to 1806.
+Defined at lines 1712 to 1812.
 
 Remove a file/directory from dircache with automatic curdir recovery.
 
@@ -591,7 +591,7 @@ Mentioned in the documentation of: [dircache_expunge_duplicate](dircache.c.md#di
 struct path * cname(struct vol *vol, struct dir *dir, char **cpath)
 ```
 
-Defined at lines 1850 to 2167.
+Defined at lines 1856 to 2173.
 
 Resolve an AFP path relative to a directory and change into the directory that holds it.
 
@@ -636,7 +636,7 @@ Uses file-scope variables: `afp_errno`, `curdir`
 static int ochdir_vol(const char *dir, const struct vol *vol)
 ```
 
-Defined at lines 2177 to 2198.
+Defined at lines 2183 to 2204.
 
 [ochdir()](../../libatalk/util/unix.c.md#ochdir) wrapper that rejects chdir across filesystem device boundaries
 
@@ -656,7 +656,7 @@ Called by: [movecwd](directory.c.md#movecwd)
 int movecwd(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 2208 to 2332.
+Defined at lines 2214 to 2338.
 
 chdir() to dir
 
@@ -680,7 +680,7 @@ Mentioned in the documentation of: [dirlookup](directory.c.md#dirlookup)
 int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 ```
 
-Defined at lines 2348 to 2369.
+Defined at lines 2354 to 2375.
 
 Whether the user may read or write in the parent directory of path.
 
@@ -706,7 +706,7 @@ Uses file-scope variables: `curdir`
 int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 ```
 
-Defined at lines 2380 to 2400.
+Defined at lines 2386 to 2406.
 
 Whether the user may read or write path, from its AFP access rights.
 
@@ -730,7 +730,7 @@ Uses file-scope variables: `curdir`
 void setdiroffcnt(struct dir *dir, struct stat *st, uint32_t count)
 ```
 
-Defined at lines 2413 to 2418.
+Defined at lines 2419 to 2424.
 
 Cache the offspring count of a directory together with its ctime.
 
@@ -749,7 +749,7 @@ Called by: [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#
 int dirreenumerate(struct dir *dir, struct stat *st)
 ```
 
-Defined at lines 2433 to 2436.
+Defined at lines 2439 to 2442.
 
 Whether the last CNID reenumeration of dir is still current.
 
@@ -769,7 +769,7 @@ Called by: [reenumerate_id](file.c.md#reenumerate_id)
 int getdirparams(const AFPObj *obj, const struct vol *vol, uint16_t bitmap, struct path *s_path, struct dir *dir, char *buf, size_t *buflen)
 ```
 
-Defined at lines 2461 to 2731.
+Defined at lines 2467 to 2737.
 
 Pack the directory parameters that bitmap selects into buf.
 
@@ -798,7 +798,7 @@ Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [enumerate](
 int path_error(struct path *path, int error)
 ```
 
-Defined at lines 2745 to 2760.
+Defined at lines 2751 to 2766.
 
 AFP error for a path that cname could not resolve to the expected directory.
 
@@ -822,7 +822,7 @@ Uses file-scope variables: `afp_errno`
 int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2779 to 2837.
+Defined at lines 2785 to 2843.
 
 FPSetDirParms: set the parameters of a directory.
 
@@ -849,7 +849,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *buf)
 ```
 
-Defined at lines 2851 to 3296.
+Defined at lines 2857 to 3302.
 
 Set a directory's parameters from an FPSetDirParms bitmap and buffer.
 
@@ -875,7 +875,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `Cur_
 int afp_syncdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3314 to 3412.
+Defined at lines 3320 to 3418.
 
 FPSyncDir: flush a directory and its AppleDouble metadata to stable storage.
 
@@ -906,7 +906,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3433 to 3537.
+Defined at lines 3439 to 3543.
 
 FPCreateDir: create a directory and return its DID.
 
@@ -933,7 +933,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int renamedir(struct vol *vol, int dirfd, char *src, char *dst, struct dir *newparent, char *newname)
 ```
 
-Defined at lines 3560 to 3619.
+Defined at lines 3566 to 3625.
 
 Rename a directory, or transfer its tree when the rename crosses devices.
 
@@ -961,11 +961,9 @@ Calls through [`vfs_ops::vfs_renamedir`](../../include/atalk/vfs.h.md#struct-vfs
 const char * dir_event_path(char *buf, size_t buflen, const struct dir *parent, const char *name)
 ```
 
-Defined at lines 3634 to 3653.
+Defined at lines 3640 to 3659.
 
 Full path of name inside parent, for FCE and Spotlight events.
-
-Absolute path of a child of parent, for FCE and Spotlight event strings.
 
 The path comes from the cached full path of parent. Without one, or when the result would not fit buf, fullpathname builds the path from the working directory, so an event path never ends clipped.
 
@@ -987,7 +985,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createfile](file.c.md#af
 int deletecurdir(struct vol *vol)
 ```
 
-Defined at lines 3670 to 3750.
+Defined at lines 3676 to 3756.
 
 Delete the working directory, which must be empty.
 
@@ -1012,7 +1010,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `afp_
 int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3770 to 3912.
+Defined at lines 3776 to 3918.
 
 FPMapID: map a user ID, group ID, or UUID to a name.
 
@@ -1037,7 +1035,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3930 to 4037.
+Defined at lines 3936 to 4043.
 
 FPMapName: map a user or group name to a Unix ID or a UUID.
 
@@ -1062,7 +1060,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_closedir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4052 to 4066.
+Defined at lines 4058 to 4072.
 
 FPCloseDir: accept the close of a variable DID directory.
 
@@ -1087,7 +1085,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_opendir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4085 to 4128.
+Defined at lines 4091 to 4134.
 
 FPOpenDir: return the DID of a directory.
 

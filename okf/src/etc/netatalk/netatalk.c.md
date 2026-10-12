@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/netatalk/netatalk.c"
-description: "33 functions, includes 14 project headers."
+description: "The netatalk service controller that starts and supervises afpd and the Spotlight dbus daemon."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/netatalk/netatalk.c"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -36,7 +36,7 @@ Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit reco
 static bool service_running(pid_t pid)
 ```
 
-Defined at lines 106 to 113.
+Defined at lines 113 to 120.
 
 Tell whether a service slot holds the pid of a running child.
 
@@ -53,7 +53,7 @@ Called by: [main](netatalk.c.md#main), [sigchld_impl](netatalk.c.md#sigchld_impl
 static bool srp_is_the_only_uam(const char *uamlist)
 ```
 
-Defined at lines 124 to 137.
+Defined at lines 131 to 144.
 
 Tell whether uamlist names uams_srp.so and nothing else.
 
@@ -74,7 +74,7 @@ Called by: [validate_singleuser_config](netatalk.c.md#validate_singleuser_config
 static int path_parent(char *dst, size_t dstlen, const char *path)
 ```
 
-Defined at lines 150 to 175.
+Defined at lines 157 to 182.
 
 Write the parent directory of path into dst.
 
@@ -97,7 +97,7 @@ Called by: [dbpath_is_creatable](netatalk.c.md#dbpath_is_creatable), [parent_is_
 static bool owned_private_dir(const char *path)
 ```
 
-Defined at lines 188 to 204.
+Defined at lines 195 to 211.
 
 Tell whether path is a directory of the caller without group or other permission bits.
 
@@ -118,7 +118,7 @@ Called by: [parent_is_private](netatalk.c.md#parent_is_private), [srp_verifier_s
 static bool parent_is_private(const char *path)
 ```
 
-Defined at lines 213 to 218.
+Defined at lines 220 to 225.
 
 Tell whether the parent directory of path is private to the caller, by owned_private_dir.
 
@@ -137,7 +137,7 @@ Called by: [dir_is_private](netatalk.c.md#dir_is_private)
 static bool dir_is_private(const char *path, mode_t file_mask, bool may_be_absent)
 ```
 
-Defined at lines 230 to 245.
+Defined at lines 237 to 252.
 
 A path only the caller can reach and replace.
 
@@ -158,7 +158,7 @@ Called by: [main](netatalk.c.md#main), [validate_singleuser_config](netatalk.c.m
 static bool dbpath_is_creatable(const char *path)
 ```
 
-Defined at lines 259 to 281.
+Defined at lines 266 to 288.
 
 Tell whether a CNID directory belongs to the caller and is writable, or can be created.
 
@@ -179,7 +179,7 @@ Called by: [validate_singleuser_config](netatalk.c.md#validate_singleuser_config
 static bool srp_verifier_store_is_private(const char *path)
 ```
 
-Defined at lines 296 to 322.
+Defined at lines 303 to 329.
 
 Tell whether the SRP verifier store is private to the calling user and holds the verifier of that user.
 
@@ -200,7 +200,7 @@ Called by: [validate_singleuser_config](netatalk.c.md#validate_singleuser_config
 static int validate_singleuser_config(bool volumes_loaded)
 ```
 
-Defined at lines 342 to 468.
+Defined at lines 349 to 475.
 
 Refuse a single-user configuration that the mode cannot serve.
 
@@ -225,7 +225,7 @@ Uses file-scope variables: `obj`
 static int makedirs(const char *path, mode_t mode)
 ```
 
-Defined at lines 482 to 509.
+Defined at lines 489 to 516.
 
 Create a directory and its missing parents, as mkdir -p does.
 
@@ -247,7 +247,7 @@ Called by: [set_sl_volumes](netatalk.c.md#set_sl_volumes)
 static FILE * open_dconf_file(const char *path)
 ```
 
-Defined at lines 519 to 544.
+Defined at lines 526 to 551.
 
 Open a dconf input file for writing with mode 0644, whatever the umask.
 
@@ -266,7 +266,7 @@ Called by: [set_sl_volumes](netatalk.c.md#set_sl_volumes)
 static int set_sl_volumes(void)
 ```
 
-Defined at lines 558 to 710.
+Defined at lines 565 to 717.
 
 Point the localsearch indexer at the Spotlight volumes through a dconf database.
 
@@ -284,7 +284,7 @@ Called by: [main](netatalk.c.md#main)
 static void libev_syserr_cb(const char *msg) EV_NOEXCEPT
 ```
 
-Defined at lines 724 to 727.
+Defined at lines 731 to 734.
 
 Log a fatal libev error and end the service controller.
 
@@ -301,7 +301,7 @@ Called by: [main](netatalk.c.md#main)
 static void sigterm_impl(void)
 ```
 
-Defined at lines 764 to 774.
+Defined at lines 771 to 781.
 
 SIGTERM implementation — caller must check in_shutdown before calling.
 
@@ -317,7 +317,7 @@ Uses file-scope variables: `afpd_pid`, `dbus_pid`, `in_shutdown`
 static void sigquit_impl(void)
 ```
 
-Defined at lines 777 to 781.
+Defined at lines 784 to 788.
 
 SIGQUIT implementation.
 
@@ -333,7 +333,7 @@ Uses file-scope variables: `afpd_pid`, `dbus_pid`
 static void sighup_impl(void)
 ```
 
-Defined at lines 784 to 803.
+Defined at lines 791 to 810.
 
 SIGHUP implementation.
 
@@ -349,7 +349,7 @@ Uses file-scope variables: `afpd_pid`, `obj`
 static bool sigchld_impl(void)
 ```
 
-Defined at lines 813 to 847.
+Defined at lines 820 to 854.
 
 Reap the exited children and mark their services for a restart.
 
@@ -369,7 +369,7 @@ Uses file-scope variables: `afpd_pid`, `dbus_pid`, `in_shutdown`
 static void timer_impl(void)
 ```
 
-Defined at lines 850 to 878.
+Defined at lines 857 to 885.
 
 timer implementation
 
@@ -385,7 +385,7 @@ Uses file-scope variables: `afpd_pid`, `afpd_restarts`, `dbus_path`, `dbus_pid`,
 static void kill_timer_cb(struct ev_loop *ev_loop, ev_timer *w, int revents)
 ```
 
-Defined at lines 893 to 897.
+Defined at lines 900 to 904.
 
 End the event loop when the shutdown grace time runs out.
 
@@ -404,7 +404,7 @@ Uses file-scope variables: `loop`
 static void sigterm_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 911 to 926.
+Defined at lines 918 to 933.
 
 Start the shutdown on SIGTERM, with KILL_GRACETIME seconds for the children to exit.
 
@@ -427,7 +427,7 @@ Uses file-scope variables: `in_shutdown`, `kill_timer_ev`, `loop`, `sighup_ev`, 
 static void sigquit_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 935 to 939.
+Defined at lines 942 to 946.
 
 Pass SIGQUIT on to afpd and dbus.
 
@@ -446,7 +446,7 @@ Called by: [main](netatalk.c.md#main)
 static void sighup_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 951 to 955.
+Defined at lines 958 to 962.
 
 Reload the volumes on SIGHUP, register them with Zeroconf again, and pass the signal on to afpd.
 
@@ -467,7 +467,7 @@ Called by: [main](netatalk.c.md#main)
 static void sigchld_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 965 to 971.
+Defined at lines 972 to 978.
 
 Reap the children on SIGCHLD, and end the event loop once a shutdown has no service left.
 
@@ -488,7 +488,7 @@ Uses file-scope variables: `loop`
 static void timer_cb(struct ev_loop *ev_loop, ev_timer *w, int revents)
 ```
 
-Defined at lines 982 to 986.
+Defined at lines 989 to 993.
 
 Restart afpd and dbus when they need it, on the 1-second timer.
 
@@ -509,7 +509,7 @@ Called by: [main](netatalk.c.md#main)
 static void kill_childs(int sig,...)
 ```
 
-Defined at lines 1046 to 1061.
+Defined at lines 1053 to 1068.
 
 Send a signal to the services whose pid slots follow, up to a NULL.
 
@@ -527,7 +527,7 @@ Called by: [main](netatalk.c.md#main), [sighup_impl](netatalk.c.md#sighup_impl),
 static void netatalk_exit(int ret)
 ```
 
-Defined at lines 1068 to 1072.
+Defined at lines 1075 to 1079.
 
 Remove the lock file and exit with a status.
 
@@ -544,7 +544,7 @@ Uses file-scope variables: `lockfile_path`
 static pid_t run_process(const char *path,...)
 ```
 
-Defined at lines 1084 to 1115.
+Defined at lines 1091 to 1122.
 
 Fork and run a program with a NULL-terminated list of arguments.
 
@@ -564,7 +564,7 @@ Called by: [main](netatalk.c.md#main), [run_afpd](netatalk.c.md#run_afpd), [time
 static pid_t run_afpd(void)
 ```
 
-Defined at lines 1125 to 1132.
+Defined at lines 1132 to 1139.
 
 Start afpd on the controller's configuration file.
 
@@ -584,7 +584,7 @@ Uses file-scope variables: `obj`
 static void show_netatalk_version(void)
 ```
 
-Defined at lines 1138 to 1162.
+Defined at lines 1145 to 1169.
 
 Print the version, the license note, and the Zeroconf and Spotlight backends of the build.
 
@@ -596,7 +596,7 @@ Called by: [main](netatalk.c.md#main)
 static void show_netatalk_paths(void)
 ```
 
-Defined at lines 1171 to 1182.
+Defined at lines 1178 to 1189.
 
 Print the paths of afp.conf, afpd, the dbus daemon and its configuration, and the lock file.
 
@@ -610,7 +610,7 @@ Called by: [main](netatalk.c.md#main)
 static void usage(void)
 ```
 
-Defined at lines 1187 to 1193.
+Defined at lines 1194 to 1200.
 
 Print the command line forms of netatalk.
 
@@ -622,7 +622,7 @@ Called by: [main](netatalk.c.md#main)
 static bool any_volume_uses_localsearch(void)
 ```
 
-Defined at lines 1201 to 1214.
+Defined at lines 1208 to 1221.
 
 Tell whether a Spotlight volume names the localsearch backend.
 
@@ -638,7 +638,7 @@ Called by: [main](netatalk.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 1236 to 1472.
+Defined at lines 1243 to 1479.
 
 Run the netatalk service controller, which starts afpd and the Spotlight dbus daemon and restarts them.
 

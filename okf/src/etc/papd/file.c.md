@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/file.c"
-description: "5 functions, includes 2 project headers."
+description: "Print job buffers of papd: lines, appended data, and status replies."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/file.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 int markline(struct papfile *pf, char **start, int *linelength, int *crlflength)
 ```
 
-Defined at lines 32 to 78.
+Defined at lines 37 to 83.
 
 Find the next line in the input buffer of a print job.
 
@@ -48,7 +48,7 @@ Called by: [ch_creator](headers.c.md#ch_creator), [ch_endcomm](headers.c.md#ch_e
 void morespace(struct papfile *pf, const char *data, int len)
 ```
 
-Defined at lines 91 to 122.
+Defined at lines 96 to 127.
 
 Append data to a papfile buffer, after moving the data to the buffer start and growing the buffer as needed.
 
@@ -67,7 +67,7 @@ Called by: [append](file.c.md#append)
 void append(struct papfile *pf, const char *data, int len)
 ```
 
-Defined at lines 130 to 139.
+Defined at lines 135 to 144.
 
 Append data to a papfile buffer.
 
@@ -85,7 +85,7 @@ Called by: [cq_default](queries.c.md#cq_default), [cq_feature](queries.c.md#cq_f
 void spoolreply(struct papfile *out, char *str)
 ```
 
-Defined at lines 149 to 161.
+Defined at lines 154 to 166.
 
 Append a PostScript status message for the client, `%%[ status: str ]%%`.
 
@@ -103,7 +103,7 @@ Called by: [cm_psquery](magics.c.md#cm_psquery), [ps](magics.c.md#ps)
 void spoolerror(struct papfile *out, char *str)
 ```
 
-Defined at lines 169 to 181.
+Defined at lines 174 to 186.
 
 Append a PostScript error message for the client, `%%[ Error: str ]%%`.
 

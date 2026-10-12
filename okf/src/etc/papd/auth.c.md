@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/auth.c"
-description: "5 functions, includes 5 project headers."
+description: "UAM registration and loading for papd printer authentication."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/auth.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 int getuamnames(const int type, char *uamnames)
 ```
 
-Defined at lines 52 to 69.
+Defined at lines 57 to 74.
 
 Write the names of the UAMs of a type into a buffer, one per line.
 
@@ -47,7 +47,7 @@ Called by: [gq_rbiuamlist](queries.c.md#gq_rbiuamlist)
 struct uam_obj * auth_uamfind(const int type, const char *name, const int len)
 ```
 
-Defined at lines 77 to 94.
+Defined at lines 82 to 99.
 
 Find a registered UAM by name.
 
@@ -63,7 +63,7 @@ Called by: [cq_rbilogin](queries.c.md#cq_rbilogin), [uam_register](uam.c.md#uam_
 int auth_register(const int type, struct uam_obj *uam)
 ```
 
-Defined at lines 101 to 115.
+Defined at lines 106 to 120.
 
 Add a UAM to the list of its type.
 
@@ -77,7 +77,7 @@ Called by: [uam_register](uam.c.md#uam_register)
 int auth_load(const char *path, const char *list)
 ```
 
-Defined at lines 131 to 167.
+Defined at lines 136 to 172.
 
 Load the UAM modules that the am option of papd.conf names.
 
@@ -99,7 +99,7 @@ Called by: [main](main.c.md#main)
 void auth_unload(void)
 ```
 
-Defined at lines 170 to 180.
+Defined at lines 175 to 185.
 
 get rid of all of the uams
 

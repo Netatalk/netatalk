@@ -5,18 +5,18 @@ description: "7 files, 26 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/acl"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
 * [libatalk/acl/aclldap.h](acl/aclldap.h.md): includes 1 project header.
-* [libatalk/acl/cache.c](acl/cache.c.md): 7 functions, 1 type, includes 4 project headers.
+* [libatalk/acl/cache.c](acl/cache.c.md): Name and UUID caches of the ACL UUID lookups.
 * [libatalk/acl/cache.h](acl/cache.h.md): LDAP cache interface.
-* [libatalk/acl/ldap.c](acl/ldap.c.md): 5 functions, includes 5 project headers.
-* [libatalk/acl/ldap_config.c](acl/ldap_config.c.md): 2 functions, includes 4 project headers.
-* [libatalk/acl/unix.c](acl/unix.c.md): 7 functions, includes 5 project headers.
-* [libatalk/acl/uuid.c](acl/uuid.c.md): 5 functions, includes 7 project headers.
+* [libatalk/acl/ldap.c](acl/ldap.c.md): LDAP lookups of UUIDs and names for ACLs.
+* [libatalk/acl/ldap_config.c](acl/ldap_config.c.md): LDAP settings of afp.conf for the ACL UUID lookups.
+* [libatalk/acl/unix.c](acl/unix.c.md): chmod wrappers that keep explicit NFSv4 ACEs and set the POSIX ACL group entry from the mode
+* [libatalk/acl/uuid.c](acl/uuid.c.md): UUID to name and name to UUID resolution for ACLs.
 
 # Includes headers from
 

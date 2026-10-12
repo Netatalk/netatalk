@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/generic_cjk.c"
-description: "8 functions, includes 1 project header."
+description: "Shared conversion code of the CJK charsets."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/generic_cjk.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commi
 static size_t cjk_iconv(void *cd, char **inbuf, char *end, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 42 to 53.
+Defined at lines 47 to 58.
 
 Convert the pending run from `*inbuf` to `end` with iconv.
 
@@ -46,7 +46,7 @@ Called by: [cjk_generic_pull](generic_cjk.c.md#cjk_generic_pull), [cjk_generic_p
 size_t cjk_generic_push(size_t(*char_func)(uint8_t *, const ucs2_t *, size_t *), void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 73 to 132.
+Defined at lines 78 to 137.
 
 Convert UCS2 to a CJK charset with a per-character table function and iconv for the rest.
 
@@ -72,7 +72,7 @@ Called by: [mac_chinese_simp_push](mac_chinese_simp.c.md#mac_chinese_simp_push),
 size_t cjk_generic_pull(size_t(*char_func)(ucs2_t *, const uint8_t *, size_t *), void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 151 to 210.
+Defined at lines 156 to 215.
 
 Convert a CJK charset to UCS2 with a per-character table function and iconv for the rest.
 
@@ -98,7 +98,7 @@ Called by: [mac_chinese_simp_pull](mac_chinese_simp.c.md#mac_chinese_simp_pull),
 size_t cjk_char_push(uint16_t c, uint8_t *out)
 ```
 
-Defined at lines 222 to 241.
+Defined at lines 227 to 246.
 
 Write a table value of a CJK charset as one or two bytes.
 
@@ -118,7 +118,7 @@ Called by: [mac_chinese_simp_char_push](mac_chinese_simp.c.md#mac_chinese_simp_c
 size_t cjk_char_pull(ucs2_t wc, ucs2_t *out, const uint32_t *compose)
 ```
 
-Defined at lines 255 to 278.
+Defined at lines 260 to 283.
 
 Expand a table value of a CJK charset into UCS2 characters.
 
@@ -139,7 +139,7 @@ Called by: [mac_chinese_simp_char_pull](mac_chinese_simp.c.md#mac_chinese_simp_c
 uint16_t cjk_lookup(uint16_t c, const cjk_index_t *index, const uint16_t *charset)
 ```
 
-Defined at lines 291 to 317.
+Defined at lines 296 to 322.
 
 Look up a character in the sparse table of a CJK charset.
 
@@ -160,7 +160,7 @@ Called by: [mac_chinese_simp_char_pull](mac_chinese_simp.c.md#mac_chinese_simp_c
 ucs2_t cjk_compose(ucs2_t base, ucs2_t comb, const uint32_t *table, size_t size)
 ```
 
-Defined at lines 331 to 351.
+Defined at lines 336 to 356.
 
 Find the composed private-use character for a base and a combining character.
 
@@ -182,7 +182,7 @@ Called by: [cjk_compose_seq](generic_cjk.c.md#cjk_compose_seq), [mac_chinese_sim
 ucs2_t cjk_compose_seq(const ucs2_t *in, size_t *len, const uint32_t *table, size_t size)
 ```
 
-Defined at lines 367 to 391.
+Defined at lines 372 to 396.
 
 Compose the sequence at `in` into one private-use character.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/getzones/getzones.c"
-description: "8 functions, includes 6 project headers."
+description: "The getzones command: list AppleTalk zones through ZIP."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/getzones/getzones.c"
 tags: ["bin/getzones"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/getzones](../getzones.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [bin/getzones](../getzones.md) subsystem. Built from the commit reco
 static void usage(char *s)
 ```
 
-Defined at lines 41 to 47.
+Defined at lines 46 to 52.
 
 Print the usage of getzones to stderr and exit with 1.
 
@@ -43,7 +43,7 @@ Called by: [main](getzones.c.md#main)
 int main(int argc, char *argv[])
 ```
 
-Defined at lines 67 to 220.
+Defined at lines 72 to 225.
 
 Ask an AppleTalk router for zone information through ZIP and print it.
 
@@ -65,7 +65,7 @@ Calls: [add_charset](../../libatalk/unicode/charcnv.c.md#add_charset), [atalk_at
 void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type, charset_t charset)
 ```
 
-Defined at lines 235 to 318.
+Defined at lines 240 to 323.
 
 Run a ZIP request over ATP, print the zones of each reply, and exit.
 
@@ -86,7 +86,7 @@ Called by: [main](getzones.c.md#main)
 static void print_zones(short n, const char *buf, charset_t charset)
 ```
 
-Defined at lines 327 to 352.
+Defined at lines 332 to 357.
 
 Print zones from a getzone reply.
 
@@ -105,7 +105,7 @@ Called by: [do_atp_lookup](getzones.c.md#do_atp_lookup)
 void do_getnetinfo(struct sockaddr_at *dest, const char *zone_to_confirm, charset_t charset)
 ```
 
-Defined at lines 366 to 431.
+Defined at lines 371 to 436.
 
 Send a ZIP GetNetInfo request, wait for its reply, and print it.
 
@@ -126,7 +126,7 @@ Called by: [main](getzones.c.md#main)
 static void print_gnireply(ssize_t len, uint8_t *buf, charset_t charset)
 ```
 
-Defined at lines 445 to 558.
+Defined at lines 450 to 563.
 
 Print the fields of a ZIP GetNetInfo reply.
 
@@ -147,7 +147,7 @@ Called by: [do_getnetinfo](getzones.c.md#do_getnetinfo)
 void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
 ```
 
-Defined at lines 572 to 651.
+Defined at lines 577 to 656.
 
 Send a ZIP query for one network and print the zones of the replies.
 
@@ -168,7 +168,7 @@ Called by: [main](getzones.c.md#main)
 static int print_and_count_zones_in_reply(uint8_t *buf, size_t len, charset_t charset)
 ```
 
-Defined at lines 665 to 715.
+Defined at lines 670 to 720.
 
 Print the network number and the zone name of each tuple in a ZIP reply.
 

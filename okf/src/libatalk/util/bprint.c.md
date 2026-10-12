@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/bprint.c"
-description: "1 function, includes 1 project header."
+description: "Hex dump of a buffer to stdout."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/bprint.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 void bprint(char *data, int len)
 ```
 
-Defined at lines 26 to 57.
+Defined at lines 31 to 62.
 
 Print a hex dump of a buffer to stdout, 16 bytes a line.
 

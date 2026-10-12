@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/idle_worker.c"
-description: "12 functions, includes 6 project headers."
+description: "Idle worker thread that runs deferred directory cache work between requests."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/idle_worker.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int iw_work_pending(void)
 ```
 
-Defined at lines 147 to 152.
+Defined at lines 153 to 158.
 
 Tell whether work for the idle worker is still in its queues.
 
@@ -48,7 +48,7 @@ Uses file-scope variables: `invalid_dircache_entries` in [etc/afpd/directory.c](
 static void * iw_main(void *arg)
 ```
 
-Defined at lines 174 to 251.
+Defined at lines 180 to 257.
 
 Run the idle worker thread.
 
@@ -75,7 +75,7 @@ Uses file-scope variables: `chains_processed`, `cycles_aborted`, `cycles_complet
 static void iw_wait_release(void)
 ```
 
-Defined at lines 268 to 290.
+Defined at lines 274 to 296.
 
 Wait until the worker has released the shared-data window.
 
@@ -93,7 +93,7 @@ Mentioned in the documentation of: [iw_revoke](idle_worker.c.md#iw_revoke)
 int iw_init(void)
 ```
 
-Defined at lines 301 to 312.
+Defined at lines 307 to 318.
 
 Start the idle worker thread of a session.
 
@@ -113,7 +113,7 @@ Uses file-scope variables: `iw_started`, `iw_tid`
 void iw_note_work(void)
 ```
 
-Defined at lines 322 to 330.
+Defined at lines 328 to 336.
 
 Producer hook: note that idle work was enqueued.
 
@@ -129,7 +129,7 @@ Uses file-scope variables: `iw_has_work`, `iw_started`, `work_noted`
 void iw_grant(void)
 ```
 
-Defined at lines 341 to 354.
+Defined at lines 347 to 360.
 
 Conditionally grant the worker the shared-data window.
 
@@ -145,7 +145,7 @@ Uses file-scope variables: `grants`, `iw_can_work`, `iw_granted`, `iw_has_work`,
 void iw_revoke(void)
 ```
 
-Defined at lines 367 to 379.
+Defined at lines 373 to 385.
 
 Revoke the grant and reclaim exclusive access after poll() returns.
 
@@ -167,7 +167,7 @@ Mentioned in the documentation of: [iw_grant](idle_worker.c.md#iw_grant)
 void iw_revoke_signal_safe(void)
 ```
 
-Defined at lines 391 to 398.
+Defined at lines 397 to 404.
 
 Signal-safe revoke for exit paths.
 
@@ -185,7 +185,7 @@ Mentioned in the documentation of: [iw_revoke](idle_worker.c.md#iw_revoke)
 void iw_shutdown(void)
 ```
 
-Defined at lines 415 to 428.
+Defined at lines 421 to 434.
 
 Shut down the idle worker thread, ABANDONING all queued work.
 
@@ -209,7 +209,7 @@ Mentioned in the documentation of: [iw_log_stats](idle_worker.c.md#iw_log_stats)
 int iw_grant_active(void)
 ```
 
-Defined at lines 437 to 440.
+Defined at lines 443 to 446.
 
 Tell worker-side code outside this file whether the grant still holds.
 
@@ -227,7 +227,7 @@ Uses file-scope variables: `iw_can_work`
 int iw_is_active(void)
 ```
 
-Defined at lines 449 to 452.
+Defined at lines 455 to 458.
 
 Tell whether the idle worker thread runs.
 
@@ -245,7 +245,7 @@ Uses file-scope variables: `iw_started`
 void iw_log_stats(void)
 ```
 
-Defined at lines 460 to 477.
+Defined at lines 466 to 483.
 
 Log idle worker statistics.
 

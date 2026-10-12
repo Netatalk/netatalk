@@ -5,7 +5,7 @@ description: "Zeroconf facade, that abstracts access to a particular Zeroconf im
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/netatalk/afp_zeroconf.c"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,8 +27,6 @@ Defined at lines 31 to 41.
 
 Register the AFP services with mDNSResponder or Avahi, whichever the build has.
 
-Register the AFP services with the Zeroconf backend.
-
 The facade prefers mDNSResponder when the build has both. Without either the call does nothing.
 
 Parameters:
@@ -47,8 +45,6 @@ void zeroconf_deregister(void)
 Defined at lines 47 to 57.
 
 Withdraw the AFP services from mDNSResponder or Avahi, whichever the build has.
-
-Withdraw the AFP services from the Zeroconf backend.
 
 Calls: [av_zeroconf_unregister](afp_avahi.c.md#av_zeroconf_unregister), [md_zeroconf_unregister](afp_mdns.c.md#md_zeroconf_unregister)
 

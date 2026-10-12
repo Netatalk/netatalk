@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/spotlight/xapian/sl_xapian.c"
-description: "20 functions, 2 types, includes 11 project headers."
+description: "Spotlight Xapian backend: index state, queries, and results."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/xapian/sl_xapian.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 
 ### sl_xapian_ops
 
-Initialized at line 773 as `struct sl_backend_ops`. Assigns:
+Initialized at line 778 as `struct sl_backend_ops`. Assigns:
 
 * `sbo_close`: [sl_xapian_close](sl_xapian.c.md#sl_xapian_close)
 * `sbo_close_query`: [sl_xapian_close_query](sl_xapian.c.md#sl_xapian_close_query)
@@ -46,7 +46,7 @@ Initialized at line 773 as `struct sl_backend_ops`. Assigns:
 static int sl_xapian_mkdir_state(const char *path, mode_t mode, char *errbuf, size_t errlen)
 ```
 
-Defined at lines 73 to 99.
+Defined at lines 78 to 104.
 
 Create a state directory, or check an existing one, so that it carries every bit of mode.
 
@@ -68,7 +68,7 @@ Called by: [sl_xapian_ensure_state_root](sl_xapian.c.md#sl_xapian_ensure_state_r
 static int sl_xapian_ensure_state_root(char *errbuf, size_t errlen)
 ```
 
-Defined at lines 112 to 126.
+Defined at lines 117 to 131.
 
 Create the Spotlight state directories as root, spotlight with mode 0755 and spotlight/xapian with mode 01777.
 
@@ -90,7 +90,7 @@ Called by: [sl_xapian_ensure_seeded](sl_xapian.c.md#sl_xapian_ensure_seeded), [s
 static int cnid_comp_fn(const void *p1, const void *p2)
 ```
 
-Defined at lines 135 to 144.
+Defined at lines 140 to 149.
 
 Order two 64-bit host-order CNIDs, for bsearch over the client filter.
 
@@ -108,7 +108,7 @@ Called by: [sl_xapian_fill_results](sl_xapian.c.md#sl_xapian_fill_results)
 static bool sl_xapian_seeded(const struct vol *vol)
 ```
 
-Defined at lines 152 to 161.
+Defined at lines 157 to 166.
 
 Tell whether this process has the Xapian index of a volume ready.
 
@@ -127,7 +127,7 @@ Uses file-scope variables: `seeded_volumes`
 static int sl_xapian_mark_seeded(const struct vol *vol)
 ```
 
-Defined at lines 170 to 189.
+Defined at lines 175 to 194.
 
 Add a volume to the seeded list, which holds the volumes whose Xapian index is ready.
 
@@ -146,7 +146,7 @@ Uses file-scope variables: `seeded_volumes`
 static void sl_xapian_unmark_seeded(const struct vol *vol)
 ```
 
-Defined at lines 196 to 216.
+Defined at lines 201 to 221.
 
 Remove a volume from the seeded list.
 
@@ -163,7 +163,7 @@ Uses file-scope variables: `seeded_volumes`
 static bool sl_xapian_db_id_char_safe(unsigned char c)
 ```
 
-Defined at lines 224 to 230.
+Defined at lines 229 to 235.
 
 Tell whether a byte may appear in a Xapian database ID.
 
@@ -180,7 +180,7 @@ Called by: [sl_xapian_db_id_safe](sl_xapian.c.md#sl_xapian_db_id_safe)
 static uint64_t sl_xapian_fnv1a_update(uint64_t hash, const char *s)
 ```
 
-Defined at lines 239 to 247.
+Defined at lines 244 to 252.
 
 Fold the bytes of a string into a 64-bit FNV-1a hash.
 
@@ -198,7 +198,7 @@ Called by: [sl_xapian_db_id_hash](sl_xapian.c.md#sl_xapian_db_id_hash)
 static bool sl_xapian_db_id_safe(const char *id)
 ```
 
-Defined at lines 258 to 283.
+Defined at lines 263 to 288.
 
 Tell whether an ID can name a Xapian database directory as it is.
 
@@ -219,7 +219,7 @@ Called by: [sl_xapian_db_path](sl_xapian.c.md#sl_xapian_db_path)
 static uint64_t sl_xapian_db_id_hash(const struct vol *vol, const char *id)
 ```
 
-Defined at lines 294 to 300.
+Defined at lines 299 to 305.
 
 Hash an unsafe ID and the volume path into a 64-bit FNV-1a value.
 
@@ -241,7 +241,7 @@ Called by: [sl_xapian_db_path](sl_xapian.c.md#sl_xapian_db_path)
 static char * sl_xapian_db_path(TALLOC_CTX *mem_ctx, const struct vol *vol)
 ```
 
-Defined at lines 314 to 336.
+Defined at lines 319 to 341.
 
 Return the path of the Xapian database of a volume under the Spotlight state directory.
 
@@ -263,7 +263,7 @@ Called by: [sl_xapian_index_event](sl_xapian.c.md#sl_xapian_index_event), [sl_xa
 static const char * sl_xapian_volume_uuid(const struct vol *vol)
 ```
 
-Defined at lines 345 to 360.
+Defined at lines 350 to 365.
 
 Return the volume UUID that the index metadata records, or the local name without one.
 
@@ -280,7 +280,7 @@ Called by: [sl_xapian_ensure_seeded](sl_xapian.c.md#sl_xapian_ensure_seeded)
 static int sl_xapian_ensure_seeded(slq_t *slq, const char *db_path)
 ```
 
-Defined at lines 376 to 429.
+Defined at lines 381 to 434.
 
 Make sure the Xapian index of the query volume is ready, once per process.
 
@@ -302,7 +302,7 @@ Called by: [sl_xapian_open_query](sl_xapian.c.md#sl_xapian_open_query)
 static int sl_xapian_fill_results(slq_t *slq)
 ```
 
-Defined at lines 443 to 533.
+Defined at lines 448 to 538.
 
 Add up to SL_XAPIAN_PAGE_SIZE results from the candidate paths to the result page.
 
@@ -323,7 +323,7 @@ Called by: [sl_xapian_fetch_results](sl_xapian.c.md#sl_xapian_fetch_results), [s
 static int sl_xapian_init(AFPObj *obj)
 ```
 
-Defined at lines 541 to 552.
+Defined at lines 546 to 557.
 
 Start the Xapian backend, which only logs once per process.
 
@@ -342,7 +342,7 @@ Dispatched via: [sl_xapian_ops](sl_xapian.c.md#sl_xapian_ops)
 static void sl_xapian_close(AFPObj *obj)
 ```
 
-Defined at lines 559 to 571.
+Defined at lines 564 to 576.
 
 Stop the Xapian backend and empty the seeded list.
 
@@ -359,7 +359,7 @@ Dispatched via: [sl_xapian_ops](sl_xapian.c.md#sl_xapian_ops)
 static int sl_xapian_open_query(slq_t *slq)
 ```
 
-Defined at lines 583 to 633.
+Defined at lines 588 to 638.
 
 Run a Spotlight query on the Xapian index of the volume.
 
@@ -382,7 +382,7 @@ Dispatched via: [sl_xapian_ops](sl_xapian.c.md#sl_xapian_ops)
 static int sl_xapian_fetch_results(slq_t *slq)
 ```
 
-Defined at lines 644 to 657.
+Defined at lines 649 to 662.
 
 Fill the next result page of a Xapian query.
 
@@ -405,7 +405,7 @@ Dispatched via: [sl_xapian_ops](sl_xapian.c.md#sl_xapian_ops)
 static void sl_xapian_close_query(slq_t *slq)
 ```
 
-Defined at lines 664 to 675.
+Defined at lines 669 to 680.
 
 Free the candidate paths and the backend state of a Xapian query.
 
@@ -424,7 +424,7 @@ Dispatched via: [sl_xapian_ops](sl_xapian.c.md#sl_xapian_ops)
 static int sl_xapian_index_event(const AFPObj *obj, const struct vol *vol, sl_index_event_t event, const char *path, const char *oldpath)
 ```
 
-Defined at lines 693 to 771.
+Defined at lines 698 to 776.
 
 Apply a file system change of a volume to its Xapian index.
 
@@ -449,14 +449,14 @@ Dispatched via: [sl_xapian_ops](sl_xapian.c.md#sl_xapian_ops)
 
 ### struct sl_xapian_query
 
-Defined at line 52.
+Defined at line 57.
 * `char ** paths`
 * `size_t count`
 * `size_t pos`
 
 ### struct sl_xapian_seeded
 
-Defined at line 47.
+Defined at line 52.
 * `char * volpath`
 * `struct sl_xapian_seeded * next`
 

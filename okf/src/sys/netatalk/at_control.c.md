@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "sys/netatalk/at_control.c"
-description: "7 functions, includes 4 project headers."
+description: "AppleTalk interface ioctls and address setup in the BSD kernel stack."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/at_control.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 void atalk_hash(struct sockaddr_at *sat, struct afhash *hp)
 ```
 
-Defined at lines 47 to 52.
+Defined at lines 52 to 57.
 
 Compute the route hashes of an AppleTalk address.
 
@@ -42,7 +42,7 @@ Parameters:
 int atalk_netmatch(struct sockaddr_at *sat1, struct sockaddr_at *sat2)
 ```
 
-Defined at lines 65 to 81.
+Defined at lines 70 to 86.
 
 Match the net of an address against the net or net range of another.
 
@@ -60,7 +60,7 @@ Returns: nonzero for a match, or 0
 at_control(int cmd, caddr_t data, struct ifnet *ifp)
 ```
 
-Defined at lines 103 to 342.
+Defined at lines 108 to 347.
 
 Run an AppleTalk interface ioctl: set or read the address of a phase.
 
@@ -85,7 +85,7 @@ Called by: [ddp_usrreq](ddp_usrreq.c.md#ddp_usrreq)
 at_scrub(struct ifnet *ifp, struct at_ifaddr *aa)
 ```
 
-Defined at lines 354 to 406.
+Defined at lines 359 to 411.
 
 Delete the routes of an AppleTalk interface address.
 
@@ -105,7 +105,7 @@ Called by: [aa_clean](at_control.c.md#aa_clean), [at_control](at_control.c.md#at
 at_ifinit(struct ifnet *ifp, struct at_ifaddr *aa, struct sockaddr_at *sat)
 ```
 
-Defined at lines 431 to 635.
+Defined at lines 436 to 640.
 
 Give an AppleTalk interface address its net range and a free address, then add its routes.
 
@@ -130,7 +130,7 @@ Uses file-scope variables: `time`
 at_broadcast(struct sockaddr_at *sat)
 ```
 
-Defined at lines 646 to 668.
+Defined at lines 651 to 673.
 
 Tell whether an AppleTalk address reaches every node of a local net.
 
@@ -149,7 +149,7 @@ Called by: [aarpresolve](aarp.c.md#aarpresolve)
 aa_clean()
 ```
 
-Defined at lines 676 to 702.
+Defined at lines 681 to 707.
 
 Delete the routes of every AppleTalk interface address and unlink each address.
 

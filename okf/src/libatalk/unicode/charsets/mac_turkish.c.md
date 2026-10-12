@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_turkish.c"
-description: "2 functions, includes 3 project headers."
+description: "MAC_TURKISH charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_turkish.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -34,7 +34,7 @@ Initialized at line 90 as `struct charset_functions`. Assigns:
 static size_t mac_turkish_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 63 to 68.
+Defined at lines 68 to 73.
 
 Convert UCS2 to MAC_TURKISH through mb_generic_push.
 
@@ -57,7 +57,7 @@ Dispatched via: [charset_mac_turkish](mac_turkish.c.md#charset_mac_turkish)
 static size_t mac_turkish_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 80 to 85.
+Defined at lines 85 to 90.
 
 Convert MAC_TURKISH to UCS2 through mb_generic_pull.
 

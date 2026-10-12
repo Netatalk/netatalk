@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/nbp.c"
-description: "2 functions, includes 13 project headers."
+description: "NBP packet processing of atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/nbp.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 static void nbp_ack(int fd, int nh_op, int nh_id, struct sockaddr_at *to)
 ```
 
-Defined at lines 53 to 69.
+Defined at lines 58 to 74.
 
 Send an NBP reply that carries only an op and a request ID.
 
@@ -55,7 +55,7 @@ Called by: [nbp_packet](nbp.c.md#nbp_packet)
 int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 ```
 
-Defined at lines 108 to 732. Declared in [etc/atalkd/nbp.h](nbp.h.md).
+Defined at lines 113 to 737. Declared in [etc/atalkd/nbp.h](nbp.h.md).
 
 Process an NBP packet from the NBP port of an interface.
 

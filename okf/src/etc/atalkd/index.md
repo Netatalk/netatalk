@@ -1,20 +1,20 @@
 # src/etc/atalkd
 
-* [aep.c](aep.c.md) - 1 function, includes 4 project headers.
+* [aep.c](aep.c.md) - AppleTalk Echo Protocol replies of atalkd.
 * [atserv.h](atserv.h.md) - 2 types.
-* [config.c](config.c.md) - 13 functions, 1 type, includes 11 project headers.
+* [config.c](config.c.md) - Reading and writing atalkd.conf, with the kernel interface list as the fallback.
 * [gate.h](gate.h.md) - 1 type.
 * [interface.h](interface.h.md) - 1 type.
 * [list.h](list.h.md) - 1 type.
-* [main.c](main.c.md) - 11 functions, includes 16 project headers.
+* [main.c](main.c.md) - The atalkd daemon: startup, interface setup, timers, and signals.
 * [main.h](main.h.md) - No functions or types.
-* [multicast.c](multicast.c.md) - 3 functions, includes 7 project headers.
+* [multicast.c](multicast.c.md) - Zone multicast addresses of AppleTalk interfaces.
 * [multicast.h](multicast.h.md) - includes 1 project header.
-* [nbp.c](nbp.c.md) - 2 functions, includes 13 project headers.
+* [nbp.c](nbp.c.md) - NBP packet processing of atalkd.
 * [nbp.h](nbp.h.md) - 1 type.
-* [route.c](route.c.md) - 1 function, includes 3 project headers.
+* [route.c](route.c.md) - Kernel route changes of atalkd through the route socket.
 * [route.h](route.h.md) - No functions or types.
-* [rtmp.c](rtmp.c.md) - 13 functions, includes 12 project headers.
+* [rtmp.c](rtmp.c.md) - RTMP routing table maintenance of atalkd.
 * [rtmp.h](rtmp.h.md) - 3 types.
-* [zip.c](zip.c.md) - 6 functions, includes 13 project headers.
+* [zip.c](zip.c.md) - ZIP zone table maintenance of atalkd.
 * [zip.h](zip.h.md) - 1 type.

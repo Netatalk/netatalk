@@ -5,28 +5,28 @@ description: "18 files, 50 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/atalkd"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [etc/atalkd/aep.c](atalkd/aep.c.md): 1 function, includes 4 project headers.
+* [etc/atalkd/aep.c](atalkd/aep.c.md): AppleTalk Echo Protocol replies of atalkd.
 * [etc/atalkd/atserv.h](atalkd/atserv.h.md): 2 types.
-* [etc/atalkd/config.c](atalkd/config.c.md): 13 functions, 1 type, includes 11 project headers.
+* [etc/atalkd/config.c](atalkd/config.c.md): Reading and writing atalkd.conf, with the kernel interface list as the fallback.
 * [etc/atalkd/gate.h](atalkd/gate.h.md): 1 type.
 * [etc/atalkd/interface.h](atalkd/interface.h.md): 1 type.
 * [etc/atalkd/list.h](atalkd/list.h.md): 1 type.
-* [etc/atalkd/main.c](atalkd/main.c.md): 11 functions, includes 16 project headers.
+* [etc/atalkd/main.c](atalkd/main.c.md): The atalkd daemon: startup, interface setup, timers, and signals.
 * [etc/atalkd/main.h](atalkd/main.h.md): No functions or types.
-* [etc/atalkd/multicast.c](atalkd/multicast.c.md): 3 functions, includes 7 project headers.
+* [etc/atalkd/multicast.c](atalkd/multicast.c.md): Zone multicast addresses of AppleTalk interfaces.
 * [etc/atalkd/multicast.h](atalkd/multicast.h.md): includes 1 project header.
-* [etc/atalkd/nbp.c](atalkd/nbp.c.md): 2 functions, includes 13 project headers.
+* [etc/atalkd/nbp.c](atalkd/nbp.c.md): NBP packet processing of atalkd.
 * [etc/atalkd/nbp.h](atalkd/nbp.h.md): 1 type.
-* [etc/atalkd/route.c](atalkd/route.c.md): 1 function, includes 3 project headers.
+* [etc/atalkd/route.c](atalkd/route.c.md): Kernel route changes of atalkd through the route socket.
 * [etc/atalkd/route.h](atalkd/route.h.md): No functions or types.
-* [etc/atalkd/rtmp.c](atalkd/rtmp.c.md): 13 functions, includes 12 project headers.
+* [etc/atalkd/rtmp.c](atalkd/rtmp.c.md): RTMP routing table maintenance of atalkd.
 * [etc/atalkd/rtmp.h](atalkd/rtmp.h.md): 3 types.
-* [etc/atalkd/zip.c](atalkd/zip.c.md): 6 functions, includes 13 project headers.
+* [etc/atalkd/zip.c](atalkd/zip.c.md): ZIP zone table maintenance of atalkd.
 * [etc/atalkd/zip.h](atalkd/zip.h.md): 1 type.
 
 # Includes headers from

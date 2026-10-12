@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/main.c"
-description: "11 functions, includes 16 project headers."
+description: "The atalkd daemon: startup, interface setup, timers, and signals."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/main.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -34,7 +34,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 
 ### atserv
 
-Initialized at line 73. Dispatches to: [aep_packet](aep.c.md#aep_packet), [nbp_packet](nbp.c.md#nbp_packet), [rtmp_packet](rtmp.c.md#rtmp_packet), [zip_packet](zip.c.md#zip_packet)
+Initialized at line 78. Dispatches to: [aep_packet](aep.c.md#aep_packet), [nbp_packet](nbp.c.md#nbp_packet), [rtmp_packet](rtmp.c.md#rtmp_packet), [zip_packet](zip.c.md#zip_packet)
 
 # Functions
 
@@ -44,7 +44,7 @@ Initialized at line 73. Dispatches to: [aep_packet](aep.c.md#aep_packet), [nbp_p
 static void atalkd_exit(const int i)
 ```
 
-Defined at lines 114 to 137.
+Defined at lines 119 to 142.
 
 Delete the AppleTalk addresses of the interfaces and the pid file, then exit.
 
@@ -65,7 +65,7 @@ Uses file-scope variables: `interfaces`, `pidfile`
 static ssize_t sendto_iface(struct interface *iface, int sockfd, const void *buf, size_t len, const struct sockaddr_at *dest_addr)
 ```
 
-Defined at lines 155 to 177.
+Defined at lines 160 to 182.
 
 Send a packet out of an interface, and log only the first failure of a run.
 
@@ -88,7 +88,7 @@ Called by: [as_timer](main.c.md#as_timer)
 static void as_timer(int sig)
 ```
 
-Defined at lines 212 to 740.
+Defined at lines 217 to 745.
 
 Run the routing work of atalkd on each SIGALRM, every 10 seconds.
 
@@ -117,7 +117,7 @@ Uses file-scope variables: `ciface`, `interfaces`, `newrtmpdata`, `ziptimeout`
 static void consistency()
 ```
 
-Defined at lines 750 to 782.
+Defined at lines 755 to 787.
 
 Check the zone table against the routes in debug mode, and exit on a mismatch.
 
@@ -133,7 +133,7 @@ Called by: [main](main.c.md#main)
 static void as_debug(int sig)
 ```
 
-Defined at lines 798 to 923.
+Defined at lines 803 to 928.
 
 Dump the interfaces, gateways, and routes to a debug file on SIGUSR1.
 
@@ -159,7 +159,7 @@ Uses file-scope variables: `interfaces`
 static void as_down(int sig)
 ```
 
-Defined at lines 935 to 967.
+Defined at lines 940 to 972.
 
 Delete the routes of atalkd and exit on SIGTERM.
 
@@ -180,7 +180,7 @@ Uses file-scope variables: `interfaces`
 int main(int ac, char **av)
 ```
 
-Defined at lines 995 to 1382.
+Defined at lines 1000 to 1387.
 
 Start atalkd: read the configuration, set up the interfaces, and serve AppleTalk.
 
@@ -208,7 +208,7 @@ Uses file-scope variables: `Packet`, `ciface`, `configfile`, `defphase`, `fds`, 
 void bootaddr(struct interface *iface)
 ```
 
-Defined at lines 1398 to 1453.
+Defined at lines 1403 to 1458.
 
 Give an interface its startup address and ask the network for its configuration.
 
@@ -231,7 +231,7 @@ Uses file-scope variables: `ciface`, `stabletimer`
 void setaddr(struct interface *iface, uint8_t phase, uint16_t net, uint8_t node, uint16_t first, uint16_t last)
 ```
 
-Defined at lines 1477 to 1596.
+Defined at lines 1482 to 1601.
 
 Set the AppleTalk address and net range of an interface and reopen its ports.
 
@@ -259,7 +259,7 @@ Uses file-scope variables: `atservNATSERV`
 int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa)
 ```
 
-Defined at lines 1611 to 1635.
+Defined at lines 1616 to 1640.
 
 Run an interface ioctl with an AppleTalk address.
 
@@ -282,7 +282,7 @@ Called by: [addmulti](multicast.c.md#addmulti), [atalkd_exit](main.c.md#atalkd_e
 void dumpconfig(struct interface *iface)
 ```
 
-Defined at lines 1646 to 1686.
+Defined at lines 1651 to 1691.
 
 Print the configuration of an interface as an atalkd.conf line in debug mode.
 

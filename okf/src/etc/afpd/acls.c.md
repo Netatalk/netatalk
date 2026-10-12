@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/acls.c"
-description: "21 functions, includes 22 project headers."
+description: "ACL support of afpd: FPAccess, FPGetACL, FPSetACL, and the Darwin ACE mapping."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acls.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -44,7 +44,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int solaris_acl_rights(const AFPObj *obj, const char *path, struct stat *sb, struct maccess *ma, uint32_t *rights_out)
 ```
 
-Defined at lines 102 to 234.
+Defined at lines 108 to 240.
 
 Compile access rights for a user to one file-system object.
 
@@ -69,7 +69,7 @@ Called by: [acltoownermode](acls.c.md#acltoownermode), [check_acl_access](acls.c
 static int map_aces_solaris_to_darwin(const ace_t *aces, darwin_ace_t *darwin_aces, int ace_count)
 ```
 
-Defined at lines 249 to 323.
+Defined at lines 255 to 329.
 
 Map NFSv4 ACEs to Darwin ACEs.
 
@@ -92,7 +92,7 @@ Called by: [map_acl](acls.c.md#map_acl)
 static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces, ace_t *nfsv4_aces, int ace_count)
 ```
 
-Defined at lines 338 to 427.
+Defined at lines 344 to 433.
 
 Map Darwin ACEs to NFSv4 ACEs.
 
@@ -117,7 +117,7 @@ Uses file-scope variables: `uuidtype` in [libatalk/acl/uuid.c](../../libatalk/ac
 static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
 ```
 
-Defined at lines 448 to 493.
+Defined at lines 454 to 499.
 
 Darwin rights that the permission set of a POSIX ACL entry grants.
 
@@ -137,7 +137,7 @@ Called by: [map_acl_posix_to_darwin](acls.c.md#map_acl_posix_to_darwin), [posix_
 static int posix_acl_rights(const AFPObj *obj, const char *path, const struct stat *sb, uint32_t *result)
 ```
 
-Defined at lines 510 to 612.
+Defined at lines 516 to 618.
 
 Compile access rights for a user to one file-system object.
 
@@ -161,7 +161,7 @@ Called by: [check_acl_access](acls.c.md#check_acl_access)
 static uint8_t acl_permset_to_uarights(acl_entry_t entry)
 ```
 
-Defined at lines 624 to 658.
+Defined at lines 630 to 664.
 
 Convert Posix ACL permissions into access rights.
 
@@ -180,7 +180,7 @@ Called by: [posix_acls_to_uaperms](acls.c.md#posix_acls_to_uaperms)
 static int posix_acls_to_uaperms(const AFPObj *obj, const char *path, struct stat *sb, struct maccess *ma)
 ```
 
-Defined at lines 678 to 778.
+Defined at lines 684 to 784.
 
 Update FPUnixPrivs for a file-system object on a volume supporting ACLs.
 
@@ -206,7 +206,7 @@ Mentioned in the documentation of: [acl_permset_to_uarights](acls.c.md#acl_perms
 static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights, int is_dir)
 ```
 
-Defined at lines 794 to 813.
+Defined at lines 800 to 819.
 
 Map Darwin ACE rights to POSIX 1e perm.
 
@@ -231,7 +231,7 @@ Called by: [map_aces_darwin_to_posix](acls.c.md#map_aces_darwin_to_posix)
 static int posix_acl_add_perm(acl_t *aclp, acl_tag_t type, uid_t id, acl_perm_t perm)
 ```
 
-Defined at lines 831 to 881.
+Defined at lines 837 to 887.
 
 Add a ACL_USER or ACL_GROUP permission to an ACL, extending existing ACEs.
 
@@ -253,7 +253,7 @@ Called by: [map_aces_darwin_to_posix](acls.c.md#map_aces_darwin_to_posix)
 static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces, acl_t *def_aclp, acl_t *acc_aclp, int ace_count, uint32_t *default_acl_flags)
 ```
 
-Defined at lines 905 to 1034.
+Defined at lines 911 to 1040.
 
 Map Darwin ACL to POSIX ACL.
 
@@ -283,7 +283,7 @@ Uses file-scope variables: `uuidtype` in [libatalk/acl/uuid.c](../../libatalk/ac
 static int map_acl_posix_to_darwin(int type, const acl_t acl, darwin_ace_t *darwin_aces)
 ```
 
-Defined at lines 1049 to 1140.
+Defined at lines 1055 to 1146.
 
 Map the named user and group entries of a POSIX ACL to Darwin ACEs.
 
@@ -306,7 +306,7 @@ Called by: [map_acl](acls.c.md#map_acl)
 static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 ```
 
-Defined at lines 1160 to 1200.
+Defined at lines 1166 to 1206.
 
 Dispatch an ACL mapping between Darwin and the ACL model of the platform.
 
@@ -330,7 +330,7 @@ Called by: [get_and_map_acl](acls.c.md#get_and_map_acl), [set_acl](acls.c.md#set
 static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1214 to 1287.
+Defined at lines 1220 to 1293.
 
 Convert the ACL of name to Darwin form and write it to rbuf.
 
@@ -353,7 +353,7 @@ Called by: [afp_getacl](acls.c.md#afp_getacl)
 static int remove_acl(const struct vol *vol, const char *path, int dir)
 ```
 
-Defined at lines 1301 to 1320.
+Defined at lines 1307 to 1326.
 
 Reduce the ACLs of an object and its AppleDouble file to the entries that mirror the mode bits.
 
@@ -378,7 +378,7 @@ Calls through [`vfs_ops::vfs_remove_acl`](../../include/atalk/vfs.h.md#struct-vf
 static int set_acl(const struct vol *vol, char *name, int inherit, darwin_ace_t *daces, uint32_t ace_count)
 ```
 
-Defined at lines 1339 to 1468. Defined 2 times under conditional compilation.
+Defined at lines 1345 to 1474. Defined 2 times under conditional compilation.
 
 Replace the NFSv4 ACL of a file or directory with the ACEs of a client.
 
@@ -405,7 +405,7 @@ Calls through [`vfs_ops::vfs_solaris_acl`](../../include/atalk/vfs.h.md#struct-v
 static acl_t acl_from_mode(mode_t mode)
 ```
 
-Defined at lines 1480 to 1559.
+Defined at lines 1486 to 1565.
 
 Build a minimal POSIX ACL with owner, group, and other entries from a mode.
 
@@ -420,7 +420,7 @@ Returns: the new ACL, or NULL when an ACL call failed
 static int check_acl_access(const AFPObj *obj, const struct vol *vol, struct dir *dir, const char *path, const uuidp_t uuid, uint32_t requested_rights)
 ```
 
-Defined at lines 1695 to 1826.
+Defined at lines 1701 to 1832.
 
 Checks if a given UUID has requested_rights (type darwin_ace_rights) for path.
 
@@ -448,7 +448,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1847 to 1902.
+Defined at lines 1853 to 1908.
 
 FPAccess: test whether the user that a UUID names holds the requested rights on an object.
 
@@ -475,7 +475,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1920 to 2036.
+Defined at lines 1926 to 2042.
 
 FPGetACL: return the owner UUID, the group UUID, and the ACL of an object.
 
@@ -502,7 +502,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2055 to 2239.
+Defined at lines 2061 to 2245.
 
 FPSetACL: remove or replace the ACL of an object.
 
@@ -529,7 +529,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
 ```
 
-Defined at lines 2259 to 2286.
+Defined at lines 2265 to 2292.
 
 Fold the ACL of path into the AFP access rights of the session user.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/afpstats.c"
-description: "5 functions, includes 5 project headers."
+description: "The afpstats socket: session statistics for the afpstats command."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afpstats.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int afpstats_init(server_child_t *childs_in, const char *sock_path, bool set_group, gid_t gid)
 ```
 
-Defined at lines 57 to 137.
+Defined at lines 62 to 142.
 
 Open the Unix socket that answers afpstats queries about the sessions.
 
@@ -53,7 +53,7 @@ Uses file-scope variables: `childs`
 static const char * state_name(int16_t state)
 ```
 
-Defined at lines 145 to 162.
+Defined at lines 150 to 167.
 
 Name the state of a session for the afpstats output.
 
@@ -70,7 +70,7 @@ Called by: [afpstats_handle_accept](afpstats.c.md#afpstats_handle_accept)
 static const char * protocol_name(int16_t state)
 ```
 
-Defined at lines 173 to 190.
+Defined at lines 178 to 195.
 
 Name the transport of a session from its state flags.
 
@@ -89,7 +89,7 @@ Called by: [afpstats_handle_accept](afpstats.c.md#afpstats_handle_accept)
 static const char * user_name(uid_t uid, char *buf, size_t buflen)
 ```
 
-Defined at lines 200 to 211.
+Defined at lines 205 to 216.
 
 Name a user for the afpstats output.
 
@@ -108,7 +108,7 @@ Called by: [afpstats_handle_accept](afpstats.c.md#afpstats_handle_accept)
 void afpstats_handle_accept(int listen_fd)
 ```
 
-Defined at lines 224 to 280.
+Defined at lines 229 to 285.
 
 Answer one afpstats client with a line per session and close the connection.
 

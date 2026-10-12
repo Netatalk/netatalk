@@ -5,21 +5,21 @@ description: "10 files, 20 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/atp"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
 * [libatalk/atp/atp_bufs.c](atp/atp_bufs.c.md): Our own memory maintenance for atp.
-* [libatalk/atp/atp_close.c](atp/atp_close.c.md): 1 function, includes 4 project headers.
+* [libatalk/atp/atp_close.c](atp/atp_close.c.md): Closing an ATP endpoint.
 * [libatalk/atp/atp_internals.h](atp/atp_internals.h.md): 1 function, includes 2 project headers.
-* [libatalk/atp/atp_open.c](atp/atp_open.c.md): 1 function, includes 4 project headers.
-* [libatalk/atp/atp_packet.c](atp/atp_packet.c.md): 5 functions, includes 5 project headers.
-* [libatalk/atp/atp_rreq.c](atp/atp_rreq.c.md): 2 functions, includes 3 project headers.
-* [libatalk/atp/atp_rresp.c](atp/atp_rresp.c.md): 1 function, includes 4 project headers.
-* [libatalk/atp/atp_rsel.c](atp/atp_rsel.c.md): 3 functions, includes 6 project headers.
-* [libatalk/atp/atp_sreq.c](atp/atp_sreq.c.md): 1 function, includes 5 project headers.
-* [libatalk/atp/atp_sresp.c](atp/atp_sresp.c.md): 1 function, includes 5 project headers.
+* [libatalk/atp/atp_open.c](atp/atp_open.c.md): Opening an ATP endpoint.
+* [libatalk/atp/atp_packet.c](atp/atp_packet.c.md): ATP packet building, receiving, and queueing.
+* [libatalk/atp/atp_rreq.c](atp/atp_rreq.c.md): Receiving ATP requests.
+* [libatalk/atp/atp_rresp.c](atp/atp_rresp.c.md): Receiving ATP responses.
+* [libatalk/atp/atp_rsel.c](atp/atp_rsel.c.md): Waiting for an ATP request or response, with retransmission.
+* [libatalk/atp/atp_sreq.c](atp/atp_sreq.c.md): Sending ATP requests.
+* [libatalk/atp/atp_sresp.c](atp/atp_sresp.c.md): Sending ATP responses.
 
 # Includes headers from
 

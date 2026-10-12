@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/atp/atp_sreq.c"
-description: "1 function, includes 5 project headers."
+description: "Sending ATP requests."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_sreq.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_sreq(ATP, struct atp_block *, int, uint8_t)
 ```
 
-Defined at lines 69 to 161. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 74 to 166. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Send an ATP request and set up the wait for its response.
 

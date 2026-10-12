@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_japanese.c"
-description: "4 functions, includes 2 project headers."
+description: "MAC_JAPANESE charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_japanese.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -33,7 +33,7 @@ Initialized at line 94 as `struct charset_functions`. Assigns:
 static size_t mac_japanese_char_push(uint8_t *out, const ucs2_t *in, size_t *size)
 ```
 
-Defined at lines 66 to 114.
+Defined at lines 67 to 115.
 
 Map one UCS2 character, or an Apple sequence, to MAC_JAPANESE bytes.
 
@@ -58,7 +58,7 @@ Uses file-scope variables: `mac_japanese_compose` in [libatalk/unicode/charsets/
 static size_t mac_japanese_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 126 to 131.
+Defined at lines 127 to 132.
 
 Convert UCS2 to MAC_JAPANESE through cjk_generic_push.
 
@@ -81,7 +81,7 @@ Dispatched via: [charset_mac_japanese](mac_japanese.c.md#charset_mac_japanese)
 static size_t mac_japanese_char_pull(ucs2_t *out, const uint8_t *in, size_t *size)
 ```
 
-Defined at lines 147 to 184.
+Defined at lines 148 to 185.
 
 Map one MAC_JAPANESE character of one or two bytes to UCS2.
 
@@ -106,7 +106,7 @@ Uses file-scope variables: `mac_japanese_2uni_charset` in [libatalk/unicode/char
 static size_t mac_japanese_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 196 to 201.
+Defined at lines 197 to 202.
 
 Convert MAC_JAPANESE to UCS2 through cjk_generic_pull.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_tickle.c"
-description: "1 function, includes 3 project headers."
+description: "ASP tickles."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_tickle.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_tickle(ASP, const uint8_t, struct sockaddr_at *)
 ```
 
-Defined at lines 28 to 47. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 33 to 52. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Send one [ASP](../../include/atalk/asp.h.md#struct-asp) tickle for a session, with a single try and no wait for a reply.
 

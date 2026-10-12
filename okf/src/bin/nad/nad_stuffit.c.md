@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_stuffit.c"
-description: "22 functions, includes 6 project headers."
+description: "The nad sit and unsit commands: create and extract StuffIt archives."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_stuffit.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_stuffit(FILE *out)
 ```
 
-Defined at lines 47 to 63.
+Defined at lines 52 to 68.
 
 Print the usage of the nad sit and unsit commands.
 
@@ -43,7 +43,7 @@ Called by: [nad_stuffit](nad_stuffit.c.md#nad_stuffit)
 static int set_nad_volume_from_path(AFPObj *obj, const char *path, afpvol_t *afpvol, struct nad_volume *volume)
 ```
 
-Defined at lines 77 to 98.
+Defined at lines 82 to 103.
 
 Open the volume of a path and select it for the nad_adouble calls.
 
@@ -67,7 +67,7 @@ Called by: [add_file_to_writer](nad_stuffit.c.md#add_file_to_writer), [unsit_arc
 static int entry_name_is_safe(const char *name)
 ```
 
-Defined at lines 109 to 140.
+Defined at lines 114 to 145.
 
 Tell whether an archive entry name stays inside the extraction directory.
 
@@ -86,7 +86,7 @@ Called by: [unsit_archive](nad_stuffit.c.md#unsit_archive)
 static int make_parent_dirs(const char *path)
 ```
 
-Defined at lines 150 to 172.
+Defined at lines 155 to 177.
 
 Create the missing parent directories of a relative path.
 
@@ -107,7 +107,7 @@ Called by: [extract_file_entry](nad_stuffit.c.md#extract_file_entry)
 static int make_dir_path(const char *path)
 ```
 
-Defined at lines 182 to 213.
+Defined at lines 187 to 218.
 
 Create a directory path with every component.
 
@@ -128,7 +128,7 @@ Called by: [unsit_archive](nad_stuffit.c.md#unsit_archive)
 static const char * path_basename(const char *path)
 ```
 
-Defined at lines 223 to 227.
+Defined at lines 228 to 232.
 
 Return the part of a path after its last slash.
 
@@ -147,7 +147,7 @@ Called by: [fill_header_from_entry](nad_stuffit.c.md#fill_header_from_entry), [s
 static int split_parent_base(const char *path, char *parent, size_t parent_len, char *base, size_t base_len)
 ```
 
-Defined at lines 241 to 270.
+Defined at lines 246 to 275.
 
 Split a path into its parent directory and its base name.
 
@@ -172,7 +172,7 @@ Called by: [extract_file_entry](nad_stuffit.c.md#extract_file_entry)
 static int fill_header_from_entry(const StuffitEntryInfo *info, struct FHeader *fh)
 ```
 
-Defined at lines 284 to 319.
+Defined at lines 289 to 324.
 
 Build a file header from a StuffIt entry.
 
@@ -194,7 +194,7 @@ Called by: [extract_file_entry](nad_stuffit.c.md#extract_file_entry)
 static int validate_entry_fork_lengths(const StuffitEntryInfo *info, const StuffitBytes *data, const StuffitBytes *rsrc)
 ```
 
-Defined at lines 330 to 355.
+Defined at lines 335 to 360.
 
 Check the decoded forks of a StuffIt entry against its lengths and the 32-bit limit.
 
@@ -213,7 +213,7 @@ Called by: [unsit_archive](nad_stuffit.c.md#unsit_archive)
 static int write_fork_bytes(int fork, const uint8_t *ptr, size_t len)
 ```
 
-Defined at lines 365 to 384.
+Defined at lines 370 to 389.
 
 Write a whole fork with nad_write, at most 8 KiB per call.
 
@@ -234,7 +234,7 @@ Called by: [extract_file_entry](nad_stuffit.c.md#extract_file_entry)
 static int extract_file_entry(const StuffitEntryInfo *info, const StuffitBytes *data, const StuffitBytes *rsrc)
 ```
 
-Defined at lines 400 to 479.
+Defined at lines 405 to 484.
 
 Extract one StuffIt file entry with its forks and Mac metadata.
 
@@ -257,7 +257,7 @@ Called by: [unsit_archive](nad_stuffit.c.md#unsit_archive)
 static int unsit_archive(const char *path, AFPObj *obj)
 ```
 
-Defined at lines 492 to 559.
+Defined at lines 497 to 564.
 
 Extract every entry of a StuffIt archive into the current directory.
 
@@ -279,7 +279,7 @@ Called by: [nad_stuffit](nad_stuffit.c.md#nad_stuffit)
 static int read_fork_bytes(int fork, size_t len, uint8_t **out)
 ```
 
-Defined at lines 571 to 609.
+Defined at lines 576 to 614.
 
 Read a whole fork of the open file into a buffer from malloc.
 
@@ -304,7 +304,7 @@ Uses file-scope variables: `forkname` in [bin/nad/megatron.c](megatron.c.md)
 static int add_file_to_writer(StuffitWriter *writer, const char *path, const char *entry_name, AFPObj *obj)
 ```
 
-Defined at lines 624 to 678.
+Defined at lines 629 to 683.
 
 Add a file with its forks and Mac metadata to a StuffIt writer.
 
@@ -328,7 +328,7 @@ Called by: [add_path_to_writer](nad_stuffit.c.md#add_path_to_writer)
 static int add_folder_to_writer(StuffitWriter *writer, const char *entry_name)
 ```
 
-Defined at lines 687 to 700.
+Defined at lines 692 to 705.
 
 Add a folder entry to a StuffIt writer.
 
@@ -346,7 +346,7 @@ Called by: [add_path_to_writer](nad_stuffit.c.md#add_path_to_writer)
 static int join_path(char *out, size_t out_len, const char *dir, const char *name)
 ```
 
-Defined at lines 711 to 720.
+Defined at lines 716 to 725.
 
 Join a directory and a name with a slash.
 
@@ -366,7 +366,7 @@ Called by: [add_path_to_writer](nad_stuffit.c.md#add_path_to_writer)
 static int is_ad_metadata_entry(const char *name)
 ```
 
-Defined at lines 731 to 737.
+Defined at lines 736 to 742.
 
 Tell whether a directory entry holds netatalk or AppleDouble metadata.
 
@@ -385,7 +385,7 @@ Called by: [add_path_to_writer](nad_stuffit.c.md#add_path_to_writer)
 static int add_path_to_writer(StuffitWriter *writer, const char *path, const char *entry_name, AFPObj *obj)
 ```
 
-Defined at lines 752 to 805.
+Defined at lines 757 to 810.
 
 Add a file or a directory tree to a StuffIt writer.
 
@@ -409,7 +409,7 @@ Called by: [sit_paths](nad_stuffit.c.md#sit_paths)
 static char * default_sit_output(const char *path)
 ```
 
-Defined at lines 814 to 826.
+Defined at lines 819 to 831.
 
 Return the default archive path, the input path with `.sit` appended.
 
@@ -426,7 +426,7 @@ Called by: [sit_paths](nad_stuffit.c.md#sit_paths)
 static int write_owned_bytes(const char *path, StuffitOwnedBytes *bytes)
 ```
 
-Defined at lines 836 to 857.
+Defined at lines 841 to 862.
 
 Write the bytes of a finished archive to a file and replace any existing file.
 
@@ -444,7 +444,7 @@ Called by: [sit_paths](nad_stuffit.c.md#sit_paths)
 static int sit_paths(int argc, char **argv, AFPObj *obj, const char *output, uint8_t method)
 ```
 
-Defined at lines 872 to 929.
+Defined at lines 877 to 934.
 
 Build a StuffIt archive from files and directory trees and write it.
 
@@ -469,7 +469,7 @@ Called by: [nad_stuffit](nad_stuffit.c.md#nad_stuffit)
 int nad_stuffit(int argc, char **argv, AFPObj *obj)
 ```
 
-Defined at lines 944 to 1039.
+Defined at lines 949 to 1044.
 
 Run the nad sit and unsit commands.
 

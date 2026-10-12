@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/dsi/dsi_cmdreply.c"
-description: "1 function, includes 2 project headers."
+description: "DSICommand replies."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_cmdreply.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 int dsi_cmdreply(DSI *, const int)
 ```
 
-Defined at lines 27 to 39. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 32 to 44. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send the reply to the current DSICommand with result code err.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/dsi/dsi_close.c"
-description: "1 function, includes 1 project header."
+description: "Closing a DSI session with a DSICloseSession request to the client."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_close.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 void dsi_close(DSI *)
 ```
 
-Defined at lines 25 to 39. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 30 to 44. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send a DSICloseSession request, close the transport, and free the [DSI](../../include/atalk/dsi.h.md#struct-dsi) session.
 

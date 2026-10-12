@@ -5,7 +5,7 @@ description: "Typesafe, dynamic object store based on talloc."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dalloc/dalloc.c"
 tags: ["libatalk/dalloc"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/dalloc](../dalloc.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,8 +29,6 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_
 Defined at lines 181 to 203.
 
 Append an element to a dalloc array, the worker of dalloc_add and dalloc_add_copy.
-
-Use dalloc_add_copy() macro, not this function.
 
 With a talloc chunk the call stores the bytes of obj in that chunk, as dalloc_add_copy needs. Without one it stores obj itself, as dalloc_add needs. The dalloc_add and dalloc_add_copy macros call it.
 

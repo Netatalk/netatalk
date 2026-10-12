@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/compat/strlcpy.c"
-description: "2 functions, includes 1 project header."
+description: "strlcpy and strlcat for systems without them"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/compat/strlcpy.c"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/compat](../compat.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/compat](../compat.md) subsystem. Built from the commit rec
 size_t strlcpy(char *, const char *, size_t)
 ```
 
-Defined at lines 45 to 61. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
+Defined at lines 50 to 66. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
 
 Write a string into a buffer with truncation and a terminating NUL, for systems without strlcpy.
 
@@ -44,7 +44,7 @@ Called by: [RF_copyfile_adouble](../vfs/vfs.c.md#rf_copyfile_adouble), [RF_copyf
 size_t strlcat(char *, const char *, size_t)
 ```
 
-Defined at lines 75 to 95. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
+Defined at lines 80 to 100. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
 
 Append a string to a buffer with truncation and a terminating NUL, for systems without strlcat.
 

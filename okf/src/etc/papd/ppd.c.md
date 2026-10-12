@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/ppd.c"
-description: "6 functions, 1 type, includes 5 project headers."
+description: "PPD file reading for the printer of a papd job."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/ppd.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 static void ppd_init(void)
 ```
 
-Defined at lines 58 to 69.
+Defined at lines 63 to 74.
 
 Read the PPD file of the printer of this process, once.
 
@@ -43,7 +43,7 @@ Uses file-scope variables: `ppd_inited`
 static char * my_fgets(char *buf, size_t bufsize, FILE *stream)
 ```
 
-Defined at lines 84 to 109.
+Defined at lines 89 to 114.
 
 Read a line that ends with CR or LF, for PPD files with Mac line ends.
 
@@ -64,7 +64,7 @@ Called by: [getppdent](ppd.c.md#getppdent)
 static struct ppdent * getppdent(FILE *stream)
 ```
 
-Defined at lines 122 to 221.
+Defined at lines 127 to 226.
 
 Read the next main keyword entry of a PPD file.
 
@@ -85,7 +85,7 @@ Called by: [read_ppd](ppd.c.md#read_ppd)
 int read_ppd(char *file, int fcnt)
 ```
 
-Defined at lines 234 to 309.
+Defined at lines 239 to 314.
 
 Read the fonts and the known features of a PPD file.
 
@@ -109,7 +109,7 @@ Uses file-scope variables: `ppd_features`, `ppd_fonts`
 struct ppd_font * ppd_font(char *font)
 ```
 
-Defined at lines 319 to 337.
+Defined at lines 324 to 342.
 
 Look up a font of the PPD file by name.
 
@@ -132,7 +132,7 @@ Uses file-scope variables: `ppd_fonts`, `ppd_inited`
 struct ppd_feature * ppd_feature(const char *feature, int len)
 ```
 
-Defined at lines 350 to 386.
+Defined at lines 355 to 391.
 
 Look up a feature of the PPD file by its main keyword.
 
@@ -154,7 +154,7 @@ Uses file-scope variables: `ppd_features`, `ppd_inited`
 
 ### struct ppdent
 
-Defined at line 45.
+Defined at line 50.
 * `char * pe_main`
 * `char * pe_option`
 * `char * pe_translation`

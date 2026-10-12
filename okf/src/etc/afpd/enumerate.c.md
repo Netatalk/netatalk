@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/enumerate.c"
-description: "7 functions, 1 type, includes 16 project headers."
+description: "Directory listing: FPEnumerate, FPEnumerateExt, and FPEnumerateExt2."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/enumerate.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -38,7 +38,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int enumerate_loop(struct dirent *de, char *mname, void *data)
 ```
 
-Defined at lines 64 to 98.
+Defined at lines 69 to 103.
 
 Append a directory entry name to the enumeration name buffer.
 
@@ -61,7 +61,7 @@ Called by: [enumerate](enumerate.c.md#enumerate)
 char * check_dirent(const struct vol *vol, char *name)
 ```
 
-Defined at lines 116 to 132.
+Defined at lines 121 to 137.
 
 Filter a directory entry for enumeration.
 
@@ -89,7 +89,7 @@ Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vf
 int for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 ```
 
-Defined at lines 147 to 175.
+Defined at lines 152 to 180.
 
 Call fn for every entry of directory name that clients may see.
 
@@ -113,7 +113,7 @@ Called by: [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#
 static int enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 211 to 688.
+Defined at lines 216 to 693.
 
 Shared body of FPEnumerate, FPEnumerateExt, and FPEnumerateExt2.
 
@@ -143,7 +143,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 701 to 705.
+Defined at lines 706 to 710.
 
 FPEnumerate: list directory entries with one-byte entry lengths.
 
@@ -166,7 +166,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 718 to 722.
+Defined at lines 723 to 727.
 
 FPEnumerateExt: list directory entries with two-byte entry lengths.
 
@@ -189,7 +189,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 736 to 740.
+Defined at lines 741 to 745.
 
 FPEnumerateExt2: list directory entries with a 32-bit start index and reply size limit.
 
@@ -212,7 +212,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
 Struct to save directory reading context in.
 
-Defined at line 43.
+Defined at line 48.
 * `u_short sd_vid`
 * `uint32_t sd_did`
 * `int sd_buflen`

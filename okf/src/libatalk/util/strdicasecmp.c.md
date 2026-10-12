@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/strdicasecmp.c"
-description: "2 functions, includes 1 project header."
+description: "Case-insensitive string comparison through the Mac Roman uppercase map."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/strdicasecmp.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,7 +22,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 int strdiacasecmp(const char *s1, const char *s2)
 ```
 
-Defined at lines 540 to 551.
+Defined at lines 545 to 556.
 
 Compare two strings without regard to case, through the Mac Roman upper case map.
 
@@ -44,7 +44,7 @@ Uses file-scope variables: `_diacasemap`
 int strndiacasecmp(const char *s1, const char *s2, size_t n)
 ```
 
-Defined at lines 565 to 583.
+Defined at lines 570 to 588.
 
 Compare up to n bytes of two strings without regard to case, through the Mac Roman upper case map.
 

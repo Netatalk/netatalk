@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_gss.c"
-description: "16 functions, includes 6 project headers."
+description: "Kerberos UAM, Client Krb v2, through the GSS-API."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_gss.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### uams_gss
 
-Initialized at line 857 as `struct uam_export`. Assigns:
+Initialized at line 862 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_gss.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_gss.c.md#uam_setup)
@@ -37,7 +37,7 @@ Initialized at line 857 as `struct uam_export`. Assigns:
 static void log_status(char *s, OM_uint32 major_status, OM_uint32 minor_status)
 ```
 
-Defined at lines 54 to 87.
+Defined at lines 59 to 92.
 
 Log the GSS-API major and minor status messages of a failed call.
 
@@ -54,7 +54,7 @@ Called by: [accept_sec_context](uams_gss.c.md#accept_sec_context), [get_client_u
 static void log_ctx_flags(OM_uint32 flags)
 ```
 
-Defined at lines 94 to 119.
+Defined at lines 99 to 124.
 
 Log each flag of an accepted GSS context at debug level.
 
@@ -69,7 +69,7 @@ Called by: [accept_sec_context](uams_gss.c.md#accept_sec_context)
 static void log_service_name(gss_ctx_id_t context)
 ```
 
-Defined at lines 126 to 161.
+Defined at lines 131 to 166.
 
 Log the service principal of an accepted GSS context at debug level.
 
@@ -86,7 +86,7 @@ Called by: [do_gss_auth](uams_gss.c.md#do_gss_auth)
 static int get_client_username(char *username, int ulen, gss_name_t *client_name)
 ```
 
-Defined at lines 175 to 233.
+Defined at lines 180 to 238.
 
 Write the user part of the client principal into the username buffer of afpd.
 
@@ -109,7 +109,7 @@ Called by: [do_gss_auth](uams_gss.c.md#do_gss_auth)
 static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
 ```
 
-Defined at lines 248 to 291.
+Defined at lines 253 to 296.
 
 Encrypt the sessionkey of afpd with gss_wrap into the cryptedkey field of the session info.
 
@@ -131,7 +131,7 @@ Called by: [do_gss_auth](uams_gss.c.md#do_gss_auth)
 static int accept_sec_context(gss_ctx_id_t *context, gss_buffer_desc *ticket_buffer, gss_name_t *client_name, gss_buffer_desc *authenticator_buff)
 ```
 
-Defined at lines 306 to 342.
+Defined at lines 311 to 347.
 
 Accept the GSS context that the ticket of the client starts, in one step.
 
@@ -155,7 +155,7 @@ Called by: [do_gss_auth](uams_gss.c.md#do_gss_auth)
 static int build_gss_reply(char *rbuf, size_t rbufsize, size_t *rbuflen, const gss_buffer_desc *authenticator)
 ```
 
-Defined at lines 354 to 377.
+Defined at lines 359 to 382.
 
 Encode the authenticator with its 2-byte length, when the reply fits in rbuf.
 
@@ -175,7 +175,7 @@ Called by: [do_gss_auth](uams_gss.c.md#do_gss_auth)
 static int do_gss_auth(void *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t rbufsize, size_t *rbuflen, char *username, size_t ulen, struct session_info *sinfo)
 ```
 
-Defined at lines 394 to 442.
+Defined at lines 399 to 447.
 
 Accept the ticket of the client, take its user name, encrypt the sessionkey, and build the reply.
 
@@ -202,7 +202,7 @@ Called by: [gss_logincont](uams_gss.c.md#gss_logincont)
 static int gss_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 460 to 473.
+Defined at lines 465 to 478.
 
 Answer a Kerberos login with the 2-byte login ID 1.
 
@@ -226,7 +226,7 @@ Called by: [gss_login_ext](uams_gss.c.md#gss_login_ext), [uam_setup](uams_gss.c.
 static int gss_logincont(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 495 to 632.
+Defined at lines 500 to 637.
 
 Authenticate a Kerberos login with the ticket of FPLoginCont.
 
@@ -252,7 +252,7 @@ Called by: [uam_setup](uams_gss.c.md#uam_setup)
 static void gss_logout(void)
 ```
 
-Defined at lines 637 to 639.
+Defined at lines 642 to 644.
 
 End a Kerberos login, which keeps no state.
 
@@ -264,7 +264,7 @@ Called by: [uam_setup](uams_gss.c.md#uam_setup)
 static int gss_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 653 to 660.
+Defined at lines 658 to 665.
 
 Answer a Kerberos FPLoginExt as gss_login does, ignoring the user name.
 
@@ -289,7 +289,7 @@ Called by: [uam_setup](uams_gss.c.md#uam_setup)
 static int set_principal(AFPObj *obj, char *principal)
 ```
 
-Defined at lines 673 to 696.
+Defined at lines 678 to 701.
 
 Store the service principal for the directory names of FPGetSrvrInfo.
 
@@ -309,7 +309,7 @@ Called by: [gss_create_principal](uams_gss.c.md#gss_create_principal)
 static int gss_create_principal(AFPObj *obj)
 ```
 
-Defined at lines 710 to 828.
+Defined at lines 715 to 833.
 
 Pick the service principal of the Kerberos UAM and store it in the AFP options.
 
@@ -330,7 +330,7 @@ Called by: [uam_setup](uams_gss.c.md#uam_setup)
 static int uam_setup(void *handle, const char *path)
 ```
 
-Defined at lines 837 to 847.
+Defined at lines 842 to 852.
 
 Pick the service principal and register the Client Krb v2 login.
 
@@ -352,7 +352,7 @@ Dispatched via: [uams_gss](uams_gss.c.md#uams_gss)
 static void uam_cleanup(void)
 ```
 
-Defined at lines 852 to 855.
+Defined at lines 857 to 860.
 
 Unregister the Client Krb v2 login.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_find.c"
-description: "6 functions, includes 6 project headers."
+description: "The nad find command: search a volume for entries by name."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_find.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_find(void)
 ```
 
-Defined at lines 45 to 55.
+Defined at lines 50 to 60.
 
 Print the usage of nad find to stdout.
 
@@ -40,7 +40,7 @@ Called by: [nad_find](nad_find.c.md#nad_find)
 static int filesystem_find(const char *path, const char *needle, int *found)
 ```
 
-Defined at lines 70 to 123.
+Defined at lines 75 to 128.
 
 Search a directory tree outside a volume for names that contain a string.
 
@@ -61,7 +61,7 @@ Called by: [nad_find](nad_find.c.md#nad_find)
 int bstr_list_push(struct bstrList *sl, bstring bs)
 ```
 
-Defined at lines 132 to 141.
+Defined at lines 137 to 146.
 
 Append a bstring to a list and grow the list when it is full.
 
@@ -79,7 +79,7 @@ Called by: [nad_find](nad_find.c.md#nad_find)
 struct bstrList * bstr_list_create_min(int min)
 ```
 
-Defined at lines 149 to 163.
+Defined at lines 154 to 168.
 
 Create an empty list with room for at least `min` entries.
 
@@ -96,7 +96,7 @@ Called by: [nad_find](nad_find.c.md#nad_find)
 bstring bjoin_inv(const struct bstrList *bl, const bstring sep)
 ```
 
-Defined at lines 177 to 239.
+Defined at lines 182 to 244.
 
 Join the strings of a list in reverse order, with an optional separator between them.
 
@@ -116,7 +116,7 @@ Called by: [nad_find](nad_find.c.md#nad_find)
 int nad_find(int argc, char **argv, AFPObj *obj)
 ```
 
-Defined at lines 254 to 379. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 259 to 384. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad find command, which searches a volume for entries by name.
 

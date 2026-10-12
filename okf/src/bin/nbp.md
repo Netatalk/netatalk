@@ -5,16 +5,16 @@ description: "5 files, 7 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/nbp"
 tags: ["bin/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [bin/nbp/nbplkup.c](nbp/nbplkup.c.md): 2 functions, includes 5 project headers.
-* [bin/nbp/nbplkup_output.c](nbp/nbplkup_output.c.md): 1 function, includes 2 project headers.
+* [bin/nbp/nbplkup.c](nbp/nbplkup.c.md): The nbplkup command: look up NBP names.
+* [bin/nbp/nbplkup_output.c](nbp/nbplkup_output.c.md): Output formatting of nbplkup: NBP name fields in the host charset.
 * [bin/nbp/nbplkup_output.h](nbp/nbplkup_output.h.md): includes 1 project header.
-* [bin/nbp/nbprgstr.c](nbp/nbprgstr.c.md): 2 functions, includes 5 project headers.
-* [bin/nbp/nbpunrgstr.c](nbp/nbpunrgstr.c.md): 2 functions, includes 4 project headers.
+* [bin/nbp/nbprgstr.c](nbp/nbprgstr.c.md): The nbprgstr command: register an NBP name with atalkd.
+* [bin/nbp/nbpunrgstr.c](nbp/nbpunrgstr.c.md): The nbpunrgstr command: unregister an NBP name with atalkd.
 
 # Includes headers from
 

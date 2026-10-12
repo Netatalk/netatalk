@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/main.c"
-description: "10 functions, 1 type, includes 13 project headers."
+description: "The papd daemon: printers, NBP registration, and the accept loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/main.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 static void sig_handler(int signo)
 ```
 
-Defined at lines 90 to 94.
+Defined at lines 95 to 99.
 
 Note SIGINT or SIGTERM, so the accept loop of the server stops.
 
@@ -50,7 +50,7 @@ Called by: [main](main.c.md#main)
 static void papd_exit(const int i)
 ```
 
-Defined at lines 110 to 115.
+Defined at lines 115 to 120.
 
 Remove the pid file, unload the UAMs, and exit the server process.
 
@@ -69,7 +69,7 @@ Called by: [die](main.c.md#die), [main](main.c.md#main), [papd_cleanup](main.c.m
 static void papd_cleanup(int n)
 ```
 
-Defined at lines 125 to 153.
+Defined at lines 130 to 158.
 
 Unregister the NBP names of the printers and delete the PPD files fetched from CUPS.
 
@@ -90,7 +90,7 @@ Uses file-scope variables: `printers`
 static void die(int n)
 ```
 
-Defined at lines 160 to 164.
+Defined at lines 165 to 169.
 
 Clean up the printer registrations and exit the server process.
 
@@ -107,7 +107,7 @@ Called by: [main](main.c.md#main)
 static void reap(int sig)
 ```
 
-Defined at lines 172 to 196.
+Defined at lines 177 to 201.
 
 Collect exited print job children on SIGCHLD and log how each ended.
 
@@ -122,7 +122,7 @@ Called by: [main](main.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 219 to 658.
+Defined at lines 224 to 663.
 
 Start papd: read the printers, register them with NBP, and serve PAP connections.
 
@@ -148,7 +148,7 @@ Uses file-scope variables: `conffile`, `defprinter`, `printcap`, `printers`, `r_
 int getstatus(struct printer *pr, rbuf_t *buf)
 ```
 
-Defined at lines 671 to 720.
+Defined at lines 676 to 725.
 
 Fill a PAP status reply with the status of a printer.
 
@@ -172,7 +172,7 @@ Uses file-scope variables: `cannedstatus`
 static void free_printer_fields(struct printer *pr)
 ```
 
-Defined at lines 728 to 765.
+Defined at lines 733 to 770.
 
 Free the strings of a printer entry that do not belong to the default printer.
 
@@ -189,7 +189,7 @@ Uses file-scope variables: `defprinter`
 static void getprinters(char *cf)
 ```
 
-Defined at lines 790 to 992.
+Defined at lines 795 to 997.
 
 Read the printer entries of papd.conf into the printer list.
 
@@ -222,7 +222,7 @@ Uses file-scope variables: `defprinter`, `printers`, `uamlist`
 int rprintcap(struct printer *pr)
 ```
 
-Defined at lines 1006 to 1152.
+Defined at lines 1011 to 1157.
 
 Check the print system entry of a spooling printer and complete the printer from it.
 
@@ -243,7 +243,7 @@ Uses file-scope variables: `defprinter`, `printcap`
 
 ### struct rbuf_t
 
-Defined at line 57.
+Defined at line 62.
 * `uint8_t user_bytes`
 * `uint8_t data_bytes`
 * `uint8_t buf_len`

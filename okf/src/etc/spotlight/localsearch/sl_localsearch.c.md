@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/spotlight/localsearch/sl_localsearch.c"
-description: "9 functions, 2 types, includes 11 project headers."
+description: "Spotlight LocalSearch backend: SPARQL queries to the indexer."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sl_localsearch.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -45,7 +45,7 @@ Initialized at line 16 as `struct sl_backend_ops`. Assigns:
 static int cnid_comp_fn(const void *p1, const void *p2)
 ```
 
-Defined at lines 59 to 68.
+Defined at lines 64 to 73.
 
 Order two 64-bit host-order CNIDs, for bsearch over the client filter.
 
@@ -63,7 +63,7 @@ Called by: [tracker_cursor_cb](sl_localsearch.c.md#tracker_cursor_cb)
 static char * tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
 ```
 
-Defined at lines 99 to 120.
+Defined at lines 104 to 125.
 
 Convert a file URI from the indexer into a local path.
 
@@ -81,7 +81,7 @@ Called by: [tracker_cursor_cb](sl_localsearch.c.md#tracker_cursor_cb)
 static void tracker_cursor_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 ```
 
-Defined at lines 140 to 282.
+Defined at lines 145 to 287.
 
 Take one row of the indexer cursor into the result page, then ask for the next row.
 
@@ -102,7 +102,7 @@ Called by: [sl_localsearch_fetch_results](sl_localsearch.c.md#sl_localsearch_fet
 static void tracker_query_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 ```
 
-Defined at lines 294 to 323.
+Defined at lines 299 to 328.
 
 Finish the SPARQL query of the indexer and start reading its cursor.
 
@@ -123,7 +123,7 @@ Called by: [sl_localsearch_open_query](sl_localsearch.c.md#sl_localsearch_open_q
 static int sl_localsearch_init(AFPObj *obj)
 ```
 
-Defined at lines 341 to 387.
+Defined at lines 346 to 392.
 
 Connect the process to the localsearch indexer over the Spotlight D-Bus session.
 
@@ -146,7 +146,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static void sl_localsearch_close(AFPObj *obj)
 ```
 
-Defined at lines 395 to 398.
+Defined at lines 400 to 403.
 
 Stop the localsearch backend, whose indexer connection lives as long as the process.
 
@@ -161,7 +161,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static int sl_localsearch_open_query(slq_t *slq)
 ```
 
-Defined at lines 410 to 465.
+Defined at lines 415 to 470.
 
 Translate a Spotlight query to SPARQL and start it on the indexer.
 
@@ -184,7 +184,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static int sl_localsearch_fetch_results(slq_t *slq)
 ```
 
-Defined at lines 478 to 509.
+Defined at lines 483 to 514.
 
 Resume the indexer cursor after a full page, and run the GLib callbacks that are ready.
 
@@ -207,7 +207,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static void sl_localsearch_close_query(slq_t *slq)
 ```
 
-Defined at lines 518 to 528.
+Defined at lines 523 to 533.
 
 Release the indexer cursor of a query.
 
@@ -224,14 +224,14 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 
 ### struct sl_ctx
 
-Defined at line 74.
+Defined at line 79.
 * `TrackerSparqlConnection * tracker_con`
 * `GCancellable * cancellable`
 * `GMainLoop * mainloop`
 
 ### struct sl_localsearch_query
 
-Defined at line 84.
+Defined at line 89.
 * `TrackerSparqlCursor * cursor`
 
 # Macros

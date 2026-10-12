@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_chinese_trad.c"
-description: "4 functions, includes 2 project headers."
+description: "MAC_CHINESE_TRAD charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_chinese_trad.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -33,7 +33,7 @@ Initialized at line 95 as `struct charset_functions`. Assigns:
 static size_t mac_chinese_trad_char_push(uint8_t *out, const ucs2_t *in, size_t *size)
 ```
 
-Defined at lines 68 to 102.
+Defined at lines 69 to 103.
 
 Map one UCS2 character, or a pair with an Apple hint character, to MAC_CHINESE_TRAD bytes.
 
@@ -58,7 +58,7 @@ Uses file-scope variables: `mac_chinese_trad_compose` in [libatalk/unicode/chars
 static size_t mac_chinese_trad_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 114 to 119.
+Defined at lines 115 to 120.
 
 Convert UCS2 to MAC_CHINESE_TRAD through cjk_generic_push.
 
@@ -81,7 +81,7 @@ Dispatched via: [charset_mac_chinese_trad](mac_chinese_trad.c.md#charset_mac_chi
 static size_t mac_chinese_trad_char_pull(ucs2_t *out, const uint8_t *in, size_t *size)
 ```
 
-Defined at lines 135 to 166.
+Defined at lines 136 to 167.
 
 Map one MAC_CHINESE_TRAD character of one or two bytes to UCS2.
 
@@ -106,7 +106,7 @@ Uses file-scope variables: `mac_chinese_trad_2uni_charset` in [libatalk/unicode/
 static size_t mac_chinese_trad_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 178 to 183.
+Defined at lines 179 to 184.
 
 Convert MAC_CHINESE_TRAD to UCS2 through cjk_generic_pull.
 

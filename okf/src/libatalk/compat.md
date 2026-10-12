@@ -5,15 +5,15 @@ description: "4 files, 6 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/compat"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [libatalk/compat/explicit_bzero.c](compat/explicit_bzero.c.md): 1 function.
-* [libatalk/compat/misc.c](compat/misc.c.md): 3 functions, includes 1 project header.
-* [libatalk/compat/rquota_xdr.c](compat/rquota_xdr.c.md): No functions or types.
-* [libatalk/compat/strlcpy.c](compat/strlcpy.c.md): 2 functions, includes 1 project header.
+* [libatalk/compat/explicit_bzero.c](compat/explicit_bzero.c.md): explicit_bzero for systems without it
+* [libatalk/compat/misc.c](compat/misc.c.md): strnlen, vasprintf, and asprintf for systems without them
+* [libatalk/compat/rquota_xdr.c](compat/rquota_xdr.c.md): XDR routines of the rquota protocol, from the Linux quota tools.
+* [libatalk/compat/strlcpy.c](compat/strlcpy.c.md): strlcpy and strlcat for systems without them
 
 # Includes headers from
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_guest.c"
-description: "5 functions, includes 5 project headers."
+description: "Guest UAM: No User Authent and the NoAuthUAM printer login."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_guest.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### uams_guest
 
-Initialized at line 190 as `struct uam_export`. Assigns:
+Initialized at line 195 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_guest.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_guest.c.md#uam_setup)
@@ -36,7 +36,7 @@ Initialized at line 190 as `struct uam_export`. Assigns:
 static int noauth_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 40 to 69.
+Defined at lines 45 to 74.
 
 Log in as the guest account of afp.conf without a password.
 
@@ -62,7 +62,7 @@ Called by: [noauth_login_ext](uams_guest.c.md#noauth_login_ext), [uam_setup](uam
 static int noauth_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 84 to 89.
+Defined at lines 89 to 94.
 
 Log in an FPLoginExt request as the guest account, ignoring the user name.
 
@@ -87,7 +87,7 @@ Called by: [uam_setup](uams_guest.c.md#uam_setup)
 static int noauth_printer(char *start, char *stop, char *username, struct papfile *out)
 ```
 
-Defined at lines 106 to 156.
+Defined at lines 111 to 161.
 
 Accept a NoAuthUAM printer login for any existing user name, without a password.
 
@@ -111,7 +111,7 @@ Called by: [uam_setup](uams_guest.c.md#uam_setup)
 static int uam_setup(void *handle, const char *path)
 ```
 
-Defined at lines 166 to 179.
+Defined at lines 171 to 184.
 
 Register the No User Authent login and the NoAuthUAM printer login.
 
@@ -133,7 +133,7 @@ Dispatched via: [uams_guest](uams_guest.c.md#uams_guest)
 static void uam_cleanup(void)
 ```
 
-Defined at lines 184 to 188.
+Defined at lines 189 to 193.
 
 Unregister the No User Authent login and the NoAuthUAM printer login.
 

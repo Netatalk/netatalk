@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/dbd/cmd_dbd.c"
-description: "5 functions, includes 6 project headers."
+description: "The dbd command: scan an AFP volume and repair its CNID database."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/dbd/cmd_dbd.c"
 tags: ["bin/dbd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [b
 static void sig_handler(int signo)
 ```
 
-Defined at lines 54 to 58.
+Defined at lines 59 to 63.
 
 Note SIGINT or SIGTERM in alarmed, so the scan stops cleanly.
 
@@ -45,7 +45,7 @@ Uses file-scope variables: `alarmed`
 static void set_signal(void)
 ```
 
-Defined at lines 66 to 101.
+Defined at lines 71 to 106.
 
 Route SIGTERM and SIGINT to sig_handler and ignore SIGABRT, SIGHUP, and SIGQUIT.
 
@@ -61,7 +61,7 @@ Called by: [main](cmd_dbd.c.md#main)
 static void usage(void)
 ```
 
-Defined at lines 106 to 124.
+Defined at lines 111 to 129.
 
 Print the usage and the options of dbd to stdout.
 
@@ -73,7 +73,7 @@ Called by: [main](cmd_dbd.c.md#main)
 void dbd_log(enum logtype lt, const char *fmt,...)
 ```
 
-Defined at lines 139 to 150.
+Defined at lines 144 to 155.
 
 Print a formatted message line to stdout, a LOGDEBUG one only with -v.
 
@@ -94,7 +94,7 @@ Uses file-scope variables: `flags`
 int main(int argc, char **argv)
 ```
 
-Defined at lines 169 to 383.
+Defined at lines 174 to 388.
 
 Scan an AFP volume and repair its CNID database and AppleDouble files.
 

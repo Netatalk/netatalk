@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_rm.c"
-description: "5 functions, includes 8 project headers."
+description: "The nad rm command: delete entries with their CNIDs and metadata."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_rm.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -30,7 +30,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static const char * check_netatalk_dirs(const char *name)
 ```
 
-Defined at lines 69 to 80.
+Defined at lines 74 to 85.
 
 Tell whether a name is one of the netatalk folders .AppleDB and .AppleDesktop.
 
@@ -47,7 +47,7 @@ Called by: [rm](nad_rm.c.md#rm)
 static void upfunc(void)
 ```
 
-Defined at lines 86 to 89.
+Defined at lines 91 to 94.
 
 Step the directory ID of the walk back to the parent after nftw leaves a directory.
 
@@ -57,7 +57,7 @@ Step the directory ID of the walk back to the parent after nftw leaves a directo
 static void usage_rm(void)
 ```
 
-Defined at lines 94 to 106.
+Defined at lines 99 to 111.
 
 Print the usage of nad rm and exit with EXIT_FAILURE.
 
@@ -69,7 +69,7 @@ Called by: [nad_rm](nad_rm.c.md#nad_rm)
 int nad_rm(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 122 to 208. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 127 to 213. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad rm command, which deletes entries with their CNIDs and AppleDouble data.
 
@@ -94,7 +94,7 @@ Uses file-scope variables: `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md)
 static int rm(const char *path, const struct stat *statp, int tflag, struct FTW *ftw)
 ```
 
-Defined at lines 228 to 421.
+Defined at lines 233 to 426.
 
 Delete one entry during the depth-first nftw walk of nad rm.
 

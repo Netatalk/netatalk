@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/dsi/dsi_init.c"
-description: "1 function, includes 1 project header."
+description: "DSI listener creation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_init.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 DSI * dsi_init(AFPObj *obj, const char *hostname, const char *address, const char *port)
 ```
 
-Defined at lines 31 to 53. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 36 to 58. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Allocate a [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener and bind it to the TCP transport.
 

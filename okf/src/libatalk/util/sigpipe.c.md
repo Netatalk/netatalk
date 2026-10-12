@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/sigpipe.c"
-description: "4 functions, includes 1 project header."
+description: "Self-pipe that wakes a poll loop from signal handlers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/sigpipe.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 int atalk_sigpipe_init(void)
 ```
 
-Defined at lines 49 to 78.
+Defined at lines 54 to 83.
 
 Create the self-pipe that wakes a poll loop from a signal handler.
 
@@ -43,7 +43,7 @@ Uses file-scope variables: `sigpipe_fd`
 int atalk_sigpipe_readfd(void)
 ```
 
-Defined at lines 85 to 88.
+Defined at lines 90 to 93.
 
 Return the read end of the self-pipe for the poll set.
 
@@ -59,7 +59,7 @@ Uses file-scope variables: `sigpipe_fd`
 void atalk_sigpipe_notify(void)
 ```
 
-Defined at lines 96 to 102.
+Defined at lines 101 to 107.
 
 Wake the poll loop from a signal handler with 1 byte on the self-pipe.
 
@@ -75,7 +75,7 @@ Uses file-scope variables: `sigpipe_fd`
 void atalk_sigpipe_drain(void)
 ```
 
-Defined at lines 107 to 114.
+Defined at lines 112 to 119.
 
 Read every pending byte from the self-pipe.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/fce_util.c"
-description: "4 functions, includes 15 project headers."
+description: "Event coalescing for the file change event (FCE) API."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fce_util.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -37,7 +37,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static long get_ms_difftime(struct timeval *tv1, struct timeval *tv2)
 ```
 
-Defined at lines 71 to 76.
+Defined at lines 76 to 81.
 
 Return the milliseconds from one time to a later one.
 
@@ -55,7 +55,7 @@ Called by: [fce_handle_coalescation](fce_util.c.md#fce_handle_coalescation)
 void fce_initialize_history(void)
 ```
 
-Defined at lines 85 to 90. Declared in [etc/afpd/fce_api_internal.h](fce_api_internal.h.md).
+Defined at lines 90 to 95. Declared in [etc/afpd/fce_api_internal.h](fce_api_internal.h.md).
 
 Clear the event history that coalescing compares against.
 
@@ -69,7 +69,7 @@ Uses file-scope variables: `fce_history_list`
 bool fce_handle_coalescation(int event, const char *path)
 ```
 
-Defined at lines 109 to 180. Declared in [etc/afpd/fce_api_internal.h](fce_api_internal.h.md).
+Defined at lines 114 to 185. Declared in [etc/afpd/fce_api_internal.h](fce_api_internal.h.md).
 
 Decide whether the fce coalesce option drops an event.
 
@@ -95,7 +95,7 @@ Uses file-scope variables: `coalesce`, `fce_history_list`
 int fce_set_coalesce(const char *opt)
 ```
 
-Defined at lines 191 to 214.
+Defined at lines 196 to 219.
 
 Set event coalescing from the fce coalesce option.
 

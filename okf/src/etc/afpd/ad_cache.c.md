@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/ad_cache.c"
-description: "6 functions, includes 11 project headers."
+description: "AppleDouble metadata and resource fork caching in the directory cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ad_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,7 +33,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 void ad_store_to_cache(struct adouble *adp, struct dir *cached)
 ```
 
-Defined at lines 56 to 87.
+Defined at lines 61 to 92.
 
 Store the AppleDouble metadata of an object in its dircache entry.
 
@@ -53,7 +53,7 @@ Called by: [ad_getcomment](desktop.c.md#ad_getcomment), [ad_metadata_cached](ad_
 void ad_rebuild_from_cache(struct adouble *adp, const struct dir *cached)
 ```
 
-Defined at lines 100 to 132.
+Defined at lines 105 to 137.
 
 Fill an AppleDouble from the metadata cached in a dircache entry.
 
@@ -71,7 +71,7 @@ Called by: [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached)
 int ad_metadata_cached(const char *name, int flags, struct adouble *adp, const struct vol *vol, struct dir *dir, bool strict, struct stat *recent_st)
 ```
 
-Defined at lines 154 to 287.
+Defined at lines 159 to 292.
 
 Read the AppleDouble metadata of an object through the dircache.
 
@@ -100,7 +100,7 @@ Uses file-scope variables: `ad_cache_hits`, `ad_cache_misses`, `ad_cache_no_ad`,
 void rfork_cache_free(struct dir *entry)
 ```
 
-Defined at lines 307 to 362.
+Defined at lines 312 to 367.
 
 Free the cached resource fork data of a dircache entry.
 
@@ -119,7 +119,7 @@ Uses file-scope variables: `rfork_cache_used` in [etc/afpd/dircache.c](dircache.
 void rfork_cache_evict_to_budget(size_t needed)
 ```
 
-Defined at lines 374 to 388.
+Defined at lines 379 to 393.
 
 Free cached resource forks from the oldest end of the LRU list until needed bytes fit.
 
@@ -140,7 +140,7 @@ Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircach
 int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
 ```
 
-Defined at lines 406 to 504.
+Defined at lines 411 to 509.
 
 Cache the entire resource fork of a file by reading it from the open fork.
 

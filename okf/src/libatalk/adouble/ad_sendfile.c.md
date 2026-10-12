@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_sendfile.c"
-description: "1 function, includes 2 project headers."
+description: "sys_sendfile: one interface over the sendfile calls of Linux, Solaris, and FreeBSD"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_sendfile.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 ```
 
-Defined at lines 92 to 97.
+Defined at lines 98 to 103.
 
 Send file bytes to a socket through the sendfile call that the platform offers.
 

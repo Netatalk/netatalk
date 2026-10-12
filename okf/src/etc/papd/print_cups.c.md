@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/print_cups.c"
-description: "12 functions, includes 8 project headers."
+description: "CUPS printing backend of papd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/print_cups.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -30,7 +30,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 const char * cups_get_language(void)
 ```
 
-Defined at lines 89 to 101.
+Defined at lines 94 to 106.
 
 Return the name of the charset of the default CUPS language.
 
@@ -44,7 +44,7 @@ Called by: [cups_autoadd_printers](print_cups.c.md#cups_autoadd_printers), [lp_p
 static const char * cups_passwd_cb(const char *prompt, http_t *http, const char *method, const char *resource, void *user_data)
 ```
 
-Defined at lines 114 to 124.
+Defined at lines 119 to 129.
 
 Refuse every CUPS password prompt, so a CUPS request never waits for a password.
 
@@ -65,7 +65,7 @@ Called by: [cups_get_printer_ppd](print_cups.c.md#cups_get_printer_ppd), [cups_g
 int cups_printername_ok(char *name)
 ```
 
-Defined at lines 134 to 170.
+Defined at lines 139 to 175.
 
 Check that a CUPS destination with this name exists and accepts a connection.
 
@@ -84,7 +84,7 @@ Called by: [rprintcap](main.c.md#rprintcap)
 const char * cups_get_printer_ppd(char *name)
 ```
 
-Defined at lines 183 to 378.
+Defined at lines 188 to 383.
 
 Write a PPD file for a CUPS printer from its IPP attributes.
 
@@ -105,7 +105,7 @@ Called by: [cups_autoadd_printers](print_cups.c.md#cups_autoadd_printers), [rpri
 int cups_get_printer_status(struct printer *pr)
 ```
 
-Defined at lines 392 to 554.
+Defined at lines 397 to 559.
 
 Ask CUPS for the state of a printer and store a PAP status line for it.
 
@@ -128,7 +128,7 @@ Uses file-scope variables: `cups_status_msg`
 int cups_print_job(char *name, const char *filename, char *job, char *username, char *cupsoptions)
 ```
 
-Defined at lines 569 to 670.
+Defined at lines 574 to 675.
 
 Submit a spooled data file to CUPS as a job.
 
@@ -146,7 +146,7 @@ Called by: [lp_print](lp.c.md#lp_print)
 struct printer * cups_autoadd_printers(struct printer *defprinter, struct printer *printers)
 ```
 
-Defined at lines 689 to 763.
+Defined at lines 694 to 768.
 
 Add a printer entry for every CUPS destination, for the cupsautoadd entry of papd.conf.
 
@@ -168,7 +168,7 @@ Called by: [getprinters](main.c.md#getprinters)
 static int cups_mangle_printer_name(struct printer *pr, struct printer *printers)
 ```
 
-Defined at lines 779 to 813.
+Defined at lines 784 to 818.
 
 Give an added printer a free NBP name by appending `#01` to `#99`.
 
@@ -190,7 +190,7 @@ Called by: [cups_autoadd_printers](print_cups.c.md#cups_autoadd_printers)
 static size_t to_ascii(char *inptr, char **outptr)
 ```
 
-Defined at lines 828 to 852.
+Defined at lines 833 to 857.
 
 Make an ASCII version of a name by turning every byte above 0x7f into `_`.
 
@@ -210,7 +210,7 @@ Called by: [convert_to_mac_name](print_cups.c.md#convert_to_mac_name)
 static int convert_to_mac_name(const char *encoding, char *inptr, char *outptr, size_t outlen)
 ```
 
-Defined at lines 870 to 908.
+Defined at lines 875 to 913.
 
 Turn a CUPS printer name into a Chooser name in Mac Roman.
 
@@ -234,7 +234,7 @@ Called by: [cups_autoadd_printers](print_cups.c.md#cups_autoadd_printers)
 int cups_check_printer(struct printer *pr, struct printer *printers, int replace)
 ```
 
-Defined at lines 928 to 971.
+Defined at lines 933 to 976.
 
 Check whether the printer list holds a printer with the same name, ignoring case.
 
@@ -257,7 +257,7 @@ Called by: [cups_autoadd_printers](print_cups.c.md#cups_autoadd_printers), [cups
 static void cups_free_printer(struct printer *pr)
 ```
 
-Defined at lines 986 to 1027.
+Defined at lines 991 to 1032.
 
 Free a printer entry and its strings.
 

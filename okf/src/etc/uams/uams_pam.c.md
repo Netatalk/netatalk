@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_pam.c"
-description: "10 functions, includes 6 project headers."
+description: "Cleartext UAM with PAM authentication and the ClearTxtUAM printer login."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_pam.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,18 +24,18 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### PAM_conversation
 
-Initialized at line 154. Dispatches to: [PAM_conv](uams_pam.c.md#pam_conv)
+Initialized at line 160. Dispatches to: [PAM_conv](uams_pam.c.md#pam_conv)
 
 ### uams_clrtxt
 
-Initialized at line 808 as `struct uam_export`. Assigns:
+Initialized at line 814 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_pam.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_pam.c.md#uam_setup)
 
 ### uams_pam
 
-Initialized at line 814 as `struct uam_export`. Assigns:
+Initialized at line 820 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_pam.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_pam.c.md#uam_setup)
@@ -48,7 +48,7 @@ Initialized at line 814 as `struct uam_export`. Assigns:
 static int PAM_conv(int num_msg, struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
 ```
 
-Defined at lines 65 to 152.
+Defined at lines 71 to 158.
 
 Answer PAM prompts with the user name and the password of the login.
 
@@ -72,7 +72,7 @@ Dispatched via: [PAM_conversation](uams_pam.c.md#pam_conversation)
 static void clrtxt_log_pam_error(enum loglevels level, pam_handle_t *ph, const char *user, const char *step, int pam_err)
 ```
 
-Defined at lines 172 to 179.
+Defined at lines 178 to 185.
 
 Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure).
 
@@ -95,7 +95,7 @@ Called by: [login](uams_pam.c.md#login), [pam_changepw](uams_pam.c.md#pam_change
 static int login(void *obj, char *username, int ulen, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 200 to 343.
+Defined at lines 206 to 349.
 
 Check a cleartext password of up to 8 bytes with PAM.
 
@@ -123,7 +123,7 @@ Called by: [pam_login](uams_pam.c.md#pam_login), [pam_login_ext](uams_pam.c.md#p
 static int pam_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 361 to 389.
+Defined at lines 367 to 395.
 
 Read the user name of a cleartext FPLogin request and check its password with PAM.
 
@@ -149,7 +149,7 @@ Called by: [uam_setup](uams_pam.c.md#uam_setup)
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 408 to 437.
+Defined at lines 414 to 443.
 
 Read the user name of a cleartext FPLoginExt request and check its password with PAM.
 
@@ -176,7 +176,7 @@ Called by: [uam_setup](uams_pam.c.md#uam_setup)
 static void pam_logout(void)
 ```
 
-Defined at lines 442 to 447.
+Defined at lines 448 to 453.
 
 Close the PAM session of the login and call pam_end.
 
@@ -188,7 +188,7 @@ Called by: [uam_setup](uams_pam.c.md#uam_setup)
 static int pam_changepw(void *obj, char *username, struct passwd *pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 468 to 588.
+Defined at lines 474 to 594.
 
 Change a cleartext password with PAM.
 
@@ -217,7 +217,7 @@ Uses file-scope variables: `PAM_chauthtok_count`, `PAM_chauthtok_mode`, `PAM_old
 static int pam_printer(char *start, char *stop, char *username, struct papfile *out)
 ```
 
-Defined at lines 608 to 763.
+Defined at lines 614 to 769.
 
 Check a ClearTxtUAM printer login with PAM and close its session at once.
 
@@ -241,7 +241,7 @@ Called by: [uam_setup](uams_pam.c.md#uam_setup)
 static int uam_setup(void *obj, const char *path)
 ```
 
-Defined at lines 776 to 795.
+Defined at lines 782 to 801.
 
 Register the Cleartxt Passwrd login and password change and the ClearTxtUAM printer login.
 
@@ -265,7 +265,7 @@ Dispatched via: [uams_clrtxt](uams_pam.c.md#uams_clrtxt), [uams_pam](uams_pam.c.
 static void uam_cleanup(void)
 ```
 
-Defined at lines 801 to 806.
+Defined at lines 807 to 812.
 
 Unregister the Cleartxt Passwrd login and password change and the ClearTxtUAM printer login.
 

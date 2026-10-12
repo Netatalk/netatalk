@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/route.c"
-description: "1 function, includes 3 project headers."
+description: "Kernel route changes of atalkd through the route socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/route.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 int route(int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
 ```
 
-Defined at lines 33 to 41.
+Defined at lines 38 to 46.
 
 Add or delete a kernel route with an ioctl on the route socket rtfd.
 

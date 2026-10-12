@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/rtmpqry/rtmpqry.c"
-description: "7 functions, includes 4 project headers."
+description: "The rtmpqry command: query an AppleTalk router with RTMP."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/rtmpqry/rtmpqry.c"
 tags: ["bin/rtmpqry"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/rtmpqry](../rtmpqry.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [bin/rtmpqry](../rtmpqry.md) subsystem. Built from the commit record
 static void usage(char *s)
 ```
 
-Defined at lines 46 to 51.
+Defined at lines 51 to 56.
 
 Print the usage of rtmpqry to stderr and exit with 1.
 
@@ -41,7 +41,7 @@ Called by: [main](rtmpqry.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 66 to 148.
+Defined at lines 71 to 153.
 
 Query an AppleTalk router with RTMP and print its answer.
 
@@ -61,7 +61,7 @@ Calls: [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [do_rtmp_rd
 int setup_ddp_socket(const struct at_addr *local_addr, struct at_addr **remote_addr)
 ```
 
-Defined at lines 162 to 183.
+Defined at lines 167 to 188.
 
 Open a DDP socket for the RTMP queries.
 
@@ -83,7 +83,7 @@ Called by: [main](rtmpqry.c.md#main)
 void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
 ```
 
-Defined at lines 196 to 286.
+Defined at lines 201 to 291.
 
 Send an RTMP Request and print the router and the networks from its reply.
 
@@ -103,7 +103,7 @@ Called by: [main](rtmpqry.c.md#main)
 void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all, int secs_timeout)
 ```
 
-Defined at lines 302 to 381.
+Defined at lines 307 to 386.
 
 Send an RTMP Route Data Request and print the routing data of each reply.
 
@@ -125,7 +125,7 @@ Called by: [main](rtmpqry.c.md#main)
 const uint8_t * print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor, size_t len, uint16_t router_net, uint8_t router_node)
 ```
 
-Defined at lines 396 to 441.
+Defined at lines 401 to 446.
 
 Print one routing tuple of an RTMP data packet.
 
@@ -148,7 +148,7 @@ Called by: [print_rtmp_data_packet](rtmpqry.c.md#print_rtmp_data_packet)
 void print_rtmp_data_packet(const uint8_t *buf, size_t len)
 ```
 
-Defined at lines 453 to 517.
+Defined at lines 458 to 522.
 
 Print the routing tuples of an RTMP data packet.
 

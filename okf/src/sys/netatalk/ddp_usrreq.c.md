@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "sys/netatalk/ddp_usrreq.c"
-description: "10 functions, includes 3 project headers."
+description: "DDP socket requests and control blocks in the BSD kernel stack."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_usrreq.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 ddp_usrreq(struct socket *so, int req, struct mbuf *m, struct mbuf *addr, struct mbuf *rights)
 ```
 
-Defined at lines 48 to 200. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
+Defined at lines 53 to 205. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
 
 Serve the socket requests of the DDP protocol.
 
@@ -52,7 +52,7 @@ Dispatched via: [atalksw](at_proto.c.md#atalksw)
 at_sockaddr(struct ddpcb *ddp, struct mbuf *addr)
 ```
 
-Defined at lines 208 to 216.
+Defined at lines 213 to 221.
 
 Return the local address of a DDP socket in an mbuf.
 
@@ -68,7 +68,7 @@ Called by: [ddp_usrreq](ddp_usrreq.c.md#ddp_usrreq)
 at_pcbsetaddr(struct ddpcb *ddp, struct mbuf *addr)
 ```
 
-Defined at lines 231 to 347.
+Defined at lines 236 to 352.
 
 Bind a DDP socket to a local address and port.
 
@@ -88,7 +88,7 @@ Called by: [at_pcbconnect](ddp_usrreq.c.md#at_pcbconnect), [ddp_usrreq](ddp_usrr
 at_pcbconnect(struct ddpcb *ddp, struct mbuf *addr)
 ```
 
-Defined at lines 362 to 472.
+Defined at lines 367 to 477.
 
 Set the foreign address of a DDP socket after checking its route.
 
@@ -110,7 +110,7 @@ Called by: [ddp_usrreq](ddp_usrreq.c.md#ddp_usrreq)
 at_pcbdisconnect(struct ddpcb *ddp)
 ```
 
-Defined at lines 479 to 485.
+Defined at lines 484 to 490.
 
 Clear the foreign address of a DDP socket.
 
@@ -125,7 +125,7 @@ Called by: [ddp_usrreq](ddp_usrreq.c.md#ddp_usrreq)
 at_pcballoc(struct socket *so)
 ```
 
-Defined at lines 494 to 515.
+Defined at lines 499 to 520.
 
 Allocate a DDP control block for a socket and link it into the list of control blocks.
 
@@ -142,7 +142,7 @@ Called by: [ddp_usrreq](ddp_usrreq.c.md#ddp_usrreq)
 at_pcbdetach(struct socket *so, struct ddpcb *ddp)
 ```
 
-Defined at lines 526 to 563.
+Defined at lines 531 to 568.
 
 Detach and free the DDP control block of a socket.
 
@@ -160,7 +160,7 @@ Called by: [ddp_clean](ddp_usrreq.c.md#ddp_clean), [ddp_usrreq](ddp_usrreq.c.md#
 struct ddpcb * ddp_search(struct sockaddr_at *from, struct sockaddr_at *to, struct at_ifaddr *aa)
 ```
 
-Defined at lines 580 to 625.
+Defined at lines 585 to 630.
 
 Find the DDP socket that an incoming packet belongs to.
 
@@ -185,7 +185,7 @@ Called by: [ddp_input](ddp_input.c.md#ddp_input)
 int ddp_init()
 ```
 
-Defined at lines 632 to 636. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
+Defined at lines 637 to 641. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
 
 Set the length limit of both AppleTalk input queues.
 
@@ -199,7 +199,7 @@ Dispatched via: [atalksw](at_proto.c.md#atalksw)
 ddp_clean()
 ```
 
-Defined at lines 641 to 648.
+Defined at lines 646 to 653.
 
 Detach every DDP socket.
 

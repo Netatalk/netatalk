@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_size.c"
-description: "1 function, includes 2 project headers."
+description: "Fork lengths of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_size.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 off_t ad_size(const struct adouble *ad, const uint32_t eid)
 ```
 
-Defined at lines 28 to 48.
+Defined at lines 33 to 53.
 
 Length of a fork of an AppleDouble.
 

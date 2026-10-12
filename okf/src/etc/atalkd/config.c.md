@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/config.c"
-description: "13 functions, 1 type, includes 11 project headers."
+description: "Reading and writing atalkd.conf, with the kernel interface list as the fallback."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/config.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 
 ### params
 
-Initialized at line 68. Dispatches to: [addr](config.c.md#addr), [dontroute](config.c.md#dontroute), [net](config.c.md#net), [phase](config.c.md#phase), [router](config.c.md#router), [seed](config.c.md#seed), [zone](config.c.md#zone)
+Initialized at line 74. Dispatches to: [addr](config.c.md#addr), [dontroute](config.c.md#dontroute), [net](config.c.md#net), [phase](config.c.md#phase), [router](config.c.md#router), [seed](config.c.md#seed), [zone](config.c.md#zone)
 
 # Functions
 
@@ -39,7 +39,7 @@ Initialized at line 68. Dispatches to: [addr](config.c.md#addr), [dontroute](con
 static char ** at_parseline(const char *line)
 ```
 
-Defined at lines 83 to 169.
+Defined at lines 89 to 175.
 
 Split an atalkd.conf line into words.
 
@@ -58,7 +58,7 @@ Called by: [readconf](config.c.md#readconf), [writeconf](config.c.md#writeconf)
 static void freeline(char **argv)
 ```
 
-Defined at lines 177 to 189.
+Defined at lines 183 to 195.
 
 Free a word array from at_parseline and the line buffer stored after its NULL.
 
@@ -73,7 +73,7 @@ Called by: [writeconf](config.c.md#writeconf)
 int writeconf(char *)
 ```
 
-Defined at lines 207 to 339. Declared in [etc/atalkd/main.c](main.c.md).
+Defined at lines 213 to 345. Declared in [etc/atalkd/main.c](main.c.md).
 
 Rewrite atalkd.conf with the configuration that atalkd settled on.
 
@@ -96,7 +96,7 @@ Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md)
 int readconf(char *)
 ```
 
-Defined at lines 373 to 528. Declared in [etc/atalkd/main.c](main.c.md).
+Defined at lines 379 to 534. Declared in [etc/atalkd/main.c](main.c.md).
 
 Read the interfaces of atalkd.conf into the interface list.
 
@@ -133,7 +133,7 @@ Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md), `para
 int router(struct interface *iface, char **av)
 ```
 
-Defined at lines 541 to 560.
+Defined at lines 547 to 566.
 
 Apply the -router option, which also makes the interface a seed.
 
@@ -153,7 +153,7 @@ Dispatched via: [params](config.c.md#params)
 int dontroute(struct interface *iface, char **av)
 ```
 
-Defined at lines 570 to 580.
+Defined at lines 576 to 586.
 
 Apply the -dontroute option, which excludes -router.
 
@@ -171,7 +171,7 @@ Dispatched via: [params](config.c.md#params)
 int seed(struct interface *iface, char **av)
 ```
 
-Defined at lines 590 to 604.
+Defined at lines 596 to 610.
 
 Apply the -seed option, which has to come before -zone.
 
@@ -189,7 +189,7 @@ Dispatched via: [params](config.c.md#params)
 int phase(struct interface *iface, char **av)
 ```
 
-Defined at lines 613 to 638.
+Defined at lines 619 to 644.
 
 Apply the -phase option, AppleTalk phase 1 or 2.
 
@@ -207,7 +207,7 @@ Dispatched via: [params](config.c.md#params)
 int net(struct interface *iface, char **av)
 ```
 
-Defined at lines 652 to 728.
+Defined at lines 658 to 734.
 
 Apply the -net option, a network number or, in phase 2, a range like 8043-8044.
 
@@ -229,7 +229,7 @@ Dispatched via: [params](config.c.md#params)
 int addr(struct interface *iface, char **av)
 ```
 
-Defined at lines 741 to 775.
+Defined at lines 747 to 781.
 
 Apply the -addr option, a net.node address of the interface.
 
@@ -251,7 +251,7 @@ Dispatched via: [params](config.c.md#params)
 int zone(struct interface *iface, char **av)
 ```
 
-Defined at lines 789 to 833.
+Defined at lines 795 to 839.
 
 Apply the -zone option, which counts only on a seed interface.
 
@@ -275,7 +275,7 @@ Mentioned in the documentation of: [main](../../bin/nbp/nbplkup.c.md#main), [nbp
 int getifconf(void)
 ```
 
-Defined at lines 845 to 930. Declared in [etc/atalkd/main.c](main.c.md).
+Defined at lines 851 to 936. Declared in [etc/atalkd/main.c](main.c.md).
 
 Add the AppleTalk interfaces of the kernel that the interface list lacks.
 
@@ -295,7 +295,7 @@ Uses file-scope variables: `interfaces` in [etc/atalkd/main.c](main.c.md)
 struct interface * newiface(const char *name)
 ```
 
-Defined at lines 939 to 956.
+Defined at lines 945 to 962.
 
 Allocate a zeroed interface structure with its name and the AppleTalk family on both addresses.
 
@@ -312,7 +312,7 @@ Called by: [getifconf](config.c.md#getifconf), [main](main.c.md#main), [readconf
 
 ### struct param
 
-Defined at line 57.
+Defined at line 63.
 * `char * p_name`
 * `int(* p_func`
 

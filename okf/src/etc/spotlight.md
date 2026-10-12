@@ -5,20 +5,20 @@ description: "10 files, 68 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/spotlight"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [etc/spotlight/cnid/sl_cnid.c](spotlight/cnid/sl_cnid.c.md): 17 functions, 2 types, includes 10 project headers.
-* [etc/spotlight/localsearch/sl_localsearch.c](spotlight/localsearch/sl_localsearch.c.md): 9 functions, 2 types, includes 11 project headers.
-* [etc/spotlight/localsearch/sparql_map.c](spotlight/localsearch/sparql_map.c.md): 1 function, includes 2 project headers.
+* [etc/spotlight/cnid/sl_cnid.c](spotlight/cnid/sl_cnid.c.md): Spotlight CNID backend: file name searches in the CNID database.
+* [etc/spotlight/localsearch/sl_localsearch.c](spotlight/localsearch/sl_localsearch.c.md): Spotlight LocalSearch backend: SPARQL queries to the indexer.
+* [etc/spotlight/localsearch/sparql_map.c](spotlight/localsearch/sparql_map.c.md): Spotlight attribute to SPARQL mapping table.
 * [etc/spotlight/localsearch/sparql_map.h](spotlight/localsearch/sparql_map.h.md): 2 types.
-* [etc/spotlight/localsearch/sparql_parser.y](spotlight/localsearch/sparql_parser.y.md): 11 functions, includes 4 project headers.
-* [etc/spotlight/localsearch/spotlight_rawquery_lexer.l](spotlight/localsearch/spotlight_rawquery_lexer.l.md): 1 function, includes 1 project header.
+* [etc/spotlight/localsearch/sparql_parser.y](spotlight/localsearch/sparql_parser.y.md): Grammar that maps Spotlight raw queries to SPARQL.
+* [etc/spotlight/localsearch/spotlight_rawquery_lexer.l](spotlight/localsearch/spotlight_rawquery_lexer.l.md): Lexer of the Spotlight raw query language.
 * [etc/spotlight/sl_backends.h](spotlight/sl_backends.h.md): includes 1 project header.
 * [etc/spotlight/spotlight_private.h](spotlight/spotlight_private.h.md): includes 1 project header.
-* [etc/spotlight/xapian/sl_xapian.c](spotlight/xapian/sl_xapian.c.md): 20 functions, 2 types, includes 11 project headers.
+* [etc/spotlight/xapian/sl_xapian.c](spotlight/xapian/sl_xapian.c.md): Spotlight Xapian backend: index state, queries, and results.
 * [etc/spotlight/xapian/sl_xapian.h](spotlight/xapian/sl_xapian.h.md): 9 functions.
 
 # Includes headers from

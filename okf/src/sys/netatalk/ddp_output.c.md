@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "sys/netatalk/ddp_output.c"
-description: "3 functions, includes 5 project headers."
+description: "DDP output and routing in the BSD kernel stack."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/ddp_output.c"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 unsigned short at_cksum()
 ```
 
-Declared at sys/netatalk/ddp_output.c line 29; no definition in the scanned sources.
+Declared at sys/netatalk/ddp_output.c line 34; no definition in the scanned sources.
 
 Called by: [ddp_output](ddp_output.c.md#ddp_output)
 
@@ -37,7 +37,7 @@ Called by: [ddp_output](ddp_output.c.md#ddp_output)
 ddp_output(struct ddpcb *ddp, struct mbuf *m)
 ```
 
-Defined at lines 44 to 105. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
+Defined at lines 49 to 110. Declared in [sys/netatalk/at_proto.c](at_proto.c.md).
 
 Send a packet from a DDP socket to its connected address.
 
@@ -63,7 +63,7 @@ Dispatched via: [atalksw](at_proto.c.md#atalksw)
 ddp_route(struct mbuf *m, struct route *ro)
 ```
 
-Defined at lines 164 to 269.
+Defined at lines 169 to 274.
 
 Send a DDP packet out of the interface of a route.
 

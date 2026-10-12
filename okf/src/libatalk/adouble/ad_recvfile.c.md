@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_recvfile.c"
-description: "1 function, includes 2 project headers."
+description: "Receiving a DSIWrite payload straight into an AppleDouble fork."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_recvfile.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-10T08:19:07+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 ssize_t ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t *off)
 ```
 
-Defined at lines 41 to 64.
+Defined at lines 46 to 69.
 
 Receive the rest of a DSIWrite payload into a fork.
 

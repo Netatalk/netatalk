@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_dhx2_pam.c"
-description: "19 functions, includes 6 project headers."
+description: "DHX2 UAM with PAM authentication."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_dhx2_pam.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,18 +24,18 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### PAM_conversation
 
-Initialized at line 305. Dispatches to: [PAM_conv](uams_dhx2_pam.c.md#pam_conv)
+Initialized at line 310. Dispatches to: [PAM_conv](uams_dhx2_pam.c.md#pam_conv)
 
 ### uams_dhx2
 
-Initialized at line 1384 as `struct uam_export`. Assigns:
+Initialized at line 1389 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx2_pam.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx2_pam.c.md#uam_setup)
 
 ### uams_dhx2_pam
 
-Initialized at line 1391 as `struct uam_export`. Assigns:
+Initialized at line 1396 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_dhx2_pam.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_dhx2_pam.c.md#uam_setup)
@@ -48,7 +48,7 @@ Initialized at line 1391 as `struct uam_export`. Assigns:
 static void dhx2_release_mpi(gcry_mpi_t *mpi)
 ```
 
-Defined at lines 66 to 72.
+Defined at lines 71 to 77.
 
 Release a libgcrypt number and set its pointer to NULL.
 
@@ -63,7 +63,7 @@ Called by: [dhx2_clear_session](uams_dhx2_pam.c.md#dhx2_clear_session), [loginco
 static void dhx2_clear_session(void)
 ```
 
-Defined at lines 81 to 90.
+Defined at lines 86 to 95.
 
 Drop the state of a DHX2 exchange, so the next step has to start over.
 
@@ -81,7 +81,7 @@ Uses file-scope variables: `ID`, `K_MD5hash`, `K_hash_len`, `Ra`, `serverNonce`
 static int dh_params_generate(unsigned int bits)
 ```
 
-Defined at lines 120 to 184.
+Defined at lines 125 to 189.
 
 Generate the prime p and the generator g of the Diffie-Hellman group.
 
@@ -102,7 +102,7 @@ Uses file-scope variables: `g`
 static int PAM_conv(int num_msg, struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
 ```
 
-Defined at lines 200 to 303.
+Defined at lines 205 to 308.
 
 Answer PAM prompts with the user name and the password of the login.
 
@@ -126,7 +126,7 @@ Dispatched via: [PAM_conversation](uams_dhx2_pam.c.md#pam_conversation)
 static int dhx2_setup(void *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 326 to 422.
+Defined at lines 331 to 427.
 
 Start a DHX2 exchange with the public key of the server.
 
@@ -153,7 +153,7 @@ Uses file-scope variables: `ID`, `Ra`, `g`
 static int login(void *obj, char *username, int ulen, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 438 to 451.
+Defined at lines 443 to 456.
 
 Look up the user of a DHX2 login and start the Diffie-Hellman exchange.
 
@@ -181,7 +181,7 @@ Uses file-scope variables: `PAM_username`, `dhxpwd`
 static int pam_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 468 to 503.
+Defined at lines 473 to 508.
 
 Read the user name of an FPLogin request and start a DHX2 login.
 
@@ -207,7 +207,7 @@ Called by: [uam_setup](uams_dhx2_pam.c.md#uam_setup)
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 521 to 556.
+Defined at lines 526 to 561.
 
 Read the user name of an FPLoginExt request and start a DHX2 login.
 
@@ -234,7 +234,7 @@ Called by: [uam_setup](uams_dhx2_pam.c.md#uam_setup)
 static int logincont1(void *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 576 to 736.
+Defined at lines 581 to 741.
 
 Derive the session key from the public key of the client and answer its nonce.
 
@@ -261,7 +261,7 @@ Uses file-scope variables: `ID`, `K_MD5hash`, `K_hash_len`, `Ra`, `dhx_c2siv`, `
 static void dhx2_log_pam_error(pam_handle_t *ph, const char *step, int pam_err)
 ```
 
-Defined at lines 748 to 753.
+Defined at lines 753 to 758.
 
 Log a failed PAM step through [uam_log_pam_failure()](../../libatalk/util/unix.c.md#uam_log_pam_failure).
 
@@ -284,7 +284,7 @@ Uses file-scope variables: `PAM_username`
 static int logincont2(void *obj_in, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 774 to 993.
+Defined at lines 779 to 998.
 
 Check the server nonce and the password of a DHX2 login with PAM.
 
@@ -312,7 +312,7 @@ Uses file-scope variables: `K_MD5hash`, `K_hash_len`, `PAM_conversation`, `PAM_p
 static int pam_logincont(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1010 to 1032.
+Defined at lines 1015 to 1037.
 
 Route an FPLoginCont request to the step that the session ID and the state expect.
 
@@ -340,7 +340,7 @@ Uses file-scope variables: `ID`
 static void pam_logout(void)
 ```
 
-Defined at lines 1038 to 1043.
+Defined at lines 1043 to 1048.
 
 Close the PAM session of the login and call pam_end.
 
@@ -354,7 +354,7 @@ Uses file-scope variables: `pamh`
 static int changepw_1(void *obj, char *uname, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1060 to 1067.
+Defined at lines 1065 to 1072.
 
 Start the Diffie-Hellman exchange of a DHX2 password change and remember the user.
 
@@ -380,7 +380,7 @@ Uses file-scope variables: `PAM_username`
 static int changepw_2(void *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1080 to 1084.
+Defined at lines 1085 to 1089.
 
 Derive the session key of a DHX2 password change, as logincont1 does for a login.
 
@@ -403,7 +403,7 @@ Called by: [dhx2_changepw](uams_dhx2_pam.c.md#dhx2_changepw)
 static int changepw_3(void *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1104 to 1282.
+Defined at lines 1109 to 1287.
 
 Check the server nonce and the old password, then set the new password with PAM.
 
@@ -430,7 +430,7 @@ Uses file-scope variables: `K_MD5hash`, `K_hash_len`, `PAM_conversation`, `PAM_p
 static int dhx2_changepw(void *obj, char *uname, struct passwd *pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1300 to 1337.
+Defined at lines 1305 to 1342.
 
 Run the three FPChangePassword requests of a DHX2 password change in order.
 
@@ -457,7 +457,7 @@ Called by: [uam_setup](uams_dhx2_pam.c.md#uam_setup)
 static int uam_setup(void *obj, const char *path)
 ```
 
-Defined at lines 1349 to 1369.
+Defined at lines 1354 to 1374.
 
 Register the DHX2 login and password change, and generate the Diffie-Hellman group.
 
@@ -481,7 +481,7 @@ Dispatched via: [uams_dhx2](uams_dhx2_pam.c.md#uams_dhx2), [uams_dhx2_pam](uams_
 static void uam_cleanup(void)
 ```
 
-Defined at lines 1375 to 1382.
+Defined at lines 1380 to 1387.
 
 Unregister the DHX2 login and password change, and release the Diffie-Hellman group.
 

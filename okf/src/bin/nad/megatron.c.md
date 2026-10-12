@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/megatron.c"
-description: "25 functions, 1 type, includes 11 project headers."
+description: "Conversion driver of the nad archive commands bin, hex, unbin, and unhex."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/megatron.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,7 +33,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_archive(FILE *out)
 ```
 
-Defined at lines 58 to 77.
+Defined at lines 64 to 83.
 
 Print the usage of the nad archive commands bin, hex, unbin, and unhex.
 
@@ -48,7 +48,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 static int parse_archive_mode(const char *name)
 ```
 
-Defined at lines 85 to 94.
+Defined at lines 91 to 100.
 
 Map an archive command name to its conversion mode.
 
@@ -65,7 +65,7 @@ Uses file-scope variables: `archive_modes`
 static int mode_writes_metadata(int module)
 ```
 
-Defined at lines 102 to 105.
+Defined at lines 108 to 111.
 
 Tell whether a mode decodes an archive into a file with Mac metadata.
 
@@ -82,7 +82,7 @@ Called by: [mode_creates_volume_file](megatron.c.md#mode_creates_volume_file), [
 static int mode_reads_metadata(int module)
 ```
 
-Defined at lines 114 to 117.
+Defined at lines 120 to 123.
 
 Tell whether a mode encodes a file and its Mac metadata into an archive.
 
@@ -99,7 +99,7 @@ Called by: [mode_creates_volume_file](megatron.c.md#mode_creates_volume_file), [
 static int mode_creates_volume_file(int module, int flags)
 ```
 
-Defined at lines 129 to 140.
+Defined at lines 135 to 146.
 
 Tell whether a conversion creates a file in the current directory.
 
@@ -121,7 +121,7 @@ Called by: [resolve_metadata_volume](megatron.c.md#resolve_metadata_volume)
 static int from_open(int un, char *file, struct FHeader *fh, int flags)
 ```
 
-Defined at lines 154 to 170.
+Defined at lines 160 to 176.
 
 Open the input of a conversion and read its header.
 
@@ -145,7 +145,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static ssize_t from_read(int un, int fork, char *buf, size_t len)
 ```
 
-Defined at lines 182 to 198.
+Defined at lines 188 to 204.
 
 Read the next bytes of a fork from the conversion input.
 
@@ -167,7 +167,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static int from_close(int un)
 ```
 
-Defined at lines 206 to 222.
+Defined at lines 212 to 228.
 
 Close the input of a conversion.
 
@@ -186,7 +186,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static int to_open(int to, char *file, struct FHeader *fh, int flags)
 ```
 
-Defined at lines 237 to 253.
+Defined at lines 243 to 259.
 
 Create the output of a conversion from a file header.
 
@@ -210,7 +210,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static ssize_t to_write(int to, int fork, size_t bufc)
 ```
 
-Defined at lines 263 to 279.
+Defined at lines 269 to 285.
 
 Write the next bytes of a fork from the fork buffer to the output.
 
@@ -233,7 +233,7 @@ Uses file-scope variables: `forkbuf`
 static int to_close(int to, int keepflag)
 ```
 
-Defined at lines 288 to 304.
+Defined at lines 294 to 310.
 
 Close the output of a conversion and keep or delete it.
 
@@ -253,7 +253,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static const char * created_file_path(int module)
 ```
 
-Defined at lines 313 to 325.
+Defined at lines 319 to 331.
 
 Return the path of the archive that an encoding created.
 
@@ -272,7 +272,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static int update_created_file_cnid(const struct nad_volume *volume, const char *path)
 ```
 
-Defined at lines 340 to 412.
+Defined at lines 346 to 418.
 
 Give a new archive file in a volume its CNID and store the CNID in its metadata.
 
@@ -294,7 +294,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static void print_header_date(const char *label, uint32_t ad_date, int available)
 ```
 
-Defined at lines 425 to 451.
+Defined at lines 431 to 457.
 
 Print one labeled header date in local time.
 
@@ -313,7 +313,7 @@ Called by: [print_header](megatron.c.md#print_header)
 static void print_header(const struct FHeader *fh)
 ```
 
-Defined at lines 461 to 481.
+Defined at lines 467 to 487.
 
 Print the file header of the input for header.
 
@@ -332,7 +332,7 @@ Called by: [nad_archive_convert](megatron.c.md#nad_archive_convert)
 static int nad_archive_convert(char *path, int module, const char *newname, int flags, const struct nad_volume *volume)
 ```
 
-Defined at lines 500 to 583.
+Defined at lines 506 to 589.
 
 Convert one file between an archive and a file with Mac metadata.
 
@@ -359,7 +359,7 @@ Uses file-scope variables: `forkbuf`
 static int validate_volume_metadata(const char *volpath, const struct vol *vol)
 ```
 
-Defined at lines 594 to 603.
+Defined at lines 600 to 609.
 
 Refuse a volume whose AppleDouble format nad does not support.
 
@@ -377,7 +377,7 @@ Called by: [resolve_metadata_volume](megatron.c.md#resolve_metadata_volume)
 static void set_fallback_volume(struct nad_volume *volume, int flags)
 ```
 
-Defined at lines 616 to 637.
+Defined at lines 622 to 643.
 
 Set up the stand-in volume that force uses outside an AFP volume.
 
@@ -399,7 +399,7 @@ Uses file-scope variables: `fallback_volume`
 static int resolve_metadata_volume(AFPObj *obj, int module, const char *path, int flags, struct nad_volume *volume)
 ```
 
-Defined at lines 659 to 755.
+Defined at lines 665 to 761.
 
 Find the AFP volume that holds the metadata of a conversion and open its CNID database.
 
@@ -428,7 +428,7 @@ Uses file-scope variables: `forceflag` in [bin/nad/nad_util.c](nad_util.c.md)
 static void close_metadata_volume(struct nad_volume *volume)
 ```
 
-Defined at lines 763 to 771.
+Defined at lines 769 to 777.
 
 Close the CNID database that resolve_metadata_volume opened and clear the volume state.
 
@@ -445,7 +445,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive), [resolve_metadata_volume](m
 static int arg_is_option_with_value(const char *arg)
 ```
 
-Defined at lines 779 to 782.
+Defined at lines 785 to 788.
 
 Tell whether an archive argument is an option that takes a value.
 
@@ -462,7 +462,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 static int arg_is_flag_option(const char *arg)
 ```
 
-Defined at lines 790 to 796.
+Defined at lines 796 to 802.
 
 Tell whether an archive argument is an option without a value.
 
@@ -479,7 +479,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 static int set_newname(char *newname, size_t newname_len, const char *name)
 ```
 
-Defined at lines 806 to 814.
+Defined at lines 812 to 820.
 
 Store the filename name for the next conversion.
 
@@ -500,7 +500,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 static int option_after_file(const char *arg)
 ```
 
-Defined at lines 822 to 827.
+Defined at lines 828 to 833.
 
 Report an option that follows a file argument.
 
@@ -517,7 +517,7 @@ Called by: [nad_archive](megatron.c.md#nad_archive)
 int nad_archive(int argc, char **argv, AFPObj *obj)
 ```
 
-Defined at lines 843 to 995.
+Defined at lines 849 to 1001.
 
 Run the nad archive commands bin, hex, unbin, and unhex.
 
@@ -540,7 +540,7 @@ Uses file-scope variables: `nad_log_verbose` in [bin/nad/nad_util.c](nad_util.c.
 
 ### struct archive_mode
 
-Defined at line 41.
+Defined at line 47.
 * `const char * name`
 * `int module`
 

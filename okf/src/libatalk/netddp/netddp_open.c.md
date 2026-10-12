@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/netddp/netddp_open.c"
-description: "1 function, includes 2 project headers."
+description: "Opening AppleTalk datagram sockets."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/netddp/netddp_open.c"
 tags: ["libatalk/netddp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/netddp](../netddp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/netddp](../netddp.md) subsystem. Built from the commit rec
 int netddp_open(struct sockaddr_at *, struct sockaddr_at *)
 ```
 
-Defined at lines 34 to 68. Declared in [include/atalk/netddp.h](../../include/atalk/netddp.h.md).
+Defined at lines 39 to 73. Declared in [include/atalk/netddp.h](../../include/atalk/netddp.h.md).
 
 Open an AppleTalk datagram socket and bind it to an address when the caller passes one.
 

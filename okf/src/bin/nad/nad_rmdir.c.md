@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_rmdir.c"
-description: "5 functions, includes 7 project headers."
+description: "The nad rmdir command: delete empty directories with their CNIDs and metadata."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_rmdir.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_rmdir(void)
 ```
 
-Defined at lines 43 to 58.
+Defined at lines 49 to 64.
 
 Print the usage of nad rmdir and exit with EXIT_FAILURE.
 
@@ -41,7 +41,7 @@ Called by: [nad_rmdir](nad_rmdir.c.md#nad_rmdir)
 static int is_protected_dir(const char *path, const afpvol_t *vol)
 ```
 
-Defined at lines 70 to 102.
+Defined at lines 76 to 108.
 
 Tell whether a path is the volume root or a directory above it.
 
@@ -61,7 +61,7 @@ Called by: [do_rmdir](nad_rmdir.c.md#do_rmdir), [rmdir_with_cnid](nad_rmdir.c.md
 static int rmdir_with_cnid(const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 112 to 163.
+Defined at lines 118 to 169.
 
 Remove a single empty directory with CNID and AppleDouble cleanup.
 
@@ -83,7 +83,7 @@ Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no t
 static int do_rmdir(const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 176 to 230.
+Defined at lines 182 to 236.
 
 Remove directory and optionally empty parent directories.
 
@@ -107,7 +107,7 @@ Uses file-scope variables: `pflag` in [bin/nad/nad.h](nad.h.md), `vflag` in [bin
 int nad_rmdir(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 245 to 296. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 251 to 302. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad rmdir command, which deletes empty directories with their CNIDs and metadata.
 

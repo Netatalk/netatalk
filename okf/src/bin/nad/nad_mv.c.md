@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_mv.c"
-description: "5 functions, includes 8 project headers."
+description: "The nad mv command: move entries with their CNIDs and metadata."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_mv.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -30,7 +30,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_mv(void)
 ```
 
-Defined at lines 57 to 80.
+Defined at lines 62 to 85.
 
 Print the usage and the options of nad mv, then exit with EXIT_FAILURE.
 
@@ -42,7 +42,7 @@ Called by: [nad_mv](nad_mv.c.md#nad_mv)
 int nad_mv(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 95 to 236. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 100 to 241. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad mv command, which moves entries with their metadata.
 
@@ -67,7 +67,7 @@ Uses file-scope variables: `afp_obj`, `fflg`, `iflg`, `nflg`, `vflg`
 static int do_move(const char *from, const char *to)
 ```
 
-Defined at lines 255 to 488.
+Defined at lines 260 to 493.
 
 Move one source to a target path.
 
@@ -93,7 +93,7 @@ Uses file-scope variables: `fflg`, `iflg`, `nflg`, `vflg`
 static int remove_path(const char *path)
 ```
 
-Defined at lines 499 to 536.
+Defined at lines 504 to 541.
 
 Delete a path outside a volume, and for a directory everything below it.
 
@@ -112,7 +112,7 @@ Called by: [copy](nad_mv.c.md#copy)
 static int copy(const char *from, const char *to)
 ```
 
-Defined at lines 550 to 602.
+Defined at lines 555 to 607.
 
 Move an entry across volumes or devices by running nad cp and then deleting the source.
 

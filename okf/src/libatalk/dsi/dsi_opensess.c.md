@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/dsi/dsi_opensess.c"
-description: "1 function, includes 3 project headers."
+description: "Answering DSIOpenSession and recording the client options."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_opensess.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 void dsi_opensession(DSI *)
 ```
 
-Defined at lines 31 to 96. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 36 to 101. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Answer a DSIOpenSession request and record the client options.
 

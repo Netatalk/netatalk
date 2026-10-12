@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/misc/uuidtest.c"
-description: "3 functions, includes 3 project headers."
+description: "The afpldaptest command: map names to UUIDs and back through LDAP, with a local fallback."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/misc/uuidtest.c"
 tags: ["bin/misc"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in 
 static void usage(void)
 ```
 
-Defined at lines 46 to 49.
+Defined at lines 52 to 55.
 
 Print the usage of afpldaptest to stdout.
 
@@ -37,7 +37,7 @@ Called by: [main](uuidtest.c.md#main)
 static void parse_ldapconf(void)
 ```
 
-Defined at lines 60 to 92.
+Defined at lines 66 to 98.
 
 Read the LDAP settings of afp.conf on the first call and report whether they are valid.
 
@@ -55,7 +55,7 @@ Uses file-scope variables: `ldap_auth_method` in [libatalk/acl/ldap.c](../../lib
 int main(int argc, char **argv)
 ```
 
-Defined at lines 108 to 203.
+Defined at lines 114 to 209.
 
 Map user and group names to UUIDs and back through the netatalk UUID layer.
 

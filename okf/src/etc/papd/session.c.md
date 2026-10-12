@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/session.c"
-description: "1 function, includes 7 project headers."
+description: "One PAP connection of papd: reading jobs and sending replies."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/session.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 int session(ATP atp, struct sockaddr_at *sat)
 ```
 
-Defined at lines 62 to 421.
+Defined at lines 67 to 426.
 
 Serve one PAP connection: read the print or query jobs and send the replies.
 

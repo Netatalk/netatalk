@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/constant_time.c"
-description: "1 function, includes 1 project header."
+description: "Constant-time memory comparison."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/constant_time.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,7 +22,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 int atalk_ct_memcmp(const void *a, const void *b, size_t n)
 ```
 
-Defined at lines 28 to 39.
+Defined at lines 33 to 44.
 
 Compare two buffers for equality in a time that depends only on their length.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/atp/atp_rresp.c"
-description: "1 function, includes 4 project headers."
+description: "Receiving ATP responses."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_rresp.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_rresp(ATP, struct atp_block *)
 ```
 
-Defined at lines 61 to 118. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 66 to 123. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Wait for the complete response to the pending ATP request and hand out its packets.
 

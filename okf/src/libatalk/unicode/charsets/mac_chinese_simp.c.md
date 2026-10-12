@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_chinese_simp.c"
-description: "4 functions, includes 2 project headers."
+description: "MAC_CHINESE_SIMP charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_chinese_simp.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -33,7 +33,7 @@ Initialized at line 97 as `struct charset_functions`. Assigns:
 static size_t mac_chinese_simp_char_push(uint8_t *out, const ucs2_t *in, size_t *size)
 ```
 
-Defined at lines 67 to 95.
+Defined at lines 68 to 96.
 
 Map one UCS2 character, or a pair with an Apple hint character, to MAC_CHINESE_SIMP bytes.
 
@@ -58,7 +58,7 @@ Uses file-scope variables: `mac_chinese_simp_compose` in [libatalk/unicode/chars
 static size_t mac_chinese_simp_push(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 107 to 112.
+Defined at lines 108 to 113.
 
 Convert UCS2 to MAC_CHINESE_SIMP through cjk_generic_push.
 
@@ -81,7 +81,7 @@ Dispatched via: [charset_mac_chinese_simp](mac_chinese_simp.c.md#charset_mac_chi
 static size_t mac_chinese_simp_char_pull(ucs2_t *out, const uint8_t *in, size_t *size)
 ```
 
-Defined at lines 127 to 158.
+Defined at lines 128 to 159.
 
 Map one MAC_CHINESE_SIMP character of one or two bytes to UCS2.
 
@@ -106,7 +106,7 @@ Uses file-scope variables: `mac_chinese_simp_2uni_charset` in [libatalk/unicode/
 static size_t mac_chinese_simp_pull(void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 170 to 175.
+Defined at lines 171 to 176.
 
 Convert MAC_CHINESE_SIMP to UCS2 through cjk_generic_pull.
 

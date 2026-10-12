@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_randnum.c"
-description: "15 functions, includes 5 project headers."
+description: "RandNum and 2-Way RandNum UAMs with the afppasswd file."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_randnum.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### uams_randnum
 
-Initialized at line 891 as `struct uam_export`. Assigns:
+Initialized at line 896 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_randnum.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_randnum.c.md#uam_setup)
@@ -36,7 +36,7 @@ Initialized at line 891 as `struct uam_export`. Assigns:
 static int unhex(unsigned char x)
 ```
 
-Defined at lines 63 to 66.
+Defined at lines 68 to 71.
 
 Return the value of a hex digit, in either case.
 
@@ -55,7 +55,7 @@ Called by: [afppasswd](uams_randnum.c.md#afppasswd), [afppasswd_read_keyfile](ua
 static int randnum_cipher_check(const char *op, gcry_error_t err)
 ```
 
-Defined at lines 75 to 84.
+Defined at lines 80 to 89.
 
 Log a failed libgcrypt call of the RandNum UAM.
 
@@ -73,7 +73,7 @@ Called by: [afppasswd](uams_randnum.c.md#afppasswd)
 static int afppasswd_open_keyfile(const char *path, const int pathlen)
 ```
 
-Defined at lines 97 to 122.
+Defined at lines 102 to 127.
 
 Open the companion file of an afppasswd file, its path plus `.key`.
 
@@ -95,7 +95,7 @@ Called by: [afppasswd](uams_randnum.c.md#afppasswd), [randnum_warn_passwdfile_ke
 static int afppasswd_read_keyfile(int keyfd, uint8_t key[DES_KEY_SZ])
 ```
 
-Defined at lines 134 to 175.
+Defined at lines 139 to 180.
 
 Read the DES secret from the `.key` file of an afppasswd file.
 
@@ -117,7 +117,7 @@ Called by: [afppasswd](uams_randnum.c.md#afppasswd), [randnum_warn_passwdfile_ke
 static void randnum_warn_passwdfile_key(void *obj)
 ```
 
-Defined at lines 186 to 228.
+Defined at lines 191 to 233.
 
 Warn at setup when the afppasswd file or its `.key` file cannot serve RandNum logins.
 
@@ -136,7 +136,7 @@ Called by: [uam_setup](uams_randnum.c.md#uam_setup)
 static int afppasswd(const struct passwd *pwd, const char *path, const int pathlen, unsigned char *passwd, int len, const int set)
 ```
 
-Defined at lines 255 to 411.
+Defined at lines 260 to 416.
 
 Read or write the DES-encrypted password of a user in an afppasswd file.
 
@@ -169,7 +169,7 @@ Called by: [randpass](uams_randnum.c.md#randpass)
 static int randpass(const struct passwd *pwd, const char *file, unsigned char *passwd, const int len, const int set)
 ```
 
-Defined at lines 427 to 453.
+Defined at lines 432 to 458.
 
 Read or write an afppasswd entry as root.
 
@@ -194,7 +194,7 @@ Called by: [rand_login](uams_randnum.c.md#rand_login), [randnum_changepw](uams_r
 static int rand_login(void *obj, char *username, int ulen, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 474 to 524.
+Defined at lines 479 to 529.
 
 Start a RandNum login with an 8-byte challenge.
 
@@ -224,7 +224,7 @@ Uses file-scope variables: `randpwd`, `seskey`
 static int randnum_logincont(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 544 to 576.
+Defined at lines 549 to 581.
 
 Check the encrypted challenge of a RandNum login.
 
@@ -252,7 +252,7 @@ Uses file-scope variables: `randpwd`, `seskey`
 static int rand2num_logincont(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 598 to 643.
+Defined at lines 603 to 648.
 
 Check the encrypted challenge of a 2-Way RandNum login and answer the challenge of the client.
 
@@ -280,7 +280,7 @@ Uses file-scope variables: `randpwd`, `seskey`
 static int randnum_changepw(void *obj, const char *username, struct passwd *pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 664 to 739.
+Defined at lines 669 to 744.
 
 Change the RandNum password of a logged-in user in the afppasswd file.
 
@@ -309,7 +309,7 @@ Uses file-scope variables: `seskey`
 static int randnum_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 755 to 790.
+Defined at lines 760 to 795.
 
 Read the user name of an FPLogin request and start a RandNum login.
 
@@ -335,7 +335,7 @@ Called by: [uam_setup](uams_randnum.c.md#uam_setup)
 static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 808 to 837.
+Defined at lines 813 to 842.
 
 Read the user name of an FPLoginExt request and start a RandNum login.
 
@@ -362,7 +362,7 @@ Called by: [uam_setup](uams_randnum.c.md#uam_setup)
 static int uam_setup(void *obj, const char *path)
 ```
 
-Defined at lines 850 to 876.
+Defined at lines 855 to 881.
 
 Register the 2 RandNum logins and the RandNum password change.
 
@@ -386,7 +386,7 @@ Dispatched via: [uams_randnum](uams_randnum.c.md#uams_randnum)
 static void uam_cleanup(void)
 ```
 
-Defined at lines 881 to 889.
+Defined at lines 886 to 894.
 
 Unregister the 2 RandNum logins and the RandNum password change.
 

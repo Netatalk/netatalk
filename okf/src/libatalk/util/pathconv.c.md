@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/pathconv.c"
-description: "1 function, includes 4 project headers."
+description: "UTF-8 to Mac file name conversion with mangling."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/pathconv.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 char * convert_utf8_to_mac(const struct vol *vol, const char *upath)
 ```
 
-Defined at lines 25 to 63.
+Defined at lines 30 to 68.
 
 Convert a UTF-8 filename to a mangled Mac filename.
 

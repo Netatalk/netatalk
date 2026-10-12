@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/pap/papstatus.c"
-description: "6 functions, includes 5 project headers."
+description: "The papstatus command: show the status of a PAP printer."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/pap/papstatus.c"
 tags: ["bin/pap"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/pap](../pap.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [bin/pap](../pap.md) subsystem. Built from the commit recorded in [b
 static void sig_handler(int signo)
 ```
 
-Defined at lines 65 to 69.
+Defined at lines 70 to 74.
 
 Note SIGINT or SIGTERM, so the status loop stops after the current poll.
 
@@ -42,7 +42,7 @@ Called by: [main](papstatus.c.md#main)
 static void usage(char *path)
 ```
 
-Defined at lines 79 to 92.
+Defined at lines 84 to 97.
 
 Print the usage of papstatus to stderr and exit with 1.
 
@@ -57,7 +57,7 @@ Called by: [main](papstatus.c.md#main)
 static char * paprc(void)
 ```
 
-Defined at lines 103 to 126.
+Defined at lines 108 to 131.
 
 Read the printer name from the first line of .
 
@@ -75,7 +75,7 @@ Called by: [main](papstatus.c.md#main)
 static void print_status(char status, char mask, char *message)
 ```
 
-Defined at lines 141 to 150.
+Defined at lines 146 to 155.
 
 Print a label and True or False for one bit of an ImageWriter status byte.
 
@@ -92,7 +92,7 @@ Called by: [getstatus](papstatus.c.md#getstatus)
 int main(int ac, char **av)
 ```
 
-Defined at lines 165 to 276.
+Defined at lines 170 to 281.
 
 Print the status of a PAP printer once, or at a fixed interval.
 
@@ -112,7 +112,7 @@ Calls: [atalk_aton](../../libatalk/util/atalk_addr.c.md#atalk_aton), [atp_close]
 static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter)
 ```
 
-Defined at lines 289 to 338.
+Defined at lines 294 to 343.
 
 Ask a PAP printer for its status and print the status text.
 

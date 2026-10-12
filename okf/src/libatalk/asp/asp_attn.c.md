@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_attn.c"
-description: "1 function, includes 4 project headers."
+description: "ASP attention requests."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_attn.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_attention(ASP, AFPUserBytes)
 ```
 
-Defined at lines 35 to 69. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 40 to 74. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Send an [ASP](../../include/atalk/asp.h.md#struct-asp) attention with an attention code to the workstation of a session.
 

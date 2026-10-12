@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/main.c"
-description: "13 functions, includes 20 project headers."
+description: "The master afpd: startup, listeners, session children, and shutdown."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/main.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,7 +42,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void afp_exit(int ret)
 ```
 
-Defined at lines 69 to 72.
+Defined at lines 74 to 77.
 
 Exit the master afpd.
 
@@ -57,7 +57,7 @@ Called by: [main](main.c.md#main), [master_out_of_fds](main.c.md#master_out_of_f
 static bool init_listening_sockets(const AFPObj *dsiconfig, const AFPObj *aspconfig)
 ```
 
-Defined at lines 85 to 116.
+Defined at lines 90 to 121.
 
 Allocate the event set of the master afpd and add the listening sockets.
 
@@ -79,7 +79,7 @@ Called by: [main](main.c.md#main)
 static bool reset_listening_sockets(const AFPObj *dsiconfig, const AFPObj *aspconfig)
 ```
 
-Defined at lines 128 to 150.
+Defined at lines 133 to 155.
 
 Remove the listening sockets from the event set of the master afpd.
 
@@ -101,7 +101,7 @@ Called by: [main](main.c.md#main)
 static void afp_end_sessions(void)
 ```
 
-Defined at lines 155 to 172.
+Defined at lines 160 to 177.
 
 End the master's sessions and remove its stats socket before it exits.
 
@@ -117,7 +117,7 @@ Uses file-scope variables: `afpstats_listen_fd`, `asp_obj`, `server_children`
 static void afp_goaway(int sig)
 ```
 
-Defined at lines 184 to 223.
+Defined at lines 189 to 228.
 
 Signal handler of the master afpd.
 
@@ -138,7 +138,7 @@ Uses file-scope variables: `gotsigchld`, `nologin`, `reloadconfig`, `server_chil
 static void child_handler(void)
 ```
 
-Defined at lines 231 to 266.
+Defined at lines 236 to 271.
 
 Reap every exited session child of the master afpd.
 
@@ -156,7 +156,7 @@ Uses file-scope variables: `server_children`
 static int raise_nofile_to(const char *who, rlim_t target, rlim_t *out)
 ```
 
-Defined at lines 282 to 339.
+Defined at lines 287 to 344.
 
 Raise RLIMIT_NOFILE toward a target, probing down on rejection.
 
@@ -177,7 +177,7 @@ Called by: [setlimits](main.c.md#setlimits)
 static int setlimits(void)
 ```
 
-Defined at lines 349 to 381.
+Defined at lines 354 to 386.
 
 Raise the descriptor limit of the master afpd toward RLIM_MAX.
 
@@ -195,7 +195,7 @@ Called by: [main](main.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 405 to 775.
+Defined at lines 410 to 780.
 
 Run the master afpd: read the configuration, open the listeners, and start a session per connection.
 
@@ -223,7 +223,7 @@ Uses file-scope variables: `afpstats_listen_fd`, `asp_obj`, `dsi_obj`, `gotsigch
 static void master_out_of_fds(const server_child_t *children)
 ```
 
-Defined at lines 794 to 819.
+Defined at lines 799 to 824.
 
 Exit for a restart once the master has been out of descriptors too long.
 
@@ -244,7 +244,7 @@ Uses file-scope variables: `fds_starved_last`, `fds_starved_since`
 static afp_child_t * dsi_start(AFPObj *obj, DSI *dsi, server_child_t *server_children)
 ```
 
-Defined at lines 834 to 859.
+Defined at lines 839 to 864.
 
 Accept a [DSI](../../include/atalk/dsi.h.md#struct-dsi) connection and fork its session.
 
@@ -269,7 +269,7 @@ Uses file-scope variables: `fds_starved_last`, `fds_starved_since`, `server_chil
 static afp_child_t * asp_start(AFPObj *obj, server_child_t *active_children)
 ```
 
-Defined at lines 871 to 888.
+Defined at lines 876 to 893.
 
 Accept an [ASP](../../include/atalk/asp.h.md#struct-asp) connection and fork its session.
 
@@ -291,7 +291,7 @@ Called by: [main](main.c.md#main)
 static void asp_cleanup(const AFPObj *obj)
 ```
 
-Defined at lines 895 to 901.
+Defined at lines 900 to 906.
 
 Stop the [ASP](../../include/atalk/asp.h.md#struct-asp) tickle timer and unregister the NBP name of the server.
 

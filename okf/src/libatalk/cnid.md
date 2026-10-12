@@ -5,15 +5,15 @@ description: "4 files, 76 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/cnid"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [libatalk/cnid/cnid.c](cnid/cnid.c.md): 16 functions, includes 4 project headers.
+* [libatalk/cnid/cnid.c](cnid/cnid.c.md): The CNID database front end and backend registry.
 * [libatalk/cnid/cnid_init.c](cnid/cnid_init.c.md): initialization stuff for CNID backends.
-* [libatalk/cnid/mysql/cnid_mysql.c](cnid/mysql/cnid_mysql.c.md): 26 functions, includes 8 project headers.
-* [libatalk/cnid/sqlite/cnid_sqlite.c](cnid/sqlite/cnid_sqlite.c.md): 33 functions, includes 8 project headers.
+* [libatalk/cnid/mysql/cnid_mysql.c](cnid/mysql/cnid_mysql.c.md): MySQL CNID backend.
+* [libatalk/cnid/sqlite/cnid_sqlite.c](cnid/sqlite/cnid_sqlite.c.md): SQLite CNID backend.
 
 # Includes headers from
 

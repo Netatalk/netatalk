@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/atp/atp_open.c"
-description: "1 function, includes 4 project headers."
+description: "Opening an ATP endpoint."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_open.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 ATP atp_open(uint8_t, const struct at_addr *)
 ```
 
-Defined at lines 57 to 95. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 62 to 100. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Open an ATP endpoint on a new DDP socket.
 

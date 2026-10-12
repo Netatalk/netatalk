@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/messages.c"
-description: "3 functions, includes 7 project headers."
+description: "FPGetSrvrMsg: the login message, and the server messages from the message file."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/messages.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int setmessage(const char *)
 ```
 
-Defined at lines 38 to 46. Declared in [include/atalk/globals.h](../../include/atalk/globals.h.md).
+Defined at lines 44 to 52. Declared in [include/atalk/globals.h](../../include/atalk/globals.h.md).
 
 Copy AFP message to message buffer.
 
@@ -50,7 +50,7 @@ Uses file-scope variables: `servermesg`
 void readmessage(AFPObj *)
 ```
 
-Defined at lines 58 to 118. Declared in [include/atalk/globals.h](../../include/atalk/globals.h.md).
+Defined at lines 64 to 124. Declared in [include/atalk/globals.h](../../include/atalk/globals.h.md).
 
 Load the server message for a session from its message file.
 
@@ -71,7 +71,7 @@ Uses file-scope variables: `servermesg`
 int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 136 to 219.
+Defined at lines 142 to 225.
 
 FPGetSrvrMsg: return the login or the server message.
 

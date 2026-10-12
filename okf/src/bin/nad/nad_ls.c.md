@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_ls.c"
-description: "16 functions, includes 4 project headers."
+description: "The nad ls command: list entries with their Mac metadata."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_ls.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static int compare_names(const struct dirent **a, const struct dirent **b)
 ```
 
-Defined at lines 66 to 69.
+Defined at lines 71 to 74.
 
 Order two directory entries by name with strcmp, for scandir.
 
@@ -44,7 +44,7 @@ Called by: [ad_ls_r](nad_ls.c.md#ad_ls_r)
 static const char * check_netatalk_dirs(const char *name)
 ```
 
-Defined at lines 96 to 105.
+Defined at lines 101 to 110.
 
 Tell whether a name is one of the netatalk folders .AppleDouble, .AppleDB, and .AppleDesktop.
 
@@ -61,7 +61,7 @@ Called by: [ad_ls_r](nad_ls.c.md#ad_ls_r)
 static void usage_ls(void)
 ```
 
-Defined at lines 112 to 145.
+Defined at lines 117 to 150.
 
 Print the usage of nad ls and the meaning of its flag letters to stdout.
 
@@ -73,7 +73,7 @@ Called by: [nad_ls](nad_ls.c.md#nad_ls)
 static void print_numlinks(const struct stat *statp)
 ```
 
-Defined at lines 152 to 155.
+Defined at lines 157 to 160.
 
 Print the link count of an entry, five characters wide.
 
@@ -88,7 +88,7 @@ Called by: [ad_print](nad_ls.c.md#ad_print)
 static void print_owner(const struct stat *statp)
 ```
 
-Defined at lines 162 to 171.
+Defined at lines 167 to 176.
 
 Print the owner name of an entry, or the UID when the name is unknown.
 
@@ -103,7 +103,7 @@ Called by: [ad_print](nad_ls.c.md#ad_print)
 static void print_group(const struct stat *statp)
 ```
 
-Defined at lines 178 to 187.
+Defined at lines 183 to 192.
 
 Print the group name of an entry, or the GID when the name is unknown.
 
@@ -118,7 +118,7 @@ Called by: [ad_print](nad_ls.c.md#ad_print)
 static void print_size(const struct stat *statp)
 ```
 
-Defined at lines 196 to 208.
+Defined at lines 201 to 213.
 
 Print the size of an entry, or the major and minor numbers of a device.
 
@@ -135,7 +135,7 @@ Called by: [ad_print](nad_ls.c.md#ad_print)
 static void print_date(const struct stat *statp)
 ```
 
-Defined at lines 218 to 240.
+Defined at lines 223 to 245.
 
 Print the modification time of an entry as ls shows it.
 
@@ -152,7 +152,7 @@ Called by: [ad_print](nad_ls.c.md#ad_print)
 static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
 ```
 
-Defined at lines 256 to 475.
+Defined at lines 261 to 480.
 
 Print the Mac metadata columns of an entry for nad ls -l.
 
@@ -175,7 +175,7 @@ Uses file-scope variables: `labels`
 static void print_mode(const struct stat *st)
 ```
 
-Defined at lines 486 to 550.
+Defined at lines 491 to 555.
 
 Print the type letter and the permission bits of an entry as ls shows them.
 
@@ -190,7 +190,7 @@ Called by: [ad_print](nad_ls.c.md#ad_print)
 static int get_terminal_width(void)
 ```
 
-Defined at lines 562 to 580.
+Defined at lines 567 to 585.
 
 Return the width of the terminal for column output.
 
@@ -206,7 +206,7 @@ Called by: [print_columns](nad_ls.c.md#print_columns)
 static unsigned int print_name_sanitized(const char *name)
 ```
 
-Defined at lines 589 to 604.
+Defined at lines 594 to 609.
 
 Print a file name with a question mark for each character that does not print.
 
@@ -223,7 +223,7 @@ Called by: [ad_print](nad_ls.c.md#ad_print), [print_columns](nad_ls.c.md#print_c
 static void print_columns(char **names, unsigned int count)
 ```
 
-Defined at lines 615 to 663.
+Defined at lines 620 to 668.
 
 Print names in columns that fit the terminal width, filling each column first.
 
@@ -243,7 +243,7 @@ Called by: [ad_ls_r](nad_ls.c.md#ad_ls_r)
 static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
 ```
 
-Defined at lines 676 to 698.
+Defined at lines 681 to 703.
 
 Print one entry, as a plain name or as a long line under -l.
 
@@ -268,7 +268,7 @@ Uses file-scope variables: `ls_l`, `ls_u`
 static int ad_ls_r(char *path, afpvol_t *vol)
 ```
 
-Defined at lines 713 to 917.
+Defined at lines 718 to 922.
 
 List a file, or the entries of a directory, and descend under -R.
 
@@ -292,7 +292,7 @@ Uses file-scope variables: `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_dbd.c.md)
 int nad_ls(int argc, char **argv, AFPObj *obj)
 ```
 
-Defined at lines 932 to 1044. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 937 to 1049. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad ls command.
 

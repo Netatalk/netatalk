@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/dsi/dsi_attn.c"
-description: "1 function, includes 3 project headers."
+description: "DSIAttention requests."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_attn.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 int dsi_attention(DSI *, AFPUserBytes)
 ```
 
-Defined at lines 34 to 65. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 39 to 70. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send a DSIAttention request carrying flags to the client.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/vfs/acl.c"
-description: "2 functions, includes 5 project headers."
+description: "Reducing ACLs to the entries that mirror the mode bits, in the VFS layer."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/acl.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded 
 int remove_nfsv4_acl_vfs(const char *name)
 ```
 
-Defined at lines 42 to 98.
+Defined at lines 48 to 104.
 
 Keep only the owner@, group@, and everyone@ entries in the NFSv4 ACL of name.
 
@@ -46,7 +46,7 @@ Called by: [RF_solaris_remove_acl](vfs.c.md#rf_solaris_remove_acl), [remove_acl]
 int remove_posix_acl_vfs(const char *name)
 ```
 
-Defined at lines 111 to 155.
+Defined at lines 117 to 161.
 
 Remove any ACL_USER, ACL_GROUP, ACL_MASK or ACL_TYPE_DEFAULT ACEs from an object.
 

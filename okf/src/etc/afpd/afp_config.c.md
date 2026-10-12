@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/afp_config.c"
-description: "2 functions, includes 21 project headers."
+description: "Configuration setup of afpd at startup and reload: UAMs, listeners, and server-wide settings."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_config.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -43,7 +43,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 void configfree(AFPObj *obj, DSI *dsi)
 ```
 
-Defined at lines 65 to 116.
+Defined at lines 71 to 122.
 
 Release the configuration and the [DSI](../../include/atalk/dsi.h.md#struct-dsi) listeners.
 
@@ -63,7 +63,7 @@ Called by: [dsi_start](main.c.md#dsi_start), [main](main.c.md#main)
 int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
 ```
 
-Defined at lines 132 to 433.
+Defined at lines 138 to 439.
 
 Set up the UAMs, the listeners, and the server-wide settings at startup or reload.
 

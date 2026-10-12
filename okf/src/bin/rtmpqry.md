@@ -5,12 +5,12 @@ description: "1 file, 7 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/rtmpqry"
 tags: ["bin/rtmpqry"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [bin/rtmpqry/rtmpqry.c](rtmpqry/rtmpqry.c.md): 7 functions, includes 4 project headers.
+* [bin/rtmpqry/rtmpqry.c](rtmpqry/rtmpqry.c.md): The rtmpqry command: query an AppleTalk router with RTMP.
 
 # Includes headers from
 

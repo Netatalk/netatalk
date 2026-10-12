@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/acl/ldap.c"
-description: "5 functions, includes 5 project headers."
+description: "LDAP lookups of UUIDs and names for ACLs."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/ldap.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 static int ldap_getattr_fromfilter_withbase_scope(const char *searchbase, const char *filter, char *attributes[], int scope, ldapcon_t conflags, char **result)
 ```
 
-Defined at lines 124 to 289.
+Defined at lines 129 to 294.
 
 LDAP get attribute from filter with base and scope.
 
@@ -57,7 +57,7 @@ Uses file-scope variables: `ldap_auth_dn`, `ldap_auth_method`, `ldap_auth_pw`, `
 static char * gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
 ```
 
-Defined at lines 298 to 355.
+Defined at lines 303 to 360.
 
 Generate LDAP filter string for UUID query.
 
@@ -77,7 +77,7 @@ Uses file-scope variables: `ldap_uuid_attr`, `ldap_uuid_encoding`
 static int ldap_escape_filter_value(const char *src, char *dst, size_t dstlen)
 ```
 
-Defined at lines 371 to 396.
+Defined at lines 376 to 401.
 
 Escape a string for an LDAP search filter as RFC 4515 requires.
 
@@ -98,7 +98,7 @@ Called by: [ldap_getuuidfromname](ldap.c.md#ldap_getuuidfromname)
 int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
 ```
 
-Defined at lines 409 to 486. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
+Defined at lines 414 to 491. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
 
 Search UUID for name in LDAP.
 
@@ -123,7 +123,7 @@ Uses file-scope variables: `ldap_config_valid`, `ldap_group_attr`, `ldap_groupba
 int ldap_getnamefromuuid(const char *uuidstr, char **name, uuidtype_t *type)
 ```
 
-Defined at lines 499 to 547. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
+Defined at lines 504 to 552. Declared in [libatalk/acl/aclldap.h](aclldap.h.md).
 
 LDAP search wrapper.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/uam.c"
-description: "9 functions, includes 9 project headers."
+description: "UAM module loading and the server services that UAMs call."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/uam.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 struct uam_mod * uam_load(AFPObj *obj, const char *path, const char *name)
 ```
 
-Defined at lines 55 to 107.
+Defined at lines 60 to 112.
 
 Load a UAM module and run its setup function.
 
@@ -56,7 +56,7 @@ Calls through [`uam_export::uam_setup`](../../include/atalk/uam.h.md#struct-uam_
 void uam_unload(struct uam_mod *mod)
 ```
 
-Defined at lines 116 to 124.
+Defined at lines 121 to 129.
 
 Run the cleanup function of a UAM module, close it, and free its entry.
 
@@ -77,7 +77,7 @@ Calls through [`uam_export::uam_cleanup`](../../include/atalk/uam.h.md#struct-ua
 int uam_register(const int type, const char *path, const char *name,...)
 ```
 
-Defined at lines 142 to 220.
+Defined at lines 147 to 225.
 
 Register a UAM of a module under a name and type.
 
@@ -101,7 +101,7 @@ Called by: [uam_setup](../uams/uams_dhx2_pam.c.md#uam_setup), [uam_setup](../uam
 void uam_unregister(const int type, const char *name)
 ```
 
-Defined at lines 228 to 245.
+Defined at lines 233 to 250.
 
 Drop a registration of a UAM and free the UAM after its last one.
 
@@ -119,7 +119,7 @@ Called by: [uam_cleanup](../uams/uams_dhx2_pam.c.md#uam_cleanup), [uam_cleanup](
 struct passwd * uam_getname(void *private, char *name, const int len)
 ```
 
-Defined at lines 261 to 356.
+Defined at lines 266 to 361.
 
 Find the password entry of a login name for a UAM.
 
@@ -142,7 +142,7 @@ Called by: [afp_changepw](auth.c.md#afp_changepw), [gss_logincont](../uams/uams_
 int uam_checkuser(void *private, const struct passwd *pwd)
 ```
 
-Defined at lines 367 to 399.
+Defined at lines 372 to 404.
 
 Check that a user may log in through a UAM.
 
@@ -162,7 +162,7 @@ Called by: [gss_logincont](../uams/uams_gss.c.md#gss_logincont), [login](../uams
 int uam_random_string(AFPObj *obj, char *buf, int len)
 ```
 
-Defined at lines 413 to 450.
+Defined at lines 418 to 455.
 
 Fill a buffer with cryptographically secure random bytes.
 
@@ -183,7 +183,7 @@ Called by: [create_session_key](auth.c.md#create_session_key), [create_session_t
 int uam_afpserver_option(void *private, const int what, void *option, size_t *len)
 ```
 
-Defined at lines 476 to 665.
+Defined at lines 481 to 670.
 
 Answer a UAM request for a server or session value.
 
@@ -215,7 +215,7 @@ Called by: [changepw_3](../uams/uams_dhx2_pam.c.md#changepw_3), [dhx_setup](../u
 UAM_MODULE_EXPORT void append(struct papfile *pf, const char *data, int len)
 ```
 
-Defined at lines 678 to 682.
+Defined at lines 683 to 687.
 
 Stub of the papd append call for the UAM modules that afpd loads, which ignores its arguments.
 

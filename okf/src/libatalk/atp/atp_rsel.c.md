@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/atp/atp_rsel.c"
-description: "3 functions, includes 6 project headers."
+description: "Waiting for an ATP request or response, with retransmission."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_rsel.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 static int resend_request(ATP ah)
 ```
 
-Defined at lines 47 to 81.
+Defined at lines 52 to 86.
 
 Send the pending ATP request again, with a bitmap of the responses still missing.
 
@@ -49,7 +49,7 @@ Called by: [atp_rsel](atp_rsel.c.md#atp_rsel)
 static int atp_resp_incomplete(ATP ah)
 ```
 
-Defined at lines 94 to 102.
+Defined at lines 99 to 107.
 
 Report a response that leaves the transaction incomplete.
 
@@ -68,7 +68,7 @@ Called by: [atp_rsel](atp_rsel.c.md#atp_rsel)
 int atp_rsel(ATP, struct sockaddr_at *, int)
 ```
 
-Defined at lines 121 to 431. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 126 to 436. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Read ATP packets until a new request arrives or the pending response is complete.
 

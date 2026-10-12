@@ -5,13 +5,13 @@ description: "2 files, 12 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/pap"
 tags: ["bin/pap"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [bin/pap/pap.c](pap/pap.c.md): 6 functions, includes 5 project headers.
-* [bin/pap/papstatus.c](pap/papstatus.c.md): 6 functions, includes 5 project headers.
+* [bin/pap/pap.c](pap/pap.c.md): The pap command: print files on a PAP printer.
+* [bin/pap/papstatus.c](pap/papstatus.c.md): The papstatus command: show the status of a PAP printer.
 
 # Includes headers from
 

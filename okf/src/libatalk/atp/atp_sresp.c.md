@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/atp/atp_sresp.c"
-description: "1 function, includes 5 project headers."
+description: "Sending ATP responses."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_sresp.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_sresp(ATP, struct atp_block *)
 ```
 
-Defined at lines 62 to 185. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 67 to 190. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Send the response to the last received ATP request.
 

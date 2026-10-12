@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_set.c"
-description: "7 functions, includes 3 project headers."
+description: "The nad set command: change the Mac metadata of an entry."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_set.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_set(void)
 ```
 
-Defined at lines 66 to 97.
+Defined at lines 71 to 102.
 
 Print the usage of nad set and the meaning of its flag letters to stdout.
 
@@ -37,7 +37,7 @@ Called by: [nad_set](nad_set.c.md#nad_set)
 static void change_type(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *p_new_type)
 ```
 
-Defined at lines 110 to 118.
+Defined at lines 115 to 123.
 
 Store a new file type in the Finder info of the metadata.
 
@@ -60,7 +60,7 @@ Called by: [nad_set](nad_set.c.md#nad_set)
 static void change_creator(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *p_new_creator)
 ```
 
-Defined at lines 131 to 139.
+Defined at lines 136 to 144.
 
 Store a new creator in the Finder info of the metadata.
 
@@ -83,7 +83,7 @@ Called by: [nad_set](nad_set.c.md#nad_set)
 static void change_label(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *p_new_label)
 ```
 
-Defined at lines 153 to 182.
+Defined at lines 158 to 187.
 
 Set the color label in the Finder flags of the metadata.
 
@@ -106,7 +106,7 @@ Called by: [nad_set](nad_set.c.md#nad_set)
 static void change_attributes(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *p_new_attributes)
 ```
 
-Defined at lines 197 to 256.
+Defined at lines 202 to 261.
 
 Set or clear AFP attributes from a string of letters.
 
@@ -131,7 +131,7 @@ Uses file-scope variables: `new_attributes`
 static void change_flags(char *path, afpvol_t *vol, const struct stat *st, struct adouble *ad, char *p_new_flags)
 ```
 
-Defined at lines 272 to 377.
+Defined at lines 277 to 382.
 
 Set or clear Finder flags from a string of letters.
 
@@ -156,7 +156,7 @@ Uses file-scope variables: `new_flags`
 int nad_set(int argc, char **argv, AFPObj *obj)
 ```
 
-Defined at lines 392 to 479. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 397 to 484. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad set command, which changes the Mac metadata of one entry.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/auth.c"
-description: "26 functions, includes 19 project headers."
+description: "AFP login, logout, password, and session token commands, and UAM loading and dispatch."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/auth.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,7 +41,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static socklen_t sockaddr_len(const struct sockaddr *sa)
 ```
 
-Defined at lines 81 to 93.
+Defined at lines 87 to 99.
 
 Return the size of the socket address structure for the family of an address.
 
@@ -58,7 +58,7 @@ Called by: [client_address](auth.c.md#client_address)
 static const char * client_address(AFPObj *obj)
 ```
 
-Defined at lines 104 to 131.
+Defined at lines 110 to 137.
 
 Name the client of a session for the login report to the master afpd.
 
@@ -79,7 +79,7 @@ Called by: [login](auth.c.md#login)
 void status_versions(char *data, const ASP asp, const DSI *dsi)
 ```
 
-Defined at lines 146 to 198.
+Defined at lines 152 to 204.
 
 Write the AFP version list of the FPGetSrvrInfo reply into a status block.
 
@@ -98,7 +98,7 @@ Called by: [status_init](status.c.md#status_init)
 void status_uams(char *data, const char *authlist)
 ```
 
-Defined at lines 210 to 241.
+Defined at lines 216 to 247.
 
 Write the UAM name list of the FPGetSrvrInfo reply into a status block.
 
@@ -118,7 +118,7 @@ Uses file-scope variables: `uam_login`
 static int send_reply(const AFPObj *obj, const int err)
 ```
 
-Defined at lines 254 to 268.
+Defined at lines 260 to 274.
 
 Pass a login result on, or answer a failed login and end the session.
 
@@ -138,7 +138,7 @@ Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login
 static int afp_errpwdexpired(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 280 to 286.
+Defined at lines 286 to 292.
 
 Answer a command with AFPERR_PWDEXPR while a password change is due.
 
@@ -159,7 +159,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 static int afp_null_nolog(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 298 to 303.
+Defined at lines 304 to 309.
 
 Answer a command with AFPERR_NOOP and no log line.
 
@@ -178,7 +178,7 @@ Returns: AFPERR_NOOP
 static int set_auth_switch(const AFPObj *obj, int expired)
 ```
 
-Defined at lines 326 to 404.
+Defined at lines 332 to 410.
 
 Install the command table of a logged-in session.
 
@@ -209,7 +209,7 @@ Uses file-scope variables: `afp_switch` in [etc/afpd/switch.c](switch.c.md), `po
 bool singleuser_admits_uid(const AFPObj *obj, uid_t uid)
 ```
 
-Defined at lines 417 to 420.
+Defined at lines 423 to 426.
 
 Tell whether the server may serve a user.
 
@@ -229,7 +229,7 @@ Called by: [login](auth.c.md#login)
 static int login(AFPObj *obj, struct passwd *pwd, void(*logout)(void), int expired)
 ```
 
-Defined at lines 440 to 544.
+Defined at lines 446 to 550.
 
 Finish a login after the UAM accepted the user.
 
@@ -259,7 +259,7 @@ Mentioned in the documentation of: [run_afpd](../netatalk/netatalk.c.md#run_afpd
 int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 563 to 623.
+Defined at lines 569 to 629.
 
 FPZzzzz: put the [DSI](../../include/atalk/dsi.h.md#struct-dsi) session to sleep or wake it from extended sleep.
 
@@ -288,7 +288,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 static int create_session_token(AFPObj *obj)
 ```
 
-Defined at lines 631 to 646.
+Defined at lines 637 to 652.
 
 Allocate the session token and fill it with random bytes.
 
@@ -307,7 +307,7 @@ Called by: [afp_getsession](auth.c.md#afp_getsession)
 static int create_session_key(AFPObj *obj)
 ```
 
-Defined at lines 658 to 676.
+Defined at lines 664 to 682.
 
 Allocate sinfo.sessionkey once and fill it with random bytes.
 
@@ -328,7 +328,7 @@ Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login
 int afp_getsession(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 700 to 822.
+Defined at lines 706 to 828.
 
 FPGetSessionToken: return a token that a reconnecting client can present.
 
@@ -355,7 +355,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 845 to 951.
+Defined at lines 851 to 957.
 
 FPDisconnectOldSession: hand the connection to the disconnected session that owns a token.
 
@@ -384,7 +384,7 @@ Uses file-scope variables: `die_pending` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
 ```
 
-Defined at lines 967 to 997.
+Defined at lines 973 to 1003.
 
 Select the AFP version that a login request names.
 
@@ -408,7 +408,7 @@ Uses file-scope variables: `afp_version_index`
 int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1017 to 1086.
+Defined at lines 1023 to 1092.
 
 FPLogin: select the AFP version and the UAM, and run the first login step.
 
@@ -435,7 +435,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1104 to 1263.
+Defined at lines 1110 to 1269.
 
 FPLoginExt: select the AFP version and the UAM, and run the first login step with a UTF-8 user name.
 
@@ -462,7 +462,7 @@ Dispatched via: [preauth_switch](switch.c.md#preauth_switch)
 int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1279 to 1301.
+Defined at lines 1285 to 1307.
 
 FPLoginCont: pass the next login step to the UAM that FPLogin selected.
 
@@ -489,7 +489,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_logout(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1317 to 1335.
+Defined at lines 1323 to 1341.
 
 FPLogout: close every fork and volume of the session.
 
@@ -516,7 +516,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1355 to 1435.
+Defined at lines 1361 to 1441.
 
 FPChangePassword: pass a password change to the UAM that the request names.
 
@@ -545,7 +545,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_getuserinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1455 to 1529.
+Defined at lines 1461 to 1535.
 
 FPGetUserInfo: return the user ID, the group ID, or the UUID of the session user.
 
@@ -572,7 +572,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 struct uam_obj * auth_uamfind(const int type, const char *name, const int len)
 ```
 
-Defined at lines 1549 to 1566.
+Defined at lines 1555 to 1572.
 
 Find a registered UAM by name.
 
@@ -595,7 +595,7 @@ Called by: [afp_changepw](auth.c.md#afp_changepw), [afp_login](auth.c.md#afp_log
 int auth_register(const int type, struct uam_obj *uam)
 ```
 
-Defined at lines 1578 to 1592.
+Defined at lines 1584 to 1598.
 
 Add a UAM to the list of its type.
 
@@ -613,7 +613,7 @@ Called by: [uam_register](uam.c.md#uam_register)
 int auth_load(AFPObj *obj, const char *path, const char *list)
 ```
 
-Defined at lines 1605 to 1649.
+Defined at lines 1611 to 1655.
 
 Load the UAM modules that the uam list option names.
 
@@ -638,7 +638,7 @@ Uses file-scope variables: `uam_modules`
 void auth_unload(void)
 ```
 
-Defined at lines 1652 to 1662.
+Defined at lines 1658 to 1668.
 
 get rid of all of the uams
 

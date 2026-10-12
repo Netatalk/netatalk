@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/cnid/mysql/cnid_mysql.c"
-description: "26 functions, includes 8 project headers."
+description: "MySQL CNID backend."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/mysql/cnid_mysql.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/cnid](../../cnid.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/cnid](../../cnid.md) subsystem. Built from the commit reco
 
 ### cnid_mysql_module
 
-Initialized at line 2091 as `struct _cnid_module`. Assigns:
+Initialized at line 2096 as `struct _cnid_module`. Assigns:
 
 * `cnid_open`: [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
 
@@ -38,7 +38,7 @@ Initialized at line 2091 as `struct _cnid_module`. Assigns:
 static bool cnid_mysql_hint_usable(cnid_t hint)
 ```
 
-Defined at lines 103 to 107.
+Defined at lines 108 to 112.
 
 Tell whether a CNID hint from AppleDouble or EA metadata is safe to bind.
 
@@ -57,7 +57,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add)
 static int init_prepared_stmt_lookup(CNID_mysql_private *db)
 ```
 
-Defined at lines 118 to 165.
+Defined at lines 123 to 170.
 
 Prepare the lookup statement of a MySQL CNID table.
 
@@ -80,7 +80,7 @@ Uses file-scope variables: `lookup_param`, `lookup_result`, `lookup_result_dev`,
 static int init_prepared_stmt_add(CNID_mysql_private *db)
 ```
 
-Defined at lines 174 to 204.
+Defined at lines 179 to 209.
 
 Prepare the insert statement for a new entry, numbered by AUTO_INCREMENT.
 
@@ -101,7 +101,7 @@ Uses file-scope variables: `add_param`, `stmt_param_dev`, `stmt_param_did`, `stm
 static int init_prepared_stmt_put(CNID_mysql_private *db)
 ```
 
-Defined at lines 212 to 245.
+Defined at lines 217 to 250.
 
 Prepare the insert statement for an entry with an explicit CNID.
 
@@ -122,7 +122,7 @@ Uses file-scope variables: `put_param`, `stmt_param_dev`, `stmt_param_did`, `stm
 static int init_prepared_stmt_get(CNID_mysql_private *db)
 ```
 
-Defined at lines 253 to 279.
+Defined at lines 258 to 284.
 
 Prepare the statement that finds the CNID of a name in a directory.
 
@@ -143,7 +143,7 @@ Uses file-scope variables: `get_param`, `get_result`, `get_result_id`, `stmt_par
 static int init_prepared_stmt_delete(CNID_mysql_private *db)
 ```
 
-Defined at lines 287 to 306.
+Defined at lines 292 to 311.
 
 Prepare the statement that removes an entry by CNID.
 
@@ -164,7 +164,7 @@ Uses file-scope variables: `delete_param`, `stmt_param_id`
 static int init_prepared_stmt_resolve(CNID_mysql_private *db)
 ```
 
-Defined at lines 314 to 340.
+Defined at lines 319 to 345.
 
 Prepare the statement that finds the parent and the name of a CNID.
 
@@ -185,7 +185,7 @@ Uses file-scope variables: `resolve_param`, `resolve_result`, `resolve_result_di
 static int init_prepared_stmt_purge(CNID_mysql_private *db)
 ```
 
-Defined at lines 351 to 385.
+Defined at lines 356 to 390.
 
 Prepare the statement that removes every entry clashing with an update.
 
@@ -208,7 +208,7 @@ Uses file-scope variables: `purge_param`, `stmt_param_dev`, `stmt_param_did`, `s
 static int init_prepared_stmt(CNID_mysql_private *db)
 ```
 
-Defined at lines 393 to 405.
+Defined at lines 398 to 410.
 
 Prepare all 7 statements of a MySQL CNID table.
 
@@ -227,7 +227,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_open](c
 static void close_prepared_stmt(CNID_mysql_private *db)
 ```
 
-Defined at lines 416 to 430.
+Defined at lines 421 to 435.
 
 Close and clear the backend's prepared MySQL statements.
 
@@ -244,7 +244,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_close](
 static void cnid_mysql_set_errno(unsigned int mysql_error_code)
 ```
 
-Defined at lines 443 to 460.
+Defined at lines 448 to 465.
 
 Classify a MySQL error code as a CNID_ERR_* errno.
 
@@ -261,7 +261,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_drain_r
 static int cnid_mysql_drain_results(MYSQL *con)
 ```
 
-Defined at lines 472 to 492.
+Defined at lines 477 to 497.
 
 Drain the remaining results of a multi-statement batch.
 
@@ -282,7 +282,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_wipe](c
 static int cnid_mysql_stmt_execute(CNID_mysql_private *db, MYSQL_STMT **stmtp)
 ```
 
-Defined at lines 507 to 556.
+Defined at lines 512 to 561.
 
 Execute a prepared statement and reprepare after CR_SERVER_LOST.
 
@@ -304,7 +304,7 @@ Called by: [cnid_mysql_delete](cnid_mysql.c.md#cnid_mysql_delete), [cnid_mysql_g
 static int cnid_mysql_execute(MYSQL *con, const char *sql)
 ```
 
-Defined at lines 568 to 580.
+Defined at lines 573 to 585.
 
 Run an SQL statement or batch on a connection.
 
@@ -326,7 +326,7 @@ Called by: [cnid_mysql_add](cnid_mysql.c.md#cnid_mysql_add), [cnid_mysql_getstam
 int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
 ```
 
-Defined at lines 589 to 607.
+Defined at lines 594 to 612.
 
 Remove a CNID from the MySQL table.
 
@@ -348,7 +348,7 @@ Uses file-scope variables: `stmt_param_id`
 void cnid_mysql_close(struct _cnid_db *cdb)
 ```
 
-Defined at lines 614 to 638.
+Defined at lines 619 to 643.
 
 Close the MySQL connection of a CNID database and free the database.
 
@@ -365,7 +365,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 int cnid_mysql_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 657 to 735.
+Defined at lines 662 to 740.
 
 Rewrite the entry of a CNID with a new name, parent, and stat.
 
@@ -393,7 +393,7 @@ Uses file-scope variables: `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, 
 cnid_t cnid_mysql_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 757 to 953.
+Defined at lines 762 to 958.
 
 Find the CNID of an object by name and parent or by device and inode.
 
@@ -422,7 +422,7 @@ Uses file-scope variables: `lookup_result`, `lookup_result_dev`, `lookup_result_
 cnid_t cnid_mysql_add(struct _cnid_db *cdb, const struct stat *st, cnid_t did, const char *name, size_t len, cnid_t hint)
 ```
 
-Defined at lines 975 to 1179.
+Defined at lines 980 to 1184.
 
 Find the CNID of an object or add a new entry for it.
 
@@ -452,7 +452,7 @@ Uses file-scope variables: `stmt_param_dev`, `stmt_param_did`, `stmt_param_id`, 
 cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
 ```
 
-Defined at lines 1194 to 1261.
+Defined at lines 1199 to 1266.
 
 Look up the CNID that a directory holds under a name.
 
@@ -478,7 +478,7 @@ Uses file-scope variables: `get_result`, `get_result_id`, `stmt_param_did`, `stm
 char * cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 ```
 
-Defined at lines 1276 to 1340.
+Defined at lines 1281 to 1345.
 
 Resolve a CNID to its parent and name in the MySQL table.
 
@@ -504,7 +504,7 @@ Uses file-scope variables: `resolve_result`, `resolve_result_did`, `resolve_resu
 int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 1352 to 1413.
+Defined at lines 1357 to 1418.
 
 Read the stamp of a volume from the volumes table.
 
@@ -527,7 +527,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 1434 to 1652.
+Defined at lines 1439 to 1657.
 
 Find the CNIDs whose name contains a substring, for cnid_find.
 
@@ -554,7 +554,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 int cnid_mysql_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 1663 to 1704.
+Defined at lines 1668 to 1709.
 
 Empty the MySQL table of a volume and restart its CNIDs at 17.
 
@@ -575,7 +575,7 @@ Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 static struct _cnid_db * cnid_mysql_new(struct vol *vol)
 ```
 
-Defined at lines 1712 to 1733.
+Defined at lines 1717 to 1738.
 
 Allocate a CNID database object with the MySQL function table.
 
@@ -594,7 +594,7 @@ Called by: [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open)
 struct _cnid_db * cnid_mysql_open(struct cnid_open_args *args)
 ```
 
-Defined at lines 1748 to 2089.
+Defined at lines 1753 to 2094.
 
 Open the MySQL CNID backend for a volume.
 

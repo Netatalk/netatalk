@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/atp/atp_rreq.c"
-description: "2 functions, includes 3 project headers."
+description: "Receiving ATP requests."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_rreq.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,11 +25,9 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 int atp_rreq_try(ATP, struct atp_block *)
 ```
 
-Defined at lines 64 to 129. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 69 to 134. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
-1 got, 0 none yet, -1 error
-
-1 got, 0 none yet, -1 error
+Read one datagram and take it as an ATP request when it is one.
 
 A caller that saw the socket turn readable never blocks here and keeps control of its wait. A readable socket does not promise a request, since the datagram may belong to another transaction or another node. The waiting form, atp_rreq, loops over this call.
 
@@ -51,7 +49,7 @@ Called by: [asp_getrequest](../asp/asp_getreq.c.md#asp_getrequest), [atp_rreq](a
 int atp_rreq(ATP, struct atp_block *)
 ```
 
-Defined at lines 138 to 147. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
+Defined at lines 143 to 152. Declared in [include/atalk/atp.h](../../include/atalk/atp.h.md).
 
 Wait for an ATP request, reading datagrams until one arrives.
 

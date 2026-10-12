@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/status.c"
-description: "12 functions, includes 11 project headers."
+description: "The FPGetSrvrInfo status block."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/status.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,7 +33,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int uam_gss_enabled(void)
 ```
 
-Defined at lines 52 to 58.
+Defined at lines 57 to 63.
 
 Tell whether afpd loaded the Kerberos UAM, Client Krb v2.
 
@@ -49,7 +49,7 @@ Called by: [status_directorynames](status.c.md#status_directorynames)
 static void status_flags(char *data, const int notif, const int ipok, const unsigned char passwdbits, const int dirsrvcs, int flags)
 ```
 
-Defined at lines 76 to 120.
+Defined at lines 81 to 125.
 
 Write the flags word of the FPGetSrvrInfo reply into a status block.
 
@@ -71,7 +71,7 @@ Called by: [status_init](status.c.md#status_init)
 static int status_server(char *data, const char *server, const struct afp_options *options)
 ```
 
-Defined at lines 135 to 183.
+Defined at lines 140 to 188.
 
 Write the server name of the FPGetSrvrInfo reply into a status block.
 
@@ -94,7 +94,7 @@ Called by: [status_init](status.c.md#status_init)
 static void status_machine(char *data)
 ```
 
-Defined at lines 193 to 222.
+Defined at lines 198 to 227.
 
 Write the machine type of the FPGetSrvrInfo reply into a status block.
 
@@ -111,7 +111,7 @@ Called by: [status_init](status.c.md#status_init)
 static uint16_t status_signature(char *data, int *servoffset, const struct afp_options *options)
 ```
 
-Defined at lines 236 to 255.
+Defined at lines 241 to 260.
 
 Write the 16-byte server signature of the FPGetSrvrInfo reply into a status block.
 
@@ -132,7 +132,7 @@ Called by: [status_init](status.c.md#status_init)
 static size_t status_netaddress(char *data, int *servoffset, const ASP asp, const DSI *dsi, const struct afp_options *options)
 ```
 
-Defined at lines 274 to 400.
+Defined at lines 279 to 405.
 
 Write the network address list of the FPGetSrvrInfo reply into a status block.
 
@@ -159,7 +159,7 @@ Uses file-scope variables: `maxstatuslen`
 static size_t status_directorynames(char *data, int *diroffset, const DSI *dsi, const struct afp_options *options)
 ```
 
-Defined at lines 423 to 448.
+Defined at lines 428 to 453.
 
 Build the DirectoryNames field of the status reply.
 
@@ -190,7 +190,7 @@ Called by: [status_init](status.c.md#status_init)
 static size_t status_utf8servername(char *data, int *nameoffset, const DSI *dsi, const struct afp_options *options)
 ```
 
-Defined at lines 464 to 506.
+Defined at lines 469 to 511.
 
 Write the UTF-8 server name of the FPGetSrvrInfo reply into a status block.
 
@@ -216,7 +216,7 @@ Uses file-scope variables: `maxstatuslen`
 static void status_icon(char *data, const unsigned char *icondata, const size_t iconlen, const int sigoffset)
 ```
 
-Defined at lines 521 to 543.
+Defined at lines 526 to 548.
 
 Write the volume icon of the FPGetSrvrInfo reply into a status block and place the signature after it.
 
@@ -236,7 +236,7 @@ Called by: [status_init](status.c.md#status_init)
 void status_init(AFPObj *dsi_obj, AFPObj *asp_obj, DSI *dsi)
 ```
 
-Defined at lines 559 to 724.
+Defined at lines 564 to 729.
 
 Build the FPGetSrvrInfo replies of a [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener and of the [ASP](../../include/atalk/asp.h.md#struct-asp) server.
 
@@ -259,7 +259,7 @@ Uses file-scope variables: `daemon_icon` in [etc/afpd/icon.c](icon.c.md), `declo
 void set_signature(struct afp_options *options)
 ```
 
-Defined at lines 738 to 932.
+Defined at lines 743 to 937.
 
 Set the 16-byte server signature.
 
@@ -278,7 +278,7 @@ Called by: [configinit](afp_config.c.md#configinit)
 int afp_getsrvrinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 946 to 963.
+Defined at lines 951 to 968.
 
 FPGetSrvrInfo: return the status block of the session transport.
 

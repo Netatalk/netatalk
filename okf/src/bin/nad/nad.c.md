@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad.c"
-description: "4 functions, includes 5 project headers."
+description: "The nad command: entry point and subcommand dispatch."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static nad_command_t get_command(const char *cmd)
 ```
 
-Defined at lines 74 to 141.
+Defined at lines 79 to 146.
 
 Map a nad subcommand name to its command code.
 
@@ -46,7 +46,7 @@ Called by: [main](nad.c.md#main)
 static void usage_main(void)
 ```
 
-Defined at lines 146 to 154.
+Defined at lines 151 to 159.
 
 Print the usage of nad and its subcommands to stdout.
 
@@ -58,7 +58,7 @@ Called by: [main](nad.c.md#main)
 static void show_version(void)
 ```
 
-Defined at lines 159 to 162.
+Defined at lines 164 to 167.
 
 Print the netatalk version of nad to stdout.
 
@@ -70,7 +70,7 @@ Called by: [main](nad.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 177 to 290.
+Defined at lines 182 to 295.
 
 Parse the global options of nad, load afp.conf, and run a subcommand.
 

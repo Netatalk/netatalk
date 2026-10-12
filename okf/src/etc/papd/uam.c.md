@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/uam.c"
-description: "7 functions, includes 6 project headers."
+description: "UAM module loading and the server services that papd offers UAMs."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/uam.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 struct uam_mod * uam_load(const char *path, const char *name)
 ```
 
-Defined at lines 43 to 94.
+Defined at lines 48 to 99.
 
 Load a UAM module for papd and run its setup.
 
@@ -52,7 +52,7 @@ Calls through [`uam_export::uam_setup`](../../include/atalk/uam.h.md#struct-uam_
 void uam_unload(struct uam_mod *mod)
 ```
 
-Defined at lines 99 to 107.
+Defined at lines 104 to 112.
 
 Run the cleanup function of a UAM module, close it, and free its entry.
 
@@ -73,7 +73,7 @@ Calls through [`uam_export::uam_cleanup`](../../include/atalk/uam.h.md#struct-ua
 int uam_register(const int type, const char *path, const char *name,...)
 ```
 
-Defined at lines 117 to 182.
+Defined at lines 122 to 187.
 
 Register a UAM of a module under a name and type.
 
@@ -87,7 +87,7 @@ Calls: [auth_register](auth.c.md#auth_register), [auth_uamfind](auth.c.md#auth_u
 void uam_unregister(const int type, const char *name)
 ```
 
-Defined at lines 187 to 204.
+Defined at lines 192 to 209.
 
 Drop a registration of a UAM and free the UAM after its last one.
 
@@ -103,7 +103,7 @@ Calls: [auth_uamfind](auth.c.md#auth_uamfind)
 int uam_afpserver_option(void *private, const int what, void *option, size_t *len)
 ```
 
-Defined at lines 213 to 217.
+Defined at lines 218 to 222.
 
 Answer a UAM request for a server or session value with nothing, for UAMs loaded by papd.
 
@@ -117,7 +117,7 @@ In papd the call is a stub that sets nothing and returns 0 for every code, since
 struct passwd * uam_getname(void *private, char *name, const int len)
 ```
 
-Defined at lines 228 to 263.
+Defined at lines 233 to 268.
 
 Find the password entry of a login name for a UAM.
 
@@ -129,7 +129,7 @@ In papd the call skips the domain forms of afpd. After getpwnam fails, it lowers
 int uam_checkuser(void *private, const struct passwd *pwd)
 ```
 
-Defined at lines 271 to 294.
+Defined at lines 276 to 299.
 
 Check that a user may log in through a UAM.
 

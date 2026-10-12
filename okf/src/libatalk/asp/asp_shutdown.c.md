@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_shutdown.c"
-description: "1 function, includes 3 project headers."
+description: "ASP CloseSession requests to the workstation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_shutdown.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 int asp_shutdown(ASP)
 ```
 
-Defined at lines 29 to 67. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 34 to 72. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Ask the workstation to close a session with an [ASP](../../include/atalk/asp.h.md#struct-asp) CloseSession request.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/afp_util.c"
-description: "2 functions, includes 2 project headers."
+description: "Names of AFP command and result codes for log messages."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/afp_util.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 const char * AfpNum2name(int num)
 ```
 
-Defined at lines 22 to 247.
+Defined at lines 27 to 252.
 
 Return the name of an AFP command code for log messages and DTrace probes.
 
@@ -40,7 +40,7 @@ Called by: [afp_over_asp](../../etc/afpd/afp_asp.c.md#afp_over_asp), [afp_over_d
 const char * AfpErr2name(int err)
 ```
 
-Defined at lines 257 to 314.
+Defined at lines 262 to 319.
 
 Return the name of an AFP result code for log messages.
 

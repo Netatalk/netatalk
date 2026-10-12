@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/afprun.c"
-description: "6 functions, includes 2 project headers."
+description: "Shell command execution as the session user for preexec, postexec, and the FCE notify script."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afprun.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int setup_out_fd(void)
 ```
 
-Defined at lines 60 to 77.
+Defined at lines 66 to 83.
 
 Create an unlinked temporary file for the output of an afprun command.
 
@@ -42,7 +42,7 @@ Called by: [afprun](afprun.c.md#afprun)
 static void gain_root_privilege(void)
 ```
 
-Defined at lines 83 to 88.
+Defined at lines 89 to 94.
 
 Gain root privilege before doing something.
 
@@ -56,7 +56,7 @@ Called by: [become_user_permanently](afprun.c.md#become_user_permanently)
 static void gain_root_group_privilege(void)
 ```
 
-Defined at lines 94 to 100.
+Defined at lines 100 to 106.
 
 Ensure our real and effective groups are zero.
 
@@ -70,7 +70,7 @@ Called by: [become_user_permanently](afprun.c.md#become_user_permanently)
 static int become_user_permanently(uid_t uid, gid_t gid)
 ```
 
-Defined at lines 114 to 275.
+Defined at lines 120 to 281.
 
 Switch the real, effective, and saved IDs to a user and group permanently.
 
@@ -92,7 +92,7 @@ Called by: [afprun](afprun.c.md#afprun), [afprun_bg](afprun.c.md#afprun_bg)
 int afprun(char *cmd, int *outfd)
 ```
 
-Defined at lines 293 to 423.
+Defined at lines 299 to 429.
 
 Run a shell command as the euid of the caller and wait for its exit status.
 
@@ -114,7 +114,7 @@ Called by: [afp_openvol](volume.c.md#afp_openvol), [closevol](volume.c.md#closev
 int afprun_bg(char *cmd)
 ```
 
-Defined at lines 435 to 492.
+Defined at lines 441 to 498.
 
 Start a shell command as the euid of the caller without waiting for it.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/afppasswd/afppasswd_migrate.c"
-description: "18 functions, 1 type, includes 3 project headers."
+description: "Migration of the legacy flat SRP verifier file into one verifier file per user."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/afppasswd/afppasswd_migrate.c"
 tags: ["bin/afppasswd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/afppasswd](../afppasswd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [bin/afppasswd](../afppasswd.md) subsystem. Built from the commit re
 static int lookup_uid(const char *name, uid_t *uid)
 ```
 
-Defined at lines 55 to 67.
+Defined at lines 61 to 73.
 
 Look up the UID of a local user name.
 
@@ -43,7 +43,7 @@ Called by: [add_record](afppasswd_migrate.c.md#add_record)
 static int split_path(const char *path, char parent[MAXPATHLEN+1], char basename[MAXPATHLEN+1])
 ```
 
-Defined at lines 81 to 122.
+Defined at lines 87 to 128.
 
 Split the path of the legacy verifier file into its directory and its file name.
 
@@ -66,7 +66,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int validate_parent(int fd, const char *path, uid_t administrator_uid)
 ```
 
-Defined at lines 133 to 147.
+Defined at lines 139 to 153.
 
 Check that the directory of the legacy verifier file belongs to the administrator and is not writable by group or other.
 
@@ -85,7 +85,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int validate_source(int fd, const char *path, uid_t administrator_uid, struct stat *st)
 ```
 
-Defined at lines 159 to 177.
+Defined at lines 165 to 183.
 
 Check that the legacy verifier file is a private single-link regular file of the administrator.
 
@@ -107,7 +107,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static void free_records(struct migrate_record *records, size_t count)
 ```
 
-Defined at lines 185 to 193.
+Defined at lines 191 to 199.
 
 Free the migration records and their array.
 
@@ -123,7 +123,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int add_record(struct migrate_record **records, size_t *count, size_t *capacity, const char *line, size_t length, size_t source_length, size_t line_number)
 ```
 
-Defined at lines 212 to 309.
+Defined at lines 218 to 315.
 
 Parse one line of the legacy verifier file into a migration record.
 
@@ -150,7 +150,7 @@ Called by: [read_records](afppasswd_migrate.c.md#read_records)
 static int read_records(int source_fd, struct migrate_record **records, size_t *count)
 ```
 
-Defined at lines 323 to 387.
+Defined at lines 329 to 393.
 
 Read every record of the legacy verifier file.
 
@@ -173,7 +173,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int source_unchanged(int source_fd, const struct migrate_record *records, size_t count)
 ```
 
-Defined at lines 399 to 426.
+Defined at lines 405 to 432.
 
 Read the legacy verifier file again and compare it byte for byte with the records read before.
 
@@ -192,7 +192,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int write_all(int fd, const char *data, size_t length)
 ```
 
-Defined at lines 438 to 457.
+Defined at lines 444 to 463.
 
 Write every byte of a buffer, looping over short writes.
 
@@ -213,7 +213,7 @@ Called by: [create_verifiers](afppasswd_migrate.c.md#create_verifiers)
 static int uid_filename(uid_t uid, char *name, size_t size)
 ```
 
-Defined at lines 467 to 471.
+Defined at lines 473 to 477.
 
 Write the decimal UID that names a migrated verifier file.
 
@@ -232,7 +232,7 @@ Called by: [create_verifiers](afppasswd_migrate.c.md#create_verifiers), [remove_
 static int create_verifiers(int directory_fd, const char *path, const struct migrate_record *records, size_t count, uid_t administrator_uid)
 ```
 
-Defined at lines 488 to 546.
+Defined at lines 494 to 552.
 
 Create a verifier file for each record in the staging directory.
 
@@ -257,7 +257,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static void remove_staging(int parent_fd, const char *temporary_name, const struct migrate_record *records, size_t count)
 ```
 
-Defined at lines 557 to 576.
+Defined at lines 563 to 582.
 
 Remove the verifier files of the records and then the staging directory.
 
@@ -277,7 +277,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int create_staging_directory(int parent_fd, const char *basename, uid_t administrator_uid, char temporary_name[MAXPATHLEN+1])
 ```
 
-Defined at lines 591 to 630.
+Defined at lines 597 to 636.
 
 Create the staging directory `.name.migrate.PID` next to the legacy file.
 
@@ -299,7 +299,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int source_still_at_path(int parent_fd, const char *basename, const struct stat *source_st)
 ```
 
-Defined at lines 641 to 648.
+Defined at lines 647 to 654.
 
 Tell whether the path of the legacy file still names the same single-link file.
 
@@ -318,7 +318,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int reject_stale_staging(int parent_fd, const char *basename, const char *path)
 ```
 
-Defined at lines 661 to 715.
+Defined at lines 667 to 721.
 
 Refuse a migration while a staging directory of an earlier run exists.
 
@@ -339,7 +339,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static int link_backup(int parent_fd, const char *basename, char backup_name[MAXPATHLEN+1])
 ```
 
-Defined at lines 728 to 761.
+Defined at lines 734 to 767.
 
 Keep the legacy file under a backup name through a hard link.
 
@@ -360,7 +360,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 static enum restore_result restore_source(int parent_fd, const char *basename, const char *backup_name)
 ```
 
-Defined at lines 779 to 805.
+Defined at lines 785 to 811.
 
 Put the legacy file back under its name from the backup and remove the backup.
 
@@ -379,7 +379,7 @@ Called by: [afppasswd_migrate_srp](afppasswd_migrate.c.md#afppasswd_migrate_srp)
 int afppasswd_migrate_srp(const char *path, uid_t administrator_uid)
 ```
 
-Defined at lines 825 to 1029.
+Defined at lines 831 to 1035.
 
 Replace a legacy flat SRP verifier file with a verifier directory at the same path.
 
@@ -401,7 +401,7 @@ Called by: [main](afppasswd.c.md#main)
 
 ### struct migrate_record
 
-Defined at line 40.
+Defined at line 46.
 * `char * line`
 * `size_t length`
 * `size_t source_length`

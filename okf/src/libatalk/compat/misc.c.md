@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/compat/misc.c"
-description: "3 functions, includes 1 project header."
+description: "strnlen, vasprintf, and asprintf for systems without them"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/compat/misc.c"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/compat](../compat.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/compat](../compat.md) subsystem. Built from the commit rec
 size_t strnlen(const char *s, size_t n)
 ```
 
-Defined at lines 27 to 38. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
+Defined at lines 32 to 43. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
 
 Return the length of a string, capped at max.
 
@@ -41,7 +41,7 @@ Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_getco
 int vasprintf(char **ret, const char *fmt, va_list ap)
 ```
 
-Defined at lines 53 to 91. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
+Defined at lines 58 to 96. Declared in [include/atalk/compat.h](../../include/atalk/compat.h.md).
 
 Format into a newly allocated string, for systems without vasprintf.
 
@@ -62,7 +62,7 @@ Called by: [TXTRecordKeyPrintf](../../etc/netatalk/afp_mdns.c.md#txtrecordkeypri
 int asprintf(char **strp, const char *fmt,...)
 ```
 
-Defined at lines 103 to 111.
+Defined at lines 108 to 116.
 
 Format into a newly allocated string, for systems without asprintf.
 

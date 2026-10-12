@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/filedir.c"
-description: "13 functions, includes 24 project headers."
+description: "AFP commands for both files and directories: FPGetFileDirParms, FPSetFileDirParms, FPRename, FPDelete, and FPMoveAndRename."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/filedir.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -46,7 +46,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int virtual_icon_reply(const AFPObj *obj, struct vol *vol, uint16_t fbitmap, uint16_t dbitmap, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 62 to 85.
+Defined at lines 68 to 91.
 
 Reply to FPGetFileDirParms for the virtual Icon file of the volume root.
 
@@ -72,7 +72,7 @@ Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams)
 int afp_getfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 105 to 228.
+Defined at lines 111 to 234.
 
 FPGetFileDirParms: return the parameters of a file or directory.
 
@@ -99,7 +99,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 247 to 325.
+Defined at lines 253 to 331.
 
 FPSetFileDirParms: set the parameters of a file or directory.
 
@@ -126,7 +126,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int check_name(const struct vol *vol, char *name)
 ```
 
-Defined at lines 335 to 348.
+Defined at lines 341 to 354.
 
 Reject a name that the AppleDouble layout reserves or that the volume vetoes.
 
@@ -148,7 +148,7 @@ Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vf
 static int moveandrename(const AFPObj *obj, struct vol *vol, struct dir *sdir, int sdir_fd, char *oldname, char *newname, int isdir)
 ```
 
-Defined at lines 377 to 706.
+Defined at lines 383 to 712.
 
 Move and rename sdir/oldname to newname in the working directory.
 
@@ -179,7 +179,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 724 to 814.
+Defined at lines 730 to 820.
 
 FPRename: rename a file or directory inside its parent directory.
 
@@ -206,7 +206,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int delete_vetoed_files_at(struct vol *vol, int parent_fd, const char *name, bool in_vetodir)
 ```
 
-Defined at lines 830 to 925.
+Defined at lines 836 to 931.
 
 Recursively delete vetoed files and directories.
 
@@ -230,7 +230,7 @@ Called by: [delete_vetoed_files](filedir.c.md#delete_vetoed_files)
 int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
 ```
 
-Defined at lines 940 to 958.
+Defined at lines 946 to 964.
 
 Delete the vetoed files in directory upath and then the directory itself.
 
@@ -253,7 +253,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [deletecurdir](directory.c.md#
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 982 to 1264.
+Defined at lines 988 to 1270.
 
 FPDelete: delete a file or an empty directory.
 
@@ -282,7 +282,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 char * absupath(const struct vol *vol, struct dir *dir, char *u)
 ```
 
-Defined at lines 1277 to 1299.
+Defined at lines 1283 to 1305.
 
 Full path of the Unix name u inside dir.
 
@@ -305,7 +305,7 @@ Called by: [afp_exchangefiles](file.c.md#afp_exchangefiles), [ctoupath](filedir.
 char * ctoupath(const struct vol *vol, struct dir *dir, char *name)
 ```
 
-Defined at lines 1309 to 1317.
+Defined at lines 1315 to 1323.
 
 Full Unix path of a Mac name inside dir.
 
@@ -326,7 +326,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [moveandrename](filedir.c.md#
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1337 to 1466.
+Defined at lines 1343 to 1472.
 
 FPMoveAndRename: move a file or directory into another directory, with a new name if given.
 
@@ -355,7 +355,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int veto_file(const char *veto_str, const char *path)
 ```
 
-Defined at lines 1478 to 1511.
+Defined at lines 1484 to 1517.
 
 Whether path matches one entry of a slash-separated veto list.
 

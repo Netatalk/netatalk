@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_date.c"
-description: "3 functions, includes 2 project headers."
+description: "Date entries of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_date.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 int set_utc_offset(uint32_t *aint_p, ad_time_offset_dir_t offset_dir)
 ```
 
-Defined at lines 31 to 71.
+Defined at lines 36 to 76.
 
 Convert an AFP date-time value between local time and UTC.
 
@@ -44,7 +44,7 @@ Called by: [getdirparams](../../etc/afpd/directory.c.md#getdirparams), [getmetad
 int ad_setdate(struct adouble *ad, unsigned int dateoff, uint32_t date)
 ```
 
-Defined at lines 84 to 111.
+Defined at lines 89 to 116.
 
 Store a date in the AppleDouble file dates entry.
 
@@ -65,7 +65,7 @@ Called by: [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [cop
 int ad_getdate(const struct adouble *ad, unsigned int dateoff, uint32_t *date)
 ```
 
-Defined at lines 122 to 150.
+Defined at lines 127 to 155.
 
 Read a date from the AppleDouble file dates entry.
 

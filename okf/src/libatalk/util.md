@@ -5,30 +5,30 @@ description: "20 files, 191 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [libatalk/util/afp_util.c](util/afp_util.c.md): 2 functions, includes 2 project headers.
-* [libatalk/util/atalk_addr.c](util/atalk_addr.c.md): 1 function, includes 2 project headers.
-* [libatalk/util/bprint.c](util/bprint.c.md): 1 function, includes 1 project header.
-* [libatalk/util/cnid.c](util/cnid.c.md): 3 functions, includes 6 project headers.
-* [libatalk/util/constant_time.c](util/constant_time.c.md): 1 function, includes 1 project header.
-* [libatalk/util/fault.c](util/fault.c.md): 9 functions, includes 2 project headers.
-* [libatalk/util/getiface.c](util/getiface.c.md): 4 functions, includes 1 project header.
-* [libatalk/util/gettok.c](util/gettok.c.md): 2 functions, includes 1 project header.
+* [libatalk/util/afp_util.c](util/afp_util.c.md): Names of AFP command and result codes for log messages.
+* [libatalk/util/atalk_addr.c](util/atalk_addr.c.md): Parsing of AppleTalk addresses in text form.
+* [libatalk/util/bprint.c](util/bprint.c.md): Hex dump of a buffer to stdout.
+* [libatalk/util/cnid.c](util/cnid.c.md): CNID resolution of paths, and volume UUIDs without dashes for CNID table names.
+* [libatalk/util/constant_time.c](util/constant_time.c.md): Constant-time memory comparison.
+* [libatalk/util/fault.c](util/fault.c.md): Fault signal handlers with backtraces, from Samba.
+* [libatalk/util/getiface.c](util/getiface.c.md): Lists of the network interface names of the system.
+* [libatalk/util/gettok.c](util/gettok.c.md): Line tokenizer for configuration files, used by the extmap.conf reader.
 * [libatalk/util/locking.c](util/locking.c.md): Netatalk utility functions: locking.
-* [libatalk/util/logger.c](util/logger.c.md): 19 functions, includes 4 project headers.
-* [libatalk/util/netatalk_conf.c](util/netatalk_conf.c.md): 52 functions, includes 13 project headers.
-* [libatalk/util/pathconv.c](util/pathconv.c.md): 1 function, includes 4 project headers.
+* [libatalk/util/logger.c](util/logger.c.md): The netatalk logging system: log types, levels, files, and syslog.
+* [libatalk/util/netatalk_conf.c](util/netatalk_conf.c.md): Reading afp.conf and extmap.conf: server options, volume definitions, and the extension map.
+* [libatalk/util/pathconv.c](util/pathconv.c.md): UTF-8 to Mac file name conversion with mangling.
 * [libatalk/util/queue.c](util/queue.c.md): Netatalk utility functions: queue.
 * [libatalk/util/server_child.c](util/server_child.c.md): functions to handle child processes
 * [libatalk/util/server_ipc.c](util/server_ipc.c.md): IPC over socketpair between parent and children.
-* [libatalk/util/server_lock.c](util/server_lock.c.md): 3 functions, includes 2 project headers.
-* [libatalk/util/sigpipe.c](util/sigpipe.c.md): 4 functions, includes 1 project header.
+* [libatalk/util/server_lock.c](util/server_lock.c.md): Pid files and daemonizing of the netatalk servers.
+* [libatalk/util/sigpipe.c](util/sigpipe.c.md): Self-pipe that wakes a poll loop from signal handlers.
 * [libatalk/util/socket.c](util/socket.c.md): Netatalk utility functions: socket.
-* [libatalk/util/strdicasecmp.c](util/strdicasecmp.c.md): 2 functions, includes 1 project header.
+* [libatalk/util/strdicasecmp.c](util/strdicasecmp.c.md): Case-insensitive string comparison through the Mac Roman uppercase map.
 * [libatalk/util/unix.c](util/unix.c.md): Netatalk utility functions: unix.
 
 # Includes headers from

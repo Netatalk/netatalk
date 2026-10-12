@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/spotlight/localsearch/sparql_map.c"
-description: "1 function, includes 2 project headers."
+description: "Spotlight attribute to SPARQL mapping table."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sparql_map.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -24,7 +24,7 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 void configure_spotlight_attributes(const char *attributes_in)
 ```
 
-Defined at lines 119 to 146.
+Defined at lines 124 to 151.
 
 Turn on only the Spotlight attributes that the spotlight attributes option lists.
 

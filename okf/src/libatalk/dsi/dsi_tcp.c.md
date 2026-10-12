@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/dsi/dsi_tcp.c"
-description: "10 functions, includes 6 project headers."
+description: "DSI over TCP: listening, accepting, and session sockets."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_tcp.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 static void dsi_tcp_close(DSI *dsi)
 ```
 
-Defined at lines 69 to 77.
+Defined at lines 74 to 82.
 
 Close the session socket, the TCP proto_close hook.
 
@@ -43,7 +43,7 @@ Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 static void timeout_handler(int sig)
 ```
 
-Defined at lines 88 to 92.
+Defined at lines 93 to 97.
 
 End a new session process that missed the deadline for its first [DSI](../../include/atalk/dsi.h.md#struct-dsi) request.
 
@@ -60,7 +60,7 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 static void dsi_init_buffer(DSI *dsi)
 ```
 
-Defined at lines 102 to 118.
+Defined at lines 107 to 123.
 
 Allocate the command buffer and the read-ahead buffer of a session.
 
@@ -77,7 +77,7 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 uint32_t dsi_effective_mss(const DSI *)
 ```
 
-Defined at lines 130 to 173. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 135 to 178. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Effective TCP segment payload of the session socket.
 
@@ -96,7 +96,7 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 uint32_t dsi_align_quantum(uint32_t configured, uint32_t mss)
 ```
 
-Defined at lines 192 to 229. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 197 to 234. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Round the configured server quantum up so FPWriteExt frames fill their last TCP segment.
 
@@ -116,7 +116,7 @@ Called by: [dsi_tcp_open](dsi_tcp.c.md#dsi_tcp_open)
 void dsi_free(DSI *dsi)
 ```
 
-Defined at lines 237 to 249. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 242 to 254. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Release the listener resources of the master afpd and close the server socket.
 
@@ -131,7 +131,7 @@ Called by: [configfree](../../etc/afpd/afp_config.c.md#configfree)
 static pid_t dsi_tcp_open(DSI *dsi)
 ```
 
-Defined at lines 267 to 419.
+Defined at lines 272 to 424.
 
 Accept a client connection and fork its session process, the TCP proto_open hook.
 
@@ -154,7 +154,7 @@ Uses file-scope variables: `deny_severity`, `itimer`
 static void guess_interface(DSI *dsi, const char *hostname, const char *port)
 ```
 
-Defined at lines 439 to 490.
+Defined at lines 444 to 495.
 
 Advertise the address of the first usable network interface.
 
@@ -175,7 +175,7 @@ Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 static int dsi_tcp_listen(const char *address, const char *port, struct addrinfo *hints, DSI *dsi, bool *psocket_err_afnotsup)
 ```
 
-Defined at lines 510 to 617.
+Defined at lines 515 to 622.
 
 Create the listening socket for address and port.
 
@@ -198,7 +198,7 @@ Called by: [dsi_tcp_init](dsi_tcp.c.md#dsi_tcp_init)
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address, const char *port)
 ```
 
-Defined at lines 645 to 769. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 650 to 774. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Initialize [DSI](../../include/atalk/dsi.h.md#struct-dsi) over TCP.
 

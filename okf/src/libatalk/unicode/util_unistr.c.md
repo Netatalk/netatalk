@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/util_unistr.c"
-description: "21 functions, includes 4 project headers."
+description: "UTF-16 string functions, with Unicode precomposition and decomposition."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/util_unistr.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit r
 int strlower_w(ucs2_t *)
 ```
 
-Defined at lines 37 to 67. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 42 to 72. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Lowercase a NUL-terminated UTF-16 string in place.
 
@@ -47,7 +47,7 @@ Called by: [charset_strlower](charcnv.c.md#charset_strlower), [convert_charset](
 int strupper_w(ucs2_t *)
 ```
 
-Defined at lines 77 to 107. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 82 to 112. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Uppercase a NUL-terminated UTF-16 string in place.
 
@@ -68,7 +68,7 @@ Called by: [charset_strupper](charcnv.c.md#charset_strupper), [convert_charset](
 size_t strlen_w(const ucs2_t *)
 ```
 
-Defined at lines 117 to 124. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 122 to 129. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Count the UTF-16 units of a NUL-terminated string, as strlen does.
 
@@ -87,7 +87,7 @@ Called by: [convert_string_internal](charcnv.c.md#convert_string_internal), [str
 size_t strnlen_w(const ucs2_t *, size_t)
 ```
 
-Defined at lines 136 to 143. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 141 to 148. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Count the UTF-16 units of a string up to a limit, as strnlen does.
 
@@ -105,7 +105,7 @@ Returns: the number of units before the NUL, capped at `max`
 ucs2_t * strchr_w(const ucs2_t *, ucs2_t)
 ```
 
-Defined at lines 155 to 170. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 160 to 175. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Find a UTF-16 unit in a NUL-terminated string, as strchr does.
 
@@ -125,7 +125,7 @@ Called by: [strstr_w](util_unistr.c.md#strstr_w)
 ucs2_t * strcasechr_w(const ucs2_t *s, ucs2_t c)
 ```
 
-Defined at lines 182 to 197. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 187 to 202. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Find a UTF-16 unit in a string, ignoring case.
 
@@ -147,7 +147,7 @@ Called by: [strcasestr_w](util_unistr.c.md#strcasestr_w)
 ucs2_t * strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
 ```
 
-Defined at lines 208 to 223.
+Defined at lines 213 to 228.
 
 Find a surrogate pair in a UTF-16 string, ignoring case.
 
@@ -169,7 +169,7 @@ Called by: [strcasestr_w](util_unistr.c.md#strcasestr_w)
 int strcmp_w(const ucs2_t *, const ucs2_t *)
 ```
 
-Defined at lines 233 to 244. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 238 to 249. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Compare two NUL-terminated UTF-16 strings by unit value, as strcmp does.
 
@@ -185,7 +185,7 @@ Returns: the difference of the first differing units, or 0
 int strncmp_w(const ucs2_t *, const ucs2_t *, size_t)
 ```
 
-Defined at lines 254 to 265. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 259 to 270. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Compare up to `len` units of two UTF-16 strings, as strncmp does.
 
@@ -204,7 +204,7 @@ Called by: [strstr_w](util_unistr.c.md#strstr_w)
 ucs2_t * strstr_w(const ucs2_t *s, const ucs2_t *ins)
 ```
 
-Defined at lines 274 to 295. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 279 to 300. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Find a UTF-16 substring, as strstr does.
 
@@ -222,7 +222,7 @@ Calls: [strchr_w](util_unistr.c.md#strchr_w), [strlen_w](util_unistr.c.md#strlen
 ucs2_t * strcasestr_w(const ucs2_t *, const ucs2_t *)
 ```
 
-Defined at lines 307 to 344. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 312 to 349. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Find a UTF-16 substring, ignoring case, with surrogate pair support.
 
@@ -244,7 +244,7 @@ Called by: [crit_check](../../etc/afpd/catsearch.c.md#crit_check)
 int strcasecmp_w(const ucs2_t *, const ucs2_t *)
 ```
 
-Defined at lines 354 to 382. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 359 to 387. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Compare two NUL-terminated UTF-16 strings, ignoring case, with surrogate pair support.
 
@@ -264,7 +264,7 @@ Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [crit_check](.
 int strncasecmp_w(const ucs2_t *, const ucs2_t *, size_t)
 ```
 
-Defined at lines 395 to 426. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 400 to 431. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Compare up to `len` units of two UTF-16 strings, ignoring case.
 
@@ -287,7 +287,7 @@ Called by: [strcasestr_w](util_unistr.c.md#strcasestr_w), [uam_getname](../../et
 ucs2_t * strndup_w(const ucs2_t *, size_t)
 ```
 
-Defined at lines 439 to 457. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 444 to 462. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Duplicate the first `len` units of a UTF-16 string into a buffer from malloc.
 
@@ -309,7 +309,7 @@ Called by: [strdup_w](util_unistr.c.md#strdup_w)
 ucs2_t * strdup_w(const ucs2_t *)
 ```
 
-Defined at lines 465 to 468. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 470 to 473. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Duplicate a NUL-terminated UTF-16 string into a buffer from malloc.
 
@@ -328,7 +328,7 @@ Called by: [creatvol](../util/netatalk_conf.c.md#creatvol)
 static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 ```
 
-Defined at lines 480 to 503.
+Defined at lines 485 to 508.
 
 Look up the precomposed BMP character for a base and a combining character.
 
@@ -350,7 +350,7 @@ Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.
 static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
 ```
 
-Defined at lines 516 to 540.
+Defined at lines 521 to 545.
 
 Look up the precomposed surrogate pair for a base pair and a combining pair.
 
@@ -372,7 +372,7 @@ Uses file-scope variables: `base_sp` in [libatalk/unicode/precompose.h](precompo
 static uint32_t do_decomposition(ucs2_t base)
 ```
 
-Defined at lines 550 to 575.
+Defined at lines 555 to 580.
 
 Look up the base and the combining character of a precomposed BMP character.
 
@@ -391,7 +391,7 @@ Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.
 static uint64_t do_decomposition_sp(unsigned int base_sp)
 ```
 
-Defined at lines 586 to 613.
+Defined at lines 591 to 618.
 
 Look up the base pair and the combining pair of a precomposed surrogate pair.
 
@@ -410,7 +410,7 @@ Uses file-scope variables: `base_sp` in [libatalk/unicode/precompose.h](precompo
 size_t precompose_w(ucs2_t *, size_t, ucs2_t *, size_t *)
 ```
 
-Defined at lines 634 to 743. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 639 to 748. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Precompose a UTF-16 string by the netatalk tables.
 
@@ -438,7 +438,7 @@ Uses file-scope variables: `base` in [libatalk/unicode/precompose.h](precompose.
 size_t decompose_w(ucs2_t *, size_t, ucs2_t *, size_t *)
 ```
 
-Defined at lines 760 to 869. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
+Defined at lines 765 to 874. Declared in [include/atalk/unicode.h](../../include/atalk/unicode.h.md).
 
 Decompose a UTF-16 string by the netatalk tables.
 

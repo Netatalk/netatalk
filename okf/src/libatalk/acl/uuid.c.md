@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/acl/uuid.c"
-description: "5 functions, includes 7 project headers."
+description: "UUID to name and name to UUID resolution for ACLs."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/uuid.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded 
 void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
 ```
 
-Defined at lines 65 to 83.
+Defined at lines 70 to 88.
 
 Build a local UUID for a user or group without a directory service UUID.
 
@@ -50,7 +50,7 @@ Uses file-scope variables: `local_group_uuid`, `local_user_uuid`
 void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
 ```
 
-Defined at lines 94 to 123.
+Defined at lines 99 to 128.
 
 Convert a hex UUID string, dashes allowed, into 16 bytes.
 
@@ -68,7 +68,7 @@ Called by: [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/misc/u
 const char * uuid_bin2string(const unsigned char *uuid)
 ```
 
-Defined at lines 135 to 181.
+Defined at lines 140 to 186.
 
 Format a 16-byte UUID as uppercase hex with dashes.
 
@@ -89,7 +89,7 @@ Uses file-scope variables: `ldap_uuid_string` in [libatalk/acl/ldap.c](ldap.c.md
 int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
 ```
 
-Defined at lines 199 to 322.
+Defined at lines 204 to 327.
 
 Resolve a user or group name to its UUID.
 
@@ -114,7 +114,7 @@ Uses file-scope variables: `uuidtype`
 int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type)
 ```
 
-Defined at lines 337 to 422.
+Defined at lines 342 to 427.
 
 Resolve a UUID to a user or group name and its type.
 

@@ -5,14 +5,14 @@ description: "3 files, 8 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/misc"
 tags: ["bin/misc"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [bin/misc/fce.c](misc/fce.c.md): 3 functions, includes 2 project headers.
-* [bin/misc/netacnv.c](misc/netacnv.c.md): 2 functions, 1 type, includes 1 project header.
-* [bin/misc/uuidtest.c](misc/uuidtest.c.md): 3 functions, includes 3 project headers.
+* [bin/misc/fce.c](misc/fce.c.md): The fce_listen command: receive and print FCE events from afpd.
+* [bin/misc/netacnv.c](misc/netacnv.c.md): The netacnv command: convert a string between two charsets.
+* [bin/misc/uuidtest.c](misc/uuidtest.c.md): The afpldaptest command: map names to UUIDs and back through LDAP, with a local fallback.
 
 # Includes headers from
 

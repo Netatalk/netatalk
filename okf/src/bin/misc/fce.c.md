@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/misc/fce.c"
-description: "3 functions, includes 2 project headers."
+description: "The fce_listen command: receive and print FCE events from afpd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/misc/fce.c"
 tags: ["bin/misc"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in 
 static void sig_handler(int signo)
 ```
 
-Defined at lines 32 to 36.
+Defined at lines 37 to 41.
 
 Note SIGINT or SIGTERM, so the listener loop stops.
 
@@ -41,7 +41,7 @@ Uses file-scope variables: `stop_requested`
 static int unpack_fce_packet(unsigned char *buf, size_t buflen, struct fce_packet *packet)
 ```
 
-Defined at lines 64 to 212.
+Defined at lines 69 to 217.
 
 Decode an FCE datagram into a packet structure.
 
@@ -62,7 +62,7 @@ Called by: [main](fce.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 227 to 393.
+Defined at lines 232 to 398.
 
 Listen for FCE datagrams from afpd and print each event.
 

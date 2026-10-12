@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nbp/nbplkup_output.c"
-description: "1 function, includes 2 project headers."
+description: "Output formatting of nbplkup: NBP name fields in the host charset."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nbp/nbplkup_output.c"
 tags: ["bin/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [b
 size_t nbplkup_convert_field(charset_t from, const char *src, size_t src_len, char **dest)
 ```
 
-Defined at lines 43 to 74.
+Defined at lines 48 to 79.
 
 Convert an NBP name field from the Mac charset to the host charset for printing.
 

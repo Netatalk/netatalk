@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/cnid.c"
-description: "3 functions, includes 6 project headers."
+description: "CNID resolution of paths, and volume UUIDs without dashes for CNID table names."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/cnid.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 bstring rel_path_in_vol(const char *path, const char *volpath)
 ```
 
-Defined at lines 71 to 149.
+Defined at lines 77 to 155.
 
 Build path relative to volume root.
 
@@ -53,7 +53,7 @@ Called by: [cnid_for_path](cnid.c.md#cnid_for_path), [cnid_for_paths_parent](../
 cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath, const char *path, cnid_t *did)
 ```
 
-Defined at lines 177 to 226.
+Defined at lines 183 to 232.
 
 Resolves CNID of a given path.
 
@@ -84,7 +84,7 @@ Called by: [copy](../../bin/nad/nad_cp.c.md#copy), [do_move](../../bin/nad/nad_m
 char * uuid_strip_dashes(const char *uuid)
 ```
 
-Defined at lines 236 to 262.
+Defined at lines 242 to 268.
 
 Return a UUID string without its dashes, for the CNID table names.
 

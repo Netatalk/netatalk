@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/generic_mb.c"
-description: "2 functions, includes 4 project headers."
+description: "Shared conversion code of the single-byte Mac charsets."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/generic_mb.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commi
 size_t mb_generic_push(int(*char_func)(unsigned char *, ucs2_t), void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 62 to 91.
+Defined at lines 67 to 96.
 
 Convert UCS2 to a single-byte charset with a per-character table function.
 
@@ -50,7 +50,7 @@ Called by: [mac_centraleurope_push](mac_centraleurope.c.md#mac_centraleurope_pus
 size_t mb_generic_pull(int(*char_func)(ucs2_t *, const unsigned char *), void *cd, char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 ```
 
-Defined at lines 109 to 139.
+Defined at lines 114 to 144.
 
 Convert a single-byte charset to UCS2 with a per-character table function.
 

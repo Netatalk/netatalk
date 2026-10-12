@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_mkdir.c"
-description: "4 functions, includes 6 project headers."
+description: "The nad mkdir command: create directories with CNIDs and metadata."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_mkdir.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void usage_mkdir(void)
 ```
 
-Defined at lines 41 to 54.
+Defined at lines 46 to 59.
 
 Print the usage of nad mkdir and exit with EXIT_FAILURE.
 
@@ -40,7 +40,7 @@ Called by: [nad_mkdir](nad_mkdir.c.md#nad_mkdir)
 static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
 ```
 
-Defined at lines 65 to 136.
+Defined at lines 70 to 141.
 
 Create a single directory with CNID and AppleDouble metadata.
 
@@ -61,7 +61,7 @@ Called by: [do_mkdir](nad_mkdir.c.md#do_mkdir)
 static int do_mkdir(const char *path, afpvol_t *vol)
 ```
 
-Defined at lines 149 to 222.
+Defined at lines 154 to 227.
 
 Create directory and optionally intermediate parents.
 
@@ -85,7 +85,7 @@ Uses file-scope variables: `pflag` in [bin/nad/nad.h](nad.h.md), `vflag` in [bin
 int nad_mkdir(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 236 to 287. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 241 to 292. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad mkdir command, which creates directories with CNIDs and AppleDouble metadata.
 

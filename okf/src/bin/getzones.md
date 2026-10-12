@@ -5,12 +5,12 @@ description: "1 file, 8 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/getzones"
 tags: ["bin/getzones"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [bin/getzones/getzones.c](getzones/getzones.c.md): 8 functions, includes 6 project headers.
+* [bin/getzones/getzones.c](getzones/getzones.c.md): The getzones command: list AppleTalk zones through ZIP.
 
 # Includes headers from
 

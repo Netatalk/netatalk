@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/pap/pap.c"
-description: "6 functions, includes 5 project headers."
+description: "The pap command: print files on a PAP printer."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/pap/pap.c"
 tags: ["bin/pap"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/pap](../pap.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [bin/pap](../pap.md) subsystem. Built from the commit recorded in [b
 static int copy_status(const struct iovec *response, char *status_buf, size_t status_buf_size, size_t *status_len)
 ```
 
-Defined at lines 52 to 73.
+Defined at lines 57 to 78.
 
 Extract the status string of a PAP Status reply into a buffer.
 
@@ -49,7 +49,7 @@ Called by: [main](pap.c.md#main), [send_file](pap.c.md#send_file)
 static void usage(char *path)
 ```
 
-Defined at lines 80 to 105.
+Defined at lines 85 to 110.
 
 Print the usage and the options of pap to stderr and exit with 2.
 
@@ -64,7 +64,7 @@ Called by: [main](pap.c.md#main)
 static char * paprc(void)
 ```
 
-Defined at lines 117 to 145.
+Defined at lines 122 to 150.
 
 Read the printer name from the first line of .
 
@@ -82,7 +82,7 @@ Called by: [main](pap.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 227 to 578.
+Defined at lines 232 to 583.
 
 Print files on a PAP printer.
 
@@ -106,7 +106,7 @@ Uses file-scope variables: `cbuf`, `connid`, `debug`, `nn`, `noeof`, `oquantum`,
 static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
 ```
 
-Defined at lines 603 to 1043.
+Defined at lines 608 to 1048.
 
 Send one file over the open PAP connection and pass the printer output to stdout.
 
@@ -132,7 +132,7 @@ Uses file-scope variables: `cbuf`, `connid`, `debug`, `nn`, `noeof`, `oquantum`,
 static void updatestatus(char *s, int len)
 ```
 
-Defined at lines 1055 to 1085.
+Defined at lines 1060 to 1090.
 
 Write a printer status line as `%%[ status ]%%`.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_adouble.c"
-description: "16 functions, 1 type, includes 7 project headers."
+description: "AppleDouble metadata and CAP name encoding for the nad archive and StuffIt commands."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_adouble.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static int cap_hexval(unsigned char c)
 ```
 
-Defined at lines 47 to 58.
+Defined at lines 53 to 64.
 
 Return the value of a lowercase hex digit of a CAP escape.
 
@@ -46,7 +46,7 @@ Called by: [cap_decode_byte](nad_adouble.c.md#cap_decode_byte)
 static int cap_decode_byte(const unsigned char *in, unsigned char *out)
 ```
 
-Defined at lines 67 to 79.
+Defined at lines 73 to 85.
 
 Decode the two hex digits after the colon of a CAP escape.
 
@@ -66,7 +66,7 @@ Called by: [utompathcap](nad_adouble.c.md#utompathcap)
 static void cap_escape_byte(unsigned char c, unsigned char **out)
 ```
 
-Defined at lines 87 to 92.
+Defined at lines 93 to 98.
 
 Write a byte as a CAP escape, a colon and two lowercase hex digits.
 
@@ -84,7 +84,7 @@ Uses file-scope variables: `hexdig`
 static char * mtoupathcap(char *mpath)
 ```
 
-Defined at lines 111 to 137.
+Defined at lines 117 to 143.
 
 Encode a Mac file name as a CAP-style host name.
 
@@ -105,7 +105,7 @@ Uses file-scope variables: `mtou_buf`
 static char * utompathcap(char *upath)
 ```
 
-Defined at lines 150 to 176.
+Defined at lines 156 to 182.
 
 Decode a CAP-style host name into a Mac file name.
 
@@ -126,7 +126,7 @@ Uses file-scope variables: `utom_buf`
 void nad_set_volume(const struct nad_volume *volume)
 ```
 
-Defined at lines 198 to 202.
+Defined at lines 204 to 208.
 
 Select the volume state for the following nad_open calls.
 
@@ -143,7 +143,7 @@ Uses file-scope variables: `nad`
 static int nad_adouble_dir(char *dir, size_t dirlen)
 ```
 
-Defined at lines 212 to 230.
+Defined at lines 218 to 236.
 
 Derive the directory part of the AppleDouble header path of the open file.
 
@@ -165,7 +165,7 @@ Uses file-scope variables: `nad`
 static int nad_prepare_adouble_dir(int parentfd, char *dir, size_t dirlen, mode_t mode, struct stat *st, int *created)
 ```
 
-Defined at lines 248 to 287.
+Defined at lines 254 to 293.
 
 Open the .AppleDouble directory of a new file and create it when missing.
 
@@ -191,7 +191,7 @@ Called by: [nad_open](nad_adouble.c.md#nad_open)
 static int nad_set_created_modes(mode_t data_mode, mode_t header_mode, int dirfd, mode_t dir_mode, int created_dir, int created_header)
 ```
 
-Defined at lines 304 to 323.
+Defined at lines 310 to 329.
 
 Set the inherited modes on the new data file, header, and .AppleDouble directory.
 
@@ -217,7 +217,7 @@ Uses file-scope variables: `nad`
 int nad_open(char *path, int openflags, struct FHeader *fh, int options)
 ```
 
-Defined at lines 344 to 532.
+Defined at lines 350 to 538.
 
 Open a file and its Mac metadata as the input or the output of a conversion.
 
@@ -243,7 +243,7 @@ Uses file-scope variables: `nad`
 int nad_header_read(struct FHeader *fh)
 ```
 
-Defined at lines 545 to 683.
+Defined at lines 551 to 689.
 
 Fill a file header from the open file and its metadata.
 
@@ -266,7 +266,7 @@ Uses file-scope variables: `nad`
 int nad_header_write(struct FHeader *fh)
 ```
 
-Defined at lines 695 to 782.
+Defined at lines 701 to 788.
 
 Write a file header into the metadata of the new file.
 
@@ -289,7 +289,7 @@ Uses file-scope variables: `nad`
 ssize_t nad_read(int fork, char *forkbuf, size_t bufc)
 ```
 
-Defined at lines 795 to 813.
+Defined at lines 801 to 819.
 
 Read the next bytes of a fork of the open file.
 
@@ -312,7 +312,7 @@ Uses file-scope variables: `forkeid`, `nad`
 ssize_t nad_write(int fork, char *forkbuf, size_t bufc)
 ```
 
-Defined at lines 826 to 861.
+Defined at lines 832 to 867.
 
 Write bytes to a fork of the new file at its tracked offset.
 
@@ -337,7 +337,7 @@ Uses file-scope variables: `forkeid`, `nad`
 static int nad_update_cnid(void)
 ```
 
-Defined at lines 873 to 917.
+Defined at lines 879 to 923.
 
 Give a new file its CNID and store the CNID in its metadata.
 
@@ -357,7 +357,7 @@ Uses file-scope variables: `nad`
 int nad_close(int status)
 ```
 
-Defined at lines 929 to 971.
+Defined at lines 935 to 977.
 
 Close the open file and keep or delete it.
 
@@ -378,7 +378,7 @@ Uses file-scope variables: `nad`
 
 ### struct nad_file_data
 
-Defined at line 182.
+Defined at line 188.
 * `char macname`
 * `char adpath`
 * `int offset`

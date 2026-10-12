@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/server_lock.c"
-description: "3 functions, includes 2 project headers."
+description: "Pid files and daemonizing of the netatalk servers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_lock.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 pid_t server_lock(char *program, char *pidfile, int debug)
 ```
 
-Defined at lines 45 to 121.
+Defined at lines 50 to 126.
 
 Check the pid file of a daemon, then fork it into the background and record the pid of the child.
 
@@ -45,7 +45,7 @@ Called by: [main](../../etc/atalkd/main.c.md#main), [main](../../etc/papd/main.c
 int check_lockfile(const char *program, const char *pidfile)
 ```
 
-Defined at lines 133 to 155.
+Defined at lines 138 to 160.
 
 Refuse to start while the pid file names a live process.
 
@@ -65,7 +65,7 @@ Called by: [create_lockfile](server_lock.c.md#create_lockfile), [main](../../etc
 int create_lockfile(const char *program, const char *pidfile)
 ```
 
-Defined at lines 166 to 192.
+Defined at lines 171 to 197.
 
 Check the pid file, then write the pid of the calling process into it.
 

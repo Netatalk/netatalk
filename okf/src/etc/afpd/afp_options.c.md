@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/afp_options.c"
-description: "5 functions, includes 9 project headers."
+description: "Command line parsing and version output of afpd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_options.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void show_version(void)
 ```
 
-Defined at lines 46 to 78.
+Defined at lines 51 to 83.
 
 Show version information about afpd.
 
@@ -45,7 +45,7 @@ Called by: [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdlin
 static void show_version_extended(void)
 ```
 
-Defined at lines 85 to 165.
+Defined at lines 90 to 170.
 
 Show extended version information about afpd and Netatalk.
 
@@ -59,7 +59,7 @@ Called by: [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdlin
 static void show_paths(void)
 ```
 
-Defined at lines 170 to 180.
+Defined at lines 175 to 185.
 
 Display compiled-in default paths.
 
@@ -71,7 +71,7 @@ Called by: [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdlin
 static void show_usage(void)
 ```
 
-Defined at lines 185 to 189.
+Defined at lines 190 to 194.
 
 Display usage information about afpd.
 
@@ -83,7 +83,7 @@ Called by: [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdlin
 void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
 ```
 
-Defined at lines 204 to 253.
+Defined at lines 209 to 258.
 
 Parse the afpd command line into the command line fields of a server object.
 

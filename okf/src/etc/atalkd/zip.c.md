@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/atalkd/zip.c"
-description: "6 functions, includes 13 project headers."
+description: "ZIP zone table maintenance of atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/zip.c"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 ```
 
-Defined at lines 54 to 93.
+Defined at lines 59 to 98.
 
 Check the zones a seed interface learned from the network against its configured zones.
 
@@ -57,7 +57,7 @@ Called by: [zip_packet](zip.c.md#zip_packet)
 int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 ```
 
-Defined at lines 128 to 1015. Declared in [etc/atalkd/zip.h](zip.h.md).
+Defined at lines 133 to 1020. Declared in [etc/atalkd/zip.h](zip.h.md).
 
 Process a ZIP packet, or a ZIP request over ATP, from the ZIP port of an interface.
 
@@ -93,7 +93,7 @@ Dispatched via: [atserv](main.c.md#atserv)
 int zip_getnetinfo(struct interface *)
 ```
 
-Defined at lines 1028 to 1080. Declared in [etc/atalkd/zip.h](zip.h.md).
+Defined at lines 1033 to 1085. Declared in [etc/atalkd/zip.h](zip.h.md).
 
 Send a ZIP GetNetInfo for the net range and default zone of an interface.
 
@@ -114,7 +114,7 @@ Called by: [as_timer](main.c.md#as_timer), [bootaddr](main.c.md#bootaddr), [rtmp
 struct ziptab * newzt(const int, const char *)
 ```
 
-Defined at lines 1092 to 1114. Declared in [etc/atalkd/zip.h](zip.h.md).
+Defined at lines 1097 to 1119. Declared in [etc/atalkd/zip.h](zip.h.md).
 
 Allocate a zone entry that holds its name in a new buffer.
 
@@ -134,7 +134,7 @@ Called by: [addzone](zip.c.md#addzone), [zone](config.c.md#zone)
 static int add_list(struct list **head, void *data)
 ```
 
-Defined at lines 1125 to 1156.
+Defined at lines 1130 to 1161.
 
 Append a pointer to a list unless the list holds it already.
 
@@ -152,7 +152,7 @@ Called by: [addzone](zip.c.md#addzone)
 int addzone(struct rtmptab *, int, char *)
 ```
 
-Defined at lines 1173 to 1238. Declared in [etc/atalkd/zip.h](zip.h.md).
+Defined at lines 1178 to 1243. Declared in [etc/atalkd/zip.h](zip.h.md).
 
 Map a route and a zone to each other, adding the zone to the zone table when new.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/fault.c"
-description: "9 functions, includes 2 project headers."
+description: "Fault signal handlers with backtraces, from Samba."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/fault.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static void log_backtrace(void *uctx)
 ```
 
-Defined at lines 101 to 166.
+Defined at lines 106 to 171.
 
 Log a backtrace of the calling thread, up to BACKTRACE_STACK_SIZE frames.
 
@@ -41,7 +41,7 @@ Called by: [panic_report](fault.c.md#panic_report)
 static void panic_report(const char *why, void *uctx)
 ```
 
-Defined at lines 174 to 178.
+Defined at lines 179 to 183.
 
 Log a panic reason and a backtrace.
 
@@ -59,7 +59,7 @@ Called by: [fault_report](fault.c.md#fault_report), [netatalk_panic](fault.c.md#
 void netatalk_panic(const char *why)
 ```
 
-Defined at lines 187 to 190.
+Defined at lines 192 to 195.
 
 Log a panic reason and a backtrace of the caller.
 
@@ -76,7 +76,7 @@ Calls: [panic_report](fault.c.md#panic_report)
 static void fault_report(int sig, siginfo_t *info, void *uctx)
 ```
 
-Defined at lines 206 to 243.
+Defined at lines 211 to 248.
 
 Log a fault signal with its address and a backtrace, then end the process.
 
@@ -99,7 +99,7 @@ Uses file-scope variables: `CatchSignal`, `cont_fn`
 static void sig_fault(int sig, siginfo_t *info, void *ctx)
 ```
 
-Defined at lines 253 to 256.
+Defined at lines 258 to 261.
 
 Pass a fault signal to fault_report, as the SA_SIGINFO handler that catch_fault_signal installs.
 
@@ -118,7 +118,7 @@ Called by: [catch_fault_signal](fault.c.md#catch_fault_signal)
 static void catch_fault_signal(int signum)
 ```
 
-Defined at lines 267 to 276.
+Defined at lines 272 to 281.
 
 Install sig_fault for a fault signal, on the alternate stack.
 
@@ -137,7 +137,7 @@ Called by: [fault_setup](fault.c.md#fault_setup)
 static void install_altstack(char *base, size_t size)
 ```
 
-Defined at lines 287 to 297.
+Defined at lines 292 to 302.
 
 Make a buffer the alternate signal stack of the calling thread.
 
@@ -155,7 +155,7 @@ Called by: [fault_setup](fault.c.md#fault_setup), [fault_setup_thread](fault.c.m
 void fault_setup_thread(void)
 ```
 
-Defined at lines 306 to 312.
+Defined at lines 311 to 317.
 
 Give the calling thread its own alternate signal stack.
 
@@ -171,7 +171,7 @@ Called by: [iw_main](../../etc/afpd/idle_worker.c.md#iw_main)
 void fault_setup(void(*fn)(void *))
 ```
 
-Defined at lines 323 to 336.
+Defined at lines 328 to 341.
 
 Install the SIGSEGV and SIGBUS handlers with an alternate signal stack.
 

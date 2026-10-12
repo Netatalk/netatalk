@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/papd/comment.c"
-description: "5 functions, includes 2 project headers."
+description: "DSC comment state stack of the papd PostScript parser."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/comment.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 void compop(void)
 ```
 
-Defined at lines 28 to 34.
+Defined at lines 33 to 39.
 
 Pop the top state off the comment stack and free it.
 
@@ -38,7 +38,7 @@ Called by: [ch_creator](headers.c.md#ch_creator), [ch_endcomm](headers.c.md#ch_e
 void compush(struct papd_comment *comment)
 ```
 
-Defined at lines 43 to 57.
+Defined at lines 48 to 62.
 
 Push a new state for a DSC comment onto the comment stack.
 
@@ -55,7 +55,7 @@ Called by: [cm_psadobe](magics.c.md#cm_psadobe), [cm_psquery](magics.c.md#cm_psq
 int comswitch(struct papd_comment *comments, int(*handler)())
 ```
 
-Defined at lines 70 to 88. Declared in [etc/papd/comment.h](comment.h.md).
+Defined at lines 75 to 93. Declared in [etc/papd/comment.h](comment.h.md).
 
 Replace the top state of the comment stack with the table entry that has a given handler.
 
@@ -77,7 +77,7 @@ Called by: [cm_psswitch](magics.c.md#cm_psswitch), [cq_feature](queries.c.md#cq_
 int comcmp(char *start, char *stop, char *str, int how)
 ```
 
-Defined at lines 102 to 119.
+Defined at lines 107 to 124.
 
 Match a comment line against a keyword.
 
@@ -99,7 +99,7 @@ Called by: [commatch](comment.c.md#commatch), [cq_default](queries.c.md#cq_defau
 struct papd_comment * commatch(char *start, char *stop, struct papd_comment comments[])
 ```
 
-Defined at lines 131 to 147. Declared in [etc/papd/comment.h](comment.h.md).
+Defined at lines 136 to 152. Declared in [etc/papd/comment.h](comment.h.md).
 
 Find the first table entry whose keyword matches a comment line.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/crc16.c"
-description: "1 function, includes 1 project header."
+description: "CRC-16/XMODEM for BinHex and MacBinary archives."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/crc16.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,7 +22,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 uint16_t crc16_xmodem_update(uint16_t crc, const void *buf, size_t len)
 ```
 
-Defined at lines 30 to 47.
+Defined at lines 35 to 52.
 
 Add bytes to a running CRC-16/XMODEM value.
 

@@ -5,17 +5,17 @@ description: "6 files, 115 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/vfs"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [libatalk/vfs/acl.c](vfs/acl.c.md): 2 functions, includes 5 project headers.
+* [libatalk/vfs/acl.c](vfs/acl.c.md): Reducing ACLs to the entries that mirror the mode bits, in the VFS layer.
 * [libatalk/vfs/ea_ad.c](vfs/ea_ad.c.md): Store Extended Attributes inside .AppleDouble folders as follows:
-* [libatalk/vfs/ea_sys.c](vfs/ea_sys.c.md): 7 functions, includes 9 project headers.
-* [libatalk/vfs/extattr.c](vfs/extattr.c.md): 15 functions, includes 6 project headers.
-* [libatalk/vfs/unix.c](vfs/unix.c.md): 12 functions, includes 10 project headers.
-* [libatalk/vfs/vfs.c](vfs/vfs.c.md): 54 functions, 1 type, includes 13 project headers.
+* [libatalk/vfs/ea_sys.c](vfs/ea_sys.c.md): The sys EA backend: AFP extended attributes in native filesystem EAs.
+* [libatalk/vfs/extattr.c](vfs/extattr.c.md): Platform wrappers for extended attribute system calls, from Samba.
+* [libatalk/vfs/unix.c](vfs/unix.c.md): Unix file operations of the VFS layer: modes, duplication, deletion, and renaming.
+* [libatalk/vfs/vfs.c](vfs/vfs.c.md): VFS operation tables for the AppleDouble layouts and the EA and ACL layers.
 
 # Includes headers from
 

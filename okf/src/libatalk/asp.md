@@ -5,21 +5,21 @@ description: "10 files, 14 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/asp"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 # Files
 
-* [libatalk/asp/asp_attn.c](asp/asp_attn.c.md): 1 function, includes 4 project headers.
+* [libatalk/asp/asp_attn.c](asp/asp_attn.c.md): ASP attention requests.
 * [libatalk/asp/asp_child.h](asp/asp_child.h.md): 1 type.
-* [libatalk/asp/asp_close.c](asp/asp_close.c.md): 1 function, includes 3 project headers.
-* [libatalk/asp/asp_cmdreply.c](asp/asp_cmdreply.c.md): 1 function, includes 2 project headers.
-* [libatalk/asp/asp_getreq.c](asp/asp_getreq.c.md): 1 function, includes 3 project headers.
-* [libatalk/asp/asp_getsess.c](asp/asp_getsess.c.md): 5 functions, includes 9 project headers.
-* [libatalk/asp/asp_init.c](asp/asp_init.c.md): 2 functions, includes 3 project headers.
-* [libatalk/asp/asp_shutdown.c](asp/asp_shutdown.c.md): 1 function, includes 3 project headers.
-* [libatalk/asp/asp_tickle.c](asp/asp_tickle.c.md): 1 function, includes 3 project headers.
-* [libatalk/asp/asp_write.c](asp/asp_write.c.md): 1 function, includes 3 project headers.
+* [libatalk/asp/asp_close.c](asp/asp_close.c.md): Closing an ASP session in reply to the CloseSession request of the workstation.
+* [libatalk/asp/asp_cmdreply.c](asp/asp_cmdreply.c.md): ASP command and write replies.
+* [libatalk/asp/asp_getreq.c](asp/asp_getreq.c.md): Reading an ASP request from the session socket.
+* [libatalk/asp/asp_getsess.c](asp/asp_getsess.c.md): The ASP session listener: accepting sessions and tickling them.
+* [libatalk/asp/asp_init.c](asp/asp_init.c.md): ASP server object creation and status block setup.
+* [libatalk/asp/asp_shutdown.c](asp/asp_shutdown.c.md): ASP CloseSession requests to the workstation.
+* [libatalk/asp/asp_tickle.c](asp/asp_tickle.c.md): ASP tickles.
+* [libatalk/asp/asp_write.c](asp/asp_write.c.md): ASP WriteContinue requests.
 
 # Includes headers from
 

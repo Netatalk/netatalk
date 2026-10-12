@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/spotlight/cnid/sl_cnid.c"
-description: "17 functions, 2 types, includes 10 project headers."
+description: "Spotlight CNID backend: file name searches in the CNID database."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/cnid/sl_cnid.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -28,7 +28,7 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 
 ### sl_cnid_ops
 
-Initialized at line 1030 as `struct sl_backend_ops`. Assigns:
+Initialized at line 1035 as `struct sl_backend_ops`. Assigns:
 
 * `sbo_close`: [sl_cnid_close](sl_cnid.c.md#sl_cnid_close)
 * `sbo_close_query`: [sl_cnid_close_query](sl_cnid.c.md#sl_cnid_close_query)
@@ -44,7 +44,7 @@ Initialized at line 1030 as `struct sl_backend_ops`. Assigns:
 static int cnid_comp_fn(const void *p1, const void *p2)
 ```
 
-Defined at lines 49 to 58.
+Defined at lines 54 to 63.
 
 Order two 64-bit host-order CNIDs, for bsearch over the client filter.
 
@@ -62,7 +62,7 @@ Called by: [sl_cnid_fill_results](sl_cnid.c.md#sl_cnid_fill_results)
 static int cnid32_comp_fn(const void *p1, const void *p2)
 ```
 
-Defined at lines 72 to 81.
+Defined at lines 77 to 86.
 
 Order two 32-bit CNIDs in network byte order, for qsort over the result buffer.
 
@@ -82,7 +82,7 @@ Called by: [sl_cnid_collect](sl_cnid.c.md#sl_cnid_collect)
 static char * sl_cnid_quoted_value(TALLOC_CTX *mem_ctx, const char *p, const char **endp)
 ```
 
-Defined at lines 182 to 274.
+Defined at lines 187 to 279.
 
 Extract the quoted value starting at or after `p`.
 
@@ -105,7 +105,7 @@ Called by: [sl_cnid_extract_terms](sl_cnid.c.md#sl_cnid_extract_terms)
 static bool sl_cnid_add_term(char **terms, int *count, char *term)
 ```
 
-Defined at lines 286 to 296.
+Defined at lines 291 to 301.
 
 Append a term to the term list unless the list holds it already.
 
@@ -126,7 +126,7 @@ Called by: [sl_cnid_extract_terms](sl_cnid.c.md#sl_cnid_extract_terms)
 static int sl_cnid_extract_terms(TALLOC_CTX *mem_ctx, const char *qstring, char **terms, int max_terms)
 ```
 
-Defined at lines 321 to 414.
+Defined at lines 326 to 419.
 
 Extract the filename search terms from a Spotlight query string.
 
@@ -159,7 +159,7 @@ Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 static const char * sl_dcache_get(struct sl_cnid_query *csq, cnid_t did)
 ```
 
-Defined at lines 427 to 436.
+Defined at lines 432 to 441.
 
 Return the memoized path of a directory in the query cache.
 
@@ -177,7 +177,7 @@ Called by: [sl_cnid_to_path](sl_cnid.c.md#sl_cnid_to_path)
 static void sl_dcache_put(struct sl_cnid_query *csq, cnid_t did, const char *path)
 ```
 
-Defined at lines 448 to 472.
+Defined at lines 453 to 477.
 
 Memoize a directory path for the rest of the query.
 
@@ -196,7 +196,7 @@ Called by: [sl_cnid_to_path](sl_cnid.c.md#sl_cnid_to_path)
 static char * sl_cnid_to_path(TALLOC_CTX *mem_ctx, const struct vol *vol, struct sl_cnid_query *csq, cnid_t cnid)
 ```
 
-Defined at lines 489 to 542.
+Defined at lines 494 to 547.
 
 Reconstruct the full filesystem path for a CNID.
 
@@ -220,7 +220,7 @@ Called by: [sl_cnid_fill_results](sl_cnid.c.md#sl_cnid_fill_results)
 static int sl_cnid_init(AFPObj *obj)
 ```
 
-Defined at lines 554 to 558.
+Defined at lines 559 to 563.
 
 Start the CNID backend, which keeps no global state.
 
@@ -239,7 +239,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static void sl_cnid_close(AFPObj *obj)
 ```
 
-Defined at lines 565 to 568.
+Defined at lines 570 to 573.
 
 Stop the CNID backend, which has nothing to release.
 
@@ -254,7 +254,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static int sl_cnid_fill_results(slq_t *slq)
 ```
 
-Defined at lines 584 to 692.
+Defined at lines 589 to 697.
 
 Add up to SL_CNID_PAGE_SIZE results from the CNID buffer to the result page.
 
@@ -275,7 +275,7 @@ Called by: [sl_cnid_fetch_results](sl_cnid.c.md#sl_cnid_fetch_results), [sl_cnid
 static int sl_cnid_cap_for(uint64_t want, int nterms)
 ```
 
-Defined at lines 706 to 719.
+Defined at lines 711 to 724.
 
 Size the candidate buffer for the wanted results and the search terms.
 
@@ -295,7 +295,7 @@ Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 static int sl_cnid_collect(slq_t *slq, struct sl_cnid_query *csq, char **terms, int nterms, cnid_t scope_did)
 ```
 
-Defined at lines 739 to 806.
+Defined at lines 744 to 811.
 
 Search every term into the candidate buffer, then drop the duplicates.
 
@@ -320,7 +320,7 @@ Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 static bool sl_cnid_scope_is_vol_root(const char *scope, const char *vol_path)
 ```
 
-Defined at lines 816 to 831.
+Defined at lines 821 to 836.
 
 Tell whether a search scope names the volume root, trailing slashes aside.
 
@@ -338,7 +338,7 @@ Called by: [sl_cnid_open_query](sl_cnid.c.md#sl_cnid_open_query)
 static int sl_cnid_open_query(slq_t *slq)
 ```
 
-Defined at lines 849 to 987.
+Defined at lines 854 to 992.
 
 Run a filename search in the CNID database for a Spotlight query.
 
@@ -363,7 +363,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static int sl_cnid_fetch_results(slq_t *slq)
 ```
 
-Defined at lines 998 to 1015.
+Defined at lines 1003 to 1020.
 
 Fill the next result page of a CNID query.
 
@@ -386,7 +386,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 static void sl_cnid_close_query(slq_t *slq)
 ```
 
-Defined at lines 1022 to 1028.
+Defined at lines 1027 to 1033.
 
 Free the backend state of a CNID query.
 
@@ -401,7 +401,7 @@ Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 
 ### struct sl_cnid_query
 
-Defined at line 144.
+Defined at line 149.
 * `cnid_t * cnids`
 * `int cap`
 * `int count`
@@ -412,7 +412,7 @@ Defined at line 144.
 
 ### struct sl_did_cache_ent
 
-Defined at line 132.
+Defined at line 137.
 * `cnid_t did`
 * `char * path`
 

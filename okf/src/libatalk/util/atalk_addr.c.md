@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/util/atalk_addr.c"
-description: "1 function, includes 2 project headers."
+description: "Parsing of AppleTalk addresses in text form."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/atalk_addr.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 int atalk_aton(char *cp, struct at_addr *addr)
 ```
 
-Defined at lines 35 to 135.
+Defined at lines 40 to 140.
 
 Parse the text form of an AppleTalk address.
 

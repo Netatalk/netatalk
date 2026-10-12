@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/asp/asp_init.c"
-description: "2 functions, includes 3 project headers."
+description: "ASP server object creation and status block setup."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/asp/asp_init.c"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/asp](../asp.md) subsystem. Built from the commit recorded 
 ASP asp_init(ATP)
 ```
 
-Defined at lines 48 to 74. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 53 to 79. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Allocate the [ASP](../../include/atalk/asp.h.md#struct-asp) server object on an ATP socket.
 
@@ -44,7 +44,7 @@ Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit)
 void asp_setstatus(ASP, char *, const int)
 ```
 
-Defined at lines 85 to 89. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
+Defined at lines 90 to 94. Declared in [include/atalk/asp.h](../../include/atalk/asp.h.md).
 
 Set the status block that status requests get.
 

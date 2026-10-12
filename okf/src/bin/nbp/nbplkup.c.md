@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nbp/nbplkup.c"
-description: "2 functions, includes 5 project headers."
+description: "The nbplkup command: look up NBP names."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nbp/nbplkup.c"
 tags: ["bin/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [b
 static void Usage(char *av0)
 ```
 
-Defined at lines 55 to 68.
+Defined at lines 60 to 73.
 
 Print the usage of nbplkup and exit with 1.
 
@@ -42,7 +42,7 @@ Called by: [main](nbplkup.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 86 to 293.
+Defined at lines 91 to 298.
 
 Look up NBP names and print each match with its address.
 

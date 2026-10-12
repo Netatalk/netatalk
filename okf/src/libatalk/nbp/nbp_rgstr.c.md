@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/nbp/nbp_rgstr.c"
-description: "1 function, includes 4 project headers."
+description: "NBP name registration through atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/nbp/nbp_rgstr.c"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/nbp](../nbp.md) subsystem. Built from the commit recorded 
 int nbp_rgstr(struct sockaddr_at *, const char *, const char *, const char *)
 ```
 
-Defined at lines 48 to 178. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
+Defined at lines 53 to 183. Declared in [include/atalk/nbp.h](../../include/atalk/nbp.h.md).
 
 Register an NBP name for a socket with the local atalkd.
 

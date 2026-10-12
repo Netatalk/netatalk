@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/afpd/quota.c"
-description: "2 functions, includes 9 project headers."
+description: "Free space under user and group quotas through libquota or quotactl."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/quota.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolSpace *btotal, id_t id, int idtype)
 ```
 
-Defined at lines 60 to 127.
+Defined at lines 65 to 132.
 
 Read the free and total space that a user or group quota leaves on a volume.
 
@@ -57,7 +57,7 @@ Called by: [uquota_getvolspace](quota.c.md#uquota_getvolspace)
 int uquota_getvolspace(const AFPObj *obj, struct vol *, VolSpace *, VolSpace *, const uint32_t)
 ```
 
-Defined at lines 142 to 192. Declared in [etc/afpd/unix.h](unix.h.md).
+Defined at lines 147 to 197. Declared in [etc/afpd/unix.h](unix.h.md).
 
 Read the space that the user and group quotas leave on a volume.
 

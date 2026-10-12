@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/misc/netacnv.c"
-description: "2 functions, 1 type, includes 1 project header."
+description: "The netacnv command: convert a string between two charsets."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/misc/netacnv.c"
 tags: ["bin/misc"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in 
 static void usage(void)
 ```
 
-Defined at lines 41 to 50.
+Defined at lines 46 to 55.
 
 Print the usage of netacnv, its defaults, and the names of its conversion options to stdout.
 
@@ -35,7 +35,7 @@ Called by: [main](netacnv.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 67 to 173.
+Defined at lines 72 to 178.
 
 Convert a string between two charsets with convert_charset and print both forms.
 
@@ -55,7 +55,7 @@ Uses file-scope variables: `buffer`
 
 ### struct flag_map
 
-Defined at line 17.
+Defined at line 22.
 * `int flag`
 * `const char * flagname`
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "etc/uams/uams_passwd.c"
-description: "6 functions, includes 5 project headers."
+description: "Cleartext UAM with Unix password authentication and the ClearTxtUAM printer login."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/uams/uams_passwd.c"
 tags: ["etc/uams"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,14 +23,14 @@ Part of the [etc/uams](../uams.md) subsystem. Built from the commit recorded in 
 
 ### uams_clrtxt
 
-Initialized at line 403 as `struct uam_export`. Assigns:
+Initialized at line 409 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_passwd.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_passwd.c.md#uam_setup)
 
 ### uams_passwd
 
-Initialized at line 409 as `struct uam_export`. Assigns:
+Initialized at line 415 as `struct uam_export`. Assigns:
 
 * `uam_cleanup`: [uam_cleanup](uams_passwd.c.md#uam_cleanup)
 * `uam_setup`: [uam_setup](uams_passwd.c.md#uam_setup)
@@ -43,7 +43,7 @@ Initialized at line 409 as `struct uam_export`. Assigns:
 static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 60 to 127.
+Defined at lines 66 to 133.
 
 Check a cleartext password of up to 8 bytes against the password hash.
 
@@ -71,7 +71,7 @@ Called by: [passwd_login](uams_passwd.c.md#passwd_login), [passwd_login_ext](uam
 static int passwd_login(void *obj, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 145 to 180.
+Defined at lines 151 to 186.
 
 Read the user name of a cleartext FPLogin request and check its password against the hash.
 
@@ -97,7 +97,7 @@ Called by: [uam_setup](uams_passwd.c.md#uam_setup)
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 203 to 232.
+Defined at lines 209 to 238.
 
 Read the user name of a cleartext FPLoginExt request and check its password against the hash.
 
@@ -130,7 +130,7 @@ Called by: [uam_setup](uams_passwd.c.md#uam_setup)
 static int passwd_printer(char *start, char *stop, char *username, struct papfile *out)
 ```
 
-Defined at lines 248 to 366.
+Defined at lines 254 to 372.
 
 Check a ClearTxtUAM printer login against the password hash.
 
@@ -154,7 +154,7 @@ Called by: [uam_setup](uams_passwd.c.md#uam_setup)
 static int uam_setup(void *obj, const char *path)
 ```
 
-Defined at lines 378 to 391.
+Defined at lines 384 to 397.
 
 Register the Cleartxt Passwrd login and the ClearTxtUAM printer login of the passwd module.
 
@@ -178,7 +178,7 @@ Dispatched via: [uams_clrtxt](uams_passwd.c.md#uams_clrtxt), [uams_passwd](uams_
 static void uam_cleanup(void)
 ```
 
-Defined at lines 397 to 401.
+Defined at lines 403 to 407.
 
 Unregister the Cleartxt Passwrd login and the ClearTxtUAM printer login of the passwd module.
 

@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_flush.c"
-description: "10 functions, includes 6 project headers."
+description: "Writing AppleDouble headers to disk and closing the forks."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_flush.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 int ad_rebuild_adouble_header_v2(struct adouble *ad)
 ```
 
-Defined at lines 61 to 99.
+Defined at lines 66 to 104.
 
 Serialize the header of a version 2 AppleDouble into ad->ad_data.
 
@@ -53,7 +53,7 @@ Mentioned in the documentation of: [ad_rebuild_adouble_header_ea](ad_flush.c.md#
 int ad_rebuild_adouble_header_ea(struct adouble *ad)
 ```
 
-Defined at lines 110 to 148.
+Defined at lines 115 to 153.
 
 Serialize the header of an EA AppleDouble into ad->ad_data.
 
@@ -74,7 +74,7 @@ Dispatched via: [ad_adouble_ea](ad_open.c.md#ad_adouble_ea)
 int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
 ```
 
-Defined at lines 160 to 209.
+Defined at lines 165 to 214.
 
 Serialize the header of a macOS native AppleDouble into adbuf.
 
@@ -96,7 +96,7 @@ Called by: [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_flush_rf](ad_flush
 static char * ad_copy_header_entry(const struct adouble *add, const struct adouble *ads, uint32_t eid, uint32_t *len)
 ```
 
-Defined at lines 223 to 258.
+Defined at lines 228 to 263.
 
 Source entry to transfer for eid, or NULL to skip it.
 
@@ -120,7 +120,7 @@ Called by: [ad_copy_header](ad_flush.c.md#ad_copy_header)
 int ad_copy_header(struct adouble *add, struct adouble *ads)
 ```
 
-Defined at lines 276 to 332.
+Defined at lines 281 to 337.
 
 Transfer the header entries of one AppleDouble into another.
 
@@ -144,7 +144,7 @@ Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [afp_exchangefiles
 static int ad_flush_hf(struct adouble *ad)
 ```
 
-Defined at lines 348 to 492.
+Defined at lines 353 to 497.
 
 Write the header of an AppleDouble to its metadata store.
 
@@ -167,7 +167,7 @@ Calls through [`adouble_fops::ad_rebuild_header`](../../include/atalk/adouble.h.
 static int ad_flush_rf(struct adouble *ad)
 ```
 
-Defined at lines 506 to 541.
+Defined at lines 511 to 546.
 
 Rewrite the ._ sidecar header of an ea AppleDouble with an open resource fork.
 
@@ -188,7 +188,7 @@ Called by: [ad_flush](ad_flush.c.md#ad_flush)
 int ad_flush(struct adouble *ad)
 ```
 
-Defined at lines 553 to 568.
+Defined at lines 558 to 573.
 
 Write the header and the resource fork metadata of an AppleDouble to disk.
 
@@ -209,7 +209,7 @@ Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_
 static int ad_data_closefd(struct adouble *ad)
 ```
 
-Defined at lines 577 to 592.
+Defined at lines 582 to 597.
 
 Close the data fork descriptor of an AppleDouble, or drop the symlink target it stands for.
 
@@ -226,7 +226,7 @@ Called by: [ad_close](ad_flush.c.md#ad_close)
 int ad_close(struct adouble *ad, int adflags)
 ```
 
-Defined at lines 609 to 745.
+Defined at lines 614 to 750.
 
 Close the forks of an AppleDouble that adflags names and release their resources.
 
