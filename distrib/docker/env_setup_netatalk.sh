@@ -470,7 +470,6 @@ fi
 
 if [ -n "$AFP_ADOUBLE" ]; then
     AFP_EA="ad"
-    TEST_FLAGS="$TEST_FLAGS -a"
 else
     AFP_EA="sys"
 fi
@@ -622,6 +621,37 @@ if [ -n "$AFP_CNID_TMPFS" ]; then
 fi
 
 # --------------------------------------------------------------------------
+# CPU affinity (benchmarking)
+# --------------------------------------------------------------------------
+
+# AFP_SERVER_CPUS and AFP_TEST_CPUS: taskset CPU lists for the AFP server
+# and for the test client, so each side keeps its CPUs for the whole run
+# instead of following the scheduler. Benchmarking only. Fails hard when
+# taskset is missing or a list is refused: a silently unpinned run would
+# measure something else.
+SERVER_CPU_PIN=""
+TEST_CPU_PIN=""
+if [ -n "$AFP_SERVER_CPUS" ] || [ -n "$AFP_TEST_CPUS" ]; then
+    if ! command -v taskset > /dev/null 2>&1; then
+        echo "ERROR: AFP_SERVER_CPUS and AFP_TEST_CPUS need taskset," \
+            "which this image does not ship" >&2
+        exit 1
+    fi
+    for cpus in $AFP_SERVER_CPUS $AFP_TEST_CPUS; do
+        if ! taskset -c "$cpus" true > /dev/null 2>&1; then
+            echo "ERROR: taskset refused the CPU list '$cpus'" >&2
+            exit 1
+        fi
+    done
+    if [ -n "$AFP_SERVER_CPUS" ]; then
+        SERVER_CPU_PIN="taskset -c $AFP_SERVER_CPUS"
+    fi
+    if [ -n "$AFP_TEST_CPUS" ]; then
+        TEST_CPU_PIN="taskset -c $AFP_TEST_CPUS"
+    fi
+fi
+
+# --------------------------------------------------------------------------
 # Testsuite and config file flags
 # --------------------------------------------------------------------------
 
@@ -635,6 +665,12 @@ fi
 # passing an unknown option to the other test runners.
 if [ "$TESTSUITE" = "spec" ] && [ "$AFP_STRICT_LOCKING" = "yes" ]; then
     TEST_FLAGS="$TEST_FLAGS -L"
+fi
+
+# -a tells afp_spectest the volume keeps its metadata in AppleDouble files
+# rather than EAs; the other test runners do not take the flag.
+if [ "$TESTSUITE" = "spec" ] && [ -n "$AFP_ADOUBLE" ]; then
+    TEST_FLAGS="$TEST_FLAGS -a"
 fi
 
 if [ -n "$AFP_CONFIG_POLLING" ]; then
