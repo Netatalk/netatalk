@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Apple Filing Protocol command, capability and error constants
+ */
+
 #ifndef _ATALK_AFP_H
 #define _ATALK_AFP_H 1
 

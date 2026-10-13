@@ -5,7 +5,7 @@
 
 /*!
  * @file
- * interface between uam.c and auth.c
+ * @brief Authentication module types and loading interface for afpd
  */
 
 #ifndef AFPD_UAM_AUTH_H

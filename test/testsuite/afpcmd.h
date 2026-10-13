@@ -1,4 +1,8 @@
-/* -------------------------------- */
+/*!
+ * @file
+ * @brief AFP test command wrappers and Spotlight RPC probe interface
+ */
+
 #ifndef AFPCMD_H
 #define AFPCMD_H
 

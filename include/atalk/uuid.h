@@ -12,6 +12,11 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief User and group UUID lookup, conversion and cache interface
+ */
+
 #ifndef AFP_UUID_H
 #define AFP_UUID_H
 

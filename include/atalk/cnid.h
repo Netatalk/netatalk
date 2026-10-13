@@ -16,12 +16,7 @@
 
 /*!
  * @file
- * This file contains all generic CNID related stuff
- * declarations. Included:
- * - CNID factory, which retrieves (eventually instantiates)
- *   CNID objects on demand
- * - selection of CNID backends (default, detected by volume)
- * - full set of CNID operations needed by server core.
+ * @brief CNID database types, backend operations and catalog lookup interface
  */
 
 #ifndef _ATALK_CNID__H

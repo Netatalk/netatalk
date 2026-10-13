@@ -9,6 +9,11 @@
  * would be 1 and 3 respectively for phase 1 and 2.
  */
 
+/*!
+ * @file
+ * @brief AppleTalk Address Resolution Protocol packet and cache types
+ */
+
 #ifndef _AARP_H
 #define _AARP_H 1
 

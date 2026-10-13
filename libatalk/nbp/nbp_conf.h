@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief NBP entity name parsing and matching interface
+ */
+
 #ifndef NBP_CONF_H
 #define NBP_CONF_H 1
 

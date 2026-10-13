@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AFP volume command handlers and volume lifecycle helpers
+ */
+
 #ifndef AFPD_VOLUME_H
 #define AFPD_VOLUME_H 1
 

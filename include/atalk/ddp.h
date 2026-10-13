@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Datagram Delivery Protocol type codes
+ */
+
 #ifndef _ATALK_DDP_H
 #define _ATALK_DDP_H 1
 

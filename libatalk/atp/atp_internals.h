@@ -21,6 +21,12 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Private ATP packet buffers, receive queue and packet construction
+ * helpers
+ */
+
 #ifndef ATP_INTERNALS_H
 #define ATP_INTERNALS_H 1
 

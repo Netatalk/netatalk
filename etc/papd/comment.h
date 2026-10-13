@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief PostScript comment parser callbacks and parser stack interface
+ */
+
 #ifndef PAPD_COMMENT_H
 #define PAPD_COMMENT_H 1
 

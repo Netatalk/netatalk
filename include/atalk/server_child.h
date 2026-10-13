@@ -3,19 +3,17 @@
  * All rights reserved.
  */
 
+/*!
+ * @file
+ * @brief AFP child process state and session management interface
+ */
+
 #ifndef _ATALK_SERVER_CHILD_H
 #define _ATALK_SERVER_CHILD_H 1
 
 #include <arpa/inet.h>
 #include <stddef.h>
 #include <sys/types.h>
-
-/*!
- * @file
- * @brief data structures and utility functions for child processes
- *
- * most of the implementation is in libatalk/util/server_child.c
- */
 
 #define CHILD_HASHSIZE 32
 

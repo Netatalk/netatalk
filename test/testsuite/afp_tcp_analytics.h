@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief TCP statistics collection types and test lifecycle interface
+ */
+
 #ifndef AFP_TCP_ANALYTICS_H
 #define AFP_TCP_ANALYTICS_H
 

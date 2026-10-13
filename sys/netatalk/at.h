@@ -4,6 +4,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AppleTalk socket addresses, network ranges and protocol constants
+ */
+
 #ifndef __AT_HEADER__
 #define __AT_HEADER__
 

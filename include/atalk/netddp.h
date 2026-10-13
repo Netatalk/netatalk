@@ -5,9 +5,11 @@
 
 /*!
  * @file
- * this provides a generic interface to the ddp layer. with this, we
- * should be able to interact with any appletalk stack that allows
- * direct access to the ddp layer.
+ * @brief Portable DDP socket lifecycle and datagram I/O interface
+ *
+ * This provides a generic interface to the DDP layer. With this, we
+ * should be able to interact with any AppleTalk stack that allows
+ * direct access to the DDP layer.
  */
 
 #ifndef _ATALK_NETDDP_H

@@ -1,7 +1,10 @@
+/*
+ * Author: Mark Williams
+ */
+
 /*!
  * @file
- * @brief Internal definitions for File Change Events API
- * @author mw
+ * @brief Internal file change event packet, history and coalescing types
  */
 
 #ifndef _FCE_API_INTERNAL_H

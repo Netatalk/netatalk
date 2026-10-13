@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AFP command and error name lookup interface
+ */
+
 #ifndef AFPD_AFP_UTIL_H
 #define AFPD_AFP_UTIL_H 1
 

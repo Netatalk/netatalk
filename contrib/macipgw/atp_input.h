@@ -17,5 +17,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief ATP request handler interface for the MacIP gateway
+ */
+
 extern int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf,
                      int recvlen);

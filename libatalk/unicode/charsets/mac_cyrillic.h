@@ -20,7 +20,7 @@
 
 /*!
  * @file
- * MacCyrillic
+ * @brief Mac Cyrillic character mapping tables
  */
 
 static const unsigned short mac_cyrillic_2uni[128] = {

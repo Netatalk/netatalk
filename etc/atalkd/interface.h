@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AppleTalk interface state, flags and allocation interface
+ */
+
 #ifndef ATALKD_INTERFACE_H
 #define ATALKD_INTERFACE_H 1
 

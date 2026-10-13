@@ -12,6 +12,11 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief AFP extended attribute command handlers
+ */
+
 #ifndef AFPD_EXT_ATTRS_H
 #define AFPD_EXT_ATTRS_H
 

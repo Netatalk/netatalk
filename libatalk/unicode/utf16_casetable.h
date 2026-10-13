@@ -8,6 +8,11 @@
     https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 */
 
+/*!
+ * @file
+ * @brief UTF-16 upper and lower case lookup tables
+ */
+
 static const uint16_t upper_table_1[704] = {
     0x0000, /*U+0000*/ /**/
     0x0001, /*U+0001*/ /**/

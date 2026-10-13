@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Peer process helpers for component test file locks
+ */
+
 #ifndef PEER_LOCK_H
 #define PEER_LOCK_H
 

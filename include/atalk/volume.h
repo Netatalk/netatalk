@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AFP volume state, configuration flags and extension mapping types
+ */
+
 #ifndef ATALK_VOLUME_H
 #define ATALK_VOLUME_H 1
 

@@ -19,6 +19,7 @@
 
 /*!
  * @file
+ * @brief Mac Chinese Simplified character mapping tables
  * @sa Reference
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */

@@ -12,6 +12,11 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Netatalk configuration and volume lookup interface
+ */
+
 #ifndef AFP_CONFIG_H
 #define AFP_CONFIG_H
 

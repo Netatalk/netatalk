@@ -26,7 +26,9 @@
 
 /*!
  * @file
- * @brief MAC_HEBREW charset conversion
+ * @brief Mac Hebrew charset conversion
+ * @sa Reference
+ * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */
 
 #ifdef HAVE_CONFIG_H

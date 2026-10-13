@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief AFP file command handlers and file metadata helpers
+ */
+
 #ifndef AFPD_FILE_H
 #define AFPD_FILE_H 1
 

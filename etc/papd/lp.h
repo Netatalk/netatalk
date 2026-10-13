@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Print job submission, queue control and spool I/O interface
+ */
+
 #ifndef PAPD_LP_H
 #define PAPD_LP_H 1
 

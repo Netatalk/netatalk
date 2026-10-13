@@ -12,6 +12,11 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Mapping tables between Darwin and NFSv4 ACL rights and flags
+ */
+
 #ifndef ACL_MAPPINGS
 #define ACL_MAPPINGS
 
@@ -23,11 +28,6 @@
 #endif
 
 #include "acls.h"
-
-/*!
- * @file
- * Stuff for mapping between ACL implementations
- */
 
 /* Solaris 10u8 still hasn't got ACE_INHERITED_ACE */
 #ifndef ACE_INHERITED_ACE

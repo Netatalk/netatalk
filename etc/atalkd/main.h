@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Interface configuration helpers and daemon state for atalkd
+ */
+
 #ifndef ATALKD_MAIN_H
 #define ATALKD_MAIN_H
 

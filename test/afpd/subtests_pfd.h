@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Parent directory descriptor cache component test entry points
+ */
+
 #ifndef SUBTESTS_PFD_H
 #define SUBTESTS_PFD_H
 

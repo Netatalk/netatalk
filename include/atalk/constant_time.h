@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Constant time memory comparison helper
+ */
+
 #ifndef _ATALK_CONSTANT_TIME_H
 #define _ATALK_CONSTANT_TIME_H 1
 

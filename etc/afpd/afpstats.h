@@ -13,6 +13,11 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief AFP statistics service initialization and connection interface
+ */
+
 #ifndef AFPD_AFPSTATS_H
 #define AFPD_AFPSTATS_H
 

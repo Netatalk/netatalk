@@ -5,39 +5,7 @@
 
 /*!
  * @file
- * @code
- * <-1byte(8bits) ->
- * +---------------+
- * | 0 | hopc  |len|
- * +---------------+
- * | len (cont)    |
- * +---------------+
- * |               |
- * +- DDP csum    -+
- * |               |
- * +---------------+
- * |               |
- * +- Dest NET    -+
- * |               |
- * +---------------+
- * |               |
- * +- Src NET     -+
- * |               |
- * +---------------+
- * | Dest NODE     |
- * +---------------+
- * | Src NODE      |
- * +---------------+
- * | Dest PORT     |
- * +---------------+
- * | Src PORT      |
- * +---------------+
- * @endcode
- *
- * On Apples, there is also a ddp_type field, after src_port. However,
- * under this unix implementation, user level processes need to be able
- * to set the ddp_type. In later revisions, the ddp_type may only be
- * available in a raw_appletalk interface.
+ * @brief ELAP and DDP packet header types, field aliases and size constants
  */
 
 #ifndef _NETATALK_DDP_H

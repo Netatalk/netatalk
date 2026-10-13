@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Component test assertion macros, reporting and harness state
+ */
+
 #ifndef TEST_H
 #define TEST_H
 

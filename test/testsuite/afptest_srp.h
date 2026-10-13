@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief SRP client proof and key derivation helpers for AFP tests
+ */
+
 #ifndef AFPTEST_SRP_H
 #define AFPTEST_SRP_H
 

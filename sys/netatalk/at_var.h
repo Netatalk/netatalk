@@ -4,6 +4,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Kernel AppleTalk interface address state and configuration types
+ */
+
 #ifndef _ATVAR_H
 #define _ATVAR_H 1
 

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Shared AFP file and directory command handlers and name checks
+ */
+
 #ifndef AFPD_FILEDIR_H
 #define AFPD_FILEDIR_H 1
 

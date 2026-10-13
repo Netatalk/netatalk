@@ -17,6 +17,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief CJK mapping table types and character conversion helpers
+ */
+
 #include <atalk/unicode.h>
 #include <iconv.h>
 #include <atalk/byteorder.h>

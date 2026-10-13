@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Printer configuration and authentication state types for papd
+ */
+
 struct printer {
     char		*p_name;
     char		*p_type;

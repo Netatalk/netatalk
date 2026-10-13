@@ -1,8 +1,12 @@
 /*
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * All rights reserved.
- *
- * modified for test-suite
+ */
+
+/*!
+ * @file
+ * @brief DSI client packet types, session state and stream I/O interface
+ * adapted for the test-suite
  */
 
 #ifndef _ATALK_DSI_H
@@ -14,10 +18,7 @@
 
 #include <netinet/in.h>
 
-/*!
- * @file
- * @brief DSI (Data Stream Interface) protocol definitions for the test-suite.
- *
+/*
  * Client-side DSI used by the afptest tools. Unlike the libatalk server-side
  * DSI implementation, this variant:
  *  - has no proto_open/proto_close, no listening socket, no AFPObj
@@ -28,7 +29,7 @@
  *    intentionally not provided here
  *
  * What a DSI packet looks like:
- * @code
+ *
  *   0                               32
  *   |-------------------------------|
  *   |flags  |command| requestID     |
@@ -39,10 +40,9 @@
  *   |-------------------------------|
  *   |reserved field                 |
  *   |-------------------------------|
- * @endcode
  *
- * @note CONVENTION: anything with a dsi_ prefix is kept in network byte order.
-*/
+ * CONVENTION: anything with a dsi_ prefix is kept in network byte order.
+ */
 
 #define DSI_BLOCKSIZ 16
 struct dsi_block {

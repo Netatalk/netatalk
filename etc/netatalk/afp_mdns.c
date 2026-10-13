@@ -1,8 +1,11 @@
+/*
+ * Author:   Lee Essen <lee.essen@nowonline.co.uk>
+ * Based on: avahi support from Daniel S. Haischt <me@daniel.stefan.haischt.name>
+ */
+
 /*!
  * @file
- * @author   Lee Essen <lee.essen@nowonline.co.uk>
- * @brief    mDNS based Zeroconf support
- * @note     Based on: avahi support from Daniel S. Haischt <me@daniel.stefan.haischt.name>
+ * @brief mDNS based Zeroconf support
  */
 
 #ifdef HAVE_CONFIG_H

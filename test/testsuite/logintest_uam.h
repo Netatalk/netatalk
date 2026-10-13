@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief UAM login test descriptors, selection and execution interface
+ */
+
 #ifndef LOGINTEST_UAM_H
 #define LOGINTEST_UAM_H
 

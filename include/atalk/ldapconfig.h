@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief LDAP preference types and configuration lifecycle interface
+ */
+
 #ifdef HAVE_LDAP
 
 #ifndef LDAPCONFIG_H

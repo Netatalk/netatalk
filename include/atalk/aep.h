@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief AppleTalk Echo Protocol operation codes
+ */
+
 #ifndef _ATALK_AEP_H
 #define _ATALK_AEP_H 1
 

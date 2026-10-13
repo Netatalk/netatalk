@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Name Binding Protocol packet types and name lookup interface
+ */
+
 #ifndef _ATALK_NBP_H
 #define _ATALK_NBP_H 1
 

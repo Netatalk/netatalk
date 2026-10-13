@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Print job buffer types and spooling helpers for papd
+ */
+
 #ifndef PAPD_FILE_H
 #define PAPD_FILE_H 1
 

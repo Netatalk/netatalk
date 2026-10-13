@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Test result types and machine readable report lifecycle interface
+ */
+
 #ifndef TESTREPORT_H
 #define TESTREPORT_H
 

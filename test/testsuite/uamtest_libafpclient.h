@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief libafpclient session and UAM discovery interface for login tests
+ */
+
 #ifndef UAMTEST_LIBAFPCLIENT_H
 #define UAMTEST_LIBAFPCLIENT_H
 

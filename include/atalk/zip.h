@@ -21,6 +21,10 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Zone Information Protocol packet types and operation codes
+ */
 
 #ifndef _ATALK_ZIP_H
 #define _ATALK_ZIP_H 1

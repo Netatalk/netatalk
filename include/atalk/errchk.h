@@ -12,6 +12,11 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Error checking, logging and cleanup control macros
+ */
+
 #ifndef ERRCHECK_H
 #define ERRCHECK_H
 
@@ -27,35 +32,6 @@
     } while (0)
 #define EC_CLEANUP cleanup
 #define EC_EXIT return ret
-
-/*!
- * @file
- * @brief Error checking macros
- * @sa ./doc/developer/developer.md
- *
- * We have these macros:
- * @code
- * EC_ZERO, EC_ZERO_LOG, EC_ZERO_LOGSTR, EC_ZERO_LOG_ERR
- * EC_NEG1, EC_NEG1_LOG, EC_NEG1_LOGSTR, EC_NEG1_LOG_ERR
- * EC_NULL, EC_NULL_LOG, EC_NULL_LOGSTR, EC_NULL_LOG_ERR
- * @endcode
- *
- * A boileplate function template is:
- *
- * @code
- *   int func(void)
- *   {
- *       EC_INIT;
- *
- *       ...your code here...
- *
- *       EC_STATUS(0);
- *
- *   EC_CLEANUP:
- *       EC_EXIT;
- *   }
- * @endcode
- */
 
 /*! check for return val 0 which is ok, every other is an error, prints errno */
 #define EC_ZERO_LOG(a)                                                  \

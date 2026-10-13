@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AppleTalk multicast membership and zone broadcast interface
+ */
+
 #ifndef ATALKD_MULTICAST_H
 #define ATALKD_MULTICAST_H 1
 

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief DSI receive file and fork write component test entry points
+ */
+
 #ifndef SUBTESTS_RECVFILE_H
 #define SUBTESTS_RECVFILE_H
 

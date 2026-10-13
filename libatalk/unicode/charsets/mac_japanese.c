@@ -19,7 +19,7 @@
 
 /*!
  * @file
- * @brief MAC_JAPANESE charset conversion
+ * @brief Mac Japanese charset conversion
  * @sa Reference
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */

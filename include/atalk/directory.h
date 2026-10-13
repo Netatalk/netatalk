@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Shared AFP directory, path and directory cache entry types
+ */
+
 #ifndef ATALK_DIRECTORY_H
 #define ATALK_DIRECTORY_H 1
 

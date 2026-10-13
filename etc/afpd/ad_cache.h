@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief AppleDouble metadata and resource fork cache interface
+ */
+
 #ifndef AD_CACHE_H
 #define AD_CACHE_H
 

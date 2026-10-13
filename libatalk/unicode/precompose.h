@@ -7,6 +7,11 @@
     https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 */
 
+/*!
+ * @file
+ * @brief Unicode composition and decomposition tables and Hangul constants
+ */
+
 #define SBASE 0xAC00
 #define LBASE 0x1100
 #define VBASE 0x1161

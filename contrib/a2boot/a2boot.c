@@ -18,6 +18,11 @@
  *	Copyright (c) 1990, The University of Melbourne.
  */
 
+/*!
+ * @file
+ * @brief The a2boot daemon: serve Apple II boot blocks and images over ATP
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

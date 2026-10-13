@@ -17,6 +17,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief MacIP gateway lifecycle and packet I/O interface
+ */
+
 extern int  macip_open(char *zone, uint32_t net, uint32_t mask, uint32_t ns,
                        outputfunc_t o);
 extern void macip_close(void);

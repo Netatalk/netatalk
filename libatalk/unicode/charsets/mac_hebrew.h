@@ -23,9 +23,7 @@
 
 /*!
  * @file
- * @brief MacHebrew
- * @sa Reference
- * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
+ * @brief Mac Hebrew character mapping tables
  */
 
 static const unsigned short mac_hebrew_2uni[128] = {

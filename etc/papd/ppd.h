@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief PostScript printer description feature and font lookup interface
+ */
+
 #ifndef PAPD_PPD_H
 #define PAPD_PPD_H 1
 

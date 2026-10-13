@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Private ASP child session state and status flags
+ */
+
 #ifndef _ASP_CHILD_H
 #define _ASP_CHILD_H 1
 

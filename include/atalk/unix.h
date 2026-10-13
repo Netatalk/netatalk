@@ -12,6 +12,11 @@
    GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Unix filesystem, privilege and resource usage helpers
+ */
+
 #ifndef ATALK_UNIX_H
 #define ATALK_UNIX_H
 

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Character set conversion types and Unicode string operations
+ */
+
 #ifndef _ATALK_UNICODE_H
 #define _ATALK_UNICODE_H 1
 

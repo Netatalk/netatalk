@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AFP server options, session state and transport callback types
+ */
+
 #ifndef AFPD_GLOBALS_H
 #define AFPD_GLOBALS_H 1
 

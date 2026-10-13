@@ -19,10 +19,8 @@
 
 /*!
  * @file
- * @sa Reference
- * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
+ * @brief Mac Japanese character mapping tables
  */
-
 
 static const uint16_t mac_japanese_uni2_page00[][2] = {
     /* 0x00a */ { 0x0201,    1 },

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Parent and child IPC message types and cache hint interface
+ */
+
 #ifndef ATALK_SERVER_IPC_H
 #define ATALK_SERVER_IPC_H
 

@@ -28,8 +28,7 @@
 
 /*!
  * @file
- * @brief Part of Netatalk's AppleDouble implementatation
- * @sa include/atalk/adouble.h
+ * @brief Opening and creating AppleDouble forks and reading metadata headers
  */
 
 #ifdef HAVE_CONFIG_H

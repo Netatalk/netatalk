@@ -14,8 +14,7 @@
 
 /*!
  * @file
- * @brief Part of Netatalk's AppleDouble implementatation
- * @sa include/atalk/adouble.h
+ * @brief Converting AppleDouble metadata and resource forks to the EA layout
  */
 
 #ifdef HAVE_CONFIG_H

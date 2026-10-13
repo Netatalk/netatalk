@@ -18,6 +18,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief IP address parsing and formatting helpers for macipgw
+ */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 

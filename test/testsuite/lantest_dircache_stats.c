@@ -13,6 +13,11 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Lantest directory cache statistics functions
+ */
+
 /* Configuration header (must be first) */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

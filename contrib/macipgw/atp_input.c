@@ -18,6 +18,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief ATP input queueing and transaction release handling for macipgw
+ */
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief UAM selection and AFP login dispatch interface for tests
+ */
+
 #ifndef AFPTEST_UAM_H
 #define AFPTEST_UAM_H
 

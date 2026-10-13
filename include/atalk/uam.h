@@ -2,6 +2,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief User authentication module registration and server callback interface
+ */
+
 #ifndef UAM_H
 #define UAM_H 1
 

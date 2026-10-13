@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Unix permissions, ownership and quota interface for afpd
+ */
+
 #ifndef AFPD_UNIX_H
 #define AFPD_UNIX_H
 

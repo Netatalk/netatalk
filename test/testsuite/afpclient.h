@@ -1,5 +1,8 @@
-/* ---------------------------------------------------
-*/
+/*!
+ * @file
+ * @brief AFP client connection types, packet encoding and command interface
+ */
+
 #ifndef AFPCLIENT_H
 #define AFPCLIENT_H
 

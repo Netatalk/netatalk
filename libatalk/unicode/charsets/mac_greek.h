@@ -20,7 +20,7 @@
 
 /*!
  * @file
- * MacGreek
+ * @brief Mac Greek character mapping tables
  */
 
 static const unsigned short mac_greek_2uni[128] = {

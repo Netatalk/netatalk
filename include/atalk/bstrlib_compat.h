@@ -1,5 +1,6 @@
-/*
- * Compatibility wrapper for bstring.
+/*!
+ * @file
+ * @brief Compatibility aliases for the bstrlib string interface
  *
  * illumos declares a legacy bgets() function in libgen.h with a signature
  * that conflicts with bstring's bgets().  Netatalk does not use bstring's

@@ -1,7 +1,10 @@
-/*
-  Declarations for pluggable Spotlight search backend ops instances.
-  Include this header wherever a backend ops pointer is needed.
-*/
+/*!
+ * @file
+ * @brief Operation table declarations for available Spotlight backends
+ *
+ * Declarations for pluggable Spotlight search backend ops instances.
+ * Include this header wherever a backend ops pointer is needed.
+ */
 
 #ifndef SPOTLIGHT_BACKENDS_H
 #define SPOTLIGHT_BACKENDS_H

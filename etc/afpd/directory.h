@@ -24,6 +24,11 @@
  * You may also use it under the terms of the General Public License (GPL). See COPYING.
  */
 
+/*!
+ * @file
+ * @brief AFP directory command handlers and path resolution helpers
+ */
+
 #ifndef AFPD_DIRECTORY_H
 #define AFPD_DIRECTORY_H 1
 

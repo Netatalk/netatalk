@@ -20,7 +20,7 @@
 
 /*!
  * @file
- * MacTurkish
+ * @brief Mac Turkish character mapping tables
  */
 
 static const unsigned short mac_turkish_2uni[128] = {

@@ -19,6 +19,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief MacIP packet forwarding and client IP address assignment for macipgw
+ */
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>

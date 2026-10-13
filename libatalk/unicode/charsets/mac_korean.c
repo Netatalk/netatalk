@@ -19,7 +19,7 @@
 
 /*!
  * @file
- * @brief MAC_KOREAN charset conversion
+ * @brief Mac Korean charset conversion
  * @sa Reference
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Logging levels, categories, configuration and message interface
+ */
+
 #ifndef _ATALK_LOGGER_H
 #define _ATALK_LOGGER_H 1
 

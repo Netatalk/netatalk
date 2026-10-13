@@ -33,15 +33,8 @@
 
 /*!
  * @file
- * @brief AFP-aware copying of files and directory trees for nad
- *
- * Implements the nad cp command, combining filesystem copying with
- * Netatalk volume services. When AFP volume information is available,
- * copying also handles volume-specific filename encoding, AppleDouble
- * metadata, and destination CNID registration.
- *
- * Source and destination volume contexts are managed independently,
- * allowing copying between paths with different volume settings.
+ * @brief The nad cp command: copy entries and their metadata, assigning CNIDs
+ * resolved for the destination paths
  */
 
 #ifdef HAVE_CONFIG_H

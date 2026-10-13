@@ -26,7 +26,7 @@
 
 /*!
  * @file
- * @brief MAC_CYRILLIC charset conversion
+ * @brief Mac Cyrillic charset conversion
  */
 
 #ifdef HAVE_CONFIG_H
