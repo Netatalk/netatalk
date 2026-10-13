@@ -6,7 +6,8 @@
  * All rights reserved. See COPYRIGHT.
  *
  * dsi_write_file() derives from Samba's sys_recvfile()
- * (source3/lib/recvfile.c):
+ * (source3/lib/recvfile.c) by Jeremy Allison, who has granted permission
+ * to redistribute this code under the GNU General Public License 2 or later
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
