@@ -5,7 +5,7 @@ description: "wrapper/stub for iconv character set conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/iconv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T07:42:22+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -124,7 +124,7 @@ Parameters:
 
 Returns: 0 or the result of the direct function, or `(size_t)-1` with errno
 
-Called by: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [pull_charset_flags](charcnv.c.md#pull_charset_flags), [push_charset_flags](charcnv.c.md#push_charset_flags)
+Called by: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [decode_source_ucs2](charcnv.c.md#decode_source_ucs2), [emit_filename_chars](charcnv.c.md#emit_filename_chars), [push_charset_flags](charcnv.c.md#push_charset_flags), [restore_source_bom](charcnv.c.md#restore_source_bom), [source_code_unit_size](charcnv.c.md#source_code_unit_size)
 
 Calls through [`atalk_iconv_t::direct`](../../include/atalk/unicode.h.md#struct-atalk_iconv_t): no table assigns this field
 
@@ -152,7 +152,7 @@ Returns: the descriptor, or `(atalk_iconv_t)-1` with ENOMEM or EINVAL
 
 Calls: [find_charset_functions](iconv.c.md#find_charset_functions), [iconv_copy](iconv.c.md#iconv_copy), [lazy_initialize_iconv](iconv.c.md#lazy_initialize_iconv), [sys_iconv](iconv.c.md#sys_iconv)
 
-Called by: [add_charset](charcnv.c.md#add_charset), [init_iconv](charcnv.c.md#init_iconv)
+Called by: [add_charset](charcnv.c.md#add_charset), [decode_source_ucs2](charcnv.c.md#decode_source_ucs2), [init_iconv](charcnv.c.md#init_iconv), [restore_source_bom](charcnv.c.md#restore_source_bom), [source_code_unit_size](charcnv.c.md#source_code_unit_size)
 
 ### atalk_iconv_close
 
@@ -168,6 +168,8 @@ Parameters:
 * `cd`: descriptor to close
 
 Returns: 0
+
+Called by: [decode_source_ucs2](charcnv.c.md#decode_source_ucs2), [restore_source_bom](charcnv.c.md#restore_source_bom), [source_code_unit_size](charcnv.c.md#source_code_unit_size)
 
 ### ascii_pull
 

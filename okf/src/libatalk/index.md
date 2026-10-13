@@ -10,6 +10,6 @@
 * [dsi](dsi.md) - 12 files, 47 functions. Files in [dsi/](dsi/).
 * [nbp](nbp.md) - 5 files, 7 functions. Files in [nbp/](nbp/).
 * [netddp](netddp.md) - 1 file, 1 function. Files in [netddp/](netddp/).
-* [unicode](unicode.md) - 31 files, 108 functions. Files in [unicode/](unicode/).
+* [unicode](unicode.md) - 31 files, 113 functions. Files in [unicode/](unicode/).
 * [util](util.md) - 20 files, 191 functions. Files in [util/](util/).
 * [vfs](vfs.md) - 6 files, 115 functions. Files in [vfs/](vfs/).

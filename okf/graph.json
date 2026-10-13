@@ -1,5 +1,5 @@
 {
-"commit": "208fa4d801d494ba9edee179c891a66c3f01e508",
+"commit": "0c81837b6b87c4fa3d548a27da669cbdfd2fd2ae",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -19603,6 +19603,41 @@
 "to": "sys/netatalk/ddp_usrreq.c#ddp_sendspace"
 },
 {
+"from": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv"
+},
+{
+"from": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_close"
+},
+{
+"from": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_open"
+},
+{
+"from": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#charset_name"
+},
+{
+"from": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#restore_source_bom"
+},
+{
+"from": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#source_code_unit_size"
+},
+{
+"from": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "use",
+"to": "libatalk/unicode/charcnv.c#conv_handles"
+},
+{
 "from": "libatalk/unicode/util_unistr.c#decompose_w",
 "kind": "call",
 "to": "libatalk/unicode/util_unistr.c#do_decomposition"
@@ -22715,6 +22750,21 @@
 "to": "libatalk/vfs/unix.c#unix_rename"
 },
 {
+"from": "libatalk/unicode/charcnv.c#emit_filename_chars",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv"
+},
+{
+"from": "libatalk/unicode/charcnv.c#emit_filename_chars",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#filename_hex_value"
+},
+{
+"from": "libatalk/unicode/charcnv.c#emit_filename_chars",
+"kind": "use",
+"to": "libatalk/unicode/charcnv.c#conv_handles"
+},
+{
 "from": "etc/papd/printcap.c#endprent",
 "kind": "use",
 "to": "etc/papd/printcap.c#pfp"
@@ -23183,6 +23233,11 @@
 "from": "libatalk/unicode/charcnv.c#free_charset_names",
 "kind": "use",
 "to": "libatalk/unicode/charcnv.c#charset_names"
+},
+{
+"from": "libatalk/unicode/charcnv.c#free_charset_names",
+"kind": "use",
+"to": "libatalk/unicode/charcnv.c#source_unit_sizes"
 },
 {
 "from": "libatalk/util/netatalk_conf.c#free_extmap",
@@ -32329,12 +32384,12 @@
 {
 "from": "libatalk/unicode/charcnv.c#pull_charset_flags",
 "kind": "call",
-"to": "libatalk/unicode/iconv.c#atalk_iconv"
+"to": "libatalk/unicode/charcnv.c#decode_source_ucs2"
 },
 {
 "from": "libatalk/unicode/charcnv.c#pull_charset_flags",
-"kind": "use",
-"to": "libatalk/unicode/charcnv.c#conv_handles"
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#emit_filename_chars"
 },
 {
 "from": "libatalk/unicode/charcnv.c#push_charset_flags",
@@ -33367,6 +33422,26 @@
 "to": "bin/nad/nad_util.c#forceflag"
 },
 {
+"from": "libatalk/unicode/charcnv.c#restore_source_bom",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv"
+},
+{
+"from": "libatalk/unicode/charcnv.c#restore_source_bom",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_close"
+},
+{
+"from": "libatalk/unicode/charcnv.c#restore_source_bom",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_open"
+},
+{
+"from": "libatalk/unicode/charcnv.c#restore_source_bom",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#charset_name"
+},
+{
 "from": "libatalk/util/netatalk_conf.c#rewrite_vol_uuid_conf",
 "kind": "use",
 "to": "libatalk/util/netatalk_conf.c#UUID_FILE_HEADER"
@@ -34252,6 +34327,11 @@
 "from": "libatalk/unicode/charcnv.c#set_charset_name",
 "kind": "use",
 "to": "libatalk/unicode/charcnv.c#charset_names"
+},
+{
+"from": "libatalk/unicode/charcnv.c#set_charset_name",
+"kind": "use",
+"to": "libatalk/unicode/charcnv.c#source_unit_sizes"
 },
 {
 "from": "etc/afpd/directory.c#set_dir_errors",
@@ -36248,6 +36328,31 @@
 "from": "libatalk/util/netatalk_conf.c#sortextmap",
 "kind": "use",
 "to": "libatalk/util/netatalk_conf.c#Extmap_cnt"
+},
+{
+"from": "libatalk/unicode/charcnv.c#source_code_unit_size",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv"
+},
+{
+"from": "libatalk/unicode/charcnv.c#source_code_unit_size",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_close"
+},
+{
+"from": "libatalk/unicode/charcnv.c#source_code_unit_size",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_open"
+},
+{
+"from": "libatalk/unicode/charcnv.c#source_code_unit_size",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#charset_name"
+},
+{
+"from": "libatalk/unicode/charcnv.c#source_code_unit_size",
+"kind": "use",
+"to": "libatalk/unicode/charcnv.c#source_unit_sizes"
 },
 {
 "from": "bin/nad/nad_stuffit.c#split_parent_base",
@@ -43928,7 +44033,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#add_charset",
 "kind": "function",
-"line": 165,
+"line": 167,
 "static": false
 },
 {
@@ -43968,7 +44073,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#add_null",
 "kind": "function",
-"line": 263,
+"line": 265,
 "static": true
 },
 {
@@ -46424,7 +46529,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_decompose",
 "kind": "function",
-"line": 739,
+"line": 741,
 "static": false
 },
 {
@@ -46432,7 +46537,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_name",
 "kind": "function",
-"line": 75,
+"line": 74,
 "static": true
 },
 {
@@ -46440,7 +46545,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_precompose",
 "kind": "function",
-"line": 699,
+"line": 701,
 "static": false
 },
 {
@@ -46448,7 +46553,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_strlower",
 "kind": "function",
-"line": 632,
+"line": 634,
 "static": false
 },
 {
@@ -46456,7 +46561,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#charset_strupper",
 "kind": "function",
-"line": 596,
+"line": 598,
 "static": false
 },
 {
@@ -47584,7 +47689,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_charset",
 "kind": "function",
-"line": 1160,
+"line": 1304,
 "static": false
 },
 {
@@ -47616,7 +47721,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string",
 "kind": "function",
-"line": 367,
+"line": 369,
 "static": false
 },
 {
@@ -47624,7 +47729,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string_allocate",
 "kind": "function",
-"line": 538,
+"line": 540,
 "static": false
 },
 {
@@ -47632,7 +47737,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string_allocate_internal",
 "kind": "function",
-"line": 428,
+"line": 430,
 "static": true
 },
 {
@@ -47640,7 +47745,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#convert_string_internal",
 "kind": "function",
-"line": 292,
+"line": 294,
 "static": true
 },
 {
@@ -48226,6 +48331,14 @@
 "kind": "function",
 "line": 53,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/unicode/charcnv.c",
+"id": "libatalk/unicode/charcnv.c#decode_source_ucs2",
+"kind": "function",
+"line": 904,
+"static": true
 },
 {
 "documented": true,
@@ -49485,6 +49598,14 @@
 },
 {
 "documented": true,
+"file": "libatalk/unicode/charcnv.c",
+"id": "libatalk/unicode/charcnv.c#emit_filename_chars",
+"kind": "function",
+"line": 1027,
+"static": true
+},
+{
+"documented": true,
 "file": "etc/papd/printcap.c",
 "id": "etc/papd/printcap.c#endprent",
 "kind": "function",
@@ -49666,6 +49787,14 @@
 "kind": "function",
 "line": 2386,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/unicode/charcnv.c",
+"id": "libatalk/unicode/charcnv.c#filename_hex_value",
+"kind": "function",
+"line": 777,
+"static": true
 },
 {
 "documented": true,
@@ -49976,7 +50105,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#get_charset_functions",
 "kind": "function",
-"line": 131,
+"line": 133,
 "static": true
 },
 {
@@ -51096,7 +51225,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#init_iconv",
 "kind": "function",
-"line": 224,
+"line": 226,
 "static": false
 },
 {
@@ -51520,7 +51649,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#lazy_initialize_conv",
 "kind": "function",
-"line": 145,
+"line": 147,
 "static": true
 },
 {
@@ -54584,7 +54713,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#pull_charset_flags",
 "kind": "function",
-"line": 799,
+"line": 1145,
 "static": true
 },
 {
@@ -54592,7 +54721,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#push_charset_flags",
 "kind": "function",
-"line": 1046,
+"line": 1190,
 "static": true
 },
 {
@@ -55125,6 +55254,14 @@
 },
 {
 "documented": true,
+"file": "libatalk/unicode/charcnv.c",
+"id": "libatalk/unicode/charcnv.c#restore_source_bom",
+"kind": "function",
+"line": 857,
+"static": true
+},
+{
+"documented": true,
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#rewrite_vol_uuid_conf",
 "kind": "function",
@@ -55608,7 +55745,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#set_charset_name",
 "kind": "function",
-"line": 101,
+"line": 100,
 "static": false
 },
 {
@@ -57053,6 +57190,14 @@
 },
 {
 "documented": true,
+"file": "libatalk/unicode/charcnv.c",
+"id": "libatalk/unicode/charcnv.c#source_code_unit_size",
+"kind": "function",
+"line": 807,
+"static": true
+},
+{
+"documented": true,
 "file": "bin/afppasswd/afppasswd_migrate.c",
 "id": "bin/afppasswd/afppasswd_migrate.c#source_still_at_path",
 "kind": "function",
@@ -58304,7 +58449,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#ucs2_to_charset",
 "kind": "function",
-"line": 666,
+"line": 668,
 "static": false
 },
 {
@@ -58312,7 +58457,7 @@
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#ucs2_to_charset_allocate",
 "kind": "function",
-"line": 682,
+"line": 684,
 "static": false
 },
 {

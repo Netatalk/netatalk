@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/unicode"
-description: "31 files, 108 functions."
+description: "31 files, 113 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/unicode"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T07:42:22+02:00 }
 ---
 
 # Files
@@ -66,15 +66,15 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 * [convert_string](unicode/charcnv.c.md#convert_string): 18 callers
 * [convert_charset](unicode/charcnv.c.md#convert_charset): 15 callers
 * [add_charset](unicode/charcnv.c.md#add_charset): 10 callers
+* [charset_name](unicode/charcnv.c.md#charset_name): 9 callers
 * [cjk_lookup](unicode/charsets/generic_cjk.c.md#cjk_lookup): 8 callers
 * [set_charset_name](unicode/charcnv.c.md#set_charset_name): 8 callers
-* [charset_name](unicode/charcnv.c.md#charset_name): 6 callers
+* [atalk_iconv](unicode/iconv.c.md#atalk_iconv): 7 callers
 * [convert_string_internal](unicode/charcnv.c.md#convert_string_internal): 6 callers
 * [strlen_w](unicode/util_unistr.c.md#strlen_w): 6 callers
-* [cjk_compose](unicode/charsets/generic_cjk.c.md#cjk_compose): 5 callers
 
 # Functions without a static caller
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[atalk_iconv_close](unicode/iconv.c.md#atalk_iconv_close), [charset_precompose](unicode/charcnv.c.md#charset_precompose), [charset_strlower](unicode/charcnv.c.md#charset_strlower), [charset_strupper](unicode/charcnv.c.md#charset_strupper), [strcmp_w](unicode/util_unistr.c.md#strcmp_w), [strnlen_w](unicode/util_unistr.c.md#strnlen_w), [strstr_w](unicode/util_unistr.c.md#strstr_w)
+[charset_precompose](unicode/charcnv.c.md#charset_precompose), [charset_strlower](unicode/charcnv.c.md#charset_strlower), [charset_strupper](unicode/charcnv.c.md#charset_strupper), [strcmp_w](unicode/util_unistr.c.md#strcmp_w), [strnlen_w](unicode/util_unistr.c.md#strnlen_w), [strstr_w](unicode/util_unistr.c.md#strstr_w)

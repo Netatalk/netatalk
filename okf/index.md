@@ -12,7 +12,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 
 # Build
 
-* [Build record](build.md) - Netatalk commit 208fa4d801d4 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
+* [Build record](build.md) - Netatalk commit 0c81837b6b87 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
 
 # Subsystems
 
@@ -42,7 +42,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [libatalk/dsi](src/libatalk/dsi.md) - 12 files, 47 functions.
 * [libatalk/nbp](src/libatalk/nbp.md) - 5 files, 7 functions.
 * [libatalk/netddp](src/libatalk/netddp.md) - 1 file, 1 function.
-* [libatalk/unicode](src/libatalk/unicode.md) - 31 files, 108 functions.
+* [libatalk/unicode](src/libatalk/unicode.md) - 31 files, 113 functions.
 * [libatalk/util](src/libatalk/util.md) - 20 files, 191 functions.
 * [libatalk/vfs](src/libatalk/vfs.md) - 6 files, 115 functions.
 * [sys/netatalk](src/sys/netatalk.md) - 13 files, 35 functions.
