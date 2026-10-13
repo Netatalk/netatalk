@@ -5,7 +5,7 @@ description: "31 files, 113 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/unicode"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T07:42:22+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 # Files
@@ -52,8 +52,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T07:42:22+02:00 }
 * [bin/nbp](../bin/nbp.md): 10 calls
 * [etc/papd](../etc/papd.md): 8 calls
 * [libatalk/util](util.md): 7 calls
+* [bin/netacnv](../bin/netacnv.md): 6 calls
 * [bin/getzones](../bin/getzones.md): 5 calls
-* [bin/misc](../bin/misc.md): 3 calls
 * [etc/atalkd](../etc/atalkd.md): 3 calls
 * [libatalk/vfs](vfs.md): 3 calls
 * [bin/nad](../bin/nad.md): 2 calls
@@ -70,8 +70,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T07:42:22+02:00 }
 * [cjk_lookup](unicode/charsets/generic_cjk.c.md#cjk_lookup): 8 callers
 * [set_charset_name](unicode/charcnv.c.md#set_charset_name): 8 callers
 * [atalk_iconv](unicode/iconv.c.md#atalk_iconv): 7 callers
+* [atalk_iconv_open](unicode/iconv.c.md#atalk_iconv_open): 6 callers
 * [convert_string_internal](unicode/charcnv.c.md#convert_string_internal): 6 callers
-* [strlen_w](unicode/util_unistr.c.md#strlen_w): 6 callers
 
 # Functions without a static caller
 

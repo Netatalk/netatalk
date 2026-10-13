@@ -5,7 +5,7 @@ description: "The netatalk logging system: log types, levels, files, and syslog.
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/logger.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -435,7 +435,7 @@ Parameters:
 
 Calls: [setuplog_internal](logger.c.md#setuplog_internal)
 
-Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/misc/uuidtest.c.md#main), [main](../../bin/nad/nad.c.md#main)
+Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [main](../../bin/afpldaptest/uuidtest.c.md#main), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/nad/nad.c.md#main)
 
 Mentioned in the documentation of: [log_reopen](logger.c.md#log_reopen)
 

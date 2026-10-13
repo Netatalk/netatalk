@@ -5,7 +5,7 @@ description: "7 files, 26 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/acl"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 # Files
@@ -29,7 +29,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 # Called from
 
 * [etc/afpd](../etc/afpd.md): 17 calls
-* [bin/misc](../bin/misc.md): 5 calls
+* [bin/afpldaptest](../bin/afpldaptest.md): 5 calls
 * [libatalk/util](util.md): 2 calls
 * [libatalk/vfs](vfs.md): 1 calls
 

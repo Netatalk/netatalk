@@ -12,17 +12,19 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 
 # Build
 
-* [Build record](build.md) - Netatalk commit 0c81837b6b87 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
+* [Build record](build.md) - Netatalk commit 13f0778abbb5 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
 
 # Subsystems
 
 * [bin/aecho](src/bin/aecho.md) - 1 file, 4 functions.
+* [bin/afpldaptest](src/bin/afpldaptest.md) - 1 file, 3 functions.
 * [bin/afppasswd](src/bin/afppasswd.md) - 3 files, 50 functions.
 * [bin/dbd](src/bin/dbd.md) - 3 files, 19 functions.
+* [bin/fce](src/bin/fce.md) - 1 file, 3 functions.
 * [bin/getzones](src/bin/getzones.md) - 1 file, 8 functions.
-* [bin/misc](src/bin/misc.md) - 3 files, 8 functions.
 * [bin/nad](src/bin/nad.md) - 24 files, 181 functions.
 * [bin/nbp](src/bin/nbp.md) - 5 files, 7 functions.
+* [bin/netacnv](src/bin/netacnv.md) - 1 file, 6 functions.
 * [bin/pap](src/bin/pap.md) - 2 files, 12 functions.
 * [bin/rtmpqry](src/bin/rtmpqry.md) - 1 file, 7 functions.
 * [etc/afpd](src/etc/afpd.md) - 65 files, 600 functions.

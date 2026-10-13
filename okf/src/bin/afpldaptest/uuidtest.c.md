@@ -1,14 +1,14 @@
 ---
 type: C Source File
-title: "bin/misc/uuidtest.c"
+title: "bin/afpldaptest/uuidtest.c"
 description: "The afpldaptest command: map names to UUIDs and back through LDAP, with a local fallback."
-resource: "https://github.com/Netatalk/netatalk/blob/main/bin/misc/uuidtest.c"
-tags: ["bin/misc"]
+resource: "https://github.com/Netatalk/netatalk/blob/main/bin/afpldaptest/uuidtest.c"
+tags: ["bin/afpldaptest"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
-Part of the [bin/misc](../misc.md) subsystem. Built from the commit recorded in [build](../../../build.md).
+Part of the [bin/afpldaptest](../afpldaptest.md) subsystem. Built from the commit recorded in [build](../../../build.md).
 
 # Includes
 

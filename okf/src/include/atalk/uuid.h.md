@@ -5,14 +5,14 @@ description: "No functions or types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/uuid.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
 
 # Included by
 
-* [bin/misc/uuidtest.c](../../bin/misc/uuidtest.c.md)
+* [bin/afpldaptest/uuidtest.c](../../bin/afpldaptest/uuidtest.c.md)
 * [etc/afpd/acls.c](../../etc/afpd/acls.c.md)
 * [etc/afpd/acls.h](../../etc/afpd/acls.h.md)
 * [etc/afpd/afp_dsi.c](../../etc/afpd/afp_dsi.c.md)

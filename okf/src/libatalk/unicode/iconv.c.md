@@ -5,7 +5,7 @@ description: "wrapper/stub for iconv character set conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/iconv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T07:42:22+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -152,7 +152,7 @@ Returns: the descriptor, or `(atalk_iconv_t)-1` with ENOMEM or EINVAL
 
 Calls: [find_charset_functions](iconv.c.md#find_charset_functions), [iconv_copy](iconv.c.md#iconv_copy), [lazy_initialize_iconv](iconv.c.md#lazy_initialize_iconv), [sys_iconv](iconv.c.md#sys_iconv)
 
-Called by: [add_charset](charcnv.c.md#add_charset), [decode_source_ucs2](charcnv.c.md#decode_source_ucs2), [init_iconv](charcnv.c.md#init_iconv), [restore_source_bom](charcnv.c.md#restore_source_bom), [source_code_unit_size](charcnv.c.md#source_code_unit_size)
+Called by: [add_charset](charcnv.c.md#add_charset), [decode_source_ucs2](charcnv.c.md#decode_source_ucs2), [init_iconv](charcnv.c.md#init_iconv), [restore_source_bom](charcnv.c.md#restore_source_bom), [source_code_unit_size](charcnv.c.md#source_code_unit_size), [validate_charset](../../bin/netacnv/netacnv.c.md#validate_charset)
 
 ### atalk_iconv_close
 
@@ -169,7 +169,7 @@ Parameters:
 
 Returns: 0
 
-Called by: [decode_source_ucs2](charcnv.c.md#decode_source_ucs2), [restore_source_bom](charcnv.c.md#restore_source_bom), [source_code_unit_size](charcnv.c.md#source_code_unit_size)
+Called by: [decode_source_ucs2](charcnv.c.md#decode_source_ucs2), [restore_source_bom](charcnv.c.md#restore_source_bom), [source_code_unit_size](charcnv.c.md#source_code_unit_size), [validate_charset](../../bin/netacnv/netacnv.c.md#validate_charset)
 
 ### ascii_pull
 

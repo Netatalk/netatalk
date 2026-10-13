@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/unicode.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -18,7 +18,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 * [bin/dbd/cmd_dbd_scanvol.c](../../bin/dbd/cmd_dbd_scanvol.c.md)
 * [bin/getzones/getzones.c](../../bin/getzones/getzones.c.md)
-* [bin/misc/netacnv.c](../../bin/misc/netacnv.c.md)
 * [bin/nad/nad_find.c](../../bin/nad/nad_find.c.md)
 * [bin/nad/nad_util.c](../../bin/nad/nad_util.c.md)
 * [bin/nbp/nbplkup.c](../../bin/nbp/nbplkup.c.md)
@@ -26,6 +25,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [bin/nbp/nbplkup_output.h](../../bin/nbp/nbplkup_output.h.md)
 * [bin/nbp/nbprgstr.c](../../bin/nbp/nbprgstr.c.md)
 * [bin/nbp/nbpunrgstr.c](../../bin/nbp/nbpunrgstr.c.md)
+* [bin/netacnv/netacnv.c](../../bin/netacnv/netacnv.c.md)
 * [etc/afpd/catsearch.c](../../etc/afpd/catsearch.c.md)
 * [etc/afpd/status.c](../../etc/afpd/status.c.md)
 * [etc/afpd/volume.h](../../etc/afpd/volume.h.md)

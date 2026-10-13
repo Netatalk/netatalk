@@ -5,7 +5,7 @@ description: "Netatalk utility functions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/util.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,8 +22,8 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [bin/aecho/aecho.c](../../bin/aecho/aecho.c.md)
 * [bin/dbd/cmd_dbd.c](../../bin/dbd/cmd_dbd.c.md)
 * [bin/dbd/cmd_dbd_scanvol.c](../../bin/dbd/cmd_dbd_scanvol.c.md)
+* [bin/fce/fce.c](../../bin/fce/fce.c.md)
 * [bin/getzones/getzones.c](../../bin/getzones/getzones.c.md)
-* [bin/misc/fce.c](../../bin/misc/fce.c.md)
 * [bin/nad/ftw.c](../../bin/nad/ftw.c.md)
 * [bin/nad/macbin.c](../../bin/nad/macbin.c.md)
 * [bin/nad/megatron.c](../../bin/nad/megatron.c.md)

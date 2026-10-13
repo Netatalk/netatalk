@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/ldapconfig.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -16,7 +16,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 # Included by
 
-* [bin/misc/uuidtest.c](../../bin/misc/uuidtest.c.md)
+* [bin/afpldaptest/uuidtest.c](../../bin/afpldaptest/uuidtest.c.md)
 * [etc/afpd/afp_config.c](../../etc/afpd/afp_config.c.md)
 * [etc/afpd/volume.c](../../etc/afpd/volume.c.md)
 * [libatalk/acl/ldap.c](../../libatalk/acl/ldap.c.md)

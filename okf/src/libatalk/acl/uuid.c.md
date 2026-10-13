@@ -5,7 +5,7 @@ description: "UUID to name and name to UUID resolution for ACLs."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/uuid.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -60,7 +60,7 @@ Parameters:
 * `uuidstring`: hex string
 * `uuid`: 16-byte destination
 
-Called by: [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/misc/uuidtest.c.md#main)
+Called by: [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/afpldaptest/uuidtest.c.md#main)
 
 ### uuid_bin2string
 
@@ -79,7 +79,7 @@ Parameters:
 
 Returns: the string in a static buffer
 
-Called by: [afp_getuserinfo](../../etc/afpd/auth.c.md#afp_getuserinfo), [get_vol_uuid](../util/netatalk_conf.c.md#get_vol_uuid), [getnamefromuuid](uuid.c.md#getnamefromuuid), [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/misc/uuidtest.c.md#main), [map_aces_darwin_to_posix](../../etc/afpd/acls.c.md#map_aces_darwin_to_posix), [uuidcache_dump](cache.c.md#uuidcache_dump)
+Called by: [afp_getuserinfo](../../etc/afpd/auth.c.md#afp_getuserinfo), [get_vol_uuid](../util/netatalk_conf.c.md#get_vol_uuid), [getnamefromuuid](uuid.c.md#getnamefromuuid), [getuuidfromname](uuid.c.md#getuuidfromname), [main](../../bin/afpldaptest/uuidtest.c.md#main), [map_aces_darwin_to_posix](../../etc/afpd/acls.c.md#map_aces_darwin_to_posix), [uuidcache_dump](cache.c.md#uuidcache_dump)
 
 Uses file-scope variables: `ldap_uuid_string` in [libatalk/acl/ldap.c](ldap.c.md)
 
@@ -104,7 +104,7 @@ Returns: 0 on success, -1 when the name is NULL or unknown
 
 Calls: [add_cachebyname](cache.c.md#add_cachebyname), [ldap_getuuidfromname](ldap.c.md#ldap_getuuidfromname), [localuuid_from_id](uuid.c.md#localuuid_from_id), [search_cachebyname](cache.c.md#search_cachebyname), [uuid_bin2string](uuid.c.md#uuid_bin2string), [uuid_string2bin](uuid.c.md#uuid_string2bin)
 
-Called by: [afp_getacl](../../etc/afpd/acls.c.md#afp_getacl), [afp_getuserinfo](../../etc/afpd/auth.c.md#afp_getuserinfo), [afp_mapname](../../etc/afpd/directory.c.md#afp_mapname), [main](../../bin/misc/uuidtest.c.md#main), [map_aces_solaris_to_darwin](../../etc/afpd/acls.c.md#map_aces_solaris_to_darwin), [map_acl_posix_to_darwin](../../etc/afpd/acls.c.md#map_acl_posix_to_darwin)
+Called by: [afp_getacl](../../etc/afpd/acls.c.md#afp_getacl), [afp_getuserinfo](../../etc/afpd/auth.c.md#afp_getuserinfo), [afp_mapname](../../etc/afpd/directory.c.md#afp_mapname), [main](../../bin/afpldaptest/uuidtest.c.md#main), [map_aces_solaris_to_darwin](../../etc/afpd/acls.c.md#map_aces_solaris_to_darwin), [map_acl_posix_to_darwin](../../etc/afpd/acls.c.md#map_acl_posix_to_darwin)
 
 Uses file-scope variables: `uuidtype`
 
@@ -129,7 +129,7 @@ Returns: 0 on success, -1 when the UUID is unknown
 
 Calls: [add_cachebyuuid](cache.c.md#add_cachebyuuid), [ldap_getnamefromuuid](ldap.c.md#ldap_getnamefromuuid), [search_cachebyuuid](cache.c.md#search_cachebyuuid), [uuid_bin2string](uuid.c.md#uuid_bin2string)
 
-Called by: [afp_mapid](../../etc/afpd/directory.c.md#afp_mapid), [main](../../bin/misc/uuidtest.c.md#main), [map_aces_darwin_to_posix](../../etc/afpd/acls.c.md#map_aces_darwin_to_posix), [map_aces_darwin_to_solaris](../../etc/afpd/acls.c.md#map_aces_darwin_to_solaris)
+Called by: [afp_mapid](../../etc/afpd/directory.c.md#afp_mapid), [main](../../bin/afpldaptest/uuidtest.c.md#main), [map_aces_darwin_to_posix](../../etc/afpd/acls.c.md#map_aces_darwin_to_posix), [map_aces_darwin_to_solaris](../../etc/afpd/acls.c.md#map_aces_darwin_to_solaris)
 
 Uses file-scope variables: `local_group_uuid`, `local_user_uuid`, `uuidtype`
 

@@ -5,7 +5,7 @@ description: "LDAP settings of afp.conf for the ACL UUID lookups."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/acl/ldap_config.c"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [libatalk/acl](../acl.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -51,6 +51,6 @@ Parameters:
 
 Returns: 0, with ldap_config_valid set when the setup is usable
 
-Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit), [parse_ldapconf](../../bin/misc/uuidtest.c.md#parse_ldapconf)
+Called by: [configinit](../../etc/afpd/afp_config.c.md#configinit), [parse_ldapconf](../../bin/afpldaptest/uuidtest.c.md#parse_ldapconf)
 
 Uses file-scope variables: `ldap_auth_method` in [libatalk/acl/ldap.c](ldap.c.md), `ldap_config_valid` in [libatalk/acl/ldap.c](ldap.c.md), `ldap_prefs` in [libatalk/acl/ldap.c](ldap.c.md), `prefs_array` in [libatalk/acl/ldap.c](ldap.c.md)

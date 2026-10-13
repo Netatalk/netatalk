@@ -5,7 +5,7 @@ description: "Character-set conversion routines based on samba iconv wrappers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charcnv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T07:42:22+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -60,7 +60,7 @@ Parameters:
 
 Returns: 0, or -1 for a charset outside the fixed slots
 
-Called by: [afp_config_parse](../util/netatalk_conf.c.md#afp_config_parse), [main](../../bin/getzones/getzones.c.md#main), [main](../../bin/misc/netacnv.c.md#main), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../etc/atalkd/main.c.md#main), [main](../../etc/papd/main.c.md#main)
+Called by: [afp_config_parse](../util/netatalk_conf.c.md#afp_config_parse), [main](../../bin/getzones/getzones.c.md#main), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../bin/netacnv/netacnv.c.md#main), [main](../../etc/atalkd/main.c.md#main), [main](../../etc/papd/main.c.md#main)
 
 Uses file-scope variables: `charset_names`, `source_unit_sizes`
 
@@ -74,7 +74,7 @@ Defined at lines 114 to 124.
 
 Free every name in the charset name table.
 
-Called by: [afp_config_free](../util/netatalk_conf.c.md#afp_config_free)
+Called by: [afp_config_free](../util/netatalk_conf.c.md#afp_config_free), [main](../../bin/netacnv/netacnv.c.md#main)
 
 Uses file-scope variables: `charset_names`, `source_unit_sizes`
 
@@ -132,7 +132,7 @@ Returns: the charset, or `(charset_t)-1` for an error
 
 Calls: [atalk_iconv_open](iconv.c.md#atalk_iconv_open), [charset_name](charcnv.c.md#charset_name), [get_charset_functions](charcnv.c.md#get_charset_functions), [lazy_initialize_conv](charcnv.c.md#lazy_initialize_conv)
 
-Called by: [convert_to_mac_name](../../etc/papd/print_cups.c.md#convert_to_mac_name), [cups_autoadd_printers](../../etc/papd/print_cups.c.md#cups_autoadd_printers), [load_charset](../util/netatalk_conf.c.md#load_charset), [lp_print](../../etc/papd/lp.c.md#lp_print), [main](../../bin/getzones/getzones.c.md#main), [main](../../bin/misc/netacnv.c.md#main), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [volume_codepage](../../etc/afpd/volume.c.md#volume_codepage)
+Called by: [convert_to_mac_name](../../etc/papd/print_cups.c.md#convert_to_mac_name), [cups_autoadd_printers](../../etc/papd/print_cups.c.md#cups_autoadd_printers), [load_charset](../util/netatalk_conf.c.md#load_charset), [lp_print](../../etc/papd/lp.c.md#lp_print), [main](../../bin/getzones/getzones.c.md#main), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../bin/netacnv/netacnv.c.md#main), [volume_codepage](../../etc/afpd/volume.c.md#volume_codepage)
 
 Uses file-scope variables: `charset_names`, `charsets`, `conv_handles`
 
@@ -627,7 +627,7 @@ Returns: the length of dest in bytes, or (size_t)-1 with errno set
 
 Calls: [charset_name](charcnv.c.md#charset_name), [decompose_w](util_unistr.c.md#decompose_w), [lazy_initialize_conv](charcnv.c.md#lazy_initialize_conv), [precompose_w](util_unistr.c.md#precompose_w), [pull_charset_flags](charcnv.c.md#pull_charset_flags), [push_charset_flags](charcnv.c.md#push_charset_flags), [strlower_w](util_unistr.c.md#strlower_w), [strupper_w](util_unistr.c.md#strupper_w)
 
-Called by: [catsearch_afp](../../etc/afpd/catsearch.c.md#catsearch_afp), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_encoding), [convert_utf8_to_mac](../util/pathconv.c.md#convert_utf8_to_mac), [creatvol](../util/netatalk_conf.c.md#creatvol), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [demangle_checks](../../etc/afpd/mangle.c.md#demangle_checks), [main](../../bin/misc/netacnv.c.md#main), [mangle](../../etc/afpd/mangle.c.md#mangle), [mangle_extension](../../etc/afpd/mangle.c.md#mangle_extension), [mtoupath](../../etc/afpd/desktop.c.md#mtoupath), [mtoupath](../vfs/ea_ad.c.md#mtoupath), [nad_find](../../bin/nad/nad_find.c.md#nad_find), [sl_rpc_openQuery](../../etc/afpd/spotlight.c.md#sl_rpc_openquery), [utompath](../../etc/afpd/desktop.c.md#utompath)
+Called by: [catsearch_afp](../../etc/afpd/catsearch.c.md#catsearch_afp), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_encoding), [convert_utf8_to_mac](../util/pathconv.c.md#convert_utf8_to_mac), [creatvol](../util/netatalk_conf.c.md#creatvol), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [demangle_checks](../../etc/afpd/mangle.c.md#demangle_checks), [main](../../bin/netacnv/netacnv.c.md#main), [mangle](../../etc/afpd/mangle.c.md#mangle), [mangle_extension](../../etc/afpd/mangle.c.md#mangle_extension), [mtoupath](../../etc/afpd/desktop.c.md#mtoupath), [mtoupath](../vfs/ea_ad.c.md#mtoupath), [nad_find](../../bin/nad/nad_find.c.md#nad_find), [sl_rpc_openQuery](../../etc/afpd/spotlight.c.md#sl_rpc_openquery), [utompath](../../etc/afpd/desktop.c.md#utompath)
 
 Uses file-scope variables: `charsets`
 

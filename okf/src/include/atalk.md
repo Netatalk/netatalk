@@ -5,7 +5,7 @@ description: "46 files, 32 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 # Files
@@ -84,13 +84,15 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T10:16:19+11:00 }
 * [libatalk/nbp](../libatalk/nbp.md): 10 includes
 * [bin/pap](../bin/pap.md): 8 includes
 * [bin/afppasswd](../bin/afppasswd.md): 6 includes
-* [bin/misc](../bin/misc.md): 6 includes
 * [bin/aecho](../bin/aecho.md): 5 includes
 * [bin/getzones](../bin/getzones.md): 5 includes
 * [libatalk/dalloc](../libatalk/dalloc.md): 4 includes
+* [bin/afpldaptest](../bin/afpldaptest.md): 3 includes
 * [bin/rtmpqry](../bin/rtmpqry.md): 3 includes
+* [bin/fce](../bin/fce.md): 2 includes
 * [libatalk/compat](../libatalk/compat.md): 2 includes
 * [sys/netatalk](../sys/netatalk.md): 2 includes
+* [bin/netacnv](../bin/netacnv.md): 1 includes
 * [libatalk/netddp](../libatalk/netddp.md): 1 includes
 
 # Calls into

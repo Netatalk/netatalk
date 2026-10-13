@@ -1,5 +1,5 @@
 {
-"commit": "0c81837b6b87c4fa3d548a27da669cbdfd2fd2ae",
+"commit": "13f0778abbb5ea7fc6640bf417d892a472f9c046",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -30,6 +30,21 @@
 "from": "bin/aecho/aecho.c",
 "kind": "include",
 "to": "sys/netatalk/at.h"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c",
+"kind": "include",
+"to": "include/atalk/ldapconfig.h"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c",
+"kind": "include",
+"to": "include/atalk/logger.h"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c",
+"kind": "include",
+"to": "include/atalk/uuid.h"
 },
 {
 "from": "bin/afppasswd/afppasswd.c",
@@ -162,6 +177,16 @@
 "to": "bin/dbd/cmd_dbd.h"
 },
 {
+"from": "bin/fce/fce.c",
+"kind": "include",
+"to": "include/atalk/fce_api.h"
+},
+{
+"from": "bin/fce/fce.c",
+"kind": "include",
+"to": "include/atalk/util.h"
+},
+{
 "from": "bin/getzones/getzones.c",
 "kind": "include",
 "to": "include/atalk/atp.h"
@@ -190,36 +215,6 @@
 "from": "bin/getzones/getzones.c",
 "kind": "include",
 "to": "sys/netatalk/at.h"
-},
-{
-"from": "bin/misc/fce.c",
-"kind": "include",
-"to": "include/atalk/fce_api.h"
-},
-{
-"from": "bin/misc/fce.c",
-"kind": "include",
-"to": "include/atalk/util.h"
-},
-{
-"from": "bin/misc/netacnv.c",
-"kind": "include",
-"to": "include/atalk/unicode.h"
-},
-{
-"from": "bin/misc/uuidtest.c",
-"kind": "include",
-"to": "include/atalk/ldapconfig.h"
-},
-{
-"from": "bin/misc/uuidtest.c",
-"kind": "include",
-"to": "include/atalk/logger.h"
-},
-{
-"from": "bin/misc/uuidtest.c",
-"kind": "include",
-"to": "include/atalk/uuid.h"
 },
 {
 "from": "bin/nad/crc16.c",
@@ -875,6 +870,11 @@
 "from": "bin/nbp/nbpunrgstr.c",
 "kind": "include",
 "to": "sys/netatalk/at.h"
+},
+{
+"from": "bin/netacnv/netacnv.c",
+"kind": "include",
+"to": "include/atalk/unicode.h"
 },
 {
 "from": "bin/pap/pap.c",
@@ -27325,6 +27325,41 @@
 "to": "bin/aecho/aecho.c#target"
 },
 {
+"from": "bin/afpldaptest/uuidtest.c#main",
+"kind": "call",
+"to": "libatalk/acl/uuid.c#getnamefromuuid"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c#main",
+"kind": "call",
+"to": "libatalk/acl/uuid.c#getuuidfromname"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c#main",
+"kind": "call",
+"to": "bin/afpldaptest/uuidtest.c#parse_ldapconf"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c#main",
+"kind": "call",
+"to": "libatalk/util/logger.c#setuplog"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c#main",
+"kind": "call",
+"to": "bin/afpldaptest/uuidtest.c#usage"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c#main",
+"kind": "call",
+"to": "libatalk/acl/uuid.c#uuid_bin2string"
+},
+{
+"from": "bin/afpldaptest/uuidtest.c#main",
+"kind": "call",
+"to": "libatalk/acl/uuid.c#uuid_string2bin"
+},
+{
 "from": "bin/afppasswd/afppasswd.c#main",
 "kind": "call",
 "to": "bin/afppasswd/afppasswd_migrate.c#afppasswd_migrate_srp"
@@ -27475,6 +27510,26 @@
 "to": "bin/dbd/cmd_dbd.c#flags"
 },
 {
+"from": "bin/fce/fce.c#main",
+"kind": "call",
+"to": "bin/fce/fce.c#sig_handler"
+},
+{
+"from": "bin/fce/fce.c#main",
+"kind": "call",
+"to": "bin/fce/fce.c#unpack_fce_packet"
+},
+{
+"from": "bin/fce/fce.c#main",
+"kind": "use",
+"to": "bin/fce/fce.c#fce_ev_names"
+},
+{
+"from": "bin/fce/fce.c#main",
+"kind": "use",
+"to": "bin/fce/fce.c#stop_requested"
+},
+{
 "from": "bin/getzones/getzones.c#main",
 "kind": "call",
 "to": "libatalk/unicode/charcnv.c#add_charset"
@@ -27508,86 +27563,6 @@
 "from": "bin/getzones/getzones.c#main",
 "kind": "call",
 "to": "bin/getzones/getzones.c#usage"
-},
-{
-"from": "bin/misc/fce.c#main",
-"kind": "call",
-"to": "bin/misc/fce.c#sig_handler"
-},
-{
-"from": "bin/misc/fce.c#main",
-"kind": "call",
-"to": "bin/misc/fce.c#unpack_fce_packet"
-},
-{
-"from": "bin/misc/fce.c#main",
-"kind": "use",
-"to": "bin/misc/fce.c#fce_ev_names"
-},
-{
-"from": "bin/misc/fce.c#main",
-"kind": "use",
-"to": "bin/misc/fce.c#stop_requested"
-},
-{
-"from": "bin/misc/netacnv.c#main",
-"kind": "call",
-"to": "libatalk/unicode/charcnv.c#add_charset"
-},
-{
-"from": "bin/misc/netacnv.c#main",
-"kind": "call",
-"to": "libatalk/unicode/charcnv.c#convert_charset"
-},
-{
-"from": "bin/misc/netacnv.c#main",
-"kind": "call",
-"to": "libatalk/unicode/charcnv.c#set_charset_name"
-},
-{
-"from": "bin/misc/netacnv.c#main",
-"kind": "call",
-"to": "bin/misc/netacnv.c#usage"
-},
-{
-"from": "bin/misc/netacnv.c#main",
-"kind": "use",
-"to": "bin/misc/netacnv.c#buffer"
-},
-{
-"from": "bin/misc/uuidtest.c#main",
-"kind": "call",
-"to": "libatalk/acl/uuid.c#getnamefromuuid"
-},
-{
-"from": "bin/misc/uuidtest.c#main",
-"kind": "call",
-"to": "libatalk/acl/uuid.c#getuuidfromname"
-},
-{
-"from": "bin/misc/uuidtest.c#main",
-"kind": "call",
-"to": "bin/misc/uuidtest.c#parse_ldapconf"
-},
-{
-"from": "bin/misc/uuidtest.c#main",
-"kind": "call",
-"to": "libatalk/util/logger.c#setuplog"
-},
-{
-"from": "bin/misc/uuidtest.c#main",
-"kind": "call",
-"to": "bin/misc/uuidtest.c#usage"
-},
-{
-"from": "bin/misc/uuidtest.c#main",
-"kind": "call",
-"to": "libatalk/acl/uuid.c#uuid_bin2string"
-},
-{
-"from": "bin/misc/uuidtest.c#main",
-"kind": "call",
-"to": "libatalk/acl/uuid.c#uuid_string2bin"
 },
 {
 "from": "bin/nad/nad.c#main",
@@ -27808,6 +27783,51 @@
 "from": "bin/nbp/nbpunrgstr.c#main",
 "kind": "call",
 "to": "libatalk/unicode/charcnv.c#set_charset_name"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#add_charset"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#convert_charset"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "bin/netacnv/netacnv.c#decode_hex_input"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#free_charset_names"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "bin/netacnv/netacnv.c#print_bytes"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "bin/netacnv/netacnv.c#print_flags"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "libatalk/unicode/charcnv.c#set_charset_name"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "bin/netacnv/netacnv.c#usage"
+},
+{
+"from": "bin/netacnv/netacnv.c#main",
+"kind": "call",
+"to": "bin/netacnv/netacnv.c#validate_charset"
 },
 {
 "from": "bin/pap/pap.c#main",
@@ -31542,17 +31562,17 @@
 "to": "libatalk/adouble/ad_open.c#get_eid"
 },
 {
-"from": "bin/misc/uuidtest.c#parse_ldapconf",
+"from": "bin/afpldaptest/uuidtest.c#parse_ldapconf",
 "kind": "call",
 "to": "libatalk/acl/ldap_config.c#acl_ldap_readconfig"
 },
 {
-"from": "bin/misc/uuidtest.c#parse_ldapconf",
+"from": "bin/afpldaptest/uuidtest.c#parse_ldapconf",
 "kind": "use",
 "to": "libatalk/acl/ldap.c#ldap_auth_method"
 },
 {
-"from": "bin/misc/uuidtest.c#parse_ldapconf",
+"from": "bin/afpldaptest/uuidtest.c#parse_ldapconf",
 "kind": "use",
 "to": "libatalk/acl/ldap.c#ldap_config_valid"
 },
@@ -35054,9 +35074,9 @@
 "to": "bin/dbd/cmd_dbd.c#alarmed"
 },
 {
-"from": "bin/misc/fce.c#sig_handler",
+"from": "bin/fce/fce.c#sig_handler",
 "kind": "use",
-"to": "bin/misc/fce.c#stop_requested"
+"to": "bin/fce/fce.c#stop_requested"
 },
 {
 "from": "bin/nad/nad_util.c#sig_handler",
@@ -38795,6 +38815,16 @@
 "to": "bin/afppasswd/afppasswd.c#valid_hex_or_disabled"
 },
 {
+"from": "bin/netacnv/netacnv.c#validate_charset",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_close"
+},
+{
+"from": "bin/netacnv/netacnv.c#validate_charset",
+"kind": "call",
+"to": "libatalk/unicode/iconv.c#atalk_iconv_open"
+},
+{
 "from": "etc/netatalk/netatalk.c#validate_singleuser_config",
 "kind": "call",
 "to": "etc/netatalk/netatalk.c#dbpath_is_creatable"
@@ -41006,6 +41036,11 @@
 "subsystem": "bin/aecho"
 },
 {
+"id": "bin/afpldaptest/uuidtest.c",
+"kind": "file",
+"subsystem": "bin/afpldaptest"
+},
+{
 "id": "bin/afppasswd/afppasswd.c",
 "kind": "file",
 "subsystem": "bin/afppasswd"
@@ -41036,24 +41071,14 @@
 "subsystem": "bin/dbd"
 },
 {
+"id": "bin/fce/fce.c",
+"kind": "file",
+"subsystem": "bin/fce"
+},
+{
 "id": "bin/getzones/getzones.c",
 "kind": "file",
 "subsystem": "bin/getzones"
-},
-{
-"id": "bin/misc/fce.c",
-"kind": "file",
-"subsystem": "bin/misc"
-},
-{
-"id": "bin/misc/netacnv.c",
-"kind": "file",
-"subsystem": "bin/misc"
-},
-{
-"id": "bin/misc/uuidtest.c",
-"kind": "file",
-"subsystem": "bin/misc"
 },
 {
 "id": "bin/nad/crc16.c",
@@ -41199,6 +41224,11 @@
 "id": "bin/nbp/nbpunrgstr.c",
 "kind": "file",
 "subsystem": "bin/nbp"
+},
+{
+"id": "bin/netacnv/netacnv.c",
+"kind": "file",
+"subsystem": "bin/netacnv"
 },
 {
 "id": "bin/pap/pap.c",
@@ -48334,6 +48364,14 @@
 },
 {
 "documented": true,
+"file": "bin/netacnv/netacnv.c",
+"id": "bin/netacnv/netacnv.c#decode_hex_input",
+"kind": "function",
+"line": 124,
+"static": true
+},
+{
+"documented": true,
 "file": "libatalk/unicode/charcnv.c",
 "id": "libatalk/unicode/charcnv.c#decode_source_ucs2",
 "kind": "function",
@@ -52470,6 +52508,14 @@
 },
 {
 "documented": true,
+"file": "bin/afpldaptest/uuidtest.c",
+"id": "bin/afpldaptest/uuidtest.c#main",
+"kind": "function",
+"line": 114,
+"static": false
+},
+{
+"documented": true,
 "file": "bin/afppasswd/afppasswd.c",
 "id": "bin/afppasswd/afppasswd.c#main",
 "kind": "function",
@@ -52486,34 +52532,18 @@
 },
 {
 "documented": true,
-"file": "bin/getzones/getzones.c",
-"id": "bin/getzones/getzones.c#main",
-"kind": "function",
-"line": 72,
-"static": false
-},
-{
-"documented": true,
-"file": "bin/misc/fce.c",
-"id": "bin/misc/fce.c#main",
+"file": "bin/fce/fce.c",
+"id": "bin/fce/fce.c#main",
 "kind": "function",
 "line": 232,
 "static": false
 },
 {
 "documented": true,
-"file": "bin/misc/netacnv.c",
-"id": "bin/misc/netacnv.c#main",
+"file": "bin/getzones/getzones.c",
+"id": "bin/getzones/getzones.c#main",
 "kind": "function",
 "line": 72,
-"static": false
-},
-{
-"documented": true,
-"file": "bin/misc/uuidtest.c",
-"id": "bin/misc/uuidtest.c#main",
-"kind": "function",
-"line": 114,
 "static": false
 },
 {
@@ -52546,6 +52576,14 @@
 "id": "bin/nbp/nbpunrgstr.c#main",
 "kind": "function",
 "line": 76,
+"static": false
+},
+{
+"documented": true,
+"file": "bin/netacnv/netacnv.c",
+"id": "bin/netacnv/netacnv.c#main",
+"kind": "function",
+"line": 238,
 "static": false
 },
 {
@@ -54030,8 +54068,8 @@
 },
 {
 "documented": true,
-"file": "bin/misc/uuidtest.c",
-"id": "bin/misc/uuidtest.c#parse_ldapconf",
+"file": "bin/afpldaptest/uuidtest.c",
+"id": "bin/afpldaptest/uuidtest.c#parse_ldapconf",
 "kind": "function",
 "line": 66,
 "static": true
@@ -54486,6 +54524,14 @@
 },
 {
 "documented": true,
+"file": "bin/netacnv/netacnv.c",
+"id": "bin/netacnv/netacnv.c#print_bytes",
+"kind": "function",
+"line": 184,
+"static": true
+},
+{
+"documented": true,
 "file": "bin/nad/nad_ls.c",
 "id": "bin/nad/nad_ls.c#print_columns",
 "kind": "function",
@@ -54506,6 +54552,14 @@
 "id": "bin/nad/nad_ls.c#print_flags",
 "kind": "function",
 "line": 261,
+"static": true
+},
+{
+"documented": true,
+"file": "bin/netacnv/netacnv.c",
+"id": "bin/netacnv/netacnv.c#print_flags",
+"kind": "function",
+"line": 200,
 "static": true
 },
 {
@@ -56166,8 +56220,8 @@
 },
 {
 "documented": true,
-"file": "bin/misc/fce.c",
-"id": "bin/misc/fce.c#sig_handler",
+"file": "bin/fce/fce.c",
+"id": "bin/fce/fce.c#sig_handler",
 "kind": "function",
 "line": 37,
 "static": true
@@ -58534,8 +58588,8 @@
 },
 {
 "documented": true,
-"file": "bin/misc/fce.c",
-"id": "bin/misc/fce.c#unpack_fce_packet",
+"file": "bin/fce/fce.c",
+"id": "bin/fce/fce.c#unpack_fce_packet",
 "kind": "function",
 "line": 69,
 "static": true
@@ -58646,6 +58700,14 @@
 },
 {
 "documented": true,
+"file": "bin/afpldaptest/uuidtest.c",
+"id": "bin/afpldaptest/uuidtest.c#usage",
+"kind": "function",
+"line": 52,
+"static": true
+},
+{
+"documented": true,
 "file": "bin/dbd/cmd_dbd.c",
 "id": "bin/dbd/cmd_dbd.c#usage",
 "kind": "function",
@@ -58662,18 +58724,10 @@
 },
 {
 "documented": true,
-"file": "bin/misc/netacnv.c",
-"id": "bin/misc/netacnv.c#usage",
+"file": "bin/netacnv/netacnv.c",
+"id": "bin/netacnv/netacnv.c#usage",
 "kind": "function",
-"line": 46,
-"static": true
-},
-{
-"documented": true,
-"file": "bin/misc/uuidtest.c",
-"id": "bin/misc/uuidtest.c#usage",
-"kind": "function",
-"line": 52,
+"line": 62,
 "static": true
 },
 {
@@ -58930,6 +58984,14 @@
 "id": "bin/afppasswd/afppasswd.c#valid_randnum_record",
 "kind": "function",
 "line": 1697,
+"static": true
+},
+{
+"documented": true,
+"file": "bin/netacnv/netacnv.c",
+"id": "bin/netacnv/netacnv.c#validate_charset",
+"kind": "function",
+"line": 92,
 "static": true
 },
 {

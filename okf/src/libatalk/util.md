@@ -5,7 +5,7 @@ description: "20 files, 191 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
 ---
 
 # Files
@@ -63,9 +63,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 * [bin/nbp](../bin/nbp.md): 3 calls
 * [bin/pap](../bin/pap.md): 2 calls
 * [bin/aecho](../bin/aecho.md): 1 calls
+* [bin/afpldaptest](../bin/afpldaptest.md): 1 calls
 * [bin/afppasswd](../bin/afppasswd.md): 1 calls
 * [bin/getzones](../bin/getzones.md): 1 calls
-* [bin/misc](../bin/misc.md): 1 calls
 * [bin/rtmpqry](../bin/rtmpqry.md): 1 calls
 * [libatalk/asp](asp.md): 1 calls
 * [libatalk/nbp](nbp.md): 1 calls
