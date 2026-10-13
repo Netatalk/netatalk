@@ -48,6 +48,7 @@ if have_spotlight
     afpd_common_sources += files(
         'spotlight.c',
         'spotlight_marshalling.c',
+        'spotlight_queries.c',
     )
     afpd_common_external_deps += libspotlight_backends
     afpd_common_external_deps += [talloc]

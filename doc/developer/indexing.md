@@ -24,12 +24,22 @@ Spotlight backends implement the `sl_backend_ops` vtable declared in
 | `sbo_close` | Release backend global state on shutdown. |
 | `sbo_open_query` | Start or execute a Spotlight query. |
 | `sbo_fetch_results` | Fill the next page of query results. |
-| `sbo_close_query` | Cancel and free per-query backend state. |
+| `sbo_close_query` | Release only this query's backend resources after asynchronous callbacks have finished. |
 | `sbo_index_event` | Optional hook for incremental index updates. |
 
 The common query handle is `slq_t`. It carries the query string, search
 scope, requested metadata, optional CNID filter, result limit, query state,
 and backend-private query state.
+
+On success, `sbo_open_query` leaves `slq_state` as `SLQ_STATE_RUNNING`,
+`SLQ_STATE_FULL`, or `SLQ_STATE_DONE`. On failure it may set
+`SLQ_STATE_ERROR`.
+
+The caller ensures asynchronous callbacks have finished before invoking
+`sbo_close_query`. The hook must not pump callbacks or remove other queries:
+query cleanup traversals retain a pointer to the next query. It must tolerate
+a NULL `slq_backend_private`, including when an open fails before
+`sbo_open_query` is called.
 
 Enabled backend ops are declared in `etc/spotlight/sl_backends.h`.
 At volume open time, `etc/afpd/volume.c` binds `vol->v_sl_backend` to one

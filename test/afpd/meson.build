@@ -25,6 +25,19 @@ endif
 
 if build_tests
 
+    if have_spotlight
+        spotlight_queries_test = executable(
+            'spotlight_queries_test',
+            'test_spotlight_queries.c',
+            '../../etc/afpd/spotlight_queries.c',
+            include_directories: root_includes,
+            dependencies: [bstring, iniparser, talloc],
+            link_with: libatalk,
+            install: false,
+        )
+        test('Spotlight query lifecycle', spotlight_queries_test)
+    endif
+
     # For dtrace probes we need to invoke dtrace on all input files, before
     # linking the final executable.
     #
