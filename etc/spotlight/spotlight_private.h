@@ -8,6 +8,17 @@
 
 #include <atalk/spotlight.h>
 
+/* Session-local query ownership and backend cleanup. */
+extern void slq_add(slq_t *slq);
+extern slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2);
+extern void slq_destroy(slq_t *slq);
+extern void slq_cancel(slq_t *slq);
+extern int slq_close(slq_t *slq);
+extern void slq_cancelled_cleanup(void);
+extern void slq_idle_cleanup(void);
+extern void slq_dump(void);
+extern const char *slq_state_name(slq_state_t state);
+
 /*
  * Add metadata for one search result to the fm_array.
  * Defined in etc/afpd/spotlight.c.

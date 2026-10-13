@@ -18,8 +18,6 @@
  * search backends
  */
 
-#define USE_LIST
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -45,7 +43,6 @@
 #include <atalk/dalloc.h>
 #include <atalk/errchk.h>
 #include <atalk/iniparser_util.h>
-#include <atalk/list.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/spotlight.h>
@@ -57,24 +54,6 @@
 
 #define MAX_SL_RESULTS 20
 #define MAX_SL_REQINFO_ATTRS 64
-#define MAX_SL_QUERY_IDLE_TIME_ACTIVE 60
-#define MAX_SL_QUERY_IDLE_TIME_TERMINAL 300
-
-struct slq_state_names {
-    slq_state_t state;
-    const char *state_name;
-};
-
-static struct slq_state_names slq_state_names[] = {
-    {SLQ_STATE_NEW, "SLQ_STATE_NEW"},
-    {SLQ_STATE_RUNNING, "SLQ_STATE_RUNNING"},
-    {SLQ_STATE_RESULTS, "SLQ_STATE_RESULTS"},
-    {SLQ_STATE_FULL, "SLQ_STATE_FULL"},
-    {SLQ_STATE_DONE, "SLQ_STATE_DONE"},
-    {SLQ_STATE_CANCEL_PENDING, "SLQ_STATE_CANCEL_PENDING"},
-    {SLQ_STATE_CANCELLED, "SLQ_STATE_CANCELLED"},
-    {SLQ_STATE_ERROR, "SLQ_STATE_ERROR"}
-};
 
 static int cnid_comp_fn(const void *p1, const void *p2);
 static bool create_result_handle(slq_t *slq);
@@ -680,6 +659,11 @@ static bool create_result_handle(slq_t *slq)
     }
 
     query_results = talloc_zero(slq, struct sl_rslts);
+
+    if (query_results == NULL) {
+        return false;
+    }
+
     /* CNIDs */
     query_results->cnids = talloc_zero(query_results, sl_cnids_t);
 
@@ -717,10 +701,12 @@ static bool create_result_handle(slq_t *slq)
  * from SLQ_STATE_DONE on. The reply then takes the CNID list and the file
  * metadata, and the sent results go with the reply.
  *
+ * Packaging failures leave the backend execution state unchanged so that
+ * cleanup can retain a query still owned by an asynchronous callback.
+ *
  * @param[in,out] array  reply array
  * @param[in,out] slq    query with results
- * @returns true, or false when create_result_handle fails, which sets
- *          SLQ_STATE_ERROR
+ * @returns true, or false when an allocation fails
  */
 static bool add_results(sl_array_t *array, slq_t *slq)
 {
@@ -748,7 +734,7 @@ static bool add_results(sl_array_t *array, slq_t *slq)
         "add_results: dispatching %d result(s), status %" PRIu64
         ", state=%s (ctx1: %" PRIx64 ", ctx2: %" PRIx64 ")",
         slq->query_results->num_results, status,
-        slq_state_names[slq->slq_state].state_name,
+        slq_state_name(slq->slq_state),
         slq->slq_ctx1, slq->slq_ctx2);
     dalloc_add_copy(array, &status, uint64_t);
     dalloc_add(array, slq->query_results->cnids, sl_cnids_t);
@@ -764,7 +750,6 @@ static bool add_results(sl_array_t *array, slq_t *slq)
 
     if (!create_result_handle(slq)) {
         LOG(log_error, logtype_sl, "couldn't add result handle");
-        slq->slq_state = SLQ_STATE_ERROR;
         return false;
     }
 
@@ -774,226 +759,6 @@ static bool add_results(sl_array_t *array, slq_t *slq)
 /******************************************************************************
  * Spotlight queries
  ******************************************************************************/
-
-static ATALK_LIST_HEAD(sl_queries);
-static ATALK_LIST_HEAD(sl_cancelled_queries);
-
-/*!
- * @brief Add a query to the list of active queries
- *
- * @param[in,out] slq  query to add
- */
-static void slq_add(slq_t *slq)
-{
-    list_add(&(slq->slq_list), &sl_queries);
-}
-
-/*!
- * @brief Add a query to the list of cancelled queries
- *
- * @param[in,out] slq  query to add
- */
-static void slq_cancelled_add(slq_t *slq)
-{
-    list_add(&(slq->slq_list), &sl_cancelled_queries);
-}
-
-/*!
- * @brief Remove a query from the active list
- *
- * The match uses the pointer, not the context IDs. A query that never joined
- * the list, after a failed openQuery, then cannot remove an active query with
- * the same IDs.
- *
- * @param[in,out] slq  query to remove
- */
-static void slq_remove(slq_t *slq)
-{
-    struct list_head *p;
-    const slq_t *q = NULL;
-    list_for_each(p, &sl_queries) {
-        q = list_entry(p, slq_t, slq_list);
-
-        if (q == slq) {
-            list_del(p);
-            break;
-        }
-    }
-    return;
-}
-
-/*!
- * @brief Find the active query with a pair of context IDs
- *
- * @param[in] ctx1  first context ID
- * @param[in] ctx2  second context ID
- * @returns the query, or NULL when no active query matches
- */
-static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
-{
-    slq_t *q = NULL;
-    struct list_head *p;
-    list_for_each(p, &sl_queries) {
-        q = list_entry(p, slq_t, slq_list);
-
-        if ((q->slq_ctx1 == ctx1) && (q->slq_ctx2 == ctx2)) {
-            break;
-        }
-
-        q = NULL;
-    }
-    return q;
-}
-
-/*!
- * @brief Close a query in its backend, remove it from the active list, and free
- * it
- *
- * @param[in] slq  query, or NULL
- */
-static void slq_destroy(slq_t *slq)
-{
-    if (slq == NULL) {
-        return;
-    }
-
-    if (slq->slq_vol && slq->slq_vol->v_sl_backend
-            && slq->slq_vol->v_sl_backend->sbo_close_query) {
-        slq->slq_vol->v_sl_backend->sbo_close_query(slq);
-    }
-
-    slq_remove(slq);
-    talloc_free(slq);
-}
-
-/*!
- * @brief Cancel a query by moving it to the cancelled list
- *
- * The state becomes SLQ_STATE_CANCEL_PENDING, and the backend cleanup waits
- * for a later pass.
- *
- * @param[in,out] slq  active query
- */
-static void slq_cancel(slq_t *slq)
-{
-    slq->slq_state = SLQ_STATE_CANCEL_PENDING;
-    slq_remove(slq);
-    slq_cancelled_add(slq);
-}
-
-/*!
- * Free all fully-cancelled queries
- */
-static void slq_cancelled_cleanup(void)
-{
-    slq_t *q = NULL;
-    struct list_head *p = sl_cancelled_queries.next;
-
-    while (p != &sl_cancelled_queries) {
-        struct list_head *next = p->next;
-        q = list_entry(p, slq_t, slq_list);
-
-        if (q->slq_state == SLQ_STATE_CANCELLED) {
-            LOG(log_debug, logtype_sl,
-                "ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": cancelled",
-                q->slq_ctx1, q->slq_ctx2);
-
-            if (q->slq_vol && q->slq_vol->v_sl_backend
-                    && q->slq_vol->v_sl_backend->sbo_close_query) {
-                q->slq_vol->v_sl_backend->sbo_close_query(q);
-            }
-
-            list_del(p);
-            talloc_free(q);
-        } else {
-            LOG(log_debug, logtype_sl,
-                "ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": %s",
-                q->slq_ctx1, q->slq_ctx2,
-                slq_state_names[q->slq_state].state_name);
-        }
-
-        p = next;
-    }
-
-    return;
-}
-
-/*!
- * Cancel or destroy queries idle longer than MAX_SL_QUERY_IDLE_TIME
- */
-static void slq_idle_cleanup(void)
-{
-    struct list_head *p;
-    slq_t *q = NULL;
-    time_t now = time(NULL);
-    time_t idle_limit;
-    bool found;
-
-    do {
-        found = false;
-        list_for_each(p, &sl_queries) {
-            q = list_entry(p, slq_t, slq_list);
-
-            switch (q->slq_state) {
-            case SLQ_STATE_DONE:
-            case SLQ_STATE_FULL:
-            case SLQ_STATE_ERROR:
-                idle_limit = MAX_SL_QUERY_IDLE_TIME_TERMINAL;
-                break;
-
-            default:
-                idle_limit = MAX_SL_QUERY_IDLE_TIME_ACTIVE;
-                break;
-            }
-
-            if (q->slq_time > now || now - q->slq_time < idle_limit) {
-                continue;
-            }
-
-            LOG(log_debug, logtype_sl,
-                "ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": idle timeout, state: %s",
-                q->slq_ctx1, q->slq_ctx2,
-                slq_state_names[q->slq_state].state_name);
-
-            switch (q->slq_state) {
-            case SLQ_STATE_DONE:
-            case SLQ_STATE_FULL:
-            case SLQ_STATE_ERROR:
-                slq_destroy(q);
-                break;
-
-            case SLQ_STATE_RUNNING:
-            case SLQ_STATE_RESULTS:
-                slq_cancel(q);
-                break;
-
-            default:
-                break;
-            }
-
-            found = true;
-            break;
-        }
-    } while (found);
-}
-
-/*!
- * @brief Log the context IDs and the state of every active query at debug level
- */
-static void slq_dump(void)
-{
-    struct list_head *p;
-    const slq_t *q = NULL;
-    int i = 0;
-    list_for_each(p, &sl_queries) {
-        q = list_entry(p, slq_t, slq_list);
-        LOG(log_debug, logtype_sl,
-            "query[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ", state: %s",
-            i++, q->slq_ctx1, q->slq_ctx2,
-            slq_state_names[q->slq_state].state_name);
-    }
-    return;
-}
 
 /*!
  * @brief Tell whether a volume that the session opened uses the localsearch
@@ -1442,7 +1207,7 @@ EC_CLEANUP: {
  *
  * The call finds the query by its context IDs, resets its idle timer, and
  * lets the backend gather more results. A query in the error state, or any
- * failure, destroys the query.
+ * failure, closes the query, deferring destruction while a callback owns it.
  *
  * @param[in]  obj    session object, unused
  * @param[in]  query  unpacked request
@@ -1505,7 +1270,7 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj _U_,
         LOG(log_debug, logtype_sl,
             "fetchQueryResults: dispatching %d result(s), state=%s",
             slq->query_results ? slq->query_results->num_results : -1,
-            slq_state_names[slq->slq_state].state_name);
+            slq_state_name(slq->slq_state));
         EC_ZERO_LOG(slq->slq_vol->v_sl_backend->sbo_fetch_results(slq));
         ok = add_results(array, slq);
 
@@ -1531,7 +1296,7 @@ EC_CLEANUP:
     LOG(log_error, logtype_sl,
         "fetchQueryResults: failed (ctx1: %" PRIx64 ", ctx2: %" PRIx64 ")",
         ctx1, ctx2);
-    slq_destroy(slq);
+    slq_close(slq);
     status = UINT64_MAX;
     dalloc_add_copy(array, &status, uint64_t);
     dalloc_add(reply, array, sl_array_t);
@@ -1808,27 +1573,7 @@ static int sl_rpc_closeQueryForContext(const AFPObj *obj _U_,
         EC_FAIL;
     }
 
-    switch (slq->slq_state) {
-    case SLQ_STATE_FULL:
-    case SLQ_STATE_DONE:
-    case SLQ_STATE_ERROR:
-        LOG(log_debug, logtype_sl, "close: destroying query: state %s",
-            slq_state_names[slq->slq_state].state_name);
-        slq_destroy(slq);
-        break;
-
-    case SLQ_STATE_RUNNING:
-    case SLQ_STATE_RESULTS:
-        LOG(log_debug, logtype_sl, "close: cancel query: state %s",
-            slq_state_names[slq->slq_state].state_name);
-        slq_cancel(slq);
-        break;
-
-    default:
-        LOG(log_error, logtype_sl, "Unexpected state %d", slq->slq_state);
-        EC_FAIL;
-    }
-
+    EC_ZERO_LOG(slq_close(slq));
     sl_result = 0;
 EC_CLEANUP:
 

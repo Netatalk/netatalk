@@ -159,6 +159,24 @@ static void tracker_cursor_cb(GObject      *object,
     cnid_t                    did, id;
     lsq = slq->slq_backend_private;
     ctx = slq->slq_obj->sl_ctx;
+    more_results = tracker_sparql_cursor_next_finish(lsq->cursor, res, &error);
+
+    /* Packaging may have failed after transferring the result buffers. */
+    if (slq->slq_state == SLQ_STATE_CANCEL_PENDING) {
+        LOG(log_debug, logtype_sl,
+            "cursor cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": cancelled",
+            slq->slq_ctx1, slq->slq_ctx2);
+        g_clear_error(&error);
+        slq->slq_state = SLQ_STATE_CANCELLED;
+        return;
+    }
+
+    if (error) {
+        LOG(log_error, logtype_sl, "Tracker cursor: %s", error->message);
+        g_error_free(error);
+        slq->slq_state = SLQ_STATE_ERROR;
+        return;
+    }
 
     if (slq->query_results == NULL) {
         LOG(log_error, logtype_sl,
@@ -171,22 +189,6 @@ static void tracker_cursor_cb(GObject      *object,
     LOG(log_debug, logtype_sl,
         "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64,
         slq->query_results->num_results, slq->slq_ctx1, slq->slq_ctx2);
-    more_results = tracker_sparql_cursor_next_finish(lsq->cursor, res, &error);
-
-    if (slq->slq_state == SLQ_STATE_CANCEL_PENDING) {
-        LOG(log_debug, logtype_sl,
-            "cursor cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": cancelled",
-            slq->slq_ctx1, slq->slq_ctx2);
-        slq->slq_state = SLQ_STATE_CANCELLED;
-        return;
-    }
-
-    if (error) {
-        LOG(log_error, logtype_sl, "Tracker cursor: %s", error->message);
-        g_error_free(error);
-        slq->slq_state = SLQ_STATE_ERROR;
-        return;
-    }
 
     if (!more_results) {
         LOG(log_debug, logtype_sl,
@@ -311,6 +313,7 @@ static void tracker_query_cb(GObject      *object,
                       TRACKER_SPARQL_CONNECTION(object), res, &error);
 
     if (slq->slq_state == SLQ_STATE_CANCEL_PENDING) {
+        g_clear_error(&error);
         slq->slq_state = SLQ_STATE_CANCELLED;
         return;
     }

@@ -73,6 +73,13 @@ typedef enum {
     SLQ_STATE_ERROR	          /*!< an error happended somewhere         */
 } slq_state_t;
 
+/*! Query ownership, independent of backend execution state. */
+typedef enum {
+    SLQ_MEMBERSHIP_DETACHED,   /*!< Not published, including failed opens. */
+    SLQ_MEMBERSHIP_ACTIVE,     /*!< Visible to client context lookup. */
+    SLQ_MEMBERSHIP_CANCELLED   /*!< Retained until cancellation completes. */
+} slq_membership_t;
+
 /*! file-system changes a Spotlight backend may index incrementally */
 typedef enum {
     SL_INDEX_FILE_MODIFY,
@@ -93,7 +100,9 @@ struct sl_rslts {
 
 /*! Internal query data structure */
 typedef struct _slq_t {
-    struct list_head  slq_list;         /*!< queries are stored in a list    */
+    struct _slq_t    *slq_next;         /*!< Links owned by the query manager */
+    struct _slq_t    *slq_prev;         /*!< Previous query in the same owner */
+    slq_membership_t  slq_membership;   /*!< Zero initializes to detached     */
     slq_state_t       slq_state;        /*!< State                           */
     AFPObj           *slq_obj;          /*!< global AFPObj handle            */
     const struct vol *slq_vol;          /*!< volume handle                   */
@@ -125,8 +134,9 @@ typedef struct sl_backend_ops {
     void (*sbo_close)(AFPObj *obj);
 
     /* Translate slq->slq_qstring into results.
-     * May be async (localsearch) or synchronous (cnid).
-     * On return slq_state must be SLQ_STATE_RUNNING or SLQ_STATE_DONE. */
+     * May be async (localsearch) or synchronous (cnid, xapian).
+     * On success slq_state must be SLQ_STATE_RUNNING, SLQ_STATE_FULL or
+     * SLQ_STATE_DONE. On failure it may be SLQ_STATE_ERROR. */
     int  (*sbo_open_query)(slq_t *slq);
 
     /* Fetch the next batch of results into slq->query_results.
@@ -134,7 +144,11 @@ typedef struct sl_backend_ops {
      * For sync backends: no-op after sbo_open_query() already set SLQ_STATE_DONE. */
     int  (*sbo_fetch_results)(slq_t *slq);
 
-    /* Cancel and clean up query state. */
+    /* Release only this query's backend resources. The caller ensures async
+     * callbacks have finished. Must not pump callbacks or remove other queries;
+     * query cleanup traversals keep a pointer to the next query.
+     * Must tolerate NULL slq_backend_private, including when an open fails
+     * before sbo_open_query() is called. */
     void (*sbo_close_query)(slq_t *slq);
 
     /* Optional incremental index update hook. */
