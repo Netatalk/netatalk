@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Synthetic volume icon lookup, metadata and resource fork interface
+ */
+
 #ifndef AFPD_VIRTUAL_ICON_H
 #define AFPD_VIRTUAL_ICON_H
 

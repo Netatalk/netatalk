@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief AppleDouble file and fork I/O interface for nad conversions
+ */
+
 #ifndef NAD_ADOUBLE_H
 #define NAD_ADOUBLE_H 1
 

@@ -3,6 +3,11 @@
  * All rights reserved.
  */
 
+/*!
+ * @file
+ * @brief Data Stream Interface packet types, session state and I/O operations
+ */
+
 #ifndef _ATALK_DSI_H
 #define _ATALK_DSI_H
 
@@ -17,27 +22,6 @@
 #include <atalk/globals.h>
 #include <atalk/server_child.h>
 
-/*!
- * @file
- * @brief DSI (Data Stream Interface) protocol definitions
- *
- * What a DSI packet looks like:
- * @code
- *   0                               32
- *   |-------------------------------|
- *   |flags  |command| requestID     |
- *   |-------------------------------|
- *   |error code/enclosed data offset|
- *   |-------------------------------|
- *   |total data length              |
- *   |-------------------------------|
- *   |reserved field                 |
- *   |-------------------------------|
- * @endcode
- *
- * @note CONVENTION: anything with a dsi_ prefix is kept in network byte order.
-*/
-
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
     uint8_t dsi_flags;       /*!< packet type: request or reply */
@@ -45,9 +29,9 @@ struct dsi_block {
     uint16_t dsi_requestID;  /*!< request ID */
     union {
         uint32_t dsi_code;   /*!< error code */
-        uint32_t dsi_doff;   /*!< data offset */
+        uint32_t dsi_doff;   /*!< write data offset within the payload */
     } dsi_data;
-    uint32_t dsi_len;        /*!< total data length */
+    uint32_t dsi_len;        /*!< payload length, excluding the DSI header */
     uint32_t dsi_reserved;   /*!< reserved field */
 };
 

@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AppleTalk gateway and route list types for atalkd
+ */
+
 struct gate {
     struct gate *g_next, *g_prev;
     int g_state;

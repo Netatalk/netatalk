@@ -12,6 +12,11 @@
    GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Command entry points, volume helpers and shared state for nad
+ */
+
 #ifndef AD_H
 #define AD_H
 

@@ -31,6 +31,10 @@
  *     implied warranties of any kind.
  */
 
+/*!
+ * @file
+ * @brief Asynchronous NBP lookup requests and reply parsing for macipgw
+ */
 
 #include <sys/types.h>
 #include <sys/param.h>

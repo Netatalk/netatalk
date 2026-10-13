@@ -17,6 +17,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief IP tunnel lifecycle and packet I/O interface for the MacIP gateway
+ */
+
 #include <stdint.h>
 
 extern int  tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o);

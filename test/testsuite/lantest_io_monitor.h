@@ -13,6 +13,11 @@
  * GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief Linux process I/O monitoring types and lifecycle interface
+ */
+
 #ifndef LANTEST_IO_MONITOR_H
 #define LANTEST_IO_MONITOR_H
 

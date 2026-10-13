@@ -309,19 +309,38 @@ Ex.
 
 #### Code documentation
 
-- Building developer documentation requires Doxygen 1.17.0 or later for native Mermaid diagram support
-- We use a Doxygen based documentation system for code documentation, with:
-  - *QDoc* style `/*! ... */` markers
-  - Use `/*!< ... */` for trailing comments
-  - *JavaDoc* style `@` prefixed [commanded tags](https://www.doxygen.nl/manual/commands.html)
-- Most comment blocks should include at least `@brief`, `@param` and `@returns`
+We use Doxygen to generate developer documentation from the source code with the following conventions.
+Version 1.17.0 or later is required since we have native Mermaid diagram support.
+
+The baseline syntax is a combination of QDoc `/*! ... */` markers and JavaDoc style `@` prefixed [command tags](https://www.doxygen.nl/manual/commands.html).
+
+- Every `.c` and `.h` file must have a `/*! ... */` file-level block with a
+  bare `@file` tag (no filename) and an explicit `@brief`
+- A header's file brief describes the interface it declares; a source file's
+  brief describes its implementation, so the two briefs should differ
+- Keep diagrams, conventions and extended file-level prose in the `.c` file
+- Function documentation belongs with the definition in the `.c` implementation
+  file, rather than with the declaration in a header. This rule applies to
+  functions, not file-level documentation. Document functions defined in headers,
+  such as inline helpers, alongside their definitions
+- Use `/*!< ... */` for trailing comments
+- Most function comment blocks should include at least `@brief`, `@param` and `@returns`
 - Indicate input/output status for `@param` with \[in\],\[out\], and \[in,out\] tags
 - Document parameter constraints, resource ownership, and return values
 - Describe side effects and concurrency requirements where relevant
 - Surround code blocks with `@code ... @endcode` for proper formatting
 - Use CommonMark markdown for rich formatting, for instance for numbered and bulleted lists
 
-Ex.
+Header file example:
+
+```C
+/*!
+ * @file
+ * @brief AppleTalk Transaction Protocol packet types and transaction interface
+ */
+```
+
+Function example:
 
 ```C
 /*!

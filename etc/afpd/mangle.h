@@ -2,6 +2,11 @@
  *
  */
 
+/*!
+ * @file
+ * @brief AFP filename mangling and demangling interface
+ */
+
 #ifndef AFPD_MANGLE_H
 #define AFPD_MANGLE_H 1
 

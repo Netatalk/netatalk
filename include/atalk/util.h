@@ -1,11 +1,6 @@
 /*!
  * @file
- * @brief Netatalk utility functions
- *
- * Utility functions for these areas:
- * * sockets
- * * locking
- * * misc UNIX function wrappers, e.g. for getcwd
+ * @brief Shared socket, signal, module loading and event loop helpers
  */
 
 #ifndef _ATALK_UTIL_H

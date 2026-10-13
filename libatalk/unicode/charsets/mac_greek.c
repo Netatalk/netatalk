@@ -28,7 +28,7 @@
 
 /*!
  * @file
- * @brief MAC_GREEK charset conversion
+ * @brief Mac Greek charset conversion
  */
 
 #ifdef HAVE_CONFIG_H

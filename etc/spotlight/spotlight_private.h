@@ -1,4 +1,7 @@
-/*
+/*!
+ * @file
+ * @brief Internal Spotlight file metadata, scope and CNID array helpers
+ *
  * Private declarations shared between etc/afpd/spotlight.c and the
  * pluggable Spotlight search backends.  Not a public API.
  */

@@ -17,6 +17,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief IPv4 address conversion helpers and MacIP gateway debug flags
+ */
+
 #include <stdint.h>
 
 extern int gDebug;

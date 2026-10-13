@@ -1,10 +1,10 @@
+/*
+ * Author: Mark Williams
+ */
+
 /*!
  * @file
- * @author: mw
- *
- * Created on 1. Oktober 2010, 21:35
- *
- * @brief API calls for file change event api
+ * @brief File change event types, registration and notification interface
  */
 
 #ifndef _FCE_API_H

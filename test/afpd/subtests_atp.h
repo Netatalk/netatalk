@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief ATP receive queue component test entry points
+ */
+
 #ifndef NETATALK_TEST_SUBTESTS_ATP_H
 #define NETATALK_TEST_SUBTESTS_ATP_H
 

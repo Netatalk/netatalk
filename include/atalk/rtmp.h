@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Routing Table Maintenance Protocol packet types and operation codes
+ */
+
 #ifndef _ATALK_RTMP_H
 #define _ATALK_RTMP_H 1
 

@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Portability declarations for missing system and C library functions
+ */
+
 #ifndef _ATALK_COMPAT_H
 #define _ATALK_COMPAT_H
 

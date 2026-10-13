@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Open fork state, byte range locking and AFP fork command handlers
+ */
+
 #ifndef AFPD_FORK_H
 #define AFPD_FORK_H 1
 

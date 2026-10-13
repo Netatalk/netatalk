@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Local filesystem benchmark operations and volume tracking types
+ */
+
 #ifndef SPEEDTEST_LOCAL_VFS_H
 #define SPEEDTEST_LOCAL_VFS_H
 

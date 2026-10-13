@@ -1,8 +1,11 @@
+/*
+ * Author:  Daniel S. Haischt <me@daniel.stefan.haischt.name>
+ */
+
 /*!
  * @file
- * @author  Daniel S. Haischt <me@daniel.stefan.haischt.name>
- * @brief   Avahi based Zeroconf support
- * @sa      https://avahi.org/doxygen/html/
+ * @brief Avahi based Zeroconf support
+ * @sa https://avahi.org/doxygen/html/
  */
 
 #ifdef HAVE_CONFIG_H

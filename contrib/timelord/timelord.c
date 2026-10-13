@@ -14,6 +14,11 @@
  *	Copyright (c) 1990, The University of Melbourne.
  */
 
+/*!
+ * @file
+ * @brief The timelord daemon: serve Macintosh time requests over ATP
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief RPC locking interface for AppleDouble files
+ */
+
 #ifndef ATALK_RPC_H
 #define ATALK_RPC_H
 

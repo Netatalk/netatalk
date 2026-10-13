@@ -12,6 +12,11 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief LDAP user and group UUID lookup interface
+ */
+
 #ifndef ACLLDAP_H
 #define ACLLDAP_H
 

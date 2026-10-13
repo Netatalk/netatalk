@@ -5,6 +5,11 @@
  * This file handles byte ordering.
  */
 
+/*!
+ * @file
+ * @brief Platform byte order detection and endian constants
+ */
+
 #ifndef _ATALK_ENDIAN_H_
 #define _ATALK_ENDIAN_H_
 

@@ -16,8 +16,9 @@
    Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
    02110-1301 USA.  */
 
-/*
- *	X/Open Portability Guide 4.2: ftw.h
+/*!
+ * @file
+ * @brief File tree traversal callbacks, flags and entry point for nad
  */
 
 #include <sys/stat.h>

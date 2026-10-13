@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Component test capability identifiers and availability checks
+ */
+
 #ifndef TEST_CAPABILITIES_H
 #define TEST_CAPABILITIES_H
 

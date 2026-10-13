@@ -26,7 +26,7 @@
 
 /*!
  * @file
- * @brief MAC_TURKISH charset conversion
+ * @brief Mac Turkish charset conversion
  */
 
 #ifdef HAVE_CONFIG_H

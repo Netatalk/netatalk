@@ -19,6 +19,10 @@
  * modified by Bjorn (Apple Logo 0xf0 to Apple unicode 0xf8ff )
  */
 
+/*!
+ * @file
+ * @brief Mac Roman character mapping tables
+ */
 
 static const unsigned char mac_roman_page00[96] = {
     0xca, 0xc1, 0xa2, 0xa3, 0xdb, 0xb4, 0x00, 0xa4, /* 0xa0-0xa7 */

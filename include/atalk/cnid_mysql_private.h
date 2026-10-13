@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Private MySQL CNID backend state and status flags
+ */
+
 #ifndef _ATALK_CNID_MYSQL_PRIVATE_H
 #define _ATALK_CNID_MYSQL_PRIVATE_H 1
 

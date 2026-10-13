@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Directory cache, metadata and utility component test entry points
+ */
+
 #ifndef SUBTESTS_H
 #define SUBTESTS_H
 

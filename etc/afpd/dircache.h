@@ -13,6 +13,11 @@
  * GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Directory cache lookup, invalidation and maintenance interface
+ */
+
 #ifndef DIRCACHE_H
 #define DIRCACHE_H
 

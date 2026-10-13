@@ -1,4 +1,8 @@
-/* Shared SRP parameters, verifier record format, and permission policy. */
+/*!
+ * @file
+ * @brief SRP group constants and verifier validation helpers
+ */
+
 #ifndef _ATALK_SRP_H
 #define _ATALK_SRP_H 1
 

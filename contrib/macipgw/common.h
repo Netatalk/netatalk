@@ -18,6 +18,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*!
+ * @file
+ * @brief MacIP gateway configuration and packet output callback types
+ */
+
 typedef void (*outputfunc_t)(char *buffer, int len);
 
 typedef struct {

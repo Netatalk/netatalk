@@ -17,6 +17,11 @@
  * $Name:  $
  */
 
+/*!
+ * @file
+ * @brief Shared hash table node, allocator and callback types
+ */
+
 #ifndef ATALK_HASH_H
 #define ATALK_HASH_H
 

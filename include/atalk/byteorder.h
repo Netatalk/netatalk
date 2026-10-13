@@ -18,24 +18,24 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+/*!
+ * @file
+ * @brief Byte order macros for reading and writing packet fields
+ *
+ * Derived from Samba's byteorder.h by Andrew Tridgell, where SVAL/IVAL
+ * always decode little-endian SMB wire format using byte-order independent
+ * arithmetic, and RSVAL/RIVAL always decode big-endian (NMB) wire format.
+ *
+ * The netatalk version replaces this with a big-endian conditional
+ * that changes the semantics: SVAL/IVAL read in host-native byte order
+ * (safe unaligned access), and RSVAL/RIVAL read in the opposite byte
+ * order. This was done to support AFP (a big-endian protocol) and
+ * native-order in-memory Unicode on big-endian Unix servers.
+ */
+
 #ifndef _BYTEORDER_H
 #define _BYTEORDER_H
 #include <arpa/inet.h>
-
-/*!
-   @file
-   Macros for machine independent short and int manipulation.
-
-   Derived from Samba's byteorder.h by Andrew Tridgell, where SVAL/IVAL
-   always decode little-endian SMB wire format using byte-order independent
-   arithmetic, and RSVAL/RIVAL always decode big-endian (NMB) wire format.
-
-   The netatalk version replaces this with a big-endian conditional
-   that changes the semantics: SVAL/IVAL read in host-native byte order
-   (safe unaligned access), and RSVAL/RIVAL read in the opposite byte
-   order. This was done to support AFP (a big-endian protocol) and
-   native-order in-memory Unicode on big-endian Unix servers.
-*/
 
 #define CVAL(buf,pos) ((unsigned)(((const unsigned char *)(buf))[pos]))
 #define CVAL_NC(buf,pos) (((unsigned char *)(buf))[pos]) /*!< Non-const version of CVAL */

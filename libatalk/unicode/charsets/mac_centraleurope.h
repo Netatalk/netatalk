@@ -18,8 +18,9 @@
  * Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
- * MacCentralEurope
+/*!
+ * @file
+ * @brief Mac Central Europe mapping tables and inline conversion helpers
  */
 
 static const unsigned short mac_centraleurope_2uni[128] = {

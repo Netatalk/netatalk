@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief NBP registration table and packet handler interface for atalkd
+ */
+
 #ifndef ATALKD_NBP_H
 #define ATALKD_NBP_H 1
 

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief AFP test login, fixture creation and response checking helpers
+ */
+
 #ifndef AFP_HELPER_H
 #define AFP_HELPER_H
 

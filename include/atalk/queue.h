@@ -16,6 +16,11 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+/*!
+ * @file
+ * @brief Queue node types and allocation, insertion and removal interface
+ */
+
 #ifndef ATALK_QUEUE_H
 #define ATALK_QUEUE_H
 

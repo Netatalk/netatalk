@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief Printer Access Protocol operation codes and packet sizes
+ */
+
 #ifndef _ATALK_PAP_H
 #define _ATALK_PAP_H 1
 

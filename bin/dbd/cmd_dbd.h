@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Volume scan flags and logging interface for dbd
+ */
+
 #ifndef CMD_DBD_H
 #define CMD_DBD_H
 

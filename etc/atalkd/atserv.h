@@ -2,6 +2,12 @@
  * Copyright (c) 1990,1992 Regents of The University of Michigan.
  * All Rights Reserved. See COPYRIGHT.
  */
+
+/*!
+ * @file
+ * @brief AppleTalk service sockets and packet dispatch callback types
+ */
+
 #ifndef ATALKD_ATSERV_H
 #define ATALKD_ATSERV_H 1
 

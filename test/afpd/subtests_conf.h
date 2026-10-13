@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Configuration component test entry points and log helpers
+ */
+
 #ifndef SUBTESTS_CONF_H
 #define SUBTESTS_CONF_H
 

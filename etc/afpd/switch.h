@@ -22,6 +22,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief AFP command dispatch tables and UAM handler replacement interface
+ */
+
 #ifndef AFPD_SWITCH_H
 #define AFPD_SWITCH_H 1
 

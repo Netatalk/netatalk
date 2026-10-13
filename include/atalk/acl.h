@@ -12,6 +12,11 @@
    GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Portable ACL retrieval, modification and permission helpers
+ */
+
 #ifndef ATALK_ACL_H
 #define ATALK_ACL_H
 

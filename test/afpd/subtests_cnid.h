@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief CNID database and volume identity component test entry points
+ */
+
 #ifndef SUBTESTS_CNID_H
 #define SUBTESTS_CNID_H
 

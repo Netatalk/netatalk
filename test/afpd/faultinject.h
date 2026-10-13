@@ -12,14 +12,18 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Fault injection controls for component test system calls
+ */
+
 #ifndef FAULTINJECT_H
 #define FAULTINJECT_H
 
 #include <sys/types.h>   /* off_t */
 
-/*!
- * @file
- * @brief Test-only fault-injection control block (see faultinject.c).
+/*
+ * Test-only fault-injection control block (see faultinject.c).
  *
  * Usage in a test (LD_PRELOAD interposition is global, so arm narrowly):
  *   fault_inject_reset();

@@ -1,5 +1,7 @@
-/* ---------------------------------------
-*/
+/*!
+ * @file
+ * @brief Unix file, fork and AppleDouble fixture helpers for AFP tests
+ */
 
 #ifndef ADOUBLEHELPER_H
 #define ADOUBLEHELPER_H

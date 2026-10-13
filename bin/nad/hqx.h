@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief BinHex file, header and fork I/O interface
+ */
+
 #ifndef _HQX_H
 #define _HQX_H 1
 

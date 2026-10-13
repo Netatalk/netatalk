@@ -61,6 +61,22 @@ checking macros replace errors with `-1`, so use an explicit check or a suitable
 error-value variant when the caller needs a particular error code, such as an
 AFP protocol error.
 
+A basic function template is:
+
+```c
+int func(void)
+{
+    EC_INIT;
+
+    /* Your code here. */
+
+    EC_STATUS(0);
+
+EC_CLEANUP:
+    EC_EXIT;
+}
+```
+
 ## Examples
 
 These examples assume the standard headers for `errno`, allocation, strings,

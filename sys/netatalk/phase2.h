@@ -3,6 +3,11 @@
  * All Rights Reserved.
  */
 
+/*!
+ * @file
+ * @brief IEEE 802.2 LLC and SNAP header types for AppleTalk Phase 2
+ */
+
 # if defined( BSD4_4 )
 #include <net/if_llc.h>
 # else /* BSD4_4 */
@@ -18,8 +23,7 @@
  *      @(#)if_llc.h	7.2 (Berkeley) 6/28/90
  */
 
-/*!
- * @file
+/*
  * IEEE 802.2 Link Level Control headers, for use in conjunction with
  * 802.{3,4,5} media access control methods.
  *

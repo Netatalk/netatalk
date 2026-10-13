@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief AFP desktop database command handlers and path conversion helpers
+ */
+
 #ifndef AFPD_DESKTOP_H
 #define AFPD_DESKTOP_H 1
 

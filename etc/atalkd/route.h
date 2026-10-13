@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Kernel AppleTalk route update interface for atalkd
+ */
+
 #ifndef ATALKD_ROUTE_H
 #define ATALKD_ROUTE_H 1
 

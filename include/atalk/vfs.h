@@ -18,8 +18,8 @@
 
 /*!
  * @file
- * vfs layer for afp
-*/
+ * @brief Volume filesystem operation callbacks and initialization interface
+ */
 
 #ifndef ATALK_VFS_H
 #define ATALK_VFS_H

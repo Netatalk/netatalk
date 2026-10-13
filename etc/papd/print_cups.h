@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief CUPS printer discovery, status and job submission interface
+ */
+
 
 #ifndef PAPD_CUPS_H
 #define PAPD_CUPS_H 1

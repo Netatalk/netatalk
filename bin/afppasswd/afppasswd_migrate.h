@@ -1,5 +1,6 @@
-/*
- * Internal support for migrating the legacy flat SRP verifier file.
+/*!
+ * @file
+ * @brief SRP verifier migration entry point for afppasswd
  */
 
 #ifndef NETATALK_AFPPASSWD_MIGRATE_H

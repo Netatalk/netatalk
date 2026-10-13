@@ -5,6 +5,11 @@
  * functions here catch C++ exceptions before returning to C callers.
  */
 
+/*!
+ * @file
+ * @brief Xapian index maintenance and Spotlight query interface
+ */
+
 #ifndef SL_XAPIAN_H
 #define SL_XAPIAN_H
 

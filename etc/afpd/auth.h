@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief AFP authentication and session command handlers
+ */
+
 #ifndef AFPD_AUTH_H
 #define AFPD_AUTH_H 1
 

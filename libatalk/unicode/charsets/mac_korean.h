@@ -19,8 +19,7 @@
 
 /*!
  * @file
- * @sa Reference
- * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
+ * @brief Mac Korean character mapping tables
  */
 
 static const uint16_t mac_korean_uni2_page00[][2] = {

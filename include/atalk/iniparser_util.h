@@ -8,6 +8,11 @@
  * (at your option) any later version.
  */
 
+/*!
+ * @file
+ * @brief INI configuration access helpers and compatibility macros
+ */
+
 #ifndef AFPD_INIPARSER_UTIL_H
 #define AFPD_INIPARSER_UTIL_H 1
 

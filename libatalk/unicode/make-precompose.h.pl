@@ -199,6 +199,14 @@ print(CHEADER "    https\:\/\/www.unicode.org\/Public\/UNIDATA\/UnicodeData.txt\
 print(CHEADER "\*\/\n");
 print(CHEADER "\n");
 
+print CHEADER <<'DOXYGEN';
+/*!
+ * @file
+ * @brief Unicode composition and decomposition tables and Hangul constants
+ */
+
+DOXYGEN
+
 print(CHEADER "\#define SBASE 0xAC00\n");
 print(CHEADER "\#define LBASE 0x1100\n");
 print(CHEADER "\#define VBASE 0x1161\n");

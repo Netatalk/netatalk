@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief AFP server message handler and unsupported command aliases
+ */
+
 #ifndef AFPD_MISC_H
 #define AFPD_MISC_H 1
 

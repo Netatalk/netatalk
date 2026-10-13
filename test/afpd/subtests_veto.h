@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Vetoed file deletion component test entry points
+ */
+
 #ifndef SUBTESTS_VETO_H
 #define SUBTESTS_VETO_H
 

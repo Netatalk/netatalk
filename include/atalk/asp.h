@@ -21,6 +21,11 @@
  *	netatalk@itd.umich.edu
  */
 
+/*!
+ * @file
+ * @brief AppleTalk Session Protocol state and session operations
+ */
+
 #ifndef _ATALK_ASP_H
 #define _ATALK_ASP_H 1
 

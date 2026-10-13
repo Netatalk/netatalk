@@ -16,6 +16,12 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
+/*!
+ * @file
+ * @brief Asynchronous NBP lookup request and reply parsing interface
+ */
+
 #include <atalk/nbp.h>
 
 extern int nbp_lookup_req(int s, char *name, char *type, char *zone);

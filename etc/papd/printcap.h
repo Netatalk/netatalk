@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Printcap entry lookup and capability parsing interface
+ */
+
 #ifndef PAPD_PRINTCAP_H
 #define PAPD_PRINTCAP_H 1
 

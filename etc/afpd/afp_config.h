@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief AFP daemon configuration initialization and cleanup interface
+ */
+
 #ifndef AFPD_CONFIG_H
 #define AFPD_CONFIG_H 1
 

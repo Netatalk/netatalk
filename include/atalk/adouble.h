@@ -23,7 +23,7 @@
 
 /*!
  * @file
- * @brief Part of Netatalk's AppleDouble implementatation
+ * @brief AppleDouble metadata, fork I/O and locking types and interface
  */
 
 #ifndef _ATALK_ADOUBLE_H

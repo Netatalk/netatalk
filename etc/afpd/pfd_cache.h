@@ -1,6 +1,11 @@
 /* Parent-directory fd cache — module and threading contract documented in
  * pfd_cache.c */
 
+/*!
+ * @file
+ * @brief Parent directory descriptor cache and statistics interface
+ */
+
 #ifndef AFPD_PFD_CACHE_H
 #define AFPD_PFD_CACHE_H 1
 

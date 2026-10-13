@@ -4,6 +4,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Desktop icon resource declarations, type codes and size constants
+ */
+
 #ifndef AFPD_ICON_H
 #define AFPD_ICON_H 1
 

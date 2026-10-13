@@ -27,7 +27,7 @@
 
 /*!
  * @file
- * @brief MAC_ROMAN charset conversion
+ * @brief Mac Roman charset conversion
  */
 
 #ifdef HAVE_CONFIG_H

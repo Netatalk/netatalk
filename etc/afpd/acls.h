@@ -12,6 +12,11 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief AFP ACL command handlers and access permission helpers
+ */
+
 #ifndef AFPD_ACLS_H
 #define AFPD_ACLS_H
 
@@ -28,17 +33,15 @@
 
 #include "directory.h"
 
-/*!
- * @file
- * @brief Definitions for ACL mapping code
+/* Definitions for ACL mapping code
  *
  * This is what Apple says about ACL flags in sys/kauth.h:
  *
- * \<Apple\> The low 16 bits of the flags field are reserved for filesystem
+ * <Apple> The low 16 bits of the flags field are reserved for filesystem
  * internal use and must be preserved by all APIs.  This includes
  * round-tripping flags through user-space interfaces.
  * The high 16 bits of the flags are used to store attributes and
- * to request specific handling of the ACL. \</Apple\>
+ * to request specific handling of the ACL. </Apple>
  *
  * The constants are included for reference. We DONT expect them on
  * the wire! We will ignore and spoil em.

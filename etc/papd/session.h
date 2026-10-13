@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief PAP client session entry point for papd
+ */
+
 #ifndef PAPD_SESSION_H
 #define PAPD_SESSION_H 1
 

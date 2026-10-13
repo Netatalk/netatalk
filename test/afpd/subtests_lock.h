@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Fork lifetime and file locking component test entry points
+ */
+
 #ifndef SUBTESTS_LOCK_H
 #define SUBTESTS_LOCK_H
 

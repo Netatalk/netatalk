@@ -3,6 +3,11 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief ZIP zone table and zone discovery interface for atalkd
+ */
+
 #ifndef ATALKD_ZIP_H
 #define ATALKD_ZIP_H 1
 

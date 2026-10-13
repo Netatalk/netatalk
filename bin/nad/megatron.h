@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Fork conversion options, Finder metadata and volume context types
+ */
+
 #ifndef MEGATRON_H
 #define MEGATRON_H 1
 

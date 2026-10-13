@@ -24,6 +24,32 @@
 /*!
  * @file
  * @brief ATP packet building, receiving, and queueing
+ *
+ * ATP packet format
+ *
+ * @code
+ * |----------------|
+ * | link header    |
+ * |      ...       |
+ * |----------------|
+ * | DDP header     |
+ * |      ...       |
+ * |   type = 3     |
+ * |----------------|
+ * | control info   | --> bits 7,6: function code
+ * |----------------|            5: XO bit
+ * | bitmap/seq no. |            4: EOM bit
+ * |----------------|            3: STS bit
+ * | TID (MSB)      |        2,1,0: release timer code (ignored under phase I)
+ * |----------------|
+ * | TID (LSB)      |
+ * |----------------|
+ * | user bytes (4) |
+ * |----------------|
+ * | data (0-578)   |
+ * |      ...       |
+ * |----------------|
+ * @endcode
  */
 
 #ifdef HAVE_CONFIG_H

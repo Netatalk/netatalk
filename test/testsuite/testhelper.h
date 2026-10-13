@@ -1,4 +1,8 @@
-/* -------------------------------- */
+/*!
+ * @file
+ * @brief AFP test assertions, lifecycle reporting and shared suite state
+ */
+
 #ifndef TESTHELPER_H
 #define TESTHELPER_H
 

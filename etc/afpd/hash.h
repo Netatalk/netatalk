@@ -17,6 +17,11 @@
  * $Name:  $
  */
 
+/*!
+ * @file
+ * @brief Hash table allocation, lookup and iteration interface for afpd
+ */
+
 #ifndef HASH_H
 #define HASH_H
 

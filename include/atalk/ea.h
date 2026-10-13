@@ -12,6 +12,11 @@
    GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Portable extended attribute operations and AppleDouble EA types
+ */
+
 #ifndef ATALK_EA_H
 #define ATALK_EA_H
 

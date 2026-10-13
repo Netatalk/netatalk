@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief AFP server status construction and server information interface
+ */
+
 #ifndef AFPD_STATUS_H
 #define AFPD_STATUS_H 1
 

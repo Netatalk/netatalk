@@ -12,6 +12,11 @@
  * GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief AFP session idle worker scheduling and lifecycle interface
+ */
+
 #ifndef IDLE_WORKER_H
 #define IDLE_WORKER_H
 

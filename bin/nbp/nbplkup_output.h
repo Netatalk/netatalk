@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Character set conversion interface for nbplkup output fields
+ */
+
 #ifndef NETATALK_NBPLKUP_OUTPUT_H
 #define NETATALK_NBPLKUP_OUTPUT_H
 

@@ -26,7 +26,7 @@
 
 /*!
  * @file
- * @brief MAC_CENTRALEUROPE charset conversion
+ * @brief Mac Central European charset conversion
  */
 
 #ifdef HAVE_CONFIG_H

@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief MacBinary file, header and fork I/O interface
+ */
+
 #ifndef _MACBIN_H
 #define _MACBIN_H 1
 

@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief AFP command invocation and DSI session helpers for component tests
+ */
+
 #ifndef AFPFUNC_HELPERS
 #define AFPFUNC_HELPERS
 

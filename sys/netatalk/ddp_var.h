@@ -3,6 +3,11 @@
  * All Rights Reserved.  See COPYRIGHT.
  */
 
+/*!
+ * @file
+ * @brief Kernel DDP socket control blocks, statistics and lookup interface
+ */
+
 #ifndef _NETATALK_DDP_VAR_H
 #define _NETATALK_DDP_VAR_H 1
 

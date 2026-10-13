@@ -12,13 +12,15 @@
    GNU General Public License for more details.
  */
 
+/*!
+ * @file
+ * @brief User and group UUID cache lookup and insertion interface
+ */
+
 #ifndef LDAPCACHE_H
 #define LDAPCACHE_H
 
-/*!
- * @file
- * @brief LDAP cache interface
- *
+/*
  * We need to cache all LDAP query results, they just take too long.
  * We do hashing with chaining. Two caches are needed:
  * 1. name -> uuid, indexed by a hash(f(): hashstring) of the name

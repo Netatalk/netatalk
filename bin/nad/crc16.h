@@ -1,3 +1,8 @@
+/*!
+ * @file
+ * @brief Incremental CRC-16/XMODEM checksum interface for nad
+ */
+
 #ifndef CRC16_H
 #define CRC16_H 1
 

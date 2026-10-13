@@ -22,6 +22,11 @@
  * reaches some value (3?), we can optionally stop asking.
  */
 
+/*!
+ * @file
+ * @brief RTMP routing table types, flags and packet handling interface
+ */
+
 #ifndef ATALKD_RTMP_H
 #define ATALKD_RTMP_H 1
 

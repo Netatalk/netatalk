@@ -95,6 +95,14 @@ print(CHEADER "    https\:\/\/www.unicode.org\/Public\/UNIDATA\/UnicodeData.txt\
 print(CHEADER "\*\/\n");
 print(CHEADER "\n");
 
+print CHEADER <<'DOXYGEN';
+/*!
+ * @file
+ * @brief UTF-16 upper and lower case lookup tables
+ */
+
+DOXYGEN
+
 print(CSOURCE "\/\*\n");
 print(CSOURCE "  DO NOT EDIT BY HAND\!\!\!\n");
 print(CSOURCE "\n");

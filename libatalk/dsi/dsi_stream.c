@@ -14,6 +14,30 @@
 /*!
  * @file
  * @brief DSI stream input and output on the session socket
+ *
+ * The 16-byte DSI header has the following wire layout. Each row represents
+ * 32 bits; the payload follows the header.
+ * @code{.unparsed}
+ *   0       8       16            31
+ *   +-------+-------+---------------+
+ *   | flags |command| request ID    |
+ *   +-------+-------+---------------+
+ *   | error code / write data offset|
+ *   +-------------------------------+
+ *   | payload length                |
+ *   +-------------------------------+
+ *   | reserved field                |
+ *   +-------------------------------+
+ * @endcode
+ *
+ * The payload length excludes the header. In a DSIWrite request, the write
+ * data offset counts bytes from the start of the payload to the file data,
+ * past the AFP request block. In a reply, the same field holds the error code.
+ *
+ * @note Multibyte wire fields use network byte order. The reply packer expects
+ * those fields in network byte order in struct dsi_block. dsi_stream_receive()
+ * converts the received dsi_doff to host byte order; dsi_requestID, dsi_len and
+ * dsi_reserved remain in network byte order.
  */
 
 #ifdef HAVE_CONFIG_H
