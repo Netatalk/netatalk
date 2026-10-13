@@ -32,7 +32,6 @@
 #include <stdint.h>
 
 #include <atalk/adouble.h>
-#include <atalk/list.h>
 #include <atalk/uuid.h>
 
 /* CNID object flags */
@@ -113,8 +112,7 @@ struct cnid_open_args {
  */
 struct _cnid_module {
     char *name;
-    /* CNID modules are also stored on a bidirectional list. */
-    struct list_head db_list;
+    struct _cnid_module *next; /*!< Permanent registry link, owned by cnid.c. */
     struct _cnid_db *(*cnid_open)(struct cnid_open_args *args);
 };
 
