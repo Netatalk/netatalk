@@ -2810,7 +2810,6 @@ EC_CLEANUP:
 }
 
 struct _cnid_module cnid_sqlite_module = {
-    "sqlite",
-    { NULL, NULL },
-    cnid_sqlite_open
+    .name = "sqlite",
+    .cnid_open = cnid_sqlite_open
 };

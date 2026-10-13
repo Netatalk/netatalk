@@ -18,8 +18,6 @@
  * @brief The CNID database front end and backend registry
  */
 
-#define USE_LIST
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -33,12 +31,11 @@
 #include <time.h>
 
 #include <atalk/cnid.h>
-#include <atalk/list.h>
 #include <atalk/logger.h>
 #include <atalk/volume.h>
 
-/*! List of all registered modules. */
-static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
+/*! Permanent registry of backend modules, kept in registration order. */
+static cnid_module *modules;
 
 /*!
  * @brief Find a registered CNID backend by name, ignoring case
@@ -48,12 +45,12 @@ static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
  */
 static const cnid_module *cnid_module_named(const char *name)
 {
-    struct list_head *ptr;
-    list_for_each(ptr, &modules) {
-        if (0 == strcasecmp(list_entry(ptr, cnid_module, db_list)->name, name)) {
-            return list_entry(ptr, cnid_module, db_list);
+    for (const cnid_module *module = modules; module; module = module->next) {
+        if (0 == strcasecmp(module->name, name)) {
+            return module;
         }
     }
+
     return NULL;
 }
 
@@ -72,7 +69,8 @@ bool cnid_scheme_registered(const char *name)
  * @brief Add a CNID backend to the list of registered backends
  *
  * A second backend with the same name, compared without case, only logs an
- * error. A backend cannot leave the list again.
+ * error. A backend cannot leave the registry again and must remain alive
+ * for the lifetime of the process.
  *
  * @param[in] module  backend to add, kept by pointer
  */
@@ -85,7 +83,15 @@ void cnid_register(struct _cnid_module *module)
     }
 
     LOG(log_info, logtype_afpd, "Registering CNID module [%s]", module->name);
-    list_add_tail(&module->db_list, &modules);
+    cnid_module **tail = &modules;
+
+    while (*tail != NULL) {
+        tail = &(*tail)->next;
+    }
+
+    module->next = NULL;
+
+    *tail = module;
 }
 
 /*!

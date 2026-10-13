@@ -1,3 +1,14 @@
+cnid_registry_test = executable(
+    'cnid_registry_test',
+    'test_cnid_registry.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test('CNID backend registry', cnid_registry_test)
+
 socket_helpers_test = executable(
     'socket_helpers_test',
     'test_socket_helpers.c',

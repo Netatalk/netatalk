@@ -2094,7 +2094,6 @@ EC_CLEANUP:
 }
 
 struct _cnid_module cnid_mysql_module = {
-    "mysql",
-    {NULL, NULL},
-    cnid_mysql_open
+    .name = "mysql",
+    .cnid_open = cnid_mysql_open
 };
