@@ -22,6 +22,7 @@ ARG RUN_DEPS="\
     talloc \
     tinysparql \
     tzdata \
+    util-linux-misc \
     "
 ARG BUILD_DEPS="\
     acl-dev \

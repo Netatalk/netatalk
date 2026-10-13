@@ -38,14 +38,14 @@ set -e
 
 echo "*** Starting AFP server"
 if [ -z "$TESTSUITE" ]; then
-    netatalk -d
+    $SERVER_CPU_PIN netatalk -d
 else
     if [ -n "$SINGLE_USER" ]; then
         echo "*** Starting single-user AFP server as $AFP_USER"
-        su "$AFP_USER" -c 'netatalk --single-user -P "$1" -F "$2"' sh \
+        $SERVER_CPU_PIN su "$AFP_USER" -c 'netatalk --single-user -P "$1" -F "$2"' sh \
             "$SU_STATE/netatalk.pid" "$NETATALK_CONFDIR/afp.conf"
     else
-        netatalk
+        $SERVER_CPU_PIN netatalk
     fi
 
     # The daemonized controller returns immediately, so wait for the listener
@@ -101,7 +101,7 @@ else
             if [ -n "$SINGLE_USER" ]; then
                 set -- "$@" -N
             fi
-            afp_spectest $TEST_FLAGS "$@"
+            $TEST_CPU_PIN afp_spectest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             if [ -n "$AFP_JUNIT_REPORT_PATH" ] && [ -f "$AFP_JUNIT_REPORT_PATH" ]; then
                 chmod 0644 "$AFP_JUNIT_REPORT_PATH"
@@ -110,7 +110,7 @@ else
         login)
             set -- -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" \
                 -u "$AFP_USER" -w "$AFP_PASS"
-            afp_logintest $TEST_FLAGS "$@"
+            $TEST_CPU_PIN afp_logintest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         lan)
@@ -120,7 +120,7 @@ else
             if [ -n "$AFP_TESTSUITE_UAM" ]; then
                 set -- "$@" -A "$AFP_TESTSUITE_UAM"
             fi
-            afp_lantest $TEST_FLAGS "$@"
+            $TEST_CPU_PIN afp_lantest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         speed)
@@ -133,7 +133,7 @@ else
             if [ -n "$AFP_SUBTESTS" ]; then
                 set -- "$@" -f "$AFP_SUBTESTS"
             fi
-            afp_speedtest $TEST_FLAGS "$@"
+            $TEST_CPU_PIN afp_speedtest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
             ;;
         *)

@@ -352,23 +352,6 @@ unsigned int local_writefooter(DSI *dsi _U_, uint16_t fork, off_t offset,
 }
 
 /*!
- * @brief Flush file data to disk via fsync()
-*/
-unsigned int local_flushfork(CONN *conn _U_, uint16_t fork)
-{
-    if (!Local_VFS_Quiet) {
-        fprintf(stdout, "---------------------\n");
-        fprintf(stdout, "Flush fork %d\n\n", fork);
-    }
-
-    if (fsync(fork) < 0) {
-        return ntohl(AFPERR_PARAM);
-    }
-
-    return ntohl(AFP_OK);
-}
-
-/*!
  * @brief Close file descriptor
 */
 unsigned int local_closefork(CONN *conn _U_, uint16_t fork)
@@ -509,7 +492,6 @@ struct vfs local_VFS = {
     local_openfork,
     local_writeheader,
     local_writefooter,
-    local_flushfork,
     local_closefork,
     local_delete,
     local_setforkparam,

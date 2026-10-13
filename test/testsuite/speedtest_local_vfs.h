@@ -32,7 +32,6 @@ unsigned int local_writeheader(DSI *dsi, uint16_t fork, off_t offset,
                                size_t size, char *data, char whence);
 unsigned int local_writefooter(DSI *dsi, uint16_t fork, off_t offset,
                                size_t size, char *data, char whence);
-unsigned int local_flushfork(CONN *conn, uint16_t fork);
 unsigned int local_closefork(CONN *conn, uint16_t fork);
 unsigned int local_delete(CONN *conn, uint16_t vol, int did, char *name);
 unsigned int local_setforkparam(CONN *conn, uint16_t fork, uint16_t bitmap,
@@ -57,7 +56,6 @@ struct vfs {
     uint16_t (*openfork)(CONN *, uint16_t, int, uint16_t, int, char *, int);
     unsigned int (*writeheader)(DSI *, uint16_t, off_t, size_t, char *, char);
     unsigned int (*writefooter)(DSI *, uint16_t, off_t, size_t, char *, char);
-    unsigned int (*flushfork)(CONN *, uint16_t);
     unsigned int (*closefork)(CONN *, uint16_t);
     unsigned int (*delete)(CONN *, uint16_t, int, char *);
     unsigned int (*setforkparam)(CONN *, uint16_t,  uint16_t, off_t);

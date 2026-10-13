@@ -154,7 +154,6 @@ static int Request = 1;
 static int Delete = 0;
 static int Sparse = 0;
 static int Local = 0;
-static int Flush = 1;
 static int Direct = 1;
 
 /* not used */
@@ -176,7 +175,6 @@ struct vfs VFS = {
     FPOpenFork,
     FPWriteHeader,
     FPWriteFooter,
-    FPFlushFork,
     FPCloseFork,
     FPDelete,
     FPSetForkParam,
@@ -898,11 +896,6 @@ void Write(void)
             offset_r += nbe_r;
         }
 
-        if (Flush && VFS.flushfork(Conn, fork)) {
-            test_failed();
-            goto fin1;
-        }
-
         timer_footer("Write", display_iter);
 
         if (VFS.closefork(Conn, fork)) {
@@ -980,10 +973,6 @@ int init_fork(uint16_t fork)
 
         written -= nbe;
         offset += nbe;
-    }
-
-    if (Flush && VFS.flushfork(Conn, fork)) {
-        return -1;
     }
 
     return 0;
@@ -1817,7 +1806,7 @@ static void run_one(char *name)
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567acDeiLTVvy] [-A uam] [-h host] [-p port] [-s vol] [-P path] [-S vol2] [-u user] [-w password] [-n iterations] [-W warmup] "
+            "usage:\t%s [-1234567cDeiLTVvy] [-A uam] [-h host] [-p port] [-s vol] [-P path] [-S vol2] [-u user] [-w password] [-n iterations] [-W warmup] "
             "[-t delay] [-d size] [-z sizes] [-q quantum] [-r requests] [-f test] [-F file] \n",
             av0);
     fprintf(stdout,
@@ -1854,7 +1843,6 @@ void usage(char *av0)
             "\t-r\tnumber of outstanding requests for pipelining (default 1)\n");
     fprintf(stdout, "\t-y\tuse a new file for each run (default same file)\n");
     fprintf(stdout, "\t-e\tsparse file (default no)\n");
-    fprintf(stdout, "\t-a\tdon't flush to disk after write (default yes)\n");
     fprintf(stdout,
             "\t-F\tread from file in volume root folder (default create a temporary file)\n");
     fprintf(stdout, "\t-v\tverbose (default no)\n");
@@ -1879,7 +1867,7 @@ int main(int ac, char **av)
     }
 
     while ((cc = getopt(ac, av,
-                        "1234567A:aceDiLTVvyd:F:f:h:n:p:P:q:r:S:s:t:u:w:W:z:")) != EOF) {
+                        "1234567A:ceDiLTVvyd:F:f:h:n:p:P:q:r:S:s:t:u:w:W:z:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -1918,10 +1906,6 @@ int main(int ac, char **av)
 
         case 'A':
             afptest_uam = afptest_uam_uses_legacy_login(optarg) ? NULL : optarg;
-            break;
-
-        case 'a':
-            Flush = 0;
             break;
 
         case 'c':

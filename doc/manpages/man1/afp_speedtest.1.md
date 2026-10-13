@@ -4,7 +4,7 @@ afp_speedtest — Simple AFP file transfer benchmarking tool
 
 # Synopsis
 
-**afp_speedtest** [-1234567acDeiLTVvy] [-A *uam*] [-h *host*] [-p *port*] [-s *volume*] [-P *path*] [-S *volume2*]
+**afp_speedtest** [-1234567cDeiLTVvy] [-A *uam*] [-h *host*] [-p *port*] [-s *volume*] [-P *path*] [-S *volume2*]
 [-u *user*] [-w *password*] [-n *iterations*] [-W *warmup*] [-t *delay*] [-d *size*] [-z *sizes*]
 [-q *quantum*] [-r *requests*] [-F *file*] [-f *test*]
 
@@ -51,9 +51,6 @@ The tool supports comprehensive performance analysis including:
 : Select authentication with the specified UAM name or alias.
   Use *clrtxt* for the legacy ClearTxt login path, *dhx* for DHCAST128,
   *dhx2* for DHX2, and *srp* for SRP.
-
-**-a**
-: Don't flush to disk after write
 
 **-c**
 : CSV output mode (automatically enables statistics and quiet mode)

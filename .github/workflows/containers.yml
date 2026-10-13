@@ -1637,6 +1637,12 @@ jobs:
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024
       AFP_RECVFILE: "yes"
+      # A fixed vCPU each for the AFP server and for the test client, so the
+      # per-request hand-off between the two never depends on where the
+      # scheduler happened to place them. vCPU 0 is left to the runner's own
+      # processes and interrupts.
+      AFP_SERVER_CPUS: "1"
+      AFP_TEST_CPUS: "2"
     outputs:
       metrics: ${{ steps.lantest-summary.outputs.METRICS }}
     steps:
@@ -1650,7 +1656,11 @@ jobs:
           # to afp_lantest.
           # --privileged: AFP_CNID_TMPFS mounts a tmpfs over the CNID state
           # dir so timings measure afpd, not the runner's fsync latency.
+          # The vCPU to core map that the pinning below relies on, for the log.
+          lscpu -e=CPU,CORE,SOCKET,ONLINE
           docker run --privileged --rm \
+            -e AFP_SERVER_CPUS="${{ env.AFP_SERVER_CPUS }}" \
+            -e AFP_TEST_CPUS="${{ env.AFP_TEST_CPUS }}" \
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
@@ -1738,7 +1748,9 @@ jobs:
             --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
             --meta recvfile=${{ env.AFP_RECVFILE }} \
             --meta splice_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
-            --meta rfork_budget_kb=${{ env.AFP_DIRCACHE_RFORK_BUDGET }}
+            --meta rfork_budget_kb=${{ env.AFP_DIRCACHE_RFORK_BUDGET }} \
+            --meta server_cpu=${{ env.AFP_SERVER_CPUS }} \
+            --meta client_cpu=${{ env.AFP_TEST_CPUS }}
           echo "PNG size: $(du -h lantest.png | cut -f1)"
       - name: Extract metrics for PR comment
         id: lantest-summary
@@ -1826,6 +1838,12 @@ jobs:
       AFP_DIRCACHE_RFORK_BUDGET: 102400
       AFP_DIRCACHE_RFORK_MAXSIZE: 1024
       AFP_RECVFILE: "yes"
+      # A fixed vCPU each for the AFP server and for the test client, so the
+      # per-request hand-off between the two never depends on where the
+      # scheduler happened to place them. vCPU 0 is left to the runner's own
+      # processes and interrupts.
+      AFP_SERVER_CPUS: "1"
+      AFP_TEST_CPUS: "2"
     outputs:
       metrics: ${{ steps.speedtest-summary.outputs.METRICS }}
     steps:
@@ -1839,7 +1857,11 @@ jobs:
           # entrypoint prepends to afp_speedtest.
           # --privileged: AFP_CNID_TMPFS mounts a tmpfs over the CNID state
           # dir so timings measure afpd, not the runner's fsync latency.
+          # The vCPU to core map that the pinning below relies on, for the log.
+          lscpu -e=CPU,CORE,SOCKET,ONLINE
           docker run --privileged --rm \
+            -e AFP_SERVER_CPUS="${{ env.AFP_SERVER_CPUS }}" \
+            -e AFP_TEST_CPUS="${{ env.AFP_TEST_CPUS }}" \
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
@@ -1899,7 +1921,9 @@ jobs:
             --meta dircache_validation_freq=${{ env.AFP_DIRCACHE_VALIDATION_FREQ }} \
             --meta recvfile=${{ env.AFP_RECVFILE }} \
             --meta splice_kb=$(( ${{ env.AFP_SERVER_QUANTUM }} / 1024 )) \
-            --meta warmup=1
+            --meta warmup=1 \
+            --meta server_cpu=${{ env.AFP_SERVER_CPUS }} \
+            --meta client_cpu=${{ env.AFP_TEST_CPUS }}
           echo "PNG size: $(du -h speedtest.png | cut -f1)"
       - name: Extract metrics for PR comment
         id: speedtest-summary
