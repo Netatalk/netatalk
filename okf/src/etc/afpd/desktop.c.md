@@ -5,7 +5,7 @@ description: "Manage the AppleDesktop folder and its contents."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/desktop.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -202,7 +202,7 @@ Uses file-scope variables: `si`
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 462 to 666.
+Defined at lines 462 to 665.
 
 FPAddIcon: store an icon bitmap in the icon file of a creator.
 
@@ -219,7 +219,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_NOITEM when iconopen fails, AFPERR_ITYPE for a size change, or AFPERR_PARAM
 
-Calls: [asp_wrtcont](../../libatalk/asp/asp_write.c.md#asp_wrtcont), [dsi_write](../../libatalk/dsi/dsi_write.c.md#dsi_write), [dsi_writeflush](../../libatalk/dsi/dsi_write.c.md#dsi_writeflush), [dsi_writeinit](../../libatalk/dsi/dsi_write.c.md#dsi_writeinit), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_dtfile](desktop.c.md#icon_dtfile), [iconopen](desktop.c.md#iconopen)
+Calls: [asp_wrtcont](../../libatalk/asp/asp_write.c.md#asp_wrtcont), [dsi_write](../../libatalk/dsi/dsi_write.c.md#dsi_write), [dsi_writedrain](../../libatalk/dsi/dsi_write.c.md#dsi_writedrain), [dsi_writeflush](../../libatalk/dsi/dsi_write.c.md#dsi_writeflush), [dsi_writeinit](../../libatalk/dsi/dsi_write.c.md#dsi_writeinit), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_dtfile](desktop.c.md#icon_dtfile), [iconopen](desktop.c.md#iconopen)
 
 Uses file-scope variables: `si`
 
@@ -231,7 +231,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_geticoninfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 691 to 766.
+Defined at lines 690 to 765.
 
 FPGetIconInfo: look up an icon of a creator by index and return its record header.
 
@@ -258,7 +258,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 785 to 935.
+Defined at lines 784 to 934.
 
 FPGetIcon: return the bitmap of an icon from the icon file of a creator.
 
@@ -285,7 +285,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 char * dtfile(const struct vol *vol, uint8_t creator[], char *ext)
 ```
 
-Defined at lines 952 to 993.
+Defined at lines 951 to 992.
 
 Build the path of a desktop database file for a creator.
 
@@ -308,7 +308,7 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 char * mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 ```
 
-Defined at lines 1008 to 1044.
+Defined at lines 1007 to 1043.
 
 Convert an AFP name into the name on disk.
 
@@ -332,7 +332,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c
 char * utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 ```
 
-Defined at lines 1061 to 1096. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
+Defined at lines 1060 to 1095. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
 
 Convert a name on disk into the AFP name a client sees.
 
@@ -356,7 +356,7 @@ Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.
 static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, char *ibuf)
 ```
 
-Defined at lines 1114 to 1192.
+Defined at lines 1113 to 1191.
 
 Store a Finder comment in the AppleDouble metadata of a file or directory.
 
@@ -382,7 +382,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1208 to 1241.
+Defined at lines 1207 to 1240.
 
 FPAddComment: store a Finder comment for a file or directory.
 
@@ -409,7 +409,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1259 to 1323.
+Defined at lines 1258 to 1322.
 
 Read the Finder comment of a file or directory from its AppleDouble metadata.
 
@@ -435,7 +435,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_getcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1336 to 1365.
+Defined at lines 1335 to 1364.
 
 FPGetComment: return the Finder comment of a file or directory.
 
@@ -460,7 +460,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 ```
 
-Defined at lines 1381 to 1452.
+Defined at lines 1380 to 1451.
 
 Remove the Finder comment from the AppleDouble metadata of a file or directory.
 
@@ -485,7 +485,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_rmvcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1465 to 1494.
+Defined at lines 1464 to 1493.
 
 FPRemoveComment: remove the Finder comment of a file or directory.
 

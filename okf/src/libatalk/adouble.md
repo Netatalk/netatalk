@@ -5,7 +5,7 @@ description: "11 files, 110 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/adouble"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 ---
 
 # Files
@@ -36,7 +36,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 200 calls
+* [etc/afpd](../etc/afpd.md): 201 calls
 * [bin/nad](../bin/nad.md): 71 calls
 * [bin/dbd](../bin/dbd.md): 19 calls
 * [libatalk/vfs](vfs.md): 17 calls
@@ -49,7 +49,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 * [ad_entry](adouble/ad_open.c.md#ad_entry): 37 callers
 * [ad_open](adouble/ad_open.c.md#ad_open): 36 callers
 * [ad_flush](adouble/ad_flush.c.md#ad_flush): 35 callers
-* [ad_getentryoff](adouble/ad_open.c.md#ad_getentryoff): 26 callers
+* [ad_getentryoff](adouble/ad_open.c.md#ad_getentryoff): 28 callers
 * [ad_setid](adouble/ad_attr.c.md#ad_setid): 15 callers
 * [ad_setname](adouble/ad_attr.c.md#ad_setname): 13 callers
 * [ad_getattr](adouble/ad_attr.c.md#ad_getattr): 11 callers

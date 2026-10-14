@@ -1,5 +1,5 @@
 {
-"commit": "7995e0dc356ebfb1cc759483bb85048080047e5d",
+"commit": "56fc92dcd90ac4708ed5253d9d04153376b617d3",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -1370,6 +1370,11 @@
 "from": "etc/afpd/afp_dsi.c",
 "kind": "include",
 "to": "include/atalk/spotlight.h"
+},
+{
+"from": "etc/afpd/afp_dsi.c",
+"kind": "include",
+"to": "include/atalk/unix.h"
 },
 {
 "from": "etc/afpd/afp_dsi.c",
@@ -6499,6 +6504,11 @@
 {
 "from": "libatalk/dsi/dsi_write.c",
 "kind": "include",
+"to": "include/atalk/unix.h"
+},
+{
+"from": "libatalk/dsi/dsi_write.c",
+"kind": "include",
 "to": "include/atalk/util.h"
 },
 {
@@ -9548,6 +9558,11 @@
 "to": "libatalk/adouble/ad_open.c#ad_getentryoff"
 },
 {
+"from": "libatalk/adouble/ad_size.c#ad_size",
+"kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_getentryoff"
+},
+{
 "from": "libatalk/adouble/ad_open.c#ad_stat",
 "kind": "call",
 "to": "libatalk/adouble/ad_open.c#ad_dir"
@@ -10156,6 +10171,11 @@
 "from": "etc/afpd/desktop.c#afp_addicon",
 "kind": "call",
 "to": "libatalk/dsi/dsi_write.c#dsi_write"
+},
+{
+"from": "etc/afpd/desktop.c#afp_addicon",
+"kind": "call",
+"to": "libatalk/dsi/dsi_write.c#dsi_writedrain"
 },
 {
 "from": "etc/afpd/desktop.c#afp_addicon",
@@ -11306,6 +11326,11 @@
 "from": "etc/afpd/enumerate.c#afp_enumerate_ext2",
 "kind": "call",
 "to": "etc/afpd/enumerate.c#enumerate"
+},
+{
+"from": "etc/afpd/auth.c#afp_errpwdexpired",
+"kind": "call",
+"to": "libatalk/dsi/dsi_write.c#dsi_writedrain"
 },
 {
 "from": "etc/afpd/file.c#afp_exchangefiles",
@@ -12793,6 +12818,11 @@
 {
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "call",
+"to": "etc/afpd/afp_dsi.c#afp_write_command"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_over_dsi",
+"kind": "call",
 "to": "libatalk/util/sigpipe.c#atalk_sigpipe_drain"
 },
 {
@@ -12848,12 +12878,7 @@
 {
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "call",
-"to": "libatalk/dsi/dsi_write.c#dsi_writeflush"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_over_dsi",
-"kind": "call",
-"to": "libatalk/dsi/dsi_write.c#dsi_writeinit"
+"to": "libatalk/dsi/dsi_write.c#dsi_writedrain"
 },
 {
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
@@ -12903,6 +12928,11 @@
 {
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "call",
+"to": "libatalk/util/unix.c#log_backoff"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_over_dsi",
+"kind": "call",
 "to": "etc/afpd/afp_dsi.c#pending_request"
 },
 {
@@ -12944,6 +12974,11 @@
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "use",
 "to": "etc/afpd/afp_dsi.c#debug_request"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_over_dsi",
+"kind": "use",
+"to": "etc/afpd/afp_dsi.c#misframed_requests"
 },
 {
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
@@ -15329,12 +15364,12 @@
 {
 "from": "libatalk/dsi/dsi_stream.c#buf_read",
 "kind": "call",
-"to": "libatalk/dsi/dsi_stream.c#from_buf"
+"to": "libatalk/dsi/dsi_stream.c#dsi_wait_input"
 },
 {
 "from": "libatalk/dsi/dsi_stream.c#buf_read",
 "kind": "call",
-"to": "libatalk/util/socket.c#readt"
+"to": "libatalk/dsi/dsi_stream.c#from_buf"
 },
 {
 "from": "etc/afpd/fce_api.c#build_fce_packet",
@@ -22440,6 +22475,31 @@
 "to": "libatalk/dsi/dsi_stream.c#dsi_stream_write"
 },
 {
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"kind": "call",
+"to": "libatalk/util/sigpipe.c#atalk_sigpipe_drain"
+},
+{
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"kind": "call",
+"to": "libatalk/util/sigpipe.c#atalk_sigpipe_readfd"
+},
+{
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"kind": "call",
+"to": "libatalk/dsi/dsi_stream.c#dsi_disconnect"
+},
+{
+"from": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"kind": "call",
+"to": "libatalk/dsi/dsi_stream.c#monotonic_ms"
+},
+{
+"from": "libatalk/dsi/dsi_stream.c#buf_read",
+"kind": "doc",
+"to": "libatalk/dsi/dsi_stream.c#dsi_wait_input"
+},
+{
 "from": "libatalk/dsi/dsi_write.c#dsi_write",
 "kind": "call",
 "to": "libatalk/dsi/dsi_stream.c#dsi_stream_read"
@@ -22457,7 +22517,22 @@
 {
 "from": "libatalk/dsi/dsi_write.c#dsi_write_file",
 "kind": "call",
+"to": "libatalk/dsi/dsi_write.c#at_mark"
+},
+{
+"from": "libatalk/dsi/dsi_write.c#dsi_write_file",
+"kind": "call",
 "to": "libatalk/dsi/dsi_write.c#dsi_close_pipe"
+},
+{
+"from": "libatalk/dsi/dsi_write.c#dsi_write_file",
+"kind": "call",
+"to": "libatalk/dsi/dsi_stream.c#dsi_wait_input"
+},
+{
+"from": "libatalk/dsi/dsi_write.c#dsi_write_file",
+"kind": "call",
+"to": "libatalk/util/unix.c#log_backoff"
 },
 {
 "from": "libatalk/dsi/dsi_write.c#dsi_write_file",
@@ -22470,9 +22545,14 @@
 "to": "libatalk/dsi/dsi_write.c#pipe_to_file"
 },
 {
-"from": "libatalk/dsi/dsi_write.c#dsi_write_file",
+"from": "libatalk/dsi/dsi_write.c#dsi_writedrain",
 "kind": "call",
-"to": "libatalk/dsi/dsi_write.c#waitfordata"
+"to": "libatalk/dsi/dsi_write.c#dsi_writeflush"
+},
+{
+"from": "libatalk/dsi/dsi_write.c#dsi_writedrain",
+"kind": "call",
+"to": "libatalk/dsi/dsi_write.c#dsi_writeinit"
 },
 {
 "from": "libatalk/dsi/dsi_write.c#dsi_writeflush",
@@ -24535,6 +24615,11 @@
 "to": "libatalk/util/socket.c#recv_fd"
 },
 {
+"from": "etc/afpd/afp_dsi.c#handle_transfer_session",
+"kind": "use",
+"to": "etc/afpd/afp_dsi.c#alarm_pending"
+},
+{
 "from": "etc/afpd/hash.c#hash_alloc_insert",
 "kind": "call",
 "to": "etc/afpd/hash.c#hash_alloc_insert_node"
@@ -26223,6 +26308,11 @@
 "from": "libatalk/util/logger.c#log_absolute_name",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/dsi/dsi_write.c#open_pipe",
+"kind": "doc",
+"to": "libatalk/util/unix.c#log_backoff"
 },
 {
 "from": "libatalk/util/logger.c#log_close_all",
@@ -31219,7 +31309,17 @@
 {
 "from": "libatalk/dsi/dsi_write.c#open_pipe",
 "kind": "call",
+"to": "libatalk/util/unix.c#count_open_fds"
+},
+{
+"from": "libatalk/dsi/dsi_write.c#open_pipe",
+"kind": "call",
 "to": "libatalk/dsi/dsi_write.c#dsi_close_pipe"
+},
+{
+"from": "libatalk/dsi/dsi_write.c#open_pipe",
+"kind": "call",
+"to": "libatalk/util/unix.c#log_backoff"
 },
 {
 "from": "bin/afppasswd/afppasswd.c#open_srp_verifier",
@@ -37025,11 +37125,6 @@
 "to": "libatalk/unicode/utf16_case.c#toupper_w"
 },
 {
-"from": "etc/afpd/fork.c#sum_neg",
-"kind": "call",
-"to": "etc/afpd/fork.c#is_neg"
-},
-{
 "from": "etc/afpd/file.c#symlink_target_safe",
 "kind": "call",
 "to": "etc/afpd/file.c#has_dotdot_component"
@@ -39420,6 +39515,11 @@
 {
 "from": "etc/afpd/fork.c#write_fork",
 "kind": "call",
+"to": "libatalk/adouble/ad_open.c#ad_getentryoff"
+},
+{
+"from": "etc/afpd/fork.c#write_fork",
+"kind": "call",
 "to": "libatalk/adouble/ad_recvfile.c#ad_recvfile"
 },
 {
@@ -39446,6 +39546,11 @@
 "from": "etc/afpd/fork.c#write_fork",
 "kind": "call",
 "to": "libatalk/dsi/dsi_write.c#dsi_write"
+},
+{
+"from": "etc/afpd/fork.c#write_fork",
+"kind": "call",
+"to": "libatalk/dsi/dsi_write.c#dsi_writedrain"
 },
 {
 "from": "etc/afpd/fork.c#write_fork",
@@ -39491,6 +39596,11 @@
 "from": "etc/afpd/fork.c#write_fork",
 "kind": "call",
 "to": "etc/afpd/fork.c#write_file"
+},
+{
+"from": "etc/afpd/fork.c#write_fork",
+"kind": "call",
+"to": "etc/afpd/fork.c#write_fits_count"
 },
 {
 "from": "etc/afpd/fork.c#write_fork",
@@ -43263,7 +43373,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad2openflags",
 "kind": "function",
-"line": 1452,
+"line": 1461,
 "static": true
 },
 {
@@ -43271,7 +43381,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#ad_addcomment",
 "kind": "function",
-"line": 1114,
+"line": 1113,
 "static": true
 },
 {
@@ -43279,7 +43389,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_chown",
 "kind": "function",
-"line": 1337,
+"line": 1346,
 "static": true
 },
 {
@@ -43335,7 +43445,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_convert_move_rfork",
 "kind": "function",
-"line": 825,
+"line": 834,
 "static": true
 },
 {
@@ -43343,7 +43453,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_convert_osx",
 "kind": "function",
-"line": 861,
+"line": 870,
 "static": true
 },
 {
@@ -43351,7 +43461,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_convert_pread_full",
 "kind": "function",
-"line": 744,
+"line": 753,
 "static": true
 },
 {
@@ -43359,7 +43469,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_convert_pwrite_full",
 "kind": "function",
-"line": 784,
+"line": 793,
 "static": true
 },
 {
@@ -43391,7 +43501,7 @@
 "file": "include/atalk/adouble.h",
 "id": "include/atalk/adouble.h#ad_data_open",
 "kind": "function",
-"line": 405,
+"line": 406,
 "static": true
 },
 {
@@ -43399,7 +43509,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_dir",
 "kind": "function",
-"line": 2734,
+"line": 2746,
 "static": false
 },
 {
@@ -43415,7 +43525,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_entry",
 "kind": "function",
-"line": 2522,
+"line": 2534,
 "static": false
 },
 {
@@ -43423,7 +43533,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_entry_check_size",
 "kind": "function",
-"line": 2397,
+"line": 2409,
 "static": true
 },
 {
@@ -43431,7 +43541,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_entry_fits",
 "kind": "function",
-"line": 2507,
+"line": 2519,
 "static": false
 },
 {
@@ -43439,7 +43549,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_error",
 "kind": "function",
-"line": 1419,
+"line": 1428,
 "static": true
 },
 {
@@ -43479,7 +43589,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_fork_fileno",
 "kind": "function",
-"line": 2583,
+"line": 2595,
 "static": false
 },
 {
@@ -43495,7 +43605,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#ad_getcomment",
 "kind": "function",
-"line": 1259,
+"line": 1258,
 "static": true
 },
 {
@@ -43511,7 +43621,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_getentryoff",
 "kind": "function",
-"line": 2549,
+"line": 2561,
 "static": false
 },
 {
@@ -43519,7 +43629,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_getfuid",
 "kind": "function",
-"line": 2810,
+"line": 2822,
 "static": false
 },
 {
@@ -43535,7 +43645,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_header_read",
 "kind": "function",
-"line": 589,
+"line": 598,
 "static": true
 },
 {
@@ -43543,7 +43653,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_header_read_ea",
 "kind": "function",
-"line": 1168,
+"line": 1177,
 "static": true
 },
 {
@@ -43551,7 +43661,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_header_read_osx",
 "kind": "function",
-"line": 1049,
+"line": 1058,
 "static": true
 },
 {
@@ -43559,7 +43669,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_header_upgrade",
 "kind": "function",
-"line": 1387,
+"line": 1396,
 "static": true
 },
 {
@@ -43567,7 +43677,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_header_upgrade_ea",
 "kind": "function",
-"line": 1399,
+"line": 1408,
 "static": true
 },
 {
@@ -43575,7 +43685,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_hf_mode",
 "kind": "function",
-"line": 3395,
+"line": 3407,
 "static": false
 },
 {
@@ -43583,7 +43693,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_init",
 "kind": "function",
-"line": 2943,
+"line": 2955,
 "static": false
 },
 {
@@ -43591,7 +43701,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_init_func",
 "kind": "function",
-"line": 2887,
+"line": 2899,
 "static": true
 },
 {
@@ -43599,7 +43709,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_init_offsets",
 "kind": "function",
-"line": 416,
+"line": 425,
 "static": false
 },
 {
@@ -43607,7 +43717,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_init_old",
 "kind": "function",
-"line": 2924,
+"line": 2936,
 "static": false
 },
 {
@@ -43631,7 +43741,7 @@
 "file": "include/atalk/adouble.h",
 "id": "include/atalk/adouble.h#ad_meta_loaded",
 "kind": "function",
-"line": 423,
+"line": 424,
 "static": true
 },
 {
@@ -43639,7 +43749,7 @@
 "file": "include/atalk/adouble.h",
 "id": "include/atalk/adouble.h#ad_meta_open",
 "kind": "function",
-"line": 411,
+"line": 412,
 "static": true
 },
 {
@@ -43647,7 +43757,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_metadata",
 "kind": "function",
-"line": 3115,
+"line": 3127,
 "static": false
 },
 {
@@ -43663,7 +43773,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_metadataat",
 "kind": "function",
-"line": 3148,
+"line": 3160,
 "static": false
 },
 {
@@ -43671,7 +43781,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_mkdir",
 "kind": "function",
-"line": 2859,
+"line": 2871,
 "static": false
 },
 {
@@ -43679,7 +43789,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_mkrf",
 "kind": "function",
-"line": 1281,
+"line": 1290,
 "static": true
 },
 {
@@ -43687,7 +43797,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_mkrf_osx",
 "kind": "function",
-"line": 1318,
+"line": 1327,
 "static": true
 },
 {
@@ -43695,7 +43805,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_mode",
 "kind": "function",
-"line": 2842,
+"line": 2854,
 "static": false
 },
 {
@@ -43703,7 +43813,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_mode_st",
 "kind": "function",
-"line": 1364,
+"line": 1373,
 "static": true
 },
 {
@@ -43711,7 +43821,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open",
 "kind": "function",
-"line": 3009,
+"line": 3021,
 "static": false
 },
 {
@@ -43719,7 +43829,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open_df",
 "kind": "function",
-"line": 1546,
+"line": 1555,
 "static": true
 },
 {
@@ -43727,7 +43837,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open_hf",
 "kind": "function",
-"line": 2012,
+"line": 2021,
 "static": true
 },
 {
@@ -43735,7 +43845,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open_hf_ea",
 "kind": "function",
-"line": 1872,
+"line": 1881,
 "static": true
 },
 {
@@ -43743,7 +43853,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open_hf_v2",
 "kind": "function",
-"line": 1689,
+"line": 1698,
 "static": true
 },
 {
@@ -43751,7 +43861,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open_rf",
 "kind": "function",
-"line": 2354,
+"line": 2366,
 "static": true
 },
 {
@@ -43759,7 +43869,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open_rf_ea",
 "kind": "function",
-"line": 2158,
+"line": 2170,
 "static": true
 },
 {
@@ -43767,7 +43877,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_open_rf_v2",
 "kind": "function",
-"line": 2112,
+"line": 2121,
 "static": true
 },
 {
@@ -43775,7 +43885,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_openat",
 "kind": "function",
-"line": 3305,
+"line": 3317,
 "static": false
 },
 {
@@ -43791,7 +43901,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_path",
 "kind": "function",
-"line": 2672,
+"line": 2684,
 "static": false
 },
 {
@@ -43799,7 +43909,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_path_ea",
 "kind": "function",
-"line": 2601,
+"line": 2613,
 "static": false
 },
 {
@@ -43807,7 +43917,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_path_osx",
 "kind": "function",
-"line": 2618,
+"line": 2630,
 "static": false
 },
 {
@@ -43879,7 +43989,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_refresh",
 "kind": "function",
-"line": 3226,
+"line": 3238,
 "static": false
 },
 {
@@ -43887,7 +43997,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_reso_size",
 "kind": "function",
-"line": 2053,
+"line": 2062,
 "static": false
 },
 {
@@ -43903,7 +44013,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#ad_rmvcomment",
 "kind": "function",
-"line": 1381,
+"line": 1380,
 "static": true
 },
 {
@@ -43911,7 +44021,7 @@
 "file": "include/atalk/adouble.h",
 "id": "include/atalk/adouble.h#ad_rsrc_open",
 "kind": "function",
-"line": 417,
+"line": 418,
 "static": true
 },
 {
@@ -43943,7 +44053,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_setfuid",
 "kind": "function",
-"line": 2799,
+"line": 2811,
 "static": false
 },
 {
@@ -43967,7 +44077,7 @@
 "file": "libatalk/adouble/ad_size.c",
 "id": "libatalk/adouble/ad_size.c#ad_size",
 "kind": "function",
-"line": 33,
+"line": 35,
 "static": false
 },
 {
@@ -43975,7 +44085,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_stat",
 "kind": "function",
-"line": 2822,
+"line": 2834,
 "static": false
 },
 {
@@ -44031,7 +44141,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#ad_valid_header_osx",
 "kind": "function",
-"line": 677,
+"line": 686,
 "static": false
 },
 {
@@ -44327,7 +44437,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#afp_addcomment",
 "kind": "function",
-"line": 1208,
+"line": 1207,
 "static": false
 },
 {
@@ -44407,7 +44517,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_bytelock",
 "kind": "function",
-"line": 1393,
+"line": 1394,
 "static": false
 },
 {
@@ -44415,7 +44525,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_bytelock_ext",
 "kind": "function",
-"line": 1411,
+"line": 1412,
 "static": false
 },
 {
@@ -44439,7 +44549,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_changepw",
 "kind": "function",
-"line": 1361,
+"line": 1367,
 "static": false
 },
 {
@@ -44463,7 +44573,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_closefork",
 "kind": "function",
-"line": 2143,
+"line": 2144,
 "static": false
 },
 {
@@ -44543,7 +44653,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_disconnect",
 "kind": "function",
-"line": 851,
+"line": 857,
 "static": false
 },
 {
@@ -44551,7 +44661,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_close",
 "kind": "function",
-"line": 129,
+"line": 133,
 "static": true
 },
 {
@@ -44559,7 +44669,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_debug",
 "kind": "function",
-"line": 438,
+"line": 446,
 "static": true
 },
 {
@@ -44567,7 +44677,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_die",
 "kind": "function",
-"line": 228,
+"line": 232,
 "static": true
 },
 {
@@ -44575,7 +44685,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_die_cause",
 "kind": "function",
-"line": 202,
+"line": 206,
 "static": true
 },
 {
@@ -44583,7 +44693,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_die_handler",
 "kind": "function",
-"line": 486,
+"line": 494,
 "static": true
 },
 {
@@ -44591,7 +44701,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_getmesg_handler",
 "kind": "function",
-"line": 449,
+"line": 457,
 "static": true
 },
 {
@@ -44599,7 +44709,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_log_disconnect",
 "kind": "function",
-"line": 732,
+"line": 740,
 "static": true
 },
 {
@@ -44607,7 +44717,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_reload",
 "kind": "function",
-"line": 418,
+"line": 426,
 "static": true
 },
 {
@@ -44615,7 +44725,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_timedown_handler",
 "kind": "function",
-"line": 344,
+"line": 352,
 "static": true
 },
 {
@@ -44623,7 +44733,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_transfer_handler",
 "kind": "function",
-"line": 271,
+"line": 275,
 "static": true
 },
 {
@@ -44663,8 +44773,8 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_errpwdexpired",
 "kind": "function",
-"line": 286,
-"static": true
+"line": 289,
+"static": false
 },
 {
 "documented": true,
@@ -44687,7 +44797,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_flush",
 "kind": "function",
-"line": 1970,
+"line": 1971,
 "static": false
 },
 {
@@ -44695,7 +44805,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_flushfork",
 "kind": "function",
-"line": 1999,
+"line": 2000,
 "static": false
 },
 {
@@ -44719,7 +44829,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#afp_getcomment",
 "kind": "function",
-"line": 1336,
+"line": 1335,
 "static": false
 },
 {
@@ -44743,7 +44853,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_getforkparams",
 "kind": "function",
-"line": 2536,
+"line": 2576,
 "static": false
 },
 {
@@ -44751,7 +44861,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#afp_geticon",
 "kind": "function",
-"line": 785,
+"line": 784,
 "static": false
 },
 {
@@ -44759,7 +44869,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#afp_geticoninfo",
 "kind": "function",
-"line": 691,
+"line": 690,
 "static": false
 },
 {
@@ -44767,7 +44877,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_getsession",
 "kind": "function",
-"line": 706,
+"line": 712,
 "static": false
 },
 {
@@ -44799,7 +44909,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_getuserinfo",
 "kind": "function",
-"line": 1461,
+"line": 1467,
 "static": false
 },
 {
@@ -44831,7 +44941,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_login",
 "kind": "function",
-"line": 1023,
+"line": 1029,
 "static": false
 },
 {
@@ -44839,7 +44949,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_login_ext",
 "kind": "function",
-"line": 1110,
+"line": 1116,
 "static": false
 },
 {
@@ -44847,7 +44957,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_logincont",
 "kind": "function",
-"line": 1285,
+"line": 1291,
 "static": false
 },
 {
@@ -44855,7 +44965,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_logout",
 "kind": "function",
-"line": 1323,
+"line": 1329,
 "static": false
 },
 {
@@ -44895,7 +45005,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_null_nolog",
 "kind": "function",
-"line": 304,
+"line": 310,
 "static": true
 },
 {
@@ -44959,7 +45069,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "function",
-"line": 882,
+"line": 904,
 "static": false
 },
 {
@@ -44967,7 +45077,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_over_dsi_sighandlers",
 "kind": "function",
-"line": 772,
+"line": 780,
 "static": false
 },
 {
@@ -44975,7 +45085,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_read",
 "kind": "function",
-"line": 1935,
+"line": 1936,
 "static": false
 },
 {
@@ -44983,7 +45093,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_read_ext",
 "kind": "function",
-"line": 1952,
+"line": 1953,
 "static": false
 },
 {
@@ -45023,7 +45133,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#afp_rmvcomment",
 "kind": "function",
-"line": 1465,
+"line": 1464,
 "static": false
 },
 {
@@ -45071,7 +45181,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_setforkparams",
 "kind": "function",
-"line": 1085,
+"line": 1088,
 "static": false
 },
 {
@@ -45103,7 +45213,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_syncfork",
 "kind": "function",
-"line": 2042,
+"line": 2043,
 "static": false
 },
 {
@@ -45111,15 +45221,23 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_write",
 "kind": "function",
-"line": 2494,
+"line": 2534,
 "static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/afp_dsi.c",
+"id": "etc/afpd/afp_dsi.c#afp_write_command",
+"kind": "function",
+"line": 876,
+"static": true
 },
 {
 "documented": true,
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#afp_write_ext",
 "kind": "function",
-"line": 2514,
+"line": 2554,
 "static": false
 },
 {
@@ -45127,7 +45245,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_zzzzz",
 "kind": "function",
-"line": 569,
+"line": 575,
 "static": false
 },
 {
@@ -45199,7 +45317,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#alarm_handler",
 "kind": "function",
-"line": 506,
+"line": 514,
 "static": true
 },
 {
@@ -45644,6 +45762,14 @@
 },
 {
 "documented": true,
+"file": "libatalk/dsi/dsi_write.c",
+"id": "libatalk/dsi/dsi_write.c#at_mark",
+"kind": "function",
+"line": 197,
+"static": true
+},
+{
+"documented": true,
 "file": "etc/atalkd/config.c",
 "id": "etc/atalkd/config.c#at_parseline",
 "kind": "function",
@@ -45991,7 +46117,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_load",
 "kind": "function",
-"line": 1611,
+"line": 1617,
 "static": false
 },
 {
@@ -46007,7 +46133,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_register",
 "kind": "function",
-"line": 1584,
+"line": 1590,
 "static": false
 },
 {
@@ -46023,7 +46149,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_uamfind",
 "kind": "function",
-"line": 1555,
+"line": 1561,
 "static": false
 },
 {
@@ -46039,7 +46165,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_unload",
 "kind": "function",
-"line": 1658,
+"line": 1664,
 "static": false
 },
 {
@@ -46159,7 +46285,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#block_sig",
 "kind": "function",
-"line": 298,
+"line": 308,
 "static": true
 },
 {
@@ -46207,7 +46333,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#buf_read",
 "kind": "function",
-"line": 223,
+"line": 227,
 "static": true
 },
 {
@@ -46239,7 +46365,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#byte_lock",
 "kind": "function",
-"line": 1291,
+"line": 1292,
 "static": true
 },
 {
@@ -46767,7 +46893,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#child_handler",
 "kind": "function",
-"line": 624,
+"line": 632,
 "static": true
 },
 {
@@ -48071,7 +48197,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#create_session_key",
 "kind": "function",
-"line": 664,
+"line": 670,
 "static": true
 },
 {
@@ -48079,7 +48205,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#create_session_token",
 "kind": "function",
-"line": 637,
+"line": 643,
 "static": true
 },
 {
@@ -49191,7 +49317,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_buffered_stream_read",
 "kind": "function",
-"line": 255,
+"line": 265,
 "static": true
 },
 {
@@ -49207,7 +49333,7 @@
 "file": "libatalk/dsi/dsi_write.c",
 "id": "libatalk/dsi/dsi_write.c#dsi_close_pipe",
 "kind": "function",
-"line": 160,
+"line": 178,
 "static": false
 },
 {
@@ -49231,7 +49357,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_disconnect",
 "kind": "function",
-"line": 330,
+"line": 352,
 "static": false
 },
 {
@@ -49271,7 +49397,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_header_pack_reply",
 "kind": "function",
-"line": 56,
+"line": 59,
 "static": true
 },
 {
@@ -49319,7 +49445,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_peek",
 "kind": "function",
-"line": 80,
+"line": 83,
 "static": true
 },
 {
@@ -49391,7 +49517,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_read",
 "kind": "function",
-"line": 612,
+"line": 706,
 "static": false
 },
 {
@@ -49399,7 +49525,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_read_file",
 "kind": "function",
-"line": 445,
+"line": 539,
 "static": false
 },
 {
@@ -49407,7 +49533,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_receive",
 "kind": "function",
-"line": 747,
+"line": 841,
 "static": false
 },
 {
@@ -49415,7 +49541,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_send",
 "kind": "function",
-"line": 666,
+"line": 760,
 "static": false
 },
 {
@@ -49423,7 +49549,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_write",
 "kind": "function",
-"line": 361,
+"line": 455,
 "static": false
 },
 {
@@ -49468,6 +49594,14 @@
 },
 {
 "documented": true,
+"file": "libatalk/dsi/dsi_stream.c",
+"id": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
+"kind": "function",
+"line": 388,
+"static": false
+},
+{
+"documented": true,
 "file": "libatalk/dsi/dsi_write.c",
 "id": "libatalk/dsi/dsi_write.c#dsi_write",
 "kind": "function",
@@ -49479,7 +49613,15 @@
 "file": "libatalk/dsi/dsi_write.c",
 "id": "libatalk/dsi/dsi_write.c#dsi_write_file",
 "kind": "function",
-"line": 327,
+"line": 334,
+"static": false
+},
+{
+"documented": true,
+"file": "libatalk/dsi/dsi_write.c",
+"id": "libatalk/dsi/dsi_write.c#dsi_writedrain",
+"kind": "function",
+"line": 163,
 "static": false
 },
 {
@@ -49503,7 +49645,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#dtfile",
 "kind": "function",
-"line": 952,
+"line": 951,
 "static": false
 },
 {
@@ -49887,7 +50029,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#flushfork",
 "kind": "function",
-"line": 2083,
+"line": 2084,
 "static": false
 },
 {
@@ -49911,7 +50053,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#fork_error",
 "kind": "function",
-"line": 1036,
+"line": 1038,
 "static": true
 },
 {
@@ -49991,7 +50133,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#from_buf",
 "kind": "function",
-"line": 182,
+"line": 185,
 "static": true
 },
 {
@@ -50183,7 +50325,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#get_eid",
 "kind": "function",
-"line": 379,
+"line": 388,
 "static": true
 },
 {
@@ -50279,7 +50421,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#get_version",
 "kind": "function",
-"line": 973,
+"line": 979,
 "static": true
 },
 {
@@ -50711,7 +50853,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_alarm",
 "kind": "function",
-"line": 532,
+"line": 540,
 "static": true
 },
 {
@@ -50719,7 +50861,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_getmesg",
 "kind": "function",
-"line": 465,
+"line": 473,
 "static": true
 },
 {
@@ -50727,7 +50869,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_timedown",
 "kind": "function",
-"line": 360,
+"line": 368,
 "static": true
 },
 {
@@ -50735,7 +50877,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_transfer_session",
 "kind": "function",
-"line": 288,
+"line": 292,
 "static": true
 },
 {
@@ -51951,7 +52093,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#login",
 "kind": "function",
-"line": 446,
+"line": 452,
 "static": true
 },
 {
@@ -52908,6 +53050,14 @@
 },
 {
 "documented": true,
+"file": "libatalk/dsi/dsi_stream.c",
+"id": "libatalk/dsi/dsi_stream.c#monotonic_ms",
+"kind": "function",
+"line": 328,
+"static": true
+},
+{
+"documented": true,
 "file": "libatalk/atp/atp_bufs.c",
 "id": "libatalk/atp/atp_bufs.c#more_bufs",
 "kind": "function",
@@ -52975,7 +53125,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#mtoupath",
 "kind": "function",
-"line": 1008,
+"line": 1007,
 "static": false
 },
 {
@@ -53407,7 +53557,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#new_ad_header",
 "kind": "function",
-"line": 476,
+"line": 485,
 "static": true
 },
 {
@@ -53799,7 +53949,7 @@
 "file": "libatalk/dsi/dsi_write.c",
 "id": "libatalk/dsi/dsi_write.c#open_pipe",
 "kind": "function",
-"line": 213,
+"line": 219,
 "static": true
 },
 {
@@ -53831,7 +53981,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#openflags2logstr",
 "kind": "function",
-"line": 319,
+"line": 328,
 "static": false
 },
 {
@@ -54063,7 +54213,7 @@
 "file": "libatalk/adouble/ad_open.c",
 "id": "libatalk/adouble/ad_open.c#parse_entries",
 "kind": "function",
-"line": 539,
+"line": 548,
 "static": true
 },
 {
@@ -54263,7 +54413,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#pending_request",
 "kind": "function",
-"line": 700,
+"line": 708,
 "static": true
 },
 {
@@ -54383,7 +54533,7 @@
 "file": "libatalk/dsi/dsi_write.c",
 "id": "libatalk/dsi/dsi_write.c#pipe_to_file",
 "kind": "function",
-"line": 287,
+"line": 294,
 "static": true
 },
 {
@@ -54711,7 +54861,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#process_deferred_signals",
 "kind": "function",
-"line": 642,
+"line": 650,
 "static": true
 },
 {
@@ -54999,7 +55149,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#read_file",
 "kind": "function",
-"line": 1430,
+"line": 1431,
 "static": true
 },
 {
@@ -55007,7 +55157,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#read_fork",
 "kind": "function",
-"line": 1569,
+"line": 1570,
 "static": true
 },
 {
@@ -55351,7 +55501,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#rfork_cache_serve_from_buf",
 "kind": "function",
-"line": 1473,
+"line": 1474,
 "static": true
 },
 {
@@ -55791,7 +55941,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#set_auth_switch",
 "kind": "function",
-"line": 332,
+"line": 338,
 "static": true
 },
 {
@@ -56327,7 +56477,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#singleuser_admits_uid",
 "kind": "function",
-"line": 423,
+"line": 429,
 "static": false
 },
 {
@@ -57791,7 +57941,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#sum_neg",
 "kind": "function",
-"line": 360,
+"line": 363,
 "static": true
 },
 {
@@ -58535,7 +58685,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#unblock_sig",
 "kind": "function",
-"line": 308,
+"line": 318,
 "static": true
 },
 {
@@ -58927,7 +59077,7 @@
 "file": "etc/afpd/desktop.c",
 "id": "etc/afpd/desktop.c#utompath",
 "kind": "function",
-"line": 1061,
+"line": 1060,
 "static": false
 },
 {
@@ -59396,14 +59546,6 @@
 },
 {
 "documented": true,
-"file": "libatalk/dsi/dsi_write.c",
-"id": "libatalk/dsi/dsi_write.c#waitfordata",
-"kind": "function",
-"line": 182,
-"static": true
-},
-{
-"documented": true,
 "file": "etc/uams/uams_gss.c",
 "id": "etc/uams/uams_gss.c#wrap_sessionkey",
 "kind": "function",
@@ -59431,7 +59573,15 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_file",
 "kind": "function",
-"line": 2190,
+"line": 2191,
+"static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/fork.c",
+"id": "etc/afpd/fork.c#write_fits_count",
+"kind": "function",
+"line": 2254,
 "static": true
 },
 {
@@ -59439,7 +59589,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_fork",
 "kind": "function",
-"line": 2265,
+"line": 2291,
 "static": true
 },
 {
@@ -59455,7 +59605,7 @@
 "file": "etc/afpd/fork.c",
 "id": "etc/afpd/fork.c#write_mark",
 "kind": "function",
-"line": 2229,
+"line": 2230,
 "static": true
 },
 {

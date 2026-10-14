@@ -5,7 +5,7 @@ description: "DSIWrite payload reception, with the recvfile pipe path."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_write.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T11:59:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -14,8 +14,9 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 
 * [atalk/dsi.h](../../include/atalk/dsi.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
+* [atalk/unix.h](../../include/atalk/unix.h.md)
 * [atalk/util.h](../../include/atalk/util.h.md)
-* System headers: `errno.h`, `fcntl.h`, `poll.h`, `stdio.h`, `string.h`, `sys/ioctl.h`, `sys/stat.h`, `sys/time.h`, `sys/types.h`, `unistd.h`
+* System headers: `errno.h`, `fcntl.h`, `stdio.h`, `string.h`, `sys/ioctl.h`, `sys/stat.h`, `sys/time.h`, `sys/types.h`, `unistd.h`
 
 # Functions
 
@@ -37,7 +38,7 @@ Parameters:
 
 Returns: buffered payload bytes, 0 when none, or when the header length falls below the data offset
 
-Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [write_fork](../../etc/afpd/fork.c.md#write_fork)
+Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [dsi_writedrain](dsi_write.c.md#dsi_writedrain), [write_fork](../../etc/afpd/fork.c.md#write_fork)
 
 ### dsi_write
 
@@ -81,9 +82,28 @@ Parameters:
 
 Calls: [dsi_stream_read](dsi_stream.c.md#dsi_stream_read)
 
-Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [write_fork](../../etc/afpd/fork.c.md#write_fork)
+Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [dsi_writedrain](dsi_write.c.md#dsi_writedrain), [write_fork](../../etc/afpd/fork.c.md#write_fork)
 
 Mentioned in the documentation of: [dsi_write_file](dsi_write.c.md#dsi_write_file)
+
+### dsi_writedrain
+
+```c
+void dsi_writedrain(DSI *)
+```
+
+Defined at lines 163 to 171. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+
+Read off the whole payload of a DSIWrite that no handler read.
+
+A DSICommand's payload arrives with its header, so the call reads nothing for one.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session with the request header parsed
+
+Calls: [dsi_writeflush](dsi_write.c.md#dsi_writeflush), [dsi_writeinit](dsi_write.c.md#dsi_writeinit)
+
+Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_errpwdexpired](../../etc/afpd/auth.c.md#afp_errpwdexpired), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [write_fork](../../etc/afpd/fork.c.md#write_fork)
 
 ### dsi_close_pipe
 
@@ -91,7 +111,7 @@ Mentioned in the documentation of: [dsi_write_file](dsi_write.c.md#dsi_write_fil
 void dsi_close_pipe(DSI *)
 ```
 
-Defined at lines 160 to 167. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 178 to 185. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Close the recvfile pipe of the session, the next write opens another.
 
@@ -100,23 +120,22 @@ Parameters:
 
 Called by: [afp_zzzzz](../../etc/afpd/auth.c.md#afp_zzzzz), [dsi_disconnect](dsi_stream.c.md#dsi_disconnect), [dsi_write_file](dsi_write.c.md#dsi_write_file), [open_pipe](dsi_write.c.md#open_pipe)
 
-### waitfordata
+### at_mark
 
 ```c
-static int waitfordata(int socket, int timeout)
+static bool at_mark(int socket)
 ```
 
-Defined at lines 182 to 198.
+Defined at lines 197 to 201.
 
-Wait up to timeout milliseconds for socket data and report a TCP urgent mark.
+Tell whether the next byte of the socket is a TCP urgent mark.
 
-The splice call stops at the urgent mark even before the urgent byte arrives, and POLLPRI waits for that byte. The recv call steps over the mark.
+The splice call stops at the mark, before the urgent byte arrives as after it. The recv call steps over the mark.
 
 Parameters:
 * `socket`: session socket
-* `timeout`: poll timeout in milliseconds, -1 to wait without limit
 
-Returns: 1 at a TCP urgent mark, 0 otherwise, or -1 with errno set when poll failed
+Returns: true at the mark, false otherwise or when the ioctl failed
 
 Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 
@@ -126,18 +145,18 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 static int open_pipe(DSI *dsi)
 ```
 
-Defined at lines 213 to 272.
+Defined at lines 219 to 277.
 
 Open the recvfile pipe of the session at the largest size the kernel grants.
 
-The goal is splice_size, and the session keeps the pipe across writes. When the kernel refuses that size, the request halves until it succeeds or reaches the current size, and splice_size shrinks to the result. A pipe that stays at 2 pages or less marks a spent pipe budget. Such a pipe is slower than recv, so the call closes it. Each warning logs once per process.
+The goal is splice_size, and the session keeps the pipe across writes. When the kernel refuses that size, the request halves until it succeeds or reaches the current size, and splice_size shrinks to the result. A pipe that stays at 2 pages or less marks a spent pipe budget. Such a pipe is slower than recv, so the call closes it, and the next write tries again: every session shares the budget, which regains pages as their pipes close. A reduced size logs each time; a spent budget and a failed pipe2 log through [log_backoff()](../util/unix.c.md#log_backoff).
 
 Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
 
 Returns: 0, or -1 when this write takes the userspace path
 
-Calls: [dsi_close_pipe](dsi_write.c.md#dsi_close_pipe)
+Calls: [count_open_fds](../util/unix.c.md#count_open_fds), [dsi_close_pipe](dsi_write.c.md#dsi_close_pipe), [log_backoff](../util/unix.c.md#log_backoff)
 
 Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 
@@ -147,29 +166,29 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 static ssize_t pipe_to_file(DSI *dsi, int tofd, loff_t *offset, size_t len)
 ```
 
-Defined at lines 287 to 309.
+Defined at lines 294 to 316.
 
 Move bytes from the recvfile pipe into a file through the reply buffer.
 
-It serves files on filesystems that cannot splice. One read takes up to len bytes, limited by the reply buffer, and the loop writes them all with pwrite. The contract matches splice with an output offset.
+It serves files on filesystems that cannot splice. One read takes up to len bytes, limited by the reply buffer, and the loop writes them all with pwrite.
 
 Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session whose pipe and reply buffer to use
 * `tofd`: destination file
-* `offset`: file offset, advanced by the bytes written
+* `offset`: file offset, advanced past every byte written, also when the call fails
 * `len`: limit for the bytes to move
 
-Returns: bytes moved, 0 at end of input, or -1 with errno set
+Returns: the bytes taken from the pipe; 0 when a write wrote none; -1 with errno set when a read or write failed
 
 Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 
 ### dsi_write_file
 
 ```c
-ssize_t dsi_write_file(DSI *, int tofd, off_t *offset, bool *nosplice)
+int dsi_write_file(DSI *, int tofd, off_t *offset, bool *nosplice)
 ```
 
-Defined at lines 327 to 435. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 334 to 441. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Receive the rest of a DSIWrite payload straight into a file.
 
@@ -181,8 +200,8 @@ Parameters:
 * `offset`: file offset of the first byte, advanced past every byte written, also when the call fails
 * `nosplice`: set when tofd's filesystem cannot splice, once the round in the pipe is written through dsi->data
 
-Returns: the bytes written: all of datasize, fewer when the caller is to finish from the socket, 0 when nothing was read; -1 with errno set
+Returns: 0 when what it took of the payload is in the file, the rest left to [dsi_write()](dsi_write.c.md#dsi_write); -1 with errno set
 
-Calls: [dsi_close_pipe](dsi_write.c.md#dsi_close_pipe), [open_pipe](dsi_write.c.md#open_pipe), [pipe_to_file](dsi_write.c.md#pipe_to_file), [waitfordata](dsi_write.c.md#waitfordata)
+Calls: [at_mark](dsi_write.c.md#at_mark), [dsi_close_pipe](dsi_write.c.md#dsi_close_pipe), [dsi_wait_input](dsi_stream.c.md#dsi_wait_input), [log_backoff](../util/unix.c.md#log_backoff), [open_pipe](dsi_write.c.md#open_pipe), [pipe_to_file](dsi_write.c.md#pipe_to_file)
 
 Called by: [ad_recvfile](../adouble/ad_recvfile.c.md#ad_recvfile)

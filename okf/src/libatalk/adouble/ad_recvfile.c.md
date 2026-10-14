@@ -5,7 +5,7 @@ description: "Receiving a DSIWrite payload straight into an AppleDouble fork."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_recvfile.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -20,7 +20,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 ### ad_recvfile
 
 ```c
-ssize_t ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t *off)
+int ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t *off)
 ```
 
 Defined at lines 46 to 69.
@@ -33,7 +33,7 @@ Parameters:
 * `dsi`: session; its datasize is the payload left to read
 * `off`: fork offset of the first byte, advanced past every byte written, also when the call fails
 
-Returns: the bytes written, 0 when the write is left to [dsi_write()](../dsi/dsi_write.c.md#dsi_write) and [ad_write()](ad_write.c.md#ad_write), or -1 with errno set
+Returns: 0 when what it took of the payload is in the fork, the rest left to [dsi_write()](../dsi/dsi_write.c.md#dsi_write) and [ad_write()](ad_write.c.md#ad_write); -1 with errno set
 
 Calls: [ad_fork_fileno](ad_open.c.md#ad_fork_fileno), [dsi_write_file](../dsi/dsi_write.c.md#dsi_write_file)
 

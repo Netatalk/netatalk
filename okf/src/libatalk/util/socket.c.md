@@ -5,7 +5,7 @@ description: "Netatalk utility functions: socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/socket.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Returns: number of bytes actually read or -1 on timeout or error
 
 Calls: [setnonblock](socket.c.md#setnonblock)
 
-Called by: [buf_read](../dsi/dsi_stream.c.md#buf_read), [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer_session), [ipc_server_read](server_ipc.c.md#ipc_server_read)
+Called by: [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer_session), [ipc_server_read](server_ipc.c.md#ipc_server_read)
 
 ### writet
 

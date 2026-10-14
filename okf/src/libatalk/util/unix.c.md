@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -120,7 +120,7 @@ Returns: number of open descriptors
 
 Calls: [count_fds_polled](unix.c.md#count_fds_polled)
 
-Called by: [dsi_note_master_fd](../dsi/dsi_getsess.c.md#dsi_note_master_fd), [dsi_refuse_starved](../dsi/dsi_getsess.c.md#dsi_refuse_starved), [master_out_of_fds](../../etc/afpd/main.c.md#master_out_of_fds), [of_usage_str](../../etc/afpd/ofork.c.md#of_usage_str), [uam_log_pam_failure](unix.c.md#uam_log_pam_failure)
+Called by: [dsi_note_master_fd](../dsi/dsi_getsess.c.md#dsi_note_master_fd), [dsi_refuse_starved](../dsi/dsi_getsess.c.md#dsi_refuse_starved), [master_out_of_fds](../../etc/afpd/main.c.md#master_out_of_fds), [of_usage_str](../../etc/afpd/ofork.c.md#of_usage_str), [open_pipe](../dsi/dsi_write.c.md#open_pipe), [uam_log_pam_failure](unix.c.md#uam_log_pam_failure)
 
 ### uam_log_pam_failure
 
@@ -166,7 +166,9 @@ Parameters:
 
 Returns: true when this occurrence should be logged
 
-Called by: [dsi_refuse_starved](../dsi/dsi_getsess.c.md#dsi_refuse_starved), [of_alloc](../../etc/afpd/ofork.c.md#of_alloc), [of_log_nfile](../../etc/afpd/ofork.c.md#of_log_nfile)
+Called by: [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [dsi_refuse_starved](../dsi/dsi_getsess.c.md#dsi_refuse_starved), [dsi_write_file](../dsi/dsi_write.c.md#dsi_write_file), [of_alloc](../../etc/afpd/ofork.c.md#of_alloc), [of_log_nfile](../../etc/afpd/ofork.c.md#of_log_nfile), [open_pipe](../dsi/dsi_write.c.md#open_pipe)
+
+Mentioned in the documentation of: [open_pipe](../dsi/dsi_write.c.md#open_pipe)
 
 ### usage_level_update
 

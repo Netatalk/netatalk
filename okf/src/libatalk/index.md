@@ -7,7 +7,7 @@
 * [cnid](cnid.md) - 4 files, 76 functions. Files in [cnid/](cnid/).
 * [compat](compat.md) - 4 files, 6 functions. Files in [compat/](compat/).
 * [dalloc](dalloc.md) - 1 file, 5 functions. Files in [dalloc/](dalloc/).
-* [dsi](dsi.md) - 12 files, 47 functions. Files in [dsi/](dsi/).
+* [dsi](dsi.md) - 12 files, 50 functions. Files in [dsi/](dsi/).
 * [nbp](nbp.md) - 5 files, 7 functions. Files in [nbp/](nbp/).
 * [netddp](netddp.md) - 1 file, 1 function. Files in [netddp/](netddp/).
 * [unicode](unicode.md) - 31 files, 113 functions. Files in [unicode/](unicode/).
