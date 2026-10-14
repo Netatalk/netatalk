@@ -5,75 +5,64 @@ afp.conf - Netatalk configuration file
 # Synopsis
 
 The **afp.conf** file is the configuration file for the **Netatalk** AFP
-file server.
-
-All AFP-specific configurations and AFP volume definitions are done via
-this file.
+file server. It holds all AFP-specific configuration and all AFP volume
+definitions.
 
 # File Format
 
-The file consists of sections and parameters. A section begins with the
-name of the section in square brackets and continues until the next
-section begins. Sections contain parameters of the form:
+The file consists of sections and parameters. A section begins with its
+name in square brackets and continues until the next section begins.
+Sections contain parameters of the form:
 
     option = value
 
-The file is line-based - that is, each newline-terminated line
-represents either a comment, a section name or a parameter.
+The file is line-based: each newline-terminated line is a comment, a
+section name, or a parameter.
 
 Parameter names are case sensitive, while section names are not.
 
-Only the first equals sign in a parameter is significant. Whitespace
-before or after the first equals sign is discarded. Leading, trailing
-and internal whitespace in section and parameter names is irrelevant.
-Leading and trailing whitespace in a parameter value is discarded.
-Internal whitespace within a parameter value is retained verbatim.
+The parser splits a parameter at its first equals sign and discards the
+whitespace around that sign. Leading, trailing, and internal whitespace
+in section and parameter names is irrelevant. The parser discards
+leading and trailing whitespace in a parameter value and keeps internal
+whitespace verbatim.
 
-Any line beginning with a semicolon (“;”) or a hash (“\#”) character is
-ignored, as are lines containing only whitespace.
+The parser ignores lines that begin with a semicolon or a hash character
+and lines that contain only whitespace.
 
-Any line ending in a **\\** (backslash) is continued on the next line in the
-customary UNIX fashion.
+A line that ends in a **\\** (backslash) continues on the next line.
 
-The values following the equals sign in parameters are all either a
-string (no quotes needed) or a boolean. Accepted boolean values are
-yes/no (preferred), y/n, true/false, t/f, on/off, enabled/disabled and
-1/0, in any case. Any other boolean value is ignored with a logged
-warning and the option's default applies. Case is preserved in string
-values. Some options such as **file perm** take numeric values.
+A parameter value is a string (no quotes needed), a boolean, or a
+number, as for **file perm**. Accepted boolean values are yes/no
+(preferred), y/n, true/false, t/f, on/off, enabled/disabled, and 1/0, in
+upper or lower case. The server logs a warning for any other boolean
+value and applies the option's default. String values keep their case.
 
 # Section Descriptions
 
-Each section in the configuration file (except for the [Global]
-section) describes a shared resource (known as a “volume”).
-The parameters within the section define the volume attributes and options.
+Each section other than [Global] describes a volume: a directory to
+which the server gives access, plus the access rights it grants to the
+user.
 
-There are two special sections, [Global] and [Homes], which are
-described under *special sections*. The following notes apply to
-ordinary section descriptions.
+[Global] and [Homes] are special sections, described under *Special
+Sections*. The following notes apply to ordinary section descriptions.
 
-A volume consists of a directory to which access is being given plus a
-description of the access rights which are granted to the user of the
-service. For volumes the **path** option must specify the directory to
-share.
+For volumes the **path** option must specify the directory to share.
+The **volume name** option sets the name of the volume.
 
-The name of the volume is defined via the **volume name** option.
-When absent, the volume name is the name of the section, expressed in
-lowercase.
+A volume section without a **path** option is a *vol preset* (volume
+preset). Other volume sections select it with the **vol preset** option,
+and it supplies their default options. When both a preset and a volume
+section set an option, the volume section setting replaces the preset
+option. At every configuration load, the server logs an error that the
+preset section has no path and skips it as a volume. Its options still
+work as the preset.
 
-Any volume section without **path** option is considered a *vol preset*
-which can be selected in other volume sections via the **vol preset**
-option and constitutes defaults for the volume. For any option specified
-both in a preset *and* in a volume section the volume section setting
-completely substitutes the preset option.
-
-The access rights granted by the server are masked by the access rights
-granted to the specified or guest UNIX user by the host system. The
-server does not grant more access than the host system grants.
+The server grants no more access than the host system grants the
+specified or guest UNIX user.
 
 The following sample section defines an AFP volume. The user has full
-access to the path */foo/bar*. The share is accessed via the share name
-*Baz*:
+access to the path */foo/bar*. Clients see the volume as *Baz*:
 
     [baz]
         volume name = Baz
@@ -83,22 +72,18 @@ access to the path */foo/bar*. The share is accessed via the share name
 
 ## The [Global] section
 
-Parameters in this section apply to the server as a whole. Parameters
-denoted by a (G) below are must be set in this section. A parameter
-denoted by both (G) and (V) may be set here in the global section of
-the configuration as a default for all volumes; a volume section (or
-selected **vol preset**) may override it.
+Parameters in [Global] apply to the server as a whole. *Parameters*
+below explains the **(G)** and **(V)** markers.
 
 ## The [Homes] section
 
-This section enable sharing of the UNIX server user home directories.
-The one mandatory option is **basedir regex**. It should be set to a path
-which matches the parent directory of the user homes.
+The [Homes] section shares the home directories of the server's UNIX
+users. Its one mandatory option is **basedir regex**. Set it to a path
+that matches the parent directory of the user homes.
 
-Specifying the optional **path** parameter makes it so that only
-the subdirectory **path** is shared, rather than the entire home directory.
-The following example illustrates this. Given all user home directories
-are stored under */home*:
+The optional **path** parameter shares only the named subdirectory of
+each home directory instead of the entire home directory. With all user
+home directories under */home*:
 
     [Homes]
         path = afp-data
@@ -107,15 +92,15 @@ are stored under */home*:
 For a user *john* this results in an AFP home volume with a path of
 */home/john/afp-data*.
 
-If **basedir regex** contains symlink, set the canonicalized absolute
-path. When */home* links to */usr/home*:
+If the path goes through a symlink, set the real path it resolves to.
+When */home* links to */usr/home*:
 
     [Homes]
         basedir regex = /usr/home
 
-The optional parameter **home name** can be used to change
-the Homes volume name, which is *$u's home* by default. See
-below for more information on VARIABLE SUBSTITUTIONS.
+The optional **home name** parameter changes the Homes volume name,
+which is *$u's home* by default. *Variable Substitutions* below lists
+the variables it accepts.
 
     [Homes]
         home name = The home of $u
@@ -124,116 +109,120 @@ below for more information on VARIABLE SUBSTITUTIONS.
 For the same user *john* this results in an AFP home volume called
 *The home of john*.
 
-Any parameter denoted by a **(H)** below can be used in the Homes section.
+Any parameter marked **(H)** below can be used in the [Homes] section.
 
 # Parameters
 
-Parameters define the specific attributes of sections.
-
-Some parameters are specific to the [Global] section (e.g., **log
-type**). All others are permissible only in volume sections. The letter
-*G* in parentheses indicates that a parameter is specific to the
-[Global] section. The letter *V* indicates that a parameter can be
-specified in a volume specific section.
+Each parameter carries a marker that says where it may be set. **(G)**
+marks a parameter that goes only in [Global], where it applies to the
+server as a whole. **(V)** marks a parameter set in a volume section. A
+parameter marked both **(G)** and **(V)** may be set in [Global] as the
+default for all volumes. A volume section, or the selected **vol
+preset**, may override it.
 
 # Variable Substitutions
 
-You can use variables in volume names. The use of variables in paths is
-limited to $u.
+You can use variables in volume names and paths. In a path, $b, $d, and
+$v expand to nothing.
 
-1. if you specify an unknown variable, it will not get converted.
+1. An unknown variable stays as typed, dollar sign included.
 
-2. if you specify a known variable, but that variable doesn't have a
-value, it will get ignored.
+2. A known variable with no value expands to nothing.
 
-The variables which can be used for substitutions are:
+The variables available for substitution are:
 
 > $b
 >
-> > basename
+> > Basename of the volume path.
 >
 > $c
 >
-> > client's ip address
+> > Client's IP address.
 >
 > $d
 >
-> > volume pathname on server
+> > Volume pathname on the server.
 >
 > $f
 >
-> > full name (contents of the gecos field in the passwd file)
+> > Full name (the gecos field of the passwd file).
 >
 > $g
 >
-> > group name
+> > Group name.
 >
 > $h
 >
-> > hostname
+> > Hostname.
 >
 > $i
 >
-> > client's ip, without port
+> > Client's IP address, without port.
 >
 > $s
 >
-> > server name (this can be the hostname)
+> > Server name (this can be the hostname).
 >
 > $u
 >
-> > user name (if guest, it is the user that guest is running as)
+> > User name (for a guest login, the guest account).
 >
 > $v
 >
-> > volume name
+> > Volume name.
 >
 > $$
 >
-> > prints dollar sign ($)
+> > Prints a dollar sign ($).
 
 # Explanation of Global Parameters
 
 ## Authentication Options
 
+The options below control how the server authenticates users.
+
 ad domain = *domain* **(G)**
 
-> Append @DOMAIN to username when authenticating. Useful in Active
+> Appends @DOMAIN to the user name when authenticating. Useful in Active
 Directory environments that otherwise would require the user to enter
 the full user@domain string.
 
 admin group = *group* **(G)**
 
-> Allows users of a certain group to be seen as the superuser when they
-log in. This option is disabled by default.
+> The server treats members of *group* as the superuser when they log in.
+Unset by default.
 
 force user = *user* **(G)**
 
-> This specifies a UNIX user name that will be assigned as the default
-user for all users connecting to this server. This is useful for sharing
-files. You should also use it carefully as using it incorrectly can
-cause security problems.
+> Makes every connecting user act as this UNIX user on the server. Use it
+with care: an incorrect setting can cause security problems.
 
 force group = *group* **(G)**
 
-> This specifies a UNIX group name that will be assigned as the default
-primary group for all users connecting to this server.
+> Assigns this UNIX group as the default primary group for every user
+connecting to the server.
 
-guest account = *name* **(G)**
+guest account = *name* (default: *nobody*) **(G)**
 
-> Specifies the user that guests should use (default is **nobody**). The name
-must be a valid user on the host system.
+> The UNIX account guests should use. It must exist on the host system.
 
-k5 keytab = *path* **(G)**; k5 service = *service* **(G)**; k5 realm = *realm* **(G)**
+k5 keytab = *path* **(G)**
 
-> These are required if the server supports the Kerberos 5 authentication
-UAM.
+k5 service = *service* **(G)**
 
-nt domain = *domain* **(G)**; nt separator = *SEPARATOR* **(G)**
+k5 realm = *realm* **(G)**
 
-> Use for e.g. winbind authentication, prepends both strings before the
-username from login and then tries to authenticate with the result
-through the available and active UAM authentication modules.
+> **k5 keytab** names the keytab file. With **k5 service**, **k5 realm**,
+and **fqdn** all set, the Kerberos 5 UAM uses that service principal.
+Otherwise it uses the first entry in the keytab.
+
+nt domain = *domain* **(G)**
+
+nt separator = *SEPARATOR* **(G)**
+
+> The server prepends both strings to the login user name and tries to
+authenticate the result through the active UAMs. Use with winbind
+authentication, for example.
 
 uam list = *uam list* (default: *uams_dhx2.so*) **(G)**
 
@@ -243,268 +232,275 @@ uam list = *uam list* (default: *uams_dhx2.so*) **(G)**
 >
 > uams_dhx2.so
 >
-> > (uams_dhx2_pam.so or uams_dhx2_passwd.so) Allow Diffie-Hellman eXchange 2
-(DHX2) for authentication.
+> > Allows Diffie-Hellman eXchange 2 (DHX2) authentication. Provided by
+uams_dhx2_pam.so or uams_dhx2_passwd.so.
 >
 > uams_srp.so
-> > Allow SRP ("Secure Remote Password") for authentication. Requires a verifier
-directory containing one file per numeric uid, either the default
-*afppasswd.srp* directory or the one specified via "**srp verifier path**".
-Active verifiers are user-owned; root-owned disabled placeholders require
-an administrator to set a password with **afppasswd -a** before use.
-See **afppasswd**(1) for details.
 >
-> uam_gss.so
+> > Allows SRP (Secure Remote Password) authentication. Requires a verifier
+directory with one file per numeric uid: the default *afppasswd.srp*
+directory or the one set with **srp verifier path**. A user owns an
+active verifier file. A root-owned file is a disabled placeholder until
+an administrator sets a password with **afppasswd -a**, as
+**afppasswd**(1) describes.
 >
-> > Allow Kerberos V for authentication. Requires Kerberos support to be enabled at compile time
-and a properly configured Kerberos environment.
+> uams_gss.so
+>
+> > Allows Kerberos 5 authentication. Requires a Netatalk build with
+Kerberos support and a properly configured Kerberos environment.
 >
 > uams_guest.so
 >
-> > Allows guest logins. (***INSECURE!***)
+> > Allows guest logins (INSECURE).
 >
 > uams_clrtxt.so
 >
-> > (uams_pam.so or uams_passwd.so) Allow logins with passwords transmitted
-in the clear. Compatible with Mac OS 9 and earlier. (***INSECURE!***)
+> > Allows logins with unencrypted passwords (INSECURE). Compatible with
+Mac OS 9 and earlier. Provided by uams_pam.so or uams_passwd.so.
 >
 > uams_randnum.so
 >
-> > Allows Random Number and Two-Way Random Number Exchange for
-authentication (requires a separate file containing the passwords,
-either the default *afppasswd* file or the one specified via
-"**passwd file**"). See **afppasswd**(1) for details. (***INSECURE!***)
+> > Allows Random Number and Two-Way Random Number Exchange authentication
+(INSECURE). Requires a separate password file: the default *afppasswd*
+file or the one set with **passwd file**, as **afppasswd**(1) describes.
 >
 > uams_dhx.so
 >
-> > (uams_dhx_pam.so or uams_dhx_passwd.so) Allow Diffie-Hellman eXchange
-(DHX) for authentication. (***INSECURE!***)
+> > Allows Diffie-Hellman eXchange (DHX) authentication. It is INSECURE.
+Provided by uams_dhx_pam.so or uams_dhx_passwd.so.
 
 uam path = *path* **(G)**
 
-> Sets the default path for UAMs for this server.
+> The directory from which **afpd** loads the UAM modules.
 
 valid shellcheck = *BOOLEAN* (default: *yes*) **(G)**
 
-> Whether to check if the user's login shell is valid (i.e. listed in
-/etc/shells). If the user's shell is not valid, authentication will
-fail. This is a security feature to prevent users with nologin shells
-from logging in. Disable this option to allow users with nologin shells
-to log in.
+> Whether to check that the user's login shell is valid, that is, listed
+in /etc/shells. Login fails for a user whose shell is not listed, such as
+nologin. Set *no* to let such users log in.
 
 ## Charset Options
 
-With OS X Apple introduced the AFP3 protocol. One of the big changes
-was, that AFP3 uses Unicode names encoded as Decomposed UTF-8
-(UTF8-MAC). Previous AFP/OS versions used charsets like MacRoman,
-MacCentralEurope, etc.
+With Mac OS X, Apple introduced AFP3, which uses Unicode names encoded
+as Decomposed UTF-8 (UTF8-MAC). Earlier AFP and OS versions used charsets
+such as MacRoman and MacCentralEurope.
 
-To be able to serve AFP3 and older clients at the same time, **afpd**
-needs to be able to convert between UTF-8 and Mac charsets. Even OS X
-clients partly still rely on the mac charset. As there's no way, **afpd**
-can detect the codepage a pre AFP3 client uses, you have to specify it
-using the **mac charset** option. The default is MacRoman, which should be
-fine for most western users.
+To serve AFP3 and older clients at the same time, **afpd** must convert
+between UTF-8 and Mac charsets. Even macOS clients partly still rely on
+the Mac charset. **afpd** cannot detect the charset a pre-AFP3 client
+uses, so you must set it with the **mac charset** option. The option's
+default should suit most western users.
 
-As **afpd** needs to interact with UNIX operating system as well, it needs
-to be able to convert from UTF8-MAC / Mac charset to the UNIX charset.
-By default **afpd** uses *UTF8*. You can set the UNIX charset using the
-**unix charset** option. If you're using extended characters in the
-configuration files for **afpd**, make sure your terminal matches the
-**unix charset**.
+**afpd** also interacts with the UNIX operating system, so it must
+convert from UTF8-MAC or the Mac charset to the UNIX charset. You can
+set the UNIX charset with the **unix charset** option. If you use
+extended characters in the configuration files for **afpd**, make sure
+your terminal matches the **unix charset**.
 
-mac charset = *charset* **(G)**/**(V)**
+mac charset = *charset* (default: *MAC_ROMAN*) **(G)**/**(V)**
 
-> Specifies the Mac clients charset, e.g. *MAC_ROMAN*. This is used to
-convert strings and filenames to the clients codepage for OS9 and
-Classic, i.e. for authentication and AFP messages (SIGUSR2 messaging).
-This will also be the default for the volumes **mac charset**. Defaults to
-*MAC_ROMAN*.
+> Specifies the Mac clients' charset, for example *MAC_ROMAN*. **afpd**
+uses it to convert strings and filenames to the clients' charset for
+Mac OS 9 and Classic, for authentication and AFP messages (SIGUSR2
+messaging).
 
-unix charset = *charset* **(G)**
+unix charset = *charset* (default: *UTF8*) **(G)**
 
-> Specifies the servers unix charset, e.g. *ISO-8859-15* or *EUC-JP*. This
-is used to convert strings to/from the systems locale, e.g. for
-authentication, server messages and volume names. If *LOCALE* is set,
-the systems locale is used. Defaults to *UTF8*.
+> Specifies the server's UNIX charset, for example *ISO-8859-15* or
+*EUC-JP*. **afpd** uses it to convert strings to and from the system
+locale, for example for authentication, server messages, and volume
+names. The value *LOCALE* selects the system locale.
 
 vol charset = *charset* **(G)**/**(V)**
 
-> Specifies the encoding of the volumes filesystem. By default, it is the
-same as **unix charset**.
+> Specifies the charset of the volume's file names on disk. By default it
+is the same as **unix charset**.
 >
-> ***NOTE:*** It is highly recommended to stick to the default UTF-8 encoding.
+> ***NOTE:*** Keep the default UTF-8 encoding.
 
 ## Password Options
 
+The options below control the password files and whether clients may
+save or change passwords.
+
 passwd file = *path* **(G)**
 
-> Sets the path to the Randnum UAM password file for this server.
+> Sets the path to the Random Number UAM's password file.
 
 passwd minlen = *number* **(G)**
 
-> Sets the minimum password length, if supported by the UAM
+> Sets the minimum password length, if the UAM supports it.
 
 save password = *BOOLEAN* (default: *yes*) **(G)**
 
-> Enables or disables the ability of clients to save passwords locally.
-Setting this option to *no* will send this hint to clients, but it is up to the client to honor it.
+> Whether clients may save passwords locally. With *no*, the server sends
+this hint to clients, but honoring it is up to the client.
 
 set password = *BOOLEAN* (default: *no*) **(G)**
 
-> Enables or disables the ability of clients to change their passwords.
-Setting this option to *yes* will allow clients to change their passwords if the UAM in use supports this feature.
+> Whether clients may change their passwords, if the UAM in use supports
+it.
 
 srp verifier path = *path* **(G)**
 
-> Sets the path to the SRP UAM verifier directory for this server. The legacy
-"**srp passwd file**" name is accepted as a deprecated alias and produces a
-warning; its value is interpreted as a directory, not as the former flat file.
+> Sets the path to the SRP UAM verifier directory. The legacy name **srp
+passwd file** still works as a deprecated alias and logs a warning. Its
+value names a directory, not the old flat file.
 
 ## Network Options
 
+The options below control the addresses and names the server advertises
+and listens on.
+
 advertise ssh = *BOOLEAN* (default: *no*) **(G)**
 
-> Allows old Mac OS X clients (10.3.3-10.4) to automatically establish a
-tunneled AFP connection through SSH. If this option is set, the server's
-answers to client's FPGetSrvrInfo requests contain an additional entry.
-It depends on both client's settings and a correctly configured and
-running **sshd**(8) on the server to let things work.
+> Allows old Mac OS X clients (10.3.3-10.4) to establish a tunneled AFP
+connection through SSH automatically. With *yes* and **fqdn** set, the
+server adds an SSH tunnel entry to its FPGetSrvrInfo reply. The tunnel
+depends on the client's settings and on a correctly configured, running
+**sshd**(8) on the server.
 >
-> ***NOTE:*** Setting this option is not recommended since globally encrypting AFP
-connections via SSH will increase the server's load significantly. On
-the other hand, Apple's client side implementation of this feature in
-Mac OS X versions prior to 10.3.4 contained a security flaw.
+> ***NOTE:*** Avoid this option: encrypting every AFP connection through
+SSH increases the server's load significantly. Also, Apple's client-side
+implementation of this feature in Mac OS X versions before 10.3.4
+contained a security flaw.
 
 afp interfaces = *name [name ...]* **(G)**
 
-> Specifies the network interfaces that the server should listen on. The
-default is to advertise the first IP address of the system, while
-listening for any incoming request.
+> Specifies the network interfaces that the server listens on. By default
+the server advertises the system's first IP address and listens on all
+addresses.
 >
 > ***NOTE:*** Do not use at the same time as the **afp listen** option.
 
 afp listen = *ip address[:port] [ip address[:port] ...]* **(G)**
 
-> Specifies the IP address that the server should advertise **and**
-listens to. The default is advertise the first IP address of the system,
-but to listen for any incoming request. The network address may be
-specified either in dotted-decimal format for IPv4 or in hexadecimal
-format for IPv6.
+> Specifies the IP addresses that the server advertises and listens on.
+By default the server advertises the system's first IP address and
+listens on all addresses. Write the address in dotted-decimal format for
+IPv4 or in hexadecimal format for IPv6.
 >
-> IPv6 address + port combination must use URL the format using square
-brackets [IPv6]:port
+> An IPv6 address with a port uses the URL format [IPv6]:port, with
+square brackets around the address.
 >
 > ***NOTE:*** Do not use at the same time as the **afp interfaces** option.
 
-afp port = *port number* **(G)**
+afp port = *port number* (default: *548*) **(G)**
 
-> Allows a different TCP port to be used for AFP. The default is 548. Also
-sets the default port applied when none specified in an **afp listen**
-option.
+> Sets the TCP port used for AFP. It is also the default port for an
+**afp listen** entry that specifies none.
 
 fqdn = *name[:port]* **(G)**
 
-> Specifies a fully-qualified domain name, with an optional port. This is
-discarded if the server cannot resolve it. This option is not honored by
-AppleShare clients <= 3.8.3. This option is disabled by default. Use
-with caution as this will involve a second name resolution step on the
-client side. Also note that afpd will advertise this name:port
-combination but not automatically listen to it.
+> Specifies a fully qualified domain name, with an optional port, that
+**afpd** advertises but does not automatically listen on. The server
+discards a name it cannot resolve. AppleShare clients 3.8.3 and earlier
+ignore this option. Unset by default. Use with caution: it adds a second
+name resolution step on the client side.
 
 hostname = *name* **(G)**
 
-> Use this instead of the result from calling hostname for determining
-which IP address to advertise, therefore the hostname is resolved to an
-IP which is the advertised. This is NOT used for listening and can be
-overridden by **afp listen**.
+> The server resolves this name, instead of the system hostname, to the
+IP address it advertises. It defaults to the system host name up to the
+first period. The server does not use the name for listening. **afp
+listen** can override it. To set the name clients see, use **server
+name**.
 
 zeroconf = *BOOLEAN* (default: *yes*) **(G)**
 
-> Whether to use automatic Zeroconf service
-registration if Avahi or mDNSResponder were compiled in.
+> Whether to advertise the server through Zeroconf (Bonjour), so Macs find
+it without an address, when the build includes Avahi or mDNSResponder.
 
 ## Transfer Tuning
 
-Sizing: the quantum should cover at least one bandwidth-delay product
-of the network path or ZFS recordsize (which ever is larger) - usually
-no more than 4 MiB. A smaller quantum favours small-file transfers;
-a larger quantum achieves maximum throughput on large files at the
-expense of small ones: tune for the workload, larger is not always
-better. The readahead should cover a few hundred milliseconds to one
-second of inbound line rate and can be increased without trade-off
-beyond memory use.
+The options below tune how **afpd** moves file data to and from clients.
 
-server quantum = *number* **(G)**
+The **server quantum** should cover at least one bandwidth-delay product
+(link speed times round-trip time) of the network path, or the ZFS
+recordsize if larger. That is usually no more than 4 MiB. A
+small quantum favors small-file transfers. A large quantum achieves
+maximum throughput on large files at the expense of small ones, so tune
+for the workload: larger is not always better. For file servers, the
+recommendation is ZFS **recordsize** = **server quantum** = **splice
+size**, with the default 1 MiB good for most use cases. The
+**dsireadbuf** readahead should cover a few hundred milliseconds to one
+second of inbound line rate. Raising it costs only memory.
 
-> This specifies the DSI server quantum in bytes: the file data carried
-by a single write or read request, excluding frame overhead. The
-default value is 1048576 (1 MiB), the maximum is 268435456 (256 MiB),
-the minimum is 32000. Values below the minimum fall back to the
-default; values above the maximum are capped to it. The session value
-is rounded up (by at most 256 KiB) to a 4 KiB multiple whose write
-frame fills its final TCP segment; the result is logged at session
-open and never falls below the configured value.
+server quantum = *number* (default: *1048576*) **(G)**
 
-dsireadbuf = *number* **(G)**
+> The DSI server quantum in bytes: the file data carried by a single
+write or read request, excluding frame overhead. The default is 1 MiB,
+the maximum is 268435456 (256 MiB), and the minimum is 32000. Values
+below the minimum fall back to the default. The server caps values above
+the maximum at the maximum. The server rounds the session value up, by
+at most 256 KiB, to a 4 KiB multiple whose write frame fills its final
+TCP segment. It logs the result at session open, and the result never
+falls below the configured value.
 
-> Scale factor that determines the size of the DSI/TCP readahead buffer,
-default is 32, maximum is 1024. This is multiplied with the DSI server
-quantum (default 1 MiB) to give the size of the buffer. The product is
-capped at 1 GiB by reducing this factor.
+dsireadbuf = *number* (default: *32*) **(G)**
+
+> Scale factor for the size of the DSI/TCP readahead buffer. Values below
+6 rise to 6, and the maximum is 1024. The buffer size is this factor
+times the DSI server quantum (default 1 MiB). The server reduces the
+factor to cap the product at 1 GiB.
 >
-> ***NOTE:*** This buffer is allocated per afpd child process, so specifying
-large values will eat up large amount of memory (buffer size \* number
-of clients).
+> ***NOTE:*** Each **afpd** child process allocates this buffer, so large
+values consume a large amount of memory (buffer size \* number of
+clients).
 
 tcprcvbuf = *number* **(G)**
 
-> Try to set TCP receive buffer using setsockopt(). Often OSes impose
-restrictions on the applications ability to set this value.
+> Tries to set the TCP receive buffer SO_RCVBUF, in bytes, with
+setsockopt(). Often the operating system restricts an application's
+ability to set this value.
 
 tcpsndbuf = *number* **(G)**
 
-> Try to set TCP send buffer using setsockopt(). Often OSes impose
-restrictions on the applications ability to set this value.
+> Tries to set the TCP send buffer SO_SNDBUF, in bytes, with
+setsockopt(). Often the operating system restricts an application's
+ability to set this value.
 
 use sendfile = *BOOLEAN* (default: *yes*) **(G)**
 
-> Whether to use sendfile syscall for
-sending file data to clients. Builds for Linux, FreeBSD, Solaris and
-illumos have it. A file whose filesystem refuses sendfile is sent through a
-buffer.
+> Whether to use the sendfile syscall to send file data to clients. It
+lets the kernel copy file data to the network without passing it through
+**afpd**. Builds for Linux, FreeBSD, Solaris, and illumos have it. A file
+whose filesystem refuses sendfile goes through a buffer instead.
 
 recvfile = *BOOLEAN* (default: *no*) **(G)**
 
-> Whether to use splice() on Linux for receiving data. On a platform without
-splice() the option is ignored with a warning.
+> Whether to use splice() on Linux to receive file data from clients
+inside the kernel. On a platform without splice(), the server ignores the
+option and logs a warning.
 
 splice size = *number* (default: *1048576*) **(G)**
 
 > Maximum number of bytes one splice() call moves when **recvfile** is
-enabled. The range is 4096 to 8388608 (8 MiB), and values outside it fall
-back to the default. A value that is not a power of two is rounded up to the
-next one. The kernel may grant a smaller pipe: `fs.pipe-max-size` limits it
-to 1 MiB by default.
+*yes*. The range is 4096 to 8388608 (8 MiB), and values outside it fall
+back to the default. The server rounds a value that is not a power of two
+up to the next one. The kernel may grant a pipe smaller than requested:
+**fs.pipe-max-size** limits it to 1 MiB by default.
 >
-> ***NOTE:*** If more than 50 users connect at the same time with **recvfile**
-enabled, either increase the kernel setting `fs.pipe-user-pages-soft` or
-reduce **splice size**. The kernel allows only 64 MiB in total by default;
-beyond the kernel limit, users fall back to recvfile off.
+> ***NOTE:*** With more than 50 users connected at the same time and
+**recvfile** *yes*, either raise the kernel setting
+**fs.pipe-user-pages-soft** or reduce **splice size**. The kernel allows
+only 64 MiB in total by default. Beyond that limit, users fall back to
+**recvfile** off.
 
 ## CNID Database Backend Options
 
-Global configurations specific to the CNID database backends, which
-controls how the database is stored and accessed.
+The CNID database maps each file and directory to the numeric ID Mac
+clients use. These options control how the server stores and accesses
+it.
 
 cnid mysql host = *MySQL server address* **(G)**
 
-> Name or address of a MySQL server for use with the mysql CNID backend.
+> Name or address of a MySQL server for the mysql CNID backend.
 >
-> On Unix systems, setting this to **localhost** (or leaving it unset) causes
-> the MySQL client library to prefer Unix socket connections, which offers
-> better performance for a local database. Setting it to **127.0.0.1**
-> forces a TCP connection to the loopback interface.
+> On UNIX systems, **localhost** (or leaving it unset) makes the MySQL
+> client library prefer UNIX socket connections. These perform better
+> than TCP for a local database. **127.0.0.1** forces a TCP connection to
+> the loopback interface.
 
 cnid mysql user = *MySQL user* **(G)**
 
@@ -512,282 +508,282 @@ cnid mysql user = *MySQL user* **(G)**
 
 cnid mysql pw = *password* **(G)**
 
-> Password for MySQL server.
+> Password for the MySQL server.
 
 cnid mysql db = *database name* **(G)**
 
-> Name of the database to use for CNID storage. If the database does not
-> exist, Netatalk will attempt to create it automatically (requires the
-> specified user to have CREATE DATABASE privileges).
+> Name of the CNID database. If it does not exist, the server tries to
+> create it, which requires the CREATE DATABASE privilege for the
+> specified user.
 
-cnid scheme = *mysql* | *sqlite* **(G)**/**(V)**
+cnid scheme = *mysql* | *sqlite* (default: *sqlite*) **(G)**/**(V)**
 
-> Set the CNID backend to be used for the volumes.
-The *mysql* backend may be absent from your netatalk installation;
-run **afpd -v** to see a list of available backends.
-A scheme the installation does not know is served with *sqlite*,
-and **afpd** logs a warning; a backend your installation was built without
-is refused and the volume does not open. A **netatalk \-\-single-user** server
-requires *sqlite*. The **dbd** and **nad** commands refuse a scheme your
-installation cannot serve until *afp.conf* is corrected.
+> Sets the CNID backend for the volumes. The *mysql* backend may be absent
+from your Netatalk installation. Run **afpd -v** to list the available
+backends. For a name that is not a backend, **afpd** serves the volume
+with *sqlite* and logs a warning. For a backend your build omits,
+**afpd** does not open the volume. A **netatalk \-\-single-user** server
+requires *sqlite*. The **dbd**(1) and **nad**(1) commands refuse a scheme
+your installation cannot serve until you correct *afp.conf*.
 >
-> *mysql*: connects to a MySQL (or MariaDB) database instance that has been provisioned for use with Netatalk.
-Requires database administration, giving you full control over how the CNID data is stored.
+> *mysql*: connects to a MySQL (or MariaDB) database instance provisioned
+for Netatalk. Requires database administration and gives you full
+control over CNID data storage.
 >
-> *sqlite*: uses the SQLite embedded database library.
-It is performant and lean, requiring no external database or daemon.
-This is the default backend.
+> *sqlite*: uses the SQLite embedded database library and needs no
+external database or daemon.
 
 vol dbpath = *path* **(G)**/**(V)**
 
-> Sets the path where the database information will be stored. You have to
-specify a writable location, even if the volume is read only.
-The default is a subdirectory named after the volume under
-*$localstatedir/netatalk/CNID*. A **(G)** value without a variable gets the
-volume name appended as a subdirectory; a volume or preset value is used as
-given. For a server run as root the *sqlite* backend sets the directory to
-mode 1777, creating it if needed, and its database files to 0666, so that
-**afpd** sessions running as the connected user and **nad** can share them;
-a **netatalk \-\-single-user** server keeps them owner-only (0700 and 0600).
-Keep the path outside any share, on a filesystem that supports POSIX record
-locks: the *sqlite* database and the icons of the desktop database are
-locked as they are written.
+> Sets the path where the server stores the database information.
+Specify a writable location, even if the volume is read-only. The
+default is a subdirectory named after the volume under
+*$localstatedir/netatalk/CNID*. A **(G)** value without a variable gets
+the volume name appended as a subdirectory. The server uses a volume or
+preset value as given. For a server run as root, the *sqlite* backend
+creates the directory if needed and sets mode 1777 on it. It sets the
+database files to 0666, so that **afpd** sessions running as the
+connected user and **nad** can share them. A **netatalk \-\-single-user**
+server keeps them owner-only (0700 and 0600). Keep the path outside any
+volume, on a filesystem that supports POSIX record locks. The server
+locks the *sqlite* database and the desktop database icons as it writes
+them.
 
 ## Directory Cache Tuning
 
-dircache size = *number* **(G)**
+**afpd** keeps file and directory metadata in a directory cache to spare
+disk lookups. These options size and tune it.
 
-> Maximum entries in the directory cache. Stores directories and optionally files.
-> Minimum: 1024 (1K). Default: 65536 (64K). Maximum: 1048576 (1M).
-> Higher values improve hit ratios but use more memory.
+dircache size = *number* (default: *65536*) **(G)**
+
+> The number of entries the directory cache can hold. An entry is a
+directory or, optionally, a file. Range: 1024 (1K) to 1048576 (1M). A
+value below the range applies the default, and one above it is capped,
+each with a warning. Raising the value improves the hit ratio and uses
+more memory.
 
 dircache validation freq = *number* (default: *100*) **(G)**
 
-> Directory cache validation frequency for external change detection.
-> Value of 1 means validate every access, higher values validate less
-frequently; a value outside 1-100 is rejected with a warning and the
-default applies. The default assumes Netatalk is the only process writing
-the volume. If any other process modifies a volume, share it with
-**multi protocol = yes** (which defaults this option to 1 together with
-the other coherency settings), or set 1 explicitly.
-> An explicit higher value wins over the **multi protocol** default, with
-a logged warning (see **multi protocol**).
+> How often **afpd** re-checks a cached entry against the disk, to catch
+changes by other processes. A value of 1 validates on every access. A
+value above 1 validates less frequently. The server rejects a value
+outside 1-100 with a warning and applies the default. The default assumes
+the server is the only process writing the volume. If another process
+modifies a volume, share it with **multi protocol = yes** or set 1
+explicitly. **multi protocol** defaults this option to 1 together with
+the other coherency settings. An explicit value above 1 takes precedence
+over the **multi protocol** default, with a logged warning (see **multi
+protocol**).
 
 dircache mode = *lru* | *arc* (default: *arc*) **(G)**
 
-> Cache replacement algorithm. **lru** = Least Recently Used (stable, memory-efficient).
-**arc** = Adaptive Replacement Cache (self-tuning, 10-50% better hit ratios,
-2× better on sequential scans). ARC **can** use up to 2× the memory of **lru**:
-evicted entries may be retained as ghosts for instant re-promotion; cold
-ghosts are dropped.
-Example: a 64K-entry cache uses ~12 MB, plus up to ~12 MB of ghosts under **arc**.
+> Which entries the cache drops when it is full. **lru** drops the least
+recently used entry: stable and memory-efficient. **arc** (Adaptive
+Replacement Cache) tunes itself, with 10-50% better hit ratios and 2×
+better on sequential scans. ARC can use up to 2× the memory of **lru**:
+it may keep evicted entries as ghosts for
+instant re-promotion and drops cold ghosts. Example: a 64K-entry cache
+uses ~12 MB, plus up to ~12 MB of ghosts under **arc**.
 >
-> **Recommendation**: Use **lru** for memory-constrained systems. Increase
-**dircache size** (max entries) for best results.
+> **Recommendation**: Use **lru** for memory-constrained systems. Raise
+**dircache size** (max entries) to improve the hit ratio.
 
 dircache rfork budget = *number* (default: *32768*) **(G)**
 
-> Total memory budget in KB for caching resource fork data in the directory
-cache. Set to 0 to disable resource fork caching.
-Resource fork caching stores small resource fork contents in memory to avoid
-repeated disk reads during FPGetFileDirParams and FPEnumerate operations.
-The cache covers Mac OS resource forks — for example custom icons and other
-Finder resources — in whichever backend the **ea** option stores them
-(AppleDouble sidecar files or extended attributes). Other extended
-attributes are not cached.
+> Total memory budget in KiB for caching resource fork data in the
+directory cache. Set to 0 to disable resource fork caching. Resource
+fork caching keeps small resource fork contents in memory, so repeated
+client reads of a resource fork (FPRead) do not touch the disk. The
+cache covers Mac OS resource forks, for example custom
+icons and other Finder resources. It covers them in either storage the
+**ea** option selects: AppleDouble sidecar files or Extended Attributes.
+It does not cache other Extended Attributes.
 >
-> Volumes with **multi protocol = yes** are excluded from the cache by
-default, because another process can change resource forks behind afpd's
-back. Setting this option explicitly lifts the exclusion, with a logged
+> By default the cache excludes volumes with **multi protocol = yes**,
+because another process can change resource forks behind **afpd**'s
+back.
+Setting this option explicitly lifts the exclusion, with a logged
 warning (see **multi protocol**).
 >
-> Maximum: 10485760 (10 GB in KB) total.
+> Maximum: 10485760 KiB (10 GiB) total.
 
 dircache rfork maxsize = *number* (default: *1024*) **(G)**
 
-> Maximum size in KB of a single resource fork entry that will be cached.
-Resource forks larger than this value will not be cached even if the total
-budget has not been exhausted.
+> Maximum size in KiB of a single cached resource fork entry. The cache
+skips resource forks larger than this value even when the total budget
+has room.
 >
 > Has no effect on volumes excluded from the resource fork cache, such as
 **multi protocol = yes** volumes (see **dircache rfork budget**).
 >
-> Maximum: 10240 (10 MB in KB) per entry.
+> Maximum: 10240 KiB (10 MiB) per entry.
 
-**Note**: See Configuration chapter in the manual for more information
+***NOTE:*** The Configuration chapter of the manual has more on
+directory cache tuning.
 
 ## Miscellaneous Options
+
+The options below fit no other group.
 
 afpstats = *BOOLEAN* (default: *no*) **(G)**
 
 > Whether to provide AFP runtime statistics (connected users, open
-volumes) via a Unix socket.
+volumes) via a UNIX socket. The **afpstats**(1) command reads them.
 
 afpstats group = *group* **(G)**
 
-> Sets the group owner of the afpstats Unix socket. The socket is created
-with mode 0660, so only root and members of this group can access runtime
-statistics. If unset, the socket keeps the group assigned by the operating
-system when afpd creates it.
+> Sets the group owner of the afpstats UNIX socket. **afpd** creates the
+socket with mode 0660, so only root and members of this group can access
+the runtime statistics. If unset, the socket keeps the group the
+operating system assigns when **afpd** creates it.
 
 close vol = *BOOLEAN* (default: *no*) **(G)**
 
-> Whether to close volumes possibly opened by clients when they're removed
-from the configuration and the configuration is reloaded.
+> Whether a configuration reload closes a volume it removes, even when
+clients may have it open.
 
-disconnect time = *number* **(G)**
+disconnect time = *number* (default: *24*) **(G)**
 
-> Keep disconnected AFP sessions for *number* hours before dropping them.
-Default is 24 hours.
+> Keeps a disconnected AFP session for *number* hours before dropping it.
+A client that reconnects within that time resumes its session.
 
-sleep time = *number* **(G)**
+sleep time = *number* (default: *10*) **(G)**
 
-> Keep sleeping AFP sessions for *number* hours before disconnecting
-clients in sleep mode. Default is 10 hours.
+> Keeps a sleeping client's AFP session for *number* hours before
+disconnecting it.
 
 extmap file = *path* **(G)**
 
-> Sets the path to the file which defines file extension type/creator
+> Sets the path to the file that defines file extension type/creator
 mappings.
 
 force xattr with sticky bit = *BOOLEAN* (default: *no*) **(G)**/**(V)**
 
-> Writing metadata xattr on directories with the sticky bit set may fail
-even though we may have write access to a directory, because if the
-sticky bit is set only the owner is allowed to write xattrs.
->
-> By enabling this option Netatalk will write the metadata xattr as root.
+> With *yes*, **afpd** writes a directory's metadata xattr as root. On a
+directory with the sticky bit set, only the owner may write xattrs, so
+the write otherwise may fail even with write access.
 
 ignored attributes = *all* | *nowrite* | *nodelete* | *norename* **(G)**/**(V)**
 
-> Specify a set of file and directory attributes that shall be ignored by
-the server, *all* includes all the other options.
+> Which of the attributes that forbid writing, deleting, or renaming a
+file or directory the server ignores. *all* includes all three.
 >
-> In OS X when the Finder sets a lock on a file/directory or you set the
-BSD uchg flag in the Terminal, all three attributes are used. Thus in
-order to ignore the Finder lock/BSD uchg flag, add set *ignored
-attributes = all*.
+> On macOS, a Finder lock on a file or directory, or the BSD uchg flag set
+in the Terminal, uses all three attributes. To ignore the Finder lock and
+the BSD uchg flag, set *ignored attributes = all*.
 
-max connections = *number* **(G)**
+max connections = *number* (default: *200*) **(G)**
 
-> Sets the maximum number of clients that can simultaneously connect to
-the server (default is 200).
+> Sets the maximum number of clients that can connect to the server at
+the same time.
 
 mimic model = *model* **(G)**
 
-> Specifies a custom icon for the mounted AFP volume on macOS (Mac OS X)
-clients. Default is to let macOS choose. Requires netatalk to be built
-with Zeroconf. Examples:
+> Specifies a custom icon for the mounted AFP volume on macOS
+clients. The default lets macOS choose. Requires a Netatalk build with
+Zeroconf. Examples: **Laptop**, **RackMount**, and **Tower**.
 >
-> - **Laptop**
-> - **RackMount**
-> - **Tower**
->
-> A complete set of supported model codes by a macOS client can be found
-by inspecting system properties files, such as
+> The complete set of model codes a macOS client supports is in its
+system property files, such as
 */System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist*
-on macOS 15 Sequoia.
+through macOS 26 Tahoe. Open the file in Xcode and inspect the *Exported
+Type Identifiers* key for the com.apple.* device types and their model
+codes.
 
 server name = *name* **(G)**
 
 > Specifies a human-readable name that uniquely describes the AFP server.
-Defaults to the value of **hostname** up until the first period.
-When netatalk is built with Zeroconf support, this is also registered as
-the service name and advertised as UTF-8, up to 63 octets (bytes) in length.
+Defaults to **hostname**. A Netatalk
+build with Zeroconf support also registers this name as the service name
+and advertises it as UTF-8, up to 63 octets (bytes) long.
 
 signature = *STRING* **(G)**
 
-> Specify a server signature. The maximum length is 16 characters. This
-option is useful for clustered environments, to provide fault isolation
-etc. By default, afpd generates a signature and saves it to a file
-called **afp_signature.conf** automatically (based on random numbers); a
-**netatalk --single-user** server keeps that file under **vol dbpath**. See
-also asip-status(1).
+> Specifies a server signature of at most 16 characters. The option suits
+clustered environments, for example to provide fault isolation. By
+default, **afpd** generates a random signature and saves it in the file
+**afp_signature.conf**. A **netatalk \-\-single-user** server keeps that
+file under **vol dbpath**.
 
 strict locking = *BOOLEAN* (default: *no*) **(G)**
 
-> Take POSIX byte-range locks on file data for every AFP read and write so
-they conflict with other POSIX lockers such as Samba (pair with Samba's own
-**strict locking = yes**); off, AFP locks are invisible to other processes.
-**afp read locks** is a deprecated synonym. Volumes that other processes
-modify should set **multi protocol = yes**, which defaults this option
-to *yes* together with the other coherency settings; an explicit *no*
-wins, with a logged warning (see **multi protocol**).
+> Takes POSIX byte-range locks on file data for every AFP read and write,
+so they conflict with other POSIX lockers such as Samba. Pair it with
+Samba's own **strict locking = yes**. With *no*, AFP locks are invisible
+to other processes. **afp read locks** is a deprecated synonym. Volumes
+that other processes modify should set **multi protocol = yes**, which
+defaults this option to *yes* together with the other coherency
+settings. An explicit *no* takes precedence, with a logged warning (see
+**multi protocol**).
 
 solaris share reservations = *BOOLEAN* (default: *yes*) **(G)**
 
-> Use share reservations on Solaris. Solaris CIFS server uses this too, so
-this makes a lock coherent multi protocol server.
+> Uses share reservations on Solaris and illumos, where the build finds
+the fshare_t locks. The Solaris CIFS server uses them too, so this makes
+a lock-coherent multi protocol server.
 
 veto message = *BOOLEAN* (default: *no*) **(G)**
 
-> Send optional AFP messages for vetoed files. Then whenever a client
-tries to access any file or directory with a vetoed name, it will be
-sent an AFP message indicating the name and the directory.
+> Whether the server sends a client an AFP message when it tries to open
+a vetoed name (see **veto files**). The message names the file and the
+directory.
 
-volnamelen = *number* **(G)**
+volnamelen = *number* (default: *80*) **(G)**
 
-> Max length of UTF8-MAC volume name for Mac OS X. Note that Hangul is
-especially sensitive to this.
+> Maximum length of a UTF8-MAC volume name for Mac OS X. The limit
+depends on the client version:
 
     73: limit of Mac OS X 10.1
     80: limit of Mac OS X 10.4/10.5 (default)
     255: limit of recent Mac OS X
 
-> Mac OS 9 and earlier are not influenced by this, because Maccharset
-volume name is always limited to 27 bytes.
+> Korean (Hangul) names reach the limit soonest. This does not affect
+Mac OS 9 and earlier, because a Mac charset volume name never exceeds 27
+bytes.
 
 vol preset = *name* **(G)**/**(V)**
 
-> Use section *name* as option preset for all volumes (when set in the
-[Global] section) or for one volume (when set in that volume's
-section).
+> Takes default options from section *name*, for all volumes when set in
+[Global] or for one volume when set in its section.
 
 ## Search Options
 
-Configure Netatalk's file search capabilities,
-covering Spotlight (Finder search) and Catalog Search.
+The options below control Netatalk's file search: Spotlight (Finder
+search) and Catalog Search.
 
 dbus daemon = *path* **(G)**
 
-> Sets the path to dbus-daemon binary used to launch a private D-Bus
-for the LocalSearch backend.
-Can be used when the compile-time default path does not match the runtime
-environment.
->
-> If support is compiled into Netatalk, you may alternatively use
-the *localsearch* backend which enables more advanced search
-capabilities, including full text search and file metadata search.
+> Sets the path to the dbus-daemon binary that starts a private D-Bus for
+the *localsearch* backend. Use it when the compile-time default path
+does not match the runtime environment.
 
 search db = *BOOLEAN* (default: *yes*) **(V)**
 
-> Use fast CNID database namesearch instead of slow recursive filesystem search
-for Classic Mac OS - Mac OS X 10.3 clients.
+> Uses the fast CNID database name search instead of a slow recursive
+filesystem search when a client searches for an exact UTF-8 file name.
+Other searches walk the volume.
 >
-> ***NOTE:*** Relies on a consistent CNID database for accurate search results.
-Interacting with the AFP volume with other file sharing protocols,
-or doing local filesystem access on the host without using **nad**(1)
-will lead to an inaccurate CNID database that has to be repaired with **dbd**(1).
+> ***NOTE:*** Accurate results need a consistent CNID database. Access to
+the volume through other file sharing protocols, or local filesystem
+access on the host without **nad**(1), makes the CNID database
+inaccurate. **dbd**(1) then must correct it.
 
 spotlight = *BOOLEAN* (default: *yes*) **(G)**/**(V)**
 
 > Whether to enable Spotlight (Finder search) compatible searches.
-As a global option, this sets the default for volumes. As a volume option,
-it overrides the global default for that volume.
 >
 > ***NOTE:*** macOS searches network volumes through *Finder search* only,
-not through the *Spotlight* widget in the menu bar, which is reserved for
-local volumes. This is macOS client behaviour, not a Netatalk limitation.
+not through the *Spotlight* widget in the menu bar, which searches local
+volumes only. This is macOS client behavior, not a Netatalk limitation.
 >
 > A volume is searchable only when its effective **spotlight** setting is
-enabled and a supported **spotlight backend** is available for that volume.
+*yes* and a supported **spotlight backend** is available for that volume.
 
 spotlight attributes = *COMMA SEPARATED STRING* (default: *EMPTY*) **(G)**
 
-> A list of Spotlight query attributes accepted by the *localsearch*
-backend. By default all attributes known to the LocalSearch SPARQL mapper
-can be searched; passing a string limits searchable attributes to elements
-of the string. Example:
+> A list of Spotlight query attributes the *localsearch* backend accepts.
+By default every attribute the LocalSearch SPARQL mapper knows is
+searchable. A list limits searches to the attributes it names. Example:
 
     spotlight attributes = *,kMDItemTextContent
 
@@ -795,15 +791,19 @@ of the string. Example:
 
 spotlight backend = *backend* (default: *cnid*) **(G)**/**(V)**
 
-> Search backend used by the Spotlight (Finder search) feature.
+> Search backend for the Spotlight (Finder search) feature.
 >
-> Depending on your Netatalk configuration, the available backends may include:
-*cnid*, *localsearch*, *xapian*.
+> Depending on your Netatalk configuration, the available backends may
+include *cnid*, *localsearch*, and *xapian*. *cnid* matches file names
+from the CNID database.
 >
->Run **netatalk -v** to see which backends are available in your installation.
+> If the build includes *localsearch*, that backend adds full text search
+and file metadata search.
 >
-> ***NOTE:*** The *xapian* backend is considered *EXPERIMENTAL*
-and is not recommended for production use at this time.
+> Run **netatalk -v** to list the backends in your installation.
+>
+> ***NOTE:*** The *xapian* backend is *EXPERIMENTAL*. Avoid it in
+production.
 
 spotlight expr = *BOOLEAN* (default: *yes*) **(G)**
 
@@ -812,74 +812,68 @@ when translating Spotlight RAW queries to SPARQL.
 >
 > This option does not affect the *cnid* or *xapian* backends.
 
-spotlight results limit = *NUMBER* (default: *10000*) **(G)**
+spotlight results limit = *number* (default: *10000*) **(G)**
 
 > Maximum number of Spotlight (Finder search) results returned per query.
-Set *0* to remove the limit. A nonzero value below *100* is raised to
-*100*, the smallest result buffer the CNID search accepts; a value above
-*16000000*, or one
-that is negative or unparsable, is rejected in favour of the default and
-logged.
+Set *0* to remove the limit. The server raises a nonzero value below
+*100* to *100*, the smallest result buffer the CNID search accepts. It
+rejects a value above *16000000*, or one that is negative or unparsable,
+logs it, and applies the default.
 >
-> Raise it if searches on large volumes are truncated; a larger limit costs
-memory and query time in proportion.
+> Raise it if the limit truncates searches on large volumes. The limit
+costs memory and query time in proportion to its size.
 >
-> This option was called **sparql results limit** before it applied to all
-backends. The old name still works and logs a deprecation warning.
+> Before it applied to all backends, this option had the name **sparql
+results limit**. The old name still works and logs a deprecation warning.
 
 ## Logging Options
 
-Control what kinds of messages are logged, and where they are logged.
+The options below control which messages the server logs, and where.
 
 log file = *logfile* **(G)**
 
-> Write logs to *logfile* on the file system. If not specified, Netatalk
-logs to the syslog daemon facility.
-New log files are created with mode `0640`, restricted further by the process
-umask. Existing log file permissions are preserved.
+> Writes logs to *logfile*. If unset, the server logs to syslog with the
+daemon facility. The server creates new log files with mode **0640**,
+restricted further by the process umask, and preserves the permissions
+of existing log files.
 
-log level = *type:level [type:level ...]*; log level = *type:level,[type:level, ...]* **(G)**
+log level = *type:level [type:level ...]* | *type:level,[type:level, ...]* **(G)**
 
-> Space or comma separated list of one or more log type and log level pairs.
+> Space or comma separated list of one or more log type and log level
+pairs.
 >
-> The default log level and severity is **default:note**
+> The default is **default:note**.
 >
-> For each pair, the log level specifies the minimum severity of messages of the given log type that will be logged.
-Only messages of the specified log type with severity equal to or higher than the specified log level will be logged,
-while messages of that log type with lower severity will be ignored.
+> For each pair, the log level is the minimum severity the server logs
+for that log type.
 >
-> The *default* log type is a special log type that applies to all messages.
-If no log level is specified for *default*, only log types with explicitly specified log levels will be logged,
-and all other log types will be ignored.
+> The *default* log type applies to all messages. Without a log level for
+*default*, the server logs only the log types with an explicit log level
+and ignores all others.
 >
-> For example, if you specify **log level = default:warn**,
-then all messages with severity *warn* or higher (i.e. *warn*, *error*, *severe*) will be logged,
-and anything below *warn* (*note*, *info*, *debug* etc.) will be ignored.
+> For example, with **log level = default:warn** the server logs every
+message with severity *warn* or above, that is, *warn*, *error*, and
+*severe*. It ignores anything below *warn*, such as *note*, *info*, and
+*debug*.
 >
-> By chaining multiple log type and log level pairs are together,
-you get fine-grained control over which messages are logged based on their type and severity.
+> Available log types: *default*, *logger*, *cnid*, *afpdaemon*, *dsi*,
+*atalkdaemon*, *papdaemon*, *uams*, *fce*, *ad*, *spotlight*.
 >
-> Available logtypes: *default*, *logger*, *cnid*, *afpdaemon*, *dsi*, *atalkdaemon*, *papdaemon*,
-*uams*, *fce*, *ad*, *spotlight*
+> Available log levels, in falling order of severity: *severe*, *error*,
+*warn*, *note*, *info*, *debug*, *debug6*, *debug7*, *debug8*, *debug9*,
+*maxdebug*.
 >
-> Available loglevels (by falling order of severity): *severe*, *error*, *warn*, *note*, *info*, *debug*, *debug6*, *debug7*,
-*debug8*, *debug9*, *maxdebug*
->
-> ***NOTE:*** Both logtype and loglevels are case insensitive.
+> ***NOTE:*** Both log type and log level are case insensitive.
 
 log microseconds = *BOOLEAN* (default: *yes*) **(G)**
 
-> Log timestamps with accuracy down to microseconds. If disabled, the
-timestamps record only whole seconds. Only takes effect when used in
-tandem with the **log file** option.
+> Logs timestamps with microsecond accuracy. With *no*, timestamps record
+whole seconds only. Applies only when **log file** is set.
 
 ## Filesystem Change Events (FCE)
 
-Netatalk includes a nifty filesystem change event mechanism where afpd
-processes notify interested listeners about certain filesystem event by
-UDP network datagrams.
-
-The following FCE events are defined:
+**afpd** sends a UDP datagram to each configured listener for the FCE
+events below.
 
 - file modification (**fmod**)
 
@@ -901,117 +895,115 @@ The following FCE events are defined:
 
 fce listener = *host[:port]* **(G)**
 
-> Enables sending FCE events to the specified *host*, default *port* is
-12250 if not specified. Specifying multiple listeners is done by having
-this option once for each of them.
+> Sends FCE events to *host*. The default *port* is 12250 when none is
+specified. The server reads the option once, so afp.conf configures one
+listener.
 
-fce version = *1* | *2* **(G)**
+fce version = *1* | *2* (default: *1*) **(G)**
 
-> FCE protocol version, default is 1. You need version 2 for the fmov,
-dmov, login or logout events.
+> FCE protocol version. Version 2 adds the source path, pid, and user name
+to the events.
 
-fce events = *fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout* **(G)**
+fce events = *fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout* (default: all) **(G)**
 
-> Specifies which FCE events are active, default is
-**fmod,fdel,ddel,fcre,dcre**.
+> Specifies which FCE events the server sends, separated by commas or
+spaces. By default all nine are active. The list replaces the default
+set, and an unknown name drops out.
 
 fce coalesce = *all* | *delete* | *create* **(G)**
 
-> Coalesce FCE events.
+> Merges bursts of related events on the same path within a short window.
+With *create*, the server also drops each fcre event, because an fmod
+always follows it.
 
-fce holdfmod = *seconds* **(G)**
+fce holdfmod = *seconds* (default: *60*) **(G)**
 
-> This determines the time delay in seconds which is always waited if
-another file modification for the same file is done by a client before
-sending an FCE file modification event (fmod). For example saving a file
-in Photoshop would generate multiple events by itself because the
-application is opening, modifying and closing a file multiple times for
-every "save". Default: 60 seconds.
+> How long, in seconds, the server waits for further changes to a file
+before sending one fmod event for them. Some applications open, modify,
+and close a file several times for one save.
 
-fce sendwait = *milliseconds* **(G)**
+fce sendwait = *milliseconds* (default: *0*) **(G)**
 
-> Defines a delay in milliseconds between the emission of each FCE event.
-Use this if you are experiencing lost FCE events when creating or
-deleting a very large number of files at once. The deluge of events that
-such an operation triggers can lead to UDP buffer overflow and
-subsequently to packet loss. Has to be a number between 0 and 999.
-Default: 0 milliseconds.
+> A delay in milliseconds between FCE events. Use it if listeners miss
+FCE events when you create or delete a large number of files at once.
+The burst of events such an operation triggers can overflow the UDP
+buffer and cause packet loss. Must be a number between 0 and 999.
 
-fce ignore names = *NAME[,NAME2,...]* **(G)**
+fce ignore names = *NAME[,NAME2,...]* (default: *.DS_Store*) **(G)**
 
-> Comma-delimited list of filenames for which FCE events shall not be
-generated. Default: *.DS_Store*
+> Comma-separated list of file names that generate no FCE events.
 
-fce ignore directories = *PATH[,PATH2,...]* **(G)**
+fce ignore directories = *PATH[,PATH2,...]* (default: empty) **(G)**
 
-> Comma-delimited list of paths to directories for which FCE events
-shall not be generated. Has to be an absolute path on the host file system.
-Must not end with a slash. Default: empty
+> Comma-separated list of directories that generate no FCE events. Each
+is an absolute path on the host filesystem and must not end with a
+slash.
 
 fce notify script = *path* **(G)**
 
-> Script which will be executed for every FCE event. Netatalk installs
+> Script that the server runs for every FCE event. Netatalk installs
 **fce_ev_script**(8) as a notification helper under its libexec directory.
+By default it writes each event to syslog.
 
 ## Options for ACL handling
 
-By default, the effective permission of the authenticated user are only
-mapped to the mentioned UARights permission structure, not the UNIX
-mode. You can adjust this behaviour with the configuration option
-**map acls**:
+These options control how the server maps ACLs for clients and which
+LDAP directory it queries for the UUIDs that ACLs need.
 
 chmod request = *preserve* (default) | *ignore* | *simple* **(G)**/**(V)**
 
-> Advanced permission control that deals with ACLs.
+> What the server does with a client's chmod() request when ACLs are
+present.
 >
-> - **ignore** - UNIX chmod() requests are completely ignored, use this
-option to allow the parent directory's ACL inheritance full control
-over new items.
+> - **ignore** - The server ignores UNIX chmod() requests. Use it to give
+the parent directory's ACL inheritance full control over new items.
 >
-> - **preserve** - preserve ZFS ACEs for named users and groups or POSIX ACL
-group mask
+> - **preserve** - Applies the chmod() but keeps the ZFS ACEs for named
+users and groups, or the POSIX ACL group mask.
 >
-> - **simple** - just to a chmod() as requested without any extra steps
+> - **simple** - Performs the chmod() as requested, without extra steps.
 
-map acls = *none* | *rights* | *mode* **(G)**
+map acls = *none* | *rights* | *mode* (default: *rights*) **(G)**
 
+> How the server maps a file's ACL into the access rights and UNIX mode it
+reports to clients.
+>
 > none
 >
-> > No mapping of ACLs.
+> > No ACL mapping.
 >
 > rights
 >
-> > Effective permissions are mapped to UARights structure. This is the
-default.
+> > Maps effective permissions to the AFP user access rights (UARights)
+the client displays.
 >
 > mode
 >
-> > ACLs are additionally mapped to the UNIX mode of the filesystem object.
+> > Additionally maps ACLs to the UNIX mode of the filesystem object.
 
-If you want to be able to display ACLs on the client, you must setup
-both client and server as part on a authentication domain (directory
-service, e.g. LDAP, Open Directory, Active Directory). The reason is, in
-OS X ACLs are bound to UUIDs, not just uid's or gid's. Therefore
-Netatalk must be able to map every filesystem uid and gid to a UUID so
-that it can return the server side ACLs which are bound to UNIX uid and
-gid mapped to OS X UUIDs.
+To display ACLs on the client, you must set up both client and server in
+one authentication domain. That means a directory service such as LDAP,
+Open Directory, or Active Directory. On macOS, ACLs are bound to UUIDs,
+not just to uids or gids. Netatalk must therefore map every filesystem
+uid and gid to a UUID before it can translate the server's ACLs for the
+client.
 
-Netatalk can query a directory server using LDAP queries. Either the
-directory server already provides an UUID attribute for user and groups
-(Active Directory, Open Directory) or you reuse an unused attribute (or
-add a new one) to you directory server (eg OpenLDAP).
+Netatalk can query a directory server with LDAP. Active Directory and
+Open Directory already provide a UUID attribute for users and groups.
+With another directory server, for example OpenLDAP, you reuse an unused
+attribute or add a new one.
 
-The following LDAP options must be configured for Netatalk:
+Configure these LDAP options for Netatalk:
 
 ldap auth method = *none* | *simple* **(G)**
 
 > none
 >
-> > anonymous LDAP bind
+> > Anonymous bind.
 >
 > simple
 >
-> > simple LDAP bind
+> > Bind with **ldap auth dn** and **ldap auth pw**.
 
 ldap auth dn = *dn* **(G)**
 
@@ -1024,11 +1016,11 @@ ldap auth pw = *password* **(G)**
 ldap uri = *ldap://somehost:1234/* **(G)**
 
 > Specifies the LDAP URI of the server to connect to. The URI scheme may
-be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP or TLS
-respectively (if supported by the LDAP library). This is only needed for
-explicit ACL support in order to be able to query LDAP for UUIDs.
+be ldap for LDAP over TCP, ldapi for LDAP over IPC, or ldaps for LDAP
+over TLS. The LDAP library must support the scheme. Only ACL support
+needs this option, to look up UUIDs in LDAP.
 >
-> You can use **afpldaptest**(1) to syntactically check your config.
+> **afpldaptest**(1) checks the syntax of your config.
 
 ldap userbase = *base dn* **(G)**
 
@@ -1050,15 +1042,19 @@ ldap uuid attr = *dn* **(G)**
 
 > Name of the LDAP attribute with the UUIDs.
 >
-> ***NOTE:*** this is used both for users and groups.
+> ***NOTE:*** The server uses this attribute for both users and groups.
 
 ldap name attr = *dn* **(G)**
 
-> Name of the LDAP attribute with the users short name.
+> Name of the LDAP attribute with the user's short name.
 
 ldap group attr = *dn* **(G)**
 
-> Name of the LDAP attribute with the groups short name.
+> Name of the LDAP attribute with the group's short name.
+
+ldap uid attr = *dn* **(G)**
+
+> Accepted by the parser and unused: no code reads the value.
 
 ldap uuid string = *STRING* **(G)**
 
@@ -1071,49 +1067,37 @@ long, including separators. Invalid formats fall back to the default.
 
 ldap uuid encoding = *string* (default) | *ms-guid* **(G)**
 
-> Format of the UUID of the LDAP attribute, allows usage of the binary
-objectGUID fields from Active Directory. If left unspecified, string is
-the default, which passes through the ASCII UUID returned by most other
-LDAP stores. If set to ms-guid, the internal UUID representation is
-converted to and from the binary format used in the objectGUID attribute
-found on objects in Active Directory when interacting with the server.
->
-> See also the options **ldap user filter** and **ldap group filter**.
->
-> string
->
-> > UUID is a string, use with e.g. OpenDirectory.
->
-> ms-guid
->
-> > Binary objectGUID from Active Directory
+> Format of the UUID in the LDAP attribute. The default, string, passes
+through the ASCII UUID that Open Directory and most other LDAP stores
+return. With ms-guid, the server converts the internal UUID
+representation to and from the binary format of the objectGUID attribute
+on Active Directory objects. Active Directory environments also need
+**ldap user filter** and **ldap group filter**.
 
-ldap user filter = *STRING* (default: unused) **(G)**
+ldap user filter = *STRING* (default: empty) **(G)**
 
-> Optional LDAP filter that matches user objects. This is necessary for
-Active Directory environments where users and groups are stored in the
-same directory subtree.
+> LDAP filter that matches user objects. Active Directory needs it,
+because users and groups share one subtree there.
 >
 > Recommended setting for Active Directory: **objectClass=user**.
 
-ldap group filter = *STRING* (default: unused) **(G)**
+ldap group filter = *STRING* (default: empty) **(G)**
 
-> Optional LDAP filter that matches group objects. This is necessary for
-Active Directory environments where users and groups are stored in the
-same directory subtree.
+> LDAP filter that matches group objects. Active Directory needs it,
+because users and groups share one subtree there.
 >
 > Recommended setting for Active Directory: **objectClass=group**.
 
 ## Classic Options
 
-Enable Netatalk features that are only relevant for Classic Mac OS or Apple II
-clients. See also the Charset options elsewhere in this manual.
+Options for features relevant only to Classic Mac OS or Apple II
+clients. The *Charset Options* section above also applies to them.
 
 appletalk = *BOOLEAN* (default: *no*) **(G)**
 
-> Enables support for AFP-over-AppleTalk. This option requires that your
-operating system supports the AppleTalk networking protocol,
-and that Netatalk was built with AppleTalk support.
+> Whether to serve AFP over AppleTalk. Requires an operating system that
+supports the AppleTalk networking protocol and a Netatalk build with
+AppleTalk support.
 
 ddp address = *ddp address* **(G)**
 
@@ -1129,8 +1113,8 @@ configured by the system.
 
 legacy icon = *icon* **(G)**/**(V)**
 
-> Sets the shared volume icon displayed in the Finder in Classic Mac OS.
-If a custom icon is already associated with the volume, this option is ignored.
+> Sets the shared volume icon that the Finder displays in Classic Mac OS.
+If the volume already has a custom icon, the server ignores this option.
 Available icon styles:
 >
 > - **daemon**
@@ -1144,63 +1128,61 @@ Available icon styles:
 
 legacy volume size = *BOOLEAN* (default: *no*) **(V)**
 
-> Limit disk size reporting to 2GB for legacy clients. This can be used
-for older Macintoshes running System 7.1 or earlier and using newer
-AppleShare clients.
+> Limits disk size reporting to 2 GB for legacy clients. Use it for older
+Macintoshes running System 7.1 or earlier with newer AppleShare clients.
 
-login message = *message* **(G)**/**(V)**
+login message = *message* **(G)**
 
-> Sets a message to be displayed when Classic Mac OS clients
-log on to the server.
-The message should be in **unix charset**.
-Extended characters are allowed.
+> Sets a message that Classic Mac OS clients see when they log in to the
+server. Write it in **unix charset**. It may contain extended characters.
 
 prodos = *BOOLEAN* (default: *no*) **(V)**
 
-> Enable ProDOS support. This option should only be enabled for volumes
-you expect to netboot an Apple II from. In addition to setting the boot
-flag on the volume, it restricts the volume free space reported to the client
-to 32MB.
+> Whether to support ProDOS. Set *yes* only for volumes you expect to
+netboot an Apple II from. It sets the volume's boot flag and reports at
+most 32 MB free.
 
 ## Debug Parameters
 
-These options are useful for debugging only. Do **NOT** enable them in
-production environments!
+Use these options for debugging only. Do not enable them in production
+environments.
 
-tickleval = *number* **(G)**
+tickleval = *number* (default: *30*) **(G)**
 
-> Sets the tickle timeout interval (in seconds). Defaults to 30.
+> Seconds between the keepalive packets (tickles) **afpd** sends to a
+client.
 
-timeout = *number* **(G)**
+timeout = *number* (default: *4*) **(G)**
 
-> Specify the number of tickles to send before timing out a connection.
-The default is 4, therefore a connection will timeout after 2 minutes.
-A client that stops sending in the middle of a request times out the same
-way, and can reconnect.
+> Number of tickles to send before timing out a connection. With the
+defaults, a connection times out after 2 minutes. A client that stops
+sending in the middle of a request times out the same way and can
+reconnect.
 
 client polling = *BOOLEAN* (default: *no*) **(G)**
 
-> With this option enabled, afpd won't advertise that it is capable of
-server notifications, so that connected clients poll the server every 10
-seconds to detect changes in opened server windows.
+> With *yes*, **afpd** does not advertise server notifications, so
+connected clients poll it every 10 seconds for changes in open server
+windows.
 
 # Explanation of Volume Parameters
 
 ## Home Section Parameters
 
-Special parameters that only apply to the home volume.
+The parameters below apply to the home volume only.
 
 basedir regex = *regex* **(H)**
 
-> Regular expression which matches the parent directory of the user homes.
-If **basedir regex** contains symlink, you must set the canonicalized
-absolute path. In the simple case this is just a path i.e.
-**basedir regex = /home**
+> Regular expression that matches the parent directory of the user homes.
+A plain path is a valid expression, for example **basedir regex =
+/home**. If the path goes through a symlink, set the real path it
+resolves to.
 
 home name = *name* **(H)**
 
-> AFP user home volume name. The default is *$u's home*. The name must
-contain "*$u*".
+> Name of each user's home volume. The default is *$u's home*. The name
+must contain *$u*. A name without it logs a warning and the default
+applies.
 
 ## Volume Sections Parameters
 
@@ -1208,141 +1190,136 @@ Each volume should at least define **path** and **volume name**.
 
 path = *path* **(V)**
 
-> The path name must be a fully qualified path name.
+> The directory to share, as an absolute path.
 
 volume name = *STRING* (default: section name in lowercase) **(V)**
 
-> The volume name option specifies the name of the shared AFP volume.
-When not set, this defaults to the name of the ini file section
-where the volume is defined, converted to lowercase.
+> The name of the shared AFP volume. When not set, it defaults to the
+volume's section name in lowercase.
 >
-> No two volumes may have the same name.
-The volume name cannot contain the ':' character.
-The volume name is mangled if it is very long.
-Mac charset volume name is limited to 27 characters.
-UTF8-MAC volume name is limited to volnamelen parameter.
+> No two volumes may have the same name. The volume name cannot contain
+the ':' character. The server mangles a volume name that is too long. A
+Mac charset volume name can have at most 27 bytes. The **volnamelen**
+parameter limits a UTF8-MAC volume name.
 
 vol size limit = *size in MiB* **(V)**
 
-> Useful for Time Machine: limits the reported volume size, thus
-preventing Time Machine from using the whole real disk space for backup.
-Example: "**vol size limit = 1000**" would limit the reported disk space to
-1 GB.
+> Limits the volume size the server reports, in MiB, so Time Machine
+cannot fill the real disk with backups. Example: **vol size limit =
+1000** limits the reported disk space to 1 GB.
 >
-> ***IMPORTANT:*** This is an approximated calculation taking into
-account the contents of Time Machine sparsebundle images. Therefore you
-MUST NOT use this volume to store other content when using this option,
-because it would NOT be accounted for. The calculation works by reading
-the band size from the Info.plist XML file of the sparsebundle, reading
-the bands/ directory counting the number of band files, and then
-multiplying one with the other.
+> ***IMPORTANT:*** The server estimates used space from the Time Machine
+sparsebundles only. It multiplies the band size in each sparsebundle's
+Info.plist XML file by the number of band files in bands/. Other content
+on the volume is not counted, so store none there.
 
 valid users = *user* / *@group* **(V)**
 
-> The allow option allows the users and groups that access a share to be
-specified. Users and groups are specified, delimited by spaces or
-commas. Groups are designated by a @ prefix. Example:
+> Lists the users and groups allowed to access the volume, delimited by
+spaces or commas. A @ prefix marks a group. Example:
 
     valid users = user @group
 
 invalid users = *user* / *@group* **(V)**
 
-> The deny option specifies users and groups who are not allowed access to
-the share. It follows the same format as the "valid users" option.
+> Lists users and groups denied access to the volume, in the same format
+as **valid users**.
 
 hosts allow = *IP host address/IP netmask bits* [ ... ] **(V)**
 
-> Only listed hosts and networks are allowed, all others are rejected. The
-network address may be specified either in dotted-decimal format for
-IPv4 or in hexadecimal format for IPv6.
+> Allows only the listed hosts and networks and rejects all others. Write
+the network address in dotted-decimal format for IPv4 or in hexadecimal
+format for IPv6.
 >
 > Example: hosts allow = 10.1.0.0/16 10.2.1.100 2001:0db8:1234::/48
 
 hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 
-> Listed hosts and nets are rejected, all others are allowed.
+> Rejects the listed hosts and networks and allows all others.
 >
 > Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab
 
 ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(G)**/**(V)**
 
-> Specify how Extended Attributes and Mac OS Resource Forks are
-stored.
+> How the server stores Extended Attributes and Mac OS Resource Forks.
 >
-> By default, we attempt to enable **sys** (filesystem Extended Attributes)
-with a fallback to **ad** (AppleDouble sidecars.)
-For the auto detection to work, the volume needs to be writable
-because we attempt to set an EA on the shared directory itself.
-For read-only volumes, set this option explicitly.
+> By default, the server tries **sys** (filesystem Extended Attributes).
+If that fails, it falls back to **ad** (AppleDouble sidecars). The auto
+detection sets a marker EA on the shared directory itself, as root. A
+read-only volume skips that test and assumes support, so auto detection
+gives it **sys**. Set this option explicitly on a read-only volume whose
+filesystem has no Extended Attributes.
 >
 > sys
 >
-> > Use filesystem Extended Attributes.
+> > Uses filesystem Extended Attributes.
 >
 > samba
 >
-> > Use filesystem Extended Attributes, but append a 0 byte to each xattr in
-order to be compatible with Samba's vfs_streams_xattr. It
-requires filesystem Extended Attribute support; a volume whose filesystem
-cannot store them fails to load.
+> > Uses filesystem Extended Attributes, but appends a NUL byte to each
+xattr. That keeps the volume compatible with Samba's vfs_streams_xattr.
+It requires filesystem Extended Attribute support. A volume whose
+filesystem cannot store them fails to load.
 >
 > > This option selects the storage format only. A volume that other
-processes modify should additionally set **multi protocol = yes**, which
-applies the coherency defaults safe concurrent access requires.
+processes modify should also set **multi protocol = yes**, which applies
+the coherency defaults that safe concurrent access requires.
 >
 > ad
 >
-> > Use AppleDouble v2 metadata stored as files in *.AppleDouble* sidecar directories.
-This is only recommended when the host's filesystem does not support
-Extended Attributes.
+> > Uses AppleDouble v2 metadata stored as files in *.AppleDouble* sidecar
+directories. Recommended only when the host's filesystem does not
+support Extended Attributes.
 >
 > none
 >
 > > No Extended Attributes support.
 >
-> ***WARNING:*** The **samba** option should not be used on a volume that was previously
-set to **sys**. This may lead to data loss (client copy between shares to convert).
+> ***WARNING:*** Do not use **samba** on a volume previously set to
+**sys**. This may lead to data loss. To convert, copy the files between
+volumes from a client.
 
 multi protocol = *BOOLEAN* (default: *no*) **(G)**/**(V)**
 
-> Declare that processes other than Netatalk modify the volume: another
-file sharing protocol (Samba/SMB, NFS) or local access on the server
-(scripts, cron jobs, shell users).
+> Declares that other processes modify the volume. Examples are another
+file sharing protocol such as Samba/SMB or NFS, and local access on the
+server by scripts, cron jobs, or shell users.
 >
-> Enabling it changes the server defaults to the values safe concurrent
-access requires: **strict locking** defaults to *yes*, **dircache
-validation freq** defaults to *1*, the volume is excluded from the
-resource-fork data cache, and on Solaris **solaris share reservations**
-stays enforced. Explicit settings always win; every explicit setting
-that weakens coherency logs a verbose warning describing the risk.
+> With *yes*, the server defaults change to the values safe concurrent
+access requires. **strict locking** defaults to *yes*, and **dircache
+validation freq** defaults to *1*. The resource fork cache excludes the
+volume, and on Solaris and illumos an explicit **solaris share
+reservations = no** logs a warning.
+Explicit settings always take precedence. Every explicit setting that
+weakens coherency (all processes seeing the same file state) logs a
+verbose warning describing the risk.
 >
-> Pairing with **ea = samba** is recommended so the other accessors can
-read the volume's Extended Attributes; a warning is logged when a
+> Pair it with **ea = samba**, so the other accessors can read the
+volume's Extended Attributes. The server logs a note at startup when a
 multi protocol volume uses a different ea format.
 >
 > **strict locking** and **dircache validation freq** are server-wide
-settings, so one multi protocol volume applies them to every volume:
-declaring it makes the whole server stricter, and a volume that sets
-**multi protocol = no** still gets them (only its exclusion from the
-resource fork cache is per-volume). Volumes are loaded with the
-configuration present at startup; changing this option takes effect for
-sessions that connect afterwards.
+settings, so one multi protocol volume applies them to every volume. A
+volume that sets **multi protocol = no** still gets them. Only the
+exclusion from the resource fork cache is per-volume. Volumes load with
+the configuration present at startup, so a change to this option takes
+effect for sessions that connect afterwards.
 >
-> When disabled (the default), Netatalk assumes it is the only process
-writing its volumes and serves them cache-backed for maximum
+> With *no* (the default), the server assumes it is the only process
+writing its volumes and serves them from its caches for maximum
 performance.
 
 mac charset = *charset* **(V)**
 
-> Specifies the Mac client charset for this Volume, e.g. *MAC_ROMAN*,
-*MAC_CYRILLIC*. If not specified the global setting is applied. This
-setting is only required if you need volumes, where the Mac charset
-differs from the one globally set in the [Global] section.
+> Specifies the Mac client charset for this volume, for example
+*MAC_ROMAN* or *MAC_CYRILLIC*. If not set, the global setting applies.
+You need it only for volumes whose Mac charset differs from the one set
+in [Global].
 
 casefold = *option* **(V)**
 
-> The casefold option handles, if the case of filenames should be changed.
-The available options are:
+> Controls whether and how the server changes the case of filenames. The
+available options are:
 >
 > **tolower** - Lowercases names in both directions.
 >
@@ -1354,21 +1331,24 @@ The available options are:
 
 password = *password* **(V)**
 
-> This option allows you to set a volume password, which can be a maximum
-of 8 characters long (using ASCII strongly recommended at the time of
-this writing).
+> Sets a volume password of at most 8 characters, the size of the AFP
+password field. Clients must enter it to mount the volume. Use ASCII
+characters.
 
-file perm = *mode* **(V)**; directory perm = *mode* **(V)**
+file perm = *mode* **(V)**
 
-> Add (bitwise OR) this mode to permissions requested by the client:
+directory perm = *mode* **(V)**
+
+> Adds (bitwise OR) this mode to the permissions the client requests.
 **file perm** applies to files only, and **directory perm** applies to
-directories only. These options can grant permission bits, but cannot remove
-bits requested by the client or set a fixed mode. For example, a client
-requesting mode `0644` with `file perm = 0222` results in mode `0666`.
+directories only. These options can grant permission bits, but cannot
+remove bits the client requests or set an absolute mode. For example, a
+client requesting mode **0644** with **file perm = 0222** results in mode
+**0666**.
 >
-> The modes are applied when the client changes permissions; they are not
-initial creation modes. See **umask** to mask permission bits. These options
-are ignored with "**unix priv = no**".
+> The server applies the modes when the client changes permissions. They
+are not initial creation modes. **umask** masks permission bits. The
+server ignores these options with **unix priv = no**.
 >
 > **Example**: Volume for a collaborative workgroup
 
@@ -1377,160 +1357,161 @@ are ignored with "**unix priv = no**".
 
 umask = *mode* **(V)**
 
-> Set a permission mask, which removes bits from modes to which it is applied.
-This option is ignored with "**unix priv = no**".
+> Sets a permission mask that removes bits from the modes it applies to.
+The server ignores this option with **unix priv = no**.
 
 preexec = *command* **(V)**
 
-> Command to be run when the volume is mounted
+> Shell command the server runs through /bin/sh when a client mounts the
+volume.
 
 postexec = *command* **(V)**
 
-> Command to be run when the volume is closed
+> Shell command the server runs through /bin/sh when the volume closes.
 
 rolist = *users/groups* **(V)**
 
-> Allows certain users and groups to have read-only access to a share.
-This follows the allow option format.
+> Gives the listed users and groups read-only access to the volume, in
+the **valid users** format.
 
 rwlist = *users/groups* **(V)**
 
-> Allows certain users and groups to have read/write access to a share.
-This follows the allow option format.
+> Gives the listed users and groups read/write access to the volume, in
+the **valid users** format.
 
 veto files = *vetoed names* **(V)**
 
-> Hide files and directories,where the path matches one of the '/'
-delimited vetoed names. The veto string must always be terminated with a
-'/', e.g. "**veto files = veto1/**", "**veto files = veto1/veto2/**".
+> Hides files and directories whose path matches one of the
+'/'-delimited vetoed names. The veto string must always end with a '/',
+for example **veto files = veto1/** or **veto files = veto1/veto2/**.
 
 volume uuid = *UUID* **(V)**
 
-> Specify a custom UUID for the volume. The UUID must be in the standard
-format, e.g. **550E8400-E29B-41D4-A716-446655440000**.
-If not specified, a random UUID is generated for the volume at
-startup and saved in the file **afp_voluuid.conf** in the shared state directory,
-or under **vol dbpath** for a **netatalk --single-user** server.
+> Specifies a custom UUID for the volume, in the standard format, for
+example **550E8400-E29B-41D4-A716-446655440000**. If not specified, the
+server generates a random UUID for the volume at startup. It saves the
+UUID in the file **afp_voluuid.conf** in the shared state directory, or
+under **vol dbpath** for a **netatalk \-\-single-user** server.
 >
-> In most circumstances, you should not need to set this option, but rather let netatalk manage it for you.
-One reason to set it manually is when you want to run **afpd** as a non-privileged user
-who does not have write access to the shared state directory and is not a
-**netatalk --single-user** server.
+> Time Machine clients identify a backup volume by this UUID. In most
+circumstances you should let the server manage it. Set it when **afpd**
+runs unprivileged, without **netatalk \-\-single-user**, and cannot write
+to the shared state directory.
 
 ## Volume options
 
-Boolean volume options.
+Every option below takes a boolean value.
 
 acls = *BOOLEAN* (default: *yes*) **(V)**
 
-> Whether to flag volumes as supporting ACLs. If ACL support is compiled
-in, this is yes by default.
+> Whether to flag volumes as supporting ACLs. Defaults to *yes* when the
+build includes ACL support.
 
 case sensitive = *BOOLEAN* (default: *yes*) **(V)**
 
 > Whether to advertise volumes as supporting case-sensitive filenames.
-If the host filesystem is case-insensitive, set to no.
+If the host filesystem is case-insensitive, set *no*.
 
 cnid dev = *BOOLEAN* (default: *yes*) **(V)**
 
-> Whether to store the unique device number for each file or directory in the CNID backend.
-This is used to detect when a file is moved across devices,
-which allows Netatalk to update the CNID database accordingly.
+> Whether to store the unique device number of each file or directory in
+the CNID backend. The server uses it to detect a file moved across
+devices and to update the CNID database accordingly.
 >
-> When using this option, make sure that the device number of the volume is consistent across reboots,
-which can be achieved by using persistent device naming (e.g. by UUID) in /etc/fstab or equivalent.
-Otherwise, the CNID database will get constantly rebuilt on every reboot, which is not ideal.
+> With this option, make sure the device number of the volume is
+consistent across reboots. Persistent device naming, for example by
+UUID, in /etc/fstab or the system's mount configuration achieves that.
+Otherwise the server rebuilds the CNID database on every reboot.
 
 convert appledouble = *BOOLEAN* (default: *no*) **(V)**
 
-> Perform automatic conversion of AppleDouble v2 metadata files to filesystem Extended Attributes
-dynamically when accessing filesystems from clients.
+> Whether to convert AppleDouble v2 metadata files to filesystem Extended
+Attributes as clients access them.
 >
-> This is useful when upgrading from Netatalk v2 to a later version,
-but incurs a small performance cost for every filesystem access.
-If you run **dbd**(1) on the volumes to convert after upgrading Netatalk,
-you don't need to enable this option, as the conversion is done by **dbd**(1) and not on the fly.
+> This helps when upgrading from Netatalk v2 to a later version, but
+slows every filesystem access a little. If you
+run **dbd**(1) on the volumes after upgrading Netatalk, you do not need
+this option. **dbd**(1) then does the conversion, not the server on the
+fly.
 
 delete veto files = *BOOLEAN* (default: *no*) **(V)**
 
-> This option is used when Netatalk is attempting to delete a directory
-that contains one or more vetoed files or directories (see the veto
-files option). If this option is set to no (the default) then if a
-directory contains any non-vetoed files or directories then the
-directory delete will fail. This is usually what you want.
+> Whether the server deletes the vetoed files and directories inside a
+directory a client deletes (see **veto files**). With *no* (the default),
+the delete fails if the directory contains any non-vetoed files or
+directories. This is usually what you want.
 >
-> If this option is set to yes, then Netatalk will attempt to recursively
-delete any files and directories within the vetoed directory.
+> With *yes*, the server tries to delete every file and directory within
+the vetoed directory recursively.
 
 follow symlinks = *BOOLEAN* (default: *no*) **(V)**
 
-> The default setting is false thus symlinks are not followed on the
-server.
-This is the same behaviour as Mac OS X's AFP server.
-Setting the option to true causes afpd to follow symlinks on the server.
+> Whether **afpd** follows symlinks on the server. The default *no*
+matches Mac OS X's AFP server.
 >
-> When a client creates a symlink via AFP, the target is validated:
-absolute paths, paths containing **..** components, relative paths that
-resolve outside the volume root, and targets on a different filesystem
-device than the volume are rejected.
+> When a client creates a symlink through AFP, the server validates the
+target. It rejects absolute paths, paths with **..** components,
+relative paths that resolve outside the volume root, and targets on a
+different filesystem device than the volume.
 >
-> ***NOTE:*** This option is security-sensitive,
-and should only be enabled if you understand the security implications
-of allowing clients to follow symlinks on the server.
+> ***NOTE:*** This option is security-sensitive. Set *yes* only if you
+understand the security implications of letting clients follow symlinks
+on the server.
 
 invisible dots = *BOOLEAN* (default: *no*) **(V)**
 
-> Make dot files invisible.
+> Makes dot files invisible.
 >
-> ***WARNING:*** Enabling this option will lead to
-unwanted side effects where OS X applications, when saving files to a
-temporary file starting with a dot first, then renaming the temp file to
-its final name, result in the saved file being invisible. The only thing
-this option is useful for is making files that start with a dot
-invisible on Mac OS 9. It's completely useless on Mac OS X, as both in
-Finder and in Terminal files starting with a dot are hidden anyway.
+> ***WARNING:*** This option has an unwanted side effect with macOS
+applications that save to a temporary dot file and rename it into place.
+The saved file ends up invisible. The option is useful only to hide files
+that begin with a dot on Mac OS 9. It is useless on macOS, where both the
+Finder and the Terminal hide files that begin with a dot anyway.
 
 network ids = *BOOLEAN* (default: *yes*) **(V)**
 
-> Whether the server support network ids. Setting this to *no* will result
-in the client not using ACL AFP functions.
+> Whether the server supports network IDs, the UUIDs that name users and
+groups in ACLs. With *no*, the client does not use the ACL AFP functions.
 
 preexec close = *BOOLEAN* (default: *no*) **(V)**
 
-> A non-zero return code from preexec close the volume being immediately,
-preventing clients to mount/see the volume in question.
+> Whether a non-zero exit code from **preexec** closes the volume
+immediately, so clients cannot see or mount it.
 
 read only = *BOOLEAN* (default: *no*) **(V)**
 
-> Specifies the share as being read only for all users.
-Forces **ea = sys**.
+> Makes the volume read-only for all users. With **ea** unset, the
+auto detection assumes Extended Attribute support and uses **sys**.
 
 stat vol = *BOOLEAN* (default: *yes*) **(V)**
 
-> Whether to stat volume path when enumerating volumes list, useful for
-automounting or volumes created by a preexec script.
+> Whether the server checks that the volume path exists and is readable
+before listing the volume. Set *no* for automounted volumes or ones a
+**preexec** script creates.
 
 time machine = *BOOLEAN* (default: *no*) **(V)**
 
-> Whether to enable Time Machine support for this volume.
+> Whether to advertise the volume as a Time Machine backup destination.
 >
-> ***NOTE:*** Only static volume paths are supported with Time Machine.
-If you use '$u' in the volume path, the volume will not be advertised to Time Machine clients.
+> ***NOTE:*** Time Machine supports static volume paths only. If the
+volume path contains '$u', the server does not advertise the volume to
+Time Machine clients.
 
 unix priv = *BOOLEAN* (default: *yes*) **(V)**
 
-> Whether to use AFP3 UNIX privileges. This should be set for OS X
-clients. See also: **file perm**, **directory perm**, and **umask**.
+> Whether to use AFP3 UNIX privileges. They let Mac clients see and set
+UNIX owner, group, and permissions. This should stay *yes* for macOS
+clients. **file perm**, **directory perm**, and **umask** depend on it.
 
 # Examples
 
 ## Example: Modern Mac clients
 
-This enables Spotlight (Finder search) and AFP stats if Netatalk was built with
-Spotlight and AFP stats support. The **mimic model** option is
-used to make the server look like an Xserve.
+This example enables Spotlight (Finder search) and AFP stats in a
+Netatalk build with Spotlight and AFP stats support. The **mimic model**
+option makes the server look like an Xserve.
 
-The home directory is mounted on */home/{user}/afp-data*.
+Each user's home volume path is */home/$u/afp-data*.
 
     [Global]
     afpstats = yes
@@ -1538,20 +1519,20 @@ The home directory is mounted on */home/{user}/afp-data*.
     spotlight = yes
     mimic model = RackMac
 
-    [Home]
+    [Homes]
     basedir regex = /home
     path = afp-data
 
 ## Example: Classic Mac clients
 
-This enables AppleTalk if Netatalk was built with AppleTalk support.
-The Random Number and ClearTxt authentication modules are used to support older Mac clients.
-The **legacy icon** option is used to give the volume a custom icon
-when mounted on Classic Mac OS clients.
+This example enables AppleTalk in a Netatalk build with AppleTalk
+support. The Random Number and Cleartext authentication modules support
+older Mac clients. The **legacy icon** option gives the volume a custom
+icon when mounted on Classic Mac OS clients.
 
-With **legacy volume size** the reported volume size is limited to 2 GB for very old Macs,
-while **prodos** is used to enable Apple II ProDOS boot flags on the volume
-as well as limiting the reported free space on the volume to 32 MB.
+**legacy volume size** is for Macs running System 7.1 or earlier, and
+**prodos** for volumes an Apple II netboots from. Their entries under
+*Classic Options* give the limits.
 
     [Global]
     appletalk = yes
@@ -1570,7 +1551,7 @@ as well as limiting the reported free space on the volume to 32 MB.
 
 # See Also
 
-afpd(8), afppasswd(5), afp_signature.conf(5), extmap.conf(5)
+**afpd**(8), **afppasswd**(1), **afp_signature.conf**(5), **extmap.conf**(5)
 
 # Author
 
