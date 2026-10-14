@@ -349,21 +349,21 @@ static int is_neg(int is64, off_t val)
 }
 
 /*!
- * @brief Whether offset plus reqcount is negative in the field width of the
- * request
+ * @brief Whether offset plus reqcount passes the largest offset the field
+ * width of the request holds, or, in a 64-bit field, passes off_t once the
+ * fork's offset in its file is added
  *
  * @param[in] is64      nonzero for the 64-bit field of the Ext commands
- * @param[in] offset    start offset
- * @param[in] reqcount  byte count
- * @returns 1 when the sum is negative, 0 otherwise
+ * @param[in] offset    start offset, not negative
+ * @param[in] reqcount  byte count, not negative
+ * @param[in] base      the fork's offset in its file
+ * @returns 1 when the sum passes INT32_MAX for a 32-bit field or INT64_MAX
+ *          less base for a 64-bit one, 0 otherwise
  */
-static int sum_neg(int is64, off_t offset, off_t reqcount)
+static int sum_neg(int is64, off_t offset, off_t reqcount, off_t base)
 {
-    if (is_neg(is64, offset + reqcount)) {
-        return 1;
-    }
-
-    return 0;
+    off_t limit = is64 ? INT64_MAX - base : INT32_MAX;
+    return reqcount > limit - offset;
 }
 
 /*!
@@ -1028,12 +1028,15 @@ static void rfork_invalidate_for_ofork(const struct vol *vol,
 /*!
  * @brief Map the errno of a failed fork write or truncate to the AFP reply
  *
- * @param[in] ofork  fork being changed
- * @param[in] call   libatalk call that failed, named in the log
+ * @param[in] ofork     fork being changed
+ * @param[in] call      libatalk call that failed, named in the log
+ * @param[in] is_write  an FPWrite, whose reply is DFULL, ACCESS or MISC
  *
- * @returns AFPERR_DFULL, AFPERR_VLOCK, AFPERR_ACCESS or AFPERR_PARAM
+ * @returns AFPERR_DFULL or AFPERR_ACCESS; otherwise AFPERR_MISC for a write
+ *          and AFPERR_VLOCK or AFPERR_PARAM for a truncate
  */
-static int fork_error(const struct ofork *ofork, const char *call)
+static int fork_error(const struct ofork *ofork, const char *call,
+                      bool is_write)
 {
     int err;
 
@@ -1048,7 +1051,7 @@ static int fork_error(const struct ofork *ofork, const char *call)
         return AFPERR_ACCESS;
 
     case EROFS:
-        err = AFPERR_VLOCK;
+        err = is_write ? AFPERR_ACCESS : AFPERR_VLOCK;
         break;
 
     case EPERM:
@@ -1056,7 +1059,7 @@ static int fork_error(const struct ofork *ofork, const char *call)
         break;
 
     default:
-        err = AFPERR_PARAM;
+        err = is_write ? AFPERR_MISC : AFPERR_PARAM;
         break;
     }
 
@@ -1088,7 +1091,6 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     struct ofork    *ofork;
     struct vol      *vol;
     struct dir      *dir;
-    const char      *call;
     off_t       size;
     uint16_t       ofrefnum, bitmap;
     int                 err;
@@ -1182,7 +1184,6 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     }
 
     if (bitmap == (1 << FILPBIT_DFLEN) || bitmap == (1 << FILPBIT_EXTDFLEN)) {
-        call = "ad_dtruncate";
         st_size = ad_size(ofork->of_ad, eid);
         err = -2;
 
@@ -1204,7 +1205,6 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
         }
     } else if (bitmap == (1 << FILPBIT_RFLEN)
                || bitmap == (1 << FILPBIT_EXTRFLEN)) {
-        call = "ad_rtruncate";
         ad_refresh(NULL, ofork->of_ad);
         st_size = ad_size(ofork->of_ad, eid);
         err = -2;
@@ -1257,7 +1257,8 @@ afp_setfork_err:
         return AFPERR_LOCK;
     }
 
-    return fork_error(ofork, call);
+    return fork_error(ofork, eid == ADEID_DFORK ? "ad_dtruncate"
+                      : "ad_rtruncate", false);
 }
 
 /* for this to work correctly, we need to check for locks before each
@@ -2203,7 +2204,7 @@ static int write_file(struct ofork *ofork, int eid, off_t *offset,
                 errno = EIO;
             }
 
-            return fork_error(ofork, "ad_write");
+            return fork_error(ofork, "ad_write", true);
         }
 
         *offset += cc;
@@ -2242,19 +2243,44 @@ static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
 
 
 /*!
+ * @brief Tell whether an FPWrite's payload of len bytes fits its ReqCount,
+ *        logging the refusal when not
+ *
+ * @param[in] ofork     the fork written, named in the log line
+ * @param[in] len       payload length
+ * @param[in] reqcount  the request's ReqCount
+ * @returns true when len fits reqcount, false when the write is refused
+ */
+static bool write_fits_count(const struct ofork *ofork, size_t len,
+                             off_t reqcount)
+{
+    if ((off_t)len <= reqcount) {
+        return true;
+    }
+
+    LOG(log_error, logtype_afpd,
+        "afp_write(%s): %zu bytes for a count of %jd", of_name(ofork), len,
+        (intmax_t)reqcount);
+    return false;
+}
+
+/*!
  * @brief Shared body of FPWrite and FPWriteExt
  *
  * The end flag makes offset count from the end of the fork. A virtual Icon
- * fork becomes a real file first. A sum beyond the field width fails with
- * AFPERR_DFULL, and strict locking takes a temporary write lock. The payload
- * arrives through recvfile where available, otherwise in dsi_write chunks
- * through write_file. A failure before afpd reads the payload drains the
- * entire request, and a later failure drains the rest of it. The reply
+ * fork becomes a real file first. A block too short for the command fails
+ * with AFPERR_PARAM, a sum beyond the field width with AFPERR_DFULL, and
+ * strict locking takes a temporary write lock. The payload arrives through
+ * recvfile where available, otherwise in dsi_write chunks through
+ * write_file. A payload longer than a nonzero ReqCount fails with
+ * AFPERR_PARAM before any byte is written, and a ReqCount of 0 replies AFP_OK
+ * with the payload drained. A failure before afpd reads the payload drains
+ * the entire request, and a later failure drains the rest of it. The reply
  * carries the offset after the last byte written.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
- * @param[in]     ibuflen  request block length, unused
+ * @param[in]     ibuflen  request block length
  * @param[out]    rbuf     reply block, receives the new offset
  * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
  *                         return
@@ -2262,7 +2288,7 @@ static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
  * @returns AFP_OK, AFPERR_ACCESS, AFPERR_PARAM, AFPERR_DFULL, AFPERR_LOCK, or
  *          the AFPERR_* code of fork_error
  */
-static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                       size_t *rbuflen, int is64)
 {
     struct ofork    *ofork;
@@ -2276,15 +2302,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     int             err = AFP_OK;
     uint16_t        ofrefnum;
     DSI *dsi = obj->dsi;
-    char *rcvbuf = NULL;
-    size_t          rcvbuflen = 0;
-    int             cc = AFP_OK;
-
-    if (dsi) {
-        rcvbuf = (char *)dsi->commands;
-        rcvbuflen = dsi->server_quantum;
-    }
-
     /* figure out parameters */
     ibuf++;
     endflag = ENDBIT(*ibuf);
@@ -2293,6 +2310,12 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     ibuf += sizeof(ofrefnum);
     offset   = get_off_t(&ibuf, is64);
     reqcount = get_off_t(&ibuf, is64);
+
+    /* a block too short for its command takes ReqCount from stale bytes */
+    if (ibuflen < (is64 ? DSI_WROFF_FPWRITEEXT : DSI_WROFF_FPWRITE)) {
+        err = AFPERR_PARAM;
+        goto afp_write_err;
+    }
 
     if (NULL == (ofork = of_find(ofrefnum))) {
         LOG(log_error, logtype_afpd,
@@ -2338,6 +2361,12 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     oldsize = ad_size(ofork->of_ad, eid);
 
     if (endflag) {
+        /* an end-relative offset must stay within off_t */
+        if (offset > INT64_MAX - oldsize) {
+            err = AFPERR_PARAM;
+            goto afp_write_err;
+        }
+
         offset += oldsize;
     }
 
@@ -2347,19 +2376,19 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         goto afp_write_err;
     }
 
-    newsize = ((offset + reqcount) > oldsize) ? (offset + reqcount) : oldsize;
-
     /* offset can overflow on 64-bit capable filesystems.
      * report disk full if that's going to happen. */
-    if (sum_neg(is64, offset, reqcount)) {
+    if (sum_neg(is64, offset, reqcount,
+                eid == ADEID_DFORK ? 0 : ad_getentryoff(ofork->of_ad, eid))) {
         LOG(log_error, logtype_afpd, "write_fork: DISK FULL");
         err = AFPERR_DFULL;
         goto afp_write_err;
     }
 
+    newsize = ((offset + reqcount) > oldsize) ? (offset + reqcount) : oldsize;
+
     if (!reqcount) { /* handle request counts of 0 */
         err = AFP_OK;
-        *rbuflen = set_off_t (offset, rbuf, is64);
         goto afp_write_err;
     }
 
@@ -2370,6 +2399,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         if (ad_tmplock(ofork->of_ad, eid, ADLOCK_WR, saveoff, reqcount,
                        ofork->of_refnum) < 0) {
             err = AFPERR_LOCK;
+            AFP_WRITE_DONE();
             goto afp_write_err;
         }
     }
@@ -2379,9 +2409,14 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     case AFPPROTO_ASP:
         if (asp_wrtcont(obj->handle, rbuf, rbuflen) < 0) {
-            *rbuflen = 0;
             LOG(log_error, logtype_afpd, "afp_write: asp_wrtcont: %s", strerror(errno));
-            return AFPERR_PARAM;
+            err = AFPERR_MISC;
+            goto afp_write_done;
+        }
+
+        if (!write_fits_count(ofork, *rbuflen, reqcount)) {
+            err = AFPERR_PARAM;
+            goto afp_write_done;
         }
 
         if (obj->options.flags & OPTION_DEBUG) {
@@ -2389,21 +2424,23 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
             bprint(rbuf, *rbuflen);
         }
 
-        cc = write_file(ofork, eid, &offset, rbuf, *rbuflen);
+        err = write_file(ofork, eid, &offset, rbuf, *rbuflen);
         break;
 #endif /* no afp/asp */
 
     case AFPPROTO_DSI: {
-        if (dsi == NULL) {
-            *rbuflen = 0;
-            return AFPERR_MISC;
-        }
-
         /* find out what we have already */
         char *wbuf = NULL;
         size_t len = dsi_writeinit(dsi, &wbuf);
 
-        if (len > 0 && (cc = write_file(ofork, eid, &offset, wbuf, len)) < 0) {
+        /* the lock range, the size check and the appended count are
+         * ReqCount's, so no more may land */
+        if (!write_fits_count(ofork, len + dsi->datasize, reqcount)) {
+            err = AFPERR_PARAM;
+            goto afp_write_done;
+        }
+
+        if ((err = write_file(ofork, eid, &offset, wbuf, len)) < 0) {
             goto afp_write_done;
         }
 
@@ -2416,15 +2453,16 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 dsi->datasize);
 
             if (ad_recvfile(ofork->of_ad, eid, dsi, &offset) < 0) {
-                cc = fork_error(ofork, "ad_recvfile");
+                err = fork_error(ofork, "ad_recvfile", true);
                 goto afp_write_done;
             }
         }
 
 #endif
 
-        while ((len = dsi_write(dsi, rcvbuf, rcvbuflen)) > 0) {
-            if ((cc = write_file(ofork, eid, &offset, rcvbuf, len)) < 0) {
+        while ((len = dsi_write(dsi, dsi->commands, dsi->server_quantum)) > 0) {
+            if ((err = write_file(ofork, eid, &offset, (char *)dsi->commands,
+                                  len)) < 0) {
                 goto afp_write_done;
             }
 
@@ -2432,10 +2470,14 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 "afp_write: wrote: %zu, offset: %jd", len, (intmax_t)offset);
         }
 
-        /* dsi_write() reads 0 at EOF as well as at the end of the payload */
+        /* dsi_write() reads 0 at EOF as well as at the end of the payload;
+         * a wait that disconnected the session left its own errno */
         if (dsi->datasize > 0) {
-            errno = ECONNRESET;
-            cc = fork_error(ofork, "dsi_write");
+            if (!(dsi->flags & DSI_DISCONNECTED)) {
+                errno = ECONNRESET;
+            }
+
+            err = fork_error(ofork, "dsi_write", true);
         }
     }
     break;
@@ -2443,7 +2485,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
 afp_write_done:
 
-    if (cc < 0 && obj->proto == AFPPROTO_DSI) {
+    if (err < 0 && obj->proto == AFPPROTO_DSI) {
         dsi_writeflush(dsi);
     }
 
@@ -2456,27 +2498,25 @@ afp_write_done:
         write_mark(obj, ofork, eid);
     }
 
-    if (cc < 0) {
+    AFP_WRITE_DONE();
+
+    if (err < 0) {
         *rbuflen = 0;
-        return cc;
+        return err;
     }
 
     /* update write count */
     ofork->of_vol->v_appended += (newsize > oldsize) ? (newsize - oldsize) : 0;
     *rbuflen = set_off_t (offset, rbuf, is64);
-    AFP_WRITE_DONE();
     return AFP_OK;
 afp_write_err:
 
     if (obj->proto == AFPPROTO_DSI) {
-        dsi_writeinit(dsi, NULL);
-        dsi_writeflush(dsi);
+        dsi_writedrain(dsi);
     }
 
-    if (err != AFP_OK) {
-        *rbuflen = 0;
-    }
-
+    /* the drain used the reply buffer; a count of 0 replies its offset */
+    *rbuflen = err == AFP_OK ? set_off_t(offset, rbuf, is64) : 0;
     return err;
 }
 

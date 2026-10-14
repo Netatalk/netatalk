@@ -23,10 +23,14 @@
 
 #include <errno.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <atalk/cnid.h>
@@ -34,11 +38,13 @@
 #include <atalk/dsi.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
 #include <atalk/queue.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
 #include "afp_config.h"
+#include "afpfunc_helpers.h"
 #include "dircache.h"
 #include "directory.h"
 #include "file.h"
@@ -46,6 +52,7 @@
 #include "fork.h"
 #include "hash.h"
 #include "subtests.h"
+#include "switch.h"
 #include "test.h"
 #include "volume.h"
 
@@ -253,6 +260,26 @@ void dsi_test_header(uint8_t *block, uint8_t command, uint16_t request_id,
 }
 
 /*!
+ * @brief Pack a request frame at p: a header of command for request_id with
+ *        data offset doff and length len, then len bytes of zeros, the first
+ *        afp_command
+ *
+ * @returns the frame's length
+ */
+size_t dsi_test_frame(uint8_t *p, uint8_t command, uint16_t request_id,
+                      uint32_t doff, uint32_t len, uint8_t afp_command)
+{
+    dsi_test_header(p, command, request_id, doff, len);
+    memset(p + DSI_BLOCKSIZ, 0, len);
+
+    if (len > 0) {
+        p[DSI_BLOCKSIZ] = afp_command;
+    }
+
+    return DSI_BLOCKSIZ + len;
+}
+
+/*!
  * @brief A DSI session on one end of an AF_UNIX socketpair, its command
  *        buffer one quantum as afpd sizes it and its read-ahead buffer one
  *        quantum; peer gets the other end
@@ -350,6 +377,218 @@ int dsi_test_connect_tcp(DSI *dsi, int *peer)
     dsi->socket = server;
     *peer = client;
     return 0;
+}
+
+/*!
+ * @brief Tell whether errnum, a loopback connection's failure, means there is
+ *        no loopback, as in a sandbox without a network of its own or one
+ *        that filters it
+ */
+int dsi_test_no_loopback(int errnum)
+{
+    return errnum == EADDRNOTAVAIL || errnum == ENETUNREACH
+           || errnum == EAFNOSUPPORT || errnum == EACCES || errnum == EPERM
+           || errnum == ECONNREFUSED || errnum == ETIMEDOUT;
+}
+
+/*! @brief proto_close of a test session: close its socket */
+void dsi_test_close_socket(DSI *dsi)
+{
+    close(dsi->socket);
+    dsi->socket = -1;
+}
+
+/*!
+ * @brief cnid_get() of a session process's CNID backend, which knows no file
+ *
+ * @returns CNID_INVALID
+ */
+static cnid_t dsi_test_cnid_get(struct _cnid_db *cdb _U_, cnid_t did _U_,
+                                const char *name _U_, size_t len _U_)
+{
+    return CNID_INVALID;
+}
+
+/*!
+ * @brief cnid_resolve() of a session process's CNID backend, which knows no
+ *        file, so a directory the session's dircache misses is not found
+ *
+ * @returns NULL
+ */
+static char *dsi_test_cnid_resolve(struct _cnid_db *cdb _U_, cnid_t *id _U_,
+                                   void *buffer _U_, size_t len _U_)
+{
+    return NULL;
+}
+
+/*!
+ * @brief cnid_close() of a session process's CNID backend, which holds
+ *        nothing
+ */
+static void dsi_test_cnid_close(struct _cnid_db *cdb _U_)
+{
+    /* the backend opened nothing */
+}
+
+/* the CNID backend of a session process: the calls a fork's and a volume's
+ * close make, answered without a database */
+static struct _cnid_db dsi_test_cnid = {
+    .cnid_get = dsi_test_cnid_get,
+    .cnid_resolve = dsi_test_cnid_resolve,
+    .cnid_close = dsi_test_cnid_close,
+};
+
+/*!
+ * @brief Serve a copy of obj in a session process: afp_over_dsi() on the
+ *        server end of a loopback TCP connection; peer gets the client end
+ *
+ * The session process gives each volume with a CNID database a backend that
+ * knows no file, so it closes its forks and volumes as a session does: an
+ * SQLite connection is unusable across fork(), and a new one in the child
+ * meets the SQLite state fork() copied from the harness, which fails on
+ * macOS. With uid 0 it ends as afp_over_dsi() ends a session that never
+ * logged in, at the end of its stream; with another uid it is logged in, and
+ * enters the disconnected state there until a termination. ipc_fd stands for
+ * its connection to the master afpd, -1 for none.
+ *
+ * @returns the session process's pid, or -1 with errno and nothing started
+ */
+pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd, int *peer)
+{
+    DSI *dsi = calloc(1, sizeof(*dsi));
+    pid_t pid = -1;
+    int err;
+
+    if (dsi == NULL || dsi_test_open(dsi, DSI_DATASIZ, peer) != 0) {
+        free(dsi);
+        return -1;
+    }
+
+    if (dsi_test_connect_tcp(dsi, peer) == 0) {
+        /* nothing buffered is written twice */
+        fflush(NULL);
+        pid = fork();
+    }
+
+    if (pid == 0) {
+        AFPObj session = *obj;
+        close(*peer);
+
+        for (struct vol *vol = getvolumes(); vol != NULL; vol = vol->v_next) {
+            if (vol->v_cdb != NULL) {
+                vol->v_cdb = &dsi_test_cnid;
+            }
+        }
+
+        session.dsi = dsi;
+        session.proto = AFPPROTO_DSI;
+        session.ipc_fd = ipc_fd;
+        session.hint_fd = -1;
+        session.uid = uid;
+        dsi->AFPobj = &session;
+        dsi->proto_close = dsi_test_close_socket;
+        /* the table login sets up for an AFP 3 client */
+        afp_switch = postauth_switch;
+        postauth_switch[AFP_READ_EXT] = afp_read_ext;
+        postauth_switch[AFP_WRITE_EXT] = afp_write_ext;
+        afp_over_dsi(&session);
+        _exit(0);
+    }
+
+    err = errno;
+
+    if (pid == -1) {
+        close(*peer);
+    }
+
+    dsi_test_cleanup(dsi);
+    free(dsi);
+    errno = err;
+    return pid;
+}
+
+/*!
+ * @brief dsi_test_serve_as() for a session that never logged in and has no
+ *        master afpd
+ *
+ * @returns the session process's pid, or -1 with errno and nothing started
+ */
+pid_t dsi_test_serve(const AFPObj *obj, int *peer)
+{
+    return dsi_test_serve_as(obj, 0, -1, peer);
+}
+
+/*!
+ * @brief End a session process dsi_test_serve() or dsi_test_serve_as()
+ *        started: close the client end, unless peer is -1 for an end the
+ *        caller keeps, so the session meets the end of its stream and exits,
+ *        then reap it, killing it only after thirty seconds, since a kill
+ *        during its exit cuts short what exit() writes; a logged-in session
+ *        needs a termination first
+ *
+ * @returns 0 when the session exited, whatever its status, which valgrind
+ *          sets for the harness's memory the session inherits and never
+ *          frees; -1 when a signal or the kill ended it
+ */
+int dsi_test_reap(pid_t pid, int peer)
+{
+    struct timespec tick = { .tv_nsec = 10 * 1000 * 1000 };
+    int status = -1;
+
+    if (peer != -1) {
+        close(peer);
+    }
+
+    for (int i = 0; i < 3000; i++) {
+        if (waitpid(pid, &status, WNOHANG) != 0) {
+            return WIFEXITED(status) ? 0 : -1;
+        }
+
+        nanosleep(&tick, NULL);
+    }
+
+    kill(pid, SIGKILL);
+    waitpid(pid, NULL, 0);
+    return -1;
+}
+
+/*!
+ * @brief Limit the process's file size to limit bytes, SIGXFSZ ignored so
+ *        that a write past it fails with EFBIG, as on a volume filling up
+ *
+ * @returns 0, or -1 with the limit and the signal's disposition unchanged
+ */
+int fsize_cap(struct fsize_cap *cap, rlim_t limit)
+{
+    struct rlimit capped;
+
+    if (getrlimit(RLIMIT_FSIZE, &cap->saved) != 0) {
+        return -1;
+    }
+
+    capped = cap->saved;
+    capped.rlim_cur = limit;
+    cap->xfsz = signal(SIGXFSZ, SIG_IGN);
+
+    if (setrlimit(RLIMIT_FSIZE, &capped) != 0) {
+        signal(SIGXFSZ, cap->xfsz);
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Give back the file size limit and the SIGXFSZ disposition that
+ *        fsize_cap() changed
+ *
+ * @returns 0, or -1 when the limit stays capped
+ */
+int fsize_uncap(const struct fsize_cap *cap)
+{
+    int rc = setrlimit(RLIMIT_FSIZE, &cap->saved);
+    signal(SIGXFSZ, cap->xfsz);
+    return rc;
 }
 
 /*!

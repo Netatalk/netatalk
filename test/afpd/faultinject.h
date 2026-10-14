@@ -31,6 +31,14 @@
  * open_fail_flags = F: only opens whose flags include F count and can fail.
  */
 
+/*! The countdown of one interposed call, with its count of armed calls */
+struct fi_call {
+    int armed;
+    int fail_after;
+    int errnum;
+    int calls;              /*!< count of armed calls seen */
+};
+
 struct fault_inject {
     int open_armed;
     int open_fail_after;    /*!< succeed this many armed opens, then fail once */
@@ -41,6 +49,8 @@ struct fault_inject {
     int close_armed;
     int close_fail_after;
     int close_errno;
+    struct fi_call asp_wrtcont;
+    int asp_wrtcont_fill;   /*!< asp_wrtcont() hands back the bytes asked for */
     int fcntl_armed;
     int fcntl_fail_after;
     int fcntl_errno;
@@ -61,14 +71,14 @@ struct fault_inject {
     int dirfd_errno;
     int dirfd_calls;
     int dirfd_failed_fd;  /*!< descriptor from the injected call */
-    /* splice() with an output offset is file side, without one socket side */
-    int splice_sock_armed;
-    int splice_sock_fail_after;
-    int splice_sock_errno;
-    int splice_file_armed;
-    int splice_file_fail_after;
-    int splice_file_errno;
+    struct fi_call splice_sock;
+    struct fi_call splice_file;
     int pipe_size_limit;    /*!< F_SETPIPE_SZ above this fails with EPERM */
+    int poll_urgent;        /*!< a wait for POLLPRI gets POLLPRI alone */
+    int poll_waits;         /*!< count of 1-fd waits under poll_urgent */
+    int poll_urgent_wakeups; /*!< count of POLLPRI waits answered */
+    int pipe_budget_spent;  /*!< pipes stay at two pages and grow no more */
+    struct fi_call pipe2;
 };
 
 extern struct fault_inject fi;

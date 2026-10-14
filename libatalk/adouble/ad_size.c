@@ -23,8 +23,10 @@
  * @brief Length of a fork of an AppleDouble
  *
  * The data fork length comes from fstat, or from the link target of a symlink.
- * Any other eid yields ad_rlen, the resource fork length that the header read
- * and ad_write maintain.
+ * The resource fork length comes from fstat of its open descriptor less the
+ * fork's place in the file, as ad_write's end-relative path counts it, so
+ * another process's appends count; without the descriptor it is ad_rlen, the
+ * length the header read and ad_write maintain.
  *
  * @param[in] ad   AppleDouble with the fork open
  * @param[in] eid  ADEID_DFORK, or any other entry for the resource fork
@@ -32,9 +34,9 @@
  */
 off_t ad_size(const struct adouble *ad, const uint32_t eid)
 {
-    if (eid == ADEID_DFORK) {
-        struct stat st;
+    struct stat st;
 
+    if (eid == ADEID_DFORK) {
         if (ad->ad_data_fork.adf_syml) {
             return strlen(ad->ad_data_fork.adf_syml);
         }
@@ -44,6 +46,11 @@ off_t ad_size(const struct adouble *ad, const uint32_t eid)
         }
 
         return st.st_size;
+    }
+
+    if (ad_reso_fileno(ad) != -1 && fstat(ad_reso_fileno(ad), &st) == 0) {
+        off_t len = st.st_size - ad_getentryoff(ad, ADEID_RFORK);
+        return len > 0 ? len : 0;
     }
 
 #if 0

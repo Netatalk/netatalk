@@ -569,8 +569,7 @@ addicon_err:
         if (obj->proto == AFPPROTO_DSI) {
             /* Drain the icon data so the session stays in sync, then
              * report the error instead of writing anything. */
-            dsi_writeinit(obj->dsi, NULL);
-            dsi_writeflush(obj->dsi);
+            dsi_writedrain(obj->dsi);
 
             if (si.sdt_fd != -1) {
                 close(si.sdt_fd);

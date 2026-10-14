@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/resource.h>
 
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
@@ -43,6 +44,11 @@
 #include "test.h"
 #include "volume.h"
 
+struct fsize_cap {
+    struct rlimit saved;
+    void (*xfsz)(int);
+};
+
 extern char **cnamewrap(const char *name);
 
 extern int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did,
@@ -55,9 +61,19 @@ extern uint16_t openvol(AFPObj *obj, const char *name);
 extern void dsi_test_header(uint8_t *block, uint8_t command,
                             uint16_t request_id, uint32_t code_or_doff,
                             uint32_t len);
+extern size_t dsi_test_frame(uint8_t *p, uint8_t command, uint16_t request_id,
+                             uint32_t doff, uint32_t len, uint8_t afp_command);
 extern int dsi_test_open(DSI *dsi, uint32_t quantum, int *peer);
 extern void dsi_test_cleanup(DSI *dsi);
 extern int dsi_test_connect_tcp(DSI *dsi, int *peer);
+extern int dsi_test_no_loopback(int errnum);
+extern void dsi_test_close_socket(DSI *dsi);
+extern pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd,
+                               int *peer);
+extern pid_t dsi_test_serve(const AFPObj *obj, int *peer);
+extern int dsi_test_reap(pid_t pid, int peer);
+extern int fsize_cap(struct fsize_cap *cap, rlim_t limit);
+extern int fsize_uncap(const struct fsize_cap *cap);
 extern int openfork(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                     uint8_t fork, uint16_t access, uint16_t *refnum);
 extern int closefork(AFPObj *obj, uint16_t refnum);

@@ -40,6 +40,19 @@ Changes in 4.7.0
 * FIX: libatalk: reject AppleDouble sidecars that place the resource fork
   anywhere but offset 82, GitHub #3378
 * UPD: afpd: raise the default 'splice size' to 1 MiB, GitHub #3378
+* FIX: afpd: AFP write operations are hardened. A write stays within the
+  range the client asked for and clear of other sessions' locks, malformed
+  or misframed write requests are refused without disrupting the session,
+  and write errors are reported with the codes the AFP 3.4 specification
+  gives, GitHub #3398
+* FIX: afpd: a client that drops off in the middle of a request, after a
+  network outage or sleep, no longer leaves its session hanging, so it can
+  reconnect, GitHub #3398
+* FIX: dsi: recvfile, the zero-copy write path on Linux, now copes with
+  slow and broken connections and with sockets and filesystems that cannot
+  splice, falling back to ordinary reads where it must, GitHub #3398
+* FIX: afpd: a file can be deleted over AFP even when its AppleDouble
+  metadata is in a layout afpd does not read, GitHub #3398
 
 Changes in 4.6.1
 ----------------

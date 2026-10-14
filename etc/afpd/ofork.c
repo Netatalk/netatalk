@@ -983,6 +983,9 @@ int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
 
     /* --- rfork fd: separate inode; never opened onto of->of_ad --- */
     if (rf_get) {
+        /* a lock probe's open of the resource fork */
+        int rflags = ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY | ADFLAGS_NOHDR;
+
         if (of != NULL && ad_rsrc_open(of->of_ad)) {
             radp = of->of_ad;            /* reuse held rfork, never close */
         } else if (of != NULL) {
@@ -994,14 +997,12 @@ int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
 #if !(defined(HAVE_EAFD) && defined(SOLARIS))
             int rerr, roerr;
             ad_init(&adrf, vol);
-            rerr = ad_openat(&adrf, dirfd, path->u_name,
-                             ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY);
+            rerr = ad_openat(&adrf, dirfd, path->u_name, rflags);
             roerr = errno;
 
             if (rerr < 0 && roerr == EACCES && try_root) {
                 become_root();
-                rerr = ad_openat(&adrf, dirfd, path->u_name,
-                                 ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY);
+                rerr = ad_openat(&adrf, dirfd, path->u_name, rflags);
                 /* roerr is not re-read: any failure here is unconditional ERROR */
                 unbecome_root();
             }
@@ -1027,7 +1028,6 @@ int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
         } else {
             /* no fork held: a transient open strands nothing.  HAVE_EAFD &&
              * SOLARIS needs DF too (the O_XATTR base fd). */
-            int rflags = ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY;
             int rerr, roerr;
 #if defined(HAVE_EAFD) && defined(SOLARIS)
             rflags |= ADFLAGS_DF;

@@ -21,12 +21,15 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <limits.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifdef HAVE_SENDFILEV
@@ -213,7 +216,8 @@ static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
  * empty
  *
  * A non-empty buffer returns only the bytes it holds, up to count. Only an
- * empty buffer leads to a socket read through readt.
+ * empty buffer leads to a socket read, which waits for input through
+ * dsi_wait_input().
  *
  * @param[in,out] dsi    DSI session
  * @param[out]    buf    receives the bytes
@@ -235,7 +239,13 @@ static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
         return len;    /* 2. */
     }
 
-    len = readt(dsi->socket, buf, count, 0, 0); /* 3. */
+    while ((len = recv(dsi->socket, buf, count, 0)) == -1 /* 3. */
+            && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+        if (dsi_wait_input(dsi) != 0) {
+            return -1;
+        }
+    }
+
     LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes): got: %d", count, len);
     return len;
 }
@@ -310,6 +320,18 @@ static void unblock_sig(DSI *dsi)
     dsi->in_write--;
 }
 
+/*!
+ * @brief Read the monotonic clock
+ *
+ * @returns milliseconds since an arbitrary start
+ */
+static long long monotonic_ms(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+
 /*********************************************************************************
  * Public functions
  *********************************************************************************/
@@ -322,14 +344,17 @@ static void unblock_sig(DSI *dsi)
  * and sets DSI_DISCONNECTED. A session that never logged in reports failure.
  * login refuses uid 0 and stores the uid on success, so a zero uid means no
  * login. The UAM logout hook is no usable mark, because a UAM may register
- * none.
+ * none. A call on a session already disconnected logs nothing.
  *
  * @param[in,out] dsi  DSI session
  * @returns 0, or -1 when no user logged in to the session
  */
 int dsi_disconnect(DSI *dsi)
 {
-    LOG(log_note, logtype_dsi, "dsi_disconnect: entering disconnected state");
+    if (!(dsi->flags & DSI_DISCONNECTED)) {
+        LOG(log_note, logtype_dsi, "dsi_disconnect: entering disconnected state");
+    }
+
     dsi->proto_close(dsi);          /* 1 */
     dsi_close_pipe(dsi);
     dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP); /* 2 */
@@ -340,6 +365,75 @@ int dsi_disconnect(DSI *dsi)
     }
 
     return 0;
+}
+
+/*!
+ * @brief Wait until the client sends more of the request being read
+ *
+ * The tickle timer that disconnects a client silent for the timeout option's
+ * count of tickleval intervals runs in the main loop, which a request being
+ * read never reaches, so the wait applies the same bound from the last bytes
+ * received; past it the session enters the disconnected state, from which the
+ * client can reconnect. The flag stop_wait points to, set for a reconnect's
+ * hand-over, ends the wait at once the same way, as the client has left the
+ * connection. Other signals leave the wait waiting, so a termination lets a
+ * request whose client still sends finish. A session without its options
+ * waits without a bound.
+ *
+ * @param[in,out] dsi  DSI session
+ * @returns 0 once the socket has input; -1 with errno ETIMEDOUT at the bound or
+ *          ECONNABORTED for a hand-over, both after the session disconnected,
+ *          or with the errno of poll
+ */
+int dsi_wait_input(DSI *dsi)
+{
+    struct pollfd pfd[2] = {
+        { .fd = dsi->socket, .events = POLLIN },
+        { .fd = atalk_sigpipe_readfd(), .events = POLLIN },
+    };
+    long long limit = -1;
+    long long end = 0;
+
+    if (dsi->AFPobj != NULL) {
+        limit = MIN((long long)dsi->AFPobj->options.timeout
+                    * dsi->AFPobj->options.tickleval, INT_MAX / 1000) * 1000;
+        end = monotonic_ms() + limit;
+    }
+
+    while (dsi->stop_wait == NULL || !*dsi->stop_wait) {
+        long long now = monotonic_ms();
+        int ret = poll(pfd, pfd[1].fd == -1 ? 1 : 2,
+                       limit < 0 ? -1 : (int)(end > now ? end - now : 0));
+
+        if (ret > 0 && pfd[0].revents != 0) {
+            return 0;
+        }
+
+        if (ret > 0) {
+            /* a signal's wake-up; a pipe that fails is watched no more */
+            if (pfd[1].revents & POLLIN) {
+                atalk_sigpipe_drain();
+            } else {
+                pfd[1].fd = -1;
+            }
+        } else if (ret == 0) {
+            LOG(log_error, logtype_dsi,
+                "dsi_wait_input: the client sent nothing for %lld s of a request",
+                limit / 1000);
+            dsi_disconnect(dsi);
+            errno = ETIMEDOUT;
+            return -1;
+        } else if (errno != EINTR) {
+            LOG(log_error, logtype_dsi, "dsi_wait_input: poll: %s",
+                strerror(errno));
+            return -1;
+        }
+    }
+
+    LOG(log_note, logtype_dsi, "dsi_wait_input: a reconnect ended the request");
+    dsi_disconnect(dsi);
+    errno = ECONNABORTED;
+    return -1;
 }
 
 /*!

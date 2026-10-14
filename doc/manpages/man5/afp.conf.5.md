@@ -485,9 +485,10 @@ back to the default. A value that is not a power of two is rounded up to the
 next one. The kernel may grant a smaller pipe: `fs.pipe-max-size` limits it
 to 1 MiB by default.
 >
-> ***NOTE:*** Each afpd child process keeps one pipe of this size, and all of
-them count against the kernel's pipe limit for the user afpd runs as
-(`fs.pipe-user-pages-soft`).
+> ***NOTE:*** If more than 50 users connect at the same time with **recvfile**
+enabled, either increase the kernel setting `fs.pipe-user-pages-soft` or
+reduce **splice size**. The kernel allows only 64 MiB in total by default;
+beyond the kernel limit, users fall back to recvfile off.
 
 ## CNID Database Backend Options
 
@@ -1170,6 +1171,8 @@ timeout = *number* **(G)**
 
 > Specify the number of tickles to send before timing out a connection.
 The default is 4, therefore a connection will timeout after 2 minutes.
+A client that stops sending in the middle of a request times out the same
+way, and can reconnect.
 
 client polling = *BOOLEAN* (default: *no*) **(G)**
 

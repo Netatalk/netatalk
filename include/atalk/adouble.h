@@ -249,6 +249,7 @@ struct adouble {
 #define ADFLAGS_CREATE    (1<<10) /*!< create file, open called with O_CREAT */
 #define ADFLAGS_EXCL      (1<<11) /*!< exclusive open, open called with O_EXCL */
 #define ADFLAGS_TRUNC     (1<<12) /*!< truncate, open called with O_TRUNC */
+#define ADFLAGS_NOHDR     (1<<13) /*!< read no ._ header: a lock probe */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_RO         (1 << 1)
@@ -533,8 +534,8 @@ extern uint32_t  ad_getid(struct adouble *, dev_t, ino_t, cnid_t, const void *);
 extern uint32_t  ad_forcegetid(struct adouble *adp);
 
 #ifdef WITH_RECVFILE
-extern ssize_t ad_recvfile(struct adouble *ad, int eid, struct DSI *dsi,
-                           off_t *off);
+extern int ad_recvfile(struct adouble *ad, int eid, struct DSI *dsi,
+                       off_t *off);
 #endif
 
 #endif /* _ATALK_ADOUBLE_H */
