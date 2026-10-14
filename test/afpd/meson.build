@@ -17,6 +17,12 @@ if enable_appletalk
     afpd_test_extra_sources += files('subtests_atp.c')
 endif
 
+# a static libatalk, which a 'both' build may link, binds asp_wrtcont() at
+# link time, past the preload
+if get_option('default_library') == 'shared'
+    test_c_args += '-DAFPDTEST_SHARED_LIBATALK'
+endif
+
 if build_tests
 
     # For dtrace probes we need to invoke dtrace on all input files, before
@@ -118,7 +124,14 @@ if build_tests
             test_external_deps,
             libcnid_deps,
         ],
-        c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
+        c_args: [
+            '-DAPPLCNAME', dversion,
+            messagedir,
+            uamdir,
+            confdir,
+            statedir,
+            test_c_args,
+        ],
         link_args: test_link_args,
         link_language: use_spotlight_xapian ? 'cpp' : 'c',
         export_dynamic: true,

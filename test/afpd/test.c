@@ -18,12 +18,17 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <string.h>
-#include <stdint.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <atalk/adouble.h>
@@ -52,6 +57,7 @@
 #include "auth.h"
 #include "dircache.h"
 #include "directory.h"
+#include "faultinject.h"
 #include "file.h"
 #include "filedir.h"
 #include "fork.h"
@@ -66,6 +72,7 @@
 #ifndef NO_DDP
 #include "subtests_atp.h"
 #endif /* NO_DDP */
+#include "switch.h"
 #include "test.h"
 #include "test_capabilities.h"
 #include "volume.h"
@@ -164,6 +171,836 @@ static int utest_fork_range_rejects_wrapped_read(void)
     }
 
     return 0;
+}
+
+/*! A reply a session owes a request: its frame's command, id and code, and
+ *  the len bytes of data at data it carries, at most 16 */
+struct dsp_reply {
+    uint8_t command;
+    uint16_t reqid;
+    int code;
+    const void *data;
+    uint32_t len;
+};
+
+/*!
+ * @brief Tell whether the next reply on peer is the one in want
+ */
+static bool dsp_reply_is(int peer, const struct dsp_reply *want)
+{
+    uint8_t expect[DSI_BLOCKSIZ];
+    uint8_t got[DSI_BLOCKSIZ + 16];
+    const size_t len = DSI_BLOCKSIZ + want->len;
+    dsi_test_header(expect, want->command, want->reqid, (uint32_t)want->code,
+                    want->len);
+    expect[0] = DSIFL_REPLY;
+    return len <= sizeof(got)
+           && readt(peer, got, len, 1, 10) == (ssize_t)len
+           && memcmp(got, expect, sizeof(expect)) == 0
+           && (want->len == 0
+               || memcmp(got + DSI_BLOCKSIZ, want->data, want->len) == 0);
+}
+
+/*! @brief Tell whether the session ends the stream on peer with no more data */
+static bool dsp_ends(int peer)
+{
+    char byte;
+    return readt(peer, &byte, 1, 1, 10) == 0;
+}
+
+/*!
+ * @brief Send len bytes of frames to a session process and tell whether it
+ *        gives the n replies in want, in order, and then ends the stream
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int dsp_serve(const uint8_t *frames, size_t len,
+                     const struct dsp_reply *want, int n)
+{
+    int peer = -1;
+    pid_t pid = dsi_test_serve(&obj, &peer);
+    int ret = -1;
+    int i = 0;
+
+    if (pid == -1) {
+        return dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    }
+
+    if (write(peer, frames, len) == (ssize_t)len
+            && shutdown(peer, SHUT_WR) == 0) {
+        while (i < n && dsp_reply_is(peer, &want[i])) {
+            i++;
+        }
+
+        if (i == n && dsp_ends(peer)) {
+            ret = 0;
+        }
+    }
+
+    return dsi_test_reap(pid, peer) == 0 ? ret : -1;
+}
+
+/*!
+ * @brief A write command in a DSICommand frame, which carries no payload, is
+ *        refused, with AFPERR_PARAM when a handler serves it and AFPERR_NOOP
+ *        when none does, and the requests after it are served
+ */
+static int utest_dsi_write_command_refused_in_command_frame(void)
+{
+    static uint8_t frames[3 * (DSI_BLOCKSIZ + 20) + DSI_BLOCKSIZ + 1];
+    static const uint8_t command[] = { AFP_WRITE, AFP_WRITE_EXT, AFP_ADDICON };
+    static const struct dsp_reply want[] = {
+        { DSIFUNC_CMD, 1, AFPERR_PARAM }, { DSIFUNC_CMD, 2, AFPERR_PARAM },
+        { DSIFUNC_CMD, 3, AFPERR_NOOP }, { DSIFUNC_CMD, 4, AFPERR_NOOP },
+    };
+    AFPCmd addicon = postauth_switch[AFP_ADDICON];
+    size_t len = 0;
+    int ret;
+
+    /* the three with a 20-byte block of zeros, FPAddIcon with no handler
+     * in the session's table, then a command no handler serves */
+    for (int i = 0; i < 3; i++) {
+        len += dsi_test_frame(frames + len, DSIFUNC_CMD, (uint16_t)(i + 1), 0,
+                              20, command[i]);
+    }
+
+    len += dsi_test_frame(frames + len, DSIFUNC_CMD, 4, 0, 1, 0xff);
+    postauth_switch[AFP_ADDICON] = NULL;
+    ret = dsp_serve(frames, len, want, 4);
+    postauth_switch[AFP_ADDICON] = addicon;
+    return ret;
+}
+
+/*!
+ * @brief A DSIWrite frame whose command takes no payload, or that no handler
+ *        serves, is refused and its payload drained, so the next request
+ *        parses
+ */
+static int utest_dsi_write_frame_drained(void)
+{
+    static uint8_t frames[2 * (DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + 8192)
+                          + DSI_BLOCKSIZ + 1];
+    static const struct dsp_reply want[] = {
+        { DSIFUNC_WRITE, 1, AFPERR_NOOP }, { DSIFUNC_WRITE, 2, AFPERR_PARAM },
+        { DSIFUNC_CMD, 3, AFPERR_NOOP },
+    };
+    size_t len;
+    /* a command no handler serves, then FPGetSrvrParms, each with 8 KiB of
+     * zeros, past the session's 8 KiB read-ahead, that a parse of the next
+     * frame would take for a header */
+    len = dsi_test_frame(frames, DSIFUNC_WRITE, 1, DSI_WROFF_FPWRITE,
+                         DSI_WROFF_FPWRITE + 8192, 0xff);
+    len += dsi_test_frame(frames + len, DSIFUNC_WRITE, 2, DSI_WROFF_FPWRITE,
+                          DSI_WROFF_FPWRITE + 8192, AFP_GETSRVPARAM);
+    len += dsi_test_frame(frames + len, DSIFUNC_CMD, 3, 0, 1, 0xff);
+    return dsp_serve(frames, len, want, 3);
+}
+
+/*!
+ * @brief A DSI command the session does not serve has its payload read with
+ *        its header, so the request after it parses
+ */
+static int utest_dsi_spurious_command_drains_nothing(void)
+{
+    static uint8_t frames[DSI_BLOCKSIZ + 6 + DSI_BLOCKSIZ + 1];
+    static const struct dsp_reply want[] = {
+        { DSIFUNC_CMD, 2, AFPERR_NOOP },
+    };
+    size_t len;
+    /* a DSIOpenSession inside the session with a 6-byte block of zeros,
+     * then a command no handler serves */
+    len = dsi_test_frame(frames, DSIFUNC_OPEN, 1, 0, 6, 0);
+    len += dsi_test_frame(frames + len, DSIFUNC_CMD, 2, 0, 1, 0xff);
+    return dsp_serve(frames, len, want, 1);
+}
+
+/*!
+ * @brief A DSIWrite that a session with an expired password refuses has its
+ *        payload drained, so the next request parses
+ */
+static int utest_dsi_write_refused_pwdexpired_drained(void)
+{
+    static uint8_t frames[DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + 8192
+                          + DSI_BLOCKSIZ + 1];
+    static const struct dsp_reply want[] = {
+        { DSIFUNC_WRITE, 1, AFPERR_PWDEXPR }, { DSIFUNC_CMD, 2, AFPERR_NOOP },
+    };
+    AFPCmd handler = postauth_switch[AFP_WRITE];
+    size_t len;
+    int ret;
+    /* FPWrite with 8 KiB of zeros, past the session's read-ahead, refused
+     * as after a login with an expired password, then a command no handler
+     * serves */
+    len = dsi_test_frame(frames, DSIFUNC_WRITE, 1, DSI_WROFF_FPWRITE,
+                         DSI_WROFF_FPWRITE + 8192, AFP_WRITE);
+    len += dsi_test_frame(frames + len, DSIFUNC_CMD, 2, 0, 1, 0xff);
+    postauth_switch[AFP_WRITE] = afp_errpwdexpired;
+    ret = dsp_serve(frames, len, want, 2);
+    postauth_switch[AFP_WRITE] = handler;
+    return ret;
+}
+
+/* an FPWrite's payload, and the part of its frame sent before a pause */
+#define DSP_PAYLOAD (64 * 1024)
+#define DSP_HEAD (DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + 4096)
+
+/*!
+ * @brief A session process of uid with ipc_fd as dsi_test_serve_as() starts
+ *        it, recvfile on as asked, that times a silent client out after one
+ *        tickle of seconds, and in frame an FPWrite of DSP_PAYLOAD zeros to
+ *        the data fork of the new file dsp_write
+ *
+ * @returns the session's pid, or -1 with errno set
+ */
+static pid_t dsp_write_session(struct vol *vol, uid_t uid, int ipc_fd,
+                               int seconds, bool recvfile, uint8_t *frame,
+                               int *peer)
+{
+    struct afp_options options = obj.options;
+    uint32_t count = htonl(DSP_PAYLOAD);
+    uint16_t refnum;
+    pid_t pid;
+    int err;
+
+    if (createfile(&obj, vol->v_vid, DIRDID_ROOT, "dsp_write") != AFP_OK
+            || openfork(&obj, vol->v_vid, DIRDID_ROOT, "dsp_write",
+                        OPENFORK_DATA, OPENACC_RD | OPENACC_WR, &refnum)
+            != AFP_OK) {
+        errno = EIO;
+        return -1;
+    }
+
+    dsi_test_frame(frame, DSIFUNC_WRITE, 1, DSI_WROFF_FPWRITE,
+                   DSI_WROFF_FPWRITE + DSP_PAYLOAD, AFP_WRITE);
+    /* refnum travels raw, as afp_openfork() returns it */
+    memcpy(frame + DSI_BLOCKSIZ + 2, &refnum, sizeof(refnum));
+    memcpy(frame + DSI_BLOCKSIZ + 8, &count, sizeof(count));
+    obj.options.timeout = 1;
+    obj.options.tickleval = seconds;
+
+    if (recvfile) {
+        obj.options.flags |= OPTION_RECVFILE;
+    }
+
+    pid = dsi_test_serve_as(&obj, uid, ipc_fd, peer);
+    err = errno;
+    obj.options = options;
+    /* the session holds its own copy of the fork */
+    closefork(&obj, refnum);
+    errno = err;
+    return pid;
+}
+
+/*!
+ * @brief Wait up to ten seconds until the session wrote len bytes to
+ *        dsp_write, so it has read that much of the payload
+ */
+static bool dsp_written(const struct vol *vol, off_t len)
+{
+    struct timespec tick = { .tv_nsec = 10 * 1000 * 1000 };
+    char path[MAXPATHLEN + 1];
+    struct stat st;
+    snprintf(path, sizeof(path), "%s/dsp_write", vol->v_path);
+
+    for (int i = 0; i < 1000; i++) {
+        if (stat(path, &st) == 0 && st.st_size >= len) {
+            return true;
+        }
+
+        nanosleep(&tick, NULL);
+    }
+
+    return false;
+}
+
+/*!
+ * @brief Tell whether the session ends the stream on peer within ten
+ *        seconds, whatever data comes first
+ */
+static bool dsp_drains(int peer)
+{
+    struct pollfd pfd = { .fd = peer, .events = POLLIN };
+    uint8_t buf[256];
+    ssize_t n = -1;
+
+    while (poll(&pfd, 1, 10000) == 1
+            && (n = recv(peer, buf, sizeof(buf), 0)) > 0) {
+        /* what comes before the end is not looked at */
+    }
+
+    return n == 0;
+}
+
+/* the uid of a logged-in session: the harness's own, or 1 under root */
+#define DSP_USER (getuid() != 0 ? getuid() : 1)
+
+/*!
+ * @brief An FPWrite whose client falls silent part way through its payload
+ *        ends the session without a reply once the silence lasts the
+ *        session's timeout of a second, not before
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or, for recvfile, without a
+ *          socket that splices
+ */
+static int dsp_stall(struct vol *vol, bool recvfile)
+{
+    static uint8_t frame[DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + DSP_PAYLOAD];
+    struct timespec t0, t1;
+    int peer = -1;
+    int ret = -1;
+    pid_t pid;
+
+    if (recvfile && !test_capability(TEST_CAP_SOCKET_SPLICE, vol)) {
+        return TEST_SKIP;
+    }
+
+    if ((pid = dsp_write_session(vol, 0, -1, 1, recvfile, frame,
+                                 &peer)) == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        clock_gettime(CLOCK_MONOTONIC, &t0);
+
+        if (write(peer, frame, DSP_HEAD) == DSP_HEAD && dsp_ends(peer)) {
+            clock_gettime(CLOCK_MONOTONIC, &t1);
+            ret = (t1.tv_sec - t0.tv_sec) * 1000
+                  + (t1.tv_nsec - t0.tv_nsec) / 1000000 >= 900 ? 0 : -1;
+        }
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_write");
+    return ret;
+}
+
+/*! @brief The session times out a write whose client falls silent */
+static int utest_dsi_stalled_write_disconnects(struct vol *vol)
+{
+    return dsp_stall(vol, false);
+}
+
+/*! @brief The session times out a recvfile write whose client falls silent */
+static int utest_recvfile_stalled_write_disconnects(struct vol *vol)
+{
+    return dsp_stall(vol, true);
+}
+
+/*!
+ * @brief A termination that arrives while an FPWrite's payload is still
+ *        arriving lets the write finish and be answered, and the session then
+ *        ends as a termination ends it
+ *
+ * The rest of the payload follows the signal after a pause, so the session
+ * waits for it with the termination recorded.
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_term_lets_write_finish(struct vol *vol)
+{
+    static uint8_t frame[DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + DSP_PAYLOAD];
+    const size_t rest = sizeof(frame) - DSP_HEAD;
+    struct timespec pause = { .tv_nsec = 200 * 1000 * 1000 };
+    uint32_t written = htonl(DSP_PAYLOAD);
+    const struct dsp_reply want = {
+        DSIFUNC_WRITE, 1, AFP_OK, &written, sizeof(written)
+    };
+    int peer = -1;
+    int ret = -1;
+    pid_t pid;
+
+    if ((pid = dsp_write_session(vol, 0, -1, 60, false, frame,
+                                 &peer)) == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        /* the signal once the session holds the first part */
+        if (write(peer, frame, DSP_HEAD) == DSP_HEAD && dsp_written(vol, 4096)
+                && kill(pid, SIGTERM) == 0 && nanosleep(&pause, NULL) == 0
+                && write(peer, frame + DSP_HEAD, rest) == (ssize_t)rest
+                && dsp_reply_is(peer, &want) && dsp_drains(peer)) {
+            ret = 0;
+        }
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_write");
+    return ret;
+}
+
+/*!
+ * @brief Hand session process pid a new connection as the master afpd hands
+ *        over a reconnect: the request ID 7 of the client's
+ *        FPDisconnectOldSession and the server end of a new loopback
+ *        connection on ipc, then SIGURG; newpeer gets the client end
+ *
+ * @returns whether the session answered the hand-over on the new connection
+ */
+static bool dsp_hand_over(pid_t pid, int ipc, int *newpeer)
+{
+    static const struct dsp_reply handover = { DSIFUNC_CMD, 7, AFP_OK };
+    const uint16_t id = htons(7);
+    DSI fresh = { .socket = -1 };
+    bool sent = false;
+
+    if (dsi_test_connect_tcp(&fresh, newpeer) == 0) {
+        sent = write(ipc, &id, sizeof(id)) == (ssize_t)sizeof(id)
+               && send_fd(ipc, fresh.socket) == 0;
+        /* the session holds its own copy */
+        close(fresh.socket);
+    }
+
+    return sent && kill(pid, SIGURG) == 0 && dsp_reply_is(*newpeer, &handover);
+}
+
+/*!
+ * @brief A logged-in session whose client fell silent part way through an
+ *        FPWrite takes over the connection a reconnect hands it, answers the
+ *        hand-over and serves the requests on it: at once during the stall,
+ *        with a tick the stall left unserved when tick, or in the
+ *        disconnected state once the stall timed out when timed_out
+ *
+ * The session times a silent client out at its first tick, so a tick of the
+ * old connection's that the new one inherits ends it before its request; a
+ * stall times out after a second when timed_out, a minute otherwise.
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or, for tick, in a build that
+ *          handles no tick
+ */
+static int dsp_reconnect(struct vol *vol, bool tick, bool timed_out)
+{
+    static uint8_t frame[DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + DSP_PAYLOAD];
+    uint8_t next[DSI_BLOCKSIZ + 1];
+    static const struct dsp_reply served = { DSIFUNC_CMD, 8, AFPERR_NOOP };
+    int newpeer = -1;
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    pid_t pid = -1;
+#ifdef DEBUGGING
+
+    /* the build installs no handler for the tickle timer's signal */
+    if (tick) {
+        return TEST_SKIP;
+    }
+
+#endif
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    dsi_test_frame(next, DSIFUNC_CMD, 8, 0, 1, 0xff);
+
+    if ((pid = dsp_write_session(vol, DSP_USER, ipc[1], timed_out ? 1 : 60,
+                                 false, frame, &peer)) == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else if (write(peer, frame, DSP_HEAD) == DSP_HEAD
+               && dsp_written(vol, 4096)
+               && (!tick || kill(pid, SIGALRM) == 0)
+               && (!timed_out || dsp_ends(peer))
+               && dsp_hand_over(pid, ipc[0], &newpeer)
+               && write(newpeer, next, sizeof(next)) == (ssize_t)sizeof(next)
+               && dsp_reply_is(newpeer, &served) && dsp_ends(peer)) {
+        ret = 0;
+    }
+
+    if (pid != -1) {
+        kill(pid, SIGTERM);
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    if (newpeer != -1) {
+        close(newpeer);
+    }
+
+    close(ipc[0]);
+    close(ipc[1]);
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_write");
+    return ret;
+}
+
+/*! @brief A reconnect takes over a session stalled in a write */
+static int utest_dsi_reconnect_takes_over_stalled_write(struct vol *vol)
+{
+    return dsp_reconnect(vol, false, false);
+}
+
+/*! @brief A reconnect drops a tick that a stalled write left unserved */
+static int utest_dsi_reconnect_drops_stalled_tick(struct vol *vol)
+{
+    return dsp_reconnect(vol, true, false);
+}
+
+/*! @brief A reconnect takes over a session whose stalled write timed out */
+static int utest_dsi_reconnect_after_write_timeout(struct vol *vol)
+{
+    return dsp_reconnect(vol, false, true);
+}
+
+/*!
+ * @brief Wait up to ten seconds for the first report of a session process
+ *        to the master afpd on ipc, which it sends with its signal handlers
+ *        set
+ */
+static bool dsp_running(int ipc)
+{
+    struct pollfd pfd = { .fd = ipc, .events = POLLIN };
+    return poll(&pfd, 1, 10000) == 1;
+}
+
+#ifndef DEBUGGING
+/*!
+ * @brief Tell whether the session sends a request on peer within ten
+ *        seconds, as a tick does for a client that sent nothing since the
+ *        last: a tickle, or the attention of a volume that changed
+ */
+static bool dsp_ticked(int peer)
+{
+    uint8_t head[DSI_BLOCKSIZ];
+    return readt(peer, head, sizeof(head), 1, 10) == (ssize_t)sizeof(head)
+           && head[0] == DSIFL_REQUEST;
+}
+#endif
+
+/*!
+ * @brief A logged-in session the timeout disconnected while idle counts the
+ *        new connection's silence afresh once a reconnect takes it over, so
+ *        the next tick reaches the client rather than disconnecting it again
+ *
+ * The session times a client out at its second tick without a request, and
+ * each SIGALRM the test sends is a tick, as the tickle timer's would be.
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or in a build that handles
+ *          no tick
+ */
+static int utest_dsi_reconnect_counts_ticks_afresh(void)
+{
+#ifdef DEBUGGING
+    /* the build installs no handler for the tickle timer's signal */
+    return TEST_SKIP;
+#else
+    struct afp_options options = obj.options;
+    int newpeer = -1;
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    pid_t pid;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    obj.options.timeout = 2;
+    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], &peer);
+    obj.options = options;
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else if (dsp_running(ipc[0])
+               && kill(pid, SIGALRM) == 0 && dsp_ticked(peer)
+               && kill(pid, SIGALRM) == 0 && dsp_drains(peer)
+               && dsp_hand_over(pid, ipc[0], &newpeer)
+               && kill(pid, SIGALRM) == 0 && dsp_ticked(newpeer)) {
+        ret = 0;
+    }
+
+    if (pid != -1) {
+        kill(pid, SIGTERM);
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    if (newpeer != -1) {
+        close(newpeer);
+    }
+
+    close(ipc[0]);
+    close(ipc[1]);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief A logged-in session that a termination reaches while its client
+ *        has sent half a request header ends once the request times out
+ *        after a second
+ *
+ * The half header follows the session's first report, so the session waits
+ * in its main loop when it arrives, and the signal follows it after a pause.
+ * The client end stays open, so the bound alone can end the read.
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_term_served_after_stalled_header(void)
+{
+    static const uint8_t half[DSI_BLOCKSIZ / 2];
+    struct timespec tick = { .tv_nsec = 300 * 1000 * 1000 };
+    struct afp_options options = obj.options;
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    pid_t pid;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    obj.options.timeout = 1;
+    obj.options.tickleval = 1;
+    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], &peer);
+    obj.options = options;
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        if (dsp_running(ipc[0])
+                && write(peer, half, sizeof(half)) == (ssize_t)sizeof(half)
+                && nanosleep(&tick, NULL) == 0) {
+            ret = 0;
+        }
+
+        kill(pid, SIGTERM);
+
+        if (dsi_test_reap(pid, -1) != 0) {
+            ret = -1;
+        }
+
+        close(peer);
+    }
+
+    close(ipc[0]);
+    close(ipc[1]);
+    return ret;
+}
+
+/*!
+ * @brief An FPWrite whose client pauses between the parts of its payload,
+ *        each pause shorter than the session's timeout but all of them
+ *        longer, completes
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_slow_write_completes(struct vol *vol)
+{
+    static uint8_t frame[DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + DSP_PAYLOAD];
+    const size_t part = (sizeof(frame) - DSP_HEAD) / 5;
+    struct timespec pause = { .tv_nsec = 500 * 1000 * 1000 };
+    uint32_t written = htonl(DSP_PAYLOAD);
+    const struct dsp_reply want = {
+        DSIFUNC_WRITE, 1, AFP_OK, &written, sizeof(written)
+    };
+    size_t off = DSP_HEAD;
+    int peer = -1;
+    int ret = -1;
+    pid_t pid;
+
+    /* five half-second pauses against a timeout of one two-second tickle */
+    if ((pid = dsp_write_session(vol, 0, -1, 2, false, frame, &peer)) == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        if (write(peer, frame, DSP_HEAD) == DSP_HEAD) {
+            while (off < sizeof(frame)
+                    && nanosleep(&pause, NULL) == 0
+                    && write(peer, frame + off, part) == (ssize_t)part) {
+                off += part;
+            }
+
+            if (off == sizeof(frame) && shutdown(peer, SHUT_WR) == 0
+                    && dsp_reply_is(peer, &want) && dsp_ends(peer)) {
+                ret = 0;
+            }
+        }
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_write");
+    return ret;
+}
+
+#ifndef HAVE_EAFD
+#define LR_SIDECAR (ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI + 32 + 100)
+
+/*!
+ * @brief FPDelete of a file whose ._ sidecar is the first len bytes of one
+ *        that records 100 bytes of resource fork at roff, behind a
+ *        FinderInfo of filen bytes at 50
+ *
+ * @returns 0 when the file and its sidecar are gone, -1 when not
+ */
+static int lr_delete(struct vol *vol, uint32_t roff, uint32_t filen,
+                     size_t len)
+{
+    const uint32_t entry[] = {
+        ADEID_RFORK, roff, 100,
+        ADEID_FINDERI, ADEDOFF_FINDERI_OSX, filen,
+    };
+    uint8_t sidecar[LR_SIDECAR] = { 0 };
+    const char *name = "lowrfork";
+    char data[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 1];
+    uint32_t be;
+    struct stat st;
+    int ret = -1;
+    int fd;
+    /* magic, version, 16 bytes of filler, two entries */
+    be = htonl(AD_MAGIC);
+    memcpy(sidecar, &be, sizeof(be));
+    be = htonl(AD_VERSION2);
+    memcpy(sidecar + 4, &be, sizeof(be));
+    sidecar[25] = 2;
+
+    for (size_t i = 0; i < sizeof(entry) / sizeof(entry[0]); i++) {
+        be = htonl(entry[i]);
+        memcpy(sidecar + AD_HEADER_LEN + 4 * i, &be, sizeof(be));
+    }
+
+    snprintf(data, sizeof(data), "%s/%s", vol->v_path, name);
+    snprintf(path, sizeof(path), "%s/._%s", vol->v_path, name);
+
+    if (createfile(&obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK) {
+        return -1;
+    }
+
+    if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600)) != -1) {
+        if (write(fd, sidecar, len) == (ssize_t)len
+                && delete (&obj, vol->v_vid, DIRDID_ROOT, name) == AFP_OK
+                && stat(path, &st) == -1 && stat(data, &st) == -1) {
+            ret = 0;
+        }
+
+        close(fd);
+    }
+
+    unlink(path);
+    unlink(data);
+    return ret;
+}
+#endif
+
+/*!
+ * @brief FPDelete of a file whose ._ sidecar no reader or writer opens as it
+ *        is deletes the file and the sidecar: a resource fork recorded below
+ *        offset 82, a FinderInfo that needs converting, an empty sidecar
+ */
+static int utest_delete_file_whatever_sidecar_holds(struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    /* the resource fork is a native stream, which no ._ file holds */
+    return TEST_SKIP;
+#else
+
+    /* without EAs the volume keeps AppleDouble v2, with no ._ file */
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    /* the fork at 70, inside the canonical FinderInfo at 50; at 50, inside
+     * a 64-byte FinderInfo; at 114, right after it; then no header at all */
+    return lr_delete(vol, ADEDOFF_FINDERI_OSX + 20, ADEDLEN_FINDERI,
+                     LR_SIDECAR) == 0
+           && lr_delete(vol, ADEDOFF_FINDERI_OSX, ADEDLEN_FINDERI + 32,
+                        LR_SIDECAR) == 0
+           && lr_delete(vol, ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI + 32,
+                        ADEDLEN_FINDERI + 32, LR_SIDECAR) == 0
+           && lr_delete(vol, 0, 0, 0) == 0 ? 0 : -1;
+#endif
+}
+
+/*!
+ * @brief An FPWrite over AppleTalk for count bytes whose data the fault
+ *        interposer's asp_wrtcont() answers, failing with errnum or, for
+ *        errnum 0, handing back the whole reply buffer
+ *
+ * @returns 0 when the reply is AFPERR_MISC for the failure and AFPERR_PARAM
+ *          for the longer data, strict locking took and cleared the count's
+ *          range and the fork is still empty, -1 when not, TEST_SKIP without
+ *          AppleTalk, a shared libatalk or the preload
+ */
+static int asp_write_refused(struct vol *vol, uint32_t count, int errnum)
+{
+#if defined(NO_DDP) || !defined(AFPDTEST_SHARED_LIBATALK)
+    return TEST_SKIP;
+#else
+    const struct ofork *of;
+    char rbuf[DSI_BLOCKSIZ];
+    uint8_t req[12] = { 0 };
+    uint32_t count_be = htonl(count);
+    size_t rbuflen = sizeof(rbuf);
+    uint16_t refnum = 0;
+    AFPObj o = obj;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (createfile(&obj, vol->v_vid, DIRDID_ROOT, "asp_write") != AFP_OK) {
+        return -1;
+    }
+
+    if (openfork(&obj, vol->v_vid, DIRDID_ROOT, "asp_write", OPENFORK_DATA,
+                 OPENACC_RD | OPENACC_WR, &refnum) != AFP_OK) {
+        delete (&obj, vol->v_vid, DIRDID_ROOT, "asp_write");
+        return -1;
+    }
+
+    /* FPWrite: command, flag, fork, offset 0, count */
+    req[0] = AFP_WRITE;
+    memcpy(req + 2, &refnum, sizeof(refnum));
+    memcpy(req + 8, &count_be, sizeof(count_be));
+    o.proto = AFPPROTO_ASP;
+    o.dsi = NULL;
+    o.options.flags |= OPTION_STRICT_LOCKING;
+    fault_inject_reset();
+    fi.fcntl_watch = 1;
+    fi.asp_wrtcont.armed = errnum != 0;
+    fi.asp_wrtcont.errnum = errnum;
+    fi.asp_wrtcont_fill = errnum == 0;
+
+    if (afp_write(&o, (char *)req, sizeof(req), rbuf, &rbuflen)
+            == (errnum != 0 ? AFPERR_MISC : AFPERR_PARAM)
+            && fi.setlk_calls == 2 && fi.lock_last_type == F_UNLCK
+            && fi.lock_last_start == 0 && fi.lock_last_len == count
+            && (of = of_find(refnum)) != NULL
+            && ad_size(of->of_ad, ADEID_DFORK) == 0) {
+        ret = 0;
+    }
+
+    fault_inject_reset();
+    closefork(&obj, refnum);
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "asp_write");
+    return ret;
+#endif
+}
+
+/*!
+ * @brief An FPWrite over AppleTalk whose data fails to arrive clears the
+ *        write lock strict locking took for its range
+ */
+static int utest_write_fork_asp_failure_unlocks(struct vol *vol)
+{
+    return asp_write_refused(vol, 100, EIO);
+}
+
+/*!
+ * @brief An FPWrite over AppleTalk whose data is longer than its ReqCount is
+ *        refused before any byte is written
+ */
+static int utest_write_fork_asp_over_count_refused(struct vol *vol)
+{
+    return asp_write_refused(vol, 1, 0);
 }
 
 _Static_assert(offsetof(struct guarded_adouble,
@@ -695,6 +1532,44 @@ static void dsi_test_noop_close(DSI *dsi)
     (void)dsi;
 }
 
+/*!
+ * @brief dsi_disconnect() on dsi, a session never logged in, then on one
+ *        logged in without a logout hook, then on one without a session
+ *
+ * @returns 0, or the number of the check that failed
+ */
+static int dsi_disconnect_checks(DSI *dsi, AFPObj *sess)
+{
+    int stdin_open = fcntl(STDIN_FILENO, F_GETFD) != -1;
+    dsi->proto_close = dsi_test_noop_close;
+    dsi->AFPobj = sess;
+
+    if (dsi_disconnect(dsi) != -1 || !(dsi->flags & DSI_DISCONNECTED)) {
+        return 1;
+    }
+
+    sess->uid = 1000;
+    sess->logout = NULL;
+    dsi->flags = 0;
+
+    if (dsi_disconnect(dsi) != 0 || !(dsi->flags & DSI_DISCONNECTED)) {
+        return 2;
+    }
+
+    dsi->AFPobj = NULL;
+
+    if (dsi_disconnect(dsi) != -1) {
+        return 3;
+    }
+
+    /* the session had no recvfile pipe to close */
+    if (stdin_open && fcntl(STDIN_FILENO, F_GETFD) == -1) {
+        return 4;
+    }
+
+    return 0;
+}
+
 /* dsi_disconnect() enters the disconnected state for a session that logged
  * in and refuses one that did not. login() refuses uid 0 and sets obj->uid
  * only on success, so that is the mark; the UAM's logout hook is not, since
@@ -703,30 +1578,18 @@ static int utest_dsi_disconnect_needs_login(void)
 {
     DSI dsi;
     AFPObj sess;
-    memset(&dsi, 0, sizeof(dsi));
+    int peer;
+    int ret;
+
+    if (dsi_test_open(&dsi, DSI_DATASIZ, &peer) != 0) {
+        return 5;
+    }
+
+    close(peer);
     memset(&sess, 0, sizeof(sess));
-    dsi.proto_close = dsi_test_noop_close;
-    dsi.AFPobj = &sess;
-
-    if (dsi_disconnect(&dsi) != -1 || !(dsi.flags & DSI_DISCONNECTED)) {
-        return 1;
-    }
-
-    sess.uid = 1000;
-    sess.logout = NULL;
-    dsi.flags = 0;
-
-    if (dsi_disconnect(&dsi) != 0 || !(dsi.flags & DSI_DISCONNECTED)) {
-        return 2;
-    }
-
-    dsi.AFPobj = NULL;
-
-    if (dsi_disconnect(&dsi) != -1) {
-        return 3;
-    }
-
-    return 0;
+    ret = dsi_disconnect_checks(&dsi, &sess);
+    dsi_test_cleanup(&dsi);
+    return ret;
 }
 
 static int utest_dsi_receive_valid_cmd(void)
@@ -1199,10 +2062,14 @@ int main(int argc, char *argv[])
                      "recvfile: a failed write drains its request");
     TEST_int_or_skip(utest_recvfile_error_leaves_no_residue(&obj, vol), 0,
                      "recvfile: a failed write leaves nothing for the next");
+    TEST_int_or_skip(utest_recvfile_readonly_replies_access(&obj, vol), 0,
+                     "recvfile: a read-only refusal replies access denied");
     TEST_int_or_skip(utest_recvfile_peer_close_ends_write(&obj, vol), 0,
                      "recvfile: a client closing mid-write ends the write");
     TEST_int_or_skip(utest_write_fork_eof_fails_request(&obj, vol), 0,
                      "write_fork: a payload cut by EOF fails the request");
+    TEST_int_or_skip(utest_recvfile_counting_arm_fails_nothing(&obj, vol), 0,
+                     "recvfile: a counting fault arm fails no splice() call");
     TEST_int_or_skip(utest_recvfile_urgent_byte_finishes_write(&obj, vol), 0,
                      "recvfile: a write past an urgent byte finishes in step");
     TEST_int_or_skip(utest_recvfile_urgent_byte_at_eof(&obj, vol), 0,
@@ -1215,12 +2082,24 @@ int main(int argc, char *argv[])
                      "recvfile: a failed resource fork write keeps its length");
     TEST_int_or_skip(utest_recvfile_high_fd_waits(&obj, vol), 0,
                      "recvfile: a socket above FD_SETSIZE waits for its data");
+    TEST_int_or_skip(utest_recvfile_urgent_byte_ahead_waits(&obj, vol), 0,
+                     "recvfile: an urgent byte past a gap leaves the write "
+                     "waiting for data");
     TEST_int_or_skip(utest_recvfile_unsplicable_fs_falls_back(&obj, vol), 0,
                      "recvfile: unsplicable files take the userspace path");
-    TEST_int_or_skip(utest_recvfile_bad_offset_keeps_splice(&obj, vol), 0,
-                     "recvfile: a refused offset leaves the file splicing");
+    TEST_int_or_skip(utest_recvfile_failed_copy_keeps_splice(&obj, vol), 0,
+                     "recvfile: a failed copy leaves the file splicing");
+    TEST_int_or_skip(utest_recvfile_socket_error_fails_request(&obj, vol), 0,
+                     "recvfile: a socket error on the first splice fails the "
+                     "write");
     TEST_int_or_skip(utest_recvfile_no_socket_splice_falls_back(&obj, vol), 0,
                      "recvfile: a refused socket splice falls back");
+    TEST_int_or_skip(utest_recvfile_spent_budget_retries(&obj, vol), 0,
+                     "recvfile: a spent pipe budget is tried again next write");
+    TEST_int_or_skip(utest_recvfile_pipe2_failure_retries(&obj, vol), 0,
+                     "recvfile: a write after a failed pipe2() splices");
+    TEST_int_or_skip(utest_recvfile_unsplicable_file_not_spliced(&obj, vol), 0,
+                     "recvfile: an unsplicable file is not spliced again");
     TEST_int_or_skip(utest_recvfile_pipe_takes_splice_size(&obj, vol), 0,
                      "recvfile: the pipe takes the size splice size asks for");
     TEST_int_or_skip(utest_recvfile_pipe_never_shrinks(&obj, vol), 0,
@@ -1229,6 +2108,54 @@ int main(int argc, char *argv[])
                      "recvfile: a refused pipe size is halved until granted");
     TEST_int_or_skip(utest_write_fork_short_write_fails_request(&obj, vol), 0,
                      "write_fork: a short fork write fails the request");
+    TEST_int_or_skip(utest_write_fork_payload_over_count_refused(&obj, vol), 0,
+                     "write_fork: a payload past its ReqCount is refused");
+    TEST_int_or_skip(utest_write_fork_asp_over_count_refused(vol), 0,
+                     "write_fork: AppleTalk data past its ReqCount is refused");
+    TEST_int_or_skip(utest_write_fork_zero_count_replies_offset(&obj, vol), 0,
+                     "write_fork: a ReqCount of 0 replies its offset");
+    TEST_int_or_skip(utest_write_fork_end_past_2gib_refused(&obj, vol), 0,
+                     "write_fork: a 32-bit end write past 2 GiB is refused");
+    TEST_int_or_skip(utest_write_fork_dfork_past_off_t_refused(&obj, vol), 0,
+                     "write_fork: a data fork write past off_t is refused");
+    TEST_int_or_skip(utest_write_fork_rfork_past_off_t_refused(&obj, vol), 0,
+                     "write_fork: a resource fork write past off_t is refused");
+    TEST_int_or_skip(utest_write_fork_rfork_end_after_append(&obj, vol), 0,
+                     "write_fork: a resource fork end write follows an append");
+    TEST_int_or_skip(utest_byte_lock_rfork_end_after_append(&obj, vol), 0,
+                     "FPByteRangeLock: a resource fork end lock follows an append");
+    TEST_int_or_skip(utest_write_fork_short_block_refused(&obj, vol), 0,
+                     "write_fork: a block too short for its ReqCount is refused");
+    TEST_int_or_skip(utest_dsi_write_command_refused_in_command_frame(), 0,
+                     "DSI: a write command in a DSICommand is refused");
+    TEST_int_or_skip(utest_dsi_write_frame_drained(), 0,
+                     "DSI: a DSIWrite no write command takes is drained");
+    TEST_int_or_skip(utest_dsi_spurious_command_drains_nothing(), 0,
+                     "DSI: a spurious command leaves the next request whole");
+    TEST_int_or_skip(utest_dsi_write_refused_pwdexpired_drained(), 0,
+                     "DSI: an expired password's refusal drains a DSIWrite");
+    TEST_int_or_skip(utest_dsi_stalled_write_disconnects(vol), 0,
+                     "DSI: a write whose client falls silent times out");
+    TEST_int_or_skip(utest_recvfile_stalled_write_disconnects(vol), 0,
+                     "recvfile: a write whose client falls silent times out");
+    TEST_int_or_skip(utest_dsi_term_lets_write_finish(vol), 0,
+                     "DSI: a termination lets a write still arriving finish");
+    TEST_int_or_skip(utest_dsi_reconnect_takes_over_stalled_write(vol), 0,
+                     "DSI: a reconnect takes over a session stalled in a write");
+    TEST_int_or_skip(utest_dsi_reconnect_drops_stalled_tick(vol), 0,
+                     "DSI: a reconnect drops a tick its stalled write left");
+    TEST_int_or_skip(utest_dsi_reconnect_after_write_timeout(vol), 0,
+                     "DSI: a reconnect takes over a session whose write timed out");
+    TEST_int_or_skip(utest_dsi_reconnect_counts_ticks_afresh(), 0,
+                     "DSI: a reconnect counts the new connection's silence afresh");
+    TEST_int_or_skip(utest_dsi_term_served_after_stalled_header(), 0,
+                     "DSI: a termination is served once a stalled header times out");
+    TEST_int_or_skip(utest_dsi_slow_write_completes(vol), 0,
+                     "DSI: a write with pauses shorter than the timeout completes");
+    TEST_int_or_skip(utest_delete_file_whatever_sidecar_holds(vol), 0,
+                     "FPDelete: a file is deleted whatever its sidecar holds");
+    TEST_int_or_skip(utest_write_fork_asp_failure_unlocks(vol), 0,
+                     "write_fork: a failed AppleTalk write clears its lock");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

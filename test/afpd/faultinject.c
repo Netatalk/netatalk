@@ -100,12 +100,14 @@ int faultinject_open_works(const char *scratch_path)
 
 /* ---- Role 2: LD_PRELOAD interposer (libfaultinject.so) ---- */
 
-#include <dlfcn.h>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -133,6 +135,16 @@ static int fault_should_fire(int armed, int *fail_after, int errnum)
     }
 
     return 0;
+}
+
+/*! @brief Count an armed call on c and tell whether it fails now */
+static int fi_call_fire(struct fi_call *c)
+{
+    if (c->armed) {
+        c->calls++;
+    }
+
+    return fault_should_fire(c->armed, &c->fail_after, c->errnum);
 }
 
 typedef int (*open_fn)(const char *, int, ...);
@@ -261,6 +273,32 @@ int close(int fd)
     return real_close(fd);
 }
 
+typedef int (*asp_wrtcont_fn)(void *, char *, size_t *);
+static asp_wrtcont_fn real_asp_wrtcont;
+
+/*!
+ * @brief asp_wrtcont() interposer: counts and fails armed calls, or with
+ *        asp_wrtcont_fill hands back the bytes asked for, 0xa5 each, as an
+ *        AppleTalk client's write continuation would
+ */
+int asp_wrtcont(void *asp, char *buf, size_t *buflen)
+{
+    if (fi_call_fire(&fi.asp_wrtcont)) {
+        return -1;
+    }
+
+    if (fi.asp_wrtcont_fill) {
+        memset(buf, 0xa5, *buflen);
+        return 0;
+    }
+
+    if (!real_asp_wrtcont) {
+        real_asp_wrtcont = (asp_wrtcont_fn)dlsym(RTLD_NEXT, "asp_wrtcont");
+    }
+
+    return real_asp_wrtcont(asp, buf, buflen);
+}
+
 /* fcntl()'s third argument is absent, an int or a pointer by command; it is
  * read and forwarded as one pointer-sized slot, as libc's own fcntl() reads
  * it, so every command keeps its argument. */
@@ -300,11 +338,20 @@ int fcntl(int fd, int cmd, ...)
 
 #ifdef F_SETPIPE_SZ
 
-    /* the kernel's refusal above fs.pipe-max-size */
-    if (cmd == F_SETPIPE_SZ && fi.pipe_size_limit > 0
-            && (int)(intptr_t)arg > fi.pipe_size_limit) {
-        errno = EPERM;
-        return -1;
+    /* over the pipe budget the kernel makes two-page pipes and grows none */
+    if (fi.pipe_budget_spent && cmd == F_GETPIPE_SZ) {
+        return 2 * (int)sysconf(_SC_PAGESIZE);
+    }
+
+    if (cmd == F_SETPIPE_SZ) {
+        int size = (int)(intptr_t)arg;
+
+        /* the kernel's refusal over the budget or above fs.pipe-max-size */
+        if (fi.pipe_budget_spent
+                || (fi.pipe_size_limit > 0 && size > fi.pipe_size_limit)) {
+            errno = EPERM;
+            return -1;
+        }
     }
 
 #endif
@@ -353,35 +400,74 @@ int dirfd(DIR *dirp)
 #endif
 
 #ifdef __linux__
+typedef int (*pipe2_fn)(int[2], int);
+static pipe2_fn real_pipe2;
+
+/*! @brief pipe2() interposer: counts and fails armed calls */
+int pipe2(int fds[2], int flags)
+{
+    if (!real_pipe2) {
+        real_pipe2 = (pipe2_fn)dlsym(RTLD_NEXT, "pipe2");
+    }
+
+    if (fi_call_fire(&fi.pipe2)) {
+        return -1;
+    }
+
+    return real_pipe2(fds, flags);
+}
+
 typedef ssize_t (*splice_fn)(int, loff_t *, int, loff_t *, size_t,
                              unsigned int);
 static splice_fn real_splice;
 
 /*!
- * @brief splice() interposer: fails armed calls
+ * @brief splice() interposer: counts and fails armed calls, a call with an
+ *        output offset on the file side and one without on the socket side
  */
 ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out,
                size_t len, unsigned int flags)
 {
+    struct fi_call *side = off_out != NULL ? &fi.splice_file
+                               : &fi.splice_sock;
+
     if (!real_splice) {
         real_splice = (splice_fn)dlsym(RTLD_NEXT, "splice");
     }
 
-    if (off_out != NULL) {
-        if (fault_should_fire(fi.splice_file_armed, &fi.splice_file_fail_after,
-                              fi.splice_file_errno)) {
-            return -1;
-        }
-
-        return real_splice(fd_in, off_in, fd_out, off_out, len, flags);
-    }
-
-    if (fault_should_fire(fi.splice_sock_armed, &fi.splice_sock_fail_after,
-                          fi.splice_sock_errno)) {
+    if (fi_call_fire(side)) {
         return -1;
     }
 
     return real_splice(fd_in, off_in, fd_out, off_out, len, flags);
+}
+
+typedef int (*poll_fn)(struct pollfd *, nfds_t, int);
+static poll_fn real_poll;
+
+/*!
+ * @brief poll() interposer: with poll_urgent, a wait for POLLPRI on one
+ *        descriptor reports an urgent byte and no data at once, as an urgent
+ *        byte past a gap in the stream does, and every one-descriptor wait
+ *        is counted
+ */
+int poll(struct pollfd *fds, nfds_t nfds, int timeout)
+{
+    if (!real_poll) {
+        real_poll = (poll_fn)dlsym(RTLD_NEXT, "poll");
+    }
+
+    if (fi.poll_urgent && nfds == 1) {
+        fi.poll_waits++;
+
+        if (fds[0].events & POLLPRI) {
+            fds[0].revents = POLLPRI;
+            fi.poll_urgent_wakeups++;
+            return 1;
+        }
+    }
+
+    return real_poll(fds, nfds, timeout);
 }
 #endif /* __linux__ */
 

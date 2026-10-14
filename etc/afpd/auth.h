@@ -53,6 +53,8 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                  size_t *rbuflen);
 int afp_logout(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                size_t *rbuflen);
+int afp_errpwdexpired(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                      size_t *rbuflen);
 int afp_getuserinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                     size_t *rbuflen);
 int afp_getsession(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

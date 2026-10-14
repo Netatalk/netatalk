@@ -40,12 +40,12 @@
  * @param[in,out] off  fork offset of the first byte, advanced past every
  *                     byte written, also when the call fails
  *
- * @returns the bytes written, 0 when the write is left to dsi_write() and
- *          ad_write(), or -1 with errno set
+ * @returns 0 when what it took of the payload is in the fork, the rest left
+ *          to dsi_write() and ad_write(); -1 with errno set
  */
-ssize_t ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t *off)
+int ad_recvfile(struct adouble *ad, int eid, DSI *dsi, off_t *off)
 {
-    ssize_t cc;
+    int cc;
     int fd;
     off_t pos = *off;
     off_t start;

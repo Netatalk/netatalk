@@ -214,6 +214,15 @@ const char *adflags2logstr(int adflags)
         first = 0;
     }
 
+    if (adflags & ADFLAGS_NOHDR) {
+        if (!first) {
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        }
+
+        strlcat(buf, "NOHDR", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+
     if (adflags & ADFLAGS_HF) {
         if (!first) {
             strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
@@ -2144,10 +2153,13 @@ EC_CLEANUP:
  * creates the fork with mode.
  *
  * Without HAVE_EAFD a created fork receives a header through new_ad_header
- * and ad_flush, and an existing one goes through ad_header_read_osx. ad_rlen
- * receives the fork size. A failure closes a descriptor this call opened, and
- * ENOENT or ENOATTR under ADFLAGS_NORF then counts as success. Any other
- * failure also closes the data and metadata forks that adflags name.
+ * and ad_flush, and an existing one goes through ad_header_read_osx, but
+ * under ADFLAGS_NOHDR, a lock probe's open that keeps the ._ descriptor for
+ * its lock test, no header is read, so it converts and refuses nothing.
+ * ad_rlen receives the fork size. A failure closes a
+ * descriptor this call opened, and ENOENT or ENOATTR under ADFLAGS_NORF then
+ * counts as success. Any other failure also closes the data and metadata
+ * forks that adflags name.
  *
  * @param[in]     path     data file whose resource fork to open
  * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
@@ -2299,7 +2311,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
             "ad_open_rf(\"%s\"): created adouble rfork, flushing: \"%s\"",
             path, rfpath);
         ad_flush(ad);
-    } else {
+    } else if (!(adflags & ADFLAGS_NOHDR)) {
         /* Read the adouble header */
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): reading adouble rfork: \"%s\"",
             path, rfpath);

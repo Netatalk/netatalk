@@ -19,7 +19,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -46,19 +45,21 @@
 #include "test.h"
 #include "test_capabilities.h"
 
-#define RF_CMD   (DSI_BLOCKSIZ + 2)
 #define RF_A_LEN (1024 * 1024)
 #define RF_B_LEN (256 * 1024)
 /* fits a loopback window with nobody reading */
 #define RF_C_LEN (12 * 1024)
-/* a countdown no write reaches: it counts calls and injects nothing */
-#define RF_NEVER 1000
+/* a splice size well below a write, so the write takes many rounds */
+#define RF_ROUND (64 * 1024)
+/* splice() calls a counting arm fails none of, short of a runaway loop */
+#define RF_RUNAWAY 100000
 
 /*! A DSI session on one end of a socket pair and a writer on the other */
 struct rf {
     AFPObj obj;
     struct vol *vol;
     DSI dsi;
+    size_t rbuflen;
     int peer;
     pthread_t writer;
     bool writing;
@@ -100,10 +101,7 @@ static size_t rf_write_frame(uint8_t *p, uint16_t reqid, uint16_t refnum,
  */
 static size_t rf_cmd_frame(uint8_t *p, uint16_t reqid)
 {
-    dsi_test_header(p, DSIFUNC_CMD, reqid, 0, 2);
-    p[DSI_BLOCKSIZ] = AFP_GETSRVPARAM;
-    p[DSI_BLOCKSIZ + 1] = 0;
-    return RF_CMD;
+    return dsi_test_frame(p, DSIFUNC_CMD, reqid, 0, 2, AFP_GETSRVPARAM);
 }
 
 /*!
@@ -237,8 +235,9 @@ static int rf_tcp_setup(struct rf *rf, AFPObj *obj, struct vol *vol)
     }
 
     if (dsi_test_connect_tcp(&rf->dsi, &rf->peer) != 0) {
+        int err = errno;
         rf_teardown(rf);
-        return TEST_SKIP;
+        return dsi_test_no_loopback(err) ? TEST_SKIP : -1;
     }
 
     return 0;
@@ -288,29 +287,43 @@ static int rf_send(struct rf *rf, const uint8_t *p, size_t len)
 }
 
 /*!
- * @brief Send the request head alone and receive it before the writer starts
- *        on the rest, so the payload arrives after the header read
+ * @brief Send the first head bytes of the request alone and receive them
+ *        before the writer starts on the rest, so the rest arrives after the
+ *        header read
  *
  * @returns 0, or -1
  */
-static int rf_send_after_head(struct rf *rf, size_t len)
+static int rf_send_split(struct rf *rf, size_t head, size_t len)
 {
-    if (write(rf->peer, rf->buf, DSI_FRAME_OVERHEAD_EXT)
-            != DSI_FRAME_OVERHEAD_EXT
+    if (write(rf->peer, rf->buf, head) != (ssize_t)head
             || dsi_stream_receive(&rf->dsi) != DSIFUNC_WRITE) {
         return -1;
     }
 
-    return rf_send(rf, rf->buf + DSI_FRAME_OVERHEAD_EXT,
-                   len - DSI_FRAME_OVERHEAD_EXT);
+    return rf_send(rf, rf->buf + head, len - head);
 }
 
-/*! @brief Run the received DSIWrite as afp_over_dsi() does */
+/*! @brief rf_send_split() at the request head, before any payload */
+static int rf_send_after_head(struct rf *rf, size_t len)
+{
+    return rf_send_split(rf, DSI_FRAME_OVERHEAD_EXT, len);
+}
+
+/*!
+ * @brief Run the received DSIWrite as afp_over_dsi() does, by its command,
+ *        the reply's length left in rbuflen
+ */
 static int rf_dispatch(struct rf *rf)
 {
-    size_t rbuflen = DSI_DATASIZ;
-    return afp_write_ext(&rf->obj, (char *)rf->dsi.commands, rf->dsi.cmdlen,
-                         (char *)rf->dsi.data, &rbuflen);
+    AFPCmd handler = afp_write_ext;
+    rf->rbuflen = DSI_DATASIZ;
+
+    if (rf->dsi.commands[0] == AFP_WRITE) {
+        handler = afp_write;
+    }
+
+    return handler(&rf->obj, (char *)rf->dsi.commands, rf->dsi.cmdlen,
+                   (char *)rf->dsi.data, &rf->rbuflen);
 }
 
 /*!
@@ -367,7 +380,10 @@ static bool rf_holds(struct rf *rf, int i, size_t len, uint8_t fill)
 
     eid = (of->of_flags & AFPFORK_DATA) ? ADEID_DFORK : ADEID_RFORK;
 
-    if (ad_size(of->of_ad, eid) != (off_t)len) {
+    /* ad_size() reads an open resource fork's length from the file, so the
+     * length the writes keep in ad_rlen is checked beside it */
+    if (ad_size(of->of_ad, eid) != (off_t)len
+            || (eid == ADEID_RFORK && of->of_ad->ad_rlen != (off_t)len)) {
         return false;
     }
 
@@ -391,38 +407,38 @@ static bool rf_holds(struct rf *rf, int i, size_t len, uint8_t fill)
     return true;
 }
 
-/* the splice() side a fault is armed on */
-enum rf_side { RF_SOCK, RF_FILE };
+/* the call a fault is armed on: a splice() side or pipe2() */
+enum rf_side { RF_SOCK, RF_FILE, RF_PIPE2 };
 
-/*!
- * @brief Arm splice() call fail_after + 1 on side with errnum; errnum 0
- *        arms a countdown no write reaches, which counts the calls
- */
-static void rf_arm(enum rf_side side, int fail_after, int errnum)
+/*! @brief The fault interposer's state for the call side names */
+static struct fi_call *rf_call(enum rf_side side)
 {
-    int after = errnum != 0 ? fail_after : RF_NEVER;
-    int err = errnum != 0 ? errnum : EIO;
-
-    if (side == RF_SOCK) {
-        fi.splice_sock_armed = 1;
-        fi.splice_sock_fail_after = after;
-        fi.splice_sock_errno = err;
-    } else {
-        fi.splice_file_armed = 1;
-        fi.splice_file_fail_after = after;
-        fi.splice_file_errno = err;
-    }
+    return side == RF_SOCK ? &fi.splice_sock
+           : side == RF_FILE ? &fi.splice_file : &fi.pipe2;
 }
 
 /*!
- * @brief Did the fault rf_arm() armed fire or, for errnum 0, did its
- *        countdown count calls without firing?
+ * @brief Arm call fail_after + 1 of side with errnum, or with errnum 0
+ *        count its calls, failing none short of RF_RUNAWAY
+ */
+static void rf_arm(enum rf_side side, int fail_after, int errnum)
+{
+    struct fi_call *s = rf_call(side);
+    s->armed = 1;
+    s->fail_after = errnum != 0 ? fail_after : RF_RUNAWAY;
+    s->errnum = errnum != 0 ? errnum : EIO;
+    s->calls = 0;
+}
+
+/*!
+ * @brief Tell whether the fault rf_arm() armed fired or, for errnum 0, side
+ *        saw a call and stayed short of RF_RUNAWAY
  */
 static bool rf_fired(enum rf_side side, int errnum)
 {
-    int left = side == RF_SOCK ? fi.splice_sock_fail_after
-               : fi.splice_file_fail_after;
-    return errnum != 0 ? left == -1 : left < RF_NEVER && left != -1;
+    const struct fi_call *s = rf_call(side);
+    return errnum != 0 ? s->fail_after == -1
+           : s->calls > 0 && s->fail_after != -1;
 }
 
 /*!
@@ -447,6 +463,8 @@ static int rf_write_test(AFPObj *obj, struct vol *vol, uint8_t fork,
     }
 
     ret = -1;
+    /* a fault on a later call meets a write still under way */
+    rf.dsi.splice_size = RF_ROUND;
 
     if (rf_open(&rf, 0, fork)
             && (!second || rf_open(&rf, 1, OPENFORK_DATA))) {
@@ -500,39 +518,56 @@ int utest_recvfile_dfull_drains_request(AFPObj *obj, struct vol *vol)
 int utest_recvfile_error_drains_request(AFPObj *obj, struct vol *vol)
 {
     return rf_write_test(obj, vol, OPENFORK_DATA, RF_FILE, 1, EIO,
-                         AFPERR_PARAM, false);
+                         AFPERR_MISC, false);
 }
 
 /*! @brief A failed recvfile write leaves nothing behind for the next one */
 int utest_recvfile_error_leaves_no_residue(AFPObj *obj, struct vol *vol)
 {
     return rf_write_test(obj, vol, OPENFORK_DATA, RF_FILE, 1, EIO,
-                         AFPERR_PARAM, true);
+                         AFPERR_MISC, true);
 }
 
 /*!
- * @brief A client that disconnects mid-payload ends the write
- *
- * The header announces 1 MiB and 256 KiB arrive before EOF; a socket-side
- * countdown no finite receive reaches bounds the splice() calls at EOF.
+ * @brief A recvfile write the filesystem refuses as read-only replies access
+ *        denied and drains its request
  */
-int utest_recvfile_peer_close_ends_write(AFPObj *obj, struct vol *vol)
+int utest_recvfile_readonly_replies_access(AFPObj *obj, struct vol *vol)
+{
+    return rf_write_test(obj, vol, OPENFORK_DATA, RF_FILE, 0, EROFS,
+                         AFPERR_ACCESS, false);
+}
+
+/*!
+ * @brief A write whose header announces 1 MiB and whose stream ends after
+ *        256 KiB fails, through splice() with recvfile and through recv()
+ *        without it
+ *
+ * @returns 0, -1, or TEST_SKIP
+ */
+static int rf_eof_test(AFPObj *obj, struct vol *vol, bool recvfile)
 {
     struct rf rf;
-    int ret;
+    int ret = recvfile ? rf_splice_setup(&rf, obj, vol)
+              : rf_setup(&rf, obj, vol);
 
-    if ((ret = rf_splice_setup(&rf, obj, vol)) != 0) {
+    if (ret != 0) {
         return ret;
     }
 
     ret = -1;
+
+    if (!recvfile) {
+        rf.obj.options.flags &= ~OPTION_RECVFILE;
+    }
 
     if (rf_open(&rf, 0, OPENFORK_DATA)) {
         rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
         rf_arm(RF_SOCK, 0, 0);
 
         if (rf_send(&rf, rf.buf, DSI_FRAME_OVERHEAD_EXT + RF_B_LEN) == 0
-                && rf_write(&rf) == AFPERR_PARAM && rf_fired(RF_SOCK, 0)) {
+                && rf_write(&rf) == AFPERR_MISC
+                && rf_fired(RF_SOCK, 0) == recvfile) {
             ret = 0;
         }
     }
@@ -541,34 +576,61 @@ int utest_recvfile_peer_close_ends_write(AFPObj *obj, struct vol *vol)
     return ret;
 }
 
+/*! @brief A client that disconnects mid-payload ends the recvfile write */
+int utest_recvfile_peer_close_ends_write(AFPObj *obj, struct vol *vol)
+{
+    return rf_eof_test(obj, vol, true);
+}
+
 /*!
  * @brief A payload the stream ends before completing fails the request on
  *        the userspace path as well
- *
- * The header announces 1 MiB and 256 KiB arrive before EOF.
  */
 int utest_write_fork_eof_fails_request(AFPObj *obj, struct vol *vol)
 {
+    return rf_eof_test(obj, vol, false);
+}
+
+/*!
+ * @brief A side armed to count its splice() calls fails none of them, past a
+ *        thousand
+ */
+int utest_recvfile_counting_arm_fails_nothing(AFPObj *obj, struct vol *vol)
+{
+    uint8_t *frames = malloc(4 * (DSI_FRAME_OVERHEAD_EXT + RF_A_LEN));
     struct rf rf;
+    size_t len = 0;
     int ret;
 
-    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+    if ((ret = rf_splice_setup(&rf, obj, vol)) != 0) {
+        free(frames);
         return ret;
     }
 
     ret = -1;
-    rf.obj.options.flags &= ~OPTION_RECVFILE;
+    /* rounds of 4 KiB: four 1 MiB writes take over a thousand socket
+     * splice() calls */
+    rf.dsi.splice_size = SPLICE_SIZE_MIN;
 
-    if (rf_open(&rf, 0, OPENFORK_DATA)) {
-        rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
+    if (frames != NULL && rf_open(&rf, 0, OPENFORK_DATA)) {
+        for (int i = 0; i < 4; i++) {
+            len += rf_write_frame(frames + len, (uint16_t)(i + 1),
+                                  rf.refnum[0], (uint64_t)i * RF_A_LEN,
+                                  RF_A_LEN, 0xA5);
+        }
 
-        if (rf_send(&rf, rf.buf, DSI_FRAME_OVERHEAD_EXT + RF_B_LEN) == 0
-                && rf_write(&rf) == AFPERR_PARAM) {
+        rf_arm(RF_SOCK, 0, 0);
+
+        if (rf_send(&rf, frames, len) == 0 && rf_write(&rf) == AFP_OK
+                && rf_write(&rf) == AFP_OK && rf_write(&rf) == AFP_OK
+                && rf_write(&rf) == AFP_OK && fi.splice_sock.calls > 1000
+                && rf_holds(&rf, 0, 4 * (size_t)RF_A_LEN, 0xA5)) {
             ret = 0;
         }
     }
 
     rf_teardown(&rf);
+    free(frames);
     return ret;
 }
 
@@ -701,6 +763,8 @@ int utest_recvfile_rfork_failure_keeps_length(AFPObj *obj, struct vol *vol)
     }
 
     ret = -1;
+    /* the second write's first round lands before its fault */
+    rf.dsi.splice_size = RF_ROUND;
 
     if (rf_open(&rf, 0, OPENFORK_RSCS)
             && (of = of_find(rf.refnum[0])) != NULL) {
@@ -713,7 +777,7 @@ int utest_recvfile_rfork_failure_keeps_length(AFPObj *obj, struct vol *vol)
         if (rf_send_after_head(&rf, len) == 0
                 && rf_dispatch(&rf) == AFPERR_DFULL
                 && rf_fired(RF_FILE, ENOSPC)
-                && ad_size(of->of_ad, ADEID_RFORK) == 0
+                && of->of_ad->ad_rlen == 0
                 && !(of->of_flags & AFPFORK_MODIFIED)) {
             fault_inject_reset();
             rf_arm(RF_FILE, 1, ENOSPC);
@@ -721,8 +785,7 @@ int utest_recvfile_rfork_failure_keeps_length(AFPObj *obj, struct vol *vol)
             if (rf_write(&rf) == AFPERR_DFULL && rf_fired(RF_FILE, ENOSPC)
                     && (of->of_flags & AFPFORK_MODIFIED)
                     && fstat(ad_reso_fileno(of->of_ad), &st) == 0
-                    && ad_size(of->of_ad, ADEID_RFORK)
-                    == st.st_size - ADEDOFF_RFORK_OSX) {
+                    && of->of_ad->ad_rlen == st.st_size - ADEDOFF_RFORK_OSX) {
                 ret = 0;
             }
         }
@@ -776,7 +839,8 @@ int utest_recvfile_high_fd_waits(AFPObj *obj, struct vol *vol)
         len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
         rf_arm(RF_SOCK, 0, EAGAIN);
 
-        /* the head is buffered before the receive, so readt() never waits */
+        /* the head is buffered before the receive, so the wait the test
+         * reaches is the recvfile loop's */
         if (rf_send_after_head(&rf, len) == 0 && rf_dispatch(&rf) == AFP_OK
                 && rf_fired(RF_SOCK, EAGAIN)
                 && rf_holds(&rf, 0, RF_A_LEN, 0xA5)) {
@@ -786,6 +850,40 @@ int utest_recvfile_high_fd_waits(AFPObj *obj, struct vol *vol)
 
     rf_teardown(&rf);
     setrlimit(RLIMIT_NOFILE, &saved);
+    return ret;
+}
+
+/*!
+ * @brief A recvfile write whose socket holds an urgent byte past a gap in
+ *        the stream waits for its payload, not for the urgent byte
+ */
+int utest_recvfile_urgent_byte_ahead_waits(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_splice_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
+        /* the first socket splice finds the queue empty */
+        rf_arm(RF_SOCK, 0, EAGAIN);
+        fi.poll_urgent = 1;
+
+        if (rf_send_after_head(&rf, len) == 0 && rf_dispatch(&rf) == AFP_OK
+                && rf_fired(RF_SOCK, EAGAIN)
+                && fi.poll_waits > 0 && fi.poll_urgent_wakeups == 0
+                && rf_holds(&rf, 0, RF_A_LEN, 0xA5)) {
+            ret = 0;
+        }
+    }
+
+    rf_teardown(&rf);
     return ret;
 }
 
@@ -800,13 +898,16 @@ int utest_recvfile_unsplicable_fs_falls_back(AFPObj *obj, struct vol *vol)
 }
 
 /*!
- * @brief A write the kernel refuses for its offset alone fails without
- *        marking the file as one that cannot splice
+ * @brief A write whose copy fails after the file refused splice() fails
+ *        without marking the file as one that cannot splice
+ *
+ * The file-side splice() is refused with EINVAL and the copy that takes
+ * over meets a file size limit of 0.
  */
-int utest_recvfile_bad_offset_keeps_splice(AFPObj *obj, struct vol *vol)
+int utest_recvfile_failed_copy_keeps_splice(AFPObj *obj, struct vol *vol)
 {
     const struct ofork *of;
-    uint64_t one = hton64(UINT64_C(1));
+    struct fsize_cap cap;
     struct rf rf;
     size_t len;
     int ret;
@@ -819,13 +920,50 @@ int utest_recvfile_bad_offset_keeps_splice(AFPObj *obj, struct vol *vol)
 
     if (rf_open(&rf, 0, OPENFORK_DATA)
             && (of = of_find(rf.refnum[0])) != NULL) {
-        len = rf_write_frame(rf.buf, 1, rf.refnum[0], INT64_MAX - 1, RF_C_LEN,
-                             0xA5);
-        /* a count of one keeps offset + count in range for write_fork() */
-        memcpy(rf.buf + DSI_BLOCKSIZ + 12, &one, sizeof(one));
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+        rf_arm(RF_FILE, 0, EINVAL);
 
-        if (rf_send_after_head(&rf, len) == 0 && rf_dispatch(&rf) != AFP_OK
-                && !of->of_ad->ad_nosplice) {
+        if (rf_send_after_head(&rf, len) == 0 && fsize_cap(&cap, 0) == 0) {
+            ret = rf_dispatch(&rf) == AFPERR_DFULL
+                  && rf_fired(RF_FILE, EINVAL) && !of->of_ad->ad_nosplice
+                  ? 0 : -1;
+            fsize_uncap(&cap);
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief An FPWrite whose payload is longer than its ReqCount is refused
+ *        before anything is written, and the next request parses
+ *
+ * Half the 8 KiB payload arrives with the header, in the read-ahead, and
+ * half after it, so neither part alone exceeds the ReqCount of 4 KiB.
+ */
+int utest_write_fork_payload_over_count_refused(AFPObj *obj, struct vol *vol)
+{
+    uint64_t half = hton64(UINT64_C(4096));
+    size_t head = DSI_FRAME_OVERHEAD_EXT + 4096;
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, 8192, 0xA5);
+        memcpy(rf.buf + DSI_BLOCKSIZ + 12, &half, sizeof(half));
+        len += rf_cmd_frame(rf.buf + len, 2);
+
+        if (rf_send_split(&rf, head, len) == 0
+                && rf_dispatch(&rf) == AFPERR_PARAM
+                && rf_holds(&rf, 0, 0, 0xA5) && rf_next_is(&rf, 2)) {
             ret = 0;
         }
     }
@@ -835,13 +973,453 @@ int utest_recvfile_bad_offset_keeps_splice(AFPObj *obj, struct vol *vol)
 }
 
 /*!
+ * @brief An FPWrite with a ReqCount of 0 replies AFP_OK and its offset,
+ *        the payload drained unwritten, and the next request parses
+ *
+ * The 16 KiB payload arrives after the header read, so the drain reads all
+ * of it through the reply buffer.
+ */
+int utest_write_fork_zero_count_replies_offset(AFPObj *obj, struct vol *vol)
+{
+    uint64_t zero = 0;
+    uint64_t off_be = hton64(UINT64_C(4096));
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 4096, 16384, 0xA5);
+        memcpy(rf.buf + DSI_BLOCKSIZ + 12, &zero, sizeof(zero));
+        len += rf_cmd_frame(rf.buf + len, 2);
+
+        if (rf_send_after_head(&rf, len) == 0 && rf_dispatch(&rf) == AFP_OK
+                && rf.rbuflen == sizeof(off_be)
+                && memcmp(rf.dsi.data, &off_be, sizeof(off_be)) == 0
+                && rf_holds(&rf, 0, 0, 0xA5) && rf_next_is(&rf, 2)) {
+            ret = 0;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief A 32-bit FPWrite from the end of a fork whose range passes 2 GiB is
+ *        refused with AFPERR_DFULL, its payload drained, the fork as it was
+ *
+ * The end flag turns an offset of INT32_MAX on a 2-byte fork into one past
+ * 2 GiB, whose sum with a count of INT32_MAX has bit 31 clear.
+ */
+int utest_write_fork_end_past_2gib_refused(AFPObj *obj, struct vol *vol)
+{
+    uint32_t max_be = htonl(INT32_MAX);
+    struct rf rf;
+    uint8_t *p;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, 2, 0xA5);
+        p = rf.buf + len;
+        len += dsi_test_frame(p, DSIFUNC_WRITE, 2, DSI_WROFF_FPWRITE,
+                              DSI_WROFF_FPWRITE + 16, AFP_WRITE);
+        /* the end flag, the fork, then offset and count */
+        p[DSI_BLOCKSIZ + 1] = 0x80;
+        memcpy(p + DSI_BLOCKSIZ + 2, &rf.refnum[0], sizeof(rf.refnum[0]));
+        memcpy(p + DSI_BLOCKSIZ + 4, &max_be, sizeof(max_be));
+        memcpy(p + DSI_BLOCKSIZ + 8, &max_be, sizeof(max_be));
+        memset(p + DSI_BLOCKSIZ + DSI_WROFF_FPWRITE, 0xA5, 16);
+        len += rf_cmd_frame(rf.buf + len, 3);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
+                && rf_write(&rf) == AFPERR_DFULL
+                && rf_holds(&rf, 0, 2, 0xA5) && rf_next_is(&rf, 3)) {
+            ret = 0;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief An FPWriteExt to a data fork whose range passes off_t is refused
+ *        with AFPERR_DFULL, its payload drained, the fork as it was
+ *
+ * An offset of INT64_MAX - 15 and a count of 64 give a sum past INT64_MAX,
+ * a signed overflow that a compiler may assume never happens.
+ */
+int utest_write_fork_dfork_past_off_t_refused(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], INT64_MAX - 15, 64, 0xA5);
+        len += rf_cmd_frame(rf.buf + len, 2);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFPERR_DFULL
+                && rf_holds(&rf, 0, 0, 0xA5) && rf_next_is(&rf, 2)) {
+            ret = 0;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief An FPWriteExt to a resource fork whose range passes off_t at the
+ *        fork's offset in its file is refused with AFPERR_DFULL, as one to a
+ *        data fork is
+ */
+int utest_write_fork_rfork_past_off_t_refused(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], INT64_MAX - 10, 10, 0xA5);
+        len += rf_cmd_frame(rf.buf + len, 2);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFPERR_DFULL
+                && rf_holds(&rf, 0, 0, 0xA5) && rf_next_is(&rf, 2)) {
+            ret = 0;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief Append 50 bytes of 0x5A to the 100-byte resource fork of fork slot
+ *        i through an adouble of its own, as another session's afpd writes
+ *
+ * @returns 0, or -1
+ */
+static int rf_append_elsewhere(struct rf *rf, int i)
+{
+    const int flags = ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR;
+    char path[MAXPATHLEN + 1];
+    char bytes[50];
+    struct adouble ad;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", rf->vol->v_path, rf->name[i]);
+    memset(bytes, 0x5A, sizeof(bytes));
+    ad_init(&ad, rf->vol);
+
+    if (ad_open(&ad, path, flags, 0) == 0) {
+        if (ad_write(&ad, ADEID_RFORK, 100, 0, bytes, sizeof(bytes))
+                == (ssize_t)sizeof(bytes) && ad_flush(&ad) == 0) {
+            ret = 0;
+        }
+
+        ad_close(&ad, flags);
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief An FPWriteExt from the end of a resource fork lands after the bytes
+ *        another session appended since this one last wrote the fork
+ */
+int utest_write_fork_rfork_end_after_append(AFPObj *obj, struct vol *vol)
+{
+    const struct ofork *of;
+    char got[60];
+    struct rf rf;
+    size_t first;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)
+            && (of = of_find(rf.refnum[0])) != NULL) {
+        first = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, 100, 0xA5);
+        len = first + rf_write_frame(rf.buf + first, 2, rf.refnum[0], 0, 10,
+                                     0xC3);
+        /* the second write counts its offset from the end of the fork */
+        rf.buf[first + DSI_BLOCKSIZ + 1] = 0x80;
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
+                && rf_append_elsewhere(&rf, 0) == 0 && rf_write(&rf) == AFP_OK
+                && ad_size(of->of_ad, ADEID_RFORK) == 160
+                && ad_read(of->of_ad, ADEID_RFORK, 100, got, sizeof(got))
+                == (ssize_t)sizeof(got)) {
+            ret = 0;
+
+            for (size_t j = 0; j < sizeof(got); j++) {
+                if ((uint8_t)got[j] != (j < 50 ? 0x5A : 0xC3)) {
+                    ret = -1;
+                }
+            }
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief An FPByteRangeLockExt from the end of a resource fork starts after
+ *        the bytes another session appended, where a write from the end lands
+ */
+int utest_byte_lock_rfork_end_after_append(AFPObj *obj, struct vol *vol)
+{
+    /* the StartEndFlag, then the range: offset 0, length 10 */
+    uint8_t req[20] = { AFP_BYTELOCK_EXT, 0x80 };
+    const uint64_t length = hton64(UINT64_C(10));
+    const uint64_t start = hton64(UINT64_C(150));
+    char reply[sizeof(start)];
+    size_t rbuflen = sizeof(reply);
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, 100, 0xA5);
+        memcpy(req + 2, &rf.refnum[0], sizeof(rf.refnum[0]));
+        memcpy(req + 12, &length, sizeof(length));
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
+                && rf_append_elsewhere(&rf, 0) == 0
+                && afp_bytelock_ext(&rf.obj, (char *)req, sizeof(req), reply,
+                                    &rbuflen) == AFP_OK
+                && rbuflen == sizeof(start)
+                && memcmp(reply, &start, sizeof(start)) == 0) {
+            ret = 0;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief An FPWriteExt framed with a 32-bit FPWrite's 12-byte block, too
+ *        short for its ReqCount, is refused with its payload drained
+ *
+ * The count the block lacks is the one the 64-byte write before it left in
+ * the command buffer, so a write that took it would pass the payload bound.
+ */
+int utest_write_fork_short_block_refused(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    uint8_t *p;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, 64, 0xA5);
+        p = rf.buf + len;
+        len += rf_write_frame(p, 2, rf.refnum[0], 64, 16, 0xA5);
+        /* the ReqCount past the 12-byte block arrives as payload */
+        dsi_test_header(p, DSIFUNC_WRITE, 2, DSI_WROFF_FPWRITE,
+                        DSI_WROFF_FPWRITEEXT + 16);
+        len += rf_cmd_frame(rf.buf + len, 3);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
+                && rf_write(&rf) == AFPERR_PARAM
+                && rf_holds(&rf, 0, 64, 0xA5) && rf_next_is(&rf, 3)) {
+            ret = 0;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief 1 MiB of 0xA5 to a new data fork while splice() on side fails
+ *        with errnum before reading anything, then 256 KiB more, of 0xA5 to
+ *        the same fork at 1 MiB with same_fork, else of 0x5A to a second
+ *        data fork
+ *
+ * @returns 0 when the first write replies AFP_OK with the fault fired, a
+ *          socket's refusal closing the session's pipe, the second write
+ *          replies AFP_OK with no splice() on either side, and each fork
+ *          holds its writes' bytes; -1 when not; TEST_SKIP
+ */
+static int rf_decline_test(AFPObj *obj, struct vol *vol, enum rf_side side,
+                           int errnum, bool same_fork)
+{
+    int fork = same_fork ? 0 : 1;
+    uint64_t off = same_fork ? RF_A_LEN : 0;
+    size_t held = same_fork ? RF_A_LEN + RF_B_LEN : RF_B_LEN;
+    uint8_t fill = same_fork ? 0xA5 : 0x5A;
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_splice_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)
+            && (same_fork || rf_open(&rf, 1, OPENFORK_DATA))) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
+        len += rf_write_frame(rf.buf + len, 2, rf.refnum[fork], off, RF_B_LEN,
+                              fill);
+        rf_arm(side, 0, errnum);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
+                && rf_fired(side, errnum)
+                && rf_holds(&rf, 0, RF_A_LEN, 0xA5)
+                && (side != RF_SOCK || rf.dsi.splice_pipe[0] == -1)) {
+            rf_arm(RF_SOCK, 0, 0);
+            rf_arm(RF_FILE, 0, 0);
+
+            if (rf_write(&rf) == AFP_OK && !rf_fired(RF_SOCK, 0)
+                    && !rf_fired(RF_FILE, 0)
+                    && rf_holds(&rf, fork, held, fill)) {
+                ret = 0;
+            }
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
  * @brief A socket splice() that fails before reading anything leaves the
- *        write to the userspace path, and the next write splices again
+ *        write to the userspace path, and the session's later writes too,
+ *        with no splice() tried and the session's pipe closed
  */
 int utest_recvfile_no_socket_splice_falls_back(AFPObj *obj, struct vol *vol)
 {
-    return rf_write_test(obj, vol, OPENFORK_DATA, RF_SOCK, 0, ENOSYS, AFP_OK,
-                         true);
+    return rf_decline_test(obj, vol, RF_SOCK, ENOSYS, false);
+}
+
+/*!
+ * @brief 256 KiB twice to one new data fork, the first write with the pipe
+ *        knobs set and the second once they have cleared
+ *
+ * @returns 0 when the first write lands through recv() with no pipe kept,
+ *          the second opens a pipe, splices from the socket and lands after
+ *          it, and each tried one pipe2(), -1 when not, TEST_SKIP without
+ *          splice
+ */
+static int rf_pipe_fault_test(AFPObj *obj, struct vol *vol, int budget_spent,
+                              int pipe2_errno)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_splice_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_B_LEN, 0xA5);
+        len += rf_write_frame(rf.buf + len, 2, rf.refnum[0], RF_B_LEN,
+                              RF_B_LEN, 0xA5);
+        fi.pipe_budget_spent = budget_spent;
+        rf_arm(RF_PIPE2, 0, pipe2_errno);
+
+        if (rf_send(&rf, rf.buf, len) == 0
+                && rf_write(&rf) == AFP_OK && rf_holds(&rf, 0, RF_B_LEN, 0xA5)
+                && rf.dsi.splice_pipe[0] == -1) {
+            /* the budget comes back as other sessions close their pipes */
+            fi.pipe_budget_spent = 0;
+            rf_arm(RF_SOCK, 0, 0);
+            ret = rf_write(&rf) == AFP_OK
+                  && rf_holds(&rf, 0, 2 * RF_B_LEN, 0xA5)
+                  && fi.pipe2.calls == 2 && rf.dsi.splice_pipe[0] != -1
+                  && rf_fired(RF_SOCK, 0) ? 0 : -1;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief Over the pipe budget a write tries one pipe and goes through
+ *        recv(), and the next write splices once a pipe fits
+ */
+int utest_recvfile_spent_budget_retries(AFPObj *obj, struct vol *vol)
+{
+    return rf_pipe_fault_test(obj, vol, 1, 0);
+}
+
+/*!
+ * @brief A pipe2() that fails leaves that write to recv(), and the next
+ *        write of the session opens a pipe and splices
+ */
+int utest_recvfile_pipe2_failure_retries(AFPObj *obj, struct vol *vol)
+{
+    return rf_pipe_fault_test(obj, vol, 0, EMFILE);
+}
+
+/*!
+ * @brief A file whose filesystem refused splice() is not spliced again: its
+ *        next write goes through recv() with no splice() on either side
+ */
+int utest_recvfile_unsplicable_file_not_spliced(AFPObj *obj, struct vol *vol)
+{
+    return rf_decline_test(obj, vol, RF_FILE, EINVAL, true);
+}
+
+/*!
+ * @brief A connection error on the first socket splice() fails the write
+ *        and drains its request, rather than leaving it to recv()
+ */
+int utest_recvfile_socket_error_fails_request(AFPObj *obj, struct vol *vol)
+{
+    return rf_write_test(obj, vol, OPENFORK_DATA, RF_SOCK, 0, ETIMEDOUT,
+                         AFPERR_MISC, false);
 }
 
 /*!
@@ -920,9 +1498,7 @@ int utest_recvfile_pipe_steps_down(AFPObj *obj, struct vol *vol)
  */
 int utest_write_fork_short_write_fails_request(AFPObj *obj, struct vol *vol)
 {
-    struct rlimit saved;
-    struct rlimit limit;
-    void (*xfsz)(int);
+    struct fsize_cap cap;
     struct rf rf;
     size_t len;
     int ret;
@@ -933,25 +1509,21 @@ int utest_write_fork_short_write_fails_request(AFPObj *obj, struct vol *vol)
 
     ret = -1;
     rf.obj.options.flags &= ~OPTION_RECVFILE;
-    xfsz = signal(SIGXFSZ, SIG_IGN);
 
-    if (getrlimit(RLIMIT_FSIZE, &saved) == 0
-            && rf_open(&rf, 0, OPENFORK_DATA)) {
-        limit = saved;
-        limit.rlim_cur = RF_B_LEN;
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
         len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_A_LEN, 0xA5);
         len += rf_cmd_frame(rf.buf + len, 2);
 
-        if (setrlimit(RLIMIT_FSIZE, &limit) == 0
-                && rf_send(&rf, rf.buf, len) == 0
-                && rf_write(&rf) == AFPERR_DFULL && rf_next_is(&rf, 2)) {
-            ret = 0;
-        }
+        if (fsize_cap(&cap, RF_B_LEN) == 0) {
+            if (rf_send(&rf, rf.buf, len) == 0
+                    && rf_write(&rf) == AFPERR_DFULL && rf_next_is(&rf, 2)) {
+                ret = 0;
+            }
 
-        setrlimit(RLIMIT_FSIZE, &saved);
+            fsize_uncap(&cap);
+        }
     }
 
-    signal(SIGXFSZ, xfsz);
     rf_teardown(&rf);
     return ret;
 }

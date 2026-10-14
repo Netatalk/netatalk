@@ -276,17 +276,23 @@ static int send_reply(const AFPObj *obj, const int err)
 /*!
  * @brief Answer a command with AFPERR_PWDEXPR while a password change is due
  *
- * @param[in]  obj      session object, unused
+ * A DSIWrite's payload is read off the stream before the reply, as every
+ * handler a DSIWrite frame runs must read it.
+ *
+ * @param[in]  obj      session object
  * @param[in]  ibuf     request block, unused
  * @param[in]  ibuflen  request block length, unused
  * @param[out] rbuf     reply block, unused
  * @param[out] rbuflen  0 on return
  * @returns AFPERR_PWDEXPR
  */
-static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_,
-                             size_t ibuflen _U_,
-                             char *rbuf _U_, size_t *rbuflen)
+int afp_errpwdexpired(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
+                      char *rbuf _U_, size_t *rbuflen)
 {
+    if (obj->proto == AFPPROTO_DSI) {
+        dsi_writedrain(obj->dsi);
+    }
+
     *rbuflen = 0;
     return AFPERR_PWDEXPR;
 }
