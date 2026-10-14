@@ -5,7 +5,7 @@ description: "DSIWrite payload reception, with the recvfile pipe path."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_write.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T11:59:27+11:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -25,7 +25,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 size_t dsi_writeinit(DSI *, char **)
 ```
 
-Defined at lines 66 to 99. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 67 to 100. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Begin a DSIWrite transfer and hand back any payload the read-ahead buffer already holds.
 
@@ -45,7 +45,7 @@ Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_over_dsi
 size_t dsi_write(DSI *, void *, const size_t)
 ```
 
-Defined at lines 113 to 128. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 114 to 129. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Receive the next part of a DSIWrite payload into buf.
 
@@ -70,7 +70,7 @@ Mentioned in the documentation of: [ad_recvfile](../adouble/ad_recvfile.c.md#ad_
 void dsi_writeflush(DSI *)
 ```
 
-Defined at lines 138 to 152. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 139 to 153. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Drain the unread remainder of a DSIWrite payload.
 
@@ -91,7 +91,7 @@ Mentioned in the documentation of: [dsi_write_file](dsi_write.c.md#dsi_write_fil
 void dsi_close_pipe(DSI *)
 ```
 
-Defined at lines 159 to 166. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 160 to 167. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Close the recvfile pipe of the session, the next write opens another.
 
@@ -106,7 +106,7 @@ Called by: [afp_zzzzz](../../etc/afpd/auth.c.md#afp_zzzzz), [dsi_disconnect](dsi
 static int waitfordata(int socket, int timeout)
 ```
 
-Defined at lines 181 to 197.
+Defined at lines 182 to 198.
 
 Wait up to timeout milliseconds for socket data and report a TCP urgent mark.
 
@@ -126,7 +126,7 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 static int open_pipe(DSI *dsi)
 ```
 
-Defined at lines 212 to 271.
+Defined at lines 213 to 272.
 
 Open the recvfile pipe of the session at the largest size the kernel grants.
 
@@ -147,7 +147,7 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 static ssize_t pipe_to_file(DSI *dsi, int tofd, loff_t *offset, size_t len)
 ```
 
-Defined at lines 286 to 308.
+Defined at lines 287 to 309.
 
 Move bytes from the recvfile pipe into a file through the reply buffer.
 
@@ -169,7 +169,7 @@ Called by: [dsi_write_file](dsi_write.c.md#dsi_write_file)
 ssize_t dsi_write_file(DSI *, int tofd, off_t *offset, bool *nosplice)
 ```
 
-Defined at lines 326 to 434. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 327 to 435. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Receive the rest of a DSIWrite payload straight into a file.
 
