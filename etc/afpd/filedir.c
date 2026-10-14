@@ -354,6 +354,142 @@ int check_name(const struct vol *vol, char *name)
 }
 
 /*!
+ * @brief Longest path string below a directory, including the directory itself
+ *
+ * The walk reports the byte length of the longest path that starts at dir,
+ * dir included, as an absolute-or-relative string the caller can add its own
+ * destination prefix to. Only directories recurse: every other entry just
+ * contributes its name length. The walk is stat-free, because d_name from
+ * readdir is the same byte string the kernel measures against the path limit,
+ * and a subdirectory that cannot be opened contributes only its own name.
+ *
+ * @param[in]  vol      volume of dir
+ * @param[in]  dirfd    directory that dir is relative to, or -1 for the
+ *                      working directory
+ * @param[in]  dir      directory to walk
+ * @param[out] longest  longest path length found; strlen(dir) for an empty dir
+ * @returns 0 on success, -1 when dir cannot be opened
+ */
+int longest_descendant_pathlen(const struct vol *vol, int dirfd,
+                                      const char *dir, size_t *longest)
+{
+    char path[MAXPATHLEN + 1];
+    DIR *dp;
+    struct dirent *de;
+    size_t dirlen;
+    size_t best;
+
+    if ((dirlen = strlen(dir)) + 2 > sizeof(path)) {
+        return -1;
+    }
+
+    if ((dp = opendirat(dirfd, dir)) == NULL) {
+        return -1;
+    }
+
+    /* dirlen keeps strlen(path) for the "<dir>/" prefix of every child */
+    memcpy(path, dir, dirlen);
+    path[dirlen] = '/';
+    path[++dirlen] = '\0';
+
+    best = 0;
+
+    while ((de = readdir(dp))) {
+        size_t namelen = strlen(de->d_name);
+        size_t sub;
+
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
+            continue;
+        }
+
+        if (dirlen + namelen > sizeof(path) - 1) {
+            /* The child path alone already busts MAXPATHLEN. */
+            closedir(dp);
+            *longest = MAXPATHLEN + 1;
+            return 0;
+        }
+
+        memcpy(path + dirlen, de->d_name, namelen + 1);
+
+        if (de->d_type == DT_DIR
+                && !longest_descendant_pathlen(vol, dirfd, path, &sub)) {
+            if (sub > best) {
+                best = sub;
+            }
+        } else if (dirlen + namelen > best) {
+            best = dirlen + namelen;
+        }
+    }
+
+    closedir(dp);
+
+    /* best == 0 means dir has no entries at all */
+    *longest = best ? best : strlen(dir);
+    return 0;
+}
+
+/*!
+ * @brief Would renaming this directory push a descendant path past MAXPATHLEN?
+ *
+ * moveandrename() derives the new full path of an object the same way for its
+ * log line and for the dircache update: the full path of the working directory,
+ * a slash, and the new Unix name. That string is what descendant operations
+ * rebuild later, so the preflight measures its byte length here and adds the
+ * part of the moved subtree that hangs below the source directory. Only
+ * directories need the walk: a plain file has no descendants. A source
+ * directory that cannot be read is not this check's business, so it reports no
+ * overflow and leaves the error to the rename itself.
+ *
+ * @param[in] vol      volume of sdir
+ * @param[in] sdir_fd  descriptor of the source directory, or -1 for the working
+ *                     directory
+ * @param[in] sdir     source directory, or the directory itself when isdir
+ * @param[in] upath    new Unix name in the working directory
+ * @param[in] isdir    nonzero when the object is a directory
+ * @returns 1 when the rename would overflow, 0 otherwise
+ */
+int rename_would_overflow_path(const struct vol *vol, int sdir_fd,
+                                      struct dir *sdir, const char *upath,
+                                      int isdir)
+{
+    size_t dstlen;
+    size_t longest = 0;
+    size_t srclen;
+    const char *srcname;
+
+    if (!isdir || upath == NULL || sdir == NULL
+            || curdir == NULL || curdir->d_fullpath == NULL) {
+        return 0;
+    }
+
+    /* The new full path of the renamed directory, byte for byte the string
+     * fullpath_join() builds from the working directory and the new name. */
+    dstlen = (size_t)blength(curdir->d_fullpath) + 1 + strlen(upath);
+
+    if (dstlen > MAXPATHLEN) {
+        return 1;
+    }
+
+    srcname = (sdir->d_u_name != NULL) ? cfrombstr(sdir->d_u_name) : ".";
+    srclen = strlen(srcname);
+
+    if (longest_descendant_pathlen(vol, sdir_fd, srcname, &longest) < 0) {
+        return 0;
+    }
+
+    /* longest is the length of the deepest path that starts at srcname, so
+     * the part below the moved directory is (longest - strlen(srcname)).
+     * Adding that to the new full path gives the deepest path the rename
+     * would create; every intermediate directory is a prefix of it and so
+     * no longer. */
+    if (longest <= srclen) {
+        return 0;
+    }
+
+    return dstlen + (longest - srclen) > MAXPATHLEN;
+}
+
+/*!
  * @brief Move and rename sdir/oldname to newname in the working directory
  *
  * A file takes its CNID from the database, and a directory passes itself as
@@ -517,6 +653,17 @@ static int moveandrename(const AFPObj *obj,
     st = &path.st;
 
     if (0 != (rc = check_name(vol, upath))) {
+        goto exit;
+    }
+
+    /* Reject a directory rename that would bury a descendant past MAXPATHLEN.
+     * Nothing has been renamed yet, so this is the last point where the old
+     * tree is still addressable and a stable error can be returned. */
+    if (rename_would_overflow_path(vol, sdir_fd, sdir, upath, isdir)) {
+        LOG(log_warning, logtype_afpd,
+            "moveandrename: rename of \"%s\" to \"%s/%s\" would exceed MAXPATHLEN below the source directory, rejecting",
+            oldunixname, cfrombstr(curdir->d_fullpath), upath);
+        rc = AFPERR_PARAM;
         goto exit;
     }
 

@@ -104,6 +104,7 @@ if build_tests
         'peer_lock.c',
         'test_capabilities.c',
         'subtests_cnid.c',
+        'subtests_rename.c',
         'subtests_conf.c',
         'subtests_lock.c',
         'subtests_pfd.c',
