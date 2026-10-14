@@ -3089,6 +3089,13 @@ int main(int argc, char *argv[])
              "dircache: a full cache keeps accepting inserts");
     TEST_int(test011_stat_refresh_drops_rights(vol), 0,
              "dircache: a stat refresh with a new ctime drops cached rights");
+    /* FPMoveAndRename PATH_MAX preflight: walking a source directory must
+     * measure the longest descendant, and the decision must reject a rename
+     * whose new full path plus that suffix no longer fits MAXPATHLEN */
+    TEST_int(test012_rename_preflight_walk_lengths(vol), 0,
+             "rename preflight: longest descendant path length is measured");
+    TEST_int(test013_rename_preflight_decision(vol), 0,
+             "rename preflight: directory over the limit is rejected, file is not");
     /* pfd cache: strict ostat equivalence (quiescent), and the
      * divergence window — probe bound + three-way sync-check no-thrash */
     TEST_int(test_pfd_ostat_equivalence(vol), 0,
