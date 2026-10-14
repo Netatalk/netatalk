@@ -772,6 +772,10 @@ jobs:
             export PATH=/usr/local/sbin:/usr/local/bin:$PATH
             netatalk -V
             afpd -V
+            # The install hook requests an asynchronous SMF manifest import.
+            # Wait for registration before the next step enables netatalk.
+            svcadm restart -s -T 60 svc:/system/manifest-import:default
+            svcs -l svc:/network/netatalk:default
       - name: AFP Spectest (production, AFP 3.4)
         shell: solaris {0}
         run: |
