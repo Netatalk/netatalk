@@ -470,7 +470,9 @@ restrictions on the applications ability to set this value.
 use sendfile = *BOOLEAN* (default: *yes*) **(G)**
 
 > Whether to use sendfile syscall for
-sending file data to clients.
+sending file data to clients. Builds for Linux, FreeBSD, Solaris and
+illumos have it. A file whose filesystem refuses sendfile is sent through a
+buffer.
 
 recvfile = *BOOLEAN* (default: *no*) **(G)**
 
@@ -547,7 +549,9 @@ given. For a server run as root the *sqlite* backend sets the directory to
 mode 1777, creating it if needed, and its database files to 0666, so that
 **afpd** sessions running as the connected user and **nad** can share them;
 a **netatalk \-\-single-user** server keeps them owner-only (0700 and 0600).
-Keep the path outside any share.
+Keep the path outside any share, on a filesystem that supports POSIX record
+locks: the *sqlite* database and the icons of the desktop database are
+locked as they are written.
 
 ## Directory Cache Tuning
 

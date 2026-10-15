@@ -30,12 +30,13 @@
  * The reply header carries the full size and the result code err. DSI_NOREPLY
  * tells the command loop that the handler sends the reply itself, and in_write
  * blocks attentions until dsi_readdone. The remaining size minus buflen bytes
- * follow through dsi_read or dsi_stream_read_file.
+ * follow through dsi_read.
  *
  * @param[in,out] dsi     DSI session
  * @param[in]     buf     first part of the reply payload
  * @param[in]     buflen  bytes in buf
- * @param[in]     size    total reply payload length
+ * @param[in]     size    total reply payload length, at most UINT32_MAX, the
+ *                        DSI header's 32-bit length
  * @param[in]     err     AFP result code
  * @returns bytes to send next, at most buflen, or -1 when the send failed
  */
@@ -53,7 +54,7 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
 
     if (dsi_stream_send(dsi, buf, buflen)) {
         dsi->datasize = size - buflen;
-        LOG(log_maxdebug, logtype_dsi, "dsi_readinit: remaining data for sendfile: %zd",
+        LOG(log_maxdebug, logtype_dsi, "dsi_readinit: remaining data: %u",
             dsi->datasize);
         return MIN(dsi->datasize, buflen);
     }

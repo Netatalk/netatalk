@@ -231,13 +231,7 @@ static const char *afp_dsi_die_cause(int sig, char *buf, size_t len)
  */
 static void afp_dsi_die(int sig)
 {
-    DSI *dsi = (DSI *)AFPobj->dsi;
-
-    if (dsi->flags & DSI_RECONINPROG) {
-        /* Primary reconnect succeeded, got SIGTERM from afpd parent */
-        dsi->flags &= ~DSI_RECONINPROG;
-        return; /* this returns to afp_disconnect */
-    }
+    const DSI *dsi = AFPobj->dsi;
 
     if (dsi->flags & DSI_DISCONNECTED) {
         char cause[64];
@@ -247,6 +241,10 @@ static void afp_dsi_die(int sig)
             AFPobj->options.tickleval);
         of_log_usage(log_note, "disconnected exit");
         exit(0);
+    }
+
+    if (dsi->flags & DSI_RECONINPROG) {
+        LOG(log_note, logtype_afpd, "Reconnect-state session terminating");
     }
 
     dsi_attention(AFPobj->dsi, AFPATTN_SHUTDOWN);
@@ -638,9 +636,8 @@ static void child_handler(int sig _U_)
  * @brief Run the work of every signal that arrived since the last call
  *
  * Only the main loop calls it, never a signal handler. A termination signal
- * goes first and ends the session. The afp_dsi_die call returns only during
- * a failed reconnect handoff, so the session then closes and exits here. A
- * primary reconnect comes next and returns at once. The shutdown notice, the
+ * goes first and ends the session through afp_dsi_die, which does not return.
+ * A primary reconnect comes next and returns at once. The shutdown notice, the
  * server message, and the timer tick follow in that order.
  *
  * @param[in,out] obj  session object
@@ -655,14 +652,6 @@ static int process_deferred_signals(AFPObj *obj)
         die_pending = 0;
         die_signalled = true;
         afp_dsi_die(sig);
-        /* Reached only with DSI_RECONINPROG set: the handoff failed
-         * (auth.c leaves the flag set) and this child still owns the client
-         * socket, so run the full teardown like the afp_over_dsi() backstop,
-         * keeping afp_dsi_die()'s diagnostic exit mapping. */
-        LOG(log_note, logtype_afpd, "Reconnect-state session terminating");
-        iw_shutdown();
-        afp_dsi_close(obj);
-        exit((sig == SIGTERM || sig == SIGALRM) ? 0 : sig);
     }
 
     /* Primary reconnect (SIGURG) */
@@ -1286,6 +1275,12 @@ void afp_over_dsi(AFPObj *obj)
             /* single shot toggle that gets set by dsi_readinit. */
             if (dsi->flags & DSI_NOREPLY) {
                 dsi->flags &= ~DSI_NOREPLY;
+
+                /* a streamed reply that broke off: nothing may follow it */
+                if (dsi->in_write) {
+                    afp_dsi_die(EXITERR_CLNT);
+                }
+
                 break;
             } else if (!dsi_cmdreply(dsi, err)) {
                 LOG(log_error, logtype_afpd, "dsi_cmdreply(%d): %s", dsi->socket,

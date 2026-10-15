@@ -72,16 +72,11 @@
 #define hton64(x)       (x)
 #else
 #define hton64(x)       ((uint64_t) (htonl(((x) >> 32) & 0xffffffffLL)) | \
-                         (uint64_t) ((htonl(x) & 0xffffffffLL) << 32))
+                         ((uint64_t) htonl(x) << 32))
 #endif
 
 #ifndef SAFE_FREE
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)
-#endif
-
-#ifdef WITH_SENDFILE
-extern ssize_t sys_sendfile(int __out_fd, int __in_fd, off_t *__offset,
-                            size_t __count);
 #endif
 
 extern const int _diacasemap[], _dialowermap[];

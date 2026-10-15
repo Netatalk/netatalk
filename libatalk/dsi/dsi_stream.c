@@ -27,26 +27,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
 
-#ifdef HAVE_SENDFILEV
+#if defined(SENDFILE_FLAVOR_LINUX) || defined(SENDFILE_FLAVOR_SOLARIS)
 #include <sys/sendfile.h>
 #endif
 
 #include <atalk/dsi.h>
 #include <atalk/logger.h>
+#include <atalk/unix.h>
 #include <atalk/util.h>
-
-#ifndef MSG_MORE
-#define MSG_MORE 0x8000
-#endif
-
-#ifndef MSG_DONTWAIT
-#define MSG_DONTWAIT 0x40
-#endif
 
 /*!
  * @brief Write the session DSI header into buf in wire format
@@ -300,8 +294,8 @@ static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data,
 }
 
 /*!
- * @brief Mark the start of a multi-packet write, so signal handlers leave the
- * socket alone
+ * @brief Mark the start of a multi-packet write, which no tickle, attention
+ * or CloseSession frame may interleave
  *
  * @param[in,out] dsi  DSI session
  */
@@ -448,15 +442,13 @@ int dsi_wait_input(DSI *dsi)
  * @param[in,out] dsi     DSI session
  * @param[in]     data    bytes to send
  * @param[in]     length  bytes to send
- * @param[in]     mode    0, DSI_NOWAIT, or DSI_MSG_MORE to hint at a following
- *                        send
+ * @param[in]     mode    0 or DSI_NOWAIT
  * @returns bytes sent, or -1 for a disconnected session or a failed send
  */
 ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 {
     size_t written;
     ssize_t len;
-    unsigned int flags;
     dsi->in_write++;
     written = 0;
     LOG(log_maxdebug, logtype_dsi, "dsi_stream_write(send: %zd bytes): START",
@@ -466,14 +458,9 @@ ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
         return -1;
     }
 
-    if (mode & DSI_MSG_MORE) {
-        flags = MSG_MORE;
-    } else {
-        flags = 0;
-    }
-
     while (written < length) {
-        len = send(dsi->socket, (uint8_t *) data + written, length - written, flags);
+        len = send(dsi->socket, (uint8_t *) data + written, length - written,
+                   0);
 
         if (len >= 0) {
             written += len;
@@ -518,175 +505,245 @@ exit:
 
 #ifdef WITH_SENDFILE
 /*!
+ * @brief Make one sendfile call: the unsent header bytes, then file bytes
+ *
+ * Linux sendfile takes no header, so the header goes out in a send of its
+ * own, held back by MSG_MORE until the file data follows. sent counts header
+ * bytes first, and is set after EAGAIN and EINTR too.
+ *
+ * @param[in]  dsi     DSI session whose socket to send on
+ * @param[in]  fromfd  file to send from
+ * @param[in]  pos     file offset of the first file byte
+ * @param[in]  count   file bytes to send at most
+ * @param[in]  hdr     unsent header bytes
+ * @param[in]  hdrlen  bytes at hdr, 0 once the header is out
+ * @param[out] sent    bytes the call put on the socket
+ * @returns 0, or -1 with errno set
+ */
+static int sendfile_call(const DSI *dsi, int fromfd, off_t pos, size_t count,
+                         char *hdr, size_t hdrlen, size_t *sent)
+{
+#if defined(SENDFILE_FLAVOR_LINUX)
+    ssize_t len;
+
+    if (hdrlen > 0) {
+        len = send(dsi->socket, hdr, hdrlen, MSG_MORE);
+    } else {
+        len = sendfile(dsi->socket, fromfd, &pos, count);
+    }
+
+    *sent = len > 0 ? (size_t)len : 0;
+    return len < 0 ? -1 : 0;
+#elif defined(SENDFILE_FLAVOR_FREEBSD)
+    struct iovec iov = { .iov_base = hdr, .iov_len = hdrlen };
+    struct sf_hdtr hdtr = { .headers = &iov, .hdr_cnt = 1 };
+    off_t sbytes = 0;
+    int ret;
+    ret = sendfile(fromfd, dsi->socket, pos, count, hdrlen > 0 ? &hdtr : NULL,
+                   &sbytes, 0);
+    *sent = (size_t)sbytes;
+    return ret;
+#elif defined(SENDFILE_FLAVOR_SOLARIS)
+    struct sendfilevec vec[2];
+    size_t xferred = 0;
+    ssize_t len;
+    int cnt = 0;
+
+    if (hdrlen > 0) {
+        vec[cnt].sfv_fd = SFV_FD_SELF;
+        vec[cnt].sfv_flag = 0;
+        /* Cast to unsigned long to prevent sign extension of the
+         * pointer value for the LFS case; see Apache PR 39463. */
+        vec[cnt].sfv_off = (unsigned long)hdr;
+        vec[cnt].sfv_len = hdrlen;
+        cnt++;
+    }
+
+    vec[cnt].sfv_fd = fromfd;
+    vec[cnt].sfv_flag = 0;
+    vec[cnt].sfv_off = pos;
+    vec[cnt].sfv_len = count;
+    cnt++;
+    len = sendfilev(dsi->socket, vec, cnt, &xferred);
+    *sent = len >= 0 ? (size_t)len : xferred;
+    return len < 0 ? -1 : 0;
+#endif
+}
+
+/*!
+ * @brief Send the rest of a read reply through the request buffer
+ *
+ * The unsent header bytes go first, then the file bytes from pos a session
+ * quantum at a time, until left reaches 0 or the file ends.
+ *
+ * @param[in,out] dsi     DSI session whose socket and request buffer to use
+ * @param[in]     fromfd  file to send from
+ * @param[in]     pos     file offset of the next file byte
+ * @param[in,out] left    file bytes the reply still owes, reduced by those sent
+ * @param[in]     hdr     unsent header bytes
+ * @param[in]     hdrlen  bytes at hdr
+ * @returns 0, or -1 with errno set, which stays EAGAIN when the client ends
+ *          the stream during a wait
+ */
+static int dsi_stream_copy_file(DSI *dsi, int fromfd, off_t pos, size_t *left,
+                                char *hdr, size_t hdrlen)
+{
+    if (hdrlen > 0
+            && dsi_stream_write(dsi, hdr, hdrlen, 0) != (ssize_t)hdrlen) {
+        return -1;
+    }
+
+    while (*left > 0) {
+        ssize_t len = pread(fromfd, dsi->commands,
+                            MIN(*left, (size_t)dsi->server_quantum), pos);
+
+        if (len == -1 && errno == EINTR) {
+            continue;
+        }
+
+        if (len == -1) {
+            LOG(log_error, logtype_dsi, "dsi_stream_read_file: pread: %s",
+                strerror(errno));
+            return -1;
+        }
+
+        if (len == 0) {
+            break;
+        }
+
+        if (dsi_stream_write(dsi, dsi->commands, (size_t)len, 0) != len) {
+            return -1;
+        }
+
+        pos += len;
+        *left -= (size_t)len;
+    }
+
+    return 0;
+}
+
+/*!
  * @brief Send a streamed FPRead reply whose payload comes from a file through
  * sendfile
  *
- * The reply header carries length and the result code err. Solaris sends the
- * header and the file in one sendfilev call, and FreeBSD passes the header to
- * sendfile. Other platforms write the header first with MSG_MORE. The loop
- * retries after EINTR and EAGAIN, reads pending input through dsi_peek
- * meanwhile, and treats a zero-length result as a failure. DSI_NOREPLY marks
- * the reply as sent, and in_write rises for the duration of the call.
+ * The reply header carries length and the result code err. Each
+ * sendfile_call sends header bytes before file bytes; the loop retries after
+ * EINTR and EAGAIN, reading pending input through dsi_peek, and stops at a
+ * call that sends nothing or an EINVAL at the end of the file. A file the
+ * kernel will not send from (EINVAL, ENOSYS, EOPNOTSUPP) goes through the
+ * request buffer instead. DSI_NOREPLY marks the reply as sent. A failure
+ * leaves in_write raised, as dsi_readinit does, so no tickle, attention or
+ * CloseSession frame follows the broken reply.
  *
  * @param[in,out] dsi     DSI session
  * @param[in]     fromfd  file to send from
  * @param[in]     offset  file offset to start at
- * @param[in]     length  payload bytes to send
+ * @param[in]     length  payload bytes to send, at least one and at most
+ *                        UINT32_MAX, the DSI header's 32-bit length
  * @param[in]     err     AFP result code
- * @returns payload bytes sent, or -1 for a disconnected session or a failed
- *          transfer
+ * @returns 0, or -1 with errno set: ENOTCONN for a disconnected session, EIO
+ *          when the file ends first, or the error of the failed call, which
+ *          stays EAGAIN or EINTR when the client ends the stream during a wait
  */
-ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset,
-                             const size_t length, const int err)
+int dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset,
+                         const size_t length, const int err)
 {
-    int ret = 0;
-    size_t written = 0;
-    size_t total = length;
-    ssize_t len;
-    off_t pos = offset;
+    static unsigned int copied_replies;
     char block[DSI_BLOCKSIZ];
-#ifdef HAVE_SENDFILEV
-    int sfvcnt;
-    struct sendfilevec vec[2];
-    ssize_t nwritten;
-#elif defined(FREEBSD)
-    ssize_t nwritten;
-    void *hdrp;
-    struct sf_hdtr hdr;
-    struct iovec iovec;
-    hdr.headers = &iovec;
-    hdr.hdr_cnt = 1;
-    hdr.trailers = NULL;
-    hdr.trl_cnt = 0;
-    hdrp = &hdr;
-#endif
+    size_t hdrleft = sizeof(block);
+    size_t left = length;
     LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file(off: %jd, len: %zu)",
         (intmax_t)offset, length);
+    dsi->in_write++;
 
     if (dsi->flags & DSI_DISCONNECTED) {
+        errno = ENOTCONN;
         return -1;
     }
 
-    dsi->in_write++;
     dsi->flags |= DSI_NOREPLY;
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_len = htonl(length);
     dsi->header.dsi_data.dsi_code = htonl(err);
     dsi_header_pack_reply(dsi, block);
-#ifdef HAVE_SENDFILEV
-    total += DSI_BLOCKSIZ;
-    sfvcnt = 2;
-    vec[0].sfv_fd = SFV_FD_SELF;
-    vec[0].sfv_flag = 0;
-    /* Cast to unsigned long to prevent sign extension of the
-     * pointer value for the LFS case; see Apache PR 39463. */
-    vec[0].sfv_off = (unsigned long)block;
-    vec[0].sfv_len = DSI_BLOCKSIZ;
-    vec[1].sfv_fd = fromfd;
-    vec[1].sfv_flag = 0;
-    vec[1].sfv_off = offset;
-    vec[1].sfv_len = length;
-#elif defined(FREEBSD)
-    iovec.iov_base = block;
-    iovec.iov_len = DSI_BLOCKSIZ;
-#else
-    dsi_stream_write(dsi, block, sizeof(block), DSI_MSG_MORE);
-#endif
 
-    while (written < total) {
-#ifdef HAVE_SENDFILEV
-        nwritten = 0;
-        len = sendfilev(dsi->socket, vec, sfvcnt, &nwritten);
-#elif defined(FREEBSD)
-        len = sendfile(fromfd, dsi->socket, pos, total - written, hdrp, &nwritten, 0);
+    while (left > 0) {
+        size_t sent;
+        size_t hdrsent;
+        /* the call's count and header together stay within a ssize_t */
+        int ret = sendfile_call(dsi, fromfd, offset,
+                                MIN(left, (size_t)SSIZE_MAX - hdrleft),
+                                block + sizeof(block) - hdrleft, hdrleft,
+                                &sent);
+        hdrsent = MIN(sent, hdrleft);
+        hdrleft -= hdrsent;
+        offset += sent - hdrsent;
+        left -= sent - hdrsent;
+        dsi->write_count += sent;
+        LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: sent: %zu",
+            sent);
 
-        if (len == 0) {
-            len = nwritten;
-        }
-
-#else
-        len = sys_sendfile(dsi->socket, fromfd, &pos, total - written);
-#endif
-
-        if (len < 0) {
-            switch (errno) {
-            case EINTR:
-            case EAGAIN:
-                len = 0;
-#if defined(HAVE_SENDFILEV) || defined(FREEBSD)
-                len = (size_t)nwritten;
-#elif defined(SOLARIS)
-
-                if (pos > offset) {
-                    /* we actually have sent sth., adjust counters and keep trying */
-                    len = pos - offset;
-                    offset = pos;
-                }
-
-#endif /* HAVE_SENDFILEV */
-
-                if (dsi_peek(dsi) != 0) {
-                    ret = -1;
-                    goto exit;
-                }
-
+        if (ret == 0) {
+            if (sent == 0) {
                 break;
-
-            default:
-                LOG(log_error, logtype_dsi, "dsi_stream_read_file: %s", strerror(errno));
-                ret = -1;
-                goto exit;
             }
-        } else if (len == 0) {
-            /* afpd is going to exit */
-            ret = -1;
-            goto exit;
+
+            continue;
         }
 
-#ifdef HAVE_SENDFILEV
-
-        if (sfvcnt == 2 && len >= vec[0].sfv_len) {
-            vec[1].sfv_off += len - vec[0].sfv_len;
-            vec[1].sfv_len -= len - vec[0].sfv_len;
-            vec[0] = vec[1];
-            sfvcnt = 1;
-        } else {
-            vec[0].sfv_off += len;
-            vec[0].sfv_len -= len;
-        }
-
-#elif defined(FREEBSD)
-
-        if (hdrp) {
-            if (len >= iovec.iov_len) {
-                hdrp = NULL;
-                len -= iovec.iov_len;   /* len now contains how much sendfile() actually sent from the file */
-            } else {
-                iovec.iov_len -= len;
-                iovec.iov_base += len;
-                len = 0;
+        if (errno == EINTR || errno == EAGAIN) {
+            if (dsi_peek(dsi) != 0) {
+                return -1;
             }
+
+            continue;
         }
 
-        pos += len;
-#endif  /* HAVE_SENDFILEV */
-        LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: wrote: %zd", len);
-        written += len;
-    }
+        if (errno == EINVAL) {
+            struct stat st;
 
-#ifdef HAVE_SENDFILEV
-    written -= DSI_BLOCKSIZ;
-#endif
-    dsi->write_count += written;
-exit:
-    dsi->in_write--;
-    LOG(log_maxdebug, logtype_dsi, "dsi_stream_read_file: written: %zd", written);
+            /* illumos fails a call that meets the end of the file with
+             * EINVAL as well */
+            if (fstat(fromfd, &st) == 0 && st.st_size <= offset) {
+                break;
+            }
 
-    if (ret != 0) {
+            errno = EINVAL;
+        }
+
+        if (errno == EINVAL || errno == ENOSYS || errno == EOPNOTSUPP) {
+            /* the kernel will not sendfile from this file */
+            if (log_backoff(&copied_replies)) {
+                LOG(log_warning, logtype_dsi,
+                    "dsi_stream_read_file: cannot sendfile from the file "
+                    "(%s), copying (reply %u)", strerror(errno),
+                    copied_replies);
+            }
+
+            if (dsi_stream_copy_file(dsi, fromfd, offset, &left,
+                                     block + sizeof(block) - hdrleft,
+                                     hdrleft) != 0) {
+                return -1;
+            }
+
+            break;
+        }
+
+        LOG(log_error, logtype_dsi, "dsi_stream_read_file: %s",
+            strerror(errno));
         return -1;
     }
 
-    return written;
+    if (left > 0) {
+        LOG(log_error, logtype_dsi,
+            "dsi_stream_read_file: the file ends %zu bytes before the reply",
+            left);
+        errno = EIO;
+        return -1;
+    }
+
+    dsi->in_write--;
+    return 0;
 }
 #endif
 

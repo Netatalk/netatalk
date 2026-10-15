@@ -2,22 +2,16 @@
 
 ## Signals and Writes to Client
 
-Because AFP/TCP uses a streaming protocol, we need to make sure that writes to the client are atomic.
-Notably, signal handlers which write data can't interrupt data currently being written.
-In addition, some functions get called from the signal handlers or can write partial packets.
-To avoid corruption, we need to make sure that these functions DO NOT touch any common-use buffers.
+Because AFP/TCP uses a streaming protocol, writes to the client must not interleave:
+a frame goes out only between whole replies.
 
 The DSI struct maintains an in_write counter that is incremented when entering write operations
 and decremented when leaving.
-Signal handlers check this flag to determine if it's safe to write to the socket.
+dsi_tickle(), dsi_attention() and dsi_close() send their frames only while it reads 0,
+and a read reply that fails leaves it raised, since nothing may follow an unfinished reply on the stream.
 
-Signals that send data to the client (afp_dsi.c):
-
-- SIGALRM (tickle handler)
-- SIGHUP (attention)
-- SIGTERM (attention)
-
-Functions which need their own buffers: dsi_attention(), dsi_tickle()
+The signal handlers in afp_dsi.c record the signal, and the main loop sends the tickle and attentions.
+dsi_attention() and dsi_tickle() build their frames in buffers of their own.
 
 ## Performance Tweaking
 

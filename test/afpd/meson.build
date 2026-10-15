@@ -114,6 +114,7 @@ if build_tests
         'subtests_lock.c',
         'subtests_pfd.c',
         'subtests_recvfile.c',
+        'subtests_sendfile.c',
         'subtests_veto.c',
         afpd_test_extra_sources,
         include_directories: test_includes,
@@ -150,7 +151,9 @@ if build_tests
         'faultinject',
         'faultinject.c',
         include_directories: test_includes,
-        c_args: ['-DFAULTINJECT_PRELOAD'],
+        # FreeBSD's and NetBSD's fortify headers make read() and pread()
+        # static inline wrappers, which the interposers would redefine
+        c_args: ['-DFAULTINJECT_PRELOAD', '-U_FORTIFY_SOURCE'],
         dependencies: cc.find_library('dl', required: false),
         install: false,
         build_by_default: true,

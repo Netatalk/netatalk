@@ -936,17 +936,16 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
 
 exit:
 
-    /* The handoff failures jump here, above the sleep(5) sweep; die_pending here
-     * means a termination signal raced the handoff after the transfer to Child
-     * A completed.  Not afp_dsi_die(): its DSI_RECONINPROG guard would swallow
-     * the exit.  Preserve afp_dsi_die()'s exit mapping so a non-SIGTERM signal
-     * (e.g. SIGQUIT) keeps its diagnostic exit status. */
+    /* The handoff failures jump here too, and the master may still pass the
+     * socket to Child A, so nothing may go out on it: no afp_dsi_die().  Keep
+     * its exit mapping so a non-SIGTERM signal (e.g. SIGQUIT) keeps its
+     * diagnostic exit status. */
     if (die_pending) {
         int sig = die_pending;
         die_pending = 0;
         dsi->flags &= ~DSI_RECONINPROG;
         LOG(log_note, logtype_afpd,
-            "afp_disconnect: session transferred, child exiting");
+            "afp_disconnect: signalled during the hand-off, child exiting");
 
         if (sig == SIGTERM || sig == SIGALRM || sig < 0) {
             exit(0);

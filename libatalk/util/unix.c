@@ -283,6 +283,42 @@ bool log_backoff(unsigned int *count)
 }
 
 /*!
+ * @brief Write len bytes in full at the descriptor's file position, going on
+ *        after EINTR and after a write that stops short
+ *
+ * @param[in] fd   descriptor to write to
+ * @param[in] buf  bytes to write
+ * @param[in] len  their count
+ *
+ * @returns 0, or -1 with errno set, EIO for a write that makes no progress
+ */
+int write_full(int fd, const void *buf, size_t len)
+{
+    size_t done = 0;
+
+    while (done < len) {
+        ssize_t cc = write(fd, (const char *)buf + done, len - done);
+
+        if (cc < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+
+            return -1;
+        }
+
+        if (cc == 0) {
+            errno = EIO;
+            return -1;
+        }
+
+        done += (size_t)cc;
+    }
+
+    return 0;
+}
+
+/*!
  * @brief Track usage against the 50, 75 and 90 percent warning thresholds
  *
  * Raises @p level past each threshold @p used has reached, and lowers it

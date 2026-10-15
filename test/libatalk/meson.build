@@ -85,6 +85,23 @@ test(
     byteorder_test,
 )
 
+hton64_test = executable(
+    'hton64_test',
+    'test_hton64.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    c_args: cc.has_multi_arguments(
+        '-fsanitize=shift',
+        '-fsanitize-undefined-trap-on-error',
+    ) ? ['-fsanitize=shift', '-fsanitize-undefined-trap-on-error'] : [],
+    install: false,
+)
+
+test(
+    'libatalk hton64',
+    hton64_test,
+)
+
 uuid_format_test = executable(
     'uuid_format_test',
     'test_uuid_format.c',

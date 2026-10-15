@@ -79,11 +79,12 @@ ssize_t adf_pread(struct ad_fd *adf, void *buf, size_t count, off_t offset)
 /*!
  * @brief Read from the data or resource fork of an AppleDouble
  *
- * The data fork of a symlink yields the link target, and fails when buflen
- * cannot hold it. Any other eid reads the resource fork, and a closed resource
- * fork yields 0. The ea layout stores the fork at offset 0 of its EA, or
- * behind the sidecar header without HAVE_EAFD. Version 2 adds the entry offset
- * from the header. The function checks no byte-range locks.
+ * The data fork of a symlink yields the link target from off, and fails with
+ * ERANGE when buflen cannot hold the rest of it. Any other eid reads the
+ * resource fork, and a closed resource fork yields 0. The ea layout stores the
+ * fork at offset 0 of its EA, or behind the sidecar header without
+ * HAVE_EAFD. Version 2 adds the entry offset from the header. The function
+ * checks no byte-range locks.
  *
  * @param[in,out] ad      AppleDouble with the fork open
  * @param[in]     eid     ADEID_DFORK, or any other entry for the resource fork
@@ -91,7 +92,7 @@ ssize_t adf_pread(struct ad_fd *adf, void *buf, size_t count, off_t offset)
  * @param[out]    buf     receives the bytes
  * @param[in]     buflen  bytes to read
  * @returns bytes read, 0 at the end of the fork or for a closed resource fork,
- *          or -1 on failure
+ *          or -1 with errno set on failure
  */
 ssize_t ad_read(struct adouble *ad, const uint32_t eid, off_t off, char *buf,
                 const size_t buflen)
@@ -104,15 +105,25 @@ ssize_t ad_read(struct adouble *ad, const uint32_t eid, off_t off, char *buf,
     if (eid == ADEID_DFORK) {
         if (ad->ad_data_fork.adf_syml != 0) {
             /* It's a symlink, we already have the target in adf_syml */
-            cc = strlen(ad->ad_data_fork.adf_syml);
+            off_t len = (off_t)strlen(ad->ad_data_fork.adf_syml);
 
-            if (buflen < cc)
-                /* Request buffersize is too small, force AFPERR_PARAM */
-            {
+            if (off < 0) {
+                errno = EINVAL;
                 return -1;
             }
 
-            memcpy(buf, ad->ad_data_fork.adf_syml, cc);
+            if (off >= len) {
+                return 0;
+            }
+
+            cc = (ssize_t)(len - off);
+
+            if (buflen < (size_t)cc) {
+                errno = ERANGE;
+                return -1;
+            }
+
+            memcpy(buf, ad->ad_data_fork.adf_syml + off, (size_t)cc);
         } else {
             cc = adf_pread(&ad->ad_data_fork, buf, buflen, off);
         }

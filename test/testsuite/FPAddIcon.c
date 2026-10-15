@@ -62,11 +62,8 @@ STATIC void test212()
     ENTER_TEST
     dt = FPOpenDT(Conn, vol);
     FAIL(FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256))
-#if 0
-    /* FIXME: afpd crash in afp_addicon() that hangs the execution */
     FAIL(htonl(AFPERR_PARAM) != FPAddIcon(Conn,  dt + 1, "ttxt", "3DMF", 1, 0, 256,
                                           icon0_256))
-#endif
     ret = FPGetIcon(Conn,  dt, "ttxt", "3DMF", 1, 256);
 
     if (ret) {
@@ -111,11 +108,8 @@ STATIC void test212()
         goto test_exit;
     }
 
-#if 0
-    /* FIXME: This line causes memory corruption in the testsuite */
     FAIL(htonl(AFPERR_ITYPE) != FPAddIcon(Conn,  dt, "ttxt", "3DMF", 4, 0, 256,
                                           icon0_256))
-#endif
     FPCloseDT(Conn, dt);
 test_exit:
     exit_test("FPAddIcon:test212: Add Icon call");

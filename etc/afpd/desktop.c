@@ -20,13 +20,15 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/uio.h>
+#include <time.h>
 #include <netatalk/at.h>
 
 #include <bstrlib.h>
@@ -377,6 +379,42 @@ static char *icon_dtfile(struct vol *vol, uint8_t creator[4])
     return dtfile(vol, creator, ".icon");
 }
 
+/* icon file opens and locks that failed, for log_backoff() */
+static unsigned int icon_failures;
+
+/* FPAddIcon writes made without a lock, for log_backoff() */
+static unsigned int icon_unlocked;
+
+/*! @brief Close the icon file descriptor the icon calls share */
+static void icon_close(void)
+{
+    if (si.sdt_fd != -1) {
+        close(si.sdt_fd);
+        si.sdt_fd = -1;
+    }
+}
+
+/*!
+ * @brief The answer of an icon read call whose icon file did not open
+ *
+ * @returns AFPERR_NOITEM for a creator without an icon file, AFPERR_MISC
+ *          for any other failure, logged with fn under log_backoff()
+ */
+static int icon_open_failed(const char *fn, struct vol *vol,
+                            uint8_t creator[4])
+{
+    if (errno == ENOENT) {
+        return AFPERR_NOITEM;
+    }
+
+    if (log_backoff(&icon_failures)) {
+        LOG(log_error, logtype_afpd, "%s(%s): open: %s, failure %u", fn,
+            icon_dtfile(vol, creator), strerror(errno), icon_failures);
+    }
+
+    return AFPERR_MISC;
+}
+
 /*!
  * @brief Open the icon file of a creator in the desktop database
  *
@@ -393,18 +431,16 @@ static char *icon_dtfile(struct vol *vol, uint8_t creator[4])
  */
 static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 {
-    char	*dtf, *adt, *adts;
+    const char	*dtf;
+    char	*adt, *adts;
 
-    if (si.sdt_fd != -1) {
-        if (memcmp(si.sdt_creator, creator, sizeof(CreatorType)) == 0 &&
-                si.sdt_vid == vol->v_vid) {
-            return 0;
-        }
-
-        close(si.sdt_fd);
-        si.sdt_fd = -1;
+    if (si.sdt_fd != -1
+            && memcmp(si.sdt_creator, creator, sizeof(CreatorType)) == 0
+            && si.sdt_vid == vol->v_vid) {
+        return 0;
     }
 
+    icon_close();
     dtf = icon_dtfile(vol, creator);
 
     if ((si.sdt_fd = open(dtf, flags, ad_mode(dtf, mode))) < 0) {
@@ -426,7 +462,6 @@ static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
             *adts = '/';
 
             if ((si.sdt_fd = open(dtf, flags, ad_mode(dtf, mode))) < 0) {
-                LOG(log_error, logtype_afpd, "iconopen(%s): open: %s", dtf, strerror(errno));
                 return -1;
             }
         } else {
@@ -436,58 +471,126 @@ static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 
     memcpy(si.sdt_creator, creator, sizeof(CreatorType));
     si.sdt_vid = vol->v_vid;
-    si.sdt_index = 1;
     return 0;
+}
+
+/*!
+ * @brief Lock the icon file for one FPAddIcon
+ *
+ * Serializes the scan, write and undo of concurrent FPAddIcon requests. The
+ * wait for another holder, which need not be an afpd, is bounded to a
+ * second. FPGetIcon and FPGetIconInfo take no lock; closing the file drops
+ * it.
+ *
+ * @returns 0, 1 when the file system takes no locks, or -1 with errno set
+ */
+static int icon_lock(void)
+{
+    struct timespec tick = { .tv_nsec = 10 * 1000 * 1000 };
+
+    for (int tries = 1;; tries++) {
+        if (write_lock(si.sdt_fd, 0, SEEK_SET, 0) == 0) {
+            return 0;
+        }
+
+        /* an NFS mount without a lock manager, among others: POSIX answers
+         * EINVAL, macOS ENOTSUP */
+        if (errno == ENOLCK || errno == EOPNOTSUPP || errno == EINVAL) {
+            return 1;
+        }
+
+#if ENOTSUP != EOPNOTSUPP
+
+        if (errno == ENOTSUP) {
+            return 1;
+        }
+
+#endif
+
+        if ((errno != EACCES && errno != EAGAIN) || tries == 100) {
+            return -1;
+        }
+
+        nanosleep(&tick, NULL);
+    }
+}
+
+/*!
+ * @brief Does entry header h match file type ftype and icon type itype, the
+ *        key FPGetIcon and FPAddIcon look an icon up by?
+ */
+static bool icon_entry_is(const uint8_t *h, const uint8_t *ftype,
+                          uint8_t itype)
+{
+    /* tag, file type, icon type, pad, size */
+    return memcmp(h + 4, ftype, 4) == 0 && h[8] == itype;
+}
+
+/*!
+ * @brief Did a read of a 12-byte record header at off, which returned rc, fail
+ *        or stop short before the end of an icon file of size bytes?
+ *
+ * A header the end of the file cuts short is a torn tail, no failure.
+ */
+static bool icon_read_failed(ssize_t rc, off_t off, off_t size)
+{
+    return rc < 0 || (rc < 12 && off + rc < size);
 }
 
 /*!
  * @brief FPAddIcon: store an icon bitmap in the icon file of a creator
  *
- * Each record of the icon file holds a 12-byte header and the bitmap. The
- * header carries the tag, the file type, the icon type, and the bitmap size.
- * A record with the same tag, file type, and icon type gets the new bitmap in
- * place, and a new icon goes at the end. The bitmap arrives as the write data
- * of the request.
+ * Each record of the icon file holds a 12-byte header (tag, file type, icon
+ * type, bitmap size) and the bitmap. The bitmap is received whole before the
+ * file is opened; data of another size fails with AFPERR_PARAM. Under a write
+ * lock, the record of the same file type and icon type, whatever its tag, is
+ * overwritten in place; otherwise the icon replaces whatever follows the last
+ * whole record. A failed write cuts a new record off again. On a file system
+ * that takes no locks the write goes ahead without one, with a warning.
  *
- * Over DSI an error drains that data first, so the session stays in step.
+ * Over DSI a request refused before its data arrives drains that data, so the
+ * session stays in step.
  *
- * @param[in]     obj      session object
- * @param[in]     ibuf     request block
- * @param[in]     ibuflen  request block length, unused
- * @param[out]    rbuf     receive buffer for the bitmap
- * @param[in,out] rbuflen  buffer capacity on entry, 0 on return
- * @returns AFP_OK, AFPERR_NOITEM when iconopen fails, AFPERR_ITYPE for a size
- *          change, or AFPERR_PARAM
+ * @param[in]  obj      session object
+ * @param[in]  ibuf     request block
+ * @param[in]  ibuflen  request block length, unused
+ * @param[out] rbuf     receive buffer for the bitmap
+ * @param[out] rbuflen  0 on return
+ * @returns AFP_OK, AFPERR_ITYPE for a size change, AFPERR_PARAM for an unknown
+ *          volume or data of the wrong size, or AFPERR_MISC when the icon file
+ *          cannot be opened, locked, read, sought or written
  */
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {
     struct vol *vol;
-#ifndef NO_DDP
-    struct iovec	iov[2];
-    int         iovcnt = 0;
-#endif
     uint8_t		fcreator[4];
     uint8_t		imh[12];
     uint8_t		irh[12];
     uint8_t		*p;
     int			itype;
-    int         cc = AFP_OK;
-    size_t 		buflen;
+    int         locked;
+    ssize_t     cc;
+    bool        match = false;
+    off_t       pos = 0;
+    struct stat st;
     uint32_t    ftype;
     uint32_t    itag;
     uint16_t		bsize = 0;
     uint16_t		rsize;
     uint16_t		vid;
-    buflen = *rbuflen;
     *rbuflen = 0;
+    icon_close();
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
 
     if (NULL == (vol = getvolbyvid(vid))) {
-        cc = AFPERR_PARAM;
-        goto addicon_err;
+        if (obj->proto == AFPPROTO_DSI) {
+            dsi_writedrain(obj->dsi);
+        }
+
+        return AFPERR_PARAM;
     }
 
     memcpy(fcreator, ibuf, sizeof(fcreator));
@@ -501,23 +604,90 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     memcpy(&bsize, ibuf, sizeof(bsize));
     bsize = ntohs(bsize);
 
-    if (si.sdt_fd != -1) {
-        (void)close(si.sdt_fd);
-        si.sdt_fd = -1;
+    /* receive the whole icon first: the file's lock is never held while
+     * waiting on a client */
+    switch (obj->proto) {
+#ifndef NO_DDP
+
+    case AFPPROTO_ASP: {
+        size_t buflen = bsize;
+
+        if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize) {
+            return AFPERR_PARAM;
+        }
+    }
+    break;
+#endif /* no afp/asp */
+
+    case AFPPROTO_DSI: {
+        DSI *dsi = obj->dsi;
+        char *wbuf = NULL;
+        size_t got = dsi_writeinit(dsi, &wbuf);
+        size_t wlen;
+
+        if (got + dsi->datasize != bsize) {
+            LOG(log_error, logtype_afpd,
+                "afp_addicon(%s): %zu bytes for an icon of %u",
+                icon_dtfile(vol, fcreator), got + dsi->datasize, bsize);
+            dsi_writeflush(dsi);
+            return AFPERR_PARAM;
+        }
+
+        if (got > 0) {
+            memcpy(rbuf, wbuf, got);
+        }
+
+        /* dsi_write() reads 0 at EOF as well as at the end of the payload */
+        while (got < bsize
+                && (wlen = dsi_write(dsi, rbuf + got, bsize - got)) > 0) {
+            got += wlen;
+        }
+
+        if (got < bsize) {
+            LOG(log_error, logtype_afpd,
+                "afp_addicon(%s): the client ended the request with %u bytes "
+                "of the icon outstanding", icon_dtfile(vol, fcreator),
+                dsi->datasize);
+            return AFPERR_PARAM;
+        }
+    }
+    break;
     }
 
     if (iconopen(vol, fcreator, O_RDWR | O_CREAT, 0666) < 0) {
-        cc = AFPERR_NOITEM;
-        goto addicon_err;
+        if (log_backoff(&icon_failures)) {
+            LOG(log_error, logtype_afpd,
+                "afp_addicon(%s): open: %s, failure %u",
+                icon_dtfile(vol, fcreator), strerror(errno), icon_failures);
+        }
+
+        return AFPERR_MISC;
     }
 
-    if (lseek(si.sdt_fd, (off_t) 0L, SEEK_SET) < 0) {
-        close(si.sdt_fd);
-        si.sdt_fd = -1;
-        LOG(log_error, logtype_afpd, "afp_addicon(%s): lseek: %s", icon_dtfile(vol,
-                fcreator), strerror(errno));
-        cc = AFPERR_PARAM;
-        goto addicon_err;
+    locked = icon_lock();
+
+    if (locked < 0) {
+        if (log_backoff(&icon_failures)) {
+            LOG(log_error, logtype_afpd,
+                "afp_addicon(%s): lock: %s, failure %u",
+                icon_dtfile(vol, fcreator), strerror(errno), icon_failures);
+        }
+
+        icon_close();
+        return AFPERR_MISC;
+    }
+
+    if (locked > 0 && log_backoff(&icon_unlocked)) {
+        LOG(log_warning, logtype_afpd,
+            "afp_addicon(%s): lock: %s, writing without one, write %u",
+            icon_dtfile(vol, fcreator), strerror(errno), icon_unlocked);
+    }
+
+    if (fstat(si.sdt_fd, &st) < 0) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): fstat: %s",
+            icon_dtfile(vol, fcreator), strerror(errno));
+        icon_close();
+        return AFPERR_MISC;
     }
 
     /*
@@ -535,157 +705,97 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     memcpy(p, &bsize, sizeof(bsize));
     bsize = ntohs(bsize);
 
-    while ((cc = read(si.sdt_fd, irh, sizeof(irh))) > 0) {
+    /* pos is the offset of the next header; a header or bitmap cut short by
+     * the end of the file ends the records */
+    while ((cc = read(si.sdt_fd, irh, sizeof(irh))) == (ssize_t)sizeof(irh)) {
         memcpy(&rsize, irh + 10, sizeof(rsize));
         rsize = ntohs(rsize);
 
-        /*
-         * Is this our set of headers?
-         */
-        if (memcmp(irh, imh, sizeof(irh) - sizeof(u_short)) == 0) {
-            /*
-             * Is the size correct?
-             */
+        if (pos + (off_t)sizeof(irh) + rsize > st.st_size) {
+            break;
+        }
+
+        /* whatever its tag */
+        if (icon_entry_is(irh, (const uint8_t *)&ftype, (uint8_t)itype)) {
             if (bsize != rsize) {
-                cc = AFPERR_ITYPE;
+                icon_close();
+                return AFPERR_ITYPE;
             }
 
+            match = true;
             break;
         }
 
         if (lseek(si.sdt_fd, (off_t) rsize, SEEK_CUR) < 0) {
-            LOG(log_error, logtype_afpd, "afp_addicon(%s): lseek: %s", icon_dtfile(vol,
-                    fcreator), strerror(errno));
-            cc = AFPERR_PARAM;
+            LOG(log_error, logtype_afpd, "afp_addicon(%s): lseek: %s",
+                icon_dtfile(vol, fcreator), strerror(errno));
+            icon_close();
+            return AFPERR_MISC;
         }
+
+        pos += (off_t)sizeof(irh) + rsize;
     }
 
-    /*
-     * Some error occurred, return.
-     */
-addicon_err:
-
-    if (cc < 0) {
-        if (obj->proto == AFPPROTO_DSI) {
-            /* Drain the icon data so the session stays in sync, then
-             * report the error instead of writing anything. */
-            dsi_writedrain(obj->dsi);
-
-            if (si.sdt_fd != -1) {
-                close(si.sdt_fd);
-                si.sdt_fd = -1;
-            }
-
-            return cc;
-        }
+    /* the cut below would drop the records after a short read */
+    if (icon_read_failed(cc, pos, st.st_size)) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): read: %s",
+            icon_dtfile(vol, fcreator),
+            cc < 0 ? strerror(errno) : "short read");
+        icon_close();
+        return AFPERR_MISC;
     }
 
-    switch (obj->proto) {
-#ifndef NO_DDP
-
-    case AFPPROTO_ASP:
-        buflen = bsize;
-
-        if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize) {
-            return AFPERR_PARAM;
-        }
-
-        /*
-         * We're at the end of the file, add the headers, etc.  */
-        if (cc == 0) {
-            iov[0].iov_base = (caddr_t)imh;
-            iov[0].iov_len = sizeof(imh);
-            iov[1].iov_base = rbuf;
-            iov[1].iov_len = bsize;
-            iovcnt = 2;
-        }
-
-        /*
-         * We found an icon to replace.
-         */
-        if (cc > 0) {
-            iov[0].iov_base = rbuf;
-            iov[0].iov_len = bsize;
-            iovcnt = 1;
-        }
-
-        if (writev(si.sdt_fd, iov, iovcnt) < 0) {
-            LOG(log_error, logtype_afpd, "afp_addicon(%s): writev: %s", icon_dtfile(vol,
-                    fcreator), strerror(errno));
-            return AFPERR_PARAM;
-        }
-
-        break;
-#endif /* no afp/asp */
-
-    case AFPPROTO_DSI: {
-        DSI *dsi = obj->dsi;
-        char *wbuf = NULL;
-        size_t wlen = dsi_writeinit(dsi, &wbuf);
-
-        /* add headers at end of file */
-        if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-            LOG(log_error,
-                logtype_afpd,
-                "afp_addicon(%s): write: %s",
-                icon_dtfile(vol, fcreator),
-                strerror(errno));
-            dsi_writeflush(dsi);
-            return AFPERR_PARAM;
-        }
-
-        if (wlen > 0 && write(si.sdt_fd, wbuf, wlen) < 0) {
-            LOG(log_error,
-                logtype_afpd,
-                "afp_addicon(%s): write: %s",
-                icon_dtfile(vol, fcreator),
-                strerror(errno));
-            dsi_writeflush(dsi);
-            return AFPERR_PARAM;
-        }
-
-        while ((wlen = dsi_write(dsi, rbuf, buflen))) {
-            if (write(si.sdt_fd, rbuf, wlen) < 0) {
-                LOG(log_error,
-                    logtype_afpd,
-                    "afp_addicon(%s): write: %s",
-                    icon_dtfile(vol, fcreator),
-                    strerror(errno));
-                dsi_writeflush(dsi);
-                return AFPERR_PARAM;
-            }
-        }
-    }
-    break;
+    /* a new record replaces whatever follows the last whole one */
+    if (!match && pos < st.st_size && ftruncate(si.sdt_fd, pos) < 0) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): ftruncate: %s",
+            icon_dtfile(vol, fcreator), strerror(errno));
+        icon_close();
+        return AFPERR_MISC;
     }
 
-    close(si.sdt_fd);
-    si.sdt_fd = -1;
-    return AFP_OK;
+    /* over the match, tag included, or after the last whole record */
+    if (lseek(si.sdt_fd, pos, SEEK_SET) < 0) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): lseek: %s",
+            icon_dtfile(vol, fcreator), strerror(errno));
+        icon_close();
+        return AFPERR_MISC;
+    }
+
+    if (write_full(si.sdt_fd, imh, sizeof(imh)) == 0
+            && write_full(si.sdt_fd, rbuf, bsize) == 0) {
+        icon_close();
+        return AFP_OK;
+    }
+
+    LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s",
+        icon_dtfile(vol, fcreator), strerror(errno));
+
+    /* undo a new record; one replaced in place keeps its length */
+    if (!match && ftruncate(si.sdt_fd, pos) < 0) {
+        LOG(log_error, logtype_afpd, "afp_addicon(%s): ftruncate: %s",
+            icon_dtfile(vol, fcreator), strerror(errno));
+    }
+
+    icon_close();
+    return AFPERR_MISC;
 }
-
-static const uint8_t	utag[] = { 0, 0, 0, 0 };
-/* example values: U, N, I, X */
-static const uint8_t	ucreator[] = { 0, 0, 0, 0 };
-/* example values: T, E, X, T */
-static const uint8_t	utype[] = { 0, 0, 0, 0 };
-static const short	usize = 256;
 
 /*!
  * @brief FPGetIconInfo: look up an icon of a creator by index and return its
  * record header
  *
- * The index counts from 1, and the open icon file keeps its position between
- * calls. A creator of 4 zero bytes gets one fixed entry with icon type 1. The
- * reply holds the 12-byte record header.
+ * The index counts from 1, and each request walks the icon file from its
+ * first entry; a record the file cuts short ends the walk. The reply holds the
+ * 12-byte record header.
  *
  * @param[in]  obj      session object, unused
  * @param[in]  ibuf     request block
  * @param[in]  ibuflen  request block length, unused
  * @param[out] rbuf     reply block
  * @param[out] rbuflen  reply length on return
- * @returns AFP_OK, AFPERR_NOITEM past the last icon or without an icon file, or
- *          AFPERR_PARAM
+ * @returns AFP_OK, AFPERR_NOITEM past the last icon or without an icon file,
+ *          AFPERR_PARAM for an unknown volume, or AFPERR_MISC when the icon
+ *          file fails to open or to read
  */
 int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                     size_t *rbuflen)
@@ -693,6 +803,9 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     struct vol	*vol;
     unsigned char	fcreator[4], ih[12];
     uint16_t	vid, iindex, bsize;
+    ssize_t	rc;
+    off_t	off = 0;
+    struct stat st;
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof(vid));
@@ -707,60 +820,47 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     memcpy(&iindex, ibuf, sizeof(iindex));
     iindex = ntohs(iindex);
 
-    if (memcmp(fcreator, ucreator, sizeof(ucreator)) == 0) {
-        if (iindex > 1) {
-            return AFPERR_NOITEM;
-        }
-
-        memcpy(ih, utag, sizeof(utag));
-        memcpy(ih + sizeof(utag), utype, sizeof(utype));
-        *(ih + sizeof(utag) + sizeof(utype)) = 1;
-        *(ih + sizeof(utag) + sizeof(utype) + 1) = 0;
-        memcpy(ih + sizeof(utag) + sizeof(utype) + 2, &usize,
-               sizeof(usize));
-        memcpy(rbuf, ih, sizeof(ih));
-        *rbuflen = sizeof(ih);
-        return AFP_OK;
-    }
-
     if (iconopen(vol, fcreator, O_RDONLY, 0) < 0) {
-        return AFPERR_NOITEM;
+        return icon_open_failed("afp_iconinfo", vol, fcreator);
     }
 
-    if (iindex < si.sdt_index) {
-        if (lseek(si.sdt_fd, (off_t) 0L, SEEK_SET) < 0) {
-            return AFPERR_PARAM;
+    if (fstat(si.sdt_fd, &st) < 0) {
+        LOG(log_error, logtype_afpd, "afp_iconinfo(%s): fstat: %s",
+            icon_dtfile(vol, fcreator), strerror(errno));
+        icon_close();
+        return AFPERR_MISC;
+    }
+
+    for (unsigned int i = 1;; i++) {
+        rc = pread(si.sdt_fd, ih, sizeof(ih), off);
+
+        if (icon_read_failed(rc, off, st.st_size)) {
+            LOG(log_error, logtype_afpd, "afp_iconinfo(%s): read: %s",
+                icon_dtfile(vol, fcreator),
+                rc < 0 ? strerror(errno) : "short read");
+            icon_close();
+            return AFPERR_MISC;
         }
 
-        si.sdt_index = 1;
-    }
-
-    /*
-     * Position to the correct spot.
-     */
-    for (;;) {
-        if (read(si.sdt_fd, ih, sizeof(ih)) != sizeof(ih)) {
-            close(si.sdt_fd);
-            si.sdt_fd = -1;
+        if (rc != (ssize_t)sizeof(ih)) {
+            icon_close();
             return AFPERR_NOITEM;
         }
 
         memcpy(&bsize, ih + 10, sizeof(bsize));
-        bsize = ntohs(bsize);
+        off += (off_t)sizeof(ih) + ntohs(bsize);
 
-        if (lseek(si.sdt_fd, (off_t) bsize, SEEK_CUR) < 0) {
-            LOG(log_error, logtype_afpd, "afp_iconinfo(%s): lseek: %s", icon_dtfile(vol,
-                    fcreator), strerror(errno));
-            return AFPERR_PARAM;
+        /* a record whose bitmap the file cuts short ends the records */
+        if (off > st.st_size) {
+            icon_close();
+            return AFPERR_NOITEM;
         }
 
-        if (si.sdt_index == iindex) {
+        if (i == iindex) {
             memcpy(rbuf, ih, sizeof(ih));
             *rbuflen = sizeof(ih);
             return AFP_OK;
         }
-
-        si.sdt_index++;
     }
 }
 
@@ -769,26 +869,30 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
  * creator
  *
  * The call looks for the first record with the requested file type and icon
- * type and returns up to the requested size of its bitmap. Over DSI a bitmap
- * larger than the reply buffer streams through dsi_read, or through sendfile
- * in a WITH_SENDFILE build. A failure during streaming ends the session.
+ * type and returns up to the requested size of its bitmap; a record the file
+ * cuts short ends the records. A read larger than the reply buffer fails with
+ * AFPERR_PARAM.
  *
- * @param[in]     obj      session object
+ * @param[in]     obj      session object, unused
  * @param[in]     ibuf     request block
  * @param[in]     ibuflen  request block length, unused
  * @param[out]    rbuf     reply block
  * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
  *                         return
- * @returns AFP_OK, AFPERR_NOITEM without a matching icon, or AFPERR_PARAM
+ * @returns AFP_OK, AFPERR_NOITEM without a matching icon, AFPERR_PARAM for an
+ *          unknown volume or a read the reply buffer cannot hold, or
+ *          AFPERR_MISC when an open, read or seek of the icon file fails
  */
-int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+int afp_geticon(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {
     struct vol	*vol;
-    off_t       offset;
     ssize_t	rc, buflen;
+    ssize_t	len;
     uint8_t	fcreator[4], ftype[4], itype, ih[12];
-    uint16_t	vid, bsize, rsize;
+    uint16_t	vid, bsize, rsize = 0;
+    off_t	pos = 0;
+    struct stat st;
     buflen = *rbuflen;
     *rbuflen = 0;
     ibuf += 2;
@@ -809,127 +913,70 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     bsize = ntohs(bsize);
 
     if (iconopen(vol, fcreator, O_RDONLY, 0) < 0) {
-        return AFPERR_NOITEM;
+        return icon_open_failed("afp_geticon", vol, fcreator);
+    }
+
+    if (fstat(si.sdt_fd, &st) < 0) {
+        LOG(log_error, logtype_afpd, "afp_geticon(%s): fstat: %s",
+            icon_dtfile(vol, fcreator), strerror(errno));
+        icon_close();
+        return AFPERR_MISC;
     }
 
     if (lseek(si.sdt_fd, (off_t) 0L, SEEK_SET) < 0) {
-        close(si.sdt_fd);
-        si.sdt_fd = -1;
         LOG(log_error, logtype_afpd, "afp_geticon(%s): lseek: %s", icon_dtfile(vol,
                 fcreator), strerror(errno));
-        return AFPERR_PARAM;
+        icon_close();
+        return AFPERR_MISC;
     }
 
-    si.sdt_index = 1;
-    offset = 0;
-
-    while ((rc = read(si.sdt_fd, ih, sizeof(ih))) > 0) {
-        si.sdt_index++;
-        offset += sizeof(ih);
-
-        if (memcmp(ih + sizeof(int), ftype, sizeof(ftype)) == 0 &&
-                *(ih + sizeof(int) + sizeof(ftype)) == itype) {
-            break;
-        }
-
+    while ((rc = read(si.sdt_fd, ih, sizeof(ih))) == (ssize_t)sizeof(ih)) {
         memcpy(&rsize, ih + 10, sizeof(rsize));
         rsize = ntohs(rsize);
+
+        /* a record whose bitmap the file cuts short ends the records */
+        if (pos + (off_t)sizeof(ih) + rsize > st.st_size) {
+            return AFPERR_NOITEM;
+        }
+
+        if (icon_entry_is(ih, ftype, itype)) {
+            break;
+        }
 
         if (lseek(si.sdt_fd, (off_t) rsize, SEEK_CUR) < 0) {
             LOG(log_error, logtype_afpd, "afp_geticon(%s): lseek: %s", icon_dtfile(vol,
                     fcreator), strerror(errno));
-            return AFPERR_PARAM;
+            return AFPERR_MISC;
         }
 
-        offset += rsize;
+        pos += (off_t)sizeof(ih) + rsize;
     }
 
-    if (rc < 0) {
-        LOG(log_error, logtype_afpd, "afp_geticon(%s): read: %s", icon_dtfile(vol,
-                fcreator), strerror(errno));
-        return AFPERR_PARAM;
+    if (icon_read_failed(rc, pos, st.st_size)) {
+        LOG(log_error, logtype_afpd, "afp_geticon(%s): read: %s",
+            icon_dtfile(vol, fcreator),
+            rc < 0 ? strerror(errno) : "short read");
+        return AFPERR_MISC;
     }
 
-    if (rc == 0) {
+    if (rc != (ssize_t)sizeof(ih)) {
         return AFPERR_NOITEM;
     }
 
-    memcpy(&rsize, ih + 10, sizeof(rsize));
-    rsize = ntohs(rsize);
-#define min(a,b)	((a)<(b)?(a):(b))
-    rc = min(bsize, rsize);
+    rc = MIN(bsize, rsize);
 
-    if ((obj->proto == AFPPROTO_DSI) && buflen < rc) {
-        DSI *dsi = obj->dsi;
-        struct stat st;
-        off_t size;
-        size = (fstat(si.sdt_fd, &st) < 0) ? 0 : st.st_size;
-
-        if (size < rc + offset) {
-            return AFPERR_PARAM;
-        }
-
-#ifndef WITH_SENDFILE
-
-        if ((buflen = dsi_readinit(dsi, rbuf, buflen, rc, AFP_OK)) < 0) {
-            goto geticon_exit;
-        }
-
-#endif
-        *rbuflen = buflen;
-
-        /* do to the streaming nature, we have to exit if we encounter
-         * a problem. much confusion results otherwise. */
-        while (*rbuflen > 0) {
-#ifdef WITH_SENDFILE
-
-            if (dsi_stream_read_file(dsi, si.sdt_fd, offset, dsi->datasize, AFP_OK) < 0) {
-                switch (errno) {
-                case ENOSYS:
-                case EINVAL:  /* there's no guarantee that all fs support sendfile */
-                    break;
-
-                default:
-                    goto geticon_exit;
-                }
-            } else {
-                dsi_readdone(dsi);
-                return AFP_OK;
-            }
-
-#endif
-            buflen = read(si.sdt_fd, rbuf, *rbuflen);
-
-            if (buflen < 0) {
-                goto geticon_exit;
-            }
-
-            /* dsi_read() also returns buffer size of next allocation */
-            buflen = dsi_read(dsi, rbuf, buflen); /* send it off */
-
-            if (buflen < 0) {
-                goto geticon_exit;
-            }
-
-            *rbuflen = buflen;
-        }
-
-        dsi_readdone(dsi);
-        return AFP_OK;
-geticon_exit:
-        LOG(log_error, logtype_afpd, "afp_geticon(%s): %s", icon_dtfile(vol, fcreator),
-            strerror(errno));
-        dsi_readdone(dsi);
-        obj->exit(EXITERR_SYS);
-        return AFP_OK;
-    } else {
-        if (read(si.sdt_fd, rbuf, rc) < rc) {
-            return AFPERR_PARAM;
-        }
-
-        *rbuflen = rc;
+    if (rc > buflen) {
+        return AFPERR_PARAM;
     }
 
+    if ((len = read(si.sdt_fd, rbuf, rc)) < rc) {
+        LOG(log_error, logtype_afpd, "afp_geticon(%s): read: %s",
+            icon_dtfile(vol, fcreator),
+            len < 0 ? strerror(errno) : "short read");
+        return AFPERR_MISC;
+    }
+
+    *rbuflen = rc;
     return AFP_OK;
 }
 
@@ -1119,7 +1166,7 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
     int			clen;
     struct adouble	ad, *adp;
     clen = (uint8_t) * ibuf++;
-    clen = min(clen, 199);
+    clen = MIN(clen, 199);
     upath = path->u_name;
 
     if (check_access(obj, vol, upath, OPENACC_WR) < 0) {
@@ -1313,7 +1360,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
     }
 
     /* OSX only use 128, greater kill Adobe CS2 */
-    clen = min(ad_getentrylen(adp, ADEID_COMMENT), 128);
+    clen = (int)MIN(ad_getentrylen(adp, ADEID_COMMENT), 128);
     *rbuf++ = clen;
     memcpy(rbuf, ad_entry(adp, ADEID_COMMENT), clen);
     *rbuflen = clen + 1;

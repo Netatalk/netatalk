@@ -281,8 +281,9 @@ size_t dsi_test_frame(uint8_t *p, uint8_t command, uint16_t request_id,
 
 /*!
  * @brief A DSI session on one end of an AF_UNIX socketpair, its command
- *        buffer one quantum as afpd sizes it and its read-ahead buffer one
- *        quantum; peer gets the other end
+ *        buffer one quantum as afpd sizes it, its read-ahead buffer one
+ *        quantum and its attention quantum the default; peer gets the other
+ *        end
  *
  * @returns 0, or -1 with nothing left open
  */
@@ -291,6 +292,7 @@ int dsi_test_open(DSI *dsi, uint32_t quantum, int *peer)
     int fds[2];
     memset(dsi, 0, sizeof(*dsi));
     dsi->socket = -1;
+    dsi->attn_quantum = DSI_DEFQUANT;
     dsi->splice_pipe[0] = dsi->splice_pipe[1] = -1;
     dsi->splice_size = DEFAULT_SPLICE_SIZE;
 
@@ -440,7 +442,8 @@ static struct _cnid_db dsi_test_cnid = {
 
 /*!
  * @brief Serve a copy of obj in a session process: afp_over_dsi() on the
- *        server end of a loopback TCP connection; peer gets the client end
+ *        server end of a loopback TCP connection, with flags added to the
+ *        session's DSI flags; peer gets the client end
  *
  * The session process gives each volume with a CNID database a backend that
  * knows no file, so it closes its forks and volumes as a session does: an
@@ -453,7 +456,8 @@ static struct _cnid_db dsi_test_cnid = {
  *
  * @returns the session process's pid, or -1 with errno and nothing started
  */
-pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd, int *peer)
+pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd,
+                        uint32_t flags, int *peer)
 {
     DSI *dsi = calloc(1, sizeof(*dsi));
     pid_t pid = -1;
@@ -487,6 +491,7 @@ pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd, int *peer)
         session.uid = uid;
         dsi->AFPobj = &session;
         dsi->proto_close = dsi_test_close_socket;
+        dsi->flags |= flags;
         /* the table login sets up for an AFP 3 client */
         afp_switch = postauth_switch;
         postauth_switch[AFP_READ_EXT] = afp_read_ext;
@@ -515,7 +520,7 @@ pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd, int *peer)
  */
 pid_t dsi_test_serve(const AFPObj *obj, int *peer)
 {
-    return dsi_test_serve_as(obj, 0, -1, peer);
+    return dsi_test_serve_as(obj, 0, -1, 0, peer);
 }
 
 /*!

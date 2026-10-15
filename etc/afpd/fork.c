@@ -629,35 +629,18 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 return AFPERR_MISC;
             }
 
-            /* Allocate a minimal ofork for the virtual file.
-             * We use a synthetic stat and adouble. */
+            /* Allocate a minimal ofork for the virtual file on a synthetic
+             * stat; of_alloc() builds its adouble, which of_dealloc() frees. */
             struct stat vst;
-            struct adouble *vad;
             memset(&vst, 0, sizeof(vst));
             vst.st_mode = S_IFREG | 0444;
             vst.st_ino = VIRTUAL_ICON_CNID;  /* synthetic inode */
             vst.st_dev = 0;
             eid = (fork == OPENFORK_DATA) ? ADEID_DFORK : ADEID_RFORK;
-            vad = malloc(sizeof(struct adouble));
-
-            if (!vad) {
-                return AFPERR_MISC;
-            }
-
-            ad_init(vad, vol);
-            vad->ad_name = strdup(VIRTUAL_ICON_NAME);
-
-            if (!vad->ad_name) {
-                free(vad);
-                return AFPERR_MISC;
-            }
-
             ofork = of_alloc(vol, curdir, (char *)VIRTUAL_ICON_NAME,
-                             &ofrefnum, eid, vad, &vst);
+                             &ofrefnum, eid, NULL, &vst);
 
             if (!ofork) {
-                free(vad->ad_name);
-                free(vad);
                 return AFPERR_NFILE;
             }
 
@@ -1426,7 +1409,9 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
  * @param[in] rbuf         data buffer
  * @param[in,out] rbuflen  in: number of bytes to read, out: bytes read
  *
- * @returns         AFP status code
+ * @returns AFP_OK, AFPERR_EOF when the fork ends first, AFPERR_PARAM when the
+ *          request is shorter than the rest of a symlink's target, or
+ *          AFPERR_MISC when the read fails
  */
 static int read_file(const struct ofork *ofork, int eid, off_t offset,
                      char *rbuf, size_t *rbuflen)
@@ -1436,10 +1421,11 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset,
     cc = ad_read(ofork->of_ad, eid, offset, rbuf, *rbuflen);
 
     if (cc < 0) {
+        int err = errno;
         LOG(log_error, logtype_afpd, "afp_read(%s): ad_read: %s", of_name(ofork),
-            strerror(errno));
+            strerror(err));
         *rbuflen = 0;
-        return AFPERR_PARAM;
+        return err == ERANGE ? AFPERR_PARAM : AFPERR_MISC;
     }
 
     if ((size_t)cc < *rbuflen) {
@@ -1551,7 +1537,8 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
  * @brief Shared body of FPRead and FPReadExt
  *
  * The call reads reqcount bytes from offset, clamped at the fork size with
- * AFPERR_EOF. It ignores the newline mask and character of the request.
+ * AFPERR_EOF, then cut at UINT32_MAX, the most a DSI reply frames. It
+ * ignores the newline mask and character of the request.
  * Strict locking takes a temporary read lock on the range. Virtual forks
  * serve their in-memory data, and resource fork reads can come from the
  * resource fork cache. Data goes out through sendfile when available,
@@ -1565,10 +1552,11 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
  * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
  *                         return
  * @param[in]     is64     nonzero for FPReadExt
- * @returns AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, or AFPERR_PARAM
+ * @returns AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, AFPERR_MISC, or
+ *          AFPERR_PARAM
  */
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
-                     char *rbuf _U_, size_t *rbuflen, int is64)
+                     char *rbuf, size_t *rbuflen, int is64)
 {
     DSI *dsi;
     struct ofork *ofork;
@@ -1647,39 +1635,10 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         }
 
         size_t tocopy = (size_t)reqcount;
-
-        switch (obj->proto) {
-#ifndef NO_DDP
-
-        case AFPPROTO_ASP:
-            *rbuflen = MIN(tocopy, *rbuflen);
-            memcpy(rbuf, ofork->of_virtual_data + offset, *rbuflen);
-
-            if (*rbuflen < tocopy) {
-                err = AFPERR_EOF;
-            }
-
-            return (int)err;
-#endif
-
-        case AFPPROTO_DSI:
-            dsi = obj->dsi;
-
-            if (dsi_readinit(dsi, (char *)ofork->of_virtual_data + offset,
-                             tocopy, tocopy, (int)err) < 0) {
-                *rbuflen = 0;
-                return AFPERR_PARAM;
-            }
-
-            dsi_readdone(dsi);
-            *rbuflen = 0;
-            return (int)err;
-
-        default:
-            LOG(log_error, logtype_afpd, "afp_read: unknown protocol %d", obj->proto);
-            *rbuflen = 0;
-            return AFPERR_PARAM;
-        }
+        /* the reply buffer holds the whole fork on both transports */
+        *rbuflen = MIN(tocopy, *rbuflen);
+        memcpy(rbuf, ofork->of_virtual_data + offset, *rbuflen);
+        return (int)err;
     }
 
     AFP_READ_START((long)reqcount);
@@ -1710,6 +1669,9 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 #ifndef NO_DDP
 
     case AFPPROTO_ASP:
+        savereqcount = reqcount;
+        saveoff = offset;
+
         if (obj->options.flags & OPTION_STRICT_LOCKING) {
             if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount,
                            ofork->of_refnum) < 0) {
@@ -1732,6 +1694,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     case AFPPROTO_DSI:
         dsi = obj->dsi;
+        /* request block parsed: the whole command buffer stages the reply */
+        ibuf = (char *)dsi->commands;
         /* reqcount isn't always truthful. we need to deal with that. */
         size = ad_size(ofork->of_ad, eid);
         LOG(log_maxdebug, logtype_afpd,
@@ -1753,13 +1717,15 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             err = AFPERR_EOF;
         }
 
+        /* the most a DSI header's 32-bit length frames; a reply cut here
+         * ends before the fork does, so it is no EOF */
+        if (reqcount > UINT32_MAX) {
+            reqcount = UINT32_MAX;
+            err = AFP_OK;
+        }
+
         savereqcount = reqcount;
         saveoff = offset;
-
-        if (reqcount < 0 || offset < 0) {
-            err = AFPERR_PARAM;
-            goto afp_read_err;
-        }
 
         if (obj->options.flags & OPTION_STRICT_LOCKING) {
             if (ad_tmplock(ofork->of_ad, eid, ADLOCK_RD, offset, reqcount,
@@ -1784,17 +1750,21 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_done;
         }
 
-        /* Size mismatch: cache stale — invalidate rfork buffer + Tier 1 AD */
-        if (cached_entry && cached_entry->dcache_rfork_buf
-                && cached_entry->dcache_rlen > 0
+        /* Size mismatch: cache stale — invalidate any rfork buffer + Tier 1
+         * AD, so no fill below takes a length the fork no longer has */
+        if (cached_entry && cached_entry->dcache_rlen > 0
                 && cached_entry->dcache_rlen != size) {
             LOG(log_debug, logtype_afpd,
                 "rfork_cache: size mismatch (cached:%lld vs live:%lld), "
                 "invalidating (did:%u)",
                 (long long)cached_entry->dcache_rlen, (long long)size,
                 ntohl(cached_entry->d_did));
-            rfork_cache_free(cached_entry);
-            rfork_stat_invalidated++;
+
+            if (cached_entry->dcache_rfork_buf) {
+                rfork_cache_free(cached_entry);
+                rfork_stat_invalidated++;
+            }
+
             rfork_stat_misses++;     /* Size mismatch counts as a miss */
             cached_entry->dcache_rlen = AD_RLEN_UNKNOWN;
             memset(cached_entry->dcache_finderinfo, 0, 32);
@@ -1836,8 +1806,6 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             int fd = ad_fork_fileno(ofork->of_ad, eid, &offset);
 
             if (dsi_stream_read_file(dsi, fd, offset, reqcount, (int)err) < 0) {
-                LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s",
-                    of_name(ofork), strerror(errno));
                 goto afp_read_exit;
             }
 
@@ -1850,7 +1818,13 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
         if (cc < 0) {
             err = cc;
-            goto afp_read_done;
+
+            if (*rbuflen == 0) {
+                goto afp_read_done;
+            }
+
+            /* the fork ends before reqcount: the bytes read are the reply */
+            reqcount = *rbuflen;
         }
 
         LOG(log_maxdebug, logtype_afpd,
@@ -1871,10 +1845,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         *rbuflen = (size_t)dsi_cc;
 
         while (*rbuflen > 0) {
-            /*
-             * This loop isn't really entered anymore, we've already
-             * sent the whole requested block in dsi_readinit().
-             */
+            /* the pieces after the first, each at most a quantum */
             cc = read_file(ofork, eid, offset, ibuf, rbuflen);
 
             if (cc < 0) {
@@ -1897,13 +1868,13 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 afp_read_exit:
         LOG(log_error, logtype_afpd, "afp_read(%s): %s", of_name(ofork),
             strerror(errno));
-        dsi_readdone(dsi);
 
         if (obj->options.flags & OPTION_STRICT_LOCKING) {
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, saveoff, savereqcount,
                        ofork->of_refnum);
         }
 
+        /* in_write stays raised: nothing may follow an unfinished reply */
         obj->exit(EXITERR_CLNT);
         break;
     } /* switch */

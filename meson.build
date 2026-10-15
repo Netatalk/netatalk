@@ -2032,12 +2032,12 @@ if enable_sendfile
         endif
     elif host_os == 'sunos'
         cdata.set('SENDFILE_FLAVOR_SOLARIS', 1)
-        have_sendfile = cc.has_function('sendfile', dependencies: sendfile_deps)
+        have_sendfile = cc.has_function(
+            'sendfilev',
+            dependencies: sendfile_deps,
+        )
         if have_sendfile
             cdata.set('WITH_SENDFILE', 1)
-        endif
-        if cc.has_function('sendfilev', dependencies: sendfile_deps)
-            cdata.set('HAVE_SENDFILEV', 1)
         endif
     elif host_os == 'freebsd'
         cdata.set('SENDFILE_FLAVOR_FREEBSD', 1)
@@ -2277,7 +2277,6 @@ use_glibc_at_header = false
 
 if host_os == 'freebsd'
     cdata.set('BSD4_4', 1)
-    cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
 elif host_os == 'dragonfly'
     # FreeBSD-derived: open(O_NOFOLLOW) on a symlink fails with EMLINK, not ELOOP.

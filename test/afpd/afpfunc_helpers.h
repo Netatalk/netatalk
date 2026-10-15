@@ -69,7 +69,7 @@ extern int dsi_test_connect_tcp(DSI *dsi, int *peer);
 extern int dsi_test_no_loopback(int errnum);
 extern void dsi_test_close_socket(DSI *dsi);
 extern pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd,
-                               int *peer);
+                               uint32_t flags, int *peer);
 extern pid_t dsi_test_serve(const AFPObj *obj, int *peer);
 extern int dsi_test_reap(pid_t pid, int peer);
 extern int fsize_cap(struct fsize_cap *cap, rlim_t limit);
