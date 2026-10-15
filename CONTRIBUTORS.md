@@ -194,6 +194,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Nico Golde
 - Tim Nowaczyk
 - Jiri Skala
+- Daniel S. Haischt <me@daniel.stefan.haischt.name>
 - Oliver Geisen
 - Timm Okke
 - Toshihiro Togo
@@ -206,7 +207,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Mark Williams
 - Riccardo Magliocchetti
 - Denis Ahrens
-- Lee Essen
+- Lee Essen <lee.essen@nowonline.co.uk>
 - Anton Starikov
 - Jamie Gilbertson
 - Thomas Johnson <NTmatter@gmail.com>
