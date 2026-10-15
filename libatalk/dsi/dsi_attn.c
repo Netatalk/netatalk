@@ -26,10 +26,10 @@
  * @brief Send a DSIAttention request carrying flags to the client
  *
  * The attention is a separate 16-byte header plus the user bytes, limited by
- * the attention quantum. The block lives on the stack, because a signal
- * handler may trigger it while the DSI buffers are in use. A sleeping session
- * skips the send. A session in the middle of a reply refuses it, because the
- * handler must not interleave with that write.
+ * the attention quantum. The block lives on the stack, apart from the
+ * session's request and reply buffers. A sleeping session skips the send. A
+ * session with a reply under way, or one a failed reply left unfinished,
+ * refuses it, since nothing may interleave with a reply on the stream.
  *
  * @param[in,out] dsi    DSI session
  * @param[in]     flags  AFP attention user bytes, in host order

@@ -25,9 +25,6 @@
 /* Available Extended Attributes modules */
 #mesondefine EA_MODULES
 
-/* Define if OS is FreeBSD */
-#mesondefine FREEBSD
-
 /* Whether ACLs support is available */
 #mesondefine HAVE_ACLS
 
@@ -270,9 +267,6 @@
 
 /* Define to 1 if you have the <security/pam_appl.h> header file. */
 #mesondefine HAVE_SECURITY_PAM_APPL_H
-
-/* Define to 1 if you have the `sendfilev' function. */
-#mesondefine HAVE_SENDFILEV
 
 /* Define to 1 if you have the `setea' function. */
 #mesondefine HAVE_SETEA

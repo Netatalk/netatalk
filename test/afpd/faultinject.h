@@ -49,6 +49,12 @@ struct fault_inject {
     int close_armed;
     int close_fail_after;
     int close_errno;
+    struct fi_call read;    /*!< read() and pread() alike */
+    int read_max;           /*!< read() and pread() read at most this */
+    int pread_calls;        /*!< pread() calls, armed or not */
+    int write_max;          /*!< a write() writes at most this many bytes */
+    int write_zero;         /*!< the next write_zero write()s write nothing */
+    struct fi_call lseek;
     struct fi_call asp_wrtcont;
     int asp_wrtcont_fill;   /*!< asp_wrtcont() hands back the bytes asked for */
     int fcntl_armed;
@@ -61,8 +67,12 @@ struct fault_inject {
     int   getlk_calls;       /*!< count of F_GETLK calls seen while watching */
     int   setlk_calls;       /*!< count of F_SETLK/F_SETLKW calls seen */
     int   lock_last_type;    /*!< l_type of the most recent watched lock fcntl */
+    int   lock_last_cmd;     /*!< cmd of the most recent watched lock fcntl */
     off_t lock_last_start;   /*!< l_start of the most recent watched lock fcntl */
     off_t lock_last_len;     /*!< l_len   of the most recent watched lock fcntl */
+    int   shrink_armed;      /*!< the next lock fcntl first cuts shrink_fd */
+    int   shrink_fd;
+    off_t shrink_to;         /*!< the length that cut leaves the file */
     int fchdir_armed;
     int fchdir_fail_after;
     int fchdir_errno;
@@ -79,6 +89,11 @@ struct fault_inject {
     int poll_urgent_wakeups; /*!< count of POLLPRI waits answered */
     int pipe_budget_spent;  /*!< pipes stay at two pages and grow no more */
     struct fi_call pipe2;
+    struct fi_call send;
+    int send_max;           /*!< a send() sends at most this many bytes */
+    struct fi_call sendfile;
+    int sendfile_fake;      /*!< a sendfile() reports its count, moving none */
+    int sendfile_eof_einval; /*!< a sendfile() at the file's end: EINVAL */
 };
 
 extern struct fault_inject fi;

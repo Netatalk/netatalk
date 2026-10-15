@@ -30,8 +30,7 @@ STATIC void test213()
         ret = FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX", 1);
 
         if (ret == htonl(AFPERR_NOITEM)) {
-            FAIL(FPGetIconInfo(Conn,  dt, u_null, 1))
-            FAIL(htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, u_null, 2))
+            FAIL(htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, u_null, 1))
             goto fin;
         } else if (ret) {
             test_failed();

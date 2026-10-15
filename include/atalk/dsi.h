@@ -65,8 +65,7 @@ typedef struct DSI {
     struct sockaddr_storage server, client;
     struct itimerval        timer;
     int      tickle;            /*!< tickle count */
-    int      in_write;          /*!< in the middle of writing multiple packets,
-                                   signal handlers can't write to the socket */
+    int      in_write;          /*!< a reply under way or left unfinished */
     int      msg_request;       /*!< pending message to the client */
     int      down_request;      /*!< pending SIGUSR1 down in 5 mn */
 
@@ -191,7 +190,6 @@ extern void dsi_getstatus(DSI *);
 extern void dsi_close(DSI *);
 
 #define DSI_NOWAIT 1
-#define DSI_MSG_MORE 2
 
 /* low-level stream commands -- in dsi_stream.c */
 extern ssize_t dsi_stream_write(DSI *, void *, const size_t, const int mode);
@@ -202,8 +200,8 @@ extern int dsi_disconnect(DSI *dsi);
 extern int dsi_wait_input(DSI *dsi);
 
 #ifdef WITH_SENDFILE
-extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len,
-                                    const int err);
+extern int dsi_stream_read_file(DSI *, int, off_t off, const size_t len,
+                                const int err);
 #endif
 
 /* client writes -- dsi_write.c */

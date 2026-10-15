@@ -55,6 +55,7 @@
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
 #include "auth.h"
+#include "desktop.h"
 #include "dircache.h"
 #include "directory.h"
 #include "faultinject.h"
@@ -62,12 +63,14 @@
 #include "filedir.h"
 #include "fork.h"
 #include "hash.h"
+#include "peer_lock.h"
 #include "subtests.h"
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
 #include "subtests_lock.h"
 #include "subtests_pfd.h"
 #include "subtests_recvfile.h"
+#include "subtests_sendfile.h"
 #include "subtests_veto.h"
 #ifndef NO_DDP
 #include "subtests_atp.h"
@@ -382,7 +385,7 @@ static pid_t dsp_write_session(struct vol *vol, uid_t uid, int ipc_fd,
         obj.options.flags |= OPTION_RECVFILE;
     }
 
-    pid = dsi_test_serve_as(&obj, uid, ipc_fd, peer);
+    pid = dsi_test_serve_as(&obj, uid, ipc_fd, 0, peer);
     err = errno;
     obj.options = options;
     /* the session holds its own copy of the fork */
@@ -698,7 +701,7 @@ static int utest_dsi_reconnect_counts_ticks_afresh(void)
     }
 
     obj.options.timeout = 2;
-    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], &peer);
+    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], 0, &peer);
     obj.options = options;
 
     if (pid == -1) {
@@ -756,7 +759,7 @@ static int utest_dsi_term_served_after_stalled_header(void)
 
     obj.options.timeout = 1;
     obj.options.tickleval = 1;
-    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], &peer);
+    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], 0, &peer);
     obj.options = options;
 
     if (pid == -1) {
@@ -1001,6 +1004,1098 @@ static int utest_write_fork_asp_failure_unlocks(struct vol *vol)
 static int utest_write_fork_asp_over_count_refused(struct vol *vol)
 {
     return asp_write_refused(vol, 1, 0);
+}
+
+#define GI_REPLY 4624
+#define GI_ICON  8192
+#define GI_SMALL 64
+#define GI_PART  1024
+/* more than the reply buffer holds and less than the icon */
+#define GI_OVER  6000
+#define GI_REQ   16
+#define GI_INFO  10
+#define GI_ENTRY 12
+
+/*! @brief Pack an icon file entry's header: tag, file type, icon type, pad,
+ *         the size of the bits after it */
+static void gi_entry(uint8_t *entry, uint8_t itype, uint16_t size)
+{
+    uint16_t size_be = htons(size);
+    memset(entry, 0, GI_ENTRY);
+    memcpy(entry + 4, "ICN#", 4);
+    entry[8] = itype;
+    memcpy(entry + 10, &size_be, sizeof(size_be));
+}
+
+/*! @brief Pack an FPGetIcon request: command, pad, volume, creator, file
+ *         type, icon type, pad, size */
+static void gi_req(uint8_t *req, const struct vol *vol, const uint8_t *creator,
+                   uint8_t itype, uint16_t size)
+{
+    uint16_t size_be = htons(size);
+    memset(req, 0, GI_REQ);
+    req[0] = AFP_GETICON;
+    memcpy(req + 2, &vol->v_vid, sizeof(vol->v_vid));
+    memcpy(req + 4, creator, 4);
+    memcpy(req + 8, "ICN#", 4);
+    req[12] = itype;
+    memcpy(req + 14, &size_be, sizeof(size_be));
+}
+
+/*! @brief Pack an FPGetIconInfo request: command, pad, volume, creator,
+ *         index */
+static void gi_info(uint8_t *info, const struct vol *vol,
+                    const uint8_t *creator, uint16_t index)
+{
+    uint16_t index_be = htons(index);
+    memset(info, 0, GI_INFO);
+    info[0] = AFP_GTICNINFO;
+    memcpy(info + 2, &vol->v_vid, sizeof(vol->v_vid));
+    memcpy(info + 4, creator, 4);
+    memcpy(info + 8, &index_be, sizeof(index_be));
+}
+
+/*!
+ * @brief Does FPGetIconInfo on the session o with the request in info return
+ *        the entry? The reply length goes in as the dispatcher sets it
+ */
+static int gi_info_is(AFPObj *o, uint8_t *info, const uint8_t *entry)
+{
+    char rbuf[GI_REPLY];
+    size_t rbuflen = GI_REPLY;
+    return afp_geticoninfo(o, (char *)info, GI_INFO, rbuf, &rbuflen)
+           == AFP_OK
+           && rbuflen == GI_ENTRY && memcmp(rbuf, entry, GI_ENTRY) == 0;
+}
+
+/*!
+ * @brief Create the creator's icon file, empty, in the volume's desktop
+ *        database, where iconopen() looks for it
+ *
+ * @returns its descriptor, or -1; *path names it
+ */
+static int gi_icon_file(const struct vol *vol, uint8_t *creator, char **path)
+{
+    char dir[MAXPATHLEN + 1];
+    snprintf(dir, sizeof(dir), "%s/" APPLEDESKTOP, vol->v_dbpath);
+    (void)mkdir(dir, 0700);
+    *path = dtfile(vol, creator, ".icon");
+    snprintf(dir, sizeof(dir), "%s", *path);
+    *strrchr(dir, '/') = '\0';
+    (void)mkdir(dir, 0700);
+    return open(*path, O_RDWR | O_CREAT | O_TRUNC, 0600);
+}
+
+/*! @brief Append an icon to the icon file: its entry header, then size bytes
+ *         of fill */
+static int gi_store(int fd, uint8_t itype, uint16_t size, int fill)
+{
+    static char bits[GI_ICON];
+    uint8_t entry[GI_ENTRY];
+    gi_entry(entry, itype, size);
+    memset(bits, fill, size);
+    return write(fd, entry, sizeof(entry)) == (ssize_t)sizeof(entry)
+           && write(fd, bits, size) == (ssize_t)size ? 0 : -1;
+}
+
+/*!
+ * @brief FPGetIcon whose read is larger than the reply buffer fails and
+ *        writes nothing past the buffer, sized as an ASP session's, and
+ *        FPGetIconInfo then returns the second entry, as after FPGetIcon of
+ *        part of the icon
+ */
+static int utest_geticon_within_reply_buffer(struct vol *vol)
+{
+    static char rbuf[GI_REPLY + GI_ICON];
+    static const char zero[GI_ICON];
+    char bits[GI_PART];
+    uint8_t creator[4] = { 'S', 'F', 'g', 'i' };
+    uint8_t entry2[GI_ENTRY];
+    uint8_t req[GI_REQ];
+    uint8_t part[GI_REQ];
+    uint8_t info2[GI_INFO];
+    size_t rbuflen = GI_REPLY;
+    char *path;
+    int fd;
+    int ret = -1;
+
+    if ((fd = gi_icon_file(vol, creator, &path)) == -1) {
+        return -1;
+    }
+
+    gi_entry(entry2, 2, GI_SMALL);
+    gi_req(req, vol, creator, 1, GI_OVER);
+    gi_req(part, vol, creator, 1, GI_PART);
+    gi_info(info2, vol, creator, 2);
+    memset(bits, 0xa5, sizeof(bits));
+    memset(rbuf, 0, sizeof(rbuf));
+
+    if (gi_store(fd, 1, GI_ICON, 0xa5) == 0
+            && gi_store(fd, 2, GI_SMALL, 0x5a) == 0
+            && afp_geticon(&obj, (char *)req, sizeof(req), rbuf,
+                           &rbuflen) == AFPERR_PARAM
+            && rbuflen == 0
+            && memcmp(rbuf + GI_REPLY, zero, sizeof(zero)) == 0
+            && gi_info_is(&obj, info2, entry2)) {
+        rbuflen = GI_REPLY;
+
+        if (afp_geticon(&obj, (char *)part, sizeof(part), rbuf,
+                        &rbuflen) == AFP_OK
+                && rbuflen == GI_PART
+                && memcmp(rbuf, bits, GI_PART) == 0
+                && gi_info_is(&obj, info2, entry2)) {
+            ret = 0;
+        }
+    }
+
+    close(fd);
+    unlink(path);
+    return ret;
+}
+
+/*!
+ * @brief FPGetIconInfo returns the entry each index names, for the same index
+ *        asked again as well, and AFPERR_NOITEM past the last whole entry,
+ *        a header whose bits the file cuts short being none, which FPGetIcon
+ *        does not find either
+ */
+static int utest_geticoninfo_walks_by_index(struct vol *vol)
+{
+    uint8_t creator[4] = { 'S', 'F', 'g', 'w' };
+    uint8_t entry[GI_ENTRY];
+    uint8_t entry2[GI_ENTRY];
+    uint8_t cut[GI_ENTRY];
+    uint8_t info1[GI_INFO];
+    uint8_t info2[GI_INFO];
+    uint8_t info3[GI_INFO];
+    uint8_t req3[GI_REQ];
+    char rbuf[GI_REPLY];
+    size_t rbuflen = GI_REPLY;
+    size_t iconlen = GI_REPLY;
+    char *path;
+    int fd;
+    int ret = -1;
+
+    if ((fd = gi_icon_file(vol, creator, &path)) == -1) {
+        return -1;
+    }
+
+    gi_entry(entry, 1, GI_ICON);
+    gi_entry(entry2, 2, GI_SMALL);
+    gi_entry(cut, 3, GI_SMALL);
+    gi_info(info1, vol, creator, 1);
+    gi_info(info2, vol, creator, 2);
+    gi_info(info3, vol, creator, 3);
+    gi_req(req3, vol, creator, 3, GI_SMALL);
+
+    if (gi_store(fd, 1, GI_ICON, 0xa5) == 0
+            && gi_store(fd, 2, GI_SMALL, 0x5a) == 0
+            && write(fd, cut, sizeof(cut)) == (ssize_t)sizeof(cut)
+            && gi_info_is(&obj, info1, entry)
+            && gi_info_is(&obj, info1, entry)
+            && gi_info_is(&obj, info2, entry2)
+            && gi_info_is(&obj, info1, entry)
+            && afp_geticoninfo(&obj, (char *)info3, GI_INFO, rbuf, &rbuflen)
+            == AFPERR_NOITEM
+            && afp_geticon(&obj, (char *)req3, GI_REQ, rbuf, &iconlen)
+            == AFPERR_NOITEM) {
+        ret = 0;
+    }
+
+    close(fd);
+    unlink(path);
+    return ret;
+}
+
+/* the fault an icon call meets in the icon file: its open fails, its first
+ * or second read or lseek() fails, or its reads stop at GI_SMALL bytes or
+ * short of a header */
+enum gi_fault {
+    GI_OPEN_FAILS,
+    GI_READ1_FAILS,
+    GI_READ2_FAILS,
+    GI_READ_SHORT,
+    GI_HEADER_SHORT,
+    GI_SEEK1_FAILS,
+    GI_SEEK2_FAILS
+};
+
+/*! @brief Arm the fault interposer for the fault and nothing else */
+static void gi_arm(enum gi_fault fault)
+{
+    fault_inject_reset();
+
+    switch (fault) {
+    case GI_OPEN_FAILS:
+        fi.open_armed = 1;
+        fi.open_errno = EACCES;
+        break;
+
+    case GI_READ1_FAILS:
+        fi.read.armed = 1;
+        fi.read.errnum = EIO;
+        break;
+
+    case GI_READ2_FAILS:
+        fi.read.armed = 1;
+        fi.read.fail_after = 1;
+        fi.read.errnum = EIO;
+        break;
+
+    case GI_READ_SHORT:
+        fi.read_max = GI_SMALL;
+        break;
+
+    case GI_HEADER_SHORT:
+        fi.read_max = GI_ENTRY - 4;
+        break;
+
+    case GI_SEEK1_FAILS:
+        fi.lseek.armed = 1;
+        fi.lseek.errnum = EIO;
+        break;
+
+    case GI_SEEK2_FAILS:
+        fi.lseek.armed = 1;
+        fi.lseek.fail_after = 1;
+        fi.lseek.errnum = EIO;
+        break;
+    }
+}
+
+/*!
+ * @brief FPGetIcon with the request in req under the fault
+ *
+ * @returns its answer when the reply is empty, 1 otherwise
+ */
+static int gi_fault(uint8_t *req, enum gi_fault fault)
+{
+    /* a read the bound misses lands past the reply buffer, not on the stack */
+    static char rbuf[GI_REPLY + GI_ICON];
+    size_t rbuflen = GI_REPLY;
+    int rc;
+    gi_arm(fault);
+    rc = afp_geticon(&obj, (char *)req, GI_REQ, rbuf, &rbuflen);
+    fault_inject_reset();
+    return rbuflen == 0 ? rc : 1;
+}
+
+/*!
+ * @brief FPGetIconInfo with the request in info under the fault
+ *
+ * @returns its answer when the reply is empty, 1 otherwise
+ */
+static int gi_info_fault(uint8_t *info, enum gi_fault fault)
+{
+    char rbuf[GI_REPLY];
+    size_t rbuflen = GI_REPLY;
+    int rc;
+    gi_arm(fault);
+    rc = afp_geticoninfo(&obj, (char *)info, GI_INFO, rbuf, &rbuflen);
+    fault_inject_reset();
+    return rbuflen == 0 ? rc : 1;
+}
+
+/*!
+ * @brief FPGetIcon and FPGetIconInfo whose open, read or seek of the icon
+ *        file fails, or whose header read stops short of the file's end,
+ *        answer AFPERR_MISC, and FPGetIconInfo then returns the entry its
+ *        index names
+ */
+static int utest_icon_failed_io_replies_misc(struct vol *vol)
+{
+    uint8_t creator[4] = { 'S', 'F', 'g', 'r' };
+    uint8_t entry2[GI_ENTRY];
+    uint8_t part[GI_REQ];
+    uint8_t part2[GI_REQ];
+    uint8_t info1[GI_INFO];
+    uint8_t info2[GI_INFO];
+    char *path;
+    int fd;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if ((fd = gi_icon_file(vol, creator, &path)) == -1) {
+        return -1;
+    }
+
+    gi_entry(entry2, 2, GI_SMALL);
+    gi_req(part, vol, creator, 1, GI_PART);
+    gi_req(part2, vol, creator, 2, GI_SMALL);
+    gi_info(info1, vol, creator, 1);
+    gi_info(info2, vol, creator, 2);
+
+    /* the entry FPGetIconInfo finds after each failure, then the answer each
+     * failure gives; the failed opens follow FPGetIconInfo's failed read,
+     * which closes the file */
+    if (gi_store(fd, 1, GI_ICON, 0xa5) == 0
+            && gi_store(fd, 2, GI_SMALL, 0x5a) == 0
+            && gi_fault(part, GI_READ2_FAILS) < 0
+            && gi_info_is(&obj, info2, entry2)
+            && gi_fault(part, GI_READ_SHORT) < 0
+            && gi_info_is(&obj, info2, entry2)
+            && gi_fault(part2, GI_SEEK2_FAILS) < 0
+            && gi_info_is(&obj, info2, entry2)
+            && gi_info_fault(info2, GI_READ2_FAILS) < 0
+            && gi_info_is(&obj, info2, entry2)
+            && gi_fault(part, GI_SEEK1_FAILS) == AFPERR_MISC
+            && gi_fault(part2, GI_READ2_FAILS) == AFPERR_MISC
+            && gi_fault(part2, GI_SEEK2_FAILS) == AFPERR_MISC
+            && gi_fault(part, GI_READ2_FAILS) == AFPERR_MISC
+            && gi_fault(part, GI_READ_SHORT) == AFPERR_MISC
+            && gi_info_fault(info2, GI_READ2_FAILS) == AFPERR_MISC
+            && gi_fault(part, GI_HEADER_SHORT) == AFPERR_MISC
+            && gi_info_fault(info1, GI_HEADER_SHORT) == AFPERR_MISC
+            && gi_fault(part, GI_OPEN_FAILS) == AFPERR_MISC
+            && gi_info_fault(info1, GI_OPEN_FAILS) == AFPERR_MISC
+            && gi_info_fault(info1, GI_READ1_FAILS) == AFPERR_MISC) {
+        ret = 0;
+    }
+
+    close(fd);
+    unlink(path);
+    return ret;
+}
+
+#define AI_QUANTUM 2048
+#define AI_ICON    1024
+#define AI_SENT    512
+#define AI_STORED  64
+#define AI_REQ     20
+#define AI_FRAME   (DSI_BLOCKSIZ + AI_REQ + AI_ICON)
+#define AI_CUT     (DSI_BLOCKSIZ + AI_REQ + AI_SENT)
+
+/*! An FPAddIcon session over a socket pair, on an icon file that holds one
+ *  stored icon */
+struct ai {
+    AFPObj o;
+    DSI dsi;
+    const struct vol *vol;
+    uint8_t *creator;         /*!< the icon file's */
+    int peer;                 /*!< the client's end */
+    char *path;               /*!< the icon file */
+    uint8_t entry[GI_ENTRY];  /*!< the stored icon's header */
+    uint8_t info[GI_INFO];    /*!< FPGetIconInfo of the stored icon */
+};
+
+/*!
+ * @brief Store one icon, type 1 of AI_STORED bytes, in the creator's icon
+ *        file and open a session on it whose quantum is AI_QUANTUM
+ *
+ * @returns 0, or -1 with nothing left open
+ */
+static int ai_setup(struct ai *ai, const struct vol *vol, uint8_t *creator)
+{
+    int fd;
+    ai->vol = vol;
+    ai->creator = creator;
+
+    if ((fd = gi_icon_file(vol, creator, &ai->path)) == -1) {
+        return -1;
+    }
+
+    if (gi_store(fd, 1, AI_STORED, 0x5a) != 0) {
+        close(fd);
+        unlink(ai->path);
+        return -1;
+    }
+
+    close(fd);
+
+    if (dsi_test_open(&ai->dsi, AI_QUANTUM, &ai->peer) != 0) {
+        unlink(ai->path);
+        return -1;
+    }
+
+    ai->o = obj;
+    ai->o.dsi = &ai->dsi;
+    ai->o.proto = AFPPROTO_DSI;
+    gi_entry(ai->entry, 1, AI_STORED);
+    gi_info(ai->info, vol, creator, 1);
+    return 0;
+}
+
+/*! @brief End the session and remove the icon file */
+static void ai_teardown(struct ai *ai)
+{
+    close(ai->peer);
+    dsi_test_cleanup(&ai->dsi);
+    unlink(ai->path);
+}
+
+/*!
+ * @brief Pack a DSIWrite of FPAddIcon to the session's icon file for an icon
+ *        of type itype and size bytes whose payload is the request and len
+ *        bytes of bits: command, pad, volume, creator, file type, icon type,
+ *        pad, tag, size
+ */
+static void ai_frame(const struct ai *ai, uint8_t *frame, uint16_t id,
+                     uint8_t itype, uint16_t size, uint32_t len)
+{
+    uint8_t *req = frame + DSI_BLOCKSIZ;
+    uint16_t size_be = htons(size);
+    dsi_test_frame(frame, DSIFUNC_WRITE, id, AI_REQ, AI_REQ + len,
+                   AFP_ADDICON);
+    memcpy(req + 2, &ai->vol->v_vid, sizeof(ai->vol->v_vid));
+    memcpy(req + 4, ai->creator, 4);
+    memcpy(req + 8, "ICN#", 4);
+    req[12] = itype;
+    memcpy(req + 18, &size_be, sizeof(size_be));
+
+    /* each byte of the bits tells its place, for a reply read back */
+    for (uint32_t i = 0; i < len; i++) {
+        req[AI_REQ + i] = (uint8_t)(i * 7);
+    }
+}
+
+/*! @brief Receive the next DSIWrite and run it as FPAddIcon, as the
+ *         dispatcher does */
+static int ai_dispatch(struct ai *ai)
+{
+    size_t rbuflen = DSI_DATASIZ;
+
+    if (dsi_stream_receive(&ai->dsi) != DSIFUNC_WRITE) {
+        return -1;
+    }
+
+    return afp_addicon(&ai->o, (char *)ai->dsi.commands, ai->dsi.cmdlen,
+                       (char *)ai->dsi.data, &rbuflen);
+}
+
+/*! @brief One FPAddIcon under a file size limit of cap bytes, where the
+ *         write of the icon stops short or fails as on a volume filling up */
+static int ai_dispatch_capped(struct ai *ai, off_t cap)
+{
+    struct fsize_cap limit;
+    int rc;
+
+    if (fsize_cap(&limit, (rlim_t)cap) != 0) {
+        return -1;
+    }
+
+    rc = ai_dispatch(ai);
+    return fsize_uncap(&limit) == 0 ? rc : -1;
+}
+
+/*! @brief Is the session's icon file size bytes long? */
+static int ai_size_is(const struct ai *ai, off_t size)
+{
+    struct stat st;
+    return stat(ai->path, &st) == 0 && st.st_size == size;
+}
+
+/*! @brief The icon file holds the stored icon alone, and FPGetIconInfo
+ *         reads it */
+static int ai_stored_alone(struct ai *ai)
+{
+    return ai_size_is(ai, GI_ENTRY + AI_STORED)
+           && gi_info_is(&ai->o, ai->info, ai->entry);
+}
+
+/*! @brief Set the tag of an FPAddIcon request ai_frame() packed */
+static void ai_tag(uint8_t *frame, const uint8_t *tag)
+{
+    memcpy(frame + DSI_BLOCKSIZ + 14, tag, 4);
+}
+
+/*!
+ * @brief The stored icon's entry, at its length, carries the tag and holds a
+ *        run of the bits ai_frame() packs from their start, the stored bits
+ *        after them, as a replacement whose write failed part way leaves it
+ */
+static int ai_replaced_part_way(struct ai *ai, const uint8_t *tag)
+{
+    uint8_t entry[GI_ENTRY];
+    uint8_t req[GI_REQ];
+    size_t rbuflen = DSI_DATASIZ;
+    uint16_t i = 0;
+    gi_entry(entry, 1, AI_STORED);
+    memcpy(entry, tag, 4);
+    gi_req(req, ai->vol, ai->creator, 1, AI_STORED);
+
+    if (!ai_size_is(ai, GI_ENTRY + AI_STORED)
+            || !gi_info_is(&ai->o, ai->info, entry)
+            || afp_geticon(&ai->o, (char *)req, GI_REQ, (char *)ai->dsi.data,
+                           &rbuflen) != AFP_OK || rbuflen != AI_STORED) {
+        return 0;
+    }
+
+    while (i < AI_STORED && ai->dsi.data[i] == (uint8_t)(i * 7)) {
+        i++;
+    }
+
+    while (i < AI_STORED && ai->dsi.data[i] == 0x5a) {
+        i++;
+    }
+
+    return i == AI_STORED;
+}
+
+/*!
+ * @brief FPAddIcon of a new icon under the fault replies AFPERR_MISC and
+ *        stores no new icon; tag ends the creator
+ *
+ * @returns 0, or -1
+ */
+static int ai_fault_misc(struct vol *vol, enum gi_fault fault, uint8_t tag)
+{
+    static uint8_t frame[AI_FRAME];
+    uint8_t creator[4] = { 'S', 'F', 'a', tag };
+    struct ai ai;
+    int rc = -1;
+    int ret = -1;
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    ai_frame(&ai, frame, 1, 2, AI_ICON, AI_ICON);
+    gi_arm(fault);
+
+    if (write(ai.peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)) {
+        rc = ai_dispatch(&ai);
+    }
+
+    fault_inject_reset();
+
+    if (rc == AFPERR_MISC && ai_stored_alone(&ai)) {
+        ret = 0;
+    }
+
+    ai_teardown(&ai);
+    return ret;
+}
+
+/*!
+ * @brief FPAddIcon whose icon file cannot be opened, whose scan meets a
+ *        failed read() of it, a read() short of the stored icon's header or
+ *        a failed lseek() over the stored icon, or whose seek to the new
+ *        entry's offset fails, replies AFPERR_MISC and stores no new icon
+ */
+static int utest_addicon_failed_io_replies_misc(struct vol *vol)
+{
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    return ai_fault_misc(vol, GI_OPEN_FAILS, 'o') == 0
+           && ai_fault_misc(vol, GI_READ1_FAILS, 'r') == 0
+           && ai_fault_misc(vol, GI_HEADER_SHORT, 'h') == 0
+           && ai_fault_misc(vol, GI_SEEK1_FAILS, 'k') == 0
+           && ai_fault_misc(vol, GI_SEEK2_FAILS, 'p') == 0 ? 0 : -1;
+}
+
+/*!
+ * @brief Receive and run the next FPAddIcon with its first lock attempt
+ *        failing with errnum, the interposer's lock record kept
+ */
+static int ai_dispatch_lock_refused(struct ai *ai, int errnum)
+{
+    int rc;
+    fi.fcntl_armed = 1;
+    fi.fcntl_fail_after = 0;
+    fi.fcntl_errno = errnum;
+    rc = ai_dispatch(ai);
+    fi.fcntl_armed = 0;
+    return rc;
+}
+
+/*!
+ * @brief ai_dispatch_lock_refused() with the scan's first read() armed to
+ *        fail
+ */
+static int ai_dispatch_lock_fails(struct ai *ai, int errnum)
+{
+    int rc;
+    fi.read.armed = 1;
+    fi.read.fail_after = 0;
+    fi.read.errnum = EIO;
+    rc = ai_dispatch_lock_refused(ai, errnum);
+    fi.read.armed = 0;
+    return rc;
+}
+
+/*!
+ * @brief FPAddIcon takes a write lock on the whole icon file before its scan,
+ *        tries again while another process holds it, writes without one on a
+ *        file system that takes none, gives up on any other error, and takes
+ *        none for a request refused before the file opens
+ */
+static int utest_addicon_locks_icon_file(struct vol *vol)
+{
+    static uint8_t full[AI_FRAME];
+    static uint8_t frame[DSI_BLOCKSIZ + AI_REQ + AI_QUANTUM];
+    static uint8_t again[AI_FRAME];
+    uint8_t creator[4] = { 'S', 'F', 'a', 'l' };
+    struct ai ai;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    /* a request the server stores, one whose payload is not the icon's
+     * size, three stored without a lock, one whose lock fails before its scan
+     * reads anything, and one whose scan, reached on the second lock
+     * attempt, fails its read */
+    ai_frame(&ai, full, 1, 2, AI_ICON, AI_ICON);
+    ai_frame(&ai, frame, 2, 2, AI_ICON, AI_QUANTUM);
+    ai_frame(&ai, again, 3, 2, AI_ICON, AI_ICON);
+    fault_inject_reset();
+    fi.fcntl_watch = 1;
+
+    if (write(ai.peer, full, sizeof(full)) == (ssize_t)sizeof(full)
+            && write(ai.peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+            && ai_dispatch(&ai) == AFP_OK
+            && fi.lock_last_cmd == F_SETLK && fi.lock_last_type == F_WRLCK
+            && fi.lock_last_start == 0 && fi.lock_last_len == 0
+            && ai_dispatch(&ai) == AFPERR_PARAM && fi.setlk_calls == 1
+            && write(ai.peer, again, sizeof(again)) == (ssize_t)sizeof(again)
+            && ai_dispatch_lock_refused(&ai, ENOLCK) == AFP_OK
+            && fi.setlk_calls == 2
+            && write(ai.peer, again, sizeof(again)) == (ssize_t)sizeof(again)
+            && ai_dispatch_lock_refused(&ai, EINVAL) == AFP_OK
+            && fi.setlk_calls == 3
+            && write(ai.peer, again, sizeof(again)) == (ssize_t)sizeof(again)
+            && ai_dispatch_lock_refused(&ai, EOPNOTSUPP) == AFP_OK
+            && fi.setlk_calls == 4
+            && write(ai.peer, again, sizeof(again)) == (ssize_t)sizeof(again)
+            && ai_dispatch_lock_fails(&ai, EIO) == AFPERR_MISC
+            && fi.setlk_calls == 5 && fi.read.calls == 0
+            && write(ai.peer, again, sizeof(again)) == (ssize_t)sizeof(again)
+            && ai_dispatch_lock_fails(&ai, EAGAIN) == AFPERR_MISC
+            && fi.setlk_calls == 7 && fi.read.calls == 1) {
+        ret = 0;
+    }
+
+    fault_inject_reset();
+    ai_teardown(&ai);
+    return ret;
+}
+
+/*!
+ * @brief FPAddIcon gives up on an icon file another process keeps locked,
+ *        replying AFPERR_MISC and storing nothing
+ */
+static int utest_addicon_lock_wait_bounded(struct vol *vol)
+{
+    static uint8_t frame[AI_FRAME];
+    uint8_t creator[4] = { 'S', 'F', 'a', 'w' };
+    struct peer peer;
+    struct ai ai;
+    int ret = -1;
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    ai_frame(&ai, frame, 1, 2, AI_ICON, AI_ICON);
+
+    if (peer_hold_lock(&peer, ai.path, F_RDLCK, 0, 0) == 0) {
+        if (write(ai.peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+                && ai_dispatch(&ai) == AFPERR_MISC
+                && ai_stored_alone(&ai)) {
+            ret = 0;
+        }
+
+        peer_release(&peer);
+    }
+
+    ai_teardown(&ai);
+    return ret;
+}
+
+#if !defined(NO_DDP) && defined(AFPDTEST_SHARED_LIBATALK)
+/*!
+ * @brief One FPAddIcon over AppleTalk of the request in frame under the
+ *        fault, the icon handed over whole
+ */
+static int ai_asp_dispatch(struct ai *ai, uint8_t *frame, enum gi_fault fault)
+{
+    char rbuf[AI_ICON];
+    size_t rbuflen = sizeof(rbuf);
+    int rc;
+    gi_arm(fault);
+    fi.asp_wrtcont_fill = 1;
+    rc = afp_addicon(&ai->o, (char *)frame + DSI_BLOCKSIZ, AI_REQ, rbuf,
+                     &rbuflen);
+    fault_inject_reset();
+    return rc;
+}
+#endif
+
+/*!
+ * @brief FPAddIcon over AppleTalk whose scan fails, or whose icon file cannot
+ *        be opened, replies AFPERR_MISC and stores no icon
+ */
+static int utest_addicon_asp_failure_reported(struct vol *vol)
+{
+#if defined(NO_DDP) || !defined(AFPDTEST_SHARED_LIBATALK)
+    return TEST_SKIP;
+#else
+    static uint8_t frame[AI_FRAME];
+    uint8_t creator[4] = { 'S', 'F', 'a', 'a' };
+    struct ai ai;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    ai.o.proto = AFPPROTO_ASP;
+    ai.o.dsi = NULL;
+    ai_frame(&ai, frame, 1, 2, AI_ICON, 0);
+
+    if (ai_asp_dispatch(&ai, frame, GI_READ1_FAILS) == AFPERR_MISC
+            && ai_asp_dispatch(&ai, frame, GI_OPEN_FAILS) == AFPERR_MISC
+            && ai_stored_alone(&ai)) {
+        ret = 0;
+    }
+
+    ai_teardown(&ai);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief FPAddIcon whose payload differs from the announced icon size, whose
+ *        write of the icon fails at a file size limit, for a new entry or
+ *        over the stored icon, or whose client ends the stream before the
+ *        icon is complete, fails the request and adds no entry; the stored
+ *        icon's entry stays readable at its length
+ */
+static int utest_addicon_failed_request_adds_no_entry(struct vol *vol)
+{
+    static uint8_t frame[DSI_BLOCKSIZ + AI_REQ + AI_QUANTUM];
+    static uint8_t full[AI_FRAME];
+    static uint8_t over[DSI_BLOCKSIZ + AI_REQ + AI_STORED];
+    static uint8_t cut[AI_FRAME];
+    static const uint8_t tag[4] = { 0, 0, 0, 7 };
+    uint8_t creator[4] = { 'S', 'F', 'a', 'i' };
+    /* room for the stored icon, the new entry's header and half its bits */
+    off_t cap = GI_ENTRY + AI_STORED + GI_ENTRY + AI_SENT;
+    /* room for half the stored icon's bits */
+    off_t inside = GI_ENTRY + AI_STORED / 2;
+    struct ai ai;
+    int ret = -1;
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    /* the first frame is longer than the session's read-ahead buffer */
+    ai_frame(&ai, frame, 1, 2, AI_ICON, AI_QUANTUM);
+    ai_frame(&ai, full, 2, 2, AI_ICON, AI_ICON);
+    ai_frame(&ai, over, 3, 1, AI_STORED, AI_STORED);
+    ai_tag(over, tag);
+    ai_frame(&ai, cut, 4, 2, AI_ICON, AI_ICON);
+
+    if (write(ai.peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+            && write(ai.peer, full, sizeof(full)) == (ssize_t)sizeof(full)
+            && write(ai.peer, over, sizeof(over)) == (ssize_t)sizeof(over)
+            && write(ai.peer, cut, AI_CUT) == AI_CUT
+            && shutdown(ai.peer, SHUT_WR) == 0
+            && ai_dispatch(&ai) == AFPERR_PARAM
+            && ai_stored_alone(&ai)
+            && ai_dispatch_capped(&ai, cap) == AFPERR_MISC
+            && ai_stored_alone(&ai)
+            && ai_dispatch_capped(&ai, inside) == AFPERR_MISC
+            && ai_replaced_part_way(&ai, tag)
+            && ai_dispatch(&ai) == AFPERR_PARAM
+            && ai_replaced_part_way(&ai, tag)) {
+        ret = 0;
+    }
+
+    ai_teardown(&ai);
+    return ret;
+}
+
+/*!
+ * @brief Does FPGetIcon of the session's icon of type itype return size
+ *        bytes, each the one ai_frame() put at its place?
+ */
+static int ai_icon_is(struct ai *ai, uint8_t itype, uint16_t size)
+{
+    uint8_t req[GI_REQ];
+    size_t rbuflen = DSI_DATASIZ;
+    gi_req(req, ai->vol, ai->creator, itype, size);
+
+    if (afp_geticon(&ai->o, (char *)req, GI_REQ, (char *)ai->dsi.data,
+                    &rbuflen) != AFP_OK || rbuflen != size) {
+        return 0;
+    }
+
+    for (uint16_t i = 0; i < size; i++) {
+        if (ai->dsi.data[i] != (uint8_t)(i * 7)) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+/*!
+ * @brief FPAddIcon stores an icon whose payload comes in two pieces whole,
+ *        replaces the stored icon of its type under another tag, header and
+ *        bits, and refuses that icon at another size with AFPERR_ITYPE
+ */
+static int utest_addicon_stores_icon_by_type(struct vol *vol)
+{
+    static uint8_t two[DSI_BLOCKSIZ + AI_REQ + AI_QUANTUM];
+    static uint8_t same[DSI_BLOCKSIZ + AI_REQ + AI_STORED];
+    static uint8_t other[DSI_BLOCKSIZ + AI_REQ + 2 * AI_STORED];
+    static const uint8_t tag[4] = { 0, 0, 0, 7 };
+    static const uint8_t tag2[4] = { 0, 0, 0, 9 };
+    uint8_t creator[4] = { 'S', 'F', 'a', 's' };
+    /* the stored icon, then the new one's header and bits */
+    off_t size = GI_ENTRY + AI_STORED + GI_ENTRY + AI_QUANTUM;
+    struct ai ai;
+    int ret = -1;
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    ai_frame(&ai, two, 1, 2, AI_QUANTUM, AI_QUANTUM);
+    ai_frame(&ai, same, 2, 1, AI_STORED, AI_STORED);
+    ai_tag(same, tag);
+    ai_frame(&ai, other, 3, 1, 2 * AI_STORED, 2 * AI_STORED);
+    ai_tag(other, tag2);
+    /* the stored icon's header as the second request leaves it */
+    memcpy(ai.entry, tag, sizeof(tag));
+
+    if (write(ai.peer, two, sizeof(two)) == (ssize_t)sizeof(two)
+            && write(ai.peer, same, sizeof(same)) == (ssize_t)sizeof(same)
+            && write(ai.peer, other, sizeof(other)) == (ssize_t)sizeof(other)
+            && ai_dispatch(&ai) == AFP_OK
+            && ai_icon_is(&ai, 2, AI_QUANTUM)
+            && ai_dispatch(&ai) == AFP_OK && ai_size_is(&ai, size)
+            && gi_info_is(&ai.o, ai.info, ai.entry)
+            && ai_icon_is(&ai, 1, AI_STORED)
+            && ai_dispatch(&ai) == AFPERR_ITYPE && ai_size_is(&ai, size)) {
+        ret = 0;
+    }
+
+    ai_teardown(&ai);
+    return ret;
+}
+
+/*! @brief Append len bytes of tail to the icon file, after the stored icon */
+static int ai_append(const struct ai *ai, const uint8_t *tail, size_t len)
+{
+    ssize_t n = -1;
+    int fd;
+
+    if ((fd = open(ai->path, O_WRONLY | O_APPEND)) != -1) {
+        n = write(fd, tail, len);
+        close(fd);
+    }
+
+    return n == (ssize_t)len;
+}
+
+/*!
+ * @brief FPAddIcon of an icon of type 2 and the stored icon's size lands
+ *        right after the stored icon, in place of what follows it, and
+ *        FPGetIconInfo and FPGetIcon read it there
+ */
+static int ai_add_after_stored(struct ai *ai)
+{
+    static uint8_t frame[DSI_BLOCKSIZ + AI_REQ + AI_STORED];
+    uint8_t entry2[GI_ENTRY];
+    uint8_t info2[GI_INFO];
+    gi_entry(entry2, 2, AI_STORED);
+    gi_info(info2, ai->vol, ai->creator, 2);
+    ai_frame(ai, frame, 1, 2, AI_STORED, AI_STORED);
+    return write(ai->peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+           && ai_dispatch(ai) == AFP_OK
+           && ai_size_is(ai, 2 * (GI_ENTRY + AI_STORED))
+           && gi_info_is(&ai->o, info2, entry2)
+           && ai_icon_is(ai, 2, AI_STORED);
+}
+
+/*!
+ * @brief FPAddIcon on an icon file that ends in a torn header stores the
+ *        icon after the last whole entry, over the torn bytes, where FPGetIcon
+ *        finds no icon before it
+ */
+static int utest_addicon_overwrites_torn_header(struct vol *vol)
+{
+    uint8_t creator[4] = { 'S', 'F', 'a', 't' };
+    uint8_t entry3[GI_ENTRY];
+    uint8_t req[GI_REQ];
+    size_t rbuflen = DSI_DATASIZ;
+    struct ai ai;
+    int ret = -1;
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    gi_entry(entry3, 3, AI_STORED);
+    gi_req(req, vol, creator, 3, AI_STORED);
+
+    /* an icon's header, the stored one's size, cut before its size */
+    if (ai_append(&ai, entry3, GI_ENTRY - 2)
+            && afp_geticon(&ai.o, (char *)req, GI_REQ, (char *)ai.dsi.data,
+                           &rbuflen) == AFPERR_NOITEM
+            && ai_add_after_stored(&ai)) {
+        ret = 0;
+    }
+
+    ai_teardown(&ai);
+    return ret;
+}
+
+/*!
+ * @brief FPAddIcon on an icon file that ends in an entry whose bits stop
+ *        short of its size stores the icon after the last whole entry and
+ *        cuts off what is left of the short one
+ */
+static int utest_addicon_overwrites_short_entry(struct vol *vol)
+{
+    uint8_t creator[4] = { 'S', 'F', 'a', 'u' };
+    uint8_t cut[GI_ENTRY + AI_SENT];
+    struct ai ai;
+    int ret = -1;
+
+    if (ai_setup(&ai, vol, creator) != 0) {
+        return -1;
+    }
+
+    /* an icon of AI_ICON bytes whose bits stop after AI_SENT, which run past
+     * the entry that takes its place */
+    gi_entry(cut, 3, AI_ICON);
+    memset(cut + GI_ENTRY, 0x5a, AI_SENT);
+
+    if (ai_append(&ai, cut, sizeof(cut))
+            && ai_add_after_stored(&ai)) {
+        ret = 0;
+    }
+
+    ai_teardown(&ai);
+    return ret;
+}
+
+/*!
+ * @brief FPGetIconInfo of the null creator walks its icon file as any other
+ *        creator's: AFPERR_NOITEM without one, its stored entry with one,
+ *        and AFPERR_NOITEM for index 0
+ */
+static int utest_geticoninfo_null_creator_walks_file(struct vol *vol)
+{
+    uint8_t creator[4] = { 0, 0, 0, 0 };
+    uint8_t entry[GI_ENTRY];
+    uint8_t info0[GI_INFO];
+    uint8_t info1[GI_INFO];
+    char rbuf[GI_REPLY];
+    size_t rbuflen = GI_REPLY;
+    char *path;
+    int fd;
+    int ret = -1;
+    gi_entry(entry, 1, GI_SMALL);
+    gi_info(info0, vol, creator, 0);
+    gi_info(info1, vol, creator, 1);
+
+    if (afp_geticoninfo(&obj, (char *)info1, GI_INFO, rbuf, &rbuflen)
+            != AFPERR_NOITEM
+            || (fd = gi_icon_file(vol, creator, &path)) == -1) {
+        return -1;
+    }
+
+    rbuflen = GI_REPLY;
+
+    if (gi_store(fd, 1, GI_SMALL, 0x5a) == 0
+            && gi_info_is(&obj, info1, entry)
+            && afp_geticoninfo(&obj, (char *)info0, GI_INFO, rbuf, &rbuflen)
+            == AFPERR_NOITEM) {
+        ret = 0;
+    }
+
+    close(fd);
+    unlink(path);
+    return ret;
+}
+
+/* three of copy_fork()'s 8 KiB pieces and part of a fourth */
+#define CF_LEN (3 * 8192 + 100)
+
+/*! @brief copy_fork() of the data fork, each write() capped at max bytes and
+ *         the first zero of them writing nothing */
+static int cf_copy(struct ofork *dst, struct ofork *src, int max, int zero)
+{
+    int rc;
+    fault_inject_reset();
+    fi.write_max = max;
+    fi.write_zero = zero;
+    rc = copy_fork(ADEID_DFORK, dst->of_ad, src->of_ad, NULL, 0);
+    fault_inject_reset();
+    return rc;
+}
+
+/*! @brief copy_fork() whose writes stop short copies the data fork whole,
+ *         and one whose write writes nothing fails with EIO */
+static int utest_copy_fork_writes_whole_or_fails(struct vol *vol)
+{
+    static char data[CF_LEN];
+    static char back[CF_LEN];
+    struct ofork *src;
+    struct ofork *dst;
+    uint16_t srefnum = 0;
+    uint16_t drefnum = 0;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    /* no two of copy_fork()'s pieces alike */
+    for (size_t i = 0; i < sizeof(data); i++) {
+        data[i] = (char)(i * 7 + i / 8192);
+    }
+
+    /* each write takes 1000 of the 8192 bytes copy_fork() hands it, then a
+     * write that writes nothing ends the copy */
+    if (createfile(&obj, vol->v_vid, DIRDID_ROOT, "cf_src") == AFP_OK
+            && createfile(&obj, vol->v_vid, DIRDID_ROOT, "cf_dst") == AFP_OK
+            && openfork(&obj, vol->v_vid, DIRDID_ROOT, "cf_src", OPENFORK_DATA,
+                        OPENACC_RD | OPENACC_WR, &srefnum) == AFP_OK
+            && openfork(&obj, vol->v_vid, DIRDID_ROOT, "cf_dst", OPENFORK_DATA,
+                        OPENACC_RD | OPENACC_WR, &drefnum) == AFP_OK
+            && (src = of_find(srefnum)) != NULL
+            && (dst = of_find(drefnum)) != NULL
+            && ad_write(src->of_ad, ADEID_DFORK, 0, 0, data, sizeof(data))
+            == (ssize_t)sizeof(data)
+            && cf_copy(dst, src, 1000, 0) == 0
+            && ad_read(dst->of_ad, ADEID_DFORK, 0, back, sizeof(back))
+            == (ssize_t)sizeof(back)
+            && memcmp(back, data, sizeof(data)) == 0
+            && cf_copy(dst, src, 0, 1) == -1 && errno == EIO) {
+        ret = 0;
+    }
+
+    if (srefnum != 0) {
+        closefork(&obj, srefnum);
+    }
+
+    if (drefnum != 0) {
+        closefork(&obj, drefnum);
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "cf_src");
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "cf_dst");
+    return ret;
 }
 
 _Static_assert(offsetof(struct guarded_adouble,
@@ -2156,6 +3251,86 @@ int main(int argc, char *argv[])
                      "FPDelete: a file is deleted whatever its sidecar holds");
     TEST_int_or_skip(utest_write_fork_asp_failure_unlocks(vol), 0,
                      "write_fork: a failed AppleTalk write clears its lock");
+    TEST_int_or_skip(utest_sendfile_read_lands_intact(&obj, vol), 0,
+                     "sendfile: a reply through a small buffer lands intact");
+    TEST_int_or_skip(utest_sendfile_header_failure_sends_nothing(&obj, vol), 0,
+                     "sendfile: no file data follows a failed header send");
+    TEST_int_or_skip(utest_sendfile_partial_header_lands_intact(&obj, vol), 0,
+                     "sendfile: a header sent in pieces lands whole");
+    TEST_int(utest_dsi_close_frame_unless_mid_reply(&obj, vol), 0,
+             "dsi_close: CloseSession goes out unless a reply is under way");
+    TEST_int_or_skip(utest_sendfile_short_fork_ends_session(&obj, vol), 0,
+                     "sendfile: a fork short of its length ends the session");
+    TEST_int_or_skip(utest_buffered_short_fork_ends_session(&obj, vol), 0,
+                     "FPRead: a buffered reply the fork cuts short ends the "
+                     "session");
+    TEST_int_or_skip(utest_sendfile_large_reply_keeps_session(&obj, vol), 0,
+                     "sendfile: a 32-bit reply of 2 GiB keeps the session");
+    TEST_int_or_skip(utest_sendfile_read_ext_fits_dsi_length(&obj, vol), 0,
+                     "FPReadExt: an 8 GiB read gets the largest DSI reply");
+    TEST_int_or_skip(utest_buffered_read_ext_fits_dsi_length(&obj, vol), 0,
+                     "FPReadExt: an 8 GiB buffered read gets the largest "
+                     "DSI reply");
+    TEST_int_or_skip(utest_sendfile_refused_file_sent_from_buffer(&obj, vol), 0,
+                     "sendfile: a file sendfile refuses goes through a buffer");
+    TEST_int(utest_geticon_within_reply_buffer(vol), 0,
+             "FPGetIcon: a read larger than the reply buffer is refused");
+    TEST_int(utest_geticoninfo_walks_by_index(vol), 0,
+             "FPGetIconInfo: each index finds its entry, in any order");
+    TEST_int_or_skip(utest_icon_failed_io_replies_misc(vol), 0,
+                     "FPGetIcon, FPGetIconInfo: a failed open, read or seek "
+                     "answers AFPERR_MISC");
+    TEST_int_or_skip(utest_addicon_failed_io_replies_misc(vol), 0,
+                     "FPAddIcon: a failed icon file open, read or seek "
+                     "replies AFPERR_MISC");
+    TEST_int_or_skip(utest_addicon_locks_icon_file(vol), 0,
+                     "FPAddIcon: a request locks the icon file it writes");
+    TEST_int(utest_addicon_lock_wait_bounded(vol), 0,
+             "FPAddIcon: a lock another process keeps is given up on");
+    TEST_int_or_skip(utest_addicon_asp_failure_reported(vol), 0,
+                     "FPAddIcon: AppleTalk reports a failed scan or open");
+    TEST_int(utest_addicon_failed_request_adds_no_entry(vol), 0,
+             "FPAddIcon: a request that fails adds no entry");
+    TEST_int(utest_addicon_stores_icon_by_type(vol), 0,
+             "FPAddIcon: an icon is stored whole and replaced by its type");
+    TEST_int(utest_addicon_overwrites_torn_header(vol), 0,
+             "FPAddIcon: an icon goes over a torn header, not after it");
+    TEST_int(utest_addicon_overwrites_short_entry(vol), 0,
+             "FPAddIcon: an icon goes over an entry short of its bits");
+    TEST_int(utest_geticoninfo_null_creator_walks_file(vol), 0,
+             "FPGetIconInfo: the null creator walks its icon file");
+    TEST_int(utest_virtual_icon_fork_frees_adouble(&obj, vol), 0,
+             "virtual icon: closing the fork frees its adouble");
+    TEST_int(utest_virtual_icon_read_from_reply_buffer(&obj, vol), 0,
+             "virtual icon: a read is answered from the reply buffer");
+    TEST_int_or_skip(utest_sendfile_reconnect_session_ends(&obj, vol), 0,
+                     "FPRead: a failed read ends a session left by a "
+                     "failed reconnect");
+    TEST_int_or_skip(utest_dsi_broken_reply_ends_session(&obj, vol), 0,
+                     "DSI: a handler's broken reply ends the session");
+    TEST_int_or_skip(utest_reconnect_sigterm_sends_attention(&obj, vol), 0,
+                     "afp_dsi_die: a session left by a failed reconnect gets "
+                     "the shutdown notice");
+    TEST_int_or_skip(utest_copy_fork_writes_whole_or_fails(vol), 0,
+                     "copy_fork: writes that stop short still copy the fork, "
+                     "a write of nothing fails it");
+    TEST_int(utest_rfork_cache_held_open_append_read_whole(&obj, vol), 0,
+             "rfork cache: a fork grown while held open reads whole");
+    TEST_int(utest_rfork_cache_stale_length_read_whole(&obj, vol), 0,
+             "rfork cache: a fork longer than its recorded length reads "
+             "whole");
+    TEST_int(utest_buffered_read_stays_in_quantum(&obj, vol), 0,
+             "FPRead: buffered reply pieces stay inside the quantum");
+    TEST_int(utest_rfork_cache_read_stays_in_quantum(&obj, vol), 0,
+             "rfork cache: reply pieces stay inside the quantum");
+    TEST_int_or_skip(utest_buffered_short_first_piece_replies(&obj, vol), 0,
+                     "FPRead: a short first buffered piece is the reply");
+    TEST_int_or_skip(utest_buffered_read_error_replies_misc(&obj, vol), 0,
+                     "FPRead: a failed read of the fork answers AFPERR_MISC");
+    TEST_int_or_skip(utest_asp_read_unlocks_its_range(&obj, vol), 0,
+                     "FPRead: AppleTalk clears the range it locked");
+    TEST_int(utest_symlink_read_from_offset(&obj, vol), 0,
+             "FPRead: a symlink reads from the offset asked for");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

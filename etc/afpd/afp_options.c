@@ -167,6 +167,12 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
+    printf("           sendfile support:\t");
+#ifdef WITH_SENDFILE
+    puts("Yes");
+#else
+    puts("No");
+#endif
 }
 
 /*!

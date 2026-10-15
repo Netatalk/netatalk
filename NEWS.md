@@ -53,6 +53,13 @@ Changes in 4.7.0
   splice, falling back to ordinary reads where it must, GitHub #3398
 * FIX: afpd: a file can be deleted over AFP even when its AppleDouble
   metadata is in a layout afpd does not read, GitHub #3398
+* FIX: afpd: harden file reads on every platform against replies past 4 GiB,
+  files sendfile refuses, buffer overruns, and failed sends, GitHub #3402
+* FIX: afpd: harden the desktop database's icon calls against failed and
+  concurrent requests and damaged icon files, GitHub #3402
+* FIX: libatalk: copying a data fork, or converting an AppleDouble v2
+  resource fork, completes after a short write, GitHub #3402
+* UPD: afpd: afpd -V reports sendfile support, GitHub #3402
 
 Changes in 4.6.1
 ----------------

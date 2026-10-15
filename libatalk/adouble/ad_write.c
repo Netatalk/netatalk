@@ -21,6 +21,7 @@
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
+#include <atalk/unix.h>
 #include <atalk/util.h>
 
 /*!
@@ -271,36 +272,6 @@ int ad_dtruncate(struct adouble *ad, const off_t size)
 }
 
 /*!
- * @brief Write buflen bytes of buf to dfd, retrying after EINTR
- *
- * @param[in] dfd     destination descriptor
- * @param[in] buf     bytes to write
- * @param[in] buflen  bytes to write
- * @returns 0, or -1 with errno set
- */
-static int copy_all(const int dfd, const void *buf,
-                    size_t buflen)
-{
-    ssize_t cc;
-
-    while (buflen > 0) {
-        if ((cc = write(dfd, buf, buflen)) < 0) {
-            switch (errno) {
-            case EINTR:
-                continue;
-
-            default:
-                return -1;
-            }
-        }
-
-        buflen -= cc;
-    }
-
-    return 0;
-}
-
-/*!
  * @brief Transfer one fork from the AppleDouble ads into the AppleDouble add
  *
  * Both forks must be open. The read loop starts at the entry offset of each
@@ -346,38 +317,6 @@ int copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf,
         return -1;
     }
 
-#if 0 /* ifdef SENDFILE_FLAVOR_LINUX */
-    /* doesn't work With 2.6 FIXME, only check for EBADFD ? */
-    off_t   offset = 0;
-    size_t  size;
-    struct stat         st;
-#define BUF 128 * 1024 * 1024
-
-    if (fstat(sfd, &st) == 0) {
-        while (1) {
-            if (offset >= st.st_size) {
-                return 0;
-            }
-
-            size = (st.st_size - offset > BUF) ? BUF : st.st_size - offset;
-
-            if ((cc = sys_sendfile(dfd, sfd, &offset, size)) < 0) {
-                switch (errno) {
-                case ENOSYS:
-                case EINVAL:  /* there's no guarantee that all fs support sendfile */
-                    goto no_sendfile;
-
-                default:
-                    return -1;
-                }
-            }
-        }
-    }
-
-no_sendfile:
-    lseek(sfd, offset, SEEK_SET);
-#endif
-
     while (1) {
         if ((cc = read(sfd, filebuf, buflen)) < 0) {
             if (errno == EINTR) {
@@ -388,7 +327,7 @@ no_sendfile:
             break;
         }
 
-        if (!cc || ((err = copy_all(dfd, filebuf, cc)) < 0)) {
+        if (!cc || ((err = write_full(dfd, filebuf, (size_t)cc)) < 0)) {
             break;
         }
     }

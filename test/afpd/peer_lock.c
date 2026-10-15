@@ -17,17 +17,20 @@
 #endif
 
 #include <fcntl.h>
+#include <poll.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include "peer_lock.h"
 
 /*!
- * @brief Fork a peer that holds an fcntl lock until released
+ * @brief Fork a peer that holds an fcntl lock until released, ten seconds at
+ * most
  *
  * F_SETLK/F_GETLK never conflict with or report the calling process's
  * own locks, so a test that needs a genuinely contending lock forks a
- * peer that takes it and parks.
+ * peer that takes it and parks. The bound lets a test whose code waits on
+ * the lock fail rather than hang.
  *
  * @param[out] p      filled with the peer's pid and control pipes
  * @param[in]  path   file to lock
@@ -66,7 +69,10 @@ int peer_hold_lock(struct peer *p, const char *path, short type,
     if (p->pid == 0) {
         /* child: take the lock, signal "held", wait for the release byte */
         struct flock fl = {0};
+        struct pollfd pfd = { .fd = down[0], .events = POLLIN };
         int fd = open(path, O_RDWR);
+        close(up[0]);
+        close(down[1]);
 
         if (fd < 0) {
             _exit(1);
@@ -87,7 +93,7 @@ int peer_hold_lock(struct peer *p, const char *path, short type,
             _exit(3);
         }
 
-        (void)read(down[0], &b, 1);   /* park until released */
+        (void)poll(&pfd, 1, 10000);   /* park until released */
         _exit(0);
     }
 
