@@ -344,9 +344,9 @@ Changes in 4.5.2
 
 * BREAKING: libatalk: dsi_writeinit changed to a pointer handoff signature;
   the libatalk soversion is bumped to 21
-* FIX: libatalk: bound AppleDouble EA reads
-* FIX: spotlight: reject empty CNID arrays
-* FIX: spotlight: validate CNID array elements
+* CVE-2026-103933: libatalk: bound AppleDouble EA reads
+* CVE-2026-110779: spotlight: validate CNID array elements
+* CVE-2026-110780: spotlight: reject empty CNID arrays
 * FIX: dsi: accept spec-legal writes of a full server quantum of data; the
   DSI server quantum bounds FPWrite/FPWriteExt data only, not the whole
   DSI frame, so a client may write (and request) a full configured quantum
