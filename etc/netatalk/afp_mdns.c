@@ -1,6 +1,11 @@
 /*
- * Author:   Lee Essen <lee.essen@nowonline.co.uk>
- * Based on: avahi support from Daniel S. Haischt <me@daniel.stefan.haischt.name>
+ * Copyright (c) 2006 Daniel S. Haischt <daniel.haischt@gmail.com>
+ * Copyright (c) 2012 Lee Essen <lee.essen@nowonline.co.uk>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  */
 
 /*!
