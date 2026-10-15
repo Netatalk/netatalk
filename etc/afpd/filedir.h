@@ -22,11 +22,12 @@ extern int check_name(const struct vol *vol, char *name);
 
 extern int delete_vetoed_files(struct vol *vol, const char *upath,
                                bool in_vetodir);
-extern int longest_descendant_pathlen(const struct vol *vol, int dirfd,
-                                      const char *dir, size_t *longest);
+extern int longest_descendant_pathlen(const struct vol *vol, int start_fd,
+                                      size_t budget, size_t *longest);
 extern int rename_would_overflow_path(const struct vol *vol, int sdir_fd,
-                                      struct dir *sdir, const char *upath,
-                                      int isdir);
+                                      const char *srcpath,
+                                      const struct dir *sdir,
+                                      const char *upath, int isdir);
 
 /* FP functions */
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
