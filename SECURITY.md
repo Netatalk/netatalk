@@ -48,6 +48,9 @@ That said, we will try to take action on your report as soon as possible!
 
 | CVE ID | Subject | Disclosure Date | Affected Versions | Severity |
 |--------|---------|-----------------|-------------------|----------|
+| [CVE-2026-110780](https://netatalk.io/security/CVE-2026-110780.html) | NULL-pointer dereference in Spotlight CNID array handling | 2026/10/15 | 3.1.0 - 4.5.1 | Medium |
+| [CVE-2026-110779](https://netatalk.io/security/CVE-2026-110779.html) | Heap out-of-bounds read in Spotlight CNID array handling | 2026/10/15 | 3.1.0 - 4.5.1 | Medium |
+| [CVE-2026-103933](https://netatalk.io/security/CVE-2026-103933.html) | Out-of-bounds write in AppleDouble sidecar reads | 2026/10/15 | 2.1.0 - 4.5.1 | High |
 | [CVE-2026-49390](https://netatalk.io/security/CVE-2026-49390.html) | Missing range validation for server quantum | 2026/05/30 | 3.0.0 - 4.4.3 | Low |
 | [CVE-2026-49389](https://netatalk.io/security/CVE-2026-49389.html) | Heap over-read in CatSearch search-spec parsing | 2026/05/30 | 2.0.0 - 4.4.3 | Low |
 | [CVE-2026-49388](https://netatalk.io/security/CVE-2026-49388.html) | Heap out-of-bounds read in Spotlight RPC TOC index | 2026/05/30 | 3.1.0 - 4.4.3 | High |
