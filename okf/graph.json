@@ -1,5 +1,5 @@
 {
-"commit": "411fe188c9f53b13bd41766ee772314b4c61f581",
+"commit": "f23c5a5d3a77f75fdef84ef178e2f0d3a9f7fc44",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -6222,82 +6222,82 @@
 "to": "include/atalk/logger.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/adouble.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/cnid_mysql_private.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/errchk.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/globals.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/logger.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/unix.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/util.h"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c",
+"from": "libatalk/cnid/cnid_mysql.c",
 "kind": "include",
 "to": "include/atalk/volume.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/adouble.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/cnid_sqlite_private.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/errchk.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/globals.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/logger.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/unix.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/util.h"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"from": "libatalk/cnid/cnid_sqlite.c",
 "kind": "include",
 "to": "include/atalk/volume.h"
 },
@@ -16990,7 +16990,7 @@
 {
 "from": "libatalk/cnid/cnid_init.c#cnid_init",
 "kind": "use",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_module"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_module"
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_lookup",
@@ -17003,434 +17003,434 @@
 "to": "libatalk/cnid/cnid.c#modules"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#close_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_drain_results"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_hint_usable"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hint_usable"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_dev"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_ino"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_close",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_close",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#close_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_delete",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_delete",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_drain_results",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_execute",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_find",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#get_result"
+"to": "libatalk/cnid/cnid_mysql.c#get_result"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#get_result_id"
+"to": "libatalk/cnid/cnid_mysql.c#get_result_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_getstamp",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_getstamp",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_getstamp",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_delete"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_dev"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_did"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_id"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_ino"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_ino"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_name"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_dev"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_ino"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_close"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_close"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_delete"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_find"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_getstamp"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_wipe"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
 "to": "libatalk/util/unix.c#become_root"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
 "to": "libatalk/util/unix.c#unbecome_root"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "call",
 "to": "libatalk/util/cnid.c#uuid_strip_dashes"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result"
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result_did"
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result_name"
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result_name_len"
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#close_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#close_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_dev"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_ino"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_wipe",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_wipe",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_drain_results"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_wipe",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_execute"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute"
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_open",
@@ -17440,13 +17440,13 @@
 {
 "from": "libatalk/cnid/cnid.c#cnid_open",
 "kind": "dispatch",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "via": "_cnid_module::cnid_open"
 },
 {
 "from": "libatalk/cnid/cnid.c#cnid_open",
 "kind": "dispatch",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "via": "_cnid_module::cnid_open"
 },
 {
@@ -17470,469 +17470,469 @@
 "to": "libatalk/cnid/cnid.c#cnid_module_named"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_begin"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_commit"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_hint_usable"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_hint_usable"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rollback"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_seed_sequence"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_begin",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_close",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_close",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#close_prepared_stmt"
+"to": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_commit",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_by_uuid",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_by_uuid",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_sequence_row",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_sequence_row",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_by_uuid"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_by_uuid"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_volumes_row",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_volumes_row",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_by_uuid"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_by_uuid"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_dir_owner_only",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_dir_owner_only",
 "kind": "call",
 "to": "libatalk/compat/strlcpy.c#strlcpy"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_fchmod_companions",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_companions",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_fchmod_regular"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_regular"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_find",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_find",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rowid_ok"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rowid_ok"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_find",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_find",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_find",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_get",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rowid_ok"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rowid_ok"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_get",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_get",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_get",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_getstamp",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_getstamp",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_getstamp",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_getstamp",
-"kind": "call",
-"to": "libatalk/compat/strlcpy.c#strlcpy"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
-"kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
-"kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rowid_ok"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
-"kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
-"kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
-"kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
-"kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "call",
 "to": "libatalk/compat/strlcpy.c#strlcpy"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_close"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rowid_ok"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_find"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_get"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_getstamp"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup"
+"to": "libatalk/compat/strlcpy.c#strlcpy"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_resolve"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_close"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe"
+},
+{
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
 "to": "libatalk/util/unix.c#become_root"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#close_prepared_stmt"
+"to": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_begin"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_commit"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_sequence_row"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_sequence_row"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_volumes_row"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_volumes_row"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_dir_owner_only"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_dir_owner_only"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_fchmod_companions"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_companions"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_fchmod_regular"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_regular"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_report_orphan"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_report_orphan"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rollback"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_seed_sequence"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_uuid_usable"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_uuid_usable"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt"
+"to": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
 "to": "libatalk/util/unix.c#unbecome_root"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "call",
 "to": "libatalk/util/cnid.c#uuid_strip_dashes"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_resolve",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rowid_ok"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rowid_ok"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_resolve",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_resolve",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_resolve",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_resolve",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "call",
 "to": "libatalk/compat/strlcpy.c#strlcpy"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_seed_sequence",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_seed_sequence",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_begin"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_commit"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rollback"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#close_prepared_stmt"
+"to": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_begin"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_commit"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rollback"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_seed_sequence"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt"
+"to": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt"
 },
 {
 "from": "etc/afpd/volume.c#cnid_volume_reset",
@@ -25270,324 +25270,324 @@
 "to": "bin/nad/nad_util.c#null_vol"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_delete"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve"
+"to": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt",
+"from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt",
 "kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt_one"
+"to": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
-"kind": "call",
-"to": "libatalk/compat/misc.c#asprintf"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#add_param"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_dev"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_ino"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_delete",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_delete",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#delete_param"
+"to": "libatalk/cnid/cnid_mysql.c#add_param"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_delete",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#get_param"
+"to": "libatalk/cnid/cnid_mysql.c#delete_param"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#get_result"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#get_result_id"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_param"
+"to": "libatalk/cnid/cnid_mysql.c#get_param"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result"
+"to": "libatalk/cnid/cnid_mysql.c#get_result"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_dev"
+"to": "libatalk/cnid/cnid_mysql.c#get_result_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_did"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_ino"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_name"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#lookup_result_name_len"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_dev"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_ino"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
-},
-{
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt_one",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt_one",
-"kind": "call",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
-"kind": "call",
-"to": "libatalk/compat/misc.c#asprintf"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#purge_param"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_param"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_dev"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_ino"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_id"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_ino"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
-"kind": "call",
-"to": "libatalk/compat/misc.c#asprintf"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#put_param"
+"to": "libatalk/cnid/cnid_mysql.c#lookup_result_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_dev"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_did"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_ino"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_name_len"
-},
-{
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
+"from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one",
 "kind": "call",
 "to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_param"
+"from": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one",
+"kind": "call",
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
-"kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result"
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result_did"
+"to": "libatalk/cnid/cnid_mysql.c#purge_param"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result_name"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#resolve_result_name_len"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
 },
 {
-"from": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
 "kind": "use",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#stmt_param_id"
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#put_param"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_dev"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_ino"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "call",
+"to": "libatalk/compat/misc.c#asprintf"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_param"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_did"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_name"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#resolve_result_name_len"
+},
+{
+"from": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
+"kind": "use",
+"to": "libatalk/cnid/cnid_mysql.c#stmt_param_id"
 },
 {
 "from": "libatalk/util/gettok.c#initline",
@@ -40125,15 +40125,15 @@
 },
 {
 "field": "cnid_open",
-"from": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_module",
+"from": "libatalk/cnid/cnid_mysql.c#cnid_mysql_module",
 "kind": "table",
-"to": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open"
+"to": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open"
 },
 {
 "field": "cnid_open",
-"from": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_module",
+"from": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_module",
 "kind": "table",
-"to": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open"
+"to": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open"
 },
 {
 "from": "etc/papd/queries.c#genqueries",
@@ -42543,12 +42543,12 @@
 "subsystem": "libatalk/cnid"
 },
 {
-"id": "libatalk/cnid/mysql/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c",
 "kind": "file",
 "subsystem": "libatalk/cnid"
 },
 {
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c",
 "kind": "file",
 "subsystem": "libatalk/cnid"
 },
@@ -47107,16 +47107,16 @@
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#close_prepared_stmt",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#close_prepared_stmt",
 "kind": "function",
 "line": 421,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#close_prepared_stmt",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#close_prepared_stmt",
 "kind": "function",
 "line": 285,
 "static": true
@@ -47339,136 +47339,136 @@
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_add",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_add",
 "kind": "function",
 "line": 980,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_close",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_close",
 "kind": "function",
 "line": 619,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_delete",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_delete",
 "kind": "function",
 "line": 594,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_drain_results",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_drain_results",
 "kind": "function",
 "line": 477,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_execute",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_execute",
 "kind": "function",
 "line": 573,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_find",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_find",
 "kind": "function",
 "line": 1439,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_get",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_get",
 "kind": "function",
 "line": 1199,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_getstamp",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_getstamp",
 "kind": "function",
 "line": 1357,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_hint_usable",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_hint_usable",
 "kind": "function",
 "line": 108,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_lookup",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_lookup",
 "kind": "function",
 "line": 762,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_new",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_new",
 "kind": "function",
 "line": 1717,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_open",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_open",
 "kind": "function",
 "line": 1753,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_resolve",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_resolve",
 "kind": "function",
 "line": 1281,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_set_errno",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_set_errno",
 "kind": "function",
 "line": 448,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_stmt_execute",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_stmt_execute",
 "kind": "function",
 "line": 512,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_update",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_update",
 "kind": "function",
 "line": 662,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_wipe",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_wipe",
 "kind": "function",
 "line": 1668,
 "static": false
@@ -47507,240 +47507,240 @@
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_add",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_add",
 "kind": "function",
 "line": 1225,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_begin",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_begin",
 "kind": "function",
 "line": 567,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_close",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_close",
 "kind": "function",
 "line": 721,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_commit",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_commit",
 "kind": "function",
 "line": 587,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete",
 "kind": "function",
 "line": 669,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_by_uuid",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_by_uuid",
 "kind": "function",
 "line": 460,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_sequence_row",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_sequence_row",
 "kind": "function",
 "line": 510,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_delete_volumes_row",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_delete_volumes_row",
 "kind": "function",
 "line": 497,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_dir_owner_only",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_dir_owner_only",
 "kind": "function",
 "line": 2099,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_execute",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_execute",
 "kind": "function",
 "line": 432,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_fchmod_companions",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_companions",
 "kind": "function",
 "line": 153,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_fchmod_regular",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_fchmod_regular",
 "kind": "function",
 "line": 94,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_find",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_find",
 "kind": "function",
 "line": 1830,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_get",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_get",
 "kind": "function",
 "line": 1513,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_getstamp",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_getstamp",
 "kind": "function",
 "line": 1726,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_hint_usable",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_hint_usable",
 "kind": "function",
 "line": 324,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_lookup",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_lookup",
 "kind": "function",
 "line": 955,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_new",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_new",
 "kind": "function",
 "line": 2067,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_open",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_open",
 "kind": "function",
 "line": 2184,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_report_orphan",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_report_orphan",
 "kind": "function",
 "line": 2130,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_resolve",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_resolve",
 "kind": "function",
 "line": 1615,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rollback",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rollback",
 "kind": "function",
 "line": 610,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_rowid_ok",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_rowid_ok",
 "kind": "function",
 "line": 340,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_seed_sequence",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_seed_sequence",
 "kind": "function",
 "line": 636,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_set_errno",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_set_errno",
 "kind": "function",
 "line": 389,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_ready",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_ready",
 "kind": "function",
 "line": 543,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_stmt_reset",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_stmt_reset",
 "kind": "function",
 "line": 525,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_update",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_update",
 "kind": "function",
 "line": 774,
 "static": false
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_uuid_usable",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_uuid_usable",
 "kind": "function",
 "line": 357,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_wipe",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_wipe",
 "kind": "function",
 "line": 1983,
 "static": false
@@ -51555,80 +51555,80 @@
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt",
 "kind": "function",
 "line": 398,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt",
 "kind": "function",
 "line": 234,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_add",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_add",
 "kind": "function",
 "line": 179,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_delete",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_delete",
 "kind": "function",
 "line": 292,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_get",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_get",
 "kind": "function",
 "line": 258,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_lookup",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_lookup",
 "kind": "function",
 "line": 123,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#init_prepared_stmt_one",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#init_prepared_stmt_one",
 "kind": "function",
 "line": 189,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_purge",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_purge",
 "kind": "function",
 "line": 356,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_put",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_put",
 "kind": "function",
 "line": 217,
 "static": true
 },
 {
 "documented": true,
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#init_prepared_stmt_resolve",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#init_prepared_stmt_resolve",
 "kind": "function",
 "line": 319,
 "static": true
@@ -59998,13 +59998,13 @@
 "kind": "table"
 },
 {
-"file": "libatalk/cnid/mysql/cnid_mysql.c",
-"id": "libatalk/cnid/mysql/cnid_mysql.c#cnid_mysql_module",
+"file": "libatalk/cnid/cnid_mysql.c",
+"id": "libatalk/cnid/cnid_mysql.c#cnid_mysql_module",
 "kind": "table"
 },
 {
-"file": "libatalk/cnid/sqlite/cnid_sqlite.c",
-"id": "libatalk/cnid/sqlite/cnid_sqlite.c#cnid_sqlite_module",
+"file": "libatalk/cnid/cnid_sqlite.c",
+"id": "libatalk/cnid/cnid_sqlite.c#cnid_sqlite_module",
 "kind": "table"
 },
 {

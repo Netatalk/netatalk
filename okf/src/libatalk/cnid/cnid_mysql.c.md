@@ -1,25 +1,25 @@
 ---
 type: C Source File
-title: "libatalk/cnid/mysql/cnid_mysql.c"
+title: "libatalk/cnid/cnid_mysql.c"
 description: "MySQL CNID backend."
-resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/mysql/cnid_mysql.c"
+resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid_mysql.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
 ---
 
-Part of the [libatalk/cnid](../../cnid.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
+Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
 
 # Includes
 
-* [atalk/adouble.h](../../../include/atalk/adouble.h.md)
-* [atalk/cnid_mysql_private.h](../../../include/atalk/cnid_mysql_private.h.md)
-* [atalk/errchk.h](../../../include/atalk/errchk.h.md)
-* [atalk/globals.h](../../../include/atalk/globals.h.md)
-* [atalk/logger.h](../../../include/atalk/logger.h.md)
-* [atalk/unix.h](../../../include/atalk/unix.h.md)
-* [atalk/util.h](../../../include/atalk/util.h.md)
-* [atalk/volume.h](../../../include/atalk/volume.h.md)
+* [atalk/adouble.h](../../include/atalk/adouble.h.md)
+* [atalk/cnid_mysql_private.h](../../include/atalk/cnid_mysql_private.h.md)
+* [atalk/errchk.h](../../include/atalk/errchk.h.md)
+* [atalk/globals.h](../../include/atalk/globals.h.md)
+* [atalk/logger.h](../../include/atalk/logger.h.md)
+* [atalk/unix.h](../../include/atalk/unix.h.md)
+* [atalk/util.h](../../include/atalk/util.h.md)
+* [atalk/volume.h](../../include/atalk/volume.h.md)
 * System headers: `arpa/inet.h`, `errmsg.h`, `errno.h`, `mysql.h`, `mysqld_error.h`, `net/if.h`, `netdb.h`, `netinet/in.h`, `netinet/tcp.h`, `stdlib.h`, `sys/param.h`, `sys/socket.h`, `sys/stat.h`, `sys/time.h`, `sys/uio.h`, `sys/un.h`, `time.h`
 
 # Function tables
@@ -68,7 +68,7 @@ Parameters:
 
 Returns: 0, or -1 when preparing or binding fails
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -89,7 +89,7 @@ Parameters:
 
 Returns: 0, or -1 when preparing or binding fails
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -110,7 +110,7 @@ Parameters:
 
 Returns: 0, or -1 when preparing or binding fails
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -131,7 +131,7 @@ Parameters:
 
 Returns: 0, or -1 when preparing or binding fails
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -152,7 +152,7 @@ Parameters:
 
 Returns: 0, or -1 when preparing or binding fails
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -173,7 +173,7 @@ Parameters:
 
 Returns: 0, or -1 when preparing or binding fails
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -196,7 +196,7 @@ Parameters:
 
 Returns: 0, or -1 when preparing or binding fails
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
@@ -440,7 +440,7 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno classified
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_drain_results](cnid_mysql.c.md#cnid_mysql_drain_results), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_hint_usable](cnid_mysql.c.md#cnid_mysql_hint_usable), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [close_prepared_stmt](cnid_mysql.c.md#close_prepared_stmt), [cnid_mysql_drain_results](cnid_mysql.c.md#cnid_mysql_drain_results), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_hint_usable](cnid_mysql.c.md#cnid_mysql_hint_usable), [cnid_mysql_lookup](cnid_mysql.c.md#cnid_mysql_lookup), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt)
 
 Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
@@ -517,7 +517,7 @@ Parameters:
 
 Returns: 0, or -1 on error
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno)
 
 Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
@@ -544,7 +544,7 @@ Parameters:
 
 Returns: the number of CNIDs, or -1 on error
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf)
+Calls: [asprintf](../compat/misc.c.md#asprintf)
 
 Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
@@ -565,7 +565,7 @@ Parameters:
 
 Returns: 0, or -1 with errno classified
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_mysql_drain_results](cnid_mysql.c.md#cnid_mysql_drain_results), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_mysql_drain_results](cnid_mysql.c.md#cnid_mysql_drain_results), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute)
 
 Called by: [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new)
 
@@ -605,9 +605,9 @@ Parameters:
 
 Returns: the database, or NULL on error
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [become_root](../../util/unix.c.md#become_root), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt), [unbecome_root](../../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../../util/cnid.c.md#uuid_strip_dashes)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [become_root](../util/unix.c.md#become_root), [cnid_mysql_execute](cnid_mysql.c.md#cnid_mysql_execute), [cnid_mysql_new](cnid_mysql.c.md#cnid_mysql_new), [cnid_mysql_set_errno](cnid_mysql.c.md#cnid_mysql_set_errno), [init_prepared_stmt](cnid_mysql.c.md#init_prepared_stmt), [unbecome_root](../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../util/cnid.c.md#uuid_strip_dashes)
 
-Called through [`_cnid_module::cnid_open`](../../../include/atalk/cnid.h.md#struct-_cnid_module) by: [cnid_open](../cnid.c.md#cnid_open)
+Called through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_cnid_module) by: [cnid_open](cnid.c.md#cnid_open)
 
 Dispatched via: [cnid_mysql_module](cnid_mysql.c.md#cnid_mysql_module)
 

@@ -5,7 +5,7 @@ description: "AppleDouble metadata, fork I/O and locking types and interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -67,8 +67,8 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/adouble/ad_recvfile.c](../../libatalk/adouble/ad_recvfile.c.md)
 * [libatalk/adouble/ad_size.c](../../libatalk/adouble/ad_size.c.md)
 * [libatalk/adouble/ad_write.c](../../libatalk/adouble/ad_write.c.md)
-* [libatalk/cnid/mysql/cnid_mysql.c](../../libatalk/cnid/mysql/cnid_mysql.c.md)
-* [libatalk/cnid/sqlite/cnid_sqlite.c](../../libatalk/cnid/sqlite/cnid_sqlite.c.md)
+* [libatalk/cnid/cnid_mysql.c](../../libatalk/cnid/cnid_mysql.c.md)
+* [libatalk/cnid/cnid_sqlite.c](../../libatalk/cnid/cnid_sqlite.c.md)
 * [libatalk/util/unix.c](../../libatalk/util/unix.c.md)
 * [libatalk/vfs/ea_ad.c](../../libatalk/vfs/ea_ad.c.md)
 * [libatalk/vfs/ea_sys.c](../../libatalk/vfs/ea_sys.c.md)

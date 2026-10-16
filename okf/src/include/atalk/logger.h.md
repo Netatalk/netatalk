@@ -5,7 +5,7 @@ description: "Logging levels, categories, configuration and message interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/logger.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -118,8 +118,8 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/asp/asp_tickle.c](../../libatalk/asp/asp_tickle.c.md)
 * [libatalk/cnid/cnid.c](../../libatalk/cnid/cnid.c.md)
 * [libatalk/cnid/cnid_init.c](../../libatalk/cnid/cnid_init.c.md)
-* [libatalk/cnid/mysql/cnid_mysql.c](../../libatalk/cnid/mysql/cnid_mysql.c.md)
-* [libatalk/cnid/sqlite/cnid_sqlite.c](../../libatalk/cnid/sqlite/cnid_sqlite.c.md)
+* [libatalk/cnid/cnid_mysql.c](../../libatalk/cnid/cnid_mysql.c.md)
+* [libatalk/cnid/cnid_sqlite.c](../../libatalk/cnid/cnid_sqlite.c.md)
 * [libatalk/dalloc/dalloc.c](../../libatalk/dalloc/dalloc.c.md)
 * [libatalk/dsi/dsi_cmdreply.c](../../libatalk/dsi/dsi_cmdreply.c.md)
 * [libatalk/dsi/dsi_getsess.c](../../libatalk/dsi/dsi_getsess.c.md)

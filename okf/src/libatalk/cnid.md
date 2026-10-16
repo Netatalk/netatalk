@@ -5,15 +5,15 @@ description: "4 files, 76 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/cnid"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
 ---
 
 # Files
 
 * [libatalk/cnid/cnid.c](cnid/cnid.c.md): The CNID database front end and backend registry.
 * [libatalk/cnid/cnid_init.c](cnid/cnid_init.c.md): initialization stuff for CNID backends.
-* [libatalk/cnid/mysql/cnid_mysql.c](cnid/mysql/cnid_mysql.c.md): MySQL CNID backend.
-* [libatalk/cnid/sqlite/cnid_sqlite.c](cnid/sqlite/cnid_sqlite.c.md): SQLite CNID backend.
+* [libatalk/cnid/cnid_mysql.c](cnid/cnid_mysql.c.md): MySQL CNID backend.
+* [libatalk/cnid/cnid_sqlite.c](cnid/cnid_sqlite.c.md): SQLite CNID backend.
 
 # Includes headers from
 
@@ -36,11 +36,11 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 
 * [cnid_init](cnid/cnid_init.c.md#cnid_init): 12 callers
 * [cnid_get](cnid/cnid.c.md#cnid_get): 11 callers
-* [cnid_sqlite_set_errno](cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_set_errno): 11 callers
-* [cnid_mysql_set_errno](cnid/mysql/cnid_mysql.c.md#cnid_mysql_set_errno): 10 callers
+* [cnid_sqlite_set_errno](cnid/cnid_sqlite.c.md#cnid_sqlite_set_errno): 11 callers
+* [cnid_mysql_set_errno](cnid/cnid_mysql.c.md#cnid_mysql_set_errno): 10 callers
 * [cnid_resolve](cnid/cnid.c.md#cnid_resolve): 9 callers
 * [cnid_delete](cnid/cnid.c.md#cnid_delete): 8 callers
-* [cnid_sqlite_stmt_ready](cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_stmt_ready): 8 callers
-* [cnid_sqlite_stmt_reset](cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_stmt_reset): 8 callers
-* [cnid_sqlite_execute](cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_execute): 6 callers
+* [cnid_sqlite_stmt_ready](cnid/cnid_sqlite.c.md#cnid_sqlite_stmt_ready): 8 callers
+* [cnid_sqlite_stmt_reset](cnid/cnid_sqlite.c.md#cnid_sqlite_stmt_reset): 8 callers
+* [cnid_sqlite_execute](cnid/cnid_sqlite.c.md#cnid_sqlite_execute): 6 callers
 * [cnid_add](cnid/cnid.c.md#cnid_add): 5 callers

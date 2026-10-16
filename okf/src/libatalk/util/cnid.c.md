@@ -5,7 +5,7 @@ description: "CNID resolution of paths, and volume UUIDs without dashes for CNID
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/cnid.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -95,4 +95,4 @@ Parameters:
 
 Returns: the new string, or NULL for a NULL uuid or a failed malloc
 
-Called by: [cnid_mysql_open](../cnid/mysql/cnid_mysql.c.md#cnid_mysql_open), [cnid_sqlite_open](../cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_open)
+Called by: [cnid_mysql_open](../cnid/cnid_mysql.c.md#cnid_mysql_open), [cnid_sqlite_open](../cnid/cnid_sqlite.c.md#cnid_sqlite_open)

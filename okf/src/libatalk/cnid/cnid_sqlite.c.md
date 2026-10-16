@@ -1,25 +1,25 @@
 ---
 type: C Source File
-title: "libatalk/cnid/sqlite/cnid_sqlite.c"
+title: "libatalk/cnid/cnid_sqlite.c"
 description: "SQLite CNID backend."
-resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/sqlite/cnid_sqlite.c"
+resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid_sqlite.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
 ---
 
-Part of the [libatalk/cnid](../../cnid.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
+Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
 
 # Includes
 
-* [atalk/adouble.h](../../../include/atalk/adouble.h.md)
-* [atalk/cnid_sqlite_private.h](../../../include/atalk/cnid_sqlite_private.h.md)
-* [atalk/errchk.h](../../../include/atalk/errchk.h.md)
-* [atalk/globals.h](../../../include/atalk/globals.h.md)
-* [atalk/logger.h](../../../include/atalk/logger.h.md)
-* [atalk/unix.h](../../../include/atalk/unix.h.md)
-* [atalk/util.h](../../../include/atalk/util.h.md)
-* [atalk/volume.h](../../../include/atalk/volume.h.md)
+* [atalk/adouble.h](../../include/atalk/adouble.h.md)
+* [atalk/cnid_sqlite_private.h](../../include/atalk/cnid_sqlite_private.h.md)
+* [atalk/errchk.h](../../include/atalk/errchk.h.md)
+* [atalk/globals.h](../../include/atalk/globals.h.md)
+* [atalk/logger.h](../../include/atalk/logger.h.md)
+* [atalk/unix.h](../../include/atalk/unix.h.md)
+* [atalk/util.h](../../include/atalk/util.h.md)
+* [atalk/volume.h](../../include/atalk/volume.h.md)
 * System headers: `arpa/inet.h`, `bstrlib.h`, `ctype.h`, `errno.h`, `fcntl.h`, `inttypes.h`, `net/if.h`, `netdb.h`, `netinet/in.h`, `netinet/tcp.h`, `sqlite3.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/socket.h`, `sys/stat.h`, `sys/time.h`, `sys/uio.h`, `sys/un.h`, `time.h`
 
 # Function tables
@@ -95,7 +95,7 @@ Parameters:
 
 Returns: 0, or -1 with errno classified
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno)
 
 Called by: [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
 
@@ -410,7 +410,7 @@ Parameters:
 
 Returns: 0, or -1 with errno classified
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute)
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_wipe](cnid_sqlite.c.md#cnid_sqlite_wipe)
 
@@ -502,7 +502,7 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno classified
 
-Calls: [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [strlcpy](../../compat/strlcpy.c.md#strlcpy)
+Calls: [cnid_sqlite_delete](cnid_sqlite.c.md#cnid_sqlite_delete), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [cnid_sqlite_update](cnid_sqlite.c.md#cnid_sqlite_update), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
 Called by: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -530,7 +530,7 @@ Parameters:
 
 Returns: the CNID, or CNID_INVALID with errno classified
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_hint_usable](cnid_sqlite.c.md#cnid_sqlite_hint_usable), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_hint_usable](cnid_sqlite.c.md#cnid_sqlite_hint_usable), [cnid_sqlite_lookup](cnid_sqlite.c.md#cnid_sqlite_lookup), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
 Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -578,7 +578,7 @@ Parameters:
 
 Returns: buffer, or NULL with errno classified
 
-Calls: [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [strlcpy](../../compat/strlcpy.c.md#strlcpy)
+Calls: [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
 Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -601,7 +601,7 @@ Parameters:
 
 Returns: 0, or -1 with errno classified
 
-Calls: [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [strlcpy](../../compat/strlcpy.c.md#strlcpy)
+Calls: [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset), [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
 Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -628,7 +628,7 @@ Parameters:
 
 Returns: the number of CNIDs, or -1 with errno classified
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [cnid_sqlite_rowid_ok](cnid_sqlite.c.md#cnid_sqlite_rowid_ok), [cnid_sqlite_set_errno](cnid_sqlite.c.md#cnid_sqlite_set_errno), [cnid_sqlite_stmt_ready](cnid_sqlite.c.md#cnid_sqlite_stmt_ready), [cnid_sqlite_stmt_reset](cnid_sqlite.c.md#cnid_sqlite_stmt_reset)
 
 Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -649,7 +649,7 @@ Parameters:
 
 Returns: 0, or -1 with errno classified, CNID_ERR_CLOSE after a failed reprepare
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt)
 
 Called by: [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new)
 
@@ -689,7 +689,7 @@ Parameters:
 
 Returns: true for a directory that the real uid owns with no group or other permission bits
 
-Calls: [strlcpy](../../compat/strlcpy.c.md#strlcpy)
+Calls: [strlcpy](../compat/strlcpy.c.md#strlcpy)
 
 Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
@@ -730,9 +730,9 @@ Parameters:
 
 Returns: the database, or NULL on error
 
-Calls: [asprintf](../../compat/misc.c.md#asprintf), [become_root](../../util/unix.c.md#become_root), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_delete_sequence_row](cnid_sqlite.c.md#cnid_sqlite_delete_sequence_row), [cnid_sqlite_delete_volumes_row](cnid_sqlite.c.md#cnid_sqlite_delete_volumes_row), [cnid_sqlite_dir_owner_only](cnid_sqlite.c.md#cnid_sqlite_dir_owner_only), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_fchmod_companions](cnid_sqlite.c.md#cnid_sqlite_fchmod_companions), [cnid_sqlite_fchmod_regular](cnid_sqlite.c.md#cnid_sqlite_fchmod_regular), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new), [cnid_sqlite_report_orphan](cnid_sqlite.c.md#cnid_sqlite_report_orphan), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_uuid_usable](cnid_sqlite.c.md#cnid_sqlite_uuid_usable), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt), [unbecome_root](../../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../../util/cnid.c.md#uuid_strip_dashes)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [become_root](../util/unix.c.md#become_root), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_delete_sequence_row](cnid_sqlite.c.md#cnid_sqlite_delete_sequence_row), [cnid_sqlite_delete_volumes_row](cnid_sqlite.c.md#cnid_sqlite_delete_volumes_row), [cnid_sqlite_dir_owner_only](cnid_sqlite.c.md#cnid_sqlite_dir_owner_only), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_fchmod_companions](cnid_sqlite.c.md#cnid_sqlite_fchmod_companions), [cnid_sqlite_fchmod_regular](cnid_sqlite.c.md#cnid_sqlite_fchmod_regular), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new), [cnid_sqlite_report_orphan](cnid_sqlite.c.md#cnid_sqlite_report_orphan), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_uuid_usable](cnid_sqlite.c.md#cnid_sqlite_uuid_usable), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt), [unbecome_root](../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../util/cnid.c.md#uuid_strip_dashes)
 
-Called through [`_cnid_module::cnid_open`](../../../include/atalk/cnid.h.md#struct-_cnid_module) by: [cnid_open](../cnid.c.md#cnid_open)
+Called through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_cnid_module) by: [cnid_open](cnid.c.md#cnid_open)
 
 Dispatched via: [cnid_sqlite_module](cnid_sqlite.c.md#cnid_sqlite_module)
 

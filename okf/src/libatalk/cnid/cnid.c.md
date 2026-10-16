@@ -5,7 +5,7 @@ description: "The CNID database front end and backend registry."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -101,7 +101,7 @@ Calls: [cnid_module_named](cnid.c.md#cnid_module_named)
 
 Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [openvol_optional](../../bin/nad/nad_util.c.md#openvol_optional), [resolve_metadata_volume](../../bin/nad/megatron.c.md#resolve_metadata_volume), [volume_openDB](../../etc/afpd/volume.c.md#volume_opendb)
 
-Calls through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_cnid_module): [cnid_mysql_open](mysql/cnid_mysql.c.md#cnid_mysql_open), [cnid_sqlite_open](sqlite/cnid_sqlite.c.md#cnid_sqlite_open)
+Calls through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_cnid_module): [cnid_mysql_open](cnid_mysql.c.md#cnid_mysql_open), [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
 ### valide
 
