@@ -1,9 +1,10 @@
 /*
  * Copyright (C) 1999-2001 Free Software Foundation, Inc.
- * This file is part of the GNU LIBICONV Library.
+ * Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
+ * This file is from the GNU LIBICONV Library and modified for use in Netatalk
  *
  * The GNU LIBICONV Library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Library General Public
+ * and/or modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
  *
@@ -12,8 +13,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with the GNU LIBICONV Library; see the file COPYING.LIB.
+ * You should have received a copy of the GNU General Public
+ * License along with the GNU LIBICONV Library; see the file COPYING.
  * If not, write to the Free Software Foundation, Inc., 59 Temple Place -
  * Suite 330, Boston, MA 02111-1307, USA.
  */
