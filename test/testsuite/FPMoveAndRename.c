@@ -569,8 +569,9 @@ STATIC void test460()
      * The rename would push the leaf past the platform limit, so it has to be
      * refused before anything moves. Accepting AFP_OK here is the regression:
      * the tree becomes unaddressable and cleanup below can no longer reach it.
+     * FPMoveAndRename returns the raw DSI error code, in network byte order.
      */
-    if (ret != AFPERR_PARAM) {
+    if (ntohl(AFPERR_PARAM) != ret) {
         if (!Quiet) {
             fprintf(stdout,
                     "\tFAILED: expected AFPERR_PARAM, got %d\n", ret);
