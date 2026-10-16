@@ -5,7 +5,7 @@ description: "Spotlight CNID backend: file name searches in the CNID database."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/cnid/sl_cnid.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -393,7 +393,7 @@ Free the backend state of a CNID query.
 Parameters:
 * `slq`: query
 
-Called through [`sl_backend_ops::sbo_close_query`](../../../include/atalk/spotlight.h.md#struct-sl_backend_ops) by: [slq_cancelled_cleanup](../../afpd/spotlight.c.md#slq_cancelled_cleanup), [slq_destroy](../../afpd/spotlight.c.md#slq_destroy)
+Called through [`sl_backend_ops::sbo_close_query`](../../../include/atalk/spotlight.h.md#struct-sl_backend_ops) by: [slq_destroy](../../afpd/spotlight_queries.c.md#slq_destroy)
 
 Dispatched via: [sl_cnid_ops](sl_cnid.c.md#sl_cnid_ops)
 

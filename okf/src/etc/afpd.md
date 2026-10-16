@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "65 files, 607 functions."
+description: "66 files, 607 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 # Files
@@ -63,6 +63,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 * [etc/afpd/quota.c](afpd/quota.c.md): Free space under user and group quotas through libquota or quotactl.
 * [etc/afpd/spotlight.c](afpd/spotlight.c.md): FPSpotlightRPC: Spotlight queries and attribute requests over the search backends.
 * [etc/afpd/spotlight_marshalling.c](afpd/spotlight_marshalling.c.md): Packing and unpacking of Spotlight RPC requests and replies.
+* [etc/afpd/spotlight_queries.c](afpd/spotlight_queries.c.md): Session-local Spotlight query ownership and deferred cancellation.
 * [etc/afpd/status.c](afpd/status.c.md): The FPGetSrvrInfo status block.
 * [etc/afpd/status.h](afpd/status.h.md): includes 4 project headers.
 * [etc/afpd/switch.c](afpd/switch.c.md): AFP command dispatch tables of the session.
@@ -79,7 +80,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 # Includes headers from
 
 * [include/atalk](../include/atalk.md): 347 includes
-* [etc/spotlight](spotlight.md): 2 includes
+* [etc/spotlight](spotlight.md): 3 includes
 * [sys/netatalk](../sys/netatalk.md): 1 includes
 
 # Headers included by

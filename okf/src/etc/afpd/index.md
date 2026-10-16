@@ -53,6 +53,7 @@
 * [quota.c](quota.c.md) - Free space under user and group quotas through libquota or quotactl.
 * [spotlight.c](spotlight.c.md) - FPSpotlightRPC: Spotlight queries and attribute requests over the search backends.
 * [spotlight_marshalling.c](spotlight_marshalling.c.md) - Packing and unpacking of Spotlight RPC requests and replies.
+* [spotlight_queries.c](spotlight_queries.c.md) - Session-local Spotlight query ownership and deferred cancellation.
 * [status.c](status.c.md) - The FPGetSrvrInfo status block.
 * [status.h](status.h.md) - includes 4 project headers.
 * [switch.c](switch.c.md) - AFP command dispatch tables of the session.

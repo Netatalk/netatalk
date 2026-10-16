@@ -5,7 +5,7 @@ description: "10 files, 68 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/spotlight"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 # Files
@@ -28,7 +28,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 
 # Headers included by
 
-* [etc/afpd](afpd.md): 2 includes
+* [etc/afpd](afpd.md): 3 includes
 
 # Calls into
 

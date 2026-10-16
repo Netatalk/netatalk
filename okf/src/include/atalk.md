@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "include/atalk"
-description: "46 files, 32 functions."
+description: "45 files, 32 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 # Files
@@ -35,7 +35,6 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 * [include/atalk/hash.h](atalk/hash.h.md): 3 types.
 * [include/atalk/iniparser_util.h](atalk/iniparser_util.h.md): No functions or types.
 * [include/atalk/ldapconfig.h](atalk/ldapconfig.h.md): 2 types.
-* [include/atalk/list.h](atalk/list.h.md): Simple doubly linked list implementation.
 * [include/atalk/logger.h](atalk/logger.h.md): 2 types.
 * [include/atalk/nbp.h](atalk/nbp.h.md): 3 types, includes 2 project headers.
 * [include/atalk/netatalk_conf.h](atalk/netatalk_conf.h.md): includes 2 project headers.
@@ -77,8 +76,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 * [libatalk/asp](../libatalk/asp.md): 26 includes
 * [etc/netatalk](../etc/netatalk.md): 25 includes
 * [libatalk/acl](../libatalk/acl.md): 23 includes
-* [libatalk/cnid](../libatalk/cnid.md): 23 includes
 * [libatalk/atp](../libatalk/atp.md): 22 includes
+* [libatalk/cnid](../libatalk/cnid.md): 21 includes
 * [bin/dbd](../bin/dbd.md): 16 includes
 * [bin/nbp](../bin/nbp.md): 12 includes
 * [libatalk/nbp](../libatalk/nbp.md): 10 includes

@@ -5,7 +5,7 @@ description: "SQLite CNID backend."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/sqlite/cnid_sqlite.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [libatalk/cnid](../../cnid.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -26,7 +26,7 @@ Part of the [libatalk/cnid](../../cnid.md) subsystem. Built from the commit reco
 
 ### cnid_sqlite_module
 
-Initialized at line 39 as `struct _cnid_module`. Assigns:
+Initialized at line 38 as `struct _cnid_module`. Assigns:
 
 * `cnid_open`: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 

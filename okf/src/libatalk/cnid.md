@@ -5,7 +5,7 @@ description: "4 files, 76 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/cnid"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 # Files
@@ -17,7 +17,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 
 # Includes headers from
 
-* [include/atalk](../include/atalk.md): 23 includes
+* [include/atalk](../include/atalk.md): 21 includes
 
 # Calls into
 

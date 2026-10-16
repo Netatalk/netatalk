@@ -5,7 +5,7 @@ description: "Spotlight LocalSearch backend: SPARQL queries to the indexer."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sl_localsearch.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -81,7 +81,7 @@ Called by: [tracker_cursor_cb](sl_localsearch.c.md#tracker_cursor_cb)
 static void tracker_cursor_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 ```
 
-Defined at lines 145 to 287.
+Defined at lines 145 to 289.
 
 Take one row of the indexer cursor into the result page, then ask for the next row.
 
@@ -102,7 +102,7 @@ Called by: [sl_localsearch_fetch_results](sl_localsearch.c.md#sl_localsearch_fet
 static void tracker_query_cb(GObject *object, GAsyncResult *res, gpointer user_data)
 ```
 
-Defined at lines 299 to 328.
+Defined at lines 301 to 331.
 
 Finish the SPARQL query of the indexer and start reading its cursor.
 
@@ -123,7 +123,7 @@ Called by: [sl_localsearch_open_query](sl_localsearch.c.md#sl_localsearch_open_q
 static int sl_localsearch_init(AFPObj *obj)
 ```
 
-Defined at lines 346 to 392.
+Defined at lines 349 to 395.
 
 Connect the process to the localsearch indexer over the Spotlight D-Bus session.
 
@@ -146,7 +146,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static void sl_localsearch_close(AFPObj *obj)
 ```
 
-Defined at lines 400 to 403.
+Defined at lines 403 to 406.
 
 Stop the localsearch backend, whose indexer connection lives as long as the process.
 
@@ -161,7 +161,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static int sl_localsearch_open_query(slq_t *slq)
 ```
 
-Defined at lines 415 to 470.
+Defined at lines 418 to 473.
 
 Translate a Spotlight query to SPARQL and start it on the indexer.
 
@@ -184,7 +184,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static int sl_localsearch_fetch_results(slq_t *slq)
 ```
 
-Defined at lines 483 to 514.
+Defined at lines 486 to 517.
 
 Resume the indexer cursor after a full page, and run the GLib callbacks that are ready.
 
@@ -207,7 +207,7 @@ Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 static void sl_localsearch_close_query(slq_t *slq)
 ```
 
-Defined at lines 523 to 533.
+Defined at lines 526 to 536.
 
 Release the indexer cursor of a query.
 
@@ -216,7 +216,7 @@ The query state is a talloc child of slq and goes with it.
 Parameters:
 * `slq`: query
 
-Called through [`sl_backend_ops::sbo_close_query`](../../../include/atalk/spotlight.h.md#struct-sl_backend_ops) by: [slq_cancelled_cleanup](../../afpd/spotlight.c.md#slq_cancelled_cleanup), [slq_destroy](../../afpd/spotlight.c.md#slq_destroy)
+Called through [`sl_backend_ops::sbo_close_query`](../../../include/atalk/spotlight.h.md#struct-sl_backend_ops) by: [slq_destroy](../../afpd/spotlight_queries.c.md#slq_destroy)
 
 Dispatched via: [sl_localsearch_ops](sl_localsearch.c.md#sl_localsearch_ops)
 

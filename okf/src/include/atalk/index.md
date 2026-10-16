@@ -25,7 +25,6 @@
 * [hash.h](hash.h.md) - 3 types.
 * [iniparser_util.h](iniparser_util.h.md) - No functions or types.
 * [ldapconfig.h](ldapconfig.h.md) - 2 types.
-* [list.h](list.h.md) - Simple doubly linked list implementation.
 * [logger.h](logger.h.md) - 2 types.
 * [nbp.h](nbp.h.md) - 3 types, includes 2 project headers.
 * [netatalk_conf.h](netatalk_conf.h.md) - includes 2 project headers.

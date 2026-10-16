@@ -5,7 +5,7 @@ description: "FPSpotlightRPC: Spotlight queries and attribute requests over the 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/spotlight.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -17,7 +17,6 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [atalk/dalloc.h](../../include/atalk/dalloc.h.md)
 * [atalk/errchk.h](../../include/atalk/errchk.h.md)
 * [atalk/iniparser_util.h](../../include/atalk/iniparser_util.h.md)
-* [atalk/list.h](../../include/atalk/list.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
 * [atalk/netatalk_conf.h](../../include/atalk/netatalk_conf.h.md)
 * [atalk/spotlight.h](../../include/atalk/spotlight.h.md)
@@ -35,7 +34,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static uint32_t spotlight_get_be32(const char *buf, size_t offset)
 ```
 
-Defined at lines 89 to 94.
+Defined at lines 68 to 73.
 
 Read a big-endian 32-bit value at any offset of a buffer.
 
@@ -53,7 +52,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static void spotlight_put_be32(char *buf, size_t offset, uint32_t val)
 ```
 
-Defined at lines 103 to 107.
+Defined at lines 82 to 86.
 
 Write a 32-bit value in big-endian order at any offset of a buffer.
 
@@ -70,7 +69,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static char * tab_level(TALLOC_CTX *mem_ctx, int level)
 ```
 
-Defined at lines 120 to 131.
+Defined at lines 99 to 110.
 
 Build a string of tab characters for the indentation of a dump.
 
@@ -88,7 +87,7 @@ Called by: [dd_dump](spotlight.c.md#dd_dump)
 int sl_index_event(const AFPObj *obj, const struct vol *vol, sl_index_event_t event, const char *path, const char *oldpath)
 ```
 
-Defined at lines 146 to 159.
+Defined at lines 125 to 138.
 
 Pass a file change to the Spotlight backend of a volume for its index.
 
@@ -113,7 +112,7 @@ Calls through [`sl_backend_ops::sbo_index_event`](../../include/atalk/spotlight.
 static char * dd_dump(DALLOC_CTX *dd, int nestinglevel)
 ```
 
-Defined at lines 171 to 332.
+Defined at lines 150 to 311.
 
 Render a Spotlight dalloc tree as indented text for the log.
 
@@ -135,7 +134,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int cnid_comp_fn(const void *p1, const void *p2)
 ```
 
-Defined at lines 341 to 354.
+Defined at lines 320 to 333.
 
 Compare two 64-bit CNIDs for qsort and bsearch.
 
@@ -153,7 +152,7 @@ Called by: [sl_createCNIDArray](spotlight.c.md#sl_createcnidarray)
 int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p)
 ```
 
-Defined at lines 367 to 413.
+Defined at lines 346 to 392.
 
 Store the CNID filter of a query as a sorted array.
 
@@ -175,7 +174,7 @@ Called by: [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery)
 static bool sl_reqinfo_contains(sl_array_t *reqinfo, const char *attr)
 ```
 
-Defined at lines 422 to 431.
+Defined at lines 401 to 410.
 
 Tell whether a list of requested attribute names holds a name.
 
@@ -193,7 +192,7 @@ Called by: [sl_sanitize_reqinfo](spotlight.c.md#sl_sanitize_reqinfo)
 static sl_array_t * sl_sanitize_reqinfo(TALLOC_CTX *mem_ctx, const sl_array_t *reqinfo)
 ```
 
-Defined at lines 443 to 483.
+Defined at lines 422 to 462.
 
 Rebuild the requested attribute list of a query without duplicates.
 
@@ -215,7 +214,7 @@ Called by: [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery)
 bool sl_path_in_scope(const char *path, const char *scope)
 ```
 
-Defined at lines 495 to 515.
+Defined at lines 474 to 494.
 
 Tell whether a path equals a scope or lies under it.
 
@@ -235,7 +234,7 @@ Called by: [sl_cnid_fill_results](../spotlight/cnid/sl_cnid.c.md#sl_cnid_fill_re
 static bool sl_path_has_dotdot(const char *path)
 ```
 
-Defined at lines 523 to 534.
+Defined at lines 502 to 513.
 
 Tell whether any component of a path is "..".
 
@@ -252,7 +251,7 @@ Called by: [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery)
 static bool sl_cnids_get_first(const sl_cnids_t *cnids, uint64_t *cnid)
 ```
 
-Defined at lines 546 to 555.
+Defined at lines 525 to 534.
 
 Read the first CNID of an unpacked CNIDs element.
 
@@ -272,7 +271,7 @@ Called by: [sl_rpc_fetchAttributeNamesForOIDArray](spotlight.c.md#sl_rpc_fetchat
 bool add_filemeta(sl_array_t *reqinfo, sl_array_t *fm_array, const char *path, const struct stat *sp)
 ```
 
-Defined at lines 573 to 660.
+Defined at lines 552 to 639.
 
 Add the requested metadata of one query result to a result array.
 
@@ -296,7 +295,7 @@ Called by: [sl_cnid_fill_results](../spotlight/cnid/sl_cnid.c.md#sl_cnid_fill_re
 static bool create_result_handle(slq_t *slq)
 ```
 
-Defined at lines 672 to 710.
+Defined at lines 651 to 694.
 
 Allocate the result buffers that the backend fills for a query.
 
@@ -315,172 +314,23 @@ Called by: [add_results](spotlight.c.md#add_results), [sl_rpc_openQuery](spotlig
 static bool add_results(sl_array_t *array, slq_t *slq)
 ```
 
-Defined at lines 725 to 772.
+Defined at lines 711 to 757.
 
 Move the gathered results of a query into a reply and start new result buffers.
 
 The status is 35 while the query runs, so the client polls again, and 0 from SLQ_STATE_DONE on. The reply then takes the CNID list and the file metadata, and the sent results go with the reply.
 
+Packaging failures leave the backend execution state unchanged so that cleanup can retain a query still owned by an asynchronous callback.
+
 Parameters:
 * `array`: reply array
 * `slq`: query with results
 
-Returns: true, or false when create_result_handle fails, which sets SLQ_STATE_ERROR
+Returns: true, or false when an allocation fails
 
-Calls: [create_result_handle](spotlight.c.md#create_result_handle)
+Calls: [create_result_handle](spotlight.c.md#create_result_handle), [slq_state_name](spotlight_queries.c.md#slq_state_name)
 
 Called by: [sl_rpc_fetchQueryResultsForContext](spotlight.c.md#sl_rpc_fetchqueryresultsforcontext)
-
-### ATALK_LIST_HEAD
-
-```c
-static ATALK_LIST_HEAD(sl_queries)
-```
-
-Declared at etc/afpd/spotlight.c line 778; no definition in the scanned sources.
-
-### slq_add
-
-```c
-static void slq_add(slq_t *slq)
-```
-
-Defined at lines 786 to 789.
-
-Add a query to the list of active queries.
-
-Parameters:
-* `slq`: query to add
-
-Called by: [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery)
-
-### slq_cancelled_add
-
-```c
-static void slq_cancelled_add(slq_t *slq)
-```
-
-Defined at lines 796 to 799.
-
-Add a query to the list of cancelled queries.
-
-Parameters:
-* `slq`: query to add
-
-Called by: [slq_cancel](spotlight.c.md#slq_cancel)
-
-### slq_remove
-
-```c
-static void slq_remove(slq_t *slq)
-```
-
-Defined at lines 810 to 823.
-
-Remove a query from the active list.
-
-The match uses the pointer, not the context IDs. A query that never joined the list, after a failed openQuery, then cannot remove an active query with the same IDs.
-
-Parameters:
-* `slq`: query to remove
-
-Called by: [slq_cancel](spotlight.c.md#slq_cancel), [slq_destroy](spotlight.c.md#slq_destroy)
-
-### slq_for_ctx
-
-```c
-static slq_t * slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
-```
-
-Defined at lines 832 to 846.
-
-Find the active query with a pair of context IDs.
-
-Parameters:
-* `ctx1`: first context ID
-* `ctx2`: second context ID
-
-Returns: the query, or NULL when no active query matches
-
-Called by: [sl_rpc_closeQueryForContext](spotlight.c.md#sl_rpc_closequeryforcontext), [sl_rpc_fetchQueryResultsForContext](spotlight.c.md#sl_rpc_fetchqueryresultsforcontext)
-
-### slq_destroy
-
-```c
-static void slq_destroy(slq_t *slq)
-```
-
-Defined at lines 854 to 867.
-
-Close a query in its backend, remove it from the active list, and free it.
-
-Parameters:
-* `slq`: query, or NULL
-
-Calls: [slq_remove](spotlight.c.md#slq_remove)
-
-Called by: [sl_rpc_closeQueryForContext](spotlight.c.md#sl_rpc_closequeryforcontext), [sl_rpc_fetchQueryResultsForContext](spotlight.c.md#sl_rpc_fetchqueryresultsforcontext), [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery), [slq_idle_cleanup](spotlight.c.md#slq_idle_cleanup)
-
-Calls through [`sl_backend_ops::sbo_close_query`](../../include/atalk/spotlight.h.md#struct-sl_backend_ops): [sl_cnid_close_query](../spotlight/cnid/sl_cnid.c.md#sl_cnid_close_query), [sl_localsearch_close_query](../spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_close_query), [sl_xapian_close_query](../spotlight/xapian/sl_xapian.c.md#sl_xapian_close_query)
-
-### slq_cancel
-
-```c
-static void slq_cancel(slq_t *slq)
-```
-
-Defined at lines 877 to 882.
-
-Cancel a query by moving it to the cancelled list.
-
-The state becomes SLQ_STATE_CANCEL_PENDING, and the backend cleanup waits for a later pass.
-
-Parameters:
-* `slq`: active query
-
-Calls: [slq_cancelled_add](spotlight.c.md#slq_cancelled_add), [slq_remove](spotlight.c.md#slq_remove)
-
-Called by: [sl_rpc_closeQueryForContext](spotlight.c.md#sl_rpc_closequeryforcontext), [slq_idle_cleanup](spotlight.c.md#slq_idle_cleanup)
-
-### slq_cancelled_cleanup
-
-```c
-static void slq_cancelled_cleanup(void)
-```
-
-Defined at lines 887 to 919.
-
-Free all fully-cancelled queries.
-
-Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
-
-Calls through [`sl_backend_ops::sbo_close_query`](../../include/atalk/spotlight.h.md#struct-sl_backend_ops): [sl_cnid_close_query](../spotlight/cnid/sl_cnid.c.md#sl_cnid_close_query), [sl_localsearch_close_query](../spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_close_query), [sl_xapian_close_query](../spotlight/xapian/sl_xapian.c.md#sl_xapian_close_query)
-
-### slq_idle_cleanup
-
-```c
-static void slq_idle_cleanup(void)
-```
-
-Defined at lines 924 to 978.
-
-Cancel or destroy queries idle longer than MAX_SL_QUERY_IDLE_TIME.
-
-Calls: [slq_cancel](spotlight.c.md#slq_cancel), [slq_destroy](spotlight.c.md#slq_destroy)
-
-Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
-
-### slq_dump
-
-```c
-static void slq_dump(void)
-```
-
-Defined at lines 983 to 996.
-
-Log the context IDs and the state of every active query at debug level.
-
-Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 
 ### localsearch_backend_active
 
@@ -488,7 +338,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static bool localsearch_backend_active(const AFPObj *obj)
 ```
 
-Defined at lines 1006 to 1018.
+Defined at lines 771 to 783.
 
 Tell whether a volume that the session opened uses the localsearch backend.
 
@@ -507,7 +357,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 1040 to 1110.
+Defined at lines 805 to 875.
 
 Spotlight RPC fetchPropertiesForContext: describe the search store of a volume.
 
@@ -531,7 +381,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, struct vol *v)
 ```
 
-Defined at lines 1133 to 1437.
+Defined at lines 898 to 1202.
 
 Spotlight RPC openQueryWithParams:forContext: start a search on a volume.
 
@@ -547,7 +397,7 @@ Parameters:
 
 Returns: 0, also after a failure, which the reply status reports
 
-Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [create_result_handle](spotlight.c.md#create_result_handle), [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [dalloc_value_for_key](../../libatalk/dalloc/dalloc.c.md#dalloc_value_for_key), [sl_createCNIDArray](spotlight.c.md#sl_createcnidarray), [sl_path_has_dotdot](spotlight.c.md#sl_path_has_dotdot), [sl_sanitize_reqinfo](spotlight.c.md#sl_sanitize_reqinfo), [slq_add](spotlight.c.md#slq_add), [slq_destroy](spotlight.c.md#slq_destroy), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [create_result_handle](spotlight.c.md#create_result_handle), [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [dalloc_value_for_key](../../libatalk/dalloc/dalloc.c.md#dalloc_value_for_key), [sl_createCNIDArray](spotlight.c.md#sl_createcnidarray), [sl_path_has_dotdot](spotlight.c.md#sl_path_has_dotdot), [sl_sanitize_reqinfo](spotlight.c.md#sl_sanitize_reqinfo), [slq_add](spotlight_queries.c.md#slq_add), [slq_destroy](spotlight_queries.c.md#slq_destroy), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 
@@ -561,11 +411,11 @@ Calls through [`sl_backend_ops::sbo_open_query`](../../include/atalk/spotlight.h
 static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 1453 to 1539.
+Defined at lines 1218 to 1304.
 
 Spotlight RPC fetchQueryResultsForContext: return the results that a query gathered.
 
-The call finds the query by its context IDs, resets its idle timer, and lets the backend gather more results. A query in the error state, or any failure, destroys the query.
+The call finds the query by its context IDs, resets its idle timer, and lets the backend gather more results. A query in the error state, or any failure, closes the query, deferring destruction while a callback owns it.
 
 Parameters:
 * `obj`: session object, unused
@@ -575,7 +425,7 @@ Parameters:
 
 Returns: 0, or -1 after a failure
 
-Calls: [add_results](spotlight.c.md#add_results), [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [slq_destroy](spotlight.c.md#slq_destroy), [slq_for_ctx](spotlight.c.md#slq_for_ctx)
+Calls: [add_results](spotlight.c.md#add_results), [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [slq_close](spotlight_queries.c.md#slq_close), [slq_for_ctx](spotlight_queries.c.md#slq_for_ctx), [slq_state_name](spotlight_queries.c.md#slq_state_name)
 
 Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 
@@ -587,7 +437,7 @@ Calls through [`sl_backend_ops::sbo_fetch_results`](../../include/atalk/spotligh
 static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1556 to 1614.
+Defined at lines 1321 to 1379.
 
 Spotlight RPC storeAttributes:forOIDArray:context: set the dates of an object.
 
@@ -611,7 +461,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1630 to 1674.
+Defined at lines 1395 to 1439.
 
 Spotlight RPC fetchAttributeNamesForOIDArray:context: list the attributes of an object.
 
@@ -635,7 +485,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1690 to 1763.
+Defined at lines 1455 to 1528.
 
 Spotlight RPC fetchAttributes:forOIDArray:context: return the metadata of an object.
 
@@ -659,7 +509,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 1777 to 1842.
+Defined at lines 1542 to 1587.
 
 Spotlight RPC closeQueryForContext: end a query.
 
@@ -673,7 +523,7 @@ Parameters:
 
 Returns: 0, or -1 for an unknown context or an unexpected state
 
-Calls: [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [slq_cancel](spotlight.c.md#slq_cancel), [slq_destroy](spotlight.c.md#slq_destroy), [slq_for_ctx](spotlight.c.md#slq_for_ctx)
+Calls: [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [slq_close](spotlight_queries.c.md#slq_close), [slq_for_ctx](spotlight_queries.c.md#slq_for_ctx)
 
 Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 
@@ -683,7 +533,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1865 to 2013.
+Defined at lines 1610 to 1758.
 
 FPSpotlightRPC: answer the Spotlight commands of a client.
 
@@ -698,22 +548,10 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_NOOP without Spotlight, AFPERR_PARAM for a request under 2 bytes, or AFPERR_MISC for every later failure
 
-Calls: [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [dd_dump](spotlight.c.md#dd_dump), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [localsearch_backend_active](spotlight.c.md#localsearch_backend_active), [sl_pack](spotlight_marshalling.c.md#sl_pack), [sl_rpc_closeQueryForContext](spotlight.c.md#sl_rpc_closequeryforcontext), [sl_rpc_fetchAttributeNamesForOIDArray](spotlight.c.md#sl_rpc_fetchattributenamesforoidarray), [sl_rpc_fetchAttributesForOIDArray](spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_fetchPropertiesForContext](spotlight.c.md#sl_rpc_fetchpropertiesforcontext), [sl_rpc_fetchQueryResultsForContext](spotlight.c.md#sl_rpc_fetchqueryresultsforcontext), [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery), [sl_rpc_storeAttributesForOIDArray](spotlight.c.md#sl_rpc_storeattributesforoidarray), [sl_unpack_len](spotlight_marshalling.c.md#sl_unpack_len), [slq_cancelled_cleanup](spotlight.c.md#slq_cancelled_cleanup), [slq_dump](spotlight.c.md#slq_dump), [slq_idle_cleanup](spotlight.c.md#slq_idle_cleanup), [spotlight_get_be32](spotlight.c.md#spotlight_get_be32), [spotlight_put_be32](spotlight.c.md#spotlight_put_be32), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
+Calls: [dalloc_get](../../libatalk/dalloc/dalloc.c.md#dalloc_get), [dd_dump](spotlight.c.md#dd_dump), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [localsearch_backend_active](spotlight.c.md#localsearch_backend_active), [sl_pack](spotlight_marshalling.c.md#sl_pack), [sl_rpc_closeQueryForContext](spotlight.c.md#sl_rpc_closequeryforcontext), [sl_rpc_fetchAttributeNamesForOIDArray](spotlight.c.md#sl_rpc_fetchattributenamesforoidarray), [sl_rpc_fetchAttributesForOIDArray](spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_fetchPropertiesForContext](spotlight.c.md#sl_rpc_fetchpropertiesforcontext), [sl_rpc_fetchQueryResultsForContext](spotlight.c.md#sl_rpc_fetchqueryresultsforcontext), [sl_rpc_openQuery](spotlight.c.md#sl_rpc_openquery), [sl_rpc_storeAttributesForOIDArray](spotlight.c.md#sl_rpc_storeattributesforoidarray), [sl_unpack_len](spotlight_marshalling.c.md#sl_unpack_len), [slq_cancelled_cleanup](spotlight_queries.c.md#slq_cancelled_cleanup), [slq_dump](spotlight_queries.c.md#slq_dump), [slq_idle_cleanup](spotlight_queries.c.md#slq_idle_cleanup), [spotlight_get_be32](spotlight.c.md#spotlight_get_be32), [spotlight_put_be32](spotlight.c.md#spotlight_put_be32), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
-# Types
-
-### struct slq_state_names
-
-Defined at line 63.
-* `slq_state_t state`
-* `const char * state_name`
-
 # Macros
 
-* Undocumented: `MAX_SL_QUERY_IDLE_TIME_ACTIVE`, `MAX_SL_QUERY_IDLE_TIME_TERMINAL`, `MAX_SL_REQINFO_ATTRS`, `MAX_SL_RESULTS`, `USE_LIST`
-
-# File-scope variables
-
-`slq_state_names`
+* Undocumented: `MAX_SL_REQINFO_ATTRS`, `MAX_SL_RESULTS`

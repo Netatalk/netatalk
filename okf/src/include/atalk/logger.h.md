@@ -5,7 +5,7 @@ description: "2 types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/logger.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -51,6 +51,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/afpd/quota.c](../../etc/afpd/quota.c.md)
 * [etc/afpd/spotlight.c](../../etc/afpd/spotlight.c.md)
 * [etc/afpd/spotlight_marshalling.c](../../etc/afpd/spotlight_marshalling.c.md)
+* [etc/afpd/spotlight_queries.c](../../etc/afpd/spotlight_queries.c.md)
 * [etc/afpd/status.c](../../etc/afpd/status.c.md)
 * [etc/afpd/switch.c](../../etc/afpd/switch.c.md)
 * [etc/afpd/uam.c](../../etc/afpd/uam.c.md)

@@ -5,7 +5,7 @@ description: "The CNID database front end and backend registry."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -13,7 +13,6 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 # Includes
 
 * [atalk/cnid.h](../../include/atalk/cnid.h.md)
-* [atalk/list.h](../../include/atalk/list.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
 * [atalk/volume.h](../../include/atalk/volume.h.md)
 * System headers: `arpa/inet.h`, `errno.h`, `string.h`, `strings.h`, `sys/param.h`, `sys/types.h`, `time.h`
@@ -26,7 +25,7 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 static const cnid_module * cnid_module_named(const char *name)
 ```
 
-Defined at lines 49 to 58.
+Defined at lines 46 to 55.
 
 Find a registered CNID backend by name, ignoring case.
 
@@ -45,7 +44,7 @@ Uses file-scope variables: `modules`
 bool cnid_scheme_registered(const char *name)
 ```
 
-Defined at lines 66 to 69.
+Defined at lines 63 to 66.
 
 Tell whether cnid_register added a CNID backend of a name.
 
@@ -64,11 +63,11 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [openvol_optional](../../bin
 void cnid_register(struct _cnid_module *module)
 ```
 
-Defined at lines 79 to 89.
+Defined at lines 77 to 95.
 
 Add a CNID backend to the list of registered backends.
 
-A second backend with the same name, compared without case, only logs an error. A backend cannot leave the list again.
+A second backend with the same name, compared without case, only logs an error. A backend cannot leave the registry again and must remain alive for the lifetime of the process.
 
 Parameters:
 * `module`: backend to add, kept by pointer
@@ -85,7 +84,7 @@ Uses file-scope variables: `modules`
 struct _cnid_db * cnid_open(struct vol *vol, char *type, int flags)
 ```
 
-Defined at lines 104 to 150.
+Defined at lines 110 to 156.
 
 Open the CNID database of a volume with the backend that a scheme names.
 
@@ -110,7 +109,7 @@ Calls through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_
 static cnid_t valide(cnid_t id)
 ```
 
-Defined at lines 164 to 186.
+Defined at lines 170 to 192.
 
 Reject a CNID from a backend that falls in the reserved range.
 
@@ -129,7 +128,7 @@ Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_get](cnid.c.md#cnid_get), [cnid
 void cnid_close(struct _cnid_db *db)
 ```
 
-Defined at lines 193 to 201.
+Defined at lines 199 to 207.
 
 Close a CNID database through its backend.
 
@@ -146,7 +145,7 @@ Calls through [`_cnid_db::cnid_close`](../../include/atalk/cnid.h.md#struct-_cni
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, const char *name, const size_t len, cnid_t hint)
 ```
 
-Defined at lines 218 to 233.
+Defined at lines 224 to 239.
 
 Add an object to the CNID database or find its existing CNID.
 
@@ -176,7 +175,7 @@ Mentioned in the documentation of: [cnid_for_path](../util/cnid.c.md#cnid_for_pa
 int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 ```
 
-Defined at lines 242 to 248.
+Defined at lines 248 to 254.
 
 Remove a CNID from the database.
 
@@ -196,7 +195,7 @@ Calls through [`_cnid_db::cnid_delete`](../../include/atalk/cnid.h.md#struct-_cn
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 260 to 267.
+Defined at lines 266 to 273.
 
 Look up the CNID of a name in a directory.
 
@@ -220,7 +219,7 @@ Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_
 int cnid_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 281 to 302.
+Defined at lines 287 to 308.
 
 Read the stamp of a CNID database.
 
@@ -243,7 +242,7 @@ Calls through [`_cnid_db::cnid_getstamp`](../../include/atalk/cnid.h.md#struct-_
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 315 to 323.
+Defined at lines 321 to 329.
 
 Look up the CNID of an object by name and parent or by device and inode.
 
@@ -268,7 +267,7 @@ Calls through [`_cnid_db::cnid_lookup`](../../include/atalk/cnid.h.md#struct-_cn
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 348 to 353.
+Defined at lines 354 to 359.
 
 Search the CNID database for entries whose name contains a substring.
 
@@ -298,7 +297,7 @@ Mentioned in the documentation of: [cnid_find_scoped](cnid.c.md#cnid_find_scoped
 int cnid_find_scoped(struct _cnid_db *cdb, const char *name, size_t namelen, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 375 to 413.
+Defined at lines 381 to 419.
 
 [cnid_find()](cnid.c.md#cnid_find) restricted to the subtree of a directory
 
@@ -325,7 +324,7 @@ Calls through [`_cnid_db::cnid_find`](../../include/atalk/cnid.h.md#struct-_cnid
 char * cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 ```
 
-Defined at lines 428 to 444.
+Defined at lines 434 to 450.
 
 Resolve a CNID to its name and parent directory.
 
@@ -351,7 +350,7 @@ Mentioned in the documentation of: [sl_cnid_to_path](../../etc/spotlight/cnid/sl
 int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 457 to 464.
+Defined at lines 463 to 470.
 
 Update the name, parent, and stat of a CNID entry.
 
@@ -375,7 +374,7 @@ Calls through [`_cnid_db::cnid_update`](../../include/atalk/cnid.h.md#struct-_cn
 int cnid_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 475 to 485.
+Defined at lines 481 to 491.
 
 Empty a CNID database.
 
@@ -389,10 +388,6 @@ Returns: the backend result, 0 on success
 Called by: [main](../../bin/dbd/cmd_dbd.c.md#main)
 
 Calls through [`_cnid_db::cnid_wipe`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
-
-# Macros
-
-* Undocumented: `USE_LIST`
 
 # File-scope variables
 

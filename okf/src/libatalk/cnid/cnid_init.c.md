@@ -5,7 +5,7 @@ description: "initialization stuff for CNID backends."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid_init.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -13,7 +13,6 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 # Includes
 
 * [atalk/cnid.h](../../include/atalk/cnid.h.md)
-* [atalk/list.h](../../include/atalk/list.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
 * System headers: `stdlib.h`
 
@@ -25,7 +24,7 @@ Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorde
 void cnid_init(void)
 ```
 
-Defined at lines 47 to 53. Declared in [include/atalk/cnid.h](../../include/atalk/cnid.h.md).
+Defined at lines 46 to 52. Declared in [include/atalk/cnid.h](../../include/atalk/cnid.h.md).
 
 Register the CNID backends built into the server.
 

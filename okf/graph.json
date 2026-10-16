@@ -1,5 +1,5 @@
 {
-"commit": "4e1ce9082755f1cd0740457827cf69efcc67eb31",
+"commit": "d710b19207d3412ff59393f3b5c1d54331afbc3e",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -3224,11 +3224,6 @@
 {
 "from": "etc/afpd/spotlight.c",
 "kind": "include",
-"to": "include/atalk/list.h"
-},
-{
-"from": "etc/afpd/spotlight.c",
-"kind": "include",
 "to": "include/atalk/logger.h"
 },
 {
@@ -3305,6 +3300,16 @@
 "from": "etc/afpd/spotlight_marshalling.c",
 "kind": "include",
 "to": "include/atalk/volume.h"
+},
+{
+"from": "etc/afpd/spotlight_queries.c",
+"kind": "include",
+"to": "include/atalk/logger.h"
+},
+{
+"from": "etc/afpd/spotlight_queries.c",
+"kind": "include",
+"to": "etc/spotlight/spotlight_private.h"
 },
 {
 "from": "etc/afpd/status.c",
@@ -5254,11 +5259,6 @@
 {
 "from": "include/atalk/cnid.h",
 "kind": "include",
-"to": "include/atalk/list.h"
-},
-{
-"from": "include/atalk/cnid.h",
-"kind": "include",
 "to": "include/atalk/uuid.h"
 },
 {
@@ -6204,11 +6204,6 @@
 {
 "from": "libatalk/cnid/cnid.c",
 "kind": "include",
-"to": "include/atalk/list.h"
-},
-{
-"from": "libatalk/cnid/cnid.c",
-"kind": "include",
 "to": "include/atalk/logger.h"
 },
 {
@@ -6220,11 +6215,6 @@
 "from": "libatalk/cnid/cnid_init.c",
 "kind": "include",
 "to": "include/atalk/cnid.h"
-},
-{
-"from": "libatalk/cnid/cnid_init.c",
-"kind": "include",
-"to": "include/atalk/list.h"
 },
 {
 "from": "libatalk/cnid/cnid_init.c",
@@ -9826,6 +9816,11 @@
 "from": "etc/afpd/spotlight.c#add_results",
 "kind": "call",
 "to": "etc/afpd/spotlight.c#create_result_handle"
+},
+{
+"from": "etc/afpd/spotlight.c#add_results",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_state_name"
 },
 {
 "from": "etc/afpd/fce_api.c#add_udp_socket",
@@ -13934,17 +13929,17 @@
 {
 "from": "etc/afpd/spotlight.c#afp_spotlight_rpc",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_cancelled_cleanup"
+"to": "etc/afpd/spotlight_queries.c#slq_cancelled_cleanup"
 },
 {
 "from": "etc/afpd/spotlight.c#afp_spotlight_rpc",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_dump"
+"to": "etc/afpd/spotlight_queries.c#slq_dump"
 },
 {
 "from": "etc/afpd/spotlight.c#afp_spotlight_rpc",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_idle_cleanup"
+"to": "etc/afpd/spotlight_queries.c#slq_idle_cleanup"
 },
 {
 "from": "etc/afpd/spotlight.c#afp_spotlight_rpc",
@@ -35812,17 +35807,12 @@
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_closeQueryForContext",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_cancel"
+"to": "etc/afpd/spotlight_queries.c#slq_close"
 },
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_closeQueryForContext",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_destroy"
-},
-{
-"from": "etc/afpd/spotlight.c#sl_rpc_closeQueryForContext",
-"kind": "call",
-"to": "etc/afpd/spotlight.c#slq_for_ctx"
+"to": "etc/afpd/spotlight_queries.c#slq_for_ctx"
 },
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_fetchAttributeNamesForOIDArray",
@@ -35882,12 +35872,17 @@
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_fetchQueryResultsForContext",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_destroy"
+"to": "etc/afpd/spotlight_queries.c#slq_close"
 },
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_fetchQueryResultsForContext",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_for_ctx"
+"to": "etc/afpd/spotlight_queries.c#slq_for_ctx"
+},
+{
+"from": "etc/afpd/spotlight.c#sl_rpc_fetchQueryResultsForContext",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_state_name"
 },
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_fetchQueryResultsForContext",
@@ -35945,12 +35940,12 @@
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_openQuery",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_add"
+"to": "etc/afpd/spotlight_queries.c#slq_add"
 },
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_openQuery",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_destroy"
+"to": "etc/afpd/spotlight_queries.c#slq_destroy"
 },
 {
 "from": "etc/afpd/spotlight.c#sl_rpc_openQuery",
@@ -36409,65 +36404,112 @@
 "to": "etc/afpd/pfd_cache.c#pfd_slots"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_cancel",
-"kind": "call",
-"to": "etc/afpd/spotlight.c#slq_cancelled_add"
+"from": "etc/afpd/spotlight_queries.c#slq_add",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_queries"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_cancel",
+"from": "etc/afpd/spotlight_queries.c#slq_cancel",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_remove"
+"to": "etc/afpd/spotlight_queries.c#slq_remove"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_cancelled_cleanup",
+"from": "etc/afpd/spotlight_queries.c#slq_cancel",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_cancelled_queries"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_cancelled_cleanup",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_destroy"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_cancelled_cleanup",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_state_name"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_cancelled_cleanup",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_cancelled_queries"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_close",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_cancel"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_close",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_destroy"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_close",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_state_name"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_destroy",
+"kind": "call",
+"to": "etc/afpd/spotlight_queries.c#slq_remove"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_destroy",
 "kind": "dispatch",
 "to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_close_query",
 "via": "sl_backend_ops::sbo_close_query"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_cancelled_cleanup",
+"from": "etc/afpd/spotlight_queries.c#slq_destroy",
 "kind": "dispatch",
 "to": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_close_query",
 "via": "sl_backend_ops::sbo_close_query"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_cancelled_cleanup",
+"from": "etc/afpd/spotlight_queries.c#slq_destroy",
 "kind": "dispatch",
 "to": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_close_query",
 "via": "sl_backend_ops::sbo_close_query"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_destroy",
+"from": "etc/afpd/spotlight_queries.c#slq_dump",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_remove"
+"to": "etc/afpd/spotlight_queries.c#slq_state_name"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_destroy",
-"kind": "dispatch",
-"to": "etc/spotlight/cnid/sl_cnid.c#sl_cnid_close_query",
-"via": "sl_backend_ops::sbo_close_query"
+"from": "etc/afpd/spotlight_queries.c#slq_dump",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_queries"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_destroy",
-"kind": "dispatch",
-"to": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_close_query",
-"via": "sl_backend_ops::sbo_close_query"
+"from": "etc/afpd/spotlight_queries.c#slq_for_ctx",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_queries"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_destroy",
-"kind": "dispatch",
-"to": "etc/spotlight/xapian/sl_xapian.c#sl_xapian_close_query",
-"via": "sl_backend_ops::sbo_close_query"
-},
-{
-"from": "etc/afpd/spotlight.c#slq_idle_cleanup",
+"from": "etc/afpd/spotlight_queries.c#slq_idle_cleanup",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_cancel"
+"to": "etc/afpd/spotlight_queries.c#slq_close"
 },
 {
-"from": "etc/afpd/spotlight.c#slq_idle_cleanup",
+"from": "etc/afpd/spotlight_queries.c#slq_idle_cleanup",
 "kind": "call",
-"to": "etc/afpd/spotlight.c#slq_destroy"
+"to": "etc/afpd/spotlight_queries.c#slq_state_name"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_idle_cleanup",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_queries"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_remove",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_cancelled_queries"
+},
+{
+"from": "etc/afpd/spotlight_queries.c#slq_remove",
+"kind": "use",
+"to": "etc/afpd/spotlight_queries.c#sl_queries"
 },
 {
 "from": "etc/afpd/spotlight_marshalling.c#slvalc",
@@ -41681,6 +41723,11 @@
 "subsystem": "etc/afpd"
 },
 {
+"id": "etc/afpd/spotlight_queries.c",
+"kind": "file",
+"subsystem": "etc/afpd"
+},
+{
 "id": "etc/afpd/status.c",
 "kind": "file",
 "subsystem": "etc/afpd"
@@ -42197,11 +42244,6 @@
 },
 {
 "id": "include/atalk/ldapconfig.h",
-"kind": "file",
-"subsystem": "include/atalk"
-},
-{
-"id": "include/atalk/list.h",
 "kind": "file",
 "subsystem": "include/atalk"
 },
@@ -42974,14 +43016,6 @@
 "id": "sys/netatalk/phase2.h",
 "kind": "file",
 "subsystem": "sys/netatalk"
-},
-{
-"documented": false,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#ATALK_LIST_HEAD",
-"kind": "function",
-"line": null,
-"static": true
 },
 {
 "documented": true,
@@ -44244,7 +44278,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#add_filemeta",
 "kind": "function",
-"line": 573,
+"line": 552,
 "static": false
 },
 {
@@ -44300,7 +44334,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#add_results",
 "kind": "function",
-"line": 725,
+"line": 711,
 "static": true
 },
 {
@@ -45252,7 +45286,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#afp_spotlight_rpc",
 "kind": "function",
-"line": 1865,
+"line": 1610,
 "static": false
 },
 {
@@ -47180,7 +47214,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_add",
 "kind": "function",
-"line": 218,
+"line": 224,
 "static": false
 },
 {
@@ -47188,7 +47222,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_close",
 "kind": "function",
-"line": 193,
+"line": 199,
 "static": false
 },
 {
@@ -47196,7 +47230,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#cnid_comp_fn",
 "kind": "function",
-"line": 341,
+"line": 320,
 "static": true
 },
 {
@@ -47228,7 +47262,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_delete",
 "kind": "function",
-"line": 242,
+"line": 248,
 "static": false
 },
 {
@@ -47236,7 +47270,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find",
 "kind": "function",
-"line": 348,
+"line": 354,
 "static": false
 },
 {
@@ -47244,7 +47278,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_find_scoped",
 "kind": "function",
-"line": 375,
+"line": 381,
 "static": false
 },
 {
@@ -47268,7 +47302,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_get",
 "kind": "function",
-"line": 260,
+"line": 266,
 "static": false
 },
 {
@@ -47276,7 +47310,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_getstamp",
 "kind": "function",
-"line": 281,
+"line": 287,
 "static": false
 },
 {
@@ -47284,7 +47318,7 @@
 "file": "libatalk/cnid/cnid_init.c",
 "id": "libatalk/cnid/cnid_init.c#cnid_init",
 "kind": "function",
-"line": 47,
+"line": 46,
 "static": false
 },
 {
@@ -47292,7 +47326,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_lookup",
 "kind": "function",
-"line": 315,
+"line": 321,
 "static": false
 },
 {
@@ -47300,7 +47334,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_module_named",
 "kind": "function",
-"line": 49,
+"line": 46,
 "static": true
 },
 {
@@ -47444,7 +47478,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_open",
 "kind": "function",
-"line": 104,
+"line": 110,
 "static": false
 },
 {
@@ -47452,7 +47486,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_register",
 "kind": "function",
-"line": 79,
+"line": 77,
 "static": false
 },
 {
@@ -47460,7 +47494,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_resolve",
 "kind": "function",
-"line": 428,
+"line": 434,
 "static": false
 },
 {
@@ -47468,7 +47502,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_scheme_registered",
 "kind": "function",
-"line": 66,
+"line": 63,
 "static": false
 },
 {
@@ -47716,7 +47750,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_update",
 "kind": "function",
-"line": 457,
+"line": 463,
 "static": false
 },
 {
@@ -47740,7 +47774,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#cnid_wipe",
 "kind": "function",
-"line": 475,
+"line": 481,
 "static": false
 },
 {
@@ -48236,7 +48270,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#create_result_handle",
 "kind": "function",
-"line": 672,
+"line": 651,
 "static": true
 },
 {
@@ -48476,7 +48510,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#dd_dump",
 "kind": "function",
-"line": 171,
+"line": 150,
 "static": true
 },
 {
@@ -52012,7 +52046,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#localsearch_backend_active",
 "kind": "function",
-"line": 1006,
+"line": 771,
 "static": true
 },
 {
@@ -56716,7 +56750,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_cnids_get_first",
 "kind": "function",
-"line": 546,
+"line": 525,
 "static": true
 },
 {
@@ -56724,7 +56758,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_createCNIDArray",
 "kind": "function",
-"line": 367,
+"line": 346,
 "static": false
 },
 {
@@ -56764,7 +56798,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_index_event",
 "kind": "function",
-"line": 146,
+"line": 125,
 "static": false
 },
 {
@@ -56772,7 +56806,7 @@
 "file": "etc/spotlight/localsearch/sl_localsearch.c",
 "id": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_close",
 "kind": "function",
-"line": 400,
+"line": 403,
 "static": true
 },
 {
@@ -56780,7 +56814,7 @@
 "file": "etc/spotlight/localsearch/sl_localsearch.c",
 "id": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_close_query",
 "kind": "function",
-"line": 523,
+"line": 526,
 "static": true
 },
 {
@@ -56788,7 +56822,7 @@
 "file": "etc/spotlight/localsearch/sl_localsearch.c",
 "id": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_fetch_results",
 "kind": "function",
-"line": 483,
+"line": 486,
 "static": true
 },
 {
@@ -56796,7 +56830,7 @@
 "file": "etc/spotlight/localsearch/sl_localsearch.c",
 "id": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_init",
 "kind": "function",
-"line": 346,
+"line": 349,
 "static": true
 },
 {
@@ -56804,7 +56838,7 @@
 "file": "etc/spotlight/localsearch/sl_localsearch.c",
 "id": "etc/spotlight/localsearch/sl_localsearch.c#sl_localsearch_open_query",
 "kind": "function",
-"line": 415,
+"line": 418,
 "static": true
 },
 {
@@ -56932,7 +56966,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_path_has_dotdot",
 "kind": "function",
-"line": 523,
+"line": 502,
 "static": true
 },
 {
@@ -56940,7 +56974,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_path_in_scope",
 "kind": "function",
-"line": 495,
+"line": 474,
 "static": false
 },
 {
@@ -56964,7 +56998,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_reqinfo_contains",
 "kind": "function",
-"line": 422,
+"line": 401,
 "static": true
 },
 {
@@ -56972,7 +57006,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_closeQueryForContext",
 "kind": "function",
-"line": 1777,
+"line": 1542,
 "static": true
 },
 {
@@ -56980,7 +57014,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_fetchAttributeNamesForOIDArray",
 "kind": "function",
-"line": 1630,
+"line": 1395,
 "static": true
 },
 {
@@ -56988,7 +57022,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_fetchAttributesForOIDArray",
 "kind": "function",
-"line": 1690,
+"line": 1455,
 "static": true
 },
 {
@@ -56996,7 +57030,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_fetchPropertiesForContext",
 "kind": "function",
-"line": 1040,
+"line": 805,
 "static": true
 },
 {
@@ -57004,7 +57038,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_fetchQueryResultsForContext",
 "kind": "function",
-"line": 1453,
+"line": 1218,
 "static": true
 },
 {
@@ -57012,7 +57046,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_openQuery",
 "kind": "function",
-"line": 1133,
+"line": 898,
 "static": true
 },
 {
@@ -57020,7 +57054,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_rpc_storeAttributesForOIDArray",
 "kind": "function",
-"line": 1556,
+"line": 1321,
 "static": true
 },
 {
@@ -57028,7 +57062,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#sl_sanitize_reqinfo",
 "kind": "function",
-"line": 443,
+"line": 422,
 "static": true
 },
 {
@@ -57393,75 +57427,83 @@
 },
 {
 "documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_add",
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_add",
 "kind": "function",
-"line": 786,
+"line": 110,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_cancel",
+"kind": "function",
+"line": 174,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_cancelled_cleanup",
+"kind": "function",
+"line": 230,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_close",
+"kind": "function",
+"line": 199,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_destroy",
+"kind": "function",
+"line": 151,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_dump",
+"kind": "function",
+"line": 288,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_for_ctx",
+"kind": "function",
+"line": 131,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_idle_cleanup",
+"kind": "function",
+"line": 253,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_remove",
+"kind": "function",
+"line": 66,
 "static": true
 },
 {
 "documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_cancel",
+"file": "etc/afpd/spotlight_queries.c",
+"id": "etc/afpd/spotlight_queries.c#slq_state_name",
 "kind": "function",
-"line": 877,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_cancelled_add",
-"kind": "function",
-"line": 796,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_cancelled_cleanup",
-"kind": "function",
-"line": 887,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_destroy",
-"kind": "function",
-"line": 854,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_dump",
-"kind": "function",
-"line": 983,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_for_ctx",
-"kind": "function",
-"line": 832,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_idle_cleanup",
-"kind": "function",
-"line": 924,
-"static": true
-},
-{
-"documented": true,
-"file": "etc/afpd/spotlight.c",
-"id": "etc/afpd/spotlight.c#slq_remove",
-"kind": "function",
-"line": 810,
-"static": true
+"line": 47,
+"static": false
 },
 {
 "documented": true,
@@ -57564,7 +57606,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#spotlight_get_be32",
 "kind": "function",
-"line": 89,
+"line": 68,
 "static": true
 },
 {
@@ -57596,7 +57638,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#spotlight_put_be32",
 "kind": "function",
-"line": 103,
+"line": 82,
 "static": true
 },
 {
@@ -58252,7 +58294,7 @@
 "file": "etc/afpd/spotlight.c",
 "id": "etc/afpd/spotlight.c#tab_level",
 "kind": "function",
-"line": 120,
+"line": 99,
 "static": true
 },
 {
@@ -58412,7 +58454,7 @@
 "file": "etc/spotlight/localsearch/sl_localsearch.c",
 "id": "etc/spotlight/localsearch/sl_localsearch.c#tracker_query_cb",
 "kind": "function",
-"line": 299,
+"line": 301,
 "static": true
 },
 {
@@ -59324,7 +59366,7 @@
 "file": "libatalk/cnid/cnid.c",
 "id": "libatalk/cnid/cnid.c#valide",
 "kind": "function",
-"line": 164,
+"line": 170,
 "static": true
 },
 {

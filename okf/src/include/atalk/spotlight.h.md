@@ -5,7 +5,7 @@ description: "5 types, includes 3 project headers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/spotlight.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,8 +41,10 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 Internal query data structure.
 
-Defined at line 95.
-* `struct list_head slq_list`: queries are stored in a list
+Defined at line 102.
+* `struct _slq_t * slq_next`: Links owned by the query manager.
+* `struct _slq_t * slq_prev`: Previous query in the same owner.
+* `slq_membership_t slq_membership`: Zero initializes to detached.
 * `slq_state_t slq_state`: State.
 * `AFPObj * slq_obj`: global [AFPObj](globals.h.md#struct-afpobj) handle
 * `const struct vol * slq_vol`: volume handle
@@ -61,13 +63,13 @@ Defined at line 95.
 
 ### struct sl_backend_ops
 
-Defined at line 118.
+Defined at line 127.
 * `const char * sbo_name`
 * `int(* sbo_init`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops); called through by [sl_rpc_openQuery](../../etc/afpd/spotlight.c.md#sl_rpc_openquery).
 * `void(* sbo_close`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops).
 * `int(* sbo_open_query`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops); called through by [sl_rpc_openQuery](../../etc/afpd/spotlight.c.md#sl_rpc_openquery).
 * `int(* sbo_fetch_results`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops); called through by [sl_rpc_fetchQueryResultsForContext](../../etc/afpd/spotlight.c.md#sl_rpc_fetchqueryresultsforcontext).
-* `void(* sbo_close_query`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops); called through by [slq_cancelled_cleanup](../../etc/afpd/spotlight.c.md#slq_cancelled_cleanup), [slq_destroy](../../etc/afpd/spotlight.c.md#slq_destroy).
+* `void(* sbo_close_query`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops); called through by [slq_destroy](../../etc/afpd/spotlight_queries.c.md#slq_destroy).
 * `int(* sbo_index_event`: Assigned in [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops); called through by [sl_index_event](../../etc/afpd/spotlight.c.md#sl_index_event).
 
 ### struct sl_cnids_t
@@ -81,7 +83,7 @@ Defined at line 54.
 
 Handle for query results.
 
-Defined at line 88.
+Defined at line 95.
 * `int num_results`
 * `sl_cnids_t * cnids`
 * `sl_array_t * fm_array`
@@ -102,6 +104,7 @@ Defined at line 51.
 * `typedef struct timeval sl_time_t`
 * `typedef struct _slq_t slq_t`
 * `enum sl_index_event_t`: `SL_INDEX_FILE_MODIFY`, `SL_INDEX_FILE_DELETE`, `SL_INDEX_DIR_DELETE`, `SL_INDEX_FILE_CREATE`, `SL_INDEX_DIR_CREATE`, `SL_INDEX_FILE_MOVE`, `SL_INDEX_DIR_MOVE`
+* `enum slq_membership_t`: `SLQ_MEMBERSHIP_DETACHED`, `SLQ_MEMBERSHIP_ACTIVE`, `SLQ_MEMBERSHIP_CANCELLED`
 * `enum slq_state_t`: `SLQ_STATE_NEW`, `SLQ_STATE_RUNNING`, `SLQ_STATE_RESULTS`, `SLQ_STATE_FULL`, `SLQ_STATE_DONE`, `SLQ_STATE_CANCEL_PENDING`, `SLQ_STATE_CANCELLED`, `SLQ_STATE_ERROR`
 
 # Macros
