@@ -1,5 +1,5 @@
 {
-"commit": "f23c5a5d3a77f75fdef84ef178e2f0d3a9f7fc44",
+"commit": "7279304e7fe0fec6b442dadddb28eb72097e973b",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -44310,7 +44310,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#add_object",
 "kind": "function",
-"line": 368,
+"line": 372,
 "static": true
 },
 {
@@ -46678,7 +46678,7 @@
 "file": "libatalk/unicode/charsets/mac_centraleurope.h",
 "id": "libatalk/unicode/charsets/mac_centraleurope.h#char_mac_centraleurope_to_ucs2",
 "kind": "function",
-"line": 55,
+"line": 56,
 "static": true
 },
 {
@@ -46686,7 +46686,7 @@
 "file": "libatalk/unicode/charsets/mac_cyrillic.h",
 "id": "libatalk/unicode/charsets/mac_cyrillic.h#char_mac_cyrillic_to_ucs2",
 "kind": "function",
-"line": 55,
+"line": 56,
 "static": true
 },
 {
@@ -46718,7 +46718,7 @@
 "file": "libatalk/unicode/charsets/mac_turkish.h",
 "id": "libatalk/unicode/charsets/mac_turkish.h#char_mac_turkish_to_ucs2",
 "kind": "function",
-"line": 55,
+"line": 56,
 "static": true
 },
 {
@@ -46726,7 +46726,7 @@
 "file": "libatalk/unicode/charsets/mac_centraleurope.h",
 "id": "libatalk/unicode/charsets/mac_centraleurope.h#char_ucs2_to_mac_centraleurope",
 "kind": "function",
-"line": 119,
+"line": 120,
 "static": true
 },
 {
@@ -46734,7 +46734,7 @@
 "file": "libatalk/unicode/charsets/mac_cyrillic.h",
 "id": "libatalk/unicode/charsets/mac_cyrillic.h#char_ucs2_to_mac_cyrillic",
 "kind": "function",
-"line": 116,
+"line": 117,
 "static": true
 },
 {
@@ -46766,7 +46766,7 @@
 "file": "libatalk/unicode/charsets/mac_turkish.h",
 "id": "libatalk/unicode/charsets/mac_turkish.h#char_ucs2_to_mac_turkish",
 "kind": "function",
-"line": 140,
+"line": 141,
 "static": true
 },
 {
@@ -50110,7 +50110,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#find_object",
 "kind": "function",
-"line": 390,
+"line": 394,
 "static": true
 },
 {
@@ -50278,7 +50278,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#ftw_dir",
 "kind": "function",
-"line": 700,
+"line": 704,
 "static": true
 },
 {
@@ -50286,7 +50286,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#ftw_startup",
 "kind": "function",
-"line": 873,
+"line": 877,
 "static": true
 },
 {
@@ -53286,7 +53286,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#mystpcpy",
 "kind": "function",
-"line": 262,
+"line": 266,
 "static": true
 },
 {
@@ -53294,7 +53294,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#mytdestroy",
 "kind": "function",
-"line": 239,
+"line": 243,
 "static": true
 },
 {
@@ -53726,7 +53726,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#nftw",
 "kind": "function",
-"line": 1082,
+"line": 1086,
 "static": false
 },
 {
@@ -53758,7 +53758,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#object_compare",
 "kind": "function",
-"line": 342,
+"line": 346,
 "static": true
 },
 {
@@ -54070,7 +54070,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#open_dir_stream",
 "kind": "function",
-"line": 418,
+"line": 422,
 "static": true
 },
 {
@@ -54998,7 +54998,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#process_entry",
 "kind": "function",
-"line": 583,
+"line": 587,
 "static": true
 },
 {
@@ -58302,7 +58302,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#tdestroy_recurse",
 "kind": "function",
-"line": 216,
+"line": 220,
 "static": true
 },
 {
@@ -59790,7 +59790,7 @@
 "file": "bin/nad/ftw.c",
 "id": "bin/nad/ftw.c#xgetcwd",
 "kind": "function",
-"line": 289,
+"line": 293,
 "static": true
 },
 {

@@ -5,14 +5,14 @@ description: "24 files, 181 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/nad"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:10:08+11:00 }
 ---
 
 # Files
 
 * [bin/nad/crc16.c](nad/crc16.c.md): CRC-16/XMODEM for BinHex and MacBinary archives.
 * [bin/nad/crc16.h](nad/crc16.h.md): Incremental CRC-16/XMODEM checksum interface for nad.
-* [bin/nad/ftw.c](nad/ftw.c.md): File tree walker from the GNU C Library for the nad commands.
+* [bin/nad/ftw.c](nad/ftw.c.md): File tree walker for the nad commands.
 * [bin/nad/ftw.h](nad/ftw.h.md): File tree traversal callbacks, flags and entry point for nad.
 * [bin/nad/hqx.c](nad/hqx.c.md): BinHex 4.0 encoding and decoding for the nad archive commands.
 * [bin/nad/hqx.h](nad/hqx.h.md): BinHex file, header and fork I/O interface.

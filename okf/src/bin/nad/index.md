@@ -2,7 +2,7 @@
 
 * [crc16.c](crc16.c.md) - CRC-16/XMODEM for BinHex and MacBinary archives.
 * [crc16.h](crc16.h.md) - Incremental CRC-16/XMODEM checksum interface for nad.
-* [ftw.c](ftw.c.md) - File tree walker from the GNU C Library for the nad commands.
+* [ftw.c](ftw.c.md) - File tree walker for the nad commands.
 * [ftw.h](ftw.h.md) - File tree traversal callbacks, flags and entry point for nad.
 * [hqx.c](hqx.c.md) - BinHex 4.0 encoding and decoding for the nad archive commands.
 * [hqx.h](hqx.h.md) - BinHex file, header and fork I/O interface.

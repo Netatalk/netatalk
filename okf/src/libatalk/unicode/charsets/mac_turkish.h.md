@@ -5,7 +5,7 @@ description: "Mac Turkish character mapping tables."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_turkish.h"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:10:08+11:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -22,7 +22,7 @@ Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commi
 static int char_mac_turkish_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 ```
 
-Defined at lines 55 to 72.
+Defined at lines 56 to 73.
 
 Map a MAC_TURKISH byte to UCS2, or return 0 for a 0xfffd entry.
 
@@ -36,7 +36,7 @@ Uses file-scope variables: `mac_turkish_2uni`
 static int char_ucs2_to_mac_turkish(unsigned char *r, ucs2_t wc)
 ```
 
-Defined at lines 140 to 175.
+Defined at lines 141 to 176.
 
 Map a UCS2 character to a MAC_TURKISH byte, or return 0.
 

@@ -5,7 +5,7 @@ description: "Mac Cyrillic character mapping tables."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_cyrillic.h"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:10:08+11:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -22,7 +22,7 @@ Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commi
 static int char_mac_cyrillic_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 ```
 
-Defined at lines 55 to 66.
+Defined at lines 56 to 67.
 
 Map a MAC_CYRILLIC byte to UCS2, through the table above 0x7f.
 
@@ -36,7 +36,7 @@ Uses file-scope variables: `mac_cyrillic_2uni`
 static int char_ucs2_to_mac_cyrillic(unsigned char *r, ucs2_t wc)
 ```
 
-Defined at lines 116 to 151.
+Defined at lines 117 to 152.
 
 Map a UCS2 character to a MAC_CYRILLIC byte, or return 0.
 
