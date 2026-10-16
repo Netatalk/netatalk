@@ -29,12 +29,17 @@
 #include "filedir.h"
 #include "subtests.h"
 
+/* Per-component name limit. NAME_MAX is not defined on illumos, and this is
+ * only an upper bound for the trees the tests build, so keep it fixed the way
+ * the rest of the testsuite does. */
+#define SUBTEST_NAME_MAX 255
+
 /* A directory whose deepest path is prefix + depth*(component_len+1) bytes. */
 static int make_tree(const char *base, size_t depth, size_t component_len,
                      char *deepest, size_t deepest_len)
 {
     char path[PATH_MAX];
-    char name[NAME_MAX + 1];
+    char name[SUBTEST_NAME_MAX + 1];
     size_t i;
     size_t j;
 
@@ -46,7 +51,7 @@ static int make_tree(const char *base, size_t depth, size_t component_len,
         return -1;
     }
 
-    if (component_len == 0 || component_len > NAME_MAX) {
+    if (component_len == 0 || component_len > SUBTEST_NAME_MAX) {
         return -1;
     }
 
