@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -166,9 +166,28 @@ Parameters:
 
 Returns: true when this occurrence should be logged
 
-Called by: [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [dsi_refuse_starved](../dsi/dsi_getsess.c.md#dsi_refuse_starved), [dsi_write_file](../dsi/dsi_write.c.md#dsi_write_file), [of_alloc](../../etc/afpd/ofork.c.md#of_alloc), [of_log_nfile](../../etc/afpd/ofork.c.md#of_log_nfile), [open_pipe](../dsi/dsi_write.c.md#open_pipe)
+Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [dsi_refuse_starved](../dsi/dsi_getsess.c.md#dsi_refuse_starved), [dsi_stream_read_file](../dsi/dsi_stream.c.md#dsi_stream_read_file), [dsi_write_file](../dsi/dsi_write.c.md#dsi_write_file), [icon_open_failed](../../etc/afpd/desktop.c.md#icon_open_failed), [of_alloc](../../etc/afpd/ofork.c.md#of_alloc), [of_log_nfile](../../etc/afpd/ofork.c.md#of_log_nfile), [open_pipe](../dsi/dsi_write.c.md#open_pipe)
 
-Mentioned in the documentation of: [open_pipe](../dsi/dsi_write.c.md#open_pipe)
+Mentioned in the documentation of: [icon_open_failed](../../etc/afpd/desktop.c.md#icon_open_failed), [open_pipe](../dsi/dsi_write.c.md#open_pipe)
+
+### write_full
+
+```c
+int write_full(int fd, const void *buf, size_t len)
+```
+
+Defined at lines 295 to 319. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+
+Write len bytes in full at the descriptor's file position, going on after EINTR and after a write that stops short.
+
+Parameters:
+* `fd`: descriptor to write to
+* `buf`: bytes to write
+* `len`: their count
+
+Returns: 0, or -1 with errno set, EIO for a write that makes no progress
+
+Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [copy_fork](../adouble/ad_write.c.md#copy_fork)
 
 ### usage_level_update
 
@@ -176,7 +195,7 @@ Mentioned in the documentation of: [open_pipe](../dsi/dsi_write.c.md#open_pipe)
 bool usage_level_update(int *level, int64_t used, int64_t limit)
 ```
 
-Defined at lines 298 to 318. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 334 to 354. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Track usage against the 50, 75 and 90 percent warning thresholds.
 
@@ -201,7 +220,7 @@ Mentioned in the documentation of: [usage_level_pct](unix.c.md#usage_level_pct)
 int usage_level_pct(int level)
 ```
 
-Defined at lines 327 to 330. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 363 to 366. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Threshold, in percent, that `level` has reached.
 
@@ -220,7 +239,7 @@ Uses file-scope variables: `usage_warn_pct`
 void become_root(void)
 ```
 
-Defined at lines 340 to 354. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 376 to 390. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 seteuid(0) and back, if either fails and panic != 0 we PANIC.
 
@@ -236,7 +255,7 @@ Uses file-scope variables: `root_nesting`, `saved_uid`
 void unbecome_root(void)
 ```
 
-Defined at lines 363 to 380. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 399 to 416. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Drop the root privileges of the matching become_root call.
 
@@ -254,7 +273,7 @@ Mentioned in the documentation of: [become_root](unix.c.md#become_root)
 const char * getcwdpath(void)
 ```
 
-Defined at lines 387 to 397.
+Defined at lines 423 to 433.
 
 get cwd in static buffer
 
@@ -268,7 +287,7 @@ Called by: [acltoownermode](../../etc/afpd/acls.c.md#acltoownermode), [ad_mkdir]
 const char * fullpathname(const char *name)
 ```
 
-Defined at lines 408 to 424.
+Defined at lines 444 to 460.
 
 Return the absolute path of a name.
 
@@ -289,7 +308,7 @@ Called by: [RF_setdirowner_adouble](../vfs/vfs.c.md#rf_setdirowner_adouble), [ad
 char * stripped_slashes_basename(char *p)
 ```
 
-Defined at lines 443 to 452.
+Defined at lines 479 to 488.
 
 Takes a buffer with a path, strips slashs, returns basename.
 
@@ -316,7 +335,7 @@ Called by: [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_enco
 const char * tmpdir(void)
 ```
 
-Defined at lines 465 to 560.
+Defined at lines 501 to 596.
 
 Return a private temporary directory for the process, netatalk-PID under TMPDIR or /tmp.
 
@@ -334,7 +353,7 @@ Mentioned in the documentation of: [as_debug](../../etc/atalkd/main.c.md#as_debu
 int ostat(const char *path, struct stat *buf, int options)
 ```
 
-Defined at lines 577 to 584.
+Defined at lines 613 to 620.
 
 Run lstat with O_NOFOLLOW in options, stat otherwise.
 
@@ -353,7 +372,7 @@ Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](..
 int ochown(const char *path, uid_t owner, gid_t group, int options)
 ```
 
-Defined at lines 595 to 602.
+Defined at lines 631 to 638.
 
 Run lchown with O_NOFOLLOW in options, chown otherwise.
 
@@ -373,7 +392,7 @@ Called by: [ea_chown](../vfs/ea_ad.c.md#ea_chown), [setdirowner](../../etc/afpd/
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 ```
 
-Defined at lines 618 to 644.
+Defined at lines 654 to 680.
 
 Change the mode of a path, with options for symlinks and ACLs.
 
@@ -395,7 +414,7 @@ Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_s
 int ostatat(int dirfd, const char *path, struct stat *st, int options)
 ```
 
-Defined at lines 656 to 664.
+Defined at lines 692 to 700.
 
 Run fstatat relative to a directory descriptor, without following a final symlink for O_NOFOLLOW.
 
@@ -415,7 +434,7 @@ Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [RF_r
 int ochdir(const char *dir, int options)
 ```
 
-Defined at lines 681 to 766.
+Defined at lines 717 to 802.
 
 Change the current directory and report a symlink on the way for O_NOFOLLOW.
 
@@ -437,7 +456,7 @@ Mentioned in the documentation of: [ochdir_vol](../../etc/afpd/directory.c.md#oc
 void randombytes(void *buf, int n)
 ```
 
-Defined at lines 777 to 804.
+Defined at lines 813 to 840.
 
 Fill a buffer with random bytes from /dev/urandom.
 
@@ -455,7 +474,7 @@ Called by: [get_vol_uuid](netatalk_conf.c.md#get_vol_uuid), [set_signature](../.
 int gmem(gid_t gid, int ngroups, gid_t *groups)
 ```
 
-Defined at lines 814 to 825. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 850 to 861. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Tell whether a group ID is in a group list.
 
@@ -474,7 +493,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol), [posix_acl_rights](../../e
 char * realpath_safe(const char *path)
 ```
 
-Defined at lines 835 to 870.
+Defined at lines 871 to 906.
 
 Resolve a path with realpath into a new buffer.
 
@@ -493,7 +512,7 @@ Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [f
 const char * basename_safe(const char *path)
 ```
 
-Defined at lines 881 to 886.
+Defined at lines 917 to 922.
 
 Return the basename of a path without changing the path.
 
@@ -514,7 +533,7 @@ Called by: [fce_register](../../etc/afpd/fce_api.c.md#fce_register)
 char * strtok_quote(char *s, const char *delim)
 ```
 
-Defined at lines 900 to 942.
+Defined at lines 936 to 978.
 
 Split a string like strtok, with tokens in double quotes kept whole.
 
@@ -534,7 +553,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol)
 int set_groups(AFPObj *obj, struct passwd *pwd)
 ```
 
-Defined at lines 954 to 985. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 990 to 1021. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Load the supplementary groups of a user into the process and into obj.
 
@@ -554,7 +573,7 @@ Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath), [load_afp_conf_vols]
 const char * print_groups(int ngroups, gid_t *groups)
 ```
 
-Defined at lines 998 to 1013. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1034 to 1049. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Format a group list for a log message.
 

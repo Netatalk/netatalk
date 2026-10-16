@@ -5,7 +5,7 @@ description: "Part of Netatalk's AppleDouble implementatation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -65,7 +65,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/adouble/ad_open.c](../../libatalk/adouble/ad_open.c.md)
 * [libatalk/adouble/ad_read.c](../../libatalk/adouble/ad_read.c.md)
 * [libatalk/adouble/ad_recvfile.c](../../libatalk/adouble/ad_recvfile.c.md)
-* [libatalk/adouble/ad_sendfile.c](../../libatalk/adouble/ad_sendfile.c.md)
 * [libatalk/adouble/ad_size.c](../../libatalk/adouble/ad_size.c.md)
 * [libatalk/adouble/ad_write.c](../../libatalk/adouble/ad_write.c.md)
 * [libatalk/cnid/mysql/cnid_mysql.c](../../libatalk/cnid/mysql/cnid_mysql.c.md)

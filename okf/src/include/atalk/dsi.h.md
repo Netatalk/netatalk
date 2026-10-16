@@ -5,7 +5,7 @@ description: "DSI (Data Stream Interface) protocol definitions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/dsi.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -63,7 +63,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void dsi_setstatus(DSI *, char *, const size_t)
 ```
 
-Declared at include/atalk/dsi.h line 171; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 170; no definition in the scanned sources.
 
 ### dsi_kill
 
@@ -71,7 +71,7 @@ Declared at include/atalk/dsi.h line 171; no definition in the scanned sources.
 void dsi_kill(int)
 ```
 
-Declared at include/atalk/dsi.h line 182; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 181; no definition in the scanned sources.
 
 # Types
 
@@ -87,7 +87,7 @@ Defined at line 58.
 * `struct sockaddr_storage server client`
 * `struct itimerval timer`
 * `int tickle`: tickle count
-* `int in_write`: in the middle of writing multiple packets, signal handlers can't write to the socket
+* `int in_write`: a reply under way or left unfinished
 * `int msg_request`: pending message to the client
 * `int down_request`: pending SIGUSR1 down in 5 mn
 * `uint32_t attn_quantum`
@@ -160,4 +160,4 @@ Defined at line 42.
 * `DSI_SERVQUANT_MAX`: maximum server quantum (256 MiB)
 * `DSI_SERVQUANT_MIN`: minimum server quantum
 * `DSI_SLEEPING`: we're sleeping after FPZzzzz
-* Undocumented: `DSIERR_BADVERS`, `DSIERR_BUFSMALL`, `DSIERR_NOACK`, `DSIERR_NOSERV`, `DSIERR_NOSESS`, `DSIERR_OK`, `DSIERR_PARM`, `DSIERR_SERVBUSY`, `DSIERR_SESSCLOS`, `DSIERR_SIZERR`, `DSIERR_TOOMANY`, `DSIFL_MAX`, `DSIFL_REPLY`, `DSIFL_REQUEST`, `DSI_BLOCKSIZ`, `DSI_DATASIZ`, `DSI_FRAME_OVERHEAD_EXT`, `DSI_MSG_MORE`, `DSI_NOWAIT`, `DSI_WROFF_FPWRITE`, `DSI_WROFF_FPWRITEEXT`, `dsi_send`, `dsi_serverID`, `dsi_wrtreply`
+* Undocumented: `DSIERR_BADVERS`, `DSIERR_BUFSMALL`, `DSIERR_NOACK`, `DSIERR_NOSERV`, `DSIERR_NOSESS`, `DSIERR_OK`, `DSIERR_PARM`, `DSIERR_SERVBUSY`, `DSIERR_SESSCLOS`, `DSIERR_SIZERR`, `DSIERR_TOOMANY`, `DSIFL_MAX`, `DSIFL_REPLY`, `DSIFL_REQUEST`, `DSI_BLOCKSIZ`, `DSI_DATASIZ`, `DSI_FRAME_OVERHEAD_EXT`, `DSI_NOWAIT`, `DSI_WROFF_FPWRITE`, `DSI_WROFF_FPWRITEEXT`, `dsi_send`, `dsi_serverID`, `dsi_wrtreply`

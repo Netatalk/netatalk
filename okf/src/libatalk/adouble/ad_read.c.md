@@ -5,7 +5,7 @@ description: "Reading the forks of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_read.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -48,11 +48,11 @@ Called by: [ad_convert_pread_full](ad_open.c.md#ad_convert_pread_full), [ad_head
 ssize_t ad_read(struct adouble *ad, const uint32_t eid, off_t off, char *buf, const size_t buflen)
 ```
 
-Defined at lines 96 to 142.
+Defined at lines 97 to 153.
 
 Read from the data or resource fork of an AppleDouble.
 
-The data fork of a symlink yields the link target, and fails when buflen cannot hold it. Any other eid reads the resource fork, and a closed resource fork yields 0. The ea layout stores the fork at offset 0 of its EA, or behind the sidecar header without HAVE_EAFD. Version 2 adds the entry offset from the header. The function checks no byte-range locks.
+The data fork of a symlink yields the link target from off, and fails with ERANGE when buflen cannot hold the rest of it. Any other eid reads the resource fork, and a closed resource fork yields 0. The ea layout stores the fork at offset 0 of its EA, or behind the sidecar header without HAVE_EAFD. Version 2 adds the entry offset from the header. The function checks no byte-range locks.
 
 Parameters:
 * `ad`: AppleDouble with the fork open
@@ -61,7 +61,7 @@ Parameters:
 * `buf`: receives the bytes
 * `buflen`: bytes to read
 
-Returns: bytes read, 0 at the end of the fork or for a closed resource fork, or -1 on failure
+Returns: bytes read, 0 at the end of the fork or for a closed resource fork, or -1 with errno set on failure
 
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [adf_pread](ad_read.c.md#adf_pread)
 

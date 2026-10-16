@@ -5,7 +5,7 @@ description: "DSI stream input and output on the session socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_stream.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -14,8 +14,9 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 
 * [atalk/dsi.h](../../include/atalk/dsi.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
+* [atalk/unix.h](../../include/atalk/unix.h.md)
 * [atalk/util.h](../../include/atalk/util.h.md)
-* System headers: `errno.h`, `limits.h`, `poll.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/socket.h`, `sys/types.h`, `sys/uio.h`, `time.h`, `unistd.h`
+* System headers: `errno.h`, `limits.h`, `poll.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/socket.h`, `sys/stat.h`, `sys/types.h`, `sys/uio.h`, `time.h`, `unistd.h`
 
 # Functions
 
@@ -25,7 +26,7 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 static void dsi_header_pack_reply(const DSI *dsi, char *buf)
 ```
 
-Defined at lines 59 to 68.
+Defined at lines 53 to 62.
 
 Write the session [DSI](../../include/atalk/dsi.h.md#struct-dsi) header into buf in wire format.
 
@@ -43,7 +44,7 @@ Called by: [dsi_stream_read_file](dsi_stream.c.md#dsi_stream_read_file), [dsi_st
 static int dsi_peek(DSI *dsi)
 ```
 
-Defined at lines 83 to 172.
+Defined at lines 77 to 166.
 
 Wait until the socket accepts writes, reading pending input meanwhile.
 
@@ -62,7 +63,7 @@ Called by: [dsi_stream_read_file](dsi_stream.c.md#dsi_stream_read_file), [dsi_st
 static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
 ```
 
-Defined at lines 185 to 212.
+Defined at lines 179 to 206.
 
 Take up to count bytes from the read-ahead buffer.
 
@@ -83,7 +84,7 @@ Called by: [buf_read](dsi_stream.c.md#buf_read), [dsi_buffered_stream_read](dsi_
 static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
 ```
 
-Defined at lines 227 to 251.
+Defined at lines 221 to 245.
 
 Read bytes from the read-ahead buffer, or from the socket when it is empty.
 
@@ -106,7 +107,7 @@ Called by: [dsi_stream_read](dsi_stream.c.md#dsi_stream_read)
 static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data, const size_t length)
 ```
 
-Defined at lines 265 to 300.
+Defined at lines 259 to 294.
 
 Read length bytes and refill the read-ahead buffer in 8192-byte chunks.
 
@@ -129,9 +130,9 @@ Called by: [dsi_stream_receive](dsi_stream.c.md#dsi_stream_receive)
 static void block_sig(DSI *dsi)
 ```
 
-Defined at lines 308 to 311.
+Defined at lines 302 to 305.
 
-Mark the start of a multi-packet write, so signal handlers leave the socket alone.
+Mark the start of a multi-packet write, which no tickle, attention or CloseSession frame may interleave.
 
 Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
@@ -144,7 +145,7 @@ Called by: [dsi_stream_send](dsi_stream.c.md#dsi_stream_send)
 static void unblock_sig(DSI *dsi)
 ```
 
-Defined at lines 318 to 321.
+Defined at lines 312 to 315.
 
 Mark the end of a multi-packet write that block_sig started.
 
@@ -159,7 +160,7 @@ Called by: [dsi_stream_send](dsi_stream.c.md#dsi_stream_send)
 static long long monotonic_ms(void)
 ```
 
-Defined at lines 328 to 333.
+Defined at lines 322 to 327.
 
 Read the monotonic clock.
 
@@ -173,7 +174,7 @@ Called by: [dsi_wait_input](dsi_stream.c.md#dsi_wait_input)
 int dsi_disconnect(DSI *dsi)
 ```
 
-Defined at lines 352 to 368. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 346 to 362. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Enter the disconnected state after a communication error with the client.
 
@@ -196,7 +197,7 @@ Calls through [`DSI::proto_close`](../../include/atalk/dsi.h.md#struct-dsi): no 
 int dsi_wait_input(DSI *dsi)
 ```
 
-Defined at lines 388 to 437. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 382 to 431. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Wait until the client sends more of the request being read.
 
@@ -219,7 +220,7 @@ Mentioned in the documentation of: [buf_read](dsi_stream.c.md#buf_read)
 ssize_t dsi_stream_write(DSI *, void *, const size_t, const int mode)
 ```
 
-Defined at lines 455 to 517. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 448 to 504. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send length raw bytes to the client socket.
 
@@ -229,38 +230,89 @@ Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
 * `data`: bytes to send
 * `length`: bytes to send
-* `mode`: 0, DSI_NOWAIT, or DSI_MSG_MORE to hint at a following send
+* `mode`: 0 or DSI_NOWAIT
 
 Returns: bytes sent, or -1 for a disconnected session or a failed send
 
 Calls: [dsi_peek](dsi_stream.c.md#dsi_peek)
 
-Called by: [dsi_attention](dsi_attn.c.md#dsi_attention), [dsi_read](dsi_read.c.md#dsi_read), [dsi_stream_read_file](dsi_stream.c.md#dsi_stream_read_file), [dsi_stream_send](dsi_stream.c.md#dsi_stream_send), [dsi_tickle](dsi_tickle.c.md#dsi_tickle)
+Called by: [dsi_attention](dsi_attn.c.md#dsi_attention), [dsi_read](dsi_read.c.md#dsi_read), [dsi_stream_copy_file](dsi_stream.c.md#dsi_stream_copy_file), [dsi_stream_send](dsi_stream.c.md#dsi_stream_send), [dsi_tickle](dsi_tickle.c.md#dsi_tickle)
+
+### sendfile_call
+
+```c
+static int sendfile_call(const DSI *dsi, int fromfd, off_t pos, size_t count, char *hdr, size_t hdrlen, size_t *sent)
+```
+
+Defined at lines 523 to 571.
+
+Make one sendfile call: the unsent header bytes, then file bytes.
+
+Linux sendfile takes no header, so the header goes out in a send of its own, held back by MSG_MORE until the file data follows. sent counts header bytes first, and is set after EAGAIN and EINTR too.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session whose socket to send on
+* `fromfd`: file to send from
+* `pos`: file offset of the first file byte
+* `count`: file bytes to send at most
+* `hdr`: unsent header bytes
+* `hdrlen`: bytes at hdr, 0 once the header is out
+* `sent`: bytes the call put on the socket
+
+Returns: 0, or -1 with errno set
+
+Called by: [dsi_stream_read_file](dsi_stream.c.md#dsi_stream_read_file)
+
+### dsi_stream_copy_file
+
+```c
+static int dsi_stream_copy_file(DSI *dsi, int fromfd, off_t pos, size_t *left, char *hdr, size_t hdrlen)
+```
+
+Defined at lines 588 to 623.
+
+Send the rest of a read reply through the request buffer.
+
+The unsent header bytes go first, then the file bytes from pos a session quantum at a time, until left reaches 0 or the file ends.
+
+Parameters:
+* `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session whose socket and request buffer to use
+* `fromfd`: file to send from
+* `pos`: file offset of the next file byte
+* `left`: file bytes the reply still owes, reduced by those sent
+* `hdr`: unsent header bytes
+* `hdrlen`: bytes at hdr
+
+Returns: 0, or -1 with errno set, which stays EAGAIN when the client ends the stream during a wait
+
+Calls: [dsi_stream_write](dsi_stream.c.md#dsi_stream_write)
+
+Called by: [dsi_stream_read_file](dsi_stream.c.md#dsi_stream_read_file)
 
 ### dsi_stream_read_file
 
 ```c
-ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len, const int err)
+int dsi_stream_read_file(DSI *, int, off_t off, const size_t len, const int err)
 ```
 
-Defined at lines 539 to 690. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 648 to 747. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send a streamed FPRead reply whose payload comes from a file through sendfile.
 
-The reply header carries length and the result code err. Solaris sends the header and the file in one sendfilev call, and FreeBSD passes the header to sendfile. Other platforms write the header first with MSG_MORE. The loop retries after EINTR and EAGAIN, reads pending input through dsi_peek meanwhile, and treats a zero-length result as a failure. DSI_NOREPLY marks the reply as sent, and in_write rises for the duration of the call.
+The reply header carries length and the result code err. Each sendfile_call sends header bytes before file bytes; the loop retries after EINTR and EAGAIN, reading pending input through dsi_peek, and stops at a call that sends nothing or an EINVAL at the end of the file. A file the kernel will not send from (EINVAL, ENOSYS, EOPNOTSUPP) goes through the request buffer instead. DSI_NOREPLY marks the reply as sent. A failure leaves in_write raised, as dsi_readinit does, so no tickle, attention or CloseSession frame follows the broken reply.
 
 Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
 * `fromfd`: file to send from
 * `offset`: file offset to start at
-* `length`: payload bytes to send
+* `length`: payload bytes to send, at least one and at most UINT32_MAX, the [DSI](../../include/atalk/dsi.h.md#struct-dsi) header's 32-bit length
 * `err`: AFP result code
 
-Returns: payload bytes sent, or -1 for a disconnected session or a failed transfer
+Returns: 0, or -1 with errno set: ENOTCONN for a disconnected session, EIO when the file ends first, or the error of the failed call, which stays EAGAIN or EINTR when the client ends the stream during a wait
 
-Calls: [dsi_header_pack_reply](dsi_stream.c.md#dsi_header_pack_reply), [dsi_peek](dsi_stream.c.md#dsi_peek), [dsi_stream_write](dsi_stream.c.md#dsi_stream_write), [sys_sendfile](../adouble/ad_sendfile.c.md#sys_sendfile)
+Calls: [dsi_header_pack_reply](dsi_stream.c.md#dsi_header_pack_reply), [dsi_peek](dsi_stream.c.md#dsi_peek), [dsi_stream_copy_file](dsi_stream.c.md#dsi_stream_copy_file), [log_backoff](../util/unix.c.md#log_backoff), [sendfile_call](dsi_stream.c.md#sendfile_call)
 
-Called by: [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [read_fork](../../etc/afpd/fork.c.md#read_fork)
+Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
 
 ### dsi_stream_read
 
@@ -268,7 +320,7 @@ Called by: [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [read_fork](.
 size_t dsi_stream_read(DSI *, void *, const size_t)
 ```
 
-Defined at lines 706 to 745. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 763 to 802. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Read length bytes from the read-ahead buffer and the socket.
 
@@ -293,7 +345,7 @@ Called by: [dsi_buffered_stream_read](dsi_stream.c.md#dsi_buffered_stream_read),
 int dsi_stream_send(DSI *, void *, size_t)
 ```
 
-Defined at lines 760 to 831. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 817 to 888. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send the reply header and length payload bytes as one [DSI](../../include/atalk/dsi.h.md#struct-dsi) message.
 
@@ -316,7 +368,7 @@ Called by: [dsi_cmdreply](dsi_cmdreply.c.md#dsi_cmdreply), [dsi_readinit](dsi_re
 int dsi_stream_receive(DSI *)
 ```
 
-Defined at lines 841 to 941. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 898 to 998. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Read [DSI](../../include/atalk/dsi.h.md#struct-dsi) command and data.
 
@@ -328,7 +380,3 @@ Returns: [DSI](../../include/atalk/dsi.h.md#struct-dsi) function on success, 0 o
 Calls: [dsi_buffered_stream_read](dsi_stream.c.md#dsi_buffered_stream_read), [dsi_stream_read](dsi_stream.c.md#dsi_stream_read)
 
 Called by: [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi)
-
-# Macros
-
-* Undocumented: `MSG_DONTWAIT`, `MSG_MORE`

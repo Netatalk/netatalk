@@ -5,7 +5,7 @@ description: "Fork commands: FPOpenFork, FPRead, FPWrite, FPCloseFork, byte rang
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -211,7 +211,7 @@ Called by: [afp_openfork](fork.c.md#afp_openfork)
 int afp_openfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 558 to 997.
+Defined at lines 558 to 980.
 
 FPOpenFork: open the data or resource fork of a file with access and deny modes.
 
@@ -228,7 +228,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_DENYCONF, AFPERR_OLOCK, AFPERR_ACCESS, AFPERR_LOCK, AFPERR_NFILE, AFPERR_VLOCK, AFPERR_BADTYPE, AFPERR_NOOBJ, or AFPERR_PARAM
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_data_open](../../include/atalk/adouble.h.md#ad_data_open), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [check_access](directory.c.md#check_access), [cname](directory.c.md#cname), [dir_remove](directory.c.md#dir_remove), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dirlookup](directory.c.md#dirlookup), [dirlookup_strict](directory.c.md#dirlookup_strict), [file_access](directory.c.md#file_access), [fork_setmode](fork.c.md#fork_setmode), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [get_afp_errno](directory.c.md#get_afp_errno), [get_id](file.c.md#get_id), [getforkparams](fork.c.md#getforkparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [of_alloc](ofork.c.md#of_alloc), [of_dealloc](ofork.c.md#of_dealloc), [of_findname](ofork.c.md#of_findname), [of_log_nfile](ofork.c.md#of_log_nfile), [of_note_open](ofork.c.md#of_note_open), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled), [virtual_icon_get_rfork](virtual_icon.c.md#virtual_icon_get_rfork), [virtual_icon_getfilparams](virtual_icon.c.md#virtual_icon_getfilparams)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_data_open](../../include/atalk/adouble.h.md#ad_data_open), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [check_access](directory.c.md#check_access), [cname](directory.c.md#cname), [dir_remove](directory.c.md#dir_remove), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dirlookup](directory.c.md#dirlookup), [dirlookup_strict](directory.c.md#dirlookup_strict), [file_access](directory.c.md#file_access), [fork_setmode](fork.c.md#fork_setmode), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [get_afp_errno](directory.c.md#get_afp_errno), [get_id](file.c.md#get_id), [getforkparams](fork.c.md#getforkparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [of_alloc](ofork.c.md#of_alloc), [of_dealloc](ofork.c.md#of_dealloc), [of_findname](ofork.c.md#of_findname), [of_log_nfile](ofork.c.md#of_log_nfile), [of_note_open](ofork.c.md#of_note_open), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled), [virtual_icon_get_rfork](virtual_icon.c.md#virtual_icon_get_rfork), [virtual_icon_getfilparams](virtual_icon.c.md#virtual_icon_getfilparams)
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md), `curdir` in [etc/afpd/directory.c](directory.c.md)
 
@@ -240,7 +240,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static void rfork_invalidate_for_ofork(const struct vol *vol, struct ofork *ofork)
 ```
 
-Defined at lines 1010 to 1026.
+Defined at lines 993 to 1009.
 
 Invalidate the cached resource fork data of the file behind an open fork.
 
@@ -260,7 +260,7 @@ Called by: [afp_setforkparams](fork.c.md#afp_setforkparams), [write_mark](fork.c
 static int fork_error(const struct ofork *ofork, const char *call, bool is_write)
 ```
 
-Defined at lines 1038 to 1069.
+Defined at lines 1021 to 1052.
 
 Map the errno of a failed fork write or truncate to the AFP reply.
 
@@ -279,7 +279,7 @@ Called by: [afp_setforkparams](fork.c.md#afp_setforkparams), [write_file](fork.c
 int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1088 to 1262.
+Defined at lines 1071 to 1245.
 
 FPSetForkParms: change the length of an open fork.
 
@@ -306,7 +306,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int byte_lock(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 1292 to 1380.
+Defined at lines 1275 to 1363.
 
 Shared body of FPByteRangeLock and FPByteRangeLockExt.
 
@@ -332,7 +332,7 @@ Called by: [afp_bytelock](fork.c.md#afp_bytelock), [afp_bytelock_ext](fork.c.md#
 int afp_bytelock(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1394 to 1398.
+Defined at lines 1377 to 1381.
 
 FPByteRangeLock: take or release a byte range lock on an open fork with 32-bit fields.
 
@@ -355,7 +355,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1412 to 1416.
+Defined at lines 1395 to 1399.
 
 FPByteRangeLockExt: take or release a byte range lock on an open fork with 64-bit fields.
 
@@ -378,7 +378,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1431 to 1456.
+Defined at lines 1416 to 1442.
 
 Read *rbuflen bytes from fork at offset.
 
@@ -389,7 +389,7 @@ Parameters:
 * `rbuf`: data buffer
 * `rbuflen`: in: number of bytes to read, out: bytes read
 
-Returns: AFP status code
+Returns: AFP_OK, AFPERR_EOF when the fork ends first, AFPERR_PARAM when the request is shorter than the rest of a symlink's target, or AFPERR_MISC when the read fails
 
 Calls: [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read)
 
@@ -401,7 +401,7 @@ Called by: [read_fork](fork.c.md#read_fork)
 static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry, char *ibuf, off_t offset, off_t reqcount, int err, size_t *rbuflen)
 ```
 
-Defined at lines 1474 to 1548.
+Defined at lines 1460 to 1534.
 
 Serve resource fork data from Tier 2 cache via [DSI](../../include/atalk/dsi.h.md#struct-dsi) framing.
 
@@ -430,11 +430,11 @@ Uses file-scope variables: `rfork_lru` in [etc/afpd/dircache.c](dircache.c.md)
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 1570 to 1923.
+Defined at lines 1558 to 1894.
 
 Shared body of FPRead and FPReadExt.
 
-The call reads reqcount bytes from offset, clamped at the fork size with AFPERR_EOF. It ignores the newline mask and character of the request. Strict locking takes a temporary read lock on the range. Virtual forks serve their in-memory data, and resource fork reads can come from the resource fork cache. Data goes out through sendfile when available, otherwise in dsi_read chunks. A failure in the middle of the reply ends the session.
+The call reads reqcount bytes from offset, clamped at the fork size with AFPERR_EOF, then cut at UINT32_MAX, the most a [DSI](../../include/atalk/dsi.h.md#struct-dsi) reply frames. It ignores the newline mask and character of the request. Strict locking takes a temporary read lock on the range. Virtual forks serve their in-memory data, and resource fork reads can come from the resource fork cache. Data goes out through sendfile when available, otherwise in dsi_read chunks. A failure in the middle of the reply ends the session.
 
 Parameters:
 * `obj`: session object
@@ -444,7 +444,7 @@ Parameters:
 * `rbuflen`: reply buffer capacity on entry, reply length on return
 * `is64`: nonzero for FPReadExt
 
-Returns: AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, or AFPERR_PARAM
+Returns: AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, AFPERR_MISC, or AFPERR_PARAM
 
 Calls: [ad_fork_fileno](../../libatalk/adouble/ad_open.c.md#ad_fork_fileno), [ad_size](../../libatalk/adouble/ad_size.c.md#ad_size), [ad_tmplock](../../libatalk/adouble/ad_lock.c.md#ad_tmplock), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [dsi_read](../../libatalk/dsi/dsi_read.c.md#dsi_read), [dsi_readdone](../../libatalk/dsi/dsi_read.c.md#dsi_readdone), [dsi_readinit](../../libatalk/dsi/dsi_read.c.md#dsi_readinit), [dsi_stream_read_file](../../libatalk/dsi/dsi_stream.c.md#dsi_stream_read_file), [fork_range_within](fork.h.md#fork_range_within), [get_off_t](fork.c.md#get_off_t), [of_find](ofork.c.md#of_find), [read_file](fork.c.md#read_file), [rfork_cache_free](ad_cache.c.md#rfork_cache_free), [rfork_cache_serve_from_buf](fork.c.md#rfork_cache_serve_from_buf), [rfork_cache_store_from_fd](ad_cache.c.md#rfork_cache_store_from_fd), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
@@ -460,7 +460,7 @@ Mentioned in the documentation of: [rfork_cache_serve_from_buf](fork.c.md#rfork_
 int afp_read(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1936 to 1940.
+Defined at lines 1907 to 1911.
 
 FPRead: read from an open fork with 32-bit offset and count.
 
@@ -483,7 +483,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1953 to 1957.
+Defined at lines 1924 to 1928.
 
 FPReadExt: read from an open fork with 64-bit offset and count.
 
@@ -506,7 +506,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_flush(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1971 to 1986.
+Defined at lines 1942 to 1957.
 
 FPFlush: flush every open fork of a volume to stable storage.
 
@@ -531,7 +531,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_flushfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2000 to 2026.
+Defined at lines 1971 to 1997.
 
 FPFlushFork: flush an open fork to stable storage.
 
@@ -556,7 +556,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_syncfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2043 to 2071.
+Defined at lines 2014 to 2042.
 
 FPSyncFork: flush an open fork to stable storage.
 
@@ -585,7 +585,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int flushfork(struct ofork *ofork)
 ```
 
-Defined at lines 2084 to 2128.
+Defined at lines 2055 to 2099.
 
 Flush the descriptors of an open fork to stable storage.
 
@@ -606,7 +606,7 @@ Called by: [afp_flushfork](fork.c.md#afp_flushfork), [afp_syncfork](fork.c.md#af
 int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2144 to 2175.
+Defined at lines 2115 to 2146.
 
 FPCloseFork: close an open fork.
 
@@ -631,7 +631,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int write_file(struct ofork *ofork, int eid, off_t *offset, char *rbuf, size_t rbuflen)
 ```
 
-Defined at lines 2191 to 2216.
+Defined at lines 2162 to 2187.
 
 Write rbuflen bytes into the fork at offset.
 
@@ -656,7 +656,7 @@ Called by: [write_fork](fork.c.md#write_fork)
 static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
 ```
 
-Defined at lines 2230 to 2242.
+Defined at lines 2201 to 2213.
 
 Flag a fork that a write reached.
 
@@ -677,7 +677,7 @@ Called by: [write_fork](fork.c.md#write_fork)
 static bool write_fits_count(const struct ofork *ofork, size_t len, off_t reqcount)
 ```
 
-Defined at lines 2254 to 2265.
+Defined at lines 2225 to 2236.
 
 Tell whether an FPWrite's payload of len bytes fits its ReqCount, logging the refusal when not.
 
@@ -696,7 +696,7 @@ Called by: [write_fork](fork.c.md#write_fork)
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 2291 to 2521.
+Defined at lines 2262 to 2492.
 
 Shared body of FPWrite and FPWriteExt.
 
@@ -722,7 +722,7 @@ Called by: [afp_write](fork.c.md#afp_write), [afp_write_ext](fork.c.md#afp_write
 int afp_write(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2534 to 2538.
+Defined at lines 2505 to 2509.
 
 FPWrite: write to an open fork with 32-bit offset and count.
 
@@ -745,7 +745,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2554 to 2558.
+Defined at lines 2525 to 2529.
 
 FPWriteExt: write to an open fork with 64-bit offset and count.
 
@@ -770,7 +770,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2576 to 2616.
+Defined at lines 2547 to 2587.
 
 FPGetForkParms: return the parameters of an open fork.
 

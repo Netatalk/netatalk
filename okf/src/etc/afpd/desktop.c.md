@@ -5,7 +5,7 @@ description: "Manage the AppleDesktop folder and its contents."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/desktop.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [mangle.h](mangle.h.md)
 * [netatalk/at.h](../../sys/netatalk/at.h.md)
 * [volume.h](volume.h.md)
-* System headers: `arpa/inet.h`, `bstrlib.h`, `ctype.h`, `errno.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/socket.h`, `sys/stat.h`, `sys/uio.h`
+* System headers: `arpa/inet.h`, `bstrlib.h`, `ctype.h`, `errno.h`, `fcntl.h`, `stdbool.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/socket.h`, `sys/stat.h`, `time.h`
 
 # Functions
 
@@ -42,7 +42,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int setdeskmode(const struct vol *vol, const mode_t mode)
 ```
 
-Defined at lines 69 to 176.
+Defined at lines 71 to 178.
 
 Apply a volume root mode change to the desktop database folder.
 
@@ -64,7 +64,7 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 189 to 263.
+Defined at lines 191 to 265.
 
 Apply a volume root owner change to the desktop database folder.
 
@@ -87,7 +87,7 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 static void create_appledesktop_folder(const struct vol *vol)
 ```
 
-Defined at lines 274 to 305.
+Defined at lines 276 to 307.
 
 Make sure the desktop database folder of a volume exists.
 
@@ -106,7 +106,7 @@ Called by: [afp_opendt](desktop.c.md#afp_opendt)
 int afp_opendt(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 320 to 337.
+Defined at lines 322 to 339.
 
 FPOpenDT: open the desktop database of a volume.
 
@@ -131,7 +131,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_closedt(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 351 to 364.
+Defined at lines 353 to 366.
 
 FPCloseDT: close the desktop database of a volume.
 
@@ -156,7 +156,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static char * icon_dtfile(struct vol *vol, uint8_t creator[4])
 ```
 
-Defined at lines 375 to 378.
+Defined at lines 377 to 380.
 
 Return the path of the icon file of a creator in the desktop database.
 
@@ -168,7 +168,39 @@ Returns: the path in the static buffer of dtfile, or NULL
 
 Calls: [dtfile](desktop.c.md#dtfile)
 
+Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#afp_geticon), [afp_geticoninfo](desktop.c.md#afp_geticoninfo), [icon_open_failed](desktop.c.md#icon_open_failed), [iconopen](desktop.c.md#iconopen)
+
+### icon_close
+
+```c
+static void icon_close(void)
+```
+
+Defined at lines 389 to 395.
+
+Close the icon file descriptor the icon calls share.
+
 Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#afp_geticon), [afp_geticoninfo](desktop.c.md#afp_geticoninfo), [iconopen](desktop.c.md#iconopen)
+
+Uses file-scope variables: `si`
+
+### icon_open_failed
+
+```c
+static int icon_open_failed(const char *fn, struct vol *vol, uint8_t creator[4])
+```
+
+Defined at lines 403 to 416.
+
+The answer of an icon read call whose icon file did not open.
+
+Returns: AFPERR_NOITEM for a creator without an icon file, AFPERR_MISC for any other failure, logged with fn under [log_backoff()](../../libatalk/util/unix.c.md#log_backoff)
+
+Calls: [icon_dtfile](desktop.c.md#icon_dtfile), [log_backoff](../../libatalk/util/unix.c.md#log_backoff)
+
+Called by: [afp_geticon](desktop.c.md#afp_geticon), [afp_geticoninfo](desktop.c.md#afp_geticoninfo)
+
+Uses file-scope variables: `icon_failures`
 
 ### iconopen
 
@@ -176,7 +208,7 @@ Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#a
 static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 ```
 
-Defined at lines 394 to 441.
+Defined at lines 432 to 475.
 
 Open the icon file of a creator in the desktop database.
 
@@ -190,11 +222,55 @@ Parameters:
 
 Returns: 0, or -1 when open fails
 
-Calls: [ad_mkdir](../../libatalk/adouble/ad_open.c.md#ad_mkdir), [ad_mode](../../libatalk/adouble/ad_open.c.md#ad_mode), [icon_dtfile](desktop.c.md#icon_dtfile)
+Calls: [ad_mkdir](../../libatalk/adouble/ad_open.c.md#ad_mkdir), [ad_mode](../../libatalk/adouble/ad_open.c.md#ad_mode), [icon_close](desktop.c.md#icon_close), [icon_dtfile](desktop.c.md#icon_dtfile)
 
 Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#afp_geticon), [afp_geticoninfo](desktop.c.md#afp_geticoninfo)
 
 Uses file-scope variables: `si`
+
+### icon_lock
+
+```c
+static int icon_lock(void)
+```
+
+Defined at lines 487 to 516.
+
+Lock the icon file for one FPAddIcon.
+
+Serializes the scan, write and undo of concurrent FPAddIcon requests. The wait for another holder, which need not be an afpd, is bounded to a second. FPGetIcon and FPGetIconInfo take no lock; closing the file drops it.
+
+Returns: 0, 1 when the file system takes no locks, or -1 with errno set
+
+Called by: [afp_addicon](desktop.c.md#afp_addicon)
+
+Uses file-scope variables: `si`
+
+### icon_entry_is
+
+```c
+static bool icon_entry_is(const uint8_t *h, const uint8_t *ftype, uint8_t itype)
+```
+
+Defined at lines 522 to 527.
+
+Does entry header h match file type ftype and icon type itype, the key FPGetIcon and FPAddIcon look an icon up by?
+
+Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#afp_geticon)
+
+### icon_read_failed
+
+```c
+static bool icon_read_failed(ssize_t rc, off_t off, off_t size)
+```
+
+Defined at lines 535 to 538.
+
+Did a read of a 12-byte record header at off, which returned rc, fail or stop short before the end of an icon file of size bytes?
+
+A header the end of the file cuts short is a torn tail, no failure.
+
+Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#afp_geticon), [afp_geticoninfo](desktop.c.md#afp_geticoninfo)
 
 ### afp_addicon
 
@@ -202,26 +278,26 @@ Uses file-scope variables: `si`
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 462 to 665.
+Defined at lines 563 to 781.
 
 FPAddIcon: store an icon bitmap in the icon file of a creator.
 
-Each record of the icon file holds a 12-byte header and the bitmap. The header carries the tag, the file type, the icon type, and the bitmap size. A record with the same tag, file type, and icon type gets the new bitmap in place, and a new icon goes at the end. The bitmap arrives as the write data of the request.
+Each record of the icon file holds a 12-byte header (tag, file type, icon type, bitmap size) and the bitmap. The bitmap is received whole before the file is opened; data of another size fails with AFPERR_PARAM. Under a write lock, the record of the same file type and icon type, whatever its tag, is overwritten in place; otherwise the icon replaces whatever follows the last whole record. A failed write cuts a new record off again. On a file system that takes no locks the write goes ahead without one, with a warning.
 
-Over [DSI](../../include/atalk/dsi.h.md#struct-dsi) an error drains that data first, so the session stays in step.
+Over [DSI](../../include/atalk/dsi.h.md#struct-dsi) a request refused before its data arrives drains that data, so the session stays in step.
 
 Parameters:
 * `obj`: session object
 * `ibuf`: request block
 * `ibuflen`: request block length, unused
 * `rbuf`: receive buffer for the bitmap
-* `rbuflen`: buffer capacity on entry, 0 on return
+* `rbuflen`: 0 on return
 
-Returns: AFP_OK, AFPERR_NOITEM when iconopen fails, AFPERR_ITYPE for a size change, or AFPERR_PARAM
+Returns: AFP_OK, AFPERR_ITYPE for a size change, AFPERR_PARAM for an unknown volume or data of the wrong size, or AFPERR_MISC when the icon file cannot be opened, locked, read, sought or written
 
-Calls: [asp_wrtcont](../../libatalk/asp/asp_write.c.md#asp_wrtcont), [dsi_write](../../libatalk/dsi/dsi_write.c.md#dsi_write), [dsi_writedrain](../../libatalk/dsi/dsi_write.c.md#dsi_writedrain), [dsi_writeflush](../../libatalk/dsi/dsi_write.c.md#dsi_writeflush), [dsi_writeinit](../../libatalk/dsi/dsi_write.c.md#dsi_writeinit), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_dtfile](desktop.c.md#icon_dtfile), [iconopen](desktop.c.md#iconopen)
+Calls: [asp_wrtcont](../../libatalk/asp/asp_write.c.md#asp_wrtcont), [dsi_write](../../libatalk/dsi/dsi_write.c.md#dsi_write), [dsi_writedrain](../../libatalk/dsi/dsi_write.c.md#dsi_writedrain), [dsi_writeflush](../../libatalk/dsi/dsi_write.c.md#dsi_writeflush), [dsi_writeinit](../../libatalk/dsi/dsi_write.c.md#dsi_writeinit), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_close](desktop.c.md#icon_close), [icon_dtfile](desktop.c.md#icon_dtfile), [icon_entry_is](desktop.c.md#icon_entry_is), [icon_lock](desktop.c.md#icon_lock), [icon_read_failed](desktop.c.md#icon_read_failed), [iconopen](desktop.c.md#iconopen), [log_backoff](../../libatalk/util/unix.c.md#log_backoff), [write_full](../../libatalk/util/unix.c.md#write_full)
 
-Uses file-scope variables: `si`
+Uses file-scope variables: `icon_failures`, `icon_unlocked`, `si`
 
 Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
@@ -231,11 +307,11 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_geticoninfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 690 to 765.
+Defined at lines 800 to 865.
 
 FPGetIconInfo: look up an icon of a creator by index and return its record header.
 
-The index counts from 1, and the open icon file keeps its position between calls. A creator of 4 zero bytes gets one fixed entry with icon type 1. The reply holds the 12-byte record header.
+The index counts from 1, and each request walks the icon file from its first entry; a record the file cuts short ends the walk. The reply holds the 12-byte record header.
 
 Parameters:
 * `obj`: session object, unused
@@ -244,11 +320,11 @@ Parameters:
 * `rbuf`: reply block
 * `rbuflen`: reply length on return
 
-Returns: AFP_OK, AFPERR_NOITEM past the last icon or without an icon file, or AFPERR_PARAM
+Returns: AFP_OK, AFPERR_NOITEM past the last icon or without an icon file, AFPERR_PARAM for an unknown volume, or AFPERR_MISC when the icon file fails to open or to read
 
-Calls: [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_dtfile](desktop.c.md#icon_dtfile), [iconopen](desktop.c.md#iconopen)
+Calls: [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_close](desktop.c.md#icon_close), [icon_dtfile](desktop.c.md#icon_dtfile), [icon_open_failed](desktop.c.md#icon_open_failed), [icon_read_failed](desktop.c.md#icon_read_failed), [iconopen](desktop.c.md#iconopen)
 
-Uses file-scope variables: `si`, `ucreator`, `usize`, `utag`, `utype`
+Uses file-scope variables: `si`
 
 Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
@@ -258,22 +334,22 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 784 to 934.
+Defined at lines 886 to 981.
 
 FPGetIcon: return the bitmap of an icon from the icon file of a creator.
 
-The call looks for the first record with the requested file type and icon type and returns up to the requested size of its bitmap. Over [DSI](../../include/atalk/dsi.h.md#struct-dsi) a bitmap larger than the reply buffer streams through dsi_read, or through sendfile in a WITH_SENDFILE build. A failure during streaming ends the session.
+The call looks for the first record with the requested file type and icon type and returns up to the requested size of its bitmap; a record the file cuts short ends the records. A read larger than the reply buffer fails with AFPERR_PARAM.
 
 Parameters:
-* `obj`: session object
+* `obj`: session object, unused
 * `ibuf`: request block
 * `ibuflen`: request block length, unused
 * `rbuf`: reply block
 * `rbuflen`: reply buffer capacity on entry, reply length on return
 
-Returns: AFP_OK, AFPERR_NOITEM without a matching icon, or AFPERR_PARAM
+Returns: AFP_OK, AFPERR_NOITEM without a matching icon, AFPERR_PARAM for an unknown volume or a read the reply buffer cannot hold, or AFPERR_MISC when an open, read or seek of the icon file fails
 
-Calls: [dsi_read](../../libatalk/dsi/dsi_read.c.md#dsi_read), [dsi_readdone](../../libatalk/dsi/dsi_read.c.md#dsi_readdone), [dsi_readinit](../../libatalk/dsi/dsi_read.c.md#dsi_readinit), [dsi_stream_read_file](../../libatalk/dsi/dsi_stream.c.md#dsi_stream_read_file), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_dtfile](desktop.c.md#icon_dtfile), [iconopen](desktop.c.md#iconopen)
+Calls: [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [icon_close](desktop.c.md#icon_close), [icon_dtfile](desktop.c.md#icon_dtfile), [icon_entry_is](desktop.c.md#icon_entry_is), [icon_open_failed](desktop.c.md#icon_open_failed), [icon_read_failed](desktop.c.md#icon_read_failed), [iconopen](desktop.c.md#iconopen)
 
 Uses file-scope variables: `si`
 
@@ -285,7 +361,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 char * dtfile(const struct vol *vol, uint8_t creator[], char *ext)
 ```
 
-Defined at lines 951 to 992.
+Defined at lines 998 to 1039.
 
 Build the path of a desktop database file for a creator.
 
@@ -308,7 +384,7 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 char * mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 ```
 
-Defined at lines 1007 to 1043.
+Defined at lines 1054 to 1090.
 
 Convert an AFP name into the name on disk.
 
@@ -332,7 +408,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c
 char * utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 ```
 
-Defined at lines 1060 to 1095. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
+Defined at lines 1107 to 1142. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
 
 Convert a name on disk into the AFP name a client sees.
 
@@ -356,7 +432,7 @@ Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.
 static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, char *ibuf)
 ```
 
-Defined at lines 1113 to 1191.
+Defined at lines 1160 to 1238.
 
 Store a Finder comment in the AppleDouble metadata of a file or directory.
 
@@ -382,7 +458,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1207 to 1240.
+Defined at lines 1254 to 1287.
 
 FPAddComment: store a Finder comment for a file or directory.
 
@@ -409,7 +485,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1258 to 1322.
+Defined at lines 1305 to 1369.
 
 Read the Finder comment of a file or directory from its AppleDouble metadata.
 
@@ -435,7 +511,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_getcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1335 to 1364.
+Defined at lines 1382 to 1411.
 
 FPGetComment: return the Finder comment of a file or directory.
 
@@ -460,7 +536,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 ```
 
-Defined at lines 1380 to 1451.
+Defined at lines 1427 to 1498.
 
 Remove the Finder comment from the AppleDouble metadata of a file or directory.
 
@@ -485,7 +561,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_rmvcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1464 to 1493.
+Defined at lines 1511 to 1540.
 
 FPRemoveComment: remove the Finder comment of a file or directory.
 
@@ -506,8 +582,8 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
 # Macros
 
-* Undocumented: `EXEC_MODE`, `min`
+* Undocumented: `EXEC_MODE`
 
 # File-scope variables
 
-`hexdig`, `si`, `ucreator`, `usize`, `utag`, `utype`
+`hexdig`, `icon_failures`, `icon_unlocked`, `si`

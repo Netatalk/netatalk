@@ -5,7 +5,7 @@ description: "Closing a DSI session with a DSICloseSession request to the client
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_close.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,11 +23,11 @@ Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded 
 void dsi_close(DSI *)
 ```
 
-Defined at lines 30 to 44. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 31 to 50. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send a DSICloseSession request, close the transport, and free the [DSI](../../include/atalk/dsi.h.md#struct-dsi) session.
 
-A sleeping or disconnected session gets neither the request nor the transport close. The call frees the structure in every case.
+A sleeping or disconnected session gets neither the request nor the transport close, and a session whose reply is still under way gets the transport close alone. The call frees the structure in every case.
 
 Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session to end, invalid afterwards

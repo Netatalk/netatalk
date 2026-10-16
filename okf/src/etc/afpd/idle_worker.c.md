@@ -5,7 +5,7 @@ description: "Idle worker thread that runs deferred directory cache work between
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/idle_worker.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -197,7 +197,7 @@ WARNING: not signal-context-safe (pthread_join); callers are main-loop paths onl
 
 Calls: [iw_log_stats](idle_worker.c.md#iw_log_stats)
 
-Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi), [process_deferred_signals](afp_dsi.c.md#process_deferred_signals)
+Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 
 Uses file-scope variables: `iw_can_work`, `iw_shutdown_flag`, `iw_started`, `iw_tid`
 

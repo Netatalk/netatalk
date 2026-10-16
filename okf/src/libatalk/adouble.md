@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/adouble"
-description: "11 files, 110 functions."
+description: "10 files, 108 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/adouble"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 # Files
@@ -18,17 +18,16 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 * [libatalk/adouble/ad_open.c](adouble/ad_open.c.md): Part of Netatalk's AppleDouble implementatation.
 * [libatalk/adouble/ad_read.c](adouble/ad_read.c.md): Reading the forks of an AppleDouble.
 * [libatalk/adouble/ad_recvfile.c](adouble/ad_recvfile.c.md): Receiving a DSIWrite payload straight into an AppleDouble fork.
-* [libatalk/adouble/ad_sendfile.c](adouble/ad_sendfile.c.md): sys_sendfile: one interface over the sendfile calls of Linux, Solaris, and FreeBSD
 * [libatalk/adouble/ad_size.c](adouble/ad_size.c.md): Fork lengths of an AppleDouble.
 * [libatalk/adouble/ad_write.c](adouble/ad_write.c.md): Writing and truncating the forks of an AppleDouble.
 
 # Includes headers from
 
-* [include/atalk](../include/atalk.md): 49 includes
+* [include/atalk](../include/atalk.md): 48 includes
 
 # Calls into
 
-* [libatalk/util](util.md): 28 calls
+* [libatalk/util](util.md): 29 calls
 * [libatalk/compat](compat.md): 8 calls
 * [libatalk/vfs](vfs.md): 8 calls
 * [include/atalk](../include/atalk.md): 7 calls
@@ -36,16 +35,15 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 201 calls
+* [etc/afpd](../etc/afpd.md): 200 calls
 * [bin/nad](../bin/nad.md): 71 calls
 * [bin/dbd](../bin/dbd.md): 19 calls
 * [libatalk/vfs](vfs.md): 17 calls
-* [libatalk/dsi](dsi.md): 1 calls
 
 # Most called functions
 
 * [ad_close](adouble/ad_flush.c.md#ad_close): 44 callers
-* [ad_init](adouble/ad_open.c.md#ad_init): 41 callers
+* [ad_init](adouble/ad_open.c.md#ad_init): 40 callers
 * [ad_entry](adouble/ad_open.c.md#ad_entry): 37 callers
 * [ad_open](adouble/ad_open.c.md#ad_open): 36 callers
 * [ad_flush](adouble/ad_flush.c.md#ad_flush): 35 callers

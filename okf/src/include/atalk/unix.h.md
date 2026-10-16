@@ -5,7 +5,7 @@ description: "includes 1 project header."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/unix.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -40,9 +40,11 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/adouble/ad_conv.c](../../libatalk/adouble/ad_conv.c.md)
 * [libatalk/adouble/ad_flush.c](../../libatalk/adouble/ad_flush.c.md)
 * [libatalk/adouble/ad_open.c](../../libatalk/adouble/ad_open.c.md)
+* [libatalk/adouble/ad_write.c](../../libatalk/adouble/ad_write.c.md)
 * [libatalk/cnid/mysql/cnid_mysql.c](../../libatalk/cnid/mysql/cnid_mysql.c.md)
 * [libatalk/cnid/sqlite/cnid_sqlite.c](../../libatalk/cnid/sqlite/cnid_sqlite.c.md)
 * [libatalk/dsi/dsi_getsess.c](../../libatalk/dsi/dsi_getsess.c.md)
+* [libatalk/dsi/dsi_stream.c](../../libatalk/dsi/dsi_stream.c.md)
 * [libatalk/dsi/dsi_write.c](../../libatalk/dsi/dsi_write.c.md)
 * [libatalk/util/logger.c](../../libatalk/util/logger.c.md)
 * [libatalk/util/netatalk_conf.c](../../libatalk/util/netatalk_conf.c.md)

@@ -8,6 +8,5 @@
 * [ad_open.c](ad_open.c.md) - Part of Netatalk's AppleDouble implementatation.
 * [ad_read.c](ad_read.c.md) - Reading the forks of an AppleDouble.
 * [ad_recvfile.c](ad_recvfile.c.md) - Receiving a DSIWrite payload straight into an AppleDouble fork.
-* [ad_sendfile.c](ad_sendfile.c.md) - sys_sendfile: one interface over the sendfile calls of Linux, Solaris, and FreeBSD
 * [ad_size.c](ad_size.c.md) - Fork lengths of an AppleDouble.
 * [ad_write.c](ad_write.c.md) - Writing and truncating the forks of an AppleDouble.
