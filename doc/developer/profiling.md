@@ -1,4 +1,81 @@
-# Flamegraph Profiling
+# Performance Analysis and Profiling
+
+Performance work starts with a repeatable workload and the state it exercises.
+Separate transfer throughput, directory traversal, metadata, search, and
+contention before changing buffers or caches. Configuration syntax and
+defaults belong in [afp.conf(5)](https://netatalk.io/manual/en/afp.conf.5.html);
+this chapter explains how to assess their implementation effects.
+
+## Workloads and measurements
+
+Record the source revision, Meson options, client version, execution mode,
+storage format, database/search backend, configuration, and session count.
+Then compare cold and warm runs of the same workload, changing one relevant
+control at a time. Check correctness and stale-result behavior as well as
+speed, especially with external writers.
+
+| Workload | Measurements and likely boundaries |
+| --- | --- |
+| Bulk reads/writes | Throughput, CPU, blocked time, socket behavior, eligible sendfile/recvfile paths |
+| Directory enumeration | Latency, stat work, metadata reads, cache/ghost hits, and filesystem I/O |
+| Small-file creation or rename | Latency, database write contention, metadata updates, and invalidation |
+| Search | Backend/index coverage, query latency, candidate/result limits, and permission filtering |
+| Concurrent or retained sessions | Per-worker memory, open forks/descriptors, database contention, and hint drops |
+
+Build the AFP client tools with `-Dwith-testsuite=true`. `lantest` exercises
+AFP workloads; `speedtest` and `speedtest_local_vfs` help compare transfer
+and local VFS costs. Use their current usage and `test/README.md` for
+invocation and environment requirements.
+
+## Validation cost and storage pressure
+
+A cache hit can still perform validation. Repeatedly checking thousands of
+cached objects creates stat work and can pressure filesystem metadata
+caches and storage even when little file data is transferred. Parent-path
+resolution adds work when a cached ancestor is unavailable. Measure stat
+activity, CPU, I/O, and cache behavior together rather than equating every
+stat call with a physical disk read.
+
+Sampled validation reduces that work by reusing cached information between
+checks. Its benefit and stale-state cost depend on access patterns and
+external writers. A configured frequency is not a guarantee that a whole
+directory enumeration will avoid stat calls; each parameter path can have
+additional filesystem requirements.
+
+Compare cache hit/miss and eviction counts, `invalid_on_use`, parent-path
+repairs, and hint drops alongside latency. ARC ghosts consume full entry
+objects in this implementation, and resource-fork content has its own byte
+budget. An improved hit ratio alone does not establish reduced memory or
+storage demand. See [Caching and Consistency](caching.md) for counter meanings.
+
+## Buffer and memory accounting
+
+DSI's server quantum limits incoming write payloads. Receive readahead is
+the quantum multiplied by `dsireadbuf`; it does not prefetch file data from
+disk. With the configured 1 MiB quantum and multiplier 32, the command and
+readahead buffers account for approximately 33 MiB per worker before session
+alignment and other state. This is an allocation estimate, not total RSS.
+
+Add reply buffers, live and ghost directory objects, variable-length names,
+resource-fork buffers actually populated, database state, open forks, thread
+stacks, and kernel socket/pipe memory. The configured resource budget is a
+limit rather than an allocation made in full at startup. Multiply measured
+worker memory by the relevant active, sleeping, and disconnected sessions.
+
+The parser caps the readahead product at 1 GiB with address-space checks,
+and session quantum alignment re-clamps it. Kernel socket buffers and
+recvfile pipe capacity can differ from requested values; inspect the actual
+values logged by the transport. Link speed and filesystem record size alone
+do not establish an appropriate quantum or buffer requirement.
+
+Sendfile/recvfile eligibility depends on build, platform, and fork storage.
+Compare enabled and disabled runs that actually reach the relevant path.
+Similarly, compare database contention and query latency before choosing a
+backend; SQLite WAL and an external MySQL connection are different workloads,
+not a universal speed ranking. Search backends also have different indexing
+and query costs; see [Indexed Spotlight Search](indexing.md).
+
+## Flamegraph workflow
 
 Netatalk provides a containerized profiling workflow that generates
 interactive SVG flamegraphs of the **afpd** daemon while running
@@ -10,12 +87,12 @@ The profiling infrastructure uses Linux **perf** for sampling and
 Brendan Gregg's [FlameGraph](https://github.com/brendangregg/FlameGraph)
 tools to produce the visualization.
 
-## Prerequisites
+### Prerequisites
 
 - Docker (or Podman) with the ability to run `--privileged` containers
 - A clone of the Netatalk source tree
 
-## Quick Start
+### Quick Start
 
 Build the debug profiling container:
 
@@ -49,7 +126,7 @@ Open `flamegraph.svg` in a web browser. The interactive SVG allows
 clicking to zoom into specific call stacks and hovering to see
 sample counts.
 
-## How It Works
+### How It Works
 
 The debug Dockerfile builds Netatalk with:
 
@@ -131,12 +208,11 @@ and file I/O paths.
 
 ### speedtest
 
-Over loopback, the speedtest is I/O-bound — afpd spends most of
-its wall time sleeping in `poll()` waiting for the next request.
-On-CPU flamegraphs show minimal data because the DSI layer
-processes each request in microseconds. Use **off-CPU mode**
-(`FLAMEGRAPH_OFFCPU=1`) to see where afpd blocks, or run against
-a remote host with real network latency for meaningful on-CPU data.
+Transfer workloads can spend much of their time waiting in `poll()` or I/O,
+producing sparse on-CPU profiles. Compare **off-CPU mode**
+(`FLAMEGRAPH_OFFCPU=1`) to locate waits, and record whether the client is
+local or remote. Loopback results do not establish behavior under real
+network latency or storage load.
 
 ## Files
 
