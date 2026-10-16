@@ -367,9 +367,9 @@ int check_name(const struct vol *vol, char *name)
  * entry that cannot possibly fit.
  *
  * @param[in]  vol      volume the descriptor belongs to
- * @param[in]  dirfd    open descriptor of the directory to walk
+ * @param[in]  start_fd open descriptor of the directory to walk
  * @param[in]  budget   longest path length to look for
- * @param[out] longest  longest path length found below dirfd; 0 for an
+ * @param[out] longest  longest path length found below start_fd; 0 for an
  *                      empty directory
  * @returns 0 on success, -1 when the directory or a subtree cannot be read
  */
@@ -382,7 +382,6 @@ int longest_descendant_pathlen(const struct vol *vol, int start_fd,
     struct dirent *de;
     struct stat st;
     size_t best = 0;
-
     own_fd = openat(start_fd, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
 
     if (own_fd == -1) {
@@ -414,7 +413,6 @@ int longest_descendant_pathlen(const struct vol *vol, int start_fd,
         }
 
         len = namelen + 1; /* the slash the parent path ends with */
-
         child_fd = openat(dirfd(dp), de->d_name,
                           O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
@@ -438,7 +436,7 @@ int longest_descendant_pathlen(const struct vol *vol, int start_fd,
         }
 
         if (longest_descendant_pathlen(vol, child_fd, budget - len,
-                                        &sub) != 0) {
+                                       &sub) != 0) {
             close(child_fd);
             closedir(dp);
             return -1;
@@ -477,7 +475,7 @@ int longest_descendant_pathlen(const struct vol *vol, int start_fd,
  * The walk is rooted at the moved directory itself, not at its name inside a
  * parent: on the FPMoveAndRename path the caller's descriptor already refers
  * to that directory (cname() chdirs into the last component of the source
- * path), so a name-relative walk would look for <dir>/<dir> and silently
+ * path), so a name-relative walk would look for dir/dir and silently
  * measure nothing.
  *
  * @param[in] vol      volume of sdir
@@ -492,9 +490,9 @@ int longest_descendant_pathlen(const struct vol *vol, int start_fd,
  *          unmeasurable
  */
 int rename_would_overflow_path(const struct vol *vol, int sdir_fd,
-                                      const char *srcpath,
-                                      const struct dir *sdir,
-                                      const char *upath, int isdir)
+                               const char *srcpath,
+                               const struct dir *sdir,
+                               const char *upath, int isdir)
 {
     int fd = -1;
     size_t dstlen;

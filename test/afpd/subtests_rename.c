@@ -193,6 +193,7 @@ int test012_rename_preflight_walk_lengths(struct vol *vol)
     }
 
     expected = strlen(deepest) - strlen(base);
+
     if (longest != expected) {
         rc = 8;
         goto out;
@@ -258,7 +259,6 @@ int test013_rename_preflight_decision(struct vol *vol)
     bstring srcname = NULL;
     int fd = -1;
     int rc = 1;
-
     (void)vol;
 
     if (tmp == NULL) {
@@ -392,14 +392,12 @@ int test013_rename_preflight_decision(struct vol *vol)
                 goto out;
             }
         }
-
         /* 5. A shortening rename on an over-limit tree must still be allowed,
          *    so the tree stays repairable over AFP. */
         {
             char short_src[PATH_MAX];
             struct dir deep;
             bstring deeppath;
-
             char *rel = deepest + strlen(base) + 1;
 
             if (snprintf(short_src, sizeof(short_src), "%s/%s", base, rel)
@@ -458,7 +456,6 @@ int test013_rename_preflight_decision(struct vol *vol)
 
         close(fd);
         fd = -1;
-
         /* 7. dirfd -1 with a relative name while the cwd is the parent,
          *    which is the FPRename layout: open(".") in afp_rename(). */
         {
@@ -466,6 +463,7 @@ int test013_rename_preflight_decision(struct vol *vol)
 
             if (prev < 0 || chdir(base) != 0) {
                 rc = 22;
+
                 if (prev >= 0) {
                     close(prev);
                 }
@@ -497,7 +495,6 @@ int test013_rename_preflight_decision(struct vol *vol)
 
             close(prev);
         }
-
         bdestroy(src.d_fullpath);
         curdir = saved_curdir;
     }
@@ -507,6 +504,7 @@ int test013_rename_preflight_decision(struct vol *vol)
     }
 
 out:
+
     if (fd >= 0) {
         close(fd);
     }
