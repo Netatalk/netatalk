@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/volume.h"
-description: "2 types, includes 5 project headers."
+description: "AFP volume state, configuration flags and extension mapping types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/volume.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -60,14 +60,14 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct extmap
 
-Defined at line 27.
+Defined at line 32.
 * `char * em_ext`
 * `char em_creator`
 * `char em_type`
 
 ### struct vol
 
-Defined at line 33.
+Defined at line 38.
 * `struct vol * v_next`
 * `AFPObj * v_obj`
 * `uint16_t v_vid`

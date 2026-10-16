@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/cnid_sqlite_private.h"
-description: "1 type, includes 1 project header."
+description: "Private SQLite CNID backend state and status flags."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid_sqlite_private.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,7 +22,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct CNID_sqlite_private
 
-Defined at line 10.
+Defined at line 15.
 * `struct vol * vol`
 * `uint32_t cnid_sqlite_flags`
 * `sqlite3 * cnid_sqlite_con`

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/util.h"
-description: "Netatalk utility functions."
+description: "Shared socket, signal, module loading and event loop helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/util.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -155,7 +155,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void * mod_open(const char *)
 ```
 
-Declared at include/atalk/util.h line 104; no definition in the scanned sources.
+Declared at include/atalk/util.h line 99; no definition in the scanned sources.
 
 Called by: [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/papd/uam.c.md#uam_load)
 
@@ -165,7 +165,7 @@ Called by: [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/pa
 void * mod_symbol(void *, const char *)
 ```
 
-Declared at include/atalk/util.h line 105; no definition in the scanned sources.
+Declared at include/atalk/util.h line 100; no definition in the scanned sources.
 
 Called by: [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/papd/uam.c.md#uam_load)
 
@@ -175,7 +175,7 @@ Called by: [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/pa
 void mod_close(void *)
 ```
 
-Declared at include/atalk/util.h line 106; no definition in the scanned sources.
+Declared at include/atalk/util.h line 101; no definition in the scanned sources.
 
 Called by: [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/papd/uam.c.md#uam_load), [uam_unload](../../etc/afpd/uam.c.md#uam_unload), [uam_unload](../../etc/papd/uam.c.md#uam_unload)
 
@@ -185,7 +185,7 @@ Called by: [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/pa
 
 atalk socket event
 
-Defined at line 189.
+Defined at line 184.
 * `struct pollfd * fdset`: struct pollfd array for poll()
 * `struct asev_data * data`: associated array of data
 * `int max`
@@ -195,7 +195,7 @@ Defined at line 189.
 
 atalk socket event data
 
-Defined at line 179.
+Defined at line 174.
 * `enum asev_fdtype fdtype`: IPC fd or listening socket fd.
 * `void * private`: pointer to AFPconfig for listening socket and pointer to afp_child_t for IPC fd
 * `int protocol`: protocol type [ASP](asp.h.md#struct-asp) or [DSI](dsi.h.md#struct-dsi)

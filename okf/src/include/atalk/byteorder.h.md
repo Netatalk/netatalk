@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/byteorder.h"
-description: "Macros for machine independent short and int manipulation."
+description: "Byte order macros for reading and writing packet fields."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/byteorder.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).

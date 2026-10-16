@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/papd/comment.h"
-description: "1 function, 2 types."
+description: "PostScript comment parser callbacks and parser stack interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/comment.h"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,20 +29,20 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 char * comtoken(char *, char *, char *, char *)
 ```
 
-Declared at etc/papd/comment.h line 65; no definition in the scanned sources.
+Declared at etc/papd/comment.h line 70; no definition in the scanned sources.
 
 # Types
 
 ### struct comstate
 
-Defined at line 25.
+Defined at line 30.
 * `struct papd_comment * cs_comment`
 * `struct comstate * cs_prev`
 * `int cs_flags`
 
 ### struct papd_comment
 
-Defined at line 14.
+Defined at line 19.
 * `char * c_begin`
 * `char * c_end`
 * `int(* c_handler`: Called through by [ps](magics.c.md#ps).

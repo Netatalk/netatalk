@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/globals.h"
-description: "1 function, 3 types, includes 5 project headers."
+description: "AFP server options, session state and transport callback types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/globals.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -91,13 +91,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void afp_options_init(struct afp_options *)
 ```
 
-Declared at include/atalk/globals.h line 246; no definition in the scanned sources.
+Declared at include/atalk/globals.h line 251; no definition in the scanned sources.
 
 # Types
 
 ### struct AFPObj
 
-Defined at line 188.
+Defined at line 193.
 * `char * cmdlineconfigfile`
 * `int cmdlineflags`
 * `int proto`
@@ -136,7 +136,7 @@ Defined at line 188.
 
 ### struct afp_options
 
-Defined at line 118.
+Defined at line 123.
 * `int connections`: Maximum number of possible AFP connections.
 * `int tickleval`
 * `int timeout`
@@ -217,7 +217,7 @@ Defined at line 118.
 
 ### struct afp_volume_name
 
-Defined at line 97.
+Defined at line 102.
 * `time_t mtime`
 * `int loaded`
 

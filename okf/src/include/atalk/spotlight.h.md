@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/spotlight.h"
-description: "5 types, includes 3 project headers."
+description: "Spotlight query types, backend callbacks and RPC interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/spotlight.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,7 +41,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 Internal query data structure.
 
-Defined at line 102.
+Defined at line 107.
 * `struct _slq_t * slq_next`: Links owned by the query manager.
 * `struct _slq_t * slq_prev`: Previous query in the same owner.
 * `slq_membership_t slq_membership`: Zero initializes to detached.
@@ -63,7 +63,7 @@ Defined at line 102.
 
 ### struct sl_backend_ops
 
-Defined at line 127.
+Defined at line 132.
 * `const char * sbo_name`
 * `int(* sbo_init`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops); called through by [sl_rpc_openQuery](../../etc/afpd/spotlight.c.md#sl_rpc_openquery).
 * `void(* sbo_close`: Assigned in [sl_cnid_ops](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_ops), [sl_localsearch_ops](../../etc/spotlight/localsearch/sl_localsearch.c.md#sl_localsearch_ops), [sl_xapian_ops](../../etc/spotlight/xapian/sl_xapian.c.md#sl_xapian_ops).
@@ -74,7 +74,7 @@ Defined at line 127.
 
 ### struct sl_cnids_t
 
-Defined at line 54.
+Defined at line 59.
 * `uint16_t ca_unkn1`
 * `uint32_t ca_context`
 * `DALLOC_CTX * ca_cnids`
@@ -83,14 +83,14 @@ Defined at line 54.
 
 Handle for query results.
 
-Defined at line 95.
+Defined at line 100.
 * `int num_results`
 * `sl_cnids_t * cnids`
 * `sl_array_t * fm_array`
 
 ### struct sl_uuid_t
 
-Defined at line 51.
+Defined at line 56.
 * `char sl_uuid`
 
 # Typedefs and enums

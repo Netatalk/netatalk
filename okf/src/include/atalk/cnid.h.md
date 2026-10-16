@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/cnid.h"
-description: "This file contains all generic CNID related stuff declarations."
+description: "CNID database types, backend operations and catalog lookup interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 This is instance of CNID database object.
 
-Defined at line 75.
+Defined at line 70.
 * `uint32_t cnid_db_flags`
 * `struct vol * cnid_db_vol`
 * `void * cnid_db_private`
@@ -75,14 +75,14 @@ Defined at line 75.
 
 ### struct _cnid_module
 
-Defined at line 113.
+Defined at line 108.
 * `char * name`
 * `struct _cnid_module * next`: Permanent registry link, owned by cnid.c.
 * `struct _cnid_db *(* cnid_open`: Assigned in [cnid_mysql_module](../../libatalk/cnid/mysql/cnid_mysql.c.md#cnid_mysql_module), [cnid_sqlite_module](../../libatalk/cnid/sqlite/cnid_sqlite.c.md#cnid_sqlite_module); called through by [cnid_open](../../libatalk/cnid/cnid.c.md#cnid_open).
 
 ### struct cnid_open_args
 
-Defined at line 105.
+Defined at line 100.
 * `uint32_t cnid_args_flags`
 * `struct vol * cnid_args_vol`
 

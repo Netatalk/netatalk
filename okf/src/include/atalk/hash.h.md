@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/hash.h"
-description: "3 types."
+description: "Shared hash table node, allocator and callback types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/hash.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 This is the hash table control structure.
 
-Defined at line 139.
+Defined at line 144.
 * `struct hnode_t ** hash_table`: 1
 * `hashcount_t hash_nchains`: 2
 * `hashcount_t hash_nodecount`: 3
@@ -45,7 +45,7 @@ Defined at line 139.
 
 Hash chain node structure.
 
-Defined at line 63.
+Defined at line 68.
 * `struct hnode_t * hash_next`
 * `const void * hash_key`
 * `void * hash_data`
@@ -55,7 +55,7 @@ Defined at line 63.
 
 Hash scanner structure, used for traversals of the data structure.
 
-Defined at line 169.
+Defined at line 174.
 * `hash_t * hash_table`
 * `hash_val_t hash_chain`
 * `hnode_t * hash_next`

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/atalkd/interface.h"
-description: "1 type."
+description: "AppleTalk interface state, flags and allocation interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/interface.h"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 
 ### struct interface
 
-Defined at line 11.
+Defined at line 16.
 * `struct interface * i_next`
 * `char i_name`
 * `int i_flags`

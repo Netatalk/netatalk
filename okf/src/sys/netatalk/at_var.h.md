@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "sys/netatalk/at_var.h"
-description: "1 type."
+description: "Kernel AppleTalk interface address state and configuration types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/at_var.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 
 For phase2, we need to keep not only our address on an interface, but also the legal networks on the interface.
 
-Defined at line 14.
+Defined at line 19.
 * `struct ifaddr aa_ifa`
 * `int aa_flags`
 * `unsigned short aa_firstnet`

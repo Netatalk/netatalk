@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "bin/nad/nad_cp.c"
-description: "AFP-aware copying of files and directory trees for nad."
+description: "The nad cp command: copy entries and their metadata, assigning CNIDs resolved for the destination paths."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_cp.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static void upfunc(void)
 ```
 
-Defined at lines 117 to 121.
+Defined at lines 110 to 114.
 
 Step the directory IDs of the walk back to the parent after nftw leaves a directory.
 
@@ -43,7 +43,7 @@ Uses file-scope variables: `did`, `pdid`, `ppdid`
 static void usage_cp(void)
 ```
 
-Defined at lines 126 to 159.
+Defined at lines 119 to 152.
 
 Print the usage and the options of nad cp, then exit with EXIT_FAILURE.
 
@@ -55,7 +55,7 @@ Called by: [nad_cp](nad_cp.c.md#nad_cp)
 static int copy_source_header(struct adouble *dest, const char *path, int flags)
 ```
 
-Defined at lines 174 to 219.
+Defined at lines 167 to 212.
 
 Transfer the AppleDouble header and the Finder comment of a source to a new entry.
 
@@ -80,7 +80,7 @@ Uses file-scope variables: `svolume`
 int nad_cp(int argc, char *argv[], AFPObj *obj)
 ```
 
-Defined at lines 239 to 411. Declared in [bin/nad/nad.h](nad.h.md).
+Defined at lines 232 to 404. Declared in [bin/nad/nad.h](nad.h.md).
 
 Run the nad cp command on files and directory trees with their Mac metadata and CNIDs.
 
@@ -107,7 +107,7 @@ Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_
 static int copy(const char *path, const struct stat *statp, int tflag, struct FTW *ftw)
 ```
 
-Defined at lines 435 to 814.
+Defined at lines 428 to 807.
 
 Recreate one source entry at the target during the nftw walk.
 
@@ -135,7 +135,7 @@ Uses file-scope variables: `Rflag`, `alarmed` in [bin/dbd/cmd_dbd.c](../dbd/cmd_
 static int ftw_copy_file(const struct FTW *entp, const char *spath, const struct stat *sp, int dne)
 ```
 
-Defined at lines 843 to 1045.
+Defined at lines 836 to 1038.
 
 Write the data of a source file to the target path.
 
@@ -163,7 +163,7 @@ Uses file-scope variables: `dvolume`, `fflag`, `iflag` in [bin/nad/nad.h](nad.h.
 static int ftw_copy_link(const struct FTW *p, const char *spath, const struct stat *sstp, int exists)
 ```
 
-Defined at lines 1059 to 1090.
+Defined at lines 1052 to 1083.
 
 Recreate a symbolic link at the target path.
 
@@ -189,7 +189,7 @@ Uses file-scope variables: `pflag` in [bin/nad/nad.h](nad.h.md), `to`
 static int setfile(const struct stat *fs, int fd)
 ```
 
-Defined at lines 1105 to 1184.
+Defined at lines 1098 to 1177.
 
 Give the target the times, the owner, and the mode of the source under -p.
 

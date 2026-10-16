@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/compat.h"
-description: "4 functions."
+description: "Portability declarations for missing system and C library functions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/compat.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -77,7 +77,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *, const sigset_t *)
 ```
 
-Declared at include/atalk/compat.h line 24; no definition in the scanned sources.
+Declared at include/atalk/compat.h line 29; no definition in the scanned sources.
 
 ### atalk_stat_mtime_timespec
 
@@ -85,7 +85,7 @@ Declared at include/atalk/compat.h line 24; no definition in the scanned sources
 static struct timespec atalk_stat_mtime_timespec(const struct stat *st)
 ```
 
-Defined at lines 56 to 68.
+Defined at lines 61 to 73.
 
 Return the stat mtime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -97,7 +97,7 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [setfile]
 static struct timespec atalk_stat_atime_timespec(const struct stat *st)
 ```
 
-Defined at lines 71 to 83.
+Defined at lines 76 to 88.
 
 Return the stat atime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -109,7 +109,7 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [setfile]
 static void atalk_timespec_to_timeval(struct timeval *tv, const struct timespec *ts)
 ```
 
-Defined at lines 86 to 91.
+Defined at lines 91 to 96.
 
 Store a timespec in a timeval, truncated to microseconds.
 

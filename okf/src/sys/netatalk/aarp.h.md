@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "sys/netatalk/aarp.h"
-description: "4 types."
+description: "AppleTalk Address Resolution Protocol packet and cache types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/aarp.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -19,20 +19,20 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 
 ### union aapa
 
-Defined at line 15.
+Defined at line 20.
 * `unsigned char ap_pa`
 * `struct aapa::ap_node ap_node`
 
 ### struct aapa::ap_node
 
-Defined at line 17.
+Defined at line 22.
 * `unsigned char an_zero`
 * `unsigned char an_net`
 * `unsigned char an_node`
 
 ### struct aarptab
 
-Defined at line 43.
+Defined at line 48.
 * `struct at_addr aat_ataddr`
 * `unsigned char aat_enaddr`
 * `unsigned char aat_timer`
@@ -41,7 +41,7 @@ Defined at line 43.
 
 ### struct ether_aarp
 
-Defined at line 24.
+Defined at line 29.
 * `struct arphdr eaa_hdr`
 * `unsigned char aarp_sha`
 * `union aapa aarp_spu`

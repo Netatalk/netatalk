@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/unicode.h"
-description: "2 types."
+description: "Character set conversion types and Unicode string operations."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/unicode.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -60,7 +60,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 generic iconv conversion structure
 
-Defined at line 17.
+Defined at line 22.
 * `size_t(* direct`: Called through by [atalk_iconv](../../libatalk/unicode/iconv.c.md#atalk_iconv).
 * `size_t(* pull`: Called through by [atalk_iconv](../../libatalk/unicode/iconv.c.md#atalk_iconv).
 * `size_t(* push`: Called through by [atalk_iconv](../../libatalk/unicode/iconv.c.md#atalk_iconv).
@@ -72,7 +72,7 @@ Defined at line 17.
 
 ### struct charset_functions
 
-Defined at line 66.
+Defined at line 71.
 * `const char * name`
 * `const uint32_t kTextEncoding`
 * `size_t(* pull`: Assigned in [charset_mac_centraleurope](../../libatalk/unicode/charsets/mac_centraleurope.c.md#charset_mac_centraleurope), [charset_mac_chinese_simp](../../libatalk/unicode/charsets/mac_chinese_simp.c.md#charset_mac_chinese_simp), [charset_mac_chinese_trad](../../libatalk/unicode/charsets/mac_chinese_trad.c.md#charset_mac_chinese_trad), [charset_mac_cyrillic](../../libatalk/unicode/charsets/mac_cyrillic.c.md#charset_mac_cyrillic), [charset_mac_greek](../../libatalk/unicode/charsets/mac_greek.c.md#charset_mac_greek), [charset_mac_hebrew](../../libatalk/unicode/charsets/mac_hebrew.c.md#charset_mac_hebrew), [charset_mac_japanese](../../libatalk/unicode/charsets/mac_japanese.c.md#charset_mac_japanese), [charset_mac_korean](../../libatalk/unicode/charsets/mac_korean.c.md#charset_mac_korean), [charset_mac_roman](../../libatalk/unicode/charsets/mac_roman.c.md#charset_mac_roman), [charset_mac_turkish](../../libatalk/unicode/charsets/mac_turkish.c.md#charset_mac_turkish), [charset_utf8](../../libatalk/unicode/utf8.c.md#charset_utf8), [charset_utf8_mac](../../libatalk/unicode/utf8.c.md#charset_utf8_mac).

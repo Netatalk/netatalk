@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/atalkd/gate.h"
-description: "1 type."
+description: "AppleTalk gateway and route list types for atalkd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/gate.h"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -21,7 +21,7 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 
 ### struct gate
 
-Defined at line 6.
+Defined at line 11.
 * `struct gate * g_next`
 * `struct gate * g_prev`
 * `int g_state`

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/atp.h"
-description: "ATP packet format."
+description: "AppleTalk Transaction Protocol packet types and transaction interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/atp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -61,7 +61,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct atp_block
 
-Defined at line 151.
+Defined at line 127.
 * `struct sockaddr_at * atp_saddr`: from/to address
 * `struct sreq_st sreqdata`
 * `struct rres_st rresdata`
@@ -72,7 +72,7 @@ Defined at line 151.
 
 ### struct atp_handle
 
-Defined at line 106.
+Defined at line 82.
 * `int atph_socket`: ddp socket
 * `struct sockaddr_at atph_saddr`: address
 * `uint16_t atph_tid`: last tid used
@@ -91,7 +91,7 @@ Defined at line 106.
 
 ### struct atpbuf
 
-Defined at line 96.
+Defined at line 72.
 * `struct atpbuf * atpbuf_next`: next buffer in chain
 * `size_t atpbuf_dlen`: data length <= ATP_BUFSIZ
 * `struct sockaddr_at atpbuf_addr`: net address sent/recvd
@@ -101,14 +101,14 @@ Defined at line 96.
 
 ### struct atphdr
 
-Defined at line 63.
+Defined at line 39.
 * `uint8_t atphd_ctrlinfo`: control information
 * `uint8_t atphd_bitmap`: bitmap or sequence number
 * `uint16_t atphd_tid`: transaction id.
 
 ### struct atpxobuf
 
-Defined at line 89.
+Defined at line 65.
 * `uint16_t atpxo_tid`
 * `struct timeval atpxo_tv`
 * `int atpxo_reltime`
@@ -116,19 +116,19 @@ Defined at line 89.
 
 ### struct rreq_st
 
-Defined at line 141.
+Defined at line 117.
 * `char * atpd_data`: request data
 * `int atpd_dlen`
 
 ### struct rres_st
 
-Defined at line 136.
+Defined at line 112.
 * `struct iovec * atpd_iov`: for response
 * `int atpd_iovcnt`
 
 ### struct sreq_st
 
-Defined at line 129.
+Defined at line 105.
 * `char * atpd_data`: request data
 * `int atpd_dlen`
 * `int atpd_tries`: max.
@@ -136,7 +136,7 @@ Defined at line 129.
 
 ### struct sres_st
 
-Defined at line 146.
+Defined at line 122.
 * `struct iovec * atpd_iov`: for response
 * `int atpd_iovcnt`
 

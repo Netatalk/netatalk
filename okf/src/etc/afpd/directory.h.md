@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/directory.h"
-description: "1 function, 2 types, includes 4 project headers."
+description: "AFP directory command handlers and path resolution helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 struct dir * dirlookup_bypath(const struct vol *vol, const char *path)
 ```
 
-Declared at etc/afpd/directory.h line 132; no definition in the scanned sources.
+Declared at etc/afpd/directory.h line 137; no definition in the scanned sources.
 
 # Types
 
@@ -66,7 +66,7 @@ Declared at etc/afpd/directory.h line 132; no definition in the scanned sources.
 
 Parameters for [dir_modify()](directory.c.md#dir_modify) selective field updates.
 
-Defined at line 61.
+Defined at line 66.
 * `unsigned int flags`: DCMOD_* bitmask.
 * `cnid_t new_pdid`: New parent DID (DCMOD_PATH).
 * `const char * new_mname`: New mac name, NULL = use new_uname (DCMOD_PATH).
@@ -77,7 +77,7 @@ Defined at line 61.
 
 ### struct maccess
 
-Defined at line 98.
+Defined at line 103.
 * `uint8_t ma_user`
 * `uint8_t ma_world`
 * `uint8_t ma_group`

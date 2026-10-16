@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "bin/nad/ftw.h"
-description: "1 type."
+description: "File tree traversal callbacks, flags and entry point for nad."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/ftw.h"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,7 +26,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 
 Structure used for fourth argument to callback function for 'nftw'.
 
-Defined at line 82.
+Defined at line 83.
 * `int base`
 * `int level`
 

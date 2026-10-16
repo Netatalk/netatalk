@@ -5,7 +5,7 @@ description: "Spotlight LocalSearch backend: SPARQL queries to the indexer."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sl_localsearch.c"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 
 ### sl_localsearch_ops
 
-Initialized at line 16 as `struct sl_backend_ops`. Assigns:
+Initialized at line 19 as `struct sl_backend_ops`. Assigns:
 
 * `sbo_close`: [sl_localsearch_close](sl_localsearch.c.md#sl_localsearch_close)
 * `sbo_close_query`: [sl_localsearch_close_query](sl_localsearch.c.md#sl_localsearch_close_query)

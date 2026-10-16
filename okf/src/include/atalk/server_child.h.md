@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/server_child.h"
-description: "data structures and utility functions for child processes"
+description: "AFP child process state and session management interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/server_child.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -38,13 +38,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void server_child_handler(server_child_t *)
 ```
 
-Declared at include/atalk/server_child.h line 70; no definition in the scanned sources.
+Declared at include/atalk/server_child.h line 68; no definition in the scanned sources.
 
 # Types
 
 ### struct afp_child
 
-Defined at line 26.
+Defined at line 24.
 * `pid_t afpch_pid`: afpd worker process pid (from the worker afpd process )
 * `uid_t afpch_uid`: user id of connected client (from the worker afpd process)
 * `int afpch_valid`: 1 if we have a clientid
@@ -65,7 +65,7 @@ Defined at line 26.
 
 ### struct server_child_t
 
-Defined at line 47.
+Defined at line 45.
 * `int servch_count`: Current count of active AFP sessions.
 * `int servch_nsessions`: Number of allowed AFP sessions.
 * `afp_child_t * servch_table`: Hashtable with data of AFP sesssions.

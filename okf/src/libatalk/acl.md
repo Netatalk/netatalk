@@ -5,14 +5,14 @@ description: "7 files, 26 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/acl"
 tags: ["libatalk/acl"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
-* [libatalk/acl/aclldap.h](acl/aclldap.h.md): includes 1 project header.
+* [libatalk/acl/aclldap.h](acl/aclldap.h.md): LDAP user and group UUID lookup interface.
 * [libatalk/acl/cache.c](acl/cache.c.md): Name and UUID caches of the ACL UUID lookups.
-* [libatalk/acl/cache.h](acl/cache.h.md): LDAP cache interface.
+* [libatalk/acl/cache.h](acl/cache.h.md): User and group UUID cache lookup and insertion interface.
 * [libatalk/acl/ldap.c](acl/ldap.c.md): LDAP lookups of UUIDs and names for ACLs.
 * [libatalk/acl/ldap_config.c](acl/ldap_config.c.md): LDAP settings of afp.conf for the ACL UUID lookups.
 * [libatalk/acl/unix.c](acl/unix.c.md): chmod wrappers that keep explicit NFSv4 ACEs and set the POSIX ACL group entry from the mode

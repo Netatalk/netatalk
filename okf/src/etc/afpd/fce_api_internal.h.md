@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/fce_api_internal.h"
-description: "Internal definitions for File Change Events API."
+description: "Internal file change event packet, history and coalescing types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fce_api_internal.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,20 +24,20 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 ### struct fce_close_event
 
-Defined at line 38.
+Defined at line 41.
 * `time_t time`
 * `char path`
 
 ### struct fce_history
 
-Defined at line 32.
+Defined at line 35.
 * `fce_ev_t fce_h_event`
 * `char fce_h_path`
 * `struct timeval fce_h_tv`
 
 ### struct udp_entry
 
-Defined at line 23.
+Defined at line 26.
 * `int sock`
 * `char * addr`
 * `char * port`

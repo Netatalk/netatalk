@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/nbp.h"
-description: "3 types, includes 2 project headers."
+description: "Name Binding Protocol packet types and name lookup interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/nbp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,14 +39,14 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct nbphdr
 
-Defined at line 38.
+Defined at line 43.
 * `uint32_t nh_op`
 * `uint32_t nh_cnt`
 * `uint32_t nh_id`
 
 ### struct nbpnve
 
-Defined at line 67.
+Defined at line 72.
 * `struct sockaddr_at nn_sat`
 * `uint8_t nn_objlen`
 * `char nn_obj`
@@ -57,7 +57,7 @@ Defined at line 67.
 
 ### struct nbptuple
 
-Defined at line 54.
+Defined at line 59.
 * `uint16_t nt_net`
 * `uint8_t nt_node`
 * `uint8_t nt_port`

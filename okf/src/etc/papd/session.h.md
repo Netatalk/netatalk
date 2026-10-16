@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/papd/session.h"
-description: "includes 1 project header."
+description: "PAP client session entry point for papd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/session.h"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).

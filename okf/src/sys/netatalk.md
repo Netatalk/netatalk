@@ -5,24 +5,24 @@ description: "13 files, 35 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/sys/netatalk"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [sys/netatalk/aarp.c](netatalk/aarp.c.md): AARP: AppleTalk address resolution in the BSD kernel stack.
-* [sys/netatalk/aarp.h](netatalk/aarp.h.md): 4 types.
-* [sys/netatalk/at.h](netatalk/at.h.md): 3 types.
+* [sys/netatalk/aarp.h](netatalk/aarp.h.md): AppleTalk Address Resolution Protocol packet and cache types.
+* [sys/netatalk/at.h](netatalk/at.h.md): AppleTalk socket addresses, network ranges and protocol constants.
 * [sys/netatalk/at_control.c](netatalk/at_control.c.md): AppleTalk interface ioctls and address setup in the BSD kernel stack.
 * [sys/netatalk/at_proto.c](netatalk/at_proto.c.md): AppleTalk protocol switch and domain in the BSD kernel stack.
-* [sys/netatalk/at_var.h](netatalk/at_var.h.md): 1 type.
-* [sys/netatalk/ddp.h](netatalk/ddp.h.md): 3 types, includes 1 project header.
+* [sys/netatalk/at_var.h](netatalk/at_var.h.md): Kernel AppleTalk interface address state and configuration types.
+* [sys/netatalk/ddp.h](netatalk/ddp.h.md): ELAP and DDP packet header types, field aliases and size constants.
 * [sys/netatalk/ddp_input.c](netatalk/ddp_input.c.md): DDP input: packet delivery and forwarding in the BSD kernel stack.
 * [sys/netatalk/ddp_output.c](netatalk/ddp_output.c.md): DDP output and routing in the BSD kernel stack.
 * [sys/netatalk/ddp_usrreq.c](netatalk/ddp_usrreq.c.md): DDP socket requests and control blocks in the BSD kernel stack.
-* [sys/netatalk/ddp_var.h](netatalk/ddp_var.h.md): 2 types.
-* [sys/netatalk/endian.h](netatalk/endian.h.md): No functions or types.
-* [sys/netatalk/phase2.h](netatalk/phase2.h.md): IEEE 802.2 Link Level Control headers, for use in conjunction with 802.
+* [sys/netatalk/ddp_var.h](netatalk/ddp_var.h.md): Kernel DDP socket control blocks, statistics and lookup interface.
+* [sys/netatalk/endian.h](netatalk/endian.h.md): Platform byte order detection and endian constants.
+* [sys/netatalk/phase2.h](netatalk/phase2.h.md): IEEE 802.2 LLC and SNAP header types for AppleTalk Phase 2.
 
 # Includes headers from
 

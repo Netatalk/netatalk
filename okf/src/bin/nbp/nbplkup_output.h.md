@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "bin/nbp/nbplkup_output.h"
-description: "includes 1 project header."
+description: "Character set conversion interface for nbplkup output fields."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nbp/nbplkup_output.h"
 tags: ["bin/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [bin/nbp](../nbp.md) subsystem. Built from the commit recorded in [build](../../../build.md).

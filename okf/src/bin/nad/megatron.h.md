@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "bin/nad/megatron.h"
-description: "4 types, includes 2 project headers."
+description: "Fork conversion options, Finder metadata and volume context types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/megatron.h"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 
 ### struct FHeader
 
-Defined at line 59.
+Defined at line 64.
 * `char name`
 * `char comment`
 * `uint32_t forklen`
@@ -41,7 +41,7 @@ Defined at line 59.
 
 ### struct FInfo
 
-Defined at line 42.
+Defined at line 47.
 * `uint32_t fdType`
 * `uint32_t fdCreator`
 * `uint16_t fdFlags`
@@ -50,7 +50,7 @@ Defined at line 42.
 
 ### struct FXInfo
 
-Defined at line 50.
+Defined at line 55.
 * `uint16_t fdIconID`
 * `uint16_t fdUnused`
 * `uint8_t fdScript`
@@ -60,7 +60,7 @@ Defined at line 50.
 
 ### struct nad_volume
 
-Defined at line 71.
+Defined at line 76.
 * `struct vol * vol`
 * `struct vol * cnid_vol`
 * `char db_stamp`

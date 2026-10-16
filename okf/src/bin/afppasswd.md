@@ -5,14 +5,14 @@ description: "3 files, 50 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/afppasswd"
 tags: ["bin/afppasswd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [bin/afppasswd/afppasswd.c](afppasswd/afppasswd.c.md): AFP user password utility.
 * [bin/afppasswd/afppasswd_migrate.c](afppasswd/afppasswd_migrate.c.md): Migration of the legacy flat SRP verifier file into one verifier file per user.
-* [bin/afppasswd/afppasswd_migrate.h](afppasswd/afppasswd_migrate.h.md): No functions or types.
+* [bin/afppasswd/afppasswd_migrate.h](afppasswd/afppasswd_migrate.h.md): SRP verifier migration entry point for afppasswd.
 
 # Includes headers from
 

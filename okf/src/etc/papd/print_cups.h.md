@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/papd/print_cups.h"
-description: "1 type."
+description: "CUPS printer discovery, status and job submission interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/print_cups.h"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,6 +24,6 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 
 ### struct cups_status
 
-Defined at line 8.
+Defined at line 13.
 * `int pr_status`
 * `char * status_message`

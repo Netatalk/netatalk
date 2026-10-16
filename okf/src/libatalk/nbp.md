@@ -5,12 +5,12 @@ description: "5 files, 7 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/nbp"
 tags: ["libatalk/nbp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
-* [libatalk/nbp/nbp_conf.h](nbp/nbp_conf.h.md): includes 1 project header.
+* [libatalk/nbp/nbp_conf.h](nbp/nbp_conf.h.md): NBP entity name parsing and matching interface.
 * [libatalk/nbp/nbp_lkup.c](nbp/nbp_lkup.c.md): NBP lookups through atalkd.
 * [libatalk/nbp/nbp_rgstr.c](nbp/nbp_rgstr.c.md): NBP name registration through atalkd.
 * [libatalk/nbp/nbp_unrgstr.c](nbp/nbp_unrgstr.c.md): NBP name removal through atalkd.

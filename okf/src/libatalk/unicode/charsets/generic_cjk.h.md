@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "libatalk/unicode/charsets/generic_cjk.h"
-description: "1 type, includes 2 project headers."
+description: "CJK mapping table types and character conversion helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/generic_cjk.h"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -28,7 +28,7 @@ Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commi
 
 ### struct cjk_index_t
 
-Defined at line 27.
+Defined at line 32.
 * `uint16_t range`
 * `const uint16_t(* summary`
 

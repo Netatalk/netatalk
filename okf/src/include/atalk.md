@@ -5,56 +5,56 @@ description: "45 files, 32 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
-* [include/atalk/acl.h](atalk/acl.h.md): No functions or types.
-* [include/atalk/adouble.h](atalk/adouble.h.md): Part of Netatalk's AppleDouble implementatation.
-* [include/atalk/aep.h](atalk/aep.h.md): No functions or types.
-* [include/atalk/afp.h](atalk/afp.h.md): No functions or types.
-* [include/atalk/afp_util.h](atalk/afp_util.h.md): No functions or types.
-* [include/atalk/asp.h](atalk/asp.h.md): 1 type, includes 4 project headers.
-* [include/atalk/atp.h](atalk/atp.h.md): ATP packet format.
-* [include/atalk/bstrlib_compat.h](atalk/bstrlib_compat.h.md): No functions or types.
-* [include/atalk/byteorder.h](atalk/byteorder.h.md): Macros for machine independent short and int manipulation.
-* [include/atalk/cnid.h](atalk/cnid.h.md): This file contains all generic CNID related stuff declarations.
-* [include/atalk/cnid_mysql_private.h](atalk/cnid_mysql_private.h.md): 1 type, includes 1 project header.
-* [include/atalk/cnid_sqlite_private.h](atalk/cnid_sqlite_private.h.md): 1 type, includes 1 project header.
-* [include/atalk/compat.h](atalk/compat.h.md): 4 functions.
-* [include/atalk/constant_time.h](atalk/constant_time.h.md): No functions or types.
-* [include/atalk/dalloc.h](atalk/dalloc.h.md): 1 type.
-* [include/atalk/ddp.h](atalk/ddp.h.md): No functions or types.
-* [include/atalk/directory.h](atalk/directory.h.md): 3 functions, 2 types, includes 4 project headers.
-* [include/atalk/dsi.h](atalk/dsi.h.md): DSI (Data Stream Interface) protocol definitions.
-* [include/atalk/ea.h](atalk/ea.h.md): 1 function, 2 types, includes 1 project header.
-* [include/atalk/errchk.h](atalk/errchk.h.md): Error checking macros.
-* [include/atalk/fce_api.h](atalk/fce_api.h.md): API calls for file change event api.
-* [include/atalk/globals.h](atalk/globals.h.md): 1 function, 3 types, includes 5 project headers.
-* [include/atalk/hash.h](atalk/hash.h.md): 3 types.
-* [include/atalk/iniparser_util.h](atalk/iniparser_util.h.md): No functions or types.
-* [include/atalk/ldapconfig.h](atalk/ldapconfig.h.md): 2 types.
-* [include/atalk/logger.h](atalk/logger.h.md): 2 types.
-* [include/atalk/nbp.h](atalk/nbp.h.md): 3 types, includes 2 project headers.
-* [include/atalk/netatalk_conf.h](atalk/netatalk_conf.h.md): includes 2 project headers.
-* [include/atalk/netddp.h](atalk/netddp.h.md): this provides a generic interface to the ddp layer.
-* [include/atalk/pap.h](atalk/pap.h.md): No functions or types.
-* [include/atalk/queue.h](atalk/queue.h.md): 1 type.
-* [include/atalk/rpc.h](atalk/rpc.h.md): 4 functions.
-* [include/atalk/rtmp.h](atalk/rtmp.h.md): 2 types.
-* [include/atalk/server_child.h](atalk/server_child.h.md): data structures and utility functions for child processes
-* [include/atalk/server_ipc.h](atalk/server_ipc.h.md): 1 type, includes 3 project headers.
-* [include/atalk/spotlight.h](atalk/spotlight.h.md): 5 types, includes 3 project headers.
-* [include/atalk/srp.h](atalk/srp.h.md): 3 functions.
-* [include/atalk/uam.h](atalk/uam.h.md): 1 function, 2 types, includes 1 project header.
-* [include/atalk/unicode.h](atalk/unicode.h.md): 2 types.
-* [include/atalk/unix.h](atalk/unix.h.md): includes 1 project header.
-* [include/atalk/util.h](atalk/util.h.md): Netatalk utility functions.
-* [include/atalk/uuid.h](atalk/uuid.h.md): No functions or types.
-* [include/atalk/vfs.h](atalk/vfs.h.md): vfs layer for afp
-* [include/atalk/volume.h](atalk/volume.h.md): 2 types, includes 5 project headers.
-* [include/atalk/zip.h](atalk/zip.h.md): 2 types.
+* [include/atalk/acl.h](atalk/acl.h.md): Portable ACL retrieval, modification and permission helpers.
+* [include/atalk/adouble.h](atalk/adouble.h.md): AppleDouble metadata, fork I/O and locking types and interface.
+* [include/atalk/aep.h](atalk/aep.h.md): AppleTalk Echo Protocol operation codes.
+* [include/atalk/afp.h](atalk/afp.h.md): Apple Filing Protocol command, capability and error constants.
+* [include/atalk/afp_util.h](atalk/afp_util.h.md): AFP command and error name lookup interface.
+* [include/atalk/asp.h](atalk/asp.h.md): AppleTalk Session Protocol state and session operations.
+* [include/atalk/atp.h](atalk/atp.h.md): AppleTalk Transaction Protocol packet types and transaction interface.
+* [include/atalk/bstrlib_compat.h](atalk/bstrlib_compat.h.md): Compatibility aliases for the bstrlib string interface.
+* [include/atalk/byteorder.h](atalk/byteorder.h.md): Byte order macros for reading and writing packet fields.
+* [include/atalk/cnid.h](atalk/cnid.h.md): CNID database types, backend operations and catalog lookup interface.
+* [include/atalk/cnid_mysql_private.h](atalk/cnid_mysql_private.h.md): Private MySQL CNID backend state and status flags.
+* [include/atalk/cnid_sqlite_private.h](atalk/cnid_sqlite_private.h.md): Private SQLite CNID backend state and status flags.
+* [include/atalk/compat.h](atalk/compat.h.md): Portability declarations for missing system and C library functions.
+* [include/atalk/constant_time.h](atalk/constant_time.h.md): Constant time memory comparison helper.
+* [include/atalk/dalloc.h](atalk/dalloc.h.md): Typed talloc container types and value access interface.
+* [include/atalk/ddp.h](atalk/ddp.h.md): Datagram Delivery Protocol type codes.
+* [include/atalk/directory.h](atalk/directory.h.md): Shared AFP directory, path and directory cache entry types.
+* [include/atalk/dsi.h](atalk/dsi.h.md): Data Stream Interface packet types, session state and I/O operations.
+* [include/atalk/ea.h](atalk/ea.h.md): Portable extended attribute operations and AppleDouble EA types.
+* [include/atalk/errchk.h](atalk/errchk.h.md): Error checking, logging and cleanup control macros.
+* [include/atalk/fce_api.h](atalk/fce_api.h.md): File change event types, registration and notification interface.
+* [include/atalk/globals.h](atalk/globals.h.md): AFP server options, session state and transport callback types.
+* [include/atalk/hash.h](atalk/hash.h.md): Shared hash table node, allocator and callback types.
+* [include/atalk/iniparser_util.h](atalk/iniparser_util.h.md): INI configuration access helpers and compatibility macros.
+* [include/atalk/ldapconfig.h](atalk/ldapconfig.h.md): LDAP preference types and configuration lifecycle interface.
+* [include/atalk/logger.h](atalk/logger.h.md): Logging levels, categories, configuration and message interface.
+* [include/atalk/nbp.h](atalk/nbp.h.md): Name Binding Protocol packet types and name lookup interface.
+* [include/atalk/netatalk_conf.h](atalk/netatalk_conf.h.md): Netatalk configuration and volume lookup interface.
+* [include/atalk/netddp.h](atalk/netddp.h.md): Portable DDP socket lifecycle and datagram I/O interface.
+* [include/atalk/pap.h](atalk/pap.h.md): Printer Access Protocol operation codes and packet sizes.
+* [include/atalk/queue.h](atalk/queue.h.md): Queue node types and allocation, insertion and removal interface.
+* [include/atalk/rpc.h](atalk/rpc.h.md): RPC locking interface for AppleDouble files.
+* [include/atalk/rtmp.h](atalk/rtmp.h.md): Routing Table Maintenance Protocol packet types and operation codes.
+* [include/atalk/server_child.h](atalk/server_child.h.md): AFP child process state and session management interface.
+* [include/atalk/server_ipc.h](atalk/server_ipc.h.md): Parent and child IPC message types and cache hint interface.
+* [include/atalk/spotlight.h](atalk/spotlight.h.md): Spotlight query types, backend callbacks and RPC interface.
+* [include/atalk/srp.h](atalk/srp.h.md): SRP group constants and verifier validation helpers.
+* [include/atalk/uam.h](atalk/uam.h.md): User authentication module registration and server callback interface.
+* [include/atalk/unicode.h](atalk/unicode.h.md): Character set conversion types and Unicode string operations.
+* [include/atalk/unix.h](atalk/unix.h.md): Unix filesystem, privilege and resource usage helpers.
+* [include/atalk/util.h](atalk/util.h.md): Shared socket, signal, module loading and event loop helpers.
+* [include/atalk/uuid.h](atalk/uuid.h.md): User and group UUID lookup, conversion and cache interface.
+* [include/atalk/vfs.h](atalk/vfs.h.md): Volume filesystem operation callbacks and initialization interface.
+* [include/atalk/volume.h](atalk/volume.h.md): AFP volume state, configuration flags and extension mapping types.
+* [include/atalk/zip.h](atalk/zip.h.md): Zone Information Protocol packet types and operation codes.
 
 # Includes headers from
 

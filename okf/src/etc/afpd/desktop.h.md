@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/desktop.h"
-description: "1 type, includes 2 project headers."
+description: "AFP desktop database command handlers and path conversion helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/desktop.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -37,7 +37,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 ### struct savedt
 
-Defined at line 33.
+Defined at line 38.
 * `uint8_t sdt_creator`
 * `int sdt_fd`
 * `int sdt_index`

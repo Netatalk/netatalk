@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/adouble/ad_conv.c"
-description: "Part of Netatalk's AppleDouble implementatation."
+description: "Converting AppleDouble metadata and resource forks to the EA layout."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_conv.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struct vol *vol)
 ```
 
-Defined at lines 71 to 163.
+Defined at lines 70 to 162.
 
 Convert the metadata of a version 2 AppleDouble file to the EA form.
 
@@ -58,7 +58,7 @@ Uses file-scope variables: `emptydirad`, `emptyfilad`
 static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struct vol *vol)
 ```
 
-Defined at lines 178 to 233.
+Defined at lines 177 to 232.
 
 Convert the resource fork of a version 2 AppleDouble file to the EA form.
 
@@ -81,7 +81,7 @@ Called by: [ad_conv_v22ea](ad_conv.c.md#ad_conv_v22ea)
 static int ad_conv_v22ea(const char *path, const struct stat *sp, const struct vol *vol)
 ```
 
-Defined at lines 247 to 277.
+Defined at lines 246 to 276.
 
 Convert a file's version 2 AppleDouble data to the EA form and delete the version 2 file.
 
@@ -104,7 +104,7 @@ Called by: [ad_convert](ad_conv.c.md#ad_convert)
 static int ad_conv_dehex(const char *path, const struct stat *sp, const struct vol *vol, const char **newpathp)
 ```
 
-Defined at lines 293 to 357.
+Defined at lines 292 to 356.
 
 Rename a path whose name carries CAP hex escapes for dot and slash to the decoded name.
 
@@ -130,7 +130,7 @@ Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no t
 int ad_convert(const char *path, const struct stat *sp, const struct vol *vol, const char **newpath)
 ```
 
-Defined at lines 370 to 402.
+Defined at lines 369 to 401.
 
 AppleDouble and encoding conversion on the fly.
 

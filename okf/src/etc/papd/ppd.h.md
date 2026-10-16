@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/papd/ppd.h"
-description: "2 types."
+description: "PostScript printer description feature and font lookup interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/ppd.h"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,12 +23,12 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 
 ### struct ppd_feature
 
-Defined at line 16.
+Defined at line 21.
 * `char * pd_name`
 * `char * pd_value`
 
 ### struct ppd_font
 
-Defined at line 11.
+Defined at line 16.
 * `char * pd_font`
 * `struct ppd_font * pd_next`

@@ -5,17 +5,17 @@ description: "7 files, 48 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/netatalk"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [etc/netatalk/afp_avahi.c](netatalk/afp_avahi.c.md): Avahi based Zeroconf support.
-* [etc/netatalk/afp_avahi.h](netatalk/afp_avahi.h.md): Avahi based Zeroconf support.
+* [etc/netatalk/afp_avahi.h](netatalk/afp_avahi.h.md): Avahi service registration interface and context type.
 * [etc/netatalk/afp_mdns.c](netatalk/afp_mdns.c.md): mDNS based Zeroconf support
-* [etc/netatalk/afp_mdns.h](netatalk/afp_mdns.h.md): mDNS based Zeroconf support
-* [etc/netatalk/afp_zeroconf.c](netatalk/afp_zeroconf.c.md): Zeroconf facade, that abstracts access to a particular Zeroconf implementation.
-* [etc/netatalk/afp_zeroconf.h](netatalk/afp_zeroconf.h.md): Zeroconf facade, that abstracts access to a particular Zeroconf implementation.
+* [etc/netatalk/afp_mdns.h](netatalk/afp_mdns.h.md): mDNS service registration interface
+* [etc/netatalk/afp_zeroconf.c](netatalk/afp_zeroconf.c.md): Register and withdraw AFP services through the Zeroconf implementation.
+* [etc/netatalk/afp_zeroconf.h](netatalk/afp_zeroconf.h.md): Zeroconf service types and backend registration interface.
 * [etc/netatalk/netatalk.c](netatalk/netatalk.c.md): The netatalk service controller that starts and supervises afpd and the Spotlight dbus daemon.
 
 # Includes headers from

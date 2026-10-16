@@ -5,7 +5,7 @@ description: "Avahi based Zeroconf support."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/netatalk/afp_avahi.c"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit reco
 static void register_stuff(void)
 ```
 
-Defined at lines 51 to 193.
+Defined at lines 54 to 196.
 
 Register the AFP service, the Time Machine volumes, and the device model with Avahi.
 
@@ -47,7 +47,7 @@ Uses file-scope variables: `ctx`
 static void publish_reply(AvahiEntryGroup *g, AvahiEntryGroupState state, void *userdata)
 ```
 
-Defined at lines 203 to 234.
+Defined at lines 206 to 237.
 
 Log the state of the entry group, and stop the Avahi thread on a name collision or a failure.
 
@@ -66,7 +66,7 @@ Uses file-scope variables: `ctx`
 static void client_callback(AvahiClient *client, AvahiClientState state, void *userdata)
 ```
 
-Defined at lines 248 to 305.
+Defined at lines 251 to 308.
 
 Track the state of the Avahi client, and register the services once the daemon runs.
 
@@ -89,7 +89,7 @@ Uses file-scope variables: `ctx`
 void av_zeroconf_register(const AFPObj *obj)
 ```
 
-Defined at lines 319 to 363.
+Defined at lines 322 to 366.
 
 Start the Avahi thread, which registers the AFP services with Zeroconf.
 
@@ -110,7 +110,7 @@ Uses file-scope variables: `ctx`
 int av_zeroconf_unregister()
 ```
 
-Defined at lines 373 to 395.
+Defined at lines 376 to 398.
 
 Stop the Avahi thread and free the Zeroconf state.
 

@@ -5,13 +5,13 @@ description: "3 files, 19 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/dbd"
 tags: ["bin/dbd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [bin/dbd/cmd_dbd.c](dbd/cmd_dbd.c.md): The dbd command: scan an AFP volume and repair its CNID database.
-* [bin/dbd/cmd_dbd.h](dbd/cmd_dbd.h.md): includes 1 project header.
+* [bin/dbd/cmd_dbd.h](dbd/cmd_dbd.h.md): Volume scan flags and logging interface for dbd.
 * [bin/dbd/cmd_dbd_scanvol.c](dbd/cmd_dbd_scanvol.c.md): Volume scan of dbd: CNID and AppleDouble checks and repairs.
 
 # Includes headers from

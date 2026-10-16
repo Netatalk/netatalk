@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/spotlight/localsearch/sparql_map.h"
-description: "2 types."
+description: "Spotlight attribute and content type mapping tables for SPARQL."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/localsearch/sparql_map.h"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit recorded in [build](../../../../build.md).
@@ -19,14 +19,14 @@ Part of the [etc/spotlight](../../spotlight.md) subsystem. Built from the commit
 
 ### struct MDTypeMap
 
-Defined at line 45.
+Defined at line 50.
 * `const char * mdtm_value`: MD query value of attributes '_kMDItemGroupId' and 'kMDItemContentTypeTree'.
 * `enum kMDTypeMap mdtm_type`: whether SPARQL query must search attribute rdf:type or nie:mime_Type
 * `const char * mdtm_sparql`: the SPARQL query match string
 
 ### struct spotlight_sparql_map
 
-Defined at line 38.
+Defined at line 43.
 * `const char * ssm_spotlight_attr`
 * `bool ssm_enabled`
 * `enum ssm_type ssm_type`

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/papd/lp.h"
-description: "3 functions, includes 1 project header."
+description: "Print job submission, queue control and spool I/O interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/lp.h"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 int lp_pagecost(void)
 ```
 
-Declared at etc/papd/lp.h line 9; no definition in the scanned sources.
+Declared at etc/papd/lp.h line 14; no definition in the scanned sources.
 
 Called by: [gq_pagecost](queries.c.md#gq_pagecost)
 
@@ -41,7 +41,7 @@ Called by: [gq_pagecost](queries.c.md#gq_pagecost)
 int lp_rmjob(int)
 ```
 
-Declared at etc/papd/lp.h line 14; no definition in the scanned sources.
+Declared at etc/papd/lp.h line 19; no definition in the scanned sources.
 
 ### lp_queue
 
@@ -49,4 +49,4 @@ Declared at etc/papd/lp.h line 14; no definition in the scanned sources.
 int lp_queue(struct papfile *)
 ```
 
-Declared at etc/papd/lp.h line 15; no definition in the scanned sources.
+Declared at etc/papd/lp.h line 20; no definition in the scanned sources.

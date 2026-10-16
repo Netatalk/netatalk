@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/fork.h"
-description: "1 function, 2 types, includes 3 project headers."
+description: "Open fork state, byte range locking and AFP fork command handlers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -47,7 +47,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int fork_range_within(off_t offset, off_t length, off_t size)
 ```
 
-Defined at lines 57 to 61.
+Defined at lines 62 to 66.
 
 Check that [offset, offset + length) fits in size without overflow.
 
@@ -57,13 +57,13 @@ Called by: [read_fork](fork.c.md#read_fork), [rfork_cache_serve_from_buf](fork.c
 
 ### struct file_key
 
-Defined at line 17.
+Defined at line 22.
 * `dev_t dev`
 * `ino_t inode`
 
 ### struct ofork
 
-Defined at line 22.
+Defined at line 27.
 * `struct file_key key`
 * `struct adouble * of_ad`
 * `struct vol * of_vol`

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "bin/dbd/cmd_dbd.h"
-description: "includes 1 project header."
+description: "Volume scan flags and logging interface for dbd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/dbd/cmd_dbd.h"
 tags: ["bin/dbd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [build](../../../build.md).

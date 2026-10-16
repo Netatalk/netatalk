@@ -5,13 +5,13 @@ description: "10 files, 14 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/asp"
 tags: ["libatalk/asp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [libatalk/asp/asp_attn.c](asp/asp_attn.c.md): ASP attention requests.
-* [libatalk/asp/asp_child.h](asp/asp_child.h.md): 1 type.
+* [libatalk/asp/asp_child.h](asp/asp_child.h.md): Private ASP child session state and status flags.
 * [libatalk/asp/asp_close.c](asp/asp_close.c.md): Closing an ASP session in reply to the CloseSession request of the workstation.
 * [libatalk/asp/asp_cmdreply.c](asp/asp_cmdreply.c.md): ASP command and write replies.
 * [libatalk/asp/asp_getreq.c](asp/asp_getreq.c.md): Reading an ASP request from the session socket.

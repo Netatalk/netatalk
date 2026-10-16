@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/queue.h"
-description: "1 type."
+description: "Queue node types and allocation, insertion and removal interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/queue.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,7 +24,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct qnode
 
-Defined at line 26.
+Defined at line 31.
 * `struct qnode * prev`
 * `struct qnode * next`
 * `void * data`

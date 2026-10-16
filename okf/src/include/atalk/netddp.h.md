@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/netddp.h"
-description: "this provides a generic interface to the ddp layer."
+description: "Portable DDP socket lifecycle and datagram I/O interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/netddp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -40,7 +40,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int netddp_close(int filedes)
 ```
 
-Defined at lines 27 to 30.
+Defined at lines 29 to 32.
 
 Close a DDP socket.
 
@@ -52,7 +52,7 @@ Called by: [atp_close](../../libatalk/atp/atp_close.c.md#atp_close), [atp_open](
 static ssize_t netddp_sendto(int s, const void *msg, size_t len, int flags, const struct sockaddr *to, socklen_t tolen)
 ```
 
-Defined at lines 33 to 37.
+Defined at lines 35 to 39.
 
 Send a DDP datagram through sendto.
 
@@ -64,7 +64,7 @@ Called by: [aep_send](../../bin/aecho/aecho.c.md#aep_send), [atp_rsel](../../lib
 static ssize_t netddp_recvfrom(int s, void *buf, size_t len, int flags, struct sockaddr *from, socklen_t *fromlen)
 ```
 
-Defined at lines 40 to 45.
+Defined at lines 42 to 47.
 
 Receive a DDP datagram through recvfrom.
 

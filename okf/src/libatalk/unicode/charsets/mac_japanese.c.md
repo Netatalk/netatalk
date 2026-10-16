@@ -1,11 +1,11 @@
 ---
 type: C Source File
 title: "libatalk/unicode/charsets/mac_japanese.c"
-description: "MAC_JAPANESE charset conversion."
+description: "Mac Japanese charset conversion."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charsets/mac_japanese.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [libatalk/unicode](../../unicode.md) subsystem. Built from the commit recorded in [build](../../../../build.md).

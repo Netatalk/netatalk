@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "sys/netatalk/phase2.h"
-description: "IEEE 802.2 Link Level Control headers, for use in conjunction with 802."
+description: "IEEE 802.2 LLC and SNAP header types for AppleTalk Phase 2."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/phase2.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 
 ### struct llc
 
-Defined at line 30.
+Defined at line 34.
 * `unsigned char llc_dsap`
 * `unsigned char llc_ssap`
 * `unsigned char control`

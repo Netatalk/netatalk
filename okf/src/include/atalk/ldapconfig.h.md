@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/ldapconfig.h"
-description: "2 types."
+description: "LDAP preference types and configuration lifecycle interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/ldapconfig.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct ldap_pref
 
-Defined at line 37.
+Defined at line 42.
 * `const void * pref`
 * `char * name`
 * `int strorint`: string to just store in char * or convert to int ?
@@ -37,7 +37,7 @@ Defined at line 37.
 
 ### struct pref_array
 
-Defined at line 46.
+Defined at line 51.
 * `const char * pref`: name of pref from ldap_prefs[] to which this value corresponds
 * `char * valuestring`: config string
 * `int value`: corresponding value

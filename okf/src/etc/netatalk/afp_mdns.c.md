@@ -5,7 +5,7 @@ description: "mDNS based Zeroconf support"
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/netatalk/afp_mdns.c"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,7 +28,7 @@ Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit reco
 int TXTRecordPrintf(TXTRecordRef *rec, const char *key, const char *fmt,...)
 ```
 
-Defined at lines 44 to 64.
+Defined at lines 47 to 67.
 
 Set a TXT record entry to a value formatted with vasprintf.
 
@@ -50,7 +50,7 @@ Called by: [register_stuff](afp_mdns.c.md#register_stuff)
 int TXTRecordKeyPrintf(TXTRecordRef *rec, const char *key_fmt, int key_var, const char *fmt,...)
 ```
 
-Defined at lines 79 to 116.
+Defined at lines 82 to 119.
 
 Set a TXT record entry, named with an int, to a value formatted with vasprintf.
 
@@ -75,7 +75,7 @@ Called by: [register_stuff](afp_mdns.c.md#register_stuff)
 static void * polling_thread(void *arg)
 ```
 
-Defined at lines 129 to 153.
+Defined at lines 132 to 156.
 
 Poll the sockets of the registered services and run their callbacks.
 
@@ -96,7 +96,7 @@ Uses file-scope variables: `svc_ref_count`, `svc_refs`
 static void RegisterReply(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType errorCode, const char *name, const char *regtype, const char *domain, void *context)
 ```
 
-Defined at lines 168 to 176.
+Defined at lines 171 to 179.
 
 Log a failed registration, as the DNSServiceRegister callback.
 
@@ -119,7 +119,7 @@ Called by: [register_stuff](afp_mdns.c.md#register_stuff)
 static void unregister_stuff(void)
 ```
 
-Defined at lines 182 to 202.
+Defined at lines 185 to 205.
 
 This function unregisters anything we have already registered and frees associated memory.
 
@@ -133,7 +133,7 @@ Uses file-scope variables: `poller`, `svc_ref_count`, `svc_refs`
 static void register_stuff(const AFPObj *obj)
 ```
 
-Defined at lines 216 to 418.
+Defined at lines 219 to 421.
 
 Register the AFP service, the Time Machine volumes, and the device model with mDNSResponder.
 
@@ -154,7 +154,7 @@ Uses file-scope variables: `poller`, `svc_ref_count`, `svc_refs`
 void md_zeroconf_register(const AFPObj *obj)
 ```
 
-Defined at lines 430 to 435.
+Defined at lines 433 to 438.
 
 Register the AFP services with mDNSResponder and start the polling thread.
 
@@ -171,7 +171,7 @@ Called by: [zeroconf_register](afp_zeroconf.c.md#zeroconf_register)
 int md_zeroconf_unregister(void)
 ```
 
-Defined at lines 444 to 448.
+Defined at lines 447 to 451.
 
 Cancel the polling thread and withdraw the mDNS services.
 

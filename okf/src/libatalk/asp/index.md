@@ -1,7 +1,7 @@
 # src/libatalk/asp
 
 * [asp_attn.c](asp_attn.c.md) - ASP attention requests.
-* [asp_child.h](asp_child.h.md) - 1 type.
+* [asp_child.h](asp_child.h.md) - Private ASP child session state and status flags.
 * [asp_close.c](asp_close.c.md) - Closing an ASP session in reply to the CloseSession request of the workstation.
 * [asp_cmdreply.c](asp_cmdreply.c.md) - ASP command and write replies.
 * [asp_getreq.c](asp_getreq.c.md) - Reading an ASP request from the session socket.

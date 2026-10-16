@@ -2,7 +2,7 @@
 
 * [atp_bufs.c](atp_bufs.c.md) - Our own memory maintenance for atp.
 * [atp_close.c](atp_close.c.md) - Closing an ATP endpoint.
-* [atp_internals.h](atp_internals.h.md) - 1 function, includes 2 project headers.
+* [atp_internals.h](atp_internals.h.md) - Private ATP packet buffers, receive queue and packet construction helpers.
 * [atp_open.c](atp_open.c.md) - Opening an ATP endpoint.
 * [atp_packet.c](atp_packet.c.md) - ATP packet building, receiving, and queueing.
 * [atp_rreq.c](atp_rreq.c.md) - Receiving ATP requests.

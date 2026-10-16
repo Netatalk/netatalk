@@ -5,40 +5,40 @@ description: "31 files, 113 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/unicode"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [libatalk/unicode/charcnv.c](unicode/charcnv.c.md): Character-set conversion routines based on samba iconv wrappers.
 * [libatalk/unicode/charsets/generic_cjk.c](unicode/charsets/generic_cjk.c.md): Shared conversion code of the CJK charsets.
-* [libatalk/unicode/charsets/generic_cjk.h](unicode/charsets/generic_cjk.h.md): 1 type, includes 2 project headers.
+* [libatalk/unicode/charsets/generic_cjk.h](unicode/charsets/generic_cjk.h.md): CJK mapping table types and character conversion helpers.
 * [libatalk/unicode/charsets/generic_mb.c](unicode/charsets/generic_mb.c.md): Shared conversion code of the single-byte Mac charsets.
-* [libatalk/unicode/charsets/generic_mb.h](unicode/charsets/generic_mb.h.md): No functions or types.
-* [libatalk/unicode/charsets/mac_centraleurope.c](unicode/charsets/mac_centraleurope.c.md): MAC_CENTRALEUROPE charset conversion.
-* [libatalk/unicode/charsets/mac_centraleurope.h](unicode/charsets/mac_centraleurope.h.md): 2 functions.
-* [libatalk/unicode/charsets/mac_chinese_simp.c](unicode/charsets/mac_chinese_simp.c.md): MAC_CHINESE_SIMP charset conversion.
-* [libatalk/unicode/charsets/mac_chinese_simp.h](unicode/charsets/mac_chinese_simp.h.md): No functions or types.
-* [libatalk/unicode/charsets/mac_chinese_trad.c](unicode/charsets/mac_chinese_trad.c.md): MAC_CHINESE_TRAD charset conversion.
-* [libatalk/unicode/charsets/mac_chinese_trad.h](unicode/charsets/mac_chinese_trad.h.md): No functions or types.
-* [libatalk/unicode/charsets/mac_cyrillic.c](unicode/charsets/mac_cyrillic.c.md): MAC_CYRILLIC charset conversion.
-* [libatalk/unicode/charsets/mac_cyrillic.h](unicode/charsets/mac_cyrillic.h.md): MacCyrillic.
-* [libatalk/unicode/charsets/mac_greek.c](unicode/charsets/mac_greek.c.md): MAC_GREEK charset conversion.
-* [libatalk/unicode/charsets/mac_greek.h](unicode/charsets/mac_greek.h.md): MacGreek.
-* [libatalk/unicode/charsets/mac_hebrew.c](unicode/charsets/mac_hebrew.c.md): MAC_HEBREW charset conversion.
-* [libatalk/unicode/charsets/mac_hebrew.h](unicode/charsets/mac_hebrew.h.md): MacHebrew.
-* [libatalk/unicode/charsets/mac_japanese.c](unicode/charsets/mac_japanese.c.md): MAC_JAPANESE charset conversion.
-* [libatalk/unicode/charsets/mac_japanese.h](unicode/charsets/mac_japanese.h.md): No functions or types.
-* [libatalk/unicode/charsets/mac_korean.c](unicode/charsets/mac_korean.c.md): MAC_KOREAN charset conversion.
-* [libatalk/unicode/charsets/mac_korean.h](unicode/charsets/mac_korean.h.md): No functions or types.
-* [libatalk/unicode/charsets/mac_roman.c](unicode/charsets/mac_roman.c.md): MAC_ROMAN charset conversion.
-* [libatalk/unicode/charsets/mac_roman.h](unicode/charsets/mac_roman.h.md): No functions or types.
-* [libatalk/unicode/charsets/mac_turkish.c](unicode/charsets/mac_turkish.c.md): MAC_TURKISH charset conversion.
-* [libatalk/unicode/charsets/mac_turkish.h](unicode/charsets/mac_turkish.h.md): MacTurkish.
+* [libatalk/unicode/charsets/generic_mb.h](unicode/charsets/generic_mb.h.md): Multibyte conversion interface using per-character callbacks.
+* [libatalk/unicode/charsets/mac_centraleurope.c](unicode/charsets/mac_centraleurope.c.md): Mac Central European charset conversion.
+* [libatalk/unicode/charsets/mac_centraleurope.h](unicode/charsets/mac_centraleurope.h.md): Mac Central Europe mapping tables and inline conversion helpers.
+* [libatalk/unicode/charsets/mac_chinese_simp.c](unicode/charsets/mac_chinese_simp.c.md): Mac Chinese Simplified charset conversion.
+* [libatalk/unicode/charsets/mac_chinese_simp.h](unicode/charsets/mac_chinese_simp.h.md): Mac Chinese Simplified character mapping tables.
+* [libatalk/unicode/charsets/mac_chinese_trad.c](unicode/charsets/mac_chinese_trad.c.md): Mac Chinese Traditional charset conversion.
+* [libatalk/unicode/charsets/mac_chinese_trad.h](unicode/charsets/mac_chinese_trad.h.md): Mac Chinese Traditional character mapping tables.
+* [libatalk/unicode/charsets/mac_cyrillic.c](unicode/charsets/mac_cyrillic.c.md): Mac Cyrillic charset conversion.
+* [libatalk/unicode/charsets/mac_cyrillic.h](unicode/charsets/mac_cyrillic.h.md): Mac Cyrillic character mapping tables.
+* [libatalk/unicode/charsets/mac_greek.c](unicode/charsets/mac_greek.c.md): Mac Greek charset conversion.
+* [libatalk/unicode/charsets/mac_greek.h](unicode/charsets/mac_greek.h.md): Mac Greek character mapping tables.
+* [libatalk/unicode/charsets/mac_hebrew.c](unicode/charsets/mac_hebrew.c.md): Mac Hebrew charset conversion.
+* [libatalk/unicode/charsets/mac_hebrew.h](unicode/charsets/mac_hebrew.h.md): Mac Hebrew character mapping tables.
+* [libatalk/unicode/charsets/mac_japanese.c](unicode/charsets/mac_japanese.c.md): Mac Japanese charset conversion.
+* [libatalk/unicode/charsets/mac_japanese.h](unicode/charsets/mac_japanese.h.md): Mac Japanese character mapping tables.
+* [libatalk/unicode/charsets/mac_korean.c](unicode/charsets/mac_korean.c.md): Mac Korean charset conversion.
+* [libatalk/unicode/charsets/mac_korean.h](unicode/charsets/mac_korean.h.md): Mac Korean character mapping tables.
+* [libatalk/unicode/charsets/mac_roman.c](unicode/charsets/mac_roman.c.md): Mac Roman charset conversion.
+* [libatalk/unicode/charsets/mac_roman.h](unicode/charsets/mac_roman.h.md): Mac Roman character mapping tables.
+* [libatalk/unicode/charsets/mac_turkish.c](unicode/charsets/mac_turkish.c.md): Mac Turkish charset conversion.
+* [libatalk/unicode/charsets/mac_turkish.h](unicode/charsets/mac_turkish.h.md): Mac Turkish character mapping tables.
 * [libatalk/unicode/iconv.c](unicode/iconv.c.md): wrapper/stub for iconv character set conversion.
-* [libatalk/unicode/precompose.h](unicode/precompose.h.md): No functions or types.
+* [libatalk/unicode/precompose.h](unicode/precompose.h.md): Unicode composition and decomposition tables and Hangul constants.
 * [libatalk/unicode/utf16_case.c](unicode/utf16_case.c.md): UTF-16 case mapping tables generated from the Unicode data.
-* [libatalk/unicode/utf16_casetable.h](unicode/utf16_casetable.h.md): No functions or types.
+* [libatalk/unicode/utf16_casetable.h](unicode/utf16_casetable.h.md): UTF-16 upper and lower case lookup tables.
 * [libatalk/unicode/utf8.c](unicode/utf8.c.md): UTF-8 charset conversion.
 * [libatalk/unicode/util_unistr.c](unicode/util_unistr.c.md): UTF-16 string functions, with Unicode precomposition and decomposition.
 

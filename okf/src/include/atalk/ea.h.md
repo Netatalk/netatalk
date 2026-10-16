@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/ea.h"
-description: "1 function, 2 types, includes 1 project header."
+description: "Portable extended attribute operations and AppleDouble EA types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/ea.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,13 +42,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 int sys_copyxattr(const char *src, const char *dst)
 ```
 
-Declared at include/atalk/ea.h line 119; no definition in the scanned sources.
+Declared at include/atalk/ea.h line 124; no definition in the scanned sources.
 
 # Types
 
 ### struct ea
 
-Defined at line 164.
+Defined at line 169.
 * `uint32_t ea_inited`: needed for interfacing ea_open w.
 * `const struct vol * vol`: vol handle, ea_close needs it
 * `int dirfd`: for *at (cf openat) semantics, -1 means ignore
@@ -62,7 +62,7 @@ Defined at line 164.
 
 ### struct ea_entry
 
-Defined at line 156.
+Defined at line 161.
 * `size_t ea_namelen`: len of ea_name without terminating 0 i.e.
 * `size_t ea_size`: size of EA
 * `char * ea_name`: name of the EA

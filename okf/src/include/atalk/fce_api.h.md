@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/fce_api.h"
-description: "API calls for file change event api."
+description: "File change event types, registration and notification interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/fce_api.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).

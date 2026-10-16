@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/srp.h"
-description: "3 functions."
+description: "SRP group constants and verifier validation helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/srp.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int srp_valid_username(const char *name)
 ```
 
-Defined at lines 58 to 64.
+Defined at lines 62 to 68.
 
 Accept 1 to SRP_USERNAME_MAX_LEN bytes without a colon, CR, or LF.
 
@@ -43,7 +43,7 @@ Called by: [add_record](../../bin/afppasswd/afppasswd_migrate.c.md#add_record), 
 static int srp_valid_fields(const char *fields)
 ```
 
-Defined at lines 67 to 102.
+Defined at lines 71 to 106.
 
 Tell whether a `salt:verifier` line is valid or fully disabled.
 
@@ -55,7 +55,7 @@ Called by: [add_record](../../bin/afppasswd/afppasswd_migrate.c.md#add_record), 
 static int srp_verifier_mode_is_safe(mode_t mode)
 ```
 
-Defined at lines 105 to 108.
+Defined at lines 109 to 112.
 
 Tell whether a verifier file mode gives group and others no access.
 

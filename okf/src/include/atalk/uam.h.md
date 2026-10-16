@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/uam.h"
-description: "1 function, 2 types, includes 1 project header."
+description: "User authentication module registration and server callback interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/uam.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,13 +42,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 UAM_MODULE_EXPORT int uam_afp_read(void *, char *, size_t *, int(*)(void *, void *, const int))
 ```
 
-Declared at include/atalk/uam.h line 99; no definition in the scanned sources.
+Declared at include/atalk/uam.h line 104; no definition in the scanned sources.
 
 # Types
 
 ### struct session_info
 
-Defined at line 72.
+Defined at line 77.
 * `void * sessionkey`: random session key
 * `size_t sessionkey_len`
 * `void * cryptedkey`: kerberos/gssapi crypted key
@@ -60,7 +60,7 @@ Defined at line 72.
 
 ### struct uam_export
 
-Defined at line 63.
+Defined at line 68.
 * `int uam_type`
 * `int uam_version`
 * `int(* uam_setup`: Assigned in [uams_clrtxt](../../etc/uams/uams_pam.c.md#uams_clrtxt), [uams_clrtxt](../../etc/uams/uams_passwd.c.md#uams_clrtxt), [uams_dhx](../../etc/uams/uams_dhx_pam.c.md#uams_dhx), [uams_dhx](../../etc/uams/uams_dhx_passwd.c.md#uams_dhx), [uams_dhx2](../../etc/uams/uams_dhx2_pam.c.md#uams_dhx2), [uams_dhx2](../../etc/uams/uams_dhx2_passwd.c.md#uams_dhx2), [uams_dhx2_pam](../../etc/uams/uams_dhx2_pam.c.md#uams_dhx2_pam), [uams_dhx2_passwd](../../etc/uams/uams_dhx2_passwd.c.md#uams_dhx2_passwd), [uams_dhx_pam](../../etc/uams/uams_dhx_pam.c.md#uams_dhx_pam), [uams_dhx_passwd](../../etc/uams/uams_dhx_passwd.c.md#uams_dhx_passwd), [uams_gss](../../etc/uams/uams_gss.c.md#uams_gss), [uams_guest](../../etc/uams/uams_guest.c.md#uams_guest), [uams_pam](../../etc/uams/uams_pam.c.md#uams_pam), [uams_passwd](../../etc/uams/uams_passwd.c.md#uams_passwd), [uams_randnum](../../etc/uams/uams_randnum.c.md#uams_randnum), [uams_srp](../../etc/uams/uams_srp.c.md#uams_srp); called through by [uam_load](../../etc/afpd/uam.c.md#uam_load), [uam_load](../../etc/papd/uam.c.md#uam_load).

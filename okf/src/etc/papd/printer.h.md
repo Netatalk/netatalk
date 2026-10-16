@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/papd/printer.h"
-description: "1 type."
+description: "Printer configuration and authentication state types for papd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/printer.h"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,7 +22,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 
 ### struct printer
 
-Defined at line 6.
+Defined at line 11.
 * `char * p_name`
 * `char * p_type`
 * `char * p_zone`

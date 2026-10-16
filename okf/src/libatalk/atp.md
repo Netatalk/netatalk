@@ -5,14 +5,14 @@ description: "10 files, 20 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/atp"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [libatalk/atp/atp_bufs.c](atp/atp_bufs.c.md): Our own memory maintenance for atp.
 * [libatalk/atp/atp_close.c](atp/atp_close.c.md): Closing an ATP endpoint.
-* [libatalk/atp/atp_internals.h](atp/atp_internals.h.md): 1 function, includes 2 project headers.
+* [libatalk/atp/atp_internals.h](atp/atp_internals.h.md): Private ATP packet buffers, receive queue and packet construction helpers.
 * [libatalk/atp/atp_open.c](atp/atp_open.c.md): Opening an ATP endpoint.
 * [libatalk/atp/atp_packet.c](atp/atp_packet.c.md): ATP packet building, receiving, and queueing.
 * [libatalk/atp/atp_rreq.c](atp/atp_rreq.c.md): Receiving ATP requests.

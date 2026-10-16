@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "sys/netatalk/at.h"
-description: "3 types."
+description: "AppleTalk socket addresses, network ranges and protocol constants."
 resource: "https://github.com/Netatalk/netatalk/blob/main/sys/netatalk/at.h"
 tags: ["sys/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -78,20 +78,20 @@ Part of the [sys/netatalk](../netatalk.md) subsystem. Built from the commit reco
 
 ### struct at_addr
 
-Defined at line 68.
+Defined at line 73.
 * `unsigned short s_net`
 * `unsigned char s_node`
 
 ### struct netrange
 
-Defined at line 118.
+Defined at line 123.
 * `unsigned char nr_phase`
 * `unsigned short nr_firstnet`
 * `unsigned short nr_lastnet`
 
 ### struct sockaddr_at
 
-Defined at line 88.
+Defined at line 93.
 * `short sat_family`
 * `unsigned char sat_port`
 * `struct at_addr sat_addr`

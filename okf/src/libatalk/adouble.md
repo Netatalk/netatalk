@@ -5,17 +5,17 @@ description: "10 files, 108 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/adouble"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [libatalk/adouble/ad_attr.c](adouble/ad_attr.c.md): AFP attributes, CNID, and name entries of an AppleDouble.
-* [libatalk/adouble/ad_conv.c](adouble/ad_conv.c.md): Part of Netatalk's AppleDouble implementatation.
+* [libatalk/adouble/ad_conv.c](adouble/ad_conv.c.md): Converting AppleDouble metadata and resource forks to the EA layout.
 * [libatalk/adouble/ad_date.c](adouble/ad_date.c.md): Date entries of an AppleDouble.
 * [libatalk/adouble/ad_flush.c](adouble/ad_flush.c.md): Writing AppleDouble headers to disk and closing the forks.
 * [libatalk/adouble/ad_lock.c](adouble/ad_lock.c.md): Byte range and share mode locks on AppleDouble forks.
-* [libatalk/adouble/ad_open.c](adouble/ad_open.c.md): Part of Netatalk's AppleDouble implementatation.
+* [libatalk/adouble/ad_open.c](adouble/ad_open.c.md): Opening and creating AppleDouble forks and reading metadata headers.
 * [libatalk/adouble/ad_read.c](adouble/ad_read.c.md): Reading the forks of an AppleDouble.
 * [libatalk/adouble/ad_recvfile.c](adouble/ad_recvfile.c.md): Receiving a DSIWrite payload straight into an AppleDouble fork.
 * [libatalk/adouble/ad_size.c](adouble/ad_size.c.md): Fork lengths of an AppleDouble.

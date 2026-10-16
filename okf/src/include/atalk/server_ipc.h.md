@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/server_ipc.h"
-description: "1 type, includes 3 project headers."
+description: "Parent and child IPC message types and cache hint interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/server_ipc.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -38,7 +38,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct ipc_cache_hint_payload
 
-Defined at line 33.
+Defined at line 38.
 * `uint8_t event`
 * `uint8_t reserved`
 * `uint16_t vid`

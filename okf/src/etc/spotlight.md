@@ -5,7 +5,7 @@ description: "10 files, 68 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/spotlight"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
@@ -13,13 +13,13 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
 * [etc/spotlight/cnid/sl_cnid.c](spotlight/cnid/sl_cnid.c.md): Spotlight CNID backend: file name searches in the CNID database.
 * [etc/spotlight/localsearch/sl_localsearch.c](spotlight/localsearch/sl_localsearch.c.md): Spotlight LocalSearch backend: SPARQL queries to the indexer.
 * [etc/spotlight/localsearch/sparql_map.c](spotlight/localsearch/sparql_map.c.md): Spotlight attribute to SPARQL mapping table.
-* [etc/spotlight/localsearch/sparql_map.h](spotlight/localsearch/sparql_map.h.md): 2 types.
+* [etc/spotlight/localsearch/sparql_map.h](spotlight/localsearch/sparql_map.h.md): Spotlight attribute and content type mapping tables for SPARQL.
 * [etc/spotlight/localsearch/sparql_parser.y](spotlight/localsearch/sparql_parser.y.md): Grammar that maps Spotlight raw queries to SPARQL.
 * [etc/spotlight/localsearch/spotlight_rawquery_lexer.l](spotlight/localsearch/spotlight_rawquery_lexer.l.md): Lexer of the Spotlight raw query language.
-* [etc/spotlight/sl_backends.h](spotlight/sl_backends.h.md): includes 1 project header.
-* [etc/spotlight/spotlight_private.h](spotlight/spotlight_private.h.md): includes 1 project header.
+* [etc/spotlight/sl_backends.h](spotlight/sl_backends.h.md): Operation table declarations for available Spotlight backends.
+* [etc/spotlight/spotlight_private.h](spotlight/spotlight_private.h.md): Internal Spotlight file metadata, scope and CNID array helpers.
 * [etc/spotlight/xapian/sl_xapian.c](spotlight/xapian/sl_xapian.c.md): Spotlight Xapian backend: index state, queries, and results.
-* [etc/spotlight/xapian/sl_xapian.h](spotlight/xapian/sl_xapian.h.md): 9 functions.
+* [etc/spotlight/xapian/sl_xapian.h](spotlight/xapian/sl_xapian.h.md): Xapian index maintenance and Spotlight query interface.
 
 # Includes headers from
 

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/unix.h"
-description: "1 function, includes 1 project header."
+description: "Unix permissions, ownership and quota interface for afpd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/unix.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int setdirmode(const struct vol *, const char *, mode_t)
 ```
 
-Declared at etc/afpd/unix.h line 195; no definition in the scanned sources.
+Declared at etc/afpd/unix.h line 200; no definition in the scanned sources.
 
 # Macros
 

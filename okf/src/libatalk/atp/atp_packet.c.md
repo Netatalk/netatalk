@@ -5,7 +5,7 @@ description: "ATP packet building, receiving, and queueing."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/atp/atp_packet.c"
 tags: ["libatalk/atp"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -27,7 +27,7 @@ Part of the [libatalk/atp](../atp.md) subsystem. Built from the commit recorded 
 void atp_build_req_packet(struct atpbuf *, uint16_t, uint8_t, struct atp_block *)
 ```
 
-Defined at lines 116 to 134. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
+Defined at lines 142 to 160. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
 
 Build an ATP request packet: the DDP type, the ATP header, and the request data.
 
@@ -45,7 +45,7 @@ Called by: [atp_sreq](atp_sreq.c.md#atp_sreq)
 void atp_build_resp_packet(struct atpbuf *, uint16_t, uint8_t, struct atp_block *, uint8_t)
 ```
 
-Defined at lines 147 to 168. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
+Defined at lines 173 to 194. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
 
 Build one ATP response packet from the response vector entry with a sequence number.
 
@@ -64,7 +64,7 @@ Called by: [atp_sresp](atp_sresp.c.md#atp_sresp)
 void atp_queue_push(ATP, struct atpbuf *)
 ```
 
-Defined at lines 184 to 210. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
+Defined at lines 210 to 236. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
 
 Push a packet onto the queue of unmatched received packets, dropping the oldest one when the queue is full.
 
@@ -84,7 +84,7 @@ Called by: [atp_recv_atp](atp_packet.c.md#atp_recv_atp), [atp_rsel](atp_rsel.c.m
 int atp_recv_atp(ATP, struct sockaddr_at *, uint8_t *, uint16_t, char *, int)
 ```
 
-Defined at lines 234 to 414. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
+Defined at lines 260 to 440. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
 
 Receive an ATP packet of a function and transaction ID from an address, from the queue or the socket.
 
@@ -110,7 +110,7 @@ Called by: [atp_rreq_try](atp_rreq.c.md#atp_rreq_try), [atp_rsel](atp_rsel.c.md#
 int at_addr_eq(struct sockaddr_at *, struct sockaddr_at *)
 ```
 
-Defined at lines 426 to 440. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
+Defined at lines 452 to 466. Declared in [libatalk/atp/atp_internals.h](atp_internals.h.md).
 
 Compare two AppleTalk addresses, with wildcards in the first.
 

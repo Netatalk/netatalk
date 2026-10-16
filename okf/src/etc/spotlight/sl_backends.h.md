@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/spotlight/sl_backends.h"
-description: "includes 1 project header."
+description: "Operation table declarations for available Spotlight backends."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/spotlight/sl_backends.h"
 tags: ["etc/spotlight"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/spotlight](../spotlight.md) subsystem. Built from the commit recorded in [build](../../../build.md).

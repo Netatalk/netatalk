@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/hash.h"
-description: "7 functions, includes 1 project header."
+description: "Hash table allocation, lookup and iteration interface for afpd."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/hash.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -30,7 +30,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 void hash_free(hash_t *)
 ```
 
-Declared at etc/afpd/hash.h line 31; no definition in the scanned sources.
+Declared at etc/afpd/hash.h line 36; no definition in the scanned sources.
 
 ### hash_init
 
@@ -38,7 +38,7 @@ Declared at etc/afpd/hash.h line 31; no definition in the scanned sources.
 hash_t * hash_init(hash_t *, hashcount_t, hash_comp_t, hash_fun_t, hnode_t **, hashcount_t)
 ```
 
-Declared at etc/afpd/hash.h line 32; no definition in the scanned sources.
+Declared at etc/afpd/hash.h line 37; no definition in the scanned sources.
 
 ### hnode_put
 
@@ -46,7 +46,7 @@ Declared at etc/afpd/hash.h line 32; no definition in the scanned sources.
 void hnode_put(hnode_t *, void *)
 ```
 
-Declared at etc/afpd/hash.h line 41; no definition in the scanned sources.
+Declared at etc/afpd/hash.h line 46; no definition in the scanned sources.
 
 ### hash_isfull
 
@@ -54,7 +54,7 @@ Declared at etc/afpd/hash.h line 41; no definition in the scanned sources.
 int hash_isfull(hash_t *)
 ```
 
-Declared at etc/afpd/hash.h line 47; no definition in the scanned sources.
+Declared at etc/afpd/hash.h line 52; no definition in the scanned sources.
 
 ### hash_isempty
 
@@ -62,7 +62,7 @@ Declared at etc/afpd/hash.h line 47; no definition in the scanned sources.
 int hash_isempty(hash_t *)
 ```
 
-Declared at etc/afpd/hash.h line 48; no definition in the scanned sources.
+Declared at etc/afpd/hash.h line 53; no definition in the scanned sources.
 
 Called by: [hash_destroy](hash.c.md#hash_destroy)
 
@@ -72,7 +72,7 @@ Called by: [hash_destroy](hash.c.md#hash_destroy)
 hnode_t * hnode_create(void *)
 ```
 
-Declared at etc/afpd/hash.h line 57; no definition in the scanned sources.
+Declared at etc/afpd/hash.h line 62; no definition in the scanned sources.
 
 ### hnode_destroy
 
@@ -80,7 +80,7 @@ Declared at etc/afpd/hash.h line 57; no definition in the scanned sources.
 void hnode_destroy(hnode_t *)
 ```
 
-Declared at etc/afpd/hash.h line 59; no definition in the scanned sources.
+Declared at etc/afpd/hash.h line 64; no definition in the scanned sources.
 
 # Macros
 

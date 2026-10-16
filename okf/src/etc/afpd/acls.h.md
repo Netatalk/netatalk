@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/acls.h"
-description: "Definitions for ACL mapping code."
+description: "AFP ACL command handlers and access permission helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acls.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -30,7 +30,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 Access Control List Entry (ACE).
 
-Defined at line 105.
+Defined at line 108.
 * `atalk_uuid_t darwin_ace_uuid`
 * `uint32_t darwin_ace_flags`
 * `uint32_t darwin_ace_rights`
@@ -39,7 +39,7 @@ Defined at line 105.
 
 Access Control List.
 
-Defined at line 112.
+Defined at line 115.
 * `uint32_t darwin_acl_count`
 * `uint32_t darwin_acl_flags`
 

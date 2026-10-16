@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "bin/nad/nad_adouble.h"
-description: "No functions or types."
+description: "AppleDouble file and fork I/O interface for nad conversions."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_adouble.h"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).

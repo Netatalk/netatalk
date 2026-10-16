@@ -5,26 +5,26 @@ description: "24 files, 181 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/bin/nad"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 # Files
 
 * [bin/nad/crc16.c](nad/crc16.c.md): CRC-16/XMODEM for BinHex and MacBinary archives.
-* [bin/nad/crc16.h](nad/crc16.h.md): No functions or types.
+* [bin/nad/crc16.h](nad/crc16.h.md): Incremental CRC-16/XMODEM checksum interface for nad.
 * [bin/nad/ftw.c](nad/ftw.c.md): File tree walker from the GNU C Library for the nad commands.
-* [bin/nad/ftw.h](nad/ftw.h.md): 1 type.
+* [bin/nad/ftw.h](nad/ftw.h.md): File tree traversal callbacks, flags and entry point for nad.
 * [bin/nad/hqx.c](nad/hqx.c.md): BinHex 4.0 encoding and decoding for the nad archive commands.
-* [bin/nad/hqx.h](nad/hqx.h.md): No functions or types.
+* [bin/nad/hqx.h](nad/hqx.h.md): BinHex file, header and fork I/O interface.
 * [bin/nad/macbin.c](nad/macbin.c.md): MacBinary encoding and decoding for the nad archive commands.
-* [bin/nad/macbin.h](nad/macbin.h.md): No functions or types.
+* [bin/nad/macbin.h](nad/macbin.h.md): MacBinary file, header and fork I/O interface.
 * [bin/nad/megatron.c](nad/megatron.c.md): Conversion driver of the nad archive commands bin, hex, unbin, and unhex.
-* [bin/nad/megatron.h](nad/megatron.h.md): 4 types, includes 2 project headers.
+* [bin/nad/megatron.h](nad/megatron.h.md): Fork conversion options, Finder metadata and volume context types.
 * [bin/nad/nad.c](nad/nad.c.md): The nad command: entry point and subcommand dispatch.
-* [bin/nad/nad.h](nad/nad.h.md): 2 types, includes 4 project headers.
+* [bin/nad/nad.h](nad/nad.h.md): Command entry points, volume helpers and shared state for nad.
 * [bin/nad/nad_adouble.c](nad/nad_adouble.c.md): AppleDouble metadata and CAP name encoding for the nad archive and StuffIt commands.
-* [bin/nad/nad_adouble.h](nad/nad_adouble.h.md): No functions or types.
-* [bin/nad/nad_cp.c](nad/nad_cp.c.md): AFP-aware copying of files and directory trees for nad.
+* [bin/nad/nad_adouble.h](nad/nad_adouble.h.md): AppleDouble file and fork I/O interface for nad conversions.
+* [bin/nad/nad_cp.c](nad/nad_cp.c.md): The nad cp command: copy entries and their metadata, assigning CNIDs resolved for the destination paths.
 * [bin/nad/nad_find.c](nad/nad_find.c.md): The nad find command: search a volume for entries by name.
 * [bin/nad/nad_ls.c](nad/nad_ls.c.md): The nad ls command: list entries with their Mac metadata.
 * [bin/nad/nad_mkdir.c](nad/nad_mkdir.c.md): The nad mkdir command: create directories with CNIDs and metadata.

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/mangle.h"
-description: "includes 6 project headers."
+description: "AFP filename mangling and demangling interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/mangle.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).

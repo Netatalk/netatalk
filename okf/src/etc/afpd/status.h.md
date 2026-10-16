@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/status.h"
-description: "includes 4 project headers."
+description: "AFP server status construction and server information interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/status.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).

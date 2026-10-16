@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "bin/nad/nad.h"
-description: "2 types, includes 4 project headers."
+description: "Command entry points, volume helpers and shared state for nad."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad.h"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -40,14 +40,14 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 
 ### struct PATH_T
 
-Defined at line 89.
+Defined at line 94.
 * `char * p_end`: pointer to NULL at end of path
 * `char * target_end`: pointer to end of target base
 * `char p_path`: pointer to the start of a path
 
 ### struct afpvol_t
 
-Defined at line 53.
+Defined at line 58.
 * `struct vol * vol`
 * `char db_stamp`
 * `bool owns_cdb`: true if this wrapper opened v_cdb

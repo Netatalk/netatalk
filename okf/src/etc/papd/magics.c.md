@@ -5,7 +5,7 @@ description: "PostScript job type detection and the papd job loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/papd/magics.c"
 tags: ["etc/papd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [etc/papd](../papd.md) subsystem. Built from the commit recorded in 
 
 ### magics
 
-Initialized at line 34. Dispatches to: [cm_psadobe](magics.c.md#cm_psadobe), [cm_psquery](magics.c.md#cm_psquery), [cm_psswitch](magics.c.md#cm_psswitch)
+Initialized at line 39. Dispatches to: [cm_psadobe](magics.c.md#cm_psadobe), [cm_psquery](magics.c.md#cm_psquery), [cm_psswitch](magics.c.md#cm_psswitch)
 
 # Functions
 

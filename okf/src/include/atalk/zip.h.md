@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/zip.h"
-description: "2 types."
+description: "Zone Information Protocol packet types and operation codes."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/zip.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -22,13 +22,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct ziphdr
 
-Defined at line 30.
+Defined at line 34.
 * `uint8_t zh_op`
 * `uint8_t zh_cnt`
 
 ### struct zipreplent
 
-Defined at line 38.
+Defined at line 42.
 * `uint16_t zre_net`
 * `uint8_t zre_zonelen`
 

@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/atalkd/rtmp.h"
-description: "3 types."
+description: "RTMP routing table types, flags and packet handling interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/atalkd/rtmp.h"
 tags: ["etc/atalkd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-08T21:56:42+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -28,20 +28,20 @@ Part of the [etc/atalkd](../atalkd.md) subsystem. Built from the commit recorded
 
 ### struct rtmp_head
 
-Defined at line 43.
+Defined at line 48.
 * `unsigned short rh_net`
 * `unsigned char rh_nodelen`
 * `unsigned char rh_node`
 
 ### struct rtmp_tuple
 
-Defined at line 49.
+Defined at line 54.
 * `unsigned short rt_net`
 * `unsigned char rt_dist`
 
 ### struct rtmptab
 
-Defined at line 30.
+Defined at line 35.
 * `struct rtmptab * rt_next`
 * `struct rtmptab * rt_prev`
 * `struct rtmptab * rt_inext`

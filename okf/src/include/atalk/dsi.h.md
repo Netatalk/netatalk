@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "include/atalk/dsi.h"
-description: "DSI (Data Stream Interface) protocol definitions."
+description: "Data Stream Interface packet types, session state and I/O operations."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/dsi.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -63,7 +63,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void dsi_setstatus(DSI *, char *, const size_t)
 ```
 
-Declared at include/atalk/dsi.h line 170; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 154; no definition in the scanned sources.
 
 ### dsi_kill
 
@@ -71,13 +71,13 @@ Declared at include/atalk/dsi.h line 170; no definition in the scanned sources.
 void dsi_kill(int)
 ```
 
-Declared at include/atalk/dsi.h line 181; no definition in the scanned sources.
+Declared at include/atalk/dsi.h line 165; no definition in the scanned sources.
 
 # Types
 
 ### struct DSI
 
-Defined at line 58.
+Defined at line 42.
 * `struct DSI * next`: multiple listening addresses
 * `AFPObj * AFPobj`
 * `int statuslen`
@@ -117,14 +117,14 @@ Defined at line 58.
 
 ### struct dsi_block
 
-Defined at line 42.
+Defined at line 26.
 * `uint8_t dsi_flags`: packet type: request or reply
 * `uint8_t dsi_command`: command
 * `uint16_t dsi_requestID`: request ID
 * `uint32_t dsi_code`: error code
-* `uint32_t dsi_doff`: data offset
+* `uint32_t dsi_doff`: write data offset within the payload
 * `union dsi_block dsi_data`
-* `uint32_t dsi_len`: total data length
+* `uint32_t dsi_len`: payload length, excluding the [DSI](dsi.h.md#struct-dsi) header
 * `uint32_t dsi_reserved`: reserved field
 
 # Typedefs and enums

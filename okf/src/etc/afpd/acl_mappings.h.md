@@ -1,11 +1,11 @@
 ---
 type: C Header File
 title: "etc/afpd/acl_mappings.h"
-description: "Stuff for mapping between ACL implementations."
+description: "Mapping tables between Darwin and NFSv4 ACL rights and flags."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acl_mappings.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
