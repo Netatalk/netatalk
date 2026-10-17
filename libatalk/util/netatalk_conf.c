@@ -2922,7 +2922,14 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     }
 
     if (!(flags & LV_ALL)) {
-        ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize, &pwresult);
+        /* the C library's size is a guess; a longer record is ERANGE */
+        while ((ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize,
+                                 &pwresult)) == ERANGE) {
+            char *grown;
+            EC_NULL(grown = realloc(pwbuf, bufsize * 2));
+            pwbuf = grown;
+            bufsize *= 2;
+        }
 
         if (pwresult == NULL) {
             LOG(log_error, logtype_afpd, "load_afp_conf_vols: getpwuid_r: %s",

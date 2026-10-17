@@ -19,6 +19,7 @@ set -e
 # passwords a cracklib-enabled afppasswd accepts
 PASS1=Kw7vTq9zLp2rXm4b
 PASS2=Jx3nRd8vPq5tYw7c
+PASS3=Vq8mZt3xNr6wKp2d
 LOG=/var/log/afpd.log
 CONF=$(netatalk_confdir)/afp.conf
 PRIV=alicevol
@@ -39,15 +40,22 @@ for u in alice bob; do
     id $u > /dev/null 2>&1 || adduser -D $u
 done
 
+# carol's passwd record outgrows the buffer the loader starts with, 16 KiB
+# where the C library names no size
+id carol > /dev/null 2>&1 \
+    || adduser -D -g "$(head -c 20000 /dev/zero | tr '\0' x)" carol
+
 CHOWN_FIX="fix with: chown -R $(id -u alice) "
-mkdir -p /srv/shared $PRIV_DIR /srv/ghost /srv/rooty /srv/dollar \
+mkdir -p /srv/shared $PRIV_DIR /srv/carol /srv/ghost /srv/rooty /srv/dollar \
     "$(dirname "$CONF")" /var/log
 chown alice $PRIV_DIR
+chown carol /srv/carol
 chmod 777 /srv/shared
 rm -rf "$(netatalk_confdir)/afppasswd.srp"
 afppasswd -c
 afppasswd -a alice -w $PASS1 > /dev/null
 afppasswd -a bob -w $PASS2 > /dev/null
+afppasswd -a carol -w $PASS3 > /dev/null
 
 # The configuration every leg starts from; a leg adds its own lines after it.
 write_conf() {
@@ -65,6 +73,10 @@ path = /srv/shared
 [$PRIV]
 path = $PRIV_DIR
 private = alice
+
+[carolvol]
+path = /srv/carol
+private = carol
 
 [ghost]
 path = /srv/ghost
@@ -129,6 +141,11 @@ afp_can_open bob $PASS2 shared || fail "bob could not open the shared volume"
 alice_state $PRIV_DB
 grep -q "is private to" $LOG && fail "turning bob away was logged at the default level"
 pass "a private volume is served to its owner only, with its state inside it"
+
+# --- the owner's record is read whatever its length
+afp_can_open carol $PASS3 carolvol \
+    || fail "carol, whose passwd record outgrows the loader's buffer, did not get the private volume"
+pass "a private volume opens for an owner whose passwd record outgrows the loader's buffer"
 
 # --- nad run by the owner opens it; run by root it opens the state as the
 # owner, so what it creates is alice's; run by bob it does not get the volume

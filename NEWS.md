@@ -27,6 +27,9 @@ Changes in 4.7.0
 * FIX: afpd: a reload request that reaches a session before login builds no
   volume list; the list is built at login for that user, so `valid users`
   and the other access options apply after a reload too
+* FIX: afpd: an account whose passwd record is longer than the C library's
+  default buffer, as a directory service's gecos field makes it, is served
+  its volumes; the loader grows the buffer to the record
 * REM: cnid: Removed the deprecated Berkeley DB (dbd) CNID backend with its
   cnid_dbd and cnid_metad daemons and the 'cnid server', 'cnid listen' and
   'vol dbnest' options; afpd serves a volume whose scheme the installation
