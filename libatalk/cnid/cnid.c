@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute and/or modify
  * it under the terms of the GNU General Public License as published
@@ -24,14 +25,19 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <grp.h>
+#include <pwd.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
 #include <atalk/volume.h>
 
 /*! Permanent registry of backend modules, kept in registration order. */
@@ -141,7 +147,42 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
         .cnid_args_vol   = vol
     };
 
+    /* private state is created as its owner: a process with euid 0, an admin
+     * session or root's tool, takes the owner's groups and ids for the open */
+    const bool as_owner = (vol->v_flags & AFPVOL_PRIVATE) && geteuid() == 0;
+
+    const gid_t egid = getegid();
+
+    if (as_owner) {
+        const struct passwd *owner = getpwuid(vol->v_private_uid);
+
+        if (owner == NULL) {
+            LOG(log_error, logtype_afpd,
+                "cnid_open: volume '%s': its owner, uid %ju, has no account",
+                vol->v_path, (uintmax_t)vol->v_private_uid);
+            return NULL;
+        }
+
+        if (initgroups(owner->pw_name, owner->pw_gid) != 0
+                || setegid(owner->pw_gid) != 0
+                || seteuid(vol->v_private_uid) != 0) {
+            LOG(log_error, logtype_afpd,
+                "cnid_open: can't open volume '%s' as its owner %s: %s",
+                vol->v_path, owner->pw_name, strerror(errno));
+
+            if (setegid(egid) != 0) {
+                AFP_PANIC("cnid_open: can't restore the gid");
+            }
+
+            return NULL;
+        }
+    }
+
     db = mod->cnid_open(&args);
+
+    if (as_owner && (seteuid(0) != 0 || setegid(egid) != 0)) {
+        AFP_PANIC("cnid_open: can't return to root");
+    }
 
     if (NULL == db) {
         LOG(log_error, logtype_afpd, "Cannot open CNID db at [%s].", vol->v_path);

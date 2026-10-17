@@ -2088,32 +2088,18 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
 }
 
 /*!
- * @brief Tell whether a CNID directory is an owner-only directory of the opener
+ * @brief Log a private volume's CNID directory that another account owns
  *
- * The call strips trailing slashes first, so lstat cannot follow a symlink.
- *
- * @param[in] path  directory path
- * @returns true for a directory that the real uid owns with no group or other
- *          permission bits
+ * @param[in] dir    the directory
+ * @param[in] owner  the account that owns it
+ * @param[in] want   the volume's owner
  */
-static bool cnid_sqlite_dir_owner_only(const char *path)
+static void cnid_sqlite_foreign_owner(const char *dir, uid_t owner, uid_t want)
 {
-    char dir[PATH_MAX];
-    struct stat st;
-    size_t len = strlcpy(dir, path, sizeof(dir));
-
-    if (len >= sizeof(dir)) {
-        return false;
-    }
-
-    /* a [Global] vol dbpath derives the directory with a trailing slash,
-     * which would make lstat() follow a symbolic link */
-    while (len > 1 && dir[len - 1] == '/') {
-        dir[--len] = '\0';
-    }
-
-    return lstat(dir, &st) == 0 && S_ISDIR(st.st_mode)
-           && st.st_uid == getuid() && (st.st_mode & 077) == 0;
+    LOG(log_error, logtype_cnid,
+        "CNID DB directory '%s' is owned by uid %ju, not by the volume's owner "
+        "%ju; fix with: chown -R %ju '%s'",
+        dir, (uintmax_t)owner, (uintmax_t)want, (uintmax_t)want, dir);
 }
 
 /*!
@@ -2166,12 +2152,12 @@ static void cnid_sqlite_report_orphan(const struct vol *vol, const char *dbdir)
 /*!
  * @brief Open the SQLite CNID backend for a volume
  *
- * The database stays private, with mode 0600 in a 0700 directory, for a
- * single-user server or an opener that owns its CNID directory. Every other
- * opener shares it, with mode 0666 in a 01777 directory. The call creates or
- * checks the directory as root without following links. It opens the
- * database with SQLITE_OPEN_NOFOLLOW and checks the -wal and -shm files
- * before and after it turns on WAL.
+ * A private volume's database stays its owner's, with mode 0600 in a 0700
+ * directory that the call creates or checks as the calling process, which
+ * cnid_open() makes the owner. A shared volume's is shared, with mode 0666 in
+ * a 01777 directory that the call creates or checks as root. Neither follows
+ * a link. It opens the database with SQLITE_OPEN_NOFOLLOW and checks the -wal
+ * and -shm files before and after it turns on WAL.
  *
  * The volumes table maps each volume path to its UUID, stamp, and depletion
  * mark. A UUID that differs only in case takes the spelling on disk, and the
@@ -2196,7 +2182,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     const char *dbpath_str = NULL;
     int sqlite_return;
     bool is_root = false;
-    bool priv = false;
+    const bool priv = (vol->v_flags & AFPVOL_PRIVATE) != 0;
     EC_NULL(cdb = cnid_sqlite_new(vol));
     EC_NULL(db =
                 (CNID_sqlite_private *) calloc(1,
@@ -2217,79 +2203,96 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         }
     }
 
-    /* Owner-only state: the single-user server's, and a directory a non-root
-     * opener already holds as its own 0700 directory, so the serving user's
-     * nad and dbd keep what the server keeps. A directory that does not exist
-     * yet is created shared, whoever creates it, and a single-user server
-     * tightens it at its next open. Root, and a directory another account
-     * owns, follow the shared rules. */
-    priv = (vol->v_obj != NULL
-            && (vol->v_obj->options.flags & OPTION_SINGLEUSER) != 0)
-           || (getuid() != 0 && cnid_sqlite_dir_owner_only(dirpath));
-    become_root();
-    is_root = true;
+    size_t dirlen = strlen(dirpath);
 
-    if (mkdir(dirpath, priv ? 0700 : 01777) != 0) {
-        if (errno == EEXIST) {
-            int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW
-                             | O_CLOEXEC);
-
-            if (dirfd < 0) {
-                LOG(log_error, logtype_cnid, "Can't open CNID DB directory '%s': %s",
-                    dirpath, strerror(errno));
-                EC_FAIL;
-            }
-
-            /* Shared state is shared with authenticated users and nad; owner-only
-             * state is kept owner-only and refused when it is not the opener's. */
-            struct stat st;
-
-            if (fstat(dirfd, &st) != 0) {
-                int saved_errno = errno;
-                LOG(log_error, logtype_cnid, "Can't stat CNID DB directory '%s': %s",
-                    dirpath, strerror(errno));
-                close(dirfd);
-                errno = saved_errno;
-                EC_FAIL;
-            }
-
-            if (priv) {
-                if (st.st_uid != getuid()) {
-                    LOG(log_error, logtype_cnid,
-                        "CNID DB directory '%s' is not owned by the server user",
-                        dirpath);
-                    close(dirfd);
-                    errno = EPERM;
-                    EC_FAIL;
-                }
-
-                if ((st.st_mode & 0777) != 0700 && fchmod(dirfd, 0700) != 0) {
-                    int saved_errno = errno;
-                    LOG(log_error, logtype_cnid,
-                        "Can't make CNID DB directory '%s' owner-only: %s",
-                        dirpath, strerror(errno));
-                    close(dirfd);
-                    errno = saved_errno;
-                    EC_FAIL;
-                }
-            } else if ((st.st_mode & 01777) != 01777
-                       && fchmod(dirfd, 01777) != 0) {
-                int saved_errno = errno;
-                close(dirfd);
-                errno = saved_errno;
-                EC_FAIL;
-            }
-
-            close(dirfd);
-        } else {
-            LOG(log_error, logtype_cnid, "Failed to create CNID DB directory '%s': %s",
-                dirpath, strerror(errno));
-            EC_FAIL;
-        }
+    /* a private directory is never a symbolic link, and a trailing slash
+     * would make open() and lstat() follow one */
+    while (priv && dirlen > 1 && dirpath[dirlen - 1] == '/') {
+        dirpath[--dirlen] = '\0';
     }
 
-    unbecome_root();
-    is_root = false;
+    /* Private state is made by its owner, as whom cnid_open() opens it, in a
+     * directory the owner controls; only shared state takes root */
+    if (!priv) {
+        become_root();
+        is_root = true;
+    }
+
+    if (mkdir(dirpath, priv ? 0700 : 01777) != 0 && errno != EEXIST) {
+        /* private state is the owner's to create: a volume root the owner
+         * cannot write takes a volume-level vol dbpath */
+        LOG(log_error, logtype_cnid,
+            "Failed to create CNID DB directory '%s': %s%s", dirpath,
+            strerror(errno), priv ? "; set a volume-level 'vol dbpath' to a "
+            "directory the volume's owner can create" : "");
+        EC_FAIL;
+    }
+
+    /* a fresh directory is judged like a found one: it can inherit a
+     * set-group-id bit from its parent, and a tool's umask trims its mode */
+    int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    struct stat st;
+
+    if (dirfd < 0) {
+        int saved_errno = errno;
+
+        /* another account's owner-only directory refuses the open */
+        if (priv && lstat(dirpath, &st) == 0 && S_ISDIR(st.st_mode)
+                && st.st_uid != vol->v_private_uid) {
+            cnid_sqlite_foreign_owner(dirpath, st.st_uid, vol->v_private_uid);
+        } else {
+            LOG(log_error, logtype_cnid,
+                "Can't open CNID DB directory '%s': %s", dirpath,
+                strerror(saved_errno));
+        }
+
+        errno = saved_errno;
+        EC_FAIL;
+    }
+
+    /* Shared state is shared with authenticated users and nad; private
+     * state is kept owner-only and refused when it is not the owner's. */
+    if (fstat(dirfd, &st) != 0) {
+        int saved_errno = errno;
+        LOG(log_error, logtype_cnid,
+            "Can't stat CNID DB directory '%s': %s", dirpath, strerror(errno));
+        close(dirfd);
+        errno = saved_errno;
+        EC_FAIL;
+    }
+
+    if (priv) {
+        if (st.st_uid != vol->v_private_uid) {
+            cnid_sqlite_foreign_owner(dirpath, st.st_uid, vol->v_private_uid);
+            close(dirfd);
+            errno = EPERM;
+            EC_FAIL;
+        }
+
+        if ((st.st_mode & 07777) != 0700 && fchmod(dirfd, 0700) != 0) {
+            int saved_errno = errno;
+            LOG(log_error, logtype_cnid,
+                "Can't make CNID DB directory '%s' owner-only: %s", dirpath,
+                strerror(errno));
+            close(dirfd);
+            errno = saved_errno;
+            EC_FAIL;
+        }
+    } else if ((st.st_mode & 01777) != 01777
+               && fchmod(dirfd, 01777) != 0) {
+        int saved_errno = errno;
+        close(dirfd);
+        errno = saved_errno;
+        EC_FAIL;
+    }
+
+    close(dirfd);
+
+    if (is_root) {
+        unbecome_root();
+        is_root = false;
+    }
+
     /* SQLITE_OPEN_NOFOLLOW rejects a symlink in any pathname component on
      * some platforms. Resolve trusted ancestor aliases such as macOS /tmp
      * after the directory itself has been opened with O_NOFOLLOW, leaving the
@@ -2313,8 +2316,11 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     }
 
     EC_ZERO(sqlite3_initialize());
-    become_root();
-    is_root = true;
+
+    if (!priv) {
+        become_root();
+        is_root = true;
+    }
 
     if (sqlite3_open_v2(dbpath_str,
                         &db->cnid_sqlite_con,
@@ -2333,9 +2339,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      * codes change nothing there. */
     sqlite3_extended_result_codes(db->cnid_sqlite_con, 1);
 
-    /* Normal servers need a world-writable database so authenticated users and
-     * nad can update CNID state. A single-user server has one identity and
-     * keeps its database private.
+    /* A shared volume needs a world-writable database so authenticated users
+     * and nad can update CNID state; a private volume's is its owner's alone.
      *
      * A non-owner such as 'nad' may be unable to repair an old mode, which is
      * nonfatal. Other failures mean the pathname did not resolve to the safe,
@@ -2382,7 +2387,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     }
 
     /* SQLite creates WAL and SHM files when WAL mode is enabled. They are
-     * shared for normal servers, but private in single-user mode. Missing
+     * shared for a shared volume and owner-only for a private one. Missing
      * companions are normal, but an entry that exists and cannot be verified
      * is fatal. */
     EC_ZERO(cnid_sqlite_fchmod_companions(dbpath_str, priv ? 0600 : 0666));
@@ -2581,8 +2586,11 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     sqlite3_clear_bindings(transient_stmt);
     sqlite3_finalize(transient_stmt);
     transient_stmt = NULL;
-    unbecome_root();
-    is_root = false;
+
+    if (is_root) {
+        unbecome_root();
+        is_root = false;
+    }
 
     /*
      * Check whether CNID set overflowed before.

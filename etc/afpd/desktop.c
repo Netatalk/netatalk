@@ -268,8 +268,10 @@ EC_CLEANUP:
  * @brief Make sure the desktop database folder of a volume exists
  *
  * When the database path lacks .AppleDesktop, the call moves the folder from
- * the volume root as root. Without either folder, or when the move fails, it
- * creates a new one with mode 0777 under the umask.
+ * the volume root. Without either folder, or when the move fails, it creates
+ * a new one with mode 0777 under the umask. On a shared volume it works as
+ * root; on a private volume as the session, inside the owner-only CNID
+ * directory.
  *
  * @param[in] vol  volume of the desktop database
  */
@@ -277,11 +279,15 @@ static void create_appledesktop_folder(const struct vol *vol)
 {
     bstring olddtpath = NULL, dtpath = NULL;
     struct stat st;
+    const bool as_root = !(vol->v_flags & AFPVOL_PRIVATE);
     olddtpath = bfromcstr(vol->v_path);
     bcatcstr(olddtpath, "/" APPLEDESKTOP);
     dtpath = bfromcstr(vol->v_dbpath);
     bcatcstr(dtpath, "/" APPLEDESKTOP);
-    become_root();
+
+    if (as_root) {
+        become_root();
+    }
 
     if (lstat(cfrombstr(dtpath), &st) != 0) {
         if ((lstat(cfrombstr(olddtpath), &st) == 0) && (S_ISDIR(st.st_mode) != 0)) {
@@ -289,19 +295,22 @@ static void create_appledesktop_folder(const struct vol *vol)
                 LOG(log_error, logtype_afpd,
                     "moving .AppleDesktop from \"%s\" failed; creating new dir \"%s\"",
                     bdata(olddtpath), bdata(dtpath));
-                /* Root-owned desktop metadata is shared by AFP users; umask applies. */
+                /* shared with the volume's users; umask applies */
                 mkdir(cfrombstr(dtpath), 0777); //NOSONAR
             }
         } else {
             LOG(log_debug, logtype_afpd,
                 "no valid .AppleDesktop dir found; creating new dir \"%s\"",
                 bdata(dtpath));
-            /* Root-owned desktop metadata is shared by AFP users; umask applies. */
+            /* shared with the volume's users; umask applies */
             mkdir(cfrombstr(dtpath), 0777); //NOSONAR
         }
     }
 
-    unbecome_root();
+    if (as_root) {
+        unbecome_root();
+    }
+
     bdestroy(dtpath);
     bdestroy(olddtpath);
 }

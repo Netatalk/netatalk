@@ -7,13 +7,23 @@ Changes in 4.7.0
 * NEW: netatalk: `--single-user` (`-u`) runs an AFP server without root for
   the invoking account, authenticating with SRP against the user's own
   verifier directory (`afppasswd -c -p`), with `-P`/`--pidfile` for its PID
-  file. Every volume must use the sqlite CNID backend; the server's
-  signature, the volume UUIDs and the CNID state are kept under a global
+  file. Every volume must be private to that user (`private = <user>`),
+  which keeps its CNID state in sqlite, owned by that user alone; the
+  server's signature and the volume UUIDs are kept under a global
   `vol dbpath` readable by that user alone, the configuration file must live
   in a mode-0700 directory the user owns, and an `afp port` below 1024 is
   warned about rather than refused.
   Without `--single-user`, `netatalk` requires root and exits with status 1
   otherwise.
+* NEW: afpd: `private = <username>` dedicates a volume to one account: no
+  other AFP user sees it, and its CNID database lives in a `.AppleDB`
+  directory inside the volume, owned by that account with owner-only
+  permissions, whichever process opens it. It always uses the sqlite CNID
+  backend and the cnid Spotlight backend, whatever `cnid scheme` and
+  `spotlight backend` say, so shared volumes can stay on mysql and
+  localsearch. Every [Homes] volume is private to its owner, so homes keep
+  sqlite state inside the home and are skipped under `force user`; a
+  `.AppleDB` another account owns is refused with the chown that fixes it
 * FIX: afpd: a reload request that reaches a session before login builds no
   volume list; the list is built at login for that user, so `valid users`
   and the other access options apply after a reload too

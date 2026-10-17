@@ -16,6 +16,21 @@ share root where **vol dbnest** was set. A **vol dbnest** volume served by
 *sqlite* kept its database in the share root, a *.sqlite* file named after
 the volume with *-wal* and *-shm* companions; delete it too.
 
+### Home volumes keep their CNID state inside the home
+
+Every **[Homes]** volume is private to its owner: its CNID database is sqlite,
+in a **.AppleDB** directory inside the home that the owner creates and alone
+can read, whatever **cnid scheme** and **vol dbpath** say in **[Global]**. A
+**.AppleDB** that another account owns, as Netatalk 2 and **vol dbnest** left
+in share roots, refuses the home until it is the owner's; the log names the
+**chown** that makes it so. A home whose root the owner cannot write to, or
+that lives on a filesystem unsuited to SQLite, takes a **[Homes]**
+**vol dbpath** with **$u**, under a local directory the owners may create in.
+The first mount moves a **.AppleDesktop** from the home's root into
+**.AppleDB**. One the owner cannot move is reported once and a fresh one is
+created inside **.AppleDB**, and the old one stays in the root; **chown** it
+to the owner before the first mount to keep its icons, or remove it.
+
 ## Upgrading from Netatalk 4.5
 
 Netatalk 4.6 changes how the credential store used by the SRP UAM

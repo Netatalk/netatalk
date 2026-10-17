@@ -418,16 +418,13 @@ su $USER1 -c "nad -F $CONF/afp.conf ls $SHARE" > /dev/null \
 owner_only_cnid $CNID1 $USER1 || fail "nad widened the CNID state"
 pass "the serving user's nad keeps the CNID state owner-only"
 
-# --- state the user's nad creates before the server's first start is the
-# shared kind any non-root tool creates, and the server's first open makes it
-# owner-only
+# --- state the user's nad creates before the server's first start is
+# owner-only from the start, and the server opens it
 rm -rf $CNID1
 su $USER1 -c "nad -F $CONF/afp.conf ls $SHARE" > /dev/null \
     || fail "nad could not create the CNID state as its user"
-[ -d "$CNID1" ] \
-    || fail "nad did not create the CNID state under vol dbpath"
-[ "$(stat -c %a "$CNID1")" != 700 ] \
-    || fail "nad created owner-only state for a server that has not started"
+owner_only_cnid $CNID1 $USER1 \
+    || fail "nad did not create owner-only CNID state inside the volume"
 start_singleuser
 owner_afparg -s files -f FPEnumerateExt > /dev/null \
     || {
@@ -435,9 +432,19 @@ owner_afparg -s files -f FPEnumerateExt > /dev/null \
         fail "the volume could not be opened over state nad created"
     }
 stop_netatalk $USER1
-owned $CNID1 "$USER1 700" \
-    || fail "the server did not make the state nad created owner-only"
-pass "state created by the user's nad is made owner-only at the server's first open"
+pass "state created by the user's nad is owner-only and served"
+
+# --- state widened while the server is down is owner-only again at its next
+# open, by the server itself, which has no root to take
+chmod 777 $CNID1
+chmod 666 $CNID1/*.sqlite
+start_singleuser
+owner_afparg -s files -f FPEnumerateExt > /dev/null \
+    || fail "the volume did not open over widened state"
+stop_netatalk $USER1
+owner_only_cnid $CNID1 $USER1 \
+    || fail "the server did not make widened state owner-only"
+pass "widened state is owner-only again at the server's next open"
 
 # --- the global cnid scheme and spotlight backend are not read for a private
 # volume: sqlite with the cnid search, and the volume creates that state
@@ -486,10 +493,10 @@ owner_afparg -s backup -f FPEnumerateExt > /dev/null \
         fail "the volume with usable state was not served"
     }
 stop_netatalk $USER1
-grep -q "not owned by the server user" $LOG1 \
-    || fail "the backend's ownership diagnostic is missing from the log"
+grep -q "fix with: chown -R $(id -u $USER1) " $LOG1 \
+    || fail "the backend's ownership diagnostic does not name the chown that fixes it"
 chown -R $USER1 $CNID1
-pass "foreign-owned CNID state refuses the mount of that volume only"
+pass "foreign-owned CNID state refuses the mount of that volume only, naming the fix"
 
 # --- the AFP desktop database sits beside the CNID state, owned by the
 # serving user, inside the 0700 directory that keeps it private. An AFP 2

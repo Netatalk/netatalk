@@ -3026,7 +3026,8 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_cnid_uuid_case_keeps_table(vol), 0,
                      "cnid_open: a case-flipped volume UUID reuses the live table");
     TEST_int_or_skip(utest_cnid_sqlite_owner_only(vol), 0,
-                     "cnid_open: single-user state is 0700/0600 and a root opener widens it");
+                     "cnid_open: a private volume's state is 0700/0600 and a "
+                     "shared open widens it");
     /* Last of the CNID group: recovering from the reset empties the volume's
      * table, so anything expecting a CNID minted earlier must run before it */
     TEST_int_or_skip(utest_cnid_add_depletion_resets(vol), 0,

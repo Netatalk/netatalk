@@ -669,12 +669,10 @@ jobs:
       - name: Run Netatalk testsuite
         run: |
           docker run --rm \
+            -e PRIVATE_VOL="1" \
             -e AFP_USER="atalk1" \
-            -e AFP_USER2="atalk2" \
             -e AFP_PASS="$CONT_PASSWD" \
-            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
-            -e AFP_CNID_BACKEND="sqlite" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
@@ -802,6 +800,7 @@ jobs:
         script:
           - afppasswd_test
           - logreopen_test
+          - private_vols_test
           - singleuser_test
     steps:
       - name: Run ${{ matrix.script }}

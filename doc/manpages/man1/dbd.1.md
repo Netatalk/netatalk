@@ -51,7 +51,9 @@ filesystem modifications
 
 **-u**
 
-> username for use with AFP volumes using user variable $u
+> username for use with AFP volumes using user variable $u; it also names
+the account whose **private** volumes **dbd** acts on, and no other
+account's
 
 **-v**
 

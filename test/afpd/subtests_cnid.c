@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1654,21 +1655,26 @@ exit:
 }
 
 /*!
- * @brief Single-user CNID state is owner-only, and a root opener widens it
+ * @brief A private volume's CNID state is its owner's and owner-only; a
+ *        shared open widens it
  *
- * The sqlite backend creates the directory 0700 and the database 0600 for a
- * volume whose server carries OPTION_SINGLEUSER, and follows the shared rules
- * (01777, 0666) for root, the widening a single-user server undoes at its
- * next open.
+ * The test runs as root, so cnid_open() takes the owner's ids for the open:
+ * the sqlite backend, as the owner, creates the directory 0700 and the
+ * database 0600, and gives the same directory the shared modes (01777, 0666)
+ * when a shared volume opens it. The owner is nobody, since root can't own a
+ * private volume.
  *
- * @returns 0 when both openers leave the modes the rule gives them
+ * @param[in] vol  the harness's open sqlite volume
+ *
+ * @returns 0 when both opens leave the owner and modes their rule gives them
  */
 int utest_cnid_sqlite_owner_only(struct vol *vol)
 {
-    struct vol su_vol;
-    AFPObj su_obj = { 0 };
+    struct vol priv_vol;
     struct _cnid_db *db;
     struct stat st;
+    const struct passwd *owner;
+    uid_t owner_uid;
     char dbdir[MAXPATHLEN];
     char dbfile[MAXPATHLEN];
     char aux[MAXPATHLEN];
@@ -1676,36 +1682,39 @@ int utest_cnid_sqlite_owner_only(struct vol *vol)
 
     if (vol->v_cdb == NULL || vol->v_dbpath == NULL
             || vol->v_cnidscheme == NULL
-            || strcmp(vol->v_cnidscheme, "sqlite") != 0 || getuid() != 0) {
+            || strcmp(vol->v_cnidscheme, "sqlite") != 0 || getuid() != 0
+            || (owner = getpwnam("nobody")) == NULL) {
         return TEST_SKIP;
     }
 
     snprintf(dbdir, sizeof(dbdir), "%s.owneronly", vol->v_dbpath);
     snprintf(dbfile, sizeof(dbfile), "%s/%s.sqlite", dbdir, vol->v_localname);
-    su_obj.options.flags = OPTION_SINGLEUSER;
-    su_vol = *vol;
-    su_vol.v_dbpath = dbdir;
-    su_vol.v_cdb = NULL;
-    su_vol.v_obj = &su_obj;
+    /* the record is the C library's, which the open looks up again */
+    owner_uid = owner->pw_uid;
+    priv_vol = *vol;
+    priv_vol.v_dbpath = dbdir;
+    priv_vol.v_cdb = NULL;
+    priv_vol.v_flags |= AFPVOL_PRIVATE;
+    priv_vol.v_private_uid = owner_uid;
 
-    if ((db = cnid_open(&su_vol, vol->v_cnidscheme, 0)) == NULL) {
-        return 1;
+    if ((db = cnid_open(&priv_vol, vol->v_cnidscheme, 0)) == NULL) {
+        result = 1;
+    } else {
+        cnid_close(db);
+
+        if (stat(dbdir, &st) != 0 || st.st_uid != owner_uid
+                || (st.st_mode & 07777) != 0700) {
+            result = 2;
+        } else if (stat(dbfile, &st) != 0 || st.st_uid != owner_uid
+                   || (st.st_mode & 0777) != 0600) {
+            result = 3;
+        }
     }
 
-    cnid_close(db);
-
-    if (stat(dbdir, &st) != 0 || (st.st_mode & 07777) != 0700) {
-        result = 2;
-    } else if (stat(dbfile, &st) != 0 || (st.st_mode & 0777) != 0600) {
-        result = 3;
-    }
-
-    /* the same directory opened by root without the flag follows the shared
-     * rules */
-    su_vol.v_obj = vol->v_obj;
+    priv_vol.v_flags &= ~AFPVOL_PRIVATE;
 
     if (result == 0) {
-        if ((db = cnid_open(&su_vol, vol->v_cnidscheme, 0)) == NULL) {
+        if ((db = cnid_open(&priv_vol, vol->v_cnidscheme, 0)) == NULL) {
             result = 4;
         } else {
             cnid_close(db);
