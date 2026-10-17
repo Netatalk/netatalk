@@ -36,6 +36,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/dsi.h>
 #include <atalk/ea.h>
 
 #include <atalk/globals.h>
@@ -2481,6 +2482,87 @@ int utest_conf_singleuser_state_paths(void)
     failed = 0;
 cleanup:
     rmdir(state);
+    rmdir(voldir);
+    free(voldir);
+    unlink(logpath);
+    return failed;
+}
+
+/*!
+ * @brief An account that is not root, with a passwd record
+ *
+ * @returns the runner's own record, or nobody's when the runner is root
+ */
+static const struct passwd *conf_nonroot_user(void)
+{
+    return getuid() == 0 ? getpwnam("nobody") : getpwuid(getuid());
+}
+
+/*!
+ * @brief A session loads volumes only once login() has named its user
+ *
+ * A reload request can reach a session before login, and a list built then
+ * would be root's. The fixture is a session, a DSI with no listening socket:
+ * the first load is a reload request's, LV_FORCE with uid 0, and the second
+ * an AFP request's, LV_DEFAULT with a user's uid.
+ *
+ * @returns 0 when the first load builds no list and the second builds the
+ *          volume
+ */
+int utest_conf_session_loads_after_login(void)
+{
+    AFPObj obj;
+    DSI dsi = { 0 };
+    char logpath[64];
+    char body[MAXPATHLEN + 64];
+    char *voldir;
+    const struct passwd *user = conf_nonroot_user();
+    uid_t user_uid;
+    int failed = -1;
+
+    if (user == NULL || conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    user_uid = user->pw_uid;
+
+    if ((voldir = conf_mkvoldir()) == NULL) {
+        unlink(logpath);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body), "[utestsession]\npath = %s\n", voldir);
+
+    if (conf_parse_fixture(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    dsi.serversock = -1;
+    obj.dsi = &dsi;
+    obj.uid = 0;
+
+    if (load_afp_conf_vols(&obj, LV_FORCE) != 0 || getvolumes() != NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_session_loads_after_login: a session before "
+                "login built a volume list\n");
+        goto teardown;
+    }
+
+    obj.uid = user_uid;
+
+    if (load_afp_conf_vols(&obj, LV_DEFAULT) != 0
+            || conf_vol_by_name("utestsession") == NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_session_loads_after_login: the logged-in "
+                "session built no volume list\n");
+        goto teardown;
+    }
+
+    failed = 0;
+teardown:
+    obj.dsi = NULL;
+    conf_teardown(&obj, NULL);
+cleanup:
     rmdir(voldir);
     free(voldir);
     unlink(logpath);

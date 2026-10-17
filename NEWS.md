@@ -14,6 +14,9 @@ Changes in 4.7.0
   warned about rather than refused.
   Without `--single-user`, `netatalk` requires root and exits with status 1
   otherwise.
+* FIX: afpd: a reload request that reaches a session before login builds no
+  volume list; the list is built at login for that user, so `valid users`
+  and the other access options apply after a reload too
 * REM: cnid: Removed the deprecated Berkeley DB (dbd) CNID backend with its
   cnid_dbd and cnid_metad daemons and the 'cnid server', 'cnid listen' and
   'vol dbnest' options; afpd serves a volume whose scheme the installation

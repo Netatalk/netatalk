@@ -2863,6 +2863,9 @@ int main(int argc, char *argv[])
                      "single-user: signature and volume uuid files live under vol dbpath, created 0700");
     TEST_int_or_skip(utest_conf_singleuser_dbpath_volume_root(), 0,
                      "single-user: a [Global] vol dbpath at a volume's path is refused");
+    TEST_int_or_skip(utest_conf_session_loads_after_login(), 0,
+                     "session: a load before login builds no volume list, a "
+                     "load after it does");
     TEST_int_or_skip(utest_conf_permission_options_require_unix_priv(), 0,
                      "volume permission options are ignored when unix priv is disabled");
     TEST_int_or_skip(utest_conf_cnid_server_listen_ignored(), 0,

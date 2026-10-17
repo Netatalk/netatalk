@@ -2787,6 +2787,12 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     struct vol         *vol;
     LOG(log_debug, logtype_afpd, "load_afp_conf_vols: BEGIN");
 
+    /* a session's list is its user's, whom login() names; one built before
+     * that would be root's and would stand until afp.conf changes */
+    if (IS_AFP_SESSION(obj) && obj->uid == 0) {
+        goto EC_CLEANUP;
+    }
+
     if (pwbuf == NULL) {
         bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
 
