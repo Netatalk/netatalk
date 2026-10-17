@@ -159,7 +159,7 @@ void fce_init_udp(void)
 
         udp_entry->addrinfo = *p;
         memcpy(&udp_entry->addrinfo, p, sizeof(struct addrinfo));
-        memcpy(&udp_entry->sockaddr, p->ai_addr, sizeof(struct sockaddr_storage));
+        memcpy(&udp_entry->sockaddr, p->ai_addr, p->ai_addrlen);
         freeaddrinfo(servinfo);
     }
 
@@ -167,26 +167,25 @@ void fce_init_udp(void)
 }
 
 /*!
- * @brief Close the sockets of every FCE listener
+ * @brief Drop every FCE listener and its socket
  *
- * A later event reopens each socket and sends FCE_CONN_BROKEN first.
+ * A configuration reload calls it before configinit() reads 'fce listener',
+ * so the table holds the listeners afp.conf names.
  */
 void fce_cleanup(void)
 {
-    if (udp_initialized == false) {
-        return;
-    }
-
     for (int i = 0; i < udp_sockets; i++) {
         struct udp_entry *udp_entry = udp_socket_list + i;
 
-        /* Close any pending sockets */
         if (udp_entry->sock != -1) {
             close(udp_entry->sock);
-            udp_entry->sock = -1;
         }
+
+        free(udp_entry->addr);
+        free(udp_entry->port);
     }
 
+    udp_sockets = 0;
     udp_initialized = false;
 }
 
@@ -242,13 +241,13 @@ static ssize_t build_fce_packet(const AFPObj *obj,
         return -1;
     }
 
-    *p = obj->fce_version;
+    *p = obj->options.fce_version;
     p += 1;
     datalen += 1;
     remaining -= 1;
 
     /* optional: options */
-    if (obj->fce_version > 1) {
+    if (obj->options.fce_version > 1) {
         if (remaining < 1) {
             return -1;
         }
@@ -274,7 +273,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     remaining -= 1;
 
     /* optional: padding */
-    if (obj->fce_version > 1) {
+    if (obj->options.fce_version > 1) {
         if (remaining < 1) {
             return -1;
         }
@@ -286,7 +285,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     }
 
     /* optional: reserved */
-    if (obj->fce_version > 1) {
+    if (obj->options.fce_version > 1) {
         if (remaining < 8) {
             return -1;
         }
@@ -420,7 +419,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
         struct passwd *pwd = getpwuid(obj->uid);
         user = strdup(pwd->pw_name);
 
-        switch (obj->fce_version) {
+        switch (obj->options.fce_version) {
         case 1:
             /* fce_ev_info unused */
             break;
@@ -432,7 +431,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
         default:
             fce_ev_info = 0;
             LOG(log_error, logtype_fce, "Unsupported FCE protocol version %d",
-                obj->fce_version);
+                obj->options.fce_version);
             break;
         }
 
@@ -442,7 +441,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
     }
 
     /* run script */
-    if (obj->fce_notify_script) {
+    if (obj->options.fce_notify_script) {
         static bstring quote = NULL;
         static bstring quoterep = NULL;
         static bstring slash = NULL;
@@ -456,8 +455,8 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
         }
 
         bstring cmd = bformat("%s -v %d -e %s -i %" PRIu32 "",
-                              obj->fce_notify_script,
-                              obj->fce_version,
+                              obj->options.fce_notify_script,
+                              obj->options.fce_version,
                               fce_event_names[event],
                               event_id);
 
@@ -540,6 +539,13 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
         /* build our data packet */
         data_len = build_fce_packet(obj, iobuf, event, path, oldpath, obj->pid, user,
                                     event_id);
+
+        if (data_len < 0) {
+            LOG(log_error, logtype_fce,
+                "send_fce_event: event for \"%s\" does not fit a packet", path);
+            continue;
+        }
+
         sent_data = sendto(udp_entry->sock,
                            iobuf,
                            data_len,
@@ -619,12 +625,56 @@ static void save_close_event(const AFPObj *obj, const char *path)
 }
 
 /*!
+ * @brief Resolve a path for the ignore-directory compare
+ *
+ * A path resolves while it exists. A path that is gone, or not there yet,
+ * resolves through its parent with its own name appended, so a deleted file
+ * compares under its directory's resolved name. A path that resolves neither
+ * way compares as it is.
+ *
+ * @param[in]  path  absolute path
+ * @param[out] buf   MAXPATHLEN + 1 bytes for the resolved path
+ * @returns buf, or path
+ */
+static const char *fce_resolved(const char *path, char *buf)
+{
+    const char *base = strrchr(path, '/');
+    char parent[MAXPATHLEN + 1];
+    size_t plen;
+
+    if (realpath(path, buf)) {
+        return buf;
+    }
+
+    /* "" and a bare name have no parent; "/x" keeps the root's */
+    plen = base == NULL ? 0 : base == path ? 1 : (size_t)(base - path);
+
+    if (plen == 0 || plen > MAXPATHLEN) {
+        return path;
+    }
+
+    memcpy(parent, path, plen);
+    parent[plen] = '\0';
+
+    if (realpath(parent, buf) == NULL) {
+        return path;
+    }
+
+    /* the root already ends in the slash */
+    return strlcat(buf, buf[1] ? base : base + 1, MAXPATHLEN + 1) > MAXPATHLEN
+           ? path : buf;
+}
+
+/*!
  * @brief Split a comma-separated ignore option into a NULL-terminated array
  *
+ * A directory is stored without trailing slashes and resolved, through its
+ * parent when it does not exist yet. A failed array allocation leaves it
+ * NULL, which ignores nothing; a failed entry copy drops that entry.
+ *
  * @param[in]  ignores       fce ignore names or fce ignore directories option
- * @param[out] dest_array    receives the allocated array
- * @param[in]  is_directory  true for directory paths, copied up to MAXPATHLEN
- *                           bytes
+ * @param[out] dest_array    receives the allocated array, or NULL
+ * @param[in]  is_directory  true for directory paths
  */
 static void fce_init_ign_paths(const char *ignores,
                                const char ***dest_array,
@@ -632,36 +682,37 @@ static void fce_init_ign_paths(const char *ignores,
 {
     char *names = strdup(ignores);
     char *saveptr = NULL;
-    /* Initial capacity, will grow if needed */
-    int capacity = 10;
+    /* entries: one more than the commas, at most */
+    int count = 1;
     int i = 0;
-    *dest_array = calloc(capacity + 1, sizeof(char *));
 
-    for (const char *p = strtok_r(names, ",", &saveptr); p;
-            p = strtok_r(NULL, ",", &saveptr)) {
-        if (i >= capacity) {
-            capacity *= 2;
-            *dest_array = realloc(*dest_array, (capacity + 1) * sizeof(char *));
-            memset(*dest_array + i, 0, (capacity + 1 - i) * sizeof(char *));
-        }
-
-        if (is_directory) {
-            size_t pathlen = strnlen(p, MAXPATHLEN);
-            char *dirpath = malloc(pathlen + 1);
-
-            if (dirpath) {
-                strlcpy(dirpath, p, pathlen + 1);
-                (*dest_array)[i++] = dirpath;
-            }
-        } else {
-            (*dest_array)[i++] = strdup(p);
-        }
+    for (const char *p = ignores; (p = strchr(p, ',')) != NULL; p++) {
+        count++;
     }
 
-    (*dest_array)[i] = NULL;
+    *dest_array = names ? calloc(count + 1, sizeof(char *)) : NULL;
 
-    if (i < capacity) {
-        *dest_array = realloc(*dest_array, (i + 1) * sizeof(char *));
+    if (*dest_array == NULL) {
+        free(names);
+        return;
+    }
+
+    for (char *p = strtok_r(names, ",", &saveptr); p;
+            p = strtok_r(NULL, ",", &saveptr)) {
+        char resolved[MAXPATHLEN + 1];
+        size_t len = strlen(p);
+
+        /* "dir/" names dir; "/" becomes "", the prefix of every path */
+        while (is_directory && len > 0 && p[len - 1] == '/') {
+            p[--len] = '\0';
+        }
+
+        const char *entry = strdup(is_directory ? fce_resolved(p, resolved)
+                                   : p);
+
+        if (entry) {
+            (*dest_array)[i++] = entry;
+        }
     }
 
     free(names);
@@ -673,10 +724,10 @@ static void fce_init_ign_paths(const char *ignores,
  *
  * An event passes when the fce events option lists it and a listener or a
  * notify script exists. A base name in fce ignore names drops out, and so
- * does a real path that starts with an fce ignore directories entry. Events
- * that fce coalesce merges drop out too. With fce fmodwait set, an
- * FCE_FILE_MODIFY event waits fce fmodwait seconds, and repeats for the same
- * file merge.
+ * does a path at or below an fce ignore directories entry, compared
+ * resolved, through its parent once it is gone. Events that fce coalesce
+ * merges drop out too. With fce fmodwait set, an FCE_FILE_MODIFY event waits
+ * fce fmodwait seconds, and repeats for the same file merge.
  *
  * @param[in] obj      session object
  * @param[in] event    event code
@@ -689,7 +740,6 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
 {
     static bool first_event = true;
     const char *bname;
-    const char *dirname;
 
     if (!(fce_ev_enabled & (1 << event))) {
         return AFP_OK;
@@ -700,7 +750,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
     LOG(log_debug, logtype_fce, "register_fce(path: %s, event: %s)",
         path, fce_event_names[event]);
 
-    if ((udp_sockets == 0) && (obj->fce_notify_script == NULL)) {
+    if ((udp_sockets == 0) && (obj->options.fce_notify_script == NULL)) {
         /* No listeners configured */
         return AFP_OK;
     }
@@ -709,12 +759,13 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
     if (first_event) {
         fce_initialize_history();
 
-        if (obj->fce_ign_names != NULL) {
-            fce_init_ign_paths(obj->fce_ign_names, &skip_files, false);
+        if (obj->options.fce_ign_names != NULL) {
+            fce_init_ign_paths(obj->options.fce_ign_names, &skip_files, false);
         }
 
-        if (obj->fce_ign_directories != NULL) {
-            fce_init_ign_paths(obj->fce_ign_directories, &skip_directories, true);
+        if (obj->options.fce_ign_directories != NULL) {
+            fce_init_ign_paths(obj->options.fce_ign_directories,
+                               &skip_directories, true);
         }
 
         first_event = false;
@@ -722,7 +773,6 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
 
     /* handle files or dirs which should not cause events (.DS_Store etc. ) */
     bname = basename_safe(path);
-    dirname = realpath_safe(path);
 
     if (bname && skip_files != NULL) {
         for (int i = 0; skip_files[i] != NULL; i++) {
@@ -734,9 +784,15 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
         }
     }
 
-    if (dirname && skip_directories != NULL) {
+    if (skip_directories != NULL) {
+        char resolved[MAXPATHLEN + 1];
+        const char *dirname = fce_resolved(path, resolved);
+
         for (int i = 0; skip_directories[i] != NULL; i++) {
-            if (strstr(dirname, skip_directories[i]) == dirname) {
+            size_t len = strlen(skip_directories[i]);
+
+            if (strncmp(dirname, skip_directories[i], len) == 0
+                    && (dirname[len] == '/' || dirname[len] == '\0')) {
                 LOG(log_debug, logtype_fce, "Skip file change event for directory <%s>",
                     skip_directories[i]);
                 return AFP_OK;
@@ -775,11 +831,9 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
  */
 static void check_saved_close_events(const AFPObj *obj)
 {
-    time_t now = time(NULL);
-
     /* check if configured holdclose time has passed */
     if (last_close_event.time
-            && ((last_close_event.time + obj->options.fce_fmodwait) < now)) {
+            && last_close_event.time + obj->options.fce_fmodwait < time(NULL)) {
         LOG(log_debug, logtype_fce, "check_saved_close_events: sending event: %s",
             last_close_event.path);
         /* yes, send event */
@@ -801,7 +855,7 @@ static void check_saved_close_events(const AFPObj *obj)
  */
 void fce_pending_events(const AFPObj *obj)
 {
-    if (!udp_sockets && obj->fce_notify_script == NULL) {
+    if (!udp_sockets && obj->options.fce_notify_script == NULL) {
         return;
     }
 

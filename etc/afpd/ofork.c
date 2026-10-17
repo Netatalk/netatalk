@@ -232,6 +232,21 @@ static void of_unhash(struct ofork *of)
 }
 
 /*!
+ * @brief Give an open fork the device and inode of st, in the hash bucket
+ *        they select
+ *
+ * @param[in,out] of  open fork
+ * @param[in]     st  stat of the file the fork now names
+ */
+void of_rekey(struct ofork *of, const struct stat *st)
+{
+    of_unhash(of);
+    of->key.dev = st->st_dev;
+    of->key.inode = st->st_ino;
+    of_hash(of);
+}
+
+/*!
  * @brief Whether the free slot queue holds no slot
  *
  * @returns true when no fork slot is free
@@ -341,12 +356,13 @@ int of_flush(const struct vol *vol)
  * @param[in]     oldpath  unused
  * @param[in]     newdir   new parent directory
  * @param[in]     newpath  new name
+ * @param[in]     newupath new name on disk, recorded in each fork
  * @returns AFP_OK, or AFPERR_MISC when strdup fails
  */
 int of_rename(const struct vol *vol,
               struct ofork *s_of,
               struct dir *olddir, const char *oldpath _U_,
-              struct dir *newdir, const char *newpath)
+              struct dir *newdir, const char *newpath, const char *newupath)
 {
     struct ofork *of, *next;
     int done = 0;
@@ -364,6 +380,15 @@ int of_rename(const struct vol *vol,
                 && olddir->d_did == of->of_did
                 && s_of->key.dev == of->key.dev
                 && s_of->key.inode == of->key.inode) {
+            char *uname = strdup(newupath);
+
+            if (uname == NULL) {
+                return AFPERR_MISC;
+            }
+
+            free(of->of_uname);
+            of->of_uname = uname;
+
             if (!done) {
                 free(of_name(of));
 
@@ -395,6 +420,7 @@ int of_rename(const struct vol *vol,
  * @param[in]  vol       volume of the file
  * @param[in]  dir       parent directory
  * @param[in]  path      file name, for a new AppleDouble
+ * @param[in]  upath     file name on disk, recorded in the fork
  * @param[out] ofrefnum  receives the reference number
  * @param[in]  eid       ADEID_DFORK or ADEID_RFORK
  * @param[in]  ad        AppleDouble of another fork of the file, or NULL
@@ -406,6 +432,7 @@ struct ofork *
 of_alloc(struct vol *vol,
          struct dir    *dir,
          char      *path,
+         const char *upath,
          uint16_t     *ofrefnum,
          const int      eid,
          struct adouble *ad,
@@ -483,16 +510,16 @@ of_alloc(struct vol *vol,
 
     of = oforks[of_refnum];
 
+    if ((of->of_uname = strdup(upath)) == NULL) {
+        goto fail;
+    }
+
     /* see if we need to allocate space for the adouble struct */
     if (!ad) {
         ad = malloc(sizeof(struct adouble));
 
         if (!ad) {
-            LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno));
-            free(of);
-            oforks[of_refnum] = NULL;
-            of_freeq_push(of_refnum);
-            return NULL;
+            goto fail;
         }
 
         /* initialize to zero. This is important to ensure that
@@ -500,12 +527,8 @@ of_alloc(struct vol *vol,
         ad_init(ad, vol);
 
         if ((ad->ad_name = strdup(path)) == NULL) {
-            LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno));
             free(ad);
-            free(of);
-            oforks[of_refnum] = NULL;
-            of_freeq_push(of_refnum);
-            return NULL;
+            goto fail;
         }
     } else {
         /* Increase the refcount on this struct adouble. This is
@@ -527,6 +550,7 @@ of_alloc(struct vol *vol,
         of->of_flags = AFPFORK_RSRC;
     }
 
+    of->of_adflags = 0;
     of_hash(of);
 
     if (++of_curr_forks > of_peak_forks) {
@@ -534,6 +558,13 @@ of_alloc(struct vol *vol,
     }
 
     return of;
+fail:
+    LOG(log_error, logtype_afpd, "of_alloc: malloc: %s", strerror(errno));
+    free(of->of_uname);
+    free(of);
+    oforks[of_refnum] = NULL;
+    of_freeq_push(of_refnum);
+    return NULL;
 }
 
 /*!
@@ -588,27 +619,6 @@ int of_stat(const struct vol *vol, struct path *path)
     if ((ret = ostat(path->u_name, &path->st, vol_syml_opt(vol))) < 0) {
         LOG(log_debug, logtype_afpd, "of_stat('%s/%s': %s)",
             cfrombstr(curdir->d_fullpath), path->u_name, strerror(errno));
-        path->st_errno = errno;
-    }
-
-    return ret;
-}
-
-/*!
- * @brief Stat path->u_name relative to dirfd without following a symlink
- *
- * @param[in]     dirfd  directory descriptor that fstatat takes as is, AT_FDCWD
- *                       for the working directory
- * @param[in,out] path   path whose stat to fill, with st_errno and st_valid set
- * @returns 0, or -1 when the stat failed
- */
-int of_fstatat(int dirfd, struct path *path)
-{
-    int ret;
-    path->st_errno = 0;
-    path->st_valid = 1;
-
-    if ((ret = fstatat(dirfd, path->u_name, &path->st, AT_SYMLINK_NOFOLLOW)) < 0) {
         path->st_errno = errno;
     }
 
@@ -676,9 +686,8 @@ int of_statdir(struct vol *vol, struct path *path)
 }
 
 /*!
- * @brief Open fork of the file that path names, matched by device and inode
- *
- * A path without a valid stat gets one through of_stat first.
+ * @brief Open fork of the file that path names in the working directory,
+ * matched by device and inode
  *
  * @param[in]     vol   volume of the path
  * @param[in,out] path  path of the file, its stat filled when missing
@@ -687,47 +696,35 @@ int of_statdir(struct vol *vol, struct path *path)
  */
 struct ofork *of_findname(const struct vol *vol, struct path *path)
 {
-    struct ofork *of;
-    struct file_key key;
-
-    if (!path->st_valid) {
-        of_stat(vol, path);
-    }
-
-    if (path->st_errno) {
-        return NULL;
-    }
-
-    key.dev = path->st.st_dev;
-    key.inode = path->st.st_ino;
-
-    for (of = ofork_table[hashfn(&key)]; of; of = of->next) {
-        if (key.dev == of->key.dev && key.inode == of->key.inode) {
-            return of;
-        }
-    }
-
-    return NULL;
+    return of_findnameat(vol, -1, path);
 }
 
 /*!
  * @brief Open fork of the file that path names relative to dirfd, matched by
  * device and inode
  *
- * A path without a valid stat gets one through of_fstatat first.
+ * A path without a valid stat gets one first, following symlinks as the
+ * volume does: forks are keyed by that stat.
  *
- * @param[in]     dirfd  directory descriptor that fstatat takes as is
+ * @param[in]     vol    volume of the path
+ * @param[in]     dirfd  directory descriptor, -1 for the working directory
  * @param[in,out] path   path of the file, its stat filled when missing
  * @returns an open fork of the file, or NULL when none is open or the stat
  *          failed
  */
-struct ofork *of_findnameat(int dirfd, struct path *path)
+struct ofork *of_findnameat(const struct vol *vol, int dirfd,
+                            struct path *path)
 {
     struct ofork *of;
     struct file_key key;
 
-    if (! path->st_valid) {
-        of_fstatat(dirfd, path);
+    if (!path->st_valid) {
+        path->st_errno = 0;
+        path->st_valid = 1;
+
+        if (ostatat(dirfd, path->u_name, &path->st, vol_syml_opt(vol)) < 0) {
+            path->st_errno = errno;
+        }
     }
 
     if (path->st_errno) {
@@ -924,7 +921,7 @@ int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
     *df_locked = 0;
     *rf_locked = 0;
     *band_held = 0;
-    of = (dirfd != -1) ? of_findnameat(dirfd, path) : of_findname(vol, path);
+    of = of_findnameat(vol, dirfd, path);
 
     /* of_findname[at]() stat()s the target (filling path->st_errno) and returns
      * NULL when it does not exist.  Map a provably-absent target to NOENT here, so
@@ -1192,6 +1189,7 @@ void of_dealloc(struct ofork *of)
         AFP_ASSERT(of->of_ad->ad_refcount > 0);
     }
 
+    free(of->of_uname);
     free(of);
 }
 
@@ -1254,14 +1252,73 @@ void of_note_open(int newfd)
 }
 
 /*!
+ * @brief The dircache entry of an open fork's file, or NULL
+ *
+ * The entry under the fork's name on disk counts only while it describes
+ * the open file: another session's rename or save can put a different
+ * file under that name.
+ *
+ * @param[in] ofork  open fork
+ * @returns the entry whose inode is the open file's, or NULL
+ */
+struct dir *of_dircache_entry(const struct ofork *ofork)
+{
+    const struct dir *parent = dirlookup(ofork->of_vol, ofork->of_did);
+    struct dir *cached;
+
+    if (parent == NULL) {
+        return NULL;
+    }
+
+    cached = dircache_search_by_name(ofork->of_vol, parent, ofork->of_uname,
+                                     strlen(ofork->of_uname));
+    return cached && cached->dcache_ino == ofork->key.inode ? cached : NULL;
+}
+
+/*!
+ * @brief Tell sibling sessions that an open fork's file has changed
+ *
+ * The file's id is that of cached, the fork's dircache entry, when there is
+ * one, else the one its metadata records, which names the open file whatever
+ * file the name holds now, else the CNID database's.
+ *
+ * @param[in] obj     session object
+ * @param[in] ofork   open fork whose file changed
+ * @param[in] cached  the fork's dircache entry, or NULL
+ */
+void of_hint_siblings(const AFPObj *obj, const struct ofork *ofork,
+                      const struct dir *cached)
+{
+    const struct vol *vol = ofork->of_vol;
+    cnid_t id = cached ? cached->d_did : CNID_INVALID;
+
+    if (id == CNID_INVALID && ad_meta_loaded(ofork->of_ad)) {
+        id = ad_getid(ofork->of_ad, ofork->key.dev, ofork->key.inode, 0,
+                      vol->v_stamp);
+    }
+
+    if (id == CNID_INVALID) {
+        id = cnid_get(vol->v_cdb, ofork->of_did, ofork->of_uname,
+                      strlen(ofork->of_uname));
+    }
+
+    if (id != CNID_INVALID) {
+        ipc_send_cache_hint(obj, vol->v_vid, id, CACHE_HINT_REFRESH);
+    }
+}
+
+/*!
  * @brief Close an open fork and free it
  *
  * A closed resource fork gets its length refreshed and, when dirty, its
- * modification date stamped. A modified fork reports FCE and Spotlight
- * events, refreshes its dircache entry, and sends a refresh hint to sibling
- * afpd processes. Without HAVE_EAFD the call deletes an empty ._ resource
- * fork that no other fork holds. It also deletes the file and CNID of an Icon
- * file at the volume root whose resource fork holds no data.
+ * modification date stamped. A modified fork sends a refresh hint to sibling
+ * afpd processes. The steps that go by the fork's name run only while the
+ * name holds the fork's file: a modified fork reports FCE and Spotlight
+ * events and refreshes its dircache entry. On a volume that is not read-only,
+ * without HAVE_EAFD the call deletes an empty ._ resource fork that no other
+ * fork holds, and it deletes the file and CNID of a regular Icon file at the
+ * volume root whose data fork is empty and whose resource fork holds no
+ * data, which FCE and Spotlight hear of as a deletion.
  *
  * @param[in]     obj    session object
  * @param[in,out] ofork  open fork, invalid afterwards
@@ -1270,13 +1327,10 @@ void of_note_open(int newfd)
 int of_closefork(const AFPObj *obj, struct ofork *ofork)
 {
     struct timeval      tv;
-    int         adflags = 0;
     int                 ret;
     int                 saved_errno = 0;
-    struct dir *dir;
-    bstring forkname = NULL;
+    struct dir *dir = NULL;
     bstring forkpath = NULL;
-    adflags = 0;
 
     /* Virtual forks don't have real file descriptors or adouble data */
     if (ofork->of_flags & AFPFORK_VIRTUAL) {
@@ -1284,16 +1338,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         return 0;
     }
 
-    if (ofork->of_flags & AFPFORK_DATA) {
-        adflags |= ADFLAGS_DF;
-    }
-
-    if (ofork->of_flags & AFPFORK_META) {
-        adflags |= ADFLAGS_HF;
-    }
-
     if (ofork->of_flags & AFPFORK_RSRC) {
-        adflags |= ADFLAGS_RF;
         /* Only set the rfork's length if we're closing the rfork. */
         ad_refresh(NULL, ofork->of_ad);
 
@@ -1303,44 +1348,45 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         }
     }
 
-    dir = dirlookup(ofork->of_vol, ofork->of_did);
+    /* the steps that go by the fork's name: a modified fork's cache refresh
+     * and events, the emptied ._ fork's unlink and the emptied Icon file's
+     * removal; another session's rename, save or delete can leave the name
+     * holding another file, or none, so a close that may run one checks it.
+     * A read-only volume keeps its files. */
+    const int rw = !(ofork->of_vol->v_flags & AFPVOL_RO);
+    const int icon = rw && (ofork->of_flags & AFPFORK_RSRC)
+                     && ofork->of_did == DIRDID_ROOT
+                     && is_virtual_icon_name(ofork->of_uname)
+                     && virtual_icon_enabled(ofork->of_vol);
+#ifdef HAVE_EAFD
+    /* a resource fork in an EA leaves no ._ file to remove */
+    const int rf_emptied = 0;
+#else
+    const int rf_emptied = rw && (ofork->of_adflags & ADFLAGS_RF)
+                           && ofork->of_ad->ad_rlen == 0;
+#endif
+    const int by_name = (ofork->of_flags & AFPFORK_MODIFIED) || icon
+                        || rf_emptied;
+    struct stat st;
+    int same = 0;
 
-    if (dir == NULL) {
-        LOG(log_debug, logtype_afpd, "dirlookup failed for %ju",
-            (uintmax_t)ofork->of_did);
+    if (by_name && (dir = dirlookup(ofork->of_vol, ofork->of_did)) != NULL) {
+        forkpath = fullpath_join(dir->d_fullpath, ofork->of_uname);
+        same = forkpath
+               && ostat(bdata(forkpath), &st, vol_syml_opt(ofork->of_vol)) == 0
+               && st.st_dev == ofork->key.dev
+               && st.st_ino == ofork->key.inode;
     }
 
-    if (dir) {
-        const char *upath = mtoupath(ofork->of_vol, of_name(ofork),
-                                     ofork->of_did, utf8_encoding(obj));
-
-        if (upath) {
-            forkname = bfromcstr(upath);
-
-            if (forkname) {
-                forkpath = bformat("%s/%s", bdata(dir->d_fullpath),
-                                   bdata(forkname));
-            }
-        }
-    }
-
-    /* Pre-acquire cache pointer before ad_close changes ctime */
+    /* Pre-acquire cache pointer before ad_close changes ctime; an entry
+     * that predates the fork's file is the one the refresh below repairs */
     struct dir *cached = NULL;
 
-    if ((ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED))
-            && dir && forkname && forkpath) {
-        cached = dircache_search_by_name(ofork->of_vol, dir, bdata(forkname),
-                                         blength(forkname));
+    if (same && ((ofork->of_flags & AFPFORK_MODIFIED) || icon)) {
+        cached = dircache_search_by_name(ofork->of_vol, dir, ofork->of_uname,
+                                         strlen(ofork->of_uname));
     }
 
-#ifdef WITH_FCE
-
-    /* Someone has used write_fork, assume the file changed and register an FCE */
-    if ((ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
-        fce_register(obj, FCE_FILE_MODIFY, bdata(forkpath), NULL);
-    }
-
-#endif /* WITH_FCE */
     ad_unlock(ofork->of_ad, ofork->of_refnum);
 #ifdef HAVE_FSHARE_T
 
@@ -1369,30 +1415,34 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     /*
      * Check for 0 byte size resource forks, delete them.
      * Here's the deal:
-     * (1) the size must be 0
-     * (2) the fork must refer to a resource fork
+     * (1) the size must be 0, on a volume that is not read-only
+     * (2) the fork's open must have taken the resource fork
      * (3) the refcount must be 1 which means this fork has the last
      *     reference to the adouble struct and the subsequent
      *     ad_close() will close the assoiciated fd.
      * (4) nobody else has the resource fork open
+     * (5) the fork's name still holds the fork's file
+     * (6) the name's ._ file is the one this fork held: forks of one
+     *     inode share the adouble, so another name of the file (a hard
+     *     link) has a ._ file of its own
      *
      * We only do this for ._ AppleDouble resource forks, not for
      * xattr resource forks, because the test-suite then fails several
      * tests on Solaris, the reason for that still needs to be
      * determined.
      */
-    if ((ofork->of_ad->ad_rlen == 0)
-            && (ofork->of_flags & AFPFORK_RSRC)
+    if (rf_emptied && same
             && (ofork->of_ad->ad_rfp->adf_refcount == 1)
             && (ad_openforks(ofork->of_ad, ATTRBIT_DOPEN) == 0)) {
-#ifndef HAVE_EAFD
-        (void)unlink(ofork->of_ad->ad_ops->ad_path(
-                         mtoupath(ofork->of_vol,
-                                  of_name(ofork),
-                                  ofork->of_did,
-                                  utf8_encoding(obj)),
-                         0));
-#endif
+        const char *rfpath = ofork->of_ad->ad_ops->ad_path(bdata(forkpath), 0);
+        struct stat rst;
+        struct stat pst;
+
+        if (fstat(ad_reso_fileno(ofork->of_ad), &rst) == 0
+                && lstat(rfpath, &pst) == 0
+                && rst.st_dev == pst.st_dev && rst.st_ino == pst.st_ino) {
+            (void)unlink(rfpath);
+        }
     }
 
     /*
@@ -1405,13 +1455,15 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
      */
     int delete_icon = 0;
 
-    if ((ofork->of_flags & AFPFORK_RSRC)
-            && ofork->of_did == DIRDID_ROOT
-            && is_virtual_icon_name(of_name(ofork))
-            && virtual_icon_enabled(ofork->of_vol)
-            && ofork->of_ad->ad_rfp->adf_refcount == 1
-            && ad_openforks(ofork->of_ad, ATTRBIT_DOPEN) == 0
-            && forkpath) {
+    /* this fork holds the resource fork, is the session's last fork of the
+     * file, and no other process has a fork of it open; the name, stat'ed by
+     * the volume's symlink rule, holds a regular file with an empty data
+     * fork */
+    if (icon
+            && (ofork->of_adflags & ADFLAGS_RF)
+            && ofork->of_ad->ad_refcount == 1
+            && same && S_ISREG(st.st_mode) && st.st_size == 0
+            && ad_openforks(ofork->of_ad, 0) == 0) {
         /*
          * Read the resource fork header and check the data-length
          * field.  Only proceed with deletion when it is zero,
@@ -1429,69 +1481,28 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         }
 
         if ((n >= 0 && n < RFORK_HEADER_SIZE) || data_len == 0) {
-            /* Look up and delete the CNID for this file */
-            cnid_t icon_cnid = cnid_get(ofork->of_vol->v_cdb,
-                                        ofork->of_did,
-                                        of_name(ofork),
-                                        strnlen(of_name(ofork), MAXPATHLEN));
-
-            if (icon_cnid != CNID_INVALID) {
-                cnid_delete(ofork->of_vol->v_cdb, icon_cnid);
-            }
-
-            /* Remove from dircache and queue the entry for deallocation;
-             * skip cache refresh and hint lookup below */
-            if (cached) {
-                (void)dir_remove(ofork->of_vol, cached, 0);
-                cached = NULL;
-            }
-
             delete_icon = 1;
         }
     }
 
     /* Refresh cache after fork close if metadata was modified */
-    if (cached) {
-        struct stat post_st;
-
-        if (ostat(bdata(forkpath), &post_st, 0) == 0) {
-            int dflags = DCMOD_STAT;
-
-            /* If resource fork was dirty, AD header was modified too */
-            if ((ofork->of_flags & AFPFORK_RSRC) && (ofork->of_flags & AFPFORK_DIRTY)) {
-                dflags |= DCMOD_AD;
-            }
-
-            dir_modify(ofork->of_vol, cached, &(struct dir_modify_args) {
-                .flags = dflags,
-                .st = &post_st,
-                .adp = (dflags & DCMOD_AD) ? ofork->of_ad : NULL,
-            });
-        }
+    if (cached && (ofork->of_flags & AFPFORK_MODIFIED) && !delete_icon) {
+        /* a changed resource fork changed its AD header too */
+        const int dflags = (ofork->of_flags & AFPFORK_RSRC)
+                           && ad_meta_loaded(ofork->of_ad)
+                           ? DCMOD_STAT | DCMOD_AD : DCMOD_STAT;
+        dir_modify(ofork->of_vol, cached, &(struct dir_modify_args) {
+            .flags = dflags,
+            .st = &st,
+            .adp = (dflags & DCMOD_AD) ? ofork->of_ad : NULL,
+        });
     }
 
-    /* Send hint to afpd siblings — only if fork was actually modified.
-     * Uses the already-resolved cached->d_did when available to avoid
-     * cnid_get() DB lookups. Falls back to cnid_get() when the file
-     * was modified but not in the local dircache (rare). */
-    if ((ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED))
-            && ofork->of_vol) {
-        cnid_t hint_cnid = (cached && cached->d_did != CNID_INVALID)
-                           ? cached->d_did : CNID_INVALID;
-
-        if (hint_cnid == CNID_INVALID && forkname) {
-            size_t ulen = blength(forkname);
-            hint_cnid = cnid_get(ofork->of_vol->v_cdb, ofork->of_did,
-                                 bdata(forkname), ulen);
-        }
-
-        if (hint_cnid != CNID_INVALID) {
-            ipc_send_cache_hint(obj, ofork->of_vol->v_vid, hint_cnid,
-                                CACHE_HINT_REFRESH);
-        }
+    if ((ofork->of_flags & AFPFORK_MODIFIED) && !delete_icon) {
+        of_hint_siblings(obj, ofork, cached);
     }
 
-    if (ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0) {
+    if (ad_close(ofork->of_ad, ofork->of_adflags) < 0) {
         /* A failed close(2) is a deferred flush error: the fd is already
          * detached and locks were released by F_UNLCK before the close, so
          * nothing is stranded.  Log and deallocate normally; the client gets
@@ -1507,28 +1518,59 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
             strerror(saved_errno));
     }
 
+    /* Unlink the emptied Icon\r file after ad_close has released fds; its
+     * AppleDouble file goes with it */
+    if (delete_icon) {
+        (void)ofork->of_vol->vfs->vfs_deletefile(ofork->of_vol, -1,
+                                                 bdata(forkpath));
+        delete_icon = unlink(bdata(forkpath)) == 0;
+    }
+
+    if (delete_icon) {
+        /* no refresh ran, so an entry that predates the file has another
+         * file's id */
+        const cnid_t icon_cnid = cached
+                                 && cached->dcache_ino == ofork->key.inode
+                                 ? cached->d_did
+                                 : cnid_get(ofork->of_vol->v_cdb, ofork->of_did,
+                                            ofork->of_uname,
+                                            strlen(ofork->of_uname));
+
+        if (icon_cnid != CNID_INVALID) {
+            cnid_delete(ofork->of_vol->v_cdb, icon_cnid);
+            ipc_send_cache_hint(obj, ofork->of_vol->v_vid, icon_cnid,
+                                CACHE_HINT_DELETE);
+        }
+
+        if (cached) {
+            (void)dir_remove(ofork->of_vol, cached, 0);
+        }
+    }
+
+#ifdef WITH_FCE
+
+    if (delete_icon) {
+        fce_register(obj, FCE_FILE_DELETE, bdata(forkpath), NULL);
+    } else if ((ofork->of_flags & AFPFORK_MODIFIED) && same) {
+        fce_register(obj, FCE_FILE_MODIFY, bdata(forkpath), NULL);
+    }
+
+#endif /* WITH_FCE */
 #ifdef WITH_SPOTLIGHT
 
-    if (ret == 0 && (ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
+    if (delete_icon) {
+        sl_index_event(obj, ofork->of_vol, SL_INDEX_FILE_DELETE,
+                       bdata(forkpath), NULL);
+    } else if (ret == 0 && (ofork->of_flags & AFPFORK_MODIFIED) && same) {
         sl_index_event(obj, ofork->of_vol, SL_INDEX_FILE_MODIFY,
                        bdata(forkpath), NULL);
     }
 
 #endif /* WITH_SPOTLIGHT */
-
-    /* Unlink the emptied Icon\r file after ad_close has released fds */
-    if (delete_icon && forkpath && bdata(forkpath)) {
-        (void)unlink(bdata(forkpath));
-    }
-
     of_dealloc(ofork);
 
     if (forkpath) {
         bdestroy(forkpath);
-    }
-
-    if (forkname) {
-        bdestroy(forkname);
     }
 
     if (ret < 0) {

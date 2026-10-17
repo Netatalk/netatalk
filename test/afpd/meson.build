@@ -128,6 +128,7 @@ if build_tests
         'subtests_offcnt.c',
         'subtests_pfd.c',
         'subtests_recvfile.c',
+        'subtests_request.c',
         'subtests_sendfile.c',
         'subtests_veto.c',
         afpd_test_extra_sources,

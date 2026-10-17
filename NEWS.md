@@ -72,6 +72,21 @@ Changes in 4.7.0
   system's own rules do, GitHub #3412
 * FIX: afpd: resolving a file ID after another client renamed its folder no
   longer loses the folder's other file IDs, GitHub #3412
+* UPD: afpd: each request costs less: a read, a write or a file listing
+  makes fewer system calls and copies less data, GitHub #3415
+* FIX: afpd: a file one session changes shows its new resource fork
+  content and length to every session, GitHub #3415
+* FIX: afpd: harden file change events: 'fce ignore directories' covers
+  a listed directory and what lies below it and no other, deleted files
+  included, AppleTalk sessions send events with the configured settings,
+  a configuration reload applies the listener, event and ignore settings
+  afresh, and events no longer leak memory, GitHub #3415
+* FIX: afpd: a custom volume icon the Finder removes disappears on
+  AppleDouble v2 volumes too, and never while a session still has the
+  icon file open; a hard link keeps its resource fork when its twin's
+  empty one is removed, GitHub #3415
+* FIX: afpd: report the right free space on a volume with 'vol size
+  limit', GitHub #3415
 
 Changes in 4.6.1
 ----------------

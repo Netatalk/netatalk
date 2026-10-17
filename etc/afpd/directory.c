@@ -2286,7 +2286,9 @@ int movecwd(const struct vol *vol, struct dir *dir)
 
                 chdir_errno = errno;
                 LOG(log_info, logtype_afpd,
-                    "movecwd: CNID retry chdir failed: %s", strerror(errno));
+                    "movecwd: CNID retry chdir to \"%s\" (did:%u) failed: %s",
+                    dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)",
+                    ntohl(saved_did), strerror(chdir_errno));
             } else {
                 /* dirlookup_strict sets AFPERR_MISC when the backend could not
                  * answer; the errno switch below must not overrule it */

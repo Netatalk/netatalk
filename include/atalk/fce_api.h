@@ -139,10 +139,14 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
                  const char *oldpath);
 /* IP address or host name, with an optional :port */
 int fce_add_udp_socket(const char *target);
-/* all|delete|create */
+/* drops every listener, for a configuration reload */
+void fce_cleanup(void);
+/* all|delete|create, or "" for none */
 int fce_set_coalesce(const char *opt);
-/* fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout */
+/* a list from FCE_DEFAULT_EVENTS */
 int fce_set_events(const char *events);
+
+#define FCE_DEFAULT_EVENTS "fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout"
 
 #define FCE_DEFAULT_PORT 12250
 #define FCE_DEFAULT_PORT_STRING "12250"

@@ -138,6 +138,10 @@ struct afp_options {
 #ifdef WITH_FCE
     int fce_fmodwait;           /*!< number of seconds FCE file mod events are put on hold */
     int fce_sendwait;           /*!< number of ms to wait between udp event sending */
+    int fce_version;            /*!< FCE packet version, 1 or 2 */
+    char *fce_ign_names;        /*!< fce ignore names option */
+    char *fce_ign_directories;  /*!< fce ignore directories option */
+    char *fce_notify_script;    /*!< fce notify script option */
 #endif /* WITH_FCE */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen;
@@ -225,12 +229,6 @@ typedef struct AFPObj {
     void (*exit)(int);
     int (*reply)(void *, int);
     int (*attention)(void *, AFPUserBytes);
-#ifdef WITH_FCE
-    int fce_version;
-    char *fce_ign_names;
-    char *fce_ign_directories;
-    char *fce_notify_script;
-#endif /* WITH_FCE */
     void *sl_ctx; /*!< opaque handle for the active search backend */
 } AFPObj;
 

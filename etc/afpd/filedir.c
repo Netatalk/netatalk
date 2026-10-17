@@ -430,7 +430,7 @@ static int moveandrename(const AFPObj *obj,
 
         path.st_valid = 0;
         path.u_name = oldunixname;
-        opened = of_findnameat(sdir_fd, &path);
+        opened = of_findnameat(vol, sdir_fd, &path);
 
         if (opened) {
             /* reuse struct adouble so it won't break locks */
@@ -485,8 +485,10 @@ static int moveandrename(const AFPObj *obj,
                                  : dircache_search_by_name(vol, sdir, oldunixname, strnlen(oldunixname,
                                      CNID_MAX_PATH_LEN));
 
-        if (!ad_metadata_cached(oldunixname, adflags, adp, vol, src_cached, true,
-                                NULL)) {
+        /* an open fork's adouble is the live copy: the cache would overwrite
+         * its header */
+        if (!ad_metadata_cached(oldunixname, adflags, adp, vol,
+                                opened ? NULL : src_cached, true, NULL)) {
             uint16_t bshort;
             ad_getattr(adp, &bshort);
             /* The ad_metadata_cached function handles ad_close() internally */
@@ -571,7 +573,7 @@ static int moveandrename(const AFPObj *obj,
             rc = renamefile(vol, curdir, sdir_fd, oldunixname, upath, newname, adp);
 
             if (rc == AFP_OK) {
-                of_rename(vol, opened, sdir, oldname, curdir, newname);
+                of_rename(vol, opened, sdir, oldname, curdir, newname, upath);
             }
         }
     } else {

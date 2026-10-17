@@ -251,8 +251,7 @@ static int check_delete_inhibit(const struct vol *vol, int dirfd, char *file)
     const struct ofork *ofm;
     uint16_t attr = 0;
     dpath.u_name = file;
-    ofm = (dirfd != -1) ? of_findnameat(dirfd, &dpath)
-          : of_findname(vol, &dpath);
+    ofm = of_findnameat(vol, dirfd, &dpath);
 
     if (ofm != NULL && ad_meta_open(ofm->of_ad)) {
         ad_getattr(ofm->of_ad, &attr);
@@ -3651,14 +3650,14 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_exchangefile;
     }
 
-    of_rename(vol, s_of, sdir, spath, curdir, temp);
+    of_rename(vol, s_of, sdir, spath, curdir, temp, temp);
 
     /* rename destination to source */
     if ((err = renamefile(vol, curdir, -1, upath, p, spath, addp)) != AFP_OK) {
         goto err_src_to_tmp;
     }
 
-    of_rename(vol, d_of, curdir, path->m_name, sdir, spath);
+    of_rename(vol, d_of, curdir, path->m_name, sdir, spath, supath);
 
     /* rename temp to destination */
     if ((err = renamefile(vol, curdir, -1, temp, upath, path->m_name,
@@ -3666,7 +3665,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_dest_to_src;
     }
 
-    of_rename(vol, s_of, curdir, temp, curdir, path->m_name);
+    of_rename(vol, s_of, curdir, temp, curdir, path->m_name, upath);
 
     /*
      * id's need switching. src -> dest and dest -> src.
@@ -3841,15 +3840,15 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 err_temp_to_dest:
     /* rename dest to temp */
     renamefile(vol, curdir, -1, upath, temp, temp, adsp);
-    of_rename(vol, s_of, curdir, upath, curdir, temp);
+    of_rename(vol, s_of, curdir, upath, curdir, temp, temp);
 err_dest_to_src:
     /* rename source back to dest */
     renamefile(vol, curdir, -1, p, upath, path->m_name, addp);
-    of_rename(vol, d_of, sdir, spath, curdir, path->m_name);
+    of_rename(vol, d_of, sdir, spath, curdir, path->m_name, upath);
 err_src_to_tmp:
     /* rename temp back to source */
     renamefile(vol, curdir, -1, temp, p, spath, adsp);
-    of_rename(vol, s_of, curdir, temp, sdir, spath);
+    of_rename(vol, s_of, curdir, temp, sdir, spath, supath);
 err_exchangefile:
 
     if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {   /* META */

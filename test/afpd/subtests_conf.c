@@ -21,15 +21,18 @@
 #include "config.h"
 #endif
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <netinet/in.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -44,6 +47,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "afp_config.h"
 #include "dircache.h"
 #include "peer_lock.h"
 #include "subtests_conf.h"
@@ -2484,5 +2488,91 @@ cleanup:
     rmdir(voldir);
     free(voldir);
     unlink(logpath);
+    return failed;
+}
+
+/*!
+ * @brief Whether a TCP socket binds to the IPv4 address ip on this host
+ *
+ * @returns 1 when it binds
+ */
+static int conf_binds(const char *ip)
+{
+    struct sockaddr_in addr = { .sin_family = AF_INET };
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    int bound;
+
+    if (fd == -1) {
+        return 0;
+    }
+
+    bound = inet_pton(AF_INET, ip, &addr.sin_addr) == 1
+            && bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == 0;
+    close(fd);
+    return bound;
+}
+
+/*!
+ * @brief An afp listen address that cannot start leaves the others listening
+ *        and adds no wildcard listener
+ *
+ * @returns 0, 1 when the listener set is wrong, TEST_SKIP when the host
+ *          cannot bind the addresses
+ */
+int utest_conf_listen_skips_failed_address(void)
+{
+    static const char body[] =
+        "afp listen = 192.0.2.1, 127.0.0.1, 192.0.2.2\n"
+        "afp port = 0\n"
+        "signature = utest\n"
+        "uam list = uams_none.so\n";
+    AFPObj obj;
+    AFPObj asp = { 0 };
+    struct sockaddr_storage ss = { 0 };
+    socklen_t sslen = sizeof(ss);
+    char logpath[64];
+    int listeners = 0;
+    int loopback = 0;
+    int failed = -1;
+
+    /* the loopback address, and two documentation addresses no host has */
+    if (!conf_binds("127.0.0.1") || conf_binds("192.0.2.1")
+            || conf_binds("192.0.2.2")) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    if (conf_parse_fixture(&obj, body, logpath) != 0) {
+        unlink(logpath);
+        return -1;
+    }
+
+    if (configinit(&obj, &asp) == 0) {
+        for (const DSI *dsi = obj.dsi; dsi; dsi = dsi->next) {
+            listeners++;
+        }
+
+        loopback = obj.dsi
+                   && getsockname(obj.dsi->serversock, (struct sockaddr *)&ss,
+                                  &sslen) == 0
+                   && ss.ss_family == AF_INET
+                   && ((struct sockaddr_in *)&ss)->sin_addr.s_addr
+                   == htonl(INADDR_LOOPBACK);
+    }
+
+    if (listeners == 1 && loopback) {
+        failed = 0;
+    } else {
+        fprintf(test_stream(),
+                "# utest_conf_listen_skips_failed_address: %d listeners, "
+                "the first %s\n",
+                listeners, loopback ? "on 127.0.0.1" : "elsewhere");
+    }
+
+    configfree(&obj, NULL);
+    conf_teardown(&obj, logpath);
     return failed;
 }
