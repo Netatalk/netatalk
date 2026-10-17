@@ -156,16 +156,13 @@ static bool srp_is_the_only_uam(const char *uamlist)
  */
 static int path_parent(char *dst, size_t dstlen, const char *path)
 {
-    size_t len;
     char *slash;
 
-    if (path == NULL || (len = strlcpy(dst, path, dstlen)) >= dstlen) {
+    if (path == NULL || strlcpy(dst, path, dstlen) >= dstlen) {
         return -1;
     }
 
-    while (len > 1 && dst[len - 1] == '/') {
-        dst[--len] = '\0';
-    }
+    strip_trailing_slashes(dst);
 
     if ((slash = strrchr(dst, '/')) == NULL) {
         strlcpy(dst, ".", dstlen);
@@ -202,10 +199,7 @@ static bool owned_private_dir(const char *path)
         return false;
     }
 
-    while (len > 1 && dir[len - 1] == '/') {
-        dir[--len] = '\0';
-    }
-
+    strip_trailing_slashes(dir);
     return lstat(dir, &st) == 0 && S_ISDIR(st.st_mode)
            && st.st_uid == getuid() && (st.st_mode & 0077) == 0;
 }
@@ -273,9 +267,7 @@ static bool dbpath_is_creatable(const char *path)
         return false;
     }
 
-    while (len > 1 && dir[len - 1] == '/') {
-        dir[--len] = '\0';
-    }
+    strip_trailing_slashes(dir);
 
     if (lstat(dir, &st) == 0) {
         return S_ISDIR(st.st_mode) && st.st_uid == getuid()
@@ -788,7 +780,12 @@ static void sighup_impl(void)
 
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
-    load_afp_conf_vols(&obj, LV_ALL);
+    load_afp_conf_vols(&obj, LV_ALL | LV_FORCE);
+
+    /* a read that dropped a volume builds what it blocked at the next one */
+    if (!obj.options.volfile.loaded) {
+        load_afp_conf_vols(&obj, LV_ALL);
+    }
 
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_deregister();

@@ -45,7 +45,7 @@ done
 id carol > /dev/null 2>&1 \
     || adduser -D -g "$(head -c 20000 /dev/zero | tr '\0' x)" carol
 
-CHOWN_FIX="fix with: chown -R $(id -u alice) "
+CHOWN_FIX="if it holds only this volume's state, fix with: chown -R $(id -u alice) "
 mkdir -p /srv/shared $PRIV_DIR /srv/carol /srv/ghost /srv/rooty /srv/dollar \
     "$(dirname "$CONF")" /var/log
 chown alice $PRIV_DIR
@@ -160,6 +160,16 @@ grep -q "\"$PRIV_DIR\" is not inside an AFP volume" $NAD_OUT \
     || fail "bob's nad was given alice's private volume"
 pass "root's nad opens the state as the owner, and another account's nad gets no volume"
 
+# --- a fresh shared CNID directory ends 01777 whatever the umask of the tool
+# that creates it
+SHARED_CNID="$(afpd_buildinfo 'state directory')CNID/shared"
+rm -rf "$SHARED_CNID"
+mkdir -p "$(dirname "$SHARED_CNID")"
+(umask 022 && nad -F "$CONF" ls /srv/shared > /dev/null) \
+    || fail "root's nad could not open the shared volume"
+owned "$SHARED_CNID" "root 1777" || fail "a fresh shared CNID directory is not 01777"
+pass "a fresh shared CNID directory is 01777 whatever the tool's umask"
+
 # --- bob's nad reaches alice's home through [Homes], which is built with
 # alice's record, but the load is bob's, so it does not get the volume. The
 # home is opened to everyone for this leg, so admission is what keeps bob from
@@ -245,10 +255,49 @@ afp_can_open alice $PASS1 $PRIV || fail "a vol dbpath for the volume broke it"
 alice_state /srv/alicecnid
 pass "a vol dbpath for the volume moves its state and keeps it owner-only"
 
-# --- a [Homes] vol dbpath names each owner with $u, under a directory the
-# owners may create in; one without $u is passed over for the home's .AppleDB
+# --- a CNID directory the owner cannot create is refused, naming the commands
+# that create it for the owner
+mkdir -p /srv/rootonly
+chmod 755 /srv/rootonly
+serve_conf $PRIV 'vol dbpath = /srv/rootonly/alicecnid'
+afp_can_open alice $PASS1 $PRIV && fail "alice's volume opened without its CNID directory"
+grep -q "fix with: mkdir -p -m 700 '/srv/rootonly/alicecnid' && chown $(id -u alice) '/srv/rootonly/alicecnid'" $LOG \
+    || fail "the failed creation did not name the commands that create the directory"
+pass "a CNID directory the owner cannot create names the commands that create it"
+
+# --- so does one under a missing parent, which the same commands create
+serve_conf $PRIV 'vol dbpath = /srv/nowhere/alicecnid'
+afp_can_open alice $PASS1 $PRIV && fail "alice's volume opened under a missing parent"
+grep -q "fix with: mkdir -p -m 700 '/srv/nowhere/alicecnid' && chown $(id -u alice) '/srv/nowhere/alicecnid'" $LOG \
+    || fail "the failed creation under a missing parent did not name the commands"
+pass "a CNID directory under a missing parent names the commands that create it"
+
+# --- a creation those commands do not cure names none: a file in the path
+: > /srv/afile
+serve_conf $PRIV 'vol dbpath = /srv/afile/cnid'
+afp_can_open alice $PASS1 $PRIV && fail "alice's volume opened with a file in its CNID path"
+grep -q "Failed to create CNID DB directory '/srv/afile/cnid'" $LOG \
+    || fail "the failed creation under a file was not logged"
+grep -q "fix with" $LOG && fail "a creation no command cures named one"
+pass "a CNID directory no command can create names none"
+
+# --- the volume's own root is refused as its CNID directory before the owner
+# check, so a root another account owns draws no chown; its mode is kept
+PRIV_MODE=$(stat -c %a $PRIV_DIR)
+chown bob $PRIV_DIR
+serve_conf $PRIV "vol dbpath = $PRIV_DIR"
+afp_can_open alice $PASS1 $PRIV && fail "alice's volume opened on its own root as CNID directory"
+grep -q "CNID DB directory '$PRIV_DIR' is the volume itself" $LOG \
+    || fail "the volume's own root was not refused"
+grep -q "fix with" $LOG && fail "the volume's own root was answered with a chown"
+[ "$(stat -c %a $PRIV_DIR)" = "$PRIV_MODE" ] || fail "the refused root changed mode"
+chown alice $PRIV_DIR
+pass "the volume's own root is refused as its CNID directory"
+
+# --- a [Homes] vol dbpath names each owner with $u, a directory root makes
+# for that owner; one without $u is passed over for the home's .AppleDB
 mkdir -p /srv/homecnid
-chmod 1777 /srv/homecnid
+install -d -m 700 -o alice /srv/homecnid/alice
 rm -rf $HOME_DB
 serve_conf Homes 'vol dbpath = /srv/homecnid/$u'
 afp_can_open alice $PASS1 "$HOME_VOL" || fail "a home did not open with a \$u vol dbpath"
@@ -262,17 +311,29 @@ grep -q "'vol dbpath' /srv/homecnid needs \$u" $LOG \
 pass "a [Homes] vol dbpath names each owner with \$u, or is passed over"
 
 # --- force user makes every session act as one account: a private volume is
-# skipped at the load, and a home when root's nad reaches it. A session of a
-# non-admin account does not log in under force user at all, so nad is the
-# load that builds a home here
+# skipped at the load, and the homes are shared. A session of a non-admin
+# account does not log in under force user at all, so nad is the load that
+# builds a home here
+rm -rf $HOME_DB
 serve_conf Global 'force user = bob'
 grep -q "\"$PRIV\": $REFUSED force user" $LOG \
     || fail "a private volume under force user was not refused"
-nad -F "$CONF" ls $HOME_DIR > /dev/null 2>&1 \
-    && fail "root's nad was given a home under force user"
-grep -q "\"$HOME_VOL\": $REFUSED force user" $LOG \
-    || fail "a home under force user was not logged"
-pass "force user skips private volumes and homes"
+nad -F "$CONF" ls $HOME_DIR > /dev/null \
+    || fail "root's nad was not given a home under force user"
+[ ! -e $HOME_DB ] || fail "a home under force user kept its state inside it"
+pass "force user skips private volumes and shares the homes"
+
+# --- '[Homes] private =' shares the homes; a name there is logged and the
+# homes stay private
+serve_conf Homes 'private ='
+afp_can_open alice $PASS1 "$HOME_VOL" || fail "alice could not open her shared home"
+[ ! -e $HOME_DB ] || fail "a shared home kept its state inside it"
+serve_conf Homes 'private = bob'
+afp_can_open alice $PASS1 "$HOME_VOL" || fail "alice could not open her home"
+grep -q "\[Homes\] 'private' takes no name" $LOG \
+    || fail "a name in [Homes] 'private' was not logged"
+alice_state $HOME_DB
+pass "'[Homes] private =' shares the homes, and a name there is passed over"
 
 # --- the next open makes widened state owner-only
 serve_conf
@@ -307,6 +368,21 @@ afp_can_open alice $PASS1 $PRIV 548 FPOpenDT \
 alice_state $PRIV_DB
 pass "the desktop database is the owner's, inside the owner-only CNID directory"
 
+# --- an admin-group session runs as root and creates the private state and
+# the desktop database as the owner
+addgroup afpadmins 2> /dev/null || true
+addgroup alice afpadmins 2> /dev/null || true
+id -nG alice | grep -qw afpadmins || fail "alice is not in afpadmins"
+rm -rf $PRIV_DB
+serve_conf Global 'admin group = afpadmins' Global 'log level = default:info'
+afp_can_open alice $PASS1 $PRIV 548 FPOpenDT \
+    || fail "FPOpenDT failed in alice's admin session"
+grep -q "admin login -- alice" $LOG || fail "alice's session was not an admin login"
+alice_state $PRIV_DB
+[ "$(stat -c %U $PRIV_DB/.AppleDesktop 2> /dev/null)" = alice ] \
+    || fail "the desktop database an admin session created is not alice's"
+pass "an admin-group session creates the private state and the .AppleDesktop folder as the owner"
+
 # --- a private CNID directory is never a symbolic link, also behind a
 # trailing slash: the volume does not open, no chown is named, and the link's
 # target is left as it was
@@ -317,9 +393,32 @@ ln -sfn /srv/bobcnid /srv/alicelink
 serve_conf $PRIV 'vol dbpath = /srv/alicelink/'
 afp_can_open alice $PASS1 $PRIV && fail "alice's volume opened through a symbolic link"
 grep -q "fix with: chown" $LOG && fail "a symbolic link was answered with a chown"
-grep -q "Can't open CNID DB directory '/srv/alicelink'" $LOG \
+grep -q "CNID DB directory '/srv/alicelink' is a symbolic link" $LOG \
     || fail "the symbolic link was not refused as a CNID directory"
+serve_conf $PRIV 'vol dbpath = /srv/alicelink/.'
+afp_can_open alice $PASS1 $PRIV && fail "alice's volume opened through a symbolic link and a final ."
+grep -q "CNID DB directory '/srv/alicelink/.' ends in . or .." $LOG \
+    || fail "a CNID path ending in . was not refused"
 owned /srv/bobcnid "bob 700" || fail "the link's target was changed"
 pass "a symbolic link is refused as a private CNID directory, trailing slash included"
+
+# --- a reload request makes the controller read afp.conf again, changed or
+# not: each read logs the unknown owner of [ghost]
+serve_conf
+: > $LOG
+pkill -HUP -x netatalk
+wait_for 10 grep -q "netatalk\[[0-9]*\] .*\"ghost\": 'private' user" $LOG \
+    || fail "the controller did not read an unchanged afp.conf again on a reload request"
+pass "a reload request makes the controller read an unchanged afp.conf again"
+
+# --- a volume renamed on its path is built at the same reload request: the
+# controller's second read finds the path free and records the new name's uuid
+VOLUUID_CONF=$(afpd_buildinfo afp_voluuid.conf)
+[ -n "$VOLUUID_CONF" ] || fail "afpd -V does not report afp_voluuid.conf"
+sed -i '/^\[shared\]/a volume name = sharedrenamed' "$CONF"
+pkill -HUP -x netatalk
+wait_for 10 grep -q '^"sharedrenamed"' "$VOLUUID_CONF" \
+    || fail "the reload request did not build the volume renamed on its path"
+pass "a reload request builds a volume renamed on its path"
 
 echo "ALL private volume tests passed"

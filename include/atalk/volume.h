@@ -118,8 +118,7 @@ struct vol {
 #endif
     int             v_preexec_close;
     char            *v_uuid;    /*!< For TimeMachine zeroconf record */
-    /*! an AFPVOL_PRIVATE volume's owner */
-    uid_t           v_private_uid;
+    uid_t           v_private_uid; /*!< an AFPVOL_PRIVATE volume's owner */
     int             v_qfd;
     uint32_t        v_ignattr;  /*!< AFP attributes that shall be ignored */
 };
@@ -167,8 +166,7 @@ typedef enum {
 #define AFPVOL_NONETIDS  (1 << 26)   /*!< signal the client it shall do privelege mapping */
 #define AFPVOL_FOLLOWSYM (1 << 27)   /*!< follow symlinks on the server, default is not to */
 #define AFPVOL_DELVETO   (1 << 28)   /*!< delete veto files and dirs */
-/*! the volume admits one account, its 'private' owner */
-#define AFPVOL_PRIVATE   (1 << 29)
+#define AFPVOL_PRIVATE   (1 << 29)   /*!< one account's, its 'private' owner */
 
 /* Extended Attributes vfs indirection */
 #define AFPVOL_EA_NONE           0   /*!< No EAs */

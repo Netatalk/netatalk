@@ -25,8 +25,10 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <libgen.h>
 #include <poll.h>
+#include <pwd.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -412,6 +414,69 @@ void unbecome_root(void)
 
             saved_uid = -1;
         }
+    }
+}
+
+/*!
+ * @brief Act as an account for one step, with its groups, egid and euid
+ *
+ * For a process whose euid is 0. unbecome_owner() takes euid 0 back.
+ *
+ * @param[in]  uid   the account
+ * @param[out] egid  the gid to hand unbecome_owner()
+ * @returns 0, or -1 with errno set and the gid as it was
+ */
+int become_owner(uid_t uid, gid_t *egid)
+{
+    const struct passwd *owner = getpwuid(uid);
+    *egid = getegid();
+
+    if (owner == NULL) {
+        errno = ENOENT;
+        return -1;
+    }
+
+    if (initgroups(owner->pw_name, owner->pw_gid) != 0
+            || setegid(owner->pw_gid) != 0 || seteuid(uid) != 0) {
+        int saved_errno = errno;
+
+        if (setegid(*egid) != 0) {
+            AFP_PANIC("become_owner: can't restore the gid");
+        }
+
+        errno = saved_errno;
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Take euid 0 back after become_owner()
+ *
+ * @param[in] egid  the gid become_owner() gave
+ */
+void unbecome_owner(gid_t egid)
+{
+    if (seteuid(0) != 0 || setegid(egid) != 0) {
+        AFP_PANIC("unbecome_owner: can't return to root");
+    }
+}
+
+/*!
+ * @brief Drop trailing slashes, which make lstat and an O_NOFOLLOW open follow
+ * a final symbolic link
+ *
+ * A lone "/" stays.
+ *
+ * @param[in,out] path  path to trim
+ */
+void strip_trailing_slashes(char *path)
+{
+    size_t len = strlen(path);
+
+    while (len > 1 && path[len - 1] == '/') {
+        path[--len] = '\0';
     }
 }
 

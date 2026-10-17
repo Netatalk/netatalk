@@ -197,8 +197,8 @@ force user = *user* **(G)**
 
 > Makes every connecting user act as this UNIX user on the server. Use it
 with care: an incorrect setting can cause security problems. A server with
-this option skips every **private** volume, the **[Homes]** volumes
-included.
+this option skips every volume section that sets **private**, and shares
+the **[Homes]** volumes.
 
 force group = *group* **(G)**
 
@@ -547,9 +547,9 @@ preset value as given. For a server run as root, the *sqlite* backend
 creates the directory if needed and sets mode 1777 on it. It sets the
 database files to 0666, so that **afpd** sessions running as the
 connected user and **nad** can share them. A **private** volume keeps its
-own directory owner-only and ignores the **(G)** value, see **private**.
-Keep the path outside any volume, on a filesystem that supports POSIX
-record locks. The server locks the *sqlite* database and the desktop
+own directory owner-only and ignores a preset's and the **(G)** value, see
+**private**. Keep the path outside any volume, on a filesystem that supports
+POSIX record locks. The server locks the *sqlite* database and the desktop
 database icons as it writes them.
 
 ## Directory Cache Tuning
@@ -1483,32 +1483,37 @@ immediately, so clients cannot see or mount it.
 
 private = *user* **(V)**
 
-> Dedicates the volume to one account. No other AFP user sees or opens it.
-The volume keeps its CNID database in *sqlite*, in a *.AppleDB* directory
-inside the volume. That account creates the directory with owner-only
+> Dedicates the volume to one account. No other AFP user is offered the
+volume or opens it. The volume keeps its CNID database in *sqlite*, in a
+*.AppleDB* directory inside the volume. That account creates the directory with owner-only
 permissions (directory 0700, database files 0600), whichever process opens
 the volume, **nad**(1) and **dbd**(1) run by root included. The directory
 counts against the account's disk quota, and the AFP desktop database lives
-there too. A **vol dbpath** set for the volume or its preset moves the
+there too. A **vol dbpath** in the volume's own section moves the
 directory to a path the account can create or already owns. Use it when
-the account cannot write the volume root. Give the directory to no other
-volume. The server logs a value that contains `$u`, which names whoever
-loads the volume rather than its owner, and passes it over. The **(G)**
-value does not apply. The server refuses a directory that another account
-owns, or a symbolic link: the volume does not open, and for another
-account's directory the log names the **chown** that repairs it. Finder
-search uses the *cnid* **spotlight
-backend** over that database when your build has it. The volume takes
+the account cannot write the volume root, and give the directory to no
+other volume. A preset or **(G)** value does not apply. The server logs a
+value with a variable and passes it over. The server refuses a directory
+that another account owns, a symbolic link, the volume's own directory, or a
+value ending in *.* or *..*: the volume does not open, and for another
+account's directory the log names the **chown** that repairs it. Finder search uses the *cnid* **spotlight backend** over that database
+when your build has it. The volume takes
 neither **cnid scheme** nor **spotlight backend**, so shared volumes can
 stay on *mysql* and *localsearch*. The server logs a value written in the
 volume's own section as not applying. The account cannot be root. A volume
 section takes an account name, never *$u*. An empty value leaves the volume
-shared. See **force user**.
+shared. A server with **force user** skips the volume.
 >
-> Every **[Homes]** volume is private to its owner and reads no **private**.
-Its state is *.AppleDB* in the home. A **[Homes]** **vol dbpath** that
-contains `$u` moves it, one directory per owner. The server logs a value
-without `$u` and passes it over.
+> Every **[Homes]** volume is private to its owner, unless **[Homes]** sets
+**private =** with no value or the server sets **force user**; then the
+homes are shared. A name in **[Homes]** **private** is logged and passed
+over. A private home keeps its state in *.AppleDB* in the home. A
+**[Homes]** **vol dbpath** that contains `$u` moves it, one directory per
+owner. Create each owner's directory as root beforehand, owned by that
+owner with mode 0700, for example with **mkdir -m 700** *dir* and **chown**
+*user* *dir*, in a parent that the owners can search and only root can
+write: an account that can create in the parent can take another owner's
+directory name. The server logs a value without `$u` and passes it over.
 >
 > The server advertises a private Time Machine volume over Zeroconf by name,
 like any other.

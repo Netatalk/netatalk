@@ -51,9 +51,10 @@ filesystem modifications
 
 **-u**
 
-> username for use with AFP volumes using user variable $u; it also names
-the account whose **private** volumes **dbd** acts on, and no other
-account's
+> username for use with AFP volumes using user variable $u. With it,
+**dbd** skips the **private** volumes of other accounts; without it, it
+reaches every private volume. Either way it opens a private volume's state
+as the volume's owner
 
 **-v**
 

@@ -20,16 +20,29 @@ the volume with *-wal* and *-shm* companions; delete it too.
 
 Every **[Homes]** volume is private to its owner: its CNID database is sqlite,
 in a **.AppleDB** directory inside the home that the owner creates and alone
-can read, whatever **cnid scheme** and **vol dbpath** say in **[Global]**. A
-**.AppleDB** that another account owns, as Netatalk 2 and **vol dbnest** left
-in share roots, refuses the home until it is the owner's; the log names the
-**chown** that makes it so. A home whose root the owner cannot write to, or
-that lives on a filesystem unsuited to SQLite, takes a **[Homes]**
-**vol dbpath** with **$u**, under a local directory the owners may create in.
-The first mount moves a **.AppleDesktop** from the home's root into
-**.AppleDB**. One the owner cannot move is reported once and a fresh one is
-created inside **.AppleDB**, and the old one stays in the root; **chown** it
-to the owner before the first mount to keep its icons, or remove it.
+can read, whatever **cnid scheme** and **vol dbpath** say in **[Global]** or
+a preset. **private =** with no value in **[Homes]** keeps the homes shared,
+as a server with **force user** does. A **.AppleDB** that another account
+owns, as Netatalk 2 and **vol dbnest** left in share roots, refuses the home
+until it is the owner's; the log names the **chown** that makes it so. A
+home whose root the owner cannot write to, or that lives on a filesystem
+unsuited to SQLite, takes a **[Homes]** **vol dbpath** with **$u**, each
+owner's directory created beforehand by root and owned by that owner. A
+**[Homes]** **vol dbpath** without **$u**, which earlier releases used as
+given and made mode 1777, is logged and passed over for the home's
+**.AppleDB**: append **/$u** to it, make that directory writable by root
+alone, and create the owners' directories. A directory an earlier release
+created under a value with **$u** belongs to root and refuses its home until
+**chown** gives it to the owner. A home's former CNID directory under the
+state directory, or its MySQL table, is no longer read once the home is
+private, and can be removed; its **.AppleDesktop** holds the home's desktop
+database. A client that opens the desktop database, as Mac OS X 10.5 and
+earlier do, moves a **.AppleDesktop** from the home's root into
+**.AppleDB**, so to keep those icons move it into the home's root, owned by
+the owner, before such a client first connects. One the owner cannot move is
+reported once and a fresh one is created inside **.AppleDB**, and the old
+one stays in the root; **chown** it to the owner before such a client first
+connects to keep its icons, or remove it.
 
 ## Upgrading from Netatalk 4.5
 

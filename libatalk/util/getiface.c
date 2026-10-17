@@ -130,13 +130,21 @@ static int getifaces(const int sockfd, char ***list)
     new = (char **) malloc((ifc.ifc_len / sizeof(struct ifreq) + 1) * sizeof(
                                char *));
 
+    if (new == NULL) {
+        return 0;
+    }
+
     for (char *ifrp = ifc.ifc_buf; ifc.ifc_len >= (int) sizeof(struct ifreq);
             ifc.ifc_len -= ifrsize, ifrp = nextifrp) {
         memcpy(&ifrbuf, ifrp, sizeof(ifrbuf));
 #ifdef BSD4_4
-        ifrsize = sizeof(ifrbuf.ifr_name) +
-                  (ifrbuf.ifr_addr.sa_len > sizeof(struct sockaddr)
-                   ? ifrbuf.ifr_addr.sa_len : sizeof(struct sockaddr));
+        ifrsize = sizeof(ifrbuf.ifr_name) + ifrbuf.ifr_addr.sa_len;
+
+        /* a record holds a struct ifreq, or the name and a longer address */
+        if (ifrsize < (int) sizeof(struct ifreq)) {
+            ifrsize = sizeof(struct ifreq);
+        }
+
 #else /* !BSD4_4 */
         ifrsize = sizeof(struct ifreq);
 #endif /* BSD4_4 */

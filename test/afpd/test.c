@@ -2870,6 +2870,15 @@ int main(int argc, char *argv[])
                      "private volume: the owner, sqlite and cnid search "
                      "inside it, a section option warned, a volume-section "
                      "$u refused");
+    TEST_int_or_skip(utest_conf_unchanged_conf_read_once(), 0,
+                     "loader: an unchanged afp.conf is read once for an empty "
+                     "volume list, a changed one again");
+    TEST_int_or_skip(utest_conf_open_volume_reload(), 0,
+                     "loader: a held volume is rebuilt after a failed read, "
+                     "and a dropped one swept once closed");
+    TEST_int_or_skip(utest_conf_reload_follows_sections(), 0,
+                     "loader: a reload follows the volume names and paths of "
+                     "afp.conf");
     TEST_int_or_skip(utest_conf_permission_options_require_unix_priv(), 0,
                      "volume permission options are ignored when unix priv is disabled");
     TEST_int_or_skip(utest_conf_cnid_server_listen_ignored(), 0,

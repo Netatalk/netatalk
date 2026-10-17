@@ -166,8 +166,8 @@ support AppleTalk, **[Homes]** volumes, a **vol dbpath** for a volume or in
 owner-only), AFP statistics, or administrator and forced-user configuration. A
 volume the serving user cannot read and search, or cannot write when it is
 not read-only, is rejected at startup, as is one whose CNID directory is owned
-by another user, or does not exist and cannot be created: a volume in a
-directory the serving user cannot write needs a volume-level **vol dbpath**
+by another user, or does not exist and cannot be created: a read-only volume
+whose root the serving user cannot write needs a volume-level **vol dbpath**
 naming a directory that user owns. CNID state that changes hands while the
 server runs is not taken over either: that volume fails to open at the mount
 and the log names the **chown** that fixes it.
@@ -177,11 +177,11 @@ changing *afp.conf*.
 
 ### Private volumes
 
-**private** dedicates a volume to one account: no other AFP user sees or opens
-it, and its CNID state is a *sqlite* database in a *.AppleDB* directory inside
-the volume that only that account can read, so shared volumes can stay on
-*mysql* and *localsearch* beside it. Every **[Homes]** volume is private to
-its owner.
+**private** dedicates a volume to one account: no other AFP user is offered
+it or opens it, and its CNID state is a *sqlite* database in a *.AppleDB*
+directory inside the volume that only that account can read, so shared
+volumes can stay on *mysql* and *localsearch* beside it. Every **[Homes]**
+volume is private to its owner by default.
 
     [Alice]
     path = /srv/alice

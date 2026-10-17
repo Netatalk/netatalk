@@ -51,9 +51,9 @@ of either backend.
   Serving AFP volumes over NFS is already risky,
   and placing a database there compounds the risk of corruption.
   Use the **vol dbpath** option to store databases on a local disk
-  if you must use NFS-mounted volumes; a private volume takes a section or
-  preset value only, its own, and a **[Homes]** value names each owner with
-  `$u` under a directory the owners may create in.
+  if you must use NFS-mounted volumes; a private volume takes its own
+  section's value only, and a **[Homes]** value names each owner with `$u`,
+  each owner's directory created beforehand by root, owned by that owner.
 
 The following sections describe the CNID backends included with Netatalk.
 The *sqlite* backend is always built; *mysql* is added at compile time.

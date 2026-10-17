@@ -2088,18 +2088,47 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
 }
 
 /*!
- * @brief Log a private volume's CNID directory that another account owns
+ * @brief Tell whether a private volume refuses a CNID directory it found,
+ *        and log why
  *
- * @param[in] dir    the directory
- * @param[in] owner  the account that owns it
- * @param[in] want   the volume's owner
+ * @param[in] vol  the volume
+ * @param[in] dir  the directory
+ * @param[in] st   the directory's lstat or fstat
+ * @returns true for a symbolic link, the volume's own root, or another
+ *          account's directory
  */
-static void cnid_sqlite_foreign_owner(const char *dir, uid_t owner, uid_t want)
+static bool cnid_sqlite_refused(const struct vol *vol, const char *dir,
+                                const struct stat *st)
 {
-    LOG(log_error, logtype_cnid,
-        "CNID DB directory '%s' is owned by uid %ju, not by the volume's owner "
-        "%ju; fix with: chown -R %ju '%s'",
-        dir, (uintmax_t)owner, (uintmax_t)want, (uintmax_t)want, dir);
+    struct stat root;
+
+    if (S_ISLNK(st->st_mode)) {
+        LOG(log_error, logtype_cnid,
+            "CNID DB directory '%s' is a symbolic link; name the directory "
+            "itself in the volume's 'vol dbpath'", dir);
+        return true;
+    }
+
+    /* made owner-only, the root would close the share, and a root another
+     * account owns would draw a chown of the whole volume */
+    if (stat(vol->v_path, &root) == 0 && root.st_dev == st->st_dev
+            && root.st_ino == st->st_ino) {
+        LOG(log_error, logtype_cnid,
+            "CNID DB directory '%s' is the volume itself; remove the volume's "
+            "'vol dbpath' to keep it in .AppleDB", dir);
+        return true;
+    }
+
+    if (S_ISDIR(st->st_mode) && st->st_uid != vol->v_private_uid) {
+        LOG(log_error, logtype_cnid,
+            "CNID DB directory '%s' is owned by uid %ju, not by the volume's "
+            "owner %ju; if it holds only this volume's state, fix with: "
+            "chown -R %ju '%s'", dir, (uintmax_t)st->st_uid,
+            (uintmax_t)vol->v_private_uid, (uintmax_t)vol->v_private_uid, dir);
+        return true;
+    }
+
+    return false;
 }
 
 /*!
@@ -2155,9 +2184,11 @@ static void cnid_sqlite_report_orphan(const struct vol *vol, const char *dbdir)
  * A private volume's database stays its owner's, with mode 0600 in a 0700
  * directory that the call creates or checks as the calling process, which
  * cnid_open() makes the owner. A shared volume's is shared, with mode 0666 in
- * a 01777 directory that the call creates or checks as root. Neither follows
- * a link. It opens the database with SQLITE_OPEN_NOFOLLOW and checks the -wal
- * and -shm files before and after it turns on WAL.
+ * a 01777 directory that the call creates or checks as root. The directory is
+ * opened O_NOFOLLOW, a private one's path first losing the trailing slashes
+ * that make the open follow a final link. It opens the database with
+ * SQLITE_OPEN_NOFOLLOW and checks the -wal and -shm files before and after it
+ * turns on WAL.
  *
  * The volumes table maps each volume path to its UUID, stamp, and depletion
  * mark. A UUID that differs only in case takes the spelling on disk, and the
@@ -2203,28 +2234,40 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         }
     }
 
-    size_t dirlen = strlen(dirpath);
+    if (priv) {
+        /* a private directory is never a symbolic link */
+        strip_trailing_slashes(dirpath);
+        const char *last = strrchr(dirpath, '/');
 
-    /* a private directory is never a symbolic link, and a trailing slash
-     * would make open() and lstat() follow one */
-    while (priv && dirlen > 1 && dirpath[dirlen - 1] == '/') {
-        dirpath[--dirlen] = '\0';
-    }
-
-    /* Private state is made by its owner, as whom cnid_open() opens it, in a
-     * directory the owner controls; only shared state takes root */
-    if (!priv) {
+        /* a final . or .. would let the open follow the link before it */
+        if (last != NULL
+                && (strcmp(last, "/.") == 0 || strcmp(last, "/..") == 0)) {
+            LOG(log_error, logtype_cnid,
+                "CNID DB directory '%s' ends in . or ..; name the directory "
+                "itself in the volume's 'vol dbpath'", dirpath);
+            errno = EINVAL;
+            EC_FAIL;
+        }
+    } else {
         become_root();
         is_root = true;
     }
 
     if (mkdir(dirpath, priv ? 0700 : 01777) != 0 && errno != EEXIST) {
-        /* private state is the owner's to create: a volume root the owner
-         * cannot write takes a volume-level vol dbpath */
-        LOG(log_error, logtype_cnid,
-            "Failed to create CNID DB directory '%s': %s%s", dirpath,
-            strerror(errno), priv ? "; set a volume-level 'vol dbpath' to a "
-            "directory the volume's owner can create" : "");
+        /* root cures a parent the owner cannot write, or a missing one */
+        if (priv && (errno == EACCES || errno == ENOENT)) {
+            LOG(log_error, logtype_cnid,
+                "Failed to create CNID DB directory '%s': %s; fix with: "
+                "mkdir -p -m 700 '%s' && chown %ju '%s' under parents the "
+                "owner can search, or move it with the volume's 'vol dbpath'",
+                dirpath, strerror(errno), dirpath,
+                (uintmax_t)vol->v_private_uid, dirpath);
+        } else {
+            LOG(log_error, logtype_cnid,
+                "Failed to create CNID DB directory '%s': %s", dirpath,
+                strerror(errno));
+        }
+
         EC_FAIL;
     }
 
@@ -2236,11 +2279,9 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     if (dirfd < 0) {
         int saved_errno = errno;
 
-        /* another account's owner-only directory refuses the open */
-        if (priv && lstat(dirpath, &st) == 0 && S_ISDIR(st.st_mode)
-                && st.st_uid != vol->v_private_uid) {
-            cnid_sqlite_foreign_owner(dirpath, st.st_uid, vol->v_private_uid);
-        } else {
+        /* a link, the root or another account's 0700 directory refuses it */
+        if (!priv || lstat(dirpath, &st) != 0
+                || !cnid_sqlite_refused(vol, dirpath, &st)) {
             LOG(log_error, logtype_cnid,
                 "Can't open CNID DB directory '%s': %s", dirpath,
                 strerror(saved_errno));
@@ -2262,8 +2303,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     }
 
     if (priv) {
-        if (st.st_uid != vol->v_private_uid) {
-            cnid_sqlite_foreign_owner(dirpath, st.st_uid, vol->v_private_uid);
+        if (cnid_sqlite_refused(vol, dirpath, &st)) {
             close(dirfd);
             errno = EPERM;
             EC_FAIL;
@@ -2281,6 +2321,9 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     } else if ((st.st_mode & 01777) != 01777
                && fchmod(dirfd, 01777) != 0) {
         int saved_errno = errno;
+        LOG(log_error, logtype_cnid,
+            "Can't make CNID DB directory '%s' shared: %s", dirpath,
+            strerror(errno));
         close(dirfd);
         errno = saved_errno;
         EC_FAIL;

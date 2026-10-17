@@ -124,7 +124,7 @@ owner_afparg() {
 # config without a [Global] vol dbpath has nowhere for it and is refused before
 # any volume loads: the system afp_voluuid.conf is never written by this mode.
 VOLUUID_CONF=$(afpd_buildinfo afp_voluuid.conf)
-[ -n "$VOLUUID_CONF" ] || fail "afpd -v does not report afp_voluuid.conf"
+[ -n "$VOLUUID_CONF" ] || fail "afpd -V does not report afp_voluuid.conf"
 rm -f "$VOLUUID_CONF"
 write_conf
 su $USER1 -c ": > $LOG1; sed -i '/^vol dbpath =/d' $CONF/afp.conf"
@@ -446,18 +446,18 @@ owner_only_cnid $CNID1 $USER1 \
     || fail "the server did not make widened state owner-only"
 pass "widened state is owner-only again at the server's next open"
 
-# --- the global cnid scheme and spotlight backend are not read for a private
-# volume: sqlite with the cnid search, and the volume creates that state
-# afresh; mysql, for which this container runs no server, would fail the open
+# --- the global cnid scheme is not read for a private volume: sqlite, and the
+# volume creates that state afresh; mysql, for which this container runs no
+# server, would fail the open
 write_conf
-su $USER1 -c "sed -i 's/^cnid scheme = sqlite/cnid scheme = mysql/' $CONF/afp.conf; sed -i '/^\[Global\]/a spotlight backend = xapian' $CONF/afp.conf"
+su $USER1 -c "sed -i 's/^cnid scheme = sqlite/cnid scheme = mysql/' $CONF/afp.conf"
 rm -rf $CNID1
 start_singleuser
 owner_afparg -s files -f FPEnumerateExt > /dev/null \
-    || fail "the volume did not open with another scheme and search backend set"
+    || fail "the volume did not open with another scheme set"
 stop_netatalk $USER1
 owner_only_cnid $CNID1 $USER1 || fail "the volume did not open on its own sqlite state"
-pass "the global scheme and search backend are not read: the volume opens on sqlite"
+pass "the global scheme is not read: the volume opens on sqlite"
 
 # --- foreign-owned CNID state is refused at startup with the fix named: the
 # backend would refuse it at every mount, so the controller judges ownership

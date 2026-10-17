@@ -155,7 +155,7 @@ start_root_netatalk() {
 
 # Open a volume over SRP and run one afparg verb on it: exit 0 when the volume
 # opened and the verb succeeded, 2 when the volume could not be opened, 1 when
-# authentication failed.
+# authentication or the verb failed.
 # $1 user, $2 password, $3 volume, $4 port (default 548), $5 verb (default
 # FPEnumerateExt). One spelling of the client invocation, so a change to the
 # AFP version or the UAM flag is one edit. FPEnumerateExt drives
@@ -203,14 +203,14 @@ owner_only_cnid() {
     return 0
 }
 
-# The value of one `afpd -v` line, by its label ($1, without the colon).
+# The value of one `afpd -V` line, by its label ($1, without the colon).
 # Labels are right-aligned with leading spaces and tab-separated from the
 # value, e.g. "                   afp.conf:<TAB>/etc/netatalk/afp.conf" or
 # "              CNID backends:<TAB>mysql sqlite ". Read from the binary
 # rather than guessed: the testsuite image builds with a non-default prefix.
 afpd_buildinfo() {
     ab_label=$1
-    afpd -v | awk -F'\t' -v k="$ab_label:" 'index($1, k) {print $2; exit}'
+    afpd -V | awk -F'\t' -v k="$ab_label:" 'index($1, k) {print $2; exit}'
     return $?
 }
 

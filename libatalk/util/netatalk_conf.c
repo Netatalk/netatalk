@@ -1532,10 +1532,71 @@ static struct vol *creatvol(AFPObj *obj,
         }
     }
 
+    const bool homes = STRCMP(section, ==, INISEC_HOMES);
+    val = getoption_str(obj->iniconfig, section, "private", preset, NULL);
+
+    if (homes && val != NULL && *val != '\0') {
+        LOG(log_warning, logtype_afpd,
+            "creatvol: [Homes] 'private' takes no name, passing it over");
+        val = NULL;
+    }
+
+    /* under force user every session is one account: the homes are shared */
+    const bool vol_private = homes ? val == NULL && !obj->options.force_user
+                             : val != NULL && *val != '\0';
+    uid_t private_uid = 0;
+
+    if (vol_private) {
+        /* every session would act as one account that is not the owner */
+        if (obj->options.force_user) {
+            LOG(log_error, logtype_afpd,
+                "creatvol: volume \"%s\": a private volume can't be used "
+                "with force user, skipping", name);
+            EC_EXIT_STATUS(0);
+        }
+
+        /* a home is built with its owner's record */
+        const struct passwd *owner = homes ? pwd : getpwnam(val);
+
+        if (owner == NULL) {
+            LOG(log_error, logtype_afpd,
+                "creatvol: volume \"%s\": 'private' user \"%s\" is unknown, "
+                "skipping", name, val);
+            EC_EXIT_STATUS(0);
+        }
+
+        private_uid = owner->pw_uid;
+
+        if (private_uid == 0) {
+            LOG(log_error, logtype_afpd,
+                "creatvol: volume \"%s\": root can't own a private volume, "
+                "skipping", name);
+            EC_EXIT_STATUS(0);
+        }
+
+        /* a load for no account, obj->uid 0, gets every private volume */
+        if (obj->uid != 0 && obj->uid != private_uid) {
+            LOG(log_info, logtype_afpd,
+                "creatvol: volume \"%s\" is private to \"%s\", skipping",
+                name, owner->pw_name);
+            EC_EXIT_STATUS(0);
+        }
+    }
+
+    if ((obj->options.flags & OPTION_SINGLEUSER)
+            && (homes || !vol_private || private_uid != getuid())) {
+        LOG(log_error, logtype_afpd,
+            "creatvol: volume \"%s\": single-user mode serves only volumes "
+            "with 'private' naming the user who started it, skipping", name);
+        EC_EXIT_STATUS(0);
+    }
+
     /* Once volumes are loaded, we never change options again, we just delete em when they're removed from afp.conf */
 
     for (struct vol *vol = Volumes; vol; vol = vol->v_next) {
-        if (STRCMP(name, ==, vol->v_localname) && vol->v_deleted) {
+        /* the same name on another path is another volume */
+        if (STRCMP(name, ==, vol->v_localname)
+                && STRCMP(path, ==, vol->v_path) && vol->v_deleted) {
             /*
              * reloading config, volume still present, nothing else to do,
              * we don't change options for volumes once they're loaded
@@ -1582,7 +1643,7 @@ static struct vol *creatvol(AFPObj *obj,
      * Home volumes are created dynamically at login, so they won't be in the
      * Volumes list yet. We check against [Homes] basedir regex instead.
      */
-    if (STRCMP(section, !=, INISEC_HOMES)) {
+    if (!homes) {
         const char *basedir = getoption_str(obj->iniconfig, INISEC_HOMES,
                                             "basedir regex", NULL, NULL);
 
@@ -1656,60 +1717,6 @@ static struct vol *creatvol(AFPObj *obj,
                 regfree(&basedir_reg);
             }
         }
-    }
-
-    /* private: the volume admits loads for its owner and loads for no
-     * account, obj->uid 0 */
-    const bool homes = STRCMP(section, ==, INISEC_HOMES);
-    bool vol_private = false;
-    uid_t private_uid = 0;
-    val = homes ? NULL
-          : getoption_str(obj->iniconfig, section, "private", preset, NULL);
-
-    if (homes || (val != NULL && *val != '\0')) {
-        /* a home is built with its owner's record */
-        const struct passwd *owner = homes ? pwd : getpwnam(val);
-
-        /* every session would act as one account that is not the owner */
-        if (obj->options.force_user) {
-            LOG(log_error, logtype_afpd,
-                "creatvol: volume \"%s\": a private volume can't be used "
-                "with force user, skipping", name);
-            EC_EXIT_STATUS(0);
-        }
-
-        if (owner == NULL) {
-            LOG(log_error, logtype_afpd,
-                "creatvol: volume \"%s\": 'private' user \"%s\" is unknown, "
-                "skipping", name, val);
-            EC_EXIT_STATUS(0);
-        }
-
-        private_uid = owner->pw_uid;
-
-        if (private_uid == 0) {
-            LOG(log_error, logtype_afpd,
-                "creatvol: volume \"%s\": root can't own a private volume, "
-                "skipping", name);
-            EC_EXIT_STATUS(0);
-        }
-
-        if (obj->uid != 0 && obj->uid != private_uid) {
-            LOG(log_info, logtype_afpd,
-                "creatvol: volume \"%s\" is private to \"%s\", skipping",
-                name, owner->pw_name);
-            EC_EXIT_STATUS(0);
-        }
-
-        vol_private = true;
-    }
-
-    if ((obj->options.flags & OPTION_SINGLEUSER)
-            && (homes || !vol_private || private_uid != getuid())) {
-        LOG(log_error, logtype_afpd,
-            "creatvol: volume \"%s\": single-user mode serves only volumes "
-            "with 'private' naming the user who started it, skipping", name);
-        EC_EXIT_STATUS(0);
     }
 
     /*
@@ -1812,21 +1819,23 @@ static struct vol *creatvol(AFPObj *obj,
         }
 
     /* Not vdgoption_str(): only a [Global] value without a variable gets
-     * the volume name appended */
-    val = getoption_str(obj->iniconfig, section, "vol dbpath", preset, NULL);
+     * the volume name appended; a private volume's directory is its
+     * section's alone */
+    val = getoption_str(obj->iniconfig, section, "vol dbpath",
+                        vol_private ? NULL : preset, NULL);
 
-    /* $u names the account a load is for: a home's owner on every load, so
-     * a home's value carries it, but any account for a volume section */
-    if (vol_private && val != NULL && (strstr(val, "$u") != NULL) != homes) {
+    /* $u names each home's owner; a variable in a volume section can name
+     * the loader rather than the volume's one owner */
+    if (vol_private && val != NULL && *val != '\0'
+            && (homes ? strstr(val, "$u") == NULL : strchr(val, '$') != NULL)) {
         LOG(log_warning, logtype_afpd,
-            "creatvol: volume \"%s\": 'vol dbpath' %s %s $u, using the "
-            "volume's .AppleDB", name, val, homes ? "needs" : "can't take");
+            "creatvol: volume \"%s\": 'vol dbpath' %s %s, using the volume's "
+            ".AppleDB", name, val, homes ? "needs $u" : "takes no variable");
         val = NULL;
     }
 
-    if (val == NULL && vol_private) {
-        /* a private volume keeps its state inside it unless its section
-         * moves it; the resolved volume path takes no variable expansion */
+    if (vol_private && (val == NULL || *val == '\0')) {
+        /* path is already resolved: no volxlate() */
         EC_NULL(dbpath = bformat("%s/.AppleDB", path));
         EC_NULL(volume->v_dbpath = strdup(cfrombstr(dbpath)));
     } else {
@@ -1862,7 +1871,6 @@ static struct vol *creatvol(AFPObj *obj,
                         DEFAULT_CNID_SCHEME);
 
     if (vol_private) {
-        /* a private volume's state is its own sqlite database */
         private_option_warning(obj, section, name, "cnid scheme", "sqlite");
         val = "sqlite";
     }
@@ -2033,7 +2041,6 @@ static struct vol *creatvol(AFPObj *obj,
                         "cnid");
 
     if (vol_private) {
-        /* Finder search on a private volume goes through its own database */
         private_option_warning(obj, section, name, "spotlight backend", "cnid");
         val = "cnid";
     }
@@ -2876,11 +2883,13 @@ int load_charset(struct vol *vol)
 /*!
  * @brief Load the volumes of afp.conf, or reload them after a change
  *
- * An unchanged mtime returns at once unless flags holds LV_FORCE. The call
- * reads afp.conf as root under a read lock, with 1 retry after a second. A
- * failed open or lock leaves the reload state untouched. A reload marks every
- * volume deleted, creates the volumes again, and frees the marked volumes
- * that are not open.
+ * In an AFP session that login() has not named a user for, the call loads
+ * nothing. After a read that parsed the file and dropped no volume, an
+ * unchanged mtime returns at once unless flags holds LV_FORCE. The call reads
+ * afp.conf as root under a read lock, with 1 retry after a second. A failed
+ * open or lock leaves the reload state untouched. A reload marks every volume
+ * deleted, creates the volumes again, and frees the marked volumes that are
+ * not open.
  *
  * Without LV_ALL the volumes follow the session user, and a reload for a user
  * other than root refreshes the groups of the user. With LV_ALL in an AFP
@@ -2888,7 +2897,8 @@ int load_charset(struct vol *vol)
  *
  * @param[in,out] obj    AFP object with the options and the session user
  * @param[in]     flags  LV_ALL to skip the user lookup and the access checks,
- *                       LV_FORCE to reload an unchanged file, or LV_DEFAULT
+ *                       a private volume still following obj->uid, LV_FORCE
+ *                       to reload an unchanged file, or LV_DEFAULT
  * @returns 0, or -1 on error
  */
 int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
@@ -2903,8 +2913,7 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     struct vol         *vol;
     LOG(log_debug, logtype_afpd, "load_afp_conf_vols: BEGIN");
 
-    /* a session's list is its user's, whom login() names; one built before
-     * that would be root's and would stand until afp.conf changes */
+    /* a session's volume list is its user's; login() has not set obj->uid */
     if (IS_AFP_SESSION(obj) && obj->uid == 0) {
         goto EC_CLEANUP;
     }
@@ -2945,7 +2954,7 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
      * under the lock, is what consumes it), so a stale answer costs at
      * most one extra reload cycle -- these calls run per
      * FPGetSrvrParms/FPOpenVol. */
-    if (Volumes && !(flags & LV_FORCE)
+    if (obj->options.volfile.loaded && !(flags & LV_FORCE)
             && stat(obj->options.configfile, &st) == 0
             && st.st_mtime <= obj->options.volfile.mtime) {
         goto EC_CLEANUP;
@@ -2988,7 +2997,8 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     }
 
     if (Volumes) {
-        if (!(flags & LV_FORCE) && !volfile_changed(obj)) {
+        if (!(flags & LV_FORCE) && !volfile_changed(obj)
+                && obj->options.volfile.loaded) {
             goto EC_CLEANUP;
         }
 
@@ -3011,7 +3021,7 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
         }
     } else {
         LOG(log_debug, logtype_afpd, "load_afp_conf_vols: no volumes yet");
-        EC_ZERO_LOG(lstat(obj->options.configfile, &st));
+        EC_ZERO_LOG(stat(obj->options.configfile, &st));
         obj->options.volfile.mtime = st.st_mtime;
     }
 
@@ -3024,6 +3034,8 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     become_root();
     obj->iniconfig = iniparser_load(obj->options.configfile);
     unbecome_root();
+    /* a file that does not parse is read again at the next call */
+    obj->options.volfile.loaded = obj->iniconfig != NULL;
     obj->vols_skipped = 0;
     EC_ZERO_LOG(readvolfile(obj, pwresult));
     struct vol *nextvol, *prevvol;
@@ -3031,6 +3043,12 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
     prevvol = NULL;
 
     while (vol) {
+        /* a dropped volume can hold a path this read skipped, or wait for
+         * its close: the next call reads again */
+        if (vol->v_deleted) {
+            obj->options.volfile.loaded = 0;
+        }
+
         if (vol->v_deleted && !(vol->v_flags & AFPVOL_OPEN)) {
             LOG(log_debug, logtype_afpd, "load_afp_conf_vols: deleted: %s",
                 vol->v_localname);
@@ -3100,6 +3118,7 @@ void unload_volumes(AFPObj *obj)
 
     Volumes = NULL;
     obj->options.volfile.mtime = 0;
+    obj->options.volfile.loaded = 0;
     lastvid = 0;
     have_uservol = 0;
     LOG(log_debug, logtype_afpd, "unload_volumes: END");
@@ -3247,7 +3266,6 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     char *user = NULL;
     char *prw;
     regmatch_t match[1];
-    size_t abspath_len;
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
 
     if (path[0] != '/') {
@@ -3262,15 +3280,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     }
 
     /* path now points to a copy of path in the abspath buffer */
-    /*
-     * Strip trailing slashes
-     */
-    abspath_len = strlen(abspath);
-
-    while (abspath[abspath_len - 1] == '/') {
-        abspath[abspath_len - 1] = 0;
-        abspath_len--;
-    }
+    strip_trailing_slashes(abspath);
 
     for (tmp = Volumes; tmp; tmp = tmp->v_next) { /* (1) */
         size_t v_path_len = strlen(tmp->v_path);
@@ -3472,23 +3482,6 @@ struct vol *getvolbyname(const char *name)
 }
 
 /*!
- * @brief Drop trailing slashes, which make lstat and an O_NOFOLLOW open follow
- * a final symbolic link
- *
- * A lone "/" stays.
- *
- * @param[in,out] path  path to trim
- */
-static void strip_trailing_slashes(char *path)
-{
-    size_t len = strlen(path);
-
-    while (len > 1 && path[len - 1] == '/') {
-        path[--len] = '\0';
-    }
-}
-
-/*!
  * @brief Tell whether a directory is the path of a volume that afp.conf names
  *
  * A single-user server makes its [Global] vol dbpath owner-only, which would
@@ -3549,13 +3542,13 @@ static bool dbpath_is_volume_root(AFPObj *obj, const char *dbpath,
  * afp_signature.conf and afp_voluuid.conf live in the [Global] vol dbpath
  * directory, which the server creates or makes mode 0700. Every other
  * process takes the same paths when that directory is a user's owner-only
- * directory and the caller is root or that user: the serving user's nad and
- * dbd, which carry no --single-user flag, and root's tools run on the user's
- * configuration, so the uuid any of them generates is the one the server
- * reads back, and a root service's own state keeps the built-in paths. A
- * variable in the value cannot expand at parse time, before the session's
- * user and the host name are known. The generate-once, read-back-later code
- * that serves the root service then runs unchanged.
+ * directory and the caller is root or that user: the serving user's nad,
+ * which carries no --single-user flag, and root's nad and dbd run on the
+ * user's configuration, so the uuid any of them generates is the one the
+ * server reads back, and a root service's own state keeps the built-in
+ * paths. A variable in the value cannot expand at parse time, before the
+ * session's user and the host name are known. The generate-once,
+ * read-back-later code that serves the root service then runs unchanged.
  *
  * @param obj         the object being configured; its options take the paths
  * @param singleuser  the server's flag: the directory is required, created
