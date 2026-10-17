@@ -77,7 +77,7 @@ extern int          of_rename(const struct vol *,
                               struct ofork *,
                               struct dir *, const char *,
                               struct dir *, const char *);
-extern int          of_flush(const struct vol *);
+extern int          of_flush(AFPObj *, struct vol *);
 extern void         of_pforkdesc(FILE *);
 extern void         of_log_usage(int level, const char *event);
 extern void         of_log_nfile(const char *name, int err);
@@ -107,7 +107,7 @@ extern int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
 
 
 /* in fork.c */
-extern int          flushfork(struct ofork *);
+extern int          flushfork(AFPObj *, struct ofork *);
 extern int          fork_setmode_deny(int access, int f_rddny, int f_wrdny,
                                       int f_nodny);
 

@@ -635,6 +635,102 @@ int utest_recvfile_counting_arm_fails_nothing(AFPObj *obj, struct vol *vol)
 }
 
 /*!
+ * @brief A payload that lands marks the volume
+ */
+int utest_write_fork_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+        vol->v_root_marked = 0;
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK) {
+            ret = vol->v_root_marked != 0 ? 0 : 1;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief Closing a resource fork a write reached marks the volume as the
+ *        close stamps the fork's modification date
+ */
+int utest_closefork_rsrc_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK) {
+            vol->v_root_marked = 0;
+
+            if (closefork(&rf.obj, rf.refnum[0]) == AFP_OK) {
+                rf.refnum[0] = 0;
+                ret = vol->v_root_marked != 0 ? 0 : 1;
+            }
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief FPFlush marks the volume as it stamps the modification date of a
+ *        resource fork a write reached
+ */
+int utest_flush_rsrc_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK) {
+            vol->v_root_marked = 0;
+
+            if (flushvol(&rf.obj, vol->v_vid) == AFP_OK) {
+                ret = vol->v_root_marked != 0 ? 0 : 1;
+            }
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
  * @brief A write with a TCP urgent byte inside its payload finishes through
  *        recv(), which steps over the byte, and the session stays in step
  */

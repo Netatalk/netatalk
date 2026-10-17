@@ -1482,6 +1482,12 @@ read only = *BOOLEAN* (default: *no*) **(V)**
 
 > Makes the volume read-only for all users. With **ea** unset, the
 auto detection assumes Extended Attribute support and uses **sys**.
+>
+> A volume on a filesystem mounted read-only is reported read-only without
+this option. A volume that only a write shows to be read-only needs it,
+such as one on an NFS export the server makes read-only, or on a read-only
+lofs mount on illumos and Solaris, whose access check and mount flags come
+from the filesystem it mounts.
 
 stat vol = *BOOLEAN* (default: *yes*) **(V)**
 

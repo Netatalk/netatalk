@@ -1058,7 +1058,8 @@ static int fork_error(const struct ofork *ofork, const char *call,
  * 64-bit form needs AFP 3.0. A negative length fails. Shrinking takes a
  * temporary write lock on the cut range, so a conflicting byte lock fails the
  * call with AFPERR_LOCK. The virtual Icon file becomes a real file first. A
- * resource fork change invalidates the cached resource fork data.
+ * resource fork change invalidates the cached resource fork data, and the
+ * request marks the volume.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -1221,6 +1222,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
                 rfork_invalidate_for_ofork(vol, ofork);
             }
 
+            setvoltime(obj, vol);
             return AFPERR_PARAM;
         }
     } else {
@@ -1233,6 +1235,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
         rfork_invalidate_for_ofork(vol, ofork);
     }
 
+    setvoltime(obj, vol);
     return AFP_OK;
 afp_setfork_err:
 
@@ -1932,14 +1935,14 @@ int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
  *
  * Failures of single forks only log, and the reply still reports success.
  *
- * @param[in]     obj      session object, unused
+ * @param[in]     obj      session object
  * @param[in]     ibuf     request block
  * @param[in]     ibuflen  request block length, unused
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
  * @returns AFP_OK, or AFPERR_PARAM for an unknown volume
  */
-int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
+int afp_flush(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
               size_t *rbuflen)
 {
     struct vol *vol;
@@ -1952,7 +1955,7 @@ int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         return AFPERR_PARAM;
     }
 
-    of_flush(vol);
+    of_flush(obj, vol);
     return AFP_OK;
 }
 
@@ -1961,14 +1964,14 @@ int afp_flush(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  *
  * A flush failure only logs, and the reply still reports success.
  *
- * @param[in]     obj      session object, unused
+ * @param[in]     obj      session object
  * @param[in]     ibuf     request block
  * @param[in]     ibuflen  request block length, unused
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
  * @returns AFP_OK, or AFPERR_PARAM for an unknown fork reference
  */
-int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_flushfork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                   char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork    *ofork;
@@ -1988,7 +1991,7 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     LOG(log_debug, logtype_afpd, "afp_flushfork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
-    if (flushfork(ofork) < 0) {
+    if (flushfork(obj, ofork) < 0) {
         LOG(log_error, logtype_afpd, "afp_flushfork(%s): %s", of_name(ofork),
             strerror(errno));
     }
@@ -2003,7 +2006,7 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
  * macOS fsync behaves unlike the fsync of other platforms.
  * @sa http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf
  *
- * @param[in]     obj      session object, unused
+ * @param[in]     obj      session object
  * @param[in]     ibuf     request block
  * @param[in]     ibuflen  request block length, unused
  * @param[out]    rbuf     reply block, unused
@@ -2011,7 +2014,7 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
  * @returns AFP_OK, AFPERR_PARAM for an unknown fork reference, or AFPERR_MISC
  *          when the flush fails
  */
-int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_syncfork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
 {
     struct ofork        *ofork;
@@ -2032,7 +2035,7 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     LOG(log_debug, logtype_afpd, "afp_syncfork(fork: %s)",
         (ofork->of_flags & AFPFORK_DATA) ? "d" : "r");
 
-    if (flushfork(ofork) < 0) {
+    if (flushfork(obj, ofork) < 0) {
         LOG(log_error, logtype_afpd, "flushfork(%s): %s", of_name(ofork),
             strerror(errno));
         return AFPERR_MISC;
@@ -2046,13 +2049,14 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
  *
  * The data fork gets an fsync. For a resource fork the call rereads the
  * resource fork length and stamps the modification date of a dirty fork. It
- * then writes the header and syncs the metadata file. Virtual forks need
- * nothing.
+ * then writes the header and syncs the metadata file; a written header
+ * marks the volume changed. Virtual forks need nothing.
  *
+ * @param[in]     obj    session object
  * @param[in,out] ofork  open fork
  * @returns 0, or -1 when an fsync or the header write failed
  */
-int flushfork(struct ofork *ofork)
+int flushfork(AFPObj *obj, struct ofork *ofork)
 {
     struct timeval tv;
     int err = 0, doflush = 0;
@@ -2082,8 +2086,15 @@ int flushfork(struct ofork *ofork)
         }
 
         /* flush the header */
-        if (doflush && ad_flush(ofork->of_ad) < 0) {
-            err = -1;
+        if (doflush) {
+            if (ad_flush(ofork->of_ad) < 0) {
+                err = -1;
+            } else {
+                /* the mark's own calls leave the fsync error for the log */
+                int saved = errno;
+                setvoltime(obj, ofork->of_vol);
+                errno = saved;
+            }
         }
 
         if (fsync(ad_reso_fileno(ofork->of_ad)) < 0) {
@@ -2116,7 +2127,10 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                   size_t *rbuflen)
 {
     struct ofork    *ofork;
+    struct vol      *vol;
     uint16_t       ofrefnum;
+    int dated;
+    int err = AFP_OK;
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
@@ -2135,14 +2149,22 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     LOG(log_debug, logtype_afpd, "afp_closefork(fork: %" PRIu16 " [%s])",
         ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "rsrc");
+    vol = ofork->of_vol;
+    dated = (ofork->of_flags & AFPFORK_RSRC)
+            && (ofork->of_flags & AFPFORK_DIRTY);
 
     if (of_closefork(obj, ofork) < 0) {
         LOG(log_error, logtype_afpd, "afp_closefork: of_closefork: %s",
             strerror(errno));
-        return AFPERR_MISC;
+        err = AFPERR_MISC;
     }
 
-    return AFP_OK;
+    /* the close stamped a written resource fork's modification date */
+    if (dated) {
+        setvoltime(obj, vol);
+    }
+
+    return err;
 }
 
 
@@ -2187,7 +2209,7 @@ static int write_file(struct ofork *ofork, int eid, off_t *offset,
 }
 
 /*!
- * @brief Flag a fork that a write reached
+ * @brief Flag a fork that a write reached and mark its volume changed
  *
  * A fork with open metadata turns dirty, so the next flush or close stamps
  * its modification date. A resource fork write also invalidates the resource
@@ -2198,8 +2220,10 @@ static int write_file(struct ofork *ofork, int eid, off_t *offset,
  * @param[in,out] ofork  open fork
  * @param[in]     eid    ADEID_DFORK or ADEID_RFORK
  */
-static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
+static void write_mark(AFPObj *obj, struct ofork *ofork, int eid)
 {
+    setvoltime(obj, ofork->of_vol);
+
     if (ad_meta_fileno(ofork->of_ad) != -1) {
         ofork->of_flags |= AFPFORK_DIRTY;
     }

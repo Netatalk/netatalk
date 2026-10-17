@@ -595,6 +595,34 @@ const char *tmpdir(void)
     return netatalk_tmpdir;
 }
 
+#if defined(CLOCK_REALTIME_COARSE)
+#define COARSE_CLOCK CLOCK_REALTIME_COARSE
+#elif defined(CLOCK_REALTIME_FAST)
+#define COARSE_CLOCK CLOCK_REALTIME_FAST
+#else
+#define COARSE_CLOCK CLOCK_REALTIME
+#endif
+
+/*!
+ * @brief The current second, from the cheapest clock the platform has
+ *
+ * The coarse or fast realtime clock, where the platform names one, comes
+ * from memory the kernel shares; CLOCK_REALTIME otherwise costs no more
+ * than time(), and on illumos avoids the system call time() makes.
+ *
+ * @returns seconds since the epoch
+ */
+time_t coarse_time(void)
+{
+    struct timespec ts;
+
+    if (clock_gettime(COARSE_CLOCK, &ts) != 0) {
+        return time(NULL);
+    }
+
+    return ts.tv_sec;
+}
+
 /*********************************************************************************
  * chdir(), chmod(), chown(), stat() wrappers taking an additional option.
  * Currently the only used options are O_NOFOLLOW, used to switch between symlink

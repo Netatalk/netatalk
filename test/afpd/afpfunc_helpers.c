@@ -22,13 +22,16 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -43,10 +46,12 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "acls.h"
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
 #include "dircache.h"
 #include "directory.h"
+#include "extattrs.h"
 #include "file.h"
 #include "filedir.h"
 #include "fork.h"
@@ -99,6 +104,33 @@ static int push_path(char **bufp, const char *name)
     }
 
     *bufp += len;
+    return len;
+}
+
+/*! @brief Step a request pointer to an even address, where afpd reads words */
+static void pad_even(char **bufp, int *len)
+{
+    char *p = *bufp;
+
+    if ((uintptr_t)p & 1) {
+        *bufp = p + 1;
+        (*len)++;
+    }
+}
+
+/*!
+ * @brief Push an EA name: a pad byte when its length word would start at
+ *        an odd address, the length, the bytes
+ */
+static int push_eaname(char **bufp, const char *attr)
+{
+    uint16_t attrlen = strlen(attr);
+    char *p = *bufp;
+    int len = 0;
+    pad_even(&p, &len);
+    PUSHVAL(p, uint16_t, htons(attrlen), len);
+    PUSHBUF(p, attr, attrlen, len);
+    *bufp = p;
     return len;
 }
 
@@ -631,4 +663,199 @@ int closefork(AFPObj *obj, uint16_t refnum)
     static char buf[4] = { 0 };
     memcpy(buf + 2, &refnum, sizeof(refnum));
     return afp_closefork(obj, buf, sizeof(buf), rbuf, &rbuflen);
+}
+
+/*!
+ * @brief Touch a file until its modification time reaches a new second
+ *
+ * File times come from the kernel's coarse clock, which trails time().
+ *
+ * @param[in] path  file to touch
+ *
+ * @returns 0, or -1 if the file cannot be touched or its modification time
+ *          does not move within five seconds
+ */
+int next_second(const char *path)
+{
+    const struct timespec tick = { .tv_sec = 0, .tv_nsec = 10 * 1000 * 1000 };
+    const time_t deadline = time(NULL) + 5;
+    struct stat st;
+    time_t start = -1;
+
+    while (time(NULL) < deadline && utimensat(AT_FDCWD, path, NULL, 0) == 0
+            && stat(path, &st) == 0) {
+        if (start == -1) {
+            start = st.st_mtime;
+        } else if (st.st_mtime != start) {
+            return 0;
+        }
+
+        nanosleep(&tick, NULL);
+    }
+
+    return -1;
+}
+
+/*!
+ * @brief Build the request FPSetDirParms and FPSetACL share: pad, volume,
+ *        directory, bitmap, path, then len bytes of parameters from an
+ *        even address
+ *
+ * @returns the request's length
+ */
+static int params_request(char *buf, uint16_t vid, cnid_t did,
+                          const char *name, uint16_t bitmap,
+                          const void *params, size_t len)
+{
+    char *p = buf;
+    int reqlen = 0;
+    ADD(p, reqlen, 2);
+    PUSHVAL(p, uint16_t, vid, reqlen);
+    PUSHVAL(p, cnid_t, did, reqlen);
+    PUSHVAL(p, uint16_t, htons(bitmap), reqlen);
+    reqlen += push_path(&p, name);
+    pad_even(&p, &reqlen);
+
+    if (len > 0) {
+        PUSHBUF(p, params, len, reqlen);
+    }
+
+    return reqlen;
+}
+
+/*!
+ * @brief FPSetDirParms of name under did: bitmap, then len bytes of
+ *        parameters
+ */
+int setdirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                uint16_t bitmap, const void *params, size_t len)
+{
+    static char buf[256] = { 0 };
+    int reqlen = params_request(buf, vid, did, name, bitmap, params, len);
+    return afp_setdirparams(obj, buf, reqlen, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPGetExtAttr of attr on name under did, the reply into reply
+ */
+int getextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+               const char *attr, uint32_t maxreply, char *reply,
+               size_t *replylen)
+{
+    static char buf[1024] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    /* bitmap, offset (always 0), reqcount (always -1), maxreply */
+    PUSHVAL(p, uint16_t, 0, len);
+    PUSHVAL(p, int64_t, 0, len);
+    PUSHVAL(p, int64_t, -1, len);
+    PUSHVAL(p, uint32_t, htonl(maxreply), len);
+    len += push_path(&p, name);
+    len += push_eaname(&p, attr);
+    return afp_getextattr(obj, buf, len, reply, replylen);
+}
+
+/*!
+ * @brief FPSetExtAttr of attr on name under did to len bytes of value,
+ *        up to MAX_EA_SIZE
+ */
+int setextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+               const char *attr, const char *value, uint32_t len)
+{
+    static char buf[8192] = { 0 };
+    char *p = buf;
+    int reqlen = 0;
+    ADD(p, reqlen, 2);
+    PUSHVAL(p, uint16_t, vid, reqlen);
+    PUSHVAL(p, cnid_t, did, reqlen);
+    /* bitmap, offset (always 0) */
+    PUSHVAL(p, uint16_t, 0, reqlen);
+    PUSHVAL(p, int64_t, 0, reqlen);
+    reqlen += push_path(&p, name);
+    reqlen += push_eaname(&p, attr);
+    PUSHVAL(p, uint32_t, htonl(len), reqlen);
+    PUSHBUF(p, value, len, reqlen);
+    return afp_setextattr(obj, buf, reqlen, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPRemoveExtAttr of attr on name under did
+ */
+int remextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+               const char *attr)
+{
+    static char buf[1024] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    /* bitmap */
+    PUSHVAL(p, uint16_t, 0, len);
+    len += push_path(&p, name);
+    len += push_eaname(&p, attr);
+    return afp_remextattr(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPSetForkParms setting the length of refnum's fork, its data or
+ *        resource fork as opened
+ */
+int setforkparams(AFPObj *obj, uint16_t refnum, uint32_t len)
+{
+    static char buf[10] = { 0 };
+    const struct ofork *of = of_find(refnum);
+    uint16_t bitmap = (of && (of->of_flags & AFPFORK_RSRC))
+                      ? htons(1 << FILPBIT_RFLEN) : htons(1 << FILPBIT_DFLEN);
+    uint32_t len_be = htonl(len);
+    memcpy(buf + 2, &refnum, sizeof(refnum));
+    memcpy(buf + 4, &bitmap, sizeof(bitmap));
+    memcpy(buf + 6, &len_be, sizeof(len_be));
+    return afp_setforkparams(obj, buf, sizeof(buf), rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPExchangeFiles of name1 under sid with name2 under did
+ */
+int exchangefiles(AFPObj *obj, uint16_t vid, cnid_t sid, cnid_t did,
+                  const char *name1, const char *name2)
+{
+    static char buf[256] = { 0 };
+    char *p = buf;
+    int len = 0;
+    /* command byte, then a pad byte */
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, sid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    len += push_path(&p, name1);
+    len += push_path(&p, name2);
+    return afp_exchangefiles(obj, buf, len, rbuf, &rbuflen);
+}
+
+#ifdef HAVE_ACLS
+/*!
+ * @brief FPSetACL on name under did: bitmap, then len bytes of UUIDs and
+ *        ACL
+ */
+int setacl(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+           uint16_t bitmap, const void *body, size_t len)
+{
+    static char buf[256] = { 0 };
+    int reqlen = params_request(buf, vid, did, name, bitmap, body, len);
+    return afp_setacl(obj, buf, reqlen, rbuf, &rbuflen);
+}
+#endif /* HAVE_ACLS */
+
+/*!
+ * @brief FPFlush of the forks open on volume vid
+ */
+int flushvol(AFPObj *obj, uint16_t vid)
+{
+    static char buf[4] = { 0 };
+    memcpy(buf + 2, &vid, sizeof(vid));
+    return afp_flush(obj, buf, sizeof(buf), rbuf, &rbuflen);
 }

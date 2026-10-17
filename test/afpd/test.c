@@ -72,6 +72,7 @@
 #include "subtests_recvfile.h"
 #include "subtests_sendfile.h"
 #include "subtests_veto.h"
+#include "subtests_volpolls.h"
 #ifndef NO_DDP
 #include "subtests_atp.h"
 #endif /* NO_DDP */
@@ -3331,6 +3332,64 @@ int main(int argc, char *argv[])
                      "FPRead: AppleTalk clears the range it locked");
     TEST_int(utest_symlink_read_from_offset(&obj, vol), 0,
              "FPRead: a symlink reads from the offset asked for");
+    TEST_int(utest_volpoll_stamp_nanoseconds(vol), 0,
+             "atalk_stat_mtime_timespec: the root's mtime keeps nanoseconds");
+    TEST_int(utest_volpoll_probe_keeps_mtime(&obj, vol), 0,
+             "FPGetVolParms: the read-only probe leaves the root's mtime");
+    TEST_int_or_skip(utest_volpoll_probe_reports_ro(&obj, vol), 0,
+                     "FPGetVolParms: EROFS is read only, EACCES is not");
+    TEST_int_or_skip(utest_volpoll_probe_mount_ro(&obj, vol), 0,
+                     "FPGetVolParms: the mount flag reports read only");
+    TEST_int_or_skip(utest_volpoll_mark_once_a_second(&obj, vol), 0,
+                     "setvoltime: the root's mtime is written once a second");
+    TEST_int(utest_volpoll_foreign_mark_announced(&obj, vol), 0,
+             "setvoltime: another session's mark reaches the next poll");
+    TEST_int_or_skip(utest_volpoll_foreign_mark_same_second(&obj, vol), 0,
+                     "setvoltime: a same-second mark reaches the next poll");
+    TEST_int_or_skip(utest_volpoll_quota_cached(&obj, vol), 0,
+                     "getvolspace: a quota answer is reused for ten seconds");
+    TEST_int_or_skip(utest_volpoll_fast_path_no_passwd(&obj), 0,
+                     "load_afp_conf_vols: the fast path skips getpwuid_r");
+    TEST_int_or_skip(utest_volpoll_srvrparms_mode_first(&obj, vol), 0,
+                     "FPGetSrvrParms: granting mode bits skip the ACL read");
+    TEST_int(utest_volpoll_name_unencodable(&obj, vol), 0,
+             "FPGetVolParms: an unencodable volume name fails cleanly");
+    TEST_int(utest_volpoll_srvrparms_cap(&obj), 0,
+             "FPGetSrvrParms: the volume list stops at the reply cap");
+    TEST_int(utest_volpoll_ea_name_not_utf8(&obj, vol), 0,
+             "EA requests: a name that is not UTF-8 fails with kFPParamErr");
+    TEST_int(utest_volpoll_volname_not_utf8(&obj), 0,
+             "FPOpenVol: a volume name that is not UTF-8 fails");
+    TEST_int(utest_volpoll_volname_from_start(&obj), 0,
+             "FPOpenVol: the name converts into the start of its buffer");
+    TEST_int(utest_volpoll_unwritten_unmarked(&obj, vol), 0,
+             "FPOpenFork: an unwritten open and close mark nothing");
+    TEST_int(utest_volpoll_mark_setforkparams(&obj, vol), 0,
+             "FPSetForkParms: a length change marks the volume");
+    TEST_int(utest_volpoll_mark_exchangefiles(&obj, vol), 0,
+             "FPExchangeFiles: an exchange marks the volume");
+    TEST_int_or_skip(volsys ? utest_volpoll_mark_setextattr(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "FPSetExtAttr: setting an EA marks the volume");
+    TEST_int_or_skip(volsys ? utest_volpoll_mark_remextattr(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "FPRemoveExtAttr: removing an EA marks the volume");
+    TEST_int(utest_volpoll_mark_setvolparms(&obj, vol), 0,
+             "FPSetVolParms: setting the backup date marks the volume");
+    TEST_int_or_skip(utest_volpoll_setvolparms_unwritten(&obj, vol), 0,
+                     "FPSetVolParms: a backup date not written fails");
+    TEST_int_or_skip(utest_volpoll_mark_setacl(&obj, vol), 0,
+                     "FPSetACL: removing an ACL marks the volume");
+    TEST_int_or_skip(utest_volpoll_setacl_group_uuid(&obj, vol), 0,
+                     "FPSetACL: the ACL follows a lone group UUID");
+    TEST_int(utest_volpoll_readonly_refused(&obj, vol), 0,
+             "read only: EA and ACL changes fail with kFPVolLocked");
+    TEST_int_or_skip(utest_write_fork_marks_volume(&obj, vol), 0,
+                     "FPWrite: a payload that lands marks the volume");
+    TEST_int_or_skip(utest_closefork_rsrc_marks_volume(&obj, vol), 0,
+                     "FPCloseFork: a written rfork's close marks the volume");
+    TEST_int_or_skip(utest_flush_rsrc_marks_volume(&obj, vol), 0,
+                     "FPFlush: a written rfork's flush marks the volume");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

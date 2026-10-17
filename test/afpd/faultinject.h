@@ -98,6 +98,14 @@ struct fault_inject {
     struct fi_call sendfile;
     int sendfile_fake;      /*!< a sendfile() reports its count, moving none */
     int sendfile_eof_einval; /*!< a sendfile() at the file's end: EINVAL */
+    int statvfs_rdonly;
+    int access_armed;
+    int access_fail_after;
+    int access_errno;
+    int utime_watch;
+    int utime_calls;
+    int acl_get_file_watch;
+    int acl_get_file_calls;
 };
 
 extern struct fault_inject fi;
