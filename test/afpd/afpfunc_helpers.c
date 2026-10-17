@@ -43,6 +43,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "acls.h"
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
 #include "dircache.h"
@@ -121,7 +122,20 @@ char **cnamewrap(const char *name)
     return &p;
 }
 
-int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
+/*!
+ * @brief FPGetFileDirParms for name under did with the given bitmaps
+ *
+ * @param[in] obj      the test session
+ * @param[in] vid      the open volume
+ * @param[in] did      the parent folder
+ * @param[in] name     the object, "" for the folder itself
+ * @param[in] fbitmap  the file bitmap
+ * @param[in] dbitmap  the directory bitmap
+ * @returns the AFP result
+ */
+int getfiledirparms_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,
+                           const char *name, uint16_t fbitmap,
+                           uint16_t dbitmap)
 {
     static char buf[256] = { 0 };
     char *p = buf;
@@ -129,10 +143,26 @@ int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     ADD(p, len, 2);
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
-    PUSHVAL(p, uint16_t, htons(FILPBIT_FNUM | FILPBIT_PDINFO), len);
-    PUSHVAL(p, uint16_t, htons(DIRPBIT_DID | DIRPBIT_PDINFO), len);
+    PUSHVAL(p, uint16_t, htons(fbitmap), len);
+    PUSHVAL(p, uint16_t, htons(dbitmap), len);
     len += push_path(&p, name);
     return afp_getfildirparams(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPGetFileDirParms for name under did, asking for the CNID and name
+ *
+ * @param[in] obj   the test session
+ * @param[in] vid   the open volume
+ * @param[in] did   the parent folder
+ * @param[in] name  the object
+ * @returns the AFP result
+ */
+int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
+{
+    return getfiledirparms_bitmap(obj, vid, did, name,
+                                  (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDINFO),
+                                  (1 << DIRPBIT_DID) | (1 << DIRPBIT_PDINFO));
 }
 
 int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
@@ -171,22 +201,55 @@ int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     return afp_delete(obj, buf, len, rbuf, &rbuflen);
 }
 
-int enumerate(AFPObj *obj, uint16_t vid, cnid_t did)
+/*!
+ * @brief FPEnumerateExt2 of did with the given bitmaps and range
+ *
+ * @param[in] obj      the test session
+ * @param[in] vid      the open volume
+ * @param[in] did      the folder to list
+ * @param[in] fbitmap  the file bitmap
+ * @param[in] dbitmap  the directory bitmap
+ * @param[in] sindex   the first entry, 1-based
+ * @param[in] reqcnt   the number of entries asked for
+ * @returns the AFP result
+ */
+int enumerate_range(AFPObj *obj, uint16_t vid, cnid_t did, uint16_t fbitmap,
+                    uint16_t dbitmap, uint32_t sindex, uint16_t reqcnt)
 {
     static char buf[256] = { 0 };
     char *p = buf;
     int len = 0;
-    int ret;
     ADD(p, len, 2);
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
-    PUSHVAL(p, uint16_t, htons(FILPBIT_PDID | FILPBIT_FNUM | FILPBIT_PDINFO), len);
-    PUSHVAL(p, uint16_t, htons(DIRPBIT_PDID | DIRPBIT_DID | DIRPBIT_PDINFO), len);
-    PUSHVAL(p, uint16_t, htons(20), len);       /* reqcount */
-    PUSHVAL(p, uint32_t, htonl(1), len);        /* startindex */
-    PUSHVAL(p, uint32_t, htonl(rbufsize), len); /* max replysize */
+    PUSHVAL(p, uint16_t, htons(fbitmap), len);
+    PUSHVAL(p, uint16_t, htons(dbitmap), len);
+    PUSHVAL(p, uint16_t, htons(reqcnt), len);
+    PUSHVAL(p, uint32_t, htonl(sindex), len);
+    PUSHVAL(p, uint32_t, htonl(rbufsize), len);
     len += push_path(&p, "");
-    ret = afp_enumerate_ext2(obj, buf, len, rbuf, &rbuflen);
+    /* enumerate() reads *rbuflen as the reply buffer's capacity */
+    rbuflen = rbufsize;
+    return afp_enumerate_ext2(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPEnumerateExt2 of the first twenty entries of did, asking for the
+ *        parent, CNID and name of each
+ *
+ * @param[in] obj  the test session
+ * @param[in] vid  the open volume
+ * @param[in] did  the folder to list
+ * @returns 0 when the listing answered, with or without entries, else -1
+ */
+int enumerate(AFPObj *obj, uint16_t vid, cnid_t did)
+{
+    int ret = enumerate_range(obj, vid, did,
+                              (1 << FILPBIT_PDID) | (1 << FILPBIT_FNUM) |
+                              (1 << FILPBIT_PDINFO),
+                              (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                              (1 << DIRPBIT_PDINFO),
+                              1, 20);
 
     if (ret != AFPERR_NOOBJ && ret != AFP_OK) {
         return -1;
@@ -631,4 +694,59 @@ int closefork(AFPObj *obj, uint16_t refnum)
     static char buf[4] = { 0 };
     memcpy(buf + 2, &refnum, sizeof(refnum));
     return afp_closefork(obj, buf, sizeof(buf), rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPAccess: does the session's user hold rights on name under did?
+ *
+ * The UUID field stays zero: check_acl_access() never reads it, so both ACL
+ * paths take the user from obj.
+ *
+ * @param[in] obj     the test session
+ * @param[in] vid     the open volume
+ * @param[in] did     the parent folder
+ * @param[in] name    the object, "" for the folder itself
+ * @param[in] rights  the Darwin rights asked for
+ * @returns the AFP result; -1 where no ACL can be read, which a build
+ *          without ACL support answers for every request
+ */
+int checkaccess(AFPObj *obj _U_, uint16_t vid _U_, cnid_t did _U_,
+                const char *name _U_, uint32_t rights _U_)
+{
+#ifdef HAVE_ACLS
+    static char buf[1024] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    /* bitmap, UUID */
+    PUSHVAL(p, uint16_t, 0, len);
+    ADD(p, len, UUID_BINSIZE);
+    PUSHVAL(p, uint32_t, htonl(rights), len);
+    len += push_path(&p, name);
+    return afp_access(obj, buf, len, rbuf, &rbuflen);
+#else
+    return -1;
+#endif
+}
+
+/*!
+ * @brief FPResolveID: the parameters of the file a CNID names
+ *
+ * @param[in] obj   the test session
+ * @param[in] vid   the open volume
+ * @param[in] cnid  the file's ID
+ * @returns the AFP result
+ */
+int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid)
+{
+    static char buf[256] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, cnid, len);
+    PUSHVAL(p, uint16_t, htons(1 << FILPBIT_FNUM), len);
+    return afp_resolveid(obj, buf, len, rbuf, &rbuflen);
 }

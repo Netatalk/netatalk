@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  * Credits; Based on work by Netatalk contributors
  *
  * This program is free software; you can redistribute it and/or modify
@@ -370,8 +370,7 @@ void display_dircache_statistics(void)
         return;
     }
 
-    /* Search for each dircache statistics type separately.
-     * The server logs three stat lines: ARC (or LRU), and AD. */
+    /* each dircache statistics line is found by its label */
     printf("\nDircache Statistics (%s):\n", log_file_path);
     printf("------------------------------------------------------------------\n");
     /* Try ARC first, fall back to LRU */
@@ -383,13 +382,15 @@ void display_dircache_statistics(void)
 
     char *ad_line = find_dircache_stats_line("dircache statistics (AD)");
     char *hints_line = find_dircache_stats_line("dircache statistics (hints)");
+    char *offcnt_line =
+        find_dircache_stats_line("dircache statistics (offcnt)");
     char *ghost_line = find_dircache_stats_line("ARC ghost performance");
     char *table_line = find_dircache_stats_line("ARC table state");
     char *adapt_line = find_dircache_stats_line("ARC adaptation");
     char *ops_line = find_dircache_stats_line("ARC operations");
     /* Print all found stats lines */
     char *lines[] = { stats_line, ghost_line, table_line, adapt_line,
-                      ops_line, hints_line, ad_line
+                      ops_line, hints_line, ad_line, offcnt_line
                     };
     int num_lines = sizeof(lines) / sizeof(lines[0]);
     int found_any = 0;

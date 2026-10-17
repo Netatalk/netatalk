@@ -113,10 +113,10 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
     cnid_t      d_pdid;              /*!< CNID of parent directory */
     cnid_t      d_did;               /*!< CNID of directory */
     uint32_t    d_offcnt;            /*!< offspring count */
-    uint32_t    d_rights_cache;      /*!< cached rights combined from mode
-                                      * and possible ACL. Validate
-                                      * dcache_ctime == st_ctime before use!
-                                      * Value 0xffffffff indicates invalid/unset. */
+    uint32_t    d_rights_cache;      /*!< cached rights from mode and ACL,
+                                      * valid while dcache_ino and
+                                      * dcache_ctime match the disk;
+                                      * 0xffffffff = unset */
     mode_t      dcache_mode;         /*!< st_mode: file type + permissions */
     uid_t       dcache_uid;          /*!< st_uid: owner user ID */
     gid_t       dcache_gid;          /*!< st_gid: owner group ID */

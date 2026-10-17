@@ -52,9 +52,11 @@
 
 /* Dircache modify flags — bitmask for selective field updates in dir_modify() */
 #define DCMOD_PATH   (1 << 0)  /*!< Identity/navigation: d_pdid, names, d_fullpath */
-#define DCMOD_STAT   (1 << 1)  /*!< Stat cache: dcache_ctime/ino/mode/mtime/uid/gid/size */
-#define DCMOD_AD     (1 << 2)  /*!< AD cache: finderinfo/filedatesi/afpfilei/rlen (Phase 2) */
-#define DCMOD_AD_INV (1 << 3)  /*!< AD invalidate: zero AD fields, set rlen = -1 (Phase 2) */
+#define DCMOD_STAT   (1 << 1)  /*!< Stat cache: dcache_ctime/ino/mode/mtime/uid/gid/size;
+                                *   a change drops d_rights_cache */
+#define DCMOD_AD     (1 << 2)  /*!< AD cache: finderinfo/filedatesi/afpfilei/rlen */
+#define DCMOD_AD_INV (1 << 3)  /*!< AD invalidate: zero AD fields, set rlen = -1;
+                                *   with DCMOD_STAT drops d_rights_cache */
 #define DCMOD_NO_PROMOTE (1 << 4)  /* Skip ARC promotion (cross-process hints) */
 
 /*!
@@ -112,6 +114,17 @@ struct maccess {
 #define	AR_UWRITE	(1<<2)
 #define	AR_UOWN		(1<<7)
 
+struct offcnt_stats {
+    unsigned long long requests;  /*!< DIRPBIT_OFFCNT answered */
+    unsigned long long cached;    /*!< served from the entry */
+    unsigned long long first;     /*!< walked: never counted */
+    unsigned long long older;     /*!< walked: stat ctime behind the count's */
+    unsigned long long confirmed; /*!< walked: the count held stood */
+    unsigned long long changed;   /*!< walked: the count held was wrong */
+    unsigned long long failed;    /*!< walk refused: unreadable folder */
+    unsigned long long entries;   /*!< visible entries the walks counted */
+};
+
 extern q_t *invalid_dircache_entries;
 
 extern void        dir_remove_and_free(const struct vol *, struct dir *);
@@ -130,6 +143,8 @@ extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *,
                             int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir,
                               const struct dir_modify_args *args);
+extern void        dir_stat_refresh(const struct vol *vol, struct dir *dir,
+                                    struct stat *st);
 extern int         dir_remove(const struct vol *vol, struct dir *dir,
                               int report_invalid);
 extern struct dir  *dirlookup(const struct vol *, cnid_t);
@@ -149,9 +164,11 @@ extern int         setdirparams(struct vol *, struct path *, uint16_t, char *);
 extern int         renamedir(struct vol *, int, char *, char *, struct dir *,
                              char *);
 extern int         path_error(struct path *, int error);
-extern void        setdiroffcnt(struct dir *dir, struct stat *st,
-                                uint32_t count);
+extern void        setdiroffcnt(const struct vol *vol, struct dir *dir,
+                                struct stat *st, uint32_t count);
 extern int         dirreenumerate(struct dir *dir, struct stat *st);
+extern void        offcnt_stats_get(struct offcnt_stats *out);
+extern void        offcnt_log_stats(const char *username);
 extern int         for_each_dirent(const struct vol *, char *, dir_loop,
                                    void *);
 extern int         check_access(const AFPObj *obj, struct vol *, char *name,

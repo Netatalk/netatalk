@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -353,7 +354,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             }
         }
 
-        setdiroffcnt(curdir, &o_path->st,  ret);
+        setdiroffcnt(vol, curdir, &o_path->st, ret);
         *sd.sd_last = 0;
         sd.sd_last = sd.sd_buf;
         sd.sd_sindex = 1;

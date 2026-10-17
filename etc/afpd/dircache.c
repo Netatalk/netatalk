@@ -2629,6 +2629,7 @@ void log_dircache_stat(void)
         "dircache statistics (AD): (user: %s) hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
         username, ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
         ad_hit_ratio);
+    offcnt_log_stats(username);
 
     /* Tier 2: Resource Fork data cache statistics — only when enabled */
     if (rfork_cache_budget > 0) {

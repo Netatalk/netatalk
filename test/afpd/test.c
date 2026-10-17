@@ -68,6 +68,7 @@
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
 #include "subtests_lock.h"
+#include "subtests_offcnt.h"
 #include "subtests_pfd.h"
 #include "subtests_recvfile.h"
 #include "subtests_sendfile.h"
@@ -3086,6 +3087,8 @@ int main(int argc, char *argv[])
              "dircache: a file expunging curdir hands curdir to the volume root");
     TEST_int(test010_full_cache_accepts_adds(vol, 8192), 0,
              "dircache: a full cache keeps accepting inserts");
+    TEST_int(test011_stat_refresh_drops_rights(vol), 0,
+             "dircache: a stat refresh with a new ctime drops cached rights");
     /* pfd cache: strict ostat equivalence (quiescent), and the
      * divergence window — probe bound + three-way sync-check no-thrash */
     TEST_int(test_pfd_ostat_equivalence(vol), 0,
@@ -3331,6 +3334,31 @@ int main(int argc, char *argv[])
                      "FPRead: AppleTalk clears the range it locked");
     TEST_int(utest_symlink_read_from_offset(&obj, vol), 0,
              "FPRead: a symlink reads from the offset asked for");
+    TEST_int(utest_offcnt_stat_causes(&obj, vid), 0,
+             "offspring count: each walk is attributed to one cause");
+    TEST_int(utest_offcnt_hard_create_existing(&obj, vid), 0,
+             "offspring count: hard create over an existing file adds nothing");
+    TEST_int_or_skip(volsys
+                     ? utest_offcnt_hard_create_over_symlink(&obj, vidsys)
+                     : TEST_SKIP, 0,
+                     "offspring count: a create over an existing symlink adds "
+                     "nothing");
+    TEST_int(utest_offcnt_create_over_symlink_keeps_link(&obj, vid), 0,
+             "offspring count: a create over a symlink keeps the link on a "
+             "sidecar volume");
+    TEST_int(utest_offcnt_hard_create_through_link(&obj, vid), 0,
+             "offspring count: a create through a dangling link counts the "
+             "entry it adds");
+    TEST_int_or_skip(utest_offcnt_access_refreshes_cache(&obj, vid), 0,
+                     "offspring count: FPAccess refreshes the cached stat");
+    TEST_int_or_skip(utest_access_delete_right_follows_parent(&obj, vid), 0,
+                     "FPAccess: a file's delete right follows the parent's ACL");
+    TEST_int(utest_resolveid_healed_folder_keeps_ids(&obj, vid), 0,
+             "FPResolveID: a healed folder keeps its file IDs");
+    TEST_int(utest_offcnt_params_keep_metadata(&obj, vid), 0,
+             "offspring count: FPGetFileDirParms keeps the metadata it reads");
+    TEST_int(utest_offcnt_fresh_stat_refreshes_cache(&obj, vid), 0,
+             "offspring count: a fresh stat refreshes the cached ctime");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");
