@@ -28,9 +28,11 @@ struct ofork {
     struct file_key     key;
     struct adouble      *of_ad;
     struct vol          *of_vol;
+    char                *of_uname;  /*!< the file's name on disk */
     cnid_t              of_did;
     uint16_t            of_refnum;
     int                 of_flags;
+    int                 of_adflags; /*!< ADFLAGS_DF/HF/RF this fork holds */
     const unsigned char *of_virtual_data;
     off_t               of_virtual_len;
     struct ofork        **prevp, *next;
@@ -52,7 +54,7 @@ struct ofork {
 #define AFPFORK_ACCRD   (1<<4)
 #define AFPFORK_ACCWR   (1<<5)
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
-#define AFPFORK_MODIFIED (1<<6) /*!< used in FCE for modified files */
+#define AFPFORK_MODIFIED (1<<6) /*!< written or its length set since open */
 #define AFPFORK_ERROR   (1<<7)  /*!< used to indicate an error in opening the fork */
 #define AFPFORK_VIRTUAL (1<<8)  /*!< virtual file fork */
 
@@ -67,16 +69,17 @@ static inline int fork_range_within(off_t offset, off_t length, off_t size)
 
 /* in ofork.c */
 extern struct ofork *of_alloc(struct vol *, struct dir *,
-                              char *, uint16_t *, const int,
+                              char *, const char *, uint16_t *, const int,
                               struct adouble *,
                               struct stat *);
 extern void         of_dealloc(struct ofork *);
 extern struct ofork *of_find(const uint16_t);
 extern struct ofork *of_findname(const struct vol *vol, struct path *);
+extern void         of_rekey(struct ofork *of, const struct stat *st);
 extern int          of_rename(const struct vol *,
                               struct ofork *,
                               struct dir *, const char *,
-                              struct dir *, const char *);
+                              struct dir *, const char *, const char *);
 extern int          of_flush(const struct vol *);
 extern void         of_pforkdesc(FILE *);
 extern void         of_log_usage(int level, const char *event);
@@ -86,16 +89,20 @@ extern const char   *of_breakdown(char *buf, size_t len);
 extern int          of_stat(const struct vol *vol, struct path *);
 extern int          of_statdir(struct vol *vol, struct path *);
 extern int          of_closefork(const AFPObj *obj, struct ofork *ofork);
+extern struct dir   *of_dircache_entry(const struct ofork *ofork);
+extern void         of_hint_siblings(const AFPObj *obj,
+                                     const struct ofork *ofork,
+                                     const struct dir *cached);
 extern void         of_closevol(const AFPObj *obj, const struct vol *vol);
 extern void         of_close_all_forks(const AFPObj *obj);
 extern struct adouble *of_ad(const struct vol *, struct path *,
                              struct adouble *);
-extern struct ofork *of_findnameat(int dirfd, struct path *path);
+extern struct ofork *of_findnameat(const struct vol *vol, int dirfd,
+                                   struct path *path);
 extern int of_delete_blocked(const struct ofork *of, uint16_t *band,
                              int *content);
 extern void of_close_inode_forks(const AFPObj *obj, const struct vol *vol,
                                  struct path *path);
-extern int of_fstatat(int dirfd, struct path *path);
 
 enum of_locks_status { OF_LOCKS_ERROR = -1, OF_LOCKS_OK = 0, OF_LOCKS_NOENT = 1 };
 

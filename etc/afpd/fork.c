@@ -47,47 +47,125 @@
 #include "virtual_icon.h"
 #include "volume.h"
 
+static int fork_setmode(const AFPObj *obj, struct adouble *adp, int eid,
+                        int access, int ofrefnum);
+static int fork_error(const struct ofork *ofork, const char *call,
+                      bool is_write);
+
+/*! the reference counts of an adouble's three forks */
+struct ad_refs {
+    int data;
+    int meta;
+    int reso;
+};
+
+/*!
+ * @brief Snapshot the reference counts of an adouble's forks
+ *
+ * @param[in] ad  adouble about to be opened
+ * @returns its counts
+ */
+static struct ad_refs ad_refs_now(const struct adouble *ad)
+{
+    return (struct ad_refs) {
+        ad->ad_data_refcount, ad->ad_meta_refcount, ad->ad_reso_refcount
+    };
+}
+
+/*!
+ * @brief ADFLAGS_DF, ADFLAGS_HF and ADFLAGS_RF of the forks whose references
+ *        rose above a snapshot: what an open took, for its close
+ *
+ * @param[in] ad      adouble after the open
+ * @param[in] before  its counts before the open
+ * @returns the ADFLAGS of the forks the open referenced
+ */
+static int ad_refs_taken(const struct adouble *ad, struct ad_refs before)
+{
+    return (ad->ad_data_refcount > before.data ? ADFLAGS_DF : 0)
+           | (ad->ad_meta_refcount > before.meta ? ADFLAGS_HF : 0)
+           | (ad->ad_reso_refcount > before.reso ? ADFLAGS_RF : 0);
+}
+
+/*!
+ * @brief Give a fork that stays virtual back the adouble it owns, when it
+ *        borrowed an open fork's
+ *
+ * @param[in,out] ofork  virtual fork
+ * @param[in]     own    its own adouble, or NULL when it borrowed none
+ */
+static void keep_own_adouble(struct ofork *ofork, struct adouble *own)
+{
+    if (own) {
+        ad_unref(ofork->of_ad);
+        ofork->of_ad = own;
+    }
+}
+
+/*!
+ * @brief Whether an AppleDouble descriptor is open read-only
+ *
+ * @param[in] adf  descriptor and the flags it was opened with
+ * @returns 1 for an open read-only descriptor, else 0
+ */
+static int adf_readonly(const struct ad_fd *adf)
+{
+    return adf->adf_fd >= 0 && (adf->adf_flags & O_ACCMODE) == O_RDONLY;
+}
+
 /*!
  * @brief Turn the virtual Icon file into a real file before a client changes it
  *
  * The write path and FPSetForkParms call it. It creates the Icon file in the
- * volume root and seeds its resource fork with the virtual icon data. The
- * Finder info marks the file invisible. The call then reopens the fork through
- * ad_open, so the open fork holds real descriptors, and drops its virtual
- * state.
+ * volume root, seeds its resource fork with the virtual icon data and marks
+ * it invisible; a file another fork created first keeps its content. The
+ * call then reopens the fork through ad_open, on the adouble of the
+ * session's open fork of the file when there is one, so the open fork holds
+ * real descriptors, takes the open-mode locks of its access, and drops its
+ * virtual state. A fork whose locks are refused stays virtual, with nothing
+ * open.
  *
+ * @param[in]     obj    session object
  * @param[in,out] ofork  open fork on the virtual Icon file
- * @returns AFP_OK, or AFPERR_MISC when a create or open failed
+ * @returns AFP_OK; AFPERR_LOCK when another open's deny modes refuse the
+ *          locks, AFPERR_ACCESS when the session's open fork of the file
+ *          holds a read-only descriptor the fork needs, the reply
+ *          fork_error() gives a failed create or open, else AFPERR_MISC
  */
-static int materialize_virtual_icon(struct ofork *ofork)
+static int materialize_virtual_icon(const AFPObj *obj, struct ofork *ofork)
 {
     const struct vol *vol = ofork->of_vol;
     size_t vlen;
     const unsigned char *vdata = virtual_icon_get_rfork(vol, &vlen);
     char path[MAXPATHLEN + 1];
+    struct adouble icon_ad;
+    struct adouble *own = NULL;
+    struct path p = { .u_name = path };
+    const struct ofork *opened;
+    struct ad_refs before;
+    struct stat st;
     int adflags;
-    int cfd;
+    int created = 0;
 
     if (!vdata) {
         return AFPERR_MISC;
     }
 
     snprintf(path, sizeof(path), "%s/%s", vol->v_path, VIRTUAL_ICON_NAME);
-    cfd = open(path, O_CREAT | O_WRONLY, 0666);
+    ad_init(&icon_ad, vol);
 
-    if (cfd < 0) {
-        LOG(log_error, logtype_afpd,
-            "materialize_virtual_icon: create failed: %s",
-            strerror(errno));
-        return AFPERR_MISC;
+    /* a file another fork made real first keeps its content */
+    if (ad_open(&icon_ad, path, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE
+                | ADFLAGS_EXCL, 0666) == 0) {
+        /* without following symlinks, a symlink under the name opens as one */
+        created = ad_data_fileno(&icon_ad) != AD_SYMLINK;
+        ad_close(&icon_ad, ADFLAGS_DF);
+    } else if (errno != EEXIST) {
+        return fork_error(ofork, "materialize_virtual_icon", true);
     }
 
-    close(cfd);
     /* Seed the resource fork and set FinderInfo invisible flag */
-    {
-        struct adouble icon_ad;
-        ad_init(&icon_ad, vol);
-
+    if (created) {
         if (ad_open(&icon_ad, path,
                     ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_CREATE,
                     0666) == 0) {
@@ -115,11 +193,30 @@ static int materialize_virtual_icon(struct ofork *ofork)
                 strerror(errno));
         }
     }
-    /* Re-initialize the adouble for real file I/O */
-    free(ofork->of_ad->ad_name);
-    memset(ofork->of_ad, 0, sizeof(struct adouble));
-    ad_init(ofork->of_ad, vol);
-    ofork->of_ad->ad_name = strdup(VIRTUAL_ICON_NAME);
+
+    if (!created && (opened = of_findname(vol, &p)) != NULL) {
+        /* the fork's own read-write open needs the data descriptor, and a
+         * resource fork's also the resource one; a lender's read-only one
+         * means the user cannot write it */
+        if (adf_readonly(&opened->of_ad->ad_data_fork)
+                || ((ofork->of_flags & AFPFORK_RSRC)
+                    && adf_readonly(opened->of_ad->ad_rfp))) {
+            return AFPERR_ACCESS;
+        }
+
+        /* the session's open fork of the file lends its adouble, as in
+         * afp_openfork(), so neither fork's close drops the other's locks */
+        own = ofork->of_ad;
+        ofork->of_ad = opened->of_ad;
+        ad_ref(ofork->of_ad);
+    } else {
+        /* Re-initialize the adouble for real file I/O */
+        char *name = ofork->of_ad->ad_name;
+        ad_init(ofork->of_ad, vol);
+        ofork->of_ad->ad_name = name;
+    }
+
+    before = ad_refs_now(ofork->of_ad);
     /* Open the data/resource fork for real */
     adflags = ADFLAGS_SETSHRMD | ADFLAGS_RDWR;
 
@@ -130,11 +227,16 @@ static int materialize_virtual_icon(struct ofork *ofork)
     }
 
     if (ad_open(ofork->of_ad, path, adflags, 0666) < 0) {
-        LOG(log_error, logtype_afpd,
-            "materialize_virtual_icon: ad_open failed: %s",
-            strerror(errno));
-        (void)unlink(path);
-        return AFPERR_MISC;
+        const int err = fork_error(ofork, "materialize_virtual_icon", true);
+        ad_close(ofork->of_ad, ad_refs_taken(ofork->of_ad, before));
+        keep_own_adouble(ofork, own);
+
+        if (created) {
+            (void)vol->vfs->vfs_deletefile(vol, -1, path);
+            (void)unlink(path);
+        }
+
+        return err;
     }
 
     /* Open metadata */
@@ -143,12 +245,38 @@ static int materialize_virtual_icon(struct ofork *ofork)
         ofork->of_flags |= AFPFORK_META;
     }
 
-    /* Stat the new file to update the ofork's key */
-    struct stat st;
+    ofork->of_adflags = ad_refs_taken(ofork->of_ad, before);
+    /* the open-mode locks of the fork's access, as afp_openfork() takes them */
+    const int eid = (ofork->of_flags & AFPFORK_RSRC) ? ADEID_RFORK
+                    : ADEID_DFORK;
+    const int access = OPENACC_WR
+                       | ((ofork->of_flags & AFPFORK_ACCRD) ? OPENACC_RD : 0);
 
-    if (ostat(path, &st, vol_syml_opt(vol)) == 0) {
-        ofork->key.dev = st.st_dev;
-        ofork->key.inode = st.st_ino;
+    if (fork_setmode(obj, ofork->of_ad, eid, access, ofork->of_refnum) < 0) {
+        const int err = errno;
+        LOG(log_debug, logtype_afpd,
+            "materialize_virtual_icon: open-mode locks refused: %s",
+            strerror(err));
+        /* the fork stays virtual; a deny mode conflict is the client's news */
+        ad_unlock(ofork->of_ad, ofork->of_refnum);
+        ad_close(ofork->of_ad, ofork->of_adflags);
+        ofork->of_adflags = 0;
+        ofork->of_flags &= ~AFPFORK_META;
+        keep_own_adouble(ofork, own);
+        return (err == EACCES || err == EAGAIN || err == EINVAL)
+               ? AFPERR_LOCK : AFPERR_MISC;
+    }
+
+    if (own) {
+        free(own->ad_name);
+        free(own);
+    }
+
+    /* the key of the file the fork opened; a symlink has no descriptor */
+    if ((ad_data_fileno(ofork->of_ad) == AD_SYMLINK
+            ? ostat(path, &st, vol_syml_opt(vol))
+            : fstat(ad_data_fileno(ofork->of_ad), &st)) == 0) {
+        of_rekey(ofork, &st);
     }
 
     /* Transition from virtual to real fork */
@@ -496,11 +624,11 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
     }
 
     /*
-     * Fix for Bug 560: put the Solaris share reservation after our locking stuff.
-     * Note that this still leaves room for a race condition where between placing our own
-     * locks above and putting the Solaris share move below another client puts a lock.
-     * We then end up with set locks from above and return with an error code, the proper
-     * fix requires a sane cleanup function for the error path in this function.
+     * The Solaris share reservation comes after our locking stuff. Note that
+     * this still leaves room for a race condition where between placing our
+     * own locks above and putting the Solaris share move below another
+     * client puts a lock. We then end up with set locks from above and return
+     * with an error code; the callers release them by refnum.
      */
 #ifdef HAVE_FSHARE_T
     fshare_t shmd;
@@ -629,6 +757,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 return AFPERR_MISC;
             }
 
+            /* a file not on disk yet has only the volume root's rights */
+            if (check_access(obj, vol, s_path->u_name, access) < 0) {
+                return AFPERR_ACCESS;
+            }
+
             /* Allocate a minimal ofork for the virtual file on a synthetic
              * stat; of_alloc() builds its adouble, which of_dealloc() frees. */
             struct stat vst;
@@ -638,13 +771,17 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             vst.st_dev = 0;
             eid = (fork == OPENFORK_DATA) ? ADEID_DFORK : ADEID_RFORK;
             ofork = of_alloc(vol, curdir, (char *)VIRTUAL_ICON_NAME,
-                             &ofrefnum, eid, NULL, &vst);
+                             s_path->u_name, &ofrefnum, eid, NULL, &vst);
 
             if (!ofork) {
                 return AFPERR_NFILE;
             }
 
-            ofork->of_flags |= AFPFORK_VIRTUAL | AFPFORK_ACCRD;
+            ofork->of_flags |= AFPFORK_VIRTUAL;
+
+            if (access & OPENACC_RD) {
+                ofork->of_flags |= AFPFORK_ACCRD;
+            }
 
             if (access & OPENACC_WR) {
                 ofork->of_flags |= AFPFORK_ACCWR;
@@ -756,7 +893,8 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         adflags |= ADFLAGS_RDONLY;
     }
 
-    if ((ofork = of_alloc(vol, curdir, path, &ofrefnum, eid, adsame, st)) == NULL) {
+    if ((ofork = of_alloc(vol, curdir, path, upath, &ofrefnum, eid, adsame,
+                          st)) == NULL) {
         return AFPERR_NFILE;
     }
 
@@ -764,6 +902,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     int had_data = ad_data_fileno(ofork->of_ad);
     int had_meta = ad_meta_fileno(ofork->of_ad);
     int had_reso = ad_reso_fileno(ofork->of_ad);
+    const struct ad_refs before = ad_refs_now(ofork->of_ad);
     LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\", %s, %s)",
         fullpathname(s_path->u_name),
         (fork == OPENFORK_DATA) ? "data" : "reso",
@@ -860,15 +999,10 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
     }
 
-    if ((adflags & ADFLAGS_RF) && (ad_get_RF_flags(ofork->of_ad) & O_CREAT)) {
-        if (ad_setname(ofork->of_ad, path)) {
-            ad_flush(ofork->of_ad);
-        }
-    }
-
     if ((ret = getforkparams(obj, ofork, bitmap, rbuf + 2 * sizeof(int16_t),
                              &buflen)) != AFP_OK) {
-        /* No local ad_close(): the openfork_err label closes whatever is open. */
+        /* No local ad_close(): the openfork_err label releases what this open
+         * took. */
         goto openfork_err;
     }
 
@@ -953,22 +1087,16 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     of_note_open(newfd);
+    ofork->of_adflags = ad_refs_taken(ofork->of_ad, before);
     LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\"): fork: %" PRIu16,
         fullpathname(s_path->m_name), ofork->of_refnum);
     memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
     return AFP_OK;
 openfork_err:
-
-    /* Close whatever is actually open (data/rsrc from the first ad_open(), HF
-     * from the second), in every failure combination, exactly once.  SETSHRMD
-     * releases any share-mode locks ad_open_df() set; the AD_*_OPEN guard makes
-     * a failure before the first open close nothing.  ret was set per case. */
-    if (ad_data_open(ofork->of_ad) || ad_meta_open(ofork->of_ad)
-            || ad_rsrc_open(ofork->of_ad)) {
-        ad_close(ofork->of_ad,
-                 (ADFLAGS_DF | ADFLAGS_RF | ADFLAGS_HF) | ADFLAGS_SETSHRMD);
-    }
-
+    /* the adouble may be another open fork's: release only what this open
+     * took. ret was set per case. */
+    ad_unlock(ofork->of_ad, ofork->of_refnum);
+    ad_close(ofork->of_ad, ad_refs_taken(ofork->of_ad, before));
     of_dealloc(ofork);
 
     /* the refused fork is released, so the counts cover open forks only */
@@ -980,43 +1108,49 @@ openfork_err:
 }
 
 /*!
- * @brief Invalidate the cached resource fork data of the file behind an open
- * fork
+ * @brief Mark an open fork changed: a resource fork's cached content goes,
+ *        and the fork's first change sends sibling sessions a refresh
+ *        hint, of_closefork() the last
  *
- * The dircache entry comes from the parent DID and the name of the fork.
- * Resource fork writes and truncations call it, and it clears both tiers of
- * the AppleDouble cache.
- *
- * @param[in] vol    volume of the fork
- * @param[in] ofork  open fork whose file changed
+ * @param[in]     obj    session object
+ * @param[in,out] ofork  open fork a write or a length set reached
  */
-static void rfork_invalidate_for_ofork(const struct vol *vol,
-                                       struct ofork *ofork)
+static void fork_modified(const AFPObj *obj, struct ofork *ofork)
 {
-    const struct dir *parentdir = dirlookup(vol, ofork->of_did);
+    const int rsrc = (ofork->of_flags & AFPFORK_RSRC)
+                     && obj->options.dircache_rfork_budget > 0;
+    const int first = !(ofork->of_flags & AFPFORK_MODIFIED);
+    struct dir *cached;
 
-    if (parentdir) {
-        char *name = of_name(ofork);
-        struct dir *cached = dircache_search_by_name(vol, parentdir,
-                                                     name, strnlen(name, MAXPATHLEN));
+    if (!rsrc && !first) {
+        return;
+    }
 
-        if (cached) {
-            dir_modify(vol, cached, &(struct dir_modify_args) {
-                .flags = DCMOD_AD_INV,
-            });
-        }
+    cached = of_dircache_entry(ofork);
+
+    if (rsrc && cached) {
+        dir_modify(ofork->of_vol, cached, &(struct dir_modify_args) {
+            .flags = DCMOD_AD_INV,
+        });
+    }
+
+    if (first) {
+        ofork->of_flags |= AFPFORK_MODIFIED;
+        of_hint_siblings(obj, ofork, cached);
     }
 }
 
 /*!
- * @brief Map the errno of a failed fork write or truncate to the AFP reply
+ * @brief Map the errno of a failed fork write, truncate or header flush, or
+ *        of the virtual Icon file's create or open, to the AFP reply
  *
  * @param[in] ofork     fork being changed
  * @param[in] call      libatalk call that failed, named in the log
- * @param[in] is_write  an FPWrite, whose reply is DFULL, ACCESS or MISC
+ * @param[in] is_write  anything but a truncate, whose reply is DFULL, ACCESS
+ *                      or MISC
  *
- * @returns AFPERR_DFULL or AFPERR_ACCESS; otherwise AFPERR_MISC for a write
- *          and AFPERR_VLOCK or AFPERR_PARAM for a truncate
+ * @returns AFPERR_DFULL or AFPERR_ACCESS; otherwise AFPERR_MISC, and
+ *          AFPERR_VLOCK or AFPERR_PARAM for a truncate
  */
 static int fork_error(const struct ofork *ofork, const char *call,
                       bool is_write)
@@ -1101,7 +1235,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
             return AFPERR_ACCESS;
         }
 
-        int mret = materialize_virtual_icon(ofork);
+        int mret = materialize_virtual_icon(obj, ofork);
 
         if (mret != AFP_OK) {
             return mret;
@@ -1198,8 +1332,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
             goto afp_setfork_err;
         }
 
-        err = ad_rtruncate(ofork->of_ad, mtoupath(ofork->of_vol, of_name(ofork),
-                                                  ofork->of_did, utf8_encoding(obj)), size);
+        err = ad_rtruncate(ofork->of_ad, ofork->of_uname, size);
 
         if (st_size > size) {
             ad_tmplock(ofork->of_ad, eid, ADLOCK_CLR, size, st_size - size,
@@ -1210,30 +1343,25 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
             goto afp_setfork_err;
         }
 
+        /* a failed flush leaves the fork truncated, which the tail marks */
         if (ad_flush(ofork->of_ad) < 0) {
-            LOG(log_error, logtype_afpd, "afp_setforkparams(%s): ad_flush: %s",
-                of_name(ofork), strerror(errno));
-
-            /* ad_rtruncate() succeeded but ad_flush() failed — the fork IS
-             * truncated on disk. Invalidate cached rfork data so the next
-             * access re-reads from disk (self-healing). */
-            if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
-                rfork_invalidate_for_ofork(vol, ofork);
-            }
-
-            return AFPERR_PARAM;
+            err = fork_error(ofork, "ad_flush", true);
         }
     } else {
         return AFPERR_BITMAP;
     }
 
-    /* Invalidate cached rfork data after truncate/extend.
-     * Only resource fork truncation (ADEID_RFORK) affects the rfork cache. */
-    if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
-        rfork_invalidate_for_ofork(vol, ofork);
+    if (st_size != size) {
+        /* a grow counts against the volume size limit, as a write past the
+         * end does */
+        if (vol->v_limitsize && size > st_size) {
+            vol->v_appended += size - st_size;
+        }
+
+        fork_modified(obj, ofork);
     }
 
-    return AFP_OK;
+    return err;
 afp_setfork_err:
 
     if (err == -2) {
@@ -1445,25 +1573,21 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset,
  * @brief Serve resource fork data from Tier 2 cache via DSI framing
  *
  * Shared helper for cache-hit and just-populated cache paths in read_fork().
- * Handles dsi_readinit/dsi_read/dsi_readdone loop and LRU promotion.
+ * Sends the reply from the cache buffer in one dsi_readinit() and promotes
+ * the entry in the rfork LRU.
  *
  * @param[in]  dsi           DSI connection
  * @param[in]  cached_entry  dir entry with populated dcache_rfork_buf
- * @param[in]  ibuf          DSI write buffer (repurposed from command buffer)
  * @param[in]  offset        Starting byte offset in the rfork
  * @param[in]  reqcount      Requested byte count
  * @param[in]  err           AFP error code (AFPERR_EOF or AFP_OK)
- * @param[out] rbuflen       Output: bytes remaining (set by dsi_read)
  *
- * @returns 0 on success (goto afp_read_done), -1 on DSI error (goto afp_read_exit)
+ * @returns 0 when the reply went out, -1 when a send failed or the entry
+ *          cannot serve the range, which read_fork()'s checks exclude
  */
 static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
-                                      char *ibuf, off_t offset,
-                                      off_t reqcount, int err,
-                                      size_t *rbuflen)
+                                      off_t offset, off_t reqcount, int err)
 {
-    ssize_t cc;
-
     if (cached_entry->dcache_rfork_buf == NULL) {
         LOG(log_error, logtype_afpd,
             "rfork_cache_serve_from_buf: NULL buffer (did:%u)",
@@ -1471,7 +1595,7 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
         return -1;
     }
 
-    /* Defense-in-depth: validate bounds before any memcpy from rfork buffer.
+    /* Defense-in-depth: validate bounds before sending from the rfork buffer.
      * Use subtraction-based validation: offset + reqcount may overflow for a
      * malicious FPReadExt count before it can be compared with dcache_rlen. */
     if (!fork_range_within(offset, reqcount, cached_entry->dcache_rlen)) {
@@ -1490,37 +1614,10 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
         (long long)offset, (long long)reqcount,
         (long long)cached_entry->dcache_rlen,
         ntohl(cached_entry->d_did));
-    *rbuflen = MIN(reqcount, dsi->server_quantum);
-    memcpy(ibuf, (char *)cached_entry->dcache_rfork_buf + offset, *rbuflen);
-    offset += *rbuflen;
 
-    if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0) {
+    if (dsi_readinit(dsi, (char *)cached_entry->dcache_rfork_buf + offset,
+                     (size_t)reqcount, (size_t)reqcount, err) < 0) {
         return -1;
-    }
-
-    *rbuflen = cc;
-
-    while (*rbuflen > 0) {
-        if (offset >= cached_entry->dcache_rlen) {
-            break;
-        }
-
-        size_t avail = (size_t)(cached_entry->dcache_rlen - offset);
-
-        if (avail == 0) {
-            break;    /* Safety: should not happen, all data sent */
-        }
-
-        size_t tocopy = MIN((size_t) * rbuflen, avail);
-        memcpy(ibuf, (char *)cached_entry->dcache_rfork_buf + offset, tocopy);
-        offset += tocopy;
-        cc = dsi_read(dsi, ibuf, tocopy);
-
-        if (cc < 0) {
-            return -1;
-        }
-
-        *rbuflen = cc;
     }
 
     dsi_readdone(dsi);
@@ -1642,28 +1739,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     AFP_READ_START((long)reqcount);
-    /* Tier 2 rfork cache: resolve dircache entry for resource fork reads.
-     * Both lookups are O(1) hash operations — no syscalls, no CNID DB queries.
-     * Guarded by budget > 0 so disabled (default) incurs zero overhead. */
     struct dir *cached_entry = NULL;
-
-    if (eid == ADEID_RFORK
-            && !(ofork->of_flags & AFPFORK_ACCWR)
-            && (!(ofork->of_vol->v_flags & AFPVOL_MULTIPROTO)
-                || obj->options.dircache_rfork_budget_explicit)
-            && obj->options.dircache_rfork_budget > 0) {
-        const struct dir *parentdir = dirlookup(ofork->of_vol, ofork->of_did);
-
-        if (parentdir) {
-            char *fname = of_name(ofork);
-            cached_entry = dircache_search_by_name(ofork->of_vol, parentdir,
-                                                   fname, strnlen(fname, MAXPATHLEN));
-
-            if (cached_entry) {
-                rfork_stat_lookups++;
-            }
-        }
-    }
 
     switch (obj->proto) {
 #ifndef NO_DDP
@@ -1735,14 +1811,22 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             }
         }
 
+        if (eid == ADEID_RFORK
+                && !(ofork->of_flags & AFPFORK_ACCWR)
+                && (!(ofork->of_vol->v_flags & AFPVOL_MULTIPROTO)
+                    || obj->options.dircache_rfork_budget_explicit)
+                && obj->options.dircache_rfork_budget > 0
+                && (cached_entry = of_dircache_entry(ofork)) != NULL) {
+            rfork_stat_lookups++;
+        }
+
         /* === Tier 2 rfork cache check — before sendfile === */
         if (cached_entry && cached_entry->dcache_rfork_buf
                 && cached_entry->dcache_rlen > 0
                 && cached_entry->dcache_rlen == size) {
             /* Serve entire request from Tier 2 cache — zero I/O. */
-            if (rfork_cache_serve_from_buf(dsi, cached_entry, ibuf,
-                                           offset, reqcount, (int)err,
-                                           rbuflen) < 0) {
+            if (rfork_cache_serve_from_buf(dsi, cached_entry, offset,
+                                           reqcount, (int)err) < 0) {
                 goto afp_read_exit;
             }
 
@@ -1752,24 +1836,17 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
         /* Size mismatch: cache stale — invalidate any rfork buffer + Tier 1
          * AD, so no fill below takes a length the fork no longer has */
-        if (cached_entry && cached_entry->dcache_rlen > 0
+        if (cached_entry && ad_rlen_known(cached_entry->dcache_rlen)
                 && cached_entry->dcache_rlen != size) {
             LOG(log_debug, logtype_afpd,
                 "rfork_cache: size mismatch (cached:%lld vs live:%lld), "
                 "invalidating (did:%u)",
                 (long long)cached_entry->dcache_rlen, (long long)size,
                 ntohl(cached_entry->d_did));
-
-            if (cached_entry->dcache_rfork_buf) {
-                rfork_cache_free(cached_entry);
-                rfork_stat_invalidated++;
-            }
-
+            dir_modify(ofork->of_vol, cached_entry, &(struct dir_modify_args) {
+                .flags = DCMOD_AD_INV | DCMOD_NO_PROMOTE,
+            });
             rfork_stat_misses++;     /* Size mismatch counts as a miss */
-            cached_entry->dcache_rlen = AD_RLEN_UNKNOWN;
-            memset(cached_entry->dcache_finderinfo, 0, 32);
-            memset(cached_entry->dcache_filedatesi, 0, 16);
-            memset(cached_entry->dcache_afpfilei, 0, 4);
             cached_entry = NULL;
         }
 
@@ -1782,9 +1859,8 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             rfork_stat_added++;
 
             /* Serve from newly-populated cache */
-            if (rfork_cache_serve_from_buf(dsi, cached_entry, ibuf,
-                                           offset, reqcount, (int)err,
-                                           rbuflen) < 0) {
+            if (rfork_cache_serve_from_buf(dsi, cached_entry, offset,
+                                           reqcount, (int)err) < 0) {
                 goto afp_read_exit;
             }
 
@@ -1792,7 +1868,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_done;
         }
 
-        /* store_from_fd failed — fall through to normal fd read */
+        /* not filled: another session writes the fork, or the fill failed */
 
         /* Count miss: any rfork cache lookup that didn't result in a hit */
         if (cached_entry) {
@@ -2187,33 +2263,6 @@ static int write_file(struct ofork *ofork, int eid, off_t *offset,
 }
 
 /*!
- * @brief Flag a fork that a write reached
- *
- * A fork with open metadata turns dirty, so the next flush or close stamps
- * its modification date. A resource fork write also invalidates the resource
- * fork cache when dircache_rfork_budget is nonzero. AFPFORK_MODIFIED stays
- * until the fork closes.
- *
- * @param[in]     obj    session object
- * @param[in,out] ofork  open fork
- * @param[in]     eid    ADEID_DFORK or ADEID_RFORK
- */
-static void write_mark(const AFPObj *obj, struct ofork *ofork, int eid)
-{
-    if (ad_meta_fileno(ofork->of_ad) != -1) {
-        ofork->of_flags |= AFPFORK_DIRTY;
-    }
-
-    if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
-        rfork_invalidate_for_ofork(ofork->of_vol, ofork);
-    }
-
-    /* remembered until close_fork */
-    ofork->of_flags |= AFPFORK_MODIFIED;
-}
-
-
-/*!
  * @brief Tell whether an FPWrite's payload of len bytes fits its ReqCount,
  *        logging the refusal when not
  *
@@ -2267,7 +2316,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     off_t           saveoff;
     off_t           reqcount;
     off_t           oldsize;
-    off_t           newsize;
     int             endflag;
     int             eid;
     int             err = AFP_OK;
@@ -2308,7 +2356,7 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
             goto afp_write_err;
         }
 
-        err = materialize_virtual_icon(ofork);
+        err = materialize_virtual_icon(obj, ofork);
 
         if (err != AFP_OK) {
             goto afp_write_err;
@@ -2329,7 +2377,10 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
         goto afp_write_err;
     }
 
-    oldsize = ad_size(ofork->of_ad, eid);
+    /* an fstat() of the fork's file; only an EOF-relative write and the
+     * volume size limit use it */
+    oldsize = (endflag || ofork->of_vol->v_limitsize)
+              ? ad_size(ofork->of_ad, eid) : 0;
 
     if (endflag) {
         /* an end-relative offset must stay within off_t */
@@ -2355,8 +2406,6 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
         err = AFPERR_DFULL;
         goto afp_write_err;
     }
-
-    newsize = ((offset + reqcount) > oldsize) ? (offset + reqcount) : oldsize;
 
     if (!reqcount) { /* handle request counts of 0 */
         err = AFP_OK;
@@ -2404,8 +2453,8 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
         char *wbuf = NULL;
         size_t len = dsi_writeinit(dsi, &wbuf);
 
-        /* the lock range, the size check and the appended count are
-         * ReqCount's, so no more may land */
+        /* the lock range and the size check are ReqCount's, so no more may
+         * land */
         if (!write_fits_count(ofork, len + dsi->datasize, reqcount)) {
             err = AFPERR_PARAM;
             goto afp_write_done;
@@ -2466,7 +2515,18 @@ afp_write_done:
     }
 
     if (offset > saveoff) {
-        write_mark(obj, ofork, eid);
+        /* open metadata turns dirty: a resource fork's flush or close stamps
+         * the modification date */
+        if (ad_meta_fileno(ofork->of_ad) != -1) {
+            ofork->of_flags |= AFPFORK_DIRTY;
+        }
+
+        fork_modified(obj, ofork);
+
+        /* bytes appended, for the volume size limit */
+        if (ofork->of_vol->v_limitsize && offset > oldsize) {
+            ofork->of_vol->v_appended += offset - oldsize;
+        }
     }
 
     AFP_WRITE_DONE();
@@ -2476,8 +2536,6 @@ afp_write_done:
         return err;
     }
 
-    /* update write count */
-    ofork->of_vol->v_appended += (newsize > oldsize) ? (newsize - oldsize) : 0;
     *rbuflen = set_off_t (offset, rbuf, is64);
     return AFP_OK;
 afp_write_err:

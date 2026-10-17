@@ -71,6 +71,7 @@
 #include "subtests_offcnt.h"
 #include "subtests_pfd.h"
 #include "subtests_recvfile.h"
+#include "subtests_request.h"
 #include "subtests_sendfile.h"
 #include "subtests_veto.h"
 #ifndef NO_DDP
@@ -2923,6 +2924,9 @@ int main(int argc, char *argv[])
              "CNID wrapper accepts a MAXPATHLEN name, rejects one byte more");
     TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
                      "dircache_resolve_size: default, minimum, round-up, clamp");
+    TEST_int_or_skip(utest_conf_listen_skips_failed_address(), 0,
+                     "afp listen: an address that cannot start leaves the "
+                     "others and no wildcard");
     {
         AFPObj singleuser_obj = { 0 };
         char *singleuser_args[] = { "afpd", "-u" };
@@ -3087,6 +3091,8 @@ int main(int argc, char *argv[])
              "dircache: a file expunging curdir hands curdir to the volume root");
     TEST_int(test010_full_cache_accepts_adds(vol, 8192), 0,
              "dircache: a full cache keeps accepting inserts");
+    TEST_int(test012_movecwd_retry_names_directory(&obj, vol), 0,
+             "movecwd: a failed CNID retry logs the directory it tried");
     TEST_int(test011_stat_refresh_drops_rights(vol), 0,
              "dircache: a stat refresh with a new ctime drops cached rights");
     /* pfd cache: strict ostat equivalence (quiescent), and the
@@ -3359,6 +3365,75 @@ int main(int argc, char *argv[])
              "offspring count: FPGetFileDirParms keeps the metadata it reads");
     TEST_int(utest_offcnt_fresh_stat_refreshes_cache(&obj, vid), 0,
              "offspring count: a fresh stat refreshes the cached ctime");
+    TEST_int_or_skip(utest_write_reads_size_only_when_used(&obj, vol), 0,
+                     "FPWrite: fork size read only when a write uses it");
+    TEST_int(utest_volume_scan_counts_no_band(&obj, vol), 0,
+             "vol size limit: a bundle without bands adds no usage");
+    TEST_int(utest_volume_scan_resets_appended(&obj, vol), 0,
+             "vol size limit: a usage scan replaces the appended count");
+    TEST_int(utest_rfork_cache_hit_sends_cached_bytes(&obj, vol), 0,
+             "rfork cache: hits are sent without a copy");
+    TEST_int(utest_rfork_cache_stale_length_reads_fork(&obj, vol), 0,
+             "rfork cache: a stale length is dropped, not served");
+    TEST_int(utest_rfork_cache_finds_name_on_disk(&obj, vol), 0,
+             "rfork cache: a fork is found by its name on disk");
+    TEST_int(utest_rfork_cache_checks_identity(&obj, vol), 0,
+             "rfork cache: an entry serves only the file it describes");
+    TEST_int(utest_hint_relay_drops_repeats(&obj, vol), 0,
+             "hint relay: a sender's repeated refresh is buffered once");
+    TEST_int(utest_fork_first_change_hints_siblings(&obj, vol), 0,
+             "fork: the first change and the close hint sibling sessions");
+    TEST_int(utest_rfork_cache_skips_fill_while_written(&obj, vol), 0,
+             "rfork cache: no fill while another session writes the fork");
+    TEST_int(utest_rfork_cache_lookup_only_inside_fork(&obj, vol), 0,
+             "rfork cache: looked up only for a read inside the fork");
+    TEST_int_or_skip(utest_fce_ignore_directories(&obj, vol), 0,
+                     "FCE: ignore directories match at a name boundary");
+    TEST_int_or_skip(utest_fce_clock_read_only_when_held(&obj, vol), 0,
+                     "FCE: clock read only while a close event is held");
+    TEST_int(utest_virtual_icon_write_takes_open_lock(&obj, vol), 0,
+             "virtual Icon: its first write takes the open lock");
+    TEST_int(utest_virtual_icon_refused_write_stays_virtual(&obj, vol), 0,
+             "virtual Icon: a refused first write leaves the fork virtual");
+    TEST_int(utest_virtual_icon_second_write_keeps_locks(&obj, vol), 0,
+             "virtual Icon: a second fork's first write keeps the first's "
+             "locks");
+    TEST_int(utest_refused_open_keeps_sibling_fork(&obj, vol), 0,
+             "FPOpenFork: a refused open leaves the file's open fork whole");
+    TEST_int(utest_reader_close_keeps_writer(&obj, vol), 0,
+             "FPCloseFork: a reader's close leaves the fork's writer working");
+    TEST_int_or_skip(utest_emptied_rfork_close_spares_new_file(&obj, vol), 0,
+                     "FPCloseFork: an emptied fork's close spares the file now "
+                     "under its name");
+    TEST_int_or_skip(utest_symlink_rfork_close_keeps_cnids(&obj, vol), 0,
+                     "FPCloseFork: a symlink's resource fork keeps the CNIDs");
+    TEST_int(utest_emptied_icon_close_deletes_file(&obj, vol), 0,
+             "fork close: an emptied Icon file goes with its AppleDouble file, "
+             "CNID, entry and a hint, not under an open fork");
+    TEST_int(utest_emptied_icon_close_keeps_data(&obj, vol), 0,
+             "fork close: an emptied Icon file stays while its data fork holds "
+             "bytes, and on a read-only volume");
+    TEST_int_or_skip(utest_emptied_icon_close_keeps_symlink(&obj, vol), 0,
+                     "fork close: an emptied Icon symlink stays");
+    TEST_int(utest_virtual_icon_write_only_open_refuses_read(&obj, vol), 0,
+             "virtual icon: a write-only open refuses a read");
+    TEST_int_or_skip(utest_icon_create_refused_replies_access(&obj, vol), 0,
+                     "virtual icon: a refused create replies AFPERR_ACCESS, "
+                     "another failed one AFPERR_MISC");
+    TEST_int_or_skip(utest_emptied_rfork_close_keeps_hard_link(&obj, vol), 0,
+                     "fork close: the emptied ._ file's unlink spares a hard "
+                     "link's");
+    TEST_int(utest_rename_moves_open_forks(&obj, vol), 0,
+             "FPRename: the file's open forks follow it to its new name");
+    TEST_int(utest_write_counts_bytes_appended(&obj, vol), 0,
+             "vol size limit: a write or a length set counts the bytes it "
+             "added");
+    TEST_int(utest_findnameat_follows_as_volume(&obj, vol), 0,
+             "fork lookup by name: follows symlinks as the volume does");
+    TEST_int(utest_rename_keeps_open_fork_length(&obj, vol), 0,
+             "rename: a refused rename leaves the open fork's length");
+    TEST_int_or_skip(utest_virtual_icon_open_checks_root_access(&obj, vol), 0,
+                     "virtual icon: a write open needs a writable volume root");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

@@ -201,6 +201,21 @@ int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     return afp_delete(obj, buf, len, rbuf, &rbuflen);
 }
 
+/*! @brief FPRename of name in did to newname */
+int renameobj(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+              const char *newname)
+{
+    static char buf[512] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    len += push_path(&p, name);
+    len += push_path(&p, newname);
+    return afp_rename(obj, buf, len, rbuf, &rbuflen);
+}
+
 /*!
  * @brief FPEnumerateExt2 of did with the given bitmaps and range
  *
@@ -749,4 +764,32 @@ int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid)
     PUSHVAL(p, cnid_t, cnid, len);
     PUSHVAL(p, uint16_t, htons(1 << FILPBIT_FNUM), len);
     return afp_resolveid(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPSetForkParms setting the length of refnum's fork, its data or
+ *        resource fork as opened
+ */
+int setforkparams(AFPObj *obj, uint16_t refnum, uint32_t len)
+{
+    static char buf[10] = { 0 };
+    const struct ofork *of = of_find(refnum);
+    uint16_t bitmap = (of && (of->of_flags & AFPFORK_RSRC))
+                      ? htons(1 << FILPBIT_RFLEN) : htons(1 << FILPBIT_DFLEN);
+    uint32_t len_be = htonl(len);
+    memcpy(buf + 2, &refnum, sizeof(refnum));
+    memcpy(buf + 4, &bitmap, sizeof(bitmap));
+    memcpy(buf + 6, &len_be, sizeof(len_be));
+    return afp_setforkparams(obj, buf, sizeof(buf), rbuf, &rbuflen);
+}
+
+/*! @brief FPGetVolParms of vid for the bitmap, the reply in rbuf */
+int getvolparams(AFPObj *obj, uint16_t vid, uint16_t bitmap)
+{
+    static char buf[6] = { 0 };
+    uint16_t bitmap_be = htons(bitmap);
+    memcpy(buf + 2, &vid, sizeof(vid));
+    memcpy(buf + 4, &bitmap_be, sizeof(bitmap_be));
+    rbuflen = sizeof(rbuf);
+    return afp_getvolparams(obj, buf, sizeof(buf), rbuf, &rbuflen);
 }

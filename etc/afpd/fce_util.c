@@ -203,6 +203,8 @@ int fce_set_coalesce(const char *opt)
     }
 
     e = strdup(opt);
+    /* a reload replaces the setting */
+    coalesce = 0;
 
     for (p = strtok(e, ","); p; p = strtok(NULL, ",")) {
         if (strcmp(p, "all") == 0) {

@@ -585,15 +585,51 @@ struct asev *asev_init(int max)
     asev->data = calloc(max, sizeof(struct asev_data));
 
     if (asev->fdset == NULL || asev->data == NULL) {
-        free(asev->fdset);
-        free(asev->data);
-        free(asev);
+        asev_free(asev);
         return NULL;
     }
 
     asev->max = max;
     asev->used = 0;
     return asev;
+}
+
+/*!
+ * @brief Free a poll set
+ *
+ * @param[in] sev  poll set, or NULL
+ */
+void asev_free(struct asev *sev)
+{
+    if (sev) {
+        free(sev->fdset);
+        free(sev->data);
+        free(sev);
+    }
+}
+
+/*!
+ * @brief Replace a poll set by one with room for max descriptors beyond the
+ *        entries it keeps, in their order
+ *
+ * @param[in] sev  poll set to replace and free, or NULL
+ * @param[in] max  room beyond the kept entries
+ * @returns the new set, or NULL with sev unchanged
+ */
+struct asev *asev_renew(struct asev *sev, int max)
+{
+    int used = sev ? sev->used : 0;
+    struct asev *renewed = asev_init(used + max);
+
+    if (renewed == NULL || sev == NULL) {
+        return renewed;
+    }
+
+    memcpy(renewed->fdset, sev->fdset, used * sizeof(*sev->fdset));
+    memcpy(renewed->data, sev->data, used * sizeof(*sev->data));
+    renewed->used = used;
+    asev_free(sev);
+    return renewed;
 }
 
 /*!

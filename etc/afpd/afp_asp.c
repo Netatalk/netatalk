@@ -30,6 +30,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/compat.h>
+#include <atalk/fce_api.h>
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/globals.h>
@@ -406,6 +407,19 @@ void afp_over_asp(AFPObj *obj)
         afp_asp_die_now(EXITERR_SYS);
     }
 
+#ifdef SA_NOCLDWAIT
+    /* the notify script runs in the background: the kernel reaps it */
+    action.sa_handler = SIG_DFL;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_NOCLDWAIT;
+
+    if (sigaction(SIGCHLD, &action, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "afp_over_asp: sigaction: %s",
+            strerror(errno));
+        afp_asp_die_now(EXITERR_SYS);
+    }
+
+#endif /* SA_NOCLDWAIT */
     /* Disable rfork caching for ASP sessions — the rfork cache tier-2
      * layer is designed for the DSI (TCP) transport path and provides no
      * benefit over AppleTalk. Zero the budget so dircache_init() skips
@@ -436,7 +450,6 @@ void afp_over_asp(AFPObj *obj)
          */
         while (1) {
             /* [A0] Process deferred signals before any blocking I/O */
-            atalk_sigpipe_drain();
             asp_process_deferred_signals(obj);
             /* [A1] Release what the hints pruned. DSI does this after each
              * command; ASP does it here so an idle session still sheds other
@@ -477,7 +490,7 @@ void afp_over_asp(AFPObj *obj)
                 return;
             }
 
-            /* [E1] Signal pipe — drain and act, as [A0] would. Nothing can
+            /* [E1] Signal pipe — drain it and act on the signals. Nothing can
              * clear a bad one: a POLLHUP/POLLNVAL/POLLERR that no read
              * consumes makes poll() return immediately for the rest of the
              * session, and no deferred signal could ever wake the loop. */
@@ -657,6 +670,10 @@ void afp_over_asp(AFPObj *obj)
 
             break;
         }
+
+#ifdef WITH_FCE
+        fce_pending_events(obj);
+#endif /* WITH_FCE */
 
         if (obj->options.flags & OPTION_DEBUG) {
             of_pforkdesc(stdout);

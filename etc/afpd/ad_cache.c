@@ -398,10 +398,11 @@ void rfork_cache_evict_to_budget(size_t needed)
  *
  * The ad_read call covers every storage format, so the call reads dcache_rlen
  * bytes through it. It refuses a closed resource fork, an empty or unknown
- * length, and a fork above rfork_max_entry_size. It also refuses while the
- * cache holds over 2 times its budget. Older buffers leave first when the
- * budget lacks room. A short read means the fork changed since its metadata
- * entered the cache, so the call invalidates the cached metadata as well.
+ * length, a fork above rfork_max_entry_size, and a fork another session has
+ * open for writing. It also refuses while the cache holds over 2 times its
+ * budget. Older buffers leave first when the budget lacks room. A short read
+ * means the fork changed since its metadata entered the cache, so the call
+ * invalidates the cached metadata as well.
  *
  * @param[in,out] entry  dircache entry of the file
  * @param[in,out] adp    AppleDouble with the resource fork open
@@ -438,6 +439,11 @@ int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
     size_t rlen = (size_t)entry->dcache_rlen;
 
     if (rlen > rfork_max_entry_size) {
+        return -1;
+    }
+
+    /* another session's writes would reach the fork unseen */
+    if (ad_testlock_range(adp, ADEID_DFORK, AD_FILELOCK_RSRC_OPEN_WR, 1) != 0) {
         return -1;
     }
 

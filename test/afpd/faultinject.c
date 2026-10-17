@@ -674,4 +674,64 @@ int sendfile(int fd, int s, off_t offset, size_t nbytes, struct sf_hdtr *hdtr,
 }
 #endif
 
+typedef int (*fstat_fn)(int, void *);
+static fstat_fn real_fstat;
+static fstat_fn real_fstat64;
+
+/* a large-file glibc build calls fstat64, other builds fstat; each forwards
+ * to its own name, so the caller's struct stat layout is kept */
+int fi_fstat(int fd, void *st) __asm__("fstat");
+int fi_fstat64(int fd, void *st) __asm__("fstat64");
+
+/*! @brief Count an fstat() of the watched descriptor */
+static void fstat_watched(int fd)
+{
+    if (fi.fstat_watch && fd == fi.fstat_fd) {
+        fi.fstat_calls++;
+    }
+}
+
+/*! @brief fstat() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat(int fd, void *st)
+{
+    if (!real_fstat) {
+        real_fstat = (fstat_fn)dlsym(RTLD_NEXT, "fstat");
+    }
+
+    fstat_watched(fd);
+    return real_fstat(fd, st);
+}
+
+/*! @brief fstat64() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat64(int fd, void *st)
+{
+    if (!real_fstat64) {
+        real_fstat64 = (fstat_fn)dlsym(RTLD_NEXT, "fstat64");
+    }
+
+    fstat_watched(fd);
+    return real_fstat64(fd, st);
+}
+
+typedef time_t (*time_fn)(time_t *);
+static time_fn real_time;
+
+/* pinned to the libc name: a header that renames time() (NetBSD's
+ * __time50) must not rename the definition */
+time_t fi_time(time_t *t) __asm__("time");
+
+/*! @brief time() interposer: counts calls while fi.time_watch is set */
+time_t fi_time(time_t *t)
+{
+    if (!real_time) {
+        real_time = (time_fn)dlsym(RTLD_NEXT, "time");
+    }
+
+    if (fi.time_watch) {
+        fi.time_calls++;
+    }
+
+    return real_time(t);
+}
+
 #endif /* FAULTINJECT_PRELOAD */

@@ -189,6 +189,8 @@ struct asev {
 };
 
 extern struct asev *asev_init(int max);
+extern struct asev *asev_renew(struct asev *sev, int max);
+extern void asev_free(struct asev *sev);
 extern bool asev_add_fd(struct asev *sev, int fd, enum asev_fdtype fdtype,
                         void *private, int protocol);
 extern bool asev_del_fd(struct asev *sev, int fd);

@@ -271,17 +271,17 @@ serv_free_return:
 
         while (p) {
             if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, p,
-                                dsi_obj->options.port)) == NULL) {
-                break;
+                                dsi_obj->options.port)) != NULL) {
+                status_init(dsi_obj, asp_obj, dsi);
+                *next = dsi;
+                next = &dsi->next;
+                dsi->AFPobj = dsi_obj;
+                LOG(log_note, logtype_afpd,
+                    "Netatalk AFP/TCP listening on %s:%d",
+                    getip_string((struct sockaddr *)&dsi->server),
+                    getip_port((struct sockaddr *)&dsi->server));
             }
 
-            status_init(dsi_obj, asp_obj, dsi);
-            *next = dsi;
-            next = &dsi->next;
-            dsi->AFPobj = dsi_obj;
-            LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on %s:%d",
-                getip_string((struct sockaddr *)&dsi->server),
-                getip_port((struct sockaddr *)&dsi->server));
             p = strtok_r(NULL, ", ", &savep);
         }
 
@@ -360,7 +360,7 @@ serv_free_return:
      * if not add a DSI that accepts all connections and goes though the list of
      * network interaces for determining an IP we can advertise in DSIStatus
      */
-    if (dsi == NULL) {
+    if (dsi_obj->dsi == NULL) {
         if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, NULL,
                             dsi_obj->options.port)) == NULL) {
             EC_FAIL_LOG("no suitable network address found, use \"afp listen\" or \"afp interfaces\"",
@@ -383,6 +383,9 @@ serv_free_return:
 #ifdef WITH_FCE
     {
         const char *r;
+        /* the process-wide FCE settings; a reload replaces each, and the
+         * per-session ones come with the options */
+        fce_cleanup();
 
         if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce listener",
                                   NULL))) {
@@ -393,33 +396,16 @@ serv_free_return:
         if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce coalesce",
                                   NULL))) {
             LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
-            fce_set_coalesce(r);
         }
+
+        fce_set_coalesce(r ? r : "");
 
         if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce events",
                                   NULL))) {
             LOG(log_note, logtype_afpd, "Fce events: %s", r);
-            fce_set_events(r);
         }
 
-        r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce version", "1");
-        LOG(log_debug, logtype_afpd, "Fce version: %s", r);
-        dsi_obj->fce_version = safe_atoi(r, "fce version", 1, 2, 1);
-
-        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore names",
-                                  ".DS_Store"))) {
-            dsi_obj->fce_ign_names = strdup(r);
-        }
-
-        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
-                                  "fce ignore directories", NULL))) {
-            dsi_obj->fce_ign_directories = strdup(r);
-        }
-
-        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
-                                  "fce notify script", NULL))) {
-            dsi_obj->fce_notify_script = strdup(r);
-        }
+        fce_set_events(r ? r : FCE_DEFAULT_EVENTS);
     }
 #endif /* WITH_FCE */
     /* Directory cache validation parameters - use value from AFPobj->options

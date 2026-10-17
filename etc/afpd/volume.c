@@ -146,12 +146,12 @@ static long long int get_tm_bands(const char *path)
     EC_NULL(dir = opendir(path));
 
     while ((entry = readdir(dir)) != NULL) {
-        count++;
+        if (strcmp(entry->d_name, ".") != 0
+                && strcmp(entry->d_name, "..") != 0) {
+            count++;
+        }
     }
 
-    /* All OSens I'm aware of return "." and "..", so just substract them,
-     * avoiding string comparison in loop */
-    count -= 2;
 EC_CLEANUP:
 
     if (dir) {
@@ -178,7 +178,8 @@ EC_CLEANUP:
  *
  * The result of the calculation is returned in "volume->v_tm_used".
  * "volume->v_appended" gets reset to 0.
- * "volume->v_tm_cachetime" is updated with the current time from time(NULL).
+ * "volume->v_tm_cachetime" is updated with the current time from time(NULL)
+ * after a successful scan.
  *
  * "volume->v_tm_used" is cached for TM_USED_CACHETIME seconds and updated by
  * "volume->v_appended". The latter is increased by X every time the client
@@ -202,10 +203,6 @@ static int get_tm_used(struct vol *vol)
 
     if (vol->v_tm_cachetime
             && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
-        if (vol->v_tm_used == -1) {
-            EC_FAIL;
-        }
-
         vol->v_tm_used += vol->v_appended;
         vol->v_appended = 0;
         LOG(log_debug, logtype_afpd, "getused(\"%s\"): cached: %" PRIu64 " bytes",
@@ -213,7 +210,6 @@ static int get_tm_used(struct vol *vol)
         return 0;
     }
 
-    vol->v_tm_cachetime = now;
     EC_NULL(dir = opendir(vol->v_path));
 
     while ((entry = readdir(dir)) != NULL) {
@@ -221,31 +217,33 @@ static int get_tm_used(struct vol *vol)
                 && (strlen(entry->d_name) == (p + strlen("sparsebundle") - entry->d_name))) {
             EC_NULL_LOG(infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name,
                                             "Info.plist"));
+            bandsize = get_tm_bandsize(cfrombstr(infoplist));
+            bdestroy(infoplist);
+            infoplist = NULL;
 
-            if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1) {
-                bdestroy(infoplist);
-                infoplist = NULL;
+            /* the band size comes from a file the volume's users write */
+            if (bandsize <= 0) {
                 continue;
             }
 
             EC_NULL_LOG(bandsdir = bformat("%s/%s/%s/", vol->v_path, entry->d_name,
                                            "bands"));
 
-            if ((links = get_tm_bands(cfrombstr(bandsdir))) == -1) {
-                bdestroy(infoplist);
-                infoplist = NULL;
-                bdestroy(bandsdir);
-                bandsdir = NULL;
-                continue;
+            if ((links = get_tm_bands(cfrombstr(bandsdir))) > 0) {
+                used += (VolSpace)(links - 1) * (VolSpace)bandsize;
             }
 
-            used += (links - 1) * bandsize;
             LOG(log_debug, logtype_afpd, "getused(\"%s\"): bands: %" PRIu64 " bytes",
                 cfrombstr(bandsdir), used);
+            bdestroy(bandsdir);
+            bandsdir = NULL;
         }
     }
 
     vol->v_tm_used = used;
+    vol->v_tm_cachetime = now;
+    /* the scan counts what was appended before it */
+    vol->v_appended = 0;
 EC_CLEANUP:
 
     if (infoplist) {
