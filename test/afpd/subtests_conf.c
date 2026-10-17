@@ -2499,6 +2499,163 @@ static const struct passwd *conf_nonroot_user(void)
 }
 
 /*!
+ * @brief A private volume belongs to its named owner, with its state inside it
+ *
+ * Its CNID directory is .AppleDB inside it whatever the global vol dbpath
+ * says, and a section-level vol dbpath moves it unless the value has $u; it
+ * uses sqlite and the cnid search backend whatever cnid scheme and spotlight
+ * backend say, a value in its own section logged and a global one not;
+ * 'private = $u' in a volume section names no account; a load for another
+ * account gets no private volume. One load holds all four sections, a second
+ * is another account's.
+ *
+ * @returns 0 when every section resolves that way
+ */
+int utest_conf_private_volume_state(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[5 * MAXPATHLEN];
+    char expected[MAXPATHLEN + 16];
+    char owner_name[MAXUSERLEN];
+    /* read as a string only: no section opens a CNID database */
+    const char dbdir[] = "/nonexistent/utestcnid";
+    char *voldir[4] = { NULL, NULL, NULL, NULL };
+    const struct vol *vol;
+    /* root can't own a private volume, so a root run names another account */
+    const struct passwd *owner = conf_nonroot_user();
+    uid_t owner_uid;
+    int failed = -1;
+
+    if (owner == NULL || conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    /* the record is the C library's, which the load below may reuse */
+    strlcpy(owner_name, owner->pw_name, sizeof(owner_name));
+    owner_uid = owner->pw_uid;
+
+    for (size_t i = 0; i < 4; i++) {
+        if ((voldir[i] = conf_mkvoldir()) == NULL) {
+            failed = TEST_SKIP;
+            goto cleanup;
+        }
+    }
+
+    snprintf(body, sizeof(body),
+             "vol dbpath = %s\n"
+             "cnid scheme = mysql\n"
+             "[utestpriv]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "spotlight backend = localsearch\n"
+             "[utestmoved]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "vol dbpath = %s\n"
+             "[utestdollar]\n"
+             "path = %s\n"
+             "private = $u\n"
+             "[utestuserdb]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "vol dbpath = %s/$u\n",
+             dbdir, voldir[0], owner_name, voldir[1], owner_name, dbdir,
+             voldir[2], voldir[3], owner_name, dbdir);
+    snprintf(expected, sizeof(expected), "%s/.AppleDB", voldir[0]);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestpriv");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, expected) != 0
+            || strcmp(vol->v_cnidscheme, "sqlite") != 0
+            || strcmp(vol->v_sl_backend_name, "cnid") != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: dbpath '%s' want '%s', "
+                "scheme '%s', backend '%s'\n",
+                vol ? vol->v_dbpath : "(no volume)", expected,
+                vol ? vol->v_cnidscheme : "-",
+                vol ? vol->v_sl_backend_name : "-");
+        goto teardown;
+    }
+
+    /* the section's own value is logged, the global one is not */
+    if (conf_log_contains(logpath, "'spotlight backend = localsearch'") != 1
+            || conf_log_contains(logpath, "'cnid scheme = ") != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: a section option was not "
+                "logged, or a global one was\n");
+        goto teardown;
+    }
+
+    vol = conf_vol_by_name("utestmoved");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, dbdir) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: section dbpath '%s' "
+                "want '%s'\n", vol ? vol->v_dbpath : "(no volume)", dbdir);
+        goto teardown;
+    }
+
+    /* $u would name the account of each load, not the volume's owner */
+    snprintf(expected, sizeof(expected), "%s/.AppleDB", voldir[3]);
+    vol = conf_vol_by_name("utestuserdb");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, expected) != 0
+            || conf_log_contains(logpath, "can't take $u") != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: section dbpath with $u "
+                "'%s' want '%s'\n", vol ? vol->v_dbpath : "(no volume)",
+                expected);
+        goto teardown;
+    }
+
+    if (conf_vol_by_name("utestdollar") != NULL
+            || conf_log_contains(logpath,
+                                 "'private' user \"$u\" is unknown") != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: 'private = $u' on a "
+                "volume section was not refused\n");
+        goto teardown;
+    }
+
+    /* a load for another account; LV_ALL, so the uid needs no record */
+    conf_teardown(&obj, NULL);
+
+    if (conf_parse_fixture(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    obj.uid = owner_uid + 1;
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0
+            || conf_vol_by_name("utestpriv") != NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: another account's load "
+                "was given the private volume\n");
+        goto teardown;
+    }
+
+    failed = 0;
+teardown:
+    conf_teardown(&obj, NULL);
+cleanup:
+
+    for (size_t i = 0; i < 4; i++) {
+        if (voldir[i]) {
+            rmdir(voldir[i]);
+            free(voldir[i]);
+        }
+    }
+
+    unlink(logpath);
+    return failed;
+}
+
+/*!
  * @brief A session loads volumes only once login() has named its user
  *
  * A reload request can reach a session before login, and a list built then

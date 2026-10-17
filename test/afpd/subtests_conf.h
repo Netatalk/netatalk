@@ -45,5 +45,6 @@ extern int utest_conf_load_afp_conf_vols_locked(void);
 extern int utest_conf_dircache_resolve_size(void);
 extern int utest_conf_singleuser_state_paths(void);
 extern int utest_conf_session_loads_after_login(void);
+extern int utest_conf_private_volume_state(void);
 
 #endif /* SUBTESTS_CONF_H */

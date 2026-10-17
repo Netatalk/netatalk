@@ -255,9 +255,8 @@ static bool dir_is_private(const char *path, mode_t file_mask,
  * @brief Tell whether a CNID directory belongs to the caller and is writable,
  * or can be created
  *
- * A symbolic link does not pass. The call drops trailing slashes first. A
- * [Global] vol dbpath gets the volume name and a slash appended, and a
- * trailing slash makes lstat follow a link. A missing directory passes when
+ * A symbolic link does not pass. The call drops trailing slashes first: with
+ * one, lstat follows a final symbolic link. A missing directory passes when
  * its parent is writable and searchable.
  *
  * @param[in] path  CNID directory of a volume
@@ -337,10 +336,10 @@ static bool srp_verifier_store_is_private(const char *path)
  * config file and the SRP verifier store must be private to the user, and
  * [Homes] is out.
  *
- * Every configured volume must load and use the sqlite CNID backend, and a
- * Spotlight volume no backend other than cnid. The user must reach each
- * volume, and its CNID directory must be another directory that the user owns
- * or can create. A port below 1024 only warns.
+ * Every configured volume must load, which a volume does only when it is
+ * private to the user. The user must reach each volume, and its CNID
+ * directory must be another directory that the user owns or can create. A
+ * port below 1024 only warns.
  *
  * @param[in] volumes_loaded  result of the volume load
  * @returns 0 when every clause passes, -1 after the message of the first
@@ -404,22 +403,6 @@ static int validate_singleuser_config(bool volumes_loaded)
     }
 
     for (const struct vol *vol = getvolumes(); vol != NULL; vol = vol->v_next) {
-        if (vol->v_cnidscheme == NULL || strcasecmp(vol->v_cnidscheme, "sqlite") != 0) {
-            fprintf(stderr, "netatalk: --single-user volume '%s' must use sqlite CNID.\n",
-                    vol->v_localname);
-            return -1;
-        }
-
-        /* the cnid backend searches the volume's own sqlite database; the
-         * others keep their index under system directories */
-        if ((vol->v_flags & AFPVOL_SPOTLIGHT) && vol->v_sl_backend_name != NULL
-                && strcasecmp(vol->v_sl_backend_name, "cnid") != 0) {
-            fprintf(stderr,
-                    "netatalk: --single-user supports only 'spotlight backend = cnid'; volume '%s' uses '%s'.\n",
-                    vol->v_localname, vol->v_sl_backend_name);
-            return -1;
-        }
-
         int want = R_OK | X_OK | ((vol->v_flags & AFPVOL_RO) ? 0 : W_OK);
 
         if (access(vol->v_path, want) != 0) {
@@ -452,7 +435,11 @@ static int validate_singleuser_config(bool volumes_loaded)
          * the backend. */
         if (!dbpath_is_creatable(vol->v_dbpath)) {
             fprintf(stderr,
-                    "netatalk: --single-user requires the CNID directory of volume '%s' (%s) to be a writable directory the calling user owns, not a symbolic link, or one the calling user can create: set 'vol dbpath' to a directory the calling user owns.\n",
+                    "netatalk: --single-user requires the CNID directory of "
+                    "volume '%s' (%s) to be a writable directory the calling "
+                    "user owns, not a symbolic link, or one the calling user "
+                    "can create: set a volume-level 'vol dbpath' to a "
+                    "directory the calling user owns.\n",
                     vol->v_localname, vol->v_dbpath);
             return -1;
         }
@@ -598,7 +585,10 @@ static int set_sl_volumes(void)
     first = true;
 
     for (vol = volumes; vol; vol = vol->v_next) {
-        if (vol->v_flags & AFPVOL_SPOTLIGHT) {
+        /* a private volume's names stay out of an index every local account
+         * can query; its owner searches it through the cnid backend */
+        if ((vol->v_flags & AFPVOL_SPOTLIGHT)
+                && !(vol->v_flags & AFPVOL_PRIVATE)) {
             if (strchr(vol->v_path, '\'') != NULL) {
                 LOG(log_warning, logtype_sl,
                     "set_sl_volumes: skipping volume with single quote in path: \"%s\"",

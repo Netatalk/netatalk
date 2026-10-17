@@ -1463,6 +1463,29 @@ static void log_ea_format_advice(const struct vol *volume,
 }
 
 /*!
+ * @brief Log a private volume's own option that the volume does not take
+ *
+ * @param[in] obj      handle
+ * @param[in] section  the volume's section
+ * @param[in] name     the volume's name
+ * @param[in] option   the option
+ * @param[in] value    the value a private volume uses
+ */
+static void private_option_warning(const AFPObj *obj, const char *section,
+                                   const char *name, const char *option,
+                                   const char *value)
+{
+    const char *own = getoption_str(obj->iniconfig, section, option, NULL,
+                                    NULL);
+
+    if (own != NULL && strcasecmp(own, value) != 0) {
+        LOG(log_warning, logtype_afpd,
+            "creatvol: volume \"%s\": '%s = %s' doesn't apply to a private "
+            "volume, which uses %s", name, option, own, value);
+    }
+}
+
+/*!
  * @brief Create volume struct
  *
  * @param[in] obj      handle
@@ -1635,6 +1658,60 @@ static struct vol *creatvol(AFPObj *obj,
         }
     }
 
+    /* private: the volume admits loads for its owner and loads for no
+     * account, obj->uid 0 */
+    const bool homes = STRCMP(section, ==, INISEC_HOMES);
+    bool vol_private = false;
+    uid_t private_uid = 0;
+    val = homes ? NULL
+          : getoption_str(obj->iniconfig, section, "private", preset, NULL);
+
+    if (homes || (val != NULL && *val != '\0')) {
+        /* a home is built with its owner's record */
+        const struct passwd *owner = homes ? pwd : getpwnam(val);
+
+        /* every session would act as one account that is not the owner */
+        if (obj->options.force_user) {
+            LOG(log_error, logtype_afpd,
+                "creatvol: volume \"%s\": a private volume can't be used "
+                "with force user, skipping", name);
+            EC_EXIT_STATUS(0);
+        }
+
+        if (owner == NULL) {
+            LOG(log_error, logtype_afpd,
+                "creatvol: volume \"%s\": 'private' user \"%s\" is unknown, "
+                "skipping", name, val);
+            EC_EXIT_STATUS(0);
+        }
+
+        private_uid = owner->pw_uid;
+
+        if (private_uid == 0) {
+            LOG(log_error, logtype_afpd,
+                "creatvol: volume \"%s\": root can't own a private volume, "
+                "skipping", name);
+            EC_EXIT_STATUS(0);
+        }
+
+        if (obj->uid != 0 && obj->uid != private_uid) {
+            LOG(log_info, logtype_afpd,
+                "creatvol: volume \"%s\" is private to \"%s\", skipping",
+                name, owner->pw_name);
+            EC_EXIT_STATUS(0);
+        }
+
+        vol_private = true;
+    }
+
+    if ((obj->options.flags & OPTION_SINGLEUSER)
+            && (homes || !vol_private || private_uid != getuid())) {
+        LOG(log_error, logtype_afpd,
+            "creatvol: volume \"%s\": single-user mode serves only volumes "
+            "with 'private' naming the user who started it, skipping", name);
+        EC_EXIT_STATUS(0);
+    }
+
     /*
      * Check allow/deny lists:
      * allow -> either no list (-1), or in list (1)
@@ -1687,6 +1764,11 @@ static struct vol *creatvol(AFPObj *obj,
     volume->v_adouble = AD_VERSION;
     volume->v_umask = obj->options.umask;
 
+    if (vol_private) {
+        volume->v_flags |= AFPVOL_PRIVATE;
+        volume->v_private_uid = private_uid;
+    }
+
     if ((val = getoption_str(obj->iniconfig, section, "password", preset, NULL))) {
         EC_NULL(volume->v_password = strdup(val));
     }
@@ -1733,31 +1815,58 @@ static struct vol *creatvol(AFPObj *obj,
      * the volume name appended */
     val = getoption_str(obj->iniconfig, section, "vol dbpath", preset, NULL);
 
-    if (val == NULL) {
-        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath",
-                            NULL, NULL);
-
-        if (val && strchr(val, '$') == NULL) {
-            EC_NULL(global_path_tmp = bformat("%s/%s/", val, tmpname));
-            val = cfrombstr(global_path_tmp);
-        }
+    /* $u names the account a load is for: a home's owner on every load, so
+     * a home's value carries it, but any account for a volume section */
+    if (vol_private && val != NULL && (strstr(val, "$u") != NULL) != homes) {
+        LOG(log_warning, logtype_afpd,
+            "creatvol: volume \"%s\": 'vol dbpath' %s %s $u, using the "
+            "volume's .AppleDB", name, val, homes ? "needs" : "can't take");
+        val = NULL;
     }
 
-    if (val == NULL) {
-        LOG(log_debug, logtype_afpd,
-            "creatvol: using default cnid vol dbpath for volume \"%s\"", name);
-        EC_NULL(dbpath = bformat("%s/%s/", _PATH_STATEDIR "CNID/", tmpname));
+    if (val == NULL && vol_private) {
+        /* a private volume keeps its state inside it unless its section
+         * moves it; the resolved volume path takes no variable expansion */
+        EC_NULL(dbpath = bformat("%s/.AppleDB", path));
+        EC_NULL(volume->v_dbpath = strdup(cfrombstr(dbpath)));
     } else {
-        LOG(log_debug, logtype_afpd,
-            "creatvol: using configured cnid vol dbpath '%s' for volume \"%s\"",
-            val, name);
-        EC_NULL(dbpath = bfromcstr(val));
+        if (val == NULL) {
+            val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath",
+                                NULL, NULL);
+
+            if (val && strchr(val, '$') == NULL) {
+                EC_NULL(global_path_tmp = bformat("%s/%s/", val, tmpname));
+                val = cfrombstr(global_path_tmp);
+            }
+        }
+
+        if (val == NULL) {
+            LOG(log_debug, logtype_afpd,
+                "creatvol: using default cnid vol dbpath for volume \"%s\"",
+                name);
+            EC_NULL(dbpath = bformat("%s/%s/", _PATH_STATEDIR "CNID/",
+                                     tmpname));
+        } else {
+            LOG(log_debug, logtype_afpd,
+                "creatvol: using configured cnid vol dbpath '%s' for volume "
+                "\"%s\"", val, name);
+            EC_NULL(dbpath = bfromcstr(val));
+        }
+
+        EC_NULL(volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN + 1,
+                                            cfrombstr(dbpath), pwd, NULL,
+                                            tmpname));
     }
 
-    EC_NULL(volume->v_dbpath = volxlate(obj, NULL, MAXPATHLEN + 1,
-                                        cfrombstr(dbpath), pwd, NULL, tmpname));
     val = vdgoption_str(obj->iniconfig, section, "cnid scheme", preset,
                         DEFAULT_CNID_SCHEME);
+
+    if (vol_private) {
+        /* a private volume's state is its own sqlite database */
+        private_option_warning(obj, section, name, "cnid scheme", "sqlite");
+        val = "sqlite";
+    }
+
     EC_NULL(volume->v_cnidscheme = strdup(val));
     val = vdgoption_str(obj->iniconfig, section, "legacy icon", preset, NULL);
 
@@ -1922,6 +2031,13 @@ static struct vol *creatvol(AFPObj *obj,
 
     val = vdgoption_str(obj->iniconfig, section, "spotlight backend", preset,
                         "cnid");
+
+    if (vol_private) {
+        /* Finder search on a private volume goes through its own database */
+        private_option_warning(obj, section, name, "spotlight backend", "cnid");
+        val = "cnid";
+    }
+
     EC_NULL(volume->v_sl_backend_name = strdup(val));
     LOG(log_debug, logtype_afpd,
         "creatvol: volume \"%s\": spotlight backend \"%s\"",
@@ -3424,8 +3540,7 @@ static bool dbpath_is_volume_root(AFPObj *obj, const char *dbpath,
  *
  * A single-user server cannot write the system state directory, so its
  * afp_signature.conf and afp_voluuid.conf live in the [Global] vol dbpath
- * directory, the parent of its CNID directories, which the server creates or
- * makes mode 0700 as it does the CNID directories below it. Every other
+ * directory, which the server creates or makes mode 0700. Every other
  * process takes the same paths when that directory is a user's owner-only
  * directory and the caller is root or that user: the serving user's nad and
  * dbd, which carry no --single-user flag, and root's tools run on the user's
@@ -3457,8 +3572,8 @@ static int user_state_paths(AFPObj *obj, bool singleuser)
         }
 
         LOG(log_error, logtype_afpd,
-            "single-user mode requires a [Global] 'vol dbpath' the calling user owns: "
-            "the signature, the volume uuids and the CNID databases are kept there");
+            "single-user mode requires a [Global] 'vol dbpath' the calling "
+            "user owns: the signature and the volume uuids are kept there");
         return -1;
     }
 

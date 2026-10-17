@@ -153,19 +153,22 @@ start_root_netatalk() {
     return 0
 }
 
-# Open a volume over SRP and enumerate its root: exit 0 when the volume
-# opened, 2 when it could not be, 1 when authentication failed.
-# $1 user, $2 password, $3 volume, $4 port (default 548). One spelling of the
-# client invocation, so a change to the AFP version or the UAM flag is one
-# edit. FPEnumerateExt drives AFP_ENUMERATE_EXT2, the request an AFP 3.x
-# client makes, rather than the AFP 2 call the plain FPEnumerate verb sends.
+# Open a volume over SRP and run one afparg verb on it: exit 0 when the volume
+# opened and the verb succeeded, 2 when the volume could not be opened, 1 when
+# authentication failed.
+# $1 user, $2 password, $3 volume, $4 port (default 548), $5 verb (default
+# FPEnumerateExt). One spelling of the client invocation, so a change to the
+# AFP version or the UAM flag is one edit. FPEnumerateExt drives
+# AFP_ENUMERATE_EXT2, the request an AFP 3.x client makes, rather than the
+# AFP 2 call the plain FPEnumerate verb sends.
 afp_can_open() {
     aco_user=$1
     aco_pass=$2
     aco_vol=$3
     aco_port=${4:-548}
+    aco_verb=${5:-FPEnumerateExt}
     afparg -7 -h 127.0.0.1 -p "$aco_port" -u "$aco_user" -w "$aco_pass" -A SRP \
-        -s "$aco_vol" -f FPEnumerateExt > /dev/null 2>&1
+        -s "$aco_vol" -f "$aco_verb" > /dev/null 2>&1
     return $?
 }
 
@@ -181,6 +184,23 @@ owned() {
     fi
 
     return 1
+}
+
+# Exit 0 when CNID directory $1 is $2's with mode 700 and holds a database
+# whose files are $2's with mode 600. The WAL and SHM files exist only while
+# the database is open, so they are judged when present.
+owner_only_cnid() {
+    ooc_dir=$1
+    ooc_user=$2
+    owned "$ooc_dir" "$ooc_user 700" || return 1
+    ls "$ooc_dir"/*.sqlite > /dev/null 2>&1 || return 1
+
+    for ooc_f in "$ooc_dir"/*.sqlite "$ooc_dir"/*.sqlite-wal "$ooc_dir"/*.sqlite-shm; do
+        [ -e "$ooc_f" ] || continue
+        owned "$ooc_f" "$ooc_user 600" || return 1
+    done
+
+    return 0
 }
 
 # The value of one `afpd -v` line, by its label ($1, without the colon).
