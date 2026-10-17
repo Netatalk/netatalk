@@ -60,6 +60,18 @@ Changes in 4.7.0
 * FIX: libatalk: copying a data fork, or converting an AppleDouble v2
   resource fork, completes after a short write, GitHub #3402
 * UPD: afpd: afpd -V reports sendfile support, GitHub #3402
+* FIX: afpd: a folder's item count no longer runs one too high after a save
+  over an existing file or through a symlink, GitHub #3412
+* FIX: afpd: saving over a symbolic link on a volume with .AppleDouble
+  metadata no longer deletes the link, GitHub #3412
+* FIX: afpd: permission changes made outside AFP take effect for a folder's
+  access checks at once, GitHub #3412
+* UPD: afpd: a stale folder item count is recounted at most twice, not on
+  every alternate listing and lookup, GitHub #3412
+* FIX: afpd: a file's delete permission follows its parent folder, as the
+  system's own rules do, GitHub #3412
+* FIX: afpd: resolving a file ID after another client renamed its folder no
+  longer loses the folder's other file IDs, GitHub #3412
 
 Changes in 4.6.1
 ----------------

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 2026 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -1392,10 +1392,11 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     if (ad_meta_fileno(&ad) == -1) {     /* Hard META / HF */
-        /* FIXME with hard create on an existing file, we already
-         * corrupted the data file.
-         */
-        netatalk_unlink(upath);
+        /* the data file the create made goes; an emulated symlink made none */
+        if (ad_data_fileno(&ad) != AD_SYMLINK) {
+            netatalk_unlink(upath);
+        }
+
         ad_close(&ad, ADFLAGS_DF);
         return AFPERR_ACCESS;
     }
@@ -1478,7 +1479,22 @@ createfile_iderr:
 
     /* Send hint to afpd siblings — parent dir ctime changed due to new file creation */
     ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
-    curdir->d_offcnt++;
+
+    /* st_errno is the pre-create stat: an existing name adds nothing; a
+     * dangling link put the file where it points, so a fresh stat of this
+     * folder decides whether its count moved */
+    if (s_path->st_errno != 0) {
+        if (S_ISLNK(st.st_mode)) {
+            struct stat dst;
+
+            if (lstat(".", &dst) == 0) {
+                dir_stat_refresh(vol, curdir, &dst);
+            }
+        } else {
+            curdir->d_offcnt++;
+        }
+    }
+
     setvoltime(obj, vol);
     return retvalue;
 }
@@ -3008,7 +3024,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
     data.did = dir->d_did;
 
     if ((ret = for_each_dirent(vol, name, reenumerate_loop, (void *)&data)) >= 0) {
-        setdiroffcnt(curdir, &st,  ret);
+        setdiroffcnt(vol, dir, &st, ret);
         dir->d_flags |= DIRF_CNID;
     }
 
@@ -3128,8 +3144,10 @@ retry:
 #endif
 
         if (errno == ENOENT && !retry) {
-            /* cnid db is out of sync, reenumerate the directory and update ids */
-            if (reenumerate_id(vol, ".", dir) < 0) {
+            /* cnid db is out of sync, reenumerate the directory and update
+             * ids; movecwd() may have replaced dir with the entry it moved
+             * into */
+            if (reenumerate_id(vol, ".", curdir) < 0) {
                 /* The table was reset: a retry would resolve this CNID against
                  * refilled rows and return another object's metadata */
                 return AFPERR_NOID;

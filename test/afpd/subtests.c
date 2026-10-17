@@ -782,6 +782,61 @@ out:
 }
 
 /*!
+ * @brief A stat refresh that moves the ctime drops the cached access rights
+ *
+ * check_acl_access() serves d_rights_cache while dcache_ctime matches the
+ * disk; a refresh that brings dcache_ctime forward must not carry rights
+ * computed under the old stat.
+ *
+ * @param[in] vol  volume whose root holds the planted entry
+ * @returns 0, else the number of the step that disagreed
+ */
+int test011_stat_refresh_drops_rights(struct vol *vol)
+{
+    struct dir *entry;
+    struct stat st;
+    struct dir_modify_args args = { .flags = DCMOD_STAT, .st = &st };
+    int ret;
+
+    if (stat(vol->v_path, &st) != 0) {
+        return -1;
+    }
+
+    entry = plant_root_entry(vol, "t011_dir", htonl(30011), &st);
+
+    if (entry == NULL) {
+        return 1;
+    }
+
+    entry->d_rights_cache = 1;
+    st.st_ctime++;
+
+    if (dir_modify(vol, entry, &args) != 0) {
+        ret = 2;
+    } else if (entry->d_rights_cache != 0xffffffff) {
+        ret = 3;
+    } else {
+        /* the same stat again: nothing moved, so cached rights stay */
+        entry->d_rights_cache = 1;
+        ret = dir_modify(vol, entry, &args) == 0
+              && entry->d_rights_cache == 1 ? 0 : 4;
+    }
+
+    if (ret == 0) {
+        /* a sibling's hint carries DCMOD_AD_INV: the rights go even when the
+         * stat did not move */
+        args.flags = DCMOD_STAT | DCMOD_AD_INV;
+        entry->d_rights_cache = 1;
+        ret = dir_modify(vol, entry, &args) == 0
+              && entry->d_rights_cache == 0xffffffff ? 0 : 5;
+    }
+
+    dir_remove(vol, entry, 0);
+    dir_free_invalid_q();
+    return ret;
+}
+
+/*!
  * @brief curdir survives its entry being expunged by a file
  *
  * A file colliding on the (vid, did) key retires the cached directory — a

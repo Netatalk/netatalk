@@ -53,10 +53,16 @@ extern char **cnamewrap(const char *name);
 
 extern int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did,
                            const char *name);
+extern int getfiledirparms_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,
+                                  const char *name, uint16_t fbitmap,
+                                  uint16_t dbitmap);
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int enumerate(AFPObj *obj, uint16_t vid, cnid_t did);
+extern int enumerate_range(AFPObj *obj, uint16_t vid, cnid_t did,
+                           uint16_t fbitmap, uint16_t dbitmap,
+                           uint32_t sindex, uint16_t reqcnt);
 extern uint16_t openvol(AFPObj *obj, const char *name);
 extern void dsi_test_header(uint8_t *block, uint8_t command,
                             uint16_t request_id, uint32_t code_or_doff,
@@ -77,5 +83,8 @@ extern int fsize_uncap(const struct fsize_cap *cap);
 extern int openfork(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                     uint8_t fork, uint16_t access, uint16_t *refnum);
 extern int closefork(AFPObj *obj, uint16_t refnum);
+extern int checkaccess(AFPObj *obj, uint16_t vid, cnid_t did,
+                       const char *name, uint32_t rights);
+extern int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid);
 
 #endif  /* AFPFUNC_HELPERS */

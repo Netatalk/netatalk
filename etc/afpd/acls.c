@@ -1,6 +1,7 @@
 /*
   Copyright (c) 2008, 2009, 2010 Frank Lahm <franklahm@gmail.com>
   Copyright (c) 2011 Laura Mueller <laura-mueller@uni-duesseldorf.de>
+  Copyright (c) 2025-2026 Andy Lemin (andylemin)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1684,6 +1685,29 @@ EC_CLEANUP:
 #endif /* HAVE_POSIX_ACLS */
 
 /*!
+ * @brief Rights of the session's user on path, from its NFSv4 or POSIX ACL
+ *
+ * @param[in]     obj     the session
+ * @param[in]     path    the object
+ * @param[in,out] st      its stat; the NFSv4 reader may widen st_mode
+ * @param[out]    rights  the Darwin rights
+ * @returns 0, or -1 when the ACL cannot be read
+ */
+static int acl_rights_of(const AFPObj *obj, const char *path, struct stat *st,
+                         uint32_t *rights)
+{
+    EC_INIT;
+#ifdef HAVE_NFSV4_ACLS
+    EC_ZERO_LOG(solaris_acl_rights(obj, path, st, NULL, rights));
+#endif
+#ifdef HAVE_POSIX_ACLS
+    EC_ZERO_LOG(posix_acl_rights(obj, path, st, rights));
+#endif
+EC_CLEANUP:
+    EC_EXIT;
+}
+
+/*!
  * @brief Checks if a given UUID has requested_rights (type darwin_ace_rights)
  * for path.
  *
@@ -1707,9 +1731,7 @@ static int check_acl_access(const AFPObj *obj,
 {
     int            ret;
     uint32_t       allowed_rights = 0;
-    char           *username = NULL;
     struct stat    st;
-    bstring        parent = NULL;
     int            is_dir;
     LOG(log_maxdebug, logtype_afpd,
         "check_acl_access(dir: \"%s\", path: \"%s\", curdir: \"%s\", 0x%08x)",
@@ -1724,28 +1746,31 @@ static int check_acl_access(const AFPObj *obj,
      * 1. It's a directory
      * 2. Cache value is not 0xffffffff (unset/invalid)
      * 3. Filesystem ctime matches cached ctime (no external permission changes)
+     * 4. Same inode as cached (the entry still describes this directory)
      */
     if (is_dir && (curdir->d_rights_cache != 0xffffffff) &&
+            (curdir->dcache_ino == st.st_ino) &&
             (curdir->dcache_ctime == st.st_ctime)) {
         /* Cache is valid - use cached rights */
         allowed_rights = curdir->d_rights_cache;
         LOG(log_debug, logtype_afpd,
-            "check_acl_access: using cached rights: 0x%08x (ctime match)", allowed_rights);
+            "check_acl_access: using cached rights: 0x%08x (stat match)", allowed_rights);
     } else {
-        /* Cached rights invalid or ctime changed - recalculate permissions */
-        if (is_dir && (curdir->d_rights_cache != 0xffffffff) &&
-                (curdir->dcache_ctime != st.st_ctime)) {
+        if (is_dir && (curdir->d_rights_cache != 0xffffffff)) {
             LOG(log_debug, logtype_afpd,
-                "check_acl_access: ctime mismatch (cached:%ld, current:%ld), invalidating permission cache",
-                (long)curdir->dcache_ctime, (long)st.st_ctime);
+                "check_acl_access: stat mismatch (cached ino:%llu ctime:%lld, "
+                "current ino:%llu ctime:%lld), invalidating permission cache",
+                (unsigned long long)curdir->dcache_ino,
+                (long long)curdir->dcache_ctime,
+                (unsigned long long)st.st_ino, (long long)st.st_ctime);
         }
 
-#ifdef HAVE_NFSV4_ACLS
-        EC_ZERO_LOG(solaris_acl_rights(obj, path, &st, NULL, &allowed_rights));
-#endif
-#ifdef HAVE_POSIX_ACLS
-        EC_ZERO_LOG(posix_acl_rights(obj, path, &st, &allowed_rights));
-#endif
+        if (is_dir) {
+            /* the entry follows the stat the rights are computed from */
+            dir_stat_refresh(vol, curdir, &st);
+        }
+
+        EC_ZERO_LOG(acl_rights_of(obj, path, &st, &allowed_rights));
 
         /*
          * The DARWIN_ACE_DELETE right might implicitly result from write acces to the parent
@@ -1755,34 +1780,28 @@ static int check_acl_access(const AFPObj *obj,
          * Currentyl acl2ownermode calls us with dir = NULL, because it doesn't make sense
          * there to do this extra check -- afaict.
          */
-        if (vol && dir && (requested_rights & DARWIN_ACE_DELETE)) {
-            int i;
+        if (vol && dir && !is_dir && (requested_rights & DARWIN_ACE_DELETE)) {
             uint32_t parent_rights = 0;
-
-            if (curdir->d_did == DIRDID_ROOT_PARENT) {
-                /* use volume path */
-                EC_NULL_LOG_ERR(parent = bfromcstr(vol->v_path), AFPERR_MISC);
-            } else {
-                /* build path for parent */
-                EC_NULL_LOG_ERR(parent = bstrcpy(curdir->d_fullpath), AFPERR_MISC);
-                EC_ZERO_LOG_ERR(bconchar(parent, '/'), AFPERR_MISC);
-                EC_ZERO_LOG_ERR(bcatcstr(parent, path), AFPERR_MISC);
-                EC_NEG1_LOG_ERR(i = bstrrchr(parent, '/'), AFPERR_MISC);
-                EC_ZERO_LOG_ERR(binsertch(parent, i, 1, 0), AFPERR_MISC);
-            }
-
-            LOG(log_debug, logtype_afpd, "parent: %s", cfrombstr(parent));
-            EC_ZERO_LOG_ERR(lstat(cfrombstr(parent), &st), AFPERR_MISC);
-#ifdef HAVE_NFSV4_ACLS
-            EC_ZERO_LOG(solaris_acl_rights(obj, cfrombstr(parent), &st, NULL,
-                                           &parent_rights));
-#endif
-#ifdef HAVE_POSIX_ACLS
-            EC_ZERO_LOG(posix_acl_rights(obj, path, &st, &parent_rights));
-#endif
+            struct stat parent_st;
+            /* the parent is the working directory cname() left */
+            EC_ZERO_LOG_ERR(lstat(".", &parent_st), AFPERR_MISC);
+            EC_ZERO_LOG(acl_rights_of(obj, ".", &parent_st, &parent_rights));
 
             if (parent_rights & (DARWIN_ACE_WRITE_DATA | DARWIN_ACE_DELETE_CHILD)) {
-                allowed_rights |= DARWIN_ACE_DELETE;    /* man, that was a lot of work! */
+                /* unlink()'s sticky rule, judged for the server's euid; NFSv4
+                 * (Solaris, FreeBSD) also lets a file's writer through */
+#ifdef HAVE_NFSV4_ACLS
+                const int writer = S_ISREG(st.st_mode) &&
+                                   (allowed_rights & DARWIN_ACE_WRITE_DATA);
+#else
+                const int writer = 0;
+#endif
+
+                if (!(parent_st.st_mode & S_ISVTX) || writer ||
+                        obj->euid == 0 || obj->euid == st.st_uid ||
+                        obj->euid == parent_st.st_uid) {
+                    allowed_rights |= DARWIN_ACE_DELETE;
+                }
             }
         }
 
@@ -1790,18 +1809,15 @@ static int check_acl_access(const AFPObj *obj,
             /* Without DARWIN_ACE_DELETE set OS X 10.6 refuses to rename subdirectories in a
              * directory.
              */
-            if (allowed_rights & DARWIN_ACE_ADD_SUBDIRECTORY) {
+            if (allowed_rights & (DARWIN_ACE_WRITE_DATA
+                                  | DARWIN_ACE_DELETE_CHILD
+                                  | DARWIN_ACE_ADD_SUBDIRECTORY)) {
                 allowed_rights |= DARWIN_ACE_DELETE;
             }
 
-            /* Cache the calculated rights along with the filesystem ctime.
-             * This allows us to detect external permission changes by comparing
-             * cached ctime with filesystem ctime on subsequent accesses. */
             curdir->d_rights_cache = allowed_rights;
-            curdir->dcache_ctime = st.st_ctime;
             LOG(log_debug, logtype_afpd,
-                "check_acl_access: cached rights 0x%08x with ctime %ld",
-                allowed_rights, (long)st.st_ctime);
+                "check_acl_access: cached rights 0x%08x", allowed_rights);
         }
 
         LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
@@ -1819,15 +1835,6 @@ static int check_acl_access(const AFPObj *obj,
     }
 
 EC_CLEANUP:
-
-    if (username) {
-        free(username);
-    }
-
-    if (parent) {
-        bdestroy(parent);
-    }
-
     EC_EXIT;
 }
 

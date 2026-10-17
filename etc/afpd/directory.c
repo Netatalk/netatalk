@@ -1419,6 +1419,12 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             dir->dcache_rlen = AD_RLEN_UNKNOWN;
         }
 
+        if (ino_changed || ctime_changed || (args->flags & DCMOD_AD_INV)) {
+            /* the cached rights were computed under the stat being replaced,
+             * or a sibling announced a change the ctime does not show */
+            dir->d_rights_cache = 0xffffffff;
+        }
+
         dir->dcache_ctime = args->st->st_ctime;
 
         if (!keep_old_ino) {
@@ -2405,22 +2411,119 @@ int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
     return 0;
 }
 
+static struct offcnt_stats offcnt_stat;
+
+/*!
+ * @brief Copy the session's offspring count statistics
+ *
+ * @param[out] out  receives the counters
+ */
+void offcnt_stats_get(struct offcnt_stats *out)
+{
+    *out = offcnt_stat;
+}
+
+/*!
+ * @brief Log the session's offspring count statistics
+ *
+ * @param[in] username  the session's user
+ */
+void offcnt_log_stats(const char *username)
+{
+    unsigned long long walked = offcnt_stat.first + offcnt_stat.older
+                                + offcnt_stat.confirmed + offcnt_stat.changed;
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (offcnt): (user: %s) requests: %llu, "
+        "cached: %llu, walked: %llu (first: %llu, older: %llu, "
+        "confirmed: %llu, changed: %llu), failed: %llu, entries: %llu",
+        username, offcnt_stat.requests, offcnt_stat.cached, walked,
+        offcnt_stat.first, offcnt_stat.older, offcnt_stat.confirmed,
+        offcnt_stat.changed, offcnt_stat.failed, offcnt_stat.entries);
+}
+
+/*!
+ * @brief Bring a dircache entry's stat up to a stat taken from disk
+ *
+ * Same inode only: an inode change may make dir_modify() re-key or drop
+ * the entry, which is left to validation and the AppleDouble lookup.
+ *
+ * @param[in]     vol  the volume
+ * @param[in,out] dir  the entry
+ * @param[in]     st   the stat taken from disk for the entry's object
+ */
+void dir_stat_refresh(const struct vol *vol, struct dir *dir, struct stat *st)
+{
+    if (dir->dcache_ino != st->st_ino || dir->dcache_ctime == st->st_ctime) {
+        return;
+    }
+
+    dir_modify(vol, dir, &(struct dir_modify_args) {
+        .flags = DCMOD_STAT,
+        .st = st
+    });
+}
+
 /*!
  * @brief Cache the offspring count of a directory together with its ctime
  *
- * The cached count stays valid while the directory ctime matches. The call
- * also clears DIRF_CNID, because a plain count does not prove that the CNID
- * database holds every entry.
+ * On the same inode the entry is brought to the stat first, so the count
+ * and the entry agree on the ctime. The cached count stays valid while the
+ * directory ctime matches. The call also clears DIRF_CNID, because a plain
+ * count does not prove that the CNID database holds every entry.
  *
+ * @param[in]     vol    the volume
  * @param[in,out] dir    directory to update
  * @param[in]     st     fresh stat of the directory
  * @param[in]     count  number of visible entries
  */
-void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
+void setdiroffcnt(const struct vol *vol, struct dir *dir, struct stat *st,
+                  uint32_t count)
 {
+    dir_stat_refresh(vol, dir, st);
     dir->d_offcnt = count;
     dir->d_ctime = st->st_ctime;
     dir->d_flags &= ~DIRF_CNID;
+}
+
+/*!
+ * @brief Serve a folder's offspring count, walking it when the count is stale
+ *
+ * @param[in]     vol    the volume
+ * @param[in,out] dir    the folder's dircache entry, holding the count
+ * @param[in]     st     the stat the request holds for the folder
+ * @param[in]     upath  the folder's path relative to the working directory
+ * @returns the count capped at 0xffff, or 0 when the folder cannot be read
+ */
+static uint16_t offcnt_serve(const struct vol *vol, struct dir *dir,
+                             struct stat *st, char *upath)
+{
+    offcnt_stat.requests++;
+
+    if (diroffcnt(dir, st)) {
+        offcnt_stat.cached++;
+    } else {
+        int count = for_each_dirent(vol, upath, NULL, NULL);
+
+        if (count < 0) {
+            offcnt_stat.failed++;
+            return 0;
+        }
+
+        if (dir->d_ctime == 0) {
+            offcnt_stat.first++;
+        } else if (st->st_ctime < dir->d_ctime) {
+            offcnt_stat.older++;
+        } else if (dir->d_offcnt == (uint32_t)count) {
+            offcnt_stat.confirmed++;
+        } else {
+            offcnt_stat.changed++;
+        }
+
+        offcnt_stat.entries += count;
+        setdiroffcnt(vol, dir, st, count);
+    }
+
+    return (uint16_t)MIN(dir->d_offcnt, 0xffff);
 }
 
 
@@ -2477,11 +2580,16 @@ int getdirparams(const AFPObj *obj,
     int         bit = 0, ad_available = 0;
     uint32_t           aint;
     uint16_t       ashort;
-    int                 ret;
     cnid_t              pdid;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
     int                 timeoffset = 0;
+
+    if (s_path->st_errno == 0) {
+        /* a valid stat: the entry follows it before the AppleDouble lookup
+         * and the count store */
+        dir_stat_refresh(vol, dir, st);
+    }
 
     if (bitmap & ((1 << DIRPBIT_ATTR)  |
                   (1 << DIRPBIT_CDATE) |
@@ -2619,15 +2727,7 @@ int getdirparams(const AFPObj *obj,
             break;
 
         case DIRPBIT_OFFCNT :
-            ashort = 0;
-
-            /* this needs to handle current directory access rights */
-            if (diroffcnt(dir, st)) {
-                ashort = (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
-            } else if ((ret = for_each_dirent(vol, upath, NULL, NULL)) >= 0) {
-                setdiroffcnt(dir, st,  ret);
-                ashort = (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
-            }
+            ashort = offcnt_serve(vol, dir, st, upath);
 
             /* Account for virtual Icon\r file in volume root offspring count */
             if (dir->d_did == DIRDID_ROOT && virtual_icon_enabled(vol)
