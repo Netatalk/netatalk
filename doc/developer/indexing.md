@@ -45,6 +45,18 @@ Enabled backend ops are declared in `etc/spotlight/sl_backends.h`.
 At volume open time, `etc/afpd/volume.c` binds `vol->v_sl_backend` to one
 of the compiled backends.
 
+Session-local ownership and deferred cancellation live in
+`etc/afpd/spotlight_queries.c`. Cancelling a query removes it from client
+lookup while retaining resources needed by asynchronous callbacks. Backend
+close and final release occur only after those callbacks no longer own it.
+Volume/query teardown must preserve this ordering; see
+[Volume Lifecycle](volumes.md).
+
+Spotlight RPC object packing is implemented in
+`etc/afpd/spotlight_marshalling.c` with allocations from `libatalk/dalloc/`.
+It is a separate layer from backend query execution. The wider request and
+notification path is described in [AFP Request Processing](request-flow.md).
+
 ## Data flow overview
 
 ```mermaid
@@ -111,7 +123,7 @@ would be dropped from the search.
 3. The selected backend handles `sbo_open_query`.
 4. The backend finds candidate paths or CNIDs.
 5. Before returning results, backends validate paths with `stat()` and
-   access checks, resolve or filter CNIDs, and call `add_filemeta()`.
+   access checks, resolve or filter CNIDs, and call add_filemeta().
 6. Results are returned in pages as CNID arrays plus metadata arrays.
 
 All current backends ultimately return filesystem results through the same
@@ -127,15 +139,15 @@ multi-word search, joined with `||`. A quoted phrase arrives as one value
 and matches as a filename substring, so adjacency needs no extra
 machinery.
 
-It searches the Netatalk CNID database with `cnid_find_scoped()`, once per
+It searches the Netatalk CNID database with cnid_find_scoped(), once per
 term, and unites the results. When the query carries a folder scope, the
-scope path is resolved to its directory CNID with `cnid_for_path()` and
+scope path is resolved to its directory CNID with cnid_for_path() and
 the subtree restriction is applied inside the database: a recursive CTE
 for the sqlite and mysql schemes.
 Resolved paths are still checked against the scope afterwards, which
 covers the mysql fallback for servers without recursive CTEs.
 
-It resolves CNIDs back to paths with `cnid_resolve()`, memoizing ancestor
+It resolves CNIDs back to paths with cnid_resolve(), memoizing ancestor
 directories for the duration of a query, and returns matching files. It
 does not maintain a separate Spotlight index and does not implement
 `sbo_index_event`.
@@ -181,7 +193,7 @@ readable by the indexing process, plain-text-like, and below the text size
 limit. Files readable to a specific AFP user but not world-readable may be
 found by filename or type, but not by `kMDItemTextContent`.
 
-AFP file and directory operations call `sl_index_event()`. The Xapian
+AFP file and directory operations call sl_index_event(). The Xapian
 backend uses those events to upsert changed paths, delete removed paths,
 delete directory prefixes, or reindex only the affected subtree after
 directory moves. If subtree reindexing fails, the backend marks the index
@@ -234,7 +246,7 @@ Core Services file metadata standard.
 
 ### Returned result metadata
 
-All backends use the shared `add_filemeta()` helper when returning results.
+All backends use the shared add_filemeta() helper when returning results.
 The following result metadata keys are currently populated from filesystem
 metadata when requested:
 

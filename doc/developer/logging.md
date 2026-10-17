@@ -1,8 +1,12 @@
-# Error checking and logging
+# Error Checking, Logging, and Diagnostics
 
 We want rigid error checking and concise log messages without burying the
 relevant function call in repetitive checks. Netatalk provides logging through
 `<atalk/logger.h>` and error checking macros through `<atalk/errchk.h>`.
+
+The implementations live in `libatalk/util/logger.c` and the two headers
+above. Worker diagnostic actions are in `etc/afpd/afp_dsi.c`, with cache
+dumps/statistics in the corresponding cache modules.
 
 ## Logging
 
@@ -127,3 +131,55 @@ EC_CLEANUP:
     EC_EXIT;
 }
 ```
+
+## Collecting a useful failure report
+
+Record the source/build revision, server and client versions, configuration
+path, execution mode, storage/search backends, and triggering AFP operation.
+`afpd -V` reports compiled features, which does not prove that a configured
+UAM loaded or a volume opened. Capture the first failure and nearby session
+messages as well as the final client error.
+
+Select logging by subsystem so a failure can be followed through transport,
+handler, storage, and database layers. For example, an isolated test service
+can enable `afpd`, `dsi`, `cnid`, `ad`, `uams`, or `sl` logging through
+`log level`. Detailed debug output also depends on build settings. Check
+the actual log destination and permissions before collecting output.
+`test/integration/logreopen_test.sh` covers log reopening.
+
+`-F` starts the daemon using the selected configuration; it is not a syntax
+check command. Reproduce with the relevant test harness or isolated service
+instead of starting another server against active volumes.
+
+## Worker dumps and error interpretation
+
+SIGINT to the intended DSI session worker requests a cache dump and toggles
+detailed diagnostic logging. The action runs in the main loop. The parent
+and controller have different signal behavior, so select the worker PID
+deliberately.
+
+Dump/log paths are constructed dynamically. Locate the file matching
+`afpd.<worker-pid>.*` in tmpdir() instead of assuming a fixed path.
+
+Session-close logs summarize directory, metadata, resource-fork, descriptor,
+hint, and idle-worker statistics. Interpret them using
+[Caching and Consistency](caching.md), and compare cold/warm runs using
+[Performance Analysis](profiling.md).
+
+Distinguish the layer that failed before mapping an AFP error:
+
+| Symptom | Implementation boundary to inspect |
+| --- | --- |
+| Missing volume | Definition loading, authorization filtering, UUID/storage initialization, and retained reload state in [Volumes](volumes.md) |
+| Transient database error versus missing ID | The unsigned CNID error contract in [Persistent File Identity](cnid.md) |
+| Failed login | Built/enabled UAM, account policy, credential backend, and effective identity in [Authentication](authentication.md) |
+| Lost session | Transport state, tickles, and reconnect transfer in [AFP Daemon](afpd.md); deliberate reset termination in [Caching](caching.md) |
+| Empty search results | Selected backend, catalog/index coverage, query scope, and access filtering in [Indexed Spotlight Search](indexing.md) |
+
+Discovery advertisements do not prove listener reachability, login, or volume
+access. Likewise, contention is not evidence of database corruption, and a
+catalog reset is not an ordinary first diagnostic step.
+
+Choose a regression test at the failing boundary using `test/README.md`.
+For a bug that spans layers, include both an internal edge-case test and a
+client-visible AFP case, with backend, storage mode, and concurrency recorded.

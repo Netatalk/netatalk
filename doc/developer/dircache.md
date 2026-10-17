@@ -521,30 +521,9 @@ Netatalk includes an idle worker thread that performs non-critical dircache
 housekeeping during `poll()` idle periods, when the main AFP command thread
 is blocked waiting for client data.
 
-### Architecture
-
-The idle worker uses **temporal separation** rather than locks: the worker
-thread and main thread never access shared dircache data concurrently. Three
-seq_cst atomic flags coordinate the handshake (`idle_worker.c`):
-
-- `iw_has_work` — set by the main thread at every enqueue
-  (`iw_note_work()`), cleared by the worker only on full drain
-- `iw_can_work` — main thread only: `iw_grant()` sets it just before
-  blocking in `poll()`, and only when `iw_has_work` is set; `iw_revoke()`
-  clears it after `poll()` returns. With no pending work, no grant is
-  issued and the post-poll path performs no atomic operations at all.
-- `iw_is_working` — worker only: published *before* re-checking
-  `iw_can_work` (Dekker store-then-check), so either the worker sees the
-  revoke and aborts before touching shared data, or main sees
-  `iw_is_working==1` and waits
-
-The worker self-wakes every 10ms via `nanosleep()` and acts only on a
-granted window. It re-checks `iw_can_work` per unit of work — per invalid
-entry freed and per `dir_remove_and_free()` inside a chain batch — so a
-revoke stops it within ~one removal (~1µs). Main's reclaim
-(`iw_wait_release()`) is a single load in the expected case, then a bounded
-cpu-relax spin, then 100µs sleeps — bounding single-core reclaim latency
-that an empty spin would stretch to a scheduler quantum.
+The scheduling API, atomic ownership handshake, fallback, and shutdown
+contracts are documented in [AFP Daemon](afpd.md). The queue mechanics and
+statistics below explain the directory-cache work performed in those windows.
 
 ### Deferred Work Types
 
@@ -563,23 +542,6 @@ that an empty spin would stretch to a scheduler quantum.
    candidate ancestor is unique and is binary-searched against the sorted
    member paths. Drops and batch retirements are counted in
    `covered_cancelled` (dircache statistics).
-
-### Graceful Degradation
-
-If the worker thread fails to start (e.g., `pthread_create()` failure or
-platforms without lock-free atomics), all operations fall back to synchronous
-behavior transparently. The `iw_is_active()` guard ensures the
-`dir_free_invalid_q()` call is preserved in the DSIFUNC_CMD handler when
-the worker is not running.
-
-### Shutdown
-
-`iw_shutdown()` joins the worker (bounded by the 10ms tick — all callers
-run after the main loop revoked the grant) and **abandons** any still-queued
-cleanup work: every caller exits immediately afterwards, the cache dies with
-the process, and the OS reclaims queue memory. Exit paths through
-`afp_dsi_close()` use `iw_revoke_signal_safe()` (a single lock-free atomic
-store, no wait) as a belt-and-braces revoke.
 
 ### Statistics
 

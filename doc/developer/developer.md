@@ -1,164 +1,111 @@
 # Developer Documentation
 
-Netatalk is a Free and Open Source AFP (Apple Filing Protocol) server for Unix-like systems.
-It provides file sharing for AFP clients: notably Macs but also cross-platform clients.
-Major differentiating features compared to other network file system protocols include
-support for rich Mac-style metadata, ultra-fast CNID-based file identity, sophisticated
-caching and locking mechanisms, and support for legacy AppleTalk networking.
-
-This page introduces the architecture and concepts useful when developing Netatalk.
-See the [user manual](https://netatalk.io/manual/en/) for installation and configuration.
+Netatalk is a Free and Open Source AFP (Apple Filing Protocol) server for
+Unix-like systems. It serves Mac-style file identity, metadata, and resource
+forks over TCP and optionally AppleTalk. This manual explains the architecture
+and implementation contracts useful when changing the server and its tools.
+See the [user manual](https://netatalk.io/manual/en/) for installation,
+configuration, and administration.
 
 ## Architecture Overview
 
-Netatalk separates service supervision, connection handling, and client sessions.
-Shared libraries provide protocol handling, metadata storage, character conversion,
-and database access used by the server and its utilities.
+Netatalk separates service supervision, connection handling, and client
+sessions. Shared libraries provide protocols, storage, character conversion,
+and database access used by daemons and utilities.
 
-| Component | Responsibility |
-| --- | --- |
-| Controller | Starts and supervises the AFP server and manages service discovery. |
-| AFP listener | Accepts connections, tracks session workers, and relays communication between them. |
-| Session worker | Handles a client's authentication, open volumes and forks, AFP requests, and caches. |
-| Shared libraries | Provide reusable protocol, storage, and platform support. |
-| Maintenance utilities | Inspect, verify, and maintain file metadata and CNID databases. |
+### Process ownership
 
-### Process Model
-
-In normal service operation, the *netatalk* controller supervises the *afpd* AFP listener.
-For each new TCP connection, the listener forks a session worker that handles
-the client's requests. Each worker maintains its own session state and caches,
-while accessing the files and persistent database records belonging to shared volumes.
+| Process | Responsibility | Implementation guide |
+| --- | --- | --- |
+| `netatalk` controller | Supervise AFP infrastructure and advertise services | [Netatalk Controller Daemon](netatalk.md) |
+| `afpd` listener | Accept connections and track session workers | [AFP Daemon](afpd.md) |
+| AFP session worker | Own client identity, open volumes/forks, transport buffers, and caches | [AFP Daemon](afpd.md), [Request Processing](request-flow.md) |
 
 ```mermaid
 flowchart TD
-    Controller["Netatalk controller"] -->|Supervises| Listener["AFP listener"]
-    Client["AFP client"] -->|DSI over TCP| Listener
-    Listener -->|Creates a worker for each connection| Worker["Session worker"]
-    Worker --> Filesystem["Filesystem and Mac metadata"]
-    Worker --> CNID["Persistent CNID database"]
+    Controller[Netatalk controller] -->|Supervises| Listener[AFP listener]
+    Client[AFP client] -->|DSI over TCP| Listener
+    Listener -->|Forks| Worker[Session worker]
+    Worker --> Files[Filesystem and Mac metadata]
+    Worker --> CNID[Persistent CNID database]
+    Worker -->|Control messages and hints| Listener
+    Listener -->|Hint pipe| Worker
 ```
 
-Workers communicate with the listener for session coordination and to relay
-cache hints to other workers. This communication helps sessions respond to
-changes made by other AFP clients without sharing their in-memory caches.
-AppleTalk services are managed separately from the AFP controller.
+Workers share persistent files and CNID records while retaining their own
+runtime state. AppleTalk services are managed separately from the AFP
+controller; see [AppleTalk](ddp.md).
 
-### Network Protocol Stack
+AFP defines file operations, while DSI over TCP or ASP over ATP/DDP carries
+them to the server's handlers. The host kernel supplies TCP/IP and optional
+DDP networking. Service discovery advertises availability separately from
+transport setup, authentication, and volume authorization.
 
-AFP defines the file operations exchanged between client and server.
-Netatalk carries AFP over TCP using DSI (Data Stream Interface),
-or optionally over AppleTalk using ASP (AppleTalk Session Protocol).
-Both transports lead to the server's AFP command handlers.
+A volume has its own storage and access policy. Persistent CNIDs identify
+objects across supported renames and moves. AppleDouble and extended
+attributes preserve Mac metadata/resource forks, separately from the CNID
+database. Filename conversion relates legacy Mac and Unicode names to host
+paths. Changes to a file operation must preserve these relationships and
+invalidate the corresponding worker caches.
 
-The **afpd** daemon provides AFP over either transport.
-See [AppleTalk Protocol Family](https://netatalk.io/developer/md_developer_2ddp)
-for the responsibilities of the AppleTalk services and their host networking requirements.
+### Lifecycle boundaries
 
-With AppleTalk support, the protocol stack looks like this.
-Protocols above the kernel boundary are implemented in Netatalk's daemons and libraries;
-the host kernel supplies the network transports below it.
+Several transitions affect different parts of a session. Changes must
+preserve the state owned on both sides of each boundary.
 
-```txt
-    AFP                          AFP
-     |                            |
-    ASP    PAP                   DSI
-      \   /                       |
-       ATP RTMP NBP ZIP AEP       | (TCP port 548)
-        |    |   |   |   |        |
-   -+---------------------------------------------------+- (kernel boundary)
-    |                    Socket                         |
-    +-----------------------+------------+--------------+
-    |                       |     TCP    |    UDP       |
-    |          DDP          +------------+--------------+
-    |                       |       IP v4 or v6         |
-    +-----------------------+---------------------------+
-    |                Network Interface                  |
-    +---------------------------------------------------+
-```
+| Transition | Contract and further reading |
+| --- | --- |
+| Connection to login | An accepted transport does not establish a serving identity; [Authentication](authentication.md) defines admission and identity changes |
+| Volume definition to mount | Parsing a share does not open its storage, CNID, or query handles; see [Volume Lifecycle](volumes.md) |
+| Request to persistent mutation | Filesystem, identity, metadata, and cache effects must agree; see [Request Processing](request-flow.md) |
+| Transport loss to retained session | A worker can retain authenticated open state for reconnect; [AFP Daemon](afpd.md) defines the state and transfer paths |
+| Reload to reused volume | Signaling processes does not reconstruct every open volume; see [Configuration Internals](configuration.md) |
+| Volume close to process exit | Per-volume cleanup must preserve the remaining session; session exit can release all worker state; see [Volume Lifecycle](volumes.md) and [AFP Daemon](afpd.md) |
 
-Without AppleTalk, the AFP transport stack is simpler:
+For single-user startup validation and its restart requirements, see
+[Netatalk Controller Daemon](netatalk.md).
 
-```txt
-          AFP
-           |
-          DSI
-           |
-           | (TCP port 548)
-           |
-   -+---------------------------+- (kernel boundary)
-    |         Socket            |
-    +------------+--------------+
-    |     TCP    |    UDP       |
-    +------------+--------------+
-    |       IP v4 or v6         |
-    +---------------------------+
-    |     Network Interface     |
-    +---------------------------+
-```
+## Reading Guide
 
-See [DSI over TCP Implementation Notes](https://netatalk.io/developer/md_developer_2dsi)
-for transport implementation details.
+Start with [Netatalk Controller Daemon](netatalk.md) and [AFP Daemon](afpd.md)
+for process behavior, then [AFP Request Processing](request-flow.md) to follow
+an operation. Use the chapters below for the state those operations own.
 
-Service discovery helps clients locate a server, but is separate from the
-transport carrying AFP requests. Advertising a service does not establish an
-authenticated file-sharing session.
+| Topic | Developer guide |
+| --- | --- |
+| Service supervision, event libraries, and discovery | [Netatalk Controller Daemon](netatalk.md) |
+| Listener loop, worker state, and open-fork tracking | [AFP Daemon](afpd.md) |
+| Persistent IDs and backend errors | [Persistent File Identity](cnid.md) |
+| Cache validity, hints, and idle-worker ownership | [Caching and Consistency](caching.md) |
+| Parsing, inheritance, validation, and reload | [Configuration Internals](configuration.md) |
+| Share definitions, runtime handles, and access policy | [Volume Lifecycle](volumes.md) |
+| UAM callbacks, serving identity, and reconnect authorization | [Authentication and Session Identity](authentication.md) |
+| Metadata formats, resource forks, VFS, and locking | [Mac Metadata and Fork Storage](appledouble.md) |
+| Server, desktop database, and virtual volume icons | [Icons](icons.md) |
+| TCP framing and AppleTalk integration | [DSI](dsi.md), [AppleTalk](ddp.md) |
+| Search backends and query ownership | [Indexed Spotlight Search](indexing.md) |
+| Shared library use and a worked metadata-copy example | [Using libatalk](libatalk.md) |
+| Error handling, diagnostics, and measurement | [Logging and Diagnostics](logging.md), [Performance Analysis](profiling.md) |
 
-## Volumes, File Identity, and Mac Metadata
+## Source Orientation
 
-An AFP volume is a configured share with its own access rules, metadata storage
-policy, and CNID database. A session opens a volume before accessing its files
-and directories. Filesystem permissions and volume policy determine which
-operations the authenticated user can perform.
+| Directory | Main responsibility |
+| --- | --- |
+| `etc/afpd/` | Listener, session workers, AFP handlers, and worker caches |
+| `etc/netatalk/` | Controller and service discovery |
+| `etc/uams/` | Loadable authentication modules |
+| `etc/spotlight/` | Search backend implementations |
+| `libatalk/`, `include/atalk/` | Shared implementations and API declarations |
+| `bin/` | Utilities such as `dbd`, `nad`, and `afppasswd` |
+| `etc/atalkd/`, `etc/papd/` | AppleTalk services |
+| `contrib/` | Auxiliary programs |
+| `test/` | Unit tests, AFP protocol clients, integration scripts, and fuzzing |
 
-AFP clients use Catalog Node Identifiers (CNIDs) to refer to files and directories.
-Netatalk maintains persistent mappings between these identifiers and objects in
-the host filesystem. A file's identity must be considered separately from its
-current name or location, especially when handling moves and renames.
+Meson options determine which optional components a build includes. The
+presence of a source file does not establish runtime availability.
 
-Mac files can have both a data fork and a resource fork, together with metadata
-such as Finder information. Netatalk translates these concepts into storage
-supported by the host filesystem, using extended attributes and AppleDouble
-files according to the volume's storage policy.
-
-| Stored information | Purpose | Storage type |
-| --- | --- | --- |
-| Data fork | The file's main contents | Regular filesystem file |
-| Resource fork and Mac metadata | Additional contents and attributes expected by Mac clients | Extended attributes (xattrs) or AppleDouble sidecar files |
-| CNID records | Persistent file and directory identities within a volume | Embedded SQLite database or a MySQL/MariaDB database server |
-
-The CNID database and Mac metadata storage have different responsibilities and
-lifecycles. A change to file contents, metadata, or location may require updates
-to more than one of these stores.
-
-Filenames also cross a compatibility boundary: classic clients use legacy Mac
-character sets, while newer AFP clients use Unicode. Character conversion and
-normalization must preserve the relationship between client-visible names,
-filesystem names, and persistent identities.
-
-## Authentication and Access Control
-
-Authentication is provided by loadable User Authentication Modules (UAMs).
-The methods available to a client depend on the server's build, configuration,
-and the client's capabilities. Authentication establishes a user identity;
-volume restrictions, filesystem permissions, and access control lists determine
-what that identity can access.
-
-In normal service mode, the server starts with privileges needed to manage
-sessions and performs file operations under the authenticated user's effective
-identity. A restricted single-user mode serves only the identity of the user
-running the server. Changes to session handling must preserve these boundaries
-through login, reconnect, and cleanup.
-
-## Caching and Consistency
-
-Session workers cache filesystem information to reduce repeated lookups and I/O.
-These caches belong to individual workers; persistent files and CNID records
-are shared between sessions.
-
-When changing a file operation, consider both the persistent update and the
-cached state it affects. Renames, deletions, metadata writes, and error recovery
-must leave other sessions able to discover the current state, including changes
-made through local tools or another file-sharing service.
-See [Directory Cache Optimization](https://netatalk.io/developer/md_developer_2dircache)
-for validation and performance details.
+These chapters explain architecture and implementation contracts. Use the
+generated file, type, and function references for API details and the
+[OKF Knowledge Graph](okf-knowledge-graph.md) for callers, dependencies, and
+hotspots. Confirm graph findings in the current source. Test selection and
+execution instructions live in `test/README.md`.

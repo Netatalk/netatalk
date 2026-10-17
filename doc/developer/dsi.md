@@ -1,40 +1,80 @@
 # DSI over TCP Transport Layer
 
-## Signals and Writes to Client
+DSI (Data Stream Interface) frames AFP traffic over TCP. It supplies session
+setup, request/reply boundaries, keep-alive tickles, attention messages, and
+streaming transfer support. AFP operation semantics belong to the handlers
+described in [AFP Request Processing](request-flow.md).
 
-Because AFP/TCP uses a streaming protocol, writes to the client must not interleave:
-a frame goes out only between whole replies.
+## Key modules
 
-The DSI struct maintains an in_write counter that is incremented when entering write operations
-and decremented when leaving.
-dsi_tickle(), dsi_attention() and dsi_close() send their frames only while it reads 0,
-and a read reply that fails leaves it raised, since nothing may follow an unfinished reply on the stream.
+| Location | Responsibility |
+| --- | --- |
+| `include/atalk/dsi.h` | Session structures, wire constants, and transport API |
+| `libatalk/dsi/dsi_tcp.c`, `libatalk/dsi/dsi_getsess.c`, `libatalk/dsi/dsi_opensess.c` | TCP setup, accept/fork, and negotiation |
+| `libatalk/dsi/dsi_stream.c` | Framing, buffered receive, send, and deadlock avoidance |
+| `libatalk/dsi/dsi_read.c`, `libatalk/dsi/dsi_write.c` | Streaming read replies and write payload consumption |
+| `etc/afpd/afp_dsi.c` | Session state, dispatch, deferred signals, and timers |
 
-The signal handlers in afp_dsi.c record the signal, and the main loop sends the tickle and attentions.
-dsi_attention() and dsi_tickle() build their frames in buffers of their own.
+## Framing and negotiation
 
-## Performance Tweaking
+Every DSI message has a 16-byte wire header. Packing and decoding handle
+multi-byte fields explicitly; a host-layout structure must not be sent
+directly. Request IDs associate replies with requests. A DSIWrite frame
+also distinguishes the AFP request block from the following write data.
 
-Sending complete packets or the header and a partial packet to the client is handled by dsi_stream_send()
-in dsi_stream.c.
-dsi_stream_send() coalesces the header and data using writev().
-In addition, AppleShare sessions often involve the sending and receiving of many small packets.
-As a consequence, TCP_NODELAY is used to speed up the turnaround time.
+dsi_stream_receive() checks frame bounds and command requirements. Write
+request blocks and write data have different limits, and ordinary commands
+must contain an AFP function byte. Oversized lengths must be rejected rather
+than silently truncated into a different request.
 
-Because dsi_stream_read() can send incomplete packets,
-dsi_stream_send() does not use the length parameter to specify the dsi_len field in the header.
-Instead, anything that uses dsi_stream_send() needs to specify dsi_len (in network byte order) before calling.
-The dsi_send() macro already does this.
+OpenSession advertises the negotiated server quantum and replay-cache
+capacity. The quantum limits incoming write data; it is not a filesystem
+block size or a universal bound on streamed read replies. Session setup
+can align the quantum to transport characteristics within configured bounds
+and re-clamp buffering after alignment.
 
-Functions that need to specify .dsi_len: dsi_readinit(), dsi_cmdreply()
+## Streaming and reply serialization
 
-To reduce the amount of tickles generated on a slow link,
-SIGALRM is turned off for the duration of a "known" large file transfer
-(i.e., dsi_read/write).
+dsi_stream_send() packs a header and coalesces header/payload using writev().
+The caller sets `dsi_len` in network byte order to the total payload length;
+the payload supplied in one send can be only its first part. The `dsi_send`
+macro sets the length for an ordinary complete reply. TCP_NODELAY improves
+turnaround for the many small messages exchanged by AFP sessions.
 
-## Read-Ahead Buffering
+A streamed read starts with dsi_readinit(), continues through dsi_read(),
+and completes with dsi_readdone(). `DSI_NOREPLY` tells the command loop that
+the handler is sending the reply itself. Incoming writes use dsi_writeinit()
+and dsi_write(); dsi_writeflush() drains unread payload when required.
 
-DSI implements a read-ahead buffer to reduce the number of small reads.
-The buffer size is controlled by the dsireadbuf option (default 12, meaning 12 × server quantum).
-When a read would block due to EAGAIN/EWOULDBLOCK,
-dsi_peek() attempts to read data from the client to break potential deadlock situations.
+The session's `in_write` count prevents tickles, attentions, and close frames
+from interleaving with an unfinished reply. dsi_tickle(), dsi_attention(),
+and dsi_close() send only when that count permits it. An incomplete failed
+read reply must not be followed by a new frame inside its payload.
+
+Timer suppression around large transfers and the write count protect
+different aspects of this sequencing. Signal ownership and deferred
+tickle/attention processing are described in [AFP Daemon](afpd.md).
+
+## Receive buffering and deadlock avoidance
+
+DSI allocates a command buffer and incoming readahead buffer per session.
+The `dsireadbuf` multiplier controls readahead relative to server quantum;
+its current configured default is 32. This buffers client network input,
+not outgoing file data or disk read-ahead.
+
+If the socket cannot accept more output, dsi_peek() watches both read and
+write readiness. It can consume client input into readahead while waiting
+to send, avoiding a deadlock in which both endpoints have full send buffers.
+A full readahead buffer is therefore a transport diagnostic, rather than
+proof that the filesystem needs a larger cache.
+
+The parser bounds the multiplier and the total allocation product, including
+address-space checks. Increasing both quantum and readahead multiplies
+per-worker memory. Explicit socket-buffer requests are also subject to the
+kernel's actual grant. See [Performance Analysis](profiling.md).
+
+## State, tickles, and replay
+
+Session state, tickle limits, reconnect handling, and AFP replay-cache
+eligibility belong to the worker command loop described in
+[AFP Daemon](afpd.md).

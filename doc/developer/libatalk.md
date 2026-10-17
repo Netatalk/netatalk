@@ -1,4 +1,4 @@
-# Using libatalk in Applications
+# libatalk API
 
 libatalk provides Netatalk's shared routines for AppleDouble metadata,
 resource forks, CNID databases, character conversion, and network protocols.
@@ -10,6 +10,36 @@ and installed by Netatalk.
 
 The example below demonstrates linking against libatalk to copy metadata
 and resource forks between existing files in a configured Netatalk volume.
+
+## Subsystems and ownership
+
+Public declarations live under `include/atalk/`; implementations are grouped
+by subsystem under `libatalk/`. The shared library aggregates internal
+libraries selected by Meson. Availability of optional networking, identity,
+or search support depends on the build.
+
+| Subsystem | Implementation / header | Conceptual guide |
+| --- | --- | --- |
+| AppleDouble | `libatalk/adouble/`, `include/atalk/adouble.h` | [Metadata and fork ownership](appledouble.md) |
+| CNID | `libatalk/cnid/`, `include/atalk/cnid.h` | [Persistent identity and error contracts](cnid.md) |
+| DSI | `libatalk/dsi/`, `include/atalk/dsi.h` | [TCP framing and streaming](dsi.md) |
+| Configuration | `libatalk/util/netatalk_conf.c`, `include/atalk/netatalk_conf.h` | [Parsing and object lifetime](configuration.md) |
+| Unicode | `libatalk/unicode/`, `include/atalk/unicode.h` | Filename conversion, normalization, and legacy charsets |
+| VFS and EAs | `libatalk/vfs/`, `include/atalk/vfs.h`, `include/atalk/ea.h` | [Built-in storage dispatch](appledouble.md) |
+| ACLs and UUID mapping | `libatalk/acl/`, `include/atalk/acl.h`, `include/atalk/uuid.h` | [Identity versus authentication](authentication.md) |
+| IPC and children | `libatalk/util/server_ipc.c`, `include/atalk/server_child.h` | [AFP child tracking and session channels](afpd.md) |
+| AppleTalk | `libatalk/asp`, `libatalk/atp`, `libatalk/nbp`, `libatalk/netddp` | [AppleTalk integration](ddp.md) |
+
+Use the generated API reference for signatures, return values, and supported
+flags. In particular, initialization, open/close references, shared-object
+references, and borrowed pointers have different contracts. Follow the
+individual API rather than assuming every function reports errors through
+the same return value or `errno` convention. See [Error Checking and Logging](logging.md).
+
+AFP handlers and worker caches in `etc/afpd/` are daemon internals, even
+where shared headers expose related structures. They are not standalone
+libatalk services. Similarly, the built-in VFS and CNID operation tables
+should not be treated as a dynamically loaded plugin interface like UAMs.
 
 ## Example: Copying File Metadata and Resource Forks
 
