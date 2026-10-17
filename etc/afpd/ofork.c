@@ -307,10 +307,11 @@ void of_pforkdesc(FILE *f)
  *
  * Failures only log.
  *
- * @param[in] vol  volume whose forks to flush
+ * @param[in]     obj  session object
+ * @param[in,out] vol  volume whose forks to flush
  * @returns 0
  */
-int of_flush(const struct vol *vol)
+int of_flush(AFPObj *obj, struct vol *vol)
 {
     int refnum;
 
@@ -320,7 +321,7 @@ int of_flush(const struct vol *vol)
 
     for (refnum = 0; refnum < nforks; refnum++) {
         if (oforks[refnum] != NULL && (oforks[refnum]->of_vol == vol) &&
-                flushfork(oforks[refnum]) < 0) {
+                flushfork(obj, oforks[refnum]) < 0) {
             LOG(log_error, logtype_afpd, "of_flush: %s", strerror(errno));
         }
     }

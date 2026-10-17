@@ -3816,6 +3816,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     setfilunixmode(vol, path, srcst.st_mode);
     setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
     unbecome_root();
+    setvoltime(obj, vol);
     err = AFP_OK;
     goto err_exchangefile;
     /* all this stuff is so that we can unwind a failed operation

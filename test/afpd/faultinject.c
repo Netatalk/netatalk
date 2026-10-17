@@ -100,6 +100,10 @@ int faultinject_open_works(const char *scratch_path)
 
 /* ---- Role 2: LD_PRELOAD interposer (libfaultinject.so) ---- */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <dirent.h>
 #include <dlfcn.h>
 #include <errno.h>
@@ -110,12 +114,17 @@ int faultinject_open_works(const char *scratch_path)
 #include <stdint.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/statvfs.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #ifdef __linux__
 #include <sys/sendfile.h>
 #endif
+
+#ifdef HAVE_POSIX_ACLS
+#include <sys/acl.h>
+#endif /* HAVE_POSIX_ACLS */
 
 /* `fi` is defined in the afpdtest executable and exported dynamically; this is
  * the same object the test code arms.  A weak fallback keeps the preload
@@ -673,5 +682,109 @@ int sendfile(int fd, int s, off_t offset, size_t nbytes, struct sf_hdtr *hdtr,
     return real_sendfile(fd, s, offset, nbytes, hdtr, sbytes, flags);
 }
 #endif
+
+typedef int (*statvfs_fn)(const char *, struct statvfs *);
+static statvfs_fn real_statvfs;
+
+/*!
+ * @brief statvfs() interposer: reports the filesystem read-only while armed
+ *
+ * The header renames this definition where libc versions the call (glibc
+ * statvfs64, NetBSD __statvfs90); the real function with the same struct
+ * carries that name too, so it is looked up under this definition's own
+ * name first. A call whose real function is not found fails with ENOSYS.
+ */
+int statvfs(const char *path, struct statvfs *buf)
+{
+    int ret;
+
+    if (!real_statvfs) {
+        Dl_info self;
+
+        if (dladdr((void *)statvfs, &self) && self.dli_sname) {
+            real_statvfs = (statvfs_fn)dlsym(RTLD_NEXT, self.dli_sname);
+        }
+
+        if (!real_statvfs) {
+            real_statvfs = (statvfs_fn)fi_real64("statvfs64", "statvfs");
+        }
+
+        if (!real_statvfs) {
+            errno = ENOSYS;
+            return -1;
+        }
+    }
+
+    ret = real_statvfs(path, buf);
+
+    if (ret == 0 && fi.statvfs_rdonly) {
+        buf->f_flag |= ST_RDONLY;
+    }
+
+    return ret;
+}
+
+typedef int (*access_fn)(const char *, int);
+static access_fn real_access;
+
+/*!
+ * @brief access() interposer: fails an armed call with the armed errno
+ */
+int access(const char *path, int mode)
+{
+    if (!real_access) {
+        real_access = (access_fn)dlsym(RTLD_NEXT, "access");
+    }
+
+    if (fault_should_fire(fi.access_armed, &fi.access_fail_after,
+                          fi.access_errno)) {
+        return -1;
+    }
+
+    return real_access(path, mode);
+}
+
+/* No <utime.h>: NetBSD renames utime() there, and a renamed definition
+ * would take the 64-bit call yet forward it to the old one */
+struct utimbuf;
+typedef int (*utime_fn)(const char *, const struct utimbuf *);
+static utime_fn real_utime;
+
+/*!
+ * @brief utime() interposer: counts watched calls
+ */
+int utime(const char *path, const struct utimbuf *times)
+{
+    if (!real_utime) {
+        real_utime = (utime_fn)dlsym(RTLD_NEXT, "utime");
+    }
+
+    if (fi.utime_watch) {
+        fi.utime_calls++;
+    }
+
+    return real_utime(path, times);
+}
+
+#ifdef HAVE_POSIX_ACLS
+typedef acl_t (*acl_get_file_fn)(const char *, acl_type_t);
+static acl_get_file_fn real_acl_get_file;
+
+/*!
+ * @brief acl_get_file() interposer: counts watched calls
+ */
+acl_t acl_get_file(const char *path, acl_type_t type)
+{
+    if (!real_acl_get_file) {
+        real_acl_get_file = (acl_get_file_fn)dlsym(RTLD_NEXT, "acl_get_file");
+    }
+
+    if (fi.acl_get_file_watch) {
+        fi.acl_get_file_calls++;
+    }
+
+    return real_acl_get_file(path, type);
+}
+#endif /* HAVE_POSIX_ACLS */
 
 #endif /* FAULTINJECT_PRELOAD */

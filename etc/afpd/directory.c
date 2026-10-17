@@ -3166,7 +3166,9 @@ setdirparam_done:
             ad_setdate(&ad, AD_DATE_MODIFY, newdate);
         }
 
-        if (upath) {
+        /* the root's mtime is the volume's change mark: neither a client's
+         * date nor a child's parent date reaches it */
+        if (upath && (dir != NULL ? dir : curdir)->d_did != DIRDID_ROOT) {
             ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
             utime(upath, &ut);
         }

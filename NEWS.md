@@ -60,6 +60,42 @@ Changes in 4.7.0
 * FIX: libatalk: copying a data fork, or converting an AppleDouble v2
   resource fork, completes after a short write, GitHub #3402
 * UPD: afpd: afpd -V reports sendfile support, GitHub #3402
+* FIX: nad: 'nad cp -p' keeps copied files' times below the second,
+  GitHub #3420
+* FIX: afpd: opening a volume and polling its parameters check its
+  read-only state without writing its root, so sessions get volume change
+  notifications for the changes afpd marks: those made by a user who can
+  write the share's root folder, and changes to that folder itself; other
+  changes reach clients through their own cache refresh, GitHub #3420
+* UPD: afpd: a share on an NFS export the server makes read-only, or on
+  a read-only lofs mount on illumos, needs 'read only = yes' to be
+  reported read only, GitHub #3420
+* UPD: afpd: free space on a quota-limited volume is fetched at most once
+  every ten seconds, GitHub #3420
+* FIX: afpd: a volume name its 'mac charset' cannot encode fails the
+  volume parameters request instead of overrunning the reply buffer,
+  GitHub #3420
+* FIX: afpd: FPGetSrvrParms converts volume names without a heap buffer; a
+  reply that reached its size cap leaked the name it left out, GitHub #3420
+* FIX: afpd: FPOpenVol, FPGetExtAttr, FPSetExtAttr and FPRemoveExtAttr fail
+  a name that does not convert from UTF-8 with kFPParamErr, where they ran
+  on a name buffer the conversion had not filled, and FPOpenVol converts
+  the name into the start of its buffer, not past a '+' left in it,
+  GitHub #3420
+* FIX: afpd: writing to a fork, setting a fork's length, exchanging files,
+  setting or removing extended attributes and ACLs, and setting a volume's
+  backup date mark the volume changed, so other sessions are told of these
+  changes as they are of creates, renames and deletes, GitHub #3420
+* FIX: afpd: setting a volume's backup date fails when the date cannot be
+  written, where it reported success, GitHub #3420
+* FIX: afpd: FPFlushFork, FPSyncFork, FPFlush and FPCloseFork mark the
+  volume changed when they stamp a written resource fork's modification
+  date, GitHub #3420
+* FIX: afpd: FPSetACL finds the ACL in a request that carries one of the
+  owner and group UUIDs; a request with the group UUID alone failed with
+  kFPMiscErr, GitHub #3420
+* FIX: afpd: FPSetExtAttr, FPRemoveExtAttr and FPSetACL refuse to change a
+  volume shared with 'read only = yes' with kFPVolLocked, GitHub #3420
 
 Changes in 4.6.1
 ----------------
