@@ -5,7 +5,7 @@ description: "AFP directory command handlers and path resolution helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T16:52:47+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 struct dir * dirlookup_bypath(const struct vol *vol, const char *path)
 ```
 
-Declared at etc/afpd/directory.h line 137; no definition in the scanned sources.
+Declared at etc/afpd/directory.h line 152; no definition in the scanned sources.
 
 # Types
 
@@ -66,7 +66,7 @@ Declared at etc/afpd/directory.h line 137; no definition in the scanned sources.
 
 Parameters for [dir_modify()](directory.c.md#dir_modify) selective field updates.
 
-Defined at line 66.
+Defined at line 68.
 * `unsigned int flags`: DCMOD_* bitmask.
 * `cnid_t new_pdid`: New parent DID (DCMOD_PATH).
 * `const char * new_mname`: New mac name, NULL = use new_uname (DCMOD_PATH).
@@ -77,11 +77,23 @@ Defined at line 66.
 
 ### struct maccess
 
-Defined at line 103.
+Defined at line 105.
 * `uint8_t ma_user`
 * `uint8_t ma_world`
 * `uint8_t ma_group`
 * `uint8_t ma_owner`
+
+### struct offcnt_stats
+
+Defined at line 117.
+* `unsigned long long requests`: DIRPBIT_OFFCNT answered.
+* `unsigned long long cached`: served from the entry
+* `unsigned long long first`: walked: never counted
+* `unsigned long long older`: walked: stat ctime behind the count's
+* `unsigned long long confirmed`: walked: the count held stood
+* `unsigned long long changed`: walked: the count held was wrong
+* `unsigned long long failed`: walk refused: unreadable folder
+* `unsigned long long entries`: visible entries the walks counted
 
 # Typedefs and enums
 
@@ -89,10 +101,10 @@ Defined at line 103.
 
 # Macros
 
-* `DCMOD_AD`: AD cache: finderinfo/filedatesi/afpfilei/rlen (Phase 2).
-* `DCMOD_AD_INV`: AD invalidate: zero AD fields, set rlen = -1 (Phase 2).
+* `DCMOD_AD`: AD cache: finderinfo/filedatesi/afpfilei/rlen.
+* `DCMOD_AD_INV`: AD invalidate: zero AD fields, set rlen = -1; with DCMOD_STAT drops d_rights_cache.
 * `DCMOD_PATH`: Identity/navigation: d_pdid, names, d_fullpath.
-* `DCMOD_STAT`: Stat cache: dcache_ctime/ino/mode/mtime/uid/gid/size.
+* `DCMOD_STAT`: Stat cache: dcache_ctime/ino/mode/mtime/uid/gid/size; a change drops d_rights_cache.
 * `DIRPBIT_PDINFO`: ProDOS Info.
 * `FILDIRBIT_ISDIR`: is a directory
 * `FILDIRBIT_ISFILE`: is a file

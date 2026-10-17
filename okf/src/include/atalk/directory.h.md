@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T16:52:47+02:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -96,7 +96,7 @@ Defined at line 77.
 * `cnid_t d_pdid`: CNID of parent directory.
 * `cnid_t d_did`: CNID of directory.
 * `uint32_t d_offcnt`: offspring count
-* `uint32_t d_rights_cache`: cached rights combined from mode and possible ACL.
+* `uint32_t d_rights_cache`: cached rights from mode and ACL, valid while dcache_ino and dcache_ctime match the disk; 0xffffffff = unset
 * `mode_t dcache_mode`: st_mode: file type + permissions
 * `uid_t dcache_uid`: st_uid: owner user ID
 * `gid_t dcache_gid`: st_gid: owner group ID

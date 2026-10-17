@@ -5,7 +5,7 @@ description: "Directory Cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T16:52:47+02:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -893,7 +893,7 @@ Mentioned in the documentation of: [validation_freq](dircache.c.md#validation_fr
 void log_dircache_stat(void)
 ```
 
-Defined at lines 2449 to 2658.
+Defined at lines 2449 to 2659.
 
 Log dircache statistics.
 
@@ -913,7 +913,7 @@ Mentioned in the documentation of: [dircache_rfork_shutdown](dircache.c.md#dirca
 void dircache_rfork_shutdown(void)
 ```
 
-Defined at lines 2666 to 2686.
+Defined at lines 2667 to 2687.
 
 Shutdown the rfork cache — free remaining RFork LRU nodes and sentinel.
 
@@ -929,7 +929,7 @@ Uses file-scope variables: `rfork_lru`, `rfork_lru_count`
 void dircache_dump(void)
 ```
 
-Defined at lines 2691 to 2897.
+Defined at lines 2692 to 2898.
 
 Dump dircache to /tmp/dircache.PID.
 
@@ -945,7 +945,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `arc_
 void dircache_reset_validation_counter(void)
 ```
 
-Defined at lines 2905 to 2910.
+Defined at lines 2906 to 2911.
 
 Reset validation counter for consistent testing.
 
@@ -961,7 +961,7 @@ Uses file-scope variables: `validation_counter`
 void process_cache_hints(AFPObj *obj)
 ```
 
-Defined at lines 2945 to 3135.
+Defined at lines 2946 to 3136.
 
 Apply the dircache invalidation hints that sibling afpd processes sent.
 
@@ -986,7 +986,7 @@ Uses file-scope variables: `cache_hint_stat`, `dircache`
 void dircache_report_invalid_entry(struct dir *dir)
 ```
 
-Defined at lines 3147 to 3156.
+Defined at lines 3148 to 3157.
 
 Report that a cache entry was invalid when actually used.
 
@@ -1003,7 +1003,7 @@ Called by: [dir_remove](directory.c.md#dir_remove)
 void dircache_remove_children_defer(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 3175 to 3247.
+Defined at lines 3176 to 3248.
 
 Queue a deferred dircache_remove_children scan for dir.
 
@@ -1025,7 +1025,7 @@ Uses file-scope variables: `deferred_count`, `deferred_depth_max`, `deferred_dep
 void dircache_flush_deferred_for_vol(uint16_t vid)
 ```
 
-Defined at lines 3264 to 3327.
+Defined at lines 3265 to 3328.
 
 Finish every deferred child scan of a closing volume at once.
 
@@ -1046,7 +1046,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 int dircache_has_deferred_work(void)
 ```
 
-Defined at lines 3336 to 3339.
+Defined at lines 3337 to 3340.
 
 Whether deferred child scans wait in the queue.
 
@@ -1064,7 +1064,7 @@ Uses file-scope variables: `deferred_count`
 static void deferred_job_kill(int idx)
 ```
 
-Defined at lines 3350 to 3355.
+Defined at lines 3351 to 3356.
 
 Retire a deferred job slot without running its scan.
 
@@ -1083,7 +1083,7 @@ Uses file-scope variables: `deferred_queue`
 static void deferred_compact_head(void)
 ```
 
-Defined at lines 3360 to 3368.
+Defined at lines 3361 to 3369.
 
 Advance deferred_head past dead slots, keeping count consistent.
 
@@ -1097,7 +1097,7 @@ Uses file-scope variables: `deferred_count`, `deferred_head`, `deferred_queue`
 static int path_is_strict_child(const char *path, size_t len, const char *parent_path, size_t parent_len)
 ```
 
-Defined at lines 3382 to 3388.
+Defined at lines 3383 to 3389.
 
 Whether path lies strictly below parent_path.
 
@@ -1119,7 +1119,7 @@ Called by: [deferred_cover_drops](dircache.c.md#deferred_cover_drops), [dircache
 static void deferred_cover_set(const struct deferred_cleanup *done, unsigned int scan_seq)
 ```
 
-Defined at lines 3400 to 3416.
+Defined at lines 3401 to 3417.
 
 Remember a finished scan as the covering memo.
 
@@ -1139,7 +1139,7 @@ Uses file-scope variables: `deferred_cover_len`, `deferred_cover_path`, `deferre
 static int deferred_cover_drops(const struct deferred_cleanup *j)
 ```
 
-Defined at lines 3430 to 3441.
+Defined at lines 3431 to 3442.
 
 Whether the covering memo makes a popped job redundant.
 
@@ -1162,7 +1162,7 @@ Uses file-scope variables: `deferred_cover_len`, `deferred_cover_path`, `deferre
 static void deferred_compact_tail(void)
 ```
 
-Defined at lines 3449 to 3468.
+Defined at lines 3450 to 3469.
 
 Compact deferred_tail backwards past dead slots.
 
@@ -1178,7 +1178,7 @@ Uses file-scope variables: `deferred_count`, `deferred_depth_max`, `deferred_dep
 static int deferred_batch_cmp(const void *a, const void *b)
 ```
 
-Defined at lines 3479 to 3498.
+Defined at lines 3480 to 3499.
 
 Order two batch members by volume ID, then by path bytes.
 
@@ -1200,7 +1200,7 @@ Uses file-scope variables: `c`, `deferred_queue`
 static int deferred_batch_match(uint16_t vid, const char *ep, size_t elen)
 ```
 
-Defined at lines 3513 to 3567.
+Defined at lines 3514 to 3568.
 
 Find the batch member that covers an entry path.
 
@@ -1223,7 +1223,7 @@ Uses file-scope variables: `c`, `deferred_batch_depth`, `deferred_batch_idx`, `d
 static int deferred_batch_start(void)
 ```
 
-Defined at lines 3575 to 3598.
+Defined at lines 3576 to 3599.
 
 Start a flat batch scan over every live pending job.
 
@@ -1243,7 +1243,7 @@ Uses file-scope variables: `deferred_batch_active`, `deferred_batch_chain_idx`, 
 static void deferred_batch_complete(void)
 ```
 
-Defined at lines 3606 to 3623.
+Defined at lines 3607 to 3624.
 
 Finish the flat batch scan: retire every pre-batch member.
 
@@ -1261,7 +1261,7 @@ Uses file-scope variables: `deferred_batch_active`, `deferred_batch_idx`, `defer
 static int deferred_batch_chain(void)
 ```
 
-Defined at lines 3631 to 3695.
+Defined at lines 3632 to 3696.
 
 Scan one hash chain for the flat batch: purge every entry whose unique candidate ancestor is a batch member.
 
@@ -1279,7 +1279,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 int dircache_process_deferred_chain(void)
 ```
 
-Defined at lines 3710 to 3840.
+Defined at lines 3711 to 3841.
 
 Process one unit of deferred cleanup.
 

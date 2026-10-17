@@ -12,7 +12,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 
 # Build
 
-* [Build record](build.md) - Netatalk commit 7279304e7fe0 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
+* [Build record](build.md) - Netatalk commit 72fe23774566 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0.
 
 # Subsystems
 
@@ -27,7 +27,7 @@ Generated from Doxygen XML; see [Build record](build.md) for the commit and coun
 * [bin/netacnv](src/bin/netacnv.md) - 1 file, 6 functions.
 * [bin/pap](src/bin/pap.md) - 2 files, 12 functions.
 * [bin/rtmpqry](src/bin/rtmpqry.md) - 1 file, 7 functions.
-* [etc/afpd](src/etc/afpd.md) - 66 files, 607 functions.
+* [etc/afpd](src/etc/afpd.md) - 66 files, 612 functions.
 * [etc/atalkd](src/etc/atalkd.md) - 18 files, 50 functions.
 * [etc/netatalk](src/etc/netatalk.md) - 7 files, 48 functions.
 * [etc/papd](src/etc/papd.md) - 22 files, 119 functions.
