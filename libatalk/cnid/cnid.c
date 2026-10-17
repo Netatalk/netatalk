@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute and/or modify
  * it under the terms of the GNU General Public License as published
@@ -29,9 +30,11 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <atalk/cnid.h>
 #include <atalk/logger.h>
+#include <atalk/util.h>
 #include <atalk/volume.h>
 
 /*! Permanent registry of backend modules, kept in registration order. */
@@ -141,7 +144,24 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
         .cnid_args_vol   = vol
     };
 
+    /* private state is its owner's: euid 0, an admin session or root's
+     * tool, becomes the owner for the open */
+    const bool as_owner = (vol->v_flags & AFPVOL_PRIVATE) && geteuid() == 0;
+
+    gid_t egid = 0;
+
+    if (as_owner && become_owner(vol->v_private_uid, &egid) != 0) {
+        LOG(log_error, logtype_afpd,
+            "cnid_open: can't open volume '%s' as its owner, uid %ju: %s",
+            vol->v_path, (uintmax_t)vol->v_private_uid, strerror(errno));
+        return NULL;
+    }
+
     db = mod->cnid_open(&args);
+
+    if (as_owner) {
+        unbecome_owner(egid);
+    }
 
     if (NULL == db) {
         LOG(log_error, logtype_afpd, "Cannot open CNID db at [%s].", vol->v_path);

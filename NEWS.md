@@ -7,13 +7,43 @@ Changes in 4.7.0
 * NEW: netatalk: `--single-user` (`-u`) runs an AFP server without root for
   the invoking account, authenticating with SRP against the user's own
   verifier directory (`afppasswd -c -p`), with `-P`/`--pidfile` for its PID
-  file. Every volume must use the sqlite CNID backend; the server's
-  signature, the volume UUIDs and the CNID state are kept under a global
+  file. Every volume must be private to that user (`private = <user>`),
+  which keeps its CNID state in sqlite, owned by that user alone; the
+  server's signature and the volume UUIDs are kept under a global
   `vol dbpath` readable by that user alone, the configuration file must live
   in a mode-0700 directory the user owns, and an `afp port` below 1024 is
   warned about rather than refused.
   Without `--single-user`, `netatalk` requires root and exits with status 1
   otherwise.
+* NEW: afpd: `private = <username>` dedicates a volume to one account: no
+  other AFP user is offered it or opens it, and its CNID database lives in
+  a `.AppleDB` directory inside the volume, owned by that account with
+  owner-only permissions, whichever process opens it. It always uses the
+  sqlite CNID backend and the cnid Spotlight backend, whatever
+  `cnid scheme` and `spotlight backend` say, so shared volumes can stay on
+  mysql and localsearch; a `.AppleDB` another account owns is refused with
+  the chown that fixes it, GitHub #3419
+* UPD: afpd: every [Homes] volume is private to its owner, its CNID state in
+  sqlite inside the home, unless [Homes] sets `private =` or the server sets
+  `force user`, see the Upgrading chapter, GitHub #3419
+* FIX: afpd: a reload request that reaches a session before login builds no
+  volume list; the list is built at login for that user, so `valid users`
+  and the other access options apply after a reload too, GitHub #3419
+* FIX: afpd: an account whose passwd record is longer than the C library's
+  default buffer, as a directory service's gecos field makes it, is served
+  its volumes, GitHub #3419
+* FIX: netatalk: a reload request (SIGHUP) reads afp.conf again even when it
+  is unchanged, so Zeroconf advertises a Time Machine volume whose disk was
+  mounted after the start, GitHub #3419
+* FIX: afpd: a session's volume list follows afp.conf after a reload: a
+  removed volume leaves it once the client closes it, a renamed volume or
+  one another section now names is served as the file says, and a file
+  that failed to parse while a client had a volume open is read again at
+  the next request, GitHub #3419
+* FIX: afpd, atalkd: on NetBSD the network interfaces read when afpd
+  guesses its address, or when atalkd starts without atalkd.conf, are
+  named correctly and no longer overrun their list's buffer,
+  GitHub #3419
 * REM: cnid: Removed the deprecated Berkeley DB (dbd) CNID backend with its
   cnid_dbd and cnid_metad daemons and the 'cnid server', 'cnid listen' and
   'vol dbnest' options; afpd serves a volume whose scheme the installation

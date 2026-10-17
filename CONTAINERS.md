@@ -320,6 +320,7 @@ Set these environment variables to a non-zero value to enable, ex. "1"
 | AFP_READONLY        | Mount volume as read-only                                                                      |
 | AFP_MULTI_PROTOCOL  | REQUIRED when anything other than Netatalk writes the shared storage (SMB/NFS servers, host scripts, NAS apps): applies the coherency defaults, see afp.conf(5) |
 | DISABLE_TIMEMACHINE | The secondary shared volume is a regular volume, not a backup volume                           |
+| PRIVATE_VOL         | Make both shared volumes private to AFP_USER, with their CNID state inside them; not with AFP_USER2 or AFP_DROPBOX |
 | **File System Configuration** |                                                                                         |
 | AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
 | AFP_ADOUBLE         | Use AppleDouble (ad) instead of system native EA for extended attributes                       |

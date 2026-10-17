@@ -2864,6 +2864,22 @@ int main(int argc, char *argv[])
                      "single-user: signature and volume uuid files live under vol dbpath, created 0700");
     TEST_int_or_skip(utest_conf_singleuser_dbpath_volume_root(), 0,
                      "single-user: a [Global] vol dbpath at a volume's path is refused");
+    TEST_int_or_skip(utest_conf_session_loads_after_login(), 0,
+                     "session: a load before login builds no volume list, a "
+                     "load after it does");
+    TEST_int_or_skip(utest_conf_private_volume_state(), 0,
+                     "private volume: the owner, sqlite and cnid search "
+                     "inside it, a section option warned, a volume-section "
+                     "$u refused");
+    TEST_int_or_skip(utest_conf_unchanged_conf_read_once(), 0,
+                     "loader: an unchanged afp.conf is read once for an empty "
+                     "volume list, a changed one again");
+    TEST_int_or_skip(utest_conf_open_volume_reload(), 0,
+                     "loader: a held volume is rebuilt after a failed read, "
+                     "and a dropped one swept once closed");
+    TEST_int_or_skip(utest_conf_reload_follows_sections(), 0,
+                     "loader: a reload follows the volume names and paths of "
+                     "afp.conf");
     TEST_int_or_skip(utest_conf_permission_options_require_unix_priv(), 0,
                      "volume permission options are ignored when unix priv is disabled");
     TEST_int_or_skip(utest_conf_cnid_server_listen_ignored(), 0,
@@ -3020,7 +3036,8 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_cnid_uuid_case_keeps_table(vol), 0,
                      "cnid_open: a case-flipped volume UUID reuses the live table");
     TEST_int_or_skip(utest_cnid_sqlite_owner_only(vol), 0,
-                     "cnid_open: single-user state is 0700/0600 and a root opener widens it");
+                     "cnid_open: a private volume's state is 0700/0600 and a "
+                     "shared open widens it");
     /* Last of the CNID group: recovering from the reset empties the volume's
      * table, so anything expecting a CNID minted earlier must run before it */
     TEST_int_or_skip(utest_cnid_add_depletion_resets(vol), 0,

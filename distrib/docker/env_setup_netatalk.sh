@@ -145,6 +145,10 @@ if [ -z "$AFP_GROUP" ]; then
     echo "ERROR: AFP_GROUP needs to be set to use this container." >&2
     exit 1
 fi
+if [ -n "$PRIVATE_VOL" ] && { [ -n "$AFP_USER2" ] || [ -n "$AFP_DROPBOX" ]; }; then
+    echo "ERROR: PRIVATE_VOL dedicates both volumes to AFP_USER; unset AFP_USER2 and AFP_DROPBOX." >&2
+    exit 1
+fi
 
 if [ "$USER_TOOL" = "pw" ]; then
     if ! pw groupshow "$AFP_GROUP" > /dev/null 2>&1; then
@@ -230,8 +234,9 @@ fi
 # The daemon runs as AFP_USER with all state under that user's home, so the
 # config directory moves there. Everything above this point (user creation,
 # password setup) and below it (UAM selection, EA mode, client defaults) is
-# shared with the root service. The CNID directories go under the user's
-# state directory, one per volume, where vol dbpath points.
+# shared with the root service. Both volumes are private to that user, as the
+# mode requires, so their CNID state lives inside them; vol dbpath holds the
+# signature and volume uuid files.
 
 if [ -n "$SINGLE_USER" ]; then
     SU_HOME=$(getent passwd "$AFP_USER" | cut -d: -f6)
@@ -245,8 +250,8 @@ if [ -n "$SINGLE_USER" ]; then
     NETATALK_CONFDIR="$SU_HOME/.config/netatalk"
     SU_STATE="$SU_HOME/.local/state/netatalk"
     NETATALK_LOG_FILE="$SU_HOME/netatalk.log"
-    su "$AFP_USER" -c 'mkdir -p -m 700 "$1" "$2" && mkdir -p "$2/cnid"' sh \
-        "$NETATALK_CONFDIR" "$SU_STATE"
+    PRIVATE_VOL=1
+    su "$AFP_USER" -c 'mkdir -p -m 700 "$1" "$2"' sh "$NETATALK_CONFDIR" "$SU_STATE"
 fi
 
 RANDNUM_PASSWD_FILE="$NETATALK_CONFDIR/afppasswd"
@@ -711,7 +716,7 @@ mimic model = $AFP_MIMIC_MODEL
 server name = ${SERVER_NAME:-Netatalk File Server}
 uam list = $UAMS
 ${SINGLE_USER:+srp verifier path = $NETATALK_CONFDIR/afppasswd.srp}
-${SINGLE_USER:+vol dbpath = $SU_STATE/cnid}
+${SINGLE_USER:+vol dbpath = $SU_STATE}
 ${SINGLE_USER:+afp port = $AFP_PORT}
 ${SINGLE_USER:+zeroconf = no}
 mac charset = ${AFP_MAC_CHARSET:-MAC_ROMAN}
@@ -725,6 +730,7 @@ cnid scheme = ${AFP_CNID_BACKEND:-sqlite}
 ea = $AFP_EA
 multi protocol = $AFP_MULTIPROTO
 path = $NETATALK_SHARE_DIR
+${PRIVATE_VOL:+private = $AFP_USER}
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
@@ -735,6 +741,7 @@ cnid scheme = ${AFP_CNID_BACKEND:-sqlite}
 ea = $AFP_EA
 multi protocol = $AFP_MULTIPROTO
 path = $NETATALK_BACKUP_DIR
+${PRIVATE_VOL:+private = $AFP_USER}
 time machine = $TIMEMACHINE
 valid users = $AFP_VALIDUSERS2
 volume name = ${SHARE_NAME2:-Time Machine}

@@ -39,16 +39,16 @@ su $USER1 -c "mkdir -p -m 700 $CONF $STATE"
 su $USER1 -c "mkdir -p $SHARE $SHARE2 $STATE/cnid"
 su $USER1 -c "afppasswd -c -f -p $STORE -w $PASS1"
 VERIFIER1=$STORE/$(id -u $USER1)
-CNID1=$STATE/cnid/files
+CNID1=$SHARE/.AppleDB
 CNID_DIR_DIAG="requires the CNID directory of volume"
 STORE_DIAG="requires 'srp verifier path' to be a mode-0700 directory"
 
 # Two volumes: "single-user" is about privileges and accounts, not about how
-# many volumes the daemon may serve. The global vol dbpath puts each volume's
-# CNID directory under the user's state directory, named after the volume, as
-# the documented configuration does, and holds the signature and volume uuid
-# files the server generates. Section names are lowercase because that is how
-# iniparser stores them and how the served volume name reads.
+# many volumes the daemon may serve. Each is private to the serving user, as
+# the mode requires, so its CNID state lives inside it; the global vol dbpath
+# holds the signature and volume uuid files the server generates. Section
+# names are lowercase because that is how iniparser stores them and how the
+# served volume name reads.
 write_conf() {
     su $USER1 -c "cat > $CONF/afp.conf" << EOF
 [Global]
@@ -62,9 +62,11 @@ zeroconf = no
 
 [files]
 path = $SHARE
+private = $USER1
 
 [backup]
 path = $SHARE2
+private = $USER1
 EOF
     su $USER1 -c "chmod 600 $CONF/afp.conf"
 }
@@ -122,7 +124,7 @@ owner_afparg() {
 # config without a [Global] vol dbpath has nowhere for it and is refused before
 # any volume loads: the system afp_voluuid.conf is never written by this mode.
 VOLUUID_CONF=$(afpd_buildinfo afp_voluuid.conf)
-[ -n "$VOLUUID_CONF" ] || fail "afpd -v does not report afp_voluuid.conf"
+[ -n "$VOLUUID_CONF" ] || fail "afpd -V does not report afp_voluuid.conf"
 rm -f "$VOLUUID_CONF"
 write_conf
 su $USER1 -c ": > $LOG1; sed -i '/^vol dbpath =/d' $CONF/afp.conf"
@@ -192,20 +194,20 @@ check_reject "CNID directory that cannot be created" \
     "printf 'vol dbpath = /var/lib/nowhere/backup\n' >> $CONF/afp.conf" \
     "$CNID_DIR_DIAG"
 # a symbolic link or a read-only directory would fail at every mount instead,
-# so both are refused here; the link is tried by a volume-level vol dbpath and
-# under the [Global] one, which appends the volume name and a trailing slash
+# so both are refused here; the link is tried by a volume-level vol dbpath,
+# whose trailing slash must not hide it, and as the volume's own .AppleDB
 check_reject "CNID directory that is a symbolic link" \
-    "ln -sfn $STATE/cnid/files $STATE/cnid/link; printf 'vol dbpath = %s/link\n' $STATE/cnid >> $CONF/afp.conf" \
+    "ln -sfn $STATE/cnid/files $STATE/cnid/link; printf 'vol dbpath = %s/link/\n' $STATE/cnid >> $CONF/afp.conf" \
     "$CNID_DIR_DIAG"
 su $USER1 -c "rm $STATE/cnid/link"
-check_reject "CNID directory that is a symbolic link under a [Global] vol dbpath" \
-    "ln -sfn $STATE/cnid/files $STATE/cnid/backup" \
+check_reject "CNID directory inside the volume that is a symbolic link" \
+    "ln -sfn $STATE/cnid $SHARE2/.AppleDB" \
     "$CNID_DIR_DIAG"
-su $USER1 -c "rm $STATE/cnid/backup"
+su $USER1 -c "rm $SHARE2/.AppleDB"
 check_reject "CNID directory that exists but is not writable" \
-    "mkdir -m 500 $STATE/cnid/backup" \
+    "mkdir -m 500 $SHARE2/.AppleDB" \
     "$CNID_DIR_DIAG"
-su $USER1 -c "rmdir $STATE/cnid/backup"
+su $USER1 -c "rmdir $SHARE2/.AppleDB"
 check_reject "a .Homes. section" \
     "printf '\n[Homes]\nbasedir regex = /home\n' >> $CONF/afp.conf" \
     "does not support .Homes. volumes"
@@ -217,7 +219,7 @@ check_reject "a .Homes. section without a basedir regex" \
 check_reject "a vol dbpath naming the volume itself" \
     "sed -i 's|^\[backup\]\$|[backup]\nvol dbpath = $SHARE2|' $CONF/afp.conf" \
     "volume 'backup' names itself as its CNID directory"
-# the [Global] form derives every volume's directory with a trailing slash
+# a trailing slash must not hide that the path is the volume's
 check_reject "a vol dbpath naming the volume itself with a trailing slash" \
     "sed -i 's|^\[backup\]\$|[backup]\nvol dbpath = $SHARE2/|' $CONF/afp.conf" \
     "volume 'backup' names itself as its CNID directory"
@@ -228,19 +230,18 @@ check_reject "a [Global] vol dbpath naming a volume's directory" \
     "is the path of volume .backup." $LOG1
 [ "$(stat -c %a "$SHARE2")" = "$SHARE2_MODE" ] \
     || fail "the refused [Global] vol dbpath changed the mode of $SHARE2"
-check_reject "a non-sqlite CNID scheme" \
-    "sed -i 's/cnid scheme = sqlite/cnid scheme = last/' $CONF/afp.conf" \
-    "must use sqlite CNID"
+check_reject "a volume that is not private" \
+    "sed -i '/^private = /d' $CONF/afp.conf" \
+    "requires every configured volume to load"
+grep -q "single-user mode serves only volumes with 'private' naming the user who started it" $LOG1 \
+    || fail "the log does not name the missing 'private'"
+check_reject "a volume private to another account" \
+    "sed -i 's/^private = .*/private = $USER2/' $CONF/afp.conf" \
+    "requires every configured volume to load"
 check_reject "a volume the calling user cannot read" \
     "chmod 0 $SHARE2" \
     "cannot access volume"
 su $USER1 -c "chmod 755 $SHARE2"
-# Spotlight itself is allowed (the fixture leaves it at the default, on): the
-# cnid backend searches the volume's own sqlite database. The other backends
-# keep their index under system directories.
-check_reject "a Spotlight backend other than cnid" \
-    "printf 'spotlight backend = xapian\n' >> $CONF/afp.conf" \
-    "supports only 'spotlight backend = cnid'"
 
 # --- the SRP store is the verifier directory and the caller's file in it: the
 # UAM opens both on every login, so a directory others can enter and a file
@@ -403,40 +404,27 @@ grep -q "can't open verifier .*/$(id -u $USER2)" $LOG1 \
     }
 pass "a second account's verifier is unreadable to the single-user daemon and its login is refused"
 
-# --- the CNID state lives where vol dbpath puts it, owner-only: the
-# directory 0700, the database, WAL and SHM files 0600, all the serving user's
-owned $CNID1 "$USER1 700" \
-    || fail "single-user CNID directory is not owner-owned 0700"
-ls $CNID1/*.sqlite > /dev/null \
-    || fail "no CNID database was created under vol dbpath"
-for f in $CNID1/*.sqlite $CNID1/*.sqlite-wal $CNID1/*.sqlite-shm; do
-    [ -e "$f" ] || continue
-    owned "$f" "$USER1 600" || fail "$f is not owner-owned 0600"
-done
+# --- the CNID state lives inside the volume, owner-only: the directory 0700,
+# the database, WAL and SHM files 0600, all the serving user's
+owner_only_cnid $CNID1 $USER1 \
+    || fail "single-user CNID state inside the volume is not owner-only"
 stop_netatalk $USER1
-pass "single-user CNID state is owner-only under vol dbpath"
+pass "single-user CNID state is owner-only inside the volume"
 
-# --- the serving user's own tools keep that state owner-only: nad opens the
-# same directory without the server's flag and must not widen it
+# --- the serving user's own tools keep that state owner-only: nad reads the
+# same afp.conf, so the volume is private to it too
 su $USER1 -c "nad -F $CONF/afp.conf ls $SHARE" > /dev/null \
     || fail "nad could not open the single-user volume as its user"
-owned $CNID1 "$USER1 700" \
-    || fail "nad widened the CNID directory to $(stat -c %a $CNID1)"
-for f in $CNID1/*.sqlite; do
-    owned "$f" "$USER1 600" || fail "nad widened $f to $(stat -c %a "$f")"
-done
+owner_only_cnid $CNID1 $USER1 || fail "nad widened the CNID state"
 pass "the serving user's nad keeps the CNID state owner-only"
 
-# --- state the user's nad creates before the server's first start is the
-# shared kind any non-root tool creates, and the server's first open makes it
-# owner-only
+# --- state the user's nad creates before the server's first start is
+# owner-only from the start, and the server opens it
 rm -rf $CNID1
 su $USER1 -c "nad -F $CONF/afp.conf ls $SHARE" > /dev/null \
     || fail "nad could not create the CNID state as its user"
-[ -d "$CNID1" ] \
-    || fail "nad did not create the CNID state under vol dbpath"
-[ "$(stat -c %a "$CNID1")" != 700 ] \
-    || fail "nad created owner-only state for a server that has not started"
+owner_only_cnid $CNID1 $USER1 \
+    || fail "nad did not create owner-only CNID state inside the volume"
 start_singleuser
 owner_afparg -s files -f FPEnumerateExt > /dev/null \
     || {
@@ -444,9 +432,32 @@ owner_afparg -s files -f FPEnumerateExt > /dev/null \
         fail "the volume could not be opened over state nad created"
     }
 stop_netatalk $USER1
-owned $CNID1 "$USER1 700" \
-    || fail "the server did not make the state nad created owner-only"
-pass "state created by the user's nad is made owner-only at the server's first open"
+pass "state created by the user's nad is owner-only and served"
+
+# --- state widened while the server is down is owner-only again at its next
+# open, by the server itself, which has no root to take
+chmod 777 $CNID1
+chmod 666 $CNID1/*.sqlite
+start_singleuser
+owner_afparg -s files -f FPEnumerateExt > /dev/null \
+    || fail "the volume did not open over widened state"
+stop_netatalk $USER1
+owner_only_cnid $CNID1 $USER1 \
+    || fail "the server did not make widened state owner-only"
+pass "widened state is owner-only again at the server's next open"
+
+# --- the global cnid scheme is not read for a private volume: sqlite, and the
+# volume creates that state afresh; mysql, for which this container runs no
+# server, would fail the open
+write_conf
+su $USER1 -c "sed -i 's/^cnid scheme = sqlite/cnid scheme = mysql/' $CONF/afp.conf"
+rm -rf $CNID1
+start_singleuser
+owner_afparg -s files -f FPEnumerateExt > /dev/null \
+    || fail "the volume did not open with another scheme set"
+stop_netatalk $USER1
+owner_only_cnid $CNID1 $USER1 || fail "the volume did not open on its own sqlite state"
+pass "the global scheme is not read: the volume opens on sqlite"
 
 # --- foreign-owned CNID state is refused at startup with the fix named: the
 # backend would refuse it at every mount, so the controller judges ownership
@@ -482,10 +493,10 @@ owner_afparg -s backup -f FPEnumerateExt > /dev/null \
         fail "the volume with usable state was not served"
     }
 stop_netatalk $USER1
-grep -q "not owned by the server user" $LOG1 \
-    || fail "the backend's ownership diagnostic is missing from the log"
+grep -q "fix with: chown -R $(id -u $USER1) " $LOG1 \
+    || fail "the backend's ownership diagnostic does not name the chown that fixes it"
 chown -R $USER1 $CNID1
-pass "foreign-owned CNID state refuses the mount of that volume only"
+pass "foreign-owned CNID state refuses the mount of that volume only, naming the fix"
 
 # --- the AFP desktop database sits beside the CNID state, owned by the
 # serving user, inside the 0700 directory that keeps it private. An AFP 2
@@ -502,7 +513,7 @@ owned $CNID1 "$USER1 700" \
     || fail "the CNID directory is no longer owner-only after the desktop database was created"
 [ "$(stat -c %U $CNID1/.AppleDesktop 2> /dev/null)" = "$USER1" ] \
     || fail "the desktop database is not owned by the serving user"
-pass "the desktop database is created by the serving user under vol dbpath"
+pass "the desktop database is created by the serving user inside the volume"
 
 # --- a relative -F is resolved before afpd is handed it. This start
 # daemonizes, because daemonize() is what moves the process to /: with -d the

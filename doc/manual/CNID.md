@@ -29,6 +29,7 @@ A CNID backend is essentially a database storing ID ↔ name mappings.
 For CNID backends that use a zero-configuration database,
 the database files are located by default in a *netatalk/CNID* subdirectory
 of your system's state directory path, e.g. */var/lib*.
+A **private** volume keeps its own in a *.AppleDB* directory inside the volume.
 You can change the state directory path with *-Dwith-statedir-path=PATH*
 at compile time.
 
@@ -50,7 +51,9 @@ of either backend.
   Serving AFP volumes over NFS is already risky,
   and placing a database there compounds the risk of corruption.
   Use the **vol dbpath** option to store databases on a local disk
-  if you must use NFS-mounted volumes.
+  if you must use NFS-mounted volumes; a private volume takes its own
+  section's value only, and a **[Homes]** value names each owner with `$u`,
+  each owner's directory created beforehand by root, owned by that owner.
 
 The following sections describe the CNID backends included with Netatalk.
 The *sqlite* backend is always built; *mysql* is added at compile time.

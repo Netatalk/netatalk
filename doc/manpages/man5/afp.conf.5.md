@@ -79,7 +79,8 @@ below explains the **(G)** and **(V)** markers.
 
 The [Homes] section shares the home directories of the server's UNIX
 users. Its one mandatory option is **basedir regex**. Set it to a path
-that matches the parent directory of the user homes.
+that matches the parent directory of the user homes. Each home volume is
+private to its owner, see **private**.
 
 The optional **path** parameter shares only the named subdirectory of
 each home directory instead of the entire home directory. With all user
@@ -195,7 +196,9 @@ Unset by default.
 force user = *user* **(G)**
 
 > Makes every connecting user act as this UNIX user on the server. Use it
-with care: an incorrect setting can cause security problems.
+with care: an incorrect setting can cause security problems. A server with
+this option skips every volume section that sets **private**, and shares
+the **[Homes]** volumes.
 
 force group = *group* **(G)**
 
@@ -522,8 +525,8 @@ cnid scheme = *mysql* | *sqlite* (default: *sqlite*) **(G)**/**(V)**
 from your Netatalk installation. Run **afpd -v** to list the available
 backends. For a name that is not a backend, **afpd** serves the volume
 with *sqlite* and logs a warning. For a backend your build omits,
-**afpd** does not open the volume. A **netatalk \-\-single-user** server
-requires *sqlite*. The **dbd**(1) and **nad**(1) commands refuse a scheme
+**afpd** does not open the volume. A **private** volume uses *sqlite*, see
+**private**. The **dbd**(1) and **nad**(1) commands refuse a scheme
 your installation cannot serve until you correct *afp.conf*.
 >
 > *mysql*: connects to a MySQL (or MariaDB) database instance provisioned
@@ -543,11 +546,11 @@ the volume name appended as a subdirectory. The server uses a volume or
 preset value as given. For a server run as root, the *sqlite* backend
 creates the directory if needed and sets mode 1777 on it. It sets the
 database files to 0666, so that **afpd** sessions running as the
-connected user and **nad** can share them. A **netatalk \-\-single-user**
-server keeps them owner-only (0700 and 0600). Keep the path outside any
-volume, on a filesystem that supports POSIX record locks. The server
-locks the *sqlite* database and the desktop database icons as it writes
-them.
+connected user and **nad** can share them. A **private** volume keeps its
+own directory owner-only and ignores a preset's and the **(G)** value, see
+**private**. Keep the path outside any volume, on a filesystem that supports
+POSIX record locks. The server locks the *sqlite* database and the desktop
+database icons as it writes them.
 
 ## Directory Cache Tuning
 
@@ -1477,6 +1480,43 @@ preexec close = *BOOLEAN* (default: *no*) **(V)**
 
 > Whether a non-zero exit code from **preexec** closes the volume
 immediately, so clients cannot see or mount it.
+
+private = *user* **(V)**
+
+> Dedicates the volume to one account. No other AFP user is offered the
+volume or opens it. The volume keeps its CNID database in *sqlite*, in a
+*.AppleDB* directory inside the volume. That account creates the directory with owner-only
+permissions (directory 0700, database files 0600), whichever process opens
+the volume, **nad**(1) and **dbd**(1) run by root included. The directory
+counts against the account's disk quota, and the AFP desktop database lives
+there too. A **vol dbpath** in the volume's own section moves the
+directory to a path the account can create or already owns. Use it when
+the account cannot write the volume root, and give the directory to no
+other volume. A preset or **(G)** value does not apply. The server logs a
+value with a variable and passes it over. The server refuses a directory
+that another account owns, a symbolic link, the volume's own directory, or a
+value ending in *.* or *..*: the volume does not open, and for another
+account's directory the log names the **chown** that repairs it. Finder search uses the *cnid* **spotlight backend** over that database
+when your build has it. The volume takes
+neither **cnid scheme** nor **spotlight backend**, so shared volumes can
+stay on *mysql* and *localsearch*. The server logs a value written in the
+volume's own section as not applying. The account cannot be root. A volume
+section takes an account name, never *$u*. An empty value leaves the volume
+shared. A server with **force user** skips the volume.
+>
+> Every **[Homes]** volume is private to its owner, unless **[Homes]** sets
+**private =** with no value or the server sets **force user**; then the
+homes are shared. A name in **[Homes]** **private** is logged and passed
+over. A private home keeps its state in *.AppleDB* in the home. A
+**[Homes]** **vol dbpath** that contains `$u` moves it, one directory per
+owner. Create each owner's directory as root beforehand, owned by that
+owner with mode 0700, for example with **mkdir -m 700** *dir* and **chown**
+*user* *dir*, in a parent that the owners can search and only root can
+write: an account that can create in the parent can take another owner's
+directory name. The server logs a value without `$u` and passes it over.
+>
+> The server advertises a private Time Machine volume over Zeroconf by name,
+like any other.
 
 read only = *BOOLEAN* (default: *no*) **(V)**
 

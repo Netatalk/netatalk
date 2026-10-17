@@ -268,8 +268,9 @@ EC_CLEANUP:
  * @brief Make sure the desktop database folder of a volume exists
  *
  * When the database path lacks .AppleDesktop, the call moves the folder from
- * the volume root as root. Without either folder, or when the move fails, it
- * creates a new one with mode 0777 under the umask.
+ * the volume root. Without either folder, or when the move fails, it creates
+ * a new one with mode 0777 under the umask. On a shared volume it works as
+ * root, and on a private volume as the owner, as cnid_open() does.
  *
  * @param[in] vol  volume of the desktop database
  */
@@ -277,11 +278,25 @@ static void create_appledesktop_folder(const struct vol *vol)
 {
     bstring olddtpath = NULL, dtpath = NULL;
     struct stat st;
+    const bool priv = (vol->v_flags & AFPVOL_PRIVATE) != 0;
+    const bool as_owner = priv && geteuid() == 0;
+    gid_t egid = 0;
+
+    if (as_owner && become_owner(vol->v_private_uid, &egid) != 0) {
+        LOG(log_error, logtype_afpd,
+            "can't create the desktop database of volume \"%s\" as its "
+            "owner: %s", vol->v_path, strerror(errno));
+        return;
+    }
+
+    if (!priv) {
+        become_root();
+    }
+
     olddtpath = bfromcstr(vol->v_path);
     bcatcstr(olddtpath, "/" APPLEDESKTOP);
     dtpath = bfromcstr(vol->v_dbpath);
     bcatcstr(dtpath, "/" APPLEDESKTOP);
-    become_root();
 
     if (lstat(cfrombstr(dtpath), &st) != 0) {
         if ((lstat(cfrombstr(olddtpath), &st) == 0) && (S_ISDIR(st.st_mode) != 0)) {
@@ -289,19 +304,24 @@ static void create_appledesktop_folder(const struct vol *vol)
                 LOG(log_error, logtype_afpd,
                     "moving .AppleDesktop from \"%s\" failed; creating new dir \"%s\"",
                     bdata(olddtpath), bdata(dtpath));
-                /* Root-owned desktop metadata is shared by AFP users; umask applies. */
+                /* shared with the volume's users; umask applies */
                 mkdir(cfrombstr(dtpath), 0777); //NOSONAR
             }
         } else {
             LOG(log_debug, logtype_afpd,
                 "no valid .AppleDesktop dir found; creating new dir \"%s\"",
                 bdata(dtpath));
-            /* Root-owned desktop metadata is shared by AFP users; umask applies. */
+            /* shared with the volume's users; umask applies */
             mkdir(cfrombstr(dtpath), 0777); //NOSONAR
         }
     }
 
-    unbecome_root();
+    if (as_owner) {
+        unbecome_owner(egid);
+    } else if (!priv) {
+        unbecome_root();
+    }
+
     bdestroy(dtpath);
     bdestroy(olddtpath);
 }

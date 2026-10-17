@@ -113,8 +113,7 @@ start and keeps them in *afp_signature.conf* and *afp_voluuid.conf* under
 explicit **signature** or **volume uuid** is honoured as usual.
 
     [Global]
-    cnid scheme = sqlite
-    vol dbpath = /home/alice/.local/state/netatalk/cnid
+    vol dbpath = /home/alice/.local/state/netatalk
     uam list = uams_srp.so
     srp verifier path = /home/alice/.config/netatalk/afppasswd.srp
     afp port = 5548
@@ -122,22 +121,18 @@ explicit **signature** or **volume uuid** is honoured as usual.
     [Files]
     path = /home/alice/Files
     volume name = Alice's Files
+    private = alice
 
 The server creates the **vol dbpath** directory with mode 0700 if it does not
 exist (an existing one must be a directory the serving user owns, and is made
-mode 0700), keeps the signature and volume UUID files in it, and creates one
-directory per volume beneath it, owned by the serving user with owner-only
-permissions (directory 0700, database files 0600). The value must not use
-variables such as `$u`, which cannot be expanded before a session exists.
-**nad** and **dbd**, run by that user or by root, find the signature and UUID
-files there too. Run by the user they keep those permissions once the server
-has created the directory, and create the shared defaults before it has, which
-the server's first start tightens. Run by root they widen the permissions to
-the shared defaults; the next server start tightens the user's own files again,
-but a file root created (a database root opened first, or the WAL and SHM files
-a killed root run left behind) stays root-owned and the volume fails to open
-until it is removed. Volume **preexec** and **postexec** hooks run as the
-serving user.
+mode 0700) and keeps the signature and volume UUID files in it. The value must
+not use variables such as `$u`, which cannot be expanded before a session
+exists. **nad** run by that user, and **nad** and **dbd** run by root, find the
+signature and UUID files there too. Each volume carries **private = alice** (see
+Private volumes below): the mode serves only volumes private to the serving
+user, and **nad** and **dbd**, which read the same *afp.conf* without
+**--single-user**, see the same private volume. Volume **preexec** and **postexec**
+hooks run as the serving user.
 
 The default AFP port 548 is privileged on many systems, so the example uses
 **afp port = 5548** and the server can bind without any privileges. Clients
@@ -159,27 +154,40 @@ The long options above correspond to **-u**, **-P**, and **-F** respectively.
 Without **--single-user**, a regular-user invocation is rejected with an
 explicit diagnostic instead of starting a partially functional server.
 
-Single-user mode requires **cnid scheme = sqlite**, a global **vol dbpath**
-naming a directory the serving user owns (created with mode 0700 if absent),
-static volume sections, **uam list = uams_srp.so**, an SRP verifier directory owned by the serving user
-with mode 0700 holding that user's verifier file with no group or other
-permissions, and a configuration file that is owned by the serving user, not
-writable by group or others, and kept in a mode-0700 directory owned by that
-user. It does not support AppleTalk, the MySQL CNID backend, **[Homes]**
-volumes, a **vol dbpath**, for a volume or in **[Global]**, naming a volume's
-own directory (the mode would keep the share owner-only), Spotlight backends
-other than
-**cnid** (the default, which searches the volume's own CNID database), AFP
-statistics, or administrator and forced-user configuration. A volume the serving user cannot read and search, or
-cannot write when it is not read-only, is rejected at startup, as is one whose
-CNID directory is owned by another user, or does not exist and cannot be
-created: **vol dbpath** must name a directory the serving user owns. CNID state
-that changes hands while the server runs is not taken over either: that volume
-fails to open at the mount and the log says which directory is not the serving
-user's.
+Single-user mode requires a global **vol dbpath** naming a directory the
+serving user owns (created with mode 0700 if absent), static volume sections
+each carrying **private** with the serving user's name, **uam list =
+uams_srp.so**, an SRP verifier directory owned by the serving user with mode
+0700 holding that user's verifier file with no group or other permissions, and
+a configuration file that is owned by the serving user, not writable by group
+or others, and kept in a mode-0700 directory owned by that user. It does not
+support AppleTalk, **[Homes]** volumes, a **vol dbpath** for a volume or in
+**[Global]** naming a volume's own directory (the mode would keep the share
+owner-only), AFP statistics, or administrator and forced-user configuration. A
+volume the serving user cannot read and search, or cannot write when it is
+not read-only, is rejected at startup, as is one whose CNID directory is owned
+by another user, or does not exist and cannot be created: a read-only volume
+whose root the serving user cannot write needs a volume-level **vol dbpath**
+naming a directory that user owns. CNID state that changes hands while the
+server runs is not taken over either: that volume fails to open at the mount
+and the log names the **chown** that fixes it.
 
 Configuration reloads are disabled in this mode. Restart **netatalk** after
 changing *afp.conf*.
+
+### Private volumes
+
+**private** dedicates a volume to one account: no other AFP user is offered
+it or opens it, and its CNID state is a *sqlite* database in a *.AppleDB*
+directory inside the volume that only that account can read, so shared
+volumes can stay on *mysql* and *localsearch* beside it. Every **[Homes]**
+volume is private to its owner by default.
+
+    [Alice]
+    path = /srv/alice
+    private = alice
+
+The rules are under **private** in [afp.conf](afp.conf.5.html).
 
 ### Backup Volumes
 

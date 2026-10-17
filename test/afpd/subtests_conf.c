@@ -36,6 +36,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/dsi.h>
 #include <atalk/ea.h>
 
 #include <atalk/globals.h>
@@ -2483,6 +2484,691 @@ cleanup:
     rmdir(state);
     rmdir(voldir);
     free(voldir);
+    unlink(logpath);
+    return failed;
+}
+
+/*!
+ * @brief An account that is not root, with a passwd record
+ *
+ * @returns the runner's own record, or nobody's when the runner is root
+ */
+static const struct passwd *conf_nonroot_user(void)
+{
+    return getuid() == 0 ? getpwnam("nobody") : getpwuid(getuid());
+}
+
+/*!
+ * @brief A private volume belongs to its named owner, with its state inside it
+ *
+ * Its CNID directory is .AppleDB inside it whatever the global or a preset's
+ * vol dbpath says, and a section-level vol dbpath moves it unless the value
+ * has a variable; it uses sqlite and the cnid search backend whatever cnid
+ * scheme and spotlight backend say, a value in its own section logged and a
+ * global one not; 'private = $u' in a volume section names no account; a
+ * reload of the same list for another account drops the private volume; an
+ * empty 'private =' leaves a volume shared, and an empty vol dbpath keeps the
+ * state in .AppleDB. One load holds all seven sections, and a reload of it is
+ * another account's.
+ *
+ * @returns 0 when every section resolves that way
+ */
+int utest_conf_private_volume_state(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    char body[8 * MAXPATHLEN];
+    char expected[MAXPATHLEN + 16];
+    char owner_name[MAXUSERLEN];
+    /* read as a string only: no section opens a CNID database */
+    const char dbdir[] = "/nonexistent/utestcnid";
+    char *voldir[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+    const struct vol *vol;
+    /* root can't own a private volume, so a root run names another account */
+    const struct passwd *owner = conf_nonroot_user();
+    uid_t owner_uid;
+    int failed = -1;
+
+    if (owner == NULL || conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    /* the record is the C library's, which the load below may reuse */
+    strlcpy(owner_name, owner->pw_name, sizeof(owner_name));
+    owner_uid = owner->pw_uid;
+
+    for (size_t i = 0; i < 7; i++) {
+        if ((voldir[i] = conf_mkvoldir()) == NULL) {
+            failed = TEST_SKIP;
+            goto cleanup;
+        }
+    }
+
+    snprintf(body, sizeof(body),
+             "vol dbpath = %s\n"
+             "cnid scheme = mysql\n"
+             "[utestpriv]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "spotlight backend = localsearch\n"
+             "[utestmoved]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "vol dbpath = %s\n"
+             "[utestdollar]\n"
+             "path = %s\n"
+             "private = $u\n"
+             "[utestuserdb]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "vol dbpath = %s/$u\n"
+             "[utestp]\n"
+             "vol dbpath = %s\n"
+             "[utestpreset]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "vol preset = utestp\n"
+             "[utestshared]\n"
+             "path = %s\n"
+             "private =\n"
+             "[utestnodb]\n"
+             "path = %s\n"
+             "private = %s\n"
+             "vol dbpath =\n",
+             dbdir, voldir[0], owner_name, voldir[1], owner_name, dbdir,
+             voldir[2], voldir[3], owner_name, dbdir, dbdir, voldir[4],
+             owner_name, voldir[5], voldir[6], owner_name);
+    snprintf(expected, sizeof(expected), "%s/.AppleDB", voldir[0]);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    vol = conf_vol_by_name("utestpriv");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, expected) != 0
+            || strcmp(vol->v_cnidscheme, "sqlite") != 0
+            || strcmp(vol->v_sl_backend_name, "cnid") != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: dbpath '%s' want '%s', "
+                "scheme '%s', backend '%s'\n",
+                vol ? vol->v_dbpath : "(no volume)", expected,
+                vol ? vol->v_cnidscheme : "-",
+                vol ? vol->v_sl_backend_name : "-");
+        goto teardown;
+    }
+
+    /* the section's own value is logged, the global one is not */
+    if (conf_log_contains(logpath, "'spotlight backend = localsearch'") != 1
+            || conf_log_contains(logpath, "'cnid scheme = ") != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: a section option was not "
+                "logged, or a global one was\n");
+        goto teardown;
+    }
+
+    vol = conf_vol_by_name("utestmoved");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, dbdir) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: section dbpath '%s' "
+                "want '%s'\n", vol ? vol->v_dbpath : "(no volume)", dbdir);
+        goto teardown;
+    }
+
+    /* a variable would name the loader, not the volume's owner */
+    snprintf(expected, sizeof(expected), "%s/.AppleDB", voldir[3]);
+    vol = conf_vol_by_name("utestuserdb");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, expected) != 0
+            || conf_log_contains(logpath, "takes no variable") != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: section dbpath with $u "
+                "'%s' want '%s'\n", vol ? vol->v_dbpath : "(no volume)",
+                expected);
+        goto teardown;
+    }
+
+    snprintf(expected, sizeof(expected), "%s/.AppleDB", voldir[4]);
+    vol = conf_vol_by_name("utestpreset");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, expected) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: preset dbpath '%s' "
+                "want '%s'\n", vol ? vol->v_dbpath : "(no volume)",
+                expected);
+        goto teardown;
+    }
+
+    vol = conf_vol_by_name("utestshared");
+
+    if (vol == NULL || (vol->v_flags & AFPVOL_PRIVATE)) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: an empty 'private =' did "
+                "not leave the volume shared\n");
+        goto teardown;
+    }
+
+    snprintf(expected, sizeof(expected), "%s/.AppleDB", voldir[6]);
+    vol = conf_vol_by_name("utestnodb");
+
+    if (vol == NULL || strcmp(vol->v_dbpath, expected) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: an empty vol dbpath gave "
+                "'%s', want '%s'\n", vol ? vol->v_dbpath : "(no volume)",
+                expected);
+        goto teardown;
+    }
+
+    if (conf_vol_by_name("utestdollar") != NULL
+            || conf_log_contains(logpath,
+                                 "'private' user \"$u\" is unknown") != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: 'private = $u' on a "
+                "volume section was not refused\n");
+        goto teardown;
+    }
+
+    /* a reload of the same list for another account; LV_ALL, so the uid
+     * needs no record */
+    obj.uid = owner_uid + 1;
+
+    if (load_afp_conf_vols(&obj, LV_ALL | LV_FORCE) != 0
+            || conf_vol_by_name("utestpriv") != NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_private_volume_state: another account's reload "
+                "kept the private volume\n");
+        goto teardown;
+    }
+
+    failed = 0;
+teardown:
+    conf_teardown(&obj, NULL);
+cleanup:
+
+    for (size_t i = 0; i < 7; i++) {
+        if (voldir[i]) {
+            rmdir(voldir[i]);
+            free(voldir[i]);
+        }
+    }
+
+    unlink(logpath);
+    return failed;
+}
+
+/*!
+ * @brief A session loads volumes only once login() has named its user
+ *
+ * A reload request can reach a session before login, and a list built then
+ * would be root's. The fixture is a session, a DSI with no listening socket:
+ * the first load is a reload request's, LV_FORCE with uid 0, and the second
+ * an AFP request's, LV_DEFAULT with a user's uid.
+ *
+ * @returns 0 when the first load builds no list and the second builds the
+ *          volume
+ */
+int utest_conf_session_loads_after_login(void)
+{
+    AFPObj obj;
+    DSI dsi = { 0 };
+    char logpath[64];
+    char body[MAXPATHLEN + 64];
+    char *voldir;
+    const struct passwd *user = conf_nonroot_user();
+    uid_t user_uid;
+    int failed = -1;
+
+    if (user == NULL || conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    user_uid = user->pw_uid;
+
+    if ((voldir = conf_mkvoldir()) == NULL) {
+        unlink(logpath);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body), "[utestsession]\npath = %s\n", voldir);
+
+    if (conf_parse_fixture(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    dsi.serversock = -1;
+    obj.dsi = &dsi;
+    obj.uid = 0;
+
+    if (load_afp_conf_vols(&obj, LV_FORCE) != 0 || getvolumes() != NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_session_loads_after_login: a session before "
+                "login built a volume list\n");
+        goto teardown;
+    }
+
+    obj.uid = user_uid;
+
+    if (load_afp_conf_vols(&obj, LV_DEFAULT) != 0
+            || conf_vol_by_name("utestsession") == NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_session_loads_after_login: the logged-in "
+                "session built no volume list\n");
+        goto teardown;
+    }
+
+    failed = 0;
+teardown:
+    obj.dsi = NULL;
+    conf_teardown(&obj, NULL);
+cleanup:
+    rmdir(voldir);
+    free(voldir);
+    unlink(logpath);
+    return failed;
+}
+
+/*!
+ * @brief An unchanged afp.conf is read once, whatever its volume list
+ *
+ * afp.conf is a symbolic link to the fixture, whose mtime is ahead of the
+ * link's own. A load whose one section names a path that does not exist
+ * admits no volume; a second load of the unchanged file reads nothing, so the
+ * section is not counted again; a third, after the file gains a volume, a
+ * line that does not parse and a later mtime, reads it and builds nothing; a
+ * fourth, the line gone and the mtime the one recorded, reads it again and
+ * builds the volume.
+ *
+ * @returns 0 when the second load counts no section, the third reads the
+ *          file and the fourth builds the volume
+ */
+int utest_conf_unchanged_conf_read_once(void)
+{
+    AFPObj obj;
+    struct stat st;
+    struct timespec mtime[2];
+    char logpath[64];
+    char linkpath[MAXPATHLEN];
+    char body[MAXPATHLEN + 64];
+    char *voldir;
+    FILE *conf;
+    long parsed;
+    int failed = -1;
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((voldir = conf_mkvoldir()) == NULL) {
+        unlink(logpath);
+        return TEST_SKIP;
+    }
+
+    if (conf_parse_fixture(&obj,
+                           "[utestgone]\n"
+                           "path = /nonexistent/utestgone\n",
+                           logpath) != 0) {
+        goto cleanup;
+    }
+
+    snprintf(linkpath, sizeof(linkpath), "%s.link", obj.options.configfile);
+    mtime[0].tv_sec = 0;
+    mtime[0].tv_nsec = UTIME_OMIT;
+    mtime[1].tv_nsec = 0;
+
+    /* the link's own mtime is a minute behind its target's */
+    if (stat(obj.options.configfile, &st) != 0) {
+        goto teardown;
+    }
+
+    mtime[1].tv_sec = st.st_mtime + 60;
+
+    if (utimensat(AT_FDCWD, obj.options.configfile, mtime, 0) != 0
+            || symlink(obj.options.configfile, linkpath) != 0) {
+        goto teardown;
+    }
+
+    free(obj.options.configfile);
+
+    if ((obj.options.configfile = strdup(linkpath)) == NULL) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0 || getvolumes() != NULL
+            || obj.vols_skipped != 1) {
+        fprintf(test_stream(),
+                "# utest_conf_unchanged_conf_read_once: the first load built "
+                "a volume or skipped no section\n");
+        goto teardown;
+    }
+
+    obj.vols_skipped = 0;
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0 || obj.vols_skipped != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_unchanged_conf_read_once: the unchanged file "
+                "was read again for an empty volume list\n");
+        goto teardown;
+    }
+
+    /* the file gains a volume and a line that does not parse, and an mtime a
+     * second after the recorded one */
+    snprintf(body, sizeof(body), "[utestback]\npath = %s\n", voldir);
+
+    if ((conf = fopen(obj.options.configfile, "a")) == NULL) {
+        goto teardown;
+    }
+
+    if (fputs(body, conf) == EOF || (parsed = ftell(conf)) < 0
+            || fputs("[utestbroken\n", conf) == EOF) {
+        fclose(conf);
+        goto teardown;
+    }
+
+    mtime[1].tv_sec = obj.options.volfile.mtime + 1;
+
+    if (fclose(conf) != 0
+            || utimensat(AT_FDCWD, obj.options.configfile, mtime, 0) != 0) {
+        goto teardown;
+    }
+
+    obj.vols_skipped = 1;
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0 || getvolumes() != NULL
+            || obj.vols_skipped != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_unchanged_conf_read_once: the changed file was "
+                "not read, or its broken line parsed\n");
+        goto teardown;
+    }
+
+    /* the line goes, and the mtime stays the one recorded */
+    if (truncate(obj.options.configfile, parsed) != 0
+            || utimensat(AT_FDCWD, obj.options.configfile, mtime, 0) != 0) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0
+            || conf_vol_by_name("utestback") == NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_unchanged_conf_read_once: a file that did not "
+                "parse was not read again\n");
+        goto teardown;
+    }
+
+    failed = 0;
+teardown:
+    unlink(linkpath);
+    conf_teardown(&obj, NULL);
+cleanup:
+    rmdir(voldir);
+    free(voldir);
+    unlink(logpath);
+    return failed;
+}
+
+/*!
+ * @brief A volume a client holds is rebuilt after a read that failed, and is
+ *        swept once closed after a read that dropped it
+ *
+ * The fixture's one volume is held open. A read that fails to parse keeps it
+ * unrebuilt, and the next read of the same file rebuilds it. A read that drops
+ * it from the file keeps it while it is held; once it is closed, the next read
+ * of the unchanged file sweeps it.
+ *
+ * @returns 0 when the volume is rebuilt, kept while held and swept after the
+ *          close
+ */
+int utest_conf_open_volume_reload(void)
+{
+    AFPObj obj;
+    struct stat st;
+    struct timespec mtime[2];
+    char logpath[64];
+    char body[MAXPATHLEN + 64];
+    char *voldir;
+    struct vol *vol;
+    FILE *conf;
+    int failed = -1;
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((voldir = conf_mkvoldir()) == NULL) {
+        unlink(logpath);
+        return TEST_SKIP;
+    }
+
+    snprintf(body, sizeof(body), "[utestheld]\npath = %s\n", voldir);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    mtime[0].tv_sec = 0;
+    mtime[0].tv_nsec = UTIME_OMIT;
+    mtime[1].tv_nsec = 0;
+
+    if ((vol = conf_vol_by_name("utestheld")) == NULL
+            || stat(obj.options.configfile, &st) != 0) {
+        goto teardown;
+    }
+
+    vol->v_flags |= AFPVOL_OPEN;
+
+    /* a line that does not parse, and an mtime a second after the recorded
+     * one */
+    if ((conf = fopen(obj.options.configfile, "a")) == NULL) {
+        goto teardown;
+    }
+
+    if (fputs("[utestbroken\n", conf) == EOF) {
+        fclose(conf);
+        goto teardown;
+    }
+
+    mtime[1].tv_sec = obj.options.volfile.mtime + 1;
+
+    if (fclose(conf) != 0
+            || utimensat(AT_FDCWD, obj.options.configfile, mtime, 0) != 0) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0 || !vol->v_deleted) {
+        fprintf(test_stream(),
+                "# utest_conf_open_volume_reload: the broken file parsed\n");
+        goto teardown;
+    }
+
+    /* the line goes, and the mtime stays the one recorded */
+    if (truncate(obj.options.configfile, st.st_size) != 0
+            || utimensat(AT_FDCWD, obj.options.configfile, mtime, 0) != 0) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0 || vol->v_deleted) {
+        fprintf(test_stream(),
+                "# utest_conf_open_volume_reload: the held volume was not "
+                "rebuilt after a read that failed\n");
+        goto teardown;
+    }
+
+    /* the volume leaves the file, and the mtime moves on */
+    mtime[1].tv_sec = obj.options.volfile.mtime + 1;
+
+    if (truncate(obj.options.configfile,
+                 st.st_size - (off_t)strlen(body)) != 0
+            || utimensat(AT_FDCWD, obj.options.configfile, mtime, 0) != 0) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0 || !vol->v_deleted
+            || conf_vol_by_name("utestheld") != vol) {
+        fprintf(test_stream(),
+                "# utest_conf_open_volume_reload: the dropped volume was not "
+                "kept while held\n");
+        goto teardown;
+    }
+
+    vol->v_flags &= ~AFPVOL_OPEN;
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0
+            || conf_vol_by_name("utestheld") != NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_open_volume_reload: the dropped volume was not "
+                "swept once closed\n");
+        goto teardown;
+    }
+
+    failed = 0;
+teardown:
+    conf_teardown(&obj, NULL);
+cleanup:
+    rmdir(voldir);
+    free(voldir);
+    unlink(logpath);
+    return failed;
+}
+
+/*!
+ * @brief Replace the fixture's last section, with an mtime a second past the
+ *        one the loader recorded
+ *
+ * @param[in] obj      the fixture's object
+ * @param[in] prefix   the length of the file before its last section
+ * @param[in] section  the new section's name
+ * @param[in] path     its path
+ * @param[in] name     its volume name
+ * @returns 0, or -1 when the file cannot be rewritten
+ */
+static int conf_new_section(const AFPObj *obj, off_t prefix,
+                            const char *section, const char *path,
+                            const char *name)
+{
+    struct timespec mtime[2] = { { 0, UTIME_OMIT }, { 0, 0 } };
+    FILE *conf;
+    int written;
+    mtime[1].tv_sec = obj->options.volfile.mtime + 1;
+
+    if (truncate(obj->options.configfile, prefix) != 0
+            || (conf = fopen(obj->options.configfile, "a")) == NULL) {
+        return -1;
+    }
+
+    written = fprintf(conf, "[%s]\npath = %s\nvolume name = %s\n", section,
+                      path, name);
+
+    if (fclose(conf) != 0 || written < 0) {
+        return -1;
+    }
+
+    return utimensat(AT_FDCWD, obj->options.configfile, mtime, 0);
+}
+
+/*!
+ * @brief A reload keeps a volume only on the path it was built for, and
+ *        builds a volume renamed on its path at the next call
+ *
+ * A second section that takes the volume's name on another path builds its
+ * own volume. A rename on that path is skipped by the read that drops the old
+ * name, and the next read of the unchanged file builds it. A section renamed
+ * over the same volume name and path keeps its volume at the same read.
+ *
+ * @returns 0 when each reload builds the volume the file names
+ */
+int utest_conf_reload_follows_sections(void)
+{
+    AFPObj obj;
+    struct stat st;
+    char logpath[64];
+    char body[MAXPATHLEN + 64];
+    char *voldir[2] = { NULL, NULL };
+    const struct vol *vol;
+    off_t prefix;
+    int failed = -1;
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        return TEST_SKIP;
+    }
+
+    for (size_t i = 0; i < 2; i++) {
+        if ((voldir[i] = conf_mkvoldir()) == NULL) {
+            failed = TEST_SKIP;
+            goto cleanup;
+        }
+    }
+
+    snprintf(body, sizeof(body),
+             "[utestold]\npath = %s\nvolume name = utestname\n", voldir[0]);
+
+    if (conf_parse_fixture_vols(&obj, body, logpath) != 0) {
+        goto cleanup;
+    }
+
+    if (stat(obj.options.configfile, &st) != 0) {
+        goto teardown;
+    }
+
+    prefix = st.st_size - (off_t)strlen(body);
+
+    /* another section takes the name, on another path */
+    if (conf_new_section(&obj, prefix, "utestnew", voldir[1],
+                         "utestname") != 0) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0
+            || (vol = conf_vol_by_name("utestname")) == NULL
+            || strcmp(vol->v_path, voldir[1]) != 0) {
+        fprintf(test_stream(),
+                "# utest_conf_reload_follows_sections: another section kept "
+                "the first one's volume\n");
+        goto teardown;
+    }
+
+    /* a rename on the path: the read that drops the old name skips the new
+     * one, and the next call reads the unchanged file again */
+    if (conf_new_section(&obj, prefix, "utestnew", voldir[1],
+                         "utestother") != 0) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0
+            || load_afp_conf_vols(&obj, LV_ALL) != 0
+            || conf_vol_by_name("utestother") == NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_reload_follows_sections: the renamed volume was "
+                "not built at the next call\n");
+        goto teardown;
+    }
+
+    /* the section is renamed over the same volume name and path */
+    if (conf_new_section(&obj, prefix, "utestagain", voldir[1],
+                         "utestother") != 0) {
+        goto teardown;
+    }
+
+    if (load_afp_conf_vols(&obj, LV_ALL) != 0
+            || conf_vol_by_name("utestother") == NULL) {
+        fprintf(test_stream(),
+                "# utest_conf_reload_follows_sections: a renamed section "
+                "dropped its volume\n");
+        goto teardown;
+    }
+
+    failed = 0;
+teardown:
+    conf_teardown(&obj, NULL);
+cleanup:
+
+    for (size_t i = 0; i < 2; i++) {
+        if (voldir[i]) {
+            rmdir(voldir[i]);
+            free(voldir[i]);
+        }
+    }
+
     unlink(logpath);
     return failed;
 }
