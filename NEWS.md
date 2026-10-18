@@ -7,13 +7,19 @@ Changes in 4.7.0
 * NEW: netatalk: `--single-user` (`-u`) runs an AFP server without root for
   the invoking account, authenticating with SRP against the user's own
   verifier directory (`afppasswd -c -p`), with `-P`/`--pidfile` for its PID
-  file. Every volume must use the sqlite CNID backend; the server's
-  signature, the volume UUIDs and the CNID state are kept under a global
+  file. Every volume must be private to that user (`private = <user>`),
+  which keeps its CNID state in sqlite, owned by that user alone; the
+  server's signature and the volume UUIDs are kept under a global
   `vol dbpath` readable by that user alone, the configuration file must live
   in a mode-0700 directory the user owns, and an `afp port` below 1024 is
   warned about rather than refused.
   Without `--single-user`, `netatalk` requires root and exits with status 1
   otherwise.
+* NEW: afpd: private volumes. `private = <user>` gives a volume to one
+  account. Its CNID database lives inside the volume by default, owned by
+  that account, not in the server's central CNID store. Every [Homes] volume
+  is now private to its owner. To keep homes shared, set `private =`
+  with no value in [Homes], see the Upgrading chapter, GitHub #3419
 * REM: cnid: Removed the deprecated Berkeley DB (dbd) CNID backend with its
   cnid_dbd and cnid_metad daemons and the 'cnid server', 'cnid listen' and
   'vol dbnest' options; afpd serves a volume whose scheme the installation

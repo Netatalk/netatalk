@@ -27,6 +27,7 @@ while query execution is delegated to a backend selected per volume.
 You can select the backend with the volume option **spotlight backend**.
 If not set, the default is **cnid** which is the simple and lightweight backend
 that uses the Netatalk CNID database for filename search.
+A **private** volume, as every home is by default, always uses **cnid**; see **private** in afp.conf(5).
 
 Example:
 

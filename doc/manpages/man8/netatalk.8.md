@@ -36,9 +36,11 @@ configuration file called *afp.conf*.
 
 > Start a restricted single-user AFP server without root privileges. The
 > daemon only accepts the UNIX identity that started it and uses that
-> identity's filesystem permissions. The server signature, the volume UUIDs
-> and each volume's SQLite CNID database are kept under **vol dbpath**, owned
-> by that user and readable by nobody else.
+> identity's filesystem permissions. Every volume must be private to that
+> user (**private =** *user*), so its CNID database is owned by that user and
+> readable by nobody else, inside the volume unless the volume sets
+> **vol dbpath**; the server signature and the volume UUIDs are kept under
+> the global **vol dbpath**, readable by that user alone.
 > Authentication is SRP against the verifier directory the user created with
 > **afppasswd -c -p**. See the Configuration manual for all requirements and
 > limitations. Without this option **netatalk** must run as root and exits

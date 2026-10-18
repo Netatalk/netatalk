@@ -6,6 +6,7 @@
 #ifndef SUBTESTS_CNID_H
 #define SUBTESTS_CNID_H
 
+struct AFPObj;
 struct vol;
 
 extern int utest_cnid_volume_tag_identity(void);
@@ -29,5 +30,7 @@ extern int utest_cnid_corrupt_row_classified(struct vol *vol);
 extern int utest_cnid_find_no_truncated_id(struct vol *vol);
 extern int utest_cnid_dup_row_no_truncated_delete(struct vol *vol);
 extern int utest_cnid_sqlite_owner_only(struct vol *vol);
+extern int utest_cnid_desktop_folder_as_owner(struct AFPObj *obj,
+                                              struct vol *vol);
 
 #endif /* SUBTESTS_CNID_H */

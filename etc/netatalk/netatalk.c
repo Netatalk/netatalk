@@ -156,16 +156,13 @@ static bool srp_is_the_only_uam(const char *uamlist)
  */
 static int path_parent(char *dst, size_t dstlen, const char *path)
 {
-    size_t len;
     char *slash;
 
-    if (path == NULL || (len = strlcpy(dst, path, dstlen)) >= dstlen) {
+    if (path == NULL || strlcpy(dst, path, dstlen) >= dstlen) {
         return -1;
     }
 
-    while (len > 1 && dst[len - 1] == '/') {
-        dst[--len] = '\0';
-    }
+    strip_trailing_slashes(dst);
 
     if ((slash = strrchr(dst, '/')) == NULL) {
         strlcpy(dst, ".", dstlen);
@@ -202,10 +199,7 @@ static bool owned_private_dir(const char *path)
         return false;
     }
 
-    while (len > 1 && dir[len - 1] == '/') {
-        dir[--len] = '\0';
-    }
-
+    strip_trailing_slashes(dir);
     return lstat(dir, &st) == 0 && S_ISDIR(st.st_mode)
            && st.st_uid == getuid() && (st.st_mode & 0077) == 0;
 }
@@ -252,13 +246,13 @@ static bool dir_is_private(const char *path, mode_t file_mask,
 }
 
 /*!
- * @brief Tell whether a CNID directory belongs to the caller and is writable,
- * or can be created
+ * @brief Tell whether a CNID directory belongs to the caller and is readable
+ * and writable, or can be created
  *
- * A symbolic link does not pass. The call drops trailing slashes first. A
- * [Global] vol dbpath gets the volume name and a slash appended, and a
- * trailing slash makes lstat follow a link. A missing directory passes when
- * its parent is writable and searchable.
+ * A symbolic link does not pass, nor does a last component of . or .., which
+ * the backend refuses. The call drops trailing slashes first: with one, lstat
+ * follows a final symbolic link. A missing directory passes when its parent
+ * is writable and searchable.
  *
  * @param[in] path  CNID directory of a volume
  * @returns true for a usable or creatable directory
@@ -274,13 +268,15 @@ static bool dbpath_is_creatable(const char *path)
         return false;
     }
 
-    while (len > 1 && dir[len - 1] == '/') {
-        dir[--len] = '\0';
+    const char *last = stripped_slashes_basename(dir);
+
+    if (strcmp(last, ".") == 0 || strcmp(last, "..") == 0) {
+        return false;
     }
 
     if (lstat(dir, &st) == 0) {
         return S_ISDIR(st.st_mode) && st.st_uid == getuid()
-               && access(dir, W_OK | X_OK) == 0;
+               && access(dir, R_OK | W_OK | X_OK) == 0;
     }
 
     return errno == ENOENT && path_parent(parent, sizeof(parent), dir) == 0
@@ -337,10 +333,10 @@ static bool srp_verifier_store_is_private(const char *path)
  * config file and the SRP verifier store must be private to the user, and
  * [Homes] is out.
  *
- * Every configured volume must load and use the sqlite CNID backend, and a
- * Spotlight volume no backend other than cnid. The user must reach each
- * volume, and its CNID directory must be another directory that the user owns
- * or can create. A port below 1024 only warns.
+ * Every configured volume must load, which a volume does only when it is
+ * private to the user. The user must reach each volume, and its CNID
+ * directory must be another directory that the user owns or can create. A
+ * port below 1024 only warns.
  *
  * @param[in] volumes_loaded  result of the volume load
  * @returns 0 when every clause passes, -1 after the message of the first
@@ -404,22 +400,6 @@ static int validate_singleuser_config(bool volumes_loaded)
     }
 
     for (const struct vol *vol = getvolumes(); vol != NULL; vol = vol->v_next) {
-        if (vol->v_cnidscheme == NULL || strcasecmp(vol->v_cnidscheme, "sqlite") != 0) {
-            fprintf(stderr, "netatalk: --single-user volume '%s' must use sqlite CNID.\n",
-                    vol->v_localname);
-            return -1;
-        }
-
-        /* the cnid backend searches the volume's own sqlite database; the
-         * others keep their index under system directories */
-        if ((vol->v_flags & AFPVOL_SPOTLIGHT) && vol->v_sl_backend_name != NULL
-                && strcasecmp(vol->v_sl_backend_name, "cnid") != 0) {
-            fprintf(stderr,
-                    "netatalk: --single-user supports only 'spotlight backend = cnid'; volume '%s' uses '%s'.\n",
-                    vol->v_localname, vol->v_sl_backend_name);
-            return -1;
-        }
-
         int want = R_OK | X_OK | ((vol->v_flags & AFPVOL_RO) ? 0 : W_OK);
 
         if (access(vol->v_path, want) != 0) {
@@ -452,7 +432,12 @@ static int validate_singleuser_config(bool volumes_loaded)
          * the backend. */
         if (!dbpath_is_creatable(vol->v_dbpath)) {
             fprintf(stderr,
-                    "netatalk: --single-user requires the CNID directory of volume '%s' (%s) to be a writable directory the calling user owns, not a symbolic link, or one the calling user can create: set 'vol dbpath' to a directory the calling user owns.\n",
+                    "netatalk: --single-user requires the CNID directory of "
+                    "volume '%s' (%s) to be a readable and writable directory "
+                    "the calling user owns, not a symbolic link or a path "
+                    "ending in . or .., or one the calling user can create: "
+                    "set a volume-level 'vol dbpath' that names such a "
+                    "directory itself.\n",
                     vol->v_localname, vol->v_dbpath);
             return -1;
         }
@@ -554,10 +539,10 @@ static FILE *open_dconf_file(const char *path)
  * @brief Point the localsearch indexer at the Spotlight volumes through a dconf
  * database
  *
- * The keyfile lists the path of every Spotlight volume as a recursive index
- * directory, and the locks file pins both index settings. A path with a
- * single quote stays out with a warning, since it would end the quoted
- * string. The call then runs dconf compile and waits for it.
+ * The keyfile lists the path of every Spotlight volume that is not private as
+ * a recursive index directory, and the locks file pins both index settings. A
+ * path with a single quote stays out with a warning, since it would end the
+ * quoted string. The call then runs dconf compile and waits for it.
  *
  * @returns 0, or -1 without volumes or when a write, the fork, or dconf compile
  *          fails
@@ -598,7 +583,10 @@ static int set_sl_volumes(void)
     first = true;
 
     for (vol = volumes; vol; vol = vol->v_next) {
-        if (vol->v_flags & AFPVOL_SPOTLIGHT) {
+        /* a private volume's names stay out of an index every local account
+         * can query; its owner searches it through the cnid backend */
+        if ((vol->v_flags & AFPVOL_SPOTLIGHT)
+                && !(vol->v_flags & AFPVOL_PRIVATE)) {
             if (strchr(vol->v_path, '\'') != NULL) {
                 LOG(log_warning, logtype_sl,
                     "set_sl_volumes: skipping volume with single quote in path: \"%s\"",
@@ -798,7 +786,12 @@ static void sighup_impl(void)
 
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
-    load_afp_conf_vols(&obj, LV_ALL);
+    load_afp_conf_vols(&obj, LV_ALL | LV_FORCE);
+
+    /* a read that dropped a volume builds what it blocked at the next one */
+    if (!obj.options.volfile.loaded) {
+        load_afp_conf_vols(&obj, LV_ALL);
+    }
 
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_deregister();
@@ -1430,8 +1423,9 @@ int main(int argc, char **argv)
         setenv("XDG_DATA_HOME", _PATH_STATEDIR, 1);
         setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 1);
         setenv("TRACKER_USE_LOG_FILES", "1", 0);
-        dbus_path = INIPARSER_GETSTR(obj.iniconfig, INISEC_GLOBAL, "dbus daemon",
-                                     DBUS_DAEMON_PATH);
+        /* dbus restarts run after reloads, which free the dictionary */
+        dbus_path = INIPARSER_GETSTRDUP(obj.iniconfig, INISEC_GLOBAL,
+                                        "dbus daemon", DBUS_DAEMON_PATH);
         LOG(log_note, logtype_default, "Starting dbus: %s", dbus_path);
 
         if ((dbus_pid = run_process(dbus_path,

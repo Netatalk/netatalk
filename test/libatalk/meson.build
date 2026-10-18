@@ -24,6 +24,36 @@ test(
     protocol: 'tap',
 )
 
+getiface_test = executable(
+    'getiface_test',
+    'test_getiface.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk interface list',
+    getiface_test,
+    protocol: 'tap',
+)
+
+shell_quote_test = executable(
+    'shell_quote_test',
+    'test_shell_quote.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk shell quoting',
+    shell_quote_test,
+    protocol: 'tap',
+)
+
 count_open_fds_test = executable(
     'count_open_fds_test',
     'test_count_open_fds.c',

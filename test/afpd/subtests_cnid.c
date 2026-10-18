@@ -19,6 +19,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
+#include <pwd.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +37,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "desktop.h"
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
 #include "test.h"
@@ -1654,21 +1657,71 @@ exit:
 }
 
 /*!
- * @brief Single-user CNID state is owner-only, and a root opener widens it
+ * @brief The process's supplementary groups
  *
- * The sqlite backend creates the directory 0700 and the database 0600 for a
- * volume whose server carries OPTION_SINGLEUSER, and follows the shared rules
- * (01777, 0666) for root, the widening a single-user server undoes at its
- * next open.
+ * @param[out] ngroups  their number
  *
- * @returns 0 when both openers leave the modes the rule gives them
+ * @returns the list, which the caller frees, or NULL
+ */
+static gid_t *cnid_groups(int *ngroups)
+{
+    int n = getgroups(0, NULL);
+    gid_t *groups = n < 0 ? NULL : malloc((size_t)(n + 1) * sizeof(gid_t));
+
+    if (groups == NULL || (*ngroups = getgroups(n, groups)) < 0) {
+        free(groups);
+        return NULL;
+    }
+
+    return groups;
+}
+
+/*!
+ * @brief Tell whether the process's supplementary groups are a list taken
+ *        before
+ *
+ * @param[in] groups   the list
+ * @param[in] ngroups  its number
+ *
+ * @returns true for the same groups in the same order
+ */
+static bool cnid_groups_are(const gid_t *groups, int ngroups)
+{
+    int n;
+    gid_t *now = cnid_groups(&n);
+    bool same = now != NULL && n == ngroups
+                && memcmp(now, groups, (size_t)n * sizeof(gid_t)) == 0;
+    free(now);
+    return same;
+}
+
+/*!
+ * @brief A private volume's CNID state is its owner's and owner-only; a
+ *        shared open widens it
+ *
+ * The test runs as root, so cnid_open() takes the owner's ids for the open:
+ * the sqlite backend, as the owner, creates the directory 0700 and the
+ * database 0600, and gives the same directory the shared modes (01777, 0666)
+ * when a shared volume opens it. The owner is nobody, since root can't own a
+ * private volume. An owner without an account fails the open before the
+ * backend runs.
+ *
+ * @param[in] vol  the harness's open sqlite volume
+ *
+ * @returns 0 when both opens leave the owner and modes their rule gives them,
+ *          the private one hands the ids back, and the open for an owner
+ *          without an account leaves no state
  */
 int utest_cnid_sqlite_owner_only(struct vol *vol)
 {
-    struct vol su_vol;
-    AFPObj su_obj = { 0 };
+    struct vol priv_vol;
     struct _cnid_db *db;
     struct stat st;
+    const struct passwd *owner;
+    uid_t owner_uid;
+    gid_t egid;
+    gid_t *groups;
+    int ngroups;
     char dbdir[MAXPATHLEN];
     char dbfile[MAXPATHLEN];
     char aux[MAXPATHLEN];
@@ -1676,36 +1729,45 @@ int utest_cnid_sqlite_owner_only(struct vol *vol)
 
     if (vol->v_cdb == NULL || vol->v_dbpath == NULL
             || vol->v_cnidscheme == NULL
-            || strcmp(vol->v_cnidscheme, "sqlite") != 0 || getuid() != 0) {
+            || strcmp(vol->v_cnidscheme, "sqlite") != 0 || getuid() != 0
+            || (owner = getpwnam("nobody")) == NULL
+            || (groups = cnid_groups(&ngroups)) == NULL) {
         return TEST_SKIP;
     }
 
     snprintf(dbdir, sizeof(dbdir), "%s.owneronly", vol->v_dbpath);
     snprintf(dbfile, sizeof(dbfile), "%s/%s.sqlite", dbdir, vol->v_localname);
-    su_obj.options.flags = OPTION_SINGLEUSER;
-    su_vol = *vol;
-    su_vol.v_dbpath = dbdir;
-    su_vol.v_cdb = NULL;
-    su_vol.v_obj = &su_obj;
+    /* the record is the C library's, which the open looks up again */
+    owner_uid = owner->pw_uid;
+    priv_vol = *vol;
+    priv_vol.v_dbpath = dbdir;
+    priv_vol.v_cdb = NULL;
+    priv_vol.v_flags |= AFPVOL_PRIVATE;
+    priv_vol.v_private_uid = owner_uid;
+    egid = getegid();
 
-    if ((db = cnid_open(&su_vol, vol->v_cnidscheme, 0)) == NULL) {
-        return 1;
+    if ((db = cnid_open(&priv_vol, vol->v_cnidscheme, 0)) == NULL) {
+        result = 1;
+    } else {
+        cnid_close(db);
+
+        /* the open hands euid 0, the egid and the groups back */
+        if (geteuid() != 0 || getegid() != egid
+                || !cnid_groups_are(groups, ngroups)) {
+            result = 9;
+        } else if (stat(dbdir, &st) != 0 || st.st_uid != owner_uid
+                   || (st.st_mode & 07777) != 0700) {
+            result = 2;
+        } else if (stat(dbfile, &st) != 0 || st.st_uid != owner_uid
+                   || (st.st_mode & 0777) != 0600) {
+            result = 3;
+        }
     }
 
-    cnid_close(db);
-
-    if (stat(dbdir, &st) != 0 || (st.st_mode & 07777) != 0700) {
-        result = 2;
-    } else if (stat(dbfile, &st) != 0 || (st.st_mode & 0777) != 0600) {
-        result = 3;
-    }
-
-    /* the same directory opened by root without the flag follows the shared
-     * rules */
-    su_vol.v_obj = vol->v_obj;
+    priv_vol.v_flags &= ~AFPVOL_PRIVATE;
 
     if (result == 0) {
-        if ((db = cnid_open(&su_vol, vol->v_cnidscheme, 0)) == NULL) {
+        if ((db = cnid_open(&priv_vol, vol->v_cnidscheme, 0)) == NULL) {
             result = 4;
         } else {
             cnid_close(db);
@@ -1724,5 +1786,155 @@ int utest_cnid_sqlite_owner_only(struct vol *vol)
     snprintf(aux, sizeof(aux), "%s-shm", dbfile);
     unlink(aux);
     rmdir(dbdir);
+
+    /* an owner without an account fails the open before the backend creates
+     * anything as root */
+    if (result == 0) {
+        uid_t ghost = owner_uid + 1;
+
+        while (getpwuid(ghost) != NULL) {
+            ghost++;
+        }
+
+        priv_vol.v_flags |= AFPVOL_PRIVATE;
+        priv_vol.v_private_uid = ghost;
+
+        if ((db = cnid_open(&priv_vol, vol->v_cnidscheme, 0)) != NULL) {
+            cnid_close(db);
+            result = 7;
+        } else if (stat(dbdir, &st) == 0) {
+            result = 8;
+        }
+
+        rmdir(dbdir);
+    }
+
+    free(groups);
+    return result;
+}
+
+/*!
+ * @brief Give a fresh directory, and a db directory made inside it, to an
+ *        account
+ *
+ * Both are reached through descriptors, so no path is resolved twice.
+ *
+ * @param[in] root  the fresh directory
+ * @param[in] uid   the account
+ * @param[in] gid   the account's group
+ *
+ * @returns true when both directories are the account's
+ */
+static bool desktop_scratch_owned(const char *root, uid_t uid, gid_t gid)
+{
+    int rootfd = open(root, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    int dbfd = -1;
+    bool owned = false;
+
+    if (rootfd >= 0 && mkdirat(rootfd, "db", 0700) == 0
+            && (dbfd = openat(rootfd, "db", O_RDONLY | O_DIRECTORY
+                              | O_NOFOLLOW | O_CLOEXEC)) >= 0) {
+        owned = fchown(dbfd, uid, gid) == 0 && fchown(rootfd, uid, gid) == 0;
+    }
+
+    if (dbfd >= 0) {
+        close(dbfd);
+    }
+
+    if (rootfd >= 0) {
+        close(rootfd);
+    }
+
+    return owned;
+}
+
+/*!
+ * @brief FPOpenDT on a private volume creates the desktop folder as the
+ *        owner and hands root's ids back
+ *
+ * The test runs as root, as an admin-group session does. For the call, the
+ * harness's volume is private to nobody, with its root and CNID directory in
+ * a directory nobody owns beside the harness's CNID directory.
+ *
+ * @param[in] obj  the harness's session
+ * @param[in] vol  the harness's open volume
+ *
+ * @returns 0, 1 when FPOpenDT fails, 2 when euid 0, the egid or the groups do
+ *          not come back, 3 when the folder is not the owner's
+ */
+int utest_cnid_desktop_folder_as_owner(AFPObj *obj, struct vol *vol)
+{
+    char root[MAXPATHLEN];
+    char dbdir[MAXPATHLEN];
+    char dtdir[MAXPATHLEN];
+    /* the request: the command, a pad byte and the volume id */
+    char ibuf[4] = { 0 };
+    char rbuf[sizeof(uint16_t)];
+    size_t rbuflen = 0;
+    char *const path = vol->v_path;
+    char *const dbpath = vol->v_dbpath;
+    const int flags = vol->v_flags;
+    const uid_t private_uid = vol->v_private_uid;
+    const gid_t egid = getegid();
+    const struct passwd *owner;
+    uid_t owner_uid;
+    gid_t owner_gid;
+    gid_t *groups;
+    int ngroups;
+    struct stat st;
+    int result = 0;
+
+    if (getuid() != 0 || (owner = getpwnam("nobody")) == NULL) {
+        return TEST_SKIP;
+    }
+
+    /* the record is the C library's, which the owner switch looks up again */
+    owner_uid = owner->pw_uid;
+    owner_gid = owner->pw_gid;
+    snprintf(root, sizeof(root), "%s.desktop-XXXXXX", vol->v_dbpath);
+
+    if (mkdtemp(root) == NULL) {
+        return TEST_SKIP;
+    }
+
+    snprintf(dbdir, sizeof(dbdir), "%s/db", root);
+    snprintf(dtdir, sizeof(dtdir), "%s/.AppleDesktop", dbdir);
+
+    if (!desktop_scratch_owned(root, owner_uid, owner_gid)
+            || (groups = cnid_groups(&ngroups)) == NULL) {
+        rmdir(dbdir);
+        rmdir(root);
+        return TEST_SKIP;
+    }
+
+    vol->v_path = root;
+    vol->v_dbpath = dbdir;
+    vol->v_flags |= AFPVOL_PRIVATE;
+    vol->v_private_uid = owner_uid;
+    memcpy(ibuf + 2, &vol->v_vid, sizeof(vol->v_vid));
+
+    if (afp_opendt(obj, ibuf, sizeof(ibuf), rbuf, &rbuflen) != AFP_OK) {
+        result = 1;
+    } else if (geteuid() != 0 || getegid() != egid
+               || !cnid_groups_are(groups, ngroups)) {
+        result = 2;
+    } else if (stat(dtdir, &st) != 0 || st.st_uid != owner_uid) {
+        result = 3;
+    }
+
+    /* a lost hand-back would run the rest of the suite as the owner */
+    if ((geteuid() != 0 && seteuid(0) != 0) || setegid(egid) != 0
+            || setgroups(ngroups, groups) != 0) {
+        result = 2;
+    }
+
+    vol->v_path = path;
+    vol->v_dbpath = dbpath;
+    vol->v_flags = flags;
+    vol->v_private_uid = private_uid;
+    free(groups);
+    rmdir(dtdir);
+    rmdir(dbdir);
+    rmdir(root);
     return result;
 }

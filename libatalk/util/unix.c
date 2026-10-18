@@ -25,8 +25,10 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <libgen.h>
 #include <poll.h>
+#include <pwd.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -413,6 +415,140 @@ void unbecome_root(void)
             saved_uid = -1;
         }
     }
+}
+
+/* the supplementary groups become_owner() replaces, which unbecome_owner()
+ * gives back */
+static gid_t *owner_saved_groups;
+static int owner_saved_ngroups;
+
+/*!
+ * @brief Act as an account for one step, with its groups, egid and euid
+ *
+ * For a process whose euid is 0. unbecome_owner() takes euid 0, the egid and
+ * the process's supplementary groups back.
+ *
+ * @param[in]  uid   the account
+ * @param[out] egid  the gid to hand unbecome_owner()
+ * @returns 0, or -1 with errno set and the ids as they were
+ */
+int become_owner(uid_t uid, gid_t *egid)
+{
+    const struct passwd *owner;
+    gid_t *groups;
+    int ngroups;
+    *egid = getegid();
+    errno = 0;
+
+    /* getpwuid() leaves errno 0 for a uid it does not know */
+    if ((owner = getpwuid(uid)) == NULL) {
+        if (errno == 0) {
+            errno = ENOENT;
+        }
+
+        return -1;
+    }
+
+    if ((ngroups = getgroups(0, NULL)) < 0) {
+        return -1;
+    }
+
+    if ((groups = realloc(owner_saved_groups,
+                          (size_t)(ngroups + 1) * sizeof(gid_t))) == NULL) {
+        return -1;
+    }
+
+    owner_saved_groups = groups;
+
+    if ((owner_saved_ngroups = getgroups(ngroups, groups)) < 0) {
+        return -1;
+    }
+
+    if (initgroups(owner->pw_name, owner->pw_gid) != 0
+            || setegid(owner->pw_gid) != 0 || seteuid(uid) != 0) {
+        int saved_errno = errno;
+
+        if (setegid(*egid) != 0
+                || setgroups(owner_saved_ngroups, owner_saved_groups) != 0) {
+            AFP_PANIC("become_owner: can't restore the ids");
+        }
+
+        errno = saved_errno;
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Take euid 0, the egid and the supplementary groups back after
+ *        become_owner()
+ *
+ * @param[in] egid  the gid become_owner() gave
+ */
+void unbecome_owner(gid_t egid)
+{
+    if (seteuid(0) != 0 || setegid(egid) != 0
+            || setgroups(owner_saved_ngroups, owner_saved_groups) != 0) {
+        AFP_PANIC("unbecome_owner: can't return to root");
+    }
+}
+
+/*!
+ * @brief Drop trailing slashes, which make lstat and an O_NOFOLLOW open follow
+ * a final symbolic link
+ *
+ * A lone "/" stays.
+ *
+ * @param[in,out] path  path to trim
+ */
+void strip_trailing_slashes(char *path)
+{
+    size_t len = strlen(path);
+
+    while (len > 1 && path[len - 1] == '/') {
+        path[--len] = '\0';
+    }
+}
+
+/*!
+ * @brief Quote a string as one word of a POSIX shell command
+ *
+ * The word is the string between single quotes, with each single quote in it
+ * written as '\''.
+ *
+ * @param[in] s  string to quote
+ * @returns the word, which the caller frees, or NULL when out of memory
+ */
+char *shell_quote(const char *s)
+{
+    size_t len = 3;
+    char *word;
+    char *d;
+
+    for (const char *p = s; *p; p++) {
+        len += *p == '\'' ? 4 : 1;
+    }
+
+    if ((word = malloc(len)) == NULL) {
+        return NULL;
+    }
+
+    d = word;
+    *d++ = '\'';
+
+    for (; *s; s++) {
+        if (*s == '\'') {
+            memcpy(d, "'\\''", 4);
+            d += 4;
+        } else {
+            *d++ = *s;
+        }
+    }
+
+    *d++ = '\'';
+    *d = '\0';
+    return word;
 }
 
 /*!
