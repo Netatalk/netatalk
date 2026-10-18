@@ -43,6 +43,11 @@ extern int utest_conf_multiproto_defaults_not_leaked_on_failed_volume(void);
 extern int utest_conf_multiproto_reverts_compiled_defaults(void);
 extern int utest_conf_load_afp_conf_vols_locked(void);
 extern int utest_conf_dircache_resolve_size(void);
+extern int utest_conf_session_loads_after_login(void);
+extern int utest_conf_private_volume_state(void);
+extern int utest_conf_unchanged_conf_read_once(void);
+extern int utest_conf_open_volume_reload(void);
+extern int utest_conf_reload_follows_sections(void);
 extern int utest_conf_singleuser_state_paths(void);
 extern int utest_conf_listen_skips_failed_address(void);
 

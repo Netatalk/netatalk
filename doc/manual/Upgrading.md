@@ -16,6 +16,21 @@ share root where **vol dbnest** was set. A **vol dbnest** volume served by
 *sqlite* kept its database in the share root, a *.sqlite* file named after
 the volume with *-wal* and *-shm* companions; delete it too.
 
+### Home volumes are now private
+
+Every **[Homes]** volume is now private to its owner. Nothing needs doing
+on upgrade. The server rebuilds each home's CNID database outside its
+central CNID store, by default in a *.AppleDB* directory inside the home.
+The home's owner owns that directory. A home's former CNID directory, or
+its MySQL table, is no longer read and can be deleted.
+
+To keep the homes shared, as before, set **private =** with no value in
+**[Homes]**. Private homes on NFS, or on a filesystem or quota unsuited to
+SQLite, need a **[Homes]** **vol dbpath** with **$u**. The Private volumes
+section of the [Configuration](Configuration.html) chapter has the
+details. If a home does not open, its log line names the command that
+fixes it.
+
 ## Upgrading from Netatalk 4.5
 
 Netatalk 4.6 changes how the credential store used by the SRP UAM

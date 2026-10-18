@@ -103,6 +103,10 @@ else
             fi
             $TEST_CPU_PIN afp_spectest $TEST_FLAGS "$@"
             TEST_EXIT_CODE=$?
+            if [ -n "$PRIVATE_VOL" ] && [ ! -d "$NETATALK_SHARE_DIR/.AppleDB" ]; then
+                echo "ERROR: PRIVATE_VOL is set, but $NETATALK_SHARE_DIR holds no .AppleDB" >&2
+                TEST_EXIT_CODE=1
+            fi
             if [ -n "$AFP_JUNIT_REPORT_PATH" ] && [ -f "$AFP_JUNIT_REPORT_PATH" ]; then
                 chmod 0644 "$AFP_JUNIT_REPORT_PATH"
             fi

@@ -79,7 +79,8 @@ below explains the **(G)** and **(V)** markers.
 
 The [Homes] section shares the home directories of the server's UNIX
 users. Its one mandatory option is **basedir regex**. Set it to a path
-that matches the parent directory of the user homes.
+that matches the parent directory of the user homes. Each home volume is
+private to its owner by default, see **private**.
 
 The optional **path** parameter shares only the named subdirectory of
 each home directory instead of the entire home directory. With all user
@@ -195,7 +196,9 @@ Unset by default.
 force user = *user* **(G)**
 
 > Makes every connecting user act as this UNIX user on the server. Use it
-with care: an incorrect setting can cause security problems.
+with care: an incorrect setting can cause security problems. A server with
+this option skips every volume section that sets **private**, and shares
+the **[Homes]** volumes.
 
 force group = *group* **(G)**
 
@@ -522,8 +525,8 @@ cnid scheme = *mysql* | *sqlite* (default: *sqlite*) **(G)**/**(V)**
 from your Netatalk installation. Run **afpd -v** to list the available
 backends. For a name that is not a backend, **afpd** serves the volume
 with *sqlite* and logs a warning. For a backend your build omits,
-**afpd** does not open the volume. A **netatalk \-\-single-user** server
-requires *sqlite*. The **dbd**(1) and **nad**(1) commands refuse a scheme
+**afpd** does not open the volume. A **private** volume uses *sqlite*, see
+**private**. The **dbd**(1) and **nad**(1) commands refuse a scheme
 your installation cannot serve until you correct *afp.conf*.
 >
 > *mysql*: connects to a MySQL (or MariaDB) database instance provisioned
@@ -543,11 +546,12 @@ the volume name appended as a subdirectory. The server uses a volume or
 preset value as given. For a server run as root, the *sqlite* backend
 creates the directory if needed and sets mode 1777 on it. It sets the
 database files to 0666, so that **afpd** sessions running as the
-connected user and **nad** can share them. A **netatalk \-\-single-user**
-server keeps them owner-only (0700 and 0600). Keep the path outside any
-volume, on a filesystem that supports POSIX record locks. The server
-locks the *sqlite* database and the desktop database icons as it writes
-them.
+connected user and **nad** can share them. A **private** volume keeps its
+own directory owner-only, by default *.AppleDB* inside the volume, and
+ignores a preset's and the **(G)** value, see **private**. Apart from that
+*.AppleDB*, keep the path outside any volume, on a filesystem that supports
+POSIX record locks. The server locks the *sqlite* database and the desktop
+database icons as it writes them.
 
 ## Directory Cache Tuning
 
@@ -791,7 +795,8 @@ searchable. A list limits searches to the attributes it names. Example:
 
 spotlight backend = *backend* (default: *cnid*) **(G)**/**(V)**
 
-> Search backend for the Spotlight (Finder search) feature.
+> Search backend for the Spotlight (Finder search) feature. A **private**
+volume uses *cnid*, see **private**.
 >
 > Depending on your Netatalk configuration, the available backends may
 include *cnid*, *localsearch*, and *xapian*. *cnid* matches file names
@@ -1226,6 +1231,27 @@ invalid users = *user* / *@group* **(V)**
 
 > Lists users and groups denied access to the volume, in the same format
 as **valid users**.
+
+private = *user* **(V)**
+
+> Dedicates the volume to one account: the server offers it to that account
+alone, and no other AFP user opens it. A shared volume keeps its CNID
+database centrally, with the server's other CNID databases under
+**vol dbpath** or in *mysql*. A private volume has a separate *sqlite*
+database instead, by default in a *.AppleDB* directory inside the volume.
+The account owns that directory, with owner-only permissions, whichever
+process opens the volume. Finder search uses the *cnid*
+**spotlight backend** when your build has it.
+>
+> The account cannot be root, and a volume section takes an account name,
+never *$u*. An empty value leaves the volume shared. A server with
+**force user** skips the volume.
+>
+> Every **[Homes]** volume is private to its owner, unless **[Homes]** sets
+**private =** with no value or the server sets **force user**. For private
+homes, a **vol dbpath** in **[Homes]** applies only when it contains *$u*.
+>
+> The Configuration chapter of the manual has more on private volumes.
 
 hosts allow = *IP host address/IP netmask bits* [ ... ] **(V)**
 
