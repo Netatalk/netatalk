@@ -314,11 +314,13 @@ int test014_rename_preflight_unreadable_descendant(struct vol *vol)
     }
 
     old_mask = umask(0);
+
     if (chmod(locked, 0) != 0) {
         umask(old_mask);
         rc = 8;
         goto out;
     }
+
     umask(old_mask);
 
     /* The walk must still succeed, and must not report a shorter answer than
