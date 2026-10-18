@@ -354,6 +354,222 @@ int check_name(const struct vol *vol, char *name)
 }
 
 /*!
+ * @brief Length of the longest path below an open directory descriptor
+ *
+ * Recurses fd-relative (openat + fdopendir), so an arbitrarily deep tree
+ * cannot exhaust the stack the way a per-level path buffer can, and no
+ * symlink in the tree can redirect the descent out of it. Directory-ness
+ * comes from ostatat() + S_ISDIR, not from dirent d_type: illumos has no
+ * d_type at all, and DT_UNKNOWN filesystems (XFS without ftype, many NFS
+ * and FUSE mounts) would otherwise score every directory as a leaf and
+ * under-count. A path longer than budget is reported as budget + 1: the
+ * caller only compares against the limit, so the walk stops at the first
+ * entry that cannot possibly fit.
+ *
+ * @param[in]  vol      volume the descriptor belongs to
+ * @param[in]  start_fd open descriptor of the directory to walk
+ * @param[in]  budget   longest path length to look for
+ * @param[out] longest  longest path length found below start_fd; 0 for an
+ *                      empty directory
+ * @returns 0 on success, -1 when the directory or a subtree cannot be read
+ */
+int longest_descendant_pathlen(const struct vol *vol, int start_fd,
+                               size_t budget, size_t *longest)
+{
+    int own_fd;
+    int child_fd;
+    DIR *dp;
+    struct dirent *de;
+    struct stat st;
+    size_t best = 0;
+    own_fd = openat(start_fd, ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+
+    if (own_fd == -1) {
+        return -1;
+    }
+
+    if ((dp = fdopendir(own_fd)) == NULL) {
+        close(own_fd);
+        return -1;
+    }
+
+    /* fdopendir() owns own_fd from here on. */
+    errno = 0;
+
+    while ((de = readdir(dp))) {
+        size_t namelen = strlen(de->d_name);
+        size_t sub;
+        size_t len;
+
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
+            continue;
+        }
+
+        if (namelen + 1 > budget) {
+            /* This entry alone already cannot fit below the move. */
+            closedir(dp);
+            *longest = budget + 1;
+            return 0;
+        }
+
+        len = namelen + 1; /* the slash the parent path ends with */
+        child_fd = openat(dirfd(dp), de->d_name,
+                          O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+
+        if (child_fd == -1) {
+            /* Capture before ostatat() below clobbers it. */
+            const int open_errno = errno;
+
+            /* Not a directory, or one we may not enter and so cannot
+             * measure: either way it is not a *shorter* answer. */
+            if (ostatat(dirfd(dp), de->d_name, &st, vol_syml_opt(vol)) != 0
+                    || !S_ISDIR(st.st_mode)) {
+                if (len > best) {
+                    best = len;
+                }
+
+                errno = 0;
+                continue;
+            }
+
+            /* A directory we cannot open. Only ENOENT and ELOOP make the
+             * answer unmeasurable: the tree changed under us, or a link loop
+             * means no finite path reaches a real descendant.
+             *
+             * EACCES/EPERM do not. renameat(2) needs no permission inside the
+             * tree being moved, so one unreadable directory must not deny a
+             * lengthening rename of its ancestors to every other user of a
+             * shared volume. Count it as a directory (len includes the slash)
+             * and let the rename itself be the authority. */
+            if (open_errno == ENOENT || open_errno == ELOOP) {
+                closedir(dp);
+                return -1;
+            }
+
+            if (len > best) {
+                best = len;
+            }
+
+            errno = 0;
+            continue;
+        }
+
+        if (longest_descendant_pathlen(vol, child_fd, budget - len,
+                                       &sub) != 0) {
+            close(child_fd);
+            closedir(dp);
+            return -1;
+        }
+
+        close(child_fd);
+
+        if (len + sub > best) {
+            best = len + sub;
+        }
+
+        errno = 0;
+    }
+
+    if (errno != 0) {
+        /* readdir() failed partway through: the answer is incomplete. */
+        closedir(dp);
+        return -1;
+    }
+
+    closedir(dp);
+    *longest = best;
+    return 0;
+}
+
+/*!
+ * @brief Would renaming this directory push a descendant path past MAXPATHLEN?
+ *
+ * moveandrename() derives the new full path of an object the same way for its
+ * log line and for the dircache update: the full path of the working directory,
+ * a slash, and the new Unix name. That string is what descendant operations
+ * rebuild later, so the preflight measures its byte length here and adds the
+ * part of the moved subtree that hangs below the moved directory. Only
+ * directories need the walk: a plain file has no descendants.
+ *
+ * The walk is rooted at the moved directory itself, not at its name inside a
+ * parent: on the FPMoveAndRename path the caller's descriptor already refers
+ * to that directory (cname() chdirs into the last component of the source
+ * path), so a name-relative walk would look for dir/dir and silently
+ * measure nothing.
+ *
+ * @param[in] vol      volume of sdir
+ * @param[in] sdir_fd  descriptor of the directory being renamed, or -1 when it
+ *                     must be opened from srcpath
+ * @param[in] srcpath  path of the directory being renamed relative to sdir_fd,
+ *                     or relative to the working directory when sdir_fd is -1
+ * @param[in] sdir     the directory being renamed
+ * @param[in] upath    new Unix name in the working directory
+ * @param[in] isdir    nonzero when the object is a directory
+ * @returns 1 when the rename would overflow, 0 when it cannot or is
+ *          unmeasurable
+ */
+int rename_would_overflow_path(const struct vol *vol, int sdir_fd,
+                               const char *srcpath,
+                               const struct dir *sdir,
+                               const char *upath, int isdir)
+{
+    int fd = -1;
+    size_t dstlen;
+    size_t longest = 0;
+
+    if (!isdir || upath == NULL || srcpath == NULL || sdir == NULL
+            || curdir == NULL || curdir->d_fullpath == NULL) {
+        return 0;
+    }
+
+    /* The new full path of the renamed directory, byte for byte the string
+     * fullpath_join() builds from the working directory and the new name. */
+    dstlen = (size_t)blength(curdir->d_fullpath) + 1 + strlen(upath);
+
+    /* The kernel counts the terminating NUL, so a path of exactly MAXPATHLEN
+     * bytes already fails with ENAMETOOLONG. */
+    if (dstlen >= MAXPATHLEN) {
+        return 1;
+    }
+
+    /* Every descendant moves by the same delta. Nothing can grow when the
+     * directory's own path does not, which also keeps an already over-limit
+     * tree repairable by a shortening or same-name rename. */
+    if (blength(sdir->d_fullpath) == 0
+            || dstlen <= (size_t)blength(sdir->d_fullpath)) {
+        return 0;
+    }
+
+    if (sdir_fd != -1) {
+        fd = sdir_fd;
+    } else if ((fd = open(srcpath, O_RDONLY | O_DIRECTORY | O_CLOEXEC)) == -1) {
+        /* Unreadable source: not this check's business, the rename itself
+         * reports the error. */
+        return 0;
+    }
+
+    if (longest_descendant_pathlen(vol, fd, MAXPATHLEN - dstlen,
+                                   &longest) < 0) {
+        if (sdir_fd == -1) {
+            close(fd);
+        }
+
+        /* Could not measure the subtree: refuse rather than let a rename
+         * through on a short answer. */
+        return 1;
+    }
+
+    if (sdir_fd == -1) {
+        close(fd);
+    }
+
+    /* longest is measured below the source directory; adding it to the new
+     * full path gives the deepest path the rename would create, and every
+     * intermediate directory is a prefix of it. */
+    return dstlen + longest >= MAXPATHLEN;
+}
+
+/*!
  * @brief Move and rename sdir/oldname to newname in the working directory
  *
  * A file takes its CNID from the database, and a directory passes itself as
@@ -405,9 +621,12 @@ static int moveandrename(const AFPObj *obj,
     adflags = 0;
 
     if (!isdir) {
-        if ((oldunixname = strdup(mtoupath(vol, oldname, sdir->d_did,
-                                           utf8_encoding(vol->v_obj)))) == NULL) {
+        char *unixname = mtoupath(vol, oldname, sdir->d_did,
+                                  utf8_encoding(vol->v_obj));
+
+        if (unixname == NULL || (oldunixname = strdup(unixname)) == NULL) {
             /* can't convert */
+            free(oldunixname);
             return AFPERR_PARAM;
         }
 
@@ -437,14 +656,12 @@ static int moveandrename(const AFPObj *obj,
             adp = opened->of_ad;
         }
     } else {
+        char *sdirname = ctoupath(vol, dirlookup_strict(vol, sdir->d_pdid),
+                                  oldname);
         id = sdir->d_did; /* we already have the CNID */
 
-        if ((oldunixname = strdup(ctoupath(vol, dirlookup_strict(vol, sdir->d_pdid),
-                                           oldname))) == NULL) {
-            if (oldunixname) {
-                free(oldunixname);
-            }
-
+        if (sdirname == NULL || (oldunixname = strdup(sdirname)) == NULL) {
+            free(oldunixname);
             return AFPERR_PARAM;
         }
 
@@ -575,6 +792,19 @@ static int moveandrename(const AFPObj *obj,
             }
         }
     } else {
+        /* Reject a directory rename that would bury a descendant past
+         * MAXPATHLEN. Nothing has been renamed yet, so this is the last
+         * point where the old tree is still addressable and a stable
+         * error can be returned. */
+        if (rename_would_overflow_path(vol, sdir_fd, oldunixname, sdir, upath,
+                                       isdir)) {
+            LOG(log_warning, logtype_afpd,
+                "moveandrename: rename of \"%s\" to \"%s/%s\" would exceed MAXPATHLEN below the source directory, rejecting",
+                oldunixname, cfrombstr(curdir->d_fullpath), upath);
+            rc = AFPERR_PARAM;
+            goto exit;
+        }
+
         rc = renamedir(vol, sdir_fd, oldunixname, upath, curdir, newname);
     }
 
