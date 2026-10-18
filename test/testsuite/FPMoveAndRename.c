@@ -511,6 +511,19 @@ STATIC void test460()
     char  sub_name[TESTSUITE_NAME_MAX + 1];
     ENTER_TEST
 
+    /*
+     * The plan sizes the tree against the absolute path of the local volume,
+     * which is only known from -c. Without it the 26-byte default is a guess:
+     * in the AFP_REMOTE=1 container legs it is 12 bytes short, so the leaf
+     * still fits after the rename, afpd correctly answers AFP_OK, and the
+     * hard assertion below would fail on main while a fork PR stays green.
+     * Skip instead of asserting against a guess.
+     */
+    if (Path[0] == '\0') {
+        test_skipped(T_PATH);
+        goto test_exit;
+    }
+
     if (test460_tree_plan(toplevel, dst_renamed, DEEP_TREE_LEAF_NAME,
                           &plan) < 0) {
         test_nottested();

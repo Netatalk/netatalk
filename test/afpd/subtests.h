@@ -57,6 +57,7 @@ extern int test010_full_cache_accepts_adds(struct vol *vol,
 extern int test011_stat_refresh_drops_rights(struct vol *vol);
 extern int test012_rename_preflight_walk_lengths(struct vol *vol);
 extern int test013_rename_preflight_decision(struct vol *vol);
+extern int test014_rename_preflight_unreadable_descendant(struct vol *vol);
 extern int dircache_test_ghost_trim_selection(void);
 extern int utest_logger_reopen_keeps_files(void);
 extern int utest_lockfile_restores_umask(void);

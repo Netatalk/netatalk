@@ -28,6 +28,7 @@
 #include "directory.h"
 #include "filedir.h"
 #include "subtests.h"
+#include "test.h"
 
 /* Per-component name limit. NAME_MAX is not defined on illumos, and this is
  * only an upper bound for the trees the tests build, so keep it fixed the way
@@ -251,6 +252,95 @@ out:
     return rc;
 }
 
+/*
+ * An unreadable subdirectory must not make the walk fail, and must still be
+ * counted as a directory (its name plus the slash its descendants sit behind).
+ *
+ * renameat(2) needs no permission inside the tree being moved, so afpd must
+ * answer a lengthening rename of the ancestors exactly as main did. Failing
+ * closed on EACCES made one unreadable directory deny renames to every other
+ * user of a shared volume. Only ENOENT and ELOOP mean the tree cannot be
+ * measured at all.
+ */
+int test014_rename_preflight_unreadable_descendant(struct vol *vol)
+{
+    char base[PATH_MAX];
+    char locked[PATH_MAX];
+    char deepest[PATH_MAX];
+    const char *tmp = getenv("TMPDIR");
+    size_t longest = 0;
+    size_t expected;
+    mode_t old_mask;
+    int rc = 1;
+
+    if (geteuid() == 0) {
+        /* root ignores the mode bits, so the case cannot be staged. */
+        return TEST_SKIP;
+    }
+
+    if (tmp == NULL) {
+        tmp = "/tmp";
+    }
+
+    if (snprintf(base, sizeof(base), "%s/nlrename013.XXXXXX", tmp)
+            >= (int)sizeof(base)) {
+        return 2;
+    }
+
+    if (mkdtemp(base) == NULL) {
+        return 3;
+    }
+
+    if (snprintf(locked, sizeof(locked), "%s/sub", base) >= (int)sizeof(locked)) {
+        rc = 4;
+        goto out;
+    }
+
+    if (make_tree(locked, 3, 4, deepest, sizeof(deepest)) != 0) {
+        rc = 5;
+        goto out;
+    }
+
+    if (walk(vol, base, MAXPATHLEN, &longest) != 0) {
+        rc = 6;
+        goto out;
+    }
+
+    expected = strlen(deepest) - strlen(base);
+
+    if (longest != expected) {
+        rc = 7;
+        goto out;
+    }
+
+    old_mask = umask(0);
+    if (chmod(locked, 0) != 0) {
+        umask(old_mask);
+        rc = 8;
+        goto out;
+    }
+    umask(old_mask);
+
+    /* The walk must still succeed, and must not report a shorter answer than
+     * the unreadable directory's own name + slash. */
+    if (walk(vol, base, MAXPATHLEN, &longest) != 0) {
+        rc = 9;
+        goto restore;
+    }
+
+    if (longest < strlen("sub") + 1) {
+        rc = 10;
+        goto restore;
+    }
+
+    rc = 0;
+restore:
+    chmod(locked, 0700);
+out:
+    rm_tree(base);
+    return rc;
+}
+
 int test013_rename_preflight_decision(struct vol *vol)
 {
     char base[PATH_MAX];
@@ -446,6 +536,31 @@ int test013_rename_preflight_decision(struct vol *vol)
 
         if (rename_would_overflow_path(vol, fd, ".", &src, "s", 1) != 0) {
             rc = 20;
+            curdir = saved_curdir;
+            goto out;
+        }
+
+        /* Same-name and shortening renames return early without walking, so
+         * neither of the two calls above reaches longest_descendant_pathlen().
+         * Rename to a LONGER name that still fits:
+         * dstlen > strlen(src.d_fullpath) so the delta early-exit does not
+         * fire, and dstlen < MAXPATHLEN so the pre-walk check does not
+         * either. Only then is the walk actually exercised, which is the
+         * point of taking the directory's own descriptor as the root. */
+        /* src.d_fullpath is the absolute ".../s", so dstlen is
+         * |base|+1+len(newname); any name of 2+ bytes exceeds it without
+         * coming close to MAXPATHLEN. Use a fixed one rather than deriving
+         * it from src_dir, which would blow past MAXPATHLEN and be answered
+         * by the pre-walk check instead of the walk. */
+        if (snprintf(longname, sizeof(longname), "renamed-longer") >=
+                (int)sizeof(longname)) {
+            rc = 26;
+            curdir = saved_curdir;
+            goto out;
+        }
+
+        if (rename_would_overflow_path(vol, fd, ".", &src, longname, 1) != 0) {
+            rc = 27;
             curdir = saved_curdir;
             goto out;
         }

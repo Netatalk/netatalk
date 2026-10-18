@@ -417,6 +417,9 @@ int longest_descendant_pathlen(const struct vol *vol, int start_fd,
                           O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
 
         if (child_fd == -1) {
+            /* Capture before ostatat() below clobbers it. */
+            const int open_errno = errno;
+
             /* Not a directory, or one we may not enter and so cannot
              * measure: either way it is not a *shorter* answer. */
             if (ostatat(dirfd(dp), de->d_name, &st, vol_syml_opt(vol)) != 0
@@ -429,10 +432,26 @@ int longest_descendant_pathlen(const struct vol *vol, int start_fd,
                 continue;
             }
 
-            /* A directory we cannot open: fail closed, the caller must not
-             * read a short answer as "fits". */
-            closedir(dp);
-            return -1;
+            /* A directory we cannot open. Only ENOENT and ELOOP make the
+             * answer unmeasurable: the tree changed under us, or a link loop
+             * means no finite path reaches a real descendant.
+             *
+             * EACCES/EPERM do not. renameat(2) needs no permission inside the
+             * tree being moved, so one unreadable directory must not deny a
+             * lengthening rename of its ancestors to every other user of a
+             * shared volume. Count it as a directory (len includes the slash)
+             * and let the rename itself be the authority. */
+            if (open_errno == ENOENT || open_errno == ELOOP) {
+                closedir(dp);
+                return -1;
+            }
+
+            if (len > best) {
+                best = len;
+            }
+
+            errno = 0;
+            continue;
         }
 
         if (longest_descendant_pathlen(vol, child_fd, budget - len,

@@ -3096,6 +3096,10 @@ int main(int argc, char *argv[])
              "rename preflight: longest descendant path length is measured");
     TEST_int(test013_rename_preflight_decision(vol), 0,
              "rename preflight: directory over the limit is rejected, file is not");
+    /* an unreadable descendant must not fail closed: renameat(2) needs no
+     * permission inside the moved tree, and main answered AFP_OK */
+    TEST_int_or_skip(test014_rename_preflight_unreadable_descendant(vol), 0,
+             "rename preflight: unreadable descendant does not deny the rename");
     /* pfd cache: strict ostat equivalence (quiescent), and the
      * divergence window — probe bound + three-way sync-check no-thrash */
     TEST_int(test_pfd_ostat_equivalence(vol), 0,
