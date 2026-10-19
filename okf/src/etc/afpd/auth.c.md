@@ -5,7 +5,7 @@ description: "AFP login, logout, password, and session token commands, and UAM l
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/auth.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -255,7 +255,7 @@ Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login
 
 Uses file-scope variables: `afp_version_index`
 
-Mentioned in the documentation of: [run_afpd](../netatalk/netatalk.c.md#run_afpd)
+Mentioned in the documentation of: [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [run_afpd](../netatalk/netatalk.c.md#run_afpd)
 
 ### afp_zzzzz
 

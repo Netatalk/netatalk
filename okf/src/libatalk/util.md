@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/util"
-description: "20 files, 194 functions."
+description: "20 files, 198 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 # Files
@@ -46,18 +46,18 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 260 calls
+* [etc/afpd](../etc/afpd.md): 262 calls
 * [libatalk/adouble](adouble.md): 29 calls
 * [libatalk/dsi](dsi.md): 23 calls
 * [bin/nad](../bin/nad.md): 18 calls
-* [etc/netatalk](../etc/netatalk.md): 14 calls
+* [etc/netatalk](../etc/netatalk.md): 17 calls
 * [etc/atalkd](../etc/atalkd.md): 12 calls
 * [libatalk/vfs](vfs.md): 12 calls
+* [libatalk/cnid](cnid.md): 11 calls
 * [etc/uams](../etc/uams.md): 9 calls
 * [bin/dbd](../bin/dbd.md): 8 calls
 * [etc/papd](../etc/papd.md): 6 calls
 * [libatalk/atp](atp.md): 6 calls
-* [libatalk/cnid](cnid.md): 6 calls
 * [etc/spotlight](../etc/spotlight.md): 5 calls
 * [libatalk/acl](acl.md): 5 calls
 * [bin/nbp](../bin/nbp.md): 3 calls

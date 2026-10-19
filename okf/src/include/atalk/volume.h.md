@@ -5,7 +5,7 @@ description: "AFP volume state, configuration flags and extension mapping types.
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/volume.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -123,6 +123,7 @@ Defined at line 38.
 * `char * v_postexec`
 * `int v_preexec_close`
 * `char * v_uuid`: For TimeMachine zeroconf record.
+* `uid_t v_private_uid`: an AFPVOL_PRIVATE volume's owner
 * `int v_qfd`
 * `uint32_t v_ignattr`: AFP attributes that shall be ignored.
 
@@ -157,6 +158,7 @@ Defined at line 38.
 * `AFPVOL_NONETIDS`: signal the client it shall do privelege mapping
 * `AFPVOL_NOSTAT`: advertise the volume even if we can't stat() it maybe because it will be mounted later in preexec
 * `AFPVOL_NOV2TOEACONV`: no adouble:v2 to adouble:ea conversion
+* `AFPVOL_PRIVATE`: one account's, its 'private' owner
 * `AFPVOL_RO`: read-only volume
 * `AFPVOL_SEARCHDB`: Use fast CNID db search instead of filesystem.
 * `AFPVOL_SPOTLIGHT`: Index volume for Spotlight searches.

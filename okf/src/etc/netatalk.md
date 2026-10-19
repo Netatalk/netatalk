@@ -5,7 +5,7 @@ description: "7 files, 48 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/netatalk"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 # Files
@@ -24,7 +24,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 
 # Calls into
 
-* [libatalk/util](../libatalk/util.md): 14 calls
+* [libatalk/util](../libatalk/util.md): 17 calls
 * [libatalk/compat](../libatalk/compat.md): 8 calls
 * [libatalk/unicode](../libatalk/unicode.md): 2 calls
 * [include/atalk](../include/atalk.md): 1 calls

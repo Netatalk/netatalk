@@ -5,7 +5,7 @@ description: "The netatalk service controller that starts and supervises afpd an
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/netatalk/netatalk.c"
 tags: ["etc/netatalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [etc/netatalk](../netatalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -74,7 +74,7 @@ Called by: [validate_singleuser_config](netatalk.c.md#validate_singleuser_config
 static int path_parent(char *dst, size_t dstlen, const char *path)
 ```
 
-Defined at lines 157 to 182.
+Defined at lines 157 to 179.
 
 Write the parent directory of path into dst.
 
@@ -87,7 +87,7 @@ Parameters:
 
 Returns: 0, or -1 when path is NULL or does not fit dst
 
-Calls: [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
+Calls: [strip_trailing_slashes](../../libatalk/util/unix.c.md#strip_trailing_slashes), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Called by: [dbpath_is_creatable](netatalk.c.md#dbpath_is_creatable), [parent_is_private](netatalk.c.md#parent_is_private)
 
@@ -97,7 +97,7 @@ Called by: [dbpath_is_creatable](netatalk.c.md#dbpath_is_creatable), [parent_is_
 static bool owned_private_dir(const char *path)
 ```
 
-Defined at lines 195 to 211.
+Defined at lines 192 to 205.
 
 Tell whether path is a directory of the caller without group or other permission bits.
 
@@ -108,7 +108,7 @@ Parameters:
 
 Returns: true when the real uid owns the directory and its mode has no group or other bits
 
-Calls: [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
+Calls: [strip_trailing_slashes](../../libatalk/util/unix.c.md#strip_trailing_slashes), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Called by: [parent_is_private](netatalk.c.md#parent_is_private), [srp_verifier_store_is_private](netatalk.c.md#srp_verifier_store_is_private)
 
@@ -118,7 +118,7 @@ Called by: [parent_is_private](netatalk.c.md#parent_is_private), [srp_verifier_s
 static bool parent_is_private(const char *path)
 ```
 
-Defined at lines 220 to 225.
+Defined at lines 214 to 219.
 
 Tell whether the parent directory of path is private to the caller, by owned_private_dir.
 
@@ -137,7 +137,7 @@ Called by: [dir_is_private](netatalk.c.md#dir_is_private)
 static bool dir_is_private(const char *path, mode_t file_mask, bool may_be_absent)
 ```
 
-Defined at lines 237 to 252.
+Defined at lines 231 to 246.
 
 A path only the caller can reach and replace.
 
@@ -158,18 +158,18 @@ Called by: [main](netatalk.c.md#main), [validate_singleuser_config](netatalk.c.m
 static bool dbpath_is_creatable(const char *path)
 ```
 
-Defined at lines 266 to 288.
+Defined at lines 260 to 284.
 
-Tell whether a CNID directory belongs to the caller and is writable, or can be created.
+Tell whether a CNID directory belongs to the caller and is readable and writable, or can be created.
 
-A symbolic link does not pass. The call drops trailing slashes first. A [Global] vol dbpath gets the volume name and a slash appended, and a trailing slash makes lstat follow a link. A missing directory passes when its parent is writable and searchable.
+A symbolic link does not pass, nor does a last component of . or .., which the backend refuses. The call drops trailing slashes first: with one, lstat follows a final symbolic link. A missing directory passes when its parent is writable and searchable.
 
 Parameters:
 * `path`: CNID directory of a volume
 
 Returns: true for a usable or creatable directory
 
-Calls: [path_parent](netatalk.c.md#path_parent), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
+Calls: [path_parent](netatalk.c.md#path_parent), [stripped_slashes_basename](../../libatalk/util/unix.c.md#stripped_slashes_basename), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Called by: [validate_singleuser_config](netatalk.c.md#validate_singleuser_config)
 
@@ -179,7 +179,7 @@ Called by: [validate_singleuser_config](netatalk.c.md#validate_singleuser_config
 static bool srp_verifier_store_is_private(const char *path)
 ```
 
-Defined at lines 303 to 329.
+Defined at lines 299 to 325.
 
 Tell whether the SRP verifier store is private to the calling user and holds the verifier of that user.
 
@@ -200,13 +200,13 @@ Called by: [validate_singleuser_config](netatalk.c.md#validate_singleuser_config
 static int validate_singleuser_config(bool volumes_loaded)
 ```
 
-Defined at lines 349 to 475.
+Defined at lines 345 to 460.
 
 Refuse a single-user configuration that the mode cannot serve.
 
 The call runs after the volumes load and before daemonize, so every message reaches the terminal of the operator. It refuses AppleTalk, afpstats, forced identities, an admin group, and a uam list other than uams_srp.so. The config file and the SRP verifier store must be private to the user, and [Homes] is out.
 
-Every configured volume must load and use the sqlite CNID backend, and a Spotlight volume no backend other than cnid. The user must reach each volume, and its CNID directory must be another directory that the user owns or can create. A port below 1024 only warns.
+Every configured volume must load, which a volume does only when it is private to the user. The user must reach each volume, and its CNID directory must be another directory that the user owns or can create. A port below 1024 only warns.
 
 Parameters:
 * `volumes_loaded`: result of the volume load
@@ -225,7 +225,7 @@ Uses file-scope variables: `obj`
 static int makedirs(const char *path, mode_t mode)
 ```
 
-Defined at lines 489 to 516.
+Defined at lines 474 to 501.
 
 Create a directory and its missing parents, as mkdir -p does.
 
@@ -247,7 +247,7 @@ Called by: [set_sl_volumes](netatalk.c.md#set_sl_volumes)
 static FILE * open_dconf_file(const char *path)
 ```
 
-Defined at lines 526 to 551.
+Defined at lines 511 to 536.
 
 Open a dconf input file for writing with mode 0644, whatever the umask.
 
@@ -266,11 +266,11 @@ Called by: [set_sl_volumes](netatalk.c.md#set_sl_volumes)
 static int set_sl_volumes(void)
 ```
 
-Defined at lines 565 to 717.
+Defined at lines 550 to 705.
 
 Point the localsearch indexer at the Spotlight volumes through a dconf database.
 
-The keyfile lists the path of every Spotlight volume as a recursive index directory, and the locks file pins both index settings. A path with a single quote stays out with a warning, since it would end the quoted string. The call then runs dconf compile and waits for it.
+The keyfile lists the path of every Spotlight volume that is not private as a recursive index directory, and the locks file pins both index settings. A path with a single quote stays out with a warning, since it would end the quoted string. The call then runs dconf compile and waits for it.
 
 Returns: 0, or -1 without volumes or when a write, the fork, or dconf compile fails
 
@@ -284,7 +284,7 @@ Called by: [main](netatalk.c.md#main)
 static void libev_syserr_cb(const char *msg) EV_NOEXCEPT
 ```
 
-Defined at lines 731 to 734.
+Defined at lines 719 to 722.
 
 Log a fatal libev error and end the service controller.
 
@@ -301,7 +301,7 @@ Called by: [main](netatalk.c.md#main)
 static void sigterm_impl(void)
 ```
 
-Defined at lines 771 to 781.
+Defined at lines 759 to 769.
 
 SIGTERM implementation — caller must check in_shutdown before calling.
 
@@ -317,7 +317,7 @@ Uses file-scope variables: `afpd_pid`, `dbus_pid`, `in_shutdown`
 static void sigquit_impl(void)
 ```
 
-Defined at lines 784 to 788.
+Defined at lines 772 to 776.
 
 SIGQUIT implementation.
 
@@ -333,7 +333,7 @@ Uses file-scope variables: `afpd_pid`, `dbus_pid`
 static void sighup_impl(void)
 ```
 
-Defined at lines 791 to 810.
+Defined at lines 779 to 803.
 
 SIGHUP implementation.
 
@@ -349,7 +349,7 @@ Uses file-scope variables: `afpd_pid`, `obj`
 static bool sigchld_impl(void)
 ```
 
-Defined at lines 820 to 854.
+Defined at lines 813 to 847.
 
 Reap the exited children and mark their services for a restart.
 
@@ -369,7 +369,7 @@ Uses file-scope variables: `afpd_pid`, `dbus_pid`, `in_shutdown`
 static void timer_impl(void)
 ```
 
-Defined at lines 857 to 885.
+Defined at lines 850 to 878.
 
 timer implementation
 
@@ -385,7 +385,7 @@ Uses file-scope variables: `afpd_pid`, `afpd_restarts`, `dbus_path`, `dbus_pid`,
 static void kill_timer_cb(struct ev_loop *ev_loop, ev_timer *w, int revents)
 ```
 
-Defined at lines 900 to 904.
+Defined at lines 893 to 897.
 
 End the event loop when the shutdown grace time runs out.
 
@@ -404,7 +404,7 @@ Uses file-scope variables: `loop`
 static void sigterm_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 918 to 933.
+Defined at lines 911 to 926.
 
 Start the shutdown on SIGTERM, with KILL_GRACETIME seconds for the children to exit.
 
@@ -427,7 +427,7 @@ Uses file-scope variables: `in_shutdown`, `kill_timer_ev`, `loop`, `sighup_ev`, 
 static void sigquit_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 942 to 946.
+Defined at lines 935 to 939.
 
 Pass SIGQUIT on to afpd and dbus.
 
@@ -446,7 +446,7 @@ Called by: [main](netatalk.c.md#main)
 static void sighup_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 958 to 962.
+Defined at lines 951 to 955.
 
 Reload the volumes on SIGHUP, register them with Zeroconf again, and pass the signal on to afpd.
 
@@ -467,7 +467,7 @@ Called by: [main](netatalk.c.md#main)
 static void sigchld_cb(struct ev_loop *ev_loop, ev_signal *w, int revents)
 ```
 
-Defined at lines 972 to 978.
+Defined at lines 965 to 971.
 
 Reap the children on SIGCHLD, and end the event loop once a shutdown has no service left.
 
@@ -488,7 +488,7 @@ Uses file-scope variables: `loop`
 static void timer_cb(struct ev_loop *ev_loop, ev_timer *w, int revents)
 ```
 
-Defined at lines 989 to 993.
+Defined at lines 982 to 986.
 
 Restart afpd and dbus when they need it, on the 1-second timer.
 
@@ -509,7 +509,7 @@ Called by: [main](netatalk.c.md#main)
 static void kill_childs(int sig,...)
 ```
 
-Defined at lines 1053 to 1068.
+Defined at lines 1046 to 1061.
 
 Send a signal to the services whose pid slots follow, up to a NULL.
 
@@ -527,7 +527,7 @@ Called by: [main](netatalk.c.md#main), [sighup_impl](netatalk.c.md#sighup_impl),
 static void netatalk_exit(int ret)
 ```
 
-Defined at lines 1075 to 1079.
+Defined at lines 1068 to 1072.
 
 Remove the lock file and exit with a status.
 
@@ -544,7 +544,7 @@ Uses file-scope variables: `lockfile_path`
 static pid_t run_process(const char *path,...)
 ```
 
-Defined at lines 1091 to 1122.
+Defined at lines 1084 to 1115.
 
 Fork and run a program with a NULL-terminated list of arguments.
 
@@ -564,7 +564,7 @@ Called by: [main](netatalk.c.md#main), [run_afpd](netatalk.c.md#run_afpd), [time
 static pid_t run_afpd(void)
 ```
 
-Defined at lines 1132 to 1139.
+Defined at lines 1125 to 1132.
 
 Start afpd on the controller's configuration file.
 
@@ -584,7 +584,7 @@ Uses file-scope variables: `obj`
 static void show_netatalk_version(void)
 ```
 
-Defined at lines 1145 to 1169.
+Defined at lines 1138 to 1162.
 
 Print the version, the license note, and the Zeroconf and Spotlight backends of the build.
 
@@ -596,7 +596,7 @@ Called by: [main](netatalk.c.md#main)
 static void show_netatalk_paths(void)
 ```
 
-Defined at lines 1178 to 1189.
+Defined at lines 1171 to 1182.
 
 Print the paths of afp.conf, afpd, the dbus daemon and its configuration, and the lock file.
 
@@ -610,7 +610,7 @@ Called by: [main](netatalk.c.md#main)
 static void usage(void)
 ```
 
-Defined at lines 1194 to 1200.
+Defined at lines 1187 to 1193.
 
 Print the command line forms of netatalk.
 
@@ -622,7 +622,7 @@ Called by: [main](netatalk.c.md#main)
 static bool any_volume_uses_localsearch(void)
 ```
 
-Defined at lines 1208 to 1221.
+Defined at lines 1201 to 1214.
 
 Tell whether a Spotlight volume names the localsearch backend.
 
@@ -638,7 +638,7 @@ Called by: [main](netatalk.c.md#main)
 int main(int argc, char **argv)
 ```
 
-Defined at lines 1243 to 1479.
+Defined at lines 1236 to 1473.
 
 Run the netatalk service controller, which starts afpd and the Spotlight dbus daemon and restarts them.
 

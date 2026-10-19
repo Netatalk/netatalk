@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,7 +23,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 * [atalk/unix.h](../../include/atalk/unix.h.md)
 * [atalk/util.h](../../include/atalk/util.h.md)
 * [atalk/vfs.h](../../include/atalk/vfs.h.md)
-* System headers: `dirent.h`, `errno.h`, `fcntl.h`, `libgen.h`, `poll.h`, `stdint.h`, `stdlib.h`, `string.h`, `sys/stat.h`, `sys/time.h`, `sys/types.h`, `time.h`, `unistd.h`
+* System headers: `dirent.h`, `errno.h`, `fcntl.h`, `grp.h`, `libgen.h`, `poll.h`, `pwd.h`, `stdint.h`, `stdlib.h`, `string.h`, `sys/stat.h`, `sys/time.h`, `sys/types.h`, `time.h`, `unistd.h`
 
 # Functions
 
@@ -33,7 +33,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static void closeall(int fd)
 ```
 
-Defined at lines 56 to 63.
+Defined at lines 58 to 65.
 
 Close every descriptor from fd up to the _SC_OPEN_MAX limit.
 
@@ -50,7 +50,7 @@ Mentioned in the documentation of: [log_close_all](logger.c.md#log_close_all)
 int daemonize(void)
 ```
 
-Defined at lines 71 to 124.
+Defined at lines 73 to 126.
 
 Fork, exit parent, setsid(), chdir("/"), close all fds.
 
@@ -68,7 +68,7 @@ Mentioned in the documentation of: [log_reopen](logger.c.md#log_reopen)
 static int count_fds_probed(int base, int n)
 ```
 
-Defined at lines 136 to 147.
+Defined at lines 138 to 149.
 
 Count open descriptors in [base, base + n) with one fcntl(2) each.
 
@@ -86,7 +86,7 @@ Called by: [count_fds_polled](unix.c.md#count_fds_polled)
 static int count_fds_polled(int max)
 ```
 
-Defined at lines 160 to 191.
+Defined at lines 162 to 193.
 
 Count open descriptors below `max`, FD_POLL_CHUNK per poll(2).
 
@@ -107,7 +107,7 @@ Called by: [count_open_fds](unix.c.md#count_open_fds)
 int count_open_fds(int *limit)
 ```
 
-Defined at lines 204 to 232. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 206 to 234. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Count the descriptors this process has open.
 
@@ -128,7 +128,7 @@ Called by: [dsi_note_master_fd](../dsi/dsi_getsess.c.md#dsi_note_master_fd), [ds
 void uam_log_pam_failure(enum loglevels level, const char *uam, const char *user, const char *step, const char *errtext, int code, int err)
 ```
 
-Defined at lines 250 to 267.
+Defined at lines 252 to 269.
 
 Log a failed PAM step with the errno it left and the fds in use.
 
@@ -157,7 +157,7 @@ Mentioned in the documentation of: [clrtxt_log_pam_error](../../etc/uams/uams_pa
 bool log_backoff(unsigned int *count)
 ```
 
-Defined at lines 279 to 283. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 281 to 285. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Count an event, reporting its 1st, 2nd, 4th, 8th... occurrence.
 
@@ -176,7 +176,7 @@ Mentioned in the documentation of: [icon_open_failed](../../etc/afpd/desktop.c.m
 int write_full(int fd, const void *buf, size_t len)
 ```
 
-Defined at lines 295 to 319. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 297 to 321. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Write len bytes in full at the descriptor's file position, going on after EINTR and after a write that stops short.
 
@@ -195,7 +195,7 @@ Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [copy_fork](.
 bool usage_level_update(int *level, int64_t used, int64_t limit)
 ```
 
-Defined at lines 334 to 354. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 336 to 356. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Track usage against the 50, 75 and 90 percent warning thresholds.
 
@@ -220,7 +220,7 @@ Mentioned in the documentation of: [usage_level_pct](unix.c.md#usage_level_pct)
 int usage_level_pct(int level)
 ```
 
-Defined at lines 363 to 366. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 365 to 368. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Threshold, in percent, that `level` has reached.
 
@@ -239,7 +239,7 @@ Uses file-scope variables: `usage_warn_pct`
 void become_root(void)
 ```
 
-Defined at lines 376 to 390. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 378 to 392. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 seteuid(0) and back, if either fails and panic != 0 we PANIC.
 
@@ -255,7 +255,7 @@ Uses file-scope variables: `root_nesting`, `saved_uid`
 void unbecome_root(void)
 ```
 
-Defined at lines 399 to 416. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 401 to 418. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Drop the root privileges of the matching become_root call.
 
@@ -267,13 +267,92 @@ Uses file-scope variables: `root_nesting`, `saved_uid`
 
 Mentioned in the documentation of: [become_root](unix.c.md#become_root)
 
+### become_owner
+
+```c
+int become_owner(uid_t uid, gid_t *egid)
+```
+
+Defined at lines 435 to 481.
+
+Act as an account for one step, with its groups, egid and euid.
+
+For a process whose euid is 0. [unbecome_owner()](unix.c.md#unbecome_owner) takes euid 0, the egid and the process's supplementary groups back.
+
+Parameters:
+* `uid`: the account
+* `egid`: the gid to hand [unbecome_owner()](unix.c.md#unbecome_owner)
+
+Returns: 0, or -1 with errno set and the ids as they were
+
+Called by: [cnid_open](../cnid/cnid.c.md#cnid_open), [create_appledesktop_folder](../../etc/afpd/desktop.c.md#create_appledesktop_folder)
+
+Uses file-scope variables: `owner_saved_groups`, `owner_saved_ngroups`
+
+Mentioned in the documentation of: [cnid_open](../cnid/cnid.c.md#cnid_open), [unbecome_owner](unix.c.md#unbecome_owner)
+
+### unbecome_owner
+
+```c
+void unbecome_owner(gid_t egid)
+```
+
+Defined at lines 489 to 495.
+
+Take euid 0, the egid and the supplementary groups back after [become_owner()](unix.c.md#become_owner).
+
+Parameters:
+* `egid`: the gid [become_owner()](unix.c.md#become_owner) gave
+
+Called by: [cnid_open](../cnid/cnid.c.md#cnid_open), [create_appledesktop_folder](../../etc/afpd/desktop.c.md#create_appledesktop_folder)
+
+Uses file-scope variables: `owner_saved_groups`, `owner_saved_ngroups`
+
+Mentioned in the documentation of: [become_owner](unix.c.md#become_owner)
+
+### strip_trailing_slashes
+
+```c
+void strip_trailing_slashes(char *path)
+```
+
+Defined at lines 505 to 512.
+
+Drop trailing slashes, which make lstat and an O_NOFOLLOW open follow a final symbolic link.
+
+A lone "/" stays.
+
+Parameters:
+* `path`: path to trim
+
+Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [getvolbypath](netatalk_conf.c.md#getvolbypath), [owned_private_dir](../../etc/netatalk/netatalk.c.md#owned_private_dir), [path_parent](../../etc/netatalk/netatalk.c.md#path_parent), [user_state_paths](netatalk_conf.c.md#user_state_paths)
+
+### shell_quote
+
+```c
+char * shell_quote(const char *s)
+```
+
+Defined at lines 523 to 552.
+
+Quote a string as one word of a POSIX shell command.
+
+The word is the string between single quotes, with each single quote in it written as '\''.
+
+Parameters:
+* `s`: string to quote
+
+Returns: the word, which the caller frees, or NULL when out of memory
+
+Called by: [cnid_sqlite_open](../cnid/cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_refused](../cnid/cnid_sqlite.c.md#cnid_sqlite_refused)
+
 ### getcwdpath
 
 ```c
 const char * getcwdpath(void)
 ```
 
-Defined at lines 423 to 433.
+Defined at lines 559 to 569.
 
 get cwd in static buffer
 
@@ -287,7 +366,7 @@ Called by: [acltoownermode](../../etc/afpd/acls.c.md#acltoownermode), [ad_mkdir]
 const char * fullpathname(const char *name)
 ```
 
-Defined at lines 444 to 460.
+Defined at lines 580 to 596.
 
 Return the absolute path of a name.
 
@@ -308,7 +387,7 @@ Called by: [RF_setdirowner_adouble](../vfs/vfs.c.md#rf_setdirowner_adouble), [ad
 char * stripped_slashes_basename(char *p)
 ```
 
-Defined at lines 479 to 488.
+Defined at lines 615 to 624.
 
 Takes a buffer with a path, strips slashs, returns basename.
 
@@ -327,7 +406,7 @@ Parameters:
 
 Returns: pointer to basename in path buffer, buffer is possibly modified
 
-Called by: [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_encoding), [fce_init_ign_paths](../../etc/afpd/fce_api.c.md#fce_init_ign_paths)
+Called by: [cnid_sqlite_open](../cnid/cnid_sqlite.c.md#cnid_sqlite_open), [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_encoding), [dbpath_is_creatable](../../etc/netatalk/netatalk.c.md#dbpath_is_creatable), [fce_init_ign_paths](../../etc/afpd/fce_api.c.md#fce_init_ign_paths)
 
 ### tmpdir
 
@@ -335,7 +414,7 @@ Called by: [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_enco
 const char * tmpdir(void)
 ```
 
-Defined at lines 501 to 596.
+Defined at lines 637 to 732.
 
 Return a private temporary directory for the process, netatalk-PID under TMPDIR or /tmp.
 
@@ -353,7 +432,7 @@ Mentioned in the documentation of: [as_debug](../../etc/atalkd/main.c.md#as_debu
 int ostat(const char *path, struct stat *buf, int options)
 ```
 
-Defined at lines 613 to 620.
+Defined at lines 749 to 756.
 
 Run lstat with O_NOFOLLOW in options, stat otherwise.
 
@@ -372,7 +451,7 @@ Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](..
 int ochown(const char *path, uid_t owner, gid_t group, int options)
 ```
 
-Defined at lines 631 to 638.
+Defined at lines 767 to 774.
 
 Run lchown with O_NOFOLLOW in options, chown otherwise.
 
@@ -392,7 +471,7 @@ Called by: [ea_chown](../vfs/ea_ad.c.md#ea_chown), [setdirowner](../../etc/afpd/
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 ```
 
-Defined at lines 654 to 680.
+Defined at lines 790 to 816.
 
 Change the mode of a path, with options for symlinks and ACLs.
 
@@ -414,7 +493,7 @@ Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_s
 int ostatat(int dirfd, const char *path, struct stat *st, int options)
 ```
 
-Defined at lines 692 to 700.
+Defined at lines 828 to 836.
 
 Run fstatat relative to a directory descriptor, without following a final symlink for O_NOFOLLOW.
 
@@ -434,7 +513,7 @@ Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [RF_r
 int ochdir(const char *dir, int options)
 ```
 
-Defined at lines 717 to 802.
+Defined at lines 853 to 938.
 
 Change the current directory and report a symlink on the way for O_NOFOLLOW.
 
@@ -456,7 +535,7 @@ Mentioned in the documentation of: [ochdir_vol](../../etc/afpd/directory.c.md#oc
 void randombytes(void *buf, int n)
 ```
 
-Defined at lines 813 to 840.
+Defined at lines 949 to 976.
 
 Fill a buffer with random bytes from /dev/urandom.
 
@@ -474,7 +553,7 @@ Called by: [get_vol_uuid](netatalk_conf.c.md#get_vol_uuid), [set_signature](../.
 int gmem(gid_t gid, int ngroups, gid_t *groups)
 ```
 
-Defined at lines 850 to 861. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 986 to 997. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Tell whether a group ID is in a group list.
 
@@ -493,7 +572,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol), [posix_acl_rights](../../e
 char * realpath_safe(const char *path)
 ```
 
-Defined at lines 871 to 906.
+Defined at lines 1007 to 1042.
 
 Resolve a path with realpath into a new buffer.
 
@@ -512,7 +591,7 @@ Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [g
 const char * basename_safe(const char *path)
 ```
 
-Defined at lines 917 to 922.
+Defined at lines 1053 to 1058.
 
 Return the basename of a path without changing the path.
 
@@ -533,7 +612,7 @@ Called by: [fce_register](../../etc/afpd/fce_api.c.md#fce_register)
 char * strtok_quote(char *s, const char *delim)
 ```
 
-Defined at lines 936 to 978.
+Defined at lines 1072 to 1114.
 
 Split a string like strtok, with tokens in double quotes kept whole.
 
@@ -553,7 +632,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol)
 int set_groups(AFPObj *obj, struct passwd *pwd)
 ```
 
-Defined at lines 990 to 1021. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1126 to 1157. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Load the supplementary groups of a user into the process and into obj.
 
@@ -573,7 +652,7 @@ Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath), [load_afp_conf_vols]
 const char * print_groups(int ngroups, gid_t *groups)
 ```
 
-Defined at lines 1034 to 1049. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1170 to 1185. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Format a group list for a log message.
 
@@ -593,4 +672,4 @@ Called by: [login](../../etc/afpd/auth.c.md#login)
 
 # File-scope variables
 
-`root_nesting`, `saved_uid`, `usage_warn_pct`
+`owner_saved_groups`, `owner_saved_ngroups`, `root_nesting`, `saved_uid`, `usage_warn_pct`

@@ -5,7 +5,7 @@ description: "SQLite CNID backend."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid_sqlite.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -672,24 +672,24 @@ Calls: [cnid_sqlite_add](cnid_sqlite.c.md#cnid_sqlite_add), [cnid_sqlite_close](
 
 Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
-### cnid_sqlite_dir_owner_only
+### cnid_sqlite_refused
 
 ```c
-static bool cnid_sqlite_dir_owner_only(const char *path)
+static bool cnid_sqlite_refused(const struct vol *vol, const char *dir, const struct stat *st)
 ```
 
-Defined at lines 2099 to 2117.
+Defined at lines 2100 to 2135.
 
-Tell whether a CNID directory is an owner-only directory of the opener.
-
-The call strips trailing slashes first, so lstat cannot follow a symlink.
+Tell whether a private volume refuses a CNID directory it found, and log why.
 
 Parameters:
-* `path`: directory path
+* `vol`: the volume
+* `dir`: the directory
+* `st`: the directory's lstat or fstat
 
-Returns: true for a directory that the real uid owns with no group or other permission bits
+Returns: true for a symbolic link, the volume's own root, or another account's directory
 
-Calls: [strlcpy](../compat/strlcpy.c.md#strlcpy)
+Calls: [shell_quote](../util/unix.c.md#shell_quote)
 
 Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 
@@ -699,7 +699,7 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 static void cnid_sqlite_report_orphan(const struct vol *vol, const char *dbdir)
 ```
 
-Defined at lines 2130 to 2164.
+Defined at lines 2148 to 2182.
 
 Log an unused CNID database named after the volume in its share root.
 
@@ -717,11 +717,11 @@ Called by: [cnid_sqlite_open](cnid_sqlite.c.md#cnid_sqlite_open)
 struct _cnid_db * cnid_sqlite_open(struct cnid_open_args *args)
 ```
 
-Defined at lines 2184 to 2810.
+Defined at lines 2204 to 2868.
 
 Open the SQLite CNID backend for a volume.
 
-The database stays private, with mode 0600 in a 0700 directory, for a single-user server or an opener that owns its CNID directory. Every other opener shares it, with mode 0666 in a 01777 directory. The call creates or checks the directory as root without following links. It opens the database with SQLITE_OPEN_NOFOLLOW and checks the -wal and -shm files before and after it turns on WAL.
+A private volume's database stays its owner's, with mode 0600 in a 0700 directory that the call creates or checks as the calling process, which [cnid_open()](cnid.c.md#cnid_open) makes the owner. A shared volume's is shared, with mode 0666 in a 01777 directory that the call creates or checks as root. The directory is opened O_NOFOLLOW, a private one's path first losing the trailing slashes that make the open follow a final link. It opens the database with SQLITE_OPEN_NOFOLLOW and checks the -wal and -shm files before and after it turns on WAL.
 
 The volumes table maps each volume path to its UUID, stamp, and depletion mark. A UUID that differs only in case takes the spelling on disk, and the call drops the tables of the same path under another UUID. A new CNID table starts its sequence at CNID_START.
 
@@ -730,7 +730,7 @@ Parameters:
 
 Returns: the database, or NULL on error
 
-Calls: [asprintf](../compat/misc.c.md#asprintf), [become_root](../util/unix.c.md#become_root), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_delete_sequence_row](cnid_sqlite.c.md#cnid_sqlite_delete_sequence_row), [cnid_sqlite_delete_volumes_row](cnid_sqlite.c.md#cnid_sqlite_delete_volumes_row), [cnid_sqlite_dir_owner_only](cnid_sqlite.c.md#cnid_sqlite_dir_owner_only), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_fchmod_companions](cnid_sqlite.c.md#cnid_sqlite_fchmod_companions), [cnid_sqlite_fchmod_regular](cnid_sqlite.c.md#cnid_sqlite_fchmod_regular), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new), [cnid_sqlite_report_orphan](cnid_sqlite.c.md#cnid_sqlite_report_orphan), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_uuid_usable](cnid_sqlite.c.md#cnid_sqlite_uuid_usable), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt), [unbecome_root](../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../util/cnid.c.md#uuid_strip_dashes)
+Calls: [asprintf](../compat/misc.c.md#asprintf), [become_root](../util/unix.c.md#become_root), [close_prepared_stmt](cnid_sqlite.c.md#close_prepared_stmt), [cnid_sqlite_begin](cnid_sqlite.c.md#cnid_sqlite_begin), [cnid_sqlite_commit](cnid_sqlite.c.md#cnid_sqlite_commit), [cnid_sqlite_delete_sequence_row](cnid_sqlite.c.md#cnid_sqlite_delete_sequence_row), [cnid_sqlite_delete_volumes_row](cnid_sqlite.c.md#cnid_sqlite_delete_volumes_row), [cnid_sqlite_execute](cnid_sqlite.c.md#cnid_sqlite_execute), [cnid_sqlite_fchmod_companions](cnid_sqlite.c.md#cnid_sqlite_fchmod_companions), [cnid_sqlite_fchmod_regular](cnid_sqlite.c.md#cnid_sqlite_fchmod_regular), [cnid_sqlite_new](cnid_sqlite.c.md#cnid_sqlite_new), [cnid_sqlite_refused](cnid_sqlite.c.md#cnid_sqlite_refused), [cnid_sqlite_report_orphan](cnid_sqlite.c.md#cnid_sqlite_report_orphan), [cnid_sqlite_rollback](cnid_sqlite.c.md#cnid_sqlite_rollback), [cnid_sqlite_seed_sequence](cnid_sqlite.c.md#cnid_sqlite_seed_sequence), [cnid_sqlite_uuid_usable](cnid_sqlite.c.md#cnid_sqlite_uuid_usable), [init_prepared_stmt](cnid_sqlite.c.md#init_prepared_stmt), [shell_quote](../util/unix.c.md#shell_quote), [stripped_slashes_basename](../util/unix.c.md#stripped_slashes_basename), [unbecome_root](../util/unix.c.md#unbecome_root), [uuid_strip_dashes](../util/cnid.c.md#uuid_strip_dashes)
 
 Called through [`_cnid_module::cnid_open`](../../include/atalk/cnid.h.md#struct-_cnid_module) by: [cnid_open](cnid.c.md#cnid_open)
 

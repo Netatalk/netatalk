@@ -5,7 +5,7 @@ description: "Manage the AppleDesktop folder and its contents."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/desktop.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -32,7 +32,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [mangle.h](mangle.h.md)
 * [netatalk/at.h](../../sys/netatalk/at.h.md)
 * [volume.h](volume.h.md)
-* System headers: `arpa/inet.h`, `bstrlib.h`, `ctype.h`, `errno.h`, `fcntl.h`, `stdbool.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/socket.h`, `sys/stat.h`, `time.h`
+* System headers: `arpa/inet.h`, `bstrlib.h`, `ctype.h`, `errno.h`, `fcntl.h`, `stdbool.h`, `stdint.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/socket.h`, `sys/stat.h`, `time.h`
 
 # Functions
 
@@ -42,7 +42,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 int setdeskmode(const struct vol *vol, const mode_t mode)
 ```
 
-Defined at lines 71 to 178.
+Defined at lines 72 to 179.
 
 Apply a volume root mode change to the desktop database folder.
 
@@ -64,7 +64,7 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 191 to 265.
+Defined at lines 192 to 266.
 
 Apply a volume root owner change to the desktop database folder.
 
@@ -87,16 +87,16 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 static void create_appledesktop_folder(const struct vol *vol)
 ```
 
-Defined at lines 276 to 307.
+Defined at lines 278 to 330.
 
 Make sure the desktop database folder of a volume exists.
 
-When the database path lacks .AppleDesktop, the call moves the folder from the volume root as root. Without either folder, or when the move fails, it creates a new one with mode 0777 under the umask.
+When the database path lacks .AppleDesktop, the call moves the folder from the volume root. Without either folder, or when the move fails, it creates a new one with mode 0777 under the umask. On a shared volume it works as root, and on a private volume as the owner, as [cnid_open()](../../libatalk/cnid/cnid.c.md#cnid_open) does.
 
 Parameters:
 * `vol`: volume of the desktop database
 
-Calls: [become_root](../../libatalk/util/unix.c.md#become_root), [unbecome_root](../../libatalk/util/unix.c.md#unbecome_root)
+Calls: [become_owner](../../libatalk/util/unix.c.md#become_owner), [become_root](../../libatalk/util/unix.c.md#become_root), [unbecome_owner](../../libatalk/util/unix.c.md#unbecome_owner), [unbecome_root](../../libatalk/util/unix.c.md#unbecome_root)
 
 Called by: [afp_opendt](desktop.c.md#afp_opendt)
 
@@ -106,7 +106,7 @@ Called by: [afp_opendt](desktop.c.md#afp_opendt)
 int afp_opendt(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 322 to 339.
+Defined at lines 345 to 362.
 
 FPOpenDT: open the desktop database of a volume.
 
@@ -131,7 +131,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_closedt(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 353 to 366.
+Defined at lines 376 to 389.
 
 FPCloseDT: close the desktop database of a volume.
 
@@ -156,7 +156,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static char * icon_dtfile(struct vol *vol, uint8_t creator[4])
 ```
 
-Defined at lines 377 to 380.
+Defined at lines 400 to 403.
 
 Return the path of the icon file of a creator in the desktop database.
 
@@ -176,7 +176,7 @@ Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#a
 static void icon_close(void)
 ```
 
-Defined at lines 389 to 395.
+Defined at lines 412 to 418.
 
 Close the icon file descriptor the icon calls share.
 
@@ -190,7 +190,7 @@ Uses file-scope variables: `si`
 static int icon_open_failed(const char *fn, struct vol *vol, uint8_t creator[4])
 ```
 
-Defined at lines 403 to 416.
+Defined at lines 426 to 439.
 
 The answer of an icon read call whose icon file did not open.
 
@@ -208,7 +208,7 @@ Uses file-scope variables: `icon_failures`
 static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 ```
 
-Defined at lines 432 to 475.
+Defined at lines 455 to 498.
 
 Open the icon file of a creator in the desktop database.
 
@@ -234,7 +234,7 @@ Uses file-scope variables: `si`
 static int icon_lock(void)
 ```
 
-Defined at lines 487 to 516.
+Defined at lines 510 to 539.
 
 Lock the icon file for one FPAddIcon.
 
@@ -252,7 +252,7 @@ Uses file-scope variables: `si`
 static bool icon_entry_is(const uint8_t *h, const uint8_t *ftype, uint8_t itype)
 ```
 
-Defined at lines 522 to 527.
+Defined at lines 545 to 550.
 
 Does entry header h match file type ftype and icon type itype, the key FPGetIcon and FPAddIcon look an icon up by?
 
@@ -264,7 +264,7 @@ Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#a
 static bool icon_read_failed(ssize_t rc, off_t off, off_t size)
 ```
 
-Defined at lines 535 to 538.
+Defined at lines 558 to 561.
 
 Did a read of a 12-byte record header at off, which returned rc, fail or stop short before the end of an icon file of size bytes?
 
@@ -278,7 +278,7 @@ Called by: [afp_addicon](desktop.c.md#afp_addicon), [afp_geticon](desktop.c.md#a
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 563 to 781.
+Defined at lines 586 to 804.
 
 FPAddIcon: store an icon bitmap in the icon file of a creator.
 
@@ -307,7 +307,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_geticoninfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 800 to 865.
+Defined at lines 823 to 888.
 
 FPGetIconInfo: look up an icon of a creator by index and return its record header.
 
@@ -334,7 +334,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 886 to 981.
+Defined at lines 909 to 1004.
 
 FPGetIcon: return the bitmap of an icon from the icon file of a creator.
 
@@ -361,7 +361,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 char * dtfile(const struct vol *vol, uint8_t creator[], char *ext)
 ```
 
-Defined at lines 998 to 1039.
+Defined at lines 1021 to 1062.
 
 Build the path of a desktop database file for a creator.
 
@@ -384,7 +384,7 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 char * mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 ```
 
-Defined at lines 1054 to 1090.
+Defined at lines 1077 to 1113.
 
 Convert an AFP name into the name on disk.
 
@@ -408,7 +408,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c
 char * utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 ```
 
-Defined at lines 1107 to 1142. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
+Defined at lines 1130 to 1165. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
 
 Convert a name on disk into the AFP name a client sees.
 
@@ -432,7 +432,7 @@ Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.
 static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, char *ibuf)
 ```
 
-Defined at lines 1160 to 1238.
+Defined at lines 1183 to 1261.
 
 Store a Finder comment in the AppleDouble metadata of a file or directory.
 
@@ -458,7 +458,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1254 to 1287.
+Defined at lines 1277 to 1310.
 
 FPAddComment: store a Finder comment for a file or directory.
 
@@ -485,7 +485,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1305 to 1369.
+Defined at lines 1328 to 1392.
 
 Read the Finder comment of a file or directory from its AppleDouble metadata.
 
@@ -511,7 +511,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_getcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1382 to 1411.
+Defined at lines 1405 to 1434.
 
 FPGetComment: return the Finder comment of a file or directory.
 
@@ -536,7 +536,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 ```
 
-Defined at lines 1427 to 1498.
+Defined at lines 1450 to 1521.
 
 Remove the Finder comment from the AppleDouble metadata of a file or directory.
 
@@ -561,7 +561,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_rmvcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1511 to 1540.
+Defined at lines 1534 to 1563.
 
 FPRemoveComment: remove the Finder comment of a file or directory.
 

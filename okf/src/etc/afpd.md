@@ -5,7 +5,7 @@ description: "66 files, 623 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 # Files
@@ -89,7 +89,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 
 # Calls into
 
-* [libatalk/util](../libatalk/util.md): 260 calls
+* [libatalk/util](../libatalk/util.md): 262 calls
 * [libatalk/adouble](../libatalk/adouble.md): 204 calls
 * [libatalk/compat](../libatalk/compat.md): 55 calls
 * [include/atalk](../include/atalk.md): 46 calls

@@ -5,7 +5,7 @@ description: "Lists of the network interface names of the system."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/getiface.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -44,7 +44,7 @@ Called by: [getifaces](getiface.c.md#getifaces)
 static int getifaces(const int sockfd, char ***list)
 ```
 
-Defined at lines 73 to 154.
+Defined at lines 73 to 162.
 
 Build a NULL-terminated list of the interface names of the system.
 
@@ -66,7 +66,7 @@ Called by: [getifacelist](getiface.c.md#getifacelist)
 char ** getifacelist(void)
 ```
 
-Defined at lines 164 to 181.
+Defined at lines 172 to 189.
 
 Return the names of the network interfaces of the system.
 
@@ -84,7 +84,7 @@ Called by: [getifconf](../../etc/atalkd/config.c.md#getifconf), [guess_interface
 void freeifacelist(char **ifacelist)
 ```
 
-Defined at lines 189 to 202.
+Defined at lines 197 to 210.
 
 Free a list from getifacelist and its names.
 

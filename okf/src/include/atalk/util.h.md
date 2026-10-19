@@ -5,7 +5,7 @@ description: "Shared socket, signal, module loading and event loop helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/util.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -110,6 +110,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [libatalk/atp/atp_rsel.c](../../libatalk/atp/atp_rsel.c.md)
 * [libatalk/atp/atp_sreq.c](../../libatalk/atp/atp_sreq.c.md)
 * [libatalk/atp/atp_sresp.c](../../libatalk/atp/atp_sresp.c.md)
+* [libatalk/cnid/cnid.c](../../libatalk/cnid/cnid.c.md)
 * [libatalk/cnid/cnid_mysql.c](../../libatalk/cnid/cnid_mysql.c.md)
 * [libatalk/cnid/cnid_sqlite.c](../../libatalk/cnid/cnid_sqlite.c.md)
 * [libatalk/compat/strlcpy.c](../../libatalk/compat/strlcpy.c.md)
