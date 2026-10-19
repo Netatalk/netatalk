@@ -140,28 +140,26 @@ static int has_dotdot_component(const char *path)
 }
 
 /*!
- * @brief Whether an absolute path lies at or below the volume path
+ * @brief Whether an absolute path is a directory or lies below it
  *
  * The prefix must end at a slash or at the end of path, so "/vol2" does not
- * count as inside "/vol". A volume at "/" contains every absolute path.
+ * lie below "/vol". The directory "/" holds every absolute path.
  *
- * @param[in] vol   volume
  * @param[in] path  resolved absolute path
- * @returns 1 when path lies inside the volume, 0 otherwise
+ * @param[in] dir   resolved absolute directory, without a trailing slash
+ *                  unless it is "/"
+ * @returns 1 when path is dir or lies below it, else 0
  */
-static int path_is_inside_volume(const struct vol *vol, const char *path)
+int path_at_or_below(const char *path, const char *dir)
 {
-    size_t volpath_len = strlen(vol->v_path);
+    size_t len = strlen(dir);
 
-    if (volpath_len == 1 && vol->v_path[0] == '/') {
+    if (len == 1 && dir[0] == '/') {
         return path[0] == '/';
     }
 
-    if (strncmp(path, vol->v_path, volpath_len) != 0) {
-        return 0;
-    }
-
-    return path[volpath_len] == '\0' || path[volpath_len] == '/';
+    return strncmp(path, dir, len) == 0
+           && (path[len] == '\0' || path[len] == '/');
 }
 
 /*!
@@ -213,7 +211,7 @@ static int symlink_target_safe(const struct vol *vol,
     resolved_target = realpath_safe(target_path);
 
     if (resolved_target) {
-        if (path_is_inside_volume(vol, resolved_target)) {
+        if (path_at_or_below(resolved_target, vol->v_path)) {
             struct stat vol_st, target_st;
 
             if (stat(vol->v_path, &vol_st) == 0 &&
@@ -232,46 +230,56 @@ static int symlink_target_safe(const struct vol *vol,
 /*!
  * @brief Check whether AFP DeleteInhibit forbids a destructive operation.
  *
- * Read the in-core header when a fork with loaded metadata is held; otherwise
- * use a private ad_metadata().  Never ad_open(HF) onto of->of_ad: with v2 the
- * sidecar shares the resource-fork inode and with EA the metadata fd is the
- * data fd, so a transient metadata open and close could strand a held lock.
- * Metadata read errors fail closed.
+ * Read the in-core header when a fork with loaded metadata is held. A held fork
+ * with a data descriptor reads the metadata through its own adouble, whose
+ * descriptors serve the read, because closing a second descriptor of the file
+ * would drop the fork's locks. Otherwise use a private ad_metadata(). Metadata
+ * read errors fail closed.
  *
- * @param[in] vol       volume containing the file
- * @param[in] dirfd     parent directory fd, or -1 for the current directory
- * @param[in] file      file name to check
+ * @param[in]     vol    volume containing the file
+ * @param[in]     dirfd  parent directory fd, or -1 for the current directory
+ * @param[in,out] path   file to check, its stat filled when missing
  *
  * @returns AFP_OK when replacement is allowed, AFPERR_OLOCK when DeleteInhibit
  *          is set, or AFPERR_ACCESS when the metadata cannot be read safely
  */
-static int check_delete_inhibit(const struct vol *vol, int dirfd, char *file)
+int check_delete_inhibit(const struct vol *vol, int dirfd, struct path *path)
 {
-    struct path dpath = {0};
     const struct ofork *ofm;
     uint16_t attr = 0;
-    dpath.u_name = file;
-    ofm = (dirfd != -1) ? of_findnameat(dirfd, &dpath)
-          : of_findname(vol, &dpath);
+    ofm = of_findnameat(vol, dirfd, path);
 
     if (ofm != NULL && ad_meta_open(ofm->of_ad)) {
         ad_getattr(ofm->of_ad, &attr);
     } else {
         struct adouble admeta;
-        ad_init(&admeta, vol);
-
+        struct adouble *adp = &admeta;
         /* ADFLAGS_CHECK_OF opens the data fork, allowing ad_metadata() to retry
          * an EACCES read as root.  Without it, an EA path read can mask EACCES
-         * as ENOENT and miss NODELETE.  This transient open is safe because no
-         * metadata-bearing fork was found above. */
-        if (ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &admeta) == 0) {
-            ad_getattr(&admeta, &attr);
-            ad_close(&admeta, ADFLAGS_HF | ADFLAGS_CHECK_OF);
+         * as ENOENT and miss NODELETE. */
+        int flags = ADFLAGS_CHECK_OF;
+
+        if (ofm != NULL && ad_data_fileno(ofm->of_ad) >= 0) {
+            adp = ofm->of_ad;
+            flags = 0;
+        } else {
+            ad_init(&admeta, vol);
+        }
+
+        const off_t rlen = adp->ad_rlen;
+        const int rc = ad_metadataat(dirfd, path->u_name, flags, adp);
+        /* the read measures the resource fork by the name; a held fork keeps
+         * the length of its own, whatever the read returned */
+        adp->ad_rlen = rlen;
+
+        if (rc == 0) {
+            ad_getattr(adp, &attr);
+            ad_close(adp, ADFLAGS_HF | flags);
         } else if (errno != ENOENT) {
             LOG(log_error, logtype_afpd,
                 "check_delete_inhibit('%s'): metadata read failed (%s); "
                 "refusing destructive operation with AFPERR_ACCESS",
-                file, strerror(errno));
+                path->u_name, strerror(errno));
             return AFPERR_ACCESS;
         }
     }
@@ -1751,7 +1759,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                     goto setfilparam_done;
                 }
 
-                err = check_delete_inhibit(vol, -1, path->u_name);
+                err = check_delete_inhibit(vol, -1, path);
 
                 if (err != AFP_OK) {
                     goto setfilparam_done;
@@ -2706,8 +2714,8 @@ done:
                   unlink; out: the CNID that was deleted. NULL when the caller
                   has neither.
 
-   NODELETE check -> one conflict GET -> policy -> unlink -> CNID/dircache
-   cleanup (afp_delete only).
+   NODELETE check -> one conflict GET -> policy -> unlink -> CNID cleanup
+   (afp_delete only).
 
    The conflict read goes through of_get_locks(), which reuses a held fork's fd
    instead of opening+closing a transient one, so it never drops a lock this child
@@ -2718,8 +2726,10 @@ done:
  * @brief Delete a file and its AppleDouble metadata
  *
  * Refuses while another process holds a deny mode or a byte-range lock on the
- * file. With checkAttrib set, deletefile honors the delete-inhibit attribute
- * and deletes the CNID and the directory cache entry of the file afterwards.
+ * file. The data file goes first, so a refused unlink leaves the AppleDouble
+ * file in place; a failed AppleDouble removal after it is only logged. With
+ * checkAttrib set, deletefile honors the delete-inhibit attribute and deletes
+ * the CNID of the file afterwards.
  *
  * @param[in]     vol          volume the file belongs to
  * @param[in]     dirfd        directory descriptor file is relative to, or -1
@@ -2745,13 +2755,14 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib,
     }
 
     LOG(log_debug, logtype_afpd, "deletefile('%s')", file);
-    /* of_get_locks() stats this fresh (of_findname/at), resolving "do we hold a
-     * fork on this inode?" and reporting a missing target as OF_LOCKS_NOENT. */
+    /* check_delete_inhibit() or of_get_locks() stats this once (of_findnameat),
+     * resolving "do we hold a fork on this inode?" and reporting a missing
+     * target as OF_LOCKS_NOENT. */
     dpath.u_name = file;
 
     /* --- NODELETE / kFPDeleteInhibitBit (afp_delete only) --- */
     if (checkAttrib) {
-        err = check_delete_inhibit(vol, dirfd, file);
+        err = check_delete_inhibit(vol, dirfd, &dpath);
 
         if (err != AFP_OK) {
             return err;
@@ -2806,12 +2817,19 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib,
         return AFPERR_BUSY;
     }
 
-    /* checkAttrib is last in the && so the unlink is never short-circuited away
-     * for the rename/copy-overwrite callers. */
-    if (!(err = vol->vfs->vfs_deletefile(vol, dirfd, file))
-            && !(err = netatalk_unlinkat(dirfd, file))
-            && checkAttrib) {
-        struct dir *cachedfile;
+    /* the data file first: a file the user may not unlink keeps its
+     * AppleDouble file */
+    if ((err = netatalk_unlinkat(dirfd, file)) != AFP_OK) {
+        return err;
+    }
+
+    if (vol->vfs->vfs_deletefile(vol, dirfd, file) != AFP_OK) {
+        LOG(log_warning, logtype_afpd,
+            "deletefile('%s'): the file is gone, its AppleDouble data stays",
+            file);
+    }
+
+    if (checkAttrib) {
         cnid_t      id = idp ? *idp : CNID_INVALID;
 
         if (id == CNID_INVALID) {
@@ -2828,14 +2846,6 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib,
 
         if (idp) {
             *idp = id;
-        }
-
-        AFP_ASSERT(file != NULL);
-        cachedfile = dircache_search_by_name(vol, curdir, file,
-                                             strnlen(file, CNID_MAX_PATH_LEN));
-
-        if (cachedfile) {
-            dir_remove(vol, cachedfile, 0);  /* User-initiated delete cleanup */
         }
     }
 
@@ -3651,14 +3661,14 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_exchangefile;
     }
 
-    of_rename(vol, s_of, sdir, spath, curdir, temp);
+    of_rename(vol, s_of, sdir, supath, curdir, temp, temp);
 
     /* rename destination to source */
     if ((err = renamefile(vol, curdir, -1, upath, p, spath, addp)) != AFP_OK) {
         goto err_src_to_tmp;
     }
 
-    of_rename(vol, d_of, curdir, path->m_name, sdir, spath);
+    of_rename(vol, d_of, curdir, upath, sdir, spath, supath);
 
     /* rename temp to destination */
     if ((err = renamefile(vol, curdir, -1, temp, upath, path->m_name,
@@ -3666,7 +3676,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_dest_to_src;
     }
 
-    of_rename(vol, s_of, curdir, temp, curdir, path->m_name);
+    of_rename(vol, s_of, curdir, temp, curdir, path->m_name, upath);
 
     /*
      * id's need switching. src -> dest and dest -> src.
@@ -3841,15 +3851,15 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 err_temp_to_dest:
     /* rename dest to temp */
     renamefile(vol, curdir, -1, upath, temp, temp, adsp);
-    of_rename(vol, s_of, curdir, upath, curdir, temp);
+    of_rename(vol, s_of, curdir, upath, curdir, temp, temp);
 err_dest_to_src:
     /* rename source back to dest */
     renamefile(vol, curdir, -1, p, upath, path->m_name, addp);
-    of_rename(vol, d_of, sdir, spath, curdir, path->m_name);
+    of_rename(vol, d_of, sdir, supath, curdir, path->m_name, upath);
 err_src_to_tmp:
     /* rename temp back to source */
     renamefile(vol, curdir, -1, temp, p, spath, adsp);
-    of_rename(vol, s_of, curdir, temp, sdir, spath);
+    of_rename(vol, s_of, curdir, temp, sdir, spath, supath);
 err_exchangefile:
 
     if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {   /* META */

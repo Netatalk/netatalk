@@ -187,8 +187,8 @@ The default ignored name is *.DS_Store*.
 fce ignore names = .DS_Store,Thumbs.db
 ```
 
-The **fce ignore directories** option suppresses events below selected absolute
-directory paths.  The paths must not end with a slash.
+The **fce ignore directories** option suppresses events for selected absolute
+directory paths and everything below them, deleted files included.
 
 ```ini
 [Global]

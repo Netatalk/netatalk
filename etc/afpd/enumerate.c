@@ -623,7 +623,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             && !real_icon_exists(vol)
             && sindex + actcnt == curdir->d_offcnt + 1) {
         esz = 0;
-        ret = virtual_icon_getfilparams(obj, vol, fbitmap,
+        ret = virtual_icon_getfilparams(obj, vol, fbitmap, 0,
                                         data + header, &esz);
 
         if (ret == AFP_OK) {

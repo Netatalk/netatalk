@@ -1,5 +1,6 @@
 /*
- * Regression tests for the readt() and writet() timeout helpers
+ * Regression tests for the readt() and writet() timeout helpers and the poll
+ * set helpers
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *
@@ -20,6 +21,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -115,6 +117,37 @@ static int test_high_fd_write_fails_before_select(void)
     return written == -1 && errno == EINVAL && select_calls == 0;
 }
 
+/*!
+ * @brief A renewed poll set keeps its entries, in order, with room for the
+ *        descriptors asked for and no more
+ *
+ * @returns 1 when the renewed set checks out, else 0
+ */
+static int test_asev_renew_keeps_entries(void)
+{
+    int owner;
+    struct asev *sev = asev_init(2);
+    struct asev *renewed;
+    int ok;
+
+    if (sev == NULL || !asev_add_fd(sev, 7, IPC_FD, &owner, 0)
+            || !asev_add_fd(sev, 9, STATS_FD, NULL, 0)
+            || (renewed = asev_renew(sev, 1)) == NULL) {
+        asev_free(sev);
+        return 0;
+    }
+
+    ok = renewed->used == 2 && renewed->fdset[0].fd == 7
+         && renewed->fdset[0].events == POLLIN
+         && renewed->data[0].fdtype == IPC_FD
+         && renewed->data[0].private == &owner
+         && renewed->fdset[1].fd == 9 && renewed->data[1].fdtype == STATS_FD
+         && asev_add_fd(renewed, 11, LISTEN_FD, NULL, 0)
+         && !asev_add_fd(renewed, 13, LISTEN_FD, NULL, 0);
+    asev_free(renewed);
+    return ok;
+}
+
 int main(void)
 {
     printf("TAP version 13\n");
@@ -122,6 +155,8 @@ int main(void)
            "readt rejects fd >= FD_SETSIZE before select");
     report(test_high_fd_write_fails_before_select(),
            "writet rejects fd >= FD_SETSIZE before select");
+    report(test_asev_renew_keeps_entries(),
+           "asev_renew keeps the entries with room for more");
     printf("1..%d\n", tests_run);
     return tests_failed == 0 ? 0 : 1;
 }

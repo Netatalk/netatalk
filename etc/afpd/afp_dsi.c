@@ -622,6 +622,7 @@ static void handle_alarm(AFPObj *obj)
     }
 }
 
+#ifndef SA_NOCLDWAIT
 /*!
  * @brief SIGCHLD handler that reaps one exited child
  *
@@ -631,6 +632,7 @@ static void child_handler(int sig _U_)
 {
     wait(NULL);
 }
+#endif /* SA_NOCLDWAIT */
 
 /*!
  * @brief Run the work of every signal that arrived since the last call
@@ -762,7 +764,8 @@ static void afp_dsi_log_disconnect(const AFPObj *obj, int rx_errno,
  * - SIGUSR1 announces a shutdown, and SIGUSR2 a server message.
  * - SIGINT toggles the debug log.
  * - SIGALRM drives the tickle timer, except in DEBUGGING builds.
- * - SIGCHLD reaps children, with SA_NOCLDWAIT where the system has it.
+ * - SIGCHLD: the kernel reaps children where SA_NOCLDWAIT exists, else a
+ *   handler does.
  *
  * @param[in] obj  session object
  */
@@ -842,11 +845,13 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
 #endif /* DEBUGGING */
-    /*  SIGCHLD */
-    action.sa_handler = child_handler;
+    /* SIGCHLD: the notify scripts run in the background; with SA_NOCLDWAIT a
+     * wait() in a handler would block while another script runs */
 #ifdef SA_NOCLDWAIT
-    /* this enhancement simplifies things for Solaris, it also improves performance */
+    action.sa_handler = SIG_DFL;
     action.sa_flags |= SA_NOCLDWAIT;
+#else
+    action.sa_handler = child_handler;
 #endif
 
     if (sigaction(SIGCHLD, &action, NULL) < 0) {
@@ -968,8 +973,6 @@ void afp_over_dsi(AFPObj *obj)
     while (1) {
         while (1) {
             /* [A0] Process deferred signals before any blocking I/O */
-            atalk_sigpipe_drain();
-
             if (process_deferred_signals(obj)) {
                 goto restart_outer;
             }
@@ -1028,7 +1031,7 @@ void afp_over_dsi(AFPObj *obj)
                 break;
             }
 
-            /* [E1] Signal pipe — drain and loop back to process signals at [A0].
+            /* [E1] Signal pipe — drain it and act on the signals.
              * Nothing can clear a bad self-pipe, and a POLLHUP/POLLNVAL/POLLERR
              * that no read consumes makes poll() return immediately for the rest
              * of the session, so the loop would spin with no way to be woken. */
@@ -1036,7 +1039,7 @@ void afp_over_dsi(AFPObj *obj)
                 LOG(log_error, logtype_afpd,
                     "afp_over_dsi: signal pipe fd %d unusable, ending session",
                     atalk_sigpipe_readfd());
-                break;
+                afp_dsi_die(EXITERR_SYS);
             }
 
             if (pfds[sigpipe_idx].revents & POLLIN) {

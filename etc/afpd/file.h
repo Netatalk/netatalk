@@ -183,6 +183,8 @@ extern int renamefile(struct vol *, struct dir *, int, char *, char *, char *,
                       struct adouble *);
 extern int copyfile(struct vol *, struct vol *, struct dir *, int, char *,
                     char *, char *, struct adouble *, int);
+extern int check_delete_inhibit(const struct vol *vol, int dirfd,
+                                struct path *path);
 extern int deletefile(const struct vol *, int, char *, int, cnid_t *);
 
 extern int getmetadata(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
@@ -194,6 +196,7 @@ extern void *get_finderinfo(const struct vol *, const char *, struct adouble *,
 
 extern size_t mtoUTF8(const struct vol *, const char *, size_t, char *, size_t);
 extern int  copy_path_name(const struct vol *, char *, char *i);
+extern int path_at_or_below(const char *path, const char *dir);
 
 extern uint32_t get_id(struct vol *,
                        struct adouble *,

@@ -21,6 +21,7 @@ extern int check_name(const struct vol *vol, char *name);
 
 extern int delete_vetoed_files(struct vol *vol, const char *upath,
                                bool in_vetodir);
+extern void dir_offcnt_take(struct dir *dir);
 
 /* FP functions */
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

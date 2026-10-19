@@ -28,6 +28,7 @@
 int  virtual_icon_enabled(const struct vol *vol);
 int  is_virtual_icon_name(const char *name);
 int  real_icon_exists(const struct vol *vol);
+int  is_virtual_icon(const struct vol *vol, cnid_t did, const char *name);
 
 void virtual_icon_init(struct vol *vol);
 const unsigned char *virtual_icon_get_rfork(const struct vol *vol,
@@ -36,6 +37,7 @@ const unsigned char *virtual_icon_get_rfork(const struct vol *vol,
 int  virtual_icon_getfilparams(const AFPObj *obj,
                                struct vol *vol,
                                uint16_t bitmap,
+                               uint16_t open_bit,
                                char *buf,
                                size_t *buflen);
 

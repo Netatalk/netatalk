@@ -73,7 +73,7 @@ static int virtual_icon_reply(const AFPObj *obj, struct vol *vol,
     int ret;
 
     if (fbitmap && AFP_OK != (ret = virtual_icon_getfilparams(
-                                        obj, vol, fbitmap,
+                                        obj, vol, fbitmap, 0,
                                         rbuf + 3 * sizeof(uint16_t), &buflen))) {
         return ret;
     }
@@ -288,10 +288,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     /* Reject modifications to virtual Icon\r file (but allow real ones) */
-    if (is_virtual_icon_name(path->u_name)
-            && curdir->d_did == DIRDID_ROOT
-            && virtual_icon_enabled(vol)
-            && !real_icon_exists(vol)) {
+    if (is_virtual_icon(vol, curdir->d_did, path->u_name)) {
         return AFPERR_OLOCK;
     }
 
@@ -358,7 +355,8 @@ int check_name(const struct vol *vol, char *name)
  *
  * A file takes its CNID from the database, and a directory passes itself as
  * sdir and supplies the DID. The rename-inhibit attribute blocks the call
- * unless the volume ignores it, and check_name screens the new name. An
+ * unless the volume ignores it, and check_name screens the new name. The
+ * virtual Icon file's name in the volume root fails with AFPERR_EXIST. An
  * unchanged name succeeds at once. Inside one directory a name that another
  * file holds fails with AFPERR_EXIST, and across directories any existing
  * destination fails. So does a destination that this session holds open.
@@ -430,10 +428,11 @@ static int moveandrename(const AFPObj *obj,
 
         path.st_valid = 0;
         path.u_name = oldunixname;
-        opened = of_findnameat(sdir_fd, &path);
+        opened = of_findnameat(vol, sdir_fd, &path);
 
-        if (opened) {
-            /* reuse struct adouble so it won't break locks */
+        /* reuse struct adouble so it won't break locks; a symlink holds
+         * none, and a metadata close would spend its fork's descriptor */
+        if (opened && ad_data_fileno(opened->of_ad) >= 0) {
             adp = opened->of_ad;
         }
     } else {
@@ -481,12 +480,19 @@ static int moveandrename(const AFPObj *obj,
 
     {
         /* Pre-rename: read metadata via cache (strict=true for write/change path) */
-        struct dir *src_cached = isdir ? sdir
-                                 : dircache_search_by_name(vol, sdir, oldunixname, strnlen(oldunixname,
-                                     CNID_MAX_PATH_LEN));
+        struct dir *src_cached = isdir ? sdir : NULL;
+
+        /* an open fork's adouble is the live copy: the cache would overwrite
+         * its header */
+        if (!isdir && !opened) {
+            src_cached = dircache_search_by_name(vol, sdir, oldunixname,
+                                                 strnlen(oldunixname,
+                                                         CNID_MAX_PATH_LEN));
+        }
 
         if (!ad_metadata_cached(oldunixname, adflags, adp, vol, src_cached, true,
-                                NULL)) {
+                                !isdir && path.st_errno == 0 ? &path.st
+                                : NULL)) {
             uint16_t bshort;
             ad_getattr(adp, &bshort);
             /* The ad_metadata_cached function handles ad_close() internally */
@@ -520,6 +526,12 @@ static int moveandrename(const AFPObj *obj,
         goto exit;
     }
 
+    /* the virtual Icon\r file holds its name, as a real one would */
+    if (is_virtual_icon(vol, curdir->d_did, upath)) {
+        rc = AFPERR_EXIST;
+        goto exit;
+    }
+
     if (isdir)
         LOG(log_debug, logtype_afpd,
             "moveandrename(\"%s\" -> \"%s/%s\")",
@@ -536,9 +548,11 @@ static int moveandrename(const AFPObj *obj,
             goto exit;
         }
 
-        if (stat(upath, st) == 0) {
-            if (!stat(oldunixname, &nst) && !(nst.st_dev == st->st_dev
-                                              && nst.st_ino == st->st_ino)) {
+        /* a symlink is a name like any other, as the volume lists it */
+        if (ostat(upath, st, vol_syml_opt(vol)) == 0) {
+            if (!ostat(oldunixname, &nst, vol_syml_opt(vol))
+                    && !(nst.st_dev == st->st_dev
+                         && nst.st_ino == st->st_ino)) {
                 /* not the same file */
                 rc = AFPERR_EXIST;
                 goto exit;
@@ -546,7 +560,7 @@ static int moveandrename(const AFPObj *obj,
 
             errno = 0;
         }
-    } else if (stat(upath, st) == 0) {
+    } else if (ostat(upath, st, vol_syml_opt(vol)) == 0) {
         rc = AFPERR_EXIST;
         goto exit;
     }
@@ -571,7 +585,8 @@ static int moveandrename(const AFPObj *obj,
             rc = renamefile(vol, curdir, sdir_fd, oldunixname, upath, newname, adp);
 
             if (rc == AFP_OK) {
-                of_rename(vol, opened, sdir, oldname, curdir, newname);
+                of_rename(vol, opened, sdir, oldunixname, curdir, newname,
+                          upath);
             }
         }
     } else {
@@ -580,7 +595,7 @@ static int moveandrename(const AFPObj *obj,
 
     if (rc == AFP_OK && id) {
         /* renaming may have moved the file/dir across a filesystem */
-        if (stat(upath, st) < 0) {
+        if (ostat(upath, st, vol_syml_opt(vol)) < 0) {
             rc = AFPERR_MISC;
             goto exit;
         }
@@ -765,10 +780,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     /* Reject rename of virtual Icon\r file (but allow real ones) */
-    if (is_virtual_icon_name(path->u_name)
-            && curdir->d_did == DIRDID_ROOT
-            && virtual_icon_enabled(vol)
-            && !real_icon_exists(vol)) {
+    if (is_virtual_icon(vol, curdir->d_did, path->u_name)) {
         return AFPERR_OLOCK;
     }
 
@@ -964,6 +976,24 @@ int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
 }
 
 /*!
+ * @brief Take one item from a directory's cached offspring count
+ *
+ * A count of no items never held the item that goes, one made outside afpd,
+ * so the call drops the count rather than wrap it, and the next request
+ * walks the directory.
+ *
+ * @param[in,out] dir  directory that lost an item
+ */
+void dir_offcnt_take(struct dir *dir)
+{
+    if (dir->d_offcnt > 0) {
+        dir->d_offcnt--;
+    } else {
+        dir->d_ctime = 0;
+    }
+}
+
+/*!
  * @brief FPDelete: delete a file or an empty directory
  *
  * Deleting the virtual Icon file of the volume root fails with AFPERR_OLOCK,
@@ -1024,10 +1054,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     /* Reject deletion of virtual Icon\r file (but allow real ones) */
-    if (is_virtual_icon_name(s_path->u_name)
-            && curdir->d_did == DIRDID_ROOT
-            && virtual_icon_enabled(vol)
-            && !real_icon_exists(vol)) {
+    if (is_virtual_icon(vol, curdir->d_did, s_path->u_name)) {
         return AFPERR_OLOCK;
     }
 
@@ -1223,8 +1250,12 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
              * here for the sibling cache hint. */
             cnid_t file_cnid = cachedfile ? cachedfile->d_did : CNID_INVALID;
 
-            /* deletefile() also handles CNID and dircache cleanup */
+            /* deletefile() also deletes the CNID */
             if ((rc = deletefile(vol, -1, upath, 1, &file_cnid)) == AFP_OK) {
+                if (cachedfile) {
+                    (void)dir_remove(vol, cachedfile, 0);
+                }
+
 #if defined(WITH_FCE) || defined(WITH_SPOTLIGHT)
                 char event_path[MAXPATHLEN + 1];
                 const char *deleted_file = dir_event_path(event_path,
@@ -1262,7 +1293,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     if (rc == AFP_OK) {
-        curdir->d_offcnt--;
+        dir_offcnt_take(curdir);
         setvoltime(obj, vol);
     }
 
@@ -1384,10 +1415,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     /* Reject move/rename of virtual Icon\r file (but allow real ones) */
-    if (is_virtual_icon_name(path->u_name)
-            && curdir->d_did == DIRDID_ROOT
-            && virtual_icon_enabled(vol)
-            && !real_icon_exists(vol)) {
+    if (is_virtual_icon(vol, curdir->d_did, path->u_name)) {
         return AFPERR_OLOCK;
     }
 

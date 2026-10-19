@@ -285,10 +285,10 @@ static int become_user_permanently(uid_t uid, gid_t gid)
  * status
  *
  * The child runs the command through /bin/sh from the root directory, with
- * root dropped permanently and descriptors 3 to 255 closed. SIGCHLD keeps its
- * default action until the wait ends, because the session handler would reap
- * the child first. A child that fails before the command runs uses an exit
- * status between 80 and 83.
+ * root dropped permanently and descriptors 3 to 255 closed. SIGCHLD takes its
+ * default action, without SA_NOCLDWAIT, until the wait ends, because the
+ * session's disposition would reap the child first. A child that fails
+ * before the command runs uses an exit status between 80 and 83.
  *
  * @param[in]  cmd    shell command line
  * @param[out] outfd  receives a rewound temporary file with the command output,
@@ -312,9 +312,9 @@ int afprun(char *cmd, int *outfd)
     LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, uid);
     /* in this method we will exec /bin/sh with the correct
        arguments, after first setting stdout to point at the file */
-    /* an afpd session reaps every child as it exits (SIGCHLD handler with
-       SA_NOCLDWAIT), which would leave waitpid() nothing to report: keep the
-       default disposition until the command's status is in */
+    /* an afpd session reaps every child as it exits (SA_NOCLDWAIT, else a
+     * SIGCHLD handler), which would leave waitpid() nothing to report: keep
+     * the default disposition until the command's status is in */
     memset(&dfl, 0, sizeof(dfl));
     dfl.sa_handler = SIG_DFL;
     sigemptyset(&dfl.sa_mask);
@@ -432,8 +432,8 @@ int afprun(char *cmd, int *outfd)
  * @brief Start a shell command as the euid of the caller without waiting for it
  *
  * The child runs the command like afprun but keeps the standard output of
- * afpd. It closes the descriptors from 3 to the open file limit. The SIGCHLD
- * handler of the session reaps it.
+ * afpd. It closes the descriptors from 3 to the open file limit. The
+ * session's SIGCHLD disposition reaps it.
  *
  * @param[in] cmd  shell command line
  * @returns 0 after the fork, or the errno of a failed fork

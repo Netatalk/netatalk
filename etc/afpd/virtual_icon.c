@@ -275,6 +275,25 @@ int is_virtual_icon_name(const char *name)
 }
 
 /*!
+ * @brief Tell whether a name in a folder is the virtual icon file
+ *
+ * The volume root holds it while the volume serves a virtual icon and no real
+ * file takes the name.
+ *
+ * @param[in] vol   volume
+ * @param[in] did   folder of the name, in network byte order
+ * @param[in] name  file name on disk
+ * @returns nonzero for the virtual icon file
+ */
+int is_virtual_icon(const struct vol *vol, cnid_t did, const char *name)
+{
+    return did == DIRDID_ROOT
+           && is_virtual_icon_name(name)
+           && virtual_icon_enabled(vol)
+           && !real_icon_exists(vol);
+}
+
+/*!
  * @brief Build the virtual icon of a volume from its legacy icon option
  *
  * The option names one of the built-in icons. An empty option builds nothing,
@@ -366,17 +385,20 @@ const unsigned char *virtual_icon_get_rfork(const struct vol *vol,
  * built fork. The dates are AD_DATE_START, and the UNIX privileges show a
  * read-only file of uid and gid 0.
  *
- * @param[in]  obj     session object
- * @param[in]  vol     volume
- * @param[in]  bitmap  file bitmap of the request
- * @param[out] buf     reply buffer
- * @param[out] buflen  length of the parameters on return
+ * @param[in]  obj       session object
+ * @param[in]  vol       volume
+ * @param[in]  bitmap    file bitmap of the request
+ * @param[in]  open_bit  ATTRBIT_DOPEN or ATTRBIT_ROPEN of the open fork the
+ *                       reply describes, or 0
+ * @param[out] buf       reply buffer
+ * @param[out] buflen    length of the parameters on return
  * @returns AFP_OK, AFPERR_MISC without a virtual icon, or AFPERR_BITMAP for an
  *          unknown bit
  */
 int virtual_icon_getfilparams(const AFPObj *obj,
                               struct vol *vol,
                               uint16_t bitmap,
+                              uint16_t open_bit,
                               char *buf,
                               size_t *buflen)
 {
@@ -403,7 +425,7 @@ int virtual_icon_getfilparams(const AFPObj *obj,
 
         switch (bit) {
         case FILPBIT_ATTR:
-            ashort = htons(ATTRBIT_INVISIBLE);
+            ashort = htons(ATTRBIT_INVISIBLE | open_bit);
             memcpy(data, &ashort, sizeof(ashort));
             data += sizeof(ashort);
             break;

@@ -3947,6 +3947,18 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                             NULL, 60);
     options->fce_sendwait   = getoption_int(config, INISEC_GLOBAL, "fce sendwait",
                                             NULL, 0);
+    options->fce_version =
+        (int)getoption_uint32_strict(config, INISEC_GLOBAL, "fce version",
+                                     NULL, 1, 2, 1);
+    options->fce_ign_names =
+        getoption_strdup(config, INISEC_GLOBAL, "fce ignore names", NULL,
+                         ".DS_Store");
+    options->fce_ign_directories =
+        getoption_strdup(config, INISEC_GLOBAL, "fce ignore directories",
+                         NULL, NULL);
+    options->fce_notify_script =
+        getoption_strdup(config, INISEC_GLOBAL, "fce notify script", NULL,
+                         NULL);
 #endif /* WITH_FCE */
     options->sleep          = getoption_int(config, INISEC_GLOBAL, "sleep time",
                                             NULL, 10);
@@ -4309,6 +4321,22 @@ void afp_config_free(AFPObj *obj)
     if (obj->options.loginmesg) {
         CONFIG_ARG_FREE(obj->options.loginmesg)
     }
+
+#ifdef WITH_FCE
+
+    if (obj->options.fce_ign_names) {
+        CONFIG_ARG_FREE(obj->options.fce_ign_names)
+    }
+
+    if (obj->options.fce_ign_directories) {
+        CONFIG_ARG_FREE(obj->options.fce_ign_directories)
+    }
+
+    if (obj->options.fce_notify_script) {
+        CONFIG_ARG_FREE(obj->options.fce_notify_script)
+    }
+
+#endif /* WITH_FCE */
 
     if (obj->options.guest) {
         CONFIG_ARG_FREE(obj->options.guest)

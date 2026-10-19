@@ -55,6 +55,8 @@ extern int test009_file_add_over_curdir_did(struct vol *vol);
 extern int test010_full_cache_accepts_adds(struct vol *vol,
                                            unsigned int cache_size);
 extern int test011_stat_refresh_drops_rights(struct vol *vol);
+extern int test012_movecwd_retry_names_directory(AFPObj *obj,
+                                                 struct vol *vol);
 extern int dircache_test_ghost_trim_selection(void);
 extern int utest_logger_reopen_keeps_files(void);
 extern int utest_lockfile_restores_umask(void);

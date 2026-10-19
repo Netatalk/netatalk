@@ -68,7 +68,8 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
  * processes — single-threaded, no locks needed
  ***********************************************************************************/
 
-#define HINT_RATE_LIMIT        1000  /* Max hints/second per child (attack guard) */
+/* Max hints/second per child (attack guard) */
+#define HINT_RATE_LIMIT        4000
 
 /* Resets skip the drop paths, so they need their own ceiling. A child raises
  * SIGTERM right after resetting, so it sends at most one. */
@@ -103,7 +104,8 @@ struct hint_entry {
 /* Hint accumulation buffer */
 static struct {
     struct hint_entry entries[HINT_BUF_SIZE];
-    int count;
+    unsigned int count;
+    struct timespec since;  /*!< arrival of the batch's oldest hint */
 } hint_buf;
 
 static struct {
@@ -486,8 +488,9 @@ EC_CLEANUP:
  *
  * Only the main thread appends to hint_buf, so the buffer needs no lock. A
  * short payload, a server with one session, or an unknown event drops the
- * hint. Any other hint counts against HINT_RATE_LIMIT per second and child,
- * and a full buffer drops it.
+ * hint, and so does a refresh that repeats one the same child has in the
+ * batch for the same volume and file. Any other hint counts against
+ * HINT_RATE_LIMIT per second and child, and a full buffer drops it.
  *
  * A volume reset counts against HINT_RESET_RATE_LIMIT instead. Its cnid field
  * carries the volume tag, and a repeat of a tag in the same second drops. A
@@ -552,6 +555,19 @@ static int ipc_relay_cache_hint(struct ipc_header *ipc,
         }
     }
 
+    /* siblings stat the file when the batch arrives, so a sender's second
+     * refresh of it in the same batch adds nothing */
+    if (hint.event == CACHE_HINT_REFRESH) {
+        for (unsigned int i = 0; i < hint_buf.count; i++) {
+            if (hint_buf.entries[i].event == CACHE_HINT_REFRESH
+                    && hint_buf.entries[i].source_pid == ipc->child_pid
+                    && hint_buf.entries[i].vid == hint.vid
+                    && hint_buf.entries[i].cnid == hint.cnid) {
+                return 0;
+            }
+        }
+    }
+
     /* Rate-limit check (attack guard) */
     if (!is_reset && check_and_increment_rate(ipc->child_pid) > HINT_RATE_LIMIT) {
         hints_rate_dropped++;
@@ -580,6 +596,10 @@ static int ipc_relay_cache_hint(struct ipc_header *ipc,
         hint_buf.count--;
     }
 
+    if (hint_buf.count == 0) {
+        clock_gettime(CLOCK_MONOTONIC, &hint_buf.since);
+    }
+
     hint_buf.entries[hint_buf.count] = (struct hint_entry) {
         .vid = hint.vid,
         .cnid = hint.cnid,
@@ -589,7 +609,8 @@ static int ipc_relay_cache_hint(struct ipc_header *ipc,
     hint_buf.count++;
 
     if (is_reset) {
-        /* A busy master can starve the batching trigger indefinitely */
+        /* at once: the dedup and the full-buffer eviction above rely on the
+         * buffer never holding a reset */
         hint_flush_pending(children);
     }
 
@@ -824,25 +845,42 @@ int ipc_child_state(AFPObj *obj, uint16_t state)
  ***********************************************************************************/
 
 /*!
- * @brief Return the number of buffered hints
+ * @brief Milliseconds until the buffered hints are due to go out
  *
- * The afpd main loop polls with a timeout of HINT_FLUSH_INTERVAL_MS while
- * hints wait, and without a timeout otherwise.
+ * A batch is due once its oldest hint has waited HINT_FLUSH_INTERVAL_MS or
+ * the buffer is full. The afpd main loop polls with this timeout and
+ * flushes when it is 0, whatever other traffic the poll serves.
  *
- * @returns the number of hints in the buffer
+ * @returns -1 with nothing buffered, 0 when the batch is due, else the
+ *          milliseconds left
  */
-int hint_buf_count(void)
+int hint_flush_timeout(void)
 {
-    return hint_buf.count;
+    struct timespec now;
+    long long waited;
+
+    if (hint_buf.count == 0) {
+        return -1;
+    }
+
+    if (hint_buf.count >= HINT_BUF_SIZE
+            || clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+        return 0;
+    }
+
+    waited = (long long)(now.tv_sec - hint_buf.since.tv_sec) * 1000
+             + (now.tv_nsec - hint_buf.since.tv_nsec) / 1000000;
+    return waited >= HINT_FLUSH_INTERVAL_MS
+           ? 0 : (int)(HINT_FLUSH_INTERVAL_MS - waited);
 }
 
 /*!
  * @brief Flush the buffered hints to the sibling sessions
  *
- * The afpd main loop calls it after a poll timeout with buffered hints and
- * when the buffer is full. The ipc_relay_cache_hint call flushes for every
- * volume reset. The master blocks signals while it runs, and no other thread
- * touches the child table, so the walk needs no lock.
+ * The afpd main loop calls it when hint_flush_timeout() finds the batch due.
+ * The ipc_relay_cache_hint call flushes for every volume reset. The master
+ * blocks signals while it runs, and no other thread touches the child
+ * table, so the walk needs no lock.
  *
  * The hints go out in priority order: volume resets first, then REFRESH,
  * DELETE, and DELETE_CHILDREN. Each sibling gets every hint except the ones
@@ -854,11 +892,12 @@ int hint_buf_count(void)
  * so a repeat of that reset goes out again.
  *
  * @param[in] children  child table
+ * @returns the number of hints the batch held
  */
-void hint_flush_pending(server_child_t *children)
+int hint_flush_pending(server_child_t *children)
 {
     if (hint_buf.count == 0) {
-        return;
+        return 0;
     }
 
     int local_count = hint_buf.count;
@@ -976,6 +1015,7 @@ void hint_flush_pending(server_child_t *children)
 
     hints_batched += local_count;
     flush_count++;
+    return local_count;
 }
 
 /***********************************************************************************
