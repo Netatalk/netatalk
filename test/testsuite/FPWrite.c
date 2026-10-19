@@ -67,6 +67,22 @@ test_exit:
 }
 
 /* ------------------------- */
+/* the free space once the server's quota answer, which serves ten
+ * seconds, has gone stale */
+static int fresh_bfree(uint16_t vol, struct afp_volume_parms *parms)
+{
+    sleep(11);
+
+    if (FPGetVolParam(Conn, vol, (1 << VOLPBIT_BFREE))) {
+        return -1;
+    }
+
+    afp_volume_unpack(parms, Conn->dsi.commands + sizeof(uint16_t),
+                      (1 << VOLPBIT_BFREE));
+    return 0;
+}
+
+/* ------------------------- */
 STATIC void test226()
 {
     uint16_t bitmap = 0;
@@ -104,6 +120,11 @@ STATIC void test226()
         goto test_exit;
     }
 
+    if (fresh_bfree(vol, &parms)) {
+        test_nottested();
+        goto test_exit;
+    }
+
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
@@ -132,13 +153,10 @@ STATIC void test226()
         goto fin;
     }
 
-    if (FPGetVolParam(Conn, vol, (1 << VOLPBIT_BFREE))) {
+    if (fresh_bfree(vol, &parms)) {
         test_nottested();
         goto fin;
     }
-
-    afp_volume_unpack(&parms, dsi->commands + sizeof(uint16_t),
-                      (1 << VOLPBIT_BFREE));
 
     if (parms.bfree > 7000) {
         if (FPWrite(Conn, fork, 0, parms.bfree - 7000, Data, 0x80)) {

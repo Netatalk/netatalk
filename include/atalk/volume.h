@@ -68,7 +68,7 @@ struct vol {
 
     /* get/set volparams */
     time_t          v_ctime;  /*!< volume creation date, not unix ctime */
-    dev_t           v_dev;    /*!< Unix volume device, Set but not used */
+    dev_t           v_dev;    /*!< device of the root, from stat_vol() */
 
     /* adouble VFS indirection */
     struct vfs_ops  *vfs;   /*!< pointer to vfs_master_funcs for chaining */
@@ -83,6 +83,14 @@ struct vol {
     time_t          v_tm_cachetime; /*!< time at which v_tm_used
                                      * was calculated last */
     VolSpace        v_appended; /*!< amount of data appended to files */
+    time_t          v_root_marked; /*!< the second setvoltime() marked */
+    VolSpace        v_qfree;       /*!< the user's quota, bytes free */
+    VolSpace        v_qtotal;      /*!< the user's quota, bytes in all */
+    time_t          v_qtime;       /*!< when the quota was fetched, or 0 */
+    int             v_root_due;    /*!< a change awaits a write of the root */
+    int             v_root_foreign; /*!< another session's mark, unannounced */
+    struct timespec v_root_stamp;  /*!< the stamp it last wrote or saw */
+    int             v_root_attn;   /*!< a change awaits the attention */
 
     /* only when opening/closing volumes or in error */
     int             v_casefold;

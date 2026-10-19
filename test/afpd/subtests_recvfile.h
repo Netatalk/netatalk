@@ -17,6 +17,12 @@ extern int utest_recvfile_readonly_replies_access(AFPObj *obj,
                                                   struct vol *vol);
 extern int utest_recvfile_peer_close_ends_write(AFPObj *obj, struct vol *vol);
 extern int utest_write_fork_eof_fails_request(AFPObj *obj, struct vol *vol);
+extern int utest_write_fork_marks_volume(AFPObj *obj, struct vol *vol);
+extern int utest_closefork_rsrc_marks_volume(AFPObj *obj, struct vol *vol);
+extern int utest_flush_rsrc_marks_volume(AFPObj *obj, struct vol *vol);
+extern int utest_flush_rsrc_failed_kept(AFPObj *obj, struct vol *vol);
+extern int utest_closevol_rsrc_marks_volume(AFPObj *obj, struct vol *vol);
+extern int utest_logout_rsrc_quiet(AFPObj *obj, struct vol *vol);
 extern int utest_recvfile_counting_arm_fails_nothing(AFPObj *obj,
                                                      struct vol *vol);
 extern int utest_recvfile_urgent_byte_finishes_write(AFPObj *obj,

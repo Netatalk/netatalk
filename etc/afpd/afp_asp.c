@@ -308,9 +308,10 @@ static void asp_process_deferred_signals(AFPObj *obj)
  * stays off for ASP sessions.
  *
  * Each loop pass acts on the recorded signals, applies the dircache hints,
- * and serves one request per readable datagram. Commands and writes dispatch
- * through afp_switch. ASP_MAX_READ_ERRORS read errors in a row end the
- * session, and stray packets only log.
+ * writes the volume roots a marked second left due, waiting at most a second
+ * while a write is due, and serves one request per readable datagram.
+ * Commands and writes dispatch through afp_switch. ASP_MAX_READ_ERRORS read
+ * errors in a row end the session, and stray packets only log.
  *
  * @param[in,out] obj  session object holding the ASP session
  */
@@ -475,8 +476,11 @@ void afp_over_asp(AFPObj *obj)
             pfds[nfds].fd = atalk_sigpipe_readfd();
             pfds[nfds].events = POLLIN;
             nfds++;
+            /* write the volume roots a marked second left due; the wait
+             * ends in time for the next */
+            int due_ms = flushvoltime(obj);
             /* [D] BLOCK IN POLL */
-            int pollret = poll(pfds, nfds, -1);
+            int pollret = poll(pfds, nfds, due_ms);
 
             /* [E] poll error handling */
             if (pollret < 0) {

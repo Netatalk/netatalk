@@ -2939,6 +2939,17 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
         EC_NULL(pwbuf = malloc(bufsize));
     }
 
+    /* Fast path: an unchanged config needs no open, no lock, no work.
+     * The mtime comparison here is read-only (volfile_changed() below,
+     * under the lock, is what consumes it), so a stale answer costs at
+     * most one extra reload cycle -- these calls run per
+     * FPGetSrvrParms/FPOpenVol. */
+    if (obj->options.volfile.loaded && !(flags & LV_FORCE)
+            && stat(obj->options.configfile, &st) == 0
+            && st.st_mtime <= obj->options.volfile.mtime) {
+        goto EC_CLEANUP;
+    }
+
     if (!(flags & LV_ALL)) {
         /* the C library's size is a guess; a longer record is ERANGE */
         while ((ret = getpwuid_r(obj->uid, &pwent, pwbuf, bufsize,
@@ -2956,17 +2967,6 @@ int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
         }
 
         pwresult = &pwent;
-    }
-
-    /* Fast path: an unchanged config needs no open, no lock, no work.
-     * The mtime comparison here is read-only (volfile_changed() below,
-     * under the lock, is what consumes it), so a stale answer costs at
-     * most one extra reload cycle -- these calls run per
-     * FPGetSrvrParms/FPOpenVol. */
-    if (obj->options.volfile.loaded && !(flags & LV_FORCE)
-            && stat(obj->options.configfile, &st) == 0
-            && st.st_mtime <= obj->options.volfile.mtime) {
-        goto EC_CLEANUP;
     }
 
     /* Open and lock the config FIRST: a failure here must leave the reload

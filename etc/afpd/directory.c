@@ -435,7 +435,8 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
                  * we overwrite the requested path with the utf8 volume name so that the following
                  * strcmp can match.
                  */
-                ucs2_to_charset(vol->v_maccharset, vol->v_macname, temp, AFPVOL_MACNAMELEN + 1);
+                ucs2_to_charset(vol->v_obj->options.maccharset, vol->v_macname,
+                                temp, AFPVOL_MACNAMELEN + 1);
 
                 if (strcasecmp(ret->m_name, temp) == 0) {
                     ucs2_to_charset(CH_UTF8_MAC, vol->v_u8mname, ret->m_name, AFPVOL_U8MNAMELEN);
@@ -3268,7 +3269,11 @@ setdirparam_done:
             ad_setdate(&ad, AD_DATE_MODIFY, newdate);
         }
 
-        if (upath) {
+        /* the root's mtime is the volume's change mark, so a date bound for
+         * the root, a client's or a child's parent date, marks the volume */
+        if (upath && (dir != NULL ? dir : curdir)->d_did == DIRDID_ROOT) {
+            setvoltime(vol->v_obj, vol);
+        } else if (upath) {
             ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
             utime(upath, &ut);
         }
@@ -3640,7 +3645,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     memcpy(rbuf, &dir->d_did, sizeof(uint32_t));
     *rbuflen = sizeof(uint32_t);
-    setvoltime(obj, vol);
+    setvoltime_entry(obj, vol, dir->d_pdid == DIRDID_ROOT);
     return AFP_OK;
 }
 

@@ -58,6 +58,7 @@ struct fault_inject {
     int pread_calls;        /*!< pread() calls, armed or not */
     int write_max;          /*!< a write() writes at most this many bytes */
     int write_zero;         /*!< the next write_zero write()s write nothing */
+    struct fi_call pwrite;
     struct fi_call lseek;
     struct fi_call asp_wrtcont;
     int asp_wrtcont_fill;   /*!< asp_wrtcont() hands back the bytes asked for */
@@ -106,6 +107,19 @@ struct fault_inject {
     int fstat_calls;        /*!< fstat() calls on fstat_fd while watching */
     int time_watch;         /*!< count the time() calls */
     int time_calls;         /*!< time() calls seen while watching */
+    int statvfs_rdonly;
+    int access_armed;
+    int access_fail_after;
+    int access_errno;
+    int utime_watch;
+    int utime_calls;
+    struct fi_call utime;   /*!< an armed utime() or utimensat() fails */
+    int utime_lag_ms;       /*!< a time-less utimensat() stamps this far back */
+    int acl_get_file_watch;
+    int acl_get_file_calls;
+    int clock_fake;         /*!< the wall clock reads clock_sec */
+    int clock_calls;        /*!< wall clock reads clock_fake answered */
+    time_t clock_sec;
 };
 
 extern struct fault_inject fi;

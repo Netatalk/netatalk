@@ -268,50 +268,83 @@ exit:
 }
 
 /*!
- * @brief Terminate a counted extended attribute name in a static buffer for log
- * lines
+ * @brief Read the EA name field of a request and convert the name for the
+ *        volume's EA backend
  *
- * @param[in] ibuf  name from the request
- * @param[in] len   length of the name, capped at 255
- * @returns the static buffer
+ * The field is a 16-bit length and the name, after a pad byte that brings
+ * the cursor to an even address. Native EAs take the name in the volume's
+ * charset and AppleDouble EA files in UTF-8, the charsets each backend
+ * lists names from.
+ *
+ * @param[in]     vol    volume
+ * @param[in,out] ibuf   cursor at the field, past it on AFP_OK
+ * @param[in]     end    end of the request
+ * @param[out]    uname  the converted name, terminated
+ * @param[in]     size   bytes available at uname
+ *
+ * @returns AFP_OK, or AFPERR_PARAM for a name over 255 bytes or past the
+ *          request's end, and for one that does not convert, converts to
+ *          nothing or holds a NUL byte
  */
-static char *to_stringz(char *ibuf, uint16_t len)
+static int ea_uname(const struct vol *vol, char **ibuf, const char *end,
+                    char *uname, size_t size)
 {
-    static char attrmname[256];
+    const charset_t to = vol->v_vfs_ea == AFPVOL_EA_AD ? CH_UTF8
+                         : vol->v_volcharset;
+    char *p = *ibuf;
+    uint16_t len;
+    size_t ulen;
 
-    if (len > 255)
-        /* don't fool with us */
-    {
-        len = 255;
+    if ((unsigned long)p & 1) {
+        p++;
     }
 
-    /* we must copy the name as its not 0-terminated and I DONT WANT TO WRITE to ibuf */
-    strlcpy(attrmname, ibuf, len + 1);
-    return attrmname;
+    /* the length field, then the bytes it counts */
+    if (end - p < 2) {
+        return AFPERR_PARAM;
+    }
+
+    memcpy(&len, p, sizeof(len));
+    len = ntohs(len);
+    p += sizeof(len);
+
+    if (len > 255 || end - p < len) {
+        return AFPERR_PARAM;
+    }
+
+    ulen = convert_string(CH_UTF8_MAC, to, p, len, uname, size);
+
+    if (ulen == 0 || ulen == (size_t) -1 || strlen(uname) != ulen) {
+        return AFPERR_PARAM;
+    }
+
+    *ibuf = p + len;
+    return AFP_OK;
 }
 
 /*!
  * @brief FPGetExtAttr: return the size or the content of an extended attribute
  *
  * A MaxReplySize of 0 asks for the size only. The name arrives in UTF-8 and
- * converts to the unix charset. An open fork of the file lends its metadata
- * descriptor to the VFS call. kXAttrNoFollow keeps the call off symlink
- * targets.
+ * converts for the volume's EA backend. An open fork of the file lends its
+ * metadata descriptor to the VFS call. kXAttrNoFollow keeps the call off
+ * symlink targets.
  *
- * @param[in]  obj      session object
+ * @param[in]  obj      session object, unused
  * @param[in]  ibuf     request block
- * @param[in]  ibuflen  request block length, unused
+ * @param[in]  ibuflen  request block length
  * @param[out] rbuf     reply block
  * @param[out] rbuflen  reply length on return
- * @returns the VFS result, AFPERR_PARAM for an unknown volume, AFPERR_MISC for
- *          an empty converted name, or the error of the directory or path
- *          lookup
+ * @returns the VFS result, AFPERR_PARAM for an unknown volume or a name
+ *          ea_uname() refuses, AFPERR_MISC on a volume without EA support,
+ *          or the error of the directory or path lookup
  */
-int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
+int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
                    size_t *rbuflen)
 {
+    const char          *end = ibuf + ibuflen;
     int                 ret, oflag = 0, fd = -1;
-    uint16_t            vid, bitmap, attrnamelen;
+    uint16_t            vid, bitmap;
     uint32_t            did, maxreply;
     char                attruname[256];
     struct vol          *vol;
@@ -361,23 +394,18 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return afp_errno;
     }
 
-    if ((unsigned long)ibuf & 1) {
-        ibuf++;
+    if ((ret = ea_uname(vol, &ibuf, end, attruname,
+                        sizeof(attruname))) != AFP_OK) {
+        return ret;
     }
 
-    /* get length of EA name */
-    memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
-    attrnamelen = ntohs(attrnamelen);
-    ibuf += sizeof(attrnamelen);
-    LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name,
-        to_stringz(ibuf, attrnamelen));
-
-    /* Convert EA name in utf8 to unix charset */
-    if (0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf,
-                            attrnamelen, attruname, 256)) {
+    /* a volume without EA support runs no EA module */
+    if (vol->v_vfs_ea == AFPVOL_EA_NONE) {
         return AFPERR_MISC;
     }
 
+    LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name,
+        attruname);
     /* write bitmap now */
     bitmap = htons(bitmap);
     memcpy(rbuf, &bitmap, sizeof(bitmap));
@@ -416,26 +444,27 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
  * @brief FPSetExtAttr: create or replace an extended attribute
  *
  * kXAttrCreate and kXAttrReplace map to O_CREAT and O_TRUNC for the VFS call.
- * A name over 255 bytes or a value over MAX_EA_SIZE gets AFPERR_PARAM. After a
- * write the dircache entry takes the new stat, and the other sessions get a
- * refresh hint.
+ * A value over MAX_EA_SIZE or past the request's end gets AFPERR_PARAM.
+ * After a write the dircache entry takes the new stat, and the other
+ * sessions get a refresh hint.
  *
  * @param[in]  obj      session object
  * @param[in]  ibuf     request block
- * @param[in]  ibuflen  request block length, unused
+ * @param[in]  ibuflen  request block length
  * @param[out] rbuf     reply block, unused
  * @param[out] rbuflen  0 on return
- * @returns the VFS result, AFPERR_PARAM, AFPERR_MISC for an empty converted
- *          name, or the error of the directory or path lookup
+ * @returns the VFS result, AFPERR_PARAM, also for a name ea_uname() refuses,
+ *          AFPERR_VLOCK on a read-only volume, AFPERR_MISC on a volume
+ *          without EA support, or the error of the directory or path lookup
  */
-int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
+int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
                    char *rbuf _U_, size_t *rbuflen)
 {
+    const char          *end = ibuf + ibuflen;
     int                 oflag = 0, ret, fd = -1;
-    uint16_t            vid, bitmap, attrnamelen;
+    uint16_t            vid, bitmap;
     uint32_t            did, attrsize;
     char                attruname[256];
-    char		*attrmname;
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
@@ -450,6 +479,10 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         LOG(log_debug, logtype_afpd, "afp_setextattr: getvolbyvid error: %s",
             strerror(errno));
         return AFPERR_PARAM;
+    }
+
+    if (vol->v_flags & AFPVOL_RO) {
+        return AFPERR_VLOCK;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -497,45 +530,36 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         }
     }
 
-    if ((unsigned long)ibuf & 1) {
-        ibuf++;
+    if ((ret = ea_uname(vol, &ibuf, end, attruname,
+                        sizeof(attruname))) != AFP_OK) {
+        return ret;
     }
 
-    /* get length of EA name */
-    memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
-    attrnamelen = ntohs(attrnamelen);
-    ibuf += sizeof(attrnamelen);
-
-    if (attrnamelen > 255) {
-        return AFPERR_PARAM;
-    }
-
-    attrmname = ibuf;
-
-    /* Convert EA name in utf8 to unix charset */
-    if (0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, attrmname,
-                            attrnamelen, attruname, 256)) {
+    if (vol->v_vfs_ea == AFPVOL_EA_NONE) {
         return AFPERR_MISC;
     }
 
-    ibuf += attrnamelen;
     /* get EA size */
+    if ((size_t)(end - ibuf) < sizeof(attrsize)) {
+        return AFPERR_PARAM;
+    }
+
     memcpy(&attrsize, ibuf, sizeof(attrsize));
     attrsize = ntohl(attrsize);
     ibuf += sizeof(attrsize);
 
-    if (attrsize > MAX_EA_SIZE)
-        /* we arbitrarily make this fatal */
-    {
+    /* an oversize value fails, by choice, rather than being cut */
+    if (attrsize > MAX_EA_SIZE || (size_t)(end - ibuf) < attrsize) {
         return AFPERR_PARAM;
     }
 
     LOG(log_debug, logtype_afpd, "afp_setextattr(%s): EA: %s, size: %u",
-        s_path->u_name, to_stringz(attrmname, attrnamelen), attrsize);
+        s_path->u_name, attruname, attrsize);
     ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize,
                                oflag, fd);
 
     if (ret == AFP_OK) {
+        setvoltime(obj, vol);
         /* EA set changes ctime — refresh stat cache */
         struct stat post_st;
         struct dir *cached = NULL;
@@ -573,22 +597,24 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 /*!
  * @brief FPRemoveExtAttr: remove an extended attribute
  *
- * A name over 255 bytes gets AFPERR_PARAM. After a removal the dircache entry
- * takes the new stat, and the other sessions get a refresh hint.
+ * After a removal the dircache entry takes the new stat, and the other
+ * sessions get a refresh hint.
  *
  * @param[in]  obj      session object
  * @param[in]  ibuf     request block
- * @param[in]  ibuflen  request block length, unused
+ * @param[in]  ibuflen  request block length
  * @param[out] rbuf     reply block, unused
  * @param[out] rbuflen  0 on return
- * @returns the VFS result, AFPERR_PARAM, AFPERR_MISC for an empty converted
- *          name, or the error of the directory or path lookup
+ * @returns the VFS result, AFPERR_PARAM, also for a name ea_uname() refuses,
+ *          AFPERR_VLOCK on a read-only volume, AFPERR_MISC on a volume
+ *          without EA support, or the error of the directory or path lookup
  */
-int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
+int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
                    char *rbuf _U_, size_t *rbuflen)
 {
+    const char          *end = ibuf + ibuflen;
     int                 oflag = 0, ret, fd = -1;
-    uint16_t            vid, bitmap, attrnamelen;
+    uint16_t            vid, bitmap;
     uint32_t            did;
     char                attruname[256];
     struct vol          *vol;
@@ -605,6 +631,10 @@ int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         LOG(log_debug, logtype_afpd, "afp_remextattr: getvolbyvid error: %s",
             strerror(errno));
         return AFPERR_PARAM;
+    }
+
+    if (vol->v_flags & AFPVOL_RO) {
+        return AFPERR_VLOCK;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -643,30 +673,21 @@ int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         }
     }
 
-    if ((unsigned long)ibuf & 1) {
-        ibuf++;
+    if ((ret = ea_uname(vol, &ibuf, end, attruname,
+                        sizeof(attruname))) != AFP_OK) {
+        return ret;
     }
 
-    /* get length of EA name */
-    memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
-    attrnamelen = ntohs(attrnamelen);
-    ibuf += sizeof(attrnamelen);
-
-    if (attrnamelen > 255) {
-        return AFPERR_PARAM;
-    }
-
-    /* Convert EA name in utf8 to unix charset */
-    if (0 >= (convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf,
-                             attrnamelen, attruname, 256))) {
+    if (vol->v_vfs_ea == AFPVOL_EA_NONE) {
         return AFPERR_MISC;
     }
 
     LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name,
-        to_stringz(ibuf, attrnamelen));
+        attruname);
     ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag, fd);
 
     if (ret == AFP_OK) {
+        setvoltime(obj, vol);
         /* EA remove changes ctime — refresh stat cache */
         struct stat post_st;
         struct dir *cached = NULL;

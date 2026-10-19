@@ -191,6 +191,10 @@ void test_skipped(int why)
         s = "required UAM support on the AFP server";
         break;
 
+    case T_AFP22_31:
+        s = "AFP 2.2 to 3.1";
+        break;
+
     default:
         s = "UNKNOWN REASON - this is a bug";
         break;

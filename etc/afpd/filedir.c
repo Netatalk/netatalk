@@ -825,7 +825,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     rc = moveandrename(obj, vol, sdir, -1, oldname, newname, isdir);
 
     if (rc == AFP_OK) {
-        setvoltime(obj, vol);
+        setvoltime_entry(obj, vol, curdir->d_did == DIRDID_ROOT);
     }
 
     return rc;
@@ -1294,7 +1294,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     if (rc == AFP_OK) {
         dir_offcnt_take(curdir);
-        setvoltime(obj, vol);
+        setvoltime_entry(obj, vol, curdir->d_did == DIRDID_ROOT);
     }
 
     return rc;
@@ -1385,6 +1385,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     uint16_t   vid;
     int         rc;
     int     sdir_fd = -1;
+    bool        from_root;
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof(vid));
@@ -1470,6 +1471,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     /* This does the work */
     LOG(log_debug, logtype_afpd, "afp_move(oldname:'%s', newname:'%s', isdir:%u)",
         oldname, newname, isdir);
+    from_root = (isdir ? sdir->d_pdid : sdir->d_did) == DIRDID_ROOT;
     rc = moveandrename(obj, vol, sdir, sdir_fd, oldname, newname, isdir);
 
     if (rc == AFP_OK) {
@@ -1487,7 +1489,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             vol->vfs->vfs_setfilmode(vol, upath, admode, path->st_valid ? &path->st : NULL);
         }
 
-        setvoltime(obj, vol);
+        setvoltime_entry(obj, vol, from_root || curdir->d_did == DIRDID_ROOT);
     }
 
 exit:

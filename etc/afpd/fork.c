@@ -1175,16 +1175,18 @@ openfork_err:
 }
 
 /*!
- * @brief Mark an open fork changed: a resource fork's cached content goes
- *        under every name the session has the file open by, and the fork's
- *        first change sends sibling sessions a refresh hint, of_closefork()
- *        the last
+ * @brief Mark an open fork changed: its volume is marked, a resource fork's
+ *        cached content goes under every name the session has the file
+ *        open by, and the fork's first change sends sibling sessions a
+ *        refresh hint, of_closefork() the last
  *
  * @param[in]     obj    session object
  * @param[in,out] ofork  open fork a write or a length set reached
  */
 static void fork_modified(const AFPObj *obj, struct ofork *ofork)
 {
+    setvoltime_write(ofork->of_vol->v_obj, ofork->of_vol);
+
     if ((ofork->of_flags & AFPFORK_RSRC)
             && obj->options.dircache_rfork_budget > 0) {
         of_rfork_changed(ofork);
@@ -1247,7 +1249,8 @@ static int fork_error(const struct ofork *ofork, const char *call,
  * 64-bit form needs AFP 3.0. A negative length fails. Shrinking takes a
  * temporary write lock on the cut range, so a conflicting byte lock fails the
  * call with AFPERR_LOCK. The virtual Icon file becomes a real file first. A
- * resource fork change invalidates the cached resource fork data.
+ * resource fork change invalidates the cached resource fork data, and a
+ * length change marks the volume.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -2183,8 +2186,9 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
  *
  * The data fork gets an fsync. For a resource fork the call rereads the
  * resource fork length and stamps the modification date of a dirty fork. It
- * then writes the header and syncs the metadata file. Virtual forks need
- * nothing.
+ * then writes the header and syncs the metadata file. A written header
+ * leaves the fork clean and marks the volume changed; after a failed one
+ * the fork stays dirty for the next flush. Virtual forks need nothing.
  *
  * @param[in,out] ofork  open fork
  * @returns 0, or -1 when an fsync or the header write failed
@@ -2214,13 +2218,20 @@ int flushfork(struct ofork *ofork)
         /* set the date if we're dirty */
         if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
             ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX, tv.tv_sec);
-            ofork->of_flags &= ~AFPFORK_DIRTY;
             doflush++;
         }
 
         /* flush the header */
-        if (doflush && ad_flush(ofork->of_ad) < 0) {
-            err = -1;
+        if (doflush) {
+            if (ad_flush(ofork->of_ad) < 0) {
+                err = -1;
+            } else {
+                ofork->of_flags &= ~AFPFORK_DIRTY;
+                /* the mark's own calls leave the fsync error for the log */
+                int saved = errno;
+                setvoltime(ofork->of_vol->v_obj, ofork->of_vol);
+                errno = saved;
+            }
         }
 
         if (fsync(ad_reso_fileno(ofork->of_ad)) < 0) {
