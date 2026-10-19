@@ -77,6 +77,9 @@ struct fault_inject {
     int   shrink_armed;      /*!< the next lock fcntl first cuts shrink_fd */
     int   shrink_fd;
     off_t shrink_to;         /*!< the length that cut leaves the file */
+    int   rename_armed;      /*!< the next F_SETLK first renames rename_from */
+    const char *rename_from;
+    const char *rename_to;   /*!< the name rename_from takes */
     int fchdir_armed;
     int fchdir_fail_after;
     int fchdir_errno;
@@ -98,6 +101,11 @@ struct fault_inject {
     struct fi_call sendfile;
     int sendfile_fake;      /*!< a sendfile() reports its count, moving none */
     int sendfile_eof_einval; /*!< a sendfile() at the file's end: EINVAL */
+    int fstat_watch;        /*!< count the fstat() calls on fstat_fd */
+    int fstat_fd;           /*!< descriptor whose fstat() calls count */
+    int fstat_calls;        /*!< fstat() calls on fstat_fd while watching */
+    int time_watch;         /*!< count the time() calls */
+    int time_calls;         /*!< time() calls seen while watching */
 };
 
 extern struct fault_inject fi;

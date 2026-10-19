@@ -1164,11 +1164,13 @@ EC_CLEANUP:
  * path. The header must hold AD_DATASZ_EA bytes, the version 2 magic and
  * version, ADEID_NUM_EA entries, and every entry the ea layout defines.
  * Without HAVE_EAFD the function forces the resource fork offset to
- * ADEDOFF_RFORK_OSX. A malformed EA fails with EINVAL. When ad carries
- * ADFLAGS_CREATE the function deletes the malformed EA as root and fails with
- * ENOENT instead, so the caller creates a fresh one.
+ * ADEDOFF_RFORK_OSX. A failed read leaves ad as it was. A malformed EA fails
+ * with EINVAL, and the log names the file by its Mac name when there is no
+ * path. When ad carries ADFLAGS_CREATE and path is set, the function deletes
+ * the malformed EA as root and fails with ENOENT instead, so the caller
+ * creates a fresh one.
  *
- * @param[in]     path  file whose metadata EA to read
+ * @param[in]     path  file whose metadata EA to read, or NULL
  * @param[in,out] ad    AppleDouble receiving the parsed header
  * @param[in]     hst   unused
  * @returns 0, or -1 with errno set
@@ -1180,6 +1182,8 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
     uint16_t nentries = 0;
     ssize_t  header_len;
     char     *buf = ad->ad_data;
+    /* what a failed read leaves in place */
+    const struct adouble was = *ad;
 
     if (ad_meta_fileno(ad) != -1) {
         header_len = sys_fgetxattr(ad_meta_fileno(ad), AD_EA_META, ad->ad_data,
@@ -1199,7 +1203,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
 
     if (header_len < AD_DATASZ_EA) {
         LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): short metadata EA",
-            fullpathname(path));
+            path ? fullpathname(path) : ad->ad_name);
         errno = EINVAL;
         EC_FAIL;
     }
@@ -1211,7 +1215,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
 
     if ((ad->ad_magic != AD_MAGIC) || (ad->ad_version != AD_VERSION2)) {
         LOG(log_error, logtype_ad, "ad_header_read_ea(\"%s\"): wrong magic or version",
-            fullpathname(path));
+            path ? fullpathname(path) : ad->ad_name);
         errno = EINVAL;
         EC_FAIL;
     }
@@ -1221,8 +1225,8 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
 
     if (nentries != ADEID_NUM_EA) {
         LOG(log_error, logtype_ad,
-            "ad_header_read_ea(\"%s\"): invalid number of entries: %d", fullpathname(path),
-            nentries);
+            "ad_header_read_ea(\"%s\"): invalid number of entries: %d",
+            path ? fullpathname(path) : ad->ad_name, nentries);
         errno = EINVAL;
         EC_FAIL;
     }
@@ -1230,7 +1234,7 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
     /* Now parse entries */
     if (parse_entries(ad, nentries, header_len)) {
         LOG(log_warning, logtype_ad, "ad_header_read(%s): malformed AppleDouble",
-            path ? fullpathname(path) : "");
+            path ? fullpathname(path) : ad->ad_name);
         errno = EINVAL;
         EC_FAIL;
     }
@@ -1260,16 +1264,21 @@ static int ad_header_read_ea(const char *path, struct adouble *ad,
 #endif
 EC_CLEANUP:
 
+    if (ret != 0) {
+        *ad = was;
+    }
+
     /* A read-only caller must see corrupt metadata as an error, rather than
      * silently deleting it and treating the source as having no header.
      * Retain the repair path for callers that explicitly allow creation. */
-    if (ret != 0 && errno == EINVAL && (ad->ad_adflags & ADFLAGS_CREATE)) {
+    if (ret != 0 && errno == EINVAL && path != NULL
+            && (ad->ad_adflags & ADFLAGS_CREATE)) {
         become_root();
         (void)sys_removexattr(path, AD_EA_META);
         unbecome_root();
         LOG(log_error, logtype_ad,
             "ad_header_read_ea(%s, %d): deleted invalid metadata EA",
-            path ? fullpathname(path) : "UNKNOWN", nentries);
+            fullpathname(path), nentries);
         errno = ENOENT;
     }
 

@@ -41,10 +41,10 @@ protocol objects, the `server_children` table, the `asev` poll descriptor
 set, and `reloadconfig`/`gotsigchld` signal flags. The loop polls listening
 sockets, child IPC sockets, and the optional afpstats Unix socket.
 
-Pending hints select `HINT_FLUSH_INTERVAL_MS` (50 ms) as the poll timeout;
-otherwise poll blocks indefinitely. Signals in the loop's set are unblocked
-immediately before poll and blocked immediately afterward. The set includes
-SIGALRM, SIGHUP, SIGUSR1, and SIGCHLD.
+Buffered hints set the poll timeout to the time left until the oldest has
+waited `HINT_FLUSH_INTERVAL_MS` (50 ms); otherwise poll blocks indefinitely.
+Signals in the loop's set are unblocked immediately before poll and blocked
+immediately afterward. The set includes SIGALRM, SIGHUP, SIGUSR1, and SIGCHLD.
 
 The processing order preserves child-table and descriptor validity:
 
@@ -56,12 +56,13 @@ The processing order preserves child-table and descriptor validity:
    initialize listeners, and signal workers with SIGHUP.
 4. Dispatch ready descriptors: `LISTEN_FD` starts sessions, `IPC_FD` calls
    ipc_server_read(), and `STATS_FD` serves afpstats requests.
-5. Flush pending hints when poll times out or the buffer reaches
-   `HINT_BUF_SIZE` (128).
+5. Flush the buffered hints once the oldest has waited 50 ms or the buffer
+   holds `HINT_BUF_SIZE` (128), whether the poll timed out or found
+   descriptors ready.
 
 ```mermaid
 flowchart TD
-    Timeout[Select timeout: 50 ms with pending hints, otherwise indefinite]
+    Timeout[Select timeout: until the oldest buffered hint is 50 ms old, otherwise indefinite]
     Timeout --> Poll[Unblock signals, poll, then block signals]
     Poll --> Reap[Save errno and reap children if signaled]
     Reap --> Result{Poll result?}
@@ -73,15 +74,16 @@ flowchart TD
     Reload -->|No| Events[Dispatch ready listener, IPC, and stats descriptors]
     Events --> Pending{Hints pending?}
     Pending -->|No| Timeout
-    Pending -->|Yes| Flush{Poll timed out or hint buffer full?}
+    Pending -->|Yes| Flush{Oldest hint 50 ms old or hint buffer full?}
     Flush -->|No| Timeout
     Flush -->|Yes| Relay[Flush hints to workers]
     Relay --> Timeout
 ```
 
-Continuous descriptor activity can postpone a timeout-triggered flush;
-50 ms is a batching timeout rather than a fixed delivery deadline.
-Delivery and drop handling are covered by [Caching and Consistency](caching.md).
+Descriptor activity does not postpone the flush: a batch goes out on the
+first pass that reaches step 5 after its oldest hint has waited 50 ms.
+Delivery and drop handling are covered by
+[Caching and Consistency](caching.md).
 
 ## Session creation and channel ownership
 
@@ -139,13 +141,15 @@ afp_over_dsi() initializes the directory cache, starts the optional idle
 worker through iw_init(), applies socket options, and creates the signal
 self-pipe. Failure to start the idle worker selects synchronous cleanup.
 
-The loop drains signal notifications and processes deferred actions. It can
-consume already-buffered DSI input without polling. Otherwise it polls the
-client socket, hint pipe, and signal self-pipe, granting idle-worker access
-before the wait and revoking it immediately on return. Revocation must
-precede signal actions, hint processing, and any other cache access, including
-after EINTR. Disconnected/dying states have separate receive paths;
-sleeping sessions still poll so reconnect and shutdown can wake them.
+The loop processes deferred actions, and drains the signal self-pipe when
+poll reports it readable; a self-pipe that poll reports broken ends the
+session. It can consume already-buffered DSI input without polling.
+Otherwise it polls the client socket, hint pipe, and signal self-pipe,
+granting idle-worker access before the wait and revoking it immediately on
+return. Revocation must precede signal actions, hint processing, and any
+other cache access, including after EINTR. Disconnected/dying states have
+separate receive paths; sleeping sessions still poll so reconnect and
+shutdown can wake them.
 
 The diagram follows ordinary frame processing. Reconnect and receive-error
 handling can restart the loop, retain the session, or end it. Poll/descriptor
@@ -153,7 +157,7 @@ error paths are omitted; every poll return still revokes idle-worker access.
 
 ```mermaid
 flowchart TD
-    Signals[Drain self-pipe and process deferred signals]
+    Signals[Process deferred signals]
     Signals --> Buffered{DSI input buffered?}
     Buffered -->|Yes| Receive[dsi_stream_receive]
     Buffered -->|No| State{Disconnected or dying?}
@@ -164,7 +168,7 @@ flowchart TD
     Poll --> Revoke[iw_revoke before any cache access]
     Revoke --> Interrupted{Interrupted by signal?}
     Interrupted -->|Yes| Signals
-    Interrupted -->|No| Ready[Process deferred signals and cache hints]
+    Interrupted -->|No| Ready[Drain a readable self-pipe, process deferred signals and cache hints]
     Ready --> Socket{Client data ready?}
     Socket -->|No| Signals
     Socket -->|Yes| Receive
@@ -216,9 +220,11 @@ ordinary allocation scanning the whole array.
 | of_closefork() | Flush required state, notify changes, close storage, and deallocate the fork |
 
 The `AFPFORK_DATA`, `AFPFORK_RSRC`, and `AFPFORK_META` bits identify opened
-storage; `AFPFORK_ACCRD` and `AFPFORK_ACCWR` record access. write_mark() sets
-`AFPFORK_DIRTY` when an open metadata descriptor needs updating and
-`AFPFORK_MODIFIED` when data changes require notifications. `AFPFORK_ERROR`
+storage, and `of_adflags` the AppleDouble forks the open took, which
+of_closefork() releases; `AFPFORK_ACCRD` and `AFPFORK_ACCWR` record access.
+write_fork() sets `AFPFORK_DIRTY` when the fork has open metadata, and
+fork_modified() sets `AFPFORK_MODIFIED` at the fork's first write or length
+change, when it also hints sibling sessions. `AFPFORK_ERROR`
 and `AFPFORK_VIRTUAL` distinguish failed opens and virtual-file state.
 
 Multiple forks of one file can share an AppleDouble object through ad_ref().

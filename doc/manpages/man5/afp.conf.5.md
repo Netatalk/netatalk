@@ -936,8 +936,10 @@ fce ignore names = *NAME[,NAME2,...]* (default: *.DS_Store*) **(G)**
 fce ignore directories = *PATH[,PATH2,...]* (default: empty) **(G)**
 
 > Comma-separated list of directories that generate no FCE events. Each
-is an absolute path on the host filesystem and must not end with a
-slash.
+is an absolute path on the host filesystem. A listed directory covers
+itself and everything below it, deleted files included. Paths compare
+after symbolic links resolve, so a directory listed through a symbolic
+link matches its target.
 
 fce notify script = *path* **(G)**
 

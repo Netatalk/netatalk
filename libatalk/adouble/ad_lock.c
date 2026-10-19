@@ -509,8 +509,9 @@ static int testlock(const struct ad_fd *adf, off_t off, off_t len)
         }
     }
 
-    /* (2) Does another process have a lock? */
-    lock.l_type = (adf->adf_flags & O_RDWR) ? F_WRLCK : F_RDLCK;
+    /* (2) Does another process have a lock? F_GETLK only tests, so a write
+     *     probe sees the band's read locks through a read-only fd too */
+    lock.l_type = F_WRLCK;
 
     if (set_lock(adf->adf_fd, F_GETLK, &lock) < 0) {
         /* is that kind of error possible ?*/
@@ -978,8 +979,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
  *  - Always probes with an explicit F_WRLCK.  A write probe conflicts with a
  *    peer's read or write lock, so it sees the F_RDLCK share-mode band entries.
  *    F_GETLK only tests, so the probe type is independent of the fd's
- *    O_RDWR/O_RDONLY mode (cf. testlock(), which picks F_RDLCK on an RO fd and
- *    would miss the band).
+ *    O_RDWR/O_RDONLY mode, as in testlock().
  *  - eid dispatch: ADEID_DFORK uses the data fd at the literal offset, which also
  *    covers the whole share-mode band (OPEN, DENY and RSRC mirrors), since the
  *    band lives on the data fd via rf2off().  ADEID_RFORK uses the resource fork's

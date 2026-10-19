@@ -1043,7 +1043,7 @@ int utest_deletefile_quirk(struct vol *vol)
     }
 
     /* register a tracked ofork on the inode, like afp_openfork() */
-    of = of_alloc(vol, curdir, leaf, &ofrefnum, ADEID_DFORK,
+    of = of_alloc(vol, curdir, leaf, leaf, &ofrefnum, ADEID_DFORK,
                   NULL, &st);
 
     if (of == NULL) {
@@ -1524,8 +1524,8 @@ int utest_of_alloc_fifo(struct vol *vol)
             goto out;
         }
 
-        of[i] = of_alloc(vol, curdir, leaf, &refnum[i], ADEID_DFORK, NULL,
-                         &st);
+        of[i] = of_alloc(vol, curdir, leaf, leaf, &refnum[i], ADEID_DFORK,
+                         NULL, &st);
 
         if (of[i] == NULL) {
             rc = 30 + i;
@@ -1567,7 +1567,8 @@ int utest_of_alloc_fifo(struct vol *vol)
         goto out;
     }
 
-    of[0] = of_alloc(vol, curdir, leaf, &refnum[0], ADEID_DFORK, NULL, &st);
+    of[0] = of_alloc(vol, curdir, leaf, leaf, &refnum[0], ADEID_DFORK, NULL,
+                     &st);
 
     if (of[0] == NULL) {
         rc = 71;
@@ -1634,7 +1635,7 @@ int utest_of_breakdown(struct vol *vol)
             goto out;
         }
 
-        of[i] = of_alloc(vol, curdir, leaf, &refnum, eid[i], NULL, &st);
+        of[i] = of_alloc(vol, curdir, leaf, leaf, &refnum, eid[i], NULL, &st);
 
         if (of[i] == NULL) {
             rc = 20 + i;

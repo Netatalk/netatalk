@@ -52,12 +52,10 @@ _Static_assert(CACHE_HINT_REFRESH < CACHE_HINT_COUNT
                && CACHE_HINT_VOLUME_RESET < CACHE_HINT_COUNT,
                "CACHE_HINT_COUNT must cover every CACHE_HINT_* value");
 
-/* Hint buffer capacity — main.c checks this to trigger immediate flush
- * when buffer is full after fd event processing. */
+/* Hint buffer capacity; a full buffer is due at once */
 #define HINT_BUF_SIZE           128
 
-/* Flush interval for poll timeout — main.c uses this to set poll timeout
- * when hints are buffered. 50ms balances latency vs syscall overhead. */
+/* Longest a buffered hint waits for its batch to go out */
 #define HINT_FLUSH_INTERVAL_MS  50
 
 extern int ipc_server_read(server_child_t *children, int fd);
@@ -71,7 +69,7 @@ extern unsigned long long ipc_get_hints_sent(void);
 extern unsigned long long ipc_get_hints_dropped(void);
 
 /* Poll-driven hint flush API (parent-side only, single-threaded) */
-extern void hint_flush_pending(server_child_t *children);
-extern int  hint_buf_count(void);
+extern int  hint_flush_pending(server_child_t *children);
+extern int  hint_flush_timeout(void);
 
 #endif /* ATALK_SERVER_IPC_H */

@@ -74,6 +74,12 @@ static inline int ad_rlen_meta_absent(off_t rlen)
     return rlen == AD_RLEN_NO_AD || rlen == AD_RLEN_RFORK_ONLY;
 }
 
+/*! @brief Tell whether a cached rlen is a definite resource fork length */
+static inline int ad_rlen_known(off_t rlen)
+{
+    return rlen >= 0 || rlen == AD_RLEN_NO_AD;
+}
+
 struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for cache locality
     /* Fields requiring 8-byte alignment: pointers, time_t, ino_t, off_t */
     bstring     d_fullpath;          /*!< complete unix path to dir (or file) */

@@ -539,7 +539,8 @@ static int ea_delentry(struct ea *ea, const char *attruname)
  * @param[in] ea         struct ea handle
  * @param[in] eaname     EA name
  *
- * @returns 0 on success, -1 on error
+ * @returns 0 when no EA file is left under the name, -1 for a missing name
+ *          or a failed unlink
  */
 static int delete_ea_file(const struct ea *ea, const char *eaname)
 {
@@ -551,9 +552,9 @@ static int delete_ea_file(const struct ea *ea, const char *eaname)
         return -1;
     }
 
+    /* no EA file exists under a name ea_path() cannot map */
     if ((eafile = ea_path(ea, eaname, 1)) == NULL) {
-        LOG(log_error, logtype_afpd, "delete_ea_file('%s'): ea_path error", eaname);
-        return -1;
+        return 0;
     }
 
     /* Check if it exists, remove if yes*/
@@ -871,6 +872,9 @@ int ea_close(struct ea *ea)
         return 0;
     }
 
+    /* pack_header() counts only the entries that keep a name */
+    const unsigned int entries = ea->ea_count;
+
     /* pack header and write it to disk if it was opened EA_RDWR*/
     if (ea->ea_flags & EA_RDWR) {
         if ((pack_header(ea)) != 0) {
@@ -921,7 +925,7 @@ int ea_close(struct ea *ea)
 exit:
 
     /* free names */
-    while (count < ea->ea_count) {
+    while (count < entries) {
         if ((*ea->ea_entries)[count].ea_name) {
             free((*ea->ea_entries)[count].ea_name);
             (*ea->ea_entries)[count].ea_name = NULL;
@@ -1300,6 +1304,13 @@ int set_ea(const struct vol *vol, const char *uname, const char *attruname,
 
     if ((write_ea(&ea, attruname, ibuf, attrsize)) != 0) {
         LOG(log_error, logtype_afpd, "set_ea('%s'): write_ea error", uname);
+
+        /* an entry this call added goes, with any EA file its write made; an
+         * EA file that cannot go stays listed, as in ea_deletefile() */
+        if (ea_addentry_ret > 0 && delete_ea_file(&ea, attruname) == 0) {
+            (void)ea_delentry(&ea, attruname);
+        }
+
         ret = AFPERR_MISC;
         goto exit;
     }
@@ -1309,7 +1320,6 @@ exit:
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "set_ea('%s'): ea_close error", uname);
         ret = AFPERR_MISC;
-        goto exit;
     }
 
     return ret;
@@ -1378,8 +1388,8 @@ exit:
  * A file without an EA header needs nothing and succeeds. With a dirfd the
  * call changes into that directory for the deletions and back afterwards, and
  * a failed return ends the process with EXITERR_SYS. A failed EA file delete
- * turns the result into AFPERR_MISC. ea_close deletes the header file because
- * every entry name ends up NULL.
+ * turns the result into AFPERR_MISC and leaves its entry in the header.
+ * ea_close deletes the header file once every entry name is NULL.
  *
  * @param[in] vol    volume holding the file
  * @param[in] dirfd  directory that file is relative to, or -1 for the working
@@ -1416,17 +1426,18 @@ int ea_deletefile(const struct vol *vol, int dirfd, const char *file)
     }
 
     while (count < ea.ea_count) {
-        if ((delete_ea_file(&ea, (*ea.ea_entries)[count].ea_name)) != 0) {
+        if (delete_ea_file(&ea, (*ea.ea_entries)[count].ea_name) != 0) {
+            /* the header keeps the entry */
             ret = AFPERR_MISC;
-            continue;
+        } else {
+            free((*ea.ea_entries)[count].ea_name);
+            (*ea.ea_entries)[count].ea_name = NULL;
         }
 
-        free((*ea.ea_entries)[count].ea_name);
-        (*ea.ea_entries)[count].ea_name = NULL;
         count++;
     }
 
-    /* ea_close removes the EA header file for us because all names are NULL */
+    /* ea_close removes the EA header file once all names are NULL */
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error closing ea handle",
             file);

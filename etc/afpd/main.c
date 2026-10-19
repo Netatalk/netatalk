@@ -80,8 +80,10 @@ static void afp_exit(int ret)
  * @brief Allocate the event set of the master afpd and add the listening
  * sockets
  *
- * The set has room for the connection limit, every DSI listener, and
- * ASEV_THRESHHOLD more descriptors. Each call allocates a new set.
+ * Each call allocates a new set that keeps the entries of the set it
+ * replaces, on a reload the sessions' IPC sockets and the stats socket, with
+ * room for the connection limit, every DSI listener, and ASEV_THRESHHOLD more
+ * descriptors.
  *
  * @param[in] dsiconfig  server object with the DSI listeners
  * @param[in] aspconfig  server object with the ASP socket
@@ -90,6 +92,7 @@ static void afp_exit(int ret)
 static bool init_listening_sockets(const AFPObj *dsiconfig,
                                    const AFPObj *aspconfig)
 {
+    struct asev *renewed;
     DSI *dsi;
     int numlisteners;
 
@@ -97,12 +100,14 @@ static bool init_listening_sockets(const AFPObj *dsiconfig,
         numlisteners++;
     }
 
-    asev = asev_init(dsiconfig->options.connections + numlisteners +
-                     ASEV_THRESHHOLD);
+    renewed = asev_renew(asev, dsiconfig->options.connections + numlisteners +
+                         ASEV_THRESHHOLD);
 
-    if (asev == NULL) {
+    if (renewed == NULL) {
         return false;
     }
+
+    asev = renewed;
 
     for (dsi = dsiconfig->dsi; dsi; dsi = dsi->next) {
         if (!(asev_add_fd(asev, dsi->serversock, LISTEN_FD, dsi, AFPPROTO_DSI))) {
@@ -598,8 +603,8 @@ int main(int ac, char **av)
      * afterwards. establishing timeouts for logins is a possible
      * solution. */
     while (1) {
-        /* Use 50ms timeout when hints are buffered, else block indefinitely */
-        int poll_timeout = (hint_buf_count() > 0) ? HINT_FLUSH_INTERVAL_MS : -1;
+        /* wake when the buffered hints are due, else block */
+        int poll_timeout = hint_flush_timeout();
         pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
         ret = poll(asev->fdset, asev->used, poll_timeout);
         pthread_sigmask(SIG_BLOCK, &sigs, NULL);
@@ -744,7 +749,8 @@ int main(int ac, char **av)
 
                         if (ipc_server_read(server_children, child->afpch_ipc_fd) != 0) {
                             if (!(asev_del_fd(asev, child->afpch_ipc_fd))) {
-                                LOG(log_error, logtype_afpd, "child[%u]: no IPC fd");
+                                LOG(log_error, logtype_afpd,
+                                    "child[%u]: no IPC fd", child->afpch_pid);
                             }
 
                             close(child->afpch_ipc_fd);
@@ -765,13 +771,9 @@ int main(int ac, char **av)
             } /* for (i)*/
         } /* if (ret > 0) */
 
-        /* 5. Flush buffered hints — single flush point, two triggers:
-         *    - ret == 0: 50ms timeout expired, flush batched hints
-         *    - count >= HINT_BUF_SIZE: buffer full from IPC burst
-         *    When ret > 0 and count < HINT_BUF_SIZE, hints continue to
-         *    accumulate until the next 50ms timeout (batching preserved). */
-        if (hint_buf_count() > 0
-                && (ret == 0 || hint_buf_count() >= HINT_BUF_SIZE)) {
+        /* 5. Flush buffered hints once the batch is due, whether the poll
+         *    timed out or found descriptors ready */
+        if (hint_flush_timeout() == 0) {
             hint_flush_pending(server_children);
         }
     } /* while (1) */

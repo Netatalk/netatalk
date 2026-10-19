@@ -157,9 +157,10 @@ pipes. Pipe writes within `PIPE_BUF` do not interleave, but reads can be
 partial; the receiver retains incomplete message bytes for the next read.
 
 Nonblocking sender/receiver capacity and rate limits can drop ordinary
-hints. A short parent poll timeout permits batching; continuous descriptor
-activity can postpone a timeout-triggered flush. The system does not promise
-immediate or lossless coherence, nor does it relay hints across hosts.
+hints. The parent sends a batch once its oldest hint has waited 50 ms, and
+relays one refresh per sender and file in each batch. The system does not
+promise immediate or lossless coherence, nor does it relay hints across
+hosts.
 
 A CNID reset has a stronger consequence: all client references in that
 identity space are obsolete. `CACHE_HINT_VOLUME_RESET` carries a UUID-derived

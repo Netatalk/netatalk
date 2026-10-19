@@ -191,7 +191,7 @@ bool fce_handle_coalescation(int event, const char *path)
  * known name in the list decides, so delete and create together need all.
  *
  * @param[in] opt  option value
- * @returns AFP_OK, or AFPERR_PARAM for NULL
+ * @returns AFP_OK, AFPERR_PARAM for NULL, or AFPERR_MISC when the copy fails
  */
 int fce_set_coalesce(const char *opt)
 {
@@ -202,7 +202,12 @@ int fce_set_coalesce(const char *opt)
         return AFPERR_PARAM;
     }
 
-    e = strdup(opt);
+    if ((e = strdup(opt)) == NULL) {
+        return AFPERR_MISC;
+    }
+
+    /* a reload replaces the setting */
+    coalesce = 0;
 
     for (p = strtok(e, ","); p; p = strtok(NULL, ",")) {
         if (strcmp(p, "all") == 0) {

@@ -108,6 +108,7 @@ int faultinject_open_works(const char *scratch_path)
 #include <poll.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -442,6 +443,16 @@ int fcntl(int fd, int cmd, ...)
         }
     }
 
+    /* another process's rename onto a name, landing after the caller's stat
+     * of it */
+    if (fi.rename_armed && (cmd == F_SETLK || cmd == F_SETLKW)) {
+        fi.rename_armed = 0;
+
+        if (rename(fi.rename_from, fi.rename_to) != 0) {
+            return -1;
+        }
+    }
+
     if (fault_should_fire(fi.fcntl_armed, &fi.fcntl_fail_after, fi.fcntl_errno)) {
         return -1;
     }
@@ -673,5 +684,140 @@ int sendfile(int fd, int s, off_t offset, size_t nbytes, struct sf_hdtr *hdtr,
     return real_sendfile(fd, s, offset, nbytes, hdtr, sbytes, flags);
 }
 #endif
+
+typedef int (*fstat_fn)(int, void *);
+static fstat_fn real_fstat;
+static fstat_fn real_fstat64;
+static fstat_fn real_fstat50;
+static fstat_fn real_fstat64_time64;
+static fstat_fn real_fstat_time64;
+
+/* a large-file glibc build calls fstat64, NetBSD's headers rename fstat()
+ * to __fstat50, a 32-bit build with a 64-bit time_t calls __fstat64_time64
+ * (glibc) or __fstat_time64 (musl), other builds call fstat; each forwards
+ * to its own name, so the caller's struct stat layout is kept */
+int fi_fstat(int fd, void *st) __asm__("fstat");
+int fi_fstat64(int fd, void *st) __asm__("fstat64");
+int fi_fstat50(int fd, void *st) __asm__("__fstat50");
+int fi_fstat64_time64(int fd, void *st) __asm__("__fstat64_time64");
+int fi_fstat_time64(int fd, void *st) __asm__("__fstat_time64");
+
+/*! @brief Count an fstat() of the watched descriptor */
+static void fstat_watched(int fd)
+{
+    if (fi.fstat_watch && fd == fi.fstat_fd) {
+        fi.fstat_calls++;
+    }
+}
+
+/*! @brief fstat() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat(int fd, void *st)
+{
+    if (!real_fstat) {
+        real_fstat = (fstat_fn)dlsym(RTLD_NEXT, "fstat");
+    }
+
+    fstat_watched(fd);
+    return real_fstat(fd, st);
+}
+
+/*! @brief fstat64() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat64(int fd, void *st)
+{
+    if (!real_fstat64) {
+        real_fstat64 = (fstat_fn)dlsym(RTLD_NEXT, "fstat64");
+    }
+
+    fstat_watched(fd);
+    return real_fstat64(fd, st);
+}
+
+/*! @brief __fstat50() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat50(int fd, void *st)
+{
+    if (!real_fstat50) {
+        real_fstat50 = (fstat_fn)dlsym(RTLD_NEXT, "__fstat50");
+    }
+
+    fstat_watched(fd);
+    return real_fstat50(fd, st);
+}
+
+/*! @brief __fstat64_time64() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat64_time64(int fd, void *st)
+{
+    if (!real_fstat64_time64) {
+        real_fstat64_time64 = (fstat_fn)dlsym(RTLD_NEXT, "__fstat64_time64");
+    }
+
+    fstat_watched(fd);
+    return real_fstat64_time64(fd, st);
+}
+
+/*! @brief __fstat_time64() interposer: counts watched calls on fi.fstat_fd */
+int fi_fstat_time64(int fd, void *st)
+{
+    if (!real_fstat_time64) {
+        real_fstat_time64 = (fstat_fn)dlsym(RTLD_NEXT, "__fstat_time64");
+    }
+
+    fstat_watched(fd);
+    return real_fstat_time64(fd, st);
+}
+
+typedef time_t (*time_fn)(time_t *);
+typedef int64_t (*time64_fn)(int64_t *);
+static time_fn real_time;
+static time_fn real_time50;
+static time64_fn real_time64;
+
+/* NetBSD's headers rename time() to __time50, a 32-bit build with a 64-bit
+ * time_t calls __time64, whose time_t this build's may not be, and other
+ * builds call time; pinned names keep a header's rename off the
+ * definitions */
+time_t fi_time(time_t *t) __asm__("time");
+time_t fi_time50(time_t *t) __asm__("__time50");
+int64_t fi_time64(int64_t *t) __asm__("__time64");
+
+/*! @brief Count a time() call while fi.time_watch is set */
+static void time_watched(void)
+{
+    if (fi.time_watch) {
+        fi.time_calls++;
+    }
+}
+
+/*! @brief time() interposer: counts calls while fi.time_watch is set */
+time_t fi_time(time_t *t)
+{
+    if (!real_time) {
+        real_time = (time_fn)dlsym(RTLD_NEXT, "time");
+    }
+
+    time_watched();
+    return real_time(t);
+}
+
+/*! @brief __time50() interposer: counts calls while fi.time_watch is set */
+time_t fi_time50(time_t *t)
+{
+    if (!real_time50) {
+        real_time50 = (time_fn)dlsym(RTLD_NEXT, "__time50");
+    }
+
+    time_watched();
+    return real_time50(t);
+}
+
+/*! @brief __time64() interposer: counts calls while fi.time_watch is set */
+int64_t fi_time64(int64_t *t)
+{
+    if (!real_time64) {
+        real_time64 = (time64_fn)dlsym(RTLD_NEXT, "__time64");
+    }
+
+    time_watched();
+    return real_time64(t);
+}
 
 #endif /* FAULTINJECT_PRELOAD */

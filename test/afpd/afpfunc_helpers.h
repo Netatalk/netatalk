@@ -64,6 +64,8 @@ extern int getfiledirparms_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
+extern int renameobj(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                     const char *newname);
 extern int enumerate(AFPObj *obj, uint16_t vid, cnid_t did);
 extern int enumerate_range(AFPObj *obj, uint16_t vid, cnid_t did,
                            uint16_t fbitmap, uint16_t dbitmap,
@@ -87,9 +89,15 @@ extern int fsize_cap(struct fsize_cap *cap, rlim_t limit);
 extern int fsize_uncap(const struct fsize_cap *cap);
 extern int openfork(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                     uint8_t fork, uint16_t access, uint16_t *refnum);
+extern int openfork_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,
+                           const char *name, uint8_t fork, uint16_t access,
+                           uint16_t bitmap, uint16_t *refnum);
 extern int closefork(AFPObj *obj, uint16_t refnum);
 extern int checkaccess(AFPObj *obj, uint16_t vid, cnid_t did,
                        const char *name, uint32_t rights);
 extern int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid);
+extern int setforkparams(AFPObj *obj, uint16_t refnum, uint32_t len);
+extern int getforkparams(AFPObj *obj, uint16_t refnum, uint16_t bitmap);
+extern int getvolparams(AFPObj *obj, uint16_t vid, uint16_t bitmap);
 
 #endif  /* AFPFUNC_HELPERS */

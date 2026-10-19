@@ -39,6 +39,7 @@
 #include <atalk/volume.h>
 
 #include "afp_config.h"
+#include "afpfunc_helpers.h"
 #include "dircache.h"
 #include "directory.h"
 #include "file.h"
@@ -1188,4 +1189,116 @@ out:
 #else
     return 0;
 #endif
+}
+
+/*!
+ * @brief A failed CNID retry in movecwd() logs the directory it tried
+ *
+ * The directory moves aside and a dangling symlink takes its name: the
+ * cached path fails with ENOENT, and the CNID rebuild lstat()s the same
+ * path, so the retry reaches its chdir and fails as well.
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume whose root takes the directory
+ * @returns 0, 1 when the log lacks the path, -1 when the setup failed
+ */
+int test012_movecwd_retry_names_directory(AFPObj *obj, struct vol *vol)
+{
+    static char dname[] = "t012_dir";
+    char aside[32];
+    char logpath[MAXPATHLEN + 1];
+    char needle[MAXPATHLEN + 64];
+    struct dir *saved_curdir = curdir;
+    struct dir *dir;
+    struct dir *now;
+    cnid_t did = CNID_INVALID;
+    int cwd_fd = open(".", O_RDONLY);
+    int vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY);
+    int created = 0;
+    int linked = 0;
+    int logged = 0;
+    int ret = -1;
+    int rc;
+    /* this run's names: what another run left keeps its own */
+    snprintf(aside, sizeof(aside), "t012_aside.%d", (int)getpid());
+    /* absolute: movecwd() changes the working directory */
+    snprintf(logpath, sizeof(logpath), "%s/t012_log.%d", vol->v_path,
+             (int)getpid());
+
+    if (cwd_fd < 0 || vfd < 0
+            || createdir(obj, vol->v_vid, DIRDID_ROOT, dname) != AFP_OK) {
+        goto out;
+    }
+
+    created = 1;
+    /* afp_createdir() leaves curdir in the directory it made */
+    dir = curdir;
+    did = dir->d_did;
+
+    if (movecwd(vol, vol->v_root) != 0) {
+        goto out;
+    }
+
+    /* a move keeps whatever metadata the directory holds; a failed one
+     * leaves the directory, and the symlink below fails */
+    renameat(vfd, dname, vfd, aside);
+
+    if (symlinkat("t012_nowhere", vfd, dname) != 0) {
+        goto out;
+    }
+
+    linked = 1;
+    setuplog("default:info", logpath, true);
+    logged = 1;
+    rc = movecwd(vol, dir);
+    setuplog("default:note", "/dev/stderr", true);
+    snprintf(needle, sizeof(needle), "\"%s/%s\" (did:%u) failed:", vol->v_path,
+             dname, ntohl(did));
+
+    if (rc == -1 && file_contains(logpath, needle)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "t012: movecwd %d, log lacks: %s\n", rc, needle);
+        ret = 1;
+    }
+
+out:
+
+    if (logged) {
+        unlink(logpath);
+    }
+
+    /* the directory back under its name, for FPDelete to remove it and
+     * whatever metadata it holds */
+    if (created) {
+        if (linked) {
+            unlinkat(vfd, dname, 0);
+        }
+
+        renameat(vfd, aside, vfd, dname);
+
+        if ((now = dircache_search_by_name(vol, vol->v_root, dname,
+                                           strlen(dname))) != NULL) {
+            dir_remove(vol, now, 0);
+        }
+
+        dir_free_invalid_q();
+        delete (obj, vol->v_vid, DIRDID_ROOT, dname);
+        cnid_delete(vol->v_cdb, did);
+    }
+
+    if (vfd >= 0) {
+        close(vfd);
+    }
+
+    if (cwd_fd >= 0) {
+        if (fchdir(cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(cwd_fd);
+    }
+
+    curdir = saved_curdir;
+    return ret;
 }

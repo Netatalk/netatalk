@@ -97,14 +97,22 @@ flowchart LR
 
 A write-capable open initially remains virtual. The first write or truncate
 calls materialize_virtual_icon(), which creates the root file, seeds the
-resource fork and Finder metadata, reopens the selected fork, and updates
-the open-fork identity before clearing its virtual fields.
+resource fork and Finder metadata, reopens the selected fork with the
+open-mode locks of its access, and updates the open-fork identity before
+clearing its virtual fields. On a volume without `follow symlinks`, a
+symlink under the name refuses the write with `AFPERR_ACCESS`. A file
+another fork made real first keeps its content: the call reopens it,
+through the session's open fork of it when there is one, and replies
+`AFPERR_ACCESS` when that fork's descriptor is read-only, or when the file is
+write-inhibited and the volume's `ignored attributes` lists neither `nowrite`
+nor `all`.
 
-This is not an atomic storage transaction. Some seeding failures log warnings
-and continue. A failed reopen removes the created pathname and reports an
-error, without promising rollback of every metadata side effect. Preserve
-the distinction between a virtual borrowed buffer and owned real descriptors
-on all success and failure paths. See [Mac Metadata and Fork Storage](appledouble.md).
+This is not an atomic storage transaction. A failed seed, reopen, or lock
+leaves the fork virtual and removes the file the call created, unless another
+process has claimed it, without promising rollback of every metadata side
+effect. Preserve the distinction between a virtual borrowed buffer and owned
+real descriptors on all success and failure paths. See
+[Mac Metadata and Fork Storage](appledouble.md).
 
 Once a real file exists, subsequent pathname operations use normal storage.
 Removing it can expose the configured virtual icon again. Volume teardown

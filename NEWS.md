@@ -72,6 +72,10 @@ Changes in 4.7.0
   system's own rules do, GitHub #3412
 * FIX: afpd: resolving a file ID after another client renamed its folder no
   longer loses the folder's other file IDs, GitHub #3412
+* UPD: afpd: each request costs less: a read, a write or a file listing
+  makes fewer system calls, and a cached resource fork read copies less
+  data, while every session sees a file's current resource fork,
+  GitHub #3415
 
 Changes in 4.6.1
 ----------------
