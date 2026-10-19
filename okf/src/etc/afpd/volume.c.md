@@ -5,7 +5,7 @@ description: "Volume commands: FPOpenVol, FPCloseVol, FPGetVolParms, and volume 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/volume.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -84,7 +84,7 @@ Called by: [get_tm_used](volume.c.md#get_tm_used)
 static int get_tm_used(struct vol *vol)
 ```
 
-Defined at lines 190 to 266.
+Defined at lines 191 to 264.
 
 Calculate used size of a TimeMachine volume.
 
@@ -96,7 +96,7 @@ This assumes that the volume is used only for TimeMachine.
 1. readdir "\1.sparsebundle/bands/" counting files
 1. calculate used size as: (file_count - 1) * band-size
 
-The result of the calculation is returned in "volume->v_tm_used". "volume->v_appended" gets reset to 0. "volume->v_tm_cachetime" is updated with the current time from [time(NULL)](../../sys/netatalk/at_control.c.md).
+The result of the calculation is returned in "volume->v_tm_used". "volume->v_appended" gets reset to 0. "volume->v_tm_cachetime" is updated with the current time from [time(NULL)](../../sys/netatalk/at_control.c.md) after a successful scan.
 
 "volume->v_tm_used" is cached for TM_USED_CACHETIME seconds and updated by "volume->v_appended". The latter is increased by X every time the client appends X bytes to a file (in [fork.c](fork.c.md)).
 
@@ -115,7 +115,7 @@ Called by: [getvolspace](volume.c.md#getvolspace)
 static int getvolspace(const AFPObj *obj, struct vol *vol, uint32_t *bfree, uint32_t *btotal, VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
 ```
 
-Defined at lines 286 to 336.
+Defined at lines 284 to 334.
 
 Free and total space of a volume in 32-bit and 64-bit form.
 
@@ -142,7 +142,7 @@ Called by: [getvolparams](volume.c.md#getvolparams)
 static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 ```
 
-Defined at lines 348 to 365.
+Defined at lines 346 to 363.
 
 Set the creation date of a volume, unique among the configured volumes.
 
@@ -163,7 +163,7 @@ Called by: [getvolparams](volume.c.md#getvolparams)
 static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
 ```
 
-Defined at lines 386 to 633.
+Defined at lines 384 to 631.
 
 Pack the volume parameters that bitmap selects into buf.
 
@@ -191,7 +191,7 @@ Uses file-scope variables: `ldap_config_valid` in [libatalk/acl/ldap.c](../../li
 static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 649 to 675.
+Defined at lines 647 to 673.
 
 Reply with the bitmap and the volume parameters it selects.
 
@@ -216,7 +216,7 @@ Called by: [afp_getvolparams](volume.c.md#afp_getvolparams), [afp_openvol](volum
 int afp_getsrvrparms(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 695 to 787. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 693 to 785. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPGetSrvrParms: list the volumes that the user may see, with the server time.
 
@@ -241,7 +241,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int volume_codepage(AFPObj *obj, struct vol *volume)
 ```
 
-Defined at lines 800 to 843.
+Defined at lines 798 to 841.
 
 Load the volume charset and the Mac charset of a volume.
 
@@ -263,7 +263,7 @@ Called by: [afp_openvol](volume.c.md#afp_openvol)
 static int volume_openDB(const AFPObj *obj, struct vol *volume)
 ```
 
-Defined at lines 854 to 871.
+Defined at lines 852 to 869.
 
 Open the CNID backend of a volume.
 
@@ -285,7 +285,7 @@ Called by: [afp_openvol](volume.c.md#afp_openvol)
 static void server_ipc_volumes(AFPObj *obj)
 ```
 
-Defined at lines 880 to 904.
+Defined at lines 878 to 902.
 
 Send the names of the open volumes to the master afpd.
 
@@ -304,7 +304,7 @@ Called by: [afp_closevol](volume.c.md#afp_closevol), [afp_openvol](volume.c.md#a
 int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 925 to 1191. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 923 to 1189. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPOpenVol: open a volume and return its parameters.
 
@@ -331,7 +331,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 uint32_t cnid_volume_tag(const struct vol *vol)
 ```
 
-Defined at lines 1204 to 1219. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1202 to 1217. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Identifier of the CNID table of a volume that every afpd process shares.
 
@@ -352,7 +352,7 @@ Mentioned in the documentation of: [reset_broadcast_forget](../../libatalk/util/
 void cnid_volume_reset(const struct vol *vol)
 ```
 
-Defined at lines 1232 to 1261. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1230 to 1259. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Announce a CNID table reset and end this session.
 
@@ -373,7 +373,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 void closevol(const AFPObj *obj, struct vol *vol)
 ```
 
-Defined at lines 1274 to 1300. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1272 to 1298. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Close a volume and release everything it holds.
 
@@ -393,7 +393,7 @@ Called by: [afp_closevol](volume.c.md#afp_closevol), [close_all_vol](volume.c.md
 void close_all_vol(const AFPObj *obj)
 ```
 
-Defined at lines 1307 to 1318. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1305 to 1316. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Close every open volume of the session.
 
@@ -412,7 +412,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1334 to 1357. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1332 to 1355. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPCloseVol: close a volume.
 
@@ -439,7 +439,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int pollvoltime(AFPObj *)
 ```
 
-Defined at lines 1372 to 1406. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1370 to 1404. Declared in [etc/afpd/volume.h](volume.h.md).
 
 poll if a volume is changed by other processes.
 
@@ -460,7 +460,7 @@ Called by: [handle_alarm](afp_dsi.c.md#handle_alarm)
 void setvoltime(AFPObj *, struct vol *)
 ```
 
-Defined at lines 1418 to 1449. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1416 to 1447. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Record a change on a volume in its modification time.
 
@@ -478,7 +478,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.m
 int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1462 to 1479. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1460 to 1477. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPGetVolParms: return the parameters of an open volume.
 
@@ -501,7 +501,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1496 to 1539. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1494 to 1537. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPSetVolParms: set the backup date of a volume.
 

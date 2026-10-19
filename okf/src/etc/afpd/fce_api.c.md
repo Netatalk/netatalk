@@ -5,7 +5,7 @@ description: "File change event API for netatalk."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fce_api.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:42:54+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -37,7 +37,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 void fce_init_udp(void)
 ```
 
-Defined at lines 114 to 167.
+Defined at lines 105 to 153.
 
 Initialize network structs for any listeners.
 
@@ -53,11 +53,13 @@ Uses file-scope variables: `udp_initialized`, `udp_socket_list`, `udp_sockets`
 void fce_cleanup(void)
 ```
 
-Defined at lines 174 to 191.
+Defined at lines 161 to 176.
 
-Close the sockets of every FCE listener.
+Drop every FCE listener and its socket.
 
-A later event reopens each socket and sends FCE_CONN_BROKEN first.
+[configinit()](afp_config.c.md#configinit) calls it before it reads 'fce listener', at startup and at each reload, so the table holds only the listener afp.conf names.
+
+Called by: [configinit](afp_config.c.md#configinit)
 
 Uses file-scope variables: `udp_initialized`, `udp_socket_list`, `udp_sockets`
 
@@ -67,7 +69,7 @@ Uses file-scope variables: `udp_initialized`, `udp_socket_list`, `udp_sockets`
 static ssize_t build_fce_packet(const AFPObj *obj, unsigned char *iobuf, fce_ev_t event, const char *path, const char *oldpath, pid_t pid, const char *user, uint32_t event_id)
 ```
 
-Defined at lines 212 to 388.
+Defined at lines 197 to 373.
 
 Build the UDP packet of one FCE event in a buffer.
 
@@ -97,7 +99,7 @@ Uses file-scope variables: `fce_ev_info`, `iobuf`
 static void send_fce_event(const AFPObj *obj, int event, const char *path, const char *oldpath)
 ```
 
-Defined at lines 406 to 563.
+Defined at lines 391 to 557.
 
 Send one FCE event to every listener and to the notify script.
 
@@ -109,7 +111,7 @@ Parameters:
 * `path`: path of the event
 * `oldpath`: source path of a move, or NULL
 
-Calls: [afprun_bg](afprun.c.md#afprun_bg), [build_fce_packet](fce_api.c.md#build_fce_packet), [fce_init_udp](fce_api.c.md#fce_init_udp)
+Calls: [afprun_bg](afprun.c.md#afprun_bg), [build_fce_packet](fce_api.c.md#build_fce_packet), [fce_init_udp](fce_api.c.md#fce_init_udp), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Called by: [check_saved_close_events](fce_api.c.md#check_saved_close_events), [fce_register](fce_api.c.md#fce_register), [save_close_event](fce_api.c.md#save_close_event)
 
@@ -121,7 +123,7 @@ Uses file-scope variables: `fce_ev_info`, `fce_event_names`, `iobuf`, `udp_socke
 static int add_udp_socket(const char *target_ip, const char *target_port)
 ```
 
-Defined at lines 573 to 594.
+Defined at lines 567 to 588.
 
 Add an FCE listener to the table.
 
@@ -141,7 +143,7 @@ Uses file-scope variables: `udp_socket_list`, `udp_sockets`
 static void save_close_event(const AFPObj *obj, const char *path)
 ```
 
-Defined at lines 605 to 619.
+Defined at lines 599 to 613.
 
 Hold back a file modify event for the fce fmodwait delay.
 
@@ -157,22 +159,46 @@ Called by: [fce_register](fce_api.c.md#fce_register)
 
 Uses file-scope variables: `last_close_event`
 
+### fce_resolved
+
+```c
+static const char * fce_resolved(const char *path, char *buf)
+```
+
+Defined at lines 627 to 654.
+
+Resolve a path for the ignore-directory compare.
+
+A path resolves while it exists. A path that is gone, or not there yet, resolves through its parent with its own name appended, so a deleted file compares under its directory's resolved name. A path that resolves neither way compares as it is.
+
+Parameters:
+* `path`: absolute path
+* `buf`: MAXPATHLEN + 1 bytes for the resolved path
+
+Returns: buf, or path
+
+Calls: [strlcat](../../libatalk/compat/strlcpy.c.md#strlcat)
+
+Called by: [fce_init_ign_paths](fce_api.c.md#fce_init_ign_paths), [fce_register](fce_api.c.md#fce_register)
+
 ### fce_init_ign_paths
 
 ```c
 static void fce_init_ign_paths(const char *ignores, const char ***dest_array, bool is_directory)
 ```
 
-Defined at lines 629 to 668.
+Defined at lines 668 to 713.
 
 Split a comma-separated ignore option into a NULL-terminated array.
 
+A directory is stored resolved, through its parent when it does not exist yet, and without trailing slashes unless it is "/". A failed array allocation, or an option without entries, leaves it NULL, which ignores nothing; a failed entry copy drops that entry.
+
 Parameters:
 * `ignores`: fce ignore names or fce ignore directories option
-* `dest_array`: receives the allocated array
-* `is_directory`: true for directory paths, copied up to MAXPATHLEN bytes
+* `dest_array`: receives the allocated array, or NULL
+* `is_directory`: true for directory paths
 
-Calls: [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [fce_resolved](fce_api.c.md#fce_resolved), [stripped_slashes_basename](../../libatalk/util/unix.c.md#stripped_slashes_basename)
 
 Called by: [fce_register](fce_api.c.md#fce_register)
 
@@ -182,11 +208,11 @@ Called by: [fce_register](fce_api.c.md#fce_register)
 int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char *oldpath)
 ```
 
-Defined at lines 687 to 769.
+Defined at lines 732 to 816.
 
 Send a file change event unless the options filter it out.
 
-An event passes when the fce events option lists it and a listener or a notify script exists. A base name in fce ignore names drops out, and so does a real path that starts with an fce ignore directories entry. Events that fce coalesce merges drop out too. With fce fmodwait set, an FCE_FILE_MODIFY event waits fce fmodwait seconds, and repeats for the same file merge.
+An event passes when the fce events option lists it and a listener or a notify script exists. A base name in fce ignore names drops out, and so does a path at or below an fce ignore directories entry, compared resolved, through its parent once it is gone. Events that fce coalesce merges drop out too. With fce fmodwait set, an FCE_FILE_MODIFY event waits fce fmodwait seconds, and repeats for the same file merge.
 
 Parameters:
 * `obj`: session object
@@ -196,9 +222,9 @@ Parameters:
 
 Returns: AFP_OK
 
-Calls: [basename_safe](../../libatalk/util/unix.c.md#basename_safe), [fce_handle_coalescation](fce_util.c.md#fce_handle_coalescation), [fce_init_ign_paths](fce_api.c.md#fce_init_ign_paths), [fce_initialize_history](fce_util.c.md#fce_initialize_history), [realpath_safe](../../libatalk/util/unix.c.md#realpath_safe), [save_close_event](fce_api.c.md#save_close_event), [send_fce_event](fce_api.c.md#send_fce_event)
+Calls: [basename_safe](../../libatalk/util/unix.c.md#basename_safe), [fce_handle_coalescation](fce_util.c.md#fce_handle_coalescation), [fce_init_ign_paths](fce_api.c.md#fce_init_ign_paths), [fce_initialize_history](fce_util.c.md#fce_initialize_history), [fce_resolved](fce_api.c.md#fce_resolved), [path_at_or_below](file.c.md#path_at_or_below), [save_close_event](fce_api.c.md#save_close_event), [send_fce_event](fce_api.c.md#send_fce_event)
 
-Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_logout](auth.c.md#afp_logout), [login](auth.c.md#login), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork)
+Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_logout](auth.c.md#afp_logout), [login](auth.c.md#login), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork)
 
 Uses file-scope variables: `fce_ev_enabled`, `fce_event_names`, `skip_directories`, `skip_files`, `udp_sockets`
 
@@ -208,7 +234,7 @@ Uses file-scope variables: `fce_ev_enabled`, `fce_event_names`, `skip_directorie
 static void check_saved_close_events(const AFPObj *obj)
 ```
 
-Defined at lines 776 to 790.
+Defined at lines 823 to 835.
 
 Send the held file modify event once the fce fmodwait delay passed.
 
@@ -227,7 +253,7 @@ Uses file-scope variables: `last_close_event`
 void fce_pending_events(const AFPObj *obj)
 ```
 
-Defined at lines 802 to 809.
+Defined at lines 847 to 854.
 
 Send a held file modify event whose delay passed.
 
@@ -238,7 +264,7 @@ Parameters:
 
 Calls: [check_saved_close_events](fce_api.c.md#check_saved_close_events)
 
-Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
+Called by: [afp_over_asp](afp_asp.c.md#afp_over_asp), [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 
 Uses file-scope variables: `udp_sockets`
 
@@ -248,7 +274,7 @@ Uses file-scope variables: `udp_sockets`
 int fce_add_udp_socket(const char *target)
 ```
 
-Defined at lines 821 to 834.
+Defined at lines 866 to 879.
 
 Add an FCE listener from the fce listener option.
 
@@ -269,7 +295,7 @@ Called by: [configinit](afp_config.c.md#configinit)
 int fce_set_events(const char *events)
 ```
 
-Defined at lines 846 to 882.
+Defined at lines 891 to 930.
 
 Set the FCE event types to send from the fce events option.
 
@@ -278,7 +304,7 @@ The option lists fmod, fdel, ddel, fcre, dcre, fmov, dmov, login, and logout, se
 Parameters:
 * `events`: option value
 
-Returns: AFP_OK, or AFPERR_PARAM for NULL
+Returns: AFP_OK, AFPERR_PARAM for NULL, or AFPERR_MISC when the copy fails
 
 Called by: [configinit](afp_config.c.md#configinit)
 

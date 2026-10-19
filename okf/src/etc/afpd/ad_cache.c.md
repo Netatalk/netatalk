@@ -5,7 +5,7 @@ description: "AppleDouble metadata and resource fork caching in the directory ca
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ad_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -109,7 +109,7 @@ The buffer leaves the resource fork LRU list, and its size, dcache_rlen, comes o
 Parameters:
 * `entry`: dircache entry with a cached resource fork
 
-Called by: [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [dir_free](directory.c.md#dir_free), [dir_modify](directory.c.md#dir_modify), [read_fork](fork.c.md#read_fork), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_store_from_fd](ad_cache.c.md#rfork_cache_store_from_fd)
+Called by: [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [dir_free](directory.c.md#dir_free), [dir_modify](directory.c.md#dir_modify), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_store_from_fd](ad_cache.c.md#rfork_cache_store_from_fd)
 
 Uses file-scope variables: `rfork_cache_used` in [etc/afpd/dircache.c](dircache.c.md), `rfork_lru_count` in [etc/afpd/dircache.c](dircache.c.md)
 
@@ -140,11 +140,11 @@ Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircach
 int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
 ```
 
-Defined at lines 411 to 509.
+Defined at lines 413 to 519.
 
 Cache the entire resource fork of a file by reading it from the open fork.
 
-The ad_read call covers every storage format, so the call reads dcache_rlen bytes through it. It refuses a closed resource fork, an empty or unknown length, and a fork above rfork_max_entry_size. It also refuses while the cache holds over 2 times its budget. Older buffers leave first when the budget lacks room. A short read means the fork changed since its metadata entered the cache, so the call invalidates the cached metadata as well.
+The ad_read call covers every storage format, so the call reads dcache_rlen bytes through it. It refuses a closed resource fork, an empty or unknown length, a fork above rfork_max_entry_size, a fork another session has open for writing, and a symlink's, whose opens no lock shows. It also refuses while the cache holds over 2 times its budget. Older buffers leave first when the budget lacks room. A short read means the fork changed since its metadata entered the cache, so the call invalidates the cached metadata as well.
 
 Parameters:
 * `entry`: dircache entry of the file
@@ -153,7 +153,7 @@ Parameters:
 
 Returns: 0, or -1 when the fork is not cacheable or the read fell short
 
-Calls: [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [enqueue](../../libatalk/util/queue.c.md#enqueue), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
+Calls: [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [enqueue](../../libatalk/util/queue.c.md#enqueue), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
 
 Called by: [read_fork](fork.c.md#read_fork)
 

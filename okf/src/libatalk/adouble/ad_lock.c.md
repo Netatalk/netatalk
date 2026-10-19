@@ -5,7 +5,7 @@ description: "Byte range and share mode locks on AppleDouble forks."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_lock.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -274,7 +274,7 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 static int testlock(const struct ad_fd *adf, off_t off, off_t len)
 ```
 
-Defined at lines 495 to 525.
+Defined at lines 495 to 526.
 
 Test a lock.
 
@@ -300,7 +300,7 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 static const char * locktypetostr(int type)
 ```
 
-Defined at lines 535 to 584.
+Defined at lines 536 to 585.
 
 Render an ADLOCK_* type mask as text, for log output.
 
@@ -319,7 +319,7 @@ Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_tmplock](ad_lock.c.md#ad_tmplock
 int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len, int fork)
 ```
 
-Defined at lines 620 to 816.
+Defined at lines 621 to 817.
 
 Take or release a byte-range or share-mode lock on a fork for one AFP fork.
 
@@ -349,7 +349,7 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len, int fork)
 ```
 
-Defined at lines 840 to 910.
+Defined at lines 841 to 911.
 
 Take or release a temporary lock that the lock array does not record.
 
@@ -375,7 +375,7 @@ Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf]
 void ad_unlock(struct adouble *ad, const int fork)
 ```
 
-Defined at lines 919 to 932.
+Defined at lines 920 to 933.
 
 Release every lock one fork holds on the data and resource forks of an AppleDouble.
 
@@ -385,7 +385,7 @@ Parameters:
 
 Calls: [adf_unlock](ad_lock.c.md#adf_unlock)
 
-Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
+Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 
 ### ad_testlock
 
@@ -393,7 +393,7 @@ Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 int ad_testlock(struct adouble *ad, int eid, const off_t off)
 ```
 
-Defined at lines 944 to 962.
+Defined at lines 945 to 963.
 
 Test for a share mode lock.
 
@@ -425,7 +425,7 @@ Tests whether another process holds a conflicting lock on [off, off+len) of fork
 Key behaviours:
 
 * No adf_lock[] array scan — kernel F_GETLK only (no self-report).
-* Always probes with an explicit F_WRLCK. A write probe conflicts with a peer's read or write lock, so it sees the F_RDLCK share-mode band entries. F_GETLK only tests, so the probe type is independent of the fd's O_RDWR/O_RDONLY mode (cf. [testlock()](ad_lock.c.md#testlock), which picks F_RDLCK on an RO fd and would miss the band).
+* Always probes with an explicit F_WRLCK. A write probe conflicts with a peer's read or write lock, so it sees the F_RDLCK share-mode band entries. F_GETLK only tests, so the probe type is independent of the fd's O_RDWR/O_RDONLY mode, as in [testlock()](ad_lock.c.md#testlock).
 * eid dispatch: ADEID_DFORK uses the data fd at the literal offset, which also covers the whole share-mode band (OPEN, DENY and RSRC mirrors), since the band lives on the data fd via [rf2off()](ad_lock.c.md#rf2off). ADEID_RFORK uses the resource fork's own fd (ad_rfp) at off + [ad_getentryoff()](ad_open.c.md#ad_getentryoff), matching [ad_lock()](ad_lock.c.md#ad_lock)'s rfork non-FILELOCK branch. Band offsets are never passed with ADEID_RFORK; a band offset is recognised as off >= AD_FILELOCK_BASE.
 * Zone clamp on data-zone requests only (off < AD_FILELOCK_BASE): a len == 0 ("whole data zone") or over-long request is bounded to the data zone, never a POSIX l_len == 0 ("to infinity") that would sweep the share-mode band. An explicit band probe (off >= AD_FILELOCK_BASE) passes through unclamped.
 
@@ -439,7 +439,7 @@ Returns: 1 = a conflicting lock exists (incl. F_GETLK EACCES/EAGAIN, reported as
 
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff), [set_lock](ad_lock.c.md#set_lock), [shmdstrfromoff](ad_lock.c.md#shmdstrfromoff)
 
-Called by: [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks)
+Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd)
 
 ### ad_testlock_whole
 
@@ -490,7 +490,7 @@ Returns: bitflags ATTRBIT_DOPEN | ATTRBIT_ROPEN if other process has fork of fil
 
 Calls: [testlock](ad_lock.c.md#testlock)
 
-Called by: [ad_open](ad_open.c.md#ad_open), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
+Called by: [ad_open](ad_open.c.md#ad_open)
 
 # Macros
 

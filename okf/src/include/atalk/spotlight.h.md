@@ -5,7 +5,7 @@ description: "Spotlight query types, backend callbacks and RPC interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/spotlight.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,6 +24,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/afpd/directory.c](../../etc/afpd/directory.c.md)
 * [etc/afpd/file.c](../../etc/afpd/file.c.md)
 * [etc/afpd/filedir.c](../../etc/afpd/filedir.c.md)
+* [etc/afpd/fork.c](../../etc/afpd/fork.c.md)
 * [etc/afpd/ofork.c](../../etc/afpd/ofork.c.md)
 * [etc/afpd/spotlight.c](../../etc/afpd/spotlight.c.md)
 * [etc/afpd/spotlight_marshalling.c](../../etc/afpd/spotlight_marshalling.c.md)

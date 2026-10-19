@@ -5,7 +5,7 @@ description: "File change event types, registration and notification interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/fce_api.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -13,6 +13,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 # Included by
 
 * [bin/fce/fce.c](../../bin/fce/fce.c.md)
+* [etc/afpd/afp_asp.c](../../etc/afpd/afp_asp.c.md)
 * [etc/afpd/afp_config.c](../../etc/afpd/afp_config.c.md)
 * [etc/afpd/afp_dsi.c](../../etc/afpd/afp_dsi.c.md)
 * [etc/afpd/afp_options.c](../../etc/afpd/afp_options.c.md)
@@ -23,5 +24,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/afpd/fce_util.c](../../etc/afpd/fce_util.c.md)
 * [etc/afpd/file.c](../../etc/afpd/file.c.md)
 * [etc/afpd/filedir.c](../../etc/afpd/filedir.c.md)
+* [etc/afpd/fork.c](../../etc/afpd/fork.c.md)
 * [etc/afpd/ofork.c](../../etc/afpd/ofork.c.md)
 * [etc/afpd/volume.c](../../etc/afpd/volume.c.md)

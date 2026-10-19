@@ -5,7 +5,7 @@ description: "AFP server options, session state and transport callback types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/globals.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -91,13 +91,13 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 void afp_options_init(struct afp_options *)
 ```
 
-Declared at include/atalk/globals.h line 251; no definition in the scanned sources.
+Declared at include/atalk/globals.h line 249; no definition in the scanned sources.
 
 # Types
 
 ### struct AFPObj
 
-Defined at line 193.
+Defined at line 197.
 * `char * cmdlineconfigfile`
 * `int cmdlineflags`
 * `int proto`

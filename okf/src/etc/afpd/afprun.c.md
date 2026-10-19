@@ -5,7 +5,7 @@ description: "Shell command execution as the session user for preexec, postexec,
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afprun.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -96,7 +96,7 @@ Defined at lines 299 to 429.
 
 Run a shell command as the euid of the caller and wait for its exit status.
 
-The child runs the command through /bin/sh from the root directory, with root dropped permanently and descriptors 3 to 255 closed. SIGCHLD keeps its default action until the wait ends, because the session handler would reap the child first. A child that fails before the command runs uses an exit status between 80 and 83.
+The child runs the command through /bin/sh from the root directory, with root dropped permanently and descriptors 3 to 255 closed. SIGCHLD takes its default action, without SA_NOCLDWAIT, until the wait ends, because the session's disposition would reap the child first. A child that fails before the command runs uses an exit status between 80 and 83.
 
 Parameters:
 * `cmd`: shell command line
@@ -118,7 +118,7 @@ Defined at lines 441 to 498.
 
 Start a shell command as the euid of the caller without waiting for it.
 
-The child runs the command like afprun but keeps the standard output of afpd. It closes the descriptors from 3 to the open file limit. The SIGCHLD handler of the session reaps it.
+The child runs the command like afprun but keeps the standard output of afpd. It closes the descriptors from 3 to the open file limit. The session's SIGCHLD disposition reaps it.
 
 Parameters:
 * `cmd`: shell command line

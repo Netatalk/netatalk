@@ -1,3 +1,3 @@
 # src/include
 
-* [atalk](atalk.md) - 45 files, 32 functions. Files in [atalk/](atalk/).
+* [atalk](atalk.md) - 45 files, 33 functions. Files in [atalk/](atalk/).

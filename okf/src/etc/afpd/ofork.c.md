@@ -5,7 +5,7 @@ description: "Open fork table of a session."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ofork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,6 +24,8 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [desktop.h](desktop.h.md)
 * [dircache.h](dircache.h.md)
 * [directory.h](directory.h.md)
+* [file.h](file.h.md)
+* [filedir.h](filedir.h.md)
 * [fork.h](fork.h.md)
 * [virtual_icon.h](virtual_icon.h.md)
 * [volume.h](volume.h.md)
@@ -37,7 +39,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void of_mix_add(struct of_mix *mix, const struct ofork *of)
 ```
 
-Defined at lines 93 to 99.
+Defined at lines 95 to 101.
 
 Count one fork into its fork and access bucket.
 
@@ -53,7 +55,7 @@ Called by: [of_breakdown](ofork.c.md#of_breakdown), [of_close_sweep](ofork.c.md#
 static const char * of_mix_str(const struct of_mix *mix, char *buf, size_t len)
 ```
 
-Defined at lines 110 to 132.
+Defined at lines 112 to 134.
 
 Format the non-empty buckets, e.g.
 
@@ -74,7 +76,7 @@ Called by: [of_breakdown](ofork.c.md#of_breakdown), [of_close_sweep](ofork.c.md#
 const char * of_breakdown(char *buf, size_t len)
 ```
 
-Defined at lines 144 to 155. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 146 to 157. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Format the live forks by fork and access mode.
 
@@ -98,7 +100,7 @@ Uses file-scope variables: `nforks`, `oforks`
 static const char * of_usage_str(char *buf, size_t len)
 ```
 
-Defined at lines 165 to 180.
+Defined at lines 167 to 182.
 
 Format fork-table and descriptor usage for a log line.
 
@@ -120,7 +122,7 @@ Uses file-scope variables: `nforks`, `of_curr_forks`, `of_opens`, `of_peak_forks
 static unsigned long hashfn(const struct file_key *key)
 ```
 
-Defined at lines 190 to 193.
+Defined at lines 192 to 195.
 
 Bucket of the open fork hash table for a file.
 
@@ -131,7 +133,7 @@ Parameters:
 
 Returns: the bucket index
 
-Called by: [of_findname](ofork.c.md#of_findname), [of_findnameat](ofork.c.md#of_findnameat), [of_hash](ofork.c.md#of_hash), [of_rename](ofork.c.md#of_rename)
+Called by: [of_findnameat](ofork.c.md#of_findnameat), [of_hash](ofork.c.md#of_hash), [of_rename](ofork.c.md#of_rename), [of_rfork_changed](ofork.c.md#of_rfork_changed)
 
 ### of_hash
 
@@ -139,7 +141,7 @@ Called by: [of_findname](ofork.c.md#of_findname), [of_findnameat](ofork.c.md#of_
 static void of_hash(struct ofork *of)
 ```
 
-Defined at lines 200 to 211.
+Defined at lines 202 to 213.
 
 Insert an open fork at the head of its hash bucket.
 
@@ -148,7 +150,7 @@ Parameters:
 
 Calls: [hashfn](ofork.c.md#hashfn)
 
-Called by: [of_alloc](ofork.c.md#of_alloc)
+Called by: [of_alloc](ofork.c.md#of_alloc), [of_rekey](ofork.c.md#of_rekey)
 
 Uses file-scope variables: `ofork_table`
 
@@ -158,7 +160,7 @@ Uses file-scope variables: `ofork_table`
 static void of_unhash(struct ofork *of)
 ```
 
-Defined at lines 220 to 232.
+Defined at lines 222 to 234.
 
 Take an open fork out of its hash bucket.
 
@@ -167,7 +169,25 @@ A second call does nothing, because the first one clears the links.
 Parameters:
 * `of`: open fork
 
-Called by: [of_dealloc](ofork.c.md#of_dealloc)
+Called by: [of_closefork](ofork.c.md#of_closefork), [of_dealloc](ofork.c.md#of_dealloc), [of_rekey](ofork.c.md#of_rekey)
+
+### of_rekey
+
+```c
+void of_rekey(struct ofork *of, const struct stat *st)
+```
+
+Defined at lines 243 to 249. Declared in [etc/afpd/fork.h](fork.h.md).
+
+Give an open fork the device and inode of st, in the hash bucket they select.
+
+Parameters:
+* `of`: open fork
+* `st`: stat of the file the fork opened
+
+Calls: [of_hash](ofork.c.md#of_hash), [of_unhash](ofork.c.md#of_unhash)
+
+Called by: [materialize_virtual_icon](fork.c.md#materialize_virtual_icon)
 
 ### of_freeq_empty
 
@@ -175,7 +195,7 @@ Called by: [of_dealloc](ofork.c.md#of_dealloc)
 static bool of_freeq_empty(void)
 ```
 
-Defined at lines 239 to 242.
+Defined at lines 256 to 259.
 
 Whether the free slot queue holds no slot.
 
@@ -191,7 +211,7 @@ Uses file-scope variables: `of_freeq_head`, `of_freeq_tail`
 static void of_freeq_push(uint16_t slot)
 ```
 
-Defined at lines 252 to 263.
+Defined at lines 269 to 280.
 
 Return a fork slot to the tail of the free slot queue.
 
@@ -212,7 +232,7 @@ Uses file-scope variables: `of_freeq`, `of_freeq_cap`, `of_freeq_tail`
 static int of_freeq_pop(void)
 ```
 
-Defined at lines 270 to 283.
+Defined at lines 287 to 300.
 
 Take the oldest free fork slot from the head of the queue.
 
@@ -230,7 +250,7 @@ Uses file-scope variables: `of_freeq`, `of_freeq_cap`, `of_freeq_head`
 void of_pforkdesc(FILE *)
 ```
 
-Defined at lines 290 to 303. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 307 to 320. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Print the reference number and name of every open fork.
 
@@ -247,7 +267,7 @@ Uses file-scope variables: `nforks`, `oforks`
 int of_flush(const struct vol *)
 ```
 
-Defined at lines 313 to 329. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 330 to 346. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Flush every open fork of a volume through flushfork.
 
@@ -264,29 +284,71 @@ Called by: [afp_flush](fork.c.md#afp_flush)
 
 Uses file-scope variables: `nforks`, `oforks`
 
+### of_path_holds
+
+```c
+static int of_path_holds(const struct ofork *of, const char *path, struct stat *st)
+```
+
+Defined at lines 357 to 363.
+
+Whether a stat of path, by the volume's symlink rule, finds an open fork's file.
+
+Parameters:
+* `of`: open fork
+* `path`: path to stat
+* `st`: receives the stat
+
+Returns: 1 when the stat finds the fork's device and inode, else 0
+
+Calls: [ostat](../../libatalk/util/unix.c.md#ostat)
+
+Called by: [of_closefork](ofork.c.md#of_closefork), [of_name_holds](ofork.c.md#of_name_holds)
+
+### of_name_holds
+
+```c
+static int of_name_holds(const struct ofork *of, const struct dir *dir)
+```
+
+Defined at lines 373 to 384.
+
+Whether an open fork's name on disk still names its file in dir.
+
+Parameters:
+* `of`: open fork
+* `dir`: the fork's directory, or NULL
+
+Returns: 1 when a stat of the name, by the volume's symlink rule, finds the fork's device and inode, else 0
+
+Calls: [fullpath_join](directory.c.md#fullpath_join), [of_path_holds](ofork.c.md#of_path_holds)
+
+Called by: [of_hint_siblings](ofork.c.md#of_hint_siblings), [of_rename](ofork.c.md#of_rename)
+
 ### of_rename
 
 ```c
-int of_rename(const struct vol *, struct ofork *, struct dir *, const char *, struct dir *, const char *)
+int of_rename(const struct vol *, struct ofork *, struct dir *, const char *, struct dir *, const char *, const char *)
 ```
 
-Defined at lines 346 to 384. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 403 to 452. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Point the open forks of a renamed file at its new name and directory.
 
-Every fork with the volume, parent directory, device, and inode of s_of follows. The name in the shared AppleDouble changes once, and each fork moves to newdir.
+Every fork with the volume, parent directory, device, and inode of s_of that records the old name, or a name that no longer holds the file, follows: another name of a hard link keeps its forks. The name in the shared AppleDouble changes once, and each fork moves to newdir.
 
 Parameters:
 * `vol`: volume of the file
 * `s_of`: one open fork of the file, or NULL when none is open
 * `olddir`: previous parent directory
-* `oldpath`: unused
+* `oldupath`: previous name on disk
 * `newdir`: new parent directory
 * `newpath`: new name
+* `newupath`: new name on disk, recorded in each fork
 
 Returns: AFP_OK, or AFPERR_MISC when strdup fails
 
-Calls: [hashfn](ofork.c.md#hashfn)
+Calls: [hashfn](ofork.c.md#hashfn), [of_name_holds](ofork.c.md#of_name_holds)
 
 Called by: [afp_exchangefiles](file.c.md#afp_exchangefiles), [moveandrename](filedir.c.md#moveandrename)
 
@@ -295,10 +357,10 @@ Uses file-scope variables: `ofork_table`
 ### of_alloc
 
 ```c
-struct ofork * of_alloc(struct vol *, struct dir *, char *, uint16_t *, const int, struct adouble *, struct stat *)
+struct ofork * of_alloc(struct vol *, struct dir *, char *, const char *, uint16_t *, const int, struct adouble *, struct stat *)
 ```
 
-Defined at lines 406 to 537. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 475 to 611. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Allocate an open fork slot and its reference number.
 
@@ -308,6 +370,7 @@ Parameters:
 * `vol`: volume of the file
 * `dir`: parent directory
 * `path`: file name, for a new AppleDouble
+* `upath`: file name on disk, recorded in the fork
 * `ofrefnum`: receives the reference number
 * `eid`: ADEID_DFORK or ADEID_RFORK
 * `ad`: AppleDouble of another fork of the file, or NULL
@@ -327,7 +390,7 @@ Uses file-scope variables: `nforks`, `of_curr_forks`, `of_fdlimit`, `of_freeq`, 
 struct ofork * of_find(const uint16_t)
 ```
 
-Defined at lines 548 to 569. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 622 to 643. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Open fork with a reference number.
 
@@ -348,7 +411,7 @@ Uses file-scope variables: `nforks`, `oforks`
 int of_stat(const struct vol *vol, struct path *)
 ```
 
-Defined at lines 582 to 595. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 656 to 669. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Stat path->u_name in the working directory and record the outcome in path.
 
@@ -362,27 +425,9 @@ Returns: 0, or -1 when the stat failed
 
 Calls: [ostat](../../libatalk/util/unix.c.md#ostat)
 
-Called by: [afp_createdir](directory.c.md#afp_createdir), [afp_opendir](directory.c.md#afp_opendir), [afp_resolveid](file.c.md#afp_resolveid), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [enumerate](enumerate.c.md#enumerate), [of_findname](ofork.c.md#of_findname), [of_statdir](ofork.c.md#of_statdir), [setfilparams](file.c.md#setfilparams), [setfilunixmode](unix.c.md#setfilunixmode)
+Called by: [afp_createdir](directory.c.md#afp_createdir), [afp_opendir](directory.c.md#afp_opendir), [afp_resolveid](file.c.md#afp_resolveid), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [enumerate](enumerate.c.md#enumerate), [of_statdir](ofork.c.md#of_statdir), [setfilparams](file.c.md#setfilparams), [setfilunixmode](unix.c.md#setfilunixmode)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
-
-### of_fstatat
-
-```c
-int of_fstatat(int dirfd, struct path *path)
-```
-
-Defined at lines 605 to 616. Declared in [etc/afpd/fork.h](fork.h.md).
-
-Stat path->u_name relative to dirfd without following a symlink.
-
-Parameters:
-* `dirfd`: directory descriptor that fstatat takes as is, AT_FDCWD for the working directory
-* `path`: path whose stat to fill, with st_errno and st_valid set
-
-Returns: 0, or -1 when the stat failed
-
-Called by: [of_findnameat](ofork.c.md#of_findnameat)
 
 ### of_statdir
 
@@ -390,7 +435,7 @@ Called by: [of_findnameat](ofork.c.md#of_findnameat)
 int of_statdir(struct vol *vol, struct path *)
 ```
 
-Defined at lines 631 to 676. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 684 to 729. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Stat the directory that path names, also when it is the working directory.
 
@@ -414,11 +459,9 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 struct ofork * of_findname(const struct vol *vol, struct path *)
 ```
 
-Defined at lines 688 to 711. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 740 to 743. Declared in [etc/afpd/fork.h](fork.h.md).
 
-Open fork of the file that path names, matched by device and inode.
-
-A path without a valid stat gets one through of_stat first.
+Open fork of the file that path names in the working directory, matched by device and inode.
 
 Parameters:
 * `vol`: volume of the path
@@ -426,33 +469,32 @@ Parameters:
 
 Returns: an open fork of the file, or NULL when none is open or the stat failed
 
-Calls: [hashfn](ofork.c.md#hashfn), [of_stat](ofork.c.md#of_stat)
+Calls: [of_findnameat](ofork.c.md#of_findnameat)
 
-Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_getcomment](desktop.c.md#ad_getcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [adl_lkup](catsearch.c.md#adl_lkup), [afp_copyfile](file.c.md#afp_copyfile), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_openfork](fork.c.md#afp_openfork), [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_setextattr](extattrs.c.md#afp_setextattr), [check_delete_inhibit](file.c.md#check_delete_inhibit), [find_adouble](file.c.md#find_adouble), [moveandrename](filedir.c.md#moveandrename), [of_ad](ofork.c.md#of_ad), [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [of_get_locks](ofork.c.md#of_get_locks)
-
-Uses file-scope variables: `ofork_table`
+Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_getcomment](desktop.c.md#ad_getcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [adl_lkup](catsearch.c.md#adl_lkup), [afp_copyfile](file.c.md#afp_copyfile), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_openfork](fork.c.md#afp_openfork), [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_setextattr](extattrs.c.md#afp_setextattr), [find_adouble](file.c.md#find_adouble), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [of_ad](ofork.c.md#of_ad), [of_close_inode_forks](ofork.c.md#of_close_inode_forks)
 
 ### of_findnameat
 
 ```c
-struct ofork * of_findnameat(int dirfd, struct path *path)
+struct ofork * of_findnameat(const struct vol *vol, int dirfd, struct path *path)
 ```
 
-Defined at lines 724 to 747. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 758 to 787. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Open fork of the file that path names relative to dirfd, matched by device and inode.
 
-A path without a valid stat gets one through of_fstatat first.
+A path without a valid stat gets one first, following symlinks as the volume does: forks are keyed by that stat.
 
 Parameters:
-* `dirfd`: directory descriptor that fstatat takes as is
+* `vol`: volume of the path
+* `dirfd`: directory descriptor, -1 for the working directory
 * `path`: path of the file, its stat filled when missing
 
 Returns: an open fork of the file, or NULL when none is open or the stat failed
 
-Calls: [hashfn](ofork.c.md#hashfn), [of_fstatat](ofork.c.md#of_fstatat)
+Calls: [hashfn](ofork.c.md#hashfn), [ostatat](../../libatalk/util/unix.c.md#ostatat)
 
-Called by: [check_delete_inhibit](file.c.md#check_delete_inhibit), [moveandrename](filedir.c.md#moveandrename), [of_get_locks](ofork.c.md#of_get_locks)
+Called by: [check_delete_inhibit](file.c.md#check_delete_inhibit), [moveandrename](filedir.c.md#moveandrename), [of_findname](ofork.c.md#of_findname), [of_get_locks](ofork.c.md#of_get_locks)
 
 Uses file-scope variables: `ofork_table`
 
@@ -462,7 +504,7 @@ Uses file-scope variables: `ofork_table`
 int of_delete_blocked(const struct ofork *of, uint16_t *band, int *content)
 ```
 
-Defined at lines 772 to 810. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 812 to 850. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Does this child hold a delete-blocking claim on the fork's file?
 
@@ -487,7 +529,7 @@ Mentioned in the documentation of: [of_close_inode_forks](ofork.c.md#of_close_in
 void of_close_inode_forks(const AFPObj *obj, const struct vol *vol, struct path *path)
 ```
 
-Defined at lines 829 to 868. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 869 to 914. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close every fork this child holds on path's inode.
 
@@ -508,7 +550,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete)
 int of_get_locks(const struct vol *vol, int dirfd, struct path *path, int df_get, off_t df_off, off_t df_len, int rf_get, off_t rf_off, off_t rf_len, uint16_t band_request, int try_root, int *df_locked, int *rf_locked, uint16_t *band_held)
 ```
 
-Defined at lines 909 to 1151. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 955 to 1197. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Conflict GET (F_GETLK only): read another holder's locks on a file.
 
@@ -534,7 +576,7 @@ Parameters:
 
 Returns: OF_LOCKS_OK (0) outputs valid (all 0 == nothing locked) OF_LOCKS_NOENT (1) target absent; outputs stay zeroed OF_LOCKS_ERROR(-1) lock state indeterminate -> caller must fail closed Outputs are zeroed on entry and only populated on OF_LOCKS_OK, so a caller that ignores the return still reads zeros, never stale data - but the return MUST be checked (zeros do not mean "no locks").
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_openat](../../libatalk/adouble/ad_open.c.md#ad_openat), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [ad_testlock_whole](../../libatalk/adouble/ad_lock.c.md#ad_testlock_whole), [become_root](../../libatalk/util/unix.c.md#become_root), [of_findname](ofork.c.md#of_findname), [of_findnameat](ofork.c.md#of_findnameat), [unbecome_root](../../libatalk/util/unix.c.md#unbecome_root)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_openat](../../libatalk/adouble/ad_open.c.md#ad_openat), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [ad_testlock_whole](../../libatalk/adouble/ad_lock.c.md#ad_testlock_whole), [become_root](../../libatalk/util/unix.c.md#become_root), [of_findnameat](ofork.c.md#of_findnameat), [unbecome_root](../../libatalk/util/unix.c.md#unbecome_root)
 
 Called by: [deletefile](file.c.md#deletefile)
 
@@ -544,7 +586,7 @@ Called by: [deletefile](file.c.md#deletefile)
 void of_dealloc(struct ofork *)
 ```
 
-Defined at lines 1162 to 1196. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1208 to 1243. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Free an open fork and return its slot to the free slot queue.
 
@@ -565,7 +607,7 @@ Uses file-scope variables: `nforks`, `of_curr_forks`, `of_fork_level`, `oforks`
 void of_log_usage(int level, const char *event)
 ```
 
-Defined at lines 1207 to 1212. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1254 to 1259. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Log fork-table and descriptor usage at a session event.
 
@@ -585,7 +627,7 @@ Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close), [afp_dsi_die](afp_dsi.c.
 void of_log_nfile(const char *name, int err)
 ```
 
-Defined at lines 1220 to 1228. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1267 to 1275. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Log an open refused because descriptors ran out.
 
@@ -605,7 +647,7 @@ Uses file-scope variables: `of_nfile_refusals`
 void of_note_open(int newfd)
 ```
 
-Defined at lines 1239 to 1254. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1286 to 1301. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Warn as fork or descriptor use climbs toward its limit.
 
@@ -620,17 +662,102 @@ Called by: [afp_openfork](fork.c.md#afp_openfork)
 
 Uses file-scope variables: `nforks`, `of_curr_forks`, `of_fd_level`, `of_fdlimit`, `of_fork_level`, `of_opens`
 
+### of_dircache_entry
+
+```c
+struct dir * of_dircache_entry(const struct ofork *ofork)
+```
+
+Defined at lines 1313 to 1325. Declared in [etc/afpd/fork.h](fork.h.md).
+
+The dircache entry of an open fork's file, or NULL.
+
+The entry under the fork's name on disk counts only while it describes the open file: another session's rename or save can put a different file under that name.
+
+Parameters:
+* `ofork`: open fork
+
+Returns: the entry whose inode is the open file's, or NULL
+
+Calls: [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup)
+
+Called by: [fork_modified](fork.c.md#fork_modified), [of_rfork_changed](ofork.c.md#of_rfork_changed), [read_fork](fork.c.md#read_fork)
+
+### of_rfork_changed
+
+```c
+void of_rfork_changed(const struct ofork *ofork)
+```
+
+Defined at lines 1336 to 1353. Declared in [etc/afpd/fork.h](fork.h.md).
+
+Drop the cached resource fork data of every open fork on ofork's adouble.
+
+The session's forks of one file share its adouble, and each name of a hard link has a dircache entry of its own.
+
+Parameters:
+* `ofork`: open fork whose resource fork changed
+
+Calls: [dir_modify](directory.c.md#dir_modify), [hashfn](ofork.c.md#hashfn), [of_dircache_entry](ofork.c.md#of_dircache_entry)
+
+Called by: [fork_modified](fork.c.md#fork_modified)
+
+Uses file-scope variables: `ofork_table`
+
+### of_hint_siblings
+
+```c
+void of_hint_siblings(const AFPObj *obj, const struct ofork *ofork, const struct dir *cached)
+```
+
+Defined at lines 1367 to 1387. Declared in [etc/afpd/fork.h](fork.h.md).
+
+Tell sibling sessions that an open fork's file has changed.
+
+The file's id is that of cached, the fork's dircache entry, when there is one, else the one its metadata records for the open file's device and inode, else the CNID database's for the name, while the name holds the fork's file.
+
+Parameters:
+* `obj`: session object
+* `ofork`: open fork whose file changed
+* `cached`: the fork's dircache entry, or NULL
+
+Calls: [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dirlookup](directory.c.md#dirlookup), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_name_holds](ofork.c.md#of_name_holds)
+
+Called by: [fork_modified](fork.c.md#fork_modified), [of_closefork](ofork.c.md#of_closefork)
+
+### of_rfork_held
+
+```c
+int of_rfork_held(const struct ofork *ofork, const char *forkpath)
+```
+
+Defined at lines 1401 to 1419. Declared in [etc/afpd/fork.h](fork.h.md).
+
+Whether the AppleDouble file under a fork's name holds the resource fork the fork's descriptor reads.
+
+Forks of one inode share an adouble, while each name of a hard link has an AppleDouble file of its own. A resource fork in an EA belongs to the data file.
+
+Parameters:
+* `ofork`: open fork that holds the resource fork
+* `forkpath`: path of the fork's name
+
+Returns: 1 when they are one file, else 0
+
+Called by: [of_closefork](ofork.c.md#of_closefork), [read_fork](fork.c.md#read_fork)
+
+Calls through [`adouble_fops::ad_path`](../../include/atalk/adouble.h.md#struct-adouble_fops): [ad_path](../../libatalk/adouble/ad_open.c.md#ad_path), [ad_path_osx](../../libatalk/adouble/ad_open.c.md#ad_path_osx)
+
 ### of_closefork
 
 ```c
 int of_closefork(const AFPObj *obj, struct ofork *ofork)
 ```
 
-Defined at lines 1270 to 1539. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1444 to 1714. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close an open fork and free it.
 
-A closed resource fork gets its length refreshed and, when dirty, its modification date stamped. A modified fork reports FCE and Spotlight events, refreshes its dircache entry, and sends a refresh hint to sibling afpd processes. Without HAVE_EAFD the call deletes an empty ._ resource fork that no other fork holds. It also deletes the file and CNID of an Icon file at the volume root whose resource fork holds no data.
+A closed resource fork gets its length refreshed and, when dirty, its modification date stamped. A modified fork sends a refresh hint to sibling afpd processes. The steps that go by the fork's name run only while the name holds the fork's file: a modified fork reports FCE and Spotlight events and refreshes its dircache entry. On a volume that is not read-only, without HAVE_EAFD, the call deletes the empty ._ resource fork of a regular file that no other fork holds while no other process has the file open. On a volume with 'legacy icon' that is not read-only, the close of a resource fork that is the session's last fork of a regular Icon file at the volume root also deletes the file, with its AppleDouble file and CNID, when its data fork is empty, its resource fork is a map without resources, or shorter than a header after the fork changed it or found a header in it at its open, no other process has the file open, and FPDelete's checks allow it; FCE and Spotlight hear of that as a deletion. Once that removal is chosen, the name's dircache entry goes, whether or not the file does.
 
 Parameters:
 * `obj`: session object
@@ -638,13 +765,13 @@ Parameters:
 
 Returns: 0, or -1 with errno set when ad_close failed
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_data_open](../../include/atalk/adouble.h.md#ad_data_open), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_openforks](../../libatalk/adouble/ad_lock.c.md#ad_openforks), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_unlock](../../libatalk/adouble/ad_lock.c.md#ad_unlock), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_modify](directory.c.md#dir_modify), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [fce_register](fce_api.c.md#fce_register), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [mtoupath](desktop.c.md#mtoupath), [of_dealloc](ofork.c.md#of_dealloc), [ostat](../../libatalk/util/unix.c.md#ostat), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_data_open](../../include/atalk/adouble.h.md#ad_data_open), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [ad_unlock](../../libatalk/adouble/ad_lock.c.md#ad_unlock), [check_delete_inhibit](file.c.md#check_delete_inhibit), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [deletefile](file.c.md#deletefile), [dir_modify](directory.c.md#dir_modify), [dir_offcnt_take](filedir.c.md#dir_offcnt_take), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [fce_register](fce_api.c.md#fce_register), [fullpath_join](directory.c.md#fullpath_join), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [of_dealloc](ofork.c.md#of_dealloc), [of_hint_siblings](ofork.c.md#of_hint_siblings), [of_path_holds](ofork.c.md#of_path_holds), [of_rfork_held](ofork.c.md#of_rfork_held), [of_unhash](ofork.c.md#of_unhash), [sl_index_event](spotlight.c.md#sl_index_event), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
 
 Called by: [afp_closefork](fork.c.md#afp_closefork), [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [of_close_sweep](ofork.c.md#of_close_sweep)
 
 Calls through [`adouble_fops::ad_path`](../../include/atalk/adouble.h.md#struct-adouble_fops): [ad_path](../../libatalk/adouble/ad_open.c.md#ad_path), [ad_path_osx](../../libatalk/adouble/ad_open.c.md#ad_path_osx)
 
-Mentioned in the documentation of: [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [of_close_sweep](ofork.c.md#of_close_sweep)
+Mentioned in the documentation of: [fork_modified](fork.c.md#fork_modified), [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [of_close_sweep](ofork.c.md#of_close_sweep)
 
 ### of_ad
 
@@ -652,7 +779,7 @@ Mentioned in the documentation of: [of_close_inode_forks](ofork.c.md#of_close_in
 struct adouble * of_ad(const struct vol *, struct path *, struct adouble *)
 ```
 
-Defined at lines 1551 to 1565. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1726 to 1740. Declared in [etc/afpd/fork.h](fork.h.md).
 
 AppleDouble to use for a file, shared with an open fork when there is one.
 
@@ -673,7 +800,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [getfilparams](file.c.md#getf
 static void of_close_sweep(const AFPObj *obj, const struct vol *vol, const char *who)
 ```
 
-Defined at lines 1578 to 1613.
+Defined at lines 1753 to 1788.
 
 Close every fork on `vol`, or every fork when `vol` is NULL.
 
@@ -696,7 +823,7 @@ Uses file-scope variables: `nforks`, `oforks`
 void of_closevol(const AFPObj *obj, const struct vol *vol)
 ```
 
-Defined at lines 1621 to 1624. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1796 to 1799. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close every open fork of a volume.
 
@@ -716,7 +843,7 @@ Mentioned in the documentation of: [of_close_inode_forks](ofork.c.md#of_close_in
 void of_close_all_forks(const AFPObj *obj)
 ```
 
-Defined at lines 1631 to 1634. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1806 to 1809. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close every open fork of the session.
 
@@ -731,7 +858,7 @@ Called by: [afp_logout](auth.c.md#afp_logout)
 
 ### struct of_mix
 
-Defined at line 83.
+Defined at line 85.
 * `int n`
 
 # Macros

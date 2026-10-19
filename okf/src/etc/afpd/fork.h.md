@@ -5,7 +5,7 @@ description: "Open fork state, byte range locking and AFP fork command handlers.
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -47,7 +47,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int fork_range_within(off_t offset, off_t length, off_t size)
 ```
 
-Defined at lines 62 to 66.
+Defined at lines 65 to 69.
 
 Check that [offset, offset + length) fits in size without overflow.
 
@@ -67,9 +67,11 @@ Defined at line 27.
 * `struct file_key key`
 * `struct adouble * of_ad`
 * `struct vol * of_vol`
+* `char * of_uname`: the file's name on disk
 * `cnid_t of_did`
 * `uint16_t of_refnum`
 * `int of_flags`
+* `int of_adflags`: ADFLAGS_DF/HF/RF this fork holds.
 * `const unsigned char * of_virtual_data`
 * `off_t of_virtual_len`
 * `struct ofork ** prevp`
@@ -84,7 +86,8 @@ Defined at line 27.
 * `AFPFORK_DATA`: open datafork
 * `AFPFORK_ERROR`: used to indicate an error in opening the fork
 * `AFPFORK_META`: open metadata
-* `AFPFORK_MODIFIED`: used in FCE for modified files
+* `AFPFORK_MODIFIED`: written or its length set since open
+* `AFPFORK_RFHEADER`: its resource fork held a header at open
 * `AFPFORK_RSRC`: open rsrcfork
 * `AFPFORK_VIRTUAL`: virtual file fork
 * Undocumented: `AFPFORK_ACCMASK`, `AFPFORK_ACCRD`, `AFPFORK_ACCWR`, `AFPFORK_DIRTY`, `OPENACC_DRD`, `OPENACC_DWR`, `OPENACC_RD`, `OPENACC_WR`, `OPENFORK_DATA`, `OPENFORK_RSCS`, `of_name`

@@ -5,7 +5,7 @@ description: "AppleDouble metadata, fork I/O and locking types and interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -87,7 +87,7 @@ Defined at lines 406 to 409.
 
 Tell whether the data fork holds a reference and a descriptor >= 0.
 
-Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
+Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 
 ### ad_meta_open
 
@@ -99,7 +99,7 @@ Defined at lines 412 to 415.
 
 Tell whether the metadata holds a reference and an open descriptor.
 
-Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf), [ad_open_rf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_rf_v2), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_getforkparams](../../etc/afpd/fork.c.md#afp_getforkparams), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [copyfile](../../etc/afpd/file.c.md#copyfile), [getforkparams](../../etc/afpd/fork.c.md#getforkparams)
+Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf), [ad_open_rf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_rf_v2), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_getforkparams](../../etc/afpd/fork.c.md#afp_getforkparams), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [copyfile](../../etc/afpd/file.c.md#copyfile), [getforkparams](../../etc/afpd/fork.c.md#getforkparams)
 
 ### ad_rsrc_open
 
@@ -111,7 +111,7 @@ Defined at lines 418 to 421.
 
 Tell whether the resource fork holds a reference and a descriptor.
 
-Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd)
+Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [read_fork](../../etc/afpd/fork.c.md#read_fork), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd)
 
 ### ad_meta_loaded
 
@@ -123,7 +123,7 @@ Defined at lines 424 to 429.
 
 Tell whether the header got read: a reference and no symlink.
 
-Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [getfilparams](../../etc/afpd/file.c.md#getfilparams)
+Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [getfilparams](../../etc/afpd/file.c.md#getfilparams), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings)
 
 ### fsetrsrcea
 
@@ -204,7 +204,7 @@ Defined at line 199.
 ### struct adouble_fops
 
 Defined at line 191.
-* `const char *(* ad_path`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_rf_ea), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork).
+* `const char *(* ad_path`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_rf_ea), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_rfork_held](../../etc/afpd/ofork.c.md#of_rfork_held).
 * `int(* ad_mkrf`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2).
 * `int(* ad_rebuild_header`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf).
 * `int(* ad_header_read`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_conv_v22ea_hf](../../libatalk/adouble/ad_conv.c.md#ad_conv_v22ea_hf), [ad_open_hf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_hf_ea), [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh).

@@ -5,7 +5,7 @@ description: "Netatalk utility functions: socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/socket.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -194,7 +194,7 @@ Called by: [dsi_tcp_init](../dsi/dsi_tcp.c.md#dsi_tcp_init)
 struct asev * asev_init(int max)
 ```
 
-Defined at lines 575 to 597.
+Defined at lines 575 to 595.
 
 Allocate an empty poll set with room for max descriptors.
 
@@ -202,6 +202,43 @@ Parameters:
 * `max`: capacity of the poll and data arrays
 
 Returns: the set, or NULL when an allocation fails
+
+Calls: [asev_free](socket.c.md#asev_free)
+
+Called by: [asev_renew](socket.c.md#asev_renew)
+
+### asev_free
+
+```c
+void asev_free(struct asev *sev)
+```
+
+Defined at lines 602 to 609.
+
+Free a poll set.
+
+Parameters:
+* `sev`: poll set, or NULL
+
+Called by: [asev_init](socket.c.md#asev_init), [asev_renew](socket.c.md#asev_renew)
+
+### asev_renew
+
+```c
+struct asev * asev_renew(struct asev *sev, int max)
+```
+
+Defined at lines 619 to 633.
+
+Replace a poll set by one with room for max descriptors beyond the entries it keeps, in their order.
+
+Parameters:
+* `sev`: poll set to replace and free, or NULL
+* `max`: room beyond the kept entries
+
+Returns: the new set, or NULL with sev unchanged
+
+Calls: [asev_free](socket.c.md#asev_free), [asev_init](socket.c.md#asev_init)
 
 Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sockets)
 
@@ -211,7 +248,7 @@ Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sock
 bool asev_add_fd(struct asev *asev, int fd, enum asev_fdtype fdtype, void *private, int protocol)
 ```
 
-Defined at lines 613 to 634.
+Defined at lines 649 to 670.
 
 Append a descriptor to a poll set, watched for POLLIN.
 
@@ -234,7 +271,7 @@ Called by: [init_listening_sockets](../../etc/afpd/main.c.md#init_listening_sock
 bool asev_del_fd(struct asev *asev, int fd)
 ```
 
-Defined at lines 645 to 692.
+Defined at lines 681 to 728.
 
 Remove a descriptor from a poll set, keeping the order of the others.
 
@@ -254,7 +291,7 @@ Called by: [child_handler](../../etc/afpd/main.c.md#child_handler), [main](../..
 int recv_fd(int fd, int nonblocking)
 ```
 
-Defined at lines 705 to 764.
+Defined at lines 741 to 800.
 
 Receive a fd on a suitable socket.
 
@@ -272,7 +309,7 @@ Called by: [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer
 int send_fd(int socket, int fd)
 ```
 
-Defined at lines 776 to 822.
+Defined at lines 812 to 858.
 
 Pass a descriptor over a Unix socket with SCM_RIGHTS.
 

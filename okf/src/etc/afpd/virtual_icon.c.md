@@ -5,7 +5,7 @@ description: "The virtual Icon file of a volume root."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/virtual_icon.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -94,7 +94,7 @@ Parameters:
 
 Returns: nonzero when the volume has a built icon resource fork
 
-Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_openfork](fork.c.md#afp_openfork), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams), [of_closefork](ofork.c.md#of_closefork)
+Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
 
 ### real_icon_exists
 
@@ -113,7 +113,7 @@ Parameters:
 
 Returns: nonzero when lstat finds VIRTUAL_ICON_NAME in the volume root
 
-Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams)
+Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon)
 
 ### is_virtual_icon_name
 
@@ -130,7 +130,30 @@ Parameters:
 
 Returns: nonzero for VIRTUAL_ICON_NAME
 
-Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_openfork](fork.c.md#afp_openfork), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [of_closefork](ofork.c.md#of_closefork)
+Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
+
+### is_virtual_icon
+
+```c
+int is_virtual_icon(const struct vol *vol, cnid_t did, const char *name)
+```
+
+Defined at lines 288 to 294.
+
+Tell whether a name in a folder is the virtual icon file.
+
+The volume root holds it while the volume serves a virtual icon and no real file takes the name.
+
+Parameters:
+* `vol`: volume
+* `did`: folder of the name, in network byte order
+* `name`: file name on disk
+
+Returns: nonzero for the virtual icon file
+
+Calls: [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+
+Called by: [afp_delete](filedir.c.md#afp_delete), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [moveandrename](filedir.c.md#moveandrename)
 
 ### virtual_icon_init
 
@@ -138,7 +161,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [afp_getfildirparams](filedir.
 void virtual_icon_init(struct vol *vol)
 ```
 
-Defined at lines 285 to 340.
+Defined at lines 304 to 359.
 
 Build the virtual icon of a volume from its legacy icon option.
 
@@ -159,7 +182,7 @@ Uses file-scope variables: `daemon_icon` in [etc/afpd/icon.c](icon.c.md), `daemo
 const unsigned char * virtual_icon_get_rfork(const struct vol *vol, size_t *outlen)
 ```
 
-Defined at lines 349 to 359.
+Defined at lines 368 to 378.
 
 Return the resource fork of the virtual icon file.
 
@@ -169,15 +192,15 @@ Parameters:
 
 Returns: the fork, or NULL without a virtual icon
 
-Called by: [afp_openfork](fork.c.md#afp_openfork), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon)
+Called by: [afp_openfork](fork.c.md#afp_openfork)
 
 ### virtual_icon_getfilparams
 
 ```c
-int virtual_icon_getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, char *buf, size_t *buflen)
+int virtual_icon_getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, uint16_t open_bit, char *buf, size_t *buflen)
 ```
 
-Defined at lines 377 to 527.
+Defined at lines 398 to 549.
 
 Build the AFP file parameters of the virtual icon file.
 
@@ -187,6 +210,7 @@ Parameters:
 * `obj`: session object
 * `vol`: volume
 * `bitmap`: file bitmap of the request
+* `open_bit`: ATTRBIT_DOPEN or ATTRBIT_ROPEN of the open fork the reply describes, or 0
 * `buf`: reply buffer
 * `buflen`: length of the parameters on return
 
@@ -194,7 +218,7 @@ Returns: AFP_OK, AFPERR_MISC without a virtual icon, or AFPERR_BITMAP for an unk
 
 Calls: [set_name](file.c.md#set_name)
 
-Called by: [afp_openfork](fork.c.md#afp_openfork), [enumerate](enumerate.c.md#enumerate), [getforkparams](fork.c.md#getforkparams), [virtual_icon_reply](filedir.c.md#virtual_icon_reply)
+Called by: [enumerate](enumerate.c.md#enumerate), [getforkparams](fork.c.md#getforkparams), [virtual_icon_reply](filedir.c.md#virtual_icon_reply)
 
 # Macros
 

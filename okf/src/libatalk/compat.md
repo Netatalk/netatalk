@@ -5,7 +5,7 @@ description: "4 files, 6 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/compat"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 # Files
@@ -21,7 +21,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 59 calls
+* [etc/afpd](../etc/afpd.md): 55 calls
 * [bin/afppasswd](../bin/afppasswd.md): 30 calls
 * [bin/nad](../bin/nad.md): 30 calls
 * [etc/uams](../etc/uams.md): 30 calls
@@ -41,8 +41,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 # Most called functions
 
 * [strlcpy](compat/strlcpy.c.md#strlcpy): 88 callers
-* [strnlen](compat/misc.c.md#strnlen): 64 callers
+* [strnlen](compat/misc.c.md#strnlen): 59 callers
 * [explicit_bzero](compat/explicit_bzero.c.md#explicit_bzero): 35 callers
-* [strlcat](compat/strlcpy.c.md#strlcat): 24 callers
+* [strlcat](compat/strlcpy.c.md#strlcat): 25 callers
 * [asprintf](compat/misc.c.md#asprintf): 21 callers
 * [vasprintf](compat/misc.c.md#vasprintf): 4 callers

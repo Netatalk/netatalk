@@ -5,7 +5,7 @@ description: "The master afpd: startup, listeners, session children, and shutdow
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/main.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -57,11 +57,11 @@ Called by: [main](main.c.md#main), [master_out_of_fds](main.c.md#master_out_of_f
 static bool init_listening_sockets(const AFPObj *dsiconfig, const AFPObj *aspconfig)
 ```
 
-Defined at lines 90 to 121.
+Defined at lines 92 to 126.
 
 Allocate the event set of the master afpd and add the listening sockets.
 
-The set has room for the connection limit, every [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener, and ASEV_THRESHHOLD more descriptors. Each call allocates a new set.
+Each call allocates a new set that keeps the entries of the set it replaces, on a reload the sessions' IPC sockets and the stats socket, with room for the connection limit, every [DSI](../../include/atalk/dsi.h.md#struct-dsi) listener, and ASEV_THRESHHOLD more descriptors.
 
 Parameters:
 * `dsiconfig`: server object with the [DSI](../../include/atalk/dsi.h.md#struct-dsi) listeners
@@ -69,7 +69,7 @@ Parameters:
 
 Returns: true, or false when the allocation or an add fails
 
-Calls: [asev_add_fd](../../libatalk/util/socket.c.md#asev_add_fd), [asev_init](../../libatalk/util/socket.c.md#asev_init)
+Calls: [asev_add_fd](../../libatalk/util/socket.c.md#asev_add_fd), [asev_renew](../../libatalk/util/socket.c.md#asev_renew)
 
 Called by: [main](main.c.md#main)
 
@@ -79,7 +79,7 @@ Called by: [main](main.c.md#main)
 static bool reset_listening_sockets(const AFPObj *dsiconfig, const AFPObj *aspconfig)
 ```
 
-Defined at lines 133 to 155.
+Defined at lines 138 to 160.
 
 Remove the listening sockets from the event set of the master afpd.
 
@@ -101,7 +101,7 @@ Called by: [main](main.c.md#main)
 static void afp_end_sessions(void)
 ```
 
-Defined at lines 160 to 177.
+Defined at lines 165 to 182.
 
 End the master's sessions and remove its stats socket before it exits.
 
@@ -117,7 +117,7 @@ Uses file-scope variables: `afpstats_listen_fd`, `asp_obj`, `server_children`
 static void afp_goaway(int sig)
 ```
 
-Defined at lines 189 to 228.
+Defined at lines 194 to 233.
 
 Signal handler of the master afpd.
 
@@ -138,7 +138,7 @@ Uses file-scope variables: `gotsigchld`, `nologin`, `reloadconfig`, `server_chil
 static void child_handler(void)
 ```
 
-Defined at lines 236 to 271.
+Defined at lines 241 to 276.
 
 Reap every exited session child of the master afpd.
 
@@ -156,7 +156,7 @@ Uses file-scope variables: `server_children`
 static int raise_nofile_to(const char *who, rlim_t target, rlim_t *out)
 ```
 
-Defined at lines 287 to 344.
+Defined at lines 292 to 349.
 
 Raise RLIMIT_NOFILE toward a target, probing down on rejection.
 
@@ -177,7 +177,7 @@ Called by: [setlimits](main.c.md#setlimits)
 static int setlimits(void)
 ```
 
-Defined at lines 354 to 386.
+Defined at lines 359 to 391.
 
 Raise the descriptor limit of the master afpd toward RLIM_MAX.
 
@@ -195,7 +195,7 @@ Called by: [main](main.c.md#main)
 int main(int ac, char **av)
 ```
 
-Defined at lines 410 to 780.
+Defined at lines 415 to 782.
 
 Run the master afpd: read the configuration, open the listeners, and start a session per connection.
 
@@ -213,7 +213,7 @@ Parameters:
 
 Returns: 0 after a poll error other than EINTR
 
-Calls: [afp_config_free](../../libatalk/util/netatalk_conf.c.md#afp_config_free), [afp_config_parse](../../libatalk/util/netatalk_conf.c.md#afp_config_parse), [afp_exit](main.c.md#afp_exit), [afp_goaway](main.c.md#afp_goaway), [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdline), [afpstats_handle_accept](afpstats.c.md#afpstats_handle_accept), [afpstats_init](afpstats.c.md#afpstats_init), [asev_add_fd](../../libatalk/util/socket.c.md#asev_add_fd), [asev_del_fd](../../libatalk/util/socket.c.md#asev_del_fd), [asp_cleanup](main.c.md#asp_cleanup), [asp_start](main.c.md#asp_start), [child_handler](main.c.md#child_handler), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [configfree](afp_config.c.md#configfree), [configinit](afp_config.c.md#configinit), [daemonize](../../libatalk/util/unix.c.md#daemonize), [dsi_reserve_spare_fd](../../libatalk/dsi/dsi_getsess.c.md#dsi_reserve_spare_fd), [dsi_start](main.c.md#dsi_start), [fault_setup](../../libatalk/util/fault.c.md#fault_setup), [hint_buf_count](../../libatalk/util/server_ipc.c.md#hint_buf_count), [hint_flush_pending](../../libatalk/util/server_ipc.c.md#hint_flush_pending), [init_listening_sockets](main.c.md#init_listening_sockets), [ipc_server_read](../../libatalk/util/server_ipc.c.md#ipc_server_read), [reset_listening_sockets](main.c.md#reset_listening_sockets), [server_child_alloc](../../libatalk/util/server_child.c.md#server_child_alloc), [server_child_kill](../../libatalk/util/server_child.c.md#server_child_kill), [setlimits](main.c.md#setlimits)
+Calls: [afp_config_free](../../libatalk/util/netatalk_conf.c.md#afp_config_free), [afp_config_parse](../../libatalk/util/netatalk_conf.c.md#afp_config_parse), [afp_exit](main.c.md#afp_exit), [afp_goaway](main.c.md#afp_goaway), [afp_options_parse_cmdline](afp_options.c.md#afp_options_parse_cmdline), [afpstats_handle_accept](afpstats.c.md#afpstats_handle_accept), [afpstats_init](afpstats.c.md#afpstats_init), [asev_add_fd](../../libatalk/util/socket.c.md#asev_add_fd), [asev_del_fd](../../libatalk/util/socket.c.md#asev_del_fd), [asp_cleanup](main.c.md#asp_cleanup), [asp_start](main.c.md#asp_start), [child_handler](main.c.md#child_handler), [cnid_init](../../libatalk/cnid/cnid_init.c.md#cnid_init), [configfree](afp_config.c.md#configfree), [configinit](afp_config.c.md#configinit), [daemonize](../../libatalk/util/unix.c.md#daemonize), [dsi_reserve_spare_fd](../../libatalk/dsi/dsi_getsess.c.md#dsi_reserve_spare_fd), [dsi_start](main.c.md#dsi_start), [fault_setup](../../libatalk/util/fault.c.md#fault_setup), [hint_flush_pending](../../libatalk/util/server_ipc.c.md#hint_flush_pending), [hint_flush_timeout](../../libatalk/util/server_ipc.c.md#hint_flush_timeout), [init_listening_sockets](main.c.md#init_listening_sockets), [ipc_server_read](../../libatalk/util/server_ipc.c.md#ipc_server_read), [reset_listening_sockets](main.c.md#reset_listening_sockets), [server_child_alloc](../../libatalk/util/server_child.c.md#server_child_alloc), [server_child_kill](../../libatalk/util/server_child.c.md#server_child_kill), [setlimits](main.c.md#setlimits)
 
 Uses file-scope variables: `afpstats_listen_fd`, `asp_obj`, `dsi_obj`, `gotsigchld`, `nologin`, `reloadconfig`, `server_children`
 
@@ -223,7 +223,7 @@ Uses file-scope variables: `afpstats_listen_fd`, `asp_obj`, `dsi_obj`, `gotsigch
 static void master_out_of_fds(const server_child_t *children)
 ```
 
-Defined at lines 799 to 824.
+Defined at lines 801 to 826.
 
 Exit for a restart once the master has been out of descriptors too long.
 
@@ -244,7 +244,7 @@ Uses file-scope variables: `fds_starved_last`, `fds_starved_since`
 static afp_child_t * dsi_start(AFPObj *obj, DSI *dsi, server_child_t *server_children)
 ```
 
-Defined at lines 839 to 864.
+Defined at lines 841 to 866.
 
 Accept a [DSI](../../include/atalk/dsi.h.md#struct-dsi) connection and fork its session.
 
@@ -269,7 +269,7 @@ Uses file-scope variables: `fds_starved_last`, `fds_starved_since`, `server_chil
 static afp_child_t * asp_start(AFPObj *obj, server_child_t *active_children)
 ```
 
-Defined at lines 876 to 893.
+Defined at lines 878 to 895.
 
 Accept an [ASP](../../include/atalk/asp.h.md#struct-asp) connection and fork its session.
 
@@ -291,7 +291,7 @@ Called by: [main](main.c.md#main)
 static void asp_cleanup(const AFPObj *obj)
 ```
 
-Defined at lines 900 to 906.
+Defined at lines 902 to 908.
 
 Stop the [ASP](../../include/atalk/asp.h.md#struct-asp) tickle timer and unregister the NBP name of the server.
 

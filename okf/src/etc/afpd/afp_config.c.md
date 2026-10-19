@@ -5,7 +5,7 @@ description: "Configuration setup of afpd at startup and reload: UAMs, listeners
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_config.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -63,7 +63,7 @@ Called by: [dsi_start](main.c.md#dsi_start), [main](main.c.md#main)
 int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
 ```
 
-Defined at lines 138 to 439.
+Defined at lines 138 to 425.
 
 Set up the UAMs, the listeners, and the server-wide settings at startup or reload.
 
@@ -75,6 +75,8 @@ Parameters:
 
 Returns: 0, or -1 when no listener could start or a setting failed
 
-Calls: [acl_ldap_freeconfig](../../libatalk/acl/ldap_config.c.md#acl_ldap_freeconfig), [acl_ldap_readconfig](../../libatalk/acl/ldap_config.c.md#acl_ldap_readconfig), [asp_close](../../libatalk/asp/asp_close.c.md#asp_close), [asp_init](../../libatalk/asp/asp_init.c.md#asp_init), [atp_close](../../libatalk/atp/atp_close.c.md#atp_close), [atp_open](../../libatalk/atp/atp_open.c.md#atp_open), [auth_load](auth.c.md#auth_load), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dsi_init](../../libatalk/dsi/dsi_init.c.md#dsi_init), [fce_add_udp_socket](fce_api.c.md#fce_add_udp_socket), [fce_set_coalesce](fce_util.c.md#fce_set_coalesce), [fce_set_events](fce_api.c.md#fce_set_events), [getip_port](../../libatalk/util/socket.c.md#getip_port), [getip_string](../../libatalk/util/socket.c.md#getip_string), [nbp_rgstr](../../libatalk/nbp/nbp_rgstr.c.md#nbp_rgstr), [nbp_unrgstr](../../libatalk/nbp/nbp_unrgstr.c.md#nbp_unrgstr), [safe_atoi](../../libatalk/util/netatalk_conf.c.md#safe_atoi), [set_signature](status.c.md#set_signature), [status_init](status.c.md#status_init), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [acl_ldap_freeconfig](../../libatalk/acl/ldap_config.c.md#acl_ldap_freeconfig), [acl_ldap_readconfig](../../libatalk/acl/ldap_config.c.md#acl_ldap_readconfig), [asp_close](../../libatalk/asp/asp_close.c.md#asp_close), [asp_init](../../libatalk/asp/asp_init.c.md#asp_init), [atp_close](../../libatalk/atp/atp_close.c.md#atp_close), [atp_open](../../libatalk/atp/atp_open.c.md#atp_open), [auth_load](auth.c.md#auth_load), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dsi_init](../../libatalk/dsi/dsi_init.c.md#dsi_init), [fce_add_udp_socket](fce_api.c.md#fce_add_udp_socket), [fce_cleanup](fce_api.c.md#fce_cleanup), [fce_set_coalesce](fce_util.c.md#fce_set_coalesce), [fce_set_events](fce_api.c.md#fce_set_events), [getip_port](../../libatalk/util/socket.c.md#getip_port), [getip_string](../../libatalk/util/socket.c.md#getip_string), [nbp_rgstr](../../libatalk/nbp/nbp_rgstr.c.md#nbp_rgstr), [nbp_unrgstr](../../libatalk/nbp/nbp_unrgstr.c.md#nbp_unrgstr), [set_signature](status.c.md#set_signature), [status_init](status.c.md#status_init), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [main](main.c.md#main)
+
+Mentioned in the documentation of: [fce_cleanup](fce_api.c.md#fce_cleanup)

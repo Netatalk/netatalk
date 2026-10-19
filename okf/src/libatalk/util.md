@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/util"
-description: "20 files, 192 functions."
+description: "20 files, 194 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 # Files
@@ -46,7 +46,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 259 calls
+* [etc/afpd](../etc/afpd.md): 260 calls
 * [libatalk/adouble](adouble.md): 29 calls
 * [libatalk/dsi](dsi.md): 23 calls
 * [bin/nad](../bin/nad.md): 18 calls
@@ -77,7 +77,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 * [ostat](util/unix.c.md#ostat): 26 callers
 * [become_root](util/unix.c.md#become_root): 21 callers
 * [unbecome_root](util/unix.c.md#unbecome_root): 21 callers
-* [ipc_send_cache_hint](util/server_ipc.c.md#ipc_send_cache_hint): 18 callers
+* [ipc_send_cache_hint](util/server_ipc.c.md#ipc_send_cache_hint): 19 callers
 * [getcwdpath](util/unix.c.md#getcwdpath): 15 callers
 * [getvolumes](util/netatalk_conf.c.md#getvolumes): 13 callers
 * [atalk_aton](util/atalk_addr.c.md#atalk_aton): 12 callers

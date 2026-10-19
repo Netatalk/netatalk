@@ -5,7 +5,7 @@ description: "Reading afp.conf and extmap.conf: server options, volume definitio
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/netatalk_conf.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -455,7 +455,7 @@ Parameters:
 
 Returns: Converted integer value or default_val on error
 
-Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [configinit](../../etc/afpd/afp_config.c.md#configinit), [getoption_int](netatalk_conf.c.md#getoption_int)
+Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [getoption_int](netatalk_conf.c.md#getoption_int)
 
 Mentioned in the documentation of: [conf_key_present](netatalk_conf.c.md#conf_key_present), [getoption_int](netatalk_conf.c.md#getoption_int)
 
@@ -1146,7 +1146,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 ```
 
-Defined at lines 3583 to 4277.
+Defined at lines 3583 to 4289.
 
 Read afp.conf into the options of an AFP object.
 
@@ -1168,7 +1168,7 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/nad/nad.c.m
 void afp_config_free(AFPObj *obj)
 ```
 
-Defined at lines 4287 to 4431.
+Defined at lines 4299 to 4459.
 
 Free the options that afp_config_parse allocated, with the extension map and the parsed afp.conf.
 

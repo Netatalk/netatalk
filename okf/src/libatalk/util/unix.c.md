@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -327,7 +327,7 @@ Parameters:
 
 Returns: pointer to basename in path buffer, buffer is possibly modified
 
-Called by: [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_encoding)
+Called by: [convert_dots_encoding](../../bin/nad/nad_util.c.md#convert_dots_encoding), [fce_init_ign_paths](../../etc/afpd/fce_api.c.md#fce_init_ign_paths)
 
 ### tmpdir
 
@@ -364,7 +364,7 @@ Parameters:
 
 Returns: the result of lstat or stat
 
-Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [check_acl_access](../../etc/afpd/acls.c.md#check_acl_access), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [dirlookup_strict](../../etc/afpd/directory.c.md#dirlookup_strict), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_stat](../../etc/afpd/ofork.c.md#of_stat), [of_statdir](../../etc/afpd/ofork.c.md#of_statdir), [pfd_get](../../etc/afpd/pfd_cache.c.md#pfd_get), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [reenumerate_id](../../etc/afpd/file.c.md#reenumerate_id), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop), [setdirmode_adouble_loop](../vfs/vfs.c.md#setdirmode_adouble_loop), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
+Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [check_acl_access](../../etc/afpd/acls.c.md#check_acl_access), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [dirlookup_strict](../../etc/afpd/directory.c.md#dirlookup_strict), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_path_holds](../../etc/afpd/ofork.c.md#of_path_holds), [of_stat](../../etc/afpd/ofork.c.md#of_stat), [of_statdir](../../etc/afpd/ofork.c.md#of_statdir), [pfd_get](../../etc/afpd/pfd_cache.c.md#pfd_get), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [reenumerate_id](../../etc/afpd/file.c.md#reenumerate_id), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop), [setdirmode_adouble_loop](../vfs/vfs.c.md#setdirmode_adouble_loop), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
 ### ochown
 
@@ -426,7 +426,7 @@ Parameters:
 
 Returns: the result of fstatat
 
-Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](../vfs/vfs.c.md#rf_renamefile_ea), [copydir](../../etc/afpd/directory.c.md#copydir), [deletedir](../../etc/afpd/directory.c.md#deletedir), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat)
+Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](../vfs/vfs.c.md#rf_renamefile_ea), [copydir](../../etc/afpd/directory.c.md#copydir), [deletedir](../../etc/afpd/directory.c.md#deletedir), [of_findnameat](../../etc/afpd/ofork.c.md#of_findnameat), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat)
 
 ### ochdir
 
@@ -504,7 +504,7 @@ Parameters:
 
 Returns: the resolved path, which the caller frees, or NULL on failure
 
-Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [fce_register](../../etc/afpd/fce_api.c.md#fce_register), [getuserbypath](netatalk_conf.c.md#getuserbypath), [getvolbypath](netatalk_conf.c.md#getvolbypath), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../etc/netatalk/netatalk.c.md#main), [readvolfile](netatalk_conf.c.md#readvolfile), [symlink_target_safe](../../etc/afpd/file.c.md#symlink_target_safe), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config)
+Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [getuserbypath](netatalk_conf.c.md#getuserbypath), [getvolbypath](netatalk_conf.c.md#getvolbypath), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../etc/netatalk/netatalk.c.md#main), [readvolfile](netatalk_conf.c.md#readvolfile), [symlink_target_safe](../../etc/afpd/file.c.md#symlink_target_safe), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config)
 
 ### basename_safe
 

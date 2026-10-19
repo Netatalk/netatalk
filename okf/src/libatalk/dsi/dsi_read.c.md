@@ -5,7 +5,7 @@ description: "Streamed FPRead replies over DSI."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_read.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -44,6 +44,8 @@ Calls: [dsi_stream_send](dsi_stream.c.md#dsi_stream_send)
 
 Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork), [rfork_cache_serve_from_buf](../../etc/afpd/fork.c.md#rfork_cache_serve_from_buf)
 
+Mentioned in the documentation of: [rfork_cache_serve_from_buf](../../etc/afpd/fork.c.md#rfork_cache_serve_from_buf)
+
 ### dsi_readdone
 
 ```c
@@ -78,4 +80,4 @@ Returns: bytes to send next, at most buflen, or -1 when the send failed
 
 Calls: [dsi_stream_write](dsi_stream.c.md#dsi_stream_write)
 
-Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork), [rfork_cache_serve_from_buf](../../etc/afpd/fork.c.md#rfork_cache_serve_from_buf)
+Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)

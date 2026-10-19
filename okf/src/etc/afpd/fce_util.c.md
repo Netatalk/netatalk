@@ -5,7 +5,7 @@ description: "Event coalescing for the file change event (FCE) API."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fce_util.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -95,7 +95,7 @@ Uses file-scope variables: `coalesce`, `fce_history_list`
 int fce_set_coalesce(const char *opt)
 ```
 
-Defined at lines 196 to 219.
+Defined at lines 196 to 224.
 
 Set event coalescing from the fce coalesce option.
 
@@ -104,7 +104,7 @@ The option lists all, delete, or create, separated by commas. The last known nam
 Parameters:
 * `opt`: option value
 
-Returns: AFP_OK, or AFPERR_PARAM for NULL
+Returns: AFP_OK, AFPERR_PARAM for NULL, or AFPERR_MISC when the copy fails
 
 Called by: [configinit](afp_config.c.md#configinit)
 

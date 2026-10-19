@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T16:52:47+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -48,13 +48,25 @@ Tell whether a cached rlen records absent AppleDouble metadata.
 
 Called by: [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached)
 
+### ad_rlen_known
+
+```c
+static int ad_rlen_known(off_t rlen)
+```
+
+Defined at lines 78 to 81.
+
+Tell whether a cached rlen is a definite resource fork length.
+
+Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
+
 ### path_cached_file
 
 ```c
 static struct dir * path_cached_file(const struct path *path)
 ```
 
-Defined at lines 163 to 170.
+Defined at lines 169 to 176.
 
 Return the dircache entry of a file path, or NULL after dir_remove.
 
@@ -66,7 +78,7 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [path_resolve_ca
 static int path_isadir(struct path *o_path)
 ```
 
-Defined at lines 178 to 187.
+Defined at lines 184 to 193.
 
 Tell whether a path resolved to a directory.
 
@@ -76,7 +88,7 @@ Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_getco
 
 ### struct dir
 
-Defined at line 77.
+Defined at line 83.
 * `bstring d_fullpath`: complete unix path to dir (or file)
 * `bstring d_m_name`: mac name
 * `bstring d_u_name`: unix name
@@ -108,7 +120,7 @@ Defined at line 77.
 
 ### struct path
 
-Defined at line 145.
+Defined at line 151.
 * `int m_type`: mac name type (long name, unicode
 * `char * m_name`: mac name
 * `char * u_name`: unix name

@@ -5,7 +5,7 @@ description: "FPSpotlightRPC: Spotlight queries and attribute requests over the 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/spotlight.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T06:55:24+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -102,7 +102,7 @@ Parameters:
 
 Returns: the result of the backend hook, or 0 without a hook
 
-Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork)
+Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork)
 
 Calls through [`sl_backend_ops::sbo_index_event`](../../include/atalk/spotlight.h.md#struct-sl_backend_ops): [sl_xapian_index_event](../spotlight/xapian/sl_xapian.c.md#sl_xapian_index_event)
 

@@ -5,7 +5,7 @@ description: "IPC over socketpair between parent and children."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_ipc.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static int rate_slot(pid_t child_pid)
 ```
 
-Defined at lines 133 to 146.
+Defined at lines 135 to 148.
 
 Find the rate slot of a child for the current second.
 
@@ -50,7 +50,7 @@ Uses file-scope variables: `pid`, `rate_track`, `window_start`
 static int check_and_increment_rate(pid_t child_pid)
 ```
 
-Defined at lines 154 to 157.
+Defined at lines 156 to 159.
 
 Count a hint of a child in the current 1-second window.
 
@@ -71,7 +71,7 @@ Uses file-scope variables: `rate_track`
 static int check_and_increment_reset_rate(pid_t child_pid)
 ```
 
-Defined at lines 167 to 170.
+Defined at lines 169 to 172.
 
 Count a volume reset of a child in the current 1-second window.
 
@@ -94,7 +94,7 @@ Uses file-scope variables: `rate_track`
 static int reset_already_broadcast(uint32_t tag)
 ```
 
-Defined at lines 188 to 206.
+Defined at lines 190 to 208.
 
 Tell whether the reset of a volume went out in the current second.
 
@@ -115,7 +115,7 @@ Uses file-scope variables: `reset_seen`, `tag`, `when`
 static void reset_broadcast_forget(uint32_t tag)
 ```
 
-Defined at lines 216 to 224.
+Defined at lines 218 to 226.
 
 Make a volume's reset broadcastable again.
 
@@ -134,7 +134,7 @@ Uses file-scope variables: `reset_seen`, `tag`
 static int hint_write_batch(int fd, const char *buf, int len, int has_reset, int *waits_left)
 ```
 
-Defined at lines 241 to 282.
+Defined at lines 243 to 284.
 
 Write a sibling's hint batch, waiting once if it carries a reset.
 
@@ -157,7 +157,7 @@ Called by: [hint_flush_pending](server_ipc.c.md#hint_flush_pending)
 static int serialize_hint(char *buf, const struct hint_entry *e)
 ```
 
-Defined at lines 295 to 318.
+Defined at lines 297 to 320.
 
 Serialize a [hint_entry](server_ipc.c.md#struct-hint_entry) to IPC wire format.
 
@@ -177,7 +177,7 @@ Called by: [hint_flush_pending](server_ipc.c.md#hint_flush_pending)
 static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 331 to 343.
+Defined at lines 333 to 345.
 
 Pass the socket of a new session to the disconnected session with the same reconnect token.
 
@@ -197,7 +197,7 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 356 to 391.
+Defined at lines 358 to 393.
 
 Record the client ID and boot time of a session, and end older sessions of a rebooted client.
 
@@ -219,7 +219,7 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_login_done(const struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 400 to 410.
+Defined at lines 402 to 412.
 
 Mark a session as logged in, with its user and client address.
 
@@ -239,7 +239,7 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_set_session_token(const struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 419 to 429.
+Defined at lines 421 to 431.
 
 Store the reconnect token that a session sent.
 
@@ -259,7 +259,7 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 438 to 450.
+Defined at lines 440 to 452.
 
 Store the session state that a child reports, for afpstats.
 
@@ -279,7 +279,7 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 461 to 481.
+Defined at lines 463 to 483.
 
 Store the list of mounted volumes that a child reports, for afpstats.
 
@@ -301,11 +301,11 @@ Called by: [ipc_server_read](server_ipc.c.md#ipc_server_read)
 static int ipc_relay_cache_hint(struct ipc_header *ipc, server_child_t *children)
 ```
 
-Defined at lines 501 to 597.
+Defined at lines 504 to 618.
 
 Buffer a dircache hint from a child for the batched relay to its siblings.
 
-Only the main thread appends to hint_buf, so the buffer needs no lock. A short payload, a server with one session, or an unknown event drops the hint. Any other hint counts against HINT_RATE_LIMIT per second and child, and a full buffer drops it.
+Only the main thread appends to hint_buf, so the buffer needs no lock. A short payload, a server with one session, or an unknown event drops the hint, and so does a refresh that repeats one the same child has in the batch for the same volume and file. Any other hint counts against HINT_RATE_LIMIT per second and child, and a full buffer drops it.
 
 A volume reset counts against HINT_RESET_RATE_LIMIT instead. Its cnid field carries the volume tag, and a repeat of a tag in the same second drops. A reset in a full buffer takes the slot of the last hint, and the call then flushes the buffer at once.
 
@@ -327,7 +327,7 @@ Uses file-scope variables: `hint_buf`, `hints_rate_dropped`, `rate_track`
 int ipc_server_read(server_child_t *children, int fd)
 ```
 
-Defined at lines 621 to 754.
+Defined at lines 642 to 775.
 
 Read a IPC message from a child.
 
@@ -351,7 +351,7 @@ Uses file-scope variables: `ipc_cmd_str`
 int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
 ```
 
-Defined at lines 768 to 808.
+Defined at lines 789 to 829.
 
 Send an IPC message from a session to the master.
 
@@ -379,7 +379,7 @@ Mentioned in the documentation of: [ipc_send_cache_hint](server_ipc.c.md#ipc_sen
 int ipc_child_state(AFPObj *obj, uint16_t state)
 ```
 
-Defined at lines 817 to 820.
+Defined at lines 838 to 841.
 
 Report the session state to the master, for afpstats.
 
@@ -393,35 +393,37 @@ Calls: [ipc_child_write](server_ipc.c.md#ipc_child_write)
 
 Called by: [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [afp_zzzzz](../../etc/afpd/auth.c.md#afp_zzzzz), [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer_session), [login](../../etc/afpd/auth.c.md#login)
 
-### hint_buf_count
+### hint_flush_timeout
 
 ```c
-int hint_buf_count(void)
+int hint_flush_timeout(void)
 ```
 
-Defined at lines 834 to 837.
+Defined at lines 857 to 875.
 
-Return the number of buffered hints.
+Milliseconds until the buffered hints are due to go out.
 
-The afpd main loop polls with a timeout of HINT_FLUSH_INTERVAL_MS while hints wait, and without a timeout otherwise.
+A batch is due once its oldest hint has waited HINT_FLUSH_INTERVAL_MS or the buffer is full. The afpd main loop polls with this timeout and flushes when it is 0, whatever other traffic the poll serves.
 
-Returns: the number of hints in the buffer
+Returns: -1 with nothing buffered, 0 when the batch is due, else the milliseconds left
 
 Called by: [main](../../etc/afpd/main.c.md#main)
 
 Uses file-scope variables: `hint_buf`
 
+Mentioned in the documentation of: [hint_flush_pending](server_ipc.c.md#hint_flush_pending)
+
 ### hint_flush_pending
 
 ```c
-void hint_flush_pending(server_child_t *children)
+int hint_flush_pending(server_child_t *children)
 ```
 
-Defined at lines 858 to 979.
+Defined at lines 897 to 1019.
 
 Flush the buffered hints to the sibling sessions.
 
-The afpd main loop calls it after a poll timeout with buffered hints and when the buffer is full. The ipc_relay_cache_hint call flushes for every volume reset. The master blocks signals while it runs, and no other thread touches the child table, so the walk needs no lock.
+The afpd main loop calls it when [hint_flush_timeout()](server_ipc.c.md#hint_flush_timeout) finds the batch due. The ipc_relay_cache_hint call flushes for every volume reset. The master blocks signals while it runs, and no other thread touches the child table, so the walk needs no lock.
 
 The hints go out in priority order: volume resets first, then REFRESH, DELETE, and DELETE_CHILDREN. Each sibling gets every hint except the ones it sent. No chunk exceeds PIPE_BUF bytes, so each write stays atomic. A failed chunk skips the rest for that sibling.
 
@@ -429,6 +431,8 @@ A chunk with a reset can wait for pipe space, within HINT_RESET_WAIT_BUDGET wait
 
 Parameters:
 * `children`: child table
+
+Returns: the number of hints the batch held
 
 Calls: [hint_write_batch](server_ipc.c.md#hint_write_batch), [reset_broadcast_forget](server_ipc.c.md#reset_broadcast_forget), [serialize_hint](server_ipc.c.md#serialize_hint)
 
@@ -442,7 +446,7 @@ Uses file-scope variables: `flush_count`, `hint_buf`, `hints_batched`
 unsigned long long ipc_get_hints_sent(void)
 ```
 
-Defined at lines 995 to 998.
+Defined at lines 1035 to 1038.
 
 Return the number of dircache hints that this session sent to the master.
 
@@ -456,7 +460,7 @@ Uses file-scope variables: `hints_sent`
 unsigned long long ipc_get_hints_dropped(void)
 ```
 
-Defined at lines 1006 to 1009.
+Defined at lines 1046 to 1049.
 
 Return the number of dircache hints that this session dropped on a full IPC socket.
 
@@ -470,7 +474,7 @@ Uses file-scope variables: `hints_dropped`
 static const char * cache_hint_name(uint8_t event)
 ```
 
-Defined at lines 1017 to 1035.
+Defined at lines 1057 to 1075.
 
 Return the name of a cache hint event for log messages.
 
@@ -487,7 +491,7 @@ Called by: [ipc_send_cache_hint](server_ipc.c.md#ipc_send_cache_hint)
 int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid, uint8_t event)
 ```
 
-Defined at lines 1065 to 1148.
+Defined at lines 1105 to 1188.
 
 Send a dircache invalidation hint from child to parent.
 
@@ -509,7 +513,7 @@ Returns: 0 on success (or graceful drop), -1 on fatal error or an undeliverable 
 
 Calls: [cache_hint_name](server_ipc.c.md#cache_hint_name)
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [cnid_volume_reset](../../etc/afpd/volume.c.md#cnid_volume_reset), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [validation_expunge_and_hint](../../etc/afpd/dircache.c.md#validation_expunge_and_hint), [validation_refresh_and_hint](../../etc/afpd/dircache.c.md#validation_refresh_and_hint)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [cnid_volume_reset](../../etc/afpd/volume.c.md#cnid_volume_reset), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [validation_expunge_and_hint](../../etc/afpd/dircache.c.md#validation_expunge_and_hint), [validation_refresh_and_hint](../../etc/afpd/dircache.c.md#validation_refresh_and_hint)
 
 Uses file-scope variables: `hints_dropped`, `hints_sent`, `pid`
 
@@ -517,7 +521,7 @@ Uses file-scope variables: `hints_dropped`, `hints_sent`, `pid`
 
 ### struct hint_entry
 
-Defined at line 96.
+Defined at line 97.
 * `uint16_t vid`
 * `cnid_t cnid`
 * `uint8_t event`
@@ -544,4 +548,4 @@ Defined at line 46.
 
 # File-scope variables
 
-`count`, `count_in_window`, `entries`, `flush_count`, `hint_buf`, `hints_batched`, `hints_dropped`, `hints_rate_dropped`, `hints_sent`, `ipc_cmd_str`, `pid`, `rate_track`, `reset_seen`, `resets_in_window`, `tag`, `when`, `window_start`
+`count`, `count_in_window`, `entries`, `flush_count`, `hint_buf`, `hints_batched`, `hints_dropped`, `hints_rate_dropped`, `hints_sent`, `ipc_cmd_str`, `pid`, `rate_track`, `reset_seen`, `resets_in_window`, `since`, `tag`, `when`, `window_start`

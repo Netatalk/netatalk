@@ -5,7 +5,7 @@ description: "Shared AFP file and directory command handlers and name checks."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/filedir.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,6 +23,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [etc/afpd/enumerate.c](enumerate.c.md)
 * [etc/afpd/file.c](file.c.md)
 * [etc/afpd/filedir.c](filedir.c.md)
+* [etc/afpd/ofork.c](ofork.c.md)
 * [etc/afpd/switch.c](switch.c.md)
 
 # File-scope variables

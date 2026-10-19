@@ -5,7 +5,7 @@ description: "Manage the AppleDesktop folder and its contents."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/desktop.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -400,7 +400,7 @@ Returns: the name in a static buffer, or NULL when the conversion fails
 
 Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [demangle](mangle.c.md#demangle), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
-Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_setforkparams](fork.c.md#afp_setforkparams), [catsearch_afp](catsearch.c.md#catsearch_afp), [cname](directory.c.md#cname), [cname_mtouname](directory.c.md#cname_mtouname), [ctoupath](filedir.c.md#ctoupath), [getforkparams](fork.c.md#getforkparams), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork), [set_name](file.c.md#set_name)
+Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c.md#afp_moveandrename), [catsearch_afp](catsearch.c.md#catsearch_afp), [cname](directory.c.md#cname), [cname_mtouname](directory.c.md#cname_mtouname), [ctoupath](filedir.c.md#ctoupath), [getforkparams](fork.c.md#getforkparams), [moveandrename](filedir.c.md#moveandrename), [set_name](file.c.md#set_name)
 
 ### utompath
 

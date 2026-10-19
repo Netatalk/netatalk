@@ -5,7 +5,7 @@ description: "AFP sessions over DSI: signal handling, session reconnects, and th
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_dsi.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -334,7 +334,7 @@ Called by: [process_deferred_signals](afp_dsi.c.md#process_deferred_signals)
 static void child_handler(int sig)
 ```
 
-Defined at lines 630 to 633.
+Defined at lines 631 to 634.
 
 SIGCHLD handler that reaps one exited child.
 
@@ -349,7 +349,7 @@ Called by: [afp_over_dsi_sighandlers](afp_dsi.c.md#afp_over_dsi_sighandlers)
 static int process_deferred_signals(AFPObj *obj)
 ```
 
-Defined at lines 647 to 684.
+Defined at lines 649 to 686.
 
 Run the work of every signal that arrived since the last call.
 
@@ -372,7 +372,7 @@ Uses file-scope variables: `alarm_pending`, `die_pending`, `die_signalled`, `get
 static void pending_request(DSI *dsi)
 ```
 
-Defined at lines 697 to 717.
+Defined at lines 699 to 719.
 
 Send the attentions that signal work left pending and load a pending server message.
 
@@ -393,7 +393,7 @@ Uses file-scope variables: `AFPobj`
 static void afp_dsi_log_disconnect(const AFPObj *obj, int rx_errno, bool already)
 ```
 
-Defined at lines 729 to 749.
+Defined at lines 731 to 751.
 
 Log why the session is disconnecting and what it keeps meanwhile.
 
@@ -414,7 +414,7 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 void afp_over_dsi_sighandlers(AFPObj *obj)
 ```
 
-Defined at lines 769 to 856.
+Defined at lines 772 to 861.
 
 Install the signal handlers and start the tickle timer of a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session.
 
@@ -426,7 +426,7 @@ Each handler runs with every signal blocked and only records its signal for the 
 * SIGUSR1 announces a shutdown, and SIGUSR2 a server message.
 * SIGINT toggles the debug log.
 * SIGALRM drives the tickle timer, except in DEBUGGING builds.
-* SIGCHLD reaps children, with SA_NOCLDWAIT where the system has it.
+* SIGCHLD: the kernel reaps children where SA_NOCLDWAIT exists, else a handler does.
 
 Parameters:
 * `obj`: session object
@@ -441,7 +441,7 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi), [login](auth.c.md#login)
 static bool afp_write_command(uint8_t function)
 ```
 
-Defined at lines 865 to 869.
+Defined at lines 870 to 874.
 
 Tell whether an AFP command takes a payload, which a DSIWrite frame carries.
 
@@ -458,7 +458,7 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 void afp_over_dsi(AFPObj *obj)
 ```
 
-Defined at lines 893 to 1356.
+Defined at lines 898 to 1359.
 
 Serve the AFP requests of a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session until the session ends.
 

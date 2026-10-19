@@ -5,7 +5,7 @@ description: "AFP sessions over ASP: signal handling and the request loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_asp.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -16,6 +16,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [atalk/asp.h](../../include/atalk/asp.h.md)
 * [atalk/atp.h](../../include/atalk/atp.h.md)
 * [atalk/compat.h](../../include/atalk/compat.h.md)
+* [atalk/fce_api.h](../../include/atalk/fce_api.h.md)
 * [atalk/globals.h](../../include/atalk/globals.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
 * [atalk/netatalk_conf.h](../../include/atalk/netatalk_conf.h.md)
@@ -35,7 +36,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void afp_asp_close(AFPObj *obj)
 ```
 
-Defined at lines 57 to 82.
+Defined at lines 58 to 83.
 
 End an [ASP](../../include/atalk/asp.h.md#struct-asp) session by closing the volumes, logging out, and closing the [ASP](../../include/atalk/asp.h.md#struct-asp) connection.
 
@@ -54,7 +55,7 @@ Called by: [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_over_asp](afp_a
 static void afp_asp_die_now(const int sig)
 ```
 
-Defined at lines 122 to 138.
+Defined at lines 123 to 139.
 
 Shut the [ASP](../../include/atalk/asp.h.md#struct-asp) session down and exit.
 
@@ -75,7 +76,7 @@ Uses file-scope variables: `child`
 static void afp_asp_timedown_now(void)
 ```
 
-Defined at lines 147 to 186.
+Defined at lines 148 to 187.
 
 Announce a shutdown in 5 minutes to the [ASP](../../include/atalk/asp.h.md#struct-asp) client and arm the exit timer.
 
@@ -93,7 +94,7 @@ Uses file-scope variables: `child`
 static void afp_asp_reload(int sig)
 ```
 
-Defined at lines 198 to 202.
+Defined at lines 199 to 203.
 
 SIGHUP handler that requests a reload of the volume configuration.
 
@@ -112,7 +113,7 @@ Uses file-scope variables: `reload_request` in [etc/afpd/afp_dsi.c](afp_dsi.c.md
 static void afp_asp_getmesg_now(void)
 ```
 
-Defined at lines 210 to 214.
+Defined at lines 211 to 215.
 
 Read the pending server message and send the [ASP](../../include/atalk/asp.h.md#struct-asp) client a message attention.
 
@@ -128,7 +129,7 @@ Uses file-scope variables: `child`
 static void afp_asp_die_handler(int sig)
 ```
 
-Defined at lines 234 to 238.
+Defined at lines 235 to 239.
 
 SIGTERM and SIGALRM handler that records the request to end the session.
 
@@ -149,7 +150,7 @@ Uses file-scope variables: `asp_die_pending`
 static void afp_asp_timedown(int sig)
 ```
 
-Defined at lines 245 to 249.
+Defined at lines 246 to 250.
 
 SIGUSR1 handler that records the request for a shutdown in 5 minutes.
 
@@ -168,7 +169,7 @@ Uses file-scope variables: `asp_timedown_pending`
 static void afp_asp_getmesg(int sig)
 ```
 
-Defined at lines 257 to 261.
+Defined at lines 258 to 262.
 
 SIGUSR2 handler that records a pending server message.
 
@@ -187,7 +188,7 @@ Uses file-scope variables: `asp_getmesg_pending`
 static void asp_process_deferred_signals(AFPObj *obj)
 ```
 
-Defined at lines 273 to 299.
+Defined at lines 274 to 300.
 
 Act on the signals that the handlers recorded while the loop was busy or waiting.
 
@@ -208,7 +209,7 @@ Uses file-scope variables: `asp_die_pending`, `asp_getmesg_pending`, `asp_timedo
 void afp_over_asp(AFPObj *obj)
 ```
 
-Defined at lines 316 to 666.
+Defined at lines 317 to 683.
 
 Run an AFP session over [ASP](../../include/atalk/asp.h.md#struct-asp) until the client closes it.
 
@@ -219,7 +220,7 @@ Each loop pass acts on the recorded signals, applies the dircache hints, and ser
 Parameters:
 * `obj`: session object holding the [ASP](../../include/atalk/asp.h.md#struct-asp) session
 
-Calls: [AfpNum2name](../../libatalk/util/afp_util.c.md#afpnum2name), [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_asp_die_handler](afp_asp.c.md#afp_asp_die_handler), [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_asp_getmesg](afp_asp.c.md#afp_asp_getmesg), [afp_asp_reload](afp_asp.c.md#afp_asp_reload), [afp_asp_timedown](afp_asp.c.md#afp_asp_timedown), [asp_attention](../../libatalk/asp/asp_attn.c.md#asp_attention), [asp_cmdreply](../../libatalk/asp/asp_cmdreply.c.md#asp_cmdreply), [asp_getrequest](../../libatalk/asp/asp_getreq.c.md#asp_getrequest), [asp_process_deferred_signals](afp_asp.c.md#asp_process_deferred_signals), [atalk_sigpipe_drain](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_drain), [atalk_sigpipe_init](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_init), [atalk_sigpipe_readfd](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_readfd), [dir_free_invalid_q](directory.c.md#dir_free_invalid_q), [dircache_init](dircache.c.md#dircache_init), [of_pforkdesc](ofork.c.md#of_pforkdesc), [process_cache_hints](dircache.c.md#process_cache_hints)
+Calls: [AfpNum2name](../../libatalk/util/afp_util.c.md#afpnum2name), [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_asp_die_handler](afp_asp.c.md#afp_asp_die_handler), [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_asp_getmesg](afp_asp.c.md#afp_asp_getmesg), [afp_asp_reload](afp_asp.c.md#afp_asp_reload), [afp_asp_timedown](afp_asp.c.md#afp_asp_timedown), [asp_attention](../../libatalk/asp/asp_attn.c.md#asp_attention), [asp_cmdreply](../../libatalk/asp/asp_cmdreply.c.md#asp_cmdreply), [asp_getrequest](../../libatalk/asp/asp_getreq.c.md#asp_getrequest), [asp_process_deferred_signals](afp_asp.c.md#asp_process_deferred_signals), [atalk_sigpipe_drain](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_drain), [atalk_sigpipe_init](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_init), [atalk_sigpipe_readfd](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_readfd), [dir_free_invalid_q](directory.c.md#dir_free_invalid_q), [dircache_init](dircache.c.md#dircache_init), [fce_pending_events](fce_api.c.md#fce_pending_events), [of_pforkdesc](ofork.c.md#of_pforkdesc), [process_cache_hints](dircache.c.md#process_cache_hints)
 
 Called by: [asp_start](main.c.md#asp_start)
 

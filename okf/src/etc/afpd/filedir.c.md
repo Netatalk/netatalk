@@ -5,7 +5,7 @@ description: "AFP commands for both files and directories: FPGetFileDirParms, FP
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/filedir.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -99,7 +99,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 253 to 331.
+Defined at lines 253 to 328.
 
 FPSetFileDirParms: set the parameters of a file or directory.
 
@@ -114,7 +114,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_VLOCK for a read-only volume, AFPERR_OLOCK, AFPERR_NOOBJ, or another AFPERR_* code
 
-Calls: [cname](directory.c.md#cname), [dirlookup_strict](directory.c.md#dirlookup_strict), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [of_statdir](ofork.c.md#of_statdir), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [setdirparams](directory.c.md#setdirparams), [setfilparams](file.c.md#setfilparams), [setvoltime](volume.c.md#setvoltime), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [cname](directory.c.md#cname), [dirlookup_strict](directory.c.md#dirlookup_strict), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_statdir](ofork.c.md#of_statdir), [setdirparams](directory.c.md#setdirparams), [setfilparams](file.c.md#setfilparams), [setvoltime](volume.c.md#setvoltime)
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md), `curdir` in [etc/afpd/directory.c](directory.c.md)
 
@@ -126,7 +126,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int check_name(const struct vol *vol, char *name)
 ```
 
-Defined at lines 341 to 354.
+Defined at lines 338 to 351.
 
 Reject a name that the AppleDouble layout reserves or that the volume vetoes.
 
@@ -148,11 +148,11 @@ Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vf
 static int moveandrename(const AFPObj *obj, struct vol *vol, struct dir *sdir, int sdir_fd, char *oldname, char *newname, int isdir)
 ```
 
-Defined at lines 383 to 712.
+Defined at lines 381 to 727.
 
 Move and rename sdir/oldname to newname in the working directory.
 
-A file takes its CNID from the database, and a directory passes itself as sdir and supplies the DID. The rename-inhibit attribute blocks the call unless the volume ignores it, and check_name screens the new name. An unchanged name succeeds at once. Inside one directory a name that another file holds fails with AFPERR_EXIST, and across directories any existing destination fails. So does a destination that this session holds open.
+A file takes its CNID from the database, and a directory passes itself as sdir and supplies the DID. The rename-inhibit attribute blocks the call unless the volume ignores it, and check_name screens the new name. The virtual Icon file's name in the volume root fails with AFPERR_EXIST. An unchanged name succeeds at once. Inside one directory a name that another file holds fails with AFPERR_EXIST, and across directories any existing destination fails. So does a destination that this session holds open.
 
 After renamefile or renamedir succeeds, the dircache entry and its children follow. FCE and Spotlight get a move event. The AppleDouble metadata and the CNID record get the new parent and name, and sibling afpd processes get hints for the object and both parents.
 
@@ -167,7 +167,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_OLOCK, AFPERR_EXIST, AFPERR_PARAM, AFPERR_MISC, or the error of renamefile or renamedir
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [check_name](filedir.c.md#check_name), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [ctoupath](filedir.c.md#ctoupath), [dir_event_path](directory.c.md#dir_event_path), [dir_modify](directory.c.md#dir_modify), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [mtoupath](desktop.c.md#mtoupath), [of_findname](ofork.c.md#of_findname), [of_findnameat](ofork.c.md#of_findnameat), [of_rename](ofork.c.md#of_rename), [renamedir](directory.c.md#renamedir), [renamefile](file.c.md#renamefile), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [check_name](filedir.c.md#check_name), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [ctoupath](filedir.c.md#ctoupath), [dir_event_path](directory.c.md#dir_event_path), [dir_modify](directory.c.md#dir_modify), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [mtoupath](desktop.c.md#mtoupath), [of_findname](ofork.c.md#of_findname), [of_findnameat](ofork.c.md#of_findnameat), [of_rename](ofork.c.md#of_rename), [ostat](../../libatalk/util/unix.c.md#ostat), [renamedir](directory.c.md#renamedir), [renamefile](file.c.md#renamefile), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename)
 
@@ -179,7 +179,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 730 to 820.
+Defined at lines 745 to 832.
 
 FPRename: rename a file or directory inside its parent directory.
 
@@ -194,7 +194,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_NORENAME, AFPERR_OLOCK, AFPERR_VLOCK, AFPERR_PARAM, or the error of moveandrename
 
-Calls: [cname](directory.c.md#cname), [copy_path_name](file.c.md#copy_path_name), [dirlookup](directory.c.md#dirlookup), [dirlookup_strict](directory.c.md#dirlookup_strict), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [moveandrename](filedir.c.md#moveandrename), [movecwd](directory.c.md#movecwd), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [setvoltime](volume.c.md#setvoltime), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [cname](directory.c.md#cname), [copy_path_name](file.c.md#copy_path_name), [dirlookup](directory.c.md#dirlookup), [dirlookup_strict](directory.c.md#dirlookup_strict), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [movecwd](directory.c.md#movecwd), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [setvoltime](volume.c.md#setvoltime), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md), `curdir` in [etc/afpd/directory.c](directory.c.md)
 
@@ -206,7 +206,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int delete_vetoed_files_at(struct vol *vol, int parent_fd, const char *name, bool in_vetodir)
 ```
 
-Defined at lines 836 to 931.
+Defined at lines 848 to 943.
 
 Recursively delete vetoed files and directories.
 
@@ -230,7 +230,7 @@ Called by: [delete_vetoed_files](filedir.c.md#delete_vetoed_files)
 int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
 ```
 
-Defined at lines 946 to 964.
+Defined at lines 958 to 976.
 
 Delete the vetoed files in directory upath and then the directory itself.
 
@@ -247,13 +247,30 @@ Calls: [delete_vetoed_files_at](filedir.c.md#delete_vetoed_files_at)
 
 Called by: [afp_delete](filedir.c.md#afp_delete), [deletecurdir](directory.c.md#deletecurdir)
 
+### dir_offcnt_take
+
+```c
+void dir_offcnt_take(struct dir *dir)
+```
+
+Defined at lines 987 to 994.
+
+Take one item from a directory's cached offspring count.
+
+A count of no items never held the item that goes, one made outside afpd, so the call drops the count rather than wrap it, and the next request walks the directory.
+
+Parameters:
+* `dir`: directory that lost an item
+
+Called by: [afp_delete](filedir.c.md#afp_delete), [of_closefork](ofork.c.md#of_closefork)
+
 ### afp_delete
 
 ```c
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 988 to 1270.
+Defined at lines 1018 to 1301.
 
 FPDelete: delete a file or an empty directory.
 
@@ -270,7 +287,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_BUSY, AFPERR_DIRNEMPT, AFPERR_ACCESS, AFPERR_OLOCK, AFPERR_NOOBJ, AFPERR_VLOCK, or another AFPERR_* code
 
-Calls: [cname](directory.c.md#cname), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [delete_vetoed_files](filedir.c.md#delete_vetoed_files), [deletecurdir](directory.c.md#deletecurdir), [deletefile](file.c.md#deletefile), [dir_event_path](directory.c.md#dir_event_path), [dir_remove](directory.c.md#dir_remove), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [of_delete_blocked](ofork.c.md#of_delete_blocked), [of_findname](ofork.c.md#of_findname), [of_statdir](ofork.c.md#of_statdir), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [setvoltime](volume.c.md#setvoltime), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [cname](directory.c.md#cname), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [delete_vetoed_files](filedir.c.md#delete_vetoed_files), [deletecurdir](directory.c.md#deletecurdir), [deletefile](file.c.md#deletefile), [dir_event_path](directory.c.md#dir_event_path), [dir_offcnt_take](filedir.c.md#dir_offcnt_take), [dir_remove](directory.c.md#dir_remove), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [of_delete_blocked](ofork.c.md#of_delete_blocked), [of_findname](ofork.c.md#of_findname), [of_statdir](ofork.c.md#of_statdir), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [setvoltime](volume.c.md#setvoltime), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md), `curdir` in [etc/afpd/directory.c](directory.c.md)
 
@@ -282,7 +299,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 char * absupath(const struct vol *vol, struct dir *dir, char *u)
 ```
 
-Defined at lines 1283 to 1305.
+Defined at lines 1314 to 1336.
 
 Full path of the Unix name u inside dir.
 
@@ -305,7 +322,7 @@ Called by: [afp_exchangefiles](file.c.md#afp_exchangefiles), [ctoupath](filedir.
 char * ctoupath(const struct vol *vol, struct dir *dir, char *name)
 ```
 
-Defined at lines 1315 to 1323.
+Defined at lines 1346 to 1354.
 
 Full Unix path of a Mac name inside dir.
 
@@ -326,7 +343,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [moveandrename](filedir.c.md#
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1343 to 1472.
+Defined at lines 1374 to 1500.
 
 FPMoveAndRename: move a file or directory into another directory, with a new name if given.
 
@@ -341,7 +358,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_OLOCK, AFPERR_VLOCK, AFPERR_NOOBJ, AFPERR_PARAM, or the error of moveandrename
 
-Calls: [ad_mode](../../libatalk/adouble/ad_open.c.md#ad_mode), [cname](directory.c.md#cname), [copy_path_name](file.c.md#copy_path_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [moveandrename](filedir.c.md#moveandrename), [mtoupath](desktop.c.md#mtoupath), [path_error](directory.c.md#path_error), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [setfilmode](../../libatalk/vfs/unix.c.md#setfilmode), [setvoltime](volume.c.md#setvoltime), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [ad_mode](../../libatalk/adouble/ad_open.c.md#ad_mode), [cname](directory.c.md#cname), [copy_path_name](file.c.md#copy_path_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [mtoupath](desktop.c.md#mtoupath), [path_error](directory.c.md#path_error), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [setfilmode](../../libatalk/vfs/unix.c.md#setfilmode), [setvoltime](volume.c.md#setvoltime), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
 Calls through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vfs_ops): [RF_setfilmode_adouble](../../libatalk/vfs/vfs.c.md#rf_setfilmode_adouble), [RF_setfilmode_ea](../../libatalk/vfs/vfs.c.md#rf_setfilmode_ea), [ea_chmod_file](../../libatalk/vfs/ea_ad.c.md#ea_chmod_file), [vfs_setfilmode](../../libatalk/vfs/vfs.c.md#vfs_setfilmode)
 
@@ -355,7 +372,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int veto_file(const char *veto_str, const char *path)
 ```
 
-Defined at lines 1484 to 1517.
+Defined at lines 1512 to 1545.
 
 Whether path matches one entry of a slash-separated veto list.
 

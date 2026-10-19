@@ -5,7 +5,7 @@ description: "12 files, 52 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/dsi"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
 ---
 
 # Files
@@ -34,7 +34,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 35 calls
+* [etc/afpd](../etc/afpd.md): 34 calls
 * [libatalk/adouble](adouble.md): 1 calls
 
 # Most called functions
