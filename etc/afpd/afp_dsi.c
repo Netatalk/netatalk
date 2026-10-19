@@ -880,9 +880,12 @@ static bool afp_write_command(uint8_t function)
  * dircache, and starts the idle worker. It then sets the TCP buffer sizes and
  * TCP_NODELAY and opens the signal pipe. Each pass of the loop runs 4 stages:
  *
- * 1. Run the deferred signal work, then wait in poll for the client socket,
- *    the cache hint pipe, or the signal pipe. Buffered input and the
- *    disconnected and dying states skip the wait.
+ * 1. Run the deferred signal work. Buffered input goes straight on, and the
+ *    disconnected and dying states after serving the cache hints; otherwise
+ *    write the volume roots a marked second left due, then wait in poll for
+ *    the client socket, the cache hint pipe, or the signal pipe, at most a
+ *    second while a write is due. A request the due write's attention read
+ *    ahead skips the wait.
  * 2. Receive a request and apply a pending volume reload or debug toggle. A
  *    failed receive enters the disconnected state, which serves the deferred
  *    signal work and then waits on the signal pipe until a primary
@@ -1011,12 +1014,21 @@ void afp_over_dsi(AFPObj *obj)
             pfds[nfds].fd = atalk_sigpipe_readfd();
             pfds[nfds].events = POLLIN;
             nfds++;
+            /* write the volume roots a marked second left due; the wait
+             * ends in time for the next */
+            int due_ms = flushvoltime(obj);
+
+            /* sending the due write's attention can read requests ahead */
+            if (dsi->start != dsi->eof) {
+                break;                          /* NO idle — data ready */
+            }
+
             /* Grant the idle worker the poll window — only if work is
              * pending (iw_has_work); otherwise no grant and the paired
              * iw_revoke() is free. Main-loop context only. */
             iw_grant();
             /* [D] BLOCK IN POLL */
-            int ret = poll(pfds, nfds, -1);
+            int ret = poll(pfds, nfds, due_ms);
             /* WARNING: iw_revoke() must be called before ANY
              * break/continue after this point */
             iw_revoke();

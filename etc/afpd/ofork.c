@@ -1435,7 +1435,8 @@ int of_rfork_held(const struct ofork *ofork, const char *forkpath)
  * shorter than a header after the fork changed it or found a header in it at
  * its open, no other process has the file open, and FPDelete's checks allow
  * it; FCE and Spotlight hear of that as a deletion. Once that removal is
- * chosen, the name's dircache entry goes, whether or not the file does.
+ * chosen, the name's dircache entry goes, whether or not the file does. A
+ * stamped date marks the volume changed.
  *
  * @param[in]     obj    session object
  * @param[in,out] ofork  open fork, invalid afterwards
@@ -1461,7 +1462,11 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
         if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
             ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX, tv.tv_sec);
-            ad_flush(ofork->of_ad);
+
+            /* the stamp on disk is the change the other sessions see */
+            if (ad_flush(ofork->of_ad) == 0) {
+                setvoltime(ofork->of_vol->v_obj, ofork->of_vol);
+            }
         }
     }
 

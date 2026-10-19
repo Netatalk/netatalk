@@ -82,6 +82,9 @@ Changes in 4.7.0
   makes fewer system calls, and a cached resource fork read copies less
   data, while every session sees a file's current resource fork,
   GitHub #3415
+* UPD: afpd: the volume polls write nothing to the share root. Changes made
+  outside afpd below it reach clients through their caches. A read-only NFS
+  export or lofs mount needs 'read only = yes', GitHub #3420
 
 Changes in 4.6.1
 ----------------

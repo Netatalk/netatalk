@@ -2062,8 +2062,8 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  * @param[in]     ibuflen  request block length, unused
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
- * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, AFPERR_MISC, or the error of
- *          remove_acl
+ * @returns AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, AFPERR_MISC, AFPERR_VLOCK on a
+ *          read-only volume, or the error of remove_acl
  */
 int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                size_t *rbuflen)
@@ -2083,6 +2083,10 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     if (NULL == (vol = getvolbyvid(vid))) {
         LOG(log_error, logtype_afpd, "afp_setacl: error getting volid:%d", vid);
         return AFPERR_PARAM;
+    }
+
+    if (vol->v_flags & AFPVOL_RO) {
+        return AFPERR_VLOCK;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -2132,7 +2136,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     /* Change group: certain changes might be allowed, so try it. FIXME: not implemented yet. */
-    if (bitmap & kFileSec_UUID) {
+    if (bitmap & kFileSec_GRPUUID) {
         LOG(log_debug, logtype_afpd,
             "afp_setacl(\"%s\"): ignoring change group request",
             fullpathname(s_path->u_name));
@@ -2148,6 +2152,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                               S_ISDIR(s_path->st.st_mode))) != AFP_OK) {
             LOG(log_error, logtype_afpd, "afp_setacl: error from remove_acl");
         } else {
+            setvoltime(obj, vol);
             /* Refresh stat cache after ACL removal */
             struct stat fresh_st;
 
@@ -2207,6 +2212,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
         if (ret == 0) {
             ret = AFP_OK;
+            setvoltime(obj, vol);
             /* Refresh stat cache after ACL modification */
             struct stat fresh_st;
 

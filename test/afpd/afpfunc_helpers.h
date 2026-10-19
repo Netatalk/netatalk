@@ -96,6 +96,21 @@ extern int closefork(AFPObj *obj, uint16_t refnum);
 extern int checkaccess(AFPObj *obj, uint16_t vid, cnid_t did,
                        const char *name, uint32_t rights);
 extern int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid);
+extern int next_second(const char *path);
+extern int setdirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                       uint16_t bitmap, const void *params, size_t len);
+extern int getextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                      const char *attr, uint32_t maxreply, char *reply,
+                      size_t *replylen);
+extern int remextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                      const char *attr);
+extern int setextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                      const char *attr, const char *value, uint32_t len);
+extern int exchangefiles(AFPObj *obj, uint16_t vid, cnid_t sid, cnid_t did,
+                         const char *name1, const char *name2);
+extern int setacl(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                  uint16_t bitmap, const void *body, size_t len);
+extern int flushvol(AFPObj *obj, uint16_t vid);
 extern int setforkparams(AFPObj *obj, uint16_t refnum, uint32_t len);
 extern int getforkparams(AFPObj *obj, uint16_t refnum, uint16_t bitmap);
 extern int getvolparams(AFPObj *obj, uint16_t vid, uint16_t bitmap);

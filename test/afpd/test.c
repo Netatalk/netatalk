@@ -74,6 +74,7 @@
 #include "subtests_request.h"
 #include "subtests_sendfile.h"
 #include "subtests_veto.h"
+#include "subtests_volpolls.h"
 #ifndef NO_DDP
 #include "subtests_atp.h"
 #endif /* NO_DDP */
@@ -899,6 +900,77 @@ static int utest_dsi_dead_signal_pipe_ends_session(void)
     return verdict;
 }
 
+/*!
+ * @brief A write that comes within the second a session's mark wrote the
+ *        root reaches the root once that second has passed, with no
+ *        further request
+ *
+ * @returns 0, 1 while the root keeps its stamp from before the writes, -1,
+ *          or TEST_SKIP without loopback or for a root written before both
+ *          writes were on disk, which leaves no due write to wait for
+ */
+static int utest_dsi_due_mark_written(struct vol *vol)
+{
+    static uint8_t frame[2][DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + DSP_PAYLOAD];
+    const uint32_t offset = htonl(DSP_PAYLOAD);
+    struct timespec tick = { .tv_nsec = 10 * 1000 * 1000 };
+    struct timespec marked = { 0 };
+    struct timespec last;
+    struct stat st;
+    int peer = -1;
+    int ret = -1;
+    pid_t pid;
+
+    /* the file's create marks a fresh second, and both writes fall in it */
+    if (next_second(vol->v_path) != 0) {
+        return -1;
+    }
+
+    if ((pid = dsp_write_session(vol, 0, -1, 10, false, frame[0],
+                                 &peer)) == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        /* the same write as the next request, at the next offset */
+        memcpy(frame[1], frame[0], sizeof(frame[1]));
+        dsi_test_header(frame[1], DSIFUNC_WRITE, 2, DSI_WROFF_FPWRITE,
+                        DSI_WROFF_FPWRITE + DSP_PAYLOAD);
+        memcpy(frame[1] + DSI_BLOCKSIZ + 4, &offset, sizeof(offset));
+
+        if (stat(vol->v_path, &st) == 0) {
+            /* the root's stamp before the writes */
+            marked = atalk_stat_mtime_timespec(&st);
+
+            if (write(peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+                    && dsp_written(vol, 2 * DSP_PAYLOAD)
+                    && stat(vol->v_path, &st) == 0) {
+                last = atalk_stat_mtime_timespec(&st);
+                /* a root written already: a write in a later second, or a
+                 * due write made before this check */
+                ret = last.tv_sec == marked.tv_sec
+                      && last.tv_nsec == marked.tv_nsec ? 1 : TEST_SKIP;
+            }
+        }
+
+        /* the session writes the root within three seconds */
+        for (int i = 0; i < 300 && ret == 1; i++) {
+            nanosleep(&tick, NULL);
+
+            if (stat(vol->v_path, &st) == 0) {
+                last = atalk_stat_mtime_timespec(&st);
+                ret = last.tv_sec != marked.tv_sec
+                      || last.tv_nsec != marked.tv_nsec ? 0 : 1;
+            }
+        }
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_write");
+    return ret;
+}
+
 #ifndef HAVE_EAFD
 #define LR_SIDECAR (ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI + 32 + 100)
 
@@ -985,6 +1057,78 @@ static int utest_delete_file_whatever_sidecar_holds(struct vol *vol)
            && lr_delete(vol, ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI + 32,
                         ADEDLEN_FINDERI + 32, LR_SIDECAR) == 0
            && lr_delete(vol, 0, 0, 0) == 0 ? 0 : -1;
+#endif
+}
+
+/*!
+ * @brief Closing an empty resource fork after a path request in another
+ *        folder deletes the fork's own ._ sidecar, and a same-named file's
+ *        in that folder keeps its resource fork
+ */
+static int utest_closefork_empty_sidecar_own_folder(struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    /* the resource fork is a native stream, which no ._ file holds */
+    return TEST_SKIP;
+#else
+    const uint16_t rw = OPENACC_RD | OPENACC_WR;
+    char own[MAXPATHLEN + 1];
+    char other[MAXPATHLEN + 1];
+    struct stat before;
+    struct stat st;
+    cnid_t xdid = 0;
+    cnid_t ydid = 0;
+    uint16_t xfork;
+    uint16_t yfork;
+    int ret = -1;
+
+    /* without EAs the volume keeps AppleDouble v2, with no ._ file */
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    snprintf(own, sizeof(own), "%s/sidecar_x/._doc", vol->v_path);
+    snprintf(other, sizeof(other), "%s/sidecar_y/._doc", vol->v_path);
+
+    /* afp_createdir() leaves curdir in the directory it made */
+    if (createdir(&obj, vol->v_vid, DIRDID_ROOT, "sidecar_x") == AFP_OK) {
+        xdid = curdir->d_did;
+    }
+
+    if (createdir(&obj, vol->v_vid, DIRDID_ROOT, "sidecar_y") == AFP_OK) {
+        ydid = curdir->d_did;
+    }
+
+    /* doc in y with a resource fork of 100 bytes */
+    if (xdid != 0 && ydid != 0
+            && createfile(&obj, vol->v_vid, xdid, "doc") == AFP_OK
+            && createfile(&obj, vol->v_vid, ydid, "doc") == AFP_OK
+            && openfork(&obj, vol->v_vid, ydid, "doc", OPENFORK_RSCS, rw,
+                        &yfork) == AFP_OK) {
+        ret = setforkparams(&obj, yfork, 100) == AFP_OK ? 0 : -1;
+        closefork(&obj, yfork);
+    }
+
+    /* doc's empty resource fork in x, open across a request in y */
+    if (ret == 0 && stat(other, &before) == 0
+            && openfork(&obj, vol->v_vid, xdid, "doc", OPENFORK_RSCS, rw,
+                        &xfork) == AFP_OK) {
+        ret = getfiledirparms(&obj, vol->v_vid, ydid, "doc") == AFP_OK
+              && closefork(&obj, xfork) == AFP_OK ? 0 : -1;
+
+        if (ret == 0) {
+            ret = stat(other, &st) == 0 && st.st_size == before.st_size
+                  && stat(own, &st) == -1 ? 0 : 1;
+        }
+    } else {
+        ret = -1;
+    }
+
+    delete (&obj, vol->v_vid, xdid, "doc");
+    delete (&obj, vol->v_vid, ydid, "doc");
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "sidecar_x");
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "sidecar_y");
+    return ret;
 #endif
 }
 
@@ -3345,6 +3489,8 @@ int main(int argc, char *argv[])
                      "DSI: a session whose signal pipe fails ends");
     TEST_int_or_skip(utest_delete_file_whatever_sidecar_holds(vol), 0,
                      "FPDelete: a file is deleted whatever its sidecar holds");
+    TEST_int_or_skip(utest_closefork_empty_sidecar_own_folder(vol), 0,
+                     "FPCloseFork: the fork's own empty sidecar is deleted");
     TEST_int_or_skip(utest_write_fork_asp_failure_unlocks(vol), 0,
                      "write_fork: a failed AppleTalk write clears its lock");
     TEST_int_or_skip(utest_sendfile_read_lands_intact(&obj, vol), 0,
@@ -3626,6 +3772,137 @@ int main(int argc, char *argv[])
              "delete: a refused unlink keeps the AppleDouble file");
     TEST_int(utest_delete_uncounted_drops_count(&obj, vol), 0,
              "delete: a file the cached item count never held drops the count");
+    TEST_int_or_skip(utest_volpoll_stamp_nanoseconds(vol), 0,
+                     "stat helpers: the root's times keep their nanoseconds");
+    TEST_int_or_skip(utest_volpoll_birthtime_member(), 0,
+                     "config.h: the stat's creation time member is known");
+    TEST_int_or_skip(utest_volpoll_spotlight_no_birthtime(), 0,
+                     "spotlight: a creation date comes only with a birth time");
+    TEST_int(utest_volpoll_probe_keeps_mtime(&obj, vol), 0,
+             "FPGetVolParms: the read-only probe leaves the root's mtime");
+    TEST_int_or_skip(utest_volpoll_probe_reports_ro(&obj, vol), 0,
+                     "FPGetVolParms: EROFS is read only, EACCES is not");
+    TEST_int_or_skip(utest_volpoll_probe_mount_ro(&obj, vol), 0,
+                     "FPGetVolParms: the mount flag reports read only");
+    TEST_int_or_skip(utest_volpoll_mark_once_a_second(&obj, vol), 0,
+                     "setvoltime: the root's mtime is written once a second");
+    TEST_int(utest_volpoll_root_date_kept(&obj, vol), 0,
+             "FPSetDirParms: a client's date leaves the root's mark");
+    TEST_int(utest_volpoll_attention_versions(&obj, vol), 0,
+             "setvoltime: the free-space attention goes to AFP 2.2 to 3.1");
+    TEST_int(utest_volpoll_foreign_mark_announced(&obj, vol), 0,
+             "setvoltime: another session's mark reaches the next poll");
+    TEST_int(utest_volpoll_announced_mark_known(&obj, vol), 0,
+             "setvoltime: an announced mark is not announced again");
+    TEST_int(utest_volpoll_refused_attention_kept(&obj, vol), 0,
+             "pollvoltime: a refused attention goes out at the next poll");
+    TEST_int_or_skip(utest_volpoll_own_mark_quiet(&obj, vol), 0,
+                     "setvoltime: a session's own mark leaves its poll quiet");
+    TEST_int(utest_volpoll_foreign_mark_this_second(&obj, vol), 0,
+             "setvoltime: a mark earlier in the second reaches the poll");
+    TEST_int_or_skip(utest_volpoll_foreign_mark_seen_second(&obj, vol), 0,
+                     "pollvoltime: a stamp in the second it took is announced");
+    TEST_int_or_skip(utest_volpoll_root_entry_own(&obj, vol), 0,
+                     "setvoltime: root creates leave the creator's poll quiet");
+    TEST_int(utest_volpoll_hard_create_compares(&obj, vol), 0,
+             "setvoltime: a hard create over a root file compares the stamp");
+    TEST_int(utest_volpoll_link_create_compares(&obj, vol), 0,
+             "setvoltime: a create through a root link compares the stamp");
+    TEST_int(utest_volpoll_link_root_create_own(&obj, vol), 0,
+             "setvoltime: a root link's create into the root is the creator's");
+    TEST_int(utest_volpoll_sublink_root_create_own(&obj, vol), 0,
+             "setvoltime: a subfolder link's root create is the creator's");
+    TEST_int_or_skip(utest_volpoll_mark_trailing_written(&obj, vol), 0,
+                     "setvoltime: a trailing stamp's second gets its write");
+    TEST_int_or_skip(utest_volpoll_foreign_mark_same_second(&obj, vol), 0,
+                     "setvoltime: a same-second mark reaches the next poll");
+    TEST_int_or_skip(utest_volpoll_quota_cached(&obj, vol), 0,
+                     "getvolspace: a quota answer is reused for ten seconds");
+    TEST_int_or_skip(utest_volpoll_fast_path_no_passwd(&obj), 0,
+                     "load_afp_conf_vols: the fast path skips getpwuid_r");
+    TEST_int_or_skip(utest_volpoll_srvrparms_mode_first(&obj, vol), 0,
+                     "FPGetSrvrParms: granting mode bits skip the ACL read");
+    TEST_int(utest_volpoll_name_unencodable(&obj, vol), 0,
+             "FPGetVolParms: an unencodable volume name fails cleanly");
+    TEST_int(utest_volpoll_srvrparms_cap(&obj), 0,
+             "FPGetSrvrParms: the volume list stops at the reply cap");
+    TEST_int(utest_volpoll_ea_name_not_utf8(&obj, vol), 0,
+             "EA requests: a name that is not UTF-8 fails with kFPParamErr");
+    TEST_int(utest_volpoll_volname_not_utf8(&obj), 0,
+             "FPOpenVol: a volume name that is not UTF-8 fails");
+    TEST_int(utest_volpoll_volname_from_start(&obj), 0,
+             "FPOpenVol: the name converts into the start of its buffer");
+    TEST_int(utest_volpoll_unwritten_unmarked(&obj, vol), 0,
+             "FPOpenFork: an unwritten open and close mark nothing");
+    TEST_int(utest_volpoll_mark_setforkparams(&obj, vol), 0,
+             "FPSetForkParms: a length change marks the volume");
+    TEST_int(utest_volpoll_mark_exchangefiles(&obj, vol), 0,
+             "FPExchangeFiles: an exchange marks the volume");
+    TEST_int_or_skip(volsys ? utest_volpoll_mark_setextattr(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "FPSetExtAttr: setting an EA marks the volume");
+    TEST_int_or_skip(volsys ? utest_volpoll_mark_remextattr(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "FPRemoveExtAttr: removing an EA marks the volume");
+    TEST_int(utest_volpoll_mark_setvolparms(&obj, vol), 0,
+             "FPSetVolParms: setting the backup date marks the volume");
+    TEST_int_or_skip(utest_volpoll_setvolparms_unwritten(&obj, vol), 0,
+                     "FPSetVolParms: a backup date not written fails");
+    TEST_int_or_skip(utest_volpoll_mark_setacl(&obj, vol), 0,
+                     "FPSetACL: removing an ACL marks the volume");
+    TEST_int_or_skip(utest_volpoll_setacl_group_uuid(&obj, vol), 0,
+                     "FPSetACL: the ACL follows a lone group or owner UUID");
+    TEST_int(utest_volpoll_readonly_refused(&obj, vol), 0,
+             "read only: EA and ACL changes fail with kFPVolLocked");
+    TEST_int_or_skip(utest_write_fork_marks_volume(&obj, vol), 0,
+                     "FPWrite: a payload that lands marks the volume");
+    TEST_int_or_skip(utest_closefork_rsrc_marks_volume(&obj, vol), 0,
+                     "FPCloseFork: a written rfork's close marks the volume");
+    TEST_int_or_skip(utest_flush_rsrc_marks_volume(&obj, vol), 0,
+                     "FPFlush: a written rfork's flush marks the volume");
+    TEST_int_or_skip(utest_flush_rsrc_failed_kept(&obj, vol), 0,
+                     "FPFlush: an rfork whose header write failed stays dirty");
+    TEST_int_or_skip(utest_closevol_rsrc_marks_volume(&obj, vol), 0,
+                     "closevol: a written rfork's sweep writes quietly");
+    TEST_int_or_skip(utest_logout_rsrc_quiet(&obj, vol), 0,
+                     "FPLogout: a written rfork's sweep sends no attention");
+    TEST_int_or_skip(utest_dsi_due_mark_written(vol), 0,
+                     "DSI: a write within a marked second reaches the root");
+    /* closes vol, fails an open of it, then hands it back open */
+    TEST_int(utest_volpoll_openvol_failed_keeps_curdir(&obj, vol), 0,
+             "FPOpenVol: a failed open leaves the current directory");
+    TEST_int_or_skip(utest_volpoll_quota_unfetched(&obj, vol), 0,
+                     "getvolspace: a volume with no quota answer fetches one");
+    TEST_int(utest_volpoll_write_attention_quiet(&obj, vol), 0,
+             "setvoltime: a fork's change sends no free-space attention");
+    TEST_int_or_skip(utest_volpoll_setvolparms_flush_error(&obj, vol), 0,
+                     "FPSetVolParms: a failed flush answers its own error");
+    TEST_int(utest_volpoll_exchange_failure_cached(&obj, vol), 0,
+             "FPExchangeFiles: an early failure keeps the folder cached");
+    TEST_int(utest_volpoll_name_global_charset(&obj, vol), 0,
+             "FPGetVolParms: the Mac name converts in the global charset");
+    TEST_int_or_skip(volsys ? utest_volpoll_ea_name_field(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "EA requests: a long, short or NUL-holding name fails");
+    TEST_int_or_skip(volsys ? utest_volpoll_ea_value_bound(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "FPSetExtAttr: a value the request lacks fails");
+    TEST_int_or_skip(utest_volpoll_ea_none_refused(&obj, vol), 0,
+                     "EA requests: a volume without EA support refuses them");
+    TEST_int_or_skip(volsys ? utest_volpoll_ea_ad_long_listed(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "FPListExtAttrs: a 255-byte name lists from EA files");
+    TEST_int_or_skip(volsys ? utest_volpoll_ea_name_listed(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "EA requests: a name lists as it was set");
+    TEST_int(utest_volpoll_volname_nul(&obj), 0,
+             "FPOpenVol: a name that holds a NUL byte fails");
+    TEST_int(utest_volpoll_setdirparms_partial_marks(&obj, vol), 0,
+             "FPSetDirParms: a partial change marks for the root's date");
+    TEST_int_or_skip(utest_volpoll_attention_quota_fresh(&obj, vol), 0,
+                     "setvoltime: an attention drops a limited quota answer");
+    TEST_int_or_skip(utest_volpoll_attention_sibling_quota(&obj, vol), 0,
+                     "setvoltime: an attention drops a sibling's quota answer");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

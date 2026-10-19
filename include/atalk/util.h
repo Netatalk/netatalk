@@ -215,6 +215,7 @@ extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
 extern char *strtok_quote(char *s, const char *delim);
 extern const char *tmpdir(void);
+extern time_t coarse_time(void);
 extern int safe_atoi(const char *str, const char *param_name,
                      int min_val, int max_val, int default_val);
 

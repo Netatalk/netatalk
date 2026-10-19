@@ -76,6 +76,7 @@
 #define T_V2CONV     32
 #define T_EXTMAP     33
 #define T_UAM        34
+#define T_AFP22_31   35
 
 /* Define ansi colors */
 #define ANSI_RED      "\033[0;31m"

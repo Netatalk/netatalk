@@ -9,6 +9,7 @@ STATIC void test206()
 {
     uint16_t bitmap;
     uint16_t vol = VolID;
+    uint32_t set;
     struct afp_volume_parms parms;
     DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -44,17 +45,19 @@ STATIC void test206()
     FAIL(htonl(AFPERR_PARAM) != FPSetVolParam(Conn, vol + 1, bitmap, &parms))
     FAIL(htonl(AFPERR_BITMAP) != FPSetVolParam(Conn, vol, 0xffff, &parms))
     parms.bdate = parms.mdate;
+    set = parms.bdate;
     FAIL(FPSetVolParam(Conn, vol, bitmap, &parms))
     parms.bdate = 0;
     bitmap = (1 << VOLPBIT_BDATE) | (1 << VOLPBIT_MDATE);
     FAIL(FPGetVolParam(Conn, vol, bitmap))
     afp_volume_unpack(&parms, dsi->commands + sizeof(uint16_t), bitmap);
 
-    if (parms.bdate != parms.mdate) {
+    /* setting the backup date marks the volume, so mdate can move on;
+     * AFP dates count signed seconds from 2000 */
+    if (parms.bdate != set || (int32_t)parms.mdate < (int32_t)set) {
         if (!Quiet) {
-            fprintf(stdout,
-                    "\tFAILED Backup %x and modification %x date are not the same!\n", parms.bdate,
-                    parms.mdate);
+            fprintf(stdout, "\tFAILED Backup %x, set %x, modification %x\n",
+                    parms.bdate, set, parms.mdate);
         }
 
         test_failed();

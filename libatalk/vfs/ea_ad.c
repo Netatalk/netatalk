@@ -1182,7 +1182,9 @@ int list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen,
              const char *uname, int oflag _U_, int fd _U_)
 {
     unsigned int count = 0;
-    int attrbuflen = *buflen, ret = AFP_OK, len;
+    size_t attrbuflen = *buflen;
+    size_t len;
+    int ret = AFP_OK;
     char *buf = attrnamebuf;
     struct ea ea;
     LOG(log_debug, logtype_afpd, "list_eas: file: %s", uname);
@@ -1198,22 +1200,16 @@ int list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen,
     }
 
     while (count < ea.ea_count) {
-        /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
-        if ((len = convert_string(vol->v_volcharset,
-                                  CH_UTF8_MAC,
-                                  (*ea.ea_entries)[count].ea_name,
-                                  (*ea.ea_entries)[count].ea_namelen,
-                                  buf + attrbuflen,
-                                  255))
-                <= 0) {
+        /* the stored UTF-8 name goes to CH_UTF8_MAC straight into the
+         * caller's name list: 255 bytes and the NUL the conversion adds */
+        len = convert_string(CH_UTF8, CH_UTF8_MAC,
+                             (*ea.ea_entries)[count].ea_name,
+                             (*ea.ea_entries)[count].ea_namelen,
+                             buf + attrbuflen, 256);
+
+        if (len == 0 || len == (size_t) -1) {
             ret = AFPERR_MISC;
             goto exit;
-        }
-
-        if (len == 255)
-            /* convert_string didn't 0-terminate */
-        {
-            attrnamebuf[attrbuflen + 255] = 0;
         }
 
         LOG(log_debug7, logtype_afpd, "list_eas(%s): EA: %s",
@@ -1372,7 +1368,6 @@ exit:
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "remove_ea('%s'): ea_close error", uname);
         ret = AFPERR_MISC;
-        goto exit;
     }
 
     return ret;

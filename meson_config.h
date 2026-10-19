@@ -292,6 +292,21 @@
 /* Define to 1 if you have the `strnlen' function. */
 #mesondefine HAVE_STRNLEN
 
+/* Define to 1 if `st_atim' is a member of `struct stat'. */
+#mesondefine HAVE_STRUCT_STAT_ST_ATIM
+
+/* Define to 1 if `st_atimespec' is a member of `struct stat'. */
+#mesondefine HAVE_STRUCT_STAT_ST_ATIMESPEC
+
+/* Define to 1 if `st_birthtimespec' is a member of `struct stat'. */
+#mesondefine HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC
+
+/* Define to 1 if `st_mtim' is a member of `struct stat'. */
+#mesondefine HAVE_STRUCT_STAT_ST_MTIM
+
+/* Define to 1 if `st_mtimespec' is a member of `struct stat'. */
+#mesondefine HAVE_STRUCT_STAT_ST_MTIMESPEC
+
 /* Define to 1 if you have the <sys/attr.h> header file. */
 #mesondefine HAVE_SYS_ATTR_H
 

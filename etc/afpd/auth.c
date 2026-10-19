@@ -1329,8 +1329,8 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
                char *rbuf  _U_, size_t *rbuflen)
 {
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
-    of_close_all_forks(obj);
     close_all_vol(obj);
+    of_close_all_forks(obj);
 
     if (obj->proto == AFPPROTO_DSI) {
         DSI *dsi = obj->dsi;

@@ -1278,6 +1278,39 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
 }
 
 /*!
+ * @brief Tell whether the file a link names is an entry of a folder
+ *
+ * @param[in] upath   name of a link in the current folder
+ * @param[in] folder  stat of the folder
+ * @returns true when the link's target sits in the folder
+ */
+static bool link_target_in(const char *upath, const struct stat *folder)
+{
+    char *target = realpath_safe(upath);
+    struct stat st;
+    bool in = false;
+
+    if (target != NULL) {
+        char *slash = strrchr(target, '/');
+
+        if (slash != NULL) {
+            /* the target's parent; a target in / keeps the slash */
+            if (slash == target) {
+                slash++;
+            }
+
+            *slash = '\0';
+            in = stat(target, &st) == 0 && st.st_dev == folder->st_dev
+                 && st.st_ino == folder->st_ino;
+        }
+
+        free(target);
+    }
+
+    return in;
+}
+
+/*!
  * @brief FPCreateFile: create a file with its AppleDouble metadata
  *
  * A hard create, any nonzero flag byte, truncates an existing file. A soft
@@ -1487,23 +1520,28 @@ createfile_iderr:
 
     /* Send hint to afpd siblings — parent dir ctime changed due to new file creation */
     ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
-
     /* st_errno is the pre-create stat: an existing name adds nothing; a
-     * dangling link put the file where it points, so a fresh stat of this
-     * folder decides whether its count moved */
+     * dangling link adds its target's entry, wherever the target lies */
+    bool root = false;
+
     if (s_path->st_errno != 0) {
         if (S_ISLNK(st.st_mode)) {
             struct stat dst;
+            struct stat rst;
 
             if (lstat(".", &dst) == 0) {
                 dir_stat_refresh(vol, curdir, &dst);
             }
+
+            root = stat(vol->v_path, &rst) == 0
+                   && link_target_in(upath, &rst);
         } else {
             curdir->d_offcnt++;
+            root = curdir->d_did == DIRDID_ROOT;
         }
     }
 
-    setvoltime(obj, vol);
+    setvoltime_entry(obj, vol, root);
     return retvalue;
 }
 
@@ -2468,7 +2506,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     curdir->d_offcnt++;
-    setvoltime(obj, d_vol);
+    setvoltime_entry(obj, d_vol, curdir->d_did == DIRDID_ROOT);
 copy_exit:
 
     if (upath && err == AFP_OK) {
@@ -3453,6 +3491,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     unsigned int        dlen;
     uint32_t		sid, did;
     uint16_t		vid;
+    bool                renamed = false;
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof(vid));
@@ -3655,6 +3694,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     close(fd);
+    /* from here the files on disk change, and the caches with them */
+    renamed = true;
 
     /* now, quickly rename the file. we error if we can't. */
     if ((err = renamefile(vol, curdir, -1, p, temp, temp, adsp)) != AFP_OK) {
@@ -3844,6 +3885,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     setfilunixmode(vol, path, srcst.st_mode);
     setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
     unbecome_root();
+    setvoltime_entry(obj, vol, sdir->d_did == DIRDID_ROOT
+                     || curdir->d_did == DIRDID_ROOT);
     err = AFP_OK;
     goto err_exchangefile;
     /* all this stuff is so that we can unwind a failed operation
@@ -3868,6 +3911,11 @@ err_exchangefile:
 
     if (!d_of && addp && ad_meta_fileno(addp) != -1) {  /* META */
         ad_close(addp, ADFLAGS_HF);
+    }
+
+    /* a failure before the renames changed nothing on disk */
+    if (!renamed) {
+        return err;
     }
 
     struct dir *cached;

@@ -588,21 +588,22 @@ endforeach
 if cc.has_type('fshare_t', prefix: '#include <fcntl.h>')
     cdata.set('HAVE_FSHARE_T', 1)
 endif
-if cc.has_member('struct stat', 'st_birthtimespec', prefix: '#include <sys/stat.h>')
-    cdata.set('HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC', 1)
-endif
-if cc.has_member('struct stat', 'st_mtim', prefix: '#include <sys/stat.h>')
-    cdata.set('HAVE_STRUCT_STAT_ST_MTIM', 1)
-endif
-if cc.has_member('struct stat', 'st_atim', prefix: '#include <sys/stat.h>')
-    cdata.set('HAVE_STRUCT_STAT_ST_ATIM', 1)
-endif
-if cc.has_member('struct stat', 'st_mtimespec', prefix: '#include <sys/stat.h>')
-    cdata.set('HAVE_STRUCT_STAT_ST_MTIMESPEC', 1)
-endif
-if cc.has_member('struct stat', 'st_atimespec', prefix: '#include <sys/stat.h>')
-    cdata.set('HAVE_STRUCT_STAT_ST_ATIMESPEC', 1)
-endif
+foreach m : [
+    'st_atim',
+    'st_atimespec',
+    'st_birthtimespec',
+    'st_mtim',
+    'st_mtimespec',
+]
+    if cc.has_member(
+        'struct stat',
+        m,
+        prefix: '#include <sys/stat.h>',
+        args: netatalk_common_flags,
+    )
+        cdata.set('HAVE_STRUCT_STAT_' + m.to_upper(), 1)
+    endif
+endforeach
 if cc.has_member(
     'struct tcp_info',
     'tcpi_snd_mss',

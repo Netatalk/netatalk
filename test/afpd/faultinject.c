@@ -100,6 +100,10 @@ int faultinject_open_works(const char *scratch_path)
 
 /* ---- Role 2: LD_PRELOAD interposer (libfaultinject.so) ---- */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <dirent.h>
 #include <dlfcn.h>
 #include <errno.h>
@@ -111,12 +115,19 @@ int faultinject_open_works(const char *scratch_path)
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifdef __linux__
 #include <sys/sendfile.h>
 #endif
+
+#ifdef HAVE_POSIX_ACLS
+#include <sys/acl.h>
+#endif /* HAVE_POSIX_ACLS */
 
 /* `fi` is defined in the afpdtest executable and exported dynamically; this is
  * the same object the test code arms.  A weak fallback keeps the preload
@@ -355,6 +366,23 @@ ssize_t pread(int fd, void *buf, size_t count, off_t offset)
     }
 
     return real_pread(fd, buf, fi_cap(count, fi.read_max), offset);
+}
+
+typedef ssize_t (*pwrite_fn)(int, const void *, size_t, off_t);
+static pwrite_fn real_pwrite;
+
+/*! @brief pwrite() interposer: counts and fails armed calls */
+ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset)
+{
+    if (!real_pwrite) {
+        real_pwrite = (pwrite_fn)fi_real64("pwrite64", "pwrite");
+    }
+
+    if (fi_call_fire(&fi.pwrite)) {
+        return -1;
+    }
+
+    return real_pwrite(fd, buf, count, offset);
 }
 
 typedef off_t (*lseek_fn)(int, off_t, int);
@@ -819,5 +847,219 @@ int64_t fi_time64(int64_t *t)
     time_watched();
     return real_time64(t);
 }
+
+typedef int (*statvfs_fn)(const char *, struct statvfs *);
+static statvfs_fn real_statvfs;
+
+/*!
+ * @brief statvfs() interposer: reports the filesystem read-only while armed
+ *
+ * The header renames this definition where libc versions the call (glibc
+ * statvfs64, NetBSD __statvfs90); the real function with the same struct
+ * carries that name too, so it is looked up under this definition's own
+ * name first, when dladdr() names this very definition. A call whose real
+ * function is not found fails with ENOSYS.
+ */
+int statvfs(const char *path, struct statvfs *buf)
+{
+    int ret;
+
+    if (!real_statvfs) {
+        Dl_info self;
+
+        if (dladdr((void *)statvfs, &self) && self.dli_sname
+                && self.dli_saddr == (void *)statvfs) {
+            real_statvfs = (statvfs_fn)dlsym(RTLD_NEXT, self.dli_sname);
+        }
+
+        if (!real_statvfs) {
+            real_statvfs = (statvfs_fn)fi_real64("statvfs64", "statvfs");
+        }
+
+        if (!real_statvfs) {
+            errno = ENOSYS;
+            return -1;
+        }
+    }
+
+    ret = real_statvfs(path, buf);
+
+    if (ret == 0 && fi.statvfs_rdonly) {
+        buf->f_flag |= ST_RDONLY;
+    }
+
+    return ret;
+}
+
+typedef int (*access_fn)(const char *, int);
+static access_fn real_access;
+
+/*!
+ * @brief access() interposer: fails an armed call with the armed errno
+ */
+int access(const char *path, int mode)
+{
+    if (!real_access) {
+        real_access = (access_fn)dlsym(RTLD_NEXT, "access");
+    }
+
+    if (fault_should_fire(fi.access_armed, &fi.access_fail_after,
+                          fi.access_errno)) {
+        return -1;
+    }
+
+    return real_access(path, mode);
+}
+
+/* No <utime.h>: NetBSD renames utime() there, and a renamed definition
+ * would take the 64-bit call yet forward it to the old one */
+struct utimbuf;
+typedef int (*utime_fn)(const char *, const struct utimbuf *);
+static utime_fn real_utime;
+
+/*!
+ * @brief utime() interposer: counts watched calls and fails an armed one
+ */
+int utime(const char *path, const struct utimbuf *times)
+{
+    if (!real_utime) {
+        real_utime = (utime_fn)dlsym(RTLD_NEXT, "utime");
+    }
+
+    if (fi.utime_watch) {
+        fi.utime_calls++;
+    }
+
+    if (fi_call_fire(&fi.utime)) {
+        return -1;
+    }
+
+    return real_utime(path, times);
+}
+
+typedef int (*utimensat_fn)(int, const char *, const struct timespec *, int);
+static utimensat_fn real_utimensat;
+
+/*!
+ * @brief utimensat() interposer: counts watched calls with utime()'s, fails
+ *        an armed one with them, and stamps a call without times
+ *        utime_lag_ms behind the clock
+ *
+ * <sys/stat.h> renames this definition where libc versions the call (glibc
+ * with 64-bit time on a 32-bit build), so the real function is looked up
+ * under this definition's own name first, as statvfs() is.
+ */
+int utimensat(int dirfd, const char *path, const struct timespec *times,
+              int flags)
+{
+    struct timespec lag[2];
+
+    if (!real_utimensat) {
+        Dl_info self;
+
+        if (dladdr((void *)utimensat, &self) && self.dli_sname
+                && self.dli_saddr == (void *)utimensat) {
+            real_utimensat = (utimensat_fn)dlsym(RTLD_NEXT, self.dli_sname);
+        }
+
+        if (!real_utimensat) {
+            real_utimensat = (utimensat_fn)dlsym(RTLD_NEXT, "utimensat");
+        }
+    }
+
+    if (fi.utime_watch) {
+        fi.utime_calls++;
+    }
+
+    if (fi_call_fire(&fi.utime)) {
+        return -1;
+    }
+
+    if (times == NULL && fi.utime_lag_ms > 0
+            && clock_gettime(CLOCK_REALTIME, &lag[0]) == 0) {
+        lag[0].tv_sec -= fi.utime_lag_ms / 1000;
+        lag[0].tv_nsec -= (fi.utime_lag_ms % 1000) * 1000L * 1000L;
+
+        if (lag[0].tv_nsec < 0) {
+            lag[0].tv_nsec += 1000L * 1000L * 1000L;
+            lag[0].tv_sec--;
+        }
+
+        lag[1] = lag[0];
+        times = lag;
+    }
+
+    return real_utimensat(dirfd, path, times, flags);
+}
+
+/* the clock coarse_time() reads, by its choice */
+#if defined(CLOCK_REALTIME_COARSE)
+#define FI_COARSE_CLOCK CLOCK_REALTIME_COARSE
+#elif defined(CLOCK_REALTIME_FAST)
+#define FI_COARSE_CLOCK CLOCK_REALTIME_FAST
+#else
+#define FI_COARSE_CLOCK CLOCK_REALTIME
+#endif
+
+typedef int (*clock_gettime_fn)(clockid_t, struct timespec *);
+static clock_gettime_fn real_clock_gettime;
+
+/*!
+ * @brief clock_gettime() interposer: while clock_fake is set, the wall clock
+ *        and the clock coarse_time() reads answer clock_sec, and
+ *        clock_calls counts those answers
+ *
+ * <time.h> renames this definition where libc versions the call (glibc with
+ * 64-bit time on a 32-bit build), so the real function is looked up under
+ * this definition's own name first, as utimensat()'s is.
+ */
+int clock_gettime(clockid_t clk, struct timespec *ts)
+{
+    if (!real_clock_gettime) {
+        Dl_info self;
+
+        if (dladdr((void *)clock_gettime, &self) && self.dli_sname
+                && self.dli_saddr == (void *)clock_gettime) {
+            real_clock_gettime = (clock_gettime_fn)dlsym(RTLD_NEXT,
+                                                         self.dli_sname);
+        }
+
+        if (!real_clock_gettime) {
+            real_clock_gettime = (clock_gettime_fn)dlsym(RTLD_NEXT,
+                                                         "clock_gettime");
+        }
+    }
+
+    if (fi.clock_fake
+            && (clk == CLOCK_REALTIME || clk == FI_COARSE_CLOCK)) {
+        fi.clock_calls++;
+        ts->tv_sec = fi.clock_sec;
+        ts->tv_nsec = 0;
+        return 0;
+    }
+
+    return real_clock_gettime(clk, ts);
+}
+
+#ifdef HAVE_POSIX_ACLS
+typedef acl_t (*acl_get_file_fn)(const char *, acl_type_t);
+static acl_get_file_fn real_acl_get_file;
+
+/*!
+ * @brief acl_get_file() interposer: counts watched calls
+ */
+acl_t acl_get_file(const char *path, acl_type_t type)
+{
+    if (!real_acl_get_file) {
+        real_acl_get_file = (acl_get_file_fn)dlsym(RTLD_NEXT, "acl_get_file");
+    }
+
+    if (fi.acl_get_file_watch) {
+        fi.acl_get_file_calls++;
+    }
+
+    return real_acl_get_file(path, type);
+}
+#endif /* HAVE_POSIX_ACLS */
 
 #endif /* FAULTINJECT_PRELOAD */

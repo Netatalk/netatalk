@@ -28,22 +28,26 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/dsi.h>
 #include <atalk/globals.h>
+#include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
 #include "afpfunc_helpers.h"
+#include "auth.h"
 #include "directory.h"
 #include "faultinject.h"
 #include "fork.h"
 #include "subtests_recvfile.h"
 #include "test.h"
 #include "test_capabilities.h"
+#include "volume.h"
 
 #define RF_A_LEN (1024 * 1024)
 #define RF_B_LEN (256 * 1024)
@@ -148,7 +152,6 @@ static void *rf_writer(void *arg)
 /*! @brief Close the forks, delete their files and release the session */
 static void rf_teardown(struct rf *rf)
 {
-    fault_inject_reset();
     /* a writer blocked in write() fails with EPIPE once its reader is gone */
     close(rf->dsi.socket);
     rf->dsi.socket = -1;
@@ -157,6 +160,8 @@ static void rf_teardown(struct rf *rf)
         pthread_join(rf->writer, NULL);
     }
 
+    /* the writer's write() calls read the fault settings until it ends */
+    fault_inject_reset();
     close(rf->peer);
 
     for (int i = 0; i < 2; i++) {
@@ -631,6 +636,297 @@ int utest_recvfile_counting_arm_fails_nothing(AFPObj *obj, struct vol *vol)
 
     rf_teardown(&rf);
     free(frames);
+    return ret;
+}
+
+/*!
+ * @brief A payload that lands marks the volume
+ */
+int utest_write_fork_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_DATA)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+        vol->v_root_marked = 0;
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK) {
+            ret = vol->v_root_marked != 0 ? 0 : 1;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief Closing a resource fork a write reached marks the volume as the
+ *        close stamps the fork's modification date
+ */
+int utest_closefork_rsrc_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK) {
+            vol->v_root_marked = 0;
+
+            if (closefork(&rf.obj, rf.refnum[0]) == AFP_OK) {
+                rf.refnum[0] = 0;
+                ret = vol->v_root_marked != 0 ? 0 : 1;
+            }
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief FPFlush marks the volume as it stamps the modification date of a
+ *        resource fork a write reached, and not before the write
+ */
+int utest_flush_rsrc_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+        /* a flush of the unwritten fork stamps nothing */
+        vol->v_root_marked = 0;
+
+        if (flushvol(&rf.obj, vol->v_vid) != AFP_OK
+                || vol->v_root_marked != 0) {
+            ret = 1;
+        } else if (rf_send(&rf, rf.buf, len) == 0
+                   && rf_write(&rf) == AFP_OK) {
+            vol->v_root_marked = 0;
+
+            if (flushvol(&rf.obj, vol->v_vid) == AFP_OK) {
+                ret = vol->v_root_marked != 0 ? 0 : 1;
+            }
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief A resource fork whose header write fails stays dirty, so the next
+ *        flush stamps it and marks the volume
+ */
+int utest_flush_rsrc_failed_kept(AFPObj *obj, struct vol *vol)
+{
+    struct ofork *ofork;
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
+                && (ofork = of_find(rf.refnum[0])) != NULL) {
+            vol->v_root_marked = 0;
+            fi.pwrite.armed = 1;
+            fi.pwrite.errnum = EIO;
+            ret = flushfork(ofork);
+            fi.pwrite.armed = 0;
+
+            /* no pwrite() reached the interposer: the header write takes
+             * none here, or the preload misses libatalk */
+            if (fi.pwrite.calls == 0) {
+                ret = TEST_SKIP;
+            } else if (ret == 0 || vol->v_root_marked != 0) {
+                ret = 1;
+            } else {
+                ret = flushfork(ofork) == 0 && vol->v_root_marked != 0 ? 0 : 1;
+            }
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+static int rf_attentions;
+
+/*! @brief Count the attentions a sweep's marks send */
+static int rf_count_attention(void *handle _U_, AFPUserBytes flags _U_)
+{
+    rf_attentions++;
+    return 1;
+}
+
+/*!
+ * @brief A volume close whose sweep closes a written resource fork writes
+ *        the root as it stamps the fork's modification date, and sends a
+ *        client from AFP 2.2 to 3.1 no free-space attention
+ */
+int utest_closevol_rsrc_marks_volume(AFPObj *obj, struct vol *vol)
+{
+    int (*const attention)(void *, AFPUserBytes) = obj->attention;
+    const int version = obj->afp_version;
+    const int flags = obj->options.flags;
+    const int proto = obj->proto;
+    struct timespec old[2] = { { 0 } };
+    struct stat st;
+    struct rf rf;
+    size_t len;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK) {
+            /* the root a minute back, with the write's mark spent */
+            old[0].tv_sec = old[1].tv_sec = time(NULL) - 60;
+            vol->v_root_marked = 0;
+            vol->v_root_due = 0;
+            ret = utimensat(AT_FDCWD, vol->v_path, old, 0) == 0 ? 0 : -1;
+        }
+    }
+
+    if (ret == 0) {
+        /* an AFP 3.1 client with server notifications */
+        rf_attentions = 0;
+        obj->attention = rf_count_attention;
+        obj->afp_version = 31;
+        obj->options.flags |= OPTION_SERVERNOTIF;
+        obj->proto = AFPPROTO_ASP;
+        /* the sweep closes the fork; a volume close clears the current
+         * directory first */
+        curdir = NULL;
+        closevol(obj, vol);
+        rf.refnum[0] = 0;
+        obj->attention = attention;
+        obj->afp_version = version;
+        obj->options.flags = flags;
+        obj->proto = proto;
+        ret = stat(vol->v_path, &st) == 0 && st.st_mtime > old[1].tv_sec
+              && rf_attentions == 0 ? 0 : 1;
+
+        /* the volume goes back open for the tests after this one */
+        if (openvol(obj, vol->v_localname) == 0) {
+            ret = -1;
+        }
+    }
+
+    rf_teardown(&rf);
+    return ret;
+}
+
+/*!
+ * @brief A logout whose sweep closes a written resource fork sends a client
+ *        from AFP 2.2 to 3.1 no free-space attention
+ */
+int utest_logout_rsrc_quiet(AFPObj *obj, struct vol *vol)
+{
+    int (*const attention)(void *, AFPUserBytes) = obj->attention;
+    const int version = obj->afp_version;
+    const int flags = obj->options.flags;
+    const int proto = obj->proto;
+    static char names[16][256];
+    size_t len;
+    size_t n = 0;
+    size_t rlen = 0;
+    struct rf rf;
+    int ret;
+
+    if ((ret = rf_setup(&rf, obj, vol)) != 0) {
+        return ret;
+    }
+
+    ret = -1;
+    rf.obj.options.flags &= ~OPTION_RECVFILE;
+
+    if (rf_open(&rf, 0, OPENFORK_RSCS)) {
+        len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, RF_C_LEN, 0xA5);
+
+        if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK) {
+            ret = 0;
+        }
+    }
+
+    if (ret == 0) {
+        for (const struct vol *v = getvolumes(); v != NULL && n < 16;
+                v = v->v_next) {
+            if (v->v_flags & AFPVOL_OPEN) {
+                snprintf(names[n++], sizeof(names[0]), "%s", v->v_localname);
+            }
+        }
+
+        /* an AFP 3.1 client with server notifications, the write's mark
+         * spent */
+        rf_attentions = 0;
+        obj->attention = rf_count_attention;
+        obj->afp_version = 31;
+        obj->options.flags |= OPTION_SERVERNOTIF;
+        obj->proto = AFPPROTO_ASP;
+        vol->v_root_marked = 0;
+        vol->v_root_due = 0;
+        curdir = NULL;
+        (void)afp_logout(obj, NULL, 0, NULL, &rlen);
+        rf.refnum[0] = 0;
+        obj->attention = attention;
+        obj->afp_version = version;
+        obj->options.flags = flags;
+        obj->proto = proto;
+        ret = rf_attentions == 0 ? 0 : 1;
+
+        /* the volumes go back open for the tests after this one */
+        for (size_t i = 0; i < n; i++) {
+            if (openvol(obj, names[i]) == 0) {
+                ret = -1;
+            }
+        }
+    }
+
+    rf_teardown(&rf);
     return ret;
 }
 

@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <inttypes.h>
 #include <netinet/in.h>
@@ -26,8 +27,9 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
+#include <sys/statvfs.h>
 #include <time.h>
-#include <utime.h>
+#include <unistd.h>
 
 #include <bstrlib.h>
 
@@ -81,6 +83,7 @@
 
 /*! Time Machine cache for 60 seconds */
 #define TM_USED_CACHETIME 60
+#define QUOTA_CACHETIME 10
 #define VOLPASSLEN  8
 
 extern int afprun(char *cmd, int *outfd);
@@ -178,8 +181,8 @@ EC_CLEANUP:
  *
  * The result of the calculation is returned in "volume->v_tm_used".
  * "volume->v_appended" gets reset to 0.
- * "volume->v_tm_cachetime" is updated with the current time from time(NULL)
- * after a successful scan.
+ * "volume->v_tm_cachetime" is updated with the current second after a
+ * successful scan.
  *
  * "volume->v_tm_used" is cached for TM_USED_CACHETIME seconds and updated by
  * "volume->v_appended". The latter is increased by X every time the client
@@ -199,7 +202,7 @@ static int get_tm_used(struct vol *vol)
     const struct dirent *entry;
     const char *p;
     long int links;
-    time_t now = time(NULL);
+    time_t now = coarse_time();
 
     if (vol->v_tm_cachetime
             && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
@@ -263,6 +266,39 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+#ifndef NO_QUOTA_SUPPORT
+/*!
+ * @brief Fetch the user's quota into vol->v_qfree and vol->v_qtotal
+ *
+ * Reuses an answer that arrived within the last QUOTA_CACHETIME seconds. A
+ * volume that holds none fetches one: one never fetched, closed since, or
+ * whose limited answer a free-space attention dropped.
+ *
+ * @param[in]     obj    session
+ * @param[in,out] vol    volume
+ * @param[in]     bsize  filesystem block size
+ *
+ * @returns AFP_OK, or the error of the fetch
+ */
+static int getvolquota(const AFPObj *obj, struct vol *vol, uint32_t bsize)
+{
+    time_t age = coarse_time() - vol->v_qtime;
+    int ret;
+
+    if (vol->v_qtime != 0 && age >= 0 && age < QUOTA_CACHETIME) {
+        return AFP_OK;
+    }
+
+    ret = uquota_getvolspace(obj, vol, &vol->v_qfree, &vol->v_qtotal, bsize);
+
+    if (ret == AFP_OK) {
+        vol->v_qtime = coarse_time();
+    }
+
+    return ret;
+}
+#endif /* NO_QUOTA_SUPPORT */
+
 /*!
  * @brief Free and total space of a volume in 32-bit and 64-bit form
  *
@@ -288,7 +324,6 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
     int         rc;
     uint32_t   maxsize;
 #ifndef NO_QUOTA_SUPPORT
-    VolSpace    qfree, qtotal;
     int         spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 #endif
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
@@ -303,10 +338,10 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
 #ifndef NO_QUOTA_SUPPORT
 
     if (spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_UQUOTA) {
-        if (uquota_getvolspace(obj, vol, &qfree, &qtotal, *bsize) == AFP_OK) {
+        if (getvolquota(obj, vol, *bsize) == AFP_OK) {
             vol->v_flags = (~AFPVOL_GVSMASK & vol->v_flags) | AFPVOL_UQUOTA;
-            *xbfree = MIN(*xbfree, qfree);
-            *xbtotal = MIN(*xbtotal, qtotal);
+            *xbfree = MIN(*xbfree, vol->v_qfree);
+            *xbtotal = MIN(*xbtotal, vol->v_qtotal);
             goto getvolspace_done;
         }
     }
@@ -363,6 +398,30 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 }
 
 /*!
+ * @brief Is the volume root on a read-only mount or subvolume?
+ *
+ * Writes nothing: the root's mtime is the volume's change mark. access()
+ * judges the real uid, root in afpd, and a root-squashed export or a
+ * single-user server refuses it before a read-only mount shows, so
+ * statvfs() answers then.
+ *
+ * @param[in] vol  volume
+ *
+ * @returns true for a read-only mount or subvolume
+ */
+static bool root_readonly(const struct vol *vol)
+{
+    struct statvfs sv;
+
+    if (access(vol->v_path, W_OK) == 0) {
+        return false;
+    }
+
+    return errno == EROFS
+           || (statvfs(vol->v_path, &sv) == 0 && (sv.f_flag & ST_RDONLY));
+}
+
+/*!
  * @brief Pack the volume parameters that bitmap selects into buf
  *
  * The call first converts version 2 AppleDouble data of the volume root to
@@ -387,6 +446,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     struct adouble  ad;
     int bit = 0, isad = 1;
     uint32_t aint;
+    size_t namelen;
     uint16_t ashort;
     uint32_t bfree = 0, btotal = 0, bsize = 0;
     /* extended bytes */
@@ -467,8 +527,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
              * NOTE: we don't actually set the read-only flag unless
              *       it's passed in that way as it's possible to mount
              *       a read-write filesystem under a read-only one. */
-            if ((vol->v_flags & AFPVOL_RO) ||
-                    ((utime(vol->v_path, NULL) < 0) && (errno == EROFS))) {
+            if ((vol->v_flags & AFPVOL_RO) || root_readonly(vol)) {
                 ashort |= VOLPBIT_ATTR_RO;
             }
 
@@ -537,6 +596,8 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
         case VOLPBIT_MDATE :
             if (st->st_mtime > vol->v_mtime) {
                 vol->v_mtime = st->st_mtime;
+                vol->v_root_stamp = atalk_stat_mtime_timespec(st);
+                vol->v_root_foreign = 0;
             }
 
             aint = AD_DATE_FROM_UNIX(vol->v_mtime);
@@ -610,16 +671,21 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
         ashort = htons(data - buf);
         memcpy(nameoff, &ashort, sizeof(ashort));
         /* name is always in mac charset */
-        aint = ucs2_to_charset(vol->v_maccharset, vol->v_macname, data + 1,
-                               AFPVOL_MACNAMELEN + 1);
+        /* the global charset creatvol() made the Mac name in */
+        namelen = ucs2_to_charset(obj->options.maccharset, vol->v_macname,
+                                  data + 1, AFPVOL_MACNAMELEN + 1);
 
-        if (aint <= 0) {
+        if (namelen == 0 || namelen == (size_t) -1) {
+            if (isad) {
+                ad_close(&ad, ADFLAGS_HF);
+            }
+
             *buflen = 0;
             return AFPERR_MISC;
         }
 
-        *data++ = aint;
-        data += aint;
+        *data++ = (char)namelen;
+        data += namelen;
     }
 
     if (isad) {
@@ -697,7 +763,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
     struct stat     st;
     struct vol      *volume;
     char    *data;
-    char        *namebuf;
+    char        name[AFPVOL_U8MNAMELEN + 1];
     int         vcnt;
     size_t      len;
     uint32_t    aint;
@@ -707,8 +773,6 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
     for (vcnt = 0, volume = getvolumes(); volume
             && vcnt < 255; volume = volume->v_next) {
         if (!(volume->v_flags & AFPVOL_NOSTAT)) {
-            struct maccess ma;
-
             if (stat(volume->v_path, &st) < 0) {
                 LOG(log_info, logtype_afpd, "afp_getsrvrparms(%s): stat: %s",
                     volume->v_path, strerror(errno));
@@ -721,19 +785,18 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
                 continue;
             }
 
-            accessmode(obj, volume, volume->v_path, &ma, NULL, &st);
-
-            if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
+            if (!accessmode_rx(obj, volume, volume->v_path, &st)) {
                 /* no r-x access */
                 continue;
             }
         }
 
         if (utf8_encoding(obj)) {
-            len = ucs2_to_charset_allocate(CH_UTF8_MAC, &namebuf, volume->v_u8mname);
+            len = ucs2_to_charset(CH_UTF8_MAC, volume->v_u8mname, name,
+                                  sizeof(name));
         } else {
-            len = ucs2_to_charset_allocate(obj->options.maccharset, &namebuf,
-                                           volume->v_macname);
+            len = ucs2_to_charset(obj->options.maccharset, volume->v_macname,
+                                  name, sizeof(name));
         }
 
         if (len == (size_t) -1) {
@@ -761,9 +824,8 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
         /* UNIX PRIVS BIT ..., OSX doesn't seem to use it, so we don't either */
         *data++ |= 0;
         *data++ = len;
-        memcpy(data, namebuf, len);
+        memcpy(data, name, len);
         data += len;
-        free(namebuf);
         vcnt++;
     }
 
@@ -918,7 +980,9 @@ static void server_ipc_volumes(AFPObj *obj)
  * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
  *                         return
  * @returns AFP_OK, AFPERR_BITMAP, AFPERR_NOOBJ for an unknown name,
- *          AFPERR_ACCESS for a wrong password, AFPERR_PARAM, or AFPERR_MISC
+ *          AFPERR_ACCESS for a wrong password, AFPERR_PARAM, also for a
+ *          name that is empty, does not convert or holds a NUL byte, or
+ *          AFPERR_MISC
  */
 int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
@@ -932,7 +996,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     uint16_t   bitmap;
     char        *vol_uname;
     char        *vol_mname = NULL;
-    char        *volname_tmp;
     ibuf += 2;
     memcpy(&bitmap, ibuf, sizeof(bitmap));
     bitmap = ntohs(bitmap);
@@ -946,10 +1009,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     len = (unsigned char) * ibuf++;
     volname = obj->oldtmp;
 
-    if ((volname_tmp = strchr(volname, '+')) != NULL) {
-        volname = volname_tmp + 1;
-    }
-
     if (utf8_encoding(obj)) {
         namelen = convert_string(CH_UTF8_MAC, CH_UCS2, ibuf, len, volname,
                                  sizeof(obj->oldtmp));
@@ -958,7 +1017,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                                  sizeof(obj->oldtmp));
     }
 
-    if (namelen <= 0) {
+    /* the lookup compares the name only up to its first NUL */
+    if (namelen == 0 || namelen == (size_t) -1
+            || strlen_w((ucs2_t *) volname) * sizeof(ucs2_t) != namelen) {
         return AFPERR_PARAM;
     }
 
@@ -1002,6 +1063,8 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     if (stat(volume->v_path, &st) < 0) {
         return AFPERR_PARAM;
     }
+
+    volume->v_root_stamp = atalk_stat_mtime_timespec(&st);
 
     if (chdir(volume->v_path) < 0) {
         return AFPERR_PARAM;
@@ -1058,7 +1121,6 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     volume->v_root = dir;
-    curdir = dir;
 
     if (volume_openDB(obj, volume) < 0) {
         LOG(log_error, logtype_afpd,
@@ -1164,6 +1226,8 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
             }
         }
 
+        /* curdir takes the root on success alone: the error exit frees it */
+        curdir = dir;
         free(vol_mname);
         server_ipc_volumes(obj);
         return AFP_OK;
@@ -1277,6 +1341,20 @@ void closevol(const AFPObj *obj, struct vol *vol)
 
     vol->v_flags &= ~AFPVOL_OPEN;
     of_closevol(obj, vol);
+
+    /* the other sessions' polls see a change still due, the forks' sweep
+     * included */
+    if (vol->v_root_due) {
+        (void)utimensat(AT_FDCWD, vol->v_path, NULL, 0);
+    }
+
+    vol->v_root_marked = 0;
+    vol->v_root_due = 0;
+    vol->v_root_foreign = 0;
+    vol->v_root_stamp.tv_sec = 0;
+    vol->v_root_stamp.tv_nsec = 0;
+    vol->v_root_attn = 0;
+    vol->v_qtime = 0;
     /* Retire the volume's pfd slots: their O_PATH fds would otherwise
      * outlive the close (pinning directories against unmount), and since
      * struct vol and v_vid persist across logout/re-login a surviving
@@ -1355,18 +1433,44 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 }
 
 /*!
-   @brief poll if a volume is changed by other processes.
-   @param obj AFP connection object
-   @return
-   0 no attention msg sent,
-   1 attention msg sent,
-   -1 error (socket closed)
+ * @brief Tell whether a stat of a volume root holds a stamp, to the
+ *        nanosecond
+ *
+ * @param[in] st     stat of the volume root
+ * @param[in] stamp  stamp the session last wrote or saw
+ *
+ * @returns true when the stat's modification time is the stamp
+ */
+static bool same_stamp(const struct stat *st, const struct timespec *stamp)
+{
+    const struct timespec ts = atalk_stat_mtime_timespec(st);
+    return ts.tv_sec == stamp->tv_sec && ts.tv_nsec == stamp->tv_nsec;
+}
 
-   @note if attention return -1 no packet has been
-   sent because the buffer is full, we don't care
-   either there's no reader or there's a lot of
-   traffic and another pollvoltime will follow
-*/
+/*!
+ * @brief Tell whether the session's idle tick polls its volumes for other
+ *        sessions' changes: over DSI, from AFP 2.2, with server notifications
+ *
+ * @param[in] obj  session
+ *
+ * @returns true for a session the poll serves
+ */
+static bool volpolls(const AFPObj *obj)
+{
+    return obj->proto == AFPPROTO_DSI && obj->afp_version > 21
+           && (obj->options.flags & OPTION_SERVERNOTIF);
+}
+
+/*!
+ * @brief Make the due root writes, then tell a client the poll serves of a
+ *        root stamp that the session neither wrote nor saw, on an open volume
+ *
+ * An attention the socket refuses leaves the change for the next call.
+ *
+ * @param[in,out] obj  session object
+ *
+ * @returns 1 when the volume-changed attention went out, else 0
+ */
 int  pollvoltime(AFPObj *obj)
 
 {
@@ -1378,7 +1482,10 @@ int  pollvoltime(AFPObj *obj)
         obj->handle = obj->dsi;
     }
 
-    if (!(obj->afp_version > 21 && obj->options.flags & OPTION_SERVERNOTIF)) {
+    /* the write serves the other sessions, whatever this one is told */
+    (void)flushvoltime(obj);
+
+    if (!volpolls(obj)) {
         return 0;
     }
 
@@ -1388,13 +1495,18 @@ int  pollvoltime(AFPObj *obj)
 
     for (vol = getvolumes(); vol; vol = vol->v_next) {
         if ((vol->v_flags & AFPVOL_OPEN)  && vol->v_mtime + 30 < tv.tv_sec) {
-            if (!stat(vol->v_path, &st) && vol->v_mtime != st.st_mtime) {
-                vol->v_mtime = st.st_mtime;
-
-                if (!obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED)) {
-                    return -1;
+            if (!stat(vol->v_path, &st)
+                    && (vol->v_root_foreign
+                        || !same_stamp(&st, &vol->v_root_stamp))) {
+                /* a refused attention leaves the change for the next tick */
+                if (obj->attention(obj->handle,
+                                   AFPATTN_NOTIFY | AFPATTN_VOLCHANGED) <= 0) {
+                    return 0;
                 }
 
+                vol->v_mtime = st.st_mtime;
+                vol->v_root_stamp = atalk_stat_mtime_timespec(&st);
+                vol->v_root_foreign = 0;
                 return 1;
             }
         }
@@ -1404,46 +1516,177 @@ int  pollvoltime(AFPObj *obj)
 }
 
 /*!
- * @brief Record a change on a volume in its modification time
+ * @brief Write a volume root's mtime for a change and read the stamp back
  *
- * The call touches the volume root and raises v_mtime when the second
- * advanced. Before AFP 3.2, with server notifications on, that also sends a
+ * A stamp the root holds before the write that the session neither wrote
+ * nor saw is another session's change: v_root_foreign keeps it, and the
+ * session's date behind it, until the session's poll has announced it. A
+ * session without that poll keeps no flag. For a client from AFP 2.2 to
+ * 3.1 with server notifications, a change to an open volume that owes the
+ * free-space attention sends it, and with it drops the limited quota
+ * answers of the volumes on the root's device.
+ *
+ * @param[in,out] obj   session object
+ * @param[in,out] vol   volume that changed
+ * @param[in]     now   the second the write marks
+ * @param[in]     mine  the root holds a stamp of the session's own
+ *
+ * @returns the second the root holds after the write, or -1 when the write
+ *          failed
+ */
+static time_t markroot(AFPObj *obj, struct vol *vol, time_t now, bool mine)
+{
+    struct stat st;
+    time_t stamped = -1;
+
+    if (!mine && volpolls(obj) && stat(vol->v_path, &st) == 0
+            && !same_stamp(&st, &vol->v_root_stamp)) {
+        vol->v_root_foreign = 1;
+    }
+
+    vol->v_root_marked = now;
+    vol->v_root_due = 0;
+
+    if (utimensat(AT_FDCWD, vol->v_path, NULL, 0) == 0
+            && stat(vol->v_path, &st) == 0) {
+        vol->v_root_stamp = atalk_stat_mtime_timespec(&st);
+        stamped = st.st_mtime;
+
+        if (stamped > vol->v_mtime && !vol->v_root_foreign) {
+            vol->v_mtime = stamped;
+        }
+    }
+
+    /* AFP 2.2-3.1 Finders poll all volumes' free space on this attention;
+     * fork writes, length changes and a closing volume's sweep owe none */
+    if (vol->v_root_attn && obj->afp_version > 21 && obj->afp_version < 32
+            && (obj->options.flags & OPTION_SERVERNOTIF)
+            && (vol->v_flags & AFPVOL_OPEN)) {
+        if (obj->proto == AFPPROTO_DSI) {
+            obj->handle = obj->dsi;
+        }
+
+        /* the polls refetch the filesystem's limited quota answers; an
+         * unlimited one stays true whatever the session changes */
+        for (struct vol *v = getvolumes(); v != NULL; v = v->v_next) {
+            if (v->v_dev == vol->v_dev && v->v_qtotal != ~(VolSpace)0) {
+                v->v_qtime = 0;
+            }
+        }
+
+        obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+    }
+
+    vol->v_root_attn = 0;
+    return stamped;
+}
+
+/*!
+ * @brief Record a change on a volume in its root's modification time
+ *
+ * The root is written once per second of coarse_time(). A change later in
+ * a written second, or one whose write left the root stamped behind that
+ * second, leaves a write due, which flushvoltime() makes once the second
+ * has passed. A change to an entry of the root stamps the root itself, so
+ * the root then holds the session's own stamp. From AFP 2.2 to 3.1, with
+ * server notifications on, the try to write an open volume's root that
+ * covers a change other than a fork write or length change also sends a
  * volume-changed attention, so the Finder refreshes the free space.
  *
- * @param[in]     obj  session object
+ * @param[in,out] obj    session object
+ * @param[in,out] vol    volume that changed
+ * @param[in]     root   the change added, removed or renamed an entry of
+ *                       the volume root
+ * @param[in]     quiet  the change, a fork write or length change, owes no
+ *                       attention
+ */
+static void markvol(AFPObj *obj, struct vol *vol, bool root, bool quiet)
+{
+    const time_t now = coarse_time();
+    struct stat st;
+
+    if (!quiet) {
+        vol->v_root_attn = 1;
+    }
+
+    if (vol->v_root_marked != now) {
+        const time_t stamped = markroot(obj, vol, now, root);
+        vol->v_root_due = stamped != -1 && stamped < now;
+    } else {
+        vol->v_root_due = 1;
+
+        if (root && stat(vol->v_path, &st) == 0) {
+            vol->v_root_stamp = atalk_stat_mtime_timespec(&st);
+        }
+    }
+}
+
+/*!
+ * @brief Record a change on a volume, telling whether it changed an entry
+ *        of the root
+ *
+ * @param[in,out] obj   session object
+ * @param[in,out] vol   volume that changed
+ * @param[in]     root  the change added, removed or renamed an entry of the
+ *                      volume root
+ */
+void setvoltime_entry(AFPObj *obj, struct vol *vol, bool root)
+{
+    markvol(obj, vol, root, false);
+}
+
+/*!
+ * @brief Record a change on a volume that leaves the root's entries alone
+ *
+ * @param[in,out] obj  session object
  * @param[in,out] vol  volume that changed
  */
 void setvoltime(AFPObj *obj, struct vol *vol)
 {
-    struct timeval  tv;
+    markvol(obj, vol, false, false);
+}
 
-    if (obj->proto == AFPPROTO_DSI) {
-        obj->handle = obj->dsi;
-    }
+/*!
+ * @brief Record a fork write or length change on a volume, which owes the
+ *        session's client no free-space attention
+ *
+ * @param[in,out] obj  session object
+ * @param[in,out] vol  volume that changed
+ */
+void setvoltime_write(AFPObj *obj, struct vol *vol)
+{
+    markvol(obj, vol, false, true);
+}
 
-    if (gettimeofday(&tv, NULL) < 0) {
-        LOG(log_error, logtype_afpd, "setvoltime(%s): gettimeofday: %s", vol->v_path,
-            strerror(errno));
-        return;
-    }
+/*!
+ * @brief Write the root of each open volume whose marked second has passed
+ *        with a change of that second unwritten
+ *
+ * The DSI and ASP command loops call it before they wait for a request, and
+ * pollvoltime() before it compares, so the change reaches other sessions'
+ * polls soon after its second.
+ *
+ * @param[in,out] obj  session object
+ *
+ * @returns how long to wait for a write still due, in milliseconds, or -1
+ */
+int flushvoltime(AFPObj *obj)
+{
+    int ms = -1;
 
-    if (utime(vol->v_path, NULL) < 0) {
-        /* write of time failed ... probably a read only filesys,
-         * where no other users can interfere, so there's no issue here
-         */
-    }
+    for (struct vol *vol = getvolumes(); vol; vol = vol->v_next) {
+        if ((vol->v_flags & AFPVOL_OPEN) && vol->v_root_due) {
+            const time_t now = coarse_time();
 
-    /* a little granularity */
-    if (vol->v_mtime < tv.tv_sec) {
-        vol->v_mtime = tv.tv_sec;
-
-        /* or finder doesn't update free space
-         * AFP 3.2 and above clients seem to be ok without so many notification
-         */
-        if (obj->afp_version < 32 && obj->options.flags & OPTION_SERVERNOTIF) {
-            obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED);
+            if (vol->v_root_marked != now) {
+                (void)markroot(obj, vol, now, false);
+            } else {
+                ms = 1000;
+            }
         }
     }
+
+    return ms;
 }
 
 /*!
@@ -1483,21 +1726,25 @@ int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
  * bitmap fails with AFPERR_BITMAP. The date lands in the AppleDouble metadata
  * of the volume root.
  *
- * @param[in]     obj      session object, unused
+ * @param[in]     obj      session object
  * @param[in]     ibuf     request block
  * @param[in]     ibuflen  request block length, unused
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
- * @returns AFP_OK, AFPERR_BITMAP, AFPERR_VLOCK for a read-only volume,
- *          AFPERR_ACCESS, or AFPERR_PARAM
+ * @returns AFP_OK, AFPERR_BITMAP, AFPERR_VLOCK for a read-only volume or
+ *          filesystem, AFPERR_ACCESS, also for a user who cannot write the
+ *          root's metadata, AFPERR_MISC when the date is not written for
+ *          another reason, or AFPERR_PARAM
  */
-int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_setvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                      char *rbuf _U_,  size_t *rbuflen)
 {
     struct adouble ad;
     struct vol  *vol;
     uint16_t   vid, bitmap;
     uint32_t   aint;
+    int ret;
+    int err;
     ibuf += 2;
     *rbuflen = 0;
     memcpy(&vid, ibuf, sizeof(vid));
@@ -1531,7 +1778,24 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     memcpy(&aint, ibuf, sizeof(aint));
     ad_setdate(&ad, AD_DATE_BACKUP, aint);
-    ad_flush(&ad);
+    ret = ad_flush(&ad);
+    err = errno;
     ad_close(&ad, ADFLAGS_HF);
+
+    if (ret != 0) {
+        switch (err) {
+        case EROFS:
+            return AFPERR_VLOCK;
+
+        case EACCES:
+        case EPERM:
+            return AFPERR_ACCESS;
+
+        default:
+            return AFPERR_MISC;
+        }
+    }
+
+    setvoltime(obj, vol);
     return AFP_OK;
 }

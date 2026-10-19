@@ -131,6 +131,7 @@ if build_tests
         'subtests_request.c',
         'subtests_sendfile.c',
         'subtests_veto.c',
+        'subtests_volpolls.c',
         afpd_test_extra_sources,
         include_directories: test_includes,
         objects: afpdtest_objects,

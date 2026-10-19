@@ -536,6 +536,12 @@ STATIC void test422()
         goto test_exit;
     }
 
+    /* AFP 2.2 introduced the attention; clients from AFP 3.2 do without */
+    if (Conn->afp_version < 22 || Conn->afp_version >= 32) {
+        test_skipped(T_AFP22_31);
+        goto test_exit;
+    }
+
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
@@ -549,21 +555,16 @@ STATIC void test422()
         goto test_exit;
     }
 
-    if (Conn->afp_version < 32) {
-        if (!Attention_received) {
-            if (!Quiet) {
-                fprintf(stdout, "\tFAILED no attention received\n");
-            }
-
-            test_failed();
+    if (!Attention_received) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED no attention received\n");
         }
-    } else if (Attention_received) {
-        fprintf(stdout, "\tFAILED attention received\n");
+
         test_failed();
     }
 
 test_exit:
-    exit_test("FPDelete:test422: Server notification on volume date change if AFP < 3.2");
+    exit_test("FPDelete:test422: Volume date notification from AFP 2.2 to 3.1");
 }
 
 

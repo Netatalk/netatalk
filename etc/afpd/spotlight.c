@@ -624,8 +624,16 @@ bool add_filemeta(sl_array_t *reqinfo,
                             "kMDItemContentCreationDate")) {
 #ifdef HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC
             struct timespec ts = sp->st_birthtimespec;
-            atalk_timespec_to_timeval(&sl_time, &ts);
-            dalloc_add_copy(meta, &sl_time, sl_time_t);
+
+            /* a birth time the filesystem lacks reads -1 on FreeBSD, and 0
+             * on NetBSD and macOS */
+            if (ts.tv_sec == -1 || (ts.tv_sec == 0 && ts.tv_nsec == 0)) {
+                dalloc_add_copy(meta, &nil, sl_nil_t);
+            } else {
+                atalk_timespec_to_timeval(&sl_time, &ts);
+                dalloc_add_copy(meta, &sl_time, sl_time_t);
+            }
+
 #else
             dalloc_add_copy(meta, &nil, sl_nil_t);
 #endif

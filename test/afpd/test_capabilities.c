@@ -33,11 +33,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <atalk/acl.h>
 #include <atalk/ea.h>
 #include <atalk/volume.h>
 
@@ -49,6 +51,7 @@ static int cap_cache[] = {
     [TEST_CAP_FAULT_INJECT] = -1,
     [TEST_CAP_EA_SYS]       = -1,
     [TEST_CAP_SOCKET_SPLICE] = -1,
+    [TEST_CAP_ACL_SET]      = -1,
 };
 
 /*! @brief Short capability name for skip/log messages. */
@@ -63,6 +66,9 @@ const char *test_capability_name(enum test_capability cap)
 
     case TEST_CAP_SOCKET_SPLICE:
         return "splice() from an AF_UNIX stream socket";
+
+    case TEST_CAP_ACL_SET:
+        return "a filesystem that stores ACLs";
 
     default:
         return "unknown";
@@ -165,12 +171,42 @@ static int probe_socket_splice(void)
 }
 
 /*!
+ * @brief Does the filesystem under vol->v_path store an ACL written to it?
+ *
+ * Writes the root's own ACL back, which leaves it as it was; a filesystem
+ * that reads ACLs but stores none, as illumos tmpfs, refuses the write.
+ */
+static int probe_acl_set(const struct vol *vol _U_)
+{
+#if defined(HAVE_NFSV4_ACLS)
+    ace_t *aces = NULL;
+    int count = get_nfsv4_acl(vol->v_path, &aces);
+    int ok = count >= 0 && acl(vol->v_path, ACE_SETACL, count, aces) == 0;
+    free(aces);
+    return ok;
+#elif defined(HAVE_POSIX_ACLS)
+    acl_t own = acl_get_file(vol->v_path, ACL_TYPE_ACCESS);
+    int ok = own != NULL
+             && acl_set_file(vol->v_path, ACL_TYPE_ACCESS, own) == 0;
+
+    if (own) {
+        acl_free(own);
+    }
+
+    return ok;
+#else
+    return 0;
+#endif
+}
+
+/*!
  * @brief Probe a capability; the result is cached for the run.
  *
  * @param cap  the capability to probe
  * @param vol  supplies a filesystem path for capabilities probed against the
  *             volume (TEST_CAP_EA_SYS, TEST_CAP_FAULT_INJECT use vol->v_path for
- *             a scratch file); must not be NULL.
+ *             a scratch file, TEST_CAP_ACL_SET writes its ACL back); must not
+ *             be NULL.
  * @returns    1 if the capability is available, 0 otherwise.
  */
 int test_capability(enum test_capability cap, const struct vol *vol)
@@ -194,6 +230,10 @@ int test_capability(enum test_capability cap, const struct vol *vol)
 
     case TEST_CAP_SOCKET_SPLICE:
         cap_cache[cap] = probe_socket_splice();
+        break;
+
+    case TEST_CAP_ACL_SET:
+        cap_cache[cap] = probe_acl_set(vol);
         break;
 
     default:
