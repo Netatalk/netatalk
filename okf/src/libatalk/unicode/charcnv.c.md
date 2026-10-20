@@ -5,7 +5,7 @@ description: "Character-set conversion routines based on samba iconv wrappers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charcnv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-13T22:34:30+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -224,7 +224,7 @@ Returns: the output length without the NUL, or `(size_t)-1` for an error
 
 Calls: [charset_name](charcnv.c.md#charset_name), [convert_string_internal](charcnv.c.md#convert_string_internal), [decompose_w](util_unistr.c.md#decompose_w), [precompose_w](util_unistr.c.md#precompose_w)
 
-Called by: [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_getsrvrmesg](../../etc/afpd/messages.c.md#afp_getsrvrmesg), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [catsearch_afp](../../etc/afpd/catsearch.c.md#catsearch_afp), [configinit](../../etc/afpd/afp_config.c.md#configinit), [creatvol](../util/netatalk_conf.c.md#creatvol), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [list_eas](../vfs/ea_ad.c.md#list_eas), [mtoUTF8](../../etc/afpd/file.c.md#mtoutf8), [register_stuff](../../etc/netatalk/afp_avahi.c.md#register_stuff), [register_stuff](../../etc/netatalk/afp_mdns.c.md#register_stuff), [status_server](../../etc/afpd/status.c.md#status_server), [status_utf8servername](../../etc/afpd/status.c.md#status_utf8servername), [sys_list_eas](../vfs/ea_sys.c.md#sys_list_eas), [uam_getname](../../etc/afpd/uam.c.md#uam_getname), [ucs2_to_charset](charcnv.c.md#ucs2_to_charset)
+Called by: [afp_getsrvrmesg](../../etc/afpd/messages.c.md#afp_getsrvrmesg), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [catsearch_afp](../../etc/afpd/catsearch.c.md#catsearch_afp), [configinit](../../etc/afpd/afp_config.c.md#configinit), [creatvol](../util/netatalk_conf.c.md#creatvol), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [ea_uname](../../etc/afpd/extattrs.c.md#ea_uname), [list_eas](../vfs/ea_ad.c.md#list_eas), [mtoUTF8](../../etc/afpd/file.c.md#mtoutf8), [register_stuff](../../etc/netatalk/afp_avahi.c.md#register_stuff), [register_stuff](../../etc/netatalk/afp_mdns.c.md#register_stuff), [status_server](../../etc/afpd/status.c.md#status_server), [status_utf8servername](../../etc/afpd/status.c.md#status_utf8servername), [sys_list_eas](../vfs/ea_sys.c.md#sys_list_eas), [uam_getname](../../etc/afpd/uam.c.md#uam_getname), [ucs2_to_charset](charcnv.c.md#ucs2_to_charset)
 
 Uses file-scope variables: `charsets`
 
@@ -348,7 +348,7 @@ Returns: The number of bytes occupied by the string in the destination
 
 Calls: [convert_string](charcnv.c.md#convert_string), [strlen_w](util_unistr.c.md#strlen_w)
 
-Called by: [cname_mtouname](../../etc/afpd/directory.c.md#cname_mtouname), [getvolparams](../../etc/afpd/volume.c.md#getvolparams)
+Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [cname_mtouname](../../etc/afpd/directory.c.md#cname_mtouname), [getvolparams](../../etc/afpd/volume.c.md#getvolparams)
 
 ### ucs2_to_charset_allocate
 
@@ -368,8 +368,6 @@ Parameters:
 Returns: the output length, or `(size_t)-1` for an error
 
 Calls: [convert_string_allocate](charcnv.c.md#convert_string_allocate), [strlen_w](util_unistr.c.md#strlen_w)
-
-Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms)
 
 ### charset_precompose
 

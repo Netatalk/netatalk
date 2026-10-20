@@ -5,7 +5,7 @@ description: "Volume commands: FPOpenVol, FPCloseVol, FPGetVolParms, and volume 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/volume.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -40,7 +40,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [unix.h](unix.h.md)
 * [virtual_icon.h](virtual_icon.h.md)
 * [volume.h](volume.h.md)
-* System headers: `arpa/inet.h`, `bstrlib.h`, `ctype.h`, `errno.h`, `grp.h`, `iniparser.h`, `inttypes.h`, `netinet/in.h`, `pwd.h`, `signal.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/socket.h`, `time.h`, `utime.h`
+* System headers: `arpa/inet.h`, `bstrlib.h`, `ctype.h`, `errno.h`, `fcntl.h`, `grp.h`, `iniparser.h`, `inttypes.h`, `netinet/in.h`, `pwd.h`, `signal.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/socket.h`, `sys/statvfs.h`, `time.h`, `unistd.h`
 
 # Functions
 
@@ -50,7 +50,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static long long int get_tm_bandsize(const char *path)
 ```
 
-Defined at lines 94 to 132.
+Defined at lines 97 to 135.
 
 Read band-size info from Info.plist XML file of an TM sparsebundle.
 
@@ -67,7 +67,7 @@ Called by: [get_tm_used](volume.c.md#get_tm_used)
 static long long int get_tm_bands(const char *path)
 ```
 
-Defined at lines 140 to 166.
+Defined at lines 143 to 169.
 
 Return number on entries in a directory.
 
@@ -84,7 +84,7 @@ Called by: [get_tm_used](volume.c.md#get_tm_used)
 static int get_tm_used(struct vol *vol)
 ```
 
-Defined at lines 191 to 264.
+Defined at lines 194 to 267.
 
 Calculate used size of a TimeMachine volume.
 
@@ -96,7 +96,7 @@ This assumes that the volume is used only for TimeMachine.
 1. readdir "\1.sparsebundle/bands/" counting files
 1. calculate used size as: (file_count - 1) * band-size
 
-The result of the calculation is returned in "volume->v_tm_used". "volume->v_appended" gets reset to 0. "volume->v_tm_cachetime" is updated with the current time from [time(NULL)](../../sys/netatalk/at_control.c.md) after a successful scan.
+The result of the calculation is returned in "volume->v_tm_used". "volume->v_appended" gets reset to 0. "volume->v_tm_cachetime" is updated with the current second after a successful scan.
 
 "volume->v_tm_used" is cached for TM_USED_CACHETIME seconds and updated by "volume->v_appended". The latter is increased by X every time the client appends X bytes to a file (in [fork.c](fork.c.md)).
 
@@ -105,7 +105,30 @@ Parameters:
 
 Returns: 0 on success, -1 on error
 
-Calls: [get_tm_bands](volume.c.md#get_tm_bands), [get_tm_bandsize](volume.c.md#get_tm_bandsize)
+Calls: [coarse_time](../../libatalk/util/unix.c.md#coarse_time), [get_tm_bands](volume.c.md#get_tm_bands), [get_tm_bandsize](volume.c.md#get_tm_bandsize)
+
+Called by: [getvolspace](volume.c.md#getvolspace)
+
+### getvolquota
+
+```c
+static int getvolquota(const AFPObj *obj, struct vol *vol, uint32_t bsize)
+```
+
+Defined at lines 283 to 299.
+
+Fetch the user's quota into vol->v_qfree and vol->v_qtotal.
+
+Reuses an answer that arrived within the last QUOTA_CACHETIME seconds. A volume that holds none fetches one: one never fetched, closed since, or whose limited answer a free-space attention dropped.
+
+Parameters:
+* `obj`: session
+* `vol`: volume
+* `bsize`: filesystem block size
+
+Returns: AFP_OK, or the error of the fetch
+
+Calls: [coarse_time](../../libatalk/util/unix.c.md#coarse_time), [uquota_getvolspace](quota.c.md#uquota_getvolspace)
 
 Called by: [getvolspace](volume.c.md#getvolspace)
 
@@ -115,7 +138,7 @@ Called by: [getvolspace](volume.c.md#getvolspace)
 static int getvolspace(const AFPObj *obj, struct vol *vol, uint32_t *bfree, uint32_t *btotal, VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
 ```
 
-Defined at lines 284 to 334.
+Defined at lines 320 to 369.
 
 Free and total space of a volume in 32-bit and 64-bit form.
 
@@ -132,7 +155,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_PARAM when statfs failed, or AFPERR_MISC when the Time Machine usage is unknown
 
-Calls: [get_tm_used](volume.c.md#get_tm_used), [uquota_getvolspace](quota.c.md#uquota_getvolspace), [ustatfs_getvolspace](unix.c.md#ustatfs_getvolspace)
+Calls: [get_tm_used](volume.c.md#get_tm_used), [getvolquota](volume.c.md#getvolquota), [ustatfs_getvolspace](unix.c.md#ustatfs_getvolspace)
 
 Called by: [getvolparams](volume.c.md#getvolparams)
 
@@ -142,7 +165,7 @@ Called by: [getvolparams](volume.c.md#getvolparams)
 static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 ```
 
-Defined at lines 346 to 363.
+Defined at lines 381 to 398.
 
 Set the creation date of a volume, unique among the configured volumes.
 
@@ -157,13 +180,32 @@ Calls: [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [getvolumes
 
 Called by: [getvolparams](volume.c.md#getvolparams)
 
+### root_readonly
+
+```c
+static bool root_readonly(const struct vol *vol)
+```
+
+Defined at lines 412 to 422.
+
+Is the volume root on a read-only mount or subvolume?
+
+Writes nothing: the root's mtime is the volume's change mark. access() judges the real uid, root in afpd, and a root-squashed export or a single-user server refuses it before a read-only mount shows, so statvfs() answers then.
+
+Parameters:
+* `vol`: volume
+
+Returns: true for a read-only mount or subvolume
+
+Called by: [getvolparams](volume.c.md#getvolparams)
+
 ### getvolparams
 
 ```c
 static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
 ```
 
-Defined at lines 384 to 631.
+Defined at lines 443 to 697.
 
 Pack the volume parameters that bitmap selects into buf.
 
@@ -179,7 +221,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_BITMAP for an unknown bit, AFPERR_PARAM when the space lookup failed, or AFPERR_MISC
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getentryoff](../../libatalk/adouble/ad_open.c.md#ad_getentryoff), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [getvolspace](volume.c.md#getvolspace), [ucs2_to_charset](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset), [vol_setdate](volume.c.md#vol_setdate)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getentryoff](../../libatalk/adouble/ad_open.c.md#ad_getentryoff), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [getvolspace](volume.c.md#getvolspace), [root_readonly](volume.c.md#root_readonly), [ucs2_to_charset](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset), [vol_setdate](volume.c.md#vol_setdate)
 
 Called by: [stat_vol](volume.c.md#stat_vol)
 
@@ -191,7 +233,7 @@ Uses file-scope variables: `ldap_config_valid` in [libatalk/acl/ldap.c](../../li
 static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 647 to 673.
+Defined at lines 713 to 739.
 
 Reply with the bitmap and the volume parameters it selects.
 
@@ -216,7 +258,7 @@ Called by: [afp_getvolparams](volume.c.md#afp_getvolparams), [afp_openvol](volum
 int afp_getsrvrparms(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 693 to 785. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 759 to 847. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPGetSrvrParms: list the volumes that the user may see, with the server time.
 
@@ -231,7 +273,7 @@ Parameters:
 
 Returns: AFP_OK, or AFPERR_PARAM when the server time is unavailable
 
-Calls: [accessmode](unix.c.md#accessmode), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [ucs2_to_charset_allocate](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset_allocate)
+Calls: [accessmode_rx](unix.c.md#accessmode_rx), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [ucs2_to_charset](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset)
 
 Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
@@ -241,7 +283,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int volume_codepage(AFPObj *obj, struct vol *volume)
 ```
 
-Defined at lines 798 to 841.
+Defined at lines 860 to 903.
 
 Load the volume charset and the Mac charset of a volume.
 
@@ -263,7 +305,7 @@ Called by: [afp_openvol](volume.c.md#afp_openvol)
 static int volume_openDB(const AFPObj *obj, struct vol *volume)
 ```
 
-Defined at lines 852 to 869.
+Defined at lines 914 to 931.
 
 Open the CNID backend of a volume.
 
@@ -285,7 +327,7 @@ Called by: [afp_openvol](volume.c.md#afp_openvol)
 static void server_ipc_volumes(AFPObj *obj)
 ```
 
-Defined at lines 878 to 902.
+Defined at lines 940 to 964.
 
 Send the names of the open volumes to the master afpd.
 
@@ -304,7 +346,7 @@ Called by: [afp_closevol](volume.c.md#afp_closevol), [afp_openvol](volume.c.md#a
 int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 923 to 1189. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 987 to 1253. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPOpenVol: open a volume and return its parameters.
 
@@ -317,9 +359,9 @@ Parameters:
 * `rbuf`: reply block
 * `rbuflen`: reply buffer capacity on entry, reply length on return
 
-Returns: AFP_OK, AFPERR_BITMAP, AFPERR_NOOBJ for an unknown name, AFPERR_ACCESS for a wrong password, AFPERR_PARAM, or AFPERR_MISC
+Returns: AFP_OK, AFPERR_BITMAP, AFPERR_NOOBJ for an unknown name, AFPERR_ACCESS for a wrong password, AFPERR_PARAM, also for a name that is empty, does not convert or holds a NUL byte, or AFPERR_MISC
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata), [afprun](afprun.c.md#afprun), [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [server_ipc_volumes](volume.c.md#server_ipc_volumes), [setmessage](messages.c.md#setmessage), [stat_vol](volume.c.md#stat_vol), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [virtual_icon_init](virtual_icon.c.md#virtual_icon_init), [volume_codepage](volume.c.md#volume_codepage), [volume_openDB](volume.c.md#volume_opendb)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata), [afprun](afprun.c.md#afprun), [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [server_ipc_volumes](volume.c.md#server_ipc_volumes), [setmessage](messages.c.md#setmessage), [stat_vol](volume.c.md#stat_vol), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [strlen_w](../../libatalk/unicode/util_unistr.c.md#strlen_w), [virtual_icon_init](virtual_icon.c.md#virtual_icon_init), [volume_codepage](volume.c.md#volume_codepage), [volume_openDB](volume.c.md#volume_opendb)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `sl_localsearch_ops` in [etc/spotlight/localsearch/sl_localsearch.c](../spotlight/localsearch/sl_localsearch.c.md)
 
@@ -331,7 +373,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 uint32_t cnid_volume_tag(const struct vol *vol)
 ```
 
-Defined at lines 1202 to 1217. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1266 to 1281. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Identifier of the CNID table of a volume that every afpd process shares.
 
@@ -352,7 +394,7 @@ Mentioned in the documentation of: [reset_broadcast_forget](../../libatalk/util/
 void cnid_volume_reset(const struct vol *vol)
 ```
 
-Defined at lines 1230 to 1259. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1294 to 1323. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Announce a CNID table reset and end this session.
 
@@ -373,7 +415,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 void closevol(const AFPObj *obj, struct vol *vol)
 ```
 
-Defined at lines 1272 to 1298. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1336 to 1376. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Close a volume and release everything it holds.
 
@@ -393,7 +435,7 @@ Called by: [afp_closevol](volume.c.md#afp_closevol), [close_all_vol](volume.c.md
 void close_all_vol(const AFPObj *obj)
 ```
 
-Defined at lines 1305 to 1316. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1383 to 1394. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Close every open volume of the session.
 
@@ -412,7 +454,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1332 to 1355. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1410 to 1433. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPCloseVol: close a volume.
 
@@ -433,26 +475,130 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 
 Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
+### same_stamp
+
+```c
+static bool same_stamp(const struct stat *st, const struct timespec *stamp)
+```
+
+Defined at lines 1444 to 1448.
+
+Tell whether a stat of a volume root holds a stamp, to the nanosecond.
+
+Parameters:
+* `st`: stat of the volume root
+* `stamp`: stamp the session last wrote or saw
+
+Returns: true when the stat's modification time is the stamp
+
+Calls: [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec)
+
+Called by: [markroot](volume.c.md#markroot), [pollvoltime](volume.c.md#pollvoltime)
+
+### volpolls
+
+```c
+static bool volpolls(const AFPObj *obj)
+```
+
+Defined at lines 1458 to 1462.
+
+Tell whether the session's idle tick polls its volumes for other sessions' changes: over [DSI](../../include/atalk/dsi.h.md#struct-dsi), from AFP 2.2, with server notifications.
+
+Parameters:
+* `obj`: session
+
+Returns: true for a session the poll serves
+
+Called by: [markroot](volume.c.md#markroot), [pollvoltime](volume.c.md#pollvoltime)
+
 ### pollvoltime
 
 ```c
 int pollvoltime(AFPObj *)
 ```
 
-Defined at lines 1370 to 1404. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1474 to 1516. Declared in [etc/afpd/volume.h](volume.h.md).
 
-poll if a volume is changed by other processes.
+Make the due root writes, then tell a client the poll serves of a root stamp that the session neither wrote nor saw, on an open volume.
+
+An attention the socket refuses leaves the change for the next call.
 
 Parameters:
-* `obj`: AFP connection object
+* `obj`: session object
 
-Returns: 0 no attention msg sent, 1 attention msg sent, -1 error (socket closed)
+Returns: 1 when the volume-changed attention went out, else 0
 
-Note: if attention return -1 no packet has been sent because the buffer is full, we don't care either there's no reader or there's a lot of traffic and another pollvoltime will follow
-
-Calls: [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes)
+Calls: [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [flushvoltime](volume.c.md#flushvoltime), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [same_stamp](volume.c.md#same_stamp), [volpolls](volume.c.md#volpolls)
 
 Called by: [handle_alarm](afp_dsi.c.md#handle_alarm)
+
+Mentioned in the documentation of: [flushvoltime](volume.c.md#flushvoltime)
+
+### markroot
+
+```c
+static time_t markroot(AFPObj *obj, struct vol *vol, time_t now, bool mine)
+```
+
+Defined at lines 1537 to 1582.
+
+Write a volume root's mtime for a change and read the stamp back.
+
+A stamp the root holds before the write that the session neither wrote nor saw is another session's change: v_root_foreign keeps it, and the session's date behind it, until the session's poll has announced it. A session without that poll keeps no flag. For a client from AFP 2.2 to 3.1 with server notifications, a change to an open volume that owes the free-space attention sends it, and with it drops the limited quota answers of the volumes on the root's device.
+
+Parameters:
+* `obj`: session object
+* `vol`: volume that changed
+* `now`: the second the write marks
+* `mine`: the root holds a stamp of the session's own
+
+Returns: the second the root holds after the write, or -1 when the write failed
+
+Calls: [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [same_stamp](volume.c.md#same_stamp), [volpolls](volume.c.md#volpolls)
+
+Called by: [flushvoltime](volume.c.md#flushvoltime), [markvol](volume.c.md#markvol)
+
+### markvol
+
+```c
+static void markvol(AFPObj *obj, struct vol *vol, bool root, bool quiet)
+```
+
+Defined at lines 1603 to 1622.
+
+Record a change on a volume in its root's modification time.
+
+The root is written once per second of [coarse_time()](../../libatalk/util/unix.c.md#coarse_time). A change later in a written second, or one whose write left the root stamped behind that second, leaves a write due, which [flushvoltime()](volume.c.md#flushvoltime) makes once the second has passed. A change to an entry of the root stamps the root itself, so the root then holds the session's own stamp. From AFP 2.2 to 3.1, with server notifications on, the try to write an open volume's root that covers a change other than a fork write or length change also sends a volume-changed attention, so the Finder refreshes the free space.
+
+Parameters:
+* `obj`: session object
+* `vol`: volume that changed
+* `root`: the change added, removed or renamed an entry of the volume root
+* `quiet`: the change, a fork write or length change, owes no attention
+
+Calls: [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [coarse_time](../../libatalk/util/unix.c.md#coarse_time), [markroot](volume.c.md#markroot)
+
+Called by: [setvoltime](volume.c.md#setvoltime), [setvoltime_entry](volume.c.md#setvoltime_entry), [setvoltime_write](volume.c.md#setvoltime_write)
+
+### setvoltime_entry
+
+```c
+void setvoltime_entry(AFPObj *, struct vol *, bool)
+```
+
+Defined at lines 1633 to 1636. Declared in [etc/afpd/volume.h](volume.h.md).
+
+Record a change on a volume, telling whether it changed an entry of the root.
+
+Parameters:
+* `obj`: session object
+* `vol`: volume that changed
+* `root`: the change added, removed or renamed an entry of the volume root
+
+Calls: [markvol](volume.c.md#markvol)
+
+Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_exchangefiles](file.c.md#afp_exchangefiles), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename)
 
 ### setvoltime
 
@@ -460,17 +606,58 @@ Called by: [handle_alarm](afp_dsi.c.md#handle_alarm)
 void setvoltime(AFPObj *, struct vol *)
 ```
 
-Defined at lines 1416 to 1447. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1644 to 1647. Declared in [etc/afpd/volume.h](volume.h.md).
 
-Record a change on a volume in its modification time.
-
-The call touches the volume root and raises v_mtime when the second advanced. Before AFP 3.2, with server notifications on, that also sends a volume-changed attention, so the Finder refreshes the free space.
+Record a change on a volume that leaves the root's entries alone.
 
 Parameters:
 * `obj`: session object
 * `vol`: volume that changed
 
-Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename), [afp_setdirparams](directory.c.md#afp_setdirparams), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [afp_setfilparams](file.c.md#afp_setfilparams)
+Calls: [markvol](volume.c.md#markvol)
+
+Called by: [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_setacl](acls.c.md#afp_setacl), [afp_setdirparams](directory.c.md#afp_setdirparams), [afp_setextattr](extattrs.c.md#afp_setextattr), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [afp_setfilparams](file.c.md#afp_setfilparams), [afp_setvolparams](volume.c.md#afp_setvolparams), [flushfork](fork.c.md#flushfork), [of_closefork](ofork.c.md#of_closefork), [setdirparams](directory.c.md#setdirparams)
+
+### setvoltime_write
+
+```c
+void setvoltime_write(AFPObj *, struct vol *)
+```
+
+Defined at lines 1656 to 1659. Declared in [etc/afpd/volume.h](volume.h.md).
+
+Record a fork write or length change on a volume, which owes the session's client no free-space attention.
+
+Parameters:
+* `obj`: session object
+* `vol`: volume that changed
+
+Calls: [markvol](volume.c.md#markvol)
+
+Called by: [fork_modified](fork.c.md#fork_modified)
+
+### flushvoltime
+
+```c
+int flushvoltime(AFPObj *)
+```
+
+Defined at lines 1673 to 1690. Declared in [etc/afpd/volume.h](volume.h.md).
+
+Write the root of each open volume whose marked second has passed with a change of that second unwritten.
+
+The [DSI](../../include/atalk/dsi.h.md#struct-dsi) and [ASP](../../include/atalk/asp.h.md#struct-asp) command loops call it before they wait for a request, and [pollvoltime()](volume.c.md#pollvoltime) before it compares, so the change reaches other sessions' polls soon after its second.
+
+Parameters:
+* `obj`: session object
+
+Returns: how long to wait for a write still due, in milliseconds, or -1
+
+Calls: [coarse_time](../../libatalk/util/unix.c.md#coarse_time), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [markroot](volume.c.md#markroot)
+
+Called by: [afp_over_asp](afp_asp.c.md#afp_over_asp), [afp_over_dsi](afp_dsi.c.md#afp_over_dsi), [pollvoltime](volume.c.md#pollvoltime)
+
+Mentioned in the documentation of: [markvol](volume.c.md#markvol)
 
 ### afp_getvolparams
 
@@ -478,7 +665,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.m
 int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1460 to 1477. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1703 to 1720. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPGetVolParms: return the parameters of an open volume.
 
@@ -501,26 +688,26 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1494 to 1537. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1739 to 1801. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPSetVolParms: set the backup date of a volume.
 
 The backup date is the only parameter that a client may set, and any other bitmap fails with AFPERR_BITMAP. The date lands in the AppleDouble metadata of the volume root.
 
 Parameters:
-* `obj`: session object, unused
+* `obj`: session object
 * `ibuf`: request block
 * `ibuflen`: request block length, unused
 * `rbuf`: reply block, unused
 * `rbuflen`: reply buffer capacity on entry, 0 on return
 
-Returns: AFP_OK, AFPERR_BITMAP, AFPERR_VLOCK for a read-only volume, AFPERR_ACCESS, or AFPERR_PARAM
+Returns: AFP_OK, AFPERR_BITMAP, AFPERR_VLOCK for a read-only volume or filesystem, AFPERR_ACCESS, also for a user who cannot write the root's metadata, AFPERR_MISC when the date is not written for another reason, or AFPERR_PARAM
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [setvoltime](volume.c.md#setvoltime)
 
 Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
 # Macros
 
 * `TM_USED_CACHETIME`: Time Machine cache for 60 seconds.
-* Undocumented: `VOLPASSLEN`
+* Undocumented: `QUOTA_CACHETIME`, `VOLPASSLEN`

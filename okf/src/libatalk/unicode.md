@@ -5,7 +5,7 @@ description: "31 files, 113 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/unicode"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 # Files
@@ -48,7 +48,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 37 calls
+* [etc/afpd](../etc/afpd.md): 36 calls
 * [bin/nbp](../bin/nbp.md): 10 calls
 * [etc/papd](../etc/papd.md): 8 calls
 * [libatalk/util](util.md): 7 calls
@@ -63,18 +63,18 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
 # Most called functions
 
 * [convert_string_allocate](unicode/charcnv.c.md#convert_string_allocate): 21 callers
-* [convert_string](unicode/charcnv.c.md#convert_string): 18 callers
+* [convert_string](unicode/charcnv.c.md#convert_string): 16 callers
 * [convert_charset](unicode/charcnv.c.md#convert_charset): 15 callers
 * [add_charset](unicode/charcnv.c.md#add_charset): 10 callers
 * [charset_name](unicode/charcnv.c.md#charset_name): 9 callers
 * [cjk_lookup](unicode/charsets/generic_cjk.c.md#cjk_lookup): 8 callers
 * [set_charset_name](unicode/charcnv.c.md#set_charset_name): 8 callers
 * [atalk_iconv](unicode/iconv.c.md#atalk_iconv): 7 callers
+* [strlen_w](unicode/util_unistr.c.md#strlen_w): 7 callers
 * [atalk_iconv_open](unicode/iconv.c.md#atalk_iconv_open): 6 callers
-* [convert_string_internal](unicode/charcnv.c.md#convert_string_internal): 6 callers
 
 # Functions without a static caller
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[charset_precompose](unicode/charcnv.c.md#charset_precompose), [charset_strlower](unicode/charcnv.c.md#charset_strlower), [charset_strupper](unicode/charcnv.c.md#charset_strupper), [strcmp_w](unicode/util_unistr.c.md#strcmp_w), [strnlen_w](unicode/util_unistr.c.md#strnlen_w), [strstr_w](unicode/util_unistr.c.md#strstr_w)
+[charset_precompose](unicode/charcnv.c.md#charset_precompose), [charset_strlower](unicode/charcnv.c.md#charset_strlower), [charset_strupper](unicode/charcnv.c.md#charset_strupper), [strcmp_w](unicode/util_unistr.c.md#strcmp_w), [strnlen_w](unicode/util_unistr.c.md#strnlen_w), [strstr_w](unicode/util_unistr.c.md#strstr_w), [ucs2_to_charset_allocate](unicode/charcnv.c.md#ucs2_to_charset_allocate)

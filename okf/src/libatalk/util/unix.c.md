@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -426,13 +426,31 @@ Called by: [afp_over_dsi](../../etc/afpd/afp_dsi.c.md#afp_over_dsi), [as_debug](
 
 Mentioned in the documentation of: [as_debug](../../etc/atalkd/main.c.md#as_debug)
 
+### coarse_time
+
+```c
+time_t coarse_time(void)
+```
+
+Defined at lines 751 to 760.
+
+The current second, from the cheapest clock the platform has.
+
+The coarse or fast realtime clock, where the platform names one, comes from memory the kernel shares; CLOCK_REALTIME otherwise costs no more than [time()](../../sys/netatalk/at_control.c.md), and on illumos avoids the system call [time()](../../sys/netatalk/at_control.c.md) makes.
+
+Returns: seconds since the epoch
+
+Called by: [flushvoltime](../../etc/afpd/volume.c.md#flushvoltime), [get_tm_used](../../etc/afpd/volume.c.md#get_tm_used), [getvolquota](../../etc/afpd/volume.c.md#getvolquota), [markvol](../../etc/afpd/volume.c.md#markvol)
+
+Mentioned in the documentation of: [markvol](../../etc/afpd/volume.c.md#markvol)
+
 ### ostat
 
 ```c
 int ostat(const char *path, struct stat *buf, int options)
 ```
 
-Defined at lines 749 to 756.
+Defined at lines 777 to 784.
 
 Run lstat with O_NOFOLLOW in options, stat otherwise.
 
@@ -451,7 +469,7 @@ Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](..
 int ochown(const char *path, uid_t owner, gid_t group, int options)
 ```
 
-Defined at lines 767 to 774.
+Defined at lines 795 to 802.
 
 Run lchown with O_NOFOLLOW in options, chown otherwise.
 
@@ -471,7 +489,7 @@ Called by: [ea_chown](../vfs/ea_ad.c.md#ea_chown), [setdirowner](../../etc/afpd/
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 ```
 
-Defined at lines 790 to 816.
+Defined at lines 818 to 844.
 
 Change the mode of a path, with options for symlinks and ACLs.
 
@@ -493,7 +511,7 @@ Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_s
 int ostatat(int dirfd, const char *path, struct stat *st, int options)
 ```
 
-Defined at lines 828 to 836.
+Defined at lines 856 to 864.
 
 Run fstatat relative to a directory descriptor, without following a final symlink for O_NOFOLLOW.
 
@@ -513,7 +531,7 @@ Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [RF_r
 int ochdir(const char *dir, int options)
 ```
 
-Defined at lines 853 to 938.
+Defined at lines 881 to 966.
 
 Change the current directory and report a symlink on the way for O_NOFOLLOW.
 
@@ -535,7 +553,7 @@ Mentioned in the documentation of: [ochdir_vol](../../etc/afpd/directory.c.md#oc
 void randombytes(void *buf, int n)
 ```
 
-Defined at lines 949 to 976.
+Defined at lines 977 to 1004.
 
 Fill a buffer with random bytes from /dev/urandom.
 
@@ -553,7 +571,7 @@ Called by: [get_vol_uuid](netatalk_conf.c.md#get_vol_uuid), [set_signature](../.
 int gmem(gid_t gid, int ngroups, gid_t *groups)
 ```
 
-Defined at lines 986 to 997. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1014 to 1025. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Tell whether a group ID is in a group list.
 
@@ -572,7 +590,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol), [posix_acl_rights](../../e
 char * realpath_safe(const char *path)
 ```
 
-Defined at lines 1007 to 1042.
+Defined at lines 1035 to 1070.
 
 Resolve a path with realpath into a new buffer.
 
@@ -583,7 +601,7 @@ Parameters:
 
 Returns: the resolved path, which the caller frees, or NULL on failure
 
-Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [getuserbypath](netatalk_conf.c.md#getuserbypath), [getvolbypath](netatalk_conf.c.md#getvolbypath), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../etc/netatalk/netatalk.c.md#main), [readvolfile](netatalk_conf.c.md#readvolfile), [symlink_target_safe](../../etc/afpd/file.c.md#symlink_target_safe), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config)
+Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [getuserbypath](netatalk_conf.c.md#getuserbypath), [getvolbypath](netatalk_conf.c.md#getvolbypath), [link_target_in](../../etc/afpd/file.c.md#link_target_in), [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../etc/netatalk/netatalk.c.md#main), [readvolfile](netatalk_conf.c.md#readvolfile), [symlink_target_safe](../../etc/afpd/file.c.md#symlink_target_safe), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config)
 
 ### basename_safe
 
@@ -591,7 +609,7 @@ Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [g
 const char * basename_safe(const char *path)
 ```
 
-Defined at lines 1053 to 1058.
+Defined at lines 1081 to 1086.
 
 Return the basename of a path without changing the path.
 
@@ -612,7 +630,7 @@ Called by: [fce_register](../../etc/afpd/fce_api.c.md#fce_register)
 char * strtok_quote(char *s, const char *delim)
 ```
 
-Defined at lines 1072 to 1114.
+Defined at lines 1100 to 1142.
 
 Split a string like strtok, with tokens in double quotes kept whole.
 
@@ -632,7 +650,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol)
 int set_groups(AFPObj *obj, struct passwd *pwd)
 ```
 
-Defined at lines 1126 to 1157. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1154 to 1185. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Load the supplementary groups of a user into the process and into obj.
 
@@ -652,7 +670,7 @@ Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath), [load_afp_conf_vols]
 const char * print_groups(int ngroups, gid_t *groups)
 ```
 
-Defined at lines 1170 to 1185. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1198 to 1213. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Format a group list for a log message.
 
@@ -668,7 +686,7 @@ Called by: [login](../../etc/afpd/auth.c.md#login)
 
 # Macros
 
-* Undocumented: `FD_POLL_CHUNK`, `GROUPSTR_BUFSIZE`, `USAGE_LEVELS`
+* Undocumented: `COARSE_CLOCK`, `FD_POLL_CHUNK`, `GROUPSTR_BUFSIZE`, `USAGE_LEVELS`
 
 # File-scope variables
 

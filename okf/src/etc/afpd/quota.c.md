@@ -5,7 +5,7 @@ description: "Free space under user and group quotas through libquota or quotact
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/quota.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -74,4 +74,4 @@ Returns: AFP_OK, or AFPERR_PARAM when neither quota exists
 
 Calls: [getfreespace](quota.c.md#getfreespace)
 
-Called by: [getvolspace](volume.c.md#getvolspace)
+Called by: [getvolquota](volume.c.md#getvolquota)

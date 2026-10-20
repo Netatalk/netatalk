@@ -5,7 +5,7 @@ description: "AFP sessions over DSI: signal handling, session reconnects, and th
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_dsi.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -458,13 +458,13 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 void afp_over_dsi(AFPObj *obj)
 ```
 
-Defined at lines 898 to 1359.
+Defined at lines 901 to 1371.
 
 Serve the AFP requests of a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session until the session ends.
 
 The call never returns. Setup installs the signal handlers, creates the dircache, and starts the idle worker. It then sets the TCP buffer sizes and TCP_NODELAY and opens the signal pipe. Each pass of the loop runs 4 stages:
 
-1. Run the deferred signal work, then wait in poll for the client socket, the cache hint pipe, or the signal pipe. Buffered input and the disconnected and dying states skip the wait.
+1. Run the deferred signal work. Buffered input goes straight on, and the disconnected and dying states after serving the cache hints; otherwise write the volume roots a marked second left due, then wait in poll for the client socket, the cache hint pipe, or the signal pipe, at most a second while a write is due. A request the due write's attention read ahead skips the wait.
 1. Receive a request and apply a pending volume reload or debug toggle. A failed receive enters the disconnected state, which serves the deferred signal work and then waits on the signal pipe until a primary reconnect, a termination or the disconnect timer ends it.
 1. Run the request. A repeated [DSI](../../include/atalk/dsi.h.md#struct-dsi) request ID with the same AFP command gets the stored result of the replay cache instead of a second run. DSICloseSession ends the session.
 1. Send the attentions that waited, load a pending server message, and send the queued FCE events.
@@ -472,7 +472,7 @@ The call never returns. Setup installs the signal handlers, creates the dircache
 Parameters:
 * `obj`: session object
 
-Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [AfpNum2name](../../libatalk/util/afp_util.c.md#afpnum2name), [afp_dsi_close](afp_dsi.c.md#afp_dsi_close), [afp_dsi_die](afp_dsi.c.md#afp_dsi_die), [afp_dsi_log_disconnect](afp_dsi.c.md#afp_dsi_log_disconnect), [afp_over_dsi_sighandlers](afp_dsi.c.md#afp_over_dsi_sighandlers), [afp_write_command](afp_dsi.c.md#afp_write_command), [atalk_sigpipe_drain](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_drain), [atalk_sigpipe_init](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_init), [atalk_sigpipe_readfd](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_readfd), [dir_free_invalid_q](directory.c.md#dir_free_invalid_q), [dircache_dump](dircache.c.md#dircache_dump), [dircache_init](dircache.c.md#dircache_init), [dsi_attention](../../libatalk/dsi/dsi_attn.c.md#dsi_attention), [dsi_cmdreply](../../libatalk/dsi/dsi_cmdreply.c.md#dsi_cmdreply), [dsi_disconnect](../../libatalk/dsi/dsi_stream.c.md#dsi_disconnect), [dsi_stream_receive](../../libatalk/dsi/dsi_stream.c.md#dsi_stream_receive), [dsi_tickle](../../libatalk/dsi/dsi_tickle.c.md#dsi_tickle), [dsi_writedrain](../../libatalk/dsi/dsi_write.c.md#dsi_writedrain), [fce_pending_events](fce_api.c.md#fce_pending_events), [handle_transfer_session](afp_dsi.c.md#handle_transfer_session), [ipc_child_state](../../libatalk/util/server_ipc.c.md#ipc_child_state), [iw_grant](idle_worker.c.md#iw_grant), [iw_init](idle_worker.c.md#iw_init), [iw_is_active](idle_worker.c.md#iw_is_active), [iw_revoke](idle_worker.c.md#iw_revoke), [iw_shutdown](idle_worker.c.md#iw_shutdown), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [log_backoff](../../libatalk/util/unix.c.md#log_backoff), [pending_request](afp_dsi.c.md#pending_request), [process_cache_hints](dircache.c.md#process_cache_hints), [process_deferred_signals](afp_dsi.c.md#process_deferred_signals), [setuplog](../../libatalk/util/logger.c.md#setuplog), [tmpdir](../../libatalk/util/unix.c.md#tmpdir), [uuidcache_dump](../../libatalk/acl/cache.c.md#uuidcache_dump)
+Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [AfpNum2name](../../libatalk/util/afp_util.c.md#afpnum2name), [afp_dsi_close](afp_dsi.c.md#afp_dsi_close), [afp_dsi_die](afp_dsi.c.md#afp_dsi_die), [afp_dsi_log_disconnect](afp_dsi.c.md#afp_dsi_log_disconnect), [afp_over_dsi_sighandlers](afp_dsi.c.md#afp_over_dsi_sighandlers), [afp_write_command](afp_dsi.c.md#afp_write_command), [atalk_sigpipe_drain](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_drain), [atalk_sigpipe_init](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_init), [atalk_sigpipe_readfd](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_readfd), [dir_free_invalid_q](directory.c.md#dir_free_invalid_q), [dircache_dump](dircache.c.md#dircache_dump), [dircache_init](dircache.c.md#dircache_init), [dsi_attention](../../libatalk/dsi/dsi_attn.c.md#dsi_attention), [dsi_cmdreply](../../libatalk/dsi/dsi_cmdreply.c.md#dsi_cmdreply), [dsi_disconnect](../../libatalk/dsi/dsi_stream.c.md#dsi_disconnect), [dsi_stream_receive](../../libatalk/dsi/dsi_stream.c.md#dsi_stream_receive), [dsi_tickle](../../libatalk/dsi/dsi_tickle.c.md#dsi_tickle), [dsi_writedrain](../../libatalk/dsi/dsi_write.c.md#dsi_writedrain), [fce_pending_events](fce_api.c.md#fce_pending_events), [flushvoltime](volume.c.md#flushvoltime), [handle_transfer_session](afp_dsi.c.md#handle_transfer_session), [ipc_child_state](../../libatalk/util/server_ipc.c.md#ipc_child_state), [iw_grant](idle_worker.c.md#iw_grant), [iw_init](idle_worker.c.md#iw_init), [iw_is_active](idle_worker.c.md#iw_is_active), [iw_revoke](idle_worker.c.md#iw_revoke), [iw_shutdown](idle_worker.c.md#iw_shutdown), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [log_backoff](../../libatalk/util/unix.c.md#log_backoff), [pending_request](afp_dsi.c.md#pending_request), [process_cache_hints](dircache.c.md#process_cache_hints), [process_deferred_signals](afp_dsi.c.md#process_deferred_signals), [setuplog](../../libatalk/util/logger.c.md#setuplog), [tmpdir](../../libatalk/util/unix.c.md#tmpdir), [uuidcache_dump](../../libatalk/acl/cache.c.md#uuidcache_dump)
 
 Called by: [dsi_start](main.c.md#dsi_start)
 

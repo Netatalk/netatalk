@@ -5,7 +5,7 @@ description: "ACL support of afpd: FPAccess, FPGetACL, FPSetACL, and the Darwin 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acls.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T16:52:47+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -524,7 +524,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2068 to 2252.
+Defined at lines 2068 to 2258.
 
 FPSetACL: remove or replace the ACL of an object.
 
@@ -537,9 +537,9 @@ Parameters:
 * `rbuf`: reply block, unused
 * `rbuflen`: reply buffer capacity on entry, 0 on return
 
-Returns: AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, AFPERR_MISC, or the error of remove_acl
+Returns: AFP_OK, AFPERR_NOOBJ, AFPERR_PARAM, AFPERR_MISC, AFPERR_VLOCK on a read-only volume, or the error of remove_acl
 
-Calls: [cname](directory.c.md#cname), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_modify](directory.c.md#dir_modify), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_statdir](ofork.c.md#of_statdir), [ostat](../../libatalk/util/unix.c.md#ostat), [remove_acl](acls.c.md#remove_acl), [set_acl](acls.c.md#set_acl), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [cname](directory.c.md#cname), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_modify](directory.c.md#dir_modify), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [of_statdir](ofork.c.md#of_statdir), [ostat](../../libatalk/util/unix.c.md#ostat), [remove_acl](acls.c.md#remove_acl), [set_acl](acls.c.md#set_acl), [setvoltime](volume.c.md#setvoltime), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
@@ -551,7 +551,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
 ```
 
-Defined at lines 2272 to 2299.
+Defined at lines 2278 to 2305.
 
 Fold the ACL of path into the AFP access rights of the session user.
 

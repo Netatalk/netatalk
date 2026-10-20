@@ -5,7 +5,7 @@ description: "UTF-16 string functions, with Unicode precomposition and decomposi
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/util_unistr.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -79,7 +79,7 @@ Parameters:
 
 Returns: the number of units before the NUL
 
-Called by: [convert_string_internal](charcnv.c.md#convert_string_internal), [strcasestr_w](util_unistr.c.md#strcasestr_w), [strndup_w](util_unistr.c.md#strndup_w), [strstr_w](util_unistr.c.md#strstr_w), [ucs2_to_charset](charcnv.c.md#ucs2_to_charset), [ucs2_to_charset_allocate](charcnv.c.md#ucs2_to_charset_allocate)
+Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [convert_string_internal](charcnv.c.md#convert_string_internal), [strcasestr_w](util_unistr.c.md#strcasestr_w), [strndup_w](util_unistr.c.md#strndup_w), [strstr_w](util_unistr.c.md#strstr_w), [ucs2_to_charset](charcnv.c.md#ucs2_to_charset), [ucs2_to_charset_allocate](charcnv.c.md#ucs2_to_charset_allocate)
 
 ### strnlen_w
 

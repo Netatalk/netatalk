@@ -5,7 +5,7 @@ description: "AFP volume state, configuration flags and extension mapping types.
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/volume.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -95,7 +95,7 @@ Defined at line 38.
 * `ucs2_t * v_macname`: mangled to legacy longname in ucs2
 * `ucs2_t * v_name`: either v_u8mname or v_macname
 * `time_t v_ctime`: volume creation date, not unix ctime
-* `dev_t v_dev`: Unix volume device, Set but not used.
+* `dev_t v_dev`: device of the root, from [stat_vol()](../../etc/afpd/volume.c.md#stat_vol)
 * `struct vfs_ops * vfs`: pointer to vfs_master_funcs for chaining
 * `const struct vfs_ops * vfs_modules`
 * `int v_vfs_ea`: The AFPVOL_EA_xx flag.
@@ -105,6 +105,14 @@ Defined at line 38.
 * `VolSpace v_tm_used`: used bytes on a TM volume
 * `time_t v_tm_cachetime`: time at which v_tm_used was calculated last
 * `VolSpace v_appended`: amount of data appended to files
+* `time_t v_root_marked`: the second [setvoltime()](../../etc/afpd/volume.c.md#setvoltime) marked
+* `VolSpace v_qfree`: the user's quota, bytes free
+* `VolSpace v_qtotal`: the user's quota, bytes in all
+* `time_t v_qtime`: when the quota was fetched, or 0
+* `int v_root_due`: a change awaits a write of the root
+* `int v_root_foreign`: another session's mark, unannounced
+* `struct timespec v_root_stamp`: the stamp it last wrote or saw
+* `int v_root_attn`: a change awaits the attention
 * `int v_casefold`
 * `char * v_configname`: as defined in afp.conf
 * `char * v_localname`: as defined in afp.conf but with vars expanded

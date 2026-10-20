@@ -5,7 +5,7 @@ description: "AFP sessions over ASP: signal handling and the request loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_asp.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -209,18 +209,18 @@ Uses file-scope variables: `asp_die_pending`, `asp_getmesg_pending`, `asp_timedo
 void afp_over_asp(AFPObj *obj)
 ```
 
-Defined at lines 317 to 683.
+Defined at lines 318 to 687.
 
 Run an AFP session over [ASP](../../include/atalk/asp.h.md#struct-asp) until the client closes it.
 
 The session adopts the connection counters, the IPC socket, and the hint pipe that asp_getsess prepared before the fork. Signal handlers only record their event and wake poll through the self-pipe. The resource fork cache stays off for [ASP](../../include/atalk/asp.h.md#struct-asp) sessions.
 
-Each loop pass acts on the recorded signals, applies the dircache hints, and serves one request per readable datagram. Commands and writes dispatch through afp_switch. ASP_MAX_READ_ERRORS read errors in a row end the session, and stray packets only log.
+Each loop pass acts on the recorded signals, applies the dircache hints, writes the volume roots a marked second left due, waiting at most a second while a write is due, and serves one request per readable datagram. Commands and writes dispatch through afp_switch. ASP_MAX_READ_ERRORS read errors in a row end the session, and stray packets only log.
 
 Parameters:
 * `obj`: session object holding the [ASP](../../include/atalk/asp.h.md#struct-asp) session
 
-Calls: [AfpNum2name](../../libatalk/util/afp_util.c.md#afpnum2name), [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_asp_die_handler](afp_asp.c.md#afp_asp_die_handler), [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_asp_getmesg](afp_asp.c.md#afp_asp_getmesg), [afp_asp_reload](afp_asp.c.md#afp_asp_reload), [afp_asp_timedown](afp_asp.c.md#afp_asp_timedown), [asp_attention](../../libatalk/asp/asp_attn.c.md#asp_attention), [asp_cmdreply](../../libatalk/asp/asp_cmdreply.c.md#asp_cmdreply), [asp_getrequest](../../libatalk/asp/asp_getreq.c.md#asp_getrequest), [asp_process_deferred_signals](afp_asp.c.md#asp_process_deferred_signals), [atalk_sigpipe_drain](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_drain), [atalk_sigpipe_init](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_init), [atalk_sigpipe_readfd](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_readfd), [dir_free_invalid_q](directory.c.md#dir_free_invalid_q), [dircache_init](dircache.c.md#dircache_init), [fce_pending_events](fce_api.c.md#fce_pending_events), [of_pforkdesc](ofork.c.md#of_pforkdesc), [process_cache_hints](dircache.c.md#process_cache_hints)
+Calls: [AfpNum2name](../../libatalk/util/afp_util.c.md#afpnum2name), [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_asp_die_handler](afp_asp.c.md#afp_asp_die_handler), [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_asp_getmesg](afp_asp.c.md#afp_asp_getmesg), [afp_asp_reload](afp_asp.c.md#afp_asp_reload), [afp_asp_timedown](afp_asp.c.md#afp_asp_timedown), [asp_attention](../../libatalk/asp/asp_attn.c.md#asp_attention), [asp_cmdreply](../../libatalk/asp/asp_cmdreply.c.md#asp_cmdreply), [asp_getrequest](../../libatalk/asp/asp_getreq.c.md#asp_getrequest), [asp_process_deferred_signals](afp_asp.c.md#asp_process_deferred_signals), [atalk_sigpipe_drain](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_drain), [atalk_sigpipe_init](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_init), [atalk_sigpipe_readfd](../../libatalk/util/sigpipe.c.md#atalk_sigpipe_readfd), [dir_free_invalid_q](directory.c.md#dir_free_invalid_q), [dircache_init](dircache.c.md#dircache_init), [fce_pending_events](fce_api.c.md#fce_pending_events), [flushvoltime](volume.c.md#flushvoltime), [of_pforkdesc](ofork.c.md#of_pforkdesc), [process_cache_hints](dircache.c.md#process_cache_hints)
 
 Called by: [asp_start](main.c.md#asp_start)
 

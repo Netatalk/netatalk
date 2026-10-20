@@ -5,7 +5,7 @@ description: "45 files, 33 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 # Files
@@ -100,7 +100,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 46 calls
+* [etc/afpd](../etc/afpd.md): 52 calls
 * [bin/afppasswd](../bin/afppasswd.md): 12 calls
 * [libatalk/nbp](../libatalk/nbp.md): 9 calls
 * [libatalk/adouble](../libatalk/adouble.md): 7 calls
@@ -120,9 +120,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 * [netddp_sendto](atalk/netddp.h.md#netddp_sendto): 12 callers
 * [ad_meta_open](atalk/adouble.h.md#ad_meta_open): 9 callers
 * [ad_rsrc_open](atalk/adouble.h.md#ad_rsrc_open): 8 callers
+* [atalk_stat_mtime_timespec](atalk/compat.h.md#atalk_stat_mtime_timespec): 8 callers
 * [netddp_recvfrom](atalk/netddp.h.md#netddp_recvfrom): 8 callers
 * [srp_valid_username](atalk/srp.h.md#srp_valid_username): 8 callers
 * [netddp_close](atalk/netddp.h.md#netddp_close): 6 callers
 * [ad_meta_loaded](atalk/adouble.h.md#ad_meta_loaded): 5 callers
 * [srp_verifier_mode_is_safe](atalk/srp.h.md#srp_verifier_mode_is_safe): 5 callers
-* [mod_close](atalk/util.h.md#mod_close): 4 callers

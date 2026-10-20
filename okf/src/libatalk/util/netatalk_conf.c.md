@@ -5,7 +5,7 @@ description: "Reading afp.conf and extmap.conf: server options, volume definitio
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/netatalk_conf.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -979,7 +979,7 @@ Return the head of the volume list, which holds open and closed volumes.
 
 Returns: the first volume, or NULL without volumes
 
-Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [any_volume_uses_localsearch](../../etc/netatalk/netatalk.c.md#any_volume_uses_localsearch), [close_all_vol](../../etc/afpd/volume.c.md#close_all_vol), [localsearch_backend_active](../../etc/afpd/spotlight.c.md#localsearch_backend_active), [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [register_stuff](../../etc/netatalk/afp_avahi.c.md#register_stuff), [register_stuff](../../etc/netatalk/afp_mdns.c.md#register_stuff), [server_ipc_volumes](../../etc/afpd/volume.c.md#server_ipc_volumes), [set_sl_volumes](../../etc/netatalk/netatalk.c.md#set_sl_volumes), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config), [vol_setdate](../../etc/afpd/volume.c.md#vol_setdate)
+Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [any_volume_uses_localsearch](../../etc/netatalk/netatalk.c.md#any_volume_uses_localsearch), [close_all_vol](../../etc/afpd/volume.c.md#close_all_vol), [flushvoltime](../../etc/afpd/volume.c.md#flushvoltime), [localsearch_backend_active](../../etc/afpd/spotlight.c.md#localsearch_backend_active), [markroot](../../etc/afpd/volume.c.md#markroot), [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [register_stuff](../../etc/netatalk/afp_avahi.c.md#register_stuff), [register_stuff](../../etc/netatalk/afp_mdns.c.md#register_stuff), [server_ipc_volumes](../../etc/afpd/volume.c.md#server_ipc_volumes), [set_sl_volumes](../../etc/netatalk/netatalk.c.md#set_sl_volumes), [validate_singleuser_config](../../etc/netatalk/netatalk.c.md#validate_singleuser_config), [vol_setdate](../../etc/afpd/volume.c.md#vol_setdate)
 
 Uses file-scope variables: `Volumes`
 

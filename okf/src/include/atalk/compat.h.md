@@ -5,7 +5,7 @@ description: "Portability declarations for missing system and C library function
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/compat.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -89,7 +89,7 @@ Defined at lines 61 to 73.
 
 Return the stat mtime as a timespec, with tv_nsec 0 if unavailable.
 
-Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [setfile](../../bin/nad/nad_cp.c.md#setfile)
+Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [markroot](../../etc/afpd/volume.c.md#markroot), [markvol](../../etc/afpd/volume.c.md#markvol), [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [same_stamp](../../etc/afpd/volume.c.md#same_stamp), [setfile](../../bin/nad/nad_cp.c.md#setfile)
 
 ### atalk_stat_atime_timespec
 
