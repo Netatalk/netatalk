@@ -316,7 +316,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -498,7 +498,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -581,7 +581,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -651,7 +651,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -696,7 +696,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -739,7 +739,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -781,7 +781,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -824,7 +824,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -915,7 +915,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -961,7 +961,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1008,7 +1008,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1052,7 +1052,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1096,7 +1096,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1139,7 +1139,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1182,7 +1182,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1226,7 +1226,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1270,7 +1270,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1314,7 +1314,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1358,7 +1358,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1401,7 +1401,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1444,7 +1444,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1489,7 +1489,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1528,7 +1528,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -1573,7 +1573,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
@@ -2284,7 +2284,7 @@ jobs:
           persist-credentials: false
       - name: Publish AFP spec test results
         if: ${{ !cancelled() }}
-        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
+        uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
         with:
           name: AFP Spectest (${{ github.job }})
           path: ${{ runner.temp }}/afp-spectest.junit.xml
