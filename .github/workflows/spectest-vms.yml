@@ -613,7 +613,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build on VM
-        uses: vmactions/openindiana-vm@21e57a45fc8dbfc8b20804ba707c1dad6c271b4f # v1.1.6
+        uses: vmactions/openindiana-vm@f0ed27ca85a6d1f5b11e4242eba1d6effa5aaae2 # v1.1.8
         with:
           release: "202510-build"
           copyback: true
