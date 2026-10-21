@@ -592,6 +592,8 @@ foreach m : [
     'st_atim',
     'st_atimespec',
     'st_birthtimespec',
+    'st_ctim',
+    'st_ctimespec',
     'st_mtim',
     'st_mtimespec',
 ]

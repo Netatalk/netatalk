@@ -72,6 +72,21 @@ static inline struct timespec atalk_stat_mtime_timespec(const struct stat *st)
     return ts;
 }
 
+/*! @brief Return the stat ctime as a timespec, with tv_nsec 0 if unavailable */
+static inline struct timespec atalk_stat_ctime_timespec(const struct stat *st)
+{
+    struct timespec ts;
+#if defined(HAVE_STRUCT_STAT_ST_CTIM)
+    ts = st->st_ctim;
+#elif defined(HAVE_STRUCT_STAT_ST_CTIMESPEC)
+    ts = st->st_ctimespec;
+#else
+    ts.tv_sec = st->st_ctime;
+    ts.tv_nsec = 0;
+#endif
+    return ts;
+}
+
 /*! @brief Return the stat atime as a timespec, with tv_nsec 0 if unavailable */
 static inline struct timespec atalk_stat_atime_timespec(const struct stat *st)
 {

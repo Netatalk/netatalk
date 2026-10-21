@@ -174,6 +174,8 @@ extern char *set_name(const struct vol *, char *, cnid_t, char *, cnid_t,
 extern struct extmap	*getextmap(const char *);
 extern struct extmap	*getdefextmap(void);
 
+extern struct dir *path_entry(const struct vol *vol, const struct dir *dir,
+                              struct path *path);
 extern int getfilparams(const AFPObj *obj, struct vol *, uint16_t,
                         struct path *,
                         struct dir *, char *buf, size_t *, int skip_fork_check);

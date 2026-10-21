@@ -203,6 +203,12 @@ struct ea_ondisk {
 
 /* VFS inderected funcs ... : */
 
+/* the reply for an attribute the object lacks, shared by both backends */
+extern int ea_absent(const struct vol *vol, char *rbuf, size_t *rbuflen);
+
+/* the names the native backend refuses, shared with afpd's EA cache */
+extern int sys_ea_protected(const char *attruname);
+
 /* Default adouble EAs */
 extern int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
                       const char *uname, int oflag, const char *attruname, int fd);

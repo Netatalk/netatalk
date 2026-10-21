@@ -301,6 +301,12 @@
 /* Define to 1 if `st_birthtimespec' is a member of `struct stat'. */
 #mesondefine HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC
 
+/* Define to 1 if `st_ctim' is a member of `struct stat'. */
+#mesondefine HAVE_STRUCT_STAT_ST_CTIM
+
+/* Define to 1 if `st_ctimespec' is a member of `struct stat'. */
+#mesondefine HAVE_STRUCT_STAT_ST_CTIMESPEC
+
 /* Define to 1 if `st_mtim' is a member of `struct stat'. */
 #mesondefine HAVE_STRUCT_STAT_ST_MTIM
 

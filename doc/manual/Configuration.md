@@ -311,6 +311,7 @@ change them.
 | *(built in — always on)*             | **fruit:locking = netatalk**         | AFP and SMB open/deny modes conflict across protocols: a deny-mode open on one side refuses a conflicting open on the other. |
 | **dircache validation freq = 1** *(the default when multi protocol = yes)* | | Netatalk notices files that Samba created, renamed, or deleted. |
 | *(built in when multi protocol = yes)* | | The volume's resource forks are not cached in afpd memory, so Samba-side changes are always re-read. |
+| *(built in when multi protocol = yes)* | | The volume's extended attribute names and values are not cached in afpd memory, so Samba-side changes are always re-read. |
 |                                      | **kernel change notify = yes** *(Samba default — keep)* | Samba notices files that Netatalk changed, and notifies SMB clients. |
 |                                      | **oplocks = no**                     | SMB clients must not cache file data on a volume Netatalk also serves — a cached write could overwrite an AFP-side change. |
 |                                      | **level2 oplocks = no**              | Second half of the row above. |
@@ -333,7 +334,7 @@ When Netatalk is the **only** process on the volume (the default posture),
 Set *multi protocol = yes* on volumes Samba also serves. It changes the
 defaults of the settings safe concurrent access requires: *strict locking*
 defaults to yes, *dircache validation freq* defaults to 1, and the volume is
-excluded from the resource-fork data cache.
+excluded from the resource-fork data cache and the extended attribute cache.
 Explicit settings always win — an explicit value that weakens coherency
 is honored and logged with a verbose warning. Pair it with *ea = samba*
 to store Extended Attributes in the Samba-compatible format. The example

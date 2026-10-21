@@ -111,6 +111,25 @@ static struct dir *path_resolve_cached_file(const struct vol *vol,
 }
 
 /*!
+ * @brief The dircache entry a request's path names
+ *
+ * A directory's entry is path->d_dir. A file's comes from the memoized
+ * lookup of path_resolve_cached_file().
+ *
+ * @param[in]     vol   volume of the object
+ * @param[in]     dir   directory that holds a file
+ * @param[in,out] path  path of the object, its d_cached memo updated for a
+ *                      file
+ * @returns the dircache entry, or NULL when a file has none
+ */
+struct dir *path_entry(const struct vol *vol, const struct dir *dir,
+                       struct path *path)
+{
+    return path_isadir(path) ? path->d_dir
+           : path_resolve_cached_file(vol, dir, path);
+}
+
+/*!
  * @brief Whether a client-supplied symlink target stays inside the volume
  *
  * The setfilparams call asks it before it turns a file into a symlink.

@@ -1029,6 +1029,7 @@ static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
 
     /* check size and read xattr */
     if (sbuf.st_size > size) {
+        errno = ERANGE;
         return -1;
     }
 

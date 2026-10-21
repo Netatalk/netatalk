@@ -1063,3 +1063,24 @@ int getvolparams(AFPObj *obj, uint16_t vid, uint16_t bitmap)
     rbuflen = sizeof(rbuf);
     return afp_getvolparams(obj, buf, sizeof(buf), rbuf, &rbuflen);
 }
+
+/*!
+ * @brief FPListExtAttrs of name under did, the reply into reply
+ */
+int listextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                uint32_t maxreply, char *reply, size_t *replylen)
+{
+    static char buf[1024] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    /* bitmap, reqcount, startindex, maxreply */
+    PUSHVAL(p, uint16_t, 0, len);
+    PUSHVAL(p, uint16_t, 0, len);
+    PUSHVAL(p, uint32_t, 0, len);
+    PUSHVAL(p, uint32_t, htonl(maxreply), len);
+    len += push_path(&p, name);
+    return afp_listextattr(obj, buf, len, reply, replylen);
+}

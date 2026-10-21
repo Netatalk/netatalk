@@ -44,6 +44,7 @@
 #include "dircache.h"
 #include "directory.h"
 #include "extattrs.h"
+#include "file.h"
 #include "fork.h"
 #include "volume.h"
 
@@ -60,8 +61,9 @@ static const char *ea_resourcefork = "com.apple.ResourceFork";
  * directory
  *
  * The client calls twice, first for the size of all names and then for the
- * names themselves. A static buffer keeps the names between the two calls, so
- * one scan of the extended attributes serves both.
+ * names themselves. The dircache entry of an object the cache serves keeps
+ * the names from the first read, so the second call and every later list of
+ * the object read nothing until the entry sees a change.
  *
  * @param[in]     obj      session object, unused
  * @param[in]     ibuf     request block
@@ -89,6 +91,10 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     size_t              attrbuflen = 0;
     int                 ad_available = 0;
     char                attrnamebuf[ATTRNAMEBUFSIZ];
+    struct dir          *cached;
+    struct dir          *entry;
+    const char          *names;
+    size_t              nameslen = 0;
     *rbuflen = 0;
     ibuf += 2;
     /* Get Bitmap and MaxReplySize first */
@@ -164,6 +170,11 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
     }
 
+    cached = path_entry(vol, curdir, s_path);
+    entry = ea_cache_entry(vol, s_path, oflag, NULL);
+    /* a directory the fallback re-addressed from its parent */
+    uname = s_path->u_name;
+
     if (opened) {
         /* Fork-owned adouble — use directly, skip cache.
          * Opportunistically populate cache if not yet loaded.
@@ -171,19 +182,12 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
          * adouble's header zeroed — storing it would flip a negative
          * sentinel to a bogus positive entry. */
         ad_available = 1;
-        size_t uname_len = strnlen(uname, CNID_MAX_PATH_LEN);
-        struct dir *cached = dircache_search_by_name(vol, curdir,
-                                                     uname, uname_len);
 
         if (cached && cached->dcache_rlen < 0 && ad_meta_loaded(adp)) {
             ad_store_to_cache(adp, cached);
         }
     } else {
         /* No open fork — use ad_metadata_cached() (non-strict) */
-        struct dir *cached = path_isadir(s_path) ? s_path->d_dir
-                             : dircache_search_by_name(vol, curdir, uname, strnlen(uname,
-                                 CNID_MAX_PATH_LEN));
-
         if (ad_metadata_cached(uname, adflags, adp, vol, cached, false,
                                (s_path->st_errno == 0) ? &s_path->st : NULL) != 0) {
             switch (errno) {
@@ -231,7 +235,22 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
     }
 
-    ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag, fd);
+    names = entry ? ea_cache_names(entry, &nameslen) : NULL;
+
+    if (names) {
+        memcpy(attrnamebuf + attrbuflen, names, nameslen);
+        attrbuflen += nameslen;
+        ret = AFP_OK;
+    } else {
+        size_t pseudo = attrbuflen;
+        ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag,
+                                    fd);
+
+        if (ret == AFP_OK && entry) {
+            ea_cache_store_names(entry, attrnamebuf + pseudo,
+                                 attrbuflen - pseudo);
+        }
+    }
 
     if (ret != AFP_OK) {
         attrbuflen = 0;
@@ -326,7 +345,11 @@ static int ea_uname(const struct vol *vol, char **ibuf, const char *end,
  * @brief FPGetExtAttr: return the size or the content of an extended attribute
  *
  * A MaxReplySize of 0 asks for the size only. The name arrives in UTF-8 and
- * converts for the volume's EA backend. An open fork of the file lends its
+ * converts for the volume's EA backend. For an object the dircache serves,
+ * the whole value is read once and kept in the entry, a name the cached list
+ * lacks is missing without a read, and the reply is built here: the size
+ * word alone for a probe or for a value over MaxReplySize, which is
+ * AFPERR_PARAM, the value otherwise. An open fork of the file lends its
  * metadata descriptor to the VFS call. kXAttrNoFollow keeps the call off
  * symlink targets.
  *
@@ -337,7 +360,8 @@ static int ea_uname(const struct vol *vol, char **ibuf, const char *end,
  * @param[out] rbuflen  reply length on return
  * @returns the VFS result, AFPERR_PARAM for an unknown volume or a name
  *          ea_uname() refuses, AFPERR_MISC on a volume without EA support,
- *          or the error of the directory or path lookup
+ *          AFPERR_NOOBJ for a path that names no object, or the error of the
+ *          directory or path lookup
  */
 int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
                    size_t *rbuflen)
@@ -346,7 +370,11 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
     int                 ret, oflag = 0, fd = -1;
     uint16_t            vid, bitmap;
     uint32_t            did, maxreply;
+    uint32_t            size;
     char                attruname[256];
+    const char          *value;
+    size_t              vlen = 0;
+    struct dir          *cached;
     struct vol          *vol;
     struct dir          *dir;
     struct path         *s_path;
@@ -394,6 +422,10 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
         return afp_errno;
     }
 
+    if (s_path->st_errno != 0) {
+        return AFPERR_NOOBJ;
+    }
+
     if ((ret = ea_uname(vol, &ibuf, end, attruname,
                         sizeof(attruname))) != AFP_OK) {
         return ret;
@@ -424,20 +456,100 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
         }
     }
 
-    /*
-      Switch on maxreply:
-      if its 0 we must return the size of the requested attribute,
-      if its non 0 we must return the attribute.
-    */
-    if (maxreply == 0) {
-        ret = vol->vfs->vfs_ea_getsize(vol, rbuf, rbuflen, s_path->u_name, oflag,
-                                       attruname, fd);
+    cached = ea_cache_entry(vol, s_path, oflag, attruname);
+    value = cached ? ea_cache_value(cached, attruname, &vlen) : NULL;
+
+    if (value) {
+        size = htonl((uint32_t)vlen);
+        memcpy(rbuf, &size, sizeof(size));
+        memcpy(rbuf + sizeof(size), value, vlen);
+        *rbuflen += sizeof(size) + vlen;
+    } else if (cached && ea_cache_absent(cached, attruname)) {
+        /* the fresh list lacks the name */
+        return ea_absent(vol, rbuf, rbuflen);
+    } else if (maxreply == 0 && cached == NULL) {
+        return vol->vfs->vfs_ea_getsize(vol, rbuf, rbuflen, s_path->u_name,
+                                        oflag, attruname, fd);
     } else {
-        ret = vol->vfs->vfs_ea_getcontent(vol, rbuf, rbuflen, s_path->u_name, oflag,
-                                          attruname, maxreply, fd);
+        /* the whole value, within MAX_EA_SIZE: a probe's size, the fetch,
+         * and the fetches after it */
+        ret = vol->vfs->vfs_ea_getcontent(vol, rbuf, rbuflen, s_path->u_name,
+                                          oflag, attruname,
+                                          MAX_EA_SIZE + MAX_REPLY_EXTRA_BYTES,
+                                          fd);
+
+        if (ret == AFPERR_PARAM && maxreply == 0) {
+            /* a value over MAX_EA_SIZE: the refusal carries the size */
+            return AFP_OK;
+        }
+
+        if (ret != AFP_OK || *rbuflen < MAX_REPLY_EXTRA_BYTES) {
+            return ret;
+        }
+
+        vlen = *rbuflen - MAX_REPLY_EXTRA_BYTES;
+
+        if (cached) {
+            ea_cache_store_value(cached, attruname, rbuf + sizeof(size), vlen);
+        }
     }
 
-    return ret;
+    /* MaxReplySize, applied here alone: the size word by itself for a
+     * probe, or when the value does not fit */
+    if (maxreply == 0 || maxreply < vlen + MAX_REPLY_EXTRA_BYTES) {
+        *rbuflen = MAX_REPLY_EXTRA_BYTES;
+        return maxreply == 0 ? AFP_OK : AFPERR_PARAM;
+    }
+
+    return AFP_OK;
+}
+
+/*!
+ * @brief Settle the volume and the dircache after an EA write: the
+ *        entry's cached names and values go whatever the result, since
+ *        ea=ad rewrites its container header on a failed write too; a
+ *        successful write stamps the volume's modification time,
+ *        refreshes the entry's stat and hints the siblings
+ *
+ * @param[in] obj     session
+ * @param[in] vol     volume of the object
+ * @param[in] s_path  the request's path as cname() left it
+ * @param[in] ret     the backend's result
+ */
+static void ea_written(AFPObj *obj, struct vol *vol, struct path *s_path,
+                       int ret)
+{
+    struct dir *cached = path_entry(vol, curdir, s_path);
+    struct stat post_st;
+    cnid_t hint_cnid;
+
+    if (cached) {
+        ea_cache_free(cached);
+    }
+
+    if (ret != AFP_OK) {
+        return;
+    }
+
+    setvoltime(obj, vol);
+
+    if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0 && cached) {
+        dir_modify(vol, cached, &(struct dir_modify_args) {
+            .flags = DCMOD_STAT,
+            .st = &post_st,
+        });
+    }
+
+    hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+    if (hint_cnid == CNID_INVALID && s_path->u_name) {
+        size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+        hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
+    }
+
+    if (hint_cnid != CNID_INVALID) {
+        ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
+    }
 }
 
 /*!
@@ -445,8 +557,9 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
  *
  * kXAttrCreate and kXAttrReplace map to O_CREAT and O_TRUNC for the VFS call.
  * A value over MAX_EA_SIZE or past the request's end gets AFPERR_PARAM.
- * After a write the dircache entry takes the new stat, and the other
- * sessions get a refresh hint.
+ * The dircache entry drops its cached EA names and values whatever the
+ * write's result; after a successful write the entry takes the new stat
+ * and the other sessions get a refresh hint.
  *
  * @param[in]  obj      session object
  * @param[in]  ibuf     request block
@@ -455,7 +568,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
  * @param[out] rbuflen  0 on return
  * @returns the VFS result, AFPERR_PARAM, also for a name ea_uname() refuses,
  *          AFPERR_VLOCK on a read-only volume, AFPERR_MISC on a volume
- *          without EA support, or the error of the directory or path lookup
+ *          without EA support, AFPERR_NOOBJ for a path that names no object,
+ *          or the error of the directory or path lookup
  */
 int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
                    char *rbuf _U_, size_t *rbuflen)
@@ -518,6 +632,10 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
         return afp_errno;
     }
 
+    if (s_path->st_errno != 0) {
+        return AFPERR_NOOBJ;
+    }
+
     if (path_isadir(s_path)) {
         LOG(log_debug, logtype_afpd, "afp_setextattr(%s): is a dir", s_path->u_name);
     } else {
@@ -557,48 +675,16 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
         s_path->u_name, attruname, attrsize);
     ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize,
                                oflag, fd);
-
-    if (ret == AFP_OK) {
-        setvoltime(obj, vol);
-        /* EA set changes ctime — refresh stat cache */
-        struct stat post_st;
-        struct dir *cached = NULL;
-
-        if (path_isadir(s_path)) {
-            cached = curdir;
-        } else if (s_path->u_name != NULL) {
-            size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
-            cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
-        }
-
-        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0 && cached) {
-            dir_modify(vol, cached, &(struct dir_modify_args) {
-                .flags = DCMOD_STAT,
-                .st = &post_st,
-            });
-        }
-
-        /* Send hint to afpd siblings — EA write changed ctime */
-        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
-
-        if (hint_cnid == CNID_INVALID && s_path->u_name) {
-            size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
-            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
-        }
-
-        if (hint_cnid != CNID_INVALID) {
-            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
-        }
-    }
-
+    ea_written(obj, vol, s_path, ret);
     return ret;
 }
 
 /*!
  * @brief FPRemoveExtAttr: remove an extended attribute
  *
- * After a removal the dircache entry takes the new stat, and the other
- * sessions get a refresh hint.
+ * The dircache entry drops its cached EA names and values whatever the
+ * removal's result; after a successful removal the entry takes the new
+ * stat and the other sessions get a refresh hint.
  *
  * @param[in]  obj      session object
  * @param[in]  ibuf     request block
@@ -607,7 +693,8 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
  * @param[out] rbuflen  0 on return
  * @returns the VFS result, AFPERR_PARAM, also for a name ea_uname() refuses,
  *          AFPERR_VLOCK on a read-only volume, AFPERR_MISC on a volume
- *          without EA support, or the error of the directory or path lookup
+ *          without EA support, AFPERR_NOOBJ for a path that names no object,
+ *          or the error of the directory or path lookup
  */
 int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
                    char *rbuf _U_, size_t *rbuflen)
@@ -661,6 +748,10 @@ int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
         return afp_errno;
     }
 
+    if (s_path->st_errno != 0) {
+        return AFPERR_NOOBJ;
+    }
+
     if (path_isadir(s_path)) {
         LOG(log_debug, logtype_afpd, "afp_remextattr(%s): is a dir", s_path->u_name);
     } else {
@@ -685,39 +776,6 @@ int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen,
     LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name,
         attruname);
     ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag, fd);
-
-    if (ret == AFP_OK) {
-        setvoltime(obj, vol);
-        /* EA remove changes ctime — refresh stat cache */
-        struct stat post_st;
-        struct dir *cached = NULL;
-
-        if (path_isadir(s_path)) {
-            cached = curdir;
-        } else if (s_path->u_name != NULL) {
-            size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
-            cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
-        }
-
-        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0 && cached) {
-            dir_modify(vol, cached, &(struct dir_modify_args) {
-                .flags = DCMOD_STAT,
-                .st = &post_st,
-            });
-        }
-
-        /* Send hint to afpd siblings — EA removal changed ctime */
-        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
-
-        if (hint_cnid == CNID_INVALID && s_path->u_name) {
-            size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
-            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
-        }
-
-        if (hint_cnid != CNID_INVALID) {
-            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
-        }
-    }
-
+    ea_written(obj, vol, s_path, ret);
     return ret;
 }

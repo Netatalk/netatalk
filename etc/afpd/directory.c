@@ -1114,6 +1114,8 @@ void dir_free(struct dir *dir)
         rfork_cache_free(dir);
     }
 
+    ea_cache_free(dir);
+
     if (dir->d_u_name != dir->d_m_name) {
         bdestroy(dir->d_u_name);
     }
@@ -1313,21 +1315,30 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                               dir->dcache_ctime != args->st->st_ctime);
         bool keep_old_ino = false;
 
-        if (ino_changed) {
-            /* Object replaced — a cached parent fd would pin the old
-             * object. Needed here because the entry survives in place
-             * when the CNID is unchanged (no dircache_remove runs). */
-            pfd_purge(vol->v_vid, dir->d_did);
-
-            /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
-             * Setting rlen = -1 before freeing would corrupt rfork_cache_used tracking. */
+        /* the AppleDouble state goes with any change of the object:
+         * rfork_cache_free() reads dcache_rlen for the budget, so the
+         * metadata is marked unknown after it; DCMOD_AD stores fresh
+         * metadata below */
+        if (ino_changed || ctime_changed) {
             if (dir->dcache_rfork_buf) {
                 rfork_cache_free(dir);
                 rfork_stat_invalidated++;
             }
 
-            /* Different inode = different file. AD is always stale. */
+            ea_cache_free(dir);
             dir->dcache_rlen = AD_RLEN_UNKNOWN;
+            LOG(log_debug, logtype_afpd,
+                "dir_modify: inode or ctime change — dropping the AD, rfork "
+                "and EA caches did:%u (ctime:%ld->%ld)",
+                ntohl(dir->d_did),
+                (long)dir->dcache_ctime, (long)args->st->st_ctime);
+        }
+
+        if (ino_changed) {
+            /* Object replaced — a cached parent fd would pin the old
+             * object. Needed here because the entry survives in place
+             * when the CNID is unchanged (no dircache_remove runs). */
+            pfd_purge(vol->v_vid, dir->d_did);
             /* Refresh CNID from database */
             cnid_t new_cnid = CNID_INVALID;
             AFP_CNID_START("cnid_lookup");
@@ -1398,26 +1409,6 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                         ntohl(new_cnid));
                 }
             }
-        } else if (ctime_changed && dir->dcache_rlen != AD_RLEN_UNKNOWN) {
-            /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
-             * Setting rlen = -1 before freeing would corrupt rfork_cache_used tracking. */
-            if (dir->dcache_rfork_buf) {
-                rfork_cache_free(dir);
-                rfork_stat_invalidated++;
-            }
-
-            /* Ctime changed (same inode): metadata modified externally.
-             * Invalidate AD cache — re-read from disk on next access.
-             * Covers dcache_rlen >= 0 (cached AD) and the negative
-             * sentinels (AD_RLEN_NO_AD, AD_RLEN_RFORK_ONLY).
-             * When DCMOD_AD is also set, ad_store_to_cache() runs after
-             * this section and re-populates dcache_rlen with caller data. */
-            LOG(log_debug, logtype_afpd,
-                "dir_modify: ctime change — invalidating AD cache "
-                "did:%u (ctime:%ld->%ld)",
-                ntohl(dir->d_did),
-                (long)dir->dcache_ctime, (long)args->st->st_ctime);
-            dir->dcache_rlen = AD_RLEN_UNKNOWN;
         }
 
         if (ino_changed || ctime_changed || (args->flags & DCMOD_AD_INV)) {
@@ -1492,6 +1483,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             rfork_stat_invalidated++;
         }
 
+        ea_cache_free(dir);
         dir->dcache_rlen = AD_RLEN_UNKNOWN;
         memset(dir->dcache_finderinfo, 0, 32);
         memset(dir->dcache_filedatesi, 0, 16);

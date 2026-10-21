@@ -123,6 +123,9 @@ struct fault_inject {
     struct fi_call unlink;
     struct fi_call readdir;
     struct fi_call getcwd;
+    int xattr_watch;      /*!< count the xattr reads below (Linux) */
+    int getxattr_calls;   /*!< getxattr/lgetxattr/fgetxattr while watching */
+    int listxattr_calls;  /*!< listxattr/llistxattr while watching */
 };
 
 extern struct fault_inject fi;

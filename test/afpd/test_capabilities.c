@@ -52,6 +52,7 @@ static int cap_cache[] = {
     [TEST_CAP_EA_SYS]       = -1,
     [TEST_CAP_SOCKET_SPLICE] = -1,
     [TEST_CAP_ACL_SET]      = -1,
+    [TEST_CAP_XATTR_WATCH]  = -1,
 };
 
 /*! @brief Short capability name for skip/log messages. */
@@ -66,6 +67,9 @@ const char *test_capability_name(enum test_capability cap)
 
     case TEST_CAP_SOCKET_SPLICE:
         return "splice() from an AF_UNIX stream socket";
+
+    case TEST_CAP_XATTR_WATCH:
+        return "xattr call counting (LD_PRELOAD)";
 
     case TEST_CAP_ACL_SET:
         return "a filesystem that stores ACLs";
@@ -171,6 +175,24 @@ static int probe_socket_splice(void)
 }
 
 /*!
+ * @brief Does the preload count libatalk's xattr reads into fi?
+ *
+ * Watches one sys_getxattr() of the volume root: the interposers exist on
+ * Linux only, and the call reaches them whatever the filesystem answers.
+ */
+static int probe_xattr_watch(const struct vol *vol)
+{
+    char buf[4];
+    int worked;
+    fault_inject_reset();
+    fi.xattr_watch = 1;
+    (void)sys_getxattr(vol->v_path, AD_EA_META, buf, sizeof(buf));
+    worked = fi.getxattr_calls == 1;
+    fault_inject_reset();
+    return worked;
+}
+
+/*!
  * @brief Does the filesystem under vol->v_path store an ACL written to it?
  *
  * Writes the root's own ACL back, which leaves it as it was; a filesystem
@@ -230,6 +252,10 @@ int test_capability(enum test_capability cap, const struct vol *vol)
 
     case TEST_CAP_SOCKET_SPLICE:
         cap_cache[cap] = probe_socket_splice();
+        break;
+
+    case TEST_CAP_XATTR_WATCH:
+        cap_cache[cap] = probe_xattr_watch(vol);
         break;
 
     case TEST_CAP_ACL_SET:
