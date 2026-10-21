@@ -129,6 +129,8 @@ struct vol {
     uid_t           v_private_uid; /*!< an AFPVOL_PRIVATE volume's owner */
     int             v_qfd;
     uint32_t        v_ignattr;  /*!< AFP attributes that shall be ignored */
+    int             v_rootfd;   /*!< ochdir() walks from it, or -1 */
+    int             v_ignorecase; /*!< the root's filesystem ignores case */
 };
 
 /*! load_afp_conf_vols() flags */

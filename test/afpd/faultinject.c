@@ -1062,4 +1062,74 @@ acl_t acl_get_file(const char *path, acl_type_t type)
 }
 #endif /* HAVE_POSIX_ACLS */
 
+typedef int (*unlink_fn)(const char *);
+static unlink_fn real_unlink;
+
+/*!
+ * @brief unlink() interposer: counts and fails armed calls
+ */
+int unlink(const char *path)
+{
+    if (!real_unlink) {
+        real_unlink = (unlink_fn)dlsym(RTLD_NEXT, "unlink");
+    }
+
+    if (fi_call_fire(&fi.unlink)) {
+        return -1;
+    }
+
+    return real_unlink(path);
+}
+
+typedef struct dirent *(*readdir_fn)(DIR *);
+static readdir_fn real_readdir;
+
+/*!
+ * @brief readdir() interposer: counts and fails armed calls
+ *
+ * <dirent.h> renames this definition where libc versions the call (glibc
+ * readdir64 under 64-bit offsets, NetBSD __readdir30), so the real function
+ * is looked up under this definition's own name first, as statvfs() is.
+ */
+struct dirent *readdir(DIR *dp)
+{
+    if (!real_readdir) {
+        Dl_info self;
+
+        if (dladdr((void *)readdir, &self) && self.dli_sname
+                && self.dli_saddr == (void *)readdir) {
+            real_readdir = (readdir_fn)dlsym(RTLD_NEXT, self.dli_sname);
+        }
+
+        if (!real_readdir) {
+            real_readdir = (readdir_fn)fi_real64("readdir64", "readdir");
+        }
+    }
+
+    if (fi_call_fire(&fi.readdir)) {
+        return NULL;
+    }
+
+    return real_readdir(dp);
+}
+
+typedef char *(*getcwd_fn)(char *, size_t);
+static getcwd_fn real_getcwd;
+
+/*!
+ * @brief getcwd() interposer: counts and fails armed calls
+ */
+char *getcwd(char *buf, size_t size)
+{
+    if (!real_getcwd) {
+        real_getcwd = (getcwd_fn)dlsym(RTLD_NEXT, "getcwd");
+    }
+
+    if (fi_call_fire(&fi.getcwd)) {
+        return NULL;
+    }
+
+    return real_getcwd(buf, size);
+}
+
 #endif /* FAULTINJECT_PRELOAD */

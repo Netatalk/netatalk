@@ -219,7 +219,13 @@ extern time_t coarse_time(void);
 extern int safe_atoi(const char *str, const char *param_name,
                      int min_val, int max_val, int default_val);
 
-extern int ochdir(const char *dir, int options);
+extern int ochdir(const char *dir, int options, int rootfd, const char *root);
+extern int ochdir_root(const char *root);
+extern int path_has_dot_component(const char *path, int dot);
+extern int path_ignores_case(const char *path);
+extern int path_probe_case(const char *dir);
+extern int ascii_tolower(int c);
+extern int path_at_or_below(const char *path, const char *dir);
 extern int ostat(const char *path, struct stat *buf, int options);
 extern int ostatat(int dirfd, const char *path, struct stat *st, int options);
 extern int ochown(const char *path, uid_t owner, gid_t group, int options);

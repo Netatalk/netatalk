@@ -25,6 +25,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/param.h>
@@ -213,6 +214,293 @@ static cnid_t valide(cnid_t id)
     return id;
 }
 
+/* folder tables a database keeps, one per listing enumerate() saves */
+#define DIRTABS 8
+
+enum dirtab_state { DIRTAB_FREE, DIRTAB_ARMED, DIRTAB_READY, DIRTAB_OFF };
+
+/*! a folder's row, its name kept as a hash */
+struct cnid_dirrow {
+    uint64_t hash;
+    uint64_t dev;
+    uint64_t ino;
+    cnid_t id;
+};
+
+/*! the rows of one folder, indexed by name hash */
+struct cnid_dirtab {
+    cnid_t did;
+    enum dirtab_state state;
+    unsigned long armed;       /*!< arm order; the oldest makes room */
+    unsigned int calls;        /*!< cnid_add calls while armed */
+    time_t loaded;             /*!< the second before the load began */
+    uint32_t count;
+    uint32_t cap;
+    struct cnid_dirrow *rows;
+    uint32_t *index;           /*!< row number + 1, 0 for a free slot */
+    uint32_t mask;
+};
+
+static unsigned long dirtab_clock;
+
+/*!
+ * @brief FNV-1a hash of a name
+ *
+ * @param[in] name  the name
+ * @param[in] len   its length
+ * @returns the hash
+ */
+static uint64_t dirtab_hash(const char *name, size_t len)
+{
+    uint64_t h = 14695981039346656037ULL;
+
+    for (size_t i = 0; i < len; i++) {
+        h = (h ^ (unsigned char)name[i]) * 1099511628211ULL;
+    }
+
+    return h;
+}
+
+/*!
+ * @brief Free a table's rows and mark it free
+ *
+ * @param[in,out] t  the table
+ */
+static void dirtab_empty(struct cnid_dirtab *t)
+{
+    free(t->rows);
+    free(t->index);
+    memset(t, 0, sizeof(*t));
+}
+
+/*!
+ * @brief The table a folder holds, or NULL
+ *
+ * @param[in] cdb  CNID database
+ * @param[in] did  the folder
+ * @returns the table, or NULL
+ */
+static struct cnid_dirtab *dirtab_of(const struct _cnid_db *cdb, cnid_t did)
+{
+    for (int i = 0; cdb->cnid_dirtabs != NULL && i < DIRTABS; i++) {
+        if (cdb->cnid_dirtabs[i].state != DIRTAB_FREE
+                && cdb->cnid_dirtabs[i].did == did) {
+            return &cdb->cnid_dirtabs[i];
+        }
+    }
+
+    return NULL;
+}
+
+/*!
+ * @brief Take one row of a folder into its table
+ *
+ * @param[in] ctx   the table
+ * @param[in] id    the row's CNID
+ * @param[in] name  the row's name
+ * @param[in] len   the name's length
+ * @param[in] dev   the row's device
+ * @param[in] ino   the row's inode
+ * @returns 0, or -1 when the rows cannot grow
+ */
+static int dirtab_take(void *ctx, uint64_t id, const char *name, size_t len,
+                       uint64_t dev, uint64_t ino)
+{
+    struct cnid_dirtab *t = ctx;
+
+    /* a row a backend lookup refuses, or one without its name, stays the
+     * backend's to answer */
+    if (name == NULL || id == 0 || id > UINT32_MAX) {
+        return 0;
+    }
+
+    if (t->count == t->cap) {
+        uint32_t cap = t->cap ? t->cap * 2 : 1024;
+        struct cnid_dirrow *rows = realloc(t->rows, cap * sizeof(*rows));
+
+        if (rows == NULL) {
+            return -1;
+        }
+
+        t->rows = rows;
+        t->cap = cap;
+    }
+
+    t->rows[t->count].hash = dirtab_hash(name, len);
+    t->rows[t->count].dev = dev;
+    t->rows[t->count].ino = ino;
+    t->rows[t->count].id = htonl((uint32_t)id);
+    t->count++;
+    return 0;
+}
+
+/*!
+ * @brief Load a folder's rows from one backend query
+ *
+ * A failed query or allocation turns the table off, and the folder's
+ * names take the backend; so does a row that finds no free slot within
+ * CNID_DIRTAB_PROBES of its own, which names chosen to collide make.
+ *
+ * @param[in]     cdb  CNID database
+ * @param[in,out] t    the folder's table
+ */
+static void dirtab_load(struct _cnid_db *cdb, struct cnid_dirtab *t)
+{
+    uint32_t slots = 16;
+    t->state = DIRTAB_OFF;
+    /* a file's ctime can trail time() by a clock tick */
+    t->loaded = time(NULL) - 1;
+
+    if (cdb->cnid_dirlist(cdb, t->did, CNID_DIRTAB_ROWS, dirtab_take,
+                          t) != 0) {
+        return;
+    }
+
+    while (slots < 2 * t->count) {
+        slots *= 2;
+    }
+
+    if ((t->index = calloc(slots, sizeof(*t->index))) == NULL) {
+        return;
+    }
+
+    t->mask = slots - 1;
+
+    for (uint32_t r = 0; r < t->count; r++) {
+        uint32_t s = (uint32_t)t->rows[r].hash & t->mask;
+        int probes = 1;
+
+        while (t->index[s] != 0) {
+            if (probes++ == CNID_DIRTAB_PROBES) {
+                return;
+            }
+
+            s = (s + 1) & t->mask;
+        }
+
+        t->index[s] = r + 1;
+    }
+
+    t->state = DIRTAB_READY;
+}
+
+/*!
+ * @brief A loaded table's CNID for a name whose row holds the object's
+ *        device and inode
+ *
+ * @param[in] t     the folder's table
+ * @param[in] name  the name
+ * @param[in] len   its length
+ * @param[in] dev   the object's device, as the backend stores it
+ * @param[in] ino   the object's inode
+ * @returns the CNID, or CNID_INVALID
+ */
+static cnid_t dirtab_lookup(const struct cnid_dirtab *t, const char *name,
+                            size_t len, uint64_t dev, uint64_t ino)
+{
+    uint64_t h = dirtab_hash(name, len);
+    uint32_t s = (uint32_t)h & t->mask;
+    uint32_t r;
+
+    /* the load put every row within CNID_DIRTAB_PROBES slots of its own */
+    for (int probes = 0; probes < CNID_DIRTAB_PROBES
+            && (r = t->index[s]) != 0; probes++) {
+        const struct cnid_dirrow *row = &t->rows[r - 1];
+
+        if (row->hash == h) {
+            return row->dev == dev && row->ino == ino ? row->id : CNID_INVALID;
+        }
+
+        s = (s + 1) & t->mask;
+    }
+
+    return CNID_INVALID;
+}
+
+/*!
+ * @brief Turn the loaded tables off: a CNID write may have moved a row
+ *
+ * @param[in] cdb  CNID database
+ */
+static void dirtab_off(const struct _cnid_db *cdb)
+{
+    for (int i = 0; cdb->cnid_dirtabs != NULL && i < DIRTABS; i++) {
+        if (cdb->cnid_dirtabs[i].state == DIRTAB_READY) {
+            cdb->cnid_dirtabs[i].state = DIRTAB_OFF;
+        }
+    }
+}
+
+/*!
+ * @brief Let one backend query answer a folder's cnid_add calls
+ *
+ * The rows load at the folder's (CNID_DIRTAB_MISSES + 1)-th call. Arming a
+ * folder again drops its rows, and the least recently armed table makes
+ * room.
+ *
+ * @param[in] cdb  CNID database, where a backend without cnid_dirlist
+ *                 arms nothing
+ * @param[in] did  the folder
+ */
+void cnid_dir_arm(struct _cnid_db *cdb, cnid_t did)
+{
+    struct cnid_dirtab *t;
+
+    if (cdb == NULL || cdb->cnid_dirlist == NULL) {
+        return;
+    }
+
+    if (cdb->cnid_dirtabs == NULL
+            && (cdb->cnid_dirtabs = calloc(DIRTABS, sizeof(*t))) == NULL) {
+        return;
+    }
+
+    if ((t = dirtab_of(cdb, did)) == NULL) {
+        t = &cdb->cnid_dirtabs[0];
+
+        for (int i = 1; i < DIRTABS && t->state != DIRTAB_FREE; i++) {
+            if (cdb->cnid_dirtabs[i].state == DIRTAB_FREE
+                    || cdb->cnid_dirtabs[i].armed < t->armed) {
+                t = &cdb->cnid_dirtabs[i];
+            }
+        }
+    }
+
+    dirtab_empty(t);
+    t->did = did;
+    t->state = DIRTAB_ARMED;
+    t->armed = ++dirtab_clock;
+}
+
+/*!
+ * @brief Free a folder's table
+ *
+ * @param[in] cdb  CNID database, or NULL
+ * @param[in] did  the folder
+ */
+void cnid_dir_forget(struct _cnid_db *cdb, cnid_t did)
+{
+    struct cnid_dirtab *t;
+
+    if (cdb != NULL && (t = dirtab_of(cdb, did)) != NULL) {
+        dirtab_empty(t);
+    }
+}
+
+/*!
+ * @brief Let a folder's table answer cnid_add() while its listing's batch
+ *        runs, and no table outside one
+ *
+ * @param[in] cdb  CNID database, or NULL
+ * @param[in] did  the folder, CNID_INVALID when the batch ends
+ */
+void cnid_dir_serve(struct _cnid_db *cdb, cnid_t did)
+{
+    if (cdb != NULL) {
+        cdb->cnid_dirtab_did = did;
+    }
+}
+
 /*!
  * @brief Close a CNID database through its backend
  *
@@ -225,14 +513,22 @@ void cnid_close(struct _cnid_db *db)
         return;
     }
 
+    for (int i = 0; db->cnid_dirtabs != NULL && i < DIRTABS; i++) {
+        dirtab_empty(&db->cnid_dirtabs[i]);
+    }
+
+    free(db->cnid_dirtabs);
     db->cnid_close(db);
 }
 
 /*!
  * @brief Add an object to the CNID database or find its existing CNID
  *
- * The call clears errno, so errno reports the classification of this call
- * only. The result passes through valide.
+ * The call clears errno before it asks the backend, so errno reports the
+ * classification of this call only. The result passes through valide.
+ * While the folder's listing batch runs, its table answers for an object
+ * last changed before the second preceding the table's load, whose row
+ * holds the object's device and inode, unless hint names another CNID.
  *
  * @param[in] cdb   CNID database
  * @param[in] st    stat of the object, for the device and inode
@@ -253,6 +549,24 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
         return CNID_INVALID;
     }
 
+    struct cnid_dirtab *t = did == cdb->cnid_dirtab_did
+                            ? dirtab_of(cdb, did) : NULL;
+
+    if (t != NULL && t->state == DIRTAB_ARMED
+            && ++t->calls > CNID_DIRTAB_MISSES) {
+        dirtab_load(cdb, t);
+    }
+
+    if (t != NULL && t->state == DIRTAB_READY && st->st_ctime < t->loaded) {
+        uint64_t dev = cdb->cnid_db_flags & CNID_FLAG_NODEV
+                       ? 0 : (uint64_t)st->st_dev;
+
+        if ((ret = dirtab_lookup(t, name, len, dev, (uint64_t)st->st_ino))
+                != CNID_INVALID && (hint == CNID_INVALID || hint == ret)) {
+            return valide(ret);
+        }
+    }
+
     /* Cleared for every backend and caller here, so errno reads as this
      * operation's verdict. Not every backend classifies every failure. */
     errno = 0;
@@ -271,6 +585,7 @@ int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 {
     int ret;
     errno = 0;
+    dirtab_off(cdb);
     ret = cdb->cnid_delete(cdb, id);
     return ret;
 }
@@ -443,8 +758,8 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
 /*!
  * @brief Resolve a CNID to its name and parent directory
  *
- * A stored name of ".." means a corrupted database, and the call then fails
- * with CNID_ERR_CORRUPT.
+ * A stored name of "." or ".." means a corrupted database, and the call then
+ * fails with CNID_ERR_CORRUPT.
  *
  * @param[in]     cdb     CNID database
  * @param[in,out] id      CNID to resolve, receives the parent CNID or
@@ -459,8 +774,9 @@ char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
     errno = 0;
     ret = cdb->cnid_resolve(cdb, id, buffer, len);
 
-    if (ret && !strcmp(ret, "..")) {
-        LOG(log_error, logtype_afpd, "cnid_resolve: name is '..', corrupted db? ");
+    if (ret && (!strcmp(ret, ".") || !strcmp(ret, ".."))) {
+        LOG(log_error, logtype_afpd,
+            "cnid_resolve: name is '%s', corrupted db? ", ret);
         /* Match the backend failure contract: without these the caller reads
          * a stale errno and *id still holds the parent DID the backend wrote */
         *id = CNID_INVALID;
@@ -487,6 +803,7 @@ int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
 {
     int ret;
     errno = 0;
+    dirtab_off(cdb);
     ret = cdb->cnid_update(cdb, id, st, did, name, len);
     return ret;
 }
@@ -504,6 +821,7 @@ int cnid_wipe(struct _cnid_db *cdb)
 {
     int ret = 0;
     errno = 0;
+    dirtab_off(cdb);
 
     if (cdb->cnid_wipe) {
         ret = cdb->cnid_wipe(cdb);

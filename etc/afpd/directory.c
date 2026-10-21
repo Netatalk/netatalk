@@ -1424,6 +1424,8 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             /* the cached rights were computed under the stat being replaced,
              * or a sibling announced a change the ctime does not show */
             dir->d_rights_cache = 0xffffffff;
+            /* the change may have brought the folder a v2 header */
+            dir->d_flags &= ~DIRF_CONVERTED;
         }
 
         dir->dcache_ctime = args->st->st_ctime;
@@ -1994,8 +1996,9 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         LOG(log_maxdebug, logtype_afpd, "cname('%s'): {node: '%s}",
             dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", ret.u_name);
 
-        /* Prevent access to our special folders like .AppleDouble */
-        if (check_name(vol, ret.u_name)) {
+        /* Prevent access to our special folders like .AppleDouble; DID 1
+         * holds the volume alone, whose name is checked below */
+        if (dir->d_did != DIRDID_ROOT_PARENT && check_name(vol, ret.u_name)) {
             /* the name is illegal */
             LOG(log_info, logtype_afpd, "cname: illegal path: '%s'", ret.u_name);
             afp_errno = AFPERR_PARAM;
@@ -2190,7 +2193,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 static int ochdir_vol(const char *dir, const struct vol *vol)
 {
     struct stat st;
-    int ret = ochdir(dir, vol_syml_opt(vol));
+    int ret = ochdir(dir, vol_syml_opt(vol), vol->v_rootfd, vol->v_path);
 
     if (ret != 0) {
         return ret;

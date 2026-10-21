@@ -1226,43 +1226,51 @@ int utest_cnid_resolve_notfound_errno(struct vol *vol)
     return 0;
 }
 
+static char fake_resolve_dot[] = ".";
 static char fake_resolve_dotdot[] = "..";
+static char *fake_resolve_name;
 
 /*!
- * @brief Backend cnid_resolve that answers "..", the corrupt name to reject
+ * @brief Backend cnid_resolve that answers fake_resolve_name, a corrupt name
+ *        to reject
  */
 static char *fake_cnid_resolve(struct _cnid_db *cdb _U_, cnid_t *id,
                                void *buffer _U_, size_t len _U_)
 {
     *id = htonl(2);
-    return fake_resolve_dotdot;
+    return fake_resolve_name;
 }
 
 /*!
- * @brief The wrapper's ".." rejection fails like a backend failure
+ * @brief The wrapper's "." and ".." rejection fails like a backend failure
  *
- * cnid_resolve() (libatalk/cnid/cnid.c) refuses a ".." name from the backend
+ * cnid_resolve() (libatalk/cnid/cnid.c) refuses either name from the backend
  * as a whole failure: NULL return, *id overwritten with CNID_INVALID in place
  * of the parent DID the backend wrote, and errno set to CNID_ERR_CORRUPT.
  */
-int utest_cnid_resolve_dotdot_rejected(void)
+int utest_cnid_resolve_dot_names_rejected(void)
 {
+    char *const names[] = { fake_resolve_dot, fake_resolve_dotdot };
     struct _cnid_db cdb = { 0 };
     char buf[64];
-    cnid_t id = htonl(1234);
     cdb.cnid_resolve = fake_cnid_resolve;
-    errno = 0;
 
-    if (cnid_resolve(&cdb, &id, buf, sizeof(buf)) != NULL) {
-        return 1;
-    }
+    for (int i = 0; i < 2; i++) {
+        cnid_t id = htonl(1234);
+        fake_resolve_name = names[i];
+        errno = 0;
 
-    if (id != CNID_INVALID) {
-        return 2;
-    }
+        if (cnid_resolve(&cdb, &id, buf, sizeof(buf)) != NULL) {
+            return 1;
+        }
 
-    if (CNID_ERRNO() != CNID_ERR_CORRUPT) {
-        return 3;
+        if (id != CNID_INVALID) {
+            return 2;
+        }
+
+        if (CNID_ERRNO() != CNID_ERR_CORRUPT) {
+            return 3;
+        }
     }
 
     return 0;
@@ -1937,4 +1945,197 @@ int utest_cnid_desktop_folder_as_owner(AFPObj *obj, struct vol *vol)
     rmdir(dbdir);
     rmdir(root);
     return result;
+}
+
+static int fake_adds;
+
+/*!
+ * @brief Backend cnid_add that counts its calls and answers one CNID
+ */
+static cnid_t fake_cnid_add(struct _cnid_db *cdb _U_,
+                            const struct stat *st _U_, cnid_t did _U_,
+                            const char *name _U_, size_t len _U_,
+                            cnid_t hint _U_)
+{
+    fake_adds++;
+    return htonl(1000);
+}
+
+/*!
+ * @brief Backend cnid_dirlist whose rows are one above 32 bits, one
+ *        without its name and a sound one
+ */
+static int fake_cnid_dirlist(struct _cnid_db *cdb _U_, cnid_t did _U_,
+                             size_t max _U_, cnid_dirlist_fn fn, void *ctx)
+{
+    return fn(ctx, 0x100000064ULL, "big", 3, 1, 10) != 0
+           || fn(ctx, 101, NULL, 4, 1, 11) != 0
+           || fn(ctx, 102, "sound", 5, 1, 12) != 0 ? -1 : 0;
+}
+
+/*!
+ * @brief cnid_close() of the stand-in backend, which holds nothing
+ */
+static void fake_cnid_close(struct _cnid_db *cdb _U_)
+{
+    /* the backend opened nothing */
+}
+
+/*!
+ * @brief A folder table leaves the rows a lookup refuses to the backend
+ *        and answers a sound one inside its listing's batch alone
+ *
+ * @returns 0, 1 when the row above 32 bits was answered, 2 when the sound
+ *          row was not, 3 when the table answered outside the batch
+ */
+int utest_cnid_dirtab_rows(void)
+{
+    struct _cnid_db cdb = { 0 };
+    struct stat st = { .st_dev = 1 };
+    char miss[] = "miss";
+    char big[] = "big";
+    char sound[] = "sound";
+    const cnid_t did = htonl(100);
+    int ret = 0;
+    cdb.cnid_add = fake_cnid_add;
+    cdb.cnid_dirlist = fake_cnid_dirlist;
+    cdb.cnid_close = fake_cnid_close;
+    cnid_dir_arm(&cdb, did);
+    cnid_dir_serve(&cdb, did);
+
+    /* the misses before the load, the last of them loading the rows */
+    for (int i = 0; i <= CNID_DIRTAB_MISSES; i++) {
+        cnid_add(&cdb, &st, did, miss, 4, CNID_INVALID);
+    }
+
+    fake_adds = 0;
+    st.st_ino = 10;
+    cnid_add(&cdb, &st, did, big, 3, CNID_INVALID);
+
+    if (fake_adds != 1) {
+        ret = 1;
+    }
+
+    st.st_ino = 12;
+
+    if (ret == 0
+            && cnid_add(&cdb, &st, did, sound, 5, CNID_INVALID) != htonl(102)) {
+        ret = 2;
+    }
+
+    cnid_dir_serve(&cdb, CNID_INVALID);
+    fake_adds = 0;
+    cnid_add(&cdb, &st, did, sound, 5, CNID_INVALID);
+
+    if (ret == 0 && fake_adds != 1) {
+        ret = 3;
+    }
+
+    cnid_close(&cdb);
+    return ret;
+}
+
+/* names whose hashes share an index slot; row i holds CNID and inode
+ * 200 + i */
+static char collide_names[CNID_DIRTAB_PROBES + 1][16];
+static int collide_rows;
+
+/*!
+ * @brief The FNV-1a hash a folder table keeps of a name
+ */
+static uint64_t name_hash(const char *name, size_t len)
+{
+    uint64_t h = 14695981039346656037ULL;
+
+    for (size_t i = 0; i < len; i++) {
+        h = (h ^ (unsigned char)name[i]) * 1099511628211ULL;
+    }
+
+    return h;
+}
+
+/*!
+ * @brief Backend cnid_dirlist whose collide_rows rows' names share an
+ *        index slot
+ */
+static int collide_dirlist(struct _cnid_db *cdb _U_, cnid_t did _U_,
+                           size_t max _U_, cnid_dirlist_fn fn, void *ctx)
+{
+    for (int i = 0; i < collide_rows; i++) {
+        if (fn(ctx, 200 + i, collide_names[i], strlen(collide_names[i]), 1,
+                200 + i) != 0) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief What cnid_add() answers for one of rows colliding rows once their
+ *        table loads, with fake_adds counting the backend's lookups
+ */
+static cnid_t collide_answer(int rows, int row)
+{
+    struct _cnid_db cdb = { 0 };
+    struct stat st = { .st_dev = 1, .st_ino = 200 + row };
+    char miss[] = "miss";
+    const char *name = collide_names[row];
+    const cnid_t did = htonl(100);
+    cnid_t id;
+    cdb.cnid_add = fake_cnid_add;
+    cdb.cnid_dirlist = collide_dirlist;
+    cdb.cnid_close = fake_cnid_close;
+    collide_rows = rows;
+    cnid_dir_arm(&cdb, did);
+    cnid_dir_serve(&cdb, did);
+
+    for (int i = 0; i <= CNID_DIRTAB_MISSES; i++) {
+        cnid_add(&cdb, &st, did, miss, 4, CNID_INVALID);
+    }
+
+    fake_adds = 0;
+    id = cnid_add(&cdb, &st, did, name, strlen(name), CNID_INVALID);
+    cnid_close(&cdb);
+    return id;
+}
+
+/*!
+ * @brief A folder table answers a row CNID_DIRTAB_PROBES - 1 slots past
+ *        its own, and turns off where a row would sit farther
+ *
+ * @returns 0, 1 when the table missed its farthest row, 2 when it loaded
+ *          rows past the limit
+ */
+int utest_cnid_dirtab_collisions(void)
+{
+    char name[16];
+    uint64_t slot = name_hash("c0", 2) & 0x3ff;
+    int n = 0;
+
+    /* names whose hashes share their low 10 bits share a slot in any
+     * table of up to 512 rows */
+    for (unsigned int i = 0; n <= CNID_DIRTAB_PROBES; i++) {
+        int len = snprintf(name, sizeof(name), "c%u", i);
+
+        if ((name_hash(name, (size_t)len) & 0x3ff) == slot) {
+            memcpy(collide_names[n++], name, (size_t)len + 1);
+        }
+    }
+
+    /* the last of CNID_DIRTAB_PROBES rows sits CNID_DIRTAB_PROBES - 1 slots
+     * past its hash slot */
+    if (collide_answer(CNID_DIRTAB_PROBES, CNID_DIRTAB_PROBES - 1)
+            != htonl(200 + CNID_DIRTAB_PROBES - 1) || fake_adds != 0) {
+        return 1;
+    }
+
+    /* one more turns the table off, so even the first row asks the
+     * backend */
+    if (collide_answer(CNID_DIRTAB_PROBES + 1, 0) != htonl(1000)
+            || fake_adds != 1) {
+        return 2;
+    }
+
+    return 0;
 }

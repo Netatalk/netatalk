@@ -328,8 +328,8 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 }
 
 /*!
- * @brief Reject a name that the AppleDouble layout reserves or that the volume
- * vetoes
+ * @brief Reject "." and "..", a name that the AppleDouble layout reserves, or
+ * one that the volume vetoes
  *
  * @param[in] vol   volume
  * @param[in] name  Unix name of a file or directory
@@ -337,13 +337,17 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
  */
 int check_name(const struct vol *vol, char *name)
 {
+    if (!strcmp(name, ".") || !strcmp(name, "..")) {
+        return AFPERR_EXIST;
+    }
+
     if (!vol->vfs->vfs_validupath(vol, name)) {
         LOG(log_warning, logtype_afpd, "check_name: illegal name: '%s'", name);
         return AFPERR_EXIST;
     }
 
     /* check for vetoed filenames */
-    if (veto_file(vol->v_veto, name)) {
+    if (veto_file(vol->v_veto, name, vol->v_ignorecase)) {
         return AFPERR_EXIST;
     }
 
@@ -898,7 +902,8 @@ static int delete_vetoed_files_at(struct vol *vol, int parent_fd,
             EC_EXIT_STATUS(AFPERR_DIRNEMPT);
         }
 
-        if (in_vetodir || veto_file(vol->v_veto, de->d_name)) {
+        if (in_vetodir
+                || veto_file(vol->v_veto, de->d_name, vol->v_ignorecase)) {
             vetoed = true;
         } else {
             vetoed = false;
@@ -1504,14 +1509,16 @@ exit:
 /*!
  * @brief Whether path matches one entry of a slash-separated veto list
  *
- * The list has the form "abc/zxc/", and an entry must equal path exactly,
- * byte for byte.
+ * The list has the form "abc/zxc/", and an entry must equal path byte for
+ * byte, or with nocase letter for letter in either ASCII case. The list's
+ * end closes its last entry as a slash does.
  *
- * @param[in] veto_str  veto list with a slash after every entry, or NULL
+ * @param[in] veto_str  slash-separated veto list, or NULL
  * @param[in] path      name to test, or NULL
+ * @param[in] nocase    whether ASCII letters match in either case
  * @returns 1 for a match, 0 otherwise
  */
-int veto_file(const char *veto_str, const char *path)
+int veto_file(const char *veto_str, const char *path, int nocase)
 {
     int i;  /* index to veto_str */
     int j;  /* index to path */
@@ -1529,10 +1536,16 @@ int veto_file(const char *veto_str, const char *path)
 
             j = 0;
         } else {
-            if (veto_str[i] != path[j]) {
+            if (veto_str[i] != path[j]
+                    && (!nocase || ascii_tolower((unsigned char)veto_str[i])
+                        != ascii_tolower((unsigned char)path[j]))) {
                 while ((veto_str[i] != '/')
                         && (veto_str[i] != '\0')) {
                     i++;
+                }
+
+                if (veto_str[i] == '\0') {
+                    return 0;
                 }
 
                 j = 0;
@@ -1541,6 +1554,12 @@ int veto_file(const char *veto_str, const char *path)
 
             j++;
         }
+    }
+
+    /* the list's end closes its last entry */
+    if ((j > 0) && (path[j] == '\0')) {
+        LOG(log_debug, logtype_afpd, "vetoed file:'%s'", path);
+        return 1;
     }
 
     return 0;

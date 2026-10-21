@@ -1409,9 +1409,12 @@ the **valid users** format.
 
 veto files = *vetoed names* **(V)**
 
-> Hides files and directories whose path matches one of the
-'/'-delimited vetoed names. The veto string must always end with a '/',
-for example **veto files = veto1/** or **veto files = veto1/veto2/**.
+> Hides files and directories whose name matches one of the
+'/'-delimited vetoed names, for example **veto files = veto1/** or
+**veto files = veto1/veto2/**. The final '/' may be left out.
+On a volume whose filesystem ignores case, or where **afpd** cannot tell,
+**veto files** ignores case too: **veto1/** also hides **VETO1**. Letters
+outside A to Z, such as Ä, match only in the case written.
 
 volume uuid = *UUID* **(V)**
 

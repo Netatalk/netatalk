@@ -69,6 +69,13 @@ static MYSQL_BIND get_param[2], get_result[1];
 static MYSQL_BIND delete_param[1];
 static MYSQL_BIND resolve_param[1], resolve_result[2];
 static MYSQL_BIND purge_param[5];
+static MYSQL_BIND dirlist_param[2], dirlist_result[4];
+static unsigned long long dirlist_param_max;
+static unsigned long long dirlist_result_id;
+static char               dirlist_result_name[MAXPATHLEN];
+static unsigned long      dirlist_result_name_len;
+static unsigned long long dirlist_result_dev;
+static unsigned long long dirlist_result_ino;
 
 /*!
  * Prepared statement parameters
@@ -390,7 +397,52 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Prepare all 7 statements of a MySQL CNID table
+ * @brief Prepare the statement that lists the rows of one folder
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
+static int init_prepared_stmt_dirlist(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    dirlist_param[0].buffer_type    = MYSQL_TYPE_LONGLONG;
+    dirlist_param[0].buffer         = &stmt_param_did;
+    dirlist_param[0].is_unsigned    = true;
+    dirlist_param[1].buffer_type    = MYSQL_TYPE_LONGLONG;
+    dirlist_param[1].buffer         = &dirlist_param_max;
+    dirlist_param[1].is_unsigned    = true;
+    dirlist_result[0].buffer_type   = MYSQL_TYPE_LONGLONG;
+    dirlist_result[0].buffer        = &dirlist_result_id;
+    dirlist_result[0].is_unsigned   = true;
+    dirlist_result[1].buffer_type   = MYSQL_TYPE_STRING;
+    dirlist_result[1].buffer        = &dirlist_result_name;
+    dirlist_result[1].buffer_length = sizeof(dirlist_result_name);
+    dirlist_result[1].length        = &dirlist_result_name_len;
+    dirlist_result[2].buffer_type   = MYSQL_TYPE_LONGLONG;
+    dirlist_result[2].buffer        = &dirlist_result_dev;
+    dirlist_result[2].is_unsigned   = true;
+    dirlist_result[3].buffer_type   = MYSQL_TYPE_LONGLONG;
+    dirlist_result[3].buffer        = &dirlist_result_ino;
+    dirlist_result[3].is_unsigned   = true;
+    EC_NULL(db->cnid_dirlist_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "SELECT Id,Name,DevNo,InodeNo FROM `%s` "
+                     "WHERE Did=? LIMIT ?",
+                     db->cnid_mysql_voluuid_str));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_dirlist_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_dirlist_stmt, dirlist_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+/*!
+ * @brief Prepare all 8 statements of a MySQL CNID table
  *
  * @param[in,out] db  MySQL backend state with the connection and the table name
  * @returns 0, or -1 when one fails
@@ -399,6 +451,7 @@ static int init_prepared_stmt(CNID_mysql_private *db)
 {
     EC_INIT;
     EC_ZERO(init_prepared_stmt_lookup(db));
+    EC_ZERO(init_prepared_stmt_dirlist(db));
     EC_ZERO(init_prepared_stmt_add(db));
     EC_ZERO(init_prepared_stmt_put(db));
     EC_ZERO(init_prepared_stmt_get(db));
@@ -423,7 +476,7 @@ static void close_prepared_stmt(CNID_mysql_private *db)
     MYSQL_STMT **stmts[] = {
         &db->cnid_lookup_stmt, &db->cnid_add_stmt, &db->cnid_put_stmt,
         &db->cnid_get_stmt, &db->cnid_delete_stmt, &db->cnid_resolve_stmt,
-        &db->cnid_purge_stmt,
+        &db->cnid_purge_stmt, &db->cnid_dirlist_stmt,
     };
 
     for (size_t i = 0; i < sizeof(stmts) / sizeof(stmts[0]); i++) {
@@ -1709,6 +1762,52 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Hand at most max rows of one folder to fn
+ *
+ * Every row is fetched, so the connection is free for the next statement
+ * when fn stops early.
+ *
+ * @param[in] cdb  CNID database
+ * @param[in] did  the folder
+ * @param[in] max  the rows to hand over at most
+ * @param[in] fn   receives each row; nonzero stops the rows
+ * @param[in] ctx  passed to fn
+ * @returns 0, or -1 when the query or fn failed
+ */
+static int cnid_mysql_dirlist(struct _cnid_db *cdb, cnid_t did, size_t max,
+                              cnid_dirlist_fn fn, void *ctx)
+{
+    CNID_mysql_private *db = cdb->cnid_db_private;
+    int stop = 0;
+    int rc;
+
+    if (db == NULL || db->cnid_dirlist_stmt == NULL) {
+        return -1;
+    }
+
+    stmt_param_did = ntohl(did);
+    dirlist_param_max = max;
+
+    if (cnid_mysql_stmt_execute(db, &db->cnid_dirlist_stmt) != 0
+            || mysql_stmt_bind_result(db->cnid_dirlist_stmt,
+                                      dirlist_result) != 0) {
+        return -1;
+    }
+
+    while ((rc = mysql_stmt_fetch(db->cnid_dirlist_stmt)) == 0
+            || rc == MYSQL_DATA_TRUNCATED) {
+        if (stop == 0 && rc == 0) {
+            stop = fn(ctx, dirlist_result_id, dirlist_result_name,
+                      dirlist_result_name_len, dirlist_result_dev,
+                      dirlist_result_ino);
+        }
+    }
+
+    mysql_stmt_free_result(db->cnid_dirlist_stmt);
+    return rc == MYSQL_NO_DATA && stop == 0 ? 0 : -1;
+}
+
+/*!
  * @brief Allocate a CNID database object with the MySQL function table
  *
  * @param[in] vol  volume of the database
@@ -1725,6 +1824,7 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     cdb->cnid_db_vol = vol;
     cdb->cnid_db_flags = CNID_FLAG_PERSISTENT;
     cdb->cnid_add = cnid_mysql_add;
+    cdb->cnid_dirlist = cnid_mysql_dirlist;
     cdb->cnid_delete = cnid_mysql_delete;
     cdb->cnid_get = cnid_mysql_get;
     cdb->cnid_lookup = cnid_mysql_lookup;

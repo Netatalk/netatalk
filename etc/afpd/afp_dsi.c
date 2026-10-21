@@ -188,6 +188,7 @@ static void afp_dsi_close(AFPObj *obj)
         dsi->read_count / 1024.0, dsi->write_count / 1024.0);
     of_log_usage(log_info, "session close");
     log_dircache_stat();
+    enumerate_log_stats();
     pfd_log_stats();
     pfd_shutdown();
     dircache_rfork_shutdown();

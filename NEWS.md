@@ -85,6 +85,14 @@ Changes in 4.7.0
 * UPD: afpd: the volume polls write nothing to the share root. Changes made
   outside afpd below it reach clients through their caches. A read-only NFS
   export or lofs mount needs 'read only = yes', GitHub #3420
+* UPD: afpd: keep the listings of up to eight folders between batches. A
+  client that browses folders side by side no longer makes afpd read each
+  folder again for every batch, and a folder's first listing takes its
+  CNIDs from one database query, 12 times as fast with the mysql scheme.
+  On FreeBSD 15.1 and later, a volume whose root is a case-insensitive ZFS
+  dataset enters folders 4 to 5 times as fast. With 'convert appledouble =
+  yes', a listing attempts the conversion only where AppleDouble v2
+  metadata can still be or a name is hex-encoded, GitHub #3421
 
 Changes in 4.6.1
 ----------------

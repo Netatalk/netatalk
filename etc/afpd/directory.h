@@ -180,6 +180,14 @@ extern int         netatalk_unlink(const char *name);
 /* from enumerate.c */
 extern char        *check_dirent(const struct vol *, char *);
 
+struct enumerate_stats {
+    unsigned long long reads;   /*!< directory reads */
+    unsigned long long rereads; /*!< reads by batches past index 1 */
+    unsigned long long names;   /*!< names the reads saved */
+};
+extern void        enumerate_stats_get(struct enumerate_stats *out);
+extern void        enumerate_log_stats(void);
+
 /* FP functions */
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
                   size_t *rbuflen);

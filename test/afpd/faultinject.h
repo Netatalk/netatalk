@@ -120,6 +120,9 @@ struct fault_inject {
     int clock_fake;         /*!< the wall clock reads clock_sec */
     int clock_calls;        /*!< wall clock reads clock_fake answered */
     time_t clock_sec;
+    struct fi_call unlink;
+    struct fi_call readdir;
+    struct fi_call getcwd;
 };
 
 extern struct fault_inject fi;

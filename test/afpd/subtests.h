@@ -57,6 +57,17 @@ extern int test010_full_cache_accepts_adds(struct vol *vol,
 extern int test011_stat_refresh_drops_rights(struct vol *vol);
 extern int test012_movecwd_retry_names_directory(AFPObj *obj,
                                                  struct vol *vol);
+extern int test013_movecwd_refuses_symlinked_path(struct vol *vol);
+extern int test014_movecwd_folder_became_file(struct vol *vol);
+extern int test015_movecwd_refuses_dotdot(struct vol *vol);
+extern int test016_cname_refuses_dot_names(AFPObj *obj, struct vol *vol);
+extern int test017_cname_vetoes_any_case(AFPObj *obj, struct vol *vol);
+extern int utest_veto_file_any_case(void);
+extern int test018_listing_vetoes_any_case(AFPObj *obj, struct vol *vol);
+extern int utest_path_probe_case_agrees(struct vol *vol);
+extern int utest_path_probe_case_skips_links(struct vol *vol);
+extern int utest_veto_file_list_end(void);
+extern int test019_cname_volume_vetoed(AFPObj *obj, struct vol *vol);
 extern int dircache_test_ghost_trim_selection(void);
 extern int utest_logger_reopen_keeps_files(void);
 extern int utest_lockfile_restores_umask(void);

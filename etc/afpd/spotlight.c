@@ -465,7 +465,8 @@ static sl_array_t *sl_sanitize_reqinfo(TALLOC_CTX *mem_ctx,
  * @brief Tell whether a path equals a scope or lies under it
  *
  * The test respects component boundaries, so /srv/afp2 does not cover
- * /srv/afp22/x. An empty or "/" scope covers every path.
+ * /srv/afp22/x. An empty scope covers every path, and "/" every absolute
+ * one.
  *
  * @param[in] path   path to test
  * @param[in] scope  scope path
@@ -473,43 +474,8 @@ static sl_array_t *sl_sanitize_reqinfo(TALLOC_CTX *mem_ctx,
  */
 bool sl_path_in_scope(const char *path, const char *scope)
 {
-    if (path == NULL || scope == NULL) {
-        return false;
-    }
-
-    if (scope[0] == '\0' || (scope[0] == '/' && scope[1] == '\0')) {
-        return true;
-    }
-
-    while (*scope != '\0' && *scope == *path) {
-        scope++;
-        path++;
-    }
-
-    if (*scope != '\0') {
-        return false;
-    }
-
-    return *path == '\0' || *path == '/';
-}
-
-/*!
- * @brief Tell whether any component of a path is ".."
- *
- * @param[in] path  path to test
- * @returns true when a component is ".."
- */
-static bool sl_path_has_dotdot(const char *path)
-{
-    for (const char *p = path; *p != '\0'; p++) {
-        if (p[0] == '.' && p[1] == '.'
-                && (p[2] == '\0' || p[2] == '/')
-                && (p == path || p[-1] == '/')) {
-            return true;
-        }
-    }
-
-    return false;
+    return path != NULL && scope != NULL
+           && (scope[0] == '\0' || path_at_or_below(path, scope));
 }
 
 /*!
@@ -1072,7 +1038,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
             }
         }
 
-        if (seg != NULL && sl_path_has_dotdot(seg)) {
+        if (seg != NULL && path_has_dot_component(seg, 0)) {
             seg = NULL;
         }
 

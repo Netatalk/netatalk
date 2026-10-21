@@ -38,6 +38,11 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef __FreeBSD__
+#include <sys/param.h>
+#include <sys/mount.h>
+#endif
+
 #include <atalk/acl.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
@@ -864,31 +869,23 @@ int ostatat(int dirfd, const char *path, struct stat *st, int options)
 }
 
 /*!
- * @brief Change the current directory and report a symlink on the way for
- * O_NOFOLLOW
+ * @brief chdir() to dir, then report a symlink on its path, which a getcwd()
+ *        that differs from dir shows
  *
- * Without O_NOFOLLOW the call is a plain chdir. With it, dir has to be a
- * canonical path, and a trailing slash is fine. The call changes directory
- * first and then compares getcwd with the requested path. On a return of 1
- * the process is already in the symlink target.
+ * dir has to be a canonical path, and a trailing slash is fine. On a return
+ * of 1 the process is already in the symlink target.
  *
- * @param[in] dir      absolute directory, or one relative to the current
- *                     directory
- * @param[in] options  O_NOFOLLOW or 0
- * @returns 0, 1 when the path held a symlink or getcwd failed after the change,
- *          or -1 when chdir or the first getcwd fails
+ * @param[in] dir  absolute directory, or one relative to the current
+ *                 directory
+ * @returns 0, 1 when the path held a symlink or getcwd() failed after the
+ *          change, or -1 when chdir() or the first getcwd() fails
  */
-int ochdir(const char *dir, int options)
+static int chdir_getcwd(const char *dir)
 {
     char buf[MAXPATHLEN + 1];
     char cwd[MAXPATHLEN + 1];
     char *test;
     int  i;
-
-    if (!(options & O_NOFOLLOW)) {
-        return chdir(dir);
-    }
-
     /*
      dir is a canonical path (without "../" "./" "//" )
      but may end with a /
@@ -963,6 +960,339 @@ int ochdir(const char *dir, int options)
     }
 
     return 0;
+}
+
+/*!
+ * @brief Whether a component of a slash-separated path is "..", or with dot
+ *        set also "."
+ *
+ * @param[in] path  the path
+ * @param[in] dot   nonzero to count a "." component too
+ * @returns 1 when such a component is there, else 0
+ */
+int path_has_dot_component(const char *path, int dot)
+{
+    for (const char *p = path; *p != '\0'; p++) {
+        if (*p != '.' || (p != path && p[-1] != '/')) {
+            continue;
+        }
+
+        const char *end = p[1] == '.' ? p + 2 : p + 1;
+
+        if ((*end == '\0' || *end == '/') && (dot || end == p + 2)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Whether an absolute path is a directory or lies below it
+ *
+ * The prefix must end at a slash or at the end of path, so "/vol2" does not
+ * lie below "/vol". The directory "/" holds every absolute path.
+ *
+ * @param[in] path  resolved absolute path
+ * @param[in] dir   resolved absolute directory, without a trailing slash
+ *                  unless it is "/"
+ * @returns 1 when path is dir or lies below it, else 0
+ */
+int path_at_or_below(const char *path, const char *dir)
+{
+    size_t len = strlen(dir);
+
+    if (len == 1 && dir[0] == '/') {
+        return path[0] == '/';
+    }
+
+    return strncmp(path, dir, len) == 0
+           && (path[len] == '\0' || path[len] == '/');
+}
+
+/* where getcwd() rebuilds the path from the filesystem (not Linux's dentry
+ * chain) and O_SEARCH opens a folder for search alone (not NetBSD's, which
+ * opens for reading; OpenBSD and DragonFly have none); FreeBSD from 15.1,
+ * for the case-insensitive ZFS datasets ochdir_root() finds */
+#if defined(O_SEARCH) && !defined(__linux__) && !defined(__NetBSD__) \
+    && (!defined(__FreeBSD__) || defined(_PC_CASE_INSENSITIVE))
+#define OCHDIR_WALK 1
+
+/*!
+ * @brief Open rel, below the folder rootfd is open on, for search following
+ *        no symlink
+ *
+ * Each component opens from the one before it with O_NOFOLLOW, so the kernel
+ * checks search permission at every step; macOS opens rel at once with
+ * O_NOFOLLOW_ANY.
+ *
+ * @param[in] rootfd  descriptor of the folder rel starts from
+ * @param[in] rel     relative path below that folder, not empty
+ * @returns the descriptor, or -1 when a component is missing, barred, no
+ *          folder or a symlink, or no descriptor is free
+ */
+static int open_below(int rootfd, const char *rel)
+{
+#ifdef O_NOFOLLOW_ANY
+    return openat(rootfd, rel,
+                  O_SEARCH | O_DIRECTORY | O_NOFOLLOW_ANY | O_CLOEXEC);
+#else
+    char path[MAXPATHLEN + 1];
+    char *name;
+    char *end;
+    int fd = rootfd;
+    int next;
+    /* chdir_below() passes a rel shorter than MAXPATHLEN */
+    strlcpy(path, rel, sizeof(path));
+
+    for (name = path; *name != '\0'; name = end) {
+        end = name + strcspn(name, "/");
+
+        if (*end == '/') {
+            *end++ = '\0';
+        }
+
+        if (*name == '\0') {
+            continue;
+        }
+
+        next = openat(fd, name,
+                      O_SEARCH | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+
+        if (fd != rootfd) {
+            close(fd);
+        }
+
+        if (next < 0) {
+            return -1;
+        }
+
+        fd = next;
+    }
+
+    /* rel names at least one component, so fd is no longer rootfd */
+    return fd;
+#endif
+}
+
+/*!
+ * @brief chdir() to dir by a walk from the folder rootfd is open on, and
+ *        report a symlink on the way
+ *
+ * Every path the walk refuses or cannot take goes to chdir_getcwd(dir),
+ * which answers for it as for any other path: a "." or ".." component,
+ * which the walk would follow, a dir of MAXPATHLEN bytes or more, a
+ * symlink, a component missing, barred or no folder, a walk with no
+ * descriptor free, and a held folder that went stale.
+ *
+ * @param[in] rootfd  descriptor of the folder the walk starts from
+ * @param[in] rel     dir's path below that folder, empty for the folder
+ * @param[in] dir     the same directory's full path
+ * @returns 0, 1 where chdir_getcwd() returns it, or -1 with errno set as
+ *          chdir() sets it
+ */
+static int chdir_below(int rootfd, const char *rel, const char *dir)
+{
+    int fd;
+    int ret;
+    int err;
+
+    if (*rel == '\0') {
+        return fchdir(rootfd) == 0 ? 0 : chdir_getcwd(dir);
+    }
+
+    if (path_has_dot_component(rel, 1) || strlen(dir) >= MAXPATHLEN
+            || (fd = open_below(rootfd, rel)) < 0) {
+        return chdir_getcwd(dir);
+    }
+
+    ret = fchdir(fd);
+    err = errno;
+    close(fd);
+    errno = err;
+    return ret;
+}
+#endif /* OCHDIR_WALK */
+
+/*!
+ * @brief Change the current directory and report a symlink on the way for
+ *        O_NOFOLLOW
+ *
+ * Without O_NOFOLLOW the call is a plain chdir(). With it, dir has to be a
+ * canonical path, and a trailing slash is fine: given rootfd from
+ * ochdir_root(root), a dir below root is entered by chdir_below() without
+ * getcwd(), any other by chdir_getcwd().
+ *
+ * @param[in] dir      absolute directory, or one relative to the current
+ *                     directory
+ * @param[in] options  O_NOFOLLOW or 0
+ * @param[in] rootfd   ochdir_root(root), or -1
+ * @param[in] root     the folder rootfd is open on, unused when rootfd is -1
+ * @returns 0, 1 when the path held a symlink or getcwd() failed after the
+ *          change, or -1 when the change fails
+ */
+int ochdir(const char *dir, int options, int rootfd, const char *root)
+{
+    if (!(options & O_NOFOLLOW)) {
+        return chdir(dir);
+    }
+
+#ifdef OCHDIR_WALK
+
+    if (rootfd >= 0 && path_at_or_below(dir, root)) {
+        size_t len = strlen(root);
+        return chdir_below(rootfd, dir + len + strspn(dir + len, "/"), dir);
+    }
+
+#else
+    (void)rootfd;
+    (void)root;
+#endif
+    return chdir_getcwd(dir);
+}
+
+/*!
+ * @brief A character in lower case if it is an ASCII capital, whatever the
+ *        locale
+ *
+ * @param[in] c  the character, as an unsigned char
+ * @returns c, with A to Z taken to a to z
+ */
+int ascii_tolower(int c)
+{
+    return c >= 'A' && c <= 'Z' ? c - 'A' + 'a' : c;
+}
+
+/*!
+ * @brief Whether a name in dir, looked up with one letter's case swapped,
+ *        finds the same object
+ *
+ * The probe takes the first entry that is no folder, has one link and holds
+ * an ASCII letter in its name: no second link can answer for it, and a
+ * folder looked up by another name keeps that name in FreeBSD's and
+ * NetBSD's namecaches, where getcwd() then finds it.
+ *
+ * @param[in] dir  folder to probe
+ * @returns 1 where the lookup ignores case, 0 where it matches case, -1
+ *          where dir cannot be read or holds no such entry
+ */
+int path_probe_case(const char *dir)
+{
+    static const char letters[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    char name[MAXPATHLEN + 1];
+    const struct dirent *de;
+    struct stat st;
+    struct stat other;
+    DIR *dp;
+    int fd;
+    int ret = -1;
+
+    if ((dp = opendir(dir)) == NULL) {
+        return -1;
+    }
+
+    fd = dirfd(dp);
+
+    while (fd >= 0 && (de = readdir(dp)) != NULL) {
+        size_t at = strcspn(de->d_name, letters);
+#ifdef DT_DIR
+
+        /* a folder readdir() tells needs no stat to be passed over */
+        if (de->d_type == DT_DIR) {
+            continue;
+        }
+
+#endif
+
+        if (de->d_name[at] == '\0'
+                || fstatat(fd, de->d_name, &st, AT_SYMLINK_NOFOLLOW) != 0
+                || S_ISDIR(st.st_mode) || st.st_nlink != 1) {
+            continue;
+        }
+
+        strlcpy(name, de->d_name, sizeof(name));
+        /* an ASCII letter's two cases differ in one bit */
+        name[at] ^= 0x20;
+        ret = fstatat(fd, name, &other, AT_SYMLINK_NOFOLLOW) == 0
+              && other.st_dev == st.st_dev && other.st_ino == st.st_ino;
+        break;
+    }
+
+    closedir(dp);
+    return ret;
+}
+
+/*!
+ * @brief Whether the filesystem holding path matches names in either case
+ *
+ * pathconf() answers where the system names the question; elsewhere, or
+ * where it has no answer, path_probe_case() looks, and a folder it cannot
+ * tell about counts as ignoring case, so veto entries match in either case.
+ *
+ * @param[in] path  a folder on the filesystem
+ * @returns 1 where pathconf() reports or the probe finds that the
+ *          filesystem ignores case, or the probe cannot tell; else 0
+ */
+int path_ignores_case(const char *path)
+{
+#if defined(_PC_CASE_INSENSITIVE)
+    long answer = pathconf(path, _PC_CASE_INSENSITIVE);
+
+    if (answer != -1) {
+        return answer == 1;
+    }
+
+#elif defined(_PC_CASE_SENSITIVE)
+    long answer = pathconf(path, _PC_CASE_SENSITIVE);
+
+    if (answer != -1) {
+        return answer == 0;
+    }
+
+#elif defined(_PC_CASE_BEHAVIOR)
+    /* a mixed ZFS dataset reports both, and matches case for open() */
+    long answer = pathconf(path, _PC_CASE_BEHAVIOR);
+
+    if (answer != -1) {
+        return (answer & (_CASE_SENSITIVE | _CASE_INSENSITIVE))
+               == _CASE_INSENSITIVE;
+    }
+
+#endif
+    return path_probe_case(path) != 0;
+}
+
+/*!
+ * @brief The descriptor ochdir() walks from below a volume root
+ *
+ * The root is open for reading: a lookup through a descriptor open for
+ * search skips the search check of its folder, which chdir() makes on every
+ * request. The caller closes the descriptor.
+ *
+ * @param[in] root  the volume root's path
+ * @returns root open where ochdir() enters the folders below it without
+ *          getcwd(), else -1
+ */
+int ochdir_root(const char *root)
+{
+#ifdef OCHDIR_WALK
+#ifdef __FreeBSD__
+    struct statfs sfs;
+
+    /* ZFS keeps case-insensitive names out of the namecache, which getcwd()
+     * then rebuilds by scanning; pathconf() tells case-insensitivity only */
+    if (statfs(root, &sfs) != 0 || strcmp(sfs.f_fstypename, "zfs") != 0
+            || !path_ignores_case(root)) {
+        return -1;
+    }
+
+#endif
+    return open(root, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+#else
+    (void)root;
+    return -1;
+#endif
 }
 
 /*!
