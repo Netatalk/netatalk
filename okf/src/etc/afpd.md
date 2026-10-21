@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "66 files, 634 functions."
+description: "66 files, 638 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 # Files
@@ -89,11 +89,11 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 
 # Calls into
 
-* [libatalk/util](../libatalk/util.md): 269 calls
+* [libatalk/util](../libatalk/util.md): 278 calls
 * [libatalk/adouble](../libatalk/adouble.md): 204 calls
-* [libatalk/compat](../libatalk/compat.md): 54 calls
+* [libatalk/compat](../libatalk/compat.md): 55 calls
 * [include/atalk](../include/atalk.md): 52 calls
-* [libatalk/cnid](../libatalk/cnid.md): 40 calls
+* [libatalk/cnid](../libatalk/cnid.md): 43 calls
 * [libatalk/unicode](../libatalk/unicode.md): 36 calls
 * [libatalk/dsi](../libatalk/dsi.md): 34 calls
 * [libatalk/vfs](../libatalk/vfs.md): 18 calls
@@ -126,4 +126,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[acl_from_mode](afpd/acls.c.md#acl_from_mode), [afp_null_nolog](afpd/auth.c.md#afp_null_nolog), [getnfsquota](afpd/nfsquota.c.md#getnfsquota), [hash_alloc_insert](afpd/hash.c.md#hash_alloc_insert), [hash_destroy](afpd/hash.c.md#hash_destroy), [hash_free_nodes](afpd/hash.c.md#hash_free_nodes), [hash_set_allocator](afpd/hash.c.md#hash_set_allocator), [hash_verify](afpd/hash.c.md#hash_verify), [hnode_getkey](afpd/hash.c.md#hnode_getkey), [offcnt_log_stats](afpd/directory.c.md#offcnt_log_stats), [offcnt_stats_get](afpd/directory.c.md#offcnt_stats_get), [pfd_stats_get](afpd/pfd_cache.c.md#pfd_stats_get), [sl_unpack](afpd/spotlight_marshalling.c.md#sl_unpack), [spotlight_get_cpx_qtype_string](afpd/spotlight_marshalling.c.md#spotlight_get_cpx_qtype_string), [spotlight_get_qtype_string](afpd/spotlight_marshalling.c.md#spotlight_get_qtype_string)
+[acl_from_mode](afpd/acls.c.md#acl_from_mode), [afp_null_nolog](afpd/auth.c.md#afp_null_nolog), [enumerate_stats_get](afpd/enumerate.c.md#enumerate_stats_get), [getnfsquota](afpd/nfsquota.c.md#getnfsquota), [hash_alloc_insert](afpd/hash.c.md#hash_alloc_insert), [hash_destroy](afpd/hash.c.md#hash_destroy), [hash_free_nodes](afpd/hash.c.md#hash_free_nodes), [hash_set_allocator](afpd/hash.c.md#hash_set_allocator), [hash_verify](afpd/hash.c.md#hash_verify), [hnode_getkey](afpd/hash.c.md#hnode_getkey), [offcnt_log_stats](afpd/directory.c.md#offcnt_log_stats), [offcnt_stats_get](afpd/directory.c.md#offcnt_stats_get), [pfd_stats_get](afpd/pfd_cache.c.md#pfd_stats_get), [sl_unpack](afpd/spotlight_marshalling.c.md#sl_unpack), [spotlight_get_cpx_qtype_string](afpd/spotlight_marshalling.c.md#spotlight_get_cpx_qtype_string), [spotlight_get_qtype_string](afpd/spotlight_marshalling.c.md#spotlight_get_qtype_string)

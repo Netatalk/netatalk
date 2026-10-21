@@ -5,7 +5,7 @@ description: "AFP sessions over DSI: signal handling, session reconnects, and th
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_dsi.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -41,7 +41,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void afp_dsi_close(AFPObj *obj)
 ```
 
-Defined at lines 133 to 195.
+Defined at lines 133 to 196.
 
 End a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session and close its connection.
 
@@ -50,7 +50,7 @@ The call stops the idle worker, closes the volumes, and logs out. An error path 
 Parameters:
 * `obj`: session object
 
-Calls: [close_all_vol](volume.c.md#close_all_vol), [dircache_rfork_shutdown](dircache.c.md#dircache_rfork_shutdown), [dsi_close](../../libatalk/dsi/dsi_close.c.md#dsi_close), [iw_log_stats](idle_worker.c.md#iw_log_stats), [iw_revoke_signal_safe](idle_worker.c.md#iw_revoke_signal_safe), [log_dircache_stat](dircache.c.md#log_dircache_stat), [of_log_usage](ofork.c.md#of_log_usage), [pfd_log_stats](pfd_cache.c.md#pfd_log_stats), [pfd_shutdown](pfd_cache.c.md#pfd_shutdown)
+Calls: [close_all_vol](volume.c.md#close_all_vol), [dircache_rfork_shutdown](dircache.c.md#dircache_rfork_shutdown), [dsi_close](../../libatalk/dsi/dsi_close.c.md#dsi_close), [enumerate_log_stats](enumerate.c.md#enumerate_log_stats), [iw_log_stats](idle_worker.c.md#iw_log_stats), [iw_revoke_signal_safe](idle_worker.c.md#iw_revoke_signal_safe), [log_dircache_stat](dircache.c.md#log_dircache_stat), [of_log_usage](ofork.c.md#of_log_usage), [pfd_log_stats](pfd_cache.c.md#pfd_log_stats), [pfd_shutdown](pfd_cache.c.md#pfd_shutdown)
 
 Called by: [afp_dsi_die](afp_dsi.c.md#afp_dsi_die), [afp_over_dsi](afp_dsi.c.md#afp_over_dsi), [handle_transfer_session](afp_dsi.c.md#handle_transfer_session)
 
@@ -62,7 +62,7 @@ Mentioned in the documentation of: [afp_dsi_die](afp_dsi.c.md#afp_dsi_die)
 static const char * afp_dsi_die_cause(int sig, char *buf, size_t len)
 ```
 
-Defined at lines 206 to 220.
+Defined at lines 207 to 221.
 
 Describe what made [afp_dsi_die()](afp_dsi.c.md#afp_dsi_die) run.
 
@@ -83,7 +83,7 @@ Uses file-scope variables: `die_sender`, `die_signalled`, `session_master`
 static void afp_dsi_die(int sig)
 ```
 
-Defined at lines 232 to 266.
+Defined at lines 233 to 267.
 
 SIGTERM: Terminate the AFP session and exit.
 
@@ -106,7 +106,7 @@ Mentioned in the documentation of: [afp_dsi_die_cause](afp_dsi.c.md#afp_dsi_die_
 static void afp_dsi_transfer_handler(int sig)
 ```
 
-Defined at lines 273 to 277.
+Defined at lines 274 to 278.
 
 SIGURG handler that records a primary reconnect for the main loop.
 
@@ -125,7 +125,7 @@ Uses file-scope variables: `transfer_pending`
 static void handle_transfer_session(AFPObj *obj)
 ```
 
-Defined at lines 290 to 340.
+Defined at lines 291 to 341.
 
 Take over the connection of a reconnecting client after SIGURG.
 
@@ -148,7 +148,7 @@ Uses file-scope variables: `alarm_pending`
 static void afp_dsi_timedown_handler(int sig)
 ```
 
-Defined at lines 350 to 354.
+Defined at lines 351 to 355.
 
 SIGUSR1 handler that records a shutdown notice for the main loop.
 
@@ -167,7 +167,7 @@ Uses file-scope variables: `timedown_pending`
 static void handle_timedown(AFPObj *obj)
 ```
 
-Defined at lines 366 to 412.
+Defined at lines 367 to 413.
 
 Announce a shutdown in 5 minutes to the [DSI](../../include/atalk/dsi.h.md#struct-dsi) client after SIGUSR1.
 
@@ -186,7 +186,7 @@ Called by: [process_deferred_signals](afp_dsi.c.md#process_deferred_signals)
 static void afp_dsi_reload(int sig)
 ```
 
-Defined at lines 424 to 428.
+Defined at lines 425 to 429.
 
 SIGHUP handler that requests a reload of the volume configuration.
 
@@ -205,7 +205,7 @@ Uses file-scope variables: `reload_request`
 static void afp_dsi_debug(int sig)
 ```
 
-Defined at lines 444 to 448.
+Defined at lines 445 to 449.
 
 SIGINT handler that requests a debug dump and a switch of the log level.
 
@@ -226,7 +226,7 @@ Uses file-scope variables: `debug_request`
 static void afp_dsi_getmesg_handler(int sig)
 ```
 
-Defined at lines 455 to 459.
+Defined at lines 456 to 460.
 
 SIGUSR2 handler that records a server message for the main loop.
 
@@ -245,7 +245,7 @@ Uses file-scope variables: `getmesg_pending`
 static void handle_getmesg(AFPObj *obj)
 ```
 
-Defined at lines 471 to 479.
+Defined at lines 472 to 480.
 
 Announce a server message to the [DSI](../../include/atalk/dsi.h.md#struct-dsi) client after SIGUSR2.
 
@@ -264,7 +264,7 @@ Called by: [process_deferred_signals](afp_dsi.c.md#process_deferred_signals)
 static void afp_dsi_die_handler(int sig, siginfo_t *si, void *uc)
 ```
 
-Defined at lines 492 to 501.
+Defined at lines 493 to 502.
 
 SIGTERM and SIGQUIT handler that records the signal and its sender for the main loop.
 
@@ -287,7 +287,7 @@ Uses file-scope variables: `die_pending`, `die_sender`
 static void alarm_handler(int sig)
 ```
 
-Defined at lines 512 to 519.
+Defined at lines 513 to 520.
 
 SIGALRM handler that rearms the tickle timer and records the tick for the main loop.
 
@@ -308,7 +308,7 @@ Uses file-scope variables: `AFPobj`, `alarm_pending`
 static void handle_alarm(AFPObj *obj)
 ```
 
-Defined at lines 538 to 623.
+Defined at lines 539 to 624.
 
 Run one tick of the session timers after SIGALRM.
 
@@ -334,7 +334,7 @@ Called by: [process_deferred_signals](afp_dsi.c.md#process_deferred_signals)
 static void child_handler(int sig)
 ```
 
-Defined at lines 631 to 634.
+Defined at lines 632 to 635.
 
 SIGCHLD handler that reaps one exited child.
 
@@ -349,7 +349,7 @@ Called by: [afp_over_dsi_sighandlers](afp_dsi.c.md#afp_over_dsi_sighandlers)
 static int process_deferred_signals(AFPObj *obj)
 ```
 
-Defined at lines 649 to 686.
+Defined at lines 650 to 687.
 
 Run the work of every signal that arrived since the last call.
 
@@ -372,7 +372,7 @@ Uses file-scope variables: `alarm_pending`, `die_pending`, `die_signalled`, `get
 static void pending_request(DSI *dsi)
 ```
 
-Defined at lines 699 to 719.
+Defined at lines 700 to 720.
 
 Send the attentions that signal work left pending and load a pending server message.
 
@@ -393,7 +393,7 @@ Uses file-scope variables: `AFPobj`
 static void afp_dsi_log_disconnect(const AFPObj *obj, int rx_errno, bool already)
 ```
 
-Defined at lines 731 to 751.
+Defined at lines 732 to 752.
 
 Log why the session is disconnecting and what it keeps meanwhile.
 
@@ -414,7 +414,7 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 void afp_over_dsi_sighandlers(AFPObj *obj)
 ```
 
-Defined at lines 772 to 861.
+Defined at lines 773 to 862.
 
 Install the signal handlers and start the tickle timer of a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session.
 
@@ -441,7 +441,7 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi), [login](auth.c.md#login)
 static bool afp_write_command(uint8_t function)
 ```
 
-Defined at lines 870 to 874.
+Defined at lines 871 to 875.
 
 Tell whether an AFP command takes a payload, which a DSIWrite frame carries.
 
@@ -458,7 +458,7 @@ Called by: [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 void afp_over_dsi(AFPObj *obj)
 ```
 
-Defined at lines 901 to 1371.
+Defined at lines 902 to 1372.
 
 Serve the AFP requests of a [DSI](../../include/atalk/dsi.h.md#struct-dsi) session until the session ends.
 

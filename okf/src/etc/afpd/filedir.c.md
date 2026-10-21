@@ -5,7 +5,7 @@ description: "AFP commands for both files and directories: FPGetFileDirParms, FP
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/filedir.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -126,9 +126,9 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int check_name(const struct vol *vol, char *name)
 ```
 
-Defined at lines 338 to 351.
+Defined at lines 338 to 355.
 
-Reject a name that the AppleDouble layout reserves or that the volume vetoes.
+Reject "." and "..", a name that the AppleDouble layout reserves, or one that the volume vetoes.
 
 Parameters:
 * `vol`: volume
@@ -148,7 +148,7 @@ Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vf
 static int moveandrename(const AFPObj *obj, struct vol *vol, struct dir *sdir, int sdir_fd, char *oldname, char *newname, int isdir)
 ```
 
-Defined at lines 381 to 727.
+Defined at lines 385 to 731.
 
 Move and rename sdir/oldname to newname in the working directory.
 
@@ -179,7 +179,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 745 to 832.
+Defined at lines 749 to 836.
 
 FPRename: rename a file or directory inside its parent directory.
 
@@ -206,7 +206,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int delete_vetoed_files_at(struct vol *vol, int parent_fd, const char *name, bool in_vetodir)
 ```
 
-Defined at lines 848 to 943.
+Defined at lines 852 to 948.
 
 Recursively delete vetoed files and directories.
 
@@ -230,7 +230,7 @@ Called by: [delete_vetoed_files](filedir.c.md#delete_vetoed_files)
 int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
 ```
 
-Defined at lines 958 to 976.
+Defined at lines 963 to 981.
 
 Delete the vetoed files in directory upath and then the directory itself.
 
@@ -253,7 +253,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [deletecurdir](directory.c.md#
 void dir_offcnt_take(struct dir *dir)
 ```
 
-Defined at lines 987 to 994.
+Defined at lines 992 to 999.
 
 Take one item from a directory's cached offspring count.
 
@@ -270,7 +270,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [of_closefork](ofork.c.md#of_c
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1018 to 1301.
+Defined at lines 1023 to 1306.
 
 FPDelete: delete a file or an empty directory.
 
@@ -299,7 +299,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 char * absupath(const struct vol *vol, struct dir *dir, char *u)
 ```
 
-Defined at lines 1314 to 1336.
+Defined at lines 1319 to 1341.
 
 Full path of the Unix name u inside dir.
 
@@ -322,7 +322,7 @@ Called by: [afp_exchangefiles](file.c.md#afp_exchangefiles), [ctoupath](filedir.
 char * ctoupath(const struct vol *vol, struct dir *dir, char *name)
 ```
 
-Defined at lines 1346 to 1354.
+Defined at lines 1351 to 1359.
 
 Full Unix path of a Mac name inside dir.
 
@@ -343,7 +343,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [moveandrename](filedir.c.md#
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1374 to 1502.
+Defined at lines 1379 to 1507.
 
 FPMoveAndRename: move a file or directory into another directory, with a new name if given.
 
@@ -369,19 +369,22 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 ### veto_file
 
 ```c
-int veto_file(const char *veto_str, const char *path)
+int veto_file(const char *veto_str, const char *path, int nocase)
 ```
 
-Defined at lines 1514 to 1547.
+Defined at lines 1521 to 1566.
 
 Whether path matches one entry of a slash-separated veto list.
 
-The list has the form "abc/zxc/", and an entry must equal path exactly, byte for byte.
+The list has the form "abc/zxc/", and an entry must equal path byte for byte, or with nocase letter for letter in either ASCII case. The list's end closes its last entry as a slash does.
 
 Parameters:
-* `veto_str`: veto list with a slash after every entry, or NULL
+* `veto_str`: slash-separated veto list, or NULL
 * `path`: name to test, or NULL
+* `nocase`: whether ASCII letters match in either case
 
 Returns: 1 for a match, 0 otherwise
+
+Calls: [ascii_tolower](../../libatalk/util/unix.c.md#ascii_tolower)
 
 Called by: [check_dirent](enumerate.c.md#check_dirent), [check_name](filedir.c.md#check_name), [delete_vetoed_files_at](filedir.c.md#delete_vetoed_files_at)

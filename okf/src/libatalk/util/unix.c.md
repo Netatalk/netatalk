@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -33,7 +33,7 @@ Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorde
 static void closeall(int fd)
 ```
 
-Defined at lines 58 to 65.
+Defined at lines 63 to 70.
 
 Close every descriptor from fd up to the _SC_OPEN_MAX limit.
 
@@ -50,7 +50,7 @@ Mentioned in the documentation of: [log_close_all](logger.c.md#log_close_all)
 int daemonize(void)
 ```
 
-Defined at lines 73 to 126.
+Defined at lines 78 to 131.
 
 Fork, exit parent, setsid(), chdir("/"), close all fds.
 
@@ -68,7 +68,7 @@ Mentioned in the documentation of: [log_reopen](logger.c.md#log_reopen)
 static int count_fds_probed(int base, int n)
 ```
 
-Defined at lines 138 to 149.
+Defined at lines 143 to 154.
 
 Count open descriptors in [base, base + n) with one fcntl(2) each.
 
@@ -86,7 +86,7 @@ Called by: [count_fds_polled](unix.c.md#count_fds_polled)
 static int count_fds_polled(int max)
 ```
 
-Defined at lines 162 to 193.
+Defined at lines 167 to 198.
 
 Count open descriptors below `max`, FD_POLL_CHUNK per poll(2).
 
@@ -107,7 +107,7 @@ Called by: [count_open_fds](unix.c.md#count_open_fds)
 int count_open_fds(int *limit)
 ```
 
-Defined at lines 206 to 234. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 211 to 239. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Count the descriptors this process has open.
 
@@ -128,7 +128,7 @@ Called by: [dsi_note_master_fd](../dsi/dsi_getsess.c.md#dsi_note_master_fd), [ds
 void uam_log_pam_failure(enum loglevels level, const char *uam, const char *user, const char *step, const char *errtext, int code, int err)
 ```
 
-Defined at lines 252 to 269.
+Defined at lines 257 to 274.
 
 Log a failed PAM step with the errno it left and the fds in use.
 
@@ -157,7 +157,7 @@ Mentioned in the documentation of: [clrtxt_log_pam_error](../../etc/uams/uams_pa
 bool log_backoff(unsigned int *count)
 ```
 
-Defined at lines 281 to 285. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 286 to 290. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Count an event, reporting its 1st, 2nd, 4th, 8th... occurrence.
 
@@ -176,7 +176,7 @@ Mentioned in the documentation of: [icon_open_failed](../../etc/afpd/desktop.c.m
 int write_full(int fd, const void *buf, size_t len)
 ```
 
-Defined at lines 297 to 321. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 302 to 326. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Write len bytes in full at the descriptor's file position, going on after EINTR and after a write that stops short.
 
@@ -195,7 +195,7 @@ Called by: [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [copy_fork](.
 bool usage_level_update(int *level, int64_t used, int64_t limit)
 ```
 
-Defined at lines 336 to 356. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 341 to 361. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Track usage against the 50, 75 and 90 percent warning thresholds.
 
@@ -220,7 +220,7 @@ Mentioned in the documentation of: [usage_level_pct](unix.c.md#usage_level_pct)
 int usage_level_pct(int level)
 ```
 
-Defined at lines 365 to 368. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 370 to 373. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Threshold, in percent, that `level` has reached.
 
@@ -239,7 +239,7 @@ Uses file-scope variables: `usage_warn_pct`
 void become_root(void)
 ```
 
-Defined at lines 378 to 392. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 383 to 397. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 seteuid(0) and back, if either fails and panic != 0 we PANIC.
 
@@ -255,7 +255,7 @@ Uses file-scope variables: `root_nesting`, `saved_uid`
 void unbecome_root(void)
 ```
 
-Defined at lines 401 to 418. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 406 to 423. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Drop the root privileges of the matching become_root call.
 
@@ -273,7 +273,7 @@ Mentioned in the documentation of: [become_root](unix.c.md#become_root)
 int become_owner(uid_t uid, gid_t *egid)
 ```
 
-Defined at lines 435 to 481.
+Defined at lines 440 to 486.
 
 Act as an account for one step, with its groups, egid and euid.
 
@@ -297,7 +297,7 @@ Mentioned in the documentation of: [cnid_open](../cnid/cnid.c.md#cnid_open), [un
 void unbecome_owner(gid_t egid)
 ```
 
-Defined at lines 489 to 495.
+Defined at lines 494 to 500.
 
 Take euid 0, the egid and the supplementary groups back after [become_owner()](unix.c.md#become_owner).
 
@@ -316,7 +316,7 @@ Mentioned in the documentation of: [become_owner](unix.c.md#become_owner)
 void strip_trailing_slashes(char *path)
 ```
 
-Defined at lines 505 to 512.
+Defined at lines 510 to 517.
 
 Drop trailing slashes, which make lstat and an O_NOFOLLOW open follow a final symbolic link.
 
@@ -333,7 +333,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse), [getvolbypat
 char * shell_quote(const char *s)
 ```
 
-Defined at lines 523 to 552.
+Defined at lines 528 to 557.
 
 Quote a string as one word of a POSIX shell command.
 
@@ -352,7 +352,7 @@ Called by: [cnid_sqlite_open](../cnid/cnid_sqlite.c.md#cnid_sqlite_open), [cnid_
 const char * getcwdpath(void)
 ```
 
-Defined at lines 559 to 569.
+Defined at lines 564 to 574.
 
 get cwd in static buffer
 
@@ -366,7 +366,7 @@ Called by: [acltoownermode](../../etc/afpd/acls.c.md#acltoownermode), [ad_mkdir]
 const char * fullpathname(const char *name)
 ```
 
-Defined at lines 580 to 596.
+Defined at lines 585 to 601.
 
 Return the absolute path of a name.
 
@@ -387,7 +387,7 @@ Called by: [RF_setdirowner_adouble](../vfs/vfs.c.md#rf_setdirowner_adouble), [ad
 char * stripped_slashes_basename(char *p)
 ```
 
-Defined at lines 615 to 624.
+Defined at lines 620 to 629.
 
 Takes a buffer with a path, strips slashs, returns basename.
 
@@ -414,7 +414,7 @@ Called by: [cnid_sqlite_open](../cnid/cnid_sqlite.c.md#cnid_sqlite_open), [conve
 const char * tmpdir(void)
 ```
 
-Defined at lines 637 to 732.
+Defined at lines 642 to 737.
 
 Return a private temporary directory for the process, netatalk-PID under TMPDIR or /tmp.
 
@@ -432,7 +432,7 @@ Mentioned in the documentation of: [as_debug](../../etc/atalkd/main.c.md#as_debu
 time_t coarse_time(void)
 ```
 
-Defined at lines 751 to 760.
+Defined at lines 756 to 765.
 
 The current second, from the cheapest clock the platform has.
 
@@ -450,7 +450,7 @@ Mentioned in the documentation of: [markvol](../../etc/afpd/volume.c.md#markvol)
 int ostat(const char *path, struct stat *buf, int options)
 ```
 
-Defined at lines 777 to 784.
+Defined at lines 782 to 789.
 
 Run lstat with O_NOFOLLOW in options, stat otherwise.
 
@@ -469,7 +469,7 @@ Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](..
 int ochown(const char *path, uid_t owner, gid_t group, int options)
 ```
 
-Defined at lines 795 to 802.
+Defined at lines 800 to 807.
 
 Run lchown with O_NOFOLLOW in options, chown otherwise.
 
@@ -489,7 +489,7 @@ Called by: [ea_chown](../vfs/ea_ad.c.md#ea_chown), [setdirowner](../../etc/afpd/
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 ```
 
-Defined at lines 818 to 844.
+Defined at lines 823 to 849.
 
 Change the mode of a path, with options for symlinks and ACLs.
 
@@ -511,7 +511,7 @@ Called by: [RF_setdirmode_adouble](../vfs/vfs.c.md#rf_setdirmode_adouble), [RF_s
 int ostatat(int dirfd, const char *path, struct stat *st, int options)
 ```
 
-Defined at lines 856 to 864.
+Defined at lines 861 to 869.
 
 Run fstatat relative to a directory descriptor, without following a final symlink for O_NOFOLLOW.
 
@@ -525,27 +525,172 @@ Returns: the result of fstatat
 
 Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [RF_renamefile_ea](../vfs/vfs.c.md#rf_renamefile_ea), [copydir](../../etc/afpd/directory.c.md#copydir), [deletedir](../../etc/afpd/directory.c.md#deletedir), [of_findnameat](../../etc/afpd/ofork.c.md#of_findnameat), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat)
 
+### chdir_getcwd
+
+```c
+static int chdir_getcwd(const char *dir)
+```
+
+Defined at lines 883 to 963.
+
+chdir() to dir, then report a symlink on its path, which a getcwd() that differs from dir shows
+
+dir has to be a canonical path, and a trailing slash is fine. On a return of 1 the process is already in the symlink target.
+
+Parameters:
+* `dir`: absolute directory, or one relative to the current directory
+
+Returns: 0, 1 when the path held a symlink or getcwd() failed after the change, or -1 when chdir() or the first getcwd() fails
+
+Called by: [ochdir](unix.c.md#ochdir)
+
+Mentioned in the documentation of: [ochdir](unix.c.md#ochdir)
+
+### path_has_dot_component
+
+```c
+int path_has_dot_component(const char *path, int dot)
+```
+
+Defined at lines 973 to 988.
+
+Whether a component of a slash-separated path is "..", or with dot set also ".".
+
+Parameters:
+* `path`: the path
+* `dot`: nonzero to count a "." component too
+
+Returns: 1 when such a component is there, else 0
+
+Called by: [sl_rpc_openQuery](../../etc/afpd/spotlight.c.md#sl_rpc_openquery), [symlink_target_safe](../../etc/afpd/file.c.md#symlink_target_safe)
+
+### path_at_or_below
+
+```c
+int path_at_or_below(const char *path, const char *dir)
+```
+
+Defined at lines 1001 to 1011.
+
+Whether an absolute path is a directory or lies below it.
+
+The prefix must end at a slash or at the end of path, so "/vol2" does not lie below "/vol". The directory "/" holds every absolute path.
+
+Parameters:
+* `path`: resolved absolute path
+* `dir`: resolved absolute directory, without a trailing slash unless it is "/"
+
+Returns: 1 when path is dir or lies below it, else 0
+
+Called by: [fce_register](../../etc/afpd/fce_api.c.md#fce_register), [ochdir](unix.c.md#ochdir), [sl_path_in_scope](../../etc/afpd/spotlight.c.md#sl_path_in_scope), [symlink_target_safe](../../etc/afpd/file.c.md#symlink_target_safe)
+
 ### ochdir
 
 ```c
-int ochdir(const char *dir, int options)
+int ochdir(const char *dir, int options, int rootfd, const char *root)
 ```
 
-Defined at lines 881 to 966.
+Defined at lines 1134 to 1152.
 
 Change the current directory and report a symlink on the way for O_NOFOLLOW.
 
-Without O_NOFOLLOW the call is a plain chdir. With it, dir has to be a canonical path, and a trailing slash is fine. The call changes directory first and then compares getcwd with the requested path. On a return of 1 the process is already in the symlink target.
+Without O_NOFOLLOW the call is a plain chdir(). With it, dir has to be a canonical path, and a trailing slash is fine: given rootfd from ochdir_root(root), a dir below root is entered by chdir_below() without getcwd(), any other by [chdir_getcwd()](unix.c.md#chdir_getcwd).
 
 Parameters:
 * `dir`: absolute directory, or one relative to the current directory
 * `options`: O_NOFOLLOW or 0
+* `rootfd`: ochdir_root(root), or -1
+* `root`: the folder rootfd is open on, unused when rootfd is -1
 
-Returns: 0, 1 when the path held a symlink or getcwd failed after the change, or -1 when chdir or the first getcwd fails
+Returns: 0, 1 when the path held a symlink or getcwd() failed after the change, or -1 when the change fails
+
+Calls: [chdir_getcwd](unix.c.md#chdir_getcwd), [path_at_or_below](unix.c.md#path_at_or_below)
 
 Called by: [ochdir_vol](../../etc/afpd/directory.c.md#ochdir_vol)
 
-Mentioned in the documentation of: [ochdir_vol](../../etc/afpd/directory.c.md#ochdir_vol)
+Mentioned in the documentation of: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [ochdir_root](unix.c.md#ochdir_root), [ochdir_vol](../../etc/afpd/directory.c.md#ochdir_vol)
+
+### ascii_tolower
+
+```c
+int ascii_tolower(int c)
+```
+
+Defined at lines 1161 to 1164.
+
+A character in lower case if it is an ASCII capital, whatever the locale.
+
+Parameters:
+* `c`: the character, as an unsigned char
+
+Returns: c, with A to Z taken to a to z
+
+Called by: [other_name](../vfs/vfs.c.md#other_name), [veto_file](../../etc/afpd/filedir.c.md#veto_file)
+
+### path_probe_case
+
+```c
+int path_probe_case(const char *dir)
+```
+
+Defined at lines 1179 to 1224.
+
+Whether a name in dir, looked up with one letter's case swapped, finds the same object.
+
+The probe takes the first entry that is no folder, has one link and holds an ASCII letter in its name: no second link can answer for it, and a folder looked up by another name keeps that name in FreeBSD's and NetBSD's namecaches, where getcwd() then finds it.
+
+Parameters:
+* `dir`: folder to probe
+
+Returns: 1 where the lookup ignores case, 0 where it matches case, -1 where dir cannot be read or holds no such entry
+
+Calls: [strlcpy](../compat/strlcpy.c.md#strlcpy)
+
+Called by: [path_ignores_case](unix.c.md#path_ignores_case)
+
+Mentioned in the documentation of: [path_ignores_case](unix.c.md#path_ignores_case)
+
+### path_ignores_case
+
+```c
+int path_ignores_case(const char *path)
+```
+
+Defined at lines 1237 to 1264.
+
+Whether the filesystem holding path matches names in either case.
+
+pathconf() answers where the system names the question; elsewhere, or where it has no answer, [path_probe_case()](unix.c.md#path_probe_case) looks, and a folder it cannot tell about counts as ignoring case, so veto entries match in either case.
+
+Parameters:
+* `path`: a folder on the filesystem
+
+Returns: 1 where pathconf() reports or the probe finds that the filesystem ignores case, or the probe cannot tell; else 0
+
+Calls: [path_probe_case](unix.c.md#path_probe_case)
+
+Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [ochdir_root](unix.c.md#ochdir_root)
+
+### ochdir_root
+
+```c
+int ochdir_root(const char *root)
+```
+
+Defined at lines 1277 to 1296.
+
+The descriptor [ochdir()](unix.c.md#ochdir) walks from below a volume root.
+
+The root is open for reading: a lookup through a descriptor open for search skips the search check of its folder, which chdir() makes on every request. The caller closes the descriptor.
+
+Parameters:
+* `root`: the volume root's path
+
+Returns: root open where [ochdir()](unix.c.md#ochdir) enters the folders below it without getcwd(), else -1
+
+Calls: [path_ignores_case](unix.c.md#path_ignores_case)
+
+Called by: [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol)
 
 ### randombytes
 
@@ -553,7 +698,7 @@ Mentioned in the documentation of: [ochdir_vol](../../etc/afpd/directory.c.md#oc
 void randombytes(void *buf, int n)
 ```
 
-Defined at lines 977 to 1004.
+Defined at lines 1307 to 1334.
 
 Fill a buffer with random bytes from /dev/urandom.
 
@@ -571,7 +716,7 @@ Called by: [get_vol_uuid](netatalk_conf.c.md#get_vol_uuid), [set_signature](../.
 int gmem(gid_t gid, int ngroups, gid_t *groups)
 ```
 
-Defined at lines 1014 to 1025. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1344 to 1355. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Tell whether a group ID is in a group list.
 
@@ -590,7 +735,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol), [posix_acl_rights](../../e
 char * realpath_safe(const char *path)
 ```
 
-Defined at lines 1035 to 1070.
+Defined at lines 1365 to 1400.
 
 Resolve a path with realpath into a new buffer.
 
@@ -609,7 +754,7 @@ Called by: [dbpath_is_volume_root](netatalk_conf.c.md#dbpath_is_volume_root), [g
 const char * basename_safe(const char *path)
 ```
 
-Defined at lines 1081 to 1086.
+Defined at lines 1411 to 1416.
 
 Return the basename of a path without changing the path.
 
@@ -630,7 +775,7 @@ Called by: [fce_register](../../etc/afpd/fce_api.c.md#fce_register)
 char * strtok_quote(char *s, const char *delim)
 ```
 
-Defined at lines 1100 to 1142.
+Defined at lines 1430 to 1472.
 
 Split a string like strtok, with tokens in double quotes kept whole.
 
@@ -650,7 +795,7 @@ Called by: [accessvol](netatalk_conf.c.md#accessvol)
 int set_groups(AFPObj *obj, struct passwd *pwd)
 ```
 
-Defined at lines 1154 to 1185. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1484 to 1515. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Load the supplementary groups of a user into the process and into obj.
 
@@ -670,7 +815,7 @@ Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath), [load_afp_conf_vols]
 const char * print_groups(int ngroups, gid_t *groups)
 ```
 
-Defined at lines 1198 to 1213. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
+Defined at lines 1528 to 1543. Declared in [include/atalk/unix.h](../../include/atalk/unix.h.md).
 
 Format a group list for a log message.
 

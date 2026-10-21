@@ -5,7 +5,7 @@ description: "AFP volume state, configuration flags and extension mapping types.
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/volume.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -134,6 +134,8 @@ Defined at line 38.
 * `uid_t v_private_uid`: an AFPVOL_PRIVATE volume's owner
 * `int v_qfd`
 * `uint32_t v_ignattr`: AFP attributes that shall be ignored.
+* `int v_rootfd`: [ochdir()](../../libatalk/util/unix.c.md#ochdir) walks from it, or -1
+* `int v_ignorecase`: the root's filesystem ignores case
 
 # Typedefs and enums
 

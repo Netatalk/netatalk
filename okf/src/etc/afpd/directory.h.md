@@ -5,7 +5,7 @@ description: "AFP directory command handlers and path resolution helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T16:52:47+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -74,6 +74,13 @@ Defined at line 68.
 * `bstring new_pdir_path`: New parent directory fullpath (DCMOD_PATH).
 * `struct stat * st`: Fresh stat result (DCMOD_STAT).
 * `struct adouble * adp`: AD data to store (DCMOD_AD, Phase 2).
+
+### struct enumerate_stats
+
+Defined at line 183.
+* `unsigned long long reads`: directory reads
+* `unsigned long long rereads`: reads by batches past index 1
+* `unsigned long long names`: names the reads saved
 
 ### struct maccess
 

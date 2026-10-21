@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -42,7 +42,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int ad_rlen_meta_absent(off_t rlen)
 ```
 
-Defined at lines 72 to 75.
+Defined at lines 73 to 76.
 
 Tell whether a cached rlen records absent AppleDouble metadata.
 
@@ -54,7 +54,7 @@ Called by: [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_metad
 static int ad_rlen_known(off_t rlen)
 ```
 
-Defined at lines 78 to 81.
+Defined at lines 79 to 82.
 
 Tell whether a cached rlen is a definite resource fork length.
 
@@ -66,7 +66,7 @@ Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
 static struct dir * path_cached_file(const struct path *path)
 ```
 
-Defined at lines 169 to 176.
+Defined at lines 170 to 177.
 
 Return the dircache entry of a file path, or NULL after dir_remove.
 
@@ -78,7 +78,7 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [path_resolve_ca
 static int path_isadir(struct path *o_path)
 ```
 
-Defined at lines 184 to 193.
+Defined at lines 185 to 194.
 
 Tell whether a path resolved to a directory.
 
@@ -88,7 +88,7 @@ Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_getco
 
 ### struct dir
 
-Defined at line 83.
+Defined at line 84.
 * `bstring d_fullpath`: complete unix path to dir (or file)
 * `bstring d_m_name`: mac name
 * `bstring d_u_name`: unix name
@@ -120,7 +120,7 @@ Defined at line 83.
 
 ### struct path
 
-Defined at line 151.
+Defined at line 152.
 * `int m_type`: mac name type (long name, unicode
 * `char * m_name`: mac name
 * `char * u_name`: unix name
@@ -142,6 +142,7 @@ Defined at line 151.
 * `DIRDID_ROOT_PARENT`: parent directory of root
 * `DIRF_ARC_GHOST`: ARC ghost entry (in B1/B2).
 * `DIRF_CNID`: renumerate id
+* `DIRF_CONVERTED`: no further v2 conversion attempt
 * `DIRF_INDEXED`: linked in the dircache hash index
 * `DIRF_ISFILE`: it's cached file, not a directory
 * `DIRF_OFFCNT`: offsprings count is valid

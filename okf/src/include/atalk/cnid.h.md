@@ -5,7 +5,7 @@ description: "CNID database types, backend operations and catalog lookup interfa
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 This is instance of CNID database object.
 
-Defined at line 70.
+Defined at line 85.
 * `uint32_t cnid_db_flags`
 * `struct vol * cnid_db_vol`
 * `void * cnid_db_private`
@@ -72,23 +72,27 @@ Defined at line 70.
 * `int(* cnid_getstamp`: Called through by [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp).
 * `int(* cnid_find`: Called through by [cnid_find_scoped](../../libatalk/cnid/cnid.c.md#cnid_find_scoped).
 * `int(* cnid_wipe`: Called through by [cnid_wipe](../../libatalk/cnid/cnid.c.md#cnid_wipe).
+* `int(* cnid_dirlist`: Called through by [dirtab_load](../../libatalk/cnid/cnid.c.md#dirtab_load).
+* `struct cnid_dirtab * cnid_dirtabs`
+* `cnid_t cnid_dirtab_did`: folder whose listing batch runs
 
 ### struct _cnid_module
 
-Defined at line 108.
+Defined at line 127.
 * `char * name`
 * `struct _cnid_module * next`: Permanent registry link, owned by cnid.c.
 * `struct _cnid_db *(* cnid_open`: Assigned in [cnid_mysql_module](../../libatalk/cnid/cnid_mysql.c.md#cnid_mysql_module), [cnid_sqlite_module](../../libatalk/cnid/cnid_sqlite.c.md#cnid_sqlite_module); called through by [cnid_open](../../libatalk/cnid/cnid.c.md#cnid_open).
 
 ### struct cnid_open_args
 
-Defined at line 100.
+Defined at line 119.
 * `uint32_t cnid_args_flags`
 * `struct vol * cnid_args_vol`
 
 # Typedefs and enums
 
 * `typedef struct _cnid_db cnid_db`
+* `typedef int(* cnid_dirlist_fn`
 * `typedef struct _cnid_module cnid_module`
 
 # Macros
@@ -103,4 +107,4 @@ Defined at line 100.
 * `CNID_FLAG_NODEV`: don't use device number only inode
 * `CNID_FLAG_PERSISTENT`: This backend implements DID persistence.
 * `CNID_START`: first valid ID
-* Undocumented: `CNID_ERRNO`, `CNID_ERR_MAX`, `CNID_ERR_PARAM`, `CNID_ERR_PATH`, `CNID_FIND_MIN_BUFLEN`, `CNID_FIND_MIN_RESULTS`, `CNID_INVALID`
+* Undocumented: `CNID_DIRTAB_MISSES`, `CNID_DIRTAB_PROBES`, `CNID_DIRTAB_ROWS`, `CNID_ERRNO`, `CNID_ERR_MAX`, `CNID_ERR_PARAM`, `CNID_ERR_PATH`, `CNID_FIND_MIN_BUFLEN`, `CNID_FIND_MIN_RESULTS`, `CNID_INVALID`

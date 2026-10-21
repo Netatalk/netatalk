@@ -5,7 +5,7 @@ description: "Private MySQL CNID backend state and status flags."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/cnid_mysql_private.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-17T10:01:45+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -36,6 +36,7 @@ Defined at line 17.
 * `MYSQL_STMT * cnid_delete_stmt`
 * `MYSQL_STMT * cnid_resolve_stmt`
 * `MYSQL_STMT * cnid_purge_stmt`
+* `MYSQL_STMT * cnid_dirlist_stmt`
 * `bool cnid_find_scoped_unsupported`
 
 # Typedefs and enums

@@ -5,7 +5,7 @@ description: "Reading afp.conf and extmap.conf: server options, volume definitio
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/netatalk_conf.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -624,7 +624,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol)
 static struct vol * creatvol(AFPObj *obj, const struct passwd *pwd, const char *section, const char *name, const char *path_in, const char *preset)
 ```
 
-Defined at lines 1499 to 2366.
+Defined at lines 1499 to 2367.
 
 Create volume struct.
 
@@ -652,7 +652,7 @@ Mentioned in the documentation of: [conf_testutil_set_lastvid](netatalk_conf.c.m
 static int volfile_changed(AFPObj *obj)
 ```
 
-Defined at lines 2377 to 2400.
+Defined at lines 2378 to 2401.
 
 Tell whether afp.conf changed since the last check, by its mtime.
 
@@ -671,7 +671,7 @@ Called by: [load_afp_conf_vols](netatalk_conf.c.md#load_afp_conf_vols)
 static int vol_section(const char *sec)
 ```
 
-Defined at lines 2408 to 2415.
+Defined at lines 2409 to 2416.
 
 Tell whether an afp.conf section defines a volume.
 
@@ -688,7 +688,7 @@ Called by: [readvolfile](netatalk_conf.c.md#readvolfile)
 static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 ```
 
-Defined at lines 2437 to 2581.
+Defined at lines 2438 to 2582.
 
 Create the volumes of the afp.conf sections and add them to the volume list.
 
@@ -714,7 +714,7 @@ Uses file-scope variables: `have_uservol`
 static int setextmap(char *ext, char *type, char *creator)
 ```
 
-Defined at lines 2599 to 2635.
+Defined at lines 2600 to 2636.
 
 Add an extension mapping to the unsorted extension map.
 
@@ -739,7 +739,7 @@ Uses file-scope variables: `Extmap`
 static int extmap_cmp(const void *map1, const void *map2)
 ```
 
-Defined at lines 2644 to 2649.
+Defined at lines 2645 to 2650.
 
 Order two extension map entries by extension, for qsort.
 
@@ -759,7 +759,7 @@ Called by: [sortextmap](netatalk_conf.c.md#sortextmap)
 static void sortextmap(void)
 ```
 
-Defined at lines 2657 to 2681.
+Defined at lines 2658 to 2682.
 
 Count and sort the extension map, and make its "." line the default mapping.
 
@@ -777,7 +777,7 @@ Uses file-scope variables: `Defextmap`, `Extmap`, `Extmap_cnt`
 static void free_extmap(void)
 ```
 
-Defined at lines 2686 to 2700.
+Defined at lines 2687 to 2701.
 
 Free the extension map and clear the default mapping.
 
@@ -791,7 +791,7 @@ Uses file-scope variables: `Defextmap`, `Extmap`, `Extmap_cnt`
 static int ext_cmp_key(const void *key, const void *obj)
 ```
 
-Defined at lines 2709 to 2714.
+Defined at lines 2710 to 2715.
 
 Compare an extension with an extension map entry, for bsearch.
 
@@ -811,7 +811,7 @@ Called by: [getextmap](netatalk_conf.c.md#getextmap)
 struct extmap * getextmap(const char *)
 ```
 
-Defined at lines 2727 to 2749. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
+Defined at lines 2728 to 2750. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
 
 Return the extension mapping for a file name.
 
@@ -834,7 +834,7 @@ Uses file-scope variables: `Defextmap`, `Extmap`, `Extmap_cnt`
 struct extmap * getdefextmap(void)
 ```
 
-Defined at lines 2757 to 2760. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
+Defined at lines 2758 to 2761. Declared in [etc/afpd/file.h](../../etc/afpd/file.h.md).
 
 Return the default extension mapping, the "." line of the extension map.
 
@@ -850,7 +850,7 @@ Uses file-scope variables: `Defextmap`
 static int readextmap(const char *file)
 ```
 
-Defined at lines 2772 to 2803.
+Defined at lines 2773 to 2804.
 
 Read an extension map file and sort the map.
 
@@ -871,7 +871,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 void volume_unlink(struct vol *volume)
 ```
 
-Defined at lines 2817 to 2836.
+Defined at lines 2818 to 2837.
 
 Remove a volume from the volume list.
 
@@ -888,7 +888,7 @@ Uses file-scope variables: `Volumes`
 void volume_free(struct vol *vol)
 ```
 
-Defined at lines 2846 to 2867.
+Defined at lines 2847 to 2868.
 
 Free a volume and the strings that loading it allocated.
 
@@ -905,7 +905,7 @@ Called by: [creatvol](netatalk_conf.c.md#creatvol), [load_afp_conf_vols](netatal
 int load_charset(struct vol *vol)
 ```
 
-Defined at lines 2875 to 2890.
+Defined at lines 2876 to 2891.
 
 Load the Mac and volume charsets of a volume.
 
@@ -924,7 +924,7 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [openvol_optional](../../bin
 int load_afp_conf_vols(AFPObj *obj, lv_flags_t flags)
 ```
 
-Defined at lines 2913 to 3106.
+Defined at lines 2914 to 3107.
 
 Load the volumes of afp.conf, or reload them after a change.
 
@@ -950,7 +950,7 @@ Uses file-scope variables: `Volumes`, `have_uservol`
 void unload_volumes(AFPObj *obj)
 ```
 
-Defined at lines 3116 to 3134.
+Defined at lines 3117 to 3135.
 
 Free every volume and reset the load state, so the next load reads afp.conf again.
 
@@ -973,7 +973,7 @@ Mentioned in the documentation of: [conf_testutil_set_lastvid](netatalk_conf.c.m
 struct vol * getvolumes(void)
 ```
 
-Defined at lines 3142 to 3145.
+Defined at lines 3143 to 3146.
 
 Return the head of the volume list, which holds open and closed volumes.
 
@@ -989,7 +989,7 @@ Uses file-scope variables: `Volumes`
 struct vol * getvolbyvid(const uint16_t vid)
 ```
 
-Defined at lines 3153 to 3168.
+Defined at lines 3154 to 3169.
 
 Find an open volume by its volume ID.
 
@@ -998,7 +998,7 @@ Parameters:
 
 Returns: the volume, or NULL for an unknown ID or a volume that is not open
 
-Called by: [afp_access](../../etc/afpd/acls.c.md#afp_access), [afp_addappl](../../etc/afpd/appl.c.md#afp_addappl), [afp_addcomment](../../etc/afpd/desktop.c.md#afp_addcomment), [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_closedir](../../etc/afpd/directory.c.md#afp_closedir), [afp_closedt](../../etc/afpd/desktop.c.md#afp_closedt), [afp_closevol](../../etc/afpd/volume.c.md#afp_closevol), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_flush](../../etc/afpd/fork.c.md#afp_flush), [afp_getacl](../../etc/afpd/acls.c.md#afp_getacl), [afp_getappl](../../etc/afpd/appl.c.md#afp_getappl), [afp_getcomment](../../etc/afpd/desktop.c.md#afp_getcomment), [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_getfildirparams](../../etc/afpd/filedir.c.md#afp_getfildirparams), [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [afp_geticoninfo](../../etc/afpd/desktop.c.md#afp_geticoninfo), [afp_getvolparams](../../etc/afpd/volume.c.md#afp_getvolparams), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [afp_opendir](../../etc/afpd/directory.c.md#afp_opendir), [afp_opendt](../../etc/afpd/desktop.c.md#afp_opendt), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_rename](../../etc/afpd/filedir.c.md#afp_rename), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [afp_rmvappl](../../etc/afpd/appl.c.md#afp_rmvappl), [afp_rmvcomment](../../etc/afpd/desktop.c.md#afp_rmvcomment), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setdirparams](../../etc/afpd/directory.c.md#afp_setdirparams), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [afp_setfildirparams](../../etc/afpd/filedir.c.md#afp_setfildirparams), [afp_setfilparams](../../etc/afpd/file.c.md#afp_setfilparams), [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [afp_spotlight_rpc](../../etc/afpd/spotlight.c.md#afp_spotlight_rpc), [afp_syncdir](../../etc/afpd/directory.c.md#afp_syncdir), [catsearch_afp](../../etc/afpd/catsearch.c.md#catsearch_afp), [deferred_batch_chain](../../etc/afpd/dircache.c.md#deferred_batch_chain), [dircache_flush_deferred_for_vol](../../etc/afpd/dircache.c.md#dircache_flush_deferred_for_vol), [dircache_process_deferred_chain](../../etc/afpd/dircache.c.md#dircache_process_deferred_chain), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints)
+Called by: [afp_access](../../etc/afpd/acls.c.md#afp_access), [afp_addappl](../../etc/afpd/appl.c.md#afp_addappl), [afp_addcomment](../../etc/afpd/desktop.c.md#afp_addcomment), [afp_addicon](../../etc/afpd/desktop.c.md#afp_addicon), [afp_closedir](../../etc/afpd/directory.c.md#afp_closedir), [afp_closedt](../../etc/afpd/desktop.c.md#afp_closedt), [afp_closevol](../../etc/afpd/volume.c.md#afp_closevol), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_flush](../../etc/afpd/fork.c.md#afp_flush), [afp_getacl](../../etc/afpd/acls.c.md#afp_getacl), [afp_getappl](../../etc/afpd/appl.c.md#afp_getappl), [afp_getcomment](../../etc/afpd/desktop.c.md#afp_getcomment), [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_getfildirparams](../../etc/afpd/filedir.c.md#afp_getfildirparams), [afp_geticon](../../etc/afpd/desktop.c.md#afp_geticon), [afp_geticoninfo](../../etc/afpd/desktop.c.md#afp_geticoninfo), [afp_getvolparams](../../etc/afpd/volume.c.md#afp_getvolparams), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [afp_opendir](../../etc/afpd/directory.c.md#afp_opendir), [afp_opendt](../../etc/afpd/desktop.c.md#afp_opendt), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_rename](../../etc/afpd/filedir.c.md#afp_rename), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [afp_rmvappl](../../etc/afpd/appl.c.md#afp_rmvappl), [afp_rmvcomment](../../etc/afpd/desktop.c.md#afp_rmvcomment), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setdirparams](../../etc/afpd/directory.c.md#afp_setdirparams), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [afp_setfildirparams](../../etc/afpd/filedir.c.md#afp_setfildirparams), [afp_setfilparams](../../etc/afpd/file.c.md#afp_setfilparams), [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [afp_spotlight_rpc](../../etc/afpd/spotlight.c.md#afp_spotlight_rpc), [afp_syncdir](../../etc/afpd/directory.c.md#afp_syncdir), [catsearch_afp](../../etc/afpd/catsearch.c.md#catsearch_afp), [deferred_batch_chain](../../etc/afpd/dircache.c.md#deferred_batch_chain), [dircache_flush_deferred_for_vol](../../etc/afpd/dircache.c.md#dircache_flush_deferred_for_vol), [dircache_process_deferred_chain](../../etc/afpd/dircache.c.md#dircache_process_deferred_chain), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [sd_drop](../../etc/afpd/enumerate.c.md#sd_drop)
 
 Uses file-scope variables: `Volumes`
 
@@ -1008,7 +1008,7 @@ Uses file-scope variables: `Volumes`
 static char * getuserbypath(const char *path)
 ```
 
-Defined at lines 3180 to 3227.
+Defined at lines 3181 to 3228.
 
 get username by path
 
@@ -1029,7 +1029,7 @@ Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath)
 struct vol * getvolbypath(AFPObj *obj, const char *path)
 ```
 
-Defined at lines 3257 to 3467.
+Defined at lines 3258 to 3468.
 
 Find the volume that holds a path, or create the home volume for it.
 
@@ -1067,7 +1067,7 @@ Mentioned in the documentation of: [getuserbypath](netatalk_conf.c.md#getuserbyp
 struct vol * getvolbyname(const char *name)
 ```
 
-Defined at lines 3478 to 3491.
+Defined at lines 3479 to 3492.
 
 Find the first volume whose section name is a prefix of name.
 
@@ -1086,7 +1086,7 @@ Uses file-scope variables: `Volumes`
 static bool dbpath_is_volume_root(AFPObj *obj, const char *dbpath, const struct passwd *pwd)
 ```
 
-Defined at lines 3506 to 3545.
+Defined at lines 3507 to 3546.
 
 Tell whether a directory is the path of a volume that afp.conf names.
 
@@ -1109,7 +1109,7 @@ Called by: [user_state_paths](netatalk_conf.c.md#user_state_paths)
 static int user_state_paths(AFPObj *obj, bool singleuser)
 ```
 
-Defined at lines 3568 to 3672.
+Defined at lines 3569 to 3673.
 
 Keep the signature and volume uuid files in the user's state.
 
@@ -1131,7 +1131,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 static int splice_size_round(int size)
 ```
 
-Defined at lines 3682 to 3696.
+Defined at lines 3683 to 3697.
 
 Round size up to a power of two, as the kernel sizes a pipe.
 
@@ -1150,7 +1150,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 ```
 
-Defined at lines 3713 to 4419.
+Defined at lines 3714 to 4420.
 
 Read afp.conf into the options of an AFP object.
 
@@ -1172,7 +1172,7 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/nad/nad.c.m
 void afp_config_free(AFPObj *obj)
 ```
 
-Defined at lines 4429 to 4589.
+Defined at lines 4430 to 4590.
 
 Free the options that afp_config_parse allocated, with the extension map and the parsed afp.conf.
 

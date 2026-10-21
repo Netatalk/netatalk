@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/vfs"
-description: "6 files, 115 functions."
+description: "6 files, 116 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/vfs"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 # Files
@@ -24,7 +24,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
 # Calls into
 
 * [libatalk/adouble](adouble.md): 17 calls
-* [libatalk/util](util.md): 12 calls
+* [libatalk/util](util.md): 13 calls
 * [libatalk/compat](compat.md): 7 calls
 * [libatalk/unicode](unicode.md): 3 calls
 * [libatalk/acl](acl.md): 1 calls

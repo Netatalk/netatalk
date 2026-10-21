@@ -5,7 +5,7 @@ description: "Volume commands: FPOpenVol, FPCloseVol, FPGetVolParms, and volume 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/volume.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -346,11 +346,11 @@ Called by: [afp_closevol](volume.c.md#afp_closevol), [afp_openvol](volume.c.md#a
 int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 987 to 1253. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 988 to 1261. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPOpenVol: open a volume and return its parameters.
 
-The bitmap must include VOLPBIT_VID. The volume name comes in UTF-8 or the Mac charset, and a volume password must match. An open volume only returns its parameters. Otherwise the call runs the preexec command, loads the charsets, creates the dircache entry of the root, and opens the CNID and Spotlight backends. A failure closes the volume again. The session runs as the user here.
+The bitmap must include VOLPBIT_VID. The volume name comes in UTF-8 or the Mac charset, and a volume password must match. An open volume only returns its parameters. Otherwise the call runs the preexec command, loads the charsets, creates the dircache entry of the root, holds the root open where [ochdir()](../../libatalk/util/unix.c.md#ochdir) walks below it, records whether the root's filesystem ignores case, and opens the CNID and Spotlight backends. A failure closes the volume again. The session runs as the user here.
 
 Parameters:
 * `obj`: session object
@@ -361,7 +361,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_BITMAP, AFPERR_NOOBJ for an unknown name, AFPERR_ACCESS for a wrong password, AFPERR_PARAM, also for a name that is empty, does not convert or holds a NUL byte, or AFPERR_MISC
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata), [afprun](afprun.c.md#afprun), [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [server_ipc_volumes](volume.c.md#server_ipc_volumes), [setmessage](messages.c.md#setmessage), [stat_vol](volume.c.md#stat_vol), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [strlen_w](../../libatalk/unicode/util_unistr.c.md#strlen_w), [virtual_icon_init](virtual_icon.c.md#virtual_icon_init), [volume_codepage](volume.c.md#volume_codepage), [volume_openDB](volume.c.md#volume_opendb)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata](../../libatalk/adouble/ad_open.c.md#ad_metadata), [afprun](afprun.c.md#afprun), [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [cnid_close](../../libatalk/cnid/cnid.c.md#cnid_close), [cnid_getstamp](../../libatalk/cnid/cnid.c.md#cnid_getstamp), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [ochdir_root](../../libatalk/util/unix.c.md#ochdir_root), [path_ignores_case](../../libatalk/util/unix.c.md#path_ignores_case), [server_ipc_volumes](volume.c.md#server_ipc_volumes), [setmessage](messages.c.md#setmessage), [stat_vol](volume.c.md#stat_vol), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [strlen_w](../../libatalk/unicode/util_unistr.c.md#strlen_w), [virtual_icon_init](virtual_icon.c.md#virtual_icon_init), [volume_codepage](volume.c.md#volume_codepage), [volume_openDB](volume.c.md#volume_opendb)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `sl_localsearch_ops` in [etc/spotlight/localsearch/sl_localsearch.c](../spotlight/localsearch/sl_localsearch.c.md)
 
@@ -373,7 +373,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 uint32_t cnid_volume_tag(const struct vol *vol)
 ```
 
-Defined at lines 1266 to 1281. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1274 to 1289. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Identifier of the CNID table of a volume that every afpd process shares.
 
@@ -394,7 +394,7 @@ Mentioned in the documentation of: [reset_broadcast_forget](../../libatalk/util/
 void cnid_volume_reset(const struct vol *vol)
 ```
 
-Defined at lines 1294 to 1323. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1302 to 1331. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Announce a CNID table reset and end this session.
 
@@ -415,11 +415,11 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 void closevol(const AFPObj *obj, struct vol *vol)
 ```
 
-Defined at lines 1336 to 1376. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1344 to 1389. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Close a volume and release everything it holds.
 
-The call closes the forks of the volume and retires its parent descriptor slots, which would otherwise pin directories and match after a reopen. It then purges the dircache entries, frees the root entry, closes the CNID database, and runs the postexec command.
+The call closes the forks of the volume and retires its parent descriptor slots, which would otherwise pin directories and match after a reopen. It then purges the dircache entries, frees the root entry, closes the CNID database and the root's descriptor, and runs the postexec command.
 
 Parameters:
 * `obj`: session object
@@ -435,7 +435,7 @@ Called by: [afp_closevol](volume.c.md#afp_closevol), [close_all_vol](volume.c.md
 void close_all_vol(const AFPObj *obj)
 ```
 
-Defined at lines 1383 to 1394. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1396 to 1407. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Close every open volume of the session.
 
@@ -454,7 +454,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1410 to 1433. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1423 to 1446. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPCloseVol: close a volume.
 
@@ -481,7 +481,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static bool same_stamp(const struct stat *st, const struct timespec *stamp)
 ```
 
-Defined at lines 1444 to 1448.
+Defined at lines 1457 to 1461.
 
 Tell whether a stat of a volume root holds a stamp, to the nanosecond.
 
@@ -501,7 +501,7 @@ Called by: [markroot](volume.c.md#markroot), [pollvoltime](volume.c.md#pollvolti
 static bool volpolls(const AFPObj *obj)
 ```
 
-Defined at lines 1458 to 1462.
+Defined at lines 1471 to 1475.
 
 Tell whether the session's idle tick polls its volumes for other sessions' changes: over [DSI](../../include/atalk/dsi.h.md#struct-dsi), from AFP 2.2, with server notifications.
 
@@ -518,7 +518,7 @@ Called by: [markroot](volume.c.md#markroot), [pollvoltime](volume.c.md#pollvolti
 int pollvoltime(AFPObj *)
 ```
 
-Defined at lines 1474 to 1516. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1487 to 1529. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Make the due root writes, then tell a client the poll serves of a root stamp that the session neither wrote nor saw, on an open volume.
 
@@ -541,7 +541,7 @@ Mentioned in the documentation of: [flushvoltime](volume.c.md#flushvoltime)
 static time_t markroot(AFPObj *obj, struct vol *vol, time_t now, bool mine)
 ```
 
-Defined at lines 1537 to 1582.
+Defined at lines 1550 to 1595.
 
 Write a volume root's mtime for a change and read the stamp back.
 
@@ -565,7 +565,7 @@ Called by: [flushvoltime](volume.c.md#flushvoltime), [markvol](volume.c.md#markv
 static void markvol(AFPObj *obj, struct vol *vol, bool root, bool quiet)
 ```
 
-Defined at lines 1603 to 1622.
+Defined at lines 1616 to 1635.
 
 Record a change on a volume in its root's modification time.
 
@@ -587,7 +587,7 @@ Called by: [setvoltime](volume.c.md#setvoltime), [setvoltime_entry](volume.c.md#
 void setvoltime_entry(AFPObj *, struct vol *, bool)
 ```
 
-Defined at lines 1633 to 1636. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1646 to 1649. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Record a change on a volume, telling whether it changed an entry of the root.
 
@@ -606,7 +606,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.m
 void setvoltime(AFPObj *, struct vol *)
 ```
 
-Defined at lines 1644 to 1647. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1657 to 1660. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Record a change on a volume that leaves the root's entries alone.
 
@@ -624,7 +624,7 @@ Called by: [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_setacl](acls.c.m
 void setvoltime_write(AFPObj *, struct vol *)
 ```
 
-Defined at lines 1656 to 1659. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1669 to 1672. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Record a fork write or length change on a volume, which owes the session's client no free-space attention.
 
@@ -642,7 +642,7 @@ Called by: [fork_modified](fork.c.md#fork_modified)
 int flushvoltime(AFPObj *)
 ```
 
-Defined at lines 1673 to 1690. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1686 to 1703. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Write the root of each open volume whose marked second has passed with a change of that second unwritten.
 
@@ -665,7 +665,7 @@ Mentioned in the documentation of: [markvol](volume.c.md#markvol)
 int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1703 to 1720. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1716 to 1733. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPGetVolParms: return the parameters of an open volume.
 
@@ -688,7 +688,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1739 to 1801. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1752 to 1814. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPSetVolParms: set the backup date of a volume.
 

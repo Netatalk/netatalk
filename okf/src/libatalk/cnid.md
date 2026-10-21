@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/cnid"
-description: "4 files, 76 functions."
+description: "4 files, 89 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/cnid"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 # Files
@@ -21,12 +21,12 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 
 # Calls into
 
-* [libatalk/compat](compat.md): 21 calls
+* [libatalk/compat](compat.md): 22 calls
 * [libatalk/util](util.md): 11 calls
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 40 calls
+* [etc/afpd](../etc/afpd.md): 43 calls
 * [bin/nad](../bin/nad.md): 24 calls
 * [bin/dbd](../bin/dbd.md): 9 calls
 * [etc/spotlight](../etc/spotlight.md): 2 calls
@@ -39,8 +39,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
 * [cnid_sqlite_set_errno](cnid/cnid_sqlite.c.md#cnid_sqlite_set_errno): 11 callers
 * [cnid_mysql_set_errno](cnid/cnid_mysql.c.md#cnid_mysql_set_errno): 10 callers
 * [cnid_resolve](cnid/cnid.c.md#cnid_resolve): 9 callers
+* [cnid_sqlite_stmt_ready](cnid/cnid_sqlite.c.md#cnid_sqlite_stmt_ready): 9 callers
 * [cnid_delete](cnid/cnid.c.md#cnid_delete): 8 callers
-* [cnid_sqlite_stmt_ready](cnid/cnid_sqlite.c.md#cnid_sqlite_stmt_ready): 8 callers
 * [cnid_sqlite_stmt_reset](cnid/cnid_sqlite.c.md#cnid_sqlite_stmt_reset): 8 callers
+* [cnid_mysql_stmt_execute](cnid/cnid_mysql.c.md#cnid_mysql_stmt_execute): 6 callers
 * [cnid_sqlite_execute](cnid/cnid_sqlite.c.md#cnid_sqlite_execute): 6 callers
-* [cnid_add](cnid/cnid.c.md#cnid_add): 5 callers

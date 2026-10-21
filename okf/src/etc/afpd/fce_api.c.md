@@ -5,7 +5,7 @@ description: "File change event API for netatalk."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fce_api.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -222,7 +222,7 @@ Parameters:
 
 Returns: AFP_OK
 
-Calls: [basename_safe](../../libatalk/util/unix.c.md#basename_safe), [fce_handle_coalescation](fce_util.c.md#fce_handle_coalescation), [fce_init_ign_paths](fce_api.c.md#fce_init_ign_paths), [fce_initialize_history](fce_util.c.md#fce_initialize_history), [fce_resolved](fce_api.c.md#fce_resolved), [path_at_or_below](file.c.md#path_at_or_below), [save_close_event](fce_api.c.md#save_close_event), [send_fce_event](fce_api.c.md#send_fce_event)
+Calls: [basename_safe](../../libatalk/util/unix.c.md#basename_safe), [fce_handle_coalescation](fce_util.c.md#fce_handle_coalescation), [fce_init_ign_paths](fce_api.c.md#fce_init_ign_paths), [fce_initialize_history](fce_util.c.md#fce_initialize_history), [fce_resolved](fce_api.c.md#fce_resolved), [path_at_or_below](../../libatalk/util/unix.c.md#path_at_or_below), [save_close_event](fce_api.c.md#save_close_event), [send_fce_event](fce_api.c.md#send_fce_event)
 
 Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_logout](auth.c.md#afp_logout), [login](auth.c.md#login), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork)
 
