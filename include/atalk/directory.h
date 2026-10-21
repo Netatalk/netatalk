@@ -102,6 +102,8 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
      * INVARIANT: dcache_rfork_buf != NULL implies dcache_rlen >= 0. */
     void        *dcache_rfork_buf;   /*!< malloc'd rfork data, or NULL */
     qnode_t     *rfork_lru_node;     /*!< position in rfork LRU list, or NULL */
+    char        *dcache_eanames;     /*!< EA names as listed, or NULL */
+    char        *dcache_eavals;      /*!< EA value records read, or NULL */
 
     time_t      d_ctime;             /*!< inode ctime,
                                       * used and modified by reenumeration */
@@ -127,10 +129,14 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
     mode_t      dcache_mode;         /*!< st_mode: file type + permissions */
     uid_t       dcache_uid;          /*!< st_uid: owner user ID */
     gid_t       dcache_gid;          /*!< st_gid: owner group ID */
+    uint32_t    dcache_ea_ctime_nsec; /*!< nanoseconds of the ctime the EA
+                                       * cache was filled under */
 
     /* Fields requiring 2-byte alignment */
     uint16_t    d_vid;               /*!< only needed in the dircache, because
                                       * we put all directories in one cache. */
+    uint16_t    dcache_ealen;        /*!< bytes in dcache_eanames */
+    uint16_t    dcache_eavlen;       /*!< bytes in dcache_eavals */
 
     /* === 1-byte + byte arrays (no alignment requirement, packed densely) === */
     uint8_t

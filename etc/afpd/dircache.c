@@ -735,6 +735,9 @@ static void arc_evict_to_ghost(struct dir *victim, q_t *src, q_t *dst,
         AFP_PANIC("arc_replace ghost migration");
     }
 
+    /* a ghost keeps its stat and metadata; a ghost hit is a miss for
+     * the EA payload */
+    ea_cache_free(victim);
     victim->d_flags |= DIRF_ARC_GHOST;
     victim->arc_list = (uint8_t)dst_list;
 
@@ -2629,6 +2632,12 @@ void log_dircache_stat(void)
         "dircache statistics (AD): (user: %s) hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
         username, ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
         ad_hit_ratio);
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (EA): (user: %s) hits: %llu, misses: %llu, "
+        "stored: %llu, oversize: %llu, dropped: %llu, absent: %llu",
+        username, ea_cache_stat.hits, ea_cache_stat.misses,
+        ea_cache_stat.stored, ea_cache_stat.oversize, ea_cache_stat.dropped,
+        ea_cache_stat.absent);
     offcnt_log_stats(username);
 
     /* Tier 2: Resource Fork data cache statistics — only when enabled */

@@ -22,12 +22,16 @@
 #endif
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 
 #include <atalk/adouble.h>
+#include <atalk/compat.h>
 #include <atalk/directory.h>
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
@@ -37,6 +41,8 @@
 
 #include "dircache.h"
 #include "directory.h"
+#include "file.h"
+#include "fork.h"
 
 #include "ad_cache.h"
 #include "unix.h"
@@ -516,4 +522,283 @@ int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
 
     rfork_lru_count++;
     return 0;
+}
+
+/******************************************************************************
+ * Tier 3: EA names and values per entry
+ ******************************************************************************/
+
+/* names cached per entry; Finder's quarantine, tags, where-froms and
+ * last-used stamps on one file total a few hundred bytes */
+#define EA_CACHE_NAMES 1024
+
+/* value records cached per entry; a value that does not fit is read
+ * every time */
+#define EA_CACHE_VALUES 2048
+
+struct ea_cache_stats ea_cache_stat;
+
+/*!
+ * @brief The entry whose EA cache applies to this request, its stat
+ *        brought up to the request's fresh stat, or NULL
+ *
+ * cname() has stat'ed a file; a directory addressed by its DID is stat'ed
+ * here, past the bypass tests, so a request the cache does not serve costs
+ * no stat. A get names its attribute, a list passes NULL:
+ * the names the list filter hides are afpd's own, written behind the
+ * entry by fork writes and FinderInfo stores, so a request under one
+ * takes no entry. Shared volumes never cache, so their requests skip the
+ * lookup. A symlink's own EAs and its target's differ, so a symlink is
+ * never cached; with follow symlinks = yes the stat cannot tell one, so
+ * kXAttrNoFollow requests bypass the cache there. An entry whose inode is
+ * not the object's is left to validation. A ctime change the stat shows
+ * below the second, where the filesystem keeps nanoseconds, drops the
+ * cache that dir_stat_refresh() cannot see. When of_statdir()'s EACCES
+ * fallback has moved the cwd to the parent, from this stat or from the list
+ * handler's own, u_name takes the directory's own name, whatever that stat
+ * found, so the backend and the cache address it from there on every
+ * volume; the volume root has no parent directory and keeps ".".
+ *
+ * @param[in]     vol    volume of the request
+ * @param[in,out] path   the request's path as cname() left it; a
+ *                       directory's stat is taken here, a file's d_cached
+ *                       memo updated
+ * @param[in]     oflag  O_NOFOLLOW for a kXAttrNoFollow request, else 0
+ * @param[in]     name   attribute name of a get, NULL for a names list
+ * @returns the entry, or NULL for a request the cache does not serve
+ */
+struct dir *ea_cache_entry(struct vol *vol, struct path *path, int oflag,
+                           const char *name)
+{
+    struct dir *entry;
+    uint32_t nsec;
+    bool serve = !((vol->v_flags & AFPVOL_MULTIPROTO)
+                   || ((oflag & O_NOFOLLOW)
+                       && (vol->v_flags & AFPVOL_FOLLOWSYM))
+                   || (name && (!(NOT_NETATALK_EA(name))
+                                || sys_ea_protected(name))));
+
+    if (serve && !path->st_valid) {
+        of_statdir(vol, path);
+    }
+
+    if (path_isadir(path) && *path->m_name == '\0' && curdir != path->d_dir
+            && path->d_dir->d_did != DIRDID_ROOT) {
+        path->u_name = cfrombstr(path->d_dir->d_u_name);
+    }
+
+    if (!serve || path->st_errno != 0) {
+        return NULL;
+    }
+
+    entry = path_entry(vol, curdir, path);
+
+    if (entry == NULL || S_ISLNK(path->st.st_mode)
+            || entry->dcache_ino != path->st.st_ino) {
+        return NULL;
+    }
+
+    dir_stat_refresh(vol, entry, &path->st);
+    nsec = (uint32_t)atalk_stat_ctime_timespec(&path->st).tv_nsec;
+
+    if (entry->dcache_ea_ctime_nsec != nsec) {
+        ea_cache_free(entry);
+        entry->dcache_ea_ctime_nsec = nsec;
+    }
+
+    return entry;
+}
+
+/*!
+ * @brief The cached names, or NULL when the entry has none cached
+ *
+ * @param[in]  entry  dircache entry of the object
+ * @param[out] len    bytes in the names on a hit
+ * @returns the names as the backend listed them, or NULL
+ */
+const char *ea_cache_names(struct dir *entry, size_t *len)
+{
+    if (entry->dcache_eanames == NULL) {
+        ea_cache_stat.misses++;
+        return NULL;
+    }
+
+    ea_cache_stat.hits++;
+    *len = entry->dcache_ealen;
+    return entry->dcache_eanames;
+}
+
+/*!
+ * @brief Cache the object's EA names, after ea_cache_names() found none
+ *
+ * One byte over len, so an object without EAs holds a pointer too: the
+ * pointer is what says the names are valid.
+ *
+ * @param[in,out] entry  dircache entry of the object
+ * @param[in]     names  the names as the backend listed them
+ * @param[in]     len    bytes in names; over EA_CACHE_NAMES nothing is kept
+ */
+void ea_cache_store_names(struct dir *entry, const char *names, size_t len)
+{
+    char *copy;
+
+    if (len > EA_CACHE_NAMES) {
+        ea_cache_stat.oversize++;
+        return;
+    }
+
+    copy = malloc(len + 1);
+
+    if (copy == NULL) {
+        return;
+    }
+
+    memcpy(copy, names, len);
+    entry->dcache_eanames = copy;
+    entry->dcache_ealen = (uint16_t)len;
+    ea_cache_stat.stored++;
+}
+
+/*!
+ * @brief Drop the entry's EA cache
+ *
+ * @param[in,out] entry  dircache entry whose EA names and values are released
+ */
+void ea_cache_free(struct dir *entry)
+{
+    if (entry->dcache_eanames || entry->dcache_eavals) {
+        ea_cache_stat.dropped++;
+    }
+
+    free(entry->dcache_eanames);
+    free(entry->dcache_eavals);
+    entry->dcache_eanames = NULL;
+    entry->dcache_eavals = NULL;
+    entry->dcache_ealen = 0;
+    entry->dcache_eavlen = 0;
+}
+
+/*!
+ * @brief The cached value of name, or NULL when it is not cached
+ *
+ * @param[in]  entry  dircache entry of the object
+ * @param[in]  name   attribute name in the unix charset
+ * @param[out] len    bytes in the value on a hit
+ * @returns the value as the backend delivered it, or NULL
+ */
+const char *ea_cache_value(struct dir *entry, const char *name, size_t *len)
+{
+    const char *rec;
+    const char *end;
+    size_t namelen = strlen(name);
+
+    if (entry->dcache_eavlen == 0) {
+        ea_cache_stat.misses++;
+        return NULL;
+    }
+
+    rec = entry->dcache_eavals;
+    end = rec + entry->dcache_eavlen;
+
+    while (rec < end) {
+        uint8_t rnamelen = (uint8_t)rec[0];
+        uint16_t vallen;
+        memcpy(&vallen, rec + 1, sizeof(vallen));
+
+        if (rnamelen == namelen && memcmp(rec + 3, name, namelen) == 0) {
+            ea_cache_stat.hits++;
+            *len = vallen;
+            return rec + 3 + namelen;
+        }
+
+        rec += 3 + rnamelen + vallen;
+    }
+
+    ea_cache_stat.misses++;
+    return NULL;
+}
+
+/*!
+ * @brief Cache one value the object was read for
+ *
+ * @param[in,out] entry  dircache entry of the object
+ * @param[in]     name   attribute name, at most UINT8_MAX bytes
+ * @param[in]     value  the value as the backend delivered it
+ * @param[in]     len    bytes in value; a record that does not fit within
+ *                       EA_CACHE_VALUES is not kept
+ */
+void ea_cache_store_value(struct dir *entry, const char *name,
+                          const char *value, size_t len)
+{
+    size_t namelen = strlen(name);
+    size_t reclen = 3 + namelen + len;
+    uint16_t vallen;
+    char *vals;
+    char *rec;
+
+    if (namelen > UINT8_MAX || len > EA_CACHE_VALUES
+            || entry->dcache_eavlen + reclen > EA_CACHE_VALUES) {
+        ea_cache_stat.oversize++;
+        return;
+    }
+
+    vals = realloc(entry->dcache_eavals, entry->dcache_eavlen + reclen);
+
+    if (vals == NULL) {
+        return;
+    }
+
+    rec = vals + entry->dcache_eavlen;
+    vallen = (uint16_t)len;
+    rec[0] = (char)namelen;
+    memcpy(rec + 1, &vallen, sizeof(vallen));
+    memcpy(rec + 3, name, namelen);
+    memcpy(rec + 3 + namelen, value, len);
+    entry->dcache_eavals = vals;
+    entry->dcache_eavlen += reclen;
+    ea_cache_stat.stored++;
+}
+
+/*!
+ * @brief Does the entry's cached list prove an attribute missing?
+ *
+ * The list holds the names as the client saw them, which an ASCII name
+ * matches after its conversion, case apart, since some attribute stores
+ * fold it; any other name, and an uncached list, leave the answer to the
+ * backend.
+ *
+ * @param[in] entry  dircache entry of the object
+ * @param[in] name   attribute name in the unix charset
+ * @returns true when the list is cached and lacks the name
+ */
+bool ea_cache_absent(const struct dir *entry, const char *name)
+{
+    const char *p = entry->dcache_eanames;
+    const char *end;
+    size_t len = strlen(name);
+
+    if (p == NULL) {
+        return false;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        if ((unsigned char)name[i] >= 0x80) {
+            return false;
+        }
+    }
+
+    end = p + entry->dcache_ealen;
+
+    while (p < end) {
+        size_t n = strnlen(p, (size_t)(end - p));
+
+        if (n == len && strncasecmp(p, name, len) == 0) {
+            return false;
+        }
+
+        p += n + 1;
+    }
+
+    ea_cache_stat.absent++;
+    return true;
 }

@@ -116,6 +116,7 @@ STATIC void test432()
     uint32_t attrlen;
     char *attrdata = "1234567890";
     size_t attrdata_len = 10;
+    int remerror = Conn->afp_version >= 34 ? AFPERR_NOITEM : AFPERR_MISC;
     dsi = &Conn->dsi;
     ENTER_TEST
 
@@ -135,6 +136,23 @@ STATIC void test432()
     }
 
     FAIL(FPSetExtAttr(Conn, vol, DIRDID_ROOT, 2, file, attr_name, attrdata))
+    /* a name the file lacks: a zero size word on the size and content paths */
+    FAIL(htonl(remerror) != FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 0, file,
+                                         "test432_missing"))
+    memcpy(&attrlen, dsi->data + 2, 4);
+
+    if (attrlen != 0) {
+        test_failed();
+    }
+
+    FAIL(htonl(remerror) != FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 4096, file,
+                                         "test432_missing"))
+    memcpy(&attrlen, dsi->data + 2, 4);
+
+    if (attrlen != 0) {
+        test_failed();
+    }
+
     /*
      * The xattr we set is 10 bytes large. The req_count must be
      * at least 10 bytes + 6 bytes. The 6 bytes are the AFP reply
@@ -153,6 +171,13 @@ STATIC void test432()
                                              attr_name));
     FAIL(htonl(AFPERR_PARAM) != FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 15, file,
                                              attr_name));
+    /* the refusal carries the size the client needs */
+    memcpy(&attrlen, dsi->data + 2, 4);
+
+    if (ntohl(attrlen) != attrdata_len) {
+        test_failed();
+    }
+
     FAIL(FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 16, file, attr_name));
     FAIL(FPGetExtAttr(Conn, vol, DIRDID_ROOT, 0, 17, file, attr_name));
     memcpy(&attrlen, dsi->data + 2, 4);

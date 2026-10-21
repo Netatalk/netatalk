@@ -27,6 +27,7 @@ enum test_capability {
     TEST_CAP_EA_SYS,         /* the test filesystem supports user xattrs (ea=sys) */
     TEST_CAP_SOCKET_SPLICE,  /* splice() from an AF_UNIX socket into a pipe */
     TEST_CAP_ACL_SET,        /* the test filesystem stores an ACL set on it */
+    TEST_CAP_XATTR_WATCH,    /* the preload counts libatalk's xattr reads */
 };
 
 int test_capability(enum test_capability cap, const struct vol *vol);

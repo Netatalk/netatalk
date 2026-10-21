@@ -564,7 +564,10 @@ dircache size = *number* (default: *65536*) **(G)**
 directory or, optionally, a file. Range: 1024 (1K) to 1048576 (1M). A
 value below the range applies the default, and one above it is capped,
 each with a warning. Raising the value improves the hit ratio and uses
-more memory.
+more memory. Each entry can also hold up to 1 KiB of extended attribute
+names and 2 KiB of attribute values once a client reads them. That is up
+to 3 KiB per entry, 192 MiB at the default size and 3 GiB at the maximum.
+The bound needs every cached file to carry that much.
 
 dircache validation freq = *number* (default: *100*) **(G)**
 
@@ -587,7 +590,8 @@ Replacement Cache) tunes itself, with 10-50% better hit ratios and 2×
 better on sequential scans. ARC can use up to 2× the memory of **lru**:
 it may keep evicted entries as ghosts for
 instant re-promotion and drops cold ghosts. Example: a 64K-entry cache
-uses ~12 MB, plus up to ~12 MB of ghosts under **arc**.
+uses ~15 MB for its entries before their names, plus up to ~15 MB of
+ghosts under **arc**.
 >
 > **Recommendation**: Use **lru** for memory-constrained systems. Raise
 **dircache size** (max entries) to improve the hit ratio.
@@ -1315,9 +1319,9 @@ server by scripts, cron jobs, or shell users.
 >
 > With *yes*, the server defaults change to the values safe concurrent
 access requires. **strict locking** defaults to *yes*, and **dircache
-validation freq** defaults to *1*. The resource fork cache excludes the
-volume, and on Solaris and illumos an explicit **solaris share
-reservations = no** logs a warning.
+validation freq** defaults to *1*. The resource fork and extended
+attribute caches exclude the volume, and on Solaris and illumos an
+explicit **solaris share reservations = no** logs a warning.
 Explicit settings always take precedence. Every explicit setting that
 weakens coherency (all processes seeing the same file state) logs a
 verbose warning describing the risk.
@@ -1329,9 +1333,9 @@ multi protocol volume uses a different ea format.
 > **strict locking** and **dircache validation freq** are server-wide
 settings, so one multi protocol volume applies them to every volume. A
 volume that sets **multi protocol = no** still gets them. Only the
-exclusion from the resource fork cache is per-volume. Volumes load with
-the configuration present at startup, so a change to this option takes
-effect for sessions that connect afterwards.
+exclusions from the resource fork and extended attribute caches are
+per-volume. Volumes load with the configuration present at startup, so a
+change to this option takes effect for sessions that connect afterwards.
 >
 > With *no* (the default), the server assumes it is the only process
 writing its volumes and serves them from its caches for maximum

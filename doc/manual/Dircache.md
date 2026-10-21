@@ -1,7 +1,8 @@
 # Directory Cache Tuning
 
 The dircache (directory cache) in Netatalk is a sophisticated multi-layer cache for files and directories,
-including filesystem stat information, AppleDouble metadata, and resource forks.
+including filesystem stat information, AppleDouble metadata, resource forks,
+and extended attribute names and values.
 
 Once populated during an initial directory enumeration,
 subsequent operations return cached data directly from memory.
@@ -36,7 +37,7 @@ dircache size = *number* **(G)**
 
 Maximum number of entries in the cache.
 The given value is rounded up to the nearest power of 2.
-Each entry takes about 192 bytes (on 64-bit systems),
+Each entry takes about 232 bytes (on 64-bit systems),
 and each **afpd** child process for every connected user has its own cache.
 Consider the number of users when configuring *dircache size*.
 
@@ -95,15 +96,15 @@ so ARC should always perform at least as well as LRU in edge cases and better in
 **Memory:** ARC can use up to twice the memory of LRU:
 it may retain up to *c* evicted entries as ghosts alongside *c* cached entries
 (where *c* is *dircache size*).
-Each entry is ~192 bytes on 64-bit systems.
+Each entry is ~232 bytes on 64-bit systems.
 Even so, ARC still outperforms an LRU cache of the same total memory.
 
 | Mode | Entries tracked | Memory (1000-entry cache) |
 | ---- | --------------- | ------------------------- |
-| LRU  | 1000 cached     | ~192 KB                   |
-| ARC  | 1000 cached + up to 1000 ghosts | ~384 KB   |
+| LRU  | 1000 cached     | ~232 KB                   |
+| ARC  | 1000 cached + up to 1000 ghosts | ~464 KB   |
 
-For the default *dircache size* of 65536: LRU ≈ 12 MB, ARC up to ≈ 24 MB per connected user.
+For the default *dircache size* of 65536: LRU ≈ 15 MB, ARC up to ≈ 30 MB per connected user.
 
 **Recommendation**: Use **lru** for memory-constrained systems.
 
@@ -114,7 +115,8 @@ Default: arc.
 Netatalk can optionally cache resource fork data in a tier-2 dircache layer.
 The cache covers Mac OS resource forks in whichever backend the volume's
 **ea** setting stores them — AppleDouble *._* sidecar files or filesystem
-extended attributes. Other extended attributes are not cached.
+extended attributes. Other extended attributes have a cache of their own,
+described below.
 This avoids repeated storage I/O when AFP clients enumerate directories
 with FPGetFileDirParams or FPEnumerate and request resource fork data.
 Resource forks store many macOS data structures such as folder cover art (icns data).
@@ -161,6 +163,29 @@ Entries are evicted in LRU/ARC order when the budget is exceeded.
     dircache size = 262144
     dircache validation freq = 100
     dircache mode = arc
+
+## Extended Attribute Caching
+
+Each dircache entry can also hold the extended attribute names of its file or folder,
+and the attribute values a client has read.
+FPListExtAttrs and FPGetExtAttr then answer from memory,
+and **afpd** answers a request for an ASCII attribute name the list lacks without a read.
+The cache has no option: *dircache size* bounds it.
+**afpd** excludes volumes with **multi protocol = yes**,
+because another process can change attributes behind its back.
+
+An entry holds at most 1 KiB of names and 2 KiB of values,
+so the cache adds at most 3 KiB per entry.
+That is about 192 MiB at the default *dircache size* and 3 GiB at the maximum,
+if every cached file carries that much.
+The attributes macOS writes to a downloaded file total under 400 bytes.
+A cache of the maximum size whose entries average 1 KiB of attributes holds 1 GiB of them.
+
+**afpd** drops the cached names and values when the file's ctime or inode changes.
+It also drops them when an AFP client writes an attribute through this server,
+and when another **afpd** process reports a change.
+The session's *dircache statistics (EA)* log line reports hits, misses, stores,
+oversize entries, drops, and the names a cached list proved missing.
 
 **Note**: Monitor dircache effectiveness by checking Netatalk log files
 for "dircache statistics:" lines when **afpd** shuts down gracefully

@@ -122,5 +122,8 @@ extern int flushvol(AFPObj *obj, uint16_t vid);
 extern int setforkparams(AFPObj *obj, uint16_t refnum, uint32_t len);
 extern int getforkparams(AFPObj *obj, uint16_t refnum, uint16_t bitmap);
 extern int getvolparams(AFPObj *obj, uint16_t vid, uint16_t bitmap);
+extern int listextattr(AFPObj *obj, uint16_t vid, cnid_t did,
+                       const char *name, uint32_t maxreply, char *reply,
+                       size_t *replylen);
 
 #endif  /* AFPFUNC_HELPERS */

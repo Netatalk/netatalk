@@ -65,6 +65,29 @@ static int sys_ea_attrname_invalid(const char *func, const char *attruname)
 }
 
 /*!
+ * @brief Is attruname a name the servers keep to themselves?
+ *
+ * @param[in] attruname  attribute name in the unix charset
+ * @returns 1 for the AppleDouble metadata attribute of adouble = ea and, on
+ *          Solaris, the NFS and SMB servers' view and SUNWsmb attributes;
+ *          0 otherwise
+ */
+int sys_ea_protected(const char *attruname)
+{
+#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
+
+    /* special attributes set by the NFS and SMB servers */
+    if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE)
+            || !strncmp(attruname, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN)) {
+        return 1;
+    }
+
+#endif
+    /* the AppleDouble metadata of adouble = ea */
+    return !strncmp(attruname, AD_EA_META, AD_EA_META_LEN);
+}
+
+/*!
  * @brief get size of a native EA
  *
  * @param[in] vol          current volume
@@ -87,6 +110,10 @@ int sys_get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
 
     if (sys_ea_attrname_invalid("sys_get_easize", attruname)) {
         return AFPERR_PARAM;
+    }
+
+    if (sys_ea_protected(attruname)) {
+        return AFPERR_ACCESS;
     }
 
     LOG(log_debug7, logtype_afpd, "sys_getextattr_size(%s): attribute: \"%s\"",
@@ -118,8 +145,14 @@ int sys_get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 "sys_getextattr_size(%s): symlink with kXAttrNoFollow", uname);
             return AFPERR_MISC;
 
-        case ENOATTR:
         case ENOENT:
+#ifndef SOLARIS
+            /* the object is gone; Solaris's attribute API reports a missing
+             * attribute as ENOENT too */
+            return AFPERR_NOOBJ;
+#endif
+
+        case ENOATTR:
             if (vol->v_obj->afp_version >= 34) {
                 return AFPERR_NOITEM;
             }
@@ -132,24 +165,17 @@ int sys_get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
         }
     }
 
-    if (ret > MAX_EA_SIZE) {
-        ret = MAX_EA_SIZE;
-    }
-
     if (vol->v_flags & AFPVOL_EA_SAMBA) {
         /* What can we do about xattrs that are 1 byte large? */
         if (ret < 2) {
-            memset(rbuf, 0, 4);
-            *rbuflen += 4;
-
-            if (vol->v_obj->afp_version >= 34) {
-                return AFPERR_NOITEM;
-            }
-
-            return AFPERR_MISC;
+            return ea_absent(vol, rbuf, rbuflen);
         }
 
         ret--;
+    }
+
+    if (ret > MAX_EA_SIZE) {
+        ret = MAX_EA_SIZE;
     }
 
     /* Start building reply packet */
@@ -189,22 +215,7 @@ int sys_get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
         return AFPERR_PARAM;
     }
 
-#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
-
-    /* Protect special attributes set by NFS server */
-    if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE)) {
-        return AFPERR_ACCESS;
-    }
-
-    /* Protect special attributes set by SMB server */
-    if (!strncmp(attruname, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN)) {
-        return AFPERR_ACCESS;
-    }
-
-#endif
-
-    /* Protect special attributes set by Netatalk server */
-    if (!strncmp(attruname, AD_EA_META, AD_EA_META_LEN)) {
+    if (sys_ea_protected(attruname)) {
         return AFPERR_ACCESS;
     }
 
@@ -250,6 +261,14 @@ int sys_get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
     /* PBaranski fix */
 
     if (ret == -1) {
+        if (errno == ERANGE) {
+            /* the value exceeds maxreply: the size word tells the client
+             * what it needs; a size query that fails answers for itself */
+            int err = sys_get_easize(vol, rbuf, rbuflen, uname, oflag,
+                                     attruname, fd);
+            return err == AFP_OK ? AFPERR_PARAM : err;
+        }
+
         memset(rbuf, 0, 4);
         *rbuflen += 4;
 
@@ -260,15 +279,19 @@ int sys_get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 "sys_getextattr_content(%s): symlink with kXAttrNoFollow", uname);
             return AFPERR_MISC;
 
+        case ENOENT:
+#ifndef SOLARIS
+            /* the object is gone; Solaris's attribute API reports a missing
+             * attribute as ENOENT too */
+            return AFPERR_NOOBJ;
+#endif
+
         case ENOATTR:
             if (vol->v_obj->afp_version >= 34) {
                 return AFPERR_NOITEM;
             }
 
             return AFPERR_MISC;
-
-        case ERANGE:
-            return AFPERR_PARAM;
 
         default:
             LOG(log_debug, logtype_afpd, "sys_getextattr_content(%s): error: %s", attruname,
@@ -280,14 +303,7 @@ int sys_get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
     if (vol->v_flags & AFPVOL_EA_SAMBA) {
         /* What can we do about xattrs that are 1 byte large? */
         if (ret < 2) {
-            memset(rbuf, 0, 4);
-            *rbuflen += 4;
-
-            if (vol->v_obj->afp_version >= 34) {
-                return AFPERR_NOITEM;
-            }
-
-            return AFPERR_MISC;
+            return ea_absent(vol, rbuf, rbuflen);
         }
 
         ret--;
@@ -542,22 +558,7 @@ int sys_remove_ea(const struct vol *vol _U_, const char *uname,
         return AFPERR_PARAM;
     }
 
-#if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
-
-    /* Protect special attributes set by NFS server */
-    if (!strcmp(attruname, VIEW_READONLY) || !strcmp(attruname, VIEW_READWRITE)) {
-        return AFPERR_ACCESS;
-    }
-
-    /* Protect special attributes set by SMB server */
-    if (!strncmp(attruname, SMB_ATTR_PREFIX, SMB_ATTR_PREFIX_LEN)) {
-        return AFPERR_ACCESS;
-    }
-
-#endif
-
-    /* Protect special attributes set by Netatalk server */
-    if (!strncmp(attruname, AD_EA_META, AD_EA_META_LEN)) {
+    if (sys_ea_protected(attruname)) {
         return AFPERR_ACCESS;
     }
 

@@ -966,6 +966,22 @@ exit:
  ************************************************************************************/
 
 /*!
+ * @brief The reply for an attribute the object lacks: a zero size word
+ *
+ * @param[in]     vol      volume of the object, whose session's AFP version
+ *                         picks the error
+ * @param[out]    rbuf     reply buffer, receives the four zero bytes
+ * @param[in,out] rbuflen  reply length, grows by 4
+ * @returns AFPERR_NOITEM on an AFP 3.4 session, AFPERR_MISC before
+ */
+int ea_absent(const struct vol *vol, char *rbuf, size_t *rbuflen)
+{
+    memset(rbuf, 0, 4);
+    *rbuflen += 4;
+    return vol->v_obj->afp_version >= 34 ? AFPERR_NOITEM : AFPERR_MISC;
+}
+
+/*!
  * @brief get size of an EA
  *
  * @param[in]   vol          current volume
@@ -1000,14 +1016,7 @@ int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 uname);
         }
 
-        memset(rbuf, 0, 4);
-        *rbuflen += 4;
-
-        if (vol->v_obj->afp_version >= 34) {
-            ret = AFPERR_NOITEM;
-        }
-
-        return ret;
+        return ea_absent(vol, rbuf, rbuflen);
     }
 
     while (count < ea.ea_count) {
@@ -1023,6 +1032,10 @@ int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
         }
 
         count++;
+    }
+
+    if (count == ea.ea_count) {
+        ret = ea_absent(vol, rbuf, rbuflen);
     }
 
     if ((ea_close(&ea)) != 0) {
@@ -1072,14 +1085,7 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
             LOG(log_error, logtype_afpd, "get_eacontent('%s'): ea_open error", uname);
         }
 
-        memset(rbuf, 0, 4);
-        *rbuflen += 4;
-
-        if (vol->v_obj->afp_version >= 34) {
-            ret = AFPERR_NOITEM;
-        }
-
-        return ret;
+        return ea_absent(vol, rbuf, rbuflen);
     }
 
     while (count < ea.ea_count) {
@@ -1116,26 +1122,26 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 maxreply = MAX_EA_SIZE;
             }
 
-            if (maxreply < (*ea.ea_entries)[count].ea_size) {
+            /* the size word opens the reply: the value follows it, or
+             * kFPParamErr tells the client the maxreply it needs */
+            toread = (*ea.ea_entries)[count].ea_size;
+            uint32 = htonl(toread);
+            memcpy(rbuf, &uint32, 4);
+            rbuf += 4;
+            *rbuflen += 4;
+
+            if (maxreply < toread) {
                 /*
                  * maxreply must be at least size of xattr. Return error instead of
                  * truncating data.
                  */
-                memset(rbuf, 0, 4);
-                *rbuflen += 4;
                 close(fd);
                 ret = AFPERR_PARAM;
                 break;
             }
 
-            toread = (*ea.ea_entries)[count].ea_size;
             LOG(log_debug, logtype_afpd, "get_eacontent('%s'): sending %u bytes", attruname,
                 toread);
-            /* Put length of EA data in reply buffer */
-            uint32 = htonl(toread);
-            memcpy(rbuf, &uint32, 4);
-            rbuf += 4;
-            *rbuflen += 4;
 
             if (read(fd, rbuf, toread) != (ssize_t)toread) {
                 LOG(log_error, logtype_afpd, "get_eacontent('%s/%s'): short read", uname,
@@ -1152,6 +1158,10 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
         }
 
         count++;
+    }
+
+    if (count == ea.ea_count) {
+        ret = ea_absent(vol, rbuf, rbuflen);
     }
 
     if ((ea_close(&ea)) != 0) {

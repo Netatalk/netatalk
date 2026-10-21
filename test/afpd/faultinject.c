@@ -118,6 +118,9 @@ int faultinject_open_works(const char *scratch_path)
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
+#ifdef __linux__
+#include <sys/xattr.h>
+#endif
 #include <time.h>
 #include <unistd.h>
 
@@ -1131,5 +1134,92 @@ char *getcwd(char *buf, size_t size)
 
     return real_getcwd(buf, size);
 }
+
+#ifdef __linux__
+typedef ssize_t (*getxattr_fn)(const char *, const char *, void *, size_t);
+typedef ssize_t (*fgetxattr_fn)(int, const char *, void *, size_t);
+typedef ssize_t (*listxattr_fn)(const char *, char *, size_t);
+
+static getxattr_fn  real_getxattr;
+static getxattr_fn  real_lgetxattr;
+static fgetxattr_fn real_fgetxattr;
+static listxattr_fn real_listxattr;
+static listxattr_fn real_llistxattr;
+
+/*!
+ * @brief Count one xattr read libatalk issued, while a test watches
+ */
+static void xattr_watched(int *counter)
+{
+    if (fi.xattr_watch) {
+        (*counter)++;
+    }
+}
+
+/*!
+ * @brief getxattr(2), counted
+ */
+ssize_t getxattr(const char *path, const char *name, void *value, size_t size)
+{
+    if (!real_getxattr) {
+        real_getxattr = (getxattr_fn)dlsym(RTLD_NEXT, "getxattr");
+    }
+
+    xattr_watched(&fi.getxattr_calls);
+    return real_getxattr(path, name, value, size);
+}
+
+/*!
+ * @brief lgetxattr(2), counted with getxattr
+ */
+ssize_t lgetxattr(const char *path, const char *name, void *value, size_t size)
+{
+    if (!real_lgetxattr) {
+        real_lgetxattr = (getxattr_fn)dlsym(RTLD_NEXT, "lgetxattr");
+    }
+
+    xattr_watched(&fi.getxattr_calls);
+    return real_lgetxattr(path, name, value, size);
+}
+
+/*!
+ * @brief fgetxattr(2), counted with getxattr
+ */
+ssize_t fgetxattr(int fd, const char *name, void *value, size_t size)
+{
+    if (!real_fgetxattr) {
+        real_fgetxattr = (fgetxattr_fn)dlsym(RTLD_NEXT, "fgetxattr");
+    }
+
+    xattr_watched(&fi.getxattr_calls);
+    return real_fgetxattr(fd, name, value, size);
+}
+
+/*!
+ * @brief listxattr(2), counted
+ */
+ssize_t listxattr(const char *path, char *list, size_t size)
+{
+    if (!real_listxattr) {
+        real_listxattr = (listxattr_fn)dlsym(RTLD_NEXT, "listxattr");
+    }
+
+    xattr_watched(&fi.listxattr_calls);
+    return real_listxattr(path, list, size);
+}
+
+/*!
+ * @brief llistxattr(2), counted with listxattr
+ */
+ssize_t llistxattr(const char *path, char *list, size_t size)
+{
+    if (!real_llistxattr) {
+        real_llistxattr = (listxattr_fn)dlsym(RTLD_NEXT, "llistxattr");
+    }
+
+    xattr_watched(&fi.listxattr_calls);
+    return real_llistxattr(path, list, size);
+}
+#endif /* __linux__ */
 
 #endif /* FAULTINJECT_PRELOAD */

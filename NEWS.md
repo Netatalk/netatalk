@@ -93,6 +93,16 @@ Changes in 4.7.0
   dataset enters folders 4 to 5 times as fast. With 'convert appledouble =
   yes', a listing attempts the conversion only where AppleDouble v2
   metadata can still be or a name is hex-encoded, GitHub #3421
+* UPD: afpd: Extended attribute names and the values a client has read are
+  kept in the object's dircache entry, so the size probe and the fetch, and
+  every later list or get of the object, read the backend once, and a
+  request for an attribute the listed names lack is answered without a
+  read; volumes with `multi protocol = yes` are excluded, and a `dircache
+  statistics (EA)` line is logged at session close. FPGetExtAttr answers
+  alike on both EA backends: a value over MaxReplySize is refused with its
+  size, a missing attribute is `kFPItemNotFound` on AFP 3.4 sessions, on
+  the size and the content path, and a file that does not exist is
+  `kFPObjectNotFound` on every EA request, GitHub #3422
 
 Changes in 4.6.1
 ----------------

@@ -68,6 +68,7 @@
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
 #include "subtests_enumerate.h"
+#include "subtests_extattr.h"
 #include "subtests_lock.h"
 #include "subtests_offcnt.h"
 #include "subtests_pfd.h"
@@ -3992,6 +3993,69 @@ int main(int argc, char *argv[])
                      "movecwd: a stale held root is entered by its path");
     TEST_int_or_skip(utest_enumerate_long_name_skipped(&obj, vid), 0,
                      "enumerate: names over 255 bytes are left out");
+    TEST_int_or_skip(volsys ? utest_ea_param_reports_size(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a value over maxreply is refused with its size");
+    TEST_int_or_skip(volsys ? utest_ea_protected_name_refused(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a protected name's size probe is refused");
+    TEST_int_or_skip(volsys ? utest_ea_samba_size_matches(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: ea = samba probes the size the fetch delivers");
+    TEST_int_or_skip(volsys ? utest_ea_missing_name_absent(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a missing name is absent on both paths");
+    TEST_int_or_skip(volsys ? utest_ea_bad_name_refused(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: an empty or non-UTF-8 name is refused");
+    TEST_int_or_skip(volsys ? utest_ea_missing_object_noobj(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a missing object is not found on both paths");
+    TEST_int_or_skip(volsys ? utest_ea_names_cached(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: two lists of a file read its EAs once");
+    TEST_int_or_skip(volsys ? utest_ea_names_follow_writes(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: cached names follow EA writes");
+    TEST_int_or_skip(volsys ? utest_ea_names_subsecond_write(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a same-second outside write drops cached names");
+    TEST_int_or_skip(volsys ? utest_ea_names_tier_lifecycle(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: cached names follow the entry's AD tier");
+    TEST_int_or_skip(volsys ? utest_ea_names_follow_access(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: FPAccess does not hide a folder's EA change");
+    TEST_int_or_skip(volsys ? utest_ea_refused_write_quiet(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a refused EA write hints no sibling");
+    TEST_int_or_skip(volsys ? utest_ea_write_closed_dir(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: an EA write on a closed folder hits its entry");
+    TEST_int_or_skip(volsys ? utest_ea_values_cached(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: one read serves the probe and later fetches");
+    TEST_int_or_skip(volsys ? utest_ea_values_follow_writes(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: cached values follow EA writes");
+    TEST_int_or_skip(volsys ? utest_ea_cache_counted(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: the statistics count stores, hits and drops");
+    TEST_int_or_skip(volsys ? utest_ea_values_cap(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a value over the cap is read every time");
+    TEST_int_or_skip(volsys ? utest_ea_hidden_name_uncached(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a name the list hides is read every time");
+    TEST_int_or_skip(volsys ? utest_ea_oversize_value_refused(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a value over MAX_EA_SIZE is served as the cap");
+    TEST_int_or_skip(volsys ? utest_ea_dir_lost_search_bit(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a closed folder is addressed from its parent");
+    TEST_int_or_skip(volsys ? utest_ea_absent_name_from_list(&obj, volsys)
+                     : TEST_SKIP, 0,
+                     "extattr: a name the list lacks is absent without a read");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");
