@@ -804,38 +804,6 @@ int utest_sendfile_refused_file_sent_from_buffer(AFPObj *obj, struct vol *vol)
 #endif
 }
 
-/*! The volume's own icon settings while a test lends it a built-in icon */
-struct vi_lent {
-    char *legacy;
-    unsigned char *icon;
-    size_t icon_len;
-};
-
-/*!
- * @brief Serve a built-in icon as the virtual icon file at the volume root
- *
- * @returns 0, or -1 when the volume builds no icon
- */
-static int vi_lend(struct vol *vol, struct vi_lent *lent)
-{
-    lent->legacy = vol->v_legacyicon;
-    lent->icon = vol->v_icon_rfork;
-    lent->icon_len = vol->v_icon_rfork_len;
-    vol->v_icon_rfork = NULL;
-    vol->v_legacyicon = "globe";
-    virtual_icon_init(vol);
-    return vol->v_icon_rfork != NULL ? 0 : -1;
-}
-
-/*! @brief Free the lent icon and give the volume its own settings back */
-static void vi_return(struct vol *vol, const struct vi_lent *lent)
-{
-    free(vol->v_icon_rfork);
-    vol->v_icon_rfork = lent->icon;
-    vol->v_icon_rfork_len = lent->icon_len;
-    vol->v_legacyicon = lent->legacy;
-}
-
 /*!
  * @brief A virtual icon fork holds the one reference to its adouble, which
  *        closing the fork releases

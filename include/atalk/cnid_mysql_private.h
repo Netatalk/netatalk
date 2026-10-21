@@ -27,6 +27,7 @@ typedef struct CNID_mysql_private {
     MYSQL_STMT   *cnid_delete_stmt;
     MYSQL_STMT   *cnid_resolve_stmt;
     MYSQL_STMT   *cnid_purge_stmt;
+    MYSQL_STMT   *cnid_dirlist_stmt;
     /* Server lacks recursive-CTE support (pre-8.0 / MariaDB pre-10.2);
      * scoped finds fall back to unscoped with a one-time warning. */
     bool          cnid_find_scoped_unsupported;

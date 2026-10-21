@@ -111,58 +111,6 @@ static struct dir *path_resolve_cached_file(const struct vol *vol,
 }
 
 /*!
- * @brief Whether a path contains a .. component
- *
- * @param[in] path  slash-separated path
- * @returns 1 when one component is exactly "..", 0 otherwise
- */
-static int has_dotdot_component(const char *path)
-{
-    const char *p = path;
-
-    while (*p) {
-        size_t len;
-        const char *slash = strchr(p, '/');
-        len = slash ? (size_t)(slash - p) : strlen(p);
-
-        if (len == 2 && p[0] == '.' && p[1] == '.') {
-            return 1;
-        }
-
-        if (!slash) {
-            break;
-        }
-
-        p = slash + 1;
-    }
-
-    return 0;
-}
-
-/*!
- * @brief Whether an absolute path is a directory or lies below it
- *
- * The prefix must end at a slash or at the end of path, so "/vol2" does not
- * lie below "/vol". The directory "/" holds every absolute path.
- *
- * @param[in] path  resolved absolute path
- * @param[in] dir   resolved absolute directory, without a trailing slash
- *                  unless it is "/"
- * @returns 1 when path is dir or lies below it, else 0
- */
-int path_at_or_below(const char *path, const char *dir)
-{
-    size_t len = strlen(dir);
-
-    if (len == 1 && dir[0] == '/') {
-        return path[0] == '/';
-    }
-
-    return strncmp(path, dir, len) == 0
-           && (path[len] == '\0' || path[len] == '/');
-}
-
-/*!
  * @brief Whether a client-supplied symlink target stays inside the volume
  *
  * The setfilparams call asks it before it turns a file into a symlink.
@@ -185,7 +133,7 @@ static int symlink_target_safe(const struct vol *vol,
     char *resolved_target = NULL;
     int safe = 0;
 
-    if (target[0] == '/' || has_dotdot_component(target)) {
+    if (target[0] == '/' || path_has_dot_component(target, 0)) {
         return 0;
     }
 

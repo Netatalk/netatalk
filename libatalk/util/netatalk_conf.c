@@ -2260,6 +2260,7 @@ static struct vol *creatvol(AFPObj *obj,
     EC_NULL(volume->v_macname = strdup_w(mactmpname));
     EC_NULL(volume->v_path = strdup(path));
     volume->v_name = utf8_encoding(obj) ? volume->v_u8mname : volume->v_macname;
+    volume->v_rootfd = -1;
 #ifdef __svr4__
     volume->v_qfd = -1;
 #endif /* __svr4__ */

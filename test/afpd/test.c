@@ -67,6 +67,7 @@
 #include "subtests.h"
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
+#include "subtests_enumerate.h"
 #include "subtests_lock.h"
 #include "subtests_offcnt.h"
 #include "subtests_pfd.h"
@@ -3007,6 +3008,8 @@ int main(int argc, char *argv[])
              "delete veto files removes matching trees and preserves ordinary files");
     TEST_int_or_skip(utest_delete_veto_dirfd_failure(), 0,
                      "delete veto files closes its directory stream when dirfd fails");
+    TEST_int(utest_delete_veto_any_case(), 0,
+             "delete veto files matches in either case when asked");
     TEST_int(utest_logger_reopen_keeps_files(), 0,
              "logger: log_close_all/log_reopen preserve files and private permissions");
     TEST_int(utest_lockfile_restores_umask(), 0,
@@ -3143,8 +3146,12 @@ int main(int argc, char *argv[])
              "volume tag names the CNID table, independent of v_vid");
     TEST_int(utest_cnid_valide_byteorder(), 0,
              "CNID wrapper validates returned ids in host byte order");
-    TEST_int(utest_cnid_resolve_dotdot_rejected(), 0,
-             "CNID wrapper '..' rejection invalidates *id and classifies corrupt");
+    TEST_int(utest_cnid_resolve_dot_names_rejected(), 0,
+             "CNID wrapper refuses '.' and '..' names as corrupt");
+    TEST_int(utest_cnid_dirtab_rows(), 0,
+             "CNID folder table: refused rows go to the backend");
+    TEST_int(utest_cnid_dirtab_collisions(), 0,
+             "CNID folder table: names that collide turn it off");
     TEST_int(utest_cnid_find_name_bound(), 0,
              "CNID wrapper accepts a MAXPATHLEN name, rejects one byte more");
     TEST_int_or_skip(utest_conf_dircache_resolve_size(), 0,
@@ -3324,6 +3331,28 @@ int main(int argc, char *argv[])
              "dircache: a stat refresh with a new ctime drops cached rights");
     TEST_int(test012_movecwd_retry_names_directory(&obj, vol), 0,
              "movecwd: a failed CNID retry logs the directory it tried");
+    TEST_int(test013_movecwd_refuses_symlinked_path(vol), 0,
+             "movecwd: a path through a symlink to a folder is refused");
+    TEST_int(test014_movecwd_folder_became_file(vol), 0,
+             "movecwd: a file or a symlink to one fails with ENOTDIR");
+    TEST_int(test015_movecwd_refuses_dotdot(vol), 0,
+             "movecwd: a .. path component is refused");
+    TEST_int(test016_cname_refuses_dot_names(&obj, vol), 0,
+             "cname: a request naming . or .. is refused");
+    TEST_int_or_skip(test017_cname_vetoes_any_case(&obj, vol), 0,
+                     "cname: a vetoed or reserved name is refused in any case");
+    TEST_int(utest_veto_file_any_case(), 0,
+             "veto files: a name matches in either case only when asked");
+    TEST_int(utest_veto_file_list_end(), 0,
+             "veto files: the list's end closes its last entry, none past it");
+    TEST_int(test018_listing_vetoes_any_case(&obj, vol), 0,
+             "veto files: listings and requests fold case only when asked");
+    TEST_int(utest_path_probe_case_agrees(vol), 0,
+             "path_probe_case: folders are passed over, a file agrees");
+    TEST_int_or_skip(utest_path_probe_case_skips_links(vol), 0,
+                     "path_probe_case: a link or another file is no match");
+    TEST_int(test019_cname_volume_vetoed(&obj, vol), 0,
+             "cname: a veto entry for the volume's name keeps the volume");
     /* pfd cache: strict ostat equivalence (quiescent), and the
      * divergence window — probe bound + three-way sync-check no-thrash */
     TEST_int(test_pfd_ostat_equivalence(vol), 0,
@@ -3903,6 +3932,66 @@ int main(int argc, char *argv[])
                      "setvoltime: an attention drops a limited quota answer");
     TEST_int_or_skip(utest_volpoll_attention_sibling_quota(&obj, vol), 0,
                      "setvoltime: an attention drops a sibling's quota answer");
+    TEST_int(utest_enumerate_rereads_counted(&obj, vid), 0,
+             "enumerate: listing reads and continuation rereads are counted");
+    TEST_int_or_skip(utest_enumerate_conversion_attempts(&obj, vol), 0,
+                     "enumerate: conversion is attempted only where needed");
+    TEST_int_or_skip(utest_enumerate_dehex_keeps_cnid(&obj, vol), 0,
+                     "enumerate: a dehexed name keeps its CNID");
+    TEST_int_or_skip(utest_enumerate_folder_rename_retried(&obj, vol), 0,
+                     "enumerate: a folder's failed rename is tried again");
+    TEST_int_or_skip(utest_enumerate_unrenamed_keeps_cnid(&obj, vol), 0,
+                     "enumerate: a name dehexing cannot take keeps its CNID");
+    TEST_int(utest_enumerate_failed_batch_keeps_index(&obj, vid), 0,
+             "enumerate: a failed batch leaves the next at its index");
+    TEST_int(utest_enumerate_failed_read_rereads(&obj, vol), 0,
+             "enumerate: a listing whose read failed is read again");
+    TEST_int_or_skip(utest_enumerate_read_error_fails(&obj, vol), 0,
+                     "enumerate: a read that fails part-way fails");
+    TEST_int(utest_enumerate_interleaved_reads_once(&obj, vid), 0,
+             "enumerate: interleaved listings read directories once");
+    TEST_int(utest_enumerate_one_kind_keeps_index(&obj, vid), 0,
+             "enumerate: a one-kind listing read again keeps its index");
+    TEST_int(utest_enumerate_kind_change_rewinds(&obj, vid), 0,
+             "enumerate: a batch of the other kind rewinds");
+    TEST_int(utest_enumerate_deleted_name_keeps_index(&obj, vid), 0,
+             "enumerate: a deleted name keeps its place in the numbering");
+    TEST_int(utest_enumerate_failed_stat_leaves_index(&obj, vid), 0,
+             "enumerate: a name whose stat failed leaves the numbering");
+    TEST_int_or_skip(utest_enumerate_dehex_vetoed_leaves(&obj, vol), 0,
+                     "enumerate: a name decoded to a vetoed one leaves");
+    TEST_int_or_skip(utest_enumerate_dehex_gone_leaves(&obj, vol), 0,
+                     "enumerate: a decoded name that fails its stat leaves");
+    TEST_int_or_skip(utest_enumerate_icon_ends_files(&obj, vol), 0,
+                     "enumerate: the virtual Icon ends a files-only listing");
+    TEST_int(utest_enumerate_cnid_one_query(&obj, vol), 0,
+             "enumerate: one folder query answers a listing's CNID lookups");
+    TEST_int(utest_enumerate_cnid_other_inode(&obj, vol), 0,
+             "enumerate: a row holding another inode asks the backend");
+    TEST_int(utest_enumerate_cnid_changed_file(&obj, vol), 0,
+             "enumerate: a file changed since the load asks the backend");
+    TEST_int_or_skip(utest_enumerate_cnid_other_metadata(&obj, vol), 0,
+                     "enumerate: a differing metadata CNID asks the backend");
+    TEST_int(utest_enumerate_cnid_write_unloads(&obj, vol), 0,
+             "enumerate: a CNID write turns the folder tables off");
+    TEST_int(utest_enumerate_cnid_outside_listing(&obj, vol), 0,
+             "enumerate: a lookup outside the listing asks the backend");
+    TEST_int(utest_enumerate_cnid_reread_unarmed(&obj, vol), 0,
+             "enumerate: a listing read again past its slot loads no table");
+    TEST_int_or_skip(utest_movecwd_skips_getcwd(&obj, vol), 0,
+                     "movecwd: a walking volume skips getcwd()");
+    TEST_int_or_skip(utest_movecwd_at_descriptor_limit(&obj, vol), 0,
+                     "movecwd: the walk falls back at the descriptor limit");
+    TEST_int_or_skip(utest_movecwd_volume_walks(vol), 0,
+                     "movecwd: macOS, illumos and Solaris hold the root");
+    TEST_int_or_skip(utest_movecwd_rechecks_root(&obj, vol), 0,
+                     "movecwd: an unsearchable volume root refuses below it");
+    TEST_int_or_skip(utest_movecwd_walk_ignores_case(&obj, vol), 0,
+                     "movecwd: the walk enters a folder whose case changed");
+    TEST_int_or_skip(utest_movecwd_stale_root(&obj, vol), 0,
+                     "movecwd: a stale held root is entered by its path");
+    TEST_int_or_skip(utest_enumerate_long_name_skipped(&obj, vid), 0,
+                     "enumerate: names over 255 bytes are left out");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

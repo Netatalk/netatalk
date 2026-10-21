@@ -222,7 +222,7 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Prepare all 12 statements of the volume, at open and after a wipe
+ * @brief Prepare all 13 statements of the volume, at open and after a wipe
  *
  * A failure leaves the later statements NULL, which cnid_sqlite_stmt_ready
  * then refuses. The scoped find walks the subtree with a recursive CTE, which
@@ -272,6 +272,9 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
                                    "DELETE FROM \"%s\" WHERE Did = ? AND Name = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_del_devino_stmt, "del_devino",
                                    "DELETE FROM \"%s\" WHERE DevNo = ? AND InodeNo = ?"));
+    EC_ZERO(init_prepared_stmt_one(db, &db->cnid_dirlist_stmt, "dirlist",
+                                   "SELECT Id, Name, DevNo, InodeNo "
+                                   "FROM \"%s\" WHERE Did = ? LIMIT ?"));
     EC_EXIT;
 EC_CLEANUP:
     EC_EXIT;
@@ -296,6 +299,7 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     sqlite3_finalize(db->cnid_update_stmt);
     sqlite3_finalize(db->cnid_del_didname_stmt);
     sqlite3_finalize(db->cnid_del_devino_stmt);
+    sqlite3_finalize(db->cnid_dirlist_stmt);
     db->cnid_lookup_stmt = NULL;
     db->cnid_add_stmt = NULL;
     db->cnid_put_stmt = NULL;
@@ -308,6 +312,7 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     db->cnid_update_stmt = NULL;
     db->cnid_del_didname_stmt = NULL;
     db->cnid_del_devino_stmt = NULL;
+    db->cnid_dirlist_stmt = NULL;
 }
 
 /*!
@@ -2059,6 +2064,50 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Hand at most max rows of one folder to fn
+ *
+ * @param[in] cdb  CNID database
+ * @param[in] did  the folder
+ * @param[in] max  the rows to hand over at most
+ * @param[in] fn   receives each row; nonzero stops the rows
+ * @param[in] ctx  passed to fn
+ * @returns 0, or -1 when the query or fn failed
+ */
+static int cnid_sqlite_dirlist(struct _cnid_db *cdb, cnid_t did, size_t max,
+                               cnid_dirlist_fn fn, void *ctx)
+{
+    const CNID_sqlite_private *db = cdb->cnid_db_private;
+    sqlite3_stmt *stmt;
+    int rc;
+
+    if (db == NULL
+            || !cnid_sqlite_stmt_ready(db->cnid_dirlist_stmt,
+                                       "cnid_sqlite_dirlist")) {
+        return -1;
+    }
+
+    stmt = db->cnid_dirlist_stmt;
+    sqlite3_reset(stmt);
+    sqlite3_bind_int64(stmt, 1, ntohl(did));
+    sqlite3_bind_int64(stmt, 2, (sqlite3_int64)max);
+
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        /* the text before its length, as SQLite asks */
+        const char *name = (const char *)sqlite3_column_text(stmt, 1);
+
+        if (fn(ctx, (uint64_t)sqlite3_column_int64(stmt, 0), name,
+                (size_t)sqlite3_column_bytes(stmt, 1),
+                (uint64_t)sqlite3_column_int64(stmt, 2),
+                (uint64_t)sqlite3_column_int64(stmt, 3)) != 0) {
+            break;
+        }
+    }
+
+    sqlite3_reset(stmt);
+    return rc == SQLITE_DONE ? 0 : -1;
+}
+
+/*!
  * @brief Allocate a CNID database object with the SQLite function table
  *
  * @param[in] vol  volume of the database
@@ -2075,6 +2124,7 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     cdb->cnid_db_vol = vol;
     cdb->cnid_db_flags = CNID_FLAG_PERSISTENT;
     cdb->cnid_add = cnid_sqlite_add;
+    cdb->cnid_dirlist = cnid_sqlite_dirlist;
     cdb->cnid_delete = cnid_sqlite_delete;
     cdb->cnid_get = cnid_sqlite_get;
     cdb->cnid_lookup = cnid_sqlite_lookup;

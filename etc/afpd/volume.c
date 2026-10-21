@@ -969,9 +969,10 @@ static void server_ipc_volumes(AFPObj *obj)
  * The bitmap must include VOLPBIT_VID. The volume name comes in UTF-8 or the
  * Mac charset, and a volume password must match. An open volume only returns
  * its parameters. Otherwise the call runs the preexec command, loads the
- * charsets, creates the dircache entry of the root, and opens the CNID and
- * Spotlight backends. A failure closes the volume again. The session runs as
- * the user here.
+ * charsets, creates the dircache entry of the root, holds the root open
+ * where ochdir() walks below it, records whether the root's filesystem
+ * ignores case, and opens the CNID and Spotlight backends. A failure closes
+ * the volume again. The session runs as the user here.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -1121,6 +1122,8 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     volume->v_root = dir;
+    volume->v_rootfd = vol_syml_opt(volume) ? ochdir_root(volume->v_path) : -1;
+    volume->v_ignorecase = path_ignores_case(volume->v_path);
 
     if (volume_openDB(obj, volume) < 0) {
         LOG(log_error, logtype_afpd,
@@ -1240,6 +1243,11 @@ openvol_err:
         volume->v_root = NULL;
     }
 
+    if (volume->v_rootfd >= 0) {
+        close(volume->v_rootfd);
+        volume->v_rootfd = -1;
+    }
+
     volume->v_flags &= ~AFPVOL_OPEN;
 
     if (volume->v_cdb != NULL) {
@@ -1328,7 +1336,7 @@ void cnid_volume_reset(const struct vol *vol)
  * The call closes the forks of the volume and retires its parent descriptor
  * slots, which would otherwise pin directories and match after a reopen. It
  * then purges the dircache entries, frees the root entry, closes the CNID
- * database, and runs the postexec command.
+ * database and the root's descriptor, and runs the postexec command.
  *
  * @param[in]     obj  session object
  * @param[in,out] vol  volume to close, or NULL
@@ -1364,6 +1372,11 @@ void closevol(const AFPObj *obj, struct vol *vol)
     dircache_purge_vol(vol);
     dir_free(vol->v_root);
     vol->v_root = NULL;
+
+    if (vol->v_rootfd >= 0) {
+        close(vol->v_rootfd);
+        vol->v_rootfd = -1;
+    }
 
     if (vol->v_cdb != NULL) {
         cnid_close(vol->v_cdb);

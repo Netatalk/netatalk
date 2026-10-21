@@ -294,3 +294,43 @@ cleanup:
     rmdir(root);
     return result;
 }
+
+/* With nocase, a veto entry matches a child in another case. */
+int utest_delete_veto_any_case(void)
+{
+    char root[MAXPATHLEN + 1] = {0};
+    char dir[MAXPATHLEN + 1] = {0};
+    char veto[MAXPATHLEN + 1] = {0};
+    struct vol vol = {0};
+    int result = 1;
+
+    if (make_case(root, "anycase") != 0) {
+        return 1;
+    }
+
+    if (case_path(dir, root, "delete") != 0
+            || case_path(veto, dir, "veto") != 0
+            || mkdir(dir, 0700) != 0 || create_file(veto) != 0) {
+        goto cleanup;
+    }
+
+    vol.v_flags = AFPVOL_DELVETO;
+    vol.v_veto = "VETO/";
+
+    /* byte for byte the child matches no entry and keeps the folder */
+    if (delete_vetoed_files(&vol, dir, false) == 0) {
+        goto cleanup;
+    }
+
+    vol.v_ignorecase = 1;
+
+    if (delete_vetoed_files(&vol, dir, false) == 0) {
+        result = 0;
+    }
+
+cleanup:
+    unlink(veto);
+    rmdir(dir);
+    rmdir(root);
+    return result;
+}

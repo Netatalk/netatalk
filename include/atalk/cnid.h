@@ -64,6 +64,21 @@
 #define CNID_FIND_MIN_RESULTS  100
 #define CNID_FIND_MIN_BUFLEN   (CNID_FIND_MIN_RESULTS * sizeof(uint32_t))
 
+/* the cnid_add calls a listing sends the backend before its folder's rows
+ * load */
+#define CNID_DIRTAB_MISSES 16
+/* the rows a folder's table holds at most */
+#define CNID_DIRTAB_ROWS   65536
+/* the slots a folder's table tries for a name; names that collide past
+ * them turn the table off */
+#define CNID_DIRTAB_PROBES 128
+
+/* receives one row of a folder; nonzero stops the rows */
+typedef int (*cnid_dirlist_fn)(void *ctx, uint64_t id, const char *name,
+                               size_t len, uint64_t dev, uint64_t ino);
+
+struct cnid_dirtab;
+
 /*!
  * This is instance of CNID database object.
  */
@@ -91,6 +106,10 @@ typedef struct _cnid_db {
                      cnid_t scope_did,
                      void *buffer, size_t buflen, bool *more_available);
     int (*cnid_wipe)(struct _cnid_db *cdb);
+    int (*cnid_dirlist)(struct _cnid_db *cdb, cnid_t did, size_t max,
+                        cnid_dirlist_fn fn, void *ctx);
+    struct cnid_dirtab *cnid_dirtabs;
+    cnid_t cnid_dirtab_did;     /*!< folder whose listing batch runs */
 } cnid_db;
 
 /*
@@ -144,5 +163,8 @@ int    cnid_find_scoped(struct _cnid_db *cdb, const char *name,
                         bool *more_available);
 int    cnid_wipe(struct _cnid_db *cdb);
 void   cnid_close(struct _cnid_db *db);
+void   cnid_dir_arm(struct _cnid_db *cdb, cnid_t did);
+void   cnid_dir_serve(struct _cnid_db *cdb, cnid_t did);
+void   cnid_dir_forget(struct _cnid_db *cdb, cnid_t did);
 
 #endif

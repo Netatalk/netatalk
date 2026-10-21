@@ -1302,3 +1302,630 @@ out:
     curdir = saved_curdir;
     return ret;
 }
+
+/*!
+ * @brief movecwd() refuses a folder whose cached path goes through a
+ *        symlink to another folder
+ *
+ * t013_a/t013_b is cached, then t013_a moves to t013_a2 and a symlink takes
+ * its place, so the cached path of t013_b goes through the symlink.
+ */
+int test013_movecwd_refuses_symlinked_path(struct vol *vol)
+{
+    static char aname[] = "t013_a";
+    static char a2name[] = "t013_a2";
+    static char bname[] = "t013_b";
+    static char bpath[] = "t013_a/t013_b";
+    struct dir *saved_curdir = curdir;
+    struct dir *b = NULL;
+    struct dir *now;
+    struct stat st;
+    cnid_t adid = CNID_INVALID;
+    cnid_t bdid = CNID_INVALID;
+    int cwd_fd = open(".", O_RDONLY);
+    int vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY);
+    int ret = -1;
+
+    if (cwd_fd < 0 || vfd < 0 || mkdirat(vfd, aname, 0700) != 0
+            || mkdirat(vfd, bpath, 0700) != 0
+            || fstatat(vfd, aname, &st, 0) != 0
+            || (adid = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, aname,
+                                strlen(aname), 0)) == CNID_INVALID
+            || fstatat(vfd, bpath, &st, 0) != 0
+            || (bdid = cnid_add(vol->v_cdb, &st, adid, bname,
+                                strlen(bname), 0)) == CNID_INVALID
+            || (b = dirlookup(vol, bdid)) == NULL
+            || renameat(vfd, aname, vfd, a2name) != 0
+            || symlinkat(a2name, vfd, aname) != 0) {
+        goto out;
+    }
+
+    if (movecwd(vol, b) == -1 && afp_errno == AFPERR_BADTYPE) {
+        ret = 0;
+    }
+
+out:
+
+    /* the symlink, then the folders back in place, however far the setup
+     * came */
+    if (vfd >= 0) {
+        if (fstatat(vfd, aname, &st, AT_SYMLINK_NOFOLLOW) == 0
+                && S_ISLNK(st.st_mode)) {
+            unlinkat(vfd, aname, 0);
+        }
+
+        renameat(vfd, a2name, vfd, aname);
+        unlinkat(vfd, bpath, AT_REMOVEDIR);
+        unlinkat(vfd, aname, AT_REMOVEDIR);
+        close(vfd);
+    }
+
+    if (b != NULL) {
+        dir_remove(vol, b, 0);
+    }
+
+    if ((now = dircache_search_by_name(vol, vol->v_root, aname,
+                                       strlen(aname))) != NULL) {
+        dir_remove(vol, now, 0);
+    }
+
+    if (bdid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, bdid);
+    }
+
+    if (adid != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, adid);
+    }
+
+    dir_free_invalid_q();
+
+    if (cwd_fd >= 0) {
+        if (fchdir(cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(cwd_fd);
+    }
+
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief movecwd() fails with ENOTDIR on a cached folder that became a file
+ *        or a symlink to a file
+ */
+int test014_movecwd_folder_became_file(struct vol *vol)
+{
+    static char dname[] = "t014_dir";
+    static char fname[] = "t014_dir_file";
+    struct dir *saved_curdir = curdir;
+    struct dir *dir = NULL;
+    struct dir *now;
+    struct stat st;
+    cnid_t did = CNID_INVALID;
+    int cwd_fd = open(".", O_RDONLY);
+    int vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY);
+    int fd = -1;
+    int ret = -1;
+
+    if (cwd_fd < 0 || vfd < 0 || mkdirat(vfd, dname, 0700) != 0
+            || fstatat(vfd, dname, &st, 0) != 0
+            || (did = cnid_add(vol->v_cdb, &st, DIRDID_ROOT, dname,
+                               strlen(dname), 0)) == CNID_INVALID
+            || (dir = dirlookup(vol, did)) == NULL
+            || unlinkat(vfd, dname, AT_REMOVEDIR) != 0
+            || (fd = openat(vfd, fname, O_WRONLY | O_CREAT, 0600)) < 0
+            || linkat(vfd, fname, vfd, dname, 0) != 0) {
+        goto out;
+    }
+
+    /* the file in the folder's place, then a symlink to it */
+    errno = 0;
+
+    if (movecwd(vol, dir) != -1 || errno != ENOTDIR
+            || unlinkat(vfd, dname, 0) != 0
+            || symlinkat(fname, vfd, dname) != 0) {
+        goto out;
+    }
+
+    errno = 0;
+
+    if (movecwd(vol, dir) == -1 && errno == ENOTDIR) {
+        ret = 0;
+    }
+
+out:
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    if (vfd >= 0) {
+        unlinkat(vfd, fname, 0);
+
+        /* the symlink, or the folder when the swap did not happen */
+        if (unlinkat(vfd, dname, 0) != 0) {
+            unlinkat(vfd, dname, AT_REMOVEDIR);
+        }
+
+        close(vfd);
+    }
+
+    if ((now = dircache_search_by_name(vol, vol->v_root, dname,
+                                       strlen(dname))) != NULL) {
+        dir_remove(vol, now, 0);
+    }
+
+    if (did != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, did);
+    }
+
+    dir_free_invalid_q();
+
+    if (cwd_fd >= 0) {
+        if (fchdir(cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(cwd_fd);
+    }
+
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief movecwd() refuses a folder whose path climbs out of the volume
+ *        through ".."
+ *
+ * The folder is built by hand, so its path reaches movecwd() as it is.
+ *
+ * @param[in] vol  volume whose root's parent the path names
+ * @returns 0, 1 when movecwd() entered the parent, -1 when the setup failed
+ */
+int test015_movecwd_refuses_dotdot(struct vol *vol)
+{
+    char cwd[MAXPATHLEN + 1];
+    struct dir *saved_curdir = curdir;
+    struct dir *up = NULL;
+    struct stat st;
+    int cwd_fd = open(".", O_RDONLY);
+    int ret = -1;
+
+    if (cwd_fd < 0 || stat(vol->v_path, &st) != 0
+            || (up = dir_new("..", "..", vol, DIRDID_ROOT, DIRDID_ROOT,
+                             bformat("%s/..", vol->v_path), &st)) == NULL) {
+        goto out;
+    }
+
+    if (movecwd(vol, up) == -1 && afp_errno == AFPERR_BADTYPE
+            && getcwd(cwd, sizeof(cwd)) != NULL
+            && strcmp(cwd, vol->v_path) == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "t015: movecwd entered %s/..\n", vol->v_path);
+        ret = 1;
+    }
+
+out:
+
+    if (up != NULL) {
+        dir_free(up);
+    }
+
+    if (cwd_fd >= 0) {
+        if (fchdir(cwd_fd) != 0 && ret == 0) {
+            ret = -1;
+        }
+
+        close(cwd_fd);
+    }
+
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief A request naming "." or ".." is refused before the name gets a
+ *        dircache entry or a CNID row
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume whose root takes the test's folder
+ * @returns 0, 1 when a request took the name, -1 when the setup failed
+ */
+int test016_cname_refuses_dot_names(AFPObj *obj, struct vol *vol)
+{
+    static char dname[] = "t016_dir";
+    struct dir *saved_curdir = curdir;
+    cnid_t did;
+    int ret = 1;
+
+    if (createdir(obj, vol->v_vid, DIRDID_ROOT, dname) != AFP_OK) {
+        return -1;
+    }
+
+    /* afp_createdir() leaves curdir in the directory it made; "." names
+     * it, ".." its parent */
+    did = curdir->d_did;
+
+    if (getfiledirparms(obj, vol->v_vid, did, ".") == AFPERR_PARAM
+            && getfiledirparms(obj, vol->v_vid, did, "..") == AFPERR_PARAM
+            && cnid_get(vol->v_cdb, DIRDID_ROOT, dname, strlen(dname)) == did) {
+        ret = 0;
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, dname);
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief On a filesystem that ignores case, a request is refused a vetoed
+ *        folder and a reserved name in another case
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume whose root takes the test's folder
+ * @returns 0, 1 when a request took a name or afpd found the filesystem
+ *          matching case, -1 when the setup failed, TEST_SKIP where the
+ *          filesystem matches case
+ */
+int test017_cname_vetoes_any_case(AFPObj *obj, struct vol *vol)
+{
+    static char dname[] = "T017_Veto";
+    static char lname[] = "t017_veto";
+    static char veto[] = "T017_Veto/";
+    char lpath[MAXPATHLEN + 1];
+    char *saved_veto = vol->v_veto;
+    struct dir *saved_curdir = curdir;
+    struct stat st;
+    int ret = 1;
+
+    if (createdir(obj, vol->v_vid, DIRDID_ROOT, dname) != AFP_OK) {
+        return -1;
+    }
+
+    /* it runs where the filesystem ignores case, which afpd must find */
+    snprintf(lpath, sizeof(lpath), "%s/%s", vol->v_path, lname);
+
+    if (stat(lpath, &st) != 0) {
+        ret = TEST_SKIP;
+    } else if (vol->v_ignorecase) {
+        vol->v_veto = veto;
+
+        if (getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, lname) == AFPERR_PARAM
+                && getfiledirparms(obj, vol->v_vid, DIRDID_ROOT,
+                                   ".appledb") == AFPERR_PARAM) {
+            ret = 0;
+        }
+
+        vol->v_veto = saved_veto;
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, dname);
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief veto_file() matches a name in either ASCII case when asked, and
+ *        byte for byte otherwise
+ *
+ * @returns 0, or the number of the check that failed
+ */
+int utest_veto_file_any_case(void)
+{
+    if (veto_file("abc/T017_Veto/", "t017_veto", 1) != 1) {
+        return 1;
+    }
+
+    if (veto_file("abc/T017_Veto/", "t017_veto", 0) != 0) {
+        return 2;
+    }
+
+    if (veto_file("abc/T017_Veto/", "T017_Veto", 0) != 1) {
+        return 3;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Listings and requests leave out or refuse a vetoed or reserved
+ *        name in another case only with the volume's case folding on
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume whose root takes the test's folder
+ * @returns 0, 1 when a listing or a request got the wrong answer, -1 when
+ *          the setup failed
+ */
+int test018_listing_vetoes_any_case(AFPObj *obj, struct vol *vol)
+{
+    static char dname[] = "t018_dir";
+    static char fname[] = "T018_Secret";
+    static char veto[] = "t018_secret/";
+    char *saved_veto = vol->v_veto;
+    int saved_nocase = vol->v_ignorecase;
+    struct dir *saved_curdir = curdir;
+    cnid_t did;
+    int ret = -1;
+
+    if (createdir(obj, vol->v_vid, DIRDID_ROOT, dname) != AFP_OK) {
+        return -1;
+    }
+
+    /* afp_createdir() leaves curdir in the directory it made */
+    did = curdir->d_did;
+
+    if (createfile(obj, vol->v_vid, did, fname) == AFP_OK) {
+        vol->v_veto = veto;
+        vol->v_ignorecase = 0;
+        /* byte for byte the entry and .AppleDB match nothing here */
+        ret = enumerate_range(obj, vol->v_vid, did, 1 << FILPBIT_FNUM, 0, 1, 1)
+              == AFP_OK
+              && getfiledirparms(obj, vol->v_vid, did, fname) == AFP_OK
+              && getfiledirparms(obj, vol->v_vid, did, ".appledb")
+              == AFPERR_NOOBJ ? 0 : 1;
+        vol->v_ignorecase = 1;
+
+        /* folded, both are refused and the listing is empty */
+        if (ret == 0 && (enumerate_range(obj, vol->v_vid, did,
+                                         1 << FILPBIT_FNUM, 0, 1, 1)
+                         != AFPERR_NOOBJ
+                         || getfiledirparms(obj, vol->v_vid, did, fname)
+                         != AFPERR_PARAM
+                         || getfiledirparms(obj, vol->v_vid, did, ".appledb")
+                         != AFPERR_PARAM)) {
+            ret = 1;
+        }
+
+        vol->v_veto = saved_veto;
+        vol->v_ignorecase = saved_nocase;
+        delete (obj, vol->v_vid, did, fname);
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, dname);
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief Whether readdir() lists one of the probe test's folders before its
+ *        file
+ *
+ * @param[in] dir    the test's folder
+ * @param[in] fname  the file's name
+ * @returns true when a T019_Sub folder comes first
+ */
+static bool probe_folder_first(const char *dir, const char *fname)
+{
+    const struct dirent *de;
+    bool first = false;
+    DIR *dp;
+
+    if ((dp = opendir(dir)) == NULL) {
+        return false;
+    }
+
+    while ((de = readdir(dp)) != NULL && strcmp(de->d_name, fname) != 0) {
+        first = first || strncmp(de->d_name, "T019_Sub", 8) == 0;
+    }
+
+    closedir(dp);
+    return first;
+}
+
+/*!
+ * @brief path_probe_case() passes over folders and answers for a file as a
+ *        lookup of its name in another case does, as path_ignores_case()
+ *        does
+ *
+ * @param[in] vol  volume whose root takes the test's folder
+ * @returns 0; 1 or 2 when the empty folder or the folder of folders gave an
+ *          answer other than undecided; 3 or 4 when the probe or
+ *          path_ignores_case() disagreed with the lookup; -1 when the setup
+ *          failed
+ */
+int utest_path_probe_case_agrees(struct vol *vol)
+{
+    static char fname[] = "T019_Name";
+    static char lname[] = "t019_name";
+    char dir[MAXPATHLEN + 1];
+    char sname[16];
+    struct stat st;
+    struct stat lst;
+    int ignores;
+    int subs = 0;
+    int dfd;
+    int fd;
+    int ret = -1;
+    snprintf(dir, sizeof(dir), "%s/t019_probe", vol->v_path);
+
+    if (mkdir(dir, 0700) != 0) {
+        return -1;
+    }
+
+    if ((dfd = open(dir, O_RDONLY | O_DIRECTORY)) < 0) {
+        rmdir(dir);
+        return -1;
+    }
+
+    /* an empty folder or a folder alone gives the probe no name */
+    if (path_probe_case(dir) != -1) {
+        ret = 1;
+        goto cleanup;
+    }
+
+    if (mkdirat(dfd, "T019_Sub0", 0700) != 0) {
+        goto cleanup;
+    }
+
+    subs = 1;
+
+    if (path_probe_case(dir) != -1) {
+        ret = 2;
+        goto cleanup;
+    }
+
+    if ((fd = openat(dfd, fname, O_WRONLY | O_CREAT | O_EXCL, 0600)) < 0) {
+        goto cleanup;
+    }
+
+    close(fd);
+
+    /* a folder listed before the file makes the probe pass one over */
+    while (subs < 16 && !probe_folder_first(dir, fname)) {
+        snprintf(sname, sizeof(sname), "T019_Sub%d", subs);
+
+        if (mkdirat(dfd, sname, 0700) != 0) {
+            break;
+        }
+
+        subs++;
+    }
+
+    /* a filesystem that ignores case finds the file in another case */
+    ignores = fstatat(dfd, fname, &st, 0) == 0
+              && fstatat(dfd, lname, &lst, 0) == 0
+              && st.st_ino == lst.st_ino;
+
+    if (path_probe_case(dir) != ignores) {
+        ret = 3;
+    } else if (path_ignores_case(dir) != ignores) {
+        ret = 4;
+    } else {
+        ret = 0;
+    }
+
+    unlinkat(dfd, fname, 0);
+cleanup:
+
+    while (subs-- > 0) {
+        snprintf(sname, sizeof(sname), "T019_Sub%d", subs);
+        unlinkat(dfd, sname, AT_REMOVEDIR);
+    }
+
+    close(dfd);
+    rmdir(dir);
+    return ret;
+}
+
+/*!
+ * @brief path_probe_case() takes no file with a second link for its probe,
+ *        and tells two files apart
+ *
+ * @param[in] vol  volume whose root takes the test's folder
+ * @returns 0, 1 when the probe took the linked file or answered 1, -1 when
+ *          the setup failed, TEST_SKIP where the filesystem refuses the
+ *          second name
+ */
+int utest_path_probe_case_skips_links(struct vol *vol)
+{
+    static char fname[] = "Ab";
+    static char lname[] = "ab";
+    char dir[MAXPATHLEN + 1];
+    int dfd;
+    int fd;
+    int ret = -1;
+    snprintf(dir, sizeof(dir), "%s/t019_links", vol->v_path);
+
+    if (mkdir(dir, 0700) != 0) {
+        return -1;
+    }
+
+    if ((dfd = open(dir, O_RDONLY | O_DIRECTORY)) < 0) {
+        rmdir(dir);
+        return -1;
+    }
+
+    if ((fd = openat(dfd, fname, O_WRONLY | O_CREAT | O_EXCL, 0600)) >= 0) {
+        close(fd);
+
+        /* a filesystem that ignores case holds the second name already */
+        if (linkat(dfd, fname, dfd, lname, 0) != 0) {
+            ret = errno == EEXIST ? TEST_SKIP : -1;
+        } else {
+            ret = path_probe_case(dir) == -1 ? 0 : 1;
+            unlinkat(dfd, lname, 0);
+        }
+
+        /* "ab" a file of its own: the swapped name finds another object */
+        if (ret == 0) {
+            if ((fd = openat(dfd, lname, O_WRONLY | O_CREAT | O_EXCL,
+                             0600)) < 0) {
+                ret = -1;
+            } else {
+                close(fd);
+                ret = path_probe_case(dir) == 0 ? 0 : 1;
+                unlinkat(dfd, lname, 0);
+            }
+        }
+
+        unlinkat(dfd, fname, 0);
+    }
+
+    close(dfd);
+    rmdir(dir);
+    return ret;
+}
+
+/*!
+ * @brief A request under DID 1 for the volume's name reaches the volume
+ *        though a veto entry matches that name
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  the volume, whose veto list the test sets
+ * @returns 0, 1 when the request was refused
+ */
+int test019_cname_volume_vetoed(AFPObj *obj, struct vol *vol)
+{
+    char veto[MAXPATHLEN + 2];
+    char *saved_veto = vol->v_veto;
+    struct dir *saved_curdir = curdir;
+    int ret;
+    snprintf(veto, sizeof(veto), "%s/", cfrombstr(vol->v_root->d_m_name));
+    vol->v_veto = veto;
+    ret = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT_PARENT,
+                          cfrombstr(vol->v_root->d_m_name)) == AFP_OK ? 0 : 1;
+    vol->v_veto = saved_veto;
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief veto_file() takes the list's end as its last entry's slash, and
+ *        reads nothing after it
+ *
+ * @returns 0, or the number of the check that failed
+ */
+int utest_veto_file_list_end(void)
+{
+    /* a list whose last entry lacks its slash, a name after its end */
+    static const char list[] = "abc\0zzz/";
+
+    if (veto_file(list, "zzz", 0) != 0) {
+        return 1;
+    }
+
+    if (veto_file(list, "ZZZ", 1) != 0) {
+        return 2;
+    }
+
+    if (veto_file(list, "abc", 0) != 1) {
+        return 3;
+    }
+
+    if (veto_file(list, "ABC", 1) != 1) {
+        return 4;
+    }
+
+    if (veto_file(list, "abcd", 0) != 0) {
+        return 5;
+    }
+
+    if (veto_file(list, "ab", 0) != 0) {
+        return 6;
+    }
+
+    return 0;
+}

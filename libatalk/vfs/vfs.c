@@ -119,14 +119,43 @@ for_each_adouble(const char *from, const char *name, rf_loop fn,
 }
 
 /*!
+ * @brief Whether name differs from a name netatalk reserves, in either ASCII
+ *        case where the volume's filesystem ignores case
+ *
+ * @param[in] vol       volume
+ * @param[in] name      directory entry name
+ * @param[in] reserved  the reserved name
+ * @returns 1 when name differs, 0 when it is the reserved name
+ */
+static int other_name(const struct vol *vol, const char *name,
+                      const char *reserved)
+{
+    size_t i = 0;
+
+    if (!vol->v_ignorecase) {
+        return strcmp(name, reserved) != 0;
+    }
+
+    while (name[i] != '\0' && ascii_tolower((unsigned char)name[i])
+            == ascii_tolower((unsigned char)reserved[i])) {
+        i++;
+    }
+
+    return name[i] != reserved[i];
+}
+
+/*!
  * @brief Whether name differs from the netatalk database directory names
  *
+ * @param[in] vol   volume
  * @param[in] name  directory entry name
- * @returns 1 for any name except .AppleDB and .AppleDesktop, 0 for those two
+ * @returns 0 for .AppleDB and .AppleDesktop, in either case where the
+ *          volume's filesystem ignores case, else 1
  */
-static int netatalk_name(const char *name)
+static int netatalk_name(const struct vol *vol, const char *name)
 {
-    return strcmp(name, ".AppleDB") && strcmp(name, ".AppleDesktop");
+    return other_name(vol, name, ".AppleDB")
+           && other_name(vol, name, ".AppleDesktop");
 }
 
 /*******************************************************************************
@@ -137,20 +166,21 @@ static int netatalk_name(const char *name)
  * @brief Whether clients may see name on a version 2 AppleDouble volume
  *
  * Names without a leading dot always pass. The netatalk directories
- * .AppleDB, .AppleDesktop, and .AppleDouble stay hidden, and so does .Parent
- * in any letter case.
+ * .AppleDB, .AppleDesktop, and .AppleDouble stay hidden, in either case where
+ * the volume's filesystem ignores case, and so does .Parent in any letter
+ * case.
  *
- * @param[in] vol   unused
+ * @param[in] vol   volume
  * @param[in] name  directory entry name
  * @returns 1 when clients may see name, 0 otherwise
  */
-static int validupath_adouble(const struct vol *vol _U_, const char *name)
+static int validupath_adouble(const struct vol *vol, const char *name)
 {
     if (name[0] != '.') {
         return 1;
     }
 
-    return netatalk_name(name) && strcmp(name, ".AppleDouble")
+    return netatalk_name(vol, name) && other_name(vol, name, ".AppleDouble")
            && strcasecmp(name, ".Parent");
 }
 
@@ -757,14 +787,15 @@ EC_CLEANUP:
  * @brief Whether clients may see name on an ea AppleDouble volume
  *
  * Names without a leading dot always pass. Of the dot names, .AppleDB and
- * .AppleDesktop stay hidden. Without HAVE_EAFD a ._ file stays hidden when it
- * carries a netatalk AppleDouble header, because it is a resource fork sidecar.
+ * .AppleDesktop stay hidden, in either case where the volume's filesystem
+ * ignores case. Without HAVE_EAFD a ._ file stays hidden when it carries a
+ * netatalk AppleDouble header, because it is a resource fork sidecar.
  *
- * @param[in] vol   unused
+ * @param[in] vol   volume
  * @param[in] name  directory entry name
  * @returns 1 when clients may see name, 0 otherwise
  */
-static int validupath_ea(const struct vol *vol _U_, const char *name)
+static int validupath_ea(const struct vol *vol, const char *name)
 {
     if (name[0] != '.') {
         return 1;
@@ -777,7 +808,7 @@ static int validupath_ea(const struct vol *vol _U_, const char *name)
     }
 
 #endif
-    return netatalk_name(name);
+    return netatalk_name(vol, name);
 }
 
 /*!

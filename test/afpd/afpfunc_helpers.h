@@ -54,6 +54,12 @@ struct fsize_cap {
     void (*xfsz)(int);
 };
 
+struct vi_lent {
+    char *legacy;
+    unsigned char *icon;
+    size_t icon_len;
+};
+
 extern char **cnamewrap(const char *name);
 
 extern int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did,
@@ -87,6 +93,8 @@ extern pid_t dsi_test_serve(const AFPObj *obj, int *peer);
 extern int dsi_test_reap(pid_t pid, int peer);
 extern int fsize_cap(struct fsize_cap *cap, rlim_t limit);
 extern int fsize_uncap(const struct fsize_cap *cap);
+extern int vi_lend(struct vol *vol, struct vi_lent *lent);
+extern void vi_return(struct vol *vol, const struct vi_lent *lent);
 extern int openfork(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                     uint8_t fork, uint16_t access, uint16_t *refnum);
 extern int openfork_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,

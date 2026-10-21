@@ -59,6 +59,7 @@
 #include "subtests.h"
 #include "switch.h"
 #include "test.h"
+#include "virtual_icon.h"
 #include "volume.h"
 
 
@@ -703,6 +704,31 @@ int fsize_uncap(const struct fsize_cap *cap)
     int rc = setrlimit(RLIMIT_FSIZE, &cap->saved);
     signal(SIGXFSZ, cap->xfsz);
     return rc;
+}
+
+/*!
+ * @brief Serve a built-in icon as the virtual icon file at the volume root
+ *
+ * @returns 0, or -1 when the volume builds no icon
+ */
+int vi_lend(struct vol *vol, struct vi_lent *lent)
+{
+    lent->legacy = vol->v_legacyicon;
+    lent->icon = vol->v_icon_rfork;
+    lent->icon_len = vol->v_icon_rfork_len;
+    vol->v_icon_rfork = NULL;
+    vol->v_legacyicon = "globe";
+    virtual_icon_init(vol);
+    return vol->v_icon_rfork != NULL ? 0 : -1;
+}
+
+/*! @brief Free the lent icon and give the volume its own settings back */
+void vi_return(struct vol *vol, const struct vi_lent *lent)
+{
+    free(vol->v_icon_rfork);
+    vol->v_icon_rfork = lent->icon;
+    vol->v_icon_rfork_len = lent->icon_len;
+    vol->v_legacyicon = lent->legacy;
 }
 
 /*!

@@ -388,9 +388,11 @@ void display_dircache_statistics(void)
     char *table_line = find_dircache_stats_line("ARC table state");
     char *adapt_line = find_dircache_stats_line("ARC adaptation");
     char *ops_line = find_dircache_stats_line("ARC operations");
+    char *enumerate_line = find_dircache_stats_line("enumerate statistics");
     /* Print all found stats lines */
     char *lines[] = { stats_line, ghost_line, table_line, adapt_line,
-                      ops_line, hints_line, ad_line, offcnt_line
+                      ops_line, hints_line, ad_line, offcnt_line,
+                      enumerate_line
                     };
     int num_lines = sizeof(lines) / sizeof(lines[0]);
     int found_any = 0;
