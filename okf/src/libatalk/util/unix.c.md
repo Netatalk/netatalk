@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -461,7 +461,7 @@ Parameters:
 
 Returns: the result of lstat or stat
 
-Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [check_acl_access](../../etc/afpd/acls.c.md#check_acl_access), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [dirlookup_strict](../../etc/afpd/directory.c.md#dirlookup_strict), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_path_holds](../../etc/afpd/ofork.c.md#of_path_holds), [of_stat](../../etc/afpd/ofork.c.md#of_stat), [of_statdir](../../etc/afpd/ofork.c.md#of_statdir), [pfd_get](../../etc/afpd/pfd_cache.c.md#pfd_get), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [reenumerate_id](../../etc/afpd/file.c.md#reenumerate_id), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop), [setdirmode_adouble_loop](../vfs/vfs.c.md#setdirmode_adouble_loop), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
+Called by: [accessmode](../../etc/afpd/unix.c.md#accessmode), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [check_acl_access](../../etc/afpd/acls.c.md#check_acl_access), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [dirlookup_strict](../../etc/afpd/directory.c.md#dirlookup_strict), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_path_holds](../../etc/afpd/ofork.c.md#of_path_holds), [of_stat](../../etc/afpd/ofork.c.md#of_stat), [of_statdir](../../etc/afpd/ofork.c.md#of_statdir), [pfd_get](../../etc/afpd/pfd_cache.c.md#pfd_get), [pfd_ostat](../../etc/afpd/pfd_cache.c.md#pfd_ostat), [process_cache_hints](../../etc/afpd/dircache.c.md#process_cache_hints), [reenumerate_id](../../etc/afpd/file.c.md#reenumerate_id), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop), [setdirmode_adouble_loop](../vfs/vfs.c.md#setdirmode_adouble_loop), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
 ### ochown
 

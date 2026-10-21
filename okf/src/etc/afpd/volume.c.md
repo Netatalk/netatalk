@@ -5,7 +5,7 @@ description: "Volume commands: FPOpenVol, FPCloseVol, FPGetVolParms, and volume 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/volume.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -616,7 +616,7 @@ Parameters:
 
 Calls: [markvol](volume.c.md#markvol)
 
-Called by: [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_setacl](acls.c.md#afp_setacl), [afp_setdirparams](directory.c.md#afp_setdirparams), [afp_setextattr](extattrs.c.md#afp_setextattr), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [afp_setfilparams](file.c.md#afp_setfilparams), [afp_setvolparams](volume.c.md#afp_setvolparams), [flushfork](fork.c.md#flushfork), [of_closefork](ofork.c.md#of_closefork), [setdirparams](directory.c.md#setdirparams)
+Called by: [afp_setacl](acls.c.md#afp_setacl), [afp_setdirparams](directory.c.md#afp_setdirparams), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [afp_setfilparams](file.c.md#afp_setfilparams), [afp_setvolparams](volume.c.md#afp_setvolparams), [ea_written](extattrs.c.md#ea_written), [flushfork](fork.c.md#flushfork), [of_closefork](ofork.c.md#of_closefork), [setdirparams](directory.c.md#setdirparams)
 
 ### setvoltime_write
 

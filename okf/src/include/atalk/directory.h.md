@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -66,7 +66,7 @@ Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
 static struct dir * path_cached_file(const struct path *path)
 ```
 
-Defined at lines 170 to 177.
+Defined at lines 176 to 183.
 
 Return the dircache entry of a file path, or NULL after dir_remove.
 
@@ -78,11 +78,11 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [path_resolve_ca
 static int path_isadir(struct path *o_path)
 ```
 
-Defined at lines 185 to 194.
+Defined at lines 191 to 200.
 
 Tell whether a path resolved to a directory.
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_addappl](../../etc/afpd/appl.c.md#afp_addappl), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_getappl](../../etc/afpd/appl.c.md#afp_getappl), [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_rename](../../etc/afpd/filedir.c.md#afp_rename), [afp_rmvappl](../../etc/afpd/appl.c.md#afp_rmvappl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [afp_setfilparams](../../etc/afpd/file.c.md#afp_setfilparams), [path_error](../../etc/afpd/directory.c.md#path_error)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_addappl](../../etc/afpd/appl.c.md#afp_addappl), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_getappl](../../etc/afpd/appl.c.md#afp_getappl), [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [afp_moveandrename](../../etc/afpd/filedir.c.md#afp_moveandrename), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_rename](../../etc/afpd/filedir.c.md#afp_rename), [afp_rmvappl](../../etc/afpd/appl.c.md#afp_rmvappl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [afp_setfilparams](../../etc/afpd/file.c.md#afp_setfilparams), [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry), [path_entry](../../etc/afpd/file.c.md#path_entry), [path_error](../../etc/afpd/directory.c.md#path_error)
 
 # Types
 
@@ -98,6 +98,8 @@ Defined at line 84.
 * `hnode_t * d_didname_node`: this entry's node in index_didname
 * `void * dcache_rfork_buf`: malloc'd rfork data, or NULL
 * `qnode_t * rfork_lru_node`: position in rfork LRU list, or NULL
+* `char * dcache_eanames`: EA names as listed, or NULL.
+* `char * dcache_eavals`: EA value records read, or NULL.
 * `time_t d_ctime`: inode ctime, used and modified by reenumeration
 * `time_t dcache_ctime`: inode ctime, used and modified by dircache
 * `ino_t dcache_ino`: inode number, used to detect changes in the dircache
@@ -112,7 +114,10 @@ Defined at line 84.
 * `mode_t dcache_mode`: st_mode: file type + permissions
 * `uid_t dcache_uid`: st_uid: owner user ID
 * `gid_t dcache_gid`: st_gid: owner group ID
+* `uint32_t dcache_ea_ctime_nsec`: nanoseconds of the ctime the EA cache was filled under
 * `uint16_t d_vid`: only needed in the dircache, because we put all directories in one cache.
+* `uint16_t dcache_ealen`: bytes in dcache_eanames
+* `uint16_t dcache_eavlen`: bytes in dcache_eavals
 * `uint8_t arc_list`: Which ARC list: 0=NONE, 1=T1, 2=T2, 3=B1, 4=B2.
 * `uint8_t dcache_afpfilei`: ADEID_AFPFILEI: AFP attributes.
 * `uint8_t dcache_finderinfo`: ADEID_FINDERI: Finder info.
@@ -120,7 +125,7 @@ Defined at line 84.
 
 ### struct path
 
-Defined at line 152.
+Defined at line 158.
 * `int m_type`: mac name type (long name, unicode
 * `char * m_name`: mac name
 * `char * u_name`: unix name

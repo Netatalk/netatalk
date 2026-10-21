@@ -5,7 +5,7 @@ description: "Open fork table of a session."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ofork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -449,9 +449,11 @@ Returns: 0, or -1 when the stat or the change of directory failed
 
 Calls: [dirlookup](directory.c.md#dirlookup), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat)
 
-Called by: [afp_access](acls.c.md#afp_access), [afp_delete](filedir.c.md#afp_delete), [afp_getacl](acls.c.md#afp_getacl), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_setacl](acls.c.md#afp_setacl), [afp_setfildirparams](filedir.c.md#afp_setfildirparams)
+Called by: [afp_access](acls.c.md#afp_access), [afp_delete](filedir.c.md#afp_delete), [afp_getacl](acls.c.md#afp_getacl), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_setacl](acls.c.md#afp_setacl), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [ea_cache_entry](ad_cache.c.md#ea_cache_entry)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
+
+Mentioned in the documentation of: [ea_cache_entry](ad_cache.c.md#ea_cache_entry)
 
 ### of_findname
 

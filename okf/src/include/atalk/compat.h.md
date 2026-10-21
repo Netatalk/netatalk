@@ -5,7 +5,7 @@ description: "Portability declarations for missing system and C library function
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/compat.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -23,6 +23,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [bin/nad/ftw.c](../../bin/nad/ftw.c.md)
 * [bin/nad/megatron.h](../../bin/nad/megatron.h.md)
 * [bin/nad/nad.h](../../bin/nad/nad.h.md)
+* [etc/afpd/ad_cache.c](../../etc/afpd/ad_cache.c.md)
 * [etc/afpd/afp_asp.c](../../etc/afpd/afp_asp.c.md)
 * [etc/afpd/afp_config.c](../../etc/afpd/afp_config.c.md)
 * [etc/afpd/afp_dsi.c](../../etc/afpd/afp_dsi.c.md)
@@ -91,13 +92,25 @@ Return the stat mtime as a timespec, with tv_nsec 0 if unavailable.
 
 Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [markroot](../../etc/afpd/volume.c.md#markroot), [markvol](../../etc/afpd/volume.c.md#markvol), [pollvoltime](../../etc/afpd/volume.c.md#pollvoltime), [same_stamp](../../etc/afpd/volume.c.md#same_stamp), [setfile](../../bin/nad/nad_cp.c.md#setfile)
 
+### atalk_stat_ctime_timespec
+
+```c
+static struct timespec atalk_stat_ctime_timespec(const struct stat *st)
+```
+
+Defined at lines 76 to 88.
+
+Return the stat ctime as a timespec, with tv_nsec 0 if unavailable.
+
+Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry)
+
 ### atalk_stat_atime_timespec
 
 ```c
 static struct timespec atalk_stat_atime_timespec(const struct stat *st)
 ```
 
-Defined at lines 76 to 88.
+Defined at lines 91 to 103.
 
 Return the stat atime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -109,7 +122,7 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [setfile]
 static void atalk_timespec_to_timeval(struct timeval *tv, const struct timespec *ts)
 ```
 
-Defined at lines 91 to 96.
+Defined at lines 106 to 111.
 
 Store a timespec in a timeval, truncated to microseconds.
 

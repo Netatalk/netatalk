@@ -5,7 +5,7 @@ description: "AFP file command handlers and file metadata helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/file.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -20,10 +20,12 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 # Included by
 
+* [etc/afpd/ad_cache.c](ad_cache.c.md)
 * [etc/afpd/appl.c](appl.c.md)
 * [etc/afpd/catsearch.c](catsearch.c.md)
 * [etc/afpd/directory.c](directory.c.md)
 * [etc/afpd/enumerate.c](enumerate.c.md)
+* [etc/afpd/extattrs.c](extattrs.c.md)
 * [etc/afpd/fce_api.c](fce_api.c.md)
 * [etc/afpd/fce_util.c](fce_util.c.md)
 * [etc/afpd/file.c](file.c.md)

@@ -5,7 +5,7 @@ description: "The CNID database front end and backend registry."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -407,7 +407,7 @@ Returns: the CNID after valide, or CNID_INVALID
 
 Calls: [valide](cnid.c.md#valide)
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_remextattr](../../etc/afpd/extattrs.c.md#afp_remextattr), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [afp_setextattr](../../etc/afpd/extattrs.c.md#afp_setextattr), [deletefile](../../etc/afpd/file.c.md#deletefile), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [deletefile](../../etc/afpd/file.c.md#deletefile), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
 Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 

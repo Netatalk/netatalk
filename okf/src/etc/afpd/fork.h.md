@@ -5,7 +5,7 @@ description: "Open fork state, byte range locking and AFP fork command handlers.
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -20,6 +20,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 # Included by
 
 * [etc/afpd/acls.c](acls.c.md)
+* [etc/afpd/ad_cache.c](ad_cache.c.md)
 * [etc/afpd/afp_asp.c](afp_asp.c.md)
 * [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 * [etc/afpd/auth.c](auth.c.md)

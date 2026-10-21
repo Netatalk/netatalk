@@ -5,7 +5,7 @@ description: "AppleDouble metadata and resource fork caching in the directory ca
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ad_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -14,6 +14,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 * [ad_cache.h](ad_cache.h.md)
 * [atalk/adouble.h](../../include/atalk/adouble.h.md)
+* [atalk/compat.h](../../include/atalk/compat.h.md)
 * [atalk/directory.h](../../include/atalk/directory.h.md)
 * [atalk/ea.h](../../include/atalk/ea.h.md)
 * [atalk/errchk.h](../../include/atalk/errchk.h.md)
@@ -22,8 +23,10 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [atalk/volume.h](../../include/atalk/volume.h.md)
 * [dircache.h](dircache.h.md)
 * [directory.h](directory.h.md)
+* [file.h](file.h.md)
+* [fork.h](fork.h.md)
 * [unix.h](unix.h.md)
-* System headers: `errno.h`, `stdbool.h`, `stdlib.h`, `string.h`, `sys/stat.h`
+* System headers: `errno.h`, `fcntl.h`, `stdbool.h`, `stdint.h`, `stdlib.h`, `string.h`, `strings.h`, `sys/stat.h`
 
 # Functions
 
@@ -33,7 +36,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 void ad_store_to_cache(struct adouble *adp, struct dir *cached)
 ```
 
-Defined at lines 61 to 92.
+Defined at lines 67 to 98.
 
 Store the AppleDouble metadata of an object in its dircache entry.
 
@@ -53,7 +56,7 @@ Called by: [ad_getcomment](desktop.c.md#ad_getcomment), [ad_metadata_cached](ad_
 void ad_rebuild_from_cache(struct adouble *adp, const struct dir *cached)
 ```
 
-Defined at lines 105 to 137.
+Defined at lines 111 to 143.
 
 Fill an AppleDouble from the metadata cached in a dircache entry.
 
@@ -71,7 +74,7 @@ Called by: [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached)
 int ad_metadata_cached(const char *name, int flags, struct adouble *adp, const struct vol *vol, struct dir *dir, bool strict, struct stat *recent_st)
 ```
 
-Defined at lines 159 to 292.
+Defined at lines 165 to 298.
 
 Read the AppleDouble metadata of an object through the dircache.
 
@@ -100,7 +103,7 @@ Uses file-scope variables: `ad_cache_hits`, `ad_cache_misses`, `ad_cache_no_ad`,
 void rfork_cache_free(struct dir *entry)
 ```
 
-Defined at lines 312 to 367.
+Defined at lines 318 to 373.
 
 Free the cached resource fork data of a dircache entry.
 
@@ -119,7 +122,7 @@ Uses file-scope variables: `rfork_cache_used` in [etc/afpd/dircache.c](dircache.
 void rfork_cache_evict_to_budget(size_t needed)
 ```
 
-Defined at lines 379 to 393.
+Defined at lines 385 to 399.
 
 Free cached resource forks from the oldest end of the LRU list until needed bytes fit.
 
@@ -140,7 +143,7 @@ Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircach
 int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
 ```
 
-Defined at lines 413 to 519.
+Defined at lines 419 to 525.
 
 Cache the entire resource fork of a file by reading it from the open fork.
 
@@ -159,6 +162,161 @@ Called by: [read_fork](fork.c.md#read_fork)
 
 Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircache.c.md), `rfork_cache_used` in [etc/afpd/dircache.c](dircache.c.md), `rfork_lru` in [etc/afpd/dircache.c](dircache.c.md), `rfork_lru_count` in [etc/afpd/dircache.c](dircache.c.md), `rfork_max_entry_size` in [etc/afpd/dircache.c](dircache.c.md), `rfork_stat_used_max` in [etc/afpd/dircache.c](dircache.c.md)
 
+### ea_cache_entry
+
+```c
+struct dir * ea_cache_entry(struct vol *vol, struct path *path, int oflag, const char *name)
+```
+
+Defined at lines 570 to 610.
+
+The entry whose EA cache applies to this request, its stat brought up to the request's fresh stat, or NULL.
+
+[cname()](directory.c.md#cname) has stat'ed a file; a directory addressed by its DID is stat'ed here, past the bypass tests, so a request the cache does not serve costs no stat. A get names its attribute, a list passes NULL: the names the list filter hides are afpd's own, written behind the entry by fork writes and FinderInfo stores, so a request under one takes no entry. Shared volumes never cache, so their requests skip the lookup. A symlink's own EAs and its target's differ, so a symlink is never cached; with follow symlinks = yes the stat cannot tell one, so kXAttrNoFollow requests bypass the cache there. An entry whose inode is not the object's is left to validation. A ctime change the stat shows below the second, where the filesystem keeps nanoseconds, drops the cache that [dir_stat_refresh()](directory.c.md#dir_stat_refresh) cannot see. When [of_statdir()](ofork.c.md#of_statdir)'s EACCES fallback has moved the cwd to the parent, from this stat or from the list handler's own, u_name takes the directory's own name, whatever that stat found, so the backend and the cache address it from there on every volume; the volume root has no parent directory and keeps ".".
+
+Parameters:
+* `vol`: volume of the request
+* `path`: the request's path as [cname()](directory.c.md#cname) left it; a directory's stat is taken here, a file's d_cached memo updated
+* `oflag`: O_NOFOLLOW for a kXAttrNoFollow request, else 0
+* `name`: attribute name of a get, NULL for a names list
+
+Returns: the entry, or NULL for a request the cache does not serve
+
+Calls: [atalk_stat_ctime_timespec](../../include/atalk/compat.h.md#atalk_stat_ctime_timespec), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [ea_cache_free](ad_cache.c.md#ea_cache_free), [of_statdir](ofork.c.md#of_statdir), [path_entry](file.c.md#path_entry), [path_isadir](../../include/atalk/directory.h.md#path_isadir), [sys_ea_protected](../../libatalk/vfs/ea_sys.c.md#sys_ea_protected)
+
+Called by: [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_listextattr](extattrs.c.md#afp_listextattr)
+
+Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
+
+### ea_cache_names
+
+```c
+const char * ea_cache_names(struct dir *entry, size_t *len)
+```
+
+Defined at lines 619 to 629.
+
+The cached names, or NULL when the entry has none cached.
+
+Parameters:
+* `entry`: dircache entry of the object
+* `len`: bytes in the names on a hit
+
+Returns: the names as the backend listed them, or NULL
+
+Called by: [afp_listextattr](extattrs.c.md#afp_listextattr)
+
+Uses file-scope variables: `ea_cache_stat`
+
+Mentioned in the documentation of: [ea_cache_store_names](ad_cache.c.md#ea_cache_store_names)
+
+### ea_cache_store_names
+
+```c
+void ea_cache_store_names(struct dir *entry, const char *names, size_t len)
+```
+
+Defined at lines 641 to 660.
+
+Cache the object's EA names, after [ea_cache_names()](ad_cache.c.md#ea_cache_names) found none.
+
+One byte over len, so an object without EAs holds a pointer too: the pointer is what says the names are valid.
+
+Parameters:
+* `entry`: dircache entry of the object
+* `names`: the names as the backend listed them
+* `len`: bytes in names; over EA_CACHE_NAMES nothing is kept
+
+Called by: [afp_listextattr](extattrs.c.md#afp_listextattr)
+
+Uses file-scope variables: `ea_cache_stat`
+
+### ea_cache_free
+
+```c
+void ea_cache_free(struct dir *entry)
+```
+
+Defined at lines 667 to 679.
+
+Drop the entry's EA cache.
+
+Parameters:
+* `entry`: dircache entry whose EA names and values are released
+
+Called by: [arc_evict_to_ghost](dircache.c.md#arc_evict_to_ghost), [dir_free](directory.c.md#dir_free), [dir_modify](directory.c.md#dir_modify), [ea_cache_entry](ad_cache.c.md#ea_cache_entry), [ea_written](extattrs.c.md#ea_written)
+
+Uses file-scope variables: `ea_cache_stat`
+
+### ea_cache_value
+
+```c
+const char * ea_cache_value(struct dir *entry, const char *name, size_t *len)
+```
+
+Defined at lines 689 to 719.
+
+The cached value of name, or NULL when it is not cached.
+
+Parameters:
+* `entry`: dircache entry of the object
+* `name`: attribute name in the unix charset
+* `len`: bytes in the value on a hit
+
+Returns: the value as the backend delivered it, or NULL
+
+Called by: [afp_getextattr](extattrs.c.md#afp_getextattr)
+
+Uses file-scope variables: `ea_cache_stat`
+
+### ea_cache_store_value
+
+```c
+void ea_cache_store_value(struct dir *entry, const char *name, const char *value, size_t len)
+```
+
+Defined at lines 730 to 760.
+
+Cache one value the object was read for.
+
+Parameters:
+* `entry`: dircache entry of the object
+* `name`: attribute name, at most UINT8_MAX bytes
+* `value`: the value as the backend delivered it
+* `len`: bytes in value; a record that does not fit within EA_CACHE_VALUES is not kept
+
+Called by: [afp_getextattr](extattrs.c.md#afp_getextattr)
+
+Uses file-scope variables: `ea_cache_stat`
+
+### ea_cache_absent
+
+```c
+bool ea_cache_absent(const struct dir *entry, const char *name)
+```
+
+Defined at lines 774 to 804.
+
+Does the entry's cached list prove an attribute missing?
+
+The list holds the names as the client saw them, which an ASCII name matches after its conversion, case apart, since some attribute stores fold it; any other name, and an uncached list, leave the answer to the backend.
+
+Parameters:
+* `entry`: dircache entry of the object
+* `name`: attribute name in the unix charset
+
+Returns: true when the list is cached and lacks the name
+
+Calls: [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+
+Called by: [afp_getextattr](extattrs.c.md#afp_getextattr)
+
+Uses file-scope variables: `ea_cache_stat`
+
+# Macros
+
+* Undocumented: `EA_CACHE_NAMES`, `EA_CACHE_VALUES`
+
 # File-scope variables
 
-`ad_cache_hits`, `ad_cache_misses`, `ad_cache_no_ad`
+`ad_cache_hits`, `ad_cache_misses`, `ad_cache_no_ad`, `ea_cache_stat`
