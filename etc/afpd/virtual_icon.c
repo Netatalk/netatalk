@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -533,15 +534,13 @@ int virtual_icon_getfilparams(const AFPObj *obj,
     if (l_nameoff) {
         ashort = htons((uint16_t)(data - buf));
         memcpy(l_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, DIRDID_ROOT, (char *)name,
-                        htonl(VIRTUAL_ICON_CNID), false);
+        data = set_name(vol, data, name, name, id, false);
     }
 
     if (utf_nameoff) {
         ashort = htons((uint16_t)(data - buf));
         memcpy(utf_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, DIRDID_ROOT, (char *)name,
-                        htonl(VIRTUAL_ICON_CNID), true);
+        data = set_name(vol, data, name, name, id, true);
     }
 
     *buflen = data - buf;

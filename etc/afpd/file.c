@@ -95,8 +95,8 @@ static const uint8_t old_ufinderi[] = {
  * @param[in,out] path  path of the file, its d_cached memo updated
  * @returns the dircache entry, or NULL when the file has none
  */
-static struct dir *path_resolve_cached_file(const struct vol *vol,
-                                            const struct dir *dir, struct path *path)
+struct dir *path_resolve_cached_file(const struct vol *vol,
+                                     const struct dir *dir, struct path *path)
 {
     struct dir *cached = path_cached_file(path);
 
@@ -412,41 +412,35 @@ void *get_finderinfo(const struct vol *vol, const char *upath,
  * @brief Append a name in AFP wire format to data
  *
  * A Mac name is a Pascal string of up to 31 bytes, the MACFILELEN limit. A
- * Mac name request on a session with UTF-8 names converts the name to the
- * Mac charset through its Unix name first. A UTF-8 name carries the text
- * encoding hint of the volume and a two-byte length, limited to 255 bytes.
+ * Mac name request on a session with UTF-8 names converts the Unix name to
+ * the Mac charset. A UTF-8 name carries the text encoding hint of the volume
+ * and a two-byte length, limited to 255 bytes.
  *
- * @param[in]  vol   volume of the name
- * @param[out] data  buffer position to append at
- * @param[in]  pid   parent DID, for the name conversion
- * @param[in]  name  name to append
- * @param[in]  id    CNID, for the name conversion
- * @param[in]  utf8  true for the UTF-8 format, false for a Mac name
+ * @param[in]  vol    volume of the name
+ * @param[out] data   buffer position to append at
+ * @param[in]  name   name to append, in the session's encoding
+ * @param[in]  uname  Unix name of the object
+ * @param[in]  id     CNID, for the name conversion
+ * @param[in]  utf8   true for the UTF-8 format, false for a Mac name
  * @returns the buffer position after the name
  */
-char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
+char *set_name(const struct vol *vol, char *data, char *name, char *uname,
                cnid_t id, bool utf8)
 {
-    uint32_t   aint;
-    uint32_t   tp_len = 0;
-    char        *tp = NULL;
-    char        *src = name;
-    aint = strlen(name);
+    uint32_t aint = (uint32_t)strlen(name);
+    char *src = name;
 
     if (!utf8) {
         /* want mac name */
         if (utf8_encoding(vol->v_obj)) {
             /* but name is an utf8 mac name */
-            char *u, *m;
-            /* global static variable... */
-            tp_len = aint;
-            tp = strdup(name);
+            char *m = utompath(vol, uname, id, 0);
 
-            if (!(u = mtoupath(vol, name, pid, 1)) || !(m = utompath(vol, u, id, 0))) {
+            if (m == NULL) {
                 aint = 0;
             } else {
-                aint = strlen(m);
                 src = m;
+                aint = (uint32_t)strlen(src);
             }
         }
 
@@ -473,14 +467,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
     }
 
     memcpy(data, src, aint);
-    data += aint;
-
-    if (tp) {
-        memcpy(name, tp, tp_len + 1);
-        free(tp);
-    }
-
-    return data;
+    return data + aint;
 }
 
 /*
@@ -1139,13 +1126,13 @@ int getmetadata(const AFPObj *obj,
     if (l_nameoff) {
         ashort = htons(data - buf);
         memcpy(l_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, dir->d_did, path->m_name, id, false);
+        data = set_name(vol, data, path->m_name, upath, id, false);
     }
 
     if (utf_nameoff) {
         ashort = htons(data - buf);
         memcpy(utf_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, dir->d_did, path->m_name, id, true);
+        data = set_name(vol, data, path->m_name, upath, id, true);
     }
 
     *buflen = data - buf;
@@ -1423,26 +1410,28 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     cnid_t id;
     size_t upath_len = upath ? strnlen(upath, CNID_MAX_PATH_LEN) : 0;
 
-    if ((id = get_id(vol, &ad, &st, dir->d_did, upath,
+    /* curdir is the path's last folder, which holds the file */
+    if ((id = get_id(vol, &ad, &st, curdir->d_did, upath,
                      (int)upath_len)) == CNID_INVALID) {
         LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
         goto createfile_iderr;
     }
 
-    (void)ad_setid(&ad, st.st_dev, st.st_ino, id, dir->d_did, vol->v_stamp);
+    (void)ad_setid(&ad, st.st_dev, st.st_ino, id, curdir->d_did,
+                   vol->v_stamp);
 createfile_iderr:
     ad_flush(&ad);
     /* Eagerly create dircache entry with AD metadata pre-populated.
      * Eliminates per-file getxattr on first enumerate after creation. */
     {
-        struct dir *cachedfile = dircache_search_by_name(vol, dir,
+        struct dir *cachedfile = dircache_search_by_name(vol, curdir,
                                                          upath, (int)upath_len);
 
         if (!cachedfile && id != CNID_INVALID) {
-            bstring fullpath = fullpath_join(dir->d_fullpath, upath);
+            bstring fullpath = fullpath_join(curdir->d_fullpath, upath);
 
             if (fullpath) {
-                cachedfile = dir_new(path, upath, vol, dir->d_did,
+                cachedfile = dir_new(path, upath, vol, curdir->d_did,
                                      id, fullpath, &st);
 
                 if (cachedfile) {
@@ -1477,14 +1466,6 @@ createfile_iderr:
 #ifdef WITH_SPOTLIGHT
     sl_index_event(obj, vol, SL_INDEX_FILE_CREATE, created_path, NULL);
 #endif /* WITH_SPOTLIGHT */
-
-    /* Defensive check: curdir may be corrupted by race conditions or cname() failures */
-    if (curdir == NULL) {
-        LOG(log_error, logtype_afpd,
-            "afp_createfile: curdir is NULL after operations, likely due to concurrent deletion or cname() failure");
-        return AFPERR_MISC;
-    }
-
     /* Send hint to afpd siblings — parent dir ctime changed due to new file creation */
     ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     /* st_errno is the pre-create stat: an existing name adds nothing; a
@@ -2912,6 +2893,12 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return AFPERR_BADTYPE;
     }
 
+    /* an empty path names the file the DID names, and cname() leaves it
+     * unstat'ed */
+    if (!s_path->st_valid) {
+        of_stat(vol, s_path);
+    }
+
     upath = s_path->u_name;
 
     switch (s_path->st_errno) {
@@ -2933,7 +2920,7 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     st = &s_path->st;
     len = upath ? (int)strnlen(upath, CNID_MAX_PATH_LEN) : 0;
     AFP_CNID_START("cnid_lookup");
-    id = cnid_lookup(vol->v_cdb, st, did, upath, len);
+    id = cnid_lookup(vol->v_cdb, st, curdir->d_did, upath, len);
     AFP_CNID_DONE();
 
     if (id) {
@@ -2942,7 +2929,8 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return AFPERR_EXISTID;
     }
 
-    if ((id = get_id(vol, NULL, st, did, upath, len)) != CNID_INVALID) {
+    if ((id = get_id(vol, NULL, st, curdir->d_did, upath,
+                     len)) != CNID_INVALID) {
         memcpy(rbuf, &id, sizeof(id));
         *rbuflen = sizeof(id);
         return AFP_OK;

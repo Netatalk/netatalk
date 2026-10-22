@@ -1445,18 +1445,16 @@ static int validation_refresh_and_hint(const struct vol *vol,
 }
 
 /*!
- * @brief Look up a directory entry by DID for pfd_cache parent resolution
+ * @brief Look up a cached entry by DID without validating it
  *
  * The probe never validates, changes, or promotes the entry. It skips ARC
- * ghosts. A ghost keeps frozen, unvalidated identity fields, so accepting one
- * as a live parent would let the pfd sync test pass against stale identity.
- * It also skips file entries, because a parent is a directory.
+ * ghosts, whose identity fields are frozen and unvalidated.
  *
  * @param[in] vol  volume of the entry
- * @param[in] did  directory ID
- * @returns the entry, or NULL for an invalid DID, a miss, a ghost, or a file
+ * @param[in] did  CNID of a file or directory
+ * @returns the entry, or NULL for an invalid DID, a miss, or a ghost
  */
-struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did)
+struct dir *dircache_lookup_did(const struct vol *vol, cnid_t did)
 {
     struct dir key;
     hnode_t *hn;
@@ -1475,7 +1473,7 @@ struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did)
 
     d = hnode_get(hn);
 
-    if (d->d_flags & (DIRF_ARC_GHOST | DIRF_ISFILE)) {
+    if (d->d_flags & DIRF_ARC_GHOST) {
         return NULL;
     }
 
@@ -1483,13 +1481,30 @@ struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did)
 }
 
 /*!
+ * @brief Look up a directory entry by DID for pfd_cache parent resolution
+ *
+ * A parent is a directory, and a ghost would let the pfd sync test pass
+ * against stale identity, so dircache_lookup_did skips it.
+ *
+ * @param[in] vol  volume of the entry
+ * @param[in] did  directory ID
+ * @returns the entry, or NULL for an invalid DID, a miss, a ghost, or a file
+ */
+struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did)
+{
+    struct dir *d = dircache_lookup_did(vol, did);
+    return d != NULL && !(d->d_flags & DIRF_ISFILE) ? d : NULL;
+}
+
+/*!
  * @brief Search the dircache via a CNID for a directory
  *
- * Found cache entries are expunged if both the parent directory st_ctime and the objects
- * st_ctime are modified.
- * This func builds on the fact, that all our code only ever needs to and does search
- * the dircache by CNID expecting directories to be returned, but not files.
- * Thus
+ * One lookup in validation_freq() stats the entry: an entry whose stat fails
+ * is expunged, and one whose inode or ctime changed goes to dir_modify(),
+ * which refreshes it, re-keys it to another CNID or expunges it.
+ * Its callers search the dircache by CNID expecting directories to be
+ * returned, but not files (a caller that takes either uses
+ * dircache_lookup_did()). Thus
  * (1) if we find a file for a given CNID we
  *     (1a) remove it from the cache
  *     (1b) return NULL indicating nothing found
@@ -2455,7 +2470,7 @@ void log_dircache_stat(void)
     double validation_ratio = 0.0;
     /* Memory accounting: struct dir size × high-water mark entry count.
      * This is the fixed-size allocation per entry; excludes variable-length
-     * heap data (d_fullpath, d_m_name, d_u_name bstrings, d_m_name_ucs2). */
+     * heap data (d_fullpath, d_m_name, d_u_name bstrings). */
     unsigned long cache_max_mem_kb =
         (queue_count_max * sizeof(struct dir)) / 1024;
 

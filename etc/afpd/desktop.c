@@ -1064,13 +1064,14 @@ char *dtfile(const struct vol *vol, uint8_t creator[], char *ext)
 /*!
  * @brief Convert an AFP name into the name on disk
  *
- * An empty name becomes ".". A mangled name resolves through demangle and the
- * CNID database. Any other name converts from UTF8-MAC or the Mac charset to
- * the volume charset.
+ * An empty name becomes ".". A mangled name resolves through demangle, from
+ * the object's dircache entry or the CNID database. Any other name converts
+ * from UTF8-MAC or the Mac charset to the volume charset.
  *
  * @param[in] vol    volume of the name
  * @param[in] mpath  AFP name of one path element
- * @param[in] did    CNID of the parent directory
+ * @param[in] did    CNID of the parent directory, or CNID_INVALID to
+ *                   convert without demangling
  * @param[in] utf8   nonzero for a UTF8-MAC name of AFP 3
  * @returns the name in a static buffer, or NULL when the conversion fails
  */
@@ -1089,9 +1090,8 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 
     /* set conversion flags */
     flags = vol->v_mtou_flags;
-    m = demangle(vol, mpath, did);
 
-    if (m != mpath) {
+    if (did != CNID_INVALID && (m = demangle(vol, mpath, did)) != mpath) {
         return m;
     }
 
@@ -1118,31 +1118,35 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
  * The name converts from the volume charset to UTF8-MAC or the Mac charset. A
  * name too long for the client, or with characters it cannot map, goes
  * through mangle, which needs the CNID. A failed conversion mangles "???"
- * instead.
+ * instead. A reply packs both names of one object, so each encoding has a
+ * static buffer of its own.
  *
  * @param[in] vol    volume of the name
  * @param[in] upath  name on disk of one path element
  * @param[in] id     CNID of the file, or 0
  * @param[in] utf8   nonzero for a UTF8-MAC name of AFP 3
- * @returns the name in a static buffer, or NULL when the name needs mangling
- *          and id is 0
+ * @returns the name in the encoding's static buffer, or NULL when the name
+ *          needs mangling and id is 0
  */
 char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 {
     /* for convert_charset dest_len parameter +2 */
-    static char  mpath[MAXPATHLEN + 2];
+    static char  mpath[2][MAXPATHLEN + 2];
     char        *m, *u;
     uint16_t    flags;
     size_t       outlen;
-    m = mpath;
+    m = mpath[utf8 != 0];
     outlen = strlen(upath);
     flags = vol->v_utom_flags;
     u = upath;
 
     /* convert charsets */
     if ((size_t) -1 == (outlen = convert_charset(vol->v_volcharset,
-                                                 utf8 ? CH_UTF8_MAC : vol->v_maccharset, vol->v_maccharset, u, outlen, mpath,
-                                                 sizeof(mpath), &flags))) {
+                                                 utf8 ? CH_UTF8_MAC
+                                                 : vol->v_maccharset,
+                                                 vol->v_maccharset, u, outlen,
+                                                 m, sizeof(mpath[0]),
+                                                 &flags))) {
         LOG(log_error, logtype_afpd, "Conversion from %s to %s for %s (%u) failed.",
             vol->v_volcodepage, vol->v_maccodepage, u, ntohl(id));
         goto utompath_error;
@@ -1154,7 +1158,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
         flags |= 2;
     }
 
-    m = mangle(vol, mpath, outlen, upath, id, flags);
+    m = mangle(vol, m, outlen, upath, id, flags);
     LOG(log_debug9, logtype_afpd, "utompath: '%s':'%s':'%2.2X'", upath, m,
         ntohl(id));
     return m;

@@ -425,6 +425,7 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
     static char temp[MAXPATHLEN + 1];
     char *t;
     cnid_t fileid = 0;
+    cnid_t did = dir->d_did;
 
     if (vol->v_obj->afp_version >= 30) {
         if (toUTF8) {
@@ -435,10 +436,8 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
                  * we overwrite the requested path with the utf8 volume name so that the following
                  * strcmp can match.
                  */
-                ucs2_to_charset(vol->v_obj->options.maccharset, vol->v_macname,
-                                temp, AFPVOL_MACNAMELEN + 1);
-
-                if (strcasecmp(ret->m_name, temp) == 0) {
+                if (vol_macname(vol, temp) != (size_t) -1
+                        && strcasecmp(ret->m_name, temp) == 0) {
                     ucs2_to_charset(CH_UTF8_MAC, vol->v_u8mname, ret->m_name, AFPVOL_U8MNAMELEN);
                 }
             } else {
@@ -455,12 +454,8 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
 
         /* check for OS X mangled filename :( */
         t = demangle_osx(vol, ret->m_name, dir->d_did, &fileid);
-
-        /* demangle_osx() calls dirlookup() which might have clobbered curdir */
-        if (curdir == NULL && movecwd(vol, dir) < 0) {
-            return -1;
-        }
-
+        /* demangle_osx() includes demangle()'s exact check */
+        did = CNID_INVALID;
         LOG(log_maxdebug, logtype_afpd,
             "cname_mtouname('%s',did:%u) {demangled:'%s', fileid:%u}",
             ret->m_name, ntohl(dir->d_did), t, ntohl(fileid));
@@ -468,9 +463,7 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
         if (t != ret->m_name) {
             ret->u_name = t;
 
-            /* duplicate work but we can't reuse all convert_char we did in demangle_osx
-             * flags weren't the same
-             */
+            /* a client may send a variant demangle_checks() accepts */
             if ((t = utompath(vol, ret->u_name, fileid, utf8_encoding(vol->v_obj)))) {
                 /* at last got our view of mac name */
                 strlcpy(ret->m_name, t, MAXPATHLEN + 1);
@@ -480,7 +473,7 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
 
     /* If we haven't got it by now, get it */
     if (ret->u_name == NULL) {
-        if ((ret->u_name = mtoupath(vol, ret->m_name, dir->d_did,
+        if ((ret->u_name = mtoupath(vol, ret->m_name, did,
                                     utf8_encoding(vol->v_obj))) == NULL) {
             afp_errno = AFPERR_PARAM;
             return -1;
@@ -998,17 +991,6 @@ struct dir *dir_new(const char *m_name,
         return NULL;
     }
 
-    if (convert_string_allocate((utf8_encoding(vol->v_obj)) ? CH_UTF8_MAC :
-                                vol->v_maccharset,
-                                CH_UCS2,
-                                m_name,
-                                -1, (char **)&dir->d_m_name_ucs2) == (size_t) -1) {
-        LOG(log_error, logtype_afpd,
-            "dir_new(did: %u) {%s, %s}: couldn't set UCS2 name", ntohl(did), m_name,
-            u_name);
-        dir->d_m_name_ucs2 = NULL;
-    }
-
     if (m_name == u_name || !strcmp(m_name, u_name)) {
         dir->d_u_name = dir->d_m_name;
     } else if ((dir->d_u_name = bfromcstr(u_name)) == NULL) {
@@ -1118,10 +1100,6 @@ void dir_free(struct dir *dir)
 
     if (dir->d_u_name != dir->d_m_name) {
         bdestroy(dir->d_u_name);
-    }
-
-    if (dir->d_m_name_ucs2) {
-        free(dir->d_m_name_ucs2);
     }
 
     bdestroy(dir->d_m_name);
@@ -1268,18 +1246,6 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             dir->d_m_name = bfromcstr(mname);
             dir->d_u_name = (strcmp(mname, args->new_uname) == 0)
                             ? dir->d_m_name : bfromcstr(args->new_uname);
-
-            if (dir->d_m_name_ucs2) {
-                free(dir->d_m_name_ucs2);
-                dir->d_m_name_ucs2 = NULL;
-            }
-
-            if (convert_string_allocate(
-                        (utf8_encoding(vol->v_obj)) ? CH_UTF8_MAC : vol->v_maccharset,
-                        CH_UCS2, mname, -1,
-                        (char **)&dir->d_m_name_ucs2) == (size_t) -1) {
-                dir->d_m_name_ucs2 = NULL;
-            }
         }
 
         if (newpath != NULL) {
@@ -2146,7 +2112,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     if (ret.m_name[0] == 0) {
         /* Last part was a dir */
         /* Force "." into a useable static buffer */
-        ret.u_name = mtoupath(vol, ret.m_name, 0, 1);
+        ret.u_name = mtoupath(vol, ret.m_name, CNID_INVALID, 1);
         /* Use curdir (updated by movecwd, handles self-healing) */
         ret.d_dir = curdir;
     } else if (original_len == 0) {
@@ -2157,7 +2123,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         /* Mark as directory */
         ret.m_name[0] = 0;
         /* "." */
-        ret.u_name = mtoupath(vol, ret.m_name, 0, 1);
+        ret.u_name = mtoupath(vol, ret.m_name, CNID_INVALID, 1);
         /* Use curdir (updated by movecwd, includes healing) */
         ret.d_dir = curdir;
         LOG(log_info, logtype_afpd,
@@ -2581,6 +2547,8 @@ int getdirparams(const AFPObj *obj,
     cnid_t              pdid;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
+    char *uname = cfrombstr(dir->d_u_name);
+    char *lname_end;
     int                 timeoffset = 0;
 
     if (s_path->st_errno == 0) {
@@ -2819,14 +2787,22 @@ int getdirparams(const AFPObj *obj,
     if (l_nameoff) {
         ashort = htons(data - buf);
         memcpy(l_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did,
-                        false);
+
+        if (dir->d_did == DIRDID_ROOT && utf8_encoding(vol->v_obj)
+                && (lname_end = set_vol_macname(vol, data)) != NULL) {
+            /* the volume's Mac name, as FPGetVolParms sends it, not the
+             * shared directory's; an AFP 2 root entry holds it already */
+            data = lname_end;
+        } else {
+            data = set_name(vol, data, cfrombstr(dir->d_m_name), uname,
+                            dir->d_did, false);
+        }
     }
 
     if (utf_nameoff) {
         ashort = htons(data - buf);
         memcpy(utf_nameoff, &ashort, sizeof(ashort));
-        data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did,
+        data = set_name(vol, data, cfrombstr(dir->d_m_name), uname, dir->d_did,
                         true);
     }
 
@@ -3616,6 +3592,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return afp_errno;
     }
 
+    /* movecwd() replaces a stale entry */
+    dir = curdir;
     ad_init(&ad, vol);
 
     if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR,
@@ -3624,8 +3602,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     ad_setname(&ad, s_path->m_name);
-    ad_setid(&ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did,
-             vol->v_stamp);
+    ad_setid(&ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did,
+             dir->d_pdid, vol->v_stamp);
 #ifdef WITH_FCE
     fce_register(obj, FCE_DIR_CREATE, bdata(curdir->d_fullpath), NULL);
 #endif /* WITH_FCE */

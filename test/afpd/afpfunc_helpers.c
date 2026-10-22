@@ -157,6 +157,9 @@ char **cnamewrap(const char *name)
 /*!
  * @brief FPGetFileDirParms for name under did with the given bitmaps
  *
+ * An AFP 2 session gets the name as one element of a long name path, the only
+ * path type it takes.
+ *
  * @param[in] obj      the test session
  * @param[in] vid      the open volume
  * @param[in] did      the parent folder
@@ -177,7 +180,16 @@ int getfiledirparms_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,
     PUSHVAL(p, cnid_t, did, len);
     PUSHVAL(p, uint16_t, htons(fbitmap), len);
     PUSHVAL(p, uint16_t, htons(dbitmap), len);
-    len += push_path(&p, name);
+
+    if (obj->afp_version >= 30) {
+        len += push_path(&p, name);
+    } else {
+        uint8_t slen = (uint8_t)strlen(name);
+        PUSHVAL(p, uint8_t, 2, len); /* path type */
+        PUSHVAL(p, uint8_t, slen, len);
+        PUSHBUF(p, name, slen, len);
+    }
+
     return afp_getfildirparams(obj, buf, len, rbuf, &rbuflen);
 }
 
@@ -835,6 +847,36 @@ int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid)
 }
 
 /*!
+ * @brief FPCreateID of the file a path from did names
+ *
+ * @param[in]  obj   the test session
+ * @param[in]  vid   the open volume
+ * @param[in]  did   the folder the path starts from
+ * @param[in]  name  the file's path
+ * @param[out] id    on AFP_OK or AFPERR_EXISTID, the file's CNID
+ * @returns the AFP result
+ */
+int createid(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+             cnid_t *id)
+{
+    static char buf[256] = { 0 };
+    char *p = buf;
+    int len = 0;
+    int ret;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    len += push_path(&p, name);
+    ret = afp_createid(obj, buf, len, rbuf, &rbuflen);
+
+    if (ret == AFP_OK || ret == AFPERR_EXISTID) {
+        memcpy(id, rbuf, sizeof(*id));
+    }
+
+    return ret;
+}
+
+/*!
  * @brief Touch a file until its modification time reaches a new second,
  *        then wait a tick
  *
@@ -1083,4 +1125,263 @@ int listextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
     PUSHVAL(p, uint32_t, htonl(maxreply), len);
     len += push_path(&p, name);
     return afp_listextattr(obj, buf, len, reply, replylen);
+}
+
+/*!
+ * @brief Copy a reply's Pascal long name into a C string
+ *
+ * @param[out] dst   MACFILELEN + 1 bytes
+ * @param[in]  pstr  the long name, its length byte first
+ * @returns 0, -1 for a name longer than a long name
+ */
+static int copy_lname(char *dst, const unsigned char *pstr)
+{
+    if (pstr[0] > MACFILELEN) {
+        return -1;
+    }
+
+    memcpy(dst, pstr + 1, pstr[0]);
+    dst[pstr[0]] = '\0';
+    return 0;
+}
+
+/*!
+ * @brief A folder listing's long and UTF-8 names, from FPEnumerateExt2
+ *
+ * @param[in]  obj     session
+ * @param[in]  vid     volume
+ * @param[in]  did     directory to list
+ * @param[out] lnames  the long names, in reply order
+ * @param[out] unames  the UTF-8 names, in reply order
+ * @param[in]  max     capacity of both, and the count requested
+ * @returns the number of entries, -1 when the request fails or a name does
+ *          not fit
+ */
+int enumerate_names(AFPObj *obj, uint16_t vid, cnid_t did,
+                    char lnames[][MACFILELEN + 1],
+                    char unames[][UTF8FILELEN_EARLY + 1], uint16_t max)
+{
+    const char *rec = rbuf + 6;
+    uint16_t count;
+    uint16_t reclen;
+    uint16_t off;
+    uint16_t len;
+    int n;
+
+    /* both bitmaps ask for the same bits, so file and folder records hold
+     * the same fields */
+    if (enumerate_range(obj, vid, did,
+                        (1 << FILPBIT_LNAME) | (1 << FILPBIT_PDINFO),
+                        (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDINFO), 1,
+                        max) != AFP_OK) {
+        return -1;
+    }
+
+    /* both bitmaps and the count, then records: a length, the kind byte, a
+     * pad, and the parameters, which lead with the offsets of the long
+     * name's Pascal string and of the UTF-8 name, an encoding hint and a
+     * two-byte length before its bytes */
+    memcpy(&count, rbuf + 4, sizeof(count));
+    count = ntohs(count);
+
+    for (n = 0; n < count && n < max; n++) {
+        const unsigned char *params = (const unsigned char *)rec + 4;
+        const unsigned char *utf8;
+        memcpy(&reclen, rec, sizeof(reclen));
+        memcpy(&off, params, sizeof(off));
+
+        if (copy_lname(lnames[n], params + ntohs(off)) != 0) {
+            return -1;
+        }
+
+        memcpy(&off, params + 2, sizeof(off));
+        utf8 = params + ntohs(off) + 4;
+        memcpy(&len, utf8, sizeof(len));
+        len = ntohs(len);
+
+        if (len > UTF8FILELEN_EARLY) {
+            return -1;
+        }
+
+        memcpy(unames[n], utf8 + 2, len);
+        unames[n][len] = '\0';
+        rec += ntohs(reclen);
+    }
+
+    return n;
+}
+
+/*!
+ * @brief A folder listing's long names, from FPEnumerate as AFP 2 sends it
+ *
+ * @param[in]  obj     session
+ * @param[in]  vid     volume
+ * @param[in]  did     directory to list
+ * @param[out] lnames  the long names, in reply order
+ * @param[in]  max     capacity of lnames, and the count requested
+ * @returns the number of entries, -1 when the request fails or a name does
+ *          not fit
+ */
+int enumerate_lnames(AFPObj *obj, uint16_t vid, cnid_t did,
+                     char lnames[][MACFILELEN + 1], uint16_t max)
+{
+    static char buf[256] = { 0 };
+    const unsigned char *rec = (const unsigned char *)rbuf + 6;
+    char *p = buf;
+    int len = 0;
+    uint16_t count;
+    int n;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    PUSHVAL(p, uint16_t, htons(1 << FILPBIT_LNAME), len);
+    PUSHVAL(p, uint16_t, htons(1 << DIRPBIT_LNAME), len);
+    PUSHVAL(p, uint16_t, htons(max), len);
+    PUSHVAL(p, uint16_t, htons(1), len);
+    PUSHVAL(p, uint16_t, htons(UINT16_MAX), len);
+    PUSHVAL(p, uint8_t, 2, len); /* path type */
+    PUSHVAL(p, uint8_t, 0, len);
+    rbuflen = rbufsize;
+
+    if (afp_enumerate(obj, buf, len, rbuf, &rbuflen) != AFP_OK) {
+        return -1;
+    }
+
+    /* both bitmaps and the count, then records: a length byte, the kind
+     * byte, and the parameters, which lead with the offset of the long
+     * name's Pascal string */
+    memcpy(&count, rbuf + 4, sizeof(count));
+    count = ntohs(count);
+
+    for (n = 0; n < count && n < max; n++) {
+        const unsigned char *params = rec + 2;
+        uint16_t off;
+        memcpy(&off, params, sizeof(off));
+
+        if (copy_lname(lnames[n], params + ntohs(off)) != 0) {
+            return -1;
+        }
+
+        rec += rec[0];
+    }
+
+    return n;
+}
+
+/*!
+ * @brief The long name FPGetFileDirParms gives a file or folder
+ *
+ * @param[in]  obj    session
+ * @param[in]  vid    volume
+ * @param[in]  did    the parent folder
+ * @param[in]  name   the object, "" for the folder did itself
+ * @param[out] lname  the long name
+ * @returns AFP_OK, the request's error, or AFPERR_PARAM for a name longer
+ *          than a long name
+ */
+int getfiledirparms_lname(AFPObj *obj, uint16_t vid, cnid_t did,
+                          const char *name, char lname[MACFILELEN + 1])
+{
+    uint16_t off;
+    int ret = getfiledirparms_bitmap(obj, vid, did, name, 1 << FILPBIT_LNAME,
+                                     1 << DIRPBIT_LNAME);
+
+    if (ret != AFP_OK) {
+        return ret;
+    }
+
+    /* both bitmaps, the kind byte and a pad, then the offset of the long
+     * name's Pascal string */
+    memcpy(&off, rbuf + 6, sizeof(off));
+
+    if (copy_lname(lname, (const unsigned char *)rbuf + 6 + ntohs(off)) != 0) {
+        return AFPERR_PARAM;
+    }
+
+    return AFP_OK;
+}
+
+/*!
+ * @brief Create an empty file behind the server's back
+ *
+ * @param[in] path  the file
+ * @returns 0, -1 when the file exists or cannot be made
+ */
+int create_disk_file(const char *path)
+{
+    int fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+
+    if (fd == -1) {
+        return -1;
+    }
+
+    return close(fd);
+}
+
+/*!
+ * @brief FPCatSearchExt over the volume for files, long names requested
+ *
+ * @param[in]  obj      session
+ * @param[in]  vid      volume
+ * @param[in]  rbitmap  criteria, FILPBIT_* bits
+ * @param[in]  spec1    first specification record
+ * @param[in]  spec2    second specification record
+ * @param[in]  speclen  length of each record, at most 64 bytes
+ * @param[out] nrecs    matches in the reply, 0 for a rejected request
+ * @param[out] lname    long name of the first match, empty without one
+ * @returns the AFP result, or AFPERR_PARAM for a longer record or a reply
+ *          name longer than a long name
+ */
+int catsearch_ext(AFPObj *obj, uint16_t vid, uint32_t rbitmap,
+                  const void *spec1, const void *spec2, uint16_t speclen,
+                  uint32_t *nrecs, char lname[MACFILELEN + 1])
+{
+    static char buf[256] = { 0 };
+    char *p = buf;
+    uint16_t off;
+    int len = 0;
+    int ret;
+    *nrecs = 0;
+    *lname = '\0';
+
+    if (speclen > 64) {
+        return AFPERR_PARAM;
+    }
+
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    /* ten matches at most, no reserved bits, a new search's position */
+    PUSHVAL(p, uint32_t, htonl(10), len);
+    PUSHVAL(p, uint32_t, 0, len);
+    ADD(p, len, 16);
+    PUSHVAL(p, uint16_t, htons(1 << FILPBIT_LNAME), len);
+    PUSHVAL(p, uint16_t, 0, len);
+    PUSHVAL(p, uint32_t, htonl(rbitmap), len);
+    PUSHVAL(p, uint16_t, htons(speclen), len);
+    PUSHBUF(p, spec1, speclen, len);
+    PUSHVAL(p, uint16_t, htons(speclen), len);
+    PUSHBUF(p, spec2, speclen, len);
+    rbuflen = 0;
+    ret = afp_catsearch_ext(obj, buf, len, rbuf, &rbuflen);
+
+    if (ret != AFP_OK && ret != AFPERR_EOF) {
+        return ret;
+    }
+
+    /* the position, the two bitmaps and the count, then the records: a
+     * length, the kind byte, a pad, and the parameters, which lead with the
+     * offset of the name's Pascal string */
+    memcpy(nrecs, rbuf + 20, sizeof(*nrecs));
+    *nrecs = ntohl(*nrecs);
+
+    if (*nrecs > 0) {
+        const unsigned char *params = (const unsigned char *)rbuf + 28;
+        memcpy(&off, params, sizeof(off));
+
+        if (copy_lname(lname, params + ntohs(off)) != 0) {
+            return AFPERR_PARAM;
+        }
+    }
+
+    return ret;
 }

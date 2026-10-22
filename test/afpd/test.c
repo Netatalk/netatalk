@@ -3346,6 +3346,8 @@ int main(int argc, char *argv[])
              "veto files: a name matches in either case only when asked");
     TEST_int(utest_veto_file_list_end(), 0,
              "veto files: the list's end closes its last entry, none past it");
+    TEST_int(utest_veto_file_matches_elements(), 0,
+             "veto files: a name matches a '/'-delimited element exactly");
     TEST_int(test018_listing_vetoes_any_case(&obj, vol), 0,
              "veto files: listings and requests fold case only when asked");
     TEST_int(utest_path_probe_case_agrees(vol), 0,
@@ -4056,6 +4058,44 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(volsys ? utest_ea_absent_name_from_list(&obj, volsys)
                      : TEST_SKIP, 0,
                      "extattr: a name the list lacks is absent without a read");
+    TEST_int(utest_enumerate_lname_is_the_files_own(&obj, vol, vid), 0,
+             "enumerate: a mangled-looking name is listed as its own");
+    TEST_int(utest_root_lname_is_the_volume_name(&obj, vol, vid), 0,
+             "names: the volume root's long name is the volume's Mac name");
+    TEST_int(utest_root_lname_beyond_the_mac_charset(&obj, vol, vid), 0,
+             "names: a Mac name its charset lacks fails FPGetVolParms only");
+    TEST_int(utest_enumerate_afp2_lists_the_mac_forms(&obj, vol, vid), 0,
+             "enumerate: an AFP 2.1 listing holds the Mac charset forms");
+    TEST_int(utest_enumerate_decomposed_name_is_mangled(&obj, vol, vid), 0,
+             "enumerate: a decomposed unix name lists mangled, and opens");
+    TEST_int(utest_demangle_unknown_id_resolves_once(&obj, vol, vid), 0,
+             "demangle: an unresolvable mangled-looking name costs one lookup");
+    TEST_int(utest_demangle_cached_file_checks_its_entry(&obj, vol, vid), 0,
+             "demangle: a cached file answers until its entry goes stale");
+    TEST_int(utest_demangle_cached_folder_ignores_ctime(&obj, vol, vid), 0,
+             "demangle: a cached folder answers whatever its entry's ctime");
+    TEST_int(utest_demangle_hash_in_prefix(&obj, vol, vid), 0,
+             "demangle: a '#' in a mangled name's prefix keeps it demanglable");
+    TEST_int(utest_demangle_hash_in_extension(&obj, vol, vid), 0,
+             "demangle: a mangled name whose extension holds an id demangles");
+    TEST_int(utest_demangle_uncached_id_keeps_its_folder(&obj, vol, vid), 0,
+             "demangle: an uncached object's mangled name stays in its folder");
+    TEST_int(utest_demangle_literal_takes_no_sibling(&obj, vol, vid), 0,
+             "demangle: a literal name takes no unconvertible sibling's place");
+    TEST_int(utest_demangle_variant_needs_afp3(&obj, vol, vid), 0,
+             "demangle: a variant demangles on the Mac OS X pass alone");
+    TEST_int(utest_catsearch_converts_matches_only(&obj, vol, vid), 0,
+             "catsearch: a search by date converts only its matches' names");
+    TEST_int(utest_catsearch_lname_matches_accents(&obj, vol, vid), 0,
+             "catsearch: a long-name search matches an accented name");
+    TEST_int(utest_catsearch_match_takes_its_entrys_id(&obj, vol, vid), 0,
+             "catsearch: a match takes its CNID from its dircache entry");
+    TEST_int(utest_createfile_registers_in_its_folder(&obj, vol, vid), 0,
+             "create: a file made through a path registers in its folder");
+    TEST_int(utest_openfork_registers_in_its_folder(&obj, vol, vid), 0,
+             "openfork: a file opened through a path registers in its folder");
+    TEST_int(utest_createid_registers_in_its_folder(&obj, vol, vid), 0,
+             "createid: an ID made through a path registers in its folder");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

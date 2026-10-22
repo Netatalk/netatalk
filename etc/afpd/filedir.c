@@ -1507,11 +1507,42 @@ exit:
 }
 
 /*!
+ * @brief Whether a veto entry of path's length equals path
+ *
+ * With nocase, letters match in either ASCII case, as ascii_tolower() folds
+ * them; every other byte matches only as written.
+ *
+ * @param[in] entry   first byte of the entry
+ * @param[in] path    name to test
+ * @param[in] len     length of both
+ * @param[in] nocase  whether ASCII letters match in either case
+ * @returns 1 for a match, 0 otherwise
+ */
+static int veto_entry_matches(const char *entry, const char *path, size_t len,
+                              int nocase)
+{
+    if (!nocase) {
+        return memcmp(entry, path, len) == 0;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        if (entry[i] != path[i]
+                && ascii_tolower((unsigned char)entry[i])
+                != ascii_tolower((unsigned char)path[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+/*!
  * @brief Whether path matches one entry of a slash-separated veto list
  *
  * The list has the form "abc/zxc/", and an entry must equal path byte for
  * byte, or with nocase letter for letter in either ASCII case. The list's
- * end closes its last entry as a slash does.
+ * end closes its last entry as a slash does. Only an entry of path's length
+ * is compared.
  *
  * @param[in] veto_str  slash-separated veto list, or NULL
  * @param[in] path      name to test, or NULL
@@ -1520,46 +1551,23 @@ exit:
  */
 int veto_file(const char *veto_str, const char *path, int nocase)
 {
-    int i;  /* index to veto_str */
-    int j;  /* index to path */
+    size_t len;
 
-    if ((veto_str == NULL) || (path == NULL)) {
+    if (veto_str == NULL || path == NULL || *path == '\0') {
         return 0;
     }
 
-    for (i = 0, j = 0; veto_str[i] != '\0'; i++) {
-        if (veto_str[i] == '/') {
-            if ((j > 0) && (path[j] == '\0')) {
-                LOG(log_debug, logtype_afpd, "vetoed file:'%s'", path);
-                return 1;
-            }
+    len = strlen(path);
 
-            j = 0;
-        } else {
-            if (veto_str[i] != path[j]
-                    && (!nocase || ascii_tolower((unsigned char)veto_str[i])
-                        != ascii_tolower((unsigned char)path[j]))) {
-                while ((veto_str[i] != '/')
-                        && (veto_str[i] != '\0')) {
-                    i++;
-                }
+    while (*veto_str != '\0') {
+        size_t elen = strcspn(veto_str, "/");
 
-                if (veto_str[i] == '\0') {
-                    return 0;
-                }
-
-                j = 0;
-                continue;
-            }
-
-            j++;
+        if (elen == len && veto_entry_matches(veto_str, path, len, nocase)) {
+            LOG(log_debug, logtype_afpd, "vetoed file:'%s'", path);
+            return 1;
         }
-    }
 
-    /* the list's end closes its last entry */
-    if ((j > 0) && (path[j] == '\0')) {
-        LOG(log_debug, logtype_afpd, "vetoed file:'%s'", path);
-        return 1;
+        veto_str += elen + (veto_str[elen] == '/');
     }
 
     return 0;

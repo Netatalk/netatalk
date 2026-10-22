@@ -1021,15 +1021,16 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\"): setting CNID", upath);
             cnid_t id;
 
-            if ((id = get_id(vol, ofork->of_ad, st, dir->d_did, upath,
-                             strlen(upath))) == CNID_INVALID) {
-                LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+            if ((id = get_id(vol, ofork->of_ad, st, curdir->d_did, upath,
+                             (int)strlen(upath))) == CNID_INVALID) {
+                LOG(log_error, logtype_afpd,
+                    "afp_openfork(\"%s\"): CNID error", upath);
                 ret = AFPERR_MISC;
                 goto openfork_err;
             }
 
-            (void)ad_setid(ofork->of_ad, st->st_dev, st->st_ino, id, dir->d_did,
-                           vol->v_stamp);
+            (void)ad_setid(ofork->of_ad, st->st_dev, st->st_ino, id,
+                           curdir->d_did, vol->v_stamp);
             ad_flush(ofork->of_ad);
         }
     } else {

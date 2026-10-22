@@ -20,11 +20,14 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <atalk/adouble.h>
@@ -40,11 +43,15 @@
 
 #include "afp_config.h"
 #include "afpfunc_helpers.h"
+#include "desktop.h"
 #include "dircache.h"
 #include "directory.h"
 #include "file.h"
 #include "filedir.h"
+#include "fork.h"
 #include "hash.h"
+#include "mangle.h"
+#include "pfd_cache.h"
 #include "subtests.h"
 #include "test.h"
 #include "volume.h"
@@ -70,6 +77,27 @@ static struct dir *plant_root_entry(const struct vol *vol, const char *uname,
 
     dircache_add(vol, entry);
     return entry;
+}
+
+/*!
+ * @brief Retire a name's dircache entry, as another session's cache hint would
+ *
+ * @param[in] vol   volume
+ * @param[in] did   the entry's folder
+ * @param[in] name  the entry's unix name
+ */
+static void drop_entry(const struct vol *vol, cnid_t did, char *name)
+{
+    const struct dir *parent = dirlookup(vol, did);
+    struct dir *entry;
+
+    if (parent != NULL
+            && (entry = dircache_search_by_name(vol, parent, name,
+                                                strlen(name))) != NULL) {
+        dir_remove(vol, entry, 0);
+    }
+
+    dir_free_invalid_q();
 }
 
 int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
@@ -1210,7 +1238,6 @@ int test012_movecwd_retry_names_directory(AFPObj *obj, struct vol *vol)
     char needle[MAXPATHLEN + 64];
     struct dir *saved_curdir = curdir;
     struct dir *dir;
-    struct dir *now;
     cnid_t did = CNID_INVALID;
     int cwd_fd = open(".", O_RDONLY);
     int vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY);
@@ -1276,13 +1303,7 @@ out:
         }
 
         renameat(vfd, aside, vfd, dname);
-
-        if ((now = dircache_search_by_name(vol, vol->v_root, dname,
-                                           strlen(dname))) != NULL) {
-            dir_remove(vol, now, 0);
-        }
-
-        dir_free_invalid_q();
+        drop_entry(vol, DIRDID_ROOT, dname);
         delete (obj, vol->v_vid, DIRDID_ROOT, dname);
         cnid_delete(vol->v_cdb, did);
     }
@@ -1318,7 +1339,6 @@ int test013_movecwd_refuses_symlinked_path(struct vol *vol)
     static char bpath[] = "t013_a/t013_b";
     struct dir *saved_curdir = curdir;
     struct dir *b = NULL;
-    struct dir *now;
     struct stat st;
     cnid_t adid = CNID_INVALID;
     cnid_t bdid = CNID_INVALID;
@@ -1364,10 +1384,7 @@ out:
         dir_remove(vol, b, 0);
     }
 
-    if ((now = dircache_search_by_name(vol, vol->v_root, aname,
-                                       strlen(aname))) != NULL) {
-        dir_remove(vol, now, 0);
-    }
+    drop_entry(vol, DIRDID_ROOT, aname);
 
     if (bdid != CNID_INVALID) {
         cnid_delete(vol->v_cdb, bdid);
@@ -1376,8 +1393,6 @@ out:
     if (adid != CNID_INVALID) {
         cnid_delete(vol->v_cdb, adid);
     }
-
-    dir_free_invalid_q();
 
     if (cwd_fd >= 0) {
         if (fchdir(cwd_fd) != 0 && ret == 0) {
@@ -1401,7 +1416,6 @@ int test014_movecwd_folder_became_file(struct vol *vol)
     static char fname[] = "t014_dir_file";
     struct dir *saved_curdir = curdir;
     struct dir *dir = NULL;
-    struct dir *now;
     struct stat st;
     cnid_t did = CNID_INVALID;
     int cwd_fd = open(".", O_RDONLY);
@@ -1452,16 +1466,11 @@ out:
         close(vfd);
     }
 
-    if ((now = dircache_search_by_name(vol, vol->v_root, dname,
-                                       strlen(dname))) != NULL) {
-        dir_remove(vol, now, 0);
-    }
+    drop_entry(vol, DIRDID_ROOT, dname);
 
     if (did != CNID_INVALID) {
         cnid_delete(vol->v_cdb, did);
     }
-
-    dir_free_invalid_q();
 
     if (cwd_fd >= 0) {
         if (fchdir(cwd_fd) != 0 && ret == 0) {
@@ -1928,4 +1937,1491 @@ int utest_veto_file_list_end(void)
     }
 
     return 0;
+}
+
+static char *(*cnid_real_resolve)(struct _cnid_db *, cnid_t *, void *,
+                                  size_t);
+static cnid_t (*cnid_real_add)(struct _cnid_db *, const struct stat *, cnid_t,
+                               const char *, size_t, cnid_t);
+static int cnid_resolves;
+static int cnid_adds;
+/* the folder whose registrations count, CNID_INVALID for every folder */
+static cnid_t cnid_add_did;
+
+/*!
+ * @brief cnid_resolve() of the watched backend, counted
+ *
+ * @param[in]     cdb     the watched database
+ * @param[in,out] id      the CNID to resolve, receives its parent's
+ * @param[out]    buffer  receives the name
+ * @param[in]     len     size of buffer
+ * @returns what the backend's cnid_resolve() returns
+ */
+static char *cnid_count_resolve(struct _cnid_db *cdb, cnid_t *id,
+                                void *buffer, size_t len)
+{
+    cnid_resolves++;
+    return cnid_real_resolve(cdb, id, buffer, len);
+}
+
+/*!
+ * @brief cnid_add() of the watched backend, counted in cnid_add_did's folder
+ *
+ * @param[in] cdb   the watched database
+ * @param[in] st    the object's stat
+ * @param[in] did   its parent's DID
+ * @param[in] name  its unix name
+ * @param[in] len   length of name
+ * @param[in] hint  the CNID its metadata holds, or CNID_INVALID
+ * @returns what the backend's cnid_add() returns
+ */
+static cnid_t cnid_count_add(struct _cnid_db *cdb, const struct stat *st,
+                             cnid_t did, const char *name, size_t len,
+                             cnid_t hint)
+{
+    if (cnid_add_did == CNID_INVALID || did == cnid_add_did) {
+        cnid_adds++;
+    }
+
+    return cnid_real_add(cdb, st, did, name, len, hint);
+}
+
+/*!
+ * @brief Count the backend's resolve and add calls until cnid_unwatch()
+ *
+ * @param[in,out] cdb  database whose cnid_resolve() and cnid_add() are wrapped
+ */
+static void cnid_watch(struct _cnid_db *cdb)
+{
+    cnid_real_resolve = cdb->cnid_resolve;
+    cnid_real_add = cdb->cnid_add;
+    cdb->cnid_resolve = cnid_count_resolve;
+    cdb->cnid_add = cnid_count_add;
+    cnid_resolves = 0;
+    cnid_adds = 0;
+}
+
+/*!
+ * @brief Give the watched backend its own cnid_resolve() and cnid_add()
+ *
+ * @param[in,out] cdb  the watched database
+ */
+static void cnid_unwatch(struct _cnid_db *cdb)
+{
+    cdb->cnid_resolve = cnid_real_resolve;
+    cdb->cnid_add = cnid_real_add;
+}
+
+/*!
+ * @brief Put files on disk in a folder of the volume, behind the server's back
+ *
+ * @param[in] vol     volume
+ * @param[in] folder  the folder's unix name under the root
+ * @param[in] names   the files' unix names
+ * @param[in] count   how many names
+ * @returns 0, -1 when a file cannot be made
+ */
+static int disk_files(const struct vol *vol, const char *folder,
+                      char *const names[], size_t count)
+{
+    char path[MAXPATHLEN + 1];
+
+    for (size_t i = 0; i < count; i++) {
+        snprintf(path, sizeof(path), "%s/%s/%s", vol->v_path, folder,
+                 names[i]);
+
+        if (create_disk_file(path) != 0) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief FPCreateDir of a folder in the root, whose DID curdir then holds
+ *
+ * @param[in] obj   the test session
+ * @param[in] vid   the open volume
+ * @param[in] name  the folder's name
+ * @returns the folder's DID, CNID_INVALID when the create fails
+ */
+static cnid_t make_folder(AFPObj *obj, uint16_t vid, const char *name)
+{
+    if (createdir(obj, vid, DIRDID_ROOT, name) != 0) {
+        return CNID_INVALID;
+    }
+
+    return curdir->d_did;
+}
+
+/*!
+ * @brief The long name an AFP 2 session lists for a name it cannot hold whole
+ *
+ * mangle() keeps the first MACFILELEN - strlen("#ID") - strlen(ext) bytes of
+ * the Mac name, then "#ID" in uppercase hex and the extension.
+ *
+ * @param[out] lname  receives the name, MACFILELEN + 1 bytes
+ * @param[in]  mac    the Mac name, or the part of it the charset holds
+ * @param[in]  ext    the extension kept, "" for none
+ * @param[in]  id     the object's CNID
+ */
+static void cut_lname(char *lname, const char *mac, const char *ext, cnid_t id)
+{
+    /* a CNID has at most eight hex digits */
+    char suffix[sizeof("#FFFFFFFF")];
+    int k = snprintf(suffix, sizeof(suffix), "#%X", ntohl(id));
+    snprintf(lname, MACFILELEN + 1, "%.*s%s%s",
+             (int)(MACFILELEN - k - strlen(ext)), mac, suffix, ext);
+}
+
+/*!
+ * @brief FPEnumerate lists each entry under its own names and resolves no id
+ *
+ * The mangled-looking name carries the sibling's CNID, so demangling it
+ * reaches the sibling, through the CNID database while the sibling has no
+ * entry. The folder's name and the fourth, whose U+00A9 is one Mac byte and
+ * two UTF-8 ones, overflow a long name, and the fifth, 100 decomposed
+ * accents, overflows both, so all three are mangled. Files put on disk have
+ * no entry, so the listing converts their names afresh. Asked for alone, the
+ * mangled-looking file's long name costs only its path's one resolve.
+ *
+ * @returns 0, 1 when a name or the lookup count is wrong or the setup fails
+ */
+int utest_enumerate_lname_is_the_files_own(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    /* a spare record shows a name listed twice */
+    enum { LISTED = 5, ROOM = LISTED + 1 };
+    char sibling[] = "sibling.txt";
+    char folder[] = "a folder whose name no long name holds";
+    char longname[] = "a file whose name no long name holds \xc2\xa9.txt";
+    char hugename[2 * 100 + sizeof(".txt")];
+    char mangled[32] = "";
+    char *names[LISTED] = { sibling, folder, mangled, longname, hugename };
+    /* the names in the Mac charset, U+00A9 as 0xA9 and U+00E9 as 0x8E, and
+     * which of them a long name cannot hold whole */
+    char maclong[] = "a file whose name no long name holds \xa9";
+    char machuge[100 + 1];
+    const char *macs[LISTED] = { sibling, folder, mangled, maclong, machuge };
+    const char *exts[LISTED] = { "", "", "", ".txt", ".txt" };
+    const bool cut[LISTED] = { false, true, false, true, true };
+    char lnames[ROOM][MACFILELEN + 1];
+    char unames[ROOM][UTF8FILELEN_EARLY + 1];
+    char want_l[MACFILELEN + 1];
+    char want_u[UTF8FILELEN_EARLY + 1];
+    cnid_t did;
+    cnid_t id;
+    int count;
+    int err;
+    int own = 0;
+    int result = 1;
+
+    for (int i = 0; i < 100; i++) {
+        memcpy(hugename + 2 * i, "\xc3\xa9", 2);
+    }
+
+    memcpy(hugename + 200, ".txt", sizeof(".txt"));
+    memset(machuge, 0x8e, 100);
+    machuge[100] = '\0';
+
+    if ((did = make_folder(obj, vid, "ln")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if (createfile(obj, vid, did, sibling) != 0
+            || createdir(obj, vid, did, folder) != 0) {
+        goto out;
+    }
+
+    id = cnid_get(vol->v_cdb, did, sibling, strlen(sibling));
+
+    if (id == CNID_INVALID) {
+        goto out;
+    }
+
+    /* demangling must reach the CNID database, as for a file the session
+     * has not met */
+    drop_entry(vol, did, sibling);
+    snprintf(mangled, sizeof(mangled), "dm #%X.txt", ntohl(id));
+
+    /* past the sibling and the folder, which AFP requests made */
+    if (disk_files(vol, "ln", names + 2, LISTED - 2) != 0) {
+        goto out;
+    }
+
+    cnid_watch(vol->v_cdb);
+    count = enumerate_names(obj, vid, did, lnames, unames, ROOM);
+    cnid_unwatch(vol->v_cdb);
+
+    for (size_t i = 0; i < LISTED; i++) {
+        int found = 0;
+        id = cnid_get(vol->v_cdb, did, names[i], strlen(names[i]));
+
+        if (id == CNID_INVALID) {
+            goto out;
+        }
+
+        if (cut[i]) {
+            cut_lname(want_l, macs[i], exts[i], id);
+        } else {
+            snprintf(want_l, sizeof(want_l), "%s", macs[i]);
+        }
+
+        snprintf(want_u, sizeof(want_u), "%s", utompath(vol, names[i], id, 1));
+
+        for (int r = 0; r < count; r++) {
+            found += (strcmp(lnames[r], want_l) == 0
+                      && strcmp(unames[r], want_u) == 0);
+        }
+
+        own += found == 1;
+    }
+
+    if (count != LISTED || own != LISTED || cnid_resolves != 0) {
+        fprintf(stderr, "enumerate: %d names, %d own, %d lookups\n", count,
+                own, cnid_resolves);
+        goto out;
+    }
+
+    /* the listing may have cached the sibling again */
+    drop_entry(vol, did, sibling);
+    cnid_watch(vol->v_cdb);
+    err = getfiledirparms_lname(obj, vid, did, mangled, want_l);
+    cnid_unwatch(vol->v_cdb);
+
+    if (err != AFP_OK || cnid_resolves != 1) {
+        fprintf(stderr, "enumerate: '%s' alone: error %d, %d lookups\n",
+                mangled, err, cnid_resolves);
+        goto out;
+    }
+
+    result = 0;
+out:
+
+    for (size_t i = 0; i < LISTED; i++) {
+        if (*names[i] != '\0') {
+            delete (obj, vid, did, names[i]);
+        }
+    }
+
+    delete (obj, vid, DIRDID_ROOT, "ln");
+    return result;
+}
+
+/*!
+ * @brief The volume root's long name is the volume's Mac name
+ *
+ * A UTF-8 session gets the Mac name FPGetVolParms sends, which creatvol()
+ * cuts to 27 characters plus '#' and the volume id; an AFP 2 session gets the
+ * root entry's Mac name, which a lookup in DID 1 matches. The test sets a Mac
+ * name that neither the UTF-8 volume name nor the root entry holds, as a
+ * volume Mac charset other than the server's can.
+ *
+ * @returns 0, 1 when a request fails or a name differs
+ */
+int utest_root_lname_is_the_volume_name(AFPObj *obj, struct vol *vol,
+                                        uint16_t vid)
+{
+    ucs2_t macname[] = { 'M', 'a', 'c', ' ', 'n', 'a', 'm', 'e', 0 };
+    ucs2_t *saved = vol->v_macname;
+    int version = obj->afp_version;
+    char lname[MACFILELEN + 1] = "";
+    char afp2[MACFILELEN + 1] = "";
+    int err = getfiledirparms_lname(obj, vid, DIRDID_ROOT, "", lname);
+    int afp2_err;
+
+    if (err != AFP_OK || strcmp(lname, "afpd_test") != 0) {
+        fprintf(stderr, "root: error %d, long name '%s'\n", err, lname);
+        return 1;
+    }
+
+    vol->v_macname = macname;
+    err = getfiledirparms_lname(obj, vid, DIRDID_ROOT, "", lname);
+    obj->afp_version = 21;
+    afp2_err = getfiledirparms_lname(obj, vid, DIRDID_ROOT, "", afp2);
+
+    if (afp2_err == AFP_OK) {
+        afp2_err = getfiledirparms(obj, vid, DIRDID_ROOT_PARENT, afp2);
+    }
+
+    obj->afp_version = version;
+    vol->v_macname = saved;
+
+    if (err != AFP_OK || strcmp(lname, "Mac name") != 0
+            || afp2_err != AFP_OK) {
+        fprintf(stderr,
+                "root: Mac name: error %d, '%s'; AFP 2.1: error %d, '%s'\n",
+                err, lname, afp2_err, afp2);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief A Mac name the server's Mac charset cannot hold fails FPGetVolParms
+ *
+ * FPGetVolParms has no name to send and fails; the root's long name falls
+ * back to its directory's. creatvol() never builds such a name, so the test
+ * sets one with U+0416, which MAC_ROMAN, the test volume's charset, lacks.
+ *
+ * @returns 0, 1 when FPGetVolParms answers or the root's long name is not its
+ *          directory's
+ */
+int utest_root_lname_beyond_the_mac_charset(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    ucs2_t macname[] = { 0x0416, 'x', 0 };
+    ucs2_t *saved = vol->v_macname;
+    char lname[MACFILELEN + 1] = "";
+    int volerr;
+    int err;
+    vol->v_macname = macname;
+    volerr = getvolparams(obj, vid, 1 << VOLPBIT_NAME);
+    err = getfiledirparms_lname(obj, vid, DIRDID_ROOT, "", lname);
+    vol->v_macname = saved;
+
+    if (volerr != AFPERR_MISC || err != AFP_OK
+            || strcmp(lname, utompath(vol, cfrombstr(vol->v_root->d_u_name),
+                                      DIRDID_ROOT, 0)) != 0) {
+        fprintf(stderr, "root: FPGetVolParms %d, long name error %d '%s'\n",
+                volerr, err, lname);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief An AFP 2.1 listing holds each name's Mac charset form
+ *
+ * The forms are written out: U+00E9 and U+00A9 as Mac Roman 0x8E and 0xA9,
+ * a name too long for a long name cut around "#ID", and a name with no Mac
+ * byte as "???#ID" plus its extension. Files put on disk have no entry.
+ *
+ * @returns 0, 1 when a name is missing or the setup fails
+ */
+int utest_enumerate_afp2_lists_the_mac_forms(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    enum { LISTED = 4, ROOM = LISTED + 1 };
+    char accent[] = "caf\xc3\xa9.txt";
+    char sign[] = "copyright \xc2\xa9.txt";
+    char ascii[] = "a long ascii name for an afp two session.txt";
+    char kanji[] = "\xe5\x86\x99\xe7\x9c\x9f.jpg";
+    char *names[LISTED] = { accent, sign, ascii, kanji };
+    const char *macs[LISTED] = {
+        "caf\x8e.txt",
+        "copyright \xa9.txt",
+        ascii,
+        "???",
+    };
+    const char *exts[LISTED] = { "", "", ".txt", ".jpg" };
+    const bool cut[LISTED] = { false, false, true, true };
+    char lnames[ROOM][MACFILELEN + 1];
+    char want[MACFILELEN + 1];
+    int version = obj->afp_version;
+    cnid_t did;
+    int count;
+    int own = 0;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "la")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if (disk_files(vol, "la", names, LISTED) != 0) {
+        goto out;
+    }
+
+    obj->afp_version = 21;
+    count = enumerate_lnames(obj, vid, did, lnames, ROOM);
+    obj->afp_version = version;
+
+    for (size_t i = 0; i < LISTED; i++) {
+        int found = 0;
+
+        if (cut[i]) {
+            cnid_t id = cnid_get(vol->v_cdb, did, names[i], strlen(names[i]));
+
+            if (id == CNID_INVALID) {
+                goto out;
+            }
+
+            cut_lname(want, macs[i], exts[i], id);
+        } else {
+            snprintf(want, sizeof(want), "%s", macs[i]);
+        }
+
+        for (int r = 0; r < count; r++) {
+            found += strcmp(lnames[r], want) == 0;
+        }
+
+        own += found == 1;
+    }
+
+    if (count != LISTED || own != LISTED) {
+        fprintf(stderr, "enumerate: AFP 2.1: %d names, %d in their Mac forms\n",
+                count, own);
+        goto out;
+    }
+
+    result = 0;
+out:
+
+    for (size_t i = 0; i < LISTED; i++) {
+        delete (obj, vid, did, names[i]);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, "la");
+    return result;
+}
+
+/*!
+ * @brief A decomposed unix name lists under a mangled long name
+ *
+ * A writer outside AFP can leave "café" decomposed on a UTF8 volume, where
+ * netatalk writes it precomposed. The combining accent has no Mac charset
+ * byte, so the long name is cut to "cafe#ID.txt" in both sessions, and
+ * FPGetFileDirParms by it reaches the file in both. The UTF-8 name is the
+ * name as it lies.
+ *
+ * @returns 0, 1 when a name or a lookup is wrong or the setup fails
+ */
+int utest_enumerate_decomposed_name_is_mangled(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid)
+{
+    char name[] = "cafe\xcc\x81.txt";
+    char *names[] = { name };
+    char path[MAXPATHLEN + 1];
+    char lnames[2][MACFILELEN + 1] = { "" };
+    char unames[2][UTF8FILELEN_EARLY + 1] = { "" };
+    char afp2[2][MACFILELEN + 1] = { "" };
+    char want[MACFILELEN + 1];
+    int version = obj->afp_version;
+    cnid_t did;
+    cnid_t id = CNID_INVALID;
+    int count;
+    int afp2_count;
+    int err;
+    int afp2_err;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "dn")) == CNID_INVALID) {
+        return 1;
+    }
+
+    snprintf(path, sizeof(path), "%s/dn/%s", vol->v_path, name);
+
+    if (disk_files(vol, "dn", names, 1) != 0) {
+        goto out;
+    }
+
+    count = enumerate_names(obj, vid, did, lnames, unames, 2);
+    id = cnid_get(vol->v_cdb, did, name, strlen(name));
+
+    if (id == CNID_INVALID) {
+        fprintf(stderr, "enumerate: decomposed: %d names, '%s', no CNID\n",
+                count, lnames[0]);
+        goto out;
+    }
+
+    cut_lname(want, "cafe", ".txt", id);
+    err = getfiledirparms(obj, vid, did, want);
+    /* an entry holds the Mac name of the session that cached it, and a
+     * process serves one session */
+    drop_entry(vol, did, name);
+    obj->afp_version = 21;
+    afp2_count = enumerate_lnames(obj, vid, did, afp2, 2);
+    afp2_err = getfiledirparms(obj, vid, did, want);
+    obj->afp_version = version;
+
+    if (count != 1 || strcmp(lnames[0], want) != 0
+            || strcmp(unames[0], name) != 0 || err != AFP_OK
+            || afp2_count != 1 || strcmp(afp2[0], want) != 0
+            || afp2_err != AFP_OK) {
+        fprintf(stderr,
+                "enumerate: decomposed: %d names, '%s' and '%s', error %d; "
+                "AFP 2.1: %d names, '%s', error %d; want '%s'\n",
+                count, lnames[0], unames[0], err, afp2_count, afp2[0],
+                afp2_err, want);
+        goto out;
+    }
+
+    result = 0;
+out:
+
+    if (id != CNID_INVALID) {
+        delete (obj, vid, did, want);
+    } else {
+        unlink(path);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, "dn");
+    return result;
+}
+
+/*!
+ * @brief The long name an AFP 2 session lists for a file
+ *
+ * @param[in]  vol      volume
+ * @param[in]  did      the file's folder
+ * @param[in]  name     the file's unix name
+ * @param[out] mangled  receives the long name, MACFILELEN + 1 bytes
+ * @returns the file's CNID, CNID_INVALID when the file has none
+ */
+static cnid_t long_name(const struct vol *vol, cnid_t did, char *name,
+                        char *mangled)
+{
+    cnid_t id = cnid_get(vol->v_cdb, did, name, strlen(name));
+
+    if (id != CNID_INVALID) {
+        snprintf(mangled, MACFILELEN + 1, "%s", utompath(vol, name, id, 0));
+    }
+
+    return id;
+}
+
+/*!
+ * @brief Create a file through AFP and give its AFP 2 long name
+ *
+ * @param[in]  obj      the test session
+ * @param[in]  vol      volume
+ * @param[in]  vid      the open volume
+ * @param[in]  did      the file's folder
+ * @param[in]  name     the file's name
+ * @param[out] mangled  receives the long name, MACFILELEN + 1 bytes
+ * @returns the file's CNID, CNID_INVALID when the create or its lookup fails
+ */
+static cnid_t mangled_file(AFPObj *obj, const struct vol *vol, uint16_t vid,
+                           cnid_t did, char *name, char *mangled)
+{
+    if (createfile(obj, vid, did, name) != 0) {
+        return CNID_INVALID;
+    }
+
+    return long_name(vol, did, name, mangled);
+}
+
+/*!
+ * @brief One FPGetFileDirParms of a name in a folder, counting CNID resolves
+ *
+ * @param[in] obj   the test session
+ * @param[in] vol   volume
+ * @param[in] vid   the open volume
+ * @param[in] did   the folder
+ * @param[in] name  the name asked for
+ * @returns the request's result; cnid_resolves holds the count
+ */
+static int watched_getfiledirparms(AFPObj *obj, const struct vol *vol,
+                                   uint16_t vid, cnid_t did, const char *name)
+{
+    int err;
+    cnid_watch(vol->v_cdb);
+    err = getfiledirparms(obj, vid, did, name);
+    cnid_unwatch(vol->v_cdb);
+    return err;
+}
+
+/*!
+ * @brief CNID resolves made by one FPGetFileDirParms of a name at the root
+ *
+ * @param[in] obj   the test session
+ * @param[in] vol   volume
+ * @param[in] vid   the open volume
+ * @param[in] name  the name asked for, which no file holds
+ * @returns the count, -1 when the request fails other than with
+ *          AFPERR_NOOBJ
+ */
+static int demangle_resolve_count(AFPObj *obj, const struct vol *vol,
+                                  uint16_t vid, const char *name)
+{
+    int err = watched_getfiledirparms(obj, vol, vid, DIRDID_ROOT, name);
+
+    if (err != AFPERR_NOOBJ) {
+        fprintf(stderr, "demangle: '%s': error %d\n", name, err);
+        return -1;
+    }
+
+    return cnid_resolves;
+}
+
+/*!
+ * @brief An unresolvable mangled-looking name costs one CNID lookup
+ *
+ * A plain name, or one with more hex digits than a CNID holds, costs none.
+ * 0xFFFFF0 parses as mangled but names no object. "dm #FFFFFFF0.text" puts
+ * the '#' as far from the end as a mangled name can, eight digits and a
+ * five-byte extension; nine digits would wrap to 0xFFFFF0 in 32 bits.
+ *
+ * @returns 0, 1 when a lookup count is wrong or a request fails
+ */
+int utest_demangle_unknown_id_resolves_once(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    int plain = demangle_resolve_count(obj, vol, vid, "dm plain.txt");
+    int hashed = demangle_resolve_count(obj, vol, vid, "dm #FFFFF0.txt");
+    int eight = demangle_resolve_count(obj, vol, vid, "dm #FFFFFFF0.text");
+    int wrapped = demangle_resolve_count(obj, vol, vid, "dm #100FFFFF0.txt");
+
+    if (plain < 0 || hashed < 0 || eight < 0 || wrapped < 0) {
+        return 1;
+    }
+
+    if (plain != 0 || hashed - plain != 1 || eight - plain != 1
+            || wrapped != plain) {
+        fprintf(stderr,
+                "demangle: %d resolves, %d eight, %d wrapped, %d plain\n",
+                hashed, eight, wrapped, plain);
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief A cached file answers its mangled name until its entry goes stale
+ *
+ * A 31-byte name is the form demangle_checks() matches by prefix. Sent at
+ * the root, which holds a same-named file, it must find nothing, and an entry
+ * whose ctime differs from the disk's costs one CNID lookup. Another
+ * session's rename reaches the disk and the row at once but this session's
+ * entry only with the cache hint, so the test renames on disk and in the row
+ * and puts a new file at the old name, which the stale entry would reach.
+ *
+ * @returns 0, 1 when a lookup count or a result is wrong or the setup fails
+ */
+int utest_demangle_cached_file_checks_its_entry(AFPObj *obj,
+                                                struct vol *vol,
+                                                uint16_t vid)
+{
+    char name[] = "a cached file with a long name.txt";
+    char moved[] = "moved.txt";
+    char mangled[MACFILELEN + 1];
+    char from[MAXPATHLEN + 1];
+    char to[MAXPATHLEN + 1];
+    char at_root[MAXPATHLEN + 1];
+    const char *answer;
+    struct stat st;
+    const struct dir *parent;
+    struct dir *entry;
+    cnid_t did;
+    cnid_t id;
+    cnid_t fileid;
+    int err;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "dc")) == CNID_INVALID) {
+        return 1;
+    }
+
+    snprintf(from, sizeof(from), "%s/dc/%s", vol->v_path, name);
+    snprintf(to, sizeof(to), "%s/dc/%s", vol->v_path, moved);
+    snprintf(at_root, sizeof(at_root), "%s/%s", vol->v_path, name);
+    id = mangled_file(obj, vol, vid, did, name, mangled);
+    parent = dirlookup(vol, did);
+
+    /* the create cached the file with the stat it took before writing the
+     * metadata, which the dircache's own validation would refresh */
+    if (id == CNID_INVALID || parent == NULL
+            || (entry = dircache_search_by_name(vol, parent, name,
+                                                strlen(name))) == NULL
+            || pfd_ostat(vol, entry, &st, vol_syml_opt(vol)) != 0) {
+        goto out;
+    }
+
+    dir_stat_refresh(vol, entry, &st);
+    err = watched_getfiledirparms(obj, vol, vid, did, mangled);
+
+    if (err != AFP_OK || cnid_resolves != 0) {
+        fprintf(stderr, "demangle: cached: error %d, %d resolves\n", err,
+                cnid_resolves);
+        goto out;
+    }
+
+    /* a caller that renames the object frees the entry's name */
+    answer = demangle_osx(vol, mangled, did, &fileid);
+    entry = dircache_search_by_name(vol, parent, name, strlen(name));
+
+    if (entry == NULL || strcmp(answer, name) != 0
+            || answer == cfrombstr(entry->d_u_name)) {
+        fprintf(stderr, "demangle: cached: the answer is the entry's\n");
+        goto out;
+    }
+
+    if (create_disk_file(at_root) != 0) {
+        goto out;
+    }
+
+    err = getfiledirparms(obj, vid, DIRDID_ROOT, mangled);
+
+    if (err != AFPERR_NOOBJ) {
+        fprintf(stderr, "demangle: root: error %d\n", err);
+        goto out;
+    }
+
+    if ((entry = dircache_search_by_name(vol, parent, name,
+                                         strlen(name))) == NULL) {
+        goto out;
+    }
+
+    entry->dcache_ctime--;
+    err = watched_getfiledirparms(obj, vol, vid, did, mangled);
+
+    if (err != AFP_OK || cnid_resolves != 1) {
+        fprintf(stderr, "demangle: ctime: error %d, %d resolves\n", err,
+                cnid_resolves);
+        goto out;
+    }
+
+    /* the rename keeps the inode the row records */
+    if (rename(from, to) != 0
+            || cnid_update(vol->v_cdb, id, &st, did, moved, strlen(moved)) != 0
+            || create_disk_file(from) != 0) {
+        goto out;
+    }
+
+    err = watched_getfiledirparms(obj, vol, vid, did, mangled);
+
+    if (err != AFPERR_NOOBJ || cnid_resolves != 1) {
+        fprintf(stderr, "demangle: stale: error %d, %d resolves\n", err,
+                cnid_resolves);
+        goto out;
+    }
+
+    result = 0;
+out:
+    /* the cache hint that would retire the stale entry never comes */
+    drop_entry(vol, did, name);
+    delete (obj, vid, did, moved);
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "dc");
+    delete (obj, vid, DIRDID_ROOT, name);
+    return result;
+}
+
+/*!
+ * @brief A cached folder answers its mangled name whatever its entry's ctime
+ *
+ * A folder's ctime moves with each change inside it, so its entry is
+ * trusted on its inode alone.
+ *
+ * @returns 0, 1 when the request fails, makes a lookup or the setup fails
+ */
+int utest_demangle_cached_folder_ignores_ctime(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid)
+{
+    char name[] = "a cached folder with a long name";
+    char mangled[MACFILELEN + 1];
+    struct dir *entry;
+    cnid_t did;
+    int err;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, name)) == CNID_INVALID) {
+        return 1;
+    }
+
+    if ((entry = dirlookup(vol, did)) == NULL) {
+        goto out;
+    }
+
+    entry->dcache_ctime--;
+    snprintf(mangled, sizeof(mangled), "%s",
+             utompath(vol, name, entry->d_did, 0));
+    err = watched_getfiledirparms(obj, vol, vid, DIRDID_ROOT, mangled);
+
+    if (err != AFP_OK || cnid_resolves != 0) {
+        fprintf(stderr, "demangle: folder: error %d, %d resolves\n", err,
+                cnid_resolves);
+        goto out;
+    }
+
+    result = 0;
+out:
+    delete (obj, vid, DIRDID_ROOT, name);
+    return result;
+}
+
+/*!
+ * @brief A mangled name whose kept prefix holds a '#' demangles to its file
+ *
+ * mangle() keeps the start of the name before "#ID", so the CNID follows
+ * the last '#' of the 31-byte name.
+ *
+ * @returns 0, 1 when the name misses the file or the setup fails
+ */
+int utest_demangle_hash_in_prefix(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    char name[] = "Song #2 (Remastered Version 2011).mp3";
+    char mangled[MACFILELEN + 1];
+    cnid_t did;
+    cnid_t id;
+    int err;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "dh")) == CNID_INVALID) {
+        return 1;
+    }
+
+    id = mangled_file(obj, vol, vid, did, name, mangled);
+
+    if (id == CNID_INVALID) {
+        goto out;
+    }
+
+    if ((err = getfiledirparms(obj, vid, did, mangled)) != AFP_OK) {
+        fprintf(stderr, "demangle: '%s': error %d\n", mangled, err);
+        goto out;
+    }
+
+    result = 0;
+out:
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "dh");
+    return result;
+}
+
+/*!
+ * @brief A mangled name whose extension holds an id demangles to its file
+ *
+ * mangle() keeps the name's extension after "#ID", so the 31-byte name ends
+ * in ".#11", which reads as CNID 17 too. The name goes back as AFP 3, through
+ * demangle_checks(), and as AFP 2.1, through the exact check.
+ *
+ * @returns 0, 1 when the name misses the file or the setup fails
+ */
+int utest_demangle_hash_in_extension(AFPObj *obj, struct vol *vol,
+                                     uint16_t vid)
+{
+    char name[] = "Quarterly results backup copy.#11";
+    char mangled[MACFILELEN + 1] = "";
+    int version = obj->afp_version;
+    int err = AFPERR_PARAM;
+    int afp2_err = AFPERR_PARAM;
+    int failed;
+    cnid_t did;
+    size_t len;
+
+    if ((did = make_folder(obj, vid, "dx")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if (mangled_file(obj, vol, vid, did, name, mangled) != CNID_INVALID
+            && (len = strlen(mangled)) > 4
+            && strcmp(mangled + len - 4, ".#11") == 0) {
+        err = getfiledirparms(obj, vid, did, mangled);
+        obj->afp_version = 21;
+        afp2_err = getfiledirparms(obj, vid, did, mangled);
+        obj->afp_version = version;
+    }
+
+    failed = err != AFP_OK || afp2_err != AFP_OK;
+
+    if (failed) {
+        fprintf(stderr, "demangle: '%s': error %d, as AFP 2.1 %d\n", mangled,
+                err, afp2_err);
+    }
+
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "dx");
+    return failed;
+}
+
+/*!
+ * @brief An uncached object's mangled name reaches nothing in another folder
+ *
+ * The CNID resolves to the object's own folder, the only one its mangled name
+ * names it in; a file of the same name in another folder stays out of reach.
+ * The name goes as AFP 2.1, whose exact check would accept it anywhere.
+ *
+ * @returns 0, 1 when the name reaches the other folder's file or the setup
+ *          fails
+ */
+int utest_demangle_uncached_id_keeps_its_folder(AFPObj *obj, struct vol *vol,
+                                                uint16_t vid)
+{
+    char name[] = "a name an AFP 2 session must mangle.txt";
+    char mangled[MACFILELEN + 1] = "";
+    int version = obj->afp_version;
+    int err = AFPERR_PARAM;
+    int failed;
+    cnid_t one;
+    cnid_t two;
+
+    if ((one = make_folder(obj, vid, "du")) == CNID_INVALID) {
+        return 1;
+    }
+
+    two = make_folder(obj, vid, "dv");
+
+    if (two != CNID_INVALID
+            && mangled_file(obj, vol, vid, one, name, mangled) != CNID_INVALID
+            && createfile(obj, vid, two, name) == 0) {
+        drop_entry(vol, one, name);
+        obj->afp_version = 21;
+        err = getfiledirparms(obj, vid, two, mangled);
+        obj->afp_version = version;
+    }
+
+    failed = err != AFPERR_NOOBJ;
+
+    if (failed) {
+        fprintf(stderr, "demangle: '%s' in another folder: error %d\n",
+                mangled, err);
+    }
+
+    delete (obj, vid, one, name);
+    delete (obj, vid, two, name);
+    delete (obj, vid, DIRDID_ROOT, "dv");
+    delete (obj, vid, DIRDID_ROOT, "du");
+    return failed;
+}
+
+/*!
+ * @brief Delete a file named with a sibling's CNID and check the sibling
+ *
+ * The file is prefix, MANGLE_CHAR, the sibling's CNID and ext, and is put on
+ * disk in the folder "dp" beside the sibling.
+ *
+ * @param[in] obj      the test session
+ * @param[in] vol      volume
+ * @param[in] vid      the open volume
+ * @param[in] did      the folder "dp"
+ * @param[in] sibling  the sibling's name, created here
+ * @param[in] prefix   the file's name before MANGLE_CHAR
+ * @param[in] ext      the file's name after the CNID
+ * @returns 0, 1 when the sibling goes, the file stays or the setup fails
+ */
+static int delete_beside(AFPObj *obj, const struct vol *vol, uint16_t vid,
+                         cnid_t did, char *sibling, const char *prefix,
+                         const char *ext)
+{
+    char literal[32] = "";
+    char path[MAXPATHLEN + 1];
+    struct stat st;
+    cnid_t id;
+    int result = 1;
+
+    if (createfile(obj, vid, did, sibling) != 0) {
+        return 1;
+    }
+
+    id = cnid_get(vol->v_cdb, did, sibling, strlen(sibling));
+    snprintf(literal, sizeof(literal), "%s#%X%s", prefix, ntohl(id), ext);
+    snprintf(path, sizeof(path), "%s/dp/%s", vol->v_path, literal);
+
+    if (id == CNID_INVALID || create_disk_file(path) != 0) {
+        goto out;
+    }
+
+    if (delete (obj, vid, did, literal) != AFP_OK || stat(path, &st) == 0) {
+        fprintf(stderr, "demangle: '%s' stays\n", literal);
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/dp/%s", vol->v_path, sibling);
+
+    if (stat(path, &st) != 0) {
+        fprintf(stderr, "demangle: the sibling of '%s' went\n", literal);
+        goto out;
+    }
+
+    result = 0;
+out:
+    delete (obj, vid, did, literal);
+    delete (obj, vid, did, sibling);
+    return result;
+}
+
+/*!
+ * @brief A literal name takes no unconvertible sibling's place
+ *
+ * Each file carries the CNID of a sibling whose name the Mac Roman charset
+ * cannot hold, after a prefix that is not the sibling's mangled one: none,
+ * "?", "??", or one that runs past the sibling's convertible start into
+ * other text.
+ *
+ * @returns 0, 1 when a sibling goes, a file stays or the setup fails
+ */
+int utest_demangle_literal_takes_no_sibling(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid)
+{
+    /* U+5199 U+771F, which the Mac Roman charset cannot hold */
+    char photo[] = "\xe5\x86\x99\xe7\x9c\x9f.jpg";
+    char track[] = "Track \xe5\x86\x99.mp3";
+    cnid_t did;
+    int failed = 0;
+
+    if ((did = make_folder(obj, vid, "dp")) == CNID_INVALID) {
+        return 1;
+    }
+
+    failed += delete_beside(obj, vol, vid, did, photo, "", ".jpg");
+    failed += delete_beside(obj, vol, vid, did, photo, "?", ".jpg");
+    failed += delete_beside(obj, vol, vid, did, photo, "??", ".jpg");
+    failed += delete_beside(obj, vol, vid, did, track, "Track Two", ".mp3");
+    delete (obj, vid, DIRDID_ROOT, "dp");
+    return failed != 0;
+}
+
+/*!
+ * @brief A variant demangles on the Mac OS X pass, not on the exact one
+ *
+ * "Track " U+5199 ".mp3" lists to an AFP 2 session as "Track #ID.mp3". The
+ * variant Mac OS X may send, with U+5199's UTF-8 bytes before the '#',
+ * demangles through demangle_osx(), cname()'s AFP 3 pass, and stays literal
+ * through demangle(), mtoupath()'s exact pass.
+ *
+ * @returns 0, 1 when a name demangles wrongly or the setup fails
+ */
+int utest_demangle_variant_needs_afp3(AFPObj *obj, struct vol *vol,
+                                      uint16_t vid)
+{
+    char name[] = "Track \xe5\x86\x99.mp3";
+    char mangled[MACFILELEN + 1];
+    char variant[MACFILELEN + 1];
+    cnid_t did;
+    cnid_t id;
+    cnid_t fileid;
+    int version = obj->afp_version;
+    int taken;
+    int exact;
+    int literal;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "d2")) == CNID_INVALID) {
+        return 1;
+    }
+
+    id = mangled_file(obj, vol, vid, did, name, mangled);
+
+    if (id == CNID_INVALID) {
+        goto out;
+    }
+
+    snprintf(variant, sizeof(variant), "Track \xe5\x86\x99#%X.mp3", ntohl(id));
+    taken = strcmp(demangle_osx(vol, variant, did, &fileid), name) == 0;
+    obj->afp_version = 21;
+    exact = strcmp(demangle(vol, mangled, did), name) == 0;
+    literal = demangle(vol, variant, did) == variant;
+    obj->afp_version = version;
+
+    if (!taken || !exact || !literal) {
+        fprintf(stderr, "demangle: '%s' taken %d; AFP 2: '%s' %d, '%s' %d\n",
+                variant, taken, mangled, exact, variant, literal);
+        goto out;
+    }
+
+    result = 0;
+out:
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "d2");
+    return result;
+}
+
+/*!
+ * @brief AFP 2.1 search for files changed in 2001, CNID calls counted
+ *
+ * @param[in]  obj    the test session
+ * @param[in]  vol    volume
+ * @param[in]  vid    the open volume
+ * @param[out] nrecs  receives the match count
+ * @param[out] lname  receives the match's long name, MACFILELEN + 1 bytes
+ * @returns the search's result
+ */
+static int afp2_date_search(AFPObj *obj, const struct vol *vol, uint16_t vid,
+                            uint32_t *nrecs, char *lname)
+{
+    uint32_t from = AD_DATE_FROM_UNIX(978307200);
+    uint32_t to = AD_DATE_FROM_UNIX(1009843200);
+    int version = obj->afp_version;
+    int ret;
+    obj->afp_version = 21;
+    cnid_watch(vol->v_cdb);
+    ret = catsearch_ext(obj, vid, 1U << FILPBIT_MDATE, &from, &to,
+                        sizeof(from), nrecs, lname);
+    cnid_unwatch(vol->v_cdb);
+    obj->afp_version = version;
+    return ret;
+}
+
+/*!
+ * @brief A search by date converts and registers no file it does not return
+ *
+ * Two files have 44-character names an AFP 2 session must mangle, which costs
+ * a registration for their ids; the match, dated 2001-06-01, needs none.
+ * Files put on disk are uncached and unregistered. The search runs as AFP
+ * 2.1, since a UTF-8 session mangles only names over 255 bytes or with
+ * unconvertible bytes.
+ *
+ * @returns 0, 1 when the reply is wrong, a file is registered or the setup
+ *          fails
+ */
+int utest_catsearch_converts_matches_only(AFPObj *obj, struct vol *vol,
+                                          uint16_t vid)
+{
+    char *names[] = {
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt",
+        "cs match.txt",
+        "cccccccccccccccccccccccccccccccccccccccc.txt",
+    };
+    const struct timespec june2001[2] = { { 991353600, 0 }, { 991353600, 0 } };
+    char path[MAXPATHLEN + 1];
+    char lname[MACFILELEN + 1];
+    uint32_t nrecs = 0;
+    cnid_t did;
+    int registered = 0;
+    int ret;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "cs")) == CNID_INVALID) {
+        return 1;
+    }
+
+    snprintf(path, sizeof(path), "%s/cs/%s", vol->v_path, names[1]);
+
+    if (disk_files(vol, "cs", names, sizeof(names) / sizeof(names[0])) != 0
+            || utimensat(AT_FDCWD, path, june2001, 0) != 0) {
+        goto out;
+    }
+
+    ret = afp2_date_search(obj, vol, vid, &nrecs, lname);
+
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        registered += (cnid_get(vol->v_cdb, did, names[i], strlen(names[i]))
+                       != CNID_INVALID);
+    }
+
+    if (ret != AFPERR_EOF || nrecs != 1 || strcmp(lname, names[1]) != 0
+            || registered != 0) {
+        fprintf(stderr,
+                "catsearch: result %d, %u matches, '%s', %d registered\n",
+                ret, nrecs, lname, registered);
+        goto out;
+    }
+
+    result = 0;
+out:
+
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        delete (obj, vid, did, names[i]);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, "cs");
+    return result;
+}
+
+/*!
+ * @brief A search by long name matches a name with an accented letter
+ *
+ * The criterion arrives in the Mac charset, and a candidate's name is UTF-8
+ * in an AFP 3 session and Mac Roman in an AFP 2 one; Mac Roman 0x8E is
+ * U+00E9. The folder also holds "cafe.txt", which the search must pass over.
+ *
+ * @returns 0, 1 when a search misses the file or the setup fails
+ */
+int utest_catsearch_lname_matches_accents(AFPObj *obj, struct vol *vol,
+                                          uint16_t vid)
+{
+    static const char want[] = "caf\x8e.txt";
+    char *names[] = { "caf\xc3\xa9.txt", "cafe.txt" };
+    unsigned char spec[3 + sizeof(want) - 1] = { 0, 2, sizeof(want) - 1 };
+    const int versions[] = { obj->afp_version, 21 };
+    char lname[MACFILELEN + 1];
+    uint32_t nrecs = 0;
+    cnid_t did;
+    int ret;
+    int result = 1;
+    memcpy(spec + 3, want, sizeof(want) - 1);
+
+    if ((did = make_folder(obj, vid, "cl")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if (disk_files(vol, "cl", names, sizeof(names) / sizeof(names[0])) != 0) {
+        goto out;
+    }
+
+    for (size_t v = 0; v < sizeof(versions) / sizeof(versions[0]); v++) {
+        obj->afp_version = versions[v];
+        ret = catsearch_ext(obj, vid, 1U << FILPBIT_LNAME, spec, spec,
+                            sizeof(spec), &nrecs, lname);
+        obj->afp_version = versions[0];
+
+        if (ret != AFPERR_EOF || nrecs != 1 || strcmp(lname, want) != 0) {
+            fprintf(stderr,
+                    "catsearch: long name as AFP %d: result %d, %u matches\n",
+                    versions[v], ret, nrecs);
+            goto out;
+        }
+    }
+
+    result = 0;
+out:
+
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        delete (obj, vid, did, names[i]);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, "cl");
+    return result;
+}
+
+/*!
+ * @brief A search match whose long name needs its CNID takes it from its entry
+ *
+ * The entry serves while its inode is the file's. A file renamed over the
+ * name, which the entry learns of only from the cache hint, costs one
+ * registration, and the search's metadata read refreshes the entry, so
+ * FPDelete of the match succeeds. The search runs as AFP 2.1, which must
+ * mangle the 40-character name. Periodic dircache validation is off, as its
+ * refresh would depend on the tests run before; only the test folder's
+ * registrations count.
+ *
+ * @returns 0, 1 when a long name, a registration count or the delete is
+ *          wrong or the setup fails
+ */
+int utest_catsearch_match_takes_its_entrys_id(AFPObj *obj, struct vol *vol,
+                                              uint16_t vid)
+{
+    char name[] = "a match whose long name needs its id.txt";
+    const struct timespec june2001[2] = { { 991353600, 0 }, { 991353600, 0 } };
+    char path[MAXPATHLEN + 1];
+    char other[MAXPATHLEN + 1];
+    char want[MACFILELEN + 1];
+    char lname[MACFILELEN + 1];
+    uint32_t nrecs = 0;
+    cnid_t did;
+    cnid_t id;
+    int freq = obj->options.dircache_validation_freq;
+    int ret;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "cm")) == CNID_INVALID) {
+        return 1;
+    }
+
+    obj->options.dircache_validation_freq = INT_MAX;
+    cnid_add_did = did;
+    snprintf(path, sizeof(path), "%s/cm/%s", vol->v_path, name);
+
+    if (mangled_file(obj, vol, vid, did, name, want) == CNID_INVALID
+            || utimensat(AT_FDCWD, path, june2001, 0) != 0) {
+        goto out;
+    }
+
+    ret = afp2_date_search(obj, vol, vid, &nrecs, lname);
+
+    if (ret != AFPERR_EOF || nrecs != 1 || strcmp(lname, want) != 0
+            || cnid_adds != 0) {
+        fprintf(stderr,
+                "catsearch: cached: result %d, %u matches, '%s', %d added\n",
+                ret, nrecs, lname, cnid_adds);
+        goto out;
+    }
+
+    /* another file takes the name, as another session's rename leaves it
+     * until the cache hint arrives; made first, it gets its own inode */
+    snprintf(other, sizeof(other), "%s/cm/other.txt", vol->v_path);
+
+    if (create_disk_file(other) != 0
+            || utimensat(AT_FDCWD, other, june2001, 0) != 0
+            || rename(other, path) != 0) {
+        goto out;
+    }
+
+    ret = afp2_date_search(obj, vol, vid, &nrecs, lname);
+    id = long_name(vol, did, name, want);
+
+    if (ret != AFPERR_EOF || nrecs != 1 || id == CNID_INVALID
+            || strcmp(lname, want) != 0 || cnid_adds != 1) {
+        fprintf(stderr,
+                "catsearch: stale: result %d, %u matches, '%s', %d added\n",
+                ret, nrecs, lname, cnid_adds);
+        goto out;
+    }
+
+    /* the search's metadata read refreshed the entry of the old inode */
+    if ((ret = delete (obj, vid, did, name)) != AFP_OK) {
+        fprintf(stderr, "catsearch: stale: delete %d\n", ret);
+        goto out;
+    }
+
+    result = 0;
+out:
+    obj->options.dircache_validation_freq = freq;
+    cnid_add_did = CNID_INVALID;
+    /* FPDelete refuses a name whose entry holds another inode */
+    drop_entry(vol, did, name);
+    delete (obj, vid, did, name);
+    delete (obj, vid, did, "other.txt");
+    delete (obj, vid, DIRDID_ROOT, "cm");
+    return result;
+}
+
+/*!
+ * @brief A file FPCreateFile makes through a path registers in its folder
+ *
+ * cname() moves into the path's last folder, which holds the file, so the
+ * file's CNID row and dircache entry belong there. A file of the same name
+ * in the folder the request names keeps its CNID. Periodic dircache
+ * validation is off, since a lookup that validates rebuilds an entry's path
+ * from its folder's and would hide a wrong one.
+ *
+ * @returns 0, 1 when the new file registers outside its folder, the root's
+ *          file loses its CNID or the setup fails
+ */
+int utest_createfile_registers_in_its_folder(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    char name[] = "made through a path.txt";
+    char want[MAXPATHLEN + 1];
+    size_t len = strlen(name);
+    int freq = obj->options.dircache_validation_freq;
+    const struct dir *folder;
+    const struct dir *entry;
+    cnid_t root_id;
+    cnid_t did;
+    int ret;
+    int result = 1;
+
+    if (createfile(obj, vid, DIRDID_ROOT, name) != 0) {
+        return 1;
+    }
+
+    root_id = cnid_get(vol->v_cdb, DIRDID_ROOT, name, len);
+
+    if (root_id == CNID_INVALID
+            || (did = make_folder(obj, vid, "pc")) == CNID_INVALID) {
+        delete (obj, vid, DIRDID_ROOT, name);
+        return 1;
+    }
+
+    snprintf(want, sizeof(want), "%s/pc/%s", vol->v_path, name);
+    obj->options.dircache_validation_freq = INT_MAX;
+
+    if ((ret = createfile(obj, vid, DIRDID_ROOT,
+                          "pc/made through a path.txt")) != 0) {
+        fprintf(stderr, "create: error %d\n", ret);
+    } else if (cnid_get(vol->v_cdb, DIRDID_ROOT, name, len) != root_id) {
+        fprintf(stderr, "create: the root's '%s' lost its CNID\n", name);
+    } else if (cnid_get(vol->v_cdb, did, name, len) == CNID_INVALID) {
+        fprintf(stderr, "create: '%s' has no CNID in its folder\n", name);
+    } else if ((folder = dirlookup(vol, did)) == NULL
+               || (entry = dircache_search_by_name(vol, folder, name,
+                                                   len)) == NULL
+               || strcmp(cfrombstr(entry->d_fullpath), want) != 0) {
+        fprintf(stderr, "create: '%s' has no entry at '%s'\n", name, want);
+    } else {
+        result = 0;
+    }
+
+    obj->options.dircache_validation_freq = freq;
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "pc");
+    delete (obj, vid, DIRDID_ROOT, name);
+    return result;
+}
+
+/*!
+ * @brief A file FPOpenFork meets through a path registers in its folder
+ *
+ * The file lies on disk without metadata, so the read-write open creates the
+ * metadata and registers the file's CNID, which belongs under the path's last
+ * folder. The open asks for no fork parameters, since getforkparams() would
+ * register the file again under the fork's folder.
+ *
+ * @returns 0, 1 when the row sits outside the folder or the setup fails
+ */
+int utest_openfork_registers_in_its_folder(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    char name[] = "opened through a path.txt";
+    char *names[] = { name };
+    uint16_t refnum;
+    cnid_t did;
+    int ret;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "po")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if (disk_files(vol, "po", names, 1) != 0) {
+        fprintf(stderr, "openfork: no file on disk\n");
+    } else if ((ret = openfork(obj, vid, DIRDID_ROOT,
+                               "po/opened through a path.txt", OPENFORK_DATA,
+                               OPENACC_RD | OPENACC_WR, &refnum)) != AFP_OK) {
+        fprintf(stderr, "openfork: error %d\n", ret);
+    } else {
+        cnid_t id = cnid_get(vol->v_cdb, did, name, strlen(name));
+        closefork(obj, refnum);
+
+        if (id != CNID_INVALID) {
+            result = 0;
+        } else {
+            fprintf(stderr, "openfork: '%s' has no CNID in its folder\n",
+                    name);
+        }
+    }
+
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "po");
+    return result;
+}
+
+/*!
+ * @brief FPCreateID through a path registers the file in its folder
+ *
+ * The file lies on disk without a CNID. The first FPCreateID registers it
+ * under the path's last folder and the second finds that row. The third
+ * names the file by its CNID with an empty path, which cname() resolves
+ * without a stat, and finds the row too. The last two answer AFPERR_EXISTID
+ * with the first one's CNID.
+ *
+ * @returns 0, 1 when a reply or the row disagrees or the setup fails
+ */
+int utest_createid_registers_in_its_folder(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    char name[] = "identified through a path.txt";
+    char path[] = "pi/identified through a path.txt";
+    char *names[] = { name };
+    size_t len = strlen(name);
+    cnid_t made = CNID_INVALID;
+    cnid_t found = CNID_INVALID;
+    cnid_t did;
+    int ret;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "pi")) == CNID_INVALID) {
+        return 1;
+    }
+
+    if (disk_files(vol, "pi", names, 1) != 0) {
+        fprintf(stderr, "createid: no file on disk\n");
+    } else if ((ret = createid(obj, vid, DIRDID_ROOT, path, &made)) != AFP_OK
+               || cnid_get(vol->v_cdb, did, name, len) != made) {
+        fprintf(stderr, "createid: first: error %d, CNID %u\n", ret,
+                ntohl(made));
+    } else if ((ret = createid(obj, vid, DIRDID_ROOT, path,
+                               &found)) != AFPERR_EXISTID
+               || found != made
+               || cnid_get(vol->v_cdb, did, name, len) != made) {
+        fprintf(stderr, "createid: second: error %d, CNID %u for %u\n", ret,
+                ntohl(found), ntohl(made));
+    } else if ((ret = createid(obj, vid, made, "", &found)) != AFPERR_EXISTID
+               || found != made
+               || cnid_get(vol->v_cdb, did, name, len) != made) {
+        fprintf(stderr, "createid: by CNID: error %d, CNID %u for %u\n", ret,
+                ntohl(found), ntohl(made));
+    } else {
+        result = 0;
+    }
+
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "pi");
+    return result;
 }

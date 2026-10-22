@@ -1,7 +1,9 @@
 /*
- * Unit tests for vetoed-file deletion and its directory descriptor handling
+ * Unit tests for veto files: name matching, and vetoed-file deletion with
+ * its directory descriptor handling
  *
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +22,6 @@
 
 #include <dirent.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,21 +32,11 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "afpfunc_helpers.h"
 #include "faultinject.h"
 #include "filedir.h"
 #include "subtests_veto.h"
 #include "test.h"
-
-static int create_file(const char *path)
-{
-    int fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
-
-    if (fd == -1) {
-        return -1;
-    }
-
-    return close(fd);
-}
 
 static int make_case(char root[MAXPATHLEN + 1], const char *name)
 {
@@ -97,7 +88,7 @@ int utest_delete_veto_symlink_stays_in_volume(void)
             || mkdir(share, 0700) != 0
             || mkdir(deldir, 0700) != 0
             || mkdir(outside, 0700) != 0
-            || create_file(secret) != 0
+            || create_disk_file(secret) != 0
             || symlink(outside, linkpath) != 0) {
         goto cleanup;
     }
@@ -146,8 +137,8 @@ int utest_delete_veto_recursive(void)
             || case_path(child, nested, "ordinary") != 0
             || case_path(keep, dir, "keep") != 0
             || mkdir(dir, 0700) != 0 || mkdir(nested, 0700) != 0
-            || create_file(child) != 0 || create_file(veto) != 0
-            || create_file(keep) != 0) {
+            || create_disk_file(child) != 0 || create_disk_file(veto) != 0
+            || create_disk_file(keep) != 0) {
         goto cleanup;
     }
 
@@ -203,7 +194,7 @@ int utest_delete_veto_dirfd_failure(void)
 
     if (case_path(dir, root, "delete") != 0
             || case_path(veto, dir, "veto") != 0
-            || mkdir(dir, 0700) != 0 || create_file(veto) != 0
+            || mkdir(dir, 0700) != 0 || create_disk_file(veto) != 0
             || stat(dir, &dir_st) != 0) {
         goto cleanup;
     }
@@ -310,7 +301,7 @@ int utest_delete_veto_any_case(void)
 
     if (case_path(dir, root, "delete") != 0
             || case_path(veto, dir, "veto") != 0
-            || mkdir(dir, 0700) != 0 || create_file(veto) != 0) {
+            || mkdir(dir, 0700) != 0 || create_disk_file(veto) != 0) {
         goto cleanup;
     }
 
@@ -332,5 +323,51 @@ cleanup:
     unlink(veto);
     rmdir(dir);
     rmdir(root);
+    return result;
+}
+
+/*!
+ * @brief veto_file() matches a name against the '/'-delimited elements
+ *
+ * The value is a heap copy, as creatvol() keeps it, so a read past it shows
+ * under valgrind.
+ *
+ * @returns 0, 1 when a name's verdict is wrong or the copy fails
+ */
+int utest_veto_file_matches_elements(void)
+{
+    static const struct {
+        const char *name;
+        int nocase;
+        int vetoed;
+    } cases[] = {
+        {".DS_Store", 0, 1},
+        {"Thumbs.db", 0, 1},
+        {"Thumbs", 0, 0},
+        {"Thumbs.db2", 0, 0},
+        {".DS_Stor", 0, 0},
+        {"", 0, 0},
+        {"tail", 0, 1},
+        {"TAIL", 0, 0},
+        {"TAIL", 1, 1},
+    };
+    char *veto = strdup(".DS_Store/Thumbs.db//tail");
+    int result = 0;
+
+    if (veto == NULL) {
+        return 1;
+    }
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        int vetoed = veto_file(veto, cases[i].name, cases[i].nocase);
+
+        if (vetoed != cases[i].vetoed) {
+            fprintf(stderr, "veto_file: '%s' nocase %d vetoed %d, want %d\n",
+                    cases[i].name, cases[i].nocase, vetoed, cases[i].vetoed);
+            result = 1;
+        }
+    }
+
+    free(veto);
     return result;
 }

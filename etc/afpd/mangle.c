@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2002 Joe Marcus Clarke (jclarke@marcuscom.com)
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -21,11 +22,15 @@
 #include <atalk/util.h>
 
 #include "desktop.h"
+#include "dircache.h"
 #include "mangle.h"
+#include "pfd_cache.h"
 
 
-#define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'A' )
-#define isuxdigit(x)    (isdigit(x) || (isupper(x) && isxdigit(x)))
+#define hextoint(c)   (isdigit((unsigned char)(c)) ? (c) - '0' : (c) + 10 - 'A')
+#define isuxdigit(x)  (isdigit((unsigned char)(x)) \
+                       || (isupper((unsigned char)(x)) \
+                           && isxdigit((unsigned char)(x))))
 
 /*!
  * @brief Convert the extension of a name for the mangled form
@@ -65,9 +70,11 @@ static size_t mangle_extension(const struct vol *vol, const char *uname,
  *
  * A name with a valid `#ID` can also be a real name, so the extensions must
  * match first. The name on disk must have needed mangling, because it was too
- * long or held unconvertible characters. Its converted form must then match
- * the prefix that the client sent. Mac OS X may cut a decomposed character in
- * the prefix, and a name that converts to nothing appears as "???".
+ * long or held unconvertible characters. The prefix that the client sent must
+ * then be the name's converted form, or "???" for a name that converts to
+ * nothing. Mac OS X may carry the prefix on into the decomposed character
+ * the conversion stopped at, so every byte of a longer prefix must start the
+ * name.
  *
  * @param[in] vol        volume of the name
  * @param[in] uname      on-disk name of the object that the ID names
@@ -140,33 +147,27 @@ static char *demangle_checks(const struct vol *vol, char *uname,
                 return mfilename;
             }
 
-            /* Now compare the two names, they have to match the number of characters in buffer */
-            /* prefix can be longer than len, OSX might send us the first character(s) of a     */
-            /* decomposed char as the *last* character(s) before the #, so our match below will */
-            /* still work, but leaves room for a race ... FIXME				    */
-            if ((prefix >= len || mfilenamelen == MACFILELEN)
-                    && !strncmp(mfilename, buffer, len)) {
-                return uname;
-            }
-        } else {
-            /* We couldn't convert the name to maccharset at all, so we'd expect a name */
-            /* in the "???#ID" form ... */
-            if (!strncmp("???", mfilename, prefix)) {
-                return uname;
-            }
-
-            /* ..but OSX might send us only the first characters of a decomposed character. */
-            /*  So convert to UTF8_MAC again, now at least the prefix number of 	  */
-            /* characters have to match ... again a possible race FIXME			  */
-
-            if ((size_t) -1 == (len = convert_charset(vol->v_volcharset, CH_UTF8_MAC, 0,
-                                                      uname, strlen(uname), buffer, sizeof(buffer), &flags))) {
+            /* the prefix holds the converted start, all of it unless a name
+             * of MACFILELEN bytes cut it */
+            if ((prefix < len && mfilenamelen != MACFILELEN)
+                    || strncmp(mfilename, buffer, len) != 0) {
                 return mfilename;
             }
 
-            if (!strncmp(mfilename, buffer, prefix)) {
+            if (prefix <= len) {
                 return uname;
             }
+        } else if (prefix == 3 && strncmp(mfilename, "???", 3) == 0) {
+            /* mangle() writes "???" for a name that converts to nothing */
+            return uname;
+        }
+
+        if (prefix > 0
+                && convert_charset(vol->v_volcharset, CH_UTF8_MAC, 0, uname,
+                                   strlen(uname), buffer, sizeof(buffer),
+                                   &flags) != (size_t) -1
+                && strncmp(mfilename, buffer, prefix) == 0) {
+            return uname;
         }
     }
 
@@ -174,98 +175,116 @@ static char *demangle_checks(const struct vol *vol, char *uname,
 }
 
 /*!
+ * @brief The CNID that a MANGLE_CHAR of a name introduces
+ *
+ * The CNID is at most eight uppercase hex digits without a leading zero, at
+ * least CNID_START, and ends the name or comes before a '.' that starts an
+ * extension of at most MAX_EXT_LENGTH bytes.
+ *
+ * @param[in]  hash  a MANGLE_CHAR of the name
+ * @param[out] ext   receives the end of the CNID's digits
+ * @returns the CNID in host order, or 0 when no CNID follows hash
+ */
+static uint32_t mangled_id(char *hash, char **ext)
+{
+    char *t = hash + 1;
+    uint32_t id = 0;
+
+    if (*t == '0') {
+        return 0;
+    }
+
+    /* a ninth digit would wrap the id into another object's */
+    while (t - hash < MANGLE_LENGTH && isuxdigit(*t)) {
+        id = (id * 16) + hextoint(*t);
+        t++;
+    }
+
+    if ((*t != 0 && *t != '.') || strlen(t) > MAX_EXT_LENGTH
+            || id < CNID_START) {
+        return 0;
+    }
+
+    *ext = t;
+    return id;
+}
+
+/*!
  * @brief Find the on-disk name that a mangled name in a directory stands for
  *
- * A mangled name holds MANGLE_CHAR, the CNID in uppercase hex without a
- * leading zero, and an extension no longer than MAX_EXT_LENGTH bytes. The
- * CNID database starts at 17, so a smaller ID never matches. The object must
- * sit in did. Without osx the name must equal the mangled name the server
- * builds. With osx, demangle_checks also accepts the forms that Mac OS X
- * sends.
+ * A mangled name is a prefix of the object's name, MANGLE_CHAR, the CNID and
+ * the name's extension. The prefix and the extension may hold MANGLE_CHAR as
+ * well, so each MANGLE_CHAR that introduces a CNID gets a turn, the last
+ * first. The object must sit in did; a cached object whose name still holds
+ * it answers from its dircache entry, any other ID from one CNID lookup. The
+ * name must equal the mangled name the server builds; with osx,
+ * demangle_checks also accepts the forms that Mac OS X sends.
  *
  * @param[in]  vol        volume of the name
  * @param[in]  mfilename  name from the client
  * @param[in]  did        CNID of the directory that holds the object
- * @param[out] osx        receives the CNID in network order, or NULL for an
- *                        exact match
- * @returns the name on disk, or mfilename when it is not a mangled name of an
- *          object in did
+ * @param[out] osx        receives the CNID in network order with the name on
+ *                        disk returned; NULL asks for the exact match alone
+ * @returns the name on disk in a static buffer, or mfilename when it is not a
+ *          mangled name of an object in did
  */
 static char *
 private_demangle(const struct vol *vol, char *mfilename, cnid_t did,
                  cnid_t *osx)
 {
-    char *t;
+    char *hash = mfilename + strlen(mfilename);
+    /* MANGLE_CHAR, the CNID's digits and the extension end a mangled name */
+    const char *first = hash - MIN(hash - mfilename,
+                                   MANGLE_LENGTH + MAX_EXT_LENGTH);
+    char *ext = NULL;
     char *u_name;
-    uint32_t id, file_id;
-    static char buffer[12 + MAXPATHLEN + 1];
-    int len = 12 + MAXPATHLEN + 1;
-    struct dir	*dir;
+    uint32_t id;
+    cnid_t pdid;
+    static char buffer[CNID_MAX_PATH_LEN];
+    struct dir *dir;
+    struct stat st;
     size_t prefix;
-    id = file_id = 0;
-    t = strchr(mfilename, MANGLE_CHAR);
 
-    if (t == NULL) {
-        return mfilename;
-    }
-
-    prefix = t - mfilename;
-    /* FIXME
-     * is prefix == 0 a valid mangled filename ?
-    */
-    /* may be a mangled filename */
-    t++;
-
-    if (*t == '0') { /* can't start with a 0 */
-        return mfilename;
-    }
-
-    while (isuxdigit(*t)) {
-        id = (id * 16) + hextoint(*t);
-        t++;
-    }
-
-    if ((*t != 0 && *t != '.') || strlen(t) > MAX_EXT_LENGTH || id < 17) {
-        return mfilename;
-    }
-
-    file_id = id = htonl(id);
-
-    if (osx) {
-        *osx = id;
-    }
-
-    /* is it a dir?, there's a conflict with pre OSX 'trash #2'  */
-    if ((dir = dirlookup(vol, id))) {
-        if (dir->d_pdid != did) {
-            /* not in the same folder, there's a race with outdate cache
-             * but we have to live with it, hopefully client will recover
-            */
-            return mfilename;
+    while (hash > first) {
+        if (*--hash != MANGLE_CHAR || (id = mangled_id(hash, &ext)) == 0) {
+            continue;
         }
 
-        if (!osx) {
-            /* it's not from cname so mfilename and dir must be the same */
-            if (strcmp(cfrombstr(dir->d_m_name), mfilename) == 0) {
-                return cfrombstr(dir->d_u_name);
+        prefix = hash - mfilename;
+        id = htonl(id);
+        pdid = id;
+
+        /* another session's rename reaches the entry only by its cache
+         * hint, and a directory's ctime moves with each change inside it */
+        if ((dir = dircache_lookup_did(vol, id)) != NULL
+                && pfd_ostat(vol, dir, &st, vol_syml_opt(vol)) == 0
+                && st.st_ino == dir->dcache_ino
+                && (!(dir->d_flags & DIRF_ISFILE)
+                    || st.st_ctime == dir->dcache_ctime)) {
+            if (dir->d_pdid != did) {
+                continue;
             }
-        } else {
-            return demangle_checks(vol, cfrombstr(dir->d_u_name), mfilename, prefix, t);
-        }
-    } else if (NULL != (u_name = cnid_resolve(vol->v_cdb, &id, buffer, len))) {
-        if (id != did) {
-            return mfilename;
+
+            /* a rename of the object frees the entry's name */
+            strlcpy(buffer, cfrombstr(dir->d_u_name), sizeof(buffer));
+            u_name = buffer;
+        } else if ((u_name = cnid_resolve(vol->v_cdb, &pdid, buffer,
+                                          sizeof(buffer))) == NULL
+                   || pdid != did) {
+            continue;
         }
 
-        if (!osx) {
-            /* convert back to mac name and check it's the same */
-            t = utompath(vol, u_name, file_id, utf8_encoding(vol->v_obj));
-
-            if (!strcmp(t, mfilename)) {
-                return u_name;
+        /* an AFP 3 client (osx) may also send a form Mac OS X builds */
+        if (strcmp(utompath(vol, u_name, id, utf8_encoding(vol->v_obj)),
+                   mfilename) == 0
+                || (osx != NULL
+                    && demangle_checks(vol, u_name, mfilename, prefix,
+                                       ext) == u_name)) {
+            if (osx != NULL) {
+                *osx = id;
             }
-        } else {
-            return demangle_checks(vol, u_name, mfilename, prefix, t);
+
+            return u_name;
         }
     }
 
@@ -294,8 +313,8 @@ demangle(const struct vol *vol, char *mfilename, cnid_t did)
  * @param[in]  vol        volume of the name
  * @param[in]  mfilename  name from the client
  * @param[in]  did        CNID of the directory that holds the object
- * @param[out] fileid     receives the CNID, in network order, of a name in the
- *                        mangled form
+ * @param[out] fileid     receives the CNID, in network order, with the name
+ *                        a mangled form resolves to
  * @returns the name on disk, or mfilename
  */
 char *
@@ -310,8 +329,9 @@ demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
  *
  * A name over the client's limit keeps a prefix of its UTF-8 or Mac charset
  * form. MANGLE_CHAR, the CNID in hexadecimal, and the extension that
- * mangle_extension() found follow the prefix. The result lives in a static
- * buffer.
+ * mangle_extension() found follow the prefix. The result lives in the static
+ * buffer of its encoding, which bit 1 of flags chooses, since a reply packs
+ * both names of one object.
  *
  * @bug Early Mac OS X (10.0 to 10.4) limited names to 255 bytes. The conversion
  * therefore runs volcharset to UTF16-MAC to UTF8-MAC truncated at 255 bytes.
@@ -326,7 +346,7 @@ demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
  * @param[in] uname        Unix name of the file
  * @param[in] id           CNID of the file, or 0
  * @param[in] flags        bit 0 forces mangling, bit 1 selects the UTF-8 length
- *                         limit
+ *                         limit and buffer
  * @returns filename when it fits, NULL when id is 0, or the mangled name
  */
 char *
@@ -335,7 +355,7 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,
 {
     char *m = NULL;
     /* way > maxlen */
-    static char mfilename[MAXPATHLEN + 2];
+    static char mfilename[2][MAXPATHLEN + 2];
     char mangle_suffix[MANGLE_LENGTH + 1];
     /* for convert_charset dest_len parameter +2 */
     char ext[MAX_EXT_LENGTH + 2];
@@ -358,7 +378,7 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,
     /* First, attempt to locate a file extension. */
     ext_len = mangle_extension(vol, uname, ext,
                                (flags & 2) ? CH_UTF8_MAC : vol->v_maccharset);
-    m = mfilename;
+    m = mfilename[(flags & 2) != 0];
     k = snprintf(mangle_suffix, sizeof(mangle_suffix), "%c%X", MANGLE_CHAR,
                  ntohl(id));
 
