@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -15,7 +15,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [atalk/cnid.h](cnid.h.md)
 * [atalk/hash.h](hash.h.md)
 * [atalk/queue.h](queue.h.md)
-* [atalk/unicode.h](unicode.h.md)
 * System headers: `arpa/inet.h`, `bstrlib.h`, `dirent.h`, `stdint.h`, `sys/types.h`
 
 # Included by
@@ -42,7 +41,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int ad_rlen_meta_absent(off_t rlen)
 ```
 
-Defined at lines 73 to 76.
+Defined at lines 72 to 75.
 
 Tell whether a cached rlen records absent AppleDouble metadata.
 
@@ -54,7 +53,7 @@ Called by: [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_metad
 static int ad_rlen_known(off_t rlen)
 ```
 
-Defined at lines 79 to 82.
+Defined at lines 78 to 81.
 
 Tell whether a cached rlen is a definite resource fork length.
 
@@ -66,7 +65,7 @@ Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
 static struct dir * path_cached_file(const struct path *path)
 ```
 
-Defined at lines 176 to 183.
+Defined at lines 174 to 181.
 
 Return the dircache entry of a file path, or NULL after dir_remove.
 
@@ -78,7 +77,7 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [path_resolve_ca
 static int path_isadir(struct path *o_path)
 ```
 
-Defined at lines 191 to 200.
+Defined at lines 189 to 198.
 
 Tell whether a path resolved to a directory.
 
@@ -88,11 +87,10 @@ Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_getco
 
 ### struct dir
 
-Defined at line 84.
+Defined at line 83.
 * `bstring d_fullpath`: complete unix path to dir (or file)
 * `bstring d_m_name`: mac name
 * `bstring d_u_name`: unix name
-* `ucs2_t * d_m_name_ucs2`: mac name as UCS2
 * `qnode_t * qidx_node`: pointer to position in queue index
 * `hnode_t * d_index_node`: this entry's node in the dircache
 * `hnode_t * d_didname_node`: this entry's node in index_didname
@@ -125,7 +123,7 @@ Defined at line 84.
 
 ### struct path
 
-Defined at line 158.
+Defined at line 156.
 * `int m_type`: mac name type (long name, unicode
 * `char * m_name`: mac name
 * `char * u_name`: unix name

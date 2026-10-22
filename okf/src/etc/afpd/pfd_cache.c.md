@@ -5,7 +5,7 @@ description: "Cache of parent directory descriptors for the stat calls that chec
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/pfd_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -160,7 +160,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [dircache_lookup_parent](dircache.c.md#dircache_lookup_parent), [ostat](../../libatalk/util/unix.c.md#ostat), [ostatat](../../libatalk/util/unix.c.md#ostatat), [pfd_get](pfd_cache.c.md#pfd_get), [pfd_repair_path](pfd_cache.c.md#pfd_repair_path)
 
-Called by: [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name)
+Called by: [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [private_demangle](mangle.c.md#private_demangle)
 
 Uses file-scope variables: `pfd_stat`
 

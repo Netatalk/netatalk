@@ -5,7 +5,7 @@ description: "Character set conversion types and Unicode string operations."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/unicode.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,7 +35,6 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/papd/lp.c](../../etc/papd/lp.c.md)
 * [etc/papd/main.c](../../etc/papd/main.c.md)
 * [etc/papd/print_cups.c](../../etc/papd/print_cups.c.md)
-* [include/atalk/directory.h](directory.h.md)
 * [include/atalk/globals.h](globals.h.md)
 * [include/atalk/util.h](util.h.md)
 * [include/atalk/volume.h](volume.h.md)

@@ -5,7 +5,7 @@ description: "Fork commands: FPOpenFork, FPRead, FPWrite, FPCloseFork, byte rang
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -267,7 +267,7 @@ Called by: [afp_openfork](fork.c.md#afp_openfork), [materialize_virtual_icon](fo
 int afp_openfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 751 to 1175.
+Defined at lines 751 to 1176.
 
 FPOpenFork: open the data or resource fork of a file with access and deny modes.
 
@@ -296,7 +296,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static void fork_modified(const AFPObj *obj, struct ofork *ofork)
 ```
 
-Defined at lines 1186 to 1199.
+Defined at lines 1187 to 1200.
 
 Mark an open fork changed: its volume is marked, a resource fork's cached content goes under every name the session has the file open by, and the fork's first change sends sibling sessions a refresh hint, [of_closefork()](ofork.c.md#of_closefork) the last.
 
@@ -314,7 +314,7 @@ Called by: [afp_setforkparams](fork.c.md#afp_setforkparams), [write_fork](fork.c
 static int fork_error(const struct ofork *ofork, const char *call, bool is_write)
 ```
 
-Defined at lines 1212 to 1243.
+Defined at lines 1213 to 1244.
 
 Map the errno of a failed fork write, truncate or header flush, or of the virtual Icon file's create or open, to the AFP reply.
 
@@ -335,7 +335,7 @@ Mentioned in the documentation of: [materialize_virtual_icon](fork.c.md#material
 int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1263 to 1431.
+Defined at lines 1264 to 1432.
 
 FPSetForkParms: change the length of an open fork.
 
@@ -362,7 +362,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int byte_lock(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 1461 to 1549.
+Defined at lines 1462 to 1550.
 
 Shared body of FPByteRangeLock and FPByteRangeLockExt.
 
@@ -388,7 +388,7 @@ Called by: [afp_bytelock](fork.c.md#afp_bytelock), [afp_bytelock_ext](fork.c.md#
 int afp_bytelock(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1563 to 1567.
+Defined at lines 1564 to 1568.
 
 FPByteRangeLock: take or release a byte range lock on an open fork with 32-bit fields.
 
@@ -411,7 +411,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1581 to 1585.
+Defined at lines 1582 to 1586.
 
 FPByteRangeLockExt: take or release a byte range lock on an open fork with 64-bit fields.
 
@@ -434,7 +434,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 static int read_file(const struct ofork *ofork, int eid, off_t offset, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1602 to 1628.
+Defined at lines 1603 to 1629.
 
 Read *rbuflen bytes from fork at offset.
 
@@ -457,7 +457,7 @@ Called by: [read_fork](fork.c.md#read_fork)
 static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry, off_t offset, off_t reqcount, int err)
 ```
 
-Defined at lines 1646 to 1689.
+Defined at lines 1647 to 1690.
 
 Serve resource fork data from Tier 2 cache via [DSI](../../include/atalk/dsi.h.md#struct-dsi) framing.
 
@@ -484,7 +484,7 @@ Uses file-scope variables: `rfork_lru` in [etc/afpd/dircache.c](dircache.c.md)
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 1713 to 2034.
+Defined at lines 1714 to 2035.
 
 Shared body of FPRead and FPReadExt.
 
@@ -514,7 +514,7 @@ Mentioned in the documentation of: [rfork_cache_serve_from_buf](fork.c.md#rfork_
 int afp_read(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2047 to 2051.
+Defined at lines 2048 to 2052.
 
 FPRead: read from an open fork with 32-bit offset and count.
 
@@ -537,7 +537,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2064 to 2068.
+Defined at lines 2065 to 2069.
 
 FPReadExt: read from an open fork with 64-bit offset and count.
 
@@ -560,7 +560,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_flush(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2082 to 2097.
+Defined at lines 2083 to 2098.
 
 FPFlush: flush every open fork of a volume to stable storage.
 
@@ -585,7 +585,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_flushfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2111 to 2137.
+Defined at lines 2112 to 2138.
 
 FPFlushFork: flush an open fork to stable storage.
 
@@ -610,7 +610,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_syncfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2154 to 2182.
+Defined at lines 2155 to 2183.
 
 FPSyncFork: flush an open fork to stable storage.
 
@@ -639,7 +639,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int flushfork(struct ofork *ofork)
 ```
 
-Defined at lines 2196 to 2247.
+Defined at lines 2197 to 2248.
 
 Flush the descriptors of an open fork to stable storage.
 
@@ -660,7 +660,7 @@ Called by: [afp_flushfork](fork.c.md#afp_flushfork), [afp_syncfork](fork.c.md#af
 int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2263 to 2294.
+Defined at lines 2264 to 2295.
 
 FPCloseFork: close an open fork.
 
@@ -685,7 +685,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int write_file(struct ofork *ofork, int eid, off_t *offset, char *rbuf, size_t rbuflen)
 ```
 
-Defined at lines 2310 to 2335.
+Defined at lines 2311 to 2336.
 
 Write rbuflen bytes into the fork at offset.
 
@@ -710,7 +710,7 @@ Called by: [write_fork](fork.c.md#write_fork)
 static bool write_fits_count(const struct ofork *ofork, size_t len, off_t reqcount)
 ```
 
-Defined at lines 2346 to 2357.
+Defined at lines 2347 to 2358.
 
 Tell whether an FPWrite's payload of len bytes fits its ReqCount, logging the refusal when not.
 
@@ -729,7 +729,7 @@ Called by: [write_fork](fork.c.md#write_fork)
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int is64)
 ```
 
-Defined at lines 2383 to 2622.
+Defined at lines 2384 to 2623.
 
 Shared body of FPWrite and FPWriteExt.
 
@@ -755,7 +755,7 @@ Called by: [afp_write](fork.c.md#afp_write), [afp_write_ext](fork.c.md#afp_write
 int afp_write(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2635 to 2639.
+Defined at lines 2636 to 2640.
 
 FPWrite: write to an open fork with 32-bit offset and count.
 
@@ -778,7 +778,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2655 to 2659.
+Defined at lines 2656 to 2660.
 
 FPWriteExt: write to an open fork with 64-bit offset and count.
 
@@ -803,7 +803,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2677 to 2717.
+Defined at lines 2678 to 2718.
 
 FPGetForkParms: return the parameters of an open fork.
 

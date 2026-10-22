@@ -5,7 +5,7 @@ description: "Character-set conversion routines based on samba iconv wrappers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charcnv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -278,7 +278,7 @@ Returns: the output length without the NUL, or `(size_t)-1` for an error
 
 Calls: [charset_name](charcnv.c.md#charset_name), [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_internal), [convert_string_internal](charcnv.c.md#convert_string_internal), [decompose_w](util_unistr.c.md#decompose_w), [precompose_w](util_unistr.c.md#precompose_w)
 
-Called by: [afp_mapid](../../etc/afpd/directory.c.md#afp_mapid), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [configinit](../../etc/afpd/afp_config.c.md#configinit), [convert_to_mac_name](../../etc/papd/print_cups.c.md#convert_to_mac_name), [cups_autoadd_printers](../../etc/papd/print_cups.c.md#cups_autoadd_printers), [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [dir_new](../../etc/afpd/directory.c.md#dir_new), [logincont2](../../etc/uams/uams_dhx2_pam.c.md#logincont2), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../etc/papd/main.c.md#main), [nbplkup_convert_field](../../bin/nbp/nbplkup_output.c.md#nbplkup_convert_field), [print_and_count_zones_in_reply](../../bin/getzones/getzones.c.md#print_and_count_zones_in_reply), [print_gnireply](../../bin/getzones/getzones.c.md#print_gnireply), [print_zones](../../bin/getzones/getzones.c.md#print_zones), [sl_unpack_cpx](../../etc/afpd/spotlight_marshalling.c.md#sl_unpack_cpx), [translate](../../etc/papd/lp.c.md#translate), [ucs2_to_charset_allocate](charcnv.c.md#ucs2_to_charset_allocate), [writeconf](../../etc/atalkd/config.c.md#writeconf), [zone](../../etc/atalkd/config.c.md#zone)
+Called by: [afp_mapid](../../etc/afpd/directory.c.md#afp_mapid), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [configinit](../../etc/afpd/afp_config.c.md#configinit), [convert_to_mac_name](../../etc/papd/print_cups.c.md#convert_to_mac_name), [cups_autoadd_printers](../../etc/papd/print_cups.c.md#cups_autoadd_printers), [logincont2](../../etc/uams/uams_dhx2_pam.c.md#logincont2), [main](../../bin/nbp/nbplkup.c.md#main), [main](../../bin/nbp/nbprgstr.c.md#main), [main](../../bin/nbp/nbpunrgstr.c.md#main), [main](../../etc/papd/main.c.md#main), [nbplkup_convert_field](../../bin/nbp/nbplkup_output.c.md#nbplkup_convert_field), [print_and_count_zones_in_reply](../../bin/getzones/getzones.c.md#print_and_count_zones_in_reply), [print_gnireply](../../bin/getzones/getzones.c.md#print_gnireply), [print_zones](../../bin/getzones/getzones.c.md#print_zones), [sl_unpack_cpx](../../etc/afpd/spotlight_marshalling.c.md#sl_unpack_cpx), [translate](../../etc/papd/lp.c.md#translate), [ucs2_to_charset_allocate](charcnv.c.md#ucs2_to_charset_allocate), [writeconf](../../etc/atalkd/config.c.md#writeconf), [zone](../../etc/atalkd/config.c.md#zone)
 
 Uses file-scope variables: `charsets`
 
@@ -348,7 +348,7 @@ Returns: The number of bytes occupied by the string in the destination
 
 Calls: [convert_string](charcnv.c.md#convert_string), [strlen_w](util_unistr.c.md#strlen_w)
 
-Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [cname_mtouname](../../etc/afpd/directory.c.md#cname_mtouname), [getvolparams](../../etc/afpd/volume.c.md#getvolparams)
+Called by: [afp_getsrvrparms](../../etc/afpd/volume.c.md#afp_getsrvrparms), [cname_mtouname](../../etc/afpd/directory.c.md#cname_mtouname), [vol_macname](../../etc/afpd/volume.c.md#vol_macname)
 
 ### ucs2_to_charset_allocate
 

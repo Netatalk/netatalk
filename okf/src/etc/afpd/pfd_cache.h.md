@@ -5,7 +5,7 @@ description: "Parent directory descriptor cache and statistics interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/pfd_cache.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -21,6 +21,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 * [etc/afpd/dircache.c](dircache.c.md)
 * [etc/afpd/directory.c](directory.c.md)
+* [etc/afpd/mangle.c](mangle.c.md)
 * [etc/afpd/pfd_cache.c](pfd_cache.c.md)
 * [etc/afpd/volume.c](volume.c.md)
 

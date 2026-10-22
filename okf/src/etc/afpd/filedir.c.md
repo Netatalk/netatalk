@@ -5,7 +5,7 @@ description: "AFP commands for both files and directories: FPGetFileDirParms, FP
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/filedir.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -366,17 +366,41 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 
 Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 
+### veto_entry_matches
+
+```c
+static int veto_entry_matches(const char *entry, const char *path, size_t len, int nocase)
+```
+
+Defined at lines 1521 to 1537.
+
+Whether a veto entry of path's length equals path.
+
+With nocase, letters match in either ASCII case, as [ascii_tolower()](../../libatalk/util/unix.c.md#ascii_tolower) folds them; every other byte matches only as written.
+
+Parameters:
+* `entry`: first byte of the entry
+* `path`: name to test
+* `len`: length of both
+* `nocase`: whether ASCII letters match in either case
+
+Returns: 1 for a match, 0 otherwise
+
+Calls: [ascii_tolower](../../libatalk/util/unix.c.md#ascii_tolower)
+
+Called by: [veto_file](filedir.c.md#veto_file)
+
 ### veto_file
 
 ```c
 int veto_file(const char *veto_str, const char *path, int nocase)
 ```
 
-Defined at lines 1521 to 1566.
+Defined at lines 1552 to 1574.
 
 Whether path matches one entry of a slash-separated veto list.
 
-The list has the form "abc/zxc/", and an entry must equal path byte for byte, or with nocase letter for letter in either ASCII case. The list's end closes its last entry as a slash does.
+The list has the form "abc/zxc/", and an entry must equal path byte for byte, or with nocase letter for letter in either ASCII case. The list's end closes its last entry as a slash does. Only an entry of path's length is compared.
 
 Parameters:
 * `veto_str`: slash-separated veto list, or NULL
@@ -385,6 +409,6 @@ Parameters:
 
 Returns: 1 for a match, 0 otherwise
 
-Calls: [ascii_tolower](../../libatalk/util/unix.c.md#ascii_tolower)
+Calls: [veto_entry_matches](filedir.c.md#veto_entry_matches)
 
 Called by: [check_dirent](enumerate.c.md#check_dirent), [check_name](filedir.c.md#check_name), [delete_vetoed_files_at](filedir.c.md#delete_vetoed_files_at)

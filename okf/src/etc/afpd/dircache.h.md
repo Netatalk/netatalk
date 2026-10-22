@@ -5,7 +5,7 @@ description: "Directory cache lookup, invalidation and maintenance interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -35,6 +35,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [etc/afpd/filedir.c](filedir.c.md)
 * [etc/afpd/fork.c](fork.c.md)
 * [etc/afpd/idle_worker.c](idle_worker.c.md)
+* [etc/afpd/mangle.c](mangle.c.md)
 * [etc/afpd/ofork.c](ofork.c.md)
 * [etc/afpd/pfd_cache.c](pfd_cache.c.md)
 * [etc/afpd/volume.c](volume.c.md)

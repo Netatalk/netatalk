@@ -5,7 +5,7 @@ description: "Reading afp.conf and extmap.conf: server options, volume definitio
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/netatalk_conf.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -644,7 +644,7 @@ Called by: [getvolbypath](netatalk_conf.c.md#getvolbypath), [readvolfile](netata
 
 Uses file-scope variables: `Volumes`, `lastvid`
 
-Mentioned in the documentation of: [conf_testutil_set_lastvid](netatalk_conf.c.md#conf_testutil_set_lastvid)
+Mentioned in the documentation of: [conf_testutil_set_lastvid](netatalk_conf.c.md#conf_testutil_set_lastvid), [vol_macname](../../etc/afpd/volume.c.md#vol_macname)
 
 ### volfile_changed
 

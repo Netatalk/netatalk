@@ -5,7 +5,7 @@ description: "Manage the AppleDesktop folder and its contents."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/desktop.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -384,23 +384,23 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 char * mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 ```
 
-Defined at lines 1077 to 1113.
+Defined at lines 1078 to 1113.
 
 Convert an AFP name into the name on disk.
 
-An empty name becomes ".". A mangled name resolves through demangle and the CNID database. Any other name converts from UTF8-MAC or the Mac charset to the volume charset.
+An empty name becomes ".". A mangled name resolves through demangle, from the object's dircache entry or the CNID database. Any other name converts from UTF8-MAC or the Mac charset to the volume charset.
 
 Parameters:
 * `vol`: volume of the name
 * `mpath`: AFP name of one path element
-* `did`: CNID of the parent directory
+* `did`: CNID of the parent directory, or CNID_INVALID to convert without demangling
 * `utf8`: nonzero for a UTF8-MAC name of AFP 3
 
 Returns: the name in a static buffer, or NULL when the conversion fails
 
 Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [demangle](mangle.c.md#demangle), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy)
 
-Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c.md#afp_moveandrename), [catsearch_afp](catsearch.c.md#catsearch_afp), [cname](directory.c.md#cname), [cname_mtouname](directory.c.md#cname_mtouname), [ctoupath](filedir.c.md#ctoupath), [getforkparams](fork.c.md#getforkparams), [moveandrename](filedir.c.md#moveandrename), [set_name](file.c.md#set_name)
+Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c.md#afp_moveandrename), [catsearch_afp](catsearch.c.md#catsearch_afp), [cname](directory.c.md#cname), [cname_mtouname](directory.c.md#cname_mtouname), [ctoupath](filedir.c.md#ctoupath), [getforkparams](fork.c.md#getforkparams), [moveandrename](filedir.c.md#moveandrename)
 
 ### utompath
 
@@ -408,11 +408,11 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_moveandrename](filedir.c
 char * utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 ```
 
-Defined at lines 1130 to 1165. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
+Defined at lines 1131 to 1169. Declared in [bin/nad/nad.h](../../bin/nad/nad.h.md).
 
 Convert a name on disk into the AFP name a client sees.
 
-The name converts from the volume charset to UTF8-MAC or the Mac charset. A name too long for the client, or with characters it cannot map, goes through mangle, which needs the CNID. A failed conversion mangles "???" instead.
+The name converts from the volume charset to UTF8-MAC or the Mac charset. A name too long for the client, or with characters it cannot map, goes through mangle, which needs the CNID. A failed conversion mangles "???" instead. A reply packs both names of one object, so each encoding has a static buffer of its own.
 
 Parameters:
 * `vol`: volume of the name
@@ -420,11 +420,11 @@ Parameters:
 * `id`: CNID of the file, or 0
 * `utf8`: nonzero for a UTF8-MAC name of AFP 3
 
-Returns: the name in a static buffer, or NULL when the name needs mangling and id is 0
+Returns: the name in the encoding's static buffer, or NULL when the name needs mangling and id is 0
 
 Calls: [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [mangle](mangle.c.md#mangle)
 
-Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.md#catsearch_db), [cname_mtouname](directory.c.md#cname_mtouname), [crit_check](catsearch.c.md#crit_check), [dir_add](directory.c.md#dir_add), [dirlookup_internal](directory.c.md#dirlookup_internal), [getmetadata](file.c.md#getmetadata), [nad_header_read](../../bin/nad/nad_adouble.c.md#nad_header_read), [private_demangle](mangle.c.md#private_demangle), [set_name](file.c.md#set_name)
+Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.md#catsearch_db), [cname_mtouname](directory.c.md#cname_mtouname), [crit_mac_name](catsearch.c.md#crit_mac_name), [dir_add](directory.c.md#dir_add), [dirlookup_internal](directory.c.md#dirlookup_internal), [getmetadata](file.c.md#getmetadata), [nad_header_read](../../bin/nad/nad_adouble.c.md#nad_header_read), [private_demangle](mangle.c.md#private_demangle), [set_name](file.c.md#set_name)
 
 ### ad_addcomment
 
@@ -432,7 +432,7 @@ Called by: [afp_resolveid](file.c.md#afp_resolveid), [catsearch_db](catsearch.c.
 static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, char *ibuf)
 ```
 
-Defined at lines 1183 to 1261.
+Defined at lines 1187 to 1265.
 
 Store a Finder comment in the AppleDouble metadata of a file or directory.
 
@@ -458,7 +458,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1277 to 1310.
+Defined at lines 1281 to 1314.
 
 FPAddComment: store a Finder comment for a file or directory.
 
@@ -485,7 +485,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1328 to 1392.
+Defined at lines 1332 to 1396.
 
 Read the Finder comment of a file or directory from its AppleDouble metadata.
 
@@ -511,7 +511,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_getcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1405 to 1434.
+Defined at lines 1409 to 1438.
 
 FPGetComment: return the Finder comment of a file or directory.
 
@@ -536,7 +536,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 ```
 
-Defined at lines 1450 to 1521.
+Defined at lines 1454 to 1525.
 
 Remove the Finder comment from the AppleDouble metadata of a file or directory.
 
@@ -561,7 +561,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_rmvcomment(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1534 to 1563.
+Defined at lines 1538 to 1567.
 
 FPRemoveComment: remove the Finder comment of a file or directory.
 

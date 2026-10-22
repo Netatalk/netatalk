@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -625,7 +625,9 @@ Parameters:
 
 Returns: c, with A to Z taken to a to z
 
-Called by: [other_name](../vfs/vfs.c.md#other_name), [veto_file](../../etc/afpd/filedir.c.md#veto_file)
+Called by: [other_name](../vfs/vfs.c.md#other_name), [veto_entry_matches](../../etc/afpd/filedir.c.md#veto_entry_matches)
+
+Mentioned in the documentation of: [veto_entry_matches](../../etc/afpd/filedir.c.md#veto_entry_matches)
 
 ### path_probe_case
 

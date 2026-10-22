@@ -5,7 +5,7 @@ description: "31 files, 113 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/unicode"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 # Files
@@ -48,7 +48,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 36 calls
+* [etc/afpd](../etc/afpd.md): 34 calls
 * [bin/nbp](../bin/nbp.md): 10 calls
 * [etc/papd](../etc/papd.md): 8 calls
 * [libatalk/util](util.md): 7 calls
@@ -62,7 +62,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
 
 # Most called functions
 
-* [convert_string_allocate](unicode/charcnv.c.md#convert_string_allocate): 21 callers
+* [convert_string_allocate](unicode/charcnv.c.md#convert_string_allocate): 19 callers
 * [convert_string](unicode/charcnv.c.md#convert_string): 16 callers
 * [convert_charset](unicode/charcnv.c.md#convert_charset): 15 callers
 * [add_charset](unicode/charcnv.c.md#add_charset): 10 callers

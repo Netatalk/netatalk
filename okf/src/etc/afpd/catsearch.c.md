@@ -5,7 +5,7 @@ description: "FPCatSearch implementation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/catsearch.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-11T16:44:05+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -156,7 +156,7 @@ Uses file-scope variables: `dsidx`, `dstack`, `save_cidx`
 static struct adouble * adl_lkup(struct vol *vol, struct path *path, struct adouble *adp)
 ```
 
-Defined at lines 407 to 450.
+Defined at lines 407 to 448.
 
 Get the AppleDouble metadata of a search candidate once.
 
@@ -164,16 +164,14 @@ A non-NULL adp means an earlier criterion loaded the metadata already. An open f
 
 Parameters:
 * `vol`: volume of the search
-* `path`: candidate with its stat result
+* `path`: candidate with its stat result, its d_cached memo set
 * `adp`: metadata from an earlier call, or NULL
 
 Returns: adp, the adouble of an open fork, the static adouble, or NULL without metadata
 
-Calls: [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [of_findname](ofork.c.md#of_findname), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [of_findname](ofork.c.md#of_findname), [path_resolve_cached_file](file.c.md#path_resolve_cached_file)
 
-Called by: [crit_check](catsearch.c.md#crit_check), [unpack_finderinfo](catsearch.c.md#unpack_finderinfo)
-
-Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
+Called by: [crit_check](catsearch.c.md#crit_check), [crit_mac_name](catsearch.c.md#crit_mac_name), [unpack_finderinfo](catsearch.c.md#unpack_finderinfo)
 
 ### unpack_buffer
 
@@ -181,7 +179,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 static struct finderinfo * unpack_buffer(struct finderinfo *finfo, char *buffer)
 ```
 
-Defined at lines 464 to 475.
+Defined at lines 462 to 473.
 
 Split packed Finder info into the type, creator, flags, and label that FPCatSearch compares.
 
@@ -201,13 +199,13 @@ Called by: [catsearch_afp](catsearch.c.md#catsearch_afp), [unpack_finderinfo](ca
 static struct finderinfo * unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp, struct finderinfo *finfo, int islnk)
 ```
 
-Defined at lines 489 to 497.
+Defined at lines 487 to 495.
 
 Unpack the Finder info of a search candidate, loading its metadata on first use.
 
 Parameters:
 * `vol`: volume of the search
-* `path`: candidate
+* `path`: candidate, its d_cached memo set by adl_lkup
 * `adp`: metadata of the candidate, loaded through adl_lkup
 * `finfo`: unpacked fields
 * `islnk`: nonzero for a symlink, passed to get_finderinfo
@@ -218,27 +216,50 @@ Calls: [adl_lkup](catsearch.c.md#adl_lkup), [get_finderinfo](file.c.md#get_finde
 
 Called by: [crit_check](catsearch.c.md#crit_check)
 
+### crit_mac_name
+
+```c
+static int crit_mac_name(struct vol *vol, struct path *path, struct adouble **adp)
+```
+
+Defined at lines 512 to 553.
+
+Set a search candidate's Mac name and the CNID its name needs.
+
+The file's dircache entry, memoed in the path for [getfilparams()](file.c.md#getfilparams), holds the CNID while the candidate's stat shows the entry's inode; any other file gets it from the CNID database.
+
+Parameters:
+* `vol`: volume of the search
+* `path`: candidate, receives its Mac name, and its CNID when the name needs one
+* `adp`: metadata of the candidate, loaded through adl_lkup for a CNID database lookup
+
+Returns: 1, 0 to skip the file, or -1 when a CNID database reset makes the search fail
+
+Calls: [adl_lkup](catsearch.c.md#adl_lkup), [get_id](file.c.md#get_id), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](desktop.c.md#utompath)
+
+Called by: [crit_check](catsearch.c.md#crit_check)
+
 ### crit_check
 
 ```c
 static int crit_check(struct vol *vol, struct path *path)
 ```
 
-Defined at lines 518 to 732.
+Defined at lines 576 to 749.
 
 Test a search candidate against the FPCatSearch criteria.
 
-A directory needs a directory bitmap and a file a file bitmap. A file gets its Mac name first, through a CNID lookup when the name needs one. The cheap tests run first: the names, then the modification date. The tests that need the AppleDouble metadata follow: the creation and backup dates, the attributes, and the Finder info fields.
+A directory needs a directory bitmap and a file a file bitmap. Cheap tests run first, the modification date and then the names; the creation and backup dates, the attributes and the Finder info, which need the AppleDouble metadata, follow. A file's Mac name, which may cost a CNID lookup, is made only for a name test and for a match.
 
 Each range test uses c1 as the lower bound and c2 as the upper one. Each mask test applies the bits of c2 and expects the value in c1.
 
 Parameters:
 * `vol`: volume of the search
-* `path`: candidate, receives its Mac name and CNID
+* `path`: candidate; a match, and a file a name test reads, receive the Mac name, and the CNID when the name needs one
 
 Returns: 1 for a match, 0 otherwise, or -1 when a CNID database reset makes the search fail
 
-Calls: [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [adl_lkup](catsearch.c.md#adl_lkup), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [get_id](file.c.md#get_id), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [strcasestr_w](../../libatalk/unicode/util_unistr.c.md#strcasestr_w), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [unpack_finderinfo](catsearch.c.md#unpack_finderinfo), [utompath](desktop.c.md#utompath)
+Calls: [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [adl_lkup](catsearch.c.md#adl_lkup), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [convert_string](../../libatalk/unicode/charcnv.c.md#convert_string), [crit_mac_name](catsearch.c.md#crit_mac_name), [strcasecmp_w](../../libatalk/unicode/util_unistr.c.md#strcasecmp_w), [strcasestr_w](../../libatalk/unicode/util_unistr.c.md#strcasestr_w), [unpack_finderinfo](catsearch.c.md#unpack_finderinfo)
 
 Called by: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db)
 
@@ -250,7 +271,7 @@ Uses file-scope variables: `c2`
 static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path, char **buf, int ext)
 ```
 
-Defined at lines 749 to 798.
+Defined at lines 766 to 815.
 
 Append one FPCatSearch result record to the reply.
 
@@ -275,7 +296,7 @@ Called by: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#
 static int catsearch(const AFPObj *obj, struct vol *vol, struct dir *dir, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 830 to 1070.
+Defined at lines 847 to 1087.
 
 Search the directory tree of a volume for FPCatSearch, resuming at a saved position.
 
@@ -308,7 +329,7 @@ Uses file-scope variables: `dstack`, `save_cidx`
 static int catsearch_db(const AFPObj *obj, struct vol *vol, const char *uname, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 1093 to 1255.
+Defined at lines 1110 to 1272.
 
 Search the CNID database by name for an FPCatSearch request.
 
@@ -337,7 +358,7 @@ Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 static int catsearch_afp(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 1276 to 1558.
+Defined at lines 1293 to 1576.
 
 Parse an FPCatSearch or FPCatSearchExt request and run the search.
 
@@ -365,7 +386,7 @@ Uses file-scope variables: `c2`
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1571 to 1575.
+Defined at lines 1589 to 1593.
 
 FPCatSearch: search a volume for files and directories that match the criteria.
 
@@ -388,7 +409,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1588 to 1592.
+Defined at lines 1606 to 1610.
 
 FPCatSearchExt: search a volume for matching files and directories, with the full result bitmaps.
 

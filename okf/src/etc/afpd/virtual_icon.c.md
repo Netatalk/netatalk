@@ -5,7 +5,7 @@ description: "The virtual Icon file of a volume root."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/virtual_icon.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -31,7 +31,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void put_u32(unsigned char *buf, uint32_t val)
 ```
 
-Defined at lines 62 to 68.
+Defined at lines 63 to 69.
 
 Write a 32-bit value in big-endian order.
 
@@ -47,7 +47,7 @@ Called by: [build_resource_fork](virtual_icon.c.md#build_resource_fork)
 static void put_u16(unsigned char *buf, uint16_t val)
 ```
 
-Defined at lines 76 to 80.
+Defined at lines 77 to 81.
 
 Write a 16-bit value in big-endian order.
 
@@ -63,7 +63,7 @@ Called by: [build_resource_fork](virtual_icon.c.md#build_resource_fork)
 static void build_resource_fork(struct vol *vol, const unsigned char *icn_hash, const unsigned char *icl4, const unsigned char *icl8)
 ```
 
-Defined at lines 97 to 235.
+Defined at lines 98 to 236.
 
 Build the resource fork of the virtual volume icon file from 3 icon resources.
 
@@ -85,7 +85,7 @@ Called by: [virtual_icon_init](virtual_icon.c.md#virtual_icon_init)
 int virtual_icon_enabled(const struct vol *vol)
 ```
 
-Defined at lines 245 to 248.
+Defined at lines 246 to 249.
 
 Tell whether a volume serves a virtual icon file.
 
@@ -102,7 +102,7 @@ Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfor
 int real_icon_exists(const struct vol *vol)
 ```
 
-Defined at lines 258 to 264.
+Defined at lines 259 to 265.
 
 Tell whether the volume root holds a real icon file.
 
@@ -121,7 +121,7 @@ Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [enumerate](
 int is_virtual_icon_name(const char *name)
 ```
 
-Defined at lines 272 to 275.
+Defined at lines 273 to 276.
 
 Tell whether a name is the name of the virtual icon file.
 
@@ -138,7 +138,7 @@ Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfor
 int is_virtual_icon(const struct vol *vol, cnid_t did, const char *name)
 ```
 
-Defined at lines 288 to 294.
+Defined at lines 289 to 295.
 
 Tell whether a name in a folder is the virtual icon file.
 
@@ -161,7 +161,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [afp_moveandrename](filedir.c.
 void virtual_icon_init(struct vol *vol)
 ```
 
-Defined at lines 304 to 359.
+Defined at lines 305 to 360.
 
 Build the virtual icon of a volume from its legacy icon option.
 
@@ -182,7 +182,7 @@ Uses file-scope variables: `daemon_icon` in [etc/afpd/icon.c](icon.c.md), `daemo
 const unsigned char * virtual_icon_get_rfork(const struct vol *vol, size_t *outlen)
 ```
 
-Defined at lines 368 to 378.
+Defined at lines 369 to 379.
 
 Return the resource fork of the virtual icon file.
 
@@ -200,7 +200,7 @@ Called by: [afp_openfork](fork.c.md#afp_openfork)
 int virtual_icon_getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, uint16_t open_bit, char *buf, size_t *buflen)
 ```
 
-Defined at lines 398 to 549.
+Defined at lines 399 to 548.
 
 Build the AFP file parameters of the virtual icon file.
 

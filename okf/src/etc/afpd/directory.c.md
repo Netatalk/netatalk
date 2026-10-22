@@ -5,7 +5,7 @@ description: "Directory resolution by CNID and path, the AFP directory commands,
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -180,7 +180,7 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *ret, int toUTF8)
 ```
 
-Defined at lines 422 to 491.
+Defined at lines 422 to 484.
 
 Convert the client name in ret->m_name to the server name in ret->u_name.
 
@@ -194,11 +194,11 @@ Parameters:
 
 Returns: 0, or -1 with afp_errno set
 
-Calls: [demangle_osx](mangle.c.md#demangle_osx), [movecwd](directory.c.md#movecwd), [mtoUTF8](file.c.md#mtoutf8), [mtoupath](desktop.c.md#mtoupath), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [ucs2_to_charset](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset), [utompath](desktop.c.md#utompath)
+Calls: [demangle_osx](mangle.c.md#demangle_osx), [mtoUTF8](file.c.md#mtoutf8), [mtoupath](desktop.c.md#mtoupath), [strlcpy](../../libatalk/compat/strlcpy.c.md#strlcpy), [ucs2_to_charset](../../libatalk/unicode/charcnv.c.md#ucs2_to_charset), [utompath](desktop.c.md#utompath), [vol_macname](volume.c.md#vol_macname)
 
 Called by: [cname](directory.c.md#cname)
 
-Uses file-scope variables: `afp_errno`, `curdir`
+Uses file-scope variables: `afp_errno`
 
 ### path_from_dir
 
@@ -206,7 +206,7 @@ Uses file-scope variables: `afp_errno`, `curdir`
 static struct path * path_from_dir(struct vol *vol, struct dir *dir, struct path *ret)
 ```
 
-Defined at lines 509 to 564.
+Defined at lines 502 to 557.
 
 Build a path result from a dircache entry after cname failed to change into it.
 
@@ -231,7 +231,7 @@ Uses file-scope variables: `afp_errno`, `curdir`
 int get_afp_errno(const int param)
 ```
 
-Defined at lines 578 to 585.
+Defined at lines 571 to 578.
 
 AFP error that the last path resolution left, with AFPERR_DID1 replaced by param.
 
@@ -250,7 +250,7 @@ Uses file-scope variables: `afp_errno`
 static struct dir * dirlookup_internal_retry(const struct vol *vol, cnid_t did, int strict, bstring *fullpath_ptr, char **upath_ptr)
 ```
 
-Defined at lines 606 to 645.
+Defined at lines 599 to 638.
 
 Retry helper for dirlookup_internal on ENOENT.
 
@@ -275,7 +275,7 @@ Called by: [dirlookup_internal](directory.c.md#dirlookup_internal)
 static struct dir * dirlookup_internal(const struct vol *vol, cnid_t did, int retry, int strict)
 ```
 
-Defined at lines 674 to 872.
+Defined at lines 667 to 865.
 
 Internal CNID (Directory ID) resolution with retry control.
 
@@ -317,7 +317,7 @@ Uses file-scope variables: `afp_errno`, `rootParent`
 struct dir * dirlookup(const struct vol *vol, cnid_t did)
 ```
 
-Defined at lines 887 to 894.
+Defined at lines 880 to 887.
 
 Optimistic CNID resolution for read/safe code paths.
 
@@ -331,7 +331,7 @@ Returns: pointer to struct dir (may have DIRF_ISFILE flag for files)
 
 Calls: [dirlookup_internal](directory.c.md#dirlookup_internal)
 
-Called by: [afp_access](acls.c.md#afp_access), [afp_addappl](appl.c.md#afp_addappl), [afp_addcomment](desktop.c.md#afp_addcomment), [afp_copyfile](file.c.md#afp_copyfile), [afp_createid](file.c.md#afp_createid), [afp_deleteid](file.c.md#afp_deleteid), [afp_getacl](acls.c.md#afp_getacl), [afp_getcomment](desktop.c.md#afp_getcomment), [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_opendir](directory.c.md#afp_opendir), [afp_openfork](fork.c.md#afp_openfork), [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_rename](filedir.c.md#afp_rename), [afp_resolveid](file.c.md#afp_resolveid), [afp_rmvappl](appl.c.md#afp_rmvappl), [afp_rmvcomment](desktop.c.md#afp_rmvcomment), [afp_setextattr](extattrs.c.md#afp_setextattr), [afp_setforkparams](fork.c.md#afp_setforkparams), [afp_syncdir](directory.c.md#afp_syncdir), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [deletecurdir](directory.c.md#deletecurdir), [dir_remove](directory.c.md#dir_remove), [dircache_remove_children](dircache.c.md#dircache_remove_children), [dirlookup_strict](directory.c.md#dirlookup_strict), [enumerate](enumerate.c.md#enumerate), [getforkparams](fork.c.md#getforkparams), [makemacpath](appl.c.md#makemacpath), [of_closefork](ofork.c.md#of_closefork), [of_dircache_entry](ofork.c.md#of_dircache_entry), [of_hint_siblings](ofork.c.md#of_hint_siblings), [of_statdir](ofork.c.md#of_statdir), [path_from_dir](directory.c.md#path_from_dir), [private_demangle](mangle.c.md#private_demangle), [setdirparams](directory.c.md#setdirparams), [sl_rpc_fetchAttributesForOIDArray](spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_storeAttributesForOIDArray](spotlight.c.md#sl_rpc_storeattributesforoidarray)
+Called by: [afp_access](acls.c.md#afp_access), [afp_addappl](appl.c.md#afp_addappl), [afp_addcomment](desktop.c.md#afp_addcomment), [afp_copyfile](file.c.md#afp_copyfile), [afp_createid](file.c.md#afp_createid), [afp_deleteid](file.c.md#afp_deleteid), [afp_getacl](acls.c.md#afp_getacl), [afp_getcomment](desktop.c.md#afp_getcomment), [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_opendir](directory.c.md#afp_opendir), [afp_openfork](fork.c.md#afp_openfork), [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_rename](filedir.c.md#afp_rename), [afp_resolveid](file.c.md#afp_resolveid), [afp_rmvappl](appl.c.md#afp_rmvappl), [afp_rmvcomment](desktop.c.md#afp_rmvcomment), [afp_setextattr](extattrs.c.md#afp_setextattr), [afp_setforkparams](fork.c.md#afp_setforkparams), [afp_syncdir](directory.c.md#afp_syncdir), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [deletecurdir](directory.c.md#deletecurdir), [dir_remove](directory.c.md#dir_remove), [dircache_remove_children](dircache.c.md#dircache_remove_children), [dirlookup_strict](directory.c.md#dirlookup_strict), [enumerate](enumerate.c.md#enumerate), [getforkparams](fork.c.md#getforkparams), [makemacpath](appl.c.md#makemacpath), [of_closefork](ofork.c.md#of_closefork), [of_dircache_entry](ofork.c.md#of_dircache_entry), [of_hint_siblings](ofork.c.md#of_hint_siblings), [of_statdir](ofork.c.md#of_statdir), [path_from_dir](directory.c.md#path_from_dir), [setdirparams](directory.c.md#setdirparams), [sl_rpc_fetchAttributesForOIDArray](spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_storeAttributesForOIDArray](spotlight.c.md#sl_rpc_storeattributesforoidarray)
 
 Mentioned in the documentation of: [dircache_expunge_duplicate](dircache.c.md#dircache_expunge_duplicate), [dircache_remove_children](dircache.c.md#dircache_remove_children), [dirlookup_strict](directory.c.md#dirlookup_strict)
 
@@ -341,7 +341,7 @@ Mentioned in the documentation of: [dircache_expunge_duplicate](dircache.c.md#di
 struct dir * dirlookup_strict(const struct vol *vol, cnid_t did)
 ```
 
-Defined at lines 909 to 962.
+Defined at lines 902 to 955.
 
 Validated DID resolution for write/change code paths.
 
@@ -363,7 +363,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.m
 struct dir * dir_new(const char *m_name, const char *u_name, const struct vol *vol, cnid_t pdid, cnid_t did, bstring path, struct stat *st)
 ```
 
-Defined at lines 981 to 1046.
+Defined at lines 974 to 1028.
 
 Construct struct dir.
 
@@ -382,8 +382,6 @@ Returns: pointer to new struct dir or NULL on error
 
 Note: Most of the time mac name and unix name are the same.
 
-Calls: [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate)
-
 Called by: [afp_createfile](file.c.md#afp_createfile), [afp_openvol](volume.c.md#afp_openvol), [dir_add](directory.c.md#dir_add), [dirlookup_internal](directory.c.md#dirlookup_internal), [getmetadata](file.c.md#getmetadata)
 
 ### fullpath_join_blk
@@ -392,7 +390,7 @@ Called by: [afp_createfile](file.c.md#afp_createfile), [afp_openvol](volume.c.md
 bstring fullpath_join_blk(const bstring parent, const char *name, int nlen)
 ```
 
-Defined at lines 1062 to 1075.
+Defined at lines 1044 to 1057.
 
 Build "parent/name" as a new bstring from a length-known leaf.
 
@@ -413,7 +411,7 @@ Called by: [fullpath_join](directory.c.md#fullpath_join), [pfd_repair_path](pfd_
 bstring fullpath_join(const bstring parent, const char *name)
 ```
 
-Defined at lines 1086 to 1089.
+Defined at lines 1068 to 1071.
 
 Build "parent/name" as a new bstring.
 
@@ -433,7 +431,7 @@ Called by: [absupath](filedir.c.md#absupath), [afp_createfile](file.c.md#afp_cre
 void dir_free(struct dir *dir)
 ```
 
-Defined at lines 1096 to 1130.
+Defined at lines 1078 to 1108.
 
 Free a struct dir and all its members.
 
@@ -450,7 +448,7 @@ Called by: [afp_createfile](file.c.md#afp_createfile), [afp_openvol](volume.c.md
 int dir_modify(const struct vol *vol, struct dir *dir, const struct dir_modify_args *args)
 ```
 
-Defined at lines 1157 to 1506.
+Defined at lines 1135 to 1472.
 
 Update a cached entry in-place with selective field updates.
 
@@ -469,13 +467,13 @@ Parameters:
 
 Returns: 0 on success, -1 on error (hash re-insert failure)
 
-Calls: [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [convert_string_allocate](../../libatalk/unicode/charcnv.c.md#convert_string_allocate), [dir_remove](directory.c.md#dir_remove), [dircache_add](dircache.c.md#dircache_add), [dircache_promote](dircache.c.md#dircache_promote), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_remove](dircache.c.md#dircache_remove), [ea_cache_free](ad_cache.c.md#ea_cache_free), [fullpath_join](directory.c.md#fullpath_join), [pfd_purge](pfd_cache.c.md#pfd_purge), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
+Calls: [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [dir_remove](directory.c.md#dir_remove), [dircache_add](dircache.c.md#dircache_add), [dircache_promote](dircache.c.md#dircache_promote), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_remove](dircache.c.md#dircache_remove), [ea_cache_free](ad_cache.c.md#ea_cache_free), [fullpath_join](directory.c.md#fullpath_join), [pfd_purge](pfd_cache.c.md#pfd_purge), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
 
 Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [afp_setacl](acls.c.md#afp_setacl), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [ea_written](extattrs.c.md#ea_written), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork), [of_rfork_changed](ofork.c.md#of_rfork_changed), [process_cache_hints](dircache.c.md#process_cache_hints), [read_fork](fork.c.md#read_fork), [setdirparams](directory.c.md#setdirparams), [setfilparams](file.c.md#setfilparams), [validation_refresh_and_hint](dircache.c.md#validation_refresh_and_hint)
 
 Uses file-scope variables: `curdir`, `rfork_stat_invalidated` in [etc/afpd/dircache.c](dircache.c.md)
 
-Mentioned in the documentation of: [dir_stat_refresh](directory.c.md#dir_stat_refresh), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname)
+Mentioned in the documentation of: [dir_stat_refresh](directory.c.md#dir_stat_refresh), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_search_by_did](dircache.c.md#dircache_search_by_did)
 
 ### dir_add
 
@@ -483,7 +481,7 @@ Mentioned in the documentation of: [dir_stat_refresh](directory.c.md#dir_stat_re
 struct dir * dir_add(struct vol *vol, const struct dir *dir, struct path *path, int len)
 ```
 
-Defined at lines 1527 to 1642.
+Defined at lines 1493 to 1608.
 
 Create struct dir from struct path.
 
@@ -514,7 +512,7 @@ Called by: [afp_createdir](directory.c.md#afp_createdir), [catsearch](catsearch.
 void dir_free_invalid_q(void)
 ```
 
-Defined at lines 1649 to 1656.
+Defined at lines 1615 to 1622.
 
 Free the queue with invalid struct dirs.
 
@@ -532,7 +530,7 @@ Uses file-scope variables: `invalid_dircache_entries`
 void dir_remove_and_free(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 1673 to 1689.
+Defined at lines 1639 to 1655.
 
 Remove a dircache entry and free it at once.
 
@@ -556,7 +554,7 @@ Uses file-scope variables: `curdir`
 int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
 ```
 
-Defined at lines 1713 to 1813.
+Defined at lines 1679 to 1779.
 
 Remove a file/directory from dircache with automatic curdir recovery.
 
@@ -591,7 +589,7 @@ Mentioned in the documentation of: [dircache_expunge_duplicate](dircache.c.md#di
 struct path * cname(struct vol *vol, struct dir *dir, char **cpath)
 ```
 
-Defined at lines 1857 to 2175.
+Defined at lines 1823 to 2141.
 
 Resolve an AFP path relative to a directory and change into the directory that holds it.
 
@@ -638,7 +636,7 @@ Mentioned in the documentation of: [ea_cache_entry](ad_cache.c.md#ea_cache_entry
 static int ochdir_vol(const char *dir, const struct vol *vol)
 ```
 
-Defined at lines 2185 to 2206.
+Defined at lines 2151 to 2172.
 
 [ochdir()](../../libatalk/util/unix.c.md#ochdir) wrapper that rejects chdir across filesystem device boundaries
 
@@ -658,7 +656,7 @@ Called by: [movecwd](directory.c.md#movecwd)
 int movecwd(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 2216 to 2342.
+Defined at lines 2182 to 2308.
 
 chdir() to dir
 
@@ -670,7 +668,7 @@ Returns: 0 on success, -1 on error with afp_errno set appropriately
 
 Calls: [dir_remove](directory.c.md#dir_remove), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dirlookup_strict](directory.c.md#dirlookup_strict), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [ochdir_vol](directory.c.md#ochdir_vol)
 
-Called by: [afp_createdir](directory.c.md#afp_createdir), [afp_deleteid](file.c.md#afp_deleteid), [afp_rename](filedir.c.md#afp_rename), [afp_resolveid](file.c.md#afp_resolveid), [afp_setforkparams](fork.c.md#afp_setforkparams), [afp_syncdir](directory.c.md#afp_syncdir), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [cname_mtouname](directory.c.md#cname_mtouname), [deletecurdir](directory.c.md#deletecurdir), [getforkparams](fork.c.md#getforkparams), [of_statdir](ofork.c.md#of_statdir), [path_from_dir](directory.c.md#path_from_dir), [setdirparams](directory.c.md#setdirparams), [sl_rpc_storeAttributesForOIDArray](spotlight.c.md#sl_rpc_storeattributesforoidarray)
+Called by: [afp_createdir](directory.c.md#afp_createdir), [afp_deleteid](file.c.md#afp_deleteid), [afp_rename](filedir.c.md#afp_rename), [afp_resolveid](file.c.md#afp_resolveid), [afp_setforkparams](fork.c.md#afp_setforkparams), [afp_syncdir](directory.c.md#afp_syncdir), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [deletecurdir](directory.c.md#deletecurdir), [getforkparams](fork.c.md#getforkparams), [of_statdir](ofork.c.md#of_statdir), [path_from_dir](directory.c.md#path_from_dir), [setdirparams](directory.c.md#setdirparams), [sl_rpc_storeAttributesForOIDArray](spotlight.c.md#sl_rpc_storeattributesforoidarray)
 
 Uses file-scope variables: `afp_errno`, `curdir`, `rootParent`
 
@@ -682,7 +680,7 @@ Mentioned in the documentation of: [dirlookup](directory.c.md#dirlookup)
 int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 ```
 
-Defined at lines 2358 to 2379.
+Defined at lines 2324 to 2345.
 
 Whether the user may read or write in the parent directory of path.
 
@@ -708,7 +706,7 @@ Uses file-scope variables: `curdir`
 int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 ```
 
-Defined at lines 2390 to 2410.
+Defined at lines 2356 to 2376.
 
 Whether the user may read or write path, from its AFP access rights.
 
@@ -732,7 +730,7 @@ Uses file-scope variables: `curdir`
 void offcnt_stats_get(struct offcnt_stats *out)
 ```
 
-Defined at lines 2419 to 2422.
+Defined at lines 2385 to 2388.
 
 Copy the session's offspring count statistics.
 
@@ -747,7 +745,7 @@ Uses file-scope variables: `offcnt_stat`
 void offcnt_log_stats(const char *username)
 ```
 
-Defined at lines 2429 to 2440.
+Defined at lines 2395 to 2406.
 
 Log the session's offspring count statistics.
 
@@ -762,7 +760,7 @@ Uses file-scope variables: `offcnt_stat`
 void dir_stat_refresh(const struct vol *vol, struct dir *dir, struct stat *st)
 ```
 
-Defined at lines 2452 to 2462.
+Defined at lines 2418 to 2428.
 
 Bring a dircache entry's stat up to a stat taken from disk.
 
@@ -785,7 +783,7 @@ Mentioned in the documentation of: [ea_cache_entry](ad_cache.c.md#ea_cache_entry
 void setdiroffcnt(const struct vol *vol, struct dir *dir, struct stat *st, uint32_t count)
 ```
 
-Defined at lines 2477 to 2484.
+Defined at lines 2443 to 2450.
 
 Cache the offspring count of a directory together with its ctime.
 
@@ -807,7 +805,7 @@ Called by: [enumerate](enumerate.c.md#enumerate), [offcnt_serve](directory.c.md#
 static uint16_t offcnt_serve(const struct vol *vol, struct dir *dir, struct stat *st, char *upath)
 ```
 
-Defined at lines 2495 to 2525.
+Defined at lines 2461 to 2491.
 
 Serve a folder's offspring count, walking it when the count is stale.
 
@@ -831,7 +829,7 @@ Uses file-scope variables: `offcnt_stat`
 int dirreenumerate(struct dir *dir, struct stat *st)
 ```
 
-Defined at lines 2540 to 2543.
+Defined at lines 2506 to 2509.
 
 Whether the last CNID reenumeration of dir is still current.
 
@@ -851,7 +849,7 @@ Called by: [reenumerate_id](file.c.md#reenumerate_id)
 int getdirparams(const AFPObj *obj, const struct vol *vol, uint16_t bitmap, struct path *s_path, struct dir *dir, char *buf, size_t *buflen)
 ```
 
-Defined at lines 2568 to 2835.
+Defined at lines 2534 to 2811.
 
 Pack the directory parameters that bitmap selects into buf.
 
@@ -870,7 +868,7 @@ Parameters:
 
 Returns: AFP_OK, or AFPERR_BITMAP for an unknown bit
 
-Calls: [accessmode](unix.c.md#accessmode), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [invisible_dots](directory.c.md#invisible_dots), [offcnt_serve](directory.c.md#offcnt_serve), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [accessmode](unix.c.md#accessmode), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [invisible_dots](directory.c.md#invisible_dots), [offcnt_serve](directory.c.md#offcnt_serve), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [set_vol_macname](volume.c.md#set_vol_macname), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
 
 Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [enumerate](enumerate.c.md#enumerate), [rslt_add](catsearch.c.md#rslt_add)
 
@@ -880,7 +878,7 @@ Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [enumerate](
 int path_error(struct path *path, int error)
 ```
 
-Defined at lines 2849 to 2864.
+Defined at lines 2825 to 2840.
 
 AFP error for a path that cname could not resolve to the expected directory.
 
@@ -904,7 +902,7 @@ Uses file-scope variables: `afp_errno`
 int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2883 to 2941.
+Defined at lines 2859 to 2917.
 
 FPSetDirParms: set the parameters of a directory.
 
@@ -931,7 +929,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *buf)
 ```
 
-Defined at lines 2955 to 3404.
+Defined at lines 2931 to 3380.
 
 Set a directory's parameters from an FPSetDirParms bitmap and buffer.
 
@@ -957,7 +955,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `Cur_
 int afp_syncdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3422 to 3520.
+Defined at lines 3398 to 3496.
 
 FPSyncDir: flush a directory and its AppleDouble metadata to stable storage.
 
@@ -988,7 +986,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3541 to 3645.
+Defined at lines 3517 to 3623.
 
 FPCreateDir: create a directory and return its DID.
 
@@ -1015,7 +1013,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int renamedir(struct vol *vol, int dirfd, char *src, char *dst, struct dir *newparent, char *newname)
 ```
 
-Defined at lines 3668 to 3727.
+Defined at lines 3646 to 3705.
 
 Rename a directory, or transfer its tree when the rename crosses devices.
 
@@ -1043,7 +1041,7 @@ Calls through [`vfs_ops::vfs_renamedir`](../../include/atalk/vfs.h.md#struct-vfs
 const char * dir_event_path(char *buf, size_t buflen, const struct dir *parent, const char *name)
 ```
 
-Defined at lines 3742 to 3761.
+Defined at lines 3720 to 3739.
 
 Full path of name inside parent, for FCE and Spotlight events.
 
@@ -1067,7 +1065,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createfile](file.c.md#af
 int deletecurdir(struct vol *vol)
 ```
 
-Defined at lines 3778 to 3858.
+Defined at lines 3756 to 3836.
 
 Delete the working directory, which must be empty.
 
@@ -1092,7 +1090,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `afp_
 int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3878 to 4020.
+Defined at lines 3856 to 3998.
 
 FPMapID: map a user ID, group ID, or UUID to a name.
 
@@ -1117,7 +1115,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4038 to 4145.
+Defined at lines 4016 to 4123.
 
 FPMapName: map a user or group name to a Unix ID or a UUID.
 
@@ -1142,7 +1140,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_closedir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4160 to 4174.
+Defined at lines 4138 to 4152.
 
 FPCloseDir: accept the close of a variable DID directory.
 
@@ -1167,7 +1165,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_opendir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4193 to 4236.
+Defined at lines 4171 to 4214.
 
 FPOpenDir: return the DID of a directory.
 

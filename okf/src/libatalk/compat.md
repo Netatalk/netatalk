@@ -5,7 +5,7 @@ description: "4 files, 6 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/compat"
 tags: ["libatalk/compat"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 ---
 
 # Files
@@ -40,8 +40,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 
 # Most called functions
 
-* [strlcpy](compat/strlcpy.c.md#strlcpy): 87 callers
-* [strnlen](compat/misc.c.md#strnlen): 59 callers
+* [strlcpy](compat/strlcpy.c.md#strlcpy): 88 callers
+* [strnlen](compat/misc.c.md#strnlen): 58 callers
 * [explicit_bzero](compat/explicit_bzero.c.md#explicit_bzero): 35 callers
 * [strlcat](compat/strlcpy.c.md#strlcat): 25 callers
 * [asprintf](compat/misc.c.md#asprintf): 22 callers
