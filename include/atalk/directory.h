@@ -39,7 +39,6 @@
 #include <atalk/cnid.h>
 #include <atalk/hash.h>
 #include <atalk/queue.h>
-#include <atalk/unicode.h>
 
 /* setgid directories */
 #ifndef DIRBITS
@@ -88,7 +87,6 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
      * will just point to the same storage as d_m_name !! */
     bstring     d_m_name;            /*!< mac name */
     bstring     d_u_name;            /*!< unix name */
-    ucs2_t      *d_m_name_ucs2;      /*!< mac name as UCS2 */
     qnode_t     *qidx_node;          /*!< pointer to position in queue index */
     hnode_t     *d_index_node;       /*!< this entry's node in the dircache */
     hnode_t     *d_didname_node;     /*!< this entry's node in index_didname */

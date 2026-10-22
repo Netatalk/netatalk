@@ -398,9 +398,9 @@ static int reducestack(void)
  * entry without metadata. Any other candidate reads through
  * ad_metadata_cached into a static adouble.
  *
- * @param[in] vol   volume of the search
- * @param[in] path  candidate with its stat result
- * @param[in] adp   metadata from an earlier call, or NULL
+ * @param[in]     vol   volume of the search
+ * @param[in,out] path  candidate with its stat result, its d_cached memo set
+ * @param[in]     adp   metadata from an earlier call, or NULL
  * @returns adp, the adouble of an open fork, the static adouble, or NULL
  *          without metadata
  */
@@ -424,8 +424,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
          * adouble's header zeroed — storing it would flip a negative
          * sentinel to a bogus positive entry. */
         adp = of->of_ad;
-        struct dir *cached = dircache_search_by_name(vol, curdir,
-                                                     path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
+        struct dir *cached = path_resolve_cached_file(vol, path->d_dir, path);
 
         if (cached && cached->dcache_rlen < 0 && ad_meta_loaded(adp)) {
             ad_store_to_cache(adp, cached);
@@ -434,8 +433,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
         ad_init(&ad, vol);
         adp = &ad;
         struct dir *cached = isdir ? path->d_dir
-                             : dircache_search_by_name(vol, curdir,
-                                                       path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
+                             : path_resolve_cached_file(vol, path->d_dir, path);
 
         if (ad_metadata_cached(path->u_name, (isdir ? ADFLAGS_DIR : 0),
                                adp, vol, cached, false,
@@ -479,7 +477,7 @@ static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
  * first use
  *
  * @param[in]     vol    volume of the search
- * @param[in]     path   candidate
+ * @param[in,out] path   candidate, its d_cached memo set by adl_lkup
  * @param[in,out] adp    metadata of the candidate, loaded through adl_lkup
  * @param[out]    finfo  unpacked fields
  * @param[in]     islnk  nonzero for a symlink, passed to get_finderinfo
@@ -496,22 +494,82 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp,
     return unpack_buffer(finfo, ptr);
 }
 
+/*!
+ * @brief Set a search candidate's Mac name and the CNID its name needs
+ *
+ * The file's dircache entry, memoed in the path for getfilparams(), holds the
+ * CNID while the candidate's stat shows the entry's inode; any other file
+ * gets it from the CNID database.
+ *
+ * @param[in]     vol   volume of the search
+ * @param[in,out] path  candidate, receives its Mac name, and its CNID when
+ *                      the name needs one
+ * @param[in,out] adp   metadata of the candidate, loaded through adl_lkup
+ *                      for a CNID database lookup
+ * @returns 1, 0 to skip the file, or -1 when a CNID database reset makes the
+ *          search fail
+ */
+static int crit_mac_name(struct vol *vol, struct path *path,
+                         struct adouble **adp)
+{
+    const struct dir *cached;
+    cnid_t id;
+
+    /* first try without id (it's slow to find it) */
+    if (path->m_name != NULL
+            || (path->m_name = utompath(vol, path->u_name, 0,
+                                        utf8_encoding(vol->v_obj))) != NULL) {
+        return 1;
+    }
+
+    /* retry with the right id */
+    cached = path_resolve_cached_file(vol, path->d_dir, path);
+
+    if (cached != NULL && cached->dcache_ino == path->st.st_ino) {
+        id = cached->d_did;
+    } else {
+        *adp = adl_lkup(vol, path, *adp);
+        id = get_id(vol, *adp, &path->st, path->d_dir->d_did, path->u_name,
+                    (int)strnlen(path->u_name, CNID_MAX_PATH_LEN));
+    }
+
+    if (!id) {
+        if (CNID_ERRNO() == CNID_ERR_RESET) {
+            /* Later entries would get reseeded CNIDs and still be
+             * sent in this reply, so fail the search */
+            return -1;
+        }
+
+        LOG(log_debug, logtype_afpd,
+            "crit_mac_name: get_id failed for '%s', skipping file in "
+            "search results", path->u_name);
+        return 0;
+    }
+
+    /* save the id for getfilparm */
+    path->id = id;
+    path->m_name = utompath(vol, path->u_name, id, utf8_encoding(vol->v_obj));
+    return 1;
+}
+
 /* -------------------- */
 #define CATPBIT_PARTIAL 31
 /*!
  * @brief Test a search candidate against the FPCatSearch criteria
  *
- * A directory needs a directory bitmap and a file a file bitmap. A file gets
- * its Mac name first, through a CNID lookup when the name needs one. The
- * cheap tests run first: the names, then the modification date. The tests
- * that need the AppleDouble metadata follow: the creation and backup dates,
- * the attributes, and the Finder info fields.
+ * A directory needs a directory bitmap and a file a file bitmap. Cheap tests
+ * run first, the modification date and then the names; the creation and
+ * backup dates, the attributes and the Finder info, which need the
+ * AppleDouble metadata, follow. A file's Mac name, which may cost a CNID
+ * lookup, is made only for a name test and for a match.
  *
  * Each range test uses c1 as the lower bound and c2 as the upper one. Each
  * mask test applies the bits of c2 and expects the value in c1.
  *
  * @param[in]     vol   volume of the search
- * @param[in,out] path  candidate, receives its Mac name and CNID
+ * @param[in,out] path  candidate; a match, and a file a name test reads,
+ *                      receive the Mac name, and the CNID when the name
+ *                      needs one
  * @returns 1 for a match, 0 otherwise, or -1 when a CNID database reset makes
  *          the search fail
  */
@@ -525,101 +583,18 @@ static int crit_check(struct vol *vol, struct path *path)
     uint32_t ac_date, ab_date;
     /* for convert_charset dest_len parameter +2 */
     static char convbuf[514];
-    size_t len;
     int islnk;
+    int named;
     islnk = S_ISLNK(path->st.st_mode);
 
     if (S_ISDIR(path->st.st_mode)) {
         if (!c1.dbitmap) {
             return 0;
         }
-    } else {
-        if (!c1.fbitmap) {
-            return 0;
-        }
-
-        /* compute the Mac name
-         * first try without id (it's slow to find it)
-         * An other option would be to call get_id in utompath but
-         * we need to pass parent dir
-        */
-        if (!(path->m_name = utompath(vol, path->u_name, 0,
-                                      utf8_encoding(vol->v_obj)))) {
-            /*retry with the right id */
-            cnid_t id;
-            adp = adl_lkup(vol, path, adp);
-
-            if (!path->u_name) {
-                LOG(log_warning, logtype_afpd,
-                    "crit_check: path->u_name is NULL, skipping file in search results");
-                return 0;
-            }
-
-            size_t uname_len = strnlen(path->u_name, CNID_MAX_PATH_LEN);
-            id = get_id(vol, adp, &path->st, path->d_dir->d_did, path->u_name,
-                        (int)uname_len);
-
-            if (!id) {
-                if (CNID_ERRNO() == CNID_ERR_RESET) {
-                    /* Later entries would get reseeded CNIDs and still be
-                     * sent in this reply, so fail the search */
-                    return -1;
-                }
-
-                LOG(log_debug, logtype_afpd,
-                    "crit_check: get_id failed for '%s', skipping file in search results",
-                    path->u_name);
-                return 0;
-            }
-
-            /* save the id for getfilparm */
-            path->id = id;
-
-            if (!(path->m_name = utompath(vol, path->u_name, id,
-                                          utf8_encoding(vol->v_obj)))) {
-                return 0;
-            }
-        }
+    } else if (!c1.fbitmap) {
+        return 0;
     }
 
-    /* Kind of optimization:
-     * -- first check things we've already have - filename
-     * -- last check things we get from ad_open()
-     * FIXME strmcp strstr (icase)
-     */
-
-    /* Check for filename */
-    if (c1.rbitmap & (1U << DIRPBIT_LNAME)) {
-        if ((size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2,
-                                                  path->m_name, -1, convbuf, 512))) {
-            goto crit_check_ret;
-        }
-
-        if (c1.rbitmap & (1U << CATPBIT_PARTIAL)) {
-            if (strcasestr_w((ucs2_t *) convbuf, (ucs2_t *) c1.lname) == NULL) {
-                goto crit_check_ret;
-            }
-        } else if (strcasecmp_w((ucs2_t *) convbuf, (ucs2_t *) c1.lname) != 0) {
-            goto crit_check_ret;
-        }
-    }
-
-    if (c1.rbitmap & (1U << FILPBIT_PDINFO)) {
-        if ((size_t)(-1) == (len = convert_charset(CH_UTF8_MAC, CH_UCS2, CH_UTF8,
-                                                   path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
-            goto crit_check_ret;
-        }
-
-        if (c1.rbitmap & (1U << CATPBIT_PARTIAL)) {
-            if (strcasestr_w((ucs2_t *) convbuf, (ucs2_t *)c1.utf8name) == NULL) {
-                goto crit_check_ret;
-            }
-        } else if (strcasecmp_w((ucs2_t *)convbuf, (ucs2_t *)c1.utf8name) != 0) {
-            goto crit_check_ret;
-        }
-    }
-
-    /* FIXME */
     if ((unsigned)c2.mdate > 0x7fffffff) {
         c2.mdate = 0x7fffffff;
     }
@@ -635,6 +610,48 @@ static int crit_check(struct vol *vol, struct path *path)
     /* Check for modification date */
     if (c1.rbitmap & (1U << DIRPBIT_MDATE)) {
         if (path->st.st_mtime < c1.mdate || path->st.st_mtime > c2.mdate) {
+            goto crit_check_ret;
+        }
+    }
+
+    /* a name test reads the Mac name */
+    if ((c1.rbitmap & ((1U << DIRPBIT_LNAME) | (1U << FILPBIT_PDINFO)))
+            && (named = crit_mac_name(vol, path, &adp)) != 1) {
+        return named;
+    }
+
+    /* Check for filename */
+    if (c1.rbitmap & (1U << DIRPBIT_LNAME)) {
+        /* m_name is in the session's encoding */
+        if ((size_t)(-1) == convert_string(utf8_encoding(vol->v_obj)
+                                           ? CH_UTF8_MAC
+                                           : vol->v_maccharset,
+                                           CH_UCS2, path->m_name, -1,
+                                           convbuf, 512)) {
+            goto crit_check_ret;
+        }
+
+        if (c1.rbitmap & (1U << CATPBIT_PARTIAL)) {
+            if (strcasestr_w((ucs2_t *) convbuf, (ucs2_t *) c1.lname) == NULL) {
+                goto crit_check_ret;
+            }
+        } else if (strcasecmp_w((ucs2_t *) convbuf, (ucs2_t *) c1.lname) != 0) {
+            goto crit_check_ret;
+        }
+    }
+
+    if (c1.rbitmap & (1U << FILPBIT_PDINFO)) {
+        if ((size_t)(-1) == convert_charset(CH_UTF8_MAC, CH_UCS2, CH_UTF8,
+                                            path->m_name, strlen(path->m_name),
+                                            convbuf, 512, &flags)) {
+            goto crit_check_ret;
+        }
+
+        if (c1.rbitmap & (1U << CATPBIT_PARTIAL)) {
+            if (strcasestr_w((ucs2_t *) convbuf, (ucs2_t *)c1.utf8name) == NULL) {
+                goto crit_check_ret;
+            }
+        } else if (strcasecmp_w((ucs2_t *)convbuf, (ucs2_t *)c1.utf8name) != 0) {
             goto crit_check_ret;
         }
     }
@@ -723,8 +740,8 @@ static int crit_check(struct vol *vol, struct path *path)
     }
 
     /* FIXME: Attributes check ! */
-    /* All criteria are met. */
-    result |= 1;
+    /* the match needs its Mac name for the reply */
+    result = crit_mac_name(vol, path, &adp);
 crit_check_ret:
     /* The ad_metadata_cached function closes adp internally for non-fork path.
      * Fork-owned adoubles no longer closed here — managed by of_closefork(). */
@@ -1515,7 +1532,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         memcpy(c1.utf8name, spec1 + 2, namelen);
         c1.utf8name[namelen] = 0;
 
-        if ((uname = mtoupath(vol, c1.utf8name, 0, utf8_encoding(obj))) == NULL) {
+        if ((uname = mtoupath(vol, c1.utf8name, CNID_INVALID,
+                              utf8_encoding(obj))) == NULL) {
             return AFPERR_PARAM;
         }
 

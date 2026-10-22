@@ -50,6 +50,7 @@ extern int        dircache_init(int reqsize);
 extern int        dircache_add(const struct vol *, struct dir *);
 extern void       dircache_remove(const struct vol *, struct dir *, int flag);
 extern struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did);
+extern struct dir *dircache_lookup_did(const struct vol *vol, cnid_t did);
 extern struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did);
 extern struct dir *dircache_search_by_name(const struct vol *,
                                            const struct dir *dir, char *name, size_t len);

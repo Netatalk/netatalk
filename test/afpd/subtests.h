@@ -69,6 +69,59 @@ extern int utest_path_probe_case_skips_links(struct vol *vol);
 extern int utest_veto_file_list_end(void);
 extern int test019_cname_volume_vetoed(AFPObj *obj, struct vol *vol);
 extern int dircache_test_ghost_trim_selection(void);
+extern int utest_enumerate_lname_is_the_files_own(AFPObj *obj,
+                                                  struct vol *vol,
+                                                  uint16_t vid);
+extern int utest_root_lname_is_the_volume_name(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid);
+extern int utest_root_lname_beyond_the_mac_charset(AFPObj *obj,
+                                                   struct vol *vol,
+                                                   uint16_t vid);
+extern int utest_enumerate_afp2_lists_the_mac_forms(AFPObj *obj,
+                                                    struct vol *vol,
+                                                    uint16_t vid);
+extern int utest_enumerate_decomposed_name_is_mangled(AFPObj *obj,
+                                                      struct vol *vol,
+                                                      uint16_t vid);
+extern int utest_demangle_unknown_id_resolves_once(AFPObj *obj,
+                                                   struct vol *vol,
+                                                   uint16_t vid);
+extern int utest_demangle_cached_file_checks_its_entry(AFPObj *obj,
+                                                       struct vol *vol,
+                                                       uint16_t vid);
+extern int utest_demangle_cached_folder_ignores_ctime(AFPObj *obj,
+                                                      struct vol *vol,
+                                                      uint16_t vid);
+extern int utest_demangle_hash_in_prefix(AFPObj *obj, struct vol *vol,
+                                         uint16_t vid);
+extern int utest_demangle_hash_in_extension(AFPObj *obj, struct vol *vol,
+                                            uint16_t vid);
+extern int utest_demangle_uncached_id_keeps_its_folder(AFPObj *obj,
+                                                       struct vol *vol,
+                                                       uint16_t vid);
+extern int utest_demangle_literal_takes_no_sibling(AFPObj *obj,
+                                                   struct vol *vol,
+                                                   uint16_t vid);
+extern int utest_demangle_variant_needs_afp3(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid);
+extern int utest_catsearch_converts_matches_only(AFPObj *obj,
+                                                 struct vol *vol,
+                                                 uint16_t vid);
+extern int utest_catsearch_lname_matches_accents(AFPObj *obj,
+                                                 struct vol *vol,
+                                                 uint16_t vid);
+extern int utest_catsearch_match_takes_its_entrys_id(AFPObj *obj,
+                                                     struct vol *vol,
+                                                     uint16_t vid);
+extern int utest_createfile_registers_in_its_folder(AFPObj *obj,
+                                                    struct vol *vol,
+                                                    uint16_t vid);
+extern int utest_openfork_registers_in_its_folder(AFPObj *obj,
+                                                  struct vol *vol,
+                                                  uint16_t vid);
+extern int utest_createid_registers_in_its_folder(AFPObj *obj,
+                                                  struct vol *vol,
+                                                  uint16_t vid);
 extern int utest_logger_reopen_keeps_files(void);
 extern int utest_lockfile_restores_umask(void);
 #endif  /* SUBTESTS_H */

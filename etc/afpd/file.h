@@ -168,8 +168,11 @@ typedef enum {
     kTextEncodingJIS_X0208_90     = 1570,
 } kTextEncoding_t;
 
-extern char *set_name(const struct vol *, char *, cnid_t, char *, cnid_t,
+extern char *set_name(const struct vol *, char *, char *, char *, cnid_t,
                       bool);
+extern struct dir *path_resolve_cached_file(const struct vol *vol,
+                                            const struct dir *dir,
+                                            struct path *path);
 
 extern struct extmap	*getextmap(const char *);
 extern struct extmap	*getdefextmap(void);

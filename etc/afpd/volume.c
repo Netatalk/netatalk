@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -422,6 +423,41 @@ static bool root_readonly(const struct vol *vol)
 }
 
 /*!
+ * @brief The volume's Mac name as a C string, in the server's Mac charset
+ *
+ * creatvol() builds the name in that charset; FPGetVolParms sends it, and an
+ * AFP 2 root entry holds it.
+ *
+ * @param[in]  vol  volume
+ * @param[out] buf  receives the name, AFPVOL_MACNAMELEN + 1 bytes
+ * @returns the name's length, or (size_t) -1 when the conversion fails
+ */
+size_t vol_macname(const struct vol *vol, char *buf)
+{
+    return ucs2_to_charset(vol->v_obj->options.maccharset, vol->v_macname,
+                           buf, AFPVOL_MACNAMELEN + 1);
+}
+
+/*!
+ * @brief Append the volume's Mac name to a reply as a Pascal string
+ *
+ * @param[in]  vol   volume
+ * @param[out] data  buffer position for the length byte
+ * @returns the position after the name, or NULL when the conversion fails
+ */
+char *set_vol_macname(const struct vol *vol, char *data)
+{
+    size_t len = vol_macname(vol, data + 1);
+
+    if (len == 0 || len == (size_t) -1) {
+        return NULL;
+    }
+
+    *data = (char)len;
+    return data + 1 + len;
+}
+
+/*!
  * @brief Pack the volume parameters that bitmap selects into buf
  *
  * The call first converts version 2 AppleDouble data of the volume root to
@@ -446,7 +482,6 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     struct adouble  ad;
     int bit = 0, isad = 1;
     uint32_t aint;
-    size_t namelen;
     uint16_t ashort;
     uint32_t bfree = 0, btotal = 0, bsize = 0;
     /* extended bytes */
@@ -670,12 +705,8 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     if (nameoff) {
         ashort = htons(data - buf);
         memcpy(nameoff, &ashort, sizeof(ashort));
-        /* name is always in mac charset */
-        /* the global charset creatvol() made the Mac name in */
-        namelen = ucs2_to_charset(obj->options.maccharset, vol->v_macname,
-                                  data + 1, AFPVOL_MACNAMELEN + 1);
 
-        if (namelen == 0 || namelen == (size_t) -1) {
+        if ((data = set_vol_macname(vol, data)) == NULL) {
             if (isad) {
                 ad_close(&ad, ADFLAGS_HF);
             }
@@ -683,9 +714,6 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
             *buflen = 0;
             return AFPERR_MISC;
         }
-
-        *data++ = (char)namelen;
-        data += namelen;
     }
 
     if (isad) {
@@ -795,8 +823,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
             len = ucs2_to_charset(CH_UTF8_MAC, volume->v_u8mname, name,
                                   sizeof(name));
         } else {
-            len = ucs2_to_charset(obj->options.maccharset, volume->v_macname,
-                                  name, sizeof(name));
+            len = vol_macname(volume, name);
         }
 
         if (len == (size_t) -1) {
