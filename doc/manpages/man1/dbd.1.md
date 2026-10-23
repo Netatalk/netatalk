@@ -4,19 +4,27 @@ dbd — CNID database maintenance utility
 
 # Synopsis
 
-**dbd** [-cfFistuv] [*volumepath*]
+**dbd** [-cfistv] [-F *configfile*] [-u *username*] *volumepath*
 
 **dbd** [-V]
 
 # Description
 
-**dbd** scans all file and directories of an AFP volume and updates the CNID
+**dbd** scans all files and directories of an AFP volume and updates the CNID
 database when discrepancies are found between the database and the filesystem.
-It must be run with appropriate permissions, i.e. as root.
+It must be run as root. The argument must resolve to the configured volume
+root; a subdirectory is refused. Use **-F** when the volume is defined in a
+non-default configuration.
+
+Run maintenance with affected AFP clients disconnected and other writers
+stopped. Back up volume metadata and catalog state before resetting or
+converting them.
 
 When run with the **-f** parameter, it will completely wipe the existing
 volume table in the database and create a new one from scratch.
 This can be used for example to convert a volume from one CNID scheme to another.
+It can change IDs and invalidate Mac aliases or saved references. It is not
+a routine first diagnostic step for contention or a missing volume.
 A volume whose **cnid scheme** names a CNID backend this installation does not
 have is refused with a message naming the scheme; correct *afp.conf* first.
 
@@ -28,9 +36,11 @@ have is refused with a message naming the scheme; correct *afp.conf* first.
 
 **-f**
 
-> delete and recreate CNID database
+> Delete and recreate the volume's CNID records. Existing IDs may change;
+combine with **-i** when fresh IDs rather than stored AppleDouble hints are
+required.
 
-**-F**
+**-F** *configfile*
 
 > location of the *afp.conf* config file
 
@@ -43,13 +53,16 @@ combine with **-f** to assign fresh CNIDs to all files and directories
 **-s**
 
 > scan volume: treat the volume as read only and don't perform any
-filesystem modifications
+filesystem modifications. Database opening and CNID reconciliation can
+still create or update database state, including records. This is not a
+zero-write database dry run. It does not cancel a separately requested
+**-f** reset.
 
 **-t**
 
 > show statistics while running
 
-**-u**
+**-u** *username*
 
 > username for use with AFP volumes using user variable $u
 
@@ -63,7 +76,7 @@ filesystem modifications
 
 # CNID usage
 
-The CNID backends maintains filename to ID mappings. If you change a
+The CNID backends maintain filename-to-ID mappings. If you change a
 filename outside **afpd**(8) (shell, samba), the CNID database will not
 reflect that change. Netatalk tries to recover from such inconsistencies
 as gracefully as possible.
