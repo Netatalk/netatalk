@@ -12,26 +12,19 @@ and some by third-party developers.
 
 ## UAMs supported by Netatalk
 
-Netatalk supports the following UAMs by default:
+Netatalk provides the following UAMs in its default configuration:
 
-- "No User Authent" UAM (guest access without authentication)
-
-- "Cleartxt Passwrd" UAM (no password encryption)
-
-- "Randnum exchange"/"2-Way Randnum exchange" UAMs
-  (very weak password encryption, separate password storage)
-
-- "DHCAST128" UAM (a.k.a. DHX; weak password encryption)
-
-- "DHX2" UAM (successor of DHCAST128 with stronger password encryption)
-
-- "SRP" UAM ("Secure Remote Password", strongest password encryption and resistant to man-in-the-middle attacks,
-  separate verifier storage)
+- *SRP* ("Secure Remote Password", RFC 2945: strongest password encryption, resistant to man-in-the-middle attacks)
+- *DHX2* (Diffie-Hellman key exchange with 128-bit CAST in CBC mode: strong password encryption)
+- *DHCAST128* (a.k.a. DHX; Diffie-Hellman key exchange with 128-bit CAST: weak password encryption)
+- *Randnum exchange*/"*2-Way Randnum exchange*" (56-bit DES password encryption: weak password encryption)
+- *Cleartxt Passwrd* (no password encryption)
+- *No User Authent* (guest access without authentication)
 
 With Kerberos support enabled at compile time, Netatalk also supports:
 
-- "Client Krb v2" UAM
-(Kerberos V, suitable for "Single Sign On" scenarios with macOS clients — see below)
+- *Client Krb v2*
+(Kerberos V, suitable for "Single Sign On" scenarios)
 
 You can configure which UAMs to activate by setting **uam list** in the **Global** section.
 **afpd** logs which UAMs it activates and reports any problems in either **netatalk.log**
@@ -49,12 +42,16 @@ See this [hint](https://web.archive.org/web/20080312054723/http://article.gmane.
 
 ## Which UAMs to activate?
 
+UAM protection applies to the authentication exchange. It does not encrypt
+subsequent AFP commands or file contents over DSI. Password-exchange
+encryption and transport confidentiality are different properties.
+
 The choice depends primarily on your needs and the clients you need to support.
 If your network consists exclusively of macOS (Mac OS X) clients,
 DHX2 provides strong encryption with PAM (or system password database) integration.
 
-If you want stronger security and don't mind the extra maintenance overhead of a separate verifier file,
-SRP is the best choice.
+If you want stronger security and don't mind the extra maintenance overhead of a separate verifier store,
+then SRP is the best choice.
 
 - Unless you specifically need guest access,
   do not enable "No User Authent" to prevent accidental unauthorized access.
@@ -90,8 +87,8 @@ SRP is the best choice.
   combining stronger encryption with the convenience of PAM integration.
 
 - "SRP" is the strongest UAM with the strongest password encryption and resistance to man-in-the-middle attacks,
-  but it requires administration of a separate file to store per-user salts and verifiers.
-  If you don't mind the extra maintenance overhead of this file, SRP is the best choice for security-conscious users.
+  but it requires administration of a directory of per-user salt/verifier files.
+  See the password storage section below for enrollment and ownership rules.
 
 - The Kerberos V ("Client Krb v2")
   UAM enables true single sign-on scenarios using Kerberos tickets.
@@ -109,8 +106,8 @@ documentation.
 
 ## Password storage
 
-Randnum and SRP do not use system passwords directly. They both rely on
-separate files managed with **afppasswd**:
+Randnum and SRP do not use system passwords directly. They use separate
+credential stores managed with **afppasswd**:
 
 - **Randnum** uses the legacy *afppasswd* file. It requires a key file
   alongside the Randnum password file (same path with a `.key` suffix).
@@ -155,6 +152,14 @@ The main advantage of PAM is that it integrates Netatalk into centralized authen
 such as LDAP, NIS, and similar systems.
 Keep in mind that the security of your users' login credentials in such scenarios
 also depends on the encryption strength of the UAM in use.
+
+PAM-backed UAMs use the **netatalk** PAM service and the host's account and
+session policy.
+
+The LDAP settings under Netatalk's ACL options perform name/UUID lookup;
+they do not themselves enable an LDAP password-authentication UAM.
+Configure login through the appropriate PAM/NSS infrastructure
+and diagnose it separately from [ACL identity mapping](ACL.html).
 
 ## Netatalk UAM overview table
 

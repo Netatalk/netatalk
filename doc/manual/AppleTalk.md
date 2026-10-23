@@ -13,6 +13,11 @@ page in the Netatalk wiki for details on how to enable AppleTalk support in your
 To see if your version of Netatalk has been built with AppleTalk support,
 check the output of **afpd -V** for the line *Transport layers: TCP/IP AppleTalk*
 
+Manage **atalkd**, **papd**, and other AppleTalk daemons through their own
+service scripts or platform service manager. Starting **netatalk** supervises
+the AFP daemon and optional Localsearch support, not those standalone
+AppleTalk services.
+
 ### To use AppleTalk or not
 
 You'll need the AppleTalk support built into Netatalk to provide file

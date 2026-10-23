@@ -36,7 +36,7 @@ behavior and configuration of a file server.
 
 **-F** *configfile*
 
-> Specifies the configuration file to use.
+> Specifies the configuration file to use when starting the daemon.
 
 **-u**
 
@@ -52,8 +52,11 @@ the CNID database in an inconsistent state. The safe way to terminate an
 **afpd** is to send it a *SIGTERM (-15)* signal and wait for it to die on
 its own.
 
-SIGTERM and SIGUSR1 signals that are sent to the parent **afpd** process
-are propagated to the children, so all processes will be affected.
+SIGTERM, SIGQUIT, and SIGUSR1 requests sent to the parent **afpd** process
+affect its sessions, as described below.
+The **netatalk** controller can restart an AFP parent that exits; stop the
+controller through its service manager or SIGTERM when shutting down the
+whole service.
 
 SIGTERM
 
@@ -61,22 +64,32 @@ SIGTERM
 
 SIGQUIT
 
-> Sending this to the parent **afpd** will cause it to exit,
-but leaving all children running!
-This can be used to implement an AFP service without downtime.
+> End sessions and exit when sent to the AFP parent. The parent sends SIGTERM
+to its tracked DSI workers. This does not preserve connected sessions for a
+restart without downtime.
 
 SIGHUP
 
-> Sending a *SIGHUP* to afpd will cause it to reload its configuration
-files.
+> The parent reparses configuration and forwards SIGHUP to workers. Workers
+reload volume definitions, but existing matching volumes retain their loaded
+options. A fresh connection or service restart can be necessary for changed
+settings. The **netatalk**(8) controller daemon reloads volume definitions
+and Zeroconf advertisements, then forwards SIGHUP to the AFP parent.
+Configuration reloads are disabled in single-user mode; restart **netatalk**
+after changing *afp.conf*.
 
 SIGINT
 
-> Sending a *SIGINT* to a child **afpd** enables *max_debug* logging and dumps
-caches to the system tmp directory:
+> Sending a *SIGINT* to a child **afpd** requests a directory-cache dump
+and UUID-cache debug messages, then enables *maxdebug* logging:
 >
 > - Debug log: *afpd.PID.XXXXXX*
 > - Directory cache: *dircache.PID*
+>
+> Temporary paths and the random debug-log suffix are selected at runtime.
+UUID-cache messages go through the logging configuration active before the
+toggle; they are not a separate dump file. Send this signal to the intended
+worker, not the AFP parent or **netatalk** controller.
 >
 > **Directory cache dump** (see **dircache mode** in **afp.conf(5)**):
 >
@@ -88,10 +101,10 @@ caches to the system tmp directory:
 SIGUSR1
 
 > The **afpd** process will send the message "The server is going down for
-maintenance." to the client and shut itself down in 5 minutes. New
-connections are not allowed. If this is sent to a child afpd, the other
-children are not affected. However, the main process will still exit,
-disabling all new connections.
+maintenance." to its client and shut that session down in 5 minutes. Sent
+to the parent, it refuses new logins and forwards the timed-shutdown request
+to workers. Sent to a DSI worker, it affects only that session; the parent
+and other workers continue. It does not stop the supervising controller.
 
 SIGUSR2
 
@@ -132,7 +145,7 @@ terminate the parent process and prevent new connections.
 
 *afp_voluuid.conf*
 
-> list of UUIDs for Time Machine volumes
+> volume UUID registry used for CNID table identity and Time Machine discovery
 
 *LOCALSTATEDIR/netatalk/msg/message.PID*, *LOCALSTATEDIR/netatalk/msg/message*
 
