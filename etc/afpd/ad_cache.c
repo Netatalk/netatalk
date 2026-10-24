@@ -146,10 +146,11 @@ void ad_rebuild_from_cache(struct adouble *adp, const struct dir *cached)
  * @brief Read the AppleDouble metadata of an object through the dircache
  *
  * The call closes the metadata before it returns, so callers that write open
- * it separately. Without strict the cache serves first, as enumeration and
- * FPGetFileDirParms need. With strict the ctime and inode must match before
- * the cache serves, as rename and delete need. A mismatch refreshes the entry
- * through dir_modify and reads from disk. A cached absence of metadata
+ * it separately. The cache serves while the entry's ctime and inode match the
+ * caller's recent stat; strict, as rename and delete need, takes a stat of
+ * its own when the caller has none. A mismatch brings the entry to the stat
+ * with dir_takes_stat() and reads from disk; an entry that does not then
+ * hold the stat takes nothing from the read. A cached absence of metadata
  * answers ENOENT without a disk read.
  *
  * @param[in]     name       file or directory
@@ -158,7 +159,7 @@ void ad_rebuild_from_cache(struct adouble *adp, const struct dir *cached)
  * @param[in,out] adp        initialized AppleDouble receiving the metadata
  * @param[in]     vol        volume of the object
  * @param[in,out] dir        dircache entry of the object, or NULL
- * @param[in]     strict     true to test ctime and inode before a cache hit
+ * @param[in]     strict     true to stat the object when recent_st is NULL
  * @param[in]     recent_st  fresh stat of the object, or NULL
  * @returns 0, or -1 with errno set, ENOENT when the object has no metadata
  */
@@ -166,59 +167,25 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
                        const struct vol *vol, struct dir *dir,
                        bool strict, struct stat *recent_st)
 {
-    /* Strict path — validate ctime/inode BEFORE serving from cache.
-     * If changed, use dir_modify(DCMOD_STAT) for coherent cache update:
-     *   - inode change: CNID refresh from DB + stat update + AD invalidation
-     *   - ctime change: stat update + AD invalidation
-     * Then fall through to disk_read for fresh AD data via ad_metadata(). */
-    if (strict && dir) {
-        struct stat st_buf;
-        struct stat *stp = recent_st;
+    struct stat st_buf;
+    struct stat *stp = recent_st;
 
-        if (!stp) {
-            if (ostat(name, &st_buf, 0) != 0) {
-                goto disk_read;
-            }
-
-            stp = &st_buf;
-        }
-
-        if (dir->dcache_ino != stp->st_ino || dir->dcache_ctime != stp->st_ctime) {
-            /* External change detected — dir_modify handles coherence:
-             * updates stat fields, refreshes CNID on inode change,
-             * and invalidates dcache_rlen so we fall through to disk_read */
-            dir_modify(vol, dir, &(struct dir_modify_args) {
-                .flags = DCMOD_STAT,
-                .st = stp,
-            });
-        } else if (dir->dcache_rlen >= 0) {
-            /* ctime/inode match — stat+AD are both valid, serve from cache */
-            adp->ad_adflags = flags;
-            ad_rebuild_from_cache(adp, dir);
-            ad_cache_hits++;
-            return 0;
-        } else if (ad_rlen_meta_absent(dir->dcache_rlen)) {
-            /* Confirmed no AD metadata and ctime unchanged — still none */
-            ad_cache_no_ad++;
-            errno = ENOENT;
-            return -1;
-        }
-
-        /* AD_RLEN_UNKNOWN: not yet loaded (or just invalidated), fall through */
-    }
-
-    if (!strict && dir && dir->dcache_rlen >= 0) {
-        /* If caller provided a recent stat, validate ctime/inode. */
-        if (recent_st
-                && (dir->dcache_ctime != recent_st->st_ctime
-                    || dir->dcache_ino != recent_st->st_ino)) {
-            dir_modify(vol, dir, &(struct dir_modify_args) {
-                .flags = DCMOD_STAT,
-                .st = recent_st,
-            });
+    if (strict && dir && !stp) {
+        if (ostat(name, &st_buf, 0) != 0) {
             goto disk_read;
         }
 
+        stp = &st_buf;
+    }
+
+    /* a stat with another ctime or inode: the metadata, or an AD file
+     * created since, is read from disk */
+    if (dir && stp && dir_stat_differs(dir, stp)) {
+        dir = dir_takes_stat(vol, dir, stp, 0) ? dir : NULL;
+        goto disk_read;
+    }
+
+    if (dir && dir->dcache_rlen >= 0) {
         adp->ad_adflags = flags;
         ad_rebuild_from_cache(adp, dir);
         ad_cache_hits++;
@@ -226,18 +193,6 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
     }
 
     if (dir && ad_rlen_meta_absent(dir->dcache_rlen)) {
-        /* If caller provided a recent stat and ctime/inode changed,
-         * the AD file may have been created since — re-check on disk. */
-        if (recent_st
-                && (dir->dcache_ctime != recent_st->st_ctime
-                    || dir->dcache_ino != recent_st->st_ino)) {
-            dir_modify(vol, dir, &(struct dir_modify_args) {
-                .flags = DCMOD_STAT,
-                .st = recent_st,
-            });
-            goto disk_read;
-        }
-
         /* Confirmed no AD metadata and ctime unchanged — still none */
         ad_cache_no_ad++;
         errno = ENOENT;
@@ -245,23 +200,19 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
     }
 
 disk_read:
-    /* Cache miss or strict validation detected stale data — read from disk */
+    /* Cache miss, or a stat the entry did not show — read from disk */
     ad_cache_misses++;
     int ret = ad_metadata(name, flags, adp);
 
     if (ret == 0) {
-        if (dir && dir->d_did != CNID_INVALID) {
-            /* Guard: dir_modify(DCMOD_STAT) may have evicted the entry
-             * (d_did set to CNID_INVALID) during strict validation above.
-             * Don't store to an evicted entry — it's unreachable. */
+        if (dir) {
             ad_store_to_cache(adp, dir);
         }
 
         /* Always close internally — callers needing a writable fd
          * must call ad_open() separately after ad_metadata_cached() returns. */
         ad_close(adp, ADFLAGS_HF | flags);
-    } else if (ret < 0 && errno == ENOENT && dir
-               && dir->d_did != CNID_INVALID) {
+    } else if (ret < 0 && errno == ENOENT && dir) {
         int saved_errno = errno;
 
         /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for

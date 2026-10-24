@@ -1084,6 +1084,91 @@ int unlink(const char *path)
     return real_unlink(path);
 }
 
+typedef int (*stat_fn)(const char *, struct stat *);
+static stat_fn real_stat;
+static stat_fn real_lstat;
+
+/*!
+ * @brief Tell whether a stat() or lstat() of path fails: every call on
+ *        fi.stat_name does, with fi.stat_errno, as a stale mount's would
+ */
+static int fi_stat_fails(const char *path)
+{
+    if (fi.stat_name == NULL || strcmp(path, fi.stat_name) != 0) {
+        return 0;
+    }
+
+    fi.stat_calls++;
+    errno = fi.stat_errno;
+    return 1;
+}
+
+/*!
+ * @brief stat() interposer: every call on fi.stat_name fails
+ *
+ * <sys/stat.h> renames this definition where libc versions the call (glibc
+ * stat64 under 64-bit offsets, NetBSD __stat50), so the real function is
+ * looked up under this definition's own name first, as statvfs() is. Where
+ * libc inlines stat() into another call, nothing reaches this definition.
+ */
+int stat(const char *path, struct stat *buf)
+{
+    if (!real_stat) {
+        Dl_info self;
+
+        if (dladdr((void *)stat, &self) && self.dli_sname
+                && self.dli_saddr == (void *)stat) {
+            real_stat = (stat_fn)dlsym(RTLD_NEXT, self.dli_sname);
+        }
+
+        if (!real_stat) {
+            real_stat = (stat_fn)fi_real64("stat64", "stat");
+        }
+
+        if (!real_stat) {
+            errno = ENOSYS;
+            return -1;
+        }
+    }
+
+    if (fi_stat_fails(path)) {
+        return -1;
+    }
+
+    return real_stat(path, buf);
+}
+
+/*!
+ * @brief lstat() interposer: every call on fi.stat_name fails, as stat()'s
+ *        do
+ */
+int lstat(const char *path, struct stat *buf)
+{
+    if (!real_lstat) {
+        Dl_info self;
+
+        if (dladdr((void *)lstat, &self) && self.dli_sname
+                && self.dli_saddr == (void *)lstat) {
+            real_lstat = (stat_fn)dlsym(RTLD_NEXT, self.dli_sname);
+        }
+
+        if (!real_lstat) {
+            real_lstat = (stat_fn)fi_real64("lstat64", "lstat");
+        }
+
+        if (!real_lstat) {
+            errno = ENOSYS;
+            return -1;
+        }
+    }
+
+    if (fi_stat_fails(path)) {
+        return -1;
+    }
+
+    return real_lstat(path, buf);
+}
+
 typedef struct dirent *(*readdir_fn)(DIR *);
 static readdir_fn real_readdir;
 

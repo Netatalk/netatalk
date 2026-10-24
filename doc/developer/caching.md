@@ -107,9 +107,22 @@ A request names a directory or file by its DID, and `dirlookup()` searches
 the directory cache by volume and DID. On a hit, an optimistic lookup
 validates the entry only when the sample falls due. A stat that still
 finds the path refreshes the entry in place when the inode or ctime
-changed. A stat that fails removes the entry, and the lookup resolves the
-DID again. A strict lookup on a write path stats every entry but the root
-ones. It removes and re-resolves on a failed stat or a changed inode.
+changed; an entry the refresh re-keys to another object's CNID answers the
+lookup as a miss, and an entry of the other kind than the object goes. Its
+row goes too while it still names that path with the old object's inode,
+so that the DID no longer leads to the object of the other kind; a new
+object that reused the inode keeps it, as the database takes them for one.
+A rename moves a folder's descendants before their cached paths follow:
+this session's leaves them to the deferred scan that removes them, another
+session's to its cache hint. A refresh therefore takes another inode only
+where the entry's path follows its parent's cached path and the parent's
+own inode is still at that path. A stat that fails removes the entry, and
+the lookup resolves the DID again. A strict lookup on a write path stats every
+entry but the root ones. It removes and re-resolves on a failed stat. On a
+changed inode it refreshes the entry, and unless the entry then holds the
+new inode under the same DID, it resolves the DID again through the
+database; an entry left with its old inode, as at a stale path, leaves the
+cache with its children first.
 
 On a miss, the CNID database returns the object's name and its parent's
 DID. The same resolution, strict, walks the parent chain until a cached
@@ -125,8 +138,10 @@ flowchart TD
     Hit -->|"Yes, and validation<br/>is due or strict"| Stat["stat the cached path"]:::store
     Hit -->|"Yes, no validation due"| Use["Use the entry"]:::done
     Stat -->|Unchanged| Use
-    Stat -->|"Found, inode or<br/>ctime changed"| Refresh["Refresh the entry<br/>in place"]:::store --> Use
-    Stat -->|"Not found, or a strict<br/>lookup's inode changed"| Drop["Remove the entry"]:::warn --> Cnid
+    Stat -->|"Found, inode or<br/>ctime changed"| Refresh["Refresh the entry<br/>in place"]:::store
+    Refresh -->|"Same DID, unless a strict<br/>lookup kept the old inode"| Use
+    Refresh -->|"Re-keyed, removed, or<br/>kept by a strict lookup"| Cnid
+    Stat -->|"Not found"| Drop["Remove the entry"]:::warn --> Cnid
     Hit -->|No| Cnid["CNID database: the name<br/>and the parent's DID"]:::store
     Cnid --> Parent["Resolve the parent chain to a<br/>cached ancestor or the root"]:::act
     Parent --> Build["Build the path, stat it,<br/>add the entry"]:::store --> Use
@@ -357,7 +372,28 @@ work. Eligible lookups are the DID and parent/name searches that find an
 entry. The default of 100 favors AFP-only writers. Sampling trades
 validation cost for a window in which external changes can remain
 undiscovered. The setting is not a time-to-live or a set number of seconds
-of freshness.
+of freshness. Whatever N is, a request that names a cached folder in its
+path, lists it, or asks for its parameters or access rights brings the
+folder's entry to its stat. Another inode there re-keys the entry to the
+object's CNID or drops it; an entry the request holds keeps its old inode
+when the database gives the object no CNID, and the request fails. The
+volume root keeps DID 2. A file's entry takes a request's stat where
+`ad_metadata_cached()` serves cached metadata against it, and the identity
+check in `getmetadata()` removes an entry that holds another inode. A
+listing takes its names' fields from their entries without a stat, except
+for a name that `readdir()` gives the other kind. A batch from any index
+uses the saved listing while the folder keeps the inode and ctime the read
+saw; otherwise the whole folder is read again. A folder whose stat shows
+no ctime is read at every batch. So is the volume root, whose ctime any
+write on the volume moves: no slot keeps its names. A listing that left a
+name out is read again at the next pass from index 1, so that the name's
+stat runs again. A change in the granule of the folder's last change can
+leave the ctime as it is: a second where the filesystem keeps no
+nanoseconds, else a tick of the clock it stamps with. A read that soon after a change has the next
+batch read the folder again. That window is 20 ms, two ticks of a 100 Hz
+clock, on a filesystem that keeps nanoseconds, and two seconds on one
+that keeps whole seconds. A ctime up to two seconds ahead of afpd's clock
+is recent too; one further ahead is a date the filesystem stored.
 
 `multi protocol = yes` supplies validation frequency 1 and strict-locking
 defaults unless explicitly overridden. It also excludes the volume from
@@ -580,7 +616,7 @@ and the idle-worker line only when the thread started.
 | Resource forks | Entries, the peak in MB with its share of the budget, lookups, hits/misses, additions, evictions, and invalidations |
 | Extended attributes | Hits, misses, stores, oversize lists or values, drops, and names a cached list proved missing |
 | Offspring counts | `requests`, `cached`, `walked` with its `first`, `older`, `confirmed`, and `changed` kinds, `failed`, and `entries` |
-| Directory listings | Reads, continuation rereads, and names read |
+| Directory listings | Reads, continuation rereads, reads for folders that changed or may have changed since their listing's read, and names read |
 | Hints | Sent/dropped, received, acted on, and unmatched |
 | Parent descriptors | Hits, opens, refreshes, re-grounds, fallbacks, purges, and path repairs |
 | Idle worker | Work noted, grants, started/completed/interrupted/aborted cycles, invalid entries freed, and hash-chain work |
