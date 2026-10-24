@@ -2914,6 +2914,8 @@ static int conf_paths_as_user(const struct passwd *pw, const char *ini_body,
     if (pid == 0) {
         AFPObj obj;
         int under;
+        /* The child uses abspath; the parent keeps its copy for unlink. */
+        free(conf);
         close(pipefd[0]);
 
         if (setgid(pw->pw_gid) != 0 || setuid(pw->pw_uid) != 0) {
