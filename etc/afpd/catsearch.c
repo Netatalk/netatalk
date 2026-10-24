@@ -990,7 +990,16 @@ static int catsearch(const AFPObj *obj,
                 }
 
                 unlen = (int)strnlen(path.u_name, CNID_MAX_PATH_LEN);
-                path.d_dir = dircache_search_by_name(vol, currentdir, path.u_name, unlen);
+                path.d_dir = dircache_search_at_stat(vol, currentdir,
+                                                     path.u_name, unlen,
+                                                     &path.st);
+
+                /* a folder whose entry could not take its stat is left out
+                 * with what it holds */
+                if (path.d_dir != NULL
+                        && path.d_dir->dcache_ino != path.st.st_ino) {
+                    continue;
+                }
 
                 if (path.d_dir == NULL) {
                     /* path.m_name is set by adddir */
@@ -1213,10 +1222,22 @@ static int catsearch_db(const AFPObj *obj,
         }
 
         /* For files path.d_dir is the parent dir, for dirs its the dir itself */
-        if (S_ISDIR(path.st.st_mode))
-            if ((dir = dirlookup(vol, cnid)) == NULL) {
+        if (S_ISDIR(path.st.st_mode)) {
+            dir = dirlookup(vol, cnid);
+
+            /* the stat was taken where the row names the folder: an entry
+             * that names another place has no stat here unless it holds
+             * the stat's inode, as a folder another session moved does; one
+             * the stat re-keyed, let go or does not describe is not the
+             * CNID's object */
+            if (dir == NULL
+                    || (dir->dcache_ino != path.st.st_ino
+                        && (dir->d_pdid != did
+                            || strcmp(cfrombstr(dir->d_u_name), name) != 0))
+                    || !dir_takes_stat(vol, dir, &path.st)) {
                 goto next;
             }
+        }
 
         path.d_dir = dir;
         LOG(log_maxdebug, logtype_afpd, "catsearch_db: dir: %s, cwd: %s, name: %s",

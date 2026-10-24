@@ -500,13 +500,14 @@ out:
 /*!
  * @brief FPAccess on a folder whose dircache entry trails the disk brings
  *        the entry to the fresh stat before it caches the rights, and on an
- *        entry keyed to another inode bypasses the cached rights and leaves
- *        the entry alone.
+ *        entry keyed to another inode bypasses the cached rights and brings
+ *        the entry back to the object the CNID database names, by DID or by
+ *        name
  *
  * @param[in] obj  the test session
  * @param[in] vid  the open test volume
  * @returns 0 when the entry holds the disk's ctime, no AppleDouble state
- *          and the rights, and the other-inode entry keeps its inode;
+ *          and the rights, and the other-inode entry takes the inode back;
  *          TEST_SKIP where no ACL rights can be read; else -1
  */
 int utest_offcnt_access_refreshes_cache(AFPObj *obj, uint16_t vid)
@@ -548,19 +549,24 @@ int utest_offcnt_access_refreshes_cache(AFPObj *obj, uint16_t vid)
         ino_t ino = fx.x->dcache_ino;
         uid_t session_uid = obj->uid;
         uid_t session_euid = obj->euid;
-        /* an entry keyed to another inode: its cached rights are bypassed and
-         * the refresh leaves it to validation; the owner of what the fixture
-         * made asks, whichever user runs the tests */
+        /* an entry keyed to another inode, named by its DID: the rights are
+         * bypassed and its row gives the inode back; the fixture owner asks */
         fx.x->dcache_ino = ino + 1;
         fx.x->d_rights_cache = 0;
         obj->uid = getuid();
         obj->euid = obj->uid;
-        rc = checkaccess(obj, vid, fx.p_did, "offcnt_x",
-                         DARWIN_ACE_LIST_DIRECTORY);
+        rc = checkaccess(obj, vid, fx.x->d_did, "", DARWIN_ACE_LIST_DIRECTORY);
         obj->uid = session_uid;
         obj->euid = session_euid;
-        ret = rc == AFP_OK && fx.x->dcache_ino == ino + 1 ? 0 : -1;
-        fx.x->dcache_ino = ino;
+        ret = rc == AFP_OK && fx.x->dcache_ino == ino ? 0 : -1;
+
+        /* named by its parent's DID and its name, the same */
+        if (ret == 0) {
+            fx.x->dcache_ino = ino + 1;
+            rc = checkaccess(obj, vid, fx.p_did, "offcnt_x", DARWIN_ACE_DELETE);
+            ret = (rc == AFP_OK || rc == AFPERR_ACCESS)
+                  && fx.x->dcache_ino == ino ? 0 : -1;
+        }
     }
 
 out:

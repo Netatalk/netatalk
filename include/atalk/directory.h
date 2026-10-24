@@ -180,6 +180,12 @@ static inline struct dir *path_cached_file(const struct path *path)
     return NULL;
 }
 
+/*! @brief Tell whether a stat shows another inode or ctime than an entry holds */
+static inline int dir_stat_differs(const struct dir *dir, const struct stat *st)
+{
+    return dir->dcache_ino != st->st_ino || dir->dcache_ctime != st->st_ctime;
+}
+
 /* Absolute path of a child of parent, for FCE and Spotlight event strings */
 extern const char *dir_event_path(char *buf, size_t buflen,
                                   const struct dir *parent,

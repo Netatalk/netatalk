@@ -884,12 +884,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 "afp_openfork: ENOENT for did:%u, retrying with strict lookup",
                 ntohl(did));
             ibuf = saved_ibuf;
-
-            if (!(dir->d_flags & DIRF_ISFILE)) {
-                (void)dircache_remove_children_defer(vol, dir);
-            }
-
-            (void)dir_remove(vol, dir, 0);
+            dir_remove_tree(vol, dir, 0);
             dir = dirlookup_strict(vol, did);
 
             if (dir != NULL) {

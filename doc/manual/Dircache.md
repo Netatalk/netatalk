@@ -60,6 +60,9 @@ Default: 100, Range: 1–100.
 
 Internal Netatalk operations (file/directory create, delete, rename)
 always update dircache entries immediately regardless of this setting.
+Listings and path lookups also update the entry of each directory they check on disk.
+Listings show added or deleted names at once,
+but refresh a cached name's details at this setting's frequency.
 If Netatalk is the only process accessing the volume,
 you can safely set a value of 100 for maximum performance.
 

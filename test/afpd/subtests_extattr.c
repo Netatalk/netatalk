@@ -638,13 +638,10 @@ int utest_ea_refused_write_quiet(AFPObj *obj, struct vol *vol)
         return 1;
     }
 
-    if (pipe(fds) != 0) {
+    if (hints_begin(obj, fds) != 0) {
         ea_teardown(obj, vol);
         return 2;
     }
-
-    fcntl(fds[0], F_SETFL, O_NONBLOCK);
-    obj->ipc_fd = fds[1];
 
     /* a name the file lacks: refused, nothing changed, nobody told */
     if (remextattr(obj, vol->v_vid, DIRDID_ROOT, EA_FILE, "nx") == AFP_OK
@@ -658,9 +655,7 @@ int utest_ea_refused_write_quiet(AFPObj *obj, struct vol *vol)
         ret = 4;
     }
 
-    obj->ipc_fd = -1;
-    close(fds[0]);
-    close(fds[1]);
+    hints_end(obj, fds);
     ea_teardown(obj, vol);
     return ret;
 }

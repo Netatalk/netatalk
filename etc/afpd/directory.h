@@ -43,6 +43,7 @@
 #endif
 
 #include <sys/types.h>
+#include <time.h>
 
 #include <atalk/adouble.h>
 #include <atalk/directory.h>
@@ -74,7 +75,7 @@ struct dir_modify_args {
     bstring
     new_pdir_path;  /*!< New parent directory fullpath (DCMOD_PATH) */
     struct stat     *st;             /*!< Fresh stat result (DCMOD_STAT) */
-    struct adouble  *adp;            /*!< AD data to store (DCMOD_AD, Phase 2) */
+    struct adouble  *adp;            /*!< AD data to store (DCMOD_AD) */
 };
 
 /* directory bits */
@@ -143,10 +144,16 @@ extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *,
                             int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir,
                               const struct dir_modify_args *args);
-extern void        dir_stat_refresh(const struct vol *vol, struct dir *dir,
+extern int         dir_stat_refresh(const struct vol *vol, struct dir *dir,
                                     struct stat *st);
+extern bool        dir_takes_stat(const struct vol *vol, struct dir *dir,
+                                  struct stat *st);
 extern int         dir_remove(const struct vol *vol, struct dir *dir,
                               int report_invalid);
+extern void        dir_remove_tree(const struct vol *vol, struct dir *dir,
+                                   int report_invalid);
+extern bool        dir_path_follows(const struct dir *entry,
+                                    const struct dir *parent);
 extern struct dir  *dirlookup(const struct vol *, cnid_t);
 extern struct dir  *dirlookup_strict(const struct vol *, cnid_t);
 extern struct dir *dirlookup_bypath(const struct vol *vol, const char *path);
@@ -164,8 +171,8 @@ extern int         setdirparams(struct vol *, struct path *, uint16_t, char *);
 extern int         renamedir(struct vol *, int, char *, char *, struct dir *,
                              char *);
 extern int         path_error(struct path *, int error);
-extern void        setdiroffcnt(const struct vol *vol, struct dir *dir,
-                                struct stat *st, uint32_t count);
+extern void        setdiroffcnt(struct dir *dir, const struct stat *st,
+                                uint32_t count);
 extern int         dirreenumerate(struct dir *dir, struct stat *st);
 extern void        offcnt_stats_get(struct offcnt_stats *out);
 extern void        offcnt_log_stats(const char *username);
@@ -182,11 +189,14 @@ extern char        *check_dirent(const struct vol *, char *);
 
 struct enumerate_stats {
     unsigned long long reads;   /*!< directory reads */
-    unsigned long long rereads; /*!< reads by batches past index 1 */
+    unsigned long long rereads; /*!< reads by batches past index 1 whose listing no slot holds, not the root's */
+    unsigned long long changed; /*!< reads of folders that changed, or may have, since their listing's read */
     unsigned long long names;   /*!< names the reads saved */
 };
 extern void        enumerate_stats_get(struct enumerate_stats *out);
 extern void        enumerate_log_stats(void);
+extern bool        enumerate_ctime_recent(const struct timespec *ctime,
+                                          const struct timespec *now);
 
 /* FP functions */
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

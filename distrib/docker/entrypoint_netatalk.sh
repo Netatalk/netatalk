@@ -49,9 +49,8 @@ else
     fi
 
     # The daemonized controller returns immediately, so wait for the listener
-    # where the image can: only the Alpine testsuite image ships /integration
-    # and a netcat. A daemon that never came up fails the leg here, not as an
-    # unexplained login failure in every test.
+    # where the image ships /integration. A daemon that never came up fails the
+    # leg here, not as an unexplained login failure in every test.
     if [ -r /integration/lib.sh ]; then
         . /integration/lib.sh
 
@@ -66,7 +65,7 @@ else
             exit 1
         fi
     else
-        sleep 2
+        sleep 3
     fi
 
     echo "*** Running testsuite: $TESTSUITE"
