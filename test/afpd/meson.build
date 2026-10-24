@@ -124,6 +124,7 @@ if build_tests
         'test_capabilities.c',
         'subtests_cnid.c',
         'subtests_conf.c',
+        'subtests_dircache.c',
         'subtests_enumerate.c',
         'subtests_extattr.c',
         'subtests_lock.c',

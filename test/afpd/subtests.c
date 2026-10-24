@@ -1656,8 +1656,10 @@ int test018_listing_vetoes_any_case(AFPObj *obj, struct vol *vol)
     char *saved_veto = vol->v_veto;
     int saved_nocase = vol->v_ignorecase;
     struct dir *saved_curdir = curdir;
+    char path[MAXPATHLEN + 1];
     cnid_t did;
     int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, dname);
 
     if (createdir(obj, vol->v_vid, DIRDID_ROOT, dname) != AFP_OK) {
         return -1;
@@ -1677,9 +1679,11 @@ int test018_listing_vetoes_any_case(AFPObj *obj, struct vol *vol)
               == AFPERR_NOOBJ ? 0 : 1;
         vol->v_ignorecase = 1;
 
-        /* folded, both are refused and the listing is empty */
-        if (ret == 0 && (enumerate_range(obj, vol->v_vid, did,
-                                         1 << FILPBIT_FNUM, 0, 1, 1)
+        /* folded, both are refused and the listing, which a change of the
+         * folder's times reads again, is empty */
+        if (ret == 0 && (utimensat(AT_FDCWD, path, NULL, 0) != 0
+                         || enumerate_range(obj, vol->v_vid, did,
+                                            1 << FILPBIT_FNUM, 0, 1, 1)
                          != AFPERR_NOOBJ
                          || getfiledirparms(obj, vol->v_vid, did, fname)
                          != AFPERR_PARAM
@@ -3040,7 +3044,7 @@ static int afp2_date_search(AFPObj *obj, const struct vol *vol, uint16_t vid,
     int ret;
     obj->afp_version = 21;
     cnid_watch(vol->v_cdb);
-    ret = catsearch_ext(obj, vid, 1U << FILPBIT_MDATE, &from, &to,
+    ret = catsearch_ext(obj, vid, 0, 1U << FILPBIT_MDATE, &from, &to,
                         sizeof(from), nrecs, lname);
     cnid_unwatch(vol->v_cdb);
     obj->afp_version = version;
@@ -3146,7 +3150,7 @@ int utest_catsearch_lname_matches_accents(AFPObj *obj, struct vol *vol,
 
     for (size_t v = 0; v < sizeof(versions) / sizeof(versions[0]); v++) {
         obj->afp_version = versions[v];
-        ret = catsearch_ext(obj, vid, 1U << FILPBIT_LNAME, spec, spec,
+        ret = catsearch_ext(obj, vid, 0, 1U << FILPBIT_LNAME, spec, spec,
                             sizeof(spec), &nrecs, lname);
         obj->afp_version = versions[0];
 

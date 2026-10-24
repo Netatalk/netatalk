@@ -289,22 +289,17 @@ static int pfd_get(const struct vol *vol, const struct dir *parent)
  */
 static void pfd_repair_path(struct dir *entry, const struct dir *parent)
 {
-    int plen = blength(parent->d_fullpath);
-    int nlen = blength(entry->d_u_name);
     const char *ep = bdata(entry->d_fullpath);
-    const char *pp = bdata(parent->d_fullpath);
 
-    if (ep != NULL && pp != NULL
-            && blength(entry->d_fullpath) == plen + 1 + nlen
-            && ep[plen] == '/'
-            && memcmp(ep, pp, (size_t)plen) == 0) {
+    if (dir_path_follows(entry, parent)) {
         return;
     }
 
     /* Both lengths are known: one exactly-sized allocation, no strlen,
      * no realloc */
     bstring repaired = fullpath_join_blk(parent->d_fullpath,
-                                         bdata(entry->d_u_name), nlen);
+                                         bdata(entry->d_u_name),
+                                         blength(entry->d_u_name));
 
     if (repaired == NULL) {
         /* Keep the stale string; the next validation retries */
@@ -341,14 +336,7 @@ int pfd_ostat(const struct vol *vol, struct dir *entry,
 
     if (entry->d_did != DIRDID_ROOT && entry->d_did != DIRDID_ROOT_PARENT
             && entry->d_u_name != NULL) {
-        if (entry->d_pdid == DIRDID_ROOT) {
-            /* The volume root is never in the dircache hash but is always
-             * live on the vol with d_fullpath = v_path and dcache_ino
-             * populated by dir_new() at afp_openvol(). */
-            parent = vol->v_root;
-        } else if (entry->d_pdid != DIRDID_ROOT_PARENT) {
-            parent = dircache_lookup_parent(vol, entry->d_pdid);
-        }
+        parent = dircache_lookup_parent(vol, entry->d_pdid);
     }
 
     if (parent != NULL && parent->d_fullpath != NULL

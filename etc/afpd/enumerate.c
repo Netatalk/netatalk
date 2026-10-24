@@ -19,12 +19,14 @@
 #include <string.h>
 #include <sys/file.h>
 #include <sys/param.h>
+#include <time.h>
 
 #include <bstrlib.h>
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
@@ -56,9 +58,12 @@ struct savedir {
     /* the kinds sd_sindex counts, from the request's bitmaps: 1 files,
      * 2 folders */
     int sd_kinds;
-    /* the index one past the last name of those kinds, 0 until a batch
-     * reaches it */
-    unsigned int sd_end;
+    /* the folder's inode and ctime as the read saw them, the ctime zero for
+     * a read the folder's last change could still hide a change from */
+    ino_t sd_ino;
+    struct timespec sd_ctime;
+    /* a name of this read left the listing, so a new pass reads it again */
+    bool sd_left;
 };
 
 /* The byte after a saved name's terminator: its kind, SD_UNKNOWN while
@@ -67,11 +72,13 @@ struct savedir {
 #define SD_FILE 1
 #define SD_DIR 2
 #define SD_SKIP 3
+/* the volume's virtual icon, after the root's names */
+#define SD_ICON 4
 #define SDBUFBRK	2048
 #define SD_SLOTS	8
 
-/* The listings saved beside enumerate()'s own, most recently used first;
- * an empty slot has sd_did 0 */
+/* The listings saved beside the one enumerate_in() uses, most recently used
+ * first; an empty slot has sd_did 0 */
 static struct savedir sd_parked[SD_SLOTS - 1];
 
 static struct enumerate_stats enumerate_stat;
@@ -93,14 +100,15 @@ void enumerate_log_stats(void)
 {
     LOG(log_info, logtype_afpd,
         "enumerate statistics: reads: %llu, continuation rereads: %llu, "
-        "names read: %llu",
-        enumerate_stat.reads, enumerate_stat.rereads, enumerate_stat.names);
+        "changed folders: %llu, names read: %llu",
+        enumerate_stat.reads, enumerate_stat.rereads, enumerate_stat.changed,
+        enumerate_stat.names);
 }
 
 /*!
- * @brief Empty a slot, freeing its names
+ * @brief Empty a listing, freeing its names
  *
- * @param[in,out] sd  the slot
+ * @param[in,out] sd  the listing
  */
 static void sd_drop(struct savedir *sd)
 {
@@ -117,13 +125,46 @@ static void sd_drop(struct savedir *sd)
 }
 
 /*!
+ * @brief Drop a listing whose stat or read failed, and map the errno to the
+ *        AFP result
+ *
+ * @param[in,out] sd    the listing
+ * @param[in]     what  the call that failed, for the log
+ * @returns AFPERR_ACCESS, AFPERR_BADTYPE, AFPERR_MISC for a descriptor or
+ *          memory shortage, else AFPERR_NODIR
+ */
+static int read_failed(struct savedir *sd, const char *what)
+{
+    int err = errno;
+    sd_drop(sd);
+    LOG(log_error, logtype_afpd, "enumerate: %s: %s (%d)", what,
+        strerror(err), err);
+
+    switch (err) {
+    case EACCES:
+        return AFPERR_ACCESS;
+
+    case ENOTDIR:
+        return AFPERR_BADTYPE;
+
+    case EMFILE:
+    case ENFILE:
+    case ENOMEM:
+        return AFPERR_MISC;
+
+    default:
+        return AFPERR_NODIR;
+    }
+}
+
+/*!
  * @brief Bring a directory's saved listing into sd, or an empty slot
  *
  * The listing sd held is parked first. A directory without a saved listing
  * keeps sd when sd is empty, else takes a parked slot, an empty one before
  * the least recently used, whose names are freed.
  *
- * @param[in,out] sd   enumerate()'s listing in use
+ * @param[in,out] sd   enumerate_in()'s listing in use
  * @param[in]     vid  the directory's volume id
  * @param[in]     did  the directory's id
  */
@@ -189,29 +230,26 @@ static char sd_kind(const struct dirent *de)
 }
 
 /*!
- * @brief Append a directory entry name to the enumeration name buffer
+ * @brief Append a name to a listing's buffer
  *
  * Each record is a length byte, the name, a NUL and the name's kind. The
- * buffer doubles when the record does not fit.
+ * buffer doubles before a record that does not fit, so a record is written
+ * whole or not at all; sd_last is the write position and keeps its place
+ * across the move.
  *
- * @param[in]     de     directory entry
- * @param[in]     mname  unused
- * @param[in,out] data   struct savedir that holds the buffer
+ * @param[in,out] sd    the listing
+ * @param[in]     name  the name, len bytes of it saved
+ * @param[in]     len   the name's length, 1 to UTF8FILELEN_EARLY
+ * @param[in]     kind  the record's kind byte
  * @returns 0, or -1 with ENOMEM when the buffer cannot grow
  */
-static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
+static int sd_append(struct savedir *sd, const char *name, int len, char kind)
 {
-    struct savedir *sd = data;
-    size_t used;
-    int len;
-    int bytes_needed;
-    len = (int) strnlen(de->d_name, UTF8FILELEN_EARLY);
-    /* the name, its terminator, its kind and the next length byte */
-    bytes_needed = len + 3;
-    *(sd->sd_last)++ = len;
-    used = (size_t)(sd->sd_last - sd->sd_buf);
+    /* the length byte, the name, its terminator, its kind and the next
+     * length byte */
+    size_t used = (size_t)(sd->sd_last - sd->sd_buf);
 
-    if (used + bytes_needed > sd->sd_buflen) {
+    if (used + len + 4 > sd->sd_buflen) {
         char *buf;
 
         if (!(buf = realloc(sd->sd_buf, sd->sd_buflen * 2))) {
@@ -226,22 +264,41 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
         sd->sd_last = sd->sd_buf + used;
     }
 
-    memcpy(sd->sd_last, de->d_name, len + 1);
+    *(sd->sd_last)++ = len;
+    memcpy(sd->sd_last, name, len);
+    sd->sd_last[len] = '\0';
     sd->sd_last += len + 1;
-    *(sd->sd_last)++ = sd_kind(de);
+    *(sd->sd_last)++ = kind;
     return 0;
+}
+
+/*!
+ * @brief Append a directory entry name to the enumeration name buffer
+ *
+ * @param[in]     de     directory entry
+ * @param[in]     mname  unused
+ * @param[in,out] data   struct savedir that holds the buffer
+ * @returns 0, or -1 with ENOMEM when the buffer cannot grow
+ */
+static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
+{
+    struct savedir *sd = data;
+    return sd_append(sd, de->d_name,
+                     (int) strnlen(de->d_name, UTF8FILELEN_EARLY), sd_kind(de));
 }
 
 /*!
  * @brief Leave a saved name out of the listing and have the folder's
  *        offspring counted again
  *
+ * @param[in,out] sd    the listing
  * @param[in,out] name  the saved name, its kind byte at name + len + 1
  * @param[in]     len   the record's length byte
  */
-static void sd_leave(char *name, int len)
+static void sd_leave(struct savedir *sd, char *name, int len)
 {
     name[len + 1] = SD_SKIP;
+    sd->sd_left = true;
     /* FPDelete, or a recount since the read, may have taken the name off
      * the count already */
     curdir->d_ctime = 0;
@@ -250,20 +307,22 @@ static void sd_leave(char *name, int len)
 /*!
  * @brief Stat a saved name, from its dircache entry when it has one
  *
- * Records the name's kind. A name whose stat fails is marked SD_SKIP, so
- * that no later batch stats it again, and has the folder's offspring
+ * Records the name's kind, which the walk to a batch's index counts by. An
+ * entry of the other kind than readdir() gave is stale, so the name is
+ * stat'ed instead. A name whose stat fails is marked SD_SKIP, so that no
+ * later batch of the read stats it again, and has the folder's offspring
  * counted again.
  *
  * @param[in]     vol     the listing's volume
+ * @param[in,out] sd      the listing
  * @param[in,out] name    the saved name, its kind byte at name + len + 1
- * @param[in]     len     the record's length byte, longer than the name
- *                        once a conversion has shortened it
+ * @param[in]     len     the record's length byte, the name's length
  * @param[out]    s_path  the name, its stat and its dircache entry
  * @returns 0 with s_path filled and its d_cached the name's entry or NULL,
  *          -1 for a name whose stat failed
  */
-static int sd_stat(const struct vol *vol, char *name, int len,
-                   struct path *s_path)
+static int sd_stat(const struct vol *vol, struct savedir *sd, char *name,
+                   int len, struct path *s_path)
 {
     char *kind = name + len + 1;
     struct dir *cached;
@@ -275,10 +334,17 @@ static int sd_stat(const struct vol *vol, char *name, int len,
     memset(s_path, 0, sizeof(*s_path));
     s_path->u_name = name;
 
+    if (*kind == SD_ICON) {
+        s_path->st.st_mode = S_IFREG;
+        return 0;
+    }
+
     /* a name afpd created or listed before has a dircache entry, whose
-     * fields stand in for a stat */
+     * fields stand in for a stat unless readdir() gave the other kind */
     if ((cached = dircache_search_by_name(vol, curdir, name,
-                                          strlen(name))) != NULL) {
+                                          (size_t)len)) != NULL
+            && (*kind == SD_UNKNOWN
+                || *kind == (S_ISDIR(cached->dcache_mode) ? SD_DIR : SD_FILE))) {
         s_path->st.st_ino = cached->dcache_ino;
         s_path->st.st_ctime = cached->dcache_ctime;
         s_path->st.st_mode = cached->dcache_mode;
@@ -300,11 +366,139 @@ static int sd_stat(const struct vol *vol, char *name, int len,
         LOG(log_maxdebug, logtype_afpd,
             "enumerate: cache miss for '%s' (performed stat)", name);
     } else {
-        sd_leave(name, len);
+        sd_leave(sd, name, len);
         return -1;
     }
 
     *kind = S_ISDIR(s_path->st.st_mode) ? SD_DIR : SD_FILE;
+    return 0;
+}
+
+/*!
+ * @brief Tell whether a change at a ctime can leave a later change's ctime
+ *        as it is, for a read that begins at now
+ *
+ * The granule of a change is a second where the filesystem keeps no
+ * nanoseconds, else the tick of the clock it stamps with, which trails the
+ * request's clock by up to a tick.
+ *
+ * @param[in] ctime  the folder's ctime
+ * @param[in] now    the time the read began, before the stat
+ * @returns true for a ctime within two seconds before now, or within two
+ *          ticks of a 100 Hz clock where it keeps nanoseconds, or up to two
+ *          seconds ahead of now; a ctime further ahead is a stored date, as
+ *          Linux gives a folder Mac OS 9 made on HFS+, not a recent change
+ */
+bool enumerate_ctime_recent(const struct timespec *ctime,
+                            const struct timespec *now)
+{
+    long long ahead;
+
+    /* a whole-second ctime is recent back to the second before now's; the
+     * band also keeps the nanoseconds apart in range */
+    if (ctime->tv_sec < now->tv_sec - 1 || ctime->tv_sec > now->tv_sec + 2) {
+        return false;
+    }
+
+    ahead = (long long)(ctime->tv_sec - now->tv_sec) * 1000000000LL
+            + ctime->tv_nsec - now->tv_nsec;
+    return ahead >= 0 ? ahead <= 2000000000LL
+           : ctime->tv_nsec == 0 || ahead > -20000000LL;
+}
+
+/*!
+ * @brief The working folder's listing: the saved one while the folder keeps
+ *        the listing's stamp, else the folder read from disk and saved
+ *
+ * Any batch serves the saved listing while the folder keeps a stamp other
+ * than the zero one, which a read in the granule of the folder's last change
+ * takes, so a folder whose stat shows no ctime is read at every batch. A new
+ * pass of a listing that left a name out reads the folder again too, so the
+ * name's stat runs again. The read leaves sd_last at the first record; a
+ * zero length byte ends the records.
+ *
+ * @param[in,out] sd      the folder's slot, from sd_select(), or the volume
+ *                        root's own listing, empty
+ * @param[in]     vol     the folder's volume
+ * @param[in]     st      the folder's stat, taken before the read
+ * @param[in]     sindex  the batch's start index
+ * @param[in]     now     the time the request began, before the stat
+ * @returns 0, or -1 with errno from the read, or ENOMEM
+ */
+static int sd_fetch(struct savedir *sd, const struct vol *vol,
+                    const struct stat *st, uint32_t sindex,
+                    const struct timespec *now)
+{
+    const struct timespec seen = atalk_stat_ctime_timespec(st);
+    /* the slot holds the folder's listing, and the folder's stat still shows
+     * its stamp; the zero stamp serves nothing, since a folder whose stat
+     * shows no ctime would match it */
+    const bool stamped = sd->sd_buf != NULL && sd->sd_did == curdir->d_did
+                         && sd->sd_ino == st->st_ino
+                         && (sd->sd_ctime.tv_sec != 0
+                             || sd->sd_ctime.tv_nsec != 0)
+                         && atalk_timespec_eq(&seen, &sd->sd_ctime);
+    int n;
+
+    /* a pass arms the folder's table, which loads its rows once; a table
+     * armed only at a read would load them for every batch of a listing
+     * read again past its slot */
+    if (sindex == 1) {
+        cnid_dir_arm(vol->v_cdb, curdir->d_did);
+    }
+
+    if (stamped && (sindex != 1 || !sd->sd_left)) {
+        return 0;
+    }
+
+    enumerate_stat.reads++;
+
+    if (sd->sd_did != curdir->d_did) {
+        /* a continuation batch whose listing a slot no longer holds; the
+         * volume root's is kept by none */
+        if (sindex != 1 && curdir->d_did != DIRDID_ROOT) {
+            enumerate_stat.rereads++;
+        }
+    } else if (!stamped) {
+        enumerate_stat.changed++;
+    }
+
+    if (sd->sd_buf == NULL) {
+        if ((sd->sd_buf = malloc(SDBUFBRK)) == NULL) {
+            return -1;
+        }
+
+        sd->sd_buflen = SDBUFBRK;
+    }
+
+    sd->sd_last = sd->sd_buf;
+
+    /* the virtual icon follows the volume root's names */
+    if ((n = for_each_dirent(vol, ".", enumerate_loop, sd)) < 0
+            || (is_virtual_icon(vol, curdir->d_did, VIRTUAL_ICON_NAME)
+                && sd_append(sd, VIRTUAL_ICON_NAME,
+                             (int)strlen(VIRTUAL_ICON_NAME), SD_ICON) < 0)) {
+        return -1;
+    }
+
+    setdiroffcnt(curdir, st, n);
+    enumerate_stat.names += n;
+    *sd->sd_last = 0;
+    sd->sd_last = sd->sd_buf;
+    sd->sd_left = false;
+    sd->sd_sindex = 1;
+    sd->sd_ino = st->st_ino;
+    sd->sd_ctime = seen;
+
+    /* a change within a recent ctime's granule can leave it as it is, so
+     * the listing takes the zero stamp, which serves no batch */
+    if (enumerate_ctime_recent(&seen, now)) {
+        sd->sd_ctime.tv_sec = 0;
+        sd->sd_ctime.tv_nsec = 0;
+    }
+
+    sd->sd_vid = vol->v_vid;
+    sd->sd_did = curdir->d_did;
     return 0;
 }
 
@@ -409,9 +603,19 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
  * The request names a directory, a file bitmap, a directory bitmap, the
  * requested count, a start index from 1, and the reply size limit.
  * FPEnumerateExt2 widens the start index and the limit to 32 bits. The first
- * request for a directory reads every visible name into a saved listing, and
- * later requests for it continue from that listing; the session keeps the
- * listings of eight directories. Entries in the dircache skip the stat.
+ * request for a directory reads every visible name into a saved listing.
+ * Later requests for it, from any index, use that listing while the
+ * directory keeps the inode and ctime the read saw, unless the read came
+ * within the granule of the directory's last change or the directory shows
+ * no ctime; the session keeps the listings of eight directories. A request
+ * after a change reads the whole directory again and goes on at its index
+ * in the new read, and so does a request at index 1 of a listing that left
+ * a name out. Any session's write on the volume moves the root's ctime, so a
+ * saved listing of the root would seldom serve: every request for the root
+ * reads it into the request's own listing, which no slot keeps. A name's
+ * dircache entry of the kind readdir() gives stands in for its stat. A
+ * directory whose entry does not then hold the directory's stat under its
+ * DID answers AFPERR_NODIR.
  *
  * Each entry carries its length, a file or directory flag, and the parameters
  * of getfilparams or getdirparams, padded to an even length. An entry type
@@ -427,13 +631,18 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
  *                         return
  * @param[in]     ext      0 for FPEnumerate, 1 for FPEnumerateExt, 2 for
  *                         FPEnumerateExt2
- * @returns AFP_OK, AFPERR_NOOBJ at the end of the directory, AFPERR_NODIR,
+ * @param[in,out] own      the request's own listing, empty, for the volume
+ *                         root's names
+ * @returns AFP_OK, AFPERR_NOOBJ at the end of the directory, AFPERR_NODIR
+ *          for a directory that is gone or replaced under its name,
  *          AFPERR_BITMAP, AFPERR_PARAM, or another AFPERR_* code
  */
-static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                     char *rbuf, size_t *rbuflen, int ext)
+static int enumerate_in(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+                        char *rbuf, size_t *rbuflen, int ext,
+                        struct savedir *own)
 {
-    static struct savedir	sd = { 0 };
+    static struct savedir	in_use = { 0 };
+    struct savedir		*sd = &in_use;
     struct vol			*vol;
     struct dir			*dir;
     int				did, ret, len, first = 1;
@@ -445,6 +654,9 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     struct path                 *o_path;
     struct path                 s_path;
     size_t                      header;
+    /* before any stat of the folder, for the listing's stamp */
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
@@ -529,76 +741,28 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         getcwdpath(), o_path->u_name, fbitmap, dbitmap, reqcnt, sindex, maxsz);
     data = rbuf + 3 * sizeof(uint16_t);
     sz = 3 * sizeof(uint16_t);	/* fbitmap, dbitmap, reqcount */
-    sd_select(&sd, vid, curdir->d_did);
 
-    if (sd.sd_buflen == 0) {
-        if ((sd.sd_buf = (char *)malloc(SDBUFBRK)) == NULL) {
-            LOG(log_error, logtype_afpd, "afp_enumerate: malloc: %s",
-                strerror(errno));
-            return AFPERR_MISC;
-        }
-
-        sd.sd_buflen = SDBUFBRK;
-        /* an empty listing until a read fills it */
-        *sd.sd_buf = 0;
+    if (curdir->d_did == DIRDID_ROOT) {
+        sd = own;
+    } else {
+        sd_select(sd, vid, curdir->d_did);
     }
 
-    /*
-     * Read the directory into a pre-malloced buffer, stored
-     *		len <name> \0 <kind>
-     * The end is indicated by a len of 0.
-     */
-    if (sindex == 1 || curdir->d_did != sd.sd_did || vid != sd.sd_vid) {
-        enumerate_stat.reads++;
+    /* the folder's stat tells whether a saved listing still describes it;
+     * cname() leaves one for a folder it stat'ed */
+    if (!o_path->st_valid && ostat(".", &o_path->st, vol_syml_opt(vol)) < 0) {
+        return read_failed(sd, "stat");
+    }
 
-        /* a continuation batch whose listing is not saved */
-        if (sindex != 1) {
-            enumerate_stat.rereads++;
-        }
+    /* the DID the request names has no folder at the path, and the listing
+     * saved under it goes */
+    if (dir_stat_refresh(vol, curdir, &o_path->st) < 0) {
+        sd_drop(sd);
+        return AFPERR_NODIR;
+    }
 
-        sd.sd_last = sd.sd_buf;
-
-        /* if dir was in the cache we don't have the inode */
-        if ((!o_path->st_valid && ostat(".", &o_path->st, vol_syml_opt(vol)) < 0) ||
-                (ret = for_each_dirent(vol, ".", enumerate_loop, (void *)&sd)) < 0) {
-            int err = errno;
-            sd_drop(&sd);
-            errno = err;
-            LOG(log_error, logtype_afpd, "enumerate: loop error: %s (%d)", strerror(errno),
-                errno);
-
-            switch (errno) {
-            case EACCES:
-                return AFPERR_ACCESS;
-
-            case ENOTDIR:
-                return AFPERR_BADTYPE;
-
-            case EMFILE:
-            case ENFILE:
-            case ENOMEM:
-                return AFPERR_MISC;
-
-            default:
-                return AFPERR_NODIR;
-            }
-        }
-
-        setdiroffcnt(vol, curdir, &o_path->st, ret);
-
-        /* a listing's first read arms its table: the read again of a
-         * listing whose slot went would load the rows for every batch */
-        if (sindex == 1) {
-            cnid_dir_arm(vol->v_cdb, curdir->d_did);
-        }
-
-        enumerate_stat.names += ret;
-        *sd.sd_last = 0;
-        sd.sd_last = sd.sd_buf;
-        sd.sd_sindex = 1;
-        sd.sd_end = 0;
-        sd.sd_vid = vid;
-        sd.sd_did = curdir->d_did;
+    if (sd_fetch(sd, vol, &o_path->st, sindex, &now) < 0) {
+        return read_failed(sd, "loop error");
     }
 
     /*
@@ -606,28 +770,32 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
      */
     int kinds = (fbitmap != 0) | (dbitmap != 0) << 1;
 
-    if (sindex < sd.sd_sindex || kinds != sd.sd_kinds) {
-        sd.sd_sindex = 1;
-        sd.sd_last = sd.sd_buf;
-        sd.sd_kinds = kinds;
-        sd.sd_end = 0;
+    if (sindex < sd->sd_sindex || kinds != sd->sd_kinds) {
+        sd->sd_sindex = 1;
+        sd->sd_last = sd->sd_buf;
+        sd->sd_kinds = kinds;
     }
 
-    while (sd.sd_sindex < sindex) {
-        len = (unsigned char) * (sd.sd_last)++;
+    while (sd->sd_sindex < sindex) {
+        len = (unsigned char) * (sd->sd_last)++;
 
+        /* a saved listing stays for the next pass, sd_last on its end, and
+         * the folder's CNID table goes until that pass arms a new one */
         if (len == 0) {
-            sd_drop(&sd);
+            sd->sd_last--;
+            cnid_dir_forget(vol->v_cdb, sd->sd_did);
             return AFPERR_NOOBJ;
         }
 
-        char *name = sd.sd_last;
-        sd.sd_last += len + 2;
+        char *name = sd->sd_last;
+        sd->sd_last += len + 2;
 
         /* the index counts the names a batch lists: those whose stat
-         * succeeds, of a kind the request asks for */
-        if (name[len + 1] == SD_UNKNOWN
-                && sd_stat(vol, name, len, &s_path) != 0) {
+         * succeeds, of a kind the request asks for. A read of the volume
+         * root holds no mark of a name whose stat failed in a batch before
+         * it, so each of its names takes its stat */
+        if ((name[len + 1] == SD_UNKNOWN || sd == own)
+                && sd_stat(vol, sd, name, len, &s_path) != 0) {
             continue;
         }
 
@@ -636,7 +804,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             continue;
         }
 
-        sd.sd_sindex++;
+        sd->sd_sindex++;
     }
 
     struct stat adst;
@@ -647,10 +815,10 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     int v2dir = convert && lstat(".AppleDouble", &adst) == 0;
     /* a batch that fails returns with sd_last back at the batch's first
      * name, so the next batch at sindex resumes there */
-    char *batch = sd.sd_last;
+    char *batch = sd->sd_last;
     cnid_dir_serve(vol->v_cdb, curdir->d_did);
 
-    while ((len = (unsigned char) * (sd.sd_last)) != 0) {
+    while ((len = (unsigned char) * (sd->sd_last)) != 0) {
         /*
          * If we've got all we need, send it.
          */
@@ -662,29 +830,30 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
          * Save the start position, in case we exceed the buffer
          * limitation, and have to back up one.
          */
-        start = sd.sd_last;
-        sd.sd_last++;
+        start = sd->sd_last;
+        sd->sd_last++;
 
-        if (sd_stat(vol, sd.sd_last, len, &s_path) != 0) {
-            sd.sd_last += len + 2;
+        if (sd_stat(vol, sd, sd->sd_last, len, &s_path) != 0) {
+            sd->sd_last += len + 2;
             continue;
         }
 
         /* NULL on a miss: dir_add() or getfilparams() caches the entry below */
         struct dir *cached = s_path.d_cached;
+        const int icon = sd->sd_last[len + 1] == SD_ICON;
         /* On-the-fly v2→EA conversion. Skip when 'convert appledouble = no'
          * is set (AFPVOL_NOV2TOEACONV) — eliminates per-file disk IO. */
         const char *convname;
         /* a folder's header is inside the folder; ad_convert() also renames
          * a hex-encoded name */
-        int attempt = convert
+        int attempt = convert && !icon
                       && (S_ISDIR(s_path.st.st_mode)
                           ? !(cached && (cached->d_flags & DIRF_CONVERTED))
-                          : v2dir || strstr(sd.sd_last, ":2e")
-                          || strstr(sd.sd_last, ":2f"));
+                          : v2dir || strstr(sd->sd_last, ":2e")
+                          || strstr(sd->sd_last, ":2f"));
 
         if (attempt
-                && ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0) {
+                && ad_convert(sd->sd_last, &s_path.st, vol, &convname) == 0) {
             struct stat oldst;
 
             /* a folder handed a decoded name stays unmarked, so a failed
@@ -695,7 +864,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
             /* ad_convert() hands back the decoded name whether or not its
              * rename happened; a failed one leaves the old name in place */
-            if (convname && lstat(sd.sd_last, &oldst) == 0) {
+            if (convname && lstat(sd->sd_last, &oldst) == 0) {
                 convname = NULL;
             }
 
@@ -706,19 +875,19 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 s_path.u_name = (char *)convname;
 
                 if (cached) {
-                    dir_remove(vol, cached, 0);  /* Clean removal, not an expunge */
+                    dir_remove_tree(vol, cached, 0);  /* Clean removal, not an expunge */
                     cached = NULL;               /* Treat as cache miss from here */
 
                     if (of_stat(vol, &s_path) != 0) {
-                        sd_leave(sd.sd_last, len);
-                        sd.sd_last += len + 2;
+                        sd_leave(sd, sd->sd_last, len);
+                        sd->sd_last += len + 2;
                         continue;
                     }
                 }
 
                 AFP_CNID_START("cnid_lookup");
-                s_path.id = cnid_lookup(vol->v_cdb, &s_path.st, curdir->d_did, sd.sd_last,
-                                        strlen(sd.sd_last));
+                s_path.id = cnid_lookup(vol->v_cdb, &s_path.st, curdir->d_did, sd->sd_last,
+                                        (size_t)len);
                 AFP_CNID_DONE();
 
                 if (s_path.id != CNID_INVALID) {
@@ -743,20 +912,14 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
                 /* a name the listing hides, once decoded, leaves it */
                 if (!check_dirent(vol, s_path.u_name)) {
-                    sd_leave(sd.sd_last, len);
-                    sd.sd_last += len + 2;
+                    sd_leave(sd, sd->sd_last, len);
+                    sd->sd_last += len + 2;
                     continue;
-                }
-
-                /* later batches find the entry under its new name, which
-                 * dehexing makes shorter than the saved one */
-                if (strlen(convname) < (size_t)len) {
-                    memcpy(sd.sd_last, convname, strlen(convname) + 1);
                 }
             }
         }
 
-        sd.sd_last += len + 2;
+        sd->sd_last += len + 2;
 
         if (!cached) {
             s_path.m_name = NULL;
@@ -797,8 +960,12 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             }
 
             /* files are added to the dircache in getfilparams() -> getmetadata() */
-            if (AFP_OK != (ret = getfilparams(obj, vol, fbitmap, &s_path, curdir,
-                                              data + header, &esz, 1))) {
+            ret = icon ? virtual_icon_getfilparams(obj, vol, fbitmap, 0,
+                                                   data + header, &esz)
+                  : getfilparams(obj, vol, fbitmap, &s_path, curdir,
+                                 data + header, &esz, 1);
+
+            if (ret != AFP_OK) {
                 goto fail;
             }
         }
@@ -821,7 +988,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 goto fail;
             }
 
-            sd.sd_last = start;
+            sd->sd_last = start;
             break;
         }
 
@@ -860,68 +1027,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     cnid_dir_serve(vol->v_cdb, CNID_INVALID);
 
-    /*
-     * Inject virtual Icon\r entry at the volume root if enabled.
-     * This is treated as one extra entry appended after real entries.
-     * We track it via sindex: the virtual entry occupies position
-     * (real_count + 1). Because sd_sindex is updated below, subsequent
-     * requests with higher sindex will skip past it.
-     *
-     * The virtual entry occupies exactly one sindex position: one past
-     * the listing's last entry of the kinds it lists (sd_end, 1-based).
-     * Only emit it when the current batch reaches that position, so it is
-     * served once and subsequent calls fall through to AFPERR_NOOBJ.
-     */
-    if (len == 0 && sd.sd_end == 0) {
-        sd.sd_end = sindex + actcnt;
-    }
-
-    if (len == 0 && actcnt < reqcnt && fbitmap != 0
-            && curdir->d_did == DIRDID_ROOT
-            && sindex + actcnt == sd.sd_end
-            && virtual_icon_enabled(vol)
-            && !real_icon_exists(vol)) {
-        esz = 0;
-        ret = virtual_icon_getfilparams(obj, vol, fbitmap, 0,
-                                        data + header, &esz);
-
-        if (ret == AFP_OK) {
-            if ((esz + header) & 1) {
-                *(data + header + esz) = '\0';
-                esz++;
-            }
-
-            if (maxsz >= sz + esz + header) {
-                sz += esz + header;
-                {
-                    size_t entry_len = esz + header;
-
-                    if (entry_len > (ext ? UINT16_MAX : UINT8_MAX)) {
-                        ret = AFPERR_PARAM;
-                        goto fail;
-                    }
-
-                    if (ext) {
-                        temp16 = htons((uint16_t)entry_len);
-                        memcpy(data, &temp16, sizeof(temp16));
-                        data += sizeof(temp16);
-                    } else {
-                        *data++ = (uint8_t)entry_len;
-                    }
-                }
-                *data++ = FILDIRBIT_ISFILE;
-
-                if (ext) {
-                    *data++ = 0;
-                }
-
-                actcnt++;
-            }
-        }
-    }
-
     if (actcnt == 0) {
-        sd_drop(&sd);
+        cnid_dir_forget(vol->v_cdb, sd->sd_did);
 
         /*
          * in case were converting adouble stuff:
@@ -936,7 +1043,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         return AFPERR_NOOBJ;
     }
 
-    sd.sd_sindex = sindex + actcnt;
+    sd->sd_sindex = sindex + actcnt;
     /*
      * All done, fill in misc junk in rbuf
      */
@@ -953,7 +1060,22 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFP_OK;
 fail:
     cnid_dir_serve(vol->v_cdb, CNID_INVALID);
-    sd.sd_last = batch;
+    sd->sd_last = batch;
+    return ret;
+}
+
+/*!
+ * @brief enumerate_in() with a listing of the request's own, which a
+ *        request for the volume root reads into and which goes with the
+ *        request
+ */
+static int enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                     size_t *rbuflen, int ext)
+{
+    struct savedir own = { 0 };
+    const int ret = enumerate_in(obj, ibuf, ibuflen, rbuf, rbuflen, ext,
+                                 &own);
+    free(own.sd_buf);
     return ret;
 }
 

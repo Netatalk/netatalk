@@ -121,6 +121,9 @@ struct fault_inject {
     int clock_calls;        /*!< wall clock reads clock_fake answered */
     time_t clock_sec;
     struct fi_call unlink;
+    const char *stat_name;  /*!< every stat() and lstat() of this path fails */
+    int stat_errno;         /*!< the errno those calls fail with */
+    int stat_calls;         /*!< stat() and lstat() calls of stat_name */
     struct fi_call readdir;
     struct fi_call getcwd;
     int xattr_watch;      /*!< count the xattr reads below (Linux) */

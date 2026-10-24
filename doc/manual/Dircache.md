@@ -52,6 +52,16 @@ to detect changes made outside of Netatalk
 A value of 1 means validate on every access;
 higher values validate less frequently.
 For example, 5 means validate cache entries every 5th access.
+Whatever the value, a request that names a cached folder in its path, lists
+it, or asks for its parameters or access rights brings the folder's entry
+up to date.
+A folder other than the volume root that replaced the cached one takes a
+new CNID when the CNID database can give it one, and requests by the old
+CNID fail.
+A folder listing takes its names' details from their cached entries.
+It serves later requests for the folder from the names it saved, a listing
+started again included, and reads the folder again when it changes.
+A listing of the volume root reads the root at every request.
 Higher values improve performance and reduce storage I/O and page-cache stress,
 but may delay detection of external changes.
 

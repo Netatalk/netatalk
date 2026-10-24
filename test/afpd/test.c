@@ -67,6 +67,7 @@
 #include "subtests.h"
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
+#include "subtests_dircache.h"
 #include "subtests_enumerate.h"
 #include "subtests_extattr.h"
 #include "subtests_lock.h"
@@ -3951,22 +3952,47 @@ int main(int argc, char *argv[])
              "enumerate: a listing whose read failed is read again");
     TEST_int_or_skip(utest_enumerate_read_error_fails(&obj, vol), 0,
                      "enumerate: a read that fails part-way fails");
-    TEST_int(utest_enumerate_interleaved_reads_once(&obj, vid), 0,
+    TEST_int(utest_enumerate_interleaved_reads_once(&obj, vol), 0,
              "enumerate: interleaved listings read directories once");
+    TEST_int(utest_enumerate_root_kept_nowhere(&obj, vol), 0,
+             "enumerate: a listing of the volume root takes no slot");
+    TEST_int_or_skip(utest_enumerate_root_failed_stat_once(&obj, vol), 0,
+                     "enumerate: the root's listing lists a name once past a "
+                     "failed stat");
+    TEST_int(utest_enumerate_changed_folder_rereads(&obj, vid), 0,
+             "enumerate: a batch after a folder change reads it again");
+    TEST_int(utest_enumerate_ctime_window(), 0,
+             "enumerate: a change's window is seconds or ticks, not a stored "
+             "date");
+    TEST_int_or_skip(utest_enumerate_recent_read_rechecked(&obj, vid), 0,
+                     "enumerate: a read in the folder's change tick is read "
+                     "again");
+    TEST_int_or_skip(utest_enumerate_ticked_read_serves(&obj, vid), 0,
+                     "enumerate: a read ticks after the change serves the "
+                     "next batch");
     TEST_int(utest_enumerate_one_kind_keeps_index(&obj, vid), 0,
              "enumerate: a one-kind listing read again keeps its index");
     TEST_int(utest_enumerate_kind_change_rewinds(&obj, vid), 0,
              "enumerate: a batch of the other kind rewinds");
-    TEST_int(utest_enumerate_deleted_name_keeps_index(&obj, vid), 0,
-             "enumerate: a deleted name keeps its place in the numbering");
-    TEST_int(utest_enumerate_failed_stat_leaves_index(&obj, vid), 0,
+    TEST_int_or_skip(utest_enumerate_other_kind_entry_stats(&obj, vid), 0,
+                     "enumerate: a file under a cached folder's name is "
+                     "listed as the file");
+    TEST_int(utest_enumerate_deleted_name_rereads(&obj, vid), 0,
+             "enumerate: a deleted name leaves the numbering at a reread");
+    TEST_int(utest_enumerate_failed_stat_leaves_index(&obj, vol), 0,
              "enumerate: a name whose stat failed leaves the numbering");
+    TEST_int(utest_enumerate_new_pass_restats(&obj, vol), 0,
+             "enumerate: a new pass after a failed stat reads again");
+    TEST_int(utest_enumerate_listing_serves_passes(&obj, vid), 0,
+             "enumerate: a settled listing serves every pass");
     TEST_int_or_skip(utest_enumerate_dehex_vetoed_leaves(&obj, vol), 0,
                      "enumerate: a name decoded to a vetoed one leaves");
     TEST_int_or_skip(utest_enumerate_dehex_gone_leaves(&obj, vol), 0,
                      "enumerate: a decoded name that fails its stat leaves");
     TEST_int_or_skip(utest_enumerate_icon_ends_files(&obj, vol), 0,
                      "enumerate: the virtual Icon ends a files-only listing");
+    TEST_int_or_skip(utest_enumerate_real_icon_replaces(&obj, vol), 0,
+                     "enumerate: a real Icon replaces the virtual one");
     TEST_int(utest_enumerate_cnid_one_query(&obj, vol), 0,
              "enumerate: one folder query answers a listing's CNID lookups");
     TEST_int(utest_enumerate_cnid_other_inode(&obj, vol), 0,
@@ -3981,6 +4007,69 @@ int main(int argc, char *argv[])
              "enumerate: a lookup outside the listing asks the backend");
     TEST_int(utest_enumerate_cnid_reread_unarmed(&obj, vol), 0,
              "enumerate: a listing read again past its slot loads no table");
+    TEST_int(utest_dircache_step_up_keeps_entry(&obj, vol, vid), 0,
+             "cname: a path that steps up leaves no stat for the parent");
+    TEST_int(utest_dircache_replaced_file_by_name(&obj, vol, vid), 0,
+             "dircache: a replaced file named by name answers anew");
+    TEST_int(utest_dircache_rekeyed_folder_children(&obj, vol, vid), 0,
+             "dircache: a re-keyed folder's old children leave");
+    TEST_int(utest_dircache_replaced_curdir_rekeyed(&obj, vol, vid), 0,
+             "dircache: validation re-keys a replaced working folder in place");
+    TEST_int(utest_dircache_replaced_folder_by_name(&obj, vol, vid), 0,
+             "dircache: a replaced folder named by name answers anew");
+    TEST_int(utest_dircache_folder_became_file(&obj, vol, vid), 0,
+             "dircache: a folder a file replaced leaves at a strict lookup");
+    TEST_int(utest_dircache_working_folder_became_file(&obj, vol, vid), 0,
+             "dircache: a working folder a file replaced leaves with its row");
+    TEST_int(utest_dircache_rowed_file_takes_folder_name(&obj, vol, vid), 0,
+             "dircache: a folder whose name a file with a row took leaves "
+             "with its row");
+    TEST_int(utest_dircache_renamed_folder_keeps_row(&obj, vol, vid), 0,
+             "dircache: a renamed folder keeps its row when a file takes "
+             "its name");
+    TEST_int(utest_dircache_unanswered_kind_keeps_row(&obj, vol, vid), 0,
+             "dircache: a folder a file replaced keeps its row when the "
+             "lookup fails");
+    TEST_int(utest_dircache_curdir_never_file(&obj, vol, vid), 0,
+             "dircache: the working folder never becomes a file entry");
+    TEST_int(utest_dircache_file_became_folder(&obj, vol, vid), 0,
+             "dircache: a file a folder replaced leaves when named");
+    TEST_int(utest_dircache_file_takes_folder_name(&obj, vol, vid), 0,
+             "dircache: a file under a folder's name drops the folder's tree");
+    TEST_int(utest_dircache_replaced_folder_params_fail(&obj, vol, vid), 0,
+             "dircache: a replaced working folder's parameters answer NOOBJ");
+    TEST_int_or_skip(utest_dircache_replaced_access_fails(&obj, vol, vid), 0,
+                     "dircache: FPAccess on a replaced working folder fails");
+    TEST_int(utest_dircache_replaced_folder_create_fails(&obj, vol, vid), 0,
+             "dircache: FPCreateFile under a replaced folder's DID fails");
+    TEST_int(utest_dircache_gone_folder_children(&obj, vol, vid), 0,
+             "dircache: a gone folder's children leave with it");
+    TEST_int(utest_dircache_hint_gone_folder_children(&obj, vol, vid), 0,
+             "dircache: a hint for a gone folder drops its children");
+    TEST_int(utest_dircache_replaced_folder_listing(&obj, vol, vid), 0,
+             "dircache: a replaced folder lists afresh under its own CNID");
+    TEST_int(utest_dircache_stale_child_path_kept(&obj, vol, vid), 0,
+             "dircache: a stale path two levels down leaves the rows alone");
+    TEST_int(utest_dircache_moved_parent_keeps_rows(&obj, vol, vid), 0,
+             "dircache: another session's rename leaves the child's row");
+    TEST_int(utest_dircache_uncached_parent_keeps_rows(&obj, vol, vid), 0,
+             "dircache: an uncached parent leaves a stale child's row");
+    TEST_int(utest_dircache_search_skips_moved_child(&obj, vol, vid), 0,
+             "dircache: a catalog search leaves out a stale child and answers");
+    TEST_int(utest_dircache_resolve_moved_child_fails(&obj, vol, vid), 0,
+             "dircache: FPResolveID in a stale child adds no rows under it");
+    TEST_int(utest_dircache_rekeyed_folder_recounts(&obj, vol, vid), 0,
+             "dircache: a re-keyed folder counts its offspring afresh");
+    TEST_int(utest_dircache_inplace_refresh_children(&obj, vol, vid), 0,
+             "dircache: a folder refreshed onto another inode drops children");
+    TEST_int(utest_dircache_held_add_fails(&obj, vol, vid), 0,
+             "dircache: a held folder without a new row answers NOOBJ");
+    TEST_int(utest_dircache_refresh_hints_siblings(&obj, vol, vid), 0,
+             "dircache: a request's re-key hints the sibling sessions");
+    TEST_int(utest_dircache_orphan_parent_no_row(&obj, vol, vid), 0,
+             "dircache: a parent without a row takes no new child row");
+    TEST_int(utest_dircache_orphan_move_fails(&obj, vol, vid), 0,
+             "dircache: moving a folder whose parent DID is gone fails");
     TEST_int_or_skip(utest_movecwd_skips_getcwd(&obj, vol), 0,
                      "movecwd: a walking volume skips getcwd()");
     TEST_int_or_skip(utest_movecwd_at_descriptor_limit(&obj, vol), 0,

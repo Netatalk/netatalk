@@ -54,6 +54,11 @@ extern struct dir *dircache_lookup_did(const struct vol *vol, cnid_t did);
 extern struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did);
 extern struct dir *dircache_search_by_name(const struct vol *,
                                            const struct dir *dir, char *name, size_t len);
+extern struct dir *dircache_search_by_name_unsampled(const struct vol *vol,
+                                                     const struct dir *dir,
+                                                     char *name, size_t len);
+extern int        dircache_refresh(const struct vol *vol, struct dir *cdir,
+                                   struct stat *st, int flags);
 
 extern void       dircache_dump(void);
 extern void       log_dircache_stat(void);

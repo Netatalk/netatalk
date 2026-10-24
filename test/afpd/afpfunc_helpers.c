@@ -37,12 +37,14 @@
 #include <unistd.h>
 
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 #include <atalk/directory.h>
 #include <atalk/dsi.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/queue.h>
+#include <atalk/server_ipc.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
@@ -258,6 +260,23 @@ int renameobj(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
     len += push_path(&p, name);
     len += push_path(&p, newname);
     return afp_rename(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*! @brief FPMoveAndRename of name in sdid into dname in ddid as newname */
+int moveobj(AFPObj *obj, uint16_t vid, cnid_t sdid, const char *name,
+            cnid_t ddid, const char *dname, const char *newname)
+{
+    static char buf[768] = { 0 };
+    char *p = buf;
+    int len = 0;
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, sdid, len);
+    PUSHVAL(p, cnid_t, ddid, len);
+    len += push_path(&p, name);
+    len += push_path(&p, dname);
+    len += push_path(&p, newname);
+    return afp_moveandrename(obj, buf, len, rbuf, &rbuflen);
 }
 
 /*!
@@ -911,6 +930,93 @@ int next_second(const char *path)
 }
 
 /*!
+ * @brief Wait until a change to a file can no longer leave its ctime as it
+ *        is, as afpd's listings judge it
+ *
+ * @param[in] path  the file
+ *
+ * @returns 0, or -1 if the stat fails or five seconds pass
+ */
+int settle(const char *path)
+{
+    const struct timespec tick = { .tv_sec = 0, .tv_nsec = 10 * 1000 * 1000 };
+    const time_t deadline = time(NULL) + 5;
+    struct timespec now;
+    struct stat st;
+
+    while (time(NULL) < deadline && stat(path, &st) == 0
+            && clock_gettime(CLOCK_REALTIME, &now) == 0) {
+        const struct timespec ctime = atalk_stat_ctime_timespec(&st);
+
+        if (!enumerate_ctime_recent(&ctime, &now)) {
+            return 0;
+        }
+
+        nanosleep(&tick, NULL);
+    }
+
+    return -1;
+}
+
+/*!
+ * @brief Have the session's cache hints written to a fresh pipe
+ *
+ * @param[in,out] obj  the test session
+ * @param[out]    fds  the pipe, for hint_came() and hints_end()
+ * @returns 0, or -1 when no pipe can be made
+ */
+int hints_begin(AFPObj *obj, int fds[2])
+{
+    if (pipe(fds) != 0) {
+        return -1;
+    }
+
+    fcntl(fds[0], F_SETFL, O_NONBLOCK);
+    obj->ipc_fd = fds[1];
+    return 0;
+}
+
+/*!
+ * @brief Whether the hints written to a pipe since its last read hold one
+ *        of an event under a CNID
+ *
+ * @param[in] fd     the pipe's read end, non-blocking
+ * @param[in] event  the CACHE_HINT_* event
+ * @param[in] cnid   the CNID, CNID_INVALID for any
+ * @returns 1 when such a hint came, else 0
+ */
+int hint_came(int fd, uint8_t event, cnid_t cnid)
+{
+    struct ipc_cache_hint_payload hint;
+    char msg[IPC_HEADERLEN + sizeof(hint)];
+    int found = 0;
+
+    while (read(fd, msg, sizeof(msg)) == (ssize_t)sizeof(msg)) {
+        memcpy(&hint, msg + IPC_HEADERLEN, sizeof(hint));
+
+        if (hint.event == event
+                && (cnid == CNID_INVALID || hint.cnid == cnid)) {
+            found = 1;
+        }
+    }
+
+    return found;
+}
+
+/*!
+ * @brief Stop writing the session's hints to the pipe and close it
+ *
+ * @param[in,out] obj  the test session
+ * @param[in]     fds  the pipe from hints_begin()
+ */
+void hints_end(AFPObj *obj, const int fds[2])
+{
+    obj->ipc_fd = -1;
+    close(fds[0]);
+    close(fds[1]);
+}
+
+/*!
  * @brief Build the request FPSetDirParms and FPSetACL share: pad, volume,
  *        directory, bitmap, path, then len bytes of parameters from an
  *        even address
@@ -1146,20 +1252,22 @@ static int copy_lname(char *dst, const unsigned char *pstr)
 }
 
 /*!
- * @brief A folder listing's long and UTF-8 names, from FPEnumerateExt2
+ * @brief A folder listing's long and UTF-8 names from an index, from
+ *        FPEnumerateExt2
  *
  * @param[in]  obj     session
  * @param[in]  vid     volume
  * @param[in]  did     directory to list
+ * @param[in]  sindex  the start index, from 1
  * @param[out] lnames  the long names, in reply order
  * @param[out] unames  the UTF-8 names, in reply order
  * @param[in]  max     capacity of both, and the count requested
  * @returns the number of entries, -1 when the request fails or a name does
  *          not fit
  */
-int enumerate_names(AFPObj *obj, uint16_t vid, cnid_t did,
-                    char lnames[][MACFILELEN + 1],
-                    char unames[][UTF8FILELEN_EARLY + 1], uint16_t max)
+int enumerate_names_from(AFPObj *obj, uint16_t vid, cnid_t did,
+                         uint32_t sindex, char lnames[][MACFILELEN + 1],
+                         char unames[][UTF8FILELEN_EARLY + 1], uint16_t max)
 {
     const char *rec = rbuf + 6;
     uint16_t count;
@@ -1172,7 +1280,7 @@ int enumerate_names(AFPObj *obj, uint16_t vid, cnid_t did,
      * the same fields */
     if (enumerate_range(obj, vid, did,
                         (1 << FILPBIT_LNAME) | (1 << FILPBIT_PDINFO),
-                        (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDINFO), 1,
+                        (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDINFO), sindex,
                         max) != AFP_OK) {
         return -1;
     }
@@ -1209,6 +1317,25 @@ int enumerate_names(AFPObj *obj, uint16_t vid, cnid_t did,
     }
 
     return n;
+}
+
+/*!
+ * @brief A folder listing's long and UTF-8 names, from FPEnumerateExt2
+ *
+ * @param[in]  obj     session
+ * @param[in]  vid     volume
+ * @param[in]  did     directory to list
+ * @param[out] lnames  the long names, in reply order
+ * @param[out] unames  the UTF-8 names, in reply order
+ * @param[in]  max     capacity of both, and the count requested
+ * @returns the number of entries, -1 when the request fails or a name does
+ *          not fit
+ */
+int enumerate_names(AFPObj *obj, uint16_t vid, cnid_t did,
+                    char lnames[][MACFILELEN + 1],
+                    char unames[][UTF8FILELEN_EARLY + 1], uint16_t max)
+{
+    return enumerate_names_from(obj, vid, did, 1, lnames, unames, max);
 }
 
 /*!
@@ -1319,10 +1446,12 @@ int create_disk_file(const char *path)
 }
 
 /*!
- * @brief FPCatSearchExt over the volume for files, long names requested
+ * @brief FPCatSearchExt over the volume for files, and for folders by their
+ *        bitmap, long names requested
  *
  * @param[in]  obj      session
  * @param[in]  vid      volume
+ * @param[in]  dbitmap  the folders' bitmap, 0 for files only
  * @param[in]  rbitmap  criteria, FILPBIT_* bits
  * @param[in]  spec1    first specification record
  * @param[in]  spec2    second specification record
@@ -1332,9 +1461,10 @@ int create_disk_file(const char *path)
  * @returns the AFP result, or AFPERR_PARAM for a longer record or a reply
  *          name longer than a long name
  */
-int catsearch_ext(AFPObj *obj, uint16_t vid, uint32_t rbitmap,
-                  const void *spec1, const void *spec2, uint16_t speclen,
-                  uint32_t *nrecs, char lname[MACFILELEN + 1])
+int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
+                  uint32_t rbitmap, const void *spec1, const void *spec2,
+                  uint16_t speclen, uint32_t *nrecs,
+                  char lname[MACFILELEN + 1])
 {
     static char buf[256] = { 0 };
     char *p = buf;
@@ -1355,7 +1485,7 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint32_t rbitmap,
     PUSHVAL(p, uint32_t, 0, len);
     ADD(p, len, 16);
     PUSHVAL(p, uint16_t, htons(1 << FILPBIT_LNAME), len);
-    PUSHVAL(p, uint16_t, 0, len);
+    PUSHVAL(p, uint16_t, htons(dbitmap), len);
     PUSHVAL(p, uint32_t, htonl(rbitmap), len);
     PUSHVAL(p, uint16_t, htons(speclen), len);
     PUSHBUF(p, spec1, speclen, len);

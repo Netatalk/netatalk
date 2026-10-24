@@ -67,9 +67,9 @@ extern int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did,
 extern int getfiledirparms_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,
                                   const char *name, uint16_t fbitmap,
                                   uint16_t dbitmap);
-extern int catsearch_ext(AFPObj *obj, uint16_t vid, uint32_t rbitmap,
-                         const void *spec1, const void *spec2,
-                         uint16_t speclen, uint32_t *nrecs,
+extern int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
+                         uint32_t rbitmap, const void *spec1,
+                         const void *spec2, uint16_t speclen, uint32_t *nrecs,
                          char lname[MACFILELEN + 1]);
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
@@ -77,11 +77,17 @@ extern int create_disk_file(const char *path);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int renameobj(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                      const char *newname);
+extern int moveobj(AFPObj *obj, uint16_t vid, cnid_t sdid, const char *name,
+                   cnid_t ddid, const char *dname, const char *newname);
 extern int enumerate(AFPObj *obj, uint16_t vid, cnid_t did);
 extern int enumerate_names(AFPObj *obj, uint16_t vid, cnid_t did,
                            char lnames[][MACFILELEN + 1],
                            char unames[][UTF8FILELEN_EARLY + 1],
                            uint16_t max);
+extern int enumerate_names_from(AFPObj *obj, uint16_t vid, cnid_t did,
+                                uint32_t sindex, char lnames[][MACFILELEN + 1],
+                                char unames[][UTF8FILELEN_EARLY + 1],
+                                uint16_t max);
 extern int enumerate_lnames(AFPObj *obj, uint16_t vid, cnid_t did,
                             char lnames[][MACFILELEN + 1], uint16_t max);
 extern int getfiledirparms_lname(AFPObj *obj, uint16_t vid, cnid_t did,
@@ -120,6 +126,10 @@ extern int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid);
 extern int createid(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                     cnid_t *id);
 extern int next_second(const char *path);
+extern int settle(const char *path);
+extern int hints_begin(AFPObj *obj, int fds[2]);
+extern int hint_came(int fd, uint8_t event, cnid_t cnid);
+extern void hints_end(AFPObj *obj, const int fds[2]);
 extern int setdirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                        uint16_t bitmap, const void *params, size_t len);
 extern int getextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,

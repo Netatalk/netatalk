@@ -1766,8 +1766,11 @@ static int check_acl_access(const AFPObj *obj,
         }
 
         if (is_dir) {
-            /* the entry follows the stat the rights are computed from */
-            dir_stat_refresh(vol, curdir, &st);
+            /* the entry follows the stat the rights come from, or the DID
+             * names no folder at the path */
+            if (dir_stat_refresh(vol, curdir, &st) < 0) {
+                EC_EXIT_STATUS(AFPERR_NOOBJ);
+            }
         }
 
         EC_ZERO_LOG(acl_rights_of(obj, path, &st, &allowed_rights));

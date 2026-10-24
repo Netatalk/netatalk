@@ -16,6 +16,7 @@
 #endif
 
 #include <signal.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
@@ -85,6 +86,13 @@ static inline struct timespec atalk_stat_ctime_timespec(const struct stat *st)
     ts.tv_nsec = 0;
 #endif
     return ts;
+}
+
+/*! @brief Tell whether two timespecs are the same instant */
+static inline bool atalk_timespec_eq(const struct timespec *a,
+                                     const struct timespec *b)
+{
+    return a->tv_sec == b->tv_sec && a->tv_nsec == b->tv_nsec;
 }
 
 /*! @brief Return the stat atime as a timespec, with tv_nsec 0 if unavailable */

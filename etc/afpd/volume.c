@@ -1484,7 +1484,7 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 static bool same_stamp(const struct stat *st, const struct timespec *stamp)
 {
     const struct timespec ts = atalk_stat_mtime_timespec(st);
-    return ts.tv_sec == stamp->tv_sec && ts.tv_nsec == stamp->tv_nsec;
+    return atalk_timespec_eq(&ts, stamp);
 }
 
 /*!

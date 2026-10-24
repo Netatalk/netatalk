@@ -545,7 +545,7 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir,
         }
 
         ret->d_dir = NULL;      /* 4 */
-        dir_remove(vol, dir, 0);   /* 5 - Proactive cleanup, not invalid on use */
+        dir_remove_tree(vol, dir, 0);   /* 5 - Proactive cleanup, not invalid on use */
         return ret;
 
     default:
@@ -575,6 +575,65 @@ int get_afp_errno(const int param)
     }
 
     return param;
+}
+
+/*!
+ * @brief Bring an entry a request reached to the stat the request took at
+ *        its path
+ *
+ * An entry the stat removes or moves to another object is staleness found on
+ * use, which the statistics count.
+ *
+ * @param[in]     vol    the volume
+ * @param[in,out] dir    the entry
+ * @param[in]     st     the stat taken at the entry's path
+ * @param[in]     flags  DCMOD_KEEP for an entry the caller holds, else 0
+ * @returns true when the entry holds the stat under its DID
+ */
+bool dir_takes_stat(const struct vol *vol, struct dir *dir, struct stat *st,
+                    int flags)
+{
+    const cnid_t did = dir->d_did;
+    const ino_t ino = dir->dcache_ino;
+
+    if (dir_stat_differs(dir, st)) {
+        dircache_refresh(vol, dir, st, flags);
+
+        if (dir->d_did != did || dir->dcache_ino != ino) {
+            dircache_report_invalid_entry(dir);
+        }
+    }
+
+    return dir->d_did == did && dir->dcache_ino == st->st_ino;
+}
+
+/*!
+ * @brief Bring a strict lookup's entry to a stat of its path that shows
+ *        another inode
+ *
+ * The entry takes the stat as dir_modify() gives it. An entry that keeps its
+ * old inode under its DID leaves the cache with its children too.
+ *
+ * @param[in]     vol  the volume
+ * @param[in,out] dir  the entry
+ * @param[in]     st   the stat taken at the entry's path
+ * @returns true when the entry holds the stat under its DID, false when the
+ *          lookup resolves the DID through its row
+ */
+static bool strict_refresh(const struct vol *vol, struct dir *dir,
+                           struct stat *st)
+{
+    const cnid_t did = dir->d_did;
+
+    if (dir_takes_stat(vol, dir, st, 0)) {
+        return true;
+    }
+
+    if (dir->d_did == did) {
+        dir_remove_tree(vol, dir, 1);
+    }
+
+    return false;
 }
 
 /* Forward declaration for retry helper */
@@ -612,14 +671,7 @@ static struct dir *dirlookup_internal_retry(const struct vol *vol,
         LOG(log_debug, logtype_afpd,
             "dirlookup_internal(did:%u): cleaning stale target entry",
             ntohl(did));
-
-        /* If strict=0 (initial target) & directory, also clean children.
-         * If strict=1 (parent recursion), skip children to avoid cascade. */
-        if (!strict && !(stale_child->d_flags & DIRF_ISFILE)) {
-            (void)dircache_remove_children_defer(vol, stale_child);
-        }
-
-        dir_remove(vol, stale_child, 0);  /* Proactive cleanup of stale entry */
+        dir_remove_tree(vol, stale_child, 0);  /* Proactive cleanup */
     }
 
     /* Cleanup current failed attempt */
@@ -704,16 +756,20 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
         if (strict) { /* 2b */
             struct stat validate_st;
 
-            if (ostat(cfrombstr(ret->d_fullpath), &validate_st, vol_syml_opt(vol)) != 0 ||
-                    validate_st.st_ino != ret->dcache_ino) {
+            if (ostat(cfrombstr(ret->d_fullpath), &validate_st,
+                      vol_syml_opt(vol)) != 0) {
                 /* Cache is stale, clean and fall through to CNID lookup */
                 LOG(log_debug, logtype_afpd, DIRLOOKUP_LOG_FMT ": cache stale, cleaning",
                     ntohl(did));
-                dir_remove(vol, ret, 0);  /* Cleanup during strict validation */
+                dir_remove_tree(vol, ret, 0);  /* Cleanup during strict validation */
                 ret = NULL;
-            } else {
+            } else if (validate_st.st_ino == ret->dcache_ino
+                       || strict_refresh(vol, ret, &validate_st)) {
                 /* Validated, safe to use */
                 goto exit;
+            } else {
+                /* the CNID lookup below answers for the DID */
+                ret = NULL;
             }
         } else {
             /* Optimistic lookup: dircache_search_by_did() validation based on the probabilistic
@@ -929,20 +985,17 @@ struct dir *dirlookup_strict(const struct vol *vol, cnid_t did)
             "dirlookup_strict(did:%u): inode mismatch (cached:%llu, actual:%llu), path '%s' was renamed/moved",
             ntohl(did), (unsigned long long)dir->dcache_ino,
             (unsigned long long)validate_st.st_ino, cfrombstr(dir->d_fullpath));
-        goto stale;
+
+        if (!strict_refresh(vol, dir, &validate_st)) {
+            return dirlookup(vol, did);
+        }
     }
 
     /* Validation passed */
     return dir;
 stale:
-
-    /* Clean stale entries and retry via CNID. dircache_remove_children and
-     * dir_remove handle curdir recovery internally, guaranteeing curdir != NULL. */
-    if (!(dir->d_flags & DIRF_ISFILE)) {
-        (void)dircache_remove_children_defer(vol, dir);
-    }
-
-    (void)dir_remove(vol, dir, 0);  /* Proactive cleanup before retry */
+    /* Clean stale entries and retry via CNID */
+    dir_remove_tree(vol, dir, 0);  /* Proactive cleanup before retry */
     /* Retry - will now miss cache and query CNID */
     dir = dirlookup(vol, did);
 
@@ -1108,6 +1161,119 @@ void dir_free(struct dir *dir)
 }
 
 /*!
+ * @brief Tell whether an entry's path is its parent's path and its name
+ *
+ * @param[in] entry   the entry
+ * @param[in] parent  the entry's parent
+ * @returns true when the paths agree
+ */
+bool dir_path_follows(const struct dir *entry, const struct dir *parent)
+{
+    int plen = blength(parent->d_fullpath);
+    const char *ep = bdata(entry->d_fullpath);
+    const char *pp = bdata(parent->d_fullpath);
+    return ep != NULL && pp != NULL
+           && blength(entry->d_fullpath) == plen + 1 + blength(entry->d_u_name)
+           && ep[plen] == '/'
+           && memcmp(ep, pp, (size_t)plen) == 0;
+}
+
+/*!
+ * @brief Tell whether a stat that finds another inode at an entry's path can
+ *        describe the entry's object
+ *
+ * A rename moves a folder's descendants, whose cached paths name the old
+ * place until this session's deferred scan or another session's hint removes
+ * them. The path stays the entry's place while it follows the parent's and
+ * the parent's own inode is still at the parent's path; another inode there
+ * is a new object, which the CNID lookup tells from one the entry's own row
+ * moved away. Another inode at a path the cache cannot vouch for that way is
+ * another object's.
+ *
+ * @param[in] vol  the volume
+ * @param[in] dir  the entry
+ * @returns false for a path that may be stale
+ */
+static bool dir_stat_usable(const struct vol *vol, const struct dir *dir)
+{
+    const struct dir *parent;
+    struct stat pst;
+
+    if (dir->d_did == DIRDID_ROOT) {
+        return true;
+    }
+
+    if ((parent = dircache_lookup_parent(vol, dir->d_pdid)) == NULL
+            || !dir_path_follows(dir, parent)) {
+        return false;
+    }
+
+    return parent->d_did == DIRDID_ROOT
+           || (ostat(cfrombstr(parent->d_fullpath), &pst,
+                     vol_syml_opt(vol)) == 0
+               && pst.st_ino == parent->dcache_ino);
+}
+
+/*!
+ * @brief Give the object a stat describes at a held entry's path its CNID
+ *
+ * The lookup found no row for the object, and a row that matches the name
+ * with another inode goes in the lookup or in the add's own. The object gets
+ * its row as dir_add() gives a new entry its own, offered the CNID its
+ * AppleDouble metadata records for its own inode, unless the parent has no
+ * row. An add that resets the CNID table ends the session, as get_id() ends
+ * it.
+ *
+ * @param[in] vol  the volume
+ * @param[in] dir  the entry, whose parent and name are the object's
+ * @param[in] st   the stat taken at the entry's path
+ * @returns the CNID, or CNID_INVALID with errno the database's answer
+ */
+static cnid_t object_cnid(const struct vol *vol, const struct dir *dir,
+                          const struct stat *st)
+{
+    static char buf[CNID_PATH_OVERHEAD + MAXPATHLEN + 1];
+    struct adouble ad;
+    cnid_t pdid = dir->d_pdid;
+    cnid_t hint = CNID_INVALID;
+    cnid_t id;
+
+    /* a lookup may have removed the parent's row, which takes no child */
+    if (pdid != DIRDID_ROOT) {
+        AFP_CNID_START("cnid_resolve");
+        const char *ppath = cnid_resolve(vol->v_cdb, &pdid, buf, sizeof(buf));
+        AFP_CNID_DONE();
+
+        if (ppath == NULL) {
+            return CNID_INVALID;
+        }
+    }
+
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, cfrombstr(dir->d_fullpath),
+                ADFLAGS_HF | ADFLAGS_RDONLY
+                | ((dir->d_flags & DIRF_ISFILE) ? 0 : ADFLAGS_DIR)) == 0) {
+        hint = ad_getid(&ad, st->st_dev, st->st_ino, 0, vol->v_stamp);
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    AFP_CNID_START("cnid_add");
+    id = cnid_add(vol->v_cdb, st, dir->d_pdid, cfrombstr(dir->d_u_name),
+                  blength(dir->d_u_name), hint);
+    AFP_CNID_DONE();
+
+    /* the add that empties a full table reports the reset once */
+    if (id == CNID_INVALID && CNID_ERRNO() == CNID_ERR_RESET) {
+        const int err = errno;
+        cnid_volume_reset(vol);
+        errno = err;
+    }
+
+    return id;
+}
+
+/*!
  * @brief Update a cached entry in-place with selective field updates
  *
  * Modifies specified field groups on an existing cache entry while
@@ -1125,6 +1291,22 @@ void dir_free(struct dir *dir)
  *   Rename:             DCMOD_PATH | DCMOD_STAT
  *   After setfilparams: DCMOD_STAT | DCMOD_AD  (Phase 2)
  *   Stat-only refresh:  DCMOD_STAT
+ *   Held entry:         DCMOD_STAT | DCMOD_KEEP
+ *
+ * A stat showing another inode drops the AppleDouble, resource fork and EA
+ * caches and asks the database for the object at the path. The entry then
+ * holds the object: its offspring count, listing table and children go, and
+ * a row other than the entry's re-keys it. When no row names the object, an
+ * entry no caller holds goes with its children, and one that curdir or a
+ * DCMOD_KEEP caller holds stays: the object gets its row as dir_add() gives
+ * a new entry its own, unless the parent has no row. A database that could
+ * not answer ends an unheld entry, and a held one that gets no row keeps its
+ * old inode, to be asked again. The volume root keeps DID 2, its children,
+ * its offspring count and its listing table. An entry of the other kind than
+ * the object at its path goes with its children, and with its row where the
+ * database answers that the row still names that path with another inode
+ * than the object's. A stat that shows another inode at a path a rename left
+ * stale is not taken: the entry keeps its fields, caches and row.
  *
  * @param[in]     vol   Volume (required)
  * @param[in,out] dir   Cache entry to update (required)
@@ -1261,7 +1443,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                 LOG(log_error, logtype_afpd,
                     "dir_modify: reindex failed, removing entry did:%u",
                     ntohl(dir->d_did));
-                dir_remove(vol, dir, 0);  /* Clean removal from ALL indexes */
+                dir_remove_tree(vol, dir, 0);  /* Clean removal from ALL indexes */
                 return -1;
             }
 
@@ -1272,14 +1454,49 @@ int dir_modify(const struct vol *vol, struct dir *dir,
         }
     }
 
+    /* Detect external changes before updating cached stat fields */
+    const bool ino_changed = args->st && dir->dcache_ino != 0
+                             && dir->dcache_ino != args->st->st_ino;
+    const bool take_stat = (args->flags & DCMOD_STAT) && args->st
+                           && (!ino_changed || dir_stat_usable(vol, dir));
+
     /* --- DCMOD_STAT: Refresh stat fields --- */
-    if ((args->flags & DCMOD_STAT) && args->st) {
-        /* Detect external changes before updating cached stat fields */
-        bool ino_changed = (dir->dcache_ino != 0 &&
-                            dir->dcache_ino != args->st->st_ino);
+    if (take_stat) {
+        if ((dir->d_flags & DIRF_ISFILE) ? S_ISDIR(args->st->st_mode)
+                : !S_ISDIR(args->st->st_mode)) {
+            char *name = cfrombstr(dir->d_u_name);
+            const size_t len = blength(dir->d_u_name);
+            /* the lookup drops a row that still names the path with the
+             * old object's inode, so that the DID no longer resolves to the
+             * object of the other kind. When the new object has a row of
+             * its own, SQLite keeps the path's, which then goes by its DID.
+             * A row a rename moved stays, and so does one whose inode the
+             * new object reused */
+            AFP_CNID_START("cnid_lookup");
+            cnid_t id = cnid_lookup(vol->v_cdb, args->st, dir->d_pdid, name,
+                                    len);
+            AFP_CNID_DONE();
+
+            if (id == CNID_INVALID && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+                AFP_CNID_START("cnid_get");
+                id = cnid_get(vol->v_cdb, dir->d_pdid, name, len);
+                AFP_CNID_DONE();
+
+                if (id == dir->d_did) {
+                    AFP_CNID_START("cnid_delete");
+                    cnid_delete(vol->v_cdb, dir->d_did);
+                    AFP_CNID_DONE();
+                }
+            }
+
+            dir_remove_tree(vol, dir, 0);
+            return 0;
+        }
+
         bool ctime_changed = (dir->dcache_ctime != 0 &&
                               dir->dcache_ctime != args->st->st_ctime);
         bool keep_old_ino = false;
+        bool replaced = false;
 
         /* the AppleDouble state goes with any change of the object:
          * rfork_cache_free() reads dcache_rlen for the budget, so the
@@ -1305,74 +1522,76 @@ int dir_modify(const struct vol *vol, struct dir *dir,
              * object. Needed here because the entry survives in place
              * when the CNID is unchanged (no dircache_remove runs). */
             pfd_purge(vol->v_vid, dir->d_did);
-            /* Refresh CNID from database */
-            cnid_t new_cnid = CNID_INVALID;
-            AFP_CNID_START("cnid_lookup");
-            new_cnid = cnid_lookup(vol->v_cdb, args->st, dir->d_pdid,
-                                   cfrombstr(dir->d_u_name),
-                                   blength(dir->d_u_name));
-            AFP_CNID_DONE();
 
-            if (new_cnid == CNID_INVALID) {
-                const char *why = "no CNID for new inode";
+            if (dir->d_did == DIRDID_ROOT) {
+                /* the volume root, named by no row, keeps DID 2 */
+                LOG(log_info, logtype_afpd,
+                    "dir_modify: the volume root's inode changed "
+                    "(ino:%llu->%llu)", (unsigned long long)dir->dcache_ino,
+                    (unsigned long long)args->st->st_ino);
+            } else {
+                /* a held entry stays, so the object at its path needs a
+                 * CNID */
+                const bool held = dir == curdir
+                                  || (args->flags & DCMOD_KEEP) != 0;
+                AFP_CNID_START("cnid_lookup");
+                cnid_t new_cnid = cnid_lookup(vol->v_cdb, args->st,
+                                              dir->d_pdid,
+                                              cfrombstr(dir->d_u_name),
+                                              blength(dir->d_u_name));
+                AFP_CNID_DONE();
 
-                if (CNID_ERRNO_IS_BACKEND_FAILURE() && dir != curdir) {
-                    /* The next access misses the cache, re-stats, and retries
-                     * the CNID refresh once the backend recovers. Keeping the
-                     * entry instead would serve its pre-change stat from the
-                     * cache-hit path, which never re-stats. */
-                    LOG(log_debug, logtype_afpd,
-                        "dir_modify: CNID backend could not answer for did:%u, "
-                        "removing entry", ntohl(dir->d_did));
-                    dir_remove(vol, dir, 0);
-                    return 0;
-                } else if (CNID_ERRNO_IS_BACKEND_FAILURE()) {
-                    /* curdir must stay valid. The stat refresh below keeps the
-                     * served metadata current, but recording the new inode
-                     * against the old CNID would consume the ino_changed
-                     * trigger that brings us back here */
+                if (new_cnid == CNID_INVALID && held
+                        && CNID_ERRNO() == CNID_ERR_NOTFOUND) {
+                    new_cnid = object_cnid(vol, dir, args->st);
+                }
+
+                if (new_cnid == CNID_INVALID) {
+                    if (!held) {
+                        /* The next access misses the cache, stats and asks
+                         * the database again */
+                        LOG(log_debug, logtype_afpd,
+                            "dir_modify: no CNID for the object at did:%u "
+                            "(errno 0x%x), removing the entry",
+                            ntohl(dir->d_did), CNID_ERRNO());
+                        dir_remove_tree(vol, dir, 0);
+                        return 0;
+                    }
+
+                    /* the old inode brings the next refresh back here; the
+                     * stat below keeps the served metadata current */
                     keep_old_ino = true;
                     LOG(log_debug, logtype_afpd,
-                        "dir_modify: CNID backend could not answer for "
-                        "curdir did:%u, keeping entry", ntohl(dir->d_did));
-                } else if (dir == curdir) {
-                    /* Do not remove curdir — callers rely on it being valid.
-                     * AD cache already invalidated (AD_RLEN_UNKNOWN above).
-                     * The DID re-index below runs only for a valid CNID, as
-                     * CNID_INVALID is DID 0. */
-                    LOG(log_error, logtype_afpd,
-                        "dir_modify: inode change on curdir! — %s, "
-                        "keeping stale entry (did:%u, ino:%llu->%llu)",
-                        why, ntohl(dir->d_did),
-                        (unsigned long long)dir->dcache_ino,
-                        (unsigned long long)args->st->st_ino);
+                        "dir_modify: no CNID for the object at held did:%u "
+                        "(errno 0x%x), keeping the entry",
+                        ntohl(dir->d_did), CNID_ERRNO());
                 } else {
-                    /* No CNID. Remove stale entry. */
-                    LOG(log_debug, logtype_afpd,
-                        "dir_modify: inode change — %s, "
-                        "removing stale entry did:%u (ino:%llu->%llu)",
-                        why, ntohl(dir->d_did),
-                        (unsigned long long)dir->dcache_ino,
-                        (unsigned long long)args->st->st_ino);
-                    dir_remove(vol, dir, 0);
-                    return 0;
-                }
-            } else if (new_cnid != dir->d_did) {
-                LOG(log_debug, logtype_afpd,
-                    "dir_modify: inode change — CNID refreshed "
-                    "did:%u->%u (ino:%llu->%llu)",
-                    ntohl(dir->d_did), ntohl(new_cnid),
-                    (unsigned long long)dir->dcache_ino,
-                    (unsigned long long)args->st->st_ino);
-                /* Remove from all indexes, update DID, re-add */
-                dircache_remove(vol, dir,
-                                DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
-                dir->d_did = new_cnid;
+                    /* the offspring count, the listing table and the
+                     * children were the old object's; the children go once
+                     * the entry is at the stat */
+                    replaced = true;
+                    dir->d_ctime = 0;
+                    dir->d_flags &= ~DIRF_CNID;
+                    cnid_dir_forget(vol->v_cdb, dir->d_did);
 
-                if (dircache_add(vol, dir) != 0) {
-                    LOG(log_error, logtype_afpd,
-                        "dir_modify: DID re-index failed for did:%u",
-                        ntohl(new_cnid));
+                    if (new_cnid != dir->d_did) {
+                        LOG(log_debug, logtype_afpd,
+                            "dir_modify: inode change — CNID refreshed "
+                            "did:%u->%u (ino:%llu->%llu)",
+                            ntohl(dir->d_did), ntohl(new_cnid),
+                            (unsigned long long)dir->dcache_ino,
+                            (unsigned long long)args->st->st_ino);
+                        /* Remove from all indexes, update DID, re-add */
+                        dircache_remove(vol, dir,
+                                        DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
+                        dir->d_did = new_cnid;
+
+                        if (dircache_add(vol, dir) != 0) {
+                            LOG(log_error, logtype_afpd,
+                                "dir_modify: DID re-index failed for did:%u",
+                                ntohl(new_cnid));
+                        }
+                    }
                 }
             }
         }
@@ -1402,6 +1621,11 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             (unsigned long long)dir->dcache_ino,
             (unsigned int)dir->dcache_mode,
             (long long)dir->dcache_size);
+
+        /* a scan that runs at once finds the entry whole here */
+        if (replaced) {
+            dircache_remove_children_defer(vol, dir);
+        }
     }
 
     /* --- DCMOD_AD: Refresh AD fields from adouble --- */
@@ -1424,8 +1648,7 @@ int dir_modify(const struct vol *vol, struct dir *dir,
     /* Auto-recompute mdate ONLY if DCMOD_AD was NOT also set
      * (ad_store_to_cache already recomputed mdate from fresh AD + stat).
      * This avoids duplicate mdate computation when both flags are set. */
-    if ((args->flags & DCMOD_STAT) && args->st
-            && !(args->flags & DCMOD_AD) && dir->dcache_rlen >= 0) {
+    if (take_stat && !(args->flags & DCMOD_AD) && dir->dcache_rlen >= 0) {
         /* Maintains invariant: dcache_filedatesi[AD_DATE_MODIFY]
          * always contains max(ad_mdate, dcache_mtime) in network byte order. */
         uint32_t ad_mdate;
@@ -1516,7 +1739,7 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
             "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
             ntohl(cdir->d_did), cfrombstr(dir->d_fullpath));
-        (void)dir_remove(vol, cdir, 0);  /* Proactive cleanup of stray */
+        dir_remove_tree(vol, cdir, 0);  /* Proactive cleanup of stray */
         /* dir_remove() queued the stray on invalid_dircache_entries; the
          * exit block below must not free it a second time */
         cdir = NULL;
@@ -1727,10 +1950,11 @@ int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
         LOG(log_debug, logtype_afpd,
             "dir_remove(did:%u): curdir was removed, attempting recovery",
             ntohl(saved_curdir_did));
-        /* Try to recover via CNID - succeeds if directory still exists */
+        /* Try to recover via CNID - succeeds if directory still exists; a
+         * file the DID's row now leads to cannot be curdir */
         struct dir *recovered = dirlookup(vol, saved_curdir_did);
 
-        if (recovered) {
+        if (recovered && !(recovered->d_flags & DIRF_ISFILE)) {
             curdir = recovered;
             LOG(log_debug, logtype_afpd,
                 "dir_remove: curdir recovery SUCCESS (did:%u), path: \"%s\"",
@@ -1756,7 +1980,8 @@ int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
         /* Fallback hierarchy: Try parent first, otherwise volume root */
         struct dir *fallback = dirlookup_strict(vol, dir->d_pdid);
 
-        if (fallback && fallback != dir) {
+        if (fallback && fallback != dir
+                && !(fallback->d_flags & DIRF_ISFILE)) {
             /* Parent exists - use it */
             curdir = fallback;
             LOG(log_debug, logtype_afpd,
@@ -1776,6 +2001,30 @@ int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
 
     /* Success - curdir unchanged or not affected */
     return 0;
+}
+
+/*!
+ * @brief Remove an entry from the cache, a folder's with its children
+ *
+ * The volume root and its parent stay with their children, as dir_remove()
+ * keeps them, and an entry already removed is left as it is. curdir stays
+ * valid: dir_remove() recovers it, and the children scan keeps it or looks it
+ * up again.
+ *
+ * @param[in]     vol             volume pointer
+ * @param[in,out] dir             entry to remove
+ * @param[in]     report_invalid  as for dir_remove()
+ */
+void dir_remove_tree(const struct vol *vol, struct dir *dir,
+                     int report_invalid)
+{
+    if (dir->d_did == DIRDID_ROOT || dir->d_did == DIRDID_ROOT_PARENT
+            || dir->d_did == CNID_INVALID) {
+        return;
+    }
+
+    dir_remove(vol, dir, report_invalid);
+    dircache_remove_children_defer(vol, dir);
 }
 
 /*!
@@ -1917,12 +2166,14 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                 }
 
                 if (movecwd(vol, dir) < 0) {
-                    dir_remove(vol, dir, 0);  /* Cleanup after movecwd failure */
+                    dir_remove_tree(vol, dir, 0);  /* Cleanup after movecwd failure */
                     return NULL;
                 }
 
                 /* Update dir after movecwd (may invalidate during stale cleanup) */
                 dir = curdir;
+                /* the stat taken is the named folder's, not this one's */
+                ret.st_valid = 0;
                 data++;
                 len--;
             }
@@ -2062,7 +2313,11 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             /* Search the cache */
             size_t unamelen = strnlen(ret.u_name, CNID_MAX_PATH_LEN);
             /* 14 */
-            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen);
+            /* of_stat() took the folder's stat, which dir_at_stat() gives
+             * the entry */
+            cdir = dircache_search_by_name_unsampled(vol, dir, ret.u_name,
+                                                     unamelen);
+            cdir = dir_at_stat(vol, cdir, &ret.st);
 
             if (cdir == NULL) {
                 /* Not in cache, create one */
@@ -2223,14 +2478,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
         if (ret != 1 && errno == ENOENT) {
             LOG(log_debug, logtype_afpd,
                 "movecwd: stale dircache entry, cleaning and retrying via CNID");
-
-            /* Clean cache - dircache_remove_children and dir_remove handle curdir recovery */
-            if (!(dir->d_flags & DIRF_ISFILE)) {
-                (void)dircache_remove_children_defer(vol, dir);
-            }
-
-            (void)dir_remove(vol, dir, 0);  /* Self-healing cleanup */
-            /* Both functions guarantee curdir != NULL (recovered or vol->v_root/rootParent) */
+            dir_remove_tree(vol, dir, 0);  /* Self-healing cleanup */
 
             /* Retry via CNID with strict validation */
             if ((dir = dirlookup_strict(vol, saved_did)) != NULL) {
@@ -2406,44 +2654,59 @@ void offcnt_log_stats(const char *username)
 }
 
 /*!
- * @brief Bring a dircache entry's stat up to a stat taken from disk
+ * @brief Bring a dircache entry to a stat taken from disk
  *
- * Same inode only: an inode change may make dir_modify() re-key or drop
- * the entry, which is left to validation and the AppleDouble lookup.
+ * The caller holds the entry, so dir_modify() keeps one that the stat alone
+ * would let go.
  *
  * @param[in]     vol  the volume
  * @param[in,out] dir  the entry
- * @param[in]     st   the stat taken from disk for the entry's object
+ * @param[in]     st   the stat taken from disk at the entry's path
+ * @returns 0, or -1 when the entry does not hold the stat under its DID: the
+ *          DID the caller's request named has no object it can use
  */
-void dir_stat_refresh(const struct vol *vol, struct dir *dir, struct stat *st)
+int dir_stat_refresh(const struct vol *vol, struct dir *dir, struct stat *st)
 {
-    if (dir->dcache_ino != st->st_ino || dir->dcache_ctime == st->st_ctime) {
-        return;
+    return dir_takes_stat(vol, dir, st, DCMOD_KEEP) ? 0 : -1;
+}
+
+/*!
+ * @brief A cached entry, brought to the stat the request took at its path
+ *
+ * An entry whose inode or ctime is not the stat's takes the stat as
+ * dir_modify() gives it: it can stay, be re-keyed, or go, in which case the
+ * caller builds the object's own entry.
+ *
+ * @param[in]     vol   the volume
+ * @param[in,out] cdir  the entry, or NULL
+ * @param[in]     st    the stat of the object at the entry's path
+ * @returns the entry, or NULL for none
+ */
+struct dir *dir_at_stat(const struct vol *vol, struct dir *cdir,
+                        struct stat *st)
+{
+    if (cdir == NULL) {
+        return NULL;
     }
 
-    dir_modify(vol, dir, &(struct dir_modify_args) {
-        .flags = DCMOD_STAT,
-        .st = st
-    });
+    dir_takes_stat(vol, cdir, st, 0);
+    return cdir->d_did == CNID_INVALID ? NULL : cdir;
 }
 
 /*!
  * @brief Cache the offspring count of a directory together with its ctime
  *
- * On the same inode the entry is brought to the stat first, so the count
- * and the entry agree on the ctime. The cached count stays valid while the
+ * The callers have brought the entry to the stat, so the count and the
+ * entry agree on the ctime. The cached count stays valid while the
  * directory ctime matches. The call also clears DIRF_CNID, because a plain
  * count does not prove that the CNID database holds every entry.
  *
- * @param[in]     vol    the volume
  * @param[in,out] dir    directory to update
  * @param[in]     st     fresh stat of the directory
  * @param[in]     count  number of visible entries
  */
-void setdiroffcnt(const struct vol *vol, struct dir *dir, struct stat *st,
-                  uint32_t count)
+void setdiroffcnt(struct dir *dir, const struct stat *st, uint32_t count)
 {
-    dir_stat_refresh(vol, dir, st);
     dir->d_offcnt = count;
     dir->d_ctime = st->st_ctime;
     dir->d_flags &= ~DIRF_CNID;
@@ -2484,7 +2747,7 @@ static uint16_t offcnt_serve(const struct vol *vol, struct dir *dir,
         }
 
         offcnt_stat.entries += count;
-        setdiroffcnt(vol, dir, st, count);
+        setdiroffcnt(dir, st, count);
     }
 
     return (uint16_t)MIN(dir->d_offcnt, 0xffff);
@@ -2529,7 +2792,8 @@ int dirreenumerate(struct dir *dir, struct stat *st)
  * @param[in]  dir     dircache entry of the directory
  * @param[out] buf     reply buffer receiving the parameters
  * @param[out] buflen  receives the bytes written
- * @returns AFP_OK, or AFPERR_BITMAP for an unknown bit
+ * @returns AFP_OK, AFPERR_NOOBJ when the DID names no folder at the path, or
+ *          AFPERR_BITMAP for an unknown bit
  */
 int getdirparams(const AFPObj *obj,
                  const struct vol *vol,
@@ -2553,8 +2817,10 @@ int getdirparams(const AFPObj *obj,
 
     if (s_path->st_errno == 0) {
         /* a valid stat: the entry follows it before the AppleDouble lookup
-         * and the count store */
-        dir_stat_refresh(vol, dir, st);
+         * and the count store, or the DID names no folder at the path */
+        if (dir_stat_refresh(vol, dir, st) < 0) {
+            return AFPERR_NOOBJ;
+        }
     }
 
     if (bitmap & ((1 << DIRPBIT_ATTR)  |
@@ -3816,19 +4082,13 @@ int deletecurdir(struct vol *vol)
         goto delete_done;
     }
 
-    /* For directory deletion: prune all child dircache entries */
-    if (!(fdir->d_flags & DIRF_ISFILE)) {
-        dircache_remove_children_defer(vol, fdir);
-    }
-
     /* Save DID before dir_remove() frees fdir */
     cnid_t fdir_did = fdir->d_did;
     /* Delete the directory's CNID */
     AFP_CNID_START("cnid_delete");
     cnid_delete(vol->v_cdb, fdir_did);
     AFP_CNID_DONE();
-    /* Remove from dircache */
-    dir_remove(vol, fdir, 0);  /* User-initiated delete, not invalid on use */
+    dir_remove_tree(vol, fdir, 0);  /* User-initiated delete, not invalid on use */
     /* Send hint to afpd siblings — dir deleted, purge children in sibling caches */
     ipc_send_cache_hint(AFPobj, vol->v_vid, fdir_did, CACHE_HINT_DELETE_CHILDREN);
 delete_done:
