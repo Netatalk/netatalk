@@ -1748,9 +1748,8 @@ static int check_acl_access(const AFPObj *obj,
      * 3. Filesystem ctime matches cached ctime (no external permission changes)
      * 4. Same inode as cached (the entry still describes this directory)
      */
-    if (is_dir && (curdir->d_rights_cache != 0xffffffff) &&
-            (curdir->dcache_ino == st.st_ino) &&
-            (curdir->dcache_ctime == st.st_ctime)) {
+    if (is_dir && (curdir->d_rights_cache != 0xffffffff)
+            && !dir_stat_differs(curdir, &st)) {
         /* Cache is valid - use cached rights */
         allowed_rights = curdir->d_rights_cache;
         LOG(log_debug, logtype_afpd,
@@ -1766,8 +1765,14 @@ static int check_acl_access(const AFPObj *obj,
         }
 
         if (is_dir) {
-            /* the entry follows the stat the rights are computed from */
-            dir_stat_refresh(vol, curdir, &st);
+            /* the entry follows the stat the rights come from; else the DID
+             * names no folder at the path, or the database could not answer
+             * for the folder there */
+            const int err = dir_stat_refresh(vol, curdir, &st);
+
+            if (err != AFP_OK) {
+                EC_EXIT_STATUS(err);
+            }
         }
 
         EC_ZERO_LOG(acl_rights_of(obj, path, &st, &allowed_rights));
@@ -1855,7 +1860,7 @@ EC_CLEANUP:
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
  * @returns AFP_OK when the rights hold, AFPERR_ACCESS when they do not,
- *          AFPERR_NOOBJ, or AFPERR_PARAM
+ *          AFPERR_NOOBJ, AFPERR_MISC, or AFPERR_PARAM
  */
 int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                size_t *rbuflen)

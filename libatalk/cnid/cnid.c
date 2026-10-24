@@ -214,8 +214,9 @@ static cnid_t valide(cnid_t id)
     return id;
 }
 
-/* folder tables a database keeps, one per listing enumerate() saves */
-#define DIRTABS 8
+/* folder tables a database keeps: one per listing enumerate() saves, and one
+ * for the volume root's listing, which no slot keeps */
+#define DIRTABS 9
 
 enum dirtab_state { DIRTAB_FREE, DIRTAB_ARMED, DIRTAB_READY, DIRTAB_OFF };
 

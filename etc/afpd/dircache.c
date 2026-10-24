@@ -1371,8 +1371,8 @@ static uint8_t gone_event_for(const struct dir *dir)
  *
  * One hint message saves every sibling afpd a separate full-path stat. The
  * hint reports the evidence. A recreated object of the same name does no
- * harm, because hints only invalidate and receivers rebuild. The call counts
- * the expunge as a cache miss.
+ * harm, because hints only invalidate and receivers rebuild. A folder's
+ * children leave with it. The call counts the expunge as a cache miss.
  *
  * @param[in]     vol   volume of the entry
  * @param[in,out] cdir  entry to expunge, invalid afterwards
@@ -1383,21 +1383,22 @@ static void validation_expunge_and_hint(const struct vol *vol,
     /* Capture before dir_remove invalidates d_did */
     cnid_t gone_did = cdir->d_did;
     uint8_t gone_event = gone_event_for(cdir);
-    (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
+    dir_remove_tree(vol, cdir, 1);  /* Invalid, Expunged during validation */
     ipc_send_cache_hint(AFPobj, vol->v_vid, gone_did, gone_event);
     dircache_stat.expunged++;
     dircache_stat.misses++;  /* Count expunge as miss */
 }
 
 /*!
- * @brief Refresh an entry whose inode or ctime changed and tell the sibling
+ * @brief Bring an entry to a fresh stat of its object and tell the sibling
  * afpd processes
  *
- * An inode change means another object replaced the entry. The call then
- * sends CACHE_HINT_REFRESH under the current DID. When dir_modify gave
- * the entry a new DID, a second hint goes out under the old DID that siblings
- * still cache. When dir_modify evicted the entry instead, the gone event of
- * the entry goes out under the old DID.
+ * An entry that takes another inode now holds the object that replaced the
+ * old one. The call then sends CACHE_HINT_REFRESH under the current DID.
+ * When dir_modify gave the entry a new DID, a second hint goes out under the
+ * old DID that siblings still cache. When dir_modify evicted the entry
+ * instead, the gone event of the entry goes out under the old DID. A stat
+ * the entry does not take sends nothing.
  *
  * A ctime-only change sends nothing. Fork writes advance ctime on every
  * flush, and a hint per write would rebuild the sibling AppleDouble and
@@ -1409,8 +1410,8 @@ static void validation_expunge_and_hint(const struct vol *vol,
  * @param[in]     st    fresh stat of the entry
  * @returns 0 when the entry survived, -1 when dir_modify evicted it
  */
-static int validation_refresh_and_hint(const struct vol *vol,
-                                       struct dir *cdir, struct stat *st)
+int dircache_refresh(const struct vol *vol, struct dir *cdir,
+                     struct stat *st)
 {
     /* Capture before dir_modify may invalidate or re-key the entry */
     cnid_t old_did = cdir->d_did;
@@ -1422,15 +1423,14 @@ static int validation_refresh_and_hint(const struct vol *vol,
         .st = st
     });
 
-    /* dir_modify may evict the entry (inode change + CNID miss) */
+    /* dir_modify may evict the entry (the other kind at its path, or another
+     * inode with no CNID for the object) */
     if (cdir->d_did == CNID_INVALID) {
         ipc_send_cache_hint(AFPobj, vol->v_vid, old_did, gone_event);
-        dircache_stat.expunged++;
-        dircache_stat.misses++;
         return -1;
     }
 
-    if (ino_changed) {
+    if (ino_changed && cdir->dcache_ino == st->st_ino) {
         ipc_send_cache_hint(AFPobj, vol->v_vid, cdir->d_did,
                             CACHE_HINT_REFRESH);
 
@@ -1439,6 +1439,27 @@ static int validation_refresh_and_hint(const struct vol *vol,
             ipc_send_cache_hint(AFPobj, vol->v_vid, old_did,
                                 CACHE_HINT_REFRESH);
         }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Refresh an entry whose inode or ctime validation found changed
+ *
+ * @param[in]     vol   volume of the entry
+ * @param[in,out] cdir  entry to refresh
+ * @param[in]     st    fresh stat of the entry
+ * @returns 0 when the entry survived, -1 when it was evicted, counted as an
+ *          expunged miss
+ */
+static int validation_refresh_and_hint(const struct vol *vol,
+                                       struct dir *cdir, struct stat *st)
+{
+    if (dircache_refresh(vol, cdir, st) != 0) {
+        dircache_stat.expunged++;
+        dircache_stat.misses++;
+        return -1;
     }
 
     return 0;
@@ -1481,18 +1502,25 @@ struct dir *dircache_lookup_did(const struct vol *vol, cnid_t did)
 }
 
 /*!
- * @brief Look up a directory entry by DID for pfd_cache parent resolution
+ * @brief Look up a directory entry by DID for parent resolution
  *
  * A parent is a directory, and a ghost would let the pfd sync test pass
- * against stale identity, so dircache_lookup_did skips it.
+ * against stale identity, so dircache_lookup_did skips it. The volume root
+ * is never in the hash, but always live on the volume.
  *
  * @param[in] vol  volume of the entry
  * @param[in] did  directory ID
- * @returns the entry, or NULL for an invalid DID, a miss, a ghost, or a file
+ * @returns the entry, the volume root's for DIRDID_ROOT, or NULL for an
+ *          invalid DID, a miss, a ghost, or a file
  */
 struct dir *dircache_lookup_parent(const struct vol *vol, cnid_t did)
 {
+    if (did == DIRDID_ROOT) {
+        return vol->v_root;
+    }
+
     struct dir *d = dircache_lookup_did(vol, did);
+
     return d != NULL && !(d->d_flags & DIRF_ISFILE) ? d : NULL;
 }
 
@@ -1583,7 +1611,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
              * This is guaranteed on all Netatalk target platforms: Linux
              * (ext4/XFS/Btrfs), macOS (APFS/HFS+), FreeBSD/NetBSD/OpenBSD
              * (UFS/FFS/ZFS) — all implement POSIX ctime semantics. */
-            if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
+            if (dir_stat_differs(cdir, &st)) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(cnid:%u): {modified:\"%s\"} (ino:%llu->%llu, ctime:%ld->%ld)",
                     ntohl(cnid), cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)",
@@ -1594,17 +1622,22 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                     return NULL;
                 }
 
-                /* Entry refreshed in-place — fall through to ARC handling */
+                /* a re-keyed entry answers the object's CNID; the DID asked
+                 * for resolves through its own row */
+                if (cdir->d_did != cnid) {
+                    dircache_stat.misses++;
+                    return NULL;
+                }
+
+                /* Entry kept under its DID — fall through to ARC handling */
+            } else {
+                cdir->dcache_mode = st.st_mode;
+                cdir->dcache_mtime = st.st_mtime;
+                cdir->dcache_uid = st.st_uid;
+                cdir->dcache_gid = st.st_gid;
+                cdir->dcache_size = st.st_size;
             }
 
-            /* Refresh non-ctime/inode stat fields from fresh stat data.
-             * Redundant after dir_modify (mismatch path) but needed
-             * when ctime/inode matched (validation-passed path). */
-            cdir->dcache_mode = st.st_mode;
-            cdir->dcache_mtime = st.st_mtime;
-            cdir->dcache_uid = st.st_uid;
-            cdir->dcache_gid = st.st_gid;
-            cdir->dcache_size = st.st_size;
             LOG(log_maxdebug, logtype_afpd,
                 "dircache(cnid:%u): {validated: path:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
@@ -1660,13 +1693,12 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
  * @param[in] dir      directory
  * @param[in] name     name (server side encoding)
  * @param[in] len      strlen of name
+ * @param[in] sample   true to take part in the sampled validation
  *
  * @returns pointer to struct dir if found in cache, else NULL
  */
-struct dir *dircache_search_by_name(const struct vol *vol,
-                                    const struct dir *dir,
-                                    char *name,
-                                    size_t len)
+static struct dir *search_by_name(const struct vol *vol, const struct dir *dir,
+                                  char *name, size_t len, bool sample)
 {
     struct dir *cdir = NULL;
     struct dir key;
@@ -1696,7 +1728,7 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     if (cdir) {
         /* Periodic validation to detect external filesystem changes.
          * Internal netatalk operations invalidate cache explicitly via dir_remove(). */
-        if (should_validate_cache_entry()) {
+        if (sample && should_validate_cache_entry()) {
             /* Check if file still exists */
             if (pfd_ostat(vol, cdir, &st, vol_syml_opt(vol)) != 0) {
                 LOG(log_debug, logtype_afpd,
@@ -1716,7 +1748,7 @@ struct dir *dircache_search_by_name(const struct vol *vol,
              * This is guaranteed on all Netatalk target platforms: Linux
              * (ext4/XFS/Btrfs), macOS (APFS/HFS+), FreeBSD/NetBSD/OpenBSD
              * (UFS/FFS/ZFS) — all implement POSIX ctime semantics. */
-            if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
+            if (dir_stat_differs(cdir, &st)) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(did:%u,\"%s\"): {modified} (ino:%llu->%llu, ctime:%ld->%ld)",
                     ntohl(dir->d_did), name,
@@ -1727,17 +1759,14 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                     return NULL;
                 }
 
-                /* Entry refreshed in-place — fall through to ARC handling */
+                /* Entry kept under its name — fall through to ARC handling */
+            } else {
+                cdir->dcache_mode = st.st_mode;
+                cdir->dcache_mtime = st.st_mtime;
+                cdir->dcache_uid = st.st_uid;
+                cdir->dcache_gid = st.st_gid;
+                cdir->dcache_size = st.st_size;
             }
-
-            /* Refresh non-ctime/inode stat fields from fresh stat data.
-             * Redundant after dir_modify (mismatch path) but needed
-             * when ctime/inode matched (validation-passed path). */
-            cdir->dcache_mode = st.st_mode;
-            cdir->dcache_mtime = st.st_mtime;
-            cdir->dcache_uid = st.st_uid;
-            cdir->dcache_gid = st.st_gid;
-            cdir->dcache_size = st.st_size;
         }
 
         /* ARC mode: Handle cache hits or ghost hits */
@@ -1775,6 +1804,66 @@ struct dir *dircache_search_by_name(const struct vol *vol,
             "dircache(did:%u,\"%s\"): {not in cache}",
             ntohl(dir->d_did), name);
         dircache_stat.misses++;
+    }
+
+    return cdir;
+}
+
+/*!
+ * @brief Search the cache by parent and name
+ *
+ * @param[in] vol   volume
+ * @param[in] dir   directory
+ * @param[in] name  name (server side encoding)
+ * @param[in] len   strlen of name
+ * @returns the entry, validated when the sample falls due, or NULL
+ */
+struct dir *dircache_search_by_name(const struct vol *vol,
+                                    const struct dir *dir,
+                                    char *name,
+                                    size_t len)
+{
+    return search_by_name(vol, dir, name, len, true);
+}
+
+/*!
+ * @brief Search the cache by parent and name, and bring the entry found to a
+ *        stat of the path, which no sampled validation stats again
+ *
+ * The caller took the stat in the parent's folder, which it entered at the
+ * parent's cached path. The entry takes the stat as dir_modify() gives it:
+ * it can stay, be re-keyed, or go, in which case the caller builds the
+ * object's own entry. An entry that holds the stat's inode takes the path
+ * under its parent's, where a rename of an ancestor left its own stale. An
+ * entry with a stale path, for which the stat shows another inode, keeps its
+ * fields, so the caller compares its inode with the stat's.
+ *
+ * @param[in]     vol   volume
+ * @param[in]     dir   directory
+ * @param[in]     name  name (server side encoding)
+ * @param[in]     len   strlen of name
+ * @param[in]     st    the stat of the object at the path
+ * @returns the entry, which may not hold the stat, or NULL for none
+ */
+struct dir *dircache_search_at_stat(const struct vol *vol,
+                                    const struct dir *dir, char *name,
+                                    size_t len, struct stat *st)
+{
+    struct dir *cdir = search_by_name(vol, dir, name, len, false);
+
+    if (cdir == NULL) {
+        return NULL;
+    }
+
+    dir_takes_stat(vol, cdir, st);
+
+    if (cdir->d_did == CNID_INVALID) {
+        return NULL;
+    }
+
+    /* a descriptor opened at the stale path may hold whatever sits there */
+    if (cdir->dcache_ino == st->st_ino && pfd_repair_path(cdir, dir)) {
+        pfd_purge(cdir->d_vid, cdir->d_did);
     }
 
     return cdir;
@@ -2199,7 +2288,9 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
 
     /* Safe now the scan is over: this re-enters dircache_add() */
     if (!curdir && saved_curdir_did != CNID_INVALID) {
-        curdir = dirlookup(vol, saved_curdir_did);
+        struct dir *found = dirlookup(vol, saved_curdir_did);
+        /* a file the DID's row now leads to cannot be curdir */
+        curdir = found && !(found->d_flags & DIRF_ISFILE) ? found : NULL;
     }
 
     if (!curdir) {
@@ -2957,10 +3048,12 @@ void dircache_reset_validation_counter(void)
  * The lookup uses hash_lookup on the DID index, because
  * dircache_search_by_did drops file entries and hints cover files too.
  * CACHE_HINT_REFRESH stats the entry and refreshes it with dir_modify, or
- * removes it when the stat fails. CACHE_HINT_DELETE removes the entry.
- * CACHE_HINT_DELETE_CHILDREN defers removing the children and then refreshes
- * or removes the entry itself. A miss still purges a pfd slot for the
- * directory events.
+ * removes it with its children when the stat fails. CACHE_HINT_DELETE
+ * removes the entry. CACHE_HINT_DELETE_CHILDREN stats the entry too: a
+ * failed stat removes it with its children, else dir_modify refreshes it and
+ * the children's removal is deferred where the entry keeps its inode, as
+ * dir_modify defers it for one that takes another. A miss still purges a pfd
+ * slot for the directory events.
  *
  * CACHE_HINT_VOLUME_RESET matches an open volume by its CNID tag and ends the
  * session with SIGTERM, so the client reconnects to the rebuilt CNID table.
@@ -3101,7 +3194,7 @@ void process_cache_hints(AFPObj *obj)
              * DCMOD_NO_PROMOTE prevents ARC promotion from cross-process hints. */
             if (ostat(cfrombstr(entry->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
                 /* Entry gone or renamed — old path invalid, remove from cache */
-                dir_remove(vol, entry, 0);
+                dir_remove_tree(vol, entry, 0);
             } else {
                 dir_modify(vol, entry, &(struct dir_modify_args) {
                     .flags = DCMOD_STAT | DCMOD_AD_INV | DCMOD_NO_PROMOTE,
@@ -3116,20 +3209,20 @@ void process_cache_hints(AFPObj *obj)
             break;
 
         case CACHE_HINT_DELETE_CHILDREN:
-
-            /* Remove all children first, then handle parent entry */
-            if (!(entry->d_flags & DIRF_ISFILE)) {
-                dircache_remove_children_defer(vol, entry);
-            }
-
-            /* Then remove or refresh the parent itself */
             if (ostat(cfrombstr(entry->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
-                dir_remove(vol, entry, 0);
+                dir_remove_tree(vol, entry, 0);
             } else {
+                const ino_t ino = entry->dcache_ino;
                 dir_modify(vol, entry, &(struct dir_modify_args) {
                     .flags = DCMOD_STAT | DCMOD_NO_PROMOTE,
                     .st = &st
                 });
+
+                /* an entry that dir_modify() moved to another object or
+                 * removed lost its children there */
+                if (entry->d_did != CNID_INVALID && entry->dcache_ino == ino) {
+                    dircache_remove_children_defer(vol, entry);
+                }
             }
 
             break;
@@ -3191,15 +3284,15 @@ void dircache_report_invalid_entry(struct dir *dir)
  * while afpd waits in poll. The job stores the full path of dir byte for
  * byte, with its volume, depth, and enqueue sequence number. Without an active
  * idle worker, with a full queue, or when malloc fails, the call runs
- * dircache_remove_children at once instead. A NULL dir or one without a full
- * path needs nothing.
+ * dircache_remove_children at once instead. A NULL dir, a file, or a dir
+ * without a full path needs nothing.
  *
  * @param[in] vol  volume of dir
  * @param[in] dir  directory whose children leave the cache, or NULL
  */
 void dircache_remove_children_defer(const struct vol *vol, struct dir *dir)
 {
-    if (!dir || !dir->d_fullpath) {
+    if (!dir || !dir->d_fullpath || (dir->d_flags & DIRF_ISFILE)) {
         return;
     }
 

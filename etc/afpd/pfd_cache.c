@@ -23,9 +23,9 @@
  * re-ground probe converges — each answer is truthful for one view,
  * never a third state (see the divergence-window tests).
  *
- * Threading: pfd_ostat() runs on the main thread only. pfd_purge()/
- * pfd_purge_vol() additionally run on the idle worker under the
- * iw_grant/iw_revoke temporal-separation handshake (via
+ * Threading: pfd_ostat() and pfd_repair_path() run on the main thread
+ * only. pfd_purge()/pfd_purge_vol() additionally run on the idle worker
+ * under the iw_grant/iw_revoke temporal-separation handshake (via
  * dircache_remove from the deferred chains) — never concurrently with
  * main-thread pfd calls, so the module needs no locks and MUST NOT grow
  * state shared outside that discipline.
@@ -275,40 +275,37 @@ static int pfd_get(const struct vol *vol, const struct dir *parent)
 
 /*!
  * @brief Rebuild the full path of a dircache entry from its parent after a
- * relative stat
+ * stat relative to the parent
  *
- * The relative stat proved that the parent descriptor and the name reach the
- * live object. An internal rename re-paths the parent at once but defers its
- * children, so a child can still carry the old path. When the stored path
- * does not equal the parent path plus the name, the call replaces it. The
- * intact case costs one length compare, one byte load, and one short memcmp.
- * When the allocation fails, the stale path stays for the next validation.
+ * The stat, through the parent's descriptor or in the parent's folder, found
+ * an object under the entry's name there. An internal rename re-paths the
+ * parent at once but defers its children, so a child can still carry the old
+ * path. When the stored path does not equal the parent path plus the name,
+ * the call replaces it. The intact case costs one length compare, one byte
+ * load, and one short memcmp. When the allocation fails, the stale path stays
+ * for the next validation.
  *
  * @param[in,out] entry   dircache entry whose path to check
  * @param[in]     parent  dircache entry of its parent
+ * @returns true when the call rebuilt a stale path
  */
-static void pfd_repair_path(struct dir *entry, const struct dir *parent)
+bool pfd_repair_path(struct dir *entry, const struct dir *parent)
 {
-    int plen = blength(parent->d_fullpath);
-    int nlen = blength(entry->d_u_name);
     const char *ep = bdata(entry->d_fullpath);
-    const char *pp = bdata(parent->d_fullpath);
 
-    if (ep != NULL && pp != NULL
-            && blength(entry->d_fullpath) == plen + 1 + nlen
-            && ep[plen] == '/'
-            && memcmp(ep, pp, (size_t)plen) == 0) {
-        return;
+    if (dir_path_follows(entry, parent)) {
+        return false;
     }
 
     /* Both lengths are known: one exactly-sized allocation, no strlen,
      * no realloc */
     bstring repaired = fullpath_join_blk(parent->d_fullpath,
-                                         bdata(entry->d_u_name), nlen);
+                                         bdata(entry->d_u_name),
+                                         blength(entry->d_u_name));
 
     if (repaired == NULL) {
         /* Keep the stale string; the next validation retries */
-        return;
+        return false;
     }
 
     LOG(log_debug, logtype_afpd, "pfd_repair_path: \"%s\" -> \"%s\"",
@@ -316,6 +313,7 @@ static void pfd_repair_path(struct dir *entry, const struct dir *parent)
     bdestroy(entry->d_fullpath);
     entry->d_fullpath = repaired;
     pfd_stat.path_repairs++;
+    return true;
 }
 
 /*!
@@ -341,14 +339,7 @@ int pfd_ostat(const struct vol *vol, struct dir *entry,
 
     if (entry->d_did != DIRDID_ROOT && entry->d_did != DIRDID_ROOT_PARENT
             && entry->d_u_name != NULL) {
-        if (entry->d_pdid == DIRDID_ROOT) {
-            /* The volume root is never in the dircache hash but is always
-             * live on the vol with d_fullpath = v_path and dcache_ino
-             * populated by dir_new() at afp_openvol(). */
-            parent = vol->v_root;
-        } else if (entry->d_pdid != DIRDID_ROOT_PARENT) {
-            parent = dircache_lookup_parent(vol, entry->d_pdid);
-        }
+        parent = dircache_lookup_parent(vol, entry->d_pdid);
     }
 
     if (parent != NULL && parent->d_fullpath != NULL

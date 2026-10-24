@@ -204,8 +204,13 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                                rbuf + 3 * sizeof(uint16_t), &buflen);
 
             if (ret != AFP_OK) {
-                LOG(log_error, logtype_afpd,
-                    "afp_getfildirparams: getdirparams failed ret=%d", ret);
+                /* kFPObjectNotFound: the DID names no folder at its path */
+                if (ret != AFPERR_NOOBJ) {
+                    LOG(log_error, logtype_afpd,
+                        "afp_getfildirparams: getdirparams failed ret=%d",
+                        ret);
+                }
+
                 return ret;
             }
         }
@@ -379,8 +384,9 @@ int check_name(const struct vol *vol, char *name)
  * @param[in] oldname  current Mac name
  * @param[in] newname  new Mac name
  * @param[in] isdir    nonzero when the object is a directory
- * @returns AFP_OK, AFPERR_OLOCK, AFPERR_EXIST, AFPERR_PARAM, AFPERR_MISC, or
- *          the error of renamefile or renamedir
+ * @returns AFP_OK, AFPERR_OLOCK, AFPERR_EXIST, AFPERR_PARAM, AFPERR_MISC,
+ *          the error of a parent DID that names no folder, or the error of
+ *          renamefile or renamedir
  */
 static int moveandrename(const AFPObj *obj,
                          struct vol *vol,
@@ -441,13 +447,16 @@ static int moveandrename(const AFPObj *obj,
         }
     } else {
         id = sdir->d_did; /* we already have the CNID */
+        /* a parent DID that names no folder fails the request */
+        struct dir *sparent = dirlookup_strict(vol, sdir->d_pdid);
+        const char *spath;
 
-        if ((oldunixname = strdup(ctoupath(vol, dirlookup_strict(vol, sdir->d_pdid),
-                                           oldname))) == NULL) {
-            if (oldunixname) {
-                free(oldunixname);
-            }
+        if (sparent == NULL) {
+            return afp_errno;
+        }
 
+        if ((spath = ctoupath(vol, sparent, oldname)) == NULL
+                || (oldunixname = strdup(spath)) == NULL) {
             return AFPERR_PARAM;
         }
 
@@ -1123,12 +1132,6 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             if (deldir) {
                 LOG(log_debug, logtype_afpd,
                     "afp_delete: cleaning cache for deleted directory \"%s\"", upath);
-
-                /* Remove child dircache entries (orphaned after directory delete) */
-                if (!(deldir->d_flags & DIRF_ISFILE)) {
-                    dircache_remove_children_defer(vol, deldir);
-                }
-
                 /* Delete CNID from database */
                 delcnid = deldir->d_did;
 
@@ -1138,8 +1141,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                     AFP_CNID_DONE();
                 }
 
-                /* Remove from dircache */
-                dir_remove(vol, deldir, 0);  /* User-initiated delete cleanup */
+                dir_remove_tree(vol, deldir, 0);  /* User-initiated delete cleanup */
             } else {
                 /* Directory not in cache, delete CNID manually */
                 size_t upath_len = upath ? strnlen(upath, CNID_MAX_PATH_LEN) : 0;

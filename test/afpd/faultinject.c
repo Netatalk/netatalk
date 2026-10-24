@@ -1084,6 +1084,75 @@ int unlink(const char *path)
     return real_unlink(path);
 }
 
+typedef int (*stat_fn)(const char *, struct stat *);
+static stat_fn real_stat;
+static stat_fn real_lstat;
+
+/*!
+ * @brief The stat() and lstat() interposers' shared body: every call on
+ *        fi.stat_name fails with fi.stat_errno, as a stale mount's would,
+ *        and counts in fi.stat_calls
+ *
+ * <sys/stat.h> renames the definitions where libc versions the calls (glibc
+ * stat64 under 64-bit offsets, NetBSD __stat50), so the real function is
+ * looked up under the definition's own name first, as statvfs()'s is. Where
+ * libc inlines a call into another, nothing reaches the definition.
+ *
+ * @param[in,out] real    the real function, found at the first call
+ * @param[in]     self    the interposer's definition
+ * @param[in]     name64  the real function's name under 64-bit offsets
+ * @param[in]     name    its plain name
+ * @param[in]     path    the call's path
+ * @param[out]    buf     the call's stat buffer
+ * @returns the real call's result, or -1 with errno
+ */
+static int fi_stat_call(stat_fn *real, void *self, const char *name64,
+                        const char *name, const char *path, struct stat *buf)
+{
+    if (!*real) {
+        Dl_info info;
+
+        if (dladdr(self, &info) && info.dli_sname && info.dli_saddr == self) {
+            *real = (stat_fn)dlsym(RTLD_NEXT, info.dli_sname);
+        }
+
+        if (!*real) {
+            *real = (stat_fn)fi_real64(name64, name);
+        }
+
+        if (!*real) {
+            errno = ENOSYS;
+            return -1;
+        }
+    }
+
+    if (fi.stat_name != NULL && strcmp(path, fi.stat_name) == 0) {
+        fi.stat_calls++;
+        errno = fi.stat_errno;
+        return -1;
+    }
+
+    return (*real)(path, buf);
+}
+
+/*!
+ * @brief stat() interposer, as fi_stat_call() describes
+ */
+int stat(const char *path, struct stat *buf)
+{
+    return fi_stat_call(&real_stat, (void *)stat, "stat64", "stat", path,
+                        buf);
+}
+
+/*!
+ * @brief lstat() interposer, as fi_stat_call() describes
+ */
+int lstat(const char *path, struct stat *buf)
+{
+    return fi_stat_call(&real_lstat, (void *)lstat, "lstat64", "lstat",
+                        path, buf);
+}
+
 typedef struct dirent *(*readdir_fn)(DIR *);
 static readdir_fn real_readdir;
 

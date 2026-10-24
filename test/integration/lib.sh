@@ -107,7 +107,12 @@ afp_listening() {
     al_port=${1:-548}
     al_host=${2:-127.0.0.1}
 
-    if nc -w 1 "$al_host" "$al_port" < /dev/null > /dev/null 2>&1; then
+    if command -v nc > /dev/null 2>&1; then
+        if nc -w 1 "$al_host" "$al_port" < /dev/null > /dev/null 2>&1; then
+            return 0
+        fi
+    elif timeout 1 bash -c ': 3<> "/dev/tcp/$0/$1"' "$al_host" "$al_port" \
+        > /dev/null 2>&1; then
         return 0
     fi
 

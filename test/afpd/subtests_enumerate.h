@@ -19,14 +19,29 @@ extern int utest_enumerate_unrenamed_keeps_cnid(AFPObj *obj, struct vol *vol);
 extern int utest_enumerate_failed_batch_keeps_index(AFPObj *obj, uint16_t vid);
 extern int utest_enumerate_failed_read_rereads(AFPObj *obj, struct vol *vol);
 extern int utest_enumerate_read_error_fails(AFPObj *obj, struct vol *vol);
-extern int utest_enumerate_interleaved_reads_once(AFPObj *obj, uint16_t vid);
+extern int utest_enumerate_interleaved_reads_once(AFPObj *obj, struct vol *vol);
+extern int utest_enumerate_root_kept_nowhere(AFPObj *obj, struct vol *vol);
+extern int utest_enumerate_root_failed_stat_once(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_enumerate_reread_failed_stat_once(AFPObj *obj,
+                                                   struct vol *vol);
+extern int utest_enumerate_changed_folder_rereads(AFPObj *obj, uint16_t vid);
+extern int utest_enumerate_ctime_window(void);
+extern int utest_enumerate_recent_read_rechecked(AFPObj *obj, uint16_t vid);
+extern int utest_enumerate_ticked_read_serves(AFPObj *obj, uint16_t vid);
+extern int utest_enumerate_window_at_read(AFPObj *obj, struct vol *vol);
 extern int utest_enumerate_one_kind_keeps_index(AFPObj *obj, uint16_t vid);
 extern int utest_enumerate_kind_change_rewinds(AFPObj *obj, uint16_t vid);
-extern int utest_enumerate_deleted_name_keeps_index(AFPObj *obj, uint16_t vid);
-extern int utest_enumerate_failed_stat_leaves_index(AFPObj *obj, uint16_t vid);
+extern int utest_enumerate_other_kind_entry_stats(AFPObj *obj, uint16_t vid);
+extern int utest_enumerate_deleted_name_rereads(AFPObj *obj, uint16_t vid);
+extern int utest_enumerate_failed_stat_leaves_index(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_enumerate_new_pass_restats(AFPObj *obj, struct vol *vol);
+extern int utest_enumerate_listing_serves_passes(AFPObj *obj, uint16_t vid);
 extern int utest_enumerate_dehex_vetoed_leaves(AFPObj *obj, struct vol *vol);
 extern int utest_enumerate_dehex_gone_leaves(AFPObj *obj, struct vol *vol);
 extern int utest_enumerate_icon_ends_files(AFPObj *obj, struct vol *vol);
+extern int utest_enumerate_real_icon_replaces(AFPObj *obj, struct vol *vol);
 extern int utest_movecwd_skips_getcwd(AFPObj *obj, struct vol *vol);
 extern int utest_movecwd_at_descriptor_limit(AFPObj *obj, struct vol *vol);
 extern int utest_movecwd_volume_walks(const struct vol *vol);

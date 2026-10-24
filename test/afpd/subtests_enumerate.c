@@ -36,8 +36,10 @@
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 #include <atalk/directory.h>
 #include <atalk/globals.h>
+#include <atalk/util.h>
 #include <atalk/volume.h>
 
 #include "afpfunc_helpers.h"
@@ -628,7 +630,9 @@ int utest_enumerate_failed_batch_keeps_index(AFPObj *obj, uint16_t vid)
     cnid_t did = 0;
     int ret = -1;
 
+    /* a settled folder keeps its listing from batch to batch */
     if (make_dir(obj, vid, dir_names[0], 3, &did) != 0
+            || settle(cfrombstr(curdir->d_fullpath)) != 0
             || enum_one(obj, vid, did, 1) != AFP_OK) {
         goto out;
     }
@@ -671,11 +675,17 @@ int utest_enumerate_failed_read_rereads(AFPObj *obj, struct vol *vol)
     /* fd is the lowest free descriptor: with the soft limit there, the
      * restarted listing's opendir() fails, for root as well. A volume that
      * follows symlinks enters the directory with chdir() alone, which takes
-     * no descriptor. */
+     * no descriptor. A change of the folder's times has the restarted
+     * listing read the folder. */
     close(fd);
     low = rl;
     low.rlim_cur = (rlim_t)fd;
     vol->v_flags |= AFPVOL_FOLLOWSYM;
+
+    if (utimensat(AT_FDCWD, cfrombstr(curdir->d_fullpath), NULL, 0) != 0) {
+        goto out;
+    }
+
     enumerate_stats_get(&before);
 
     if (setrlimit(RLIMIT_NOFILE, &low) != 0) {
@@ -761,18 +771,97 @@ out:
 }
 
 /*!
- * @brief Eight listings stay saved: two in interleaved batches read their
- *        directories once each, and six more leave the first one saved
+ * @brief Let the volume root's first n folders of dir_names settle
+ *
+ * A stat fixes the ctime a filesystem sets lazily; the folder made last
+ * settles last.
+ *
+ * @returns 0, -1 when a stat fails or the last folder does not settle
  */
-int utest_enumerate_interleaved_reads_once(AFPObj *obj, uint16_t vid)
+static int enum_settle(const struct vol *vol, int n)
 {
+    char path[MAXPATHLEN + 1] = "";
+    struct stat st;
+
+    for (int i = 0; i < n; i++) {
+        snprintf(path, sizeof(path), "%s/%s", vol->v_path, dir_names[i]);
+
+        if (stat(path, &st) != 0) {
+            return -1;
+        }
+    }
+
+    return settle(path);
+}
+
+/*!
+ * @brief A listing of the volume root takes no slot: each request for the
+ *        root reads it, and the eight folders' listings that fill the slots
+ *        all serve again after it
+ */
+int utest_enumerate_root_kept_nowhere(AFPObj *obj, struct vol *vol)
+{
+    uint16_t vid = vol->v_vid;
     struct enumerate_stats before;
     struct enumerate_stats mid;
     struct enumerate_stats after;
     cnid_t did[ENUM_DIRS] = { 0 };
     int ret = -1;
 
-    if (enum_setup(obj, vid, did) != 0) {
+    /* the root settles too, so a listing of it kept anywhere would serve */
+    if (enum_setup(obj, vid, did) != 0
+            || enum_settle(vol, ENUM_DIRS - 1) != 0
+            || settle(vol->v_path) != 0) {
+        goto out;
+    }
+
+    /* A to H, settled, fill the session's eight slots */
+    for (int i = 0; i < ENUM_DIRS - 1; i++) {
+        if (enum_batch(obj, vid, did[i], 1) != AFP_OK) {
+            goto out;
+        }
+    }
+
+    enumerate_stats_get(&before);
+
+    if (enumerate_range(obj, vid, DIRDID_ROOT, 1 << FILPBIT_FNUM,
+                        1 << DIRPBIT_DID, 1, ENUM_BATCH) != AFP_OK
+            || enumerate_range(obj, vid, DIRDID_ROOT, 1 << FILPBIT_FNUM,
+                               1 << DIRPBIT_DID, 1, ENUM_BATCH) != AFP_OK) {
+        goto out;
+    }
+
+    enumerate_stats_get(&mid);
+
+    for (int i = 0; i < ENUM_DIRS - 1; i++) {
+        if (enum_batch(obj, vid, did[i], 1) != AFP_OK) {
+            goto out;
+        }
+    }
+
+    enumerate_stats_get(&after);
+    ret = mid.reads - before.reads == 2 && after.reads == mid.reads ? 0 : -1;
+out:
+    enum_teardown(obj, vid, did);
+    return ret;
+}
+
+/*!
+ * @brief Eight listings stay saved: two in interleaved batches read their
+ *        directories once each, and six more leave the first one saved
+ */
+int utest_enumerate_interleaved_reads_once(AFPObj *obj, struct vol *vol)
+{
+    uint16_t vid = vol->v_vid;
+    struct enumerate_stats before;
+    struct enumerate_stats mid;
+    struct enumerate_stats after;
+    cnid_t did[ENUM_DIRS] = { 0 };
+    int ret = -1;
+
+    /* a listing read within a granule of its folder's last change reads it
+     * again at its next batch, so A and B settle first */
+    if (enum_setup(obj, vid, did) != 0 || enum_settle(vol, 2) != 0) {
         goto out;
     }
 
@@ -831,24 +920,31 @@ int utest_enumerate_one_kind_keeps_index(AFPObj *obj, uint16_t vid)
         { 1 << FILPBIT_FNUM, 0 },
         { 0, 1 << DIRPBIT_DID }
     };
+    char folder[MAXPATHLEN + 1];
     cnid_t did = 0;
     int ret = -1;
 
-    if (make_dir(obj, vid, dir_names[0], 2, &did) != 0
-            || createdir(obj, vid, did, "folder-0") != AFP_OK
+    if (make_dir(obj, vid, dir_names[0], 2, &did) != 0) {
+        goto out;
+    }
+
+    snprintf(folder, sizeof(folder), "%s", cfrombstr(curdir->d_fullpath));
+
+    if (createdir(obj, vid, did, "folder-0") != AFP_OK
             || createdir(obj, vid, did, "folder-1") != AFP_OK) {
         goto out;
     }
 
-    /* two entries of each kind: the batch at index 3 ends the listing and
-     * drops it, so index 2 asked again reads the folder anew and walks over
-     * its first name, a file or a folder */
+    /* two entries of each kind: once the batch at index 3 ends the listing,
+     * a change of the folder's times has index 2 asked again read the
+     * folder anew and walk over its first name, a file or a folder */
     for (int i = 0; i < 2; i++) {
         const uint16_t *k = kinds[i];
 
         if (enum_at(obj, vid, did, k, 1) != AFP_OK
                 || enum_at(obj, vid, did, k, 2) != AFP_OK
                 || enum_at(obj, vid, did, k, 3) != AFPERR_NOOBJ
+                || utimensat(AT_FDCWD, folder, NULL, 0) != 0
                 || enum_at(obj, vid, did, k, 2) != AFP_OK
                 || enum_at(obj, vid, did, k, 3) != AFPERR_NOOBJ) {
             goto out;
@@ -875,11 +971,19 @@ int utest_enumerate_kind_change_rewinds(AFPObj *obj, uint16_t vid)
 {
     static const uint16_t files[2] = { 1 << FILPBIT_FNUM, 0 };
     static const uint16_t folders[2] = { 0, 1 << DIRPBIT_DID };
+    char folder[MAXPATHLEN + 1];
     cnid_t did = 0;
     int ret = -1;
 
-    if (make_dir(obj, vid, dir_names[0], 1, &did) != 0
-            || createdir(obj, vid, did, "folder-0") != AFP_OK) {
+    if (make_dir(obj, vid, dir_names[0], 1, &did) != 0) {
+        goto out;
+    }
+
+    snprintf(folder, sizeof(folder), "%s", cfrombstr(curdir->d_fullpath));
+
+    /* a settled folder keeps its listing from batch to batch */
+    if (createdir(obj, vid, did, "folder-0") != AFP_OK
+            || settle(folder) != 0) {
         goto out;
     }
 
@@ -899,6 +1003,95 @@ out:
     }
 
     remove_dir(obj, vid, dir_names[0], 1, did);
+    return ret;
+}
+
+/*!
+ * @brief Whether readdir() gives a name in a folder as a regular file
+ */
+static int readdir_gives_file(const char *path, const char *name)
+{
+    int file = 0;
+#ifdef DT_REG
+    const struct dirent *de;
+    DIR *dp;
+
+    if ((dp = opendir(path)) == NULL) {
+        return 0;
+    }
+
+    while ((de = readdir(dp)) != NULL) {
+        if (strcmp(de->d_name, name) == 0) {
+            file = de->d_type == DT_REG;
+            break;
+        }
+    }
+
+    closedir(dp);
+#else
+    (void)path;
+    (void)name;
+#endif
+    return file;
+}
+
+/*!
+ * @brief A listing of files lists a name that readdir() gives as a file,
+ *        whose cached entry is the folder's that held the name before;
+ *        skipped where readdir() gives no kind
+ */
+int utest_enumerate_other_kind_entry_stats(AFPObj *obj, uint16_t vid)
+{
+    char folder[MAXPATHLEN + 1];
+    char aside[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 1] = "";
+    char name[32];
+    char moved[32];
+    cnid_t did = 0;
+    int ret = -1;
+    snprintf(name, sizeof(name), ENUM_FILE, 3);
+    snprintf(moved, sizeof(moved), "%s-aside", dir_names[0]);
+
+    if (make_dir(obj, vid, dir_names[0], 3, &did) != 0) {
+        goto out;
+    }
+
+    snprintf(folder, sizeof(folder), "%s", cfrombstr(curdir->d_fullpath));
+    snprintf(path, sizeof(path), "%s/%s", folder, name);
+    snprintf(aside, sizeof(aside), "%s-aside", folder);
+
+    /* a folder made through a request is cached, and a file takes its name
+     * behind afpd once the folder moves out of the listing; the settled
+     * folder keeps its listing for every batch */
+    if (createdir(obj, vid, did, name) != AFP_OK || rename(path, aside) != 0
+            || create_disk_file(path) != 0 || settle(folder) != 0) {
+        goto out;
+    }
+
+    if (!readdir_gives_file(folder, name)) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    /* the four files take indexes 1 to 4 */
+    if (enum_one(obj, vid, did, 1) == AFP_OK
+            && enum_one(obj, vid, did, 2) == AFP_OK
+            && enum_one(obj, vid, did, 3) == AFP_OK
+            && enum_one(obj, vid, did, 4) == AFP_OK
+            && enum_one(obj, vid, did, 5) == AFPERR_NOOBJ) {
+        ret = 0;
+    }
+
+out:
+
+    /* a folder entry left on the file's name refuses the delete */
+    if (did != 0) {
+        delete (obj, vid, did, name);
+        unlink(path);
+        delete (obj, vid, DIRDID_ROOT, moved);
+    }
+
+    remove_dir(obj, vid, dir_names[0], 3, did);
     return ret;
 }
 
@@ -931,10 +1124,10 @@ static void listed_name(const char *path, int n, char name[MAXPATHLEN + 1])
 }
 
 /*!
- * @brief A name deleted after a batch returned it still holds its place
- *        in the listing's numbering
+ * @brief A name deleted after a batch returned it leaves the numbering: the
+ *        next batch reads the folder again
  */
-int utest_enumerate_deleted_name_keeps_index(AFPObj *obj, uint16_t vid)
+int utest_enumerate_deleted_name_rereads(AFPObj *obj, uint16_t vid)
 {
     char first[MAXPATHLEN + 1];
     cnid_t did = 0;
@@ -946,14 +1139,15 @@ int utest_enumerate_deleted_name_keeps_index(AFPObj *obj, uint16_t vid)
 
     listed_name(cfrombstr(curdir->d_fullpath), 0, first);
 
-    /* one file per batch, then the first deleted and index 3 asked again:
-     * the walk counts the deleted name, as the batch at index 1 did */
+    /* one file per batch, then the first deleted: index 3 is past the two
+     * names left, and index 2 lists the last of them */
     if (first[0] != '\0'
             && enum_one(obj, vid, did, 1) == AFP_OK
             && enum_one(obj, vid, did, 2) == AFP_OK
             && enum_one(obj, vid, did, 3) == AFP_OK
             && delete (obj, vid, did, first) == AFP_OK
-            && enum_one(obj, vid, did, 3) == AFP_OK) {
+            && enum_one(obj, vid, did, 3) == AFPERR_NOOBJ
+            && enum_one(obj, vid, did, 2) == AFP_OK) {
         ret = 0;
     }
 
@@ -963,47 +1157,331 @@ out:
 }
 
 /*!
- * @brief A name deleted before a batch reached it leaves the numbering, for
- *        a batch asked again for an earlier index too, and the folder's
- *        offspring count keeps the three files left
+ * @brief A listing of the volume root, read at every request, lists each
+ *        name once when a name readdir() gives as a file fails its stat at
+ *        every call, as on a stale mount, and has the root's offspring
+ *        counted again; skipped without the stat interposer or where
+ *        readdir() gives no kind
  */
-int utest_enumerate_failed_stat_leaves_index(AFPObj *obj, uint16_t vid)
+int utest_enumerate_root_failed_stat_once(AFPObj *obj, struct vol *vol)
 {
-    char second[MAXPATHLEN + 1];
-    struct dir *folder;
-    cnid_t did = 0;
+    char lnames[1][MACFILELEN + 1];
+    char unames[1][UTF8FILELEN_EARLY + 1];
+    char seen[64][MACFILELEN + 1];
+    char path[MAXPATHLEN + 1];
+    char mute[MAXPATHLEN + 1];
+    char name[32];
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    struct stat st;
+    uint32_t n = 0;
+    int ours = 0;
     int ret = -1;
 
-    if (make_dir(obj, vid, dir_names[0], 4, &did) != 0) {
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    for (int i = 0; i < 3; i++) {
+        snprintf(path, sizeof(path), "%s/" ENUM_FILE, vol->v_path, 900 + i);
+
+        if (create_disk_file(path) != 0) {
+            goto out;
+        }
+    }
+
+    /* the first of the three in readdir() order fails, two names after it */
+    listed_name(vol->v_path, 0, mute);
+    fault_inject_reset();
+    fi.stat_name = mute;
+    fi.stat_errno = EIO;
+
+    /* the probe makes the call afpd makes for a listed name */
+    if (!readdir_gives_file(vol->v_path, mute)
+            || ostat(mute, &st, vol_syml_opt(vol)) == 0 || errno != EIO
+            || fi.stat_calls != 1) {
+        ret = TEST_SKIP;
         goto out;
     }
 
-    folder = curdir;
-    listed_name(cfrombstr(folder->d_fullpath), 1, second);
+    enumerate_stats_get(&before);
 
-    /* FPDelete takes the name off the count, which FPGetFileDirParms then
-     * serves, or recounts where the deletion moved the folder's ctime */
-    if (second[0] == '\0' || enum_one(obj, vid, did, 1) != AFP_OK
-            || delete (obj, vid, did, second) != AFP_OK
-            || getfiledirparms_bitmap(obj, vid, DIRDID_ROOT, dir_names[0], 0,
-                                      1 << DIRPBIT_OFFCNT) != AFP_OK) {
+    /* one name per batch to the end of the listing */
+    while (n < 64 && enumerate_names_from(obj, vol->v_vid, DIRDID_ROOT,
+                                          n + 1, lnames, unames, 1) == 1) {
+        for (uint32_t i = 0; i < n; i++) {
+            if (strcmp(seen[i], lnames[0]) == 0) {
+                goto out;
+            }
+        }
+
+        ours += strncmp(lnames[0], "listing-entry-9", 15) == 0;
+        snprintf(seen[n++], sizeof(seen[0]), "%s", lnames[0]);
+    }
+
+    /* past the probe and the batch that left the name out, each later
+     * request stats it again on its way to its index; no read of the root
+     * counts as a continuation reread, and the name each request left out
+     * has the root's offspring counted again */
+    enumerate_stats_get(&after);
+    ret = n < 64 && ours == 2 && fi.stat_calls > 2
+          && after.rereads == before.rereads && vol->v_root->d_ctime == 0
+          ? 0 : -1;
+out:
+    fault_inject_reset();
+
+    for (int i = 0; i < 3; i++) {
+        snprintf(name, sizeof(name), ENUM_FILE, 900 + i);
+        delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief A folder's listing that each batch reads again, as in the granule
+ *        of the folder's last change, lists each name once when a name
+ *        readdir() gives as a file fails its stat at every call; skipped
+ *        without the stat or clock interposer or where readdir() gives no
+ *        kind
+ */
+int utest_enumerate_reread_failed_stat_once(AFPObj *obj, struct vol *vol)
+{
+    char lnames[1][MACFILELEN + 1];
+    char unames[1][UTF8FILELEN_EARLY + 1];
+    char seen[3][MACFILELEN + 1];
+    char folder[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 1];
+    char mute[MAXPATHLEN + 1];
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    struct timespec now;
+    struct stat st;
+    cnid_t did = 0;
+    uint32_t n = 0;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (make_dir(obj, vol->v_vid, dir_names[0], 0, &did) != 0) {
         goto out;
     }
 
-    /* the batch at index 2, whose stat of the deleted name fails, and the
-     * walk of index 3 asked again skip the name, and the count stays 3 */
-    if (enum_one(obj, vid, did, 2) == AFP_OK
-            && enum_one(obj, vid, did, 3) == AFP_OK
-            && enum_one(obj, vid, did, 3) == AFP_OK
-            && enum_one(obj, vid, did, 4) == AFPERR_NOOBJ
-            && getfiledirparms_bitmap(obj, vid, DIRDID_ROOT, dir_names[0], 0,
-                                      1 << DIRPBIT_OFFCNT) == AFP_OK
-            && folder->d_offcnt == 3) {
+    snprintf(folder, sizeof(folder), "%s/%s", vol->v_path, dir_names[0]);
+
+    for (int i = 0; i < 3; i++) {
+        snprintf(path, sizeof(path), "%s/" ENUM_FILE, folder, i);
+
+        if (create_disk_file(path) != 0) {
+            goto out;
+        }
+    }
+
+    /* the first of the three in readdir() order fails, and the clock stays
+     * in the second of the folder's ctime, so every batch reads it again */
+    listed_name(folder, 0, mute);
+
+    if (stat(folder, &st) != 0) {
+        goto out;
+    }
+
+    fault_inject_reset();
+    fi.stat_name = mute;
+    fi.stat_errno = EIO;
+    fi.clock_fake = 1;
+    fi.clock_sec = st.st_ctime;
+
+    /* the probes make the calls afpd makes */
+    if (!readdir_gives_file(folder, mute)
+            || ostat(mute, &st, vol_syml_opt(vol)) == 0 || errno != EIO
+            || clock_gettime(CLOCK_REALTIME, &now) != 0
+            || now.tv_sec != fi.clock_sec) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    enumerate_stats_get(&before);
+
+    /* one name per batch to the end of the listing */
+    while (n < 3 && enumerate_names_from(obj, vol->v_vid, did, n + 1, lnames,
+                                         unames, 1) == 1) {
+        for (uint32_t i = 0; i < n; i++) {
+            if (strcmp(seen[i], lnames[0]) == 0) {
+                goto out;
+            }
+        }
+
+        snprintf(seen[n++], sizeof(seen[0]), "%s", lnames[0]);
+    }
+
+    /* the batch past the end read the folder too */
+    enumerate_stats_get(&after);
+    ret = n == 2 && after.reads - before.reads == 3 ? 0 : -1;
+out:
+    fault_inject_reset();
+    remove_dir(obj, vol->v_vid, dir_names[0], 3, did);
+    return ret;
+}
+
+/* the name at the volume root a dangling symlink in folder A points to */
+#define ENUM_TARGET "listing-target"
+
+/* folder A, its three files and a dangling symlink after them, and the
+ * follow flag the volume had before dangling_setup() set it */
+struct dangling {
+    cnid_t did;
+    int follow;
+    char folder[MAXPATHLEN + 1];
+    char link[MAXPATHLEN + 1];
+};
+
+/*!
+ * @brief Folder A with three files and a symlink to ENUM_TARGET, which the
+ *        volume root does not hold, on a volume that now follows symlinks,
+ *        so the link's stat fails
+ *
+ * @returns 0, -1 when the setup fails
+ */
+static int dangling_setup(AFPObj *obj, struct vol *vol, struct dangling *dl)
+{
+    memset(dl, 0, sizeof(*dl));
+    dl->follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+
+    if (make_dir(obj, vol->v_vid, dir_names[0], 3, &dl->did) != 0) {
+        return -1;
+    }
+
+    snprintf(dl->folder, sizeof(dl->folder), "%s",
+             cfrombstr(curdir->d_fullpath));
+    snprintf(dl->link, sizeof(dl->link), "%s/" ENUM_FILE, dl->folder, 3);
+    vol->v_flags |= AFPVOL_FOLLOWSYM;
+    return symlink("../" ENUM_TARGET, dl->link);
+}
+
+/*!
+ * @brief Remove what dangling_setup() made and give the volume its follow
+ *        flag back
+ */
+static void dangling_teardown(AFPObj *obj, struct vol *vol,
+                              const struct dangling *dl)
+{
+    vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | dl->follow;
+    unlink(dl->link);
+    remove_dir(obj, vol->v_vid, dir_names[0], 3, dl->did);
+}
+
+/*!
+ * @brief A name whose stat fails, a dangling symlink on a volume that
+ *        follows symlinks, leaves the numbering, for a batch asked again for
+ *        an earlier index too, and has the folder's offspring counted again
+ */
+int utest_enumerate_failed_stat_leaves_index(AFPObj *obj, struct vol *vol)
+{
+    uint16_t vid = vol->v_vid;
+    struct dangling dl;
+    int ret = -1;
+
+    /* the folder settled, its listing serves every batch: the three files
+     * take indexes 1 to 3 wherever readdir puts the link, index 3 asked
+     * again too */
+    if (dangling_setup(obj, vol, &dl) == 0 && settle(dl.folder) == 0
+            && enum_one(obj, vid, dl.did, 1) == AFP_OK
+            && enum_one(obj, vid, dl.did, 2) == AFP_OK
+            && enum_one(obj, vid, dl.did, 3) == AFP_OK
+            && enum_one(obj, vid, dl.did, 3) == AFP_OK
+            && enum_one(obj, vid, dl.did, 4) == AFPERR_NOOBJ
+            && curdir->d_did == dl.did && curdir->d_ctime == 0) {
         ret = 0;
     }
 
+    dangling_teardown(obj, vol, &dl);
+    return ret;
+}
+
+/*!
+ * @brief A new pass of a listing that left a name out reads the folder
+ *        again: a symlink whose target appeared is listed, although the
+ *        folder kept its stamp
+ */
+int utest_enumerate_new_pass_restats(AFPObj *obj, struct vol *vol)
+{
+    uint16_t vid = vol->v_vid;
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    struct dangling dl;
+    char target[MAXPATHLEN + 1];
+    char name[32];
+    int ret = -1;
+    snprintf(target, sizeof(target), "%s/" ENUM_TARGET, vol->v_path);
+    snprintf(name, sizeof(name), ENUM_FILE, 3);
+
+    /* the first pass lists the three files and leaves the link out; its
+     * target then appears outside the folder */
+    if (dangling_setup(obj, vol, &dl) != 0 || settle(dl.folder) != 0
+            || enum_one(obj, vid, dl.did, 1) != AFP_OK
+            || enum_one(obj, vid, dl.did, 4) != AFPERR_NOOBJ
+            || create_disk_file(target) != 0) {
+        goto out;
+    }
+
+    enumerate_stats_get(&before);
+
+    if (enum_one(obj, vid, dl.did, 1) == AFP_OK
+            && enum_one(obj, vid, dl.did, 4) == AFP_OK) {
+        enumerate_stats_get(&after);
+        ret = after.reads - before.reads == 1 ? 0 : -1;
+    }
+
 out:
-    remove_dir(obj, vid, dir_names[0], 4, did);
+    /* the link goes through afpd, with the row its listing made, while its
+     * target still makes it a file */
+    delete (obj, vid, dl.did, name);
+    unlink(target);
+    dangling_teardown(obj, vol, &dl);
+    return ret;
+}
+
+/*!
+ * @brief A settled folder's listing serves every pass: a pass begun again,
+ *        an index past the end asked twice, a batch that finds the end, and
+ *        the passes after them read nothing
+ */
+int utest_enumerate_listing_serves_passes(AFPObj *obj, uint16_t vid)
+{
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    char folder[MAXPATHLEN + 1];
+    cnid_t did = 0;
+    int ret = -1;
+
+    if (make_dir(obj, vid, dir_names[0], 3, &did) != 0) {
+        goto out;
+    }
+
+    snprintf(folder, sizeof(folder), "%s", cfrombstr(curdir->d_fullpath));
+
+    if (settle(folder) != 0 || enum_one(obj, vid, did, 1) != AFP_OK) {
+        goto out;
+    }
+
+    enumerate_stats_get(&before);
+
+    if (enum_one(obj, vid, did, 2) == AFP_OK
+            && enum_one(obj, vid, did, 1) == AFP_OK
+            && enum_one(obj, vid, did, 5) == AFPERR_NOOBJ
+            && enum_one(obj, vid, did, 5) == AFPERR_NOOBJ
+            && enum_one(obj, vid, did, 1) == AFP_OK
+            && enum_one(obj, vid, did, 3) == AFP_OK
+            && enum_one(obj, vid, did, 4) == AFPERR_NOOBJ
+            && enum_one(obj, vid, did, 1) == AFP_OK) {
+        enumerate_stats_get(&after);
+        ret = after.reads == before.reads ? 0 : -1;
+    }
+
+out:
+    remove_dir(obj, vid, dir_names[0], 3, did);
     return ret;
 }
 
@@ -1056,6 +1534,90 @@ out:
 }
 
 /*!
+ * @brief The index of the virtual Icon in a listing of the volume root, one
+ *        entry per batch
+ *
+ * @returns the index, 0 when the listing ends without the Icon
+ */
+static uint32_t icon_index(AFPObj *obj, uint16_t vid)
+{
+    char lnames[1][MACFILELEN + 1];
+    char unames[1][UTF8FILELEN_EARLY + 1];
+    uint32_t n = 1;
+
+    while (enumerate_names_from(obj, vid, DIRDID_ROOT, n, lnames, unames, 1)
+            == 1) {
+        if (strcmp(lnames[0], VIRTUAL_ICON_NAME) == 0) {
+            return n;
+        }
+
+        n++;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief A real Icon file made at the volume root after its listing reached
+ *        the virtual Icon replaces it: a listing of the root lists the real
+ *        file, which a dircache entry then holds, and no second Icon
+ */
+int utest_enumerate_real_icon_replaces(AFPObj *obj, struct vol *vol)
+{
+    char lnames[1][MACFILELEN + 1];
+    char unames[1][UTF8FILELEN_EARLY + 1];
+    char path[MAXPATHLEN + 1];
+    char icon[] = VIRTUAL_ICON_NAME;
+    struct vi_lent lent;
+    struct stat st;
+    struct dir *entry;
+    uint32_t icons = 0;
+    uint32_t count = 0;
+    uint32_t n;
+    int ret = -1;
+
+    if (vol->v_icon_rfork != NULL || real_icon_exists(vol)) {
+        return TEST_SKIP;
+    }
+
+    if (vi_lend(vol, &lent) != 0) {
+        vi_return(vol, &lent);
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/" VIRTUAL_ICON_NAME, vol->v_path);
+
+    /* an entry an earlier test left under the name would stand in for the
+     * real file's stat */
+    if ((entry = dircache_search_by_name(vol, vol->v_root, icon,
+                                         strlen(icon))) != NULL) {
+        dir_remove(vol, entry, 0);
+    }
+
+    /* the root's n names, the virtual Icon last, then the real file in its
+     * place among them */
+    if ((n = icon_index(obj, vol->v_vid)) != 0
+            && create_disk_file(path) == 0 && stat(path, &st) == 0) {
+        while (enumerate_names_from(obj, vol->v_vid, DIRDID_ROOT, count + 1,
+                                    lnames, unames, 1) == 1) {
+            icons += strcmp(lnames[0], VIRTUAL_ICON_NAME) == 0;
+            count++;
+        }
+
+        ret = count == n && icons == 1
+              && (entry = dircache_search_by_name(vol, vol->v_root, icon,
+                                                  strlen(icon))) != NULL
+              && entry->dcache_ino == st.st_ino ? 0 : -1;
+    }
+
+    /* FPDelete takes the real file's entry and row with it */
+    delete (obj, vol->v_vid, DIRDID_ROOT, icon);
+    unlink(path);
+    vi_return(vol, &lent);
+    return ret;
+}
+
+/*!
  * @brief A file whose hex-encoded name decodes to a vetoed one leaves the
  *        listing that converts it
  *
@@ -1069,6 +1631,8 @@ int utest_enumerate_dehex_vetoed_leaves(AFPObj *obj, struct vol *vol)
     /* "t:2ev" decodes to the vetoed "t.v" */
     static char names[3][6] = { "t:2ev", "other", "t.v" };
     static char veto[] = "t.v/";
+    char lnames[3][MACFILELEN + 1];
+    char unames[3][UTF8FILELEN_EARLY + 1];
     char path[MAXPATHLEN + 1];
     uint16_t vid = vol->v_vid;
     int noconv = vol->v_flags & AFPVOL_NOV2TOEACONV;
@@ -1099,8 +1663,9 @@ int utest_enumerate_dehex_vetoed_leaves(AFPObj *obj, struct vol *vol)
 
     vol->v_veto = veto;
     vol->v_flags &= ~AFPVOL_NOV2TOEACONV;
-    /* the converting batch lists the other file alone, so none follows */
-    ret = enum_batch(obj, vid, did, 1) == AFP_OK
+    /* the converting batch lists the other file alone, and none follows */
+    ret = enumerate_names(obj, vid, did, lnames, unames, 3) == 1
+          && strcmp(unames[0], names[1]) == 0
           && enum_batch(obj, vid, did, 2) == AFPERR_NOOBJ ? 0 : 1;
 out:
     vol->v_veto = saved_veto;
@@ -1860,5 +2425,318 @@ int utest_enumerate_cnid_reread_unarmed(AFPObj *obj, struct vol *vol)
           == 2 * ENUM_BATCH ? 0 : 1;
 out:
     enum_teardown(obj, vid, did);
+    return ret;
+}
+
+/*!
+ * @brief A batch after its folder changed reads the folder again and goes on
+ *        at its index in the new read, which holds a name made since and not
+ *        one removed since
+ */
+int utest_enumerate_changed_folder_rereads(AFPObj *obj, uint16_t vid)
+{
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    char lnames[3][MACFILELEN + 1];
+    char unames[3][UTF8FILELEN_EARLY + 1];
+    char want[2][MAXPATHLEN + 1];
+    char folder[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 1];
+    cnid_t did = 0;
+    int ret = -1;
+
+    if (make_dir(obj, vid, dir_names[0], 3, &did) != 0) {
+        goto out;
+    }
+
+    snprintf(folder, sizeof(folder), "%s", cfrombstr(curdir->d_fullpath));
+
+    /* a read past the folder's change window keeps its stamp */
+    if (settle(folder) != 0
+            || enumerate_names(obj, vid, did, lnames, unames, 3) != 3) {
+        goto out;
+    }
+
+    /* the second goes and a fourth comes */
+    snprintf(path, sizeof(path), "%s/%s", folder, unames[1]);
+
+    if (unlink(path) != 0) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/" ENUM_FILE, folder, 3);
+
+    if (create_disk_file(path) != 0) {
+        goto out;
+    }
+
+    /* the new read's names at indexes 2 and 3 */
+    listed_name(folder, 1, want[0]);
+    listed_name(folder, 2, want[1]);
+    enumerate_stats_get(&before);
+
+    if (enumerate_names_from(obj, vid, did, 2, lnames, unames, 3) == 2
+            && strcmp(unames[0], want[0]) == 0
+            && strcmp(unames[1], want[1]) == 0) {
+        enumerate_stats_get(&after);
+        ret = after.reads - before.reads == 1
+              && after.changed - before.changed == 1 ? 0 : -1;
+    }
+
+out:
+    remove_dir(obj, vid, dir_names[0], 4, did);
+    return ret;
+}
+
+/*!
+ * @brief A folder's last change can hide another for two seconds, or for
+ *        two ticks where the ctime keeps nanoseconds, and up to two seconds
+ *        ahead of the clock; a date stored far ahead or long before is old
+ */
+int utest_enumerate_ctime_window(void)
+{
+    /* every value fits a 32-bit time_t */
+    const struct timespec now = { .tv_sec = 1700000000, .tv_nsec = 500000000 };
+    const struct timespec recent[] = {
+        { .tv_sec = 1700000000, .tv_nsec = 490 * 1000 * 1000 },
+        { .tv_sec = 1699999999, .tv_nsec = 0 },
+        { .tv_sec = 1700000001, .tv_nsec = 0 },
+        { .tv_sec = 1700000002, .tv_nsec = 500 * 1000 * 1000 }
+    };
+    const struct timespec old[] = {
+        { .tv_sec = 1700000000, .tv_nsec = 470 * 1000 * 1000 },
+        { .tv_sec = 1699999998, .tv_nsec = 0 },
+        { .tv_sec = 1700000002, .tv_nsec = 510 * 1000 * 1000 },
+        { .tv_sec = 1800000000, .tv_nsec = 0 },
+        { .tv_sec = -1500000000, .tv_nsec = 0 }
+    };
+    /* the two ticks' edge, 19 ms in and 21 ms out, and across a second */
+    const struct timespec past = { .tv_sec = 1700000001, .tv_nsec = 5000000 };
+    const struct timespec edge_in[] = {
+        { .tv_sec = 1700000000, .tv_nsec = 481 * 1000 * 1000 },
+        { .tv_sec = 1700000000, .tv_nsec = 986 * 1000 * 1000 }
+    };
+    const struct timespec edge_out[] = {
+        { .tv_sec = 1700000000, .tv_nsec = 479 * 1000 * 1000 },
+        { .tv_sec = 1700000000, .tv_nsec = 984 * 1000 * 1000 }
+    };
+
+    for (size_t i = 0; i < sizeof(recent) / sizeof(recent[0]); i++) {
+        if (!enumerate_ctime_recent(&recent[i], &now)) {
+            return -1;
+        }
+    }
+
+    for (size_t i = 0; i < sizeof(old) / sizeof(old[0]); i++) {
+        if (enumerate_ctime_recent(&old[i], &now)) {
+            return -1;
+        }
+    }
+
+    if (!enumerate_ctime_recent(&edge_in[0], &now)
+            || !enumerate_ctime_recent(&edge_in[1], &past)
+            || enumerate_ctime_recent(&edge_out[0], &now)
+            || enumerate_ctime_recent(&edge_out[1], &past)) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief The nanoseconds from one instant to a later one
+ */
+static long long ns_between(const struct timespec *from,
+                            const struct timespec *to)
+{
+    return (long long)(to->tv_sec - from->tv_sec) * 1000000000LL
+           + (to->tv_nsec - from->tv_nsec);
+}
+
+/*!
+ * @brief A listing read within a tick of its folder's last change is read
+ *        again by its next batch: a change in that tick can leave the ctime
+ *        as it is; skipped where no try reads the folder within 10 ms of the
+ *        change
+ */
+int utest_enumerate_recent_read_rechecked(AFPObj *obj, uint16_t vid)
+{
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    struct timespec made;
+    struct timespec read;
+    char path[MAXPATHLEN + 1];
+    cnid_t did = 0;
+    int ret = -1;
+
+    if (make_dir(obj, vid, dir_names[0], 3, &did) != 0) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/scratch", cfrombstr(curdir->d_fullpath));
+    ret = TEST_SKIP;
+
+    /* a name made and removed puts the folder's last change just before the
+     * read; a try whose read comes later than that proves nothing */
+    for (int i = 0; ret == TEST_SKIP && i < 10; i++) {
+        clock_gettime(CLOCK_REALTIME, &made);
+
+        if (create_disk_file(path) != 0 || unlink(path) != 0
+                || enum_one(obj, vid, did, 1) != AFP_OK
+                || clock_gettime(CLOCK_REALTIME, &read) != 0) {
+            ret = -1;
+            break;
+        }
+
+        enumerate_stats_get(&before);
+
+        if (enum_one(obj, vid, did, 2) != AFP_OK) {
+            ret = -1;
+            break;
+        }
+
+        enumerate_stats_get(&after);
+
+        if (ns_between(&made, &read) < 10000000LL) {
+            ret = after.reads - before.reads == 1
+                  && after.changed - before.changed == 1 ? 0 : -1;
+        }
+    }
+
+out:
+    remove_dir(obj, vid, dir_names[0], 3, did);
+    return ret;
+}
+
+/*!
+ * @brief A listing read three ticks after its folder's last change serves
+ *        its next batch where the filesystem keeps the ctime's nanoseconds;
+ *        skipped where it keeps whole seconds
+ */
+int utest_enumerate_ticked_read_serves(AFPObj *obj, uint16_t vid)
+{
+    const struct timespec tick = { .tv_sec = 0, .tv_nsec = 10 * 1000 * 1000 };
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    struct timespec made;
+    struct timespec now;
+    char folder[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 1];
+    struct stat st;
+    cnid_t did = 0;
+    int ret = -1;
+
+    if (make_dir(obj, vid, dir_names[0], 3, &did) != 0) {
+        goto out;
+    }
+
+    snprintf(folder, sizeof(folder), "%s", cfrombstr(curdir->d_fullpath));
+    snprintf(path, sizeof(path), "%s/scratch", folder);
+
+    /* the clock read after the change bounds the change's ctime */
+    if (create_disk_file(path) != 0 || unlink(path) != 0
+            || stat(folder, &st) != 0
+            || clock_gettime(CLOCK_REALTIME, &made) != 0) {
+        goto out;
+    }
+
+    if (atalk_stat_ctime_timespec(&st).tv_nsec == 0) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    do {
+        nanosleep(&tick, NULL);
+        clock_gettime(CLOCK_REALTIME, &now);
+    } while (ns_between(&made, &now) < 30000000LL);
+
+    enumerate_stats_get(&before);
+
+    if (enum_one(obj, vid, did, 1) == AFP_OK
+            && enum_one(obj, vid, did, 2) == AFP_OK) {
+        enumerate_stats_get(&after);
+        ret = after.reads - before.reads == 1 ? 0 : -1;
+    }
+
+out:
+    remove_dir(obj, vid, dir_names[0], 3, did);
+    return ret;
+}
+
+/* the time, in seconds, that slow_resolve() moves the fake clock to, and
+ * the backend's resolve that it wraps */
+static time_t resolved_sec;
+static char *(*backend_resolve)(struct _cnid_db *cdb, cnid_t *id,
+                                void *buffer, size_t len);
+
+/*!
+ * @brief A cnid_resolve() that takes seconds: the fake clock moves on to
+ *        resolved_sec before the backend answers
+ */
+static char *slow_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
+                          size_t len)
+{
+    fi.clock_sec = resolved_sec;
+    return backend_resolve(cdb, id, buffer, len);
+}
+
+/*!
+ * @brief A request whose lookup of its folder takes seconds judges the
+ *        listing's stamp by the clock at the read: a read in the second of
+ *        the folder's last change has the next batch read the folder again;
+ *        skipped without the clock interposer
+ */
+int utest_enumerate_window_at_read(AFPObj *obj, struct vol *vol)
+{
+    struct enumerate_stats before;
+    struct enumerate_stats after;
+    struct timespec now;
+    struct dir *entry;
+    struct stat st;
+    cnid_t did = 0;
+    int rc;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (make_dir(obj, vol->v_vid, dir_names[0], 3, &did) != 0
+            || stat(cfrombstr(curdir->d_fullpath), &st) != 0
+            || movecwd(vol, vol->v_root) != 0
+            || (entry = dircache_lookup_did(vol, did)) == NULL) {
+        goto out;
+    }
+
+    /* the request begins three seconds before the folder's last change, and
+     * its lookup by the folder's DID, the entry gone, resolves until that
+     * change's second */
+    dir_remove(vol, entry, 0);
+    fault_inject_reset();
+    fi.clock_fake = 1;
+    fi.clock_sec = st.st_ctime - 3;
+
+    /* the probe reads the clock as afpd does */
+    if (clock_gettime(CLOCK_REALTIME, &now) != 0
+            || now.tv_sec != fi.clock_sec) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    resolved_sec = st.st_ctime;
+    backend_resolve = vol->v_cdb->cnid_resolve;
+    vol->v_cdb->cnid_resolve = slow_resolve;
+    enumerate_stats_get(&before);
+    rc = enum_one(obj, vol->v_vid, did, 1);
+    vol->v_cdb->cnid_resolve = backend_resolve;
+
+    if (rc == AFP_OK && enum_one(obj, vol->v_vid, did, 2) == AFP_OK) {
+        enumerate_stats_get(&after);
+        ret = after.reads - before.reads == 2 ? 0 : -1;
+    }
+
+out:
+    fault_inject_reset();
+    remove_dir(obj, vol->v_vid, dir_names[0], 3, did);
     return ret;
 }

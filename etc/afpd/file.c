@@ -672,7 +672,7 @@ int getmetadata(const AFPObj *obj,
                     LOG(log_debug, logtype_afpd,
                         "getmetadata: inode mismatch (cached:%llu vs current:%llu), file replaced, invalidating cache",
                         (unsigned long long)cachedfile->dcache_ino, (unsigned long long)st->st_ino);
-                    dir_remove(vol, cachedfile, 1);  /* Invalid: inode mismatch detected */
+                    dir_remove_tree(vol, cachedfile, 1);  /* Invalid: inode mismatch detected */
                     cachedfile = NULL;
                 }
             }
@@ -2999,8 +2999,9 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
  * @param[in]     vol   volume of the directory
  * @param[in]     name  directory path, "." for the working directory
  * @param[in,out] dir   dircache entry of the directory
- * @returns the number of entries, or -1 without a CNID database or after a
- *          failure
+ * @returns the number of entries; AFPERR_MISC where the database could not
+ *          answer for the folder at the path; else -1 without a CNID
+ *          database or after a failure
  */
 static int
 reenumerate_id(struct vol *vol, char *name, struct dir *dir)
@@ -3018,6 +3019,13 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
         return -1;
     }
 
+    /* the entry follows the stat; else the DID names no folder at the path
+     * to register its files under, or the database could not answer for
+     * the folder there */
+    if ((ret = dir_stat_refresh(vol, dir, &st)) != AFP_OK) {
+        return ret == AFPERR_MISC ? ret : -1;
+    }
+
     if (dirreenumerate(dir, &st)) {
         /* we already did it once and the dir haven't been modified */
         return dir->d_offcnt;
@@ -3027,7 +3035,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
     data.did = dir->d_did;
 
     if ((ret = for_each_dirent(vol, name, reenumerate_loop, (void *)&data)) >= 0) {
-        setdiroffcnt(vol, dir, &st, ret);
+        setdiroffcnt(dir, &st, ret);
         dir->d_flags |= DIRF_CNID;
     }
 
@@ -3150,10 +3158,12 @@ retry:
             /* cnid db is out of sync, reenumerate the directory and update
              * ids; movecwd() may have replaced dir with the entry it moved
              * into */
-            if (reenumerate_id(vol, ".", curdir) < 0) {
-                /* The table was reset: a retry would resolve this CNID against
-                 * refilled rows and return another object's metadata */
-                return AFPERR_NOID;
+            const int found = reenumerate_id(vol, ".", curdir);
+
+            if (found < 0) {
+                /* a reset table would resolve this CNID against refilled
+                 * rows, and a DID that names no folder holds none of them */
+                return found == AFPERR_MISC ? found : AFPERR_NOID;
             }
 
             id = cnid;

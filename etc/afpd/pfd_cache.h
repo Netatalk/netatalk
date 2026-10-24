@@ -33,6 +33,7 @@ struct pfd_stats {
 
 extern int  pfd_ostat(const struct vol *vol, struct dir *entry,
                       struct stat *st, int options);
+extern bool pfd_repair_path(struct dir *entry, const struct dir *parent);
 extern void pfd_purge(uint16_t vid, cnid_t did);
 extern void pfd_purge_vol(uint16_t vid);
 extern void pfd_shutdown(void);
