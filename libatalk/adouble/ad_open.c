@@ -285,6 +285,15 @@ const char *adflags2logstr(int adflags)
         first = 0;
     }
 
+    if (adflags & ADFLAGS_RDONLY_STRICT) {
+        if (!first) {
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        }
+
+        strlcat(buf, "RDONLY_STRICT", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+
     if (adflags & ADFLAGS_CREATE) {
         if (!first) {
             strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
@@ -1474,7 +1483,7 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
         oflags |= O_RDWR;
     }
 
-    if (adflags & ADFLAGS_RDONLY) {
+    if ((adflags & ADFLAGS_RDONLY) && !(adflags & ADFLAGS_RDONLY_STRICT)) {
         if (((adfile == ADFLAGS_DF || adfile == ADFLAGS_RF)
                 && (adflags & ADFLAGS_SETSHRMD))
                 /* need rw access for locks */
@@ -1693,8 +1702,9 @@ EC_CLEANUP:
  * ENOENT under ADFLAGS_CREATE creates the .AppleDouble directory when needed,
  * retries with O_CREAT and a mode from ad_hf_mode, and lets ad_chown set the
  * owner. A new or empty file receives a fresh header through new_ad_header
- * and ad_flush. Any other file goes through ad_header_read. A failure after
- * the open closes the descriptor again.
+ * and ad_flush, except that ADFLAGS_RDONLY_STRICT rejects an empty file with
+ * EIO. Any other file goes through ad_header_read. A failure after the open
+ * closes the descriptor again.
  *
  * @param[in]     path     data file whose metadata file to open
  * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
@@ -1826,6 +1836,11 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode,
         /* check for 0 length files, treat them as new. */
         if (fstat(ad->ad_mdp->adf_fd, &st_meta) == 0) {
             if (st_meta.st_size == 0) {
+                if (adflags & ADFLAGS_RDONLY_STRICT) {
+                    errno = EIO;
+                    EC_FAIL;
+                }
+
                 ad->ad_mdp->adf_flags |= O_TRUNC;
             } else
                 /* we have valid data in st_meta stat structure, reused it in ad_header_read */
@@ -3003,8 +3018,13 @@ void ad_init(struct adouble *ad, const struct vol *vol)
  *  - ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags
  *
  * Access mode for the forks:
- *  - ADFLAGS_RDONLY:    open read only
+ *  - ADFLAGS_RDONLY:    read intent; permits descriptor promotion and metadata
+ *                       repair as described below
  *  - ADFLAGS_RDWR:      open read write
+ *  - ADFLAGS_RDONLY_STRICT: open existing metadata with O_RDONLY and no repair.
+ *                       Implies ADFLAGS_RDONLY; only ADFLAGS_HF and ADFLAGS_DIR
+ *                       may accompany it. Requires a freshly initialized
+ *                       adouble, which must be reinitialized before reuse.
  *
  * Creation flags:
  *  - ADFLAGS_CREATE:    create if not existing
@@ -3015,10 +3035,26 @@ void ad_init(struct adouble *ad, const struct vol *vol)
  *  - ADFLAGS_SETSHRMD:  this adouble struct will be used to set sharemode locks.
  *                       This basically results in the files being opened RW instead of RDONLY.
  *
- * The open mode flags (rw vs ro) have to take into account all the following requirements:
+ * ADFLAGS_RDONLY does not guarantee an O_RDONLY descriptor or an open without
+ * filesystem modifications. With ADFLAGS_SETSHRMD (also implied by
+ * ADFLAGS_CHECK_OF), data and resource descriptors request O_RDWR so they can
+ * carry write locks. Version 2 metadata also requests O_RDWR because it shares
+ * a descriptor with the resource fork, which may later be opened for writing.
+ * Opening an existing zero-length v2 metadata file may initialize and flush a
+ * fresh header, even without ADFLAGS_CREATE.
  *
- * - we remember open fds for files because me must avoid a single close releasing fcntl locks for other
- *   fds of the same file
+ * Use ADFLAGS_RDONLY_STRICT for isolated metadata inspection, such as a dbd
+ * scan. It bypasses descriptor promotion and rejects an empty v2 header with
+ * EIO before repair. It requires ADFLAGS_HF and permits ADFLAGS_DIR and the
+ * implied ADFLAGS_RDONLY; other flags or a previously opened adouble cause
+ * EINVAL. Close a successful open with ad_close(ad, ADFLAGS_HF), then
+ * reinitialize the object before any further ad_open(). Reinitialization is
+ * also required before retrying a failed strict open.
+ *
+ * Normal AFP fork operations retain shared descriptors: closing another
+ * descriptor for the same file can release the process's POSIX locks.
+ * Strict metadata inspection therefore uses a private, freshly initialized
+ * adouble and cannot replace opens on a shared fork object.
  *
  * @bug on Solaris (HAVE_EAFD) ADFLAGS_RF doesn't work without
  *   ADFLAGS_HF, because it checks whether ad_meta_fileno() is already
@@ -3031,6 +3067,26 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     EC_INIT;
     va_list args;
     mode_t mode = 0;
+
+    /* A scan needs an isolated metadata read, without the descriptor sharing
+     * and write upgrades used by AFP fork opens. Reject conflicting flags
+     * and reuse before opening anything or changing the reference counts. */
+    if (adflags & ADFLAGS_RDONLY_STRICT) {
+        if (!(adflags & ADFLAGS_HF)
+                || (adflags & ~(ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDONLY
+                                | ADFLAGS_RDONLY_STRICT))
+                || ad->ad_inited == AD_INITED) {
+            errno = EINVAL;
+            return -1;
+        }
+
+        adflags |= ADFLAGS_RDONLY;
+    } else if (ad->ad_inited == AD_INITED
+               && (ad->ad_adflags & ADFLAGS_RDONLY_STRICT)) {
+        errno = EINVAL;
+        return -1;
+    }
+
     LOG(log_debug, logtype_ad,
         "ad_open(\"%s\", %s): BEGIN {d: %d, m: %d, r: %d}"
         "[dfd: %d (ref: %d), mfd: %d (ref: %d), rfd: %d (ref: %d)]",

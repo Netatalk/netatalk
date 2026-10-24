@@ -54,6 +54,32 @@ specific descriptor/open state before using it. Open descriptors can also
 outlive a pathname or directory entry, so operations on an open fork must
 distinguish the held object from a later path lookup.
 
+### Read-only access
+
+`ADFLAGS_RDONLY` expresses read intent while allowing internal write access.
+With `ADFLAGS_SETSHRMD`, including opens that specify `ADFLAGS_CHECK_OF`,
+data and resource descriptors request `O_RDWR` to support write locks.
+Version 2 metadata also requests `O_RDWR`: its descriptor is shared with
+the resource fork, which may later be opened for writing. An existing empty
+v2 metadata file can receive a fresh header during the open, even without
+`ADFLAGS_CREATE`. Callers must not use this flag alone to promise that
+metadata will remain unchanged.
+
+For isolated metadata inspection, such as `dbd -s`, use
+`ADFLAGS_HF | ADFLAGS_RDONLY_STRICT`, adding `ADFLAGS_DIR` for a directory.
+Strict mode implies `ADFLAGS_RDONLY`, bypasses descriptor promotion, and
+rejects an empty v2 header with `EIO` before it can be repaired. It accepts
+only these flags and requires a private, freshly initialized `struct adouble`.
+Conflicting flags or an object previously used by ad_open() cause `EINVAL`.
+Close a successful open with `ad_close(&ad, ADFLAGS_HF)` and reinitialize
+the object before another open. A retry after a failed strict open also
+requires reinitialization.
+
+Normal AFP fork operations need shared descriptors and lock handling.
+Replacing their opens with strict mode requires a separate ownership review:
+closing an additional descriptor for the same file can release existing
+process-owned POSIX locks. See ad_open() for the API contract.
+
 ## Parsed entries and cached metadata
 
 ad_entry() returns a pointer only when the requested entry's parsed bounds
