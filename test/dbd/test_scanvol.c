@@ -21,6 +21,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -34,6 +35,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
@@ -172,6 +174,10 @@ static void scratch_cleanup(struct dbd_scratch *s)
 
     unlink(s->dbfile);
     rmdir(s->dbdir);
+    snprintf(path, sizeof(path), "%s/%s/sample", s->share, ADv2_DIRNAME);
+    unlink(path);
+    snprintf(path, sizeof(path), "%s/sample", s->share);
+    unlink(path);
     snprintf(path, sizeof(path), "%s/%s/.Parent", s->share, ADv2_DIRNAME);
     unlink(path);
     snprintf(path, sizeof(path), "%s/%s", s->share, ADv2_DIRNAME);
@@ -244,6 +250,259 @@ static void test_new_addir_reopen_failure(void)
     report(fired && created && ret == -1, name);
 }
 
+/*! @brief Create a data file and valid v2 metadata with a known CNID hint */
+static int scratch_metadata(struct dbd_scratch *s)
+{
+    struct adouble ad;
+    struct stat st;
+    char path[MAXPATHLEN];
+    /* SQLite returns a string; ad_setid copies the full fixed-width field. */
+    char stamp[ADEDLEN_PRIVSYN] = {0};
+    int fd, ret;
+    ad_init(&ad, &s->vol);
+
+    if (ad_open(&ad, s->share, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR
+                | ADFLAGS_CREATE, 0700) != 0) {
+        return -1;
+    }
+
+    ad_close(&ad, ADFLAGS_HF);
+    snprintf(path, sizeof(path), "%s/sample", s->share);
+    fd = open(path, O_CREAT | O_RDWR | O_EXCL, 0600);
+
+    if (fd < 0) {
+        return -1;
+    }
+
+    ret = fstat(fd, &st);
+    close(fd);
+
+    if (ret != 0 || cnid_getstamp(s->vol.v_cdb, stamp, sizeof(stamp)) != 0) {
+        return -1;
+    }
+
+    ad_init(&ad, &s->vol);
+
+    if (ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                0600) != 0) {
+        return -1;
+    }
+
+    ret = ad_setid(&ad, st.st_dev, st.st_ino, htonl(1000), htonl(2), stamp);
+
+    if (ret == 1) {
+        ret = ad_flush(&ad);
+    } else {
+        errno = EINVAL;
+        ret = -1;
+    }
+
+    ad_close(&ad, ADFLAGS_HF);
+    return ret;
+}
+
+/*! @brief Read the metadata bytes and stat for before/after comparisons */
+static ssize_t metadata_snapshot(const char *path, char *buf, struct stat *st)
+{
+    int fd = open(path, O_RDONLY);
+    ssize_t len = -1;
+
+    if (fd >= 0) {
+        if (fstat(fd, st) == 0) {
+            len = read(fd, buf, AD_DATASZ2);
+        }
+
+        close(fd);
+    }
+
+    return len;
+}
+
+/*! @brief Compare metadata content and modification times, ignoring read atime */
+static int metadata_unchanged(const char *path, const char *before,
+                              ssize_t before_len, const struct stat *before_st)
+{
+    char after[AD_DATASZ2];
+    struct stat after_st;
+    struct timespec before_mtime, after_mtime;
+    ssize_t after_len = metadata_snapshot(path, after, &after_st);
+
+    if (before_len < 0 || after_len != before_len) {
+        return 0;
+    }
+
+    before_mtime = atalk_stat_mtime_timespec(before_st);
+    after_mtime = atalk_stat_mtime_timespec(&after_st);
+    return before_st->st_size == after_st.st_size
+           && before_st->st_ctime == after_st.st_ctime
+           && before_mtime.tv_sec == after_mtime.tv_sec
+           && before_mtime.tv_nsec == after_mtime.tv_nsec
+           && memcmp(before, after, (size_t)before_len) == 0;
+}
+
+/*! @brief Strict reads use O_RDONLY, while ordinary v2 opens retain O_RDWR */
+static void test_strict_metadata(void)
+{
+    const int conflicting[] = {
+        ADFLAGS_RDWR, ADFLAGS_CREATE, ADFLAGS_TRUNC, ADFLAGS_EXCL,
+        ADFLAGS_SETSHRMD, ADFLAGS_CHECK_OF, ADFLAGS_DF, ADFLAGS_RF,
+    };
+    struct dbd_scratch s;
+    struct adouble ad;
+    struct stat st;
+    char path[MAXPATHLEN];
+    int passed = 1;
+
+    if (scratch_setup(&s) < 0 || scratch_metadata(&s) != 0) {
+        printf("Bail out! cannot create metadata: %s\n", strerror(errno));
+        scratch_cleanup(&s);
+        exit(1);
+    }
+
+    snprintf(path, sizeof(path), "%s/sample", s.share);
+    ad_init(&ad, &s.vol);
+
+    if (ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDONLY_STRICT) != 0) {
+        passed = 0;
+    } else {
+        passed = (fcntl(ad_meta_fileno(&ad), F_GETFL) & O_ACCMODE) == O_RDONLY;
+        /* A strict handle cannot be reused for a write upgrade. */
+        passed &= ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDWR) == -1
+                  && errno == EINVAL;
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    ad_init(&ad, &s.vol);
+
+    if (ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDONLY) != 0) {
+        passed = 0;
+    } else {
+        passed &= (fcntl(ad_meta_fileno(&ad), F_GETFL) & O_ACCMODE) == O_RDWR;
+        /* A strict request must not inherit an existing writable handle. */
+        passed &= ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDONLY_STRICT) == -1
+                  && errno == EINVAL;
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    for (size_t i = 0; i < sizeof(conflicting) / sizeof(conflicting[0]); i++) {
+        ad_init(&ad, &s.vol);
+        passed &= ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDONLY_STRICT
+                          | conflicting[i]) == -1 && errno == EINVAL;
+        passed &= ad_meta_fileno(&ad) == -1 && ad.ad_meta_refcount == 0;
+    }
+
+    report(passed,
+           "strict metadata opens are read-only and preserve ordinary v2 promotion");
+    snprintf(path, sizeof(path), "%s/%s/sample", s.share, ADv2_DIRNAME);
+    passed = truncate(path, 0) == 0;
+    snprintf(path, sizeof(path), "%s/sample", s.share);
+    ad_init(&ad, &s.vol);
+
+    if (ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDONLY_STRICT) == 0) {
+        passed = 0;
+        ad_close(&ad, ADFLAGS_HF);
+    } else {
+        passed &= errno == EIO && ad_meta_fileno(&ad) == -1
+                  && ad.ad_meta_refcount == 0 && ad.ad_mdp->adf_refcount == 0;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s/sample", s.share, ADv2_DIRNAME);
+    passed &= stat(path, &st) == 0 && st.st_size == 0;
+    report(passed,
+           "strict reads reject empty v2 metadata and close the failed open");
+    scratch_cleanup(&s);
+}
+
+/*! @brief Both scan modes preserve writable empty and read-only valid sidecars */
+static void test_scan_metadata(int empty, dbd_flags_t flags, const char *name)
+{
+    struct dbd_scratch s;
+    char path[MAXPATHLEN], origcwd[MAXPATHLEN], before[AD_DATASZ2];
+    struct stat before_st;
+    struct timespec times[2] = {{946684800, 0}, {946684800, 0}};
+    ssize_t before_len;
+    cnid_t id;
+    int ret, passed;
+
+    if (scratch_setup(&s) < 0 || scratch_metadata(&s) != 0
+            || getcwd(origcwd, sizeof(origcwd)) == NULL) {
+        printf("Bail out! cannot create metadata: %s\n", strerror(errno));
+        scratch_cleanup(&s);
+        exit(1);
+    }
+
+    snprintf(path, sizeof(path), "%s/%s/sample", s.share, ADv2_DIRNAME);
+
+    if ((empty && truncate(path, 0) != 0)
+            || utimensat(AT_FDCWD, path, times, 0) != 0
+            || chmod(path, empty ? 0600 : 0444) != 0) {
+        printf("Bail out! cannot prepare metadata: %s\n", strerror(errno));
+        scratch_cleanup(&s);
+        exit(1);
+    }
+
+    before_len = metadata_snapshot(path, before, &before_st);
+    ret = cmd_dbd_scanvol(&s.vol, DBD_FLAGS_SCAN | flags);
+    passed = chdir(origcwd) == 0 && ret == 0
+             && metadata_unchanged(path, before, before_len, &before_st);
+    id = cnid_get(s.vol.v_cdb, htonl(2), "sample", strlen("sample"));
+
+    if (!empty) {
+        /* Prove the entry was processed, including its hint when -i is absent. */
+        passed &= id != CNID_INVALID
+                  && ((flags & DBD_FLAGS_STRIP_AD) || id == htonl(1000));
+    }
+
+    scratch_cleanup(&s);
+    report(passed, name);
+}
+
+/*! @brief Ordinary maintenance repairs empty headers and mismatched CNID hints */
+static void test_metadata_repair(int empty)
+{
+    struct dbd_scratch s;
+    struct adouble ad;
+    struct stat st = {0};
+    char path[MAXPATHLEN], origcwd[MAXPATHLEN], stamp[ADEDLEN_PRIVSYN];
+    cnid_t id;
+    int passed;
+
+    if (scratch_setup(&s) < 0 || scratch_metadata(&s) != 0
+            || getcwd(origcwd, sizeof(origcwd)) == NULL) {
+        printf("Bail out! cannot create metadata: %s\n", strerror(errno));
+        scratch_cleanup(&s);
+        exit(1);
+    }
+
+    snprintf(path, sizeof(path), "%s/sample", s.share);
+    passed = stat(path, &st) == 0;
+    /* The database takes precedence over the fixture's stale hint of 1000. */
+    id = cnid_add(s.vol.v_cdb, &st, htonl(2), "sample", strlen("sample"),
+                  htonl(2000));
+    passed &= id == htonl(2000);
+    snprintf(path, sizeof(path), "%s/%s/sample", s.share, ADv2_DIRNAME);
+    passed &= !empty || truncate(path, 0) == 0;
+    passed &= cmd_dbd_scanvol(&s.vol, 0) == 0;
+    passed &= chdir(origcwd) == 0;
+    passed &= stat(path, &st) == 0 && st.st_size > 0;
+    snprintf(path, sizeof(path), "%s/sample", s.share);
+    passed &= stat(path, &st) == 0;
+    passed &= cnid_get(s.vol.v_cdb, htonl(2), "sample", strlen("sample")) == id;
+    cnid_getstamp(s.vol.v_cdb, stamp, sizeof(stamp));
+    ad_init(&ad, &s.vol);
+
+    if (ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDONLY_STRICT) != 0) {
+        passed = 0;
+    } else {
+        passed &= ad_getid(&ad, st.st_dev, st.st_ino, htonl(2), stamp) == id;
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    scratch_cleanup(&s);
+    report(passed, empty ? "ordinary maintenance repairs empty v2 metadata"
+           : "ordinary maintenance replaces a stale hint with the database CNID");
+}
+
 /*!
  * @brief Run the dbd scan tests and print their TAP results
  *
@@ -266,6 +525,16 @@ int main(void)
 
     cnid_init();
     test_new_addir_reopen_failure();
+    test_strict_metadata();
+    test_scan_metadata(1, 0, "-s leaves empty v2 metadata unchanged");
+    test_scan_metadata(1, DBD_FLAGS_STRIP_AD,
+                       "-s -i leaves empty v2 metadata unchanged");
+    test_scan_metadata(0, 0,
+                       "-s reads a CNID hint from read-only v2 metadata without changing it");
+    test_scan_metadata(0, DBD_FLAGS_STRIP_AD,
+                       "-s -i leaves valid read-only v2 metadata unchanged");
+    test_metadata_repair(1);
+    test_metadata_repair(0);
     printf("1..%d\n", tests_run);
     return tests_failed == 0 ? 0 : 1;
 }

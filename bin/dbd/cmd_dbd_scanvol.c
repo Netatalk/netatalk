@@ -148,7 +148,8 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
  * On an adouble:ea volume the call converts the adouble:v2 data with -c and
  * otherwise does nothing. On an adouble:v2 volume a missing AppleDouble file
  * gets a log line. Outside -s, the call creates it with the Mac name and the
- * owner of the entry. An existing file has to open.
+ * owner of the entry. An existing file has to open. Under -s it is opened
+ * strictly read-only, so an empty header is reported rather than repaired.
  *
  * @param[in]  fname    entry name in the current directory
  * @param[in]  st       stat result of the entry
@@ -231,10 +232,13 @@ static int check_adfile(const char *fname, const struct stat *st,
             close(fd);
         }
     } else {
+        int oflags = (dbd_flags & DBD_FLAGS_SCAN)
+                     ? ADFLAGS_RDONLY_STRICT : ADFLAGS_RDONLY;
         ad_init(&ad, vol);
 
-        if (ad_open(&ad, fname, adflags | ADFLAGS_RDONLY) != 0) {
+        if (ad_open(&ad, fname, adflags | oflags) != 0) {
             dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
+            close(fd);
             return -1;
         }
 
@@ -773,6 +777,7 @@ static int read_addir(void)
  * AppleDouble file agrees
  *
  * The call reads the CNID hint of the AppleDouble file, unless -i ignores it.
+ * Under -s, the metadata read cannot initialize or repair the header.
  * It then adds or looks up the entry in the database with that hint. A mismatch
  * rewrites the AppleDouble file with the database CNID, except under -s. An
  * emptied CNID table ends the scan through longjmp, since the rest of the
@@ -789,6 +794,8 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
 {
     int adflags = ADFLAGS_HF;
     int err;
+    int oflags = (dbd_flags & DBD_FLAGS_SCAN)
+                 ? ADFLAGS_RDONLY_STRICT : ADFLAGS_RDWR;
     cnid_t db_cnid, ad_cnid;
     struct adouble ad;
     adflags = ADFLAGS_HF | (S_ISDIR(st->st_mode) ? ADFLAGS_DIR : 0);
@@ -799,7 +806,6 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
         dbd_log(LOGDEBUG, "Ignoring AppleDouble CNID hint for '%s/%s'", cwdbuf, name);
 
         if (ADFILE_OK && vol->v_adouble == AD_VERSION_EA) {
-            int oflags = (dbd_flags & DBD_FLAGS_SCAN) ? ADFLAGS_RDONLY : ADFLAGS_RDWR;
             ad_init(&ad, vol);
 
             if (ad_open(&ad, name, adflags | oflags) != 0) {
@@ -812,7 +818,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
     } else if (ADFILE_OK) {
         ad_init(&ad, vol);
 
-        if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
+        if (ad_open(&ad, name, adflags | oflags) != 0) {
             if (vol->v_adouble != AD_VERSION_EA) {
                 dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name,
                         strerror(errno));

@@ -245,11 +245,15 @@ struct adouble {
                                      at least prevent other users who have rw access to the
                                      file from placing excl locks. */
 #define ADFLAGS_RDWR      (1<<8)  /*!< open read/write */
-#define ADFLAGS_RDONLY    (1<<9)  /*!< open read only */
+#define ADFLAGS_RDONLY    (1<<9)  /*!< read intent; may use O_RDWR for locking or
+                                     shared v2 forks and repair empty v2 metadata;
+                                     see ADFLAGS_RDONLY_STRICT */
 #define ADFLAGS_CREATE    (1<<10) /*!< create file, open called with O_CREAT */
 #define ADFLAGS_EXCL      (1<<11) /*!< exclusive open, open called with O_EXCL */
 #define ADFLAGS_TRUNC     (1<<12) /*!< truncate, open called with O_TRUNC */
 #define ADFLAGS_NOHDR     (1<<13) /*!< read no ._ header: a lock probe */
+#define ADFLAGS_RDONLY_STRICT (1<<14) /*!< metadata only, no promotion or repair;
+                                        requires a freshly initialized adouble */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_RO         (1 << 1)

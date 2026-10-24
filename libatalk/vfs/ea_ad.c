@@ -775,6 +775,9 @@ exit:
 
     /* fall through */
     case -2:
+        free(ea->filename);
+        ea->filename = NULL;
+
         if (ea->ea_data) {
             free(ea->ea_data);
             ea->ea_data = NULL;
