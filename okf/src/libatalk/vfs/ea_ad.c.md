@@ -5,7 +5,7 @@ description: "Store Extended Attributes inside .AppleDouble folders as follows:"
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/ea_ad.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T21:19:58+01:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -264,7 +264,7 @@ Calls through [`vol::ad_path`](../../include/atalk/volume.h.md#struct-vol): no t
 int ea_open(const struct vol *vol, const char *uname, eaflags_t eaflags, struct ea *ea)
 ```
 
-Defined at lines 645 to 792. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 645 to 795. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 open EA header file, create if it doesnt exits and called with O_CREATE
 
@@ -291,7 +291,7 @@ Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [e
 int ea_openat(const struct vol *vol, int dirfd, const char *uname, eaflags_t eaflags, struct ea *ea)
 ```
 
-Defined at lines 816 to 849. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 819 to 852. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 openat like wrapper for ea_open, takes a additional file descriptor
 
@@ -319,7 +319,7 @@ Called by: [ea_copyfile](ea_ad.c.md#ea_copyfile), [ea_deletefile](ea_ad.c.md#ea_
 int ea_close(struct ea *ea)
 ```
 
-Defined at lines 861 to 960. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 864 to 963. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 flushes and closes an ea handle
 
@@ -340,7 +340,7 @@ Called by: [check_eafiles](../../bin/dbd/cmd_dbd_scanvol.c.md#check_eafiles), [e
 int ea_absent(const struct vol *vol, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 977 to 982. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 980 to 985. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 The reply for an attribute the object lacks: a zero size word.
 
@@ -359,7 +359,7 @@ Called by: [afp_getextattr](../../etc/afpd/extattrs.c.md#afp_getextattr), [get_e
 int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int fd)
 ```
 
-Defined at lines 999 to 1048. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1002 to 1051. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 get size of an EA
 
@@ -388,7 +388,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen, const char *uname, int oflag, const char *attruname, int maxreply, int fd)
 ```
 
-Defined at lines 1066 to 1174. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1069 to 1177. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy EA into rbuf
 
@@ -418,7 +418,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen, const char *uname, int oflag, int fd)
 ```
 
-Defined at lines 1191 to 1252. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1194 to 1255. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy names of EAs into attrnamebuf
 
@@ -446,7 +446,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int set_ea(const struct vol *vol, const char *uname, const char *attruname, const char *ibuf, size_t attrsize, int oflag, int fd)
 ```
 
-Defined at lines 1270 to 1332. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1273 to 1335. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 set a Solaris native EA
 
@@ -475,7 +475,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int remove_ea(const struct vol *vol, const char *uname, const char *attruname, int oflag, int fd)
 ```
 
-Defined at lines 1347 to 1384. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1350 to 1387. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 remove a EA from a file
 
@@ -502,7 +502,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_deletefile(const struct vol *vol, int dirfd, const char *file)
 ```
 
-Defined at lines 1405 to 1464. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1408 to 1467. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Delete every EA of a file together with the EA header file.
 
@@ -527,7 +527,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_renamefile(const struct vol *vol, int dirfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1485 to 1589. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1488 to 1592. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Move every AppleDouble EA of src to dst.
 
@@ -553,7 +553,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_copyfile(const struct vol *vol, int sfd, const char *src, const char *dst)
 ```
 
-Defined at lines 1603 to 1697. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1606 to 1700. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 copy EAs
 
@@ -579,7 +579,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_chown(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
 ```
 
-Defined at lines 1712 to 1775. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1715 to 1778. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Give the EA header file and every EA file of path a new owner.
 
@@ -605,7 +605,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 1791 to 1863. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1794 to 1866. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Apply a new file mode to the EA header file and every EA file.
 
@@ -631,7 +631,7 @@ Dispatched via: [netatalk_ea_adouble](vfs.c.md#netatalk_ea_adouble)
 int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
 ```
 
-Defined at lines 1880 to 1956. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
+Defined at lines 1883 to 1959. Declared in [include/atalk/ea.h](../../include/atalk/ea.h.md).
 
 Apply a new directory mode to the EA header file and every EA file.
 

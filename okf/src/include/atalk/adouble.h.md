@@ -5,7 +5,7 @@ description: "AppleDouble metadata, fork I/O and locking types and interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T21:19:58+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -83,7 +83,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int ad_data_open(const struct adouble *ad)
 ```
 
-Defined at lines 406 to 409.
+Defined at lines 410 to 413.
 
 Tell whether the data fork holds a reference and a descriptor >= 0.
 
@@ -95,7 +95,7 @@ Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 static int ad_meta_open(const struct adouble *ad)
 ```
 
-Defined at lines 412 to 415.
+Defined at lines 416 to 419.
 
 Tell whether the metadata holds a reference and an open descriptor.
 
@@ -107,7 +107,7 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_flush_
 static int ad_rsrc_open(const struct adouble *ad)
 ```
 
-Defined at lines 418 to 421.
+Defined at lines 422 to 425.
 
 Tell whether the resource fork holds a reference and a descriptor.
 
@@ -119,7 +119,7 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](
 static int ad_meta_loaded(const struct adouble *ad)
 ```
 
-Defined at lines 424 to 429.
+Defined at lines 428 to 433.
 
 Tell whether the header got read: a reference and no symlink.
 
@@ -131,7 +131,7 @@ Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr]
 int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
 ```
 
-Declared at include/atalk/adouble.h line 453; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 457; no definition in the scanned sources.
 
 ### ad_pread
 
@@ -139,7 +139,7 @@ Declared at include/atalk/adouble.h line 453; no definition in the scanned sourc
 ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t)
 ```
 
-Declared at include/atalk/adouble.h line 509; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 513; no definition in the scanned sources.
 
 # Types
 
@@ -232,7 +232,8 @@ Defined at line 191.
 * `ADFLAGS_NOHDR`: read no ._ header: a lock probe
 * `ADFLAGS_NOHF`: not an error if no metadata fork
 * `ADFLAGS_NORF`: not an error if no resource fork
-* `ADFLAGS_RDONLY`: open read only
+* `ADFLAGS_RDONLY`: read intent; may use O_RDWR for locking or shared v2 forks and repair empty v2 metadata; see ADFLAGS_RDONLY_STRICT
+* `ADFLAGS_RDONLY_STRICT`: metadata only, no promotion or repair; requires a freshly initialized adouble
 * `ADFLAGS_RDWR`: open read/write
 * `ADFLAGS_SETSHRMD`: setting share mode must be done with excl fcnt lock, which implies that the file must be opened rw.
 * `ADFLAGS_TRUNC`: truncate, open called with O_TRUNC

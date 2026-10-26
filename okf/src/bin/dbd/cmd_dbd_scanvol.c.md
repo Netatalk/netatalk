@@ -5,7 +5,7 @@ description: "Volume scan of dbd: CNID and AppleDouble checks and repairs."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/dbd/cmd_dbd_scanvol.c"
 tags: ["bin/dbd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T21:19:58+01:00 }
 ---
 
 Part of the [bin/dbd](../dbd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -95,11 +95,11 @@ Called by: [dbd_readdir](cmd_dbd_scanvol.c.md#dbd_readdir)
 static int check_adfile(const char *fname, const struct stat *st, const char **newname)
 ```
 
-Defined at lines 160 to 246.
+Defined at lines 161 to 250.
 
 Check the AppleDouble file of an entry, or convert it to extended attributes with -c.
 
-On an adouble:ea volume the call converts the adouble:v2 data with -c and otherwise does nothing. On an adouble:v2 volume a missing AppleDouble file gets a log line. Outside -s, the call creates it with the Mac name and the owner of the entry. An existing file has to open.
+On an adouble:ea volume the call converts the adouble:v2 data with -c and otherwise does nothing. On an adouble:v2 volume a missing AppleDouble file gets a log line. Outside -s, the call creates it with the Mac name and the owner of the entry. An existing file has to open. Under -s it is opened strictly read-only, so an empty header is reported rather than repaired.
 
 Parameters:
 * `fname`: entry name in the current directory
@@ -122,7 +122,7 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static void remove_eafiles(const char *name, struct ea *ea)
 ```
 
-Defined at lines 258 to 310.
+Defined at lines 262 to 314.
 
 Delete the extended attribute files of an entry from the .AppleDouble directory.
 
@@ -144,7 +144,7 @@ Uses file-scope variables: `cwdbuf`
 static int check_eafiles(const char *fname)
 ```
 
-Defined at lines 323 to 380.
+Defined at lines 327 to 384.
 
 Check the extended attribute files of an entry against its EA header.
 
@@ -167,7 +167,7 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static bool adouble_dir_unusable(int err)
 ```
 
-Defined at lines 392 to 395.
+Defined at lines 396 to 399.
 
 Tell whether an open error means that a non-directory holds the .AppleDouble name.
 
@@ -186,7 +186,7 @@ Called by: [check_addir](cmd_dbd_scanvol.c.md#check_addir)
 static int check_addir(int volroot)
 ```
 
-Defined at lines 411 to 570.
+Defined at lines 415 to 574.
 
 Check the .AppleDouble directory and its .Parent file in the current directory, and create them when missing.
 
@@ -211,7 +211,7 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static int check_eafile_in_adouble(int parent_fd, int addir_fd, const char *name)
 ```
 
-Defined at lines 586 to 643.
+Defined at lines 590 to 647.
 
 Check whether a .AppleDouble entry is an EA file and whether its data file still exists.
 
@@ -238,7 +238,7 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static int read_addir(void)
 ```
 
-Defined at lines 656 to 769.
+Defined at lines 660 to 773.
 
 Check the entries of the .AppleDouble directory of the current directory.
 
@@ -258,11 +258,11 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok)
 ```
 
-Defined at lines 787 to 881.
+Defined at lines 792 to 887.
 
 Make sure that an entry has a CNID in the database and that its AppleDouble file agrees.
 
-The call reads the CNID hint of the AppleDouble file, unless -i ignores it. It then adds or looks up the entry in the database with that hint. A mismatch rewrites the AppleDouble file with the database CNID, except under -s. An emptied CNID table ends the scan through longjmp, since the rest of the volume would get new IDs.
+The call reads the CNID hint of the AppleDouble file, unless -i ignores it. Under -s, the metadata read cannot initialize or repair the header. It then adds or looks up the entry in the database with that hint. A mismatch rewrites the AppleDouble file with the database CNID, except under -s. An emptied CNID table ends the scan through longjmp, since the rest of the volume would get new IDs.
 
 Parameters:
 * `name`: entry name
@@ -284,7 +284,7 @@ Uses file-scope variables: `cwdbuf`, `dbd_flags`, `jmp`, `stamp`
 static int check_orphaned(const char *name)
 ```
 
-Defined at lines 891 to 909.
+Defined at lines 897 to 915.
 
 Delete a `._name` file whose `name` no longer exists.
 
@@ -307,7 +307,7 @@ Uses file-scope variables: `cwdbuf`
 static int dbd_readdir(int volroot, cnid_t did)
 ```
 
-Defined at lines 928 to 1131.
+Defined at lines 934 to 1137.
 
 Scan the current directory, check each entry, and descend into the subdirectories.
 
@@ -335,7 +335,7 @@ Uses file-scope variables: `alarmed` in [bin/dbd/cmd_dbd.c](cmd_dbd.c.md), `cwdb
 int cmd_dbd_scanvol(struct vol *vol, dbd_flags_t flags)
 ```
 
-Defined at lines 1146 to 1211. Declared in [bin/dbd/cmd_dbd.h](cmd_dbd.h.md).
+Defined at lines 1152 to 1217. Declared in [bin/dbd/cmd_dbd.h](cmd_dbd.h.md).
 
 Scan a whole volume from its root.
 
