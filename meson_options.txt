@@ -136,6 +136,12 @@ option(
     description: 'Enable iconv support',
 )
 option(
+    'with-libunwind',
+    type: 'boolean',
+    value: true,
+    description: 'Enable libunwind use if library is present',
+)
+option(
     'with-overwrite',
     type: 'boolean',
     value: false,
