@@ -60,6 +60,7 @@ enable_debugging = get_option('with-debugging')
 enable_dtrace = get_option('with-dtrace')
 enable_fce = get_option('with-fce')
 enable_gssapi = get_option('with-gssapi')
+enable_libunwind = get_option('with-libunwind')
 enable_iconv = get_option('with-libiconv')
 enable_kerberos = get_option('with-kerberos')
 enable_krb5_uam = get_option('with-krbV-uam')
@@ -644,7 +645,11 @@ cnid_backends = ''
 # Check for mysql CNID backend
 
 # Backtraces on musl, which ships no execinfo
-libunwind = dependency('libunwind', required: false)
+if enable_libunwind
+    libunwind = dependency('libunwind', required: false)
+else
+    libunwind = disabler()
+endif
 
 if libunwind.found()
     cdata.set('HAVE_LIBUNWIND', 1)
