@@ -3,8 +3,10 @@
   Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
   Copyright (c) 2026 Andy Lemin (andylemin)
 
-  dsi_test_header(), dsi_test_cleanup() and the session set-up in
-  dsi_test_open() come from test.c.
+  dsi_test_header(), dsi_test_cleanup(), the session set-up in
+  dsi_test_open() and the AppleDouble header packing of pack_appledouble()
+  come from test.c; write_disk_file() comes from subtests_cnid.c, and
+  drop_entry() from subtests.c.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1514,4 +1516,71 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
     }
 
     return ret;
+}
+
+/*!
+ * @brief Pack an AppleDouble header into buf: the magic, version 2, a zero
+ *        filler and n entries of an id, an offset and a length each
+ *
+ * @param[out] buf    a zeroed buffer of AD_HEADER_LEN + 12 * n bytes or more
+ * @param[in]  entry  the n entries, three words each
+ * @param[in]  n      the entry count
+ */
+void pack_appledouble(uint8_t *buf, const uint32_t *entry, uint16_t n)
+{
+    const uint16_t count = htons(n);
+    uint32_t be = htonl(AD_MAGIC);
+    memcpy(buf, &be, sizeof(be));
+    be = htonl(AD_VERSION2);
+    memcpy(buf + ADEDLEN_MAGIC, &be, sizeof(be));
+    memcpy(buf + AD_HEADER_LEN - ADEDLEN_NENTRIES, &count, sizeof(count));
+
+    for (size_t i = 0; i < 3 * (size_t)n; i++) {
+        be = htonl(entry[i]);
+        memcpy(buf + AD_HEADER_LEN + 4 * i, &be, sizeof(be));
+    }
+}
+
+/*!
+ * @brief Write a file's whole content behind the server's back, creating or
+ *        truncating it
+ *
+ * @param[in] path  the file
+ * @param[in] data  the content
+ * @param[in] len   its length
+ * @returns 0, -1 when the open or the write failed
+ */
+int write_disk_file(const char *path, const void *data, size_t len)
+{
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    ssize_t written;
+
+    if (fd < 0) {
+        return -1;
+    }
+
+    written = write(fd, data, len);
+    close(fd);
+    return written == (ssize_t)len ? 0 : -1;
+}
+
+/*!
+ * @brief Retire a name's dircache entry, as another session's cache hint would
+ *
+ * @param[in] vol   volume
+ * @param[in] did   the entry's folder
+ * @param[in] name  the entry's unix name
+ */
+void drop_entry(const struct vol *vol, cnid_t did, char *name)
+{
+    const struct dir *parent = dirlookup(vol, did);
+    struct dir *entry;
+
+    if (parent != NULL
+            && (entry = dircache_search_by_name(vol, parent, name,
+                                                strlen(name))) != NULL) {
+        dir_remove(vol, entry, 0);
+    }
+
+    dir_free_invalid_q();
 }

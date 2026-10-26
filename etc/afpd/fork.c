@@ -236,7 +236,7 @@ static int materialize_virtual_icon(const AFPObj *obj, struct ofork *ofork,
     }
 
     before = ad_refs_now(ofork->of_ad);
-    /* a failed or closed resource fork open zeroes a lender's length */
+    /* a failed open of a missing resource fork zeroes a lender's length */
     rlen = ofork->of_ad->ad_rlen;
 
     /* the data fork first, with no create: a file gone from the name stays
@@ -600,8 +600,8 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
                         int access, int ofrefnum)
 {
     int ret;
-    int readset;
-    int writeset;
+    int readset = 0;
+    int writeset = 0;
     int denyreadset;
     int denywriteset;
 
@@ -611,7 +611,9 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
     }
 
     if (access & (OPENACC_RD | OPENACC_DRD)) {
-        if ((readset = ad_testlock(adp, eid, AD_FILELOCK_OPEN_RD)) < 0) {
+        /* the open-read band answers the deny-read request alone */
+        if ((access & OPENACC_DRD)
+                && (readset = ad_testlock(adp, eid, AD_FILELOCK_OPEN_RD)) < 0) {
             return readset;
         }
 
@@ -653,7 +655,10 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
 
     /* ------------same for writing -------------- */
     if (access & (OPENACC_WR | OPENACC_DWR)) {
-        if ((writeset = ad_testlock(adp, eid, AD_FILELOCK_OPEN_WR)) < 0) {
+        /* the open-write band answers the deny-write request alone */
+        if ((access & OPENACC_DWR)
+                && (writeset = ad_testlock(adp, eid,
+                                           AD_FILELOCK_OPEN_WR)) < 0) {
             return writeset;
         }
 
@@ -1007,6 +1012,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         adflags = ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE;
     } else {
         adflags = ADFLAGS_HF | ADFLAGS_RDONLY;
+    }
+
+    /* the resource fork's open above measured the fork it holds */
+    if (eid == ADEID_RFORK && ad_reso_fileno(ofork->of_ad) != -1) {
+        adflags |= ADFLAGS_NORLEN;
     }
 
     if (ad_open(ofork->of_ad, upath, adflags, 0666) == 0) {

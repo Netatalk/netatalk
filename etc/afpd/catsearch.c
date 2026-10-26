@@ -1002,11 +1002,12 @@ static int catsearch(const AFPObj *obj,
                 }
 
                 if (path.d_dir == NULL) {
-                    /* path.m_name is set by adddir */
-                    if ((path.d_dir = dir_add(vol,
-                                              currentdir,
-                                              &path,
-                                              unlen)) == NULL) {
+                    /* path.m_name is set by adddir; the criteria and the
+                     * reply read the folder's metadata next */
+                    if ((path.d_dir = dir_add_fill(vol, currentdir, &path,
+                                                   unlen,
+                                                   (c1.rbitmap | c1.dbitmap)
+                                                   & DIRPBITS_AD)) == NULL) {
                         result = AFPERR_MISC;
                         goto catsearch_end;
                     }

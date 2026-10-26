@@ -95,6 +95,11 @@ struct dir_modify_args {
 #define DIRPBIT_PDINFO  13         /*!< ProDOS Info */
 #define DIRPBIT_UNIXPR  15
 
+/* the folder parameters whose request makes getdirparams() read metadata */
+#define DIRPBITS_AD ((1 << DIRPBIT_ATTR) | (1 << DIRPBIT_CDATE) \
+                     | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_BDATE) \
+                     | (1 << DIRPBIT_FINFO))
+
 #define FILDIRBIT_ISDIR        (1 << 7) /*!< is a directory */
 #define FILDIRBIT_ISFILE       (0)      /*!< is a file */
 
@@ -140,6 +145,8 @@ extern struct dir  *dir_new(const char *mname, const char *uname,
                             const struct vol *,
                             cnid_t pdid, cnid_t did, bstring fullpath, struct stat *);
 extern void        dir_free(struct dir *);
+extern struct dir  *dir_add_fill(struct vol *, const struct dir *,
+                                 struct path *, int, bool);
 extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *,
                             int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir,

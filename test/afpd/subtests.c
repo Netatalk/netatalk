@@ -79,27 +79,6 @@ static struct dir *plant_root_entry(const struct vol *vol, const char *uname,
     return entry;
 }
 
-/*!
- * @brief Retire a name's dircache entry, as another session's cache hint would
- *
- * @param[in] vol   volume
- * @param[in] did   the entry's folder
- * @param[in] name  the entry's unix name
- */
-static void drop_entry(const struct vol *vol, cnid_t did, char *name)
-{
-    const struct dir *parent = dirlookup(vol, did);
-    struct dir *entry;
-
-    if (parent != NULL
-            && (entry = dircache_search_by_name(vol, parent, name,
-                                                strlen(name))) != NULL) {
-        dir_remove(vol, entry, 0);
-    }
-
-    dir_free_invalid_q();
-}
-
 int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 {
     struct dir *dir;

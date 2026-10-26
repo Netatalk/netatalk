@@ -3718,7 +3718,7 @@ int utest_icon_cleanup_spares_swapped_file(AFPObj *obj, struct vol *vol)
              vol->ad_path(name, 0));
     snprintf(swappath, sizeof(swappath), "%s/%s", vol->v_path, swap);
 
-    /* a write-only fork's locks take two probes before the first lock */
+    /* a write-only fork's locks take one probe before the first lock */
     if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
                  OPENACC_WR, &v) != AFP_OK
             || (fd = open(swappath, O_CREAT | O_WRONLY, 0600)) < 0) {
@@ -3739,7 +3739,7 @@ int utest_icon_cleanup_spares_swapped_file(AFPObj *obj, struct vol *vol)
     fi.rename_to = path;
     fi.rename_armed = 1;
     fi.fcntl_armed = 1;
-    fi.fcntl_fail_after = 2;
+    fi.fcntl_fail_after = 1;
     fi.fcntl_errno = ENOLCK;
     rc = afp_write_ext(&fio.obj, (char *)fio.dsi.commands, fio.dsi.cmdlen,
                        (char *)fio.dsi.data, &rbuflen);
@@ -5934,8 +5934,9 @@ int utest_virtual_icon_open_checks_root_access(AFPObj *obj, struct vol *vol)
 }
 
 /*!
- * @brief The close of a resource fork survives a malformed metadata EA that
- *        a writer outside afpd left on the file, and logs the file's name
+ * @brief The close of a written resource fork survives a malformed metadata
+ *        EA that a writer outside afpd left on the file, and logs the file's
+ *        name
  *
  * @returns 0, 1 when the close crashed or its log names no file, -1 when the
  *          setup failed, TEST_SKIP where no EA holds the metadata
@@ -5974,7 +5975,8 @@ int utest_rfork_close_survives_bad_metadata(AFPObj *obj, struct vol *vol)
 
     if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
             || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
-                        OPENACC_RD | OPENACC_WR, &w) != AFP_OK) {
+                        OPENACC_RD | OPENACC_WR, &w) != AFP_OK
+            || fio_write(w, 0, 0, rq_data, 1) != AFP_OK) {
         goto out;
     }
 

@@ -186,10 +186,34 @@ void accessmode(const AFPObj *obj, const struct vol *vol, char *path,
 }
 
 /*!
- * @brief Does the session user have read and search rights on a directory?
+ * @brief Does the session user hold rights on a file or directory?
  *
  * afpd's ACL mappings only add to the user's rights, so the ACL is read
- * only when the mode bits leave out read or search.
+ * only when the mode bits leave a right out.
+ *
+ * @param[in]     obj     session
+ * @param[in]     vol     volume
+ * @param[in]     path    file or directory
+ * @param[in,out] st      stat of path, whose mode an ACL read can rewrite
+ * @param[in]     rights  the AR_U* rights asked
+ *
+ * @returns true when the user holds every right asked
+ */
+bool accessmode_has(const AFPObj *obj, const struct vol *vol, char *path,
+                    struct stat *st, uint8_t rights)
+{
+    struct maccess ma;
+    utommode(obj, st, &ma);
+
+    if ((ma.ma_user & rights) != rights) {
+        accessmode(obj, vol, path, &ma, NULL, st);
+    }
+
+    return (ma.ma_user & rights) == rights;
+}
+
+/*!
+ * @brief Does the session user have read and search rights on a directory?
  *
  * @param[in]     obj   session
  * @param[in]     vol   volume
@@ -201,15 +225,7 @@ void accessmode(const AFPObj *obj, const struct vol *vol, char *path,
 bool accessmode_rx(const AFPObj *obj, const struct vol *vol, char *path,
                    struct stat *st)
 {
-    const uint8_t rx = AR_UREAD | AR_USEARCH;
-    struct maccess ma;
-    utommode(obj, st, &ma);
-
-    if ((ma.ma_user & rx) != rx) {
-        accessmode(obj, vol, path, &ma, NULL, st);
-    }
-
-    return (ma.ma_user & rx) == rx;
+    return accessmode_has(obj, vol, path, st, AR_UREAD | AR_USEARCH);
 }
 
 /*!
