@@ -258,10 +258,8 @@ q_t *rfork_lru = NULL;
 /*! Cache hint processing statistics — logged by log_dircache_stat() */
 static struct {
     unsigned long long hints_received;   /*!< Total hints read from pipe */
-    unsigned long long
-    hints_acted_on;   /*!< Hints that matched a local cache entry */
-    unsigned long long
-    hints_no_match;   /*!< Hints for entries not in local cache (zero cost) */
+    unsigned long long hints_acted_on;   /*!< Hints that matched a local cache entry */
+    unsigned long long hints_no_match;   /*!< Hints for entries not in local cache (zero cost) */
 } cache_hint_stat;
 
 /********************************************************

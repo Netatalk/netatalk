@@ -22,8 +22,7 @@
 struct pfd_stats {
     unsigned long long hits;            /*!< fd served */
     unsigned long long opens;           /*!< slot fills (full path resolutions) */
-    unsigned long long
-    sync_refreshes;  /*!< dircache-learned mismatches, refilled */
+    unsigned long long sync_refreshes;  /*!< dircache-learned mismatches, refilled */
     unsigned long long probe_refreshes; /*!< re-ground probe mismatches, refilled */
     unsigned long long regrounds;       /*!< absolute-path probes issued */
     unsigned long long fallbacks;       /*!< fell back to full-path ostat */

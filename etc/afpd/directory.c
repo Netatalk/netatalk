@@ -871,8 +871,7 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
     }
 
     /* Create new struct for dircache */
-    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath,
-                       &st)) == NULL) { /* 6 */
+    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath, &st)) == NULL) { /* 6 */
         LOG(log_error, logtype_afpd, DIRLOOKUP_LOG_FMT ": {%s, %s}: %s", ntohl(did),
             mpath, upath, strerror(errno));
         afp_errno = AFPERR_MISC;
@@ -1075,8 +1074,7 @@ struct dir *dir_new(const char *m_name,
     }
 
     dir->d_rights_cache = 0xffffffff;
-    dir->arc_list =
-        0;  /* ARC_NONE (= 0, defined in dircache.c), safe with calloc zero-init */
+    dir->arc_list = 0;  /* ARC_NONE (= 0, defined in dircache.c), safe with calloc zero-init */
     /* calloc already zeros these, but be explicit for clarity: */
     dir->dcache_rfork_buf = NULL;
     dir->rfork_lru_node = NULL;

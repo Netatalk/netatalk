@@ -69,11 +69,9 @@
 struct dir_modify_args {
     unsigned int     flags;          /*!< DCMOD_* bitmask */
     cnid_t           new_pdid;       /*!< New parent DID (DCMOD_PATH) */
-    const char
-    *new_mname;      /*!< New mac name, NULL = use new_uname (DCMOD_PATH) */
+    const char      *new_mname;      /*!< New mac name, NULL = use new_uname (DCMOD_PATH) */
     const char      *new_uname;      /*!< New unix name (DCMOD_PATH) */
-    bstring
-    new_pdir_path;  /*!< New parent directory fullpath (DCMOD_PATH) */
+    bstring          new_pdir_path;  /*!< New parent directory fullpath (DCMOD_PATH) */
     struct stat     *st;             /*!< Fresh stat result (DCMOD_STAT) */
     struct adouble  *adp;            /*!< AD data to store (DCMOD_AD) */
 };

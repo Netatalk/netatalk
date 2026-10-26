@@ -397,8 +397,7 @@ STATIC void test529()
     /* Continue iteration if we got results */
     iteration = 1;
 
-    while (ret == 0
-            && iteration < 50) {  /* Safety limit to prevent infinite loop */
+    while (ret == 0 && iteration < 50) {  /* Safety limit to prevent infinite loop */
         memcpy(pos, dsi->data, 16);
         ret = FPCatSearchExt(Conn, vol, 10, pos, f_bitmap, d_bitmap, rbitmap, &filedir,
                              &filedir2);
