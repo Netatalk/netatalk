@@ -422,8 +422,7 @@ int test_pfd_probe_rename_detection(struct vol *vol)
      * simulates a foreign process renaming the directory away and
      * recreating the path, exactly the race the probe must detect.
      * Nothing here trusts the pre-race resolution. */
-    if (rename(oldp, movedp) != 0
-            || mkdir(oldp, 0700) != 0) { // NOSONAR (TOCTOU is the scenario under test)
+    if (rename(oldp, movedp) != 0 || mkdir(oldp, 0700) != 0) { // NOSONAR (TOCTOU is the scenario under test)
         goto out;
     }
 

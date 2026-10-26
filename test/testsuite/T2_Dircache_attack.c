@@ -702,8 +702,7 @@ test_exit:
 STATIC void test508()
 {
     uint16_t vol = VolID;
-    const int NUM_DIRS =
-        2100;  /* Cache=1024 + ghosts=1024 = 2048 capacity, 2100 causes minimal rotation */
+    const int NUM_DIRS = 2100;  /* Cache=1024 + ghosts=1024 = 2048 capacity, 2100 causes minimal rotation */
     uint32_t *dir_ids = NULL;
     char dir_name[64];
     int created_count = 0;

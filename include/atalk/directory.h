@@ -137,8 +137,7 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
     uint16_t    dcache_eavlen;       /*!< bytes in dcache_eavals */
 
     /* === 1-byte + byte arrays (no alignment requirement, packed densely) === */
-    uint8_t
-    arc_list;            /*!< Which ARC list: 0=NONE, 1=T1, 2=T2, 3=B1, 4=B2 */
+    uint8_t     arc_list;            /*!< Which ARC list: 0=NONE, 1=T1, 2=T2, 3=B1, 4=B2 */
 
     /* Cached AppleDouble metadata (Tier 1 AD cache).
      * Populated from ad_metadata() via ad_store_to_cache().
@@ -149,8 +148,7 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
      * Zero-initialized by calloc — zeros are valid defaults. */
     uint8_t     dcache_afpfilei[4];  /*!< ADEID_AFPFILEI: AFP attributes */
     uint8_t     dcache_finderinfo[32]; /*!< ADEID_FINDERI: Finder info */
-    uint8_t
-    dcache_filedatesi[16]; /*!< ADEID_FILEDATESI: create/modify/backup dates (SERVED values) */
+    uint8_t     dcache_filedatesi[16]; /*!< ADEID_FILEDATESI: create/modify/backup dates (SERVED values) */
 };
 
 struct path {

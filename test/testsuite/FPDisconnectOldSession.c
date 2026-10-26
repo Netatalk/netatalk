@@ -925,8 +925,7 @@ fin:
 
     /* Cleanup */
     if (saved_did) {
-        FPDelete(Conn, vol, saved_did,
-                 file1);        /* Original name (if not renamed) */
+        FPDelete(Conn, vol, saved_did, file1);        /* Original name (if not renamed) */
         FPDelete(Conn, vol, saved_did, file2);        /* (if not deleted) */
         FPDelete(Conn, vol, saved_did, file3);        /* Should exist */
         FPDelete(Conn, vol, saved_did, renamed_file1); /* Renamed file */

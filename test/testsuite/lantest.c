@@ -148,10 +148,8 @@ static int32_t num_locks = 2000;  /* byte-range locks held in one fork */
 static int32_t create_enum_files = 2000;  /* 2000 files */
 static int32_t copy_files = 1000;  /* client-side copies: 1000 reads + 1000
                                     * writes = 2000 user actions */
-static int32_t num_fork_locks =
-    2000;  /* forks locked at once (TEST_FORK2000LOCKS) */
-static int32_t cache_dirs =
-    20;  /* dirs for cache tests (20 x 100 = 2000 files) */
+static int32_t num_fork_locks = 2000;  /* forks locked at once (TEST_FORK2000LOCKS) */
+static int32_t cache_dirs = 20;  /* dirs for cache tests (20 x 100 = 2000 files) */
 static int32_t cache_files_per_dir = 100;  /* files per dir */
 static int32_t mixed_cache_files = 500;  /* mixed ops file count: 4 user
                                           * actions each = 2000 actions */
