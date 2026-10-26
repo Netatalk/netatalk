@@ -725,7 +725,11 @@ int ad_close(struct adouble *ad, int adflags)
                         err = -1;
                     }
 
-                    ad->ad_rlen = 0;
+                    /* a fork still holding the adouble keeps the length */
+                    if (!ad_held(ad)) {
+                        ad->ad_rlen = 0;
+                    }
+
                     ad_reso_fileno(ad) = -1;
                 }
             } else {

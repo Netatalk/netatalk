@@ -254,6 +254,7 @@ struct adouble {
 #define ADFLAGS_NOHDR     (1<<13) /*!< read no ._ header: a lock probe */
 #define ADFLAGS_RDONLY_STRICT (1<<14) /*!< metadata only, no promotion or repair;
                                         requires a freshly initialized adouble */
+#define ADFLAGS_NORLEN    (1<<15) /*!< keep ad_rlen, measured by the caller */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_RO         (1 << 1)
@@ -424,6 +425,12 @@ static inline int ad_rsrc_open(const struct adouble *ad)
     return ad->ad_reso_refcount && ad_reso_fileno(ad) >= 0;
 }
 
+/*! @brief Tell whether a data or metadata reference still holds the adouble */
+static inline int ad_held(const struct adouble *ad)
+{
+    return ad->ad_data_refcount || ad->ad_meta_refcount;
+}
+
 /*! @brief Tell whether the header got read: a reference and no symlink */
 static inline int ad_meta_loaded(const struct adouble *ad)
 {
@@ -496,6 +503,8 @@ extern int ad_open_native_finderinfo(const char *path, char *ret);
 extern int ad_openat(struct adouble *, int dirfd, const char *path,
                      int adflags, ...);
 extern int ad_refresh(const char *path, struct adouble *);
+extern int ad_refresh_rfork(const char *path, struct adouble *ad);
+extern int ad_refresh_meta(const char *path, struct adouble *ad);
 extern int ad_stat(const char *, struct stat *);
 extern int ad_metadata(const char *, int, struct adouble *);
 extern int ad_metadataat(int, const char *, int, struct adouble *);

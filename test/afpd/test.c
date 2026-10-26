@@ -70,6 +70,7 @@
 #include "subtests_dircache.h"
 #include "subtests_enumerate.h"
 #include "subtests_extattr.h"
+#include "subtests_icons.h"
 #include "subtests_lock.h"
 #include "subtests_offcnt.h"
 #include "subtests_pfd.h"
@@ -995,22 +996,9 @@ static int lr_delete(struct vol *vol, uint32_t roff, uint32_t filen,
     const char *name = "lowrfork";
     char data[MAXPATHLEN + 1];
     char path[MAXPATHLEN + 1];
-    uint32_t be;
     struct stat st;
     int ret = -1;
-    int fd;
-    /* magic, version, 16 bytes of filler, two entries */
-    be = htonl(AD_MAGIC);
-    memcpy(sidecar, &be, sizeof(be));
-    be = htonl(AD_VERSION2);
-    memcpy(sidecar + 4, &be, sizeof(be));
-    sidecar[25] = 2;
-
-    for (size_t i = 0; i < sizeof(entry) / sizeof(entry[0]); i++) {
-        be = htonl(entry[i]);
-        memcpy(sidecar + AD_HEADER_LEN + 4 * i, &be, sizeof(be));
-    }
-
+    pack_appledouble(sidecar, entry, 2);
     snprintf(data, sizeof(data), "%s/%s", vol->v_path, name);
     snprintf(path, sizeof(path), "%s/._%s", vol->v_path, name);
 
@@ -1018,14 +1006,10 @@ static int lr_delete(struct vol *vol, uint32_t roff, uint32_t filen,
         return -1;
     }
 
-    if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600)) != -1) {
-        if (write(fd, sidecar, len) == (ssize_t)len
-                && delete (&obj, vol->v_vid, DIRDID_ROOT, name) == AFP_OK
-                && stat(path, &st) == -1 && stat(data, &st) == -1) {
-            ret = 0;
-        }
-
-        close(fd);
+    if (write_disk_file(path, sidecar, len) == 0
+            && delete (&obj, vol->v_vid, DIRDID_ROOT, name) == AFP_OK
+            && stat(path, &st) == -1 && stat(data, &st) == -1) {
+        ret = 0;
     }
 
     unlink(path);
@@ -3679,6 +3663,56 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_emptied_rfork_close_keeps_sidecar(&obj, vol), 0,
                      "FPCloseFork: an emptied fork's ._ file stays on a "
                      "read-only volume and under another open of the fork");
+    TEST_int_or_skip(utest_rfork_unchanged_close_skips_metadata(&obj, vol), 0,
+                     "FPCloseFork: an unchanged resource fork's close "
+                     "re-reads its header and not its metadata");
+    TEST_int_or_skip(utest_rfork_readonly_close_sees_growth(&obj, vol), 0,
+                     "FPCloseFork: a read-only fork's close reads a ._ file "
+                     "another process grew under it");
+    TEST_int_or_skip(utest_rfork_close_refreshes_shared(&obj, vol), 0,
+                     "FPCloseFork: a shared adouble's close reads the header "
+                     "another process changed");
+    TEST_int_or_skip(utest_icon_readonly_close_converts_first(&obj, vol), 0,
+                     "FPCloseFork: the root Icon file's read-only close "
+                     "converts a rewritten ._ file before its removal test");
+    TEST_int_or_skip(utest_rfork_open_measures_sidecar_once(&obj, vol), 0,
+                     "FPOpenFork: a resource fork's open measures its "
+                     "sidecar once, by its descriptor");
+    TEST_int_or_skip(utest_rfork_join_measures_held_descriptor(&obj, vol), 0,
+                     "FPOpenFork: a second open of a held resource fork "
+                     "takes the length of the descriptor it joins");
+    TEST_int_or_skip(utest_folder_entry_keeps_metadata_read(&obj, vol), 0,
+                     "dircache: a listing's new folder entry keeps the "
+                     "metadata its id lookup read");
+    TEST_int_or_skip(utest_catsearch_entry_keeps_metadata_read(&obj, vol), 0,
+                     "FPCatSearch: a search's new folder entry keeps the "
+                     "metadata its id lookup read");
+    TEST_int_or_skip(utest_rfork_open_probes_bands_for_deny_only(&obj, vol), 0,
+                     "FPOpenFork: an open probes an open band for the deny "
+                     "request that consults it alone");
+    TEST_int_or_skip(utest_rfork_open_skips_acl_read_mode_grants(&obj, vol), 0,
+                     "FPOpenFork: an open reads no ACL when the mode bits "
+                     "grant the access");
+    TEST_int_or_skip(utest_shared_rfork_length_survives_rsrc_close(&obj, vol),
+                     0,
+                     "FPCloseFork: a shared adouble keeps the resource fork "
+                     "length after the fork's close");
+    TEST_int_or_skip(utest_shared_rfork_length_survives_failed_open(&obj, vol),
+                     0,
+                     "FPOpenFork: a shared adouble keeps the resource fork "
+                     "length past a failed resource fork open");
+    TEST_int_or_skip(utest_emptied_sidecar_goes_under_bad_metadata(&obj, vol),
+                     0,
+                     "FPCloseFork: an emptied resource fork's ._ file goes "
+                     "although the metadata EA does not parse");
+    TEST_int_or_skip(utest_shared_rfork_length_survives_bad_sidecar(&obj, vol),
+                     0,
+                     "FPOpenFork: a shared adouble keeps the resource fork "
+                     "length past an open of a sidecar whose header does not "
+                     "parse");
+    TEST_int_or_skip(utest_readonly_volume_close_reads_nothing(&obj, vol), 0,
+                     "FPCloseFork: a read-only fork's close on a read-only "
+                     "volume reads neither the header nor the metadata");
     TEST_int_or_skip(utest_symlink_rfork_close_keeps_cnids(&obj, vol), 0,
                      "FPCloseFork: a symlink's resource fork keeps the CNIDs");
     TEST_int(utest_emptied_icon_close_deletes_file(&obj, vol), 0,

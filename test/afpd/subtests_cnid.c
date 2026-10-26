@@ -37,6 +37,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "afpfunc_helpers.h"
 #include "desktop.h"
 #include "subtests_cnid.h"
 #include "subtests_conf.h"
@@ -395,23 +396,6 @@ int utest_cnid_scheme_registered(void)
 }
 
 /*!
- * @brief Write a scratch file's whole content
- */
-static int cnid_scratch_write(const char *path, const void *data, size_t len)
-{
-    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    ssize_t written;
-
-    if (fd < 0) {
-        return -1;
-    }
-
-    written = write(fd, data, len);
-    close(fd);
-    return written == (ssize_t)len ? 0 : -1;
-}
-
-/*!
  * @brief Open and close the scratch volume's database, then report whether
  *        that open logged @p needle
  */
@@ -539,15 +523,15 @@ int utest_cnid_sqlite_orphan_reported(void)
     snprintf(target, sizeof(target), "%s/target.sqlite", symvol.base);
     setuplog("default:note", logpath, true);
 
-    if (cnid_scratch_write(orphan, header, sizeof(header)) == 0) {
+    if (write_disk_file(orphan, header, sizeof(header)) == 0) {
         got[0] = cnid_orphan_logged(&s, logpath, orphan);
     }
 
-    if (cnid_scratch_write(orphan, "plain text\n", 11) == 0) {
+    if (write_disk_file(orphan, "plain text\n", 11) == 0) {
         got[1] = cnid_orphan_logged(&s, logpath, orphan);
     }
 
-    if (cnid_scratch_write(target, header, sizeof(header)) == 0
+    if (write_disk_file(target, header, sizeof(header)) == 0
             && symlink(target, linked) == 0) {
         got[2] = cnid_orphan_logged(&symvol, logpath, linked);
     }

@@ -205,6 +205,8 @@ extern int setfilowner(const struct vol *, const uid_t, const gid_t,
                        struct path *);
 extern void accessmode(const AFPObj *obj, const struct vol *, char *,
                        struct maccess *, struct dir *, struct stat *);
+extern bool accessmode_has(const AFPObj *obj, const struct vol *, char *,
+                           struct stat *, uint8_t);
 extern bool accessmode_rx(const AFPObj *obj, const struct vol *, char *,
                           struct stat *);
 

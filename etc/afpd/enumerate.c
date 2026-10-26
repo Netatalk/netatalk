@@ -846,7 +846,8 @@ static int enumerate_in(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             continue;
         }
 
-        /* NULL on a miss: dir_add() or getfilparams() caches the entry below */
+        /* NULL on a miss: dir_add_fill() or getfilparams() caches the entry
+         * below */
         struct dir *cached = s_path.d_cached;
         const int icon = sd->sd_last[len + 1] == SD_ICON;
         /* On-the-fly v2→EA conversion. Skip when 'convert appledouble = no'
@@ -949,7 +950,8 @@ static int enumerate_in(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             } else {
                 int len = strlen(s_path.u_name);
 
-                if ((dir = dir_add(vol, curdir, &s_path, len)) == NULL) {
+                if ((dir = dir_add_fill(vol, curdir, &s_path, len,
+                                        dbitmap & DIRPBITS_AD)) == NULL) {
                     LOG(log_error, logtype_afpd,
                         "enumerate(vid:%u, did:%u, name:'%s'): error adding dir: '%s'",
                         ntohs(vid), ntohl(did), o_path->u_name, s_path.u_name);

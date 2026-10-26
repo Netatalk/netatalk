@@ -1421,22 +1421,23 @@ int of_rfork_held(const struct ofork *ofork, const char *forkpath)
 /*!
  * @brief Close an open fork and free it
  *
- * A closed resource fork gets its length refreshed and, when dirty, its
- * modification date stamped. A modified fork sends a refresh hint to sibling
- * afpd processes. The steps that go by the fork's name run only while the
- * name holds the fork's file: a modified fork reports FCE and Spotlight
- * events and refreshes its dircache entry. On a volume that is not read-only,
- * without HAVE_EAFD, the call deletes the empty ._ resource fork of a regular
- * file that no other fork holds while no other process has the file open. On
- * a volume with 'legacy icon' that is not read-only, the close of a resource
- * fork that is the session's last fork of a regular Icon file at the volume
- * root also deletes the file, with its AppleDouble file and CNID, when its
- * data fork is empty, its resource fork is a map without resources, or
- * shorter than a header after the fork changed it or found a header in it at
- * its open, no other process has the file open, and FPDelete's checks allow
- * it; FCE and Spotlight hear of that as a deletion. Once that removal is
- * chosen, the name's dircache entry goes, whether or not the file does. A
- * stamped date marks the volume changed.
+ * A closed resource fork gets its own header re-read; one that was written,
+ * had its length set or shares its adouble gets its metadata re-read too, and
+ * a dirty one gets its modification date stamped. A modified fork sends a
+ * refresh hint to sibling afpd processes. The steps that go by the fork's
+ * name run only while the name holds the fork's file: a modified fork reports
+ * FCE and Spotlight events and refreshes its dircache entry. On a volume that
+ * is not read-only, without HAVE_EAFD, the call deletes the empty ._ resource
+ * fork of a regular file that no other fork holds while no other process has
+ * the file open. On a volume with 'legacy icon' that is not read-only, the
+ * close of a resource fork that is the session's last fork of a regular Icon
+ * file at the volume root also deletes the file, with its AppleDouble file
+ * and CNID, when its data fork is empty, its resource fork is a map without
+ * resources, or shorter than a header after the fork changed it or found a
+ * header in it at its open, no other process has the file open, and
+ * FPDelete's checks allow it; FCE and Spotlight hear of that as a deletion.
+ * Once that removal is chosen, the name's dircache entry goes, whether or not
+ * the file does. A stamped date marks the volume changed.
  *
  * @param[in]     obj    session object
  * @param[in,out] ofork  open fork, invalid afterwards
@@ -1447,6 +1448,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     struct timeval      tv;
     int                 ret;
     int                 saved_errno = 0;
+    int                 reread = -1;
     struct dir *dir = NULL;
     bstring forkpath = NULL;
 
@@ -1454,20 +1456,6 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     if (ofork->of_flags & AFPFORK_VIRTUAL) {
         of_dealloc(ofork);
         return 0;
-    }
-
-    if (ofork->of_flags & AFPFORK_RSRC) {
-        /* Only set the rfork's length if we're closing the rfork. */
-        ad_refresh(NULL, ofork->of_ad);
-
-        if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
-            ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX, tv.tv_sec);
-
-            /* the stamp on disk is the change the other sessions see */
-            if (ad_flush(ofork->of_ad) == 0) {
-                setvoltime(ofork->of_vol->v_obj, ofork->of_vol);
-            }
-        }
     }
 
     /* the steps that go by the fork's name: a modified fork's cache refresh
@@ -1483,15 +1471,49 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
                      && virtual_icon_enabled(ofork->of_vol);
 #ifdef HAVE_EAFD
     /* a resource fork in an EA leaves no ._ file to remove */
-    const int rf_emptied = 0;
+    const int judge = 0;
 #else
     /* on adouble:v2 the resource fork descriptor is the metadata file; a
      * symlink's emulated data fork carries no lock to probe */
-    const int rf_emptied = rw && ofork->of_ad->ad_vers == AD_VERSION_EA
-                           && ad_data_fileno(ofork->of_ad) != AD_SYMLINK
-                           && (ofork->of_adflags & ADFLAGS_RF)
-                           && ofork->of_ad->ad_rfp->adf_refcount == 1
-                           && ofork->of_ad->ad_rlen == 0;
+    const int judge = rw && ofork->of_ad->ad_vers == AD_VERSION_EA
+                      && ad_data_fileno(ofork->of_ad) != AD_SYMLINK
+                      && (ofork->of_adflags & ADFLAGS_RF)
+                      && ofork->of_ad->ad_rfp->adf_refcount == 1;
+#endif
+
+    if (ofork->of_flags & AFPFORK_RSRC) {
+        const int changed = ofork->of_flags
+                            & (AFPFORK_DIRTY | AFPFORK_MODIFIED);
+        const int shared = ofork->of_ad->ad_refcount > 1;
+
+        /* the emptied-sidecar unlink judges by the header; the stamp, the
+         * dircache copy, shared headers and the Icon file's removal read the
+         * fork afresh */
+        if (changed || shared || icon || judge) {
+            reread = ad_refresh_rfork(NULL, ofork->of_ad);
+        }
+
+        if (ofork->of_ad->ad_vers == AD_VERSION_EA && (changed || shared)) {
+            (void)ad_refresh_meta(NULL, ofork->of_ad);
+        }
+
+        if ((ofork->of_flags & AFPFORK_DIRTY) && !gettimeofday(&tv, NULL)) {
+            ad_setdate(ofork->of_ad, AD_DATE_MODIFY | AD_DATE_UNIX, tv.tv_sec);
+
+            /* the stamp on disk is the change the other sessions see */
+            if (ad_flush(ofork->of_ad) == 0) {
+                setvoltime(ofork->of_vol->v_obj, ofork->of_vol);
+            }
+        }
+    }
+
+#ifdef HAVE_EAFD
+    const int rf_emptied = 0;
+    (void)reread;
+#else
+    /* a header the close could not re-read keeps the open-time length, which
+     * judges nothing */
+    const int rf_emptied = judge && reread == 0 && ofork->of_ad->ad_rlen == 0;
 #endif
     const int by_name = (ofork->of_flags & AFPFORK_MODIFIED) || icon
                         || rf_emptied;

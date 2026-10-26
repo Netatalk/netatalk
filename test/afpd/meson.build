@@ -127,6 +127,7 @@ if build_tests
         'subtests_dircache.c',
         'subtests_enumerate.c',
         'subtests_extattr.c',
+        'subtests_icons.c',
         'subtests_lock.c',
         'subtests_offcnt.c',
         'subtests_pfd.c',

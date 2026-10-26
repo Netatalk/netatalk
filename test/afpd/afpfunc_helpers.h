@@ -74,6 +74,7 @@ extern int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int create_disk_file(const char *path);
+extern int write_disk_file(const char *path, const void *data, size_t len);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int renameobj(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                      const char *newname);
@@ -150,5 +151,7 @@ extern int getvolparams(AFPObj *obj, uint16_t vid, uint16_t bitmap);
 extern int listextattr(AFPObj *obj, uint16_t vid, cnid_t did,
                        const char *name, uint32_t maxreply, char *reply,
                        size_t *replylen);
+extern void pack_appledouble(uint8_t *buf, const uint32_t *entry, uint16_t n);
+extern void drop_entry(const struct vol *vol, cnid_t did, char *name);
 
 #endif  /* AFPFUNC_HELPERS */

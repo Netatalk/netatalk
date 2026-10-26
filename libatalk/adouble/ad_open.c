@@ -222,6 +222,15 @@ const char *adflags2logstr(int adflags)
         first = 0;
     }
 
+    if (adflags & ADFLAGS_NORLEN) {
+        if (!first) {
+            strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
+        }
+
+        strlcat(buf, "NORLEN", ADFLAGS2LOGSTRBUFSIZ);
+        first = 0;
+    }
+
     if (adflags & ADFLAGS_HF) {
         if (!first) {
             strlcat(buf, "|", ADFLAGS2LOGSTRBUFSIZ);
@@ -1050,6 +1059,19 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Length of a resource fork past the header of its ._ file
+ *
+ * @param[in] st  stat of the file
+ * @returns the bytes past the header, 0 for a file of the header's length
+ *          or shorter
+ */
+static off_t rlen_osx(const struct stat *st)
+{
+    return st->st_size > ADEDOFF_RFORK_OSX ? st->st_size - ADEDOFF_RFORK_OSX
+           : 0;
+}
+
+/*!
  * @brief Read the header of a macOS ._ file and take its resource fork
  *
  * Only the resource fork comes from the ._ file. The FinderInfo lives in the
@@ -1161,7 +1183,7 @@ reread:
     }
 
     ad_setentryoff(ad, ADEID_RFORK, ADEDOFF_RFORK_OSX);
-    ad->ad_rlen = hst->st_size - ADEDOFF_RFORK_OSX;
+    ad->ad_rlen = rlen_osx(hst);
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -1891,8 +1913,9 @@ EC_CLEANUP:
  * Creation on an ADVOL_RO volume fails with EROFS. new_ad_header and ad_flush
  * write the fresh header, and the descriptor flags gain O_CREAT. On macOS the
  * native FinderInfo EA overwrites the FinderInfo entry. ad_rlen receives the
- * resource fork size, and a failure after the open closes the descriptor
- * again.
+ * resource fork size unless ADFLAGS_NORLEN says the caller's resource fork
+ * open has just measured it, and a failure after the open closes the
+ * descriptor again.
  *
  * @param[in]     path     file whose metadata EA to open
  * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
@@ -2010,7 +2033,10 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
         ad->ad_mdp->adf_refcount++;
     }
 
-    ad->ad_rlen = ad_reso_size(path, adflags, ad);
+    if (!(adflags & ADFLAGS_NORLEN)) {
+        ad->ad_rlen = ad_reso_size(path, adflags, ad);
+    }
+
 EC_CLEANUP:
 
     if (ret != 0 && opened && ad_meta_fileno(ad) != -1) {
@@ -2072,17 +2098,17 @@ static int ad_open_hf(const char *path, int adflags, int mode,
 /*!
  * @brief Size of the resource fork of an AppleDouble ea file
  *
- * With HAVE_EAFD the size comes from the open resource fork descriptor. Failing
- * that, it comes from the resource fork EA of the metadata descriptor or of
- * path. Without HAVE_EAFD it is the size of the ad_path_osx file beyond its
- * header.
+ * An open resource fork descriptor gives the size on every layout. Failing
+ * that, with HAVE_EAFD it comes from the resource fork EA of the metadata
+ * descriptor or of path, and without HAVE_EAFD it is the size of the
+ * ad_path_osx file beyond its header, by path.
  *
  * @param[in] path     file whose resource fork to measure
  * @param[in] adflags  ADFLAGS_* bits, ADFLAGS_DIR yields 0
  * @param[in] ad       AppleDouble with possibly open descriptors, or NULL
  * @returns the size in bytes, or 0 for a directory or when the lookup fails
  */
-off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_)
+off_t ad_reso_size(const char *path, int adflags, struct adouble *ad)
 {
     EC_INIT;
     struct stat st;
@@ -2094,7 +2120,6 @@ off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_)
 
     LOG(log_debug, logtype_ad, "ad_reso_size(\"%s\"): BEGIN", path);
 #ifdef HAVE_EAFD
-    ssize_t easz;
 
     if (ad && ad_reso_fileno(ad) != -1) {
         EC_NEG1(fstat(ad_reso_fileno(ad), &st));
@@ -2106,18 +2131,20 @@ off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_)
     }
 
 #else
-    const char *rfpath;
-    EC_NULL_LOG(rfpath = ad_path_osx(path, adflags));
-    EC_ZERO(lstat(rfpath, &st));
 
-    if (st.st_size > ADEDOFF_RFORK_OSX) {
-        rlen = st.st_size - ADEDOFF_RFORK_OSX;
+    /* an open resource fork holds the fork the forks read */
+    if (ad && ad_rsrc_open(ad)) {
+        EC_ZERO(fstat(ad_reso_fileno(ad), &st));
     } else {
-        rlen = 0;
+        const char *rfpath;
+        EC_NULL_LOG(rfpath = ad_path_osx(path, adflags));
+        EC_ZERO(lstat(rfpath, &st));
     }
 
+    rlen = rlen_osx(&st);
 #endif
-    LOG(log_debug, logtype_ad, "ad_reso_size(\"%s\"): size: %zd", path, rlen);
+    LOG(log_debug, logtype_ad, "ad_reso_size(\"%s\"): size: %lld", path,
+        (long long)rlen);
 EC_CLEANUP:
 
     if (ret != 0) {
@@ -2216,7 +2243,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
         ad->ad_rfp->adf_flags &= ~(O_TRUNC | O_CREAT);
         ad->ad_reso_refcount++;
         ad->ad_rfp->adf_refcount++;
-        EC_NEG1_LOG(ad->ad_rlen = ad_reso_size(path, adflags, ad));
+        ad->ad_rlen = ad_reso_size(path, adflags, ad);
         goto EC_CLEANUP;
     }
 
@@ -2325,6 +2352,8 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
     EC_ZERO_LOG(fstat(ad_reso_fileno(ad), &st));
 
     if (ad->ad_rfp->adf_flags & O_CREAT) {
+        /* the new file's length, for the header the flush writes */
+        ad->ad_rlen = rlen_osx(&st);
         /* This is a new adouble header file, create it */
         LOG(log_debug, logtype_ad,
             "ad_open_rf(\"%s\"): created adouble rfork, initializing: \"%s\"",
@@ -2334,15 +2363,19 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
             "ad_open_rf(\"%s\"): created adouble rfork, flushing: \"%s\"",
             path, rfpath);
         ad_flush(ad);
-    } else if (!(adflags & ADFLAGS_NOHDR)) {
-        /* Read the adouble header */
+    } else if (adflags & ADFLAGS_NOHDR) {
+        /* a lock probe's open reads no header: the stat's length */
+        ad->ad_rlen = rlen_osx(&st);
+    } else {
+        /* the header read sets the length from this stat */
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): reading adouble rfork: \"%s\"",
             path, rfpath);
         EC_NEG1_LOG(ad_header_read_osx(rfpath, ad, &st));
     }
 
-#endif
+#else
     ad->ad_rlen = ad_reso_size(path, adflags, ad);
+#endif
 EC_CLEANUP:
 
     if (ret != 0) {
@@ -2368,7 +2401,11 @@ EC_CLEANUP:
             errno = err;
         }
 
-        ad->ad_rlen = 0;
+        /* a missing fork has no length; a fork still holding the adouble
+         * keeps the length of a fork this open could not read */
+        if (open_errno == ENOENT || open_errno == ENOATTR || !ad_held(ad)) {
+            ad->ad_rlen = 0;
+        }
     }
 
     LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): END: %d", fullpathname(path),
@@ -3310,55 +3347,73 @@ int ad_refresh(const char *path, struct adouble *ad)
         return ad->ad_ops->ad_header_read(NULL, ad, NULL);
 
     case AD_VERSION_EA:
-#ifdef HAVE_EAFD
-        if (ad_meta_open(ad)) {
-            if (ad_data_fileno(ad) == -1) {
-                return -1;
-            }
-
-            /* TODO: read meta EA */
+        if (ad_refresh_rfork(path, ad) != 0) {
+            return -1;
         }
 
-        if (ad_rsrc_open(ad)) {
-            if (ad_reso_fileno(ad) == -1) {
-                return -1;
-            }
-
-            struct stat st;
-
-            if (fstat(ad_reso_fileno(ad), &st) == -1) {
-                return -1;
-            }
-
-            ad->ad_rlen = st.st_size;
-        }
-
-#else
-
-        if (ad_meta_open(ad)) {
-            if (ad_data_fileno(ad) == -1) {
-                return -1;
-            }
-
-            /* TODO: read meta EA */
-        }
-
-        if (ad_rsrc_open(ad)) {
-            if (ad_reso_fileno(ad) == -1) {
-                return -1;
-            }
-
-            if (ad_header_read_osx(path, ad, NULL) < 0) {
-                return -1;
-            }
-        }
-
-#endif
-        return ad->ad_ops->ad_header_read(path, ad, NULL);
+        return ad_refresh_meta(path, ad);
 
     default:
         return -1;
     }
+}
+
+/*!
+ * @brief Re-read what the open resource fork's own file holds
+ *
+ * The metadata stays as it was read. On the ea layout the read is the ._
+ * file's header, converted as ad_refresh() converts it; on version 2 the
+ * whole header; under HAVE_EAFD the fork's length.
+ *
+ * @param[in]     path  file, for the log and the conversion, or NULL
+ * @param[in,out] ad    AppleDouble with the resource fork open
+ * @returns 0, or -1 with errno set when a read failed; a fork without a file
+ *          of its own leaves nothing to read
+ */
+int ad_refresh_rfork(const char *path, struct adouble *ad)
+{
+#ifdef HAVE_EAFD
+    struct stat st;
+#endif
+
+    if (ad->ad_vers == AD_VERSION2) {
+        return ad_refresh(path, ad);
+    }
+
+    if (!ad_rsrc_open(ad)) {
+        return 0;
+    }
+
+#ifdef HAVE_EAFD
+
+    if (fstat(ad_reso_fileno(ad), &st) == -1) {
+        return -1;
+    }
+
+    ad->ad_rlen = st.st_size;
+    return 0;
+#else
+    return ad_header_read_osx(path, ad, NULL);
+#endif
+}
+
+/*!
+ * @brief Re-read the metadata of an open AppleDouble
+ *
+ * The resource fork's own file stays as it was read. On the ea layout the
+ * read is the metadata EA; on version 2 the whole header.
+ *
+ * @param[in]     path  file, read by path when the metadata is not open
+ * @param[in,out] ad    AppleDouble
+ * @returns 0, or -1 with errno set when the read failed
+ */
+int ad_refresh_meta(const char *path, struct adouble *ad)
+{
+    if (ad->ad_vers == AD_VERSION2) {
+        return ad_refresh(path, ad);
+    }
+
+    return ad->ad_ops->ad_header_read(path, ad, NULL);
 }
 
 /*!

@@ -37,6 +37,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <atalk/acl.h>
@@ -53,6 +54,7 @@ static int cap_cache[] = {
     [TEST_CAP_SOCKET_SPLICE] = -1,
     [TEST_CAP_ACL_SET]      = -1,
     [TEST_CAP_XATTR_WATCH]  = -1,
+    [TEST_CAP_STAT_WATCH]  = -1,
 };
 
 /*! @brief Short capability name for skip/log messages. */
@@ -70,6 +72,9 @@ const char *test_capability_name(enum test_capability cap)
 
     case TEST_CAP_XATTR_WATCH:
         return "xattr call counting (LD_PRELOAD)";
+
+    case TEST_CAP_STAT_WATCH:
+        return "stat() call counting (LD_PRELOAD)";
 
     case TEST_CAP_ACL_SET:
         return "a filesystem that stores ACLs";
@@ -193,6 +198,25 @@ static int probe_xattr_watch(const struct vol *vol)
 }
 
 /*!
+ * @brief Does the preload count stat() and lstat() calls of a path by its
+ *        suffix?
+ *
+ * The test binary's own lstat() takes the symbol libatalk's does; a libc
+ * that routes the calls through another symbol leaves the count at zero.
+ */
+static int probe_stat_watch(const struct vol *vol)
+{
+    struct stat st;
+    int worked;
+    fault_inject_reset();
+    fi.stat_suffix = vol->v_path;
+    (void)lstat(vol->v_path, &st);
+    worked = fi.stat_suffix_calls == 1;
+    fault_inject_reset();
+    return worked;
+}
+
+/*!
  * @brief Does the filesystem under vol->v_path store an ACL written to it?
  *
  * Writes the root's own ACL back, which leaves it as it was; a filesystem
@@ -256,6 +280,10 @@ int test_capability(enum test_capability cap, const struct vol *vol)
 
     case TEST_CAP_XATTR_WATCH:
         cap_cache[cap] = probe_xattr_watch(vol);
+        break;
+
+    case TEST_CAP_STAT_WATCH:
+        cap_cache[cap] = probe_stat_watch(vol);
         break;
 
     case TEST_CAP_ACL_SET:

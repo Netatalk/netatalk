@@ -1088,6 +1088,24 @@ typedef int (*stat_fn)(const char *, struct stat *);
 static stat_fn real_stat;
 static stat_fn real_lstat;
 
+/*! @brief Count a stat() or lstat() of a path that ends in fi.stat_suffix */
+static void stat_watched(const char *path)
+{
+    size_t plen;
+    size_t slen;
+
+    if (fi.stat_suffix == NULL) {
+        return;
+    }
+
+    plen = strlen(path);
+    slen = strlen(fi.stat_suffix);
+
+    if (plen >= slen && strcmp(path + plen - slen, fi.stat_suffix) == 0) {
+        fi.stat_suffix_calls++;
+    }
+}
+
 /*!
  * @brief The stat() and lstat() interposers' shared body: every call on
  *        fi.stat_name fails with fi.stat_errno, as a stale mount's would,
@@ -1136,19 +1154,23 @@ static int fi_stat_call(stat_fn *real, void *self, const char *name64,
 }
 
 /*!
- * @brief stat() interposer, as fi_stat_call() describes
+ * @brief stat() interposer, as fi_stat_call() describes, which also counts
+ *        the calls on fi.stat_suffix's paths
  */
 int stat(const char *path, struct stat *buf)
 {
+    stat_watched(path);
     return fi_stat_call(&real_stat, (void *)stat, "stat64", "stat", path,
                         buf);
 }
 
 /*!
- * @brief lstat() interposer, as fi_stat_call() describes
+ * @brief lstat() interposer, as fi_stat_call() describes, which also counts
+ *        the calls on fi.stat_suffix's paths
  */
 int lstat(const char *path, struct stat *buf)
 {
+    stat_watched(path);
     return fi_stat_call(&real_lstat, (void *)lstat, "lstat64", "lstat",
                         path, buf);
 }

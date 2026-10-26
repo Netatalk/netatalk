@@ -1698,22 +1698,25 @@ int dir_modify(const struct vol *vol, struct dir *dir,
  *
  * 1. Open adouble file, get CNID from it.
  * 2. Search the database, hinting with the CNID from (1).
- * 3. Build fullpath and create struct dir.
+ * 3. Build fullpath and create struct dir; with fill, the entry holds the
+ *    metadata of (1), or the mark of a folder without metadata.
  * 4. Add it to the cache.
  *
  * @param[in] vol       pointer to struct vol, possibly modified in callee
  * @param[in] dir       pointer to parent directory
  * @param[in,out] path  pointer to struct path with valid path->u_name
  * @param[in] len       strlen of path->u_name
+ * @param[in] fill      the caller reads the folder's metadata parameters next
  *
  * @returns Pointer to new struct dir or NULL on error.
  *
  * @note Function also assigns path->m_name from path->u_name.
  */
-struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
-                    int len)
+struct dir *dir_add_fill(struct vol *vol, const struct dir *dir,
+                         struct path *path, int len, bool fill)
 {
     int err = 0;
+    off_t rlen = AD_RLEN_UNKNOWN;
     struct dir  *cdir = NULL;
     cnid_t      id;
     struct adouble  ad;
@@ -1733,9 +1736,10 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
     if (cdir != NULL) {
         /* there's a stray entry in the dircache */
         LOG(log_debug, logtype_afpd,
-            "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
+            "dir_add_fill(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', "
+            "removing}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
-            ntohl(cdir->d_did), cfrombstr(dir->d_fullpath));
+            ntohl(cdir->d_did), cfrombstr(cdir->d_fullpath));
         dir_remove_tree(vol, cdir, 0);  /* Proactive cleanup of stray */
         /* dir_remove() queued the stray on invalid_dircache_entries; the
          * exit block below must not free it a second time */
@@ -1748,6 +1752,9 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
     if ((ad_open(&ad, path->u_name,
                  ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDONLY)) == 0) { /* 1 */
         adp = &ad;
+    } else if (errno == ENOENT) {
+        /* a folder without metadata: its entry says so */
+        rlen = AD_RLEN_NO_AD;
     }
 
     /* Get CNID */
@@ -1757,17 +1764,12 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
         goto exit;
     }
 
-    if (adp) {
-        ad_close(adp, ADFLAGS_HF);
-        adp = NULL;
-    }
-
     /* Get macname from unixname */
     if (path->m_name == NULL) {
         if ((path->m_name = utompath(vol, path->u_name, id,
                                      utf8_encoding(vol->v_obj))) == NULL) {
-            LOG(log_error, logtype_afpd, "dir_add(\"%s\"): can't assign macname",
-                path->u_name);
+            LOG(log_error, logtype_afpd,
+                "dir_add_fill(\"%s\"): can't assign macname", path->u_name);
             err = 2;
             goto exit;
         }
@@ -1792,6 +1794,15 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
         goto exit;
     }
 
+    /* the caller's folder parameters read what the id lookup read */
+    if (fill) {
+        if (adp) {
+            ad_store_to_cache(adp, cdir);
+        } else {
+            cdir->dcache_rlen = rlen;
+        }
+    }
+
     if ((dircache_add(vol, cdir)) != 0) { /* 4 */
         LOG(log_error, logtype_afpd, "dir_add: fatal dircache error: %s",
             cfrombstr(fullpath));
@@ -1800,13 +1811,13 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
 
 exit:
 
-    if (err != 0) {
-        LOG(log_debug, logtype_afpd, "dir_add('%s/%s'): error: %u",
-            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)", path->u_name, err);
+    if (adp) {
+        ad_close(adp, ADFLAGS_HF);
+    }
 
-        if (adp) {
-            ad_close(adp, ADFLAGS_HF);
-        }
+    if (err != 0) {
+        LOG(log_debug, logtype_afpd, "dir_add_fill('%s/%s'): error: %u",
+            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)", path->u_name, err);
 
         if (!cdir && fullpath) {
             bdestroy(fullpath);
@@ -1819,12 +1830,28 @@ exit:
         cdir = NULL;
     } else {
         /* no error */
-        LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {cached: %u,'%s'}",
+        LOG(log_debug, logtype_afpd,
+            "dir_add_fill(did:%u,'%s/%s'): {cached: %u,'%s'}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
             ntohl(cdir->d_did), cfrombstr(cdir->d_fullpath));
     }
 
     return cdir;
+}
+
+/*!
+ * @brief dir_add_fill() leaving the new entry's metadata state unknown
+ *
+ * @param[in] vol       pointer to struct vol, possibly modified in callee
+ * @param[in] dir       pointer to parent directory
+ * @param[in,out] path  pointer to struct path with valid path->u_name
+ * @param[in] len       strlen of path->u_name
+ * @returns the new struct dir, or NULL on error
+ */
+struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
+                    int len)
+{
+    return dir_add_fill(vol, dir, path, len, false);
 }
 
 /*!
@@ -2558,6 +2585,18 @@ int movecwd(const struct vol *vol, struct dir *dir)
 }
 
 /*!
+ * @brief The AFP rights an open mode asks for
+ *
+ * @param[in] mode  OPENACC_RD, OPENACC_WR, or both
+ * @returns AR_UREAD for OPENACC_RD, AR_UWRITE for OPENACC_WR
+ */
+static uint8_t openacc_rights(int mode)
+{
+    return ((mode & OPENACC_RD) ? AR_UREAD : 0)
+           | ((mode & OPENACC_WR) ? AR_UWRITE : 0);
+}
+
+/*!
  * @brief Whether the user may read or write in the parent directory of path
  *
  * The test uses the AFP access rights of the parent directory instead of the
@@ -2573,25 +2612,23 @@ int movecwd(const struct vol *vol, struct dir *dir)
  */
 int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 {
-    struct maccess ma;
-    char *p;
-    p = ad_dir(path);
+    const uint8_t rights = openacc_rights(mode);
+    struct stat st;
+    char *p = ad_dir(path);
 
     if (!p) {
         return -1;
     }
 
-    accessmode(obj, vol, p, &ma, curdir, NULL);
+    if (!rights) {
+        return 0;
+    }
 
-    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE)) {
+    if (ostat(p, &st, vol_syml_opt(vol)) != 0) {
         return -1;
     }
 
-    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD)) {
-        return -1;
-    }
-
-    return 0;
+    return accessmode_has(obj, vol, p, &st, rights) ? 0 : -1;
 }
 
 /*!
@@ -2605,19 +2642,9 @@ int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
  */
 int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 {
-    struct maccess ma;
-    accessmode(obj, vol, path->u_name, &ma, curdir, &path->st);
-    LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
-        path->u_name, ma.ma_user);
-
-    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE)) {
-        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): write access denied",
-            path->u_name);
-        return -1;
-    }
-
-    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD)) {
-        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): read access denied",
+    if (!accessmode_has(obj, vol, path->u_name, &path->st,
+                        openacc_rights(mode))) {
+        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): access denied",
             path->u_name);
         return -1;
     }
@@ -2816,11 +2843,7 @@ int getdirparams(const AFPObj *obj,
         }
     }
 
-    if (bitmap & ((1 << DIRPBIT_ATTR)  |
-                  (1 << DIRPBIT_CDATE) |
-                  (1 << DIRPBIT_MDATE) |
-                  (1 << DIRPBIT_BDATE) |
-                  (1 << DIRPBIT_FINFO))) {
+    if (bitmap & DIRPBITS_AD) {
         ad_init(&ad, vol);
 
         if (!ad_metadata_cached(upath, ADFLAGS_DIR, &ad, vol, dir, false,

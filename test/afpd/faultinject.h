@@ -129,6 +129,8 @@ struct fault_inject {
     int xattr_watch;      /*!< count the xattr reads below (Linux) */
     int getxattr_calls;   /*!< getxattr/lgetxattr/fgetxattr while watching */
     int listxattr_calls;  /*!< listxattr/llistxattr while watching */
+    const char *stat_suffix; /*!< count stat()/lstat() of paths ending in it */
+    int stat_suffix_calls;   /*!< those calls on stat_suffix's paths */
 };
 
 extern struct fault_inject fi;
