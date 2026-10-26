@@ -5,7 +5,7 @@ description: "Cache of parent directory descriptors for the stat calls that chec
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/pfd_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -119,22 +119,24 @@ Uses file-scope variables: `pfd_slots`, `pfd_stat`
 ### pfd_repair_path
 
 ```c
-static void pfd_repair_path(struct dir *entry, const struct dir *parent)
+bool pfd_repair_path(struct dir *entry, const struct dir *parent)
 ```
 
-Defined at lines 290 to 319.
+Defined at lines 292 to 317.
 
-Rebuild the full path of a dircache entry from its parent after a relative stat.
+Rebuild the full path of a dircache entry from its parent after a stat relative to the parent.
 
-The relative stat proved that the parent descriptor and the name reach the live object. An internal rename re-paths the parent at once but defers its children, so a child can still carry the old path. When the stored path does not equal the parent path plus the name, the call replaces it. The intact case costs one length compare, one byte load, and one short memcmp. When the allocation fails, the stale path stays for the next validation.
+The stat, through the parent's descriptor or in the parent's folder, found an object under the entry's name there. An internal rename re-paths the parent at once but defers its children, so a child can still carry the old path. When the stored path does not equal the parent path plus the name, the call replaces it. The intact case costs one length compare, one byte load, and one short memcmp. When the allocation fails, the stale path stays for the next validation.
 
 Parameters:
 * `entry`: dircache entry whose path to check
 * `parent`: dircache entry of its parent
 
-Calls: [fullpath_join_blk](directory.c.md#fullpath_join_blk)
+Returns: true when the call rebuilt a stale path
 
-Called by: [pfd_ostat](pfd_cache.c.md#pfd_ostat)
+Calls: [dir_path_follows](directory.c.md#dir_path_follows), [fullpath_join_blk](directory.c.md#fullpath_join_blk)
+
+Called by: [dircache_search_at_stat](dircache.c.md#dircache_search_at_stat), [pfd_ostat](pfd_cache.c.md#pfd_ostat)
 
 Uses file-scope variables: `pfd_stat`
 
@@ -144,7 +146,7 @@ Uses file-scope variables: `pfd_stat`
 int pfd_ostat(const struct vol *vol, struct dir *entry, struct stat *st, int options)
 ```
 
-Defined at lines 337 to 373.
+Defined at lines 335 to 364.
 
 Stat the full path of a dircache entry through the cached parent descriptor.
 
@@ -160,7 +162,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [dircache_lookup_parent](dircache.c.md#dircache_lookup_parent), [ostat](../../libatalk/util/unix.c.md#ostat), [ostatat](../../libatalk/util/unix.c.md#ostatat), [pfd_get](pfd_cache.c.md#pfd_get), [pfd_repair_path](pfd_cache.c.md#pfd_repair_path)
 
-Called by: [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [private_demangle](mangle.c.md#private_demangle)
+Called by: [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [private_demangle](mangle.c.md#private_demangle), [search_by_name](dircache.c.md#search_by_name)
 
 Uses file-scope variables: `pfd_stat`
 
@@ -170,7 +172,7 @@ Uses file-scope variables: `pfd_stat`
 void pfd_purge(uint16_t vid, cnid_t did)
 ```
 
-Defined at lines 385 to 399.
+Defined at lines 376 to 390.
 
 Retire the cache slot of a directory.
 
@@ -182,7 +184,7 @@ Parameters:
 
 Calls: [slot_retire](pfd_cache.c.md#slot_retire)
 
-Called by: [dir_modify](directory.c.md#dir_modify), [dircache_remove](dircache.c.md#dircache_remove), [process_cache_hints](dircache.c.md#process_cache_hints)
+Called by: [dir_modify](directory.c.md#dir_modify), [dircache_remove](dircache.c.md#dircache_remove), [dircache_search_at_stat](dircache.c.md#dircache_search_at_stat), [process_cache_hints](dircache.c.md#process_cache_hints)
 
 Uses file-scope variables: `pfd_initialized`, `pfd_slots`, `pfd_stat`
 
@@ -192,7 +194,7 @@ Uses file-scope variables: `pfd_initialized`, `pfd_slots`, `pfd_stat`
 void pfd_purge_vol(uint16_t vid)
 ```
 
-Defined at lines 406 to 418.
+Defined at lines 397 to 409.
 
 Retire every cache slot of a volume, as the volume closes.
 
@@ -211,7 +213,7 @@ Uses file-scope variables: `pfd_initialized`, `pfd_slots`, `pfd_stat`
 void pfd_shutdown(void)
 ```
 
-Defined at lines 423 to 432.
+Defined at lines 414 to 423.
 
 Close every cached descriptor when the session ends.
 
@@ -227,7 +229,7 @@ Uses file-scope variables: `pfd_initialized`, `pfd_slots`
 void pfd_stats_get(struct pfd_stats *out)
 ```
 
-Defined at lines 439 to 442.
+Defined at lines 430 to 433.
 
 Snapshot of the cache counters, for the unit tests.
 
@@ -242,7 +244,7 @@ Uses file-scope variables: `pfd_stat`
 void pfd_log_stats(void)
 ```
 
-Defined at lines 450 to 462.
+Defined at lines 441 to 453.
 
 Log the cache counters at the end of the session.
 

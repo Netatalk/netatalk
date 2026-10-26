@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "66 files, 653 functions."
+description: "66 files, 667 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 # Files
@@ -79,7 +79,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 
 # Includes headers from
 
-* [include/atalk](../include/atalk.md): 351 includes
+* [include/atalk](../include/atalk.md): 352 includes
 * [etc/spotlight](spotlight.md): 3 includes
 * [sys/netatalk](../sys/netatalk.md): 1 includes
 
@@ -89,11 +89,11 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 
 # Calls into
 
-* [libatalk/util](../libatalk/util.md): 276 calls
-* [libatalk/adouble](../libatalk/adouble.md): 204 calls
-* [include/atalk](../include/atalk.md): 55 calls
+* [libatalk/util](../libatalk/util.md): 277 calls
+* [libatalk/adouble](../libatalk/adouble.md): 208 calls
+* [include/atalk](../include/atalk.md): 63 calls
 * [libatalk/compat](../libatalk/compat.md): 54 calls
-* [libatalk/cnid](../libatalk/cnid.md): 42 calls
+* [libatalk/cnid](../libatalk/cnid.md): 48 calls
 * [libatalk/dsi](../libatalk/dsi.md): 34 calls
 * [libatalk/unicode](../libatalk/unicode.md): 34 calls
 * [libatalk/vfs](../libatalk/vfs.md): 20 calls
@@ -115,12 +115,12 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
 * [uam_afpserver_option](afpd/uam.c.md#uam_afpserver_option): 29 callers
 * [cname](afpd/directory.c.md#cname): 28 callers
 * [get_afp_errno](afpd/directory.c.md#get_afp_errno): 21 callers
-* [dir_remove](afpd/directory.c.md#dir_remove): 20 callers
-* [dircache_search_by_name](afpd/dircache.c.md#dircache_search_by_name): 17 callers
 * [of_findname](afpd/ofork.c.md#of_findname): 17 callers
+* [dir_remove_tree](afpd/directory.c.md#dir_remove_tree): 16 callers
+* [dircache_search_by_name](afpd/dircache.c.md#dircache_search_by_name): 15 callers
 * [dirlookup_strict](afpd/directory.c.md#dirlookup_strict): 15 callers
 * [movecwd](afpd/directory.c.md#movecwd): 15 callers
-* [dir_modify](afpd/directory.c.md#dir_modify): 14 callers
+* [hnode_get](afpd/hash.c.md#hnode_get): 13 callers
 
 # Functions without a static caller
 

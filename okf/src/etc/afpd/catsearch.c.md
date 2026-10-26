@@ -5,7 +5,7 @@ description: "FPCatSearch implementation."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/catsearch.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -296,7 +296,7 @@ Called by: [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#
 static int catsearch(const AFPObj *obj, struct vol *vol, struct dir *dir, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 847 to 1087.
+Defined at lines 847 to 1096.
 
 Search the directory tree of a volume for FPCatSearch, resuming at a saved position.
 
@@ -317,7 +317,7 @@ Parameters:
 
 Returns: AFP_OK after a pause, AFPERR_EOF at the end of the tree, AFPERR_CATCHNG for a stale position, AFPERR_NFILE, or AFPERR_MISC
 
-Calls: [addstack](catsearch.c.md#addstack), [check_dirent](enumerate.c.md#check_dirent), [clearstack](catsearch.c.md#clearstack), [crit_check](catsearch.c.md#crit_check), [dir_add](directory.c.md#dir_add), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [reducestack](catsearch.c.md#reducestack), [rslt_add](catsearch.c.md#rslt_add), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [addstack](catsearch.c.md#addstack), [check_dirent](enumerate.c.md#check_dirent), [clearstack](catsearch.c.md#clearstack), [crit_check](catsearch.c.md#crit_check), [dir_add](directory.c.md#dir_add), [dircache_search_at_stat](dircache.c.md#dircache_search_at_stat), [dirlookup](directory.c.md#dirlookup), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [reducestack](catsearch.c.md#reducestack), [rslt_add](catsearch.c.md#rslt_add), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 
@@ -329,7 +329,7 @@ Uses file-scope variables: `dstack`, `save_cidx`
 static int catsearch_db(const AFPObj *obj, struct vol *vol, const char *uname, int rmatches, uint32_t *pos, char *rbuf, uint32_t *nrecs, int *rsize, int ext)
 ```
 
-Defined at lines 1110 to 1272.
+Defined at lines 1119 to 1293.
 
 Search the CNID database by name for an FPCatSearch request.
 
@@ -348,7 +348,7 @@ Parameters:
 
 Returns: AFP_OK after a pause, AFPERR_EOF after the last CNID, AFPERR_CATCHNG for a stale position, or AFPERR_MISC
 
-Calls: [cnid_find](../../libatalk/cnid/cnid.c.md#cnid_find), [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [crit_check](catsearch.c.md#crit_check), [dirlookup](directory.c.md#dirlookup), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [rslt_add](catsearch.c.md#rslt_add), [utompath](desktop.c.md#utompath)
+Calls: [cnid_find](../../libatalk/cnid/cnid.c.md#cnid_find), [cnid_resolve](../../libatalk/cnid/cnid.c.md#cnid_resolve), [convert_charset](../../libatalk/unicode/charcnv.c.md#convert_charset), [crit_check](catsearch.c.md#crit_check), [dir_takes_stat](directory.c.md#dir_takes_stat), [dirlookup](directory.c.md#dirlookup), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [movecwd](directory.c.md#movecwd), [of_stat](ofork.c.md#of_stat), [rslt_add](catsearch.c.md#rslt_add), [utompath](desktop.c.md#utompath)
 
 Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 
@@ -358,7 +358,7 @@ Called by: [catsearch_afp](catsearch.c.md#catsearch_afp)
 static int catsearch_afp(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 1293 to 1576.
+Defined at lines 1314 to 1597.
 
 Parse an FPCatSearch or FPCatSearchExt request and run the search.
 
@@ -386,7 +386,7 @@ Uses file-scope variables: `c2`
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1589 to 1593.
+Defined at lines 1610 to 1614.
 
 FPCatSearch: search a volume for files and directories that match the criteria.
 
@@ -409,7 +409,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1606 to 1610.
+Defined at lines 1627 to 1631.
 
 FPCatSearchExt: search a volume for matching files and directories, with the full result bitmaps.
 

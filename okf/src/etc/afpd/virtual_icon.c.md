@@ -5,7 +5,7 @@ description: "The virtual Icon file of a volume root."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/virtual_icon.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -94,7 +94,7 @@ Parameters:
 
 Returns: nonzero when the volume has a built icon resource fork
 
-Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
+Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
 
 ### real_icon_exists
 
@@ -113,7 +113,7 @@ Parameters:
 
 Returns: nonzero when lstat finds VIRTUAL_ICON_NAME in the volume root
 
-Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [enumerate](enumerate.c.md#enumerate), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon)
+Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon)
 
 ### is_virtual_icon_name
 
@@ -153,7 +153,7 @@ Returns: nonzero for the virtual icon file
 
 Calls: [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [real_icon_exists](virtual_icon.c.md#real_icon_exists), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
 
-Called by: [afp_delete](filedir.c.md#afp_delete), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [moveandrename](filedir.c.md#moveandrename)
+Called by: [afp_delete](filedir.c.md#afp_delete), [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename), [afp_setfildirparams](filedir.c.md#afp_setfildirparams), [moveandrename](filedir.c.md#moveandrename), [sd_fetch](enumerate.c.md#sd_fetch)
 
 ### virtual_icon_init
 
@@ -218,7 +218,7 @@ Returns: AFP_OK, AFPERR_MISC without a virtual icon, or AFPERR_BITMAP for an unk
 
 Calls: [set_name](file.c.md#set_name)
 
-Called by: [enumerate](enumerate.c.md#enumerate), [getforkparams](fork.c.md#getforkparams), [virtual_icon_reply](filedir.c.md#virtual_icon_reply)
+Called by: [enumerate_in](enumerate.c.md#enumerate_in), [getforkparams](fork.c.md#getforkparams), [virtual_icon_reply](filedir.c.md#virtual_icon_reply)
 
 # Macros
 

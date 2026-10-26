@@ -5,7 +5,7 @@ description: "IPC over socketpair between parent and children."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_ipc.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -513,7 +513,7 @@ Returns: 0 on success (or graceful drop), -1 on fatal error or an undeliverable 
 
 Calls: [cache_hint_name](server_ipc.c.md#cache_hint_name)
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [cnid_volume_reset](../../etc/afpd/volume.c.md#cnid_volume_reset), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [validation_expunge_and_hint](../../etc/afpd/dircache.c.md#validation_expunge_and_hint), [validation_refresh_and_hint](../../etc/afpd/dircache.c.md#validation_refresh_and_hint)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [cnid_volume_reset](../../etc/afpd/volume.c.md#cnid_volume_reset), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [dircache_refresh](../../etc/afpd/dircache.c.md#dircache_refresh), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [validation_expunge_and_hint](../../etc/afpd/dircache.c.md#validation_expunge_and_hint)
 
 Uses file-scope variables: `hints_dropped`, `hints_sent`, `pid`
 

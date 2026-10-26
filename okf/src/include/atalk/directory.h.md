@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -71,13 +71,25 @@ Return the dircache entry of a file path, or NULL after dir_remove.
 
 Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [path_resolve_cached_file](../../etc/afpd/file.c.md#path_resolve_cached_file)
 
+### dir_stat_differs
+
+```c
+static int dir_stat_differs(const struct dir *dir, const struct stat *st)
+```
+
+Defined at lines 184 to 187.
+
+Tell whether a stat shows another inode or ctime than an entry holds.
+
+Called by: [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [check_acl_access](../../etc/afpd/acls.c.md#check_acl_access), [dir_takes_stat](../../etc/afpd/directory.c.md#dir_takes_stat), [dircache_search_by_did](../../etc/afpd/dircache.c.md#dircache_search_by_did), [search_by_name](../../etc/afpd/dircache.c.md#search_by_name)
+
 ### path_isadir
 
 ```c
 static int path_isadir(struct path *o_path)
 ```
 
-Defined at lines 189 to 198.
+Defined at lines 195 to 204.
 
 Tell whether a path resolved to a directory.
 

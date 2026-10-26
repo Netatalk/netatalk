@@ -5,7 +5,7 @@ description: "Converting AppleDouble metadata and resource forks to the EA layou
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_conv.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -144,7 +144,7 @@ Returns: -1 on internal error, otherwise 0. newpath is NULL if no character conv
 
 Calls: [ad_conv_dehex](ad_conv.c.md#ad_conv_dehex), [ad_conv_v22ea](ad_conv.c.md#ad_conv_v22ea), [fullpathname](../util/unix.c.md#fullpathname)
 
-Called by: [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [cmd_dbd_scanvol](../../bin/dbd/cmd_dbd_scanvol.c.md#cmd_dbd_scanvol), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [getvolparams](../../etc/afpd/volume.c.md#getvolparams)
+Called by: [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [cmd_dbd_scanvol](../../bin/dbd/cmd_dbd_scanvol.c.md#cmd_dbd_scanvol), [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in), [getvolparams](../../etc/afpd/volume.c.md#getvolparams)
 
 # File-scope variables
 

@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "include/atalk"
-description: "45 files, 34 functions."
+description: "45 files, 36 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/include/atalk"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 # Files
@@ -62,7 +62,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 
 # Headers included by
 
-* [etc/afpd](../etc/afpd.md): 351 includes
+* [etc/afpd](../etc/afpd.md): 352 includes
 * [bin/nad](../bin/nad.md): 76 includes
 * [libatalk/util](../libatalk/util.md): 69 includes
 * [libatalk/vfs](../libatalk/vfs.md): 52 includes
@@ -100,7 +100,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 55 calls
+* [etc/afpd](../etc/afpd.md): 63 calls
 * [bin/afppasswd](../bin/afppasswd.md): 12 calls
 * [libatalk/nbp](../libatalk/nbp.md): 9 calls
 * [libatalk/adouble](../libatalk/adouble.md): 7 calls
@@ -125,4 +125,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 * [srp_valid_username](atalk/srp.h.md#srp_valid_username): 8 callers
 * [netddp_close](atalk/netddp.h.md#netddp_close): 6 callers
 * [ad_meta_loaded](atalk/adouble.h.md#ad_meta_loaded): 5 callers
-* [srp_verifier_mode_is_safe](atalk/srp.h.md#srp_verifier_mode_is_safe): 5 callers
+* [dir_stat_differs](atalk/directory.h.md#dir_stat_differs): 5 callers

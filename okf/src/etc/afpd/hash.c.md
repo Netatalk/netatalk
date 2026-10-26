@@ -5,7 +5,7 @@ description: "Chained hash table for the directory cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/hash.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -306,7 +306,7 @@ Parameters:
 
 Returns: the node, or NULL when no node matches
 
-Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_lookup_did](dircache.c.md#dircache_lookup_did), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [hash_delete](hash.c.md#hash_delete), [hash_insert](hash.c.md#hash_insert), [hash_scan_delete](hash.c.md#hash_scan_delete), [process_cache_hints](dircache.c.md#process_cache_hints)
+Called by: [dircache_add](dircache.c.md#dircache_add), [dircache_lookup_did](dircache.c.md#dircache_lookup_did), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [hash_delete](hash.c.md#hash_delete), [hash_insert](hash.c.md#hash_insert), [hash_scan_delete](hash.c.md#hash_scan_delete), [process_cache_hints](dircache.c.md#process_cache_hints), [search_by_name](dircache.c.md#search_by_name)
 
 ### hash_delete
 
@@ -529,7 +529,7 @@ Parameters:
 
 Returns: the data pointer of the node
 
-Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache_add](dircache.c.md#dircache_add), [dircache_dump](dircache.c.md#dircache_dump), [dircache_flush_deferred_for_vol](dircache.c.md#dircache_flush_deferred_for_vol), [dircache_lookup_did](dircache.c.md#dircache_lookup_did), [dircache_process_deferred_chain](dircache.c.md#dircache_process_deferred_chain), [dircache_purge_vol](dircache.c.md#dircache_purge_vol), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_remove](dircache.c.md#dircache_remove), [dircache_remove_children](dircache.c.md#dircache_remove_children), [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [process_cache_hints](dircache.c.md#process_cache_hints)
+Called by: [deferred_batch_chain](dircache.c.md#deferred_batch_chain), [dircache_add](dircache.c.md#dircache_add), [dircache_dump](dircache.c.md#dircache_dump), [dircache_flush_deferred_for_vol](dircache.c.md#dircache_flush_deferred_for_vol), [dircache_lookup_did](dircache.c.md#dircache_lookup_did), [dircache_process_deferred_chain](dircache.c.md#dircache_process_deferred_chain), [dircache_purge_vol](dircache.c.md#dircache_purge_vol), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_remove](dircache.c.md#dircache_remove), [dircache_remove_children](dircache.c.md#dircache_remove_children), [dircache_search_by_did](dircache.c.md#dircache_search_by_did), [process_cache_hints](dircache.c.md#process_cache_hints), [search_by_name](dircache.c.md#search_by_name)
 
 ### hnode_getkey
 

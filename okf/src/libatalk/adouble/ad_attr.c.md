@@ -5,7 +5,7 @@ description: "AFP attributes, CNID, and name entries of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_attr.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -115,7 +115,7 @@ Returns: the stored CNID, or CNID_INVALID when the entry is absent or the identi
 
 Calls: [ad_entry](ad_open.c.md#ad_entry)
 
-Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [get_id](../../etc/afpd/file.c.md#get_id), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings)
+Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [get_id](../../etc/afpd/file.c.md#get_id), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings)
 
 ### ad_forcegetid
 

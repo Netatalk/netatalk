@@ -5,7 +5,7 @@ description: "20 files, 206 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 # Files
@@ -46,7 +46,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 276 calls
+* [etc/afpd](../etc/afpd.md): 277 calls
 * [libatalk/adouble](adouble.md): 29 calls
 * [libatalk/dsi](dsi.md): 23 calls
 * [bin/nad](../bin/nad.md): 18 calls
@@ -74,7 +74,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 
 * [getvolbyvid](util/netatalk_conf.c.md#getvolbyvid): 48 callers
 * [fullpathname](util/unix.c.md#fullpathname): 33 callers
-* [ostat](util/unix.c.md#ostat): 25 callers
+* [ostat](util/unix.c.md#ostat): 26 callers
 * [become_root](util/unix.c.md#become_root): 21 callers
 * [unbecome_root](util/unix.c.md#unbecome_root): 21 callers
 * [ipc_send_cache_hint](util/server_ipc.c.md#ipc_send_cache_hint): 18 callers

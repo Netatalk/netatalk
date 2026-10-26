@@ -5,7 +5,7 @@ description: "ACL support of afpd: FPAccess, FPGetACL, FPSetACL, and the Darwin 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/acls.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -442,7 +442,7 @@ Called by: [check_acl_access](acls.c.md#check_acl_access)
 static int check_acl_access(const AFPObj *obj, const struct vol *vol, struct dir *dir, const char *path, const uuidp_t uuid, uint32_t requested_rights)
 ```
 
-Defined at lines 1725 to 1839.
+Defined at lines 1725 to 1844.
 
 Checks if a given UUID has requested_rights (type darwin_ace_rights) for path.
 
@@ -458,7 +458,7 @@ Parameters:
 
 Returns: AFP result code
 
-Calls: [acl_rights_of](acls.c.md#acl_rights_of), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [ostat](../../libatalk/util/unix.c.md#ostat)
+Calls: [acl_rights_of](acls.c.md#acl_rights_of), [dir_stat_differs](../../include/atalk/directory.h.md#dir_stat_differs), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [ostat](../../libatalk/util/unix.c.md#ostat)
 
 Called by: [afp_access](acls.c.md#afp_access)
 
@@ -470,7 +470,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1860 to 1915.
+Defined at lines 1865 to 1920.
 
 FPAccess: test whether the user that a UUID names holds the requested rights on an object.
 
@@ -483,7 +483,7 @@ Parameters:
 * `rbuf`: reply block, unused
 * `rbuflen`: reply buffer capacity on entry, 0 on return
 
-Returns: AFP_OK when the rights hold, AFPERR_ACCESS when they do not, AFPERR_NOOBJ, or AFPERR_PARAM
+Returns: AFP_OK when the rights hold, AFPERR_ACCESS when they do not, AFPERR_NOOBJ, AFPERR_MISC, or AFPERR_PARAM
 
 Calls: [check_acl_access](acls.c.md#check_acl_access), [cname](directory.c.md#cname), [dirlookup](directory.c.md#dirlookup), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [of_statdir](ofork.c.md#of_statdir)
 
@@ -497,7 +497,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1933 to 2049.
+Defined at lines 1938 to 2054.
 
 FPGetACL: return the owner UUID, the group UUID, and the ACL of an object.
 
@@ -524,7 +524,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 2068 to 2258.
+Defined at lines 2073 to 2263.
 
 FPSetACL: remove or replace the ACL of an object.
 
@@ -551,7 +551,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma)
 ```
 
-Defined at lines 2278 to 2305.
+Defined at lines 2283 to 2310.
 
 Fold the ACL of path into the AFP access rights of the session user.
 

@@ -5,7 +5,7 @@ description: "The CNID database front end and backend registry."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/cnid/cnid.c"
 tags: ["libatalk/cnid"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [libatalk/cnid](../cnid.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -131,7 +131,7 @@ Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_get](cnid.c.md#cnid_get), [cnid
 static uint64_t dirtab_hash(const char *name, size_t len)
 ```
 
-Defined at lines 253 to 262.
+Defined at lines 254 to 263.
 
 FNV-1a hash of a name.
 
@@ -149,7 +149,7 @@ Called by: [dirtab_lookup](cnid.c.md#dirtab_lookup), [dirtab_take](cnid.c.md#dir
 static void dirtab_empty(struct cnid_dirtab *t)
 ```
 
-Defined at lines 269 to 274.
+Defined at lines 270 to 275.
 
 Free a table's rows and mark it free.
 
@@ -164,7 +164,7 @@ Called by: [cnid_close](cnid.c.md#cnid_close), [cnid_dir_arm](cnid.c.md#cnid_dir
 static struct cnid_dirtab * dirtab_of(const struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 283 to 293.
+Defined at lines 284 to 294.
 
 The table a folder holds, or NULL.
 
@@ -182,7 +182,7 @@ Called by: [cnid_add](cnid.c.md#cnid_add), [cnid_dir_arm](cnid.c.md#cnid_dir_arm
 static int dirtab_take(void *ctx, uint64_t id, const char *name, size_t len, uint64_t dev, uint64_t ino)
 ```
 
-Defined at lines 306 to 335.
+Defined at lines 307 to 336.
 
 Take one row of a folder into its table.
 
@@ -206,7 +206,7 @@ Called by: [dirtab_load](cnid.c.md#dirtab_load)
 static void dirtab_load(struct _cnid_db *cdb, struct cnid_dirtab *t)
 ```
 
-Defined at lines 347 to 385.
+Defined at lines 348 to 386.
 
 Load a folder's rows from one backend query.
 
@@ -228,7 +228,7 @@ Calls through [`_cnid_db::cnid_dirlist`](../../include/atalk/cnid.h.md#struct-_c
 static cnid_t dirtab_lookup(const struct cnid_dirtab *t, const char *name, size_t len, uint64_t dev, uint64_t ino)
 ```
 
-Defined at lines 398 to 418.
+Defined at lines 399 to 419.
 
 A loaded table's CNID for a name whose row holds the object's device and inode.
 
@@ -251,7 +251,7 @@ Called by: [cnid_add](cnid.c.md#cnid_add)
 static void dirtab_off(const struct _cnid_db *cdb)
 ```
 
-Defined at lines 425 to 432.
+Defined at lines 426 to 433.
 
 Turn the loaded tables off: a CNID write may have moved a row.
 
@@ -266,7 +266,7 @@ Called by: [cnid_delete](cnid.c.md#cnid_delete), [cnid_update](cnid.c.md#cnid_up
 void cnid_dir_arm(struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 445 to 473.
+Defined at lines 446 to 474.
 
 Let one backend query answer a folder's cnid_add calls.
 
@@ -278,7 +278,7 @@ Parameters:
 
 Calls: [dirtab_empty](cnid.c.md#dirtab_empty), [dirtab_of](cnid.c.md#dirtab_of)
 
-Called by: [enumerate](../../etc/afpd/enumerate.c.md#enumerate)
+Called by: [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in)
 
 Uses file-scope variables: `dirtab_clock`
 
@@ -288,7 +288,7 @@ Uses file-scope variables: `dirtab_clock`
 void cnid_dir_forget(struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 481 to 488.
+Defined at lines 482 to 489.
 
 Free a folder's table.
 
@@ -298,7 +298,7 @@ Parameters:
 
 Calls: [dirtab_empty](cnid.c.md#dirtab_empty), [dirtab_of](cnid.c.md#dirtab_of)
 
-Called by: [sd_drop](../../etc/afpd/enumerate.c.md#sd_drop)
+Called by: [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in), [sd_drop](../../etc/afpd/enumerate.c.md#sd_drop)
 
 ### cnid_dir_serve
 
@@ -306,7 +306,7 @@ Called by: [sd_drop](../../etc/afpd/enumerate.c.md#sd_drop)
 void cnid_dir_serve(struct _cnid_db *cdb, cnid_t did)
 ```
 
-Defined at lines 497 to 502.
+Defined at lines 498 to 503.
 
 Let a folder's table answer [cnid_add()](cnid.c.md#cnid_add) while its listing's batch runs, and no table outside one.
 
@@ -314,7 +314,7 @@ Parameters:
 * `cdb`: CNID database, or NULL
 * `did`: the folder, CNID_INVALID when the batch ends
 
-Called by: [enumerate](../../etc/afpd/enumerate.c.md#enumerate)
+Called by: [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in)
 
 ### cnid_close
 
@@ -322,7 +322,7 @@ Called by: [enumerate](../../etc/afpd/enumerate.c.md#enumerate)
 void cnid_close(struct _cnid_db *db)
 ```
 
-Defined at lines 509 to 522.
+Defined at lines 510 to 523.
 
 Close a CNID database through its backend.
 
@@ -341,7 +341,7 @@ Calls through [`_cnid_db::cnid_close`](../../include/atalk/cnid.h.md#struct-_cni
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, const char *name, const size_t len, cnid_t hint)
 ```
 
-Defined at lines 542 to 575.
+Defined at lines 543 to 576.
 
 Add an object to the CNID database or find its existing CNID.
 
@@ -359,7 +359,7 @@ Returns: the CNID, or CNID_INVALID with errno set to a CNID_ERR_* value or 0
 
 Calls: [dirtab_load](cnid.c.md#dirtab_load), [dirtab_lookup](cnid.c.md#dirtab_lookup), [dirtab_of](cnid.c.md#dirtab_of), [valide](cnid.c.md#valide)
 
-Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [cnid_for_path](../util/cnid.c.md#cnid_for_path), [cnid_for_paths_parent](../../bin/nad/nad_util.c.md#cnid_for_paths_parent), [get_id](../../etc/afpd/file.c.md#get_id), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop)
+Called by: [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [cnid_for_path](../util/cnid.c.md#cnid_for_path), [cnid_for_paths_parent](../../bin/nad/nad_util.c.md#cnid_for_paths_parent), [get_id](../../etc/afpd/file.c.md#get_id), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [reenumerate_loop](../../etc/afpd/file.c.md#reenumerate_loop)
 
 Calls through [`_cnid_db::cnid_add`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
@@ -371,7 +371,7 @@ Mentioned in the documentation of: [cnid_dir_serve](cnid.c.md#cnid_dir_serve), [
 int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 ```
 
-Defined at lines 584 to 591.
+Defined at lines 585 to 592.
 
 Remove a CNID from the database.
 
@@ -383,7 +383,7 @@ Returns: the backend result, 0 on success
 
 Calls: [dirtab_off](cnid.c.md#dirtab_off)
 
-Called by: [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [deletefile](../../etc/afpd/file.c.md#deletefile), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [rm](../../bin/nad/nad_rm.c.md#rm), [rmdir_with_cnid](../../bin/nad/nad_rmdir.c.md#rmdir_with_cnid)
+Called by: [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [deletefile](../../etc/afpd/file.c.md#deletefile), [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [rm](../../bin/nad/nad_rm.c.md#rm), [rmdir_with_cnid](../../bin/nad/nad_rmdir.c.md#rmdir_with_cnid)
 
 Calls through [`_cnid_db::cnid_delete`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
@@ -393,7 +393,7 @@ Calls through [`_cnid_db::cnid_delete`](../../include/atalk/cnid.h.md#struct-_cn
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 603 to 610.
+Defined at lines 604 to 611.
 
 Look up the CNID of a name in a directory.
 
@@ -407,7 +407,7 @@ Returns: the CNID after valide, or CNID_INVALID
 
 Calls: [valide](cnid.c.md#valide)
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [deletefile](../../etc/afpd/file.c.md#deletefile), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_delete](../../etc/afpd/filedir.c.md#afp_delete), [afp_setacl](../../etc/afpd/acls.c.md#afp_setacl), [deletefile](../../etc/afpd/file.c.md#deletefile), [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [ea_written](../../etc/afpd/extattrs.c.md#ea_written), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
 Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
@@ -417,7 +417,7 @@ Calls through [`_cnid_db::cnid_get`](../../include/atalk/cnid.h.md#struct-_cnid_
 int cnid_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 ```
 
-Defined at lines 624 to 645.
+Defined at lines 625 to 646.
 
 Read the stamp of a CNID database.
 
@@ -440,7 +440,7 @@ Calls through [`_cnid_db::cnid_getstamp`](../../include/atalk/cnid.h.md#struct-_
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 658 to 666.
+Defined at lines 659 to 667.
 
 Look up the CNID of an object by name and parent or by device and inode.
 
@@ -455,7 +455,7 @@ Returns: the CNID after valide, or CNID_INVALID
 
 Calls: [valide](cnid.c.md#valide)
 
-Called by: [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [update_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#update_cnid)
+Called by: [afp_createid](../../etc/afpd/file.c.md#afp_createid), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [dir_modify](../../etc/afpd/directory.c.md#dir_modify), [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in), [update_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#update_cnid)
 
 Calls through [`_cnid_db::cnid_lookup`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
@@ -465,7 +465,7 @@ Calls through [`_cnid_db::cnid_lookup`](../../include/atalk/cnid.h.md#struct-_cn
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 691 to 696.
+Defined at lines 692 to 697.
 
 Search the CNID database for entries whose name contains a substring.
 
@@ -495,7 +495,7 @@ Mentioned in the documentation of: [cnid_find_scoped](cnid.c.md#cnid_find_scoped
 int cnid_find_scoped(struct _cnid_db *cdb, const char *name, size_t namelen, cnid_t scope_did, void *buffer, size_t buflen, bool *more_available)
 ```
 
-Defined at lines 718 to 756.
+Defined at lines 719 to 757.
 
 [cnid_find()](cnid.c.md#cnid_find) restricted to the subtree of a directory
 
@@ -522,7 +522,7 @@ Calls through [`_cnid_db::cnid_find`](../../include/atalk/cnid.h.md#struct-_cnid
 char * cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 ```
 
-Defined at lines 771 to 788.
+Defined at lines 772 to 789.
 
 Resolve a CNID to its name and parent directory.
 
@@ -536,7 +536,7 @@ Parameters:
 
 Returns: the name inside buffer, or NULL
 
-Called by: [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [nad_find](../../bin/nad/nad_find.c.md#nad_find), [private_demangle](../../etc/afpd/mangle.c.md#private_demangle), [sl_cnid_to_path](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_to_path), [sl_rpc_fetchAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_storeAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_storeattributesforoidarray)
+Called by: [afp_deleteid](../../etc/afpd/file.c.md#afp_deleteid), [afp_resolveid](../../etc/afpd/file.c.md#afp_resolveid), [catsearch_db](../../etc/afpd/catsearch.c.md#catsearch_db), [dirlookup_internal](../../etc/afpd/directory.c.md#dirlookup_internal), [nad_find](../../bin/nad/nad_find.c.md#nad_find), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [private_demangle](../../etc/afpd/mangle.c.md#private_demangle), [sl_cnid_to_path](../../etc/spotlight/cnid/sl_cnid.c.md#sl_cnid_to_path), [sl_rpc_fetchAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_fetchattributesforoidarray), [sl_rpc_storeAttributesForOIDArray](../../etc/afpd/spotlight.c.md#sl_rpc_storeattributesforoidarray)
 
 Calls through [`_cnid_db::cnid_resolve`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
@@ -548,7 +548,7 @@ Mentioned in the documentation of: [sl_cnid_to_path](../../etc/spotlight/cnid/sl
 int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st, const cnid_t did, char *name, const size_t len)
 ```
 
-Defined at lines 801 to 809.
+Defined at lines 802 to 810.
 
 Update the name, parent, and stat of a CNID entry.
 
@@ -564,7 +564,7 @@ Returns: the backend result, 0 on success
 
 Calls: [dirtab_off](cnid.c.md#dirtab_off)
 
-Called by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [do_move](../../bin/nad/nad_mv.c.md#do_move), [enumerate](../../etc/afpd/enumerate.c.md#enumerate), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [update_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#update_cnid)
+Called by: [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [do_move](../../bin/nad/nad_mv.c.md#do_move), [enumerate_in](../../etc/afpd/enumerate.c.md#enumerate_in), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [update_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#update_cnid)
 
 Calls through [`_cnid_db::cnid_update`](../../include/atalk/cnid.h.md#struct-_cnid_db): no table assigns this field
 
@@ -574,7 +574,7 @@ Calls through [`_cnid_db::cnid_update`](../../include/atalk/cnid.h.md#struct-_cn
 int cnid_wipe(struct _cnid_db *cdb)
 ```
 
-Defined at lines 820 to 831.
+Defined at lines 821 to 832.
 
 Empty a CNID database.
 
@@ -597,7 +597,7 @@ Calls through [`_cnid_db::cnid_wipe`](../../include/atalk/cnid.h.md#struct-_cnid
 
 a folder's row, its name kept as a hash
 
-Defined at line 223.
+Defined at line 224.
 * `uint64_t hash`
 * `uint64_t dev`
 * `uint64_t ino`
@@ -607,7 +607,7 @@ Defined at line 223.
 
 the rows of one folder, indexed by name hash
 
-Defined at line 231.
+Defined at line 232.
 * `cnid_t did`
 * `enum dirtab_state state`
 * `unsigned long armed`: arm order; the oldest makes room

@@ -5,7 +5,7 @@ description: "Volume commands: FPOpenVol, FPCloseVol, FPGetVolParms, and volume 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/volume.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -447,7 +447,7 @@ Parameters:
 
 Calls: [cnid_volume_tag](volume.c.md#cnid_volume_tag), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint)
 
-Called by: [get_id](file.c.md#get_id), [reenumerate_loop](file.c.md#reenumerate_loop), [sl_cnid_open_query](../spotlight/cnid/sl_cnid.c.md#sl_cnid_open_query), [sl_xapian_fill_results](../spotlight/xapian/sl_xapian.c.md#sl_xapian_fill_results), [tracker_cursor_cb](../spotlight/localsearch/sl_localsearch.c.md#tracker_cursor_cb)
+Called by: [get_id](file.c.md#get_id), [object_cnid](directory.c.md#object_cnid), [reenumerate_loop](file.c.md#reenumerate_loop), [sl_cnid_open_query](../spotlight/cnid/sl_cnid.c.md#sl_cnid_open_query), [sl_xapian_fill_results](../spotlight/xapian/sl_xapian.c.md#sl_xapian_fill_results), [tracker_cursor_cb](../spotlight/localsearch/sl_localsearch.c.md#tracker_cursor_cb)
 
 Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 
@@ -533,7 +533,7 @@ Parameters:
 
 Returns: true when the stat's modification time is the stamp
 
-Calls: [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec)
+Calls: [atalk_stat_mtime_timespec](../../include/atalk/compat.h.md#atalk_stat_mtime_timespec), [atalk_timespec_eq](../../include/atalk/compat.h.md#atalk_timespec_eq)
 
 Called by: [markroot](volume.c.md#markroot), [pollvoltime](volume.c.md#pollvoltime)
 

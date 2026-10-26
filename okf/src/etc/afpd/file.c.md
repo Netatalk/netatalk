@@ -5,7 +5,7 @@ description: "File parameters and the AFP file commands: FPCreateFile, FPCopyFil
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/file.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -255,6 +255,8 @@ Called by: [afp_createfile](file.c.md#afp_createfile), [afp_createid](file.c.md#
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 
+Mentioned in the documentation of: [object_cnid](directory.c.md#object_cnid)
+
 ### getmetadata
 
 ```c
@@ -281,7 +283,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_BITMAP for an unknown bit, AFPERR_NOOBJ, AFPERR_MISC, or the afp_errno of get_id
 
-Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [accessmode](unix.c.md#accessmode), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_forcegetid](../../libatalk/adouble/ad_attr.c.md#ad_forcegetid), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [dir_remove](directory.c.md#dir_remove), [dircache_add](dircache.c.md#dircache_add), [fullpath_join](directory.c.md#fullpath_join), [get_finderinfo](file.c.md#get_finderinfo), [get_id](file.c.md#get_id), [ostat](../../libatalk/util/unix.c.md#ostat), [path_cached_file](../../include/atalk/directory.h.md#path_cached_file), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](desktop.c.md#utompath)
+Calls: [AfpErr2name](../../libatalk/util/afp_util.c.md#afperr2name), [accessmode](unix.c.md#accessmode), [ad_entry](../../libatalk/adouble/ad_open.c.md#ad_entry), [ad_forcegetid](../../libatalk/adouble/ad_attr.c.md#ad_forcegetid), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_getdate](../../libatalk/adouble/ad_date.c.md#ad_getdate), [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [dir_free](directory.c.md#dir_free), [dir_new](directory.c.md#dir_new), [dir_remove_tree](directory.c.md#dir_remove_tree), [dircache_add](dircache.c.md#dircache_add), [fullpath_join](directory.c.md#fullpath_join), [get_finderinfo](file.c.md#get_finderinfo), [get_id](file.c.md#get_id), [ostat](../../libatalk/util/unix.c.md#ostat), [path_cached_file](../../include/atalk/directory.h.md#path_cached_file), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [set_name](file.c.md#set_name), [set_utc_offset](../../libatalk/adouble/ad_date.c.md#set_utc_offset), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [utompath](desktop.c.md#utompath)
 
 Called by: [getfilparams](file.c.md#getfilparams), [getforkparams](fork.c.md#getforkparams)
 
@@ -313,7 +315,7 @@ Returns: AFP_OK, AFPERR_ACCESS when the metadata is unreadable, or the result of
 
 Calls: [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [getmetadata](file.c.md#getmetadata), [of_ad](ofork.c.md#of_ad), [path_resolve_cached_file](file.c.md#path_resolve_cached_file)
 
-Called by: [afp_getappl](appl.c.md#afp_getappl), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_resolveid](file.c.md#afp_resolveid), [enumerate](enumerate.c.md#enumerate), [rslt_add](catsearch.c.md#rslt_add)
+Called by: [afp_getappl](appl.c.md#afp_getappl), [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_resolveid](file.c.md#afp_resolveid), [enumerate_in](enumerate.c.md#enumerate_in), [rslt_add](catsearch.c.md#rslt_add)
 
 Mentioned in the documentation of: [crit_mac_name](catsearch.c.md#crit_mac_name)
 
@@ -640,7 +642,7 @@ Called by: [reenumerate_id](file.c.md#reenumerate_id)
 static int reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 ```
 
-Defined at lines 3006 to 3035.
+Defined at lines 3007 to 3043.
 
 Register every entry of a directory with the CNID database after a stale lookup.
 
@@ -651,9 +653,9 @@ Parameters:
 * `name`: directory path, "." for the working directory
 * `dir`: dircache entry of the directory
 
-Returns: the number of entries, or -1 without a CNID database or after a failure
+Returns: the number of entries; AFPERR_MISC where the database could not answer for the folder at the path; else -1 without a CNID database or after a failure
 
-Calls: [dirreenumerate](directory.c.md#dirreenumerate), [for_each_dirent](enumerate.c.md#for_each_dirent), [ostat](../../libatalk/util/unix.c.md#ostat), [reenumerate_loop](file.c.md#reenumerate_loop), [setdiroffcnt](directory.c.md#setdiroffcnt)
+Calls: [dir_stat_refresh](directory.c.md#dir_stat_refresh), [dirreenumerate](directory.c.md#dirreenumerate), [for_each_dirent](enumerate.c.md#for_each_dirent), [ostat](../../libatalk/util/unix.c.md#ostat), [reenumerate_loop](file.c.md#reenumerate_loop), [setdiroffcnt](directory.c.md#setdiroffcnt)
 
 Called by: [afp_resolveid](file.c.md#afp_resolveid)
 
@@ -663,7 +665,7 @@ Called by: [afp_resolveid](file.c.md#afp_resolveid)
 int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3057 to 3200.
+Defined at lines 3065 to 3210.
 
 FPResolveID: return the parameters of the file that a file ID names.
 
@@ -690,7 +692,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_deleteid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3219 to 3335.
+Defined at lines 3229 to 3345.
 
 FPDeleteID: delete the CNID record that a file ID names.
 
@@ -717,7 +719,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static struct adouble * find_adouble(const AFPObj *obj, struct vol *vol, struct path *path, struct ofork **of, struct adouble *adp)
 ```
 
-Defined at lines 3354 to 3405.
+Defined at lines 3364 to 3415.
 
 AppleDouble of an FPExchangeFiles operand after the access tests.
 
@@ -744,7 +746,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3427 to 3890.
+Defined at lines 3437 to 3900.
 
 FPExchangeFiles: swap the contents of two files while each name keeps its file ID.
 

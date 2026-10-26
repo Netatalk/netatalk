@@ -5,7 +5,7 @@ description: "AFP directory command handlers and path resolution helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -16,7 +16,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 * [atalk/directory.h](../../include/atalk/directory.h.md)
 * [atalk/globals.h](../../include/atalk/globals.h.md)
 * [volume.h](volume.h.md)
-* System headers: `arpa/inet.h`, `dirent.h`, `stdbool.h`, `sys/sysmacros.h`, `sys/types.h`
+* System headers: `arpa/inet.h`, `dirent.h`, `stdbool.h`, `sys/sysmacros.h`, `sys/types.h`, `time.h`
 
 # Included by
 
@@ -58,7 +58,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 struct dir * dirlookup_bypath(const struct vol *vol, const char *path)
 ```
 
-Declared at etc/afpd/directory.h line 152; no definition in the scanned sources.
+Declared at etc/afpd/directory.h line 159; no definition in the scanned sources.
 
 # Types
 
@@ -66,25 +66,26 @@ Declared at etc/afpd/directory.h line 152; no definition in the scanned sources.
 
 Parameters for [dir_modify()](directory.c.md#dir_modify) selective field updates.
 
-Defined at line 68.
+Defined at line 69.
 * `unsigned int flags`: DCMOD_* bitmask.
 * `cnid_t new_pdid`: New parent DID (DCMOD_PATH).
 * `const char * new_mname`: New mac name, NULL = use new_uname (DCMOD_PATH).
 * `const char * new_uname`: New unix name (DCMOD_PATH).
 * `bstring new_pdir_path`: New parent directory fullpath (DCMOD_PATH).
 * `struct stat * st`: Fresh stat result (DCMOD_STAT).
-* `struct adouble * adp`: AD data to store (DCMOD_AD, Phase 2).
+* `struct adouble * adp`: AD data to store (DCMOD_AD).
 
 ### struct enumerate_stats
 
-Defined at line 183.
+Defined at line 190.
 * `unsigned long long reads`: directory reads
-* `unsigned long long rereads`: reads by batches past index 1
+* `unsigned long long rereads`: reads by batches past index 1 whose listing no slot holds, not the root's
+* `unsigned long long changed`: reads of folders that changed, or may have, since their listing's read
 * `unsigned long long names`: names the reads saved
 
 ### struct maccess
 
-Defined at line 105.
+Defined at line 106.
 * `uint8_t ma_user`
 * `uint8_t ma_world`
 * `uint8_t ma_group`
@@ -92,7 +93,7 @@ Defined at line 105.
 
 ### struct offcnt_stats
 
-Defined at line 117.
+Defined at line 118.
 * `unsigned long long requests`: DIRPBIT_OFFCNT answered.
 * `unsigned long long cached`: served from the entry
 * `unsigned long long first`: walked: never counted

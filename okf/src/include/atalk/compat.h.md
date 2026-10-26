@@ -5,14 +5,14 @@ description: "Portability declarations for missing system and C library function
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/compat.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
 
 # Includes
 
-* System headers: `signal.h`, `stdarg.h`, `stddef.h`, `stdio.h`, `sys/stat.h`, `sys/time.h`, `time.h`
+* System headers: `signal.h`, `stdarg.h`, `stdbool.h`, `stddef.h`, `stdio.h`, `sys/stat.h`, `sys/time.h`, `time.h`
 
 # Included by
 
@@ -30,6 +30,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/afpd/afp_options.c](../../etc/afpd/afp_options.c.md)
 * [etc/afpd/afpstats.c](../../etc/afpd/afpstats.c.md)
 * [etc/afpd/auth.c](../../etc/afpd/auth.c.md)
+* [etc/afpd/enumerate.c](../../etc/afpd/enumerate.c.md)
 * [etc/afpd/main.c](../../etc/afpd/main.c.md)
 * [etc/afpd/quota.c](../../etc/afpd/quota.c.md)
 * [etc/afpd/spotlight.c](../../etc/afpd/spotlight.c.md)
@@ -78,7 +79,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *, const sigset_t *)
 ```
 
-Declared at include/atalk/compat.h line 29; no definition in the scanned sources.
+Declared at include/atalk/compat.h line 30; no definition in the scanned sources.
 
 ### atalk_stat_mtime_timespec
 
@@ -86,7 +87,7 @@ Declared at include/atalk/compat.h line 29; no definition in the scanned sources
 static struct timespec atalk_stat_mtime_timespec(const struct stat *st)
 ```
 
-Defined at lines 61 to 73.
+Defined at lines 62 to 74.
 
 Return the stat mtime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -98,11 +99,23 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [afp_open
 static struct timespec atalk_stat_ctime_timespec(const struct stat *st)
 ```
 
-Defined at lines 76 to 88.
+Defined at lines 77 to 89.
 
 Return the stat ctime as a timespec, with tv_nsec 0 if unavailable.
 
-Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry)
+Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
+
+### atalk_timespec_eq
+
+```c
+static bool atalk_timespec_eq(const struct timespec *a, const struct timespec *b)
+```
+
+Defined at lines 92 to 96.
+
+Tell whether two timespecs are the same instant.
+
+Called by: [same_stamp](../../etc/afpd/volume.c.md#same_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
 
 ### atalk_stat_atime_timespec
 
@@ -110,7 +123,7 @@ Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry)
 static struct timespec atalk_stat_atime_timespec(const struct stat *st)
 ```
 
-Defined at lines 91 to 103.
+Defined at lines 99 to 111.
 
 Return the stat atime as a timespec, with tv_nsec 0 if unavailable.
 
@@ -122,7 +135,7 @@ Called by: [add_filemeta](../../etc/afpd/spotlight.c.md#add_filemeta), [setfile]
 static void atalk_timespec_to_timeval(struct timeval *tv, const struct timespec *ts)
 ```
 
-Defined at lines 106 to 111.
+Defined at lines 114 to 119.
 
 Store a timespec in a timeval, truncated to microseconds.
 
