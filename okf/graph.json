@@ -1,5 +1,5 @@
 {
-"commit": "6ed0977906a28e30fa24457b77ebe32ee9bfcb75",
+"commit": "85636c364f0066fd8dc37ff6579d7185f7624979",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -44789,7 +44789,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#RegisterReply",
 "kind": "function",
-"line": 171,
+"line": 176,
 "static": true
 },
 {
@@ -44797,7 +44797,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#TXTRecordKeyPrintf",
 "kind": "function",
-"line": 82,
+"line": 87,
 "static": false
 },
 {
@@ -44805,7 +44805,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#TXTRecordPrintf",
 "kind": "function",
-"line": 47,
+"line": 52,
 "static": false
 },
 {
@@ -47885,7 +47885,7 @@
 "file": "etc/netatalk/afp_avahi.c",
 "id": "etc/netatalk/afp_avahi.c#av_zeroconf_register",
 "kind": "function",
-"line": 322,
+"line": 327,
 "static": false
 },
 {
@@ -47893,7 +47893,7 @@
 "file": "etc/netatalk/afp_avahi.c",
 "id": "etc/netatalk/afp_avahi.c#av_zeroconf_unregister",
 "kind": "function",
-"line": 376,
+"line": 381,
 "static": false
 },
 {
@@ -48717,7 +48717,7 @@
 "file": "etc/netatalk/afp_avahi.c",
 "id": "etc/netatalk/afp_avahi.c#client_callback",
 "kind": "function",
-"line": 251,
+"line": 256,
 "static": true
 },
 {
@@ -55109,7 +55109,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#md_zeroconf_register",
 "kind": "function",
-"line": 433,
+"line": 438,
 "static": false
 },
 {
@@ -55117,7 +55117,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#md_zeroconf_unregister",
 "kind": "function",
-"line": 447,
+"line": 452,
 "static": false
 },
 {
@@ -56821,7 +56821,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#polling_thread",
 "kind": "function",
-"line": 132,
+"line": 137,
 "static": true
 },
 {
@@ -57181,7 +57181,7 @@
 "file": "etc/netatalk/afp_avahi.c",
 "id": "etc/netatalk/afp_avahi.c#publish_reply",
 "kind": "function",
-"line": 206,
+"line": 211,
 "static": true
 },
 {
@@ -57573,7 +57573,7 @@
 "file": "etc/netatalk/afp_avahi.c",
 "id": "etc/netatalk/afp_avahi.c#register_stuff",
 "kind": "function",
-"line": 54,
+"line": 59,
 "static": true
 },
 {
@@ -57581,7 +57581,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#register_stuff",
 "kind": "function",
-"line": 219,
+"line": 224,
 "static": true
 },
 {
@@ -61165,7 +61165,7 @@
 "file": "etc/netatalk/afp_mdns.c",
 "id": "etc/netatalk/afp_mdns.c#unregister_stuff",
 "kind": "function",
-"line": 185,
+"line": 190,
 "static": true
 },
 {
@@ -62125,7 +62125,7 @@
 "file": "etc/netatalk/afp_zeroconf.c",
 "id": "etc/netatalk/afp_zeroconf.c#zeroconf_deregister",
 "kind": "function",
-"line": 50,
+"line": 55,
 "static": false
 },
 {
@@ -62133,7 +62133,7 @@
 "file": "etc/netatalk/afp_zeroconf.c",
 "id": "etc/netatalk/afp_zeroconf.c#zeroconf_register",
 "kind": "function",
-"line": 34,
+"line": 39,
 "static": false
 },
 {
