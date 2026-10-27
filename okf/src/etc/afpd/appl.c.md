@@ -5,7 +5,7 @@ description: "The APPL desktop database: FPAddAPPL, FPRemoveAPPL, and FPGetAPPL.
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/appl.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-27T23:13:49+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -102,7 +102,7 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 static char * makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, char *path)
 ```
 
-Defined at lines 226 to 259.
+Defined at lines 226 to 258.
 
 Build the volume path of a file backwards at the end of a buffer.
 
@@ -129,7 +129,7 @@ Called by: [afp_addappl](appl.c.md#afp_addappl), [afp_rmvappl](appl.c.md#afp_rmv
 int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 277 to 416.
+Defined at lines 276 to 415.
 
 FPAddAPPL: add an application to the APPL file of its creator.
 
@@ -156,7 +156,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 434 to 541.
+Defined at lines 433 to 540.
 
 FPRemoveAPPL: remove an application from the APPL file of its creator.
 
@@ -183,7 +183,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 564 to 718.
+Defined at lines 563 to 717.
 
 FPGetAPPL: return the file parameters of an application from the APPL file of its creator.
 

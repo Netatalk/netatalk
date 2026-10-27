@@ -5,7 +5,7 @@ description: "AFP directory command handlers and path resolution helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-27T23:13:49+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 struct dir * dirlookup_bypath(const struct vol *vol, const char *path)
 ```
 
-Declared at etc/afpd/directory.h line 159; no definition in the scanned sources.
+Declared at etc/afpd/directory.h line 157; no definition in the scanned sources.
 
 # Types
 
@@ -77,7 +77,7 @@ Defined at line 69.
 
 ### struct enumerate_stats
 
-Defined at line 190.
+Defined at line 188.
 * `unsigned long long reads`: directory reads
 * `unsigned long long rereads`: reads by batches past index 1 whose listing no slot holds, not the root's
 * `unsigned long long changed`: reads of folders that changed, or may have, since their listing's read
@@ -85,7 +85,7 @@ Defined at line 190.
 
 ### struct maccess
 
-Defined at line 106.
+Defined at line 104.
 * `uint8_t ma_user`
 * `uint8_t ma_world`
 * `uint8_t ma_group`
@@ -93,7 +93,7 @@ Defined at line 106.
 
 ### struct offcnt_stats
 
-Defined at line 118.
+Defined at line 116.
 * `unsigned long long requests`: DIRPBIT_OFFCNT answered.
 * `unsigned long long cached`: served from the entry
 * `unsigned long long first`: walked: never counted

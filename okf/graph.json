@@ -1,5 +1,5 @@
 {
-"commit": "1e5a5c485d4763c7a7510eca46a6d2826e5a36f2",
+"commit": "810dad93223159c188c8af5b9bc2218bad4f1667",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -46093,7 +46093,7 @@
 "file": "etc/afpd/appl.c",
 "id": "etc/afpd/appl.c#afp_addappl",
 "kind": "function",
-"line": 277,
+"line": 276,
 "static": false
 },
 {
@@ -46221,7 +46221,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_closedir",
 "kind": "function",
-"line": 4393,
+"line": 4391,
 "static": false
 },
 {
@@ -46277,7 +46277,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_createdir",
 "kind": "function",
-"line": 3778,
+"line": 3776,
 "static": false
 },
 {
@@ -46485,7 +46485,7 @@
 "file": "etc/afpd/appl.c",
 "id": "etc/afpd/appl.c#afp_getappl",
 "kind": "function",
-"line": 564,
+"line": 563,
 "static": false
 },
 {
@@ -46637,7 +46637,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_mapid",
 "kind": "function",
-"line": 4111,
+"line": 4109,
 "static": false
 },
 {
@@ -46645,7 +46645,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_mapname",
 "kind": "function",
-"line": 4271,
+"line": 4269,
 "static": false
 },
 {
@@ -46677,7 +46677,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_opendir",
 "kind": "function",
-"line": 4426,
+"line": 4424,
 "static": false
 },
 {
@@ -46789,7 +46789,7 @@
 "file": "etc/afpd/appl.c",
 "id": "etc/afpd/appl.c#afp_rmvappl",
 "kind": "function",
-"line": 434,
+"line": 433,
 "static": false
 },
 {
@@ -46813,7 +46813,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_setdirparams",
 "kind": "function",
-"line": 3120,
+"line": 3118,
 "static": false
 },
 {
@@ -46869,7 +46869,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#afp_syncdir",
 "kind": "function",
-"line": 3659,
+"line": 3657,
 "static": false
 },
 {
@@ -47045,7 +47045,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_case_i",
 "kind": "function",
-"line": 849,
+"line": 847,
 "static": true
 },
 {
@@ -47053,7 +47053,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_case_ii_adapt_and_replace",
 "kind": "function",
-"line": 914,
+"line": 912,
 "static": true
 },
 {
@@ -47061,7 +47061,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_case_iii_adapt_and_replace",
 "kind": "function",
-"line": 992,
+"line": 990,
 "static": true
 },
 {
@@ -47069,7 +47069,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_case_iv_insert",
 "kind": "function",
-"line": 1148,
+"line": 1146,
 "static": true
 },
 {
@@ -47077,7 +47077,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_case_iv_make_room",
 "kind": "function",
-"line": 1067,
+"line": 1065,
 "static": true
 },
 {
@@ -47085,7 +47085,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_destroy",
 "kind": "function",
-"line": 428,
+"line": 426,
 "static": true
 },
 {
@@ -47093,7 +47093,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_ensure_ghost_capacity",
 "kind": "function",
-"line": 630,
+"line": 628,
 "static": true
 },
 {
@@ -47101,7 +47101,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_evict_to_ghost",
 "kind": "function",
-"line": 725,
+"line": 723,
 "static": true
 },
 {
@@ -47109,7 +47109,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_find_victim",
 "kind": "function",
-"line": 684,
+"line": 682,
 "static": true
 },
 {
@@ -47117,7 +47117,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_ghost_trim_candidate",
 "kind": "function",
-"line": 593,
+"line": 591,
 "static": false
 },
 {
@@ -47125,7 +47125,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_init",
 "kind": "function",
-"line": 396,
+"line": 394,
 "static": true
 },
 {
@@ -47133,7 +47133,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_replace",
 "kind": "function",
-"line": 782,
+"line": 780,
 "static": true
 },
 {
@@ -47141,7 +47141,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#arc_verify_invariants",
 "kind": "function",
-"line": 469,
+"line": 467,
 "static": true
 },
 {
@@ -48445,7 +48445,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#check_access",
 "kind": "function",
-"line": 2576,
+"line": 2574,
 "static": false
 },
 {
@@ -48821,7 +48821,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#cname",
 "kind": "function",
-"line": 2071,
+"line": 2069,
 "static": false
 },
 {
@@ -50309,7 +50309,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_batch_chain",
 "kind": "function",
-"line": 3749,
+"line": 3747,
 "static": true
 },
 {
@@ -50317,7 +50317,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_batch_cmp",
 "kind": "function",
-"line": 3597,
+"line": 3595,
 "static": true
 },
 {
@@ -50325,7 +50325,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_batch_complete",
 "kind": "function",
-"line": 3724,
+"line": 3722,
 "static": true
 },
 {
@@ -50333,7 +50333,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_batch_match",
 "kind": "function",
-"line": 3631,
+"line": 3629,
 "static": true
 },
 {
@@ -50341,7 +50341,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_batch_start",
 "kind": "function",
-"line": 3693,
+"line": 3691,
 "static": true
 },
 {
@@ -50349,7 +50349,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_compact_head",
 "kind": "function",
-"line": 3478,
+"line": 3476,
 "static": true
 },
 {
@@ -50357,7 +50357,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_compact_tail",
 "kind": "function",
-"line": 3567,
+"line": 3565,
 "static": true
 },
 {
@@ -50365,7 +50365,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_cover_drops",
 "kind": "function",
-"line": 3548,
+"line": 3546,
 "static": true
 },
 {
@@ -50373,7 +50373,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_cover_set",
 "kind": "function",
-"line": 3518,
+"line": 3516,
 "static": true
 },
 {
@@ -50381,7 +50381,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#deferred_job_kill",
 "kind": "function",
-"line": 3468,
+"line": 3466,
 "static": true
 },
 {
@@ -50413,7 +50413,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#deletecurdir",
 "kind": "function",
-"line": 4017,
+"line": 4015,
 "static": false
 },
 {
@@ -50613,7 +50613,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_add",
 "kind": "function",
-"line": 1715,
+"line": 1713,
 "static": false
 },
 {
@@ -50621,7 +50621,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_event_path",
 "kind": "function",
-"line": 3981,
+"line": 3979,
 "static": false
 },
 {
@@ -50629,7 +50629,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_free",
 "kind": "function",
-"line": 1134,
+"line": 1132,
 "static": false
 },
 {
@@ -50637,7 +50637,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_free_invalid_q",
 "kind": "function",
-"line": 1837,
+"line": 1835,
 "static": false
 },
 {
@@ -50653,7 +50653,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_modify",
 "kind": "function",
-"line": 1322,
+"line": 1320,
 "static": false
 },
 {
@@ -50661,7 +50661,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_new",
 "kind": "function",
-"line": 1030,
+"line": 1029,
 "static": false
 },
 {
@@ -50677,7 +50677,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_path_follows",
 "kind": "function",
-"line": 1173,
+"line": 1171,
 "static": false
 },
 {
@@ -50685,7 +50685,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_remove",
 "kind": "function",
-"line": 1901,
+"line": 1899,
 "static": false
 },
 {
@@ -50693,7 +50693,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_remove_and_free",
 "kind": "function",
-"line": 1861,
+"line": 1859,
 "static": false
 },
 {
@@ -50701,7 +50701,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_remove_tree",
 "kind": "function",
-"line": 2017,
+"line": 2015,
 "static": false
 },
 {
@@ -50717,7 +50717,7 @@
 "file": "include/atalk/directory.h",
 "id": "include/atalk/directory.h#dir_stat_differs",
 "kind": "function",
-"line": 184,
+"line": 182,
 "static": true
 },
 {
@@ -50725,7 +50725,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_stat_refresh",
 "kind": "function",
-"line": 2675,
+"line": 2673,
 "static": false
 },
 {
@@ -50733,7 +50733,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dir_stat_usable",
 "kind": "function",
-"line": 1200,
+"line": 1198,
 "static": true
 },
 {
@@ -50749,7 +50749,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_add",
 "kind": "function",
-"line": 1913,
+"line": 1911,
 "static": false
 },
 {
@@ -50757,7 +50757,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_defer_free",
 "kind": "function",
-"line": 568,
+"line": 566,
 "static": true
 },
 {
@@ -50765,7 +50765,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_dump",
 "kind": "function",
-"line": 2807,
+"line": 2805,
 "static": false
 },
 {
@@ -50773,7 +50773,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_evict",
 "kind": "function",
-"line": 1310,
+"line": 1308,
 "static": true
 },
 {
@@ -50781,7 +50781,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_expunge_duplicate",
 "kind": "function",
-"line": 1883,
+"line": 1881,
 "static": true
 },
 {
@@ -50789,7 +50789,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_flush_deferred_for_vol",
 "kind": "function",
-"line": 3382,
+"line": 3380,
 "static": false
 },
 {
@@ -50797,7 +50797,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_has_deferred_work",
 "kind": "function",
-"line": 3454,
+"line": 3452,
 "static": false
 },
 {
@@ -50805,7 +50805,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_init",
 "kind": "function",
-"line": 2457,
+"line": 2455,
 "static": false
 },
 {
@@ -50813,7 +50813,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_lookup_did",
 "kind": "function",
-"line": 1478,
+"line": 1476,
 "static": false
 },
 {
@@ -50821,7 +50821,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_lookup_parent",
 "kind": "function",
-"line": 1516,
+"line": 1514,
 "static": false
 },
 {
@@ -50829,7 +50829,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_mismatch_panic",
 "kind": "function",
-"line": 2058,
+"line": 2056,
 "static": true
 },
 {
@@ -50837,7 +50837,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_process_deferred_chain",
 "kind": "function",
-"line": 3828,
+"line": 3826,
 "static": false
 },
 {
@@ -50845,7 +50845,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_promote",
 "kind": "function",
-"line": 2372,
+"line": 2370,
 "static": false
 },
 {
@@ -50853,7 +50853,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_purge_vol",
 "kind": "function",
-"line": 511,
+"line": 509,
 "static": false
 },
 {
@@ -50861,7 +50861,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_refresh",
 "kind": "function",
-"line": 1413,
+"line": 1411,
 "static": false
 },
 {
@@ -50869,7 +50869,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_reindex_didname",
 "kind": "function",
-"line": 2324,
+"line": 2322,
 "static": false
 },
 {
@@ -50877,7 +50877,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_remove",
 "kind": "function",
-"line": 2090,
+"line": 2088,
 "static": false
 },
 {
@@ -50885,7 +50885,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_remove_children",
 "kind": "function",
-"line": 2232,
+"line": 2230,
 "static": false
 },
 {
@@ -50893,7 +50893,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_remove_children_defer",
 "kind": "function",
-"line": 3293,
+"line": 3291,
 "static": false
 },
 {
@@ -50901,7 +50901,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_report_invalid_entry",
 "kind": "function",
-"line": 3265,
+"line": 3263,
 "static": false
 },
 {
@@ -50909,7 +50909,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_reset_validation_counter",
 "kind": "function",
-"line": 3021,
+"line": 3019,
 "static": false
 },
 {
@@ -50917,7 +50917,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_resolve_size",
 "kind": "function",
-"line": 2413,
+"line": 2411,
 "static": false
 },
 {
@@ -50925,7 +50925,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_rfork_shutdown",
 "kind": "function",
-"line": 2782,
+"line": 2780,
 "static": false
 },
 {
@@ -50933,7 +50933,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_search_at_stat",
 "kind": "function",
-"line": 1848,
+"line": 1846,
 "static": false
 },
 {
@@ -50941,7 +50941,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_search_by_did",
 "kind": "function",
-"line": 1546,
+"line": 1544,
 "static": false
 },
 {
@@ -50949,7 +50949,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#dircache_search_by_name",
 "kind": "function",
-"line": 1821,
+"line": 1819,
 "static": false
 },
 {
@@ -50957,7 +50957,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirlookup",
 "kind": "function",
-"line": 939,
+"line": 938,
 "static": false
 },
 {
@@ -50989,7 +50989,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirlookup_strict",
 "kind": "function",
-"line": 961,
+"line": 960,
 "static": false
 },
 {
@@ -51005,7 +51005,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#dirreenumerate",
 "kind": "function",
-"line": 2760,
+"line": 2758,
 "static": false
 },
 {
@@ -51997,7 +51997,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#file_access",
 "kind": "function",
-"line": 2608,
+"line": 2606,
 "static": false
 },
 {
@@ -52253,7 +52253,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#fullpath_join",
 "kind": "function",
-"line": 1124,
+"line": 1122,
 "static": false
 },
 {
@@ -52261,7 +52261,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#fullpath_join_blk",
 "kind": "function",
-"line": 1100,
+"line": 1098,
 "static": false
 },
 {
@@ -52501,7 +52501,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#getdirparams",
 "kind": "function",
-"line": 2790,
+"line": 2788,
 "static": false
 },
 {
@@ -52789,7 +52789,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#gone_event_for",
 "kind": "function",
-"line": 1361,
+"line": 1359,
 "static": true
 },
 {
@@ -52981,7 +52981,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#hash_comp_didname",
 "kind": "function",
-"line": 1248,
+"line": 1246,
 "static": true
 },
 {
@@ -52989,7 +52989,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#hash_comp_vid_did",
 "kind": "function",
-"line": 379,
+"line": 377,
 "static": true
 },
 {
@@ -53037,7 +53037,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#hash_didname",
 "kind": "function",
-"line": 1191,
+"line": 1189,
 "static": true
 },
 {
@@ -53165,7 +53165,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#hash_vid_did",
 "kind": "function",
-"line": 353,
+"line": 351,
 "static": true
 },
 {
@@ -54101,7 +54101,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#log_dircache_stat",
 "kind": "function",
-"line": 2558,
+"line": 2556,
 "static": false
 },
 {
@@ -55221,7 +55221,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#movecwd",
 "kind": "function",
-"line": 2441,
+"line": 2439,
 "static": false
 },
 {
@@ -55765,7 +55765,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#object_cnid",
 "kind": "function",
-"line": 1235,
+"line": 1233,
 "static": true
 },
 {
@@ -55797,7 +55797,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#ochdir_vol",
 "kind": "function",
-"line": 2410,
+"line": 2408,
 "static": true
 },
 {
@@ -56117,7 +56117,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#offcnt_log_stats",
 "kind": "function",
-"line": 2647,
+"line": 2645,
 "static": false
 },
 {
@@ -56125,7 +56125,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#offcnt_serve",
 "kind": "function",
-"line": 2715,
+"line": 2713,
 "static": true
 },
 {
@@ -56133,7 +56133,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#offcnt_stats_get",
 "kind": "function",
-"line": 2637,
+"line": 2635,
 "static": false
 },
 {
@@ -56573,7 +56573,7 @@
 "file": "include/atalk/directory.h",
 "id": "include/atalk/directory.h#path_cached_file",
 "kind": "function",
-"line": 174,
+"line": 172,
 "static": true
 },
 {
@@ -56589,7 +56589,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#path_error",
 "kind": "function",
-"line": 3086,
+"line": 3084,
 "static": false
 },
 {
@@ -56621,7 +56621,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#path_is_strict_child",
 "kind": "function",
-"line": 3500,
+"line": 3498,
 "static": true
 },
 {
@@ -56629,7 +56629,7 @@
 "file": "include/atalk/directory.h",
 "id": "include/atalk/directory.h#path_isadir",
 "kind": "function",
-"line": 195,
+"line": 193,
 "static": true
 },
 {
@@ -57125,7 +57125,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#process_cache_hints",
 "kind": "function",
-"line": 3063,
+"line": 3061,
 "static": false
 },
 {
@@ -57669,7 +57669,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#renamedir",
 "kind": "function",
-"line": 3907,
+"line": 3905,
 "static": false
 },
 {
@@ -58069,7 +58069,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#search_by_name",
 "kind": "function",
-"line": 1700,
+"line": 1698,
 "static": true
 },
 {
@@ -58493,7 +58493,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#setdiroffcnt",
 "kind": "function",
-"line": 2699,
+"line": 2697,
 "static": false
 },
 {
@@ -58509,7 +58509,7 @@
 "file": "etc/afpd/directory.c",
 "id": "etc/afpd/directory.c#setdirparams",
 "kind": "function",
-"line": 3192,
+"line": 3190,
 "static": false
 },
 {
@@ -58677,7 +58677,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#should_validate_cache_entry",
 "kind": "function",
-"line": 1291,
+"line": 1289,
 "static": true
 },
 {
@@ -61605,7 +61605,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#validation_expunge_and_hint",
 "kind": "function",
-"line": 1380,
+"line": 1378,
 "static": true
 },
 {
@@ -61613,7 +61613,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#validation_freq",
 "kind": "function",
-"line": 1272,
+"line": 1270,
 "static": true
 },
 {
@@ -61621,7 +61621,7 @@
 "file": "etc/afpd/dircache.c",
 "id": "etc/afpd/dircache.c#validation_refresh_and_hint",
 "kind": "function",
-"line": 1456,
+"line": 1454,
 "static": true
 },
 {

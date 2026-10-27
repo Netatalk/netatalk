@@ -1,16 +1,16 @@
 ---
 type: Build Record
 title: "Build record"
-description: "Netatalk commit 1e5a5c485d47 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0."
-resource: "https://github.com/Netatalk/netatalk/commit/1e5a5c485d4763c7a7510eca46a6d2826e5a36f2"
+description: "Netatalk commit 810dad932231 rendered by process:okf-from-doxygen/1 from Doxygen 1.15.0."
+resource: "https://github.com/Netatalk/netatalk/commit/810dad93223159c188c8af5b9bc2218bad4f1667"
 tags: ["build"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T21:19:58+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-27T23:13:49+11:00 }
 ---
 
 # Source
 
-* Commit: [1e5a5c485d4763c7a7510eca46a6d2826e5a36f2](https://github.com/Netatalk/netatalk/commit/1e5a5c485d4763c7a7510eca46a6d2826e5a36f2), committed 2026-10-26T21:19:58+01:00
+* Commit: [810dad93223159c188c8af5b9bc2218bad4f1667](https://github.com/Netatalk/netatalk/commit/810dad93223159c188c8af5b9bc2218bad4f1667), committed 2026-10-27T23:13:49+11:00
 * Scanned directories: `bin`, `etc`, `include`, `libatalk`, `sys`
 * Doxygen: 1.15.0, configured from `doc/Doxyfile.in` with XML output and reference relations
 

@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-27T23:13:49+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -65,7 +65,7 @@ Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
 static struct dir * path_cached_file(const struct path *path)
 ```
 
-Defined at lines 174 to 181.
+Defined at lines 172 to 179.
 
 Return the dircache entry of a file path, or NULL after dir_remove.
 
@@ -77,7 +77,7 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [path_resolve_ca
 static int dir_stat_differs(const struct dir *dir, const struct stat *st)
 ```
 
-Defined at lines 184 to 187.
+Defined at lines 182 to 185.
 
 Tell whether a stat shows another inode or ctime than an entry holds.
 
@@ -89,7 +89,7 @@ Called by: [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached)
 static int path_isadir(struct path *o_path)
 ```
 
-Defined at lines 195 to 204.
+Defined at lines 193 to 202.
 
 Tell whether a path resolved to a directory.
 
@@ -135,7 +135,7 @@ Defined at line 83.
 
 ### struct path
 
-Defined at line 156.
+Defined at line 154.
 * `int m_type`: mac name type (long name, unicode
 * `char * m_name`: mac name
 * `char * u_name`: unix name
