@@ -463,6 +463,14 @@ int fcntl(int fd, int cmd, ...)
         fi.lock_last_type  = flk->l_type;
         fi.lock_last_start = flk->l_start;
         fi.lock_last_len   = flk->l_len;
+
+        if (fi.lock_calls < FI_LOCK_CALLS) {
+            fi.lock_call[fi.lock_calls] = (struct fi_lock) {
+                cmd, flk->l_type, flk->l_start, flk->l_len
+            };
+        }
+
+        fi.lock_calls++;
     }
 
     /* another process's truncate, landing after the caller sized the file */

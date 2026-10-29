@@ -123,8 +123,17 @@ extern int utest_rfork_close_survives_bad_metadata(AFPObj *obj,
 extern int utest_rfork_close_keeps_metadata_past_bad_ea(AFPObj *obj,
                                                         struct vol *vol);
 extern int utest_readonly_open_meets_deny_mode(AFPObj *obj, struct vol *vol);
+extern int utest_rfork_no_access_opens_share_their_slot(AFPObj *obj,
+                                                        struct vol *vol);
 extern int utest_refused_delete_keeps_appledouble(AFPObj *obj,
                                                   struct vol *vol);
+extern int utest_tmplock_covers_uncovered_bytes_only(AFPObj *obj,
+                                                     struct vol *vol);
+extern int utest_tmplock_read_lock_covers_read(AFPObj *obj, struct vol *vol);
+extern int utest_tmplock_refused_stretch_undoes_the_taken(AFPObj *obj,
+                                                          struct vol *vol);
 extern int utest_delete_uncounted_drops_count(AFPObj *obj, struct vol *vol);
+extern int utest_byte_locks_scan_in_start_order(AFPObj *obj,
+                                                struct vol *vol);
 
 #endif /* SUBTESTS_REQUEST_H */

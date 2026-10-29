@@ -1542,6 +1542,7 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             return AFPERR_NLOCK;
 
         case EINVAL:
+        case EOVERFLOW:
             return UNLOCKBIT(flags) ? AFPERR_NORANGE : AFPERR_RANGEOVR;
 
         case EBADF:

@@ -46,5 +46,8 @@ extern int utest_freelock_unlck_fail_logs(const struct vol *vol);
 extern int utest_fork_setmode_fdeny(const struct vol *vol);
 extern int utest_of_alloc_fifo(struct vol *vol);
 extern int utest_of_breakdown(struct vol *vol);
+extern int utest_tmplock_whole_file_meets_every_lock(const struct vol *vol);
+extern int utest_departing_fork_frees_its_own_bytes(const struct vol *vol);
+extern int utest_band_slot_overlap_released_per_fork(const struct vol *vol);
 
 #endif /* SUBTESTS_LOCK_H */

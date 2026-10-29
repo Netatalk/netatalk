@@ -21,4 +21,16 @@ extern void peer_release(struct peer *p);
 extern int peer_try_lock(const char *path, short type, off_t start,
                          off_t len);
 
+/* A kernel lock a forked child tries on a range, and whether the range is
+ * expected free. */
+struct range_probe {
+    short type;          /* F_RDLCK or F_WRLCK */
+    off_t off;           /* first byte of the range */
+    off_t len;           /* length of the range */
+    int   free;          /* 1 when the child should get the lock, 0 when not */
+};
+
+extern int probe_ranges(const char *path, const struct range_probe *probes,
+                        int count, int *seen);
+
 #endif /* PEER_LOCK_H */

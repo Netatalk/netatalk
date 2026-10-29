@@ -3363,6 +3363,9 @@ int main(int argc, char *argv[])
                      "read-only downgrade retry strips O_TRUNC (no truncate)");
     TEST_int_or_skip(utest_ad2openflags_accmode(vol), 0,
                      "ad2openflags: SETSHRMD|RDONLY promoted to O_RDWR, plain RDONLY stays RO");
+    /* temporary-lock conflict scan */
+    TEST_int(utest_tmplock_whole_file_meets_every_lock(vol), 0,
+             "ad_tmplock: a whole-file range meets another fork's lock");
     /* delete-conflict GET / of_get_locks / ad_testlock_range unit tests */
     TEST_int_or_skip(utest_testlock_range_clamp(vol), 0,
                      "ad_testlock_range: data-zone probe is clamped, never sweeps the band");
@@ -3391,13 +3394,20 @@ int main(int argc, char *argv[])
      * NULL and the test skips, like any other unmet capability). */
     TEST_int_or_skip(volsys ? utest_deletefile_nodelete(volsys) : TEST_SKIP, 0,
                      "deletefile honours NODELETE (ea=sys backend)");
-    /* release-path correctness: per-fork unlock, coalesced-union release, unlock-fail log */
+    /* release path: per-fork unlock, overlap release, failed-unlock log */
     TEST_int_or_skip(utest_shared_rlock(vol), 0,
                      "shared read lock: kernel lock survives first release, drops on last");
     TEST_int_or_skip(utest_overlap_strand(vol), 0,
-                     "overlapping read locks: union unlock leaves no stranded remainder");
+                     "overlapping read locks: per-fork releases leave no "
+                     "stranded remainder");
     TEST_int_or_skip(utest_freelock_unlck_fail_logs(vol), 0,
                      "adf_freelock: a failed F_UNLCK is logged and the entry still dropped");
+    TEST_int(utest_departing_fork_frees_its_own_bytes(vol), 0,
+             "adf_freelock: a departing fork's read lock frees the bytes the "
+             "staying fork's lock does not hold");
+    TEST_int(utest_band_slot_overlap_released_per_fork(vol), 0,
+             "adf_freelock: a read lock up to another fork's band slot leaves "
+             "the slot to that fork");
     TEST_int_or_skip(utest_fork_setmode_fdeny(vol), 0,
                      "fork_setmode_deny: each access mode maps to the correct deny bits");
     TEST_int(utest_of_alloc_fifo(vol), 0,
@@ -3615,10 +3625,25 @@ int main(int argc, char *argv[])
              "offspring count: FPGetFileDirParms keeps the metadata it reads");
     TEST_int(utest_offcnt_fresh_stat_refreshes_cache(&obj, vid), 0,
              "offspring count: a fresh stat refreshes the cached ctime");
+    TEST_int_or_skip(utest_byte_locks_scan_in_start_order(&obj, vol), 0,
+                     "byte locks: ranges taken out of start order stay held "
+                     "through the strict-locking reads that meet them");
     TEST_int_or_skip(utest_write_reads_size_only_when_used(&obj, vol), 0,
                      "FPWrite: fork size read only when a write uses it");
+    TEST_int_or_skip(utest_tmplock_covers_uncovered_bytes_only(&obj, vol), 0,
+                     "strict locking: a request locks only the bytes no "
+                     "recorded lock covers and leaves every lock as it was");
+    TEST_int_or_skip(utest_tmplock_read_lock_covers_read(&obj, vol), 0,
+                     "strict locking: a read inside a read-only fork's lock "
+                     "makes no kernel call");
+    TEST_int_or_skip(utest_tmplock_refused_stretch_undoes_the_taken(&obj, vol),
+                     0, "strict locking: a refused stretch releases the "
+                     "stretches taken before it");
     TEST_int(utest_volume_scan_counts_no_band(&obj, vol), 0,
              "vol size limit: a bundle without bands adds no usage");
+    TEST_int(utest_rfork_no_access_opens_share_their_slot(&obj, vol), 0,
+             "FPOpenFork: two no-access opens of a resource fork share the "
+             "band's last slot, which the last close frees");
     TEST_int(utest_volume_scan_resets_appended(&obj, vol), 0,
              "vol size limit: a usage scan replaces the appended count");
     TEST_int(utest_rfork_cache_hit_sends_cached_bytes(&obj, vol), 0,

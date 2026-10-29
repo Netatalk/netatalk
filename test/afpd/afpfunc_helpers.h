@@ -121,6 +121,8 @@ extern int openfork_bitmap(AFPObj *obj, uint16_t vid, cnid_t did,
                            const char *name, uint8_t fork, uint16_t access,
                            uint16_t bitmap, uint16_t *refnum);
 extern int closefork(AFPObj *obj, uint16_t refnum);
+extern int bytelock_ext(AFPObj *obj, uint16_t refnum, int end, int clear,
+                        uint64_t offset, uint64_t length, uint64_t *start);
 extern int checkaccess(AFPObj *obj, uint16_t vid, cnid_t did,
                        const char *name, uint32_t rights);
 extern int resolveid(AFPObj *obj, uint16_t vid, cnid_t cnid);
