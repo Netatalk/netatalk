@@ -813,6 +813,42 @@ int closefork(AFPObj *obj, uint16_t refnum)
 }
 
 /*!
+ * @brief FPByteRangeLockExt on an open fork
+ *
+ * @param[in]  obj     the test session
+ * @param[in]  refnum  the fork
+ * @param[in]  end     nonzero to count offset from the fork's end
+ * @param[in]  clear   nonzero to release the range, zero to take it
+ * @param[in]  offset  first byte of the range
+ * @param[in]  length  length of the range
+ * @param[out] start   the range start the reply carries, or NULL
+ * @returns the AFP result
+ */
+int bytelock_ext(AFPObj *obj, uint16_t refnum, int end, int clear,
+                 uint64_t offset, uint64_t length, uint64_t *start)
+{
+    static uint8_t buf[20] = { AFP_BYTELOCK_EXT, 0 };
+    uint64_t offset_be = hton64(offset);
+    uint64_t length_be = hton64(length);
+    uint64_t start_be;
+    int rc;
+    buf[1] = (end ? 0x80 : 0) | (clear ? 0x01 : 0);
+    memcpy(buf + 2, &refnum, sizeof(refnum));
+    memcpy(buf + 4, &offset_be, sizeof(offset_be));
+    memcpy(buf + 12, &length_be, sizeof(length_be));
+    rbuflen = sizeof(rbuf);
+    rc = afp_bytelock_ext(obj, (char *)buf, sizeof(buf), rbuf, &rbuflen);
+
+    /* the reply carries the range's start; the same swap converts it back */
+    if (start != NULL && rc == AFP_OK && rbuflen == sizeof(start_be)) {
+        memcpy(&start_be, rbuf, sizeof(start_be));
+        *start = hton64(start_be);
+    }
+
+    return rc;
+}
+
+/*!
  * @brief FPAccess: does the session's user hold rights on name under did?
  *
  * The UUID field stays zero: check_acl_access() never reads it, so both ACL

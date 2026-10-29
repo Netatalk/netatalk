@@ -161,16 +161,10 @@ struct ad_entry {
     ssize_t   ade_len;
 };
 
-typedef struct adf_lock_shared {
-    int   count;
-    off_t start;
-    off_t end;
-} adf_lock_shared_t;
-
 typedef struct adf_lock_t {
     struct flock lock;
     int user;
-    adf_lock_shared_t *refcount;
+    off_t reach;    /*!< farthest last byte of this entry and the ones before */
 } adf_lock_t;
 
 struct ad_fd {

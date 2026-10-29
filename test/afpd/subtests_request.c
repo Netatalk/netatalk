@@ -6344,3 +6344,583 @@ out:
     fio_done(vol, 0, name);
     return ret;
 }
+
+/*!
+ * @brief Byte locks taken out of start order stay held through
+ *        strict-locking reads that reach them, before and after a release
+ *
+ * The first read, of [349, 400), meets D at its last byte and ends where A
+ * starts: the lock and the release of the bytes D leaves make two F_SETLK
+ * calls. A second fork's reads into D and C and lock over D are refused.
+ * The second read, of [700, 900) after B's release, meets C: two calls.
+ *
+ * @returns 0, TEST_SKIP when the probes pass without the fault injector, 1
+ *          when a request, a probe or a count is wrong, -1 when the fixture
+ *          failed
+ */
+int utest_byte_locks_scan_in_start_order(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_sorted";
+    /* A, B and C at 400, 600 and 800, then D at 50: out of start order */
+    static const struct {
+        off_t off;
+        off_t len;
+    } locks[4] = { { 400, 200 }, { 600, 200 }, { 800, 200 }, { 50, 300 } };
+    /* after the first read D's last byte and A's first stay held with the
+     * gap between them free; after the second C's first byte stays held, B's
+     * range is free and D is still held through the other fork's close */
+    static const struct range_probe first[3] = {
+        { F_WRLCK, 349, 1, 0 }, { F_WRLCK, 400, 1, 0 },
+        { F_WRLCK, 350, 50, 1 },
+    };
+    static const struct range_probe second[3] = {
+        { F_WRLCK, 800, 1, 0 }, { F_WRLCK, 600, 200, 1 },
+        { F_WRLCK, 340, 10, 0 },
+    };
+    int counting = test_capability(TEST_CAP_FAULT_INJECT, vol);
+    char path[MAXPATHLEN + 1];
+    char out[256];
+    uint16_t w = 0;
+    uint16_t v = 0;
+    int rc = AFP_OK;
+    /* v's read into D, its lock over D, its read into C */
+    int refused[3] = { -1, -1, -1 };
+    int calls = -1;
+    int calls_after = -1;
+    int bad_first = -1;             /* the probe that failed after each read */
+    int bad_second = -1;
+    int seen = -1;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    fio.obj.options.flags |= OPTION_STRICT_LOCKING;
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, 1100) != AFP_OK) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    for (int i = 0; i < 4 && rc == AFP_OK; i++) {
+        rc = bytelock_ext(&fio.obj, w, 0, 0, locks[i].off, locks[i].len,
+                          NULL);
+    }
+
+    fault_inject_reset();
+    fi.fcntl_watch = 1;
+
+    if (rc == AFP_OK) {
+        rc = fio_read(w, 349, 51, 51, out);
+        calls = fi.setlk_calls;
+        bad_first = probe_ranges(path, first, 3, &seen);
+    }
+
+    if (rc == AFP_OK) {
+        rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                      OPENACC_RD | OPENACC_WR, &v);
+    }
+
+    /* another fork of the file meets D's lock on a read and on a lock, then
+     * C's lock once B's release has moved C down a slot */
+    if (rc == AFP_OK) {
+        refused[0] = fio_read(v, 300, 50, 50, out);
+        refused[1] = bytelock_ext(&fio.obj, v, 0, 0, 340, 20, NULL);
+        rc = bytelock_ext(&fio.obj, w, 0, 1, locks[1].off, locks[1].len,
+                          NULL);
+    }
+
+    if (rc == AFP_OK) {
+        refused[2] = fio_read(v, 850, 50, 50, out);
+        rc = closefork(&fio.obj, v);
+
+        if (rc == AFP_OK) {
+            v = 0;
+        }
+
+        fi.setlk_calls = 0;
+    }
+
+    if (rc == AFP_OK) {
+        rc = fio_read(w, 700, 200, 200, out);
+        calls_after = fi.setlk_calls;
+        bad_second = probe_ranges(path, second, 3, &seen);
+    }
+
+    if (bad_first == -2 || bad_second == -2) {
+        goto out;                       /* a probe's child failed */
+    }
+
+    if (rc != AFP_OK || refused[0] != AFPERR_LOCK || refused[1] != AFPERR_LOCK
+            || refused[2] != AFPERR_LOCK || bad_first >= 0 || bad_second >= 0) {
+        ret = 1;
+    } else if (!counting) {
+        ret = TEST_SKIP;
+    } else {
+        ret = calls == 2 && calls_after == 2 ? 0 : 1;
+    }
+
+    if (ret == 1) {
+        fprintf(stderr,
+                "sorted locks: rc %d, refused %d/%d/%d, probe %d/%d saw %d, "
+                "F_SETLK %d/%d\n", rc, refused[0], refused[1], refused[2],
+                bad_first, bad_second, seen, calls, calls_after);
+    }
+
+out:
+    fault_inject_reset();
+
+    if (v) {
+        closefork(&fio.obj, v);
+    }
+
+    fio_done(vol, w, name);
+    return ret;
+}
+
+/*!
+ * @brief Two opens of a resource fork with no access share the band's last
+ *        slot, so the first close leaves it held and the second frees it
+ *
+ * @returns 0, 1 when the slot is free after the first close, 2 when it is
+ *          still held after the second, -1 when the fixture failed
+ */
+int utest_rfork_no_access_opens_share_their_slot(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_noaccess";
+    char path[MAXPATHLEN + 1];
+    uint16_t w = 0;
+    uint16_t a = 0;
+    uint16_t b = 0;
+    int held = -1;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    /* a file with a resource fork, then two opens of the fork with no access */
+    if (fio_rfork(vol, name, &w) != 0 || closefork(&fio.obj, w) != AFP_OK) {
+        goto out;
+    }
+
+    w = 0;
+
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS, 0,
+                 &a) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                        0, &b) != AFP_OK) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (closefork(&fio.obj, a) != AFP_OK) {
+        goto out;
+    }
+
+    a = 0;
+    held = peer_try_lock(path, F_WRLCK, (off_t)AD_FILELOCK_RSRC_OPEN_NONE, 1);
+
+    if (held < 0) {
+        goto out;                       /* the probe's child failed */
+    }
+
+    if (held == 1) {
+        fprintf(stderr, "no-access opens: slot free after the first close\n");
+        ret = 1;
+        goto out;
+    }
+
+    /* the second fork is the slot's last holder: its close frees the byte */
+    if (closefork(&fio.obj, b) != AFP_OK) {
+        goto out;
+    }
+
+    b = 0;
+    held = peer_try_lock(path, F_WRLCK, (off_t)AD_FILELOCK_RSRC_OPEN_NONE, 1);
+
+    if (held < 0) {
+        goto out;
+    }
+
+    ret = held == 1 ? 0 : 2;
+
+    if (ret == 2) {
+        fprintf(stderr, "no-access opens: slot held after both closes\n");
+    }
+
+out:
+
+    if (a) {
+        closefork(&fio.obj, a);
+    }
+
+    if (b) {
+        closefork(&fio.obj, b);
+    }
+
+    fio_done(vol, w, name);
+    return ret;
+}
+
+/*! A run of bytes */
+struct byte_span {
+    off_t off;      /*!< first byte */
+    off_t len;      /*!< length */
+};
+
+/*!
+ * @brief Do the watched lock calls take each stretch in order, then release
+ *        each in the same order?
+ *
+ * @param[in] gap   the uncovered stretches, in order of start
+ * @param[in] n     their number; the calls expected are 2n
+ * @param[in] type  F_RDLCK or F_WRLCK, the type the takes ask for
+ * @returns the index of the first call that differs, -1 when all agree
+ */
+static int stretch_calls_differ(const struct byte_span *gap, int n, int type)
+{
+    for (int k = 0; k < 2 * n && k < FI_LOCK_CALLS; k++) {
+        const struct fi_lock *c = fi.lock_call + k;
+        const struct byte_span *g = gap + (k < n ? k : k - n);
+
+        if (c->cmd != F_SETLK || c->type != (k < n ? type : F_UNLCK)
+                || c->start != g->off || c->len != g->len) {
+            return k;
+        }
+    }
+
+    return -1;
+}
+
+/*!
+ * @brief A strict-locking read or write locks the bytes of its range that no
+ *        recorded lock covers, one take and one release per stretch, each
+ *        over that stretch, and leaves every recorded lock as it was
+ *
+ * @returns 0, TEST_SKIP when the probes pass without the fault injector, 1
+ *          when a request, a count, a call's range or a probe is wrong, -1
+ *          when the fixture failed
+ */
+int utest_tmplock_covers_uncovered_bytes_only(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_gaps";
+    /* the fork holds [1000, 1200) and [1400, 1600); each case names a range,
+     * the F_SETLK calls a read and a write of it each make, and the stretches
+     * those calls take and release */
+    static const struct {
+        off_t off;
+        off_t len;
+        int calls;
+        struct byte_span gap[3];
+    } cases[8] = {
+        { 0, 100, 2, { { 0, 100 } } },
+        { 1050, 50, 0, { { 0, 0 } } },
+        { 1000, 200, 0, { { 0, 0 } } },
+        { 900, 200, 2, { { 900, 100 } } },
+        { 1100, 200, 2, { { 1200, 100 } } },
+        { 900, 400, 4, { { 900, 100 }, { 1200, 100 } } },
+        { 900, 800, 6, { { 900, 100 }, { 1200, 200 }, { 1600, 100 } } },
+        { 1200, 200, 2, { { 1200, 200 } } },
+    };
+    /* after each case both locks' first and last bytes refuse a write lock,
+     * the first lock refuses a read lock, so it is still a write lock, and
+     * the bytes between the locks and the bytes the cases reach outside them
+     * take a write lock */
+    static const struct range_probe probes[9] = {
+        { F_WRLCK, 1000, 1, 0 }, { F_WRLCK, 1199, 1, 0 },
+        { F_RDLCK, 1000, 200, 0 }, { F_WRLCK, 1400, 1, 0 },
+        { F_WRLCK, 1599, 1, 0 }, { F_WRLCK, 1200, 200, 1 },
+        { F_WRLCK, 0, 100, 1 }, { F_WRLCK, 900, 100, 1 },
+        { F_WRLCK, 1600, 100, 1 },
+    };
+    int counting = test_capability(TEST_CAP_FAULT_INJECT, vol);
+    char path[MAXPATHLEN + 1];
+    char out[1024];
+    uint16_t w = 0;
+    int rc = AFP_OK;
+    int bad = -1;                   /* the failing case */
+    int bad_write = -1;             /* its request: 0 the read, 1 the write */
+    int bad_probe = -1;             /* the probe that failed, -1 for none */
+    int got = -1;
+    int wrong = -1;                 /* the call off its stretch, -1 for none */
+    int seen = -1;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    fio.obj.options.flags |= OPTION_STRICT_LOCKING;
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, 2100) != AFP_OK
+            || bytelock_ext(&fio.obj, w, 0, 0, 1000, 200, NULL) != AFP_OK
+            || bytelock_ext(&fio.obj, w, 0, 0, 1400, 200, NULL) != AFP_OK) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    for (int i = 0; i < 8 && bad < 0; i++) {
+        for (int writing = 0; writing < 2 && bad < 0; writing++) {
+            uint32_t len = (uint32_t)cases[i].len;
+            fault_inject_reset();
+            fi.fcntl_watch = 1;
+            rc = writing ? fio_write(w, 0, cases[i].off, rq_data, len)
+                 : fio_read(w, cases[i].off, len, len, out);
+            got = fi.setlk_calls;
+            wrong = counting && got == cases[i].calls
+                    ? stretch_calls_differ(cases[i].gap, got / 2,
+                                           writing ? F_WRLCK : F_RDLCK)
+                    : -1;
+
+            if (rc != AFP_OK
+                    || (counting && (got != cases[i].calls || wrong >= 0))) {
+                bad = i;
+                bad_write = writing;
+            }
+        }
+
+        /* the read and the write leave the same locks: probe once */
+        if (bad < 0) {
+            bad_probe = probe_ranges(path, probes, 9, &seen);
+
+            if (bad_probe == -2) {
+                goto out;                   /* a probe's child failed */
+            }
+
+            if (bad_probe >= 0) {
+                bad = i;
+            }
+        }
+    }
+
+    if (bad < 0) {
+        ret = counting ? 0 : TEST_SKIP;
+    } else {
+        fprintf(stderr,
+                "uncovered: case %d req %d rc %d F_SETLK %d call %d probe %d "
+                "saw %d\n", bad, bad_write, rc, got, wrong, bad_probe, seen);
+        ret = 1;
+    }
+
+out:
+    fault_inject_reset();
+    fio_done(vol, w, name);
+    return ret;
+}
+
+/*!
+ * @brief A read-only fork's byte lock is a read lock: a second read-only fork's
+ *        strict-locking read inside it makes no kernel call, one across its
+ *        start two, one over it and a nested lock four, and one inside it past
+ *        the nested lock none
+ *
+ * @returns 0, TEST_SKIP when the open injector misses the data file's open or
+ *          the probes pass without the fault injector, 1 when a request, a
+ *          count or a probe is wrong, -1 when the fixture failed
+ */
+int utest_tmplock_read_lock_covers_read(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_gaps_ro";
+    /* after the reads both locks' end bytes and the outer lock's bytes past
+     * the nested one stay held, and the bytes the reads took on either side of
+     * the outer lock take a write lock */
+    static const struct range_probe probes[7] = {
+        { F_WRLCK, 100, 1, 0 }, { F_WRLCK, 199, 1, 0 }, { F_WRLCK, 120, 1, 0 },
+        { F_WRLCK, 139, 1, 0 }, { F_WRLCK, 150, 30, 0 }, { F_WRLCK, 50, 50, 1 },
+        { F_WRLCK, 200, 50, 1 },
+    };
+    int counting = test_capability(TEST_CAP_FAULT_INJECT, vol);
+    char path[MAXPATHLEN + 1];
+    char out[256];
+    uint16_t r1 = 0;
+    uint16_t r2 = 0;
+    int rc;
+    int inside = -1;
+    int across = -1;
+    int nested = -1;
+    int covered = -1;
+    int bad_probe = -1;
+    int seen = -1;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    fio.obj.options.flags |= OPTION_STRICT_LOCKING;
+
+    /* a file with content, closed, then opened read-only by two forks */
+    if (fio_dfork(vol, name, &r1) != 0
+            || fio_write(r1, 0, 0, rq_data, 300) != AFP_OK
+            || closefork(&fio.obj, r1) != AFP_OK) {
+        goto out;
+    }
+
+    r1 = 0;
+    rc = fio_open_readonly(vol, name, OPENFORK_DATA, &r1);
+
+    if (rc == TEST_SKIP) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    if (rc != AFP_OK) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                  OPENACC_RD, &r2);
+
+    /* the first fork's lock over [100, 200) is a read lock on the read-only
+     * descriptor; a read inside it, then one across its start */
+    if (rc == AFP_OK) {
+        rc = bytelock_ext(&fio.obj, r1, 0, 0, 100, 100, NULL);
+    }
+
+    if (rc == AFP_OK) {
+        fault_inject_reset();
+        fi.fcntl_watch = 1;
+        rc = fio_read(r2, 100, 100, 100, out);
+        inside = fi.setlk_calls;
+        fi.setlk_calls = 0;
+    }
+
+    if (rc == AFP_OK) {
+        rc = fio_read(r2, 50, 100, 100, out);
+        across = fi.setlk_calls;
+    }
+
+    /* the second fork's lock over [120, 140) lies inside the first's; a read
+     * over both and past them covers [50, 100) and [200, 300) alone */
+    if (rc == AFP_OK) {
+        rc = bytelock_ext(&fio.obj, r2, 0, 0, 120, 20, NULL);
+        fi.setlk_calls = 0;
+    }
+
+    if (rc == AFP_OK) {
+        rc = fio_read(r2, 50, 250, 250, out);
+        nested = fi.setlk_calls;
+        fi.setlk_calls = 0;
+    }
+
+    /* a read that starts past the nested lock's end is covered by the outer
+     * entry alone, which only its reach, not its own end, finds */
+    if (rc == AFP_OK) {
+        rc = fio_read(r2, 150, 30, 30, out);
+        covered = fi.setlk_calls;
+    }
+
+    if (rc == AFP_OK) {
+        bad_probe = probe_ranges(path, probes, 7, &seen);
+
+        if (bad_probe == -2) {
+            goto out;                       /* a probe's child failed */
+        }
+    }
+
+    if (rc != AFP_OK || bad_probe >= 0) {
+        ret = 1;
+    } else if (!counting) {
+        ret = TEST_SKIP;
+    } else {
+        ret = inside == 0 && across == 2 && nested == 4 && covered == 0 ? 0 : 1;
+    }
+
+    if (ret == 1) {
+        fprintf(stderr,
+                "read lock covers: rc %d, F_SETLK %d/%d/%d/%d, probe %d saw "
+                "%d\n", rc, inside, across, nested, covered, bad_probe, seen);
+    }
+
+out:
+    fault_inject_reset();
+
+    if (r2) {
+        closefork(&fio.obj, r2);
+    }
+
+    fio_done(vol, r1, name);
+    return ret;
+}
+
+/*!
+ * @brief A strict-locking read whose second stretch the kernel refuses
+ *        releases the first stretch again and replies AFPERR_LOCK
+ *
+ * @returns 0, TEST_SKIP without the fault injector, 1 when the reply, the
+ *          count or a probe is wrong, -1 when the fixture failed
+ */
+int utest_tmplock_refused_stretch_undoes_the_taken(AFPObj *obj,
+                                                   struct vol *vol)
+{
+    static char name[] = "rq_undo";
+    /* [900, 1000) is free again and the lock at 1000 untouched */
+    static const struct range_probe probes[2] = {
+        { F_WRLCK, 900, 100, 1 }, { F_WRLCK, 1000, 1, 0 },
+    };
+    char path[MAXPATHLEN + 1];
+    char out[512];
+    uint16_t w = 0;
+    int rc = -1;
+    int calls = -1;
+    int undo = -1;                  /* last lock call released [900, 1000) */
+    int bad_probe = -1;
+    int seen = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    fio.obj.options.flags |= OPTION_STRICT_LOCKING;
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, 2100) != AFP_OK
+            || bytelock_ext(&fio.obj, w, 0, 0, 1000, 200, NULL) != AFP_OK) {
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    /* the read of [900, 1300) takes [900, 1000), is refused [1200, 1300) and
+     * releases [900, 1000) again: three F_SETLK calls */
+    fault_inject_reset();
+    fi.fcntl_armed = 1;
+    fi.fcntl_fail_after = 1;
+    fi.fcntl_errno = EACCES;
+    fi.fcntl_watch = 1;
+    rc = fio_read(w, 900, 400, 400, out);
+    calls = fi.setlk_calls;
+    undo = fi.lock_last_type == F_UNLCK && fi.lock_last_start == 900
+           && fi.lock_last_len == 100;
+    fault_inject_reset();
+    bad_probe = probe_ranges(path, probes, 2, &seen);
+
+    if (bad_probe == -2) {
+        goto out;                       /* a probe's child failed */
+    }
+
+    ret = rc == AFPERR_LOCK && calls == 3 && undo && bad_probe == -1 ? 0 : 1;
+
+    if (ret == 1) {
+        fprintf(stderr,
+                "refused stretch: rc %d, F_SETLK %d, undo %d, probe %d saw "
+                "%d\n", rc, calls, undo, bad_probe, seen);
+    }
+
+out:
+    fault_inject_reset();
+    fio_done(vol, w, name);
+    return ret;
+}

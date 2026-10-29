@@ -1285,8 +1285,9 @@ int utest_deletefile_nodelete(const struct vol *vol)
 }
 
 /*!
- * @brief Two same-range read locks from two fork owners share one refcount; the
- * kernel lock survives the first release and drops only on the last.
+ * @brief Two same-range read locks from two fork owners are each recorded; the
+ * kernel lock survives the first release, whose range the other entry still
+ * covers, and drops only on the last.
  */
 int utest_shared_rlock(const struct vol *vol)
 {
@@ -1302,8 +1303,8 @@ int utest_shared_rlock(const struct vol *vol)
         return 1;                        /* setup open failed */
     }
 
-    /* Two read locks, same range [0,100), distinct fork owners 1 and 2:
-     * adf_findxlock matches the overlap and they share one refcount group. */
+    /* Two read locks, same range [0,100), distinct fork owners 1 and 2: the
+     * kernel merges them into one lock. */
     if (ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, 100, 1) < 0
             || ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, 100, 2) < 0) {
         ad_close(&ad, ADFLAGS_DF);
@@ -1311,14 +1312,15 @@ int utest_shared_rlock(const struct vol *vol)
         return 2;                        /* setup lock failed */
     }
 
-    /* Release owner 1: group count 2->1, kernel lock must REMAIN. */
+    /* Release owner 1: owner 2's entry covers the range, kernel lock must
+     * REMAIN. */
     ad_unlock(&ad, 1);
 
     if (peer_try_lock(path, F_WRLCK, 0, 100) != 0) {
         rc = 3;                          /* expected 0 == still held */
     }
 
-    /* Release owner 2: group count 1->0, kernel lock must be GONE. */
+    /* Release owner 2: no entry covers the range, kernel lock must be GONE. */
     ad_unlock(&ad, 2);
 
     if (!rc && peer_try_lock(path, F_WRLCK, 0, 100) != 1) {
@@ -1331,9 +1333,9 @@ int utest_shared_rlock(const struct vol *vol)
 }
 
 /*!
- * @brief Overlapping read locks from two fork owners coalesce in the kernel; the
- * union unlock must release the whole coalesced range, leaving no stranded
- * remainder.
+ * @brief Overlapping read locks from two fork owners coalesce in the kernel;
+ * each owner's release frees the bytes the other does not hold, leaving no
+ * stranded remainder once both are gone.
  */
 int utest_overlap_strand(const struct vol *vol)
 {
@@ -1363,8 +1365,8 @@ int utest_overlap_strand(const struct vol *vol)
         rc = 3;                          /* expected 0 == [50,150) still held */
     }
 
-    /* Release owner 2 (last): the whole coalesced [0,150) must be gone - no
-     * stranded [0,50) remainder. */
+    /* Release owner 2 (last): owner 1's release freed [0,50); the rest of
+     * [0,150) must be gone - no stranded remainder. */
     ad_unlock(&ad, 2);
 
     if (!rc && peer_try_lock(path, F_WRLCK, 0, 150) != 1) {
@@ -1377,8 +1379,8 @@ int utest_overlap_strand(const struct vol *vol)
 }
 
 /*!
- * @brief A failed refcount-0 F_UNLCK in adf_freelock() is logged and the entry
- * still dropped (log-drop-continue), not silently swallowed.
+ * @brief A failed F_UNLCK of a departing lock's range is logged by the
+ * uncovered-stretch walk and the entry still dropped, not silently swallowed.
  */
 int utest_freelock_unlck_fail_logs(const struct vol *vol)
 {
@@ -1415,7 +1417,7 @@ int utest_freelock_unlck_fail_logs(const struct vol *vol)
     /* Route logs to a temp file so the log_error is observable. */
     setuplog("default:error", logf, true);
     /* Arm the NEXT fcntl (the ADLOCK_CLR path issues no fcntl before the F_UNLCK,
-     * so the armed failure lands exactly on adf_freelock's unlock). */
+     * so the armed failure lands exactly on the release walk's one stretch). */
     fi.fcntl_armed = 1;
     fi.fcntl_fail_after = 0;             /* fail the very next fcntl, once */
     fi.fcntl_errno = ENOLCK;
@@ -1444,7 +1446,7 @@ int utest_freelock_unlck_fail_logs(const struct vol *vol)
 
     if (lf) {
         while (fgets(buf, sizeof(buf), lf)) {
-            if (strstr(buf, "adf_freelock") && strstr(buf, "F_UNLCK")) {
+            if (strstr(buf, "adf_lock_gaps") && strstr(buf, "F_UNLCK")) {
                 found = 1;
                 break;
             }
@@ -1674,4 +1676,171 @@ out:
     }
 
     return rc;
+}
+
+/*!
+ * @brief A temporary lock of zero length reaches the end of the file and
+ *        meets every recorded range of another fork
+ *
+ * @returns 0, 1 when the whole-file lock was granted over the held range,
+ *          3 when it was refused with an errno other than EACCES, 2 when the
+ *          fixture failed
+ */
+int utest_tmplock_whole_file_meets_every_lock(const struct vol *vol)
+{
+    struct adouble ad;
+    char path[MAXPATHLEN + 1];
+    int ret;
+
+    if (make_scratch(vol, "fi_whole_meets", 400, path, sizeof(path)) != 0) {
+        return 2;
+    }
+
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_DF | ADFLAGS_RDWR, 0666) != 0) {
+        (void)unlink(path);
+        return 2;
+    }
+
+    /* fork 1 holds [400, 500), past the file's 400 bytes; fork 2 asks for the
+     * whole file, which reaches past the end of the file */
+    if (ad_lock(&ad, ADEID_DFORK, ADLOCK_WR, 400, 100, 1) != 0) {
+        ret = 2;
+    } else if (ad_tmplock(&ad, ADEID_DFORK, ADLOCK_WR, 0, 0, 2) == 0) {
+        (void)ad_tmplock(&ad, ADEID_DFORK, ADLOCK_CLR, 0, 0, 2);
+        ret = 1;
+    } else if (errno != EACCES) {
+        fprintf(stderr, "whole-file lock: refused with errno %d\n", errno);
+        ret = 3;
+    } else {
+        ret = 0;
+    }
+
+    ad_unlock(&ad, 1);
+    ad_close(&ad, ADFLAGS_DF);
+    (void)unlink(path);
+    return ret;
+}
+
+/*!
+ * @brief A fork's read lock overlapping another fork's is released as far as
+ *        the other fork's lock does not reach when the fork leaves
+ *
+ * @returns 0, 1 when the departed fork's own bytes stay locked or the staying
+ *          fork's bytes are freed, 2 when the fixture failed
+ */
+int utest_departing_fork_frees_its_own_bytes(const struct vol *vol)
+{
+    struct adouble ad;
+    char path[MAXPATHLEN + 1];
+    /* fork 2's own bytes are free; the shared bytes and fork 1's stay held */
+    static const struct range_probe probes[3] = {
+        { F_WRLCK, 100, 50, 1 }, { F_WRLCK, 50, 50, 0 },
+        { F_WRLCK, 0, 50, 0 },
+    };
+    int bad = -1;
+    int seen = -1;
+    int ret;
+
+    if (make_scratch(vol, "fi_depart", 400, path, sizeof(path)) != 0) {
+        return 2;
+    }
+
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_DF | ADFLAGS_RDWR, 0666) != 0) {
+        (void)unlink(path);
+        return 2;
+    }
+
+    /* fork 1 holds [0, 100) and fork 2 [50, 150), both read locks; fork 2
+     * leaves while fork 1 stays */
+    ret = (ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, 100, 1) != 0
+           || ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 50, 100, 2) != 0) ? 2 : 0;
+    ad_unlock(&ad, 2);
+
+    if (ret == 0) {
+        bad = probe_ranges(path, probes, 3, &seen);
+        ret = bad == -2 ? 2 : (bad == -1 ? 0 : 1);
+    }
+
+    if (ret == 1) {
+        fprintf(stderr, "departing fork: probe %d saw %d\n", bad, seen);
+    }
+
+    ad_unlock(&ad, 1);
+    ad_close(&ad, ADFLAGS_DF);
+    (void)unlink(path);
+    return ret;
+}
+
+/*!
+ * @brief A read lock running up to a band slot another fork holds frees its
+ *        own bytes when its fork leaves and leaves the slot to the other fork
+ *
+ * @returns 0, 1 when the departed fork's bytes stay locked, the slot is freed
+ *          with them, or the slot stays locked after its fork left, 2 when the
+ *          fixture failed
+ */
+int utest_band_slot_overlap_released_per_fork(const struct vol *vol)
+{
+    struct adouble ad;
+    char path[MAXPATHLEN + 1];
+    const off_t slot = (off_t)AD_FILELOCK_OPEN_RD;
+    /* every byte fork 2 held is free while fork 1 keeps the slot, which goes
+     * with fork 1 */
+    static const struct range_probe before[2] = {
+        { F_WRLCK, 0, (off_t)AD_FILELOCK_OPEN_RD, 1 },
+        { F_WRLCK, (off_t)AD_FILELOCK_OPEN_RD, 1, 0 },
+    };
+    static const struct range_probe after[1] = {
+        { F_WRLCK, (off_t)AD_FILELOCK_OPEN_RD, 1, 1 },
+    };
+    int bad = -1;
+    int bad_after = -1;
+    int seen = -1;
+    int ret;
+
+    if (make_scratch(vol, "fi_band_slot", 400, path, sizeof(path)) != 0) {
+        return 2;
+    }
+
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_DF | ADFLAGS_RDWR, 0666) != 0) {
+        (void)unlink(path);
+        return 2;
+    }
+
+    /* fork 1 holds the open-for-read slot; fork 2's read lock runs from byte
+     * zero up to that slot */
+    ret = (ad_lock(&ad, ADEID_DFORK, ADLOCK_RD | ADLOCK_FILELOCK, slot, 1, 1)
+           || ad_lock(&ad, ADEID_DFORK, ADLOCK_RD, 0, slot + 1, 2)) ? 2 : 0;
+    /* fork 2 leaves: its bytes go, the slot stays with fork 1 */
+    ad_unlock(&ad, 2);
+
+    if (ret == 0) {
+        bad = probe_ranges(path, before, 2, &seen);
+    }
+
+    ad_unlock(&ad, 1);
+
+    if (ret == 0) {
+        if (bad == -1) {
+            bad_after = probe_ranges(path, after, 1, &seen);
+        }
+
+        ret = bad == -2 || bad_after == -2 ? 2
+              : (bad == -1 && bad_after == -1 ? 0 : 1);
+    }
+
+    if (ret == 1) {
+        fprintf(stderr, "band slot: probe %d, after %d, saw %d\n", bad,
+                bad_after, seen);
+    }
+
+    ad_close(&ad, ADFLAGS_DF);
+    (void)unlink(path);
+    return ret;
 }

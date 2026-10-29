@@ -1496,14 +1496,10 @@ int utest_write_fork_rfork_end_after_append(AFPObj *obj, struct vol *vol)
  */
 int utest_byte_lock_rfork_end_after_append(AFPObj *obj, struct vol *vol)
 {
-    /* the StartEndFlag, then the range: offset 0, length 10 */
-    uint8_t req[20] = { AFP_BYTELOCK_EXT, 0x80 };
-    const uint64_t length = hton64(UINT64_C(10));
-    const uint64_t start = hton64(UINT64_C(150));
-    char reply[sizeof(start)];
-    size_t rbuflen = sizeof(reply);
+    uint64_t start = 0;
     struct rf rf;
     size_t len;
+    int rc;
     int ret;
 
     if ((ret = rf_setup(&rf, obj, vol)) != 0) {
@@ -1514,16 +1510,16 @@ int utest_byte_lock_rfork_end_after_append(AFPObj *obj, struct vol *vol)
 
     if (rf_open(&rf, 0, OPENFORK_RSCS)) {
         len = rf_write_frame(rf.buf, 1, rf.refnum[0], 0, 100, 0xA5);
-        memcpy(req + 2, &rf.refnum[0], sizeof(rf.refnum[0]));
-        memcpy(req + 12, &length, sizeof(length));
 
         if (rf_send(&rf, rf.buf, len) == 0 && rf_write(&rf) == AFP_OK
-                && rf_append_elsewhere(&rf, 0) == 0
-                && afp_bytelock_ext(&rf.obj, (char *)req, sizeof(req), reply,
-                                    &rbuflen) == AFP_OK
-                && rbuflen == sizeof(start)
-                && memcmp(reply, &start, sizeof(start)) == 0) {
-            ret = 0;
+                && rf_append_elsewhere(&rf, 0) == 0) {
+            /* a lock of 10 bytes from the fork's end lands after the
+             * appended bytes, at 150 */
+            rc = bytelock_ext(&rf.obj, rf.refnum[0], 1, 0, 0, 10, &start);
+
+            if (rc == AFP_OK && start == 150) {
+                ret = 0;
+            }
         }
     }
 

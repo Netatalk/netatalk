@@ -16,6 +16,7 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/wait.h>
@@ -142,7 +143,8 @@ void peer_release(struct peer *p)
  * @param[in] len    range length (0 = to EOF)
  *
  * @returns 1 if the lock was acquired (range free), 0 if it conflicted
- *          (range held by another process), -1 on a fork/open error
+ *          (range held by another process), -1 on a fork or open error or
+ *          when fcntl failed for a reason other than a conflict
  */
 int peer_try_lock(const char *path, short type, off_t start, off_t len)
 {
@@ -175,8 +177,14 @@ int peer_try_lock(const char *path, short type, off_t start, off_t len)
             fl.l_whence = SEEK_SET;
             fl.l_start = start;
             fl.l_len = len;
-            /* 1 = acquired (range free), 0 = conflict (range held) */
-            r = (fcntl(fd, F_SETLK, &fl) == 0) ? 1 : 0;
+
+            /* 1 = acquired (range free), 0 = conflict (range held); any
+             * other failure of the call is the probe's, not the range's */
+            if (fcntl(fd, F_SETLK, &fl) == 0) {
+                r = 1;
+            } else {
+                r = errno == EACCES || errno == EAGAIN ? 0 : 3;
+            }
         }
 
         (void)write(pfd[1], &r, 1);
@@ -192,9 +200,39 @@ int peer_try_lock(const char *path, short type, off_t start, off_t len)
     close(pfd[0]);
     (void)waitpid(pid, &status, 0);
 
-    if (res == 2) {
-        return -1;                   /* child could not open the file */
+    if (res == 2 || res == 3) {
+        return -1;                   /* could not open, or fcntl failed */
     }
 
     return res == 1 ? 1 : 0;
+}
+
+/*!
+ * @brief Try each probe from a forked child and report the first whose
+ *        outcome differs from the one expected
+ *
+ * @param[in]  path    the file
+ * @param[in]  probes  the ranges, their lock types and expected outcomes
+ * @param[in]  count   number of probes
+ * @param[out] seen    the outcome of the probe reported, 1 free and 0 held
+ * @returns the index of the first probe that disagreed, -1 when every probe
+ *          agreed, -2 when a probe's child failed
+ */
+int probe_ranges(const char *path, const struct range_probe *probes,
+                 int count, int *seen)
+{
+    for (int p = 0; p < count; p++) {
+        *seen = peer_try_lock(path, probes[p].type, probes[p].off,
+                              probes[p].len);
+
+        if (*seen < 0) {
+            return -2;
+        }
+
+        if (*seen != probes[p].free) {
+            return p;
+        }
+    }
+
+    return -1;
 }

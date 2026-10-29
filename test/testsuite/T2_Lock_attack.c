@@ -190,12 +190,12 @@ test_exit:
 }
 
 /* ------------------------------------------------------------------ *
- * test603  Shared share-mode read-lock preservation (refcount > 1),
- *          kernel-observed.
+ * test603  Shared share-mode read-lock preservation, kernel-observed.
  *
- * Two deny-none read opens of one fork in one session share the AD_FILELOCK_OPEN_RD
- * share-mode lock with a refcount of 2. Closing the first open must not drop the
- * kernel lock (refcount 2->1); closing the second must (refcount ->0).
+ * Two deny-none read opens of one fork in one session each record the
+ * AD_FILELOCK_OPEN_RD share-mode slot. Closing the first open must not drop the
+ * kernel lock, which the second open's entry still covers; closing the second
+ * must.
  * ------------------------------------------------------------------ */
 STATIC void test603()
 {

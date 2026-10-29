@@ -43,6 +43,16 @@ struct fi_call {
     int calls;              /*!< count of armed calls seen */
 };
 
+/*! One watched lock fcntl: its command and the range it named */
+struct fi_lock {
+    int   cmd;
+    int   type;             /*!< l_type */
+    off_t start;            /*!< l_start */
+    off_t len;              /*!< l_len */
+};
+
+#define FI_LOCK_CALLS 8     /*!< watched lock fcntls kept, in order */
+
 struct fault_inject {
     int open_armed;
     int open_fail_after;    /*!< succeed this many armed opens, then fail once */
@@ -75,6 +85,9 @@ struct fault_inject {
     int   lock_last_cmd;     /*!< cmd of the most recent watched lock fcntl */
     off_t lock_last_start;   /*!< l_start of the most recent watched lock fcntl */
     off_t lock_last_len;     /*!< l_len   of the most recent watched lock fcntl */
+    int   lock_calls;        /*!< watched lock fcntls, the first FI_LOCK_CALLS
+                                  of them kept in lock_call[] */
+    struct fi_lock lock_call[FI_LOCK_CALLS];
     int   shrink_armed;      /*!< the next lock fcntl first cuts shrink_fd */
     int   shrink_fd;
     off_t shrink_to;         /*!< the length that cut leaves the file */
