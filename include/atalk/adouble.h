@@ -503,7 +503,7 @@ extern int ad_stat(const char *, struct stat *);
 extern int ad_metadata(const char *, int, struct adouble *);
 extern int ad_metadataat(int, const char *, int, struct adouble *);
 extern mode_t ad_hf_mode(mode_t mode);
-extern int ad_valid_header_osx(const char *path);
+extern int ad_valid_header_osx(const char *path, int fd);
 extern off_t ad_reso_size(const char *path, int adflags, struct adouble *ad);
 
 /* ad_conv.c */

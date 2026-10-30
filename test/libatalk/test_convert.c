@@ -788,8 +788,7 @@ int main(void)
     }
 
     /* afpd opens forks with the bare filename after moving into the
-     * file's directory; ad_convert_osx() derives the data fork name from
-     * the sidecar path with the same assumption. Mirror that here. */
+     * file's directory. Mirror that here. */
     if (getcwd(origcwd, sizeof(origcwd)) == NULL) {
         perror("getcwd");
         return 1;

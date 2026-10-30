@@ -343,8 +343,10 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
  * entry takes the current fork length, capped at 4 GiB minus one byte. Version
  * 2 writes ad_data to the metadata file. The EA form stores it in the
  * AD_EA_META extended attribute of the file, or of the directory through a
- * temporary chdir. On macOS it also refreshes the native FinderInfo EA of an
- * existing file. A sticky directory that refuses the EA with EPERM is an error
+ * temporary chdir. On macOS it also writes the native FinderInfo EA, except
+ * for a header just made whose FinderInfo the EA holds already, or that holds
+ * none on a file without the EA, as every metadata open reads that EA over
+ * the entry. A sticky directory that refuses the EA with EPERM is an error
  * unless the volume sets ADVOL_FORCE_STICKY_XATTR.
  *
  * @param[in,out] ad  AppleDouble whose header entries are current
@@ -402,8 +404,22 @@ static int ad_flush_hf(struct adouble *ad)
 #ifdef __APPLE__
                 char *FinderInfo;
                 char NativeFinderInfo[ADEDLEN_FINDERI] = {'\0'};
+                char HeldFinderInfo[ADEDLEN_FINDERI] = {'\0'};
                 FinderInfo = ad_entry(ad, ADEID_FINDERI);
                 memcpy(NativeFinderInfo, FinderInfo, ADEDLEN_FINDERI);
+
+                /* a header just made writes the native EA where its
+                 * FinderInfo differs from the EA's, which the open that made
+                 * it read into the entry; an empty one stays out of a file
+                 * without the EA */
+                if (ad->ad_mdp->adf_flags & O_CREAT) {
+                    (void)sys_fgetxattr(ad_data_fileno(ad), EA_FINFO,
+                                        HeldFinderInfo, ADEDLEN_FINDERI);
+                }
+
+                const int native = !(ad->ad_mdp->adf_flags & O_CREAT)
+                                   || memcmp(NativeFinderInfo, HeldFinderInfo,
+                                             ADEDLEN_FINDERI) != 0;
 #endif
 
                 if (ad->ad_adflags & ADFLAGS_DIR) {
@@ -413,7 +429,7 @@ static int ad_flush_hf(struct adouble *ad)
                     ret = sys_fsetxattr(dirfd, AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
 #ifdef __APPLE__
 
-                    if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
+                    if (native) {
                         sys_fsetxattr(dirfd, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
                     }
 
@@ -438,7 +454,7 @@ static int ad_flush_hf(struct adouble *ad)
                         ret = sys_fsetxattr(dirfd, AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
 #ifdef __APPLE__
 
-                        if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
+                        if (native) {
                             sys_fsetxattr(dirfd, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
                         }
 
@@ -461,8 +477,8 @@ static int ad_flush_hf(struct adouble *ad)
                                               AD_DATASZ_EA, 0));
 #ifdef __APPLE__
 
-                    /* write back finderinfo to macos native ea, but only if we aren't creating a new adouble ea for netatalk */
-                    if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
+                    /* write back finderinfo to macos native ea */
+                    if (native) {
                         EC_ZERO_LOG(sys_fsetxattr(ad_data_fileno(ad), EA_FINFO, NativeFinderInfo,
                                                   ADEDLEN_FINDERI, 0));
                     }
@@ -604,7 +620,9 @@ static int ad_data_closefd(struct adouble *ad)
  * reaches zero. ADFLAGS_SETSHRMD and ADFLAGS_CHECK_OF also close the data fork,
  * because the share-mode locks live there. For version 2 closing the resource
  * fork also closes the metadata file, because opening the resource fork opens
- * it. ad_close logs and asserts a count that is already zero.
+ * it. The metadata of an emulated symlink, whose open takes no descriptor
+ * reference on the ea layout, gives back its metadata reference alone.
+ * ad_close logs and asserts a count that is already zero.
  *
  * @param[in,out] ad       AppleDouble to close, or NULL
  * @param[in]     adflags  ADFLAGS_DF, ADFLAGS_HF, ADFLAGS_RF, and the modifiers
@@ -665,7 +683,11 @@ int ad_close(struct adouble *ad, int adflags)
         }
     }
 
-    if ((adflags & ADFLAGS_HF) && (ad_meta_fileno(ad) != -1)) {
+    if ((adflags & ADFLAGS_HF) && ad_meta_fileno(ad) == AD_SYMLINK) {
+        if (ad->ad_meta_refcount) {
+            ad->ad_meta_refcount--;
+        }
+    } else if ((adflags & ADFLAGS_HF) && (ad_meta_fileno(ad) != -1)) {
         if (ad->ad_meta_refcount) {
             ad->ad_meta_refcount--;
         }
@@ -689,7 +711,7 @@ int ad_close(struct adouble *ad, int adflags)
 
     if (adflags & ADFLAGS_RF) {
         /* HF is automatically opened when opening an RF, close it. */
-        if ((ad->ad_vers == AD_VERSION2) && (ad_meta_fileno(ad) != -1)) {
+        if ((ad->ad_vers == AD_VERSION2) && (ad_meta_fileno(ad) >= 0)) {
             if (ad->ad_meta_refcount) {
                 ad->ad_meta_refcount--;
             }

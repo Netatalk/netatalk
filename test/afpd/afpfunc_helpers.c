@@ -38,6 +38,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/compat.h>
 #include <atalk/directory.h>
@@ -227,10 +228,23 @@ int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 
 int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 {
-    static char buf[256] = { 0 };
+    static char buf[512] = { 0 };
     char *p = buf;
     int len = 0;
     PUSHVAL(p, uint16_t, htons(128), len); /* hard create */
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, did, len);
+    len += push_path(&p, name);
+    return afp_createfile(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*! @brief FPCreateFile of name in did without the hard create flag */
+int createfile_soft(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
+{
+    static char buf[512] = { 0 };
+    char *p = buf;
+    int len = 0;
+    PUSHVAL(p, uint16_t, 0, len);
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
     len += push_path(&p, name);
@@ -279,6 +293,30 @@ int moveobj(AFPObj *obj, uint16_t vid, cnid_t sdid, const char *name,
     len += push_path(&p, dname);
     len += push_path(&p, newname);
     return afp_moveandrename(obj, buf, len, rbuf, &rbuflen);
+}
+
+/*! @brief FPCopyFile of name in sdid to newname in ddid of the same volume */
+int copyfileobj(AFPObj *obj, uint16_t vid, cnid_t sdid, const char *name,
+                cnid_t ddid, const char *newname)
+{
+    static char buf[768] = { 0 };
+    char *p = buf;
+    int len = 0;
+
+    /* the fixed fields and the three path headers take 35 bytes */
+    if (strlen(name) + strlen(newname) > sizeof(buf) - 35) {
+        return -1;
+    }
+
+    ADD(p, len, 2);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, sdid, len);
+    PUSHVAL(p, uint16_t, vid, len);
+    PUSHVAL(p, cnid_t, ddid, len);
+    len += push_path(&p, name);
+    len += push_path(&p, "");
+    len += push_path(&p, newname);
+    return afp_copyfile(obj, buf, len, rbuf, &rbuflen);
 }
 
 /*!
@@ -1055,9 +1093,9 @@ void hints_end(AFPObj *obj, const int fds[2])
 }
 
 /*!
- * @brief Build the request FPSetDirParms and FPSetACL share: pad, volume,
- *        directory, bitmap, path, then len bytes of parameters from an
- *        even address
+ * @brief Build the request FPSetDirParms, FPSetFileParms and FPSetACL
+ *        share: pad, volume, directory, bitmap, path, then len bytes of
+ *        parameters from an even address
  *
  * @returns the request's length
  */
@@ -1091,6 +1129,40 @@ int setdirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
     static char buf[256] = { 0 };
     int reqlen = params_request(buf, vid, did, name, bitmap, params, len);
     return afp_setdirparams(obj, buf, reqlen, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief FPSetFileParms of name under did: bitmap, then len bytes of
+ *        parameters
+ *
+ * @returns the call's AFP result
+ */
+int setfileparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
+                 uint16_t bitmap, const void *params, size_t len)
+{
+    static char buf[512] = { 0 };
+    int reqlen = params_request(buf, vid, did, name, bitmap, params, len);
+    return afp_setfilparams(obj, buf, reqlen, rbuf, &rbuflen);
+}
+
+/*!
+ * @brief The header of a ._ file as macOS writes it, into buf of at least
+ *        ADEDOFF_FINDERI_OSX bytes: a resource fork entry of rlen bytes at
+ *        roff and a FinderInfo entry of filen bytes at its canonical offset,
+ *        the rest of buf zero
+ *
+ * @returns the length of a file that holds the fork, roff + rlen
+ */
+size_t osx_sidecar(uint8_t *buf, size_t size, uint32_t roff, uint32_t rlen,
+                   uint32_t filen)
+{
+    const uint32_t entry[] = {
+        ADEID_RFORK, roff, rlen,
+        ADEID_FINDERI, ADEDOFF_FINDERI_OSX, filen,
+    };
+    memset(buf, 0, size);
+    pack_appledouble(buf, entry, 2);
+    return (size_t)roff + rlen;
 }
 
 /*!
@@ -1598,6 +1670,30 @@ int write_disk_file(const char *path, const void *data, size_t len)
     written = write(fd, data, len);
     close(fd);
     return written == (ssize_t)len ? 0 : -1;
+}
+
+/*!
+ * @brief Whether a file's content starts with the len bytes of want, read
+ *        behind the server's back
+ *
+ * @param[in] path  the file
+ * @param[in] want  the bytes
+ * @param[in] len   their count, at most 64
+ * @returns 1 when it does, 0 otherwise
+ */
+int disk_file_is(const char *path, const void *want, size_t len)
+{
+    char buf[64];
+    ssize_t n;
+    int fd;
+
+    if (len > sizeof(buf) || (fd = open(path, O_RDONLY)) < 0) {
+        return 0;
+    }
+
+    n = read(fd, buf, len);
+    close(fd);
+    return n == (ssize_t)len && memcmp(buf, want, len) == 0;
 }
 
 /*!

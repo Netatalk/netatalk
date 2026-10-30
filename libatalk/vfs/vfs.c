@@ -172,9 +172,11 @@ static int netatalk_name(const struct vol *vol, const char *name)
  *
  * @param[in] vol   volume
  * @param[in] name  directory entry name
+ * @param[in] fd    unused
  * @returns 1 when clients may see name, 0 otherwise
  */
-static int validupath_adouble(const struct vol *vol, const char *name)
+static int validupath_adouble(const struct vol *vol, const char *name,
+                              int fd _U_)
 {
     if (name[0] != '.') {
         return 1;
@@ -793,9 +795,11 @@ EC_CLEANUP:
  *
  * @param[in] vol   volume
  * @param[in] name  directory entry name
+ * @param[in] fd    a descriptor an open fork holds on name, for the header
+ *                  read, or -1
  * @returns 1 when clients may see name, 0 otherwise
  */
-static int validupath_ea(const struct vol *vol, const char *name)
+static int validupath_ea(const struct vol *vol, const char *name, int fd)
 {
     if (name[0] != '.') {
         return 1;
@@ -804,9 +808,11 @@ static int validupath_ea(const struct vol *vol, const char *name)
 #ifndef HAVE_EAFD
 
     if (name[1] == '_') {
-        return ad_valid_header_osx(name);
+        return ad_valid_header_osx(name, fd);
     }
 
+#else
+    (void)fd;
 #endif
     return netatalk_name(vol, name);
 }
@@ -1780,11 +1786,12 @@ static int vfs_ea_remove(const struct vol *vol, const char *uname,
  *
  * @param[in] vol   volume
  * @param[in] name  directory entry name
+ * @param[in] fd    a descriptor an open fork holds on name, or -1
  * @returns nonzero when clients may see name, 0 otherwise
  */
-static int vfs_validupath(const struct vol *vol, const char *name)
+static int vfs_validupath(const struct vol *vol, const char *name, int fd)
 {
-    return vol->vfs_modules[0]->vfs_validupath(vol, name);
+    return vol->vfs_modules[0]->vfs_validupath(vol, name, fd);
 }
 
 /*!

@@ -336,6 +336,9 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
  * @brief Reject "." and "..", a name that the AppleDouble layout reserves, or
  * one that the volume vetoes
  *
+ * A ._ file this session holds open is read through the fork's own
+ * descriptor.
+ *
  * @param[in] vol   volume
  * @param[in] name  Unix name of a file or directory
  * @returns 0 for an acceptable name, AFPERR_EXIST otherwise
@@ -346,7 +349,7 @@ int check_name(const struct vol *vol, char *name)
         return AFPERR_EXIST;
     }
 
-    if (!vol->vfs->vfs_validupath(vol, name)) {
+    if (!vol->vfs->vfs_validupath(vol, name, of_sidecar_fd(vol, name))) {
         LOG(log_warning, logtype_afpd, "check_name: illegal name: '%s'", name);
         return AFPERR_EXIST;
     }
@@ -360,11 +363,39 @@ int check_name(const struct vol *vol, char *name)
 }
 
 /*!
+ * @brief Reject a name for a new file or folder: one that check_name()
+ *        rejects, or a ._ name that no file holds where the ea layout keeps
+ *        resource forks in ._ files
+ *
+ * Without HAVE_EAFD the ea layout keeps file x's resource fork in ._x, which
+ * afpd opens past any deny mode that a fork of a file named ._x holds, so no
+ * request makes a file or folder of a ._ name. A ._ file that holds the name
+ * stays as it is, and keeps its name through a rename to itself.
+ *
+ * @param[in] vol   volume
+ * @param[in] name  Unix name in the working directory
+ * @returns 0 for an acceptable name, AFPERR_EXIST otherwise
+ */
+int check_newname(const struct vol *vol, char *name)
+{
+#ifndef HAVE_EAFD
+    struct stat st;
+
+    if (vol->v_adouble == AD_VERSION_EA && name[0] == '.' && name[1] == '_'
+            && lstat(name, &st) != 0) {
+        return AFPERR_EXIST;
+    }
+
+#endif
+    return check_name(vol, name);
+}
+
+/*!
  * @brief Move and rename sdir/oldname to newname in the working directory
  *
  * A file takes its CNID from the database, and a directory passes itself as
  * sdir and supplies the DID. The rename-inhibit attribute blocks the call
- * unless the volume ignores it, and check_name screens the new name. The
+ * unless the volume ignores it, and check_newname() screens the new name. The
  * virtual Icon file's name in the volume root fails with AFPERR_EXIST. An
  * unchanged name succeeds at once. Inside one directory a name that another
  * file holds fails with AFPERR_EXIST, and across directories any existing
@@ -535,7 +566,7 @@ static int moveandrename(const AFPObj *obj,
     path.u_name = upath;
     st = &path.st;
 
-    if (0 != (rc = check_name(vol, upath))) {
+    if (0 != (rc = check_newname(vol, upath))) {
         goto exit;
     }
 

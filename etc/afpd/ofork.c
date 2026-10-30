@@ -1419,6 +1419,63 @@ int of_rfork_held(const struct ofork *ofork, const char *forkpath)
 }
 
 /*!
+ * @brief The descriptor through which this session holds the ._ file name in
+ *        the working directory
+ *
+ * A fork of the file holds it on its data descriptor, and a resource fork
+ * whose sidecar the file is holds it on its resource fork descriptor, on any
+ * of the session's volumes and by whatever name the session or another opened
+ * or renamed it. A read through that descriptor keeps the locks the session
+ * holds on the file, which another descriptor's close drops. Only the ea
+ * layout without HAVE_EAFD keeps resource forks in ._ files, so volumes of the
+ * other layout, other names and a session without forks stat nothing.
+ *
+ * @param[in] vol   volume of the working directory
+ * @param[in] name  a name in the working directory
+ * @returns the descriptor, or -1 when no fork holds the file
+ */
+int of_sidecar_fd(const struct vol *vol, const char *name)
+{
+#ifndef HAVE_EAFD
+    struct stat st;
+    struct stat rst;
+    struct file_key key;
+
+    if (vol->v_adouble != AD_VERSION_EA || strncmp(name, "._", 2) != 0
+            || of_curr_forks == 0 || stat(name, &st) != 0) {
+        return -1;
+    }
+
+    key.dev = st.st_dev;
+    key.inode = st.st_ino;
+
+    /* a fork of any volume holds the locks the inode carries */
+    for (const struct ofork *of = ofork_table[hashfn(&key)]; of;
+            of = of->next) {
+        if (of->key.dev == key.dev && of->key.inode == key.inode
+                && ad_data_fileno(of->of_ad) >= 0) {
+            return ad_data_fileno(of->of_ad);
+        }
+    }
+
+    for (int i = 0; i < OFORK_HASHSIZE; i++) {
+        for (const struct ofork *of = ofork_table[i]; of; of = of->next) {
+            if (ad_reso_fileno(of->of_ad) >= 0
+                    && fstat(ad_reso_fileno(of->of_ad), &rst) == 0
+                    && rst.st_dev == st.st_dev && rst.st_ino == st.st_ino) {
+                return ad_reso_fileno(of->of_ad);
+            }
+        }
+    }
+
+#else
+    (void)vol;
+    (void)name;
+#endif
+    return -1;
+}
+
+/*!
  * @brief Close an open fork and free it
  *
  * A closed resource fork gets its own header re-read; one that was written,

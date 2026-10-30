@@ -506,7 +506,8 @@ static int sd_fetch(struct savedir *sd, const struct vol *vol,
  * @brief Filter a directory entry for enumeration
  *
  * Drops ".", "..", names longer than 255 bytes, the names the volume's VFS
- * modules reserve for their metadata, and vetoed names.
+ * modules reserve for their metadata, and vetoed names. A ._ file this session
+ * holds open is read through the fork's own descriptor.
  *
  * @bug A dangling symlink defeats the filter. Move a folder that holds one into
  * the trash and empty the trash. afp_enumerate then returns an empty listing
@@ -529,7 +530,7 @@ char *check_dirent(const struct vol *vol, char *name)
         return NULL;
     }
 
-    if (!vol->vfs->vfs_validupath(vol, name)) {
+    if (!vol->vfs->vfs_validupath(vol, name, of_sidecar_fd(vol, name))) {
         return NULL;
     }
 

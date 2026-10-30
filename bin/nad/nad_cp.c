@@ -456,7 +456,7 @@ static int copy(const char *path,
     }
 
     if (dvolume.vol->v_path
-            && !dvolume.vol->vfs->vfs_validupath(dvolume.vol, dir)) {
+            && !dvolume.vol->vfs->vfs_validupath(dvolume.vol, dir, -1)) {
         return FTW_SKIP_SUBTREE;
     }
 

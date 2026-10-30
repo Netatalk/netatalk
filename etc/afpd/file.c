@@ -15,10 +15,12 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+#include <sys/stat.h>
 #include <utime.h>
 
 #include <atalk/adouble.h>
@@ -26,6 +28,7 @@
 #include <atalk/afp_util.h>
 #include <atalk/cnid.h>
 #include <atalk/dsi.h>
+#include <atalk/ea.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
@@ -257,6 +260,45 @@ int check_delete_inhibit(const struct vol *vol, int dirfd, struct path *path)
     }
 
     return AFP_OK;
+}
+
+/*!
+ * @brief Whether a deny mode or a byte-range lock on a file refuses its
+ *        replacement, as they refuse FPDelete
+ *
+ * The session's own forks answer from its lock bookkeeping, other processes'
+ * from the file's locks, which of_get_locks() reads through a held fork's
+ * descriptor; an open alone refuses nothing.
+ *
+ * @param[in]     vol   volume of the file
+ * @param[in,out] path  the file in the working directory, with its stat
+ * @returns AFP_OK, AFPERR_BUSY for a deny mode or a lock, AFPERR_NOOBJ when
+ *          the file has gone, or AFPERR_ACCESS when its locks cannot be read
+ */
+static int replace_blocked(const struct vol *vol, struct path *path)
+{
+    const struct ofork *of = of_findname(vol, path);
+    int df_locked;
+    int rf_locked;
+    uint16_t band_held;
+
+    if (of != NULL && of_delete_blocked(of, NULL, NULL)) {
+        return AFPERR_BUSY;
+    }
+
+    switch (of_get_locks(vol, -1, path, 1, 0, 0, 1, 0, 0, ALL_BAND_BITS, 1,
+                         &df_locked, &rf_locked, &band_held)) {
+    case OF_LOCKS_OK:
+        return df_locked || rf_locked
+               || (band_held & DELETE_BLOCKING_BAND_BITS)
+               ? AFPERR_BUSY : AFP_OK;
+
+    case OF_LOCKS_NOENT:
+        return AFPERR_NOOBJ;
+
+    default:
+        return AFPERR_ACCESS;
+    }
 }
 
 /*!
@@ -1264,15 +1306,170 @@ static bool link_target_in(const char *upath, const struct stat *folder)
     return in;
 }
 
+#ifndef HAVE_EAFD
+/*!
+ * @brief Whether a process other than this one may hold a lock on a ._ file
+ *
+ * The test reads the locks through the descriptor of a fork this session
+ * holds on the file, as another descriptor's close would drop that fork's
+ * locks, and otherwise through a read-only descriptor of its own. A name that
+ * holds no file, and a file that takes no locks, hold none; a file whose locks
+ * cannot be read counts as locked, as a delete's lock read fails closed.
+ *
+ * @param[in] vol   volume of the working directory
+ * @param[in] name  the ._ file, in the working directory
+ * @returns 1 when another process holds a lock on it or its locks cannot be
+ *          read, 0 otherwise
+ */
+static int sidecar_locked(const struct vol *vol, const char *name)
+{
+    struct flock lock = { .l_type = F_WRLCK, .l_whence = SEEK_SET };
+    int fd = of_sidecar_fd(vol, name);
+    const int own = fd < 0;
+
+    if (own && (fd = open(name, O_RDONLY | O_NONBLOCK | O_NOFOLLOW)) < 0) {
+        return errno != ENOENT && errno != ENAMETOOLONG;
+    }
+
+    if (fcntl(fd, F_GETLK, &lock) != 0) {
+        lock.l_type = errno == EINVAL ? F_UNLCK : F_WRLCK;
+    }
+
+    if (own) {
+        close(fd);
+    }
+
+    return lock.l_type != F_UNLCK;
+}
+#endif /* !HAVE_EAFD */
+
+/*!
+ * @brief Open fresh metadata for a file that a create makes or empties
+ *
+ * The open truncates version 2's metadata file, with the resource fork it
+ * holds, and makes the ea layout's EA afresh, and reads no header from
+ * either, so the file takes none that a metadata file left under its name
+ * holds, nor fails on one that will not parse. The ea layout's resource fork
+ * goes first, as a delete removes it, unopened: a ._ file's open would
+ * convert a macOS one into the metadata, a ._ name too long for the file
+ * system holds none, and on Solaris the resource fork EA goes through the
+ * create's own descriptor, as one opened by name and closed would drop the
+ * create's lock. A ._ file that another process holds a lock on refuses the
+ * create with EBUSY, as a lock on the resource fork refuses a delete, and so
+ * does one whose locks cannot be read.
+ *
+ * @param[in]     vol   volume of the file
+ * @param[in,out] ad    AppleDouble of the create, its data fork open
+ * @param[in]     path  the file, in the working directory
+ * @returns 0, or -1 with errno set
+ */
+static int createfile_meta(const struct vol *vol, struct adouble *ad,
+                           const char *path)
+{
+    if (ad->ad_vers == AD_VERSION_EA && ad_data_fileno(ad) >= 0) {
+#ifdef HAVE_EAFD
+        (void)vol;
+        const int gone = sys_fremovexattr(ad_data_fileno(ad), path,
+                                          AD_EA_RESO) == 0
+                         || errno == ENOATTR || errno == ENOENT;
+#else
+        const char *rpath = ad->ad_ops->ad_path(path, 0);
+
+        if (sidecar_locked(vol, rpath)) {
+            errno = EBUSY;
+            return -1;
+        }
+
+        const int gone = unlink(rpath) == 0 || errno == ENOENT
+                         || errno == ENAMETOOLONG;
+#endif
+
+        if (!gone) {
+            return -1;
+        }
+    }
+
+    return ad_open(ad, path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE
+                   | ADFLAGS_TRUNC, 0666);
+}
+
+/*!
+ * @brief Empty an existing file for a hard create, under a write lock over the
+ *        whole file on the create's own data descriptor
+ *
+ * The lock fails while another process holds a lock on the file: another afpd
+ * session's fork holds share-mode locks on it, and a process outside afpd can
+ * hold a byte-range lock on its data. As the descriptor that truncates holds
+ * the lock from before the truncation to after it, no fork opens in between.
+ * Both forks empty and the metadata starts over, as the AFP specification has
+ * a hard create delete and recreate the file: under the lock the metadata
+ * opens fresh through createfile_meta(), whose refusal leaves the data as it
+ * was, the data then empties, and the fresh header takes the emptied file's
+ * dates; a truncation that fails after it leaves the fresh metadata. The
+ * release clears every lock this process holds on the file; the caller holds
+ * no fork of it.
+ *
+ * @param[in]     vol   volume of the file
+ * @param[in,out] ad    AppleDouble of the create, its data fork open alone
+ * @param[in]     path  the file, in the working directory
+ * @returns AFP_OK, AFPERR_BUSY while another process holds a lock on the file
+ *          or on its ._ file, or the ._ file's locks cannot be read,
+ *          AFPERR_DFULL, or AFPERR_ACCESS
+ */
+static int createfile_truncate(const struct vol *vol, struct adouble *ad,
+                               const char *path)
+{
+    struct stat st;
+    int ret = AFP_OK;
+
+    if (ad_tmplock(ad, ADEID_DFORK, ADLOCK_WR, 0, 0, 0) != 0) {
+        return errno == EACCES || errno == EAGAIN ? AFPERR_BUSY : AFPERR_ACCESS;
+    }
+
+    if (createfile_meta(vol, ad, path) != 0 || ad_dtruncate(ad, 0) != 0
+            || fstat(ad_data_fileno(ad), &st) != 0) {
+        switch (errno) {
+        case EBUSY:
+            ret = AFPERR_BUSY;
+            break;
+
+        case EDQUOT:
+        case ENOSPC:
+            ret = AFPERR_DFULL;
+            break;
+
+        default:
+            ret = AFPERR_ACCESS;
+            break;
+        }
+    } else {
+        /* the header took its dates from the data before it emptied */
+        ad_setdate(ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t)st.st_mtime);
+        ad_setdate(ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t)st.st_mtime);
+        ad_setdate(ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t)st.st_mtime);
+    }
+
+    (void)ad_tmplock(ad, ADEID_DFORK, ADLOCK_CLR, 0, 0, 0);
+    return ret;
+}
+
 /*!
  * @brief FPCreateFile: create a file with its AppleDouble metadata
  *
- * A hard create, any nonzero flag byte, truncates an existing file. A soft
- * create fails with AFPERR_EXIST when the name exists. A file that this
- * session holds open fails with AFPERR_BUSY for a hard create and AFPERR_EXIST
- * for a soft one. The call writes the Mac name and the CNID into the metadata
- * and records the file in the dircache. FCE and Spotlight learn about the new
- * file, and sibling afpd processes get a refresh hint for the parent.
+ * A hard create, any nonzero flag byte, empties both forks of a file that
+ * holds the name and gives it fresh metadata through createfile_truncate(),
+ * so it fails with AFPERR_BUSY while another afpd session holds the file open
+ * or another process holds a lock on it. A soft create fails with
+ * AFPERR_EXIST when the name exists. A file that this session holds open
+ * fails with AFPERR_BUSY for a hard create, also one that took the name after
+ * the lookup, and AFPERR_EXIST for a soft one. A file the call makes takes
+ * fresh metadata through createfile_meta(), whatever a metadata file left
+ * under the name holds, and goes again when that fails; a metadata open that
+ * fails leaves an existing file as it was. The call writes the Mac name and
+ * the CNID into the metadata and records the file in the dircache, whose
+ * entry for a file it emptied takes the file's new stat and metadata. FCE and
+ * Spotlight learn about the new file, and sibling afpd processes get a
+ * refresh hint for the parent, and for a file a hard create found there.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -1280,8 +1477,8 @@ static bool link_target_in(const char *upath, const struct stat *folder)
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
  * @returns AFP_OK, AFPERR_EXIST, AFPERR_BUSY, AFPERR_VLOCK, AFPERR_ACCESS,
- *          AFPERR_DFULL, AFPERR_BADTYPE for a directory path, or another
- *          AFPERR_* code
+ *          AFPERR_DFULL, AFPERR_BADTYPE for a directory path, AFPERR_PARAM
+ *          for a name that check_newname() refuses, or another AFPERR_* code
  */
 int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                    size_t *rbuflen)
@@ -1291,7 +1488,8 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     struct dir		*dir;
     struct ofork        *of = NULL;
     char		*path, *upath;
-    int			creatf, did, openf, retvalue = AFP_OK;
+    int			creatf, did, rc, retvalue = AFP_OK;
+    int			existing = 0;
     uint16_t		vid;
     struct path		*s_path;
     *rbuflen = 0;
@@ -1329,6 +1527,11 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     upath = s_path->u_name;
+
+    if (check_newname(vol, upath) != AFP_OK) {
+        return AFPERR_PARAM;
+    }
+
     ad_init(&ad, vol);
 
     /* if upath is deleted we already in trouble anyway */
@@ -1340,17 +1543,45 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         }
     }
 
-    if (creatf) {
-        openf = ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_TRUNC;
-    } else
-        /* on a soft create, if the file is open then ad_open won't fail
-           because open syscall is not called */
-    {
-        openf = ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_EXCL;
+    /* a create makes the file, and a hard create that finds the name taken
+     * opens the file there; the metadata opens after the data */
+    rc = ad_open(&ad, upath, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE
+                 | ADFLAGS_EXCL, 0666);
+
+    if (rc < 0 && errno == EEXIST && creatf) {
+        existing = 1;
+        rc = ad_open(&ad, upath, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                     0666);
     }
 
-    if (ad_open(&ad, upath, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_NOHF | openf,
-                0666) < 0) {
+    if (rc == 0 && existing && ad_data_fileno(&ad) != AD_SYMLINK) {
+        /* the name may hold another file than the lookup found, one this
+         * session holds among them; the lookup's stat stays for the count */
+        struct path now = { .u_name = upath, .st_valid = 1, .st_fd = 1 };
+        now.st_errno = fstat(ad_data_fileno(&ad), &now.st) ? errno : 0;
+        /* a file whose stat fails may be one this session holds */
+        retvalue = now.st_errno ? AFPERR_ACCESS
+                   : of_findname(vol, &now) ? AFPERR_BUSY
+                   : createfile_truncate(vol, &ad, upath);
+
+        if (retvalue != AFP_OK) {
+            ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
+            return retvalue;
+        }
+    } else if (rc == 0 && createfile_meta(vol, &ad, upath) != 0) {
+        const int err = errno;
+
+        /* the data file the create made goes */
+        if (!existing) {
+            netatalk_unlink(upath);
+        }
+
+        ad_close(&ad, ADFLAGS_DF);
+        errno = err;
+        rc = -1;
+    }
+
+    if (rc < 0) {
         switch (errno) {
         case EROFS:
             return AFPERR_VLOCK;
@@ -1373,6 +1604,9 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             return AFPERR_EXIST;
         }
 
+        case EBUSY:
+            return AFPERR_BUSY;
+
         case EACCES :
             return AFPERR_ACCESS;
 
@@ -1387,11 +1621,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     if (ad_meta_fileno(&ad) == -1) {     /* Hard META / HF */
-        /* the data file the create made goes; an emulated symlink made none */
-        if (ad_data_fileno(&ad) != AD_SYMLINK) {
-            netatalk_unlink(upath);
-        }
-
+        /* version 2 opens no metadata for an emulated symlink */
         ad_close(&ad, ADFLAGS_DF);
         return AFPERR_ACCESS;
     }
@@ -1449,8 +1679,13 @@ createfile_iderr:
             }
         }
 
+        /* an entry from before a hard create takes the emptied file's stat */
         if (cachedfile) {
-            ad_store_to_cache(&ad, cachedfile);
+            (void)dir_modify(vol, cachedfile, &(struct dir_modify_args) {
+                .flags = DCMOD_STAT | DCMOD_AD,
+                .st = &st,
+                .adp = &ad,
+            });
         }
     }
     ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
@@ -1468,6 +1703,12 @@ createfile_iderr:
 #endif /* WITH_SPOTLIGHT */
     /* Send hint to afpd siblings — parent dir ctime changed due to new file creation */
     ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
+
+    /* and of a file a hard create found there, as their entries hold it */
+    if (existing && id != CNID_INVALID) {
+        ipc_send_cache_hint(obj, vol->v_vid, id, CACHE_HINT_REFRESH);
+    }
+
     /* st_errno is the pre-create stat: an existing name adds nothing; a
      * dangling link adds its target's entry, wherever the target lies */
     bool root = false;
@@ -1597,31 +1838,43 @@ extern struct path Cur_Path;
  * @brief Apply the file parameters that f_bitmap selects from buf
  *
  * Without UNIX privileges the user needs write access to the parent
- * directory. A first pass applies the UNIX privileges and owner and converts
- * a file into a symlink, all without the AppleDouble. A second pass with the
- * metadata open sets attributes, dates, Finder info, and ProDOS info.
+ * directory. A first pass applies the owner and the UNIX privileges and
+ * converts a file into a symlink before the metadata open; a mode without the
+ * owner's write bit waits for the second pass, which with the metadata open
+ * sets attributes, dates, Finder info, and ProDOS info. A symlink that a fork
+ * of the session's emulates opens its metadata through an AppleDouble of the
+ * call's own, as one no fork holds does, since the fork's opens none: version
+ * 2 sets it in the link's metadata file, and on the ea layout, which keeps no
+ * metadata for a symlink, the call sets what needs none. So does the link
+ * that the conversion of a held file makes where the fork's or the call's
+ * layout is ea, as the fork's metadata then is not the link's: on the ea
+ * layout it is the replaced file's, which another name of it may still show.
  *
  * On a volume that does not follow symlinks, Finder info of type slnk and
  * creator rhap turns a regular file into a symlink. The link target is the
- * path that the file contains, and symlink_target_safe guards it. Date and
- * Finder info changes update the file modification time. Privilege changes
- * and a changed invisible attribute also update the parent. Sibling afpd
- * processes get a refresh hint.
+ * path that the file contains, read through a held fork's own descriptor when
+ * the session holds one, and symlink_target_safe guards it. A deny mode or a
+ * byte-range lock on the file refuses the conversion with AFPERR_BUSY, as it
+ * refuses FPDelete. Date and Finder info changes update the file modification
+ * time, except in a refused conversion; a symlink takes the time itself, as
+ * its lookups report its own times, not its target's, and its dircache entry
+ * goes. Privilege changes and a changed invisible attribute also update the
+ * parent. Sibling afpd processes get a refresh hint.
  *
  * @param[in]     obj       session object
  * @param[in]     vol       volume of the file
  * @param[in,out] path      file, restated after a symlink conversion
  * @param[in]     f_bitmap  AFP file bitmap, FILPBIT_* bits
  * @param[in]     buf       parameter block in bitmap order
- * @returns AFP_OK, AFPERR_ACCESS, AFPERR_BITMAP, AFPERR_MISC, or another
- *          AFPERR_* code
+ * @returns AFP_OK, AFPERR_ACCESS, AFPERR_BITMAP, AFPERR_BUSY, AFPERR_MISC, or
+ *          another AFPERR_* code
  */
 int setfilparams(const AFPObj *obj, struct vol *vol,
                  struct path *path, uint16_t f_bitmap, char *buf)
 {
     struct adouble	ad, *adp;
     struct extmap	*em;
-    int			bit, isad = 1, err = AFP_OK;
+    int			bit, isad = 0, err = AFP_OK;
     char                *upath;
     char		*ade = NULL;
     uint8_t              achar, xyy[4];
@@ -1632,7 +1885,6 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     uint32_t		aint;
     uint32_t		upriv = 0;
     uint16_t           upriv_bit = 0;
-    struct utimbuf	ut;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
     uint32_t                 newdate = 0;
@@ -1647,6 +1899,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     ssize_t len;
     char symbuf[MAXPATHLEN + 1];
     int                 timeoffset = 0;
+    struct dir          *cached = NULL;
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
 
     if (path == NULL) {
@@ -1724,36 +1977,53 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             if (memcmp(buf, "slnkrhap", 8) == 0
                     && !(S_ISLNK(path->st.st_mode))
                     && !(vol->v_flags & AFPVOL_FOLLOWSYM)) {
-                /* request to turn this into a symlink */
-                if ((fp = open(path->u_name, O_RDONLY)) == -1) {
-                    err = AFPERR_MISC;
-                    goto setfilparam_done;
-                }
+                /* a symlink request: the target is read through a held fork's
+                 * descriptor, as another descriptor's close drops its locks */
+                if (ad_data_fileno(adp) >= 0) {
+                    /* the descriptor reads only what the user may still read */
+                    if (file_access(obj, vol, path, OPENACC_RD) < 0) {
+                        err = AFPERR_MISC;
+                        goto setfilparam_refused;
+                    }
 
-                len = read(fp, symbuf, MAXPATHLEN);
-                close(fp);
+                    len = ad_read(adp, ADEID_DFORK, 0, symbuf, MAXPATHLEN);
+                } else {
+                    if ((fp = open(path->u_name, O_RDONLY)) == -1) {
+                        err = AFPERR_MISC;
+                        goto setfilparam_refused;
+                    }
+
+                    len = read(fp, symbuf, MAXPATHLEN);
+                    close(fp);
+                }
 
                 if (!(len > 0)) {
                     err = AFPERR_MISC;
-                    goto setfilparam_done;
+                    goto setfilparam_refused;
                 }
 
                 symbuf[len] = 0;
 
                 if (!symlink_target_safe(vol, path->u_name, symbuf)) {
                     err = AFPERR_ACCESS;
-                    goto setfilparam_done;
+                    goto setfilparam_refused;
                 }
 
                 err = check_delete_inhibit(vol, -1, path);
 
                 if (err != AFP_OK) {
-                    goto setfilparam_done;
+                    goto setfilparam_refused;
+                }
+
+                /* the link replaces the file, which a deny mode or a lock
+                 * keeps as it keeps it from FPDelete */
+                if ((err = replace_blocked(vol, path)) != AFP_OK) {
+                    goto setfilparam_refused;
                 }
 
                 if (replace_with_symlink(path->u_name, symbuf) != 0) {
                     err = AFPERR_MISC;
-                    goto setfilparam_done;
+                    goto setfilparam_refused;
                 }
 
                 of_stat(vol, path);
@@ -1848,9 +2118,23 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
         bit++;
     }
 
-    /* second try with adouble open
-    */
-    if (ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) < 0) {
+    /* a held fork's emulated symlink opens no metadata, and a held file the
+     * conversion replaced keeps the fork's metadata where either layout is
+     * ea, so the call opens its own, as for a symlink no fork holds */
+    if (adp != &ad
+            && (ad_data_fileno(adp) == AD_SYMLINK
+                || (symlinked && (adp->ad_vers == AD_VERSION_EA
+                                  || vol->v_adouble == AD_VERSION_EA)))) {
+        ad_init(&ad, vol);
+        adp = &ad;
+    }
+
+    /* second try with adouble open; isad stays 0 until it works, as a
+     * refusal before it must not close a held fork's metadata */
+    isad = ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                   0666) == 0;
+
+    if (!isad) {
         LOG(log_debug, logtype_afpd, "setfilparams: ad_open_metadata error: %s",
             strerror(errno));
 
@@ -1866,7 +2150,6 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
 
         LOG(log_debug, logtype_afpd,
             "setfilparams: no adouble perms, but only FILPBIT_MDATE and/or FILPBIT_UNIXPR");
-        isad = 0;
     } else if (ad_get_MD_flags(adp) & O_CREAT) {
         ad_setname(adp, path->m_name);
         cnid_t id;
@@ -1874,7 +2157,9 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
 
         if ((id = get_id(vol, adp, &path->st, curdir->d_did, upath,
                          (int)upath_len)) == CNID_INVALID) {
-            LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+            LOG(log_error, logtype_afpd, "setfilparams(\"%s\"): CNID error",
+                upath);
+            ad_close(adp, ADFLAGS_HF);
             return AFPERR_MISC;
         }
 
@@ -2013,15 +2298,32 @@ setfilparam_done:
         }
 
         if (upath) {
-            ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
-            utime(upath, &ut);
+            /* a symlink's own times, which its lookups report, where the
+             * volume does not follow symlinks */
+            const struct timespec ts[2] = {
+                { .tv_sec = AD_DATE_TO_UNIX(newdate) },
+                { .tv_sec = AD_DATE_TO_UNIX(newdate) }
+            };
+            (void)utimensat(AT_FDCWD, upath, ts,
+                            vol_syml_opt(vol) ? AT_SYMLINK_NOFOLLOW : 0);
+        }
+
+        if (upath && symlinked) {
+            /* the link's entry holds the old date; a lookup refills it */
+            const size_t n = strnlen(upath, CNID_MAX_PATH_LEN);
+            struct dir *stale = dircache_search_by_name(vol, curdir, upath, n);
+
+            if (stale) {
+                dir_remove(vol, stale, 0);
+            }
         }
     }
 
+    /* a refused symlink conversion leaves the file's dates as they were */
+setfilparam_refused:
+
     /* Acquire cache pointer BEFORE ad_flush to avoid ctime race.
      * Skip for symlinks — file-to-symlink conversion invalidates AD. */
-    struct dir *cached = NULL;
-
     if (!symlinked && upath) {
         cached = dircache_search_by_name(vol, curdir, upath, strnlen(upath,
             CNID_MAX_PATH_LEN));
@@ -2283,8 +2585,9 @@ int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
  * directory by volume, DID, and path, and the new name. A source open with a
  * deny-read mode, or one this session cannot open read-only with share modes,
  * fails with AFPERR_DENYCONF. A source fork that this session holds keeps its
- * descriptors, so its locks survive. The copyfile call creates the new file.
- * FCE, Spotlight, and sibling afpd processes then learn about it.
+ * descriptors, so its locks survive. The new name passes check_newname(), as
+ * a renamed one does. The copyfile call creates the new file. FCE, Spotlight,
+ * and sibling afpd processes then learn about it.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -2292,7 +2595,8 @@ int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
  * @param[out]    rbuf     reply block, unused
  * @param[in,out] rbuflen  reply buffer capacity on entry, 0 on return
  * @returns AFP_OK, AFPERR_DENYCONF, AFPERR_VLOCK for a read-only destination
- *          volume, AFPERR_PARAM, or another AFPERR_* code
+ *          volume, AFPERR_EXIST for a name check_newname() refuses,
+ *          AFPERR_PARAM, or another AFPERR_* code
  */
 int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                  size_t *rbuflen)
@@ -2444,6 +2748,11 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     if (NULL == (upath = mtoupath(d_vol, newname, curdir->d_did,
                                   utf8_encoding(d_vol->v_obj)))) {
         retvalue = AFPERR_PARAM;
+        goto copy_exit;
+    }
+
+    if ((err = check_newname(d_vol, upath)) != AFP_OK) {
+        retvalue = err;
         goto copy_exit;
     }
 
@@ -3345,26 +3654,108 @@ delete:
 }
 
 /*!
+ * @brief Open the metadata of an FPExchangeFiles operand by the file's own
+ *        name, making it for a file without any
+ *
+ * A held fork's descriptor serves the open as it is, and the header swap
+ * leaves out a header on a read-only one. Where the ea layout keeps resource
+ * forks in ._ files, a macOS one converts first, at a resource fork open, so
+ * the metadata that makes keeps the sidecar's FinderInfo, and one that does
+ * not open for writing leaves the file without metadata, which would mask the
+ * sidecar's FinderInfo. A header
+ * the open makes, or one without the file's CNID, as a conversion makes it,
+ * takes the file's Mac name and CNID, as one that FPCreateFile or
+ * FPSetFileParms makes does. A malformed header stays as it is, and a header
+ * the open made, or found empty on version 2, but could not flush or give a
+ * CNID is closed again, so neither takes part in the swap.
+ *
+ * @param[in]     vol   volume of the file
+ * @param[in]     path  the file in the working directory, with its stat
+ * @param[in,out] adp   AppleDouble of the file, a held fork's or a private one
+ * @returns 0, or -1 with the metadata not open
+ */
+static int exchange_meta_open(struct vol *vol, const struct path *path,
+                              struct adouble *adp)
+{
+    const char *name = path->u_name;
+    int stamp;
+    cnid_t id;
+
+    if (ad_open(adp, name, ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
+        if (errno != ENOENT) {
+            return -1;
+        }
+
+#ifndef HAVE_EAFD
+
+        if (vol->v_adouble == AD_VERSION_EA) {
+            if (ad_open(adp, name, ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_NORF)
+                    != 0) {
+                return -1;
+            }
+
+            ad_close(adp, ADFLAGS_RF);
+        }
+
+#endif
+
+        if (ad_open(adp, name, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                    0666) != 0) {
+            return -1;
+        }
+    }
+
+    stamp = (ad_get_MD_flags(adp) & O_CREAT)
+            || ad_getid(adp, path->st.st_dev, path->st.st_ino, 0,
+                        vol->v_stamp) == CNID_INVALID;
+
+    if (stamp) {
+        ad_setname(adp, path->m_name);
+
+        if ((id = get_id(vol, adp, &path->st, curdir->d_did, name,
+                         (int)strnlen(name, CNID_MAX_PATH_LEN)))
+                == CNID_INVALID) {
+            ad_close(adp, ADFLAGS_HF);
+            return -1;
+        }
+
+        (void)ad_setid(adp, path->st.st_dev, path->st.st_ino, id,
+                       curdir->d_did, vol->v_stamp);
+    }
+
+    if ((stamp || (ad_get_MD_flags(adp) & O_TRUNC)) && ad_flush(adp) != 0) {
+        ad_close(adp, ADFLAGS_HF);
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
  * @brief AppleDouble of an FPExchangeFiles operand after the access tests
  *
  * A failed stat maps to AFPERR_NOID, AFPERR_ACCESS, or AFPERR_PARAM in
- * afp_errno. The user needs write access to the file. A file that this
- * session holds open lends the AppleDouble of its fork, so its locks survive.
- * Otherwise the call opens the metadata read-write. A resource fork without
- * write access fails, because the AFP specification demands read and write
- * privileges on both files.
+ * afp_errno. The user needs read and write access to the file, as the AFP
+ * specification demands of both files. A file that this session holds open
+ * lends the AppleDouble of its fork, so its locks survive, and the call takes
+ * a metadata reference for it when the fork holds none. Otherwise the call
+ * opens the metadata read-write. Both opens make the metadata of a file
+ * without any, where they can, while the file still has its own name.
  *
- * @param[in]  obj   session object
- * @param[in]  vol   volume of the file
- * @param[in]  path  file with its stat
- * @param[out] of    receives the open fork of the file, or NULL
- * @param[in]  adp   AppleDouble to open when no fork holds the file
+ * @param[in]  obj        session object
+ * @param[in]  vol        volume of the file
+ * @param[in]  path       file with its stat
+ * @param[out] of         receives the open fork of the file, or NULL
+ * @param[in]  adp        AppleDouble to open when no fork holds the file
+ * @param[out] held_meta  set when the call took a metadata reference on the
+ *                        fork's AppleDouble, which the caller closes
  * @returns the AppleDouble to use, or NULL with afp_errno set
  */
 static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
-                                    struct path *path, struct ofork **of, struct adouble *adp)
+                                    struct path *path, struct ofork **of,
+                                    struct adouble *adp, bool *held_meta)
 {
-    int             ret;
+    *held_meta = false;
 
     if (path->st_errno) {
         switch (path->st_errno) {
@@ -3388,7 +3779,7 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
     /* we use file_access both for legacy Mac perm and
      * for unix privilege, rename will take care of folder perms
     */
-    if (file_access(obj, vol, path, OPENACC_WR) < 0) {
+    if (file_access(obj, vol, path, OPENACC_RD | OPENACC_WR) < 0) {
         afp_errno = AFPERR_ACCESS;
         return NULL;
     }
@@ -3396,19 +3787,12 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
     if ((*of = of_findname(vol, path))) {
         /* reuse struct adouble so it won't break locks */
         adp = (*of)->of_ad;
+        /* a fork opened before its file had metadata lacks the swap's
+         * reference; a symlink has no metadata to take */
+        *held_meta = !ad_meta_open(adp) && ad_data_fileno(adp) != AD_SYMLINK
+                     && exchange_meta_open(vol, path, adp) == 0;
     } else {
-        ret = ad_open(adp, path->u_name, ADFLAGS_HF | ADFLAGS_RDWR);
-
-        /* META and HF */
-        if (!ret && ad_reso_fileno(adp) != -1
-                && !(adp->ad_resource_fork.adf_flags & (O_RDWR | O_WRONLY))) {
-            /* from AFP spec.
-             * The user must have the Read & Write privilege for both files in order to use this command.
-             */
-            ad_close(adp, ADFLAGS_HF);
-            afp_errno = AFPERR_ACCESS;
-            return NULL;
-        }
+        (void)exchange_meta_open(vol, path, adp);
     }
 
     return adp;
@@ -3422,9 +3806,17 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
  *
  * Both files must be distinct regular files on the same device that the user
  * may write. Three renames through a .AppleTemp file in the destination
- * directory swap the data and metadata. The CNID records, the AppleDouble IDs,
- * and the permissions then swap back, so each name keeps its file ID and
- * permissions. A failure undoes the renames.
+ * directory swap the data and metadata. The metadata headers, the CNID
+ * records, the AppleDouble IDs, and the permissions then swap back, so each
+ * name keeps its FinderInfo, attributes, header dates, file ID and
+ * permissions, and the Finder comment stays with its file; a file without
+ * metadata gets a header before the renames to take the other's, and when one
+ * side has no header it can write, both headers stay with their files. A
+ * failure undoes the renames, and after the CNID rewrite the CNID rows with
+ * them; a failed first rename removes the .AppleTemp file, and an undo that
+ * fails ends the unwind, as each later one would rename a file onto the name
+ * that the other still holds. The user must read both files too, as the AFP
+ * specification demands.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -3437,7 +3829,7 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
 int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                       char *rbuf _U_, size_t *rbuflen)
 {
-    struct stat         srcst, destst;
+    struct stat         srcst, destst, tempst;
     struct vol		*vol;
     struct dir		*dir, *sdir;
     char		*spath, temp[17], *p;
@@ -3457,6 +3849,10 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     uint32_t		sid, did;
     uint16_t		vid;
     bool                renamed = false;
+    bool                s_held_meta = false;
+    bool                d_held_meta = false;
+    off_t               srlen = 0;
+    off_t               drlen = 0;
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof(vid));
@@ -3507,7 +3903,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     ad_init(&ads, vol);
 
-    if (!(adsp = find_adouble(obj, vol, path, &s_of, &ads))) {
+    if (!(adsp = find_adouble(obj, vol, path, &s_of, &ads, &s_held_meta))) {
         return afp_errno;
     }
 
@@ -3526,13 +3922,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             (unsigned long long)srcst.st_ino);
         /* Invalidate stale cache entry */
         dir_remove(vol, cached_src, 1);  /* Invalid: inode mismatch, file replaced */
-
-        /* Clean up source adouble */
-        if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {
-            ad_close(adsp, ADFLAGS_HF);
-        }
-
-        return AFPERR_NOOBJ;
+        err = AFPERR_NOOBJ;
+        goto err_exchangefile;
     }
 
     /* ***** from here we may have resource fork open **** */
@@ -3578,7 +3969,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     ad_init(&add, vol);
 
-    if (!(addp = find_adouble(obj, vol, path, &d_of, &add))) {
+    if (!(addp = find_adouble(obj, vol, path, &d_of, &add, &d_held_meta))) {
         err = afp_errno;
         goto err_exchangefile;
     }
@@ -3600,16 +3991,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             (unsigned long long)destst.st_ino);
         /* Invalidate stale cache entry */
         dir_remove(vol, cached_dest, 1);  /* Invalid: inode mismatch, file replaced */
-
-        /* Clean up both adoubles before returning */
-        if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {
-            ad_close(adsp, ADFLAGS_HF);
-        }
-
-        if (!d_of && addp && ad_meta_fileno(addp) != -1) {
-            ad_close(addp, ADFLAGS_HF);
-        }
-
         err = AFPERR_NOOBJ;
         goto err_exchangefile;
     }
@@ -3658,12 +4039,33 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_exchangefile;
     }
 
+    /* its inode tells the empty file from a source the first rename's undo
+     * may have left under its name */
+    if (fstat(fd, &tempst) != 0) {
+        close(fd);
+        unlink(temp);
+        err = AFPERR_MISC;
+        goto err_exchangefile;
+    }
+
     close(fd);
-    /* from here the files on disk change, and the caches with them */
+    /* the renames' metadata opens and the header swap take each side's
+     * resource fork length from a name, which is not the one a hard link's
+     * held fork reads its resource fork through */
+    srlen = adsp->ad_rlen;
+    drlen = addp->ad_rlen;
+    /* from here the names on disk change, and the caches with them */
     renamed = true;
 
     /* now, quickly rename the file. we error if we can't. */
     if ((err = renamefile(vol, curdir, -1, p, temp, temp, adsp)) != AFP_OK) {
+        struct stat st;
+
+        if (lstat(temp, &st) == 0 && st.st_dev == tempst.st_dev
+                && st.st_ino == tempst.st_ino) {
+            unlink(temp);
+        }
+
         goto err_exchangefile;
     }
 
@@ -3683,6 +4085,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     of_rename(vol, s_of, curdir, temp, curdir, path->m_name, upath);
+    adsp->ad_rlen = srlen;
+    addp->ad_rlen = drlen;
 
     /*
      * id's need switching. src -> dest and dest -> src.
@@ -3729,90 +4133,31 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_temp_to_dest;
     }
 
-    if (ad_meta_open(adsp) || ad_meta_open(addp)) {
+    /* the headers swap back to the names when both can be written, and
+     * otherwise stay with the files */
+    if (ad_meta_open(adsp) && ad_meta_open(addp)
+            && (ad_get_MD_flags(adsp) & O_ACCMODE) == O_RDWR
+            && (ad_get_MD_flags(addp) & O_ACCMODE) == O_RDWR) {
         struct adouble adtmp;
-        bool opened_ads = false;
-        bool opened_add = false;
+        int swapped;
         ad_init(&adtmp, vol);
-        ad_init_offsets(&adtmp);
+        swapped = ad_copy_header(&adtmp, adsp) == 0
+                  && ad_copy_header(adsp, addp) == 0
+                  && ad_copy_header(addp, &adtmp) == 0;
+        adsp->ad_rlen = srlen;
+        addp->ad_rlen = drlen;
 
-        if (!ad_meta_open(adsp)) {
-            /* RDWR: this block rewrites the metadata header (ad_flush only
-             * persists when the fd carries O_RDWR). */
-            if (ad_open(adsp, p, ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
-                err = AFPERR_MISC;
-                goto err_temp_to_dest;
-            }
-
-            opened_ads = true;
-        }
-
-        if (!ad_meta_open(addp)) {
-            if (ad_open(addp, upath, ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
-                err = AFPERR_MISC;
-
-                if (opened_ads) {
-                    ad_close(adsp, ADFLAGS_HF);
-                }
-
-                goto err_temp_to_dest;
-            }
-
-            opened_add = true;
-        }
-
-        if (ad_copy_header(&adtmp, adsp) != 0) {
+        if (!swapped) {
             err = AFPERR_MISC;
-
-            if (opened_ads) {
-                ad_close(adsp, ADFLAGS_HF);
-            }
-
-            if (opened_add) {
-                ad_close(addp, ADFLAGS_HF);
-            }
-
             goto err_temp_to_dest;
         }
 
-        if (ad_copy_header(adsp, addp) != 0) {
-            err = AFPERR_MISC;
-
-            if (opened_ads) {
-                ad_close(adsp, ADFLAGS_HF);
-            }
-
-            if (opened_add) {
-                ad_close(addp, ADFLAGS_HF);
-            }
-
-            goto err_temp_to_dest;
-        }
-
-        if (ad_copy_header(addp, &adtmp) != 0) {
-            err = AFPERR_MISC;
-
-            if (opened_ads) {
-                ad_close(adsp, ADFLAGS_HF);
-            }
-
-            if (opened_add) {
-                ad_close(addp, ADFLAGS_HF);
-            }
-
-            goto err_temp_to_dest;
-        }
-
+        /* version 2's name entry names the file, whose header came from the
+         * other name */
+        ad_setname(adsp, path->m_name);
+        ad_setname(addp, spath);
         ad_flush(adsp);
         ad_flush(addp);
-
-        if (opened_ads) {
-            ad_close(adsp, ADFLAGS_HF);
-        }
-
-        if (opened_add) {
-            ad_close(addp, ADFLAGS_HF);
-        }
     }
 
     /* FIXME: we should switch resource fork too */
@@ -3857,17 +4202,48 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     /* all this stuff is so that we can unwind a failed operation
      * properly. */
 err_temp_to_dest:
+
+    /* the CNID rows go back with the names */
+    if (did) {
+        AFP_CNID_START("cnid_update");
+        (void)cnid_update(vol->v_cdb, did, &destst, curdir->d_did, upath, dlen);
+        AFP_CNID_DONE();
+    }
+
+    if (sid) {
+        AFP_CNID_START("cnid_update");
+        (void)cnid_update(vol->v_cdb, sid, &srcst, sdir->d_did, supath, slen);
+        AFP_CNID_DONE();
+    }
+
     /* rename dest to temp */
-    renamefile(vol, curdir, -1, upath, temp, temp, adsp);
+    if (renamefile(vol, curdir, -1, upath, temp, temp, adsp) != AFP_OK) {
+        goto err_unwind;
+    }
+
     of_rename(vol, s_of, curdir, upath, curdir, temp, temp);
 err_dest_to_src:
+
     /* rename source back to dest */
-    renamefile(vol, curdir, -1, p, upath, path->m_name, addp);
+    if (renamefile(vol, curdir, -1, p, upath, path->m_name, addp) != AFP_OK) {
+        goto err_unwind;
+    }
+
     of_rename(vol, d_of, sdir, supath, curdir, path->m_name, upath);
 err_src_to_tmp:
+
     /* rename temp back to source */
-    renamefile(vol, curdir, -1, temp, p, spath, adsp);
-    of_rename(vol, s_of, curdir, temp, sdir, spath, supath);
+    if (renamefile(vol, curdir, -1, temp, p, spath, adsp) == AFP_OK) {
+        of_rename(vol, s_of, curdir, temp, sdir, spath, supath);
+        goto err_exchangefile;
+    }
+
+err_unwind:
+    /* the later undos would rename a file onto the name another holds */
+    LOG(log_error, logtype_afpd,
+        "afp_exchangefiles(\"%s\", \"%s\"): an undo rename failed, the "
+        "files stay under \"%s\", \"%s\" and \"%s\"", p, upath, p, upath,
+        temp);
 err_exchangefile:
 
     if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {   /* META */
@@ -3878,11 +4254,22 @@ err_exchangefile:
         ad_close(addp, ADFLAGS_HF);
     }
 
-    /* a failure before the renames changed nothing on disk */
+    /* the references find_adouble() took on held forks' metadata */
+    if (s_held_meta) {
+        ad_close(adsp, ADFLAGS_HF);
+    }
+
+    if (d_held_meta) {
+        ad_close(addp, ADFLAGS_HF);
+    }
+
+    /* a failure before the renames left the names as they were */
     if (!renamed) {
         return err;
     }
 
+    adsp->ad_rlen = srlen;
+    addp->ad_rlen = drlen;
     struct dir *cached;
 
     if ((cached = dircache_search_by_did(vol, sid)) != NULL) {
