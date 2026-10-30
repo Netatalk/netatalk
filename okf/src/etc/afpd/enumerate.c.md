@@ -5,7 +5,7 @@ description: "Directory listing: FPEnumerate, FPEnumerateExt, and FPEnumerateExt
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/enumerate.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -334,7 +334,7 @@ Called by: [offcnt_serve](directory.c.md#offcnt_serve), [reenumerate_id](file.c.
 static int enumerate_in(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext, struct savedir *own)
 ```
 
-Defined at lines 640 to 1073.
+Defined at lines 640 to 1075.
 
 Shared body of FPEnumerate, FPEnumerateExt, and FPEnumerateExt2.
 
@@ -353,7 +353,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_NOOBJ at the end of the directory, AFPERR_NODIR for a directory that is gone or replaced under its name, AFPERR_BITMAP, AFPERR_PARAM, or another AFPERR_* code
 
-Calls: [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [check_dirent](enumerate.c.md#check_dirent), [cname](directory.c.md#cname), [cnid_dir_arm](../../libatalk/cnid/cnid.c.md#cnid_dir_arm), [cnid_dir_forget](../../libatalk/cnid/cnid.c.md#cnid_dir_forget), [cnid_dir_serve](../../libatalk/cnid/cnid.c.md#cnid_dir_serve), [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [dir_add](directory.c.md#dir_add), [dir_remove_tree](directory.c.md#dir_remove_tree), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [dirlookup](directory.c.md#dirlookup), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [get_afp_errno](directory.c.md#get_afp_errno), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [getdirparams](directory.c.md#getdirparams), [getfilparams](file.c.md#getfilparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat), [path_error](directory.c.md#path_error), [read_failed](enumerate.c.md#read_failed), [sd_drop](enumerate.c.md#sd_drop), [sd_fetch](enumerate.c.md#sd_fetch), [sd_leave](enumerate.c.md#sd_leave), [sd_select](enumerate.c.md#sd_select), [sd_stat](enumerate.c.md#sd_stat), [virtual_icon_getfilparams](virtual_icon.c.md#virtual_icon_getfilparams)
+Calls: [ad_convert](../../libatalk/adouble/ad_conv.c.md#ad_convert), [check_dirent](enumerate.c.md#check_dirent), [cname](directory.c.md#cname), [cnid_dir_arm](../../libatalk/cnid/cnid.c.md#cnid_dir_arm), [cnid_dir_forget](../../libatalk/cnid/cnid.c.md#cnid_dir_forget), [cnid_dir_serve](../../libatalk/cnid/cnid.c.md#cnid_dir_serve), [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [dir_add_fill](directory.c.md#dir_add_fill), [dir_remove_tree](directory.c.md#dir_remove_tree), [dir_stat_refresh](directory.c.md#dir_stat_refresh), [dirlookup](directory.c.md#dirlookup), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [get_afp_errno](directory.c.md#get_afp_errno), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath), [getdirparams](directory.c.md#getdirparams), [getfilparams](file.c.md#getfilparams), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [of_stat](ofork.c.md#of_stat), [ostat](../../libatalk/util/unix.c.md#ostat), [path_error](directory.c.md#path_error), [read_failed](enumerate.c.md#read_failed), [sd_drop](enumerate.c.md#sd_drop), [sd_fetch](enumerate.c.md#sd_fetch), [sd_leave](enumerate.c.md#sd_leave), [sd_select](enumerate.c.md#sd_select), [sd_stat](enumerate.c.md#sd_stat), [virtual_icon_getfilparams](virtual_icon.c.md#virtual_icon_getfilparams)
 
 Called by: [enumerate](enumerate.c.md#enumerate)
 
@@ -367,7 +367,7 @@ Mentioned in the documentation of: [enumerate](enumerate.c.md#enumerate), [sd_se
 static int enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 1090 to 1096.
+Defined at lines 1092 to 1098.
 
 [enumerate_in()](enumerate.c.md#enumerate_in) with the volume root's listing, whose buffer stays from request to request while each request for the root reads the root into it again
 
@@ -393,7 +393,7 @@ Mentioned in the documentation of: [sd_fetch](enumerate.c.md#sd_fetch)
 int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1109 to 1113.
+Defined at lines 1111 to 1115.
 
 FPEnumerate: list directory entries with one-byte entry lengths.
 
@@ -416,7 +416,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1126 to 1130.
+Defined at lines 1128 to 1132.
 
 FPEnumerateExt: list directory entries with two-byte entry lengths.
 
@@ -439,7 +439,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1144 to 1148.
+Defined at lines 1146 to 1150.
 
 FPEnumerateExt2: list directory entries with a 32-bit start index and reply size limit.
 

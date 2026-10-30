@@ -5,7 +5,7 @@ description: "File parameters and the AFP file commands: FPCreateFile, FPCopyFil
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/file.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -251,7 +251,7 @@ Returns: the CNID in network byte order, or CNID_INVALID without a CNID database
 
 Calls: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getid](../../libatalk/adouble/ad_attr.c.md#ad_getid), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [cnid_add](../../libatalk/cnid/cnid.c.md#cnid_add), [cnid_volume_reset](volume.c.md#cnid_volume_reset), [fullpathname](../../libatalk/util/unix.c.md#fullpathname), [getcwdpath](../../libatalk/util/unix.c.md#getcwdpath)
 
-Called by: [afp_createfile](file.c.md#afp_createfile), [afp_createid](file.c.md#afp_createid), [afp_openfork](fork.c.md#afp_openfork), [copyfile](file.c.md#copyfile), [crit_mac_name](catsearch.c.md#crit_mac_name), [dir_add](directory.c.md#dir_add), [getmetadata](file.c.md#getmetadata), [setfilparams](file.c.md#setfilparams)
+Called by: [afp_createfile](file.c.md#afp_createfile), [afp_createid](file.c.md#afp_createid), [afp_openfork](fork.c.md#afp_openfork), [copyfile](file.c.md#copyfile), [crit_mac_name](catsearch.c.md#crit_mac_name), [dir_add_fill](directory.c.md#dir_add_fill), [getmetadata](file.c.md#getmetadata), [setfilparams](file.c.md#setfilparams)
 
 Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 

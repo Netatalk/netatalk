@@ -5,7 +5,7 @@ description: "Unix modes, owners, and AFP access rights of files and directories
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/unix.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -87,7 +87,7 @@ Parameters:
 
 Calls: [gmem](../../libatalk/util/unix.c.md#gmem), [utombits](unix.c.md#utombits)
 
-Called by: [accessmode](unix.c.md#accessmode), [accessmode_rx](unix.c.md#accessmode_rx)
+Called by: [accessmode](unix.c.md#accessmode), [accessmode_has](unix.c.md#accessmode_has)
 
 ### accessmode
 
@@ -111,7 +111,32 @@ Parameters:
 
 Calls: [acltoownermode](acls.c.md#acltoownermode), [ostat](../../libatalk/util/unix.c.md#ostat), [utommode](unix.c.md#utommode)
 
-Called by: [accessmode_rx](unix.c.md#accessmode_rx), [check_access](directory.c.md#check_access), [file_access](directory.c.md#file_access), [getdirparams](directory.c.md#getdirparams), [getmetadata](file.c.md#getmetadata), [setdirparams](directory.c.md#setdirparams)
+Called by: [accessmode_has](unix.c.md#accessmode_has), [getdirparams](directory.c.md#getdirparams), [getmetadata](file.c.md#getmetadata), [setdirparams](directory.c.md#setdirparams)
+
+### accessmode_has
+
+```c
+bool accessmode_has(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, uint8_t rights)
+```
+
+Defined at lines 202 to 213.
+
+Does the session user hold rights on a file or directory?
+
+afpd's ACL mappings only add to the user's rights, so the ACL is read only when the mode bits leave a right out.
+
+Parameters:
+* `obj`: session
+* `vol`: volume
+* `path`: file or directory
+* `st`: stat of path, whose mode an ACL read can rewrite
+* `rights`: the AR_U* rights asked
+
+Returns: true when the user holds every right asked
+
+Calls: [accessmode](unix.c.md#accessmode), [utommode](unix.c.md#utommode)
+
+Called by: [accessmode_rx](unix.c.md#accessmode_rx), [check_access](directory.c.md#check_access), [file_access](directory.c.md#file_access)
 
 ### accessmode_rx
 
@@ -119,11 +144,9 @@ Called by: [accessmode_rx](unix.c.md#accessmode_rx), [check_access](directory.c.
 bool accessmode_rx(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st)
 ```
 
-Defined at lines 201 to 213.
+Defined at lines 225 to 229.
 
 Does the session user have read and search rights on a directory?
-
-afpd's ACL mappings only add to the user's rights, so the ACL is read only when the mode bits leave out read or search.
 
 Parameters:
 * `obj`: session
@@ -133,7 +156,7 @@ Parameters:
 
 Returns: true when the user may read and search path
 
-Calls: [accessmode](unix.c.md#accessmode), [utommode](unix.c.md#utommode)
+Calls: [accessmode_has](unix.c.md#accessmode_has)
 
 Called by: [afp_getsrvrparms](volume.c.md#afp_getsrvrparms)
 
@@ -143,7 +166,7 @@ Called by: [afp_getsrvrparms](volume.c.md#afp_getsrvrparms)
 static mode_t mtoubits(uint8_t bits)
 ```
 
-Defined at lines 224 to 233.
+Defined at lines 240 to 249.
 
 Map AFP access rights to the three permission bits of one Unix class.
 
@@ -162,7 +185,7 @@ Called by: [mtoumode](unix.c.md#mtoumode)
 mode_t mtoumode(struct maccess *)
 ```
 
-Defined at lines 246 to 256. Declared in [etc/afpd/directory.h](directory.h.md).
+Defined at lines 262 to 272. Declared in [etc/afpd/directory.h](directory.h.md).
 
 Build a Unix mode from AFP access rights.
 
@@ -183,7 +206,7 @@ Called by: [setdirparams](directory.c.md#setdirparams)
 int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 ```
 
-Defined at lines 270 to 288.
+Defined at lines 286 to 304.
 
 Apply a Unix mode to a file and to its AppleDouble metadata.
 
@@ -208,7 +231,7 @@ Calls through [`vfs_ops::vfs_setfilmode`](../../include/atalk/vfs.h.md#struct-vf
 int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 ```
 
-Defined at lines 304 to 333.
+Defined at lines 320 to 349.
 
 Apply a Unix mode to a directory and to its AppleDouble metadata.
 
@@ -233,7 +256,7 @@ Calls through [`vfs_ops::vfs_setdirunixmode`](../../include/atalk/vfs.h.md#struc
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid, struct path *path)
 ```
 
-Defined at lines 346 to 362.
+Defined at lines 362 to 378.
 
 Give a file and its AppleDouble metadata a new owner and group.
 
@@ -259,7 +282,7 @@ Calls through [`vfs_ops::vfs_chown`](../../include/atalk/vfs.h.md#struct-vfs_ops
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const gid_t gid)
 ```
 
-Defined at lines 377 to 390.
+Defined at lines 393 to 406.
 
 Give a directory and its AppleDouble metadata a new owner and group.
 

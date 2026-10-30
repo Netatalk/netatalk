@@ -5,7 +5,7 @@ description: "Open fork table of a session."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ofork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -755,11 +755,11 @@ Calls through [`adouble_fops::ad_path`](../../include/atalk/adouble.h.md#struct-
 int of_closefork(const AFPObj *obj, struct ofork *ofork)
 ```
 
-Defined at lines 1445 to 1719. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1446 to 1741. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close an open fork and free it.
 
-A closed resource fork gets its length refreshed and, when dirty, its modification date stamped. A modified fork sends a refresh hint to sibling afpd processes. The steps that go by the fork's name run only while the name holds the fork's file: a modified fork reports FCE and Spotlight events and refreshes its dircache entry. On a volume that is not read-only, without HAVE_EAFD, the call deletes the empty ._ resource fork of a regular file that no other fork holds while no other process has the file open. On a volume with 'legacy icon' that is not read-only, the close of a resource fork that is the session's last fork of a regular Icon file at the volume root also deletes the file, with its AppleDouble file and CNID, when its data fork is empty, its resource fork is a map without resources, or shorter than a header after the fork changed it or found a header in it at its open, no other process has the file open, and FPDelete's checks allow it; FCE and Spotlight hear of that as a deletion. Once that removal is chosen, the name's dircache entry goes, whether or not the file does. A stamped date marks the volume changed.
+A closed resource fork gets its own header re-read; one that was written, had its length set or shares its adouble gets its metadata re-read too, and a dirty one gets its modification date stamped. A modified fork sends a refresh hint to sibling afpd processes. The steps that go by the fork's name run only while the name holds the fork's file: a modified fork reports FCE and Spotlight events and refreshes its dircache entry. On a volume that is not read-only, without HAVE_EAFD, the call deletes the empty ._ resource fork of a regular file that no other fork holds while no other process has the file open. On a volume with 'legacy icon' that is not read-only, the close of a resource fork that is the session's last fork of a regular Icon file at the volume root also deletes the file, with its AppleDouble file and CNID, when its data fork is empty, its resource fork is a map without resources, or shorter than a header after the fork changed it or found a header in it at its open, no other process has the file open, and FPDelete's checks allow it; FCE and Spotlight hear of that as a deletion. Once that removal is chosen, the name's dircache entry goes, whether or not the file does. A stamped date marks the volume changed.
 
 Parameters:
 * `obj`: session object
@@ -767,7 +767,7 @@ Parameters:
 
 Returns: 0, or -1 with errno set when ad_close failed
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_data_open](../../include/atalk/adouble.h.md#ad_data_open), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [ad_unlock](../../libatalk/adouble/ad_lock.c.md#ad_unlock), [check_delete_inhibit](file.c.md#check_delete_inhibit), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [deletefile](file.c.md#deletefile), [dir_modify](directory.c.md#dir_modify), [dir_offcnt_take](filedir.c.md#dir_offcnt_take), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [fce_register](fce_api.c.md#fce_register), [fullpath_join](directory.c.md#fullpath_join), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [of_dealloc](ofork.c.md#of_dealloc), [of_hint_siblings](ofork.c.md#of_hint_siblings), [of_path_holds](ofork.c.md#of_path_holds), [of_rfork_held](ofork.c.md#of_rfork_held), [of_unhash](ofork.c.md#of_unhash), [setvoltime](volume.c.md#setvoltime), [sl_index_event](spotlight.c.md#sl_index_event), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_data_open](../../include/atalk/adouble.h.md#ad_data_open), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_meta_loaded](../../include/atalk/adouble.h.md#ad_meta_loaded), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh_meta](../../libatalk/adouble/ad_open.c.md#ad_refresh_meta), [ad_refresh_rfork](../../libatalk/adouble/ad_open.c.md#ad_refresh_rfork), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_setdate](../../libatalk/adouble/ad_date.c.md#ad_setdate), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [ad_unlock](../../libatalk/adouble/ad_lock.c.md#ad_unlock), [check_delete_inhibit](file.c.md#check_delete_inhibit), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [deletefile](file.c.md#deletefile), [dir_modify](directory.c.md#dir_modify), [dir_offcnt_take](filedir.c.md#dir_offcnt_take), [dir_remove](directory.c.md#dir_remove), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup](directory.c.md#dirlookup), [fce_register](fce_api.c.md#fce_register), [fullpath_join](directory.c.md#fullpath_join), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon_name](virtual_icon.c.md#is_virtual_icon_name), [of_dealloc](ofork.c.md#of_dealloc), [of_hint_siblings](ofork.c.md#of_hint_siblings), [of_path_holds](ofork.c.md#of_path_holds), [of_rfork_held](ofork.c.md#of_rfork_held), [of_unhash](ofork.c.md#of_unhash), [setvoltime](volume.c.md#setvoltime), [sl_index_event](spotlight.c.md#sl_index_event), [virtual_icon_enabled](virtual_icon.c.md#virtual_icon_enabled)
 
 Called by: [afp_closefork](fork.c.md#afp_closefork), [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [of_close_sweep](ofork.c.md#of_close_sweep)
 
@@ -781,7 +781,7 @@ Mentioned in the documentation of: [fork_modified](fork.c.md#fork_modified), [of
 struct adouble * of_ad(const struct vol *, struct path *, struct adouble *)
 ```
 
-Defined at lines 1731 to 1745. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1753 to 1767. Declared in [etc/afpd/fork.h](fork.h.md).
 
 AppleDouble to use for a file, shared with an open fork when there is one.
 
@@ -802,7 +802,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [getfilparams](file.c.md#getf
 static void of_close_sweep(const AFPObj *obj, const struct vol *vol, const char *who)
 ```
 
-Defined at lines 1758 to 1793.
+Defined at lines 1780 to 1815.
 
 Close every fork on `vol`, or every fork when `vol` is NULL.
 
@@ -825,7 +825,7 @@ Uses file-scope variables: `nforks`, `oforks`
 void of_closevol(const AFPObj *obj, const struct vol *vol)
 ```
 
-Defined at lines 1801 to 1804. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1823 to 1826. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close every open fork of a volume.
 
@@ -845,7 +845,7 @@ Mentioned in the documentation of: [of_close_inode_forks](ofork.c.md#of_close_in
 void of_close_all_forks(const AFPObj *obj)
 ```
 
-Defined at lines 1811 to 1814. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1833 to 1836. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close every open fork of the session.
 

@@ -5,7 +5,7 @@ description: "Directory Cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-27T23:13:49+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -737,7 +737,7 @@ Returns: the entry, validated when the sample falls due, or NULL
 
 Calls: [search_by_name](dircache.c.md#search_by_name)
 
-Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_getcomment](desktop.c.md#ad_getcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_exchangefiles](file.c.md#afp_exchangefiles), [afp_setacl](acls.c.md#afp_setacl), [afp_setfilparams](file.c.md#afp_setfilparams), [dir_add](directory.c.md#dir_add), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork), [of_dircache_entry](ofork.c.md#of_dircache_entry), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [sd_stat](enumerate.c.md#sd_stat), [setfilparams](file.c.md#setfilparams)
+Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_getcomment](desktop.c.md#ad_getcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_exchangefiles](file.c.md#afp_exchangefiles), [afp_setacl](acls.c.md#afp_setacl), [afp_setfilparams](file.c.md#afp_setfilparams), [dir_add_fill](directory.c.md#dir_add_fill), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork), [of_dircache_entry](ofork.c.md#of_dircache_entry), [path_resolve_cached_file](file.c.md#path_resolve_cached_file), [sd_stat](enumerate.c.md#sd_stat), [setfilparams](file.c.md#setfilparams)
 
 ### dircache_search_at_stat
 
@@ -807,7 +807,7 @@ Returns: 0; a failed hash insert aborts the process
 
 Calls: [arc_case_iv_insert](dircache.c.md#arc_case_iv_insert), [arc_case_iv_make_room](dircache.c.md#arc_case_iv_make_room), [dircache_dump](dircache.c.md#dircache_dump), [dircache_evict](dircache.c.md#dircache_evict), [dircache_expunge_duplicate](dircache.c.md#dircache_expunge_duplicate), [enqueue](../../libatalk/util/queue.c.md#enqueue), [hash_alloc_insert_node](hash.c.md#hash_alloc_insert_node), [hash_delete_free](hash.c.md#hash_delete_free), [hash_lookup](hash.c.md#hash_lookup), [hnode_get](hash.c.md#hnode_get)
 
-Called by: [afp_createfile](file.c.md#afp_createfile), [dir_add](directory.c.md#dir_add), [dir_modify](directory.c.md#dir_modify), [dirlookup_internal](directory.c.md#dirlookup_internal), [getmetadata](file.c.md#getmetadata)
+Called by: [afp_createfile](file.c.md#afp_createfile), [dir_add_fill](directory.c.md#dir_add_fill), [dir_modify](directory.c.md#dir_modify), [dirlookup_internal](directory.c.md#dirlookup_internal), [getmetadata](file.c.md#getmetadata)
 
 Uses file-scope variables: `arc_cache`, `curdir` in [etc/afpd/directory.c](directory.c.md), `dircache`, `dircache_maxsize`, `index_didname`, `index_queue`, `queue_count`, `queue_count_max`, `rootParent` in [etc/afpd/directory.c](directory.c.md), `vid_entry_count`
 

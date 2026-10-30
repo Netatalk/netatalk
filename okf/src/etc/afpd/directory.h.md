@@ -5,7 +5,7 @@ description: "AFP directory command handlers and path resolution helpers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-27T23:13:49+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 struct dir * dirlookup_bypath(const struct vol *vol, const char *path)
 ```
 
-Declared at etc/afpd/directory.h line 157; no definition in the scanned sources.
+Declared at etc/afpd/directory.h line 164; no definition in the scanned sources.
 
 # Types
 
@@ -77,7 +77,7 @@ Defined at line 69.
 
 ### struct enumerate_stats
 
-Defined at line 188.
+Defined at line 195.
 * `unsigned long long reads`: directory reads
 * `unsigned long long rereads`: reads by batches past index 1 whose listing no slot holds, not the root's
 * `unsigned long long changed`: reads of folders that changed, or may have, since their listing's read
@@ -85,7 +85,7 @@ Defined at line 188.
 
 ### struct maccess
 
-Defined at line 104.
+Defined at line 109.
 * `uint8_t ma_user`
 * `uint8_t ma_world`
 * `uint8_t ma_group`
@@ -93,7 +93,7 @@ Defined at line 104.
 
 ### struct offcnt_stats
 
-Defined at line 116.
+Defined at line 121.
 * `unsigned long long requests`: DIRPBIT_OFFCNT answered.
 * `unsigned long long cached`: served from the entry
 * `unsigned long long first`: walked: never counted
@@ -116,4 +116,4 @@ Defined at line 116.
 * `DIRPBIT_PDINFO`: ProDOS Info.
 * `FILDIRBIT_ISDIR`: is a directory
 * `FILDIRBIT_ISFILE`: is a file
-* Undocumented: `AR_UOWN`, `AR_UREAD`, `AR_USEARCH`, `AR_UWRITE`, `CNID`, `DCMOD_NO_PROMOTE`, `DIRPBIT_ACCESS`, `DIRPBIT_ATTR`, `DIRPBIT_BDATE`, `DIRPBIT_CDATE`, `DIRPBIT_DID`, `DIRPBIT_FINFO`, `DIRPBIT_GID`, `DIRPBIT_LNAME`, `DIRPBIT_MDATE`, `DIRPBIT_OFFCNT`, `DIRPBIT_PDID`, `DIRPBIT_SNAME`, `DIRPBIT_UID`, `DIRPBIT_UNIXPR`
+* Undocumented: `AR_UOWN`, `AR_UREAD`, `AR_USEARCH`, `AR_UWRITE`, `CNID`, `DCMOD_NO_PROMOTE`, `DIRPBITS_AD`, `DIRPBIT_ACCESS`, `DIRPBIT_ATTR`, `DIRPBIT_BDATE`, `DIRPBIT_CDATE`, `DIRPBIT_DID`, `DIRPBIT_FINFO`, `DIRPBIT_GID`, `DIRPBIT_LNAME`, `DIRPBIT_MDATE`, `DIRPBIT_OFFCNT`, `DIRPBIT_PDID`, `DIRPBIT_SNAME`, `DIRPBIT_UID`, `DIRPBIT_UNIXPR`
