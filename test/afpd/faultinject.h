@@ -33,6 +33,8 @@
  *
  * fail_after = N: the next N armed calls succeed, call N+1 fails once.
  * open_fail_flags = F: only opens whose flags include F count and can fail.
+ * open_hook = fn: fn runs once, ahead of the next open whose flags include
+ * open_hook_flags, as another process's step landing just before it.
  */
 
 /*! The countdown of one interposed call, with its count of armed calls */
@@ -41,6 +43,7 @@ struct fi_call {
     int fail_after;
     int errnum;
     int calls;              /*!< count of armed calls seen */
+    int fail_more;          /*!< armed calls that fail after the first */
 };
 
 /*! One watched lock fcntl: its command and the range it named */
@@ -60,6 +63,8 @@ struct fault_inject {
     int open_calls;         /*!< count of armed open() calls seen */
     int open_last_flags;    /*!< flags arg of the most recent armed open() */
     int open_fail_flags;    /*!< opens without these flags pass through */
+    void (*open_hook)(void); /*!< runs once ahead of an open with the flags */
+    int open_hook_flags;    /*!< the flags that open must include */
     int close_armed;
     int close_fail_after;
     int close_errno;
@@ -134,11 +139,14 @@ struct fault_inject {
     int clock_calls;        /*!< wall clock reads clock_fake answered */
     time_t clock_sec;
     struct fi_call unlink;
+    struct fi_call renameat; /*!< an armed renameat() fails */
+    const char *renameat_to; /*!< renameat() to other names passes by */
     const char *stat_name;  /*!< every stat() and lstat() of this path fails */
     int stat_errno;         /*!< the errno those calls fail with */
     int stat_calls;         /*!< stat() and lstat() calls of stat_name */
     struct fi_call readdir;
     struct fi_call getcwd;
+    struct fi_call fsetxattr; /*!< an armed fsetxattr() fails (Linux) */
     int xattr_watch;      /*!< count the xattr reads below (Linux) */
     int getxattr_calls;   /*!< getxattr/lgetxattr/fgetxattr while watching */
     int listxattr_calls;  /*!< listxattr/llistxattr while watching */

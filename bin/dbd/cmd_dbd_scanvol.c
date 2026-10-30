@@ -996,7 +996,7 @@ static int dbd_readdir(int volroot, cnid_t did)
             continue;
         }
 
-        if (!vol->vfs->vfs_validupath(vol, ep->d_name)) {
+        if (!vol->vfs->vfs_validupath(vol, ep->d_name, -1)) {
             dbd_log(LOGDEBUG, "Ignoring \"%s\"", ep->d_name);
             continue;
         }
@@ -1051,7 +1051,7 @@ static int dbd_readdir(int volroot, cnid_t did)
                 continue;
             }
 
-            if (vol->vfs->vfs_validupath(vol, ep->d_name)) {
+            if (vol->vfs->vfs_validupath(vol, ep->d_name, -1)) {
                 dbd_log(LOGSTD, "Bad AppleDouble \"%s/%s\"", cwdbuf, ep->d_name);
                 continue;
             }

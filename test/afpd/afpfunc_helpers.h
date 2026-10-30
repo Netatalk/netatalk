@@ -73,11 +73,16 @@ extern int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
                          char lname[MACFILELEN + 1]);
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
+extern int createfile_soft(AFPObj *obj, uint16_t vid, cnid_t did,
+                           const char *name);
 extern int create_disk_file(const char *path);
 extern int write_disk_file(const char *path, const void *data, size_t len);
+extern int disk_file_is(const char *path, const void *want, size_t len);
 extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int renameobj(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                      const char *newname);
+extern int copyfileobj(AFPObj *obj, uint16_t vid, cnid_t sdid,
+                       const char *name, cnid_t ddid, const char *newname);
 extern int moveobj(AFPObj *obj, uint16_t vid, cnid_t sdid, const char *name,
                    cnid_t ddid, const char *dname, const char *newname);
 extern int enumerate(AFPObj *obj, uint16_t vid, cnid_t did);
@@ -135,6 +140,11 @@ extern int hint_came(int fd, uint8_t event, cnid_t cnid);
 extern void hints_end(AFPObj *obj, const int fds[2]);
 extern int setdirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                        uint16_t bitmap, const void *params, size_t len);
+extern int setfileparms(AFPObj *obj, uint16_t vid, cnid_t did,
+                        const char *name, uint16_t bitmap, const void *params,
+                        size_t len);
+extern size_t osx_sidecar(uint8_t *buf, size_t size, uint32_t roff,
+                          uint32_t rlen, uint32_t filen);
 extern int getextattr(AFPObj *obj, uint16_t vid, cnid_t did, const char *name,
                       const char *attr, uint32_t maxreply, char *reply,
                       size_t *replylen);

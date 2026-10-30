@@ -58,6 +58,8 @@ struct ofork {
 #define AFPFORK_ERROR   (1<<7)  /*!< used to indicate an error in opening the fork */
 #define AFPFORK_VIRTUAL (1<<8)  /*!< virtual file fork */
 #define AFPFORK_RFHEADER (1<<9) /*!< its resource fork held a header at open */
+#define AFPFORK_DENYRD  (1<<10) /*!< a virtual fork opened denying reads */
+#define AFPFORK_DENYWR  (1<<11) /*!< a virtual fork opened denying writes */
 
 #define of_name(a) (a)->of_ad->ad_name
 
@@ -94,6 +96,7 @@ extern struct dir   *of_dircache_entry(const struct ofork *ofork);
 extern void         of_rfork_changed(const struct ofork *ofork);
 extern int          of_rfork_held(const struct ofork *ofork,
                                   const char *forkpath);
+extern int          of_sidecar_fd(const struct vol *vol, const char *name);
 extern void         of_hint_siblings(const AFPObj *obj,
                                      const struct ofork *ofork,
                                      const struct dir *cached);

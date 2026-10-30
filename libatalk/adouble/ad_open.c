@@ -694,24 +694,40 @@ static int ad_header_read(const char *path, struct adouble *ad,
  *
  * Reads the header, checks the magic and the version, and requires the netatalk
  * filler string. A ._ file that macOS itself wrote fails the check: it is not
- * one of ours, so enumeration and access treat it as plain data.
+ * one of ours, so enumeration and access treat it as plain data, as they do
+ * a FIFO, whose open waits for no writer and whose read fails. An open that a
+ * lease holder's break would delay waits for it. A descriptor that an open
+ * fork holds on the file serves the read, as the close of one opened here
+ * would drop the locks the fork holds on it.
  *
  * @param[in] path  path of the ._ file
+ * @param[in] fd    descriptor of the file to read the header through, or -1
+ *                  to open path
  * @returns 0 for a netatalk header, 1 otherwise, including when the file cannot
  *          be read
  */
-int ad_valid_header_osx(const char *path)
+int ad_valid_header_osx(const char *path, int fd)
 {
     EC_INIT;
-    int fd = -1;
+    int opened = -1;
     struct adouble      adosx;
     char                *buf = &adosx.ad_data[0];
     ssize_t             header_len;
     LOG(log_debug, logtype_ad, "ad_valid_header_osx(\"%s\"): BEGIN",
         fullpathname(path));
-    EC_NEG1(fd = open(path, O_RDONLY));
+
+    if (fd == -1) {
+        opened = open(path, O_RDONLY | O_NONBLOCK);
+
+        if (opened == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            opened = open(path, O_RDONLY);
+        }
+
+        EC_NEG1(fd = opened);
+    }
+
     /* read the header */
-    EC_NEG1(header_len = read(fd, buf, AD_DATASZ_OSX));
+    EC_NEG1(header_len = pread(fd, buf, AD_DATASZ_OSX, 0));
 
     if (header_len < AD_HEADER_LEN) {
         EC_FAIL;
@@ -744,8 +760,8 @@ EC_CLEANUP:
     LOG(log_debug, logtype_ad, "ad_valid_header_osx(\"%s\"): END: %d",
         fullpathname(path), ret);
 
-    if (fd != -1) {
-        close(fd);
+    if (opened != -1) {
+        close(opened);
     }
 
     if (ret != 0) {
@@ -876,16 +892,27 @@ static int ad_convert_move_rfork(struct ad_fd *adf, off_t src, off_t dst,
  * netatalk cannot use. The conversion discards them and moves the resource fork
  * to its canonical offset. Entry offsets and lengths come from the file, so
  * ad_convert_osx validates them and refuses a malformed sidecar instead of
- * rewriting it. ad_open() runs during the conversion and could recurse, so a
- * static flag makes a nested call a no-op.
+ * rewriting it. A data file without a metadata EA gets one with the sidecar's
+ * FinderInfo before the rewrite, so a refused or failed EA step leaves the
+ * sidecar as it was, and the file without the EA, as does a volume set read
+ * only, where the conversion fails with EROFS; one with an EA keeps its own,
+ * which a read by name finds without opening the file, one that will not
+ * parse is made afresh, and an emulated symlink takes none. ad_open() runs
+ * during the conversion and could recurse, so a static flag makes a nested
+ * call a no-op.
  *
- * @param[in]     path  path of the ._ file, for log messages
- * @param[in,out] ad    AppleDouble whose entries describe the file as read
- * @param[in]     hst   stat of the open sidecar the header came from
+ * @param[in]     path   path of the ._ file, for log messages, or NULL
+ * @param[in,out] ad     AppleDouble whose entries describe the file as read
+ * @param[in]     hst    stat of the open sidecar the header came from
+ * @param[in]     base   AppleDouble opening the resource fork; its data
+ *                       descriptor, when open, serves the metadata EA's
+ *                       create, and refuses it when read-only
+ * @param[in]     dpath  path of the data file, or NULL for no metadata EA
  * @returns -1 on error, 0 when nothing needed converting, 1 after converting
  */
 static int ad_convert_osx(const char *path, struct adouble *ad,
-                          const struct stat *hst)
+                          const struct stat *hst, const struct adouble *base,
+                          const char *dpath)
 {
     EC_INIT;
     static bool in_conversion = false;
@@ -896,6 +923,16 @@ static int ad_convert_osx(const char *path, struct adouble *ad,
 
     if (in_conversion || finderlen == ADEDLEN_FINDERI) {
         return 0;
+    }
+
+    /* a read-only volume keeps the sidecar, and with it the xattrs macOS
+     * packed into it, as macOS wrote it */
+    if (ad->ad_options & ADVOL_RO) {
+        LOG(log_info, logtype_ad,
+            "ad_convert_osx(%s): read-only volume, not converting",
+            path ? fullpathname(path) : "");
+        errno = EROFS;
+        return -1;
     }
 
     in_conversion = true;
@@ -984,6 +1021,70 @@ static int ad_convert_osx(const char *path, struct adouble *ad,
         EC_FAIL;
     }
 
+    if (dpath != NULL && ad_data_fileno(base) != AD_SYMLINK) {
+        struct adouble probe;
+        struct adouble adea;
+        const char *finfo = ad_entry(ad, ADEID_FINDERI);
+        ad_init_old(&probe, AD_VERSION_EA, ad->ad_options);
+        ad_init_old(&adea, AD_VERSION_EA, ad->ad_options);
+
+        if (ad_init_offsets(&probe) != 0 || ad_init_offsets(&adea) != 0) {
+            LOG(log_error, logtype_ad, "ad_init_offsets failed");
+            EC_FAIL;
+        }
+
+        if (ad_open(&probe, dpath, ADFLAGS_HF | ADFLAGS_RDONLY) == 0) {
+            ad_close(&probe, ADFLAGS_HF);
+        } else {
+            /* the EA is missing or will not parse; adea's first open carries
+             * the create, under which ad_header_read_ea() makes a malformed
+             * EA afresh. base lends its data descriptor, which its own
+             * reference keeps open through adea's close, as a second
+             * descriptor's close drops the locks; a read-only one marks a
+             * file the user could not write */
+            if (ad_data_fileno(base) >= 0) {
+                if ((base->ad_data_fork.adf_flags & O_ACCMODE) != O_RDWR) {
+                    LOG(log_error, logtype_ad, "create metadata: %s",
+                        strerror(EACCES));
+                    errno = EACCES;
+                    EC_FAIL;
+                }
+
+                adea.ad_data_fork.adf_fd = ad_data_fileno(base);
+                adea.ad_data_fork.adf_flags = base->ad_data_fork.adf_flags;
+                adea.ad_data_fork.adf_refcount = 1;
+            }
+
+            if (ad_open(&adea, dpath,
+                        ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) < 0) {
+                LOG(log_error, logtype_ad, "create metadata: %s",
+                    strerror(errno));
+                EC_FAIL;
+            }
+
+            if (adea.ad_mdp->adf_flags & O_CREAT) {
+                if (finfo != NULL) {
+                    memcpy(ad_entry(&adea, ADEID_FINDERI), finfo,
+                           ADEDLEN_FINDERI);
+                }
+
+                if (ad_flush(&adea) != 0) {
+                    const int err = errno;
+                    LOG(log_error, logtype_ad, "write metadata: %s",
+                        strerror(err));
+                    /* the EA the create wrote lacks the sidecar's
+                     * FinderInfo, which a later conversion would keep */
+                    (void)sys_removexattr(dpath, AD_EA_META);
+                    ad_close(&adea, ADFLAGS_HF);
+                    errno = err;
+                    EC_FAIL;
+                }
+            }
+
+            ad_close(&adea, ADFLAGS_HF);
+        }
+    }
+
     /* roff >= doff, so the validated source end also proves that the
      * destination end fits. Use bounded positioned I/O instead of mmap():
      * a concurrent truncate becomes a short read and EIO rather than
@@ -1011,43 +1112,6 @@ static int ad_convert_osx(const char *path, struct adouble *ad,
         EC_FAIL;
     }
 
-    /* Create a metadata EA if one doesn't exit. path can be NULL when
-     * reached through ad_refresh(); also, the data fork name is derived
-     * from the sidecar path below, which only works for the afpd-style
-     * "._<name>" form. */
-    if (path == NULL || strlen(path) < 3) {
-        EC_EXIT_STATUS(0);
-    }
-
-    struct adouble adea;
-
-    ad_init_old(&adea, AD_VERSION_EA, ad->ad_options);
-
-    if (ad_init_offsets(&adea) != 0) {
-        LOG(log_error, logtype_ad, "ad_init_offsets failed");
-        EC_FAIL;
-    }
-
-    if (ad_open(&adea, path + 2, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
-                0666) < 0) {
-        LOG(log_error, logtype_ad, "create metadata: %s\n", strerror(errno));
-        EC_FAIL;
-    }
-
-    if (adea.ad_mdp->adf_flags & O_CREAT) {
-        if (ad_entry(ad, ADEID_FINDERI)) {
-            memcpy(ad_entry(&adea, ADEID_FINDERI),
-                   ad_entry(ad, ADEID_FINDERI),
-                   ADEDLEN_FINDERI);
-        } else {
-            LOG(log_debug, logtype_ad, "ad_convert_osx(%s): invalid FinderInfo",
-                path ? fullpathname(path) : "");
-        }
-
-        ad_flush(&adea);
-    }
-
-    ad_close(&adea, ADFLAGS_HF);
 EC_CLEANUP:
     in_conversion = false;
 
@@ -1079,14 +1143,19 @@ static off_t rlen_osx(const struct stat *st)
  * macOS-written file, which ad_convert_osx() rewrites once before a second
  * read. The resource fork entry must sit at ADEDOFF_RFORK_OSX.
  *
- * @param[in]     path  path of the data file, for log messages
- * @param[in,out] ad    AppleDouble whose resource fork descriptor is open
- * @param[in]     hst   stat of the ._ file, or NULL to fstat it here
+ * @param[in]     path   path of the ._ file, for log messages, or NULL
+ * @param[in,out] ad     AppleDouble whose resource fork descriptor is open; its
+ *                       data descriptor, when open, serves the conversion's
+ *                       metadata EA create, and refuses it when read-only
+ * @param[in]     hst    stat of the ._ file, or NULL to fstat it here
+ * @param[in]     dpath  path of the data file, or NULL for a conversion
+ *                       without a metadata EA
  * @returns 0 on success, -1 with errno EIO for a malformed or unconvertible
- *          header, or the errno of fstat or pread
+ *          header, the errno of a refused conversion, or the errno of fstat
+ *          or pread
  */
 static int ad_header_read_osx(const char *path, struct adouble *ad,
-                              struct stat *hst)
+                              struct stat *hst, const char *dpath)
 {
     EC_INIT;
     struct adouble      adosx;
@@ -1164,13 +1233,18 @@ reread:
         }
 
         retry_read++;
+        const int converted = ad_convert_osx(path, &adosx, hst, ad, dpath);
 
-        if (ad_convert_osx(path, &adosx, hst) == 1) {
+        if (converted == 1) {
             hst = NULL;
             goto reread;
         }
 
-        errno = EIO;
+        /* a refused conversion keeps its errno for the client's reply */
+        if (converted == 0) {
+            errno = EIO;
+        }
+
         EC_FAIL;
     }
 
@@ -1577,12 +1651,14 @@ int ad_open_native_finderinfo(const char *path, char *ret)
 /*!
  * @brief Open the data fork of an AppleDouble
  *
- * An already open fork gains a reference. A new open maps adflags through
+ * An already open fork gains a reference, but refuses a read-write request on
+ * a read-only one with EACCES. A new open maps adflags through
  * ad2openflags and, under ADFLAGS_CREATE, restricts mode to the parent
  * directory permissions unless ADVOL_UNIXPRIV keeps it. When O_NOFOLLOW hits a
  * symlink the fork stores the link target instead of a descriptor and marks it
- * AD_SYMLINK. EACCES, EPERM, or EROFS on a read-only ADFLAGS_SETSHRMD open
- * retries read-only without O_CREAT, O_EXCL, or O_TRUNC. Under ADFLAGS_CREATE,
+ * AD_SYMLINK; an exclusive create fails with EEXIST there, as the name exists.
+ * EACCES, EPERM, or EROFS on a read-only ADFLAGS_SETSHRMD open retries
+ * read-only without O_CREAT, O_EXCL, or O_TRUNC. Under ADFLAGS_CREATE,
  * ad_chown then sets the owner of the opened file.
  *
  * @param[in]     path     data file
@@ -1611,7 +1687,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode,
         /* the file is already open, but we want write access: */
         if ((adflags & ADFLAGS_RDWR)
                 /* and it was denied the first time: */
-                && (ad->ad_data_fork.adf_flags & O_RDONLY)) {
+                && (ad->ad_data_fork.adf_flags & O_ACCMODE) == O_RDONLY) {
             errno = EACCES;
             return -1;
         }
@@ -1643,8 +1719,9 @@ static int ad_open_df(const char *path, int adflags, mode_t mode,
          * the symlink with lstat() rather than by matching errno. The errno for
          * an O_NOFOLLOW symlink open varies by platform (EMLINK/EFTYPE/ELOOP),
          * and DragonflyBSD returns EACCES for an unprivileged caller because its
-         * permission check precedes the symlink check. lstat() is unambiguous. */
-        if (oflags & O_NOFOLLOW) {
+         * permission check precedes the symlink check. lstat() is unambiguous.
+         * An exclusive create keeps its EEXIST. */
+        if ((oflags & O_NOFOLLOW) && !(oflags & O_EXCL)) {
             struct stat lst;
 
             if (lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)) {
@@ -1717,7 +1794,8 @@ EC_CLEANUP:
  * @brief Open or create the version 2 metadata file of an AppleDouble
  *
  * A symlink data fork short-circuits with nothing opened. An already open
- * metadata file gains a reference after ad_refresh. Otherwise the call opens
+ * metadata file gains a reference after ad_refresh, which runs before the
+ * refusal of a read-write request on a read-only one. Otherwise the call opens
  * the ad_path file without O_CREAT or O_EXCL. EACCES, EPERM, or EROFS on a
  * read-only ADFLAGS_SETSHRMD open retries read-only without O_TRUNC.
  *
@@ -1760,15 +1838,18 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode,
     }
 
     if (ad_meta_fileno(ad) != -1) {
+        /* a refused write request still re-reads the header, which the
+         * caller's attribute tests read */
+        ad_refresh(path, ad);
+
         /* the file is already open, but we want write access: */
         if ((adflags & ADFLAGS_RDWR) &&
                 /* and it was already denied: */
-                (ad->ad_mdp->adf_flags & O_RDONLY)) {
+                (ad->ad_mdp->adf_flags & O_ACCMODE) == O_RDONLY) {
             errno = EACCES;
             EC_FAIL;
         }
 
-        ad_refresh(path, ad);
         /* it's not new anymore */
         ad->ad_mdp->adf_flags &= ~(O_TRUNC | O_CREAT);
         ad->ad_mdp->adf_refcount++;
@@ -1905,9 +1986,10 @@ EC_CLEANUP:
  * @brief Open or create the metadata EA of an AppleDouble ea file
  *
  * A symlink short-circuits with nothing opened. An already open metadata
- * descriptor gains a reference. A write request on a closed descriptor opens
- * the file itself, read-only for a directory so that fchdir still works. A
- * read-only request reads the EA by path and opens nothing.
+ * descriptor gains a reference, but refuses a read-write request on a
+ * read-only one, a folder's excepted. A write request on a closed descriptor
+ * opens the file itself, read-only for a directory so that fchdir still
+ * works. A read-only request reads the EA by path and opens nothing.
  *
  * A missing EA fails with ENOENT unless ADFLAGS_CREATE allows creating one.
  * Creation on an ADVOL_RO volume fails with EROFS. new_ad_header and ad_flush
@@ -1916,6 +1998,11 @@ EC_CLEANUP:
  * resource fork size unless ADFLAGS_NORLEN says the caller's resource fork
  * open has just measured it, and a failure after the open closes the
  * descriptor again.
+ *
+ * ADFLAGS_TRUNC with ADFLAGS_CREATE makes a fresh header in place of an
+ * existing EA, as version 2's truncated metadata file does, and on macOS
+ * removes the native FinderInfo EA, which the open would read over it.
+ * Without ADFLAGS_CREATE the open reads the EA as it finds it.
  *
  * @param[in]     path     file whose metadata EA to open
  * @param[in]     adflags  ADFLAGS_* bits of the ad_open call
@@ -1943,12 +2030,15 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
     }
 
     if (ad_meta_fileno(ad) != -1) {
-        /* the file is already open, but we want write access: */
-        if ((oflags & O_RDWR) &&
-                /* and it was already denied: */
-                (ad->ad_mdp->adf_flags & O_RDONLY)) {
-            LOG(log_error, logtype_ad, "ad_open_hf_ea(%s): rw request for ro file: %s",
-                fullpathname(path), strerror(errno));
+        /* the file is already open, but we want write access (oflags asks
+         * for it for a read's locks too): */
+        if ((adflags & ADFLAGS_RDWR) && !(adflags & ADFLAGS_DIR) &&
+                /* and it was already denied: a folder's metadata goes
+                 * through its read-only descriptor */
+                (ad->ad_mdp->adf_flags & O_ACCMODE) == O_RDONLY) {
+            LOG(log_debug, logtype_ad,
+                "ad_open_hf_ea(%s): rw request for ro file",
+                fullpathname(path));
             errno = EACCES;
             EC_FAIL;
         }
@@ -1977,8 +2067,10 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
     char NativeFinderInfo[ADEDLEN_FINDERI] = {'\0'};
 #endif
 
-    /* Read the adouble header in and parse it.*/
-    if (ad->ad_ops->ad_header_read(path, ad, NULL) != 0) {
+    /* Read the adouble header in and parse it, or make a fresh one in place of
+     * it for a create that truncates */
+    if (((adflags & ADFLAGS_TRUNC) && (adflags & ADFLAGS_CREATE))
+            || ad->ad_ops->ad_header_read(path, ad, NULL) != 0) {
         if (!(adflags & ADFLAGS_CREATE)) {
             LOG(log_debug, logtype_ad, "ad_open_hf_ea(\"%s\"): can't read metadata EA",
                 path);
@@ -1998,7 +2090,8 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
         LOG(log_debug, logtype_ad, "ad_open_hf_ea(\"%s\"): creating metadata EA", path);
 
         /* It doesnt exist, EPERM or another error */
-        if (!(errno == ENOATTR || errno == ENOENT)) {
+        if (!(adflags & ADFLAGS_TRUNC)
+                && !(errno == ENOATTR || errno == ENOENT)) {
             LOG(log_error, logtype_ad, "ad_open_hf_ea: unexpected: %s", strerror(errno));
             EC_FAIL;
         }
@@ -2007,11 +2100,17 @@ static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
         EC_NEG1_LOG(new_ad_header(ad, path, NULL, adflags));
         ad->ad_mdp->adf_flags |= O_CREAT; /* mark as just created */
 #ifdef __APPLE__
-        /* Read in FinderInfo from macOS */
-        FinderInfo = ad_entry(ad, ADEID_FINDERI);
 
-        if (ad_open_native_finderinfo(path, NativeFinderInfo)) {
-            memcpy(FinderInfo, NativeFinderInfo, ADEDLEN_FINDERI);
+        if (adflags & ADFLAGS_TRUNC) {
+            /* the native FinderInfo goes with the header it would refill */
+            (void)sys_removexattr(path, EA_FINFO);
+        } else {
+            /* Read in FinderInfo from macOS */
+            FinderInfo = ad_entry(ad, ADEID_FINDERI);
+
+            if (ad_open_native_finderinfo(path, NativeFinderInfo)) {
+                memcpy(FinderInfo, NativeFinderInfo, ADEDLEN_FINDERI);
+            }
         }
 
 #endif
@@ -2195,12 +2294,13 @@ EC_CLEANUP:
 /*!
  * @brief Open or create the resource fork of an AppleDouble ea file
  *
- * An already open resource fork gains a reference and refreshes ad_rlen. A new
- * open uses sys_getxattrfd on the metadata descriptor on Solaris, and open on
- * the ad_path file elsewhere, both without O_CREAT. EACCES, EPERM, or EROFS on
- * a read-only open retries read-only without O_TRUNC. ENOENT without
- * ADFLAGS_CREATE returns 0 with no fork open. ADFLAGS_CREATE adds O_CREAT and
- * creates the fork with mode.
+ * An already open resource fork gains a reference and refreshes ad_rlen, but
+ * refuses a read-write request with EACCES when it is open read-only, keeping
+ * its ad_rlen. A new open uses sys_getxattrfd on the metadata descriptor on
+ * Solaris, and open on the ad_path file elsewhere, both without O_CREAT.
+ * EACCES, EPERM, or EROFS on a read-only open retries read-only without
+ * O_TRUNC. ENOENT without ADFLAGS_CREATE returns 0 with no fork open.
+ * ADFLAGS_CREATE adds O_CREAT and creates the fork with mode.
  *
  * Without HAVE_EAFD a created fork receives a header through new_ad_header
  * and ad_flush, and an existing one goes through ad_header_read_osx, but
@@ -2232,10 +2332,11 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
     oflags = ad2openflags(ad, ADFLAGS_RF, adflags) & ~O_CREAT;
 
     if (ad_reso_fileno(ad) != -1) {
-        /* the file is already open, but we want write access: */
-        if ((oflags & O_RDWR)
+        /* the file is already open, but we want write access (oflags asks
+         * for it for a read's locks too): */
+        if ((adflags & ADFLAGS_RDWR)
                 /* and it was already denied: */
-                && (ad->ad_rfp->adf_flags & O_RDONLY)) {
+                && (ad->ad_rfp->adf_flags & O_ACCMODE) == O_RDONLY) {
             errno = EACCES;
             EC_FAIL;
         }
@@ -2370,7 +2471,7 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
         /* the header read sets the length from this stat */
         LOG(log_debug, logtype_ad, "ad_open_rf(\"%s\"): reading adouble rfork: \"%s\"",
             path, rfpath);
-        EC_NEG1_LOG(ad_header_read_osx(rfpath, ad, &st));
+        EC_NEG1_LOG(ad_header_read_osx(rfpath, ad, &st, path));
     }
 
 #else
@@ -3393,7 +3494,7 @@ int ad_refresh_rfork(const char *path, struct adouble *ad)
     ad->ad_rlen = st.st_size;
     return 0;
 #else
-    return ad_header_read_osx(path, ad, NULL);
+    return ad_header_read_osx(NULL, ad, NULL, path);
 #endif
 }
 

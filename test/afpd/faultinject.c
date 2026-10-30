@@ -165,6 +165,13 @@ static int fi_call_fire(struct fi_call *c)
         c->calls++;
     }
 
+    /* past its first failure, fail_more calls fail too */
+    if (c->armed && c->fail_after < 0 && c->fail_more > 0) {
+        c->fail_more--;
+        errno = c->errnum;
+        return 1;
+    }
+
     return fault_should_fire(c->armed, &c->fail_after, c->errnum);
 }
 
@@ -205,9 +212,22 @@ static dirfd_fn  real_dirfd;
 /* Record then decide, shared by every open-family interposer.  Record before
  * the decision so count/flags reflect the attempt; only while armed.  An open
  * without the flags of open_fail_flags is neither recorded nor failed.  Returns
- * 1 when the caller should inject the failure (errno already set). */
+ * 1 when the caller should inject the failure (errno already set).  A hook
+ * runs first, cleared and with arming off while it runs, so the opens it makes
+ * pass through. */
 static int open_armed_should_fire(int flags)
 {
+    void (*hook)(void) = fi.open_hook;
+
+    if (hook != NULL
+            && (flags & fi.open_hook_flags) == fi.open_hook_flags) {
+        const int armed = fi.open_armed;
+        fi.open_hook = NULL;
+        fi.open_armed = 0;
+        hook();
+        fi.open_armed = armed;
+    }
+
     if (!fi.open_armed) {
         return 0;
     }
@@ -1073,6 +1093,27 @@ acl_t acl_get_file(const char *path, acl_type_t type)
 }
 #endif /* HAVE_POSIX_ACLS */
 
+typedef int (*renameat_fn)(int, const char *, int, const char *);
+static renameat_fn real_renameat;
+
+/*!
+ * @brief renameat() interposer: counts and fails armed calls
+ */
+int renameat(int olddirfd, const char *oldpath, int newdirfd,
+             const char *newpath)
+{
+    if (!real_renameat) {
+        real_renameat = (renameat_fn)dlsym(RTLD_NEXT, "renameat");
+    }
+
+    if ((fi.renameat_to == NULL || strcmp(newpath, fi.renameat_to) == 0)
+            && fi_call_fire(&fi.renameat)) {
+        return -1;
+    }
+
+    return real_renameat(olddirfd, oldpath, newdirfd, newpath);
+}
+
 typedef int (*unlink_fn)(const char *);
 static unlink_fn real_unlink;
 
@@ -1318,6 +1359,26 @@ ssize_t llistxattr(const char *path, char *list, size_t size)
 
     xattr_watched(&fi.listxattr_calls);
     return real_llistxattr(path, list, size);
+}
+
+typedef int (*fsetxattr_fn)(int, const char *, const void *, size_t, int);
+static fsetxattr_fn real_fsetxattr;
+
+/*!
+ * @brief fsetxattr(2) interposer: counts and fails armed calls
+ */
+int fsetxattr(int fd, const char *name, const void *value, size_t size,
+              int flags)
+{
+    if (!real_fsetxattr) {
+        real_fsetxattr = (fsetxattr_fn)dlsym(RTLD_NEXT, "fsetxattr");
+    }
+
+    if (fi_call_fire(&fi.fsetxattr)) {
+        return -1;
+    }
+
+    return real_fsetxattr(fd, name, value, size, flags);
 }
 #endif /* __linux__ */
 

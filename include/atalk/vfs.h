@@ -36,7 +36,8 @@
 #define VFS_MODULES_MAX 3
 
 /* Function argument types for VFS operations */
-typedef int (*vfs_validupath_fn)(const struct vol *vol, const char *name);
+typedef int (*vfs_validupath_fn)(const struct vol *vol, const char *name,
+                                 int fd);
 typedef int (*vfs_chown_fn)(const struct vol *vol, const char *path, uid_t uid,
                             gid_t gid);
 typedef int (*vfs_renamedir_fn)(const struct vol *vol, int dirfd,

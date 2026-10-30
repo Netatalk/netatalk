@@ -168,7 +168,7 @@ int nad_rm(int argc, char *argv[], AFPObj *obj)
         const char *name = strrchr(argv[i], '/');
         name = name ? name + 1 : argv[i];
         sidecars[i] = strncmp(name, "._", 2) == 0
-                      && ad_valid_header_osx(argv[i]) == 0;
+                      && ad_valid_header_osx(argv[i], -1) == 0;
     }
 
     for (int i = 0; argv[i] != NULL; i++) {
@@ -268,7 +268,7 @@ static int rm(const char *path,
         }
 
         if (tflag != FTW_NS && S_ISREG(statp->st_mode)
-                && ad_valid_header_osx(path) == 0) {
+                && ad_valid_header_osx(path, -1) == 0) {
             if (unlink(path) != 0 && errno != ENOENT) {
                 NAD_INFO("unlink: %s: %s", path, strerror(errno));
                 badrm = rval = 1;

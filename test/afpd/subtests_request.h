@@ -11,6 +11,87 @@
 
 extern int utest_write_reads_size_only_when_used(AFPObj *obj,
                                                  struct vol *vol);
+extern int utest_hard_create_refused_under_peer_open(AFPObj *obj,
+                                                     struct vol *vol);
+extern int utest_hard_create_refuses_racing_open(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_hard_create_keeps_data_without_metadata(AFPObj *obj,
+                                                         struct vol *vol);
+extern int utest_hard_create_v2_header_starts_over(AFPObj *obj,
+                                                   struct vol *vol);
+extern int utest_hard_create_empties_late_file(AFPObj *obj, struct vol *vol);
+extern int utest_hard_create_refuses_held_late_file(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_create_drops_stale_metadata(AFPObj *obj, struct vol *vol);
+extern int utest_hard_create_starts_file_over(AFPObj *obj,
+                                              struct vol *vol);
+extern int utest_create_drops_stale_sidecar(AFPObj *obj, struct vol *vol);
+extern int utest_create_refused_by_sidecar_folder(AFPObj *obj, struct vol *vol);
+extern int utest_create_long_name(AFPObj *obj, struct vol *vol);
+extern int utest_hard_create_refused_under_sidecar_lock(AFPObj *obj,
+                                                        struct vol *vol);
+extern int utest_hard_create_refused_unread_sidecar(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_ea_trunc_open_reads_header(AFPObj *obj, struct vol *vol);
+extern int utest_soft_create_over_symlink_exists(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_hard_create_refreshes_entry(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_refusal_keeps_locks(AFPObj *obj, struct vol *vol);
+extern int utest_setfileparms_held_symlink_kept(AFPObj *obj, struct vol *vol);
+extern int utest_held_conversion_keeps_metadata(AFPObj *obj, struct vol *vol);
+extern int utest_symlink_conversion_refused_under_deny(AFPObj *obj,
+                                                       struct vol *vol);
+extern int utest_setfileparms_cnid_failure_closes(AFPObj *obj,
+                                                  struct vol *vol);
+extern int utest_setfileparms_readonly_fork_refused(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_copyfile_readonly_source(AFPObj *obj, struct vol *vol);
+extern int utest_openfork_rsrc_beside_readonly(AFPObj *obj, struct vol *vol);
+extern int utest_icon_write_inhibited_readonly_lender(AFPObj *obj,
+                                                      struct vol *vol);
+extern int utest_setfileparms_native_finderinfo_kept(AFPObj *obj,
+                                                     struct vol *vol);
+extern int utest_osx_conversion_keeps_locks(AFPObj *obj, struct vol *vol);
+extern int utest_osx_conversion_by_path(AFPObj *obj, struct vol *vol);
+extern int utest_osx_conversion_readonly_kept(AFPObj *obj, struct vol *vol);
+extern int utest_osx_conversion_readonly_with_metadata(AFPObj *obj,
+                                                       struct vol *vol);
+extern int utest_osx_conversion_of_symlink(AFPObj *obj, struct vol *vol);
+extern int utest_osx_conversion_failed_write_retried(AFPObj *obj,
+                                                     struct vol *vol);
+extern int utest_osx_conversion_repairs_metadata(AFPObj *obj, struct vol *vol);
+extern int utest_osx_conversion_readonly_volume(AFPObj *obj, struct vol *vol);
+extern int utest_osx_conversion_header_has_cnid(AFPObj *obj, struct vol *vol);
+extern int utest_readonly_volume_open_adds_no_cnid(AFPObj *obj,
+                                                   struct vol *vol);
+extern int utest_exchange_held_file_keeps_locks(AFPObj *obj, struct vol *vol);
+extern int utest_exchange_bare_held_destination(AFPObj *obj, struct vol *vol);
+extern int utest_exchange_held_symlink_kept(AFPObj *obj, struct vol *vol);
+extern int utest_exchange_refused_header_has_cnid(AFPObj *obj,
+                                                  struct vol *vol);
+extern int utest_exchange_osx_sidecar_finderinfo(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_exchange_hard_link_keeps_rlen(AFPObj *obj, struct vol *vol);
+extern int utest_exchange_refused_sidecar_header(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_exchange_bare_hard_link_keeps_rlen(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_exchange_failure_restores_cnids(AFPObj *obj,
+                                                 struct vol *vol);
+extern int utest_exchange_failed_rename_leaves_no_temp(AFPObj *obj,
+                                                       struct vol *vol);
+extern int utest_exchange_needs_read_access(AFPObj *obj, struct vol *vol);
+extern int utest_exchange_v2_names_kept(AFPObj *obj, struct vol *vol);
+extern int utest_sidecar_names_refused(AFPObj *obj, struct vol *vol);
+extern int utest_listing_keeps_sidecar_locks(AFPObj *obj, struct vol *vol);
+extern int utest_listing_passes_fifo(AFPObj *obj, struct vol *vol);
+extern int utest_v2_bare_rsrc_open_takes_band(AFPObj *obj, struct vol *vol);
+extern int utest_virtual_icon_write_takes_deny_lock(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_exchange_failed_undo_keeps_files(AFPObj *obj,
+                                                  struct vol *vol);
+extern int utest_setfileparms_symlink_dated_itself(AFPObj *obj,
+                                                   struct vol *vol);
 extern int utest_volume_scan_counts_no_band(AFPObj *obj, struct vol *vol);
 extern int utest_volume_scan_resets_appended(AFPObj *obj, struct vol *vol);
 extern int utest_rfork_cache_hit_sends_cached_bytes(AFPObj *obj,

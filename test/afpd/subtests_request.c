@@ -23,9 +23,11 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -529,6 +531,4743 @@ int utest_write_reads_size_only_when_used(AFPObj *obj, struct vol *vol)
 
 out:
     fio_done(vol, w, name);
+    return ret;
+}
+
+/*!
+ * @brief Whether the metadata of path carries finfo's first len bytes as its
+ *        FinderInfo
+ *
+ * @returns 1 when it does, 0 when it does not, -1 when the metadata cannot be
+ *          read
+ */
+static int finderinfo_is(const struct vol *vol, const char *path,
+                         const char *finfo, size_t len)
+{
+    struct adouble ad;
+    const char *entry;
+    int ret = -1;
+    ad_init(&ad, vol);
+
+    if (ad_metadata(path, 0, &ad) == 0) {
+        if ((entry = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
+            ret = memcmp(entry, finfo, len) == 0;
+        }
+
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief FPCreateFile with the hard create flag refuses a file another
+ *        session holds open or another process holds a byte-range lock on,
+ *        leaving its bytes, and truncates the file once both are gone
+ *
+ * @returns 0, 1 when a create answered otherwise or the file changed under the
+ *          open or the lock, or -1 when the fixture failed
+ */
+int utest_hard_create_refused_under_peer_open(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_hcreate";
+    char path[MAXPATHLEN + 1];
+    struct peer peer;
+    struct stat st;
+    uint16_t w = 0;
+    off_t left[2] = { -1, -1 };
+    off_t after = -1;
+    int rc[2] = { -1, -1 };
+    int again = -1;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK) {
+        goto out;
+    }
+
+    if (closefork(&fio.obj, w) != AFP_OK) {
+        goto out;
+    }
+
+    w = 0;
+
+    /* the band lock of another session's read open, then a byte-range lock
+     * of a process outside afpd, each on the file at its full length */
+    for (int i = 0; i < 2; i++) {
+        if (truncate(path, RQ_LEN) != 0
+                || peer_hold_lock(&peer, path, i == 0 ? F_RDLCK : F_WRLCK,
+                                  i == 0 ? AD_FILELOCK_OPEN_RD : 0, 1) != 0) {
+            goto out;
+        }
+
+        rc[i] = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+        peer_release(&peer);
+
+        if (stat(path, &st) == 0) {
+            left[i] = st.st_size;
+        }
+    }
+
+    /* with the fork closed and the lock gone the hard create truncates */
+    again = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+
+    if (stat(path, &st) == 0) {
+        after = st.st_size;
+    }
+
+    if (rc[0] == AFPERR_BUSY && rc[1] == AFPERR_BUSY && left[0] == RQ_LEN
+            && left[1] == RQ_LEN && again == AFP_OK && after == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr,
+                "hard create under a peer's open: %d with %jd bytes left, "
+                "under a peer's byte-range lock: %d with %jd bytes left, "
+                "then %d with %jd bytes\n", rc[0], (intmax_t)left[0], rc[1],
+                (intmax_t)left[1], again, (intmax_t)after);
+        ret = 1;
+    }
+
+out:
+    fio_done(vol, w, name);
+    return ret;
+}
+
+
+/*! The peer process of hc_peer_opens(), with its file and the call's result */
+static struct peer hc_peer;
+static char hc_path[MAXPATHLEN + 1];
+static int hc_held = -1;
+
+/*!
+ * @brief The open hook of utest_hard_create_refuses_racing_open(): another
+ *        session's read open of the file, as its share-mode lock
+ */
+static void hc_peer_opens(void)
+{
+    hc_held = peer_hold_lock(&hc_peer, hc_path, F_RDLCK, AD_FILELOCK_OPEN_RD,
+                             1);
+}
+
+/*!
+ * @brief A hard FPCreateFile whose own open another session's open of the
+ *        file overtakes is refused and leaves the file's bytes
+ *
+ * @returns 0, 1 when the create answered otherwise or the file lost bytes,
+ *          -1 when the fixture failed, or TEST_SKIP without the fault
+ *          injector
+ */
+int utest_hard_create_refuses_racing_open(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_hcrace";
+    struct stat st;
+    uint16_t w = 0;
+    off_t left = -1;
+    int rc;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(hc_path, sizeof(hc_path), "%s/%s", vol->v_path, name);
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK) {
+        goto out;
+    }
+
+    w = 0;
+    /* the peer opens the file after whatever the create tests before its own
+     * open, the first that may create */
+    fault_inject_reset();
+    hc_held = -1;
+    fi.open_hook = hc_peer_opens;
+    fi.open_hook_flags = O_CREAT;
+    rc = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    fault_inject_reset();
+
+    if (hc_held != 0) {
+        goto out;
+    }
+
+    peer_release(&hc_peer);
+
+    if (stat(hc_path, &st) == 0) {
+        left = st.st_size;
+    }
+
+    if (rc == AFPERR_BUSY && left == RQ_LEN) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "hard create under a racing open: %d with %jd bytes "
+                        "left\n", rc, (intmax_t)left);
+        ret = 1;
+    }
+
+out:
+    fio_done(vol, w, name);
+    return ret;
+}
+
+/*!
+ * @brief On version 2 a hard FPCreateFile whose metadata file will not open
+ *        answers AFPERR_ACCESS and leaves the file with its bytes
+ *
+ * A folder in the metadata file's place refuses every open of it.
+ *
+ * @returns 0, 1 when the create answered otherwise or the file was cut or
+ *          removed, -1 when the fixture failed
+ */
+int utest_hard_create_keeps_data_without_metadata(AFPObj *obj,
+                                                  struct vol *vol)
+{
+    static char name[] = "rq_hcmeta";
+    const int saved_adouble = vol->v_adouble;
+    char path[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    char adfile[MAXPATHLEN + 1];
+    struct stat st;
+    uint16_t w = 0;
+    off_t left = -1;
+    int rc;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    snprintf(adfile, sizeof(adfile), "%s/%s", adpath, name);
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK) {
+        goto out;
+    }
+
+    w = 0;
+
+    if (unlink(adfile) != 0 || mkdir(adfile, 0750) != 0) {
+        goto out;
+    }
+
+    rc = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+
+    if (stat(path, &st) == 0) {
+        left = st.st_size;
+    }
+
+    if (rc == AFPERR_ACCESS && left == RQ_LEN) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "version 2 hard create without metadata: %d with %jd "
+                        "bytes left\n", rc, (intmax_t)left);
+        ret = 1;
+    }
+
+out:
+    (void)rmdir(adfile);
+    fio_done(vol, w, name);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    (void)rmdir(adpath);
+    return ret;
+}
+
+/*!
+ * @brief A version 2 hard FPCreateFile of a file with a resource fork, its
+ *        data a day old, leaves a header whose resource fork entry is empty
+ *        and whose dates are the create's, and one of a file whose header is
+ *        malformed makes it a fresh header
+ *
+ * @returns 0, 1 when a create answered otherwise or left the old header's
+ *          length, dates or malformation, -1 when the fixture failed
+ */
+int utest_hard_create_v2_header_starts_over(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_hchead";
+    static char bad[] = "rq_hcbad";
+    const int saved_adouble = vol->v_adouble;
+    char path[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    char junk[100];
+    struct timespec old[2] = { { 0 } };
+    struct adouble ad;
+    uint32_t cdate = 0;
+    uint16_t w = 0;
+    off_t entry = -1;
+    int rc[2] = { -1, -1 };
+    int fresh = 0;
+    int fd;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                        OPENACC_RD | OPENACC_WR, &w) != AFP_OK
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK) {
+        w = 0;
+        goto out;
+    }
+
+    w = 0;
+    old[0].tv_sec = old[1].tv_sec = time(NULL) - 86400;
+
+    if (utimensat(AT_FDCWD, path, old, 0) != 0) {
+        goto out;
+    }
+
+    rc[0] = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    ad_init(&ad, vol);
+
+    if (ad_metadata(path, 0, &ad) == 0) {
+        entry = ad_getentrylen(&ad, ADEID_RFORK);
+        (void)ad_getdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, &cdate);
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    /* a header that will not parse */
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, bad);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble/%s", vol->v_path, bad);
+    memset(junk, 'x', sizeof(junk));
+
+    if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, bad) != AFP_OK
+            || (fd = open(adpath, O_WRONLY | O_TRUNC)) < 0) {
+        goto out;
+    }
+
+    if (write(fd, junk, sizeof(junk)) != (ssize_t)sizeof(junk)) {
+        close(fd);
+        goto out;
+    }
+
+    close(fd);
+    rc[1] = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, bad);
+    ad_init(&ad, vol);
+
+    if (ad_metadata(path, 0, &ad) == 0) {
+        fresh = 1;
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    if (rc[0] == AFP_OK && entry == 0 && (time_t)cdate > old[0].tv_sec
+            && rc[1] == AFP_OK && fresh) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "version 2 hard create: %d with resource fork entry "
+                        "%jd and create date %jd after the data's %jd; over a "
+                        "malformed header %d, header fresh %d\n", rc[0],
+                (intmax_t)entry, (intmax_t)cdate, (intmax_t)old[0].tv_sec,
+                rc[1], fresh);
+        ret = 1;
+    }
+
+out:
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, bad);
+    fio_done(vol, w, name);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    return ret;
+}
+
+/*! The file of hc_late_file() and hc_late_rename(), with the latter's source */
+static char hc_late[MAXPATHLEN + 1];
+static char hc_aside[MAXPATHLEN + 1];
+static int hc_done = -1;
+
+/*!
+ * @brief The open hook of utest_hard_create_empties_late_file(): another
+ *        process writes a file under the name after the create's lookup
+ */
+static void hc_late_file(void)
+{
+    int fd;
+
+    if ((fd = open(hc_late, O_WRONLY | O_CREAT | O_EXCL, 0640)) >= 0) {
+        hc_done = write(fd, rq_data, RQ_LEN) == RQ_LEN ? 0 : -1;
+        close(fd);
+    }
+}
+
+/*!
+ * @brief The open hook of utest_hard_create_refuses_held_late_file():
+ *        another session renames a file this session holds onto the name
+ */
+static void hc_late_rename(void)
+{
+    hc_done = rename(hc_aside, hc_late);
+}
+
+/*!
+ * @brief A hard FPCreateFile of a name that a file takes after the create's
+ *        lookup empties that file
+ *
+ * @returns 0, 1 when the create answered otherwise or left the file's bytes,
+ *          -1 when the fixture failed, or TEST_SKIP without the fault
+ *          injector
+ */
+int utest_hard_create_empties_late_file(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_hclate";
+    struct stat st;
+    off_t left = -1;
+    int rc;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(hc_late, sizeof(hc_late), "%s/%s", vol->v_path, name);
+    fault_inject_reset();
+    hc_done = -1;
+    fi.open_hook = hc_late_file;
+    fi.open_hook_flags = O_CREAT;
+    rc = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    fault_inject_reset();
+
+    if (hc_done != 0) {
+        goto out;
+    }
+
+    if (stat(hc_late, &st) == 0) {
+        left = st.st_size;
+    }
+
+    if (rc == AFP_OK && left == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "hard create of a name a file took after the "
+                        "lookup: %d with %jd bytes left\n", rc, (intmax_t)left);
+        ret = 1;
+    }
+
+out:
+    fio_done(vol, 0, name);
+    return ret;
+}
+
+/*!
+ * @brief A hard FPCreateFile of a name that a file this session holds takes
+ *        after the create's lookup, in place of another, is refused with
+ *        AFPERR_BUSY and leaves the held file's bytes
+ *
+ * @returns 0, 1 when the create answered otherwise or the held file lost
+ *          bytes, -1 when the fixture failed, or TEST_SKIP without the fault
+ *          injector
+ */
+int utest_hard_create_refuses_held_late_file(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_hcname";
+    static char held[] = "rq_hcheld";
+    struct stat st;
+    uint16_t r = 0;
+    off_t left = -1;
+    int rc;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(hc_late, sizeof(hc_late), "%s/%s", vol->v_path, name);
+    snprintf(hc_aside, sizeof(hc_aside), "%s/%s", vol->v_path, held);
+
+    /* the name holds a file the session does not hold, which the held one
+     * replaces after the lookup */
+    if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || fio_dfork(vol, held, &r) != 0
+            || fio_write(r, 0, 0, rq_data, RQ_LEN) != AFP_OK) {
+        goto out;
+    }
+
+    fault_inject_reset();
+    hc_done = -1;
+    fi.open_hook = hc_late_rename;
+    fi.open_hook_flags = O_CREAT;
+    rc = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    fault_inject_reset();
+
+    if (hc_done != 0) {
+        goto out;
+    }
+
+    if (stat(hc_late, &st) == 0) {
+        left = st.st_size;
+    }
+
+    if (rc == AFPERR_BUSY && left == RQ_LEN) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "hard create of a name a held file took after the "
+                        "lookup: %d with %jd bytes left\n", rc, (intmax_t)left);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    /* FPDelete refuses a name whose file another process replaced, so the
+     * files go by unlink(2) */
+    for (int i = 0; i < 2; i++) {
+        char *n = i == 0 ? name : held;
+        cnid_t id;
+
+        if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, n,
+                           strlen(n))) != CNID_INVALID) {
+            cnid_delete(vol->v_cdb, id);
+        }
+    }
+
+    unlink(hc_late);
+    unlink(hc_aside);
+    fio_done(vol, 0, name);
+    return ret;
+}
+
+/*!
+ * @brief On version 2 FPCreateFile of a name whose file another process
+ *        removed, leaving its metadata file, gives the new file fresh
+ *        metadata, a hard create as a soft one
+ *
+ * @returns 0, 1 when a create answered otherwise or the new file took the old
+ *          FinderInfo, -1 when the fixture failed
+ */
+int utest_create_drops_stale_metadata(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_cstale";
+    const int saved_adouble = vol->v_adouble;
+    char finfo[ADEDLEN_FINDERI] = "OLDstale";
+    const char zero[ADEDLEN_FINDERI] = { 0 };
+    char path[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    int rc[2] = { -1, -1 };
+    int fresh[2] = { -1, -1 };
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    for (int i = 0; i < 2; i++) {
+        /* the data file goes as another process removes it */
+        if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+                || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                                1 << FILPBIT_FINFO, finfo,
+                                sizeof(finfo)) != AFP_OK
+                || unlink(path) != 0) {
+            goto out;
+        }
+
+        rc[i] = i == 0 ? createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name)
+                : createfile_soft(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+        fresh[i] = finderinfo_is(vol, path, zero, sizeof(zero));
+        delete (&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    }
+
+    if (rc[0] == AFP_OK && rc[1] == AFP_OK && fresh[0] == 1 && fresh[1] == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "version 2 create over a left metadata file: hard %d "
+                        "with fresh metadata %d, soft %d with %d\n", rc[0],
+                fresh[0], rc[1], fresh[1]);
+        ret = 1;
+    }
+
+out:
+    fio_done(vol, 0, name);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    return ret;
+}
+
+/*!
+ * @brief A hard FPCreateFile of name, a file with data, a resource fork and
+ *        FinderInfo, under the volume's layout
+ *
+ * @returns 0 when the create answered AFP_OK and left both forks empty, the
+ *          ea layout's ._ file gone and the FinderInfo zero, 1 when it did
+ *          not, -1 when the fixture failed
+ */
+static int hc_starts_over(struct vol *vol, const char *name)
+{
+    char finfo[ADEDLEN_FINDERI] = "TEXTttxt";
+    const char zero[ADEDLEN_FINDERI] = { 0 };
+    char path[MAXPATHLEN + 1];
+    char sidecar[MAXPATHLEN + 1];
+    struct adouble ad;
+    struct stat st;
+    uint16_t w = 0;
+    off_t dlen = -1;
+    off_t rlen = -1;
+    int cleared = 0;
+    int gone = 1;
+    int rc;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(sidecar, sizeof(sidecar), "%s/._%s", vol->v_path, name);
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK) {
+        goto out;
+    }
+
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                 OPENACC_RD | OPENACC_WR, &w) != AFP_OK
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK
+            || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                            1 << FILPBIT_FINFO, finfo,
+                            sizeof(finfo)) != AFP_OK) {
+        goto out;
+    }
+
+    rc = createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+
+    if (stat(path, &st) == 0) {
+        dlen = st.st_size;
+    }
+
+    ad_init(&ad, vol);
+
+    if (ad_metadata(path, 0, &ad) == 0) {
+        rlen = ad.ad_rlen;
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    cleared = finderinfo_is(vol, path, zero, sizeof(zero)) == 1;
+#ifndef HAVE_EAFD
+
+    if (vol->v_adouble == AD_VERSION_EA) {
+        gone = lstat(sidecar, &st) != 0 && errno == ENOENT;
+    }
+
+#endif
+
+    if (rc == AFP_OK && dlen == 0 && rlen == 0 && gone && cleared) {
+        ret = 0;
+    } else {
+        fprintf(stderr,
+                "hard create over a file with forks, %s: %d, data %jd bytes, "
+                "resource fork %jd bytes, ._ file gone %d, FinderInfo cleared "
+                "%d\n", vol->v_adouble == AD_VERSION2 ? "version 2" : "ea", rc,
+                (intmax_t)dlen, (intmax_t)rlen, gone, cleared);
+        ret = 1;
+    }
+
+out:
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    return ret;
+}
+
+/*!
+ * @brief A hard FPCreateFile of a file with a resource fork and FinderInfo
+ *        leaves it both forks empty and fresh metadata, on the ea layout as
+ *        on version 2
+ *
+ * @returns 0, 1 when a create answered otherwise or left a fork's bytes or
+ *          the FinderInfo, -1 when a fixture failed
+ */
+int utest_hard_create_starts_file_over(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_hcover";
+    const int saved_adouble = vol->v_adouble;
+    char adpath[MAXPATHLEN + 1];
+    int ea = 0;
+    int v2;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    if (saved_adouble == AD_VERSION_EA) {
+        ea = hc_starts_over(vol, name);
+    }
+
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+    v2 = hc_starts_over(vol, name);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    fio_done(vol, 0, name);
+
+    if (ea == -1 || v2 == -1) {
+        return -1;
+    }
+
+    return ea || v2;
+}
+
+/*!
+ * @brief FPCreateFile of a name whose file another process removed, leaving
+ *        its ._ file, removes the ._ file, as the new file has no resource
+ *        fork
+ *
+ * @returns 0, 1 when the create answered otherwise or the ._ file stayed, -1
+ *          when the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_create_drops_stale_sidecar(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_csside";
+    char path[MAXPATHLEN + 1];
+    char sidecar[MAXPATHLEN + 1];
+    struct stat st;
+    uint16_t w = 0;
+    int rc = -1;
+    int gone = 0;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(sidecar, sizeof(sidecar), "%s/._%s", vol->v_path, name);
+
+    /* a resource fork in the ._ file, and the data file removed */
+    if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                        OPENACC_RD | OPENACC_WR, &w) != AFP_OK
+            || fio_write(w, 0, 0, rq_data, 100) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK || unlink(path) != 0) {
+        goto out;
+    }
+
+    rc = createfile_soft(&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    gone = lstat(sidecar, &st) != 0 && errno == ENOENT;
+
+    if (rc == AFP_OK && gone) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "soft create beside a left ._ file: %d, ._ file "
+                        "gone %d\n", rc, gone);
+        ret = 1;
+    }
+
+out:
+    unlink(sidecar);
+    fio_done(vol, 0, name);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief A hard FPCreateFile of a new file whose ._ name holds a folder, which
+ *        the create cannot remove, answers AFPERR_PARAM and leaves no file
+ *        under the name
+ *
+ * @returns 0, 1 when the call answered otherwise or a file stayed, -1 when
+ *          the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_create_refused_by_sidecar_folder(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_crsdir";
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    struct stat st;
+    cnid_t id;
+    int rc;
+    int stray;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (mkdir(rpath, 0750) != 0) {
+        return -1;
+    }
+
+    rc = createfile(obj, vol->v_vid, DIRDID_ROOT, name);
+    stray = lstat(path, &st) == 0;
+
+    /* a file the create left goes by unlink(2), as FPDelete would meet the
+     * folder too */
+    if (stray) {
+        if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, name,
+                           strlen(name))) != CNID_INVALID) {
+            cnid_delete(vol->v_cdb, id);
+        }
+
+        unlink(path);
+    }
+
+    rmdir(rpath);
+
+    if (rc == AFPERR_PARAM && !stray) {
+        return 0;
+    }
+
+    fprintf(stderr, "hard create beside a ._ folder: %d, file left %d\n", rc,
+            stray);
+    return 1;
+#endif
+}
+
+/*!
+ * @brief A hard FPCreateFile of a new file whose name of 254 bytes leaves no
+ *        room for its ._ name, and one over that file, answer AFP_OK
+ *
+ * @returns 0, 1 when a create answered otherwise, -1 when the fixture failed,
+ *          or TEST_SKIP where no ._ file holds the resource fork
+ */
+int utest_create_long_name(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    char name[255];
+    char path[MAXPATHLEN + 1];
+    cnid_t id;
+    int rc[2];
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    memset(name, 'l', sizeof(name) - 1);
+    memcpy(name, "rq_", 3);
+    name[sizeof(name) - 1] = '\0';
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    rc[0] = createfile(obj, vol->v_vid, DIRDID_ROOT, name);
+    rc[1] = createfile(obj, vol->v_vid, DIRDID_ROOT, name);
+
+    /* the file goes by unlink(2), as a delete would meet the long ._ name */
+    if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, name,
+                       strlen(name))) != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+
+    if (rc[0] == AFP_OK && rc[1] == AFP_OK) {
+        return 0;
+    }
+
+    fprintf(stderr, "hard create of a 254-byte name: %d, over it %d\n", rc[0],
+            rc[1]);
+    return 1;
+#endif
+}
+
+/*!
+ * @brief A hard FPCreateFile over a file whose ._ file another process holds
+ *        a byte-range lock on answers AFPERR_BUSY and leaves the ._ file, as
+ *        FPDelete of the file would
+ *
+ * @returns 0, 1 when the call answered otherwise or the ._ file went, -1 when
+ *          the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_hard_create_refused_under_sidecar_lock(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_crslk";
+    char rpath[MAXPATHLEN + 1];
+    struct peer peer;
+    struct stat st;
+    int rc;
+    int kept;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || write_disk_file(rpath, "sidecar", 7) != 0) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, name);
+        return -1;
+    }
+
+    /* a lock outside afpd, which holds no band lock on the data file */
+    if (peer_hold_lock(&peer, rpath, F_RDLCK, 0, 1) != 0) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, name);
+        unlink(rpath);
+        return -1;
+    }
+
+    rc = createfile(obj, vol->v_vid, DIRDID_ROOT, name);
+    peer_release(&peer);
+    kept = lstat(rpath, &st) == 0;
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    unlink(rpath);
+
+    if (rc == AFPERR_BUSY && kept) {
+        return 0;
+    }
+
+    fprintf(stderr, "hard create under a lock on its ._ file: %d, ._ file "
+                    "kept %d\n", rc, kept);
+    return 1;
+#endif
+}
+
+/*!
+ * @brief A hard create whose read of the locks on the file's ._ file fails
+ *        keeps the ._ file and answers AFPERR_BUSY
+ *
+ * @returns 0, 1 when the create answered otherwise, the ._ file went or the
+ *          create read its locks other than once, -1 when the fixture failed,
+ *          or TEST_SKIP without the fault injector or where no ._ file holds
+ *          the resource fork
+ */
+int utest_hard_create_refused_unread_sidecar(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_crsun";
+    char rpath[MAXPATHLEN + 1];
+    struct stat st;
+    int rc;
+    int reads;
+    int kept;
+
+    if (vol->v_adouble != AD_VERSION_EA
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || write_disk_file(rpath, "sidecar", 7) != 0) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, name);
+        return -1;
+    }
+
+    /* the ._ file's lock read is the create's one open that neither blocks
+     * nor follows a link */
+    fault_inject_reset();
+    fi.open_armed = 1;
+    fi.open_fail_after = 0;
+    fi.open_errno = EMFILE;
+    fi.open_fail_flags = O_NONBLOCK | O_NOFOLLOW;
+    rc = createfile(obj, vol->v_vid, DIRDID_ROOT, name);
+    reads = fi.open_calls;
+    fault_inject_reset();
+    kept = lstat(rpath, &st) == 0;
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    unlink(rpath);
+
+    if (rc == AFPERR_BUSY && kept && reads == 1) {
+        return 0;
+    }
+
+    fprintf(stderr, "hard create whose ._ file's locks will not read: %d, "
+                    "._ file kept %d, lock reads %d\n", rc, kept, reads);
+    return 1;
+#endif
+}
+
+/*!
+ * @brief On the ea layout a metadata open with ADFLAGS_TRUNC and without
+ *        ADFLAGS_CREATE reads the file's header as it finds it
+ *
+ * @returns 0, 1 when the open failed or the FinderInfo went, -1 when the
+ *          fixture failed, or TEST_SKIP on version 2
+ */
+int utest_ea_trunc_open_reads_header(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_eatrunc";
+    char finfo[ADEDLEN_FINDERI] = "TEXTttxt";
+    char path[MAXPATHLEN + 1];
+    struct adouble ad;
+    int rc;
+    int kept;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || setfileparms(obj, vol->v_vid, DIRDID_ROOT, name,
+                            1 << FILPBIT_FINFO, finfo, sizeof(finfo))
+            != AFP_OK) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, name);
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    ad_init(&ad, vol);
+    rc = ad_open(&ad, path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_TRUNC);
+
+    if (rc == 0) {
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    kept = finderinfo_is(vol, path, finfo, 8);
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+
+    if (rc == 0 && kept == 1) {
+        return 0;
+    }
+
+    fprintf(stderr, "ea metadata open with ADFLAGS_TRUNC alone: %d, "
+                    "FinderInfo kept %d\n", rc, kept);
+    return 1;
+}
+
+/*!
+ * @brief FPCreateFile without the hard create flag over a name that holds a
+ *        symlink, on a volume that does not follow symlinks, answers
+ *        AFPERR_EXIST and leaves the link, and so does an FPCopyFile onto the
+ *        name
+ *
+ * @returns 0, 1 when a call answered otherwise or the link went, -1 when the
+ *          fixture failed, or TEST_SKIP on a volume that follows symlinks
+ */
+int utest_soft_create_over_symlink_exists(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_sclink";
+    static char target[] = "rq_sctarget";
+    char path[MAXPATHLEN + 1];
+    char tpath[MAXPATHLEN + 1];
+    struct stat st;
+    int fd;
+    int rc[2];
+    int kept[2];
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(tpath, sizeof(tpath), "%s/%s", vol->v_path, target);
+
+    if ((fd = open(tpath, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        return -1;
+    }
+
+    close(fd);
+
+    if (symlink(target, path) != 0) {
+        unlink(tpath);
+        return -1;
+    }
+
+    rc[0] = createfile_soft(obj, vol->v_vid, DIRDID_ROOT, name);
+    kept[0] = lstat(path, &st) == 0 && S_ISLNK(st.st_mode);
+    rc[1] = copyfileobj(obj, vol->v_vid, DIRDID_ROOT, target, DIRDID_ROOT,
+                        name);
+    kept[1] = lstat(path, &st) == 0 && S_ISLNK(st.st_mode);
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    delete (obj, vol->v_vid, DIRDID_ROOT, target);
+    unlink(path);
+    unlink(tpath);
+
+    if (rc[0] == AFPERR_EXIST && kept[0] && rc[1] == AFPERR_EXIST
+            && kept[1]) {
+        return 0;
+    }
+
+    fprintf(stderr, "soft create over a symlink: %d, link kept %d; a copy "
+                    "onto it %d, link kept %d\n", rc[0], kept[0], rc[1],
+            kept[1]);
+    return 1;
+}
+
+/*!
+ * @brief A hard FPCreateFile over a file whose dircache entry holds its
+ *        size leaves the entry the emptied file's size and sends sibling
+ *        sessions a refresh hint for the file
+ *
+ * @returns 0, 1 when the create answered otherwise, the entry kept the old
+ *          size or no hint came, -1 when the fixture failed
+ */
+int utest_hard_create_refreshes_entry(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_hclisted";
+    char path[MAXPATHLEN + 1];
+    const struct dir *entry;
+    cnid_t id;
+    off_t listed = -1;
+    off_t after = -1;
+    int fds[2];
+    int hinted = 0;
+    int fd;
+    int rc = -1;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if ((fd = open(path, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        return -1;
+    }
+
+    if (write(fd, rq_data, RQ_LEN) != RQ_LEN) {
+        close(fd);
+        goto out;
+    }
+
+    close(fd);
+
+    /* the lookup records the file in the dircache with its size */
+    if (getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || (entry = dircache_search_by_name(vol, vol->v_root, name,
+                                                strlen(name))) == NULL) {
+        goto out;
+    }
+
+    listed = entry->dcache_size;
+    id = entry->d_did;
+
+    if (hints_begin(obj, fds) != 0) {
+        goto out;
+    }
+
+    rc = createfile(obj, vol->v_vid, DIRDID_ROOT, name);
+    hinted = hint_came(fds[0], CACHE_HINT_REFRESH, id);
+    hints_end(obj, fds);
+
+    if ((entry = dircache_search_by_name(vol, vol->v_root, name,
+                                         strlen(name))) != NULL) {
+        after = entry->dcache_size;
+    }
+
+    if (listed != RQ_LEN) {
+        goto out;
+    }
+
+    if (rc == AFP_OK && after == 0 && hinted) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "hard create over a listed file: %d, entry size %jd "
+                        "then %jd, file's refresh hint %d\n", rc,
+                (intmax_t)listed, (intmax_t)after, hinted);
+        ret = 1;
+    }
+
+out:
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    return ret;
+}
+
+/*!
+ * @brief FPSetFileParms that would turn a held file into a symlink to a
+ *        target outside the volume is refused each time, the session's fork
+ *        keeps its metadata reference, its descriptor and its deny-write lock
+ *        on the file, and the file keeps its modification date
+ *
+ * @returns 0, 1 when a call answered otherwise, the lock was missing before the
+ *          calls or went, the reference or the date changed or the fork
+ *          stopped reading, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_symlink_refusal_keeps_locks(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slnk";
+    static const char target[] = "/nonexistent/outside";
+    char finfo[ADEDLEN_FINDERI] = "slnkrhap";
+    char out[sizeof(target)];
+    char path[MAXPATHLEN + 1];
+    const struct ofork *of;
+    struct timespec old[2] = { { 0 } };
+    struct stat st;
+    uint16_t r = 0;
+    int held[3] = { -1, -1, -1 };
+    int rc[2] = { -1, -1 };
+    int refs[2] = { -1, -1 };
+    int readable;
+    int dated;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    /* the file holds the link's target, an absolute path */
+    if (fio_dfork(vol, name, &r) != 0
+            || fio_write(r, 0, 0, target, sizeof(target)) != AFP_OK) {
+        goto out;
+    }
+
+    if (closefork(&fio.obj, r) != AFP_OK) {
+        goto out;
+    }
+
+    r = 0;
+    old[0].tv_sec = old[1].tv_sec = time(NULL) - 60;
+
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                 OPENACC_RD | OPENACC_DWR, &r) != AFP_OK
+            || (of = of_find(r)) == NULL
+            || utimensat(AT_FDCWD, path, old, 0) != 0) {
+        goto out;
+    }
+
+    held[0] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+    refs[0] = of->of_ad->ad_meta_refcount;
+
+    /* twice, each refusal leaving the fork's metadata reference and its
+     * descriptor as they were */
+    for (int i = 0; i < 2; i++) {
+        rc[i] = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                             1 << FILPBIT_FINFO, finfo, sizeof(finfo));
+        held[i + 1] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+    }
+
+    refs[1] = of->of_ad->ad_meta_refcount;
+    readable = fio_read(r, 0, sizeof(target), sizeof(target), out) == AFP_OK
+               && memcmp(out, target, sizeof(target)) == 0;
+    dated = stat(path, &st) == 0 && st.st_mtime == old[1].tv_sec;
+
+    if (held[0] < 0) {
+        goto out;
+    }
+
+    if (rc[0] == AFPERR_ACCESS && rc[1] == AFPERR_ACCESS && held[0] == 0
+            && held[1] == 0 && held[2] == 0 && refs[1] == refs[0] && readable
+            && dated) {
+        ret = 0;
+    } else {
+        fprintf(stderr,
+                "symlink conversion: %d then %d, deny-write band held %d, %d "
+                "and %d, metadata references %d then %d, fork reads %d, date "
+                "kept %d\n", rc[0], rc[1], held[0] == 0, held[1] == 0,
+                held[2] == 0, refs[0], refs[1], readable, dated);
+        ret = 1;
+    }
+
+out:
+    fio_done(vol, r, name);
+    return ret;
+}
+
+/*!
+ * @brief FPSetFileParms of FinderInfo on a symlink whose data fork the session
+ *        holds answers AFP_OK and leaves the fork its emulated descriptor and
+ *        link target, and so does an FPExchangeFiles of the link with a file,
+ *        whose renames open and close the link's metadata; on version 2 the
+ *        link's metadata file takes the FinderInfo, as for a link no fork
+ *        holds
+ *
+ * @returns 0, 1 when a call answered otherwise, the fork lost its descriptor
+ *          or the FinderInfo did not land, -1 when the fixture failed, or
+ *          TEST_SKIP on a volume that follows symlinks
+ */
+int utest_setfileparms_held_symlink_kept(AFPObj *obj, struct vol *vol)
+{
+    static char target[] = "rq_sflnkt";
+    static char alias[] = "rq_sflnk";
+    static char alias2[] = "rq_sflnk2";
+    static char file[] = "rq_sflnkf";
+    static char *names[] = { alias, alias2, file };
+    char finfo[ADEDLEN_FINDERI] = "TEXTttxt";
+    const int saved_adouble = vol->v_adouble;
+    char path[MAXPATHLEN + 1];
+    char path2[MAXPATHLEN + 1];
+    char fpath[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    const struct ofork *of;
+    cnid_t id;
+    uint16_t r = 0;
+    int fd[2] = { -1, -1 };
+    int rc[2] = { -1, -1 };
+    int kept = 0;
+    int set = -1;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, alias);
+    snprintf(path2, sizeof(path2), "%s/%s", vol->v_path, alias2);
+    snprintf(fpath, sizeof(fpath), "%s/%s", vol->v_path, file);
+
+    if (symlink(target, path) != 0
+            || createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, file) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, alias,
+                        OPENFORK_DATA, OPENACC_RD, &r) != AFP_OK
+            || (of = of_find(r)) == NULL
+            || ad_data_fileno(of->of_ad) != AD_SYMLINK) {
+        goto out;
+    }
+
+    rc[0] = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, alias,
+                         1 << FILPBIT_FINFO, finfo, sizeof(finfo));
+    fd[0] = ad_data_fileno(of->of_ad);
+    /* the renames open and close the link's metadata whatever the call
+     * answers */
+    (void)exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, alias,
+                        file);
+    fd[1] = ad_data_fileno(of->of_ad);
+    kept = of->of_ad->ad_data_fork.adf_syml != NULL;
+    closefork(&fio.obj, r);
+    r = 0;
+    /* on version 2 the link's metadata file takes the FinderInfo */
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+
+    if (symlink(target, path2) != 0
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, alias2,
+                        OPENFORK_DATA, OPENACC_RD, &r) != AFP_OK
+            || (of = of_find(r)) == NULL
+            || ad_data_fileno(of->of_ad) != AD_SYMLINK) {
+        goto out;
+    }
+
+    rc[1] = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, alias2,
+                         1 << FILPBIT_FINFO, finfo, sizeof(finfo));
+    set = finderinfo_is(vol, path2, finfo, sizeof(finfo));
+
+    if (rc[0] == AFP_OK && fd[0] == AD_SYMLINK && fd[1] == AD_SYMLINK && kept
+            && rc[1] == AFP_OK && set == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPSetFileParms on a held symlink: %d, data "
+                        "descriptor %d, after an exchange %d, on version 2 %d "
+                        "with the FinderInfo set %d\n", rc[0], fd[0], fd[1],
+                rc[1], set);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+
+    /* FPDelete refuses a symlink where it cannot read the link's lock
+     * state, so the names go by unlink(2), with the metadata files that
+     * version 2 made for them */
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, names[i],
+                           strlen(names[i]))) != CNID_INVALID) {
+            cnid_delete(vol->v_cdb, id);
+        }
+
+        snprintf(adpath, sizeof(adpath), "%s/.AppleDouble/%s", vol->v_path,
+                 names[i]);
+        unlink(adpath);
+    }
+
+    unlink(path);
+    unlink(path2);
+    unlink(fpath);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    fio_done(vol, 0, target);
+    return ret;
+}
+
+/*!
+ * @brief FPSetFileParms' symlink conversion of a file whose data fork the
+ *        session holds, on the ea layout, leaves the metadata of the replaced
+ *        file as it was, which a second name of the file still shows
+ *
+ * @returns 0, 1 when the conversion answered otherwise or the second name's
+ *          FinderInfo changed, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks or on version 2, where each name has
+ *          a metadata file of its own
+ */
+int utest_held_conversion_keeps_metadata(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_schl";
+    static char other[] = "rq_schl2";
+    static char target[] = "rq_schlt";
+    static char *names[] = { name, other };
+    char old[ADEDLEN_FINDERI] = "TEXTttxt";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    char opath[MAXPATHLEN + 1];
+    char tpath[MAXPATHLEN + 1];
+    struct stat st;
+    cnid_t id;
+    uint16_t w = 0;
+    uint16_t r = 0;
+    int fd;
+    int rc = -1;
+    int made = 0;
+    int kept = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA || (vol->v_flags & AFPVOL_FOLLOWSYM)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(opath, sizeof(opath), "%s/%s", vol->v_path, other);
+    snprintf(tpath, sizeof(tpath), "%s/%s", vol->v_path, target);
+
+    if ((fd = open(tpath, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        goto out;
+    }
+
+    close(fd);
+
+    /* the file holds its link target, and a second name shares its metadata */
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, target, sizeof(target) - 1) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK
+            || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                            1 << FILPBIT_FINFO, old, sizeof(old)) != AFP_OK
+            || link(path, opath) != 0
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                        OPENFORK_DATA, OPENACC_RD, &r) != AFP_OK) {
+        goto out;
+    }
+
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, slnk, sizeof(slnk));
+    made = lstat(path, &st) == 0 && S_ISLNK(st.st_mode);
+    kept = finderinfo_is(vol, opath, old, sizeof(old));
+
+    if (rc == AFP_OK && made && kept == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "symlink conversion of a held file with a second "
+                        "name: %d, link made %d, second name's FinderInfo "
+                        "kept %d\n", rc, made, kept);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    /* FPDelete refuses a symlink where it cannot read the link's lock
+     * state, so the names go by unlink(2) */
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, names[i],
+                           strlen(names[i]))) != CNID_INVALID) {
+            cnid_delete(vol->v_cdb, id);
+        }
+    }
+
+    unlink(path);
+    unlink(opath);
+    unlink(tpath);
+    fio_done(vol, 0, target);
+    return ret;
+}
+
+/*!
+ * @brief FPSetFileParms that would turn a file into a symlink to a target
+ *        inside the volume answers AFPERR_BUSY while another process denies
+ *        writes to the file or holds a byte-range lock on its data, and while
+ *        the session's own fork denies writes, and the file stays
+ *
+ * @returns 0, 1 when a call answered otherwise or the file went, -1 when the
+ *          fixture failed, or TEST_SKIP on a volume that follows symlinks
+ */
+int utest_symlink_conversion_refused_under_deny(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_slnkheld";
+    static char target[] = "rq_slnkto";
+    char finfo[ADEDLEN_FINDERI] = "slnkrhap";
+    char path[MAXPATHLEN + 1];
+    char tpath[MAXPATHLEN + 1];
+    struct peer peer;
+    struct stat st;
+    uint16_t r = 0;
+    int rc[3] = { -1, -1, -1 };
+    int kept[3] = { 0, 0, 0 };
+    int fd;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(tpath, sizeof(tpath), "%s/%s", vol->v_path, target);
+
+    /* the file holds the name of a file beside it */
+    if ((fd = open(tpath, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        goto out;
+    }
+
+    close(fd);
+
+    if (fio_dfork(vol, name, &r) != 0
+            || fio_write(r, 0, 0, target, sizeof(target) - 1) != AFP_OK
+            || closefork(&fio.obj, r) != AFP_OK) {
+        goto out;
+    }
+
+    r = 0;
+
+    if (peer_hold_lock(&peer, path, F_RDLCK, AD_FILELOCK_DENY_WR, 1) != 0) {
+        goto out;
+    }
+
+    rc[0] = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                         1 << FILPBIT_FINFO, finfo, sizeof(finfo));
+    peer_release(&peer);
+    kept[0] = lstat(path, &st) == 0 && S_ISREG(st.st_mode);
+
+    /* a byte-range lock on the data, as a process outside afpd holds one */
+    if (peer_hold_lock(&peer, path, F_RDLCK, 0, 1) != 0) {
+        goto out;
+    }
+
+    rc[1] = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                         1 << FILPBIT_FINFO, finfo, sizeof(finfo));
+    peer_release(&peer);
+    kept[1] = lstat(path, &st) == 0 && S_ISREG(st.st_mode);
+
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                 OPENACC_RD | OPENACC_DWR, &r) != AFP_OK) {
+        goto out;
+    }
+
+    rc[2] = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                         1 << FILPBIT_FINFO, finfo, sizeof(finfo));
+    kept[2] = lstat(path, &st) == 0 && S_ISREG(st.st_mode);
+
+    if (rc[0] == AFPERR_BUSY && rc[1] == AFPERR_BUSY && rc[2] == AFPERR_BUSY
+            && kept[0] && kept[1] && kept[2]) {
+        ret = 0;
+    } else {
+        fprintf(stderr,
+                "symlink conversion under a deny mode: another process's %d, "
+                "file kept %d, under its byte-range lock %d, file kept %d, "
+                "the session's own %d, file kept %d\n", rc[0], kept[0],
+                rc[1], kept[1], rc[2], kept[2]);
+        ret = 1;
+    }
+
+out:
+    fio_done(vol, r, name);
+    unlink(tpath);
+    return ret;
+}
+
+/*! @brief A CNID backend's add that fails as a busy backend's does */
+static cnid_t rq_cnid_add_busy(struct _cnid_db *cdb _U_,
+                               const struct stat *st _U_, cnid_t did _U_,
+                               const char *name _U_, size_t len _U_,
+                               cnid_t hint _U_)
+{
+    errno = CNID_ERR_BUSY;
+    return CNID_INVALID;
+}
+
+/*!
+ * @brief FPSetFileParms of a file without metadata that gets no CNID from a
+ *        busy backend answers AFPERR_MISC with the metadata it opened closed
+ *
+ * @returns 0, 1 when the call answered otherwise or left a descriptor open,
+ *          -1 when the fixture failed
+ */
+int utest_setfileparms_cnid_failure_closes(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_sfnoid";
+    char finfo[ADEDLEN_FINDERI] = "TEXTttxt";
+    cnid_t (*add)(struct _cnid_db *, const struct stat *, cnid_t,
+                  const char *, size_t, cnid_t);
+    char path[MAXPATHLEN + 1];
+    int before;
+    int after;
+    int fd;
+    int rc;
+
+    if (vol->v_cdb == NULL) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if ((fd = open(path, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        return -1;
+    }
+
+    close(fd);
+    /* the lowest free descriptor: a metadata left open moves it up */
+    before = open("/dev/null", O_RDONLY);
+    close(before);
+    add = vol->v_cdb->cnid_add;
+    vol->v_cdb->cnid_add = rq_cnid_add_busy;
+    rc = setfileparms(obj, vol->v_vid, DIRDID_ROOT, name, 1 << FILPBIT_FINFO,
+                      finfo, sizeof(finfo));
+    vol->v_cdb->cnid_add = add;
+    after = open("/dev/null", O_RDONLY);
+    close(after);
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+
+    if (rc == AFPERR_MISC && after == before) {
+        return 0;
+    }
+
+    fprintf(stderr, "FPSetFileParms without a CNID: %d, lowest free "
+                    "descriptor %d then %d\n", rc, before, after);
+    return 1;
+}
+
+/*!
+ * @brief FPSetFileParms of FinderInfo on name, a file whose fork the session
+ *        holds with its metadata on a read-only descriptor, as for a user who
+ *        may not write the file
+ *
+ * The open() injector refuses the read-write open of the descriptor that
+ * holds the metadata, after skip others: the data file's on the ea layout,
+ * the metadata file's on version 2, which a resource fork's open opens after
+ * the data file.
+ *
+ * @returns 0 when the call answered AFPERR_ACCESS and left the FinderInfo, 1
+ *          when it did not, -1 when the fixture failed, or TEST_SKIP when the
+ *          fault injector missed the open
+ */
+static int sf_readonly_refused(struct vol *vol, const char *name,
+                               uint8_t fork, int skip)
+{
+    char finfo[ADEDLEN_FINDERI] = "TEXTttxt";
+    char newinfo[ADEDLEN_FINDERI] = "APPLaaaa";
+    char path[MAXPATHLEN + 1];
+    const struct ofork *of;
+    uint16_t r = 0;
+    int kept;
+    int rc;
+    int ret = -1;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                            1 << FILPBIT_FINFO, finfo,
+                            sizeof(finfo)) != AFP_OK) {
+        goto out;
+    }
+
+    fault_inject_reset();
+    fi.open_armed = 1;
+    fi.open_fail_after = skip;
+    fi.open_errno = EACCES;
+    fi.open_fail_flags = O_RDWR;
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, fork, OPENACC_RD,
+                  &r);
+    fault_inject_reset();
+
+    if (rc != AFP_OK || (of = of_find(r)) == NULL) {
+        goto out;
+    }
+
+    /* positive control: the fork holds its metadata read-only */
+    if ((ad_get_MD_flags(of->of_ad) & O_ACCMODE) != O_RDONLY) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    rc = setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name,
+                      1 << FILPBIT_FINFO, newinfo, sizeof(newinfo));
+    kept = finderinfo_is(vol, path, finfo, sizeof(finfo)) == 1;
+
+    if (rc == AFPERR_ACCESS && kept) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPSetFileParms through a read-only fork, %s: %d, "
+                        "FinderInfo kept %d\n",
+                vol->v_adouble == AD_VERSION2 ? "version 2" : "ea", rc, kept);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, name);
+    return ret;
+}
+
+/*!
+ * @brief FPSetFileParms of FinderInfo on a file whose fork the session holds
+ *        with its metadata on a read-only descriptor, as for a user who may
+ *        not write it, answers AFPERR_ACCESS and leaves the FinderInfo, on the
+ *        ea layout as on version 2
+ *
+ * @returns 0, 1 when a call answered otherwise or the FinderInfo changed, -1
+ *          when a fixture failed, or TEST_SKIP without the fault injector
+ */
+int utest_setfileparms_readonly_fork_refused(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_sfro";
+    const int saved_adouble = vol->v_adouble;
+    char adpath[MAXPATHLEN + 1];
+    int ea = TEST_SKIP;
+    int v2;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    if (saved_adouble == AD_VERSION_EA) {
+        ea = sf_readonly_refused(vol, name, OPENFORK_DATA, 0);
+    }
+
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+    v2 = sf_readonly_refused(vol, name, OPENFORK_RSCS, 1);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    fio_done(vol, 0, name);
+
+    if (ea == -1 || v2 == -1) {
+        return -1;
+    }
+
+    if (ea == 1 || v2 == 1) {
+        return 1;
+    }
+
+    return ea == TEST_SKIP && v2 == TEST_SKIP ? TEST_SKIP : 0;
+}
+
+/*!
+ * @brief FPCopyFile of a file whose data opens read-only, as for a user who
+ *        may read it but not write it, copies it
+ *
+ * @returns 0, 1 when the call answered otherwise or the copy lacks the data,
+ *          -1 when the fixture failed, or TEST_SKIP without the fault
+ *          injector or when it missed the source's open
+ */
+int utest_copyfile_readonly_source(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_cpro";
+    static char copy[] = "rq_cprocopy";
+    char path[MAXPATHLEN + 1];
+    char out[RQ_LEN];
+    struct stat st;
+    uint16_t w = 0;
+    int calls;
+    int fd;
+    int same = 0;
+    int rc;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    if (fio_dfork(vol, name, &w) != 0
+            || fio_write(w, 0, 0, rq_data, RQ_LEN) != AFP_OK
+            || closefork(&fio.obj, w) != AFP_OK) {
+        w = 0;
+        goto out;
+    }
+
+    w = 0;
+    /* the source's read-write open, the call's first, is refused */
+    fault_inject_reset();
+    fi.open_armed = 1;
+    fi.open_fail_after = 0;
+    fi.open_errno = EACCES;
+    fi.open_fail_flags = O_RDWR;
+    rc = copyfileobj(&fio.obj, vol->v_vid, DIRDID_ROOT, name, DIRDID_ROOT,
+                     copy);
+    calls = fi.open_calls;
+    fault_inject_reset();
+
+    /* positive control: the injector refused an open */
+    if (calls == 0) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, copy);
+
+    if ((fd = open(path, O_RDONLY)) >= 0) {
+        same = fstat(fd, &st) == 0 && st.st_size == RQ_LEN
+               && read(fd, out, RQ_LEN) == RQ_LEN
+               && memcmp(out, rq_data, RQ_LEN) == 0;
+        close(fd);
+    }
+
+    if (rc == AFP_OK && same) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPCopyFile of a read-only source: %d, copy holds "
+                        "the data %d\n", rc, same);
+        ret = 1;
+    }
+
+out:
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, copy);
+    fio_done(vol, w, name);
+    return ret;
+}
+
+/*!
+ * @brief Beside a resource fork the session holds on a read-only descriptor,
+ *        as for a user who may not write it, a read-only open of the fork
+ *        shares the descriptor and a read-write one is refused with
+ *        AFPERR_LOCK, the held fork keeping its length
+ *
+ * @returns 0, 1 when an open answered otherwise or the held fork lost its
+ *          length, -1 when the fixture failed, or TEST_SKIP without the fault
+ *          injector, on version 2, or when the injector missed the resource
+ *          fork's open
+ */
+int utest_openfork_rsrc_beside_readonly(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_rsro";
+    const struct ofork *of;
+    uint16_t r = 0;
+    uint16_t more[2] = { 0, 0 };
+    int rc[2] = { -1, -1 };
+    off_t rlen = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    if (fio_rfork(vol, name, &r) != 0 || closefork(&fio.obj, r) != AFP_OK) {
+        r = 0;
+        goto out;
+    }
+
+    r = 0;
+    /* the data file's read-write open goes through, the resource fork's is
+     * refused */
+    fault_inject_reset();
+    fi.open_armed = 1;
+    fi.open_fail_after = 1;
+    fi.open_errno = EACCES;
+    fi.open_fail_flags = O_RDWR;
+    rc[0] = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                     OPENACC_RD, &r);
+    fault_inject_reset();
+
+    if (rc[0] != AFP_OK || (of = of_find(r)) == NULL) {
+        goto out;
+    }
+
+    /* positive control: the fork holds the resource fork read-only */
+    if (ad_reso_fileno(of->of_ad) < 0
+            || (of->of_ad->ad_rfp->adf_flags & O_ACCMODE) != O_RDONLY) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    rc[0] = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                     OPENACC_RD, &more[0]);
+    rc[1] = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                     OPENACC_RD | OPENACC_WR, &more[1]);
+    rlen = of->of_ad->ad_rlen;
+
+    if (rc[0] == AFP_OK && rc[1] == AFPERR_LOCK && rlen == RQ_LEN) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "resource fork opens beside a read-only one: read %d, "
+                        "write %d, held fork's length %jd\n", rc[0], rc[1],
+                (intmax_t)rlen);
+        ret = 1;
+    }
+
+out:
+
+    for (int i = 0; i < 2; i++) {
+        if (more[i]) {
+            closefork(&fio.obj, more[i]);
+        }
+    }
+
+    fio_done(vol, r, name);
+    return ret;
+}
+
+/*!
+ * @brief On version 2 a virtual Icon fork's first write onto an Icon file
+ *        that is real and write-inhibited, whose resource fork the session
+ *        holds with the metadata on a read-only descriptor, replies
+ *        AFPERR_ACCESS and leaves the fork virtual
+ *
+ * @returns 0, 1 when the write landed, -1 when the setup failed, or
+ *          TEST_SKIP without the fault injector or when it missed the
+ *          metadata file's open
+ */
+int utest_icon_write_inhibited_readonly_lender(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "Icon\r";
+    /* a resource fork header with no resources */
+    static unsigned char icon[16];
+    unsigned char *saved = vol->v_icon_rfork;
+    size_t saved_len = vol->v_icon_rfork_len;
+    const int saved_adouble = vol->v_adouble;
+    char path[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    const struct ofork *of;
+    uint16_t w = 0;
+    uint16_t r = 0;
+    int virt = -1;
+    int rc = -1;
+    int fd;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+    vol->v_icon_rfork = icon;
+    vol->v_icon_rfork_len = sizeof(icon);
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(adpath, sizeof(adpath), "%s/%s", vol->v_path,
+             vol->ad_path(name, 0));
+
+    /* the virtual fork opens first, then the file turns real and
+     * write-inhibited */
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                 OPENACC_RD | OPENACC_WR, &w) != AFP_OK
+            || (fd = open(path, O_CREAT | O_WRONLY, 0600)) < 0) {
+        goto out;
+    }
+
+    close(fd);
+
+    if (fio_set_attr(vol, path, ATTRBIT_NOWRITE, 1) != 0) {
+        goto out;
+    }
+
+    /* the resource fork's open of the data file goes through, of the
+     * metadata file read-write is refused */
+    fault_inject_reset();
+    fi.open_armed = 1;
+    fi.open_fail_after = 1;
+    fi.open_errno = EACCES;
+    fi.open_fail_flags = O_RDWR;
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                  OPENACC_RD, &r);
+    fault_inject_reset();
+
+    if (rc != AFP_OK || (of = of_find(r)) == NULL) {
+        goto out;
+    }
+
+    /* positive control: the lender holds its metadata read-only */
+    if ((ad_get_MD_flags(of->of_ad) & O_ACCMODE) != O_RDONLY) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    rc = fio_write(w, 0, 0, rq_data, 1);
+    virt = (of = of_find(w)) != NULL && (of->of_flags & AFPFORK_VIRTUAL);
+
+    if (rc == AFPERR_ACCESS && virt == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "write-inhibited icon beside a read-only lender: "
+                        "write %d, virtual %d\n", rc, virt);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    if (w) {
+        closefork(&fio.obj, w);
+    }
+
+    vol->v_icon_rfork = saved;
+    vol->v_icon_rfork_len = saved_len;
+    unlink(adpath);
+    unlink(path);
+    fio_done(vol, 0, name);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    return ret;
+}
+
+#ifdef __APPLE__
+/*!
+ * @brief On macOS, FPSetFileParms of FinderInfo on name, a file made outside
+ *        afpd with native FinderInfo native, reads back newinfo
+ *
+ * @returns 0 when the call answered AFP_OK and newinfo reads back, 1 when it
+ *          did not, -1 when the fixture failed
+ */
+static int sf_native_finderinfo(AFPObj *obj, struct vol *vol,
+                                const char *name, const char *native,
+                                const char *newinfo)
+{
+    char path[MAXPATHLEN + 1];
+    int taken;
+    int fd;
+    int rc;
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    /* the Finder's file: native FinderInfo, no netatalk metadata */
+    if ((fd = open(path, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        return -1;
+    }
+
+    close(fd);
+
+    if (sys_setxattr(path, EA_FINFO, native, ADEDLEN_FINDERI, 0) != 0) {
+        unlink(path);
+        return -1;
+    }
+
+    rc = setfileparms(obj, vol->v_vid, DIRDID_ROOT, name, 1 << FILPBIT_FINFO,
+                      newinfo, ADEDLEN_FINDERI);
+    taken = finderinfo_is(vol, path, newinfo, ADEDLEN_FINDERI) == 1;
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+
+    if (rc == AFP_OK && taken) {
+        return 0;
+    }
+
+    fprintf(stderr, "FPSetFileParms over native FinderInfo: %d, new "
+                    "FinderInfo read back %d\n", rc, taken);
+    return 1;
+}
+#endif
+
+/*!
+ * @brief On macOS, FPSetFileParms of FinderInfo on a file made outside afpd
+ *        with a native FinderInfo EA reads back the new FinderInfo, an empty
+ *        one too
+ *
+ * @returns 0, 1 when a call answered otherwise or the old FinderInfo came
+ *          back, -1 when a fixture failed, or TEST_SKIP elsewhere and on
+ *          version 2
+ */
+int utest_setfileparms_native_finderinfo_kept(AFPObj *obj, struct vol *vol)
+{
+#ifdef __APPLE__
+    static const char native[ADEDLEN_FINDERI] = "TEXTttxt";
+    static const char newinfo[ADEDLEN_FINDERI] = "APPLaaaa";
+    static const char empty[ADEDLEN_FINDERI] = { 0 };
+    int ret[2];
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    ret[0] = sf_native_finderinfo(obj, vol, "rq_sfnative", native, newinfo);
+    ret[1] = sf_native_finderinfo(obj, vol, "rq_sfnative0", native, empty);
+
+    if (ret[0] == -1 || ret[1] == -1) {
+        return -1;
+    }
+
+    return ret[0] || ret[1];
+#else
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#endif
+}
+
+#ifndef HAVE_EAFD
+/*!
+ * @brief The ._ file of name, a path in the volume, as macOS writes it: a
+ *        64-byte FinderInfo entry, as macOS packs xattrs, that starts with
+ *        finfo, and a 100-byte resource fork of rq_data behind it
+ *
+ * @returns 0, or -1 when the file could not be written
+ */
+static int osx_write_sidecar(const struct vol *vol, const char *name,
+                             const char *finfo)
+{
+    uint8_t sidecar[ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI + 32 + 100];
+    const char *slash = strrchr(name, '/');
+    const int dirlen = slash ? (int)(slash - name + 1) : 0;
+    char rpath[MAXPATHLEN + 1];
+    size_t len;
+    len = osx_sidecar(sidecar, sizeof(sidecar),
+                      ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI + 32, 100,
+                      ADEDLEN_FINDERI + 32);
+    memcpy(sidecar + ADEDOFF_FINDERI_OSX, finfo, strlen(finfo));
+    memcpy(sidecar + len - 100, rq_data, 100);
+    snprintf(rpath, sizeof(rpath), "%s/%.*s._%s", vol->v_path, dirlen, name,
+             name + dirlen);
+    return write_disk_file(rpath, sidecar, len);
+}
+#endif /* !HAVE_EAFD */
+
+/*!
+ * @brief The first resource fork open of a held file whose ._ file macOS
+ *        wrote converts the file, gives a file without metadata the
+ *        sidecar's FinderInfo and leaves another its own, and keeps the
+ *        session's deny-write lock on the data fork
+ *
+ * @returns 0, 1 when the lock was missing before the open or went, the open or
+ *          the converted fork failed or the FinderInfo landed wrong, -1 when
+ *          the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_osx_conversion_keeps_locks(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    /* a file made outside afpd, without metadata, then one afpd made */
+    static char *name[] = { "rq_osxbare", "rq_osx" };
+    static const char sidecar_fi[] = "DENYdeny";
+    char finfo[ADEDLEN_FINDERI] = "OWNafpd!";
+    char out[100];
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    struct stat st;
+    uint16_t r = 0;
+    uint16_t rr = 0;
+    int ret = 0;
+
+    /* without EAs the volume keeps AppleDouble v2, with no ._ file */
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    for (int i = 0; i < 2 && ret == 0; i++) {
+        const char *expect = i == 0 ? sidecar_fi : finfo;
+        char want[ADEDLEN_FINDERI] = { 0 };
+        int held[2] = { -1, -1 };
+        int rc = -1;
+        int converted = 0;
+        int kept;
+        snprintf(path, sizeof(path), "%s/%s", vol->v_path, name[i]);
+        snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name[i]);
+        ret = -1;
+
+        if (i == 0) {
+            if (create_disk_file(path) != 0) {
+                break;
+            }
+        } else if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT,
+                              name[i]) != AFP_OK
+                   || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, name[i],
+                                   1 << FILPBIT_FINFO, finfo, sizeof(finfo))
+                   != AFP_OK) {
+            break;
+        }
+
+        if (osx_write_sidecar(vol, name[i], sidecar_fi) != 0
+                || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name[i],
+                            OPENFORK_DATA, OPENACC_RD | OPENACC_DWR, &r)
+                != AFP_OK) {
+            break;
+        }
+
+        held[0] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+        rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name[i],
+                      OPENFORK_RSCS, OPENACC_RD | OPENACC_WR, &rr);
+        held[1] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+
+        if (rc == AFP_OK) {
+            /* the fork reads from its canonical offset, where the
+             * conversion moved it */
+            converted = fio_read(rr, 0, 100, 100, out) == AFP_OK
+                        && memcmp(out, rq_data, 100) == 0
+                        && stat(rpath, &st) == 0
+                        && st.st_size == ADEDOFF_RFORK_OSX + 100;
+            closefork(&fio.obj, rr);
+        }
+
+        memcpy(want, expect, strlen(expect));
+        kept = finderinfo_is(vol, path, want, sizeof(want));
+        closefork(&fio.obj, r);
+        r = 0;
+
+        if (held[0] < 0) {
+            break;
+        }
+
+        /* only the file without metadata takes the sidecar's FinderInfo */
+        if (held[0] == 0 && held[1] == 0 && converted && kept == 1) {
+            ret = 0;
+        } else {
+            fprintf(stderr,
+                    "sidecar conversion of %s: resource fork open %d, "
+                    "deny-write band held %d before and %d after, converted "
+                    "%d, FinderInfo %s %d\n", name[i], rc, held[0] == 0,
+                    held[1] == 0, converted, i == 0 ? "copied" : "kept", kept);
+            ret = 1;
+        }
+    }
+
+    for (int i = 0; i < 2; i++) {
+        snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name[i]);
+        unlink(rpath);
+    }
+
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, name[0]);
+    fio_done(vol, r, name[1]);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief A resource fork open by a path with folders, as the Icon file's
+ *        materialization opens one, of a file without metadata whose ._ file
+ *        macOS wrote gives the file the sidecar's FinderInfo
+ *
+ * @returns 0, 1 when the open failed or the FinderInfo is missing, -1 when
+ *          the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_osx_conversion_by_path(AFPObj *obj _U_, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_osxpath";
+    static const char sidecar_fi[] = "PATHpath";
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    struct adouble ad;
+    int rc = -1;
+    int taken;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (create_disk_file(path) != 0 || osx_write_sidecar(vol, name,
+                                                         sidecar_fi) != 0) {
+        unlink(path);
+        return -1;
+    }
+
+    ad_init(&ad, vol);
+
+    if ((rc = ad_open(&ad, path, ADFLAGS_RF | ADFLAGS_RDWR)) == 0) {
+        ad_close(&ad, ADFLAGS_RF);
+    }
+
+    taken = finderinfo_is(vol, path, sidecar_fi, strlen(sidecar_fi));
+    unlink(rpath);
+    unlink(path);
+
+    if (rc == 0 && taken == 1) {
+        return 0;
+    }
+
+    fprintf(stderr, "sidecar conversion by a full path: open %d, FinderInfo "
+                    "copied %d\n", rc, taken);
+    return 1;
+#endif
+}
+
+/*!
+ * @brief A resource fork open of a file whose ._ file macOS wrote, while the
+ *        session holds the data fork on a read-only descriptor, as for a user
+ *        who may not write the file, answers AFPERR_ACCESS and leaves the
+ *        sidecar as it was
+ *
+ * @returns 0, 1 when the open answered otherwise or the sidecar changed, -1
+ *          when the fixture failed, or TEST_SKIP without the fault injector or
+ *          where no ._ file holds the resource fork
+ */
+int utest_osx_conversion_readonly_kept(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_osxro";
+    static const char sidecar_fi[] = "READonly";
+    uint8_t before[256];
+    uint8_t after[256];
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    uint16_t r = 0;
+    uint16_t rr = 0;
+    ssize_t nb = -1;
+    ssize_t na = -2;
+    int kept;
+    int rc;
+    int fd;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (create_disk_file(path) != 0
+            || osx_write_sidecar(vol, name, sidecar_fi) != 0
+            || (fd = open(rpath, O_RDONLY)) < 0) {
+        goto out;
+    }
+
+    nb = read(fd, before, sizeof(before));
+    close(fd);
+
+    if ((rc = fio_open_readonly(vol, name, OPENFORK_DATA, &r)) != AFP_OK) {
+        ret = rc == TEST_SKIP ? TEST_SKIP : -1;
+        goto out;
+    }
+
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                  OPENACC_RD, &rr);
+
+    if (rc == AFP_OK) {
+        closefork(&fio.obj, rr);
+    }
+
+    if ((fd = open(rpath, O_RDONLY)) >= 0) {
+        na = read(fd, after, sizeof(after));
+        close(fd);
+    }
+
+    kept = nb > 0 && na == nb && memcmp(before, after, (size_t)nb) == 0;
+
+    if (rc == AFPERR_ACCESS && kept) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "sidecar conversion through a read-only fork: open "
+                        "%d, sidecar kept %d\n", rc, kept);
+        ret = 1;
+    }
+
+out:
+    unlink(rpath);
+    fio_done(vol, r, name);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief The first resource fork open of a file that has metadata, whose data
+ *        fork the session holds on a read-only descriptor, converts its ._
+ *        file that macOS wrote, as no metadata needs writing
+ *
+ * @returns 0, 1 when the open failed, -1 when the fixture failed, or
+ *          TEST_SKIP without the fault injector or where no ._ file holds the
+ *          resource fork
+ */
+int utest_osx_conversion_readonly_with_metadata(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_osxrom";
+    char rpath[MAXPATHLEN + 1];
+    uint16_t r = 0;
+    uint16_t rr = 0;
+    int rc;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || osx_write_sidecar(vol, name, "META") != 0) {
+        goto out;
+    }
+
+    if ((rc = fio_open_readonly(vol, name, OPENFORK_DATA, &r)) != AFP_OK) {
+        ret = rc == TEST_SKIP ? TEST_SKIP : -1;
+        goto out;
+    }
+
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                  OPENACC_RD, &rr);
+
+    if (rc == AFP_OK) {
+        closefork(&fio.obj, rr);
+        ret = 0;
+    } else {
+        fprintf(stderr, "sidecar conversion of a file with metadata through "
+                        "a read-only fork: open %d\n", rc);
+        ret = 1;
+    }
+
+out:
+    unlink(rpath);
+    fio_done(vol, r, name);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief The first resource fork open of a symlink whose ._ file macOS wrote,
+ *        on a volume that does not follow symlinks, converts the ._ file
+ *
+ * @returns 0, 1 when the open failed, -1 when the fixture failed, or
+ *          TEST_SKIP on a volume that follows symlinks or where no ._ file
+ *          holds the resource fork
+ */
+int utest_osx_conversion_of_symlink(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char target[] = "rq_osxlnkt";
+    static char alias[] = "rq_osxlnk";
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    cnid_t id;
+    uint16_t rr = 0;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA || (vol->v_flags & AFPVOL_FOLLOWSYM)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, alias);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, alias);
+
+    if (symlink(target, path) != 0
+            || osx_write_sidecar(vol, alias, "LINK") != 0) {
+        goto out;
+    }
+
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, alias, OPENFORK_RSCS,
+                  OPENACC_RD, &rr);
+
+    if (rc == AFP_OK) {
+        closefork(&fio.obj, rr);
+        ret = 0;
+    } else {
+        fprintf(stderr, "sidecar conversion of a symlink: open %d\n", rc);
+        ret = 1;
+    }
+
+out:
+
+    /* FPDelete refuses a symlink where it cannot read the link's lock
+     * state, so the link goes by unlink(2) */
+    if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, alias,
+                       strlen(alias))) != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(rpath);
+    unlink(path);
+    fio_done(vol, 0, target);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief A resource fork open of a file without metadata whose ._ file macOS
+ *        wrote, where the write of the sidecar's FinderInfo into the new
+ *        metadata EA fails, leaves the file without the EA, so the next open
+ *        converts the ._ file with its FinderInfo
+ *
+ * @returns 0, 1 when the next open failed or the FinderInfo did not land, -1
+ *          when the fixture failed, or TEST_SKIP without the fault injector,
+ *          where no ._ file holds the resource fork, or when the injector
+ *          missed the writes
+ */
+int utest_osx_conversion_failed_write_retried(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_osxfw";
+    static const char sidecar_fi[] = "FAILfail";
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    uint16_t rr = 0;
+    int rc[2] = { -1, -1 };
+    int calls;
+    int taken = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (create_disk_file(path) != 0
+            || osx_write_sidecar(vol, name, sidecar_fi) != 0) {
+        goto out;
+    }
+
+    /* the create's own write of the EA goes, the FinderInfo's after it fails */
+    fault_inject_reset();
+    fi.fsetxattr.armed = 1;
+    fi.fsetxattr.fail_after = 1;
+    fi.fsetxattr.errnum = EIO;
+    rc[0] = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                     OPENACC_RD, &rr);
+    calls = fi.fsetxattr.calls;
+    fault_inject_reset();
+
+    if (rc[0] == AFP_OK) {
+        closefork(&fio.obj, rr);
+    }
+
+    rr = 0;
+    rc[1] = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                     OPENACC_RD, &rr);
+
+    if (rc[1] == AFP_OK) {
+        closefork(&fio.obj, rr);
+    }
+
+    taken = finderinfo_is(vol, path, sidecar_fi, strlen(sidecar_fi));
+
+    /* positive control: the injector saw both writes of the first open,
+     * whose failure refuses that open */
+    if (calls < 2) {
+        ret = TEST_SKIP;
+    } else if (rc[0] != AFP_OK && rc[1] == AFP_OK && taken == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "sidecar conversion after a failed metadata write: "
+                        "open %d then %d, FinderInfo copied %d\n", rc[0],
+                rc[1], taken);
+        ret = 1;
+    }
+
+out:
+    unlink(rpath);
+    fio_done(vol, 0, name);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief The first resource fork open of a file whose metadata EA will not
+ *        parse and whose ._ file macOS wrote makes the EA afresh with the
+ *        sidecar's FinderInfo
+ *
+ * @returns 0, 1 when the open failed or the FinderInfo did not land, -1 when
+ *          the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_osx_conversion_repairs_metadata(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_osxbad";
+    static const char sidecar_fi[] = "BADEbade";
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    uint16_t rr = 0;
+    int rc = -1;
+    int taken = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    /* one byte of metadata, which no header read parses */
+    if (create_disk_file(path) != 0
+            || sys_lsetxattr(path, AD_EA_META, "x", 1, 0) != 0
+            || osx_write_sidecar(vol, name, sidecar_fi) != 0) {
+        goto out;
+    }
+
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                  OPENACC_RD, &rr);
+
+    if (rc == AFP_OK) {
+        closefork(&fio.obj, rr);
+    }
+
+    taken = finderinfo_is(vol, path, sidecar_fi, strlen(sidecar_fi));
+
+    if (rc == AFP_OK && taken == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "sidecar conversion over metadata that will not "
+                        "parse: open %d, FinderInfo copied %d\n", rc, taken);
+        ret = 1;
+    }
+
+out:
+    unlink(rpath);
+    fio_done(vol, 0, name);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief On a volume set read only, a resource fork open of a file with
+ *        metadata whose ._ file macOS wrote answers AFPERR_VLOCK and leaves
+ *        the sidecar as macOS wrote it
+ *
+ * @returns 0, 1 when the open answered otherwise or the sidecar changed, -1
+ *          when the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_osx_conversion_readonly_volume(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_osxrovol";
+    static const char sidecar_fi[] = "ROVOLume";
+    const int saved_flags = vol->v_flags;
+    const int saved_options = vol->v_ad_options;
+    uint8_t before[256];
+    uint8_t after[256];
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    uint16_t rr = 0;
+    ssize_t nb = -1;
+    ssize_t na = -2;
+    int rc;
+    int fd;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    /* the metadata EA is there already, so the conversion makes none */
+    if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, name) != AFP_OK
+            || osx_write_sidecar(vol, name, sidecar_fi) != 0
+            || (fd = open(rpath, O_RDONLY)) < 0) {
+        goto out;
+    }
+
+    nb = read(fd, before, sizeof(before));
+    close(fd);
+    vol->v_flags |= AFPVOL_RO;
+    vol->v_ad_options |= ADVOL_RO;
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                  OPENACC_RD, &rr);
+
+    if (rc == AFP_OK) {
+        closefork(&fio.obj, rr);
+    }
+
+    vol->v_flags = saved_flags;
+    vol->v_ad_options = saved_options;
+
+    if ((fd = open(rpath, O_RDONLY)) >= 0) {
+        na = read(fd, after, sizeof(after));
+        close(fd);
+    }
+
+    if (rc == AFPERR_VLOCK && nb > 0 && na == nb
+            && memcmp(before, after, (size_t)nb) == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "sidecar on a read-only volume: open %d, %zd bytes "
+                        "then %zd, rewritten\n", rc, nb, na);
+        ret = 1;
+    }
+
+out:
+    unlink(rpath);
+    fio_done(vol, 0, name);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief The CNID that the metadata of path carries for the file under path
+ *
+ * @returns the CNID, or CNID_INVALID when the metadata cannot be read or holds
+ *          none for that file
+ */
+static cnid_t header_id(const struct vol *vol, const char *path)
+{
+    struct adouble ad;
+    struct stat st;
+    cnid_t id = CNID_INVALID;
+    ad_init(&ad, vol);
+
+    if (stat(path, &st) == 0 && ad_metadata(path, 0, &ad) == 0) {
+        id = ad_getid(&ad, st.st_dev, st.st_ino, DIRDID_ROOT, vol->v_stamp);
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    return id;
+}
+
+/*!
+ * @brief A read-only resource fork open that converts a macOS ._ file of a
+ *        file without metadata leaves the metadata the conversion makes the
+ *        file's CNID
+ *
+ * @returns 0, 1 when the open failed or the header lacks the CNID, -1 when
+ *          the fixture failed, or TEST_SKIP where no ._ file holds the
+ *          resource fork
+ */
+int utest_osx_conversion_header_has_cnid(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_osxcnid";
+    static const char sidecar_fi[] = "CNIDcnid";
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    uint16_t rr = 0;
+    cnid_t named = CNID_INVALID;
+    cnid_t id = CNID_INVALID;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA || vol->v_cdb == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    if (create_disk_file(path) != 0
+            || osx_write_sidecar(vol, name, sidecar_fi) != 0) {
+        goto out;
+    }
+
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                  OPENACC_RD, &rr);
+
+    if (rc == AFP_OK) {
+        closefork(&fio.obj, rr);
+    }
+
+    named = header_id(vol, path);
+    id = cnid_get(vol->v_cdb, DIRDID_ROOT, name, strlen(name));
+
+    if (rc == AFP_OK && id != CNID_INVALID && named == id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "converted sidecar's metadata: open %d, header CNID "
+                        "%u, CNID %u\n", rc, ntohl(named), ntohl(id));
+        ret = 1;
+    }
+
+out:
+    unlink(rpath);
+    fio_done(vol, 0, name);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief A data fork open on a volume set read only leaves a header without
+ *        the file's CNID as it is, such as the metadata that a macOS ._
+ *        file's conversion outside afpd makes
+ *
+ * @returns 0, 1 when the open failed or the header took a CNID, -1 when the
+ *          fixture failed, or TEST_SKIP where no ._ file holds the resource
+ *          fork
+ */
+int utest_readonly_volume_open_adds_no_cnid(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char name[] = "rq_rocnid";
+    const int saved_flags = vol->v_flags;
+    char path[MAXPATHLEN + 1];
+    char rpath[MAXPATHLEN + 1];
+    struct adouble ad;
+    uint16_t r = 0;
+    cnid_t named = CNID_INVALID;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA || vol->v_cdb == NULL) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+    snprintf(rpath, sizeof(rpath), "%s/._%s", vol->v_path, name);
+
+    /* the conversion by a path makes the metadata without a CNID */
+    if (create_disk_file(path) != 0
+            || osx_write_sidecar(vol, name, "ROVLrovl") != 0) {
+        goto out;
+    }
+
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_RF | ADFLAGS_RDWR) != 0) {
+        goto out;
+    }
+
+    ad_close(&ad, ADFLAGS_RF);
+    vol->v_flags |= AFPVOL_RO;
+    rc = openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                  OPENACC_RD, &r);
+    vol->v_flags = saved_flags;
+    named = header_id(vol, path);
+
+    if (rc == AFP_OK && named == CNID_INVALID) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "data fork open on a read-only volume: %d, header "
+                        "CNID %u\n", rc, ntohl(named));
+        ret = 1;
+    }
+
+out:
+    vol->v_flags = saved_flags;
+    unlink(rpath);
+    fio_done(vol, r, name);
+    return ret;
+#endif
+}
+
+
+/*!
+ * @brief FPExchangeFiles of a held file whose fork was opened before the file
+ *        had metadata, with a file that has none, the held file the source and
+ *        then, its resource fork open too, the destination with another such
+ *        file, keeps the session's deny-write lock, the fork's metadata
+ *        references and its resource fork length, and each name its own
+ *        FinderInfo and CNID
+ *
+ * Until the last lock probe the held file's header is read again through its
+ * fork's adouble, whose open reuses the data descriptor on the ea layout: on
+ * Solaris and illumos a read by name opens and closes the file, which drops
+ * the session's locks on it.
+ *
+ * @returns 0, 1 when a call answered otherwise, a name's FinderInfo or CNID is
+ *          wrong, the lock went, or the fork held a metadata reference before
+ *          the first call or its references or length changed, or -1 when the
+ *          fixture failed
+ */
+int utest_exchange_held_file_keeps_locks(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xheld";
+    static char b[] = "rq_xbare";
+    static char c[] = "rq_xbare2";
+    char finfo[ADEDLEN_FINDERI] = "DENYdeny";
+    char bfinfo[ADEDLEN_FINDERI] = "BAREbare";
+    char apath[MAXPATHLEN + 1];
+    char bpath[MAXPATHLEN + 1];
+    char cpath[MAXPATHLEN + 1];
+    const struct ofork *of;
+    const char *entry;
+    struct stat st;
+    cnid_t aid = CNID_INVALID;
+    cnid_t bid = CNID_INVALID;
+    cnid_t cid = CNID_INVALID;
+    cnid_t named[2] = { CNID_INVALID, CNID_INVALID };
+    cnid_t named2[2] = { CNID_INVALID, CNID_INVALID };
+    uint16_t r = 0;
+    uint16_t rr = 0;
+    uint16_t rr2 = 0;
+    int rc[2] = { -1, -1 };
+    int held[2] = { -1, -1 };
+    int refs[4] = { -1, -1, -1, -1 };
+    off_t rlen[2] = { -1, -1 };
+    int info[4] = { -1, -1, -1, -1 };
+    int wrote;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+    snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, b);
+    snprintf(cpath, sizeof(cpath), "%s/%s", vol->v_path, c);
+
+    /* held before it has metadata, a's fork holds no metadata reference */
+    if (create_disk_file(apath) != 0
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, a, OPENFORK_DATA,
+                        OPENACC_RD | OPENACC_DWR, &r) != AFP_OK
+            || (of = of_find(r)) == NULL
+            || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, a,
+                            1 << FILPBIT_FINFO, finfo, sizeof(finfo)) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, a, OPENFORK_RSCS,
+                        OPENACC_RD | OPENACC_WR, &rr) != AFP_OK) {
+        goto out;
+    }
+
+    wrote = fio_write(rr, 0, 0, rq_data, 100) == AFP_OK;
+
+    /* b and c have CNIDs and no metadata */
+    if (closefork(&fio.obj, rr) != AFP_OK || !wrote
+            || (aid = cnid_get(vol->v_cdb, DIRDID_ROOT, a, strlen(a)))
+            == CNID_INVALID
+            || create_disk_file(bpath) != 0 || create_disk_file(cpath) != 0
+            || getfiledirparms(&fio.obj, vol->v_vid, DIRDID_ROOT, b) != AFP_OK
+            || getfiledirparms(&fio.obj, vol->v_vid, DIRDID_ROOT, c) != AFP_OK
+            || (bid = cnid_get(vol->v_cdb, DIRDID_ROOT, b, strlen(b)))
+            == CNID_INVALID
+            || (cid = cnid_get(vol->v_cdb, DIRDID_ROOT, c, strlen(c)))
+            == CNID_INVALID) {
+        goto out;
+    }
+
+    if (peer_try_lock(apath, F_WRLCK, AD_FILELOCK_DENY_WR, 1) != 0) {
+        goto out;
+    }
+
+    refs[0] = of->of_ad->ad_meta_refcount;
+    rc[0] = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+    refs[1] = of->of_ad->ad_meta_refcount;
+    /* the exchange gives the held file b's name */
+    held[0] = peer_try_lock(bpath, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+    rlen[0] = of->of_ad->ad_rlen;
+
+    if (stat(bpath, &st) == 0
+            && ad_open(of->of_ad, bpath, ADFLAGS_HF | ADFLAGS_RDONLY) == 0) {
+        named[1] = ad_getid(of->of_ad, st.st_dev, st.st_ino, DIRDID_ROOT,
+                            vol->v_stamp);
+
+        if ((entry = ad_entry(of->of_ad, ADEID_FINDERI)) != NULL) {
+            info[0] = memcmp(entry, finfo, sizeof(finfo)) == 0;
+        }
+
+        ad_close(of->of_ad, ADFLAGS_HF);
+    }
+
+    /* the second exchange runs on the first's result, with the held file's
+     * metadata open through its resource fork */
+    if (rc[0] == AFP_OK && held[0] == 0) {
+        if (setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, b,
+                         1 << FILPBIT_FINFO, bfinfo, sizeof(bfinfo)) != AFP_OK
+                || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, b,
+                            OPENFORK_RSCS, OPENACC_RD, &rr2) != AFP_OK
+                || peer_try_lock(bpath, F_WRLCK, AD_FILELOCK_DENY_WR, 1) != 0) {
+            goto out;
+        }
+
+        refs[2] = of->of_ad->ad_meta_refcount;
+        rc[1] = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT,
+                              c, b);
+        refs[3] = of->of_ad->ad_meta_refcount;
+        held[1] = peer_try_lock(cpath, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+        rlen[1] = of->of_ad->ad_rlen;
+        closefork(&fio.obj, rr2);
+        rr2 = 0;
+    }
+
+    named[0] = header_id(vol, apath);
+    named2[0] = header_id(vol, bpath);
+    named2[1] = header_id(vol, cpath);
+    info[1] = finderinfo_is(vol, apath, finfo, sizeof(finfo));
+    info[2] = finderinfo_is(vol, bpath, bfinfo, sizeof(bfinfo));
+    info[3] = finderinfo_is(vol, cpath, bfinfo, sizeof(bfinfo));
+
+    if (rc[0] == AFP_OK && rc[1] == AFP_OK && held[0] == 0 && held[1] == 0
+            && refs[0] == 0 && refs[1] == 0 && refs[3] == refs[2]
+            && rlen[0] == 100 && rlen[1] == 100 && named[0] == aid
+            && named[1] == bid && named2[0] == bid && named2[1] == cid
+            && info[0] == 0 && info[1] == 1 && info[2] == 1 && info[3] == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr,
+                "exchange: %d then %d, deny-write band held %d and %d, "
+                "metadata references %d then %d and %d then %d, resource "
+                "fork length %jd and %jd, CNIDs under a's and b's names %u "
+                "and %u for %u and %u, then under b's and c's %u and %u for "
+                "%u and %u, FinderInfo states %d, %d, %d and %d\n", rc[0],
+                rc[1], held[0] == 0, held[1] == 0, refs[0], refs[1], refs[2],
+                refs[3], (intmax_t)rlen[0], (intmax_t)rlen[1],
+                ntohl(named[0]), ntohl(named[1]), ntohl(aid), ntohl(bid),
+                ntohl(named2[0]), ntohl(named2[1]), ntohl(bid), ntohl(cid),
+                info[0], info[1], info[2], info[3]);
+        ret = 1;
+    }
+
+out:
+
+    if (rr2) {
+        closefork(&fio.obj, rr2);
+    }
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, b);
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, c);
+    fio_done(vol, 0, a);
+    return ret;
+}
+
+/*!
+ * @brief FPExchangeFiles of a file with FinderInfo and a held file whose fork
+ *        was opened before it had metadata, the held file the destination,
+ *        keeps the session's deny-write lock and the fork's metadata
+ *        references, and each name its own FinderInfo
+ *
+ * @returns 0, 1 when the call answered otherwise, a name's FinderInfo is wrong,
+ *          the lock went, or the fork held a metadata reference before the
+ *          call or its references changed, or -1 when the fixture failed
+ */
+int utest_exchange_bare_held_destination(AFPObj *obj, struct vol *vol)
+{
+    static char d[] = "rq_xdest";
+    static char e[] = "rq_xmeta";
+    char finfo[ADEDLEN_FINDERI] = "METAmeta";
+    char dpath[MAXPATHLEN + 1];
+    char epath[MAXPATHLEN + 1];
+    const struct ofork *of;
+    uint16_t r = 0;
+    int refs[2] = { -1, -1 };
+    int info[2] = { -1, -1 };
+    int held = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(dpath, sizeof(dpath), "%s/%s", vol->v_path, d);
+    snprintf(epath, sizeof(epath), "%s/%s", vol->v_path, e);
+
+    if (create_disk_file(dpath) != 0
+            || createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, e) != AFP_OK
+            || setfileparms(&fio.obj, vol->v_vid, DIRDID_ROOT, e,
+                            1 << FILPBIT_FINFO, finfo, sizeof(finfo)) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, d, OPENFORK_DATA,
+                        OPENACC_RD | OPENACC_DWR, &r) != AFP_OK
+            || (of = of_find(r)) == NULL
+            || peer_try_lock(dpath, F_WRLCK, AD_FILELOCK_DENY_WR, 1) != 0) {
+        goto out;
+    }
+
+    refs[0] = of->of_ad->ad_meta_refcount;
+    rc = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, e, d);
+    refs[1] = of->of_ad->ad_meta_refcount;
+    /* the exchange gives the held file e's name */
+    held = peer_try_lock(epath, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+    info[0] = finderinfo_is(vol, epath, finfo, sizeof(finfo));
+    info[1] = finderinfo_is(vol, dpath, finfo, sizeof(finfo));
+
+    if (held < 0) {
+        goto out;
+    }
+
+    if (rc == AFP_OK && held == 0 && refs[0] == 0 && refs[1] == 0
+            && info[0] == 1 && info[1] == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr,
+                "exchange with a held destination without metadata: %d, "
+                "deny-write band held %d, metadata references %d then %d, "
+                "FinderInfo states %d and %d\n", rc, held == 0, refs[0],
+                refs[1], info[0], info[1]);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, e);
+    fio_done(vol, 0, d);
+    return ret;
+}
+
+/*!
+ * @brief FPExchangeFiles of a held symlink with a folder is refused, and the
+ *        fork keeps its emulated descriptor and its metadata references, on
+ *        the volume's layout and on version 2
+ *
+ * @returns 0, 1 when a call answered otherwise or the fork's descriptor or
+ *          references changed, -1 when the fixture failed, or TEST_SKIP on a
+ *          volume that follows symlinks
+ */
+int utest_exchange_held_symlink_kept(AFPObj *obj, struct vol *vol)
+{
+    static char target[] = "rq_xlnkt";
+    static char alias[] = "rq_xlnk";
+    static char folder[] = "rq_xlnkd";
+    const int saved_adouble = vol->v_adouble;
+    char path[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    const struct ofork *of;
+    cnid_t id;
+    uint16_t r = 0;
+    int refs[2][2] = { { -1, -1 }, { -1, -1 } };
+    int fd[2] = { -1, -1 };
+    int rc[2] = { -1, -1 };
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, alias);
+
+    if (symlink(target, path) != 0
+            || createdir(&fio.obj, vol->v_vid, DIRDID_ROOT, folder) != AFP_OK) {
+        goto out;
+    }
+
+    /* the volume's layout, then version 2, whose metadata open of a held
+     * link would take a reference that the close does not give back */
+    for (int i = 0; i < 2; i++) {
+        if (i == 1) {
+            vol->v_adouble = AD_VERSION2;
+            initvol_vfs(vol);
+        }
+
+        if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, alias, OPENFORK_DATA,
+                     OPENACC_RD, &r) != AFP_OK
+                || (of = of_find(r)) == NULL) {
+            goto out;
+        }
+
+        /* the refusal comes after the link's own lookup */
+        refs[i][0] = of->of_ad->ad_meta_refcount;
+        rc[i] = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT,
+                              alias, folder);
+        refs[i][1] = of->of_ad->ad_meta_refcount;
+        fd[i] = ad_data_fileno(of->of_ad);
+        closefork(&fio.obj, r);
+        r = 0;
+    }
+
+    if (rc[0] == AFPERR_BADTYPE && fd[0] == AD_SYMLINK
+            && refs[0][1] == refs[0][0] && rc[1] == AFPERR_BADTYPE
+            && fd[1] == AD_SYMLINK && refs[1][1] == refs[1][0]) {
+        ret = 0;
+    } else {
+        fprintf(stderr,
+                "exchange of a held symlink with a folder: %d, data "
+                "descriptor %d, metadata references %d then %d; on version "
+                "2: %d, %d, %d then %d\n", rc[0], fd[0], refs[0][0],
+                refs[0][1], rc[1], fd[1], refs[1][0], refs[1][1]);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble/%s", vol->v_path,
+             alias);
+    unlink(adpath);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+
+    /* FPDelete refuses a symlink where it cannot read the link's lock
+     * state, so the link goes by unlink(2) */
+    if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, alias,
+                       strlen(alias))) != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    fio_done(vol, 0, folder);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    return ret;
+}
+
+
+/*!
+ * @brief FPExchangeFiles of a file without metadata with a folder answers
+ *        AFPERR_BADTYPE and leaves the file the header it made, which
+ *        carries the file's CNID
+ *
+ * @returns 0, 1 when the call answered otherwise or the header lacks the
+ *          CNID, -1 when the fixture failed
+ */
+int utest_exchange_refused_header_has_cnid(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xnoid";
+    static char d[] = "rq_xfolder";
+    char apath[MAXPATHLEN + 1];
+    cnid_t named;
+    cnid_t id;
+    int rc;
+
+    if (vol->v_cdb == NULL) {
+        return TEST_SKIP;
+    }
+
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+
+    if (create_disk_file(apath) != 0) {
+        return -1;
+    }
+
+    if (createdir(obj, vol->v_vid, DIRDID_ROOT, d) != AFP_OK) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, a);
+        return -1;
+    }
+
+    rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, d);
+    named = header_id(vol, apath);
+    id = cnid_get(vol->v_cdb, DIRDID_ROOT, a, strlen(a));
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, d);
+
+    if (rc == AFPERR_BADTYPE && id != CNID_INVALID && named == id) {
+        return 0;
+    }
+
+    fprintf(stderr, "exchange with a folder: %d, header CNID %u, CNID %u\n",
+            rc, ntohl(named), ntohl(id));
+    return 1;
+}
+
+/*!
+ * @brief FPExchangeFiles of a file without metadata whose ._ file macOS
+ *        wrote leaves its name the sidecar's FinderInfo, and the other name
+ *        its own
+ *
+ * @returns 0, 1 when the call answered otherwise or a name's FinderInfo is
+ *          wrong, -1 when the fixture failed, or TEST_SKIP where no ._ file
+ *          holds the resource fork
+ */
+int utest_exchange_osx_sidecar_finderinfo(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char a[] = "rq_xosx";
+    static char b[] = "rq_xosxb";
+    static const char sidecar_fi[] = "SIDEcar!";
+    static const char adata[] = "a's data";
+    static const char bdata[] = "b's longer data";
+    char bfinfo[ADEDLEN_FINDERI] = "BBBBbbbb";
+    char apath[MAXPATHLEN + 1];
+    char bpath[MAXPATHLEN + 1];
+    char sidecar[MAXPATHLEN + 1];
+    int rc = -1;
+    int info[2] = { -1, -1 };
+    int moved;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+    snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, b);
+
+    if (write_disk_file(apath, adata, sizeof(adata)) != 0
+            || osx_write_sidecar(vol, a, sidecar_fi) != 0
+            || createfile(obj, vol->v_vid, DIRDID_ROOT, b) != AFP_OK
+            || setfileparms(obj, vol->v_vid, DIRDID_ROOT, b, 1 << FILPBIT_FINFO,
+                            bfinfo, sizeof(bfinfo)) != AFP_OK
+            || write_disk_file(bpath, bdata, sizeof(bdata)) != 0) {
+        goto out;
+    }
+
+    rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+    info[0] = finderinfo_is(vol, apath, sidecar_fi, strlen(sidecar_fi));
+    info[1] = finderinfo_is(vol, bpath, bfinfo, sizeof(bfinfo));
+    /* the data trades names, the FinderInfo stays with them */
+    moved = disk_file_is(apath, bdata, sizeof(bdata))
+            && disk_file_is(bpath, adata, sizeof(adata));
+
+    if (rc == AFP_OK && info[0] == 1 && info[1] == 1 && moved) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "exchange of a file with a macOS ._ file: %d, "
+                        "FinderInfo of %s %d and of %s %d, data swapped %d\n",
+                rc, a, info[0], b, info[1], moved);
+        ret = 1;
+    }
+
+out:
+
+    for (int i = 0; i < 2; i++) {
+        snprintf(sidecar, sizeof(sidecar), "%s/._%s", vol->v_path,
+                 i == 0 ? a : b);
+        unlink(sidecar);
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, b);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief FPExchangeFiles of a file whose hard link's resource fork the
+ *        session holds leaves the held fork the length of its own resource
+ *        fork
+ *
+ * @returns 0, 1 when the call answered otherwise or the fork's length
+ *          changed, -1 when the fixture failed, or TEST_SKIP where the names
+ *          of a file share one resource fork
+ */
+int utest_exchange_hard_link_keeps_rlen(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char x[] = "rq_xlink";
+    static char y[] = "rq_xlink2";
+    static char z[] = "rq_xother";
+    static char *names[] = { x, y, z };
+    char xpath[MAXPATHLEN + 1];
+    char ypath[MAXPATHLEN + 1];
+    char sidecar[MAXPATHLEN + 1];
+    const struct ofork *of;
+    uint16_t w = 0;
+    uint16_t rr = 0;
+    off_t before = -1;
+    off_t after = -1;
+    int rc = -1;
+    int ret = -1;
+
+    /* the ea layout gives each name a ._ file of its own */
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(xpath, sizeof(xpath), "%s/%s", vol->v_path, x);
+    snprintf(ypath, sizeof(ypath), "%s/%s", vol->v_path, y);
+
+    /* x's resource fork holds RQ_LEN bytes, z's 50 */
+    for (int i = 0; i < 3; i += 2) {
+        if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, names[i]) != AFP_OK
+                || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, names[i],
+                            OPENFORK_RSCS, OPENACC_RD | OPENACC_WR, &w)
+                != AFP_OK
+                || fio_write(w, 0, 0, rq_data, i == 0 ? RQ_LEN : 50) != AFP_OK
+                || closefork(&fio.obj, w) != AFP_OK) {
+            goto out;
+        }
+
+        w = 0;
+    }
+
+    /* y's own ._ file holds 100 bytes, through the fork the session keeps */
+    if (link(xpath, ypath) != 0
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, y, OPENFORK_RSCS,
+                        OPENACC_RD | OPENACC_WR, &rr) != AFP_OK
+            || fio_write(rr, 0, 0, rq_data, 100) != AFP_OK
+            || (of = of_find(rr)) == NULL) {
+        goto out;
+    }
+
+    before = of->of_ad->ad_rlen;
+    rc = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, x, z);
+    after = of->of_ad->ad_rlen;
+
+    if (before != 100) {
+        goto out;
+    }
+
+    if (rc == AFP_OK && after == 100) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "exchange of a held hard link's file: %d, resource "
+                        "fork length %jd then %jd\n", rc, (intmax_t)before,
+                (intmax_t)after);
+        ret = 1;
+    }
+
+out:
+
+    if (rr) {
+        closefork(&fio.obj, rr);
+    }
+
+    for (int i = 0; i < 3; i++) {
+        snprintf(sidecar, sizeof(sidecar), "%s/._%s", vol->v_path, names[i]);
+        unlink(sidecar);
+
+        if (i < 2) {
+            delete (&fio.obj, vol->v_vid, DIRDID_ROOT, names[i]);
+        }
+    }
+
+    fio_done(vol, w, z);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief FPExchangeFiles of a file without metadata whose ._ file macOS wrote
+ *        with a folder answers AFPERR_BADTYPE and leaves the file the header
+ *        the sidecar's conversion made, with the file's CNID, or, when the
+ *        sidecar does not open for writing, no header to mask the sidecar's
+ *        FinderInfo, which a later resource fork open takes
+ *
+ * @returns 0, 1 when a call answered otherwise, the header lacks the CNID or
+ *          the FinderInfo was lost, -1 when the fixture failed, or TEST_SKIP
+ *          without a CNID database or the fault injector, or where no ._ file
+ *          holds the resource fork
+ */
+int utest_exchange_refused_sidecar_header(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char a[] = "rq_xsconv";
+    static char d[] = "rq_xsfolder";
+    static const char sidecar_fi[] = "SIDEcar!";
+    char apath[MAXPATHLEN + 1];
+    char sidecar[MAXPATHLEN + 1];
+    cnid_t named = CNID_INVALID;
+    cnid_t id = CNID_INVALID;
+    uint16_t rr = 0;
+    int rc[2] = { -1, -1 };
+    int info = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA || vol->v_cdb == NULL
+            || !test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+    snprintf(sidecar, sizeof(sidecar), "%s/._%s", vol->v_path, a);
+
+    /* a sidecar that converts: the header it makes takes the file's CNID */
+    if (createdir(&fio.obj, vol->v_vid, DIRDID_ROOT, d) != AFP_OK
+            || create_disk_file(apath) != 0
+            || osx_write_sidecar(vol, a, sidecar_fi) != 0) {
+        goto out;
+    }
+
+    rc[0] = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a,
+                          d);
+    named = header_id(vol, apath);
+    id = cnid_get(vol->v_cdb, DIRDID_ROOT, a, strlen(a));
+    unlink(sidecar);
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, a);
+
+    /* a sidecar that does not open for writing: the file's read-write open
+     * goes through and the sidecar's is refused */
+    if (create_disk_file(apath) != 0
+            || osx_write_sidecar(vol, a, sidecar_fi) != 0) {
+        goto out;
+    }
+
+    fault_inject_reset();
+    fi.open_armed = 1;
+    fi.open_fail_after = 1;
+    fi.open_errno = EACCES;
+    fi.open_fail_flags = O_RDWR;
+    rc[1] = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a,
+                          d);
+    fault_inject_reset();
+
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, a, OPENFORK_RSCS,
+                 OPENACC_RD | OPENACC_WR, &rr) == AFP_OK) {
+        info = finderinfo_is(vol, apath, sidecar_fi, strlen(sidecar_fi));
+    }
+
+    if (rc[0] == AFPERR_BADTYPE && id != CNID_INVALID && named == id
+            && rc[1] == AFPERR_BADTYPE && info == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "refused exchange of a file with a macOS ._ file: %d, "
+                        "header CNID %u, CNID %u; with the sidecar read-only "
+                        "%d, its FinderInfo kept %d\n", rc[0], ntohl(named),
+                ntohl(id), rc[1], info);
+        ret = 1;
+    }
+
+out:
+
+    if (rr) {
+        closefork(&fio.obj, rr);
+    }
+
+    unlink(sidecar);
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, a);
+    fio_done(vol, 0, d);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief FPExchangeFiles of a file whose hard link's resource fork the
+ *        session holds read-only, opened before the file had metadata, leaves
+ *        the held fork the length of its own resource fork
+ *
+ * @returns 0, 1 when the call answered otherwise or the fork's length
+ *          changed, -1 when the fixture failed, or TEST_SKIP where the names
+ *          of a file share one resource fork
+ */
+int utest_exchange_bare_hard_link_keeps_rlen(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char x[] = "rq_xblink";
+    static char y[] = "rq_xblink2";
+    static char t[] = "rq_xblinkt";
+    static char z[] = "rq_xbother";
+    static char *names[] = { x, t, z };
+    static const uint32_t sizes[] = { RQ_LEN, 100, 50 };
+    char xpath[MAXPATHLEN + 1];
+    char ypath[MAXPATHLEN + 1];
+    char from[MAXPATHLEN + 1];
+    char to[MAXPATHLEN + 1];
+    const struct ofork *of;
+    uint16_t w = 0;
+    uint16_t rr = 0;
+    off_t before = -1;
+    off_t after = -1;
+    int rc = -1;
+    int ret = -1;
+
+    /* the ea layout gives each name a ._ file of its own */
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(xpath, sizeof(xpath), "%s/%s", vol->v_path, x);
+    snprintf(ypath, sizeof(ypath), "%s/%s", vol->v_path, y);
+    snprintf(from, sizeof(from), "%s/._%s", vol->v_path, t);
+    snprintf(to, sizeof(to), "%s/._%s", vol->v_path, y);
+
+    /* the resource forks of x, t and z hold RQ_LEN, 100 and 50 bytes */
+    for (int i = 0; i < 3; i++) {
+        if (createfile(&fio.obj, vol->v_vid, DIRDID_ROOT, names[i]) != AFP_OK
+                || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, names[i],
+                            OPENFORK_RSCS, OPENACC_RD | OPENACC_WR, &w)
+                != AFP_OK
+                || fio_write(w, 0, 0, rq_data, sizes[i]) != AFP_OK
+                || closefork(&fio.obj, w) != AFP_OK) {
+            w = 0;
+            goto out;
+        }
+
+        w = 0;
+    }
+
+    /* y, a hard link of x, which loses its metadata, takes t's ._ file */
+    if (sys_lremovexattr(xpath, AD_EA_META) != 0 || link(xpath, ypath) != 0
+            || rename(from, to) != 0
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, y, OPENFORK_RSCS,
+                        OPENACC_RD, &rr) != AFP_OK
+            || (of = of_find(rr)) == NULL || ad_meta_open(of->of_ad)) {
+        goto out;
+    }
+
+    before = of->of_ad->ad_rlen;
+    rc = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, x, z);
+    after = of->of_ad->ad_rlen;
+
+    if (before != 100) {
+        goto out;
+    }
+
+    if (rc == AFP_OK && after == 100) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "exchange of a bare held hard link's file: %d, "
+                        "resource fork length %jd then %jd\n", rc,
+                (intmax_t)before, (intmax_t)after);
+        ret = 1;
+    }
+
+out:
+
+    if (rr) {
+        closefork(&fio.obj, rr);
+    }
+
+    unlink(to);
+    unlink(ypath);
+
+    for (int i = 0; i < 2; i++) {
+        delete (&fio.obj, vol->v_vid, DIRDID_ROOT, names[i]);
+    }
+
+    fio_done(vol, w, z);
+    return ret;
+#endif
+}
+
+/*! The CNID backend's update that rq_cnid_update_second_busy() wraps */
+static int (*rq_update_real)(struct _cnid_db *cdb, cnid_t id,
+                             const struct stat *st, cnid_t did,
+                             const char *name, size_t len);
+static int rq_update_calls;
+
+/*! @brief A CNID backend's update whose second call fails as a busy one */
+static int rq_cnid_update_second_busy(struct _cnid_db *cdb, cnid_t id,
+                                      const struct stat *st, cnid_t did,
+                                      const char *name, size_t len)
+{
+    if (++rq_update_calls == 2) {
+        errno = CNID_ERR_BUSY;
+        return -1;
+    }
+
+    return rq_update_real(cdb, id, st, did, name, len);
+}
+
+/*!
+ * @brief FPExchangeFiles whose second CNID update fails answers
+ *        AFPERR_MISC and leaves each name its file and its CNID
+ *
+ * @returns 0, 1 when the call answered otherwise or a name lost its file or
+ *          its CNID, -1 when the fixture failed
+ */
+int utest_exchange_failure_restores_cnids(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xcnida";
+    static char b[] = "rq_xcnidb";
+    static char *names[] = { a, b };
+    char path[2][MAXPATHLEN + 1];
+    struct stat st[2];
+    struct stat now;
+    cnid_t id[2] = { CNID_INVALID, CNID_INVALID };
+    cnid_t found[2] = { CNID_INVALID, CNID_INVALID };
+    int same[2] = { 0, 0 };
+    int rc;
+
+    if (vol->v_cdb == NULL) {
+        return TEST_SKIP;
+    }
+
+    for (int i = 0; i < 2; i++) {
+        snprintf(path[i], sizeof(path[i]), "%s/%s", vol->v_path, names[i]);
+
+        if (createfile(obj, vol->v_vid, DIRDID_ROOT, names[i]) != AFP_OK
+                || stat(path[i], &st[i]) != 0
+                || (id[i] = cnid_get(vol->v_cdb, DIRDID_ROOT, names[i],
+                                     strlen(names[i]))) == CNID_INVALID) {
+            delete (obj, vol->v_vid, DIRDID_ROOT, a);
+            delete (obj, vol->v_vid, DIRDID_ROOT, b);
+            return -1;
+        }
+    }
+
+    rq_update_real = vol->v_cdb->cnid_update;
+    rq_update_calls = 0;
+    vol->v_cdb->cnid_update = rq_cnid_update_second_busy;
+    rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+    vol->v_cdb->cnid_update = rq_update_real;
+
+    for (int i = 0; i < 2; i++) {
+        same[i] = stat(path[i], &now) == 0 && now.st_ino == st[i].st_ino;
+        found[i] = cnid_lookup(vol->v_cdb, &st[i], DIRDID_ROOT, names[i],
+                               strlen(names[i]));
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, b);
+
+    if (rc == AFPERR_MISC && same[0] && same[1] && found[0] == id[0]
+            && found[1] == id[1]) {
+        return 0;
+    }
+
+    fprintf(stderr,
+            "exchange whose CNID update fails: %d, files kept %d and %d, "
+            "CNIDs %u then %u and %u then %u\n", rc, same[0], same[1],
+            ntohl(id[0]), ntohl(found[0]), ntohl(id[1]), ntohl(found[1]));
+    return 1;
+}
+
+/*!
+ * @brief The number of .AppleTemp files in the volume root
+ *
+ * @returns the count, or -1 when the folder cannot be read
+ */
+static int appletemp_count(const struct vol *vol)
+{
+    DIR *dp = opendir(vol->v_path);
+    const struct dirent *de;
+    int n = 0;
+
+    if (dp == NULL) {
+        return -1;
+    }
+
+    while ((de = readdir(dp)) != NULL) {
+        n += strncmp(de->d_name, ".AppleTemp", 10) == 0;
+    }
+
+    closedir(dp);
+    return n;
+}
+
+/*!
+ * @brief FPExchangeFiles whose first rename fails answers with the rename's
+ *        error, leaves both files and no .AppleTemp file
+ *
+ * @returns 0, 1 when the call answered AFP_OK, a file went or a temporary
+ *          file stayed, -1 when the fixture failed, or TEST_SKIP without the
+ *          fault injector
+ */
+int utest_exchange_failed_rename_leaves_no_temp(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xtmpa";
+    static char b[] = "rq_xtmpb";
+    char apath[MAXPATHLEN + 1];
+    char bpath[MAXPATHLEN + 1];
+    struct stat st;
+    int before;
+    int after;
+    int calls;
+    int kept;
+    int rc = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+    snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, b);
+
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, a) != AFP_OK
+            || createfile(obj, vol->v_vid, DIRDID_ROOT, b) != AFP_OK
+            || (before = appletemp_count(vol)) < 0) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, a);
+        delete (obj, vol->v_vid, DIRDID_ROOT, b);
+        return -1;
+    }
+
+    fault_inject_reset();
+    fi.renameat.armed = 1;
+    fi.renameat.fail_after = 0;
+    fi.renameat.errnum = EACCES;
+    rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+    calls = fi.renameat.calls;
+    fault_inject_reset();
+    after = appletemp_count(vol);
+    kept = stat(apath, &st) == 0 && stat(bpath, &st) == 0;
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, b);
+
+    /* positive control: the injector reached the rename */
+    if (calls == 0) {
+        return TEST_SKIP;
+    }
+
+    if (rc == AFPERR_ACCESS && kept && after == before) {
+        return 0;
+    }
+
+    fprintf(stderr, "exchange whose first rename fails: %d, files kept %d, "
+                    ".AppleTemp files %d then %d\n", rc, kept, before, after);
+    return 1;
+}
+
+/*!
+ * @brief FPExchangeFiles by a user who may write a file but not read it
+ *        answers AFPERR_ACCESS and leaves both files' data
+ *
+ * @returns 0, 1 when the call answered otherwise or the data moved, -1 when
+ *          the fixture failed
+ */
+int utest_exchange_needs_read_access(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xwonly";
+    static char b[] = "rq_xrw";
+    const uid_t session_uid = obj->uid;
+    const uid_t session_euid = obj->euid;
+    gid_t *const session_groups = obj->groups;
+    const int session_ngroups = obj->ngroups;
+    gid_t group;
+    char apath[MAXPATHLEN + 1];
+    char bpath[MAXPATHLEN + 1];
+    struct stat st[2];
+    struct stat now;
+    int kept;
+    int rc;
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+    snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, b);
+
+    /* a member of the files' group, not their owner, may write a, not read
+     * it, and may read and write b */
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, a) != AFP_OK
+            || createfile(obj, vol->v_vid, DIRDID_ROOT, b) != AFP_OK
+            || chmod(apath, 0620) != 0 || chmod(bpath, 0660) != 0
+            || stat(apath, &st[0]) != 0 || stat(bpath, &st[1]) != 0
+            || st[0].st_gid != st[1].st_gid) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, a);
+        delete (obj, vol->v_vid, DIRDID_ROOT, b);
+        return -1;
+    }
+
+    group = st[0].st_gid;
+    obj->uid = getuid() + 1;
+    obj->euid = obj->uid;
+    obj->groups = &group;
+    obj->ngroups = 1;
+    rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+    obj->uid = session_uid;
+    obj->euid = session_euid;
+    obj->groups = session_groups;
+    obj->ngroups = session_ngroups;
+    kept = stat(apath, &now) == 0 && now.st_ino == st[0].st_ino
+           && stat(bpath, &now) == 0 && now.st_ino == st[1].st_ino;
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, b);
+
+    if (rc == AFPERR_ACCESS && kept) {
+        return 0;
+    }
+
+    fprintf(stderr, "exchange of a file its user may not read: %d, files "
+                    "kept %d\n", rc, kept);
+    return 1;
+}
+
+/*!
+ * @brief Whether the version 2 metadata of path names the file mname
+ *
+ * @returns 1 when it does, 0 when it does not, -1 when the metadata cannot be
+ *          read
+ */
+static int header_names(const struct vol *vol, const char *path,
+                        const char *mname)
+{
+    struct adouble ad;
+    const char *entry;
+    int ret = -1;
+    ad_init(&ad, vol);
+
+    if (ad_metadata(path, 0, &ad) == 0) {
+        entry = ad_entry(&ad, ADEID_NAME);
+        ret = entry != NULL
+              && ad_getentrylen(&ad, ADEID_NAME) == strlen(mname)
+              && memcmp(entry, mname, strlen(mname)) == 0;
+        ad_close(&ad, ADFLAGS_HF);
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief On version 2, FPExchangeFiles of two files with metadata leaves
+ *        each name's header its own Mac name, and the files' data trade
+ *        names
+ *
+ * @returns 0, 1 when the call answered otherwise, a header names the other
+ *          file or the data stayed, -1 when the fixture failed
+ */
+int utest_exchange_v2_names_kept(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xv2a";
+    static char b[] = "rq_xv2b";
+    static const char adata[] = "AAAAAAAA";
+    static const char bdata[] = "BBBBBBBB";
+    const int saved_adouble = vol->v_adouble;
+    char apath[MAXPATHLEN + 1];
+    char bpath[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    int named[2] = { -1, -1 };
+    int moved = 0;
+    int rc = -1;
+    int ret = -1;
+    snprintf(apath, sizeof(apath), "%s/%s", vol->v_path, a);
+    snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, b);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, a) == AFP_OK
+            && createfile(obj, vol->v_vid, DIRDID_ROOT, b) == AFP_OK
+            && write_disk_file(apath, adata, sizeof(adata)) == 0
+            && write_disk_file(bpath, bdata, sizeof(bdata)) == 0) {
+        rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+        named[0] = header_names(vol, apath, a);
+        named[1] = header_names(vol, bpath, b);
+        moved = disk_file_is(apath, bdata, sizeof(bdata))
+                && disk_file_is(bpath, adata, sizeof(adata));
+
+        if (rc == AFP_OK && named[0] == 1 && named[1] == 1 && moved) {
+            ret = 0;
+        } else {
+            fprintf(stderr, "version 2 exchange: %d, %s's header names it %d, "
+                            "%s's %d, data swapped %d\n", rc, a, named[0], b,
+                    named[1], moved);
+            ret = 1;
+        }
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, a);
+    delete (obj, vol->v_vid, DIRDID_ROOT, b);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    (void)rmdir(adpath);
+    return ret;
+}
+
+/*!
+ * @brief On the ea layout a ._ name that no file holds is refused for a new
+ *        file or folder: FPCreateFile and FPCreateDir of one, FPRename of x
+ *        to ._x, FPCopyFile of x to a ._ name and FPCreateFile of ._ before
+ *        ._x leave the names unmade and x in place, while a lookup of such a
+ *        name answers AFPERR_NOOBJ and a ._ file without a netatalk header
+ *        stays visible and a hard FPCreateFile empties it
+ *
+ * @returns 0, 1 when a call answered otherwise, a ._ name got a file or x
+ *          went, -1 when the fixture failed, or TEST_SKIP where no ._ file
+ *          holds a resource fork
+ */
+int utest_sidecar_names_refused(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char x[] = "rq_sname";
+    static char data[] = "._rq_sdata";
+    static char *made[] = { "._rq_snew", "._rq_sdir", "._rq_sname",
+                            "._rq_scopy", "._._rq_sname"
+                          };
+    char path[MAXPATHLEN + 1];
+    struct stat st;
+    int rc[8];
+    int stray = 0;
+    int emptied;
+    int kept;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, data);
+
+    if (createfile(obj, vol->v_vid, DIRDID_ROOT, x) != AFP_OK
+            || write_disk_file(path, "plain data", 10) != 0) {
+        delete (obj, vol->v_vid, DIRDID_ROOT, x);
+        return -1;
+    }
+
+    rc[0] = createfile(obj, vol->v_vid, DIRDID_ROOT, made[0]);
+    rc[1] = createdir(obj, vol->v_vid, DIRDID_ROOT, made[1]);
+    rc[2] = renameobj(obj, vol->v_vid, DIRDID_ROOT, x, made[2]);
+    rc[3] = copyfileobj(obj, vol->v_vid, DIRDID_ROOT, x, DIRDID_ROOT,
+                        made[3]);
+    rc[4] = createfile(obj, vol->v_vid, DIRDID_ROOT, made[4]);
+    rc[5] = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, "._rq_smiss");
+    rc[6] = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, data);
+    rc[7] = createfile(obj, vol->v_vid, DIRDID_ROOT, data);
+    emptied = stat(path, &st) == 0 && st.st_size == 0;
+    delete (obj, vol->v_vid, DIRDID_ROOT, data);
+    unlink(path);
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, x);
+    kept = stat(path, &st) == 0;
+
+    for (size_t i = 0; i < sizeof(made) / sizeof(made[0]); i++) {
+        snprintf(path, sizeof(path), "%s/%s", vol->v_path, made[i]);
+
+        if (lstat(path, &st) == 0) {
+            stray++;
+
+            if (S_ISDIR(st.st_mode)) {
+                rmdir(path);
+            } else {
+                unlink(path);
+            }
+        }
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, x);
+
+    if (rc[0] == AFPERR_PARAM && rc[1] == AFPERR_PARAM
+            && rc[2] == AFPERR_EXIST && rc[3] == AFPERR_EXIST
+            && rc[4] == AFPERR_PARAM && rc[5] == AFPERR_NOOBJ
+            && rc[6] == AFP_OK && rc[7] == AFP_OK && emptied
+            && kept && stray == 0) {
+        return 0;
+    }
+
+    fprintf(stderr, "._ names: create %d, folder %d, rename %d, copy %d, "
+                    "nested create %d, lookup of a missing one %d, of a "
+                    "plain one %d, hard create over it %d, emptied %d, file "
+                    "kept %d, stray names %d\n",
+            rc[0], rc[1], rc[2], rc[3], rc[4], rc[5], rc[6], rc[7], emptied,
+            kept, stray);
+    return 1;
+#endif
+}
+
+/*!
+ * @brief A listing of a folder that holds a ._ file the session holds open,
+ *        and a lookup of the name, keep the session's locks on it: a
+ *        resource fork's FPByteRangeLockExt lock on its ._ file, also after
+ *        another session renamed the file, and a data fork's deny-write lock
+ *        on a ._ file that macOS wrote, while the lookup of the netatalk
+ *        sidecar answers AFPERR_PARAM
+ *
+ * @returns 0, 1 when a lock was missing before the listing or went or the
+ *          lookup answered otherwise, -1 when the fixture failed, or
+ *          TEST_SKIP where no ._ file holds a resource fork
+ */
+int utest_listing_keeps_sidecar_locks(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char folder[] = "rq_sidecars";
+    static char x[] = "rq_sfile";
+    static char xs[] = "._rq_sfile";
+    static char w[] = "rq_swfile";
+    /* the ._ file of a file rq_svis that is not there */
+    static char y[] = "rq_sidecars/rq_svis";
+    static char vis[] = "._rq_svis";
+    /* FPByteRangeLockExt from the start: offset 0, length 10 */
+    uint8_t req[20] = { AFP_BYTELOCK_EXT, 0 };
+    const uint64_t length = hton64(UINT64_C(10));
+    char reply[sizeof(uint64_t)];
+    size_t rlen = sizeof(reply);
+    char xpath[MAXPATHLEN + 1];
+    char xside[MAXPATHLEN + 1];
+    char wpath[MAXPATHLEN + 1];
+    char wside[MAXPATHLEN + 1];
+    char vpath[MAXPATHLEN + 1];
+    char fpath[MAXPATHLEN + 1];
+    cnid_t did = CNID_INVALID;
+    uint16_t rr = 0;
+    uint16_t v = 0;
+    int held[5] = { -1, -1, -1, -1, -1 };
+    int hidden = -1;
+    int renamed = 0;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(fpath, sizeof(fpath), "%s/%s", vol->v_path, folder);
+    snprintf(xpath, sizeof(xpath), "%s/%s", fpath, x);
+    snprintf(xside, sizeof(xside), "%s/._%s", fpath, x);
+    snprintf(wpath, sizeof(wpath), "%s/%s", fpath, w);
+    snprintf(wside, sizeof(wside), "%s/._%s", fpath, w);
+    snprintf(vpath, sizeof(vpath), "%s/%s", fpath, vis);
+
+    if (createdir(&fio.obj, vol->v_vid, DIRDID_ROOT, folder) != AFP_OK) {
+        goto out;
+    }
+
+    did = curdir->d_did;
+
+    /* x's resource fork, locked on its ._ file; a ._ file macOS wrote for a
+     * file y that is not there, open as data and denying writes */
+    if (createfile(&fio.obj, vol->v_vid, did, x) != AFP_OK
+            || openfork(&fio.obj, vol->v_vid, did, x, OPENFORK_RSCS,
+                        OPENACC_RD | OPENACC_WR, &rr) != AFP_OK
+            || fio_write(rr, 0, 0, rq_data, 100) != AFP_OK) {
+        goto out;
+    }
+
+    memcpy(req + 2, &rr, sizeof(rr));
+    memcpy(req + 12, &length, sizeof(length));
+
+    if (afp_bytelock_ext(&fio.obj, (char *)req, sizeof(req), reply,
+                         &rlen) != AFP_OK) {
+        goto out;
+    }
+
+    if (osx_write_sidecar(vol, y, "VISIble!") != 0
+            || openfork(&fio.obj, vol->v_vid, did, vis, OPENFORK_DATA,
+                        OPENACC_RD | OPENACC_DWR, &v) != AFP_OK) {
+        goto out;
+    }
+
+    held[0] = peer_try_lock(xside, F_WRLCK, ADEDOFF_RFORK_OSX, 10);
+    held[1] = peer_try_lock(vpath, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+
+    /* a listing, and lookups of both ._ names */
+    if (enumerate(&fio.obj, vol->v_vid, did) != 0
+            || getfiledirparms(&fio.obj, vol->v_vid, did, vis) != AFP_OK) {
+        goto out;
+    }
+
+    /* x's sidecar is hidden, but the refusal reads its header */
+    hidden = getfiledirparms(&fio.obj, vol->v_vid, did, xs);
+    held[2] = peer_try_lock(xside, F_WRLCK, ADEDOFF_RFORK_OSX, 10);
+    held[3] = peer_try_lock(vpath, F_WRLCK, AD_FILELOCK_DENY_WR, 1);
+
+    /* another session's rename of x to w moves its ._ file along */
+    if (held[0] != 0 || held[1] != 0 || rename(xpath, wpath) != 0
+            || rename(xside, wside) != 0) {
+        goto out;
+    }
+
+    renamed = 1;
+
+    if (enumerate(&fio.obj, vol->v_vid, did) != 0) {
+        goto out;
+    }
+
+    held[4] = peer_try_lock(wside, F_WRLCK, ADEDOFF_RFORK_OSX, 10);
+
+    if (held[2] == 0 && held[3] == 0 && held[4] == 0
+            && hidden == AFPERR_PARAM) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "listing beside held ._ files: resource fork lock "
+                        "held %d, after a rename %d, deny-write lock held %d, "
+                        "lookup of the hidden sidecar %d\n", held[2] == 0,
+                held[4] == 0, held[3] == 0, hidden);
+        ret = 1;
+    }
+
+out:
+
+    if (rr) {
+        closefork(&fio.obj, rr);
+    }
+
+    if (v) {
+        closefork(&fio.obj, v);
+    }
+
+    unlink(vpath);
+
+    if (did != CNID_INVALID) {
+        delete (&fio.obj, vol->v_vid, did, renamed ? w : x);
+        delete (&fio.obj, vol->v_vid, DIRDID_ROOT, folder);
+    }
+
+    fio_done(vol, 0, folder);
+    return ret;
+#endif
+}
+
+#ifndef HAVE_EAFD
+/*! The SIGALRM handler of utest_listing_passes_fifo(): its arrival ends an
+ *  open that waits for a FIFO's writer */
+static void fifo_alarm(int sig _U_)
+{
+    /* the signal's arrival alone ends the wait */
+}
+#endif /* !HAVE_EAFD */
+
+/*!
+ * @brief A listing of a folder that holds a FIFO with a ._ name returns at
+ *        once, its open waiting for no writer
+ *
+ * @returns 0, 1 when the listing failed or waited, -1 when the fixture
+ *          failed, or TEST_SKIP where no ._ file holds a resource fork
+ */
+int utest_listing_passes_fifo(AFPObj *obj, struct vol *vol)
+{
+#ifdef HAVE_EAFD
+    (void)obj;
+    (void)vol;
+    return TEST_SKIP;
+#else
+    static char folder[] = "rq_fifos";
+    char fpath[MAXPATHLEN + 1];
+    char fifo[MAXPATHLEN + 1];
+    struct sigaction sa;
+    struct sigaction old;
+    struct timespec t[2];
+    cnid_t did = CNID_INVALID;
+    long waited = -1;
+    int rc = -1;
+    int ret = -1;
+
+    if (vol->v_adouble != AD_VERSION_EA) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    snprintf(fpath, sizeof(fpath), "%s/%s", vol->v_path, folder);
+    snprintf(fifo, sizeof(fifo), "%s/._rq_fifo", fpath);
+
+    if (createdir(&fio.obj, vol->v_vid, DIRDID_ROOT, folder) != AFP_OK) {
+        goto out;
+    }
+
+    did = curdir->d_did;
+    /* without SA_RESTART the alarm ends an open that waits */
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = fifo_alarm;
+    sigemptyset(&sa.sa_mask);
+
+    if (mkfifo(fifo, 0600) != 0 || sigaction(SIGALRM, &sa, &old) != 0) {
+        goto out;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &t[0]);
+    alarm(3);
+    rc = enumerate(&fio.obj, vol->v_vid, did);
+    alarm(0);
+    clock_gettime(CLOCK_MONOTONIC, &t[1]);
+    sigaction(SIGALRM, &old, NULL);
+    waited = (t[1].tv_sec - t[0].tv_sec) * 1000
+             + (t[1].tv_nsec - t[0].tv_nsec) / 1000000;
+
+    if (rc == 0 && waited < 1500) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "listing beside a FIFO with a ._ name: %d after %ld "
+                        "ms\n", rc, waited);
+        ret = 1;
+    }
+
+out:
+    unlink(fifo);
+
+    if (did != CNID_INVALID) {
+        delete (&fio.obj, vol->v_vid, DIRDID_ROOT, folder);
+    }
+
+    fio_done(vol, 0, folder);
+    return ret;
+#endif
+}
+
+/*!
+ * @brief On version 2 a read-only resource fork open of a file without its
+ *        metadata file, denying writes, takes the band locks of its access
+ *        and its deny mode, as another session's open sees them
+ *
+ * @returns 0, 1 when a band lock was missing, -1 when the fixture failed
+ */
+int utest_v2_bare_rsrc_open_takes_band(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "rq_v2band";
+    const int saved_adouble = vol->v_adouble;
+    char path[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    uint16_t r = 0;
+    int held[2] = { -1, -1 };
+    int ret = -1;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    vol->v_adouble = AD_VERSION2;
+    initvol_vfs(vol);
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (create_disk_file(path) != 0
+            || openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                        OPENACC_RD | OPENACC_DWR, &r) != AFP_OK) {
+        goto out;
+    }
+
+    held[0] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_RSRC_OPEN_RD, 1);
+    held[1] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_RSRC_DENY_WR, 1);
+
+    if (held[0] == 0 && held[1] == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "version 2 resource fork without its metadata file: "
+                        "read band held %d, deny-write band held %d\n",
+                held[0] == 0, held[1] == 0);
+        ret = 1;
+    }
+
+out:
+
+    if (r) {
+        closefork(&fio.obj, r);
+    }
+
+    fio_done(vol, 0, name);
+    vol->v_adouble = saved_adouble;
+    initvol_vfs(vol);
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble", vol->v_path);
+    (void)rmdir(adpath);
+    return ret;
+}
+
+/*!
+ * @brief The first write to the virtual Icon fork, opened denying writes,
+ *        takes the deny-write band lock with the open-mode ones, as another
+ *        session's open sees it
+ *
+ * @returns 0, 1 when the write failed or a band lock was missing, -1 when
+ *          the fixture failed
+ */
+int utest_virtual_icon_write_takes_deny_lock(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "Icon\r";
+    /* a resource fork header with no resources */
+    static unsigned char icon[16];
+    unsigned char *saved = vol->v_icon_rfork;
+    size_t saved_len = vol->v_icon_rfork_len;
+    char path[MAXPATHLEN + 1];
+    uint16_t w = 0;
+    int held[2] = { -1, -1 };
+    int rc = -1;
+    int ret;
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    vol->v_icon_rfork = icon;
+    vol->v_icon_rfork_len = sizeof(icon);
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (openfork(&fio.obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                 OPENACC_RD | OPENACC_WR | OPENACC_DWR, &w) == AFP_OK) {
+        rc = fio_write(w, 0, 0, rq_data, 1);
+        held[0] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_RSRC_OPEN_WR, 1);
+        held[1] = peer_try_lock(path, F_WRLCK, AD_FILELOCK_RSRC_DENY_WR, 1);
+        closefork(&fio.obj, w);
+    }
+
+    vol->v_icon_rfork = saved;
+    vol->v_icon_rfork_len = saved_len;
+    unlink(path);
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, vol->ad_path(name, 0));
+    unlink(path);
+
+    if (rc == AFP_OK && held[0] == 0 && held[1] == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "virtual icon opened denying writes: write %d, open "
+                        "band held %d, deny-write band held %d\n", rc,
+                held[0] == 0, held[1] == 0);
+        ret = 1;
+    }
+
+    fio_done(vol, 0, name);
+    return ret;
+}
+
+/*!
+ * @brief The files of the exchange's names in the volume root, its temporary
+ *        ones among them, whose first len bytes, at most 64, are all c
+ *
+ * @returns their count, or -1 when the folder does not open
+ */
+static int files_holding(const struct vol *vol, char c, size_t len)
+{
+    char path[MAXPATHLEN + 1];
+    char buf[64];
+    char want[64];
+    struct dirent *de;
+    DIR *dp;
+    int n = 0;
+    memset(want, c, sizeof(want));
+
+    if ((dp = opendir(vol->v_path)) == NULL) {
+        return -1;
+    }
+
+    while ((de = readdir(dp)) != NULL) {
+        int fd;
+
+        if (strncmp(de->d_name, "rq_xundo", 8) != 0
+                && strncmp(de->d_name, ".AppleTemp", 10) != 0) {
+            continue;
+        }
+
+        snprintf(path, sizeof(path), "%s/%s", vol->v_path, de->d_name);
+
+        if ((fd = open(path, O_RDONLY)) < 0) {
+            continue;
+        }
+
+        if (read(fd, buf, len) == (ssize_t)len && memcmp(buf, want, len) == 0) {
+            n++;
+        }
+
+        close(fd);
+    }
+
+    closedir(dp);
+    return n;
+}
+
+/*!
+ * @brief FPExchangeFiles whose third rename and the undo after it fail
+ *        answers an error and leaves both files' bytes under a name, the
+ *        undo's failure ending the unwind
+ *
+ * @returns 0, 1 when the call answered AFP_OK or a file's bytes went, -1 when
+ *          the fixture failed, or TEST_SKIP without the fault injector or
+ *          when it missed the renames
+ */
+int utest_exchange_failed_undo_keeps_files(AFPObj *obj, struct vol *vol)
+{
+    static char a[] = "rq_xundo";
+    static char b[] = "rq_xundob";
+    char data[2][32];
+    char path[MAXPATHLEN + 1];
+    struct dirent *de;
+    DIR *dp;
+    uint16_t w = 0;
+    int held[2] = { -1, -1 };
+    int calls;
+    int rc;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    if (fio_open(obj) != 0) {
+        return -1;
+    }
+
+    memset(data[0], 'A', sizeof(data[0]));
+    memset(data[1], 'B', sizeof(data[1]));
+
+    for (int i = 0; i < 2; i++) {
+        if (fio_dfork(vol, i == 0 ? a : b, &w) != 0
+                || fio_write(w, 0, 0, data[i], sizeof(data[i])) != AFP_OK
+                || closefork(&fio.obj, w) != AFP_OK) {
+            w = 0;
+            goto out;
+        }
+
+        w = 0;
+    }
+
+    /* the third rename, temp to b, fails, and the undo, a to b, after it */
+    fault_inject_reset();
+    fi.renameat.armed = 1;
+    fi.renameat.fail_after = 0;
+    fi.renameat.fail_more = 1;
+    fi.renameat.errnum = EACCES;
+    fi.renameat_to = b;
+    rc = exchangefiles(&fio.obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT, a, b);
+    calls = fi.renameat.calls;
+    fault_inject_reset();
+
+    /* positive control: both renames onto b were tried */
+    if (calls < 2) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    held[0] = files_holding(vol, 'A', sizeof(data[0]));
+    held[1] = files_holding(vol, 'B', sizeof(data[1]));
+
+    if (rc != AFP_OK && held[0] == 1 && held[1] == 1) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "exchange whose third rename and its undo fail: %d, "
+                        "files holding a's bytes %d, b's %d\n", rc, held[0],
+                held[1]);
+        ret = 1;
+    }
+
+out:
+
+    /* the names the exchange left, temp's among them, go by unlink(2),
+     * with the metadata files that version 2 made for them */
+    if ((dp = opendir(vol->v_path)) != NULL) {
+        while ((de = readdir(dp)) != NULL) {
+            if (strncmp(de->d_name, ".AppleTemp", 10) == 0) {
+                snprintf(path, sizeof(path), "%s/%s", vol->v_path,
+                         de->d_name);
+                unlink(path);
+                snprintf(path, sizeof(path), "%s/.AppleDouble/%s",
+                         vol->v_path, de->d_name);
+                unlink(path);
+            }
+        }
+
+        closedir(dp);
+    }
+
+    delete (&fio.obj, vol->v_vid, DIRDID_ROOT, b);
+    fio_done(vol, 0, a);
+    return ret;
+}
+
+/*!
+ * @brief FPSetFileParms of a modification date on a symlink, on a volume that
+ *        does not follow symlinks, dates the link, leaves its target's dates
+ *        as they were, and leaves the session no dircache entry of the link
+ *        with its old date
+ *
+ * @returns 0, 1 when the call answered otherwise, the link kept its date, the
+ *          target's changed or the link's entry kept the old date, -1 when
+ *          the fixture failed, or TEST_SKIP on a volume that follows symlinks
+ */
+int utest_setfileparms_symlink_dated_itself(AFPObj *obj, struct vol *vol)
+{
+    static char target[] = "rq_sdtarget";
+    static char alias[] = "rq_sdlink";
+    const int saved_freq = obj->options.dircache_validation_freq;
+    char path[MAXPATHLEN + 1];
+    char tpath[MAXPATHLEN + 1];
+    char adpath[MAXPATHLEN + 1];
+    struct timespec old[2];
+    struct stat st[2];
+    const struct dir *entry;
+    uint32_t date;
+    cnid_t id;
+    time_t want;
+    int fd;
+    int rc = -1;
+    int dated = 0;
+    int kept = 0;
+    int fresh = 0;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, alias);
+    snprintf(tpath, sizeof(tpath), "%s/%s", vol->v_path, target);
+
+    if ((fd = open(tpath, O_RDWR | O_CREAT | O_EXCL, 0640)) < 0) {
+        return -1;
+    }
+
+    close(fd);
+    /* the target a day old, the date asked for a week old */
+    old[0].tv_sec = old[1].tv_sec = time(NULL) - 86400;
+    old[0].tv_nsec = old[1].tv_nsec = 0;
+    want = old[1].tv_sec - 6 * 86400;
+    date = AD_DATE_FROM_UNIX(want);
+    /* a lookup caches the link with its own date, which no sampled
+     * validation refreshes */
+    obj->options.dircache_validation_freq = INT_MAX;
+
+    if (utimensat(AT_FDCWD, tpath, old, 0) != 0
+            || symlink(target, path) != 0
+            || getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, alias) != AFP_OK
+            || dircache_search_by_name(vol, vol->v_root, alias,
+                                       strlen(alias)) == NULL) {
+        goto out;
+    }
+
+    rc = setfileparms(obj, vol->v_vid, DIRDID_ROOT, alias, 1 << FILPBIT_MDATE,
+                      &date, sizeof(date));
+    dated = lstat(path, &st[0]) == 0 && st[0].st_mtime == want;
+    kept = stat(tpath, &st[1]) == 0 && st[1].st_mtime == old[1].tv_sec;
+    entry = dircache_search_by_name(vol, vol->v_root, alias, strlen(alias));
+    fresh = entry == NULL || entry->dcache_mtime == want;
+
+    if (rc == AFP_OK && dated && kept && fresh) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPSetFileParms of a symlink's date: %d, link dated "
+                        "%d, target's date kept %d, cached date current %d\n",
+                rc, dated, kept, fresh);
+        ret = 1;
+    }
+
+out:
+    obj->options.dircache_validation_freq = saved_freq;
+
+    /* FPDelete refuses a symlink where it cannot read the link's lock
+     * state, so the names go by unlink(2), with the metadata file that
+     * version 2 made for the link */
+    if ((id = cnid_get(vol->v_cdb, DIRDID_ROOT, alias,
+                       strlen(alias))) != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    snprintf(adpath, sizeof(adpath), "%s/.AppleDouble/%s", vol->v_path,
+             alias);
+    unlink(adpath);
+    unlink(path);
+    unlink(tpath);
     return ret;
 }
 

@@ -110,18 +110,18 @@ static int adf_readonly(const struct ad_fd *adf)
  * it invisible; a file another fork created first keeps its content. The
  * call then reopens the fork through ad_open, on the adouble of the
  * session's open fork of the file when there is one, so the open fork holds
- * real descriptors, takes the open-mode locks of its access, and drops its
- * virtual state. A fork whose name a symlink holds on a volume without
- * 'follow symlinks', whose seed, reopen or locks fail, or whose file is
- * write-inhibited where the volume does not ignore it, stays virtual, with
+ * real descriptors, takes the open-mode locks of its access and deny modes,
+ * and drops its virtual state. A fork whose name a symlink holds on a volume
+ * without 'follow symlinks', whose seed, reopen or locks fail, or whose file
+ * is write-inhibited where the volume does not ignore it, stays virtual, with
  * nothing open; a file the call created goes again while the name holds it,
  * unless another process claims it, and then counts as created.
  *
  * @param[in]     obj       session object
  * @param[in,out] ofork     open fork on the virtual Icon file
  * @param[in]     is_write  called for an FPWrite, else for FPSetForkParms
- * @returns AFP_OK; AFPERR_LOCK when another open's deny modes refuse the
- *          locks, AFPERR_ACCESS when a symlink holds the name on a volume
+ * @returns AFP_OK; AFPERR_LOCK when another open's modes refuse the locks,
+ *          AFPERR_ACCESS when a symlink holds the name on a volume
  *          without 'follow symlinks', the session's open fork of the file
  *          holds a read-only descriptor the fork needs, or the file is
  *          write-inhibited where the volume does not ignore it, the reply
@@ -150,22 +150,13 @@ static int materialize_virtual_icon(const AFPObj *obj, struct ofork *ofork,
     /* a file another fork made real first keeps its content */
     if (ad_open(&icon_ad, path, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE
                 | ADFLAGS_EXCL, 0666) == 0) {
-        /* without following symlinks, a symlink under the name opens as
-         * one, and holds no file for the icon */
-        const int islink = ad_data_fileno(&icon_ad) == AD_SYMLINK;
-
         /* the file the call made, the only one its cleanup removes */
-        if (!islink && fstat(ad_data_fileno(&icon_ad), &st) == 0) {
+        if (fstat(ad_data_fileno(&icon_ad), &st) == 0) {
             made.dev = st.st_dev;
             made.inode = st.st_ino;
         }
 
         ad_close(&icon_ad, ADFLAGS_DF);
-
-        if (islink) {
-            return AFPERR_ACCESS;
-        }
-
         created = 1;
     } else if (errno != EEXIST) {
         return fork_error(ofork, "materialize_virtual_icon", is_write);
@@ -215,7 +206,7 @@ static int materialize_virtual_icon(const AFPObj *obj, struct ofork *ofork,
         /* the fork's own read-write open needs the data descriptor, and a
          * resource fork's also the resource one; a lender's read-only one
          * means the user cannot write it, and the emulated one of a symlink
-         * renamed onto the name since the create holds no file */
+         * holds no file */
         if (ad_data_fileno(opened->of_ad) < 0
                 || adf_readonly(&opened->of_ad->ad_data_fork)
                 || ((ofork->of_flags & AFPFORK_RSRC)
@@ -240,8 +231,7 @@ static int materialize_virtual_icon(const AFPObj *obj, struct ofork *ofork,
     rlen = ofork->of_ad->ad_rlen;
 
     /* the data fork first, with no create: a file gone from the name stays
-     * gone, and a symlink renamed onto it since the create holds no file
-     * for the icon */
+     * gone, and a symlink under it holds no file for the icon */
     if (ad_open(ofork->of_ad, path,
                 ADFLAGS_DF | ADFLAGS_SETSHRMD | ADFLAGS_RDWR) < 0) {
         err = fork_error(ofork, "materialize_virtual_icon", is_write);
@@ -265,8 +255,10 @@ static int materialize_virtual_icon(const AFPObj *obj, struct ofork *ofork,
     meta = ad_open(ofork->of_ad, path,
                    ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) == 0;
 
-    /* WriteInhibit refuses the write, unless the volume ignores it */
-    if (meta && !(vol->v_ignattr & ATTRBIT_NOWRITE)) {
+    /* WriteInhibit refuses the write, unless the volume ignores it; a
+     * lender's metadata on a read-only descriptor holds it too */
+    if (ad_meta_fileno(ofork->of_ad) != -1
+            && !(vol->v_ignattr & ATTRBIT_NOWRITE)) {
         uint16_t attr;
         ad_getattr(ofork->of_ad, &attr);
 
@@ -276,11 +268,14 @@ static int materialize_virtual_icon(const AFPObj *obj, struct ofork *ofork,
         }
     }
 
-    /* the open-mode locks of the fork's access, as afp_openfork() takes them */
+    /* the open-mode locks of the fork's access and deny modes, as
+     * afp_openfork() takes them */
     const int eid = (ofork->of_flags & AFPFORK_RSRC) ? ADEID_RFORK
                     : ADEID_DFORK;
     const int access = OPENACC_WR
-                       | ((ofork->of_flags & AFPFORK_ACCRD) ? OPENACC_RD : 0);
+                       | ((ofork->of_flags & AFPFORK_ACCRD) ? OPENACC_RD : 0)
+                       | ((ofork->of_flags & AFPFORK_DENYRD) ? OPENACC_DRD : 0)
+                       | ((ofork->of_flags & AFPFORK_DENYWR) ? OPENACC_DWR : 0);
 
     if (fork_setmode(obj, ofork->of_ad, eid, access, ofork->of_refnum) < 0) {
         /* a deny mode conflict is the client's news */
@@ -736,12 +731,16 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
  * open on a read-only volume fails with AFPERR_VLOCK, and a directory with
  * AFPERR_BADTYPE. The virtual Icon file of the volume root opens without a
  * descriptor. A real fork opens through ad_open with share modes, and the
- * metadata opens too, created for a write open.
+ * metadata opens too, created for a write open. On the ea layout a header
+ * without the file's CNID takes it, with the opened file's identity, wherever
+ * the metadata descriptor can write it, but on a volume set read only.
  *
  * The write-inhibit attribute refuses a write open with AFPERR_OLOCK, and a
- * deny mode conflict fails with AFPERR_DENYCONF. The reply carries the
- * bitmap, the fork reference number, and the fork parameters. Running out of
- * descriptors fails with AFPERR_NFILE.
+ * deny mode conflict fails with AFPERR_DENYCONF. Every fork takes the band
+ * locks of its access and deny modes on the data file, a version 2 resource
+ * fork opened read-only on a file without its metadata file among them. The
+ * reply carries the bitmap, the fork reference number, and the fork
+ * parameters. Running out of descriptors fails with AFPERR_NFILE.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -856,6 +855,15 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
             if (access & OPENACC_WR) {
                 ofork->of_flags |= AFPFORK_ACCWR;
+            }
+
+            /* the first write's file takes them with the access */
+            if (access & OPENACC_DRD) {
+                ofork->of_flags |= AFPFORK_DENYRD;
+            }
+
+            if (access & OPENACC_DWR) {
+                ofork->of_flags |= AFPFORK_DENYWR;
             }
 
             ofork->of_virtual_data = vdata;
@@ -1037,6 +1045,28 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             (void)ad_setid(ofork->of_ad, st->st_dev, st->st_ino, id,
                            curdir->d_did, vol->v_stamp);
             ad_flush(ofork->of_ad);
+        } else if (ofork->of_ad->ad_vers == AD_VERSION_EA
+                   && !(vol->v_flags & AFPVOL_RO)
+                   && ad_meta_fileno(ofork->of_ad) >= 0
+                   && (ad_get_MD_flags(ofork->of_ad) & O_ACCMODE) == O_RDWR
+                   && ad_getid(ofork->of_ad, st->st_dev, st->st_ino, 0,
+                               vol->v_stamp) == CNID_INVALID) {
+            /* a header made without the file's CNID, as a macOS ._ file's
+             * conversion makes one, takes it, which a CNID database rebuild
+             * would otherwise renumber; an ea header always has the entries
+             * for it, where a version 2 one from an older release may not.
+             * The identity is the opened file's, which the lookup's stat may
+             * not describe */
+            struct stat now;
+            cnid_t id;
+
+            if (fstat(ad_data_fileno(ofork->of_ad), &now) == 0
+                    && (id = get_id(vol, ofork->of_ad, &now, curdir->d_did,
+                                    upath, (int)strlen(upath))) != CNID_INVALID
+                    && ad_setid(ofork->of_ad, now.st_dev, now.st_ino, id,
+                                curdir->d_did, vol->v_stamp)) {
+                ad_flush(ofork->of_ad);
+            }
         }
     } else {
         switch (errno) {
@@ -1094,45 +1124,38 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
     }
 
-    /*
-     * synchronization locks:
-     */
+    /* synchronization locks, on the data file's band, which a version 2
+     * resource fork without its metadata file takes too */
+    ret = fork_setmode(obj, ofork->of_ad, eid, access, ofrefnum);
 
-    /* don't try to lock non-existent rforks. */
-    if ((eid == ADEID_DFORK)
-            || (ad_reso_fileno(ofork->of_ad) != -1)
-            || (ofork->of_ad->ad_vers == AD_VERSION_EA)) {
-        ret = fork_setmode(obj, ofork->of_ad, eid, access, ofrefnum);
+    /* can we access the fork? */
+    if (ret < 0) {
+        ofork->of_flags |= AFPFORK_ERROR;
 
-        /* can we access the fork? */
-        if (ret < 0) {
-            ofork->of_flags |= AFPFORK_ERROR;
+        /* Map errno before the goto: the cleanup ad_close()/close(2)
+         * clobbers it. */
+        switch (errno) {
+        case EAGAIN: /* return data anyway */
+        case EACCES:
+        case EINVAL:
+            ofrefnum = 0;
+            memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
+            ret = AFPERR_DENYCONF;
+            break;
 
-            /* Map errno before the goto: the cleanup ad_close()/close(2)
-             * clobbers it. */
-            switch (errno) {
-            case EAGAIN: /* return data anyway */
-            case EACCES:
-            case EINVAL:
-                ofrefnum = 0;
-                memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
-                ret = AFPERR_DENYCONF;
-                break;
-
-            default:
-                *rbuflen = 0;
-                LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_lock: %s",
-                    s_path->m_name, strerror(errno));
-                ret = AFPERR_PARAM;
-                break;
-            }
-
-            goto openfork_err;
+        default:
+            *rbuflen = 0;
+            LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_lock: %s",
+                s_path->m_name, strerror(errno));
+            ret = AFPERR_PARAM;
+            break;
         }
 
-        if (access & OPENACC_WR) {
-            ofork->of_flags |= AFPFORK_ACCWR;
-        }
+        goto openfork_err;
+    }
+
+    if (access & OPENACC_WR) {
+        ofork->of_flags |= AFPFORK_ACCWR;
     }
 
     /* the file may be open read only without resource fork */

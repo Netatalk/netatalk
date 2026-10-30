@@ -3864,6 +3864,169 @@ int main(int argc, char *argv[])
              "delete: a refused unlink keeps the AppleDouble file");
     TEST_int(utest_delete_uncounted_drops_count(&obj, vol), 0,
              "delete: a file the cached item count never held drops the count");
+    TEST_int(utest_hard_create_refused_under_peer_open(&obj, vol), 0,
+             "FPCreateFile: a hard create of a file another session holds "
+             "open or another process locks is refused");
+    TEST_int_or_skip(utest_hard_create_refuses_racing_open(&obj, vol), 0,
+                     "FPCreateFile: a hard create that another session's "
+                     "open overtakes is refused");
+    TEST_int(utest_hard_create_keeps_data_without_metadata(&obj, vol), 0,
+             "FPCreateFile: a version 2 hard create whose metadata will not "
+             "open keeps the file");
+    TEST_int(utest_hard_create_v2_header_starts_over(&obj, vol), 0,
+             "FPCreateFile: a version 2 hard create starts the header over "
+             "without reading it");
+    TEST_int_or_skip(utest_hard_create_empties_late_file(&obj, vol), 0,
+                     "FPCreateFile: a hard create empties a file that took "
+                     "the name after its lookup");
+    TEST_int_or_skip(utest_hard_create_refuses_held_late_file(&obj, vol), 0,
+                     "FPCreateFile: a hard create refuses a held file that "
+                     "took the name after its lookup");
+    TEST_int(utest_create_drops_stale_metadata(&obj, vol), 0,
+             "FPCreateFile: a file made under a name whose metadata file "
+             "stayed gets fresh metadata");
+    TEST_int(utest_hard_create_starts_file_over(&obj, vol), 0,
+             "FPCreateFile: a hard create empties both forks and the "
+             "FinderInfo, on the ea layout as on version 2");
+    TEST_int_or_skip(utest_create_drops_stale_sidecar(&obj, vol), 0,
+                     "FPCreateFile: a file made under a name whose ._ file "
+                     "stayed takes none");
+    TEST_int_or_skip(utest_create_refused_by_sidecar_folder(&obj, vol), 0,
+                     "FPCreateFile: a new file whose ._ name holds a folder "
+                     "is refused and goes");
+    TEST_int_or_skip(utest_create_long_name(&obj, vol), 0,
+                     "FPCreateFile: a name too long for its ._ name is "
+                     "made and emptied");
+    TEST_int_or_skip(utest_hard_create_refused_under_sidecar_lock(&obj, vol),
+                     0, "FPCreateFile: a hard create under a lock on the "
+                     "file's ._ file is refused");
+    TEST_int_or_skip(utest_hard_create_refused_unread_sidecar(&obj, vol), 0,
+                     "FPCreateFile: a hard create whose read of the ._ "
+                     "file's locks fails is refused");
+    TEST_int_or_skip(utest_ea_trunc_open_reads_header(&obj, vol), 0,
+                     "ad_open: an ea layout metadata open that truncates "
+                     "without creating reads the header");
+    TEST_int_or_skip(utest_soft_create_over_symlink_exists(&obj, vol), 0,
+                     "FPCreateFile, FPCopyFile: a soft create or a copy over "
+                     "a symlink answers AFPERR_EXIST");
+    TEST_int(utest_hard_create_refreshes_entry(&obj, vol), 0,
+             "FPCreateFile: a hard create leaves the file's dircache entry "
+             "its new size");
+    TEST_int_or_skip(utest_symlink_refusal_keeps_locks(&obj, vol), 0,
+                     "FPSetFileParms: a refused symlink conversion keeps the "
+                     "fork's locks");
+    TEST_int_or_skip(utest_setfileparms_held_symlink_kept(&obj, vol), 0,
+                     "FPSetFileParms: a held symlink's fork keeps its "
+                     "descriptor, and a version 2 link takes the FinderInfo");
+    TEST_int_or_skip(utest_held_conversion_keeps_metadata(&obj, vol), 0,
+                     "FPSetFileParms: a held file's symlink conversion leaves "
+                     "the replaced file's metadata");
+    TEST_int_or_skip(utest_symlink_conversion_refused_under_deny(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion of a file whose "
+                     "writes are denied or whose data is locked is refused");
+    TEST_int_or_skip(utest_setfileparms_cnid_failure_closes(&obj, vol), 0,
+                     "FPSetFileParms: a CNID failure closes the metadata it "
+                     "opened");
+    TEST_int_or_skip(utest_setfileparms_readonly_fork_refused(&obj, vol), 0,
+                     "FPSetFileParms: metadata held on a read-only descriptor "
+                     "is refused, not dropped");
+    TEST_int_or_skip(utest_copyfile_readonly_source(&obj, vol), 0,
+                     "FPCopyFile: a source the user may only read is copied");
+    TEST_int_or_skip(utest_openfork_rsrc_beside_readonly(&obj, vol), 0,
+                     "FPOpenFork: a read-only resource fork serves reads and "
+                     "refuses a write");
+    TEST_int_or_skip(utest_icon_write_inhibited_readonly_lender(&obj, vol), 0,
+                     "FPWrite: a write-inhibited Icon beside a read-only "
+                     "lender stays virtual");
+    TEST_int_or_skip(utest_setfileparms_native_finderinfo_kept(&obj, vol), 0,
+                     "FPSetFileParms: on macOS a FinderInfo change to a "
+                     "Finder-made file stays");
+    TEST_int_or_skip(utest_osx_conversion_keeps_locks(&obj, vol), 0,
+                     "FPOpenFork: converting a macOS ._ file keeps the data "
+                     "fork's locks");
+    TEST_int_or_skip(utest_osx_conversion_by_path(&obj, vol), 0,
+                     "ad_open: converting a macOS ._ file by a full path makes "
+                     "the data file's metadata");
+    TEST_int_or_skip(utest_osx_conversion_readonly_kept(&obj, vol), 0,
+                     "FPOpenFork: a macOS ._ file a read-only fork cannot "
+                     "convert stays as macOS wrote it");
+    TEST_int_or_skip(utest_osx_conversion_readonly_with_metadata(&obj, vol),
+                     0, "FPOpenFork: a macOS ._ file of a file with metadata "
+                     "converts through a read-only fork");
+    TEST_int_or_skip(utest_osx_conversion_of_symlink(&obj, vol), 0,
+                     "FPOpenFork: a symlink's macOS ._ file converts at the "
+                     "first open");
+    TEST_int_or_skip(utest_osx_conversion_failed_write_retried(&obj, vol), 0,
+                     "FPOpenFork: a macOS ._ file whose FinderInfo write "
+                     "failed converts at the next open");
+    TEST_int_or_skip(utest_osx_conversion_repairs_metadata(&obj, vol), 0,
+                     "FPOpenFork: a macOS ._ file of a file whose metadata "
+                     "will not parse makes it afresh");
+    TEST_int_or_skip(utest_osx_conversion_readonly_volume(&obj, vol), 0,
+                     "FPOpenFork: a read-only volume keeps a macOS ._ file as "
+                     "macOS wrote it");
+    TEST_int_or_skip(utest_osx_conversion_header_has_cnid(&obj, vol), 0,
+                     "FPOpenFork: the metadata a macOS ._ file's conversion "
+                     "makes carries the file's CNID");
+    TEST_int_or_skip(utest_readonly_volume_open_adds_no_cnid(&obj, vol), 0,
+                     "FPOpenFork: an open on a read-only volume leaves a "
+                     "header without its CNID");
+    TEST_int(utest_exchange_held_file_keeps_locks(&obj, vol), 0,
+             "FPExchangeFiles: a held file keeps its locks and each name "
+             "its own metadata and CNID");
+    TEST_int(utest_exchange_bare_held_destination(&obj, vol), 0,
+             "FPExchangeFiles: a held destination without metadata gets a "
+             "header and keeps its locks");
+    TEST_int_or_skip(utest_exchange_held_symlink_kept(&obj, vol), 0,
+                     "FPExchangeFiles: a held symlink's fork keeps its "
+                     "descriptor through a refused exchange");
+    TEST_int_or_skip(utest_exchange_refused_header_has_cnid(&obj, vol), 0,
+                     "FPExchangeFiles: a refused exchange leaves the header "
+                     "it made the file's CNID");
+    TEST_int_or_skip(utest_exchange_osx_sidecar_finderinfo(&obj, vol), 0,
+                     "FPExchangeFiles: a file with a macOS ._ file keeps the "
+                     "sidecar's FinderInfo");
+    TEST_int_or_skip(utest_exchange_hard_link_keeps_rlen(&obj, vol), 0,
+                     "FPExchangeFiles: a held hard link's resource fork keeps "
+                     "its length");
+    TEST_int_or_skip(utest_exchange_refused_sidecar_header(&obj, vol), 0,
+                     "FPExchangeFiles: a refused exchange leaves a macOS ._ "
+                     "file's conversion its CNID, or its FinderInfo");
+    TEST_int_or_skip(utest_exchange_bare_hard_link_keeps_rlen(&obj, vol), 0,
+                     "FPExchangeFiles: a held hard link's fork without "
+                     "metadata keeps its length");
+    TEST_int_or_skip(utest_exchange_failure_restores_cnids(&obj, vol), 0,
+                     "FPExchangeFiles: a failure after the CNID rewrite "
+                     "restores the CNIDs");
+    TEST_int_or_skip(utest_exchange_failed_rename_leaves_no_temp(&obj, vol), 0,
+                     "FPExchangeFiles: a failed first rename leaves no "
+                     ".AppleTemp file");
+    TEST_int(utest_exchange_needs_read_access(&obj, vol), 0,
+             "FPExchangeFiles: a file its user may not read is refused");
+    TEST_int(utest_exchange_v2_names_kept(&obj, vol), 0,
+             "FPExchangeFiles: on version 2 each name's header keeps its own "
+             "name");
+    TEST_int_or_skip(utest_sidecar_names_refused(&obj, vol), 0,
+                     "FPCreateFile, FPCreateDir, FPRename, FPCopyFile: a ._ "
+                     "name no file holds is refused");
+    TEST_int_or_skip(utest_listing_keeps_sidecar_locks(&obj, vol), 0,
+                     "FPEnumerate: a listing keeps the session's locks on the "
+                     "._ files it holds open");
+    TEST_int_or_skip(utest_listing_passes_fifo(&obj, vol), 0,
+                     "FPEnumerate: a FIFO with a ._ name does not hold up a "
+                     "listing");
+    TEST_int(utest_v2_bare_rsrc_open_takes_band(&obj, vol), 0,
+             "FPOpenFork: a version 2 resource fork without its metadata "
+             "file takes its band locks");
+    TEST_int(utest_virtual_icon_write_takes_deny_lock(&obj, vol), 0,
+             "FPWrite: the virtual Icon's first write takes its fork's deny "
+             "modes");
+    TEST_int_or_skip(utest_exchange_failed_undo_keeps_files(&obj, vol), 0,
+                     "FPExchangeFiles: an undo that fails ends the unwind "
+                     "with both files kept");
+    TEST_int_or_skip(utest_setfileparms_symlink_dated_itself(&obj, vol), 0,
+                     "FPSetFileParms: a symlink's date goes to the link, not "
+                     "its target");
     TEST_int_or_skip(utest_volpoll_stamp_nanoseconds(vol), 0,
                      "stat helpers: the root's times keep their nanoseconds");
     TEST_int_or_skip(utest_volpoll_birthtime_member(), 0,

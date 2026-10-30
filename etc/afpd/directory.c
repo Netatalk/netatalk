@@ -3780,7 +3780,8 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 /*!
  * @brief FPCreateDir: create a directory and return its DID
  *
- * The request names the new directory relative to a parent DID. The call
+ * The request names the new directory relative to a parent DID, by a name
+ * that check_newname() accepts, else the call fails with AFPERR_PARAM. The call
  * creates it with netatalk_mkdir, adds it to the dircache, and writes its
  * AppleDouble metadata with the Mac name and the CNID. FCE and Spotlight learn
  * about the new directory, and sibling afpd processes get a refresh hint for
@@ -3848,6 +3849,10 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     upath = s_path->u_name;
+
+    if (check_newname(vol, upath) != AFP_OK) {
+        return AFPERR_PARAM;
+    }
 
     if (AFP_OK != (err = netatalk_mkdir(vol, upath))) {
         return err;
