@@ -38,5 +38,9 @@ extern int utest_shared_rfork_length_survives_bad_sidecar(AFPObj *obj,
                                                           struct vol *vol);
 extern int utest_readonly_volume_close_reads_nothing(AFPObj *obj,
                                                      struct vol *vol);
+extern int utest_closed_fork_drops_its_open_bit(AFPObj *obj, struct vol *vol);
+extern int utest_open_forks_report_both(AFPObj *obj, struct vol *vol);
+extern int utest_peer_data_fork_shows_in_attributes(AFPObj *obj,
+                                                    struct vol *vol);
 
 #endif /* SUBTESTS_ICONS_H */

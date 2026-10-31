@@ -23,6 +23,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -43,6 +44,7 @@
 #include "directory.h"
 #include "faultinject.h"
 #include "fork.h"
+#include "peer_lock.h"
 #include "subtests_icons.h"
 #include "test.h"
 #include "test_capabilities.h"
@@ -1286,6 +1288,183 @@ out:
         closefork(obj, r);
     }
 
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    return ret;
+}
+
+/*!
+ * @brief The attribute word FPGetFileDirParms reports for name in the
+ *        volume root, from the last reply
+ *
+ * @returns the word in host order, or -1 when the call failed
+ */
+static int icons_file_attr(AFPObj *obj, const struct vol *vol,
+                           const char *name)
+{
+    const char *params;
+    size_t len;
+    uint16_t attr;
+
+    if (getfiledirparms_bitmap(obj, vol->v_vid, DIRDID_ROOT, name,
+                               1 << FILPBIT_ATTR, 0) != AFP_OK) {
+        return -1;
+    }
+
+    params = reply_params(REPLY_FILEDIRPARMS, &len);
+
+    if (len < sizeof(attr)) {
+        return -1;
+    }
+
+    memcpy(&attr, params, sizeof(attr));
+    return ntohs(attr);
+}
+
+/*!
+ * @brief A fork closed while another fork of the file stays open drops its
+ *        open-fork attribute bit at once: a resource fork opened, a data
+ *        fork opened beside it and the resource fork closed, the file
+ *        reports the data fork open alone
+ *
+ * @returns 0, 1 when the file reports other bits, -1 when the setup failed
+ */
+int utest_closed_fork_drops_its_open_bit(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "icons_odrop";
+    const int bits = ATTRBIT_DOPEN | ATTRBIT_ROPEN;
+    uint16_t r = 0;
+    uint16_t d = 0;
+    int attr = -1;
+    int ret = -1;
+
+    if (icons_make_file(obj, vol, name) != 0) {
+        return -1;
+    }
+
+    if (openfork(obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                 OPENACC_RD, &r) != AFP_OK
+            || openfork(obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                        OPENACC_RD, &d) != AFP_OK) {
+        goto out;
+    }
+
+    closefork(obj, r);
+    r = 0;
+    attr = icons_file_attr(obj, vol, name);
+    ret = attr >= 0 && (attr & bits) == ATTRBIT_DOPEN ? 0 : 1;
+
+    if (ret != 0) {
+        fprintf(stderr, "closed fork: attributes %#x, expected %#x\n", attr,
+                ATTRBIT_DOPEN);
+    }
+
+out:
+
+    if (r) {
+        closefork(obj, r);
+    }
+
+    if (d) {
+        closefork(obj, d);
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    return ret;
+}
+
+/*!
+ * @brief A file with its resource fork open alone reports that fork's
+ *        open-fork bit, and with a data fork open beside it both
+ *
+ * @returns 0, 1 when the file reports other bits, -1 when the setup failed
+ */
+int utest_open_forks_report_both(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "icons_oboth";
+    const int bits = ATTRBIT_DOPEN | ATTRBIT_ROPEN;
+    uint16_t r = 0;
+    uint16_t d = 0;
+    int alone = -1;
+    int paired = -1;
+    int ret = -1;
+
+    if (icons_make_file(obj, vol, name) != 0) {
+        return -1;
+    }
+
+    if (openfork(obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_RSCS,
+                 OPENACC_RD, &r) != AFP_OK) {
+        goto out;
+    }
+
+    alone = icons_file_attr(obj, vol, name);
+
+    if (openfork(obj, vol->v_vid, DIRDID_ROOT, name, OPENFORK_DATA,
+                 OPENACC_RD, &d) != AFP_OK) {
+        goto out;
+    }
+
+    paired = icons_file_attr(obj, vol, name);
+    ret = alone >= 0 && (alone & ATTRBIT_ROPEN) && paired >= 0
+          && (paired & bits) == bits ? 0 : 1;
+
+    if (ret != 0) {
+        fprintf(stderr, "open forks: attributes %#x alone, %#x paired, "
+                "expected %#x and %#x\n", alone, paired, ATTRBIT_ROPEN, bits);
+    }
+
+out:
+
+    if (r) {
+        closefork(obj, r);
+    }
+
+    if (d) {
+        closefork(obj, d);
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, name);
+    return ret;
+}
+
+/*!
+ * @brief A data fork another process holds open shows in the attributes
+ *        FPGetFileDirParms reads from disk: the probe of the open bands
+ *        finds the peer's lock
+ *
+ * @returns 0, 1 when the data fork's bit is missing, -1 when the setup
+ *          failed
+ */
+int utest_peer_data_fork_shows_in_attributes(AFPObj *obj, struct vol *vol)
+{
+    static char name[] = "icons_opeer";
+    char path[MAXPATHLEN + 1];
+    struct peer peer;
+    int attr = -1;
+    int ret = -1;
+
+    if (icons_make_file(obj, vol, name) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, name);
+
+    if (peer_hold_lock(&peer, path, F_RDLCK, AD_FILELOCK_OPEN_RD, 1) != 0) {
+        goto out;
+    }
+
+    /* without its entry the file's parameters read the metadata from disk
+     * and probe the bands */
+    drop_entry(vol, DIRDID_ROOT, name);
+    attr = icons_file_attr(obj, vol, name);
+    peer_release(&peer);
+    ret = attr >= 0 && (attr & ATTRBIT_DOPEN) ? 0 : 1;
+
+    if (ret != 0) {
+        fprintf(stderr, "peer's data fork: attributes %#x\n", attr);
+    }
+
+out:
     delete (obj, vol->v_vid, DIRDID_ROOT, name);
     return ret;
 }

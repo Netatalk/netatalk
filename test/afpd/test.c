@@ -3738,6 +3738,15 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_readonly_volume_close_reads_nothing(&obj, vol), 0,
                      "FPCloseFork: a read-only fork's close on a read-only "
                      "volume reads neither the header nor the metadata");
+    TEST_int(utest_closed_fork_drops_its_open_bit(&obj, vol), 0,
+             "attributes: a fork closed beside an open fork drops its "
+             "open-fork bit at once");
+    TEST_int(utest_open_forks_report_both(&obj, vol), 0,
+             "attributes: a resource fork open alone reports its open-fork bit "
+             "and beside a data fork both");
+    TEST_int(utest_peer_data_fork_shows_in_attributes(&obj, vol), 0,
+             "attributes: a peer's open data fork shows in the word read "
+             "from disk");
     TEST_int_or_skip(utest_symlink_rfork_close_keeps_cnids(&obj, vol), 0,
                      "FPCloseFork: a symlink's resource fork keeps the CNIDs");
     TEST_int(utest_emptied_icon_close_deletes_file(&obj, vol), 0,
