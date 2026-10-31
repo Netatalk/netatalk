@@ -32,6 +32,7 @@
 #include <atalk/afp.h>
 #include <atalk/asp.h>
 #include <atalk/cnid.h>
+#include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
@@ -724,13 +725,281 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid,
 }
 
 /*!
+ * @brief Whether the resource fork cache serves a volume
+ *
+ * An ASP session has no budget; a multiprotocol volume takes the cache only
+ * with a budget set explicitly.
+ *
+ * @param[in] obj  session object
+ * @param[in] vol  volume
+ * @returns true when it does
+ */
+static bool rfork_cache_serves(const AFPObj *obj, const struct vol *vol)
+{
+    return obj->options.dircache_rfork_budget > 0
+           && (!(vol->v_flags & AFPVOL_MULTIPROTO)
+               || obj->options.dircache_rfork_budget_explicit);
+}
+
+#if !defined(HAVE_EAFD) || !defined(SOLARIS)
+/*!
+ * @brief The resource fork length an FPOpenFork takes from the file's
+ *        dircache entry, whose buffer the fork reads instead of the sidecar
+ *
+ * Only a read on the ea layout qualifies, without strict locking, whose
+ * temporary locks need the descriptor. A file the session holds open shares
+ * that fork's adouble, a hard link has a sidecar per name, and the root Icon
+ * file of a volume serving a built-in icon removes an emptied file through
+ * the descriptor at its close. The entry, brought to the lookup's stat, must
+ * hold the file's buffer.
+ *
+ * @param[in]     obj     session object
+ * @param[in]     vol     volume of the file
+ * @param[in]     dir     the file's folder
+ * @param[in,out] path    the file as cname() resolved it
+ * @param[in]     fork    OPENFORK_DATA or OPENFORK_RSCS
+ * @param[in]     access  OPENACC_* access and deny bits
+ * @param[in]     opened  the session's open fork of the file, or NULL
+ * @returns the entry's dcache_rlen, or 0 when the open takes the sidecar
+ */
+static off_t fork_cache_rlen(const AFPObj *obj, const struct vol *vol,
+                             const struct dir *dir, struct path *path,
+                             char fork, uint16_t access,
+                             const struct ofork *opened)
+{
+    const struct dir *entry;
+
+    if (fork == OPENFORK_DATA || !(access & OPENACC_RD)
+            || (access & OPENACC_WR) || vol->v_adouble != AD_VERSION_EA
+            || !rfork_cache_serves(obj, vol)
+            || (obj->options.flags & OPTION_STRICT_LOCKING) || opened != NULL
+            || !S_ISREG(path->st.st_mode) || path->st.st_nlink != 1
+            || (dir->d_did == DIRDID_ROOT && is_virtual_icon_name(path->u_name)
+                && virtual_icon_enabled(vol))) {
+        return 0;
+    }
+
+    entry = dircache_search_at_stat(vol, dir, path->u_name,
+                                    strlen(path->u_name), &path->st);
+    return entry != NULL && entry->dcache_ino == path->st.st_ino
+           && entry->dcache_rfork_buf != NULL ? entry->dcache_rlen : 0;
+}
+#endif
+
+/*!
+ * @brief Whether a fork opened from the resource fork cache reads without a
+ *        resource fork reference of its own
+ *
+ * @param[in] ofork  open fork
+ * @returns true until fork_open_rsrc() takes the reference
+ */
+static bool fork_cached(const struct ofork *ofork)
+{
+    return (ofork->of_flags & AFPFORK_CACHED)
+           && !(ofork->of_adflags & ADFLAGS_RF);
+}
+
+/*!
+ * @brief Whether an entry's buffer holds the resource fork a stat measured
+ *
+ * @param[in] entry  dircache entry of the fork's file
+ * @param[in] len    the fork's length
+ * @param[in] stamp  rfork_stamp() of the stat
+ * @returns true when the buffer has the length and the stamp
+ */
+static bool rfork_buf_holds(const struct dir *entry, off_t len,
+                            const struct timespec *stamp)
+{
+    return entry->dcache_rfork_buf != NULL && entry->dcache_rlen > 0
+           && entry->dcache_rlen == len
+           && atalk_timespec_eq(&entry->dcache_rfork_buf->stamp, stamp);
+}
+
+/*!
+ * @brief Drop an entry's cached resource fork and metadata, which the fork
+ *        on disk no longer matches
+ *
+ * @param[in]     vol    volume of the entry
+ * @param[in,out] entry  dircache entry of the fork's file
+ */
+static void rfork_cache_drop(const struct vol *vol, struct dir *entry)
+{
+    dir_modify(vol, entry, &(struct dir_modify_args) {
+        .flags = DCMOD_AD_INV | DCMOD_NO_PROMOTE,
+    });
+}
+
+/*!
+ * @brief The length of a resource fork through the descriptor it holds, as
+ *        ad_size() measures it, with the stamp of the same stat
+ *
+ * @param[in]  ad     adouble of the fork
+ * @param[out] stamp  rfork_stamp() of the stat, untouched without one
+ * @returns the length, 0 for a fork the open found no file for, ad_rlen when
+ *          the stat fails
+ */
+static off_t rfork_size(const struct adouble *ad, struct timespec *stamp)
+{
+    struct stat st;
+
+    if (!ad_rsrc_open(ad)) {
+        return 0;
+    }
+
+    if (fstat(ad_reso_fileno(ad), &st) != 0) {
+        return ad->ad_rlen;
+    }
+
+    *stamp = rfork_stamp(&st);
+    return MAX(st.st_size - ad_getentryoff(ad, ADEID_RFORK), 0);
+}
+
+/*!
+ * @brief The resource fork the sidecar under a path holds, for a fork opened
+ *        from the cache
+ *
+ * @param[in]  ofork  fork opened from the resource fork cache
+ * @param[in]  path   the file's path
+ * @param[out] stamp  rfork_stamp() of the sidecar's stat
+ * @returns the fork's length past the sidecar's header, 0 for a sidecar no
+ *          longer than its header, or -1 for no sidecar or one that is no
+ *          regular file
+ */
+static off_t fork_sidecar_measure(const struct ofork *ofork, const char *path,
+                                  struct timespec *stamp)
+{
+#if defined(HAVE_EAFD) && defined(SOLARIS)
+    /* the fork is an attribute, measured through the held data descriptor;
+     * no fork opens from the cache there */
+    memset(stamp, 0, sizeof(*stamp));
+    return ad_reso_size(path, 0, ofork->of_ad);
+#else
+    const struct adouble *ad = ofork->of_ad;
+    const char *rfpath = ad->ad_ops->ad_path(path, 0);
+    struct stat st;
+
+    if (rfpath == NULL || ostat(rfpath, &st, vol_syml_opt(ofork->of_vol)) != 0
+            || !S_ISREG(st.st_mode)) {
+        return -1;
+    }
+
+    *stamp = rfork_stamp(&st);
+    return MAX(st.st_size - ad_getentryoff(ad, ADEID_RFORK), 0);
+#endif
+}
+
+/*!
+ * @brief Take the resource fork reference of a fork opened from the cache,
+ *        under the fork's name, as afp_openfork() takes it
+ *
+ * Another fork of the session that holds the sidecar's descriptor lends it;
+ * a new one is asked read-write for the byte-range locks. The share-mode
+ * bands stay on the data descriptor, where the fork's open took them.
+ *
+ * A failed open leaves the fork reporting the length of the sidecar under
+ * its name, none without one. A sibling's descriptor is joined only while
+ * it reads the sidecar under that name.
+ *
+ * @param[in,out] ofork    fork opened from the resource fork cache
+ * @param[in]     is_read  a read wants the fork, else a byte-range lock
+ * @returns AFP_OK; AFPERR_MISC when no name holds the file; for a name
+ *          that holds no sidecar the fork can read, AFPERR_EOF for a read
+ *          and AFPERR_PARAM for a lock; AFPERR_PARAM for a sidecar whose
+ *          header does not parse; AFPERR_ACCESS for a read of a sidecar the
+ *          user cannot open; else AFPERR_MISC
+ */
+static int fork_open_rsrc(struct ofork *ofork, bool is_read)
+{
+    struct adouble *ad = ofork->of_ad;
+    const struct ad_refs before = ad_refs_now(ad);
+    const int had_reso = ad_reso_fileno(ad);
+    /* the join of a write intent onto a read-only descriptor is refused */
+    const int adflags = ADFLAGS_RF | ADFLAGS_RDONLY
+                        | (ad_rsrc_open(ad) ? 0 : ADFLAGS_RDWR);
+    bstring path = of_held_path(ofork);
+    int err;
+
+    if (path == NULL) {
+        err = errno;
+
+        /* no name holds the file: the fork is out of reach, not empty */
+        if (err == ENOENT) {
+            LOG(log_debug, logtype_afpd, "fork_open_rsrc(%s): no name",
+                of_name(ofork));
+            return AFPERR_MISC;
+        }
+    } else if (ad_rsrc_open(ad) && !of_rfork_held(ofork, bdata(path))) {
+        /* the descriptor a sibling holds reads another name's sidecar */
+        LOG(log_error, logtype_afpd,
+            "fork_open_rsrc(%s): the held resource fork is another name's",
+            of_name(ofork));
+        bdestroy(path);
+        return AFPERR_MISC;
+    } else {
+        err = ad_open(ad, bdata(path), adflags) == 0 ? 0 : errno;
+
+        /* a name without a sidecar opens nothing */
+        if (err == 0 && !ad_rsrc_open(ad)) {
+            err = ENOENT;
+        }
+
+        /* the length the fork reports follows the sidecar it could not take */
+        if (err == ENOENT || err == EISDIR || err == OPEN_NOFOLLOW_ERRNO) {
+            ad->ad_rlen = 0;
+        } else if (err != 0) {
+            struct timespec stamp;
+            const off_t rlen = fork_sidecar_measure(ofork, bdata(path),
+                                                    &stamp);
+            ad->ad_rlen = MAX(rlen, 0);
+        }
+
+        bdestroy(path);
+    }
+
+    switch (err) {
+    case 0:
+        ofork->of_adflags |= ad_refs_taken(ad, before);
+        of_note_fd(had_reso < 0 ? ad_reso_fileno(ad) : -1);
+        return AFP_OK;
+
+    case ENOENT:
+    case EISDIR:
+    case OPEN_NOFOLLOW_ERRNO:
+        LOG(log_debug, logtype_afpd, "fork_open_rsrc(%s): %s", of_name(ofork),
+            strerror(err));
+        return is_read ? AFPERR_EOF : AFPERR_PARAM;
+
+    case EIO:
+        /* the header read logged the sidecar it refused */
+        return AFPERR_PARAM;
+
+    case EACCES:
+        /* a lock's replies carry no AFPERR_ACCESS */
+        return is_read ? AFPERR_ACCESS : AFPERR_MISC;
+
+    case EMFILE:
+    case ENFILE:
+        of_log_nfile("fork_open_rsrc", of_name(ofork), err);
+        return AFPERR_MISC;
+
+    default:
+        LOG(log_error, logtype_afpd, "fork_open_rsrc(%s): %s", of_name(ofork),
+            strerror(err));
+        return AFPERR_MISC;
+    }
+}
+
+/*!
  * @brief FPOpenFork: open the data or resource fork of a file with access and
  * deny modes
  *
  * OPENFORK_RSCS, bit 7 of the fork byte, selects the resource fork. A write
  * open on a read-only volume fails with AFPERR_VLOCK, and a directory with
  * AFPERR_BADTYPE. The virtual Icon file of the volume root opens without a
- * descriptor. A real fork opens through ad_open with share modes, and the
+ * descriptor. A read-only resource fork that the file's dircache entry holds
+ * opens the data file alone, while the session holds no other fork of the
+ * file, and reads the entry's copy until a request needs the sidecar. A real
+ * fork opens through ad_open with share modes, and the
  * metadata opens too, created for a write open. On the ea layout a header
  * without the file's CNID takes it, with the opened file's identity, wherever
  * the metadata descriptor can write it, but on a volume set read only.
@@ -963,6 +1232,20 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         adflags |= ADFLAGS_RDONLY;
     }
 
+    /* Solaris keeps the resource fork in an attribute, whose share
+     * reservation rides on the fork's own descriptor */
+#if defined(HAVE_EAFD) && defined(SOLARIS)
+    const off_t cached_rlen = 0;
+#else
+    const off_t cached_rlen = fork_cache_rlen(obj, vol, curdir, s_path, fork,
+                                              access, opened);
+#endif
+
+    /* the share-mode bands of the fork live on the data file */
+    if (cached_rlen > 0) {
+        adflags &= ~ADFLAGS_RF;
+    }
+
     if ((ofork = of_alloc(vol, curdir, path, upath, &ofrefnum, eid, adsame,
                           st)) == NULL) {
         return AFPERR_NFILE;
@@ -1022,8 +1305,10 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         adflags = ADFLAGS_HF | ADFLAGS_RDONLY;
     }
 
-    /* the resource fork's open above measured the fork it holds */
-    if (eid == ADEID_RFORK && ad_reso_fileno(ofork->of_ad) != -1) {
+    /* the resource fork's open above measured the fork it holds, and the
+     * entry measured the one a fork from the cache reads */
+    if (eid == ADEID_RFORK
+            && (cached_rlen > 0 || ad_reso_fileno(ofork->of_ad) != -1)) {
         adflags |= ADFLAGS_NORLEN;
     }
 
@@ -1095,6 +1380,14 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             ret = AFPERR_PARAM;
             goto openfork_err;
         }
+    }
+
+    /* the listing reported the entry's length; no reference carries the
+     * fork's open bit until its resource fork opens */
+    if (cached_rlen > 0) {
+        ofork->of_ad->ad_rlen = cached_rlen;
+        ofork->of_ad->ad_held_forks |= ATTRBIT_ROPEN;
+        ofork->of_flags |= AFPFORK_CACHED;
     }
 
     if ((ret = getforkparams(obj, ofork, bitmap, rbuf + 2 * sizeof(int16_t),
@@ -1197,7 +1490,7 @@ openfork_err:
 
     /* the refused fork is released, so the counts cover open forks only */
     if (nfile_err) {
-        of_log_nfile(s_path->m_name, nfile_err);
+        of_log_nfile("afp_openfork", s_path->m_name, nfile_err);
     }
 
     return ret;
@@ -1475,7 +1768,8 @@ afp_setfork_err:
  * The flag byte chooses between taking and releasing the lock, and whether the
  * offset counts from the end of the fork. A length of -1 extends the range to
  * BYTELOCK_MAX, below the share mode band. Locks on virtual forks succeed
- * without effect. The reply carries the start offset of the range.
+ * without effect, and a lock on a fork opened from the cache takes its
+ * resource fork first. The reply carries the start offset of the range.
  *
  * @param[in]     obj      session object, unused
  * @param[in]     ibuf     request block
@@ -1485,7 +1779,7 @@ afp_setfork_err:
  *                         return
  * @param[in]     is64     nonzero for FPByteRangeLockExt
  * @returns AFP_OK, AFPERR_LOCK, AFPERR_NORANGE, AFPERR_NLOCK, AFPERR_RANGEOVR,
- *          or AFPERR_PARAM
+ *          AFPERR_PARAM, or the reply of fork_open_rsrc()
  */
 static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen, int is64)
@@ -1532,9 +1826,26 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         length = BYTELOCK_MAX;
     } else if (!length || is_neg(is64, length)) {
         return AFPERR_PARAM;
-    } else if ((length >= AD_FILELOCK_BASE)
-               && -1 == (ad_reso_fileno(ofork->of_ad))) { /* HF ?*/
-        return AFPERR_LOCK;
+    }
+
+    /* an end-relative offset is checked once the fork's size is known */
+    if (offset < 0 && !ENDBIT(flags)) {
+        return AFPERR_PARAM;
+    }
+
+    /* a lock lives on the fork's own resource fork descriptor; a fork
+     * without one holds no lock to release */
+    if (!UNLOCKBIT(flags) && fork_cached(ofork)) {
+        const int ret = fork_open_rsrc(ofork, false);
+
+        if (ret != AFP_OK) {
+            return ret;
+        }
+    }
+
+    /* a fork from the cache that holds no descriptor holds no lock */
+    if (length >= AD_FILELOCK_BASE && ad_reso_fileno(ofork->of_ad) == -1) {
+        return fork_cached(ofork) ? AFPERR_NORANGE : AFPERR_LOCK;
     }
 
     if (ENDBIT(flags)) {
@@ -1703,7 +2014,7 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
         (long long)cached_entry->dcache_rlen,
         ntohl(cached_entry->d_did));
 
-    if (dsi_readinit(dsi, (char *)cached_entry->dcache_rfork_buf + offset,
+    if (dsi_readinit(dsi, cached_entry->dcache_rfork_buf->data + offset,
                      (size_t)reqcount, (size_t)reqcount, err) < 0) {
         return -1;
     }
@@ -1726,9 +2037,11 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
  * ignores the newline mask and character of the request.
  * Strict locking takes a temporary read lock on the range. Virtual forks
  * serve their in-memory data, and resource fork reads can come from the
- * resource fork cache. Data goes out through sendfile when available,
- * otherwise in dsi_read chunks. A failure in the middle of the reply ends the
- * session.
+ * resource fork cache while the fork's length and stamp agree with it. A fork
+ * opened from the cache checks the sidecar under the entry's path and takes
+ * its own resource fork for a read the buffer cannot serve. Data goes out
+ * through sendfile when available, otherwise in dsi_read chunks. A failure in
+ * the middle of the reply ends the session.
  *
  * @param[in]     obj      session object
  * @param[in]     ibuf     request block
@@ -1737,8 +2050,8 @@ static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
  * @param[in,out] rbuflen  reply buffer capacity on entry, reply length on
  *                         return
  * @param[in]     is64     nonzero for FPReadExt
- * @returns AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, AFPERR_MISC, or
- *          AFPERR_PARAM
+ * @returns AFP_OK, AFPERR_EOF, AFPERR_ACCESS, AFPERR_LOCK, AFPERR_MISC,
+ *          AFPERR_PARAM, or the reply of fork_open_rsrc()
  */
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                      char *rbuf, size_t *rbuflen, int is64)
@@ -1755,6 +2068,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     ssize_t      err;
     int          eid;
     uint16_t     ofrefnum;
+    struct timespec stamp = { 0 };
     /* we break the AFP spec here by not supporting nlmask and nlchar anymore */
     ibuf += 2;
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
@@ -1860,11 +2174,41 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         dsi = obj->dsi;
         /* request block parsed: the whole command buffer stages the reply */
         ibuf = (char *)dsi->commands;
+
+        /* a fork opened from the cache serves the buffer while the sidecar
+         * under the entry's path holds that fork; a strict-locking read
+         * locks through the descriptor */
+        if (fork_cached(ofork)) {
+            if (!(obj->options.flags & OPTION_STRICT_LOCKING)
+                    && rfork_cache_serves(obj, ofork->of_vol)
+                    && (cached_entry = of_dircache_entry(ofork)) != NULL
+                    && cached_entry->dcache_rfork_buf != NULL) {
+                size = fork_sidecar_measure(ofork,
+                                            bdata(cached_entry->d_fullpath),
+                                            &stamp);
+
+                if (!rfork_buf_holds(cached_entry, size, &stamp)) {
+                    rfork_cache_drop(ofork->of_vol, cached_entry);
+                    cached_entry = NULL;
+                }
+            } else {
+                cached_entry = NULL;
+            }
+
+            if (cached_entry == NULL
+                    && (err = fork_open_rsrc(ofork, true)) != AFP_OK) {
+                goto afp_read_err;
+            }
+        }
+
         /* a ReqCount past the fork's end stops at its size; a resource fork
          * the open found no file for has nothing to read, whatever
          * descriptor or length a later metadata open put into the adouble */
-        size = eid == ADEID_RFORK && !ad_rsrc_open(ofork->of_ad)
-               ? 0 : ad_size(ofork->of_ad, eid);
+        if (cached_entry == NULL) {
+            size = eid == ADEID_RFORK ? rfork_size(ofork->of_ad, &stamp)
+                   : ad_size(ofork->of_ad, eid);
+        }
+
         LOG(log_maxdebug, logtype_afpd,
             "afp_read(fork: %" PRIu16 " [%s], off: %" PRIu64 ", len: %" PRIu64 ", size: %"
             PRIu64 ")",
@@ -1902,19 +2246,16 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             }
         }
 
-        if (eid == ADEID_RFORK
-                && !(ofork->of_flags & AFPFORK_ACCWR)
-                && (!(ofork->of_vol->v_flags & AFPVOL_MULTIPROTO)
-                    || obj->options.dircache_rfork_budget_explicit)
-                && obj->options.dircache_rfork_budget > 0
-                && (cached_entry = of_dircache_entry(ofork)) != NULL) {
+        if (cached_entry != NULL
+                || (eid == ADEID_RFORK
+                    && !(ofork->of_flags & AFPFORK_ACCWR)
+                    && rfork_cache_serves(obj, ofork->of_vol)
+                    && (cached_entry = of_dircache_entry(ofork)) != NULL)) {
             rfork_stat_lookups++;
         }
 
         /* === Tier 2 rfork cache check — before sendfile === */
-        if (cached_entry && cached_entry->dcache_rfork_buf
-                && cached_entry->dcache_rlen > 0
-                && cached_entry->dcache_rlen == size) {
+        if (cached_entry && rfork_buf_holds(cached_entry, size, &stamp)) {
             /* Serve entire request from Tier 2 cache — zero I/O. */
             if (rfork_cache_serve_from_buf(dsi, cached_entry, offset,
                                            reqcount, (int)err) < 0) {
@@ -1925,18 +2266,18 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             goto afp_read_done;
         }
 
-        /* Size mismatch: cache stale — invalidate any rfork buffer + Tier 1
-         * AD, so no fill below takes a length the fork no longer has */
+        /* A length the fork no longer has, or a buffer the check above
+         * refused for its stamp: the buffer and the Tier 1 AD go, so no fill
+         * below takes them */
         if (cached_entry && ad_rlen_known(cached_entry->dcache_rlen)
-                && cached_entry->dcache_rlen != size) {
+                && (cached_entry->dcache_rlen != size
+                    || cached_entry->dcache_rfork_buf != NULL)) {
             LOG(log_debug, logtype_afpd,
-                "rfork_cache: size mismatch (cached:%lld vs live:%lld), "
+                "rfork_cache: stale (cached:%lld vs live:%lld), "
                 "invalidating (did:%u)",
                 (long long)cached_entry->dcache_rlen, (long long)size,
                 ntohl(cached_entry->d_did));
-            dir_modify(ofork->of_vol, cached_entry, &(struct dir_modify_args) {
-                .flags = DCMOD_AD_INV | DCMOD_NO_PROMOTE,
-            });
+            rfork_cache_drop(ofork->of_vol, cached_entry);
             rfork_stat_misses++;     /* Size mismatch counts as a miss */
             cached_entry = NULL;
         }
@@ -2692,7 +3033,8 @@ int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
  * @brief FPGetForkParms: return the parameters of an open fork
  *
  * Open metadata gets a reread first, so the reply reflects changes of other
- * processes. The reply carries the bitmap and the parameters of
+ * processes, and a fork opened from the cache measures its sidecar for a
+ * resource fork length. The reply carries the bitmap and the parameters of
  * getforkparams.
  *
  * @param[in]     obj      session object
@@ -2725,6 +3067,21 @@ int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
             " (ntohs: %" PRIu16 ")",
             ofrefnum, ntohs(ofrefnum));
         return AFPERR_PARAM;
+    }
+
+    /* ad_refresh() measures no resource fork without its descriptor; a name
+     * that left the file keeps the length the fork holds */
+    if (fork_cached(ofork)
+            && (bitmap & ((1 << FILPBIT_RFLEN) | (1 << FILPBIT_EXTRFLEN)))) {
+        bstring path = of_held_path(ofork);
+
+        if (path != NULL) {
+            struct timespec stamp;
+            const off_t rlen = fork_sidecar_measure(ofork, bdata(path),
+                                                    &stamp);
+            ofork->of_ad->ad_rlen = MAX(rlen, 0);
+            bdestroy(path);
+        }
     }
 
     if (ad_meta_open(ofork->of_ad)) {

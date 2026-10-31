@@ -363,6 +363,45 @@ static int of_path_holds(const struct ofork *of, const char *path,
 }
 
 /*!
+ * @brief The path of an open fork's name in dir, while it holds the fork's
+ *        file
+ *
+ * @param[in]  of   open fork
+ * @param[in]  dir  the fork's directory, or NULL
+ * @param[out] st   the stat of the path, by the volume's symlink rule
+ * @returns the path, which the caller frees, or NULL with errno ENOMEM when
+ *          it cannot be built, the stat's errno when the path cannot be
+ *          stat'ed, else ENOENT
+ */
+static bstring of_name_path(const struct ofork *of, const struct dir *dir,
+                            struct stat *st)
+{
+    bstring path;
+
+    if (dir == NULL) {
+        errno = ENOENT;
+        return NULL;
+    }
+
+    if ((path = fullpath_join(dir->d_fullpath, of->of_uname)) == NULL) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    errno = 0;
+
+    if (!of_path_holds(of, bdata(path), st)) {
+        /* the stat's own errno, or ENOENT for a name that holds another file */
+        const int err = errno ? errno : ENOENT;
+        bdestroy(path);
+        errno = err;
+        return NULL;
+    }
+
+    return path;
+}
+
+/*!
  * @brief Whether an open fork's name on disk still names its file in dir
  *
  * @param[in] of   open fork
@@ -372,15 +411,57 @@ static int of_path_holds(const struct ofork *of, const char *path,
  */
 static int of_name_holds(const struct ofork *of, const struct dir *dir)
 {
-    bstring path = dir ? fullpath_join(dir->d_fullpath, of->of_uname) : NULL;
     struct stat st;
-    const int holds = path != NULL && of_path_holds(of, bdata(path), &st);
+    bstring path = of_name_path(of, dir, &st);
 
-    if (path != NULL) {
-        bdestroy(path);
+    if (path == NULL) {
+        return 0;
     }
 
-    return holds;
+    bdestroy(path);
+    return 1;
+}
+
+/*!
+ * @brief The path under which an open fork's name holds its file
+ *
+ * The session's own rename of an ancestor leaves the cached paths below it
+ * stale until the scan the rename queued drops them, so a path that does not
+ * hold the file is built again under the parent dirlookup_strict()
+ * validates, which may drop stale entries from the dircache.
+ *
+ * @param[in] ofork  open fork
+ * @returns the path, which the caller frees, or NULL with errno ENOENT when
+ *          no name holds the file, the stat's errno when the name cannot be
+ *          stat'ed, EACCES or EAGAIN when the lookup of the fork's folder
+ *          was refused or got no answer, ENOMEM when the path cannot be built
+ */
+bstring of_held_path(const struct ofork *ofork)
+{
+    struct stat st;
+    bstring path = of_name_path(ofork, dirlookup(ofork->of_vol, ofork->of_did),
+                                &st);
+
+    if (path == NULL && errno != ENOMEM) {
+        const int first = errno;
+        const struct dir *dir = dirlookup_strict(ofork->of_vol, ofork->of_did);
+
+        /* a folder that is gone leaves the first error; a lookup the CNID
+         * backend refused or failed names no missing file */
+        if (dir == NULL) {
+            if (afp_errno == AFPERR_NOOBJ) {
+                errno = first;
+            } else {
+                errno = afp_errno == AFPERR_ACCESS ? EACCES : EAGAIN;
+            }
+
+            return NULL;
+        }
+
+        path = of_name_path(ofork, dir, &st);
+    }
+
+    return path;
 }
 
 /*!
@@ -1261,16 +1342,34 @@ void of_log_usage(int level, const char *event)
 /*!
  * @brief Log an open refused because descriptors ran out
  *
+ * @param[in] call  the refused call, named in the log
  * @param[in] name  file being opened
  * @param[in] err   errno of the failed open
  */
-void of_log_nfile(const char *name, int err)
+void of_log_nfile(const char *call, const char *name, int err)
 {
     if (log_backoff(&of_nfile_refusals)) {
         char usage[OF_USAGE_LEN];
-        LOG(log_error, logtype_afpd, "afp_openfork(\"%s\"): %s, refusal %u: %s",
+        LOG(log_error, logtype_afpd, "%s(\"%s\"): %s, refusal %u: %s", call,
             name, strerror(err), of_nfile_refusals,
             of_usage_str(usage, sizeof(usage)));
+    }
+}
+
+/*!
+ * @brief Warn as descriptor use climbs toward its limit
+ *
+ * open(2) returns the lowest free descriptor, so the highest one an open
+ * created bounds those in use from below, at no cost.
+ *
+ * @param[in] newfd  highest descriptor the open created, or -1 for none
+ */
+void of_note_fd(int newfd)
+{
+    if (newfd >= 0 && usage_level_update(&of_fd_level, newfd + 1, of_fdlimit)) {
+        char usage[OF_USAGE_LEN];
+        LOG(log_warning, logtype_afpd, "fd use over %d%% of the limit: %s",
+            usage_level_pct(of_fd_level), of_usage_str(usage, sizeof(usage)));
     }
 }
 
@@ -1278,8 +1377,7 @@ void of_log_nfile(const char *name, int err)
  * @brief Warn as fork or descriptor use climbs toward its limit
  *
  * Runs once the fork is fully open: the open counts, and the breakdown sees
- * its access mode.  open(2) returns the lowest free descriptor, so the
- * highest one this open created bounds those in use from below, at no cost.
+ * its access mode.
  *
  * @param[in] newfd  highest descriptor the open created, or -1 for none
  */
@@ -1293,11 +1391,7 @@ void of_note_open(int newfd)
             usage_level_pct(of_fork_level), of_usage_str(usage, sizeof(usage)));
     }
 
-    if (newfd >= 0 && usage_level_update(&of_fd_level, newfd + 1, of_fdlimit)) {
-        char usage[OF_USAGE_LEN];
-        LOG(log_warning, logtype_afpd, "fd use over %d%% of the limit: %s",
-            usage_level_pct(of_fd_level), of_usage_str(usage, sizeof(usage)));
-    }
+    of_note_fd(newfd);
 }
 
 /*!
@@ -1578,8 +1672,8 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     int same = 0;
 
     if (by_name && (dir = dirlookup(ofork->of_vol, ofork->of_did)) != NULL) {
-        forkpath = fullpath_join(dir->d_fullpath, ofork->of_uname);
-        same = forkpath && of_path_holds(ofork, bdata(forkpath), &st);
+        forkpath = of_name_path(ofork, dir, &st);
+        same = bdata(forkpath) != NULL;
     }
 
     /* Pre-acquire cache pointer before ad_close changes ctime; an entry
@@ -1698,6 +1792,12 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         }
 
         of_hint_siblings(obj, ofork, cached);
+    }
+
+    /* the open bit of a fork opened from the cache, which no reference
+     * carries before its resource fork opens */
+    if (ofork->of_flags & AFPFORK_CACHED) {
+        ofork->of_ad->ad_held_forks &= ~ATTRBIT_ROPEN;
     }
 
     if (ad_close(ofork->of_ad, ofork->of_adflags) < 0) {

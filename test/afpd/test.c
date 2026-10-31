@@ -3747,6 +3747,63 @@ int main(int argc, char *argv[])
     TEST_int(utest_peer_data_fork_shows_in_attributes(&obj, vol), 0,
              "attributes: a peer's open data fork shows in the word read "
              "from disk");
+    TEST_int_or_skip(utest_cached_rfork_open_opens_data_file_only(&obj, vol), 0,
+                     "rfork cache: a cached fork's open opens the data file "
+                     "alone and replies as the sidecar's open");
+    TEST_int_or_skip(utest_cached_rfork_read_stats_sidecar_once(&obj, vol), 0,
+                     "rfork cache: a cached fork's read stats the sidecar once "
+                     "and serves the buffer");
+    TEST_int_or_skip(utest_cached_rfork_close_closes_one_descriptor(&obj, vol),
+                     0, "rfork cache: a cached fork's close closes one "
+                     "descriptor and reads no header");
+    TEST_int_or_skip(utest_cached_rfork_lock_takes_own_reference(&obj, vol), 0,
+                     "rfork cache: a cached fork's lock takes its own "
+                     "resource fork reference");
+    TEST_int_or_skip(utest_cached_rfork_release_without_lock(&obj, vol), 0,
+                     "rfork cache: a cached fork's release of no lock and a "
+                     "malformed lock open nothing");
+    TEST_int_or_skip(utest_cached_rfork_read_sees_rewrite(&obj, vol), 0,
+                     "rfork cache: a cached fork reads the sidecar another "
+                     "process rewrote");
+    TEST_int(utest_cached_rfork_read_after_buffer_drop(&obj, vol), 0,
+             "rfork cache: a cached fork reads through its descriptor once "
+             "the buffer goes");
+    TEST_int(utest_cached_rfork_meets_deny_read(&obj, vol), 0,
+             "rfork cache: a cached fork meets the deny-read bands");
+    TEST_int(utest_cached_rfork_file_params_keep_metadata(&obj, vol), 0,
+             "rfork cache: the file parameters of a cached fork's file come "
+             "from its header");
+    TEST_int(utest_cached_rfork_close_drops_its_open_bit(&obj, vol), 0,
+             "rfork cache: a cached fork closed beside a data fork drops its "
+             "open-fork bit");
+    TEST_int_or_skip(utest_cached_rfork_second_open_joins(&obj, vol), 0,
+                     "rfork cache: a second open joins a cached fork's adouble");
+    TEST_int_or_skip(utest_cached_rfork_missing_sidecar_reads_eof(&obj, vol), 0,
+                     "rfork cache: a cached fork whose sidecar went reads "
+                     "nothing");
+    TEST_int_or_skip(utest_cached_rfork_short_sidecar_reads_eof(&obj, vol), 0,
+                     "rfork cache: a cached fork whose sidecar was cut to its "
+                     "header reads an empty fork");
+    TEST_int_or_skip(utest_cached_rfork_bad_sidecar_read_refused(&obj, vol), 0,
+                     "rfork cache: a cached fork refuses a sidecar whose "
+                     "header does not parse");
+    TEST_int_or_skip(utest_cached_rfork_unreadable_sidecar_read_refused(&obj,
+            vol), 0,
+                     "rfork cache: a cached fork refuses a read the sidecar's "
+                     "mode refuses");
+    TEST_int_or_skip(utest_cached_rfork_renamed_file_read_refused(&obj, vol),
+                     0, "rfork cache: a cached fork whose file was renamed "
+                     "refuses a read and keeps its length");
+    TEST_int_or_skip(utest_hard_link_takes_base_open(&obj, vol), 0,
+                     "rfork cache: a hard link's resource fork opens its "
+                     "sidecar");
+    TEST_int_or_skip(utest_root_icon_takes_base_open(&obj, vol), 0,
+                     "rfork cache: the root Icon file's resource fork opens "
+                     "its sidecar");
+    TEST_int_or_skip(utest_cached_rfork_strict_locking_takes_base_open(&obj,
+            vol), 0,
+                     "rfork cache: under strict locking a resource fork opens "
+                     "its sidecar");
     TEST_int_or_skip(utest_symlink_rfork_close_keeps_cnids(&obj, vol), 0,
                      "FPCloseFork: a symlink's resource fork keeps the CNIDs");
     TEST_int(utest_emptied_icon_close_deletes_file(&obj, vol), 0,

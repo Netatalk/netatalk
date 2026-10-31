@@ -65,9 +65,7 @@ struct fault_inject {
     int open_fail_flags;    /*!< opens without these flags pass through */
     void (*open_hook)(void); /*!< runs once ahead of an open with the flags */
     int open_hook_flags;    /*!< the flags that open must include */
-    int close_armed;
-    int close_fail_after;
-    int close_errno;
+    struct fi_call close;   /*!< a failed close() closes the descriptor too */
     struct fi_call read;    /*!< read() and pread() alike */
     int read_max;           /*!< read() and pread() read at most this */
     int pread_calls;        /*!< pread() calls, armed or not */
@@ -121,7 +119,8 @@ struct fault_inject {
     int sendfile_fake;      /*!< a sendfile() reports its count, moving none */
     int sendfile_eof_einval; /*!< a sendfile() at the file's end: EINVAL */
     int fstat_watch;        /*!< count the fstat() calls on fstat_fd */
-    int fstat_fd;           /*!< descriptor whose fstat() calls count */
+    int fstat_fd;           /*!< descriptor whose fstat() calls count, -1
+                             * for every descriptor */
     int fstat_calls;        /*!< fstat() calls on fstat_fd while watching */
     int time_watch;         /*!< count the time() calls */
     int time_calls;         /*!< time() calls seen while watching */

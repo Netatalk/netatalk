@@ -354,7 +354,8 @@ void rfork_cache_evict_to_budget(size_t needed)
  * fork
  *
  * The ad_read call covers every storage format, so the call reads dcache_rlen
- * bytes through it. It refuses a closed resource fork, an empty or unknown
+ * bytes through it, after a stat of the descriptor that stamps the copy
+ * (rfork_stamp()). It refuses a closed resource fork, an empty or unknown
  * length, a fork above rfork_max_entry_size, a fork another session has open
  * for writing, and a symlink's, whose opens no lock shows. It also refuses
  * while the cache holds over 2 times its budget. Older buffers leave first
@@ -425,17 +426,23 @@ int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
         return -1;
     }
 
-    char *buf = malloc(rlen);
+    struct rfork_buf *buf = malloc(sizeof(*buf) + rlen);
 
-    if (!buf) {
+    struct stat st;
+
+    /* a write that lands after the stat, past the ctime's resolution, leaves
+     * a stamp the reads refuse */
+    if (!buf || fstat(ad_reso_fileno(adp), &st) != 0) {
+        free(buf);
         return -1;
     }
 
+    buf->stamp = rfork_stamp(&st);
     /* AFP clients may read resource forks in chunks (e.g., 32KB at a time). We
      * upgrade first read to full-fork ad_read() to ensure the cache contains the
      * whole fork. Subsequent FPReads are served from cache.
      * ad_read() handles all storage formats (EA, macOS xattr, AD v2 sidecar). */
-    ssize_t bytes_read = ad_read(adp, eid, 0, buf, (size_t)entry->dcache_rlen);
+    ssize_t bytes_read = ad_read(adp, eid, 0, buf->data, rlen);
 
     if (bytes_read != entry->dcache_rlen) {
         /* Short read: fork size changed since Tier 1 was populated.
