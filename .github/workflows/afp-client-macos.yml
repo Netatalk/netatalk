@@ -1,0 +1,175 @@
+name: macOS AFP Client Smoke Tests
+
+on:
+  push:
+    branches:
+      - main
+      - branch-*
+  pull_request:
+    branches:
+      - main
+      - branch-*
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+env:
+  AFP_USER: atalk1
+  AFP_GROUP: afpusers
+  PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig
+
+jobs:
+  native-afp-macos:
+    name: Native AFP client smoke tests - macOS 26 (Apple Silicon)
+    runs-on: macos-26
+    timeout-minutes: 24
+    env:
+      DYLD_LIBRARY_PATH: /opt/homebrew/lib
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      AFP_MOUNT: /private/tmp/afp-native-mount
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install \
+            bstring cmark-gfm cracklib iniparser libev libgcrypt \
+            libiconv meson openldap talloc
+
+      - name: Build and install Netatalk
+        run: |
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+          meson setup build -Dbuildtype=debugoptimized -Dwith-homebrew=true
+          meson compile -C build
+          sudo meson install -C build
+
+      - name: Generate test credentials
+        run: |
+          # Hexadecimal needs no URL escaping when passed to mount_afp.
+          AFP_PASS="$(openssl rand -hex 16)"
+          echo "::add-mask::$AFP_PASS"
+          echo "AFP_PASS=$AFP_PASS" >> "$GITHUB_ENV"
+
+      - name: Configure test user and server
+        run: |
+          sudo dscl . -create /Groups/"$AFP_GROUP"
+          sudo dscl . -create /Groups/"$AFP_GROUP" PrimaryGroupID 599
+          sudo dscl . -create /Users/"$AFP_USER"
+          sudo dscl . -create /Users/"$AFP_USER" UserShell /usr/bin/false
+          sudo dscl . -create /Users/"$AFP_USER" UniqueID 5001
+          sudo dscl . -create /Users/"$AFP_USER" PrimaryGroupID 599
+          sudo dscl . -create /Users/"$AFP_USER" NFSHomeDirectory /var/empty
+          sudo dscl . -passwd /Users/"$AFP_USER" "$AFP_PASS"
+          sudo dscl . -append /Groups/"$AFP_GROUP" GroupMembership "$AFP_USER"
+
+          sudo tee /etc/pam.d/netatalk > /dev/null <<'PAMEOF'
+          auth       required       pam_opendirectory.so
+          account    required       pam_permit.so
+          password   required       pam_deny.so
+          session    required       pam_permit.so
+          PAMEOF
+
+          sudo mkdir -p /private/tmp/afp-native-share
+          sudo chown "$AFP_USER:$AFP_GROUP" /private/tmp/afp-native-share
+          sudo chmod 0700 /private/tmp/afp-native-share
+          mkdir -p "$AFP_MOUNT"
+          sudo tee "$(brew --prefix)/etc/afp.conf" > /dev/null <<AFPCONF
+          [Global]
+          server name = Netatalk Native Client CI
+          uam list = uams_dhx2.so
+          afp listen = 127.0.0.1:5548
+          cnid scheme = sqlite
+          log level = default:info
+          log file = /private/tmp/afp-native.log
+
+          [native-smoke]
+          path = /private/tmp/afp-native-share
+          valid users = $AFP_USER
+          ea = sys
+          AFPCONF
+
+      - name: Start Netatalk and wait for readiness
+        run: |
+          sudo netatalkd start
+          for attempt in {1..30}; do
+            if asip-status 127.0.0.1:5548; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Netatalk did not become ready" >&2
+          exit 1
+
+      - name: Mount with Apple's native AFP client
+        timeout-minutes: 2
+        run: |
+          /sbin/mount_afp -s -o nobrowse \
+            "afp://$AFP_USER:$AFP_PASS@127.0.0.1:5548/native-smoke" "$AFP_MOUNT"
+          /sbin/mount | grep -F " on $AFP_MOUNT (afpfs,"
+
+      - name: Run mounted-volume smoke tests
+        timeout-minutes: 4
+        run: perl .github/scripts/afp_client_smoke.pl "$AFP_MOUNT"
+
+      - name: Verify data survives unmount and remount
+        timeout-minutes: 2
+        run: |
+          printf 'AFP persistence test\n' > "$RUNNER_TEMP/afp-expected.txt"
+          cp "$RUNNER_TEMP/afp-expected.txt" "$AFP_MOUNT/persistent.txt"
+          printf 'resource fork' > "$AFP_MOUNT/persistent.txt/..namedfork/rsrc"
+          xattr -w org.netatalk.smoke 'AFP attribute' "$AFP_MOUNT/persistent.txt"
+          /sbin/umount "$AFP_MOUNT"
+          /sbin/mount_afp -s -o nobrowse \
+            "afp://$AFP_USER:$AFP_PASS@127.0.0.1:5548/native-smoke" "$AFP_MOUNT"
+          /sbin/mount | grep -F " on $AFP_MOUNT (afpfs,"
+          cmp "$RUNNER_TEMP/afp-expected.txt" "$AFP_MOUNT/persistent.txt"
+          test "$(cat "$AFP_MOUNT/persistent.txt/..namedfork/rsrc")" = 'resource fork'
+          test "$(xattr -p org.netatalk.smoke "$AFP_MOUNT/persistent.txt")" = 'AFP attribute'
+          rm "$AFP_MOUNT/persistent.txt"
+
+      - name: Unmount AFP volume
+        if: always()
+        timeout-minutes: 1
+        run: /sbin/umount "$AFP_MOUNT" || sudo /sbin/umount -f "$AFP_MOUNT" || true
+
+      - name: Stop Netatalk
+        if: always()
+        run: sudo netatalkd stop || sudo killall netatalk afpd 2>/dev/null || true
+
+      - name: Cleanup test user and group
+        if: always()
+        run: |
+          sudo dscl . -delete /Users/"$AFP_USER" 2>/dev/null || true
+          sudo dscl . -delete /Groups/"$AFP_GROUP" 2>/dev/null || true
+
+      - name: Show Netatalk log
+        if: always()
+        run: sudo tail -200 /private/tmp/afp-native.log 2>/dev/null || true
+
+      - name: Collect build and server logs
+        if: always()
+        run: |
+          LOG_DIR="$RUNNER_TEMP/native-afp-macos-logs"
+          mkdir -p "$LOG_DIR"
+          if [ -d build/meson-logs ]; then
+            cp -R build/meson-logs "$LOG_DIR/"
+          fi
+          if sudo test -f /private/tmp/afp-native.log; then
+            # The runner creates the copy; Netatalk's original may be root-only.
+            sudo cat /private/tmp/afp-native.log > "$LOG_DIR/afp-native.log"
+          fi
+
+      - name: Upload build and server logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-afp-macos-logs
+          path: ${{ runner.temp }}/native-afp-macos-logs
