@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  * All rights reserved. See COPYRIGHT.
  */
 
@@ -30,8 +31,9 @@
  *
  * The shared and invisible attributes are opaque and live in the Finder flags,
  * so they come from there, as bug #2802236 required. For directories
- * ATTRBIT_EXPFLDR occupies the shared bit and stays untouched. The adouble's
- * open-fork bits are also present in the result.
+ * ATTRBIT_EXPFLDR occupies the shared bit and stays untouched. The open-fork
+ * bits join the result: the forks this process holds and the bands other
+ * processes held at the entry's last open under ADFLAGS_CHECK_OF.
  *
  * @sa https://sourceforge.net/p/netatalk/bugs/350/
  *
@@ -77,7 +79,7 @@ int ad_getattr(const struct adouble *ad, uint16_t *attr)
         }
     }
 
-    *attr |= htons(ad->ad_open_forks);
+    *attr |= htons(ad_forks_open(ad));
     return 0;
 }
 

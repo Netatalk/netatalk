@@ -219,7 +219,11 @@ struct adouble {
                     * the header parameter size is too small. */
     char *ad_name; /*!< mac name (maccharset or UTF8-MAC) */
     struct adouble_fops *ad_ops;
-    uint16_t ad_open_forks; /*!< open forks (by others) */
+    uint16_t ad_open_forks; /*!< ATTRBIT_DOPEN and ATTRBIT_ROPEN of the
+                             * bands other processes hold, as the last
+                             * probe under ADFLAGS_CHECK_OF found them */
+    uint16_t ad_held_forks; /*!< the same bits for the forks this process
+                             * holds without a descriptor */
     bool ad_nosplice; /*!< the fork's file cannot take splice() */
     size_t valid_data_len; /*!< Bytes read into ad_data */
     char ad_data[AD_DATASZ_MAX];
@@ -231,7 +235,7 @@ struct adouble {
 #define ADFLAGS_DIR       (1<<3)
 #define ADFLAGS_NOHF      (1<<4)  /*!< not an error if no metadata fork */
 #define ADFLAGS_NORF      (1<<5)  /*!< not an error if no resource fork */
-#define ADFLAGS_CHECK_OF  (1<<6)  /*!< check for open forks from us and other afpd's */
+#define ADFLAGS_CHECK_OF  (1<<6)  /*!< probe the bands other afpd processes hold on the forks */
 #define ADFLAGS_SETSHRMD  (1<<7)  /*!< setting share mode must be done with excl fcnt lock,
                                      which implies that the file must be opened rw.
                                      If it can't be opened rw (eg EPERM or EROFS) it will
@@ -431,6 +435,24 @@ static inline int ad_meta_loaded(const struct adouble *ad)
     return ad->ad_meta_refcount > 0
            && ad_meta_fileno(ad) != AD_SYMLINK
            && ad_data_fileno(ad) != AD_SYMLINK;
+}
+
+/*! @brief ATTRBIT_DOPEN and ATTRBIT_ROPEN of the forks this process holds:
+ *         by a reference, or without a descriptor; a probe under
+ *         ADFLAGS_CHECK_OF counts its own data reference until its close */
+static inline uint16_t ad_forks_held(const struct adouble *ad)
+{
+    return (ad->ad_data_refcount > 0 ? ATTRBIT_DOPEN : 0)
+           | (ad->ad_reso_refcount > 0 ? ATTRBIT_ROPEN : 0)
+           | ad->ad_held_forks;
+}
+
+/*! @brief The open-fork attribute bits of a file: the forks this process
+ *         holds and the bands other processes held at the adouble's last
+ *         open under ADFLAGS_CHECK_OF */
+static inline uint16_t ad_forks_open(const struct adouble *ad)
+{
+    return ad_forks_held(ad) | ad->ad_open_forks;
 }
 
 #define ad_getversion(ad)   ((ad)->ad_version)

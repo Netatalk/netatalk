@@ -55,9 +55,17 @@ static int cap_cache[] = {
     [TEST_CAP_ACL_SET]      = -1,
     [TEST_CAP_XATTR_WATCH]  = -1,
     [TEST_CAP_STAT_WATCH]  = -1,
+    [TEST_CAP_FSTAT_WATCH]  = -1,
+    [TEST_CAP_CLOSE_WATCH]  = -1,
+    [TEST_CAP_PREAD_WATCH]  = -1,
 };
 
-/*! @brief Short capability name for skip/log messages. */
+/*!
+ * @brief Short capability name for skip and log messages
+ *
+ * @param[in] cap  the capability
+ * @returns its name
+ */
 const char *test_capability_name(enum test_capability cap)
 {
     switch (cap) {
@@ -75,6 +83,15 @@ const char *test_capability_name(enum test_capability cap)
 
     case TEST_CAP_STAT_WATCH:
         return "stat() call counting (LD_PRELOAD)";
+
+    case TEST_CAP_FSTAT_WATCH:
+        return "fstat() call counting (LD_PRELOAD)";
+
+    case TEST_CAP_CLOSE_WATCH:
+        return "close() call counting (LD_PRELOAD)";
+
+    case TEST_CAP_PREAD_WATCH:
+        return "pread() call counting (LD_PRELOAD)";
 
     case TEST_CAP_ACL_SET:
         return "a filesystem that stores ACLs";
@@ -217,6 +234,83 @@ static int probe_stat_watch(const struct vol *vol)
 }
 
 /*!
+ * @brief Does the preload count fstat() calls of every descriptor while
+ *        fstat_fd is -1?
+ *
+ * @returns 1 when one fstat() of a pipe counts once, else 0
+ */
+static int probe_fstat_watch(void)
+{
+    struct stat st;
+    int p[2];
+    int worked;
+
+    if (pipe(p) != 0) {
+        return 0;
+    }
+
+    fault_inject_reset();
+    fi.fstat_watch = 1;
+    fi.fstat_fd = -1;
+    worked = fstat(p[0], &st) == 0 && fi.fstat_calls == 1;
+    fault_inject_reset();
+    close(p[0]);
+    close(p[1]);
+    return worked;
+}
+
+/*!
+ * @brief Does the preload count close() calls through a countdown armed
+ *        never to fire?
+ *
+ * @returns 1 when one close() of a pipe counts once, else 0
+ */
+static int probe_close_watch(void)
+{
+    int p[2];
+    int worked;
+
+    if (pipe(p) != 0) {
+        return 0;
+    }
+
+    fault_inject_reset();
+    fi.close.armed = 1;
+    fi.close.fail_after = -1;
+    worked = close(p[0]) == 0 && fi.close.calls == 1;
+    fault_inject_reset();
+    close(p[1]);
+    return worked;
+}
+
+/*!
+ * @brief Does the preload count pread() calls?
+ *
+ * @param[in] vol  volume whose root takes the probe's file
+ * @returns 1 when one pread() of an empty file counts once, else 0
+ */
+static int probe_pread_watch(const struct vol *vol)
+{
+    char path[MAXPATHLEN + 1];
+    char byte;
+    int fd;
+    int worked;
+
+    if (snprintf(path, sizeof(path), "%s/.cap_pread_probe", vol->v_path)
+            >= (int)sizeof(path)
+            || (fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0600)) < 0) {
+        return 0;
+    }
+
+    fault_inject_reset();
+    worked = pread(fd, &byte, 1, 0) == 0 && fi.pread_calls == 1;
+    fault_inject_reset();
+    close(fd);
+    (void)unlink(path);
+    return worked;
+}
+
+/*!
  * @brief Does the filesystem under vol->v_path store an ACL written to it?
  *
  * Writes the root's own ACL back, which leaves it as it was; a filesystem
@@ -246,14 +340,14 @@ static int probe_acl_set(const struct vol *vol _U_)
 }
 
 /*!
- * @brief Probe a capability; the result is cached for the run.
+ * @brief Probe a capability; the result is cached for the run
  *
- * @param cap  the capability to probe
- * @param vol  supplies a filesystem path for capabilities probed against the
- *             volume (TEST_CAP_EA_SYS, TEST_CAP_FAULT_INJECT use vol->v_path for
- *             a scratch file, TEST_CAP_ACL_SET writes its ACL back); must not
- *             be NULL.
- * @returns    1 if the capability is available, 0 otherwise.
+ * @param[in] cap  the capability to probe
+ * @param[in] vol  supplies a filesystem path for capabilities probed against
+ *                 the volume (TEST_CAP_EA_SYS, TEST_CAP_FAULT_INJECT and
+ *                 TEST_CAP_PREAD_WATCH use vol->v_path for a scratch file,
+ *                 TEST_CAP_ACL_SET writes its ACL back); must not be NULL
+ * @returns 1 if the capability is available, 0 otherwise
  */
 int test_capability(enum test_capability cap, const struct vol *vol)
 {
@@ -284,6 +378,18 @@ int test_capability(enum test_capability cap, const struct vol *vol)
 
     case TEST_CAP_STAT_WATCH:
         cap_cache[cap] = probe_stat_watch(vol);
+        break;
+
+    case TEST_CAP_FSTAT_WATCH:
+        cap_cache[cap] = probe_fstat_watch();
+        break;
+
+    case TEST_CAP_CLOSE_WATCH:
+        cap_cache[cap] = probe_close_watch();
+        break;
+
+    case TEST_CAP_PREAD_WATCH:
+        cap_cache[cap] = probe_pread_watch(vol);
         break;
 
     case TEST_CAP_ACL_SET:

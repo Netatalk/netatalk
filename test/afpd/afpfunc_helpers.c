@@ -1716,3 +1716,18 @@ void drop_entry(const struct vol *vol, cnid_t did, char *name)
 
     dir_free_invalid_q();
 }
+
+/*!
+ * @brief The parameter block of the last reply a helper kept: the bytes
+ *        past the reply's head, which the REPLY_* constants give
+ *
+ * @param[in]  head  the head's length
+ * @param[out] len   the block's length, 0 for a reply no longer than the
+ *                   head
+ * @returns the block
+ */
+const char *reply_params(size_t head, size_t *len)
+{
+    *len = rbuflen > head ? rbuflen - head : 0;
+    return rbuf + head;
+}

@@ -29,6 +29,9 @@ enum test_capability {
     TEST_CAP_ACL_SET,        /* the test filesystem stores an ACL set on it */
     TEST_CAP_XATTR_WATCH,    /* the preload counts libatalk's xattr reads */
     TEST_CAP_STAT_WATCH,     /* the preload counts libatalk's stat() calls */
+    TEST_CAP_FSTAT_WATCH,    /* the preload counts every fstat() */
+    TEST_CAP_CLOSE_WATCH,    /* the preload counts close() calls */
+    TEST_CAP_PREAD_WATCH,    /* the preload counts pread() calls */
 };
 
 int test_capability(enum test_capability cap, const struct vol *vol);

@@ -33,6 +33,7 @@
 #include <dirent.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <time.h>
 
 #include <bstrlib.h>
 
@@ -80,6 +81,13 @@ static inline int ad_rlen_known(off_t rlen)
     return rlen >= 0 || rlen == AD_RLEN_NO_AD;
 }
 
+/*! A cached resource fork: the stamp of the sidecar its bytes came from,
+ *  then its dcache_rlen bytes */
+struct rfork_buf {
+    struct timespec stamp;   /*!< rfork_stamp() of the fill's stat */
+    char data[];
+};
+
 struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for cache locality
     /* Fields requiring 8-byte alignment: pointers, time_t, ino_t, off_t */
     bstring     d_fullpath;          /*!< complete unix path to dir (or file) */
@@ -96,9 +104,10 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
      * Freed automatically when the struct dir entry is evicted from dircache.
      * Only populated for files with resource forks <= rfork_max_entry_size.
      * NULL = not cached (may or may not have an rfork on disk).
-     * Buffer size is always dcache_rlen (Tier 1) — no separate size field needed.
+     * Its data is always dcache_rlen (Tier 1) bytes — no separate size field
+     * needed.
      * INVARIANT: dcache_rfork_buf != NULL implies dcache_rlen >= 0. */
-    void        *dcache_rfork_buf;   /*!< malloc'd rfork data, or NULL */
+    struct rfork_buf *dcache_rfork_buf; /*!< malloc'd rfork data, or NULL */
     qnode_t     *rfork_lru_node;     /*!< position in rfork LRU list, or NULL */
     char        *dcache_eanames;     /*!< EA names as listed, or NULL */
     char        *dcache_eavals;      /*!< EA value records read, or NULL */
