@@ -5,7 +5,7 @@ description: "Byte range and share mode locks on AppleDouble forks."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_lock.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T15:31:59+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -465,7 +465,7 @@ Returns: 0, or -1 with errno EINVAL for a range below byte zero, one whose start
 
 Calls: [XLATE_FCNTL_LOCK](ad_lock.c.md#xlate_fcntl_lock), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [adf_findxlock](ad_lock.c.md#adf_findxlock), [adf_lock_fits](ad_lock.c.md#adf_lock_fits), [adf_lock_gaps](ad_lock.c.md#adf_lock_gaps), [locktypetostr](ad_lock.c.md#locktypetostr), [shmdstrfromoff](ad_lock.c.md#shmdstrfromoff)
 
-Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [read_fork](../../etc/afpd/fork.c.md#read_fork), [write_fork](../../etc/afpd/fork.c.md#write_fork)
+Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [createfile_truncate](../../etc/afpd/file.c.md#createfile_truncate), [read_fork](../../etc/afpd/fork.c.md#read_fork), [write_fork](../../etc/afpd/fork.c.md#write_fork)
 
 ### ad_unlock
 

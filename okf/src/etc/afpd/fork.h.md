@@ -5,7 +5,7 @@ description: "Open fork state, byte range locking and AFP fork command handlers.
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/fork.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -48,7 +48,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static int fork_range_within(off_t offset, off_t length, off_t size)
 ```
 
-Defined at lines 65 to 69.
+Defined at lines 67 to 71.
 
 Check that [offset, offset + length) fits in size without overflow.
 
@@ -85,6 +85,8 @@ Defined at line 27.
 # Macros
 
 * `AFPFORK_DATA`: open datafork
+* `AFPFORK_DENYRD`: a virtual fork opened denying reads
+* `AFPFORK_DENYWR`: a virtual fork opened denying writes
 * `AFPFORK_ERROR`: used to indicate an error in opening the fork
 * `AFPFORK_META`: open metadata
 * `AFPFORK_MODIFIED`: written or its length set since open

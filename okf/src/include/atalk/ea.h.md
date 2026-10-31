@@ -5,7 +5,7 @@ description: "Portable extended attribute operations and AppleDouble EA types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/ea.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -19,6 +19,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [bin/dbd/cmd_dbd_scanvol.c](../../bin/dbd/cmd_dbd_scanvol.c.md)
 * [etc/afpd/ad_cache.c](../../etc/afpd/ad_cache.c.md)
 * [etc/afpd/extattrs.c](../../etc/afpd/extattrs.c.md)
+* [etc/afpd/file.c](../../etc/afpd/file.c.md)
 * [etc/afpd/ofork.c](../../etc/afpd/ofork.c.md)
 * [etc/afpd/volume.c](../../etc/afpd/volume.c.md)
 * [libatalk/adouble/ad_conv.c](../../libatalk/adouble/ad_conv.c.md)

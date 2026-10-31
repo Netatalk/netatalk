@@ -5,7 +5,7 @@ description: "Writing AppleDouble headers to disk and closing the forks."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_flush.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -144,18 +144,18 @@ Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [afp_exchangefiles
 static int ad_flush_hf(struct adouble *ad)
 ```
 
-Defined at lines 353 to 497.
+Defined at lines 355 to 513.
 
 Write the header of an AppleDouble to its metadata store.
 
-The store must be open for writing, else nothing happens. The resource fork entry takes the current fork length, capped at 4 GiB minus one byte. Version 2 writes ad_data to the metadata file. The EA form stores it in the AD_EA_META extended attribute of the file, or of the directory through a temporary chdir. On macOS it also refreshes the native FinderInfo EA of an existing file. A sticky directory that refuses the EA with EPERM is an error unless the volume sets ADVOL_FORCE_STICKY_XATTR.
+The store must be open for writing, else nothing happens. The resource fork entry takes the current fork length, capped at 4 GiB minus one byte. Version 2 writes ad_data to the metadata file. The EA form stores it in the AD_EA_META extended attribute of the file, or of the directory through a temporary chdir. On macOS it also writes the native FinderInfo EA, except for a header just made whose FinderInfo the EA holds already, or that holds none on a file without the EA, as every metadata open reads that EA over the entry. A sticky directory that refuses the EA with EPERM is an error unless the volume sets ADVOL_FORCE_STICKY_XATTR.
 
 Parameters:
 * `ad`: AppleDouble whose header entries are current
 
 Returns: 0, or -1 with errno set
 
-Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [adf_pwrite](ad_write.c.md#adf_pwrite), [adflags2logstr](ad_open.c.md#adflags2logstr), [become_root](../util/unix.c.md#become_root), [sys_fsetxattr](../vfs/extattr.c.md#sys_fsetxattr), [unbecome_root](../util/unix.c.md#unbecome_root)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [adf_pwrite](ad_write.c.md#adf_pwrite), [adflags2logstr](ad_open.c.md#adflags2logstr), [become_root](../util/unix.c.md#become_root), [sys_fgetxattr](../vfs/extattr.c.md#sys_fgetxattr), [sys_fsetxattr](../vfs/extattr.c.md#sys_fsetxattr), [unbecome_root](../util/unix.c.md#unbecome_root)
 
 Called by: [ad_flush](ad_flush.c.md#ad_flush)
 
@@ -167,7 +167,7 @@ Calls through [`adouble_fops::ad_rebuild_header`](../../include/atalk/adouble.h.
 static int ad_flush_rf(struct adouble *ad)
 ```
 
-Defined at lines 511 to 546.
+Defined at lines 527 to 562.
 
 Rewrite the ._ sidecar header of an ea AppleDouble with an open resource fork.
 
@@ -188,7 +188,7 @@ Called by: [ad_flush](ad_flush.c.md#ad_flush)
 int ad_flush(struct adouble *ad)
 ```
 
-Defined at lines 558 to 573.
+Defined at lines 574 to 589.
 
 Write the header and the resource fork metadata of an AppleDouble to disk.
 
@@ -201,7 +201,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [ad_flush_hf](ad_flush.c.md#ad_flush_hf), [ad_flush_rf](ad_flush.c.md#ad_flush_rf), [ad_meta_open](../../include/atalk/adouble.h.md#ad_meta_open), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [adflags2logstr](ad_open.c.md#adflags2logstr)
 
-Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_open_hf_ea](ad_open.c.md#ad_open_hf_ea), [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](ad_open.c.md#ad_open_rf_ea), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [check_addir](../../bin/dbd/cmd_dbd_scanvol.c.md#check_addir), [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [do_move](../../bin/nad/nad_mv.c.md#do_move), [flushfork](../../etc/afpd/fork.c.md#flushfork), [get_id](../../etc/afpd/file.c.md#get_id), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [nad_close](../../bin/nad/nad_adouble.c.md#nad_close), [nad_header_write](../../bin/nad/nad_adouble.c.md#nad_header_write), [nad_set](../../bin/nad/nad_set.c.md#nad_set), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [renamedir](../../etc/afpd/directory.c.md#renamedir), [renamefile](../../etc/afpd/file.c.md#renamefile), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [update_created_file_cnid](../../bin/nad/megatron.c.md#update_created_file_cnid)
+Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_open_hf_ea](ad_open.c.md#ad_open_hf_ea), [ad_open_hf_v2](ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](ad_open.c.md#ad_open_rf_ea), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [check_addir](../../bin/dbd/cmd_dbd_scanvol.c.md#check_addir), [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [copy](../../bin/nad/nad_cp.c.md#copy), [copyfile](../../etc/afpd/file.c.md#copyfile), [do_move](../../bin/nad/nad_mv.c.md#do_move), [exchange_meta_open](../../etc/afpd/file.c.md#exchange_meta_open), [flushfork](../../etc/afpd/fork.c.md#flushfork), [get_id](../../etc/afpd/file.c.md#get_id), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [nad_close](../../bin/nad/nad_adouble.c.md#nad_close), [nad_header_write](../../bin/nad/nad_adouble.c.md#nad_header_write), [nad_set](../../bin/nad/nad_set.c.md#nad_set), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [renamedir](../../etc/afpd/directory.c.md#renamedir), [renamefile](../../etc/afpd/file.c.md#renamefile), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [update_created_file_cnid](../../bin/nad/megatron.c.md#update_created_file_cnid)
 
 ### ad_data_closefd
 
@@ -209,7 +209,7 @@ Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_
 static int ad_data_closefd(struct adouble *ad)
 ```
 
-Defined at lines 582 to 597.
+Defined at lines 598 to 613.
 
 Close the data fork descriptor of an AppleDouble, or drop the symlink target it stands for.
 
@@ -226,11 +226,11 @@ Called by: [ad_close](ad_flush.c.md#ad_close)
 int ad_close(struct adouble *ad, int adflags)
 ```
 
-Defined at lines 614 to 754.
+Defined at lines 632 to 776.
 
 Close the forks of an AppleDouble that adflags names and release their resources.
 
-Each fork carries a reference count, and its descriptor closes when the count reaches zero. ADFLAGS_SETSHRMD and ADFLAGS_CHECK_OF also close the data fork, because the share-mode locks live there. For version 2 closing the resource fork also closes the metadata file, because opening the resource fork opens it. ad_close logs and asserts a count that is already zero.
+Each fork carries a reference count, and its descriptor closes when the count reaches zero. ADFLAGS_SETSHRMD and ADFLAGS_CHECK_OF also close the data fork, because the share-mode locks live there. For version 2 closing the resource fork also closes the metadata file, because opening the resource fork opens it. The metadata of an emulated symlink, whose open takes no descriptor reference on the ea layout, gives back its metadata reference alone. ad_close logs and asserts a count that is already zero.
 
 Parameters:
 * `ad`: AppleDouble to close, or NULL
@@ -240,7 +240,7 @@ Returns: 0, or -1 when a close failed
 
 Calls: [ad_data_closefd](ad_flush.c.md#ad_data_closefd), [ad_held](../../include/atalk/adouble.h.md#ad_held), [adf_lock_free](ad_lock.c.md#adf_lock_free), [adflags2logstr](ad_open.c.md#adflags2logstr)
 
-Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_error](ad_open.c.md#ad_error), [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_open_rf_ea](ad_open.c.md#ad_open_rf_ea), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [check_addir](../../bin/dbd/cmd_dbd_scanvol.c.md#check_addir), [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [copy](../../bin/nad/nad_cp.c.md#copy), [copy_source_header](../../bin/nad/nad_cp.c.md#copy_source_header), [copyfile](../../etc/afpd/file.c.md#copyfile), [dir_add_fill](../../etc/afpd/directory.c.md#dir_add_fill), [do_move](../../bin/nad/nad_mv.c.md#do_move), [ea_copyfile](../vfs/ea_ad.c.md#ea_copyfile), [ea_renamefile](../vfs/ea_ad.c.md#ea_renamefile), [find_adouble](../../etc/afpd/file.c.md#find_adouble), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [nad_close](../../bin/nad/nad_adouble.c.md#nad_close), [nad_open](../../bin/nad/nad_adouble.c.md#nad_open), [nad_set](../../bin/nad/nad_set.c.md#nad_set), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [print_flags](../../bin/nad/nad_ls.c.md#print_flags), [renamedir](../../etc/afpd/directory.c.md#renamedir), [renamefile](../../etc/afpd/file.c.md#renamefile), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [update_created_file_cnid](../../bin/nad/megatron.c.md#update_created_file_cnid)
+Called by: [RF_renamefile_adouble](../vfs/vfs.c.md#rf_renamefile_adouble), [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [ad_convert_osx](ad_open.c.md#ad_convert_osx), [ad_error](ad_open.c.md#ad_error), [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached), [ad_open_rf_ea](ad_open.c.md#ad_open_rf_ea), [ad_rmvcomment](../../etc/afpd/desktop.c.md#ad_rmvcomment), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_createfile](../../etc/afpd/file.c.md#afp_createfile), [afp_exchangefiles](../../etc/afpd/file.c.md#afp_exchangefiles), [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [afp_openvol](../../etc/afpd/volume.c.md#afp_openvol), [afp_setvolparams](../../etc/afpd/volume.c.md#afp_setvolparams), [check_addir](../../bin/dbd/cmd_dbd_scanvol.c.md#check_addir), [check_adfile](../../bin/dbd/cmd_dbd_scanvol.c.md#check_adfile), [check_cnid](../../bin/dbd/cmd_dbd_scanvol.c.md#check_cnid), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [copy](../../bin/nad/nad_cp.c.md#copy), [copy_source_header](../../bin/nad/nad_cp.c.md#copy_source_header), [copyfile](../../etc/afpd/file.c.md#copyfile), [dir_add_fill](../../etc/afpd/directory.c.md#dir_add_fill), [do_move](../../bin/nad/nad_mv.c.md#do_move), [ea_copyfile](../vfs/ea_ad.c.md#ea_copyfile), [ea_renamefile](../vfs/ea_ad.c.md#ea_renamefile), [exchange_meta_open](../../etc/afpd/file.c.md#exchange_meta_open), [getvolparams](../../etc/afpd/volume.c.md#getvolparams), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [mkdir_with_cnid](../../bin/nad/nad_mkdir.c.md#mkdir_with_cnid), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [nad_close](../../bin/nad/nad_adouble.c.md#nad_close), [nad_open](../../bin/nad/nad_adouble.c.md#nad_open), [nad_set](../../bin/nad/nad_set.c.md#nad_set), [object_cnid](../../etc/afpd/directory.c.md#object_cnid), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [print_flags](../../bin/nad/nad_ls.c.md#print_flags), [renamedir](../../etc/afpd/directory.c.md#renamedir), [renamefile](../../etc/afpd/file.c.md#renamefile), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams), [update_created_file_cnid](../../bin/nad/megatron.c.md#update_created_file_cnid)
 
 # Macros
 

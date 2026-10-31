@@ -5,7 +5,7 @@ description: "Directory listing: FPEnumerate, FPEnumerateExt, and FPEnumerateExt
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/enumerate.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -282,11 +282,11 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 char * check_dirent(const struct vol *vol, char *name)
 ```
 
-Defined at lines 521 to 542.
+Defined at lines 522 to 543.
 
 Filter a directory entry for enumeration.
 
-Drops ".", "..", names longer than 255 bytes, the names the volume's VFS modules reserve for their metadata, and vetoed names.
+Drops ".", "..", names longer than 255 bytes, the names the volume's VFS modules reserve for their metadata, and vetoed names. A ._ file this session holds open is read through the fork's own descriptor.
 
 Bug: A dangling symlink defeats the filter. Move a folder that holds one into the trash and empty the trash. afp_enumerate then returns an empty listing while afp_getdirparams still reports offspring, so the client never calls afp_delete.
 
@@ -298,7 +298,7 @@ Parameters:
 
 Returns: name when the client may see the entry, NULL otherwise
 
-Calls: [strnlen](../../libatalk/compat/misc.c.md#strnlen), [veto_file](filedir.c.md#veto_file)
+Calls: [of_sidecar_fd](ofork.c.md#of_sidecar_fd), [strnlen](../../libatalk/compat/misc.c.md#strnlen), [veto_file](filedir.c.md#veto_file)
 
 Called by: [catsearch](catsearch.c.md#catsearch), [enumerate_in](enumerate.c.md#enumerate_in), [for_each_dirent](enumerate.c.md#for_each_dirent)
 
@@ -310,7 +310,7 @@ Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vf
 int for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 ```
 
-Defined at lines 558 to 591.
+Defined at lines 559 to 592.
 
 Call fn for every entry of directory name that clients may see.
 
@@ -334,7 +334,7 @@ Called by: [offcnt_serve](directory.c.md#offcnt_serve), [reenumerate_id](file.c.
 static int enumerate_in(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext, struct savedir *own)
 ```
 
-Defined at lines 640 to 1075.
+Defined at lines 641 to 1076.
 
 Shared body of FPEnumerate, FPEnumerateExt, and FPEnumerateExt2.
 
@@ -367,7 +367,7 @@ Mentioned in the documentation of: [enumerate](enumerate.c.md#enumerate), [sd_se
 static int enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen, int ext)
 ```
 
-Defined at lines 1092 to 1098.
+Defined at lines 1093 to 1099.
 
 [enumerate_in()](enumerate.c.md#enumerate_in) with the volume root's listing, whose buffer stays from request to request while each request for the root reads the root into it again
 
@@ -393,7 +393,7 @@ Mentioned in the documentation of: [sd_fetch](enumerate.c.md#sd_fetch)
 int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1111 to 1115.
+Defined at lines 1112 to 1116.
 
 FPEnumerate: list directory entries with one-byte entry lengths.
 
@@ -416,7 +416,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1128 to 1132.
+Defined at lines 1129 to 1133.
 
 FPEnumerateExt: list directory entries with two-byte entry lengths.
 
@@ -439,7 +439,7 @@ Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1146 to 1150.
+Defined at lines 1147 to 1151.
 
 FPEnumerateExt2: list directory entries with a 32-bit start index and reply size limit.
 

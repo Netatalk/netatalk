@@ -5,7 +5,7 @@ description: "Platform wrappers for extended attribute system calls, from Samba.
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/vfs/extattr.c"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [libatalk/vfs](../vfs.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -113,7 +113,7 @@ Returns: the EA length, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
-Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [ad_reso_size](../adouble/ad_open.c.md#ad_reso_size), [copy_ea](unix.c.md#copy_ea), [sys_get_eacontent](ea_sys.c.md#sys_get_eacontent), [sys_get_easize](ea_sys.c.md#sys_get_easize)
+Called by: [ad_flush_hf](../adouble/ad_flush.c.md#ad_flush_hf), [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [ad_reso_size](../adouble/ad_open.c.md#ad_reso_size), [copy_ea](unix.c.md#copy_ea), [sys_get_eacontent](ea_sys.c.md#sys_get_eacontent), [sys_get_easize](ea_sys.c.md#sys_get_easize)
 
 ### sys_lgetxattr
 
@@ -250,7 +250,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
-Called by: [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
+Called by: [ad_convert_osx](../adouble/ad_open.c.md#ad_convert_osx), [ad_header_read_ea](../adouble/ad_open.c.md#ad_header_read_ea), [ad_open_hf_ea](../adouble/ad_open.c.md#ad_open_hf_ea), [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
 
 ### sys_fremovexattr
 
@@ -273,7 +273,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [prefix](extattr.c.md#prefix)
 
-Called by: [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
+Called by: [createfile_meta](../../etc/afpd/file.c.md#createfile_meta), [sys_remove_ea](ea_sys.c.md#sys_remove_ea)
 
 ### sys_lremovexattr
 

@@ -5,7 +5,7 @@ description: "6 files, 118 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/vfs"
 tags: ["libatalk/vfs"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 # Files
@@ -31,8 +31,8 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 
 # Called from
 
-* [etc/afpd](../etc/afpd.md): 20 calls
-* [libatalk/adouble](adouble.md): 8 calls
+* [etc/afpd](../etc/afpd.md): 21 calls
+* [libatalk/adouble](adouble.md): 11 calls
 * [bin/dbd](../bin/dbd.md): 3 calls
 * [libatalk/util](util.md): 3 calls
 
@@ -45,9 +45,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T20:46:18+11:00 }
 * [ea_attrname_invalid](vfs/ea_ad.c.md#ea_attrname_invalid): 8 callers
 * [netatalk_unlinkat](vfs/unix.c.md#netatalk_unlinkat): 6 callers
 * [setfilmode](vfs/unix.c.md#setfilmode): 6 callers
+* [sys_fgetxattr](vfs/extattr.c.md#sys_fgetxattr): 6 callers
 * [dir_rx_set](vfs/unix.c.md#dir_rx_set): 5 callers
 * [ea_absent](vfs/ea_ad.c.md#ea_absent): 5 callers
-* [sys_fgetxattr](vfs/extattr.c.md#sys_fgetxattr): 5 callers
 
 # Functions without a static caller
 

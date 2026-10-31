@@ -5,7 +5,7 @@ description: "Writing and truncating the forks of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_write.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -133,7 +133,7 @@ Returns: 0, or -1 with errno set
 
 Calls: [sys_ftruncate](ad_write.c.md#sys_ftruncate)
 
-Called by: [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams)
+Called by: [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [createfile_truncate](../../etc/afpd/file.c.md#createfile_truncate)
 
 ### copy_fork
 

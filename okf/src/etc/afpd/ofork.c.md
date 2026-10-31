@@ -5,7 +5,7 @@ description: "Open fork table of a session."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ofork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -133,7 +133,7 @@ Parameters:
 
 Returns: the bucket index
 
-Called by: [of_findnameat](ofork.c.md#of_findnameat), [of_hash](ofork.c.md#of_hash), [of_rename](ofork.c.md#of_rename), [of_rfork_changed](ofork.c.md#of_rfork_changed)
+Called by: [of_findnameat](ofork.c.md#of_findnameat), [of_hash](ofork.c.md#of_hash), [of_rename](ofork.c.md#of_rename), [of_rfork_changed](ofork.c.md#of_rfork_changed), [of_sidecar_fd](ofork.c.md#of_sidecar_fd)
 
 ### of_hash
 
@@ -473,7 +473,7 @@ Returns: an open fork of the file, or NULL when none is open or the stat failed
 
 Calls: [of_findnameat](ofork.c.md#of_findnameat)
 
-Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_getcomment](desktop.c.md#ad_getcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [adl_lkup](catsearch.c.md#adl_lkup), [afp_copyfile](file.c.md#afp_copyfile), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_openfork](fork.c.md#afp_openfork), [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_setextattr](extattrs.c.md#afp_setextattr), [find_adouble](file.c.md#find_adouble), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [of_ad](ofork.c.md#of_ad), [of_close_inode_forks](ofork.c.md#of_close_inode_forks)
+Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_getcomment](desktop.c.md#ad_getcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [adl_lkup](catsearch.c.md#adl_lkup), [afp_copyfile](file.c.md#afp_copyfile), [afp_createfile](file.c.md#afp_createfile), [afp_delete](filedir.c.md#afp_delete), [afp_getextattr](extattrs.c.md#afp_getextattr), [afp_listextattr](extattrs.c.md#afp_listextattr), [afp_openfork](fork.c.md#afp_openfork), [afp_remextattr](extattrs.c.md#afp_remextattr), [afp_setextattr](extattrs.c.md#afp_setextattr), [find_adouble](file.c.md#find_adouble), [materialize_virtual_icon](fork.c.md#materialize_virtual_icon), [moveandrename](filedir.c.md#moveandrename), [of_ad](ofork.c.md#of_ad), [of_close_inode_forks](ofork.c.md#of_close_inode_forks), [replace_blocked](file.c.md#replace_blocked)
 
 ### of_findnameat
 
@@ -521,7 +521,7 @@ Parameters:
 
 Returns: nonzero if the delete must be refused
 
-Called by: [afp_delete](filedir.c.md#afp_delete)
+Called by: [afp_delete](filedir.c.md#afp_delete), [replace_blocked](file.c.md#replace_blocked)
 
 Mentioned in the documentation of: [of_close_inode_forks](ofork.c.md#of_close_inode_forks)
 
@@ -580,7 +580,9 @@ Returns: OF_LOCKS_OK (0) outputs valid (all 0 == nothing locked) OF_LOCKS_NOENT 
 
 Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_openat](../../libatalk/adouble/ad_open.c.md#ad_openat), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [ad_testlock_whole](../../libatalk/adouble/ad_lock.c.md#ad_testlock_whole), [become_root](../../libatalk/util/unix.c.md#become_root), [of_findnameat](ofork.c.md#of_findnameat), [unbecome_root](../../libatalk/util/unix.c.md#unbecome_root)
 
-Called by: [deletefile](file.c.md#deletefile)
+Called by: [deletefile](file.c.md#deletefile), [replace_blocked](file.c.md#replace_blocked)
+
+Mentioned in the documentation of: [replace_blocked](file.c.md#replace_blocked)
 
 ### of_dealloc
 
@@ -749,13 +751,37 @@ Called by: [of_closefork](ofork.c.md#of_closefork), [read_fork](fork.c.md#read_f
 
 Calls through [`adouble_fops::ad_path`](../../include/atalk/adouble.h.md#struct-adouble_fops): [ad_path](../../libatalk/adouble/ad_open.c.md#ad_path), [ad_path_osx](../../libatalk/adouble/ad_open.c.md#ad_path_osx)
 
+### of_sidecar_fd
+
+```c
+int of_sidecar_fd(const struct vol *vol, const char *name)
+```
+
+Defined at lines 1437 to 1476. Declared in [etc/afpd/fork.h](fork.h.md).
+
+The descriptor through which this session holds the ._ file name in the working directory.
+
+A fork of the file holds it on its data descriptor, and a resource fork whose sidecar the file is holds it on its resource fork descriptor, on any of the session's volumes and by whatever name the session or another opened or renamed it. A read through that descriptor keeps the locks the session holds on the file, which another descriptor's close drops. Only the ea layout without HAVE_EAFD keeps resource forks in ._ files, so volumes of the other layout, other names and a session without forks stat nothing.
+
+Parameters:
+* `vol`: volume of the working directory
+* `name`: a name in the working directory
+
+Returns: the descriptor, or -1 when no fork holds the file
+
+Calls: [hashfn](ofork.c.md#hashfn)
+
+Called by: [check_dirent](enumerate.c.md#check_dirent), [check_name](filedir.c.md#check_name), [sidecar_locked](file.c.md#sidecar_locked)
+
+Uses file-scope variables: `of_curr_forks`, `ofork_table`
+
 ### of_closefork
 
 ```c
 int of_closefork(const AFPObj *obj, struct ofork *ofork)
 ```
 
-Defined at lines 1446 to 1741. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1503 to 1798. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close an open fork and free it.
 
@@ -781,7 +807,7 @@ Mentioned in the documentation of: [fork_modified](fork.c.md#fork_modified), [of
 struct adouble * of_ad(const struct vol *, struct path *, struct adouble *)
 ```
 
-Defined at lines 1753 to 1767. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1810 to 1824. Declared in [etc/afpd/fork.h](fork.h.md).
 
 AppleDouble to use for a file, shared with an open fork when there is one.
 
@@ -802,7 +828,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [getfilparams](file.c.md#getf
 static void of_close_sweep(const AFPObj *obj, const struct vol *vol, const char *who)
 ```
 
-Defined at lines 1780 to 1815.
+Defined at lines 1837 to 1872.
 
 Close every fork on `vol`, or every fork when `vol` is NULL.
 
@@ -825,7 +851,7 @@ Uses file-scope variables: `nforks`, `oforks`
 void of_closevol(const AFPObj *obj, const struct vol *vol)
 ```
 
-Defined at lines 1823 to 1826. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1880 to 1883. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close every open fork of a volume.
 
@@ -845,7 +871,7 @@ Mentioned in the documentation of: [of_close_inode_forks](ofork.c.md#of_close_in
 void of_close_all_forks(const AFPObj *obj)
 ```
 
-Defined at lines 1833 to 1836. Declared in [etc/afpd/fork.h](fork.h.md).
+Defined at lines 1890 to 1893. Declared in [etc/afpd/fork.h](fork.h.md).
 
 Close every open fork of the session.
 

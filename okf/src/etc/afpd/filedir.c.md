@@ -5,7 +5,7 @@ description: "AFP commands for both files and directories: FPGetFileDirParms, FP
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/filedir.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -126,9 +126,11 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int check_name(const struct vol *vol, char *name)
 ```
 
-Defined at lines 343 to 360.
+Defined at lines 346 to 363.
 
 Reject "." and "..", a name that the AppleDouble layout reserves, or one that the volume vetoes.
+
+A ._ file this session holds open is read through the fork's own descriptor.
 
 Parameters:
 * `vol`: volume
@@ -136,11 +138,37 @@ Parameters:
 
 Returns: 0 for an acceptable name, AFPERR_EXIST otherwise
 
-Calls: [veto_file](filedir.c.md#veto_file)
+Calls: [of_sidecar_fd](ofork.c.md#of_sidecar_fd), [veto_file](filedir.c.md#veto_file)
 
-Called by: [cname](directory.c.md#cname), [moveandrename](filedir.c.md#moveandrename)
+Called by: [check_newname](filedir.c.md#check_newname), [cname](directory.c.md#cname)
 
 Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops): [validupath_adouble](../../libatalk/vfs/vfs.c.md#validupath_adouble), [validupath_ea](../../libatalk/vfs/vfs.c.md#validupath_ea), [vfs_validupath](../../libatalk/vfs/vfs.c.md#vfs_validupath)
+
+Mentioned in the documentation of: [check_newname](filedir.c.md#check_newname)
+
+### check_newname
+
+```c
+int check_newname(const struct vol *vol, char *name)
+```
+
+Defined at lines 379 to 391.
+
+Reject a name for a new file or folder: one that [check_name()](filedir.c.md#check_name) rejects, or a ._ name that no file holds where the ea layout keeps resource forks in ._ files.
+
+Without HAVE_EAFD the ea layout keeps file x's resource fork in ._x, which afpd opens past any deny mode that a fork of a file named ._x holds, so no request makes a file or folder of a ._ name. A ._ file that holds the name stays as it is, and keeps its name through a rename to itself.
+
+Parameters:
+* `vol`: volume
+* `name`: Unix name in the working directory
+
+Returns: 0 for an acceptable name, AFPERR_EXIST otherwise
+
+Calls: [check_name](filedir.c.md#check_name)
+
+Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [moveandrename](filedir.c.md#moveandrename)
+
+Mentioned in the documentation of: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.md#afp_createdir), [afp_createfile](file.c.md#afp_createfile), [moveandrename](filedir.c.md#moveandrename)
 
 ### moveandrename
 
@@ -148,11 +176,11 @@ Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vf
 static int moveandrename(const AFPObj *obj, struct vol *vol, struct dir *sdir, int sdir_fd, char *oldname, char *newname, int isdir)
 ```
 
-Defined at lines 391 to 740.
+Defined at lines 422 to 771.
 
 Move and rename sdir/oldname to newname in the working directory.
 
-A file takes its CNID from the database, and a directory passes itself as sdir and supplies the DID. The rename-inhibit attribute blocks the call unless the volume ignores it, and check_name screens the new name. The virtual Icon file's name in the volume root fails with AFPERR_EXIST. An unchanged name succeeds at once. Inside one directory a name that another file holds fails with AFPERR_EXIST, and across directories any existing destination fails. So does a destination that this session holds open.
+A file takes its CNID from the database, and a directory passes itself as sdir and supplies the DID. The rename-inhibit attribute blocks the call unless the volume ignores it, and [check_newname()](filedir.c.md#check_newname) screens the new name. The virtual Icon file's name in the volume root fails with AFPERR_EXIST. An unchanged name succeeds at once. Inside one directory a name that another file holds fails with AFPERR_EXIST, and across directories any existing destination fails. So does a destination that this session holds open.
 
 After renamefile or renamedir succeeds, the dircache entry and its children follow. FCE and Spotlight get a move event. The AppleDouble metadata and the CNID record get the new parent and name, and sibling afpd processes get hints for the object and both parents.
 
@@ -167,7 +195,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_OLOCK, AFPERR_EXIST, AFPERR_PARAM, AFPERR_MISC, the error of a parent DID that names no folder, or the error of renamefile or renamedir
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [check_name](filedir.c.md#check_name), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [ctoupath](filedir.c.md#ctoupath), [dir_event_path](directory.c.md#dir_event_path), [dir_modify](directory.c.md#dir_modify), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [mtoupath](desktop.c.md#mtoupath), [of_findname](ofork.c.md#of_findname), [of_findnameat](ofork.c.md#of_findnameat), [of_rename](ofork.c.md#of_rename), [ostat](../../libatalk/util/unix.c.md#ostat), [renamedir](directory.c.md#renamedir), [renamefile](file.c.md#renamefile), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_metadata_cached](ad_cache.c.md#ad_metadata_cached), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [check_newname](filedir.c.md#check_newname), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [cnid_update](../../libatalk/cnid/cnid.c.md#cnid_update), [ctoupath](filedir.c.md#ctoupath), [dir_event_path](directory.c.md#dir_event_path), [dir_modify](directory.c.md#dir_modify), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [dircache_search_by_name](dircache.c.md#dircache_search_by_name), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [mtoupath](desktop.c.md#mtoupath), [of_findname](ofork.c.md#of_findname), [of_findnameat](ofork.c.md#of_findnameat), [of_rename](ofork.c.md#of_rename), [ostat](../../libatalk/util/unix.c.md#ostat), [renamedir](directory.c.md#renamedir), [renamefile](file.c.md#renamefile), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Called by: [afp_moveandrename](filedir.c.md#afp_moveandrename), [afp_rename](filedir.c.md#afp_rename)
 
@@ -179,7 +207,7 @@ Uses file-scope variables: `afp_errno` in [etc/afpd/directory.c](directory.c.md)
 int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 758 to 845.
+Defined at lines 789 to 876.
 
 FPRename: rename a file or directory inside its parent directory.
 
@@ -206,7 +234,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int delete_vetoed_files_at(struct vol *vol, int parent_fd, const char *name, bool in_vetodir)
 ```
 
-Defined at lines 861 to 957.
+Defined at lines 892 to 988.
 
 Recursively delete vetoed files and directories.
 
@@ -230,7 +258,7 @@ Called by: [delete_vetoed_files](filedir.c.md#delete_vetoed_files)
 int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
 ```
 
-Defined at lines 972 to 990.
+Defined at lines 1003 to 1021.
 
 Delete the vetoed files in directory upath and then the directory itself.
 
@@ -253,7 +281,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [deletecurdir](directory.c.md#
 void dir_offcnt_take(struct dir *dir)
 ```
 
-Defined at lines 1001 to 1008.
+Defined at lines 1032 to 1039.
 
 Take one item from a directory's cached offspring count.
 
@@ -270,7 +298,7 @@ Called by: [afp_delete](filedir.c.md#afp_delete), [of_closefork](ofork.c.md#of_c
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1032 to 1308.
+Defined at lines 1063 to 1339.
 
 FPDelete: delete a file or an empty directory.
 
@@ -299,7 +327,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 char * absupath(const struct vol *vol, struct dir *dir, char *u)
 ```
 
-Defined at lines 1321 to 1343.
+Defined at lines 1352 to 1374.
 
 Full path of the Unix name u inside dir.
 
@@ -322,7 +350,7 @@ Called by: [afp_exchangefiles](file.c.md#afp_exchangefiles), [ctoupath](filedir.
 char * ctoupath(const struct vol *vol, struct dir *dir, char *name)
 ```
 
-Defined at lines 1353 to 1361.
+Defined at lines 1384 to 1392.
 
 Full Unix path of a Mac name inside dir.
 
@@ -343,7 +371,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [moveandrename](filedir.c.md#
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1381 to 1509.
+Defined at lines 1412 to 1540.
 
 FPMoveAndRename: move a file or directory into another directory, with a new name if given.
 
@@ -372,7 +400,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static int veto_entry_matches(const char *entry, const char *path, size_t len, int nocase)
 ```
 
-Defined at lines 1523 to 1539.
+Defined at lines 1554 to 1570.
 
 Whether a veto entry of path's length equals path.
 
@@ -396,7 +424,7 @@ Called by: [veto_file](filedir.c.md#veto_file)
 int veto_file(const char *veto_str, const char *path, int nocase)
 ```
 
-Defined at lines 1554 to 1576.
+Defined at lines 1585 to 1607.
 
 Whether path matches one entry of a slash-separated veto list.
 

@@ -5,7 +5,7 @@ description: "Directory resolution by CNID and path, the AFP directory commands,
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/directory.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -582,7 +582,7 @@ Returns: 0, also for an entry the stat removed, or -1 on error (hash re-insert f
 
 Calls: [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cnid_delete](../../libatalk/cnid/cnid.c.md#cnid_delete), [cnid_dir_forget](../../libatalk/cnid/cnid.c.md#cnid_dir_forget), [cnid_get](../../libatalk/cnid/cnid.c.md#cnid_get), [cnid_lookup](../../libatalk/cnid/cnid.c.md#cnid_lookup), [dir_remove_tree](directory.c.md#dir_remove_tree), [dir_stat_usable](directory.c.md#dir_stat_usable), [dircache_add](dircache.c.md#dircache_add), [dircache_promote](dircache.c.md#dircache_promote), [dircache_reindex_didname](dircache.c.md#dircache_reindex_didname), [dircache_remove](dircache.c.md#dircache_remove), [dircache_remove_children_defer](dircache.c.md#dircache_remove_children_defer), [ea_cache_free](ad_cache.c.md#ea_cache_free), [fullpath_join](directory.c.md#fullpath_join), [object_cnid](directory.c.md#object_cnid), [pfd_purge](pfd_cache.c.md#pfd_purge), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
 
-Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [afp_setacl](acls.c.md#afp_setacl), [dircache_refresh](dircache.c.md#dircache_refresh), [ea_written](extattrs.c.md#ea_written), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork), [of_rfork_changed](ofork.c.md#of_rfork_changed), [process_cache_hints](dircache.c.md#process_cache_hints), [read_fork](fork.c.md#read_fork), [setdirparams](directory.c.md#setdirparams), [setfilparams](file.c.md#setfilparams)
+Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_rmvcomment](desktop.c.md#ad_rmvcomment), [afp_createfile](file.c.md#afp_createfile), [afp_setacl](acls.c.md#afp_setacl), [dircache_refresh](dircache.c.md#dircache_refresh), [ea_written](extattrs.c.md#ea_written), [moveandrename](filedir.c.md#moveandrename), [of_closefork](ofork.c.md#of_closefork), [of_rfork_changed](ofork.c.md#of_rfork_changed), [process_cache_hints](dircache.c.md#process_cache_hints), [read_fork](fork.c.md#read_fork), [setdirparams](directory.c.md#setdirparams), [setfilparams](file.c.md#setfilparams)
 
 Uses file-scope variables: `curdir`, `rfork_stat_invalidated` in [etc/afpd/dircache.c](dircache.c.md)
 
@@ -896,7 +896,7 @@ Returns: 0 when the rights allow mode, -1 otherwise
 
 Calls: [accessmode_has](unix.c.md#accessmode_has), [openacc_rights](directory.c.md#openacc_rights)
 
-Called by: [afp_openfork](fork.c.md#afp_openfork), [find_adouble](file.c.md#find_adouble)
+Called by: [afp_openfork](fork.c.md#afp_openfork), [find_adouble](file.c.md#find_adouble), [setfilparams](file.c.md#setfilparams)
 
 ### offcnt_stats_get
 
@@ -1159,11 +1159,11 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 3799 to 3905.
+Defined at lines 3800 to 3910.
 
 FPCreateDir: create a directory and return its DID.
 
-The request names the new directory relative to a parent DID. The call creates it with netatalk_mkdir, adds it to the dircache, and writes its AppleDouble metadata with the Mac name and the CNID. FCE and Spotlight learn about the new directory, and sibling afpd processes get a refresh hint for the parent.
+The request names the new directory relative to a parent DID, by a name that [check_newname()](filedir.c.md#check_newname) accepts, else the call fails with AFPERR_PARAM. The call creates it with netatalk_mkdir, adds it to the dircache, and writes its AppleDouble metadata with the Mac name and the CNID. FCE and Spotlight learn about the new directory, and sibling afpd processes get a refresh hint for the parent.
 
 Parameters:
 * `obj`: session object
@@ -1174,7 +1174,7 @@ Parameters:
 
 Returns: AFP_OK, AFPERR_EXIST, AFPERR_VLOCK for a read-only volume, AFPERR_ACCESS when the metadata cannot open, or another AFPERR_* code
 
-Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [cname](directory.c.md#cname), [dir_add](directory.c.md#dir_add), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [movecwd](directory.c.md#movecwd), [netatalk_mkdir](directory.c.md#netatalk_mkdir), [of_stat](ofork.c.md#of_stat), [setvoltime_entry](volume.c.md#setvoltime_entry), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
+Calls: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_init](../../libatalk/adouble/ad_open.c.md#ad_init), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open), [ad_setid](../../libatalk/adouble/ad_attr.c.md#ad_setid), [ad_setname](../../libatalk/adouble/ad_attr.c.md#ad_setname), [ad_store_to_cache](ad_cache.c.md#ad_store_to_cache), [check_newname](filedir.c.md#check_newname), [cname](directory.c.md#cname), [dir_add](directory.c.md#dir_add), [dirlookup_strict](directory.c.md#dirlookup_strict), [fce_register](fce_api.c.md#fce_register), [get_afp_errno](directory.c.md#get_afp_errno), [getvolbyvid](../../libatalk/util/netatalk_conf.c.md#getvolbyvid), [ipc_send_cache_hint](../../libatalk/util/server_ipc.c.md#ipc_send_cache_hint), [movecwd](directory.c.md#movecwd), [netatalk_mkdir](directory.c.md#netatalk_mkdir), [of_stat](ofork.c.md#of_stat), [setvoltime_entry](volume.c.md#setvoltime_entry), [sl_index_event](spotlight.c.md#sl_index_event), [strnlen](../../libatalk/compat/misc.c.md#strnlen)
 
 Uses file-scope variables: `afp_errno`, `curdir`
 
@@ -1186,7 +1186,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int renamedir(struct vol *vol, int dirfd, char *src, char *dst, struct dir *newparent, char *newname)
 ```
 
-Defined at lines 3928 to 3987.
+Defined at lines 3933 to 3992.
 
 Rename a directory, or transfer its tree when the rename crosses devices.
 
@@ -1214,7 +1214,7 @@ Calls through [`vfs_ops::vfs_renamedir`](../../include/atalk/vfs.h.md#struct-vfs
 const char * dir_event_path(char *buf, size_t buflen, const struct dir *parent, const char *name)
 ```
 
-Defined at lines 4002 to 4021.
+Defined at lines 4007 to 4026.
 
 Full path of name inside parent, for FCE and Spotlight events.
 
@@ -1238,7 +1238,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createfile](file.c.md#af
 int deletecurdir(struct vol *vol)
 ```
 
-Defined at lines 4038 to 4112.
+Defined at lines 4043 to 4117.
 
 Delete the working directory, which must be empty.
 
@@ -1263,7 +1263,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `afp_
 int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4132 to 4274.
+Defined at lines 4137 to 4279.
 
 FPMapID: map a user ID, group ID, or UUID to a name.
 
@@ -1288,7 +1288,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4292 to 4399.
+Defined at lines 4297 to 4404.
 
 FPMapName: map a user or group name to a Unix ID or a UUID.
 
@@ -1313,7 +1313,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_closedir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4414 to 4428.
+Defined at lines 4419 to 4433.
 
 FPCloseDir: accept the close of a variable DID directory.
 
@@ -1338,7 +1338,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_opendir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 4447 to 4490.
+Defined at lines 4452 to 4495.
 
 FPOpenDir: return the DID of a directory.
 

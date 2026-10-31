@@ -5,7 +5,7 @@ description: "Volume filesystem operation callbacks and initialization interface
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/vfs.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -44,7 +44,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 
 ### struct vfs_ops
 
-Defined at line 98.
+Defined at line 99.
 * `vfs_validupath_fn vfs_validupath`: Assigned in [netatalk_adouble_ea](../../libatalk/vfs/vfs.c.md#netatalk_adouble_ea), [netatalk_adouble_v2](../../libatalk/vfs/vfs.c.md#netatalk_adouble_v2), [vfs_master_funcs](../../libatalk/vfs/vfs.c.md#vfs_master_funcs); called through by [check_dirent](../../etc/afpd/enumerate.c.md#check_dirent), [check_name](../../etc/afpd/filedir.c.md#check_name), [dbd_readdir](../../bin/dbd/cmd_dbd_scanvol.c.md#dbd_readdir), [vfs_validupath](../../libatalk/vfs/vfs.c.md#vfs_validupath).
 * `vfs_chown_fn vfs_chown`: Assigned in [netatalk_adouble_ea](../../libatalk/vfs/vfs.c.md#netatalk_adouble_ea), [netatalk_adouble_v2](../../libatalk/vfs/vfs.c.md#netatalk_adouble_v2), [netatalk_ea_adouble](../../libatalk/vfs/vfs.c.md#netatalk_ea_adouble), [vfs_master_funcs](../../libatalk/vfs/vfs.c.md#vfs_master_funcs); called through by [setfilowner](../../etc/afpd/unix.c.md#setfilowner), [vfs_chown](../../libatalk/vfs/vfs.c.md#vfs_chown).
 * `vfs_renamedir_fn vfs_renamedir`: Assigned in [netatalk_adouble_ea](../../libatalk/vfs/vfs.c.md#netatalk_adouble_ea), [netatalk_adouble_v2](../../libatalk/vfs/vfs.c.md#netatalk_adouble_v2), [vfs_master_funcs](../../libatalk/vfs/vfs.c.md#vfs_master_funcs); called through by [renamedir](../../etc/afpd/directory.c.md#renamedir), [vfs_renamedir](../../libatalk/vfs/vfs.c.md#vfs_renamedir).

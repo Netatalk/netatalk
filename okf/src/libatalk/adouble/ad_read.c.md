@@ -5,7 +5,7 @@ description: "Reading the forks of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_read.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -65,4 +65,4 @@ Returns: bytes read, 0 at the end of the fork or for a closed resource fork, or 
 
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [adf_pread](ad_read.c.md#adf_pread)
 
-Called by: [nad_read](../../bin/nad/nad_adouble.c.md#nad_read), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [read_file](../../etc/afpd/fork.c.md#read_file), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd)
+Called by: [nad_read](../../bin/nad/nad_adouble.c.md#nad_read), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [read_file](../../etc/afpd/fork.c.md#read_file), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
