@@ -1,7 +1,7 @@
 # src/libatalk
 
 * [acl](acl.md) - 7 files, 26 functions. Files in [acl/](acl/).
-* [adouble](adouble.md) - 10 files, 111 functions. Files in [adouble/](adouble/).
+* [adouble](adouble.md) - 10 files, 116 functions. Files in [adouble/](adouble/).
 * [asp](asp.md) - 10 files, 14 functions. Files in [asp/](asp/).
 * [atp](atp.md) - 10 files, 20 functions. Files in [atp/](atp/).
 * [cnid](cnid.md) - 4 files, 89 functions. Files in [cnid/](cnid/).

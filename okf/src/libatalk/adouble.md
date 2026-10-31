@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/adouble"
-description: "10 files, 111 functions."
+description: "10 files, 116 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/adouble"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T15:31:59+11:00 }
 ---
 
 # Files

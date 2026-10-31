@@ -5,7 +5,7 @@ description: "Byte range and share mode locks on AppleDouble forks."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_lock.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T15:31:59+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -17,7 +17,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 * [atalk/errchk.h](../../include/atalk/errchk.h.md)
 * [atalk/logger.h](../../include/atalk/logger.h.md)
 * [atalk/util.h](../../include/atalk/util.h.md)
-* System headers: `errno.h`, `inttypes.h`, `stdio.h`, `stdlib.h`, `string.h`
+* System headers: `errno.h`, `inttypes.h`, `limits.h`, `stdio.h`, `stdlib.h`, `string.h`
 
 # Functions
 
@@ -27,7 +27,7 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 static const char * shmdstrfromoff(off_t off)
 ```
 
-Defined at lines 44 to 80.
+Defined at lines 39 to 75.
 
 Name the share-mode lock slot that a lock-band offset stands for, for log output.
 
@@ -44,7 +44,7 @@ Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_testlock](ad_lock.c.md#ad_testlo
 static int set_lock(int fd, int cmd, struct flock *lock)
 ```
 
-Defined at lines 94 to 117.
+Defined at lines 89 to 112.
 
 Apply an fcntl lock operation to a fork descriptor.
 
@@ -59,7 +59,7 @@ Returns: 0, or -1 with errno from fcntl
 
 Calls: [shmdstrfromoff](ad_lock.c.md#shmdstrfromoff)
 
-Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_testlock_range](ad_lock.c.md#ad_testlock_range), [ad_testlock_whole](ad_lock.c.md#ad_testlock_whole), [ad_tmplock](ad_lock.c.md#ad_tmplock), [adf_freelock](ad_lock.c.md#adf_freelock), [adf_relockrange](ad_lock.c.md#adf_relockrange), [testlock](ad_lock.c.md#testlock)
+Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_testlock_range](ad_lock.c.md#ad_testlock_range), [ad_testlock_whole](ad_lock.c.md#ad_testlock_whole), [adf_lock_gaps](ad_lock.c.md#adf_lock_gaps), [testlock](ad_lock.c.md#testlock)
 
 ### XLATE_FCNTL_LOCK
 
@@ -67,7 +67,7 @@ Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_testlock_range](ad_lock.c.md#ad_
 static int XLATE_FCNTL_LOCK(int type)
 ```
 
-Defined at lines 125 to 139.
+Defined at lines 120 to 134.
 
 Translate an ADLOCK_* lock type into the fcntl lock type.
 
@@ -84,9 +84,11 @@ Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_tmplock](ad_lock.c.md#ad_tmplock
 static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen)
 ```
 
-Defined at lines 151 to 156.
+Defined at lines 150 to 155.
 
 Tell whether two byte ranges overlap, where a zero length runs to the end of the file.
+
+Subtracting the starts instead of adding the lengths keeps the comparison within off_t for ranges at or past byte zero, one at the largest offset included.
 
 Parameters:
 * `a`: start of the first range
@@ -96,7 +98,127 @@ Parameters:
 
 Returns: non-zero when the ranges share at least one byte
 
-Called by: [adf_findlock](ad_lock.c.md#adf_findlock), [adf_findxlock](ad_lock.c.md#adf_findxlock), [adf_relockrange](ad_lock.c.md#adf_relockrange), [testlock](ad_lock.c.md#testlock)
+Called by: [adf_findlock](ad_lock.c.md#adf_findlock), [adf_findxlock](ad_lock.c.md#adf_findxlock), [testlock](ad_lock.c.md#testlock)
+
+### adf_lock_fits
+
+```c
+static int adf_lock_fits(off_t start, off_t len)
+```
+
+Defined at lines 174 to 177.
+
+Tell whether a range of positive length ends at or below the largest offset.
+
+Parameters:
+* `start`: first byte of the range, at or past byte zero
+* `len`: length of the range, positive
+
+Returns: non-zero when the range's last byte fits in off_t
+
+Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_tmplock](ad_lock.c.md#ad_tmplock)
+
+### adf_lock_last
+
+```c
+static off_t adf_lock_last(off_t start, off_t len)
+```
+
+Defined at lines 187 to 190.
+
+Last byte of a range that fits, where a zero length reaches the end of the file.
+
+Parameters:
+* `start`: first byte of the range
+* `len`: length of the range, or 0 to the end of the file
+
+Returns: the last byte, the largest offset for a zero length
+
+Called by: [adf_lock_gaps](ad_lock.c.md#adf_lock_gaps), [adf_lock_reach](ad_lock.c.md#adf_lock_reach), [adf_lock_window](ad_lock.c.md#adf_lock_window)
+
+### adf_lock_lower
+
+```c
+static int adf_lock_lower(const struct ad_fd *adf, off_t target, int by_reach)
+```
+
+Defined at lines 204 to 222.
+
+First index of the lock array whose entry starts, or with by_reach reaches, at or past target.
+
+Entries are in order of start, and their reach, the farthest last byte of an entry and the ones before it, rises with the index.
+
+Parameters:
+* `adf`: fork descriptor
+* `target`: the offset to search for
+* `by_reach`: nonzero to search the entries' reach, zero their start
+
+Returns: the index, or adf_lockcount when no entry qualifies
+
+Called by: [ad_lock](ad_lock.c.md#ad_lock), [adf_lock_window](ad_lock.c.md#adf_lock_window)
+
+### adf_lock_window
+
+```c
+static void adf_lock_window(const struct ad_fd *adf, off_t off, off_t len, int *lo, int *hi)
+```
+
+Defined at lines 241 to 248.
+
+Index window of the lock array that can hold entries overlapping a byte range.
+
+An entry before the first one whose reach is at or past off ends before the range starts, and an entry at or past the first one that starts past the range's last byte begins after it ends. The range has passed the callers' checks: it starts at or past byte zero and its last byte fits in off_t. A range of zero length reaches the end of the file, and no entry starts past the largest offset, so both take the array's end as their upper bound.
+
+Parameters:
+* `adf`: fork descriptor
+* `off`: start of the range
+* `len`: length of the range, or 0 to the end of the file
+* `lo`: first index that can overlap the range
+* `hi`: index after the last entry that can overlap the range
+
+Calls: [adf_lock_last](ad_lock.c.md#adf_lock_last), [adf_lock_lower](ad_lock.c.md#adf_lock_lower)
+
+Called by: [adf_findlock](ad_lock.c.md#adf_findlock), [adf_findxlock](ad_lock.c.md#adf_findxlock), [adf_lock_gaps](ad_lock.c.md#adf_lock_gaps)
+
+### adf_lock_reach
+
+```c
+static void adf_lock_reach(struct ad_fd *adf, int from)
+```
+
+Defined at lines 256 to 270.
+
+Recompute the reach of the entries from index from to the end.
+
+Parameters:
+* `adf`: fork descriptor
+* `from`: first index to recompute
+
+Calls: [adf_lock_last](ad_lock.c.md#adf_lock_last)
+
+Called by: [ad_lock](ad_lock.c.md#ad_lock), [adf_freelock](ad_lock.c.md#adf_freelock)
+
+### adf_lock_gaps
+
+```c
+static int adf_lock_gaps(const struct ad_fd *adf, const struct flock *r)
+```
+
+Defined at lines 291 to 341.
+
+Apply a lock operation to the bytes of a range that no recorded entry covers.
+
+The window's entries are in order of start, so the uncovered bytes are the stretches between them. An entry covers its bytes whatever its type: below the band the conflict scan has refused another fork's conflicting entry, and a read lock is recorded there only on a read-only descriptor, where a write request degrades to a read lock too; in the band the fork's own share-mode entries are read locks, so a write reaching them takes no write lock there. A take that fails on a stretch releases the stretches before it; a release that fails on one logs it and goes on.
+
+Parameters:
+* `adf`: fork descriptor
+* `r`: the range, past the callers' checks, with l_type F_RDLCK or F_WRLCK to take it or F_UNLCK to release it
+
+Returns: 0, or -1 with errno from fcntl for a refused take, or -1 after a failed release
+
+Calls: [adf_lock_last](ad_lock.c.md#adf_lock_last), [adf_lock_window](ad_lock.c.md#adf_lock_window), [set_lock](ad_lock.c.md#set_lock)
+
+Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_tmplock](ad_lock.c.md#ad_tmplock), [adf_freelock](ad_lock.c.md#adf_freelock)
 
 ### adf_freelock
 
@@ -104,19 +226,19 @@ Called by: [adf_findlock](ad_lock.c.md#adf_findlock), [adf_findxlock](ad_lock.c.
 static void adf_freelock(struct ad_fd *ad, const int i)
 ```
 
-Defined at lines 180 to 242.
+Defined at lines 354 to 382.
 
 Drop lock i of a fork descriptor and compact the lock array.
 
-The kernel lock goes away only with the last reference to the shared lock record. For a data-zone lock the release covers the union of ranges that the kernel coalesced, and adf_relockrange restores the surviving overlapping locks after the compaction. A band lock releases only the range it covers. The array shrinks once 100 or more slots stand unused, the ARRAY_FREE_DELTA margin.
+The release covers the bytes of the entry's range that no surviving entry holds, so the survivors keep their locks whatever the kernel coalesced. The array shrinks once more than 100 slots stand unused, the ARRAY_FREE_DELTA margin.
 
 Parameters:
 * `ad`: fork descriptor holding the lock array
 * `i`: index of the lock to drop
 
-Calls: [adf_relockrange](ad_lock.c.md#adf_relockrange), [set_lock](ad_lock.c.md#set_lock)
+Calls: [adf_lock_gaps](ad_lock.c.md#adf_lock_gaps), [adf_lock_reach](ad_lock.c.md#adf_lock_reach)
 
-Called by: [ad_lock](ad_lock.c.md#ad_lock), [adf_unlock](ad_lock.c.md#adf_unlock)
+Called by: [ad_lock](ad_lock.c.md#ad_lock), [adf_lock_free](ad_lock.c.md#adf_lock_free), [adf_unlock](ad_lock.c.md#adf_unlock)
 
 Mentioned in the documentation of: [adf_unlock](ad_lock.c.md#adf_unlock)
 
@@ -126,11 +248,11 @@ Mentioned in the documentation of: [adf_unlock](ad_lock.c.md#adf_unlock)
 static void adf_unlock(struct adouble *ad, struct ad_fd *adf, const int fork)
 ```
 
-Defined at lines 258 to 271.
+Defined at lines 399 to 410.
 
 Release every lock one fork holds on a fork descriptor.
 
-The AFP specification releases all locks of a user when the user closes the fork. A user here is one OForkRefNum, the fork of lock[i].user. Only this fork's locks go. A sibling fork on the same shared [ad_fd](../../include/atalk/adouble.h.md#struct-ad_fd) keeps its locks. The locks live in an array that [adf_freelock()](ad_lock.c.md#adf_freelock) compacts. After each removal the scan steps back and re-reads the array pointer, which realloc may have moved.
+The AFP specification releases all locks of a user when the user closes the fork. A user here is one OForkRefNum, the fork of lock[i].user. Only this fork's locks go. A sibling fork on the same shared [ad_fd](../../include/atalk/adouble.h.md#struct-ad_fd) keeps its locks. The locks live in an array that [adf_freelock()](ad_lock.c.md#adf_freelock) compacts. The scan runs from the top down, so a removal moves only the entries above it, and re-reads the array pointer after each one, which realloc may have moved.
 
 Parameters:
 * `ad`: unused
@@ -147,7 +269,7 @@ Called by: [ad_unlock](ad_lock.c.md#ad_unlock)
 void adf_lock_init(struct ad_fd *adf)
 ```
 
-Defined at lines 282 to 292.
+Defined at lines 421 to 431.
 
 Initialize lock tracking for an [ad_fd](../../include/atalk/adouble.h.md#struct-ad_fd) structure.
 
@@ -164,42 +286,20 @@ Called by: [ad_open_df](ad_open.c.md#ad_open_df), [ad_open_hf_v2](ad_open.c.md#a
 void adf_lock_free(struct ad_fd *adf)
 ```
 
-Defined at lines 306 to 339.
+Defined at lines 444 to 465.
 
 Free all locks in an [ad_fd](../../include/atalk/adouble.h.md#struct-ad_fd) structure.
 
-Iterates through all locks in the [ad_fd](../../include/atalk/adouble.h.md#struct-ad_fd) lock array, releasing fcntl locks and freeing memory. Manages refcounted locks properly by only freeing refcount memory when the last reference is released.
+Releases every lock in the [ad_fd](../../include/atalk/adouble.h.md#struct-ad_fd) lock array, each over the bytes no other entry holds, and frees the array.
 
 This function is called when closing file descriptors to ensure all locks are properly released and memory is freed.
 
 Parameters:
 * `adf`: File descriptor structure containing locks to free
 
-Calls: [adf_lock_init](ad_lock.c.md#adf_lock_init)
+Calls: [adf_freelock](ad_lock.c.md#adf_freelock), [adf_lock_init](ad_lock.c.md#adf_lock_init)
 
 Called by: [ad_close](ad_flush.c.md#ad_close)
-
-### adf_relockrange
-
-```c
-static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
-```
-
-Defined at lines 353 to 374.
-
-Re-assert every lock of a fork descriptor that overlaps a byte range.
-
-The restore is optimistic. The temporary release already succeeded and the guarded operation is over, so a failed range only logs an error. Locks outside the range stay as they are.
-
-Parameters:
-* `ad`: fork descriptor holding the lock array
-* `fd`: descriptor to set the locks on
-* `off`: start of the range
-* `len`: length of the range
-
-Calls: [OVERLAP](ad_lock.c.md#overlap), [set_lock](ad_lock.c.md#set_lock)
-
-Called by: [ad_tmplock](ad_lock.c.md#ad_tmplock), [adf_freelock](ad_lock.c.md#adf_freelock)
 
 ### adf_findlock
 
@@ -207,7 +307,7 @@ Called by: [ad_tmplock](ad_lock.c.md#ad_tmplock), [adf_freelock](ad_lock.c.md#ad
 static int adf_findlock(struct ad_fd *ad, const int fork, const int type, const off_t off, const off_t len)
 ```
 
-Defined at lines 387 to 405.
+Defined at lines 477 to 496.
 
 Find a lock of one open fork that overlaps a byte range.
 
@@ -220,7 +320,7 @@ Parameters:
 
 Returns: the index of the first matching lock, or -1
 
-Calls: [OVERLAP](ad_lock.c.md#overlap)
+Calls: [OVERLAP](ad_lock.c.md#overlap), [adf_lock_window](ad_lock.c.md#adf_lock_window)
 
 Called by: [ad_lock](ad_lock.c.md#ad_lock)
 
@@ -230,7 +330,7 @@ Called by: [ad_lock](ad_lock.c.md#ad_lock)
 static int adf_findxlock(struct ad_fd *ad, const int fork, const int type, const off_t off, const off_t len)
 ```
 
-Defined at lines 418 to 439.
+Defined at lines 509 to 531.
 
 Find a lock of any other open fork that overlaps a byte range.
 
@@ -243,7 +343,7 @@ Parameters:
 
 Returns: the index of the first matching lock, or -1
 
-Calls: [OVERLAP](ad_lock.c.md#overlap)
+Calls: [OVERLAP](ad_lock.c.md#overlap), [adf_lock_window](ad_lock.c.md#adf_lock_window)
 
 Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_tmplock](ad_lock.c.md#ad_tmplock)
 
@@ -253,7 +353,7 @@ Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_tmplock](ad_lock.c.md#ad_tmplock
 static off_t rf2off(off_t off)
 ```
 
-Defined at lines 463 to 480.
+Defined at lines 542 to 559.
 
 Map a data fork band lock offset to the matching resource fork band offset.
 
@@ -274,7 +374,7 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 static int testlock(const struct ad_fd *adf, off_t off, off_t len)
 ```
 
-Defined at lines 495 to 526.
+Defined at lines 574 to 605.
 
 Test a lock.
 
@@ -300,7 +400,7 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 static const char * locktypetostr(int type)
 ```
 
-Defined at lines 536 to 585.
+Defined at lines 615 to 664.
 
 Render an ADLOCK_* type mask as text, for log output.
 
@@ -319,13 +419,11 @@ Called by: [ad_lock](ad_lock.c.md#ad_lock), [ad_tmplock](ad_lock.c.md#ad_tmplock
 int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len, int fork)
 ```
 
-Defined at lines 621 to 817.
+Defined at lines 701 to 865.
 
 Take or release a byte-range or share-mode lock on a fork for one AFP fork.
 
-Locks are process-wide fcntl locks, so ad_lock keeps a per-descriptor array of the ranges each fork holds and checks it before the kernel. A write lock on a read-only descriptor degrades to a read lock, which still blocks a deny on the file. Resource fork ranges shift by the resource fork entry offset. With ADLOCK_FILELOCK they move into the share-mode band of the data fork instead.
-
-BYTELOCK_MAX locks to the end of the file. Overlapping read locks of different forks share one reference-counted group that records the union of their ranges. When the kernel took the lock but the bookkeeping fails, ad_lock removes the kernel lock again. On failure errno is EACCES for a conflicting lock of another fork. EINVAL marks an invalid release, a re-lock without ADLOCK_UPGRADE, or an empty whole-file range. Other values come from fcntl or malloc.
+Locks are process-wide fcntl locks, so the descriptor's array records the ranges each fork holds, in order of start, and is checked before the kernel. A write lock on a read-only descriptor degrades to a read lock, which still blocks a deny on the file. Resource fork ranges shift by the resource fork entry offset; with ADLOCK_FILELOCK they move into the data fork's share-mode band instead. BYTELOCK_MAX locks to the end of the file. Overlapping read locks of different forks are each recorded; the kernel merges them, and a release frees the bytes no other entry holds. A lock the kernel took but the array could not record is released again.
 
 Parameters:
 * `ad`: AppleDouble whose forks are open
@@ -335,9 +433,9 @@ Parameters:
 * `len`: length of the range, BYTELOCK_MAX for the rest of the file, 1 with ADLOCK_FILELOCK
 * `fork`: OForkRefNum the lock belongs to
 
-Returns: 0, or -1 with errno set
+Returns: 0, or -1 with errno EACCES for a conflicting lock of another fork; EINVAL for a range below byte zero, one the entry offset moves past the largest offset, one without length, a release of a range no entry of the fork holds as it is, an upgrade whose range differs from its entry's, or a take without ADLOCK_UPGRADE over bytes an entry of the fork already holds; EOVERFLOW for a take whose last byte passes the largest offset; else the errno of fcntl or realloc
 
-Calls: [XLATE_FCNTL_LOCK](ad_lock.c.md#xlate_fcntl_lock), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [adf_findlock](ad_lock.c.md#adf_findlock), [adf_findxlock](ad_lock.c.md#adf_findxlock), [adf_freelock](ad_lock.c.md#adf_freelock), [locktypetostr](ad_lock.c.md#locktypetostr), [rf2off](ad_lock.c.md#rf2off), [set_lock](ad_lock.c.md#set_lock), [shmdstrfromoff](ad_lock.c.md#shmdstrfromoff)
+Calls: [XLATE_FCNTL_LOCK](ad_lock.c.md#xlate_fcntl_lock), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [adf_findlock](ad_lock.c.md#adf_findlock), [adf_findxlock](ad_lock.c.md#adf_findxlock), [adf_freelock](ad_lock.c.md#adf_freelock), [adf_lock_fits](ad_lock.c.md#adf_lock_fits), [adf_lock_gaps](ad_lock.c.md#adf_lock_gaps), [adf_lock_lower](ad_lock.c.md#adf_lock_lower), [adf_lock_reach](ad_lock.c.md#adf_lock_reach), [locktypetostr](ad_lock.c.md#locktypetostr), [rf2off](ad_lock.c.md#rf2off), [set_lock](ad_lock.c.md#set_lock), [shmdstrfromoff](ad_lock.c.md#shmdstrfromoff)
 
 Called by: [byte_lock](../../etc/afpd/fork.c.md#byte_lock), [fork_setmode](../../etc/afpd/fork.c.md#fork_setmode)
 
@@ -349,23 +447,23 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off, off_t len, int fork)
 ```
 
-Defined at lines 841 to 911.
+Defined at lines 893 to 966.
 
 Take or release a temporary lock that the lock array does not record.
 
-A temporary lock guards an operation such as a read, a write, or a delete and goes away with its F_UNLCK. Releasing it restores the forks' recorded ranges that overlapped it. A missing resource fork counts as success, and a write lock on a read-only descriptor degrades to a read lock. ADLOCK_FILELOCK on the resource fork locks from offset 0, as deletion does. Open places read locks on the metadata. Delete asks for a write lock on the entire file, which fails while another process has the file open.
+A temporary lock guards a read, a write, a truncate or the conversion of an AppleDouble file and goes away with its F_UNLCK. It covers only the bytes of its range no recorded entry holds, so the recorded ranges stay as they are. A missing resource fork counts as success before any check, and a write lock on a read-only descriptor degrades to a read lock. ADLOCK_FILELOCK locks the resource fork's AppleDouble file from byte zero instead of the fork's entry offset; the conversion takes it over the whole file with fork 0, on a descriptor that records no lock, so nothing is left out of it.
 
 Parameters:
 * `ad`: AppleDouble whose forks are open
 * `eid`: ADEID_DFORK or ADEID_RFORK
 * `locktype`: ADLOCK_RD, ADLOCK_WR, or ADLOCK_CLR, plus ADLOCK_FILELOCK
 * `off`: first byte of the range
-* `len`: length of the range
+* `len`: length of the range, or 0 to the end of the file
 * `fork`: OForkRefNum asking, or 0 to skip the check against other forks' locks
 
-Returns: 0, or -1 with errno EACCES when another fork holds a conflicting lock, or the errno of fcntl
+Returns: 0, or -1 with errno EINVAL for a range below byte zero, one whose start the resource fork's entry offset moves past the largest offset or one of negative length, EOVERFLOW for a last byte past the largest offset, EACCES when another fork holds a conflicting lock, or the errno of fcntl
 
-Calls: [XLATE_FCNTL_LOCK](ad_lock.c.md#xlate_fcntl_lock), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [adf_findxlock](ad_lock.c.md#adf_findxlock), [adf_relockrange](ad_lock.c.md#adf_relockrange), [locktypetostr](ad_lock.c.md#locktypetostr), [set_lock](ad_lock.c.md#set_lock), [shmdstrfromoff](ad_lock.c.md#shmdstrfromoff)
+Calls: [XLATE_FCNTL_LOCK](ad_lock.c.md#xlate_fcntl_lock), [ad_getentryoff](ad_open.c.md#ad_getentryoff), [adf_findxlock](ad_lock.c.md#adf_findxlock), [adf_lock_fits](ad_lock.c.md#adf_lock_fits), [adf_lock_gaps](ad_lock.c.md#adf_lock_gaps), [locktypetostr](ad_lock.c.md#locktypetostr), [shmdstrfromoff](ad_lock.c.md#shmdstrfromoff)
 
 Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf](ad_conv.c.md#ad_conv_v22ea_rf), [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [read_fork](../../etc/afpd/fork.c.md#read_fork), [write_fork](../../etc/afpd/fork.c.md#write_fork)
 
@@ -375,7 +473,7 @@ Called by: [ad_conv_v22ea_hf](ad_conv.c.md#ad_conv_v22ea_hf), [ad_conv_v22ea_rf]
 void ad_unlock(struct adouble *ad, const int fork)
 ```
 
-Defined at lines 920 to 933.
+Defined at lines 975 to 988.
 
 Release every lock one fork holds on the data and resource forks of an AppleDouble.
 
@@ -393,7 +491,7 @@ Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [materialize_v
 int ad_testlock(struct adouble *ad, int eid, const off_t off)
 ```
 
-Defined at lines 945 to 963.
+Defined at lines 1000 to 1018.
 
 Test for a share mode lock.
 
@@ -416,7 +514,7 @@ Mentioned in the documentation of: [ad_testlock_range](ad_lock.c.md#ad_testlock_
 int ad_testlock_range(struct adouble *ad, int eid, off_t off, off_t len)
 ```
 
-Defined at lines 1004 to 1070.
+Defined at lines 1059 to 1125.
 
 GET-only range probe: does another process hold a conflicting lock?
 
@@ -447,7 +545,7 @@ Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks
 int ad_testlock_whole(struct adouble *ad, int eid)
 ```
 
-Defined at lines 1099 to 1119.
+Defined at lines 1154 to 1174.
 
 Probe with one F_GETLK whether another process holds any lock on a fork descriptor.
 
@@ -473,7 +571,7 @@ Called by: [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks)
 uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
 ```
 
-Defined at lines 1133 to 1166.
+Defined at lines 1188 to 1221.
 
 Return if a file is open by another process.
 
@@ -494,4 +592,4 @@ Called by: [ad_open](ad_open.c.md#ad_open)
 
 # Macros
 
-* Undocumented: `ARRAY_BLOCK_SIZE`, `ARRAY_FREE_DELTA`, `LTYPE2STRBUFSIZ`
+* Undocumented: `ARRAY_BLOCK_SIZE`, `ARRAY_FREE_DELTA`, `LOCK_TOP`, `LTYPE2STRBUFSIZ`

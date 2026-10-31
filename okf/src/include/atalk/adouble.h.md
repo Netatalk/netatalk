@@ -5,7 +5,7 @@ description: "AppleDouble metadata, fork I/O and locking types and interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T15:31:59+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -83,7 +83,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int ad_data_open(const struct adouble *ad)
 ```
 
-Defined at lines 411 to 414.
+Defined at lines 405 to 408.
 
 Tell whether the data fork holds a reference and a descriptor >= 0.
 
@@ -95,7 +95,7 @@ Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 static int ad_meta_open(const struct adouble *ad)
 ```
 
-Defined at lines 417 to 420.
+Defined at lines 411 to 414.
 
 Tell whether the metadata holds a reference and an open descriptor.
 
@@ -107,7 +107,7 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_flush_
 static int ad_rsrc_open(const struct adouble *ad)
 ```
 
-Defined at lines 423 to 426.
+Defined at lines 417 to 420.
 
 Tell whether the resource fork holds a reference and a descriptor.
 
@@ -119,7 +119,7 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](
 static int ad_held(const struct adouble *ad)
 ```
 
-Defined at lines 429 to 432.
+Defined at lines 423 to 426.
 
 Tell whether a data or metadata reference still holds the adouble.
 
@@ -131,7 +131,7 @@ Called by: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_open_r
 static int ad_meta_loaded(const struct adouble *ad)
 ```
 
-Defined at lines 435 to 440.
+Defined at lines 429 to 434.
 
 Tell whether the header got read: a reference and no symlink.
 
@@ -143,7 +143,7 @@ Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr]
 int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
 ```
 
-Declared at include/atalk/adouble.h line 464; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 458; no definition in the scanned sources.
 
 ### ad_pread
 
@@ -151,7 +151,7 @@ Declared at include/atalk/adouble.h line 464; no definition in the scanned sourc
 ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t)
 ```
 
-Declared at include/atalk/adouble.h line 522; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 516; no definition in the scanned sources.
 
 # Types
 
@@ -163,7 +163,7 @@ Defined at line 159.
 
 ### struct ad_fd
 
-Defined at line 176.
+Defined at line 170.
 * `int adf_fd`: -1: invalid, AD_SYMLINK: symlink
 * `char * adf_syml`
 * `int adf_flags`
@@ -172,23 +172,16 @@ Defined at line 176.
 * `int adf_lockcount`
 * `int adf_lockmax`
 
-### struct adf_lock_shared
-
-Defined at line 164.
-* `int count`
-* `off_t start`
-* `off_t end`
-
 ### struct adf_lock_t
 
-Defined at line 170.
+Defined at line 164.
 * `struct flock lock`
 * `int user`
-* `adf_lock_shared_t * refcount`
+* `off_t reach`: farthest last byte of this entry and the ones before
 
 ### struct adouble
 
-Defined at line 199.
+Defined at line 193.
 * `uint32_t ad_magic`: Official adouble magic.
 * `uint32_t ad_version`: Official adouble version number.
 * `char ad_filler`
@@ -215,7 +208,7 @@ Defined at line 199.
 
 ### struct adouble_fops
 
-Defined at line 191.
+Defined at line 185.
 * `const char *(* ad_path`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_rf_ea), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_rfork_held](../../etc/afpd/ofork.c.md#of_rfork_held).
 * `int(* ad_mkrf`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2).
 * `int(* ad_rebuild_header`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf).
@@ -224,7 +217,6 @@ Defined at line 191.
 
 # Typedefs and enums
 
-* `typedef struct adf_lock_shared adf_lock_shared_t`
 * `typedef struct adf_lock_t adf_lock_t`
 * `typedef uint32_t cnid_t`
 * `enum ad_time_offset_dir_t`: `TO_UTC`, `TO_LOCALTIME`
