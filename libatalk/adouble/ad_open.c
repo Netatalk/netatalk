@@ -3136,8 +3136,8 @@ void ad_init(struct adouble *ad, const struct vol *vol)
  *
  * You must call ad_init() before ad_open, usually you'll just call it like this:
  * @code
- *      struct adoube ad;
- *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
+ *      struct adouble ad;
+ *      ad_init(&ad, vol);
  * @endcode
  *
  * Open a files data fork, metadata fork or resource fork.
@@ -3169,7 +3169,7 @@ void ad_init(struct adouble *ad, const struct vol *vol)
  *  - ADFLAGS_TRUNC:     truncate
  *
  * Special flags:
- *  - ADFLAGS_CHECK_OF:  check for open forks from us and other afpd's
+ *  - ADFLAGS_CHECK_OF:  record the forks other afpd processes hold open
  *  - ADFLAGS_SETSHRMD:  this adouble struct will be used to set sharemode locks.
  *                       This basically results in the files being opened RW instead of RDONLY.
  *
@@ -3259,14 +3259,11 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     if (ad->ad_inited != AD_INITED) {
         ad->ad_adflags = adflags;
         ad->ad_inited = AD_INITED;
-    } else {
-        ad->ad_open_forks = ((ad->ad_data_fork.adf_refcount > 0) ? ATTRBIT_DOPEN : 0);
-
-        if (ad->ad_resource_fork.adf_refcount > 0) {
-            ad->ad_open_forks |= ATTRBIT_ROPEN;
-        }
     }
 
+    /* the forks this process holds, before the probe's own data reference
+     * joins them: ad_openforks() probes the bands of the others */
+    const uint16_t held = ad_forks_held(ad);
     va_start(args, adflags);
 
     if (adflags & ADFLAGS_CREATE) {
@@ -3298,7 +3295,7 @@ int ad_open(struct adouble *ad, const char *path, int adflags, ...)
     }
 
     if (adflags & ADFLAGS_CHECK_OF) {
-        ad->ad_open_forks |= ad_openforks(ad, ad->ad_open_forks);
+        ad->ad_open_forks = ad_openforks(ad, held);
     }
 
 EC_CLEANUP:
@@ -3322,7 +3319,7 @@ EC_CLEANUP:
  *
  * @param[in]     name   file or directory
  * @param[in]     flags  ADFLAGS_DIR when name is a directory, ADFLAGS_CHECK_OF
- *                       to look for open forks of this or another afpd
+ *                       to probe the bands other afpd processes hold
  * @param[in,out] adp    initialized AppleDouble receiving the metadata
  * @returns 0, or -1 with errno set
  */

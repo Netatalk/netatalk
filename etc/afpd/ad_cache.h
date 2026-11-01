@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 
 #include <atalk/adouble.h>
+#include <atalk/compat.h>
 #include <atalk/directory.h>
 #include <atalk/volume.h>
 
@@ -30,6 +31,12 @@ extern int  rfork_cache_store_from_fd(struct dir *entry,
                                       struct adouble *adp, int eid);
 extern void rfork_cache_free(struct dir *entry);
 extern void rfork_cache_evict_to_budget(size_t needed);
+
+/*! @brief The stamp a resource fork's stat gives its cached copy: its ctime */
+static inline struct timespec rfork_stamp(const struct stat *st)
+{
+    return atalk_stat_ctime_timespec(st);
+}
 
 struct ea_cache_stats {
     unsigned long long hits;      /*!< names or a value served from an entry */
