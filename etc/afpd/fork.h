@@ -60,6 +60,7 @@ struct ofork {
 #define AFPFORK_RFHEADER (1<<9) /*!< its resource fork held a header at open */
 #define AFPFORK_DENYRD  (1<<10) /*!< a virtual fork opened denying reads */
 #define AFPFORK_DENYWR  (1<<11) /*!< a virtual fork opened denying writes */
+#define AFPFORK_CACHED  (1<<12) /*!< opened from the resource fork cache */
 
 #define of_name(a) (a)->of_ad->ad_name
 
@@ -86,8 +87,9 @@ extern int          of_rename(const struct vol *,
 extern int          of_flush(const struct vol *);
 extern void         of_pforkdesc(FILE *);
 extern void         of_log_usage(int level, const char *event);
-extern void         of_log_nfile(const char *name, int err);
+extern void         of_log_nfile(const char *call, const char *name, int err);
 extern void         of_note_open(int newfd);
+extern void         of_note_fd(int newfd);
 extern const char   *of_breakdown(char *buf, size_t len);
 extern int          of_stat(const struct vol *vol, struct path *);
 extern int          of_statdir(struct vol *vol, struct path *);
@@ -96,6 +98,7 @@ extern struct dir   *of_dircache_entry(const struct ofork *ofork);
 extern void         of_rfork_changed(const struct ofork *ofork);
 extern int          of_rfork_held(const struct ofork *ofork,
                                   const char *forkpath);
+extern bstring      of_held_path(const struct ofork *ofork);
 extern int          of_sidecar_fd(const struct vol *vol, const char *name);
 extern void         of_hint_siblings(const AFPObj *obj,
                                      const struct ofork *ofork,

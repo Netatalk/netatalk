@@ -309,13 +309,14 @@ int fi_open64_2(const char *path, int flags)
     return real_open64_2(path, flags);
 }
 
+/*! @brief close() interposer: counts and fails armed calls */
 int close(int fd)
 {
     if (!real_close) {
         real_close = (close_fn)dlsym(RTLD_NEXT, "close");
     }
 
-    if (fault_should_fire(fi.close_armed, &fi.close_fail_after, fi.close_errno)) {
+    if (fi_call_fire(&fi.close)) {
         /* The fd IS still closed (mirror real close-on-error semantics); only
          * the reported result is the injected failure. */
         real_close(fd);
@@ -761,10 +762,11 @@ int fi_fstat50(int fd, void *st) __asm__("__fstat50");
 int fi_fstat64_time64(int fd, void *st) __asm__("__fstat64_time64");
 int fi_fstat_time64(int fd, void *st) __asm__("__fstat_time64");
 
-/*! @brief Count an fstat() of the watched descriptor */
+/*! @brief Count an fstat() of the watched descriptor, of any while
+ *         fstat_fd is -1 */
 static void fstat_watched(int fd)
 {
-    if (fi.fstat_watch && fd == fi.fstat_fd) {
+    if (fi.fstat_watch && (fi.fstat_fd == -1 || fd == fi.fstat_fd)) {
         fi.fstat_calls++;
     }
 }

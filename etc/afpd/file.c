@@ -2421,7 +2421,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
              * get two files, it's fixable for our process (eg reopen the new file, get the
              * locks, and so on. But it doesn't solve the case with a second process
              */
-            if (adp->ad_open_forks) {
+            if (ad_forks_open(adp)) {
                 /* FIXME  warning in syslog so admin'd know there's a conflict ?*/
                 return AFPERR_OLOCK; /* little lie */
             }

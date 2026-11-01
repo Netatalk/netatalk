@@ -5364,7 +5364,8 @@ int utest_volume_scan_resets_appended(AFPObj *obj, struct vol *vol)
 /*!
  * @brief A cache hit is sent from the cache buffer: the reply is the
  *        fork's bytes from the read's offset, and neither the command
- *        buffer past the request nor the reply buffer is written
+ *        buffer past the request nor the reply buffer is written; the
+ *        read that filled the buffer counts a miss
  */
 int utest_rfork_cache_hit_sends_cached_bytes(AFPObj *obj, struct vol *vol)
 {
@@ -5374,6 +5375,7 @@ int utest_rfork_cache_hit_sends_cached_bytes(AFPObj *obj, struct vol *vol)
     char out[RQ_LEN];
     unsigned long long added = rfork_stat_added;
     unsigned long long hits = rfork_stat_hits;
+    unsigned long long misses = rfork_stat_misses;
     uint16_t r = 0;
     int ret = -1;
 
@@ -5415,11 +5417,13 @@ int utest_rfork_cache_hit_sends_cached_bytes(AFPObj *obj, struct vol *vol)
         }
     }
 
-    if (rfork_stat_added == added + 1 && rfork_stat_hits == hits + 2) {
+    if (rfork_stat_added == added + 1 && rfork_stat_hits == hits + 1
+            && rfork_stat_misses == misses + 1) {
         ret = 0;
     } else {
-        fprintf(stderr, "rfork hit: added +%llu, hits +%llu\n",
-                rfork_stat_added - added, rfork_stat_hits - hits);
+        fprintf(stderr, "rfork hit: added +%llu, hits +%llu, misses +%llu\n",
+                rfork_stat_added - added, rfork_stat_hits - hits,
+                rfork_stat_misses - misses);
         ret = 1;
     }
 
@@ -5487,7 +5491,8 @@ out:
 
 /*!
  * @brief A resource fork whose name the client sends decomposed is served
- *        from the cache, and the session's own write drops what it cached
+ *        from the cache, and the session's own write drops what it cached;
+ *        the fill's read and the read after the write count a miss each
  */
 int utest_rfork_cache_finds_name_on_disk(AFPObj *obj, struct vol *vol)
 {
@@ -5496,6 +5501,7 @@ int utest_rfork_cache_finds_name_on_disk(AFPObj *obj, struct vol *vol)
     char out[RQ_LEN];
     unsigned long long added = rfork_stat_added;
     unsigned long long hits = rfork_stat_hits;
+    unsigned long long misses = rfork_stat_misses;
     uint16_t r = 0;
     uint16_t w = 0;
     int ret = -1;
@@ -5525,12 +5531,14 @@ int utest_rfork_cache_finds_name_on_disk(AFPObj *obj, struct vol *vol)
         goto out;
     }
 
-    if (rfork_stat_added == added + 1 && rfork_stat_hits == hits + 2
+    if (rfork_stat_added == added + 1 && rfork_stat_hits == hits + 1
+            && rfork_stat_misses == misses + 2
             && memcmp(out, rq_data + 1000, 1000) == 0) {
         ret = 0;
     } else {
-        fprintf(stderr, "rfork name: added +%llu, hits +%llu, %s bytes\n",
-                rfork_stat_added - added, rfork_stat_hits - hits,
+        fprintf(stderr, "rfork name: added +%llu, hits +%llu, misses +%llu, "
+                        "%s bytes\n", rfork_stat_added - added,
+                rfork_stat_hits - hits, rfork_stat_misses - misses,
                 memcmp(out, rq_data + 1000, 1000) == 0 ? "new" : "old");
         ret = 1;
     }
