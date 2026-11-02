@@ -5,7 +5,7 @@ description: "The virtual Icon file of a volume root."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/virtual_icon.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -94,7 +94,7 @@ Parameters:
 
 Returns: nonzero when the volume has a built icon resource fork
 
-Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
+Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [fork_cache_rlen](fork.c.md#fork_cache_rlen), [getdirparams](directory.c.md#getdirparams), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
 
 ### real_icon_exists
 
@@ -130,7 +130,7 @@ Parameters:
 
 Returns: nonzero for VIRTUAL_ICON_NAME
 
-Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
+Called by: [afp_getfildirparams](filedir.c.md#afp_getfildirparams), [afp_openfork](fork.c.md#afp_openfork), [fork_cache_rlen](fork.c.md#fork_cache_rlen), [is_virtual_icon](virtual_icon.c.md#is_virtual_icon), [of_closefork](ofork.c.md#of_closefork)
 
 ### is_virtual_icon
 

@@ -5,7 +5,7 @@ description: "Shared AFP directory, path and directory cache entry types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/directory.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-27T23:13:49+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -15,7 +15,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [atalk/cnid.h](cnid.h.md)
 * [atalk/hash.h](hash.h.md)
 * [atalk/queue.h](queue.h.md)
-* System headers: `arpa/inet.h`, `bstrlib.h`, `dirent.h`, `stdint.h`, `sys/types.h`
+* System headers: `arpa/inet.h`, `bstrlib.h`, `dirent.h`, `stdint.h`, `sys/types.h`, `time.h`
 
 # Included by
 
@@ -41,7 +41,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int ad_rlen_meta_absent(off_t rlen)
 ```
 
-Defined at lines 72 to 75.
+Defined at lines 73 to 76.
 
 Tell whether a cached rlen records absent AppleDouble metadata.
 
@@ -53,7 +53,7 @@ Called by: [ad_getcomment](../../etc/afpd/desktop.c.md#ad_getcomment), [ad_metad
 static int ad_rlen_known(off_t rlen)
 ```
 
-Defined at lines 78 to 81.
+Defined at lines 79 to 82.
 
 Tell whether a cached rlen is a definite resource fork length.
 
@@ -65,7 +65,7 @@ Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
 static struct dir * path_cached_file(const struct path *path)
 ```
 
-Defined at lines 172 to 179.
+Defined at lines 181 to 188.
 
 Return the dircache entry of a file path, or NULL after dir_remove.
 
@@ -77,7 +77,7 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [path_resolve_ca
 static int dir_stat_differs(const struct dir *dir, const struct stat *st)
 ```
 
-Defined at lines 182 to 185.
+Defined at lines 191 to 194.
 
 Tell whether a stat shows another inode or ctime than an entry holds.
 
@@ -89,7 +89,7 @@ Called by: [ad_metadata_cached](../../etc/afpd/ad_cache.c.md#ad_metadata_cached)
 static int path_isadir(struct path *o_path)
 ```
 
-Defined at lines 193 to 202.
+Defined at lines 202 to 211.
 
 Tell whether a path resolved to a directory.
 
@@ -99,14 +99,14 @@ Called by: [ad_addcomment](../../etc/afpd/desktop.c.md#ad_addcomment), [ad_getco
 
 ### struct dir
 
-Defined at line 83.
+Defined at line 91.
 * `bstring d_fullpath`: complete unix path to dir (or file)
 * `bstring d_m_name`: mac name
 * `bstring d_u_name`: unix name
 * `qnode_t * qidx_node`: pointer to position in queue index
 * `hnode_t * d_index_node`: this entry's node in the dircache
 * `hnode_t * d_didname_node`: this entry's node in index_didname
-* `void * dcache_rfork_buf`: malloc'd rfork data, or NULL
+* `struct rfork_buf * dcache_rfork_buf`: malloc'd rfork data, or NULL
 * `qnode_t * rfork_lru_node`: position in rfork LRU list, or NULL
 * `char * dcache_eanames`: EA names as listed, or NULL.
 * `char * dcache_eavals`: EA value records read, or NULL.
@@ -135,7 +135,7 @@ Defined at line 83.
 
 ### struct path
 
-Defined at line 154.
+Defined at line 163.
 * `int m_type`: mac name type (long name, unicode
 * `char * m_name`: mac name
 * `char * u_name`: unix name
@@ -146,6 +146,14 @@ Defined at line 154.
 * `int st_fd`
 * `struct stat st`
 * `struct dir * d_cached`
+
+### struct rfork_buf
+
+A cached resource fork: the stamp of the sidecar its bytes came from, then its dcache_rlen bytes.
+
+Defined at line 86.
+* `struct timespec stamp`: [rfork_stamp()](../../etc/afpd/ad_cache.h.md#rfork_stamp) of the fill's stat
+* `char data`
 
 # Macros
 

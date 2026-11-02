@@ -5,7 +5,7 @@ description: "Fork lengths of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_size.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-14T21:05:28+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -39,3 +39,5 @@ Returns: the length in bytes, 0 when the data fork stat failed
 Calls: [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [afp_setforkparams](../../etc/afpd/fork.c.md#afp_setforkparams), [byte_lock](../../etc/afpd/fork.c.md#byte_lock), [nad_header_read](../../bin/nad/nad_adouble.c.md#nad_header_read), [read_fork](../../etc/afpd/fork.c.md#read_fork), [write_fork](../../etc/afpd/fork.c.md#write_fork)
+
+Mentioned in the documentation of: [rfork_size](../../etc/afpd/fork.c.md#rfork_size)

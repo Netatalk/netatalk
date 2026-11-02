@@ -5,7 +5,7 @@ description: "AppleDouble metadata, fork I/O and locking types and interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/adouble.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -83,7 +83,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 static int ad_data_open(const struct adouble *ad)
 ```
 
-Defined at lines 405 to 408.
+Defined at lines 409 to 412.
 
 Tell whether the data fork holds a reference and a descriptor >= 0.
 
@@ -95,7 +95,7 @@ Called by: [of_closefork](../../etc/afpd/ofork.c.md#of_closefork)
 static int ad_meta_open(const struct adouble *ad)
 ```
 
-Defined at lines 411 to 414.
+Defined at lines 415 to 418.
 
 Tell whether the metadata holds a reference and an open descriptor.
 
@@ -107,11 +107,11 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_flush_
 static int ad_rsrc_open(const struct adouble *ad)
 ```
 
-Defined at lines 417 to 420.
+Defined at lines 421 to 424.
 
 Tell whether the resource fork holds a reference and a descriptor.
 
-Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh_rfork](../../libatalk/adouble/ad_open.c.md#ad_refresh_rfork), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [read_fork](../../etc/afpd/fork.c.md#read_fork), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd)
+Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_refresh_rfork](../../libatalk/adouble/ad_open.c.md#ad_refresh_rfork), [ad_reso_size](../../libatalk/adouble/ad_open.c.md#ad_reso_size), [afp_copyfile](../../etc/afpd/file.c.md#afp_copyfile), [fork_open_rsrc](../../etc/afpd/fork.c.md#fork_open_rsrc), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_get_locks](../../etc/afpd/ofork.c.md#of_get_locks), [rfork_cache_store_from_fd](../../etc/afpd/ad_cache.c.md#rfork_cache_store_from_fd), [rfork_size](../../etc/afpd/fork.c.md#rfork_size)
 
 ### ad_held
 
@@ -119,7 +119,7 @@ Called by: [ad_flush](../../libatalk/adouble/ad_flush.c.md#ad_flush), [ad_read](
 static int ad_held(const struct adouble *ad)
 ```
 
-Defined at lines 423 to 426.
+Defined at lines 427 to 430.
 
 Tell whether a data or metadata reference still holds the adouble.
 
@@ -131,11 +131,37 @@ Called by: [ad_close](../../libatalk/adouble/ad_flush.c.md#ad_close), [ad_open_r
 static int ad_meta_loaded(const struct adouble *ad)
 ```
 
-Defined at lines 429 to 434.
+Defined at lines 433 to 438.
 
 Tell whether the header got read: a reference and no symlink.
 
 Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr](../../etc/afpd/extattrs.c.md#afp_listextattr), [getfilparams](../../etc/afpd/file.c.md#getfilparams), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_hint_siblings](../../etc/afpd/ofork.c.md#of_hint_siblings)
+
+### ad_forks_held
+
+```c
+static uint16_t ad_forks_held(const struct adouble *ad)
+```
+
+Defined at lines 443 to 448.
+
+ATTRBIT_DOPEN and ATTRBIT_ROPEN of the forks this process holds: by a reference, or without a descriptor; a probe under ADFLAGS_CHECK_OF counts its own data reference until its close.
+
+Called by: [ad_forks_open](adouble.h.md#ad_forks_open), [ad_open](../../libatalk/adouble/ad_open.c.md#ad_open)
+
+### ad_forks_open
+
+```c
+static uint16_t ad_forks_open(const struct adouble *ad)
+```
+
+Defined at lines 453 to 456.
+
+The open-fork attribute bits of a file: the forks this process holds and the bands other processes held at the adouble's last open under ADFLAGS_CHECK_OF.
+
+Calls: [ad_forks_held](adouble.h.md#ad_forks_held)
+
+Called by: [ad_getattr](../../libatalk/adouble/ad_attr.c.md#ad_getattr), [renamefile](../../etc/afpd/file.c.md#renamefile)
 
 ### fsetrsrcea
 
@@ -143,7 +169,7 @@ Called by: [adl_lkup](../../etc/afpd/catsearch.c.md#adl_lkup), [afp_listextattr]
 int fsetrsrcea(struct adouble *ad, int fd, const char *eaname, const void *value, size_t size, int flags)
 ```
 
-Declared at include/atalk/adouble.h line 458; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 480; no definition in the scanned sources.
 
 ### ad_pread
 
@@ -151,7 +177,7 @@ Declared at include/atalk/adouble.h line 458; no definition in the scanned sourc
 ssize_t ad_pread(struct ad_fd *, void *, size_t, off_t)
 ```
 
-Declared at include/atalk/adouble.h line 516; no definition in the scanned sources.
+Declared at include/atalk/adouble.h line 538; no definition in the scanned sources.
 
 # Types
 
@@ -201,7 +227,8 @@ Defined at line 193.
 * `off_t ad_rlen`: resource fork len with AFP 3.0 the header parameter size is too small.
 * `char * ad_name`: mac name (maccharset or UTF8-MAC)
 * `struct adouble_fops * ad_ops`
-* `uint16_t ad_open_forks`: open forks (by others)
+* `uint16_t ad_open_forks`: ATTRBIT_DOPEN and ATTRBIT_ROPEN of the bands other processes hold, as the last probe under ADFLAGS_CHECK_OF found them.
+* `uint16_t ad_held_forks`: the same bits for the forks this process holds without a descriptor
 * `bool ad_nosplice`: the fork's file cannot take splice()
 * `size_t valid_data_len`: Bytes read into ad_data.
 * `char ad_data`
@@ -209,7 +236,7 @@ Defined at line 193.
 ### struct adouble_fops
 
 Defined at line 185.
-* `const char *(* ad_path`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_rf_ea), [createfile_meta](../../etc/afpd/file.c.md#createfile_meta), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_rfork_held](../../etc/afpd/ofork.c.md#of_rfork_held).
+* `const char *(* ad_path`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_open_rf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_rf_ea), [createfile_meta](../../etc/afpd/file.c.md#createfile_meta), [fork_sidecar_measure](../../etc/afpd/fork.c.md#fork_sidecar_measure), [of_closefork](../../etc/afpd/ofork.c.md#of_closefork), [of_rfork_held](../../etc/afpd/ofork.c.md#of_rfork_held).
 * `int(* ad_mkrf`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2).
 * `int(* ad_rebuild_header`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_flush_hf](../../libatalk/adouble/ad_flush.c.md#ad_flush_hf).
 * `int(* ad_header_read`: Assigned in [ad_adouble](../../libatalk/adouble/ad_open.c.md#ad_adouble), [ad_adouble_ea](../../libatalk/adouble/ad_open.c.md#ad_adouble_ea); called through by [ad_conv_v22ea_hf](../../libatalk/adouble/ad_conv.c.md#ad_conv_v22ea_hf), [ad_open_hf_ea](../../libatalk/adouble/ad_open.c.md#ad_open_hf_ea), [ad_open_hf_v2](../../libatalk/adouble/ad_open.c.md#ad_open_hf_v2), [ad_refresh](../../libatalk/adouble/ad_open.c.md#ad_refresh), [ad_refresh_meta](../../libatalk/adouble/ad_open.c.md#ad_refresh_meta).
@@ -230,7 +257,7 @@ Defined at line 185.
 * `ADEID_MSDOSFILEI`: we don't use this
 * `ADEID_PRIVSYN`: in synch with database
 * `ADEID_PRODOSFILEI`: we store prodos info here
-* `ADFLAGS_CHECK_OF`: check for open forks from us and other afpd's
+* `ADFLAGS_CHECK_OF`: probe the bands other afpd processes hold on the forks
 * `ADFLAGS_CREATE`: create file, open called with O_CREAT
 * `ADFLAGS_EXCL`: exclusive open, open called with O_EXCL
 * `ADFLAGS_NOHDR`: read no ._ header: a lock probe

@@ -5,7 +5,7 @@ description: "Portability declarations for missing system and C library function
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/compat.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -24,6 +24,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [bin/nad/megatron.h](../../bin/nad/megatron.h.md)
 * [bin/nad/nad.h](../../bin/nad/nad.h.md)
 * [etc/afpd/ad_cache.c](../../etc/afpd/ad_cache.c.md)
+* [etc/afpd/ad_cache.h](../../etc/afpd/ad_cache.h.md)
 * [etc/afpd/afp_asp.c](../../etc/afpd/afp_asp.c.md)
 * [etc/afpd/afp_config.c](../../etc/afpd/afp_config.c.md)
 * [etc/afpd/afp_dsi.c](../../etc/afpd/afp_dsi.c.md)
@@ -31,6 +32,7 @@ Part of the [include/atalk](../atalk.md) subsystem. Built from the commit record
 * [etc/afpd/afpstats.c](../../etc/afpd/afpstats.c.md)
 * [etc/afpd/auth.c](../../etc/afpd/auth.c.md)
 * [etc/afpd/enumerate.c](../../etc/afpd/enumerate.c.md)
+* [etc/afpd/fork.c](../../etc/afpd/fork.c.md)
 * [etc/afpd/main.c](../../etc/afpd/main.c.md)
 * [etc/afpd/quota.c](../../etc/afpd/quota.c.md)
 * [etc/afpd/spotlight.c](../../etc/afpd/spotlight.c.md)
@@ -103,7 +105,7 @@ Defined at lines 77 to 89.
 
 Return the stat ctime as a timespec, with tv_nsec 0 if unavailable.
 
-Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
+Called by: [ea_cache_entry](../../etc/afpd/ad_cache.c.md#ea_cache_entry), [rfork_stamp](../../etc/afpd/ad_cache.h.md#rfork_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
 
 ### atalk_timespec_eq
 
@@ -115,7 +117,7 @@ Defined at lines 92 to 96.
 
 Tell whether two timespecs are the same instant.
 
-Called by: [same_stamp](../../etc/afpd/volume.c.md#same_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
+Called by: [rfork_buf_holds](../../etc/afpd/fork.c.md#rfork_buf_holds), [same_stamp](../../etc/afpd/volume.c.md#same_stamp), [sd_fetch](../../etc/afpd/enumerate.c.md#sd_fetch)
 
 ### atalk_stat_atime_timespec
 

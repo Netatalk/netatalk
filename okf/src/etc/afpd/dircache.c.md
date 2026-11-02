@@ -5,7 +5,7 @@ description: "Directory Cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-30T10:57:24+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -762,7 +762,7 @@ Returns: the entry, which may not hold the stat, or NULL for none
 
 Calls: [dir_takes_stat](directory.c.md#dir_takes_stat), [pfd_purge](pfd_cache.c.md#pfd_purge), [pfd_repair_path](pfd_cache.c.md#pfd_repair_path), [search_by_name](dircache.c.md#search_by_name)
 
-Called by: [catsearch](catsearch.c.md#catsearch), [cname](directory.c.md#cname)
+Called by: [catsearch](catsearch.c.md#catsearch), [cname](directory.c.md#cname), [fork_cache_rlen](fork.c.md#fork_cache_rlen)
 
 ### dircache_expunge_duplicate
 

@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "66 files, 677 functions."
+description: "66 files, 689 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 # Files
@@ -79,7 +79,7 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 
 # Includes headers from
 
-* [include/atalk](../include/atalk.md): 353 includes
+* [include/atalk](../include/atalk.md): 355 includes
 * [etc/spotlight](spotlight.md): 3 includes
 * [sys/netatalk](../sys/netatalk.md): 1 includes
 
@@ -89,9 +89,9 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 
 # Calls into
 
-* [libatalk/util](../libatalk/util.md): 278 calls
-* [libatalk/adouble](../libatalk/adouble.md): 219 calls
-* [include/atalk](../include/atalk.md): 64 calls
+* [libatalk/util](../libatalk/util.md): 281 calls
+* [libatalk/adouble](../libatalk/adouble.md): 223 calls
+* [include/atalk](../include/atalk.md): 68 calls
 * [libatalk/compat](../libatalk/compat.md): 55 calls
 * [libatalk/cnid](../libatalk/cnid.md): 48 calls
 * [libatalk/dsi](../libatalk/dsi.md): 34 calls
@@ -111,14 +111,14 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
 
 # Most called functions
 
-* [dirlookup](afpd/directory.c.md#dirlookup): 39 callers
+* [dirlookup](afpd/directory.c.md#dirlookup): 40 callers
 * [uam_afpserver_option](afpd/uam.c.md#uam_afpserver_option): 29 callers
 * [cname](afpd/directory.c.md#cname): 28 callers
 * [get_afp_errno](afpd/directory.c.md#get_afp_errno): 21 callers
 * [of_findname](afpd/ofork.c.md#of_findname): 18 callers
 * [dir_remove_tree](afpd/directory.c.md#dir_remove_tree): 16 callers
+* [dirlookup_strict](afpd/directory.c.md#dirlookup_strict): 16 callers
 * [dircache_search_by_name](afpd/dircache.c.md#dircache_search_by_name): 15 callers
-* [dirlookup_strict](afpd/directory.c.md#dirlookup_strict): 15 callers
 * [movecwd](afpd/directory.c.md#movecwd): 15 callers
 * [dir_modify](afpd/directory.c.md#dir_modify): 13 callers
 

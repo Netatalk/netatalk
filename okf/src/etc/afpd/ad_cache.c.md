@@ -5,7 +5,7 @@ description: "AppleDouble metadata and resource fork caching in the directory ca
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ad_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -143,11 +143,11 @@ Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircach
 int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
 ```
 
-Defined at lines 370 to 476.
+Defined at lines 371 to 483.
 
 Cache the entire resource fork of a file by reading it from the open fork.
 
-The ad_read call covers every storage format, so the call reads dcache_rlen bytes through it. It refuses a closed resource fork, an empty or unknown length, a fork above rfork_max_entry_size, a fork another session has open for writing, and a symlink's, whose opens no lock shows. It also refuses while the cache holds over 2 times its budget. Older buffers leave first when the budget lacks room. A short read means the fork changed since its metadata entered the cache, so the call invalidates the cached metadata as well.
+The ad_read call covers every storage format, so the call reads dcache_rlen bytes through it, after a stat of the descriptor that stamps the copy ([rfork_stamp()](ad_cache.h.md#rfork_stamp)). It refuses a closed resource fork, an empty or unknown length, a fork above rfork_max_entry_size, a fork another session has open for writing, and a symlink's, whose opens no lock shows. It also refuses while the cache holds over 2 times its budget. Older buffers leave first when the budget lacks room. A short read means the fork changed since its metadata entered the cache, so the call invalidates the cached metadata as well.
 
 Parameters:
 * `entry`: dircache entry of the file
@@ -156,7 +156,7 @@ Parameters:
 
 Returns: 0, or -1 when the fork is not cacheable or the read fell short
 
-Calls: [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [enqueue](../../libatalk/util/queue.c.md#enqueue), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_free](ad_cache.c.md#rfork_cache_free)
+Calls: [ad_read](../../libatalk/adouble/ad_read.c.md#ad_read), [ad_rsrc_open](../../include/atalk/adouble.h.md#ad_rsrc_open), [ad_testlock_range](../../libatalk/adouble/ad_lock.c.md#ad_testlock_range), [enqueue](../../libatalk/util/queue.c.md#enqueue), [rfork_cache_evict_to_budget](ad_cache.c.md#rfork_cache_evict_to_budget), [rfork_cache_free](ad_cache.c.md#rfork_cache_free), [rfork_stamp](ad_cache.h.md#rfork_stamp)
 
 Called by: [read_fork](fork.c.md#read_fork)
 
@@ -168,7 +168,7 @@ Uses file-scope variables: `rfork_cache_budget` in [etc/afpd/dircache.c](dircach
 struct dir * ea_cache_entry(struct vol *vol, struct path *path, int oflag, const char *name)
 ```
 
-Defined at lines 521 to 561.
+Defined at lines 528 to 568.
 
 The entry whose EA cache applies to this request, its stat brought up to the request's fresh stat, or NULL.
 
@@ -194,7 +194,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 const char * ea_cache_names(struct dir *entry, size_t *len)
 ```
 
-Defined at lines 570 to 580.
+Defined at lines 577 to 587.
 
 The cached names, or NULL when the entry has none cached.
 
@@ -216,7 +216,7 @@ Mentioned in the documentation of: [ea_cache_store_names](ad_cache.c.md#ea_cache
 void ea_cache_store_names(struct dir *entry, const char *names, size_t len)
 ```
 
-Defined at lines 592 to 611.
+Defined at lines 599 to 618.
 
 Cache the object's EA names, after [ea_cache_names()](ad_cache.c.md#ea_cache_names) found none.
 
@@ -237,7 +237,7 @@ Uses file-scope variables: `ea_cache_stat`
 void ea_cache_free(struct dir *entry)
 ```
 
-Defined at lines 618 to 630.
+Defined at lines 625 to 637.
 
 Drop the entry's EA cache.
 
@@ -254,7 +254,7 @@ Uses file-scope variables: `ea_cache_stat`
 const char * ea_cache_value(struct dir *entry, const char *name, size_t *len)
 ```
 
-Defined at lines 640 to 670.
+Defined at lines 647 to 677.
 
 The cached value of name, or NULL when it is not cached.
 
@@ -275,7 +275,7 @@ Uses file-scope variables: `ea_cache_stat`
 void ea_cache_store_value(struct dir *entry, const char *name, const char *value, size_t len)
 ```
 
-Defined at lines 681 to 711.
+Defined at lines 688 to 718.
 
 Cache one value the object was read for.
 
@@ -295,7 +295,7 @@ Uses file-scope variables: `ea_cache_stat`
 bool ea_cache_absent(const struct dir *entry, const char *name)
 ```
 
-Defined at lines 725 to 755.
+Defined at lines 732 to 762.
 
 Does the entry's cached list prove an attribute missing?
 

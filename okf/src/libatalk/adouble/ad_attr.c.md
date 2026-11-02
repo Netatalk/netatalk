@@ -5,7 +5,7 @@ description: "AFP attributes, CNID, and name entries of an AppleDouble."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/adouble/ad_attr.c"
 tags: ["libatalk/adouble"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 ---
 
 Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -26,11 +26,11 @@ Part of the [libatalk/adouble](../adouble.md) subsystem. Built from the commit r
 int ad_getattr(const struct adouble *ad, uint16_t *attr)
 ```
 
-Defined at lines 42 to 82.
+Defined at lines 44 to 84.
 
 Read the AFP attribute word of an AppleDouble entry.
 
-The shared and invisible attributes are opaque and live in the Finder flags, so they come from there, as bug #2802236 required. For directories ATTRBIT_EXPFLDR occupies the shared bit and stays untouched. The adouble's open-fork bits are also present in the result.
+The shared and invisible attributes are opaque and live in the Finder flags, so they come from there, as bug #2802236 required. For directories ATTRBIT_EXPFLDR occupies the shared bit and stays untouched. The open-fork bits join the result: the forks this process holds and the bands other processes held at the entry's last open under ADFLAGS_CHECK_OF.
 
 See also: https://sourceforge.net/p/netatalk/bugs/350/
 
@@ -40,7 +40,7 @@ Parameters:
 
 Returns: 0
 
-Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
+Calls: [ad_entry](ad_open.c.md#ad_entry), [ad_forks_open](../../include/atalk/adouble.h.md#ad_forks_open), [ad_getentryoff](ad_open.c.md#ad_getentryoff)
 
 Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [change_attributes](../../bin/nad/nad_set.c.md#change_attributes), [check_delete_inhibit](../../etc/afpd/file.c.md#check_delete_inhibit), [crit_check](../../etc/afpd/catsearch.c.md#crit_check), [deletecurdir](../../etc/afpd/directory.c.md#deletecurdir), [getdirparams](../../etc/afpd/directory.c.md#getdirparams), [getmetadata](../../etc/afpd/file.c.md#getmetadata), [materialize_virtual_icon](../../etc/afpd/fork.c.md#materialize_virtual_icon), [moveandrename](../../etc/afpd/filedir.c.md#moveandrename), [print_flags](../../bin/nad/nad_ls.c.md#print_flags), [setdirparams](../../etc/afpd/directory.c.md#setdirparams), [setfilparams](../../etc/afpd/file.c.md#setfilparams)
 
@@ -50,7 +50,7 @@ Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [change_attrib
 int ad_setattr(const struct adouble *ad, const uint16_t attribute)
 ```
 
-Defined at lines 97 to 137.
+Defined at lines 99 to 139.
 
 Store the AFP attribute word in an AppleDouble entry.
 
@@ -72,7 +72,7 @@ Called by: [change_attributes](../../bin/nad/nad_set.c.md#change_attributes), [n
 int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino, const uint32_t id, const cnid_t did, const void *stamp)
 ```
 
-Defined at lines 158 to 270.
+Defined at lines 160 to 272.
 
 Store the CNID, the file identity, and the database stamp in the private AppleDouble entries.
 
@@ -98,7 +98,7 @@ Called by: [afp_createdir](../../etc/afpd/directory.c.md#afp_createdir), [afp_cr
 uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino, const cnid_t did, const void *stamp)
 ```
 
-Defined at lines 288 to 361.
+Defined at lines 290 to 363.
 
 Read the CNID stored in an AppleDouble entry when it matches the file.
 
@@ -123,7 +123,7 @@ Called by: [afp_openfork](../../etc/afpd/fork.c.md#afp_openfork), [check_cnid](.
 uint32_t ad_forcegetid(struct adouble *adp)
 ```
 
-Defined at lines 371 to 393.
+Defined at lines 373 to 395.
 
 Read the CNID stored in an AppleDouble entry without checking the file's identity.
 
@@ -142,7 +142,7 @@ Called by: [getmetadata](../../etc/afpd/file.c.md#getmetadata), [print_flags](..
 int ad_setname(struct adouble *ad, const char *path)
 ```
 
-Defined at lines 405 to 427.
+Defined at lines 407 to 429.
 
 Store a file name in the AppleDouble name entry.
 
