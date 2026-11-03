@@ -2935,6 +2935,14 @@ static int utest_dsi_receive_rejects_write_offset_past_payload(void)
     return 0;
 }
 
+/*!
+ * @brief Run the afpd unit tests, as a TAP stream with --tap, and emit the
+ *        plan
+ *
+ * @param[in] argc  argument count
+ * @param[in] argv  arguments
+ * @returns 0 once every test has reported; a failed check exits with 1
+ */
 int main(int argc, char *argv[])
 {
     int reti;
@@ -4396,6 +4404,20 @@ int main(int argc, char *argv[])
                      "movecwd: the walk enters a folder whose case changed");
     TEST_int_or_skip(utest_movecwd_stale_root(&obj, vol), 0,
                      "movecwd: a stale held root is entered by its path");
+    TEST_int_or_skip(utest_cname_steps_down_a_path(&obj, vol), 0,
+                     "cname: a path of folder names steps from name to name");
+    TEST_int_or_skip(utest_cname_step_takes_one_name(&obj, vol), 0,
+                     "cname: a step enters a single name");
+    TEST_int_or_skip(utest_cname_step_refuses_another_device(&obj, vol), 0,
+                     "cname: a folder on another device takes the walk");
+    TEST_int_or_skip(utest_cname_step_refuses_long_path(&obj, vol), 0,
+                     "cname: a path of MAXPATHLEN or more takes the walk");
+    TEST_int_or_skip(utest_cname_step_refuses_swapped_symlink(&obj, vol), 0,
+                     "cname: a name made a symlink after its stat is refused");
+    TEST_int_or_skip(utest_cname_step_keeps_the_device(&obj, vol), 0,
+                     "cname: a step stays on the volume's device");
+    TEST_int_or_skip(utest_cname_step_rechecks_the_device(&obj, vol), 0,
+                     "cname: a step rechecks the device after its chdir()");
     TEST_int_or_skip(utest_enumerate_long_name_skipped(&obj, vid), 0,
                      "enumerate: names over 255 bytes are left out");
     TEST_int_or_skip(volsys ? utest_ea_param_reports_size(&obj, volsys)

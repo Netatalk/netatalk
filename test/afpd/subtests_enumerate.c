@@ -25,6 +25,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -2002,6 +2003,712 @@ out:
     }
 
     remove_dir(obj, vol->v_vid, dir_names[0], 1, did);
+    return ret;
+}
+
+/* the folders of the cname() step tests: a, a/b and a/b/c */
+enum { STEP_A, STEP_B, STEP_C, STEP_DIRS };
+
+struct step_tree {
+    char path[STEP_DIRS][40];
+    struct dir *dir[STEP_DIRS];
+};
+
+/*!
+ * @brief Make the step folders, named for tag, below the volume root
+ *
+ * @param[in]  obj  the test session
+ * @param[in]  vol  the volume
+ * @param[in]  tag  prefix of the names
+ * @param[out] t    the folders' paths and entries
+ * @returns 0, or -1 when a folder could not be made
+ */
+static int step_tree_make(AFPObj *obj, const struct vol *vol,
+                          const char *tag, struct step_tree *t)
+{
+    memset(t, 0, sizeof(*t));
+    snprintf(t->path[STEP_A], sizeof(t->path[STEP_A]), "%s_a", tag);
+    snprintf(t->path[STEP_B], sizeof(t->path[STEP_B]), "%s_a/%s_b", tag, tag);
+    snprintf(t->path[STEP_C], sizeof(t->path[STEP_C]), "%s_a/%s_b/%s_c", tag,
+             tag, tag);
+
+    for (int i = 0; i < STEP_DIRS; i++) {
+        if (createdir(obj, vol->v_vid, DIRDID_ROOT, t->path[i]) != AFP_OK) {
+            return -1;
+        }
+
+        /* afp_createdir() leaves curdir in the folder it made */
+        t->dir[i] = curdir;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Delete the step folders that step_tree_make() made, children first
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @param[in] t    the folders
+ */
+static void step_tree_remove(AFPObj *obj, const struct vol *vol,
+                             const struct step_tree *t)
+{
+    for (int i = STEP_DIRS - 1; i >= 0; i--) {
+        if (t->dir[i] != NULL) {
+            delete (obj, vol->v_vid, DIRDID_ROOT, t->path[i]);
+        }
+    }
+}
+
+/*!
+ * @brief Set the volume's symlink option for one leg of a walk count
+ *
+ * A volume that walks from its root descriptor and follows no symlinks opens
+ * from that descriptor on the full walk, and changes into no path, so the
+ * count there needs the openat() watch.
+ *
+ * @param[in,out] vol  the volume
+ * @param[in]     leg  0 for following no symlinks, 1 for following them
+ * @returns true with the option set, false where no count shows the leg's
+ *          full walk
+ */
+static bool step_leg(struct vol *vol, int leg)
+{
+    if (leg == 0 && vol->v_rootfd >= 0
+            && !test_capability(TEST_CAP_OPENAT_WATCH, vol)) {
+        return false;
+    }
+
+    vol->v_flags = leg ? vol->v_flags | AFPVOL_FOLLOWSYM
+                   : vol->v_flags & ~AFPVOL_FOLLOWSYM;
+    return true;
+}
+
+/*!
+ * @brief Whether the process's working directory is the folder at path
+ *
+ * @param[in] path  the folder's absolute path
+ * @returns true when "." and path are one inode
+ */
+static bool cwd_is(const char *path)
+{
+    struct stat here;
+    struct stat want;
+    return stat(".", &here) == 0 && stat(path, &want) == 0
+           && here.st_dev == want.st_dev && here.st_ino == want.st_ino;
+}
+
+/*!
+ * @brief Count the next request's full walks: chdir() of an absolute path,
+ *        and openat() from the root descriptor where the volume holds one
+ *
+ * @param[in] vol  the volume
+ */
+static void arm_walk_count(const struct vol *vol)
+{
+    fault_inject_reset();
+    fi.chdir.armed = 1;
+    fi.chdir.fail_after = -1;
+    fi.openat_watch = vol->v_rootfd >= 0;
+    fi.openat_fd = vol->v_rootfd;
+}
+
+/*!
+ * @brief Retire a lookup's dircache entry and the CNID row it made
+ *
+ * @param[in] vol   the volume
+ * @param[in] did   the parent's DID
+ * @param[in] name  the name below it
+ */
+static void drop_entry_row(const struct vol *vol, cnid_t did, char *name)
+{
+    cnid_t id;
+    drop_entry(vol, did, name);
+    id = cnid_get(vol->v_cdb, did, name, strlen(name));
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+}
+
+/*!
+ * @brief A request naming a path of three folders below the volume root
+ *        walks to the root alone and steps from name to name into the last
+ *        folder, following symlinks or not
+ *
+ * A full walk changes into an absolute path, or opens from the root
+ * descriptor where the volume holds one; a step changes into a name where
+ * the volume follows symlinks, and opens one where it does not.
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @returns 0, 1 when a name took the full walk, the request failed or the
+ *          working directory is not the last folder, -1 when the setup
+ *          failed, TEST_SKIP where no count shows the walks
+ */
+int utest_cname_steps_down_a_path(AFPObj *obj, struct vol *vol)
+{
+    const int follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+    struct dir *saved_curdir = curdir;
+    struct step_tree t;
+    char last[MAXPATHLEN];
+    int ret;
+
+    if (!test_capability(TEST_CAP_CHDIR_WATCH, vol)) {
+        return TEST_SKIP;
+    }
+
+    ret = step_tree_make(obj, vol, "stepdown", &t);
+    snprintf(last, sizeof(last), "%s/%s", vol->v_path, t.path[STEP_C]);
+
+    for (int leg = 0; leg < 2 && ret == 0; leg++) {
+        /* the walk to the request's folder, the root, changes into its path
+         * unless it enters the root descriptor */
+        const int root_walks = leg == 1 || vol->v_rootfd < 0;
+        int names;
+        int rc;
+
+        if (!step_leg(vol, leg)) {
+            ret = TEST_SKIP;
+            break;
+        }
+
+        arm_walk_count(vol);
+        rc = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, t.path[STEP_C]);
+        names = fi.chdir.calls - fi.chdir_abs_calls;
+
+        if (rc != AFP_OK || fi.chdir_abs_calls != root_walks
+                || fi.openat_fd_calls != 0 || names != (leg ? STEP_DIRS : 0)
+                || curdir != t.dir[STEP_C] || !cwd_is(last)) {
+            fprintf(stderr, "cname steps: leg %d: FPGetFileDirParms %d, "
+                            "%d absolute and %d other chdir(), %d openat() "
+                            "from the root\n", leg, rc, fi.chdir_abs_calls,
+                    names, fi.openat_fd_calls);
+            ret = 1;
+        }
+
+        fault_inject_reset();
+    }
+
+    vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | follow;
+    step_tree_remove(obj, vol, &t);
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief A cached path that names two folders below the working directory
+ *        takes the full walk where the volume follows no symlinks
+ *
+ * The cached path of stepslash_a/stepslash_b is rewritten to
+ * stepslash_a/stepslash/b, a folder of its own: the request walks to the
+ * root, steps into stepslash_a and must walk to the rewritten path.
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @returns 0, 1 when the request stepped into the rewritten path, failed or
+ *          left the working directory elsewhere, -1 when the setup failed,
+ *          TEST_SKIP where no count shows the walks
+ */
+int utest_cname_step_takes_one_name(AFPObj *obj, struct vol *vol)
+{
+    static char bname[] = "stepslash_b";
+    const int follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+    struct dir *saved_curdir = curdir;
+    struct step_tree t;
+    char moved[MAXPATHLEN];
+    char *path = NULL;
+    char *sep = NULL;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_CHDIR_WATCH, vol) || !step_leg(vol, 0)) {
+        return TEST_SKIP;
+    }
+
+    if (step_tree_make(obj, vol, "stepslash", &t) == 0
+            && createdir(obj, vol->v_vid, DIRDID_ROOT,
+                         "stepslash_a/stepslash") == AFP_OK
+            && createdir(obj, vol->v_vid, DIRDID_ROOT,
+                         "stepslash_a/stepslash/b") == AFP_OK
+            && (path = bdata(t.dir[STEP_B]->d_fullpath)) != NULL
+            && (sep = strrchr(path, '_')) != NULL) {
+        cnid_t adid = t.dir[STEP_A]->d_did;
+        int walks;
+        int rc;
+        *sep = '/';
+        snprintf(moved, sizeof(moved), "%s", path);
+        arm_walk_count(vol);
+        rc = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, t.path[STEP_B]);
+        walks = fi.chdir_abs_calls + fi.openat_fd_calls;
+        fault_inject_reset();
+
+        if (rc == AFP_OK && walks == (vol->v_rootfd < 0) + 1
+                && cwd_is(moved)) {
+            ret = 0;
+        } else {
+            fprintf(stderr, "cname one name: FPGetFileDirParms %d, %d "
+                            "walks\n", rc, walks);
+            ret = 1;
+        }
+
+        /* the entry keeps the rewritten path: it goes, and the lookups below
+         * add it again from its CNID row */
+        movecwd(vol, vol->v_root);
+        drop_entry(vol, adid, bname);
+    }
+
+    vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | follow;
+    delete (obj, vol->v_vid, DIRDID_ROOT, "stepslash_a/stepslash/b");
+    delete (obj, vol->v_vid, DIRDID_ROOT, "stepslash_a/stepslash");
+    step_tree_remove(obj, vol, &t);
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief A folder whose stat shows another device than the volume's, as a
+ *        nested dataset or mount point does, takes the full walk where the
+ *        volume follows no symlinks
+ *
+ * The stat interposer gives stepmnt_b another device. The request walks to
+ * the root, steps into stepmnt_a and must walk to stepmnt_b, which the walk
+ * enters: it checks no device where symlinks are not followed.
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @returns 0, 1 when the request stepped into the folder, failed or left the
+ *          working directory elsewhere, -1 when the setup failed, TEST_SKIP
+ *          where no count shows the walks or stat() is not interposed
+ */
+int utest_cname_step_refuses_another_device(AFPObj *obj, struct vol *vol)
+{
+    static char bname[] = "stepmnt_b";
+    const int follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+    struct dir *saved_curdir = curdir;
+    struct step_tree t;
+    char bpath[MAXPATHLEN];
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_CHDIR_WATCH, vol)
+            || !test_capability(TEST_CAP_STAT_WATCH, vol)
+            || !step_leg(vol, 0)) {
+        return TEST_SKIP;
+    }
+
+    if (step_tree_make(obj, vol, "stepmnt", &t) == 0) {
+        int walks;
+        int rc;
+        snprintf(bpath, sizeof(bpath), "%s/%s", vol->v_path, t.path[STEP_B]);
+        arm_walk_count(vol);
+        fi.stat_dev_name = bname;
+        fi.stat_dev = vol->v_dev + 1;
+        rc = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, t.path[STEP_B]);
+        walks = fi.chdir_abs_calls + fi.openat_fd_calls;
+        fault_inject_reset();
+
+        if (rc == AFP_OK && walks == (vol->v_rootfd < 0) + 1
+                && cwd_is(bpath)) {
+            ret = 0;
+        } else {
+            fprintf(stderr, "cname other device: FPGetFileDirParms %d, %d "
+                            "walks\n", rc, walks);
+            ret = 1;
+        }
+    }
+
+    vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | follow;
+    step_tree_remove(obj, vol, &t);
+    curdir = saved_curdir;
+    return ret;
+}
+
+/* the folders of the long-path test share one name of this length, so a
+ * request's buffer holds it; the array bound holds the deepest chain any
+ * volume path leaves room for */
+#define LONG_NAME_LEN 200
+#define LONG_LEVELS (MAXPATHLEN / (LONG_NAME_LEN + 1) + 2)
+
+/*!
+ * @brief A folder whose cached path is MAXPATHLEN bytes or longer takes the
+ *        full walk, which no chdir() of the path can make
+ *
+ * Folders nest below the volume root until the last one's path reaches
+ * MAXPATHLEN; each but the last is resolved by its parent's DID, which keeps
+ * every request path short. The request for the last folder must answer
+ * AFPERR_NOOBJ, the walk's answer to ENAMETOOLONG, and leave curdir and the
+ * working directory at the parent, where a step by the name alone would
+ * enter the folder.
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @returns 0, 1 when the request entered the folder or left curdir elsewhere,
+ *          -1 when the setup failed
+ */
+int utest_cname_step_refuses_long_path(AFPObj *obj, struct vol *vol)
+{
+    const int follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+    struct dir *saved_curdir = curdir;
+    char name[LONG_NAME_LEN + 1];
+    char parent[MAXPATHLEN];
+    cnid_t did[LONG_LEVELS];
+    size_t plen = strlen(vol->v_path);
+    int levels = (int)((MAXPATHLEN - plen + LONG_NAME_LEN)
+                       / (LONG_NAME_LEN + 1));
+    int pfd;
+    int made = 0;
+    int resolved = 0;
+    int n;
+    int ret = -1;
+    memset(name, 'x', LONG_NAME_LEN);
+    name[LONG_NAME_LEN] = '\0';
+
+    if (plen >= MAXPATHLEN || levels < 1 || levels >= LONG_LEVELS
+            || (pfd = open(vol->v_path, O_RDONLY | O_DIRECTORY)) < 0) {
+        return -1;
+    }
+
+    vol->v_flags &= ~AFPVOL_FOLLOWSYM;
+    did[0] = DIRDID_ROOT;
+    n = snprintf(parent, sizeof(parent), "%s", vol->v_path);
+
+    /* pfd stays the deepest resolved folder, which the last mkdirat() made
+     * its folder in */
+    for (int i = 1; i <= levels; i++) {
+        int next;
+
+        if (mkdirat(pfd, name, 0750) != 0) {
+            break;
+        }
+
+        made = i;
+
+        if (i == levels
+                || (next = openat(pfd, name, O_RDONLY | O_DIRECTORY)) < 0) {
+            break;
+        }
+
+        if (getfiledirparms(obj, vol->v_vid, did[i - 1], name) != AFP_OK
+                || curdir == NULL) {
+            close(next);
+            break;
+        }
+
+        did[i] = curdir->d_did;
+        resolved = i;
+        n += snprintf(parent + n, sizeof(parent) - (size_t)n, "/%s", name);
+        close(pfd);
+        pfd = next;
+    }
+
+    if (made == levels) {
+        int rc = getfiledirparms(obj, vol->v_vid, did[levels - 1], name);
+
+        if (rc == AFPERR_NOOBJ && curdir != NULL
+                && curdir->d_did == did[levels - 1] && cwd_is(parent)) {
+            ret = 0;
+        } else {
+            fprintf(stderr, "cname long path: %d levels, FPGetFileDirParms %d, "
+                            "curdir did %u\n", levels, rc,
+                    curdir ? ntohl(curdir->d_did) : 0);
+            ret = 1;
+        }
+
+        /* the walk left the folder's row, and the step may have entered it */
+        movecwd(vol, vol->v_root);
+        drop_entry_row(vol, did[levels - 1], name);
+    }
+
+    /* the folder made in pfd and not resolved, then the resolved ones */
+    if (made > resolved) {
+        unlinkat(pfd, name, AT_REMOVEDIR);
+    }
+
+    for (int i = resolved; i >= 1; i--) {
+        delete (obj, vol->v_vid, did[i - 1], name);
+    }
+
+    close(pfd);
+    vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | follow;
+    curdir = saved_curdir;
+    return ret;
+}
+
+/* the swap test swaps its first folder for a symlink to it ahead of the
+ * step */
+static int swap_vfd = -1;
+static int swap_moved;
+static int swap_done;
+
+/*!
+ * @brief Move stepswap_a to stepswap_a2 and give its name a symlink to it,
+ *        as another process's change landing between the stat and the step
+ */
+static void swap_to_symlink(void)
+{
+    swap_moved = renameat(swap_vfd, "stepswap_a", swap_vfd,
+                          "stepswap_a2") == 0;
+    swap_done = swap_moved
+                && symlinkat("stepswap_a2", swap_vfd, "stepswap_a") == 0;
+}
+
+/*!
+ * @brief A folder name that turns into a symlink to the folder after its
+ *        stat is refused where the volume follows no symlinks
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @returns 0, 1 when the request entered the folder through the symlink or
+ *          the swap missed the step, -1 when the setup failed, TEST_SKIP
+ *          where open() is not interposed
+ */
+int utest_cname_step_refuses_swapped_symlink(AFPObj *obj, struct vol *vol)
+{
+    const int follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+    struct dir *saved_curdir = curdir;
+    struct step_tree t = { 0 };
+    int ret = -1;
+    int rc;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    swap_moved = 0;
+    swap_done = 0;
+
+    if ((swap_vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY)) < 0
+            || step_tree_make(obj, vol, "stepswap", &t) != 0) {
+        goto out;
+    }
+
+    vol->v_flags &= ~AFPVOL_FOLLOWSYM;
+    fault_inject_reset();
+    /* the step's open is the request's first that opens a folder */
+    fi.open_hook = swap_to_symlink;
+    fi.open_hook_flags = O_DIRECTORY;
+    rc = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, t.path[STEP_B]);
+    fault_inject_reset();
+
+    if (swap_done && rc == AFPERR_BADTYPE) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cname swap: swapped %d, FPGetFileDirParms %d\n",
+                swap_done, rc);
+        ret = 1;
+    }
+
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | follow;
+
+    if (swap_vfd >= 0) {
+        if (swap_done) {
+            unlinkat(swap_vfd, "stepswap_a", 0);
+        }
+
+        if (swap_moved) {
+            renameat(swap_vfd, "stepswap_a2", swap_vfd, "stepswap_a");
+        }
+
+        close(swap_vfd);
+        swap_vfd = -1;
+        step_tree_remove(obj, vol, &t);
+    }
+
+    curdir = saved_curdir;
+    return ret;
+}
+
+/*!
+ * @brief A path through a symlink to a folder on another device is refused
+ *        where the volume follows symlinks, as the full walk refuses it
+ *
+ * stepdev_a/stepdev_b points to /dev, on another device than the test volume
+ * or the test skips. The name's stat follows the symlink, so the step refuses
+ * it before changing into it; where chdir() is counted, the request's one
+ * chdir() of a name enters stepdev_a.
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @returns 0, 1 when the request entered the other device or the step
+ *          changed into the name, -1 when the setup failed, TEST_SKIP where
+ *          /dev shares the volume's device
+ */
+int utest_cname_step_keeps_the_device(AFPObj *obj, struct vol *vol)
+{
+    static char lname[] = "stepdev_a/stepdev_b";
+    static char bname[] = "stepdev_b";
+    const int follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+    struct dir *saved_curdir = curdir;
+    struct stat st;
+    bool counted;
+    cnid_t adid;
+    int vfd;
+    int linked = 0;
+    int names;
+    int ret = -1;
+    int rc;
+
+    if (stat("/dev", &st) != 0 || st.st_dev == vol->v_dev) {
+        return TEST_SKIP;
+    }
+
+    counted = test_capability(TEST_CAP_CHDIR_WATCH, vol);
+
+    if (make_dir(obj, vol->v_vid, "stepdev_a", 0, &adid) != 0) {
+        return -1;
+    }
+
+    if ((vfd = open(vol->v_path, O_RDONLY | O_DIRECTORY)) < 0
+            || symlinkat("/dev", vfd, lname) != 0) {
+        goto out;
+    }
+
+    linked = 1;
+    vol->v_flags |= AFPVOL_FOLLOWSYM;
+    arm_walk_count(vol);
+    rc = getfiledirparms(obj, vol->v_vid, DIRDID_ROOT, lname);
+    names = fi.chdir.calls - fi.chdir_abs_calls;
+    fault_inject_reset();
+
+    if (rc == AFPERR_BADTYPE && (!counted || names == 1)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "cname device: FPGetFileDirParms %d through a "
+                        "symlink to /dev, %d chdir() of a name\n", rc, names);
+        ret = 1;
+    }
+
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | follow;
+
+    if (linked) {
+        /* the lookup gave the name an entry and a row before the refusal */
+        drop_entry_row(vol, adid, bname);
+        unlinkat(vfd, lname, 0);
+    }
+
+    if (vfd >= 0) {
+        close(vfd);
+    }
+
+    remove_dir(obj, vol->v_vid, "stepdev_a", 0, adid);
+    curdir = saved_curdir;
+    return ret;
+}
+
+/* the recheck test swaps stepre_b for a symlink to /dev ahead of the step's
+ * chdir(), and its second leg makes the walk after the refusal fail */
+static int recheck_vfd = -1;
+static const char *recheck_fail_but;
+static int recheck_moved;
+static int recheck_done;
+
+/*!
+ * @brief Move stepre_b to stepre_b2 and give its name a symlink to /dev, as
+ *        another process's change landing between the stat and the chdir()
+ */
+static void recheck_swap(void)
+{
+    recheck_moved = renameat(recheck_vfd, "stepre_b", recheck_vfd,
+                             "stepre_b2") == 0;
+    recheck_done = recheck_moved
+                   && symlinkat("/dev", recheck_vfd, "stepre_b") == 0;
+    fi.chdir_fail_abs_but = recheck_fail_but;
+}
+
+/*!
+ * @brief A folder name that turns into a symlink to another device between
+ *        its stat and the step's chdir() is refused where the volume follows
+ *        symlinks, and the working directory stays the folder curdir names,
+ *        also where the walk after the refusal fails; where the return to
+ *        the root fails too, curdir is the root's entry
+ *
+ * @param[in] obj  the test session
+ * @param[in] vol  the volume
+ * @returns 0, 1 when the request entered the other device or left curdir
+ *          and the working directory apart, -1 when the setup failed,
+ *          TEST_SKIP where /dev shares the volume's device or chdir() is not
+ *          interposed
+ */
+int utest_cname_step_rechecks_the_device(AFPObj *obj, struct vol *vol)
+{
+    const int follow = vol->v_flags & AFPVOL_FOLLOWSYM;
+    struct dir *saved_curdir = curdir;
+    struct stat st;
+    char apath[MAXPATHLEN];
+    int ret = 0;
+
+    if (stat("/dev", &st) != 0 || st.st_dev == vol->v_dev
+            || !test_capability(TEST_CAP_CHDIR_WATCH, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(apath, sizeof(apath), "%s/stepre_a", vol->v_path);
+
+    /* leg 0: the walk after the refusal refuses /dev too; leg 1: it fails
+     * at its chdir(); leg 2: the step's return to the root fails as well */
+    for (int leg = 0; leg < 3 && ret == 0; leg++) {
+        const char *fail_but = leg == 1 ? vol->v_path : "/";
+        cnid_t adid;
+        int rc;
+
+        if (make_dir(obj, vol->v_vid, "stepre_a", 0, &adid) != 0) {
+            ret = -1;
+            break;
+        }
+
+        recheck_moved = 0;
+        recheck_done = 0;
+
+        if (createdir(obj, vol->v_vid, adid, "stepre_b") != AFP_OK
+                || (recheck_vfd = open(apath, O_RDONLY | O_DIRECTORY)) < 0) {
+            ret = -1;
+        } else {
+            recheck_fail_but = leg ? fail_but : NULL;
+            vol->v_flags |= AFPVOL_FOLLOWSYM;
+            fault_inject_reset();
+            /* the walk to stepre_a, then the step into stepre_b */
+            fi.chdir_hook = recheck_swap;
+            rc = getfiledirparms(obj, vol->v_vid, adid, "stepre_b");
+            fault_inject_reset();
+
+            if (!recheck_done || rc == AFP_OK
+                    || (leg == 0 && rc != AFPERR_BADTYPE) || curdir == NULL
+                    || (leg == 2 ? curdir != vol->v_root
+                        : !cwd_is(cfrombstr(curdir->d_fullpath)))) {
+                fprintf(stderr, "cname recheck: leg %d: swapped %d, "
+                                "FPGetFileDirParms %d\n", leg, recheck_done,
+                        rc);
+                ret = 1;
+            }
+
+            /* the failed return left the working directory on /dev */
+            if (leg == 2 && chdir(vol->v_path) != 0) {
+                ret = -1;
+            }
+        }
+
+        vol->v_flags = (vol->v_flags & ~AFPVOL_FOLLOWSYM) | follow;
+
+        if (recheck_vfd >= 0) {
+            if (recheck_done) {
+                unlinkat(recheck_vfd, "stepre_b", 0);
+            }
+
+            if (recheck_moved) {
+                renameat(recheck_vfd, "stepre_b2", recheck_vfd, "stepre_b");
+            }
+
+            close(recheck_vfd);
+            recheck_vfd = -1;
+        }
+
+        delete (obj, vol->v_vid, adid, "stepre_b");
+        remove_dir(obj, vol->v_vid, "stepre_a", 0, adid);
+    }
+
+    curdir = saved_curdir;
     return ret;
 }
 

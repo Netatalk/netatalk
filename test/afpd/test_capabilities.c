@@ -58,6 +58,8 @@ static int cap_cache[] = {
     [TEST_CAP_FSTAT_WATCH]  = -1,
     [TEST_CAP_CLOSE_WATCH]  = -1,
     [TEST_CAP_PREAD_WATCH]  = -1,
+    [TEST_CAP_CHDIR_WATCH]  = -1,
+    [TEST_CAP_OPENAT_WATCH] = -1,
 };
 
 /*!
@@ -92,6 +94,12 @@ const char *test_capability_name(enum test_capability cap)
 
     case TEST_CAP_PREAD_WATCH:
         return "pread() call counting (LD_PRELOAD)";
+
+    case TEST_CAP_CHDIR_WATCH:
+        return "chdir() call counting (LD_PRELOAD)";
+
+    case TEST_CAP_OPENAT_WATCH:
+        return "openat() call counting (LD_PRELOAD)";
 
     case TEST_CAP_ACL_SET:
         return "a filesystem that stores ACLs";
@@ -311,6 +319,54 @@ static int probe_pread_watch(const struct vol *vol)
 }
 
 /*!
+ * @brief Does the preload count chdir() calls through a countdown armed
+ *        never to fire?
+ *
+ * @returns 1 when one chdir() into the working directory counts once, else 0
+ */
+static int probe_chdir_watch(void)
+{
+    int worked;
+    fault_inject_reset();
+    fi.chdir.armed = 1;
+    fi.chdir.fail_after = -1;
+    worked = chdir(".") == 0 && fi.chdir.calls == 1;
+    fault_inject_reset();
+    return worked;
+}
+
+/*!
+ * @brief Does the preload count the openat() calls from one descriptor?
+ *
+ * @returns 1 when one openat() from a descriptor on the working directory
+ *          counts once, else 0
+ */
+static int probe_openat_watch(void)
+{
+    int dfd = open(".", O_RDONLY | O_DIRECTORY);
+    int fd;
+    int worked;
+
+    if (dfd < 0) {
+        return 0;
+    }
+
+    fault_inject_reset();
+    fi.openat_watch = 1;
+    fi.openat_fd = dfd;
+    fd = openat(dfd, ".", O_RDONLY | O_DIRECTORY);
+    worked = fd >= 0 && fi.openat_fd_calls == 1;
+    fault_inject_reset();
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    close(dfd);
+    return worked;
+}
+
+/*!
  * @brief Does the filesystem under vol->v_path store an ACL written to it?
  *
  * Writes the root's own ACL back, which leaves it as it was; a filesystem
@@ -390,6 +446,14 @@ int test_capability(enum test_capability cap, const struct vol *vol)
 
     case TEST_CAP_PREAD_WATCH:
         cap_cache[cap] = probe_pread_watch(vol);
+        break;
+
+    case TEST_CAP_CHDIR_WATCH:
+        cap_cache[cap] = probe_chdir_watch();
+        break;
+
+    case TEST_CAP_OPENAT_WATCH:
+        cap_cache[cap] = probe_openat_watch();
         break;
 
     case TEST_CAP_ACL_SET:

@@ -1828,13 +1828,14 @@ struct dir *dircache_search_by_name(const struct vol *vol,
  * @brief Search the cache by parent and name, and bring the entry found to a
  *        stat of the path, which no sampled validation stats again
  *
- * The caller took the stat in the parent's folder, which it entered at the
- * parent's cached path. The entry takes the stat as dir_modify() gives it:
- * it can stay, be re-keyed, or go, in which case the caller builds the
- * object's own entry. An entry that holds the stat's inode takes the path
- * under its parent's, where a rename of an ancestor left its own stale. An
- * entry with a stale path, for which the stat shows another inode, keeps its
- * fields, so the caller compares its inode with the stat's.
+ * The caller took the stat in the parent's folder, entered at its cached
+ * path or, as cname()'s steps do, by name from the folder above. The entry
+ * takes the stat as dir_modify() gives it: it can stay, be re-keyed, or go,
+ * in which case the caller builds the object's own entry. An entry that
+ * holds the stat's inode takes the path under its parent's, where a rename
+ * of an ancestor left its own stale. An entry with a stale path, for which
+ * the stat shows another inode, keeps its fields, so the caller compares its
+ * inode with the stat's.
  *
  * @param[in]     vol   volume
  * @param[in]     dir   directory
