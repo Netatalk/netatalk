@@ -58,17 +58,6 @@
 
 #define PFD_SLOTS 16
 
-#if defined(O_PATH)
-#define PFD_OPEN_FLAGS (O_PATH | O_DIRECTORY | O_NOFOLLOW)
-#elif defined(O_SEARCH)
-#define PFD_OPEN_FLAGS (O_SEARCH | O_DIRECTORY)
-#else
-/* Execute-only directories fail to open with O_RDONLY; pfd_get() then
- * returns -1 and the wrapper falls back to full-path ostat (correct,
- * slower). */
-#define PFD_OPEN_FLAGS (O_RDONLY | O_DIRECTORY)
-#endif
-
 struct pfd_slot {
     /* network order, as stored in struct dir */
     cnid_t   did;

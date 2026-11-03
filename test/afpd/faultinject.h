@@ -35,6 +35,13 @@
  * open_fail_flags = F: only opens whose flags include F count and can fail.
  * open_hook = fn: fn runs once, ahead of the next open whose flags include
  * open_hook_flags, as another process's step landing just before it.
+ * chdir_hook = fn: fn runs once, ahead of the next chdir() of a relative
+ * path, the same way.
+ * chdir_fail_abs_but = P: while set, chdir() of an absolute path other than P
+ * fails with EACCES.
+ * stat_dev_name = P with stat_dev = D: a stat() or lstat() of P reports D as
+ * the device, as a mount point's would.
+ * openat_watch = 1 with openat_fd = D: openat() calls from D are counted.
  */
 
 /*! The countdown of one interposed call, with its count of armed calls */
@@ -143,7 +150,16 @@ struct fault_inject {
     const char *stat_name;  /*!< every stat() and lstat() of this path fails */
     int stat_errno;         /*!< the errno those calls fail with */
     int stat_calls;         /*!< stat() and lstat() calls of stat_name */
+    const char *stat_dev_name; /*!< a stat() of this path reports stat_dev */
+    dev_t stat_dev;
     struct fi_call readdir;
+    struct fi_call chdir;
+    int chdir_abs_calls;    /*!< armed chdir() calls of an absolute path */
+    void (*chdir_hook)(void); /*!< runs once ahead of a relative chdir() */
+    const char *chdir_fail_abs_but; /*!< other absolute chdir()s fail */
+    int openat_watch;       /*!< count the openat() calls from openat_fd */
+    int openat_fd;
+    int openat_fd_calls;    /*!< those calls while watching */
     struct fi_call getcwd;
     struct fi_call fsetxattr; /*!< an armed fsetxattr() fails (Linux) */
     int xattr_watch;      /*!< count the xattr reads below (Linux) */
