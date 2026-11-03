@@ -190,6 +190,8 @@ typedef int (*open_fn)(const char *, int, ...);
 typedef int (*open2_fn)(const char *, int);
 typedef int (*close_fn)(int);
 typedef int (*fcntl_fn)(int, int, ...);
+typedef int (*chdir_fn)(const char *);
+typedef int (*openat_fn)(int, const char *, int, ...);
 typedef int (*fchdir_fn)(int);
 #ifndef dirfd
 typedef int (*dirfd_fn)(DIR *);
@@ -200,6 +202,8 @@ static open2_fn  real_open_2;
 static open2_fn  real_open64_2;
 static close_fn  real_close;
 static fcntl_fn  real_fcntl;
+static chdir_fn  real_chdir;
+static openat_fn real_openat;
 static fchdir_fn real_fchdir;
 #ifndef dirfd
 static dirfd_fn  real_dirfd;
@@ -209,23 +213,53 @@ static dirfd_fn  real_dirfd;
 #define O_TMPFILE 0
 #endif
 
-/* Record then decide, shared by every open-family interposer.  Record before
- * the decision so count/flags reflect the attempt; only while armed.  An open
- * without the flags of open_fail_flags is neither recorded nor failed.  Returns
- * 1 when the caller should inject the failure (errno already set).  A hook
- * runs first, cleared and with arming off while it runs, so the opens it makes
- * pass through. */
+/*!
+ * @brief Whether an open with flags passes a mode: O_CREAT, or all of
+ *        O_TMPFILE, which holds O_DIRECTORY's bit
+ *
+ * Reading a mode the call did not pass is undefined behaviour.
+ *
+ * @param[in] flags  the open flags
+ * @returns 1 when the call carries a mode, else 0
+ */
+static int open_takes_mode(int flags)
+{
+    return (flags & O_CREAT)
+           || (O_TMPFILE != 0 && (flags & O_TMPFILE) == O_TMPFILE);
+}
+
+/*!
+ * @brief Run a one-shot hook, cleared and with its interposer disarmed while
+ *        it runs, so the calls the hook makes pass through
+ *
+ * @param[in,out] hook   the hook, NULL afterwards
+ * @param[in,out] armed  the interposer's arming, restored afterwards
+ */
+static void fi_run_hook(void (**hook)(void), int *armed)
+{
+    void (*fn)(void) = *hook;
+    const int was_armed = *armed;
+    *hook = NULL;
+    *armed = 0;
+    fn();
+    *armed = was_armed;
+}
+
+/*!
+ * @brief Record an open-family call and decide whether to fail it
+ *
+ * The attempt is recorded before the decision, only while armed; an open
+ * without the flags of open_fail_flags is neither recorded nor failed. A hook
+ * runs first, so the opens it makes pass through.
+ *
+ * @param[in] flags  the open flags
+ * @returns 1 when the caller injects the failure, with errno set
+ */
 static int open_armed_should_fire(int flags)
 {
-    void (*hook)(void) = fi.open_hook;
-
-    if (hook != NULL
+    if (fi.open_hook != NULL
             && (flags & fi.open_hook_flags) == fi.open_hook_flags) {
-        const int armed = fi.open_armed;
-        fi.open_hook = NULL;
-        fi.open_armed = 0;
-        hook();
-        fi.open_armed = armed;
+        fi_run_hook(&fi.open_hook, &fi.open_armed);
     }
 
     if (!fi.open_armed) {
@@ -242,19 +276,19 @@ static int open_armed_should_fire(int flags)
     return fault_should_fire(fi.open_armed, &fi.open_fail_after, fi.open_errno);
 }
 
-/* A single open() definition covers both symbols libatalk may reference: under
- * glibc with _FILE_OFFSET_BITS=64 (set globally) <fcntl.h> renames THIS
- * definition to open64() — which is exactly the symbol LFS callers reference —
- * while musl/non-LFS keeps it as open().  So there is no separate open64()
- * interposer (a second definition would collide with the renamed one).
+/*!
+ * @brief open() interposer: records an armed open and fails it as
+ *        open_armed_should_fire() decides
  *
- * open() takes a third mode_t argument ONLY when creating; reading the vararg
- * otherwise is undefined behaviour. */
+ * Under glibc with _FILE_OFFSET_BITS=64 <fcntl.h> renames this definition to
+ * open64(), the symbol LFS callers reference, so no second definition exists;
+ * musl keeps it as open(). The mode is read only where the call passes one.
+ */
 int open(const char *path, int flags, ...)
 {
     mode_t mode = 0;
 
-    if (flags & (O_CREAT | O_TMPFILE)) {
+    if (open_takes_mode(flags)) {
         va_list ap;
         va_start(ap, flags);
         mode = (mode_t)va_arg(ap, int);
@@ -537,6 +571,69 @@ int fcntl(int fd, int cmd, ...)
 
 #endif
     return real_fcntl(fd, cmd, arg);
+}
+
+/*!
+ * @brief chdir() interposer: runs chdir_hook ahead of a relative path, counts
+ *        armed calls, those of an absolute path apart, fails them, and fails
+ *        the absolute paths chdir_fail_abs_but excludes
+ */
+int chdir(const char *path)
+{
+    const int absolute = path != NULL && path[0] == '/';
+
+    if (!real_chdir) {
+        real_chdir = (chdir_fn)dlsym(RTLD_NEXT, "chdir");
+    }
+
+    if (!absolute && fi.chdir_hook != NULL) {
+        fi_run_hook(&fi.chdir_hook, &fi.chdir.armed);
+    }
+
+    if (fi.chdir.armed && absolute) {
+        fi.chdir_abs_calls++;
+    }
+
+    if (fi_call_fire(&fi.chdir)) {
+        return -1;
+    }
+
+    if (absolute && fi.chdir_fail_abs_but != NULL
+            && strcmp(path, fi.chdir_fail_abs_but) != 0) {
+        errno = EACCES;
+        return -1;
+    }
+
+    return real_chdir(path);
+}
+
+/*!
+ * @brief openat() interposer: counts the calls from openat_fd while
+ *        openat_watch is set
+ *
+ * Under glibc with _FILE_OFFSET_BITS=64 this definition is openat64(), as
+ * open()'s is open64().
+ */
+int openat(int fd, const char *path, int flags, ...)
+{
+    mode_t mode = 0;
+
+    if (open_takes_mode(flags)) {
+        va_list ap;
+        va_start(ap, flags);
+        mode = (mode_t)va_arg(ap, int);
+        va_end(ap);
+    }
+
+    if (!real_openat) {
+        real_openat = (openat_fn)fi_real64("openat64", "openat");
+    }
+
+    if (fi.openat_watch && fd == fi.openat_fd) {
+        fi.openat_fd_calls++;
+    }
+
+    return real_openat(fd, path, flags, mode);
 }
 
 int fchdir(int fd)
@@ -1160,7 +1257,8 @@ static void stat_watched(const char *path)
 /*!
  * @brief The stat() and lstat() interposers' shared body: every call on
  *        fi.stat_name fails with fi.stat_errno, as a stale mount's would,
- *        and counts in fi.stat_calls
+ *        and counts in fi.stat_calls; a call on fi.stat_dev_name reports
+ *        fi.stat_dev as the device, as a mount point's would
  *
  * <sys/stat.h> renames the definitions where libc versions the calls (glibc
  * stat64 under 64-bit offsets, NetBSD __stat50), so the real function is
@@ -1201,7 +1299,14 @@ static int fi_stat_call(stat_fn *real, void *self, const char *name64,
         return -1;
     }
 
-    return (*real)(path, buf);
+    int ret = (*real)(path, buf);
+
+    if (ret == 0 && fi.stat_dev_name != NULL
+            && strcmp(path, fi.stat_dev_name) == 0) {
+        buf->st_dev = fi.stat_dev;
+    }
+
+    return ret;
 }
 
 /*!

@@ -48,6 +48,15 @@ extern int utest_movecwd_volume_walks(const struct vol *vol);
 extern int utest_movecwd_rechecks_root(AFPObj *obj, struct vol *vol);
 extern int utest_movecwd_walk_ignores_case(AFPObj *obj, struct vol *vol);
 extern int utest_movecwd_stale_root(AFPObj *obj, struct vol *vol);
+extern int utest_cname_steps_down_a_path(AFPObj *obj, struct vol *vol);
+extern int utest_cname_step_takes_one_name(AFPObj *obj, struct vol *vol);
+extern int utest_cname_step_refuses_another_device(AFPObj *obj,
+                                                   struct vol *vol);
+extern int utest_cname_step_refuses_long_path(AFPObj *obj, struct vol *vol);
+extern int utest_cname_step_refuses_swapped_symlink(AFPObj *obj,
+                                                    struct vol *vol);
+extern int utest_cname_step_keeps_the_device(AFPObj *obj, struct vol *vol);
+extern int utest_cname_step_rechecks_the_device(AFPObj *obj, struct vol *vol);
 extern int utest_enumerate_long_name_skipped(AFPObj *obj, uint16_t vid);
 extern int utest_enumerate_cnid_one_query(AFPObj *obj, struct vol *vol);
 extern int utest_enumerate_cnid_other_inode(AFPObj *obj, struct vol *vol);
