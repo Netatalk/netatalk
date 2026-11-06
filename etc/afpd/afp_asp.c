@@ -497,8 +497,11 @@ void afp_over_asp(AFPObj *obj)
             /* [E1] Signal pipe — drain it and act on the signals. Nothing can
              * clear a bad one: a POLLHUP/POLLNVAL/POLLERR that no read
              * consumes makes poll() return immediately for the rest of the
-             * session, and no deferred signal could ever wake the loop. */
-            if (pfds[sigpipe_idx].revents & (POLLNVAL | POLLERR | POLLHUP)) {
+             * session, and no deferred signal could ever wake the loop.
+             * Socket-backed pipes can report EOF with POLLIN alone. */
+            if ((pfds[sigpipe_idx].revents & (POLLNVAL | POLLERR | POLLHUP))
+                    || ((pfds[sigpipe_idx].revents & POLLIN)
+                        && atalk_sigpipe_drain() != 0)) {
                 LOG(log_error, logtype_afpd,
                     "afp_over_asp: signal pipe fd %d invalid, ending session",
                     atalk_sigpipe_readfd());
@@ -507,7 +510,6 @@ void afp_over_asp(AFPObj *obj)
             }
 
             if (pfds[sigpipe_idx].revents & POLLIN) {
-                atalk_sigpipe_drain();
                 asp_process_deferred_signals(obj);
             }
 

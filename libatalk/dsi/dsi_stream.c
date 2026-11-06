@@ -401,7 +401,8 @@ int dsi_disconnect(DSI *dsi)
  * @param[in,out] dsi  DSI session
  * @returns 0 once the socket has input; -1 with errno ETIMEDOUT at the bound or
  *          ECONNABORTED for a hand-over, both after the session disconnected,
- *          or with the errno of poll
+ *          or with the errno of poll. An unusable signal pipe terminates the
+ *          session through its exit callback, or returns -1 if none is set.
  */
 int dsi_wait_input(DSI *dsi)
 {
@@ -428,11 +429,23 @@ int dsi_wait_input(DSI *dsi)
         }
 
         if (ret > 0) {
-            /* a signal's wake-up; a pipe that fails is watched no more */
-            if (pfd[1].revents & POLLIN) {
-                atalk_sigpipe_drain();
-            } else {
-                pfd[1].fd = -1;
+            /* Losing signal wake-ups is fatal to the session. */
+            if ((pfd[1].revents & (POLLERR | POLLHUP | POLLNVAL))
+                    || ((pfd[1].revents & POLLIN)
+                        && atalk_sigpipe_drain() != 0)) {
+                int saved_errno = (pfd[1].revents & POLLNVAL) ? EBADF
+                                  : (pfd[1].revents & POLLHUP) ? EPIPE
+                                  : (pfd[1].revents & POLLERR) ? EIO : errno;
+                LOG(log_error, logtype_dsi,
+                    "dsi_wait_input: signal pipe fd %d unusable: %s",
+                    pfd[1].fd, strerror(saved_errno));
+
+                if (dsi->AFPobj != NULL && dsi->AFPobj->exit != NULL) {
+                    dsi->AFPobj->exit(EXITERR_SYS);
+                }
+
+                errno = saved_errno;
+                return -1;
             }
         } else if (ret == 0) {
             LOG(log_error, logtype_dsi,

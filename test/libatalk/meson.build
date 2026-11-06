@@ -24,6 +24,21 @@ test(
     protocol: 'tap',
 )
 
+sigpipe_test = executable(
+    'sigpipe_test',
+    'test_sigpipe.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk signal pipe',
+    sigpipe_test,
+    protocol: 'tap',
+)
+
 getiface_test = executable(
     'getiface_test',
     'test_getiface.c',
