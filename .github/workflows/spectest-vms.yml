@@ -33,7 +33,7 @@ env:
 
 jobs:
   spectest-dflybsd:
-    name: AFP Spectest - DragonFlyBSD (sys:ad, HAMMER2)
+    name: AFP Spectest - DragonFlyBSD 6.4 (sys:ad, HAMMER2)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -46,6 +46,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/dragonflybsd-vm@4ab776fa9f914fbea72f13715b451e77e7ef5c41 # v1.3.4
         with:
+          release: "6.4.2"
           copyback: true
           sync-time: true
           sync: nfs
@@ -126,7 +127,7 @@ jobs:
           path: build/meson-logs
 
   spectest-freebsd:
-    name: AFP Spectest - FreeBSD (PerfConfig, UFS)
+    name: AFP Spectest - FreeBSD 15 (PerfConfig, UFS)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -139,6 +140,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1.5.9
         with:
+          release: "15.1"
           copyback: true
           sync: sshfs
           prepare: |
@@ -216,7 +218,7 @@ jobs:
           path: build/meson-logs
 
   spectest-freebsd-zfs:
-    name: AFP Spectest - FreeBSD (PerfConfig, ZFS)
+    name: AFP Spectest - FreeBSD 15 (PerfConfig, ZFS)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -229,6 +231,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1.5.9
         with:
+          release: "15.1"
           copyback: true
           sync: sshfs
           prepare: |
@@ -314,7 +317,7 @@ jobs:
           path: build/meson-logs
 
   spectest-netbsd:
-    name: AFP Spectest - NetBSD (sys:ad, FFS)
+    name: AFP Spectest - NetBSD 11 (sys:ad, FFS)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -325,8 +328,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Build on VM
-        uses: vmactions/netbsd-vm@c8a0d7ddb84619a7a8cc4e652efa7950b3fd9f92 # v1.5.2
+        uses: vmactions/netbsd-vm@5957cf330aef2e6ddc63c604364c99ce2e02b91d # v1.5.3
         with:
+          release: "11.1"
           copyback: true
           prepare: |
             set -e
@@ -407,7 +411,7 @@ jobs:
           path: build/meson-logs
 
   spectest-openbsd:
-    name: AFP Spectest - OpenBSD (sys:ad, FFS)
+    name: AFP Spectest - OpenBSD 8.0 (sys:ad, FFS)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -418,8 +422,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Build on VM
-        uses: vmactions/openbsd-vm@5f7b2c933b8846a138361d6843c52af4bef5d945 # v1.4.8
+        uses: vmactions/openbsd-vm@f1ca8bc8ecc5b6ef7218e5b914836e067e1546d3 # v1.4.9
         with:
+          release: "8.0"
           copyback: true
           sync: sshfs
           prepare: |
@@ -440,7 +445,7 @@ jobs:
               libtalloc \
               mariadb-client \
               meson \
-              openldap-client-- \
+              openldap-client-2.6.16v0 \
               openpam \
               rust \
               sqlite3 \
@@ -497,7 +502,7 @@ jobs:
           path: build/meson-logs
 
   spectest-omnios:
-    name: AFP Spectest - OmniOS (sys:ad, ZFS)
+    name: AFP Spectest - OmniOS r151060 (sys:ad, ZFS)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -508,9 +513,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Build on VM
-        uses: vmactions/omnios-vm@9576f0b6d15e7696548409baa533bc0a339caf42 # v1.3.7
+        uses: vmactions/omnios-vm@aeee92416495d9685b2997d954f6b063ae5b832d # v1.3.8
         with:
-          release: "r151056-build"
+          release: "r151060-build"
           copyback: true
           prepare: |
             set -e
@@ -602,7 +607,7 @@ jobs:
           path: build/meson-logs
 
   spectest-openindiana:
-    name: AFP Spectest - OpenIndiana (sys:ad, ZFS)
+    name: AFP Spectest - OpenIndiana 202610 (sys:ad, ZFS)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -613,9 +618,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Build on VM
-        uses: vmactions/openindiana-vm@74a06af3be38c265a2d99d1af520d66a057ff222 # v1.1.9
+        uses: vmactions/openindiana-vm@b0669479e0325a25198dc7ed2a4b6089e98f91b3 # v1.2.0
         with:
-          release: "202510-build"
+          release: "202610-build"
           copyback: true
           prepare: |
             set -e
@@ -701,7 +706,7 @@ jobs:
           path: build/meson-logs
 
   spectest-solaris:
-    name: AFP Spectest - Solaris (sys:ad, ZFS)
+    name: AFP Spectest - Solaris 11.4 (sys:ad, ZFS)
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     permissions:
@@ -712,8 +717,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Build on VM
-        uses: vmactions/solaris-vm@87d3c436511cef802cd1637f86f73b1a97715c8c # v1.4.1
+        uses: vmactions/solaris-vm@1c166978f5a2c1f87f1c9d4d8dd85ae3d1eff6f7 # v1.4.2
         with:
+          release: "11.4-clang-19"
           copyback: true
           sync-time: true
           sync: nfs
