@@ -214,7 +214,8 @@ trap abort_run INT TERM HUP
 # dtrace -l reports a description that matches no probe on stderr, below
 # its header line, and exits 0
 has_probe() {
-    dtrace -l -n "$1" 2> /dev/null | awk 'NR > 1 {n++} END {exit n == 0}'
+    probe=$1
+    dtrace -l -n "$probe" 2> /dev/null | awk 'NR > 1 {n++} END {exit n == 0}'
 }
 
 if [ "$trace" -eq 1 ]; then
