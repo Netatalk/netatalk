@@ -258,3 +258,15 @@ executable(
     install_rpath: rpath_libdir,
     build_rpath: rpath_libdir,
 )
+
+executable(
+    'afp_navtest',
+    ['navtest.c'],
+    include_directories: root_includes,
+    dependencies: [afptest_external_deps, iniparser],
+    c_args: confdir,
+    link_with: libafptest,
+    install: false,
+    install_rpath: rpath_libdir,
+    build_rpath: rpath_libdir,
+)
