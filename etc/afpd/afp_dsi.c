@@ -1047,8 +1047,11 @@ void afp_over_dsi(AFPObj *obj)
             /* [E1] Signal pipe — drain it and act on the signals.
              * Nothing can clear a bad self-pipe, and a POLLHUP/POLLNVAL/POLLERR
              * that no read consumes makes poll() return immediately for the rest
-             * of the session, so the loop would spin with no way to be woken. */
-            if (pfds[sigpipe_idx].revents & (POLLNVAL | POLLERR | POLLHUP)) {
+             * of the session, so the loop would spin with no way to be woken.
+             * Socket-backed pipes can report EOF with POLLIN alone. */
+            if ((pfds[sigpipe_idx].revents & (POLLNVAL | POLLERR | POLLHUP))
+                    || ((pfds[sigpipe_idx].revents & POLLIN)
+                        && atalk_sigpipe_drain() != 0)) {
                 LOG(log_error, logtype_afpd,
                     "afp_over_dsi: signal pipe fd %d unusable, ending session",
                     atalk_sigpipe_readfd());
@@ -1056,8 +1059,6 @@ void afp_over_dsi(AFPObj *obj)
             }
 
             if (pfds[sigpipe_idx].revents & POLLIN) {
-                atalk_sigpipe_drain();
-
                 if (process_deferred_signals(obj)) {
                     goto restart_outer;
                 }
@@ -1147,8 +1148,7 @@ void afp_over_dsi(AFPObj *obj)
             ipc_child_state(obj, DSI_DISCONNECTED);
             /* the failed read may have drained the wake-up of a signal
              * recorded while it waited, so the pending work comes first;
-             * one recorded later wakes the poll through the pipe, or, once
-             * the pipe fails, only by interrupting it */
+             * one recorded later wakes the poll through the pipe */
             struct pollfd wake = {
                 .fd = atalk_sigpipe_readfd(), .events = POLLIN
             };
@@ -1159,13 +1159,13 @@ void afp_over_dsi(AFPObj *obj)
                 }
 
                 if (poll(&wake, 1, -1) == 1
-                        && (wake.revents & (POLLERR | POLLHUP | POLLNVAL))) {
+                        && ((wake.revents & (POLLERR | POLLHUP | POLLNVAL))
+                            || ((wake.revents & POLLIN)
+                                && atalk_sigpipe_drain() != 0))) {
                     LOG(log_error, logtype_afpd,
-                        "afp_over_dsi: signal pipe fd %d unusable", wake.fd);
-                    wake.fd = -1;
+                        "afp_over_dsi: signal pipe fd %d unusable, ending session", wake.fd);
+                    afp_dsi_die(EXITERR_SYS);
                 }
-
-                atalk_sigpipe_drain();
             }
 
             ipc_child_state(obj, DSI_RUNNING);

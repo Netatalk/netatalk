@@ -330,7 +330,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/netbsd-vm@5957cf330aef2e6ddc63c604364c99ce2e02b91d # v1.5.3
         with:
-          release: "11.1"
+          release: "11.1-microvm"
           copyback: true
           prepare: |
             set -e

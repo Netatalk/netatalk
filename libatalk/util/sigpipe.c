@@ -108,12 +108,32 @@ void atalk_sigpipe_notify(void)
 
 /*!
  * @brief Read every pending byte from the self-pipe
+ *
+ * EOF must be detected by read(): socket-backed pipes can report only POLLIN
+ * when their writer closes, without POLLHUP.
+ *
+ * @returns 0 when drained (EAGAIN/EWOULDBLOCK), or -1 with errno set on a
+ *          read error or EOF (EPIPE). Interrupted reads are retried.
  */
-void atalk_sigpipe_drain(void)
+int atalk_sigpipe_drain(void)
 {
     char buf[64];
 
-    while (read(sigpipe_fd[0], buf, sizeof(buf)) > 0) {
-        /* drain */
+    for (;;) {
+        ssize_t n = read(sigpipe_fd[0], buf, sizeof(buf));
+
+        if (n > 0 || (n < 0 && errno == EINTR)) {
+            continue;
+        }
+
+        if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            return 0;
+        }
+
+        if (n == 0) {
+            errno = EPIPE;
+        }
+
+        return -1;
     }
 }
