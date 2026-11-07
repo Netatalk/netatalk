@@ -24,22 +24,34 @@
 /* a function this kernel inlines or names otherwise has no probe */
 #pragma D option zdefs
 
+/* every function prints, at 0 when nothing called it */
+BEGIN
+{
+	@n["zfs_freebsd_cachedlookup"] = sum(0);
+	@n["zfs_lookup"] = sum(0);
+	@n["zfs_vptocnp"] = sum(0);
+	@n["zap_value_search"] = sum(0);
+	@n["vn_fullpath_dir"] = sum(0);
+	@ns["zap_value_search"] = sum(0);
+	@ns["vn_fullpath_dir"] = sum(0);
+}
+
 fbt::zfs_freebsd_cachedlookup:entry
 /pid == $1/
 {
-	@n["zfs_freebsd_cachedlookup"] = count();
+	@n["zfs_freebsd_cachedlookup"] = sum(1);
 }
 
 fbt::zfs_lookup:entry
 /pid == $1/
 {
-	@n["zfs_lookup"] = count();
+	@n["zfs_lookup"] = sum(1);
 }
 
 fbt::zfs_vptocnp:entry
 /pid == $1/
 {
-	@n["zfs_vptocnp"] = count();
+	@n["zfs_vptocnp"] = sum(1);
 }
 
 fbt::zap_value_search:entry
@@ -51,7 +63,7 @@ fbt::zap_value_search:entry
 fbt::zap_value_search:return
 /self->z0/
 {
-	@n["zap_value_search"] = count();
+	@n["zap_value_search"] = sum(1);
 	@ns["zap_value_search"] = sum(timestamp - self->z0);
 	@scan = quantize((timestamp - self->z0) / 1000);
 	self->z0 = 0;
@@ -66,7 +78,7 @@ fbt::vn_fullpath_dir:entry
 fbt::vn_fullpath_dir:return
 /self->f0/
 {
-	@n["vn_fullpath_dir"] = count();
+	@n["vn_fullpath_dir"] = sum(1);
 	@ns["vn_fullpath_dir"] = sum(timestamp - self->f0);
 	self->f0 = 0;
 }

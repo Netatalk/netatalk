@@ -207,6 +207,9 @@ def main():
          and sorted(int(r["did"]) for r in gap_rows) == [1, 3, 4, 5]),
         ("the connection is numbered, not addressed",
          all(r["conn"] == "c1" for r in rows)),
+        ("the slow lines and the CSV carry the request bitmaps",
+         re.search(r"slow: .* bitmaps f0001 d0100$", text, re.M) is not None
+         and all(r["bitmaps"] == "f0001 d0100" for r in rows)),
     ]
     failed = [name for name, ok in checks if not ok]
     for name, ok in checks:

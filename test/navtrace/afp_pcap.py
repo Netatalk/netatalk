@@ -12,6 +12,7 @@ with its reply by DSI request ID and prints, per phase:
   - the time the client spent between a reply and its next request
   - how many names the request paths carry, and how many parent hops
   - the DIDs requested most often
+  - the slowest requests, with their file and directory bitmaps
 
 Server time is the reply's first byte minus the later of the request's last
 byte and the previous reply's last byte on the connection, since afpd serves
@@ -102,6 +103,9 @@ PATH_AT = {
     29: 10, 30: 10, 34: 12, 35: 10, 66: 18, 68: 22, 69: 30, 72: 20,
     73: 14, 75: 30, 78: None,
 }
+
+# requests with a file bitmap at offset 8 and a directory bitmap at 10
+BITMAPS_AT = {9, 34, 66, 68}
 
 
 def read_pcap(path):
@@ -417,6 +421,9 @@ def main():
             if afp in PATH_AT and len(payload) >= 8:
                 vol, did = struct.unpack(">HI", payload[2:8])
             names, hops, path = decode_path(payload, PATH_AT.get(afp), tokens)
+            bitmaps = ""
+            if afp in BITMAPS_AT and len(payload) >= 12:
+                bitmaps = "f%04x d%04x" % struct.unpack(">HH", payload[8:12])
             reply = None
             for r in replies.get(reqid, []):
                 if r[0] >= t_req:
@@ -431,7 +438,7 @@ def main():
                 "cmd": AFP_CMDS.get(afp, "AFP%d" % afp),
                 "result": reply[2] if reply else None,
                 "vol": vol, "did": did, "names": names, "hops": hops,
-                "path": path,
+                "path": path, "bitmaps": bitmaps,
             })
 
     rows.sort(key=lambda r: r["t"])
@@ -463,7 +470,7 @@ def main():
             w = csv.writer(f)
             w.writerow(["t", "phase", "conn", "cmd", "result", "vol", "did",
                         "names", "hops", "path", "server_us",
-                        "client_gap_us"])
+                        "client_gap_us", "bitmaps"])
             for r in rows:
                 w.writerow(["%.6f" % r["t"], r["phase"], r["conn"], r["cmd"],
                             r["result"], r["vol"], r["did"], r["names"],
@@ -471,7 +478,8 @@ def main():
                             "" if r["server_us"] is None
                             else "%.0f" % r["server_us"],
                             "" if r["client_gap_us"] is None
-                            else "%.0f" % r["client_gap_us"]])
+                            else "%.0f" % r["client_gap_us"],
+                            r["bitmaps"]])
 
     report(rows, args.levels)
 
@@ -521,8 +529,9 @@ def report(rows, levels):
         slow = sorted((r for r in rs if r["server_us"] is not None),
                       key=lambda r: -r["server_us"])[:5]
         for r in slow:
-            print("   slow: %8.0f us %-18s did %s path %r" % (
-                r["server_us"], r["cmd"], r["did"], r["path"]))
+            print("   slow: %8.0f us %-18s did %s path %r%s" % (
+                r["server_us"], r["cmd"], r["did"], r["path"],
+                " bitmaps " + r["bitmaps"] if r["bitmaps"] else ""))
 
 
 if __name__ == "__main__":

@@ -9,7 +9,8 @@
 #   -d  the ZFS dataset of the volume, for its properties
 #   -o  output folder (default /var/tmp/navtrace-<date>)
 #   -t  trace afpd with DTrace: per-request times through netatalk's afp
-#       provider when the build has it, else per-system-call totals, and
+#       provider when the build has it, split into time on CPU, asleep and
+#       runnable with what afpd slept on, else per-system-call totals; and
 #       ZFS name-cache misses and directory scans
 #   -s  with -t, the per-system-call totals in place of the request times,
 #       whose probes would add to them: a run of its own
@@ -49,14 +50,14 @@ while getopts u:c:i:d:o:tsm opt; do
         s) syscalls=1 ;;
         m) debug=1 ;;
         *)
-            sed -n '3,17p' "$0"
+            sed -n '3,18p' "$0"
             exit 2
             ;;
     esac
 done
 
 if [ -z "$user" ] || [ -z "$client" ]; then
-    sed -n '3,17p' "$0"
+    sed -n '3,18p' "$0"
     exit 2
 fi
 
@@ -113,8 +114,8 @@ afpd -V > "$out/afpd-V.txt" 2>&1
 grep "DTrace probes" "$out/afpd-V.txt"
 conf=$(awk -F':[[:space:]]*' '/afp.conf:/ {print $2; exit}' "$out/afpd-V.txt")
 # every section but [Global] and [Homes] loses its name, every comment and
-# every line that is no option goes, and only the settings that shape the
-# walk and its caches keep their values
+# every line that is no option goes, and only the settings that shape how
+# requests are served keep their values
 redact_conf() {
     awk '
     /^[[:space:]]*$/ { print; next }
@@ -133,7 +134,7 @@ redact_conf() {
         key = tolower($0)
         sub(/[[:space:]]*=.*/, "", key)
         sub(/^[[:space:]]*/, "", key)
-        if (key !~ /^(follow symlinks|casefold|ea|appledouble|cnid scheme|cnid dbd .*|read only|unix charset|vol charset|mac charset|dircache.*|log level|afp read locks|vol size limit|spotlight|search|convert appledouble|delete veto files|invisible dots|use dots|legacy icon|virtual icon|network trash folder|time machine|acls|map acls|chmod request|file perm|directory perm|umask|server quantum|dsireadbuf|sendfile|splice.*|recvfile.*|preexec close|afp version|zeroconf|uam list)$/) {
+        if (key !~ /^(follow symlinks|case sensitive|casefold|ea|cnid scheme|cnid dev|read only|unix charset|vol charset|mac charset|dircache.*|log level|log microseconds|vol size limit|stat vol|spotlight|search db|convert appledouble|delete veto files|invisible dots|legacy icon|time machine|acls|map acls|chmod request|unix priv|strict locking|file perm|directory perm|umask|server quantum|dsireadbuf|tcprcvbuf|tcpsndbuf|use sendfile|splice size|recvfile|preexec close|zeroconf|uam list)$/) {
             sub(/=.*/, "= REDACTED")
         } else {
             sub(/[[:space:]]*[;#].*$/, "")
@@ -210,10 +211,21 @@ tcpdump -i "$iface" -s 0 -B 16384 -U -w "$out/afp.pcap" \
 tcpdump_pid=$!
 trap abort_run INT TERM HUP
 
+# dtrace -l reports a description that matches no probe on stderr, below
+# its header line, and exits 0
+has_probe() {
+    dtrace -l -n "$1" 2> /dev/null | awk 'NR > 1 {n++} END {exit n == 0}'
+}
+
 if [ "$trace" -eq 1 ]; then
     kldstat -q -m dtraceall || kldload dtraceall
-    if [ "$syscalls" -eq 0 ] \
-        && dtrace -l -n "afp${pid}:::afpfunc-start" > /dev/null 2>&1; then
+    # a function with no probe on this kernel reads 0 in the ZFS report too;
+    # dtrace -o appends to this list of them
+    grep -o 'fbt::[a-z_]*:entry' "$here/zfs_lookups.d" | sort -u \
+        | while read -r p; do
+            has_probe "$p" || echo "no probe on this kernel: $p"
+        done > "$out/dtrace-zfs.txt"
+    if [ "$syscalls" -eq 0 ] && has_probe "afp${pid}:::afpfunc-start"; then
         dtrace -q -s "$here/afpd_requests.d" -p "$pid" \
             -o "$out/dtrace-requests.txt" 2> "$out/dtrace-requests.err" &
     else
@@ -242,13 +254,14 @@ if ! kill -0 "$tcpdump_pid" 2> /dev/null; then
 fi
 cat << EOF
 
-Capturing. On the Mac, in Terminal, with the volume mounted at /Volumes/VOL:
+Capturing. On the Mac, in Terminal, with VOL replaced by the volume's name
+as /Volumes shows it:
 
-  stat /Volumes/VOL/navmark-down1   # marks the start of the descent
+  stat "/Volumes/VOL/navmark-down1"   # marks the start of the descent
   ... open the folders one level at a time, down the tree ...
-  stat /Volumes/VOL/navmark-up1     # marks the start of the ascent
+  stat "/Volumes/VOL/navmark-up1"     # marks the start of the ascent
   ... go back up one level at a time (Command-Up) ...
-  stat /Volumes/VOL/navmark-end     # marks the end
+  stat "/Volumes/VOL/navmark-end"     # marks the end
 
 Each stat answers "No such file or directory"; that is expected.
 Press Enter here when done.
@@ -355,10 +368,10 @@ for f in "$out"/dircache."$pid".*; do
 done
 if [ -n "$dataset" ]; then
     # the dataset and pool keep their roles in every ZFS file; a dataset
-    # property that names a place, a snapshot, a share or a key loses its
-    # value, a user property goes with its name, an inherited one its
-    # ancestor's name; in the pool files a device label reads DEVICE, and
-    # an entry of the errors list ENTRY
+    # property that names a place, a snapshot, a share or a key, or tells
+    # the dataset apart, loses its value, a user property goes with its
+    # name, an inherited one its ancestor's name; in the pool files a device
+    # label reads DEVICE, and an entry of the errors list ENTRY
     strip='function strip(s, needle, repl,    out, i) {
             out = ""
             while (needle != "" && (i = index(s, needle)) > 0) {
@@ -370,7 +383,7 @@ if [ -n "$dataset" ]; then
     awk -v ds="$dataset" -v pool="${dataset%%/*}" "$strip"'
         $2 ~ /:/ { next }
         $4 == "inherited" { NF = 4 }
-        $2 ~ /^(mountpoint|origin|sharenfs|sharesmb|encryptionroot|keylocation|receive_resume_token|redact_snaps|mlslabel)$/ {
+        $2 ~ /^(mountpoint|origin|sharenfs|sharesmb|encryptionroot|keylocation|receive_resume_token|redact_snaps|mlslabel|guid)$/ {
             src = $NF
             $3 = "REDACTED"
             $4 = src
@@ -406,17 +419,19 @@ report-pcap.txt, requests.csv   the AFP requests, per phase and command
 report-counters.txt             kernel counter changes over the run
 report-log.txt                  the afpd debug log per command and phase (-m)
 dircache.*.first, .second       the session's dircache before and after (-m)
-dtrace-*.txt                    request, system call and ZFS lookup counts (-t)
+dtrace-*.txt                    request times, on CPU and asleep, what afpd
+                                slept on, system calls and ZFS lookups (-t)
 counters-*, vmstat-z-*, ps-*, procstat-files-*   snapshots before and after
 system.txt, afpd-V.txt, afp.conf, zfs-dataset.txt, zpool-*   the configuration
 EOF
 # the archive lives in the folder this run made, where no other user could
-# place a path for it; the reports to share are for everyone, and the folder
-# opens for traversal only
-tar -czf "$out/share.tar.gz" -C "$out" share
-chmod 711 "$out"
+# place a path for it; the reports to share are for everyone, in the archive
+# too, and the folder opens for traversal only
 chmod 755 "$share"
-chmod 644 "$share"/* "$out/share.tar.gz"
+chmod 644 "$share"/*
+tar -czf "$out/share.tar.gz" -C "$out" share
+chmod 644 "$out/share.tar.gz"
+chmod 711 "$out"
 echo "collect.sh: done; share $out/share.tar.gz; the raw capture, log and" \
     "dumps stay in $out"
 exit "$status"

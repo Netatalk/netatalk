@@ -1191,7 +1191,8 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    if (CreateOnly + NavigateOnly + RemoveOnly > 1) {
+    if ((CreateOnly && (NavigateOnly || RemoveOnly))
+            || (NavigateOnly && RemoveOnly)) {
         fprintf(stderr, "navtest: -c, -n and -x exclude one another\n");
         return 2;
     }
