@@ -1,5 +1,5 @@
 {
-"commit": "8318bbcfb000ee1ad984c0f34e55a588597ad832",
+"commit": "d67524a5ed1d6bd3ae2f6302ef23130c20c4ca45",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -48396,7 +48396,7 @@
 "file": "libatalk/util/sigpipe.c",
 "id": "libatalk/util/sigpipe.c#atalk_sigpipe_drain",
 "kind": "function",
-"line": 112,
+"line": 118,
 "static": false
 },
 {
@@ -52252,7 +52252,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_copy_file",
 "kind": "function",
-"line": 612,
+"line": 625,
 "static": true
 },
 {
@@ -52260,7 +52260,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_read",
 "kind": "function",
-"line": 787,
+"line": 800,
 "static": false
 },
 {
@@ -52268,7 +52268,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_read_file",
 "kind": "function",
-"line": 672,
+"line": 685,
 "static": false
 },
 {
@@ -52276,7 +52276,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_receive",
 "kind": "function",
-"line": 922,
+"line": 935,
 "static": false
 },
 {
@@ -52284,7 +52284,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_send",
 "kind": "function",
-"line": 841,
+"line": 854,
 "static": false
 },
 {
@@ -52292,7 +52292,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_stream_write",
 "kind": "function",
-"line": 472,
+"line": 485,
 "static": false
 },
 {
@@ -52340,7 +52340,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#dsi_wait_input",
 "kind": "function",
-"line": 406,
+"line": 407,
 "static": false
 },
 {
@@ -59100,7 +59100,7 @@
 "file": "libatalk/dsi/dsi_stream.c",
 "id": "libatalk/dsi/dsi_stream.c#sendfile_call",
 "kind": "function",
-"line": 547,
+"line": 560,
 "static": true
 },
 {

@@ -5,7 +5,7 @@ description: "AFP server options, session state and transport callback types."
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/globals.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-19T23:19:03+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-09T10:23:20+11:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -129,7 +129,7 @@ Defined at line 197.
 * `int cnx_max`
 * `int vols_skipped`: volume sections the last [load_afp_conf_vols()](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols) could not turn into volumes
 * `void(* logout`
-* `void(* exit`
+* `void(* exit`: Called through by [dsi_wait_input](../../libatalk/dsi/dsi_stream.c.md#dsi_wait_input).
 * `int(* reply`
 * `int(* attention`
 * `void * sl_ctx`: opaque handle for the active search backend

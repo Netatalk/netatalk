@@ -5,7 +5,7 @@ description: "DSI stream input and output on the session socket."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/dsi/dsi_stream.c"
 tags: ["libatalk/dsi"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-09T10:23:20+11:00 }
 ---
 
 Part of the [libatalk/dsi](../dsi.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -197,7 +197,7 @@ Calls through [`DSI::proto_close`](../../include/atalk/dsi.h.md#struct-dsi): no 
 int dsi_wait_input(DSI *dsi)
 ```
 
-Defined at lines 406 to 455. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 407 to 468. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Wait until the client sends more of the request being read.
 
@@ -206,11 +206,13 @@ The tickle timer that disconnects a client silent for the timeout option's count
 Parameters:
 * `dsi`: [DSI](../../include/atalk/dsi.h.md#struct-dsi) session
 
-Returns: 0 once the socket has input; -1 with errno ETIMEDOUT at the bound or ECONNABORTED for a hand-over, both after the session disconnected, or with the errno of poll
+Returns: 0 once the socket has input; -1 with errno ETIMEDOUT at the bound or ECONNABORTED for a hand-over, both after the session disconnected, or with the errno of poll. An unusable signal pipe terminates the session through its exit callback, or returns -1 if none is set.
 
 Calls: [atalk_sigpipe_drain](../util/sigpipe.c.md#atalk_sigpipe_drain), [atalk_sigpipe_readfd](../util/sigpipe.c.md#atalk_sigpipe_readfd), [dsi_disconnect](dsi_stream.c.md#dsi_disconnect), [monotonic_ms](dsi_stream.c.md#monotonic_ms)
 
 Called by: [buf_read](dsi_stream.c.md#buf_read), [dsi_write_file](dsi_write.c.md#dsi_write_file)
+
+Calls through [`AFPObj::exit`](../../include/atalk/globals.h.md#struct-afpobj): no table assigns this field
 
 Mentioned in the documentation of: [buf_read](dsi_stream.c.md#buf_read)
 
@@ -220,7 +222,7 @@ Mentioned in the documentation of: [buf_read](dsi_stream.c.md#buf_read)
 ssize_t dsi_stream_write(DSI *, void *, const size_t, const int mode)
 ```
 
-Defined at lines 472 to 528. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 485 to 541. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send length raw bytes to the client socket.
 
@@ -244,7 +246,7 @@ Called by: [dsi_attention](dsi_attn.c.md#dsi_attention), [dsi_read](dsi_read.c.m
 static int sendfile_call(const DSI *dsi, int fromfd, off_t pos, size_t count, char *hdr, size_t hdrlen, size_t *sent)
 ```
 
-Defined at lines 547 to 595.
+Defined at lines 560 to 608.
 
 Make one sendfile call: the unsent header bytes, then file bytes.
 
@@ -269,7 +271,7 @@ Called by: [dsi_stream_read_file](dsi_stream.c.md#dsi_stream_read_file)
 static int dsi_stream_copy_file(DSI *dsi, int fromfd, off_t pos, size_t *left, char *hdr, size_t hdrlen)
 ```
 
-Defined at lines 612 to 647.
+Defined at lines 625 to 660.
 
 Send the rest of a read reply through the request buffer.
 
@@ -295,7 +297,7 @@ Called by: [dsi_stream_read_file](dsi_stream.c.md#dsi_stream_read_file)
 int dsi_stream_read_file(DSI *, int, off_t off, const size_t len, const int err)
 ```
 
-Defined at lines 672 to 771. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 685 to 784. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send a streamed FPRead reply whose payload comes from a file through sendfile.
 
@@ -320,7 +322,7 @@ Called by: [read_fork](../../etc/afpd/fork.c.md#read_fork)
 size_t dsi_stream_read(DSI *, void *, const size_t)
 ```
 
-Defined at lines 787 to 826. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 800 to 839. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Read length bytes from the read-ahead buffer and the socket.
 
@@ -345,7 +347,7 @@ Called by: [dsi_buffered_stream_read](dsi_stream.c.md#dsi_buffered_stream_read),
 int dsi_stream_send(DSI *, void *, size_t)
 ```
 
-Defined at lines 841 to 912. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 854 to 925. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Send the reply header and length payload bytes as one [DSI](../../include/atalk/dsi.h.md#struct-dsi) message.
 
@@ -368,7 +370,7 @@ Called by: [dsi_cmdreply](dsi_cmdreply.c.md#dsi_cmdreply), [dsi_readinit](dsi_re
 int dsi_stream_receive(DSI *)
 ```
 
-Defined at lines 922 to 1022. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
+Defined at lines 935 to 1035. Declared in [include/atalk/dsi.h](../../include/atalk/dsi.h.md).
 
 Read [DSI](../../include/atalk/dsi.h.md#struct-dsi) command and data.
 

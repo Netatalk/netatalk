@@ -5,7 +5,7 @@ description: "AFP sessions over ASP: signal handling and the request loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_asp.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T20:07:02+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-09T10:23:20+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -209,7 +209,7 @@ Uses file-scope variables: `asp_die_pending`, `asp_getmesg_pending`, `asp_timedo
 void afp_over_asp(AFPObj *obj)
 ```
 
-Defined at lines 318 to 687.
+Defined at lines 318 to 689.
 
 Run an AFP session over [ASP](../../include/atalk/asp.h.md#struct-asp) until the client closes it.
 
