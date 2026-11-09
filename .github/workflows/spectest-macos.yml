@@ -287,8 +287,8 @@ jobs:
         run: |
           curl --proto '=https' --location --fail \
             -o "$RUNNER_TEMP/MacPorts.pkg" \
-            https://distfiles.macports.org/MacPorts/MacPorts-2.12.6-15-Sequoia.pkg
-          echo "2d6d58ff3ff60e70f8dc05cb2df9df3137e3d7c0c6d6f6236d68c8ba03343e34  $RUNNER_TEMP/MacPorts.pkg" | shasum -a 256 -c -
+            https://distfiles.macports.org/MacPorts/MacPorts-2.12.7-15-Sequoia.pkg
+          echo "87b2e87ed7adc4aca947b42eb7ff991614cc0edfccb486237f2bbc75f28aae63  $RUNNER_TEMP/MacPorts.pkg" | shasum -a 256 -c -
           sudo installer -pkg "$RUNNER_TEMP/MacPorts.pkg" -target /
           echo "/opt/local/bin" >> "$GITHUB_PATH"
           echo "/opt/local/sbin" >> "$GITHUB_PATH"
