@@ -130,7 +130,7 @@ jobs:
           path: build/meson-logs
 
   build-archlinux:
-    name: Arch Linux base latest
+    name: Arch Linux
     runs-on: ubuntu-26.04
     timeout-minutes: 24
     container:
@@ -141,7 +141,7 @@ jobs:
           persist-credentials: false
       - name: Install dependencies
         run: |
-          pacman -Sy --noconfirm \
+          pacman --sync --refresh --sysupgrade --noconfirm --needed \
             avahi \
             bison \
             cmark-gfm \
