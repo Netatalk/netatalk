@@ -296,8 +296,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # not installing mysql/mariadb or rust/stuffit-rs here, because the combination of
-          # MacPorts and GitHub macOS 15 Intel runner is causing flakiness in the job
+          # only a subset of the optional dependencies are available as MacPorts Intel binary ports
           sudo /opt/local/bin/port -N install \
             bstring \
             cmark-gfm \
@@ -307,7 +306,6 @@ jobs:
             libiconv \
             meson \
             ninja \
-            openldap \
             pkgconfig \
             sqlite3 \
             talloc
