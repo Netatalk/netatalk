@@ -126,7 +126,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: type=raw,value=${{ github.sha }}
-      # As the correctness image but release, so the numbers exclude the asserts
+      # As the correctness image but release, so the numbers exclude the asserts,
+      # and with the newest SQLite release built from source
       - name: Build and push container image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -135,6 +136,7 @@ jobs:
           push: true
           build-args: |
             BUILDTYPE=release
+            SQLITE_FROM_SOURCE=true
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
 
