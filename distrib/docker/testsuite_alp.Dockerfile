@@ -63,10 +63,51 @@ ENV BUILD_DEPS=$BUILD_DEPS
 # Perf jobs pass release, so their numbers do not include the asserts
 ARG BUILDTYPE=debugoptimized
 
+# Perf jobs pass true, to build the newest SQLite release from source
+ARG SQLITE_FROM_SOURCE=false
+
 RUN apk update \
 &&  apk add --no-cache \
     $RUN_DEPS \
     $BUILD_DEPS
+
+WORKDIR /sqlite-code
+
+# The flags and library options of aports main/sqlite/APKBUILD. pkgconf and
+# the musl loader search /usr/local first, so every libsqlite3 user loads it
+RUN if [ "$SQLITE_FROM_SOURCE" = true ]; then \
+        apk add --no-cache curl \
+    &&  curl -fsS -o download.html https://sqlite.org/download.html \
+    &&  product=$(grep -m 1 -E '^PRODUCT,[0-9.]+,[0-9]{4}/sqlite-autoconf-[0-9]+\.tar\.gz,' download.html) \
+    &&  curl -fsS -o sqlite.tar.gz "https://sqlite.org/$(echo "$product" | cut -d , -f 3)" \
+    &&  echo "$(echo "$product" | cut -d , -f 5)  sqlite.tar.gz" | sha3sum -a 256 -c - \
+    &&  tar -xzf sqlite.tar.gz --strip-components=1 \
+    &&  CFLAGS="-O2 -fstack-clash-protection -Wformat -Werror=format-security \
+            -DSQLITE_ENABLE_FTS3_PARENTHESIS \
+            -DSQLITE_ENABLE_COLUMN_METADATA \
+            -DSQLITE_SECURE_DELETE \
+            -DSQLITE_ENABLE_UNLOCK_NOTIFY \
+            -DSQLITE_ENABLE_RTREE \
+            -DSQLITE_ENABLE_GEOPOLY \
+            -DSQLITE_USE_URI \
+            -DSQLITE_ENABLE_DBSTAT_VTAB \
+            -DSQLITE_SOUNDEX \
+            -DSQLITE_MAX_VARIABLE_NUMBER=250000" \
+        LDFLAGS="-Wl,--as-needed,-O1,--sort-common -Wl,-z,pack-relative-relocs" \
+        ./configure \
+            --prefix=/usr/local \
+            --enable-threadsafe \
+            --disable-readline \
+            --enable-session \
+            --enable-static \
+            --enable-fts3 \
+            --enable-fts4 \
+            --enable-fts5 \
+            --soname=legacy \
+    &&  make -j"$(nproc)" \
+    &&  make install DESTDIR=/staging \
+    &&  cp -a /staging/usr/local/. /usr/local/; \
+    fi
 
 WORKDIR /netatalk-client-code
 ADD "https://netatalk.io/NetatalkDistributionPublicKey.asc" netatalk-distribution.asc
