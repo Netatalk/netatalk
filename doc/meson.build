@@ -36,6 +36,9 @@ if build_testsuite
         'afp_speedtest',
         'afparg',
     ]
+    manpage_admin_commands += [
+        'netatalk-diag',
+    ]
 endif
 
 if enable_appletalk

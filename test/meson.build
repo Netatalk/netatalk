@@ -7,6 +7,7 @@ if build_tests
     subdir('dbd')
     subdir('libatalk')
     subdir('nad')
+    subdir('netatalk-diag')
     subdir('uams')
 
     if have_iconv

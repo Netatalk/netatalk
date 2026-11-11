@@ -53,6 +53,7 @@ jobs:
           usesh: true
           prepare: |
             set -e
+            pkg upgrade -y
             pkg install -y \
               avahi \
               curl \
@@ -67,11 +68,8 @@ jobs:
               openldap26-client \
               perl5 \
               pkgconf \
-              py39-gdbm \
-              py39-sqlite3 \
-              py39-tkinter \
               rust \
-              sqlite \
+              sqlite3 \
               talloc \
               xapian-core
             curl --proto '=https' --location --fail -o stuffit-rs.tar.gz "${{ env.STUFFIT_RS_TARBALL_URL }}"

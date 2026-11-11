@@ -27,3 +27,23 @@ if perl.found() and grep.found()
         install_mode: 'rwxr-xr-x',
     )
 endif
+
+if build_testsuite and perl.found()
+    diag_script = configure_file(
+        input: 'netatalk-diag.sh',
+        output: 'netatalk-diag',
+        configuration: cdata,
+    )
+
+    install_data(
+        diag_script,
+        install_dir: sbindir,
+        install_mode: 'rwxr-xr-x',
+    )
+
+    install_data(
+        'netatalk_diag.pl',
+        install_dir: libexecdir / 'netatalk',
+        install_mode: 'rw-r--r--',
+    )
+endif
