@@ -57,7 +57,7 @@ static int wait_for_idle_timeout(void)
     unsigned int timeout;
     unsigned int minimum_wait;
 
-    if (get_positive_env_uint("AFP_SLEEP_TEST_WAIT", seconds, UINT_MAX,
+    if (get_positive_env_uint("AFP_SLEEP_TEST_WAIT", seconds, 600,
                               &seconds) ||
             get_positive_env_uint("AFP_TICKLEVAL", 30, INT_MAX,
                                   &tickleval) ||
@@ -72,7 +72,7 @@ static int wait_for_idle_timeout(void)
 
     minimum_wait = (timeout + 1) * tickleval;
 
-    if (seconds <= 120 || seconds <= minimum_wait) {
+    if (seconds <= 120 || seconds <= minimum_wait) { //NOSONAR no DOS risk, test code
         fprintf(stderr,
                 "AFP_SLEEP_TEST_WAIT must exceed 120 seconds and %u seconds "
                 "for AFP_TICKLEVAL=%u and AFP_TIMEOUT=%u\n",
