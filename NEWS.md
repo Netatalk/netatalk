@@ -20,6 +20,12 @@ Changes in 4.7.0
   that account, not in the server's central CNID store. Every [Homes] volume
   is now private to its owner. To keep homes shared, set `private =`
   with no value in [Homes], see the Upgrading chapter, GitHub #3419
+* NEW: netatalk-diag: a script that collects diagnostics of a slow AFP
+  server into one archive to send to the developers: the AFP traffic, the
+  server's counters, and optionally a trace of one afpd session, with
+  reports on where the time went and every file, folder, volume, user, and
+  host name and every address removed; installed with the AFP test suite
+  (-Dwith-testsuite=true), GitHub #3462
 * REM: cnid: Removed the deprecated Berkeley DB (dbd) CNID backend with its
   cnid_dbd and cnid_metad daemons and the 'cnid server', 'cnid listen' and
   'vol dbnest' options; afpd serves a volume whose scheme the installation
