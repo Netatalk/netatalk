@@ -82,7 +82,7 @@ static int wait_for_idle_timeout(void)
 
     fprintf(stdout, "sleep %u seconds\n", seconds);
 
-    while ((seconds = sleep(seconds)) != 0) {
+    while ((seconds = sleep(seconds)) != 0) { //NOSONAR no DOS risk, test code
         /* A signal must not shorten the interval being tested. */
     }
 
