@@ -53,8 +53,8 @@ static int fflg, iflg, nflg, vflg;
 static AFPObj *afp_obj;
 static afpvol_t svolume, dvolume;
 static cnid_t did, pdid;
-static int copy(const char *, const char *);
-static int do_move(const char *, const char *);
+static int copy(char *, char *);
+static int do_move(char *, char *);
 
 /*!
  * @brief Print the usage and the options of nad mv, then exit with EXIT_FAILURE
@@ -257,7 +257,7 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
  * @param[in] to    target path
  * @returns 0, or 1 or -1 for an error
  */
-static int do_move(const char *from, const char *to)
+static int do_move(char *from, char *to)
 {
     struct stat sb;
     int ask, ch, first;
@@ -552,7 +552,7 @@ static int remove_path(const char *path)
  * @param[in] to    target path
  * @returns 0, or 1 for an error
  */
-static int copy(const char *from, const char *to)
+static int copy(char *from, char *to)
 {
     struct stat sb;
 
@@ -576,12 +576,12 @@ static int copy(const char *from, const char *to)
 
     /* Copy source to destination. */
     {
-        const char *cp_argv[] = {
+        char *cp_argv[] = {
             "cp", vflg ? "-Rpv" : "-Rp", from, to, NULL
         };
         optind = 1;
 
-        if (nad_cp(4, (char **)cp_argv, afp_obj) != 0) {
+        if (nad_cp(4, cp_argv, afp_obj) != 0) {
             NAD_INFO("cp -R %s %s: failed", from, to);
             return 1;
         }
@@ -589,10 +589,10 @@ static int copy(const char *from, const char *to)
 
     /* Delete the source. */
     if (svolume.vol->v_path) {
-        const char *rm_argv[] = { "rm", "-R", from, NULL };
+        char *rm_argv[] = { "rm", "-R", from, NULL };
         optind = 1;
 
-        if (nad_rm(3, (char **)rm_argv, afp_obj) != 0) {
+        if (nad_rm(3, rm_argv, afp_obj) != 0) {
             NAD_INFO("rm -R %s: failed", from);
             return 1;
         }

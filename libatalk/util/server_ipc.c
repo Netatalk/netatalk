@@ -786,7 +786,7 @@ int ipc_server_read(server_child_t *children, int fd)
  * @param[in] msg      message body
  * @returns 0, or -1 for a message over IPC_MAXMSGSIZE or a failed write
  */
-int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
+int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, const void *msg)
 {
     char block[IPC_MAXMSGSIZE], *p;
     uint32_t msglen;

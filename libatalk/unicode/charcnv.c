@@ -738,7 +738,7 @@ size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst,
  * @param[in]  outlen  size of @p dst
  * @returns the output length, or `(size_t)-1` for an error
  */
-size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
+size_t charset_decompose(charset_t ch, const char *src, size_t inlen, char *dst,
                          size_t outlen)
 {
     char *buffer;
