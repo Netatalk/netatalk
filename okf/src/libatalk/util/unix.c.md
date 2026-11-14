@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T13:31:45+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -344,7 +344,9 @@ Parameters:
 
 Returns: the word, which the caller frees, or NULL when out of memory
 
-Called by: [cnid_sqlite_open](../cnid/cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_refused](../cnid/cnid_sqlite.c.md#cnid_sqlite_refused)
+Called by: [cnid_sqlite_open](../cnid/cnid_sqlite.c.md#cnid_sqlite_open), [cnid_sqlite_refused](../cnid/cnid_sqlite.c.md#cnid_sqlite_refused), [shellcmd_xlate](netatalk_conf.c.md#shellcmd_xlate)
+
+Mentioned in the documentation of: [shellcmd_xlate](netatalk_conf.c.md#shellcmd_xlate)
 
 ### getcwdpath
 

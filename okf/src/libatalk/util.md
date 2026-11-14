@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "libatalk/util"
-description: "20 files, 206 functions."
+description: "20 files, 209 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/libatalk/util"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T13:31:45+01:00 }
 ---
 
 # Files
@@ -87,4 +87,4 @@ generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
 
 No call, table or documentation edge reaches these functions in the scanned sources. Entry points reached through dlopen, signals, callbacks passed as arguments, or code outside the scanned directories appear here too.
 
-[conf_testutil_set_lastvid](util/netatalk_conf.c.md#conf_testutil_set_lastvid), [getvolbyname](util/netatalk_conf.c.md#getvolbyname), [ipc_get_hints_dropped](util/server_ipc.c.md#ipc_get_hints_dropped), [ipc_get_hints_sent](util/server_ipc.c.md#ipc_get_hints_sent), [lock_reg](util/locking.c.md#lock_reg), [make_log_entry](util/logger.c.md#make_log_entry), [netatalk_panic](util/fault.c.md#netatalk_panic), [prequeue](util/queue.c.md#prequeue), [volume_unlink](util/netatalk_conf.c.md#volume_unlink)
+[conf_testutil_expand_hook](util/netatalk_conf.c.md#conf_testutil_expand_hook), [conf_testutil_set_lastvid](util/netatalk_conf.c.md#conf_testutil_set_lastvid), [getvolbyname](util/netatalk_conf.c.md#getvolbyname), [ipc_get_hints_dropped](util/server_ipc.c.md#ipc_get_hints_dropped), [ipc_get_hints_sent](util/server_ipc.c.md#ipc_get_hints_sent), [lock_reg](util/locking.c.md#lock_reg), [make_log_entry](util/logger.c.md#make_log_entry), [netatalk_panic](util/fault.c.md#netatalk_panic), [prequeue](util/queue.c.md#prequeue), [volume_unlink](util/netatalk_conf.c.md#volume_unlink)

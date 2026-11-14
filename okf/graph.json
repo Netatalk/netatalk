@@ -1,5 +1,5 @@
 {
-"commit": "d67524a5ed1d6bd3ae2f6302ef23130c20c4ca45",
+"commit": "4c1c47c251c611e425f1a49d139b53ecd019595c",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -18567,6 +18567,11 @@
 "to": "libatalk/util/netatalk_conf.c#conf_parse_bool"
 },
 {
+"from": "libatalk/util/netatalk_conf.c#conf_testutil_expand_hook",
+"kind": "call",
+"to": "libatalk/util/netatalk_conf.c#shellcmd_xlate"
+},
+{
 "from": "libatalk/util/netatalk_conf.c#conf_testutil_set_lastvid",
 "kind": "use",
 "to": "libatalk/util/netatalk_conf.c#lastvid"
@@ -19832,6 +19837,11 @@
 "from": "libatalk/util/netatalk_conf.c#creatvol",
 "kind": "call",
 "to": "libatalk/util/netatalk_conf.c#private_option_warning"
+},
+{
+"from": "libatalk/util/netatalk_conf.c#creatvol",
+"kind": "call",
+"to": "libatalk/util/netatalk_conf.c#shellcmd_xlate"
 },
 {
 "from": "libatalk/util/netatalk_conf.c#creatvol",
@@ -37382,6 +37392,26 @@
 "to": "etc/afpd/volume.c#markvol"
 },
 {
+"from": "libatalk/util/netatalk_conf.c#shellcmd_xlate",
+"kind": "doc",
+"to": "libatalk/util/unix.c#shell_quote"
+},
+{
+"from": "libatalk/util/netatalk_conf.c#shellcmd_xlate",
+"kind": "call",
+"to": "libatalk/util/unix.c#shell_quote"
+},
+{
+"from": "libatalk/util/netatalk_conf.c#shellcmd_xlate",
+"kind": "call",
+"to": "libatalk/util/netatalk_conf.c#shellcmd_escape_pair"
+},
+{
+"from": "libatalk/util/netatalk_conf.c#shellcmd_xlate",
+"kind": "call",
+"to": "libatalk/util/netatalk_conf.c#volxlate"
+},
+{
 "from": "etc/afpd/dircache.c#should_validate_cache_entry",
 "kind": "call",
 "to": "etc/afpd/dircache.c#validation_freq"
@@ -45668,7 +45698,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#accessvol",
 "kind": "function",
-"line": 724,
+"line": 921,
 "static": true
 },
 {
@@ -47052,7 +47082,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#afp_config_free",
 "kind": "function",
-"line": 4430,
+"line": 4625,
 "static": false
 },
 {
@@ -47060,7 +47090,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#afp_config_parse",
 "kind": "function",
-"line": 3714,
+"line": 3909,
 "static": false
 },
 {
@@ -47836,7 +47866,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#apply_multiprotocol_defaults",
 "kind": "function",
-"line": 1360,
+"line": 1557,
 "static": true
 },
 {
@@ -50356,7 +50386,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#conf_int_key_usable",
 "kind": "function",
-"line": 1073,
+"line": 1270,
 "static": true
 },
 {
@@ -50364,7 +50394,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#conf_key_present",
 "kind": "function",
-"line": 1053,
+"line": 1250,
 "static": true
 },
 {
@@ -50372,8 +50402,16 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#conf_parse_bool",
 "kind": "function",
-"line": 1009,
+"line": 1206,
 "static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/netatalk_conf.c",
+"id": "libatalk/util/netatalk_conf.c#conf_testutil_expand_hook",
+"kind": "function",
+"line": 894,
+"static": false
 },
 {
 "documented": true,
@@ -50828,7 +50866,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#creatvol",
 "kind": "function",
-"line": 1499,
+"line": 1696,
 "static": true
 },
 {
@@ -51012,7 +51050,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#dbpath_is_volume_root",
 "kind": "function",
-"line": 3507,
+"line": 3702,
 "static": true
 },
 {
@@ -52700,7 +52738,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#ext_cmp_key",
 "kind": "function",
-"line": 2710,
+"line": 2905,
 "static": true
 },
 {
@@ -52708,7 +52746,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#extmap_cmp",
 "kind": "function",
-"line": 2645,
+"line": 2840,
 "static": true
 },
 {
@@ -53012,7 +53050,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#free_extmap",
 "kind": "function",
-"line": 2687,
+"line": 2882,
 "static": true
 },
 {
@@ -53364,7 +53402,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getdefextmap",
 "kind": "function",
-"line": 2758,
+"line": 2953,
 "static": false
 },
 {
@@ -53380,7 +53418,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getextmap",
 "kind": "function",
-"line": 2728,
+"line": 2923,
 "static": false
 },
 {
@@ -53476,7 +53514,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getoption_bool",
 "kind": "function",
-"line": 1100,
+"line": 1297,
 "static": true
 },
 {
@@ -53484,7 +53522,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getoption_int",
 "kind": "function",
-"line": 1182,
+"line": 1379,
 "static": true
 },
 {
@@ -53492,7 +53530,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getoption_str",
 "kind": "function",
-"line": 892,
+"line": 1089,
 "static": true
 },
 {
@@ -53500,7 +53538,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getoption_strdup",
 "kind": "function",
-"line": 924,
+"line": 1121,
 "static": true
 },
 {
@@ -53508,7 +53546,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getoption_strdup_alias",
 "kind": "function",
-"line": 966,
+"line": 1163,
 "static": true
 },
 {
@@ -53516,7 +53554,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getoption_uint32_strict",
 "kind": "function",
-"line": 1215,
+"line": 1412,
 "static": true
 },
 {
@@ -53580,7 +53618,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getuserbypath",
 "kind": "function",
-"line": 3181,
+"line": 3376,
 "static": true
 },
 {
@@ -53596,7 +53634,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getvolbyname",
 "kind": "function",
-"line": 3479,
+"line": 3674,
 "static": false
 },
 {
@@ -53604,7 +53642,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getvolbypath",
 "kind": "function",
-"line": 3258,
+"line": 3453,
 "static": false
 },
 {
@@ -53612,7 +53650,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getvolbyvid",
 "kind": "function",
-"line": 3154,
+"line": 3349,
 "static": false
 },
 {
@@ -53644,7 +53682,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#getvolumes",
 "kind": "function",
-"line": 3143,
+"line": 3338,
 "static": false
 },
 {
@@ -54156,7 +54194,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#hostaccessvol",
 "kind": "function",
-"line": 778,
+"line": 975,
 "static": true
 },
 {
@@ -54884,7 +54922,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#load_afp_conf_vols",
 "kind": "function",
-"line": 2914,
+"line": 3109,
 "static": false
 },
 {
@@ -54892,7 +54930,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#load_charset",
 "kind": "function",
-"line": 2876,
+"line": 3071,
 "static": false
 },
 {
@@ -54980,7 +55018,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#log_ea_format_advice",
 "kind": "function",
-"line": 1440,
+"line": 1637,
 "static": true
 },
 {
@@ -56492,7 +56530,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#netatalk_readbuf_clamp",
 "kind": "function",
-"line": 860,
+"line": 1057,
 "static": false
 },
 {
@@ -58020,7 +58058,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#private_option_warning",
 "kind": "function",
-"line": 1474,
+"line": 1671,
 "static": true
 },
 {
@@ -58396,7 +58434,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#readextmap",
 "kind": "function",
-"line": 2773,
+"line": 2968,
 "static": true
 },
 {
@@ -58420,7 +58458,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#readvolfile",
 "kind": "function",
-"line": 2438,
+"line": 2633,
 "static": true
 },
 {
@@ -58956,7 +58994,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#safe_atoi",
 "kind": "function",
-"line": 1131,
+"line": 1328,
 "static": false
 },
 {
@@ -59492,7 +59530,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#setextmap",
 "kind": "function",
-"line": 2600,
+"line": 2795,
 "static": true
 },
 {
@@ -59630,6 +59668,22 @@
 "kind": "function",
 "line": 528,
 "static": false
+},
+{
+"documented": true,
+"file": "libatalk/util/netatalk_conf.c",
+"id": "libatalk/util/netatalk_conf.c#shellcmd_escape_pair",
+"kind": "function",
+"line": 711,
+"static": true
+},
+{
+"documented": true,
+"file": "libatalk/util/netatalk_conf.c",
+"id": "libatalk/util/netatalk_conf.c#shellcmd_xlate",
+"kind": "function",
+"line": 737,
+"static": true
 },
 {
 "documented": true,
@@ -60756,7 +60810,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#sortextmap",
 "kind": "function",
-"line": 2658,
+"line": 2853,
 "static": true
 },
 {
@@ -60788,7 +60842,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#splice_size_round",
 "kind": "function",
-"line": 3683,
+"line": 3878,
 "static": true
 },
 {
@@ -62100,7 +62154,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#unload_volumes",
 "kind": "function",
-"line": 3117,
+"line": 3312,
 "static": false
 },
 {
@@ -62404,7 +62458,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#user_state_paths",
 "kind": "function",
-"line": 3569,
+"line": 3764,
 "static": true
 },
 {
@@ -62636,7 +62690,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#vdgoption_bool",
 "kind": "function",
-"line": 1284,
+"line": 1481,
 "static": true
 },
 {
@@ -62644,7 +62698,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#vdgoption_str",
 "kind": "function",
-"line": 1325,
+"line": 1522,
 "static": true
 },
 {
@@ -62876,7 +62930,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#vol_section",
 "kind": "function",
-"line": 2409,
+"line": 2604,
 "static": true
 },
 {
@@ -62892,7 +62946,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#volfile_changed",
 "kind": "function",
-"line": 2378,
+"line": 2573,
 "static": true
 },
 {
@@ -62916,7 +62970,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#volume_free",
 "kind": "function",
-"line": 2847,
+"line": 3042,
 "static": false
 },
 {
@@ -62932,7 +62986,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#volume_unlink",
 "kind": "function",
-"line": 2818,
+"line": 3013,
 "static": false
 },
 {
