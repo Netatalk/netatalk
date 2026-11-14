@@ -534,7 +534,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     const char *address = client_address(obj);
     ipc_child_write(obj, IPC_LOGINDONE,
                     strnlen(address, IPC_MAXMSGSIZE - IPC_HEADERLEN),
-                    (void *)address);
+                    address);
 
     if (obj->proto == AFPPROTO_ASP) {
         ipc_child_state(obj, ASP_RUNNING);
@@ -719,7 +719,7 @@ int afp_getsession(
     uint32_t       boottime;
     uint32_t           tklen, tp;
     char                *token;
-    char                *p;
+    const char         *p;
     *rbuflen = 0;
     tklen = 0;
 
@@ -860,7 +860,7 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     DSI                 *dsi = (DSI *)obj->dsi;
     uint16_t           type;
     uint32_t           tklen;
-    char               *token;
+    const char         *token;
     *rbuflen = 0;
 
     if (ibuflen < 2 + sizeof(type) + sizeof(tklen)) {

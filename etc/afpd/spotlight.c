@@ -542,12 +542,13 @@ bool add_filemeta(sl_array_t *reqinfo,
      */
     size_t path_len = strnlen(path, MAXPATHLEN);
     size_t nfd_buf_size = path_len * 3 + 1;
-    char *nfd_path = talloc_array(meta, char, nfd_buf_size);
+    char *nfd_buf = talloc_array(meta, char, nfd_buf_size);
+    const char *nfd_path = path;
 
-    if (nfd_path == NULL
-            || charset_decompose(CH_UTF8, (char *)path, path_len,
-                                 nfd_path, nfd_buf_size) == (size_t) -1) {
-        nfd_path = (char *)path;
+    if (nfd_buf != NULL
+            && charset_decompose(CH_UTF8, path, path_len,
+                                 nfd_buf, nfd_buf_size) != (size_t) -1) {
+        nfd_path = nfd_buf;
     }
 
     for (size_t i = 0; i < metacount; i++) {
@@ -877,7 +878,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     EC_INIT;
     char *sl_query;
     const uint64_t *uint64;
-    DALLOC_CTX *reqinfo;
+    const DALLOC_CTX *reqinfo;
     sl_array_t *array;
     const sl_cnids_t *cnids = NULL;
     const sl_array_t *cnid_array = NULL;

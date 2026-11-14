@@ -60,7 +60,7 @@ _Static_assert(CACHE_HINT_REFRESH < CACHE_HINT_COUNT
 
 extern int ipc_server_read(server_child_t *children, int fd);
 extern int ipc_child_write(AFPObj *obj, uint16_t command, size_t len,
-                           void *token);
+                           const void *token);
 extern int ipc_child_state(AFPObj *obj, uint16_t state);
 
 extern int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,

@@ -132,7 +132,8 @@ extern size_t   ucs2_to_charset(charset_t, const ucs2_t *src, char *dest,
 extern size_t   convert_charset(charset_t, charset_t, charset_t, const char *,
                                 size_t, char *, size_t, uint16_t *);
 extern size_t   charset_precompose(charset_t, char *, size_t, char *, size_t);
-extern size_t   charset_decompose(charset_t, char *, size_t, char *, size_t);
+extern size_t   charset_decompose(charset_t, const char *, size_t, char *,
+                                  size_t);
 
 extern charset_t add_charset(const char *name);
 
