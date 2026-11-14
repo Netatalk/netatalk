@@ -35,22 +35,12 @@
 #include "macbin.h"
 #include "crc16.h"
 
-/* This allows nad to generate .bin files that won't choke other
-   well-known converter apps. It also makes sure that checksums
-   always match. (RLB) */
-#define MACBINARY_PLAY_NICE_WITH_OTHERS
-
 /*	String used to indicate standard input instead of a disk
 	file.  Should be a string not normally used for a file
  */
 #ifndef	STDIN
 #	define	STDIN	"-"
 #endif /* STDIN */
-
-/*	Yes and no
- */
-#define NOWAY		0
-#define SURETHANG	1
 
 /*	Size of a macbinary file header
  */
@@ -121,14 +111,11 @@ static uint16_t macbin_fdflags_from_header(const unsigned char *header,
 
     if (revision >= 2) {
         flags_low = header[101];
-#ifdef MACBINARY_PLAY_NICE_WITH_OTHERS
 
         /* Some compatibility-oriented writers mirror the low byte at 74. */
         if (flags_low == 0) {
             flags_low = header[74];
         }
-
-#endif /* MACBINARY_PLAY_NICE_WITH_OTHERS */
     }
 
     return htons(macbin_u16_from_bytes(header[73], flags_low));
@@ -146,9 +133,8 @@ static void macbin_fdflags_to_header(unsigned char *header, uint16_t fdflags)
 {
     uint16_t flags = ntohs(fdflags);
     header[73] = (unsigned char)(flags >> 8);
-#ifdef MACBINARY_PLAY_NICE_WITH_OTHERS
+    /* Mirror the low byte at 74 for compatibility with legacy converters. */
     header[74] = (unsigned char)(flags & 0xff);
-#endif /* MACBINARY_PLAY_NICE_WITH_OTHERS */
     header[101] = (unsigned char)(flags & 0xff);
 }
 
@@ -694,10 +680,7 @@ int bin_header_read(struct FHeader *fh, int revision)
         return -1;
     }
 
-    /*
-     * Go through and copy all the stuff you can get from the
-     * MacBinary header into the fh struct.  What fun!
-     */
+    /* Copy the MacBinary header fields into the file header. */
     if (head_buf[1] >= sizeof(fh->name)) {
         return -1;
     }

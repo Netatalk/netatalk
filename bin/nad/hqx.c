@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -48,11 +49,6 @@
 #ifndef	STDIN
 #	define	STDIN	"-"
 #endif /* ! STDIN */
-
-/*	Yes and no
- */
-#define NOWAY		0
-#define SURETHANG	1
 
 /*	Looking for the first or any other line of a binhex file
  */
@@ -842,8 +838,8 @@ static const unsigned char hqxlookup[] = {
  */
 int skip_junk(int line)
 {
-    int			found = NOWAY;
-    int			stopflag;
+    bool			found = false;
+    bool			stopflag;
     int			nc = 0;
     unsigned char		c;
     unsigned char		prevchar;
@@ -853,21 +849,21 @@ int skip_junk(int line)
         return -1;
     }
 
-    while (found == NOWAY) {
+    while (!found) {
         if (line == FIRST) {
             if (*hqx7_first == ':') {
                 nc = c = 0;
-                stopflag = NOWAY;
+                stopflag = false;
                 hqx7_first++;
 
-                while ((stopflag == NOWAY) &&
+                while ((!stopflag) &&
                         (nc < (hqx7_last - hqx7_first))) {
                     switch (c = hqxlookup[ hqx7_first[ nc ]]) {
                     case 0xFC :
                     case 0xFF :
                     case 0xFE :
                     case 0xFD :
-                        stopflag = SURETHANG;
+                        stopflag = true;
                         break;
 
                     default :
@@ -878,7 +874,7 @@ int skip_junk(int line)
 
                 if ((nc > 30) && (nc < 64) &&
                         ((c == 0xFE) || (c == 0xFD))) {
-                    found = SURETHANG;
+                    found = true;
                 }
             } else {
                 hqx7_first++;
@@ -886,10 +882,10 @@ int skip_junk(int line)
         } else {
             if ((prevchar = hqxlookup[ *hqx7_first ]) == 0xFE) {
                 nc = c = 0;
-                stopflag = NOWAY;
+                stopflag = false;
                 hqx7_first++;
 
-                while ((stopflag == NOWAY) &&
+                while ((!stopflag) &&
                         (nc < (hqx7_last - hqx7_first))) {
                     switch (c = hqxlookup[ hqx7_first[ nc ]]) {
                     case 0xFC :
@@ -899,10 +895,11 @@ int skip_junk(int line)
                             break;
                         }
 
-                    /* fall through */
                     case 0xFF :
+
+                    /* Fall through: whitespace after data ends this line. */
                     case 0xFD :
-                        stopflag = SURETHANG;
+                        stopflag = true;
                         break;
 
                     default :
@@ -913,9 +910,9 @@ int skip_junk(int line)
                 }
 
                 if (c == 0xFD) {
-                    found = SURETHANG;
+                    found = true;
                 } else if ((nc > 30) && (c == 0xFE)) {
-                    found = SURETHANG;
+                    found = true;
                 }
             } else {
                 hqx7_first++;
@@ -1005,8 +1002,9 @@ size_t hqx_7tobin(char *outbuf, size_t datalen)
                         break;
                     }
 
-                /* fall through */
                 case 0xFD :
+
+                /* Fall through: whitespace within encoded data ends decoding. */
                 case 0xFF :
                     eofflag = 1;
 
