@@ -1523,7 +1523,7 @@ STATIC void test431()
             goto fin;
         }
     }
-    fd = open(cmd, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    fd = open(cmd, O_WRONLY | O_CREAT | O_TRUNC, 0666); //NOSONAR: granting permissions to 'others' is intentional
 
     if (fd == -1 || close(fd) != 0) {
         test_failed();
@@ -1589,7 +1589,7 @@ STATIC void test431()
             goto fin;
         }
     }
-    fd = open(cmd, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    fd = open(cmd, O_WRONLY | O_CREAT | O_TRUNC, 0666); //NOSONAR: granting permissions to 'others' is intentional
 
     if (fd == -1) {
         test_failed();

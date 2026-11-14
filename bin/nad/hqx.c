@@ -361,7 +361,7 @@ int hqx_open(char *hqxfile, int flags, struct FHeader *fh, int options)
                 return -1;
             }
 
-            if ((hqx.filed = open(hqx.path, flags, 0666)) < 0) {
+            if ((hqx.filed = open(hqx.path, flags, 0666)) < 0) { //NOSONAR: granting permissions to 'others' is intentional
                 perror(hqx.path);
                 return -1;
             }

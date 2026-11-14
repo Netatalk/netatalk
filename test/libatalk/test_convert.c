@@ -804,7 +804,7 @@ int main(void)
     snprintf(bakpath, sizeof(bakpath), "sidecar.bak");
     setuplog("default:severe", "/dev/stderr", false);
     /* Data fork the sidecar belongs to. */
-    df = open(dfpath, O_RDWR | O_CREAT, 0644);
+    df = open(dfpath, O_RDWR | O_CREAT, 0644); //NOSONAR: granting permissions to 'others' is intentional
 
     if (df < 0) {
         perror("open data fork");

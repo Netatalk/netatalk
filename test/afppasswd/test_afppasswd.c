@@ -593,7 +593,7 @@ static void test_enrollment_ownership(void)
                "root -d repairs verifier permissions to 0600");
     }
 
-    int ready = chmod(verifier, 0666) == 0;
+    int ready = chmod(verifier, 0666) == 0; //NOSONAR: granting permissions to 'others' is intentional
     fail_verifier_chmod = 1;
     result = update_srp_passwd(directory, "alice", account.pw_uid, flags,
                                "new-password");

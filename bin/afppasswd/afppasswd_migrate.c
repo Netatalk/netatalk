@@ -915,7 +915,7 @@ int afppasswd_migrate_srp(const char *path, uid_t administrator_uid)
 
     if (create_verifiers(temporary_fd, path, records, count,
                          administrator_uid) < 0 ||
-            fchmod(temporary_fd, 0755) < 0 ||
+            fchmod(temporary_fd, 0755) < 0 || //NOSONAR: granting permissions to 'others' is intentional
             fsync(temporary_fd) < 0) {
         fprintf(stderr,
                 "afppasswd: migration staging failed; the legacy file was not changed.\n");
