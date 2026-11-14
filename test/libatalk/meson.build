@@ -69,6 +69,18 @@ test(
     protocol: 'tap',
 )
 
+shell_hooks_test = executable(
+    'shell_hooks_test',
+    'test_shell_hooks.c',
+    '../../etc/afpd/afprun.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test('libatalk shell hook interpolation', shell_hooks_test, protocol: 'tap')
+
 count_open_fds_test = executable(
     'count_open_fds_test',
     'test_count_open_fds.c',
