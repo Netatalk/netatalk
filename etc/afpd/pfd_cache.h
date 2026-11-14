@@ -9,11 +9,25 @@
 #ifndef AFPD_PFD_CACHE_H
 #define AFPD_PFD_CACHE_H 1
 
+#include <fcntl.h>
 #include <sys/stat.h>
 
 #include <atalk/directory.h>
 
 #include "volume.h"
+
+/* A folder open for search: O_PATH checks no right on the folder itself,
+ * O_SEARCH its search right, except on NetBSD, where it opens for reading as
+ * O_RDONLY does and a folder the user may search but not read refuses the
+ * open; callers then fall back to the full path. O_NOFOLLOW is in the O_PATH
+ * form alone; a caller refusing a symlink adds it */
+#if defined(O_PATH)
+#define PFD_OPEN_FLAGS (O_PATH | O_DIRECTORY | O_NOFOLLOW)
+#elif defined(O_SEARCH)
+#define PFD_OPEN_FLAGS (O_SEARCH | O_DIRECTORY)
+#else
+#define PFD_OPEN_FLAGS (O_RDONLY | O_DIRECTORY)
+#endif
 
 /* One absolute re-ground probe per this many uses of a slot — the
  * ground-truth bound on rename-away staleness (unit tests assert on it) */

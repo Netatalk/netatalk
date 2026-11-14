@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdbool.h>
@@ -26,6 +27,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <utime.h>
 
 #include <bstrlib.h>
@@ -2052,6 +2054,125 @@ void dir_remove_tree(const struct vol *vol, struct dir *dir,
 }
 
 /*!
+ * @brief Whether the working directory is on the volume's device
+ *
+ * @param[in] vol  the volume
+ * @returns 0 when it is, 1 with errno EXDEV when it is not, or -1 when the
+ *          stat fails
+ */
+static int cwd_on_volume(const struct vol *vol)
+{
+    struct stat st;
+
+    if (stat(".", &st) != 0) {
+        return -1;
+    }
+
+    if (st.st_dev != vol->v_dev) {
+        errno = EXDEV;
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Return the working directory and curdir to the volume root after a
+ *        refused change of directory
+ *
+ * @param[in] vol  the volume
+ */
+static void cwd_back_to_root(const struct vol *vol)
+{
+    if (chdir(vol->v_path) != 0) {
+        LOG(log_error, logtype_afpd, "can't chdir back to \"%s\": %s",
+            vol->v_path, strerror(errno));
+    }
+
+    curdir = vol->v_root;
+}
+
+/*!
+ * @brief Enter a child of the working directory by the name cname() just
+ *        looked up there
+ *
+ * dir is one name below curdir, neither "." nor ".." after check_name(), and
+ * holds the stat of_stat() took of its name in curdir's folder on the
+ * volume's device; any other case, as a nested dataset or a cached path whose
+ * last name is not d_u_name, takes the walk. Where the volume follows
+ * symlinks, as the walk does, the step is chdir() and the walk's device
+ * check; where it follows none, an open refusing a symlink and fchdir().
+ *
+ * A folder renamed above the working directory during the request goes
+ * unseen until the next walk, as after the walk itself. On a filesystem that
+ * folds case or normalises names, a step enters a folder by any spelling the
+ * filesystem resolves, which the walk's getcwd() compare refuses.
+ *
+ * @param[in] vol  the volume
+ * @param[in] dir  the child, curdir on success
+ * @param[in] st   the stat of the child's name, taken in curdir's folder
+ * @returns true when the working directory is dir's folder; false leaves
+ *          the working directory and curdir unchanged for movecwd(), or,
+ *          where the check after the chdir() fails, curdir at the volume
+ *          root's entry and the working directory at the root unless the
+ *          return there fails, which is logged
+ */
+static bool cwd_step(const struct vol *vol, struct dir *dir,
+                     const struct stat *st)
+{
+    const char *name;
+    const char *uname;
+
+    if (curdir == NULL || curdir == &rootParent
+            || dir->d_pdid != curdir->d_did || dir->d_vid != curdir->d_vid
+            || st->st_ino != dir->dcache_ino || st->st_dev != vol->v_dev
+            || blength(dir->d_fullpath) >= MAXPATHLEN
+            || !dir_path_follows(dir, curdir)) {
+        return false;
+    }
+
+    /* dir_path_follows() matched the last name's length alone */
+    name = bdata(dir->d_fullpath) + blength(curdir->d_fullpath) + 1;
+    uname = bdata(dir->d_u_name);
+
+    if (uname == NULL || blength(dir->d_u_name) == 0
+            || memcmp(name, uname, (size_t)blength(dir->d_u_name)) != 0) {
+        return false;
+    }
+
+    if (vol_syml_opt(vol) != 0) {
+        /* no O_CLOEXEC: the descriptor closes before any fork, and musl sets
+         * the flag with a second call */
+        int fd = open(name, PFD_OPEN_FLAGS | O_NOFOLLOW);
+        bool entered = fd >= 0 && fchdir(fd) == 0;
+
+        if (fd >= 0) {
+            close(fd);
+        }
+
+        if (!entered) {
+            return false;
+        }
+    } else {
+        if (chdir(name) != 0) {
+            return false;
+        }
+
+        /* back to the root as the walk's refusal does: the walk that follows
+         * resets only from its own check */
+        if (cwd_on_volume(vol) != 0) {
+            cwd_back_to_root(vol);
+            return false;
+        }
+    }
+
+    LOG(log_debug, logtype_afpd, "cwd_step(to: did: %u, \"%s\")",
+        ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
+    curdir = dir;
+    return true;
+}
+
+/*!
  * @brief Resolve an AFP path relative to a directory and change into the
  * directory that holds it
  *
@@ -2079,7 +2200,8 @@ void dir_remove_tree(const struct vol *vol, struct dir *dir,
  * 13. A directory continues the walk.
  * 14. Look the directory up in the dircache.
  * 15. Add a dircache entry when the lookup misses.
- * 16. Change into the directory.
+ * 16. Change into the directory, by its name from the working directory where
+ *     its entry holds the stat of step 9.
  * 17. Clear m_name, so the end of the walk knows that the last element was a
  *     directory.
  *
@@ -2358,7 +2480,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
         /* Now chdir to the evaluated dir */
         /* 16 */
-        if (movecwd(vol, cdir) < 0) {
+        if (!cwd_step(vol, cdir, &ret.st) && movecwd(vol, cdir) < 0) {
             LOG(log_debug, logtype_afpd,
                 "cname(cwd:'%s'): failed to chdir to new subdir '%s': %s",
                 (curdir && curdir->d_fullpath) ? cfrombstr(curdir->d_fullpath) : "(null)",
@@ -2434,7 +2556,6 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
  */
 static int ochdir_vol(const char *dir, const struct vol *vol)
 {
-    struct stat st;
     int ret = ochdir(dir, vol_syml_opt(vol), vol->v_rootfd, vol->v_path);
 
     if (ret != 0) {
@@ -2442,14 +2563,7 @@ static int ochdir_vol(const char *dir, const struct vol *vol)
     }
 
     if (vol_syml_opt(vol) == 0) {
-        if (stat(".", &st) != 0) {
-            return -1;
-        }
-
-        if (st.st_dev != vol->v_dev) {
-            errno = EXDEV;
-            return 1;
-        }
+        return cwd_on_volume(vol);
     }
 
     return 0;
@@ -2550,14 +2664,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
         if (ret == 1) {
             /* path is a symlink, crosses a device boundary, or getcwd failed */
             afp_errno = AFPERR_BADTYPE;
-
-            if (chdir(vol->v_path) < 0) {
-                LOG(log_error, logtype_afpd, "can't chdir back'%s': %s", vol->v_path,
-                    strerror(errno));
-                /* XXX what do we do here? */
-            }
-
-            curdir = vol->v_root;
+            cwd_back_to_root(vol);
             errno = chdir_errno;
             return -1;
         }
