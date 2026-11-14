@@ -5,7 +5,7 @@ description: "Open fork table of a session."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/ofork.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -472,6 +472,8 @@ Calls: [ostat](../../libatalk/util/unix.c.md#ostat)
 Called by: [afp_createdir](directory.c.md#afp_createdir), [afp_createid](file.c.md#afp_createid), [afp_opendir](directory.c.md#afp_opendir), [afp_resolveid](file.c.md#afp_resolveid), [catsearch](catsearch.c.md#catsearch), [catsearch_db](catsearch.c.md#catsearch_db), [cname](directory.c.md#cname), [enumerate_in](enumerate.c.md#enumerate_in), [of_statdir](ofork.c.md#of_statdir), [sd_stat](enumerate.c.md#sd_stat), [setfilparams](file.c.md#setfilparams), [setfilunixmode](unix.c.md#setfilunixmode)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
+
+Mentioned in the documentation of: [cwd_step](directory.c.md#cwd_step)
 
 ### of_statdir
 

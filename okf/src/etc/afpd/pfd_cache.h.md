@@ -5,7 +5,7 @@ description: "Parent directory descriptor cache and statistics interface."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/pfd_cache.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -14,7 +14,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 * [atalk/directory.h](../../include/atalk/directory.h.md)
 * [volume.h](volume.h.md)
-* System headers: `sys/stat.h`
+* System headers: `fcntl.h`, `sys/stat.h`
 
 # Included by
 
@@ -29,7 +29,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 ### struct pfd_stats
 
-Defined at line 22.
+Defined at line 36.
 * `unsigned long long hits`: fd served
 * `unsigned long long opens`: slot fills (full path resolutions)
 * `unsigned long long sync_refreshes`: dircache-learned mismatches, refilled
@@ -41,4 +41,4 @@ Defined at line 22.
 
 # Macros
 
-* Undocumented: `PFD_REGROUND_INTERVAL`
+* Undocumented: `PFD_OPEN_FLAGS`, `PFD_REGROUND_INTERVAL`

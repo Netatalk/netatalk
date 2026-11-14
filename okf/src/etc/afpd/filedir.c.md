@@ -5,7 +5,7 @@ description: "AFP commands for both files and directories: FPGetFileDirParms, FP
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/filedir.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -144,7 +144,7 @@ Called by: [check_newname](filedir.c.md#check_newname), [cname](directory.c.md#c
 
 Calls through [`vfs_ops::vfs_validupath`](../../include/atalk/vfs.h.md#struct-vfs_ops): [validupath_adouble](../../libatalk/vfs/vfs.c.md#validupath_adouble), [validupath_ea](../../libatalk/vfs/vfs.c.md#validupath_ea), [vfs_validupath](../../libatalk/vfs/vfs.c.md#vfs_validupath)
 
-Mentioned in the documentation of: [check_newname](filedir.c.md#check_newname)
+Mentioned in the documentation of: [check_newname](filedir.c.md#check_newname), [cwd_step](directory.c.md#cwd_step)
 
 ### check_newname
 

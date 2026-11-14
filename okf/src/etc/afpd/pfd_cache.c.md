@@ -5,7 +5,7 @@ description: "Cache of parent directory descriptors for the stat calls that chec
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/pfd_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -29,7 +29,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void pfd_init_once(void)
 ```
 
-Defined at lines 99 to 108.
+Defined at lines 88 to 97.
 
 Mark every slot of the parent descriptor cache empty on first use.
 
@@ -43,7 +43,7 @@ Uses file-scope variables: `pfd_initialized`, `pfd_slots`
 static void slot_retire(struct pfd_slot *s)
 ```
 
-Defined at lines 115 to 125.
+Defined at lines 104 to 114.
 
 Close the descriptor of a cache slot and mark the slot empty.
 
@@ -58,7 +58,7 @@ Called by: [pfd_get](pfd_cache.c.md#pfd_get), [pfd_purge](pfd_cache.c.md#pfd_pur
 static int slot_fill(struct pfd_slot *s, const struct vol *vol, const struct dir *parent)
 ```
 
-Defined at lines 140 to 164.
+Defined at lines 129 to 153.
 
 Open the directory of a dircache entry into a cache slot and record its identity.
 
@@ -81,7 +81,7 @@ Uses file-scope variables: `pfd_stat`
 static void slot_move_to_front(int i)
 ```
 
-Defined at lines 171 to 178.
+Defined at lines 160 to 167.
 
 Move slot i to position 0, the front of the use order.
 
@@ -98,7 +98,7 @@ Uses file-scope variables: `pfd_slots`
 static int pfd_get(const struct vol *vol, const struct dir *parent)
 ```
 
-Defined at lines 195 to 274.
+Defined at lines 184 to 263.
 
 Directory descriptor of a dircache entry from the slot cache.
 
@@ -122,7 +122,7 @@ Uses file-scope variables: `pfd_slots`, `pfd_stat`
 bool pfd_repair_path(struct dir *entry, const struct dir *parent)
 ```
 
-Defined at lines 292 to 317.
+Defined at lines 281 to 306.
 
 Rebuild the full path of a dircache entry from its parent after a stat relative to the parent.
 
@@ -146,7 +146,7 @@ Uses file-scope variables: `pfd_stat`
 int pfd_ostat(const struct vol *vol, struct dir *entry, struct stat *st, int options)
 ```
 
-Defined at lines 335 to 364.
+Defined at lines 324 to 353.
 
 Stat the full path of a dircache entry through the cached parent descriptor.
 
@@ -172,7 +172,7 @@ Uses file-scope variables: `pfd_stat`
 void pfd_purge(uint16_t vid, cnid_t did)
 ```
 
-Defined at lines 376 to 390.
+Defined at lines 365 to 379.
 
 Retire the cache slot of a directory.
 
@@ -194,7 +194,7 @@ Uses file-scope variables: `pfd_initialized`, `pfd_slots`, `pfd_stat`
 void pfd_purge_vol(uint16_t vid)
 ```
 
-Defined at lines 397 to 409.
+Defined at lines 386 to 398.
 
 Retire every cache slot of a volume, as the volume closes.
 
@@ -213,7 +213,7 @@ Uses file-scope variables: `pfd_initialized`, `pfd_slots`, `pfd_stat`
 void pfd_shutdown(void)
 ```
 
-Defined at lines 414 to 423.
+Defined at lines 403 to 412.
 
 Close every cached descriptor when the session ends.
 
@@ -229,7 +229,7 @@ Uses file-scope variables: `pfd_initialized`, `pfd_slots`
 void pfd_stats_get(struct pfd_stats *out)
 ```
 
-Defined at lines 430 to 433.
+Defined at lines 419 to 422.
 
 Snapshot of the cache counters, for the unit tests.
 
@@ -244,7 +244,7 @@ Uses file-scope variables: `pfd_stat`
 void pfd_log_stats(void)
 ```
 
-Defined at lines 441 to 453.
+Defined at lines 430 to 442.
 
 Log the cache counters at the end of the session.
 
@@ -258,7 +258,7 @@ Uses file-scope variables: `pfd_stat`
 
 ### struct pfd_slot
 
-Defined at line 72.
+Defined at line 61.
 * `cnid_t did`
 * `uint16_t vid`
 * `int fd`
@@ -269,7 +269,7 @@ Defined at line 72.
 
 # Macros
 
-* Undocumented: `PFD_OPEN_FLAGS`, `PFD_SLOTS`
+* Undocumented: `PFD_SLOTS`
 
 # File-scope variables
 

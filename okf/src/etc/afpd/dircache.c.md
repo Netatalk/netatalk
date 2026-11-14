@@ -5,7 +5,7 @@ description: "Directory Cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-02T11:32:44+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -745,11 +745,11 @@ Called by: [ad_addcomment](desktop.c.md#ad_addcomment), [ad_getcomment](desktop.
 struct dir * dircache_search_at_stat(const struct vol *vol, const struct dir *dir, char *name, size_t len, struct stat *st)
 ```
 
-Defined at lines 1846 to 1868.
+Defined at lines 1847 to 1869.
 
 Search the cache by parent and name, and bring the entry found to a stat of the path, which no sampled validation stats again.
 
-The caller took the stat in the parent's folder, which it entered at the parent's cached path. The entry takes the stat as [dir_modify()](directory.c.md#dir_modify) gives it: it can stay, be re-keyed, or go, in which case the caller builds the object's own entry. An entry that holds the stat's inode takes the path under its parent's, where a rename of an ancestor left its own stale. An entry with a stale path, for which the stat shows another inode, keeps its fields, so the caller compares its inode with the stat's.
+The caller took the stat in the parent's folder, entered at its cached path or, as [cname()](directory.c.md#cname)'s steps do, by name from the folder above. The entry takes the stat as [dir_modify()](directory.c.md#dir_modify) gives it: it can stay, be re-keyed, or go, in which case the caller builds the object's own entry. An entry that holds the stat's inode takes the path under its parent's, where a rename of an ancestor left its own stale. An entry with a stale path, for which the stat shows another inode, keeps its fields, so the caller compares its inode with the stat's.
 
 Parameters:
 * `vol`: volume
@@ -770,7 +770,7 @@ Called by: [catsearch](catsearch.c.md#catsearch), [cname](directory.c.md#cname),
 static void dircache_expunge_duplicate(const struct vol *vol, struct dir *dup, int *took_curdir)
 ```
 
-Defined at lines 1881 to 1898.
+Defined at lines 1882 to 1899.
 
 Retire a cached entry that a pending insert is about to supersede.
 
@@ -793,7 +793,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int dircache_add(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 1911 to 2041.
+Defined at lines 1912 to 2042.
 
 create struct dir from struct path
 
@@ -819,7 +819,7 @@ Mentioned in the documentation of: [dircache_expunge_duplicate](dircache.c.md#di
 static void dircache_mismatch_panic(const char *index_name, const struct dir *dir, const void *node, const struct dir *found)
 ```
 
-Defined at lines 2056 to 2070.
+Defined at lines 2057 to 2071.
 
 Abort afpd because an index node names an entry other than its owner.
 
@@ -841,7 +841,7 @@ Called by: [dircache_remove](dircache.c.md#dircache_remove)
 void dircache_remove(const struct vol *vol, struct dir *dir, int flags)
 ```
 
-Defined at lines 2088 to 2208.
+Defined at lines 2089 to 2209.
 
 Remove an entry from the dircache indexes and queues that flags name.
 
@@ -866,7 +866,7 @@ Mentioned in the documentation of: [arc_ensure_ghost_capacity](dircache.c.md#arc
 int dircache_remove_children(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 2230 to 2308.
+Defined at lines 2231 to 2309.
 
 Remove all child entries of a directory from the dircache.
 
@@ -892,7 +892,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 int dircache_reindex_didname(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 2322 to 2352.
+Defined at lines 2323 to 2353.
 
 Re-insert entry into DID/name index after key change.
 
@@ -916,7 +916,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 void dircache_promote(struct dir *dir)
 ```
 
-Defined at lines 2370 to 2398.
+Defined at lines 2371 to 2399.
 
 Promote a cache entry to signal recency.
 
@@ -941,7 +941,7 @@ Uses file-scope variables: `arc_cache`, `index_queue`
 unsigned int dircache_resolve_size(int reqsize)
 ```
 
-Defined at lines 2411 to 2438.
+Defined at lines 2412 to 2439.
 
 Resolve a requested dircache size to the effective maximum.
 
@@ -960,7 +960,7 @@ Called by: [dircache_init](dircache.c.md#dircache_init)
 int dircache_init(int reqsize)
 ```
 
-Defined at lines 2455 to 2546.
+Defined at lines 2456 to 2547.
 
 Initialize the dircache and indexes.
 
@@ -988,7 +988,7 @@ Mentioned in the documentation of: [validation_freq](dircache.c.md#validation_fr
 void log_dircache_stat(void)
 ```
 
-Defined at lines 2556 to 2772.
+Defined at lines 2557 to 2773.
 
 Log dircache statistics.
 
@@ -1008,7 +1008,7 @@ Mentioned in the documentation of: [dircache_rfork_shutdown](dircache.c.md#dirca
 void dircache_rfork_shutdown(void)
 ```
 
-Defined at lines 2780 to 2800.
+Defined at lines 2781 to 2801.
 
 Shutdown the rfork cache — free remaining RFork LRU nodes and sentinel.
 
@@ -1024,7 +1024,7 @@ Uses file-scope variables: `rfork_lru`, `rfork_lru_count`
 void dircache_dump(void)
 ```
 
-Defined at lines 2805 to 3011.
+Defined at lines 2806 to 3012.
 
 Dump dircache to /tmp/dircache.PID.
 
@@ -1040,7 +1040,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `arc_
 void dircache_reset_validation_counter(void)
 ```
 
-Defined at lines 3019 to 3024.
+Defined at lines 3020 to 3025.
 
 Reset validation counter for consistent testing.
 
@@ -1056,7 +1056,7 @@ Uses file-scope variables: `validation_counter`
 void process_cache_hints(AFPObj *obj)
 ```
 
-Defined at lines 3061 to 3251.
+Defined at lines 3062 to 3252.
 
 Apply the dircache invalidation hints that sibling afpd processes sent.
 
@@ -1081,7 +1081,7 @@ Uses file-scope variables: `cache_hint_stat`, `dircache`
 void dircache_report_invalid_entry(struct dir *dir)
 ```
 
-Defined at lines 3263 to 3272.
+Defined at lines 3264 to 3273.
 
 Report that a cache entry was invalid when actually used.
 
@@ -1098,7 +1098,7 @@ Called by: [dir_remove](directory.c.md#dir_remove), [dir_takes_stat](directory.c
 void dircache_remove_children_defer(const struct vol *vol, struct dir *dir)
 ```
 
-Defined at lines 3291 to 3363.
+Defined at lines 3292 to 3364.
 
 Queue a deferred dircache_remove_children scan for dir.
 
@@ -1120,7 +1120,7 @@ Uses file-scope variables: `deferred_count`, `deferred_depth_max`, `deferred_dep
 void dircache_flush_deferred_for_vol(uint16_t vid)
 ```
 
-Defined at lines 3380 to 3443.
+Defined at lines 3381 to 3444.
 
 Finish every deferred child scan of a closing volume at once.
 
@@ -1141,7 +1141,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 int dircache_has_deferred_work(void)
 ```
 
-Defined at lines 3452 to 3455.
+Defined at lines 3453 to 3456.
 
 Whether deferred child scans wait in the queue.
 
@@ -1159,7 +1159,7 @@ Uses file-scope variables: `deferred_count`
 static void deferred_job_kill(int idx)
 ```
 
-Defined at lines 3466 to 3471.
+Defined at lines 3467 to 3472.
 
 Retire a deferred job slot without running its scan.
 
@@ -1178,7 +1178,7 @@ Uses file-scope variables: `deferred_queue`
 static void deferred_compact_head(void)
 ```
 
-Defined at lines 3476 to 3484.
+Defined at lines 3477 to 3485.
 
 Advance deferred_head past dead slots, keeping count consistent.
 
@@ -1192,7 +1192,7 @@ Uses file-scope variables: `deferred_count`, `deferred_head`, `deferred_queue`
 static int path_is_strict_child(const char *path, size_t len, const char *parent_path, size_t parent_len)
 ```
 
-Defined at lines 3498 to 3504.
+Defined at lines 3499 to 3505.
 
 Whether path lies strictly below parent_path.
 
@@ -1214,7 +1214,7 @@ Called by: [deferred_cover_drops](dircache.c.md#deferred_cover_drops), [dircache
 static void deferred_cover_set(const struct deferred_cleanup *done, unsigned int scan_seq)
 ```
 
-Defined at lines 3516 to 3532.
+Defined at lines 3517 to 3533.
 
 Remember a finished scan as the covering memo.
 
@@ -1234,7 +1234,7 @@ Uses file-scope variables: `deferred_cover_len`, `deferred_cover_path`, `deferre
 static int deferred_cover_drops(const struct deferred_cleanup *j)
 ```
 
-Defined at lines 3546 to 3557.
+Defined at lines 3547 to 3558.
 
 Whether the covering memo makes a popped job redundant.
 
@@ -1257,7 +1257,7 @@ Uses file-scope variables: `deferred_cover_len`, `deferred_cover_path`, `deferre
 static void deferred_compact_tail(void)
 ```
 
-Defined at lines 3565 to 3584.
+Defined at lines 3566 to 3585.
 
 Compact deferred_tail backwards past dead slots.
 
@@ -1273,7 +1273,7 @@ Uses file-scope variables: `deferred_count`, `deferred_depth_max`, `deferred_dep
 static int deferred_batch_cmp(const void *a, const void *b)
 ```
 
-Defined at lines 3595 to 3614.
+Defined at lines 3596 to 3615.
 
 Order two batch members by volume ID, then by path bytes.
 
@@ -1295,7 +1295,7 @@ Uses file-scope variables: `c`, `deferred_queue`
 static int deferred_batch_match(uint16_t vid, const char *ep, size_t elen)
 ```
 
-Defined at lines 3629 to 3683.
+Defined at lines 3630 to 3684.
 
 Find the batch member that covers an entry path.
 
@@ -1318,7 +1318,7 @@ Uses file-scope variables: `c`, `deferred_batch_depth`, `deferred_batch_idx`, `d
 static int deferred_batch_start(void)
 ```
 
-Defined at lines 3691 to 3714.
+Defined at lines 3692 to 3715.
 
 Start a flat batch scan over every live pending job.
 
@@ -1338,7 +1338,7 @@ Uses file-scope variables: `deferred_batch_active`, `deferred_batch_chain_idx`, 
 static void deferred_batch_complete(void)
 ```
 
-Defined at lines 3722 to 3739.
+Defined at lines 3723 to 3740.
 
 Finish the flat batch scan: retire every pre-batch member.
 
@@ -1356,7 +1356,7 @@ Uses file-scope variables: `deferred_batch_active`, `deferred_batch_idx`, `defer
 static int deferred_batch_chain(void)
 ```
 
-Defined at lines 3747 to 3811.
+Defined at lines 3748 to 3812.
 
 Scan one hash chain for the flat batch: purge every entry whose unique candidate ancestor is a batch member.
 
@@ -1374,7 +1374,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md), `
 int dircache_process_deferred_chain(void)
 ```
 
-Defined at lines 3826 to 3956.
+Defined at lines 3827 to 3957.
 
 Process one unit of deferred cleanup.
 
