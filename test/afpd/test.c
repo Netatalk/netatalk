@@ -3101,6 +3101,8 @@ int main(int argc, char *argv[])
                      "strict locking key, afp read locks alias, precedence, explicitness");
     TEST_int_or_skip(utest_conf_srp_verifier_path_keys(), 0,
                      "SRP verifier path key, deprecated passwd-file alias, precedence");
+    TEST_int_or_skip(utest_conf_k5_keytab_env(), 0,
+                     "k5 keytab overrides the environment and survives config cleanup");
     TEST_int_or_skip(utest_conf_spotlight_results_limit_keys(), 0,
                      "spotlight results limit key, sparql results limit alias, precedence");
     TEST_int_or_skip(utest_conf_multiproto_defaults(), 0,

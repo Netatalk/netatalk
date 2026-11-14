@@ -3904,7 +3904,8 @@ static int splice_size_round(int size)
  * @param[in]     processname  name for log lines, or NULL to keep the current
  *                             one
  * @returns 0, or -1 when afp.conf cannot load, a single-user server has no
- *          usable vol dbpath, an allocation fails, or gethostname fails
+ *          usable vol dbpath, an allocation fails, gethostname fails, or the
+ *          Kerberos keytab environment variable cannot be set
  */
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 {
@@ -4399,19 +4400,17 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->hostname = strdup(val);
     }
 
-    if ((p = getoption_strdup(config, INISEC_GLOBAL, "k5 keytab", NULL, NULL))) {
-        size_t len = strlen(p);
-        size_t ktlen = len + 14;
-        options->k5keytab = malloc(ktlen);
+    const char *keytab = getoption_str(config, INISEC_GLOBAL, "k5 keytab", NULL,
+                                       NULL);
 
-        if (options->k5keytab == NULL) {
-            free(p);
-            EC_FAIL;
-        }
-
-        snprintf(options->k5keytab, ktlen, "KRB5_KTNAME=%s", p);
-        putenv(options->k5keytab);
-        free(p);
+    if (keytab) {
+        /* Preserve the public options field and its assignment format. */
+        size_t ktlen = sizeof("KRB5_KTNAME=") + strlen(keytab);
+        EC_NULL_LOG(options->k5keytab = malloc(ktlen));
+        snprintf(options->k5keytab, ktlen, "KRB5_KTNAME=%s", keytab);
+        /* Kerberos and GSS-API use the default keytab. setenv() copies the
+         * value so it remains valid after afp_config_free(). */
+        EC_ZERO_LOG(setenv("KRB5_KTNAME", keytab, 1));
     }
 
     if ((p = getoption_strdup(config, INISEC_GLOBAL, "admin group", NULL, NULL))) {

@@ -952,6 +952,93 @@ cleanup:
     return failed;
 }
 
+/* Exercise the environment contract without needing a Kerberos installation.
+ * Omission preserves the current environment, including after a reload. */
+int utest_conf_k5_keytab_env(void)
+{
+    AFPObj obj;
+    char logpath[64];
+    const char *original = getenv("KRB5_KTNAME");
+    char *saved = original ? strdup(original) : NULL;
+    int failed = -1;
+    static const struct {
+        const char *body;
+        const char *expected;
+        const char *assignment;
+    } cases[] = {
+        {"", NULL, NULL},
+        {"", "FILE:/inherited.keytab", NULL},
+        {
+            "k5 keytab = FILE:/key tabs/service=afp.keytab\n",
+            "FILE:/key tabs/service=afp.keytab",
+            "KRB5_KTNAME=FILE:/key tabs/service=afp.keytab"
+        },
+        {
+            "k5 keytab = FILE:/replacement.keytab\n", "FILE:/replacement.keytab",
+            "KRB5_KTNAME=FILE:/replacement.keytab"
+        },
+        {"", "FILE:/replacement.keytab", NULL},
+    };
+
+    if (original && saved == NULL) {
+        return -1;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        free(saved);
+        return TEST_SKIP;
+    }
+
+    if (unsetenv("KRB5_KTNAME") != 0) {
+        goto cleanup;
+    }
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        if (i == 1 && setenv("KRB5_KTNAME", cases[i].expected, 1) != 0) {
+            goto cleanup;
+        }
+
+        if (conf_parse_fixture(&obj, cases[i].body, logpath) != 0) {
+            goto cleanup;
+        }
+
+        const char *assignment = obj.options.k5keytab;
+
+        if (cases[i].assignment
+                ? assignment == NULL || strcmp(assignment, cases[i].assignment) != 0
+                : assignment != NULL) {
+            fprintf(test_stream(), "# k5 keytab options: case %zu: %s, expected %s\n",
+                    i, assignment ? assignment : "(unset)",
+                    cases[i].assignment ? cases[i].assignment : "(unset)");
+            conf_teardown(&obj, NULL);
+            goto cleanup;
+        }
+
+        conf_teardown(&obj, NULL);
+        const char *value = getenv("KRB5_KTNAME");
+
+        if (cases[i].expected ? value == NULL || strcmp(value, cases[i].expected) != 0
+                : value != NULL) {
+            fprintf(test_stream(), "# k5 keytab environment: case %zu: %s, expected %s\n",
+                    i, value ? value : "(unset)",
+                    cases[i].expected ? cases[i].expected : "(unset)");
+            goto cleanup;
+        }
+    }
+
+    failed = 0;
+cleanup:
+
+    if (saved ? setenv("KRB5_KTNAME", saved, 1) != 0 //NOSONAR env variable injection is deliberate in this test
+            : unsetenv("KRB5_KTNAME") != 0) {
+        failed = -1;
+    }
+
+    free(saved);
+    unlink(logpath);
+    return failed;
+}
+
 /* The directory-valued SRP option supersedes the old single-file name. */
 int utest_conf_srp_verifier_path_keys(void)
 {
