@@ -1396,10 +1396,32 @@ preexec = *command* **(V)**
 
 > Shell command the server runs through /bin/sh when a client mounts the
 volume.
+>
+> Variable substitutions such as **$u**, **$f**, **$d**, and **$v** are passed
+as literal shell words. They may be unquoted, single-quoted, or double-quoted
+in the command; spaces and shell metacharacters in their values remain data.
+An empty value remains an empty argument. A backslash-escaped dollar sign
+is not substituted. In a hook containing substitutions, **$$** produces a
+literal dollar sign.
+Overlong variable values are rejected; expanded hook commands are never
+truncated.
+>
+> Hooks containing substitutions support simple commands, command lists,
+and pipelines. Parentheses, braces, backticks, **#**, **<<**, **$[**, shell
+**$'...'** or **$"..."** quoting, backslash-newline continuations, and
+unbalanced quotes are rejected and the volume is skipped. Hooks without
+substitutions retain their shell syntax. Move complex shell logic into a
+separate script and pass values as arguments, for example:
+>
+>     preexec = /usr/local/bin/volume-hook $u $d "$f"
+>
+> The script must also treat its arguments as data; do not pass them to
+**eval** or use them as shell command text.
 
 postexec = *command* **(V)**
 
 > Shell command the server runs through /bin/sh when the volume closes.
+Variable substitution follows the same rules as **preexec**.
 
 rolist = *users/groups* **(V)**
 
