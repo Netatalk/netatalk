@@ -27,6 +27,7 @@ extern int utest_conf_removed_options_appletalk_parse(void);
 extern int utest_conf_singleuser_dbpath_volume_root(void);
 extern int utest_conf_strict_locking_keys(void);
 extern int utest_conf_srp_verifier_path_keys(void);
+extern int utest_conf_k5_keytab_env(void);
 extern int utest_conf_spotlight_results_limit_keys(void);
 extern int utest_conf_multiproto_defaults(void);
 extern int utest_conf_multiproto_explicit_wins(void);
