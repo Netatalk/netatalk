@@ -702,6 +702,203 @@ static char *volxlate(const AFPObj *obj,
 }
 
 /*!
+ * @brief Whether a backslash escapes the next character in a hook
+ *
+ * @param[in] p      position in the configured command
+ * @param[in] quote  enclosing quote, or NUL outside quotes
+ * @returns true for an escape pair consumed together by both hook passes
+ */
+static bool shellcmd_escape_pair(const char *p, char quote)
+{
+    return *p == '\\' && p[1] && quote != '\''
+           && (!quote || strchr("$`\"\\", p[1]) != NULL);
+}
+
+/*!
+ * @brief Expand hook variables as literal shell words
+ *
+ * Unlike path/name expansion, hook expansion must preserve the boundary
+ * between configuration syntax and account/session data. Close any enclosing
+ * quote, insert a shell_quote() word, and reopen the quote. Never truncate a
+ * quoted command: that could remove the quoting that makes it safe.
+ *
+ * This handles simple command lists and pipelines, not a shell grammar.
+ * With variables present, reject constructs whose quoting needs a shell
+ * parser (subshells, substitutions, here-documents, comments and extensions).
+ * Put those constructs in a separate script and pass the variables to it.
+ *
+ * @param[in] obj      session and server options
+ * @param[in] src      configured shell command
+ * @param[in] pwd      session user's account entry, or NULL
+ * @param[in] path     volume path
+ * @param[in] volname  volume name
+ * @returns allocated command, or NULL on unsupported syntax/allocation failure
+ */
+static char *shellcmd_xlate(const AFPObj *obj, const char *src,
+                            const struct passwd *pwd, const char *path,
+                            const char *volname)
+{
+    bool variables = false;
+    char quote = '\0';
+    bstring command;
+    char *result = NULL;
+
+    for (const char *p = src; *p; p++) {
+        if (shellcmd_escape_pair(p, quote)) {
+            p++;
+            continue;
+        }
+
+        if (*p == '$' && p[1] && strchr("bcdfghisuv$", p[1])) {
+            if (p[1] != '$') {
+                variables = true;
+            }
+
+            p++;
+            continue;
+        }
+
+        if (*p == '\'' || *p == '"') {
+            if (!quote) {
+                quote = *p;
+            } else if (quote == *p) {
+                quote = '\0';
+            }
+        }
+    }
+
+    /* Deliberately conservative, even inside quotes. Removing a shell line
+     * continuation could otherwise assemble a forbidden token across lines. */
+    if (variables && (strpbrk(src, "`(){}#") || strstr(src, "<<")
+                      || strstr(src, "$[")
+                      || strstr(src, "$'") || strstr(src, "$\"")
+                      || strstr(src, "\\\n"))) {
+        goto invalid;
+    }
+
+    if ((command = bfromcstr("")) == NULL) {
+        return NULL;
+    }
+
+    quote = '\0';
+
+    /* Shell-only hooks use this pass too: raw volxlate() would expand escaped
+     * dollars. Preserve their shell syntax and historical $$ translation. */
+    for (const char *p = src; *p; p++) {
+        if (shellcmd_escape_pair(p, quote)) {
+            if (bconchar(command, *p) != BSTR_OK
+                    || bconchar(command, p[1]) != BSTR_OK) {
+                goto cleanup;
+            }
+
+            p++;
+            continue;
+        }
+
+        if (variables && *p == '\\' && quote != '\'' && !p[1]) {
+            goto cleanup;
+        }
+
+        if (*p == '$' && p[1] && strchr("bcdfghisuv$", p[1])) {
+            if (p[1] == '$') {
+                /* A literal dollar must not introduce syntax next to a word
+                 * inserted below (notably the shell's $'...' extension). */
+                if ((variables && quote != '\'' && bconchar(command, '\\') != BSTR_OK)
+                        || bconchar(command, '$') != BSTR_OK) {
+                    goto cleanup;
+                }
+
+                p++;
+                continue;
+            }
+
+            char token[3] = {'$', p[1], '\0'};
+            char *value = volxlate(obj, NULL, MAXPATHLEN, token, pwd, path,
+                                   volname);
+            char *word = NULL;
+
+            if (value && strlen(value) < MAXPATHLEN) {
+                word = shell_quote(value);
+            }
+
+            free(value);
+
+            if (!word) {
+                goto cleanup;
+            }
+
+            int status = BSTR_OK;
+
+            if (quote) {
+                status = bconchar(command, quote);
+            }
+
+            if (status == BSTR_OK) {
+                status = bcatcstr(command, word);
+            }
+
+            free(word);
+
+            if (status != BSTR_OK
+                    || (quote && bconchar(command, quote) != BSTR_OK)) {
+                goto cleanup;
+            }
+
+            p++;
+            continue;
+        }
+
+        if (*p == '\'' || *p == '"') {
+            if (!quote) {
+                quote = *p;
+            } else if (quote == *p) {
+                quote = '\0';
+            }
+        }
+
+        if (bconchar(command, *p) != BSTR_OK) {
+            goto cleanup;
+        }
+    }
+
+    const char *data = bdata(command);
+
+    if ((!variables || !quote) && data != NULL) {
+        result = strdup(data);
+    }
+
+cleanup:
+    bdestroy(command);
+
+    if (result) {
+        return result;
+    }
+
+invalid:
+    LOG(log_error, logtype_afpd,
+        "Cannot expand shell hook: unsupported syntax, overlong variable, "
+        "or allocation failure; use a script with variable arguments");
+    return NULL;
+}
+
+/*!
+ * @brief Test seam for shell-hook expansion, outside the installed public API
+ *
+ * @param[in] obj      session and server options
+ * @param[in] src      configured shell command
+ * @param[in] pwd      session user's account entry, or NULL
+ * @param[in] path     volume path
+ * @param[in] volname  volume name
+ * @returns allocated command, or NULL if expansion fails
+ */
+char *conf_testutil_expand_hook(const AFPObj *obj, const char *src,
+                                const struct passwd *pwd, const char *path,
+                                const char *volname)
+{
+    return shellcmd_xlate(obj, src, pwd, path, volname);
+}
+
+/*!
  * @brief check user access list for volume
  *
  * This function wants a string consisting of names seperated by comma
@@ -1910,13 +2107,11 @@ static struct vol *creatvol(AFPObj *obj,
     }
 
     if ((val = getoption_str(obj->iniconfig, section, "preexec", preset, NULL))) {
-        EC_NULL(volume->v_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path,
-                                             name));
+        EC_NULL(volume->v_preexec = shellcmd_xlate(obj, val, pwd, path, name));
     }
 
     if ((val = getoption_str(obj->iniconfig, section, "postexec", preset, NULL))) {
-        EC_NULL(volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path,
-                                              name));
+        EC_NULL(volume->v_postexec = shellcmd_xlate(obj, val, pwd, path, name));
     }
 
     /* iniparser answers an empty "volume uuid =" with "", not NULL, so the
