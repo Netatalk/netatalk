@@ -431,7 +431,7 @@ int bin_open(char *binfile, int flags, struct FHeader *fh, int options)
                 return -1;
             }
 
-            if ((bin.filed = open(bin.path, flags, 0666)) < 0) {
+            if ((bin.filed = open(bin.path, flags, 0666)) < 0) { //NOSONAR: granting permissions to 'others' is intentional
                 perror(bin.path);
                 return -1;
             }

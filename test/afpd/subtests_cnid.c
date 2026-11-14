@@ -151,7 +151,7 @@ int utest_cnid_sqlite_symlinks_rejected(void)
 
     seed = NULL;
 
-    if (chmod(aux_db, 0666) != 0 || symlink(sentinel, aux_wal) != 0) {
+    if (chmod(aux_db, 0666) != 0 || symlink(sentinel, aux_wal) != 0) { //NOSONAR: granting permissions to 'others' is intentional
         result = 9;
         goto cleanup;
     }

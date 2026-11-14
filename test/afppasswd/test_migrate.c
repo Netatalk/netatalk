@@ -628,7 +628,7 @@ static void test_unsafe_metadata(void)
     int passed = record != NULL && make_case(directory, path, record) == 0;
 
     if (passed) {
-        passed = chmod(path, 0644) == 0 &&
+        passed = chmod(path, 0644) == 0 && //NOSONAR: granting permissions to 'others' is intentional
                  run_migration(path, &context) < 0 &&
                  source_is_unchanged(path, record) &&
                  count_case_entries(directory) == 1;

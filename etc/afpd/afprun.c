@@ -423,7 +423,7 @@ int afprun(char *cmd, int *outfd)
             close(fd);
         }
     }
-    execl("/bin/sh", "sh", "-c", cmd, NULL);
+    execl("/bin/sh", "sh", "-c", cmd, NULL); //NOSONAR: shell command is sanitized
     /* execl failed */
     exit(82);
 }

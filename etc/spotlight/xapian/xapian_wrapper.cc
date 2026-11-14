@@ -155,7 +155,7 @@ bool mkdir_one(const std::string &path, std::string &errmsg)
         return true;
     }
 
-    if (mkdir(path.c_str(), 0775) == 0) {
+    if (mkdir(path.c_str(), 0775) == 0) { //NOSONAR: granting permissions to 'others' is intentional
         return true;
     }
 
@@ -1216,6 +1216,7 @@ void chmod_database_path(const std::string &db_path)
         return;
     }
 
+    /* FIXME: refactor away global permissions: GitHub #3263 */
     fchmod(dirfd, 0777);
     DIR *dir = fdopendir(dirfd);
 
@@ -1253,6 +1254,7 @@ void chmod_database_path(const std::string &db_path)
             continue;
         }
 
+        /* FIXME: refactor away global permissions: GitHub #3263 */
         fchmod(fd, S_ISDIR(st.st_mode) ? 0777 : 0666);
         close(fd);
     }

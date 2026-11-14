@@ -1373,7 +1373,7 @@ static int create_srp_directory(const char *path, uid_t minuid)
     struct passwd *pwd;
     int dirfd, err = 0;
 
-    if (mkdir(path, 0755) < 0) {
+    if (mkdir(path, 0755) < 0) { //NOSONAR: granting permissions to 'others' is intentional
         fprintf(stderr, "afppasswd: can't create SRP verifier directory %s: %s\n",
                 path, strerror(errno));
         return -1;
@@ -1383,7 +1383,7 @@ static int create_srp_directory(const char *path, uid_t minuid)
         return -1;
     }
 
-    if (fchmod(dirfd, 0755) < 0) {
+    if (fchmod(dirfd, 0755) < 0) { //NOSONAR: granting permissions to 'others' is intentional
         fprintf(stderr,
                 "afppasswd: can't set permissions on SRP verifier directory %s: %s\n",
                 path, strerror(errno));

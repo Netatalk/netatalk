@@ -2376,7 +2376,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             EC_FAIL;
         }
     } else if ((st.st_mode & 01777) != 01777
-               && fchmod(dirfd, 01777) != 0) {
+               && fchmod(dirfd, 01777) != 0) { //NOSONAR: granting permissions to 'others' is intentional
         int saved_errno = errno;
         LOG(log_error, logtype_cnid,
             "Can't make CNID DB directory '%s' shared: %s", dirpath,

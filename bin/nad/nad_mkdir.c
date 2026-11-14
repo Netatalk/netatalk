@@ -99,7 +99,7 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
     if (vol->vol->v_adouble == AD_VERSION2) {
         bstring addir = bfromcstr(path);
         bcatcstr(addir, "/.AppleDouble");
-        mkdir(cfrombstr(addir), 0777);
+        mkdir(cfrombstr(addir), 0777); //NOSONAR: granting permissions to 'others' is intentional
         chmod(cfrombstr(addir), 02777); //NOSONAR: Shared AppleDouble metadata requires group inheritance and multiuser access.
         bdestroy(addir);
     }
