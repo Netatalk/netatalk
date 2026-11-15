@@ -1,5 +1,5 @@
 {
-"commit": "918b4e1423c1715ff54f944059f027dcdfb118e7",
+"commit": "8cc6852d9687d0f81f6be8fcef63580a8cabd45a",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -47152,7 +47152,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#afp_config_free",
 "kind": "function",
-"line": 4625,
+"line": 4624,
 "static": false
 },
 {
@@ -47160,7 +47160,7 @@
 "file": "libatalk/util/netatalk_conf.c",
 "id": "libatalk/util/netatalk_conf.c#afp_config_parse",
 "kind": "function",
-"line": 3909,
+"line": 3910,
 "static": false
 },
 {

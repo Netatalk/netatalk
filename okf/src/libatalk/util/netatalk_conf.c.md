@@ -5,7 +5,7 @@ description: "Reading afp.conf and extmap.conf: server options, volume definitio
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/netatalk_conf.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T13:31:45+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-15T08:21:33+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -1216,7 +1216,7 @@ Called by: [afp_config_parse](netatalk_conf.c.md#afp_config_parse)
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 ```
 
-Defined at lines 3909 to 4615.
+Defined at lines 3910 to 4614.
 
 Read afp.conf into the options of an AFP object.
 
@@ -1226,7 +1226,7 @@ Parameters:
 * ``: AFP object to configure
 * `processname`: name for log lines, or NULL to keep the current one
 
-Returns: 0, or -1 when afp.conf cannot load, a single-user server has no usable vol dbpath, an allocation fails, or gethostname fails
+Returns: 0, or -1 when afp.conf cannot load, a single-user server has no usable vol dbpath, an allocation fails, gethostname fails, or the Kerberos keytab environment variable cannot be set
 
 Calls: [atalk_aton](atalk_addr.c.md#atalk_aton), [become_root](unix.c.md#become_root), [conf_int_key_usable](netatalk_conf.c.md#conf_int_key_usable), [conf_key_present](netatalk_conf.c.md#conf_key_present), [conf_parse_bool](netatalk_conf.c.md#conf_parse_bool), [getoption_bool](netatalk_conf.c.md#getoption_bool), [getoption_int](netatalk_conf.c.md#getoption_int), [getoption_str](netatalk_conf.c.md#getoption_str), [getoption_strdup](netatalk_conf.c.md#getoption_strdup), [getoption_strdup_alias](netatalk_conf.c.md#getoption_strdup_alias), [getoption_uint32_strict](netatalk_conf.c.md#getoption_uint32_strict), [netatalk_readbuf_clamp](netatalk_conf.c.md#netatalk_readbuf_clamp), [readextmap](netatalk_conf.c.md#readextmap), [safe_atoi](netatalk_conf.c.md#safe_atoi), [set_charset_name](../unicode/charcnv.c.md#set_charset_name), [set_processname](logger.c.md#set_processname), [setuplog](logger.c.md#setuplog), [splice_size_round](netatalk_conf.c.md#splice_size_round), [strip_trailing_slashes](unix.c.md#strip_trailing_slashes), [unbecome_root](unix.c.md#unbecome_root), [user_state_paths](netatalk_conf.c.md#user_state_paths)
 
@@ -1238,7 +1238,7 @@ Called by: [main](../../bin/dbd/cmd_dbd.c.md#main), [main](../../bin/nad/nad.c.m
 void afp_config_free(AFPObj *obj)
 ```
 
-Defined at lines 4625 to 4785.
+Defined at lines 4624 to 4784.
 
 Free the options that afp_config_parse allocated, with the extension map and the parsed afp.conf.
 
