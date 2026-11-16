@@ -895,9 +895,7 @@ int skip_junk(int line)
                             break;
                         }
 
-                    case 0xFF :
-
-                    /* Fall through: whitespace after data ends this line. */
+                    case 0xFF : /* Fall through: whitespace after data ends this line. */
                     case 0xFD :
                         stopflag = true;
                         break;
@@ -1002,9 +1000,7 @@ size_t hqx_7tobin(char *outbuf, size_t datalen)
                         break;
                     }
 
-                case 0xFD :
-
-                /* Fall through: whitespace within encoded data ends decoding. */
+                case 0xFD : /* Fall through: whitespace within encoded data ends decoding. */
                 case 0xFF :
                     eofflag = 1;
 
