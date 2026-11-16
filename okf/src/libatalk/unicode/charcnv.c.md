@@ -5,7 +5,7 @@ description: "Character-set conversion routines based on samba iconv wrappers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/unicode/charcnv.c"
 tags: ["libatalk/unicode"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-22T19:27:15+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-16T11:02:17+11:00 }
 ---
 
 Part of the [libatalk/unicode](../unicode.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -393,7 +393,7 @@ Calls: [convert_string_allocate_internal](charcnv.c.md#convert_string_allocate_i
 ### charset_decompose
 
 ```c
-size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst, size_t outlen)
+size_t charset_decompose(charset_t ch, const char *src, size_t inlen, char *dst, size_t outlen)
 ```
 
 Defined at lines 741 to 769.

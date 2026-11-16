@@ -5,7 +5,7 @@ description: "The nad mv command: move entries with their CNIDs and metadata."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/nad_mv.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-16T11:02:17+11:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -64,7 +64,7 @@ Uses file-scope variables: `afp_obj`, `fflg`, `iflg`, `nflg`, `vflg`
 ### do_move
 
 ```c
-static int do_move(const char *from, const char *to)
+static int do_move(char *from, char *to)
 ```
 
 Defined at lines 260 to 493.
@@ -109,7 +109,7 @@ Called by: [copy](nad_mv.c.md#copy)
 ### copy
 
 ```c
-static int copy(const char *from, const char *to)
+static int copy(char *from, char *to)
 ```
 
 Defined at lines 555 to 607.

@@ -5,7 +5,7 @@ description: "FPSpotlightRPC: Spotlight queries and attribute requests over the 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/spotlight.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-21T15:29:27+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-16T11:02:17+11:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -256,7 +256,7 @@ Called by: [sl_rpc_fetchAttributeNamesForOIDArray](spotlight.c.md#sl_rpc_fetchat
 bool add_filemeta(sl_array_t *reqinfo, sl_array_t *fm_array, const char *path, const struct stat *sp)
 ```
 
-Defined at lines 518 to 613.
+Defined at lines 518 to 614.
 
 Add the requested metadata of one query result to a result array.
 
@@ -280,7 +280,7 @@ Called by: [sl_cnid_fill_results](../spotlight/cnid/sl_cnid.c.md#sl_cnid_fill_re
 static bool create_result_handle(slq_t *slq)
 ```
 
-Defined at lines 625 to 668.
+Defined at lines 626 to 669.
 
 Allocate the result buffers that the backend fills for a query.
 
@@ -299,7 +299,7 @@ Called by: [add_results](spotlight.c.md#add_results), [sl_rpc_openQuery](spotlig
 static bool add_results(sl_array_t *array, slq_t *slq)
 ```
 
-Defined at lines 685 to 731.
+Defined at lines 686 to 732.
 
 Move the gathered results of a query into a reply and start new result buffers.
 
@@ -323,7 +323,7 @@ Called by: [sl_rpc_fetchQueryResultsForContext](spotlight.c.md#sl_rpc_fetchquery
 static bool localsearch_backend_active(const AFPObj *obj)
 ```
 
-Defined at lines 745 to 757.
+Defined at lines 746 to 758.
 
 Tell whether a volume that the session opened uses the localsearch backend.
 
@@ -342,7 +342,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 779 to 849.
+Defined at lines 780 to 850.
 
 Spotlight RPC fetchPropertiesForContext: describe the search store of a volume.
 
@@ -366,7 +366,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_openQuery(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, struct vol *v)
 ```
 
-Defined at lines 872 to 1176.
+Defined at lines 873 to 1177.
 
 Spotlight RPC openQueryWithParams:forContext: start a search on a volume.
 
@@ -396,7 +396,7 @@ Calls through [`sl_backend_ops::sbo_open_query`](../../include/atalk/spotlight.h
 static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 1192 to 1278.
+Defined at lines 1193 to 1279.
 
 Spotlight RPC fetchQueryResultsForContext: return the results that a query gathered.
 
@@ -422,7 +422,7 @@ Calls through [`sl_backend_ops::sbo_fetch_results`](../../include/atalk/spotligh
 static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1295 to 1353.
+Defined at lines 1296 to 1354.
 
 Spotlight RPC storeAttributes:forOIDArray:context: set the dates of an object.
 
@@ -446,7 +446,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1369 to 1413.
+Defined at lines 1370 to 1414.
 
 Spotlight RPC fetchAttributeNamesForOIDArray:context: list the attributes of an object.
 
@@ -470,7 +470,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 ```
 
-Defined at lines 1429 to 1502.
+Defined at lines 1430 to 1503.
 
 Spotlight RPC fetchAttributes:forOIDArray:context: return the metadata of an object.
 
@@ -494,7 +494,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 static int sl_rpc_closeQueryForContext(const AFPObj *obj, const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *v)
 ```
 
-Defined at lines 1516 to 1561.
+Defined at lines 1517 to 1562.
 
 Spotlight RPC closeQueryForContext: end a query.
 
@@ -518,7 +518,7 @@ Called by: [afp_spotlight_rpc](spotlight.c.md#afp_spotlight_rpc)
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1584 to 1732.
+Defined at lines 1585 to 1733.
 
 FPSpotlightRPC: answer the Spotlight commands of a client.
 

@@ -5,7 +5,7 @@ description: "IPC over socketpair between parent and children."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/server_ipc.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-16T11:02:17+11:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -348,7 +348,7 @@ Uses file-scope variables: `ipc_cmd_str`
 ### ipc_child_write
 
 ```c
-int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
+int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, const void *msg)
 ```
 
 Defined at lines 789 to 829.
