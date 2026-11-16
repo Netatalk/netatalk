@@ -5,7 +5,7 @@ description: "BinHex 4.0 encoding and decoding for the nad archive commands."
 resource: "https://github.com/Netatalk/netatalk/blob/main/bin/nad/hqx.c"
 tags: ["bin/nad"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-12T21:52:14+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-16T10:59:23+11:00 }
 ---
 
 Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -19,7 +19,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 * [nad.h](nad.h.md)
 * [nad_adouble.h](nad_adouble.h.md)
 * [netatalk/endian.h](../../sys/netatalk/endian.h.md)
-* System headers: `ctype.h`, `netinet/in.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/time.h`, `sys/types.h`, `sys/uio.h`, `time.h`, `unistd.h`
+* System headers: `ctype.h`, `netinet/in.h`, `stdbool.h`, `stdio.h`, `stdlib.h`, `string.h`, `sys/param.h`, `sys/time.h`, `sys/types.h`, `sys/uio.h`, `time.h`, `unistd.h`
 
 # Functions
 
@@ -29,7 +29,7 @@ Part of the [bin/nad](../nad.md) subsystem. Built from the commit recorded in [b
 static int hqx_write_all(const void *buf, size_t len)
 ```
 
-Defined at lines 110 to 126.
+Defined at lines 106 to 122.
 
 Write a whole buffer to the BinHex output.
 
@@ -51,7 +51,7 @@ Uses file-scope variables: `hqx`
 static int hqx_put_char(unsigned char c)
 ```
 
-Defined at lines 137 to 153.
+Defined at lines 133 to 149.
 
 Write one BinHex character to the output and start a new line after 63 characters.
 
@@ -74,7 +74,7 @@ Uses file-scope variables: `hqx`
 static int hqx_emit_6bit(unsigned char b)
 ```
 
-Defined at lines 164 to 185.
+Defined at lines 160 to 181.
 
 Add one byte to the 6-bit encoder of the BinHex output.
 
@@ -97,7 +97,7 @@ Uses file-scope variables: `hqx`, `hqxchars`
 static int hqx_emit_byte(unsigned char b)
 ```
 
-Defined at lines 196 to 207.
+Defined at lines 192 to 203.
 
 Encode one data byte and escape the 0x90 run marker.
 
@@ -118,7 +118,7 @@ Called by: [hqx_emit_data](hqx.c.md#hqx_emit_data)
 static int hqx_emit_data(const void *buf, size_t len)
 ```
 
-Defined at lines 216 to 227.
+Defined at lines 212 to 223.
 
 Encode a buffer of data bytes with hqx_emit_byte.
 
@@ -138,7 +138,7 @@ Called by: [hqx_finish_fork](hqx.c.md#hqx_finish_fork), [hqx_header_write](hqx.c
 static int hqx_flush_6bit(void)
 ```
 
-Defined at lines 237 to 261.
+Defined at lines 233 to 257.
 
 Write the one or two bytes that the encoder still holds.
 
@@ -158,7 +158,7 @@ Uses file-scope variables: `hqx`, `hqxchars`
 static int hqx_finish_fork(int fork)
 ```
 
-Defined at lines 272 to 292.
+Defined at lines 268 to 288.
 
 Write the CRC of a fork after its last declared byte.
 
@@ -181,7 +181,7 @@ Uses file-scope variables: `hqx`
 int hqx_open(char *hqxfile, int flags, struct FHeader *fh, int options)
 ```
 
-Defined at lines 309 to 388.
+Defined at lines 305 to 384.
 
 Open a BinHex file for reading or writing.
 
@@ -209,7 +209,7 @@ Mentioned in the documentation of: [hqx_close](hqx.c.md#hqx_close), [hqx_header_
 int hqx_close(int keepflag)
 ```
 
-Defined at lines 402 to 438.
+Defined at lines 398 to 434.
 
 Close the active BinHex file.
 
@@ -232,7 +232,7 @@ Uses file-scope variables: `hqx`
 const char * hqx_path(void)
 ```
 
-Defined at lines 448 to 451.
+Defined at lines 444 to 447.
 
 Return the path of the BinHex output that hqx_open created.
 
@@ -250,7 +250,7 @@ Uses file-scope variables: `hqx`
 ssize_t hqx_read(int fork, char *buffer, size_t length)
 ```
 
-Defined at lines 469 to 533.
+Defined at lines 465 to 529.
 
 Read decoded data from a BinHex fork.
 
@@ -279,7 +279,7 @@ Mentioned in the documentation of: [hqx_7tobin](hqx.c.md#hqx_7tobin)
 int hqx_header_read(struct FHeader *fh)
 ```
 
-Defined at lines 546 to 664.
+Defined at lines 542 to 660.
 
 Read and validate a BinHex header.
 
@@ -304,7 +304,7 @@ Mentioned in the documentation of: [hqx_7tobin](hqx.c.md#hqx_7tobin)
 int hqx_header_write(struct FHeader *fh)
 ```
 
-Defined at lines 673 to 711.
+Defined at lines 669 to 707.
 
 Encode and write a BinHex header.
 
@@ -323,7 +323,7 @@ Called by: [hqx_open](hqx.c.md#hqx_open)
 ssize_t hqx_write(int fork, char *buffer, size_t length)
 ```
 
-Defined at lines 725 to 753.
+Defined at lines 721 to 749.
 
 Encode fork data into the BinHex output.
 
@@ -348,7 +348,7 @@ Uses file-scope variables: `hqx`
 ssize_t hqx7_fill(unsigned char *hqx7_ptr)
 ```
 
-Defined at lines 766 to 786.
+Defined at lines 762 to 782.
 
 Fill the BinHex text input buffer.
 
@@ -369,7 +369,7 @@ Uses file-scope variables: `hqx`, `hqx7_buf`, `hqx7_first`, `hqx7_last`
 int skip_junk(int line)
 ```
 
-Defined at lines 843 to 940.
+Defined at lines 839 to 937.
 
 Skip non-BinHex text until encoded data is found.
 
@@ -394,7 +394,7 @@ Mentioned in the documentation of: [hqx7_fill](hqx.c.md#hqx7_fill)
 size_t hqx_7tobin(char *outbuf, size_t datalen)
 ```
 
-Defined at lines 954 to 1083.
+Defined at lines 951 to 1081.
 
 Decode BinHex text data to binary.
 
@@ -418,7 +418,7 @@ Mentioned in the documentation of: [hqx7_fill](hqx.c.md#hqx7_fill), [skip_junk](
 
 ### struct hqx_file_data
 
-Defined at line 77.
+Defined at line 73.
 * `uint32_t forklen`
 * `unsigned short forkcrc`
 * `int forkdone`
@@ -433,7 +433,7 @@ Defined at line 77.
 
 # Macros
 
-* Undocumented: `BHH_CRCSIZ`, `BHH_DATASIZ`, `BHH_FLAGSIZ`, `BHH_HEADSIZ`, `BHH_RESSIZ`, `BHH_TCSIZ`, `BHH_VERSION`, `FIRST`, `NOWAY`, `OTHER`, `RUNCHAR`, `SURETHANG`
+* Undocumented: `BHH_CRCSIZ`, `BHH_DATASIZ`, `BHH_FLAGSIZ`, `BHH_HEADSIZ`, `BHH_RESSIZ`, `BHH_TCSIZ`, `BHH_VERSION`, `FIRST`, `OTHER`, `RUNCHAR`
 
 # File-scope variables
 

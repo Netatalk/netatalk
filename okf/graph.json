@@ -1,5 +1,5 @@
 {
-"commit": "8cc6852d9687d0f81f6be8fcef63580a8cabd45a",
+"commit": "493cc564b55eb46945ca6cfcfde46450714e1b5e",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -48832,7 +48832,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#bin_close",
 "kind": "function",
-"line": 467,
+"line": 453,
 "static": false
 },
 {
@@ -48840,7 +48840,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#bin_header_read",
 "kind": "function",
-"line": 680,
+"line": 666,
 "static": false
 },
 {
@@ -48848,7 +48848,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#bin_header_write",
 "kind": "function",
-"line": 776,
+"line": 759,
 "static": false
 },
 {
@@ -48856,7 +48856,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#bin_open",
 "kind": "function",
-"line": 375,
+"line": 361,
 "static": false
 },
 {
@@ -48864,7 +48864,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#bin_path",
 "kind": "function",
-"line": 510,
+"line": 496,
 "static": false
 },
 {
@@ -48872,7 +48872,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#bin_read",
 "kind": "function",
-"line": 530,
+"line": 516,
 "static": false
 },
 {
@@ -48880,7 +48880,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#bin_write",
 "kind": "function",
-"line": 602,
+"line": 588,
 "static": false
 },
 {
@@ -54296,7 +54296,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx7_fill",
 "kind": "function",
-"line": 766,
+"line": 762,
 "static": false
 },
 {
@@ -54304,7 +54304,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_7tobin",
 "kind": "function",
-"line": 954,
+"line": 951,
 "static": false
 },
 {
@@ -54312,7 +54312,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_close",
 "kind": "function",
-"line": 402,
+"line": 398,
 "static": false
 },
 {
@@ -54320,7 +54320,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_emit_6bit",
 "kind": "function",
-"line": 164,
+"line": 160,
 "static": true
 },
 {
@@ -54328,7 +54328,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_emit_byte",
 "kind": "function",
-"line": 196,
+"line": 192,
 "static": true
 },
 {
@@ -54336,7 +54336,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_emit_data",
 "kind": "function",
-"line": 216,
+"line": 212,
 "static": true
 },
 {
@@ -54344,7 +54344,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_finish_fork",
 "kind": "function",
-"line": 272,
+"line": 268,
 "static": true
 },
 {
@@ -54352,7 +54352,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_flush_6bit",
 "kind": "function",
-"line": 237,
+"line": 233,
 "static": true
 },
 {
@@ -54360,7 +54360,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_header_read",
 "kind": "function",
-"line": 546,
+"line": 542,
 "static": false
 },
 {
@@ -54368,7 +54368,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_header_write",
 "kind": "function",
-"line": 673,
+"line": 669,
 "static": false
 },
 {
@@ -54376,7 +54376,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_open",
 "kind": "function",
-"line": 309,
+"line": 305,
 "static": false
 },
 {
@@ -54384,7 +54384,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_path",
 "kind": "function",
-"line": 448,
+"line": 444,
 "static": false
 },
 {
@@ -54392,7 +54392,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_put_char",
 "kind": "function",
-"line": 137,
+"line": 133,
 "static": true
 },
 {
@@ -54400,7 +54400,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_read",
 "kind": "function",
-"line": 469,
+"line": 465,
 "static": false
 },
 {
@@ -54408,7 +54408,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_write",
 "kind": "function",
-"line": 725,
+"line": 721,
 "static": false
 },
 {
@@ -54416,7 +54416,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#hqx_write_all",
 "kind": "function",
-"line": 110,
+"line": 106,
 "static": true
 },
 {
@@ -55680,7 +55680,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_ad_date_from_header",
 "kind": "function",
-"line": 165,
+"line": 151,
 "static": true
 },
 {
@@ -55688,7 +55688,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_ad_date_to_header",
 "kind": "function",
-"line": 181,
+"line": 167,
 "static": true
 },
 {
@@ -55696,7 +55696,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_discard_bytes",
 "kind": "function",
-"line": 200,
+"line": 186,
 "static": true
 },
 {
@@ -55704,7 +55704,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_fdflags_from_header",
 "kind": "function",
-"line": 117,
+"line": 107,
 "static": true
 },
 {
@@ -55712,7 +55712,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_fdflags_to_header",
 "kind": "function",
-"line": 145,
+"line": 132,
 "static": true
 },
 {
@@ -55720,7 +55720,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_skip_padding",
 "kind": "function",
-"line": 271,
+"line": 257,
 "static": true
 },
 {
@@ -55728,7 +55728,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_u16_from_bytes",
 "kind": "function",
-"line": 83,
+"line": 73,
 "static": true
 },
 {
@@ -55736,7 +55736,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_u32_from_header",
 "kind": "function",
-"line": 97,
+"line": 87,
 "static": true
 },
 {
@@ -55744,7 +55744,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_write_padding",
 "kind": "function",
-"line": 326,
+"line": 312,
 "static": true
 },
 {
@@ -55752,7 +55752,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#macbin_write_repeat",
 "kind": "function",
-"line": 236,
+"line": 222,
 "static": true
 },
 {
@@ -60016,7 +60016,7 @@
 "file": "bin/nad/hqx.c",
 "id": "bin/nad/hqx.c#skip_junk",
 "kind": "function",
-"line": 843,
+"line": 839,
 "static": false
 },
 {
@@ -61696,7 +61696,7 @@
 "file": "bin/nad/macbin.c",
 "id": "bin/nad/macbin.c#test_header",
 "kind": "function",
-"line": 884,
+"line": 867,
 "static": false
 },
 {
