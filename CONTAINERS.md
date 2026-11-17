@@ -77,17 +77,20 @@ Additionally, we rely on the host's D-Bus for Zeroconf, achieved with a bind mou
 The left hand side of the bind mount is the host machine, and the right hand side is the container.
 The host machine path may have to be changed to match the location of D-Bus on the host machine.
 
-On certain host OSes, notably Ubuntu: if the Apparmor security policy restricts D-Bus messages,
-enable the `unconfined` security option.
+On certain host OS and Docker version configurations, the default security profile may block certain features such as
+access to the host network interface or sending of D-Bus messages. Loosening one more more security options for your
+container runtime should restore functionality, with the tradeoff of a less hardened runtime of course.
 
-Example for the docker compose yaml configuration file:
+Example of unconfining both apparmor and seccomp security features in the compose yaml configuration file:
 
 ```yaml
     security_opt:
       - apparmor=unconfined
+      - seccomp=unconfined
 ```
 
-See the [Docker AppArmor security profiles documentation](https://docs.docker.com/engine/security/apparmor/)
+See Docker's [AppArmor](https://docs.docker.com/engine/security/apparmor/) and
+[Seccomp](https://docs.docker.com/engine/security/seccomp/) security profiles documentation
 for further details.
 
 The container is hard coded to output `afpd` (the Netatalk file server daemon) logs to the container's stdout,
