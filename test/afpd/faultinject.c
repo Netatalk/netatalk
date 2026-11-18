@@ -388,14 +388,18 @@ typedef ssize_t (*write_fn)(int, const void *, size_t);
 static write_fn real_write;
 
 /*!
- * @brief write() interposer: the next write_zero calls write nothing and
- *        return 0, and with write_max set a call writes no more than
- *        write_max bytes
+ * @brief write() interposer: a call write_hook answers 1 and the next
+ *        write_zero calls write nothing and return 0, and with write_max set
+ *        a call writes no more than write_max bytes
  */
 ssize_t write(int fd, const void *buf, size_t count)
 {
     if (!real_write) {
         real_write = (write_fn)dlsym(RTLD_NEXT, "write");
+    }
+
+    if (fi.write_hook != NULL && fi.write_hook(fd, buf, count) == 1) {
+        return 0;
     }
 
     if (fi.write_zero > 0) {

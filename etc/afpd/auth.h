@@ -13,6 +13,7 @@
 
 #include <limits.h>
 #include <stdbool.h>
+#include <sys/time.h>
 
 #include <atalk/globals.h>
 
@@ -46,6 +47,9 @@ extern gid_t	*groups;
 extern int	ngroups;
 
 bool singleuser_admits_uid(const AFPObj *obj, uid_t uid);
+void auth_due_tick(struct itimerval *kept, bool notice);
+void auth_logout(const AFPObj *obj);
+void auth_switch_back(const AFPObj *obj);
 
 /* FP functions */
 int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,

@@ -119,24 +119,24 @@ static pid_t session_master = 0;
  * libatalk/util/sigpipe.c and is shared with the ASP transport. */
 
 /*!
- * @brief End a DSI session and close its connection
+ * @brief Close a DSI session's volumes, log out, and log its statistics,
+ * leaving its connection alone
  *
- * The call stops the idle worker, closes the volumes, and logs out. An error
- * path that exits after become_root leaves the euid at 0, so the call
- * switches back to obj->uid first. The volume close scripts run as the login
- * user. Signals stay blocked during the logout, so a signal from PAM cannot
- * interrupt it. The session statistics, the cache counters, and the TCP buffer
- * sizes go to the log.
+ * The IPC descriptor closes first, so the master hands the ending session no
+ * reconnect. A DSICloseSession closes its volumes before this call: a
+ * reconnect the master hands it meanwhile is lost.
+ *
+ * A session with a logout blocks its signals from the logout on, so a signal
+ * from PAM cannot interrupt it. The signals a fault or a trap raises stay
+ * deliverable: POSIX leaves the effect of a blocked fault signal undefined.
  *
  * @param[in,out] obj  session object
  */
-static void afp_dsi_close(AFPObj *obj)
+void afp_dsi_end(AFPObj *obj)
 {
-    DSI *dsi = obj->dsi;
+    const DSI *dsi = obj->dsi;
     sigset_t sigs;
-    /* Revokes iw_can_work — no wait. Async-signal-safe (single atomic
-     * store). All afp_dsi_close() paths run post-revoke in main-loop
-     * context and end in exit(); the store is belt-and-braces. */
+    /* no grant is live here: see iw_revoke_signal_safe() */
     iw_revoke_signal_safe();
     /* Log idle worker stats AFTER stop but BEFORE log_dircache_stat() */
     iw_log_stats();
@@ -148,25 +148,19 @@ static void afp_dsi_close(AFPObj *obj)
         obj->hint_fd = -1;
     }
 
-    /* euid may not be the login user if an error path exited mid-command
-     * (e.g. after become_root()); volume prexec_close scripts need the
-     * login user, restore it. Before login there is none to restore.
-     */
-    if (obj->uid != 0 && geteuid() != obj->uid) {
-        if (seteuid(obj->uid) < 0) {
-            LOG(log_error, logtype_afpd, "can't seteuid(%u) back %s: uid: %u, euid: %u",
-                obj->uid, strerror(errno), getuid(), geteuid());
-            exit(EXITERR_SYS);
-        }
-    }
-
+    auth_switch_back(obj);
     close_all_vol(obj);
 
     if (obj->logout) {
-        /* Block sigs, PAM/systemd/whoever might send us a SIG??? in (*obj->logout)() -> pam_close_session() */
+        /* pam_close_session(), or what it calls, may signal its caller */
         sigfillset(&sigs);
+        sigdelset(&sigs, SIGSEGV);
+        sigdelset(&sigs, SIGBUS);
+        sigdelset(&sigs, SIGFPE);
+        sigdelset(&sigs, SIGILL);
+        sigdelset(&sigs, SIGTRAP);
         pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-        (*obj->logout)();
+        auth_logout(obj);
     }
 
     /* Log TCP buffer sizes at session close (socket may already be closed
@@ -192,7 +186,17 @@ static void afp_dsi_close(AFPObj *obj)
     pfd_log_stats();
     pfd_shutdown();
     dircache_rfork_shutdown();
-    dsi_close(dsi);
+}
+
+/*!
+ * @brief End a DSI session and close its connection
+ *
+ * @param[in,out] obj  session object
+ */
+static void afp_dsi_close(AFPObj *obj)
+{
+    afp_dsi_end(obj);
+    dsi_close(obj->dsi);
 }
 
 /*!
@@ -221,14 +225,13 @@ static const char *afp_dsi_die_cause(int sig, char *buf, size_t len)
 }
 
 /*!
- * @brief SIGTERM: Terminate the AFP session and exit.
+ * @brief End the AFP session and exit
  *
- * Wraps afp_dsi_close() + exit() with pre-flight checks and a shutdown
- * attention to notify the client.  Other call sites in this file invoke
- * afp_dsi_close() + exit() directly — a future cleanup could funnel
- * all exit paths through here.
+ * A disconnected session's close keeps the DSI, which alarm_handler() reads
+ * until the exit.
  *
- * @param sig  signal number or EXITERR_* code; 0 for maintenance shutdown.
+ * @param[in] sig  signal number, EXITERR_* code, or 0 from send_reply() for
+ *                 a refused or failed login
  */
 static void afp_dsi_die(int sig)
 {
@@ -241,6 +244,7 @@ static void afp_dsi_die(int sig)
             afp_dsi_die_cause(sig, cause, sizeof(cause)), dsi->tickle,
             AFPobj->options.tickleval);
         of_log_usage(log_note, "disconnected exit");
+        afp_dsi_end(AFPobj);
         exit(0);
     }
 
@@ -251,9 +255,7 @@ static void afp_dsi_die(int sig)
     dsi_attention(AFPobj->dsi, AFPATTN_SHUTDOWN);
     afp_dsi_close(AFPobj);
 
-    if (sig) /* if no signal, assume dying because logins are disabled &
-                don't log it (maintenance mode)*/
-    {
+    if (sig) {
         char cause[64];
         LOG(log_info, logtype_afpd, "Connection terminated: %s",
             afp_dsi_die_cause(sig, cause, sizeof(cause)));
@@ -1217,6 +1219,9 @@ void afp_over_dsi(AFPObj *obj)
         case DSIFUNC_CLOSE:
             LOG(log_debug, logtype_afpd, "DSI: close session request");
             iw_shutdown();
+            /* while the IPC descriptor is open, for the forks' refresh
+             * hints, as at an FPLogout */
+            close_all_vol(obj);
             afp_dsi_close(obj);
             LOG(log_note, logtype_afpd, "done");
             exit(0);

@@ -19,6 +19,12 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief The component tests' helpers: AFP commands called on a session
+ *        object, files written to disk, and DSI sessions served in a child
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -604,13 +610,20 @@ static char *dsi_test_cnid_resolve(struct _cnid_db *cdb _U_, cnid_t *id _U_,
     return NULL;
 }
 
+uid_t dsi_test_closed_euid = (uid_t) -1;
+uint8_t dsi_test_closed_in_root;
+
 /*!
  * @brief cnid_close() of a session process's CNID backend, which holds
- *        nothing
+ *        nothing: it notes the close's euid and whether it ran in the root
+ *        directory
  */
 static void dsi_test_cnid_close(struct _cnid_db *cdb _U_)
 {
-    /* the backend opened nothing */
+    /* no other directory's name fits */
+    char cwd[2];
+    dsi_test_closed_euid = geteuid();
+    dsi_test_closed_in_root = getcwd(cwd, sizeof(cwd)) != NULL;
 }
 
 /* the CNID backend of a session process: the calls a fork's and a volume's
@@ -670,6 +683,12 @@ pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd,
         session.ipc_fd = ipc_fd;
         session.hint_fd = -1;
         session.uid = uid;
+        /* the harness's euid: under root, as login() leaves a member of
+         * the admin group */
+        session.euid = geteuid();
+        /* programs the session starts run without the preloaded interposer,
+         * which not every build's shell can load */
+        unsetenv("LD_PRELOAD");
         dsi->AFPobj = &session;
         dsi->proto_close = dsi_test_close_socket;
         dsi->flags |= flags;

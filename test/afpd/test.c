@@ -13,6 +13,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief afpdtest's driver and its afpd component tests
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -20,6 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -28,6 +34,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -39,6 +47,8 @@
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/queue.h>
+#include <atalk/server_ipc.h>
+#include <atalk/uam.h>
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
@@ -663,6 +673,1172 @@ static bool dsp_running(int ipc)
 {
     struct pollfd pfd = { .fd = ipc, .events = POLLIN };
     return poll(&pfd, 1, 10000) == 1;
+}
+
+/* where a stand-in logout reports, in the session process */
+static int dsp_logout_fd = -1;
+
+/*!
+ * @brief A UAM's logout for a served session: on dsp_logout_fd, 1 when it
+ *        runs after a volume's close with the process's real uid and gid,
+ *        root's under root, else 0
+ */
+static void dsp_logout(void)
+{
+    const uint8_t own = dsi_test_closed_euid != (uid_t) -1
+                        && geteuid() == getuid() && getegid() == getgid();
+    (void)!write(dsp_logout_fd, &own, sizeof(own));
+}
+
+/*!
+ * @brief The logout of a UAM whose login login() refuses on a logged-in
+ *        session: 2 on dsp_logout_fd, which dsp_logged_out() takes for no
+ *        logout of the session's first UAM
+ */
+static void dsp_other_logout(void)
+{
+    const uint8_t other = 2;
+    (void)!write(dsp_logout_fd, &other, sizeof(other));
+}
+
+/*!
+ * @brief Read what dsp_logout() left on the read end fd of its pipe, once the
+ *        session ended
+ *
+ * @returns whether the session logged out of its UAM once, after a volume's
+ *          close and with its real uid and gid
+ */
+static bool dsp_logged_out(int fd)
+{
+    uint8_t got[2];
+    return setnonblock(fd, 1) == 0 && read(fd, got, sizeof(got)) == 1
+           && got[0] == 1;
+}
+
+/*!
+ * @brief dsi_test_serve_as() for a logged-in session of DSP_USER whose UAM's
+ *        logout is hook, which reports on out; the session holds its own
+ *        copies of ipc_fd and out, and the caller's are closed
+ *
+ * @returns the session's pid, or -1 with errno set
+ */
+static pid_t dsp_logged_in(void (*hook)(void), int ipc_fd, int out, int *peer)
+{
+    void (*logout)(void) = obj.logout;
+    pid_t pid;
+    int err;
+    dsp_logout_fd = out;
+    obj.logout = hook;
+    pid = dsi_test_serve_as(&obj, DSP_USER, ipc_fd, 0, peer);
+    err = errno;
+    obj.logout = logout;
+    dsp_logout_fd = -1;
+    close(out);
+
+    if (ipc_fd != -1) {
+        close(ipc_fd);
+    }
+
+    errno = err;
+    return pid;
+}
+
+/* the account dsp_uam_login() accepts, and its name */
+static struct passwd dsp_uam_pwd;
+static char dsp_uam_name[] = "dsp_user";
+
+/*!
+ * @brief A UAM's login that accepts any request as dsp_uam_pwd
+ *
+ * @returns AFP_OK
+ */
+static int dsp_uam_login(void *uam_obj _U_, struct passwd **pwd,
+                         char *ibuf _U_, int ibuflen _U_, char *rbuf _U_,
+                         size_t *rbuflen)
+{
+    *pwd = &dsp_uam_pwd;
+    *rbuflen = 0;
+    return AFP_OK;
+}
+
+/*!
+ * @brief Write into frame an FPLogin of request reqid for AFP 3.4 through
+ *        the UAM named uam, with nothing for the UAM
+ *
+ * @returns the frame's length
+ */
+static size_t dsp_login_frame(uint8_t *frame, uint16_t reqid, const char *uam)
+{
+    static const char version[] = "AFP3.4";
+    const size_t vlen = sizeof(version) - 1;
+    const size_t ulen = strlen(uam);
+    uint8_t *p = frame + DSI_BLOCKSIZ + 1;
+    const size_t len = dsi_test_frame(frame, DSIFUNC_CMD, reqid, 0,
+                                      (uint32_t)(3 + vlen + ulen), AFP_LOGIN);
+    *p++ = (uint8_t)vlen;
+    memcpy(p, version, vlen);
+    p += vlen;
+    *p++ = (uint8_t)ulen;
+    memcpy(p, uam, ulen);
+    return len;
+}
+
+/*!
+ * @brief Send a session a DSICloseSession
+ *
+ * @returns whether the request went out whole
+ */
+static bool dsp_bye(int peer)
+{
+    uint8_t bye[DSI_BLOCKSIZ];
+    dsi_test_frame(bye, DSIFUNC_CLOSE, 2, 0, 0, 0);
+    return write(peer, bye, sizeof(bye)) == (ssize_t)sizeof(bye);
+}
+
+/*!
+ * @brief Log a served session in through a stand-in UAM as uid, and end it
+ *
+ * The UAM accepts a user of uid and gid uid. A login that gets AFP_OK ends
+ * with a DSICloseSession, a refused one with the refusal. With again the
+ * session is logged in before, and the UAM has a logout of its own.
+ *
+ * @returns 0 when the FPLogin gets code and the session logs out as
+ *          dsp_logged_out() checks, -1 otherwise, or TEST_SKIP without loopback
+ */
+static int dsp_login(uid_t uid, bool again, int code)
+{
+    static const char uam[] = "dsp login";
+    const struct dsp_reply reply = { DSIFUNC_CMD, 1, code };
+    const int cnx_max = obj.cnx_max;
+    uint8_t frame[DSI_BLOCKSIZ + 64];
+    size_t len;
+    int peer = -1;
+    int out[2];
+    int ret = -1;
+    int err;
+    pid_t pid;
+
+    if (pipe(out) != 0) {
+        return -1;
+    }
+
+    if (uam_register(UAM_SERVER_LOGIN, "dsp", uam, dsp_uam_login, NULL,
+                     again ? &dsp_other_logout : &dsp_logout) != 0) {
+        close(out[0]);
+        close(out[1]);
+        return -1;
+    }
+
+    dsp_uam_pwd.pw_name = dsp_uam_name;
+    dsp_uam_pwd.pw_uid = uid;
+    dsp_uam_pwd.pw_gid = uid;
+    len = dsp_login_frame(frame, 1, uam);
+    /* login() refuses a session past the master's limit */
+    obj.cnx_max = 1;
+
+    if (again) {
+        pid = dsp_logged_in(dsp_logout, -1, out[1], &peer);
+        err = errno;
+    } else {
+        dsp_logout_fd = out[1];
+        pid = dsi_test_serve(&obj, &peer);
+        err = errno;
+        dsp_logout_fd = -1;
+        close(out[1]);
+    }
+
+    obj.cnx_max = cnx_max;
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(err) ? TEST_SKIP : -1;
+    } else {
+        if (write(peer, frame, len) == (ssize_t)len
+                && dsp_reply_is(peer, &reply)
+                && (code != AFP_OK || dsp_bye(peer))) {
+            ret = 0;
+        } else {
+            kill(pid, SIGTERM);
+        }
+
+        if (dsi_test_reap(pid, peer) != 0 || !dsp_logged_out(out[0])) {
+            ret = -1;
+        }
+    }
+
+    uam_unregister(UAM_SERVER_LOGIN, uam);
+    close(out[0]);
+    return ret;
+}
+
+/*!
+ * @brief A user's session logs out of the UAM once at its close, with the
+ *        ids the UAM's login had
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or root
+ */
+static int utest_login_user_logs_out(void)
+{
+    /* only root switches ids */
+    if (getuid() != 0) {
+        return TEST_SKIP;
+    }
+
+    return dsp_login(1, false, AFP_OK);
+}
+
+/*!
+ * @brief A session whose FPLogin login() refuses after the UAM accepted the
+ *        user logs out of the UAM once as the refusal ends it
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_login_refused_logs_out(void)
+{
+    /* root, whom login() refuses */
+    return dsp_login(0, false, AFPERR_NOTAUTH);
+}
+
+/*!
+ * @brief A logged-in session whose FPLogin login() refuses keeps its
+ *        login's logout, which runs once as the refusal ends it, and runs no
+ *        logout of the refused login's UAM
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_login_again_keeps_logout(void)
+{
+    return dsp_login(0, true, AFPERR_NOTAUTH);
+}
+
+/*!
+ * @brief A member of the admin group who logs in under force user, and runs
+ *        as the forced user, logs out of the UAM once at the session's close
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or root
+ */
+static int utest_dsi_forced_admin_logs_out(void)
+{
+    const struct afp_options options = obj.options;
+    int ret;
+
+    /* only root switches ids */
+    if (getuid() != 0) {
+        return TEST_SKIP;
+    }
+
+    /* uid 1 of group 1, the admin group, forced to uid 2 */
+    obj.options.admingid = 1;
+    obj.options.force_user = true;
+    obj.options.force_uid = 2;
+    ret = dsp_login(1, false, AFP_OK);
+    obj.options = options;
+    return ret;
+}
+
+/*!
+ * @brief Read what a session sends the master on ipc until a message of
+ *        command whose payload is the len bytes at want comes, each part
+ *        within ten seconds
+ *
+ * @returns whether such a message came
+ */
+static bool dsp_ipc_sent(int ipc, uint16_t command, const void *want,
+                         uint32_t len)
+{
+    uint8_t head[IPC_HEADERLEN];
+    uint8_t msg[IPC_MAXMSGSIZE];
+    uint16_t got;
+    uint32_t n;
+
+    do {
+        if (readt(ipc, head, sizeof(head), 1, 10) != (ssize_t)sizeof(head)) {
+            return false;
+        }
+
+        memcpy(&got, head, sizeof(got));
+        memcpy(&n, head + IPC_HEADERLEN - sizeof(n), sizeof(n));
+
+        if (n > sizeof(msg)
+                || (n != 0 && readt(ipc, msg, n, 1, 10) != (ssize_t)n)) {
+            return false;
+        }
+    } while (got != command || n != len || memcmp(msg, want, len) != 0);
+
+    return true;
+}
+
+/*!
+ * @brief Wait for a session to ask the master to have the other sessions
+ *        refresh the entry of id on volume vid, whatever it sends first
+ *
+ * @returns whether the hint came, each message within ten seconds
+ */
+static bool dsp_hinted(int ipc, uint16_t vid, cnid_t id)
+{
+    const struct ipc_cache_hint_payload hint = {
+        .event = CACHE_HINT_REFRESH, .vid = vid, .cnid = id
+    };
+    return dsp_ipc_sent(ipc, IPC_CACHE_HINT, &hint, sizeof(hint));
+}
+
+/*!
+ * @brief A session that holds an open fork takes an FPWrite, whose first
+ *        change sends a refresh hint, and then ends: the client's
+ *        DSICloseSession has the fork's close send a second hint, and with
+ *        term a termination has the close send none
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int dsp_close_hints(struct vol *vol, bool term)
+{
+    static uint8_t frame[DSI_BLOCKSIZ + DSI_WROFF_FPWRITE + DSP_PAYLOAD];
+    uint32_t written = htonl(DSP_PAYLOAD);
+    const struct dsp_reply want = {
+        DSIFUNC_WRITE, 1, AFP_OK, &written, sizeof(written)
+    };
+    cnid_t id;
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    int err;
+    pid_t pid;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    pid = dsp_write_session(vol, 0, ipc[1], 60, false, frame, &peer);
+    err = errno;
+    /* the session holds its own copy, so its exit ends the stream */
+    close(ipc[1]);
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(err) ? TEST_SKIP : -1;
+    } else {
+        id = cnid_get(vol->v_cdb, DIRDID_ROOT, "dsp_write",
+                      strlen("dsp_write"));
+
+        if (id == CNID_INVALID
+                || write(peer, frame, sizeof(frame)) != (ssize_t)sizeof(frame)
+                || !dsp_reply_is(peer, &want)
+                || !dsp_hinted(ipc[0], vol->v_vid, id)) {
+            ret = -1;
+        } else if (!term) {
+            ret = dsp_bye(peer) && dsp_hinted(ipc[0], vol->v_vid, id) ? 0 : -1;
+        } else {
+            /* the stream must end: a wait without a hint proves nothing */
+            ret = kill(pid, SIGTERM) == 0
+                  && !dsp_hinted(ipc[0], vol->v_vid, id)
+                  && dsp_ends(ipc[0]) ? 0 : -1;
+        }
+
+        if (dsi_test_reap(pid, peer) != 0) {
+            ret = -1;
+        }
+    }
+
+    close(ipc[0]);
+    delete (&obj, vol->v_vid, DIRDID_ROOT, "dsp_write");
+    return ret;
+}
+
+/*!
+ * @brief A session its client closes after an FPWrite has the other
+ *        sessions refresh the written file's entry at the fork's close, as
+ *        at the write's first change
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_close_hints_written_fork(struct vol *vol)
+{
+    return dsp_close_hints(vol, false);
+}
+
+/*!
+ * @brief A session a termination ends closes its IPC descriptor before its
+ *        volumes, so the master hands it no reconnect
+ *
+ * The evidence from outside: the session's IPC stream ends with no hint of
+ * the written fork's close in it.
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_term_closes_ipc_first(struct vol *vol)
+{
+    return dsp_close_hints(vol, true);
+}
+
+/*!
+ * @brief Open the IPC socket pair of a served session in ipc and the pipe of
+ *        its dsp_logout() reports in out
+ *
+ * @returns 0, or -1 with neither open
+ */
+static int dsp_channels(int ipc[2], int out[2])
+{
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    if (pipe(out) != 0) {
+        close(ipc[0]);
+        close(ipc[1]);
+        return -1;
+    }
+
+    return 0;
+}
+
+/* an FPDisconnectOldSession: command, pad, type, token length and token */
+#define DSP_HANDOFF_LEN (2 + 2 + 4 + SESSIONTOKEN_LEN)
+
+/* the IPC descriptor whose hand-off message dsp_handoff_refused() refuses,
+ * and whether no termination arrives with the refusal */
+static int dsp_handoff_fd = -1;
+static bool dsp_handoff_quiet;
+
+/*!
+ * @brief write_hook that refuses the hand-off message on dsp_handoff_fd and,
+ *        unless dsp_handoff_quiet is set, has a termination arrive with it
+ *
+ * @returns 1 for the hand-off message, 0 for any other write
+ */
+static int dsp_handoff_refused(int fd, const void *buf, size_t count)
+{
+    uint16_t command;
+
+    if (fd != dsp_handoff_fd || count < sizeof(command)) {
+        return 0;
+    }
+
+    memcpy(&command, buf, sizeof(command));
+
+    if (command != IPC_DISCOLDSESSION) {
+        return 0;
+    }
+
+    fi.write_hook = NULL;
+
+    if (!dsp_handoff_quiet) {
+        raise(SIGTERM);
+    }
+
+    return 1;
+}
+
+/*!
+ * @brief Take a session's hand-off as the master afpd does
+ *
+ * It reads the token, the request ID and the socket, closes the socket, and
+ * sends six reload signals 100 ms apart, which the session's wait outlasts,
+ * then the master's termination.
+ *
+ * @returns whether the whole hand-off came in time
+ */
+static bool dsp_takes_handoff(pid_t pid, int ipc)
+{
+    const struct timespec apart = { .tv_nsec = 100 * 1000 * 1000 };
+    /* the request's token: zeros, as dsi_test_frame() leaves it */
+    static const uint8_t token[SESSIONTOKEN_LEN];
+    struct pollfd passed = { .fd = ipc, .events = POLLIN };
+    uint16_t id;
+    int fd;
+
+    /* recv_fd() alone gives the descriptor two seconds */
+    if (!dsp_ipc_sent(ipc, IPC_DISCOLDSESSION, token, sizeof(token))
+            || readt(ipc, &id, sizeof(id), 1, 10) != (ssize_t)sizeof(id)
+            || poll(&passed, 1, 10000) != 1
+            || (fd = recv_fd(ipc, 1)) == -1) {
+        return false;
+    }
+
+    close(fd);
+
+    for (int i = 0; i < 6; i++) {
+        if (kill(pid, SIGHUP) != 0 || nanosleep(&apart, NULL) != 0) {
+            return false;
+        }
+    }
+
+    return kill(pid, SIGTERM) == 0;
+}
+
+/*!
+ * @brief A logged-in session that hands its connection over for a client's
+ *        FPDisconnectOldSession logs out of its UAM once and sends the client
+ *        nothing more, both when the master takes the hand-off and, with
+ *        fail, when a termination arrives while the hand-off fails
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or where the runner held the
+ *          master's termination back four seconds or more and the session
+ *          answered the request itself
+ */
+static int dsp_handoff(bool fail)
+{
+    uint8_t frame[DSI_BLOCKSIZ + DSP_HANDOFF_LEN];
+    uint8_t missed[DSI_BLOCKSIZ];
+    uint8_t sent[DSI_BLOCKSIZ];
+    const uint32_t tklen = htonl(SESSIONTOKEN_LEN);
+    AFPCmd handler = postauth_switch[AFP_DISCTOLDSESS];
+    struct timespec asked;
+    struct timespec told;
+    bool late = false;
+    ssize_t n;
+    int peer = -1;
+    int ipc[2];
+    int out[2];
+    int ret = -1;
+    pid_t pid;
+
+    if (dsp_channels(ipc, out) != 0) {
+        return -1;
+    }
+
+    dsi_test_frame(frame, DSIFUNC_CMD, 9, 0, DSP_HANDOFF_LEN, AFP_DISCTOLDSESS);
+    memcpy(frame + DSI_BLOCKSIZ + 4, &tklen, sizeof(tklen));
+    /* the answer of a session whose wait for the termination ran out */
+    dsi_test_header(missed, DSIFUNC_CMD, 9, (uint32_t)AFPERR_MISC, 0);
+    missed[0] = DSIFL_REPLY;
+    postauth_switch[AFP_DISCTOLDSESS] = afp_disconnect;
+
+    if (fail) {
+        dsp_handoff_fd = ipc[1];
+        fi.write_hook = dsp_handoff_refused;
+    }
+
+    pid = dsp_logged_in(dsp_logout, ipc[1], out[1], &peer);
+    fi.write_hook = NULL;
+    dsp_handoff_fd = -1;
+    postauth_switch[AFP_DISCTOLDSESS] = handler;
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        clock_gettime(CLOCK_MONOTONIC, &asked);
+
+        if (write(peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+                && (fail || dsp_takes_handoff(pid, ipc[0]))) {
+            ret = 0;
+            clock_gettime(CLOCK_MONOTONIC, &told);
+            late = !fail && (told.tv_sec - asked.tv_sec) * 1000
+                   + (told.tv_nsec - asked.tv_nsec) / 1000000 >= 4000;
+        } else {
+            kill(pid, SIGTERM);
+        }
+
+        if (dsi_test_reap(pid, -1) != 0 || !dsp_logged_out(out[0])) {
+            ret = -1;
+        } else if ((n = readt(peer, sent, sizeof(sent), 1, 10)) != 0) {
+            /* data reached the client: only the session's own AFPERR_MISC,
+             * after a termination four seconds late or more, is a skip */
+            ret = late && n == (ssize_t)sizeof(sent)
+                  && memcmp(sent, missed, sizeof(sent)) == 0 ? TEST_SKIP : -1;
+        }
+
+        close(peer);
+    }
+
+    close(ipc[0]);
+    close(out[0]);
+    return ret;
+}
+
+/*!
+ * @brief A session that hands its connection over for a reconnect logs out
+ *
+ * @returns dsp_handoff()'s result
+ */
+static int utest_dsi_handoff_logs_out(void)
+{
+    return dsp_handoff(false);
+}
+
+/*!
+ * @brief A session whose hand-off a termination interrupts logs out
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or the fault injector
+ */
+static int utest_dsi_handoff_term_logs_out(const struct vol *vol)
+{
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    return dsp_handoff(true);
+}
+
+/* a command number afpd's handler table leaves unused */
+#define DSP_SPARE_COMMAND 0xfe
+
+/*!
+ * @brief A stand-in AFP command for the session's timer
+ *
+ * Its third and fourth bytes are an interval and a time in seconds. A second
+ * byte other than 0 sets the timer to them: a time of 0 stops it, as a due
+ * one-shot reads back. Otherwise AFP_OK means that the timer has that
+ * interval and that time left, less ten seconds at most.
+ *
+ * @returns AFP_OK once it set the timer or for such a timer, else AFPERR_MISC
+ */
+static int dsp_timer(AFPObj *session _U_, char *ibuf, size_t ibuflen,
+                     char *rbuf _U_, size_t *rbuflen)
+{
+    struct itimerval it = { { 0, 0 }, { 0, 0 } };
+    *rbuflen = 0;
+
+    if (ibuflen < 4) {
+        return AFPERR_MISC;
+    }
+
+    const uint8_t interval = (uint8_t)ibuf[2];
+    const uint8_t left = (uint8_t)ibuf[3];
+
+    if (ibuf[1] != 0) {
+        it.it_interval.tv_sec = interval;
+        it.it_value.tv_sec = left;
+        return setitimer(ITIMER_REAL, &it, NULL) == 0 ? AFP_OK : AFPERR_MISC;
+    }
+
+    /* within a clock tick, NetBSD and DragonFly read all of the time back */
+    return getitimer(ITIMER_REAL, &it) == 0
+           && it.it_interval.tv_sec == interval && it.it_interval.tv_usec == 0
+           && it.it_value.tv_sec <= left && it.it_value.tv_sec + 10 >= left
+           ? AFP_OK : AFPERR_MISC;
+}
+
+/*!
+ * @brief Send a session the stand-in timer command as request reqid: with
+ *        set it sets the timer to interval and left seconds, else it asks
+ *        whether the timer has that interval and that time left, less ten
+ *        seconds at most
+ *
+ * @returns whether the command got AFP_OK
+ */
+static bool dsp_timer_ok(int peer, uint16_t reqid, bool set, uint8_t interval,
+                         uint8_t left)
+{
+    uint8_t ask[DSI_BLOCKSIZ + 4];
+    const struct dsp_reply ok = { DSIFUNC_CMD, reqid, AFP_OK };
+    dsi_test_frame(ask, DSIFUNC_CMD, reqid, 0, 4, DSP_SPARE_COMMAND);
+    ask[DSI_BLOCKSIZ + 1] = set;
+    ask[DSI_BLOCKSIZ + 2] = interval;
+    ask[DSI_BLOCKSIZ + 3] = left;
+    return write(peer, ask, sizeof(ask)) == (ssize_t)sizeof(ask)
+           && dsp_reply_is(peer, &ok);
+}
+
+/*!
+ * @brief Give a session a shutdown notice
+ *
+ * @returns whether the notice's attention came within ten seconds
+ */
+static bool dsp_noticed(pid_t pid, int peer)
+{
+    uint8_t notice[DSI_BLOCKSIZ + sizeof(AFPUserBytes)];
+    return kill(pid, SIGUSR1) == 0
+           && readt(peer, notice, sizeof(notice), 1, 10)
+           == (ssize_t)sizeof(notice) && notice[1] == DSIFUNC_ATTN;
+}
+
+/*!
+ * @brief Read what a session sends on peer until it ends the stream, with a
+ *        tickle for every second it sends nothing, as a client's comes: a
+ *        session under a shutdown notice looks at a tick with its next
+ *        request
+ *
+ * @returns whether the stream ends within ten such seconds, an attention
+ *          before its end
+ */
+static bool dsp_shuts_down(int peer)
+{
+    uint8_t tickle[DSI_BLOCKSIZ];
+    uint8_t head[DSI_BLOCKSIZ];
+    uint8_t body[sizeof(AFPUserBytes)];
+    uint32_t len;
+    bool attention = false;
+    int quiet = 0;
+    ssize_t n;
+    dsi_test_frame(tickle, DSIFUNC_TICKLE, 10, 0, 0, 0);
+
+    while (quiet < 10) {
+        n = readt(peer, head, sizeof(head), 1, 1);
+
+        if (n == 0) {
+            return attention;
+        }
+
+        if (n != (ssize_t)sizeof(head)) {
+            quiet++;
+            (void)!write(peer, tickle, sizeof(tickle));
+            continue;
+        }
+
+        memcpy(&len, head + 8, sizeof(len));
+        len = ntohl(len);
+
+        if (len > sizeof(body)) {
+            return false;
+        }
+
+        if (len != 0 && readt(peer, body, len, 1, 10) != (ssize_t)len) {
+            return false;
+        }
+
+        attention = attention || head[1] == DSIFUNC_ATTN;
+    }
+
+    return false;
+}
+
+/* dsp_handoff_timer()'s timers: a shutdown notice's, a due notice's, a tickle
+ * timer; the tickle interval and the time left on the first and last, which
+ * outlast every test */
+#define DSP_NOTICE 0
+#define DSP_NOTICE_DUE 1
+#define DSP_TICKLE 2
+#define DSP_TICKLE_SECONDS 120
+#define DSP_LEFT_SECONDS 60
+
+/*!
+ * @brief A session whose hand-off fails with no termination answers
+ *        AFPERR_MISC and keeps the timer it had with the time left, a
+ *        shutdown notice's or a tickle timer; a notice's due tick ends it
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int dsp_handoff_timer(uint8_t timer)
+{
+    uint8_t frame[DSI_BLOCKSIZ + DSP_HANDOFF_LEN];
+    const uint32_t tklen = htonl(SESSIONTOKEN_LEN);
+    const uint8_t interval = timer == DSP_TICKLE ? DSP_TICKLE_SECONDS : 0;
+    const uint8_t left = timer == DSP_NOTICE_DUE ? 0 : DSP_LEFT_SECONDS;
+    const struct dsp_reply failed = { DSIFUNC_CMD, 9, AFPERR_MISC };
+    AFPCmd handler = postauth_switch[AFP_DISCTOLDSESS];
+    bool kept = false;
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    int err;
+    pid_t pid;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    dsi_test_frame(frame, DSIFUNC_CMD, 9, 0, DSP_HANDOFF_LEN,
+                   AFP_DISCTOLDSESS);
+    memcpy(frame + DSI_BLOCKSIZ + 4, &tklen, sizeof(tklen));
+    /* the session process copies the table with the handlers in it */
+    postauth_switch[AFP_DISCTOLDSESS] = afp_disconnect;
+    postauth_switch[DSP_SPARE_COMMAND] = dsp_timer;
+    dsp_handoff_fd = ipc[1];
+    dsp_handoff_quiet = true;
+    fi.write_hook = dsp_handoff_refused;
+    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], 0, &peer);
+    err = errno;
+    fi.write_hook = NULL;
+    dsp_handoff_quiet = false;
+    dsp_handoff_fd = -1;
+    postauth_switch[DSP_SPARE_COMMAND] = NULL;
+    postauth_switch[AFP_DISCTOLDSESS] = handler;
+    close(ipc[1]);
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(err) ? TEST_SKIP : -1;
+    } else {
+        /* the notice's attention comes before the replies */
+        if (dsp_running(ipc[0])
+                && (timer == DSP_TICKLE || dsp_noticed(pid, peer))
+                && dsp_timer_ok(peer, 8, true, interval, left)
+                && write(peer, frame, sizeof(frame)) == (ssize_t)sizeof(frame)
+                && dsp_reply_is(peer, &failed)) {
+            kept = timer == DSP_NOTICE_DUE ? dsp_shuts_down(peer)
+                   : dsp_timer_ok(peer, 10, false, interval, left);
+        }
+
+        if (timer != DSP_NOTICE_DUE || !kept) {
+            kill(pid, SIGTERM);
+        }
+
+        ret = dsi_test_reap(pid, peer) == 0 && kept ? 0 : -1;
+    }
+
+    close(ipc[0]);
+    return ret;
+}
+
+/*!
+ * @brief A failed hand-off leaves a session the timer it stopped: a shutdown
+ *        notice's time, a notice's tick that was due when it began, and a
+ *        tickle timer's interval and time
+ *
+ * auth_due_tick() is also called directly: for a tickle timer's due tick,
+ * which no kernel returns on demand, for a due notice, and for a timer that
+ * never ran.
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or the fault injector
+ */
+static int utest_dsi_handoff_keeps_timer(const struct vol *vol)
+{
+    struct itimerval due = { .it_interval = { .tv_sec = DSP_TICKLE_SECONDS } };
+    struct itimerval shot = { { 0, 0 }, { 0, 0 } };
+    struct itimerval none = { { 0, 0 }, { 0, 0 } };
+    auth_due_tick(&due, false);
+    auth_due_tick(&shot, true);
+    auth_due_tick(&none, false);
+
+    if (due.it_value.tv_usec != 1 || shot.it_value.tv_usec != 1
+            || none.it_value.tv_usec != 0) {
+        return -1;
+    }
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    for (uint8_t timer = DSP_NOTICE; timer <= DSP_TICKLE; timer++) {
+        const int ret = dsp_handoff_timer(timer);
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Wait for a session to report state to the master on ipc, whatever
+ *        it sends first
+ *
+ * @returns whether the report came, each message within ten seconds
+ */
+static bool dsp_reports(int ipc, uint16_t state)
+{
+    return dsp_ipc_sent(ipc, IPC_STATE, &state, sizeof(state));
+}
+
+/*!
+ * @brief A logged-in session whose client leaves logs out of its UAM once
+ *        when a termination, or with expire the first tick past its
+ *        reconnect time, ends it in the disconnected state
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int dsp_disconnected_end(bool expire)
+{
+    struct afp_options options = obj.options;
+    int peer = -1;
+    int ipc[2];
+    int out[2];
+    int ret = -1;
+    pid_t pid;
+
+    if (dsp_channels(ipc, out) != 0) {
+        return -1;
+    }
+
+    if (expire) {
+        obj.options.disconnected = 0;
+    }
+
+    pid = dsp_logged_in(dsp_logout, ipc[1], out[1], &peer);
+    obj.options = options;
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        close(peer);
+
+        if (dsp_reports(ipc[0], DSI_DISCONNECTED)
+                && kill(pid, expire ? SIGALRM : SIGTERM) == 0) {
+            ret = 0;
+        } else {
+            kill(pid, SIGTERM);
+        }
+
+        if (dsi_test_reap(pid, -1) != 0 || !dsp_logged_out(out[0])) {
+            ret = -1;
+        }
+    }
+
+    close(ipc[0]);
+    close(out[0]);
+    return ret;
+}
+
+/*!
+ * @brief A disconnected session a termination ends logs out
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_disconnected_term_logs_out(void)
+{
+    return dsp_disconnected_end(false);
+}
+
+/*!
+ * @brief A disconnected session whose reconnect time runs out logs out
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or in a build that handles
+ *          no tick
+ */
+static int utest_dsi_disconnected_expiry_logs_out(void)
+{
+#ifdef DEBUGGING
+    /* the build installs no handler for the tickle timer's signal */
+    return TEST_SKIP;
+#else
+    return dsp_disconnected_end(true);
+#endif
+}
+
+/*!
+ * @brief A session that runs with another euid than its login user's, as
+ *        login() leaves a member of the admin group, closes its volumes with
+ *        it: the file the volume's close script makes is that euid's
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or root
+ */
+static int utest_dsi_close_keeps_session_euid(struct vol *vol)
+{
+    char *postexec = vol->v_postexec;
+    char path[MAXPATHLEN + 1];
+    char cmd[MAXPATHLEN + 16];
+    struct stat st;
+    int peer = -1;
+    int ipc[2];
+    int ret = -1;
+    int err;
+    pid_t pid;
+
+    /* only root's session runs with another euid than its user's */
+    if (getuid() != 0) {
+        return TEST_SKIP;
+    }
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, ipc) != 0) {
+        return -1;
+    }
+
+    snprintf(path, sizeof(path), "%s/dsp_euid", vol->v_path);
+    snprintf(cmd, sizeof(cmd), ": > '%s'", path);
+    vol->v_postexec = cmd;
+    pid = dsi_test_serve_as(&obj, DSP_USER, ipc[1], 0, &peer);
+    err = errno;
+    vol->v_postexec = postexec;
+    close(ipc[1]);
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(err) ? TEST_SKIP : -1;
+    } else {
+        ret = dsp_running(ipc[0]) ? 0 : -1;
+        kill(pid, SIGTERM);
+
+        if (dsi_test_reap(pid, peer) != 0 || stat(path, &st) != 0
+                || st.st_uid != geteuid()) {
+            ret = -1;
+        }
+    }
+
+    close(ipc[0]);
+    unlink(path);
+    return ret;
+}
+
+/* an euid that is neither root's nor DSP_USER's, as a forced user's is */
+#define DSP_OTHER_USER 2
+
+/*!
+ * @brief A stand-in AFP command that records DSP_OTHER_USER's as the euid
+ *        login() gave the session
+ *
+ * The process keeps root's euid, as a close reached between become_root()
+ * and unbecome_root() would find a forced user's session.
+ *
+ * @returns AFP_OK
+ */
+static int dsp_left_root(AFPObj *session, char *ibuf _U_, size_t ibuflen _U_,
+                         char *rbuf _U_, size_t *rbuflen)
+{
+    *rbuflen = 0;
+    session->euid = DSP_OTHER_USER;
+    return AFP_OK;
+}
+
+/*!
+ * @brief A UAM's logout that reports on dsp_logout_fd whether the session
+ *        closed its volumes with DSP_OTHER_USER's euid
+ */
+static void dsp_closed_logout(void)
+{
+    const uint8_t back = dsi_test_closed_euid == DSP_OTHER_USER;
+    (void)!write(dsp_logout_fd, &back, sizeof(back));
+}
+
+/*!
+ * @brief A session left at root's euid switches back to the euid login()
+ *        gave it before it closes its volumes
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback or root
+ */
+static int utest_dsi_close_switches_back(void)
+{
+    uint8_t ask[DSI_BLOCKSIZ + 2];
+    const struct dsp_reply asked = { DSIFUNC_CMD, 1, AFP_OK };
+    uint8_t back = 0;
+    bool left;
+    int peer = -1;
+    int ipc[2];
+    int out[2];
+    int ret = -1;
+    pid_t pid;
+
+    /* only root has an euid to switch back from */
+    if (getuid() != 0) {
+        return TEST_SKIP;
+    }
+
+    if (dsp_channels(ipc, out) != 0) {
+        return -1;
+    }
+
+    dsi_test_frame(ask, DSIFUNC_CMD, 1, 0, 2, DSP_SPARE_COMMAND);
+    postauth_switch[DSP_SPARE_COMMAND] = dsp_left_root;
+    pid = dsp_logged_in(dsp_closed_logout, ipc[1], out[1], &peer);
+    postauth_switch[DSP_SPARE_COMMAND] = NULL;
+
+    if (pid == -1) {
+        ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+    } else {
+        left = write(peer, ask, sizeof(ask)) == (ssize_t)sizeof(ask)
+               && dsp_reply_is(peer, &asked);
+        kill(pid, SIGTERM);
+
+        if (dsi_test_reap(pid, peer) == 0 && left
+                && read(out[0], &back, sizeof(back)) == 1 && back == 1) {
+            ret = 0;
+        }
+    }
+
+    close(ipc[0]);
+    close(out[0]);
+    return ret;
+}
+
+/* what dsp_state_logout() reports of the process state a logout runs in:
+ * the working directory is the root directory, as at the volumes' close, a
+ * wait for a child gets the child's status, and the signals a fault raises
+ * are deliverable where a termination is blocked */
+#define DSP_STATE_ROOT_DIR 1
+#define DSP_STATE_CHILD 2
+#define DSP_STATE_FAULTS 4
+
+/*!
+ * @brief A UAM's logout that reports on dsp_logout_fd the DSP_STATE_* bits of
+ *        the process state it runs in
+ */
+static void dsp_state_logout(void)
+{
+    char cwd[MAXPATHLEN + 1];
+    sigset_t blocked;
+    int status = 0;
+    uint8_t state = 0;
+    const pid_t pid = fork();
+
+    if (pid == 0) {
+        _exit(0);
+    }
+
+    if (dsi_test_closed_in_root && getcwd(cwd, sizeof(cwd)) != NULL
+            && strcmp(cwd, "/") == 0) {
+        state |= DSP_STATE_ROOT_DIR;
+    }
+
+    if (pid > 0 && waitpid(pid, &status, 0) == pid) {
+        state |= DSP_STATE_CHILD;
+    }
+
+    if (pthread_sigmask(SIG_BLOCK, NULL, &blocked) == 0
+            && sigismember(&blocked, SIGTERM) == 1
+            && !sigismember(&blocked, SIGSEGV)
+            && !sigismember(&blocked, SIGBUS)
+            && !sigismember(&blocked, SIGFPE)
+            && !sigismember(&blocked, SIGILL)
+            && !sigismember(&blocked, SIGTRAP)) {
+        state |= DSP_STATE_FAULTS;
+    }
+
+    (void)!write(dsp_logout_fd, &state, sizeof(state));
+}
+
+/*!
+ * @brief A logged-in session that a termination ends inside its volume, where
+ *        its requests leave it, logs out in the state the DSP_STATE_* bit
+ *        want names
+ *
+ * @returns 0, -1, or TEST_SKIP without loopback
+ */
+static int utest_dsi_logout_state(const struct vol *vol, uint8_t want)
+{
+    const int cwd = open(".", O_RDONLY);
+    uint8_t state = 0;
+    bool up;
+    int peer = -1;
+    int ipc[2];
+    int out[2];
+    int ret = -1;
+    pid_t pid;
+
+    if (cwd == -1) {
+        return -1;
+    }
+
+    if (chdir(vol->v_path) == 0 && dsp_channels(ipc, out) == 0) {
+        pid = dsp_logged_in(dsp_state_logout, ipc[1], out[1], &peer);
+
+        if (pid == -1) {
+            ret = dsi_test_no_loopback(errno) ? TEST_SKIP : -1;
+        } else {
+            up = dsp_running(ipc[0]);
+            kill(pid, SIGTERM);
+
+            if (dsi_test_reap(pid, peer) == 0 && up
+                    && read(out[0], &state, sizeof(state)) == 1
+                    && (state & want) != 0) {
+                ret = 0;
+            }
+        }
+
+        close(ipc[0]);
+        close(out[0]);
+    }
+
+    if (fchdir(cwd) != 0) {
+        ret = -1;
+    }
+
+    close(cwd);
+    return ret;
+}
+
+/*!
+ * @brief An FPDisconnectOldSession on a session without a DSI, as an
+ *        AppleTalk session is, answers AFPERR_NOOP
+ *
+ * @returns 0, or -1
+ */
+static int utest_disconnect_needs_dsi(void)
+{
+    const uint32_t tklen = htonl(SESSIONTOKEN_LEN);
+    char ask[DSP_HANDOFF_LEN] = { AFP_DISCTOLDSESS };
+    AFPObj session = obj;
+    size_t rlen = 0;
+    memcpy(ask + 4, &tklen, sizeof(tklen));
+    session.proto = AFPPROTO_ASP;
+    session.dsi = NULL;
+    return afp_disconnect(&session, ask, sizeof(ask), NULL, &rlen)
+           == AFPERR_NOOP ? 0 : -1;
 }
 
 #ifndef DEBUGGING
@@ -3510,6 +4686,40 @@ int main(int argc, char *argv[])
                      "recvfile: a write whose client falls silent times out");
     TEST_int_or_skip(utest_dsi_term_lets_write_finish(vol), 0,
                      "DSI: a termination lets a write still arriving finish");
+    TEST_int_or_skip(utest_login_user_logs_out(), 0,
+                     "FPLogin: a session logs out with its login's rights");
+    TEST_int_or_skip(utest_dsi_close_hints_written_fork(vol), 0,
+                     "DSI: a closed session hints the file it wrote");
+    TEST_int_or_skip(utest_dsi_term_closes_ipc_first(vol), 0,
+                     "DSI: a terminated session closes its IPC channel first");
+    TEST_int_or_skip(utest_dsi_handoff_logs_out(), 0,
+                     "DSI: a session handing its connection over logs out");
+    TEST_int_or_skip(utest_dsi_handoff_term_logs_out(vol), 0,
+                     "DSI: a session ending in a failed hand-off logs out");
+    TEST_int_or_skip(utest_dsi_handoff_keeps_timer(vol), 0,
+                     "DSI: a failed hand-off keeps the timer it stopped");
+    TEST_int_or_skip(utest_dsi_disconnected_term_logs_out(), 0,
+                     "DSI: a disconnected session a termination ends logs out");
+    TEST_int_or_skip(utest_dsi_disconnected_expiry_logs_out(), 0,
+                     "DSI: a disconnected session logs out as its time ends");
+    TEST_int_or_skip(utest_login_refused_logs_out(), 0,
+                     "FPLogin: a refused login logs out of the accepting UAM");
+    TEST_int_or_skip(utest_login_again_keeps_logout(), 0,
+                     "FPLogin: a refused second login keeps the first logout");
+    TEST_int_or_skip(utest_dsi_forced_admin_logs_out(), 0,
+                     "DSI: a forced admin session logs out at its close");
+    TEST_int_or_skip(utest_dsi_close_keeps_session_euid(vol), 0,
+                     "DSI: a session closes its volumes with its own euid");
+    TEST_int_or_skip(utest_dsi_close_switches_back(), 0,
+                     "DSI: a session left at root's euid switches back");
+    TEST_int_or_skip(utest_dsi_logout_state(vol, DSP_STATE_ROOT_DIR), 0,
+                     "DSI: a session logs out from the root directory");
+    TEST_int_or_skip(utest_dsi_logout_state(vol, DSP_STATE_CHILD), 0,
+                     "DSI: a logout's child process leaves its exit status");
+    TEST_int_or_skip(utest_dsi_logout_state(vol, DSP_STATE_FAULTS), 0,
+                     "DSI: a logout leaves the fault signals deliverable");
+    TEST_int_or_skip(utest_disconnect_needs_dsi(), 0,
+                     "FPDisconnectOldSession: a session without DSI refuses");
     TEST_int_or_skip(utest_dsi_reconnect_takes_over_stalled_write(vol), 0,
                      "DSI: a reconnect takes over a session stalled in a write");
     TEST_int_or_skip(utest_dsi_reconnect_drops_stalled_tick(vol), 0,

@@ -1416,13 +1416,22 @@ void closevol(const AFPObj *obj, struct vol *vol)
 }
 
 /*!
- * @brief Close every open volume of the session
+ * @brief Close every open volume of the session, from the root directory
+ *
+ * A close script or a PAM session's close that unmounts a volume's file
+ * system finds it busy while the session's working directory is in it.
  *
  * @param[in] obj  session object
  */
 void close_all_vol(const AFPObj *obj)
 {
     struct vol  *ovol;
+
+    if (chdir("/") < 0) {
+        LOG(log_error, logtype_afpd, "close_all_vol: chdir: %s",
+            strerror(errno));
+    }
+
     curdir = NULL;
 
     for (ovol = getvolumes(); ovol; ovol = ovol->v_next) {
