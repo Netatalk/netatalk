@@ -434,10 +434,12 @@ bool singleuser_admits_uid(const AFPObj *obj, uid_t uid)
 /*!
  * @brief Finish a login after the UAM accepted the user
  *
- * The call refuses root, a user that a single-user server may not serve, and
- * a login past the connection limit. It sets the groups and switches the euid
- * and egid to the user. A member of the admin group keeps the root euid
- * instead. The force user and force group options then override the switch.
+ * The call records the UAM's logout first, unless an earlier login holds one,
+ * so a session it refuses still logs out at its end. It refuses root, a user
+ * that a single-user server may not serve, and a login past the connection
+ * limit. It sets the groups and switches the euid and egid to the user. A
+ * member of the admin group keeps the root euid instead. The force user and
+ * force group options then override the switch.
  *
  * Next the call installs the command table and reports the login with the
  * client address to the master afpd. It resets the umask, because PAM may
@@ -454,6 +456,11 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
 {
     bool admin = false;
     int i;
+
+    /* an earlier login's logout stays until this one succeeds */
+    if (obj->logout == NULL) {
+        obj->logout = logout;
+    }
 
     /* don't allow root login */
     if (pwd->pw_uid == 0) {
@@ -553,6 +560,76 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     fce_register(obj, FCE_LOGIN, "", NULL);
 #endif /* WITH_FCE */
     return AFP_OK;
+}
+
+/*!
+ * @brief Run the UAM's logout with root's euid and the real gid, as its login
+ * ran, and with SIGCHLD's default action
+ *
+ * A PAM module's close can need the rights its open had: FreeBSD's pam_xdg
+ * removes its session file only as root. The supplementary groups stay the
+ * session's. A module that waits for a helper needs the exit status, which
+ * the session's SIGCHLD action has the kernel discard. A server that does
+ * not run as root has one set of ids and switches none.
+ *
+ * @param[in] obj  session object with a logout hook
+ */
+void auth_logout(const AFPObj *obj)
+{
+    const uid_t euid = geteuid();
+    const gid_t egid = getegid();
+    const bool root = getuid() == 0;
+    struct sigaction dfl;
+    struct sigaction reaping;
+
+    if (root && (seteuid(0) < 0 || setegid(getgid()) < 0)) {
+        LOG(log_error, logtype_afpd,
+            "auth_logout: euid %u and egid %u, not euid 0 and egid %u: %s",
+            (unsigned int)geteuid(), (unsigned int)getegid(),
+            (unsigned int)getgid(), strerror(errno));
+    }
+
+    memset(&dfl, 0, sizeof(dfl));
+    dfl.sa_handler = SIG_DFL;
+    sigemptyset(&dfl.sa_mask);
+    const bool reset = sigaction(SIGCHLD, &dfl, &reaping) == 0;
+    (*obj->logout)();
+
+    if (reset) {
+        sigaction(SIGCHLD, &reaping, NULL);
+    }
+
+    if (root) {
+        /* the egid while the euid is root's, then the euid even where that
+         * failed */
+        const bool egid_back = setegid(egid) == 0;
+
+        if (seteuid(euid) < 0 || !egid_back) {
+            LOG(log_error, logtype_afpd,
+                "auth_logout: can't switch back to euid %u and egid %u: %s",
+                (unsigned int)euid, (unsigned int)egid, strerror(errno));
+        }
+    }
+}
+
+/*!
+ * @brief Switch back to the euid login() gave a session, for its close
+ *
+ * That euid is the forced user's under force user, root's for a member of
+ * the admin group, else the login user's. The switch is a guard: a close
+ * reached between become_root() and unbecome_root() would find the euid at
+ * 0.
+ *
+ * @param[in] obj  session object
+ */
+void auth_switch_back(const AFPObj *obj)
+{
+    /* before a login there is no euid to switch back to */
+    if (obj->uid != 0 && geteuid() != obj->euid && seteuid(obj->euid) < 0) {
+        LOG(log_error, logtype_afpd, "can't seteuid(%u) back from %u: %s",
+            (unsigned int)obj->euid, (unsigned int)geteuid(), strerror(errno));
+        exit(EXITERR_SYS);
+    }
 }
 
 /*!
@@ -834,25 +911,49 @@ int afp_getsession(
 }
 
 /*!
+ * @brief Give a stopped timer whose tick was due the shortest time to run
+ *
+ * A tick that was due but not yet served when setitimer() stopped the timer
+ * comes back as no time left, and a timer set with no time stays stopped.
+ * The tickle timer shows by its interval that it ran. A shutdown notice's
+ * one-shot does not.
+ *
+ * @param[in,out] kept    timer that setitimer() handed back
+ * @param[in]     notice  whether the session is under a shutdown notice
+ */
+void auth_due_tick(struct itimerval *kept, bool notice)
+{
+    if (kept->it_value.tv_sec == 0 && kept->it_value.tv_usec == 0
+            && (kept->it_interval.tv_sec != 0 || kept->it_interval.tv_usec != 0
+                || notice)) {
+        kept->it_value.tv_usec = 1;
+    }
+}
+
+/*!
  * @brief FPDisconnectOldSession: hand the connection to the disconnected
  * session that owns a token
  *
  * A client sends it on a new connection to resume a disconnected session.
- * The call stops the tickle timer and sends the token, the DSI request ID,
+ * The call stops the session's timer and sends the token, the DSI request ID,
  * and the client socket to the master afpd. The master passes them to the old
  * session, which answers the request, and sends SIGTERM to this one. A
- * SIGTERM within the 5-second wait marks success, and the process exits.
+ * termination pending by the end of the 5-second wait marks success: the
+ * process closes its session and exits.
  *
- * A failed handoff restarts the timer and leaves DSI_RECONINPROG set, so the
- * next connection error ends this session.
+ * A handoff that fails with a termination pending ends the same way. Any
+ * other failed handoff leaves DSI_RECONINPROG set, so the next connection
+ * error ends this session, and the timer the call stopped runs on with the
+ * time it had left.
  *
  * @param[in]  obj      session object
  * @param[in]  ibuf     request block
  * @param[in]  ibuflen  request block length
  * @param[out] rbuf     reply block, unused
  * @param[out] rbuflen  0 on return
- * @returns AFPERR_MISC when the token length is wrong or the handoff fails, or
- *          AFPERR_PARAM for a short request
+ * @returns AFPERR_MISC when the token length is wrong or the handoff fails,
+ *          AFPERR_PARAM for a short request, or AFPERR_NOOP on a transport
+ *          other than DSI, which has no DSI connection to hand over
  */
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
                    size_t *rbuflen)
@@ -861,7 +962,13 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     uint16_t           type;
     uint32_t           tklen;
     const char         *token;
+    struct timespec    left = { .tv_sec = 5 };
+    struct itimerval   kept = {{0, 0}, {0, 0}};
     *rbuflen = 0;
+
+    if (obj->proto != AFPPROTO_DSI) {
+        return AFPERR_NOOP;
+    }
 
     if (ibuflen < 2 + sizeof(type) + sizeof(tklen)) {
         return AFPERR_PARAM;
@@ -898,9 +1005,9 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     token = ibuf;
     LOG(log_note, logtype_afpd, "afp_disconnect: trying primary reconnect");
     dsi->flags |= DSI_RECONINPROG;
-    /* Deactivate tickle timer */
+    /* the tickle's timer or a shutdown notice's */
     const struct itimerval none = {{0, 0}, {0, 0}};
-    setitimer(ITIMER_REAL, &none, NULL);
+    setitimer(ITIMER_REAL, &none, &kept);
 
     /* check for old session, possibly transferring session from here to there */
     if (ipc_child_write(obj, IPC_DISCOLDSESSION, tklen, token) != 0) {
@@ -920,9 +1027,11 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
 
     /* Wait out the window in which master may SIGTERM us if the session
      * transferred to Child A. */
-    sleep(5);
+    while (!die_pending && nanosleep(&left, &left) != 0 && errno == EINTR) {
+        /* another signal, such as a reload's SIGHUP: wait the time left */
+    }
 
-    /* SIGTERM during sleep(5): drop the flag so the success branch fires. */
+    /* any termination counts, not only the master's */
     if (die_pending) {
         die_pending = 0;
         dsi->flags &= ~DSI_RECONINPROG;
@@ -931,6 +1040,9 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     if (!(dsi->flags & DSI_RECONINPROG)) {
         sleep(2); /* let the reconnecting session settle */
         LOG(log_note, logtype_afpd, "afp_disconnect: primary reconnect succeeded");
+        /* this copy alone: a session handed the socket holds its own */
+        dsi->proto_close(dsi);
+        afp_dsi_end(obj);
         exit(0);
     }
 
@@ -946,6 +1058,8 @@ exit:
         dsi->flags &= ~DSI_RECONINPROG;
         LOG(log_note, logtype_afpd,
             "afp_disconnect: signalled during the hand-off, child exiting");
+        dsi->proto_close(dsi);
+        afp_dsi_end(obj);
 
         if (sig == SIGTERM || sig == SIGALRM || sig < 0) {
             exit(0);
@@ -956,7 +1070,8 @@ exit:
 
     /* Leave DSI_RECONINPROG set: the afp_over_dsi() backstop uses it to reap
      * this child on the next connection error. */
-    setitimer(ITIMER_REAL, &dsi->timer, NULL);
+    auth_due_tick(&kept, (dsi->flags & DSI_DIE) != 0);
+    setitimer(ITIMER_REAL, &kept, NULL);
     LOG(log_error, logtype_afpd, "afp_disconnect: primary reconnect failed");
     return AFPERR_MISC;
 }

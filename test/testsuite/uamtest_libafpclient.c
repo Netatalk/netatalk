@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -10,6 +11,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ */
+
+/*!
+ * @file
+ * @brief libafpclient sessions for afp_logintest's UAM tests
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <afp.h>
 #include <libafpclient.h>
@@ -34,8 +41,15 @@ struct uamtest_session {
     struct afp_server *server;
 };
 
+/* the wait for the library's loop thread, as long as the library's own for
+ * a server's status */
+#define LOOP_START_SECONDS 60
+
 static pthread_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t loop_running_cond = PTHREAD_COND_INITIALIZER;
 static int initialized;
+static bool loop_running;
+static struct timespec loop_deadline;
 static pthread_t loop_thread;
 
 static void uamtest_libafpclient_log(void *priv, enum logtypes logtype,
@@ -55,12 +69,21 @@ static void uamtest_libafpclient_log(void *priv, enum logtypes logtype,
     fprintf(stdout, "%s\n", message ? message : "(null)");
 }
 
+/*! @brief libafpclient's loop_started hook: its loop thread is ready */
+static void uamtest_libafpclient_loop_started(void)
+{
+    pthread_mutex_lock(&init_lock);
+    loop_running = true;
+    pthread_cond_signal(&loop_running_cond);
+    pthread_mutex_unlock(&init_lock);
+}
+
 static struct libafpclient uamtest_libafpclient = {
     .unmount_volume = NULL,
     .log_for_client = uamtest_libafpclient_log,
     .forced_ending_hook = NULL,
     .scan_extra_fds = NULL,
-    .loop_started = NULL,
+    .loop_started = uamtest_libafpclient_loop_started,
 };
 
 static void fill_request(struct afp_connection_request *req,
@@ -79,19 +102,36 @@ static void fill_request(struct afp_connection_request *req,
     req->uam_mask = uam_mask;
 }
 
+/*!
+ * @brief Start libafpclient's loop thread once and wait until it is ready
+ *
+ * @returns 0, or -1 when the thread is not ready within LOOP_START_SECONDS
+ */
 int uamtest_libafpclient_init(void)
 {
+    int ret;
     pthread_mutex_lock(&init_lock);
 
     if (!initialized) {
         libafpclient_register(&uamtest_libafpclient);
         init_uams();
         afp_main_quick_startup(&loop_thread);
+        clock_gettime(CLOCK_REALTIME, &loop_deadline);
+        loop_deadline.tv_sec += LOOP_START_SECONDS;
         initialized = 1;
     }
 
+    /* A connection made before the loop thread cleared its descriptor set
+     * and blocked its wake-up signal is never read, or ends the process. */
+    while (!loop_running
+            && pthread_cond_timedwait(&loop_running_cond, &init_lock,
+                                      &loop_deadline) == 0) {
+        /* spurious wake-up */
+    }
+
+    ret = loop_running ? 0 : -1;
     pthread_mutex_unlock(&init_lock);
-    return 0;
+    return ret;
 }
 
 unsigned int uamtest_libafpclient_uam_mask(const char *uam)

@@ -291,9 +291,9 @@ stubs. If no worker is active, the DSICommand handler calls
 dir_free_invalid_q() synchronously.
 
 iw_shutdown() joins the thread on session exit and abandons queued work
-because the process exits immediately afterward. Exit paths through
-afp_dsi_close() also use iw_revoke_signal_safe(), which revokes without
-waiting and cannot establish a window for ordinary cache access.
+because the session is ending. Exit paths through afp_dsi_end() also use
+iw_revoke_signal_safe(), which revokes without waiting and cannot establish
+a window for ordinary cache access.
 Session teardown closes forks and volumes. The queue and invalidation
 contracts are in [Caching and Consistency](caching.md).
 

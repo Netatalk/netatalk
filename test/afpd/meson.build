@@ -198,9 +198,10 @@ if build_tests
         is_parallel: false,
         priority: 0,
         # The CNID contention test waits out the backend's full busy timeout,
-        # and the valgrind CI leg multiplies everything else; meson's 30s
-        # default is too close for a loaded runner
-        timeout: 120,
+        # the valgrind CI leg multiplies everything else, and the
+        # ThreadSanitizer leg waits a second at the exit of each session the
+        # tests serve
+        timeout: 180,
     )
     # Second leg in LRU mode: both cache modes ship, and index_queue and
     # dircache_evict() run in that mode only
@@ -217,7 +218,7 @@ if build_tests
         verbose: true,
         is_parallel: false,
         priority: 0,
-        timeout: 120,
+        timeout: 180,
     )
 
 endif

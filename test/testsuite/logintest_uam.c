@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
+ * Copyright (c) 2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -10,6 +11,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ */
+
+/*!
+ * @file
+ * @brief afp_logintest's UAM tests: login, request and failure checks per UAM
  */
 
 #ifdef HAVE_CONFIG_H
@@ -166,6 +172,18 @@ static void make_wrong_password(char *buf, size_t buflen)
     }
 }
 
+/*!
+ * @brief Run one UAM's login, request and failure checks
+ *
+ * A client library that did not start fails the test. A UAM the server does
+ * not advertise is skipped, as is a login that fails where the server's UAMs
+ * are unknown.
+ *
+ * @param[in]  entry       the UAM's test
+ * @param[out] reason      the result's explanation
+ * @param[in]  reason_len  size of @p reason
+ * @returns the test's result
+ */
 static enum test_result run_one(const struct uamtest_entry *entry,
                                 char *reason, size_t reason_len)
 {
@@ -176,6 +194,12 @@ static enum test_result run_one(const struct uamtest_entry *entry,
     unsigned int using_uam;
     char wrong_password[AFP_MAX_PASSWORD_LEN];
     int using_version;
+
+    if (uamtest_libafpclient_init() != 0) {
+        snprintf(reason, reason_len, "libafpclient did not start");
+        return RESULT_FAIL;
+    }
+
     canonical = uamtest_libafpclient_resolve_uam(entry->uam);
     mask = uamtest_libafpclient_uam_mask(entry->uam);
 

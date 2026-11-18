@@ -42,6 +42,8 @@
  * stat_dev_name = P with stat_dev = D: a stat() or lstat() of P reports D as
  * the device, as a mount point's would.
  * openat_watch = 1 with openat_fd = D: openat() calls from D are counted.
+ * write_hook = fn: fn sees every write() first, and one it answers 1 writes
+ * nothing.
  */
 
 /*! The countdown of one interposed call, with its count of armed calls */
@@ -78,6 +80,7 @@ struct fault_inject {
     int pread_calls;        /*!< pread() calls, armed or not */
     int write_max;          /*!< a write() writes at most this many bytes */
     int write_zero;         /*!< the next write_zero write()s write nothing */
+    int (*write_hook)(int, const void *, size_t); /*!< 1 skips the write */
     struct fi_call pwrite;
     struct fi_call lseek;
     struct fi_call asp_wrtcont;

@@ -112,6 +112,10 @@ extern void dsi_test_cleanup(DSI *dsi);
 extern int dsi_test_connect_tcp(DSI *dsi, int *peer);
 extern int dsi_test_no_loopback(int errnum);
 extern void dsi_test_close_socket(DSI *dsi);
+/* the euid a session process closed a volume's CNID backend with */
+extern uid_t dsi_test_closed_euid;
+/* whether that close ran in the root directory */
+extern uint8_t dsi_test_closed_in_root;
 extern pid_t dsi_test_serve_as(const AFPObj *obj, uid_t uid, int ipc_fd,
                                uint32_t flags, int *peer);
 extern pid_t dsi_test_serve(const AFPObj *obj, int *peer);

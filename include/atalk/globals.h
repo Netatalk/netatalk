@@ -256,4 +256,5 @@ extern void afp_over_asp(AFPObj *);
 #endif /* NO_DDP */
 extern void afp_over_dsi(AFPObj *);
 extern void afp_over_dsi_sighandlers(AFPObj *obj);
+extern void afp_dsi_end(AFPObj *obj);
 #endif /* globals.h */

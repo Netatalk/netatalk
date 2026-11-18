@@ -406,7 +406,7 @@ void iw_revoke_signal_safe(void)
 /*!
  * @brief Shut down the idle worker thread, ABANDONING all queued work.
  *
- * The session is ending and every caller exits immediately afterwards
+ * The session is ending and every caller serves no further command
  * — outstanding dircache cleanup is redundant: the whole cache dies
  * with the process, and the OS reclaims queue memory at exit(). No drain
  * is performed.
@@ -430,7 +430,7 @@ void iw_shutdown(void)
     /* Log stats while iw_started is still 1 */
     iw_log_stats();
     iw_started = 0;
-    /* Queued work intentionally abandoned — caller exits immediately. */
+    /* Queued work intentionally abandoned — the session is ending. */
 }
 
 /*!
@@ -460,8 +460,9 @@ int iw_is_active(void)
 /*!
  * @brief Log idle worker statistics.
  *
- * Called from session close (afp_dsi_close) and iw_shutdown(). Relaxed
- * reads; the worker may still be alive on die paths (no join there).
+ * Called from session close (afp_dsi_end) and iw_shutdown(). Relaxed
+ * reads; the worker may still be alive where the close runs without
+ * iw_shutdown()'s join.
  */
 void iw_log_stats(void)
 {

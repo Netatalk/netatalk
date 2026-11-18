@@ -48,32 +48,16 @@ static AFPObj *child;
  * @brief End an ASP session by closing the volumes, logging out, and closing
  * the ASP connection
  *
- * An error path that exits after become_root leaves the euid at 0. The call
- * switches back to obj->uid first, because the volume close scripts run as
- * the login user.
- * Only a failed switch ends the process at once.
- *
  * @param[in,out] obj  session object
  */
 static void afp_asp_close(AFPObj *obj)
 {
     ASP asp = obj->handle;
-
-    /* euid may not be the login user if an error path exited mid-command
-     * (e.g. after become_root()); volume prexec_close scripts need the login
-     * user, so restore it and carry on. Only a failed restore is fatal —
-     * exiting on success would skip close_all_vol() and the PAM logout. */
-    if (obj->uid != geteuid() && seteuid(obj->uid) < 0) {
-        LOG(log_error, logtype_afpd,
-            "afp_asp_close: can't seteuid back to %i from %i (%s)",
-            obj->uid, geteuid(), strerror(errno));
-        exit(EXITERR_SYS);
-    }
-
+    auth_switch_back(obj);
     close_all_vol(obj);
 
     if (obj->logout) {
-        (*obj->logout)();
+        auth_logout(obj);
     }
 
     LOG(log_note, logtype_afpd,
