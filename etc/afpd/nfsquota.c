@@ -168,8 +168,10 @@ int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
     if (callaurpc(vol, RQUOTAPROG, RQUOTAVERS, RQUOTAPROC_GETQUOTA,
                   (xdrproc_t) xdr_getquota_args, (char *) &gq_args,
                   (xdrproc_t) xdr_getquota_rslt, (char *) &gq_rslt) != 0) {
-        LOG(log_info, logtype_afpd, "nfsquota: can't retrieve nfs quota information. \
-            make sure that rpc.rquotad is running on %s.", vol->v_gvs);
+        LOG(log_info, logtype_afpd,
+            "nfsquota: can't retrieve nfs quota information. "
+            "make sure that rpc.rquotad is running on %s.",
+            vol->v_gvs);
         *hostpath = ':';
         return AFPERR_PARAM;
     }

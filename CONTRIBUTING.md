@@ -379,6 +379,8 @@ static int hint_write_batch(int fd, const char *buf, int len, int has_reset,
 - No trailing spaces
 - Max one empty line in sequence
 - Empty line padding before and after unrelated blocks, labels, etc.
+- Long strings may be split across lines with adjacent string literals,
+  do not use backslash line continuation
 
 ## Meson coding standards
 
