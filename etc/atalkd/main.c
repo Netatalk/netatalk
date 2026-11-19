@@ -1531,8 +1531,9 @@ void setaddr(struct interface *iface,
     memcpy(iface->i_addr.sat_zero, &nr, sizeof(struct netrange));
 
     if (ifconfig(iface->i_name, SIOCSIFADDR, &iface->i_addr)) {
-        LOG(log_error, logtype_atalkd, "setifaddr: %s (%u-%u): %s. try specifying a \
-smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
+        LOG(log_error, logtype_atalkd,
+            "setifaddr: %s (%u-%u): %s. try specifying a smaller net range.",
+            iface->i_name, ntohs(first), ntohs(last), strerror(errno));
         atalkd_exit(1);
     }
 

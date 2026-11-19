@@ -824,10 +824,10 @@ int cq_listq(struct papfile *in, struct papfile *out,
 static struct uam_obj *papd_uam = NULL;
 static const char *rbiloginok = "0\r";
 static const char *rbiloginbad = "-1\r";
-static const char *rbiloginerrstr = "%%[Error: SecurityError; \
-SecurityViolation: Unknown user, incorrect password or log on is \
-disabled ]%%\r%%[Flushing: rest of job (to end-of-file) will be \
-ignored ]%%\r";
+static const char *rbiloginerrstr =
+    "%%[Error: SecurityError; SecurityViolation: Unknown user, incorrect "
+    "password or log on is disabled ]%%\r%%[Flushing: rest of job (to "
+    "end-of-file) will be ignored ]%%\r";
 
 /*!
  * @brief Log a user in for printing with the `%%?BeginQuery: RBILogin` query
