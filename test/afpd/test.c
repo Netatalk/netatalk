@@ -4425,6 +4425,39 @@ int main(int argc, char *argv[])
                      "cnid_find: search results never carry a truncated id");
     TEST_int_or_skip(utest_cnid_dup_row_no_truncated_delete(vol), 0,
                      "cnid_lookup: duplicate cleanup never deletes through a truncated id");
+    TEST_int_or_skip(utest_cnid_dup_row_parent_out_of_range(vol), 0,
+                     "cnid_lookup: a surplus row whose parent is out of range "
+                     "goes by its CNID");
+    TEST_int(utest_cnid_delete_row_conditional(vol), 0,
+             "cnid_delete_row: removes a row only while it records the "
+             "parent, name, device and inode");
+    TEST_int(utest_cnid_update_row_conditional(vol), 0,
+             "cnid_update_row: rewrites a row only while it records the "
+             "parent, name, device and inode");
+    TEST_int_or_skip(utest_cnid_update_row_moved_keeps_other(vol), 0,
+                     "cnid_update_row: a row another session moved before "
+                     "the update held it keeps the other row");
+    TEST_int(utest_cnid_update_row_replace_calls(vol), 0,
+             "cnid_update_row: a replace that reads another row leaves it, "
+             "and the row takes the stat");
+    TEST_int_or_skip(utest_cnid_update_row_after_reconnect(vol), 0,
+                     "cnid_update_row: a connection the server dropped "
+                     "reconnects and prepares its statements again");
+    TEST_int_or_skip(utest_cnid_mysql_failed_open_closes(vol), 0,
+                     "cnid_open: a MySQL open that fails after its connect "
+                     "closes the connection");
+    TEST_int_or_skip(utest_cnid_update_row_dropped_in_hold(vol), 0,
+                     "cnid_update_row: a connection dropped inside the hold "
+                     "fails the update and leaves the row");
+    TEST_int_or_skip(utest_cnid_lookup_row_changed(vol), 0,
+                     "cnid_add: a stale row another session rewrote for the "
+                     "object before the lookup's delete keeps its CNID");
+    TEST_int_or_skip(utest_cnid_lookup_rows_changed(vol), 0,
+                     "cnid_lookup: a stale row another session changed "
+                     "before the lookup's delete stays");
+    TEST_int(utest_cnid_row_case_renamed(vol), 0,
+             "cnid_delete_row, cnid_update_row: a row renamed by case alone "
+             "stays");
     TEST_int_or_skip(utest_cnid_uuid_case_keeps_table(vol), 0,
                      "cnid_open: a case-flipped volume UUID reuses the live table");
     TEST_int_or_skip(utest_cnid_sqlite_owner_only(vol), 0,
@@ -4503,6 +4536,12 @@ int main(int argc, char *argv[])
              "dircache: a stat refresh with a new ctime drops cached rights");
     TEST_int(test012_movecwd_retry_names_directory(&obj, vol), 0,
              "movecwd: a failed CNID retry logs the directory it tried");
+    TEST_int(utest_movecwd_retry_refuses_link(&obj, vol), 0,
+             "movecwd: a CNID retry refuses a link that took the folder's "
+             "name");
+    TEST_int_or_skip(utest_dangling_link_by_cnid_resolves_once(&obj, vol, vid),
+                     0, "getfiledirparms: a dangling link named by its CNID "
+                     "resolves once");
     TEST_int(test013_movecwd_refuses_symlinked_path(vol), 0,
              "movecwd: a path through a symlink to a folder is refused");
     TEST_int(test014_movecwd_folder_became_file(vol), 0,
@@ -5207,6 +5246,78 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_held_conversion_keeps_metadata(&obj, vol), 0,
                      "FPSetFileParms: a held file's symlink conversion leaves "
                      "the replaced file's metadata");
+    TEST_int_or_skip(utest_symlink_conversion_keeps_cnid(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion keeps the file's "
+                     "CNID");
+    TEST_int_or_skip(utest_symlink_conversion_update_fails(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion whose row cannot "
+                     "take the link answers MISC");
+    TEST_int_or_skip(utest_symlink_conversion_late_failure(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion that fails late "
+                     "leaves no dircache entry for the file");
+    TEST_int_or_skip(utest_symlink_conversion_needs_cnid(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion whose CNID the "
+                     "backend cannot read answers MISC");
+    TEST_int_or_skip(utest_symlink_conversion_replaced_file(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion of a file replaced "
+                     "outside afpd leaves the link without its CNID");
+    TEST_int_or_skip(utest_symlink_conversion_link_identity(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion gives the row the "
+                     "link it made");
+    TEST_int_or_skip(utest_symlink_conversion_row_moved(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion leaves the file "
+                     "and a row another session moved meanwhile");
+    TEST_int_or_skip(utest_symlink_conversion_row_dropped(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion whose row another "
+                     "session dropped leaves the link without the CNID");
+    TEST_int_or_skip(utest_symlink_conversion_answer_lost(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion whose update's "
+                     "answer is lost after the update keeps the CNID");
+    TEST_int_or_skip(utest_symlink_conversion_hold_refused(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion whose row the "
+                     "backend cannot hold answers MISC and keeps the file");
+    TEST_int_or_skip(utest_symlink_conversion_replaced_meanwhile(&obj, vol),
+                     0, "FPSetFileParms: a symlink conversion of a file "
+                     "replaced while it waits for its row answers NOOBJ");
+    TEST_int_or_skip(utest_symlink_conversion_held_file_meanwhile(&obj, vol),
+                     0, "FPSetFileParms: a symlink conversion of a file that "
+                     "a held file replaces while it waits for its row keeps "
+                     "that file's locks");
+    TEST_int_or_skip(utest_symlink_conversion_replaced_in_checks(&obj, vol),
+                     0, "FPSetFileParms: a symlink conversion of a file "
+                     "replaced while its refusal checks run answers NOOBJ");
+    TEST_int_or_skip(utest_symlink_conversion_stat_fails_in_checks(&obj, vol),
+                     0, "FPSetFileParms: a symlink conversion whose name's "
+                     "stat fails with EIO in the rename's checks answers "
+                     "MISC");
+    TEST_int_or_skip(utest_symlink_conversion_denied_meanwhile(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion of a file whose "
+                     "writes another process denies while it waits for its "
+                     "row answers BUSY");
+    TEST_int_or_skip(utest_symlink_conversion_changed_meanwhile(&obj, vol),
+                     0, "FPSetFileParms: a symlink conversion of a file "
+                     "changed while it waits for its row answers MISC");
+    TEST_int_or_skip(utest_symlink_conversion_rolled_back(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion whose update rolls "
+                     "back after the rename keeps the CNID");
+    TEST_int(utest_symlink_conversion_stage_unlisted(&obj, vol), 0,
+             "FPEnumerateExt2: a listing leaves out a symlink conversion's "
+             "staged link");
+    TEST_int_or_skip(utest_symlink_conversion_row_case(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion keeps the CNID "
+                     "of a row that records the name in another case");
+    TEST_int_or_skip(utest_symlink_conversion_window_lookup(&obj, vol), 0,
+                     "FPSetFileParms: another session's lookup by the CNID "
+                     "at the rename leaves the row to the link");
+    TEST_int_or_skip(utest_symlink_conversion_window_listing(&obj, vol), 0,
+                     "FPSetFileParms: another session's listing at the "
+                     "rename leaves the CNID to the link");
+    TEST_int_or_skip(utest_symlink_conversion_validated_entry(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion keeps the CNID "
+                     "while the dircache validates every lookup");
+    TEST_int_or_skip(utest_symlink_conversion_link_unstatable(&obj, vol), 0,
+                     "FPSetFileParms: a symlink conversion whose link has no "
+                     "stat answers MISC");
     TEST_int_or_skip(utest_symlink_conversion_refused_under_deny(&obj, vol), 0,
                      "FPSetFileParms: a symlink conversion of a file whose "
                      "writes are denied or whose data is locked is refused");
@@ -5604,6 +5715,132 @@ int main(int argc, char *argv[])
              "dircache: a parent without a row takes no new child row");
     TEST_int(utest_dircache_orphan_move_fails(&obj, vol, vid), 0,
              "dircache: moving a folder whose parent DID is gone fails");
+    TEST_int(utest_dircache_replaced_folder_by_did(&obj, vol, vid), 0,
+             "dircache: a folder replaced without an entry answers NOOBJ "
+             "by its DID");
+    TEST_int(utest_dircache_replaced_file_by_cnid(&obj, vol, vid), 0,
+             "dircache: a file replaced outside afpd answers NOOBJ by its "
+             "CNID");
+    TEST_int_or_skip(utest_dircache_stat_denied_by_did(&obj, vol, vid), 0,
+                     "dircache: a denied stat answers ACCESS by the DID");
+    TEST_int_or_skip(utest_dircache_ids_under_denied_folder(&obj, vol, vid), 0,
+                     "dircache: FPResolveID and FPDeleteID under a denied "
+                     "folder answer ACCESS");
+    TEST_int_or_skip(utest_dircache_moved_folder_stat_denied(&obj, vol, vid),
+                     0, "dircache: a moved folder whose stat is denied "
+                     "answers ACCESS by its DID");
+    TEST_int(utest_dircache_folder_became_file_by_did(&obj, vol, vid), 0,
+             "dircache: a cached folder a file replaced answers NOOBJ by "
+             "its DID");
+    TEST_int(utest_dircache_moved_folder_file_at_name(&obj, vol, vid), 0,
+             "dircache: a moved folder, a file at its old name, answers by "
+             "its DID");
+    TEST_int_or_skip(utest_dircache_ids_in_moved_denied_folder(&obj, vol, vid),
+                     0, "dircache: FPResolveID and FPDeleteID under a moved "
+                     "denied folder answer ACCESS");
+    TEST_int(utest_dircache_child_of_replaced_folder(&obj, vol, vid), 0,
+             "dircache: a cached folder under a replaced folder answers "
+             "NOOBJ by its DID");
+    TEST_int_or_skip(utest_dircache_row_rewritten_after_resolve(&obj, vol, vid),
+                     0, "dircache: a row rewritten for the object after the "
+                     "resolve answers and stays");
+    TEST_int(utest_dircache_replacement_keeps_its_row(&obj, vol, vid), 0,
+             "dircache: a file replaced by one with its own row is "
+             "refused, and the replacement keeps its row");
+    TEST_int_or_skip(volsys ? utest_dircache_replacement_keeps_its_cnid(&obj,
+            volsys, vidsys) : TEST_SKIP, 0,
+                     "dircache: on ea=sys a replacement keeps its CNID by "
+                     "its name");
+    TEST_int(utest_dircache_row_rewritten_at_retirement(&obj, vol, vid), 0,
+             "dircache: a row rewritten as the refusal deletes stays");
+    TEST_int(utest_dircache_row_moved_at_retirement(&obj, vol, vid), 0,
+             "dircache: a row moved as the refusal deletes stays at its new "
+             "name");
+    TEST_int(utest_dircache_retirement_backend_failure(&obj, vol, vid), 0,
+             "dircache: a refusal the backend cannot finish answers MISC "
+             "and keeps the row");
+    TEST_int(utest_dircache_moved_folder_ids_backend_failure(&obj, vol, vid),
+             0, "dircache: FPResolveID and FPDeleteID in a moved folder the "
+             "backend cannot look up answer MISC");
+    TEST_int(utest_dircache_followed_link_replacement(&obj, vol, vid), 0,
+             "dircache: a folder a followed link replaced answers NOOBJ by "
+             "its DID");
+    TEST_int(utest_dircache_link_row_rewritten_at_retirement(&obj, vol, vid),
+             0, "dircache: a row rewritten for a followed link as the "
+             "refusal deletes stays");
+    TEST_int_or_skip(utest_dircache_rewritten_link_unreadable(&obj, vol, vid),
+                     0, "dircache: a row rewritten for a followed link whose "
+                     "lstat then fails answers MISC and stays");
+    TEST_int_or_skip(utest_dircache_followed_link_unreadable(&obj, vol, vid),
+                     0, "dircache: a followed link whose lstat fails answers "
+                     "MISC and keeps its row");
+    TEST_int_or_skip(utest_dircache_path_crosses_file_by_did(&obj, vol, vid),
+                     0, "dircache: a stat that answers ENOTDIR answers NOOBJ "
+                     "by the DID");
+    TEST_int(utest_dircache_enumerate_vanished_folder(&obj, vol, vid), 0,
+             "dircache: FPEnumerate of a cached folder that vanished answers "
+             "NODIR");
+    TEST_int(utest_dircache_resolveid_folder_a_file_took(&obj, vol, vid), 0,
+             "dircache: FPResolveID in a folder a file took answers "
+             "NOID");
+    TEST_int(utest_dircache_deleteid_folder_a_file_took(&obj, vol, vid), 0,
+             "dircache: FPDeleteID in a folder a file took deletes the "
+             "ID");
+    TEST_int_or_skip(utest_dircache_resolveid_getcwd_denied(&obj, vol, vid),
+                     0, "dircache: FPResolveID with getcwd() denied answers "
+                     "ACCESS");
+    TEST_int(utest_dircache_search_after_self_heal(&obj, vol, vid), 0,
+             "dircache: a catalog search after a self-heal finds the file");
+    TEST_int(utest_dircache_walk_after_self_heal(&obj, vol, vid), 0,
+             "dircache: a walking catalog search after a self-heal finds "
+             "the file under its folder");
+    TEST_int_or_skip(utest_dircache_walk_skips_denied_folder(&obj, vol, vid),
+                     0, "dircache: a walking catalog search skips a denied "
+                     "folder");
+    TEST_int(utest_dircache_walk_backend_failure(&obj, vol, vid), 0,
+             "dircache: a walking catalog search whose self-heal the "
+             "backend cannot answer ends with MISC");
+    TEST_int_or_skip(utest_dircache_walk_paused_folder_denied(&obj, vol, vid),
+                     0, "dircache: a walking catalog search skips the denied "
+                     "folder it paused in and lists the next one");
+    TEST_int_or_skip(utest_dircache_forkparms_after_self_heal(&obj, vol, vid),
+                     0, "dircache: FPGetForkParms after a self-heal names "
+                     "the folder");
+    TEST_int(utest_dircache_followed_link_row(&obj, vol, vid), 0,
+             "dircache: a followed link whose row records the link "
+             "answers by its DID");
+    TEST_int(utest_dircache_file_entry_not_entered(&obj, vol, vid), 0,
+             "dircache: movecwd refuses a file entry");
+    TEST_int(utest_dircache_file_of_replaced_folder(&obj, vol, vid), 0,
+             "dircache: a file whose folder another replaced is refused "
+             "by its CNID");
+    TEST_int_or_skip(utest_dircache_folder_link_by_cnid(&obj, vol, vid), 0,
+                     "dircache: a symlink to a folder named by its CNID "
+                     "answers as by name");
+    TEST_int_or_skip(utest_dircache_other_device_by_did(&obj, vol, vid), 0,
+                     "dircache: a folder on another device than its row "
+                     "answers NOOBJ by its DID");
+    TEST_int(utest_dircache_exchange_by_cnid(&obj, vol, vid), 0,
+             "dircache: FPExchangeFiles of a file named by its CNID keeps "
+             "its row");
+    TEST_int_or_skip(utest_dircache_setfileparms_link_by_cnid(&obj, vol, vid),
+                     0, "dircache: FPSetFileParms of a symlink named by its "
+                     "CNID takes it for the link");
+    TEST_int_or_skip(utest_dircache_openfork_by_cnid_other_user(&obj, vol, vid),
+                     0, "dircache: FPOpenFork of a file named by its CNID "
+                     "checks its mode");
+    TEST_int_or_skip(utest_dircache_file_stat_fails_by_cnid(&obj, vol, vid),
+                     0, "dircache: a file whose stat fails answers ACCESS or "
+                     "MISC by its CNID");
+    TEST_int_or_skip(utest_dircache_createid_unenterable_folder(&obj, vol, vid),
+                     0, "dircache: FPCreateID of a folder it cannot enter "
+                     "keeps the folder's row");
+    TEST_int(utest_dircache_fifo_by_cnid(&obj, vol, vid), 0,
+             "dircache: a FIFO named by its CNID is refused as by name");
+    TEST_int(utest_dircache_file_replaced_after_lookup(&obj, vol, vid), 0,
+             "dircache: a file replaced after its lookup by CNID is refused");
+    TEST_int(utest_dircache_file_deleted_after_lookup(&obj, vol, vid), 0,
+             "dircache: a file deleted after its lookup by CNID is refused");
     TEST_int_or_skip(utest_movecwd_skips_getcwd(&obj, vol), 0,
                      "movecwd: a walking volume skips getcwd()");
     TEST_int_or_skip(utest_movecwd_at_descriptor_limit(&obj, vol), 0,
@@ -5733,6 +5970,9 @@ int main(int argc, char *argv[])
              "openfork: a file opened through a path registers in its folder");
     TEST_int(utest_createid_registers_in_its_folder(&obj, vol, vid), 0,
              "createid: an ID made through a path registers in its folder");
+    TEST_int(utest_file_by_cnid_resolves_once(&obj, vol, vid), 0,
+             "getfiledirparms: a file named by its CNID resolves once and "
+             "adds nothing");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

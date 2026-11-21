@@ -67,7 +67,10 @@ static MYSQL_BIND lookup_param[4], lookup_result[5];
 static MYSQL_BIND add_param[4], put_param[5];
 static MYSQL_BIND get_param[2], get_result[1];
 static MYSQL_BIND delete_param[1];
-static MYSQL_BIND resolve_param[1], resolve_result[2];
+static MYSQL_BIND delete_row_param[5];
+static MYSQL_BIND update_row_param[7], del_devino_other_param[3];
+static MYSQL_BIND check_row_param[5];
+static MYSQL_BIND resolve_param[1], resolve_result[4];
 static MYSQL_BIND purge_param[5];
 static MYSQL_BIND dirlist_param[2], dirlist_result[4];
 static unsigned long long dirlist_param_max;
@@ -86,6 +89,9 @@ static unsigned long long stmt_param_id;
 static unsigned long long stmt_param_did;
 static unsigned long long stmt_param_dev;
 static unsigned long long stmt_param_ino;
+/* the device and inode update_row sets, which del_devino_other matches */
+static unsigned long long stmt_param_newdev;
+static unsigned long long stmt_param_newino;
 
 /*!
  * lookup result parameters
@@ -100,6 +106,8 @@ static unsigned long long get_result_id;
 static unsigned long long resolve_result_did;
 static char               resolve_result_name[MAXPATHLEN];
 static unsigned long      resolve_result_name_len;
+static unsigned long long resolve_result_dev;
+static unsigned long long resolve_result_ino;
 
 /*!
  * @brief Tell whether a CNID hint from AppleDouble or EA metadata is safe to
@@ -318,7 +326,178 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Prepare the statement that finds the parent and the name of a CNID
+ * @brief Prepare the delete of a row by CNID, parent, name, device and inode
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
+static int init_prepared_stmt_delete_row(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    delete_row_param[0].buffer_type   = MYSQL_TYPE_LONGLONG;
+    delete_row_param[0].buffer        = &stmt_param_id;
+    delete_row_param[0].is_unsigned   = true;
+    delete_row_param[1].buffer_type   = MYSQL_TYPE_LONGLONG;
+    delete_row_param[1].buffer        = &stmt_param_did;
+    delete_row_param[1].is_unsigned   = true;
+    delete_row_param[2].buffer_type   = MYSQL_TYPE_BLOB;
+    delete_row_param[2].buffer        = &stmt_param_name;
+    delete_row_param[2].buffer_length = sizeof(stmt_param_name);
+    delete_row_param[2].length        = &stmt_param_name_len;
+    delete_row_param[3].buffer_type   = MYSQL_TYPE_LONGLONG;
+    delete_row_param[3].buffer        = &stmt_param_dev;
+    delete_row_param[3].is_unsigned   = true;
+    delete_row_param[4].buffer_type   = MYSQL_TYPE_LONGLONG;
+    delete_row_param[4].buffer        = &stmt_param_ino;
+    delete_row_param[4].is_unsigned   = true;
+    EC_NULL(db->cnid_delete_row_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "DELETE FROM `%s` WHERE Id=? AND Did=? AND %s "
+                     "AND DevNo=? AND InodeNo=?",
+                     db->cnid_mysql_voluuid_str, db->cnid_mysql_name_is));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_delete_row_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_delete_row_stmt,
+                                      delete_row_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+/*!
+ * @brief Prepare the conditional update of a row's device and inode
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
+static int init_prepared_stmt_update_row(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    update_row_param[0].buffer_type   = MYSQL_TYPE_LONGLONG;
+    update_row_param[0].buffer        = &stmt_param_newdev;
+    update_row_param[0].is_unsigned   = true;
+    update_row_param[1].buffer_type   = MYSQL_TYPE_LONGLONG;
+    update_row_param[1].buffer        = &stmt_param_newino;
+    update_row_param[1].is_unsigned   = true;
+    update_row_param[2].buffer_type   = MYSQL_TYPE_LONGLONG;
+    update_row_param[2].buffer        = &stmt_param_id;
+    update_row_param[2].is_unsigned   = true;
+    update_row_param[3].buffer_type   = MYSQL_TYPE_LONGLONG;
+    update_row_param[3].buffer        = &stmt_param_did;
+    update_row_param[3].is_unsigned   = true;
+    update_row_param[4].buffer_type   = MYSQL_TYPE_BLOB;
+    update_row_param[4].buffer        = &stmt_param_name;
+    update_row_param[4].buffer_length = sizeof(stmt_param_name);
+    update_row_param[4].length        = &stmt_param_name_len;
+    update_row_param[5].buffer_type   = MYSQL_TYPE_LONGLONG;
+    update_row_param[5].buffer        = &stmt_param_dev;
+    update_row_param[5].is_unsigned   = true;
+    update_row_param[6].buffer_type   = MYSQL_TYPE_LONGLONG;
+    update_row_param[6].buffer        = &stmt_param_ino;
+    update_row_param[6].is_unsigned   = true;
+    EC_NULL(db->cnid_update_row_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "UPDATE `%s` SET DevNo=?, InodeNo=? WHERE Id=? AND Did=? "
+                     "AND %s AND DevNo=? AND InodeNo=?",
+                     db->cnid_mysql_voluuid_str, db->cnid_mysql_name_is));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_update_row_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_update_row_stmt,
+                                      update_row_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+/*!
+ * @brief Prepare the removal of the other rows that record a device and inode
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
+static int init_prepared_stmt_del_devino_other(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    del_devino_other_param[0].buffer_type   = MYSQL_TYPE_LONGLONG;
+    del_devino_other_param[0].buffer        = &stmt_param_newdev;
+    del_devino_other_param[0].is_unsigned   = true;
+    del_devino_other_param[1].buffer_type   = MYSQL_TYPE_LONGLONG;
+    del_devino_other_param[1].buffer        = &stmt_param_newino;
+    del_devino_other_param[1].is_unsigned   = true;
+    del_devino_other_param[2].buffer_type   = MYSQL_TYPE_LONGLONG;
+    del_devino_other_param[2].buffer        = &stmt_param_id;
+    del_devino_other_param[2].is_unsigned   = true;
+    EC_NULL(db->cnid_del_devino_other_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "DELETE FROM `%s` WHERE DevNo=? AND InodeNo=? AND Id<>?",
+                     db->cnid_mysql_voluuid_str));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_del_devino_other_stmt, sql,
+                                   strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_del_devino_other_stmt,
+                                      del_devino_other_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+/*!
+ * @brief Prepare the update's check of its row, which locks it on InnoDB
+ *
+ * @param[in,out] db  MySQL backend state with the connection and the table name
+ * @returns 0, or -1 when preparing or binding fails
+ */
+static int init_prepared_stmt_check_row(CNID_mysql_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    check_row_param[0].buffer_type   = MYSQL_TYPE_LONGLONG;
+    check_row_param[0].buffer        = &stmt_param_id;
+    check_row_param[0].is_unsigned   = true;
+    check_row_param[1].buffer_type   = MYSQL_TYPE_LONGLONG;
+    check_row_param[1].buffer        = &stmt_param_did;
+    check_row_param[1].is_unsigned   = true;
+    check_row_param[2].buffer_type   = MYSQL_TYPE_BLOB;
+    check_row_param[2].buffer        = &stmt_param_name;
+    check_row_param[2].buffer_length = sizeof(stmt_param_name);
+    check_row_param[2].length        = &stmt_param_name_len;
+    check_row_param[3].buffer_type   = MYSQL_TYPE_LONGLONG;
+    check_row_param[3].buffer        = &stmt_param_dev;
+    check_row_param[3].is_unsigned   = true;
+    check_row_param[4].buffer_type   = MYSQL_TYPE_LONGLONG;
+    check_row_param[4].buffer        = &stmt_param_ino;
+    check_row_param[4].is_unsigned   = true;
+    EC_NULL(db->cnid_check_row_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "SELECT Id FROM `%s` WHERE Id=? AND Did=? AND %s "
+                     "AND DevNo=? AND InodeNo=? FOR UPDATE",
+                     db->cnid_mysql_voluuid_str, db->cnid_mysql_name_is));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_check_row_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_check_row_stmt,
+                                      check_row_param));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+/*!
+ * @brief Prepare the read of a CNID's parent, name, device and inode
  *
  * @param[in,out] db  MySQL backend state with the connection and the table name
  * @returns 0, or -1 when preparing or binding fails
@@ -337,9 +516,15 @@ static int init_prepared_stmt_resolve(CNID_mysql_private *db)
     resolve_result[1].buffer        = &resolve_result_name;
     resolve_result[1].buffer_length = sizeof(resolve_result_name);
     resolve_result[1].length        = &resolve_result_name_len;
+    resolve_result[2].buffer_type   = MYSQL_TYPE_LONGLONG;
+    resolve_result[2].buffer        = &resolve_result_dev;
+    resolve_result[2].is_unsigned   = true;
+    resolve_result[3].buffer_type   = MYSQL_TYPE_LONGLONG;
+    resolve_result[3].buffer        = &resolve_result_ino;
+    resolve_result[3].is_unsigned   = true;
     EC_NULL(db->cnid_resolve_stmt = mysql_stmt_init(db->cnid_mysql_con));
-    EC_NEG1(asprintf(&sql, "SELECT Did, Name FROM `%s` WHERE Id=?",
-                     db->cnid_mysql_voluuid_str));
+    EC_NEG1(asprintf(&sql, "SELECT Did, Name, DevNo, InodeNo FROM `%s` "
+                           "WHERE Id=?", db->cnid_mysql_voluuid_str));
     EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_resolve_stmt, sql, strlen(sql)));
     EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_resolve_stmt, resolve_param));
 EC_CLEANUP:
@@ -442,7 +627,39 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Prepare all 8 statements of a MySQL CNID table
+ * @brief Set the SQL that compares a row's name with a name read back
+ *
+ * Name converts to the results charset, as a read converts it, and compares
+ * as bytes: an unchanged name matches whatever the column's charset, and a
+ * name that differs in case alone does not. A charset name the SQL cannot
+ * carry falls back to the table's collation.
+ *
+ * @param[in,out] db       MySQL backend state
+ * @param[in]     charset  the connection's character_set_results, or NULL
+ *                         when a read hands names back as stored
+ */
+static void cnid_mysql_set_name_is(CNID_mysql_private *db,
+                                   const char *charset)
+{
+    if (charset == NULL) {
+        snprintf(db->cnid_mysql_name_is, sizeof(db->cnid_mysql_name_is),
+                 "CAST(Name AS BINARY)=?");
+    } else if (charset[0] != '\0' && strlen(charset) < 32
+               && strspn(charset, "abcdefghijklmnopqrstuvwxyz0123456789_")
+               == strlen(charset)) {
+        snprintf(db->cnid_mysql_name_is, sizeof(db->cnid_mysql_name_is),
+                 "CAST(CONVERT(Name USING %s) AS BINARY)=?", charset);
+    } else {
+        LOG(log_warning, logtype_cnid,
+            "MySQL results charset '%s' has no usable name; row names compare "
+            "under the table's collation", charset);
+        snprintf(db->cnid_mysql_name_is, sizeof(db->cnid_mysql_name_is),
+                 "Name=?");
+    }
+}
+
+/*!
+ * @brief Prepare the statements of a MySQL CNID table
  *
  * @param[in,out] db  MySQL backend state with the connection and the table name
  * @returns 0, or -1 when one fails
@@ -456,8 +673,13 @@ static int init_prepared_stmt(CNID_mysql_private *db)
     EC_ZERO(init_prepared_stmt_put(db));
     EC_ZERO(init_prepared_stmt_get(db));
     EC_ZERO(init_prepared_stmt_delete(db));
+    EC_ZERO(init_prepared_stmt_delete_row(db));
+    EC_ZERO(init_prepared_stmt_update_row(db));
+    EC_ZERO(init_prepared_stmt_del_devino_other(db));
+    EC_ZERO(init_prepared_stmt_check_row(db));
     EC_ZERO(init_prepared_stmt_resolve(db));
     EC_ZERO(init_prepared_stmt_purge(db));
+    db->cnid_mysql_stmt_thread = mysql_thread_id(db->cnid_mysql_con);
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -477,6 +699,8 @@ static void close_prepared_stmt(CNID_mysql_private *db)
         &db->cnid_lookup_stmt, &db->cnid_add_stmt, &db->cnid_put_stmt,
         &db->cnid_get_stmt, &db->cnid_delete_stmt, &db->cnid_resolve_stmt,
         &db->cnid_purge_stmt, &db->cnid_dirlist_stmt,
+        &db->cnid_delete_row_stmt, &db->cnid_update_row_stmt,
+        &db->cnid_del_devino_other_stmt, &db->cnid_check_row_stmt,
     };
 
     for (size_t i = 0; i < sizeof(stmts) / sizeof(stmts[0]); i++) {
@@ -665,6 +889,364 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Remove a CNID's row while it records a parent, name, device and inode
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] id    CNID in network order, not 0
+ * @param[in] did   parent the row must record, in network order
+ * @param[in] name  name the row must record, as a read handed it back
+ * @param[in] len   length of name, up to MAXPATHLEN
+ * @param[in] dev   device the row must record
+ * @param[in] ino   inode the row must record
+ * @returns 1 when the row went, 0 when no row matched, or -1 with errno
+ *          classified
+ */
+static int cnid_mysql_delete_row(struct _cnid_db *cdb, const cnid_t id,
+                                 const cnid_t did, const char *name,
+                                 size_t len, uint64_t dev, uint64_t ino)
+{
+    CNID_mysql_private *db;
+
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !name) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_delete_row: Parameter error");
+        errno = CNID_ERR_PARAM;
+        return -1;
+    }
+
+    if (len > MAXPATHLEN) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_delete_row: name is too long");
+        errno = CNID_ERR_PATH;
+        return -1;
+    }
+
+    stmt_param_id = ntohl(id);
+    stmt_param_did = ntohl(did);
+    strncpy(stmt_param_name, name, sizeof(stmt_param_name));
+    stmt_param_name_len = len;
+    stmt_param_dev = dev;
+    stmt_param_ino = ino;
+
+    if (cnid_mysql_stmt_execute(db, &db->cnid_delete_row_stmt) != 0) {
+        return -1;
+    }
+
+    return mysql_stmt_affected_rows(db->cnid_delete_row_stmt) > 0 ? 1 : 0;
+}
+
+/*!
+ * @brief Hold a CNID table's rows for a conditional update
+ *
+ * On InnoDB the update's check locks its row in a transaction, and on any
+ * other engine, or one the open could not read, the hold locks the table.
+ * There, a user who may not lock tables gets no hold for the handle's updates.
+ *
+ * @param[in,out] db  MySQL backend state
+ * @returns 0, or -1 with errno classified
+ */
+static int cnid_mysql_hold(CNID_mysql_private *db)
+{
+    char *sql = NULL;
+    unsigned int err;
+    int ret;
+
+    if (db->cnid_mysql_hold_kind == CNID_MYSQL_HOLD_ROW) {
+        return cnid_mysql_execute(db->cnid_mysql_con, "START TRANSACTION");
+    }
+
+    if (db->cnid_mysql_hold_kind == CNID_MYSQL_HOLD_NONE) {
+        return 0;
+    }
+
+    if (asprintf(&sql, "LOCK TABLES `%s` WRITE",
+                 db->cnid_mysql_voluuid_str) < 0) {
+        errno = CNID_ERR_DB;
+        return -1;
+    }
+
+    ret = cnid_mysql_execute(db->cnid_mysql_con, sql);
+    free(sql);
+    err = mysql_errno(db->cnid_mysql_con);
+
+    if (ret != 0 && (err == ER_DBACCESS_DENIED_ERROR
+                     || err == ER_TABLEACCESS_DENIED_ERROR)) {
+        LOG(log_warning, logtype_cnid,
+            "MySQL user lacks LOCK TABLES for CNID table `%s`: its "
+            "conditional updates hold no row", db->cnid_mysql_voluuid_str);
+        db->cnid_mysql_hold_kind = CNID_MYSQL_HOLD_NONE;
+        return 0;
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief End a hold of cnid_mysql_hold()
+ *
+ * A table lock ends the same way either way: its engine cannot undo writes.
+ *
+ * @param[in] db    MySQL backend state
+ * @param[in] keep  keep the hold's writes, or roll them back on InnoDB
+ * @returns 0, or -1 with errno classified, or unchanged when keep is false
+ */
+static int cnid_mysql_release(const CNID_mysql_private *db, bool keep)
+{
+    const int saved_errno = errno;
+    const char *sql = "UNLOCK TABLES";
+    int ret;
+
+    if (db->cnid_mysql_hold_kind == CNID_MYSQL_HOLD_NONE) {
+        return 0;
+    }
+
+    if (db->cnid_mysql_hold_kind == CNID_MYSQL_HOLD_ROW) {
+        sql = keep ? "COMMIT" : "ROLLBACK";
+    }
+
+    ret = cnid_mysql_execute(db->cnid_mysql_con, sql);
+
+    if (!keep) {
+        errno = saved_errno;
+    }
+
+    return ret;
+}
+
+/*!
+ * @brief Drop the prepared statements after a failed conditional update
+ *
+ * After a reconnect, MariaDB's client keeps handles the new session lacks,
+ * whose executes answer ER_UNKNOWN_STMT_HANDLER or CR_COMMANDS_OUT_OF_SYNC,
+ * and a restarted server can reuse the thread ID. An update fails rarely, and
+ * preparing again costs less than telling those failures apart. Until a later
+ * call prepares them, a listing looks its names up one by one.
+ *
+ * @param[in,out] db  MySQL backend state
+ */
+static void cnid_mysql_drop_stmts(CNID_mysql_private *db)
+{
+    const int saved_errno = errno;
+    close_prepared_stmt(db);
+    errno = saved_errno;
+}
+
+/*!
+ * @brief End a failed conditional update's hold, and drop the statements
+ *
+ * @param[in,out] db  MySQL backend state
+ */
+static void cnid_mysql_update_row_end(CNID_mysql_private *db)
+{
+    (void)cnid_mysql_release(db, false);
+    cnid_mysql_drop_stmts(db);
+}
+
+/*!
+ * @brief Report a failed statement and end the hold, rolling back on InnoDB
+ *
+ * @param[in,out] db    MySQL backend state
+ * @param[in]     stmt  the statement that failed
+ * @returns -1 with errno classified
+ */
+static int cnid_mysql_update_row_failed(CNID_mysql_private *db,
+                                        MYSQL_STMT *stmt)
+{
+    const unsigned int err = mysql_stmt_errno(stmt);
+    LOG(log_error, logtype_cnid,
+        "cnid_mysql_update_row: MySQL statement error: %s",
+        mysql_stmt_error(stmt));
+    /* a pending result keeps MariaDB's client from closing other statements */
+    (void)mysql_stmt_free_result(stmt);
+    cnid_mysql_set_errno(err);
+    cnid_mysql_update_row_end(db);
+    return -1;
+}
+
+/*!
+ * @brief End a conditional update that lost its hold to a reconnect
+ *
+ * @param[in,out] db  MySQL backend state
+ * @returns -1 with errno CNID_ERR_BUSY
+ */
+static int cnid_mysql_update_row_lost(CNID_mysql_private *db)
+{
+    LOG(log_error, logtype_cnid,
+        "cnid_mysql_update_row: the connection reconnected inside the hold");
+    errno = CNID_ERR_BUSY;
+    cnid_mysql_update_row_end(db);
+    return -1;
+}
+
+/*!
+ * @brief Set the parameters of a conditional update's statements
+ *
+ * Every handle in a process shares the statements' parameter buffers.
+ *
+ * @param[in] cdb   CNID database
+ * @param[in] id    CNID in network order
+ * @param[in] did   parent the row must record, in network order
+ * @param[in] name  name the row must record
+ * @param[in] len   length of name, up to MAXPATHLEN
+ * @param[in] dev   device the row must record
+ * @param[in] ino   inode the row must record
+ * @param[in] st    stat whose device and inode the row takes
+ */
+static void cnid_mysql_update_row_params(const struct _cnid_db *cdb,
+                                         cnid_t id, cnid_t did,
+                                         const char *name, size_t len,
+                                         uint64_t dev, uint64_t ino,
+                                         const struct stat *st)
+{
+    stmt_param_newdev = cnid_row_dev(cdb, st);
+    stmt_param_newino = st->st_ino;
+    stmt_param_id = ntohl(id);
+    stmt_param_did = ntohl(did);
+    strncpy(stmt_param_name, name, sizeof(stmt_param_name));
+    stmt_param_name_len = len;
+    stmt_param_dev = dev;
+    stmt_param_ino = ino;
+}
+
+/*!
+ * @brief Give a CNID's row a stat's device and inode while it still matches
+ *
+ * The hold spans the check, replace and the update, so another session's
+ * delete of the row waits for the update, which removes another row with the
+ * stat's device and inode as stale. A reconnect in the hold fails the call
+ * rather than replay outside it. Without a hold, the update's own condition
+ * answers 0 for a row that changed after the check, after replace ran.
+ *
+ * @param[in] cdb      CNID database
+ * @param[in] id       CNID in network order, not 0
+ * @param[in] did      parent the row must record, in network order
+ * @param[in] name     name the row must record, as a read handed it back
+ * @param[in] len      length of name, up to MAXPATHLEN
+ * @param[in] dev      device the row must record
+ * @param[in] ino      inode the row must record
+ * @param[in] st       stat whose device and inode the row takes
+ * @param[in] replace  runs inside the hold when the row matched, or NULL
+ * @param[in] arg      replace's argument
+ * @returns 1 when the row changed, 0 when no row matched, the row already
+ *          records the stat's device and inode or, without a hold, the row
+ *          changed after the check, or -1 with errno classified, or with
+ *          replace's errno when replace failed
+ */
+static int cnid_mysql_update_row(struct _cnid_db *cdb, const cnid_t id,
+                                 const cnid_t did, const char *name,
+                                 size_t len, uint64_t dev, uint64_t ino,
+                                 const struct stat *st,
+                                 cnid_replace_fn replace, void *arg)
+{
+    CNID_mysql_private *db;
+    MYSQL_STMT *stmt;
+    unsigned long held;
+    bool matched;
+    int changed = 0;
+
+    if (!cdb || !(db = cdb->cnid_db_private) || !id || !name || !st) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_update_row: Parameter error");
+        errno = CNID_ERR_PARAM;
+        return -1;
+    }
+
+    if (len > MAXPATHLEN) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_update_row: name is too long");
+        errno = CNID_ERR_PATH;
+        return -1;
+    }
+
+    /* the ping reconnects a connection the server closed; MySQL's client
+     * needs a second ping where the server wrote an error before it closed,
+     * as MySQL's idle timeout does */
+    if (mysql_ping(db->cnid_mysql_con) != 0
+            && mysql_ping(db->cnid_mysql_con) != 0) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_update_row: ping: %s",
+            mysql_error(db->cnid_mysql_con));
+        cnid_mysql_set_errno(mysql_errno(db->cnid_mysql_con));
+        cnid_mysql_drop_stmts(db);
+        return -1;
+    }
+
+    if (mysql_thread_id(db->cnid_mysql_con) != db->cnid_mysql_stmt_thread
+            || db->cnid_check_row_stmt == NULL
+            || db->cnid_update_row_stmt == NULL
+            || db->cnid_del_devino_other_stmt == NULL) {
+        close_prepared_stmt(db);
+
+        if (init_prepared_stmt(db) != 0) {
+            cnid_mysql_set_errno(0);
+            return -1;
+        }
+    }
+
+    if (cnid_mysql_hold(db) != 0) {
+        cnid_mysql_drop_stmts(db);
+        return -1;
+    }
+
+    /* the hold's query can reconnect, onto a session without the statements */
+    held = mysql_thread_id(db->cnid_mysql_con);
+
+    if (held != db->cnid_mysql_stmt_thread) {
+        return cnid_mysql_update_row_lost(db);
+    }
+
+    cnid_mysql_update_row_params(cdb, id, did, name, len, dev, ino, st);
+    stmt = db->cnid_check_row_stmt;
+
+    if (mysql_stmt_execute(stmt) != 0 || mysql_stmt_store_result(stmt) != 0) {
+        return cnid_mysql_update_row_failed(db, stmt);
+    }
+
+    matched = mysql_stmt_num_rows(stmt) > 0;
+    mysql_stmt_free_result(stmt);
+
+    if (matched) {
+        if (replace != NULL && replace(arg) != 0) {
+            cnid_mysql_update_row_end(db);
+            return -1;
+        }
+
+        /* a replace whose CNID calls reconnected ended the hold */
+        if (mysql_thread_id(db->cnid_mysql_con) != held
+                || db->cnid_update_row_stmt == NULL
+                || db->cnid_del_devino_other_stmt == NULL) {
+            return cnid_mysql_update_row_lost(db);
+        }
+
+        /* replace's CNID calls, on any handle, can overwrite the parameters */
+        cnid_mysql_update_row_params(cdb, id, did, name, len, dev, ino, st);
+        stmt = db->cnid_update_row_stmt;
+
+        /* the update runs first, and the delete only for a stale row it
+         * meets: a delete that matches no row gap-locks the DevIno index
+         * where another hold's update inserts, so two such holds deadlock */
+        if (mysql_stmt_execute(stmt) != 0) {
+            if (mysql_stmt_errno(stmt) != ER_DUP_ENTRY) {
+                return cnid_mysql_update_row_failed(db, stmt);
+            }
+
+            if (mysql_stmt_execute(db->cnid_del_devino_other_stmt) != 0) {
+                return cnid_mysql_update_row_failed(
+                           db, db->cnid_del_devino_other_stmt);
+            }
+
+            if (mysql_stmt_execute(stmt) != 0) {
+                return cnid_mysql_update_row_failed(db, stmt);
+            }
+        }
+
+        changed = mysql_stmt_affected_rows(stmt) > 0 ? 1 : 0;
+    }
+
+    if (cnid_mysql_release(db, true) != 0) {
+        cnid_mysql_update_row_end(db);
+        return -1;
+    }
+
+    return changed;
+}
+
+/*!
  * @brief Close the MySQL connection of a CNID database and free the database
  *
  * @param[in] cdb  CNID database, and a NULL one logs an error
@@ -736,12 +1318,7 @@ int cnid_mysql_update(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = 0;
-
-    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
-        dev = st->st_dev;
-    }
-
+    uint64_t dev = cnid_row_dev(cdb, st);
     uint64_t ino = st->st_ino;
 
     do {
@@ -795,14 +1372,15 @@ EC_CLEANUP:
 /*!
  * @brief Find the CNID of an object by name and parent or by device and inode
  *
- * A single matching row is the answer. Two rows, one per index, are stale,
- * and the call removes both.
+ * A single matching row is the answer. Two rows, one per index, are stale:
+ * the call removes each one that still records what it read.
  *
  * A row with another name or parent means a server-side move or a reused
  * inode. When its CNID equals the hint of the current add, the row takes the
  * new name and parent. Otherwise, and for a row with another device or inode,
- * the call removes the row. Each removal reports CNID_ERR_NOTFOUND, so
- * cnid_mysql_add inserts a new entry.
+ * the call removes the row while it still records what the call read. Each
+ * removal reports CNID_ERR_NOTFOUND: cnid_mysql_add inserts a new entry, or
+ * meets a row another session changed meanwhile and repeats the lookup.
  *
  * @param[in] cdb   CNID database
  * @param[in] st    stat of the object
@@ -835,12 +1413,7 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = 0;
-
-    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
-        dev = st->st_dev;
-    }
-
+    uint64_t dev = cnid_row_dev(cdb, st);
     uint64_t ino = st->st_ino;
     cnid_t hint = db->cnid_mysql_hint;
     LOG(log_maxdebug, logtype_cnid,
@@ -899,20 +1472,36 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
         break;
 
     case 2: {
-        /* a mismatch, delete both and return not found. Fetch both ids
-         * before deleting: a CR_SERVER_LOST recovery inside delete
-         * re-prepares every statement and would invalidate a fetch
-         * still in flight on the lookup handle. */
-        cnid_t mismatched[2];
+        /* fetch both rows before deleting: a CR_SERVER_LOST recovery inside
+         * the delete re-prepares every statement, which would invalidate a
+         * fetch still in flight on the lookup handle */
+        struct {
+            cnid_t id;
+            cnid_t did;
+            uint64_t dev;
+            uint64_t ino;
+            unsigned long len;
+            char name[MAXPATHLEN];
+        } mismatched[2];
         int nfetched = 0;
 
         while (nfetched < 2
                 && mysql_stmt_fetch(db->cnid_lookup_stmt) == 0) {
-            mismatched[nfetched++] = htonl((cnid_t)lookup_result_id);
+            mismatched[nfetched].id = htonl((cnid_t)lookup_result_id);
+            mismatched[nfetched].did = htonl((cnid_t)lookup_result_did);
+            mismatched[nfetched].dev = lookup_result_dev;
+            mismatched[nfetched].ino = lookup_result_ino;
+            mismatched[nfetched].len = lookup_result_name_len;
+            memcpy(mismatched[nfetched].name, lookup_result_name,
+                   sizeof(mismatched[nfetched].name));
+            nfetched++;
         }
 
         for (int i = 0; i < nfetched; i++) {
-            if (cnid_mysql_delete(cdb, mismatched[i])) {
+            if (cnid_mysql_delete_row(cdb, mismatched[i].id, mismatched[i].did,
+                                      mismatched[i].name, mismatched[i].len,
+                                      mismatched[i].dev,
+                                      mismatched[i].ino) < 0) {
                 /* errno carries the delete's own classification: overwriting it
                  * would turn a lock that will free into a session-fatal error */
                 LOG(log_error, logtype_cnid, "MySQL query error: %s",
@@ -949,7 +1538,9 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
             ntohl(hint), ntohl(did), name);
 
         if (hint != retid) {
-            if (cnid_mysql_delete(cdb, retid) != 0) {
+            if (cnid_mysql_delete_row(cdb, retid, retdid, retname,
+                                      lookup_result_name_len, retdev,
+                                      retino) < 0) {
                 /* errno carries the delete's own classification */
                 LOG(log_error, logtype_cnid, "MySQL query error: %s",
                     mysql_error(db->cnid_mysql_con));
@@ -976,7 +1567,8 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
             "cnid_mysql_lookup(DID:%u, name: \"%s\"): changed dev/ino",
             ntohl(did), name);
 
-        if (cnid_mysql_delete(cdb, retid) != 0) {
+        if (cnid_mysql_delete_row(cdb, retid, retdid, retname,
+                                  lookup_result_name_len, retdev, retino) < 0) {
             /* errno carries the delete's own classification */
             LOG(log_error, logtype_cnid, "MySQL query error: %s",
                 mysql_error(db->cnid_mysql_con));
@@ -1057,12 +1649,7 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = 0;
-
-    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
-        dev = st->st_dev;
-    }
-
+    uint64_t dev = cnid_row_dev(cdb, st);
     uint64_t ino = st->st_ino;
     /* The reserve gate governs inserting the hint as an explicit Id only.
      * The raw hint still drives lookup's update-in-place vs delete-and-reinsert
@@ -1319,7 +1906,7 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Resolve a CNID to its parent and name in the MySQL table
+ * @brief Resolve a CNID to its parent, name, device and inode
  *
  * A contended database reports a classified errno, not a missing CNID, which
  * afp_resolveid would turn into a permanent AFPERR_NOID.
@@ -1329,10 +1916,12 @@ EC_CLEANUP:
  *                        CNID_INVALID
  * @param[out]    buffer  receives the name
  * @param[in]     len     size of buffer
+ * @param[out]    dev     receives the row's device
+ * @param[out]    ino     receives the row's inode
  * @returns buffer, or NULL with errno classified
  */
 char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
-                         size_t len)
+                         size_t len, uint64_t *dev, uint64_t *ino)
 {
     EC_INIT;
     CNID_mysql_private *db;
@@ -1383,6 +1972,8 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
     resolve_result_name[resolve_result_name_len] = '\0';
     *id = htonl((uint32_t)resolve_result_did);
     strncpy(buffer, resolve_result_name, len);
+    *dev = resolve_result_dev;
+    *ino = resolve_result_ino;
 EC_CLEANUP:
 
     if (have_result) {
@@ -1826,6 +2417,8 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     cdb->cnid_add = cnid_mysql_add;
     cdb->cnid_dirlist = cnid_mysql_dirlist;
     cdb->cnid_delete = cnid_mysql_delete;
+    cdb->cnid_delete_row = cnid_mysql_delete_row;
+    cdb->cnid_update_row = cnid_mysql_update_row;
     cdb->cnid_get = cnid_mysql_get;
     cdb->cnid_lookup = cnid_mysql_lookup;
     cdb->cnid_find = cnid_mysql_find;
@@ -2149,7 +2742,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            "DevNo BIGINT UNSIGNED NOT NULL,"
                            "InodeNo BIGINT UNSIGNED NOT NULL,"
                            "UNIQUE DidName(Did, Name), UNIQUE DevIno(DevNo, InodeNo)) "
-                           "AUTO_INCREMENT=17",
+                           "ENGINE=InnoDB AUTO_INCREMENT=17",
                      db->cnid_mysql_voluuid_str));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql)) {
@@ -2164,6 +2757,38 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
             vol->v_localname);
     }
 
+    free(sql);
+    sql = NULL;
+    /* the results charset decides how names compare; the engine, which an
+     * existing table keeps, decides how a conditional update holds a row */
+    EC_NEG1(asprintf(&sql, "SELECT @@character_set_results, "
+                           "(SELECT ENGINE FROM information_schema.TABLES "
+                           "WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='%s')",
+                     db->cnid_mysql_voluuid_str));
+
+    if (cnid_mysql_execute(db->cnid_mysql_con, sql)) {
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
+        EC_FAIL;
+    }
+
+    if ((result = mysql_store_result(db->cnid_mysql_con)) == NULL
+            || (row = mysql_fetch_row(result)) == NULL) {
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
+        cnid_mysql_set_errno(mysql_errno(db->cnid_mysql_con));
+        EC_FAIL;
+    }
+
+    cnid_mysql_set_name_is(db, row[0]);
+    db->cnid_mysql_hold_kind = CNID_MYSQL_HOLD_TABLE;
+
+    if (row[1] != NULL && strcmp(row[1], "InnoDB") == 0) {
+        db->cnid_mysql_hold_kind = CNID_MYSQL_HOLD_ROW;
+    }
+
+    mysql_free_result(result);
+    result = NULL;
     EC_ZERO(init_prepared_stmt(db));
     LOG(log_debug, logtype_cnid,
         "Finished initializing MySQL CNID module for volume '%s'",
@@ -2180,14 +2805,10 @@ EC_CLEANUP:
 
     if (ret != 0) {
         if (cdb) {
-            free(cdb);
+            cnid_mysql_close(cdb);
         }
 
         cdb = NULL;
-
-        if (db) {
-            free(db);
-        }
     }
 
     return cdb;

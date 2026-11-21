@@ -918,19 +918,34 @@ static int catsearch(const AFPObj *obj,
             cfrombstr(currentdir->d_fullpath));
         error = movecwd(vol, currentdir);
 
-        if (!error && dirpos == NULL) {
-            dirpos = opendir(".");
-        }
+        /* a folder movecwd() could not enter is not listed, as its names
+         * would be read where the working directory is not */
+        if (!error) {
+            /* a self-healing movecwd() replaces a stale entry with curdir */
+            currentdir = curdir;
 
-        if (dirpos == NULL) {
-            const char *temp = cfrombstr(currentdir->d_fullpath);
-            dirpos = opendir(temp);
+            if (dirpos == NULL) {
+                dirpos = opendir(".");
+            }
+
+            if (dirpos == NULL) {
+                const char *temp = cfrombstr(currentdir->d_fullpath);
+                dirpos = opendir(temp);
+            }
         }
 
         if (error || dirpos == NULL) {
             switch (errno) {
             case EACCES:
                 dstack[cidx].ds_checked = 1;
+
+                /* the next folder lists from a listing of its own, not the
+                 * one a pause left open in this folder */
+                if (dirpos != NULL) {
+                    closedir(dirpos);
+                    dirpos = NULL;
+                }
+
                 continue;
 
             case EMFILE:
@@ -1205,6 +1220,8 @@ static int catsearch_db(const AFPObj *obj,
             goto next;
         }
 
+        /* a self-healing movecwd() replaces a stale entry with curdir */
+        dir = curdir;
         memset(&path, 0, sizeof(path));
         path.u_name = name;
         path.m_name = utompath(vol, name, cnid, utf8_encoding(vol->v_obj));
