@@ -77,7 +77,124 @@
 #define CNID_SQLITE_HINT_RESERVE    (1u << 28)
 #define CNID_SQLITE_MAX_HINT        (UINT32_MAX - CNID_SQLITE_HINT_RESERVE)
 
+/* The value of a numeric macro below as SQL text */
+#define CNID_SQLITE_STR(n)          CNID_SQLITE_STR_(n)
+#define CNID_SQLITE_STR_(n)         #n
+
+/* Writes of a connection between moves of the change log into the name
+ * index; the count starts at the changes already logged */
+#define CNID_SQLITE_INDEX_BATCH     1024
+/* Logged changes one move takes at most, which bounds the time it holds the
+ * write lock */
+#define CNID_SQLITE_INDEX_MOVE      4096
+
+/* Most candidates a folder search walks up from, else it scans the folder.
+ * Each folder walks once, some 1.2 us a level: 16384 candidates 30 levels
+ * deep take 35 ms at 16 a folder, 0.7 s one to a folder */
+#define CNID_SQLITE_WALK_MAX        16384
+/* The query, the limit and the scope directory, the parameters after the
+ * seeds' ?1 to ?CNID_FIND_MAX_SEEDS, as plain numbers for the SQL text */
+#define CNID_SQLITE_FIND_MATCH      9
+#define CNID_SQLITE_FIND_LIMIT      10
+#define CNID_SQLITE_FIND_SCOPE      11
+_Static_assert(CNID_SQLITE_FIND_MATCH == CNID_FIND_MAX_SEEDS + 1,
+               "the query's parameter follows the seeds'");
+
+/* Suffix of the name index's full-text table, numbered by the folding it
+ * holds, so a netatalk that folds otherwise never reads it */
+#define CNID_SQLITE_NAMES           "_names1"
+
+/*
+ * The name index of table %1$s: a trigram full-text table of the names
+ * folded for case and diacritics, and a log keyed by the Id of each row
+ * changed since its name last moved in. The triggers write only the log, so
+ * a library without FTS5 and a netatalk without the index still write the
+ * table.
+ */
+#define CNID_SQLITE_INDEX_SQL \
+    "SAVEPOINT name_index;" \
+    "CREATE VIRTUAL TABLE \"%1$s" CNID_SQLITE_NAMES "\" USING fts5(Name, " \
+    "tokenize='trigram', detail='none', columnsize=0);" \
+    "CREATE TABLE \"%1$s_changes\" (Id INTEGER PRIMARY KEY);" \
+    "CREATE TRIGGER \"%1$s_added\" AFTER INSERT ON \"%1$s\" " \
+    "BEGIN INSERT OR IGNORE INTO \"%1$s_changes\" VALUES (new.Id); END;" \
+    "CREATE TRIGGER \"%1$s_renamed\" AFTER UPDATE OF Id, Name ON \"%1$s\" " \
+    "WHEN old.Id IS NOT new.Id OR old.Name IS NOT new.Name " \
+    "BEGIN INSERT OR IGNORE INTO \"%1$s_changes\" SELECT old.Id " \
+    "UNION SELECT new.Id; END;" \
+    "CREATE TRIGGER \"%1$s_deleted\" AFTER DELETE ON \"%1$s\" " \
+    "BEGIN INSERT OR IGNORE INTO \"%1$s_changes\" VALUES (old.Id); END;" \
+    "RELEASE name_index;"
+#define CNID_SQLITE_INDEX_OBJECTS   5
+/* The index's own objects, its tables and triggers: an object of another
+ * kind by one of their names is no part of it */
+#define CNID_SQLITE_INDEX_OBJECTS_SQL \
+    "SELECT count(*) FROM sqlite_master WHERE (type = 'table' " \
+    "AND name COLLATE NOCASE IN ('%1$s" CNID_SQLITE_NAMES "', " \
+    "'%1$s_changes')) " \
+    "OR (type = 'trigger' AND name COLLATE NOCASE IN ('%1$s_added', " \
+    "'%1$s_renamed', '%1$s_deleted'))"
+/* The logged changes up to a batch: a move starts at a batch, so a count
+ * past it reads the log for nothing */
+#define CNID_SQLITE_INDEX_LOGGED_SQL \
+    "SELECT count(*) FROM (SELECT 1 FROM \"%1$s_changes\" LIMIT " \
+    CNID_SQLITE_STR(CNID_SQLITE_INDEX_BATCH) ")"
+#define CNID_SQLITE_INDEX_DROP_SQL \
+    "DROP TRIGGER IF EXISTS \"%1$s_added\";" \
+    "DROP TRIGGER IF EXISTS \"%1$s_renamed\";" \
+    "DROP TRIGGER IF EXISTS \"%1$s_deleted\";" \
+    "DROP TABLE IF EXISTS \"%1$s_changes\";"
+/* The %2$d lowest logged Ids move, in Id order: FTS5 writes out its pending
+ * terms whenever a rowid is below the one before */
+#define CNID_SQLITE_INDEX_UPDATE_SQL \
+    "DELETE FROM \"%1$s" CNID_SQLITE_NAMES "\" WHERE rowid IN " \
+    "(SELECT Id FROM \"%1$s_changes\" ORDER BY Id LIMIT %2$d);" \
+    "INSERT INTO \"%1$s" CNID_SQLITE_NAMES "\" (rowid, Name) " \
+    "SELECT Id, netatalk_fold(Name) FROM \"%1$s\" " \
+    "WHERE Id IN (SELECT Id FROM \"%1$s_changes\" ORDER BY Id LIMIT %2$d) " \
+    "ORDER BY Id;" \
+    "DELETE FROM \"%1$s_changes\" WHERE Id IN " \
+    "(SELECT Id FROM \"%1$s_changes\" ORDER BY Id LIMIT %2$d);"
+/* One seed's arm of an index search, given the columns after the Id, the
+ * table twice, the seed's parameter and the table: the index's candidates
+ * the log does not hold, in rowid order, each decided by the query */
+#define CNID_SQLITE_FIND_ARM_SQL \
+    "SELECT n.rowid%s FROM \"%s" CNID_SQLITE_NAMES "\" n " \
+    "CROSS JOIN \"%s\" t ON t.Id = n.rowid WHERE n.Name GLOB ?%d " \
+    "AND n.rowid NOT IN (SELECT Id FROM \"%s_changes\") " \
+    "AND netatalk_match(t.Name, ?" CNID_SQLITE_STR(CNID_SQLITE_FIND_MATCH) \
+    ") UNION "
+/* The last arm, given the columns after the Id and the table twice: the
+ * table's rows whose Ids the log holds */
+#define CNID_SQLITE_FIND_LOG_SQL \
+    "SELECT Id%s FROM \"%s\" WHERE Id IN (SELECT Id FROM \"%s_changes\") " \
+    "AND netatalk_match(Name, ?" CNID_SQLITE_STR(CNID_SQLITE_FIND_MATCH) ")"
+/* The arms' matches in Id order, the limit of them: the arms select only the
+ * Id, so SQLite merges them in rowid order and the limit stops every arm */
+#define CNID_SQLITE_FIND_INDEX_SQL \
+    "%s ORDER BY 1 LIMIT ?" CNID_SQLITE_STR(CNID_SQLITE_FIND_LIMIT)
+/* The arms' matches under the scope directory, given the arms with their
+ * folders and the table: each folder walks up once, to the directory or the
+ * root, by UNION so that a loop in a corrupt table ends */
+#define CNID_SQLITE_FIND_SCOPED_INDEX_SQL \
+    "WITH RECURSIVE cand(Id, Did) AS (%s), " \
+    "up(Start, Did) AS (SELECT DISTINCT Did, Did FROM cand " \
+    "UNION SELECT up.Start, p.Did FROM up JOIN \"%s\" p ON p.Id = up.Did " \
+    "WHERE up.Did <> ?" CNID_SQLITE_STR(CNID_SQLITE_FIND_SCOPE) ") " \
+    "SELECT Id FROM cand WHERE Did IN (SELECT Start FROM up WHERE Did = ?" \
+    CNID_SQLITE_STR(CNID_SQLITE_FIND_SCOPE) ") ORDER BY Id LIMIT ?" \
+    CNID_SQLITE_STR(CNID_SQLITE_FIND_LIMIT)
+/* The logged Ids up to CNID_SQLITE_WALK_MAX + 1 */
+#define CNID_SQLITE_WALK_LOGGED_SQL \
+    "SELECT count(*) FROM (SELECT 1 FROM \"%1$s_changes\" LIMIT " \
+    CNID_SQLITE_STR(CNID_SQLITE_WALK_MAX) " + 1)"
+/* The candidates of the index for the pattern ?1, ?2 at most */
+#define CNID_SQLITE_INDEX_CANDIDATES_SQL \
+    "SELECT count(*) FROM (SELECT 1 FROM \"%1$s" CNID_SQLITE_NAMES "\" " \
+    "WHERE Name GLOB ?1 LIMIT ?2)"
+
 static void cnid_sqlite_set_errno(int sqlite_return);
+static void cnid_sqlite_index_prepare(CNID_sqlite_private *db);
 
 /*!
  * @brief Change the mode of a SQLite file without following a symlink
@@ -194,6 +311,69 @@ static void cnid_sqlite_match(sqlite3_context *ctx, int argc _U_,
 }
 
 /*!
+ * @brief SQL function netatalk_fold(name): the name as the name index holds it
+ *
+ * The function's data is the volume, in whose charset the name comes.
+ *
+ * @param[in,out] ctx   receives the folded name
+ * @param[in]     argc  1
+ * @param[in]     argv  the name
+ */
+static void cnid_sqlite_fold(sqlite3_context *ctx, int argc _U_,
+                             sqlite3_value **argv)
+{
+    const struct vol *vol = sqlite3_user_data(ctx);
+    const char *name = (const char *)sqlite3_value_text(argv[0]);
+    const char *folded;
+
+    if (name == NULL) {
+        sqlite3_result_null(ctx);
+        return;
+    }
+
+    if ((folded = sl_name_fold_in(name, (size_t)sqlite3_value_bytes(argv[0]),
+                                  vol->v_volcharset)) == NULL) {
+        sqlite3_result_error_nomem(ctx);
+        return;
+    }
+
+    sqlite3_result_text(ctx, folded, -1, free);
+}
+
+/*!
+ * @brief Prepare one statement of the volume; the caller reports a failure
+ *
+ * @param[in,out] db       SQLite backend state
+ * @param[in,out] stmt     statement to finalize and prepare again
+ * @param[in]     tag      statement name for the log
+ * @param[in]     sql_fmt  SQL with %s for the table name of the volume, or
+ *                         without one
+ * @returns the SQLite result, SQLITE_NOMEM when the SQL cannot be built
+ */
+static int cnid_sqlite_prepare_one(CNID_sqlite_private *db,
+                                   sqlite3_stmt **stmt, const char *tag,
+                                   const char *sql_fmt)
+{
+    char *sql = NULL;
+    int prepare_return;
+
+    if (*stmt) {
+        sqlite3_finalize(*stmt);
+        *stmt = NULL;
+    }
+
+    if (asprintf(&sql, sql_fmt, db->cnid_sqlite_voluuid_str) < 0) { //NOSONAR: sql_fmt is one of this file's SQL templates
+        return SQLITE_NOMEM;
+    }
+
+    LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_%s: SQL: %s", tag, sql);
+    prepare_return = sqlite3_prepare_v2(db->cnid_sqlite_con, sql,
+                                        (int) strlen(sql), stmt, NULL);
+    free(sql);
+    return prepare_return;
+}
+
+/*!
  * @brief Prepare one statement of the volume, finalizing the previous one
  *
  * Preparing loads the schema, so a corrupt or read-only database fails here,
@@ -210,42 +390,25 @@ static int init_prepared_stmt_one(CNID_sqlite_private *db,
                                   sqlite3_stmt **stmt,
                                   const char *tag, const char *sql_fmt)
 {
-    EC_INIT;
-    char *sql = NULL;
+    int prepare_return = cnid_sqlite_prepare_one(db, stmt, tag, sql_fmt);
 
-    if (*stmt) {
-        sqlite3_finalize(*stmt);
-        *stmt = NULL;
-    }
-
-    EC_NEG1(asprintf(&sql, sql_fmt, db->cnid_sqlite_voluuid_str));
-    LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_%s: SQL: %s", tag, sql);
-    int prepare_return = sqlite3_prepare_v2(db->cnid_sqlite_con, sql,
-                                            (int) strlen(sql), stmt, NULL);
-
-    /* Preparing loads the schema, so a corrupt or read-only database
-     * surfaces here, not at step time; classify it like any other failure */
     if (prepare_return != SQLITE_OK) {
         LOG(log_error, logtype_cnid, "init_prepared_stmt_%s: prepare failed: %s",
             tag, sqlite3_errmsg(db->cnid_sqlite_con));
         cnid_sqlite_set_errno(prepare_return);
-        EC_FAIL;
+        return -1;
     }
 
-EC_CLEANUP:
-
-    if (sql) {
-        free(sql);
-    }
-
-    EC_EXIT;
+    return 0;
 }
 
 /*!
  * @brief Prepare all 13 statements of the volume, at open and after a wipe
  *
- * A failure leaves the later statements NULL, which cnid_sqlite_stmt_ready
- * then refuses. The scoped find walks the subtree with a recursive CTE, which
+ * The searches through the name index prepare last, where the table has one,
+ * and a failure of theirs leaves name searches to the scans. A failure of the
+ * 13 leaves the later statements NULL, which cnid_sqlite_stmt_ready then
+ * refuses. The scoped find walks the subtree with a recursive CTE, which
  * needs SQLite 3.8.3 or later.
  *
  * @param[in,out] db  SQLite backend state
@@ -271,8 +434,10 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
                                    "SELECT Stamp FROM volumes WHERE VolPath = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_find_stmt, "find",
                                    "SELECT Id FROM \"%s\" "
-                                   "WHERE netatalk_match(Name, ?) "
-                                   "ORDER BY Id LIMIT ?"));
+                                   "WHERE netatalk_match(Name, ?"
+                                   CNID_SQLITE_STR(CNID_SQLITE_FIND_MATCH) ") "
+                                   "ORDER BY Id LIMIT ?"
+                                   CNID_SQLITE_STR(CNID_SQLITE_FIND_LIMIT)));
     /* Subtree-scoped variant: the recursive CTE enumerates the scope
      * directory's transitive contents via the (Did, Name) unique index, and
      * the CROSS JOIN pins the scope set as the outer loop so cost is
@@ -281,14 +446,17 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
      * positional %1$s. */
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_find_scoped_stmt, "find_scoped",
                                    "WITH RECURSIVE scope(Id) AS ("
-                                   "  VALUES(?)"
+                                   "  VALUES(?"
+                                   CNID_SQLITE_STR(CNID_SQLITE_FIND_SCOPE) ")"
                                    "  UNION"
                                    "  SELECT t.Id FROM \"%1$s\" t JOIN scope s ON t.Did = s.Id"
                                    ") "
                                    "SELECT t.Id FROM scope s CROSS JOIN \"%1$s\" t "
                                    "ON t.Did = s.Id "
-                                   "WHERE netatalk_match(t.Name, ?) "
-                                   "ORDER BY t.Id LIMIT ?"));
+                                   "WHERE netatalk_match(t.Name, ?"
+                                   CNID_SQLITE_STR(CNID_SQLITE_FIND_MATCH) ") "
+                                   "ORDER BY t.Id LIMIT ?"
+                                   CNID_SQLITE_STR(CNID_SQLITE_FIND_LIMIT)));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_update_stmt, "update",
                                    "UPDATE \"%s\" SET Name = ?, Did = ?, DevNo = ?, InodeNo = ? WHERE Id = ?"));
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_del_didname_stmt, "del_didname",
@@ -298,9 +466,81 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
     EC_ZERO(init_prepared_stmt_one(db, &db->cnid_dirlist_stmt, "dirlist",
                                    "SELECT Id, Name, DevNo, InodeNo "
                                    "FROM \"%s\" WHERE Did = ? LIMIT ?"));
+    cnid_sqlite_index_prepare(db);
     EC_EXIT;
 EC_CLEANUP:
     EC_EXIT;
+}
+
+/*!
+ * @brief Finalize the name index's searches and clear their pointers
+ *
+ * @param[in,out] db  SQLite backend state
+ */
+static void cnid_sqlite_index_retire(CNID_sqlite_private *db)
+{
+    for (int i = 0; i < CNID_FIND_MAX_SEEDS; i++) {
+        sqlite3_finalize(db->cnid_find_index_stmt[i]);
+        sqlite3_finalize(db->cnid_find_scoped_index_stmt[i]);
+        db->cnid_find_index_stmt[i] = NULL;
+        db->cnid_find_scoped_index_stmt[i] = NULL;
+    }
+
+    sqlite3_finalize(db->cnid_find_candidates_stmt);
+    db->cnid_find_candidates_stmt = NULL;
+}
+
+/*!
+ * @brief Prepare the search through the name index for a number of seeds
+ *
+ * Each seed takes an arm of the index's candidates, a last arm the rows whose
+ * Ids the log holds, and the arms join by UNION.
+ *
+ * @param[in] db      SQLite backend state
+ * @param[in] nseeds  number of seeds, 1 to CNID_FIND_MAX_SEEDS
+ * @param[in] scoped  whether the search walks its matches up to a directory
+ * @param[out] stmt   receives the statement
+ * @returns the result of the prepare, SQLITE_NOMEM when the SQL cannot be
+ *          built
+ */
+static int cnid_sqlite_index_stmt(const CNID_sqlite_private *db, int nseeds,
+                                  bool scoped, sqlite3_stmt **stmt)
+{
+    const char *uuid = db->cnid_sqlite_voluuid_str;
+    const size_t size = (size_t)(nseeds + 1)
+                        * (strlen(CNID_SQLITE_FIND_ARM_SQL) + 3 * strlen(uuid)
+                           + 16);
+    char *arms = malloc(size);
+    char *sql = NULL;
+    size_t n = 0;
+    int rc = SQLITE_NOMEM;
+
+    if (arms == NULL) {
+        return rc;
+    }
+
+    for (int i = 0; i < nseeds && n < size; i++) {
+        n += (size_t)snprintf(arms + n, size - n, CNID_SQLITE_FIND_ARM_SQL,
+                              scoped ? ", t.Did" : "", uuid, uuid, i + 1,
+                              uuid);
+    }
+
+    if (n < size) {
+        n += (size_t)snprintf(arms + n, size - n, CNID_SQLITE_FIND_LOG_SQL,
+                              scoped ? ", Did" : "", uuid, uuid);
+    }
+
+    /* the size fits every arm, and a truncated one prepares no statement */
+    if (n < size
+            && (scoped ? asprintf(&sql, CNID_SQLITE_FIND_SCOPED_INDEX_SQL,
+                                  arms, uuid)
+                : asprintf(&sql, CNID_SQLITE_FIND_INDEX_SQL, arms)) >= 0) {
+        rc = sqlite3_prepare_v2(db->cnid_sqlite_con, sql, -1, stmt, NULL);
+        free(sql);
+    }
+
+    free(arms);
+    return rc;
 }
 
 /*!
@@ -323,6 +563,7 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     sqlite3_finalize(db->cnid_del_didname_stmt);
     sqlite3_finalize(db->cnid_del_devino_stmt);
     sqlite3_finalize(db->cnid_dirlist_stmt);
+    cnid_sqlite_index_retire(db);
     db->cnid_lookup_stmt = NULL;
     db->cnid_add_stmt = NULL;
     db->cnid_put_stmt = NULL;
@@ -688,6 +929,502 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Read the count that a SQL template of the volume selects
+ *
+ * @param[in] db   SQLite backend state
+ * @param[in] fmt  SQL with %1$s for the table name, selecting the count
+ * @returns the count, or -1 when it cannot be read, with the reason in
+ *          sqlite3_errmsg()
+ */
+static int cnid_sqlite_count(const CNID_sqlite_private *db, const char *fmt)
+{
+    sqlite3_stmt *stmt = NULL;
+    char *sql = NULL;
+    int count = -1;
+
+    if (asprintf(&sql, fmt, db->cnid_sqlite_voluuid_str) < 0) { //NOSONAR: fmt is one of this file's SQL templates
+        return -1;
+    }
+
+    if (sqlite3_prepare_v2(db->cnid_sqlite_con, sql, -1, &stmt, NULL)
+            == SQLITE_OK && sqlite3_step(stmt) == SQLITE_ROW) {
+        count = sqlite3_column_int(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+    free(sql);
+    return count;
+}
+
+/*!
+ * @brief Remove the name index of a table in one savepoint
+ *
+ * The full-text table drops on its own statement and may stay: a library
+ * without FTS5 cannot drop it, and once the triggers and the log go the table
+ * logs nothing. Outside a transaction RELEASE commits; a reader that holds
+ * off that commit in rollback-journal mode holds off the fallback's RELEASE
+ * too, so there the fallback is ROLLBACK.
+ *
+ * @param[in] con   SQLite connection
+ * @param[in] uuid  name of the table
+ * @returns 0, or -1 with errno classified when the index stays or a failure
+ *          rolled back the transaction
+ */
+static int cnid_sqlite_index_drop(sqlite3 *con, const char *uuid)
+{
+    const bool outermost = sqlite3_get_autocommit(con) != 0;
+    char *sql = NULL;
+    int ret;
+
+    if (asprintf(&sql, "SAVEPOINT index_drop;" CNID_SQLITE_INDEX_DROP_SQL,
+                 uuid) < 0) {
+        errno = CNID_ERR_BUSY;
+        return -1;
+    }
+
+    ret = cnid_sqlite_execute(con, sql);
+    free(sql);
+
+    if (ret == 0
+            && asprintf(&sql, "DROP TABLE IF EXISTS \"%s" CNID_SQLITE_NAMES "\"",
+                        uuid) < 0) {
+        errno = CNID_ERR_BUSY;
+        ret = -1;
+    } else if (ret == 0) {
+        sqlite3_exec(con, sql, NULL, NULL, NULL);
+        free(sql);
+    }
+
+    /* SQLite answers some failures that clear by themselves by rolling back
+     * the transaction, the savepoint's and the caller's */
+    if (sqlite3_get_autocommit(con)) {
+        errno = CNID_ERR_BUSY;
+        return -1;
+    }
+
+    if (ret == 0 && cnid_sqlite_execute(con, "RELEASE index_drop") == 0) {
+        return 0;
+    }
+
+    const int err = errno;
+    sqlite3_exec(con, outermost ? "ROLLBACK"
+                 : "ROLLBACK TO index_drop; RELEASE index_drop;", NULL, NULL,
+                 NULL);
+    errno = err;
+    return -1;
+}
+
+/*!
+ * @brief Tell whether the full-text table of a stale volume remains
+ *
+ * @param[in] con   SQLite connection
+ * @param[in] uuid  name of the volume's table
+ * @returns true when the table remains or the check fails
+ */
+static bool cnid_sqlite_names_left(sqlite3 *con, const char *uuid)
+{
+    sqlite3_stmt *stmt = NULL;
+    char *name = NULL;
+    bool left = true;
+
+    if (asprintf(&name, "%s" CNID_SQLITE_NAMES, uuid) < 0) {
+        return true;
+    }
+
+    if (sqlite3_prepare_v2(con, "SELECT 1 FROM sqlite_master WHERE "
+                                "type = 'table' AND name = ? COLLATE NOCASE",
+                           -1, &stmt, NULL) == SQLITE_OK
+            && sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC)
+            == SQLITE_OK) {
+        left = sqlite3_step(stmt) != SQLITE_DONE;
+    }
+
+    sqlite3_finalize(stmt);
+    free(name);
+    return left;
+}
+
+/*!
+ * @brief Give an empty table its name index, in the caller's write transaction
+ *
+ * The index takes in only rows written after it, so a table with rows keeps
+ * its scan and an empty table with a whole index keeps it. Part of an index,
+ * as a drop of the table alone leaves, goes first. A library without FTS5 or
+ * its trigram tokenizer answers SQLITE_ERROR and leaves the table without an
+ * index.
+ *
+ * @param[in] db  SQLite backend state
+ * @returns 0, or -1 with errno classified when a failure ended the caller's
+ *          transaction or left an empty table without the index, which it
+ *          would never get once rows fill it
+ */
+static int cnid_sqlite_index_create(const CNID_sqlite_private *db)
+{
+    const bool held = !sqlite3_get_autocommit(db->cnid_sqlite_con);
+    const int rows = cnid_sqlite_count(db, "SELECT count(*) FROM (SELECT 1 "
+                                           "FROM \"%1$s\" LIMIT 1)");
+    const int objects = rows == 0
+                        ? cnid_sqlite_count(db, CNID_SQLITE_INDEX_OBJECTS_SQL)
+                        : 0;
+    char *sql = NULL;
+    int rc;
+
+    /* SQLite answers some failures that clear by themselves by rolling back
+     * the transaction */
+    if (held && sqlite3_get_autocommit(db->cnid_sqlite_con)) {
+        errno = CNID_ERR_BUSY;
+        return -1;
+    }
+
+    if (rows > 0 || objects == CNID_SQLITE_INDEX_OBJECTS) {
+        return 0;
+    }
+
+    if (objects > 0
+            && cnid_sqlite_index_drop(db->cnid_sqlite_con,
+                                      db->cnid_sqlite_voluuid_str) != 0) {
+        return -1;
+    }
+
+    if (rows < 0 || objects < 0
+            || asprintf(&sql, CNID_SQLITE_INDEX_SQL,
+                        db->cnid_sqlite_voluuid_str) < 0) {
+        LOG(log_error, logtype_cnid,
+            "CNID table %s: cannot give it a name index: %s",
+            db->cnid_sqlite_voluuid_str, sqlite3_errmsg(db->cnid_sqlite_con));
+        errno = CNID_ERR_BUSY;
+        return -1;
+    }
+
+    if ((rc = sqlite3_exec(db->cnid_sqlite_con, sql, NULL, NULL, NULL))
+            != SQLITE_OK) {
+        const bool lacking = (rc & 0xff) == SQLITE_ERROR;
+
+        if (lacking) {
+            LOG(log_info, logtype_cnid,
+                "CNID table %s has no name index, so name searches read every "
+                "row: %s", db->cnid_sqlite_voluuid_str,
+                sqlite3_errmsg(db->cnid_sqlite_con));
+        } else {
+            LOG(log_error, logtype_cnid,
+                "CNID table %s: cannot give it a name index: %s",
+                db->cnid_sqlite_voluuid_str,
+                sqlite3_errmsg(db->cnid_sqlite_con));
+        }
+
+        free(sql);
+
+        /* SQLite answers some failures by rolling back the transaction */
+        if ((held && sqlite3_get_autocommit(db->cnid_sqlite_con))
+                || sqlite3_exec(db->cnid_sqlite_con,
+                                "ROLLBACK TO name_index; RELEASE name_index;",
+                                NULL, NULL, NULL) != SQLITE_OK
+                || !lacking) {
+            cnid_sqlite_set_errno(rc);
+            return -1;
+        }
+
+        return 0;
+    }
+
+    free(sql);
+    return 0;
+}
+
+/*!
+ * @brief Tell whether a failure on the name index says the index is unusable
+ *
+ * An index another connection dropped answers SQLITE_ERROR, one that fails
+ * FTS5's own checks SQLITE_CORRUPT.
+ *
+ * @param[in] rc  SQLite result of the prepare, step or move
+ * @returns true for SQLITE_ERROR and SQLITE_CORRUPT
+ */
+static bool cnid_sqlite_index_broken(int rc)
+{
+    return (rc & 0xff) == SQLITE_ERROR || (rc & 0xff) == SQLITE_CORRUPT;
+}
+
+/* The remedy the log names when a failure stops this connection's use of
+ * the index */
+#define CNID_SQLITE_INDEX_REBUILT "deleting the CNID database recreates it"
+
+/*!
+ * @brief Stop using the name index on this connection, and log why
+ *
+ * The connection's searches scan the table; the index stays for the
+ * connections that can use it.
+ *
+ * @param[in,out] db      SQLite backend state
+ * @param[in]     reason  why, for the log
+ * @param[in]     remedy  what serves the index again, for the log
+ */
+static void cnid_sqlite_index_abandon(CNID_sqlite_private *db,
+                                      const char *reason, const char *remedy)
+{
+    LOG(log_warning, logtype_cnid,
+        "CNID table %s stops using its name index, which %s, so name searches "
+        "read every row; %s: %s", db->cnid_sqlite_voluuid_str, reason, remedy,
+        sqlite3_errmsg(db->cnid_sqlite_con));
+    cnid_sqlite_index_retire(db);
+}
+
+/*!
+ * @brief Prepare the name index's searches when this library reads a whole one
+ *
+ * The changes the log holds count as writes of the connection, so a full log
+ * that other connections left moves at its next write.
+ *
+ * @param[in,out] db  SQLite backend state
+ */
+static void cnid_sqlite_index_prepare(CNID_sqlite_private *db)
+{
+    int objects;
+    int logged;
+    int rc;
+    cnid_sqlite_index_retire(db);
+    db->cnid_sqlite_changes = 0;
+
+    if ((objects = cnid_sqlite_count(db, CNID_SQLITE_INDEX_OBJECTS_SQL))
+            == 0) {
+        return;
+    }
+
+    if (objects < 0) {
+        LOG(log_warning, logtype_cnid,
+            "CNID table %s cannot tell whether it holds a name index, so this "
+            "connection's name searches read every row: %s",
+            db->cnid_sqlite_voluuid_str, sqlite3_errmsg(db->cnid_sqlite_con));
+        return;
+    }
+
+    if (objects != CNID_SQLITE_INDEX_OBJECTS) {
+        LOG(log_warning, logtype_cnid,
+            "CNID table %s holds an incomplete name index, so name searches "
+            "read every row; deleting the CNID database recreates it",
+            db->cnid_sqlite_voluuid_str);
+        return;
+    }
+
+    rc = cnid_sqlite_index_stmt(db, 1, false, &db->cnid_find_index_stmt[0]);
+
+    if (rc == SQLITE_OK) {
+        rc = cnid_sqlite_index_stmt(db, 1, true,
+                                    &db->cnid_find_scoped_index_stmt[0]);
+    }
+
+    if (rc == SQLITE_OK) {
+        rc = cnid_sqlite_prepare_one(db, &db->cnid_find_candidates_stmt,
+                                     "candidates",
+                                     CNID_SQLITE_INDEX_CANDIDATES_SQL);
+    }
+
+    if (rc != SQLITE_OK) {
+        if (cnid_sqlite_index_broken(rc)) {
+            cnid_sqlite_index_abandon(db, "this SQLite library cannot read",
+                                      "a netatalk with SQLite 3.34 or later "
+                                      "and FTS5 reads it");
+        } else {
+            LOG(log_warning, logtype_cnid,
+                "CNID table %s cannot prepare the searches through its name "
+                "index, so this connection's name searches read every row: %s",
+                db->cnid_sqlite_voluuid_str,
+                sqlite3_errmsg(db->cnid_sqlite_con));
+            cnid_sqlite_index_retire(db);
+        }
+
+        return;
+    }
+
+    logged = cnid_sqlite_count(db, CNID_SQLITE_INDEX_LOGGED_SQL);
+    db->cnid_sqlite_changes = logged > 0 ? (unsigned int)logged : 0;
+}
+
+/*!
+ * @brief Count a write; at a batch, move the lowest logged Ids into the index
+ *
+ * The changes the log still holds after a move count as writes again, so a
+ * larger log moves on the next writes. A move that says the index is broken
+ * ends the connection's use of it; after any other failure, a COMMIT's
+ * included, the changes stay logged for CNID_SQLITE_INDEX_BATCH more writes.
+ * errno is kept.
+ *
+ * @param[in,out] db  SQLite backend state
+ */
+static void cnid_sqlite_index_changed(CNID_sqlite_private *db)
+{
+    const int saved_errno = errno;
+    char *sql = NULL;
+    int owned = 0;
+    int logged;
+    int rc = SQLITE_NOMEM;
+
+    if (db->cnid_find_index_stmt[0] == NULL
+            || ++db->cnid_sqlite_changes < CNID_SQLITE_INDEX_BATCH) {
+        return;
+    }
+
+    if (asprintf(&sql, CNID_SQLITE_INDEX_UPDATE_SQL,
+                 db->cnid_sqlite_voluuid_str, CNID_SQLITE_INDEX_MOVE) < 0) {
+        sql = NULL;
+    } else if (cnid_sqlite_begin(db->cnid_sqlite_con, &owned) == 0
+               && (rc = sqlite3_exec(db->cnid_sqlite_con, sql, NULL, NULL,
+                                     NULL)) == SQLITE_OK
+               && cnid_sqlite_commit(db->cnid_sqlite_con, &owned) != 0) {
+        rc = SQLITE_BUSY;
+    }
+
+    /* log sqlite3_errmsg() before the rollback replaces it */
+    if (cnid_sqlite_index_broken(rc)) {
+        cnid_sqlite_index_abandon(db, "a move of its changes failed on",
+                                  CNID_SQLITE_INDEX_REBUILT);
+    } else if (rc != SQLITE_OK) {
+        LOG(log_warning, logtype_cnid,
+            "the name index of CNID table %s falls behind its writes: %s",
+            db->cnid_sqlite_voluuid_str, sqlite3_errmsg(db->cnid_sqlite_con));
+        db->cnid_sqlite_changes = 0;
+    }
+
+    cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
+    free(sql);
+
+    if (rc == SQLITE_OK) {
+        logged = cnid_sqlite_count(db, CNID_SQLITE_INDEX_LOGGED_SQL);
+        db->cnid_sqlite_changes = logged > 0 ? (unsigned int)logged : 0;
+    }
+
+    errno = saved_errno;
+}
+
+/*!
+ * @brief Tell whether the name index narrows a search for a seed
+ *
+ * The trigram index needs 3 characters in a row free of the wildcards of its
+ * pattern; without them it reads every name it holds, slower than the table
+ * scan. A pattern longer than the connection's limit for a GLOB pattern
+ * fails each candidate's check against the index's copy of its name, so it
+ * takes the scan too.
+ *
+ * @param[in] db    SQLite backend state
+ * @param[in] seed  the seed
+ * @returns true when the index pattern holds such a run within the limit
+ */
+static bool cnid_sqlite_indexable(const CNID_sqlite_private *db,
+                                  const struct sl_name_pattern *seed)
+{
+    const char *glob = sl_name_pattern_index_glob(seed);
+    const unsigned char *c = (const unsigned char *)glob;
+    int run = 0;
+
+    if (strlen(glob) > (size_t)sqlite3_limit(db->cnid_sqlite_con,
+                                             SQLITE_LIMIT_LIKE_PATTERN_LENGTH,
+                                             -1)) {
+        return false;
+    }
+
+    for (; *c != '\0'; c++) {
+        if (*c == '*' || *c == '?') {
+            run = 0;
+        } else if ((*c & 0xc0) != 0x80 && ++run == 3) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * @brief Count the seeds' index candidates and the logged Ids, up to a limit
+ *
+ * A candidate of two seeds counts twice and a logged Id whether it matches or
+ * not, so the count bounds the walk from above.
+ *
+ * @param[in] db      SQLite backend state
+ * @param[in] seeds   the seeds
+ * @param[in] nseeds  number of seeds
+ * @param[in] limit   the count to stop at, at most CNID_SQLITE_WALK_MAX + 1
+ * @returns the count, limit when it reaches it or cannot be read
+ */
+static unsigned int cnid_sqlite_candidates(const CNID_sqlite_private *db,
+                                           const struct sl_name_pattern
+                                           *const *seeds, int nseeds,
+                                           unsigned int limit)
+{
+    sqlite3_stmt *stmt = db->cnid_find_candidates_stmt;
+    int logged = cnid_sqlite_count(db, CNID_SQLITE_WALK_LOGGED_SQL);
+    unsigned int count = logged < 0 ? limit : MIN((unsigned int)logged, limit);
+
+    for (int i = 0; i < nseeds && count < limit; i++) {
+        sqlite3_reset(stmt);
+
+        if (sqlite3_bind_text(stmt, 1, sl_name_pattern_index_glob(seeds[i]),
+                              -1, SQLITE_STATIC) != SQLITE_OK
+                || sqlite3_bind_int64(stmt, 2, limit - count) != SQLITE_OK
+                || sqlite3_step(stmt) != SQLITE_ROW) {
+            count = limit;
+            break;
+        }
+
+        count += (unsigned int)sqlite3_column_int64(stmt, 0);
+    }
+
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    return count;
+}
+
+/*!
+ * @brief cnid_find_narrows: whether the name index narrows a search by a seed
+ *
+ * A folder search takes the same seeds as a search of the volume.
+ *
+ * @param[in] cdb        CNID database
+ * @param[in] seed       the seed
+ * @param[in] scope_did  unused
+ * @returns true when the connection reads the index and
+ *          cnid_sqlite_indexable() takes the seed
+ */
+static bool cnid_sqlite_find_narrows(struct _cnid_db *cdb,
+                                     const struct sl_name_pattern *seed,
+                                     cnid_t scope_did _U_)
+{
+    const CNID_sqlite_private *db = cdb->cnid_db_private;
+    return db->cnid_find_index_stmt[0] != NULL
+           && cnid_sqlite_indexable(db, seed);
+}
+
+/*!
+ * @brief Empty the volume's table and restart its CNIDs at CNID_START
+ *
+ * It runs inside the caller's transaction. The name index goes first, so the
+ * delete logs no changes and empties the table at once, and it comes back
+ * with the empty table.
+ *
+ * @param[in] db  SQLite backend state
+ * @returns 0, or -1 with errno classified
+ */
+static int cnid_sqlite_empty_table(CNID_sqlite_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+    EC_NEG1(cnid_sqlite_index_drop(db->cnid_sqlite_con,
+                                   db->cnid_sqlite_voluuid_str));
+
+    if (asprintf(&sql, "DELETE FROM \"%s\"", db->cnid_sqlite_voluuid_str) < 0) {
+        sql = NULL;
+        errno = CNID_ERR_BUSY;
+        EC_FAIL;
+    }
+
+    EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, sql));
+    EC_NEG1(cnid_sqlite_seed_sequence(db));
+    EC_NEG1(cnid_sqlite_index_create(db));
+EC_CLEANUP:
+    free(sql);
+    EC_EXIT;
+}
+
+/*!
  * @brief Remove a CNID from the SQLite table
  *
  * @param[in] cdb  CNID database
@@ -726,6 +1463,7 @@ int cnid_sqlite_delete(struct _cnid_db *cdb, const cnid_t id)
         EC_FAIL;
     }
 
+    cnid_sqlite_index_changed(db);
 EC_CLEANUP:
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_delete(id: %" PRIu32 "): END", ntohl(id));
@@ -947,6 +1685,7 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
         EC_NEG1(cnid_sqlite_commit(db->cnid_sqlite_con, &owned));
     }
 
+    cnid_sqlite_index_changed(db);
 EC_CLEANUP:
 
     if (db) {
@@ -1451,17 +2190,8 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
                 free(sql);
                 sql = NULL;
-                EC_NEG1(asprintf(&sql, "DELETE FROM \"%s\"", db->cnid_sqlite_voluuid_str));
 
-                if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
-                    cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
-                    EC_FAIL;
-                }
-
-                free(sql);
-                sql = NULL;
-
-                if (cnid_sqlite_seed_sequence(db) < 0) {
+                if (cnid_sqlite_empty_table(db) < 0) {
                     cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
                     EC_FAIL;
                 }
@@ -1484,6 +2214,9 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 errno = CNID_ERR_CORRUPT;
                 EC_FAIL;
             }
+
+            /* after last_insert_rowid(), which a move into the index changes */
+            cnid_sqlite_index_changed(db);
         }
     } while (id == CNID_INVALID && ++attempts < CNID_SQLITE_ADD_ATTEMPTS);
 
@@ -1838,19 +2571,64 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Bind a name search's parameters
+ *
+ * @param[in] stmt       the statement
+ * @param[in] indexed    whether it searches through the index
+ * @param[in] query      the name comparisons
+ * @param[in] seeds      the seeds
+ * @param[in] nseeds     number of seeds
+ * @param[in] scope_did  CNID of the scope directory, or CNID_INVALID
+ * @param[in] limit      rows the statement returns at most
+ * @returns SQLITE_OK, or the result of the bind that failed
+ */
+static int cnid_sqlite_find_bind(sqlite3_stmt *stmt, bool indexed,
+                                 const struct sl_name_query *query,
+                                 const struct sl_name_pattern *const *seeds,
+                                 int nseeds, cnid_t scope_did,
+                                 sqlite3_int64 limit)
+{
+    /* The table stores host-order integers; the API traffics in network
+     * order */
+    const sqlite3_int64 scope = (sqlite3_int64)ntohl(scope_did);
+    int rc = SQLITE_OK;
+
+    for (int i = 0; indexed && i < nseeds && rc == SQLITE_OK; i++) {
+        rc = sqlite3_bind_text(stmt, i + 1,
+                               sl_name_pattern_index_glob(seeds[i]), -1,
+                               SQLITE_STATIC);
+    }
+
+    if (rc == SQLITE_OK && scope_did != CNID_INVALID) {
+        rc = sqlite3_bind_int64(stmt, CNID_SQLITE_FIND_SCOPE, scope);
+    }
+
+    if (rc == SQLITE_OK) {
+        rc = sqlite3_bind_pointer(stmt, CNID_SQLITE_FIND_MATCH, (void *)query, //NOSONAR: netatalk_match() reads it as const
+                                  "sl_name_query", NULL);
+    }
+
+    return rc == SQLITE_OK
+           ? sqlite3_bind_int64(stmt, CNID_SQLITE_FIND_LIMIT, limit) : rc;
+}
+
+/*!
  * @brief Find the CNIDs whose names match a query, for cnid_find
  *
  * The cnid_find wrapper validates the arguments. The statements decide each
  * name through netatalk_match(), the query bound as a pointer, so the LIMIT
  * counts matches. The statement asks for 1 row more than buffer holds, which
  * sets more_available. A row with an ID outside the CNID range
- * drops out. A scope directory selects the statement that walks its subtree
- * with a recursive CTE.
+ * drops out. The seeds read the candidates of the name index in one
+ * statement; a folder search walks them up its folders for
+ * CNID_SQLITE_WALK_MAX candidates at most and scans the folder otherwise. A
+ * failure that says the index is unusable ends the connection's use of it
+ * and repeats the search as a scan.
  *
  * @param[in]  cdb             CNID database
  * @param[in]  query           the name comparisons
- * @param[in]  seeds           unused: every search reads every name
- * @param[in]  nseeds          unused
+ * @param[in]  seeds           the query's seeds, or NULL for every name
+ * @param[in]  nseeds          number of seeds
  * @param[in]  scope_did       CNID of the scope directory, or CNID_INVALID for
  *                             an unscoped search
  * @param[out] buffer          receives the CNIDs in network order
@@ -1859,16 +2637,17 @@ EC_CLEANUP:
  * @returns the number of CNIDs, or -1 with errno classified
  */
 int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
-                     const struct sl_name_pattern *const *seeds _U_,
-                     int nseeds _U_, cnid_t scope_did, void *buffer,
-                     size_t buflen, bool *more_available)
+                     const struct sl_name_pattern *const *seeds, int nseeds,
+                     cnid_t scope_did, void *buffer, size_t buflen,
+                     bool *more_available)
 {
     EC_INIT;
     CNID_sqlite_private *db = NULL;
     sqlite3_stmt *stmt = NULL;
+    const bool scoped = scope_did != CNID_INVALID;
+    bool indexed;
     int count = 0;
     int find_return;
-    int param = 1;
     cnid_t *cnids = (cnid_t *)buffer;
     unsigned long max_results = buflen / sizeof(cnid_t);
     LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(): BEGIN");
@@ -1879,8 +2658,40 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
         EC_FAIL;
     }
 
-    stmt = scope_did != CNID_INVALID ? db->cnid_find_scoped_stmt
-           : db->cnid_find_stmt;
+    indexed = seeds != NULL && nseeds > 0 && nseeds <= CNID_FIND_MAX_SEEDS
+              && db->cnid_find_index_stmt[0] != NULL
+              && (!scoped
+                  || cnid_sqlite_candidates(db, seeds, nseeds,
+                                            CNID_SQLITE_WALK_MAX + 1)
+                  <= CNID_SQLITE_WALK_MAX);
+
+    if (indexed) {
+        sqlite3_stmt **slot = scoped
+                              ? &db->cnid_find_scoped_index_stmt[nseeds - 1]
+                              : &db->cnid_find_index_stmt[nseeds - 1];
+        int rc;
+
+        if (*slot == NULL
+                && (rc = cnid_sqlite_index_stmt(db, nseeds, scoped, slot))
+                != SQLITE_OK) {
+            if (cnid_sqlite_index_broken(rc)) {
+                cnid_sqlite_index_abandon(db, "a search failed on",
+                                          CNID_SQLITE_INDEX_REBUILT);
+            } else {
+                LOG(log_error, logtype_cnid,
+                    "cnid_sqlite_find: a search through the name index does "
+                    "not prepare: %s", sqlite3_errmsg(db->cnid_sqlite_con));
+            }
+
+            indexed = false;
+        }
+
+        stmt = *slot;
+    }
+
+    if (!indexed) {
+        stmt = scoped ? db->cnid_find_scoped_stmt : db->cnid_find_stmt;
+    }
 
     if (!cnid_sqlite_stmt_ready(stmt, "cnid_sqlite_find")) {
         EC_FAIL;
@@ -1895,29 +2706,14 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
         *more_available = false;
     }
 
+search:
     sqlite3_reset(stmt);
     sqlite3_clear_bindings(stmt);
-
-    if (scope_did != CNID_INVALID) {
-        /* The table stores host-order integers; the API traffics in network
-         * order */
-        find_return = sqlite3_bind_int64(stmt, param++,
-                                         (sqlite3_int64) ntohl(scope_did));
-    } else {
-        find_return = SQLITE_OK;
-    }
-
-    if (find_return == SQLITE_OK) {
-        find_return = sqlite3_bind_pointer(stmt, param++, (void *)query,
-                                           "sl_name_query", NULL);
-    }
-
-    if (find_return == SQLITE_OK) {
-        /* LIMIT max_results + 1: peek for an extra row to detect "more
-         * results exist" without a second query. */
-        find_return = sqlite3_bind_int64(stmt, param,
-                                         (sqlite3_int64)(max_results + 1));
-    }
+    /* LIMIT max_results + 1: peek for an extra row to detect "more results
+     * exist" without a second query. */
+    find_return = cnid_sqlite_find_bind(stmt, indexed, query, seeds, nseeds,
+                                        scope_did,
+                                        (sqlite3_int64)(max_results + 1));
 
     if (find_return != SQLITE_OK) {
         LOG(log_error, logtype_cnid,
@@ -1958,6 +2754,15 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
         }
 
         count = (int)max_results;
+    }
+
+    if (indexed && cnid_sqlite_index_broken(find_return)) {
+        cnid_sqlite_index_abandon(db, "a search failed on",
+                                  CNID_SQLITE_INDEX_REBUILT);
+        stmt = scoped ? db->cnid_find_scoped_stmt : db->cnid_find_stmt;
+        indexed = false;
+        count = 0;
+        goto search;
     }
 
     if (find_return != SQLITE_ROW && find_return != SQLITE_DONE) {
@@ -2023,17 +2828,8 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
 
     free(sql);
     sql = NULL;
-    EC_NEG1(asprintf(&sql, "DELETE FROM \"%s\";", db->cnid_sqlite_voluuid_str));
 
-    if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
-        cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
-        EC_FAIL;
-    }
-
-    free(sql);
-    sql = NULL;
-
-    if (cnid_sqlite_seed_sequence(db) < 0) {
+    if (cnid_sqlite_empty_table(db) < 0) {
         cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
         EC_FAIL;
     }
@@ -2140,6 +2936,7 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     cdb->cnid_get = cnid_sqlite_get;
     cdb->cnid_lookup = cnid_sqlite_lookup;
     cdb->cnid_find = cnid_sqlite_find;
+    cdb->cnid_find_narrows = cnid_sqlite_find_narrows;
     cdb->cnid_resolve = cnid_sqlite_resolve;
     cdb->cnid_getstamp = cnid_sqlite_getstamp;
     cdb->cnid_update = cnid_sqlite_update;
@@ -2454,7 +3251,11 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      * netatalk_fold(), so neither prepares without them */
     if (sqlite3_create_function(db->cnid_sqlite_con, "netatalk_match", 2,
                                 SQLITE_UTF8 | SQLITE_DETERMINISTIC, NULL,
-                                cnid_sqlite_match, NULL, NULL) != SQLITE_OK) {
+                                cnid_sqlite_match, NULL, NULL) != SQLITE_OK
+            || sqlite3_create_function(db->cnid_sqlite_con, "netatalk_fold", 1,
+                                       SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+                                       vol, cnid_sqlite_fold, NULL,
+                                       NULL) != SQLITE_OK) {
         LOG(log_error, logtype_cnid,
             "cnid_sqlite_open: cannot register the name matcher: %s",
             sqlite3_errmsg(db->cnid_sqlite_con));
@@ -2643,8 +3444,9 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                 "cnid_sqlite_open: removing stale volume entry UUID '%s' for path '%s'",
                 stale_uuids[i], vol->v_path);
 
-            if (asprintf(&stale_sql, "DROP TABLE IF EXISTS \"%s\"",
-                         stale_uuids[i]) == -1) {
+            if (cnid_sqlite_index_drop(db->cnid_sqlite_con, stale_uuids[i]) != 0
+                    || asprintf(&stale_sql, "DROP TABLE IF EXISTS \"%s\"",
+                                stale_uuids[i]) == -1) {
                 stale_sql = NULL;
                 removed = 0;
             } else {
@@ -2655,6 +3457,13 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             if (removed) {
                 removed = cnid_sqlite_delete_sequence_row(db->cnid_sqlite_con,
                                                           stale_uuids[i]) == 0;
+            }
+
+            /* the row stays the record of a full-text table that a library
+             * without FTS5 cannot drop */
+            if (removed) {
+                removed = !cnid_sqlite_names_left(db->cnid_sqlite_con,
+                                                  stale_uuids[i]);
             }
 
             if (removed) {
@@ -2854,7 +3663,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
          * from the range AFP reserves */
         EC_NEG1(cnid_sqlite_begin(db->cnid_sqlite_con, &owned));
 
-        if (cnid_sqlite_seed_sequence(db) < 0) {
+        if (cnid_sqlite_seed_sequence(db) < 0
+                || cnid_sqlite_index_create(db) < 0) {
             cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
             EC_FAIL;
         }

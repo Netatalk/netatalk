@@ -37,6 +37,7 @@
 #include <sqlite3.h>
 
 #include <atalk/cnid.h>
+#include <atalk/cnid_sqlite_private.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/sl_names.h>
@@ -698,6 +699,1436 @@ int utest_cnid_find_query_limit(void)
     }
 
     cnid_close(cdb);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief Tell whether this SQLite library builds an FTS5 trigram table
+ *
+ * @returns true when it does
+ */
+static bool cnid_fts5_trigram(void)
+{
+    static const char sql[] = "CREATE VIRTUAL TABLE t USING "
+                              "fts5(n, tokenize='trigram')";
+    sqlite3 *probe = NULL;
+    bool ok = sqlite3_open(":memory:", &probe) == SQLITE_OK
+              && sqlite3_exec(probe, sql, NULL, NULL, NULL) == SQLITE_OK;
+    sqlite3_close(probe);
+    return ok;
+}
+
+/*!
+ * @brief Count the CNIDs a value with its modifiers answers on the whole
+ *        volume
+ *
+ * @param[in] cdb    CNID database
+ * @param[in] value  the value
+ * @param[in] flags  SL_NAMES_* flags
+ * @returns the count, or -1 for a failed search
+ */
+static int cnid_value_count(struct _cnid_db *cdb, const char *value,
+                            unsigned int flags)
+{
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    bool more = false;
+    struct sl_name_query *query = sl_name_query_value(value, strlen(value),
+                                                      flags);
+    int count = query == NULL ? -1
+                : cnid_find_scoped(cdb, query, CNID_INVALID, results,
+                                   sizeof(results), &more);
+    sl_name_query_free(query);
+    return count;
+}
+
+/*!
+ * @brief Check the anchors, d and w on the syntax names
+ *
+ * @param[in] cdb  CNID database holding cnid_syntax_names
+ * @returns 0, or the number of the first failed check
+ */
+static int cnid_value_checks(struct _cnid_db *cdb)
+{
+    if (cnid_value_count(cdb, "cafe*", SL_NAMES_CASE | SL_NAMES_DIACRITIC
+                         | SL_NAMES_WORD) != 1) {
+        return 1;
+    }
+
+    if (cnid_value_count(cdb, "*.JPG", 0) != 1) {
+        return 2;
+    }
+
+    if (cnid_value_count(cdb, "IMG_1234.JPG", 0) != 1) {
+        return 3;
+    }
+
+    return cnid_value_count(cdb, "IMG_1234", 0) == 0 ? 0 : 4;
+}
+
+/*!
+ * @brief Steps of the table scan statement during one search
+ *
+ * @param[in] cdb   sqlite CNID database
+ * @param[in] term  search term
+ * @param[in] want  results the search must answer
+ * @returns the steps, or -1 when the search answers another count
+ */
+static int cnid_scan_steps(struct _cnid_db *cdb, const char *term, int want)
+{
+    const CNID_sqlite_private *db = cdb->cnid_db_private;
+    sqlite3_stmt_status(db->cnid_find_stmt, SQLITE_STMTSTATUS_FULLSCAN_STEP, 1);
+
+    if (cnid_find_count(cdb, term) != want) {
+        return -1;
+    }
+
+    return sqlite3_stmt_status(db->cnid_find_stmt,
+                               SQLITE_STMTSTATUS_FULLSCAN_STEP, 0);
+}
+
+/*!
+ * @brief Tell whether a statement reads the volume's table by Id alone, as
+ *        its query plan says
+ *
+ * @param[in] cdb   sqlite CNID database
+ * @param[in] stmt  a prepared statement of the backend
+ * @returns true when no step of the plan scans the table, under its name or
+ *          the statements' aliases of it
+ */
+static bool cnid_reads_by_id(struct _cnid_db *cdb, sqlite3_stmt *stmt)
+{
+    const CNID_sqlite_private *db = cdb->cnid_db_private;
+    const char *uuid = db->cnid_sqlite_voluuid_str;
+    char *sql = sqlite3_mprintf("EXPLAIN QUERY PLAN %s", sqlite3_sql(stmt));
+    sqlite3_stmt *plan = NULL;
+    bool by_id = sql != NULL
+                 && sqlite3_prepare_v2(db->cnid_sqlite_con, sql, -1, &plan,
+                                       NULL) == SQLITE_OK;
+
+    while (by_id && sqlite3_step(plan) == SQLITE_ROW) {
+        const char *step = (const char *)sqlite3_column_text(plan, 3);
+        const char *name;
+        size_t len;
+
+        if (step == NULL || strncmp(step, "SCAN ", 5) != 0) {
+            continue;
+        }
+
+        /* SQLite before 3.36 writes SCAN TABLE */
+        name = step + 5 + (strncmp(step + 5, "TABLE ", 6) == 0 ? 6 : 0);
+        len = strcspn(name, " ");
+        by_id = !((len == 1 && (name[0] == 't' || name[0] == 'p'))
+                  || (len == strlen(uuid) && strncmp(name, uuid, len) == 0));
+    }
+
+    sqlite3_finalize(plan);
+    sqlite3_free(sql);
+    return by_id;
+}
+
+/*!
+ * @brief Tell whether every index statement the searches prepared reads the
+ *        volume's table by Id alone, while the scan statement does not
+ *
+ * @param[in] cdb  sqlite CNID database
+ * @returns true when they do, and one at least was prepared
+ */
+static bool cnid_index_reads_by_id(struct _cnid_db *cdb)
+{
+    const CNID_sqlite_private *db = cdb->cnid_db_private;
+    int prepared = 0;
+
+    for (int i = 0; i < CNID_FIND_MAX_SEEDS; i++) {
+        sqlite3_stmt *const stmts[2] = {
+            db->cnid_find_index_stmt[i], db->cnid_find_scoped_index_stmt[i]
+        };
+
+        for (int k = 0; k < 2; k++) {
+            if (stmts[k] != NULL && !cnid_reads_by_id(cdb, stmts[k])) {
+                return false;
+            }
+
+            prepared += stmts[k] != NULL;
+        }
+    }
+
+    return prepared > 0 && db->cnid_find_stmt != NULL
+           && !cnid_reads_by_id(cdb, db->cnid_find_stmt);
+}
+
+/*!
+ * @brief Open a second connection to a scratch database that may write the
+ *        name index's own tables and the schema, as the tests that break an
+ *        index do
+ *
+ * A library that opens its connections in defensive mode refuses both.
+ *
+ * @param[in]  dbfile  the database
+ * @param[out] peer    receives the connection, to sqlite3_close() either way
+ * @returns SQLITE_OK, or the result of the open
+ */
+static int cnid_scratch_peer(const char *dbfile, sqlite3 **peer)
+{
+    int rc = sqlite3_open(dbfile, peer);
+#ifdef SQLITE_DBCONFIG_DEFENSIVE
+
+    if (rc == SQLITE_OK) {
+        sqlite3_db_config(*peer, SQLITE_DBCONFIG_DEFENSIVE, 0, (int *)NULL);
+    }
+
+#endif
+    return rc;
+}
+
+/*!
+ * @brief Run one SQL text through a second connection to the scratch database
+ *
+ * @param[in] s    scratch volume
+ * @param[in] fmt  SQL with %1$s for the table name
+ * @returns the first column of the first row, -1 on an error, 0 without a row
+ */
+static int cnid_scratch_sql(const struct cnid_scratch *s, const char *fmt)
+{
+    sqlite3 *peer = NULL;
+    sqlite3_stmt *stmt = NULL;
+    char *uuid = uuid_strip_dashes(s->vol.v_uuid);
+    char *sql = NULL;
+    int ret = -1;
+
+    if (uuid != NULL && asprintf(&sql, fmt, uuid) >= 0) { //NOSONAR: fmt is one of this file's SQL templates
+        if (cnid_scratch_peer(s->dbfile, &peer) == SQLITE_OK
+                && sqlite3_prepare_v2(peer, sql, -1, &stmt, NULL)
+                == SQLITE_OK) {
+            int rc = sqlite3_step(stmt);
+            ret = rc == SQLITE_ROW ? sqlite3_column_int(stmt, 0)
+                  : rc == SQLITE_DONE ? 0 : -1;
+        }
+
+        sqlite3_finalize(stmt);
+        sqlite3_close(peer);
+        free(sql);
+    }
+
+    free(uuid);
+    return ret;
+}
+
+/* The volume's name index objects, and the changes its log holds */
+#define CNID_INDEX_OBJECTS_SQL \
+    "SELECT count(*) FROM sqlite_master WHERE name COLLATE NOCASE IN " \
+    "('%1$s_names1', '%1$s_changes', '%1$s_added', '%1$s_renamed', " \
+    "'%1$s_deleted')"
+#define CNID_INDEX_LOGGED_SQL "SELECT count(*) FROM \"%1$s_changes\""
+#define CNID_INDEX_TRIGGERS_SQL \
+    "SELECT count(*) FROM sqlite_master WHERE type = 'trigger' " \
+    "AND name LIKE '%1$s\\_%%' ESCAPE '\\'"
+
+/*!
+ * @brief Register numbered names in the root of a scratch database, each with
+ *        an inode of its own
+ *
+ * @param[in] cdb    CNID database
+ * @param[in] fmt    printf format of a name, taking its number
+ * @param[in] first  number of the first name
+ * @param[in] n      number of names
+ * @param[in] ino    inode of the first name
+ * @returns 0, or -1 when an add fails
+ */
+static int cnid_add_numbered(struct _cnid_db *cdb, const char *fmt,
+                             int first, int n, ino_t ino)
+{
+    char name[48];
+    const char *names[1] = { name };
+
+    for (int i = 0; i < n; i++) {
+        snprintf(name, sizeof(name), fmt, first + i); //NOSONAR: fmt is a name pattern of this file's tests
+
+        if (cnid_add_names(cdb, names, 1, ino + (ino_t)i) != 0) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Register a folder in the root, a folder in it and a needle two
+ *        levels down, and a folder in the root of 20 names and a folder with
+ *        a needle
+ *
+ * @param[in]  cdb  CNID database
+ * @param[out] box  receives the outer folder's CNID
+ * @param[out] big  receives the CNID of the folder of 22 names
+ * @returns 0, or -1 when an add fails
+ */
+static int cnid_add_box(struct _cnid_db *cdb, cnid_t *box, cnid_t *big)
+{
+    struct stat st;
+    cnid_t inner;
+    char name[16];
+    memset(&st, 0, sizeof(st));
+    st.st_dev = 4242;
+    st.st_ino = 60;
+
+    if ((*box = cnid_add(cdb, &st, DIRDID_ROOT, "box", 3,
+                         CNID_INVALID)) == CNID_INVALID) {
+        return -1;
+    }
+
+    st.st_ino = 61;
+
+    if ((inner = cnid_add(cdb, &st, *box, "inner", 5, CNID_INVALID))
+            == CNID_INVALID) {
+        return -1;
+    }
+
+    st.st_ino = 62;
+
+    if (cnid_add(cdb, &st, inner, "needle deep.txt", 15, CNID_INVALID)
+            == CNID_INVALID) {
+        return -1;
+    }
+
+    st.st_ino = 63;
+
+    if ((*big = cnid_add(cdb, &st, DIRDID_ROOT, "big", 3,
+                         CNID_INVALID)) == CNID_INVALID) {
+        return -1;
+    }
+
+    for (int i = 0; i < 20; i++) {
+        snprintf(name, sizeof(name), "big %02d.txt", i);
+        st.st_ino = 64 + (ino_t)i;
+
+        if (cnid_add(cdb, &st, *big, name, strlen(name), CNID_INVALID)
+                == CNID_INVALID) {
+            return -1;
+        }
+    }
+
+    st.st_ino = 84;
+
+    if ((inner = cnid_add(cdb, &st, *big, "sub", 3, CNID_INVALID))
+            == CNID_INVALID) {
+        return -1;
+    }
+
+    st.st_ino = 85;
+    return cnid_add(cdb, &st, inner, "needle big.txt", 14, CNID_INVALID)
+           == CNID_INVALID ? -1 : 0;
+}
+
+/* The query of the folder searches that cnid_add_box()'s needles answer */
+#define CNID_NEEDLE_QUERY "kMDItemFSName==\"*needle*\"c"
+
+/*!
+ * @brief Search a folder, counting the runs of the scan of the folder's
+ *        subtree
+ *
+ * @param[in]  cdb     sqlite CNID database
+ * @param[in]  text    the query
+ * @param[in]  folder  CNID of the folder
+ * @param[out] scans   receives the runs of the scan statement
+ * @returns the CNIDs, or -1 for a failed search
+ */
+static int cnid_scoped_count(struct _cnid_db *cdb, const char *text,
+                             cnid_t folder, int *scans)
+{
+    const CNID_sqlite_private *db = cdb->cnid_db_private;
+    struct sl_name_query *query = sl_name_query_parse(text, 0, 8);
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    bool more = false;
+    int count = -1;
+
+    if (query != NULL) {
+        sqlite3_stmt_status(db->cnid_find_scoped_stmt, SQLITE_STMTSTATUS_RUN,
+                            1);
+        count = cnid_find_scoped(cdb, query, folder, results, sizeof(results),
+                                 &more);
+        *scans = sqlite3_stmt_status(db->cnid_find_scoped_stmt,
+                                     SQLITE_STMTSTATUS_RUN, 0);
+        sl_name_query_free(query);
+    }
+
+    return count;
+}
+
+/*!
+ * @brief A search inside a folder answers the names under the folder alone,
+ *        walking the name index's few candidates up their folders, of one
+ *        seed and of two
+ *
+ * @param[in] cdb  sqlite CNID database holding cnid_add_box()'s folders and a
+ *                 needle in the root
+ * @param[in] box  CNID of the outer folder, 3 names
+ * @param[in] big  CNID of the folder of 22 names
+ * @returns 0, or the number of the first failed check
+ */
+static int cnid_scoped_checks(struct _cnid_db *cdb, cnid_t box, cnid_t big)
+{
+    const CNID_sqlite_private *db = cdb->cnid_db_private;
+    int scans = -1;
+
+    if (cnid_scoped_count(cdb, CNID_NEEDLE_QUERY, big, &scans) != 1
+            || scans != 0) {
+        return 1;
+    }
+
+    if (cnid_scoped_count(cdb, CNID_NEEDLE_QUERY, box, &scans) != 1
+            || scans != 0) {
+        return 2;
+    }
+
+    /* two seeds walk up through the folder statement of two arms */
+    return cnid_scoped_count(cdb, CNID_NEEDLE_QUERY
+                             "||kMDItemFSName==\"*big 1*\"c", big, &scans)
+           == 11 && scans == 0 && db->cnid_find_scoped_index_stmt[1] != NULL
+           ? 0 : 3;
+}
+
+/* 17500 needles in the root, more than CNID_SQLITE_WALK_MAX, which a second
+ * connection writes in one statement each: the rows, their names in the name
+ * index, and their Ids out of its log, as a move leaves them */
+#define CNID_WALK_NEEDLES_SQL \
+    "WITH RECURSIVE n(i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM n " \
+    "WHERE i < 17499) INSERT INTO \"%1$s\" (Name, Did, DevNo, InodeNo) " \
+    "SELECT printf('needle %%05d.txt', i), 2, 4242, 100000 + i FROM n"
+#define CNID_WALK_INDEXED_SQL \
+    "INSERT INTO \"%1$s_names1\" (rowid, Name) SELECT Id, lower(Name) " \
+    "FROM \"%1$s\" WHERE Name GLOB 'needle [0-9]*'"
+#define CNID_WALK_MOVED_SQL \
+    "DELETE FROM \"%1$s_changes\" WHERE Id IN " \
+    "(SELECT Id FROM \"%1$s\" WHERE Name GLOB 'needle [0-9]*')"
+
+/*!
+ * @brief A search inside a folder scans the folder when the name index holds
+ *        more than CNID_SQLITE_WALK_MAX candidates, or its change log more
+ *        Ids, and answers alike
+ *
+ * The needles wait in the log first, none of them in the full-text table,
+ * then move into the table.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_walk_max(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    cnid_t box = CNID_INVALID;
+    cnid_t big = CNID_INVALID;
+    int scans = -1;
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "walkmax", "walkmaxvol",
+                           "0F0F0F0F-1111-2222-3333-BCBCBCBCBCBC") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        cnid_scratch_cleanup(&s);
+        return 1;
+    }
+
+    if (cnid_add_box(cdb, &box, &big) != 0
+            || cnid_scratch_sql(&s, CNID_WALK_NEEDLES_SQL) != 0) {
+        result = 10;
+    } else if (cnid_scoped_count(cdb, CNID_NEEDLE_QUERY, box, &scans) != 1
+               || scans == 0) {
+        result = 3;
+    } else if (cnid_scratch_sql(&s, CNID_WALK_INDEXED_SQL) != 0
+               || cnid_scratch_sql(&s, CNID_WALK_MOVED_SQL) != 0) {
+        result = 10;
+    } else if (cnid_scoped_count(cdb, CNID_NEEDLE_QUERY, box, &scans) != 1
+               || scans == 0) {
+        result = 1;
+    } else if (cnid_scoped_count(cdb, CNID_NEEDLE_QUERY, big, &scans) != 1
+               || scans == 0) {
+        result = 2;
+    }
+
+    cnid_close(cdb);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A search on a new sqlite database reads the name index, one on an
+ *        older database reads the table, and both answer alike
+ *
+ * The names before the 1024th write move into the index's full-text table,
+ * and those after it answer from the log. A search inside either of
+ * cnid_add_box()'s folders walks its needle up through the index, whose
+ * statements read the table by Id alone. A rename and a delete answer at
+ * once. With the index's objects dropped, the reopened database scans, and a
+ * wipe gives the emptied table its index back.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_name_index(void)
+{
+    static char scheme[] = "sqlite";
+    static char needle[] = "needle report.pdf";
+    static char newname[] = "haystack report.pdf";
+    static char gone[] = "fill 0042.txt";
+    /* bytes that start no UTF-8 character, one before a continuation byte */
+    static char latin[] = "R\xe9sum\xe9\x96 2.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    struct stat st;
+    const char *names[1] = { needle };
+    const char *latins[1] = { latin };
+    cnid_t box = CNID_INVALID;
+    cnid_t big = CNID_INVALID;
+    cnid_t id;
+    int logged;
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "index", "indexvol",
+                           "0F0F0F0F-1111-2222-3333-CCCCCCCCCCCC") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        cnid_scratch_cleanup(&s);
+        return 1;
+    }
+
+    if (cnid_scratch_sql(&s, CNID_INDEX_OBJECTS_SQL) != 5) {
+        result = 12;
+    } else if (cnid_add_names(cdb, cnid_syntax_names,
+                              sizeof(cnid_syntax_names)
+                              / sizeof(cnid_syntax_names[0]), 100) != 0
+               || cnid_add_names(cdb, names, 1, 50) != 0
+               || cnid_add_names(cdb, latins, 1, 51) != 0
+               || cnid_add_box(cdb, &box, &big) != 0
+               || cnid_add_numbered(cdb, "fill %04d.txt", 0, 1100, 10000)
+               != 0) {
+        result = 11;
+    }
+
+    logged = cnid_scratch_sql(&s, CNID_INDEX_LOGGED_SQL);
+
+    if (result == 0 && cnid_scan_steps(cdb, "needle", 3) != 0) {
+        result = 2;
+    } else if (result == 0 && (logged < 1 || logged >= 1100)) {
+        result = 3;
+    } else if (result == 0
+               && cnid_scratch_sql(&s, "SELECT count(*) FROM \"%1$s_names1\" "
+                                   "WHERE Name GLOB '*needle*'") != 3) {
+        result = 13;
+    } else if (result == 0 && (cnid_syntax_checks(cdb) != 0
+                               || cnid_value_checks(cdb) != 0)) {
+        result = 4;
+    } else if (result == 0 && cnid_scoped_checks(cdb, box, big) != 0) {
+        result = 15;
+    } else if (result == 0 && cnid_scan_steps(cdb, "\xe9sum\xe9", 1) != 0) {
+        result = 16;
+    } else if (result == 0 && !cnid_index_reads_by_id(cdb)) {
+        result = 17;
+    }
+
+    memset(&st, 0, sizeof(st));
+    st.st_dev = 4242;
+    st.st_ino = 50;
+
+    if (result == 0
+            && ((id = cnid_get(cdb, DIRDID_ROOT, needle,
+                               strlen(needle))) == CNID_INVALID
+                || cnid_update(cdb, id, &st, DIRDID_ROOT, newname,
+                               strlen(newname)) != 0
+                || cnid_find_count(cdb, "needle") != 2
+                || cnid_find_count(cdb, "haystack") != 1)) {
+        result = 5;
+    }
+
+    if (result == 0
+            && ((id = cnid_get(cdb, DIRDID_ROOT, gone, strlen(gone)))
+                == CNID_INVALID
+                || cnid_delete(cdb, id) != 0
+                || cnid_find_count(cdb, "fill 0042") != 0)) {
+        result = 6;
+    }
+
+    cnid_close(cdb);
+    cdb = NULL;
+
+    if (result == 0
+            && cnid_scratch_sql(&s, "DROP TRIGGER \"%1$s_added\"") != 0) {
+        result = 7;
+    }
+
+    if (result == 0) {
+        cnid_scratch_sql(&s, "DROP TRIGGER \"%1$s_renamed\"");
+        cnid_scratch_sql(&s, "DROP TRIGGER \"%1$s_deleted\"");
+        cnid_scratch_sql(&s, "DROP TABLE \"%1$s_changes\"");
+        cnid_scratch_sql(&s, "DROP TABLE \"%1$s_names1\"");
+        cdb = cnid_open(&s.vol, scheme, 0);
+    }
+
+    if (result == 0
+            && (cdb == NULL || cnid_scan_steps(cdb, "haystack", 1) < 1100
+                || cnid_syntax_checks(cdb) != 0
+                || cnid_value_checks(cdb) != 0)) {
+        result = 8;
+    }
+
+    if (result == 0
+            && cnid_scratch_sql(&s, CNID_INDEX_OBJECTS_SQL) != 0) {
+        result = 9;
+    }
+
+    if (result == 0
+            && (cnid_wipe(cdb) != 0
+                || cnid_scratch_sql(&s, CNID_INDEX_OBJECTS_SQL) != 5
+                || cnid_add_names(cdb, names, 1, 50) != 0
+                || cnid_add_numbered(cdb, "after %04d.txt", 0, 30, 30000) != 0
+                || cnid_scan_steps(cdb, "needle", 1) != 0)) {
+        result = 14;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief The change log moves into the name index once the writes of the
+ *        connections that share it reach a batch, a bounded share at a time
+ *
+ * One connection writes fewer names than a batch, and the next one moves the
+ * log when its own writes bring the log to a batch. A log longer than one
+ * move takes moves over the next writes.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_moves(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    int logged[4] = { -2, -2, -2, -2 };
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "moves", "movesvol",
+                           "0F0F0F0F-1111-2222-3333-EEEEEEEEEEEE") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+            || cnid_add_numbered(cdb, "first %04d.txt", 0, 1000, 20000) != 0) {
+        result = 10;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    logged[0] = cnid_scratch_sql(&s, CNID_INDEX_LOGGED_SQL);
+
+    if (result == 0
+            && ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+                || cnid_add_numbered(cdb, "second %04d.txt", 0, 24, 30000)
+                != 0)) {
+        result = 11;
+    }
+
+    logged[1] = cnid_scratch_sql(&s, CNID_INDEX_LOGGED_SQL);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    /* five times the table's Ids, as deleted rows log them */
+    for (int i = 0; result == 0 && i < 5; i++) {
+        static const char *const backlog[] = {
+            "INSERT INTO \"%1$s_changes\" SELECT Id FROM \"%1$s\"",
+            "INSERT INTO \"%1$s_changes\" SELECT Id + 100000 FROM \"%1$s\"",
+            "INSERT INTO \"%1$s_changes\" SELECT Id + 200000 FROM \"%1$s\"",
+            "INSERT INTO \"%1$s_changes\" SELECT Id + 300000 FROM \"%1$s\"",
+            "INSERT INTO \"%1$s_changes\" SELECT Id + 400000 FROM \"%1$s\"",
+        };
+
+        if (cnid_scratch_sql(&s, backlog[i]) != 0) {
+            result = 12;
+        }
+    }
+
+    if (result == 0
+            && ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+                || cnid_add_numbered(cdb, "third %04d.txt", 0, 1, 40000)
+                != 0)) {
+        result = 13;
+    }
+
+    logged[2] = cnid_scratch_sql(&s, CNID_INDEX_LOGGED_SQL);
+
+    if (result == 0
+            && cnid_add_numbered(cdb, "third %04d.txt", 1, 1, 40001) != 0) {
+        result = 14;
+    }
+
+    logged[3] = cnid_scratch_sql(&s, CNID_INDEX_LOGGED_SQL);
+
+    if (result == 0
+            && (logged[0] != 1000 || logged[1] != 0
+                || logged[2] != 5 * 1024 + 1 - 4096 || logged[3] != 0)) {
+        result = 1;
+    } else if (result == 0
+               && (cnid_find_count(cdb, "first 0999") != 1
+                   || cnid_find_count(cdb, "second 0023") != 1
+                   || cnid_find_count(cdb, "third 0001") != 1)) {
+        result = 2;
+    }
+
+    if (result != 0) {
+        fprintf(test_stream(), "# utest_cnid_name_index_moves: result %d, "
+                "logged %d %d %d %d\n", result, logged[0], logged[1],
+                logged[2], logged[3]);
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief Progress handler that interrupts every statement of a connection
+ *
+ * @param[in] arg  unused
+ * @returns 1
+ */
+static int cnid_interrupt(void *arg _U_)
+{
+    return 1;
+}
+
+/*!
+ * @brief SQL function netatalk_fold() that fails as a busy database does, so
+ *        only a move of the change log fails
+ *
+ * @param[in,out] ctx   receives SQLITE_BUSY
+ * @param[in]     argc  unused
+ * @param[in]     argv  unused
+ */
+static void cnid_fold_busy(sqlite3_context *ctx, int argc _U_,
+                           sqlite3_value **argv _U_)
+{
+    sqlite3_result_error_code(ctx, SQLITE_BUSY);
+}
+
+/*!
+ * @brief Part of a name index on an empty table, as an older build's cleanup
+ *        of a volume leaves the index's tables, gives way to a whole index
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_partial(void)
+{
+    static char scheme[] = "sqlite";
+    static char needle[] = "partial needle.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const char *names[1] = { needle };
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "partial", "partialvol",
+                           "0F0F0F0F-1111-2222-3333-CECECECECECE") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        result = 10;
+    } else {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    /* the table goes with its triggers, and the index's tables stay */
+    if (result == 0 && (cnid_scratch_sql(&s, "DROP TABLE \"%1$s\"") != 0
+                        || cnid_scratch_sql(&s, CNID_INDEX_OBJECTS_SQL) != 2)) {
+        result = 11;
+    }
+
+    if (result == 0 && ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+                        || cnid_scratch_sql(&s, CNID_INDEX_OBJECTS_SQL) != 5
+                        || cnid_add_names(cdb, names, 1, 50) != 0
+                        || cnid_find_count(cdb, "needle") != 1)) {
+        result = 1;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief The name index outlasts a failure that says nothing about it, and an
+ *        empty table's open keeps its index without a word
+ *
+ * An interrupted search fails, and the next one still reads the index. A
+ * move that fails keeps the index and the changes it would move, which the
+ * searches through the index still answer. The second open of an empty
+ * table logs no missing index and keeps the index it finds, the change its
+ * log holds included.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_kept(void)
+{
+    static char scheme[] = "sqlite";
+    static char needle[] = "kept needle.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const char *names[1] = { needle };
+    char logpath[64];
+    int quiet = -2;
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "kept", "keptvol",
+                           "0F0F0F0F-1111-2222-3333-FFFFFFFFFFFF") != 0) {
+        return TEST_SKIP;
+    }
+
+    if (conf_mklog(logpath, sizeof(logpath)) != 0) {
+        cnid_scratch_cleanup(&s);
+        return TEST_SKIP;
+    }
+
+    setuplog("default:info", logpath, true);
+
+    if (cnid_open_logged(&s, logpath, "has no name index") == 0
+            && cnid_scratch_sql(&s, "INSERT INTO \"%1$s_changes\" "
+                                "VALUES (999)") == 0) {
+        quiet = cnid_open_logged(&s, logpath, "has no name index");
+    }
+
+    setuplog("default:note", "/dev/stderr", true);
+    unlink(logpath);
+
+    if (quiet != 0) {
+        result = 1;
+    } else if (cnid_scratch_sql(&s, CNID_INDEX_LOGGED_SQL) != 1) {
+        result = 5;
+    } else if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+               || cnid_add_names(cdb, names, 1, 50) != 0
+               || cnid_add_numbered(cdb, "fill %04d.txt", 0, 1100, 10000)
+               != 0) {
+        result = 10;
+    } else {
+        const CNID_sqlite_private *db = cdb->cnid_db_private;
+        sqlite3_progress_handler(db->cnid_sqlite_con, 1, cnid_interrupt, NULL);
+
+        if (cnid_find_count(cdb, "needle") != -1) {
+            result = 2;
+        }
+
+        sqlite3_progress_handler(db->cnid_sqlite_con, 0, NULL, NULL);
+
+        if (result == 0 && cnid_scan_steps(cdb, "needle", 1) != 0) {
+            result = 3;
+        }
+
+        if (result == 0
+                && (sqlite3_create_function(db->cnid_sqlite_con,
+                                            "netatalk_fold", 1, SQLITE_UTF8,
+                                            NULL, cnid_fold_busy, NULL, NULL)
+                    != SQLITE_OK
+                    || cnid_add_numbered(cdb, "more %04d.txt", 0, 1100, 30000)
+                    != 0)) {
+            result = 6;
+        }
+
+        if (result == 0
+                && (db->cnid_find_index_stmt[0] == NULL
+                    || cnid_scratch_sql(&s, CNID_INDEX_LOGGED_SQL) < 1100
+                    || cnid_scan_steps(cdb, "more 1099", 1) != 0)) {
+            result = 7;
+        }
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/* The volume's full-text table, 1 or 0 */
+#define CNID_INDEX_NAMES_SQL \
+    "SELECT count(*) FROM sqlite_master " \
+    "WHERE name = '%1$s_names1' COLLATE NOCASE"
+
+/*!
+ * @brief A name index that fails to create leaves the table without one, and
+ *        the open and a wipe go on with searches that read the table
+ *
+ * An index of the database named as the index's change log makes the
+ * creation fail, which rolls back to its savepoint and leaves no full-text
+ * table behind.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_refused(void)
+{
+    static char scheme[] = "sqlite";
+    static char needle[] = "refused needle.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const char *names[1] = { needle };
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "refused", "refusedvol",
+                           "0F0F0F0F-1111-2222-3333-ABABABABABAB") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        result = 10;
+    } else {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    if (result == 0
+            && (cnid_scratch_sql(&s, "DROP TRIGGER \"%1$s_added\"") != 0
+                || cnid_scratch_sql(&s, "DROP TRIGGER \"%1$s_renamed\"") != 0
+                || cnid_scratch_sql(&s, "DROP TRIGGER \"%1$s_deleted\"") != 0
+                || cnid_scratch_sql(&s, "DROP TABLE \"%1$s_changes\"") != 0
+                || cnid_scratch_sql(&s, "DROP TABLE \"%1$s_names1\"") != 0
+                || cnid_scratch_sql(&s, "CREATE INDEX \"%1$s_changes\" "
+                                    "ON \"%1$s\" (Did)") != 0)) {
+        result = 11;
+    }
+
+    if (result == 0 && ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+                        || cnid_scratch_sql(&s, CNID_INDEX_NAMES_SQL) != 0)) {
+        result = 1;
+    } else if (result == 0
+               && (cnid_add_numbered(cdb, "fill %04d.txt", 0, 20, 10000) != 0
+                   || cnid_add_names(cdb, names, 1, 50) != 0
+                   || cnid_scan_steps(cdb, "needle", 1) < 10)) {
+        result = 2;
+    } else if (result == 0
+               && (cnid_wipe(cdb) != 0
+                   || cnid_scratch_sql(&s, CNID_INDEX_NAMES_SQL) != 0)) {
+        result = 3;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A name index a connection cannot use stays, and its searches scan
+ *
+ * An incomplete index shows at the open of its table, a broken one at the
+ * search that finds it so. A wipe gives the emptied table a whole index
+ * again.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_unused(void)
+{
+    static char scheme[] = "sqlite";
+    static char needle[] = "unused needle.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const char *names[1] = { needle };
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "unused", "unusedvol",
+                           "0F0F0F0F-1111-2222-3333-CDCDCDCDCDCD") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+            || cnid_add_names(cdb, names, 1, 50) != 0) {
+        result = 10;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    if (result == 0
+            && cnid_scratch_sql(&s, "DROP TABLE \"%1$s_names1\"") != 0) {
+        result = 11;
+    }
+
+    if (result == 0 && ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+                        || cnid_scratch_sql(&s, CNID_INDEX_OBJECTS_SQL) != 4
+                        || cnid_find_count(cdb, "needle") != 1)) {
+        result = 1;
+    } else if (result == 0
+               && (cnid_wipe(cdb) != 0
+                   || cnid_scratch_sql(&s, CNID_INDEX_OBJECTS_SQL) != 5
+                   || cnid_add_names(cdb, names, 1, 50) != 0
+                   || cnid_add_numbered(cdb, "fill %04d.txt", 0, 1100, 10000)
+                   != 0)) {
+        result = 12;
+    } else if (result == 0
+               && cnid_scratch_sql(&s, "DELETE FROM \"%1$s_names1_data\"")
+               != 0) {
+        result = 13;
+    } else if (result == 0) {
+        const CNID_sqlite_private *db = cdb->cnid_db_private;
+
+        if (cnid_find_count(cdb, "needle") != 1
+                || db->cnid_find_index_stmt[0] != NULL
+                || cnid_scratch_sql(&s, CNID_INDEX_TRIGGERS_SQL) != 3) {
+            result = 2;
+        }
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A two-seed prepare that fails on a broken index ends its use and scans
+ *
+ * A lookup after another connection drops the log reads the new schema, so
+ * the statement of two seeds fails at its prepare rather than at its first
+ * step.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_prepare_broken(void)
+{
+    static char scheme[] = "sqlite";
+    static char volname[] = "brokenvol";
+    static char needle[] = "broken needle.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const CNID_sqlite_private *db = NULL;
+    const char *names[1] = { needle };
+    bool more = false;
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "broken", volname,
+                           "0F0F0F0F-1111-2222-3333-BABABABABABA") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+            || cnid_add_names(cdb, names, 1, 60) != 0
+            || (db = cdb->cnid_db_private)->cnid_find_index_stmt[0] == NULL
+            || cnid_scratch_sql(&s, "DROP TABLE \"%1$s_changes\"") != 0
+            || cnid_get(cdb, DIRDID_ROOT, needle, strlen(needle))
+            == CNID_INVALID) {
+        result = 10;
+    } else if (cnid_query_count(cdb, "kMDItemFSName==\"*broken*\"c"
+                                "||kMDItemFSName==\"*needle*\"c", &more) != 1
+               || db->cnid_find_index_stmt[0] != NULL) {
+        result = 1;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A move of the logged changes that finds the name index broken ends
+ *        the connection's use of it, and its searches read the table
+ *
+ * Another connection empties the index's data; the writes then reach a move
+ * before any search reads the index.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_move_broken(void)
+{
+    static char scheme[] = "sqlite";
+    static char needle[] = "moved needle.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const CNID_sqlite_private *db = NULL;
+    const char *names[1] = { needle };
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "movebroken", "movebrokenvol",
+                           "0F0F0F0F-1111-2222-3333-ABABABABABAB") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+            || cnid_add_names(cdb, names, 1, 70) != 0
+            || (db = cdb->cnid_db_private)->cnid_find_index_stmt[0] == NULL
+            || cnid_scratch_sql(&s, "DELETE FROM \"%1$s_names1_data\"") != 0
+            || cnid_add_numbered(cdb, "moved %04d.txt", 0, 1100, 20000) != 0) {
+        result = 10;
+    } else if (db->cnid_find_index_stmt[0] != NULL) {
+        result = 1;
+    } else if (cnid_find_count(cdb, "needle") != 1
+               || cnid_scratch_sql(&s, CNID_INDEX_TRIGGERS_SQL) != 3) {
+        result = 2;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/* The full-text rows of the name "a long needle name.txt", 1 once a move
+ * takes it into the index */
+#define CNID_LONG_NEEDLE_SQL \
+    "SELECT count(*) FROM \"%1$s_names1\" WHERE rowid IN " \
+    "(SELECT Id FROM \"%1$s\" WHERE Name = 'a long needle name.txt')"
+
+/*!
+ * @brief A seed whose pattern passes the connection's limit for a GLOB
+ *        pattern reads the table, and the connection keeps its index
+ *
+ * The 1100 names after the needle reach a move, which takes the needle into
+ * the full-text table: a search through the index would hand it to SQLite's
+ * check of each candidate against the pattern, which fails past the limit.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_name_index_long_pattern(void)
+{
+    static char scheme[] = "sqlite";
+    static char needle[] = "a long needle name.txt";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const CNID_sqlite_private *db = NULL;
+    const char *names[1] = { needle };
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "longglob", "longglobvol",
+                           "0F0F0F0F-1111-2222-3333-EFEFEFEFEFEF") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+            || cnid_add_names(cdb, names, 1, 80) != 0
+            || cnid_add_numbered(cdb, "long %04d.txt", 0, 1100, 30000) != 0
+            || (db = cdb->cnid_db_private)->cnid_find_index_stmt[0] == NULL
+            || cnid_scratch_sql(&s, CNID_LONG_NEEDLE_SQL) != 1) {
+        result = 10;
+    } else {
+        /* "*long needle name.txt*" holds 22 bytes */
+        sqlite3_limit(db->cnid_sqlite_con, SQLITE_LIMIT_LIKE_PATTERN_LENGTH,
+                      20);
+
+        if (cnid_find_count(cdb, "long needle name.txt") != 1
+                || db->cnid_find_index_stmt[0] == NULL) {
+            result = 1;
+        }
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/* A stale volume's row and the objects of the schema its UUID ?1 names */
+#define CNID_STALE_LEFT_SQL \
+    "SELECT (SELECT count(*) FROM volumes WHERE VolUUID = ?1) " \
+    "+ (SELECT count(*) FROM sqlite_master WHERE name LIKE ?1 || '%')"
+
+/*!
+ * @brief The open's cleanup of a stale volume keeps the volume's row while
+ *        its full-text table stays, as a library without FTS5 leaves it, and
+ *        removes the row once the table is gone
+ *
+ * The old volume's full-text table names a module the library lacks, so no
+ * drop removes it; the other objects of the old volume go at once.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_stale_names_kept(void)
+{
+    static char scheme[] = "sqlite";
+    static char volname[] = "stalevol";
+    static const char old_uuid[] = "0F0F0F0F-1111-2222-3333-CACACACACACA";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    sqlite3 *peer = NULL;
+    sqlite3_stmt *stmt = NULL;
+    char *old = uuid_strip_dashes(old_uuid);
+    char *sql = NULL;
+    int result = 0;
+
+    if (old == NULL || !cnid_fts5_trigram()) {
+        free(old);
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "stale", volname, old_uuid) != 0) {
+        free(old);
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        result = 10;
+    } else {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    if (result == 0
+            && asprintf(&sql, "DROP TABLE \"%s_names1\";"
+                        "PRAGMA writable_schema = ON;"
+                        "INSERT INTO sqlite_master VALUES ('table', "
+                        "'%s_names1', '%s_names1', 0, 'CREATE VIRTUAL "
+                        "TABLE \"%s_names1\" USING nosuchmodule()');"
+                        "PRAGMA writable_schema = OFF;", old, old, old, old)
+            < 0) {
+        sql = NULL;
+        result = 11;
+    }
+
+    if (result == 0
+            && (cnid_scratch_peer(s.dbfile, &peer) != SQLITE_OK
+                || sqlite3_exec(peer, sql, NULL, NULL, NULL) != SQLITE_OK)) {
+        result = 11;
+    }
+
+    sqlite3_close(peer);
+    peer = NULL;
+
+    /* the volume comes back under another UUID, so the old one is stale */
+    if (result == 0) {
+        snprintf(s.uuid, sizeof(s.uuid), "%s",
+                 "0F0F0F0F-1111-2222-3333-CACACACACACB");
+
+        if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+            result = 12;
+        }
+    }
+
+    if (result == 0
+            && (cnid_scratch_peer(s.dbfile, &peer) != SQLITE_OK
+                || sqlite3_prepare_v2(peer, CNID_STALE_LEFT_SQL, -1, &stmt,
+                                      NULL) != SQLITE_OK
+                || sqlite3_bind_text(stmt, 1, old, -1, SQLITE_STATIC)
+                != SQLITE_OK
+                || sqlite3_step(stmt) != SQLITE_ROW
+                || sqlite3_column_int(stmt, 0) != 2)) {
+        result = 1;
+    }
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+        cdb = NULL;
+    }
+
+    /* without its full-text table the next open removes the stale volume,
+     * its row the last */
+    free(sql);
+    sql = NULL;
+
+    if (result == 0
+            && asprintf(&sql, "PRAGMA writable_schema = ON;"
+                        "DELETE FROM sqlite_master WHERE name = "
+                        "'%s_names1';PRAGMA writable_schema = OFF;", old)
+            < 0) {
+        sql = NULL;
+        result = 13;
+    } else if (result == 0
+               && (sqlite3_exec(peer, sql, NULL, NULL, NULL) != SQLITE_OK
+                   || (cdb = cnid_open(&s.vol, scheme, 0)) == NULL)) {
+        result = 13;
+    } else if (result == 0
+               && (sqlite3_reset(stmt) != SQLITE_OK
+                   || sqlite3_step(stmt) != SQLITE_ROW
+                   || sqlite3_column_int(stmt, 0) != 0)) {
+        result = 2;
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(peer);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
+    free(sql);
+    free(old);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A search by two seeds through the name index takes each match once,
+ *        the renamed names its change log holds included, up to its limit
+ *
+ * Names that both comparisons match come through both seeds' arms, and
+ * renames log names whose Ids come before the indexed ones; their old names
+ * match neither seed, so the log's arm alone takes them. The UNION of the
+ * arms keeps one of each, the first matches in Id order, and the table is
+ * not scanned.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_seeds_once(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb = NULL;
+    const CNID_sqlite_private *db = NULL;
+    struct sl_name_query *q = NULL;
+    cnid_t results[200];
+    struct stat st;
+    char name[32];
+    bool more = false;
+    int count = -1;
+    int result = 0;
+
+    if (!cnid_fts5_trigram()) {
+        return TEST_SKIP;
+    }
+
+    if (cnid_scratch_setup(&s, "seeds", "seedsvol",
+                           "0F0F0F0F-1111-2222-3333-EFEFEFEFEFEF") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL
+            || cnid_add_numbered(cdb, "alpha beta %02d.txt", 0, 30, 19000)
+            != 0
+            || cnid_add_numbered(cdb, "gamma %03d.txt", 0, 60, 21000) != 0
+            || cnid_add_numbered(cdb, "beta %03d.txt", 0, 250, 20000) != 0
+            || cnid_add_numbered(cdb, "fill %04d.txt", 0, 1100, 10000) != 0) {
+        result = 10;
+    }
+
+    memset(&st, 0, sizeof(st));
+    st.st_dev = 4242;
+
+    for (int i = 0; result == 0 && i < 60; i++) {
+        cnid_t id;
+        snprintf(name, sizeof(name), "gamma %03d.txt", i);
+        id = cnid_get(cdb, DIRDID_ROOT, name, strlen(name));
+        snprintf(name, sizeof(name), "beta again %03d.txt", i);
+        st.st_ino = 21000 + (ino_t)i;
+
+        if (id == CNID_INVALID
+                || cnid_update(cdb, id, &st, DIRDID_ROOT, name,
+                               strlen(name)) != 0) {
+            result = 11;
+        }
+    }
+
+    if (result == 0
+            && (q = sl_name_query_parse("kMDItemFSName==\"*alpha*\"c"
+                                        "||kMDItemFSName==\"*beta*\"c", 0, 8))
+            == NULL) {
+        result = 12;
+    }
+
+    if (result == 0) {
+        db = cdb->cnid_db_private;
+        sqlite3_stmt_status(db->cnid_find_stmt, SQLITE_STMTSTATUS_RUN, 1);
+        count = cnid_find_scoped(cdb, q, CNID_INVALID, results,
+                                 sizeof(results), &more);
+    }
+
+    for (int i = 1; result == 0 && i < count; i++) {
+        if (ntohl(results[i]) <= ntohl(results[i - 1])) {
+            result = 2;
+        }
+    }
+
+    if (result == 0 && (count != 200 || !more)) {
+        result = 1;
+    }
+
+    if (result == 0
+            && (sqlite3_stmt_status(db->cnid_find_stmt, SQLITE_STMTSTATUS_RUN,
+                                    0) != 0
+                || db->cnid_find_index_stmt[1] == NULL)) {
+        result = 4;
+    }
+
+    /* the 31st match is the first renamed name, which only the log's arm
+     * takes */
+    if (result == 0
+            && results[30] != cnid_get(cdb, DIRDID_ROOT,
+                                       "beta again 000.txt", 18)) {
+        result = 3;
+    }
+
+    sl_name_query_free(q);
+
+    if (cdb != NULL) {
+        cnid_close(cdb);
+    }
+
     cnid_scratch_cleanup(&s);
     return result;
 }
@@ -1512,6 +2943,7 @@ static struct {
     int nseeds;             /*!< seeds the last search took */
     size_t literals;        /*!< literal bytes of its first seed */
     bool narrows;           /*!< what fake_cnid_find_narrows() answers */
+    cnid_t scope_did;       /*!< the folder fake_cnid_find_narrows() saw */
 } fake_seeds;
 
 /*!
@@ -1555,15 +2987,19 @@ static int fake_seeds_find(struct _cnid_db *cdb _U_,
 }
 
 /*!
- * @brief Backend cnid_find_narrows that answers as fake_seeds says
+ * @brief Backend cnid_find_narrows that answers as fake_seeds says, and notes
+ *        the search's folder
  *
- * @param[in] cdb   unused
- * @param[in] seed  unused
+ * @param[in] cdb        unused
+ * @param[in] seed       unused
+ * @param[in] scope_did  the search's folder
  * @returns fake_seeds.narrows
  */
 static bool fake_cnid_find_narrows(struct _cnid_db *cdb _U_,
-                                   const struct sl_name_pattern *seed _U_)
+                                   const struct sl_name_pattern *seed _U_,
+                                   cnid_t scope_did)
 {
+    fake_seeds.scope_did = scope_did;
     return fake_seeds.narrows;
 }
 
@@ -1620,9 +3056,10 @@ int utest_cnid_find_name_bound(void)
 }
 
 /*!
- * @brief A query's seeds reach the backend in one search, none when the
- *        backend does not narrow by them, and a failed search leaves
- *        more_available false
+ * @brief A query's seeds reach the backend in one search
+ *
+ * None go when the backend does not narrow by them, the backend's test sees
+ * the search's folder, and a failed search leaves more_available false.
  *
  * @returns 0, or the number of the first failed check
  */
@@ -1659,6 +3096,15 @@ int utest_cnid_find_seeds_together(void)
                                          sizeof(results), &more) != 3 || more
                         || fake_seeds.runs != 1 || fake_seeds.nseeds != 0)) {
         result = 3;
+    }
+
+    memset(&fake_seeds, 0, sizeof(fake_seeds));
+    fake_seeds.narrows = true;
+
+    if (result == 0 && (cnid_find_scoped(&cdb, q, htonl(17), results,
+                                         sizeof(results), &more) != 0
+                        || fake_seeds.scope_did != htonl(17))) {
+        result = 5;
     }
 
     memset(&fake_seeds, 0, sizeof(fake_seeds));

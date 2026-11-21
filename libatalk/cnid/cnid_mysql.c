@@ -19,7 +19,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <arpa/inet.h>
-#include <ctype.h>
 #include <errno.h>
 #include <net/if.h>
 #include <netdb.h>
@@ -66,8 +65,20 @@
  * out of reach of the deferred-die path */
 #define CNID_MYSQL_RECONNECT_ATTEMPTS 2
 
+/*
+ * The column of folded names: netatalk folds a name for case and diacritics
+ * as the matcher does, so a search compares bytes whatever the collation.
+ * The 1 in its name is the version of the folding, so a netatalk that folds
+ * otherwise never reads it. A row without a folded name, as an older
+ * netatalk writes one, holds NULL.
+ */
+#define CNID_MYSQL_FOLDED_NAME  "Folded1"
+#define CNID_MYSQL_FOLDED       CNID_MYSQL_FOLDED_NAME " VARBINARY(1020) NULL"
+/* Bytes of a folded name the column holds; a longer one is NULL */
+#define CNID_MYSQL_FOLDED_MAX   1020
+
 static MYSQL_BIND lookup_param[4], lookup_result[5];
-static MYSQL_BIND add_param[4], put_param[5];
+static MYSQL_BIND add_param[5], put_param[6];
 static MYSQL_BIND get_param[2], get_result[1];
 static MYSQL_BIND delete_param[1];
 static MYSQL_BIND resolve_param[1], resolve_result[2];
@@ -85,6 +96,9 @@ static unsigned long long dirlist_result_ino;
  */
 static char               stmt_param_name[MAXPATHLEN];
 static unsigned long      stmt_param_name_len;
+/* the folded name, 0 bytes for none */
+static char               stmt_param_folded[CNID_MYSQL_FOLDED_MAX];
+static unsigned long      stmt_param_folded_len;
 static unsigned long long stmt_param_id;
 static unsigned long long stmt_param_did;
 static unsigned long long stmt_param_dev;
@@ -180,8 +194,51 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Point a statement parameter at the folded name
+ *
+ * NULLIF() in the statements stores the 0 bytes of no fold as NULL.
+ *
+ * @param[out] param  the parameter
+ */
+static void cnid_mysql_folded_param(MYSQL_BIND *param)
+{
+    param->buffer_type   = MYSQL_TYPE_BLOB;
+    param->buffer        = stmt_param_folded;
+    param->buffer_length = sizeof(stmt_param_folded);
+    param->length        = &stmt_param_folded_len;
+}
+
+/*!
+ * @brief Fold a name into the statement parameter of the folded column
+ *
+ * A fold longer than the column, or none for want of memory, leaves the
+ * column NULL, which every search takes as a candidate.
+ *
+ * @param[in] name     the name
+ * @param[in] len      bytes of name
+ * @param[in] charset  the name's charset, the volume's
+ */
+static void cnid_mysql_fold_param(const char *name, size_t len,
+                                  charset_t charset)
+{
+    char *folded = sl_name_fold_in(name, len, charset);
+    size_t n = folded != NULL ? strlen(folded) : 0;
+    stmt_param_folded_len = 0;
+
+    if (folded != NULL && n <= sizeof(stmt_param_folded)) {
+        memcpy(stmt_param_folded, folded, n);
+        stmt_param_folded_len = n;
+    }
+
+    free(folded);
+}
+
+/*!
  * @brief Prepare the insert statement for a new entry, numbered by
  * AUTO_INCREMENT
+ *
+ * The prepare tells whether the table has the column of folded names: a
+ * table an older netatalk made has none.
  *
  * @param[in,out] db  MySQL backend state with the connection and the table name
  * @returns 0, or -1 when preparing or binding fails
@@ -192,8 +249,28 @@ static int init_prepared_stmt_add(CNID_mysql_private *db)
     char *sql = NULL;
     EC_NULL(db->cnid_add_stmt = mysql_stmt_init(db->cnid_mysql_con));
     EC_NEG1(asprintf(&sql,
-                     "INSERT INTO `%s` (Name,Did,DevNo,InodeNo) VALUES(?,?,?,?)",
+                     "INSERT INTO `%s` (Name,Did,DevNo,InodeNo,"
+                     CNID_MYSQL_FOLDED_NAME ") VALUES(?,?,?,?,NULLIF(?,''))",
                      db->cnid_mysql_voluuid_str));
+    db->cnid_mysql_folded = false;
+
+    if (mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)) == 0) {
+        db->cnid_mysql_folded = true;
+    } else {
+        if (mysql_stmt_errno(db->cnid_add_stmt) != ER_BAD_FIELD_ERROR) {
+            LOG(log_error, logtype_cnid, "init_prepared_stmt_add: %s",
+                mysql_stmt_error(db->cnid_add_stmt));
+            EC_FAIL;
+        }
+
+        free(sql);
+        sql = NULL;
+        EC_NEG1(asprintf(&sql,
+                         "INSERT INTO `%s` (Name,Did,DevNo,InodeNo) "
+                         "VALUES(?,?,?,?)", db->cnid_mysql_voluuid_str));
+        EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)));
+    }
+
     add_param[0].buffer_type    = MYSQL_TYPE_STRING;
     add_param[0].buffer         = &stmt_param_name;
     add_param[0].buffer_length  = sizeof(stmt_param_name);
@@ -207,7 +284,7 @@ static int init_prepared_stmt_add(CNID_mysql_private *db)
     add_param[3].buffer_type    = MYSQL_TYPE_LONGLONG;
     add_param[3].buffer         = &stmt_param_ino;
     add_param[3].is_unsigned    = true;
-    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)));
+    cnid_mysql_folded_param(&add_param[4]);
     EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_add_stmt, add_param));
 EC_CLEANUP:
 
@@ -221,6 +298,9 @@ EC_CLEANUP:
 /*!
  * @brief Prepare the insert statement for an entry with an explicit CNID
  *
+ * The statement writes the folded name where init_prepared_stmt_add() found
+ * the column.
+ *
  * @param[in,out] db  MySQL backend state with the connection and the table name
  * @returns 0, or -1 when preparing or binding fails
  */
@@ -229,9 +309,18 @@ static int init_prepared_stmt_put(CNID_mysql_private *db)
     EC_INIT;
     char *sql = NULL;
     EC_NULL(db->cnid_put_stmt = mysql_stmt_init(db->cnid_mysql_con));
-    EC_NEG1(asprintf(&sql,
-                     "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo) VALUES(?,?,?,?,?)",
-                     db->cnid_mysql_voluuid_str));
+
+    if (db->cnid_mysql_folded) {
+        EC_NEG1(asprintf(&sql,
+                         "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo,"
+                         CNID_MYSQL_FOLDED_NAME ") VALUES(?,?,?,?,?,NULLIF(?,''))",
+                         db->cnid_mysql_voluuid_str));
+    } else {
+        EC_NEG1(asprintf(&sql,
+                         "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo) "
+                         "VALUES(?,?,?,?,?)", db->cnid_mysql_voluuid_str));
+    }
+
     put_param[0].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[0].buffer         = &stmt_param_id;
     put_param[0].is_unsigned    = true;
@@ -248,6 +337,7 @@ static int init_prepared_stmt_put(CNID_mysql_private *db)
     put_param[4].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[4].buffer         = &stmt_param_ino;
     put_param[4].is_unsigned    = true;
+    cnid_mysql_folded_param(&put_param[5]);
     EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_put_stmt, sql, strlen(sql)));
     EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_put_stmt, put_param));
 EC_CLEANUP:
@@ -756,6 +846,12 @@ int cnid_mysql_update(struct _cnid_db *cdb,
         stmt_param_ino = ino;
         EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_purge_stmt));
 
+        /* here, not before the purge: a reconnect prepares the statements
+         * again and reads cnid_mysql_folded anew */
+        if (db->cnid_mysql_folded) {
+            cnid_mysql_fold_param(name, len, cdb->cnid_db_vol->v_volcharset);
+        }
+
         if (mysql_stmt_execute(db->cnid_put_stmt)) {
             switch (mysql_stmt_errno(db->cnid_put_stmt)) {
             case ER_DUP_ENTRY:
@@ -1127,6 +1223,11 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
             stmt_param_dev = dev;
             stmt_param_ino = ino;
 
+            if (db->cnid_mysql_folded) {
+                cnid_mysql_fold_param(name, len,
+                                      cdb->cnid_db_vol->v_volcharset);
+            }
+
             if (mysql_stmt_execute(stmt)) {
                 switch (mysql_stmt_errno(stmt)) {
                 case ER_DUP_ENTRY:
@@ -1479,97 +1580,92 @@ EC_CLEANUP:
 /*!
  * @brief The LIKE pattern a name search sends the server for a seed
  *
- * A collation can fold letters other than the matcher does, a decomposed
- * name holds marks after its letters, and a collation can read two letters
- * as one, so every letter and every non-ASCII character give way to '%'.
- * Digits and punctuation compare as themselves under every collation, and
- * under 'd' the seed's pattern already gives way after each of them, for the
- * marks the matcher drops. Every name the seed matches satisfies the
- * pattern.
+ * Folded1 compares bytes, so it takes the seed's pattern over folded names;
+ * Name takes the pattern that holds under any collation. Every name the seed
+ * matches satisfies the pattern of either column.
  *
- * @param[in] seed  the seed, or NULL for every name
- * @returns the pattern, to free(), or NULL when out of memory
+ * @param[in] seed    the seed
+ * @param[in] folded  whether the pattern compares the folded names
+ * @returns the pattern, which the seed holds
  */
-static char *cnid_mysql_like(const struct sl_name_pattern *seed)
+static const char *cnid_mysql_like(const struct sl_name_pattern *seed,
+                                   bool folded)
 {
-    const unsigned char *c;
-    bool open = false;
-    char *like;
-    char *o;
-
-    if (seed == NULL) {
-        return strdup("%");
-    }
-
-    c = (const unsigned char *)sl_name_pattern_like(seed);
-
-    if ((like = malloc(strlen((const char *)c) + 1)) == NULL) {
-        return NULL;
-    }
-
-    o = like;
-
-    while (*c != '\0') {
-        size_t len = *c == '!' && c[1] != '\0' ? 2 : 1;
-
-        if (*c == '%' || *c >= 0x80 || isalpha(*c)) {
-            if (!open) {
-                *o++ = '%';
-                open = true;
-            }
-
-            c++;
-            continue;
-        }
-
-        memcpy(o, c, len);
-        o += len;
-        c += len;
-        open = false;
-    }
-
-    *o = '\0';
-    return like;
+    return folded ? sl_name_pattern_index_like(seed)
+           : sl_name_pattern_like(seed);
 }
 
 /*!
- * @brief Tell whether the LIKE pattern of a seed narrows a name search
+ * @brief Tell whether a name search compares the folded names
  *
- * @param[in] cdb   unused
- * @param[in] seed  the seed
+ * A folder search compares Name, which its walk reads from the DidName
+ * index, where the folded names would cost a read of each row of the folder.
+ *
+ * @param[in] db         MySQL backend state
+ * @param[in] scope_did  the search's folder, or CNID_INVALID for the volume
+ * @returns true when the table holds folded names and the search covers the
+ *          volume, as every search does on a server without recursive CTEs
+ */
+static bool cnid_mysql_find_folded(const CNID_mysql_private *db,
+                                   cnid_t scope_did)
+{
+    return db->cnid_mysql_folded
+           && (scope_did == CNID_INVALID || db->cnid_find_scoped_unsupported);
+}
+
+/*!
+ * @brief Tell whether a seed's LIKE pattern narrows a name search
+ *
+ * @param[in] cdb        CNID database
+ * @param[in] seed       the seed
+ * @param[in] scope_did  the search's folder, or CNID_INVALID for the volume
  * @returns true when the pattern holds a character other than '%'
  */
-static bool cnid_mysql_find_narrows(struct _cnid_db *cdb _U_,
-                                    const struct sl_name_pattern *seed)
+static bool cnid_mysql_find_narrows(struct _cnid_db *cdb,
+                                    const struct sl_name_pattern *seed,
+                                    cnid_t scope_did)
 {
-    char *like = cnid_mysql_like(seed);
-    bool narrows = like != NULL && like[strspn(like, "%")] != '\0';
-    free(like);
-    return narrows;
+    const CNID_mysql_private *db = cdb->cnid_db_private;
+    const char *like = cnid_mysql_like(seed,
+                                       cnid_mysql_find_folded(db, scope_did));
+    return like[strspn(like, "%")] != '\0';
 }
 
 /*!
  * @brief Write the WHERE condition of a name search over its LIKE patterns
  *
- * @param[in]  npat  LIKE patterns, 0 for every row
- * @param[out] cond  receives the condition
- * @param[in]  size  room in cond
+ * The condition keeps the rows whose names one pattern keeps, every row for
+ * none, and a row without a folded name as a candidate for the matcher.
+ *
+ * @param[in]  folded  whether the patterns compare the folded names
+ * @param[in]  npat    LIKE patterns, 0 for every row
+ * @param[out] cond    receives the condition
+ * @param[in]  size    room in cond
+ * @returns true when the condition fits
  */
-static void cnid_mysql_find_cond(int npat, char *cond, size_t size)
+static bool cnid_mysql_find_cond(bool folded, int npat, char *cond,
+                                 size_t size)
 {
+    const char *column = folded ? CNID_MYSQL_FOLDED_NAME : "Name";
     size_t n = 0;
 
     if (npat == 0) {
         snprintf(cond, size, "1");
-        return;
+        return true;
     }
 
-    for (int i = 0; i < npat; i++) {
-        n += (size_t)snprintf(cond + n, size - n, "%st.Name LIKE ? ESCAPE '!'",
-                              i ? " OR " : "(");
+    for (int i = 0; i < npat && n < size; i++) {
+        n += (size_t)snprintf(cond + n, size - n, "%st.%s LIKE ? ESCAPE '!'",
+                              i ? " OR " : "(", column);
     }
 
-    snprintf(cond + n, size - n, ")");
+    if (n < size) {
+        n += (size_t)snprintf(cond + n, size - n, "%s)",
+                              folded ? " OR t." CNID_MYSQL_FOLDED_NAME
+                              " IS NULL" : "");
+    }
+
+    return n < size;
 }
 
 /*!
@@ -1584,16 +1680,21 @@ static void cnid_mysql_find_cond(int npat, char *cond, size_t size)
  * @param[in,out] db      MySQL backend state
  * @param[in]     stmt    the statement
  * @param[in]     npat    LIKE patterns, 0 for every name
+ * @param[in]     folded  whether the patterns compare the folded names
  * @param[in,out] scoped  whether the search is scoped, cleared on a fallback
  * @returns 0, or -1 when the prepare fails
  */
 static int cnid_mysql_find_prepare(CNID_mysql_private *db, MYSQL_STMT *stmt,
-                                   int npat, bool *scoped)
+                                   int npat, bool folded, bool *scoped)
 {
     char cond[CNID_FIND_MAX_SEEDS * 48 + 32];
     char *sql = NULL;
     int ret = -1;
-    cnid_mysql_find_cond(npat, cond, sizeof(cond));
+
+    /* cond has room for CNID_FIND_MAX_SEEDS patterns */
+    if (!cnid_mysql_find_cond(folded, npat, cond, sizeof(cond))) {
+        return -1;
+    }
 
     if (*scoped) {
         /* STRAIGHT_JOIN keeps the scope the outer loop, so the cost follows
@@ -1666,6 +1767,7 @@ static int cnid_mysql_find_prepare(CNID_mysql_private *db, MYSQL_STMT *stmt,
  * @param[in] stmt    the prepared search
  * @param[in] scoped  whether the search takes a scope, and no batches
  * @param[in] scope   CNID of the scope directory in host order
+ * @param[in] binary  whether the patterns compare bytes of folded names
  * @param[in] likes   the LIKE patterns
  * @param[in] lens    bytes of each pattern
  * @param[in] npat    number of patterns
@@ -1675,8 +1777,9 @@ static int cnid_mysql_find_prepare(CNID_mysql_private *db, MYSQL_STMT *stmt,
  * @returns 0, or -1 when a bind fails
  */
 static int cnid_mysql_find_bind(MYSQL_STMT *stmt, bool scoped,
-                                unsigned long long *scope, char *const *likes,
-                                unsigned long *lens, int npat,
+                                unsigned long long *scope, bool binary,
+                                const char *const *likes, unsigned long *lens,
+                                int npat,
                                 unsigned long long *after,
                                 unsigned long long *batch, MYSQL_BIND *result)
 {
@@ -1691,8 +1794,8 @@ static int cnid_mysql_find_bind(MYSQL_STMT *stmt, bool scoped,
     }
 
     for (int k = 0; k < npat; k++, i++) {
-        param[i].buffer_type = MYSQL_TYPE_STRING;
-        param[i].buffer = likes[k];
+        param[i].buffer_type = binary ? MYSQL_TYPE_BLOB : MYSQL_TYPE_STRING;
+        param[i].buffer = (void *)likes[k]; //NOSONAR: MySQL only reads a parameter's buffer
         param[i].buffer_length = lens[k];
         param[i].length = &lens[k];
     }
@@ -1809,8 +1912,9 @@ static int cnid_mysql_id_order(const void *a, const void *b)
  * most, until 1 match more than buffer holds, which sets more_available. A
  * scoped search walks the subtree with a recursive CTE once and streams its
  * rows unordered, keeping the lowest Ids that match, so it finds the matches
- * an unscoped search would. The patterns bind as statement parameters, never
- * as SQL text. A server without CTE support falls back to an unscoped search.
+ * an unscoped search would; it compares Name, as cnid_mysql_find_folded()
+ * says. The patterns bind as statement parameters, never as SQL text. A
+ * server without CTE support falls back to an unscoped search.
  *
  * @param[in]  cdb             CNID database
  * @param[in]  query           the name comparisons
@@ -1830,7 +1934,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
 {
     EC_INIT;
     CNID_mysql_private *db = cdb->cnid_db_private;
-    char *likes[CNID_FIND_MAX_SEEDS] = { NULL };
+    const char *likes[CNID_FIND_MAX_SEEDS];
     unsigned long lens[CNID_FIND_MAX_SEEDS];
     MYSQL_STMT *stmt = NULL;
     MYSQL_BIND result[2];
@@ -1844,6 +1948,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
     unsigned long max_results = buflen / sizeof(cnid_t);
     bool scoped = (scope_did != CNID_INVALID
                    && !db->cnid_find_scoped_unsupported);
+    const bool folded = cnid_mysql_find_folded(db, scope_did);
     bool more = false;
     int npat = seeds != NULL ? nseeds : 0;
     int fetch_ret = 0;
@@ -1859,7 +1964,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
     }
 
     for (int i = 0; i < npat; i++) {
-        EC_NULL(likes[i] = cnid_mysql_like(seeds[i]));
+        likes[i] = cnid_mysql_like(seeds[i], folded);
         lens[i] = strlen(likes[i]);
         LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'",
             likes[i]);
@@ -1875,9 +1980,9 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
     result[1].buffer_length = sizeof(name);
     result[1].length = &name_len;
     EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
-    EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, &scoped));
-    EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, likes, lens, npat,
-                                 &after, &batch, result));
+    EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, folded, &scoped));
+    EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, folded, likes, lens,
+                                 npat, &after, &batch, result));
 
     if (scoped && mysql_stmt_execute(stmt) == 0) {
         /* Unbuffered, so the rows come as the fetches read them */
@@ -1914,9 +2019,9 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
                 "cnid_mysql_find: scoped query failed at execute (%s); "
                 "retrying unscoped", mysql_stmt_error(stmt));
             scoped = false;
-            EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, &scoped));
-            EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, likes, lens,
-                                         npat, &after, &batch, result));
+            EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, folded, &scoped));
+            EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, folded, likes,
+                                         lens, npat, &after, &batch, result));
         }
 
         while (count <= (int)max_results) {
@@ -1981,10 +2086,6 @@ EC_CLEANUP:
 
     if (stmt) {
         mysql_stmt_close(stmt);
-    }
-
-    for (int i = 0; i < npat; i++) {
-        free(likes[i]);
     }
 
     if (ret != 0) {
@@ -2435,10 +2536,10 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            "Name VARCHAR(255) NOT NULL,"
                            "Did INT UNSIGNED NOT NULL,"
                            "DevNo BIGINT UNSIGNED NOT NULL,"
-                           "InodeNo BIGINT UNSIGNED NOT NULL,"
+                           "InodeNo BIGINT UNSIGNED NOT NULL,%s,"
                            "UNIQUE DidName(Did, Name), UNIQUE DevIno(DevNo, InodeNo)) "
                            "AUTO_INCREMENT=17",
-                     db->cnid_mysql_voluuid_str));
+                     db->cnid_mysql_voluuid_str, CNID_MYSQL_FOLDED));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql)) {
         LOG(log_error, logtype_cnid, "MySQL query error: %s",

@@ -668,17 +668,25 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
 }
 
 /* --------------- */
+/* A search's database and folder, for cnid_find_narrows() */
+struct cnid_find_search {
+    struct _cnid_db *cdb;
+    cnid_t scope_did;
+};
+
 /*!
  * @brief sl_name_query_seeds() test: whether the backend narrows by a seed
  *
  * @param[in] seed  the seed
- * @param[in] ctx   the CNID database
+ * @param[in] ctx   the search, a struct cnid_find_search
  * @returns the backend's answer, false for a backend without the test
  */
 static bool cnid_find_narrows(const struct sl_name_pattern *seed, void *ctx)
 {
-    struct _cnid_db *cdb = ctx;
-    return cdb->cnid_find_narrows != NULL && cdb->cnid_find_narrows(cdb, seed);
+    const struct cnid_find_search *search = ctx;
+    struct _cnid_db *cdb = search->cdb;
+    return cdb->cnid_find_narrows != NULL
+           && cdb->cnid_find_narrows(cdb, seed, search->scope_did);
 }
 
 /*!
@@ -716,6 +724,7 @@ int cnid_find_scoped(struct _cnid_db *cdb, const struct sl_name_query *query,
                      bool *more_available)
 {
     const struct sl_name_pattern *seeds[CNID_FIND_MAX_SEEDS];
+    struct cnid_find_search search = { cdb, scope_did };
     int nseeds;
 
     if (more_available) {
@@ -738,7 +747,7 @@ int cnid_find_scoped(struct _cnid_db *cdb, const struct sl_name_query *query,
     }
 
     nseeds = sl_name_query_seeds(query, seeds, CNID_FIND_MAX_SEEDS,
-                                 cnid_find_narrows, cdb);
+                                 cnid_find_narrows, &search);
     errno = 0;
     return cdb->cnid_find(cdb, query, nseeds > 0 ? seeds : NULL, nseeds,
                           scope_did, buffer, buflen, more_available);

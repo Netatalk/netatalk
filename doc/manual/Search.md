@@ -61,9 +61,33 @@ Available Spotlight backends:
   spaces, such as Chinese, Japanese or Thai, every character starts a word.
   On a volume whose **vol charset** is not UTF-8, the query and each name
   convert to UTF-8 before they compare.
-  With the *mysql* CNID scheme the server keeps the names that hold a
-  search's digits and punctuation, whatever the collation of the CNID
-  table, and Netatalk matches each of them.
+  A *sqlite* CNID database that Netatalk creates holds a name index that
+  answers these searches without reading every row, when the SQLite library
+  has FTS5 and its trigram tokenizer (SQLite 3.34 or later); a search needs
+  3 characters in a row for it, so a two-character word of Chinese or
+  Japanese reads every row. A database without the index, as an older
+  Netatalk created it, answers them by reading its table. A *mysql* CNID
+  table that Netatalk creates holds each name folded for case and
+  diacritics, and in a search of the whole volume the server keeps the
+  names that hold the search's characters; a search inside a folder, and
+  every search of a table without folded names, keeps the names that hold
+  its digits and punctuation, whatever the table's collation, and Netatalk
+  matches each of them. To give an existing *sqlite* volume of
+  `vol charset = UTF8` the index, run `dbd -f` on it, which builds the
+  database again from the files on the volume. A *mysql* table keeps its
+  columns under `dbd -f`, so drop the volume's table and run `dbd` on the
+  volume, which fills the new table; until `dbd` has run, a search finds
+  only the files that clients have listed since. `dbd` takes UTF8 volumes
+  alone, and `dbd -f` on a volume of another charset empties the database
+  before it refuses the volume, so give such a volume the index by
+  deleting its *sqlite* database, or dropping its *mysql* table, and let
+  clients list the files again. Either way a file keeps its CNID only
+  where its metadata stores it; any other file gets a new CNID, which
+  breaks the Mac aliases and saved references that point to it, so back up
+  the database first, and run `dbd` with the volume's clients
+  disconnected, as dbd(1) says. The index and `Folded1` hold the names as
+  the volume's charset read them, so a change of `vol charset` takes the
+  same rebuild.
 
 - **localsearch**
   Uses the LocalSearch/Tracker SPARQL backend for broader file contents and metadata indexing/search.

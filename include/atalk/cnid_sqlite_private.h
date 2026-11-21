@@ -6,6 +6,7 @@
 #ifndef _ATALK_CNID_SQLITE_PRIVATE_H
 #define _ATALK_CNID_SQLITE_PRIVATE_H 1
 
+#include <atalk/cnid.h>
 #include <atalk/uuid.h>
 
 #define CNID_SQLITE_FLAG_DEPLETED (1 << 0) /*!< CNID set overflowed */
@@ -31,6 +32,13 @@ typedef struct CNID_sqlite_private {
     sqlite3_stmt *cnid_del_didname_stmt;
     sqlite3_stmt *cnid_del_devino_stmt;
     sqlite3_stmt *cnid_dirlist_stmt;
+    /*! Name index searches by seed count: [0] NULL without an index */
+    sqlite3_stmt *cnid_find_index_stmt[CNID_FIND_MAX_SEEDS];
+    /*! The same for folder searches */
+    sqlite3_stmt *cnid_find_scoped_index_stmt[CNID_FIND_MAX_SEEDS];
+    sqlite3_stmt *cnid_find_candidates_stmt;
+    unsigned int cnid_sqlite_changes;   /*!< changes logged and writes since,
+                                             toward CNID_SQLITE_INDEX_BATCH */
 } CNID_sqlite_private;
 
 #endif

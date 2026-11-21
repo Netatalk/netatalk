@@ -19,11 +19,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
+#include <atalk/logger.h>
 #include <atalk/sl_names.h>
+#include <atalk/util.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define SL_C  SL_NAMES_CASE
@@ -309,11 +316,11 @@ static const struct query_case query_cases[] = {
         "report.txt", true
     },
     {"kMDItemFSName==\"*\\\"two words\\\"*\"cd", "my two words.txt", true},
-    /* comparisons of other modifiers fold the name apart */
     /* without the trailing '*' the escaped quotes are quotes */
     {"kMDItemFSName==\"\\\"two words\\\"\"cd", "\"two words\"", true},
     {"kMDItemFSName==\"\\\"two words\\\"\"cd", "two words", false},
     {"kMDItemFSName==\"*\\\"two words\\\"\"cd", "my \"two words\"", true},
+    /* comparisons of other modifiers fold the name apart */
     {"kMDItemFSName==\"*Ab*\"&&kMDItemFSName==\"*ab*\"c", "xAbx", true},
     {"kMDItemFSName==\"*Ab*\"&&kMDItemFSName==\"*ab*\"c", "xabx", false},
     /* the Finder's pairs for five words: a pair counts once, so the fifth
@@ -742,6 +749,443 @@ static void test_value_query(void)
     sl_name_query_free(q);
 }
 
+/* A value, its modifiers, and the name index's GLOB and LIKE patterns */
+struct index_case {
+    const char *value;
+    unsigned int flags;
+    const char *glob;
+    const char *like;
+};
+
+static const struct index_case index_cases[] = {
+    {"Caf\xc3\xa9*", SL_C, "cafe*", "cafe%"},
+    {"*cafe*", SL_C, "*cafe*", "%cafe%"},
+    {"*cafe", SL_C, "*cafe", "%cafe"},
+    {"cafe*", SL_C | SL_W, "*cafe*", "%cafe%"},
+    {"x?y", 0, "x*y", "x%y"},
+    {"a[b", 0, "a?b", "a[b"},
+    {"50%_!", 0, "50%_!", "50!%!_!!"},
+    {"r\xe9s", 0, "r\xef\xbf\xbds", "r\xef\xbf\xbds"},
+};
+
+/* A value, its modifiers and a name it matches */
+struct index_hold_case {
+    const char *value;
+    unsigned int flags;
+    const char *name;
+};
+
+static const struct index_hold_case index_holds[] = {
+    {"re*rt", SL_C, "Report"},
+    {"*caf\xc3\xa9*b?r*", SL_C | SL_D, "my CAFE\xcc\x81 bar.txt"},
+    {"\xce\xa3*\xcf\x82", SL_C, "\xcf\x83\xce\xb9\xcf\x83"},
+    {"\xc4\xb0stan*", SL_C | SL_D, "istanbul"},
+    {"*\xea\xb0\x80?", SL_C, "\xe1\x84\x80\xe1\x85\xa1\xe1\x84\x80"},
+    {"*50%*?_*", 0, "a 50% x_y"},
+    /* a mark that d drops between two jamo, or a syllable and its final
+     * consonant, which compose without it */
+    {"\xe1\x84\x80\xcc\x81*", SL_C, "\xe1\x84\x80\xcc\x81\xe1\x85\xa1"},
+    {"\xea\xb0\x80\xcc\xa3*", SL_C, "\xea\xb0\x80\xcc\xa3\xe1\x86\xa8"},
+    {"*\xe1\x85\xa1", SL_C, "\xe1\x84\x80\xcc\xa3\xe1\x85\xa1"},
+    /* أ before a fatha, whose marks d and the index drop */
+    {"*\xd8\xb3\xd8\xa3*", SL_C | SL_D, "\xd8\xb3\xd8\xa3\xd9\x8e\xd9\x84"},
+};
+
+/* A value, its modifiers and a name it matches whose bytes the value's LIKE
+ * pattern must take: variation selectors fold away under any modifiers, and
+ * a mark under d */
+static const struct index_hold_case like_holds[] = {
+    {"*1.2*", 0, "v1\xef\xb8\x8f.2.txt"},
+    {"12*", SL_C, "1\xef\xb8\x8e" "2.txt"},
+    {"50%", 0, "\xef\xb8\x8f" "50%"},
+    {"2023", SL_W, "20\xef\xb8\x8f" "23 report"},
+    {"*5#", 0, "x5\xf3\xa0\x84\x80#"},
+    {"2023*", SL_C | SL_D, "2\xcc\x81" "023.txt"},
+};
+
+/*!
+ * @brief Match a GLOB pattern of '*', '?' and literal bytes, as the index's
+ *        patterns hold them, against UTF-8 text, '?' taking one character
+ *
+ * @param[in] p  the pattern
+ * @param[in] s  the text
+ * @returns whether the pattern takes the text
+ */
+static bool glob_takes(const char *p, const char *s)
+{
+    if (*p == '*') {
+        for (;; s++) {
+            if (glob_takes(p + 1, s)) {
+                return true;
+            }
+
+            if (*s == '\0') {
+                return false;
+            }
+        }
+    }
+
+    if (*p == '\0' || *s == '\0') {
+        return *p == *s;
+    }
+
+    if (*p == '?') {
+        do {
+            s++;
+        } while ((*s & 0xc0) == 0x80);
+
+        return glob_takes(p + 1, s);
+    }
+
+    return *p == *s && glob_takes(p + 1, s + 1);
+}
+
+/*!
+ * @brief Match a LIKE pattern of '%', '!' escapes and literal bytes against
+ *        text, as a column of folded names compares its bytes
+ *
+ * @param[in] p  the pattern
+ * @param[in] s  the text
+ * @returns whether the pattern takes the text
+ */
+static bool like_takes(const char *p, const char *s)
+{
+    if (*p == '%') {
+        for (;; s++) {
+            if (like_takes(p + 1, s)) {
+                return true;
+            }
+
+            if (*s == '\0') {
+                return false;
+            }
+        }
+    }
+
+    if (*p == '!' && p[1] != '\0') {
+        p++;
+    }
+
+    if (*p == '\0' || *s == '\0') {
+        return *p == *s;
+    }
+
+    return *p == *s && like_takes(p + 1, s + 1);
+}
+
+/*!
+ * @brief Check that the LIKE pattern of a value takes the names it matches
+ */
+static void test_like_holds(void)
+{
+    char label[160];
+
+    for (size_t i = 0; i < ARRAY_SIZE(like_holds); i++) {
+        const struct index_hold_case *t = &like_holds[i];
+        const size_t len = strlen(t->name);
+        struct sl_name_pattern *p;
+        p = sl_name_pattern_new(t->value, strlen(t->value), t->flags);
+        snprintf(label, sizeof(label),
+                 "value '%s' flags %u matches '%s', and its LIKE pattern "
+                 "takes the name", t->value, t->flags, t->name);
+        report(p != NULL && sl_name_pattern_match(p, t->name, len)
+               && like_takes(sl_name_pattern_like(p), t->name), label);
+        sl_name_pattern_free(p);
+    }
+}
+
+/*!
+ * @brief Check the patterns the name index takes for a value, that they hold
+ *        the folded form of names the value matches, and a name folded as
+ *        the index holds it
+ */
+static void test_index_patterns(void)
+{
+    char label[160];
+    char *fold;
+
+    for (size_t i = 0; i < ARRAY_SIZE(index_cases); i++) {
+        const struct index_case *t = &index_cases[i];
+        struct sl_name_pattern *p;
+        p = sl_name_pattern_new(t->value, strlen(t->value), t->flags);
+        snprintf(label, sizeof(label),
+                 "value '%s' flags %u takes GLOB '%s' and LIKE '%s' over "
+                 "folded names", t->value, t->flags, t->glob, t->like);
+        report(p != NULL
+               && strcmp(sl_name_pattern_index_glob(p), t->glob) == 0
+               && strcmp(sl_name_pattern_index_like(p), t->like) == 0, label);
+        sl_name_pattern_free(p);
+    }
+
+    for (size_t i = 0; i < ARRAY_SIZE(index_holds); i++) {
+        const struct index_hold_case *t = &index_holds[i];
+        const size_t len = strlen(t->name);
+        struct sl_name_pattern *p;
+        p = sl_name_pattern_new(t->value, strlen(t->value), t->flags);
+        fold = sl_name_fold(t->name, len);
+        snprintf(label, sizeof(label),
+                 "value '%s' flags %u matches '%s', and its GLOB and LIKE "
+                 "patterns take the name folded", t->value, t->flags,
+                 t->name);
+        report(p != NULL && fold != NULL
+               && sl_name_pattern_match(p, t->name, len)
+               && glob_takes(sl_name_pattern_index_glob(p), fold)
+               && like_takes(sl_name_pattern_index_like(p), fold), label);
+        free(fold);
+        sl_name_pattern_free(p);
+    }
+
+    fold = sl_name_fold("\xc3\x84pfel R\xe9s", 10);
+    report(fold != NULL && strcmp(fold, "apfel r\xef\xbf\xbds") == 0,
+           "a name folds for case and diacritics, a byte that starts no "
+           "UTF-8 character to U+FFFD");
+    free(fold);
+}
+
+/*!
+ * @brief Check a query and a term in Latin-1, against names in Latin-1: c
+ *        and d fold their letters, and no letter matches another
+ */
+static void test_latin1(void)
+{
+    struct sl_name_query *q;
+    char *folded;
+    charset_t latin;
+    set_charset_name(CH_UNIX, "UTF8");
+    set_charset_name(CH_MAC, "MAC_ROMAN");
+
+    if ((latin = add_charset("ISO-8859-1")) == (charset_t) -1) {
+        printf("ok %d - Latin-1 names # SKIP no ISO-8859-1\n", ++tests_run);
+        return;
+    }
+
+    /* "*ÉTÉ*"c on été.txt and àtà.txt, "*ete*"cd on été.txt */
+    q = sl_name_query_parse_in("kMDItemFSName==\"*\xc9T\xc9*\"c", 0, 8, latin);
+    report(q != NULL && sl_name_query_match(q, "\xe9t\xe9.txt", 7)
+           && !sl_name_query_match(q, "\xe0t\xe0.txt", 7),
+           "a Latin-1 query folds its letters' case, and none matches "
+           "another");
+    sl_name_query_free(q);
+    q = sl_name_query_parse_in("kMDItemFSName==\"*ete*\"cd", 0, 8, latin);
+    report(q != NULL && sl_name_query_match(q, "\xe9t\xe9.txt", 7),
+           "a Latin-1 query folds its letters' diacritics");
+    sl_name_query_free(q);
+    q = sl_name_query_term_in("\xc9T\xc9.TXT", 7, true, SL_C, latin);
+    report(q != NULL && sl_name_query_match(q, "\xe9t\xe9.txt", 7)
+           && !sl_name_query_match(q, "\xe0t\xe0.txt", 7),
+           "a Latin-1 whole name matches its case variants alone");
+    sl_name_query_free(q);
+    folded = sl_name_fold_in("\xc9t\xc9.TXT", 7, latin);
+    report(folded != NULL && strcmp(folded, "ete.txt") == 0,
+           "a Latin-1 name folds as its UTF-8 form does");
+    free(folded);
+}
+
+/*!
+ * @brief Check that a name which does not convert from the volume's charset
+ *        matches by its bytes and writes no log line, as a search compares
+ *        every name of a volume that other tools fill
+ */
+static void test_unconverted_name(void)
+{
+    char dir[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 8];
+    struct sl_name_query *q;
+    struct stat st;
+    char *folded;
+    charset_t sjis;
+    int length;
+
+    if ((sjis = add_charset("SHIFT_JIS")) == (charset_t) -1) {
+        printf("ok %d - a name that does not convert # SKIP no Shift_JIS\n",
+               ++tests_run);
+        return;
+    }
+
+    length = snprintf(dir, sizeof(dir), "%s/sl_names.XXXXXX", tmpdir());
+
+    if (length < 0 || (size_t)length >= sizeof(dir) || mkdtemp(dir) == NULL) {
+        printf("Bail out! no scratch directory: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    snprintf(path, sizeof(path), "%s/log", dir);
+    setuplog("default:error", path, false);
+    /* a lead byte at the end, which no Shift_JIS decoder takes */
+    q = sl_name_query_parse_in("kMDItemFSName==\"*abc*\"c", 0, 8, sjis);
+    folded = sl_name_fold_in("ABC.TXT\x81", 8, sjis);
+    report(q != NULL && sl_name_query_match(q, "abc.txt\x81", 8)
+           && folded != NULL && strncmp(folded, "abc.txt", 7) == 0,
+           "a name that does not convert folds and matches its bytes");
+    report(stat(path, &st) == 0 && st.st_size == 0,
+           "a name that does not convert writes no log line");
+    setuplog("default:severe", "/dev/stderr", false);
+    sl_name_query_free(q);
+    free(folded);
+    unlink(path);
+    rmdir(dir);
+}
+
+/*!
+ * @brief Write a query whose name value starts some bytes before the end of
+ *        the matcher's first piece, MAXPATHLEN / 2 bytes, after a content
+ *        comparison of padding
+ *
+ * @param[in] value   the value, in the query's charset
+ * @param[in] before  bytes of the value before the piece's end
+ * @returns the query, to free(), or NULL when out of memory
+ */
+static char *straddling_query(const char *value, size_t before)
+{
+    static const char head[] = "kMDItemTextContent==\"";
+    static const char mid[] = "\"||kMDItemFSName==\"";
+    const size_t pad = MAXPATHLEN / 2 - before - (sizeof(head) - 1)
+                       - (sizeof(mid) - 1);
+    const size_t vlen = strlen(value);
+    char *query = malloc(sizeof(head) + pad + sizeof(mid) + vlen + 3);
+    char *p = query;
+
+    if (query != NULL) {
+        memcpy(p, head, sizeof(head) - 1);
+        p += sizeof(head) - 1;
+        memset(p, 'a', pad);
+        p += pad;
+        memcpy(p, mid, sizeof(mid) - 1);
+        p += sizeof(mid) - 1;
+        memcpy(p, value, vlen);
+        memcpy(p + vlen, "\"c", 3);
+    }
+
+    return query;
+}
+
+/*!
+ * @brief Check queries that convert to UTF-8 in pieces or a character at a time
+ *
+ * Latin-1 runs of wildcards and of letters longer than one conversion holds,
+ * Latin-1 and Shift_JIS values across a piece's end, Mac Japanese characters
+ * that decode to more units than one conversion holds, a long Shift_JIS run,
+ * and a Shift_JIS character whose second byte is a backslash.
+ */
+static void test_converted_query(void)
+{
+    static const char head[] = "kMDItemFSName==\"\xe9";
+    static const char tail[] = ".txt\"c";
+    static const char either[] = "kMDItemFSName==\"*report*\"c"
+                                 "||kMDItemFSName==\"";
+    static const char sjis_either[] = "kMDItemFSName==\"*\x95\x5c*\"c"
+                                      "||kMDItemFSName==\"*";
+    static const char mac_either[] = "kMDItemFSName==\"report*\"c"
+                                     "||kMDItemTextContent==\"";
+    static const char latin_value[] = "\xe9t\xe9 0123456789 \xe0\xfc\xf1.txt";
+    static const char sjis_value[] = "\x95\x5c\x95\x5c\x95\x5c\x95\x5c"
+                                     "\x95\x5c\x95\x5c\x95\x5c\x95\x5c"
+                                     "\x95\x5c\x95\x5c\x95\x5c\x95\x5c.txt";
+    const size_t run = 5000;
+    const size_t mac_run = 1000;
+    char *query = malloc(sizeof(either) + run + sizeof(tail));
+    struct sl_name_query *q = NULL;
+    charset_t cs;
+
+    if (query == NULL) {
+        report(false, "a long Latin-1 query takes its memory");
+    } else if ((cs = add_charset("ISO-8859-1")) == (charset_t) -1) {
+        printf("ok %d - a long Latin-1 query # SKIP no ISO-8859-1\n",
+               ++tests_run);
+    } else {
+        memcpy(query, head, sizeof(head) - 1);
+        memset(query + sizeof(head) - 1, '*', run);
+        memcpy(query + sizeof(head) - 1 + run, tail, sizeof(tail));
+        q = sl_name_query_parse_in(query, 0, 8, cs);
+        report(q != NULL && sl_name_query_match(q, "\xe9t\xe9.txt", 7),
+               "a Latin-1 query longer than one conversion holds converts "
+               "whole");
+        sl_name_query_free(q);
+        memcpy(query, either, sizeof(either) - 1);
+        memset(query + sizeof(either) - 1, 'a', run);
+        memcpy(query + sizeof(either) - 1 + run, "\"", 2);
+        q = sl_name_query_parse_in(query, 0, 8, cs);
+        report(q != NULL && sl_name_query_match(q, "my report.txt", 13),
+               "a Latin-1 query with a run of letters longer than one "
+               "conversion holds converts whole");
+        sl_name_query_free(q);
+        free(query);
+        query = straddling_query(latin_value, 10);
+        q = query != NULL ? sl_name_query_parse_in(query, 0, 8, cs) : NULL;
+        report(q != NULL && sl_name_query_match(q, latin_value,
+                                                strlen(latin_value)),
+               "a Latin-1 value across the end of a piece converts byte for "
+               "byte");
+        sl_name_query_free(q);
+    }
+
+    free(query);
+
+    /* 0x87 0xFB decodes to five units in Mac Japanese, U+F862 and 有限会社 */
+    if ((cs = add_charset("MAC_JAPANESE")) == (charset_t) -1) {
+        printf("ok %d - a Mac Japanese query # SKIP no MAC_JAPANESE\n",
+               ++tests_run);
+    } else if ((query = malloc(sizeof(mac_either) + 2 * mac_run + 2))
+               != NULL) {
+        memcpy(query, mac_either, sizeof(mac_either) - 1);
+
+        for (size_t i = 0; i < mac_run; i++) {
+            memcpy(query + sizeof(mac_either) - 1 + 2 * i, "\x87\xfb", 2);
+        }
+
+        memcpy(query + sizeof(mac_either) - 1 + 2 * mac_run, "\"", 2);
+        q = sl_name_query_parse_in(query, 0, 8, cs);
+        report(q != NULL && sl_name_query_match(q, "report.txt", 10),
+               "a Mac Japanese query whose characters decode to more units "
+               "than one conversion holds converts whole");
+        sl_name_query_free(q);
+        free(query);
+    } else {
+        report(false, "a long Mac Japanese query takes its memory");
+    }
+
+    /* 表 is 0x95 0x5C in Shift_JIS */
+    if ((cs = add_charset("SHIFT_JIS")) == (charset_t) -1) {
+        printf("ok %d - a Shift_JIS query # SKIP no Shift_JIS\n", ++tests_run);
+        return;
+    }
+
+    q = sl_name_query_parse_in("kMDItemFSName==\"\x95\x5c\"c", 0, 8, cs);
+    report(q != NULL && sl_name_query_match(q, "\x95\x5c", 2),
+           "a Shift_JIS character whose second byte is a backslash escapes "
+           "nothing");
+    sl_name_query_free(q);
+
+    /* the 41 bytes before the run put a first byte of 表 where the first
+     * piece would end */
+    if ((query = malloc(sizeof(sjis_either) + 2 * run + 2)) != NULL) {
+        memcpy(query, sjis_either, sizeof(sjis_either) - 1);
+
+        for (size_t i = 0; i < run; i++) {
+            memcpy(query + sizeof(sjis_either) - 1 + 2 * i, "\x95\x5c", 2);
+        }
+
+        memcpy(query + sizeof(sjis_either) - 1 + 2 * run, "\"", 2);
+        q = sl_name_query_parse_in(query, 0, 8, cs);
+        report(q != NULL && sl_name_query_match(q, "\x95\x5c.txt", 6),
+               "a Shift_JIS query longer than one conversion holds converts "
+               "whole, a character never cut");
+        sl_name_query_free(q);
+        free(query);
+    } else {
+        report(false, "a long Shift_JIS query takes its memory");
+    }
+
+    /* the piece ends inside the sixth 表 */
+    query = straddling_query(sjis_value, 11);
+    q = query != NULL ? sl_name_query_parse_in(query, 0, 8, cs) : NULL;
+    report(q != NULL && sl_name_query_match(q, sjis_value, strlen(sjis_value)),
+           "a Shift_JIS value across the end of a piece converts byte for "
+           "byte");
+    sl_name_query_free(q);
+    free(query);
+}
+
 /*!
  * @brief Run the checks and print the TAP plan
  *
@@ -761,6 +1205,11 @@ int main(void)
     test_refused();
     test_term_query();
     test_value_query();
+    test_like_holds();
+    test_index_patterns();
+    test_latin1();
+    test_converted_query();
+    test_unconverted_name();
     printf("1..%d\n", tests_run);
     return tests_failed == 0 ? 0 : 1;
 }

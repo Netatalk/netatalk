@@ -112,7 +112,8 @@ typedef struct _cnid_db {
                      cnid_t scope_did, void *buffer, size_t buflen,
                      bool *more_available);
     bool (*cnid_find_narrows)(struct _cnid_db *cdb,
-                              const struct sl_name_pattern *seed);
+                              const struct sl_name_pattern *seed,
+                              cnid_t scope_did);
     int (*cnid_wipe)(struct _cnid_db *cdb);
     int (*cnid_dirlist)(struct _cnid_db *cdb, cnid_t did, size_t max,
                         cnid_dirlist_fn fn, void *ctx);

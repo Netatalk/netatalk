@@ -51,6 +51,25 @@ reconcile conflicting records. Current SQLite connections use WAL,
 `synchronous=NORMAL`, a bounded busy timeout, and per-connection prepared
 statements. Readers can overlap, while write contention still needs handling.
 
+A table the SQLite backend creates, with a library that has FTS5 and its
+trigram tokenizer, also carries a name index: `<uuid>_names1`, an FTS5
+trigram table of each name folded for case and diacritics and kept
+decomposed, so that dropping a mark never joins the characters beside it,
+its 1 the version of the folding; `<uuid>_changes`, the Ids, each once, of
+the rows changed since their names last moved into it; and three plain-SQL
+triggers that log every insert, rename and delete there, so every Netatalk
+build and every SQLite library still writes the table. A connection moves
+the lowest 4096 logged Ids into the full-text table once its writes and the
+log it found at its open reach 1024, and a name search reads the full-text
+table for the rows the log does not hold and the table for those it does.
+Only an empty table gets the index; `dbd -f` rebuilds the database of a UTF8
+volume with one, and a database Netatalk creates after its file is deleted
+starts with one, empty until clients list the files or `dbd` runs.
+Code that writes the table leaves the triggers in place. Code that empties
+it drops the index in one savepoint, deletes the rows, and creates the
+index in another savepoint, inside a transaction of the caller that holds
+the three together.
+
 Transaction ownership must remain explicit. Error cleanup should roll back
 only the transaction it owns and preserve the failure being reported.
 Retries must be bounded; contention or an unusable row must not cause an
@@ -58,9 +77,15 @@ endless lookup/insert cycle. Backend code validates rows, UUIDs, and metadata
 hints before using them.
 
 The optional MySQL backend uses an external server and UUID-based volume
-tables. Centralizing CNID records does not provide distributed file locking
-or cross-host cache invalidation. User configuration and backend setup are
-documented in [CNID Backends](https://netatalk.io/manual/en/CNID.html).
+tables. A table it creates holds each name folded in `Folded1`, NULL where
+an older build wrote the row, and a name search of the whole volume
+compares its patterns over it; a folder search compares `Name`, which its
+walk of the folder reads from the `DidName` index without the rows. Every
+insert and every try of an update writes `Folded1`, so a new writer of the
+table writes it too. Centralizing CNID records does not provide
+distributed file locking or cross-host cache invalidation. User
+configuration and backend setup are documented in
+[CNID Backends](https://netatalk.io/manual/en/CNID.html).
 
 ## Metadata hints and error contracts
 

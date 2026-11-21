@@ -37,6 +37,10 @@
 /* UTF-16 units one decomposed character takes at most */
 #define SL_NAME_UNITS 16
 
+/* The name index's fold, besides SL_NAMES_CASE and SL_NAMES_DIACRITIC:
+ * Hangul syllables decompose too, and nothing composes */
+#define SL_NAME_INDEX (1 << 8)
+
 /* A query node that matches no name: a comparison the policy refuses */
 #define SL_NAME_NEVER 'N'
 
@@ -59,6 +63,8 @@ struct sl_name_pattern {
     size_t req;             /*!< first token of the longest literal run */
     size_t reqlen;          /*!< its tokens, 0 without a literal */
     char *like;             /*!< LIKE pattern every match satisfies */
+    char *index_glob;       /*!< GLOB pattern over names sl_name_fold() folds */
+    char *index_like;       /*!< LIKE pattern over them, ESCAPE '!' */
     size_t ntok;
     struct sl_name_tok tok[];
 };
@@ -314,21 +320,22 @@ static bool sl_name_atomic(ucs2_t u)
  *
  * SL_NAMES_CASE folds the case of each character first, so a letter that
  * lowers to a precomposed one decomposes as that one does; I with dot above
- * lowers to i followed by its dot, as its decomposition does. Under
- * SL_NAMES_DIACRITIC each character but a CJK ideograph or a Hangul syllable
- * then takes its canonical decomposition and drops the combining marks the
- * folding knows. The units are then composed, so a name stored precomposed
- * and one stored decomposed in canonical order fold alike. precompose_w()
- * composes neighbours alone: marks in another order, or a letter stored
- * part composed, fold apart wherever the marks stay. It composes no unit
- * below U+0300 with the one before it, nor an ideograph or a syllable, so
- * units of those alone stay as they are. A variation selector picks a glyph
- * of the character before it alone and folds away, so ❤ and its
- * emoji form ❤️ fold alike.
+ * lowers to i and its dot, as its decomposition does. SL_NAMES_DIACRITIC
+ * then decomposes each character but a CJK ideograph or a Hangul syllable
+ * and drops the marks sl_name_mark() knows. A variation selector only picks
+ * a glyph and folds away, so ❤ and its emoji form ❤️ fold alike. The units
+ * then compose, so a name stored precomposed and one stored decomposed in
+ * canonical order fold alike; precompose_w() composes neighbours only, so
+ * marks in another order, or a letter stored part composed, fold apart
+ * wherever the marks stay. Units below U+0300, ideographs and syllables never
+ * compose with the unit before them, so a fold of those alone skips
+ * composing. Under SL_NAME_INDEX a Hangul syllable decomposes too and nothing
+ * composes: a dropped mark could otherwise let its neighbours compose, which
+ * a run of a value, folded alone, does not.
  *
  * @param[in]  str    the characters
  * @param[in]  len    bytes of str
- * @param[in]  flags  SL_NAMES_CASE and SL_NAMES_DIACRITIC
+ * @param[in]  flags  SL_NAMES_CASE, SL_NAMES_DIACRITIC and SL_NAME_INDEX
  * @param[out] out    receives the units, 2 * len + SL_NAME_UNITS of room
  * @param[out] tmp    scratch of the same room
  * @returns the number of units
@@ -384,7 +391,8 @@ static size_t sl_name_fold_units(const char *str, size_t len,
         }
 
         if ((flags & SL_NAMES_DIACRITIC) && in[0] >= 0x80
-                && !sl_name_atomic(in[0])
+                && (!sl_name_atomic(in[0])
+                    || ((flags & SL_NAME_INDEX) && in[0] >= 0xac00))
                 && (bytes = decompose_w(in, k * sizeof(ucs2_t), dec, &left))
                 != (size_t) -1) {
             for (size_t i = 0; i < bytes / sizeof(ucs2_t); i++) {
@@ -405,7 +413,7 @@ static size_t sl_name_fold_units(const char *str, size_t len,
         }
     }
 
-    for (size_t i = 0; i < n && !compose; i++) {
+    for (size_t i = 0; i < n && !compose && !(flags & SL_NAME_INDEX); i++) {
         compose = tmp[i] >= 0x300 && !sl_name_atomic(tmp[i]);
     }
 
@@ -755,8 +763,52 @@ static bool sl_name_glob(const struct sl_name_pattern *pat, const ucs2_t *s,
 }
 
 /*!
- * @brief Fold the literal characters gathered since the last wildcard into
- *        tokens of the value, and count their folded bytes
+ * @brief Write folded units as UTF-8, a stray byte's unit as U+FFFD
+ *
+ * U+DC80 to U+DCFF stand for the bytes that start no UTF-8 character. The
+ * index text and its patterns then hold whole characters only, which
+ * SQLite's GLOB and trigrams read one by one, as the matcher reads the
+ * units; a stray byte written as itself would merge with the bytes after
+ * it.
+ *
+ * @param[out] o  output position
+ * @param[in]  u  the units
+ * @param[in]  n  number of units
+ * @returns the output position after them
+ */
+static char *sl_name_put_utf8(char *o, const ucs2_t *u, size_t n)
+{
+    for (size_t i = 0; i < n; i++) {
+        uint32_t cp = u[i];
+
+        if (cp >= 0xd800 && cp < 0xdc00 && i + 1 < n) {
+            cp = 0x10000 + ((cp - 0xd800) << 10) + (u[++i] - 0xdc00u);
+        } else if (cp >= 0xdc80 && cp <= 0xdcff) {
+            cp = 0xfffd;
+        }
+
+        if (cp < 0x80) {
+            *o++ = (char)cp;
+        } else if (cp < 0x800) {
+            *o++ = (char)(0xc0 | cp >> 6);
+            *o++ = (char)(0x80 | (cp & 0x3f));
+        } else if (cp < 0x10000) {
+            *o++ = (char)(0xe0 | cp >> 12);
+            *o++ = (char)(0x80 | (cp >> 6 & 0x3f));
+            *o++ = (char)(0x80 | (cp & 0x3f));
+        } else {
+            *o++ = (char)(0xf0 | cp >> 18);
+            *o++ = (char)(0x80 | (cp >> 12 & 0x3f));
+            *o++ = (char)(0x80 | (cp >> 6 & 0x3f));
+            *o++ = (char)(0x80 | (cp & 0x3f));
+        }
+    }
+
+    return o;
+}
+
+/*!
+ * @brief Fold a run of literal characters into tokens and the index patterns
  *
  * @param[in,out] pat     the value, receiving the tokens and their folded
  *                        bytes
@@ -764,11 +816,15 @@ static bool sl_name_glob(const struct sl_name_pattern *pat, const ucs2_t *s,
  * @param[in,out] runlen  bytes of run, reset to 0
  * @param[out]    units   scratch of 2 * run bytes + SL_NAME_UNITS units
  * @param[out]    tmp     scratch of the same room
+ * @param[in,out] gp      end of the GLOB index pattern, moved past the run
+ * @param[in,out] ip      end of the LIKE index pattern, moved past the run
  */
 static void sl_name_flush(struct sl_name_pattern *pat, const char *run,
-                          size_t *runlen, ucs2_t *units, ucs2_t *tmp)
+                          size_t *runlen, ucs2_t *units, ucs2_t *tmp,
+                          char **gp, char **ip)
 {
     size_t k = sl_name_fold_units(run, *runlen, pat->flags, units, tmp);
+    char *end;
 
     for (size_t i = 0; i < k; i++) {
         ucs2_t u = units[i];
@@ -785,6 +841,26 @@ static void sl_name_flush(struct sl_name_pattern *pat, const char *run,
         pat->tok[pat->ntok++].ch = units[i];
     }
 
+    k = sl_name_fold_units(run, *runlen,
+                           SL_NAMES_CASE | SL_NAMES_DIACRITIC | SL_NAME_INDEX,
+                           units, tmp);
+    end = sl_name_put_utf8(*gp, units, k);
+
+    /* LIKE escapes its wildcards with '!'; a GLOB wildcard becomes '?', which
+     * matches it among others */
+    for (char *c = *gp; c < end; c++) {
+        if (*c == '%' || *c == '_' || *c == '!') {
+            *(*ip)++ = '!';
+        }
+
+        *(*ip)++ = *c;
+
+        if (*c == '*' || *c == '?' || *c == '[') {
+            *c = '?';
+        }
+    }
+
+    *gp = end;
     *runlen = 0;
 }
 
@@ -816,9 +892,15 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
     char *run = malloc(len + 1);
     size_t runlen = 0;
     char *lp;
+    char *gp;
+    char *ip;
 
+    /* like: '!', the byte and '%' for each byte of the value; the index
+     * patterns: 3 bytes of UTF-8 a folded unit, twice that with escapes */
     if (pat == NULL || units == NULL || run == NULL
-            || (pat->like = malloc(3 * len + 3)) == NULL) {
+            || (pat->like = malloc(3 * len + 3)) == NULL
+            || (pat->index_glob = malloc(3 * room + 3)) == NULL
+            || (pat->index_like = malloc(6 * room + 3)) == NULL) {
         free(units);
         free(run);
         sl_name_pattern_free(pat);
@@ -827,6 +909,16 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
 
     pat->flags = flags;
     lp = pat->like;
+    gp = pat->index_glob;
+    ip = pat->index_like;
+
+    /* the index's patterns anchor where the value does, w aside: its folded
+     * names start and end as the matcher's do */
+    if ((flags & SL_NAMES_WORD) || len == 0 || *p == '*' || *p == '?') {
+        *gp++ = '*';
+        *ip++ = '%';
+    }
+
     *lp++ = '%';
 
     while (p < end) {
@@ -834,7 +926,13 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
 
         if (*p == '*' || *p == '?') {
             unsigned char kind = *p++ == '*' ? SL_TOK_ANY : SL_TOK_ONE;
-            sl_name_flush(pat, run, &runlen, units, units + room);
+
+            if (runlen > 0) {
+                sl_name_flush(pat, run, &runlen, units, units + room, &gp,
+                              &ip);
+                *gp++ = '*';
+                *ip++ = '%';
+            }
 
             if (kind == SL_TOK_ONE || pat->ntok == 0
                     || pat->tok[pat->ntok - 1].kind != SL_TOK_ANY) {
@@ -872,8 +970,18 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
         *lp++ = '%';
     }
 
-    sl_name_flush(pat, run, &runlen, units, units + room);
+    if (runlen > 0) {
+        sl_name_flush(pat, run, &runlen, units, units + room, &gp, &ip);
+
+        if (flags & SL_NAMES_WORD) {
+            *gp++ = '*';
+            *ip++ = '%';
+        }
+    }
+
     *lp = '\0';
+    *gp = '\0';
+    *ip = '\0';
     free(units);
     free(run);
 
@@ -890,6 +998,8 @@ struct sl_name_pattern *sl_name_pattern_new(const char *value, size_t len,
 
     if (flags & SL_NAMES_NEGATE) {
         memcpy(pat->like, "%", 2);
+        memcpy(pat->index_glob, "*", 2);
+        memcpy(pat->index_like, "%", 2);
     }
 
     return pat;
@@ -904,6 +1014,8 @@ void sl_name_pattern_free(struct sl_name_pattern *pattern)
 {
     if (pattern != NULL) {
         free(pattern->like);
+        free(pattern->index_glob);
+        free(pattern->index_like);
         free(pattern);
     }
 }
@@ -1045,6 +1157,88 @@ static bool sl_name_folds_match(struct sl_name_folds *f,
 size_t sl_name_pattern_literals(const struct sl_name_pattern *pattern)
 {
     return pattern->literals;
+}
+
+/*!
+ * @brief Fold a name for case and diacritics, decomposed, as the index does
+ *
+ * @param[in] name  UTF-8 name
+ * @param[in] len   bytes of name
+ * @returns the folded UTF-8 name, to free(), or NULL when out of memory
+ */
+char *sl_name_fold(const char *name, size_t len)
+{
+    const size_t room = 2 * len + SL_NAME_UNITS;
+    ucs2_t *units = malloc(2 * room * sizeof(ucs2_t));
+    /* a folded unit takes 3 bytes of UTF-8 at most */
+    char *out = malloc(3 * room + 1);
+
+    if (units != NULL && out != NULL) {
+        size_t k = sl_name_fold_units(name, len,
+                                      SL_NAMES_CASE | SL_NAMES_DIACRITIC
+                                      | SL_NAME_INDEX, units, units + room);
+        *sl_name_put_utf8(out, units, k) = '\0';
+    } else {
+        free(out);
+        out = NULL;
+    }
+
+    free(units);
+    return out;
+}
+
+/*!
+ * @brief Fold a name of a charset as sl_name_fold() folds its UTF-8
+ *
+ * @param[in] name     the name
+ * @param[in] len      bytes of name
+ * @param[in] charset  its charset; a name that does not convert folds its
+ *                     bytes
+ * @returns the folded name, to free(), or NULL when out of memory
+ */
+char *sl_name_fold_in(const char *name, size_t len, charset_t charset)
+{
+    char utf8[4 * MAXPATHLEN + 1];
+    size_t n;
+
+    if (sl_name_converts(charset)
+            && (n = convert_string_quiet(charset, CH_UTF8, name, len, utf8,
+                                         sizeof(utf8))) != (size_t) -1) {
+        return sl_name_fold(utf8, n);
+    }
+
+    return sl_name_fold(name, len);
+}
+
+/*!
+ * @brief The GLOB pattern that the folded name of every match satisfies
+ *
+ * '*' joins the value's runs of folded literal characters, so a '%' or a '_'
+ * in them compares as itself; a '*', '?' or '[' in them stands as '?'. An
+ * end of the value that a wildcard or w leaves open takes '*' as well.
+ *
+ * @param[in] pattern  the comparison
+ * @returns the pattern, "*" for a !=, which lasts as long as @p pattern
+ */
+const char *sl_name_pattern_index_glob(const struct sl_name_pattern *pattern)
+{
+    return pattern->index_glob;
+}
+
+/*!
+ * @brief The LIKE pattern, ESCAPE '!', that every match's folded name satisfies
+ *
+ * '%' joins the value's runs of folded literal characters, each '%', '_' and
+ * '!' of them escaped with '!', for a column of folded names that compares
+ * bytes. An end of the value that a wildcard or w leaves open takes '%' as
+ * well.
+ *
+ * @param[in] pattern  the comparison
+ * @returns the pattern, "%" for a !=, which lasts as long as @p pattern
+ */
+const char *sl_name_pattern_index_like(const struct sl_name_pattern *pattern)
+{
+    return pattern->index_like;
 }
 
 /*!

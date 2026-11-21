@@ -31,6 +31,7 @@ typedef struct CNID_mysql_private {
     /* Server lacks recursive-CTE support (pre-8.0 / MariaDB pre-10.2);
      * scoped finds fall back to unscoped with a one-time warning. */
     bool          cnid_find_scoped_unsupported;
+    bool          cnid_mysql_folded;  /*!< the table has the Folded1 column */
 } CNID_mysql_private;
 
 #endif

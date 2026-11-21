@@ -32,6 +32,12 @@ extern bool sl_name_pattern_match(const struct sl_name_pattern *pattern,
                                   const char *name, size_t len);
 extern size_t sl_name_pattern_literals(const struct sl_name_pattern *pattern);
 extern const char *sl_name_pattern_like(const struct sl_name_pattern *pattern);
+extern const char *sl_name_pattern_index_glob(
+    const struct sl_name_pattern *pattern);
+extern const char *sl_name_pattern_index_like(
+    const struct sl_name_pattern *pattern);
+extern char *sl_name_fold(const char *name, size_t len);
+extern char *sl_name_fold_in(const char *name, size_t len, charset_t charset);
 extern struct sl_name_query *sl_name_query_parse(const char *query,
                                                  size_t min_literals,
                                                  int max_comparisons);

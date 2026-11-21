@@ -4655,6 +4655,40 @@ int main(int argc, char *argv[])
                      "names that contain it");
     TEST_int_or_skip(utest_cnid_find_query_limit(), 0,
                      "cnid_find: the results are matches of the whole query");
+    TEST_int_or_skip(utest_cnid_find_name_index(), 0,
+                     "cnid_find: a new sqlite database reads its name index");
+    TEST_int_or_skip(utest_cnid_name_index_moves(), 0,
+                     "cnid_find: the shared change log moves in bounded steps");
+    TEST_int_or_skip(utest_cnid_name_index_partial(), 0,
+                     "cnid_find: part of a name index on an empty table gives "
+                     "way to a whole one");
+    TEST_int_or_skip(utest_cnid_name_index_kept(), 0,
+                     "cnid_find: the name index outlasts a failed search and "
+                     "a failed move");
+    TEST_int_or_skip(utest_cnid_name_index_refused(), 0,
+                     "cnid_find: a name index that fails to create leaves "
+                     "nothing behind");
+    TEST_int_or_skip(utest_cnid_name_index_unused(), 0,
+                     "cnid_find: a name index a connection cannot use stays, "
+                     "and its searches read the table");
+    TEST_int_or_skip(utest_cnid_name_index_prepare_broken(), 0,
+                     "cnid_find: a two-seed search that does not prepare on a "
+                     "broken name index ends its use");
+    TEST_int_or_skip(utest_cnid_name_index_move_broken(), 0,
+                     "cnid_find: a move that finds the name index broken ends "
+                     "its use");
+    TEST_int_or_skip(utest_cnid_name_index_long_pattern(), 0,
+                     "cnid_find: a pattern past the GLOB limit reads the "
+                     "table and keeps the name index");
+    TEST_int_or_skip(utest_cnid_stale_names_kept(), 0,
+                     "cnid_open: a stale volume keeps its row while its "
+                     "full-text table stays, and goes once the table does");
+    TEST_int_or_skip(utest_cnid_find_walk_max(), 0,
+                     "cnid_find: a folder search of more than 16384 candidates "
+                     "scans the folder");
+    TEST_int_or_skip(utest_cnid_find_seeds_once(), 0,
+                     "cnid_find: two seeds over the index take each match "
+                     "once");
     TEST(load_afp_conf_vols(&obj, LV_ALL), "load all volumes from config");
     obj.afp_version = 34;
     /* No IPC channel or dircache hint pipe in test harness */
