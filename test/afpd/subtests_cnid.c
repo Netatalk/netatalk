@@ -382,6 +382,59 @@ int utest_cnid_open_missing_backend_refused(void)
 }
 
 /*!
+ * @brief A MySQL open that fails at the volume's folder gives up root
+ *
+ * The folder's parent is missing, so the open fails before it connects.
+ *
+ * @returns 0, 1 when the open succeeds, 2 when it leaves the euid at 0 or
+ *          root does not come back, TEST_SKIP without the MySQL backend or
+ *          root
+ */
+int utest_cnid_mysql_open_drops_root(void)
+{
+#ifndef CNID_BACKEND_MYSQL
+    return TEST_SKIP;
+#else
+    static char scheme[] = "mysql";
+    char localname[64];
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    uid_t euid;
+    int result = 0;
+    snprintf(localname, sizeof(localname), "netatalk-test-%ld/euid",
+             (long)getpid());
+
+    if (getuid() != 0
+            || cnid_scratch_setup(&s, "euid", localname,
+                                  "0F0F0F0F-1111-2222-3333-777777777777")
+            != 0) {
+        return TEST_SKIP;
+    }
+
+    if (seteuid(1) != 0) {
+        cnid_scratch_cleanup(&s);
+        return TEST_SKIP;
+    }
+
+    cdb = cnid_open(&s.vol, scheme, 0);
+    euid = geteuid();
+
+    /* a lost hand-back would run the rest of the suite as uid 1 */
+    if (euid != 0 && seteuid(0) != 0) {
+        result = 2;
+    } else if (cdb != NULL) {
+        cnid_close(cdb);
+        result = 1;
+    } else if (euid != 1) {
+        result = 2;
+    }
+
+    cnid_scratch_cleanup(&s);
+    return result;
+#endif
+}
+
+/*!
  * @brief cnid_scheme_registered() knows the registered backends by name
  */
 int utest_cnid_scheme_registered(void)

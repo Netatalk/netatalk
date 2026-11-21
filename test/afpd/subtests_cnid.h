@@ -22,6 +22,7 @@ extern int utest_cnid_sqlite_symlinks_rejected(void);
 extern int utest_cnid_open_unknown_scheme_uses_sqlite(void);
 extern int utest_cnid_open_scheme_case_insensitive(void);
 extern int utest_cnid_open_missing_backend_refused(void);
+extern int utest_cnid_mysql_open_drops_root(void);
 extern int utest_cnid_scheme_registered(void);
 extern int utest_cnid_sqlite_orphan_reported(void);
 extern int utest_cnid_sqlite_creation_logged(void);

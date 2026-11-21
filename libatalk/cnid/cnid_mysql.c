@@ -2266,6 +2266,8 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     MYSQL_ROW row;
     struct vol *vol = args->cnid_args_vol;
     MYSQL *temp_conn = NULL;
+    struct stat st;
+    int dir_errno = 0;
     snprintf(dirpath, sizeof(dirpath), "%sCNID/%s", _PATH_STATEDIR,
              vol->v_localname);
     become_root();
@@ -2273,21 +2275,28 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     /* We need the volume dir under CNID to store .AppleDesktop,
        although this backend does not keep any database file here. */
     if (mkdir(dirpath, 0755) != 0) { //NOSONAR: AFP users need desktop directory access; only the owner can write.
-        if (errno == EEXIST) {
-            struct stat st;
+        dir_errno = errno;
 
-            if (stat(dirpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
-                LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
-                EC_FAIL;
-            }
-        } else {
-            LOG(log_error, logtype_cnid, "Failed to create volume directory '%s': %s",
-                dirpath, strerror(errno));
-            EC_FAIL;
+        if (dir_errno == EEXIST) {
+            dir_errno = stat(dirpath, &st) == 0 && S_ISDIR(st.st_mode) ? 0
+                        : ENOTDIR;
         }
     }
 
+    /* before any failure, which would leave the session root */
     unbecome_root();
+
+    if (dir_errno == ENOTDIR) {
+        LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
+        EC_FAIL;
+    }
+
+    if (dir_errno != 0) {
+        LOG(log_error, logtype_cnid, "Failed to create volume directory '%s': %s",
+            dirpath, strerror(dir_errno));
+        EC_FAIL;
+    }
+
     EC_NULL(cdb = cnid_mysql_new(vol));
     EC_NULL(db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)));
     cdb->cnid_db_private = db;
@@ -2345,7 +2354,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            NULL, 0, NULL, 0) == NULL) {
         LOG(log_error, logtype_cnid, "Failed to connect to MySQL server: %s",
             mysql_error(temp_conn));
-        mysql_close(temp_conn);
         EC_FAIL;
     }
 
@@ -2356,7 +2364,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     if (cnid_mysql_execute(temp_conn, sql)) {
         LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(temp_conn));
-        mysql_close(temp_conn);
         EC_FAIL;
     }
 
@@ -2366,7 +2373,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     if (result == NULL) {
         LOG(log_error, logtype_cnid, "MySQL result error: %s", mysql_error(temp_conn));
-        mysql_close(temp_conn);
         EC_FAIL;
     }
 
@@ -2381,7 +2387,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
         if (cnid_mysql_execute(temp_conn, sql)) {
             LOG(log_error, logtype_cnid, "Failed to create MySQL database '%s': %s",
                 obj->options.cnid_mysql_db, mysql_error(temp_conn));
-            mysql_close(temp_conn);
             EC_FAIL;
         }
 
@@ -2579,20 +2584,18 @@ EC_CLEANUP:
         mysql_free_result(result);
     }
 
+    if (temp_conn) {
+        mysql_close(temp_conn);
+    }
+
     if (sql) {
         free(sql);
     }
 
-    if (ret != 0) {
-        if (cdb) {
-            free(cdb);
-        }
-
+    /* the close frees the connection, its statements and the strings */
+    if (ret != 0 && cdb != NULL) {
+        cnid_mysql_close(cdb);
         cdb = NULL;
-
-        if (db) {
-            free(db);
-        }
     }
 
     return cdb;

@@ -4642,6 +4642,9 @@ int main(int argc, char *argv[])
                      "cnid_open: scheme names match without regard to case");
     TEST_int_or_skip(utest_cnid_open_missing_backend_refused(), 0,
                      "cnid_open: a backend this build lacks is refused");
+    TEST_int_or_skip(utest_cnid_mysql_open_drops_root(), 0,
+                     "cnid_open: a MySQL open that fails at the volume's "
+                     "folder gives up root");
     TEST_int(utest_cnid_scheme_registered(), 0,
              "cnid_scheme_registered: names the registered backends");
     TEST_int_or_skip(utest_cnid_sqlite_orphan_reported(), 0,
