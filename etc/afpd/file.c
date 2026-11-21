@@ -24,6 +24,7 @@
 #include <utime.h>
 
 #include <atalk/adouble.h>
+#include <atalk/acl.h>
 #include <atalk/afp.h>
 #include <atalk/afp_util.h>
 #include <atalk/cnid.h>
@@ -4073,10 +4074,16 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     uint32_t		sid, did;
     uint16_t		vid;
     bool                renamed = false;
+    bool                perms_attempted = false;
     bool                s_held_meta = false;
     bool                d_held_meta = false;
     off_t               srlen = 0;
     off_t               drlen = 0;
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+    acl_t               src_acl = NULL;
+    acl_t               dest_acl = NULL;
+    bool                restore_acls = false;
+#endif
     *rbuflen = 0;
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof(vid));
@@ -4253,6 +4260,34 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto err_exchangefile;
     }
 
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+    /* The inodes move, but each pathname must keep its access ACL. Take both
+     * snapshots before any rename so an unreadable ACL cannot leave a partial
+     * exchange. Filesystems without POSIX ACL support use the mode path below. */
+    src_acl = acl_get_file(p, ACL_TYPE_ACCESS);
+
+    if (src_acl == NULL && errno != ENOTSUP) {
+        LOG(log_error, logtype_afpd, "afp_exchangefiles: reading source ACL: %s",
+            strerror(errno));
+        err = AFPERR_MISC;
+        goto err_exchangefile;
+    }
+
+    if (src_acl != NULL) {
+        dest_acl = acl_get_file(upath, ACL_TYPE_ACCESS);
+
+        if (dest_acl == NULL) {
+            LOG(log_error, logtype_afpd,
+                "afp_exchangefiles: reading destination ACL: %s",
+                strerror(errno));
+            err = AFPERR_MISC;
+            goto err_exchangefile;
+        }
+
+        restore_acls = true;
+    }
+
+#endif
     /* construct a temp name.
      * NOTE: the temp file will be in the dest file's directory. it
      * will also be inaccessible from AFP. */
@@ -4397,32 +4432,66 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         ad_flush(adsp);
     }
 
-    /* change perms, src gets dest perm and vice versa */
+    /* Each name keeps its original owner, mode and native access ACL. */
+    perms_attempted = true;
     become_root();
-    /*
-     * we need to exchange ACL entries as well
-     */
-#if 0
-    exchange_acls(vol, p, upath);
-#endif
     path->st = srcst;
     path->st_valid = 1;
     path->st_errno = 0;
-    path->m_name = NULL;
     path->u_name = upath;
-    setfilunixmode(vol, path, destst.st_mode);
-    setfilowner(vol, destst.st_uid, destst.st_gid, path);
+
+    if (srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        (void)setfilowner(vol, destst.st_uid, destst.st_gid, path);
+    }
+
+    if (((srcst.st_mode ^ destst.st_mode) & 07777)
+            || srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        (void)setfilunixmode(vol, path, destst.st_mode);
+    } else {
+        (void)vol->vfs->vfs_setfilmode(vol, path->u_name, destst.st_mode,
+                                       &path->st);
+    }
+
     path->st = destst;
     path->st_valid = 1;
     path->st_errno = 0;
     path->u_name = p;
-    setfilunixmode(vol, path, srcst.st_mode);
-    setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
+
+    if (srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        (void)setfilowner(vol, srcst.st_uid, srcst.st_gid, path);
+    }
+
+    if (((srcst.st_mode ^ destst.st_mode) & 07777)
+            || srcst.st_uid != destst.st_uid || srcst.st_gid != destst.st_gid) {
+        (void)setfilunixmode(vol, path, srcst.st_mode);
+    } else {
+        (void)vol->vfs->vfs_setfilmode(vol, path->u_name, srcst.st_mode,
+                                       &path->st);
+    }
+
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+
+    if (restore_acls && (acl_set_file(upath, ACL_TYPE_ACCESS, dest_acl) != 0
+                         || acl_set_file(p, ACL_TYPE_ACCESS, src_acl) != 0)) {
+        LOG(log_error, logtype_afpd,
+            "afp_exchangefiles: restoring access ACL: %s", strerror(errno));
+        err = AFPERR_MISC;
+        goto err_exchange_perms;
+    }
+
+#endif
     unbecome_root();
     setvoltime_entry(obj, vol, sdir->d_did == DIRDID_ROOT
                      || curdir->d_did == DIRDID_ROOT);
     err = AFP_OK;
     goto err_exchangefile;
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+err_exchange_perms:
+    LOG(log_error, logtype_afpd,
+        "afp_exchangefiles: restoring file permissions: %s", strerror(errno));
+    unbecome_root();
+    goto err_temp_to_dest;
+#endif
     /* all this stuff is so that we can unwind a failed operation
      * properly. */
 err_temp_to_dest:
@@ -4459,6 +4528,55 @@ err_src_to_tmp:
     /* rename temp back to source */
     if (renamefile(vol, curdir, -1, temp, p, spath, adsp) == AFP_OK) {
         of_rename(vol, s_of, curdir, temp, sdir, spath, supath);
+
+        if (perms_attempted) {
+            become_root();
+            path->st = srcst;
+            path->st_valid = 1;
+            path->st_errno = 0;
+            path->u_name = p;
+
+            if (setfilowner(vol, srcst.st_uid, srcst.st_gid, path) < 0
+                    || setfilunixmode(vol, path, srcst.st_mode) < 0) {
+                LOG(log_error, logtype_afpd,
+                    "afp_exchangefiles: restoring source permissions after undo: %s",
+                    strerror(errno));
+            }
+
+            path->st = destst;
+            path->u_name = upath;
+
+            if (setfilowner(vol, destst.st_uid, destst.st_gid, path) < 0
+                    || setfilunixmode(vol, path, destst.st_mode) < 0) {
+                LOG(log_error, logtype_afpd,
+                    "afp_exchangefiles: restoring destination permissions after undo: %s",
+                    strerror(errno));
+            }
+
+            unbecome_root();
+        }
+
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+
+        if (restore_acls) {
+            become_root();
+
+            if (acl_set_file(p, ACL_TYPE_ACCESS, src_acl) != 0) {
+                LOG(log_error, logtype_afpd,
+                    "afp_exchangefiles: restoring source ACL after undo: %s",
+                    strerror(errno));
+            }
+
+            if (acl_set_file(upath, ACL_TYPE_ACCESS, dest_acl) != 0) {
+                LOG(log_error, logtype_afpd,
+                    "afp_exchangefiles: restoring destination ACL after undo: %s",
+                    strerror(errno));
+            }
+
+            unbecome_root();
+        }
+
+#endif
         goto err_exchangefile;
     }
 
@@ -4469,6 +4587,17 @@ err_unwind:
         "files stay under \"%s\", \"%s\" and \"%s\"", p, upath, p, upath,
         temp);
 err_exchangefile:
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+
+    if (src_acl != NULL) {
+        acl_free(src_acl);
+    }
+
+    if (dest_acl != NULL) {
+        acl_free(dest_acl);
+    }
+
+#endif
 
     if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {   /* META */
         ad_close(adsp, ADFLAGS_HF);

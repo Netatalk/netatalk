@@ -40,6 +40,7 @@
 #include <unistd.h>
 
 #include <atalk/adouble.h>
+#include <atalk/acl.h>
 #include <atalk/afp.h>
 #include <atalk/cnid.h>
 #include <atalk/dsi.h>
@@ -50,6 +51,10 @@
 #include <atalk/server_ipc.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
+
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+#include <acl/libacl.h>
+#endif
 
 #include "afpfunc_helpers.h"
 #include "desktop.h"
@@ -3676,6 +3681,86 @@ out:
     delete (&fio.obj, vol->v_vid, DIRDID_ROOT, c);
     fio_done(vol, 0, a);
     return ret;
+}
+
+/* A restrictive mask can hide permissions in named entries and ACL_GROUP_OBJ.
+ * FPExchangeFiles must keep the complete native ACL with each pathname. */
+int utest_exchange_keeps_posix_acls(AFPObj *obj, struct vol *vol)
+{
+#if defined(__linux__) && defined(HAVE_POSIX_ACLS)
+    static char source[] = "rq_xacl_source";
+    static char dest[] = "rq_xacl_dest";
+    char source_path[MAXPATHLEN + 1];
+    char dest_path[MAXPATHLEN + 1];
+    acl_t before_source = NULL, before_dest = NULL;
+    acl_t after_source = NULL, after_dest = NULL;
+    struct stat st;
+    int rc = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_ACL_SET, vol)) {
+        return TEST_SKIP;
+    }
+
+    snprintf(source_path, sizeof(source_path), "%s/%s", vol->v_path, source);
+    snprintf(dest_path, sizeof(dest_path), "%s/%s", vol->v_path, dest);
+
+    if (create_disk_file(source_path) != 0 || create_disk_file(dest_path) != 0) {
+        goto out;
+    }
+
+    before_source = acl_from_text("user::rw-\nuser:65534:rwx\n"
+                                  "group::rwx\nmask::r--\nother::---");
+    before_dest = acl_from_text("user::rw-\nuser:65534:rwx\n"
+                                "group::r-x\nmask::r--\nother::---");
+
+    if (before_source == NULL || before_dest == NULL
+            || acl_set_file(source_path, ACL_TYPE_ACCESS, before_source) != 0
+            || acl_set_file(dest_path, ACL_TYPE_ACCESS, before_dest) != 0) {
+        goto out;
+    }
+
+    rc = exchangefiles(obj, vol->v_vid, DIRDID_ROOT, DIRDID_ROOT,
+                       source, dest);
+    after_source = acl_get_file(source_path, ACL_TYPE_ACCESS);
+    after_dest = acl_get_file(dest_path, ACL_TYPE_ACCESS);
+
+    if (rc == AFP_OK && after_source != NULL && after_dest != NULL
+            && acl_cmp(before_source, after_source) == 0
+            && acl_cmp(before_dest, after_dest) == 0
+            && stat(source_path, &st) == 0 && (st.st_mode & 0777) == 0640
+            && stat(dest_path, &st) == 0 && (st.st_mode & 0777) == 0640) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "exchange native ACLs: AFP result %d, source and "
+                        "destination ACLs or modes changed\n", rc);
+        ret = 1;
+    }
+
+out:
+
+    if (before_source) {
+        acl_free(before_source);
+    }
+
+    if (before_dest) {
+        acl_free(before_dest);
+    }
+
+    if (after_source) {
+        acl_free(after_source);
+    }
+
+    if (after_dest) {
+        acl_free(after_dest);
+    }
+
+    delete (obj, vol->v_vid, DIRDID_ROOT, source);
+    delete (obj, vol->v_vid, DIRDID_ROOT, dest);
+    return ret;
+#else
+    return TEST_SKIP;
+#endif
 }
 
 /*!

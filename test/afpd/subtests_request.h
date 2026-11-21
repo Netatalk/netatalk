@@ -106,6 +106,7 @@ extern int utest_osx_conversion_header_has_cnid(AFPObj *obj, struct vol *vol);
 extern int utest_readonly_volume_open_adds_no_cnid(AFPObj *obj,
                                                    struct vol *vol);
 extern int utest_exchange_held_file_keeps_locks(AFPObj *obj, struct vol *vol);
+extern int utest_exchange_keeps_posix_acls(AFPObj *obj, struct vol *vol);
 extern int utest_exchange_bare_held_destination(AFPObj *obj, struct vol *vol);
 extern int utest_exchange_held_symlink_kept(AFPObj *obj, struct vol *vol);
 extern int utest_exchange_refused_header_has_cnid(AFPObj *obj,

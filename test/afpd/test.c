@@ -5703,6 +5703,9 @@ int main(int argc, char *argv[])
     TEST_int(utest_exchange_held_file_keeps_locks(&obj, vol), 0,
              "FPExchangeFiles: a held file keeps its locks and each name "
              "its own metadata and CNID");
+    TEST_int_or_skip(utest_exchange_keeps_posix_acls(&obj, vol), 0,
+                     "FPExchangeFiles: each name keeps its native POSIX ACL "
+                     "and restrictive mask");
     TEST_int(utest_exchange_bare_held_destination(&obj, vol), 0,
              "FPExchangeFiles: a held destination without metadata gets a "
              "header and keeps its locks");
