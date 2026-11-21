@@ -3419,8 +3419,8 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return AFPERR_BADTYPE;
     }
 
-    /* an empty path names the file the DID names, and cname() leaves it
-     * unstat'ed */
+    /* a folder that cname() could not enter comes back unstat'ed, and a
+     * lookup of device and inode 0 would take its row */
     if (!s_path->st_valid) {
         of_stat(vol, s_path);
     }

@@ -1834,6 +1834,16 @@ int disk_file_is(const char *path, const void *want, size_t len)
 }
 
 /*!
+ * @brief A SIGALRM handler that does nothing: the signal alone ends a wait
+ *
+ * @param[in] sig  the signal, unused
+ */
+void alarm_wakes(int sig _U_)
+{
+    /* the signal's arrival alone ends the wait */
+}
+
+/*!
  * @brief Retire a name's dircache entry, as another session's cache hint would
  *
  * @param[in] vol   volume

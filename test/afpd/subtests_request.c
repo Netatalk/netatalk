@@ -4847,15 +4847,6 @@ out:
 #endif
 }
 
-#ifndef HAVE_EAFD
-/*! The SIGALRM handler of utest_listing_passes_fifo(): its arrival ends an
- *  open that waits for a FIFO's writer */
-static void fifo_alarm(int sig _U_)
-{
-    /* the signal's arrival alone ends the wait */
-}
-#endif /* !HAVE_EAFD */
-
 /*!
  * @brief A listing of a folder that holds a FIFO with a ._ name returns at
  *        once, its open waiting for no writer
@@ -4899,7 +4890,7 @@ int utest_listing_passes_fifo(AFPObj *obj, struct vol *vol)
     did = curdir->d_did;
     /* without SA_RESTART the alarm ends an open that waits */
     memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = fifo_alarm;
+    sa.sa_handler = alarm_wakes;
     sigemptyset(&sa.sa_mask);
 
     if (mkfifo(fifo, 0600) != 0 || sigaction(SIGALRM, &sa, &old) != 0) {

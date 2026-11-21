@@ -3424,8 +3424,8 @@ int utest_openfork_registers_in_its_folder(AFPObj *obj, struct vol *vol,
  * The file lies on disk without a CNID. The first FPCreateID registers it
  * under the path's last folder and the second finds that row. The third
  * names the file by its CNID with an empty path, which cname() resolves
- * without a stat, and finds the row too. The last two answer AFPERR_EXISTID
- * with the first one's CNID.
+ * with the file's stat, and finds the row too. The last two answer
+ * AFPERR_EXISTID with the first one's CNID.
  *
  * @returns 0, 1 when a reply or the row disagrees or the setup fails
  */
@@ -3575,4 +3575,68 @@ int utest_movecwd_retry_refuses_link(AFPObj *obj, struct vol *vol)
     }
 
     return linked_folder_done(obj, vol, &lf, ret);
+}
+
+/*!
+ * @brief A file by its CNID resolves once, adds nothing and keeps its entry
+ *
+ * Periodic dircache validation is off, as its refresh would depend on the
+ * tests run before; only the test folder's registrations count.
+ *
+ * @returns 0, 1 when a backend count, the reply or the entry is wrong or the
+ *          setup fails
+ */
+int utest_file_by_cnid_resolves_once(AFPObj *obj, struct vol *vol,
+                                     uint16_t vid)
+{
+    char name[] = "named by its CNID.txt";
+    const struct dir *parent;
+    const struct dir *entry;
+    const char *params;
+    size_t len;
+    cnid_t did;
+    cnid_t id;
+    cnid_t fnum;
+    int freq = obj->options.dircache_validation_freq;
+    int err;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, "fc")) == CNID_INVALID) {
+        return 1;
+    }
+
+    obj->options.dircache_validation_freq = INT_MAX;
+    cnid_add_did = did;
+
+    if (createfile(obj, vid, did, name) != AFP_OK
+            || (id = cnid_get(vol->v_cdb, did, name, strlen(name)))
+            == CNID_INVALID) {
+        goto out;
+    }
+
+    err = watched_getfiledirparms(obj, vol, vid, id, "");
+    params = reply_params(REPLY_FILEDIRPARMS, &len);
+
+    if (err != AFP_OK || cnid_resolves != 1 || cnid_adds != 0
+            || len < sizeof(fnum)) {
+        fprintf(stderr, "by CNID: error %d, %d resolves, %d adds\n", err,
+                cnid_resolves, cnid_adds);
+        goto out;
+    }
+
+    memcpy(&fnum, params, sizeof(fnum));
+
+    if (fnum == id && (parent = dirlookup(vol, did)) != NULL
+            && (entry = dircache_search_by_name(vol, parent, name,
+                                                strlen(name))) != NULL
+            && entry->d_did == id) {
+        result = 0;
+    }
+
+out:
+    obj->options.dircache_validation_freq = freq;
+    cnid_add_did = CNID_INVALID;
+    delete (obj, vid, did, name);
+    delete (obj, vid, DIRDID_ROOT, "fc");
+    return result;
 }

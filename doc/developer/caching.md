@@ -171,6 +171,12 @@ flowchart TD
 
 Figure 2: how a DID resolves through the cache, the CNID database, and the filesystem
 
+The search by DID drops a file entry it finds, so a file a request names by
+its CNID resolves through the database at every request. The request then
+names the file in its folder, with the file's stat, through the entry the
+lookup built, and the reply takes the file's CNID from that entry. A FIFO,
+a socket or a device node named so is refused, as it is by name.
+
 The filesystem is the authority. The CNID database is the persistent map
 from an ID to a name and a parent. The cache is the fast path in front of
 both, and every other process shares the page cache beneath them.

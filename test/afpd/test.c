@@ -5820,6 +5820,27 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_dircache_other_device_by_did(&obj, vol, vid), 0,
                      "dircache: a folder on another device than its row "
                      "answers NOOBJ by its DID");
+    TEST_int(utest_dircache_exchange_by_cnid(&obj, vol, vid), 0,
+             "dircache: FPExchangeFiles of a file named by its CNID keeps "
+             "its row");
+    TEST_int_or_skip(utest_dircache_setfileparms_link_by_cnid(&obj, vol, vid),
+                     0, "dircache: FPSetFileParms of a symlink named by its "
+                     "CNID takes it for the link");
+    TEST_int_or_skip(utest_dircache_openfork_by_cnid_other_user(&obj, vol, vid),
+                     0, "dircache: FPOpenFork of a file named by its CNID "
+                     "checks its mode");
+    TEST_int_or_skip(utest_dircache_file_stat_fails_by_cnid(&obj, vol, vid),
+                     0, "dircache: a file whose stat fails answers ACCESS or "
+                     "MISC by its CNID");
+    TEST_int_or_skip(utest_dircache_createid_unenterable_folder(&obj, vol, vid),
+                     0, "dircache: FPCreateID of a folder it cannot enter "
+                     "keeps the folder's row");
+    TEST_int(utest_dircache_fifo_by_cnid(&obj, vol, vid), 0,
+             "dircache: a FIFO named by its CNID is refused as by name");
+    TEST_int(utest_dircache_file_replaced_after_lookup(&obj, vol, vid), 0,
+             "dircache: a file replaced after its lookup by CNID is refused");
+    TEST_int(utest_dircache_file_deleted_after_lookup(&obj, vol, vid), 0,
+             "dircache: a file deleted after its lookup by CNID is refused");
     TEST_int_or_skip(utest_movecwd_skips_getcwd(&obj, vol), 0,
                      "movecwd: a walking volume skips getcwd()");
     TEST_int_or_skip(utest_movecwd_at_descriptor_limit(&obj, vol), 0,
@@ -5949,6 +5970,9 @@ int main(int argc, char *argv[])
              "openfork: a file opened through a path registers in its folder");
     TEST_int(utest_createid_registers_in_its_folder(&obj, vol, vid), 0,
              "createid: an ID made through a path registers in its folder");
+    TEST_int(utest_file_by_cnid_resolves_once(&obj, vol, vid), 0,
+             "getfiledirparms: a file named by its CNID resolves once and "
+             "adds nothing");
     /* drives a full closevol/openvol cycle on vol and hands it back open */
     TEST_int(test_pfd_vol_close_purges_slots(&obj, vol), 0,
              "closevol: pfd slots keyed on the volume are retired");

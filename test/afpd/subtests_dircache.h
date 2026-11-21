@@ -213,5 +213,27 @@ extern int utest_dircache_folder_link_by_cnid(AFPObj *obj, struct vol *vol,
                                               uint16_t vid);
 extern int utest_dircache_other_device_by_did(AFPObj *obj, struct vol *vol,
                                               uint16_t vid);
+extern int utest_dircache_setfileparms_link_by_cnid(AFPObj *obj,
+                                                    struct vol *vol,
+                                                    uint16_t vid);
+extern int utest_dircache_openfork_by_cnid_other_user(AFPObj *obj,
+                                                      struct vol *vol,
+                                                      uint16_t vid);
+extern int utest_dircache_exchange_by_cnid(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid);
+extern int utest_dircache_file_stat_fails_by_cnid(AFPObj *obj,
+                                                  struct vol *vol,
+                                                  uint16_t vid);
+extern int utest_dircache_createid_unenterable_folder(AFPObj *obj,
+                                                      struct vol *vol,
+                                                      uint16_t vid);
+extern int utest_dircache_fifo_by_cnid(AFPObj *obj, struct vol *vol,
+                                       uint16_t vid);
+extern int utest_dircache_file_replaced_after_lookup(AFPObj *obj,
+                                                     struct vol *vol,
+                                                     uint16_t vid);
+extern int utest_dircache_file_deleted_after_lookup(AFPObj *obj,
+                                                    struct vol *vol,
+                                                    uint16_t vid);
 
 #endif /* SUBTESTS_DIRCACHE_H */

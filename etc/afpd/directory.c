@@ -509,26 +509,28 @@ int stat_answer(int err)
 }
 
 /*!
- * @brief Build a path result from a dircache entry after cname failed to change
- * into it
+ * @brief Build a path result from an entry that cname could not enter
  *
  * The call changes into the parent of dir and fills ret with the names of dir.
- * With AFPERR_ACCESS the directory exists but denies entry, and ret keeps dir.
- * With AFPERR_NOOBJ movecwd() refused a file entry, or the directory's chdir
- * failed with another errno than ENOENT, ENOTDIR, EACCES or EPERM, so ret gets
- * no directory and the call removes dir from the cache. An entry movecwd()'s
- * self-heal removed, the volume root and its parent get no result.
+ * A folder that denies entry, AFPERR_ACCESS, becomes ret->d_dir; with
+ * AFPERR_NOOBJ ret gets no folder and dir leaves the cache. A file entry gives
+ * ret the file's stat and d_cached the entry: a file that left its name
+ * answers AFPERR_NOOBJ and leaves the cache, another failed stat answers
+ * AFPERR_ACCESS or AFPERR_MISC and keeps the entry, and a FIFO, a socket or a
+ * device node answers AFPERR_NODIR, as cname refuses it by name. An entry
+ * movecwd()'s self-heal removed, the volume root and its parent get no
+ * result.
  *
  * @param[in]     vol  volume of dir
  * @param[in,out] dir  directory or file entry that cname could not enter
  * @param[out]    ret  path result to fill, which cname cleared
- * @returns ret, or NULL with afp_errno set for no result, for any other
- *          afp_errno, or when the parent lookup or change failed
+ * @returns ret, or NULL with afp_errno set
  */
 static struct path *path_from_dir(struct vol *vol, struct dir *dir,
                                   struct path *ret)
 {
     const int err = afp_errno;
+    const bool file = (dir->d_flags & DIRF_ISFILE) != 0;
     struct dir *pdir;
 
     if (dir->d_did == CNID_INVALID || dir->d_did == DIRDID_ROOT_PARENT
@@ -548,9 +550,36 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir,
     if (dir->d_m_name == dir->d_u_name) {
         ret->u_name = ret->m_name;
     } else {
-        ret->u_name =  ret->m_name + blength(dir->d_m_name) + 1;
+        ret->u_name = ret->m_name + blength(dir->d_m_name) + 1;
         memcpy(ret->u_name, cfrombstr(dir->d_u_name),
                blength(dir->d_u_name) + 1);
+    }
+
+    if (file) {
+        /* the name must still hold the object the lookup matched to the row */
+        if (of_stat(vol, ret) != 0) {
+            if ((afp_errno = stat_answer(ret->st_errno)) == AFPERR_NOOBJ) {
+                dir_remove(vol, dir, 0);
+            }
+
+            return NULL;
+        }
+
+        if (ret->st.st_ino != dir->dcache_ino) {
+            dir_remove(vol, dir, 0);
+            afp_errno = AFPERR_NOOBJ;
+            return NULL;
+        }
+
+        if (!S_ISREG(ret->st.st_mode) && !S_ISLNK(ret->st.st_mode)) {
+            LOG(log_info, logtype_afpd, "cname: special file: '%s'",
+                ret->u_name);
+            afp_errno = AFPERR_NODIR;
+            return NULL;
+        }
+
+        ret->d_cached = dir;
+        return ret;
     }
 
     if (err == AFPERR_ACCESS) {

@@ -174,6 +174,7 @@ extern int listextattr(AFPObj *obj, uint16_t vid, cnid_t did,
                        size_t *replylen);
 extern void pack_appledouble(uint8_t *buf, const uint32_t *entry, uint16_t n);
 extern void drop_entry(const struct vol *vol, cnid_t did, char *name);
+extern void alarm_wakes(int sig);
 
 /* the heads reply_params() skips: the bitmap and the fork reference of an
  * FPOpenFork reply, the bitmap of FPGetForkParms, the two bitmaps and the

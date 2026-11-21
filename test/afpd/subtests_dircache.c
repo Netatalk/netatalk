@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -4401,4 +4402,469 @@ out:
     fault_inject_reset();
     dc_teardown(obj, vid, &fx);
     return ret;
+}
+
+/*!
+ * @brief FPSetFileParms of a symlink by its CNID converts nothing, as by name
+ */
+int utest_dircache_setfileparms_link_by_cnid(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    static char link[] = "dc-link";
+    static const char other[] = "dc-elsewhere";
+    char slnk[ADEDLEN_FINDERI] = "slnkrhap";
+    char lpath[MAXPATHLEN + 1];
+    char tpath[MAXPATHLEN + 1];
+    char target[MAXPATHLEN + 1];
+    struct dc_fixture fx;
+    ssize_t n = -1;
+    cnid_t id = CNID_INVALID;
+    int by_name = -1;
+    int err = -1;
+    int fd;
+    int ret = -1;
+
+    if (vol->v_flags & AFPVOL_FOLLOWSYM) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, lpath, link);
+    folder_path(vol, tpath, DC_LEAF);
+
+    if (createdir(obj, vid, DIRDID_ROOT, DC_FOLDER) != AFP_OK) {
+        goto out;
+    }
+
+    fx.did = curdir->d_did;
+
+    /* the link's target holds a path, which a conversion of the link would
+     * take for a target of its own */
+    if ((fd = open(tpath, O_WRONLY | O_CREAT | O_EXCL, 0640)) < 0) {
+        goto out;
+    }
+
+    n = write(fd, other, sizeof(other) - 1);
+    close(fd);
+
+    if (n != (ssize_t)(sizeof(other) - 1) || symlink(DC_LEAF, lpath) != 0
+            || movecwd(vol, vol->v_root) != 0
+            || getfiledirparms(obj, vid, fx.did, link) != AFP_OK
+            || (id = cnid_get(vol->v_cdb, fx.did, link, strlen(link)))
+            == CNID_INVALID) {
+        goto out;
+    }
+
+    by_name = setfileparms(obj, vid, fx.did, link, 1 << FILPBIT_FINFO, slnk,
+                           sizeof(slnk));
+    err = setfileparms(obj, vid, id, "", 1 << FILPBIT_FINFO, slnk,
+                       sizeof(slnk));
+    n = readlink(lpath, target, sizeof(target) - 1);
+
+    if (n >= 0) {
+        target[n] = '\0';
+    }
+
+    if (by_name == AFP_OK && err == by_name && n == (ssize_t)strlen(DC_LEAF)
+            && strcmp(target, DC_LEAF) == 0) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPSetFileParms of a symlink by its CNID: %d, by "
+                        "its name %d, the link's target %s\n", err, by_name,
+                n >= 0 ? target : "gone");
+    }
+
+out:
+    movecwd(vol, vol->v_root);
+    unlink(lpath);
+    unlink(tpath);
+
+    if (id != CNID_INVALID) {
+        drop_entry(vol, fx.did, link);
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief FPOpenFork by CNID checks another user's rights by the file's mode
+ */
+int utest_dircache_openfork_by_cnid_other_user(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid)
+{
+    const uid_t uid = obj->uid;
+    const uid_t euid = obj->euid;
+    gid_t *const groups = obj->groups;
+    const int ngroups = obj->ngroups;
+    const int flags = vol->v_flags;
+    const int options = obj->options.flags;
+    struct dc_fixture fx;
+    struct stat st;
+    gid_t group;
+    uint16_t refnum = 0;
+    bool moded;
+    int denied = -1;
+    int err = -1;
+    int fd;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    /* group-readable by its mode alone, set and read through one descriptor */
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || (fd = open(fx.child, O_RDONLY)) < 0) {
+        goto out;
+    }
+
+    moded = fchmod(fd, 0640) == 0 && fstat(fd, &st) == 0;
+    close(fd);
+
+    if (!moded) {
+        goto out;
+    }
+
+    /* rights from the stat alone: unix privileges, no ACL mapping */
+    vol->v_flags |= AFPVOL_UNIX_PRIV;
+    obj->options.flags &= ~(OPTION_ACL2MACCESS | OPTION_ACL2MODE);
+
+    if (!vol_unix_priv(vol)) {
+        ret = TEST_SKIP;
+        goto out;
+    }
+
+    /* another user in the file's group */
+    group = st.st_gid;
+    obj->uid = getuid() + 1;
+    obj->euid = obj->uid;
+    obj->groups = &group;
+    obj->ngroups = 1;
+    err = openfork(obj, vid, fx.child_id, "", OPENFORK_DATA, OPENACC_RD,
+                   &refnum);
+
+    /* the process owns the file, so at mode 0600 only afpd's own check
+     * refuses the group its read */
+    if (err == AFP_OK) {
+        closefork(obj, refnum);
+        refnum = 0;
+
+        if (chmod(fx.child, 0600) == 0) {
+            denied = openfork(obj, vid, fx.child_id, "", OPENFORK_DATA,
+                              OPENACC_RD, &refnum);
+        }
+    }
+
+    obj->uid = uid;
+    obj->euid = euid;
+    obj->groups = groups;
+    obj->ngroups = ngroups;
+    obj->options.flags = options;
+    vol->v_flags = flags;
+
+    if (err == AFP_OK && denied == AFPERR_ACCESS) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPOpenFork by CNID for another user: %d, at mode "
+                        "0600 %d\n", err, denied);
+    }
+
+out:
+    obj->uid = uid;
+    obj->euid = euid;
+    obj->groups = groups;
+    obj->ngroups = ngroups;
+    obj->options.flags = options;
+    vol->v_flags = flags;
+
+    if (refnum) {
+        closefork(obj, refnum);
+    }
+
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief FPExchangeFiles by CNID swaps contents, the CNID staying with its name
+ */
+int utest_dircache_exchange_by_cnid(AFPObj *obj, struct vol *vol,
+                                    uint16_t vid)
+{
+    char child[] = DC_CHILD;
+    char leaf[] = DC_LEAF;
+    char lpath[MAXPATHLEN + 1];
+    struct dc_fixture fx;
+    struct stat cst;
+    struct stat lst;
+    int err = -1;
+    int again = -1;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, lpath, leaf);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || createfile(obj, vid, fx.did, leaf) != AFP_OK
+            || write_disk_file(fx.child, "child", 5) != 0
+            || write_disk_file(lpath, "leaf", 4) != 0) {
+        goto out;
+    }
+
+    err = exchangefiles(obj, vid, fx.child_id, fx.did, "", leaf);
+    /* the row records the object the exchange left at the name */
+    again = getfiledirparms(obj, vid, fx.child_id, "");
+
+    /* disk_file_is() reads a prefix, so the sizes rule out a longer file */
+    if (err == AFP_OK && again == AFP_OK && disk_file_is(fx.child, "leaf", 4)
+            && disk_file_is(lpath, "child", 5)
+            && stat(fx.child, &cst) == 0 && cst.st_size == 4
+            && stat(lpath, &lst) == 0 && lst.st_size == 5
+            && cnid_get(vol->v_cdb, fx.did, child, strlen(child))
+            == fx.child_id) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "exchange by CNID: %d, the CNID after it: %d\n", err,
+                again);
+    }
+
+out:
+    delete (obj, vid, fx.did, leaf);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief By CNID, a stat failing EACCES answers kFPAccessDenied, EIO kFPMiscErr
+ */
+int utest_dircache_file_stat_fails_by_cnid(AFPObj *obj, struct vol *vol,
+                                           uint16_t vid)
+{
+    static char child[] = DC_CHILD;
+    struct dc_fixture fx;
+    int calls = 0;
+    int eio_calls = 0;
+    int denied = -1;
+    int failed = -1;
+    int again = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL) {
+        goto out;
+    }
+
+    /* the name in its folder: the lookup by the CNID stats the full path */
+    fault_inject_reset();
+    fi.stat_name = child;
+    fi.stat_errno = EACCES;
+    denied = getfiledirparms(obj, vid, fx.child_id, "");
+    calls = fi.stat_calls;
+    fi.stat_errno = EIO;
+    failed = getfiledirparms(obj, vid, fx.child_id, "");
+    eio_calls = fi.stat_calls - calls;
+    fault_inject_reset();
+    again = getfiledirparms(obj, vid, fx.child_id, "");
+
+    /* a stat that libc makes inside another call reaches no interposer */
+    if (calls == 0) {
+        ret = TEST_SKIP;
+    } else if (denied == AFPERR_ACCESS && failed == AFPERR_MISC
+               && eio_calls > 0 && again == AFP_OK) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "a file's stat by its CNID: denied %d, failed %d "
+                        "after %d failed stats, then %d\n", denied, failed,
+                eio_calls, again);
+    }
+
+out:
+    fault_inject_reset();
+    movecwd(vol, vol->v_root);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief FPCreateID of a folder whose chdir fails with ELOOP keeps its row
+ */
+int utest_dircache_createid_unenterable_folder(AFPObj *obj, struct vol *vol,
+                                               uint16_t vid)
+{
+    static char buf[CNID_MAX_PATH_LEN];
+    struct dc_fixture fx;
+    struct stat st;
+    cnid_t probe;
+    cnid_t id = CNID_INVALID;
+    uint64_t dev = 0;
+    uint64_t ino = 0;
+    int calls = 0;
+    int err = -1;
+    int ret = -1;
+
+    if (!test_capability(TEST_CAP_FAULT_INJECT, vol)) {
+        return TEST_SKIP;
+    }
+
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || stat(fx.path, &st) != 0) {
+        goto out;
+    }
+
+    fault_inject_reset();
+    fi.chdir.armed = 1;
+    fi.chdir.fail_after = 0;
+    fi.chdir.errnum = ELOOP;
+    err = createid(obj, vid, fx.did, "", &id);
+    calls = fi.chdir.calls;
+    fault_inject_reset();
+    probe = fx.did;
+
+    /* a volume that walks enters the folder without a chdir() */
+    if (calls == 0) {
+        ret = TEST_SKIP;
+    } else if (err != AFP_OK
+               && cnid_resolve_row(vol->v_cdb, &probe, buf, sizeof(buf), &dev,
+                                   &ino) != NULL
+               && cnid_row_holds(vol->v_cdb, dev, ino, &st)) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FPCreateID of a folder it cannot enter: %d\n", err);
+    }
+
+out:
+    fault_inject_reset();
+    movecwd(vol, vol->v_root);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A FIFO named by its CNID is refused with AFPERR_NODIR, as by name
+ */
+int utest_dircache_fifo_by_cnid(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    char name[] = DC_LEAF;
+    char path[MAXPATHLEN + 1];
+    struct dc_fixture fx;
+    struct sigaction sa;
+    struct sigaction old;
+    struct stat st;
+    struct dir *entry;
+    const struct path *named = NULL;
+    cnid_t id = CNID_INVALID;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+    folder_path(vol, path, DC_LEAF);
+    /* without SA_RESTART the alarm ends an open that waits */
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = alarm_wakes;
+    sigemptyset(&sa.sa_mask);
+
+    if (uncached_folder(obj, vol, vid, &fx) != 0 || mkfifo(path, 0600) != 0
+            || lstat(path, &st) != 0
+            || (id = cnid_add(vol->v_cdb, &st, fx.did, name, strlen(name),
+                              CNID_INVALID)) == CNID_INVALID
+            || sigaction(SIGALRM, &sa, &old) != 0) {
+        goto out;
+    }
+
+    /* an open of the FIFO by the lookup or by cname() would wait */
+    alarm(3);
+
+    if ((entry = dirlookup(vol, id)) != NULL) {
+        named = cname(vol, entry, cnamewrap(""));
+    }
+
+    alarm(0);
+    sigaction(SIGALRM, &old, NULL);
+
+    if (entry != NULL && named == NULL && afp_errno == AFPERR_NODIR) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "FIFO by CNID: %s, %s, afp_errno %d\n",
+                entry != NULL ? "an entry" : "no entry",
+                named != NULL ? "a path" : "no path", afp_errno);
+    }
+
+out:
+
+    if (id != CNID_INVALID) {
+        cnid_delete(vol->v_cdb, id);
+    }
+
+    unlink(path);
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief cname() of a file entry whose file left its name after the lookup
+ *
+ * @param[in] obj      the test session
+ * @param[in] vol      the open volume
+ * @param[in] vid      the volume's id
+ * @param[in] replace  1 when another file takes the name, 0 when none does
+ * @returns 0 when cname() refuses with AFPERR_NOOBJ and the entry left the
+ *          cache, -1 otherwise
+ */
+static int file_left_after_lookup(AFPObj *obj, struct vol *vol, uint16_t vid,
+                                  int replace)
+{
+    struct dc_fixture fx;
+    struct dir *entry;
+    const struct path *named;
+    int ret = -1;
+    dc_setup(obj, vol, &fx);
+
+    if (cached_pair(obj, vol, vid, 0, &fx) == NULL
+            || (entry = dirlookup(vol, fx.child_id)) == NULL
+            || (replace ? replace_file(fx.child, fx.child_aside)
+                : unlink(fx.child)) != 0) {
+        goto out;
+    }
+
+    named = cname(vol, entry, cnamewrap(""));
+
+    if (named == NULL && afp_errno == AFPERR_NOOBJ
+            && dircache_lookup_did(vol, fx.child_id) == NULL) {
+        ret = 0;
+    } else {
+        fprintf(stderr, "file %s after its lookup: %s, afp_errno %d\n",
+                replace ? "replaced" : "deleted",
+                named != NULL ? "a path" : "no path", afp_errno);
+    }
+
+out:
+
+    /* the teardown deletes by name, and a deleted file's row would stay */
+    if (!replace && fx.child_id != CNID_INVALID) {
+        (void)cnid_delete(vol->v_cdb, fx.child_id);
+    }
+
+    dc_teardown(obj, vid, &fx);
+    return ret;
+}
+
+/*!
+ * @brief A file replaced after its lookup by CNID is refused with AFPERR_NOOBJ
+ */
+int utest_dircache_file_replaced_after_lookup(AFPObj *obj, struct vol *vol,
+                                              uint16_t vid)
+{
+    return file_left_after_lookup(obj, vol, vid, 1);
+}
+
+/*!
+ * @brief A file deleted after its lookup by CNID is refused with AFPERR_NOOBJ
+ */
+int utest_dircache_file_deleted_after_lookup(AFPObj *obj, struct vol *vol,
+                                             uint16_t vid)
+{
+    return file_left_after_lookup(obj, vol, vid, 0);
 }
