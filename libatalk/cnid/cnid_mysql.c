@@ -779,6 +779,39 @@ static int cnid_mysql_execute(MYSQL *con, const char *sql)
 }
 
 /*!
+ * @brief Escape a string for a quoted literal of SQL text
+ *
+ * @param[in] con  MySQL connection, whose charset the escaping follows
+ * @param[in] s    the string
+ * @returns the escaped string, to free(), or NULL when out of memory
+ */
+static char *cnid_mysql_escape(MYSQL *con, const char *s)
+{
+    const size_t len = strlen(s);
+    char *out = malloc(2 * len + 1);
+
+    /* libmysqlclient fails with -1 under NO_BACKSLASH_ESCAPES, where a
+     * backslash is itself and a doubled quote is the escape */
+    if (out != NULL
+            && mysql_real_escape_string(con, out, s, (unsigned long)len)
+            == (unsigned long) -1) {
+        char *o = out;
+
+        for (const char *p = s; *p != '\0'; p++) {
+            if (*p == '\'') {
+                *o++ = '\'';
+            }
+
+            *o++ = *p;
+        }
+
+        *o = '\0';
+    }
+
+    return out;
+}
+
+/*!
  * @brief Remove a CNID from the MySQL table
  *
  * @param[in] cdb  CNID database
@@ -823,6 +856,7 @@ void cnid_mysql_close(struct _cnid_db *cdb)
         LOG(log_debug, logtype_cnid, "closing database connection for volume '%s'",
             cdb->cnid_db_vol->v_localname);
         free(db->cnid_mysql_voluuid_str);
+        free(db->cnid_mysql_volpath);
         close_prepared_stmt(db);
 
         if (db->cnid_mysql_con) {
@@ -1566,8 +1600,10 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
         return -1;
     }
 
-    EC_NEG1(asprintf(&sql, "SELECT Stamp FROM volumes WHERE VolPath='%s'",
-                     cdb->cnid_db_vol->v_path));
+    /* by the key: a path that an older build stored unescaped reads back
+     * other than the volume's, and its open keeps that row */
+    EC_NEG1(asprintf(&sql, "SELECT Stamp FROM volumes WHERE VolUUID='%s'",
+                     db->cnid_mysql_voluuid_str));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql)
             && mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
@@ -2448,6 +2484,10 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
             obj->options.cnid_mysql_db);
     }
 
+    /* escaped after the first statement, whose answer carries the sql_mode
+     * init_connect set, so a quote or a backslash stays in the path */
+    EC_NULL(db->cnid_mysql_volpath = cnid_mysql_escape(db->cnid_mysql_con,
+                                                       vol->v_path));
     free(sql);
     sql = NULL;
     /*
@@ -2458,7 +2498,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
      */
     EC_NEG1(asprintf(&sql,
                      "SELECT VolUUID FROM volumes WHERE VolPath='%s' AND VolUUID != '%s'",
-                     vol->v_path, db->cnid_mysql_voluuid_str));
+                     db->cnid_mysql_volpath, db->cnid_mysql_voluuid_str));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql) == 0) {
         MYSQL_RES *stale_result = mysql_store_result(db->cnid_mysql_con);
@@ -2483,7 +2523,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
             sql = NULL;
             EC_NEG1(asprintf(&sql,
                              "DELETE FROM volumes WHERE VolPath='%s' AND VolUUID != '%s'",
-                             vol->v_path, db->cnid_mysql_voluuid_str));
+                             db->cnid_mysql_volpath, db->cnid_mysql_voluuid_str));
             cnid_mysql_execute(db->cnid_mysql_con, sql);
         }
     }
@@ -2500,7 +2540,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                      "INSERT INTO volumes (VolUUID, VolPath, Stamp, Depleted) "
                      "VALUES('%s','%s','%s',0)",
                      db->cnid_mysql_voluuid_str,
-                     vol->v_path,
+                     db->cnid_mysql_volpath,
                      blob));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql)) {

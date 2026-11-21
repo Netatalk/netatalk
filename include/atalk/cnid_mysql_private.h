@@ -19,6 +19,8 @@ typedef struct CNID_mysql_private {
     uint32_t      cnid_mysql_flags;
     MYSQL        *cnid_mysql_con;
     char         *cnid_mysql_voluuid_str;
+    char         *cnid_mysql_volpath; /*!< the volume path, escaped for a
+                                        quoted SQL literal */
     cnid_t        cnid_mysql_hint;
     MYSQL_STMT   *cnid_lookup_stmt;
     MYSQL_STMT   *cnid_add_stmt;
