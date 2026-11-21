@@ -1471,17 +1471,17 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Find the CNIDs whose name contains a substring, for cnid_find
+ * @brief Find the CNIDs whose names a LIKE pattern matches, for cnid_find
  *
- * The cnid_find wrapper validates the arguments. The query asks for 1 row
- * more than buffer holds, and that extra row sets more_available. The name
- * pattern binds as a statement parameter, never as SQL text. A scoped search
- * walks the subtree with a recursive CTE. A server without CTE support falls
- * back to an unscoped search.
+ * The cnid_find wrapper validates the arguments and builds the pattern, which
+ * escapes with '!'. The query asks for 1 row more than buffer holds, and that
+ * extra row sets more_available. The pattern binds as a statement parameter,
+ * never as SQL text. A scoped search walks the subtree with a recursive CTE.
+ * A server without CTE support falls back to an unscoped search.
  *
  * @param[in]  cdb             CNID database
- * @param[in]  name            UTF-8 substring
- * @param[in]  namelen         length of name
+ * @param[in]  name            the LIKE pattern
+ * @param[in]  namelen         bytes in @p name
  * @param[in]  scope_did       CNID of the scope directory, or CNID_INVALID for
  *                             all of the volume
  * @param[out] buffer          receives the CNIDs in network order
@@ -1522,7 +1522,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     LOG(log_maxdebug, logtype_cnid,
         "cnid_mysql_find: called with name='%s', namelen=%zu, buflen=%zu", name,
         namelen, buflen);
-    EC_NEG1(asprintf(&namelike, "%%%s%%", name));
+    EC_NULL(namelike = strndup(name, namelen));
     namelike_len = strlen(namelike);
     LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'", namelike);
     EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
@@ -1550,7 +1550,8 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
                          ") "
                          "SELECT t.Id FROM scope s STRAIGHT_JOIN `%s` t "
                          "ON t.Did = s.Id "
-                         "WHERE t.Name LIKE ? ORDER BY t.Id LIMIT %lu",
+                         "WHERE t.Name LIKE ? ESCAPE '!' ORDER BY t.Id "
+                         "LIMIT %lu",
                          db->cnid_mysql_voluuid_str,
                          db->cnid_mysql_voluuid_str, max_results + 1));
         LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
@@ -1583,7 +1584,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     if (!scoped) {
         EC_NEG1(asprintf(&sql,
                          "SELECT Id FROM `%s` WHERE Name LIKE ? "
-                         "ORDER BY Id LIMIT %lu",
+                         "ESCAPE '!' ORDER BY Id LIMIT %lu",
                          db->cnid_mysql_voluuid_str, max_results + 1));
         LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
         EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
@@ -1634,7 +1635,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
             "retrying unscoped", mysql_stmt_error(stmt));
         EC_NEG1(asprintf(&sql,
                          "SELECT Id FROM `%s` WHERE Name LIKE ? "
-                         "ORDER BY Id LIMIT %lu",
+                         "ESCAPE '!' ORDER BY Id LIMIT %lu",
                          db->cnid_mysql_voluuid_str, max_results + 1));
         EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
         free(sql);

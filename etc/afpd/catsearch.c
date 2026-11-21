@@ -1099,7 +1099,8 @@ catsearch_end:
 /*!
  * @brief Search the CNID database by name for an FPCatSearch request
  *
- * A new search looks up the CNIDs of the lowercased uname through cnid_find.
+ * A new search looks up the CNIDs of the lowercased uname through
+ * cnid_find_exact().
  * Each call then resolves, stats, and tests the next CNIDs against the
  * criteria in c1 and c2. The search always covers all of the volume. A call
  * pauses after rmatches matches or 448 bytes of results. A CNID that no
@@ -1163,13 +1164,13 @@ static int catsearch_db(const AFPObj *obj,
         }
 
         LOG(log_debug, logtype_afpd, "catsearch_db: %s", buffer);
-        AFP_CNID_START("cnid_find");
-        num_matches = cnid_find(vol->v_cdb,
-                                buffer,
-                                namelen,
-                                resbuf,
-                                sizeof(resbuf),
-                                NULL);
+        AFP_CNID_START("cnid_find_exact");
+        num_matches = cnid_find_exact(vol->v_cdb,
+                                      buffer,
+                                      namelen,
+                                      resbuf,
+                                      sizeof(resbuf),
+                                      NULL);
         AFP_CNID_DONE();
 
         if (num_matches == -1) {

@@ -5727,6 +5727,12 @@ int main(int argc, char *argv[])
              "catsearch: a long-name search matches an accented name");
     TEST_int(utest_catsearch_match_takes_its_entrys_id(&obj, vol, vid), 0,
              "catsearch: a match takes its CNID from its dircache entry");
+    TEST_int(utest_catsearch_db_exact_name(&obj, vol, vid), 0,
+             "catsearch: an exact name past 100 containing names is found");
+    TEST_int(utest_catsearch_db_exact_backslash(&obj, vol, vid), 0,
+             "catsearch: an exact name reads a backslash as itself");
+    TEST_int(utest_catsearch_db_exact_wildcards(&obj, vol, vid), 0,
+             "catsearch: an exact name reads '%' and '_' as themselves");
     TEST_int(utest_createfile_registers_in_its_folder(&obj, vol, vid), 0,
              "create: a file made through a path registers in its folder");
     TEST_int(utest_openfork_registers_in_its_folder(&obj, vol, vid), 0,

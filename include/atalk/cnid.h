@@ -161,6 +161,9 @@ int    cnid_find_scoped(struct _cnid_db *cdb, const char *name,
                         size_t namelen, cnid_t scope_did,
                         void *buffer, size_t buflen,
                         bool *more_available);
+int    cnid_find_exact(struct _cnid_db *cdb, const char *name,
+                       size_t namelen, void *buffer, size_t buflen,
+                       bool *more_available);
 int    cnid_wipe(struct _cnid_db *cdb);
 void   cnid_close(struct _cnid_db *db);
 void   cnid_dir_arm(struct _cnid_db *cdb, cnid_t did);

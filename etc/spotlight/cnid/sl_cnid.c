@@ -108,8 +108,8 @@ static int cnid32_comp_fn(const void *p1, const void *p2)
  * through to cnid_find(). Sub-3-char terms produce too many matches
  * against a typical CNID database to be useful, so we silently return no
  * results. This policy is Spotlight-only: `nad find` and FPCatSearch /
- * CatSearchExt continue to accept 1- and 2-character prefixes through
- * the same cnid_find() API.
+ * CatSearchExt accept 1- and 2-character names through the same CNID
+ * search calls.
  */
 #define SL_CNID_MIN_TERMLEN 3
 

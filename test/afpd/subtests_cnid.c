@@ -12,6 +12,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Component tests of the CNID databases, their name searches and volume identity
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -1263,7 +1268,8 @@ int utest_cnid_resolve_dot_names_rejected(void)
 static size_t fake_find_namelen;
 
 /*!
- * @brief Backend cnid_find that records the name length handed to it
+ * @brief Backend cnid_find that records the length of the LIKE pattern
+ *        handed to it
  */
 static int fake_cnid_find(struct _cnid_db *cdb _U_, const char *name _U_,
                           size_t namelen, cnid_t scope_did _U_,
@@ -1278,7 +1284,8 @@ static int fake_cnid_find(struct _cnid_db *cdb _U_, const char *name _U_,
  * @brief cnid_find() accepts a name of MAXPATHLEN bytes and rejects one more
  *
  * The wrapper's bound is the path-buffer limit; a longer name, or an empty
- * one, is a parameter error that never reaches the backend.
+ * one, is a parameter error that never reaches the backend. The backend gets
+ * the name with a '%' at either end.
  */
 int utest_cnid_find_name_bound(void)
 {
@@ -1293,7 +1300,7 @@ int utest_cnid_find_name_bound(void)
     errno = 0;
 
     if (cnid_find(&cdb, name, MAXPATHLEN, results, sizeof(results), &more) != 0
-            || fake_find_namelen != MAXPATHLEN) {
+            || fake_find_namelen != MAXPATHLEN + 2) {
         return 1;
     }
 

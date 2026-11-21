@@ -13,6 +13,11 @@
   GNU General Public License for more details.
 */
 
+/*!
+ * @file
+ * @brief Component tests of the directory cache, metadata, Catalog Search and utilities
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
@@ -3242,6 +3247,137 @@ out:
     delete (obj, vid, did, "other.txt");
     delete (obj, vid, DIRDID_ROOT, "cm");
     return result;
+}
+
+/*!
+ * @brief Write the specification record of a search by a UTF-8 name
+ *
+ * The record holds the name's offset past the record's fixed part, then an
+ * encoding hint, the name's length and its bytes.
+ *
+ * @param[out] spec  receives the record
+ * @param[in]  want  the name, at most 32 bytes
+ * @returns the record's length
+ */
+static uint16_t catsearch_db_spec(unsigned char spec[12 + 32],
+                                  const char *want)
+{
+    const size_t len = strlen(want);
+    memset(spec, 0, 12);
+    spec[1] = 6;
+    spec[11] = (unsigned char)len;
+    memcpy(spec + 12, want, len);
+    return (uint16_t)(12 + len);
+}
+
+/*!
+ * @brief Whether a search of the database by exact name finds a file that
+ *        comes after more than CNID_FIND_MIN_RESULTS other names
+ *
+ * The other files come first, so the file's CNID is the highest, and every
+ * other name is one that a query for the file's name could take.
+ *
+ * @param[in] obj     AFP session
+ * @param[in] vol     volume
+ * @param[in] vid     volume ID
+ * @param[in] folder  folder for the files, made in the volume root
+ * @param[in] want    the file's name, at most 32 bytes
+ * @param[in] prefix  the other names, before their number
+ * @param[in] suffix  the other names, after their number
+ * @returns 0, 1 when the search misses the file or the setup fails
+ */
+static int catsearch_db_exact(AFPObj *obj, struct vol *vol, uint16_t vid,
+                              const char *folder, const char *want,
+                              const char *prefix, const char *suffix)
+{
+    unsigned char spec[12 + 32];
+    const uint16_t speclen = catsearch_db_spec(spec, want);
+    char name[80];
+    char lname[MACFILELEN + 1];
+    const int searchdb = vol->v_flags & AFPVOL_SEARCHDB;
+    uint32_t nrecs = 0;
+    cnid_t did;
+    int made = 0;
+    int ret;
+    int result = 1;
+
+    if ((did = make_folder(obj, vid, folder)) == CNID_INVALID) {
+        return 1;
+    }
+
+    vol->v_flags |= AFPVOL_SEARCHDB;
+
+    for (; made <= CNID_FIND_MIN_RESULTS; made++) {
+        snprintf(name, sizeof(name), "%s%03d%s", prefix, made, suffix);
+
+        if (createfile(obj, vid, did, name) != AFP_OK) {
+            goto out;
+        }
+    }
+
+    if (createfile(obj, vid, did, want) != AFP_OK) {
+        goto out;
+    }
+
+    ret = catsearch_ext(obj, vid, 0, 1U << FILPBIT_PDINFO, spec, spec, speclen,
+                        &nrecs, lname);
+
+    if (ret != AFPERR_EOF || nrecs != 1 || strcmp(lname, want) != 0) {
+        fprintf(stderr, "catsearch: exact name '%s': result %d, %u matches, "
+                        "'%s'\n", want, ret, nrecs, lname);
+        goto out;
+    }
+
+    result = 0;
+out:
+    vol->v_flags = (vol->v_flags & ~AFPVOL_SEARCHDB) | searchdb;
+    delete (obj, vid, did, want);
+
+    while (made-- > 0) {
+        snprintf(name, sizeof(name), "%s%03d%s", prefix, made, suffix);
+        delete (obj, vid, did, name);
+    }
+
+    delete (obj, vid, DIRDID_ROOT, folder);
+    return result;
+}
+
+/*!
+ * @brief A search of the database by exact name finds the file past more
+ *        names that contain the name than one query returns
+ *
+ * @returns 0, 1 when the search misses the file or the setup fails
+ */
+int utest_catsearch_db_exact_name(AFPObj *obj, struct vol *vol, uint16_t vid)
+{
+    return catsearch_db_exact(obj, vol, vid, "ce", "ce target", "ce target ",
+                              "");
+}
+
+/*!
+ * @brief A search of the database by exact name reads a backslash in it as
+ *        itself
+ *
+ * @returns 0, 1 when the search misses the file or the setup fails
+ */
+int utest_catsearch_db_exact_backslash(AFPObj *obj, struct vol *vol,
+                                       uint16_t vid)
+{
+    return catsearch_db_exact(obj, vol, vid, "cb", "a\\b", "a\\b ", "");
+}
+
+/*!
+ * @brief A search of the database by exact name reads '%' and '_' in it as
+ *        themselves
+ *
+ * Every other name matches "a%b_c" read as a LIKE pattern.
+ *
+ * @returns 0, 1 when the search misses the file or the setup fails
+ */
+int utest_catsearch_db_exact_wildcards(AFPObj *obj, struct vol *vol,
+                                       uint16_t vid)
+{
+    return catsearch_db_exact(obj, vol, vid, "pc", "a%b_c", "a", "bxc");
 }
 
 /*!

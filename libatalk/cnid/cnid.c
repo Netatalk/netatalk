@@ -697,30 +697,31 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
 }
 
 /*!
- * @brief cnid_find() restricted to the subtree of a directory
+ * @brief Check a name search's arguments and hand the backend its LIKE
+ *        pattern
  *
- * Identical contract to cnid_find(); additionally, when @p scope_did
- * is not CNID_INVALID only entries lying underneath that directory
- * match. The scope directory itself is not a result.
+ * The pattern escapes with '!'. A search within names keeps the name's '%'
+ * and '_' as wildcards; an exact search escapes them too.
  *
  * @param[in]  cdb            CNID database handle
- * @param[in]  name           UTF-8 substring to search for, NUL-terminated
+ * @param[in]  name           name to search for, NUL-terminated
  * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
+ * @param[in]  exact          match whole names, every character literal
  * @param[in]  scope_did      CNID of the scope directory in network byte
  *                            order, or CNID_INVALID for the whole volume
- * @param[out] buffer         caller-provided buffer for matching CNIDs in network byte order
- * @param[in]  buflen         capacity of @p buffer in bytes, must be >= CNID_FIND_MIN_BUFLEN
- * @param[out] more_available set to true iff result set was truncated, NULL to opt out
- *
- * @returns number of CNIDs written to @p buffer on success, -1 on failure
- *          (errno = CNID_ERR_PARAM for invalid arguments, otherwise the
- *          backend's CNID_ERR_* classification, or 0 where it makes none)
+ * @param[out] buffer         receives the CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes, at least
+ *                            CNID_FIND_MIN_BUFLEN
+ * @param[out] more_available set to true iff the result set was truncated,
+ *                            NULL to opt out
+ * @returns the number of CNIDs, or -1 as cnid_find() fails
  */
-int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
-                     size_t namelen, cnid_t scope_did,
-                     void *buffer, size_t buflen, bool *more_available)
+static int cnid_find_like(struct _cnid_db *cdb, const char *name,
+                          size_t namelen, bool exact, cnid_t scope_did,
+                          void *buffer, size_t buflen, bool *more_available)
 {
-    int ret;
+    char like[2 * MAXPATHLEN + 3];
+    size_t len = 0;
 
     if (more_available) {
         *more_available = false;
@@ -750,10 +751,76 @@ int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
         return -1;
     }
 
+    if (!exact) {
+        like[len++] = '%';
+    }
+
+    for (size_t i = 0; i < namelen; i++) {
+        if (name[i] == '!' || (exact && (name[i] == '%' || name[i] == '_'))) {
+            like[len++] = '!';
+        }
+
+        like[len++] = name[i];
+    }
+
+    if (!exact) {
+        like[len++] = '%';
+    }
+
+    like[len] = '\0';
     errno = 0;
-    ret = cdb->cnid_find(cdb, name, namelen, scope_did,
-                         buffer, buflen, more_available);
-    return ret;
+    return cdb->cnid_find(cdb, like, len, scope_did, buffer, buflen,
+                          more_available);
+}
+
+/*!
+ * @brief cnid_find() restricted to the subtree of a directory
+ *
+ * Identical contract to cnid_find(); additionally, when @p scope_did
+ * is not CNID_INVALID only entries lying underneath that directory
+ * match. The scope directory itself is not a result.
+ *
+ * @param[in]  cdb            CNID database handle
+ * @param[in]  name           UTF-8 substring to search for, NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
+ * @param[in]  scope_did      CNID of the scope directory in network byte
+ *                            order, or CNID_INVALID for the whole volume
+ * @param[out] buffer         receives the CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes, at least
+ *                            CNID_FIND_MIN_BUFLEN
+ * @param[out] more_available set to true iff the result set was truncated,
+ *                            NULL to opt out
+ * @returns number of CNIDs written to @p buffer on success, -1 on failure
+ *          (errno = CNID_ERR_PARAM for invalid arguments, CNID_ERR_BUSY
+ *          when the term does not parse, otherwise the backend's CNID_ERR_*
+ *          classification, or 0 where it makes none)
+ */
+int cnid_find_scoped(struct _cnid_db *cdb, const char *name,
+                     size_t namelen, cnid_t scope_did,
+                     void *buffer, size_t buflen, bool *more_available)
+{
+    return cnid_find_like(cdb, name, namelen, false, scope_did, buffer,
+                          buflen, more_available);
+}
+
+/*!
+ * @brief cnid_find() for whole names, every character of the name literal
+ *
+ * @param[in]  cdb            CNID database handle
+ * @param[in]  name           name to search for, NUL-terminated
+ * @param[in]  namelen        bytes in @p name, range 1..MAXPATHLEN
+ * @param[out] buffer         receives the CNIDs in network byte order
+ * @param[in]  buflen         capacity of @p buffer in bytes, at least
+ *                            CNID_FIND_MIN_BUFLEN
+ * @param[out] more_available set to true iff the result set was truncated,
+ *                            NULL to opt out
+ * @returns the number of CNIDs, or -1 as cnid_find() fails
+ */
+int cnid_find_exact(struct _cnid_db *cdb, const char *name, size_t namelen,
+                    void *buffer, size_t buflen, bool *more_available)
+{
+    return cnid_find_like(cdb, name, namelen, true, CNID_INVALID, buffer,
+                          buflen, more_available);
 }
 
 /*!
