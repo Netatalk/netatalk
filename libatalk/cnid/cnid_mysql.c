@@ -534,11 +534,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static void close_prepared_stmt(CNID_mysql_private *db);
+
 /*!
  * @brief Prepare all 8 statements of a MySQL CNID table
  *
+ * A failure closes every statement and sets CNID_ERR_DB, which ends the
+ * session. The lookup or purge before an add's or an update's insert then
+ * finds its statement NULL in cnid_mysql_stmt_execute(), which prepares them
+ * all again.
+ *
  * @param[in,out] db  MySQL backend state with the connection and the table name
- * @returns 0, or -1 when one fails
+ * @returns 0, or -1 with errno CNID_ERR_DB when one fails
  */
 static int init_prepared_stmt(CNID_mysql_private *db)
 {
@@ -552,6 +559,12 @@ static int init_prepared_stmt(CNID_mysql_private *db)
     EC_ZERO(init_prepared_stmt_resolve(db));
     EC_ZERO(init_prepared_stmt_purge(db));
 EC_CLEANUP:
+
+    if (ret != 0) {
+        close_prepared_stmt(db);
+        errno = CNID_ERR_DB;
+    }
+
     EC_EXIT;
 }
 
@@ -1131,7 +1144,9 @@ EC_CLEANUP: {
         const int saved_errno = errno;
         LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: id: %" PRIu32, ntohl(id));
 
-        if (have_result) {
+        /* a delete or an update above whose reprepare failed closed every
+         * statement, and the stored result with it */
+        if (have_result && db->cnid_lookup_stmt != NULL) {
             mysql_stmt_free_result(db->cnid_lookup_stmt);
         }
 
