@@ -1575,26 +1575,25 @@ int create_disk_file(const char *path)
 }
 
 /*!
- * @brief One FPCatSearchExt request over the volume at a catalog position, ten
- *        matches at most
+ * @brief One FPCatSearchExt request over the volume at a catalog position
  *
- * @param[in]     obj      session
- * @param[in]     vid      volume
- * @param[in]     fbitmap  the files' bitmap
- * @param[in]     dbitmap  the folders' bitmap, 0 for files only
- * @param[in]     rbitmap  criteria, FILPBIT_* bits
- * @param[in]     spec1    first specification record
- * @param[in]     spec2    second specification record
- * @param[in]     speclen  length of each record, at most 64 bytes
- * @param[in,out] pos      catalog position, all zero for a new search
- * @param[out]    nrecs    matches in the reply, 0 for a rejected request
+ * @param[in]     obj         session
+ * @param[in]     vid         volume
+ * @param[in]     reqmatches  matches the reply holds at most
+ * @param[in]     fbitmap     the files' bitmap
+ * @param[in]     dbitmap     the folders' bitmap, 0 for files only
+ * @param[in]     rbitmap     criteria, FILPBIT_* bits
+ * @param[in]     spec1       first specification record
+ * @param[in]     spec2       second specification record
+ * @param[in]     speclen     length of each record, at most 64 bytes
+ * @param[in,out] pos         catalog position, all zero for a new search
+ * @param[out]    nrecs       matches in the reply, 0 for a rejected request
  * @returns the AFP result, or AFPERR_PARAM for a longer record
  */
-static int catsearch_ext_at(AFPObj *obj, uint16_t vid, uint16_t fbitmap,
-                            uint16_t dbitmap, uint32_t rbitmap,
-                            const void *spec1, const void *spec2,
-                            uint16_t speclen, unsigned char pos[16],
-                            uint32_t *nrecs)
+int catsearch_ext_at(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
+                     uint16_t fbitmap, uint16_t dbitmap, uint32_t rbitmap,
+                     const void *spec1, const void *spec2, uint16_t speclen,
+                     unsigned char pos[16], uint32_t *nrecs)
 {
     static char buf[256] = { 0 };
     char *p = buf;
@@ -1608,8 +1607,8 @@ static int catsearch_ext_at(AFPObj *obj, uint16_t vid, uint16_t fbitmap,
 
     ADD(p, len, 2);
     PUSHVAL(p, uint16_t, vid, len);
-    /* ten matches at most and no reserved bits */
-    PUSHVAL(p, uint32_t, htonl(10), len);
+    /* the match limit and no reserved bits */
+    PUSHVAL(p, uint32_t, htonl(reqmatches), len);
     PUSHVAL(p, uint32_t, 0, len);
     PUSHBUF(p, pos, 16, len);
     PUSHVAL(p, uint16_t, htons(fbitmap), len);
@@ -1656,8 +1655,8 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
 {
     unsigned char pos[16] = { 0 };
     uint16_t off;
-    int ret = catsearch_ext_at(obj, vid, 1 << FILPBIT_LNAME, dbitmap, rbitmap,
-                               spec1, spec2, speclen, pos, nrecs);
+    int ret = catsearch_ext_at(obj, vid, 10, 1 << FILPBIT_LNAME, dbitmap,
+                               rbitmap, spec1, spec2, speclen, pos, nrecs);
     *lname = '\0';
 
     /* a record is a length, the kind byte, a pad, and the parameters, which
@@ -1675,37 +1674,47 @@ int catsearch_ext(AFPObj *obj, uint16_t vid, uint16_t dbitmap,
 }
 
 /*!
- * @brief Collect the file IDs that the replies of an FPCatSearchExt search
- *        over the volume match, each once, following the catalog position to
- *        the end
+ * @brief Collect the distinct file IDs of an FPCatSearchExt search to its end
  *
- * @param[in]  obj      session
- * @param[in]  vid      volume
- * @param[in]  rbitmap  criteria, FILPBIT_* bits
- * @param[in]  spec1    first specification record
- * @param[in]  spec2    second specification record
- * @param[in]  speclen  length of each record, at most 64 bytes
- * @param[out] ids      receives the file IDs
- * @param[in]  max      room in ids
- * @param[out] nids     distinct file IDs, max at most
- * @returns AFPERR_EOF at the end of the search, or the result that stopped it
+ * @param[in]  obj         session
+ * @param[in]  vid         volume
+ * @param[in]  reqmatches  matches a reply holds at most
+ * @param[in]  rbitmap     criteria, FILPBIT_* bits
+ * @param[in]  spec1       first specification record
+ * @param[in]  spec2       second specification record
+ * @param[in]  speclen     length of each record, at most 64 bytes
+ * @param[out] ids         receives the file IDs
+ * @param[in]  max         room in ids
+ * @param[out] nids        distinct file IDs, max at most
+ * @param[out] nrecs       records of every reply
+ * @returns AFPERR_EOF at the end of the search, AFPERR_MISC for a search that
+ *          does not end, or the result that stopped it
  */
-int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t rbitmap,
-                      const void *spec1, const void *spec2, uint16_t speclen,
-                      cnid_t *ids, uint32_t max, uint32_t *nids)
+int catsearch_ext_ids(AFPObj *obj, uint16_t vid, uint32_t reqmatches,
+                      uint32_t rbitmap, const void *spec1, const void *spec2,
+                      uint16_t speclen, cnid_t *ids, uint32_t max,
+                      uint32_t *nids, uint32_t *nrecs)
 {
     unsigned char pos[16] = { 0 };
-    uint32_t nrecs;
+    uint32_t replies = 0;
+    uint32_t got;
     int ret;
     *nids = 0;
+    *nrecs = 0;
 
     do {
         /* a record is its size, the kind byte, a pad, and the file ID */
         const unsigned char *rec = (const unsigned char *)rbuf + 24;
-        ret = catsearch_ext_at(obj, vid, 1 << FILPBIT_FNUM, 0, rbitmap, spec1,
-                               spec2, speclen, pos, &nrecs);
 
-        for (uint32_t k = 0; k < nrecs; k++) {
+        if (replies++ > 4 * max + 16) {
+            return AFPERR_MISC;
+        }
+
+        ret = catsearch_ext_at(obj, vid, reqmatches, 1 << FILPBIT_FNUM, 0,
+                               rbitmap, spec1, spec2, speclen, pos, &got);
+        *nrecs += got;
+
+        for (uint32_t k = 0; k < got; k++) {
             uint16_t size;
             cnid_t id;
             uint32_t j = 0;
