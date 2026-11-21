@@ -1,11 +1,11 @@
 ---
 type: Subsystem
 title: "etc/afpd"
-description: "66 files, 692 functions."
+description: "66 files, 696 functions."
 resource: "https://github.com/Netatalk/netatalk/tree/main/etc/afpd"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 # Files

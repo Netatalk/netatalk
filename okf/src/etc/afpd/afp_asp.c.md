@@ -5,7 +5,7 @@ description: "AFP sessions over ASP: signal handling and the request loop."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/afp_asp.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-09T10:23:20+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -36,16 +36,14 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 static void afp_asp_close(AFPObj *obj)
 ```
 
-Defined at lines 58 to 83.
+Defined at lines 53 to 67.
 
 End an [ASP](../../include/atalk/asp.h.md#struct-asp) session by closing the volumes, logging out, and closing the [ASP](../../include/atalk/asp.h.md#struct-asp) connection.
-
-An error path that exits after become_root leaves the euid at 0. The call switches back to obj->uid first, because the volume close scripts run as the login user. Only a failed switch ends the process at once.
 
 Parameters:
 * `obj`: session object
 
-Calls: [asp_close](../../libatalk/asp/asp_close.c.md#asp_close), [close_all_vol](volume.c.md#close_all_vol)
+Calls: [asp_close](../../libatalk/asp/asp_close.c.md#asp_close), [auth_logout](auth.c.md#auth_logout), [auth_switch_back](auth.c.md#auth_switch_back), [close_all_vol](volume.c.md#close_all_vol)
 
 Called by: [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_over_asp](afp_asp.c.md#afp_over_asp)
 
@@ -55,7 +53,7 @@ Called by: [afp_asp_die_now](afp_asp.c.md#afp_asp_die_now), [afp_over_asp](afp_a
 static void afp_asp_die_now(const int sig)
 ```
 
-Defined at lines 123 to 139.
+Defined at lines 107 to 123.
 
 Shut the [ASP](../../include/atalk/asp.h.md#struct-asp) session down and exit.
 
@@ -76,7 +74,7 @@ Uses file-scope variables: `child`
 static void afp_asp_timedown_now(void)
 ```
 
-Defined at lines 148 to 187.
+Defined at lines 132 to 171.
 
 Announce a shutdown in 5 minutes to the [ASP](../../include/atalk/asp.h.md#struct-asp) client and arm the exit timer.
 
@@ -94,7 +92,7 @@ Uses file-scope variables: `child`
 static void afp_asp_reload(int sig)
 ```
 
-Defined at lines 199 to 203.
+Defined at lines 183 to 187.
 
 SIGHUP handler that requests a reload of the volume configuration.
 
@@ -113,7 +111,7 @@ Uses file-scope variables: `reload_request` in [etc/afpd/afp_dsi.c](afp_dsi.c.md
 static void afp_asp_getmesg_now(void)
 ```
 
-Defined at lines 211 to 215.
+Defined at lines 195 to 199.
 
 Read the pending server message and send the [ASP](../../include/atalk/asp.h.md#struct-asp) client a message attention.
 
@@ -129,7 +127,7 @@ Uses file-scope variables: `child`
 static void afp_asp_die_handler(int sig)
 ```
 
-Defined at lines 235 to 239.
+Defined at lines 219 to 223.
 
 SIGTERM and SIGALRM handler that records the request to end the session.
 
@@ -150,7 +148,7 @@ Uses file-scope variables: `asp_die_pending`
 static void afp_asp_timedown(int sig)
 ```
 
-Defined at lines 246 to 250.
+Defined at lines 230 to 234.
 
 SIGUSR1 handler that records the request for a shutdown in 5 minutes.
 
@@ -169,7 +167,7 @@ Uses file-scope variables: `asp_timedown_pending`
 static void afp_asp_getmesg(int sig)
 ```
 
-Defined at lines 258 to 262.
+Defined at lines 242 to 246.
 
 SIGUSR2 handler that records a pending server message.
 
@@ -188,7 +186,7 @@ Uses file-scope variables: `asp_getmesg_pending`
 static void asp_process_deferred_signals(AFPObj *obj)
 ```
 
-Defined at lines 274 to 300.
+Defined at lines 258 to 284.
 
 Act on the signals that the handlers recorded while the loop was busy or waiting.
 
@@ -209,7 +207,7 @@ Uses file-scope variables: `asp_die_pending`, `asp_getmesg_pending`, `asp_timedo
 void afp_over_asp(AFPObj *obj)
 ```
 
-Defined at lines 318 to 689.
+Defined at lines 302 to 673.
 
 Run an AFP session over [ASP](../../include/atalk/asp.h.md#struct-asp) until the client closes it.
 

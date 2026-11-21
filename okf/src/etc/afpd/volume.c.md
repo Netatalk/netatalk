@@ -5,7 +5,7 @@ description: "Volume commands: FPOpenVol, FPCloseVol, FPGetVolParms, and volume 
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/volume.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-26T14:42:48+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -477,16 +477,18 @@ Called by: [afp_closevol](volume.c.md#afp_closevol), [close_all_vol](volume.c.md
 void close_all_vol(const AFPObj *obj)
 ```
 
-Defined at lines 1423 to 1434. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1426 to 1443. Declared in [etc/afpd/volume.h](volume.h.md).
 
-Close every open volume of the session.
+Close every open volume of the session, from the root directory.
+
+A close script or a PAM session's close that unmounts a volume's file system finds it busy while the session's working directory is in it.
 
 Parameters:
 * `obj`: session object
 
 Calls: [closevol](volume.c.md#closevol), [getvolumes](../../libatalk/util/netatalk_conf.c.md#getvolumes)
 
-Called by: [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_dsi_close](afp_dsi.c.md#afp_dsi_close), [afp_logout](auth.c.md#afp_logout)
+Called by: [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_dsi_end](afp_dsi.c.md#afp_dsi_end), [afp_logout](auth.c.md#afp_logout), [afp_over_dsi](afp_dsi.c.md#afp_over_dsi)
 
 Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 
@@ -496,7 +498,7 @@ Uses file-scope variables: `curdir` in [etc/afpd/directory.c](directory.c.md)
 int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1450 to 1473. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1459 to 1482. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPCloseVol: close a volume.
 
@@ -523,7 +525,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 static bool same_stamp(const struct stat *st, const struct timespec *stamp)
 ```
 
-Defined at lines 1484 to 1488.
+Defined at lines 1493 to 1497.
 
 Tell whether a stat of a volume root holds a stamp, to the nanosecond.
 
@@ -543,7 +545,7 @@ Called by: [markroot](volume.c.md#markroot), [pollvoltime](volume.c.md#pollvolti
 static bool volpolls(const AFPObj *obj)
 ```
 
-Defined at lines 1498 to 1502.
+Defined at lines 1507 to 1511.
 
 Tell whether the session's idle tick polls its volumes for other sessions' changes: over [DSI](../../include/atalk/dsi.h.md#struct-dsi), from AFP 2.2, with server notifications.
 
@@ -560,7 +562,7 @@ Called by: [markroot](volume.c.md#markroot), [pollvoltime](volume.c.md#pollvolti
 int pollvoltime(AFPObj *)
 ```
 
-Defined at lines 1514 to 1556. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1523 to 1565. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Make the due root writes, then tell a client the poll serves of a root stamp that the session neither wrote nor saw, on an open volume.
 
@@ -583,7 +585,7 @@ Mentioned in the documentation of: [flushvoltime](volume.c.md#flushvoltime)
 static time_t markroot(AFPObj *obj, struct vol *vol, time_t now, bool mine)
 ```
 
-Defined at lines 1577 to 1622.
+Defined at lines 1586 to 1631.
 
 Write a volume root's mtime for a change and read the stamp back.
 
@@ -607,7 +609,7 @@ Called by: [flushvoltime](volume.c.md#flushvoltime), [markvol](volume.c.md#markv
 static void markvol(AFPObj *obj, struct vol *vol, bool root, bool quiet)
 ```
 
-Defined at lines 1643 to 1662.
+Defined at lines 1652 to 1671.
 
 Record a change on a volume in its root's modification time.
 
@@ -629,7 +631,7 @@ Called by: [setvoltime](volume.c.md#setvoltime), [setvoltime_entry](volume.c.md#
 void setvoltime_entry(AFPObj *, struct vol *, bool)
 ```
 
-Defined at lines 1673 to 1676. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1682 to 1685. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Record a change on a volume, telling whether it changed an entry of the root.
 
@@ -648,7 +650,7 @@ Called by: [afp_copyfile](file.c.md#afp_copyfile), [afp_createdir](directory.c.m
 void setvoltime(AFPObj *, struct vol *)
 ```
 
-Defined at lines 1684 to 1687. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1693 to 1696. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Record a change on a volume that leaves the root's entries alone.
 
@@ -666,7 +668,7 @@ Called by: [afp_setacl](acls.c.md#afp_setacl), [afp_setdirparams](directory.c.md
 void setvoltime_write(AFPObj *, struct vol *)
 ```
 
-Defined at lines 1696 to 1699. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1705 to 1708. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Record a fork write or length change on a volume, which owes the session's client no free-space attention.
 
@@ -684,7 +686,7 @@ Called by: [fork_modified](fork.c.md#fork_modified)
 int flushvoltime(AFPObj *)
 ```
 
-Defined at lines 1713 to 1730. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1722 to 1739. Declared in [etc/afpd/volume.h](volume.h.md).
 
 Write the root of each open volume whose marked second has passed with a change of that second unwritten.
 
@@ -707,7 +709,7 @@ Mentioned in the documentation of: [markvol](volume.c.md#markvol)
 int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1743 to 1760. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1752 to 1769. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPGetVolParms: return the parameters of an open volume.
 
@@ -730,7 +732,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_setvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1779 to 1841. Declared in [etc/afpd/volume.h](volume.h.md).
+Defined at lines 1788 to 1850. Declared in [etc/afpd/volume.h](volume.h.md).
 
 FPSetVolParms: set the backup date of a volume.
 

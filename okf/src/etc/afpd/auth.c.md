@@ -5,7 +5,7 @@ description: "AFP login, logout, password, and session token commands, and UAM l
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/auth.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-20T00:03:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -132,6 +132,8 @@ Returns: err for AFP_OK and AFPERR_AUTHCONT, or AFP_OK when obj->exit returns
 
 Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login_ext), [afp_logincont](auth.c.md#afp_logincont)
 
+Mentioned in the documentation of: [afp_dsi_die](afp_dsi.c.md#afp_dsi_die)
+
 ### afp_errpwdexpired
 
 ```c
@@ -233,11 +235,11 @@ Called by: [login](auth.c.md#login)
 static int login(AFPObj *obj, struct passwd *pwd, void(*logout)(void), int expired)
 ```
 
-Defined at lines 452 to 556.
+Defined at lines 454 to 563.
 
 Finish a login after the UAM accepted the user.
 
-The call refuses root, a user that a single-user server may not serve, and a login past the connection limit. It sets the groups and switches the euid and egid to the user. A member of the admin group keeps the root euid instead. The force user and force group options then override the switch.
+The call records the UAM's logout first, unless an earlier login holds one, so a session it refuses still logs out at its end. It refuses root, a user that a single-user server may not serve, and a login past the connection limit. It sets the groups and switches the euid and egid to the user. A member of the admin group keeps the root euid instead. The force user and force group options then override the switch.
 
 Next the call installs the command table and reports the login with the client address to the master afpd. It resets the umask, because PAM may change it. A [DSI](../../include/atalk/dsi.h.md#struct-dsi) session also installs its signal handlers again.
 
@@ -255,7 +257,41 @@ Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login
 
 Uses file-scope variables: `afp_version_index`
 
-Mentioned in the documentation of: [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [run_afpd](../netatalk/netatalk.c.md#run_afpd)
+Mentioned in the documentation of: [auth_switch_back](auth.c.md#auth_switch_back), [load_afp_conf_vols](../../libatalk/util/netatalk_conf.c.md#load_afp_conf_vols), [run_afpd](../netatalk/netatalk.c.md#run_afpd)
+
+### auth_logout
+
+```c
+void auth_logout(const AFPObj *obj)
+```
+
+Defined at lines 577 to 613.
+
+Run the UAM's logout with root's euid and the real gid, as its login ran, and with SIGCHLD's default action.
+
+A PAM module's close can need the rights its open had: FreeBSD's pam_xdg removes its session file only as root. The supplementary groups stay the session's. A module that waits for a helper needs the exit status, which the session's SIGCHLD action has the kernel discard. A server that does not run as root has one set of ids and switches none.
+
+Parameters:
+* `obj`: session object with a logout hook
+
+Called by: [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
+
+### auth_switch_back
+
+```c
+void auth_switch_back(const AFPObj *obj)
+```
+
+Defined at lines 625 to 633.
+
+Switch back to the euid [login()](auth.c.md#login) gave a session, for its close.
+
+That euid is the forced user's under force user, root's for a member of the admin group, else the login user's. The switch is a guard: a close reached between [become_root()](../../libatalk/util/unix.c.md#become_root) and [unbecome_root()](../../libatalk/util/unix.c.md#unbecome_root) would find the euid at 0.
+
+Parameters:
+* `obj`: session object
+
+Called by: [afp_asp_close](afp_asp.c.md#afp_asp_close), [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
 
 ### afp_zzzzz
 
@@ -263,7 +299,7 @@ Mentioned in the documentation of: [load_afp_conf_vols](../../libatalk/util/neta
 int afp_zzzzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 575 to 635.
+Defined at lines 652 to 712.
 
 FPZzzzz: put the [DSI](../../include/atalk/dsi.h.md#struct-dsi) session to sleep or wake it from extended sleep.
 
@@ -292,7 +328,7 @@ Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 static int create_session_token(AFPObj *obj)
 ```
 
-Defined at lines 643 to 658.
+Defined at lines 720 to 735.
 
 Allocate the session token and fill it with random bytes.
 
@@ -311,7 +347,7 @@ Called by: [afp_getsession](auth.c.md#afp_getsession)
 static int create_session_key(AFPObj *obj)
 ```
 
-Defined at lines 670 to 688.
+Defined at lines 747 to 765.
 
 Allocate sinfo.sessionkey once and fill it with random bytes.
 
@@ -332,7 +368,7 @@ Called by: [afp_login](auth.c.md#afp_login), [afp_login_ext](auth.c.md#afp_login
 int afp_getsession(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 712 to 834.
+Defined at lines 789 to 911.
 
 FPGetSessionToken: return a token that a reconnecting client can present.
 
@@ -353,19 +389,37 @@ Calls: [create_session_token](auth.c.md#create_session_token), [ipc_child_write]
 
 Called by: [set_auth_switch](auth.c.md#set_auth_switch)
 
+### auth_due_tick
+
+```c
+void auth_due_tick(struct itimerval *kept, bool notice)
+```
+
+Defined at lines 924 to 931.
+
+Give a stopped timer whose tick was due the shortest time to run.
+
+A tick that was due but not yet served when setitimer() stopped the timer comes back as no time left, and a timer set with no time stays stopped. The tickle timer shows by its interval that it ran. A shutdown notice's one-shot does not.
+
+Parameters:
+* `kept`: timer that setitimer() handed back
+* `notice`: whether the session is under a shutdown notice
+
+Called by: [afp_disconnect](auth.c.md#afp_disconnect)
+
 ### afp_disconnect
 
 ```c
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 857 to 962.
+Defined at lines 958 to 1077.
 
 FPDisconnectOldSession: hand the connection to the disconnected session that owns a token.
 
-A client sends it on a new connection to resume a disconnected session. The call stops the tickle timer and sends the token, the [DSI](../../include/atalk/dsi.h.md#struct-dsi) request ID, and the client socket to the master afpd. The master passes them to the old session, which answers the request, and sends SIGTERM to this one. A SIGTERM within the 5-second wait marks success, and the process exits.
+A client sends it on a new connection to resume a disconnected session. The call stops the session's timer and sends the token, the [DSI](../../include/atalk/dsi.h.md#struct-dsi) request ID, and the client socket to the master afpd. The master passes them to the old session, which answers the request, and sends SIGTERM to this one. A termination pending by the end of the 5-second wait marks success: the process closes its session and exits.
 
-A failed handoff restarts the timer and leaves DSI_RECONINPROG set, so the next connection error ends this session.
+A handoff that fails with a termination pending ends the same way. Any other failed handoff leaves DSI_RECONINPROG set, so the next connection error ends this session, and the timer the call stopped runs on with the time it had left.
 
 Parameters:
 * `obj`: session object
@@ -374,11 +428,13 @@ Parameters:
 * `rbuf`: reply block, unused
 * `rbuflen`: 0 on return
 
-Returns: AFPERR_MISC when the token length is wrong or the handoff fails, or AFPERR_PARAM for a short request
+Returns: AFPERR_MISC when the token length is wrong or the handoff fails, AFPERR_PARAM for a short request, or AFPERR_NOOP on a transport other than [DSI](../../include/atalk/dsi.h.md#struct-dsi), which has no [DSI](../../include/atalk/dsi.h.md#struct-dsi) connection to hand over
 
-Calls: [ipc_child_write](../../libatalk/util/server_ipc.c.md#ipc_child_write), [send_fd](../../libatalk/util/socket.c.md#send_fd), [writet](../../libatalk/util/socket.c.md#writet)
+Calls: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end), [auth_due_tick](auth.c.md#auth_due_tick), [ipc_child_write](../../libatalk/util/server_ipc.c.md#ipc_child_write), [send_fd](../../libatalk/util/socket.c.md#send_fd), [writet](../../libatalk/util/socket.c.md#writet)
 
 Called by: [set_auth_switch](auth.c.md#set_auth_switch)
+
+Calls through [`DSI::proto_close`](../../include/atalk/dsi.h.md#struct-dsi): no table assigns this field
 
 Uses file-scope variables: `die_pending` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 
@@ -388,7 +444,7 @@ Uses file-scope variables: `die_pending` in [etc/afpd/afp_dsi.c](afp_dsi.c.md)
 static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
 ```
 
-Defined at lines 978 to 1008.
+Defined at lines 1093 to 1123.
 
 Select the AFP version that a login request names.
 
@@ -412,7 +468,7 @@ Uses file-scope variables: `afp_version_index`
 int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1028 to 1097.
+Defined at lines 1143 to 1212.
 
 FPLogin: select the AFP version and the UAM, and run the first login step.
 
@@ -439,7 +495,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1115 to 1274.
+Defined at lines 1230 to 1389.
 
 FPLoginExt: select the AFP version and the UAM, and run the first login step with a UTF-8 user name.
 
@@ -466,7 +522,7 @@ Dispatched via: [preauth_switch](switch.c.md#preauth_switch)
 int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1290 to 1312.
+Defined at lines 1405 to 1427.
 
 FPLoginCont: pass the next login step to the UAM that FPLogin selected.
 
@@ -493,7 +549,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_logout(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1328 to 1346.
+Defined at lines 1443 to 1461.
 
 FPLogout: close every fork and volume of the session.
 
@@ -520,7 +576,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch), [preauth_switch]
 int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1366 to 1446.
+Defined at lines 1481 to 1561.
 
 FPChangePassword: pass a password change to the UAM that the request names.
 
@@ -549,7 +605,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 int afp_getuserinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
 ```
 
-Defined at lines 1466 to 1540.
+Defined at lines 1581 to 1655.
 
 FPGetUserInfo: return the user ID, the group ID, or the UUID of the session user.
 
@@ -576,7 +632,7 @@ Dispatched via: [postauth_switch](switch.c.md#postauth_switch)
 struct uam_obj * auth_uamfind(const int type, const char *name, const int len)
 ```
 
-Defined at lines 1560 to 1577.
+Defined at lines 1675 to 1692.
 
 Find a registered UAM by name.
 
@@ -599,7 +655,7 @@ Called by: [afp_changepw](auth.c.md#afp_changepw), [afp_login](auth.c.md#afp_log
 int auth_register(const int type, struct uam_obj *uam)
 ```
 
-Defined at lines 1589 to 1603.
+Defined at lines 1704 to 1718.
 
 Add a UAM to the list of its type.
 
@@ -617,7 +673,7 @@ Called by: [uam_register](uam.c.md#uam_register)
 int auth_load(AFPObj *obj, const char *path, const char *list)
 ```
 
-Defined at lines 1616 to 1660.
+Defined at lines 1731 to 1775.
 
 Load the UAM modules that the uam list option names.
 
@@ -642,7 +698,7 @@ Uses file-scope variables: `uam_modules`
 void auth_unload(void)
 ```
 
-Defined at lines 1663 to 1673.
+Defined at lines 1778 to 1788.
 
 get rid of all of the uams
 

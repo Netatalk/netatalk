@@ -5,7 +5,7 @@ description: "Directory Cache."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/dircache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -996,7 +996,7 @@ Includes hit ratio percentage for monitoring cache effectiveness, validation-spe
 
 Calls: [validation_freq](dircache.c.md#validation_freq)
 
-Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close)
+Called by: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
 
 Uses file-scope variables: `AFPobj` in [etc/afpd/afp_dsi.c](afp_dsi.c.md), `arc_cache`, `queue_count_max`
 
@@ -1014,7 +1014,7 @@ Shutdown the rfork cache — free remaining RFork LRU nodes and sentinel.
 
 Called from the child shutdown path after [log_dircache_stat()](dircache.c.md#log_dircache_stat). Frees the qnodes (rfork data buffers are reclaimed by exit()) and the LRU sentinel.
 
-Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close)
+Called by: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
 
 Uses file-scope variables: `rfork_lru`, `rfork_lru_count`
 

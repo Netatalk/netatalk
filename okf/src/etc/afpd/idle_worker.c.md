@@ -5,7 +5,7 @@ description: "Idle worker thread that runs deferred directory cache work between
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/idle_worker.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T12:16:30+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -173,7 +173,7 @@ Signal-safe revoke for exit paths.
 
 Single lock-free store; does NOT wait for release. Safe because every caller reaches exit() without returning to AFP command processing, and at every call site the grant was already revoked by the main loop (the store is belt-and-braces against future signal-context close paths). Does not touch iw_granted (not async-signal-safe to reason about; the process is exiting).
 
-Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close)
+Called by: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
 
 Uses file-scope variables: `iw_can_work`, `iw_started`
 
@@ -189,7 +189,7 @@ Defined at lines 421 to 434.
 
 Shut down the idle worker thread, ABANDONING all queued work.
 
-The session is ending and every caller exits immediately afterwards — outstanding dircache cleanup is redundant: the whole cache dies with the process, and the OS reclaims queue memory at exit(). No drain is performed.
+The session is ending and every caller serves no further command — outstanding dircache cleanup is redundant: the whole cache dies with the process, and the OS reclaims queue memory at exit(). No drain is performed.
 
 Join is bounded: all call sites run after the main loop revoked the grant, so the worker is dormant in its 10ms tick — it observes iw_shutdown_flag within IW_WAKE_MS and exits.
 
@@ -245,13 +245,13 @@ Uses file-scope variables: `iw_started`
 void iw_log_stats(void)
 ```
 
-Defined at lines 466 to 483.
+Defined at lines 467 to 484.
 
 Log idle worker statistics.
 
-Called from session close (afp_dsi_close) and [iw_shutdown()](idle_worker.c.md#iw_shutdown). Relaxed reads; the worker may still be alive on die paths (no join there).
+Called from session close (afp_dsi_end) and [iw_shutdown()](idle_worker.c.md#iw_shutdown). Relaxed reads; the worker may still be alive where the close runs without [iw_shutdown()](idle_worker.c.md#iw_shutdown)'s join.
 
-Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close), [iw_shutdown](idle_worker.c.md#iw_shutdown)
+Called by: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end), [iw_shutdown](idle_worker.c.md#iw_shutdown)
 
 Uses file-scope variables: `iw_started`, `iw_stat`
 

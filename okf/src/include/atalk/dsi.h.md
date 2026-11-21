@@ -5,7 +5,7 @@ description: "Data Stream Interface packet types, session state and I/O operatio
 resource: "https://github.com/Netatalk/netatalk/blob/main/include/atalk/dsi.h"
 tags: ["include/atalk"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [include/atalk](../atalk.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -113,7 +113,7 @@ Defined at line 42.
 * `char * eof`: end of currently used buffer
 * `char * end`
 * `pid_t(* proto_open`: Called through by [dsi_getsession](../../libatalk/dsi/dsi_getsess.c.md#dsi_getsession).
-* `void(* proto_close`: Called through by [dsi_close](../../libatalk/dsi/dsi_close.c.md#dsi_close), [dsi_disconnect](../../libatalk/dsi/dsi_stream.c.md#dsi_disconnect), [dsi_getsession](../../libatalk/dsi/dsi_getsess.c.md#dsi_getsession), [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer_session).
+* `void(* proto_close`: Called through by [afp_disconnect](../../etc/afpd/auth.c.md#afp_disconnect), [dsi_close](../../libatalk/dsi/dsi_close.c.md#dsi_close), [dsi_disconnect](../../libatalk/dsi/dsi_stream.c.md#dsi_disconnect), [dsi_getsession](../../libatalk/dsi/dsi_getsess.c.md#dsi_getsession), [handle_transfer_session](../../etc/afpd/afp_dsi.c.md#handle_transfer_session).
 
 ### struct dsi_block
 

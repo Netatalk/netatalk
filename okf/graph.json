@@ -1,5 +1,5 @@
 {
-"commit": "468d1993ce0e4417c6ab8671fb07a81bd91bf2b1",
+"commit": "2e685384eb59b2fa49ca98a24dce20e6d1be461b",
 "edges": [
 {
 "from": "bin/aecho/aecho.c",
@@ -10497,6 +10497,16 @@
 {
 "from": "etc/afpd/afp_asp.c#afp_asp_close",
 "kind": "call",
+"to": "etc/afpd/auth.c#auth_logout"
+},
+{
+"from": "etc/afpd/afp_asp.c#afp_asp_close",
+"kind": "call",
+"to": "etc/afpd/auth.c#auth_switch_back"
+},
+{
+"from": "etc/afpd/afp_asp.c#afp_asp_close",
+"kind": "call",
 "to": "etc/afpd/volume.c#close_all_vol"
 },
 {
@@ -11427,6 +11437,16 @@
 {
 "from": "etc/afpd/auth.c#afp_disconnect",
 "kind": "call",
+"to": "etc/afpd/afp_dsi.c#afp_dsi_end"
+},
+{
+"from": "etc/afpd/auth.c#afp_disconnect",
+"kind": "call",
+"to": "etc/afpd/auth.c#auth_due_tick"
+},
+{
+"from": "etc/afpd/auth.c#afp_disconnect",
+"kind": "call",
 "to": "libatalk/util/server_ipc.c#ipc_child_write"
 },
 {
@@ -11447,57 +11467,12 @@
 {
 "from": "etc/afpd/afp_dsi.c#afp_dsi_close",
 "kind": "call",
-"to": "etc/afpd/volume.c#close_all_vol"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/dircache.c#dircache_rfork_shutdown"
+"to": "etc/afpd/afp_dsi.c#afp_dsi_end"
 },
 {
 "from": "etc/afpd/afp_dsi.c#afp_dsi_close",
 "kind": "call",
 "to": "libatalk/dsi/dsi_close.c#dsi_close"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/enumerate.c#enumerate_log_stats"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/idle_worker.c#iw_log_stats"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/idle_worker.c#iw_revoke_signal_safe"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/dircache.c#log_dircache_stat"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/ofork.c#of_log_usage"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/pfd_cache.c#pfd_log_stats"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_close",
-"kind": "call",
-"to": "etc/afpd/pfd_cache.c#pfd_shutdown"
-},
-{
-"from": "etc/afpd/afp_dsi.c#afp_dsi_die",
-"kind": "doc",
-"to": "etc/afpd/afp_dsi.c#afp_dsi_close"
 },
 {
 "from": "etc/afpd/afp_dsi.c#afp_dsi_debug",
@@ -11518,6 +11493,11 @@
 "from": "etc/afpd/afp_dsi.c#afp_dsi_die",
 "kind": "call",
 "to": "etc/afpd/afp_dsi.c#afp_dsi_die_cause"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_die",
+"kind": "call",
+"to": "etc/afpd/afp_dsi.c#afp_dsi_end"
 },
 {
 "from": "etc/afpd/afp_dsi.c#afp_dsi_die",
@@ -11568,6 +11548,61 @@
 "from": "etc/afpd/afp_dsi.c#afp_dsi_die_handler",
 "kind": "use",
 "to": "etc/afpd/afp_dsi.c#die_sender"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/auth.c#auth_logout"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/auth.c#auth_switch_back"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/volume.c#close_all_vol"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/dircache.c#dircache_rfork_shutdown"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/enumerate.c#enumerate_log_stats"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/idle_worker.c#iw_log_stats"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/idle_worker.c#iw_revoke_signal_safe"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/dircache.c#log_dircache_stat"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/ofork.c#of_log_usage"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/pfd_cache.c#pfd_log_stats"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "call",
+"to": "etc/afpd/pfd_cache.c#pfd_shutdown"
 },
 {
 "from": "etc/afpd/afp_dsi.c#afp_dsi_getmesg_handler",
@@ -13225,6 +13260,11 @@
 {
 "from": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "call",
+"to": "etc/afpd/volume.c#close_all_vol"
+},
+{
+"from": "etc/afpd/afp_dsi.c#afp_over_dsi",
+"kind": "call",
 "to": "etc/afpd/directory.c#dir_free_invalid_q"
 },
 {
@@ -14464,6 +14504,11 @@
 "to": "etc/afpd/afp_dsi.c#alarm_pending"
 },
 {
+"from": "etc/afpd/afp_dsi.c#afp_dsi_die",
+"kind": "doc",
+"to": "etc/afpd/afp_dsi.c#alarm_handler"
+},
+{
 "from": "etc/netatalk/netatalk.c#any_volume_uses_localsearch",
 "kind": "call",
 "to": "libatalk/util/netatalk_conf.c#getvolumes"
@@ -15532,6 +15577,11 @@
 "from": "libatalk/util/unix.c#become_root",
 "kind": "use",
 "to": "libatalk/util/unix.c#saved_uid"
+},
+{
+"from": "etc/afpd/auth.c#auth_switch_back",
+"kind": "doc",
+"to": "libatalk/util/unix.c#become_root"
 },
 {
 "from": "etc/afpd/afprun.c#become_user_permanently",
@@ -28106,6 +28156,11 @@
 "to": "etc/afpd/auth.c#afp_version_index"
 },
 {
+"from": "etc/afpd/auth.c#auth_switch_back",
+"kind": "doc",
+"to": "etc/afpd/auth.c#login"
+},
+{
 "from": "libatalk/util/netatalk_conf.c#load_afp_conf_vols",
 "kind": "doc",
 "to": "etc/afpd/auth.c#login"
@@ -36420,6 +36475,11 @@
 "to": "bin/pap/pap.c#waitforprinter"
 },
 {
+"from": "etc/afpd/afp_dsi.c#afp_dsi_die",
+"kind": "doc",
+"to": "etc/afpd/auth.c#send_reply"
+},
+{
 "from": "libatalk/util/server_child.c#server_child_add",
 "kind": "call",
 "to": "libatalk/util/server_child.c#hash_child"
@@ -40973,6 +41033,11 @@
 "from": "libatalk/util/unix.c#unbecome_root",
 "kind": "use",
 "to": "libatalk/util/unix.c#saved_uid"
+},
+{
+"from": "etc/afpd/auth.c#auth_switch_back",
+"kind": "doc",
+"to": "libatalk/util/unix.c#unbecome_root"
 },
 {
 "from": "libatalk/util/unix.c#become_root",
@@ -47016,7 +47081,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_close",
 "kind": "function",
-"line": 58,
+"line": 53,
 "static": true
 },
 {
@@ -47024,7 +47089,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_die_handler",
 "kind": "function",
-"line": 235,
+"line": 219,
 "static": true
 },
 {
@@ -47032,7 +47097,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_die_now",
 "kind": "function",
-"line": 123,
+"line": 107,
 "static": true
 },
 {
@@ -47040,7 +47105,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_getmesg",
 "kind": "function",
-"line": 258,
+"line": 242,
 "static": true
 },
 {
@@ -47048,7 +47113,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_getmesg_now",
 "kind": "function",
-"line": 211,
+"line": 195,
 "static": true
 },
 {
@@ -47056,7 +47121,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_reload",
 "kind": "function",
-"line": 199,
+"line": 183,
 "static": true
 },
 {
@@ -47064,7 +47129,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_timedown",
 "kind": "function",
-"line": 246,
+"line": 230,
 "static": true
 },
 {
@@ -47072,7 +47137,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_asp_timedown_now",
 "kind": "function",
-"line": 148,
+"line": 132,
 "static": true
 },
 {
@@ -47112,7 +47177,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_changepw",
 "kind": "function",
-"line": 1366,
+"line": 1481,
 "static": false
 },
 {
@@ -47144,7 +47209,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#afp_closevol",
 "kind": "function",
-"line": 1450,
+"line": 1459,
 "static": false
 },
 {
@@ -47216,7 +47281,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_disconnect",
 "kind": "function",
-"line": 857,
+"line": 958,
 "static": false
 },
 {
@@ -47224,7 +47289,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_close",
 "kind": "function",
-"line": 133,
+"line": 196,
 "static": true
 },
 {
@@ -47232,7 +47297,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_debug",
 "kind": "function",
-"line": 445,
+"line": 447,
 "static": true
 },
 {
@@ -47240,7 +47305,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_die",
 "kind": "function",
-"line": 233,
+"line": 236,
 "static": true
 },
 {
@@ -47248,7 +47313,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_die_cause",
 "kind": "function",
-"line": 207,
+"line": 211,
 "static": true
 },
 {
@@ -47256,15 +47321,23 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_die_handler",
 "kind": "function",
-"line": 493,
+"line": 495,
 "static": true
+},
+{
+"documented": true,
+"file": "etc/afpd/afp_dsi.c",
+"id": "etc/afpd/afp_dsi.c#afp_dsi_end",
+"kind": "function",
+"line": 135,
+"static": false
 },
 {
 "documented": true,
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_getmesg_handler",
 "kind": "function",
-"line": 456,
+"line": 458,
 "static": true
 },
 {
@@ -47272,7 +47345,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_log_disconnect",
 "kind": "function",
-"line": 732,
+"line": 734,
 "static": true
 },
 {
@@ -47280,7 +47353,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_reload",
 "kind": "function",
-"line": 425,
+"line": 427,
 "static": true
 },
 {
@@ -47288,7 +47361,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_timedown_handler",
 "kind": "function",
-"line": 351,
+"line": 353,
 "static": true
 },
 {
@@ -47296,7 +47369,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_dsi_transfer_handler",
 "kind": "function",
-"line": 274,
+"line": 276,
 "static": true
 },
 {
@@ -47440,7 +47513,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_getsession",
 "kind": "function",
-"line": 712,
+"line": 789,
 "static": false
 },
 {
@@ -47472,7 +47545,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_getuserinfo",
 "kind": "function",
-"line": 1466,
+"line": 1581,
 "static": false
 },
 {
@@ -47480,7 +47553,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#afp_getvolparams",
 "kind": "function",
-"line": 1743,
+"line": 1752,
 "static": false
 },
 {
@@ -47504,7 +47577,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_login",
 "kind": "function",
-"line": 1028,
+"line": 1143,
 "static": false
 },
 {
@@ -47512,7 +47585,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_login_ext",
 "kind": "function",
-"line": 1115,
+"line": 1230,
 "static": false
 },
 {
@@ -47520,7 +47593,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_logincont",
 "kind": "function",
-"line": 1290,
+"line": 1405,
 "static": false
 },
 {
@@ -47528,7 +47601,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_logout",
 "kind": "function",
-"line": 1328,
+"line": 1443,
 "static": false
 },
 {
@@ -47624,7 +47697,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#afp_over_asp",
 "kind": "function",
-"line": 318,
+"line": 302,
 "static": false
 },
 {
@@ -47632,7 +47705,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_over_dsi",
 "kind": "function",
-"line": 902,
+"line": 904,
 "static": false
 },
 {
@@ -47640,7 +47713,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_over_dsi_sighandlers",
 "kind": "function",
-"line": 773,
+"line": 775,
 "static": false
 },
 {
@@ -47752,7 +47825,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#afp_setvolparams",
 "kind": "function",
-"line": 1779,
+"line": 1788,
 "static": false
 },
 {
@@ -47792,7 +47865,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#afp_write_command",
 "kind": "function",
-"line": 871,
+"line": 873,
 "static": true
 },
 {
@@ -47808,7 +47881,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#afp_zzzzz",
 "kind": "function",
-"line": 575,
+"line": 652,
 "static": false
 },
 {
@@ -47880,7 +47953,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#alarm_handler",
 "kind": "function",
-"line": 513,
+"line": 515,
 "static": true
 },
 {
@@ -48224,7 +48297,7 @@
 "file": "etc/afpd/afp_asp.c",
 "id": "etc/afpd/afp_asp.c#asp_process_deferred_signals",
 "kind": "function",
-"line": 274,
+"line": 258,
 "static": true
 },
 {
@@ -48718,9 +48791,17 @@
 {
 "documented": true,
 "file": "etc/afpd/auth.c",
+"id": "etc/afpd/auth.c#auth_due_tick",
+"kind": "function",
+"line": 924,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_load",
 "kind": "function",
-"line": 1616,
+"line": 1731,
 "static": false
 },
 {
@@ -48734,9 +48815,17 @@
 {
 "documented": true,
 "file": "etc/afpd/auth.c",
+"id": "etc/afpd/auth.c#auth_logout",
+"kind": "function",
+"line": 577,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_register",
 "kind": "function",
-"line": 1589,
+"line": 1704,
 "static": false
 },
 {
@@ -48750,9 +48839,17 @@
 {
 "documented": true,
 "file": "etc/afpd/auth.c",
+"id": "etc/afpd/auth.c#auth_switch_back",
+"kind": "function",
+"line": 625,
+"static": false
+},
+{
+"documented": true,
+"file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_uamfind",
 "kind": "function",
-"line": 1560,
+"line": 1675,
 "static": false
 },
 {
@@ -48768,7 +48865,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#auth_unload",
 "kind": "function",
-"line": 1663,
+"line": 1778,
 "static": false
 },
 {
@@ -49520,7 +49617,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#child_handler",
 "kind": "function",
-"line": 632,
+"line": 634,
 "static": true
 },
 {
@@ -49632,7 +49729,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#close_all_vol",
 "kind": "function",
-"line": 1423,
+"line": 1426,
 "static": false
 },
 {
@@ -50872,7 +50969,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#create_session_key",
 "kind": "function",
-"line": 670,
+"line": 747,
 "static": true
 },
 {
@@ -50880,7 +50977,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#create_session_token",
 "kind": "function",
-"line": 643,
+"line": 720,
 "static": true
 },
 {
@@ -53040,7 +53137,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#flushvoltime",
 "kind": "function",
-"line": 1713,
+"line": 1722,
 "static": false
 },
 {
@@ -53472,7 +53569,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#get_version",
 "kind": "function",
-"line": 978,
+"line": 1093,
 "static": true
 },
 {
@@ -53912,7 +54009,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_alarm",
 "kind": "function",
-"line": 539,
+"line": 541,
 "static": true
 },
 {
@@ -53920,7 +54017,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_getmesg",
 "kind": "function",
-"line": 472,
+"line": 474,
 "static": true
 },
 {
@@ -53928,7 +54025,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_timedown",
 "kind": "function",
-"line": 367,
+"line": 369,
 "static": true
 },
 {
@@ -53936,7 +54033,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#handle_transfer_session",
 "kind": "function",
-"line": 291,
+"line": 293,
 "static": true
 },
 {
@@ -54840,7 +54937,7 @@
 "file": "etc/afpd/idle_worker.c",
 "id": "etc/afpd/idle_worker.c#iw_log_stats",
 "kind": "function",
-"line": 466,
+"line": 467,
 "static": false
 },
 {
@@ -55208,7 +55305,7 @@
 "file": "etc/afpd/auth.c",
 "id": "etc/afpd/auth.c#login",
 "kind": "function",
-"line": 452,
+"line": 454,
 "static": true
 },
 {
@@ -56064,7 +56161,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#markroot",
 "kind": "function",
-"line": 1577,
+"line": 1586,
 "static": true
 },
 {
@@ -56072,7 +56169,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#markvol",
 "kind": "function",
-"line": 1643,
+"line": 1652,
 "static": true
 },
 {
@@ -57720,7 +57817,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#pending_request",
 "kind": "function",
-"line": 700,
+"line": 702,
 "static": true
 },
 {
@@ -57872,7 +57969,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#pollvoltime",
 "kind": "function",
-"line": 1514,
+"line": 1523,
 "static": false
 },
 {
@@ -58176,7 +58273,7 @@
 "file": "etc/afpd/afp_dsi.c",
 "id": "etc/afpd/afp_dsi.c#process_deferred_signals",
 "kind": "function",
-"line": 650,
+"line": 652,
 "static": true
 },
 {
@@ -59096,7 +59193,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#same_stamp",
 "kind": "function",
-"line": 1484,
+"line": 1493,
 "static": true
 },
 {
@@ -59728,7 +59825,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#setvoltime",
 "kind": "function",
-"line": 1684,
+"line": 1693,
 "static": false
 },
 {
@@ -59736,7 +59833,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#setvoltime_entry",
 "kind": "function",
-"line": 1673,
+"line": 1682,
 "static": false
 },
 {
@@ -59744,7 +59841,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#setvoltime_write",
 "kind": "function",
-"line": 1696,
+"line": 1705,
 "static": false
 },
 {
@@ -63048,7 +63145,7 @@
 "file": "etc/afpd/volume.c",
 "id": "etc/afpd/volume.c#volpolls",
 "kind": "function",
-"line": 1498,
+"line": 1507,
 "static": true
 },
 {

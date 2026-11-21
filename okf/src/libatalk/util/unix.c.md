@@ -5,7 +5,7 @@ description: "Netatalk utility functions: unix."
 resource: "https://github.com/Netatalk/netatalk/blob/main/libatalk/util/unix.c"
 tags: ["libatalk/util"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T13:31:45+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [libatalk/util](../util.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -249,6 +249,8 @@ Called by: [ad_conv_dehex](../adouble/ad_conv.c.md#ad_conv_dehex), [ad_conv_v22e
 
 Uses file-scope variables: `root_nesting`, `saved_uid`
 
+Mentioned in the documentation of: [auth_switch_back](../../etc/afpd/auth.c.md#auth_switch_back)
+
 ### unbecome_root
 
 ```c
@@ -265,7 +267,7 @@ Called by: [ad_conv_dehex](../adouble/ad_conv.c.md#ad_conv_dehex), [ad_conv_v22e
 
 Uses file-scope variables: `root_nesting`, `saved_uid`
 
-Mentioned in the documentation of: [become_root](unix.c.md#become_root)
+Mentioned in the documentation of: [auth_switch_back](../../etc/afpd/auth.c.md#auth_switch_back), [become_root](unix.c.md#become_root)
 
 ### become_owner
 

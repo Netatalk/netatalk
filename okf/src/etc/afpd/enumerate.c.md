@@ -5,7 +5,7 @@ description: "Directory listing: FPEnumerate, FPEnumerateExt, and FPEnumerateExt
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/enumerate.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-31T16:21:52+11:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -58,7 +58,7 @@ Defined at lines 100 to 107.
 
 Log the session's directory listing counts.
 
-Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close)
+Called by: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
 
 Uses file-scope variables: `enumerate_stat`
 

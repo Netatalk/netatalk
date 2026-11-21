@@ -5,7 +5,7 @@ description: "Cache of parent directory descriptors for the stat calls that chec
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/pfd_cache.c"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-11-14T23:33:54+01:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -219,7 +219,7 @@ Close every cached descriptor when the session ends.
 
 Calls: [slot_retire](pfd_cache.c.md#slot_retire)
 
-Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close)
+Called by: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
 
 Uses file-scope variables: `pfd_initialized`, `pfd_slots`
 
@@ -250,7 +250,7 @@ Log the cache counters at the end of the session.
 
 Refresh counters that approach the hit count mean that the slots rebuild on every call.
 
-Called by: [afp_dsi_close](afp_dsi.c.md#afp_dsi_close)
+Called by: [afp_dsi_end](afp_dsi.c.md#afp_dsi_end)
 
 Uses file-scope variables: `pfd_stat`
 

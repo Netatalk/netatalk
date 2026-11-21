@@ -5,7 +5,7 @@ description: "AFP authentication and session command handlers."
 resource: "https://github.com/Netatalk/netatalk/blob/main/etc/afpd/auth.h"
 tags: ["etc/afpd"]
 status: stable
-generated: { by: process:okf-from-doxygen/1, at: 2026-10-16T07:37:38+02:00 }
+generated: { by: process:okf-from-doxygen/1, at: 2026-11-21T17:04:55+01:00 }
 ---
 
 Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in [build](../../../build.md).
@@ -13,7 +13,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 # Includes
 
 * [atalk/globals.h](../../include/atalk/globals.h.md)
-* System headers: `limits.h`, `stdbool.h`
+* System headers: `limits.h`, `stdbool.h`, `sys/time.h`
 
 # Included by
 
@@ -31,7 +31,7 @@ Part of the [etc/afpd](../afpd.md) subsystem. Built from the commit recorded in 
 
 ### struct afp_versions
 
-Defined at line 19.
+Defined at line 20.
 * `char * av_name`
 * `int av_number`
 
