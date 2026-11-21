@@ -1701,6 +1701,23 @@ static bool cnid_mysql_find_narrows(struct _cnid_db *cdb,
 }
 
 /*!
+ * @brief Tell whether a seed's folded-name pattern narrows a volume search
+ *
+ * For the volume search a folder search falls back to.
+ *
+ * @param[in] seed  the seed
+ * @param[in] ctx   unused
+ * @returns true when the pattern holds a character other than '%'
+ */
+static bool cnid_mysql_folded_narrows(const struct sl_name_pattern *seed,
+                                      void *ctx)
+{
+    const char *like = sl_name_pattern_index_like(seed);
+    (void)ctx;
+    return like[strspn(like, "%")] != '\0';
+}
+
+/*!
  * @brief Write the WHERE condition of a name search over its LIKE patterns
  *
  * The condition keeps the rows whose names one pattern keeps, every row for
@@ -1828,6 +1845,49 @@ static int cnid_mysql_find_prepare(CNID_mysql_private *db, MYSQL_STMT *stmt,
 
     free(sql);
     return ret;
+}
+
+/*!
+ * @brief Tell whether a folder search's walk stopped short of its subtree
+ *
+ * MariaDB ends a recursion past max_recursive_iterations with the rows so far
+ * and warning 1931, which the client library does not count for a prepared
+ * statement, so SHOW WARNINGS tells. A server that keeps fewer warnings than
+ * it counts, under max_error_count, may have dropped it.
+ *
+ * @param[in] con  MySQL connection
+ * @returns true when the walk stopped short or may have, or its warnings do
+ *          not read
+ */
+static bool cnid_mysql_cut_short(MYSQL *con)
+{
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    unsigned long long kept;
+    bool cut = false;
+
+    if (mysql_query(con, "SHOW WARNINGS") != 0
+            || (res = mysql_store_result(con)) == NULL) {
+        return true;
+    }
+
+    kept = mysql_num_rows(res);
+
+    while (!cut && (row = mysql_fetch_row(res)) != NULL) {
+        cut = row[1] != NULL && strcmp(row[1], "1931") == 0;
+    }
+
+    mysql_free_result(res);
+
+    if (cut || mysql_query(con, "SHOW COUNT(*) WARNINGS") != 0
+            || (res = mysql_store_result(con)) == NULL) {
+        return true;
+    }
+
+    row = mysql_fetch_row(res);
+    cut = row == NULL || row[0] == NULL || strtoull(row[0], NULL, 10) > kept;
+    mysql_free_result(res);
+    return cut;
 }
 
 /*!
@@ -1970,20 +2030,94 @@ static int cnid_mysql_id_order(const void *a, const void *b)
     return x < y ? -1 : x > y;
 }
 
+/* Folder verdicts a folder search over the volume keeps, by CNID; a
+ * collision costs only another walk */
+#define CNID_MYSQL_SCOPE_CACHE 1024
+
+/* A folder search the server cannot walk: its folder and the verdicts its
+ * walks keep */
+struct cnid_mysql_scope {
+    cnid_t scope;
+    struct {
+        cnid_t did;
+        bool under;
+    } seen[CNID_MYSQL_SCOPE_CACHE];
+};
+
+/*!
+ * @brief Tell whether an entry lies under a folder search's folder
+ *
+ * The walk ends at the folder, at the root, at a folder whose verdict a walk
+ * kept, or past MAXPATHLEN / 2 folders, as many as a path of MAXPATHLEN bytes
+ * holds, which only a loop in the table makes and which leaves the entry
+ * outside. Each folder it passed then keeps the verdict, so a loop costs one
+ * walk a search. An entry whose walk meets a missing row is outside and
+ * keeps no verdict, as a rename deletes a row before it adds it.
+ *
+ * @param[in]     cdb  CNID database
+ * @param[in,out] sc   the folder and the verdicts
+ * @param[in]     id   CNID of the entry, in network order
+ * @returns 1 when the entry lies under the folder, the folder itself not, 0
+ *          when it lies outside, -1 when a resolve fails otherwise than for a
+ *          missing row, errno classified
+ */
+static int cnid_mysql_under(struct _cnid_db *cdb, struct cnid_mysql_scope *sc,
+                            cnid_t id)
+{
+    cnid_t path[MAXPATHLEN / 2];
+    char name[12 + MAXPATHLEN + 1];
+    size_t n = 0;
+    bool under = false;
+    bool known = false;
+    cnid_t did = id;
+
+    while (!known && n < MAXPATHLEN / 2) {
+        size_t slot;
+
+        if (cnid_mysql_resolve(cdb, &did, name, sizeof(name)) == NULL) {
+            return errno == CNID_ERR_NOTFOUND ? 0 : -1;
+        }
+
+        slot = ntohl(did) % CNID_MYSQL_SCOPE_CACHE;
+
+        if (did == sc->scope || ntohl(did) < CNID_START) {
+            under = did == sc->scope;
+            known = true;
+        } else if (sc->seen[slot].did == did) {
+            under = sc->seen[slot].under;
+            known = true;
+        } else {
+            path[n++] = did;
+        }
+    }
+
+    for (size_t i = 0; i < n; i++) {
+        const size_t slot = ntohl(path[i]) % CNID_MYSQL_SCOPE_CACHE;
+        sc->seen[slot].did = path[i];
+        sc->seen[slot].under = under;
+    }
+
+    return under;
+}
+
 /*!
  * @brief Find the CNIDs whose names match a query, for cnid_find
  *
  * The cnid_find wrapper validates the arguments. One statement takes the rows
  * whose names one of the seeds' LIKE patterns keeps, every row without seeds,
- * and the query decides each name. An unscoped search reads the rows after
- * the last Id the previous execution read, 1 more than buffer holds at first
- * and eight times as many each time a batch fills, CNID_MYSQL_FIND_BATCH at
- * most, until 1 match more than buffer holds, which sets more_available. A
- * scoped search walks the subtree with a recursive CTE once and streams its
- * rows unordered, keeping the lowest Ids that match, so it finds the matches
- * an unscoped search would; it compares Name, as cnid_mysql_find_folded()
- * says. The patterns bind as statement parameters, never as SQL text. A
- * server without CTE support falls back to an unscoped search.
+ * and the query decides each name; the patterns bind as statement
+ * parameters, never as SQL text. A volume search reads the rows after the
+ * last Id the previous batch read, the first batch 1 more than buffer holds
+ * and each next eight times larger, CNID_MYSQL_FIND_BATCH at most, until a
+ * match past buffer sets more_available. A folder search walks its subtree
+ * with a recursive CTE once and streams the rows unordered, keeping the
+ * lowest Ids that match, the matches a volume search finds; it compares Name,
+ * as cnid_mysql_find_folded() says. A server without CTE support, a failed
+ * scoped execute, or a walk cut short with a warning, as MariaDB's past
+ * max_recursive_iterations, makes it a volume search that keeps the matches
+ * cnid_mysql_under() places under the folder, before they take room in
+ * buffer. That search compares the folded names where the table holds them,
+ * except on the search that finds the server without CTEs.
  *
  * @param[in]  cdb             CNID database
  * @param[in]  query           the name comparisons
@@ -2003,10 +2137,13 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
 {
     EC_INIT;
     CNID_mysql_private *db = cdb->cnid_db_private;
+    const struct sl_name_pattern *folded_seeds[CNID_FIND_MAX_SEEDS];
     const char *likes[CNID_FIND_MAX_SEEDS];
     unsigned long lens[CNID_FIND_MAX_SEEDS];
     MYSQL_STMT *stmt = NULL;
     MYSQL_BIND result[2];
+    struct cnid_mysql_scope *sc = NULL;
+    int under = 0;
     char name[MAXPATHLEN + 1];
     unsigned long name_len = 0;
     unsigned long long result_id = 0;
@@ -2017,8 +2154,9 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
     unsigned long max_results = buflen / sizeof(cnid_t);
     bool scoped = (scope_did != CNID_INVALID
                    && !db->cnid_find_scoped_unsupported);
-    const bool folded = cnid_mysql_find_folded(db, scope_did);
+    bool folded = cnid_mysql_find_folded(db, scope_did);
     bool more = false;
+    bool walked = false;
     int npat = seeds != NULL ? nseeds : 0;
     int fetch_ret = 0;
     int count = 0;
@@ -2074,6 +2212,10 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
         }
 
         mysql_stmt_free_result(stmt);
+        walked = !cnid_mysql_cut_short(db->cnid_mysql_con);
+    }
+
+    if (walked) {
         qsort(cnids, (size_t)count, sizeof(cnids[0]), cnid_mysql_id_order);
 
         for (int i = 0; i < count; i++) {
@@ -2082,15 +2224,36 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
     } else {
         if (scoped) {
             /* e.g. the server's CTE recursion-depth cap on an unusually
-             * deep subtree; retry unscoped — the Spotlight layer's path
-             * guard keeps the results correct */
+             * deep subtree */
             LOG(log_warning, logtype_cnid,
-                "cnid_mysql_find: scoped query failed at execute (%s); "
+                "cnid_mysql_find: scoped query failed or stopped short (%s); "
                 "retrying unscoped", mysql_stmt_error(stmt));
             scoped = false;
+            count = 0;
+            more = false;
+
+            /* the folded patterns pick the seeds again: they can narrow the
+             * volume where Name's could not */
+            if (db->cnid_mysql_folded) {
+                folded = true;
+                npat = sl_name_query_seeds(query, folded_seeds,
+                                           CNID_FIND_MAX_SEEDS,
+                                           cnid_mysql_folded_narrows, NULL);
+
+                for (int i = 0; i < npat; i++) {
+                    likes[i] = sl_name_pattern_index_like(folded_seeds[i]);
+                    lens[i] = strlen(likes[i]);
+                }
+            }
+
             EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, folded, &scoped));
             EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, folded, likes,
                                          lens, npat, &after, &batch, result));
+        }
+
+        if (scope_did != CNID_INVALID) {
+            EC_NULL(sc = calloc(1, sizeof(*sc)));
+            sc->scope = scope_did;
         }
 
         while (count <= (int)max_results) {
@@ -2111,6 +2274,18 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
 
                 if (!cnid_mysql_id_ok(result_id)
                         || !sl_name_query_match(query, name, name_len)) {
+                    continue;
+                }
+
+                if (sc != NULL
+                        && (under = cnid_mysql_under(cdb, sc,
+                                                     htonl((uint32_t)result_id)))
+                        != 1) {
+                    if (under < 0) {
+                        mysql_stmt_free_result(stmt);
+                        EC_FAIL;
+                    }
+
                     continue;
                 }
 
@@ -2152,6 +2327,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
 
     LOG(log_debug, logtype_cnid, "cnid_mysql_find: returning %d matches", count);
 EC_CLEANUP:
+    free(sc);
 
     if (stmt) {
         mysql_stmt_close(stmt);

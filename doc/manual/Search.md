@@ -119,9 +119,10 @@ queries, but may not match content queries such as `kMDItemTextContent`.
   between `*` wildcards.
 - Searching within a folder returns only results from that folder and
   its subfolders. With the **cnid** backend the restriction is applied
-  inside the CNID database; with the *mysql* CNID scheme that requires
-  MySQL 8.0 or MariaDB 10.2, and older servers fall back to a
-  volume-wide search that is filtered afterwards.
+  inside the CNID database. With the *mysql* CNID scheme the server walks
+  the folder, which takes MySQL 8.0 or MariaDB 10.2; an older server, or
+  a walk that fails or that MariaDB's `max_recursive_iterations` cuts
+  short, searches the volume and keeps the matches inside the folder.
 
 The **localsearch** and **xapian** backends do not yet support quoted
 phrase searches.

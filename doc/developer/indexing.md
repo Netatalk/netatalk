@@ -130,39 +130,37 @@ All current backends ultimately return filesystem results through the same
 
 ## CNID backend
 
-The CNID backend is the smallest backend. It reads the name comparisons
-of the query — `kMDItemFSName`, `kMDItemDisplayName`, `_kMDItemFileName`
-and the any-attribute `*`, with `==` or `!=`, joined by `&&` and `||` —
-through the matcher in `libatalk/util/sl_names.c`, which decides every
-name the backend returns; any other comparison drops out of the query.
-The matcher reads attribute names and modifiers without regard to case, as
-a volume that folds its names to one case converts the query, and on a
-volume whose charset is not UTF-8 it converts the query's values and each
-name to UTF-8 first. macOS sends one predicate per word of a multi-word
-search, joined with `||`, and a quoted phrase as one value.
+The CNID backend is the smallest backend. It reads the name comparisons of
+the query (`kMDItemFSName`, `kMDItemDisplayName`, `_kMDItemFileName` and the
+any-attribute `*`, with `==` or `!=`, joined by `&&` and `||`) through the
+matcher in `libatalk/util/sl_names.c`, which decides every name the backend
+returns; any other comparison drops out of the query. The matcher reads
+attribute names and modifiers without regard to case, as a volume that folds
+its names to one case converts the query, and on a volume whose charset is
+not UTF-8 it converts the query's values and each name to UTF-8 first. macOS
+sends one predicate per word of a multi-word search, joined with `||`, and a
+quoted phrase as one value.
 
-It searches the Netatalk CNID database with cnid_find_scoped(), which
-hands the database backend the whole query: the sqlite scheme narrows by
-its name index, the mysql scheme by LIKE patterns over its names,
-both described in [CNID Persistent File Identity](cnid.md). A backend
-that narrows the search by the query's seeds, positive comparisons that
-every match satisfies one of, reads the candidates of all of them in one
-statement; otherwise one statement reads every name. Of the two sides of
-an `&&` the seeds come from the one the backend narrows by, the left one
-where it narrows by both, and the search reads every candidate of that
-side. Either way the results are the first matches of the whole query in
-CNID order, each once, so a result limit counts matches and a term with
-many matches leaves the others no less room than a search of every name
-would. A repeated comparison counts once toward the eight a query keeps,
-and is read once in an `&&` or an `||` of its own kind, and a query of
-more than 32 name comparisons, repeats included, or of parentheses nested
-more than 64 deep, matches no name. When
-the query carries a folder scope, the
-scope path is resolved to its directory CNID with cnid_for_path() and
-the subtree restriction is applied inside the database: a recursive CTE
-for the sqlite and mysql schemes.
-Resolved paths are still checked against the scope afterwards, which
-covers the mysql fallback for servers without recursive CTEs.
+It searches the Netatalk CNID database with cnid_find_scoped(), which hands
+the database backend the whole query: the sqlite scheme narrows by its name
+index, the mysql scheme by LIKE patterns over its names, both described in
+[CNID Persistent File Identity](cnid.md). A backend that narrows the search
+by the query's seeds, positive comparisons that every match satisfies one
+of, reads the candidates of all of them in one statement; otherwise one
+statement reads every name. Of the two sides of an `&&` the seeds come from
+the one the backend narrows by, the left one where it narrows by both, and
+the search reads every candidate of that side. Either way the results are
+the first matches of the whole query in CNID order, each once, so a result
+limit counts matches and a term with many matches leaves the others no less
+room than a search of every name would. A repeated comparison counts once
+toward the eight a query keeps, and is read once in an `&&` or an `||` of
+its own kind, and a query of more than 32 name comparisons, repeats
+included, or of parentheses nested more than 64 deep, matches no name. When
+the query carries a folder scope, the scope path is resolved to its
+directory CNID with cnid_for_path() and the subtree restriction is applied
+inside the database: a recursive CTE for the sqlite and mysql schemes.
+Resolved paths are still checked against the scope afterwards, for renames
+that race the query.
 
 It resolves CNIDs back to paths with cnid_resolve(), memoizing ancestor
 directories for the duration of a query, and returns matching files. It

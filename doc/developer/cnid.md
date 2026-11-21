@@ -78,12 +78,16 @@ hints before using them.
 
 The optional MySQL backend uses an external server and UUID-based volume
 tables. A table it creates holds each name folded in `Folded1`, NULL where
-an older build wrote the row, and a name search of the whole volume
-compares its patterns over it; a folder search compares `Name`, which its
-walk of the folder reads from the `DidName` index without the rows. Every
-insert and every try of an update writes `Folded1`, so a new writer of the
-table writes it too. Centralizing CNID records does not provide
-distributed file locking or cross-host cache invalidation. User
+an older build wrote the row, and a name search of the whole volume compares
+its patterns over it; a folder search compares `Name`, which its walk of the
+folder reads from the `DidName` index without the rows. A server without
+recursive CTEs, or a folder statement that fails or stops short, makes a
+folder search read the whole volume instead, comparing `Folded1` where the
+table holds it, and each match then walks up its folders through the resolve
+statement, a round trip for each folder that the search's cache of 1024
+verdicts does not hold, before it counts. Every insert and every try of an
+update writes `Folded1` with the name. Centralizing CNID records does not
+provide distributed file locking or cross-host cache invalidation. User
 configuration and backend setup are documented in
 [CNID Backends](https://netatalk.io/manual/en/CNID.html).
 

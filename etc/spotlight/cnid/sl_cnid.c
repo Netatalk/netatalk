@@ -379,10 +379,8 @@ static int sl_cnid_fill_results(slq_t *slq)
             continue;
         }
 
-        /*
-         * Guard for cases the database-side scope cannot cover: the mysql
-         * CTE fallback on old servers, and renames racing the query.
-         */
+        /* Guard for renames racing the query, which the database-side scope
+         * cannot see */
         if (!sl_path_in_scope(path, slq->slq_scope)) {
             LOG(log_debug, logtype_sl,
                 "cnid backend: out of scope, skipping: %s", path);
