@@ -675,7 +675,7 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
         if (comb < 0x300);
         /* Unicode Standard Annex #15 A10.3 Hangul Composition */
         /* Step 1: leading consonant, vowel */
-        else if ((VBASE <= comb) && (comb <= VBASE + VCOUNT)) {
+        else if ((VBASE <= comb) && (comb < VBASE + VCOUNT)) {
             if ((LBASE <= base) && (base < LBASE + LCOUNT)) {
                 result = 1;
                 lindex = base - LBASE;

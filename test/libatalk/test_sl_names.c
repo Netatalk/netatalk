@@ -221,6 +221,10 @@ static const struct match_case match_cases[] = {
     {"(2)*", SL_C | SL_D | SL_W, "photo (2).jpg", true},
     {"#12*", SL_C | SL_D | SL_W, "Invoice #12.pdf", true},
     {"report*", SL_C | SL_D | SL_W, "\xe3\x85\x8b\xe3\x85\x8breport.txt", false},
+    /* U+1176, past the modern vowels, composes with no leading consonant;
+     * U+1100 and U+1175 still do */
+    {"\xe1\x84\x80\xe1\x85\xb6", 0, "\xea\xb9\x8c", false},
+    {"\xe1\x84\x80\xe1\x85\xb5", 0, "\xea\xb8\xb0", true},
     /* != */
     {"*.txt", SL_NAMES_NEGATE, "a.pdf", true},
     {"*.txt", SL_NAMES_NEGATE, "a.txt", false},
