@@ -769,7 +769,8 @@ search db = *BOOLEAN* (default: *yes*) **(V)**
 
 > Uses the fast CNID database name search instead of a slow recursive
 filesystem search when a client searches for an exact UTF-8 file name.
-Other searches walk the volume.
+Other searches walk the volume, and so does a search for a name that more
+than 1048576 files carry.
 >
 > ***NOTE:*** Accurate results need a consistent CNID database. Access to
 the volume through other file sharing protocols, or local filesystem

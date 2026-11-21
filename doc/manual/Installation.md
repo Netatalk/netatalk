@@ -79,7 +79,8 @@ packages that can be installed to enhance Netatalk's functionality.
     The SQLite library version 3.31 or later is required. It provides the
     *sqlite* CNID backend, an embedded database that does not require a
     separate database server to be set up and maintained by the system
-    administrator.
+    administrator. With FTS5 and version 3.34 or later, the CNID databases
+    Netatalk creates hold a name index for Spotlight and Catalog Search.
 
 ### Optional third-party software
 

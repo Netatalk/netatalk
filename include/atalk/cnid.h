@@ -63,6 +63,9 @@
 /* Smallest result buffer the cnid_find() wrapper accepts for any backend */
 #define CNID_FIND_MIN_RESULTS  100
 #define CNID_FIND_MIN_BUFLEN   (CNID_FIND_MIN_RESULTS * sizeof(uint32_t))
+/* Seeds one name search narrows by at most, all in one statement; a query
+ * with more reads every name */
+#define CNID_FIND_MAX_SEEDS    8
 
 /* the cnid_add calls a listing sends the backend before its folder's rows
  * load */
@@ -78,6 +81,8 @@ typedef int (*cnid_dirlist_fn)(void *ctx, uint64_t id, const char *name,
                                size_t len, uint64_t dev, uint64_t ino);
 
 struct cnid_dirtab;
+struct sl_name_pattern;
+struct sl_name_query;
 
 /*!
  * This is instance of CNID database object.
@@ -102,9 +107,13 @@ typedef struct _cnid_db {
                        cnid_t did, const char *name, size_t len);
     void (*cnid_close)(struct _cnid_db *cdb);
     int (*cnid_getstamp)(struct _cnid_db *cdb, void *buffer, const size_t len);
-    int (*cnid_find)(struct _cnid_db *cdb, const char *name, size_t namelen,
-                     cnid_t scope_did,
-                     void *buffer, size_t buflen, bool *more_available);
+    int (*cnid_find)(struct _cnid_db *cdb, const struct sl_name_query *query,
+                     const struct sl_name_pattern *const *seeds, int nseeds,
+                     cnid_t scope_did, void *buffer, size_t buflen,
+                     bool *more_available);
+    bool (*cnid_find_narrows)(struct _cnid_db *cdb,
+                              const struct sl_name_pattern *seed,
+                              cnid_t scope_did);
     int (*cnid_wipe)(struct _cnid_db *cdb);
     int (*cnid_dirlist)(struct _cnid_db *cdb, cnid_t did, size_t max,
                         cnid_dirlist_fn fn, void *ctx);
@@ -157,10 +166,13 @@ int    cnid_update(struct _cnid_db *cdb, const cnid_t id,
                    const size_t len);
 int    cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
                  void *buffer, size_t buflen, bool *more_available);
-int    cnid_find_scoped(struct _cnid_db *cdb, const char *name,
-                        size_t namelen, cnid_t scope_did,
-                        void *buffer, size_t buflen,
+int    cnid_find_scoped(struct _cnid_db *cdb,
+                        const struct sl_name_query *query,
+                        cnid_t scope_did, void *buffer, size_t buflen,
                         bool *more_available);
+int    cnid_find_exact(struct _cnid_db *cdb, const char *name,
+                       size_t namelen, void *buffer, size_t buflen,
+                       bool *more_available);
 int    cnid_wipe(struct _cnid_db *cdb);
 void   cnid_close(struct _cnid_db *db);
 void   cnid_dir_arm(struct _cnid_db *cdb, cnid_t did);

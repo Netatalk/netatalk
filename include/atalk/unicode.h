@@ -118,6 +118,8 @@ extern void     free_charset_names(void);
 extern void     init_iconv(void);
 extern size_t   convert_string(charset_t, charset_t, void const *, size_t,
                                void *, size_t);
+extern size_t   convert_string_quiet(charset_t, charset_t, void const *,
+                                     size_t, void *, size_t);
 extern size_t   convert_string_allocate(charset_t, charset_t, void const *,
                                         size_t, char **);
 extern size_t   charset_strupper(charset_t, const char *, size_t, char *,

@@ -179,5 +179,7 @@ extern int sl_pack(DALLOC_CTX *query, char *buf);
 extern int sl_unpack(DALLOC_CTX *query, const char *buf);
 extern int sl_unpack_len(DALLOC_CTX *query, const char *buf, size_t buf_len);
 extern void configure_spotlight_attributes(const char *attributes);
+extern char *sl_query_to_volume(TALLOC_CTX *ctx, const struct vol *vol,
+                                const char *query);
 
 #endif /* SPOTLIGHT_H */

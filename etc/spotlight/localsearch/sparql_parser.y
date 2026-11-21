@@ -30,8 +30,8 @@
     extern void yy_delete_buffer (YY_BUFFER_STATE buffer);
 
     /* forward declarations */
-    static const char *map_expr(const char *attr, char op, const char *val);
-    static const char *map_daterange(const char *dateattr, time_t date1, time_t date2);
+    static char *map_expr(const char *attr, char op, const char *val);
+    static char *map_daterange(const char *dateattr, time_t date1, time_t date2);
     static time_t isodate2unix(const char *s);
 
     /* global vars, e.g. needed by the lexer */
@@ -51,7 +51,7 @@
 
 %union {
     int ival;
-    const char *sval;
+    char *sval;
     bool bval;
     time_t tval;
 }
@@ -124,6 +124,8 @@ BOOL {
     YYABORT;
 }
 | match OR match                 {
+    /* each join frees the strings it joins, which nothing else holds, so a
+     * query of many comparisons keeps one copy of its text */
     if ($1 == NULL && $3 == NULL) {
         $$ = NULL;
     } else if ($1 == NULL) {
@@ -131,9 +133,12 @@ BOOL {
     } else if ($3 == NULL) {
         $$ = $1;
     } else if (strcmp($1, $3) == 0) {
-        $$ = talloc_asprintf(ssp_slq, "%s", $1);
+        $$ = $1;
+        talloc_free($3);
     } else {
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
+        talloc_free($1);
+        talloc_free($3);
     }
 }
 | match                        {$$ = $1;}
@@ -150,6 +155,9 @@ BOOL {
     } else {
         $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
     }
+
+    talloc_free($1);
+    talloc_free($3);
 }
 | expr OR expr                 {
     if (!ssp_slq->slq_allow_expr) {
@@ -164,9 +172,12 @@ BOOL {
     } else if ($3 == NULL) {
         $$ = $1;
     } else if (strcmp($1, $3) == 0) {
-        $$ = talloc_asprintf(ssp_slq, "%s", $1);
+        $$ = $1;
+        talloc_free($3);
     } else {
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
+        talloc_free($1);
+        talloc_free($3);
     }
 }
 ;
@@ -251,7 +262,7 @@ static char *ascii_lower_dup(TALLOC_CTX *ctx, const char *s, size_t len)
  * @returns the SPARQL pattern, or NULL for an unknown attribute or a failed
  *          localtime
  */
-static const char *map_daterange(const char *dateattr, time_t date1,
+static char *map_daterange(const char *dateattr, time_t date1,
                                  time_t date2)
 {
     EC_INIT;
@@ -346,7 +357,7 @@ static char *map_type_search(const char *attr, char op, const char *val)
  * @returns the SPARQL pattern, or NULL for an unknown attribute, one that
  *          ssm_enabled leaves off, or an error
  */
-static const char *map_expr(const char *attr, char op, const char *val)
+static char *map_expr(const char *attr, char op, const char *val)
 {
     EC_INIT;
     char *result = NULL;

@@ -19,6 +19,8 @@ typedef struct CNID_mysql_private {
     uint32_t      cnid_mysql_flags;
     MYSQL        *cnid_mysql_con;
     char         *cnid_mysql_voluuid_str;
+    char         *cnid_mysql_volpath; /*!< the volume path, escaped for a
+                                        quoted SQL literal */
     cnid_t        cnid_mysql_hint;
     MYSQL_STMT   *cnid_lookup_stmt;
     MYSQL_STMT   *cnid_add_stmt;
@@ -31,6 +33,7 @@ typedef struct CNID_mysql_private {
     /* Server lacks recursive-CTE support (pre-8.0 / MariaDB pre-10.2);
      * scoped finds fall back to unscoped with a one-time warning. */
     bool          cnid_find_scoped_unsupported;
+    bool          cnid_mysql_folded;  /*!< the table has the Folded1 column */
 } CNID_mysql_private;
 
 #endif

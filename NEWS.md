@@ -4,6 +4,21 @@ Netatalk Changelog
 Changes in 4.7.0
 ----------------
 
+* UPD: Spotlight: the cnid backend reads the name comparisons of a search in
+  Apple's query syntax, with wildcards, whole-name and word matching and the
+  case and diacritic modifiers. The sqlite CNID databases Netatalk creates
+  hold a name index that answers name searches without reading every name,
+  given SQLite 3.34 or later with FTS5; the mysql CNID tables it creates
+  hold folded names that the server matches. An existing CNID database
+  keeps working and reads every name; on a UTF8 volume `dbd -f` rebuilds a
+  sqlite one with the index, and a `dbd` run after dropping a mysql
+  volume's table fills a new one with the folded names, GitHub #3476
+* BREAKING: libatalk: Soversion bumped to 25; cnid_find() reads its term in
+  Spotlight's value syntax, `*` and `?` as wildcards and a backslash as an
+  escape; the cnid_db backend operation for find takes a parsed query and
+  its seeds, cnid_find_narrows is new, and cnid_find_scoped() takes a
+  query; cnid_find_exact() and the installed header sl_names.h are new,
+  GitHub #3476
 * NEW: netatalk: `--single-user` (`-u`) runs an AFP server without root for
   the invoking account, authenticating with SRP against the user's own
   verifier directory (`afppasswd -c -p`), with `-P`/`--pidfile` for its PID

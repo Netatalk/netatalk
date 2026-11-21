@@ -735,6 +735,15 @@ static int resolve_metadata_volume(AFPObj *obj, int module,
             return -1;
         }
 
+        /* the backend folds each name it writes in the volume's charset */
+        if (load_charset(cnid_vol) != 0) {
+            fprintf(stderr, "Can't load the character sets of %s\n",
+                    cnid_vol->v_path);
+            volume->vol = NULL;
+            volume->cnid_vol = NULL;
+            return -1;
+        }
+
         cnid_vol->v_cdb = cnid_open(cnid_vol, cnid_vol->v_cnidscheme,
                                     cnid_flags);
 

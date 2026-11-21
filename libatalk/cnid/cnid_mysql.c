@@ -25,6 +25,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -42,6 +43,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/sl_names.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
@@ -63,8 +65,20 @@
  * out of reach of the deferred-die path */
 #define CNID_MYSQL_RECONNECT_ATTEMPTS 2
 
+/*
+ * The column of folded names: netatalk folds a name for case and diacritics
+ * as the matcher does, so a search compares bytes whatever the collation.
+ * The 1 in its name is the version of the folding, so a netatalk that folds
+ * otherwise never reads it. A row without a folded name, as an older
+ * netatalk writes one, holds NULL.
+ */
+#define CNID_MYSQL_FOLDED_NAME  "Folded1"
+#define CNID_MYSQL_FOLDED       CNID_MYSQL_FOLDED_NAME " VARBINARY(1020) NULL"
+/* Bytes of a folded name the column holds; a longer one is NULL */
+#define CNID_MYSQL_FOLDED_MAX   1020
+
 static MYSQL_BIND lookup_param[4], lookup_result[5];
-static MYSQL_BIND add_param[4], put_param[5];
+static MYSQL_BIND add_param[5], put_param[6];
 static MYSQL_BIND get_param[2], get_result[1];
 static MYSQL_BIND delete_param[1];
 static MYSQL_BIND resolve_param[1], resolve_result[2];
@@ -82,6 +96,9 @@ static unsigned long long dirlist_result_ino;
  */
 static char               stmt_param_name[MAXPATHLEN];
 static unsigned long      stmt_param_name_len;
+/* the folded name, 0 bytes for none */
+static char               stmt_param_folded[CNID_MYSQL_FOLDED_MAX];
+static unsigned long      stmt_param_folded_len;
 static unsigned long long stmt_param_id;
 static unsigned long long stmt_param_did;
 static unsigned long long stmt_param_dev;
@@ -177,8 +194,51 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Point a statement parameter at the folded name
+ *
+ * NULLIF() in the statements stores the 0 bytes of no fold as NULL.
+ *
+ * @param[out] param  the parameter
+ */
+static void cnid_mysql_folded_param(MYSQL_BIND *param)
+{
+    param->buffer_type   = MYSQL_TYPE_BLOB;
+    param->buffer        = stmt_param_folded;
+    param->buffer_length = sizeof(stmt_param_folded);
+    param->length        = &stmt_param_folded_len;
+}
+
+/*!
+ * @brief Fold a name into the statement parameter of the folded column
+ *
+ * A fold longer than the column, or none for want of memory, leaves the
+ * column NULL, which every search takes as a candidate.
+ *
+ * @param[in] name     the name
+ * @param[in] len      bytes of name
+ * @param[in] charset  the name's charset, the volume's
+ */
+static void cnid_mysql_fold_param(const char *name, size_t len,
+                                  charset_t charset)
+{
+    char *folded = sl_name_fold_in(name, len, charset);
+    size_t n = folded != NULL ? strlen(folded) : 0;
+    stmt_param_folded_len = 0;
+
+    if (folded != NULL && n <= sizeof(stmt_param_folded)) {
+        memcpy(stmt_param_folded, folded, n);
+        stmt_param_folded_len = n;
+    }
+
+    free(folded);
+}
+
+/*!
  * @brief Prepare the insert statement for a new entry, numbered by
  * AUTO_INCREMENT
+ *
+ * The prepare tells whether the table has the column of folded names: a
+ * table an older netatalk made has none.
  *
  * @param[in,out] db  MySQL backend state with the connection and the table name
  * @returns 0, or -1 when preparing or binding fails
@@ -189,8 +249,28 @@ static int init_prepared_stmt_add(CNID_mysql_private *db)
     char *sql = NULL;
     EC_NULL(db->cnid_add_stmt = mysql_stmt_init(db->cnid_mysql_con));
     EC_NEG1(asprintf(&sql,
-                     "INSERT INTO `%s` (Name,Did,DevNo,InodeNo) VALUES(?,?,?,?)",
+                     "INSERT INTO `%s` (Name,Did,DevNo,InodeNo,"
+                     CNID_MYSQL_FOLDED_NAME ") VALUES(?,?,?,?,NULLIF(?,''))",
                      db->cnid_mysql_voluuid_str));
+    db->cnid_mysql_folded = false;
+
+    if (mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)) == 0) {
+        db->cnid_mysql_folded = true;
+    } else {
+        if (mysql_stmt_errno(db->cnid_add_stmt) != ER_BAD_FIELD_ERROR) {
+            LOG(log_error, logtype_cnid, "init_prepared_stmt_add: %s",
+                mysql_stmt_error(db->cnid_add_stmt));
+            EC_FAIL;
+        }
+
+        free(sql);
+        sql = NULL;
+        EC_NEG1(asprintf(&sql,
+                         "INSERT INTO `%s` (Name,Did,DevNo,InodeNo) "
+                         "VALUES(?,?,?,?)", db->cnid_mysql_voluuid_str));
+        EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)));
+    }
+
     add_param[0].buffer_type    = MYSQL_TYPE_STRING;
     add_param[0].buffer         = &stmt_param_name;
     add_param[0].buffer_length  = sizeof(stmt_param_name);
@@ -204,7 +284,7 @@ static int init_prepared_stmt_add(CNID_mysql_private *db)
     add_param[3].buffer_type    = MYSQL_TYPE_LONGLONG;
     add_param[3].buffer         = &stmt_param_ino;
     add_param[3].is_unsigned    = true;
-    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)));
+    cnid_mysql_folded_param(&add_param[4]);
     EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_add_stmt, add_param));
 EC_CLEANUP:
 
@@ -218,6 +298,9 @@ EC_CLEANUP:
 /*!
  * @brief Prepare the insert statement for an entry with an explicit CNID
  *
+ * The statement writes the folded name where init_prepared_stmt_add() found
+ * the column.
+ *
  * @param[in,out] db  MySQL backend state with the connection and the table name
  * @returns 0, or -1 when preparing or binding fails
  */
@@ -226,9 +309,18 @@ static int init_prepared_stmt_put(CNID_mysql_private *db)
     EC_INIT;
     char *sql = NULL;
     EC_NULL(db->cnid_put_stmt = mysql_stmt_init(db->cnid_mysql_con));
-    EC_NEG1(asprintf(&sql,
-                     "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo) VALUES(?,?,?,?,?)",
-                     db->cnid_mysql_voluuid_str));
+
+    if (db->cnid_mysql_folded) {
+        EC_NEG1(asprintf(&sql,
+                         "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo,"
+                         CNID_MYSQL_FOLDED_NAME ") VALUES(?,?,?,?,?,NULLIF(?,''))",
+                         db->cnid_mysql_voluuid_str));
+    } else {
+        EC_NEG1(asprintf(&sql,
+                         "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo) "
+                         "VALUES(?,?,?,?,?)", db->cnid_mysql_voluuid_str));
+    }
+
     put_param[0].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[0].buffer         = &stmt_param_id;
     put_param[0].is_unsigned    = true;
@@ -245,6 +337,7 @@ static int init_prepared_stmt_put(CNID_mysql_private *db)
     put_param[4].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[4].buffer         = &stmt_param_ino;
     put_param[4].is_unsigned    = true;
+    cnid_mysql_folded_param(&put_param[5]);
     EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_put_stmt, sql, strlen(sql)));
     EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_put_stmt, put_param));
 EC_CLEANUP:
@@ -441,11 +534,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static void close_prepared_stmt(CNID_mysql_private *db);
+
 /*!
  * @brief Prepare all 8 statements of a MySQL CNID table
  *
+ * A failure closes every statement and sets CNID_ERR_DB, which ends the
+ * session. The lookup or purge before an add's or an update's insert then
+ * finds its statement NULL in cnid_mysql_stmt_execute(), which prepares them
+ * all again.
+ *
  * @param[in,out] db  MySQL backend state with the connection and the table name
- * @returns 0, or -1 when one fails
+ * @returns 0, or -1 with errno CNID_ERR_DB when one fails
  */
 static int init_prepared_stmt(CNID_mysql_private *db)
 {
@@ -459,6 +559,12 @@ static int init_prepared_stmt(CNID_mysql_private *db)
     EC_ZERO(init_prepared_stmt_resolve(db));
     EC_ZERO(init_prepared_stmt_purge(db));
 EC_CLEANUP:
+
+    if (ret != 0) {
+        close_prepared_stmt(db);
+        errno = CNID_ERR_DB;
+    }
+
     EC_EXIT;
 }
 
@@ -547,6 +653,41 @@ static int cnid_mysql_drain_results(MYSQL *con)
     }
 
     return 0;
+}
+
+static int cnid_mysql_execute(MYSQL *con, const char *sql);
+
+/*!
+ * @brief Empty the volume's table, restart its CNIDs at 17 and write Depleted
+ *
+ * One batch runs it, but TRUNCATE and ALTER commit on their own, so a
+ * TRUNCATE that fails leaves the new mark and the rows in place.
+ *
+ * @param[in] db        MySQL backend state
+ * @param[in] depleted  the mark, 1 or 0
+ * @returns 0, or -1 with errno classified when a statement failed
+ */
+static int cnid_mysql_empty(const CNID_mysql_private *db, int depleted)
+{
+    const char *uuid = db->cnid_mysql_voluuid_str;
+    char *sql = NULL;
+    int ret = -1;
+
+    if (asprintf(&sql, "START TRANSACTION;"
+                       "UPDATE volumes SET Depleted=%d WHERE VolUUID='%s';"
+                       "TRUNCATE TABLE `%s`;"
+                       "ALTER TABLE `%s` AUTO_INCREMENT = 17;"
+                       "COMMIT;", depleted, uuid, uuid, uuid) < 0) {
+        errno = CNID_ERR_DB;
+        return -1;
+    }
+
+    if (cnid_mysql_execute(db->cnid_mysql_con, sql) == 0) {
+        ret = cnid_mysql_drain_results(db->cnid_mysql_con);
+    }
+
+    free(sql);
+    return ret;
 }
 
 /*!
@@ -638,6 +779,39 @@ static int cnid_mysql_execute(MYSQL *con, const char *sql)
 }
 
 /*!
+ * @brief Escape a string for a quoted literal of SQL text
+ *
+ * @param[in] con  MySQL connection, whose charset the escaping follows
+ * @param[in] s    the string
+ * @returns the escaped string, to free(), or NULL when out of memory
+ */
+static char *cnid_mysql_escape(MYSQL *con, const char *s)
+{
+    const size_t len = strlen(s);
+    char *out = malloc(2 * len + 1);
+
+    /* libmysqlclient fails with -1 under NO_BACKSLASH_ESCAPES, where a
+     * backslash is itself and a doubled quote is the escape */
+    if (out != NULL
+            && mysql_real_escape_string(con, out, s, (unsigned long)len)
+            == (unsigned long) -1) {
+        char *o = out;
+
+        for (const char *p = s; *p != '\0'; p++) {
+            if (*p == '\'') {
+                *o++ = '\'';
+            }
+
+            *o++ = *p;
+        }
+
+        *o = '\0';
+    }
+
+    return out;
+}
+
+/*!
  * @brief Remove a CNID from the MySQL table
  *
  * @param[in] cdb  CNID database
@@ -682,6 +856,7 @@ void cnid_mysql_close(struct _cnid_db *cdb)
         LOG(log_debug, logtype_cnid, "closing database connection for volume '%s'",
             cdb->cnid_db_vol->v_localname);
         free(db->cnid_mysql_voluuid_str);
+        free(db->cnid_mysql_volpath);
         close_prepared_stmt(db);
 
         if (db->cnid_mysql_con) {
@@ -752,6 +927,12 @@ int cnid_mysql_update(struct _cnid_db *cdb,
         stmt_param_dev = dev;
         stmt_param_ino = ino;
         EC_ZERO(cnid_mysql_stmt_execute(db, &db->cnid_purge_stmt));
+
+        /* here, not before the purge: a reconnect prepares the statements
+         * again and reads cnid_mysql_folded anew */
+        if (db->cnid_mysql_folded) {
+            cnid_mysql_fold_param(name, len, cdb->cnid_db_vol->v_volcharset);
+        }
 
         if (mysql_stmt_execute(db->cnid_put_stmt)) {
             switch (mysql_stmt_errno(db->cnid_put_stmt)) {
@@ -997,7 +1178,9 @@ EC_CLEANUP: {
         const int saved_errno = errno;
         LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: id: %" PRIu32, ntohl(id));
 
-        if (have_result) {
+        /* a delete or an update above whose reprepare failed closed every
+         * statement, and the stored result with it */
+        if (have_result && db->cnid_lookup_stmt != NULL) {
             mysql_stmt_free_result(db->cnid_lookup_stmt);
         }
 
@@ -1039,7 +1222,6 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
 {
     EC_INIT;
     CNID_mysql_private *db = NULL;
-    char *sql = NULL;
     cnid_t id = CNID_INVALID;
     MYSQL_STMT *stmt;
     my_ulonglong lastid;
@@ -1124,6 +1306,11 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
             stmt_param_dev = dev;
             stmt_param_ino = ino;
 
+            if (db->cnid_mysql_folded) {
+                cnid_mysql_fold_param(name, len,
+                                      cdb->cnid_db_vol->v_volcharset);
+            }
+
             if (mysql_stmt_execute(stmt)) {
                 switch (mysql_stmt_errno(stmt)) {
                 case ER_DUP_ENTRY:
@@ -1173,23 +1360,11 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                     "cnid_mysql_add: CNID set is depleted, emptying the CNID "
                     "table for volume '%s'; entries are rebuilt on access",
                     cdb->cnid_db_vol->v_localname);
-                EC_NEG1(asprintf(&sql,
-                                 "START TRANSACTION;"
-                                 "UPDATE volumes SET Depleted=1 WHERE VolUUID='%s';"
-                                 "TRUNCATE TABLE %s;"
-                                 "ALTER TABLE %s AUTO_INCREMENT = 17;"
-                                 "COMMIT;",
-                                 db->cnid_mysql_voluuid_str,
-                                 db->cnid_mysql_voluuid_str,
-                                 db->cnid_mysql_voluuid_str));
-                EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
-                free(sql);
-                sql = NULL;
                 /* Checked before the table is called reset: announcing a reset
                  * of a table still holding its rows, with the sequence not
                  * reseeded, would disconnect every session and do it again on
                  * the next insert. */
-                EC_NEG1(cnid_mysql_drain_results(db->cnid_mysql_con));
+                EC_NEG1(cnid_mysql_empty(db, 1));
                 db->cnid_mysql_flags |= CNID_MYSQL_FLAG_DEPLETED;
                 /* CNIDs issued before the reset now name nothing, or name a
                  * different file as the table refills. Report rather than
@@ -1219,10 +1394,6 @@ EC_CLEANUP: {
         /* Callers read errno to tell a table reset from an ordinary failure */
         const int saved_errno = errno;
         LOG(log_debug, logtype_cnid, "cnid_mysql_add: id: %" PRIu32, ntohl(id));
-
-        if (sql) {
-            free(sql);
-        }
 
         if (db) {
             /* The hint channel spans only this add: a later direct lookup
@@ -1429,8 +1600,10 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
         return -1;
     }
 
-    EC_NEG1(asprintf(&sql, "SELECT Stamp FROM volumes WHERE VolPath='%s'",
-                     cdb->cnid_db_vol->v_path));
+    /* by the key: a path that an older build stored unescaped reads back
+     * other than the volume's, and its open keeps that row */
+    EC_NEG1(asprintf(&sql, "SELECT Stamp FROM volumes WHERE VolUUID='%s'",
+                     db->cnid_mysql_voluuid_str));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql)
             && mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
@@ -1470,18 +1643,486 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/* Rows one batch of a volume search fetches at most */
+#define CNID_MYSQL_FIND_BATCH 65536
+
 /*!
- * @brief Find the CNIDs whose name contains a substring, for cnid_find
+ * @brief The LIKE pattern a name search sends the server for a seed
  *
- * The cnid_find wrapper validates the arguments. The query asks for 1 row
- * more than buffer holds, and that extra row sets more_available. The name
- * pattern binds as a statement parameter, never as SQL text. A scoped search
- * walks the subtree with a recursive CTE. A server without CTE support falls
- * back to an unscoped search.
+ * Folded1 compares bytes, so it takes the seed's pattern over folded names;
+ * Name takes the pattern that holds under any collation. Every name the seed
+ * matches satisfies the pattern of either column.
+ *
+ * @param[in] seed    the seed
+ * @param[in] folded  whether the pattern compares the folded names
+ * @returns the pattern, which the seed holds
+ */
+static const char *cnid_mysql_like(const struct sl_name_pattern *seed,
+                                   bool folded)
+{
+    return folded ? sl_name_pattern_index_like(seed)
+           : sl_name_pattern_like(seed);
+}
+
+/*!
+ * @brief Tell whether a name search compares the folded names
+ *
+ * A folder search compares Name, which its walk reads from the DidName
+ * index, where the folded names would cost a read of each row of the folder.
+ *
+ * @param[in] db         MySQL backend state
+ * @param[in] scope_did  the search's folder, or CNID_INVALID for the volume
+ * @returns true when the table holds folded names and the search covers the
+ *          volume, as every search does on a server without recursive CTEs
+ */
+static bool cnid_mysql_find_folded(const CNID_mysql_private *db,
+                                   cnid_t scope_did)
+{
+    return db->cnid_mysql_folded
+           && (scope_did == CNID_INVALID || db->cnid_find_scoped_unsupported);
+}
+
+/*!
+ * @brief Tell whether a seed's LIKE pattern narrows a name search
+ *
+ * @param[in] cdb        CNID database
+ * @param[in] seed       the seed
+ * @param[in] scope_did  the search's folder, or CNID_INVALID for the volume
+ * @returns true when the pattern holds a character other than '%'
+ */
+static bool cnid_mysql_find_narrows(struct _cnid_db *cdb,
+                                    const struct sl_name_pattern *seed,
+                                    cnid_t scope_did)
+{
+    const CNID_mysql_private *db = cdb->cnid_db_private;
+    const char *like = cnid_mysql_like(seed,
+                                       cnid_mysql_find_folded(db, scope_did));
+    return like[strspn(like, "%")] != '\0';
+}
+
+/*!
+ * @brief Tell whether a seed's folded-name pattern narrows a volume search
+ *
+ * For the volume search a folder search falls back to.
+ *
+ * @param[in] seed  the seed
+ * @param[in] ctx   unused
+ * @returns true when the pattern holds a character other than '%'
+ */
+static bool cnid_mysql_folded_narrows(const struct sl_name_pattern *seed,
+                                      void *ctx)
+{
+    const char *like = sl_name_pattern_index_like(seed);
+    (void)ctx;
+    return like[strspn(like, "%")] != '\0';
+}
+
+/*!
+ * @brief Write the WHERE condition of a name search over its LIKE patterns
+ *
+ * The condition keeps the rows whose names one pattern keeps, every row for
+ * none, and a row without a folded name as a candidate for the matcher.
+ *
+ * @param[in]  folded  whether the patterns compare the folded names
+ * @param[in]  npat    LIKE patterns, 0 for every row
+ * @param[out] cond    receives the condition
+ * @param[in]  size    room in cond
+ * @returns true when the condition fits
+ */
+static bool cnid_mysql_find_cond(bool folded, int npat, char *cond,
+                                 size_t size)
+{
+    const char *column = folded ? CNID_MYSQL_FOLDED_NAME : "Name";
+    size_t n = 0;
+
+    if (npat == 0) {
+        snprintf(cond, size, "1");
+        return true;
+    }
+
+    for (int i = 0; i < npat && n < size; i++) {
+        n += (size_t)snprintf(cond + n, size - n, "%st.%s LIKE ? ESCAPE '!'",
+                              i ? " OR " : "(", column);
+    }
+
+    if (n < size) {
+        n += (size_t)snprintf(cond + n, size - n, "%s)",
+                              folded ? " OR t." CNID_MYSQL_FOLDED_NAME
+                              " IS NULL" : "");
+    }
+
+    return n < size;
+}
+
+/*!
+ * @brief Prepare a name search: a batch of the volume, or a folder's subtree
+ *
+ * A volume search takes the rows after an Id whose names a LIKE pattern
+ * keeps. A folder search walks its subtree with a recursive CTE once and
+ * streams the rows unordered: a batch after the last Id would walk and sort
+ * the whole subtree again for every batch. A server that cannot parse the
+ * CTE latches the unscoped search for the connection.
+ *
+ * @param[in,out] db      MySQL backend state
+ * @param[in]     stmt    the statement
+ * @param[in]     npat    LIKE patterns, 0 for every name
+ * @param[in]     folded  whether the patterns compare the folded names
+ * @param[in,out] scoped  whether the search is scoped, cleared on a fallback
+ * @returns 0, or -1 when the prepare fails
+ */
+static int cnid_mysql_find_prepare(CNID_mysql_private *db, MYSQL_STMT *stmt,
+                                   int npat, bool folded, bool *scoped)
+{
+    char cond[CNID_FIND_MAX_SEEDS * 48 + 32];
+    char *sql = NULL;
+    int ret = -1;
+
+    /* cond has room for CNID_FIND_MAX_SEEDS patterns */
+    if (!cnid_mysql_find_cond(folded, npat, cond, sizeof(cond))) {
+        return -1;
+    }
+
+    if (*scoped) {
+        /* STRAIGHT_JOIN keeps the scope the outer loop, so the cost follows
+         * the subtree, not the volume; the CTE needs MySQL 8.0 or MariaDB
+         * 10.2 */
+        if (asprintf(&sql,
+                     "WITH RECURSIVE scope (Id) AS ("
+                     "  SELECT CAST(? AS UNSIGNED)"
+                     "  UNION"
+                     "  SELECT t.Id FROM `%s` t JOIN scope s ON t.Did = s.Id"
+                     ") "
+                     "SELECT t.Id, t.Name FROM scope s "
+                     "STRAIGHT_JOIN `%s` t ON t.Did = s.Id WHERE %s",
+                     db->cnid_mysql_voluuid_str,
+                     db->cnid_mysql_voluuid_str, cond) < 0) {
+            return -1;
+        }
+
+        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
+        ret = mysql_stmt_prepare(stmt, sql, strlen(sql));
+        free(sql);
+        sql = NULL;
+
+        if (ret == 0) {
+            return 0;
+        }
+
+        /*
+         * Only a parse rejection means the server lacks recursive CTEs;
+         * latch the fallback for that alone.
+         */
+        if (mysql_stmt_errno(stmt) != 1064 /* ER_PARSE_ERROR */) {
+            LOG(log_error, logtype_cnid, "cnid_mysql_find: prepare failed: %s",
+                mysql_stmt_error(stmt));
+            return -1;
+        }
+
+        LOG(log_warning, logtype_cnid,
+            "cnid_mysql_find: server lacks recursive-CTE support (%s); "
+            "falling back to unscoped searches for this connection",
+            mysql_stmt_error(stmt));
+        db->cnid_find_scoped_unsupported = true;
+        *scoped = false;
+        ret = -1;
+    }
+
+    if (asprintf(&sql,
+                 "SELECT t.Id, t.Name FROM `%s` t WHERE %s AND t.Id > ? "
+                 "ORDER BY t.Id LIMIT ?", db->cnid_mysql_voluuid_str,
+                 cond) < 0) {
+        return -1;
+    }
+
+    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
+
+    if (mysql_stmt_prepare(stmt, sql, strlen(sql)) == 0) {
+        ret = 0;
+    } else {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: prepare failed: %s",
+            mysql_stmt_error(stmt));
+    }
+
+    free(sql);
+    return ret;
+}
+
+/*!
+ * @brief Tell whether a folder search's walk stopped short of its subtree
+ *
+ * MariaDB ends a recursion past max_recursive_iterations with the rows so far
+ * and warning 1931, which the client library does not count for a prepared
+ * statement, so SHOW WARNINGS tells. A server that keeps fewer warnings than
+ * it counts, under max_error_count, may have dropped it.
+ *
+ * @param[in] con  MySQL connection
+ * @returns true when the walk stopped short or may have, or its warnings do
+ *          not read
+ */
+static bool cnid_mysql_cut_short(MYSQL *con)
+{
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    unsigned long long kept;
+    bool cut = false;
+
+    if (mysql_query(con, "SHOW WARNINGS") != 0
+            || (res = mysql_store_result(con)) == NULL) {
+        return true;
+    }
+
+    kept = mysql_num_rows(res);
+
+    while (!cut && (row = mysql_fetch_row(res)) != NULL) {
+        cut = row[1] != NULL && strcmp(row[1], "1931") == 0;
+    }
+
+    mysql_free_result(res);
+
+    if (cut || mysql_query(con, "SHOW COUNT(*) WARNINGS") != 0
+            || (res = mysql_store_result(con)) == NULL) {
+        return true;
+    }
+
+    row = mysql_fetch_row(res);
+    cut = row == NULL || row[0] == NULL || strtoull(row[0], NULL, 10) > kept;
+    mysql_free_result(res);
+    return cut;
+}
+
+/*!
+ * @brief Bind a name search's parameters and its result columns
+ *
+ * @param[in] stmt    the prepared search
+ * @param[in] scoped  whether the search takes a scope, and no batches
+ * @param[in] scope   CNID of the scope directory in host order
+ * @param[in] binary  whether the patterns compare bytes of folded names
+ * @param[in] likes   the LIKE patterns
+ * @param[in] lens    bytes of each pattern
+ * @param[in] npat    number of patterns
+ * @param[in] after   Id the rows of a batch follow
+ * @param[in] batch   rows one batch fetches
+ * @param[in] result  the Id and the name of a row
+ * @returns 0, or -1 when a bind fails
+ */
+static int cnid_mysql_find_bind(MYSQL_STMT *stmt, bool scoped,
+                                unsigned long long *scope, bool binary,
+                                const char *const *likes, unsigned long *lens,
+                                int npat,
+                                unsigned long long *after,
+                                unsigned long long *batch, MYSQL_BIND *result)
+{
+    MYSQL_BIND param[CNID_FIND_MAX_SEEDS + 3];
+    int i = 0;
+    memset(param, 0, sizeof(param));
+
+    if (scoped) {
+        param[i].buffer_type = MYSQL_TYPE_LONGLONG;
+        param[i].buffer = scope;
+        param[i++].is_unsigned = true;
+    }
+
+    for (int k = 0; k < npat; k++, i++) {
+        param[i].buffer_type = binary ? MYSQL_TYPE_BLOB : MYSQL_TYPE_STRING;
+        param[i].buffer = (void *)likes[k]; //NOSONAR: MySQL only reads a parameter's buffer
+        param[i].buffer_length = lens[k];
+        param[i].length = &lens[k];
+    }
+
+    if (!scoped) {
+        param[i].buffer_type = MYSQL_TYPE_LONGLONG;
+        param[i].buffer = after;
+        param[i++].is_unsigned = true;
+        param[i].buffer_type = MYSQL_TYPE_LONGLONG;
+        param[i].buffer = batch;
+        param[i].is_unsigned = true;
+    }
+
+    if (mysql_stmt_bind_param(stmt, param) != 0
+            || mysql_stmt_bind_result(stmt, result) != 0) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: bind failed: %s",
+            mysql_stmt_error(stmt));
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Tell whether a row's Id is a CNID, logging one that is not
+ *
+ * A corrupt row's match drops out of the search.
+ *
+ * @param[in] id  the Id
+ * @returns true for 1 to UINT32_MAX
+ */
+static bool cnid_mysql_id_ok(unsigned long long id)
+{
+    if (id != 0 && id <= UINT32_MAX) {
+        return true;
+    }
+
+    LOG(log_error, logtype_cnid,
+        "cnid_mysql_find: out of range id %llu in a name search, skipped", id);
+    return false;
+}
+
+/*!
+ * @brief Keep the lowest Ids of an unordered stream of matches, in a max-heap
+ *
+ * @param[in,out] heap  the Ids kept, the largest first
+ * @param[in,out] n     Ids in heap
+ * @param[in]     cap   room in heap
+ * @param[in]     id    the Id of a match
+ * @returns true when heap was full, so the search holds more matches than it
+ *          keeps
+ */
+static bool cnid_mysql_lowest(uint32_t *heap, int *n, int cap, uint32_t id)
+{
+    int i;
+
+    if (*n < cap) {
+        for (i = (*n)++; i > 0 && heap[(i - 1) / 2] < id; i = (i - 1) / 2) {
+            heap[i] = heap[(i - 1) / 2];
+        }
+
+        heap[i] = id;
+        return false;
+    }
+
+    if (id < heap[0]) {
+        for (i = 0;;) {
+            int c = 2 * i + 1;
+
+            if (c >= cap) {
+                break;
+            }
+
+            if (c + 1 < cap && heap[c + 1] > heap[c]) {
+                c++;
+            }
+
+            if (heap[c] <= id) {
+                break;
+            }
+
+            heap[i] = heap[c];
+            i = c;
+        }
+
+        heap[i] = id;
+    }
+
+    return true;
+}
+
+/*!
+ * @brief Order two host-order Ids
+ *
+ * @param[in] a  an Id
+ * @param[in] b  another
+ * @returns -1, 0 or 1
+ */
+static int cnid_mysql_id_order(const void *a, const void *b)
+{
+    uint32_t x = *(const uint32_t *)a;
+    uint32_t y = *(const uint32_t *)b;
+    return x < y ? -1 : x > y;
+}
+
+/* Folder verdicts a folder search over the volume keeps, by CNID; a
+ * collision costs only another walk */
+#define CNID_MYSQL_SCOPE_CACHE 1024
+
+/* A folder search the server cannot walk: its folder and the verdicts its
+ * walks keep */
+struct cnid_mysql_scope {
+    cnid_t scope;
+    struct {
+        cnid_t did;
+        bool under;
+    } seen[CNID_MYSQL_SCOPE_CACHE];
+};
+
+/*!
+ * @brief Tell whether an entry lies under a folder search's folder
+ *
+ * The walk ends at the folder, at the root, at a folder whose verdict a walk
+ * kept, or past MAXPATHLEN / 2 folders, as many as a path of MAXPATHLEN bytes
+ * holds, which only a loop in the table makes and which leaves the entry
+ * outside. Each folder it passed then keeps the verdict, so a loop costs one
+ * walk a search. An entry whose walk meets a missing row is outside and
+ * keeps no verdict, as a rename deletes a row before it adds it.
+ *
+ * @param[in]     cdb  CNID database
+ * @param[in,out] sc   the folder and the verdicts
+ * @param[in]     id   CNID of the entry, in network order
+ * @returns 1 when the entry lies under the folder, the folder itself not, 0
+ *          when it lies outside, -1 when a resolve fails otherwise than for a
+ *          missing row, errno classified
+ */
+static int cnid_mysql_under(struct _cnid_db *cdb, struct cnid_mysql_scope *sc,
+                            cnid_t id)
+{
+    cnid_t path[MAXPATHLEN / 2];
+    char name[12 + MAXPATHLEN + 1];
+    size_t n = 0;
+    bool under = false;
+    bool known = false;
+    cnid_t did = id;
+
+    while (!known && n < MAXPATHLEN / 2) {
+        size_t slot;
+
+        if (cnid_mysql_resolve(cdb, &did, name, sizeof(name)) == NULL) {
+            return errno == CNID_ERR_NOTFOUND ? 0 : -1;
+        }
+
+        slot = ntohl(did) % CNID_MYSQL_SCOPE_CACHE;
+
+        if (did == sc->scope || ntohl(did) < CNID_START) {
+            under = did == sc->scope;
+            known = true;
+        } else if (sc->seen[slot].did == did) {
+            under = sc->seen[slot].under;
+            known = true;
+        } else {
+            path[n++] = did;
+        }
+    }
+
+    for (size_t i = 0; i < n; i++) {
+        const size_t slot = ntohl(path[i]) % CNID_MYSQL_SCOPE_CACHE;
+        sc->seen[slot].did = path[i];
+        sc->seen[slot].under = under;
+    }
+
+    return under;
+}
+
+/*!
+ * @brief Find the CNIDs whose names match a query, for cnid_find
+ *
+ * The cnid_find wrapper validates the arguments. One statement takes the rows
+ * whose names one of the seeds' LIKE patterns keeps, every row without seeds,
+ * and the query decides each name; the patterns bind as statement
+ * parameters, never as SQL text. A volume search reads the rows after the
+ * last Id the previous batch read, the first batch 1 more than buffer holds
+ * and each next eight times larger, CNID_MYSQL_FIND_BATCH at most, until a
+ * match past buffer sets more_available. A folder search walks its subtree
+ * with a recursive CTE once and streams the rows unordered, keeping the
+ * lowest Ids that match, the matches a volume search finds; it compares Name,
+ * as cnid_mysql_find_folded() says. A server without CTE support, a failed
+ * scoped execute, or a walk cut short with a warning, as MariaDB's past
+ * max_recursive_iterations, makes it a volume search that keeps the matches
+ * cnid_mysql_under() places under the folder, before they take room in
+ * buffer. That search compares the folded names where the table holds them,
+ * except on the search that finds the server without CTEs.
  *
  * @param[in]  cdb             CNID database
- * @param[in]  name            UTF-8 substring
- * @param[in]  namelen         length of name
+ * @param[in]  query           the name comparisons
+ * @param[in]  seeds           the query's seeds, or NULL for every name
+ * @param[in]  nseeds          number of seeds
  * @param[in]  scope_did       CNID of the scope directory, or CNID_INVALID for
  *                             all of the volume
  * @param[out] buffer          receives the CNIDs in network order
@@ -1489,29 +2130,39 @@ EC_CLEANUP:
  * @param[out] more_available  receives true when more matches exist, or NULL
  * @returns the number of CNIDs, or -1 on error
  */
-int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                    cnid_t scope_did,
-                    void *buffer, size_t buflen, bool *more_available)
+int cnid_mysql_find(struct _cnid_db *cdb, const struct sl_name_query *query,
+                    const struct sl_name_pattern *const *seeds, int nseeds,
+                    cnid_t scope_did, void *buffer, size_t buflen,
+                    bool *more_available)
 {
     EC_INIT;
     CNID_mysql_private *db = cdb->cnid_db_private;
-    char *sql = NULL;
-    char *namelike = NULL;
+    const struct sl_name_pattern *folded_seeds[CNID_FIND_MAX_SEEDS];
+    const char *likes[CNID_FIND_MAX_SEEDS];
+    unsigned long lens[CNID_FIND_MAX_SEEDS];
     MYSQL_STMT *stmt = NULL;
-    MYSQL_BIND param[1];
-    MYSQL_BIND sparam[2];
-    MYSQL_BIND result[1];
-    int count = 0;
+    MYSQL_BIND result[2];
+    struct cnid_mysql_scope *sc = NULL;
+    int under = 0;
+    char name[MAXPATHLEN + 1];
+    unsigned long name_len = 0;
+    unsigned long long result_id = 0;
+    unsigned long long scope = ntohl(scope_did);
+    unsigned long long after = 0;
+    unsigned long long batch;
     cnid_t *cnids = (cnid_t *)buffer;
     unsigned long max_results = buflen / sizeof(cnid_t);
-    unsigned long namelike_len;
-    unsigned long long result_id = 0;
-    bool have_result = false;
-    int fetch_ret = MYSQL_NO_DATA;
+    bool scoped = (scope_did != CNID_INVALID
+                   && !db->cnid_find_scoped_unsupported);
+    bool folded = cnid_mysql_find_folded(db, scope_did);
+    bool more = false;
+    bool walked = false;
+    int npat = seeds != NULL ? nseeds : 0;
+    int fetch_ret = 0;
+    int count = 0;
 
     /* Parameters pre-validated by the libatalk/cnid/cnid.c wrapper:
-     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN];
-     *   buflen >= CNID_FIND_MIN_BUFLEN.
+     *   cdb, query non-NULL; buflen >= CNID_FIND_MIN_BUFLEN.
      * Re-checking here would risk emitting a different errno value than
      * the wrapper for the same input. */
 
@@ -1519,185 +2170,167 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
         *more_available = false;
     }
 
-    LOG(log_maxdebug, logtype_cnid,
-        "cnid_mysql_find: called with name='%s', namelen=%zu, buflen=%zu", name,
-        namelen, buflen);
-    EC_NEG1(asprintf(&namelike, "%%%s%%", name));
-    namelike_len = strlen(namelike);
-    LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'", namelike);
-    EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
-    /* LIMIT max_results + 1: peek pattern (matches SQLite). The LIMIT value
-     * is not user-controlled (derived from caller's buflen) and is safe to
-     * interpolate as a literal; the Name LIKE parameter is bound via
-     * mysql_stmt_bind_param below, never inlined into the SQL string. */
-    bool scoped = (scope_did != CNID_INVALID
-                   && !db->cnid_find_scoped_unsupported);
-    unsigned long long scope_host = 0;
-
-    if (scoped) {
-        /*
-         * Subtree-scoped variant: the recursive CTE enumerates the
-         * scope directory's transitive contents; STRAIGHT_JOIN pins
-         * the scope set as the outer loop so cost is proportional to
-         * the subtree, not the volume. Requires MySQL 8.0 / MariaDB
-         * 10.2; older servers fail the prepare and fall back below.
-         */
-        EC_NEG1(asprintf(&sql,
-                         "WITH RECURSIVE scope (Id) AS ("
-                         "  SELECT CAST(? AS UNSIGNED)"
-                         "  UNION"
-                         "  SELECT t.Id FROM `%s` t JOIN scope s ON t.Did = s.Id"
-                         ") "
-                         "SELECT t.Id FROM scope s STRAIGHT_JOIN `%s` t "
-                         "ON t.Did = s.Id "
-                         "WHERE t.Name LIKE ? ORDER BY t.Id LIMIT %lu",
-                         db->cnid_mysql_voluuid_str,
-                         db->cnid_mysql_voluuid_str, max_results + 1));
-        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
-
-        if (mysql_stmt_prepare(stmt, sql, strlen(sql)) != 0) {
-            /*
-             * Only a parse rejection means the server lacks recursive
-             * CTEs; latch the fallback for that alone. Any other
-             * prepare failure (connection loss, OOM) is transient and
-             * takes the same error path the unscoped prepare would.
-             */
-            if (mysql_stmt_errno(stmt) == 1064 /* ER_PARSE_ERROR */) {
-                LOG(log_warning, logtype_cnid,
-                    "cnid_mysql_find: server lacks recursive-CTE support "
-                    "(%s); falling back to unscoped searches for this "
-                    "connection", mysql_stmt_error(stmt));
-                db->cnid_find_scoped_unsupported = true;
-                scoped = false;
-                free(sql);
-                sql = NULL;
-            } else {
-                LOG(log_error, logtype_cnid,
-                    "cnid_mysql_find: prepare failed: %s",
-                    mysql_stmt_error(stmt));
-                EC_FAIL;
-            }
-        }
+    for (int i = 0; i < npat; i++) {
+        likes[i] = cnid_mysql_like(seeds[i], folded);
+        lens[i] = strlen(likes[i]);
+        LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'",
+            likes[i]);
     }
 
-    if (!scoped) {
-        EC_NEG1(asprintf(&sql,
-                         "SELECT Id FROM `%s` WHERE Name LIKE ? "
-                         "ORDER BY Id LIMIT %lu",
-                         db->cnid_mysql_voluuid_str, max_results + 1));
-        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
-        EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
-    }
-
-    free(sql);
-    sql = NULL;
-
-    if (scoped) {
-        scope_host = (unsigned long long)ntohl(scope_did);
-        memset(sparam, 0, sizeof(sparam));
-        sparam[0].buffer_type = MYSQL_TYPE_LONGLONG;
-        sparam[0].buffer = &scope_host;
-        sparam[0].is_unsigned = true;
-        sparam[1].buffer_type = MYSQL_TYPE_STRING;
-        sparam[1].buffer = namelike;
-        sparam[1].buffer_length = namelike_len;
-        sparam[1].length = &namelike_len;
-        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, sparam));
-    } else {
-        memset(param, 0, sizeof(param));
-        param[0].buffer_type = MYSQL_TYPE_STRING;
-        param[0].buffer = namelike;
-        param[0].buffer_length = namelike_len;
-        param[0].length = &namelike_len;
-        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
-    }
-
+    batch = MIN(max_results + 1, CNID_MYSQL_FIND_BATCH);
     memset(result, 0, sizeof(result));
     result[0].buffer_type = MYSQL_TYPE_LONGLONG;
     result[0].buffer = &result_id;
     result[0].is_unsigned = true;
-    EC_ZERO_LOG(mysql_stmt_bind_result(stmt, result));
+    result[1].buffer_type = MYSQL_TYPE_STRING;
+    result[1].buffer = name;
+    result[1].buffer_length = sizeof(name);
+    result[1].length = &name_len;
+    EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, folded, &scoped));
+    EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, folded, likes, lens,
+                                 npat, &after, &batch, result));
 
-    if (mysql_stmt_execute(stmt) != 0) {
-        if (!scoped) {
+    if (scoped && mysql_stmt_execute(stmt) == 0) {
+        /* Unbuffered, so the rows come as the fetches read them */
+        while ((fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
+            if (cnid_mysql_id_ok(result_id)
+                    && sl_name_query_match(query, name, name_len)
+                    && cnid_mysql_lowest((uint32_t *)cnids, &count,
+                                         (int)max_results,
+                                         (uint32_t)result_id)) {
+                more = true;
+            }
+        }
+
+        if (fetch_ret != MYSQL_NO_DATA) {
             LOG(log_error, logtype_cnid,
-                "cnid_mysql_find: execute failed: %s",
+                "cnid_mysql_find: MySQL error after fetch: %s",
                 mysql_stmt_error(stmt));
+            mysql_stmt_free_result(stmt);
             EC_FAIL;
         }
 
-        /* e.g. the server's CTE recursion-depth cap on an unusually
-         * deep subtree; retry unscoped — the Spotlight layer's path
-         * guard keeps the results correct */
-        LOG(log_warning, logtype_cnid,
-            "cnid_mysql_find: scoped query failed at execute (%s); "
-            "retrying unscoped", mysql_stmt_error(stmt));
-        EC_NEG1(asprintf(&sql,
-                         "SELECT Id FROM `%s` WHERE Name LIKE ? "
-                         "ORDER BY Id LIMIT %lu",
-                         db->cnid_mysql_voluuid_str, max_results + 1));
-        EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
-        free(sql);
-        sql = NULL;
-        memset(param, 0, sizeof(param));
-        param[0].buffer_type = MYSQL_TYPE_STRING;
-        param[0].buffer = namelike;
-        param[0].buffer_length = namelike_len;
-        param[0].length = &namelike_len;
-        EC_ZERO_LOG(mysql_stmt_bind_param(stmt, param));
-        EC_ZERO_LOG(mysql_stmt_bind_result(stmt, result));
-        EC_ZERO_LOG(mysql_stmt_execute(stmt));
+        mysql_stmt_free_result(stmt);
+        walked = !cnid_mysql_cut_short(db->cnid_mysql_con);
     }
 
-    EC_ZERO_LOG(mysql_stmt_store_result(stmt));
-    have_result = true;
-    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: mysql_num_rows=%lu",
-        (unsigned long)mysql_stmt_num_rows(stmt));
+    if (walked) {
+        qsort(cnids, (size_t)count, sizeof(cnids[0]), cnid_mysql_id_order);
 
-    /* Fetch up to max_results + 1 rows. The (max_results + 1)-th row, if
-     * it exists, is the "more available" sentinel and is not stored in
-     * cnids[]. */
-    while (count <= (int)max_results
-            && (fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
-        if (count < (int)max_results) {
-            LOG(log_maxdebug, logtype_cnid,
-                "cnid_mysql_find: row[%d] = '%llu'", count, result_id);
-            cnids[count] = htonl((uint32_t)result_id);
+        for (int i = 0; i < count; i++) {
+            cnids[i] = htonl(cnids[i]);
+        }
+    } else {
+        if (scoped) {
+            /* e.g. the server's CTE recursion-depth cap on an unusually
+             * deep subtree */
+            LOG(log_warning, logtype_cnid,
+                "cnid_mysql_find: scoped query failed or stopped short (%s); "
+                "retrying unscoped", mysql_stmt_error(stmt));
+            scoped = false;
+            count = 0;
+            more = false;
+
+            /* the folded patterns pick the seeds again: they can narrow the
+             * volume where Name's could not */
+            if (db->cnid_mysql_folded) {
+                folded = true;
+                npat = sl_name_query_seeds(query, folded_seeds,
+                                           CNID_FIND_MAX_SEEDS,
+                                           cnid_mysql_folded_narrows, NULL);
+
+                for (int i = 0; i < npat; i++) {
+                    likes[i] = sl_name_pattern_index_like(folded_seeds[i]);
+                    lens[i] = strlen(likes[i]);
+                }
+            }
+
+            EC_ZERO(cnid_mysql_find_prepare(db, stmt, npat, folded, &scoped));
+            EC_ZERO(cnid_mysql_find_bind(stmt, scoped, &scope, folded, likes,
+                                         lens, npat, &after, &batch, result));
         }
 
-        count++;
+        if (scope_did != CNID_INVALID) {
+            EC_NULL(sc = calloc(1, sizeof(*sc)));
+            sc->scope = scope_did;
+        }
+
+        while (count <= (int)max_results) {
+            unsigned long long rows = 0;
+
+            if (mysql_stmt_execute(stmt) != 0) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_mysql_find: execute failed: %s",
+                    mysql_stmt_error(stmt));
+                EC_FAIL;
+            }
+
+            EC_ZERO_LOG(mysql_stmt_store_result(stmt));
+
+            while ((fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
+                rows++;
+                after = result_id;
+
+                if (!cnid_mysql_id_ok(result_id)
+                        || !sl_name_query_match(query, name, name_len)) {
+                    continue;
+                }
+
+                if (sc != NULL
+                        && (under = cnid_mysql_under(cdb, sc,
+                                                     htonl((uint32_t)result_id)))
+                        != 1) {
+                    if (under < 0) {
+                        mysql_stmt_free_result(stmt);
+                        EC_FAIL;
+                    }
+
+                    continue;
+                }
+
+                if (count < (int)max_results) {
+                    cnids[count] = htonl((uint32_t)result_id);
+                }
+
+                if (++count > (int)max_results) {
+                    break;
+                }
+            }
+
+            if (fetch_ret != 0 && fetch_ret != MYSQL_NO_DATA) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_mysql_find: MySQL error after fetch: %s",
+                    mysql_stmt_error(stmt));
+                mysql_stmt_free_result(stmt);
+                EC_FAIL;
+            }
+
+            mysql_stmt_free_result(stmt);
+
+            if (rows < batch) {
+                break;
+            }
+
+            batch = MIN(batch * 8, CNID_MYSQL_FIND_BATCH);
+        }
+
+        if (count > (int)max_results) {
+            more = true;
+            count = (int)max_results;
+        }
     }
 
-    if (count > (int)max_results) {
-        if (more_available) {
-            *more_available = true;
-        }
-
-        count = (int)max_results;
-    } else if (fetch_ret != MYSQL_NO_DATA && fetch_ret != 0) {
-        LOG(log_error, logtype_cnid,
-            "cnid_mysql_find: MySQL error after fetch: %s",
-            mysql_stmt_error(stmt));
-        EC_FAIL;
+    if (more && more_available) {
+        *more_available = true;
     }
 
     LOG(log_debug, logtype_cnid, "cnid_mysql_find: returning %d matches", count);
 EC_CLEANUP:
-
-    if (have_result) {
-        mysql_stmt_free_result(stmt);
-    }
+    free(sc);
 
     if (stmt) {
         mysql_stmt_close(stmt);
-    }
-
-    if (namelike) {
-        free(namelike);
-    }
-
-    if (sql) {
-        free(sql);
     }
 
     if (ret != 0) {
@@ -1722,7 +2355,6 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
 {
     EC_INIT;
     CNID_mysql_private *db;
-    char *sql = NULL;
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_wipe: Parameter error");
@@ -1731,21 +2363,10 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     }
 
     LOG(log_debug, logtype_cnid, "cnid_mysql_wipe");
-    EC_NEG1(asprintf(&sql, "START TRANSACTION;"
-                           "UPDATE volumes SET Depleted=0 WHERE VolUUID='%s';"
-                           "TRUNCATE TABLE `%s`;"
-                           "ALTER TABLE `%s` AUTO_INCREMENT = 17;"
-                           "COMMIT;",
-                     db->cnid_mysql_voluuid_str,
-                     db->cnid_mysql_voluuid_str,
-                     db->cnid_mysql_voluuid_str));
-    EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con, sql));
-    free(sql);
-    sql = NULL;
     /* Before the latch is cleared: a caller told the wipe succeeded rebuilds
      * against a table that still holds its rows, with explicit-Id hint inserts
      * re-enabled against a sequence that was never reseeded. */
-    EC_NEG1(cnid_mysql_drain_results(db->cnid_mysql_con));
+    EC_NEG1(cnid_mysql_empty(db, 0));
     /* The Depleted column is cleared above, but this connection latched the
      * flag at open. Leaving it set would make the rest of a dbd rebuild
      * silently discard every AppleDouble CNID hint it is trying to restore,
@@ -1753,11 +2374,6 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     db->cnid_mysql_flags &= ~(CNID_MYSQL_FLAG_DEPLETED
                               | CNID_MYSQL_FLAG_NEAR_DEPLETION);
 EC_CLEANUP:
-
-    if (sql) {
-        free(sql);
-    }
-
     EC_EXIT;
 }
 
@@ -1829,6 +2445,7 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     cdb->cnid_get = cnid_mysql_get;
     cdb->cnid_lookup = cnid_mysql_lookup;
     cdb->cnid_find = cnid_mysql_find;
+    cdb->cnid_find_narrows = cnid_mysql_find_narrows;
     cdb->cnid_resolve = cnid_mysql_resolve;
     cdb->cnid_getstamp = cnid_mysql_getstamp;
     cdb->cnid_update = cnid_mysql_update;
@@ -1861,6 +2478,8 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     MYSQL_ROW row;
     struct vol *vol = args->cnid_args_vol;
     MYSQL *temp_conn = NULL;
+    struct stat st;
+    int dir_errno = 0;
     snprintf(dirpath, sizeof(dirpath), "%sCNID/%s", _PATH_STATEDIR,
              vol->v_localname);
     become_root();
@@ -1868,21 +2487,28 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     /* We need the volume dir under CNID to store .AppleDesktop,
        although this backend does not keep any database file here. */
     if (mkdir(dirpath, 0755) != 0) { //NOSONAR: AFP users need desktop directory access; only the owner can write.
-        if (errno == EEXIST) {
-            struct stat st;
+        dir_errno = errno;
 
-            if (stat(dirpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
-                LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
-                EC_FAIL;
-            }
-        } else {
-            LOG(log_error, logtype_cnid, "Failed to create volume directory '%s': %s",
-                dirpath, strerror(errno));
-            EC_FAIL;
+        if (dir_errno == EEXIST) {
+            dir_errno = stat(dirpath, &st) == 0 && S_ISDIR(st.st_mode) ? 0
+                        : ENOTDIR;
         }
     }
 
+    /* before any failure, which would leave the session root */
     unbecome_root();
+
+    if (dir_errno == ENOTDIR) {
+        LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
+        EC_FAIL;
+    }
+
+    if (dir_errno != 0) {
+        LOG(log_error, logtype_cnid, "Failed to create volume directory '%s': %s",
+            dirpath, strerror(dir_errno));
+        EC_FAIL;
+    }
+
     EC_NULL(cdb = cnid_mysql_new(vol));
     EC_NULL(db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)));
     cdb->cnid_db_private = db;
@@ -1940,7 +2566,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            NULL, 0, NULL, 0) == NULL) {
         LOG(log_error, logtype_cnid, "Failed to connect to MySQL server: %s",
             mysql_error(temp_conn));
-        mysql_close(temp_conn);
         EC_FAIL;
     }
 
@@ -1951,7 +2576,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     if (cnid_mysql_execute(temp_conn, sql)) {
         LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(temp_conn));
-        mysql_close(temp_conn);
         EC_FAIL;
     }
 
@@ -1961,7 +2585,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     if (result == NULL) {
         LOG(log_error, logtype_cnid, "MySQL result error: %s", mysql_error(temp_conn));
-        mysql_close(temp_conn);
         EC_FAIL;
     }
 
@@ -1976,7 +2599,6 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
         if (cnid_mysql_execute(temp_conn, sql)) {
             LOG(log_error, logtype_cnid, "Failed to create MySQL database '%s': %s",
                 obj->options.cnid_mysql_db, mysql_error(temp_conn));
-            mysql_close(temp_conn);
             EC_FAIL;
         }
 
@@ -2038,6 +2660,10 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
             obj->options.cnid_mysql_db);
     }
 
+    /* escaped after the first statement, whose answer carries the sql_mode
+     * init_connect set, so a quote or a backslash stays in the path */
+    EC_NULL(db->cnid_mysql_volpath = cnid_mysql_escape(db->cnid_mysql_con,
+                                                       vol->v_path));
     free(sql);
     sql = NULL;
     /*
@@ -2048,7 +2674,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
      */
     EC_NEG1(asprintf(&sql,
                      "SELECT VolUUID FROM volumes WHERE VolPath='%s' AND VolUUID != '%s'",
-                     vol->v_path, db->cnid_mysql_voluuid_str));
+                     db->cnid_mysql_volpath, db->cnid_mysql_voluuid_str));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql) == 0) {
         MYSQL_RES *stale_result = mysql_store_result(db->cnid_mysql_con);
@@ -2073,7 +2699,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
             sql = NULL;
             EC_NEG1(asprintf(&sql,
                              "DELETE FROM volumes WHERE VolPath='%s' AND VolUUID != '%s'",
-                             vol->v_path, db->cnid_mysql_voluuid_str));
+                             db->cnid_mysql_volpath, db->cnid_mysql_voluuid_str));
             cnid_mysql_execute(db->cnid_mysql_con, sql);
         }
     }
@@ -2090,7 +2716,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                      "INSERT INTO volumes (VolUUID, VolPath, Stamp, Depleted) "
                      "VALUES('%s','%s','%s',0)",
                      db->cnid_mysql_voluuid_str,
-                     vol->v_path,
+                     db->cnid_mysql_volpath,
                      blob));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql)) {
@@ -2147,10 +2773,10 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            "Name VARCHAR(255) NOT NULL,"
                            "Did INT UNSIGNED NOT NULL,"
                            "DevNo BIGINT UNSIGNED NOT NULL,"
-                           "InodeNo BIGINT UNSIGNED NOT NULL,"
+                           "InodeNo BIGINT UNSIGNED NOT NULL,%s,"
                            "UNIQUE DidName(Did, Name), UNIQUE DevIno(DevNo, InodeNo)) "
                            "AUTO_INCREMENT=17",
-                     db->cnid_mysql_voluuid_str));
+                     db->cnid_mysql_voluuid_str, CNID_MYSQL_FOLDED));
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql)) {
         LOG(log_error, logtype_cnid, "MySQL query error: %s",
@@ -2174,20 +2800,18 @@ EC_CLEANUP:
         mysql_free_result(result);
     }
 
+    if (temp_conn) {
+        mysql_close(temp_conn);
+    }
+
     if (sql) {
         free(sql);
     }
 
-    if (ret != 0) {
-        if (cdb) {
-            free(cdb);
-        }
-
+    /* the close frees the connection, its statements and the strings */
+    if (ret != 0 && cdb != NULL) {
+        cnid_mysql_close(cdb);
         cdb = NULL;
-
-        if (db) {
-            free(db);
-        }
     }
 
     return cdb;
