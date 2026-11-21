@@ -199,7 +199,10 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
                 goto lookup_err;
             }
 
-            if ((c = select(s + 1, &fds, NULL, NULL, &tv)) < 0) {
+            /* select() may update its timeout. Keep our own remaining time. */
+            struct timeval timeout = tv;
+
+            if ((c = select(s + 1, &fds, NULL, NULL, &timeout)) < 0) {
                 goto lookup_err;
             }
 
@@ -211,7 +214,7 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
                 goto lookup_err;
             }
 
-            if (tv_begin.tv_usec > tv_end.tv_sec) {
+            if (tv_begin.tv_usec > tv_end.tv_usec) {
                 tv_end.tv_usec += 1000000;
                 tv_end.tv_sec -= 1;
             }
