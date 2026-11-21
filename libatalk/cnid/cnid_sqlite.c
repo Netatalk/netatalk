@@ -2619,11 +2619,13 @@ static int cnid_sqlite_find_bind(sqlite3_stmt *stmt, bool indexed,
  * name through netatalk_match(), the query bound as a pointer, so the LIMIT
  * counts matches. The statement asks for 1 row more than buffer holds, which
  * sets more_available. A row with an ID outside the CNID range
- * drops out. The seeds read the candidates of the name index in one
- * statement; a folder search walks them up its folders for
- * CNID_SQLITE_WALK_MAX candidates at most and scans the folder otherwise. A
- * failure that says the index is unusable ends the connection's use of it
- * and repeats the search as a scan.
+ * drops out, and the search runs again with room for the rows it skipped.
+ * The seeds read the candidates of the name index in one statement; a folder
+ * search walks them up its folders for CNID_SQLITE_WALK_MAX candidates at
+ * most, the change log's Ids counted with them, and scans the folder
+ * otherwise, counting and walking in one transaction. A failure that says
+ * the index is unusable ends the connection's use of it and repeats the
+ * search as a scan.
  *
  * @param[in]  cdb             CNID database
  * @param[in]  query           the name comparisons
@@ -2646,7 +2648,9 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
     sqlite3_stmt *stmt = NULL;
     const bool scoped = scope_did != CNID_INVALID;
     bool indexed;
+    int owned = 0;
     int count = 0;
+    int rows = 0;
     int find_return;
     cnid_t *cnids = (cnid_t *)buffer;
     unsigned long max_results = buflen / sizeof(cnid_t);
@@ -2659,7 +2663,17 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
     }
 
     indexed = seeds != NULL && nseeds > 0 && nseeds <= CNID_FIND_MAX_SEEDS
-              && db->cnid_find_index_stmt[0] != NULL
+              && db->cnid_find_index_stmt[0] != NULL;
+
+    /* The walk takes the candidates the count read, in one snapshot */
+    if (indexed && scoped && sqlite3_get_autocommit(db->cnid_sqlite_con)
+            && cnid_sqlite_begin(db->cnid_sqlite_con, &owned) != 0) {
+        LOG(log_debug, logtype_cnid,
+            "cnid_sqlite_find: the folder search reads without a "
+            "transaction: %s", sqlite3_errmsg(db->cnid_sqlite_con));
+    }
+
+    indexed = indexed
               && (!scoped
                   || cnid_sqlite_candidates(db, seeds, nseeds,
                                             CNID_SQLITE_WALK_MAX + 1)
@@ -2706,46 +2720,78 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const struct sl_name_query *query,
         *more_available = false;
     }
 
-search:
-    sqlite3_reset(stmt);
-    sqlite3_clear_bindings(stmt);
     /* LIMIT max_results + 1: peek for an extra row to detect "more results
-     * exist" without a second query. */
-    find_return = cnid_sqlite_find_bind(stmt, indexed, query, seeds, nseeds,
-                                        scope_did,
-                                        (sqlite3_int64)(max_results + 1));
+     * exist" without a second query. A run that hits the LIMIT after skipping
+     * rows runs again with room for them. */
+    for (sqlite3_int64 limit = (sqlite3_int64)max_results + 1;;) {
+        int skipped = 0;
+        count = 0;
+        rows = 0;
+        sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        find_return = cnid_sqlite_find_bind(stmt, indexed, query, seeds,
+                                            nseeds, scope_did, limit);
 
-    if (find_return != SQLITE_OK) {
-        LOG(log_error, logtype_cnid,
-            "cnid_sqlite_find: bind failed: %s",
-            sqlite3_errmsg(db->cnid_sqlite_con));
-        cnid_sqlite_set_errno(find_return);
-        EC_FAIL;
-    }
-
-    /* Fetch up to max_results + 1 rows. The (max_results + 1)-th row, if
-     * it exists, is the "more available" sentinel and is not stored in
-     * cnids[]. */
-    /* The step return is the only reliable source here: sqlite3_errcode() is
-     * sticky on the connection, so a SQLITE_CONSTRAINT that cnid_sqlite_add()
-     * handled and moved on from would make this successful search look failed. */
-    while ((find_return = sqlite3_step(stmt)) == SQLITE_ROW
-            && count <= (int)max_results) {
-        uint64_t rowid = sqlite3_column_int64(stmt, 0);
-
-        /* A corrupt row is skipped, not fatal: the remaining matches are sound */
-        if (!cnid_sqlite_rowid_ok(rowid)) {
+        if (find_return != SQLITE_OK) {
             LOG(log_error, logtype_cnid,
-                "cnid_sqlite_find: out of range id %" PRIu64
-                " in a name search, skipped", rowid);
+                "cnid_sqlite_find: bind failed: %s",
+                sqlite3_errmsg(db->cnid_sqlite_con));
+            cnid_sqlite_set_errno(find_return);
+            EC_FAIL;
+        }
+
+        /* The (max_results + 1)-th match, if it exists, is the "more
+         * available" sentinel and is not stored in cnids[]. The step return
+         * is the only reliable source here: sqlite3_errcode() is sticky on
+         * the connection, so a SQLITE_CONSTRAINT that cnid_sqlite_add()
+         * handled and moved on from would make this successful search look
+         * failed. */
+        while ((find_return = sqlite3_step(stmt)) == SQLITE_ROW
+                && count <= (int)max_results) {
+            uint64_t rowid = sqlite3_column_int64(stmt, 0);
+            rows++;
+
+            /* A corrupt row is skipped, not fatal: the remaining matches are
+             * sound */
+            if (!cnid_sqlite_rowid_ok(rowid)) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_sqlite_find: out of range id %" PRIu64
+                    " in a name search, skipped", rowid);
+                skipped++;
+                continue;
+            }
+
+            if (count < (int)max_results) {
+                cnids[count] = htonl((uint32_t) rowid);
+            }
+
+            count++;
+        }
+
+        if (indexed && cnid_sqlite_index_broken(find_return)) {
+            cnid_sqlite_index_abandon(db, "a search failed on",
+                                      CNID_SQLITE_INDEX_REBUILT);
+            stmt = scoped ? db->cnid_find_scoped_stmt : db->cnid_find_stmt;
+            indexed = false;
+            limit = (sqlite3_int64)max_results + 1;
             continue;
         }
 
-        if (count < (int)max_results) {
-            cnids[count] = htonl((uint32_t) rowid);
+        if (find_return != SQLITE_ROW && find_return != SQLITE_DONE) {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_find: sqlite query error: %s",
+                sqlite3_errmsg(db->cnid_sqlite_con));
+            cnid_sqlite_set_errno(find_return);
+            EC_FAIL;
         }
 
-        count++;
+        if (count > (int)max_results || skipped == 0 || rows < limit) {
+            break;
+        }
+
+        /* each run skips more rows than the one before allowed for, so the
+         * runs end */
+        limit = (sqlite3_int64)max_results + 1 + skipped;
     }
 
     if (count > (int)max_results) {
@@ -2756,29 +2802,18 @@ search:
         count = (int)max_results;
     }
 
-    if (indexed && cnid_sqlite_index_broken(find_return)) {
-        cnid_sqlite_index_abandon(db, "a search failed on",
-                                  CNID_SQLITE_INDEX_REBUILT);
-        stmt = scoped ? db->cnid_find_scoped_stmt : db->cnid_find_stmt;
-        indexed = false;
-        count = 0;
-        goto search;
-    }
-
-    if (find_return != SQLITE_ROW && find_return != SQLITE_DONE) {
-        LOG(log_error, logtype_cnid,
-            "cnid_sqlite_find: sqlite query error: %s",
-            sqlite3_errmsg(db->cnid_sqlite_con));
-        cnid_sqlite_set_errno(find_return);
-        EC_FAIL;
-    }
-
     LOG(log_debug, logtype_cnid, "cnid_sqlite_find: got %d matches", count);
 EC_CLEANUP:
     LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(): END");
 
+    /* the seeds' patterns and the query go when the caller frees the query */
     if (db && stmt) {
         cnid_sqlite_stmt_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+    }
+
+    if (db) {
+        cnid_sqlite_rollback(db->cnid_sqlite_con, &owned);
     }
 
     if (ret != 0) {

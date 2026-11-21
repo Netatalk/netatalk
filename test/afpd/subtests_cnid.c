@@ -1102,6 +1102,177 @@ static int cnid_scoped_checks(struct _cnid_db *cdb, cnid_t box, cnid_t big)
     "(SELECT Id FROM \"%1$s\" WHERE Name GLOB 'needle [0-9]*')"
 
 /*!
+ * @brief A search whose rows hold an Id outside the CNID range skips it and
+ *        still reports the matches past its buffer
+ *
+ * The row of Id 0 comes first, so the statement's LIMIT counts it, and the
+ * 101st valid match lies past the rows the statement returns.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_skipped_more(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    bool more = false;
+    int result = 0;
+
+    if (cnid_scratch_setup(&s, "skipped", "skippedvol",
+                           "0F0F0F0F-1111-2222-3333-DEDEDEDEDEDE") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        cnid_scratch_cleanup(&s);
+        return 1;
+    }
+
+    if (cnid_add_numbered(cdb, "skipped %03d.txt", 0, CNID_FIND_MIN_RESULTS + 1,
+                          10000) != 0
+            || cnid_scratch_sql(&s, "INSERT INTO \"%1$s\" (Id, Name, Did, "
+                                "DevNo, InodeNo) VALUES (0, 'skipped bad.txt', "
+                                "2, 4242, 9999)") != 0) {
+        result = 10;
+    } else if (cnid_find(cdb, "skipped", 7, results, sizeof(results), &more)
+               != CNID_FIND_MIN_RESULTS) {
+        result = 1;
+    } else if (!more) {
+        result = 2;
+    }
+
+    cnid_close(cdb);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A volume of Latin-1 names: a search folds the case and the
+ *        diacritics of their letters and matches no other letter, through
+ *        the name index and without it
+ *
+ * The names move into the index's full-text table at the 1024th write, its
+ * copy of each folded from Latin-1; the rename after them answers from the
+ * log. An exact search folds case and diacritics, so été.txt and ete.txt
+ * answer it alike, and àtà.txt does not.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_latin1(void)
+{
+    static char scheme[] = "sqlite";
+    static char ete_latin[] = "\xe9t\xe9.txt";
+    static char ata_latin[] = "\xe0t\xe0.txt";
+    static char ete[] = "ete.txt";
+    const char *names[] = { ete_latin, ata_latin, ete };
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    struct stat st;
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    cnid_t id;
+    bool more = false;
+    int result = 0;
+
+    if (cnid_scratch_setup(&s, "latin", "latinvol",
+                           "0F0F0F0F-1111-2222-3333-E1E1E1E1E1E1") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((s.vol.v_volcharset = add_charset("ISO-8859-1")) == (charset_t) -1) {
+        cnid_scratch_cleanup(&s);
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        cnid_scratch_cleanup(&s);
+        return 1;
+    }
+
+    if (cnid_add_names(cdb, names, 3, 70) != 0
+            || cnid_add_numbered(cdb, "fill %04d.txt", 0, 1100, 10000) != 0) {
+        result = 10;
+    } else if (cnid_find_exact(cdb, "\xc9T\xc9.TXT", 7, results,
+                               sizeof(results), &more) != 2
+               || results[0] != cnid_get(cdb, DIRDID_ROOT, ete_latin, 7)
+               || results[1] != cnid_get(cdb, DIRDID_ROOT, ete, 7)) {
+        result = 1;
+    } else if (cnid_find(cdb, "\xc0T\xc0", 3, results, sizeof(results),
+                         &more) != 1
+               || results[0] != cnid_get(cdb, DIRDID_ROOT, ata_latin, 7)) {
+        result = 2;
+    }
+
+    /* a rename the log holds, the full-text table its old name */
+    memset(&st, 0, sizeof(st));
+    st.st_dev = 4242;
+    st.st_ino = 72;
+
+    if (result == 0
+            && ((id = cnid_get(cdb, DIRDID_ROOT, ete, 7)) == CNID_INVALID
+                || cnid_update(cdb, id, &st, DIRDID_ROOT, "\xe9T\xc9 2.txt",
+                               9) != 0)) {
+        result = 11;
+    } else if (result == 0
+               && (cnid_find_exact(cdb, "\xc9t\xe9 2.TXT", 9, results,
+                                   sizeof(results), &more) != 1
+                   || results[0] != id)) {
+        result = 3;
+    }
+
+    cnid_close(cdb);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
+ * @brief A search whose LIMIT the rows of Ids outside the CNID range take up
+ *        runs again and fills its buffer, without more matches to report
+ *
+ * The rows of Ids -1 and 0 come first, and exactly a buffer of valid matches
+ * follows them.
+ *
+ * @returns 0, or the number of the first failed check
+ */
+int utest_cnid_find_skipped_fills(void)
+{
+    static char scheme[] = "sqlite";
+    struct cnid_scratch s;
+    struct _cnid_db *cdb;
+    cnid_t results[CNID_FIND_MIN_RESULTS];
+    bool more = true;
+    int result = 0;
+
+    if (cnid_scratch_setup(&s, "fills", "fillsvol",
+                           "0F0F0F0F-1111-2222-3333-DFDFDFDFDFDF") != 0) {
+        return TEST_SKIP;
+    }
+
+    if ((cdb = cnid_open(&s.vol, scheme, 0)) == NULL) {
+        cnid_scratch_cleanup(&s);
+        return 1;
+    }
+
+    if (cnid_add_numbered(cdb, "fills %03d.txt", 0, CNID_FIND_MIN_RESULTS,
+                          10000) != 0
+            || cnid_scratch_sql(&s, "INSERT INTO \"%1$s\" (Id, Name, Did, "
+                                "DevNo, InodeNo) VALUES (-1, 'fills bad.txt', "
+                                "2, 4242, 9998), (0, 'fills worse.txt', 2, "
+                                "4242, 9999)") != 0) {
+        result = 10;
+    } else if (cnid_find(cdb, "fills", 5, results, sizeof(results), &more)
+               != CNID_FIND_MIN_RESULTS) {
+        result = 1;
+    } else if (more) {
+        result = 2;
+    }
+
+    cnid_close(cdb);
+    cnid_scratch_cleanup(&s);
+    return result;
+}
+
+/*!
  * @brief A search inside a folder scans the folder when the name index holds
  *        more than CNID_SQLITE_WALK_MAX candidates, or its change log more
  *        Ids, and answers alike

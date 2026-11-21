@@ -4686,6 +4686,15 @@ int main(int argc, char *argv[])
     TEST_int_or_skip(utest_cnid_find_walk_max(), 0,
                      "cnid_find: a folder search of more than 16384 candidates "
                      "scans the folder");
+    TEST_int_or_skip(utest_cnid_find_skipped_more(), 0,
+                     "cnid_find: a skipped out-of-range row keeps more matches "
+                     "reported");
+    TEST_int_or_skip(utest_cnid_find_skipped_fills(), 0,
+                     "cnid_find: skipped out-of-range rows leave the buffer "
+                     "full of matches");
+    TEST_int_or_skip(utest_cnid_find_latin1(), 0,
+                     "cnid_find: a volume of Latin-1 names folds their "
+                     "letters' case and matches no other letter");
     TEST_int_or_skip(utest_cnid_find_seeds_once(), 0,
                      "cnid_find: two seeds over the index take each match "
                      "once");

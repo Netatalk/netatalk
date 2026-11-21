@@ -693,18 +693,14 @@ static bool cnid_find_narrows(const struct sl_name_pattern *seed, void *ctx)
  * @brief Find the CNIDs whose names match a query, in a directory's subtree
  *
  * Centralises parameter validation so all CNID backends behave identically
- * against bad input. A backend that narrows the search by every seed of the
- * query reads the candidates of all of them in one search; otherwise the
- * search reads every name. Every result matches the whole query, once, so
- * the buffer's room counts matches, and the results are the first matches
- * in CNID order, as a search of every name finds them. When @p scope_did is
- * not CNID_INVALID only entries lying underneath that directory match; the
- * scope directory itself is not a result.
+ * against bad input. A backend that narrows by every seed of the query reads
+ * their candidates in one search, otherwise every name. The results are the
+ * first matches of the whole query in CNID order, each once, so the buffer's
+ * room counts matches. With @p scope_did other than CNID_INVALID only entries
+ * beneath that directory match, the directory itself excluded.
  *
- * The optional @p more_available out-parameter, when non-NULL, is written
- * unconditionally on entry to false and again by the backend: false on
- * error, true iff the result set was truncated on success (more matches
- * exist than fit in @p buffer).
+ * @p more_available, when non-NULL, is false after any failure, the
+ * wrapper's included, and true when more matches exist than fit.
  *
  * @param[in]  cdb            CNID database handle
  * @param[in]  query          the name comparisons
@@ -713,7 +709,7 @@ static bool cnid_find_narrows(const struct sl_name_pattern *seed, void *ctx)
  * @param[out] buffer         receives the CNIDs in network byte order
  * @param[in]  buflen         capacity of @p buffer in bytes, at least
  *                            CNID_FIND_MIN_BUFLEN
- * @param[out] more_available set to true iff the result set was truncated,
+ * @param[out] more_available set to true when more matches exist than fit,
  *                            NULL to opt out
  * @returns number of CNIDs written to @p buffer on success, -1 on failure
  *          (errno = CNID_ERR_PARAM for invalid arguments, otherwise the
@@ -764,7 +760,7 @@ int cnid_find_scoped(struct _cnid_db *cdb, const struct sl_name_query *query,
  * @param[in]  flags          SL_NAMES_CASE and SL_NAMES_DIACRITIC bits
  * @param[out] buffer         receives the CNIDs in network byte order
  * @param[in]  buflen         capacity of @p buffer in bytes
- * @param[out] more_available set to true iff the result set was truncated,
+ * @param[out] more_available set to true when more matches exist than fit,
  *                            NULL to opt out
  * @returns the number of CNIDs, or -1 as cnid_find_scoped() fails
  */
@@ -808,14 +804,12 @@ static int cnid_find_string(struct _cnid_db *cdb, const char *name,
  *
  * The term follows Spotlight's value syntax: '*' matches any run of
  * characters, '?' one character, and a backslash makes the next character
- * literal, a backslash at the end of the term itself included. Letters match
- * without regard to case. Centralises parameter validation so all CNID
- * backends behave identically against bad input.
+ * literal; a backslash at the end means itself. Letters match without regard
+ * to case. Centralises parameter validation so all CNID backends behave
+ * identically against bad input.
  *
- * The optional @p more_available out-parameter, when non-NULL, is written
- * unconditionally on entry to false and again by the backend: false on
- * error, true iff the result set was truncated on success (more matches
- * exist than fit in @p buffer).
+ * @p more_available, when non-NULL, is false after any failure, the
+ * wrapper's included, and true when more matches exist than fit.
  *
  * @param[in]  cdb            CNID database handle
  * @param[in]  name           term to search for in the volume's charset,
@@ -825,7 +819,7 @@ static int cnid_find_string(struct _cnid_db *cdb, const char *name,
  * @param[out] buffer         receives the CNIDs in network byte order
  * @param[in]  buflen         capacity of @p buffer in bytes, at least
  *                            CNID_FIND_MIN_BUFLEN
- * @param[out] more_available set to true iff the result set was truncated,
+ * @param[out] more_available set to true when more matches exist than fit,
  *                            NULL to opt out
  * @returns number of CNIDs written to @p buffer on success, -1 on failure
  *          (errno = CNID_ERR_PARAM for invalid arguments, CNID_ERR_BUSY
@@ -855,7 +849,7 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
  * @param[out] buffer         receives the CNIDs in network byte order
  * @param[in]  buflen         capacity of @p buffer in bytes, at least
  *                            CNID_FIND_MIN_BUFLEN
- * @param[out] more_available set to true iff the result set was truncated,
+ * @param[out] more_available set to true when more matches exist than fit,
  *                            NULL to opt out
  * @returns the number of CNIDs, or -1 as cnid_find() fails
  */
