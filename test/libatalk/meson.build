@@ -196,6 +196,21 @@ test(
     protocol: 'tap',
 )
 
+sl_names_test = executable(
+    'sl_names_test',
+    'test_sl_names.c',
+    include_directories: root_includes,
+    dependencies: [bstring, iniparser],
+    link_with: libatalk,
+    install: false,
+)
+
+test(
+    'libatalk Spotlight name comparisons',
+    sl_names_test,
+    protocol: 'tap',
+)
+
 adouble_convert_c_args = []
 adouble_convert_env = {}
 adouble_convert_depends = []

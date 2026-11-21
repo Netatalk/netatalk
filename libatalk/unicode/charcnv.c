@@ -27,6 +27,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,7 +47,7 @@
 
 /*!
  * @file
- * Character-set conversion routines based on samba iconv wrappers.
+ * @brief Character-set conversion routines based on samba iconv wrappers
  */
 
 
@@ -349,13 +350,7 @@ static size_t convert_string_internal(charset_t from, charset_t to,
 
 
 /*!
- * @brief Convert a string between two charsets through UCS2, with Unicode
- * composition
- *
- * A decomposed target charset gets decomposed text. Otherwise text from a
- * decomposed source, or from a charset without built-in functions, gets
- * precomposed. The intermediate buffers hold MAXPATHLEN UCS2 characters,
- * and the output ends with a NUL.
+ * @brief Convert a string as convert_string() does, logging on @p log
  *
  * @param[in]  from     source charset
  * @param[in]  to       target charset
@@ -364,11 +359,13 @@ static size_t convert_string_internal(charset_t from, charset_t to,
  *                      length
  * @param[out] dest     output buffer
  * @param[in]  destlen  size of @p dest
+ * @param[in]  log      whether a failed conversion to or from UCS2 logs an
+ *                      error
  * @returns the output length without the NUL, or `(size_t)-1` for an error
  */
-size_t convert_string(charset_t from, charset_t to,
-                      void const *src, size_t srclen,
-                      void *dest, size_t destlen)
+static size_t convert_string_log(charset_t from, charset_t to,
+                                 void const *src, size_t srclen,
+                                 void *dest, size_t destlen, bool log)
 {
     size_t i_len, o_len;
     ucs2_t *u;
@@ -378,8 +375,11 @@ size_t convert_string(charset_t from, charset_t to,
     /* convert from_set to UCS2 */
     if ((size_t) -1 == (o_len = convert_string_internal(from, CH_UCS2, src, srclen,
                                                         (char *) buffer, sizeof(buffer)))) {
-        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )",
-            charset_name(from));
+        if (log) {
+            LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )",
+                charset_name(from));
+        }
+
         return (size_t) -1;
     }
 
@@ -403,12 +403,63 @@ size_t convert_string(charset_t from, charset_t to,
     /* Convert UCS2 to to_set */
     if ((size_t)(-1) == (o_len = convert_string_internal(CH_UCS2, to, (char *) u,
                                                          i_len, dest, destlen))) {
-        LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s",
-            charset_name(to), strerror(errno));
+        if (log) {
+            LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s",
+                charset_name(to), strerror(errno));
+        }
+
         return (size_t) -1;
     }
 
     return o_len;
+}
+
+/*!
+ * @brief Convert a string between two charsets through UCS2, with Unicode
+ * composition
+ *
+ * A decomposed target charset gets decomposed text. Otherwise text from a
+ * decomposed source, or from a charset without built-in functions, gets
+ * precomposed. The intermediate buffers hold MAXPATHLEN UCS2 characters,
+ * and the output ends with a NUL. A failed conversion to or from UCS2 logs
+ * an error.
+ *
+ * @param[in]  from     source charset
+ * @param[in]  to       target charset
+ * @param[in]  src      source string
+ * @param[in]  srclen   source length in bytes, or `(size_t)-1` for the string
+ *                      length
+ * @param[out] dest     output buffer
+ * @param[in]  destlen  size of @p dest
+ * @returns the output length without the NUL, or `(size_t)-1` for an error
+ */
+size_t convert_string(charset_t from, charset_t to,
+                      void const *src, size_t srclen,
+                      void *dest, size_t destlen)
+{
+    return convert_string_log(from, to, src, srclen, dest, destlen, true);
+}
+
+/*!
+ * @brief Convert a string as convert_string() does, without the error log
+ *
+ * For a caller that takes a string that does not convert as data, as a name
+ * search does with every name it compares.
+ *
+ * @param[in]  from     source charset
+ * @param[in]  to       target charset
+ * @param[in]  src      source string
+ * @param[in]  srclen   source length in bytes, or `(size_t)-1` for the string
+ *                      length
+ * @param[out] dest     output buffer
+ * @param[in]  destlen  size of @p dest
+ * @returns the output length without the NUL, or `(size_t)-1` for an error
+ */
+size_t convert_string_quiet(charset_t from, charset_t to,
+                            void const *src, size_t srclen,
+                            void *dest, size_t destlen)
+{
+    return convert_string_log(from, to, src, srclen, dest, destlen, false);
 }
 
 
